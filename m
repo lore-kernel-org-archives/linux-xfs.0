@@ -2,389 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 963E3C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Mar 2022 21:15:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8910C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Mar 2022 21:38:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245345AbiCPVQt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Mar 2022 17:16:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48700 "EHLO
+        id S239195AbiCPVjk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Mar 2022 17:39:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358183AbiCPVQq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 17:16:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F550340C5
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 14:15:28 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1C7F961526
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 21:15:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75895C340E9;
-        Wed, 16 Mar 2022 21:15:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647465327;
-        bh=Jz/lYUZXbk9aVRSnMOWzVNwRxmzHWFG2n8mjJYwsmOU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=f9IeazhK6SJq+UrnZEugQ23/Y5QQbEqjVKLKnc/kQFZi6PGNwpiAtA4u42aTuHlgU
-         ow/M2Zf6AdBGfgGopTrTek211GnADwEqs47kDDV9jwBVCHnOkgYNJoyzi4jvk4nXPO
-         OsAmH7sL+xKx1cGCYpgWC/azwH6K7ZuMXLKSK70q/Xxb4Uyk3ioK+T4bUNS+PzldK3
-         AFHAODx8optSokyWe+K3jxS/+21dzh23FCz+TAcVN7SfGDHzJlRWGvyyt1+Vlec37U
-         2bmUHbV0ireM8dR5p5Rxp/F6UPB1HhpqW1unlj4fPUjtAE78T4qhmNib9OUhmIY253
-         DjuuT1bl1yi7A==
-Date:   Wed, 16 Mar 2022 14:15:26 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: don't include bnobt blocks when reserving free
- block pool
-Message-ID: <20220316211526.GW8224@magnolia>
-References: <20220314180847.GM8224@magnolia>
- <YjHJ0qOUnmAUEgoV@bfoster>
- <20220316163216.GU8224@magnolia>
- <YjIeXX6XeX36bmXx@bfoster>
- <20220316181726.GV8224@magnolia>
- <YjIxC5i/LQhA9lhW@bfoster>
- <YjI3x4Qp7bCwP1DS@bfoster>
+        with ESMTP id S1356305AbiCPVjh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 17:39:37 -0400
+Received: from mail-il1-x12e.google.com (mail-il1-x12e.google.com [IPv6:2607:f8b0:4864:20::12e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AD5436E26;
+        Wed, 16 Mar 2022 14:38:21 -0700 (PDT)
+Received: by mail-il1-x12e.google.com with SMTP id q6so2502765ilv.6;
+        Wed, 16 Mar 2022 14:38:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=5j/Sq8viQeL/hoyzW74KMLICeOJJ3w8lbHfpe3/YTVU=;
+        b=DXYv2/wtt7waxuVknPG+8pyznDUfuCkxuI2Lex+axB/Zy85oY4E/fnFE0mA97FmQOi
+         /tD3CPYnHde2MjrrfhGwuoC5N0G31hdTcV/G2/DdOgiXIpvsScpx4FYENxTSu7h5KnjU
+         yl4EbrcDeBisoXk/U/1+Rfwm1qDfMKgs85FhvVJYtcQM6MUvnIbd9Pz2FDY+HuTobiGl
+         P1AHw2J9ycFDjwN3c601lKwxw6IYpSGz9+8xw0anZjFNuEUEzq4sKJf9Bh5LoQLpzfOW
+         hRGzG2q5XoYx+6cytlYs0+1zOd0fItjUylW/KJmqGBj8KwIJMXihXIoH4J1slKqK8Kmy
+         VxMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5j/Sq8viQeL/hoyzW74KMLICeOJJ3w8lbHfpe3/YTVU=;
+        b=YPt0VrrPX6GBSUTT/JGfaLHI9lMhmj8NT66MC6UHzsax1EOt3kyTrtqt73/jg3qOhF
+         m7KhjDIzSRA9cUW0EsunmyVu/UORlOTZHZdyu3rncAc2DgB+O92HNeQ+DONxiLZ8/YY9
+         xBz0PLoZhFQ/8/+hIUE9eCgEyuTJIm0z1i80YYDTn5lwQm1aT6Mw8TEZRzwsDUyM7ja2
+         QHgUAR7EMlckb6YpLcIdsoWOy9hMQLBRVLR3Y3i4INfNo1uBvotnO5Dp5MJUDpghwsHF
+         GSgIW6iNpPK66f+YbGFI8iMs+DmLl9NXEeLV2zbgOnSxfX8H7o7m+07xrG1FUDkX1jBx
+         A7oQ==
+X-Gm-Message-State: AOAM530DkYj5GyfMxn1F6m82AY4hl3CIGBQq5Yzjeo9hjH4hEhWIGuKW
+        ycCvUm6VgX639z67JOAxsVdLl5frvPoUfKJwwNM=
+X-Google-Smtp-Source: ABdhPJzyY7nVOwSZFU6XgRHIUFHXdyAf8u1zf1zxe/TFlHeKO0VEOG5DoWkiwO5oi6A6Zcq1sk6IKlUs0qteIMjGX5k=
+X-Received: by 2002:a92:c5aa:0:b0:2c5:f753:9069 with SMTP id
+ r10-20020a92c5aa000000b002c5f7539069mr608362ilt.71.1647466700640; Wed, 16 Mar
+ 2022 14:38:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YjI3x4Qp7bCwP1DS@bfoster>
+References: <Yh9G7FyCLtsm2mFA@kroah.com> <Yh9ZvLHuztwQCu0d@silpixa00400314>
+ <Yh+FpKuoyj3G16lK@kroah.com> <Yh/vY4t3xnuoCW3Q@gondor.apana.org.au>
+ <Yh/yr6oB5yeOUErL@silpixa00400314> <Yh/znCnZzWaL49+o@gondor.apana.org.au>
+ <YiDHT31ujlGdQEe/@silpixa00400314> <YiEVPc2cd38AnLZB@gmail.com>
+ <YiEyGoHacN80FcOL@silpixa00400314> <YiE21aPGG5DHwJvb@gmail.com> <YiJRQQmSxA/fbm6P@silpixa00400314>
+In-Reply-To: <YiJRQQmSxA/fbm6P@silpixa00400314>
+From:   Kyle Sanderson <kyle.leet@gmail.com>
+Date:   Wed, 16 Mar 2022 14:38:10 -0700
+Message-ID: <CACsaVZJ2JH1M9-fB9uO=XKDuO74ZPKBHX81TQ4+bBvr_iSNiWQ@mail.gmail.com>
+Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
+ dm-crypt + xfs
+To:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+Cc:     Eric Biggers <ebiggers@kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Dave Chinner <david@fromorbit.com>, qat-linux@intel.com,
+        Linux-Kernal <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 16, 2022 at 03:17:27PM -0400, Brian Foster wrote:
-> On Wed, Mar 16, 2022 at 02:48:43PM -0400, Brian Foster wrote:
-> > On Wed, Mar 16, 2022 at 11:17:26AM -0700, Darrick J. Wong wrote:
-> > > On Wed, Mar 16, 2022 at 01:29:01PM -0400, Brian Foster wrote:
-> > > > On Wed, Mar 16, 2022 at 09:32:16AM -0700, Darrick J. Wong wrote:
-> > > > > On Wed, Mar 16, 2022 at 07:28:18AM -0400, Brian Foster wrote:
-> > > > > > On Mon, Mar 14, 2022 at 11:08:47AM -0700, Darrick J. Wong wrote:
-> > > > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > > > > 
-> > > > > > > xfs_reserve_blocks controls the size of the user-visible free space
-> > > > > > > reserve pool.  Given the difference between the current and requested
-> > > > > > > pool sizes, it will try to reserve free space from fdblocks.  However,
-> > > > > > > the amount requested from fdblocks is also constrained by the amount of
-> > > > > > > space that we think xfs_mod_fdblocks will give us.  We'll keep trying to
-> > > > > > > reserve space so long as xfs_mod_fdblocks returns ENOSPC.
-> > > > > > > 
-> > > > > > > In commit fd43cf600cf6, we decided that xfs_mod_fdblocks should not hand
-> > > > > > > out the "free space" used by the free space btrees, because some portion
-> > > > > > > of the free space btrees hold in reserve space for future btree
-> > > > > > > expansion.  Unfortunately, xfs_reserve_blocks' estimation of the number
-> > > > > > > of blocks that it could request from xfs_mod_fdblocks was not updated to
-> > > > > > > include m_allocbt_blks, so if space is extremely low, the caller hangs.
-> > > > > > > 
-> > > > > > > Fix this by including m_allocbt_blks in the estimation, and modify the
-> > > > > > > loop so that it will not retry infinitely.
-> > > > > > > 
-> > > > > > > Found by running xfs/306 (which formats a single-AG 20MB filesystem)
-> > > > > > > with an fstests configuration that specifies a 1k blocksize and a
-> > > > > > > specially crafted log size that will consume 7/8 of the space (17920
-> > > > > > > blocks, specifically) in that AG.
-> > > > > > > 
-> > > > > > > Cc: Brian Foster <bfoster@redhat.com>
-> > > > > > > Fixes: fd43cf600cf6 ("xfs: set aside allocation btree blocks from block reservation")
-> > > > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > > > ---
-> > > > > > >  fs/xfs/xfs_fsops.c |   16 ++++++++++++----
-> > > > > > >  1 file changed, 12 insertions(+), 4 deletions(-)
-> > > > > > > 
-> > > > > > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > > > > > > index 33e26690a8c4..78b6982ea5b0 100644
-> > > > > > > --- a/fs/xfs/xfs_fsops.c
-> > > > > > > +++ b/fs/xfs/xfs_fsops.c
-> > > > > > > @@ -379,6 +379,7 @@ xfs_reserve_blocks(
-> > > > > > >  	int64_t			fdblks_delta = 0;
-> > > > > > >  	uint64_t		request;
-> > > > > > >  	int64_t			free;
-> > > > > > > +	unsigned int		tries;
-> > > > > > >  	int			error = 0;
-> > > > > > >  
-> > > > > > >  	/* If inval is null, report current values and return */
-> > > > > > > @@ -432,9 +433,16 @@ xfs_reserve_blocks(
-> > > > > > >  	 * perform a partial reservation if the request exceeds free space.
-> > > > > > >  	 */
-> > > > > > >  	error = -ENOSPC;
-> > > > > > > -	do {
-> > > > > > > -		free = percpu_counter_sum(&mp->m_fdblocks) -
-> > > > > > > -						mp->m_alloc_set_aside;
-> > > > > > > +	for (tries = 0; tries < 30 && error == -ENOSPC; tries++) {
-> > > > > > 
-> > > > > > Any reason for the magic number of retries as opposed to perhaps just
-> > > > > > not retrying at all?
-> > > > > 
-> > > > > I /think/ the origins of the loop was commit dbcabad19aa9 ("[XFS] Fix
-> > > > > block reservation mechanism."), where I guess Dave decided that we
-> > > > > should loop forever trying to satisfy a request from userspace to
-> > > > > increase the reserve pool.  OFC you and I have been patching this
-> > > > > function to fix all its horrible warts over the years, so maybe you're
-> > > > > right that this should only try once...
-> > > > > 
-> > > > > (For the mount time default reservation, we should only iterate the loop
-> > > > > once (provided the accounting is correct ;) since nobody else is
-> > > > > touching the free space counters.)
-> > > > > 
-> > > > > > This seems a little odd when you think about it
-> > > > > > given that the request is already intended to take available space into
-> > > > > > account and modify the request from userspace. OTOH, another
-> > > > > > consideration could be to retry some (really large?) number of times and
-> > > > > > then bail out if we happen to iterate without an observable change in
-> > > > > > free space (i.e., something is wrong), however I suppose that could be
-> > > > > > racy as well. *shrug*
-> > > > > 
-> > > > > ...but if you're the sysadmin desperately trying to increase the size of
-> > > > > the reserve pool when the fs is running near ENOSPC, you're going to be
-> > > > > racing with fdblocks bouncing up and down.  The @free samples that we
-> > > > > take here in the loop body are indeed racy since we can't tell the
-> > > > > difference between @free being unchanged from the last iteration because
-> > > > > someone freed a block and someone else immediately consumed it, or a
-> > > > > totally idle system.
-> > > > > 
-> > > > > Either way, it's better than hanging the whole system. :)
-> > > > > 
-> > > > 
-> > > > Yeah.. I'm not bothered much by whether we retry once, 42 times or
-> > > > forever. I think what this boils down to for me is whether it's worth
-> > > > the risk of a behavior change of an -ENOSPC return causing something
-> > > > unexpected for some random user or use case. Could we just do this in
-> > > > two separate patches? Patch 1 fixes the calculation and targets stable,
-> > > > patch 2 does whatever to the retry loop that potentially changes retry
-> > > > semantics (and doesn't really need backporting)..?
-> > > 
-> > > Splitting the two patches sounds good to me.
-> > > 
-> > > > > What if I augment the loop control with a comment capturing some of this:
-> > > > > 
-> > > > > 	/*
-> > > > > 	 * The loop body estimates how many blocks it can request from
-> > > > > 	 * fdblocks to stash in the reserve pool.  This is a classic
-> > > > > 	 * TOCTOU race since fdblocks updates are not always coordinated
-> > > > > 	 * via m_sb_lock.  We also cannot tell if @free remaining
-> > > > > 	 * unchanged between iterations is due to an idle system or
-> > > > > 	 * freed blocks being consumed immediately, so we'll try a
-> > > > > 	 * finite number of times to satisfy the request.
-> > > > > 	 */
-> > > > > 	for (tries = 0; tries < 30...) {
-> > > > > 
-> > > > > > 
-> > > > > > > +		/*
-> > > > > > > +		 * The reservation pool cannot take space that xfs_mod_fdblocks
-> > > > > > > +		 * will not give us.  This includes the per-AG set-aside space
-> > > > > > > +		 * and free space btree blocks that are not available for
-> > > > > > > +		 * allocation due to per-AG metadata reservations.
-> > > > > > > +		 */
-> > > > > > > +		free = percpu_counter_sum(&mp->m_fdblocks);
-> > > > > > > +		free -= mp->m_alloc_set_aside;
-> > > > > > > +		free -= atomic64_read(&mp->m_allocbt_blks);
-> > > > > > 
-> > > > > > Seems reasonable. Do we want to consider ->m_allocbt_blks in other
-> > > > > > places where ->m_alloc_set_aside is used (i.e. xfs_fs_statfs(), etc.)?
-> > > > > > Not sure how much it matters for space reporting purposes, but if so, it
-> > > > > > might also be worth reconsidering the usefulness of a static field and
-> > > > > > initialization helper (i.e. xfs_alloc_set_aside()) if the majority of
-> > > > > > uses involve a dynamic calculation (due to ->m_allocbt_blks).
-> > > > > 
-> > > > > When I was writing this patch, I very nearly decided to make those three
-> > > > > lines above their own helper.  I didn't see any other spots that looked
-> > > > > like obvious candidates for such a calculation outside of statfs.
-> > > > > 
-> > > > 
-> > > > Indeed..
-> > > > 
-> > > > > Subtracting m_allocbt_blks from statfs' avail field is a behavior
-> > > > > change, since we always used to consider bnobt blocks as available.  We
-> > > > > don't have an exact count of how many blocks are needed to hide the
-> > > > > per-ag reserved extents, so in the end we have to decide whether we want
-> > > > > to hear complaints about over- or under-estimation of available blocks.
-> > > > > 
-> > > > > So I think the statfs stuff is a separate patch. :)
-> > > > > 
-> > > > 
-> > > > Similar deal as above.. I'm more interested in a potential cleanup of
-> > > > the code that helps prevent this sort of buglet for the next user of
-> > > > ->m_alloc_set_aside that will (expectedly) have no idea about this
-> > > > subtle quirk than I am about what's presented in the free space
-> > > > counters. ISTM that we ought to just ditch ->m_alloc_set_aside, replace
-> > > > the existing xfs_alloc_set_aside() with an XFS_ALLOC_FS_RESERVED() macro
-> > > > or something that just does the (agcount << 3) thing, and then define a
-> > > 
-> > > I'm not sure that the current xfs_alloc_set_aside code is correct.
-> > > Right now it comes with this comment:
-> > > 
-> > > "We need to reserve 4 fsbs _per AG_ for the freelist and 4 more to
-> > > handle a potential split of the file's bmap btree."
-> > > 
-> > > I think the first part ("4 fsbs _per AG_ for the freelist") is wrong.
-> > > AFAICT, that part refers to the number of blocks we need to keep free in
-> > > case we have to replenish a completely empty AGFL.  The hardcoded value
-> > > of 4 seems wrong, since xfs_alloc_min_freelist() is what _fix_freelist
-> > > uses to decide how big the AGFL needs to be, and it returns 6 on a
-> > > filesystem that has rmapbt enabled.  So I think XFS_ALLOC_AGFL_RESERVE
-> > > is wrong here and should be replaced with the function call.
-> > > 
-> > > I also think the second part ("and 4 more to handle a split of the
-> > > file's bmap btree") is wrong.  If we're really supposed to save enough
-> > > blocks to handle a bmbt split, then I think this ought to be
-> > > (mp->m_bm_maxlevels[0] - 1), not 4, right?  According to xfs_db, bmap
-> > > btrees can be 9 levels tall:
-> > > 
-> > > xfs_db> btheight bmapbt -n 4294967296 -b 512
-> > > bmapbt: worst case per 512-byte block: 13 records (leaf) / 13 keyptrs (node)
-> > > level 0: 4294967296 records, 330382100 blocks
-> > > level 1: 330382100 records, 25414008 blocks
-> > > level 2: 25414008 records, 1954924 blocks
-> > > level 3: 1954924 records, 150379 blocks
-> > > level 4: 150379 records, 11568 blocks
-> > > level 5: 11568 records, 890 blocks
-> > > level 6: 890 records, 69 blocks
-> > > level 7: 69 records, 6 blocks
-> > > level 8: 6 records, 1 block
-> > > 9 levels, 357913945 blocks total
-> > > 
-> > > The root level is in the inode, so we need 8 blocks to handle a full
-> > > split on a 512b block filesystem.
-> > > 
-> > > Granted, it's at least correct for 4k+ block filesystems:
-> > > 
-> > > xfs_db> btheight bmapbt -n 4294967296
-> > > bmapbt: worst case per 4096-byte block: 125 records (leaf) / 125 keyptrs (node)
-> > > level 0: 4294967296 records, 34359739 blocks
-> > > level 1: 34359739 records, 274878 blocks
-> > > level 2: 274878 records, 2200 blocks
-> > > level 3: 2200 records, 18 blocks
-> > > level 4: 18 records, 1 block
-> > > 5 levels, 34636836 blocks total
-> > > 
-> > > So in the end, I think that calculation should become:
-> > > 
-> > > unsigned int
-> > > xfs_alloc_set_aside(
-> > > 	struct xfs_mount	*mp)
-> > > {
-> > > 	unsigned int		min-agfl = xfs_alloc_min_freelist(mp, NULL);
-> > > 
-> > > 	return mp->m_sb.sb_agcount * (min_agfl + mp->m_bm_maxlevels[0] - 1);
-> > > }
-> > > 
-> > 
-> > I'm not familiar enough with the original context, but that seems
-> > reasonable to me at a glance. If we do want to change this, I'd again
-> > just suggest a separate patch since presumably there isn't any known bug
-> > report or anything associated with the current code.
+> Makes sense. I'm going to send it upstream and Cc stable as documented
+> in https://www.kernel.org/doc/html/v4.10/process/stable-kernel-rules.html#option-1
+> I will then revert this change in the set that fixes the problem.
 
-Oh definitely, each of these little fixes nets their own patch.
+Did this go anywhere? I'm still not seeing it in any of the stable trees.
 
-> > > > new xfs_alloc_set_aside() that combines the macro calculation with
-> > > > ->m_allocbt_blks. Then the whole "set aside" concept is calculated and
-> > > > documented in one place. Hm?
-> > > 
-> > > I think I'd rather call the new function xfs_fdblocks_avail() over
-> > > reusing an existing name, because I fear that zapping an old function
-> > > and replacing it with a new function with the same name will cause
-> > > confusion for anyone backporting patches or reading code after an
-> > > absence.
-> > > 
-> > 
-> > The logical change is basically just to include the allocbt block count
-> > in the "set aside" calculation, not necessarily redefine what "set
-> > aside" means, so I don't really see that as a problem. The function is
-> > only used in a couple places, but we've managed to make it confusing by
-> > conflating the naming of the function, xfs_mount field and local
-> > variables in certain contexts.
+Kyle.
 
-Hmm.  The way I see things, the setaside is the *minimum* amount of free
-space that we need to withhold from the user to guarantee that we can
-always make progress in a file mapping update.  m_allocbt_blks is the
-amount of space used by free space btrees (currently, the entire btree)
-that we withhold from the user to guarantee that btree expansions from
-the per-AG reservations can actually be filled.
-
-The reserve pool looks to me like a user-controlled chunk of space that
-we also withhold to avoid ENOSPC failure from within writeback; and the
-per-AG reservations of course are even more space withheld to guarantee
-btree expansion.
-
-IOWs, there are four (I hope!) different free space pools that we use to
-guarantee forward progress on this or that operation, and the only thing
-they have in common is they don't get reported to userspace as available
-blocks.  I don't know that I want to go mixing them too much.
-
-Though, I agree that all of this is really confusing and needs a central
-function that makes it obvious how we compute available blocks given all
-the free space pools that we have.
-
-> > BTW, do we ever really expect the "set aside" value to be of any
-> > significance relative to the perag reservation values for any moderately
-> > recent kernel?
-
-Nope.  Any non-tiny filesystem with at least finobt=1 is going to have
-way more per-AG reservation than either the setaside or the reserve
-pool.
-
-> > IIRC (most) perag res is not presented as free space, so
-> > I'm curious if it would even be noticeable if we just fixed and used
-> > xfs_alloc_set_aside() consistently across the board..
-
-It isn't.  On a 500G test image with reflink, rmap, and finobt turned
-on, the per-AG reservations consume ~630kblocks for each of four AGs of
-about ~32.7mblocks apiece.  That's about 2%.  The reservation pool is
-8192 blocks and the set-aside is 4*8=32 blocks, both of which are
-rounding error by comparison.
-
-At maximal free space fragmentation, the free space btrees would consume
-(worst case) about 65kblocks per AG.  That might be noticeable.
-
-> I suppose it's reasonable to want to include allocbt blocks as free
-> space in general, though, since technically they are eventually usable
-> blocks. So naming and whatnot aside, at the end the day I'm good with
-> anything that refactors this code one way or another such that it's
-> harder to repeat the same mistake.
-
-Yeah, I at least like the idea of having a function that estimates how
-much free space we can try to reserve without using reserve pool blocks.
-I also am warming to the idea of telling users they can't have /any/ of
-those reserved blocks... particularly since I haven't even gotten to the
-"I fill my fs to 99% full and only then buy one more gigabyte of space,
-wash, rinse, repeat" complaints.
-
---D
-
-> 
-> Brian
-> 
-> > Brian
-> > 
-> > > Also the only reason we have a mount variable and a function (instead of
-> > > a macro) is that Dave asked me to change the codebase away from the
-> > > XFS_ALLOC_AG_MAX_USABLE/XFS_ALLOC_SET_ASIDE macros as part of merging
-> > > reflink.
-> > > 
-> > > --D
-> > > 
-> > > > Brian
-> > > > 
-> > > > > --D
-> > > > > 
-> > > > > > 
-> > > > > > Brian
-> > > > > > 
-> > > > > > >  		if (free <= 0)
-> > > > > > >  			break;
-> > > > > > >  
-> > > > > > > @@ -459,7 +467,7 @@ xfs_reserve_blocks(
-> > > > > > >  		spin_unlock(&mp->m_sb_lock);
-> > > > > > >  		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
-> > > > > > >  		spin_lock(&mp->m_sb_lock);
-> > > > > > > -	} while (error == -ENOSPC);
-> > > > > > > +	}
-> > > > > > >  
-> > > > > > >  	/*
-> > > > > > >  	 * Update the reserve counters if blocks have been successfully
-> > > > > > > 
-> > > > > > 
-> > > > > 
-> > > > 
-> > > 
-> 
+On Fri, Mar 4, 2022 at 9:50 AM Giovanni Cabiddu
+<giovanni.cabiddu@intel.com> wrote:
+>
+> On Thu, Mar 03, 2022 at 09:44:53PM +0000, Eric Biggers wrote:
+> > On Thu, Mar 03, 2022 at 09:24:42PM +0000, Giovanni Cabiddu wrote:
+> > > On Thu, Mar 03, 2022 at 07:21:33PM +0000, Eric Biggers wrote:
+> > > > If these algorithms have critical bugs, which it appears they do, then IMO it
+> > > > would be better to disable them (either stop registering them, or disable the
+> > > > whole driver) than to leave them available with low cra_priority.  Low
+> > > > cra_priority doesn't guarantee that they aren't used.
+> > > Thanks for your feedback Eric.
+> > >
+> > > Here is a patch that disables the registration of the algorithms in the
+> > > QAT driver by setting, a config time, the number of HW queues (aka
+> > > instances) to zero.
+> > >
+> > > ---8<---
+> > > From: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+> > > Subject: [PATCH] crypto: qat - disable registration of algorithms
+> > > Organization: Intel Research and Development Ireland Ltd - Co. Reg. #308263 - Collinstown Industrial Park, Leixlip, County Kildare - Ireland
+> > >
+> > > The implementations of aead and skcipher in the QAT driver do not
+> > > support properly requests with the CRYPTO_TFM_REQ_MAY_BACKLOG flag set.
+> > > If the HW queue is full, the driver returns -EBUSY but does not enqueue
+> > > the request.
+> > > This can result in applications like dm-crypt waiting indefinitely for a
+> > > completion of a request that was never submitted to the hardware.
+> > >
+> > > To avoid this problem, disable the registration of all skcipher and aead
+> > > implementations in the QAT driver by setting the number of crypto
+> > > instances to 0 at configuration time.
+> > >
+> > > This patch deviates from the original upstream solution, that prevents
+> > > dm-crypt to use drivers registered with the flag
+> > > CRYPTO_ALG_ALLOCATES_MEMORY, since a backport of that set to stable
+> > > kernels may have a too wide effect.
+> > >
+> > > commit 7bcb2c99f8ed032cfb3f5596b4dccac6b1f501df upstream
+> > > commit 2eb27c11937ee9984c04b75d213a737291c5f58c upstream
+> > > commit fbb6cda44190d72aa5199d728797aabc6d2ed816 upstream
+> > > commit b8aa7dc5c7535f9abfca4bceb0ade9ee10cf5f54 upstream
+> > > commit cd74693870fb748d812867ba49af733d689a3604 upstream
+> > >
+> > > Signed-off-by: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+> > > ---
+> > >  drivers/crypto/qat/qat_common/qat_crypto.c | 4 +---
+> > >  1 file changed, 1 insertion(+), 3 deletions(-)
+> >
+> > Sounds good; is there any reason not to apply this upstream too, though?
+> > You could revert it later as part of the patch series that fixes the driver.
+> Makes sense. I'm going to send it upstream and Cc stable as documented
+> in https://www.kernel.org/doc/html/v4.10/process/stable-kernel-rules.html#option-1
+> I will then revert this change in the set that fixes the problem.
+>
+> Thanks,
+>
+> --
+> Giovanni
