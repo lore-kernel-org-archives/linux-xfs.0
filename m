@@ -2,133 +2,175 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22515C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Mar 2022 08:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 618E1C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Mar 2022 09:29:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346087AbiCPI4W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Mar 2022 04:56:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60818 "EHLO
+        id S1354894AbiCPJa5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Mar 2022 05:30:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345549AbiCPI4V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 04:56:21 -0400
-Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E036C2C13C
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 01:55:06 -0700 (PDT)
-Received: by mail-ej1-x636.google.com with SMTP id d10so2632391eje.10
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 01:55:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=colorfullife-com.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language
-         :from:to:cc:references:in-reply-to:content-transfer-encoding;
-        bh=X5ydxHYWOblptVZ8H1Fz1lofwwdpSFjGxBAnmiGiHLk=;
-        b=FnRLt5jVmDX7Dd8wvlpoWFAY4tP9Z8De96sJkjakkBktgdGHaQYRKRADo9NCwm9y+o
-         6HEYWVpEncHGW2mH11LMSdWK5QKyM1rU4N2wYM1/ITPoKBTYABTw2of8tNXE/Sb76t9m
-         hdsCxs6feS5JNDJNEAxU9DKrlipXHgxQ6gnBj23vGUZ5OtWmev+HLv5trzN6ZJNkpq+i
-         qFNtvxDMe2l4/AS3jKs8pKvmm/N7pBOQSfe1e+0KpDlKsFZz0ejj3PJGGPucxPQ11Iu7
-         iIPDLW11DA2jX2qUCc7NeHUTda+InI4J4BpBthblOmpXlXyTe8XFSv3hv93/3kqhKS1H
-         yTKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:from:to:cc:references:in-reply-to
-         :content-transfer-encoding;
-        bh=X5ydxHYWOblptVZ8H1Fz1lofwwdpSFjGxBAnmiGiHLk=;
-        b=hzNxK865qqup4GQKqwsMg+Ekdlr5H1+b1+lbHG4pHoC3RcB//FpcJLSHT0yZ/4UDlk
-         xu+eBrI6XtF3z2bnTMGoZ5ZSGKNf8Rl4ekQYalsuXZ0FyfKEGgZ41e7i8A9uq8lcjwXv
-         1s6lTTNBGiXmF9AksEYWdRMvUepl565xFhe1SuwqEFk1g3b1ioFRmH/Lr28RkbOPkJ8x
-         xuHYZ8JlNxBOtEpgsFhh4mh3mWihDLDZ4s3K2PySXBZCWuGgAjNuJ2Cjm0iKfPRNwZ6g
-         DDjO5RnWxU4PWjgd0Lp5jbZBPE+Sc9lQvda/Zb08ERkssSVfR5RxjejKmJ27mSVIWcM6
-         t9nw==
-X-Gm-Message-State: AOAM5335iRN2LXJfyuaUwd5tBfviqE+UQjXBNVE/nNzla/60MM/k6HKG
-        bSBwAhxRzShpSWF9ebl7ZMNg9O5qHGS9LA==
-X-Google-Smtp-Source: ABdhPJzzPSm72xIG67kVYsKfeoTBPYIJuqLRJON8e09/V+vZnGhbvBXgJyiCchr+OwSGKxKB8ZPU7w==
-X-Received: by 2002:a17:907:6eac:b0:6db:9dc7:9c0e with SMTP id sh44-20020a1709076eac00b006db9dc79c0emr21008302ejc.18.1647420905410;
-        Wed, 16 Mar 2022 01:55:05 -0700 (PDT)
-Received: from ?IPV6:2003:d9:9706:b800:c31b:4649:aab0:e4be? (p200300d99706b800c31b4649aab0e4be.dip0.t-ipconnect.de. [2003:d9:9706:b800:c31b:4649:aab0:e4be])
-        by smtp.googlemail.com with ESMTPSA id js24-20020a170906ca9800b006c8aeca8fe8sm607915ejb.58.2022.03.16.01.55.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Mar 2022 01:55:05 -0700 (PDT)
-Message-ID: <3242ad20-0039-2579-b125-b7a9447a7230@colorfullife.com>
-Date:   Wed, 16 Mar 2022 09:55:04 +0100
+        with ESMTP id S1346468AbiCPJay (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 05:30:54 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AFB16542D
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 02:29:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9EB63B81A64
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 09:29:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6775BC340F6
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 09:29:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647422973;
+        bh=b1FsDwTJ/klAMYyMN6NrveYFLvNO1D3I4xzeUjYV3io=;
+        h=From:To:Subject:Date:From;
+        b=nvpqBT1TY6t8QJAFJMQIowmzfQJMu6EXo6/MegUAhgm20xvQNlmcUiTh951F2z1NJ
+         nAY+Y0aUOqb5T77vBTBFYAyVYYmHoh5xWfpFeKgbLvhqWbfQ0ZM7ETf1Mxl/Xz21EL
+         j9vjCkvm0La4QAYJh+1YVHSbCH8364KHwPE8+wfWi9SOGfU3/Rw4U6lEPDoPmUqhzu
+         S3qhu7IjfEtOki9wxr0u0KBDz5eHyzErimLveYLYxsMEV0+DJZJKBZoo/KCbXBgL3N
+         OstBHoyPH1XxCND2SM7H2aMaFBvcJ/mLRVhPOeSwukJhT53ObkQ2UrSL3ahJuWEO4e
+         Zg0ClxTyCAjrQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 55A82CAC6E2; Wed, 16 Mar 2022 09:29:33 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 215693] New: [xfstests generic/673] file on XFS lose its sgid
+ bit after reflink, if there's only sgid bit
+Date:   Wed, 16 Mar 2022 09:29:32 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: zlang@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression
+Message-ID: <bug-215693-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.2
-Subject: Re: Metadata CRC error detected at
- xfs_dir3_block_read_verify+0x9e/0xc0 [xfs], xfs_dir3_block block 0x86f58
-Content-Language: en-US
-From:   Manfred Spraul <manfred@colorfullife.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Spraul Manfred (XC/QMM21-CT)" <Manfred.Spraul@de.bosch.com>
-References: <613af505-7646-366c-428a-b64659e1f7cf@colorfullife.com>
- <20220313224624.GJ3927073@dread.disaster.area>
- <8024317e-07be-aa3d-9aa3-2f835aaa1278@colorfullife.com>
-In-Reply-To: <8024317e-07be-aa3d-9aa3-2f835aaa1278@colorfullife.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215693
 
-On 3/14/22 16:18, Manfred Spraul wrote:
-> Hi Dave,
->
-> On 3/13/22 23:46, Dave Chinner wrote:
->> OK, this test is explicitly tearing writes at the storage level.
->> When there is an update to multiple sectors of the metadata block,
->> the metadata will be inconsistent on disk while those individual
->> sector writes are replayed.
->
-> Thanks for the clarification.
->
-> I'll modify the test application to never tear write operations and 
-> retry.
->
-> If there are findings, then I'll distribute them.
->
-I've modified the test app, and with 4000 simulated power failures I 
-have not seen any corruptions.
+            Bug ID: 215693
+           Summary: [xfstests generic/673] file on XFS lose its sgid bit
+                    after reflink, if there's only sgid bit
+           Product: File System
+           Version: 2.5
+    Kernel Version: xfs-5.18-merge-1
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zlang@redhat.com
+        Regression: No
 
+xfstests suddently generic/673 fails on latest xfs-5.18-merge-1:
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/aarch64 hpe-xxx-xx-x-xxxx-xx 5.17.0-rc8+ #1 SMP Mon =
+Mar
+14 15:30:26 EDT 2022
+MKFS_OPTIONS  -- -f -m crc=3D1,finobt=3D1,rmapbt=3D0,reflink=3D1,bigtime=3D=
+1,inobtcount=3D1
+/dev/vda3
+MOUNT_OPTIONS -- -o context=3Dsystem_u:object_r:root_t:s0 /dev/vda3
+/mnt/xfstests/scratch
 
-Thus:
+generic/673     - output mismatch (see
+/var/lib/xfstests/results//generic/673.out.bad)
+    --- tests/generic/673.out   2022-03-14 19:50:16.969436417 -0400
+    +++ /var/lib/xfstests/results//generic/673.out.bad  2022-03-15
+12:12:33.080620337 -0400
+    @@ -3,7 +3,7 @@
+     310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
+     6666 -rwSrwSrw- SCRATCH_MNT/a
+     3784de23efab7a2074c9ec66901e39e5  SCRATCH_MNT/a
+    -2666 -rw-rwSrw- SCRATCH_MNT/a
+    +666 -rw-rw-rw- SCRATCH_MNT/a
 
-- With teared write operations: 2 corruptions from ~800 simulated power 
-failures
+     Test 2 - qa_user, group-exec file
+    ...
+    (Run 'diff -u /var/lib/xfstests/tests/generic/673.out
+/var/lib/xfstests/results//generic/673.out.bad'  to see the entire diff)
+Ran: generic/673
+Failures: generic/673
+Failed 1 of 1 tests
 
-- Without teared write operations: no corruptions from ~4000 simulated 
-power failures.
+The diff output is:
+--- /dev/fd/63  2022-03-15 09:42:11.044230787 -0400
++++ generic/673.out.bad 2022-03-15 09:42:10.514261066 -0400
+@@ -3,7 +3,7 @@
+ 310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
+ 6666 -rwSrwSrw- SCRATCH_MNT/a
+ 3784de23efab7a2074c9ec66901e39e5  SCRATCH_MNT/a
+-2666 -rw-rwSrw- SCRATCH_MNT/a
++666 -rw-rw-rw- SCRATCH_MNT/a
 
-But:
+ Test 2 - qa_user, group-exec file
+ 310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
+@@ -15,7 +15,7 @@
+ 310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
+ 6766 -rwsrwSrw- SCRATCH_MNT/a
+ 3784de23efab7a2074c9ec66901e39e5  SCRATCH_MNT/a
+-2766 -rwxrwSrw- SCRATCH_MNT/a
++766 -rwxrw-rw- SCRATCH_MNT/a
 
-I've checked the eMMC specification, and the spec allows that teared 
-write happen:
+ Test 4 - qa_user, all-exec file
+ 310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
 
-JESD84-B51A, chapter 6.6.8.1:
+According to the generic/673.out, the failed lines are
+QA output created by 673
+Test 1 - qa_user, non-exec file
+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
+6666 -rwSrwSrw- SCRATCH_MNT/a
+3784de23efab7a2074c9ec66901e39e5  SCRATCH_MNT/a
+2666 -rw-rwSrw- SCRATCH_MNT/a                    <------ fail
 
-> All of the sectors being modified by the write operation that was interrupted may be in one of the following states: all sectors contain new data, all sectors contain old data or some sectors contain new data and some sectors contain old data.
-"some sectors contain new data and some sectors contain old data".
+Test 2 - qa_user, group-exec file
+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
+6676 -rwSrwsrw- SCRATCH_MNT/a
+3784de23efab7a2074c9ec66901e39e5  SCRATCH_MNT/a
+676 -rw-rwxrw- SCRATCH_MNT/a
 
-NVM also appears to allow tearing for writes larger than a certain size 
-(and the size is 2 kB in the example in the spec, and one observed 
-corruption happened when tearing a 20 kB write that crosses a 32kB boundary)
+Test 3 - qa_user, user-exec file
+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
+6766 -rwsrwSrw- SCRATCH_MNT/a
+3784de23efab7a2074c9ec66901e39e5  SCRATCH_MNT/a
+2766 -rwxrwSrw- SCRATCH_MNT/a                    <------ fail
+...
+...
 
-NVMe-NVM-Command-Set-Specification-1.0a-2021.07.26-Ratified, Chapter 
-2.1.4.2AWUPF/NAWUPF
+I've reported another about losing sgid or suid bits after chown:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215687
+I doubt they're same issue, but due to they're about different testing (cho=
+wn
+and reflink), and the file not always lose its sgid bit after reflink(only =
+Test
+1 and 3). So I hope to get review from xfs expert, to make sure the behavior
+changes are all as your expected, then we can change the test case's expect
+result.
 
-> If a write command is submitted with size greater than the 
-> AWUPF/NAWUPF value or crosses an atomic
-> boundary, then there is no guarantee of the data returned on 
-> subsequent reads of the associated logical
-> blocks.
+--=20
+You may reply to this email to add a comment.
 
-
-Is my understanding correct that XFS support neither eMMC nor NVM devices?
-(unless there is a battery backup that exceeds the guarantees from the spec)
-
-
---
-
-     Manfred
-
+You are receiving this mail because:
+You are watching the assignee of the bug.=
