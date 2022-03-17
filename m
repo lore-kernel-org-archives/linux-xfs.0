@@ -2,134 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 960FCC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 02:47:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F972C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 02:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344810AbiCQCsZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Mar 2022 22:48:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54500 "EHLO
+        id S1346513AbiCQCyt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Mar 2022 22:54:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358644AbiCQCsY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 22:48:24 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 282E0201BC
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 19:47:08 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 089A05334C8;
-        Thu, 17 Mar 2022 13:47:06 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nUgAL-006Nqh-7X; Thu, 17 Mar 2022 13:47:05 +1100
-Date:   Thu, 17 Mar 2022 13:47:05 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Manfred Spraul <manfred@colorfullife.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Spraul Manfred (XC/QMM21-CT)" <Manfred.Spraul@de.bosch.com>
-Subject: Re: Metadata CRC error detected at
- xfs_dir3_block_read_verify+0x9e/0xc0 [xfs], xfs_dir3_block block 0x86f58
-Message-ID: <20220317024705.GY3927073@dread.disaster.area>
-References: <613af505-7646-366c-428a-b64659e1f7cf@colorfullife.com>
- <20220313224624.GJ3927073@dread.disaster.area>
- <8024317e-07be-aa3d-9aa3-2f835aaa1278@colorfullife.com>
- <3242ad20-0039-2579-b125-b7a9447a7230@colorfullife.com>
+        with ESMTP id S237023AbiCQCys (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 22:54:48 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B1CE201BC
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 19:53:33 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DF0BEB81E00
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 02:53:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B4D4C340E9;
+        Thu, 17 Mar 2022 02:53:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647485610;
+        bh=wSUuD7l8XwIMHpdPjIYlAZEB4vjuqvtQQK51kGTqmwQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WLumorfRVLh8z97LNTeGgolcaOc3+J3KYQX/CZxuWIV891ASuLDMJp6qZEGt5D2MZ
+         mq4p3c2CKhLj8SxHMn6giD14INhzur3O3k29H7n9PjACCuaWrxUmDjVQqsStn8Xnwe
+         kgDURdFlgK0L8zydbR3Sng4g0UmvVMHVNkekeQF23d/v7TELgB06XcROaFa0WjvDtm
+         RUpPRROiVFDOLjLgqOoVgL00m6IbZQ62LfHkHDOsZ5NXczScw569wchQMDDsc+QABD
+         6EkZuLjOt9VtOeqx2NZX2hdnnYCH9HjdXAT0jFQckwBpQ0DWodAo5aRCIsZp1xj+mq
+         iqwUrJn+x81JQ==
+Date:   Wed, 16 Mar 2022 19:53:30 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>,
+        Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>,
+        Eric Sandeen <sandeen@redhat.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: make quota default to no warning limit at all
+Message-ID: <20220317025330.GY8224@magnolia>
+References: <20220314180914.GN8224@magnolia>
+ <fe974dac-bd1d-f3e7-6bd7-bc3f3cb56dd1@sandeen.net>
+ <20220317022219.GX3927073@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3242ad20-0039-2579-b125-b7a9447a7230@colorfullife.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6232a12b
-        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
-        a=xje8vFcpFEbUqUHFRg0A:9 a=CjuIK1q_8ugA:10 a=igBNqPyMv6gA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220317022219.GX3927073@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 16, 2022 at 09:55:04AM +0100, Manfred Spraul wrote:
-> Hi Dave,
-> 
-> On 3/14/22 16:18, Manfred Spraul wrote:
-> > Hi Dave,
+On Thu, Mar 17, 2022 at 01:22:19PM +1100, Dave Chinner wrote:
+> On Wed, Mar 16, 2022 at 12:41:08PM -0500, Eric Sandeen wrote:
+> > On 3/14/22 1:09 PM, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Historically, the quota warning counter was never incremented on a
+> > > softlimit violation, and hence was never enforced.  Now that the counter
+> > > works, the default of 5 warnings is getting enforced, which is a
+> > > breakage that people aren't used to.  In the interest of not introducing
+> > > new fail to things that used to work, make the default warning limit of
+> > > zero, and make zero mean there is no limit.
+> > > 
+> > > Sorta-fixes: 4b8628d57b72 ("xfs: actually bump warning counts when we send warnings")
+> > > Reported-by: Eric Sandeen <sandeen@sandeen.net>
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > On 3/13/22 23:46, Dave Chinner wrote:
-> > > OK, this test is explicitly tearing writes at the storage level.
-> > > When there is an update to multiple sectors of the metadata block,
-> > > the metadata will be inconsistent on disk while those individual
-> > > sector writes are replayed.
+> > Darrick and I talked about this offline a bit yesterday, and I think
+> > we reached an understanding/agreement on this .... 
 > > 
-> > Thanks for the clarification.
+> > While this patch will solve the problem of low warning thresholds
+> > rendering timer thresholds useless, I'm still of the opinion that
+> > this is not a feature to fix, but an inadvertent/broken behavior to
+> > remove.
 > > 
-> > I'll modify the test application to never tear write operations and
-> > retry.
+> > The concept of a warning limit in xfs quota has been documented as
+> > unimplemented for about 20+ years. Digging through ancient IRIX docs,
+> > the intent may have been to warn once per login session
+> > (which would make more sense with the current limit of 5.) However,
+> > nothing can be found in code archives to indicate that the warning
+> > counter was ever bumped by anything (until the semi-recent change in
+> > Linux.)
 > > 
-> > If there are findings, then I'll distribute them.
+> > This feature is still documented as unimplemented in the xfs_quota
+> > man page.
 > > 
-> I've modified the test app, and with 4000 simulated power failures I have
-> not seen any corruptions.
+> > And although there are skeletal functions to manipulate warning limits
+> > in xfs_quota, they cannot be disabled, and the interface differs from
+> > timer limits, so is barely usable.
+> > 
+> > There is no concept of a "warning limit" in non-xfs quota tools, either.
+> > 
+> > There is no documentation on what constitutes a warning event, or when
+> > it should be incremented.
+> > 
+> > tl;dr: While the warning counter bump has been upstream for some time
+> > now, I think we can argue that that does not constitute a feature that
+> > needs fixing or careful deprecation; TBH it looks more like a bug that
+> > should be fixed by removing the increment altogether.
+> > 
+> > And then I think we can agree that if warning limits hae been documented
+> > as unimplemented for 20+ years, we can also just remove any other code
+> > that is related to this unimplemented feature.
 > 
+> Sounds fine to me. THe less untested, undefined legacy code with
+> custom user APIs we have to carry around the better. Remove it all
+> before someone starts poking at it with a sharp stick and finds a
+> zany zero-day....
+
+LOLYUP.
+
+Hey Catherine, are you interested in /removing/ the quota warning limit
+code from XFS?  Note: just the limits, not the actually issuance of
+quota warnings (xfs_quota_warn) nor the warning counter itself.
+
+I think a good place to start would be to remove the 'warn' field from
+struct xfs_quota_limits, and then remove code as necessary to fix all
+the compilation errors.  I think you can leave the actual warning
+counter itself (struct xfs_dquot_res.warnings) since it (roughly) tracks
+how many times we've sent a warning over netlink to ... wherever they
+go.
+
+--D
+
+> Cheers,
 > 
-> Thus:
-> 
-> - With teared write operations: 2 corruptions from ~800 simulated power
-> failures
-> 
-> - Without teared write operations: no corruptions from ~4000 simulated power
-> failures.
-
-Good to hear.
-
-> But:
-> 
-> I've checked the eMMC specification, and the spec allows that teared write
-> happen:
-
-Yes, most storage only guarantees that sector writes are atomic and
-so multi-sector writes have no guarantees of being written
-atomically.  IOWs, all storage technologies that currently exist are
-allowed to tear multi-sector writes.
-
-However, FUA writes are guaranteed to be whole on persistent storage
-regardless of size when the hardware signals completion. And any
-write that the hardware has signalled as complete before a cache
-flush is received is also guaranteed to be whole on persistent
-storage when the cache flush is signalled as complete by the
-hardware. These mechanisms provide protection against torn writes.
-
-IOWs, it's up to filesystems to guarantee data is on stable storage
-before they trust it fully. Filesystems are pretty good at using
-REQ_FLUSH, REQ_FUA and write completion ordering to ensure that
-anything they need whole and complete on stable storage is actually
-whole and complete.
-
-In the cases where torn writes occur because that haven't been
-covered by a FUA or cache flush guarantee (such as your test),
-filesystems need mechanisms in their metadata to detect such events.
-CRCs are the prime mechanism for this - that's what XFS uses, and it
-was XFS reporting a CRC failure when reading torn metadata that
-started this whole thread.
-
-> Is my understanding correct that XFS support neither eMMC nor NVM devices?
-> (unless there is a battery backup that exceeds the guarantees from the spec)
-
-Incorrect.
-
-They are supported just fine because flush/FUA semantics provide
-guarantees against torn writes in normal operation. IOWs, torn
-writes are something that almost *never* happen in real life, even
-when power fails suddenly. Despite this, XFS can detect it has
-occurred (because broken storage is all too common!), and if it
-can't recovery automatically, it will shut down and ask the user to
-correct the problem.
-
-BTRFS and ZFS can also detect torn writes, and if you use the
-(non-default) ext4 option "metadata_csum" it will also detect torn
-writes to metadata via CRC failures. There are other filesystems
-that can detect and correct torn writes, too.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
