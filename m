@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FAABC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 21:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1C47C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 21:21:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230192AbiCQVWj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Mar 2022 17:22:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48878 "EHLO
+        id S230193AbiCQVWq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Mar 2022 17:22:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230186AbiCQVWi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 17:22:38 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D428FDC2
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 14:21:20 -0700 (PDT)
+        with ESMTP id S230186AbiCQVWp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 17:22:45 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E41A15857B
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 14:21:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 90FCCB8200A
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 21:21:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3211FC340E9;
-        Thu, 17 Mar 2022 21:21:18 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 233A6B81F99
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 21:21:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7619C340E9;
+        Thu, 17 Mar 2022 21:21:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647552078;
-        bh=cDTgLB0AEoWwQgkpeG6E9njZZmjZtibAiYYCh0rV2z8=;
+        s=k20201202; t=1647552083;
+        bh=vuXTfwyMCXLwA4/53OsUr7WwO6LGZBU98yr+14z9zig=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=DERiDHMLXRAxhlLIOEtTVtXmA2qp8lZjPl1rcE3DFnqtnXRHkzsp5KvQUOsy7u1rL
-         J4P8qutC8lTQdVMMsCfNsRunaUHy6kXs75OE6L01V2VMDuJ+suoFAYcMP8amUftB6A
-         xKodxOOiuWj3CVHqnOgYosZuEWjB+dPO/FUVDnV7NYJL5LVJSj6LlHQSzV9bYN/JWG
-         xJ9PmYoz6tnRZweymVwl3FW6mGTEu5VwQfGXLfL297C6RixJ0HEB/p1lD3LhqxkNWM
-         fWqNnN8+KuIhCul51smFx4yF4cJthJCdLovoNbT6w5tLtaLba/LgzUmTDkZ6DZXjNb
-         CTfTlvK0v6h6g==
-Subject: [PATCH 4/6] xfs: fix infinite loop when reserving free block pool
+        b=lgf7R4gVFMbd/u2KianzsRq4gsaJr7aEOvAhMVlVkZSk9pIhRLSsW6nmWTDjqetSr
+         mWQ0IfYbU5guvtTqNunHDDj1oO+jLO5YpkRdU9Uf1gGo4KWl1RZdQueZRys8MVf4m0
+         yh5f8HA4VWLkgLrr1+Rm0O2EsyF7O7YZFH1sckGSD0gxYC773W6Z8goe6cf7qNoncu
+         hsBx1Q1c/NnvegtHm7JK8qiLdSRBpc/hWKlsruZldDVEzgnpjw/OJn+Aqis7UVRIHK
+         Vq6TOBYZgAkcwu9JV2WgIGF06b8ycZf+6RuyiP8pNquusUmFXTtBS2YU+bYYQb5jFW
+         iUti6jyUeH+Yw==
+Subject: [PATCH 5/6] xfs: don't report reserved bnobt space as available
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        bfoster@redhat.com, david@fromorbit.com
-Date:   Thu, 17 Mar 2022 14:21:17 -0700
-Message-ID: <164755207773.4194202.7639088962184690301.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com
+Date:   Thu, 17 Mar 2022 14:21:23 -0700
+Message-ID: <164755208338.4194202.6258724683699525828.stgit@magnolia>
 In-Reply-To: <164755205517.4194202.16256634362046237564.stgit@magnolia>
 References: <164755205517.4194202.16256634362046237564.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,54 +49,87 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Don't spin in an infinite loop trying to reserve blocks -- if we can't
-do it after 30 tries, we're racing with a nearly full filesystem, so
-just give up.
+On a modern filesystem, we don't allow userspace to allocate blocks for
+data storage from the per-AG space reservations, the user-controlled
+reservation pool that prevents ENOSPC in the middle of internal
+operations, or the internal per-AG set-aside that prevents ENOSPC.
+Since we now consider free space btree blocks as unavailable for
+allocation for data storage, we shouldn't report those blocks via statfs
+either.
 
-Cc: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_fsops.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_fsops.c |    3 +--
+ fs/xfs/xfs_mount.h |   13 +++++++++++++
+ fs/xfs/xfs_super.c |    4 +---
+ 3 files changed, 15 insertions(+), 5 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index b71799a3acd3..4076b9004077 100644
+index 4076b9004077..b42b8bc55729 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -379,6 +379,7 @@ xfs_reserve_blocks(
- 	int64_t			fdblks_delta = 0;
- 	uint64_t		request;
- 	int64_t			free;
-+	unsigned int		tries;
- 	int			error = 0;
+@@ -346,8 +346,7 @@ xfs_fs_counts(
+ {
+ 	cnt->allocino = percpu_counter_read_positive(&mp->m_icount);
+ 	cnt->freeino = percpu_counter_read_positive(&mp->m_ifree);
+-	cnt->freedata = percpu_counter_read_positive(&mp->m_fdblocks) -
+-						mp->m_alloc_set_aside;
++	cnt->freedata = xfs_fdblocks_available_fast(mp);
  
- 	/* If inval is null, report current values and return */
-@@ -430,9 +431,16 @@ xfs_reserve_blocks(
- 	 * If the request is larger than the current reservation, reserve the
- 	 * blocks before we update the reserve counters. Sample m_fdblocks and
- 	 * perform a partial reservation if the request exceeds free space.
-+	 *
-+	 * The loop body estimates how many blocks it can request from fdblocks
-+	 * to stash in the reserve pool.  This is a classic TOCTOU race since
-+	 * fdblocks updates are not always coordinated via m_sb_lock.  We also
-+	 * cannot tell if @free remaining unchanged between iterations is due
-+	 * to an idle system or freed blocks being consumed immediately, so
-+	 * we'll try a finite number of times to satisfy the request.
- 	 */
- 	error = -ENOSPC;
--	do {
-+	for (tries = 0; tries < 30 && error == -ENOSPC; tries++) {
- 		/*
- 		 * The reservation pool cannot take space that xfs_mod_fdblocks
- 		 * will not give us.
-@@ -462,7 +470,7 @@ xfs_reserve_blocks(
- 		spin_unlock(&mp->m_sb_lock);
- 		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
- 		spin_lock(&mp->m_sb_lock);
--	} while (error == -ENOSPC);
-+	}
+ 	spin_lock(&mp->m_sb_lock);
+ 	cnt->freertx = mp->m_sb.sb_frextents;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 998b54c3c454..74e9b8558162 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -508,6 +508,19 @@ xfs_fdblocks_available(
+ 	return free;
+ }
  
- 	/*
- 	 * Update the reserve counters if blocks have been successfully
++/* Same as above, but don't take the slow path. */
++static inline int64_t
++xfs_fdblocks_available_fast(
++	struct xfs_mount	*mp)
++{
++	int64_t			free;
++
++	free = percpu_counter_read_positive(&mp->m_fdblocks);
++	free -= mp->m_alloc_set_aside;
++	free -= atomic64_read(&mp->m_allocbt_blks);
++	return free;
++}
++
+ extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
+ 				 bool reserved);
+ extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index d84714e4e46a..7b6c147e63c4 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -791,7 +791,6 @@ xfs_fs_statfs(
+ 	uint64_t		fakeinos, id;
+ 	uint64_t		icount;
+ 	uint64_t		ifree;
+-	uint64_t		fdblocks;
+ 	xfs_extlen_t		lsize;
+ 	int64_t			ffree;
+ 
+@@ -806,7 +805,6 @@ xfs_fs_statfs(
+ 
+ 	icount = percpu_counter_sum(&mp->m_icount);
+ 	ifree = percpu_counter_sum(&mp->m_ifree);
+-	fdblocks = percpu_counter_sum(&mp->m_fdblocks);
+ 
+ 	spin_lock(&mp->m_sb_lock);
+ 	statp->f_bsize = sbp->sb_blocksize;
+@@ -815,7 +813,7 @@ xfs_fs_statfs(
+ 	spin_unlock(&mp->m_sb_lock);
+ 
+ 	/* make sure statp->f_bfree does not underflow */
+-	statp->f_bfree = max_t(int64_t, fdblocks - mp->m_alloc_set_aside, 0);
++	statp->f_bfree = max_t(int64_t, xfs_fdblocks_available(mp), 0);
+ 	statp->f_bavail = statp->f_bfree;
+ 
+ 	fakeinos = XFS_FSB_TO_INO(mp, statp->f_bfree);
 
