@@ -2,101 +2,208 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E188AC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 06:05:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F477C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 06:05:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229591AbiCQGGf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229849AbiCQGGf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 17 Mar 2022 02:06:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55242 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229624AbiCQGG3 (ORCPT
+        with ESMTP id S229788AbiCQGG3 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 02:06:29 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 88AD282D3B
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 22:39:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id ACEF8132E95
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 22:39:12 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D05A910E4899
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D5DAB10E4844
         for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 16:39:09 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nUiqq-006QoL-W6
+        id 1nUiqr-006Qod-6B
         for linux-xfs@vger.kernel.org; Thu, 17 Mar 2022 16:39:09 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nUiqq-000giD-Un
+        id 1nUiqr-000gie-5A
         for linux-xfs@vger.kernel.org;
-        Thu, 17 Mar 2022 16:39:08 +1100
+        Thu, 17 Mar 2022 16:39:09 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/7 v4] xfs: log recovery fixes
-Date:   Thu, 17 Mar 2022 16:39:00 +1100
-Message-Id: <20220317053907.164160-1-david@fromorbit.com>
+Subject: [PATCH 6/7] xfs: AIL should be log centric
+Date:   Thu, 17 Mar 2022 16:39:06 +1100
+Message-Id: <20220317053907.164160-7-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220317053907.164160-1-david@fromorbit.com>
+References: <20220317053907.164160-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6232c97d
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6232c97e
         a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=AmCRXBs-6vWbMaXcZSAA:9 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8 a=VwQbUJbxAAAA:8
+        a=XSbMu-zJpuptHPn39gwA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Willy reported generic/530 had started hanging on his test machines
-and I've tried to reproduce the problem he reported. While I haven't
-reproduced the exact hang he's been having, I've found a couple of
-others while running g/530 in a tight loop on a couple of test
-machines.
+From: Dave Chinner <dchinner@redhat.com>
 
-The first 3 patches are defensive fixes - the log worker acts as a
-watchdog, and the issues in patch 2 and 3 were triggered on my
-testing of g/530 and lead to 30s delays that the log worker watchdog
-caught. Without the watchdog, these may actually be deadlock
-triggers.
+The AIL operates purely on log items, so it is a log centric
+subsystem. Divorce it from the xfs_mount and instead have it pass
+around xlog pointers.
 
-The 4th patch is the one that fixes the problem Willy reported.
-It is a regression from conversion of the AIL pushing to use
-non-blocking CIL flushes. It is unknown why this suddenly started
-showing up on Willy's test machine right now, and why only on that
-machine, but it is clearly a problem. This patch catches the state
-that leads to the deadlock and breaks it with an immediate log
-force to flush any pending iclogs.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_trans.c      |  2 +-
+ fs/xfs/xfs_trans_ail.c  | 26 +++++++++++++-------------
+ fs/xfs/xfs_trans_priv.h |  3 ++-
+ 3 files changed, 16 insertions(+), 15 deletions(-)
 
-In testing these patches, I found generic/388 was causing frequent
-failures with recovery failing because inode clusters were being
-found uninitialised in log recovery. That turns out to be a zero day
-race condition in the forced shutdown code, and that is fixed over
-the patches 5-7. In short, we can't abort writeback of log items
-before we shut down the log (because that's separate to -mount-
-shutdown) as removing aborted log items can move the tail of the log
-forward and that can be propagated to the on-disk log and corrupt it
-if timing is just right.
-
-Fixing this takes failures of g/388 from 1 in 5-10 runs to 1 in 100
-runs. There is a change in patch 7 that I mention "I'm not sure how
-this can happen here, but it's handled elsewhere like this" that
-avoids a double remove of an aborted inode from the AIL that results
-in an ASSERT failure. I *think* I now know how that can occur, but
-fixing it is another set of patches, and it may be a recent
-regression rather than a long standing issue.
-
-Version 4:
-- rebase on 5.17-rc8
-- commit message fixups.
-- more comments for non-obvious xlog_is_shutdown() use cases.
-
-Version 3:
-- https://lore.kernel.org/linux-xfs/20220315064241.3133751-1-david@fromorbit.com/
-- added fixes for generic/388 failures.
-
-Version 2:
-- https://lore.kernel.org/linux-xfs/20220309015512.2648074-1-david@fromorbit.com/
-- updated to 5.17-rc7
-- tested by Willy.
-
-Version 1:
-- https://lore.kernel.org/linux-xfs/20220307053252.2534616-1-david@fromorbit.com/
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index dbd83eff1756..36a10298742d 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -775,7 +775,7 @@ xfs_trans_committed_bulk(
+ 		 * object into the AIL as we are in a shutdown situation.
+ 		 */
+ 		if (aborted) {
+-			ASSERT(xfs_is_shutdown(ailp->ail_mount));
++			ASSERT(xlog_is_shutdown(ailp->ail_log));
+ 			if (lip->li_ops->iop_unpin)
+ 				lip->li_ops->iop_unpin(lip, 1);
+ 			continue;
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 1b52952097c1..c2ccb98c7bcd 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -398,7 +398,7 @@ xfsaild_push_item(
+ 	 * If log item pinning is enabled, skip the push and track the item as
+ 	 * pinned. This can help induce head-behind-tail conditions.
+ 	 */
+-	if (XFS_TEST_ERROR(false, ailp->ail_mount, XFS_ERRTAG_LOG_ITEM_PIN))
++	if (XFS_TEST_ERROR(false, ailp->ail_log->l_mp, XFS_ERRTAG_LOG_ITEM_PIN))
+ 		return XFS_ITEM_PINNED;
+ 
+ 	/*
+@@ -418,7 +418,7 @@ static long
+ xfsaild_push(
+ 	struct xfs_ail		*ailp)
+ {
+-	xfs_mount_t		*mp = ailp->ail_mount;
++	struct xfs_mount	*mp = ailp->ail_log->l_mp;
+ 	struct xfs_ail_cursor	cur;
+ 	struct xfs_log_item	*lip;
+ 	xfs_lsn_t		lsn;
+@@ -443,7 +443,7 @@ xfsaild_push(
+ 		ailp->ail_log_flush = 0;
+ 
+ 		XFS_STATS_INC(mp, xs_push_ail_flush);
+-		xlog_cil_flush(mp->m_log);
++		xlog_cil_flush(ailp->ail_log);
+ 	}
+ 
+ 	spin_lock(&ailp->ail_lock);
+@@ -632,7 +632,7 @@ xfsaild(
+ 			 * opportunity to release such buffers from the queue.
+ 			 */
+ 			ASSERT(list_empty(&ailp->ail_buf_list) ||
+-			       xfs_is_shutdown(ailp->ail_mount));
++			       xlog_is_shutdown(ailp->ail_log));
+ 			xfs_buf_delwri_cancel(&ailp->ail_buf_list);
+ 			break;
+ 		}
+@@ -695,7 +695,7 @@ xfs_ail_push(
+ 	struct xfs_log_item	*lip;
+ 
+ 	lip = xfs_ail_min(ailp);
+-	if (!lip || xfs_is_shutdown(ailp->ail_mount) ||
++	if (!lip || xlog_is_shutdown(ailp->ail_log) ||
+ 	    XFS_LSN_CMP(threshold_lsn, ailp->ail_target) <= 0)
+ 		return;
+ 
+@@ -751,7 +751,7 @@ xfs_ail_update_finish(
+ 	struct xfs_ail		*ailp,
+ 	xfs_lsn_t		old_lsn) __releases(ailp->ail_lock)
+ {
+-	struct xfs_mount	*mp = ailp->ail_mount;
++	struct xlog		*log = ailp->ail_log;
+ 
+ 	/* if the tail lsn hasn't changed, don't do updates or wakeups. */
+ 	if (!old_lsn || old_lsn == __xfs_ail_min_lsn(ailp)) {
+@@ -759,13 +759,13 @@ xfs_ail_update_finish(
+ 		return;
+ 	}
+ 
+-	if (!xfs_is_shutdown(mp))
+-		xlog_assign_tail_lsn_locked(mp);
++	if (!xlog_is_shutdown(log))
++		xlog_assign_tail_lsn_locked(log->l_mp);
+ 
+ 	if (list_empty(&ailp->ail_head))
+ 		wake_up_all(&ailp->ail_empty);
+ 	spin_unlock(&ailp->ail_lock);
+-	xfs_log_space_wake(mp);
++	xfs_log_space_wake(log->l_mp);
+ }
+ 
+ /*
+@@ -873,13 +873,13 @@ xfs_trans_ail_delete(
+ 	int			shutdown_type)
+ {
+ 	struct xfs_ail		*ailp = lip->li_ailp;
+-	struct xfs_mount	*mp = ailp->ail_mount;
++	struct xfs_mount	*mp = ailp->ail_log->l_mp;
+ 	xfs_lsn_t		tail_lsn;
+ 
+ 	spin_lock(&ailp->ail_lock);
+ 	if (!test_bit(XFS_LI_IN_AIL, &lip->li_flags)) {
+ 		spin_unlock(&ailp->ail_lock);
+-		if (shutdown_type && !xfs_is_shutdown(mp)) {
++		if (shutdown_type && !xlog_is_shutdown(ailp->ail_log)) {
+ 			xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
+ 	"%s: attempting to delete a log item that is not in the AIL",
+ 					__func__);
+@@ -904,7 +904,7 @@ xfs_trans_ail_init(
+ 	if (!ailp)
+ 		return -ENOMEM;
+ 
+-	ailp->ail_mount = mp;
++	ailp->ail_log = mp->m_log;
+ 	INIT_LIST_HEAD(&ailp->ail_head);
+ 	INIT_LIST_HEAD(&ailp->ail_cursors);
+ 	spin_lock_init(&ailp->ail_lock);
+@@ -912,7 +912,7 @@ xfs_trans_ail_init(
+ 	init_waitqueue_head(&ailp->ail_empty);
+ 
+ 	ailp->ail_task = kthread_run(xfsaild, ailp, "xfsaild/%s",
+-			ailp->ail_mount->m_super->s_id);
++				mp->m_super->s_id);
+ 	if (IS_ERR(ailp->ail_task))
+ 		goto out_free_ailp;
+ 
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 3004aeac9110..f0d79a9050ba 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -6,6 +6,7 @@
+ #ifndef __XFS_TRANS_PRIV_H__
+ #define	__XFS_TRANS_PRIV_H__
+ 
++struct xlog;
+ struct xfs_log_item;
+ struct xfs_mount;
+ struct xfs_trans;
+@@ -50,7 +51,7 @@ struct xfs_ail_cursor {
+  * Eventually we need to drive the locking in here as well.
+  */
+ struct xfs_ail {
+-	struct xfs_mount	*ail_mount;
++	struct xlog		*ail_log;
+ 	struct task_struct	*ail_task;
+ 	struct list_head	ail_head;
+ 	xfs_lsn_t		ail_target;
+-- 
+2.35.1
 
