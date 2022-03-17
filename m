@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 779DBC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 21:21:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21EE0C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 21:21:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230184AbiCQVWW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Mar 2022 17:22:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48190 "EHLO
+        id S230183AbiCQVW0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Mar 2022 17:22:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230183AbiCQVWV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 17:22:21 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03D32186179
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 14:21:04 -0700 (PDT)
+        with ESMTP id S230190AbiCQVWZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 17:22:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 285811890D1
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 14:21:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A574CB81F99
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 21:21:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67812C340E9;
-        Thu, 17 Mar 2022 21:21:01 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 929EA61A07
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 21:21:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01B60C340E9;
+        Thu, 17 Mar 2022 21:21:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647552061;
-        bh=mz60quR36QCxaFCzTygXjjRH/zGDNTXduaNODNRbFuI=;
+        s=k20201202; t=1647552067;
+        bh=EE/I9395StaL1HrMX28jI9S6m80undMfNIyvXXXn9m0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=sK2NrTSlWlPJbxwIJxzeUN7PIOmOIQQwMOFVlwL6olcg3eoCBEC0exOJMW0vDypSO
-         acpCPaZPa79eH73zbMnltm+5Mbz5A7ji2sxG6qb2Xvwa3JOE87RkU9dCK7gEkyMZPw
-         I5xuhoQo80I0b6DTunBMk10yjn5tT/dHRY0Dz48BX7D8l9HvaqJlVfP+CkFrvWZX9a
-         wiOyV7DZvOsr2fISztuiBvbPrnetIZQ9qLi1w+BoSM5ugua83rVf89N2CSYOlPa+E6
-         Ij3v6nTS5aH3zqprylUfG8FmWi7PmBn5Jj8egRxCU8cdjP7MnPEyV4h9qQBigSEfB8
-         S04kINJIiZ0pw==
-Subject: [PATCH 1/6] xfs: document the XFS_ALLOC_AGFL_RESERVE constant
+        b=vKQqP4RfcnhDe/ruovV3v73fQFTq3svUyNZatIXMhAFGvf/lm+1keDc9tzOijjcnR
+         wmZ+QwbMzWJmd/nnVHfaT8uQzKHJ/NuaV9ZjMkflZjUh6po6ou9bkGX/AVVJUDEoFx
+         gdjffaB5KVEO4u06AMGaVZxn17pBcCWuHr4KzIqUYQRyeZXkOIapKpuOOzxKYVDKG+
+         y+XgzR2KVkoo0xVWj209qf1okch00zXRK4EYrFkDlkBgFA2eB2YV1cD8AM1pLQeE2F
+         qFKou6eSnDD+M7Ng90Q1rjEd62RdWw/AgiUG3tYd1yio5t9NLAz3HEmCR736jI/SPw
+         7CzRyp3wJv/yA==
+Subject: [PATCH 2/6] xfs: actually set aside enough space to handle a bmbt
+ split
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com
-Date:   Thu, 17 Mar 2022 14:21:01 -0700
-Message-ID: <164755206098.4194202.17244831596965430593.stgit@magnolia>
+Date:   Thu, 17 Mar 2022 14:21:06 -0700
+Message-ID: <164755206657.4194202.6609453202119841910.stgit@magnolia>
 In-Reply-To: <164755205517.4194202.16256634362046237564.stgit@magnolia>
 References: <164755205517.4194202.16256634362046237564.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,86 +50,89 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, we use this undocumented macro to encode the minimum number
-of blocks needed to replenish a completely empty AGFL when an AG is
-nearly full.  This has lead to confusion on the part of the maintainers,
-so let's document what the value actually means, and move it to
-xfs_alloc.c since it's not used outside of that module.
+The comment for xfs_alloc_set_aside indicates that we want to set aside
+enough space to handle a bmap btree split.  The code, unfortunately,
+hardcodes this to 4.
+
+This is incorrect, since file bmap btrees can be taller than that:
+
+xfs_db> btheight bmapbt -n 4294967296 -b 512
+bmapbt: worst case per 512-byte block: 13 records (leaf) / 13 keyptrs (node)
+level 0: 4294967296 records, 330382100 blocks
+level 1: 330382100 records, 25414008 blocks
+level 2: 25414008 records, 1954924 blocks
+level 3: 1954924 records, 150379 blocks
+level 4: 150379 records, 11568 blocks
+level 5: 11568 records, 890 blocks
+level 6: 890 records, 69 blocks
+level 7: 69 records, 6 blocks
+level 8: 6 records, 1 block
+9 levels, 357913945 blocks total
+
+Fix this by using the actual bmap btree maxlevel value for the
+set-aside.  We subtract one because the root is always in the inode and
+hence never splits.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   23 ++++++++++++++++++-----
- fs/xfs/libxfs/xfs_alloc.h |    1 -
- 2 files changed, 18 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c |    7 +++++--
+ fs/xfs/libxfs/xfs_sb.c    |    2 --
+ fs/xfs/xfs_mount.c        |    7 +++++++
+ 3 files changed, 12 insertions(+), 4 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 353e53b892e6..b0678e96ce61 100644
+index b0678e96ce61..747b3e45303f 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -82,6 +82,19 @@ xfs_prealloc_blocks(
- }
- 
- /*
-+ * The number of blocks per AG that we withhold from xfs_mod_fdblocks to
-+ * guarantee that we can refill the AGFL prior to allocating space in a nearly
-+ * full AG.  We require two blocks per free space btree because free space
-+ * btrees shrink to a single block as the AG fills up, and any allocation can
-+ * cause a btree split.  The rmap btree uses a per-AG reservation to withhold
-+ * space from xfs_mod_fdblocks, so we do not account for that here.
-+ */
-+#define XFS_ALLOCBT_AGFL_RESERVE	4
-+
-+/*
-+ * Compute the number of blocks that we set aside to guarantee the ability to
-+ * refill the AGFL and handle a full bmap btree split.
-+ *
-  * In order to avoid ENOSPC-related deadlock caused by out-of-order locking of
-  * AGF buffer (PV 947395), we place constraints on the relationship among
-  * actual allocations for data blocks, freelist blocks, and potential file data
-@@ -93,14 +106,14 @@ xfs_prealloc_blocks(
-  * extents need to be actually allocated. To get around this, we explicitly set
+@@ -107,13 +107,16 @@ xfs_prealloc_blocks(
   * aside a few blocks which will not be reserved in delayed allocation.
   *
-- * We need to reserve 4 fsbs _per AG_ for the freelist and 4 more to handle a
-- * potential split of the file's bmap btree.
-+ * For each AG, we need to reserve enough blocks to replenish a totally empty
-+ * AGFL and 4 more to handle a potential split of the file's bmap btree.
+  * For each AG, we need to reserve enough blocks to replenish a totally empty
+- * AGFL and 4 more to handle a potential split of the file's bmap btree.
++ * AGFL and enough to handle a potential split of a file's bmap btree.
   */
  unsigned int
  xfs_alloc_set_aside(
  	struct xfs_mount	*mp)
  {
--	return mp->m_sb.sb_agcount * (XFS_ALLOC_AGFL_RESERVE + 4);
-+	return mp->m_sb.sb_agcount * (XFS_ALLOCBT_AGFL_RESERVE + 4);
+-	return mp->m_sb.sb_agcount * (XFS_ALLOCBT_AGFL_RESERVE + 4);
++	unsigned int		bmbt_splits;
++
++	bmbt_splits = max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]) - 1;
++	return mp->m_sb.sb_agcount * (XFS_ALLOCBT_AGFL_RESERVE + bmbt_splits);
  }
  
  /*
-@@ -124,12 +137,12 @@ xfs_alloc_ag_max_usable(
- 	unsigned int		blocks;
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index f4e84aa1d50a..b823beb944e4 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -887,8 +887,6 @@ xfs_sb_mount_common(
+ 	mp->m_refc_mnr[1] = mp->m_refc_mxr[1] / 2;
  
- 	blocks = XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)); /* ag headers */
--	blocks += XFS_ALLOC_AGFL_RESERVE;
-+	blocks += XFS_ALLOCBT_AGFL_RESERVE;
- 	blocks += 3;			/* AGF, AGI btree root blocks */
- 	if (xfs_has_finobt(mp))
- 		blocks++;		/* finobt root block */
- 	if (xfs_has_rmapbt(mp))
--		blocks++; 		/* rmap root block */
-+		blocks++;		/* rmap root block */
- 	if (xfs_has_reflink(mp))
- 		blocks++;		/* refcount root block */
+ 	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
+-	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+-	mp->m_ag_max_usable = xfs_alloc_ag_max_usable(mp);
+ }
  
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 1c14a0b1abea..d4c057b764f9 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -88,7 +88,6 @@ typedef struct xfs_alloc_arg {
- #define XFS_ALLOC_NOBUSY		(1 << 2)/* Busy extents not allowed */
+ /*
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bed73e8002a5..9336176dc706 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -652,6 +652,13 @@ xfs_mountfs(
  
- /* freespace limit calculations */
--#define XFS_ALLOC_AGFL_RESERVE	4
- unsigned int xfs_alloc_set_aside(struct xfs_mount *mp);
- unsigned int xfs_alloc_ag_max_usable(struct xfs_mount *mp);
+ 	xfs_agbtree_compute_maxlevels(mp);
  
++	/*
++	 * Compute the amount of space to set aside to handle btree splits now
++	 * that we have calculated the btree maxlevels.
++	 */
++	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
++	mp->m_ag_max_usable = xfs_alloc_ag_max_usable(mp);
++
+ 	/*
+ 	 * Check if sb_agblocks is aligned at stripe boundary.  If sb_agblocks
+ 	 * is NOT aligned turn off m_dalign since allocator alignment is within
 
