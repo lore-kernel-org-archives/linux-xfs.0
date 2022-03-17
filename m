@@ -2,184 +2,434 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE712C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 16:09:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83550C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 16:11:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236084AbiCQQLK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Mar 2022 12:11:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52520 "EHLO
+        id S236354AbiCQQMd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Mar 2022 12:12:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230243AbiCQQLJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 12:11:09 -0400
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE85E9C92
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 09:09:52 -0700 (PDT)
-Received: by mail-ej1-x62b.google.com with SMTP id r13so11758491ejd.5
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 09:09:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=colorfullife-com.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=9S1dj2ozMzQZPZTJBZ9QOWNEopJf5uJI85XYX/uBfag=;
-        b=182KBuCWak8O+g8Rl6RNSgeEqNHI9LYnjdqg+VdV08kK4IlAyJV/U7NHQyAuwGDQiz
-         EEtE4rSTsHlcAxLqFmkjFozt/TBsjZe9VJbxdkxBmBQyxpst/YgP6h/5m01AlrK80oqN
-         HnAX51X1P9KWI8NT6YvI1lDXksp2id77VYTAZ7oAmyZLzG8c8BLn/eWQhKfQVfaWnSis
-         S/9G5Oitc0PplQwYbXUYk9XjEbt70/K2mh6PzXpFxyHpRzyWXzFZFGqrJCuX416WfjwP
-         a86SEfYJO3h1NOKdXltk1zymLH+Z2k0iYpMZ+QVcmP8kP2msWpkl+QQGDuO/mtC4L0iv
-         mbmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=9S1dj2ozMzQZPZTJBZ9QOWNEopJf5uJI85XYX/uBfag=;
-        b=P+7eBsd9Ju1Ew8SDmo2/w2dRBLJ57rDcXg28XfjxhNjeDubdBahdT7ySFFwVE7Nx7H
-         yagO6ly9mYY5AjuEKgR1SL1pgISxzaHewwW4K5ng4DSuTB8RN4cZjLqRZGlrF0AyoX0j
-         DHhxo3sh9/qtDDDuWRkoKJKJ3Qy/zEE2bWJ7peYkDo63KkvVbOA/97UelVrQJsF7/6Gm
-         78x2suS7YXVEL+8u8ivC9jXHRlJba1TVZgaP4CKc2YJjQ+XYD9njVzMbkLEC3Z0P1+l2
-         gkmrASCDcrYKGExWvd2QKybZlzdEe47LeQrbnpjNA04hVOA6JTd6MIwx+L5waT7GKjI5
-         qqKQ==
-X-Gm-Message-State: AOAM531+wwZl3UVz0+OwuBe2F0+HQPlko03HGTqXGuVs8vmqpNc7pg5O
-        8+oHuiWGLyIfRY1ny0vF8cdICw==
-X-Google-Smtp-Source: ABdhPJzNaMWzre8p1B2ALVIBRlMiHcj9iKefth7xRNPC6dN4FEpILFFbGqNS+Jr1vu+vqLONASYdtg==
-X-Received: by 2002:a17:906:6144:b0:6cf:bb2e:a2e1 with SMTP id p4-20020a170906614400b006cfbb2ea2e1mr5139031ejl.299.1647533391104;
-        Thu, 17 Mar 2022 09:09:51 -0700 (PDT)
-Received: from ?IPV6:2003:d9:970a:1500:3685:1631:4fc4:d41f? (p200300d9970a1500368516314fc4d41f.dip0.t-ipconnect.de. [2003:d9:970a:1500:3685:1631:4fc4:d41f])
-        by smtp.googlemail.com with ESMTPSA id x12-20020a50d9cc000000b0040f70fe78f3sm2963091edj.36.2022.03.17.09.09.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Mar 2022 09:09:50 -0700 (PDT)
-Message-ID: <fb6facca-9028-8249-470c-af75318e9fb7@colorfullife.com>
-Date:   Thu, 17 Mar 2022 17:09:49 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.2
-Subject: Re: Metadata CRC error detected at
- xfs_dir3_block_read_verify+0x9e/0xc0 [xfs], xfs_dir3_block block 0x86f58
-Content-Language: en-US
+        with ESMTP id S236365AbiCQQMb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 12:12:31 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABE00214F91
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 09:11:13 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 218F460F78
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 16:11:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F2A6C340E9;
+        Thu, 17 Mar 2022 16:11:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647533472;
+        bh=jKv17c/lKTF24qnLfH8/0C0qkJCVfcwSIfWQ+20R41g=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=DVLzKOyga83JBSeI9IvFLDG8zZzO5M5XK1ggiGUtycgINlFLhCF3n+YwZmUnjedE8
+         7zu+uVrJuh3k/iLbeDv0babBscy1g3l2rQd6lS8jd2ImCZA2QV2kJqG0ktHOautxQh
+         1FVHz4fH6usQR3v1ky/y2uw+6Sca5RHA2Mk6W4+7CQeImEOfAyjy35i5grhf3Kq/UU
+         8im7DEGJ9vyTakBKXnJluGz687EQbCtka7g+/KtZsWB4auuT4a3GtScn04g7aQXNX4
+         D2scs6wBDP2SVZaPN/KsjdqRnh4VMMNWW/hBcuZ0ESlJR40299M+qgYV/NQ4K0yk4y
+         ixoyhcYRK3pNQ==
+Date:   Thu, 17 Mar 2022 09:11:12 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org,
-        "Spraul Manfred (XC/QMM21-CT)" <Manfred.Spraul@de.bosch.com>
-References: <613af505-7646-366c-428a-b64659e1f7cf@colorfullife.com>
- <20220313224624.GJ3927073@dread.disaster.area>
- <8024317e-07be-aa3d-9aa3-2f835aaa1278@colorfullife.com>
- <3242ad20-0039-2579-b125-b7a9447a7230@colorfullife.com>
- <20220317024705.GY3927073@dread.disaster.area>
- <20220317030828.GZ3927073@dread.disaster.area>
- <21c13283-2a9f-4978-25e4-228e44ab74e6@colorfullife.com>
- <20220317082411.GA3927073@dread.disaster.area>
-From:   Manfred Spraul <manfred@colorfullife.com>
-In-Reply-To: <20220317082411.GA3927073@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/7] xfs: xfs_is_shutdown vs xlog_is_shutdown cage fight
+Message-ID: <20220317161112.GB8224@magnolia>
+References: <20220317053907.164160-1-david@fromorbit.com>
+ <20220317053907.164160-8-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220317053907.164160-8-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+On Thu, Mar 17, 2022 at 04:39:07PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> I've been chasing a recent resurgence in generic/388 recovery
+> failure and/or corruption events. The events have largely been
+> uninitialised inode chunks being tripped over in log recovery
+> such as:
+> 
+>  XFS (pmem1): User initiated shutdown received.
+>  pmem1: writeback error on inode 12621949, offset 1019904, sector 12968096
+>  XFS (pmem1): Log I/O Error (0x6) detected at xfs_fs_goingdown+0xa3/0xf0 (fs/xfs/xfs_fsops.c:500).  Shutting down filesystem.
+>  XFS (pmem1): Please unmount the filesystem and rectify the problem(s)
+>  XFS (pmem1): Unmounting Filesystem
+>  XFS (pmem1): Mounting V5 Filesystem
+>  XFS (pmem1): Starting recovery (logdev: internal)
+>  XFS (pmem1): bad inode magic/vsn daddr 8723584 #0 (magic=1818)
+>  XFS (pmem1): Metadata corruption detected at xfs_inode_buf_verify+0x180/0x190, xfs_inode block 0x851c80 xfs_inode_buf_verify
+>  XFS (pmem1): Unmount and run xfs_repair
+>  XFS (pmem1): First 128 bytes of corrupted metadata buffer:
+>  00000000: 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18  ................
+>  00000010: 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18  ................
+>  00000020: 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18  ................
+>  00000030: 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18  ................
+>  00000040: 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18  ................
+>  00000050: 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18  ................
+>  00000060: 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18  ................
+>  00000070: 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18 18  ................
+>  XFS (pmem1): metadata I/O error in "xlog_recover_items_pass2+0x52/0xc0" at daddr 0x851c80 len 32 error 117
+>  XFS (pmem1): log mount/recovery failed: error -117
+>  XFS (pmem1): log mount failed
+> 
+> There have been isolated random other issues, too - xfs_repair fails
+> because it finds some corruption in symlink blocks, rmap
+> inconsistencies, etc - but they are nowhere near as common as the
+> uninitialised inode chunk failure.
+> 
+> The problem has clearly happened at runtime before recovery has run;
+> I can see the ICREATE log item in the log shortly before the
+> actively recovered range of the log. This means the ICREATE was
+> definitely created and written to the log, but for some reason the
+> tail of the log has been moved past the ordered buffer log item that
+> tracks INODE_ALLOC buffers and, supposedly, prevents the tail of the
+> log moving past the ICREATE log item before the inode chunk buffer
+> is written to disk.
+> 
+> Tracing the fsstress processes that are running when the filesystem
+> shut down immediately pin-pointed the problem:
+> 
+> user shutdown marks xfs_mount as shutdown
+> 
+>          godown-213341 [008]  6398.022871: console:              [ 6397.915392] XFS (pmem1): User initiated shutdown received.
+> .....
+> 
+> aild tries to push ordered inode cluster buffer
+> 
+>   xfsaild/pmem1-213314 [001]  6398.022974: xfs_buf_trylock:      dev 259:1 daddr 0x851c80 bbcount 0x20 hold 16 pincount 0 lock 0 flags DONE|INODES|PAGES caller xfs_inode_item_push+0x8e
+>   xfsaild/pmem1-213314 [001]  6398.022976: xfs_ilock_nowait:     dev 259:1 ino 0x851c80 flags ILOCK_SHARED caller xfs_iflush_cluster+0xae
+> 
+> xfs_iflush_cluster() checks xfs_is_shutdown(), returns true,
+> calls xfs_iflush_abort() to kill writeback of the inode.
+> Inode is removed from AIL, drops cluster buffer reference.
+> 
+>   xfsaild/pmem1-213314 [001]  6398.022977: xfs_ail_delete:       dev 259:1 lip 0xffff88880247ed80 old lsn 7/20344 new lsn 7/21000 type XFS_LI_INODE flags IN_AIL
+>   xfsaild/pmem1-213314 [001]  6398.022978: xfs_buf_rele:         dev 259:1 daddr 0x851c80 bbcount 0x20 hold 17 pincount 0 lock 0 flags DONE|INODES|PAGES caller xfs_iflush_abort+0xd7
+> 
+> .....
+> 
+> All inodes on cluster buffer are aborted, then the cluster buffer
+> itself is aborted and removed from the AIL *without writeback*:
+> 
+> xfsaild/pmem1-213314 [001]  6398.023011: xfs_buf_error_relse:  dev 259:1 daddr 0x851c80 bbcount 0x20 hold 2 pincount 0 lock 0 flags ASYNC|DONE|STALE|INODES|PAGES caller xfs_buf_ioend_fail+0x33
+>    xfsaild/pmem1-213314 [001]  6398.023012: xfs_ail_delete:       dev 259:1 lip 0xffff8888053efde8 old lsn 7/20344 new lsn 7/20344 type XFS_LI_BUF flags IN_AIL
+> 
+> The inode buffer was at 7/20344 when it was removed from the AIL.
+> 
+>    xfsaild/pmem1-213314 [001]  6398.023012: xfs_buf_item_relse:   dev 259:1 daddr 0x851c80 bbcount 0x20 hold 2 pincount 0 lock 0 flags ASYNC|DONE|STALE|INODES|PAGES caller xfs_buf_item_done+0x31
+>    xfsaild/pmem1-213314 [001]  6398.023012: xfs_buf_rele:         dev 259:1 daddr 0x851c80 bbcount 0x20 hold 2 pincount 0 lock 0 flags ASYNC|DONE|STALE|INODES|PAGES caller xfs_buf_item_relse+0x39
+> 
+> .....
+> 
+> Userspace is still running, doing stuff. an fsstress process runs
+> syncfs() or sync() and we end up in sync_fs_one_sb() which issues
+> a log force. This pushes on the CIL:
+> 
+>         fsstress-213322 [001]  6398.024430: xfs_fs_sync_fs:       dev 259:1 m_features 0x20000000019ff6e9 opstate (clean|shutdown|inodegc|blockgc) s_flags 0x70810000 caller sync_fs_one_sb+0x26
+>         fsstress-213322 [001]  6398.024430: xfs_log_force:        dev 259:1 lsn 0x0 caller xfs_fs_sync_fs+0x82
+>         fsstress-213322 [001]  6398.024430: xfs_log_force:        dev 259:1 lsn 0x5f caller xfs_log_force+0x7c
+>            <...>-194402 [001]  6398.024467: kmem_alloc:           size 176 flags 0x14 caller xlog_cil_push_work+0x9f
+> 
+> And the CIL fills up iclogs with pending changes. This picks up
+> the current tail from the AIL:
+> 
+>            <...>-194402 [001]  6398.024497: xlog_iclog_get_space: dev 259:1 state XLOG_STATE_ACTIVE refcnt 1 offset 0 lsn 0x0 flags  caller xlog_write+0x149
+>            <...>-194402 [001]  6398.024498: xlog_iclog_switch:    dev 259:1 state XLOG_STATE_ACTIVE refcnt 1 offset 0 lsn 0x700005408 flags  caller xlog_state_get_iclog_space+0x37e
+>            <...>-194402 [001]  6398.024521: xlog_iclog_release:   dev 259:1 state XLOG_STATE_WANT_SYNC refcnt 1 offset 32256 lsn 0x700005408 flags  caller xlog_write+0x5f9
+>            <...>-194402 [001]  6398.024522: xfs_log_assign_tail_lsn: dev 259:1 new tail lsn 7/21000, old lsn 7/20344, last sync 7/21448
+> 
+> And it moves the tail of the log to 7/21000 from 7/20344. This
+> *moves the tail of the log beyond the ICREATE transaction* that was
+> at 7/20344 and pinned by the inode cluster buffer that was cancelled
+> above.
+> 
+> ....
+> 
+>          godown-213341 [008]  6398.027005: xfs_force_shutdown:   dev 259:1 tag logerror flags log_io|force_umount file fs/xfs/xfs_fsops.c line_num 500
+>           godown-213341 [008]  6398.027022: console:              [ 6397.915406] pmem1: writeback error on inode 12621949, offset 1019904, sector 12968096
+>           godown-213341 [008]  6398.030551: console:              [ 6397.919546] XFS (pmem1): Log I/O Error (0x6) detected at xfs_fs_goingdown+0xa3/0xf0 (fs/
+> 
+> And finally the log itself is now shutdown, stopping all further
+> writes to the log. But this is too late to prevent the corruption
+> that moving the tail of the log forwards after we start cancelling
+> writeback causes.
+> 
+> The fundamental problem here is that we are using the wrong shutdown
+> checks for log items. We've long conflated mount shutdown with log
+> shutdown state, and I started separating that recently with the
+> atomic shutdown state changes in commit b36d4651e165 ("xfs: make
+> forced shutdown processing atomic"). The changes in that commit
+> series are directly responsible for being able to diagnose this
+> issue because it clearly separated mount shutdown from log shutdown.
+> 
+> Essentially, once we start cancelling writeback of log items and
+> removing them from the AIL because the filesystem is shut down, we
+> *cannot* update the journal because we may have cancelled the items
+> that pin the tail of the log. That moves the tail of the log
+> forwards without having written the metadata back, hence we have
+> corrupt in memory state and writing to the journal propagates that
+> to the on-disk state.
+> 
+> What commit b36d4651e165 makes clear is that log item state needs to
+> change relative to log shutdown, not mount shutdown. IOWs, anything
+> that aborts metadata writeback needs to check log shutdown state
+> because log items directly affect log consistency. Having them check
+> mount shutdown state introduces the above race condition where we
+> cancel metadata writeback before the log shuts down.
+> 
+> To fix this, this patch works through all log items and converts
+> shutdown checks to use xlog_is_shutdown() rather than
+> xfs_is_shutdown(), so that we don't start aborting metadata
+> writeback before we shut off journal writes.
+> 
+> AFAICT, this race condition is a zero day IO error handling bug in
+> XFS that dates back to the introduction of XLOG_IO_ERROR,
+> XLOG_STATE_IOERROR and XFS_FORCED_SHUTDOWN back in January 1997.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c        | 40 ++++++++++++++++++++++++++++++++--------
+>  fs/xfs/xfs_icache.c     | 10 +++++++++-
+>  fs/xfs/xfs_inode.c      | 15 +++++++++++++--
+>  fs/xfs/xfs_inode_item.c | 12 ++++++++++++
+>  fs/xfs/xfs_qm.c         |  8 ++++----
+>  5 files changed, 70 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 8867f143598e..3617d9d2bc73 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -14,6 +14,7 @@
+>  #include "xfs_trace.h"
+>  #include "xfs_log.h"
+>  #include "xfs_log_recover.h"
+> +#include "xfs_log_priv.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_buf_item.h"
+>  #include "xfs_errortag.h"
+> @@ -813,7 +814,15 @@ xfs_buf_read_map(
+>  	 * buffer.
+>  	 */
+>  	if (error) {
+> -		if (!xfs_is_shutdown(target->bt_mount))
+> +		/*
+> +		 * Check against log shutdown for error reporting because
+> +		 * metadata writeback may require a read first and we need to
+> +		 * report errors in metadata writeback until the log is shut
+> +		 * down. High level transaction read functions already check
+> +		 * against mount shutdown, anyway, so we only need to be
+> +		 * concerned about low level IO interactions here.
 
-On 3/17/22 09:24, Dave Chinner wrote:
-> On Thu, Mar 17, 2022 at 07:49:02AM +0100, Manfred Spraul wrote:
->> Hi Dave,
->>
->> [+Ted as the topic also applies to ext4]
->>
->> On 3/17/22 04:08, Dave Chinner wrote:
->>> On Thu, Mar 17, 2022 at 01:47:05PM +1100, Dave Chinner wrote:
->>>> On Wed, Mar 16, 2022 at 09:55:04AM +0100, Manfred Spraul wrote:
->>>>> Hi Dave,
->>>>>
->>>>> On 3/14/22 16:18, Manfred Spraul wrote:
->>>>>
->>>>> But:
->>>>>
->>>>> I've checked the eMMC specification, and the spec allows that teared write
->>>>> happen:
->>>> Yes, most storage only guarantees that sector writes are atomic and
->>>> so multi-sector writes have no guarantees of being written
->>>> atomically.  IOWs, all storage technologies that currently exist are
->>>> allowed to tear multi-sector writes.
->>>>
->>>> However, FUA writes are guaranteed to be whole on persistent storage
->>>> regardless of size when the hardware signals completion. And any
->>>> write that the hardware has signalled as complete before a cache
->>>> flush is received is also guaranteed to be whole on persistent
->>>> storage when the cache flush is signalled as complete by the
->>>> hardware. These mechanisms provide protection against torn writes.
->> My plan was to create a replay application that randomly creates disc images
->> allowed by the writeback_cache_control documentation.
->>
->> https://www.kernel.org/doc/html/latest/block/writeback_cache_control.html
->>
->> And then check that the filesystem behaves as expected/defined.
-> We already have that tool that exercises stepwise flush/fua aware
-> write recovery for filesystem testing: dm-logwrites was written and
-> integrated into fstests years ago (2016?) by Josef Bacik for testing
-> btrfs recovery, but it was a generic solution that all filesystems
-> can use to test failure recovery....
->
-> See, for example, common/dmlogwrites and tests/generic/482 - g/482
-> uses fsstress to randomly modify the filesystem while dm-logwrites
-> records all the writes made by the filesystem. It then replays them
-> one flush/fua at a time, mounting the filesystem to ensure that it
-> can recover the filesystem, then runs filesystem checkers to ensure
-> that the filesystem does not have any corrupt metadata. Then it
-> replays to the next flush/fua and repeats.
->
-> tools/dm-logwrite-replay provides a script and documents the
-> methodology to run step by step through replay of g/482 failures to
-> be able to reliably reproduce and diagnose the cause of the failure.
->
-> There's no need to re-invent the wheel if we've already got a
-> perfectly good one...
+Much better, thank you!
 
-Thanks a lot for the hint!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-I was thinking were a replay tool might exist and came up with nbd. 
-Feedback was that it doesn't exist so I wrote something.
+--D
 
-I didn't think about dm.
-
-I'll look at dm-log-writes.
-
->>>>> Is my understanding correct that XFS support neither eMMC nor NVM devices?
->>>>> (unless there is a battery backup that exceeds the guarantees from the spec)
->>>> Incorrect.
->>>>
->>>> They are supported just fine because flush/FUA semantics provide
->>>> guarantees against torn writes in normal operation. IOWs, torn
->>>> writes are something that almost *never* happen in real life, even
->>>> when power fails suddenly. Despite this, XFS can detect it has
->>>> occurred (because broken storage is all too common!), and if it
->>>> can't recovery automatically, it will shut down and ask the user to
->>>> correct the problem.
->> So for xfs the behavior should be:
->>
->> - without torn writes: Mount always successful, no errors when accessing the
->> content.
-> Yes.
->
-> Of course, there are software bugs, so mounts, recovery and
-> subsequent repair testing can still fail.
->
->> - with torn writes: There may be error that will be detected only at
->> runtime. The errors may at the end cause a file system shutdown.
-> Yes, and they may even prevent the filesystem from being mounted
-> because recovery trips over them (e.g. processing pending unlinked
-> inodes or replaying incomplete intents).
->
->> (commented dmesg is attached)
->>
->> The application I have in mind are embedded systems.
->> I.e. there is no user that can correct something, the recovery strategy must
->> be included in the design.
-> Good luck with that - storage hardware fails in ways that no
-> existing filesystem can recover automatically from 100% of the time.
-> And very few even attempt to do so because it is largely an
-> impossible requirement to fulfil. Torn writes are just the tip of
-> the iceberg....
-Yes :-(
-
---
-
-     Manfred
-
+> +		 */
+> +		if (!xlog_is_shutdown(target->bt_mount->m_log))
+>  			xfs_buf_ioerror_alert(bp, fa);
+>  
+>  		bp->b_flags &= ~XBF_DONE;
+> @@ -1177,10 +1186,10 @@ xfs_buf_ioend_handle_error(
+>  	struct xfs_error_cfg	*cfg;
+>  
+>  	/*
+> -	 * If we've already decided to shutdown the filesystem because of I/O
+> -	 * errors, there's no point in giving this a retry.
+> +	 * If we've already shutdown the journal because of I/O errors, there's
+> +	 * no point in giving this a retry.
+>  	 */
+> -	if (xfs_is_shutdown(mp))
+> +	if (xlog_is_shutdown(mp->m_log))
+>  		goto out_stale;
+>  
+>  	xfs_buf_ioerror_alert_ratelimited(bp);
+> @@ -1593,8 +1602,23 @@ __xfs_buf_submit(
+>  
+>  	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
+>  
+> -	/* on shutdown we stale and complete the buffer immediately */
+> -	if (xfs_is_shutdown(bp->b_mount)) {
+> +	/*
+> +	 * On log shutdown we stale and complete the buffer immediately. We can
+> +	 * be called to read the superblock before the log has been set up, so
+> +	 * be careful checking the log state.
+> +	 *
+> +	 * Checking the mount shutdown state here can result in the log tail
+> +	 * moving inappropriately on disk as the log may not yet be shut down.
+> +	 * i.e. failing this buffer on mount shutdown can remove it from the AIL
+> +	 * and move the tail of the log forwards without having written this
+> +	 * buffer to disk. This corrupts the log tail state in memory, and
+> +	 * because the log may not be shut down yet, it can then be propagated
+> +	 * to disk before the log is shutdown. Hence we check log shutdown
+> +	 * state here rather than mount state to avoid corrupting the log tail
+> +	 * on shutdown.
+> +	 */
+> +	if (bp->b_mount->m_log &&
+> +	    xlog_is_shutdown(bp->b_mount->m_log)) {
+>  		xfs_buf_ioend_fail(bp);
+>  		return -EIO;
+>  	}
+> @@ -1808,10 +1832,10 @@ xfs_buftarg_drain(
+>  	 * If one or more failed buffers were freed, that means dirty metadata
+>  	 * was thrown away. This should only ever happen after I/O completion
+>  	 * handling has elevated I/O error(s) to permanent failures and shuts
+> -	 * down the fs.
+> +	 * down the journal.
+>  	 */
+>  	if (write_fail) {
+> -		ASSERT(xfs_is_shutdown(btp->bt_mount));
+> +		ASSERT(xlog_is_shutdown(btp->bt_mount->m_log));
+>  		xfs_alert(btp->bt_mount,
+>  	      "Please run xfs_repair to determine the extent of the problem.");
+>  	}
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 9644f938990c..4148cdf7ce4a 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -23,6 +23,7 @@
+>  #include "xfs_reflink.h"
+>  #include "xfs_ialloc.h"
+>  #include "xfs_ag.h"
+> +#include "xfs_log_priv.h"
+>  
+>  #include <linux/iversion.h>
+>  
+> @@ -873,7 +874,14 @@ xfs_reclaim_inode(
+>  	if (xfs_iflags_test_and_set(ip, XFS_IFLUSHING))
+>  		goto out_iunlock;
+>  
+> -	if (xfs_is_shutdown(ip->i_mount)) {
+> +	/*
+> +	 * Check for log shutdown because aborting the inode can move the log
+> +	 * tail and corrupt in memory state. This is fine if the log is shut
+> +	 * down, but if the log is still active and only the mount is shut down
+> +	 * then the in-memory log tail movement caused by the abort can be
+> +	 * incorrectly propagated to disk.
+> +	 */
+> +	if (xlog_is_shutdown(ip->i_mount->m_log)) {
+>  		xfs_iunpin_wait(ip);
+>  		xfs_iflush_abort(ip);
+>  		goto reclaim;
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 04bf467b1090..aab55a06ece7 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -35,6 +35,7 @@
+>  #include "xfs_bmap_btree.h"
+>  #include "xfs_reflink.h"
+>  #include "xfs_ag.h"
+> +#include "xfs_log_priv.h"
+>  
+>  struct kmem_cache *xfs_inode_cache;
+>  
+> @@ -3659,7 +3660,7 @@ xfs_iflush_cluster(
+>  		 * AIL, leaving a dirty/unpinned inode attached to the buffer
+>  		 * that otherwise looks like it should be flushed.
+>  		 */
+> -		if (xfs_is_shutdown(mp)) {
+> +		if (xlog_is_shutdown(mp->m_log)) {
+>  			xfs_iunpin_wait(ip);
+>  			xfs_iflush_abort(ip);
+>  			xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> @@ -3685,9 +3686,19 @@ xfs_iflush_cluster(
+>  	}
+>  
+>  	if (error) {
+> +		/*
+> +		 * Shutdown first so we kill the log before we release this
+> +		 * buffer. If it is an INODE_ALLOC buffer and pins the tail
+> +		 * of the log, failing it before the _log_ is shut down can
+> +		 * result in the log tail being moved forward in the journal
+> +		 * on disk because log writes can still be taking place. Hence
+> +		 * unpinning the tail will allow the ICREATE intent to be
+> +		 * removed from the log an recovery will fail with uninitialised
+> +		 * inode cluster buffers.
+> +		 */
+> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+>  		bp->b_flags |= XBF_ASYNC;
+>  		xfs_buf_ioend_fail(bp);
+> -		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+>  		return error;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 90d8e591baf8..11158fa81a09 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -17,6 +17,7 @@
+>  #include "xfs_trans_priv.h"
+>  #include "xfs_buf_item.h"
+>  #include "xfs_log.h"
+> +#include "xfs_log_priv.h"
+>  #include "xfs_error.h"
+>  
+>  #include <linux/iversion.h>
+> @@ -720,6 +721,17 @@ xfs_iflush_ail_updates(
+>  		if (INODE_ITEM(lip)->ili_flush_lsn != lip->li_lsn)
+>  			continue;
+>  
+> +		/*
+> +		 * dgc: Not sure how this happens, but it happens very
+> +		 * occassionaly via generic/388.  xfs_iflush_abort() also
+> +		 * silently handles this same "under writeback but not in AIL at
+> +		 * shutdown" condition via xfs_trans_ail_delete().
+> +		 */
+> +		if (!test_bit(XFS_LI_IN_AIL, &lip->li_flags)) {
+> +			ASSERT(xlog_is_shutdown(lip->li_log));
+> +			continue;
+> +		}
+> +
+>  		lsn = xfs_ail_delete_one(ailp, lip);
+>  		if (!tail_lsn && lsn)
+>  			tail_lsn = lsn;
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 32ac8d9c8940..f165d1a3de1d 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -25,6 +25,7 @@
+>  #include "xfs_error.h"
+>  #include "xfs_ag.h"
+>  #include "xfs_ialloc.h"
+> +#include "xfs_log_priv.h"
+>  
+>  /*
+>   * The global quota manager. There is only one of these for the entire
+> @@ -121,8 +122,7 @@ xfs_qm_dqpurge(
+>  	struct xfs_dquot	*dqp,
+>  	void			*data)
+>  {
+> -	struct xfs_mount	*mp = dqp->q_mount;
+> -	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+> +	struct xfs_quotainfo	*qi = dqp->q_mount->m_quotainfo;
+>  	int			error = -EAGAIN;
+>  
+>  	xfs_dqlock(dqp);
+> @@ -157,7 +157,7 @@ xfs_qm_dqpurge(
+>  	}
+>  
+>  	ASSERT(atomic_read(&dqp->q_pincount) == 0);
+> -	ASSERT(xfs_is_shutdown(mp) ||
+> +	ASSERT(xlog_is_shutdown(dqp->q_logitem.qli_item.li_log) ||
+>  		!test_bit(XFS_LI_IN_AIL, &dqp->q_logitem.qli_item.li_flags));
+>  
+>  	xfs_dqfunlock(dqp);
+> @@ -172,7 +172,7 @@ xfs_qm_dqpurge(
+>  	 */
+>  	ASSERT(!list_empty(&dqp->q_lru));
+>  	list_lru_del(&qi->qi_lru, &dqp->q_lru);
+> -	XFS_STATS_DEC(mp, xs_qm_dquot_unused);
+> +	XFS_STATS_DEC(dqp->q_mount, xs_qm_dquot_unused);
+>  
+>  	xfs_qm_dqdestroy(dqp);
+>  	return 0;
+> -- 
+> 2.35.1
+> 
