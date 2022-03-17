@@ -2,138 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A75C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 06:05:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64A5CC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 06:05:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229863AbiCQGGg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Mar 2022 02:06:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54760 "EHLO
+        id S229807AbiCQGGh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Mar 2022 02:06:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229717AbiCQGG3 (ORCPT
+        with ESMTP id S229777AbiCQGG3 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 02:06:29 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8A004132E89
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 22:39:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 48632133DAC
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 22:39:12 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D144510E4987
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D4ACE10E48BE
         for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 16:39:09 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nUiqr-006QoX-49
+        id 1nUiqr-006QoT-38
         for linux-xfs@vger.kernel.org; Thu, 17 Mar 2022 16:39:09 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nUiqr-000giT-37
+        id 1nUiqr-000giO-22
         for linux-xfs@vger.kernel.org;
         Thu, 17 Mar 2022 16:39:09 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 4/7] xfs: async CIL flushes need pending pushes to be made stable
-Date:   Thu, 17 Mar 2022 16:39:04 +1100
-Message-Id: <20220317053907.164160-5-david@fromorbit.com>
+Subject: [PATCH 3/7] xfs: xfs_ail_push_all_sync() stalls when racing with updates
+Date:   Thu, 17 Mar 2022 16:39:03 +1100
+Message-Id: <20220317053907.164160-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220317053907.164160-1-david@fromorbit.com>
 References: <20220317053907.164160-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6232c97d
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6232c97d
         a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=JfrnYn6hAAAA:8 a=VwQbUJbxAAAA:8
-        a=yk_eRm6W7gORI4apyj4A:9 a=1CNFftbPRP8L7MoqJWF3:22
-        a=AjGcO6oz07-iQ99wixmX:22
+        a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8 a=VwQbUJbxAAAA:8
+        a=EOO2phA2CyUEHaC7MKsA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When the AIL tries to flush the CIL, it relies on the CIL push
-ending up on stable storage without having to wait for and
-manipulate iclog state directly. However, if there is already a
-pending CIL push when the AIL tries to flush the CIL, it won't set
-the cil->xc_push_commit_stable flag and so the CIL push will not
-actively flush the commit record iclog.
+xfs_ail_push_all_sync() has a loop like this:
 
-generic/530 when run on a single CPU test VM can trigger this fairly
-reliably. This test exercises unlinked inode recovery, and can
-result in inodes being pinned in memory by ongoing modifications to
-the inode cluster buffer to record unlinked list modifications. As a
-result, the first inode unlinked in a buffer can pin the tail of the
-log whilst the inode cluster buffer is pinned by the current
-checkpoint that has been pushed but isn't on stable storage because
-because the cil->xc_push_commit_stable was not set. This results in
-the log/AIL effectively deadlocking until something triggers the
-commit record iclog to be pushed to stable storage (i.e. the
-periodic log worker calling xfs_log_force()).
+while max_ail_lsn {
+	prepare_to_wait(ail_empty)
+	target = max_ail_lsn
+	wake_up(ail_task);
+	schedule()
+}
 
-The fix is two-fold - first we should always set the
-cil->xc_push_commit_stable when xlog_cil_flush() is called,
-regardless of whether there is already a pending push or not.
+Which is designed to sleep until the AIL is emptied. When
+xfs_ail_update_finish() moves the tail of the log, it does:
 
-Second, if the CIL is empty, we should trigger an iclog flush to
-ensure that the iclogs of the last checkpoint have actually been
-submitted to disk as that checkpoint may not have been run under
-stable completion constraints.
+	if (list_empty(&ailp->ail_head))
+		wake_up_all(&ailp->ail_empty);
 
-Reported-and-tested-by: Matthew Wilcox <willy@infradead.org>
-Fixes: 0020a190cf3e ("xfs: AIL needs asynchronous CIL forcing")
+So it will only wake up the sync push waiter when the AIL goes
+empty. If, by the time the push waiter has woken, the AIL has more
+in it, it will reset the target, wake the push task and go back to
+sleep.
+
+The problem here is that if the AIL is having items added to it
+when xfs_ail_push_all_sync() is called, then they may get inserted
+into the AIL at a LSN higher than the target LSN. At this point,
+xfsaild_push() will see that the target is X, the item LSNs are
+(X+N) and skip over them, hence never pushing the out.
+
+The result of this the AIL will not get emptied by the AIL push
+thread, hence xfs_ail_finish_update() will never see the AIL being
+empty even if it moves the tail. Hence xfs_ail_push_all_sync() never
+gets woken and hence cannot update the push target to capture the
+items beyond the current target on the LSN.
+
+This is a TOCTOU type of issue so the way to avoid it is to not
+use the push target at all for sync pushes. We know that a sync push
+is being requested by the fact the ail_empty wait queue is active,
+hence the xfsaild can just set the target to max_ail_lsn on every
+push that we see the wait queue active. Hence we no longer will
+leave items on the AIL that are beyond the LSN sampled at the start
+of a sync push.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log_cil.c | 22 +++++++++++++++++++---
- 1 file changed, 19 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_trans_ail.c | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 747e62799dff..0baa07524ea2 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -1233,18 +1233,27 @@ xlog_cil_push_now(
- 	if (!async)
- 		flush_workqueue(cil->xc_push_wq);
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 2a8c8dc54c95..1b52952097c1 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -448,10 +448,22 @@ xfsaild_push(
  
-+	spin_lock(&cil->xc_push_lock);
-+
+ 	spin_lock(&ailp->ail_lock);
+ 
+-	/* barrier matches the ail_target update in xfs_ail_push() */
+-	smp_rmb();
+-	target = ailp->ail_target;
+-	ailp->ail_target_prev = target;
 +	/*
-+	 * If this is an async flush request, we always need to set the
-+	 * xc_push_commit_stable flag even if something else has already queued
-+	 * a push. The flush caller is asking for the CIL to be on stable
-+	 * storage when the next push completes, so regardless of who has queued
-+	 * the push, the flush requires stable semantics from it.
++	 * If we have a sync push waiter, we always have to push till the AIL is
++	 * empty. Update the target to point to the end of the AIL so that
++	 * capture updates that occur after the sync push waiter has gone to
++	 * sleep.
 +	 */
-+	cil->xc_push_commit_stable = async;
-+
- 	/*
- 	 * If the CIL is empty or we've already pushed the sequence then
--	 * there's no work we need to do.
-+	 * there's no more work that we need to do.
- 	 */
--	spin_lock(&cil->xc_push_lock);
- 	if (list_empty(&cil->xc_cil) || push_seq <= cil->xc_push_seq) {
- 		spin_unlock(&cil->xc_push_lock);
- 		return;
- 	}
++	if (waitqueue_active(&ailp->ail_empty)) {
++		lip = xfs_ail_max(ailp);
++		if (lip)
++			target = lip->li_lsn;
++	} else {
++		/* barrier matches the ail_target update in xfs_ail_push() */
++		smp_rmb();
++		target = ailp->ail_target;
++		ailp->ail_target_prev = target;
++	}
  
- 	cil->xc_push_seq = push_seq;
--	cil->xc_push_commit_stable = async;
- 	queue_work(cil->xc_push_wq, &cil->xc_ctx->push_work);
- 	spin_unlock(&cil->xc_push_lock);
- }
-@@ -1342,6 +1351,13 @@ xlog_cil_flush(
- 
- 	trace_xfs_log_force(log->l_mp, seq, _RET_IP_);
- 	xlog_cil_push_now(log, seq, true);
-+
-+	/*
-+	 * If the CIL is empty, make sure that any previous checkpoint that may
-+	 * still be in an active iclog is pushed to stable storage.
-+	 */
-+	if (list_empty(&log->l_cilp->xc_cil))
-+		xfs_log_force(log->l_mp, 0);
- }
- 
- /*
+ 	/* we're done if the AIL is empty or our push has reached the end */
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->ail_last_pushed_lsn);
+@@ -724,7 +736,6 @@ xfs_ail_push_all_sync(
+ 	spin_lock(&ailp->ail_lock);
+ 	while ((lip = xfs_ail_max(ailp)) != NULL) {
+ 		prepare_to_wait(&ailp->ail_empty, &wait, TASK_UNINTERRUPTIBLE);
+-		ailp->ail_target = lip->li_lsn;
+ 		wake_up_process(ailp->ail_task);
+ 		spin_unlock(&ailp->ail_lock);
+ 		schedule();
 -- 
 2.35.1
 
