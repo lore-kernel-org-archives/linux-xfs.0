@@ -2,146 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E47B4C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 03:08:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B8EEC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 03:08:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233130AbiCQDJs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Mar 2022 23:09:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35342 "EHLO
+        id S240469AbiCQDKJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Mar 2022 23:10:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229690AbiCQDJq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 23:09:46 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4619D21242
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 20:08:30 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 812D910E46BA;
-        Thu, 17 Mar 2022 14:08:29 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nUgV2-006OGF-P5; Thu, 17 Mar 2022 14:08:28 +1100
-Date:   Thu, 17 Mar 2022 14:08:28 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Manfred Spraul <manfred@colorfullife.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Spraul Manfred (XC/QMM21-CT)" <Manfred.Spraul@de.bosch.com>
-Subject: Re: Metadata CRC error detected at
- xfs_dir3_block_read_verify+0x9e/0xc0 [xfs], xfs_dir3_block block 0x86f58
-Message-ID: <20220317030828.GZ3927073@dread.disaster.area>
-References: <613af505-7646-366c-428a-b64659e1f7cf@colorfullife.com>
- <20220313224624.GJ3927073@dread.disaster.area>
- <8024317e-07be-aa3d-9aa3-2f835aaa1278@colorfullife.com>
- <3242ad20-0039-2579-b125-b7a9447a7230@colorfullife.com>
- <20220317024705.GY3927073@dread.disaster.area>
+        with ESMTP id S238537AbiCQDKH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 23:10:07 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFA7C21242
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 20:08:51 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7F294B81E01
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 03:08:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EEABC340EC;
+        Thu, 17 Mar 2022 03:08:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647486528;
+        bh=fRbtzPlLDjE6qZZoYYpeU4BZvDXT5HhB3R9Z7RHXqSw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WDcjOD8GOlj/LYDVXK6klzYQUSxBKx3Z1mpDgXzF4uLHpen6+u5OFB3JqudxjnNoK
+         G9BFYbgkWP6ASc/GuhFCcyOAWKMeGitstBnSMUH4qMcqIryWL8H/rcIkBVH0KeoOOa
+         UceNk/4IVOVbVNMrWmoq3ZrSm7NowLnk+PnXautV75uSgs0lBbxPHpZXK/UI9Fu60y
+         BzuKQvOYxmGG0c5CP/186MgN/ebOtYsL9cFqIiJ5WV4Cr/XGnIXQpq0avgp0XPtOCW
+         Z8BVunjFvpn26B1bjmy/QOkDLaKtOe6FkmzJfcLtoxyq8JFiuM7bcr3OrnuqF4G35w
+         SmywXtxxzlpRQ==
+Date:   Wed, 16 Mar 2022 20:08:47 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     guodf <15147193722@163.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Metadata CRC error detected at xfs_bmbt block 0x1868f56bb0/0x1000
+Message-ID: <20220317030847.GZ8224@magnolia>
+References: <16d2444c.2cc8.17f95b788b9.Coremail.15147193722@163.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20220317024705.GY3927073@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6232a62d
-        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
-        a=tctxP7Ghy1wDT3JLoegA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <16d2444c.2cc8.17f95b788b9.Coremail.15147193722@163.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 17, 2022 at 01:47:05PM +1100, Dave Chinner wrote:
-> On Wed, Mar 16, 2022 at 09:55:04AM +0100, Manfred Spraul wrote:
-> > Hi Dave,
-> > 
-> > On 3/14/22 16:18, Manfred Spraul wrote:
-> > > Hi Dave,
-> > > 
-> > > On 3/13/22 23:46, Dave Chinner wrote:
-> > > > OK, this test is explicitly tearing writes at the storage level.
-> > > > When there is an update to multiple sectors of the metadata block,
-> > > > the metadata will be inconsistent on disk while those individual
-> > > > sector writes are replayed.
-> > > 
-> > > Thanks for the clarification.
-> > > 
-> > > I'll modify the test application to never tear write operations and
-> > > retry.
-> > > 
-> > > If there are findings, then I'll distribute them.
-> > > 
-> > I've modified the test app, and with 4000 simulated power failures I have
-> > not seen any corruptions.
-> > 
-> > 
-> > Thus:
-> > 
-> > - With teared write operations: 2 corruptions from ~800 simulated power
-> > failures
-> > 
-> > - Without teared write operations: no corruptions from ~4000 simulated power
-> > failures.
+On Thu, Mar 17, 2022 at 10:31:47AM +0800, guodf wrote:
 > 
-> Good to hear.
 > 
-> > But:
-> > 
-> > I've checked the eMMC specification, and the spec allows that teared write
-> > happen:
+> Hello:
+>      A fatal error occurred in the XFS file system of my production environment when I run the following command
+>      error：
+>     [root@localhost 0316]# xfs_metadump  -g -o -w /dev/centos/home xfs.img
+> Metadata CRC error detected at xfs_agf block 0x187ffffe79/0x200
+> xfs_metadump: cannot init perag data (-74). Continuing anyway.
+> Copying free space trees of AG 10                          
+> Metadata CRC error detected at xfs_bmbt block 0x1868f56bb0/0x1000
 > 
-> Yes, most storage only guarantees that sector writes are atomic and
-> so multi-sector writes have no guarantees of being written
-> atomically.  IOWs, all storage technologies that currently exist are
-> allowed to tear multi-sector writes.
 > 
-> However, FUA writes are guaranteed to be whole on persistent storage
-> regardless of size when the hardware signals completion. And any
-> write that the hardware has signalled as complete before a cache
-> flush is received is also guaranteed to be whole on persistent
-> storage when the cache flush is signalled as complete by the
-> hardware. These mechanisms provide protection against torn writes.
+> xfs_metadump: invalid numrecs (65079) in bmapbtd block 48/220114342
+> Copying free space trees of AG 22  Metadata CRC error detected at xfs_bmbt block 0x18a6ffeb38/0x1000
 > 
-> IOWs, it's up to filesystems to guarantee data is on stable storage
-> before they trust it fully. Filesystems are pretty good at using
-> REQ_FLUSH, REQ_FUA and write completion ordering to ensure that
-> anything they need whole and complete on stable storage is actually
-> whole and complete.
 > 
-> In the cases where torn writes occur because that haven't been
-> covered by a FUA or cache flush guarantee (such as your test),
-> filesystems need mechanisms in their metadata to detect such events.
-> CRCs are the prime mechanism for this - that's what XFS uses, and it
-> was XFS reporting a CRC failure when reading torn metadata that
-> started this whole thread.
+> xfs_metadump: invalid numrecs (39031) in bmapbtd block 49/81788312
+> Metadata CRC error detected at xfs_bmbt block 0x19a1ffeda8/0x1000
+> xfs_metadump: invalid numrecs (49606) in bmapbtd block 51/71302632
+> Metadata CRC error detected at xfs_bmbt block 0x1a9cfff018/0x1000
+> xfs_metadump: invalid numrecs (4194) in bmapbtd block 53/60816952
+> Copying free space trees of AG 48   bad magic number
 > 
-> > Is my understanding correct that XFS support neither eMMC nor NVM devices?
-> > (unless there is a battery backup that exceeds the guarantees from the spec)
 > 
-> Incorrect.
+> xfs_metadump: cannot read superblock for ag 49
+> Metadata CRC error detected at xfs_agi block 0x187ffffe7a/0x200
+> Metadata CRC error detected at xfs_agfl block 0x187ffffe7b/0x200
+> /usr/sbin/xfs_metadump: line 33:  6369 Segmentation fault      (core dumped) xfs_db$DBOPTS -i -p xfs_metadump -c "metadump$OPTS $2" $1
 > 
-> They are supported just fine because flush/FUA semantics provide
-> guarantees against torn writes in normal operation. IOWs, torn
-> writes are something that almost *never* happen in real life, even
-> when power fails suddenly. Despite this, XFS can detect it has
-> occurred (because broken storage is all too common!), and if it
-> can't recovery automatically, it will shut down and ask the user to
-> correct the problem.
 > 
-> BTRFS and ZFS can also detect torn writes, and if you use the
-> (non-default) ext4 option "metadata_csum" it will also detect torn
+> I have two questions and hope to get your reply
+> 1：Metadata CRC error detected at xfs_agfl block 0x187ffffe7b/0x200
+> 
+> What does the red font mean？What does it mean？
 
-Correction - metadata_csum is ienabled by default, I just ran the
-wrong mkfs command when I tested it a few moments ago.
+There are checksum errors in the metadata, which implies that something
+weird happened with the storage (bitflips in the cable, torn writes,
+broken disk firmware)...
 
--Dave.
+> 2：How can I fix it
 
-> writes to metadata via CRC failures. There are other filesystems
-> that can detect and correct torn writes, too.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+Send us a coredump and the xfs_db binary so we can try to fix this
+crash, and run xfs_repair?
 
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+> 
+> 
+> Thank you very much
+> 
