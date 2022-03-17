@@ -2,109 +2,71 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0933DC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 02:22:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E4EDC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 02:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233729AbiCQCXh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Mar 2022 22:23:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39956 "EHLO
+        id S1355027AbiCQCdI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Mar 2022 22:33:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348793AbiCQCXh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 22:23:37 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BD7611BEAA
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 19:22:21 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DF13C10E4935;
-        Thu, 17 Mar 2022 13:22:20 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nUfmN-006NNa-EF; Thu, 17 Mar 2022 13:22:19 +1100
-Date:   Thu, 17 Mar 2022 13:22:19 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Eric Sandeen <sandeen@redhat.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: make quota default to no warning limit at all
-Message-ID: <20220317022219.GX3927073@dread.disaster.area>
-References: <20220314180914.GN8224@magnolia>
- <fe974dac-bd1d-f3e7-6bd7-bc3f3cb56dd1@sandeen.net>
+        with ESMTP id S1354709AbiCQCdH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 22:33:07 -0400
+Received: from m13115.mail.163.com (m13115.mail.163.com [220.181.13.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8F6121FA5A
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 19:31:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=QSoLL
+        2+5JYZ8u69IL3RFBtacsfyEjVG7c3eNXdTLX/o=; b=BuPriFhVhVCpnaGk4VCTv
+        4XGHwpXLxBDi3ThwVEldLi5sBQN7Ue9Tyifv5SpzKHZ22iJD6pneI9PZ5wEt5qoa
+        FqW2Zoe5bVeshhmBgoXZsQpc4Z2v3iutY3rl7QOA+aIRyyTTnqmC3INa7Q/Uy9nw
+        vSET1mboKOf+sZOeRtYGGQ=
+Received: from 15147193722$163.com ( [110.16.107.22] ) by
+ ajax-webmail-wmsvr115 (Coremail) ; Thu, 17 Mar 2022 10:31:47 +0800 (CST)
+X-Originating-IP: [110.16.107.22]
+Date:   Thu, 17 Mar 2022 10:31:47 +0800 (CST)
+From:   guodf <15147193722@163.com>
+To:     linux-xfs@vger.kernel.org
+Subject: Metadata CRC error detected at xfs_bmbt block 0x1868f56bb0/0x1000
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.13 build 20210622(1d4788a8)
+ Copyright (c) 2002-2022 www.mailtech.cn 163com
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fe974dac-bd1d-f3e7-6bd7-bc3f3cb56dd1@sandeen.net>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62329b5d
-        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=5xOlfOR4AAAA:8
-        a=7-415B0cAAAA:8 a=q-MXYPEFc9MjIKl_fUMA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=SGlsW6VomvECssOqsvzv:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Message-ID: <16d2444c.2cc8.17f95b788b9.Coremail.15147193722@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: c8GowAB388aWnTJi_HoRAA--.32146W
+X-CM-SenderInfo: jprvikyxrzjliss6il2tof0z/xtbBaQDFlFXlw479ggAEs+
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 16, 2022 at 12:41:08PM -0500, Eric Sandeen wrote:
-> On 3/14/22 1:09 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Historically, the quota warning counter was never incremented on a
-> > softlimit violation, and hence was never enforced.  Now that the counter
-> > works, the default of 5 warnings is getting enforced, which is a
-> > breakage that people aren't used to.  In the interest of not introducing
-> > new fail to things that used to work, make the default warning limit of
-> > zero, and make zero mean there is no limit.
-> > 
-> > Sorta-fixes: 4b8628d57b72 ("xfs: actually bump warning counts when we send warnings")
-> > Reported-by: Eric Sandeen <sandeen@sandeen.net>
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> Darrick and I talked about this offline a bit yesterday, and I think
-> we reached an understanding/agreement on this .... 
-> 
-> While this patch will solve the problem of low warning thresholds
-> rendering timer thresholds useless, I'm still of the opinion that
-> this is not a feature to fix, but an inadvertent/broken behavior to
-> remove.
-> 
-> The concept of a warning limit in xfs quota has been documented as
-> unimplemented for about 20+ years. Digging through ancient IRIX docs,
-> the intent may have been to warn once per login session
-> (which would make more sense with the current limit of 5.) However,
-> nothing can be found in code archives to indicate that the warning
-> counter was ever bumped by anything (until the semi-recent change in
-> Linux.)
-> 
-> This feature is still documented as unimplemented in the xfs_quota
-> man page.
-> 
-> And although there are skeletal functions to manipulate warning limits
-> in xfs_quota, they cannot be disabled, and the interface differs from
-> timer limits, so is barely usable.
-> 
-> There is no concept of a "warning limit" in non-xfs quota tools, either.
-> 
-> There is no documentation on what constitutes a warning event, or when
-> it should be incremented.
-> 
-> tl;dr: While the warning counter bump has been upstream for some time
-> now, I think we can argue that that does not constitute a feature that
-> needs fixing or careful deprecation; TBH it looks more like a bug that
-> should be fixed by removing the increment altogether.
-> 
-> And then I think we can agree that if warning limits hae been documented
-> as unimplemented for 20+ years, we can also just remove any other code
-> that is related to this unimplemented feature.
-
-Sounds fine to me. THe less untested, undefined legacy code with
-custom user APIs we have to carry around the better. Remove it all
-before someone starts poking at it with a sharp stick and finds a
-zany zero-day....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+CgpIZWxsbzoKwqAgwqAgwqBBIGZhdGFsIGVycm9yIG9jY3VycmVkIGluIHRoZSBYRlMgZmlsZSBz
+eXN0ZW0gb2YgbXkgcHJvZHVjdGlvbiBlbnZpcm9ubWVudCB3aGVuIEkgcnVuIHRoZSBmb2xsb3dp
+bmcgY29tbWFuZArCoCDCoCDCoGVycm9y77yaCsKgIMKgIFtyb290QGxvY2FsaG9zdCAwMzE2XSMg
+eGZzX21ldGFkdW1wwqAgLWcgLW8gLXcgL2Rldi9jZW50b3MvaG9tZSB4ZnMuaW1nCk1ldGFkYXRh
+IENSQyBlcnJvciBkZXRlY3RlZCBhdCB4ZnNfYWdmIGJsb2NrIDB4MTg3ZmZmZmU3OS8weDIwMAp4
+ZnNfbWV0YWR1bXA6IGNhbm5vdCBpbml0IHBlcmFnIGRhdGEgKC03NCkuIENvbnRpbnVpbmcgYW55
+d2F5LgpDb3B5aW5nIGZyZWUgc3BhY2UgdHJlZXMgb2YgQUcgMTDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoMKgCk1ldGFkYXRhIENSQyBlcnJvciBkZXRlY3RlZCBhdCB4ZnNf
+Ym1idCBibG9jayAweDE4NjhmNTZiYjAvMHgxMDAwCgoKeGZzX21ldGFkdW1wOiBpbnZhbGlkIG51
+bXJlY3MgKDY1MDc5KSBpbiBibWFwYnRkIGJsb2NrIDQ4LzIyMDExNDM0MgpDb3B5aW5nIGZyZWUg
+c3BhY2UgdHJlZXMgb2YgQUcgMjLCoCBNZXRhZGF0YSBDUkMgZXJyb3IgZGV0ZWN0ZWQgYXQgeGZz
+X2JtYnQgYmxvY2sgMHgxOGE2ZmZlYjM4LzB4MTAwMAoKCnhmc19tZXRhZHVtcDogaW52YWxpZCBu
+dW1yZWNzICgzOTAzMSkgaW4gYm1hcGJ0ZCBibG9jayA0OS84MTc4ODMxMgpNZXRhZGF0YSBDUkMg
+ZXJyb3IgZGV0ZWN0ZWQgYXQgeGZzX2JtYnQgYmxvY2sgMHgxOWExZmZlZGE4LzB4MTAwMAp4ZnNf
+bWV0YWR1bXA6IGludmFsaWQgbnVtcmVjcyAoNDk2MDYpIGluIGJtYXBidGQgYmxvY2sgNTEvNzEz
+MDI2MzIKTWV0YWRhdGEgQ1JDIGVycm9yIGRldGVjdGVkIGF0IHhmc19ibWJ0IGJsb2NrIDB4MWE5
+Y2ZmZjAxOC8weDEwMDAKeGZzX21ldGFkdW1wOiBpbnZhbGlkIG51bXJlY3MgKDQxOTQpIGluIGJt
+YXBidGQgYmxvY2sgNTMvNjA4MTY5NTIKQ29weWluZyBmcmVlIHNwYWNlIHRyZWVzIG9mIEFHIDQ4
+wqAgwqBiYWQgbWFnaWMgbnVtYmVyCgoKeGZzX21ldGFkdW1wOiBjYW5ub3QgcmVhZCBzdXBlcmJs
+b2NrIGZvciBhZyA0OQpNZXRhZGF0YSBDUkMgZXJyb3IgZGV0ZWN0ZWQgYXQgeGZzX2FnaSBibG9j
+ayAweDE4N2ZmZmZlN2EvMHgyMDAKTWV0YWRhdGEgQ1JDIGVycm9yIGRldGVjdGVkIGF0IHhmc19h
+Z2ZsIGJsb2NrIDB4MTg3ZmZmZmU3Yi8weDIwMAovdXNyL3NiaW4veGZzX21ldGFkdW1wOiBsaW5l
+IDMzOsKgIDYzNjkgU2VnbWVudGF0aW9uIGZhdWx0wqAgwqAgwqAgKGNvcmUgZHVtcGVkKSB4ZnNf
+ZGIkREJPUFRTIC1pIC1wIHhmc19tZXRhZHVtcCAtYyAibWV0YWR1bXAkT1BUUyAkMiIgJDEKCgpJ
+IGhhdmUgdHdvIHF1ZXN0aW9ucyBhbmQgaG9wZSB0byBnZXQgeW91ciByZXBseQox77yaTWV0YWRh
+dGEgQ1JDIGVycm9yIGRldGVjdGVkIGF0IHhmc19hZ2ZsIGJsb2NrwqAweDE4N2ZmZmZlN2IvMHgy
+MDAKCldoYXQgZG9lcyB0aGUgcmVkIGZvbnQgbWVhbu+8n1doYXQgZG9lcyBpdCBtZWFu77yfCgoy
+77yaSG93IGNhbiBJIGZpeCBpdAoKClRoYW5rIHlvdSB2ZXJ5IG11Y2gKCg==
