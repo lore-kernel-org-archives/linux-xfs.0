@@ -2,153 +2,157 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 792E5C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 08:24:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE67C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 09:12:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229464AbiCQIZw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Mar 2022 04:25:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37328 "EHLO
+        id S231755AbiCQJOG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Mar 2022 05:14:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231239AbiCQIZt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 04:25:49 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 28B5A16BFAE
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 01:24:15 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 71D5753395D;
-        Thu, 17 Mar 2022 19:24:11 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nUlQZ-006TWf-2F; Thu, 17 Mar 2022 19:24:11 +1100
-Date:   Thu, 17 Mar 2022 19:24:11 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Manfred Spraul <manfred@colorfullife.com>
-Cc:     Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org,
-        "Spraul Manfred (XC/QMM21-CT)" <Manfred.Spraul@de.bosch.com>
-Subject: Re: Metadata CRC error detected at
- xfs_dir3_block_read_verify+0x9e/0xc0 [xfs], xfs_dir3_block block 0x86f58
-Message-ID: <20220317082411.GA3927073@dread.disaster.area>
-References: <613af505-7646-366c-428a-b64659e1f7cf@colorfullife.com>
- <20220313224624.GJ3927073@dread.disaster.area>
- <8024317e-07be-aa3d-9aa3-2f835aaa1278@colorfullife.com>
- <3242ad20-0039-2579-b125-b7a9447a7230@colorfullife.com>
- <20220317024705.GY3927073@dread.disaster.area>
- <20220317030828.GZ3927073@dread.disaster.area>
- <21c13283-2a9f-4978-25e4-228e44ab74e6@colorfullife.com>
+        with ESMTP id S230307AbiCQJOF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 05:14:05 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AE7CE728B
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 02:12:49 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 5788421110;
+        Thu, 17 Mar 2022 09:12:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1647508368; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=iHQtB7lyFU+K2r0Jct93UoLAulQiCsBBFXE6M+b0tFE=;
+        b=Ke1FKEh+rF8XDQpE89d4i7is7B6gi18RaoT3f4yIjpdlQM7A0DFbFcFFBAz5JAmsO5f/80
+        GkFDPz0xHuf4FkYhh+rNa5cM+LDDIU1HJrrhkDjpHQ3+Lk/BnVbpPYkMAkK+f0xRmvmO8f
+        W90PNiTMf3cGUNPY0MqcjjMFqiUdGXU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1647508368;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=iHQtB7lyFU+K2r0Jct93UoLAulQiCsBBFXE6M+b0tFE=;
+        b=ii6MdISH2+vuAvXwB+N2fffYW5jikVb64877ShTywoF3c2ZSy8Tq/nZziv0lu4H8bN46Y5
+        8XPLzdsLbIZFliCA==
+Received: from quack3.suse.cz (unknown [10.100.200.198])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 3CCA1A3B87;
+        Thu, 17 Mar 2022 09:12:48 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 5A187A0615; Thu, 17 Mar 2022 10:12:47 +0100 (CET)
+Date:   Thu, 17 Mar 2022 10:12:47 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, jack@suse.cz
+Subject: Re: [PATCH] xfs: drop async cache flushes from CIL commits.
+Message-ID: <20220317091247.ajk3astyxmmghrsf@quack3.lan>
+References: <20220317051219.137547-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <21c13283-2a9f-4978-25e4-228e44ab74e6@colorfullife.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6232f02d
-        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=Vru7tE-Dn4nHED3q0wEA:9 a=CjuIK1q_8ugA:10 a=BjvGB96Vj3QA:10
-        a=5gVn6xHntvQA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220317051219.137547-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 17, 2022 at 07:49:02AM +0100, Manfred Spraul wrote:
-> Hi Dave,
+On Thu 17-03-22 16:12:19, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> [+Ted as the topic also applies to ext4]
+> Jan Kara reported a performance regression in dbench that he
+> bisected down to commit bad77c375e8d ("xfs: CIL checkpoint
+> flushes caches unconditionally").
 > 
-> On 3/17/22 04:08, Dave Chinner wrote:
-> > On Thu, Mar 17, 2022 at 01:47:05PM +1100, Dave Chinner wrote:
-> > > On Wed, Mar 16, 2022 at 09:55:04AM +0100, Manfred Spraul wrote:
-> > > > Hi Dave,
-> > > > 
-> > > > On 3/14/22 16:18, Manfred Spraul wrote:
-> > > > 
-> > > > But:
-> > > > 
-> > > > I've checked the eMMC specification, and the spec allows that teared write
-> > > > happen:
-> > > Yes, most storage only guarantees that sector writes are atomic and
-> > > so multi-sector writes have no guarantees of being written
-> > > atomically.  IOWs, all storage technologies that currently exist are
-> > > allowed to tear multi-sector writes.
-> > > 
-> > > However, FUA writes are guaranteed to be whole on persistent storage
-> > > regardless of size when the hardware signals completion. And any
-> > > write that the hardware has signalled as complete before a cache
-> > > flush is received is also guaranteed to be whole on persistent
-> > > storage when the cache flush is signalled as complete by the
-> > > hardware. These mechanisms provide protection against torn writes.
+> Whilst developing the journal flush/fua optimisations this cache was
+> part of, it appeared to made a significant difference to
+> performance. However, now that this patchset has settled and all the
+> correctness issues fixed, there does not appear to be any
+> significant performance benefit to asynchronous cache flushes.
 > 
-> My plan was to create a replay application that randomly creates disc images
-> allowed by the writeback_cache_control documentation.
+> In fact, the opposite is true on some storage types and workloads,
+> where additional cache flushes that can occur from fsync heavy
+> workloads have measurable and significant impact on overall
+> throughput.
 > 
-> https://www.kernel.org/doc/html/latest/block/writeback_cache_control.html
->
-> And then check that the filesystem behaves as expected/defined.
-
-We already have that tool that exercises stepwise flush/fua aware
-write recovery for filesystem testing: dm-logwrites was written and
-integrated into fstests years ago (2016?) by Josef Bacik for testing
-btrfs recovery, but it was a generic solution that all filesystems
-can use to test failure recovery....
-
-See, for example, common/dmlogwrites and tests/generic/482 - g/482
-uses fsstress to randomly modify the filesystem while dm-logwrites
-records all the writes made by the filesystem. It then replays them
-one flush/fua at a time, mounting the filesystem to ensure that it
-can recover the filesystem, then runs filesystem checkers to ensure
-that the filesystem does not have any corrupt metadata. Then it
-replays to the next flush/fua and repeats.
-
-tools/dm-logwrite-replay provides a script and documents the
-methodology to run step by step through replay of g/482 failures to
-be able to reliably reproduce and diagnose the cause of the failure.
-
-There's no need to re-invent the wheel if we've already got a
-perfectly good one...
-
-> > > > Is my understanding correct that XFS support neither eMMC nor NVM devices?
-> > > > (unless there is a battery backup that exceeds the guarantees from the spec)
-> > > Incorrect.
-> > > 
-> > > They are supported just fine because flush/FUA semantics provide
-> > > guarantees against torn writes in normal operation. IOWs, torn
-> > > writes are something that almost *never* happen in real life, even
-> > > when power fails suddenly. Despite this, XFS can detect it has
-> > > occurred (because broken storage is all too common!), and if it
-> > > can't recovery automatically, it will shut down and ask the user to
-> > > correct the problem.
+> Local dbench testing shows little difference on dbench runs with
+> sync vs async cache flushes on either fast or slow SSD storage, and
+> no difference in streaming concurrent async transaction workloads
+> like fs-mark.
 > 
-> So for xfs the behavior should be:
+> Fast NVME storage.
 > 
-> - without torn writes: Mount always successful, no errors when accessing the
-> content.
-
-Yes.
-
-Of course, there are software bugs, so mounts, recovery and
-subsequent repair testing can still fail.
-
-> - with torn writes: There may be error that will be detected only at
-> runtime. The errors may at the end cause a file system shutdown.
-
-Yes, and they may even prevent the filesystem from being mounted
-because recovery trips over them (e.g. processing pending unlinked
-inodes or replaying incomplete intents).
-
-> (commented dmesg is attached)
+> From `dbench -t 30`, CIL scale:
 > 
-> The application I have in mind are embedded systems.
-> I.e. there is no user that can correct something, the recovery strategy must
-> be included in the design.
+> clients		async			sync
+> 		BW	Latency		BW	Latency
+> 1		 935.18   0.855		 915.64   0.903
+> 8		2404.51   6.873		2341.77   6.511
+> 16		3003.42   6.460		2931.57   6.529
+> 32		3697.23   7.939		3596.28   7.894
+> 128		7237.43  15.495		7217.74  11.588
+> 512		5079.24  90.587		5167.08  95.822
+> 
+> fsmark, 32 threads, create w/ 64 byte xattr w/32k logbsize
+> 
+> 	create		chown		unlink
+> async   1m41s		1m16s		2m03s
+> sync	1m40s		1m19s		1m54s
+> 
+> Slower SATA SSD storage:
+> 
+> From `dbench -t 30`, CIL scale:
+> 
+> clients		async			sync
+> 		BW	Latency		BW	Latency
+> 1		  78.59  15.792		  83.78  10.729
+> 8		 367.88  92.067		 404.63  59.943
+> 16		 564.51  72.524		 602.71  76.089
+> 32		 831.66 105.984		 870.26 110.482
+> 128		1659.76 102.969		1624.73  91.356
+> 512		2135.91 223.054		2603.07 161.160
+> 
+> fsmark, 16 threads, create w/32k logbsize
+> 
+> 	create		unlink
+> async   5m06s		4m15s
+> sync	5m00s		4m22s
+> 
+> And on Jan's test machine:
+> 
+>                    5.18-rc8-vanilla       5.18-rc8-patched
+> Amean     1        71.22 (   0.00%)       64.94 *   8.81%*
+> Amean     2        93.03 (   0.00%)       84.80 *   8.85%*
+> Amean     4       150.54 (   0.00%)      137.51 *   8.66%*
+> Amean     8       252.53 (   0.00%)      242.24 *   4.08%*
+> Amean     16      454.13 (   0.00%)      439.08 *   3.31%*
+> Amean     32      835.24 (   0.00%)      829.74 *   0.66%*
+> Amean     64     1740.59 (   0.00%)     1686.73 *   3.09%*
+> 
+> Performance and cache flush behaviour is restored to pre-regression
+> levels.
+> 
+> As such, we can now consider the async cache flush mechanism an
+> unnecessary exercise in premature optimisation and hence we can
+> now remove it and the infrastructure it requires completely.
+> 
+> Fixes: bad77c375e8d ("xfs: CIL checkpoint flushes caches unconditionally")
+> Reported-and-tested-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Good luck with that - storage hardware fails in ways that no
-existing filesystem can recover automatically from 100% of the time.
-And very few even attempt to do so because it is largely an
-impossible requirement to fulfil. Torn writes are just the tip of
-the iceberg....
+Thanks!
 
-Cheers,
+> @@ -1058,7 +1048,7 @@ xlog_cil_push_work(
+>  	 * Before we format and submit the first iclog, we have to ensure that
+>  	 * the metadata writeback ordering cache flush is complete.
+>  	 */
+> -	wait_for_completion(&bdev_flush);
+> +//	wait_for_completion(&bdev_flush);
+>  
+>  	error = xlog_cil_write_chain(ctx, &lvhdr);
+>  	if (error)
 
-Dave.
+I guess this should be removed instead of commented-out...
+
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
