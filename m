@@ -2,188 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ED8EC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 17:05:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB7B7C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 19:26:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234748AbiCQRGw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Mar 2022 13:06:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33654 "EHLO
+        id S237812AbiCQT2O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Mar 2022 15:28:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231339AbiCQRGv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 13:06:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 066571BD813
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 10:05:35 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 92C9F61506
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 17:05:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF642C340E9;
-        Thu, 17 Mar 2022 17:05:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647536734;
-        bh=xSrHACZ9bdedOYux2dihbb9GzZKfNwzQ/9kk5U5OJko=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JcOInREFz7DQpsUTjmL9Lsgd0thdGljbx52lUmrHyq9ajM/Yi7vvuj1YraEdA2gic
-         hdYWXL68sDIYJYGWUiQDvPUIK3Ok95r5cDXSYcSteCFcKg6rFZ2yndnLohe0j3eWFI
-         HXgiqQCkx+/n8DulRMrVAO0yyxm4siI/HYxcVQPAld2/oIH5mYDBpErs2h1jX4oW7h
-         I5lPeNgIPVkZDssthvv4yYF3i9xp+1e50aCANosvqTgyln07J4e5JVQ6XncRrk5oN/
-         uUX040szQ9pkES40D8V9OSMWyLeRK5aQDaiuJcu2pW+Pb3IdeR/wer4eKUfSr6RTVo
-         Q0r03N7sjphkw==
-Date:   Thu, 17 Mar 2022 10:05:33 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: don't include bnobt blocks when reserving free
- block pool
-Message-ID: <20220317170533.GC8224@magnolia>
-References: <20220314180847.GM8224@magnolia>
- <YjHJ0qOUnmAUEgoV@bfoster>
- <20220316163216.GU8224@magnolia>
- <YjIeXX6XeX36bmXx@bfoster>
- <20220316181726.GV8224@magnolia>
- <20220317020526.GV3927073@dread.disaster.area>
+        with ESMTP id S237577AbiCQT2N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 15:28:13 -0400
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77B8C21794B
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 12:26:55 -0700 (PDT)
+Received: by mail-lf1-x135.google.com with SMTP id s25so10655141lfs.10
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 12:26:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Kld44BtN3rNiFeHs8eqamOSFXSi6G0Opd+8/ljmh7IE=;
+        b=aKUrlosQ/9HfOXQQwNdHeJfbdj6COyNpFJt+90/nk3eG+hm/7ahcfqx8JRd6Enx5Zd
+         qbllDAtGaAxjsCoL0umx6EmEc9sKvG1fp+yQBmtND7UETKMwdzRSahFjsF1ERXx++3Qt
+         87+Ue7rFm3KGaX8La/yPJQpzPxff/HSYVrV20=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Kld44BtN3rNiFeHs8eqamOSFXSi6G0Opd+8/ljmh7IE=;
+        b=mSR3IBIllK6LCiokZMmJrwopGCdRIhBNi91yZVATWPgvB8Uu1RbyYwLB3aNSHO1yjw
+         6JCLHzVOFCczjWjVLnwubD0uGWf0BMBrj+2906aS4mVlrmo3sc5m1CAs4kR6HagSF5+H
+         sOAN2IKnLzEJ6n7w9SZaNx9DZNjksNxdiiWy/TpVEmI++o1tE4pZFQIfOZMgr3b0Ywdq
+         rLMI8u2fyEgK8n/ALSgu0w77UUa1N6MEUCkZN6t+qsqjNH08MSOsrguJW1Lll7yf2UQX
+         JXqj5Z4ADxg8i0HiP3jzmXnr+yocDyOzttGPn4cNANI2P1vKqAO/OY3RSiaoDG35swxB
+         L9kA==
+X-Gm-Message-State: AOAM532AI/FRiplBCGdSjQ5Xsx2K5vTBkdtSNDzMqrXagwV+Xdq2TjE+
+        jG8yM5qlJSS9bw+XWodmiWOd11t2TEMWAksEot8=
+X-Google-Smtp-Source: ABdhPJx9421jUkWuDJh4rPxjOYjPR6zKALFYgpBUZNV6KvsTNsUCF63U1goF4W/Yy4vM/fHYnnddWQ==
+X-Received: by 2002:a05:6512:1193:b0:448:96df:f2a4 with SMTP id g19-20020a056512119300b0044896dff2a4mr3751144lfr.479.1647545213562;
+        Thu, 17 Mar 2022 12:26:53 -0700 (PDT)
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com. [209.85.167.51])
+        by smtp.gmail.com with ESMTPSA id z17-20020ac24191000000b004483a4d9a3esm512958lfh.152.2022.03.17.12.26.51
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 17 Mar 2022 12:26:52 -0700 (PDT)
+Received: by mail-lf1-f51.google.com with SMTP id w7so10687504lfd.6
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 12:26:51 -0700 (PDT)
+X-Received: by 2002:ac2:4f92:0:b0:448:7eab:c004 with SMTP id
+ z18-20020ac24f92000000b004487eabc004mr3766610lfs.27.1647545211431; Thu, 17
+ Mar 2022 12:26:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220317020526.GV3927073@dread.disaster.area>
+References: <YjDj3lvlNJK/IPiU@bfoster> <YjJPu/3tYnuKK888@casper.infradead.org>
+ <CAHk-=wgPTWoXCa=JembExs8Y7fw7YUi9XR0zn1xaxWLSXBN_vg@mail.gmail.com> <YjNN5SzHELGig+U4@casper.infradead.org>
+In-Reply-To: <YjNN5SzHELGig+U4@casper.infradead.org>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Thu, 17 Mar 2022 12:26:35 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wiZvOpaP0DVyqOnspFqpXRaT6q53=gnA2psxnf5dbt7bw@mail.gmail.com>
+Message-ID: <CAHk-=wiZvOpaP0DVyqOnspFqpXRaT6q53=gnA2psxnf5dbt7bw@mail.gmail.com>
+Subject: Re: writeback completion soft lockup BUG in folio_wake_bit()
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Brian Foster <bfoster@redhat.com>, Linux-MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Hugh Dickins <hughd@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 17, 2022 at 01:05:26PM +1100, Dave Chinner wrote:
-> On Wed, Mar 16, 2022 at 11:17:26AM -0700, Darrick J. Wong wrote:
-> > On Wed, Mar 16, 2022 at 01:29:01PM -0400, Brian Foster wrote:
-> > > On Wed, Mar 16, 2022 at 09:32:16AM -0700, Darrick J. Wong wrote:
-> > > > On Wed, Mar 16, 2022 at 07:28:18AM -0400, Brian Foster wrote:
-> > > > > On Mon, Mar 14, 2022 at 11:08:47AM -0700, Darrick J. Wong wrote:
-> > > Similar deal as above.. I'm more interested in a potential cleanup of
-> > > the code that helps prevent this sort of buglet for the next user of
-> > > ->m_alloc_set_aside that will (expectedly) have no idea about this
-> > > subtle quirk than I am about what's presented in the free space
-> > > counters. ISTM that we ought to just ditch ->m_alloc_set_aside, replace
-> > > the existing xfs_alloc_set_aside() with an XFS_ALLOC_FS_RESERVED() macro
-> > > or something that just does the (agcount << 3) thing, and then define a
-> > 
-> > I'm not sure that the current xfs_alloc_set_aside code is correct.
-> > Right now it comes with this comment:
-> > 
-> > "We need to reserve 4 fsbs _per AG_ for the freelist and 4 more to
-> > handle a potential split of the file's bmap btree."
-> >
-> > I think the first part ("4 fsbs _per AG_ for the freelist") is wrong.
-> > AFAICT, that part refers to the number of blocks we need to keep free in
-> > case we have to replenish a completely empty AGFL.  The hardcoded value
-> > of 4 seems wrong, since xfs_alloc_min_freelist() is what _fix_freelist
-> > uses to decide how big the AGFL needs to be, and it returns 6 on a
-> > filesystem that has rmapbt enabled.  So I think XFS_ALLOC_AGFL_RESERVE
-> > is wrong here and should be replaced with the function call.
-> 
-> Back when I wrote that code (circa 2007, IIRC), that was actually
-> correct according to the reservations that were made when freeing
-> an extent at ENOSPC.
-> 
-> We needed 4 blocks for the AGFL fixup to always succeed  - 2 blocks
-> for each BNO and CNT btrees, and, IIRC, the extent free reservation
-> was just 4 blocks at that time. Hence the 4+4 value.
-> 
-> However, you are right that rmap also adds another per-ag btree that
-> is allocated from the agfl and that set_aside() should be taking
-> that into accout. That said, I think that xfs_alloc_min_freelist()
-> might even be wrong by just adding 2 blocks to the AGFL for the
-> rmapbt.
-> 
-> That is, at ENOSPC the rmapbt can be a *big* btree. It's not like
-> the BNO and CNT btrees which are completely empty at that point in
-> time; the RMAP tree could be one level below max height, and freeing
-> a single block could split a rmap rec and trigger a full height RMAP
-> split.
-> 
-> So the minimum free list length in that case is 2 + 2 + MAX_RMAP_HEIGHT.
+On Thu, Mar 17, 2022 at 8:04 AM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> So how about we do something like this:
+>
+>  - Make folio_start_writeback() and set_page_writeback() return void,
+>    fixing up AFS and NFS.
+>  - Add a folio_wait_start_writeback() to use in the VFS
+>  - Remove the calls to set_page_writeback() in the filesystems
 
-The rmap btree can become a big btree, but the per-ag rmapbt reservation
-ensures that there's enough free space to refill the AGFL to handle the
-rmap btree expanding to its maximum allowable size.  XFS_AG_RESV_RMAPBT
-is subtracted from fdblocks, so I don't think alloc_set_aside ought to
-withhold even more blocks from xfs_mod_fdblocks.
+That sounds lovely, but it does worry me a bit. Not just the odd
+'keepwrite' thing, but also the whole ordering between the folio bit
+and the tagging bits. Does the ordering possibly matter?
 
-IOWS, I was wrong earlier -- we only need to withhold enough space from
-fdblocks to handle splits of the bnobt and cntbt at or near ENOSPC.  The
-value 4 is actually correct, but needs much better explanation.
-Especially for benefit of the original author. ;)
+That whole "xyz_writeback_keepwrite()" thing seems odd. It's used in
+only one place (the folio version isn't used at all):
 
-> > I also think the second part ("and 4 more to handle a split of the
-> > file's bmap btree") is wrong.  If we're really supposed to save enough
-> > blocks to handle a bmbt split, then I think this ought to be
-> > (mp->m_bm_maxlevels[0] - 1), not 4, right?  According to xfs_db, bmap
-> > btrees can be 9 levels tall:
-> 
-> Yes, we've changed the BMBT reservations in the years since that
-> code was written to handle max height reservations correctly, too.
-> So, like the RMAP btree reservation, we probably should be reserving
-> MAX_BMAP_HEIGHT in the set-aside calculation.
+  ext4_writepage():
 
-Right.
+     ext4_walk_page_buffers() fails:
+                redirty_page_for_writepage(wbc, page);
+                keep_towrite = true;
+      ext4_bio_write_page().
 
-> refcount btree space is handled by the ag_resv code and blocks
-> aren't allocated from the AGFL, so I don't think we need to take
-> taht into account for xfs_alloc_set_aside().
+which just looks odd. Why does it even try to continue to do the
+writepage when the page buffer thing has failed?
 
-Right.
+In the regular write path (ie ext4_write_begin()), a
+ext4_walk_page_buffers() failure is fatal or causes a retry). Why is
+ext4_writepage() any different? Particularly since it wants to keep
+the page dirty, then trying to do the writeback just seems wrong.
 
-> > So in the end, I think that calculation should become:
-> > 
-> > unsigned int
-> > xfs_alloc_set_aside(
-> > 	struct xfs_mount	*mp)
-> > {
-> > 	unsigned int		min-agfl = xfs_alloc_min_freelist(mp, NULL);
-> > 
-> > 	return mp->m_sb.sb_agcount * (min_agfl + mp->m_bm_maxlevels[0] - 1);
-> > }
-> 
-> *nod*, but with the proviso that xfs_alloc_min_freelist() doesn't
-> appear to be correct, either....
-> 
-> Also, that's a fixed value for the physical geometry of the
-> filesystem, so it should be calculated once at mount time and stored
-> in the xfs_mount (and only updated if needed at growfs time)...
+So this code is all a bit odd, I suspect there are decades of "people
+continued to do what they historically did" changes, and it is all
+worrisome.
 
-There are three callers of xfs_alloc_min_freelist(, NULL) now.  One of
-them is the the function that does the root inode calculation, which we
-only use in mkfs and repair.
+Your cleanup sounds like the right thing, but I also think that
+getting rid of that 'keepwrite' thing would also be the right thing.
+And it all worries me.
 
-The other two are xfs_alloc_set_aside and xfs_alloc_ag_max_usable, and
-we already cache the return value of those two functions, so I don't see
-why we need to cache xfs_alloc_min_freelist separately?
-
-(Or even touch it at all, really...)
-
---D
-
-> > > new xfs_alloc_set_aside() that combines the macro calculation with
-> > > ->m_allocbt_blks. Then the whole "set aside" concept is calculated and
-> > > documented in one place. Hm?
-> > 
-> > I think I'd rather call the new function xfs_fdblocks_avail() over
-> > reusing an existing name, because I fear that zapping an old function
-> > and replacing it with a new function with the same name will cause
-> > confusion for anyone backporting patches or reading code after an
-> > absence.
-> > 
-> > Also the only reason we have a mount variable and a function (instead of
-> > a macro) is that Dave asked me to change the codebase away from the
-> > XFS_ALLOC_AG_MAX_USABLE/XFS_ALLOC_SET_ASIDE macros as part of merging
-> > reflink.
-> 
-> Yeah, macros wrapping a variable or repeated constant calculation
-> are bad, and it's something we've been cleaning up for a long
-> time...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+            Linus
