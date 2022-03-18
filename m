@@ -2,147 +2,170 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8022C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 16:11:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 562DBC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 17:32:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234956AbiCRQMd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Mar 2022 12:12:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36638 "EHLO
+        id S239507AbiCRRd0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Mar 2022 13:33:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234745AbiCRQMc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Mar 2022 12:12:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6C7B41AECA0
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 09:11:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1647619872;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=W7xITz/5ElJGJFyeGuq895Jef1O/vQALLGAOy/yRoTU=;
-        b=MvVGIPgjo/1HSa71RCzgg6HhRceDOvJ+zeOFwKfSAddPvHq6bg91oP3bVzGHynQUrLC3L3
-        GPAHWMeHrFpZSkF+rHGl4NqRavy/3yAXxMUc9r9gpvXELeYTteOn9nlyZpzePI8aqsflIu
-        kfbFtZOmFbHuGIvMkBAg04BOHYbzopo=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-375-bwXFFNAaNyC7UAA2UmcLLA-1; Fri, 18 Mar 2022 12:11:10 -0400
-X-MC-Unique: bwXFFNAaNyC7UAA2UmcLLA-1
-Received: by mail-qt1-f198.google.com with SMTP id bq21-20020a05622a1c1500b002e06d6279d5so5930159qtb.7
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 09:11:10 -0700 (PDT)
+        with ESMTP id S233290AbiCRRd0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Mar 2022 13:33:26 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BE27CF488;
+        Fri, 18 Mar 2022 10:32:07 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id l4-20020a17090a49c400b001c6840df4a3so5106776pjm.0;
+        Fri, 18 Mar 2022 10:32:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=v2+7TjxCz/iJePRyFbqQRLmhTrxcszamkFrqGEeq6RE=;
+        b=j6rdW0vl3K3sGSkYu5w7VUoJZJZvYdcycVs5qyXdXGtGv/mX1pV1rkvC+ckVdBL/Ts
+         wvoc0z+Ja9EpA3+aKl1DVOsCRjgJKx36A8CareMJUtbIejvnh7zRR1RHLrb6JRUsAhRx
+         y0XUYRpUFdMt12mg3Z5uz8Lg5USvnTqhJt5vEWr6o+HZ9irOkyy/DovkNM2SbrQ1JX8M
+         Lna+vYwAd0Rq7IOpPk7i0MgBEJKL+nnQ3bg5tkxA+RaNMuaObzgsjcFqQ5RukRiVwvzQ
+         sgIGO2lunB2ZEKsPV6TA44T15jtdf435vfQTo3DmA/yN/XVMy6OnkbkfkFbbTdP8O2J1
+         lxKg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=W7xITz/5ElJGJFyeGuq895Jef1O/vQALLGAOy/yRoTU=;
-        b=BfVT2L/qgNlD1s1tMFEk3qKXmFx5N6zgN49BNYyUmgcEbAQCdl26VFCbhcy/pae+iX
-         ihyqkL4nH97FYFlDTrQ5CLBe0ySy3xlpTaCADzpKUfVdXvHwUBb6ubqfS98mnb7MrVKR
-         EXFb50z+VezbNnV5JYAo5MAu8TRHraKP91s5Gi+CqqsZ/Vxay0YQa5f0Uv/TZ7ctzTdw
-         8DHOfk9sOXsXMsCI6+2pX2aDK6/ZmpPT1zSrzli/es6lecCHILNEm8isrlezQLu+h047
-         /Aa40m5wtJpiHM4rh6iv/4rVO4v8LVD3SHFvHrH1YJRn6Lcogrp/tZqKhTHhd7O0ZP/c
-         dN6Q==
-X-Gm-Message-State: AOAM531j4uSexOSd3lHuEKas/yqbjDC7aWlAkfGnxVwc9Q6IsWuNhGLB
-        QYQF6+m4ujymYCOXnbR1ScZ10zuIf6jHusZf1L3R97sHKD/8Fw1WGwaG3yJBjIDaVJ+KBkIqPG1
-        yhH+OS2sGQhJgdQPM3cZt3F42dPByH7jxMe+wZd6MxRlur1+byKyFTpq8sojZ0X+VyU7OT8k=
-X-Received: by 2002:ac8:5cc1:0:b0:2e1:bd05:1371 with SMTP id s1-20020ac85cc1000000b002e1bd051371mr7871013qta.573.1647619869906;
-        Fri, 18 Mar 2022 09:11:09 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxxBZ3zoEWYEf+X+sQIkCzS/FpYh4SQtDrS5VoBzXusu3TEWy1H5h9zcxCa+PdtVw4feWoKSw==
-X-Received: by 2002:ac8:5cc1:0:b0:2e1:bd05:1371 with SMTP id s1-20020ac85cc1000000b002e1bd051371mr7870974qta.573.1647619869408;
-        Fri, 18 Mar 2022 09:11:09 -0700 (PDT)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id q8-20020a05622a030800b002e1c9304db8sm5873617qtw.38.2022.03.18.09.11.09
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Mar 2022 09:11:09 -0700 (PDT)
-Date:   Fri, 18 Mar 2022 12:11:07 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: Re: [BUG] log I/O completion GPF via xfs/006 and xfs/264 on
- 5.17.0-rc8
-Message-ID: <YjSvG0wgm6epCa8X@bfoster>
-References: <YjSNTd+U3HBq/Gsv@bfoster>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=v2+7TjxCz/iJePRyFbqQRLmhTrxcszamkFrqGEeq6RE=;
+        b=rAqSx1OpdliI+/3Ggpnvvu+8EBfz/QJles4EcDHQIwfl7xpPsyZkYSXY5B+SHY/6Kx
+         UbVuwFFXqcy2fmuAhUYMwAKGuDeZrvVFE4ZTm3HILzfqmprI4glPh6UItql8DzHU5zFR
+         v1gXmCXGSdChCMhvIHm3s3kqhRrxs8giNwAOptOwbIVmA3u0WfyMhNA20cbWDp8+eGM4
+         pK/jkY/VRHiTqwmf9Wq39vv7fw8ut49GR0ScRdkPTArBLjlRA8WI677irim+7+qX+a5+
+         t9SsC8MEuDVheFSTxLf2tsApBiSJnXFAN2wazMQLqbmhBib+W1q0l8uL0gsyURdQjYqJ
+         MqPQ==
+X-Gm-Message-State: AOAM530RLxARBvL1j5k/uhnP28aM+XhH7tvhDbm1Od0HaKE8I+qTKnMj
+        9jXBv+ulDC47BkF5tVxhyTiGAeY2MsLHc7S10nk=
+X-Google-Smtp-Source: ABdhPJyh5sar5ek5GT9YTEP77ixsCcilYxYkIste3RuLag/BYsrgSRi1slJnriJ+u/pf99Z+trolDxeILv7BgoSjLmA=
+X-Received: by 2002:a17:90a:3906:b0:1bf:a0a6:d208 with SMTP id
+ y6-20020a17090a390600b001bfa0a6d208mr22604556pjb.21.1647624726981; Fri, 18
+ Mar 2022 10:32:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YjSNTd+U3HBq/Gsv@bfoster>
+References: <20220317234827.447799-1-shy828301@gmail.com> <20220318012948.GE1544202@dread.disaster.area>
+In-Reply-To: <20220318012948.GE1544202@dread.disaster.area>
+From:   Yang Shi <shy828301@gmail.com>
+Date:   Fri, 18 Mar 2022 10:31:55 -0700
+Message-ID: <CAHbLzkpFch0+=XorZXpaqvFb=_OXdn4ZsjOLhWg1EJpMZNaM0A@mail.gmail.com>
+Subject: Re: [v2 PATCH 0/8] Make khugepaged collapse readonly FS THP more consistent
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     vbabka@suse.cz, kirill.shutemov@linux.intel.com,
+        linmiaohe@huawei.com, songliubraving@fb.com, riel@surriel.com,
+        willy@infradead.org, ziy@nvidia.com, akpm@linux-foundation.org,
+        tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com,
+        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 18, 2022 at 09:46:53AM -0400, Brian Foster wrote:
-> Hi,
-> 
-> I'm not sure if this is known and/or fixed already, but it didn't look
-> familiar so here is a report. I hit a splat when testing Willy's
-> prospective folio bookmark change and it turns out it replicates on
-> Linus' current master (551acdc3c3d2). This initially reproduced on
-> xfs/264 (mkfs defaults) and I saw a soft lockup warning variant via
-> xfs/006, but when I attempted to reproduce the latter a second time I
-> hit what looks like the same problem as xfs/264. Both tests seem to
-> involve some form of error injection, so possibly the same underlying
-> problem. The GPF splat from xfs/264 is below.
-> 
+On Thu, Mar 17, 2022 at 6:29 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Thu, Mar 17, 2022 at 04:48:19PM -0700, Yang Shi wrote:
+> >
+> > Changelog
+> > v2: * Collected reviewed-by tags from Miaohe Lin.
+> >     * Fixed build error for patch 4/8.
+> >
+> > The readonly FS THP relies on khugepaged to collapse THP for suitable
+> > vmas.  But it is kind of "random luck" for khugepaged to see the
+> > readonly FS vmas (see report: https://lore.kernel.org/linux-mm/00f195d4-d039-3cf2-d3a1-a2c88de397a0@suse.cz/) since currently the vmas are registered to khugepaged when:
+> >   - Anon huge pmd page fault
+> >   - VMA merge
+> >   - MADV_HUGEPAGE
+> >   - Shmem mmap
+> >
+> > If the above conditions are not met, even though khugepaged is enabled
+> > it won't see readonly FS vmas at all.  MADV_HUGEPAGE could be specified
+> > explicitly to tell khugepaged to collapse this area, but when khugepaged
+> > mode is "always" it should scan suitable vmas as long as VM_NOHUGEPAGE
+> > is not set.
+> >
+> > So make sure readonly FS vmas are registered to khugepaged to make the
+> > behavior more consistent.
+> >
+> > Registering the vmas in mmap path seems more preferred from performance
+> > point of view since page fault path is definitely hot path.
+> >
+> >
+> > The patch 1 ~ 7 are minor bug fixes, clean up and preparation patches.
+> > The patch 8 converts ext4 and xfs.  We may need convert more filesystems,
+> > but I'd like to hear some comments before doing that.
+>
+> After reading through the patchset, I have no idea what this is even
+> doing or enabling. I can't comment on the last patch and it's effect
+> on XFS because there's no high level explanation of the
+> functionality or feature to provide me with the context in which I
+> should be reviewing this patchset.
+>
+> I understand this has something to do with hugepages, but there's no
+> explaination of exactly where huge pages are going to be used in the
+> filesystem, what the problems with khugepaged and filesystems are
+> that this apparently solves, what constraints it places on
+> filesystems to enable huge pages to be used, etc.
+>
+> I'm guessing that the result is that we'll suddenly see huge pages
+> in the page cache for some undefined set of files in some undefined
+> set of workloads. But that doesn't help me understand any of the
+> impacts it may have. e.g:
 
-Darrick pointed out this [1] series on IRC (particularly the final
-patch) so I gave that a try. I _think_ that addresses the GPF issue
-given it was nearly 100% reproducible before and I didn't see it in a
-few iterations, but once I started a test loop for a longer test I ran
-into the aforementioned soft lockup again. A snippet of that one is
-below [2]. When this occurs, the task appears to be stuck (i.e. the
-warning repeats) indefinitely.
+Song introduced READ_ONLY_THP_FOR_FS back in 2019. It collapses huge
+pages for readonly executable file mappings to speed up the programs
+with huge text section. The huge page is allocated/collapsed by
+khugepaged instead of in page fault path.
 
-Brian
+Vlastimil reported the huge pages are not collapsed consistently since
+the suitable MMs were not registered by khugepaged consistently as the
+commit log elaborated. So this patchset makes the behavior of
+khugepaged (for collapsing readonly file THP) more consistent.
 
-[1] https://lore.kernel.org/linux-xfs/20220317053907.164160-1-david@fromorbit.com/
-[2] Soft lockup warning from xfs/264 with patches from [1] applied:
+>
+> - how does this relate to the folio conversion and use of large
+>   pages in the page cache?
+> - why do we want two completely separate large page mechanisms in
+>   the page cache?
 
-watchdog: BUG: soft lockup - CPU#52 stuck for 134s! [kworker/52:1H:1881]
-Modules linked in: rfkill rpcrdma sunrpc intel_rapl_msr intel_rapl_common rdma_ucm ib_srpt ib_isert iscsi_target_mod i10nm_edac target_core_mod x86_pkg_temp_thermal intel_powerclamp ib_iser coretemp libiscsi scsi_transport_iscsi kvm_intel rdma_cm ib_umad ipmi_ssif ib_ipoib iw_cm ib_cm kvm iTCO_wdt iTCO_vendor_support irqbypass crct10dif_pclmul crc32_pclmul acpi_ipmi mlx5_ib ghash_clmulni_intel bnxt_re ipmi_si rapl intel_cstate ib_uverbs ipmi_devintf mei_me isst_if_mmio isst_if_mbox_pci i2c_i801 nd_pmem ib_core intel_uncore wmi_bmof pcspkr isst_if_common mei i2c_smbus intel_pch_thermal ipmi_msghandler nd_btt dax_pmem acpi_power_meter xfs libcrc32c sd_mod sg mlx5_core lpfc mgag200 i2c_algo_bit drm_shmem_helper nvmet_fc drm_kms_helper nvmet nvme_fc mlxfw nvme_fabrics syscopyarea sysfillrect pci_hyperv_intf sysimgblt fb_sys_fops nvme_core ahci tls t10_pi libahci crc32c_intel psample scsi_transport_fc bnxt_en drm megaraid_sas tg3 libata wmi nfit libnvdimm dm_mirror dm_region_hash
- dm_log dm_mod
-CPU: 52 PID: 1881 Comm: kworker/52:1H Tainted: G S           L    5.17.0-rc8+ #17
-Hardware name: Dell Inc. PowerEdge R750/06V45N, BIOS 1.2.4 05/28/2021
-Workqueue: xfs-log/dm-5 xlog_ioend_work [xfs]
-RIP: 0010:native_queued_spin_lock_slowpath+0x1b0/0x1e0
-Code: c1 e9 12 83 e0 03 83 e9 01 48 c1 e0 05 48 63 c9 48 05 40 0d 03 00 48 03 04 cd e0 ba 00 8c 48 89 10 8b 42 08 85 c0 75 09 f3 90 <8b> 42 08 85 c0 74 f7 48 8b 0a 48 85 c9 0f 84 6b ff ff ff 0f 0d 09
-RSP: 0018:ff4ed0b360e4bb48 EFLAGS: 00000246
-RAX: 0000000000000000 RBX: ff3413f05c684540 RCX: 0000000000001719
-RDX: ff34142ebfeb0d40 RSI: ffffffff8bf826f6 RDI: ffffffff8bf54147
-RBP: ff34142ebfeb0d40 R08: ff34142ebfeb0a68 R09: 00000000000001bc
-R10: 00000000000001d1 R11: 0000000000000abd R12: 0000000000d40000
-R13: 0000000000000008 R14: ff3413f04cd84000 R15: ff3413f059404400
-FS:  0000000000000000(0000) GS:ff34142ebfe80000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f9200514f70 CR3: 0000000216c16005 CR4: 0000000000771ee0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-PKRU: 55555554
-Call Trace:
- <TASK>
- _raw_spin_lock+0x2c/0x30
- xfs_trans_ail_delete+0x2a/0xd0 [xfs]
- xfs_buf_item_done+0x22/0x30 [xfs]
- xfs_buf_ioend+0x71/0x5e0 [xfs]
- xfs_trans_committed_bulk+0x167/0x2c0 [xfs]
- ? enqueue_entity+0x121/0x4d0
- ? enqueue_task_fair+0x417/0x530
- ? resched_curr+0x23/0xc0
- ? check_preempt_curr+0x3f/0x70
- ? _raw_spin_unlock_irqrestore+0x1f/0x31
- ? __wake_up_common_lock+0x87/0xc0
- xlog_cil_committed+0x29c/0x2d0 [xfs]
- ? _raw_spin_unlock_irqrestore+0x1f/0x31
- ? __wake_up_common_lock+0x87/0xc0
- xlog_cil_process_committed+0x69/0x80 [xfs]
- xlog_state_shutdown_callbacks+0xce/0xf0 [xfs]
- xlog_force_shutdown+0xd0/0x110 [xfs]
- xfs_do_force_shutdown+0x5f/0x150 [xfs]
- xlog_ioend_work+0x71/0x80 [xfs]
- process_one_work+0x1c5/0x390
- ? process_one_work+0x390/0x390
- worker_thread+0x30/0x350
- ? process_one_work+0x390/0x390
- kthread+0xe6/0x110
- ? kthread_complete_and_exit+0x20/0x20
- ret_from_fork+0x1f/0x30
- </TASK>
+It has nothing to do with the folio conversion. But once the file
+THP/huge page is fully supported, the READ_ONLY_THP_FOR_FS may be
+deprecated. However, making khugepaged collapse file THP more
+consistently is applicable to full file huge page support as well as
+long as we still use khugepaged to collapse THP.
 
+> - why is this limited to "read only VMAs" and how does the
+>   filesystem actually ensure that the VMAs are read only?
+
+It uses the below check:
+
+(IS_ENABLED(CONFIG_READ_ONLY_THP_FOR_FS)) &&
+               (vma->vm_flags & VM_EXEC) &&
+               !inode_is_open_for_write(inode) && S_ISREG(inode->i_mode);
+
+This condition was introduced by READ_ONLY_THP_FOR_FS in the first
+place, not this patchset.
+
+> - what happens if we have a file that huge pages mapped into the
+>   page cache via read only VMAs then has write() called on it via a
+>   different file descriptor and so we need to dirty the page cache
+>   that has huge pages in it?
+
+Once someone else opens the fd in write mode, the THP will be
+truncated and khugepaged will backoff IIUC.
+
+>
+> I've got a lot more questions, but to save me having to ask them,
+> how about you explain what this new functionality actually does, why
+> we need to support it, and why it is better than the fully writeable
+> huge page support via folios that we already have in the works...
+>
+> Cheers,
+>
+> Dave.
+>
+> --
+> Dave Chinner
+> david@fromorbit.com
