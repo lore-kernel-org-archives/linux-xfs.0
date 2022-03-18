@@ -2,81 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C6D7C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 18:58:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E486C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 20:19:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240281AbiCRS7y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Mar 2022 14:59:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32934 "EHLO
+        id S240551AbiCRUUe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Mar 2022 16:20:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237336AbiCRS7x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Mar 2022 14:59:53 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B524CBF975
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 11:58:34 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id bu29so15601067lfb.0
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 11:58:34 -0700 (PDT)
+        with ESMTP id S240356AbiCRUUd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Mar 2022 16:20:33 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55A5AB2455;
+        Fri, 18 Mar 2022 13:19:13 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id v4so8279560pjh.2;
+        Fri, 18 Mar 2022 13:19:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
+        d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=ZDmW+p2ypjT1HjKWJx8fh+7ifv3HKZNMXtvuE6nm2qs=;
-        b=XHm5zI8ZBbpkWBIg6jHxN78K61Pegw6nnLu5ZR3iY8VEia03dmDXc3bRlF28jroE23
-         doUqgjtYjvMH/budaSJuXxwTsP9wm1X3caE0hvtLwEj1Yzt9y1nJKLAZWQpSC1IyN0hj
-         mypuoFL+N7hevvkbbmj5/rf2VzcZF7ajqMqyI=
+        bh=HV4U7qntOGnpJQ2Afj++lgXG3IzP1EpW8jb1OgmKEbs=;
+        b=cv/wFbgGRgnZTrAo2iSw2ZYNZUvLSvO2ykavsVExcgFHItqQBTyFH7XfiGSzuYmgwA
+         Ed/JqSZs6k0xhbTvukrPZxEZWV4jv5BtS4zuCxqFqhs2oXgCojO8M1opGbEwTKSG4awU
+         lhBbN+i+NnMlCgMprP9pR+cCkED5e/56cGEarkY/Ah0B68BqRb4VcQ/YZN/fWJ6ZzWgb
+         sKicUq3R3HPPAKLMthT1J6DFsMHC27D8b35u/5XMiKH/TJ8FAXlzqZHDmEBL2uIpHWSa
+         MnyPKyGIYzKEJiYv7difK79cDiFRCJnz5WPIfDR2pzRioPQmcDWorTSHCivvHfRSseRM
+         TBSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=ZDmW+p2ypjT1HjKWJx8fh+7ifv3HKZNMXtvuE6nm2qs=;
-        b=XKaVkHZonaTTefY/Gq+yJSud1kvBorh3L+fHQ72vmXXbrYjgnH6OnzvpjKcwb+nZaZ
-         +w280tZ8YMjgtiNDQRrD0md9vzh1KTQ9N/GSav4kSIklHSSwockFSSlkvc66jtolPpEc
-         1LjsAlGj+6/LfPouhzqIRK3NAemWOpjfGTeiqLU5j5oZMM7XRJdCw9N8wKTIE/NgVDQd
-         XjnDgnDMq2k08F/aKUNi41MNIfnY/42HzKsuRntFTXiNo+/ZgaUMTz1v9Td0+HLV4Jv9
-         iw4yKcpg8gDzL0cBX5E7fELtSmzvI3OooNFVcfrzFeoaqptTWZajDGM4JuXtZOpIkHrn
-         8lbQ==
-X-Gm-Message-State: AOAM532me2DzisKT7N2g357IqkjeVufYV0L2Q4KnGlvfJ9Fxq++F2+Zl
-        ycmbBHpxSZ9OQ6lPI/TW35cmOQfrvaQqQh54kDI=
-X-Google-Smtp-Source: ABdhPJy0jxOzZIPp82x73vUooRg9s1lDIc4qQjXxyCKE4EGc9jjfKyi1TpNcmKy8cfptR24uUywfBg==
-X-Received: by 2002:ac2:5fc1:0:b0:448:2915:3306 with SMTP id q1-20020ac25fc1000000b0044829153306mr6528950lfg.109.1647629912767;
-        Fri, 18 Mar 2022 11:58:32 -0700 (PDT)
-Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com. [209.85.208.169])
-        by smtp.gmail.com with ESMTPSA id h7-20020ac25d67000000b0044836d7c475sm964073lft.147.2022.03.18.11.58.31
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Mar 2022 11:58:31 -0700 (PDT)
-Received: by mail-lj1-f169.google.com with SMTP id y17so12392693ljd.12
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 11:58:31 -0700 (PDT)
-X-Received: by 2002:a2e:a78f:0:b0:249:21ce:6d53 with SMTP id
- c15-20020a2ea78f000000b0024921ce6d53mr6973185ljf.164.1647629910974; Fri, 18
- Mar 2022 11:58:30 -0700 (PDT)
+        bh=HV4U7qntOGnpJQ2Afj++lgXG3IzP1EpW8jb1OgmKEbs=;
+        b=TpIz/hXueDbtS/AIxi1Vp/VzvwJbsmSnkPfxlOJUlSPG9o+1C7NOSZQvixMMMyWYMm
+         i4k8s5q5md/omP86IZ9nXPk1qNj9VNIaNb9wieD54FpPRdUyRP64op3YYirZeJ/ZHwcO
+         k5LchIgvLxn2hmAOsTRIeyWoCdJ/RUCT/kcoXCXmCdP143Rv8yImboCsEkaYUzkQC2Ac
+         eHiGPEd6pKpdrucQw15qFgS33BA4++LWAdV+IIh5D5fNx3Ot6nMKXPlXkK9QYFUkHRp+
+         WZ/b5liDxL3NgcSRm0PQGJIMqA4evkPfEfWB1SrHGVLRtPn0OZZefPWvtSskHJZWrSiq
+         2lvQ==
+X-Gm-Message-State: AOAM533VaUt7wxBkQ64eGqhfEXU9Y5TRLFUGSiQuVosGS+p+N/eWyRpe
+        e8HL0cul/0IhITtOVgKpYRKTQTDHQhN/gIVZkAk=
+X-Google-Smtp-Source: ABdhPJzS7VKxms885c65Z+VAIRBodeDJ9R0QcxFh8fU+8LTK7EQHr7jWlQVtwvzDdeaT2HcKmVDeVupzLGpfuzOqFwo=
+X-Received: by 2002:a17:90a:3906:b0:1bf:a0a6:d208 with SMTP id
+ y6-20020a17090a390600b001bfa0a6d208mr23331916pjb.21.1647634752753; Fri, 18
+ Mar 2022 13:19:12 -0700 (PDT)
 MIME-Version: 1.0
-References: <YjDj3lvlNJK/IPiU@bfoster> <YjJPu/3tYnuKK888@casper.infradead.org>
- <YjM88OwoccZOKp86@bfoster> <YjSTq4roN/LJ7Xsy@bfoster> <YjSbHp6B9a1G3tuQ@casper.infradead.org>
-In-Reply-To: <YjSbHp6B9a1G3tuQ@casper.infradead.org>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Fri, 18 Mar 2022 11:58:14 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wh6V6TZjjnqBvktbaho_wqfjZYQ9zcKJTV8EP2Kygn0uQ@mail.gmail.com>
-Message-ID: <CAHk-=wh6V6TZjjnqBvktbaho_wqfjZYQ9zcKJTV8EP2Kygn0uQ@mail.gmail.com>
-Subject: Re: writeback completion soft lockup BUG in folio_wake_bit()
+References: <20220317234827.447799-1-shy828301@gmail.com> <20220318012948.GE1544202@dread.disaster.area>
+ <YjP+oyoT9Y2SFt8L@casper.infradead.org> <CAHbLzkonVj63+up4-BCPm29yjaf_29asMFJHpXiZp96UjGGNSg@mail.gmail.com>
+ <YjTT5Meqdn8fiuC2@casper.infradead.org>
+In-Reply-To: <YjTT5Meqdn8fiuC2@casper.infradead.org>
+From:   Yang Shi <shy828301@gmail.com>
+Date:   Fri, 18 Mar 2022 13:19:00 -0700
+Message-ID: <CAHbLzkrE1sF2bcv=eB8szx047pUgMZzo9JuyADTCBzZ9V-+7XA@mail.gmail.com>
+Subject: Re: [v2 PATCH 0/8] Make khugepaged collapse readonly FS THP more consistent
 To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Brian Foster <bfoster@redhat.com>, Linux-MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Hugh Dickins <hughd@google.com>
+Cc:     Dave Chinner <david@fromorbit.com>, vbabka@suse.cz,
+        kirill.shutemov@linux.intel.com, linmiaohe@huawei.com,
+        songliubraving@fb.com, riel@surriel.com, ziy@nvidia.com,
+        akpm@linux-foundation.org, tytso@mit.edu, adilger.kernel@dilger.ca,
+        darrick.wong@oracle.com, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 18, 2022 at 7:45 AM Matthew Wilcox <willy@infradead.org> wrote:
+On Fri, Mar 18, 2022 at 11:48 AM Matthew Wilcox <willy@infradead.org> wrote:
 >
-> Excellent!  I'm going to propose these two patches for -rc1 (I don't
-> think we want to be playing with this after -rc8)
+> On Fri, Mar 18, 2022 at 11:04:29AM -0700, Yang Shi wrote:
+> > I agree once page cache huge page is fully supported,
+> > READ_ONLY_THP_FOR_FS could be deprecated. But actually this patchset
+> > makes khugepaged collapse file THP more consistently. It guarantees
+> > the THP could be collapsed as long as file THP is supported and
+> > configured properly and there is suitable file vmas, it is not
+> > guaranteed by the current code. So it should be useful even though
+> > READ_ONLY_THP_FOR_FS is gone IMHO.
+>
+> I don't know if it's a good thing or not.  Experiments with 64k
+> PAGE_SIZE on arm64 shows some benchmarks improving and others regressing.
+> Just because we _can_ collapse a 2MB range of pages into a single 2MB
+> page doesn't mean we _should_.  I suspect the right size folio for any
+> given file will depend on the access pattern.  For example, dirtying a
+> few bytes in a folio will result in the entire folio being written back.
+> Is that what you want?  Maybe!  It may prompt the filesystem to defragment
+> that range, which would be good.  On the other hand, if you're bandwidth
+> limited, it may decrease your performance.  And if your media has limited
+> write endurance, it may result in your drive wearing out more quickly.
+>
+> Changing the heuristics should come with data.  Preferably from a wide
+> range of systems and use cases.  I know that's hard to do, but how else
+> can we proceed?
 
-Ack. I think your commit message may be a bit too optimistic (who
-knows if other loads can trigger the over-long page locking wait-queue
-latencies), but since I don't see any other ways to really check this
-than just trying it, let's do it.
+TBH I don't think it belongs to "change the heuristics". Its users'
+decision if their workloads could benefit from huge pages or not. They
+could set THP to always/madivse/never per their workloads. The
+patchset is aimed to fix the misbehavior. The user visible issue is
+even though users enable READ_ONLY_THP_FOR_FS and configure THP to
+"always" (khugepaged always runs) and do expect their huge text
+section is backed by THP but THP may not be collapsed.
 
-                 Linus
+>
+> And I think you ignored my point that READ_ONLY_THP_FOR_FS required
+> no changes to filesystems.  It was completely invisible to them, by
+> design.  Now this patchset requires each filesystem to do something.
+> That's not a great step.
+
+I don't mean to ignore your point. I do understand it is not perfect.
+I was thinking about making it FS agnostic in the first place. But I
+didn't think of a perfect way to do it at that time, so I followed
+what tmpfs does.
+
+However, by rethinking this we may be able to call
+khugepaged_enter_file() in filemap_fault(). I was concerned about the
+overhead in the page fault path. But it may be neglectable since
+khugepaged_enter_file() does bail out in the first place if the mm is
+already registered in khugepaged, just the first page fault needs to
+go through all the check, but the first page fault is typically a
+major fault so the overhead should be not noticeable comparing to the
+overhead of I/O. Calling khugepaged_enter() in page fault path is the
+approach used by anonymous THP too.
+
+>
+> P.S. khugepaged currently does nothing if a range contains a compound
+> page.  It assumes that the page is compound because it's now a THP.
+> Large folios break that assumption, so khugepaged will now never
+> collapse a range which includes large folios.  Thanks to commit
+>     mm/filemap: Support VM_HUGEPAGE for file mappings
+> we'll always try to bring in PMD-sized pages for MADV_HUGEPAGE, so
+> it _probably_ doesn't matter.  But it's something we should watch
+> for as filesystems grow support for large folios.
+
+Yeah, I agree, thanks for reminding this. In addition I think the
+users of READ_ONLY_THP_FOR_FS should also expect the PMD-sized THP to
+be collapsed for their usecase with full page cache THP support since
+their benefits come from reduced TLB miss.
