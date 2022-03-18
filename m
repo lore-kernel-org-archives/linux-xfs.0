@@ -2,150 +2,216 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 372EEC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 13:47:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 394B1C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 14:14:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233619AbiCRNsS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Mar 2022 09:48:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33476 "EHLO
+        id S237134AbiCROP3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Mar 2022 10:15:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236805AbiCRNsS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Mar 2022 09:48:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8DB22170DAF
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 06:46:58 -0700 (PDT)
+        with ESMTP id S237138AbiCROP1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Mar 2022 10:15:27 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 587091A7724
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 07:14:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1647611217;
+        s=mimecast20190719; t=1647612847;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type;
-        bh=zk6SiYHFBx+Dh7tkZ/9iTCm0qDbhPY8kGy4Blu2IcTg=;
-        b=HQTWC9cRkjva5KxDv454k+wzfE/lPxetbz0sm8uaGXc0BTqS3KF/3Jf3lDt2FwyiUsREIu
-        LMcU+ZO6A7clNLh37g/A06+rRIhD01TJvdqFkJV6mqoPTxJhhSIKRQYWKVJ2zsuylkufWf
-        0gfXXYLUwwPEOFhed4mjFyZIWVTXJT8=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=xVu+mDTPb464jas0MF+N3kLKCYSGhLNWfvQBrQWtjhY=;
+        b=NSY5k6CrS8NF8HFBKTnG+8GFRBrwAErF/DHleHCqD9lBEDh9abUURtB/fALHIP26pbNPJJ
+        5BnpYl52BQW/AjTYxf2lsaIcsZOGp4H4YuIeXB8yy+fbjB1Uzg+pqxl/8WHj4OFr5VEtkN
+        EqsHLSJWVSAc0A1K3cztr3yCg+BiYSU=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-391-ir3GatVYO92QhjWXRaGxsg-1; Fri, 18 Mar 2022 09:46:56 -0400
-X-MC-Unique: ir3GatVYO92QhjWXRaGxsg-1
-Received: by mail-qk1-f197.google.com with SMTP id 12-20020a37090c000000b0067b32f93b90so5360874qkj.16
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 06:46:56 -0700 (PDT)
+ us-mta-392-_eBmTEMdOPmng6HQcYfa6Q-1; Fri, 18 Mar 2022 10:14:06 -0400
+X-MC-Unique: _eBmTEMdOPmng6HQcYfa6Q-1
+Received: by mail-qv1-f69.google.com with SMTP id fw9-20020a056214238900b0043522aa5b81so6280416qvb.21
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 07:14:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:subject:message-id:mime-version
-         :content-disposition;
-        bh=zk6SiYHFBx+Dh7tkZ/9iTCm0qDbhPY8kGy4Blu2IcTg=;
-        b=0gtKeOcc6xdSEGuS+kKmmt5oWEviEnGsPvj/du9dcnQbgHtxICGEKL52HMVayg8pJT
-         jCa9th8dIkWL6irS499xs9d0mHWm0KzvjrL8k2OwGQESYmq/BVn8GePOk7TuC8jNa8bD
-         KhBeKgVRWz8btUBFlN78f+d8A3np7PzEuvl7PtqHrylcZzeCTvb+5Pd/F1kbgH8WtD6K
-         nRxUJvZ3PmV9F3njhwyQoy0L4dzdZhISRoFgDV8w3SMEkE9bqF9syPROM5yZzDUl0Y+Y
-         3pMcqOQ98htmbyGlH40PAtMvtsIYPb4nZ+y35Pgb4l2TWfAOibqBTnNfJNnp0Ui5S5H7
-         HI/Q==
-X-Gm-Message-State: AOAM531jZ9TXFEPuthm5t7p/paf1oJXvqeYKrFI6KUbXn4rLbnQejBHE
-        CvTK254nXAgHr55hm7mgQIyB3SrLZIElUHtDqDKhonvTMcHtHOuqVUjZXeYkc8vAbaVXwP/7klR
-        2rjYkNdx4FvrtrzwpHXnk8qJ87HEAETjX0jc7F0khnY8+GO8X86i/DDigcYzmYjg3iWh7Pnw=
-X-Received: by 2002:ac8:5e46:0:b0:2e1:e77b:804c with SMTP id i6-20020ac85e46000000b002e1e77b804cmr7433553qtx.671.1647611215546;
-        Fri, 18 Mar 2022 06:46:55 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzGkz/+r3g0T97y8AcRE3ElW7nCiWscpbnF0X8VFhhoFRHhVJRgLvdbtvKTv5geRWIJWrYq+Q==
-X-Received: by 2002:ac8:5e46:0:b0:2e1:e77b:804c with SMTP id i6-20020ac85e46000000b002e1e77b804cmr7433529qtx.671.1647611215105;
-        Fri, 18 Mar 2022 06:46:55 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=xVu+mDTPb464jas0MF+N3kLKCYSGhLNWfvQBrQWtjhY=;
+        b=ixgIIuVHXdJE8dZYKpxATf1Mky+lLdoFt/VMoJozkfmW7BtowQ/uDQ+uSaiMbMnYml
+         3ZKK7ebyhw9VCXRRbHK2nd9eOqipX5rHbN/C10FYVK/0JtoF4at6KdnFhfwci9b+96gW
+         PMdZZkJlgxUjRzyqndz+oKnEyuNZ6X1F3woqwsjNshzekYbFZHXyWF89DSda6Jq1ZsfJ
+         bzprHCeYnECeIP+CvOVdY2/Gc1z383uG3j2xCMdrFByHp/djLEBab24qJ89+tIkEUdX1
+         SFtIHjZCb7Fg7lKYtC4VuGyzSH7l1ceF3df/HIJqLE5wlGp+gVvJpV7rau0yxEARO9VO
+         vamQ==
+X-Gm-Message-State: AOAM5313AAv1WqVwudoR3Gt9+/8HyBeO8hOpW1pjPN00tJLWhGMHGt6M
+        TYZH03Ok6+WhjpePO4RVn84756ms+FlbalrdOHdB6sDM2w4F33crrYMElw3xKCwGKe8mDLJAfm6
+        VI+KtpiKu/h2Yh2IDAuJ4
+X-Received: by 2002:a37:a4f:0:b0:67c:a5c0:1648 with SMTP id 76-20020a370a4f000000b0067ca5c01648mr5972312qkk.192.1647612845797;
+        Fri, 18 Mar 2022 07:14:05 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJy2yd4wU7zf90tU0xLYFOAIwdyNu2ueVxqX0kLDNar2X3NKO47u2vgSd0dj8IEeVgx4GnlF4w==
+X-Received: by 2002:a37:a4f:0:b0:67c:a5c0:1648 with SMTP id 76-20020a370a4f000000b0067ca5c01648mr5972289qkk.192.1647612845370;
+        Fri, 18 Mar 2022 07:14:05 -0700 (PDT)
 Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id i17-20020ac85e51000000b002e1cf062ef4sm5825816qtx.45.2022.03.18.06.46.54
-        for <linux-xfs@vger.kernel.org>
+        by smtp.gmail.com with ESMTPSA id f17-20020ac87f11000000b002e1e831366asm5760454qtk.77.2022.03.18.07.14.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Mar 2022 06:46:54 -0700 (PDT)
-Date:   Fri, 18 Mar 2022 09:46:53 -0400
+        Fri, 18 Mar 2022 07:14:05 -0700 (PDT)
+Date:   Fri, 18 Mar 2022 10:14:03 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [BUG] log I/O completion GPF via xfs/006 and xfs/264 on 5.17.0-rc8
-Message-ID: <YjSNTd+U3HBq/Gsv@bfoster>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Hugh Dickins <hughd@google.com>
+Subject: Re: writeback completion soft lockup BUG in folio_wake_bit()
+Message-ID: <YjSTq4roN/LJ7Xsy@bfoster>
+References: <YjDj3lvlNJK/IPiU@bfoster>
+ <YjJPu/3tYnuKK888@casper.infradead.org>
+ <YjM88OwoccZOKp86@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <YjM88OwoccZOKp86@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Thu, Mar 17, 2022 at 09:51:44AM -0400, Brian Foster wrote:
+> On Wed, Mar 16, 2022 at 08:59:39PM +0000, Matthew Wilcox wrote:
+> > On Tue, Mar 15, 2022 at 03:07:10PM -0400, Brian Foster wrote:
+> > > What seems to happen is that the majority of the fsync calls end up
+> > > waiting on writeback of a particular page, the wakeup of the writeback
+> > > bit on that page wakes a task that immediately resets PG_writeback on
+> > > the page such that N other folio_wait_writeback() waiters see the bit
+> > > still set and immediately place themselves back onto the tail of the
+> > > wait queue.  Meanwhile the waker task spins in the WQ_FLAG_BOOKMARK loop
+> > > in folio_wake_bit() (backing off the lock for a cycle or so in each
+> > > iteration) only to find the same bunch of tasks in the queue. This
+> > > process repeats for a long enough amount of time to trigger the soft
+> > > lockup warning. I've confirmed this spinning behavior with a tracepoint
+> > > in the bookmark loop that indicates we're stuck for many hundreds of
+> > > thousands of iterations (at least) of this loop when the soft lockup
+> > > warning triggers.
+> > 
+> > [...]
+> > 
+> > > I've run a few quick experiments to try and corroborate this analysis.
+> > > The problem goes away completely if I either back out the loop change in
+> > > folio_wait_writeback() or bump WAITQUEUE_WALK_BREAK_CNT to something
+> > > like 128 (i.e. greater than the total possible number of waiter tasks in
+> > > this test). I've also played a few games with bookmark behavior mostly
+> > > out of curiosity, but usually end up introducing other problems like
+> > > missed wakeups, etc.
+> > 
+> > As I recall, the bookmark hack was introduced in order to handle
+> > lock_page() problems.  It wasn't really supposed to handle writeback,
+> > but nobody thought it would cause any harm (and indeed, it didn't at the
+> > time).  So how about we only use bookmarks for lock_page(), since
+> > lock_page() usually doesn't have the multiple-waker semantics that
+> > writeback has?
+> > 
+> 
+> Oh, interesting. I wasn't aware of the tenuous status of the bookmark
+> code. This is indeed much nicer than anything I was playing with. I
+> suspect it will address the problem, but I'll throw it at my test env
+> for a while and follow up.. thanks!
+> 
 
-I'm not sure if this is known and/or fixed already, but it didn't look
-familiar so here is a report. I hit a splat when testing Willy's
-prospective folio bookmark change and it turns out it replicates on
-Linus' current master (551acdc3c3d2). This initially reproduced on
-xfs/264 (mkfs defaults) and I saw a soft lockup warning variant via
-xfs/006, but when I attempted to reproduce the latter a second time I
-hit what looks like the same problem as xfs/264. Both tests seem to
-involve some form of error injection, so possibly the same underlying
-problem. The GPF splat from xfs/264 is below.
+So I'm not clear on where we're at with this patch vs. something that
+moves (or drops) the wb wait loop vs. the wait and set thing (which
+seems more invasive and longer term), but FWIW.. this patch survived
+over 10k iterations of the reproducer test yesterday (the problem
+typically reproduces in ~1k or so iterations on average) and an
+overnight fstests run without regression.
 
 Brian
 
---- 8< ---
-
-general protection fault, probably for non-canonical address 0x102e31d0105f07d: 0000 [#1] PREEMPT SMP NOPTI
-CPU: 24 PID: 1647 Comm: kworker/24:1H Tainted: G S                5.17.0-rc8+ #14
-Hardware name: Dell Inc. PowerEdge R750/06V45N, BIOS 1.2.4 05/28/2021
-Workqueue: xfs-log/dm-5 xlog_ioend_work [xfs]
-RIP: 0010:native_queued_spin_lock_slowpath+0x1a4/0x1e0
-Code: f3 90 48 8b 0a 48 85 c9 74 f6 eb c5 c1 e9 12 83 e0 03 83 e9 01 48 c1 e0 05 48 63 c9 48 05 40 0d 03 00 48 03 04 cd e0 ba 60 b9 <48> 89 10 8b 42 08 85 c0 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 0a
-RSP: 0018:ff407350cf917b48 EFLAGS: 00010206
-RAX: 0102e31d0105f07d RBX: ff1a52eeb16dd1c0 RCX: 0000000000002c5a
-RDX: ff1a53123fb30d40 RSI: ffffffffb95826f6 RDI: ffffffffb9554147
-RBP: ff1a53123fb30d40 R08: ff1a52d3c8684028 R09: 0000000000000121
-R10: 00000000000000bf R11: 0000000000000b65 R12: 0000000000640000
-R13: 0000000000000008 R14: ff1a52d3d0899000 R15: ff1a52d5bdf07800
-FS:  0000000000000000(0000) GS:ff1a53123fb00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000556b2ed15f44 CR3: 000000019a4c0005 CR4: 0000000000771ee0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-PKRU: 55555554
-Call Trace:
- <TASK>
- _raw_spin_lock+0x2c/0x30
- xfs_trans_ail_delete+0x27/0xd0 [xfs]
- xfs_buf_item_done+0x22/0x30 [xfs]
- xfs_buf_ioend+0x71/0x5e0 [xfs]
- xfs_trans_committed_bulk+0x167/0x2c0 [xfs]
- ? enqueue_entity+0x121/0x4d0
- ? enqueue_task_fair+0x417/0x530
- ? resched_curr+0x23/0xc0
- ? check_preempt_curr+0x3f/0x70
- ? _raw_spin_unlock_irqrestore+0x1f/0x31
- ? __wake_up_common_lock+0x87/0xc0
- xlog_cil_committed+0x29c/0x2d0 [xfs]
- ? _raw_spin_unlock_irqrestore+0x1f/0x31
- ? __wake_up_common_lock+0x87/0xc0
- xlog_cil_process_committed+0x69/0x80 [xfs]
- xlog_state_shutdown_callbacks+0xce/0xf0 [xfs]
- xlog_force_shutdown+0xd0/0x110 [xfs]
- xfs_do_force_shutdown+0x5f/0x150 [xfs]
- xlog_ioend_work+0x71/0x80 [xfs]
- process_one_work+0x1c5/0x390
- ? process_one_work+0x390/0x390
- worker_thread+0x30/0x350
- ? process_one_work+0x390/0x390
- kthread+0xe6/0x110
- ? kthread_complete_and_exit+0x20/0x20
- ret_from_fork+0x1f/0x30
- </TASK>
-Modules linked in: rpcrdma sunrpc rdma_ucm ib_srpt ib_isert iscsi_target_mod target_core_mod ib_iser libiscsi intel_rapl_msr scsi_transport_iscsi intel_rapl_common ib_umad i10nm_edac x86_pkg_temp_thermal intel_powerclamp ch
- dm_log dm_mod
----[ end trace 0000000000000000 ]---
-RIP: 0010:native_queued_spin_lock_slowpath+0x1a4/0x1e0
-Code: f3 90 48 8b 0a 48 85 c9 74 f6 eb c5 c1 e9 12 83 e0 03 83 e9 01 48 c1 e0 05 48 63 c9 48 05 40 0d 03 00 48 03 04 cd e0 ba 60 b9 <48> 89 10 8b 42 08 85 c0 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 0a
-RSP: 0018:ff407350cf917b48 EFLAGS: 00010206
-RAX: 0102e31d0105f07d RBX: ff1a52eeb16dd1c0 RCX: 0000000000002c5a
-RDX: ff1a53123fb30d40 RSI: ffffffffb95826f6 RDI: ffffffffb9554147
-RBP: ff1a53123fb30d40 R08: ff1a52d3c8684028 R09: 0000000000000121
-R10: 00000000000000bf R11: 0000000000000b65 R12: 0000000000640000
-R13: 0000000000000008 R14: ff1a52d3d0899000 R15: ff1a52d5bdf07800
-FS:  0000000000000000(0000) GS:ff1a53123fb00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000556b2ed15f44 CR3: 000000019a4c0005 CR4: 0000000000771ee0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-PKRU: 55555554
-Kernel panic - not syncing: Fatal exception
-Kernel Offset: 0x37200000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
----[ end Kernel panic - not syncing: Fatal exception ]---
+> Brian
+> 
+> > (this is more in the spirit of "minimal patch" -- I think
+> > initialising the bookmark should be moved to folio_unlock()).
+> > 
+> > diff --git a/mm/filemap.c b/mm/filemap.c index
+> > b2728eb52407..9ee3c5f1f489 100644
+> > --- a/mm/filemap.c
+> > +++ b/mm/filemap.c
+> > @@ -1146,26 +1146,28 @@ static int wake_page_function(wait_queue_entry_t *wait, unsigned mode, int sync,
+> >  	return (flags & WQ_FLAG_EXCLUSIVE) != 0;
+> >  }
+> >  
+> > -static void folio_wake_bit(struct folio *folio, int bit_nr)
+> > +static void folio_wake_bit(struct folio *folio, int bit_nr,
+> > +		wait_queue_entry_t *bookmark)
+> >  {
+> >  	wait_queue_head_t *q = folio_waitqueue(folio);
+> >  	struct wait_page_key key;
+> >  	unsigned long flags;
+> > -	wait_queue_entry_t bookmark;
+> >  
+> >  	key.folio = folio;
+> >  	key.bit_nr = bit_nr;
+> >  	key.page_match = 0;
+> >  
+> > -	bookmark.flags = 0;
+> > -	bookmark.private = NULL;
+> > -	bookmark.func = NULL;
+> > -	INIT_LIST_HEAD(&bookmark.entry);
+> > +	if (bookmark) {
+> > +		bookmark->flags = 0;
+> > +		bookmark->private = NULL;
+> > +		bookmark->func = NULL;
+> > +		INIT_LIST_HEAD(&bookmark->entry);
+> > +	}
+> >  
+> >  	spin_lock_irqsave(&q->lock, flags);
+> > -	__wake_up_locked_key_bookmark(q, TASK_NORMAL, &key, &bookmark);
+> > +	__wake_up_locked_key_bookmark(q, TASK_NORMAL, &key, bookmark);
+> >  
+> > -	while (bookmark.flags & WQ_FLAG_BOOKMARK) {
+> > +	while (bookmark && (bookmark->flags & WQ_FLAG_BOOKMARK)) {
+> >  		/*
+> >  		 * Take a breather from holding the lock,
+> >  		 * allow pages that finish wake up asynchronously
+> > @@ -1175,7 +1177,7 @@ static void folio_wake_bit(struct folio *folio, int bit_nr)
+> >  		spin_unlock_irqrestore(&q->lock, flags);
+> >  		cpu_relax();
+> >  		spin_lock_irqsave(&q->lock, flags);
+> > -		__wake_up_locked_key_bookmark(q, TASK_NORMAL, &key, &bookmark);
+> > +		__wake_up_locked_key_bookmark(q, TASK_NORMAL, &key, bookmark);
+> >  	}
+> >  
+> >  	/*
+> > @@ -1204,7 +1206,7 @@ static void folio_wake(struct folio *folio, int bit)
+> >  {
+> >  	if (!folio_test_waiters(folio))
+> >  		return;
+> > -	folio_wake_bit(folio, bit);
+> > +	folio_wake_bit(folio, bit, NULL);
+> >  }
+> >  
+> >  /*
+> > @@ -1554,12 +1556,15 @@ static inline bool clear_bit_unlock_is_negative_byte(long nr, volatile void *mem
+> >   */
+> >  void folio_unlock(struct folio *folio)
+> >  {
+> > +	wait_queue_entry_t bookmark;
+> > +
+> >  	/* Bit 7 allows x86 to check the byte's sign bit */
+> >  	BUILD_BUG_ON(PG_waiters != 7);
+> >  	BUILD_BUG_ON(PG_locked > 7);
+> >  	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
+> > +
+> >  	if (clear_bit_unlock_is_negative_byte(PG_locked, folio_flags(folio, 0)))
+> > -		folio_wake_bit(folio, PG_locked);
+> > +		folio_wake_bit(folio, PG_locked, &bookmark);
+> >  }
+> >  EXPORT_SYMBOL(folio_unlock);
+> >  
+> > @@ -1578,7 +1583,7 @@ void folio_end_private_2(struct folio *folio)
+> >  {
+> >  	VM_BUG_ON_FOLIO(!folio_test_private_2(folio), folio);
+> >  	clear_bit_unlock(PG_private_2, folio_flags(folio, 0));
+> > -	folio_wake_bit(folio, PG_private_2);
+> > +	folio_wake_bit(folio, PG_private_2, NULL);
+> >  	folio_put(folio);
+> >  }
+> >  EXPORT_SYMBOL(folio_end_private_2);
+> > 
 
