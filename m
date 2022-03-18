@@ -2,151 +2,208 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 851AEC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 20:59:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBF22C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 21:01:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240964AbiCRVAk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Mar 2022 17:00:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34724 "EHLO
+        id S241000AbiCRVCX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Mar 2022 17:02:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240992AbiCRVAj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Mar 2022 17:00:39 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2FEC01B4E86
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 13:59:17 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 3CF6210E51B6;
-        Sat, 19 Mar 2022 07:59:14 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nVJgm-007574-DG; Sat, 19 Mar 2022 07:59:12 +1100
-Date:   Sat, 19 Mar 2022 07:59:12 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     kbuild@lists.01.org, linux-xfs@vger.kernel.org, lkp@intel.com,
-        kbuild-all@lists.01.org
-Subject: Re: [kbuild] Re: [PATCH 3/7] xfs: xfs_ail_push_all_sync() stalls
- when racing with updates
-Message-ID: <20220318205912.GF1544202@dread.disaster.area>
-References: <20220317053907.164160-4-david@fromorbit.com>
- <202203172212.pRLbx3jA-lkp@intel.com>
+        with ESMTP id S240997AbiCRVCV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Mar 2022 17:02:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7BEE2DF3D5
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 14:01:01 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6DDA4610E7
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 21:01:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6B5AC340F4;
+        Fri, 18 Mar 2022 21:01:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647637260;
+        bh=yD+WAZ54Bbs3V6H7aIaog8hiHrhQFKwdYrSAj2QBkUY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cvwPJkp4kD7h76GWbKuWusj+kgBVefZKWbfO5T1xPVGlzBuD8B3b4IK6Cka7x4i8k
+         S//TqYt+RzJYlwt0YpQzxzfUhugF4ViB0Fl01IJWhWP7xw6sudF7Sr9qnazBe1hcV+
+         k/tUO0aaIlOVXMiXTyZdhM1QeBjt9iVrAlQ0yfKAWjwQqhqy7ldy9l+l0rDrpZboKe
+         dLooHiSg7UmYWC9JHDLiYm71HFEVMjQBC7deExYzzIrcPJreLIn9G5uRyzce/YjvHu
+         223qp3L76AUAq/akd9q24WxlXto5Wnw+1Aj4ly1Y7hy7I7AnpuYsS635vo91XnZqxu
+         vCQr9oGMebKNg==
+Date:   Fri, 18 Mar 2022 14:01:00 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 3/6] xfs: don't include bnobt blocks when reserving free
+ block pool
+Message-ID: <20220318210100.GE8224@magnolia>
+References: <164755205517.4194202.16256634362046237564.stgit@magnolia>
+ <164755207216.4194202.19795257360716142.stgit@magnolia>
+ <YjR4nWL9RXOq1mDi@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202203172212.pRLbx3jA-lkp@intel.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6234f2a3
-        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=NEAV23lmAAAA:8 a=VwQbUJbxAAAA:8
-        a=i3X5FwGiAAAA:8 a=QyXUC8HyAAAA:8 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=jOG9JjpHtk2UEyIpgh4A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=mmqRlSCDY2ywfjPLJ4af:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <YjR4nWL9RXOq1mDi@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 18, 2022 at 11:10:22AM +0300, Dan Carpenter wrote:
-> Hi Dave,
+On Fri, Mar 18, 2022 at 08:18:37AM -0400, Brian Foster wrote:
+> On Thu, Mar 17, 2022 at 02:21:12PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > xfs_reserve_blocks controls the size of the user-visible free space
+> > reserve pool.  Given the difference between the current and requested
+> > pool sizes, it will try to reserve free space from fdblocks.  However,
+> > the amount requested from fdblocks is also constrained by the amount of
+> > space that we think xfs_mod_fdblocks will give us.  We'll keep trying to
+> > reserve space so long as xfs_mod_fdblocks returns ENOSPC.
+> > 
+> > In commit fd43cf600cf6, we decided that xfs_mod_fdblocks should not hand
+> > out the "free space" used by the free space btrees, because some portion
+> > of the free space btrees hold in reserve space for future btree
+> > expansion.  Unfortunately, xfs_reserve_blocks' estimation of the number
+> > of blocks that it could request from xfs_mod_fdblocks was not updated to
+> > include m_allocbt_blks, so if space is extremely low, the caller hangs.
+> > 
+> > Fix this by creating a function to estimate the number of blocks that
+> > can be reserved from fdblocks, which needs to exclude the set-aside and
+> > m_allocbt_blks.
+> > 
+> > Found by running xfs/306 (which formats a single-AG 20MB filesystem)
+> > with an fstests configuration that specifies a 1k blocksize and a
+> > specially crafted log size that will consume 7/8 of the space (17920
+> > blocks, specifically) in that AG.
+> > 
+> > Cc: Brian Foster <bfoster@redhat.com>
+> > Fixes: fd43cf600cf6 ("xfs: set aside allocation btree blocks from block reservation")
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/xfs_fsops.c |    7 +++++--
+> >  fs/xfs/xfs_mount.h |   29 +++++++++++++++++++++++++++++
+> >  2 files changed, 34 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > index 33e26690a8c4..b71799a3acd3 100644
+> > --- a/fs/xfs/xfs_fsops.c
+> > +++ b/fs/xfs/xfs_fsops.c
+> > @@ -433,8 +433,11 @@ xfs_reserve_blocks(
+> >  	 */
+> >  	error = -ENOSPC;
+> >  	do {
+> > -		free = percpu_counter_sum(&mp->m_fdblocks) -
+> > -						mp->m_alloc_set_aside;
+> > +		/*
+> > +		 * The reservation pool cannot take space that xfs_mod_fdblocks
+> > +		 * will not give us.
+> > +		 */
 > 
-> url:    https://github.com/0day-ci/linux/commits/Dave-Chinner/xfs-log-recovery-fixes/20220317-141849 
-> base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git  for-next
-> config: parisc-randconfig-m031-20220317 (https://download.01.org/0day-ci/archive/20220317/202203172212.pRLbx3jA-lkp@intel.com/config )
-> compiler: hppa-linux-gcc (GCC) 11.2.0
+> This comment seems unnecessary. I'm not sure what this is telling that
+> the code doesn't already..?
+
+Yeah, I'll get rid of it.
+
+> > +		free = xfs_fdblocks_available(mp);
+> >  		if (free <= 0)
+> >  			break;
+> >  
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index 00720a02e761..998b54c3c454 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -479,6 +479,35 @@ extern void	xfs_unmountfs(xfs_mount_t *);
+> >   */
+> >  #define XFS_FDBLOCKS_BATCH	1024
+> >  
+> > +/*
+> > + * Estimate the amount of space that xfs_mod_fdblocks might give us without
+> > + * drawing from the reservation pool.  In other words, estimate the free space
+> > + * that is available to userspace.
+> > + *
+> > + * This quantity is the amount of free space tracked in the on-disk metadata
+> > + * minus:
+> > + *
+> > + * - Delayed allocation reservations
+> > + * - Per-AG space reservations to guarantee metadata expansion
+> > + * - Userspace-controlled free space reserve pool
+> > + *
+> > + * - Space reserved to ensure that we can always split a bmap btree
+> > + * - Free space btree blocks that are not available for allocation due to
+> > + *   per-AG metadata reservations
+> > + *
+> > + * The first three are captured in the incore fdblocks counter.
+> > + */
 > 
-> If you fix the issue, kindly add following tag as appropriate
-> Reported-by: kernel test robot <lkp@intel.com>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> smatch warnings:
-> fs/xfs/xfs_trans_ail.c:476 xfsaild_push() error: uninitialized symbol 'target'.
-> 
-> vim +/target +476 fs/xfs/xfs_trans_ail.c
-> 
-> 0030807c66f058 Christoph Hellwig 2011-10-11  417  static long
-> 0030807c66f058 Christoph Hellwig 2011-10-11  418  xfsaild_push(
-> 0030807c66f058 Christoph Hellwig 2011-10-11  419  	struct xfs_ail		*ailp)
-> 249a8c1124653f David Chinner     2008-02-05  420  {
-> 57e809561118a4 Matthew Wilcox    2018-03-07  421  	xfs_mount_t		*mp = ailp->ail_mount;
-> af3e40228fb2db Dave Chinner      2011-07-18  422  	struct xfs_ail_cursor	cur;
-> efe2330fdc246a Christoph Hellwig 2019-06-28  423  	struct xfs_log_item	*lip;
-> 9e7004e741de0b Dave Chinner      2011-05-06  424  	xfs_lsn_t		lsn;
-> fe0da767311933 Dave Chinner      2011-05-06  425  	xfs_lsn_t		target;
-> 43ff2122e6492b Christoph Hellwig 2012-04-23  426  	long			tout;
-> 9e7004e741de0b Dave Chinner      2011-05-06  427  	int			stuck = 0;
-> 43ff2122e6492b Christoph Hellwig 2012-04-23  428  	int			flushing = 0;
-> 9e7004e741de0b Dave Chinner      2011-05-06  429  	int			count = 0;
-> ^1da177e4c3f41 Linus Torvalds    2005-04-16  430  
-> 670ce93fef93bb Dave Chinner      2011-09-30  431  	/*
-> 43ff2122e6492b Christoph Hellwig 2012-04-23  432  	 * If we encountered pinned items or did not finish writing out all
-> 0020a190cf3eac Dave Chinner      2021-08-10  433  	 * buffers the last time we ran, force a background CIL push to get the
-> 0020a190cf3eac Dave Chinner      2021-08-10  434  	 * items unpinned in the near future. We do not wait on the CIL push as
-> 0020a190cf3eac Dave Chinner      2021-08-10  435  	 * that could stall us for seconds if there is enough background IO
-> 0020a190cf3eac Dave Chinner      2021-08-10  436  	 * load. Stalling for that long when the tail of the log is pinned and
-> 0020a190cf3eac Dave Chinner      2021-08-10  437  	 * needs flushing will hard stop the transaction subsystem when log
-> 0020a190cf3eac Dave Chinner      2021-08-10  438  	 * space runs out.
-> 670ce93fef93bb Dave Chinner      2011-09-30  439  	 */
-> 57e809561118a4 Matthew Wilcox    2018-03-07  440  	if (ailp->ail_log_flush && ailp->ail_last_pushed_lsn == 0 &&
-> 57e809561118a4 Matthew Wilcox    2018-03-07  441  	    (!list_empty_careful(&ailp->ail_buf_list) ||
-> 43ff2122e6492b Christoph Hellwig 2012-04-23  442  	     xfs_ail_min_lsn(ailp))) {
-> 57e809561118a4 Matthew Wilcox    2018-03-07  443  		ailp->ail_log_flush = 0;
-> 43ff2122e6492b Christoph Hellwig 2012-04-23  444  
-> ff6d6af2351cae Bill O'Donnell    2015-10-12  445  		XFS_STATS_INC(mp, xs_push_ail_flush);
-> 0020a190cf3eac Dave Chinner      2021-08-10  446  		xlog_cil_flush(mp->m_log);
-> 670ce93fef93bb Dave Chinner      2011-09-30  447  	}
-> 670ce93fef93bb Dave Chinner      2011-09-30  448  
-> 57e809561118a4 Matthew Wilcox    2018-03-07  449  	spin_lock(&ailp->ail_lock);
-> 8375f922aaa6e7 Brian Foster      2012-06-28  450  
-> 29e90a4845ecee Dave Chinner      2022-03-17  451  	/*
-> 29e90a4845ecee Dave Chinner      2022-03-17  452  	 * If we have a sync push waiter, we always have to push till the AIL is
-> 29e90a4845ecee Dave Chinner      2022-03-17  453  	 * empty. Update the target to point to the end of the AIL so that
-> 29e90a4845ecee Dave Chinner      2022-03-17  454  	 * capture updates that occur after the sync push waiter has gone to
-> 29e90a4845ecee Dave Chinner      2022-03-17  455  	 * sleep.
-> 29e90a4845ecee Dave Chinner      2022-03-17  456  	 */
-> 29e90a4845ecee Dave Chinner      2022-03-17  457  	if (waitqueue_active(&ailp->ail_empty)) {
-> 29e90a4845ecee Dave Chinner      2022-03-17  458  		lip = xfs_ail_max(ailp);
-> 29e90a4845ecee Dave Chinner      2022-03-17  459  		if (lip)
-> 29e90a4845ecee Dave Chinner      2022-03-17  460  			target = lip->li_lsn;
-> 
-> No else path.
+> Hm. Sometimes I wonder if we overdocument things to our own detriment
+> (reading back my own comments at times suggests I'm terrible at this).
+> So do we really need to document what other internal reservations are or
+> are not taken out of ->m_fdblocks here..? I suspect we already have
+> plenty of sufficient documentation for things like perag res colocated
+> with the actual code, such that this kind of thing just creates an
+> external reference that will probably just bitrot as years go by. Can we
+> reduce this down to just explain how/why this helper has to calculate a
+> block availability value for blocks that otherwise haven't been
+> explicitly allocated out of the in-core free block counters?
 
-Target will only be uninitialised here if the AIL is empty. 
+Hmm.  I suppose I could reduce the comment at the same time that I split
+out the code that computes the amount of free space that isn't
+available.
 
-> 29e90a4845ecee Dave Chinner      2022-03-17  461  	} else {
-> 57e809561118a4 Matthew Wilcox    2018-03-07  462  		/* barrier matches the ail_target update in xfs_ail_push() */
-> 8375f922aaa6e7 Brian Foster      2012-06-28  463  		smp_rmb();
-> 57e809561118a4 Matthew Wilcox    2018-03-07  464  		target = ailp->ail_target;
-> 57e809561118a4 Matthew Wilcox    2018-03-07  465  		ailp->ail_target_prev = target;
-> 29e90a4845ecee Dave Chinner      2022-03-17  466  	}
-> 8375f922aaa6e7 Brian Foster      2012-06-28  467  
-> f376b45e861d8b Brian Foster      2020-07-16  468  	/* we're done if the AIL is empty or our push has reached the end */
-> 57e809561118a4 Matthew Wilcox    2018-03-07  469  	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->ail_last_pushed_lsn);
+> > +static inline int64_t
+> > +xfs_fdblocks_available(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	int64_t			free = percpu_counter_sum(&mp->m_fdblocks);
+> > +
+> > +	free -= mp->m_alloc_set_aside;
+> > +	free -= atomic64_read(&mp->m_allocbt_blks);
+> > +	return free;
+> > +}
+> > +
 > 
-> "lip" re-assigned here
+> FWIW the helper seems fine in context, but will this help us avoid the
+> duplicate calculation in xfs_mod_fdblocks(), for instance?
 
-If the AIL is empty, this will return NULL. Hence if xfs_ail_max()
-returns NULL, so will this. Hence:
+It will once I turn that into:
+
+
+/*
+ * Estimate the amount of free space that is not available to userspace
+ * and is not explicitly reserved from the incore fdblocks:
+ *
+ * - Space reserved to ensure that we can always split a bmap btree
+ * - Free space btree blocks that are not available for allocation due
+ *   to per-AG metadata reservations
+ */
+static inline uint64_t
+xfs_fdblocks_unavailable(
+	struct xfs_mount	*mp)
+{
+	return mp->m_alloc_set_aside + atomic64_read(&mp->m_allocbt_blks);
+}
+
+/*
+ * Estimate the amount of space that xfs_mod_fdblocks might give us
+ * without drawing from any reservation pool.  In other words, estimate
+ * the free space that is available to userspace.
+ */
+static inline int64_t
+xfs_fdblocks_available(
+	struct xfs_mount	*mp)
+{
+	return percpu_counter_sum(&mp->m_fdblocks) -
+			xfs_fdblocks_unavailable(mp);
+}
+
+--D
 
 > 
-> f376b45e861d8b Brian Foster      2020-07-16  470  	if (!lip)
-> 9e7004e741de0b Dave Chinner      2011-05-06  471  		goto out_done;
-
-We take this path, and never reference target...
-
-> ^1da177e4c3f41 Linus Torvalds    2005-04-16  472  
-> ff6d6af2351cae Bill O'Donnell    2015-10-12  473  	XFS_STATS_INC(mp, xs_push_ail);
-> ^1da177e4c3f41 Linus Torvalds    2005-04-16  474  
-> 249a8c1124653f David Chinner     2008-02-05  475  	lsn = lip->li_lsn;
-> 50e86686dfb287 Dave Chinner      2011-05-06 @476  	while ((XFS_LSN_CMP(lip->li_lsn, target) <= 0)) {
->                                                                                          ^^^^^^
-
-And this path will only be taken if there are items in the AIL,
-and in that case we are guaranteed to have initialised target....
-
-Not a bug.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Brian
+> 
+> >  extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
+> >  				 bool reserved);
+> >  extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
+> > 
+> 
