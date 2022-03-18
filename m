@@ -2,177 +2,402 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06640C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Mar 2022 23:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEEE7C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 01:03:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230236AbiCQXuP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Mar 2022 19:50:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58524 "EHLO
+        id S231348AbiCRBFC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Mar 2022 21:05:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230233AbiCQXuF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 19:50:05 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE6C32B5EE5;
-        Thu, 17 Mar 2022 16:48:46 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id m22so6234506pja.0;
-        Thu, 17 Mar 2022 16:48:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=g+Z88nKMaMfnoSMNb28nSkaCjqMBUKAv77UuVBn2dOA=;
-        b=NOASi9NgJH/JhidTvkHtQlNha/nZlQouiv+VMSrwVtvNEwYlfFWCG+n2/7jjdRpBSm
-         MY/X+xNVwdSloqJFf3LBUjzMllxCucZpqM9XZaVh9SCVlL5YIc8l3Ya6LRBD22kEwjuu
-         dgnuWVgjO6iSnyFi4Z2IEO1E7EFhe1HtApOYrT/S2d7FQ0u2s5zwp53tgjQCg57iqBz/
-         ID4ucyePPmJOTJcwhxzDjbN8SHnPxdRgOfWtE20nncuBfKLaF294ZhS+bxp4vKMj0Lmo
-         uvQQJDiDTM8uxNZa62mz3YJEKqwfFEoCSqHkOSUvQA6r1I3W01MGxHi+uXPu8UrECc+v
-         IaXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=g+Z88nKMaMfnoSMNb28nSkaCjqMBUKAv77UuVBn2dOA=;
-        b=uTqKgdvXkient94bJ96n4XkbvBxNyJ/aVecLaayco1IRoGgiybI8kL8jPSMQpoDxLK
-         AepxbXBtysS5y63dT+MCYByuNx5ydv0WX/A23o0GlhoEZJ4y6OR/fD7nPJuIMi5kGZW8
-         nMzuRlDl2u0isnsH3yWPMiTyM4VLGLQhlNm3Zhs6rYHEOgzuZccjq/M4iXoMRc8qt0X1
-         kYmav5MLn53YRwykuPf4wZK9GuImxVtA9f6RtSpRJQ/i2hJq5xnr7zxLdGlJ62aYkBsk
-         C4DTnuWEMM58kfsvoYuBsigvUE36z6rjPecQ3wFVRswWyaNjUi/iJuZDWBj/qK32YqG2
-         XpuQ==
-X-Gm-Message-State: AOAM532OYS7RrwXa0do54NsuQoA5XbLUEbQFekC3sXOFWjLcOrlpXdgj
-        Wl4pJy9GZaSfgPoQbhMOuWA=
-X-Google-Smtp-Source: ABdhPJxDC2A0C1V8B2FdGbOhYK6a94gMe52gtKBZcHpjue2Sw4OdOaK/2/qo2FvvMWbiqB7Gu8VYLw==
-X-Received: by 2002:a17:902:f684:b0:151:93ab:3483 with SMTP id l4-20020a170902f68400b0015193ab3483mr7397253plg.4.1647560926315;
-        Thu, 17 Mar 2022 16:48:46 -0700 (PDT)
-Received: from localhost.localdomain (c-67-174-241-145.hsd1.ca.comcast.net. [67.174.241.145])
-        by smtp.gmail.com with ESMTPSA id o7-20020aa79787000000b004f8e44a02e2sm8581329pfp.45.2022.03.17.16.48.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Mar 2022 16:48:45 -0700 (PDT)
-From:   Yang Shi <shy828301@gmail.com>
-To:     vbabka@suse.cz, kirill.shutemov@linux.intel.com,
-        linmiaohe@huawei.com, songliubraving@fb.com, riel@surriel.com,
-        willy@infradead.org, ziy@nvidia.com, akpm@linux-foundation.org,
-        tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com
-Cc:     shy828301@gmail.com, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [v2 PATCH 6/8] mm: khugepaged: move some khugepaged_* functions to khugepaged.c
-Date:   Thu, 17 Mar 2022 16:48:25 -0700
-Message-Id: <20220317234827.447799-7-shy828301@gmail.com>
-X-Mailer: git-send-email 2.26.3
-In-Reply-To: <20220317234827.447799-1-shy828301@gmail.com>
-References: <20220317234827.447799-1-shy828301@gmail.com>
+        with ESMTP id S231346AbiCRBFB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 21:05:01 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 685E2BA319
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 18:03:41 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C7551533BC9;
+        Fri, 18 Mar 2022 12:03:40 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nV11n-006klg-9K; Fri, 18 Mar 2022 12:03:39 +1100
+Date:   Fri, 18 Mar 2022 12:03:39 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCHi v2] xfs: drop async cache flushes from CIL commits.
+Message-ID: <20220318010339.GD1544202@dread.disaster.area>
+References: <20220317051219.137547-1-david@fromorbit.com>
+ <20220317091247.ajk3astyxmmghrsf@quack3.lan>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220317091247.ajk3astyxmmghrsf@quack3.lan>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6233da6d
+        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8
+        a=8gG7tWc4s3CLz9d5ZAEA:9 a=CjuIK1q_8ugA:10
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This move also makes the following patches easier.  The following patches
-will call khugepaged_enter() for regular filesystems to make readonly FS
-THP collapse more consistent.  They need to use some macros defined in
-huge_mm.h, for example, HPAGE_PMD_*, but it seems not preferred to
-polute filesystems code with including unnecessary header files.  With
-this move the filesystems code just need include khugepaged.h, which is
-quite small and the use is quite specific, to call khugepaged_enter()
-to hook mm with khugepaged.
 
-And the khugepaged_* functions actually are wrappers for some non-inline
-functions, so it seems the benefits are not too much to keep them inline.
+From: Dave Chinner <dchinner@redhat.com>
 
-This also helps to reuse hugepage_vma_check() for khugepaged_enter() so
-that we could remove some duplicate checks.
+Jan Kara reported a performance regression in dbench that he
+bisected down to commit bad77c375e8d ("xfs: CIL checkpoint
+flushes caches unconditionally").
 
-Signed-off-by: Yang Shi <shy828301@gmail.com>
+Whilst developing the journal flush/fua optimisations this cache was
+part of, it appeared to made a significant difference to
+performance. However, now that this patchset has settled and all the
+correctness issues fixed, there does not appear to be any
+significant performance benefit to asynchronous cache flushes.
+
+In fact, the opposite is true on some storage types and workloads,
+where additional cache flushes that can occur from fsync heavy
+workloads have measurable and significant impact on overall
+throughput.
+
+Local dbench testing shows little difference on dbench runs with
+sync vs async cache flushes on either fast or slow SSD storage, and
+no difference in streaming concurrent async transaction workloads
+like fs-mark.
+
+Fast NVME storage.
+
+From `dbench -t 30`, CIL scale:
+
+clients		async			sync
+		BW	Latency		BW	Latency
+1		 935.18   0.855		 915.64   0.903
+8		2404.51   6.873		2341.77   6.511
+16		3003.42   6.460		2931.57   6.529
+32		3697.23   7.939		3596.28   7.894
+128		7237.43  15.495		7217.74  11.588
+512		5079.24  90.587		5167.08  95.822
+
+fsmark, 32 threads, create w/ 64 byte xattr w/32k logbsize
+
+	create		chown		unlink
+async   1m41s		1m16s		2m03s
+sync	1m40s		1m19s		1m54s
+
+Slower SATA SSD storage:
+
+From `dbench -t 30`, CIL scale:
+
+clients		async			sync
+		BW	Latency		BW	Latency
+1		  78.59  15.792		  83.78  10.729
+8		 367.88  92.067		 404.63  59.943
+16		 564.51  72.524		 602.71  76.089
+32		 831.66 105.984		 870.26 110.482
+128		1659.76 102.969		1624.73  91.356
+512		2135.91 223.054		2603.07 161.160
+
+fsmark, 16 threads, create w/32k logbsize
+
+	create		unlink
+async   5m06s		4m15s
+sync	5m00s		4m22s
+
+And on Jan's test machine:
+
+                   5.18-rc8-vanilla       5.18-rc8-patched
+Amean     1        71.22 (   0.00%)       64.94 *   8.81%*
+Amean     2        93.03 (   0.00%)       84.80 *   8.85%*
+Amean     4       150.54 (   0.00%)      137.51 *   8.66%*
+Amean     8       252.53 (   0.00%)      242.24 *   4.08%*
+Amean     16      454.13 (   0.00%)      439.08 *   3.31%*
+Amean     32      835.24 (   0.00%)      829.74 *   0.66%*
+Amean     64     1740.59 (   0.00%)     1686.73 *   3.09%*
+
+Performance and cache flush behaviour is restored to pre-regression
+levels.
+
+As such, we can now consider the async cache flush mechanism an
+unnecessary exercise in premature optimisation and hence we can
+now remove it and the infrastructure it requires completely.
+
+Fixes: bad77c375e8d ("xfs: CIL checkpoint flushes caches unconditionally")
+Reported-and-tested-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/linux/khugepaged.h | 33 ++++++---------------------------
- mm/khugepaged.c            | 20 ++++++++++++++++++++
- 2 files changed, 26 insertions(+), 27 deletions(-)
+Version 2:
+- really get rid of all the commented out code. (Thanks Jan!)
 
-diff --git a/include/linux/khugepaged.h b/include/linux/khugepaged.h
-index 0423d3619f26..54e169116d49 100644
---- a/include/linux/khugepaged.h
-+++ b/include/linux/khugepaged.h
-@@ -16,6 +16,12 @@ extern void __khugepaged_enter(struct mm_struct *mm);
- extern void __khugepaged_exit(struct mm_struct *mm);
- extern void khugepaged_enter_vma_merge(struct vm_area_struct *vma,
- 				       unsigned long vm_flags);
-+extern void khugepaged_fork(struct mm_struct *mm,
-+			    struct mm_struct *oldmm);
-+extern void khugepaged_exit(struct mm_struct *mm);
-+extern void khugepaged_enter(struct vm_area_struct *vma,
-+			     unsigned long vm_flags);
-+
- extern void khugepaged_min_free_kbytes_update(void);
- #ifdef CONFIG_SHMEM
- extern void collapse_pte_mapped_thp(struct mm_struct *mm, unsigned long addr);
-@@ -33,36 +39,9 @@ static inline void collapse_pte_mapped_thp(struct mm_struct *mm,
- #define khugepaged_always()				\
- 	(transparent_hugepage_flags &			\
- 	 (1<<TRANSPARENT_HUGEPAGE_FLAG))
--#define khugepaged_req_madv()					\
--	(transparent_hugepage_flags &				\
--	 (1<<TRANSPARENT_HUGEPAGE_REQ_MADV_FLAG))
- #define khugepaged_defrag()					\
- 	(transparent_hugepage_flags &				\
- 	 (1<<TRANSPARENT_HUGEPAGE_DEFRAG_KHUGEPAGED_FLAG))
--
--static inline void khugepaged_fork(struct mm_struct *mm, struct mm_struct *oldmm)
--{
--	if (test_bit(MMF_VM_HUGEPAGE, &oldmm->flags))
--		__khugepaged_enter(mm);
--}
--
--static inline void khugepaged_exit(struct mm_struct *mm)
--{
--	if (test_bit(MMF_VM_HUGEPAGE, &mm->flags))
--		__khugepaged_exit(mm);
--}
--
--static inline void khugepaged_enter(struct vm_area_struct *vma,
--				   unsigned long vm_flags)
--{
--	if (!test_bit(MMF_VM_HUGEPAGE, &vma->vm_mm->flags))
--		if ((khugepaged_always() ||
--		     (shmem_file(vma->vm_file) && shmem_huge_enabled(vma)) ||
--		     (khugepaged_req_madv() && (vm_flags & VM_HUGEPAGE))) &&
--		    !(vm_flags & VM_NOHUGEPAGE) &&
--		    !test_bit(MMF_DISABLE_THP, &vma->vm_mm->flags))
--			__khugepaged_enter(vma->vm_mm);
--}
- #else /* CONFIG_TRANSPARENT_HUGEPAGE */
- static inline void khugepaged_fork(struct mm_struct *mm, struct mm_struct *oldmm)
- {
-diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-index b87af297e652..4cb4379ecf25 100644
---- a/mm/khugepaged.c
-+++ b/mm/khugepaged.c
-@@ -557,6 +557,26 @@ void __khugepaged_exit(struct mm_struct *mm)
- 	}
+ fs/xfs/xfs_bio_io.c   | 35 -----------------------------------
+ fs/xfs/xfs_linux.h    |  2 --
+ fs/xfs/xfs_log.c      | 36 +++++++++++-------------------------
+ fs/xfs/xfs_log_cil.c  | 42 +++++++++++++-----------------------------
+ fs/xfs/xfs_log_priv.h |  3 +--
+ 5 files changed, 25 insertions(+), 93 deletions(-)
+
+diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
+index 667e297f59b1..17f36db2f792 100644
+--- a/fs/xfs/xfs_bio_io.c
++++ b/fs/xfs/xfs_bio_io.c
+@@ -9,41 +9,6 @@ static inline unsigned int bio_max_vecs(unsigned int count)
+ 	return bio_max_segs(howmany(count, PAGE_SIZE));
  }
  
-+void khugepaged_fork(struct mm_struct *mm, struct mm_struct *oldmm)
-+{
-+	if (test_bit(MMF_VM_HUGEPAGE, &oldmm->flags))
-+		__khugepaged_enter(mm);
-+}
-+
-+void khugepaged_exit(struct mm_struct *mm)
-+{
-+	if (test_bit(MMF_VM_HUGEPAGE, &mm->flags))
-+		__khugepaged_exit(mm);
-+}
-+
-+void khugepaged_enter(struct vm_area_struct *vma, unsigned long vm_flags)
-+{
-+	if (!test_bit(MMF_VM_HUGEPAGE, &vma->vm_mm->flags) &&
-+	    khugepaged_enabled())
-+		if (hugepage_vma_check(vma, vm_flags))
-+			__khugepaged_enter(vma->vm_mm);
-+}
-+
- static void release_pte_page(struct page *page)
+-static void
+-xfs_flush_bdev_async_endio(
+-	struct bio	*bio)
+-{
+-	complete(bio->bi_private);
+-}
+-
+-/*
+- * Submit a request for an async cache flush to run. If the request queue does
+- * not require flush operations, just skip it altogether. If the caller needs
+- * to wait for the flush completion at a later point in time, they must supply a
+- * valid completion. This will be signalled when the flush completes.  The
+- * caller never sees the bio that is issued here.
+- */
+-void
+-xfs_flush_bdev_async(
+-	struct bio		*bio,
+-	struct block_device	*bdev,
+-	struct completion	*done)
+-{
+-	struct request_queue	*q = bdev->bd_disk->queue;
+-
+-	if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
+-		complete(done);
+-		return;
+-	}
+-
+-	bio_init(bio, NULL, 0);
+-	bio_set_dev(bio, bdev);
+-	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
+-	bio->bi_private = done;
+-	bio->bi_end_io = xfs_flush_bdev_async_endio;
+-
+-	submit_bio(bio);
+-}
+ int
+ xfs_rw_bdev(
+ 	struct block_device	*bdev,
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 09a8fba84ff9..cb9105d667db 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -197,8 +197,6 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
+ 
+ int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
+ 		char *data, unsigned int op);
+-void xfs_flush_bdev_async(struct bio *bio, struct block_device *bdev,
+-		struct completion *done);
+ 
+ #define ASSERT_ALWAYS(expr)	\
+ 	(likely(expr) ? (void)0 : assfail(NULL, #expr, __FILE__, __LINE__))
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 89fec9a18c34..40419e8fedad 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -523,12 +523,6 @@ xlog_state_shutdown_callbacks(
+  * Flush iclog to disk if this is the last reference to the given iclog and the
+  * it is in the WANT_SYNC state.
+  *
+- * If the caller passes in a non-zero @old_tail_lsn and the current log tail
+- * does not match, there may be metadata on disk that must be persisted before
+- * this iclog is written.  To satisfy that requirement, set the
+- * XLOG_ICL_NEED_FLUSH flag as a condition for writing this iclog with the new
+- * log tail value.
+- *
+  * If XLOG_ICL_NEED_FUA is already set on the iclog, we need to ensure that the
+  * log tail is updated correctly. NEED_FUA indicates that the iclog will be
+  * written to stable storage, and implies that a commit record is contained
+@@ -545,12 +539,10 @@ xlog_state_shutdown_callbacks(
+  * always capture the tail lsn on the iclog on the first NEED_FUA release
+  * regardless of the number of active reference counts on this iclog.
+  */
+-
+ int
+ xlog_state_release_iclog(
+ 	struct xlog		*log,
+-	struct xlog_in_core	*iclog,
+-	xfs_lsn_t		old_tail_lsn)
++	struct xlog_in_core	*iclog)
  {
- 	mod_node_page_state(page_pgdat(page),
--- 
-2.26.3
-
+ 	xfs_lsn_t		tail_lsn;
+ 	bool			last_ref;
+@@ -561,18 +553,14 @@ xlog_state_release_iclog(
+ 	/*
+ 	 * Grabbing the current log tail needs to be atomic w.r.t. the writing
+ 	 * of the tail LSN into the iclog so we guarantee that the log tail does
+-	 * not move between deciding if a cache flush is required and writing
+-	 * the LSN into the iclog below.
++	 * not move between the first time we know that the iclog needs to be
++	 * made stable and when we eventually submit it.
+ 	 */
+-	if (old_tail_lsn || iclog->ic_state == XLOG_STATE_WANT_SYNC) {
++	if ((iclog->ic_state == XLOG_STATE_WANT_SYNC ||
++	     (iclog->ic_flags & XLOG_ICL_NEED_FUA)) &&
++	    !iclog->ic_header.h_tail_lsn) {
+ 		tail_lsn = xlog_assign_tail_lsn(log->l_mp);
+-
+-		if (old_tail_lsn && tail_lsn != old_tail_lsn)
+-			iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
+-
+-		if ((iclog->ic_flags & XLOG_ICL_NEED_FUA) &&
+-		    !iclog->ic_header.h_tail_lsn)
+-			iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
++		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
+ 	}
+ 
+ 	last_ref = atomic_dec_and_test(&iclog->ic_refcnt);
+@@ -600,8 +588,6 @@ xlog_state_release_iclog(
+ 	}
+ 
+ 	iclog->ic_state = XLOG_STATE_SYNCING;
+-	if (!iclog->ic_header.h_tail_lsn)
+-		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
+ 	xlog_verify_tail_lsn(log, iclog);
+ 	trace_xlog_iclog_syncing(iclog, _RET_IP_);
+ 
+@@ -874,7 +860,7 @@ xlog_force_iclog(
+ 	iclog->ic_flags |= XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA;
+ 	if (iclog->ic_state == XLOG_STATE_ACTIVE)
+ 		xlog_state_switch_iclogs(iclog->ic_log, iclog, 0);
+-	return xlog_state_release_iclog(iclog->ic_log, iclog, 0);
++	return xlog_state_release_iclog(iclog->ic_log, iclog);
+ }
+ 
+ /*
+@@ -2412,7 +2398,7 @@ xlog_write_copy_finish(
+ 		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
+ 			xlog_is_shutdown(log));
+ release_iclog:
+-	error = xlog_state_release_iclog(log, iclog, 0);
++	error = xlog_state_release_iclog(log, iclog);
+ 	spin_unlock(&log->l_icloglock);
+ 	return error;
+ }
+@@ -2629,7 +2615,7 @@ xlog_write(
+ 
+ 	spin_lock(&log->l_icloglock);
+ 	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
+-	error = xlog_state_release_iclog(log, iclog, 0);
++	error = xlog_state_release_iclog(log, iclog);
+ 	spin_unlock(&log->l_icloglock);
+ 
+ 	return error;
+@@ -3053,7 +3039,7 @@ xlog_state_get_iclog_space(
+ 		 * reference to the iclog.
+ 		 */
+ 		if (!atomic_add_unless(&iclog->ic_refcnt, -1, 1))
+-			error = xlog_state_release_iclog(log, iclog, 0);
++			error = xlog_state_release_iclog(log, iclog);
+ 		spin_unlock(&log->l_icloglock);
+ 		if (error)
+ 			return error;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 83a039762b81..148ccd145916 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -705,11 +705,21 @@ xlog_cil_set_ctx_write_state(
+ 		 * The LSN we need to pass to the log items on transaction
+ 		 * commit is the LSN reported by the first log vector write, not
+ 		 * the commit lsn. If we use the commit record lsn then we can
+-		 * move the tail beyond the grant write head.
++		 * move the grant write head beyond the tail LSN and overwrite
++		 * it.
+ 		 */
+ 		ctx->start_lsn = lsn;
+ 		wake_up_all(&cil->xc_start_wait);
+ 		spin_unlock(&cil->xc_push_lock);
++
++		/*
++		 * Make sure the metadata we are about to overwrite in the log
++		 * has been flushed to stable storage before this iclog is
++		 * issued.
++		 */
++		spin_lock(&cil->xc_log->l_icloglock);
++		iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
++		spin_unlock(&cil->xc_log->l_icloglock);
+ 		return;
+ 	}
+ 
+@@ -888,10 +898,7 @@ xlog_cil_push_work(
+ 	struct xfs_trans_header thdr;
+ 	struct xfs_log_iovec	lhdr;
+ 	struct xfs_log_vec	lvhdr = { NULL };
+-	xfs_lsn_t		preflush_tail_lsn;
+ 	xfs_csn_t		push_seq;
+-	struct bio		bio;
+-	DECLARE_COMPLETION_ONSTACK(bdev_flush);
+ 	bool			push_commit_stable;
+ 
+ 	new_ctx = xlog_cil_ctx_alloc();
+@@ -961,23 +968,6 @@ xlog_cil_push_work(
+ 	list_add(&ctx->committing, &cil->xc_committing);
+ 	spin_unlock(&cil->xc_push_lock);
+ 
+-	/*
+-	 * The CIL is stable at this point - nothing new will be added to it
+-	 * because we hold the flush lock exclusively. Hence we can now issue
+-	 * a cache flush to ensure all the completed metadata in the journal we
+-	 * are about to overwrite is on stable storage.
+-	 *
+-	 * Because we are issuing this cache flush before we've written the
+-	 * tail lsn to the iclog, we can have metadata IO completions move the
+-	 * tail forwards between the completion of this flush and the iclog
+-	 * being written. In this case, we need to re-issue the cache flush
+-	 * before the iclog write. To detect whether the log tail moves, sample
+-	 * the tail LSN *before* we issue the flush.
+-	 */
+-	preflush_tail_lsn = atomic64_read(&log->l_tail_lsn);
+-	xfs_flush_bdev_async(&bio, log->l_mp->m_ddev_targp->bt_bdev,
+-				&bdev_flush);
+-
+ 	/*
+ 	 * Pull all the log vectors off the items in the CIL, and remove the
+ 	 * items from the CIL. We don't need the CIL lock here because it's only
+@@ -1054,12 +1044,6 @@ xlog_cil_push_work(
+ 	lvhdr.lv_iovecp = &lhdr;
+ 	lvhdr.lv_next = ctx->lv_chain;
+ 
+-	/*
+-	 * Before we format and submit the first iclog, we have to ensure that
+-	 * the metadata writeback ordering cache flush is complete.
+-	 */
+-	wait_for_completion(&bdev_flush);
+-
+ 	error = xlog_cil_write_chain(ctx, &lvhdr);
+ 	if (error)
+ 		goto out_abort_free_ticket;
+@@ -1118,7 +1102,7 @@ xlog_cil_push_work(
+ 	if (push_commit_stable &&
+ 	    ctx->commit_iclog->ic_state == XLOG_STATE_ACTIVE)
+ 		xlog_state_switch_iclogs(log, ctx->commit_iclog, 0);
+-	xlog_state_release_iclog(log, ctx->commit_iclog, preflush_tail_lsn);
++	xlog_state_release_iclog(log, ctx->commit_iclog);
+ 
+ 	/* Not safe to reference ctx now! */
+ 
+@@ -1139,7 +1123,7 @@ xlog_cil_push_work(
+ 		return;
+ 	}
+ 	spin_lock(&log->l_icloglock);
+-	xlog_state_release_iclog(log, ctx->commit_iclog, 0);
++	xlog_state_release_iclog(log, ctx->commit_iclog);
+ 	/* Not safe to reference ctx now! */
+ 	spin_unlock(&log->l_icloglock);
+ }
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 23103d68423c..80d77aac6fe4 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -524,8 +524,7 @@ void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
+ 
+ void xlog_state_switch_iclogs(struct xlog *log, struct xlog_in_core *iclog,
+ 		int eventual_size);
+-int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog,
+-		xfs_lsn_t log_tail_lsn);
++int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog);
+ 
+ /*
+  * When we crack an atomic LSN, we sample it first so that the value will not
