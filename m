@@ -2,402 +2,196 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEEE7C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 01:03:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF05C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Mar 2022 01:10:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231348AbiCRBFC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Mar 2022 21:05:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39694 "EHLO
+        id S231370AbiCRBLv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Mar 2022 21:11:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231346AbiCRBFB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 21:05:01 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 685E2BA319
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Mar 2022 18:03:41 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C7551533BC9;
-        Fri, 18 Mar 2022 12:03:40 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nV11n-006klg-9K; Fri, 18 Mar 2022 12:03:39 +1100
-Date:   Fri, 18 Mar 2022 12:03:39 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCHi v2] xfs: drop async cache flushes from CIL commits.
-Message-ID: <20220318010339.GD1544202@dread.disaster.area>
-References: <20220317051219.137547-1-david@fromorbit.com>
- <20220317091247.ajk3astyxmmghrsf@quack3.lan>
+        with ESMTP id S231368AbiCRBLu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Mar 2022 21:11:50 -0400
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F129169B01;
+        Thu, 17 Mar 2022 18:10:33 -0700 (PDT)
+Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 22I0uaMc002587;
+        Thu, 17 Mar 2022 18:10:33 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : mime-version; s=facebook;
+ bh=OrJZ3bgVZCAeNzWQyEpDdcbo/rJKI5Fz+6MdHg+7q/s=;
+ b=P/0rhpMNaQRQvh9VQeGpd8PJYetqVnrDJ4QfMS8t1BoQMOkyrAnF7JPOhI6Tz5I27cQ9
+ hajiVviI7t82iGy8/6KHs5bjyRWcUOhg5o+rNx3nhRERq8sLP6cM/k8qPELumhlHpLdt
+ hFPQfb7A81jjWKBX/a8+p/7lx5Y2apupsx0= 
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2047.outbound.protection.outlook.com [104.47.66.47])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3evfyx021s-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 17 Mar 2022 18:10:32 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=h62Z2+mLKE7yQIcMm86fykxRp/HL0o0o0p1/PgLvdqVgE2gVvJlOrtfPgTzYWMg/zNeiRaQIHvdB20yze+62F1X5S7PzNPotIwBps142tobkPX+t37iC+PZ/6yoTLgPnyOZc5Qcb9pWmRh4cw/NJUz97u1X+4B1TAJPbPyKKcq0sEeAFDjQiEAtr9gtkqxAMKTyJQIqtDe73oQI7kAnYLLcgcGJIClcNBhcvPAGOySiSBlu6pjAjsZLfFs5p8+i/kB4DOJ+CFHCwWst3x3olQ8I7tYEPCZb+Bkr658cU1v3Cl8PK/CKPjEleudG2F4oupuGuD/p9TX0x9hG5eZaDyA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=OrJZ3bgVZCAeNzWQyEpDdcbo/rJKI5Fz+6MdHg+7q/s=;
+ b=Gv2NoZ8Lbv7/7Cxg73A3Z5I4Nrwje8oNMDQupmdCz5yiMkeK+TDq32E8pmOaAvX2vRDNXK1A8klc2pVkPXCueJ7THe43dSGmz+X1o16zSCBpC2323G4LvQo1ulETGqDTSkuUaOMLPlH9GC3fH/zDx9IuYeUxAtNgMBsIk/ULTdZd6v+Ufl1zGoyd4uNq/ksL4oLupYnd7r3q+g0sZC/jmcj/tQZOEYv7PnSZ/nbf77KUdV+u97l5tzDP5+HIlZilE6uJpvo5pbr0TnTrvhW+4pAOU6VTYUcW1Y8uOk9EIXfALoJ/8sSvEYPh4tqlopQOTfdd33/+bFFyS+0AwFSDwg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
+ header.d=fb.com; arc=none
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
+ by BN7PR15MB2321.namprd15.prod.outlook.com (2603:10b6:406:86::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.17; Fri, 18 Mar
+ 2022 01:10:30 +0000
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::c476:aaa5:bac1:c383]) by SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::c476:aaa5:bac1:c383%9]) with mapi id 15.20.5081.017; Fri, 18 Mar 2022
+ 01:10:30 +0000
+From:   Song Liu <songliubraving@fb.com>
+To:     Yang Shi <shy828301@gmail.com>
+CC:     Vlastimil Babka <vbabka@suse.cz>,
+        "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+        "linmiaohe@huawei.com" <linmiaohe@huawei.com>,
+        Rik van Riel <riel@surriel.com>,
+        Matthew Wilcox <willy@infradead.org>, Zi Yan <ziy@nvidia.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "tytso@mit.edu" <tytso@mit.edu>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        Linux-Fsdevel <linux-fsdevel@vger.kernel.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [v2 PATCH 0/8] Make khugepaged collapse readonly FS THP more
+ consistent
+Thread-Topic: [v2 PATCH 0/8] Make khugepaged collapse readonly FS THP more
+ consistent
+Thread-Index: AQHYOlmGNQgmUdDgp0OWw19sweVp7azEVTeA
+Date:   Fri, 18 Mar 2022 01:10:30 +0000
+Message-ID: <96F2D93B-2043-44C3-8062-C639372A0212@fb.com>
+References: <20220317234827.447799-1-shy828301@gmail.com>
+In-Reply-To: <20220317234827.447799-1-shy828301@gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3693.60.0.1.1)
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 7942aaf5-f7da-4ac6-3b54-08da087c1850
+x-ms-traffictypediagnostic: BN7PR15MB2321:EE_
+x-microsoft-antispam-prvs: <BN7PR15MB2321E17DE5B105DB0DD9A257B3139@BN7PR15MB2321.namprd15.prod.outlook.com>
+x-fb-source: Internal
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: yinZ6vnPgUVKzUMrQOI5hixFYNwZjaXEH/I/W9t0yt/KL8t2Kapl2TxkvGz+rcDwmCGOyEIQA90Waa95rJo4620xyPlMAV07nQxV9309NF8ni8eswKjM2JuYFnZBM6V7C7Sxi7V2o1uFfCBj3QZ0zZ+Kx0fRcdQGO8Jg/gYmtO7qBWpbyXlyZaeKKUv/wtbGsOwy6FWt5Tdu8xaQh6ZPPVTRtgIDaUm4k70nE3Wmz72/GGC9vSzxrT5YC+OjMHBmwoPl0/n0gYinka7twi//QPlZhupbKnaRUbQjX8kJaQt04Xp4vDUc3Lty3b6ZL/2tyNJMLtuFmMV6qEGwRJzvd94TcDQBw3mXBPBYVyosTZghAT83pEHzpS+BCEj1tXpPD+FT3huxR+7pq9sX/h1u3UfvoxpdyZ84JkriF2dvFxWtOlxQ1p4rDLk77oQza2Xp5B0OGgfC3+pivoIHkdoI+ASQ5KXF4qjA4ONCmkcxevjzOx2mqvm/jJnn61iJcEs/yAoWx6QEX8xHE3BK4JatkhWpoie0+0QZPFrdxArCNM7W9BnrY6aNWBXLyvET6vCwvDst1+LaDZylofkrGbO5ActeI7Vee/Rc7MLykZLPn/nfAT9IsUH+NGS3rnp4g6919jvDwSdKr6MmS+BEHFd2x7oNVRLPRSlgC10+QSq9J2ZAu+LUeJU3PnHnqC8CwTmu4bdj5Da8A7Oyq4aJekO17VjMzd4jOCoZ+MrYhN1LwLsaZlgWPfGyTsTK0d1w+xAaJaW2fF7mUEsFeYLdP4B4bGGesHircC4Y9Lia8YMaWy39WOz1ELCnY7PjOPlwJLZkPTCrRVmggIqPrTc6fR3FgDQp22wHULhMqq9FbDQ9s/E=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(38100700002)(5660300002)(7416002)(83380400001)(71200400001)(36756003)(8936002)(86362001)(6506007)(966005)(38070700005)(91956017)(6486002)(8676002)(66556008)(66476007)(66446008)(64756008)(4326008)(66946007)(33656002)(76116006)(6916009)(54906003)(53546011)(186003)(6512007)(122000001)(2616005)(508600001)(316002)(2906002)(45980500001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?e8OlCamG/tvr99z3XEkudLjbGyGANpLkxsuc1e0zSFmpXBr/Py1o919madEl?=
+ =?us-ascii?Q?XPkJAF3NEvqA8DuBKP58usOF8xQZfVkTnnESH8+z37BNDGl/bWIi7EMQ600b?=
+ =?us-ascii?Q?I9173IbWRTYCo0XELRnXAjFhqb/hV1cjYXZ3GrSEu0pZIhdZLY5yD5HhuVei?=
+ =?us-ascii?Q?jIyNiXdmKCSZXOozXgbygxEd2K4wvZ/+necCKJAxmIws21wc+9eaq5pHEHWd?=
+ =?us-ascii?Q?tkMQCdXBeoDgZ+FSck2CBvklek7XglZEJ4GwLwwbocQ1BQU1pSLrmYVOez3A?=
+ =?us-ascii?Q?sWySY13FOTeNqslQgY+XFGmJukc0NPdtAu3zgF57Dh+RqR5mAegmqZwZfEiW?=
+ =?us-ascii?Q?Sgh8sV1SoRN4sxhp7RdrbBD5e5qIebrAeNuoQObLnLBlh0pMoENawnawonWV?=
+ =?us-ascii?Q?tQz4dJp3mdZToAMqWAB8iryhEmZX3ZrEHPGZCkyip+sDP0OKocXMRsX4cuUI?=
+ =?us-ascii?Q?BwTiRlNMFl0xGevtc12/yW3yp+U+NSH4SzbkeLhHwDgztcpvRDudixBIus/K?=
+ =?us-ascii?Q?VF7haq2hXl0YYtdBAl5S6GYGwrlrVgw97GnrH9QDdiNKH4bbiZr/BW8Z6w4L?=
+ =?us-ascii?Q?9cIM5JkLxeT5/UycFyfgEBd8flX1homB32NsaTeZ4b3GRZvX33VicZk+fbJM?=
+ =?us-ascii?Q?qynJm7MgVg5SQTFyZI4zF1mIgSQf1oW46MKRIczHpZDm4AhOaskOoZllEuS7?=
+ =?us-ascii?Q?NJoAQlikFl/NA0ciDpjLXTG6BBXyfkteiM5rYnxpd/NkDXTZZ817xSAKpJfe?=
+ =?us-ascii?Q?FD/MKXNNxzkD9IFcA4C29JYhaUKLKaIlw0XBWE1uw/hqH9hT3xv1ZzyMhee1?=
+ =?us-ascii?Q?LjGDgp7hxbCD08ZSKIh3LyPBtniYYdjKxxTK2aRXjTwLnab8elUDSsZkXM1V?=
+ =?us-ascii?Q?I0kgh/AVx+3WE3yPpUB1hveeJMNc5B41DJ9Qkeb/pTv5sszcOsq7xx5jOvsv?=
+ =?us-ascii?Q?8dmR4p+C8KbJMhIi4nxg5g+GWw+tyxaIi+HmW1N7q2K539ZiPyo0HeWnS01O?=
+ =?us-ascii?Q?42lrEkY+6fm7K+0yyTA3JFRCcm3xzXm1lObbhIaJiRTu3teT8cqqLP6GBmmb?=
+ =?us-ascii?Q?Cgm3sgFacEtuBZkAevpcnRXZOjAFIks9ItwKJ5SqJY8qMeQEQrW411sSKM5f?=
+ =?us-ascii?Q?KP44vOVdLjOY5JvLVOM5IjB28/HEX+M3urvHOawfxO0FaDX+hY/SJKVabkJd?=
+ =?us-ascii?Q?bzW27ogKKQfH8IrDjPgRFLaBSPgkbHc9Nc9bu91wfJH8HV7Yf5+siv93B2dZ?=
+ =?us-ascii?Q?FQ6TtjNcrLiRvpxitNRojo36IPV5Eo3yYRD2nw2N3aF9Qx8o87qzOd+lWjuY?=
+ =?us-ascii?Q?ioxRGNylnY+9/iKiMt0QtvN8vy0lDx6Hcr5mNMp9UneWNQkMVya/SKGH9Gkt?=
+ =?us-ascii?Q?0FCJxXQdrbCSHLlDA6rEgvDnZCGHXB8BSS3NrNSFRH/6nyxWYagSAC35IU8V?=
+ =?us-ascii?Q?0k150uKVb/51Td4MgtAu5hBdl9b2kCPkTeJ2KJyeX8t+aVAdDUMzcFLXt1ay?=
+ =?us-ascii?Q?toh6MrFFF73jmMA=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <0636B14C8F0EE044AFAE647D0AC3B5A7@namprd15.prod.outlook.com>
+X-OriginatorOrg: fb.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7942aaf5-f7da-4ac6-3b54-08da087c1850
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Mar 2022 01:10:30.2599
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 0xBtxny9QBCChVByJzJJbWwNGuynrrlIX0x7+SKUcmSMHZhgDtasrrtSWRGzh1Mh3cAoqcGQfQ8AclwU++4Mkg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR15MB2321
+X-Proofpoint-ORIG-GUID: zDZMzu2GFpY1dElYZiNG1owQmrbOmJhP
+X-Proofpoint-GUID: zDZMzu2GFpY1dElYZiNG1owQmrbOmJhP
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220317091247.ajk3astyxmmghrsf@quack3.lan>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6233da6d
-        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8
-        a=8gG7tWc4s3CLz9d5ZAEA:9 a=CjuIK1q_8ugA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.850,Hydra:6.0.425,FMLib:17.11.64.514
+ definitions=2022-03-17_07,2022-03-15_01,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
-From: Dave Chinner <dchinner@redhat.com>
 
-Jan Kara reported a performance regression in dbench that he
-bisected down to commit bad77c375e8d ("xfs: CIL checkpoint
-flushes caches unconditionally").
+> On Mar 17, 2022, at 4:48 PM, Yang Shi <shy828301@gmail.com> wrote:
+> 
+> 
+> Changelog
+> v2: * Collected reviewed-by tags from Miaohe Lin.
+>    * Fixed build error for patch 4/8.
+> 
+> The readonly FS THP relies on khugepaged to collapse THP for suitable
+> vmas.  But it is kind of "random luck" for khugepaged to see the
+> readonly FS vmas (see report: https://lore.kernel.org/linux-mm/00f195d4-d039-3cf2-d3a1-a2c88de397a0@suse.cz/) since currently the vmas are registered to khugepaged when:
+>  - Anon huge pmd page fault
+>  - VMA merge
+>  - MADV_HUGEPAGE
+>  - Shmem mmap
+> 
+> If the above conditions are not met, even though khugepaged is enabled
+> it won't see readonly FS vmas at all.  MADV_HUGEPAGE could be specified
+> explicitly to tell khugepaged to collapse this area, but when khugepaged
+> mode is "always" it should scan suitable vmas as long as VM_NOHUGEPAGE
+> is not set.
+> 
+> So make sure readonly FS vmas are registered to khugepaged to make the
+> behavior more consistent.
+> 
+> Registering the vmas in mmap path seems more preferred from performance
+> point of view since page fault path is definitely hot path.
+> 
+> 
+> The patch 1 ~ 7 are minor bug fixes, clean up and preparation patches.
+> The patch 8 converts ext4 and xfs.  We may need convert more filesystems,
+> but I'd like to hear some comments before doing that.
+> 
+> 
+> Tested with khugepaged test in selftests and the testcase provided by
+> Vlastimil Babka in https://lore.kernel.org/lkml/df3b5d1c-a36b-2c73-3e27-99e74983de3a@suse.cz/
+> by commenting out MADV_HUGEPAGE call.
 
-Whilst developing the journal flush/fua optimisations this cache was
-part of, it appeared to made a significant difference to
-performance. However, now that this patchset has settled and all the
-correctness issues fixed, there does not appear to be any
-significant performance benefit to asynchronous cache flushes.
+LGTM. For the series:
 
-In fact, the opposite is true on some storage types and workloads,
-where additional cache flushes that can occur from fsync heavy
-workloads have measurable and significant impact on overall
-throughput.
+Acked-by: Song Liu <song@kernel.org>
 
-Local dbench testing shows little difference on dbench runs with
-sync vs async cache flushes on either fast or slow SSD storage, and
-no difference in streaming concurrent async transaction workloads
-like fs-mark.
+> 
+> 
+> b/fs/ext4/file.c                 |    4 +++
+> b/fs/xfs/xfs_file.c              |    4 +++
+> b/include/linux/huge_mm.h        |    9 +++++++
+> b/include/linux/khugepaged.h     |   69 +++++++++++++++++++++----------------------------------------
+> b/include/linux/sched/coredump.h |    3 +-
+> b/kernel/fork.c                  |    4 ---
+> b/mm/huge_memory.c               |   15 +++----------
+> b/mm/khugepaged.c                |   71 ++++++++++++++++++++++++++++++++++++++++++++-------------------
+> b/mm/shmem.c                     |   14 +++---------
+> 9 files changed, 102 insertions(+), 91 deletions(-)
+> 
 
-Fast NVME storage.
-
-From `dbench -t 30`, CIL scale:
-
-clients		async			sync
-		BW	Latency		BW	Latency
-1		 935.18   0.855		 915.64   0.903
-8		2404.51   6.873		2341.77   6.511
-16		3003.42   6.460		2931.57   6.529
-32		3697.23   7.939		3596.28   7.894
-128		7237.43  15.495		7217.74  11.588
-512		5079.24  90.587		5167.08  95.822
-
-fsmark, 32 threads, create w/ 64 byte xattr w/32k logbsize
-
-	create		chown		unlink
-async   1m41s		1m16s		2m03s
-sync	1m40s		1m19s		1m54s
-
-Slower SATA SSD storage:
-
-From `dbench -t 30`, CIL scale:
-
-clients		async			sync
-		BW	Latency		BW	Latency
-1		  78.59  15.792		  83.78  10.729
-8		 367.88  92.067		 404.63  59.943
-16		 564.51  72.524		 602.71  76.089
-32		 831.66 105.984		 870.26 110.482
-128		1659.76 102.969		1624.73  91.356
-512		2135.91 223.054		2603.07 161.160
-
-fsmark, 16 threads, create w/32k logbsize
-
-	create		unlink
-async   5m06s		4m15s
-sync	5m00s		4m22s
-
-And on Jan's test machine:
-
-                   5.18-rc8-vanilla       5.18-rc8-patched
-Amean     1        71.22 (   0.00%)       64.94 *   8.81%*
-Amean     2        93.03 (   0.00%)       84.80 *   8.85%*
-Amean     4       150.54 (   0.00%)      137.51 *   8.66%*
-Amean     8       252.53 (   0.00%)      242.24 *   4.08%*
-Amean     16      454.13 (   0.00%)      439.08 *   3.31%*
-Amean     32      835.24 (   0.00%)      829.74 *   0.66%*
-Amean     64     1740.59 (   0.00%)     1686.73 *   3.09%*
-
-Performance and cache flush behaviour is restored to pre-regression
-levels.
-
-As such, we can now consider the async cache flush mechanism an
-unnecessary exercise in premature optimisation and hence we can
-now remove it and the infrastructure it requires completely.
-
-Fixes: bad77c375e8d ("xfs: CIL checkpoint flushes caches unconditionally")
-Reported-and-tested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
-Version 2:
-- really get rid of all the commented out code. (Thanks Jan!)
-
- fs/xfs/xfs_bio_io.c   | 35 -----------------------------------
- fs/xfs/xfs_linux.h    |  2 --
- fs/xfs/xfs_log.c      | 36 +++++++++++-------------------------
- fs/xfs/xfs_log_cil.c  | 42 +++++++++++++-----------------------------
- fs/xfs/xfs_log_priv.h |  3 +--
- 5 files changed, 25 insertions(+), 93 deletions(-)
-
-diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
-index 667e297f59b1..17f36db2f792 100644
---- a/fs/xfs/xfs_bio_io.c
-+++ b/fs/xfs/xfs_bio_io.c
-@@ -9,41 +9,6 @@ static inline unsigned int bio_max_vecs(unsigned int count)
- 	return bio_max_segs(howmany(count, PAGE_SIZE));
- }
- 
--static void
--xfs_flush_bdev_async_endio(
--	struct bio	*bio)
--{
--	complete(bio->bi_private);
--}
--
--/*
-- * Submit a request for an async cache flush to run. If the request queue does
-- * not require flush operations, just skip it altogether. If the caller needs
-- * to wait for the flush completion at a later point in time, they must supply a
-- * valid completion. This will be signalled when the flush completes.  The
-- * caller never sees the bio that is issued here.
-- */
--void
--xfs_flush_bdev_async(
--	struct bio		*bio,
--	struct block_device	*bdev,
--	struct completion	*done)
--{
--	struct request_queue	*q = bdev->bd_disk->queue;
--
--	if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
--		complete(done);
--		return;
--	}
--
--	bio_init(bio, NULL, 0);
--	bio_set_dev(bio, bdev);
--	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
--	bio->bi_private = done;
--	bio->bi_end_io = xfs_flush_bdev_async_endio;
--
--	submit_bio(bio);
--}
- int
- xfs_rw_bdev(
- 	struct block_device	*bdev,
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 09a8fba84ff9..cb9105d667db 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -197,8 +197,6 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
- 
- int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
- 		char *data, unsigned int op);
--void xfs_flush_bdev_async(struct bio *bio, struct block_device *bdev,
--		struct completion *done);
- 
- #define ASSERT_ALWAYS(expr)	\
- 	(likely(expr) ? (void)0 : assfail(NULL, #expr, __FILE__, __LINE__))
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 89fec9a18c34..40419e8fedad 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -523,12 +523,6 @@ xlog_state_shutdown_callbacks(
-  * Flush iclog to disk if this is the last reference to the given iclog and the
-  * it is in the WANT_SYNC state.
-  *
-- * If the caller passes in a non-zero @old_tail_lsn and the current log tail
-- * does not match, there may be metadata on disk that must be persisted before
-- * this iclog is written.  To satisfy that requirement, set the
-- * XLOG_ICL_NEED_FLUSH flag as a condition for writing this iclog with the new
-- * log tail value.
-- *
-  * If XLOG_ICL_NEED_FUA is already set on the iclog, we need to ensure that the
-  * log tail is updated correctly. NEED_FUA indicates that the iclog will be
-  * written to stable storage, and implies that a commit record is contained
-@@ -545,12 +539,10 @@ xlog_state_shutdown_callbacks(
-  * always capture the tail lsn on the iclog on the first NEED_FUA release
-  * regardless of the number of active reference counts on this iclog.
-  */
--
- int
- xlog_state_release_iclog(
- 	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	xfs_lsn_t		old_tail_lsn)
-+	struct xlog_in_core	*iclog)
- {
- 	xfs_lsn_t		tail_lsn;
- 	bool			last_ref;
-@@ -561,18 +553,14 @@ xlog_state_release_iclog(
- 	/*
- 	 * Grabbing the current log tail needs to be atomic w.r.t. the writing
- 	 * of the tail LSN into the iclog so we guarantee that the log tail does
--	 * not move between deciding if a cache flush is required and writing
--	 * the LSN into the iclog below.
-+	 * not move between the first time we know that the iclog needs to be
-+	 * made stable and when we eventually submit it.
- 	 */
--	if (old_tail_lsn || iclog->ic_state == XLOG_STATE_WANT_SYNC) {
-+	if ((iclog->ic_state == XLOG_STATE_WANT_SYNC ||
-+	     (iclog->ic_flags & XLOG_ICL_NEED_FUA)) &&
-+	    !iclog->ic_header.h_tail_lsn) {
- 		tail_lsn = xlog_assign_tail_lsn(log->l_mp);
--
--		if (old_tail_lsn && tail_lsn != old_tail_lsn)
--			iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
--
--		if ((iclog->ic_flags & XLOG_ICL_NEED_FUA) &&
--		    !iclog->ic_header.h_tail_lsn)
--			iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
-+		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
- 	}
- 
- 	last_ref = atomic_dec_and_test(&iclog->ic_refcnt);
-@@ -600,8 +588,6 @@ xlog_state_release_iclog(
- 	}
- 
- 	iclog->ic_state = XLOG_STATE_SYNCING;
--	if (!iclog->ic_header.h_tail_lsn)
--		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
- 	xlog_verify_tail_lsn(log, iclog);
- 	trace_xlog_iclog_syncing(iclog, _RET_IP_);
- 
-@@ -874,7 +860,7 @@ xlog_force_iclog(
- 	iclog->ic_flags |= XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA;
- 	if (iclog->ic_state == XLOG_STATE_ACTIVE)
- 		xlog_state_switch_iclogs(iclog->ic_log, iclog, 0);
--	return xlog_state_release_iclog(iclog->ic_log, iclog, 0);
-+	return xlog_state_release_iclog(iclog->ic_log, iclog);
- }
- 
- /*
-@@ -2412,7 +2398,7 @@ xlog_write_copy_finish(
- 		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
- 			xlog_is_shutdown(log));
- release_iclog:
--	error = xlog_state_release_iclog(log, iclog, 0);
-+	error = xlog_state_release_iclog(log, iclog);
- 	spin_unlock(&log->l_icloglock);
- 	return error;
- }
-@@ -2629,7 +2615,7 @@ xlog_write(
- 
- 	spin_lock(&log->l_icloglock);
- 	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
--	error = xlog_state_release_iclog(log, iclog, 0);
-+	error = xlog_state_release_iclog(log, iclog);
- 	spin_unlock(&log->l_icloglock);
- 
- 	return error;
-@@ -3053,7 +3039,7 @@ xlog_state_get_iclog_space(
- 		 * reference to the iclog.
- 		 */
- 		if (!atomic_add_unless(&iclog->ic_refcnt, -1, 1))
--			error = xlog_state_release_iclog(log, iclog, 0);
-+			error = xlog_state_release_iclog(log, iclog);
- 		spin_unlock(&log->l_icloglock);
- 		if (error)
- 			return error;
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 83a039762b81..148ccd145916 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -705,11 +705,21 @@ xlog_cil_set_ctx_write_state(
- 		 * The LSN we need to pass to the log items on transaction
- 		 * commit is the LSN reported by the first log vector write, not
- 		 * the commit lsn. If we use the commit record lsn then we can
--		 * move the tail beyond the grant write head.
-+		 * move the grant write head beyond the tail LSN and overwrite
-+		 * it.
- 		 */
- 		ctx->start_lsn = lsn;
- 		wake_up_all(&cil->xc_start_wait);
- 		spin_unlock(&cil->xc_push_lock);
-+
-+		/*
-+		 * Make sure the metadata we are about to overwrite in the log
-+		 * has been flushed to stable storage before this iclog is
-+		 * issued.
-+		 */
-+		spin_lock(&cil->xc_log->l_icloglock);
-+		iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
-+		spin_unlock(&cil->xc_log->l_icloglock);
- 		return;
- 	}
- 
-@@ -888,10 +898,7 @@ xlog_cil_push_work(
- 	struct xfs_trans_header thdr;
- 	struct xfs_log_iovec	lhdr;
- 	struct xfs_log_vec	lvhdr = { NULL };
--	xfs_lsn_t		preflush_tail_lsn;
- 	xfs_csn_t		push_seq;
--	struct bio		bio;
--	DECLARE_COMPLETION_ONSTACK(bdev_flush);
- 	bool			push_commit_stable;
- 
- 	new_ctx = xlog_cil_ctx_alloc();
-@@ -961,23 +968,6 @@ xlog_cil_push_work(
- 	list_add(&ctx->committing, &cil->xc_committing);
- 	spin_unlock(&cil->xc_push_lock);
- 
--	/*
--	 * The CIL is stable at this point - nothing new will be added to it
--	 * because we hold the flush lock exclusively. Hence we can now issue
--	 * a cache flush to ensure all the completed metadata in the journal we
--	 * are about to overwrite is on stable storage.
--	 *
--	 * Because we are issuing this cache flush before we've written the
--	 * tail lsn to the iclog, we can have metadata IO completions move the
--	 * tail forwards between the completion of this flush and the iclog
--	 * being written. In this case, we need to re-issue the cache flush
--	 * before the iclog write. To detect whether the log tail moves, sample
--	 * the tail LSN *before* we issue the flush.
--	 */
--	preflush_tail_lsn = atomic64_read(&log->l_tail_lsn);
--	xfs_flush_bdev_async(&bio, log->l_mp->m_ddev_targp->bt_bdev,
--				&bdev_flush);
--
- 	/*
- 	 * Pull all the log vectors off the items in the CIL, and remove the
- 	 * items from the CIL. We don't need the CIL lock here because it's only
-@@ -1054,12 +1044,6 @@ xlog_cil_push_work(
- 	lvhdr.lv_iovecp = &lhdr;
- 	lvhdr.lv_next = ctx->lv_chain;
- 
--	/*
--	 * Before we format and submit the first iclog, we have to ensure that
--	 * the metadata writeback ordering cache flush is complete.
--	 */
--	wait_for_completion(&bdev_flush);
--
- 	error = xlog_cil_write_chain(ctx, &lvhdr);
- 	if (error)
- 		goto out_abort_free_ticket;
-@@ -1118,7 +1102,7 @@ xlog_cil_push_work(
- 	if (push_commit_stable &&
- 	    ctx->commit_iclog->ic_state == XLOG_STATE_ACTIVE)
- 		xlog_state_switch_iclogs(log, ctx->commit_iclog, 0);
--	xlog_state_release_iclog(log, ctx->commit_iclog, preflush_tail_lsn);
-+	xlog_state_release_iclog(log, ctx->commit_iclog);
- 
- 	/* Not safe to reference ctx now! */
- 
-@@ -1139,7 +1123,7 @@ xlog_cil_push_work(
- 		return;
- 	}
- 	spin_lock(&log->l_icloglock);
--	xlog_state_release_iclog(log, ctx->commit_iclog, 0);
-+	xlog_state_release_iclog(log, ctx->commit_iclog);
- 	/* Not safe to reference ctx now! */
- 	spin_unlock(&log->l_icloglock);
- }
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 23103d68423c..80d77aac6fe4 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -524,8 +524,7 @@ void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
- 
- void xlog_state_switch_iclogs(struct xlog *log, struct xlog_in_core *iclog,
- 		int eventual_size);
--int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog,
--		xfs_lsn_t log_tail_lsn);
-+int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog);
- 
- /*
-  * When we crack an atomic LSN, we sample it first so that the value will not
