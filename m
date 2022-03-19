@@ -2,129 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F066C433FE
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Mar 2022 16:23:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36EB7C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Mar 2022 22:48:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241399AbiCSQZC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 19 Mar 2022 12:25:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36558 "EHLO
+        id S236144AbiCSWtx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 19 Mar 2022 18:49:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229707AbiCSQZB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Mar 2022 12:25:01 -0400
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8E7B8BF4D;
-        Sat, 19 Mar 2022 09:23:39 -0700 (PDT)
-Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 22JGN4VN007569
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 19 Mar 2022 12:23:05 -0400
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id 49E8815C0038; Sat, 19 Mar 2022 12:23:04 -0400 (EDT)
-Date:   Sat, 19 Mar 2022 12:23:04 -0400
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Jan Kara <jack@suse.cz>, Matthew Wilcox <willy@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Linux-MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Hugh Dickins <hughd@google.com>,
-        Namjae Jeon <namjae.jeon@samsung.com>,
-        Ashish Sangwan <a.sangwan@samsung.com>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>
-Subject: Re: writeback completion soft lockup BUG in folio_wake_bit()
-Message-ID: <YjYDaBnN36zggeGa@mit.edu>
-References: <YjDj3lvlNJK/IPiU@bfoster>
- <YjJPu/3tYnuKK888@casper.infradead.org>
- <CAHk-=wgPTWoXCa=JembExs8Y7fw7YUi9XR0zn1xaxWLSXBN_vg@mail.gmail.com>
- <YjNN5SzHELGig+U4@casper.infradead.org>
- <CAHk-=wiZvOpaP0DVyqOnspFqpXRaT6q53=gnA2psxnf5dbt7bw@mail.gmail.com>
- <YjOlJL7xwktKoLFN@casper.infradead.org>
- <20220318131600.iv7ct2m4o52plkhl@quack3.lan>
- <CAHk-=wiky+cT7xF_2S94ToEjm=XNX73CsFHaQJH3tzYQ+Vb1mw@mail.gmail.com>
+        with ESMTP id S244305AbiCSWtu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Mar 2022 18:49:50 -0400
+X-Greylist: delayed 404 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 19 Mar 2022 15:48:27 PDT
+Received: from mail01.amorngroup.com (mail01.amorngroup.com [119.59.108.243])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D47D33F30A
+        for <linux-xfs@vger.kernel.org>; Sat, 19 Mar 2022 15:48:25 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by mail01.amorngroup.com (Postfix) with ESMTP id 1DE0C1207732
+        for <linux-xfs@vger.kernel.org>; Sun, 20 Mar 2022 05:41:39 +0700 (+07)
+Received: from mail01.amorngroup.com ([127.0.0.1])
+        by localhost (mail01.amorngroup.com [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id Cycym4K1Wj6X for <linux-xfs@vger.kernel.org>;
+        Sun, 20 Mar 2022 05:41:38 +0700 (+07)
+Received: from localhost (localhost [127.0.0.1])
+        by mail01.amorngroup.com (Postfix) with ESMTP id C5234120777D
+        for <linux-xfs@vger.kernel.org>; Sun, 20 Mar 2022 05:41:38 +0700 (+07)
+DKIM-Filter: OpenDKIM Filter v2.10.3 mail01.amorngroup.com C5234120777D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amorngroup.com;
+        s=BF927CE2-890B-11EA-B561-170775A3ADCF; t=1647729698;
+        bh=PUfW/J4eqjEG//Doa5I2UWPmX11n95miHfXefwGD+tQ=;
+        h=From:To:Date:Message-ID:MIME-Version;
+        b=Z/Tmc2mPJWTRBS2lamc/s8dXzU5N6qvPLgMS6xUbc+tCAC2wj1qKGavlFbaydHzkP
+         9b1aB+ZmccEkHFWW0Syqatr55NZzDv7ccvoxkydUFy82YLVwSVIpSgEth+H64ouuPy
+         3iloCgnlLQG1qEUyCrPJZIFkP5Xq/Otrq3gerpwwLNN7mEO4d0kFQ2PQEqmKKjIj1g
+         lsFrXnmDZC7cXvozwUhpcHsQTQ8A56u8Vo5/6NhK5Q/li/tuu9qKwUzESnliZqzELR
+         xOFUABfxbON3Yj1rQIcl90fZJZNgtnW3l4WWkpd6Ybpeo/n1Rml9IFctEbKgZ+coGR
+         p+0o9XQ2hNqhA==
+X-Virus-Scanned: amavisd-new at mail01.amorngroup.com
+Received: from mail01.amorngroup.com ([127.0.0.1])
+        by localhost (mail01.amorngroup.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 5xyqE7FYD_hS for <linux-xfs@vger.kernel.org>;
+        Sun, 20 Mar 2022 05:41:38 +0700 (+07)
+Received: from amorngroup.com (unknown [20.92.111.168])
+        by mail01.amorngroup.com (Postfix) with ESMTPSA id 0D9C11207786
+        for <linux-xfs@vger.kernel.org>; Sun, 20 Mar 2022 05:41:31 +0700 (+07)
+Reply-To: gsandassociates01@gmail.com
+From:   "G. Paris" <gparis@amorngroup.com>
+To:     linux-xfs@vger.kernel.org
+Subject: Business/Project Funding Opportunity 
+Date:   19 Mar 2022 22:41:31 +0000
+Message-ID: <20220319224128.3000A510C086F96B@amorngroup.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wiky+cT7xF_2S94ToEjm=XNX73CsFHaQJH3tzYQ+Vb1mw@mail.gmail.com>
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 18, 2022 at 11:56:04AM -0700, Linus Torvalds wrote:
-> On Fri, Mar 18, 2022 at 6:16 AM Jan Kara <jack@suse.cz> wrote:
-> >
-> > I agree with Dave that 'keep_towrite' thing is kind of self-inflicted
-> > damage on the ext4 side (we need to write out some blocks underlying the
-> > page but cannot write all from the transaction commit code, so we need to
-> > keep xarray tags intact so that data integrity sync cannot miss the page).
-> > Also it is no longer needed in the current default ext4 setup. But if you
-> > have blocksize < pagesize and mount the fs with 'dioreadlock,data=ordered'
-> > mount options, the hack is still needed AFAIK and we don't have a
-> > reasonable way around it.
-> 
-> I assume you meant 'dioread_lock'.
-> 
-> Which seems to be the default (even if 'data=ordered' is not).
+Greetings,
 
-That's not quite right.  data=ordered is the default, and that has
-been the case since ext3 was introduced.
+We invites you to partner with us and benefit in our Client's=20
+Loan and Project funding program.Please do not hesitate to=20
+contact us at   gsandassociates01@gmail.com
 
-"dioread_lock" was the default in the days of ext3; "dioread_nolock"
-was added to allow parallel Direct I/O reads (hence "nolock").  A
-while back, we tried to make dioread_nolock the default since it tends
-improve performance for workloads that have a mix of writes that
-should be affected by fsyncs, and those that shouldn't.
+I look forward to your favorable response.
 
-Howevver, we had to revert that change when blocksize < pagesize to
-work around a problem found on Power machines where "echo 3 >
-drop_caches" on the host appears to cause file system corruptions on
-the guest.  (Commit 626b035b816b "ext4: don't set dioread_nolock by
-default for blocksize < pagesize").
-
-> IOW, we could simply warn about "data=ordered is no longer supported"
-> and turn it into data=journal.
-> 
-> Obviously *only* do this for the case of "blocksize < PAGE_SIZE".
-
-Actiavelly, we've discussed a number of times doing the reverse ---
-removing data=journal entirely, since it's (a) rarely used, and (b)
-data=journal disables a bunch of optimizations, including
-preallocation, and so its performance is pretty awful for most
-workloads.  The main reason why haven't until now is that we believe
-there is a small number of people who do find data=journal useful for
-their workload, and at least _so_ far it's not been that hard to keep
-it limping along --- although in most cases, data=journal doesn't get
-supported for new features or performance optimizations, and it
-definitely does note get as much testing.
-
-
-So the thing that I've been waiting to do for a while is to replace
-the whole data=ordered vs data=writeback and dioread_nolock and
-dioread_lock is a complete reworking of the ext4 buffered writeback
-path, where we write the data blocks *first*, and only then update the
-ext4 metadata.
-
-Historically, going as far back as ext2, we've always allocated data
-blocks and updatted the metadata blocks, and only then updated the
-buffer or page cache for the data blocks.  All of the complexities
-around data=ordered, data=writeback, dioread_nolock, etc., is because
-we haven't done the fundamental work of reversing the order in which
-we do buffered writeback.   What we *should* be doing is:
-
-*) Determining where the new allocated data blockblocks should be, and
-   preventing those blocks from being used for any other purposes, but
-   *not* updating the file system metadata to reflect that change.
-
-*) Submit the data block write
-
-*) On write completion, update the metadata blocks in a kernel thread.
-
-Over time, we've been finding more and more reasons why I need to do
-this work, so it's something I'm going to have to prioritize in the
-next few months.
-
-Cheerse,
-
-						- Ted
+Mr. G. Paris.
+Senior consultant
+GS & Associates
