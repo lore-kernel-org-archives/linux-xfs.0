@@ -2,214 +2,205 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BD30C433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Mar 2022 02:02:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD869C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Mar 2022 06:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235651AbiCSCER (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Mar 2022 22:04:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51152 "EHLO
+        id S242271AbiCSGbN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 19 Mar 2022 02:31:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232981AbiCSCEQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Mar 2022 22:04:16 -0400
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91A59986C8
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Mar 2022 19:02:55 -0700 (PDT)
-Received: from fsav312.sakura.ne.jp (fsav312.sakura.ne.jp [153.120.85.143])
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 22J22qaa070248;
-        Sat, 19 Mar 2022 11:02:52 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Received: from www262.sakura.ne.jp (202.181.97.72)
- by fsav312.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav312.sakura.ne.jp);
- Sat, 19 Mar 2022 11:02:52 +0900 (JST)
-X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav312.sakura.ne.jp)
-Received: from [192.168.1.9] (M106072142033.v4.enabler.ne.jp [106.72.142.33])
-        (authenticated bits=0)
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 22J22pLa070244
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NO);
-        Sat, 19 Mar 2022 11:02:52 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Message-ID: <61f41e56-3650-f0fc-9ef5-7e19fe84e6b7@I-love.SAKURA.ne.jp>
-Date:   Sat, 19 Mar 2022 11:02:51 +0900
+        with ESMTP id S242252AbiCSGbM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Mar 2022 02:31:12 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D64741AA8D3;
+        Fri, 18 Mar 2022 23:29:50 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22J1VW7c017377;
+        Sat, 19 Mar 2022 06:29:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : content-type : mime-version; s=corp-2021-07-09;
+ bh=4AdHtv0Iq+UP1JeVBfXLHyEl3dBQcbQI1fPp32fdsvU=;
+ b=nDQAbpWvqU4oZSOSTsqsCfO8sXcfwQdX/xbH1DCCT7PyPG2Sk0Qo81qxLq2Zn0Fjhtn2
+ HCloyyrNMWEKHW/IsefVDKDq+ru5fV7Oy2xhnGJR6C7VVYoyfMmKJe2tso9pKv8fRRPc
+ IA53Osr8pAIzELjB5BHgsRFKrNZRN/QiIIYaL5GJNMGjgOEkNaIjjNCrlz/eqlvgpCZh
+ jlY6F8lCrF2WtQxxyG72xwR8k48AKA9wQseZKFwxdakrOPPjDez8gV6+4iBwGzJdmaGX
+ gZQh+xapTUhMV61Oqyn8a1SkamhhXChCro3LRDwMjMlIVZ8Dq5BFYtWguOuYIwB85iIr uQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ew5kcg5pp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 19 Mar 2022 06:29:00 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 22J6MICS027495;
+        Sat, 19 Mar 2022 06:28:59 GMT
+Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2048.outbound.protection.outlook.com [104.47.56.48])
+        by userp3020.oracle.com with ESMTP id 3ew8mfrwhv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 19 Mar 2022 06:28:58 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MKrAZE/gpKMdsxFM4mgSO0srUn1h91OgmGuE2Bw7WZGvJEtrRu6y2y4KE6gRrKxD46RrK+T+0UUrjnZxemjcVqe+9BehhstQNy+RgvH82uLswial8ZrMTa2a8E7Ss2r3jqeDrIHte1mym7R8kUx+XVt5rFZqiQAc1L0V6T7JT7fsrrdHIV4fLBG71xn0oEfWqEV9GsZOLhrc0PYVMqqp0WgTlcr20ctyPomaNmjm75KOoC6ZM2z2Zi7/V4KwgBpApBokmhiO/EJ/G93SQlkPSJztzsGaYcueIJ5Q+G1sq5EHWrd8hW1Ovu1vv1beH1vczJsAbY3LGyMoRLA2Iz5uMA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4AdHtv0Iq+UP1JeVBfXLHyEl3dBQcbQI1fPp32fdsvU=;
+ b=fIyBCxrJBFcKpcmk3U1WtPgpgo+Yd1+41Ns7rndUanGC2aU/GL984yYkQH70LlYEf0JfDxBCTgH0Rjt3XhEL4kPuT3S8zYz28M0iXFV7lgOwkxciod/+a6ucIHCL/R/F+HP1/xHMkokBu1bT46egLgDBqvGK18rKI1G/X+HwRJV+TsQ3+nIFf8szqCJk4cQRcBMttNdYAhq6HEtjwxlFCazlK6ShDrJ1alMCicvpWMoTGIYRv3zKGHGeA/+lH7l5XxD2f1ONb+90UssCgKbAoyytlzokKY0uyEbED9kD7z/jrgnEI4Od3lHC9ioy3xa+JObcsZk7xCOIczzNOB55Og==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4AdHtv0Iq+UP1JeVBfXLHyEl3dBQcbQI1fPp32fdsvU=;
+ b=JswslQgLMP1x7L2NUYGFO6TknO8SorUdhsnDvYlWJK+3+LQQgSC9G1W+H2RpGLB6w3EgJX0zJq/B1i4kiRvhVLI7wq8b6LLUyMHih1GR+trI/ldKTsWsg3D02chDjIkxUvViDG2SvUt6l+kbsbbbuuo4s0jkfYDH2bRAfvBRFDI=
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com (2603:10b6:a03:2d1::14)
+ by CY4PR10MB1798.namprd10.prod.outlook.com (2603:10b6:903:126::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.17; Sat, 19 Mar
+ 2022 06:28:57 +0000
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::2092:8e36:64c0:a336]) by SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::2092:8e36:64c0:a336%8]) with mapi id 15.20.5081.019; Sat, 19 Mar 2022
+ 06:28:56 +0000
+From:   Jane Chu <jane.chu@oracle.com>
+To:     david@fromorbit.com, djwong@kernel.org, dan.j.williams@intel.com,
+        hch@infradead.org, vishal.l.verma@intel.com, dave.jiang@intel.com,
+        agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com,
+        ira.weiny@intel.com, willy@infradead.org, vgoyal@redhat.com,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH v6 0/6] DAX poison recovery
+Date:   Sat, 19 Mar 2022 00:28:27 -0600
+Message-Id: <20220319062833.3136528-1-jane.chu@oracle.com>
+X-Mailer: git-send-email 2.18.4
+Content-Type: text/plain
+X-ClientProxiedBy: BY5PR16CA0025.namprd16.prod.outlook.com
+ (2603:10b6:a03:1a0::38) To SJ0PR10MB4429.namprd10.prod.outlook.com
+ (2603:10b6:a03:2d1::14)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH] loop: add WQ_MEM_RECLAIM flag to per device workqueue
-Content-Language: en-US
-To:     Tejun Heo <tj@kernel.org>
-Cc:     Dan Schatzberg <schatzberg.dan@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-References: <e0a0bc94-e6de-b0e5-ee46-a76cd1570ea6@I-love.SAKURA.ne.jp>
- <YjNHzyTFHjh9v6k4@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
- <5542ef88-dcc9-0db5-7f01-ad5779d9bc07@I-love.SAKURA.ne.jp>
- <YjS+Jr6QudSKMSGy@slm.duckdns.org>
-From:   Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-In-Reply-To: <YjS+Jr6QudSKMSGy@slm.duckdns.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: f2d9f55b-cbe1-4291-a40d-08da0971bf07
+X-MS-TrafficTypeDiagnostic: CY4PR10MB1798:EE_
+X-Microsoft-Antispam-PRVS: <CY4PR10MB17980AE1BF3BF108A174C849F3149@CY4PR10MB1798.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 2Dq1Y3EysgEPbQKG8ZI3WDeNlBuTODkjc/kPAHJ2wHIYqx0piONDuuyF7IJ6u0jvMGAmBS7gz/YK35/WTziXcNfci2XUNlOiqUdpp9DfF4XQC2hSe1CjpelzBvSfYM8LE/6dQlaNfzr9EEAHOP3YZzpQxvLLzb2lPeAiZFMjmXu8XGBdSlM1suoqNYAnbbJWW1h6XmkgN3O00PROVNVBCZZlahm1qPnv90P5WbHka65fjXYNBW40Ggc3iiFzl8IJDMBIrHXRJYNw1mtazs3QRTkt8l6fhDz6IMpSFZ+uZCrIQKOM0LeskYcrlNRdX4u5IOpAyLO4EhgM6exi2JFjp3A90xJb/HR7wYW/vQ5L8WwhtTXsGI0QYlaDelPysSTmu9YzO3POPTku5l32N8U1ylPXW3Q4jUUHrVl4rofw3v163YeJJSnCzpqM8MhwEfKvP1HGOit8czUpjT17NjvxUFfVxxwHUynib2dJM1YE9VVsVbmLL1jy7L6mSJEwBqIHj05LqPCZH38EYZnsPjDLOJMGwqTvjNfiG20OGzvSYV3LzDE6Ce0T0wkgd0P0FgFhc4vdI8naJqcsugbhUSA3yC5RQvEDAOtTKMp2D3VQyA0ane+H1OQuiHRLt4DKQET0pfSqQSV+1j0zMul6aujYFAXHX8nRkqUuKRzwGAlU2yvyu8C2xIPZ7qXapZrqdM+Ir5THc0yvdCERfhfutxj3OhICqvrvk3o5R8CRrdZVBJemDukne4xgI1amxxfaa6kdqH4GmIvONPryoL5/nIqUXCMLeNgOe7O2hQneEDnrBXmgpVnBbjQGi3SVFVFMClcM
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4429.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(52116002)(6512007)(66476007)(8676002)(83380400001)(66556008)(316002)(6506007)(2906002)(38100700002)(66946007)(508600001)(44832011)(966005)(5660300002)(8936002)(7416002)(36756003)(1076003)(6486002)(86362001)(186003)(2616005)(921005)(6666004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?q4GcftBlqGcRlNVsaCKLsBxGr3+lj3Q/zChm7r9PqZof1RM2cXU7avrZ2N7f?=
+ =?us-ascii?Q?b+5eLRSznlfUO1MWw4Op8WnNalRJ5y78ekwwKjAl88RM4C3OCNmaUgEMNIVM?=
+ =?us-ascii?Q?JBMDsnPkHeAgPqLQSsBqaCZ7oiJN/rVM0XVGe+lkxeBo1Z0Yi4OFpOGz6BBU?=
+ =?us-ascii?Q?mVnWHL7XA2QGh/vukxoFI6pguAQfn2mJJNoF5WMJuGZDCNIg0wat/Kiv2+U8?=
+ =?us-ascii?Q?Z0IAIZ4YtZ43h5ZAyZfRah8l2XHLVm4BwdE/4CWSQtt0uDdy2CEd60u7TzlC?=
+ =?us-ascii?Q?rYaltOcT7+Ib2HcJqhS8oPvFd+m8jMfH9Dkm7WspnbX3QHtymNdQXyCN3TCK?=
+ =?us-ascii?Q?QeB0GdbNnrJi5j6Jvq74cO191lS30V2SsVK6Uw0YCdUdOqKRzPCJ+xmd62F/?=
+ =?us-ascii?Q?KJrQPpHPRXri8hIBTbs2jzRDpE5WNVPrnCVT6Gsx58gN0vevZcsUdIVK859N?=
+ =?us-ascii?Q?jVlwcl0Pnx4lL7ZKlsT9ZpERVpzvz2WB7MHSiv3/ia2QiT5Xzxu0fUBUGgGm?=
+ =?us-ascii?Q?pB9QW7xrV3xysT6O/q0d8f11SJfBWWmAvftVUaW0eblYqVCCsJy1ShrhkWhy?=
+ =?us-ascii?Q?rVndFDBNAmyx66CpB5uaDM+u1ANOT4D/naPuZ2IAO0/K+Re3Y5kyPCZDeJxS?=
+ =?us-ascii?Q?iN+umTU2aHO9xVCDeAiqqEJdQuRv2M+iYPR8p4+V6uFYELhZbkUpACXwEaZA?=
+ =?us-ascii?Q?aqQGaKIiHyEJoVmhI5FJViHxVpz+bdmKjkHLf09VAQxeeJPtH2++gFSA0OHD?=
+ =?us-ascii?Q?orp6aKpO9dLRUAwgnSXEjuVBXuJT/t7mw3lSNgbm48VIYqeLEqbJ25ZgsTBE?=
+ =?us-ascii?Q?se3HRaGfp2o5ijIeO4RTkvZ2CTaMl/mKuNpBdmwJcTNdIu22pqSkvj2fDiDI?=
+ =?us-ascii?Q?PElYNWcQsEqGXvfGzIzyM6Y8xKIqsfE+/i+4mM64d0QuG2L2VoSf86d4ym1b?=
+ =?us-ascii?Q?h8+u1Uu4bnr7PU4Fs1FiWk64G/kb45gmKAh9tCeyO09Kskz0kNbuKD+NhsVg?=
+ =?us-ascii?Q?IM2tGCGFzvhrGblCUWxwg8JaKMJqQrP9RX5neb3IDKbGET7ZyXQB6eHGY/pd?=
+ =?us-ascii?Q?7WsIRQWiAcwrVwB/CDhKP0IHZjdYJlvPGFIvmqIjFsUestmlQ28uGC4XFdbc?=
+ =?us-ascii?Q?AVpo7biH3ienXn9Z2SDA2XapKuJhZPS4TO5Vv/RzQvv24HyhEiaa/Aj+Suh+?=
+ =?us-ascii?Q?1YLvwGeL2DFtQ2HxU4rkEas+rXrd3aoR9NsriEUldGlo2wFFIOLHel3LaOEO?=
+ =?us-ascii?Q?Vz/h5O7Z9SsxYuJdGuDpYEWWwm4fI57blPJPwRdkPwfyi20/3MrdnufQxo/8?=
+ =?us-ascii?Q?Pn2VvndvWhXwFQ/Y0bJLvU7bVG4M5+y4p88UghIEA2xeuvrJcfTrhnZYvjk8?=
+ =?us-ascii?Q?gsRq6aWsVwAgVy2KJYex0ylYI9TyFCQI/et9mmwCmzpgppbNpv8rv5b124YZ?=
+ =?us-ascii?Q?83mLZrtami4Ip6zCtPhh1fST5oUC7w6GMD5/Oo+YISDy/cL7kazwIw=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f2d9f55b-cbe1-4291-a40d-08da0971bf07
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4429.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2022 06:28:56.8668
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: s3/4BRPyacuYIQER7dSRk4zQcH61jKIaNtRIkQSZvxqKLjhXfHqUW2hPTEvyvDYXlhIVP/e9bcpb6eaPxFIyWA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1798
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10290 signatures=694221
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 bulkscore=0
+ malwarescore=0 mlxlogscore=999 phishscore=0 spamscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2203190038
+X-Proofpoint-GUID: RmwJNbKd_ExqLUtVqUfRu_s3-RairxE7
+X-Proofpoint-ORIG-GUID: RmwJNbKd_ExqLUtVqUfRu_s3-RairxE7
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2022/03/19 2:15, Tejun Heo wrote:
-> Hello,
-> 
-> On Fri, Mar 18, 2022 at 09:05:42PM +0900, Tetsuo Handa wrote:
->> But since include/linux/workqueue.h only says
->>
->> 	__WQ_LEGACY		= 1 << 18, /* internal: create*_workqueue() */
->>
->> , I can't tell when not to specify __WQ_LEGACY and WQ_MEM_RECLAIM together...
->>
->> Tejun, what is the intent of this warning? Can the description of __WQ_LEGACY flag
->> be updated? I think that the loop module had better reserve one "struct task_struct"
->> for each loop device.
->>
->> I guess that, in general, waiting for a work in !WQ_MEM_RECLAIM WQ from a
->> WQ_MEM_RECLAIM WQ is dangerous because that work may not be able to find
->> "struct task_struct" for processing that work. Then, what we should do is to
->> create mp->m_sync_workqueue with WQ_MEM_RECLAIM flag added instead of creating
->> lo->workqueue with __WQ_LEGACY + WQ_MEM_RECLAIM flags added...
->>
->> Is __WQ_LEGACY + WQ_MEM_RECLAIM combination a hack for silencing this warning
->> without fixing various WQs used by xfs and other filesystems?
-> 
-> So, create_workqueue() is the deprecated interface and always imples
-> MEM_RECLAIM because back when the interface was added each wq had a
-> dedicated worker and there's no way to tell one way or the other. The
-> warning is telling you to convert the workqueue to the alloc_workqueue()
-> interface and explicitly use WQ_MEM_RECLAIM flag if the workqueue is gonna
-> participate in MEM_RECLAIM chain.
+In this series, dax recovery code path is independent of that of
+normal write. Competing dax recovery threads are serialized,
+racing read threads are guaranteed not overlapping with the
+recovery process.
 
-Is the intent of __WQ_LEGACY flag to indicate that "this WQ was created
-using deprecated interface" ? But such intention no longer holds true.
+In this phase, the recovery granularity is page, future patch
+will explore recovery in finer granularity.
 
-Despite __WQ_LEGACY flag is described as "internal: create*_workqueue()",
-tegra194_cpufreq_probe()/scsi_add_host_with_dma()/iscsi_host_alloc()/
-iscsi_transport_init() are passing __WQ_LEGACY flag using alloc_workqueue()
-interface. Therefore, __WQ_LEGACY flag is no longer a meaningful indicator of
-"internal: create*_workqueue()". Description for __WQ_LEGACY flag needs an
-update.
+Changelog:
+v5->v6:
+  . per Christoph, move set{clear}_mce_nospec() inline functions out
+    of include/linux/set_memory.h and into arch/x86/mm/pat/set_memory.c
+    file, so that no need to export _set_memory_present().
+  . per Christoph, ratelimit warning message in pmem_do_write()
+  . per both Christoph and Dan, switch back to adding a flag to
+    dax_direct_access() instead of embedding the flag in kvaddr
+  . suggestions from Christoph for improving code structure and
+    readability
+  . per Dan, add .recovery_write to dev_pagemap.ops instead of adding
+    it to dax_operations, such that, the DM layer doesn't need to be
+    involved explicitly in dax recoovery write
+  . per Dan, is_bad_pmem() takes a seqlock, so no need to place it
+    under recovery_lock. 
+  Many thanks for both reviewers!
+  
+v4->v5:
+  Fixed build errors reported by kernel test robot
 
-Here is an example program which reproduces
+v3->v4:
+  Rebased to v5.17-rc1-81-g0280e3c58f92
 
-	WARN_ONCE(worker && ((worker->current_pwq->wq->flags &
-			      (WQ_MEM_RECLAIM | __WQ_LEGACY)) == WQ_MEM_RECLAIM),
-		  "workqueue: WQ_MEM_RECLAIM %s:%ps is flushing !WQ_MEM_RECLAIM %s:%ps",
-		  worker->current_pwq->wq->name, worker->current_func,
-		  target_wq->name, target_func);
+References:
+v4 https://lore.kernel.org/lkml/20220126211116.860012-1-jane.chu@oracle.com/T/
+v3 https://lkml.org/lkml/2022/1/11/900
+v2 https://lore.kernel.org/all/20211106011638.2613039-1-jane.chu@oracle.com/
+Disussions about marking poisoned page as 'np'
+https://lore.kernel.org/all/CAPcyv4hrXPb1tASBZUg-GgdVs0OOFKXMXLiHmktg_kFi7YBMyQ@mail.gmail.com/
 
-reported in https://lore.kernel.org/all/20210322060334.GD32426@xsang-OptiPlex-9020/ .
+Jane Chu (6):
+  x86/mm: fix comment
+  x86/mce: relocate set{clear}_mce_nospec() functions
+  mce: fix set_mce_nospec to always unmap the whole page
+  dax: add DAX_RECOVERY flag and .recovery_write dev_pgmap_ops
+  pmem: refactor pmem_clear_poison()
+  pmem: implement pmem_recovery_write()
 
----------- test.c ----------
-#include <linux/module.h>
-#include <linux/sched.h>
+ arch/x86/include/asm/set_memory.h |  52 ---------
+ arch/x86/kernel/cpu/mce/core.c    |   6 +-
+ arch/x86/mm/pat/set_memory.c      |  47 +++++++-
+ drivers/dax/super.c               |  23 +++-
+ drivers/md/dm-linear.c            |   4 +-
+ drivers/md/dm-log-writes.c        |   5 +-
+ drivers/md/dm-stripe.c            |   4 +-
+ drivers/md/dm-target.c            |   2 +-
+ drivers/md/dm-writecache.c        |   5 +-
+ drivers/md/dm.c                   |   5 +-
+ drivers/nvdimm/pmem.c             | 182 +++++++++++++++++++++---------
+ drivers/nvdimm/pmem.h             |   3 +-
+ drivers/s390/block/dcssblk.c      |   4 +-
+ fs/dax.c                          |  32 +++++-
+ fs/fuse/dax.c                     |   4 +-
+ include/linux/dax.h               |  12 +-
+ include/linux/device-mapper.h     |   2 +-
+ include/linux/memremap.h          |   7 ++
+ include/linux/set_memory.h        |  11 +-
+ tools/testing/nvdimm/pmem-dax.c   |   2 +-
+ 20 files changed, 269 insertions(+), 143 deletions(-)
 
-static struct workqueue_struct *wq1;
-static struct workqueue_struct *wq2;
-static struct work_struct w1;
-static struct work_struct w2;
-
-static void wq2_workfn(struct work_struct *work)
-{
-}
-
-static void wq1_workfn(struct work_struct *work)
-{
-	INIT_WORK(&w2, wq2_workfn);
-	queue_work(wq2, &w2);
-	flush_work(&w2);
-}
-
-static int __init wq_test_init(void)
-{
-	wq1 = alloc_workqueue("wq1", WQ_MEM_RECLAIM, 0);
-	wq2 = alloc_workqueue("wq2", 0, 0);
-	INIT_WORK(&w1, wq1_workfn);
-	queue_work(wq1, &w1);
-	flush_work(&w1);
-	destroy_workqueue(wq2);
-	destroy_workqueue(wq1);
-	return -EINVAL;
-}
-
-module_init(wq_test_init);
-MODULE_LICENSE("GPL");
----------- test.c ----------
-
-----------
-[  152.666153] test: loading out-of-tree module taints kernel.
-[  152.673510] ------------[ cut here ]------------
-[  152.675765] workqueue: WQ_MEM_RECLAIM wq1:wq1_workfn [test] is flushing !WQ_MEM_RECLAIM wq2:wq2_workfn [test]
-[  152.675790] WARNING: CPU: 0 PID: 259 at kernel/workqueue.c:2650 check_flush_dependency+0x169/0x170
-[  152.682636] Modules linked in: test(O+) loop dm_mod dax serio_raw sg vmw_vmci fuse drm sd_mod t10_pi ata_generic pata_acpi ahci libahci ata_piix mptspi mptscsih i2c_piix4 mptbase i2c_core libata scsi_transport_spi e1000
-[  152.690020] CPU: 0 PID: 259 Comm: kworker/0:2 Kdump: loaded Tainted: G           O      5.17.0-rc8+ #72
-[  152.693869] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 02/27/2020
-[  152.697764] Workqueue: wq1 wq1_workfn [test]
-[  152.699762] RIP: 0010:check_flush_dependency+0x169/0x170
-[  152.701817] Code: 8d 7f 18 e8 89 84 3a 00 49 8b 57 18 49 81 c5 60 01 00 00 48 c7 c7 60 f4 86 82 4c 89 e6 4c 89 e9 4d 89 f0 31 c0 e8 c7 80 fc ff <0f> 0b e9 61 ff ff ff 55 41 57 41 56 41 55 41 54 53 48 83 ec 18 48
-[  152.709031] RSP: 0018:ffff8881110a7b00 EFLAGS: 00010046
-[  152.711434] RAX: 19db87cad24ebb00 RBX: ffffe8ffffa4cc00 RCX: 0000000000000002
-[  152.714781] RDX: 0000000000000004 RSI: dffffc0000000000 RDI: ffffffff84a84f00
-[  152.717334] RBP: 0000000000000000 R08: dffffc0000000000 R09: ffffed1023546ef8
-[  152.723543] R10: ffffed1023546ef8 R11: 1ffff11023546ef7 R12: ffff888113e75160
-[  152.729068] R13: ffff888113e70f60 R14: ffffffffa0848090 R15: ffff8881014c3528
-[  152.731834] FS:  0000000000000000(0000) GS:ffff88811aa00000(0000) knlGS:0000000000000000
-[  152.734735] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  152.736840] CR2: 0000557cfd128768 CR3: 000000007216f006 CR4: 00000000001706f0
-[  152.739790] Call Trace:
-[  152.740715]  <TASK>
-[  152.742072]  start_flush_work+0xf9/0x440
-[  152.746516]  __flush_work+0xed/0x170
-[  152.747845]  ? flush_work+0x10/0x10
-[  152.749240]  ? __queue_work+0x558/0x5b0
-[  152.750648]  ? queue_work_on+0xe0/0x160
-[  152.752036]  ? lockdep_hardirqs_on+0xe6/0x170
-[  152.753757]  ? queue_work_on+0xed/0x160
-[  152.755546]  ? wq_worker_last_func+0x20/0x20
-[  152.757177]  ? rcu_read_lock_sched_held+0x87/0x100
-[  152.758960]  ? perf_trace_rcu_stall_warning+0x210/0x210
-[  152.760929]  process_one_work+0x45e/0x6b0
-[  152.762587]  ? rescuer_thread+0x9f0/0x9f0
-[  152.764332]  ? _raw_spin_lock_irqsave+0xf0/0xf0
-[  152.766110]  worker_thread+0x4d7/0x960
-[  152.767523]  ? _raw_spin_unlock+0x40/0x40
-[  152.769146]  ? preempt_count_sub+0xf/0xc0
-[  152.770595]  ? _raw_spin_unlock_irqrestore+0xb2/0x110
-[  152.773091]  ? rcu_lock_release+0x20/0x20
-[  152.774637]  kthread+0x178/0x1a0
-[  152.775819]  ? kthread_blkcg+0x50/0x50
-[  152.777228]  ret_from_fork+0x1f/0x30
-[  152.778603]  </TASK>
-[  152.779427] irq event stamp: 12002
-[  152.782443] hardirqs last  enabled at (12001): [<ffffffff81102620>] queue_work_on+0xe0/0x160
-[  152.786186] hardirqs last disabled at (12002): [<ffffffff8237473b>] _raw_spin_lock_irq+0x7b/0xe0
-[  152.789707] softirqs last  enabled at (11996): [<ffffffff810d9105>] irq_exit_rcu+0xb5/0x100
-[  152.792767] softirqs last disabled at (11971): [<ffffffff810d9105>] irq_exit_rcu+0xb5/0x100
-[  152.795802] ---[ end trace 0000000000000000 ]---
-----------
-
-But if I do
-
--	wq1 = alloc_workqueue("wq1", WQ_MEM_RECLAIM, 0);
-+	wq1 = alloc_workqueue("wq1", __WQ_LEGACY | WQ_MEM_RECLAIM, 0);
-
-, this warning goes away. Therefore, it seems to me that __WQ_LEGACY flag is used
-in combination with WQ_MEM_RECLAIM flag in order to ask check_flush_dependency()
-not to emit this warning when we cannot afford doing
-
--	wq2 = alloc_workqueue("wq2", 0, 0);
-+	wq2 = alloc_workqueue("wq2", WQ_MEM_RECLAIM, 0);
-
-because the owner of wq1 and wq2 differs.
-
-Given that the legacy create_workqueue() interface always implied WQ_MEM_RECLAIM flag,
-maybe it is better to make alloc_workqueue() interface WQ_MEM_RECLAIM by default.
-That is, obsolete WQ_MEM_RECLAIM flag and __WQ_LEGACY flag, and introduce a new flag
-(e.g. WQ_MAY_SHARE_WORKER) which is passed to alloc_workqueue() interface only when
-it is absolutely confident that this WQ never participates in memory reclaim path and
-never participates in flush_workqueue()/flush_work() operation.
+-- 
+2.18.4
 
