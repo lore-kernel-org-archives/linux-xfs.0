@@ -2,181 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D395C433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Mar 2022 08:45:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F066C433FE
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Mar 2022 16:23:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242535AbiCSIqj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 19 Mar 2022 04:46:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52020 "EHLO
+        id S241399AbiCSQZC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 19 Mar 2022 12:25:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234507AbiCSIqi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Mar 2022 04:46:38 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D6A160D5;
-        Sat, 19 Mar 2022 01:45:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1647679516; x=1679215516;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=k5pfSFVTly+M3cSKghoKNsmKVoZp5T4ZrPis3GmwE5I=;
-  b=Szk1moaNW4nERKKnxbL4qvo3fkk0vr1MsAI6XWzfLWwBvERl6bqa3qYs
-   AyecNVWdeaCnAj66fkZ8tQSDYgJnC6anyO5C56fHksOMsYgab8vL/l/yE
-   n4nC21DEA19a7ptbNFpuI/RVSHOM8SLyIgu0bK/7J1Rh4HIHFeZn0qEX/
-   56JsJAccBJOh86CTkJVHK1J/qkkRZjMChbCSmUKnhMCyzRxElSfmn0oF2
-   CvuLoH6Q+dazhiUQGjX5+0Ec6DfQsuVWUVin9Yc5EZEKm9v+EX3BPhQAc
-   5ffnBdWus9ikq/b07628QiKomjpB/+Ssxpo99z2j9ZY5/YyX8B1deWWzY
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10290"; a="237230279"
-X-IronPort-AV: E=Sophos;i="5.90,194,1643702400"; 
-   d="scan'208";a="237230279"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2022 01:45:15 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,194,1643702400"; 
-   d="scan'208";a="542300135"
-Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
-  by orsmga007.jf.intel.com with ESMTP; 19 Mar 2022 01:45:10 -0700
-Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nVUhw-000FmU-IK; Sat, 19 Mar 2022 08:45:08 +0000
-Date:   Sat, 19 Mar 2022 16:44:44 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Jane Chu <jane.chu@oracle.com>, david@fromorbit.com,
-        djwong@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
-        vishal.l.verma@intel.com, dave.jiang@intel.com, agk@redhat.com,
-        snitzer@redhat.com, dm-devel@redhat.com, ira.weiny@intel.com,
-        willy@infradead.org, vgoyal@redhat.com,
-        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org
-Subject: Re: [PATCH v6 4/6] dax: add DAX_RECOVERY flag and .recovery_write
- dev_pgmap_ops
-Message-ID: <202203191635.vyoiL17f-lkp@intel.com>
-References: <20220319062833.3136528-5-jane.chu@oracle.com>
+        with ESMTP id S229707AbiCSQZB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Mar 2022 12:25:01 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8E7B8BF4D;
+        Sat, 19 Mar 2022 09:23:39 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 22JGN4VN007569
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 19 Mar 2022 12:23:05 -0400
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 49E8815C0038; Sat, 19 Mar 2022 12:23:04 -0400 (EDT)
+Date:   Sat, 19 Mar 2022 12:23:04 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Jan Kara <jack@suse.cz>, Matthew Wilcox <willy@infradead.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Linux-MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Hugh Dickins <hughd@google.com>,
+        Namjae Jeon <namjae.jeon@samsung.com>,
+        Ashish Sangwan <a.sangwan@samsung.com>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>
+Subject: Re: writeback completion soft lockup BUG in folio_wake_bit()
+Message-ID: <YjYDaBnN36zggeGa@mit.edu>
+References: <YjDj3lvlNJK/IPiU@bfoster>
+ <YjJPu/3tYnuKK888@casper.infradead.org>
+ <CAHk-=wgPTWoXCa=JembExs8Y7fw7YUi9XR0zn1xaxWLSXBN_vg@mail.gmail.com>
+ <YjNN5SzHELGig+U4@casper.infradead.org>
+ <CAHk-=wiZvOpaP0DVyqOnspFqpXRaT6q53=gnA2psxnf5dbt7bw@mail.gmail.com>
+ <YjOlJL7xwktKoLFN@casper.infradead.org>
+ <20220318131600.iv7ct2m4o52plkhl@quack3.lan>
+ <CAHk-=wiky+cT7xF_2S94ToEjm=XNX73CsFHaQJH3tzYQ+Vb1mw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220319062833.3136528-5-jane.chu@oracle.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <CAHk-=wiky+cT7xF_2S94ToEjm=XNX73CsFHaQJH3tzYQ+Vb1mw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Jane,
+On Fri, Mar 18, 2022 at 11:56:04AM -0700, Linus Torvalds wrote:
+> On Fri, Mar 18, 2022 at 6:16 AM Jan Kara <jack@suse.cz> wrote:
+> >
+> > I agree with Dave that 'keep_towrite' thing is kind of self-inflicted
+> > damage on the ext4 side (we need to write out some blocks underlying the
+> > page but cannot write all from the transaction commit code, so we need to
+> > keep xarray tags intact so that data integrity sync cannot miss the page).
+> > Also it is no longer needed in the current default ext4 setup. But if you
+> > have blocksize < pagesize and mount the fs with 'dioreadlock,data=ordered'
+> > mount options, the hack is still needed AFAIK and we don't have a
+> > reasonable way around it.
+> 
+> I assume you meant 'dioread_lock'.
+> 
+> Which seems to be the default (even if 'data=ordered' is not).
 
-Thank you for the patch! Yet something to improve:
+That's not quite right.  data=ordered is the default, and that has
+been the case since ext3 was introduced.
 
-[auto build test ERROR on nvdimm/libnvdimm-for-next]
-[also build test ERROR on device-mapper-dm/for-next linus/master v5.17-rc8 next-20220318]
-[cannot apply to tip/x86/mm]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+"dioread_lock" was the default in the days of ext3; "dioread_nolock"
+was added to allow parallel Direct I/O reads (hence "nolock").  A
+while back, we tried to make dioread_nolock the default since it tends
+improve performance for workloads that have a mix of writes that
+should be affected by fsyncs, and those that shouldn't.
 
-url:    https://github.com/0day-ci/linux/commits/Jane-Chu/DAX-poison-recovery/20220319-143144
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/nvdimm/nvdimm.git libnvdimm-for-next
-config: s390-randconfig-r044-20220318 (https://download.01.org/0day-ci/archive/20220319/202203191635.vyoiL17f-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project a6e70e4056dff962ec634c5bd4f2f4105a0bef71)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install s390 cross compiling tool for clang build
-        # apt-get install binutils-s390x-linux-gnu
-        # https://github.com/0day-ci/linux/commit/203570f765a6ad07eb5809850478a25a5257f7e2
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Jane-Chu/DAX-poison-recovery/20220319-143144
-        git checkout 203570f765a6ad07eb5809850478a25a5257f7e2
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=s390 SHELL=/bin/bash drivers/s390/block/
+Howevver, we had to revert that change when blocksize < pagesize to
+work around a problem found on Power machines where "echo 3 >
+drop_caches" on the host appears to cause file system corruptions on
+the guest.  (Commit 626b035b816b "ext4: don't set dioread_nolock by
+default for blocksize < pagesize").
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+> IOW, we could simply warn about "data=ordered is no longer supported"
+> and turn it into data=journal.
+> 
+> Obviously *only* do this for the case of "blocksize < PAGE_SIZE".
 
-All errors (new ones prefixed by >>):
-
-   In file included from drivers/s390/block/dcssblk.c:24:
-   In file included from arch/s390/include/asm/io.h:75:
-   include/asm-generic/io.h:464:31: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           val = __raw_readb(PCI_IOBASE + addr);
-                             ~~~~~~~~~~ ^
-   include/asm-generic/io.h:477:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           val = __le16_to_cpu((__le16 __force)__raw_readw(PCI_IOBASE + addr));
-                                                           ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/big_endian.h:37:59: note: expanded from macro '__le16_to_cpu'
-   #define __le16_to_cpu(x) __swab16((__force __u16)(__le16)(x))
-                                                             ^
-   include/uapi/linux/swab.h:102:54: note: expanded from macro '__swab16'
-   #define __swab16(x) (__u16)__builtin_bswap16((__u16)(x))
-                                                        ^
-   In file included from drivers/s390/block/dcssblk.c:24:
-   In file included from arch/s390/include/asm/io.h:75:
-   include/asm-generic/io.h:490:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           val = __le32_to_cpu((__le32 __force)__raw_readl(PCI_IOBASE + addr));
-                                                           ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/big_endian.h:35:59: note: expanded from macro '__le32_to_cpu'
-   #define __le32_to_cpu(x) __swab32((__force __u32)(__le32)(x))
-                                                             ^
-   include/uapi/linux/swab.h:115:54: note: expanded from macro '__swab32'
-   #define __swab32(x) (__u32)__builtin_bswap32((__u32)(x))
-                                                        ^
-   In file included from drivers/s390/block/dcssblk.c:24:
-   In file included from arch/s390/include/asm/io.h:75:
-   include/asm-generic/io.h:501:33: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           __raw_writeb(value, PCI_IOBASE + addr);
-                               ~~~~~~~~~~ ^
-   include/asm-generic/io.h:511:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           __raw_writew((u16 __force)cpu_to_le16(value), PCI_IOBASE + addr);
-                                                         ~~~~~~~~~~ ^
-   include/asm-generic/io.h:521:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           __raw_writel((u32 __force)cpu_to_le32(value), PCI_IOBASE + addr);
-                                                         ~~~~~~~~~~ ^
-   include/asm-generic/io.h:609:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           readsb(PCI_IOBASE + addr, buffer, count);
-                  ~~~~~~~~~~ ^
-   include/asm-generic/io.h:617:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           readsw(PCI_IOBASE + addr, buffer, count);
-                  ~~~~~~~~~~ ^
-   include/asm-generic/io.h:625:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           readsl(PCI_IOBASE + addr, buffer, count);
-                  ~~~~~~~~~~ ^
-   include/asm-generic/io.h:634:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           writesb(PCI_IOBASE + addr, buffer, count);
-                   ~~~~~~~~~~ ^
-   include/asm-generic/io.h:643:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           writesw(PCI_IOBASE + addr, buffer, count);
-                   ~~~~~~~~~~ ^
-   include/asm-generic/io.h:652:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-           writesl(PCI_IOBASE + addr, buffer, count);
-                   ~~~~~~~~~~ ^
->> drivers/s390/block/dcssblk.c:53:63: error: too few arguments to function call, expected 6, have 5
-           rc = dax_direct_access(dax_dev, pgoff, nr_pages, &kaddr, NULL);
-                ~~~~~~~~~~~~~~~~~                                       ^
-   include/linux/dax.h:186:6: note: 'dax_direct_access' declared here
-   long dax_direct_access(struct dax_device *dax_dev, pgoff_t pgoff, long nr_pages,
-        ^
-   12 warnings and 1 error generated.
+Actiavelly, we've discussed a number of times doing the reverse ---
+removing data=journal entirely, since it's (a) rarely used, and (b)
+data=journal disables a bunch of optimizations, including
+preallocation, and so its performance is pretty awful for most
+workloads.  The main reason why haven't until now is that we believe
+there is a small number of people who do find data=journal useful for
+their workload, and at least _so_ far it's not been that hard to keep
+it limping along --- although in most cases, data=journal doesn't get
+supported for new features or performance optimizations, and it
+definitely does note get as much testing.
 
 
-vim +53 drivers/s390/block/dcssblk.c
+So the thing that I've been waiting to do for a while is to replace
+the whole data=ordered vs data=writeback and dioread_nolock and
+dioread_lock is a complete reworking of the ext4 buffered writeback
+path, where we write the data blocks *first*, and only then update the
+ext4 metadata.
 
-7a2765f6e82063f Dan Williams 2017-01-26  46  
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  47  static int dcssblk_dax_zero_page_range(struct dax_device *dax_dev,
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  48  				       pgoff_t pgoff, size_t nr_pages)
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  49  {
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  50  	long rc;
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  51  	void *kaddr;
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  52  
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28 @53  	rc = dax_direct_access(dax_dev, pgoff, nr_pages, &kaddr, NULL);
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  54  	if (rc < 0)
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  55  		return rc;
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  56  	memset(kaddr, 0, nr_pages << PAGE_SHIFT);
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  57  	dax_flush(dax_dev, kaddr, nr_pages << PAGE_SHIFT);
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  58  	return 0;
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  59  }
-79fa974ff6bc3f7 Vivek Goyal  2020-02-28  60  
+Historically, going as far back as ext2, we've always allocated data
+blocks and updatted the metadata blocks, and only then updated the
+buffer or page cache for the data blocks.  All of the complexities
+around data=ordered, data=writeback, dioread_nolock, etc., is because
+we haven't done the fundamental work of reversing the order in which
+we do buffered writeback.   What we *should* be doing is:
 
----
-0-DAY CI Kernel Test Service
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+*) Determining where the new allocated data blockblocks should be, and
+   preventing those blocks from being used for any other purposes, but
+   *not* updating the file system metadata to reflect that change.
+
+*) Submit the data block write
+
+*) On write completion, update the metadata blocks in a kernel thread.
+
+Over time, we've been finding more and more reasons why I need to do
+this work, so it's something I'm going to have to prioritize in the
+next few months.
+
+Cheerse,
+
+						- Ted
