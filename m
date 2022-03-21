@@ -2,146 +2,119 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D8BAC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Mar 2022 22:50:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66842C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Mar 2022 22:51:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229807AbiCUWwU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Mar 2022 18:52:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34286 "EHLO
+        id S230349AbiCUWwc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Mar 2022 18:52:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230226AbiCUWwL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Mar 2022 18:52:11 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8615C3D8B3F
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 15:41:26 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 40013533776;
-        Tue, 22 Mar 2022 09:41:25 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nWQiJ-008HnX-Co; Tue, 22 Mar 2022 09:41:23 +1100
-Date:   Tue, 22 Mar 2022 09:41:23 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: shutdown in intent recovery has non-intent
- items in the AIL
-Message-ID: <20220321224123.GK1544202@dread.disaster.area>
-References: <20220321012329.376307-1-david@fromorbit.com>
- <20220321012329.376307-3-david@fromorbit.com>
- <20220321215236.GK8224@magnolia>
+        with ESMTP id S230338AbiCUWwO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Mar 2022 18:52:14 -0400
+Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C2D439F02E
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 15:31:37 -0700 (PDT)
+Received: by mail-ej1-x633.google.com with SMTP id pv16so32793333ejb.0
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 15:31:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=thejof-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=kEtqK72Zw9ibC1HWUR067mDWAJ0KkSMiUJjG7zRfYrM=;
+        b=bZrMi3zZ+sK4zSf1J1N0bP6fctrHy3SqLkMfGmurgK8GLtDde7SkzH4KM5rKUkfF2C
+         Lm4B5L2tLYBVUZ+VE+2KVhFA0ncn5ESTAw9dJrlncxi6WsFvv8+6UZDtJ4wLSJEBffm8
+         lsY+B++L4364u7ESexw5gHgqQyYCWd0zWJswjjo/Am7aBPRumrFZxdk8MpUzvlvg7ZtG
+         CrdmufNZP8HvUUDKV0XDk5899KRYgD2DQIh7sWrPxyq00CbB6QLa1b1QkHeEFDD1BT8y
+         +8yjMMD7uGOo82KfDVOnAd7wtPBU/Dzlu11KmG9m+Y/MLFQr+o+kAhw3+DWGT3ly99kb
+         Un5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=kEtqK72Zw9ibC1HWUR067mDWAJ0KkSMiUJjG7zRfYrM=;
+        b=rT/5pWz0llFICGYFyJg/jj0AfSZ+Nxgis68rKnvwtUiJgWaIuRj+TtP5z8WGTMKXyk
+         CTzb8W85c4x67Xz/Wt3dGbzGcnCeIc8z1MC39Orym+pSHPUHQuisqlwHG82+BB38VHJN
+         KLDjX89X0+DkJRF8WW3TWg9pq7ueS0A9CfelaWixkz5axDwi8PgzlV8RqhKhKg9/rnw1
+         1QGqepCRbEPk7LpMUcO4dmJvBnGEtkjDtSD3HJkVleseJYgZxTXzSM/RgMUvicQjqNZ1
+         jUw7aWRsbd0qTh2oeH94EMNm5ZBtXgrGaxk3oLJxc8/VtSV8Bsh+rlbupc7n9tNnKeVJ
+         6qHw==
+X-Gm-Message-State: AOAM532xlEEJ1sGk0Hh3QXAL60CIoV50c9JK3GOsXT6Uoyp7QK3TvfMU
+        6ag7mTALYwNm4V9S146NvxuazVs1d6BUGQuJ32PgxH861ct8H9Pr2IU=
+X-Google-Smtp-Source: ABdhPJwnbT+/HirccKoILTERQKJpjWMYGeNrlv+6zQl3JFPHyGcExCZiGbt/bCY187zRJmYIOe+7DWPKpp9Cmh5w5D0=
+X-Received: by 2002:a17:906:99c5:b0:6df:8215:4ccd with SMTP id
+ s5-20020a17090699c500b006df82154ccdmr23107165ejn.684.1647900199431; Mon, 21
+ Mar 2022 15:03:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220321215236.GK8224@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6238ff15
-        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=4v67lGCmLuo1e8ycD80A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <0bc6a322d6f9b812b1444b588b5036263f377455.1647495044.git.jof@thejof.com>
+ <20220317231620.GC1544202@dread.disaster.area>
+In-Reply-To: <20220317231620.GC1544202@dread.disaster.area>
+From:   Jonathan Lassoff <jof@thejof.com>
+Date:   Mon, 21 Mar 2022 15:03:08 -0700
+Message-ID: <CAHsqw9sZfsNsQs779-hb5wR4H+W+wnHfNV=wo0vT2D6oXZ9t=g@mail.gmail.com>
+Subject: Re: [PATCH v0 1/2] Add XFS messages to printk index
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 21, 2022 at 02:52:36PM -0700, Darrick J. Wong wrote:
-> On Mon, Mar 21, 2022 at 12:23:29PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > generic/388 triggered a failure in RUI recovery due to a corrupted
-> > btree record and the system then locked up hard due to a subsequent
-> > assert failure while holding a spinlock cancelling intents:
-> > 
-> >  XFS (pmem1): Corruption of in-memory data (0x8) detected at xfs_do_force_shutdown+0x1a/0x20 (fs/xfs/xfs_trans.c:964).  Shutting down filesystem.
-> >  XFS (pmem1): Please unmount the filesystem and rectify the problem(s)
-> >  XFS: Assertion failed: !xlog_item_is_intent(lip), file: fs/xfs/xfs_log_recover.c, line: 2632
-> >  Call Trace:
-> >   <TASK>
-> >   xlog_recover_cancel_intents.isra.0+0xd1/0x120
-> >   xlog_recover_finish+0xb9/0x110
-> >   xfs_log_mount_finish+0x15a/0x1e0
-> >   xfs_mountfs+0x540/0x910
-> >   xfs_fs_fill_super+0x476/0x830
-> >   get_tree_bdev+0x171/0x270
-> >   ? xfs_init_fs_context+0x1e0/0x1e0
-> >   xfs_fs_get_tree+0x15/0x20
-> >   vfs_get_tree+0x24/0xc0
-> >   path_mount+0x304/0xba0
-> >   ? putname+0x55/0x60
-> >   __x64_sys_mount+0x108/0x140
-> >   do_syscall_64+0x35/0x80
-> >   entry_SYSCALL_64_after_hwframe+0x44/0xae
-> > 
-> > Essentially, there's dirty metadata in the AIL from intent recovery
-> > transactions, so when we go to cancel the remaining intents we assume
-> > that all objects after the first non-intent log item in the AIL are
-> > not intents.
-> > 
-> > This is not true. Intent recovery can log new intents to continue
-> > the operations the original intent could not complete in a single
-> > transaction. The new intents are committed before they are deferred,
-> > which means if the CIL commits in the background they will get
-> > inserted into the AIL at the head.
-> 
-> Like you, I wonder how I never hit this.  Maybe I've never hit a
-> corrupted rmap btree record during recovery?
-> 
-> So I guess what we're tripping over is a sequence of items in the AIL
-> that looks something like this?
-> 
-> 0. <recovered non intent items>
-> 1. <recovered intent item>
-> 2. <new non-intent item>
-> 3. <new intent items>
+On Thu, 17 Mar 2022 at 16:16, Dave Chinner <david@fromorbit.com> wrote:
+> That's a nasty mess. To begin with, we most definitely do not want
+> to have to define log level translations in multiple places so this
+> needs to be reworked so the front end macros define everything and
+> pass things down to the lower level functions.
 
-Mostly correct, but not quite. At the end of the first phase of
-recovery (i.e. reading the log and extracting/recovering individual
-items), the AIL looks like this:
+I can follow up with a PATCH v1 to do this kernel level deduplication.
+I focused my initial attempt at changing as little as possible.
 
-0. <incomplete recovered intents>
+> And, anyway, why can't you just drop printk_index_subsys_emit() into
+> the define_xfs_printk_level() macro? The kern_level, the fmt string
+> and the varargs are all available there...
 
-It has nothing else in it, just the intents that need recovery.
+The short answer is that the format strings need to be known at
+compile time, as this printk index is added into a section of the
+resultant ELF binary.
 
-In the second phase of recovery, we start processing those intents,
-walking the above list and calling ->recover on them. IIUC,
-recovering a BUI can create CUI and RUI intents, recovering a CUI
-can create both RUI and EFI intents, and recovering a RUI can create
-EFI intents.
+> Anyway, there's more important high level stuff that needs
+> explaining first.
+>
+> This is competely undocumented functionality and it's the first I've
+> ever heard about it. There's nothing I can easily find to learn how
+> this information being exposed to userspace is supposed to be used.
+> The commit message is pretty much information free, but this is a
+> new userspace ABI. What ABI constraints are we now subject to by
+> exporting XFS log message formats to userspace places?
+>
+> i.e. Where's the documentation defining the contract this new
+> userspace ABI forms between the kernel log messages and userspace?
+> How do users know what we guarantee won't or will break, and how do
+> we kernel developers know what we're allowed to do once these very
+> specific internal subsystem implementation details are exposed to
+> userspace?
+>
+> Hell, how did this stuff even get merged without any supporting
+> documentation?
 
-Now, processing these newly created chained intents is deferred
-after committing them to the *CIL*, so only the initial intents in 0
-above are replayed because we check the AIL contents again. If there
-is enough space in the journal and CIL to aggregate all these new
-intents and objects, they will never reach the AIL before the
-initial intent recovery has completed, and the check will never
-fail.  Hence I think the actual logged contents check is rarely, if
-ever, run properly because nothing has reached the AIL in normal
-cases.
+I can't really comment as to the commit history of the printk
+indexing, though I think it's a fair criticism that there doesn't
+currently seem to be any in-tree Documentation file about the
+functionality yet.
+The best references I could point to are commit
+337015573718b161891a3473d25f59273f2e626b and this LWN article:
+https://lwn.net/Articles/857148/
 
-However, if the CIL -ever- commits during intent processing, then
-the AIL check is completely invalid - the AIL can contain buffers,
-inodes, new intents, etc in any order:
+Your concern about ABI commitments is totally valid, and is (to me)
+rather ironic in this context. This printk indexing effort was started
+so that end user-operators can more reliably capture critical event
+data *without* asking developers to commit to anything. The hope here
+is that developers can change format strings and parameters at will,
+and that from release-to-release end user-operators can compare the
+printk index to see if there are any changes in printk index entries
+that they care about for their environment.
 
-0. <incomplete recovered intents>
-1. <non intent items>
-2. <new chained/deferred intents>
-3. <non intent items>
-4. <new chained/deferred intents>
-5. <non intent items>
-....
-
-> So we speed along the AIL list, dealing with the <0> items until we get
-> to <1>.  We recover <1>, which generates <2> and <3>.  Next, the
-> debugging code thinks we've hit the end of the list of recovered items,
-> and therefore it can keep walking the AIL and that it will only find
-> items like <2>.  Unfortunately, it finds the new intent <3> and trips?
-
-Effectively, yes.
-
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
-Thanks!
-
--- 
-Dave Chinner
-david@fromorbit.com
+It is my genuine hope that by merging a change like what I'm proposing
+here, that end users can more reliably detect and react to XFS events
+without XFS developers needing to know about this or commit to
+anything. The only reason this change is needed is because XFS wraps
+printk() for its own formatting.
