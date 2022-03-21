@@ -2,145 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF7A5C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Mar 2022 20:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E75FC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Mar 2022 22:46:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229717AbiCUVAm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Mar 2022 17:00:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57466 "EHLO
+        id S229887AbiCUWrn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Mar 2022 18:47:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230090AbiCUVAm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Mar 2022 17:00:42 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B57C403D7;
-        Mon, 21 Mar 2022 13:59:16 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id bx5so14025422pjb.3;
-        Mon, 21 Mar 2022 13:59:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=IIUq70JYO9LLmND1+BslUpEoL6qaTZK16a7hVYB0QVM=;
-        b=GndI/VxWim9/UZXk2q5afrDqn2qyfiunzh3+1Wi9X8fNS1w85Tf4ChDSAH8lNu5uUL
-         oWYqa/jbEnaFBK81JDNc81tks7HXnDtf3AndRcwvNV9bSWWPsC4XzNwmnBsOEdkY0L1X
-         BSUG7RROwOeVpU/tFDseuWll/YOx3hbAqIOScG1ZrCafa0FxC4cOZFUyKofji/UXVGZE
-         FdsJxWWGaHKc+ZeWwRHhBQEb4MxhvniyoNYzNkXb1HCmR+ZLFFOcLbXYmMAGkuuYqiiQ
-         4v3yAupeTJUIl3lUpmw43KqO20tcx9Zmm/IP2nvuGgT+hjVlPo1QRaBdT0e2fmiBIXjV
-         tF+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=IIUq70JYO9LLmND1+BslUpEoL6qaTZK16a7hVYB0QVM=;
-        b=RBUXKlp5L2IowEYcQGNXmnZvQ4rtDLYcdKICVOmMEuLMxmO+vpnbeT9jJ33fV7ugsr
-         TFKrdi/mgw6pJtbD9zEc4OI4sHUZeC0+kpLufsNFlg7mkAt9av+Jo14soNzjzvbRjp8M
-         ngQi42rRIiaf98qO8s+wtMtscoA8xNbwz10u+qBcNikp0EnYEZpBNycjJgHiakkEkKwL
-         a84lOulBs03J+RCQP4aYk9SDCZHWNU+JZ1zz82M33jZ5tRmZ1RtDPj8izdxSSe3wzOH5
-         bXXFMi+d3x5xhd6VPr8IH+wlxgZBY68jd2u9oz4XJWGZBTzRYS2ROGaBfs+/05RzIOSW
-         6vBA==
-X-Gm-Message-State: AOAM530Qj70tzzhYA2leYaomF8fNceqVBGRLqckaqg2/d1zhWUvw1VSz
-        u+7UhbiFQHfwEilv7RrVzPFDtA2ifr4Bh8OOGec8MgM3
-X-Google-Smtp-Source: ABdhPJyBLvSja91CZSb9b1UipjcC7dfke8iT6LTMlxKJcStOuDIKqmTw96VUrfGKcbTdWt/JgXkudAetfH8E4lRL998=
-X-Received: by 2002:a17:903:124a:b0:151:99fe:1a10 with SMTP id
- u10-20020a170903124a00b0015199fe1a10mr14532689plh.87.1647896356123; Mon, 21
- Mar 2022 13:59:16 -0700 (PDT)
+        with ESMTP id S229664AbiCUWrf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Mar 2022 18:47:35 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5FAE2AB89C;
+        Mon, 21 Mar 2022 15:27:33 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 888C3B81AAA;
+        Mon, 21 Mar 2022 22:21:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 412CAC340E8;
+        Mon, 21 Mar 2022 22:21:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647901286;
+        bh=YdRuUQ7n1xMKIOQKXhmD50thxaX6B8sq7j5Ta8xBOgE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mjrrZhGi7hE60DXYpI8kfKjkj+BhXTfVQpSXi9BT1Apy9rZmUoILwCuqgWgjXu0yf
+         JpgH6Z6s4/G6nT/DnXwgZ/ye3OJr1CCaWjJjutJGCsRzVrZPt3zg4WKTr3ZlGlzZpr
+         1OQ3Udyb8DbZ+RPAKFG/RAhmqPtk31O9WLmwicpipRwY5r7RXeIed9dqsrIDHxlomJ
+         s4cO7P3CBiQfItlhxWaNLlyXHwOgldO1SRlMnF44TORG4zwkn5i6PxWBGob4XqZ5T/
+         /DPTr1cAGh3NUUjALHlSPYMO+C+5+nASO3V3YD5Ev0lSNOtwdt65XTaxUShbUweoF6
+         TQkJfmnr1r0mQ==
+Date:   Mon, 21 Mar 2022 15:21:25 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Gao Xiang <hsiangkao@linux.alibaba.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 0/3] xfs: some end COW remapping optimization
+Message-ID: <20220321222125.GN8241@magnolia>
+References: <20220216030854.30180-1-hsiangkao@linux.alibaba.com>
 MIME-Version: 1.0
-References: <20220317234827.447799-1-shy828301@gmail.com> <20220317234827.447799-4-shy828301@gmail.com>
- <YjhpxDKJFtztdTCb@ip-172-31-19-208.ap-northeast-1.compute.internal>
-In-Reply-To: <YjhpxDKJFtztdTCb@ip-172-31-19-208.ap-northeast-1.compute.internal>
-From:   Yang Shi <shy828301@gmail.com>
-Date:   Mon, 21 Mar 2022 13:59:04 -0700
-Message-ID: <CAHbLzkpZVJ0L1rVQdZEeLq6s9H9DSPQVKdHz626uHk2z0Mw7uw@mail.gmail.com>
-Subject: Re: [v2 PATCH 3/8] mm: khugepaged: skip DAX vma
-To:     Hyeonggon Yoo <42.hyeyoo@gmail.com>
-Cc:     Vlastimil Babka <vbabka@suse.cz>,
-        "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        Song Liu <songliubraving@fb.com>,
-        Rik van Riel <riel@surriel.com>,
-        Matthew Wilcox <willy@infradead.org>, Zi Yan <ziy@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        darrick.wong@oracle.com, Linux MM <linux-mm@kvack.org>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220216030854.30180-1-hsiangkao@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 21, 2022 at 5:04 AM Hyeonggon Yoo <42.hyeyoo@gmail.com> wrote:
->
-> On Thu, Mar 17, 2022 at 04:48:22PM -0700, Yang Shi wrote:
-> > The DAX vma may be seen by khugepaged when the mm has other khugepaged
-> > suitable vmas.  So khugepaged may try to collapse THP for DAX vma, but
-> > it will fail due to page sanity check, for example, page is not
-> > on LRU.
-> >
-> > So it is not harmful, but it is definitely pointless to run khugepaged
-> > against DAX vma, so skip it in early check.
->
-> in fs/xfs/xfs_file.c:
-> 1391 STATIC int
-> 1392 xfs_file_mmap(
-> 1393         struct file             *file,
-> 1394         struct vm_area_struct   *vma)
-> 1395 {
-> 1396         struct inode            *inode = file_inode(file);
-> 1397         struct xfs_buftarg      *target = xfs_inode_buftarg(XFS_I(inode));
-> 1398
-> 1399         /*
-> 1400          * We don't support synchronous mappings for non-DAX files and
-> 1401          * for DAX files if underneath dax_device is not synchronous.
-> 1402          */
-> 1403         if (!daxdev_mapping_supported(vma, target->bt_daxdev))
-> 1404                 return -EOPNOTSUPP;
-> 1405
-> 1406         file_accessed(file);
-> 1407         vma->vm_ops = &xfs_file_vm_ops;
-> 1408         if (IS_DAX(inode))
-> 1409                 vma->vm_flags |= VM_HUGEPAGE;
->
-> Are xfs and other filesystems setting VM_HUGEPAGE flag even if it can
-> never be collapsed?
+On Wed, Feb 16, 2022 at 11:08:51AM +0800, Gao Xiang wrote:
+> Hi folks,
+> 
+> Currently, xfs_reflink_end_cow_extent() will unconditionally unmap an
+> extent from DATA fork and then remap an extent from COW fork. It seems
+> somewhat ineffective since for many cases we could update real bmbt
+> records directly by sightly enhancing old
+> xfs_bmap_add_extent_unwritten_real() implementation, thus reduce some
+> measurable extra metadata overhead.
 
-DAX is available or intended to use on some special devices, for
-example, persistent memory. Collapsing huge pages on such devices is
-not the intended usecase of khugepaged.
+Does it work with rmap enabled?
 
->
-> 1410         return 0;
-> 1411 }
->
->
-> > Reviewed-by: Miaohe Lin <linmiaohe@huawei.com>
-> > Signed-off-by: Yang Shi <shy828301@gmail.com>
-> > ---
-> >  mm/khugepaged.c | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> >
-> > diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-> > index 82c71c6da9ce..a0e4fa33660e 100644
-> > --- a/mm/khugepaged.c
-> > +++ b/mm/khugepaged.c
-> > @@ -448,6 +448,10 @@ static bool hugepage_vma_check(struct vm_area_struct *vma,
-> >       if (vm_flags & VM_NO_KHUGEPAGED)
-> >               return false;
-> >
-> > +     /* Don't run khugepaged against DAX vma */
-> > +     if (vma_is_dax(vma))
-> > +             return false;
-> > +
-> >       if (vma->vm_file && !IS_ALIGNED((vma->vm_start >> PAGE_SHIFT) -
-> >                               vma->vm_pgoff, HPAGE_PMD_NR))
-> >               return false;
-> > --
-> > 2.26.3
-> >
-> >
->
-> --
-> Thank you, You are awesome!
-> Hyeonggon :-)
+Reading between the lines, I'm guessing the performance boost might
+come from avoiding a transaction roll and (possibly) reducing the need
+to log bmbt updates?  Particularly in the worst case where we split the
+bmbt only to rejoin the blocks immediately after.
+
+Recently, Dave and Allison have been pondering making an addition to the
+deferred log item code so that we could ->finish_item the first defer op
+in the same transaction that logs the caller's deferred operations.
+Might that get you most of the speed advantage that you're seeking?
+
+> It's important to us since, actually, we're planing to use a modified
+> alway-cow like atomic write approach internally for database
+> applications, therefore it'd be nice to do some optimization over
+> simple end COW approach. Also I think it's still generic and can
+> benefit other reflink use cases as well.
+
+Hmm, that sounds /awfully/ similar to what sqlite does with f2fs' atomic
+write ioctls.
+
+Alternately, would this[1] feature that's been sitting around in
+djwong-dev since late 2019 help?
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=atomic-file-updates
+
+--D
+
+> 
+> I did some tests with ramdisk in order to measure metadata overhead:
+> 
+> echo 1 > /sys/fs/xfs/debug/always_cow
+> mkfs.xfs -f -mreflink=1 /dev/ram0
+> mount /dev/ram0 testdir
+> fio -filename=testdir/1 -size=1G -ioengine=psync -bs=4k -rw=randwrite -overwrite=1 -direct=1 -end_fsync=1 -name=job1
+> 
+> Test results as below:
+> Vanilla:
+> (1)   iops        : min= 7986, max=16434, avg=12505.76, stdev=2400.05, samples=41
+> (2)   iops        : min= 7636, max=16376, avg=12474.19, stdev=2258.18, samples=42
+> (3)   iops        : min= 8346, max=16439, avg=12227.95, stdev=2432.12, samples=42
+> (4)   iops        : min= 8580, max=16496, avg=12779.41, stdev=2297.42, samples=41
+> (5)   iops        : min= 8286, max=16556, avg=12500.76, stdev=2123.90, samples=41
+> 
+> Patched:
+> (1)   iops        : min= 7086, max=17132, avg=12931.20, stdev=2729.10, samples=40
+> (2)   iops        : min= 7704, max=17508, avg=13204.62, stdev=2507.70, samples=39
+> (3)   iops        : min= 8736, max=17634, avg=13253.08, stdev=2545.18, samples=39
+> (4)   iops        : min= 7188, max=17550, avg=12928.40, stdev=2633.64, samples=40
+> (5)   iops        : min= 8268, max=17446, avg=12837.55, stdev=2717.98, samples=40
+> 
+> xfstests seems survived. Comments are much welcomed and
+> thanks for your time!
+> 
+> Thanks,
+> Gao Xiang
+> 
+> Changes since v1:
+>  - fix missing tmp_logflags initialization;
+>  - drop unnecessary realtime inode check pointed out by Darrick.
+> 
+> Gao Xiang (3):
+>   xfs: get rid of LEFT, RIGHT, PREV in
+>     xfs_bmap_add_extent_unwritten_real()
+>   xfs: introduce xfs_bmap_update_extent_real()
+>   xfs: introduce xfs_bremapi_from_cowfork()
+> 
+>  fs/xfs/libxfs/xfs_bmap.c | 377 +++++++++++++++++++++++++--------------
+>  fs/xfs/libxfs/xfs_bmap.h |   7 +-
+>  fs/xfs/xfs_reflink.c     |  24 +--
+>  3 files changed, 252 insertions(+), 156 deletions(-)
+> 
+> -- 
+> 2.24.4
+> 
