@@ -2,136 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC04BC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Mar 2022 12:04:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04609C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Mar 2022 15:22:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347196AbiCUMGI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Mar 2022 08:06:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47988 "EHLO
+        id S1350124AbiCUPYE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Mar 2022 11:24:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347194AbiCUMGB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Mar 2022 08:06:01 -0400
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2475355239;
-        Mon, 21 Mar 2022 05:04:28 -0700 (PDT)
-Received: by mail-pg1-x533.google.com with SMTP id o8so10155797pgf.9;
-        Mon, 21 Mar 2022 05:04:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=5wM5oc/qGqPRm9eHrVGn9VhXD+Ebt8HaLEMG+j1FPV8=;
-        b=ANwYR1851LYRyUzlBy9yCDmefbcw+dtz9Weiw2IAsUWMgwWNOt7vqjSFesvZczXjTM
-         r6akG55ZFfWp0xPYfsEuEH+CgYKuiLbDP+hfvrkNrQontaVz7b0QbnA9sjRBhFOC4Hwf
-         hb+GOAcJ953ZzFPhNKQxGZsnOs64gpkoEIX5j1eVjjMfTBIjXljiyNVZw4KRDIugj9Bk
-         4PORPHLKkWNNU5qJSEncrZU4hOFOX/PMggb9hgqGTfg2loBKWc9ULZPhBY7zUwTs6jvi
-         zK/hVNAwwU65aVXLN+nVsP2ovH9JR83K4FwmPI7AELysmbfv2dCawHfbchU8LUeju3fs
-         Lsvg==
+        with ESMTP id S1348926AbiCUPYA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Mar 2022 11:24:00 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 80D30111DF5
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 08:22:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1647876151;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Ue5sFx3kgn4KbBlrKR5bimlTLmfnSBCDH9OOCKRo1Jg=;
+        b=V5qpFEwkbUsa1NZLtCcBIkQ3ryD9eC33ObxmM3uoIRe6Zj6Iy5cMlrjdgCT44SS+v9xwk3
+        /ZYCoRwSRsokenu5kKio/DNHEiK8SFvJeKTXSID0s2exDuqPTMCiw+Wux15brrMTzn5wYO
+        TL1idrM3v0WUexdHW73wBwN5sjkqo98=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-26-fZSEbPiCMsKoFtsleV5TtA-1; Mon, 21 Mar 2022 11:22:30 -0400
+X-MC-Unique: fZSEbPiCMsKoFtsleV5TtA-1
+Received: by mail-qt1-f197.google.com with SMTP id k11-20020ac8604b000000b002e1a4109edeso9499331qtm.15
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 08:22:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=5wM5oc/qGqPRm9eHrVGn9VhXD+Ebt8HaLEMG+j1FPV8=;
-        b=fidWlx1VvVHJP4UXazzznd9A66PG+sp+MRitk3BbaqnHP2qK/WRpdJehkvLLmxcj7j
-         1DnU7GV4RJz234L4XC0poPI0D5QR6jqnBFHXDASI+fJNaVraHO/MR1wrVAvJnu75ELgg
-         g7Tj6/s+Z+mrTRDhStT/ytq1aG5u0VMkBtmJeBHC6j3WS74RSEfnk401dqenbpIWjZjm
-         uWa4HjnhDO4FnKQSuVjIreA1eSK6GJIsps+9K/xtb2WQR3Y1icNkYT95I+TJ77RWWv9V
-         DfacnU7/j9/yGsMQ906iGW93klxOwQyGhUryuwmesiQQ2Cj8kTfDHWp6uggUarUbkiHI
-         YpaQ==
-X-Gm-Message-State: AOAM5319wHwvYsf4b//l/XbXlwf4+8sSfBg0Qs7TACh18Gj6ARTsebIx
-        gujB4v8kGti24ZOHlRAl+I0=
-X-Google-Smtp-Source: ABdhPJwBB3ljMvE9r8NOHjfHQSD3f80I1d97dhOe/XDW23sYrRkWY/cojiGqY43lJTgSmaB1KzP1rA==
-X-Received: by 2002:aa7:9019:0:b0:4fa:7532:9551 with SMTP id m25-20020aa79019000000b004fa75329551mr15275981pfo.26.1647864267445;
-        Mon, 21 Mar 2022 05:04:27 -0700 (PDT)
-Received: from ip-172-31-19-208.ap-northeast-1.compute.internal (ec2-18-181-137-102.ap-northeast-1.compute.amazonaws.com. [18.181.137.102])
-        by smtp.gmail.com with ESMTPSA id o3-20020a639203000000b003810e49ff4fsm15683589pgd.1.2022.03.21.05.04.23
+        bh=Ue5sFx3kgn4KbBlrKR5bimlTLmfnSBCDH9OOCKRo1Jg=;
+        b=WfiQyWPlLLLC0NVyKJwdYI8ifu3+G2ULqsIhHCCmKAEQdpt34c2LBV8AW6McqmPL6A
+         IfoHMWOCm/oU2ZUtMZav/uTfPbnVFQ5WoZpAKGxV9Y75Dxx1IcQhzto7b9xyoYWS3Kix
+         a8j5uZ4tWhQks6GyjB7f02xNI4moE2dFOSPd0e/B/ZDR2wUuFYiarhWad7rr2QFKMjlT
+         h72zMatvLFr4lAN4rmTytYAQmMwFmO0HyjYtnW2jLw+l/CQDQMza87ucubCxB1ObELx9
+         i89JMLKq6lGcrn2vsD6PAWCykySyjSmitRe/nIyTN+1/6NkUsa60eyYsQRDnxh2sgJMC
+         DELg==
+X-Gm-Message-State: AOAM532TALgkQJkIV4uHfmzSDFoToh5D8L23CcR/9QgphnPfKQq3zN9n
+        WkDBArScq4+SoZ2yhYUtjB0C3dy8Lvur5cRTE5J1uvrLvzDWGSwpgk4x0iwzTU/a/LIvnPG76xI
+        o/9hLqmD1mX23pQOLQMiv
+X-Received: by 2002:a05:622a:48e:b0:2e0:706f:1d4 with SMTP id p14-20020a05622a048e00b002e0706f01d4mr16328816qtx.326.1647876149810;
+        Mon, 21 Mar 2022 08:22:29 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzsYDJEnWxAwIxkFe2oIu7AD6Ym47aTsjSoEan08vePVBCo6uXe9ym8f0DJR0j5XJ2oAVtc0g==
+X-Received: by 2002:a05:622a:48e:b0:2e0:706f:1d4 with SMTP id p14-20020a05622a048e00b002e0706f01d4mr16328795qtx.326.1647876149564;
+        Mon, 21 Mar 2022 08:22:29 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id s13-20020a05620a0bcd00b0067afe7dd3ffsm8291241qki.49.2022.03.21.08.22.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Mar 2022 05:04:26 -0700 (PDT)
-Date:   Mon, 21 Mar 2022 12:04:20 +0000
-From:   Hyeonggon Yoo <42.hyeyoo@gmail.com>
-To:     Yang Shi <shy828301@gmail.com>
-Cc:     vbabka@suse.cz, kirill.shutemov@linux.intel.com,
-        linmiaohe@huawei.com, songliubraving@fb.com, riel@surriel.com,
-        willy@infradead.org, ziy@nvidia.com, akpm@linux-foundation.org,
-        tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com,
-        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [v2 PATCH 3/8] mm: khugepaged: skip DAX vma
-Message-ID: <YjhpxDKJFtztdTCb@ip-172-31-19-208.ap-northeast-1.compute.internal>
-References: <20220317234827.447799-1-shy828301@gmail.com>
- <20220317234827.447799-4-shy828301@gmail.com>
+        Mon, 21 Mar 2022 08:22:29 -0700 (PDT)
+Date:   Mon, 21 Mar 2022 11:22:27 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 3/6] xfs: don't include bnobt blocks when reserving free
+ block pool
+Message-ID: <YjiYM2uxEHAfWFmz@bfoster>
+References: <164779460699.550479.5112721232994728564.stgit@magnolia>
+ <164779462392.550479.11627083041484347485.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220317234827.447799-4-shy828301@gmail.com>
+In-Reply-To: <164779462392.550479.11627083041484347485.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 17, 2022 at 04:48:22PM -0700, Yang Shi wrote:
-> The DAX vma may be seen by khugepaged when the mm has other khugepaged
-> suitable vmas.  So khugepaged may try to collapse THP for DAX vma, but
-> it will fail due to page sanity check, for example, page is not
-> on LRU.
+On Sun, Mar 20, 2022 at 09:43:43AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> So it is not harmful, but it is definitely pointless to run khugepaged
-> against DAX vma, so skip it in early check.
-
-in fs/xfs/xfs_file.c:
-1391 STATIC int
-1392 xfs_file_mmap(
-1393         struct file             *file,
-1394         struct vm_area_struct   *vma)
-1395 {
-1396         struct inode            *inode = file_inode(file);
-1397         struct xfs_buftarg      *target = xfs_inode_buftarg(XFS_I(inode));
-1398 
-1399         /*
-1400          * We don't support synchronous mappings for non-DAX files and
-1401          * for DAX files if underneath dax_device is not synchronous.
-1402          */
-1403         if (!daxdev_mapping_supported(vma, target->bt_daxdev))
-1404                 return -EOPNOTSUPP;
-1405 
-1406         file_accessed(file);
-1407         vma->vm_ops = &xfs_file_vm_ops;
-1408         if (IS_DAX(inode))
-1409                 vma->vm_flags |= VM_HUGEPAGE;
-
-Are xfs and other filesystems setting VM_HUGEPAGE flag even if it can
-never be collapsed?
-
-1410         return 0;
-1411 }
-
-
-> Reviewed-by: Miaohe Lin <linmiaohe@huawei.com>
-> Signed-off-by: Yang Shi <shy828301@gmail.com>
+> xfs_reserve_blocks controls the size of the user-visible free space
+> reserve pool.  Given the difference between the current and requested
+> pool sizes, it will try to reserve free space from fdblocks.  However,
+> the amount requested from fdblocks is also constrained by the amount of
+> space that we think xfs_mod_fdblocks will give us.  We'll keep trying to
+> reserve space so long as xfs_mod_fdblocks returns ENOSPC.
+> 
+> In commit fd43cf600cf6, we decided that xfs_mod_fdblocks should not hand
+> out the "free space" used by the free space btrees, because some portion
+> of the free space btrees hold in reserve space for future btree
+> expansion.  Unfortunately, xfs_reserve_blocks' estimation of the number
+> of blocks that it could request from xfs_mod_fdblocks was not updated to
+> include m_allocbt_blks, so if space is extremely low, the caller hangs.
+> 
+> Fix this by creating a function to estimate the number of blocks that
+> can be reserved from fdblocks, which needs to exclude the set-aside and
+> m_allocbt_blks.
+> 
+> Found by running xfs/306 (which formats a single-AG 20MB filesystem)
+> with an fstests configuration that specifies a 1k blocksize and a
+> specially crafted log size that will consume 7/8 of the space (17920
+> blocks, specifically) in that AG.
+> 
+> Cc: Brian Foster <bfoster@redhat.com>
+> Fixes: fd43cf600cf6 ("xfs: set aside allocation btree blocks from block reservation")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  mm/khugepaged.c | 4 ++++
->  1 file changed, 4 insertions(+)
+>  fs/xfs/xfs_fsops.c |    2 +-
+>  fs/xfs/xfs_mount.c |    2 +-
+>  fs/xfs/xfs_mount.h |   15 +++++++++++++++
+>  3 files changed, 17 insertions(+), 2 deletions(-)
 > 
-> diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-> index 82c71c6da9ce..a0e4fa33660e 100644
-> --- a/mm/khugepaged.c
-> +++ b/mm/khugepaged.c
-> @@ -448,6 +448,10 @@ static bool hugepage_vma_check(struct vm_area_struct *vma,
->  	if (vm_flags & VM_NO_KHUGEPAGED)
->  		return false;
+> 
+...
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 00720a02e761..da1b7056e743 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -479,6 +479,21 @@ extern void	xfs_unmountfs(xfs_mount_t *);
+>   */
+>  #define XFS_FDBLOCKS_BATCH	1024
 >  
-> +	/* Don't run khugepaged against DAX vma */
-> +	if (vma_is_dax(vma))
-> +		return false;
+> +/*
+> + * Estimate the amount of free space that is not available to userspace and is
+> + * not explicitly reserved from the incore fdblocks:
+> + *
+> + * - Space reserved to ensure that we can always split a bmap btree
+> + * - Free space btree blocks that are not available for allocation due to
+> + *   per-AG metadata reservations
+> + */
+
+What does this mean by "due to" perag res? That sounds like a separate
+thing to me. Perhaps this could just say something like:
+
+"Estimate the amount of accounted free space that is not available to
+userspace. This includes the minimum number of blocks to support a bmbt
+split (calculated at mount time) and the blocks currently in-use by the
+allocation btrees."
+
+Comment nit aside, this LGTM. Thanks for the rework..
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +static inline uint64_t
+> +xfs_fdblocks_unavailable(
+> +	struct xfs_mount	*mp)
+> +{
+> +	return mp->m_alloc_set_aside + atomic64_read(&mp->m_allocbt_blks);
+> +}
 > +
->  	if (vma->vm_file && !IS_ALIGNED((vma->vm_start >> PAGE_SHIFT) -
->  				vma->vm_pgoff, HPAGE_PMD_NR))
->  		return false;
-> -- 
-> 2.26.3
-> 
+>  extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
+>  				 bool reserved);
+>  extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
 > 
 
--- 
-Thank you, You are awesome!
-Hyeonggon :-)
