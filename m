@@ -2,296 +2,290 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C887EC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 07:10:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CAFFC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 07:16:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237262AbiCVHLz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Mar 2022 03:11:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37788 "EHLO
+        id S237340AbiCVHRh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Mar 2022 03:17:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237281AbiCVHLx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 03:11:53 -0400
-X-Greylist: delayed 63 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 22 Mar 2022 00:10:25 PDT
-Received: from esa5.fujitsucc.c3s2.iphmx.com (esa5.fujitsucc.c3s2.iphmx.com [68.232.159.76])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42DE3625D
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 00:10:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
-  t=1647933026; x=1679469026;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=ekKaREYE0Zh7LqgW9uvgKJ4ouioGAfI6PRB/Z5H4SwA=;
-  b=tcMpqFo3ldoqEyhVNPT+r8lLSYSD/fmvvMSyUUYFOFnJ3hxy2MpSjxqk
-   mD+rsMXvpznd+IOvOdcJ1aGtrSEk1zEskEYSvbdPxEZFoNvmKYmnVhbDh
-   70M6zwXxXfVxqkZDQjwQty0oK2Kgb+Ll9PQuXNBRwsKcxT8ghweTnMgHo
-   xCbON3copRqmpQ04UV/A619RtNQcPgwlpE25bRqyguVfdV0NPeyYTF7pq
-   glTDYk8SND0LqNwvTpYjUtHF14V1uQC6UveAkQV5IcRiZ0XUE4y9mJQUK
-   0eTrKOiEMEwVMO0icLNc+RA8ZOBrzxUNKFrjESvLCyJ4+clkK2zegP1jI
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10293"; a="52306906"
-X-IronPort-AV: E=Sophos;i="5.90,201,1643641200"; 
-   d="scan'208";a="52306906"
-Received: from mail-os0jpn01lp2105.outbound.protection.outlook.com (HELO JPN01-OS0-obe.outbound.protection.outlook.com) ([104.47.23.105])
-  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 16:09:19 +0900
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=SSr7qGFfp2nWfVS7qH4WdZwLnleG70P0zcaoVCg/BeyburWA+XlofeGHuFPjI/eYeKP0SNzNEzU9IQaEEkUKWuzw9zwV7NZHWiDao9g9lBT2JZjpr6EiBaK+E8iC9GOcZrQ8//W9lFDK/7pImMbgc27SkWxw5o8dBCLwBVmjYtke4TvSQL63H4C54AYWfhPpuTLIjxpkENPShH+tfw2zhSDF6r9FEtfThvP3ngoA1jixRkdI7qUuE2cEDylXGRwCOKyYGoe91B+jGSBLutG23IDGD6mKlyIdhnfch0QHDTqFWioGnSwJg4cJK4lZFSlbKAQwdPbW8XXVSDncYhtDgg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ekKaREYE0Zh7LqgW9uvgKJ4ouioGAfI6PRB/Z5H4SwA=;
- b=AE8QHiClU38j50bbsAd701nm9Ba20NfBgutrN886GvSjp5GDM14aSSKqXtgh5QdRn4+flpoQeCli6uN7x8XUlz5DDpkQuboFcr1gUaJHTYF/ROYhYIosS5z4R9GoYcgGDLWrydBa0x4sV9dNxgfROxj0yzPyLpjaixDfdp7e2cR6h3zCgC6zcQnDJWRm0Cu65iuoNMQDDKQslHhyQ05aH+U5AnuUVAPJ+Km6t1IeFbvyroprGQqnTS0tAZRvat8jPjtBEps45i+kZlg5kV60NKihWuxwfRvUSfbBnS476RJA641DNIkXwAdGsOKS9l+vyeUKoW9EYM3kdqY2qfctvA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
- dkim=pass header.d=fujitsu.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ekKaREYE0Zh7LqgW9uvgKJ4ouioGAfI6PRB/Z5H4SwA=;
- b=B9q69HDUJiI9KoiKJw/sxEtyIjPI6kUiwr6rOKgAx1QCPuh+LPfZles/0/VY2TVbgHrlGY5ZKVU6z78yDDZE+uTggzT7h3hyTx5f/6QcOg9gA0ctBsuNhKJKlRUqYr+5A/L4W+0wF0pT0GxvgzoN2vhnenVVkmI9WDrjSRRfzLI=
-Received: from TY2PR01MB4427.jpnprd01.prod.outlook.com (2603:1096:404:10d::20)
- by OSAPR01MB2418.jpnprd01.prod.outlook.com (2603:1096:604::21) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5081.14; Tue, 22 Mar 2022 07:09:15 +0000
-Received: from TY2PR01MB4427.jpnprd01.prod.outlook.com
- ([fe80::dd2e:e671:b3d5:d354]) by TY2PR01MB4427.jpnprd01.prod.outlook.com
- ([fe80::dd2e:e671:b3d5:d354%6]) with mapi id 15.20.5081.023; Tue, 22 Mar 2022
- 07:09:15 +0000
-From:   "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>
-To:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-CC:     "djwong@kernel.org" <djwong@kernel.org>,
-        "pvorel@suse.cz" <pvorel@suse.cz>
-Subject: Re: [RFC] xfs: fix up non-directory creation in SGID directories when
- umask S_IXGRP
-Thread-Topic: [RFC] xfs: fix up non-directory creation in SGID directories
- when umask S_IXGRP
-Thread-Index: AQHYPbMKZH5hQ8bjhE6SBiWNByw8e6zK/FSA
-Date:   Tue, 22 Mar 2022 07:09:14 +0000
-Message-ID: <62397651.90204@fujitsu.com>
-References: <1647929219-5388-1-git-send-email-xuyang2018.jy@fujitsu.com>
-In-Reply-To: <1647929219-5388-1-git-send-email-xuyang2018.jy@fujitsu.com>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=fujitsu.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 59c3f52c-2171-4058-4964-08da0bd2dfc3
-x-ms-traffictypediagnostic: OSAPR01MB2418:EE_
-x-microsoft-antispam-prvs: <OSAPR01MB2418E4D69B9B61E8A45F4D97FD179@OSAPR01MB2418.jpnprd01.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ST0Drx8OY8HKPH7x992YGuDkHoCe3dm37XFWcIsl9i3vHkqOvEmANNbbMS2CGAApboeAkT0kq4UcNjCoBqATd/65Kt4LB3b91tks8X6TreVDeLRUQXBCaoJw4KHK7QY8FvPLjp0MRhcTRCG0msv2XTFDQPNS8eL7h+M2KG295Ylc5OC6ICvJni+lsBd845xQ8AEaMf1fuQ2z2W4316BVDUbiKRrpO64aOV/YWt89z6nNHdDs2iTlpKbG9ovnZ+VLI/m+Sm5eukDOOGrhLXwntgI1HkRRXDhf+QyOmWe698Mm33POxALM8XBBEKllo5a2PztB6MQZQ9DL7l1BXhBoJ/cRMIhF8kdApzlEDGi5/8bKaHuu4WcQp0B2jluuGtec6FRErPt8lilRFfKnNOurn81fFP00oAiZ4N3zUn/vDSuthtyKhXGo3AUsfVNABxn03B2hrPLJs5NrQGojWs4rD5Re6ALOwd2kqQ2t/sktamzQPZz0lShPHOHcTo9wpFMkc/mEkzQTgmjrXks6aO2vhVRSDx2DgtJU3FIIMpYOxbPIUtz7KPci0ra3eu3iZDLREReu9sh0swt8vJddJzX19cbJoSSjPOGmmX3sESxafDFopbTztPUTrXvKUJ7Xxl/1bmj87PT06+F7niTaj7ETNzKIJGBaigfobOnWR9Oa/XE+cPMFxhWkxFnELmgSDvizdKcqEQkLzcBwM5TqmIcnFwArF3KgKTzIv7kKyUk4P3VSQn1n1p9VwKwI0B2kfqa2nZnt733u8pHHr/bDLAau+VEp4bwJkf5CjtVkz0AD8/LwwRhe6oT16C/rm/Xw6MEG
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY2PR01MB4427.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(186003)(26005)(38100700002)(122000001)(85182001)(36756003)(66476007)(8676002)(4326008)(66556008)(38070700005)(54906003)(66946007)(6916009)(2906002)(66446008)(64756008)(91956017)(76116006)(316002)(5660300002)(6506007)(6512007)(82960400001)(508600001)(6486002)(2616005)(71200400001)(83380400001)(8936002)(86362001)(62816006);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?gb2312?B?SUJ1UEhqUnZBc2VDdGR1TWFVSU0yTldQSWFML0V6dUlYUGlSSTBoSStKOUg3?=
- =?gb2312?B?aDRLaUROakk0cnZmSzRJK2FlTEFjcGR0eUxVeFUxV0lpNGZsQlYwQTdTVU1R?=
- =?gb2312?B?ZmwyTFNDMGJiZmN5RkdkdjBTQTlrbEdFUFpRMVAzTlVLNmJGS3J5c1ZqbStE?=
- =?gb2312?B?QmIvVGdDLy9mL1J3bHZUbmRnL0Nkck5sZWV3Mk5LNVE3WG9MWHZ2MGJkMmt0?=
- =?gb2312?B?OUNwaTVadDR4WWFoeS82eHlqV1A0dnF0VkxzOFlqeWxrc2YrNVdreVVoRHN5?=
- =?gb2312?B?THVraGlpbkJSSWxiYXBLOWNhVW1tbU5nVWRwWDJNRFRyVWhwWXVYd0ZyWnlZ?=
- =?gb2312?B?UUR0aEtFWXBiQ2Z1cDk4NDdEdko3OGg4QXVuSTRjWEhKUGxVZVZjOE12RUdk?=
- =?gb2312?B?Rk1WVG9pYkhxaVRTYVZLUDhuYjlCTmYxVjhTODJyS29YaWo5bkswMHR1Q0Nm?=
- =?gb2312?B?VFNUR1dzc0ZqOUx4TzMxbFpCTUxCeHo5bEVUODhGRXVPVmJ0cmxJbFZ1T1ZW?=
- =?gb2312?B?NnMwcVlUSUdOTjBCamVxdURmYVRpS0QxZFFJS1dHYVFGd0R0TEJXdWJHSGlN?=
- =?gb2312?B?V2M3TVRFc2xGZWZVWUpSc3hBdW55VHJza2FTaHlJOHIzSEZ4MlpKTGdsY1Y5?=
- =?gb2312?B?L08xaEd6YXB0R0JTTzA3Y1huMzhndDFNdXd4WHVJWnBHM1A0L2xmSUdlekF1?=
- =?gb2312?B?eVZyUkFydEsyb3JwQkxSS1U5MVUvY1lwcVEycld6QjFDY0J5M05IS3YzTXFL?=
- =?gb2312?B?dEtERmczVEtQL3ZOYmttQ0I5Z3lyY0pQQTYxZC8yVHY0dTZrRklvRExIY1VS?=
- =?gb2312?B?WjJ6NFZzd0hYejd2OTlqU3RDR0l6cmkvYUhMZWZSbW54aWptZU1yRFdzdUR6?=
- =?gb2312?B?NnB0Mi82NENxT2IrSHBoYmhWZnBvTjUwZVNFRHlWNUliNVdvYnIzMDJHSmpS?=
- =?gb2312?B?aEdWY2FFY1YxSUt6TTYzU2VCS0VmSDd1NVJuWWFjVm9uNzhJOEd6N25uMUlw?=
- =?gb2312?B?cTMwQ3gxb3hXNEJUNjdmbXN3Q0R2MWFNYWh3aVNlRW5LRXplSEFLczYrSGJt?=
- =?gb2312?B?b3hxc0pXNjZxaitqSnB5ZC8zMUFhZjQ1RFhJM1hrQSsrd3JkejNUT2xwVWtt?=
- =?gb2312?B?T3RtQWdrc2ZWZzg3VmRwWlhvWnZKeDFLM3kzQmhjRC9rTlljNnFEbGFEd2Ro?=
- =?gb2312?B?NHlSUnhIeGphRHJhamVReU44dHF0WVhIc2F2ZmpHSXdvVTNJZ3BqL3dBTFlB?=
- =?gb2312?B?TnVDaW1DOWpwRTBldndNS2hwWmpZUU1sV2xhbTJDWjdEWVkzb09LSzNMVXNq?=
- =?gb2312?B?eC91a3lYRnVOaGVETVNTaDc4YXc3QTNVR2xOSy9Tb0x2aVRPR2M1emdoT0Jq?=
- =?gb2312?B?NDA1dlZrZ2paeTQyL2YrUjVEZS9MalpneHVwUjRhblhVQTBsb0ZLdDhmejN2?=
- =?gb2312?B?RG0yM1J3LytSTC9JQXhPTDZpY2xiaDZqYnZVRWJTTFdJOTAram9HM1pRdFlx?=
- =?gb2312?B?TVBOUGFKSnh6NTBJOWpIOXZiT0R3eWJBbExiZmxLTzY1QlhWaWlKMVl3dCtk?=
- =?gb2312?B?UVczYmVBcWFTeGRsZUY5VUhRTmwzT2VVT2UyWU5RNzlnNGwrbml3bzVHcWFh?=
- =?gb2312?B?dUxmU3VGWnVxemZzUGxxbmM2SjNodC9oaHBOUHNZK3hFY3NxUW1GNFFoajlH?=
- =?gb2312?B?Q0RLMFRSYjhDY2lDOU1UVllQSWk2ZVlPN1pmcmNjSWx0Nzc3NndWRFdYWC9F?=
- =?gb2312?B?TFZVdGZxeGROcGoyNkpTcDhUQzdWVmd6U2VlMFVRSU1CN0hlWVVWOVBQVTZ2?=
- =?gb2312?B?Ym43V0wyRUcrNTlndDU1SnNvZjRkN3ZHRnUreExuWEtIKzNkc1JhbkhXcmVX?=
- =?gb2312?B?UEkyM3hza24yTFNhSGM0TkhSeXNnN1UvVnpQWFlLTDhabU0rb1pPbFl1WUpI?=
- =?gb2312?B?bDdHQTJSeUxCZ2J3eCsxdDVsajlaMnVrU0wyRmtpd3dTWm1UODFUdW9Ja2Zt?=
- =?gb2312?Q?ickC6x0AbE3ZBQ93fud9dhpGpzo5zw=3D?=
-Content-Type: text/plain; charset="gb2312"
-Content-ID: <62F8A684B6C7A64989984E3053EBFDD4@jpnprd01.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S237345AbiCVHRf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 03:17:35 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6224310FB
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 00:16:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1647933367;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=c/FBRcy+huZE69c5xi3jUZeE1RQ+k0XlKCnqgEAjnHQ=;
+        b=V8rPumBBl5Q0TPDsNv9XA22HxviRA/fI0hntfwYuJ/h+g+8VyslElpsbxJDBdcfjNFVEcV
+        duAw7UtV1ewdNN0UMds3cMqiL7A+z61750wc/jYin3wfU0sN+zmU4HhJo8WnAkQDLjk1+N
+        7qemMWLzYG2YX86hbrTNm03CXiQHGCM=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-331-0RkL5fy2Nm-DzOAomlgSLQ-1; Tue, 22 Mar 2022 03:16:05 -0400
+X-MC-Unique: 0RkL5fy2Nm-DzOAomlgSLQ-1
+Received: by mail-qv1-f69.google.com with SMTP id h18-20020a05621402f200b00440cedaa9a2so13129665qvu.17
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 00:16:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=c/FBRcy+huZE69c5xi3jUZeE1RQ+k0XlKCnqgEAjnHQ=;
+        b=2p3pkX/I6rvPwlqVMFkJFZxSM8iYOpLBPiXFBnCv9mjM1pxiqMMyDDxYGYE4RpoWAf
+         thcgzov5lA43GdrxPkDzj0ldi1LN3O2uj5qBF7QLLobv/fMZ/LyyVzm+mJtvnp/Ku21p
+         KnIBIIRR9pd9fF6k+SIr0KaARNDmf019WMifgbaHMBhq5+Vsz8UpX/E+i58wYayx0GAQ
+         HwBJmDG5A4ny8HxKara02h4IBrbqgOD38vpSrorXJXxckiLhOwYoXpK14l4V/aFZ21v0
+         ih27Dtd4O9ITNFMaPhM3XjGfKAWJTL/ilrPPptfHSLkvT7dOZrqZK/xMOELr1kAvJVfw
+         ju0g==
+X-Gm-Message-State: AOAM532/UvRqmdIeiYoMoqlrRheNmsueKayIpZevaV2n4nWnMLoCGm5T
+        d9ZaidIdkltMFILBk/VLp+Rx+6HA1T/W4FSNEblqq7BJ5wVUHZNtVl6HwYTn0B9gA0olUXW2MQL
+        0fRtVc13Ea3dvmp5N4Cp9
+X-Received: by 2002:a37:b983:0:b0:67e:c0d2:c3ca with SMTP id j125-20020a37b983000000b0067ec0d2c3camr278714qkf.749.1647933365340;
+        Tue, 22 Mar 2022 00:16:05 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxRxjtfelMddTXjRRLqZmUuEMnBFZ5mAmlvL9fae1Ph1bC9jLzIywe/oKgswQWRkJhvne3c1Q==
+X-Received: by 2002:a37:b983:0:b0:67e:c0d2:c3ca with SMTP id j125-20020a37b983000000b0067ec0d2c3camr278704qkf.749.1647933364857;
+        Tue, 22 Mar 2022 00:16:04 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id w3-20020a05622a190300b002e1f084d84bsm11502557qtc.50.2022.03.22.00.16.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Mar 2022 00:16:04 -0700 (PDT)
+Date:   Tue, 22 Mar 2022 15:15:56 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 6/4] xfs/17[035]: fix intermittent failures when
+ filesystem metadata gets large
+Message-ID: <20220322071556.6iajo57ilyalwfdi@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+References: <164740140348.3371628.12967562090320741592.stgit@magnolia>
+ <20220316221326.GF8200@magnolia>
 MIME-Version: 1.0
-X-OriginatorOrg: fujitsu.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY2PR01MB4427.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 59c3f52c-2171-4058-4964-08da0bd2dfc3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Mar 2022 07:09:15.1032
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 4IoXlMqbYfp6TGHSX6hmogevJRMm9VaSAdzwjQTWVZAvyxTlS7SBRJaP/qtTsOSSZN+9bguOijeTi/ZxCNRt9dMabvi6DGbZft1QDNQifvc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSAPR01MB2418
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220316221326.GF8200@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-DQpTaW5jZSB0aGlzIHBhdGNoIG1pc3MgcG9zaXhfYWNsX3JlbGVhc2Ugd2hlbiBzdWNjZWVkIGFu
-ZCBicmVhayBvbGQgbG9naWMNCnRoYXQgb25seSBjYWxsIGZyb20geGZzX2dlbmVyaWNfY3JlYXRl
-IHdpbGwgY2FsbCBwb3NpeF9hY2xfY3JlYXRlLg0KDQpJIHdpbGwgcmVzZW5kIGEgdjEgcGF0Y2gu
-IHBsZWFzZSBpZ25vcmUgdGhpcyBwYXRjaA0KDQpCZXN0IFJlZ2FyZHMNCllhbmcgWHUNCj4gUGV0
-ciByZXBvcnRlZCBhIHByb2JsZW0gdGhhdCBTX0lTR0lEIGJpdCB3YXMgbm90IGNsZWFuIHdoZW4g
-dGVzdGluZyBsdHAgY2FzZQ0KPiBjcmVhdGUwOVsxXSBieSB1c2luZyB1bWFzaygwNzcpLg0KPiAN
-Cj4gSXQgZmFpbHMgYmVjYXVzZSB4ZnMgd2lsbCBjYWxsIHBvc2l4X2FjbF9jcmVhdGUgYmVmb3Jl
-IHhmc19pbml0X25ld19ub2RlIGNhbGxzDQo+IGlub2RlX2luaXRfb3duZXIsIHNvIFNfSVhHUlAg
-bW9kZSB3aWxsIGJlIGNsZWFyIHdoZW4gZW5hYmxlIENPTkZJR19YRlNfUE9TSVhBQ0wNCj4gYW5k
-IGRvZXNuJ3Qgc2V0IGFjbCBvciBkZWZhdWx0IGFjbCBvbiBkaXIsIHRoZW4gaW5vZGVfaW5pdF9v
-d25lciB3aWxsIG5vdCBjbGVhcg0KPiBTX0lTR0lEIGJpdC4NCj4gDQo+IFRoZSBjYWxsdHJhY2Ug
-YXMgYmVsb3c6DQo+IA0KPiAgICAgd2lsbCB1c2UgIGlub2RlX2luaXRfb3duZXIoc3RydWN0IHVz
-ZXJfbmFtZXNwYWNlICptbnRfdXNlcm5zLCBzdHJ1Y3Rpbm9kZSAqaW5vZGUpDQo+IFsgIDI5Ni43
-NjA2NzVdICB4ZnNfaW5pdF9uZXdfaW5vZGUrMHgxMGUvMHg2YzANCj4gWyAgMjk2Ljc2MDY3OF0g
-IHhmc19jcmVhdGUrMHg0MDEvMHg2MTANCj4gICAgIHdpbGwgdXNlIHBvc2l4X2FjbF9jcmVhdGUo
-ZGlyLCZtb2RlLCZkZWZhdWx0X2FjbCwmYWNsKTsNCj4gWyAgMjk2Ljc2MDY4MV0gIHhmc19nZW5l
-cmljX2NyZWF0ZSsweDEyMy8weDJlMA0KPiBbICAyOTYuNzYwNjg0XSAgPyBfcmF3X3NwaW5fdW5s
-b2NrKzB4MTYvMHgzMA0KPiBbICAyOTYuNzYwNjg3XSAgcGF0aF9vcGVuYXQrMHhmYjgvMHgxMjEw
-DQo+IFsgIDI5Ni43NjA2ODldICBkb19maWxwX29wZW4rMHhiNC8weDEyMA0KPiBbICAyOTYuNzYw
-NjkxXSAgPyBmaWxlX3R0eV93cml0ZS5pc3JhLjMxKzB4MjAzLzB4MzQwDQo+IFsgIDI5Ni43NjA2
-OTddICA/IF9fY2hlY2tfb2JqZWN0X3NpemUrMHgxNTAvMHgxNzANCj4gWyAgMjk2Ljc2MDY5OV0g
-IGRvX3N5c19vcGVuYXQyKzB4MjQyLzB4MzEwDQo+IFsgIDI5Ni43NjA3MDJdICBkb19zeXNfb3Bl
-bisweDRiLzB4ODANCj4gWyAgMjk2Ljc2MDcwNF0gIGRvX3N5c2NhbGxfNjQrMHgzYS8weDgwDQo+
-IA0KPiBGaXggdGhpcyBpcyBzaW1wbGUsIHdlIGNhbiBjYWxsIHBvc2l4X2FjbF9jcmVhdGUgYWZ0
-ZXIgeGZzX2luaXRfbmV3X2lub2RlIGNvbXBsZXRlZCwNCj4gc28gaW5vZGVfaW5pdF9vd25lciBj
-YW4gY2xlYXIgU19JU0dJRCBiaXQgY29ycmVjdGx5IGxpa2UgZXh0NCBvciBidHJmcyBkb2VzLg0K
-PiANCj4gQnV0IGNvbW1pdCBlNmE2ODhjMzMyMzggKCJ4ZnM6IGluaXRpYWxpc2UgYXR0ciBmb3Jr
-IG9uIGlub2RlIGNyZWF0ZSIpIGhhcyBjcmVhdGVkDQo+IGF0dHIgZm9yayBpbiBhZHZhbmNlIGFj
-Y29yZGluZyB0byBhY2wsIHNvIGEgYmV0dGVyIHNvbHV0aW9uIGlzIHRoYXQgbW92aW5nIHRoZXNl
-DQo+IGZ1bmN0aW9ucyBpbnRvIHhmc19pbml0X25ld19pbm9kZS4NCj4gDQo+IFsxXWh0dHBzOi8v
-Z2l0aHViLmNvbS9saW51eC10ZXN0LXByb2plY3QvbHRwL2Jsb2IvbWFzdGVyL3Rlc3RjYXNlcy9r
-ZXJuZWwvc3lzY2FsbHMvY3JlYXQvY3JlYXQwOS5jDQo+IFJlcG9ydGVkLWJ5OiBQZXRyIFZvcmVs
-PHB2b3JlbEBzdXNlLmN6Pg0KPiBTaWduZWQtb2ZmLWJ5OiBZYW5nIFh1PHh1eWFuZzIwMTguanlA
-ZnVqaXRzdS5jb20+DQo+IC0tLQ0KPiAgIGZzL3hmcy94ZnNfaW5vZGUuYyB8IDU0ICsrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKystLQ0KPiAgIGZzL3hmcy94ZnNfaW9wcy5jICB8
-IDYzICsrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gICAy
-IGZpbGVzIGNoYW5nZWQsIDU3IGluc2VydGlvbnMoKyksIDYwIGRlbGV0aW9ucygtKQ0KPiANCj4g
-ZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfaW5vZGUuYyBiL2ZzL3hmcy94ZnNfaW5vZGUuYw0KPiBp
-bmRleCAyNjIyN2QyNmYyNzQuLjgxMjdiODNiMzc2YyAxMDA2NDQNCj4gLS0tIGEvZnMveGZzL3hm
-c19pbm9kZS5jDQo+ICsrKyBiL2ZzL3hmcy94ZnNfaW5vZGUuYw0KPiBAQCAtNCw2ICs0LDcgQEAN
-Cj4gICAgKiBBbGwgUmlnaHRzIFJlc2VydmVkLg0KPiAgICAqLw0KPiAgICNpbmNsdWRlPGxpbnV4
-L2l2ZXJzaW9uLmg+DQo+ICsjaW5jbHVkZTxsaW51eC9wb3NpeF9hY2wuaD4NCj4gDQo+ICAgI2lu
-Y2x1ZGUgInhmcy5oIg0KPiAgICNpbmNsdWRlICJ4ZnNfZnMuaCINCj4gQEAgLTM2LDYgKzM3LDcg
-QEANCj4gICAjaW5jbHVkZSAieGZzX3JlZmxpbmsuaCINCj4gICAjaW5jbHVkZSAieGZzX2FnLmgi
-DQo+ICAgI2luY2x1ZGUgInhmc19sb2dfcHJpdi5oIg0KPiArI2luY2x1ZGUgInhmc19hY2wuaCIN
-Cj4gDQo+ICAgc3RydWN0IGttZW1fY2FjaGUgKnhmc19pbm9kZV9jYWNoZTsNCj4gDQo+IEBAIC03
-ODEsNiArNzgzLDM2IEBAIHhmc19pbm9kZV9pbmhlcml0X2ZsYWdzMigNCj4gICAJfQ0KPiAgIH0N
-Cj4gDQo+ICsvKg0KPiArICogQ2hlY2sgdG8gc2VlIGlmIHdlIGFyZSBsaWtlbHkgdG8gbmVlZCBh
-biBleHRlbmRlZCBhdHRyaWJ1dGUgdG8gYmUgYWRkZWQgdG8NCj4gKyAqIHRoZSBpbm9kZSB3ZSBh
-cmUgYWJvdXQgdG8gYWxsb2NhdGUuIFRoaXMgYWxsb3dzIHRoZSBhdHRyaWJ1dGUgZm9yayB0byBi
-ZQ0KPiArICogY3JlYXRlZCBkdXJpbmcgdGhlIGlub2RlIGFsbG9jYXRpb24sIHJlZHVjaW5nIHRo
-ZSBudW1iZXIgb2YgdHJhbnNhY3Rpb25zIHdlDQo+ICsgKiBuZWVkIHRvIGRvIGluIHRoaXMgZmFz
-dCBwYXRoLg0KPiArICoNCj4gKyAqIFRoZSBzZWN1cml0eSBjaGVja3MgYXJlIG9wdGltaXN0aWMs
-IGJ1dCBub3QgZ3VhcmFudGVlZC4gVGhlIHR3byBMU01zIHRoYXQNCj4gKyAqIHJlcXVpcmUgeGF0
-dHJzIHRvIGJlIGFkZGVkIGhlcmUgKHNlbGludXggYW5kIHNtYWNrKSBhcmUgYWxzbyB0aGUgb25s
-eSB0d28NCj4gKyAqIExTTXMgdGhhdCBhZGQgYSBzYi0+c19zZWN1cml0eSBzdHJ1Y3R1cmUgdG8g
-dGhlIHN1cGVyYmxvY2suIEhlbmNlIGlmIHNlY3VyaXR5DQo+ICsgKiBpcyBlbmFibGVkIGFuZCBz
-Yi0+c19zZWN1cml0eSBpcyBzZXQsIHdlIGhhdmUgYSBwcmV0dHkgZ29vZCBpZGVhIHRoYXQgd2Ug
-YXJlDQo+ICsgKiBnb2luZyB0byBiZSBhc2tlZCB0byBhZGQgYSBzZWN1cml0eSB4YXR0ciBpbW1l
-ZGlhdGVseSBhZnRlciBhbGxvY2F0aW5nIHRoZQ0KPiArICogeGZzIGlub2RlIGFuZCBpbnN0YW50
-aWF0aW5nIHRoZSBWRlMgaW5vZGUuDQo+ICsgKi8NCj4gK3N0YXRpYyBpbmxpbmUgYm9vbA0KPiAr
-eGZzX2NyZWF0ZV9uZWVkX3hhdHRyKA0KPiArCXN0cnVjdCBpbm9kZSAgICAqZGlyLA0KPiArCXN0
-cnVjdCBwb3NpeF9hY2wgKmRlZmF1bHRfYWNsLA0KPiArCXN0cnVjdCBwb3NpeF9hY2wgKmFjbCkN
-Cj4gK3sNCj4gKwlpZiAoYWNsKQ0KPiArCQlyZXR1cm4gdHJ1ZTsNCj4gKwlpZiAoZGVmYXVsdF9h
-Y2wpDQo+ICsJCXJldHVybiB0cnVlOw0KPiArI2lmIElTX0VOQUJMRUQoQ09ORklHX1NFQ1VSSVRZ
-KQ0KPiArCWlmIChkaXItPmlfc2ItPnNfc2VjdXJpdHkpDQo+ICsJCXJldHVybiB0cnVlOw0KPiAr
-I2VuZGlmDQo+ICsJcmV0dXJuIGZhbHNlOw0KPiArfQ0KPiArDQo+ICAgLyoNCj4gICAgKiBJbml0
-aWFsaXNlIGEgbmV3bHkgYWxsb2NhdGVkIGlub2RlIGFuZCByZXR1cm4gdGhlIGluLWNvcmUgaW5v
-ZGUgdG8gdGhlDQo+ICAgICogY2FsbGVyIGxvY2tlZCBleGNsdXNpdmVseS4NCj4gQEAgLTgwNSw3
-ICs4MzcsNyBAQCB4ZnNfaW5pdF9uZXdfaW5vZGUoDQo+ICAgCWludAkJCWVycm9yOw0KPiAgIAlz
-dHJ1Y3QgdGltZXNwZWM2NAl0djsNCj4gICAJc3RydWN0IGlub2RlCQkqaW5vZGU7DQo+IC0NCj4g
-KwlzdHJ1Y3QgcG9zaXhfYWNsIAkqZGVmYXVsdF9hY2wsICphY2w7DQo+ICAgCS8qDQo+ICAgCSAq
-IFByb3RlY3QgYWdhaW5zdCBvYnZpb3VzbHkgY29ycnVwdCBhbGxvY2F0aW9uIGJ0cmVlIHJlY29y
-ZHMuIExhdGVyDQo+ICAgCSAqIHhmc19pZ2V0IGNoZWNrcyB3aWxsIGNhdGNoIHJlLWFsbG9jYXRp
-b24gb2Ygb3RoZXIgYWN0aXZlIGluLW1lbW9yeQ0KPiBAQCAtODkzLDYgKzkyNSw5IEBAIHhmc19p
-bml0X25ld19pbm9kZSgNCj4gICAJCUFTU0VSVCgwKTsNCj4gICAJfQ0KPiANCj4gKwllcnJvciA9
-IHBvc2l4X2FjbF9jcmVhdGUoZGlyLCZpbm9kZS0+aV9tb2RlLCZkZWZhdWx0X2FjbCwmYWNsKTsN
-Cj4gKwlpZiAoZXJyb3IpDQo+ICsJCXJldHVybiBlcnJvcjsNCj4gICAJLyoNCj4gICAJICogSWYg
-d2UgbmVlZCB0byBjcmVhdGUgYXR0cmlidXRlcyBpbW1lZGlhdGVseSBhZnRlciBhbGxvY2F0aW5n
-IHRoZQ0KPiAgIAkgKiBpbm9kZSwgaW5pdGlhbGlzZSBhbiBlbXB0eSBhdHRyaWJ1dGUgZm9yayBy
-aWdodCBub3cuIFdlIHVzZSB0aGUNCj4gQEAgLTkwMiw3ICs5MzcsOSBAQCB4ZnNfaW5pdF9uZXdf
-aW5vZGUoDQo+ICAgCSAqIHRoaXMgc2F2ZXMgdXMgZnJvbSBuZWVkaW5nIHRvIHJ1biBhIHNlcGFy
-YXRlIHRyYW5zYWN0aW9uIHRvIHNldCB0aGUNCj4gICAJICogZm9yayBvZmZzZXQgaW4gdGhlIGlt
-bWVkaWF0ZSBmdXR1cmUuDQo+ICAgCSAqLw0KPiAtCWlmIChpbml0X3hhdHRycyYmICB4ZnNfaGFz
-X2F0dHIobXApKSB7DQo+ICsJaWYgKGluaXRfeGF0dHJzJiYNCj4gKwkgICAgeGZzX2NyZWF0ZV9u
-ZWVkX3hhdHRyKGRpciwgZGVmYXVsdF9hY2wsIGFjbCkmJg0KPiArCSAgICB4ZnNfaGFzX2F0dHIo
-bXApKSB7DQo+ICAgCQlpcC0+aV9mb3Jrb2ZmID0geGZzX2RlZmF1bHRfYXR0cm9mZnNldChpcCk+
-PiAgMzsNCj4gICAJCWlwLT5pX2FmcCA9IHhmc19pZm9ya19hbGxvYyhYRlNfRElOT0RFX0ZNVF9F
-WFRFTlRTLCAwKTsNCj4gICAJfQ0KPiBAQCAtOTE2LDYgKzk1MywxOSBAQCB4ZnNfaW5pdF9uZXdf
-aW5vZGUoDQo+ICAgCS8qIG5vdyB0aGF0IHdlIGhhdmUgYW4gaV9tb2RlIHdlIGNhbiBzZXR1cCB0
-aGUgaW5vZGUgc3RydWN0dXJlICovDQo+ICAgCXhmc19zZXR1cF9pbm9kZShpcCk7DQo+IA0KPiAr
-I2lmZGVmIENPTkZJR19YRlNfUE9TSVhfQUNMDQo+ICsJaWYgKGRlZmF1bHRfYWNsKSB7DQo+ICsJ
-CWVycm9yID0gX194ZnNfc2V0X2FjbChpbm9kZSwgZGVmYXVsdF9hY2wsIEFDTF9UWVBFX0RFRkFV
-TFQpOw0KPiArCQlpZiAoZXJyb3IpDQo+ICsJCQlwb3NpeF9hY2xfcmVsZWFzZShkZWZhdWx0X2Fj
-bCk7DQo+ICsJfQ0KPiArCWlmIChhY2wpIHsNCj4gKwkJZXJyb3IgPSBfX3hmc19zZXRfYWNsKGlu
-b2RlLCBhY2wsIEFDTF9UWVBFX0FDQ0VTUyk7DQo+ICsJCWlmIChlcnJvcikNCj4gKwkJCXBvc2l4
-X2FjbF9yZWxlYXNlKGFjbCk7DQo+ICsJfQ0KPiArI2VuZGlmDQo+ICsNCj4gICAJKmlwcCA9IGlw
-Ow0KPiAgIAlyZXR1cm4gMDsNCj4gICB9DQo+IGRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lvcHMu
-YyBiL2ZzL3hmcy94ZnNfaW9wcy5jDQo+IGluZGV4IGIzNGU4ZTQzNDRhOC4uNWY5ZmNiNmU3Y2Y4
-IDEwMDY0NA0KPiAtLS0gYS9mcy94ZnMveGZzX2lvcHMuYw0KPiArKysgYi9mcy94ZnMveGZzX2lv
-cHMuYw0KPiBAQCAtMTI3LDM3ICsxMjcsNiBAQCB4ZnNfY2xlYW51cF9pbm9kZSgNCj4gICAJeGZz
-X3JlbW92ZShYRlNfSShkaXIpLCZ0ZWFyZG93biwgWEZTX0koaW5vZGUpKTsNCj4gICB9DQo+IA0K
-PiAtLyoNCj4gLSAqIENoZWNrIHRvIHNlZSBpZiB3ZSBhcmUgbGlrZWx5IHRvIG5lZWQgYW4gZXh0
-ZW5kZWQgYXR0cmlidXRlIHRvIGJlIGFkZGVkIHRvDQo+IC0gKiB0aGUgaW5vZGUgd2UgYXJlIGFi
-b3V0IHRvIGFsbG9jYXRlLiBUaGlzIGFsbG93cyB0aGUgYXR0cmlidXRlIGZvcmsgdG8gYmUNCj4g
-LSAqIGNyZWF0ZWQgZHVyaW5nIHRoZSBpbm9kZSBhbGxvY2F0aW9uLCByZWR1Y2luZyB0aGUgbnVt
-YmVyIG9mIHRyYW5zYWN0aW9ucyB3ZQ0KPiAtICogbmVlZCB0byBkbyBpbiB0aGlzIGZhc3QgcGF0
-aC4NCj4gLSAqDQo+IC0gKiBUaGUgc2VjdXJpdHkgY2hlY2tzIGFyZSBvcHRpbWlzdGljLCBidXQg
-bm90IGd1YXJhbnRlZWQuIFRoZSB0d28gTFNNcyB0aGF0DQo+IC0gKiByZXF1aXJlIHhhdHRycyB0
-byBiZSBhZGRlZCBoZXJlIChzZWxpbnV4IGFuZCBzbWFjaykgYXJlIGFsc28gdGhlIG9ubHkgdHdv
-DQo+IC0gKiBMU01zIHRoYXQgYWRkIGEgc2ItPnNfc2VjdXJpdHkgc3RydWN0dXJlIHRvIHRoZSBz
-dXBlcmJsb2NrLiBIZW5jZSBpZiBzZWN1cml0eQ0KPiAtICogaXMgZW5hYmxlZCBhbmQgc2ItPnNf
-c2VjdXJpdHkgaXMgc2V0LCB3ZSBoYXZlIGEgcHJldHR5IGdvb2QgaWRlYSB0aGF0IHdlIGFyZQ0K
-PiAtICogZ29pbmcgdG8gYmUgYXNrZWQgdG8gYWRkIGEgc2VjdXJpdHkgeGF0dHIgaW1tZWRpYXRl
-bHkgYWZ0ZXIgYWxsb2NhdGluZyB0aGUNCj4gLSAqIHhmcyBpbm9kZSBhbmQgaW5zdGFudGlhdGlu
-ZyB0aGUgVkZTIGlub2RlLg0KPiAtICovDQo+IC1zdGF0aWMgaW5saW5lIGJvb2wNCj4gLXhmc19j
-cmVhdGVfbmVlZF94YXR0cigNCj4gLQlzdHJ1Y3QgaW5vZGUJKmRpciwNCj4gLQlzdHJ1Y3QgcG9z
-aXhfYWNsICpkZWZhdWx0X2FjbCwNCj4gLQlzdHJ1Y3QgcG9zaXhfYWNsICphY2wpDQo+IC17DQo+
-IC0JaWYgKGFjbCkNCj4gLQkJcmV0dXJuIHRydWU7DQo+IC0JaWYgKGRlZmF1bHRfYWNsKQ0KPiAt
-CQlyZXR1cm4gdHJ1ZTsNCj4gLSNpZiBJU19FTkFCTEVEKENPTkZJR19TRUNVUklUWSkNCj4gLQlp
-ZiAoZGlyLT5pX3NiLT5zX3NlY3VyaXR5KQ0KPiAtCQlyZXR1cm4gdHJ1ZTsNCj4gLSNlbmRpZg0K
-PiAtCXJldHVybiBmYWxzZTsNCj4gLX0NCj4gLQ0KPiAtDQo+ICAgU1RBVElDIGludA0KPiAgIHhm
-c19nZW5lcmljX2NyZWF0ZSgNCj4gICAJc3RydWN0IHVzZXJfbmFtZXNwYWNlCSptbnRfdXNlcm5z
-LA0KPiBAQCAtMTY5LDcgKzEzOCw2IEBAIHhmc19nZW5lcmljX2NyZWF0ZSgNCj4gICB7DQo+ICAg
-CXN0cnVjdCBpbm9kZQkqaW5vZGU7DQo+ICAgCXN0cnVjdCB4ZnNfaW5vZGUgKmlwID0gTlVMTDsN
-Cj4gLQlzdHJ1Y3QgcG9zaXhfYWNsICpkZWZhdWx0X2FjbCwgKmFjbDsNCj4gICAJc3RydWN0IHhm
-c19uYW1lCW5hbWU7DQo+ICAgCWludAkJZXJyb3I7DQo+IA0KPiBAQCAtMTg0LDI0ICsxNTIsMTkg
-QEAgeGZzX2dlbmVyaWNfY3JlYXRlKA0KPiAgIAkJcmRldiA9IDA7DQo+ICAgCX0NCj4gDQo+IC0J
-ZXJyb3IgPSBwb3NpeF9hY2xfY3JlYXRlKGRpciwmbW9kZSwmZGVmYXVsdF9hY2wsJmFjbCk7DQo+
-IC0JaWYgKGVycm9yKQ0KPiAtCQlyZXR1cm4gZXJyb3I7DQo+IC0NCj4gICAJLyogVmVyaWZ5IG1v
-ZGUgaXMgdmFsaWQgYWxzbyBmb3IgdG1wZmlsZSBjYXNlICovDQo+ICAgCWVycm9yID0geGZzX2Rl
-bnRyeV9tb2RlX3RvX25hbWUoJm5hbWUsIGRlbnRyeSwgbW9kZSk7DQo+ICAgCWlmICh1bmxpa2Vs
-eShlcnJvcikpDQo+IC0JCWdvdG8gb3V0X2ZyZWVfYWNsOw0KPiArCQlyZXR1cm4gZXJyb3I7DQo+
-IA0KPiAgIAlpZiAoIXRtcGZpbGUpIHsNCj4gICAJCWVycm9yID0geGZzX2NyZWF0ZShtbnRfdXNl
-cm5zLCBYRlNfSShkaXIpLCZuYW1lLCBtb2RlLCByZGV2LA0KPiAtCQkJCXhmc19jcmVhdGVfbmVl
-ZF94YXR0cihkaXIsIGRlZmF1bHRfYWNsLCBhY2wpLA0KPiAtCQkJCSZpcCk7DQo+ICsJCQkJdHJ1
-ZSwmaXApOw0KPiAgIAl9IGVsc2Ugew0KPiAgIAkJZXJyb3IgPSB4ZnNfY3JlYXRlX3RtcGZpbGUo
-bW50X3VzZXJucywgWEZTX0koZGlyKSwgbW9kZSwmaXApOw0KPiAgIAl9DQo+ICAgCWlmICh1bmxp
-a2VseShlcnJvcikpDQo+IC0JCWdvdG8gb3V0X2ZyZWVfYWNsOw0KPiArCQlyZXR1cm4gZXJyb3I7
-DQo+IA0KPiAgIAlpbm9kZSA9IFZGU19JKGlwKTsNCj4gDQo+IEBAIC0yMDksMTkgKzE3Miw2IEBA
-IHhmc19nZW5lcmljX2NyZWF0ZSgNCj4gICAJaWYgKHVubGlrZWx5KGVycm9yKSkNCj4gICAJCWdv
-dG8gb3V0X2NsZWFudXBfaW5vZGU7DQo+IA0KPiAtI2lmZGVmIENPTkZJR19YRlNfUE9TSVhfQUNM
-DQo+IC0JaWYgKGRlZmF1bHRfYWNsKSB7DQo+IC0JCWVycm9yID0gX194ZnNfc2V0X2FjbChpbm9k
-ZSwgZGVmYXVsdF9hY2wsIEFDTF9UWVBFX0RFRkFVTFQpOw0KPiAtCQlpZiAoZXJyb3IpDQo+IC0J
-CQlnb3RvIG91dF9jbGVhbnVwX2lub2RlOw0KPiAtCX0NCj4gLQlpZiAoYWNsKSB7DQo+IC0JCWVy
-cm9yID0gX194ZnNfc2V0X2FjbChpbm9kZSwgYWNsLCBBQ0xfVFlQRV9BQ0NFU1MpOw0KPiAtCQlp
-ZiAoZXJyb3IpDQo+IC0JCQlnb3RvIG91dF9jbGVhbnVwX2lub2RlOw0KPiAtCX0NCj4gLSNlbmRp
-Zg0KPiAtDQo+ICAgCXhmc19zZXR1cF9pb3BzKGlwKTsNCj4gDQo+ICAgCWlmICh0bXBmaWxlKSB7
-DQo+IEBAIC0yNDAsMTcgKzE5MCwxNCBAQCB4ZnNfZ2VuZXJpY19jcmVhdGUoDQo+IA0KPiAgIAl4
-ZnNfZmluaXNoX2lub2RlX3NldHVwKGlwKTsNCj4gDQo+IC0gb3V0X2ZyZWVfYWNsOg0KPiAtCXBv
-c2l4X2FjbF9yZWxlYXNlKGRlZmF1bHRfYWNsKTsNCj4gLQlwb3NpeF9hY2xfcmVsZWFzZShhY2wp
-Ow0KPiAtCXJldHVybiBlcnJvcjsNCj4gKwlyZXR1cm4gMDsNCj4gDQo+ICAgIG91dF9jbGVhbnVw
-X2lub2RlOg0KPiAgIAl4ZnNfZmluaXNoX2lub2RlX3NldHVwKGlwKTsNCj4gICAJaWYgKCF0bXBm
-aWxlKQ0KPiAgIAkJeGZzX2NsZWFudXBfaW5vZGUoZGlyLCBpbm9kZSwgZGVudHJ5KTsNCj4gICAJ
-eGZzX2lyZWxlKGlwKTsNCj4gLQlnb3RvIG91dF9mcmVlX2FjbDsNCj4gKwlyZXR1cm4gZXJyb3I7
-DQo+ICAgfQ0KPiANCj4gICBTVEFUSUMgaW50DQo=
+On Wed, Mar 16, 2022 at 03:13:26PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> These tests check that the filestreams allocator never shares an AG
+> across multiple streams when there's plenty of space in the filesystem.
+> Recent increases in metadata overhead for newer features (e.g. bigger
+> logs due to reflink) can throw this off, so add another AG to the
+> formatted filesystem to encourage it to avoid the AG with the log.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+
+
+
+>  common/filestreams |    2 +-
+>  tests/xfs/170      |   16 +++++++++++-----
+>  tests/xfs/170.out  |    8 ++++----
+>  tests/xfs/171      |   16 ++++++++++++----
+>  tests/xfs/171.out  |    8 ++++----
+>  tests/xfs/173      |   16 ++++++++++++----
+>  tests/xfs/173.out  |    8 ++++----
+
+Looks good to me, and test passed after merging this patch. Just one
+tiny question, the subject is "xfs/17[035]: ...", if "17[035]" mean
+170, 173 and 175, but the files you changed are 170, 171 and 173 as
+above :)
+
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+
+
+>  7 files changed, 48 insertions(+), 26 deletions(-)
+> 
+> diff --git a/common/filestreams b/common/filestreams
+> index 8165effe..62acb47c 100644
+> --- a/common/filestreams
+> +++ b/common/filestreams
+> @@ -80,7 +80,7 @@ _check_for_dupes()
+>  
+>  _test_streams() {
+>  
+> -	echo "# testing $* ...."
+> +	echo "# testing $* ...." | tee -a $seqres.full
+>  	local agcount="$1"
+>  	local agsize="$2" # in MB
+>  	local stream_count="$3"
+> diff --git a/tests/xfs/170 b/tests/xfs/170
+> index 5e622d24..b9ead341 100755
+> --- a/tests/xfs/170
+> +++ b/tests/xfs/170
+> @@ -25,11 +25,17 @@ _check_filestreams_support || _notrun "filestreams not available"
+>  # test small stream, multiple I/O per file, 30s timeout
+>  _set_stream_timeout_centisecs 3000
+>  
+> -# test streams does a mkfs and mount
+> -_test_streams 8 22 4 8 3 0 0
+> -_test_streams 8 22 4 8 3 1 0
+> -_test_streams 8 22 4 8 3 0 1
+> -_test_streams 8 22 4 8 3 1 1
+> +# This test checks that the filestreams allocator never allocates space in any
+> +# given AG into more than one stream when there's plenty of space on the
+> +# filesystem.  Newer feature sets (e.g. reflink) have increased the size of
+> +# the log for small filesystems, so we make sure there's one more AG than
+> +# filestreams to encourage the allocator to skip whichever AG owns the log.
+> +#
+> +# Exercise 9x 22MB AGs, 4 filestreams, 8 files per stream, and 3MB per file.
+> +_test_streams 9 22 4 8 3 0 0
+> +_test_streams 9 22 4 8 3 1 0
+> +_test_streams 9 22 4 8 3 0 1
+> +_test_streams 9 22 4 8 3 1 1
+>  
+>  status=0
+>  exit
+> diff --git a/tests/xfs/170.out b/tests/xfs/170.out
+> index e71515e9..16dcb795 100644
+> --- a/tests/xfs/170.out
+> +++ b/tests/xfs/170.out
+> @@ -1,20 +1,20 @@
+>  QA output created by 170
+> -# testing 8 22 4 8 3 0 0 ....
+> +# testing 9 22 4 8 3 0 0 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 8 22 4 8 3 1 0 ....
+> +# testing 9 22 4 8 3 1 0 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 8 22 4 8 3 0 1 ....
+> +# testing 9 22 4 8 3 0 1 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 8 22 4 8 3 1 1 ....
+> +# testing 9 22 4 8 3 1 1 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+> diff --git a/tests/xfs/171 b/tests/xfs/171
+> index 4412fe2f..f93b6011 100755
+> --- a/tests/xfs/171
+> +++ b/tests/xfs/171
+> @@ -29,10 +29,18 @@ _check_filestreams_support || _notrun "filestreams not available"
+>  # 100 = 78.1% full, should reliably succeed
+>  _set_stream_timeout_centisecs 12000
+>  
+> -_test_streams 64 16 8 100 1 1 0
+> -_test_streams 64 16 8 100 1 1 1
+> -_test_streams 64 16 8 100 1 0 0
+> -_test_streams 64 16 8 100 1 0 1
+> +# This test tries to get close to the exact point at which the filestreams
+> +# allocator will start to allocate space from some AG into more than one
+> +# stream.  Newer feature sets (e.g. reflink) have increased the size of the log
+> +# for small filesystems, so we make sure there's one more AG than filestreams
+> +# to encourage the allocator to skip whichever AG owns the log.
+> +#
+> +# This test exercises 64x 16MB AGs, 8 filestreams, 100 files per stream, and
+> +# 1MB per file.
+> +_test_streams 65 16 8 100 1 1 0
+> +_test_streams 65 16 8 100 1 1 1
+> +_test_streams 65 16 8 100 1 0 0
+> +_test_streams 65 16 8 100 1 0 1
+>  
+>  status=0
+>  exit
+> diff --git a/tests/xfs/171.out b/tests/xfs/171.out
+> index 89407cb2..73f73c90 100644
+> --- a/tests/xfs/171.out
+> +++ b/tests/xfs/171.out
+> @@ -1,20 +1,20 @@
+>  QA output created by 171
+> -# testing 64 16 8 100 1 1 0 ....
+> +# testing 65 16 8 100 1 1 0 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 64 16 8 100 1 1 1 ....
+> +# testing 65 16 8 100 1 1 1 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 64 16 8 100 1 0 0 ....
+> +# testing 65 16 8 100 1 0 0 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 64 16 8 100 1 0 1 ....
+> +# testing 65 16 8 100 1 0 1 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+> diff --git a/tests/xfs/173 b/tests/xfs/173
+> index bce6ac51..6b18d919 100755
+> --- a/tests/xfs/173
+> +++ b/tests/xfs/173
+> @@ -26,10 +26,18 @@ _check_filestreams_support || _notrun "filestreams not available"
+>  # be less than or equal to half the AG count so we don't run out of AGs.
+>  _set_stream_timeout_centisecs 12000
+>  
+> -_test_streams 64 16 33 8 2 1 1 fail
+> -_test_streams 64 16 32 8 2 0 1
+> -_test_streams 64 16 33 8 2 0 0 fail
+> -_test_streams 64 16 32 8 2 1 0
+> +# This test checks the exact point at which the filestreams allocator will
+> +# start to allocate space from some AG into more than one stream.  Newer
+> +# feature sets (e.g. reflink) have increased the size of the log for small
+> +# filesystems, so we make sure there's one more AG than filestreams to
+> +# encourage the allocator to skip whichever AG owns the log.
+> +#
+> +# Exercise 65x 16MB AGs, 32/33 filestreams, 8 files per stream, and 2MB per
+> +# file.
+> +_test_streams 65 16 34 8 2 1 1 fail
+> +_test_streams 65 16 32 8 2 0 1
+> +_test_streams 65 16 34 8 2 0 0 fail
+> +_test_streams 65 16 32 8 2 1 0
+>  
+>  status=0
+>  exit
+> diff --git a/tests/xfs/173.out b/tests/xfs/173.out
+> index 21493057..705c352a 100644
+> --- a/tests/xfs/173.out
+> +++ b/tests/xfs/173.out
+> @@ -1,20 +1,20 @@
+>  QA output created by 173
+> -# testing 64 16 33 8 2 1 1 fail ....
+> +# testing 65 16 34 8 2 1 1 fail ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + expected failure, matching AGs
+> -# testing 64 16 32 8 2 0 1 ....
+> +# testing 65 16 32 8 2 0 1 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 64 16 33 8 2 0 0 fail ....
+> +# testing 65 16 34 8 2 0 0 fail ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + expected failure, matching AGs
+> -# testing 64 16 32 8 2 1 0 ....
+> +# testing 65 16 32 8 2 1 0 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+> 
+
