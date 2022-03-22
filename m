@@ -2,105 +2,150 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70B2DC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 02:51:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A32AC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 02:57:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235588AbiCVCwm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Mar 2022 22:52:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43000 "EHLO
+        id S235784AbiCVC7U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Mar 2022 22:59:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235577AbiCVCwl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Mar 2022 22:52:41 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 900FC43394;
-        Mon, 21 Mar 2022 19:51:14 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 39DBFB81B2B;
-        Tue, 22 Mar 2022 02:51:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFA03C340E8;
-        Tue, 22 Mar 2022 02:51:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647917471;
-        bh=2bRP5Y4GjdyK69yoEGR0c5zmw5oC670YQPme7HBz7aI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RGLUwqZ+K49EIH8om+WKvAR6jxqoIiIw9RR9JZHrdJgXpu8ppQl3VK2c4oUsIUMKQ
-         KPIcMzWiVkqoEgR871FYBMKuid/+/fBhMymN0k2ltopdoL6X2oYM0A2FNQT6FUHNHJ
-         vDBYd9xELM3oUSr14Cal/lRvCkt1UbEk/xfzEQdr+gtjjCDX0LtWPzVsiCrFaV5gHg
-         RePlCJ4QQ/S7Lsyi1Fg+7/+EBYsjR9Zy93mN582+w4vwPnjS35jgPZ4XUGupT4gSod
-         QGULjYhgu+Zbqm2aRouXslyvLhOMtIamrHy7dQQvd2pqgqPPQHFGsaHLTT6vv7CW8j
-         L4EOHrr8lrzjA==
-Date:   Mon, 21 Mar 2022 19:51:11 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Yang Li <yang.lee@linux.alibaba.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: Re: [PATCH -next] xfs: clean up some inconsistent indenting
-Message-ID: <20220322025111.GN8224@magnolia>
-References: <20220322001137.96594-1-yang.lee@linux.alibaba.com>
+        with ESMTP id S235789AbiCVC7T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Mar 2022 22:59:19 -0400
+Received: from out30-54.freemail.mail.aliyun.com (out30-54.freemail.mail.aliyun.com [115.124.30.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFD1C33EEDB;
+        Mon, 21 Mar 2022 19:57:51 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R461e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04394;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0V7tXCnQ_1647917867;
+Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0V7tXCnQ_1647917867)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Tue, 22 Mar 2022 10:57:49 +0800
+Date:   Tue, 22 Mar 2022 10:57:47 +0800
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 0/3] xfs: some end COW remapping optimization
+Message-ID: <Yjk7K2yTqpJZLsx5@B-P7TQMD6M-0146.local>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <20220216030854.30180-1-hsiangkao@linux.alibaba.com>
+ <20220321222125.GN8241@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20220322001137.96594-1-yang.lee@linux.alibaba.com>
+In-Reply-To: <20220321222125.GN8241@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 22, 2022 at 08:11:37AM +0800, Yang Li wrote:
-> Eliminate the follow smatch warning:
-> fs/xfs/xfs_log.c:3702 xlog_verify_tail_lsn() warn: inconsistent
-> indenting
-> 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+Hi Darrick,
 
-https://lore.kernel.org/linux-xfs/20210902233137.GB1826899@dread.disaster.area/
-?
-
---D
-
-> ---
->  fs/xfs/xfs_log.c | 22 +++++++++++-----------
->  1 file changed, 11 insertions(+), 11 deletions(-)
+On Mon, Mar 21, 2022 at 03:21:25PM -0700, Darrick J. Wong wrote:
+> On Wed, Feb 16, 2022 at 11:08:51AM +0800, Gao Xiang wrote:
+> > Hi folks,
+> > 
+> > Currently, xfs_reflink_end_cow_extent() will unconditionally unmap an
+> > extent from DATA fork and then remap an extent from COW fork. It seems
+> > somewhat ineffective since for many cases we could update real bmbt
+> > records directly by sightly enhancing old
+> > xfs_bmap_add_extent_unwritten_real() implementation, thus reduce some
+> > measurable extra metadata overhead.
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index a8034c0afdf2..5c8843026468 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3699,21 +3699,21 @@ xlog_verify_tail_lsn(
->  	xfs_lsn_t	tail_lsn = be64_to_cpu(iclog->ic_header.h_tail_lsn);
->  	int		blocks;
->  
-> -    if (CYCLE_LSN(tail_lsn) == log->l_prev_cycle) {
-> -	blocks =
-> -	    log->l_logBBsize - (log->l_prev_block - BLOCK_LSN(tail_lsn));
-> +	if (CYCLE_LSN(tail_lsn) == log->l_prev_cycle) {
-> +		blocks = log->l_logBBsize -
-> +			(log->l_prev_block - BLOCK_LSN(tail_lsn));
->  	if (blocks < BTOBB(iclog->ic_offset)+BTOBB(log->l_iclog_hsize))
->  		xfs_emerg(log->l_mp, "%s: ran out of log space", __func__);
-> -    } else {
-> -	ASSERT(CYCLE_LSN(tail_lsn)+1 == log->l_prev_cycle);
-> +	} else {
-> +		ASSERT(CYCLE_LSN(tail_lsn)+1 == log->l_prev_cycle);
->  
-> -	if (BLOCK_LSN(tail_lsn) == log->l_prev_block)
-> -		xfs_emerg(log->l_mp, "%s: tail wrapped", __func__);
-> +		if (BLOCK_LSN(tail_lsn) == log->l_prev_block)
-> +			xfs_emerg(log->l_mp, "%s: tail wrapped", __func__);
->  
-> -	blocks = BLOCK_LSN(tail_lsn) - log->l_prev_block;
-> -	if (blocks < BTOBB(iclog->ic_offset) + 1)
-> -		xfs_emerg(log->l_mp, "%s: ran out of log space", __func__);
-> -    }
-> +		blocks = BLOCK_LSN(tail_lsn) - log->l_prev_block;
-> +		if (blocks < BTOBB(iclog->ic_offset) + 1)
-> +			xfs_emerg(log->l_mp, "%s: ran out of log space", __func__);
-> +	}
->  }
->  
->  /*
-> -- 
-> 2.20.1.7.g153144c
+> Does it work with rmap enabled?
+
+Yeah, I've tested with rmap enabled. But for now, I have to prioritize
+`erofs over fscache' stuff since it's really needed for cloud vendors and
+cloud-native ecosystem to achieve high-dense and proformance image
+solution for runC and Kata containers. And this patchset still left
+some work to do (since our tester found some cases could cause
+performance degration but I haven't checked/confirm it yet.)
+
+> Reading between the lines, I'm guessing the performance boost might
+> come from avoiding a transaction roll and (possibly) reducing the need
+> to log bmbt updates?  Particularly in the worst case where we split the
+> bmbt only to rejoin the blocks immediately after.
 > 
+> Recently, Dave and Allison have been pondering making an addition to the
+> deferred log item code so that we could ->finish_item the first defer op
+> in the same transaction that logs the caller's deferred operations.
+> Might that get you most of the speed advantage that you're seeking?
+
+Ok, I will recheck later after my container stuff are almost done..
+
+> 
+> > It's important to us since, actually, we're planing to use a modified
+> > alway-cow like atomic write approach internally for database
+> > applications, therefore it'd be nice to do some optimization over
+> > simple end COW approach. Also I think it's still generic and can
+> > benefit other reflink use cases as well.
+> 
+> Hmm, that sounds /awfully/ similar to what sqlite does with f2fs' atomic
+> write ioctls.
+> 
+> Alternately, would this[1] feature that's been sitting around in
+> djwong-dev since late 2019 help?
+> 
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=atomic-file-updates
+> 
+
+The problem is that, for example, mysql directly uses direct I/O to
+write data, and we don't want to touch applications (since there are
+still old e.g. mysql versions in production.) so a transparent COW
+atomic write would be much helpful for products (yeah, I admit it's a
+bit tricky, but until applications choose to use swapext, we still
+need some way that we don't need to touch database apps).
+
+Thanks for the reply and the time!
+
+Thanks,
+Gao Xiang 
+
+> --D
+> 
+> > 
+> > I did some tests with ramdisk in order to measure metadata overhead:
+> > 
+> > echo 1 > /sys/fs/xfs/debug/always_cow
+> > mkfs.xfs -f -mreflink=1 /dev/ram0
+> > mount /dev/ram0 testdir
+> > fio -filename=testdir/1 -size=1G -ioengine=psync -bs=4k -rw=randwrite -overwrite=1 -direct=1 -end_fsync=1 -name=job1
+> > 
+> > Test results as below:
+> > Vanilla:
+> > (1)   iops        : min= 7986, max=16434, avg=12505.76, stdev=2400.05, samples=41
+> > (2)   iops        : min= 7636, max=16376, avg=12474.19, stdev=2258.18, samples=42
+> > (3)   iops        : min= 8346, max=16439, avg=12227.95, stdev=2432.12, samples=42
+> > (4)   iops        : min= 8580, max=16496, avg=12779.41, stdev=2297.42, samples=41
+> > (5)   iops        : min= 8286, max=16556, avg=12500.76, stdev=2123.90, samples=41
+> > 
+> > Patched:
+> > (1)   iops        : min= 7086, max=17132, avg=12931.20, stdev=2729.10, samples=40
+> > (2)   iops        : min= 7704, max=17508, avg=13204.62, stdev=2507.70, samples=39
+> > (3)   iops        : min= 8736, max=17634, avg=13253.08, stdev=2545.18, samples=39
+> > (4)   iops        : min= 7188, max=17550, avg=12928.40, stdev=2633.64, samples=40
+> > (5)   iops        : min= 8268, max=17446, avg=12837.55, stdev=2717.98, samples=40
+> > 
+> > xfstests seems survived. Comments are much welcomed and
+> > thanks for your time!
+> > 
+> > Thanks,
+> > Gao Xiang
+> > 
+> > Changes since v1:
+> >  - fix missing tmp_logflags initialization;
+> >  - drop unnecessary realtime inode check pointed out by Darrick.
+> > 
+> > Gao Xiang (3):
+> >   xfs: get rid of LEFT, RIGHT, PREV in
+> >     xfs_bmap_add_extent_unwritten_real()
+> >   xfs: introduce xfs_bmap_update_extent_real()
+> >   xfs: introduce xfs_bremapi_from_cowfork()
+> > 
+> >  fs/xfs/libxfs/xfs_bmap.c | 377 +++++++++++++++++++++++++--------------
+> >  fs/xfs/libxfs/xfs_bmap.h |   7 +-
+> >  fs/xfs/xfs_reflink.c     |  24 +--
+> >  3 files changed, 252 insertions(+), 156 deletions(-)
+> > 
+> > -- 
+> > 2.24.4
+> > 
