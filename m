@@ -2,145 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20692C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 03:27:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65625C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 04:50:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235971AbiCVD21 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Mar 2022 23:28:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34324 "EHLO
+        id S236492AbiCVEwQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Mar 2022 00:52:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235946AbiCVD2Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Mar 2022 23:28:25 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 820C99D0EE
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 20:26:53 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0340010E4D48;
-        Tue, 22 Mar 2022 14:26:51 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nWVAX-008MdH-J8; Tue, 22 Mar 2022 14:26:49 +1100
-Date:   Tue, 22 Mar 2022 14:26:49 +1100
-From:   Dave Chinner <david@fromorbit.com>
+        with ESMTP id S236498AbiCVEwP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 00:52:15 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1D295107098
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 21:50:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1647924647;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7GE5TTOJNSSl7mjMkfHrkTkFXYcSfvqrM2p+DPskOEI=;
+        b=RbIMDv0oHj0vOqnxNWvNqHBOrNbYJun4rVpUQ/ylVU1SZAjaENfi0NQ5nxO38BDhkQgJN2
+        D0z7EU0rOVHtHNgXXQoNOeJm5TEADuE0+0K5yno2otS1wXt/Q3LNlzT51vUWE+1QgLLQnj
+        E1sDWyPfMQ8RyADt4a19RnIwPIBSXDg=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-588-3X6hCQcgPtmG1Rn028kGeQ-1; Tue, 22 Mar 2022 00:50:45 -0400
+X-MC-Unique: 3X6hCQcgPtmG1Rn028kGeQ-1
+Received: by mail-wm1-f70.google.com with SMTP id r9-20020a1c4409000000b0038c15a1ed8cso504487wma.7
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 21:50:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=7GE5TTOJNSSl7mjMkfHrkTkFXYcSfvqrM2p+DPskOEI=;
+        b=LzNSUOScBjcbd4H8wOwWSFL89hSIP2OqKb8mFsjW3cDn27pvjGOtHFK0/fOY+HGAfq
+         NHOTNcCkWJiu7IOi/XmY5vHeCgQS9xIP90XcfcKZnIAbkrWMDcSPfzJlOlsCVJfLHt14
+         EKNazgz6dl2t2jlMkDdK1XSa/iPVIt1OqFf1YGy8v3yDyksd8LB+5EbpQhSIHqs+8urb
+         93MoeifyXwWujTLmjRCJA1akZ0nUN1e3FQo7XVQn2TuvTyAsSdSTjLprhUeSggN+43Kk
+         1TLwiGbnykW3qFshev2gmjOJlQk/NodO9tKc0K202TuLS0az5Vw+5yaaHggIuv64YSqM
+         yJVw==
+X-Gm-Message-State: AOAM530pT8Qj5QNqUkEuikGAE/9jmJwAmHNovYOUaV8Uyp3Eom+EixGr
+        irp+vaooxuAeJIdg/56gTJVsWEMhbcPh3lzX1AkOHBgpE6XhxFDEAU2nPONxY3X5barbXb4sdfs
+        zriIf0q9351d7HKc8+pLP
+X-Received: by 2002:a1c:2947:0:b0:38c:7910:d941 with SMTP id p68-20020a1c2947000000b0038c7910d941mr1951220wmp.41.1647924643996;
+        Mon, 21 Mar 2022 21:50:43 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJz5YmJUtrnAmA75EeuNJ84bg6hSPz7qdgnaiDPypvbPDeyhikWgEASUfHt9DoUBncQRbN64jw==
+X-Received: by 2002:a1c:2947:0:b0:38c:7910:d941 with SMTP id p68-20020a1c2947000000b0038c7910d941mr1951206wmp.41.1647924643783;
+        Mon, 21 Mar 2022 21:50:43 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id r65-20020a1c4444000000b0038c48dd23b9sm1678961wma.5.2022.03.21.21.50.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Mar 2022 21:50:43 -0700 (PDT)
+Date:   Tue, 22 Mar 2022 12:50:38 +0800
+From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/2] xfs: more shutdown/recovery fixes
-Message-ID: <20220322032649.GM1544202@dread.disaster.area>
-References: <20220321012329.376307-1-david@fromorbit.com>
- <20220322023528.GM8224@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/4] generic/459: ensure that the lvm devices have been
+ created
+Message-ID: <20220322045038.3nj6bpx63lo4xz4i@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+References: <164740140348.3371628.12967562090320741592.stgit@magnolia>
+ <164740140920.3371628.4554997239924071993.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220322023528.GM8224@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=623941fc
-        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
-        a=wb7p_SvHpRXns-bbYSEA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <164740140920.3371628.4554997239924071993.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 21, 2022 at 07:35:28PM -0700, Darrick J. Wong wrote:
-> On Mon, Mar 21, 2022 at 12:23:27PM +1100, Dave Chinner wrote:
-> > Hi folks,
-> > 
-> > These two patches are followups to my recent series of
-> > shutdown/recovery fixes. The cluster buffer lock patch addresses a
-> > race condition that started to show up regularly once the fixes in
-> > the previous series were done - it is a regression from the async
-> > inode reclaim work that was done almost 2 years ago now.
-> > 
-> > The second patch is something I'm really surprised has taken this
-> > long to uncover. There is a check in intent recovery/cancellation
-> > that checks that there are no intent items in the AIL after the
-> > first non-intent item is found. This behaviour was correct back when
-> > we only had standalone intent items (i.e. EFI/EFD), but when we
-> > started to chain complex operations by intents, the recovery of an
-> > incomplete intent can log and commit new intents and they can end up
-> > in the AIL before log recovery is complete and finished processing
-> > the deferred items. Hence the ASSERT() check that no intents
-> > exist in the AIL after the first non-intent item is simply invalid.
-> > 
-> > With these two patches, I'm back to being able to run hundreds of
-> > cycles of g/388 or -g recoveryloop without seeing any failures.
+On Tue, Mar 15, 2022 at 08:30:09PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Hmm, with this series applied to current for-next
-> + your other log patches
-> + my xfs_reserve_blocks infinite loop fix and cleanup series
+> Once in a /very/ long while this test fails because _mkfs_dev can't find
+> the LVM thinp volume after it's been created.  Since the "solution" du
+> jour seems to be to sprinkle udevadm settle calls everywhere, do that
+> here in the hopes that will fix it.
 > 
-> I see this while running fstests on an all-defaults v5 filesystem.
-> I /think/ it's crashing in the "xfs_buf_ispinned(bp)" right below the
-> "ASSERT(iip->ili_item.li_buf);" in xfs_inode_item_push.
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-Oh, because you have CONFIG_XFS_ASSERT_FATAL=n, or whatever the
-config thingy is to keep going even when asserts fail...
+Good to me,
+Reviewed-by: Zorro Lang <zlang@redhat.com>
 
-> [ 1294.636121] run fstests generic/251 at 2022-03-21 16:06:27
-> [ 1295.168287] XFS (sda): Mounting V5 Filesystem
-> [ 1295.180601] XFS (sda): Ending clean mount
-> [ 1295.471352] XFS (sdf): Mounting V5 Filesystem
-> [ 1295.482082] XFS (sdf): Ending clean mount
-> [ 1295.483612] XFS (sdf): Quotacheck needed: Please wait.
-> [ 1295.487265] XFS (sdf): Quotacheck: Done.
-> [ 1376.010962] XFS (sdf): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
-> [ 1386.006736] XFS: Assertion failed: iip->ili_item.li_buf, file: fs/xfs/xfs_inode_item.c, line: 547
-> [ 1386.007571] ------------[ cut here ]------------
-> [ 1386.007991] WARNING: CPU: 0 PID: 419577 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
-> [ 1386.008837] Modules linked in: btrfs blake2b_generic xor lzo_compress lzo_decompress zlib_deflate raid6_pq zstd_compress ext4 mbcache jbd2 dm_flakey dm_snapshot dm_bufio dm_zero xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip xt_REDIRECT xt_set ip_set_hash_net ip_set_hash_mac ip_set iptable_nat nf_nat nf_conntrack nfnetlink nf_defrag_ipv6 nf_defrag_ipv4 ip6table_filter ip6_tables iptable_filter bfq pvpanic_mmio pvpanic sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet
-> [ 1386.012759] CPU: 0 PID: 419577 Comm: xfsaild/sdf Not tainted 5.17.0-rc6-djwx #rc6 38f9b0b98565b531708bd3bd34525d3eec280440
-> [ 1386.013718] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
-> [ 1386.014493] RIP: 0010:assfail+0x3c/0x40 [xfs]
-> [ 1386.015098] Code: 90 9c 45 a0 e8 81 f9 ff ff 8a 1d d3 28 0c 00 80 fb 01 76 0f 0f b6 f3 48 c7 c7 60 81 4f a0 e8 b3 4d fd e0 80 e3 01 74 02 0f 0b <0f> 0b 5b c3 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48 89 44 24
-> [ 1386.016706] RSP: 0018:ffffc9000530be18 EFLAGS: 00010246
-> [ 1386.017172] RAX: 0000000000000000 RBX: ffff888063ace300 RCX: 0000000000000000
-> [ 1386.017801] RDX: 00000000ffffffc0 RSI: 0000000000000000 RDI: ffffffffa0449eb0
-> [ 1386.018435] RBP: ffff88805fa897c0 R08: 0000000000000000 R09: 000000000000000a
-> [ 1386.019059] R10: 000000000000000a R11: f000000000000000 R12: ffff88800ad06f40
-> [ 1386.019685] R13: ffff88800ad06f68 R14: 00000016000191e9 R15: 0000000000000000
-> [ 1386.020395] FS:  0000000000000000(0000) GS:ffff88803ec00000(0000) knlGS:0000000000000000
-> [ 1386.021172] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 1386.021680] CR2: 0000564ba4fc9968 CR3: 000000002852c002 CR4: 00000000001706b0
-> [ 1386.022313] Call Trace:
-> [ 1386.022555]  <TASK>
-> [ 1386.022763]  xfs_inode_item_push+0xf4/0x140 [xfs 9a019b85afd13531ec29ae154df8383f289b73eb]
-> [ 1386.023579]  xfsaild+0x402/0xc30 [xfs 9a019b85afd13531ec29ae154df8383f289b73eb]
-> [ 1386.024367]  ? __set_cpus_allowed_ptr_locked+0xe0/0x1a0
-> [ 1386.024841]  ? preempt_count_add+0x73/0xa0
-> [ 1386.025255]  ? xfs_trans_ail_cursor_first+0x80/0x80 [xfs 9a019b85afd13531ec29ae154df8383f289b73eb]
-> [ 1386.026163]  kthread+0xea/0x110
-> [ 1386.026487]  ? kthread_complete_and_exit+0x20/0x20
-> [ 1386.026924]  ret_from_fork+0x1f/0x30
-> [ 1386.027261]  </TASK>
+>  tests/generic/459 |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> 
+> diff --git a/tests/generic/459 b/tests/generic/459
+> index cda19e6e..57d58e55 100755
+> --- a/tests/generic/459
+> +++ b/tests/generic/459
+> @@ -70,6 +70,7 @@ $LVM_PROG lvcreate  --virtualsize $virtsize \
+>  		    -T $vgname/$poolname \
+>  		    -n $lvname >>$seqres.full 2>&1
+>  
+> +$UDEV_SETTLE_PROG &>/dev/null
+>  _mkfs_dev /dev/mapper/$vgname-$lvname >>$seqres.full 2>&1
+>  
+>  # Running the test over the original volume doesn't reproduce the problem
+> 
 
-I haven't seen that particular failure - that's likely an
-interaction with stale indoes and buffers on inode cluster buffer
-freeing. On the surface it doesn't seem to be related to the
-shutdown changes, but it could be related to the fact that we
-are accessing the inode log item without holding either the buffer
-locked or the item locked.
-
-Hence this could be racing with an journal IO completion for a freed
-inode cluster buffer that runs inode IO compeltion directly, which
-then calls xfs_iflush_abort() because XFS_ISTALE is set on all the
-inodes.
-
-Yeah.
-
-I changed xfs_iflush_abort() to clean up the inode log item state
-before I removed it from the AIL, thinking that this was safe to
-do because anything that uses the iip->ili_item.li_buf should be
-checking it before using it.....
-
-.... and that is exactly what xfs_inode_item_push() is _not_ doing.
-
-OK, I know how this is happening, I'll have to rework the first
-patch in this series to address this.
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
