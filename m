@@ -2,131 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD876C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 09:01:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE64C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 09:23:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232103AbiCVJDP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Mar 2022 05:03:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49204 "EHLO
+        id S232328AbiCVJY4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Mar 2022 05:24:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230511AbiCVJDP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 05:03:15 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FCE1BE0F;
-        Tue, 22 Mar 2022 02:01:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=LtO7Gpa8ASYKqY1/CwdSfVaPTW3C+ci3qYUk5dRycGQ=; b=yAiokzCaLy/awcMQcpRXrqiDEr
-        rqCdbpdl2Es5oSNKzpIVb/wnI1luKtmRXGg9ffOjP4DFsCyTiGlOv2Q1YoX6jPRYUey9D1UMxJS1i
-        noIpsbSasVzmopVGv21VsYoBKqixj7eKTXKwF3LeRFoAJTaCT22a2hDXONsP4FOOR9rpeR8kFf3ZM
-        FMwMiYzXBuxQ0Ig/zd2nBVLZz3mCjJVOV/Fo8I1Sq68vaMqRdjUsA33xa/DYUUf+WatbKTpg6ylvl
-        94x+Xdb16f+LFzi6AJg5khLgub2Sz4MrrlMaY3eYm8BO4hIc7WbhNy1WFH95HL5kYwwJqyyoC0AB0
-        Ka2e8mdw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nWaOa-00AVwe-GZ; Tue, 22 Mar 2022 09:01:40 +0000
-Date:   Tue, 22 Mar 2022 02:01:40 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     david@fromorbit.com, djwong@kernel.org, dan.j.williams@intel.com,
-        hch@infradead.org, vishal.l.verma@intel.com, dave.jiang@intel.com,
-        agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com,
-        ira.weiny@intel.com, willy@infradead.org, vgoyal@redhat.com,
-        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v6 4/6] dax: add DAX_RECOVERY flag and .recovery_write
- dev_pgmap_ops
-Message-ID: <YjmQdJdOWUr2IYIP@infradead.org>
-References: <20220319062833.3136528-1-jane.chu@oracle.com>
- <20220319062833.3136528-5-jane.chu@oracle.com>
+        with ESMTP id S232544AbiCVJYz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 05:24:55 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 938F9275D0
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 02:23:25 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B189010E4AF6;
+        Tue, 22 Mar 2022 20:23:24 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nWaja-008SZu-Jl; Tue, 22 Mar 2022 20:23:22 +1100
+Date:   Tue, 22 Mar 2022 20:23:22 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Yang Xu <xuyang2018.jy@fujitsu.com>
+Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org, pvorel@suse.cz
+Subject: Re: [RFC RESEND] xfs: fix up non-directory creation in SGID
+ directories when umask S_IXGRP
+Message-ID: <20220322092322.GO1544202@dread.disaster.area>
+References: <1647936257-3188-1-git-send-email-xuyang2018.jy@fujitsu.com>
+ <20220322084320.GN1544202@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220319062833.3136528-5-jane.chu@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20220322084320.GN1544202@dread.disaster.area>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6239958d
+        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=Z4Rwk6OoAAAA:8
+        a=1XWaLZrsAAAA:8 a=drOt6m5kAAAA:8 a=7-415B0cAAAA:8 a=lUUSfwFQRV29FVf-fLEA:9
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=HkZW87K1Qel5hWWM3VKY:22
+        a=RMMjzBEyIzXRtoq5n5K6:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Mar 19, 2022 at 12:28:31AM -0600, Jane Chu wrote:
-> Introduce DAX_RECOVERY flag to dax_direct_access(). The flag is
-> not set by default in dax_direct_access() such that the helper
-> does not translate a pmem range to kernel virtual address if the
-> range contains uncorrectable errors.  When the flag is set,
-> the helper ignores the UEs and return kernel virtual adderss so
-> that the caller may get on with data recovery via write.
+On Tue, Mar 22, 2022 at 07:43:20PM +1100, Dave Chinner wrote:
+> On Tue, Mar 22, 2022 at 04:04:17PM +0800, Yang Xu wrote:
+> > Petr reported a problem that S_ISGID bit was not clean when testing ltp
+> > case create09[1] by using umask(077).
+> 
+> Ok. So what is the failure message from the test?
+> 
+> When did the test start failing? Is this a recent failure or
+> something that has been around for years? If it's recent, what
+> commit broke it?
 
-This DAX_RECOVERY doesn't actually seem to be used anywhere here or
-in the subsequent patches.  Did I miss something?
+Ok, I went and looked at the test, and it confirmed my suspicion.  I
+can't find the patch that introduced this change on lore.kernel.org.
+Looks like one of those silent security fixes that nobody gets told
+about, gets no real review, has no test cases written for it, etc.
 
-> Also introduce a new dev_pagemap_ops .recovery_write function.
-> The function is applicable to FSDAX device only. The device
-> page backend driver provides .recovery_write function if the
-> device has underlying mechanism to clear the uncorrectable
-> errors on the fly.
+And nobody wrote a test for until August 2021 and that's when people
+started to notice broken filesystems.
 
-Why is this not in struct dax_operations?
+This is the commit that failed to fix several filesystems:
 
->  
-> +size_t dax_recovery_write(struct dax_device *dax_dev, pgoff_t pgoff,
-> +		void *addr, size_t bytes, struct iov_iter *iter)
-> +{
-> +	struct dev_pagemap *pgmap = dax_dev->pgmap;
-> +
-> +	if (!pgmap || !pgmap->ops->recovery_write)
-> +		return -EIO;
-> +	return pgmap->ops->recovery_write(pgmap, pgoff, addr, bytes,
-> +				(void *)iter);
+commit 0fa3ecd87848c9c93c2c828ef4c3a8ca36ce46c7
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue Jul 3 17:10:19 2018 -0700
 
-No need to cast a type pointer to a void pointer.  But more importantly
-losing the type information here and passing it as void seems very
-wrong.
+    Fix up non-directory creation in SGID directories
+    
+    sgid directories have special semantics, making newly created files in
+    the directory belong to the group of the directory, and newly created
+    subdirectories will also become sgid.  This is historically used for
+    group-shared directories.
+    
+    But group directories writable by non-group members should not imply
+    that such non-group members can magically join the group, so make sure
+    to clear the sgid bit on non-directories for non-members (but remember
+    that sgid without group execute means "mandatory locking", just to
+    confuse things even more).
+    
+    Reported-by: Jann Horn <jannh@google.com>
+    Cc: Andy Lutomirski <luto@kernel.org>
+    Cc: Al Viro <viro@zeniv.linux.org.uk>
+    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
 
-> +static size_t pmem_recovery_write(struct dev_pagemap *pgmap, pgoff_t pgoff,
-> +		void *addr, size_t bytes, void *iter)
-> +{
-> +	struct pmem_device *pmem = pgmap->owner;
-> +
-> +	dev_warn(pmem->bb.dev, "%s: not yet implemented\n", __func__);
-> +
-> +	/* XXX more later */
-> +	return 0;
-> +}
+diff --git a/fs/inode.c b/fs/inode.c
+index 2c300e981796..8c86c809ca17 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -1999,8 +1999,14 @@ void inode_init_owner(struct inode *inode, const struct inode *dir,
+        inode->i_uid = current_fsuid();
+        if (dir && dir->i_mode & S_ISGID) {
+                inode->i_gid = dir->i_gid;
++
++               /* Directories are special, and always inherit S_ISGID */
+                if (S_ISDIR(mode))
+                        mode |= S_ISGID;
++               else if ((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP) &&
++                        !in_group_p(inode->i_gid) &&
++                        !capable_wrt_inode_uidgid(dir, CAP_FSETID))
++                       mode &= ~S_ISGID;
+        } else
+                inode->i_gid = current_fsgid();
+        inode->i_mode = mode;
 
-This shuld not be added here - the core code can cope with a NULL
-method just fine.
+The problem is it takes away mode bits that the VFS passed to us
+deep in the VFS inode initialisation done during on-disk inode
+initialisation, and it's hidden well away from sight of the
+filesystems.
 
-> +		recov = 0;
-> +		flags = 0;
-> +		nrpg = PHYS_PFN(size);
+Oh, what a mess - this in_group_p() && capable_wrt_inode_uidgid()
+check is splattered all over filesystems in random places to clear
+SGID bits. e.g ceph_finish_async_create() is an open coded
+inode_init_owner() call. There's special case
+code in fuse_set_acl() to clear SGID. There's a special case in
+ovl_posix_acl_xattr_set() for ACL xattrs to clear SGID. And so on.
 
-Please spell out the words.  The recovery flag can also be
-a bool to make the code more readable.
+No consistency anywhere - shouldn't the VFS just be stripping the
+SGID bit before it passes the mode down to filesystems? It has all
+the info it needs - it doesn't need the filesystems to do everything
+correctly with the mode and ensuring that they order things like
+posix acl setup functions correctly with inode_init_owner() to strip
+the SGID bit...
 
-> +		map_len = dax_direct_access(dax_dev, pgoff, nrpg, flags,
-> +					&kaddr, NULL);
-> +		if ((map_len == -EIO) && (iov_iter_rw(iter) == WRITE)) {
+Just strip the SGID bit at the VFS, and then the filesystems can't
+get it wrong...
 
-No need for the inner braces.
+Cheers,
 
-> +			flags |= DAX_RECOVERY;
-> +			map_len = dax_direct_access(dax_dev, pgoff, nrpg,
-> +						flags, &kaddr, NULL);
-
-And noneed for the flags variable at all really.
-
->  			xfer = dax_copy_from_iter(dax_dev, pgoff, kaddr,
->  					map_len, iter);
->  		else
-> @@ -1271,6 +1286,11 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
->  		length -= xfer;
->  		done += xfer;
->  
-> +		if (recov && (xfer == (ssize_t) -EIO)) {
-> +			pr_warn("dax_recovery_write failed\n");
-> +			ret = -EIO;
-> +			break;
-
-And no, we can't just use an unsigned variable to communicate a
-negative error code.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
