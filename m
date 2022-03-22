@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBFF5C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 08:44:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C995BC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 08:53:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231660AbiCVIps (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Mar 2022 04:45:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36166 "EHLO
+        id S231723AbiCVIyl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Mar 2022 04:54:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231668AbiCVIpq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 04:45:46 -0400
+        with ESMTP id S231929AbiCVIyi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 04:54:38 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C49F22AE3B;
-        Tue, 22 Mar 2022 01:44:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 792F0CC7;
+        Tue, 22 Mar 2022 01:53:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=QAMnkCbPUARhn8PReqsuR28ofrVR9sa+6IKI9MA59uc=; b=YYeEAtVT0hh7A0ZXZQf1G7Cmvm
-        kigmRFo8HKuqBMYwA3Pgh7PbkRRCntyglV30cb1JjhwP6+IyYU+qCgliuVyXnT8Q1Y2HNicRqK2u7
-        k4TcBXLdR+3l3Iy+EM0cfVbYOgUbpcVIlMIc8aLtK/HpGgB1aaZoqrooGTbw97vl4rehTa8X7PWbZ
-        PZ13nq9X6pfiy+HThwMfgTE/5YiMX3RfulLBRxnJ4AeCy3yYSnGW248GMzg9Kkcv70zjj1cWfOlaN
-        V+S8qt2mRg4M2b+Y5/66GG64uUPj6NkgM/HhLTDsCaqhdkl4RnhFfTm8eX0GlgmWry4cLaAy1BmK+
-        kjn9ABQQ==;
+        bh=uJdzlcEvij5Ft5CrLtuSMWt2NhA+02RXJxJray9JMj4=; b=M9YAGf4DfLFxhrF5jVExSCvkEh
+        F5kzgwhWOl5Rhw1rx8z0Q1Tk614exWnNSewldl9jMIQzc5LkF+IK4YWl5o1M8da8g6a3+uEReKaod
+        r5/OvpYjZUkLj6pqAIS8MdtWHq813xsfM01oCqrQ8Lkh4hInX2nfBYj87F9y1bQ/Zbe+Og8lYPy2Z
+        ticSqIplcnJBoCCPg7jSYPfZ2qc9u0dQe5qoOxTYE9ugxK8ywSK6Uzrp7EzxHPM9d9cr0wR9Q5BBL
+        R0/JmZJihfa3SxFUqAIfCSdBIoXY7cR0rP8Ds0Q9z0xu/nq6HUZDFVO5qbbMwetDdyls+5ZhfyYPU
+        /y5sUiig==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nWa7e-00ASlo-Ri; Tue, 22 Mar 2022 08:44:10 +0000
-Date:   Tue, 22 Mar 2022 01:44:10 -0700
+        id 1nWaGF-00AVAX-ND; Tue, 22 Mar 2022 08:53:03 +0000
+Date:   Tue, 22 Mar 2022 01:53:03 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Jane Chu <jane.chu@oracle.com>
 Cc:     david@fromorbit.com, djwong@kernel.org, dan.j.williams@intel.com,
@@ -35,33 +35,73 @@ Cc:     david@fromorbit.com, djwong@kernel.org, dan.j.williams@intel.com,
         ira.weiny@intel.com, willy@infradead.org, vgoyal@redhat.com,
         linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v6 3/6] mce: fix set_mce_nospec to always unmap the whole
- page
-Message-ID: <YjmMWvDRUHE08T+a@infradead.org>
+Subject: Re: [PATCH v6 5/6] pmem: refactor pmem_clear_poison()
+Message-ID: <YjmOb0dSY9GG/Q6r@infradead.org>
 References: <20220319062833.3136528-1-jane.chu@oracle.com>
- <20220319062833.3136528-4-jane.chu@oracle.com>
+ <20220319062833.3136528-6-jane.chu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220319062833.3136528-4-jane.chu@oracle.com>
+In-Reply-To: <20220319062833.3136528-6-jane.chu@oracle.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Mar 19, 2022 at 12:28:30AM -0600, Jane Chu wrote:
-> Mark poisoned page as not present, and to reverse the 'np' effect,
-> restate the _PAGE_PRESENT bit. Please refer to discussions here for
-> reason behind the decision.
-> https://lore.kernel.org/all/CAPcyv4hrXPb1tASBZUg-GgdVs0OOFKXMXLiHmktg_kFi7YBMyQ@mail.gmail.com/
-
-I think it would be good to summarize the conclusion here instead of
-just linking to it.
-
-> +static int _set_memory_present(unsigned long addr, int numpages)
+> -static void hwpoison_clear(struct pmem_device *pmem,
+> -		phys_addr_t phys, unsigned int len)
+> +static phys_addr_t to_phys(struct pmem_device *pmem, phys_addr_t offset)
+>  {
+> +	return pmem->phys_addr + offset;
+> +}
+> +
+> +static sector_t to_sect(struct pmem_device *pmem, phys_addr_t offset)
 > +{
-> +	return change_page_attr_set(&addr, numpages, __pgprot(_PAGE_PRESENT), 0);
+> +	return (offset - pmem->data_offset) / 512;
+> +}
+> +
+> +static phys_addr_t to_offset(struct pmem_device *pmem, sector_t sector)
+> +{
+> +	return sector * 512 + pmem->data_offset;
 > +}
 
-What is the point of this trivial helper with a single caller?
+The multiplicate / divison using 512 could use shifts using
+SECTOR_SHIFT.
 
+> +
+> +static void clear_hwpoison(struct pmem_device *pmem, phys_addr_t offset,
+> +		unsigned int len)
+
+> +static void clear_bb(struct pmem_device *pmem, sector_t sector, long blks)
+
+All these functions lack a pmem_ prefix.
+
+> +static blk_status_t __pmem_clear_poison(struct pmem_device *pmem,
+> +		phys_addr_t offset, unsigned int len,
+> +		unsigned int *blks)
+> +{
+> +	phys_addr_t phys = to_phys(pmem, offset);
+>  	long cleared;
+> +	blk_status_t rc;
+>  
+> +	cleared = nvdimm_clear_poison(to_dev(pmem), phys, len);
+> +	*blks = cleared / 512;
+> +	rc = (cleared < len) ? BLK_STS_IOERR : BLK_STS_OK;
+> +	if (cleared <= 0 || *blks == 0)
+> +		return rc;
+
+This look odd.  I think just returing the cleared byte value would
+make much more sense:
+
+static long __pmem_clear_poison(struct pmem_device *pmem,
+		phys_addr_t offset, unsigned int len)
+{
+	long cleared = nvdimm_clear_poison(to_dev(pmem), phys, len);
+
+	if (cleared > 0) {
+		clear_hwpoison(pmem, offset, cleared);
+		arch_invalidate_pmem(pmem->virt_addr + offset, len);
+	}
+
+	return cleared;
+}
