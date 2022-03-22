@@ -2,96 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67ACCC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 22:19:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DCECC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 22:41:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237838AbiCVWVR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Mar 2022 18:21:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39628 "EHLO
+        id S229870AbiCVWnF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Mar 2022 18:43:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237833AbiCVWVL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 18:21:11 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 198AE55BEA;
-        Tue, 22 Mar 2022 15:19:43 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id gb19so16839778pjb.1;
-        Tue, 22 Mar 2022 15:19:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=GXfG0dLHhcSc78SHKKLUp/gv80NUqVjr6FWI+zRyKPc=;
-        b=g4CJCmPx1AXZJDujLKD0xR6PULiPIUbNCjmS5SA6NDp25yuKIquIA78zub8Cf+xbFy
-         9PlgZKBSAk9S6SfCwrUEU58yXFIp7JTiS0ZBAzoyk5nwBWC4Au8h7bzk/3GgiSUYDC3D
-         rKCzpiQsOlkgtvgkAGl/rCVBgbPXphLWPxkUDg0FtsFx3+30Onf22w4pZd/BQ5oXI5Tz
-         UcpwoRk1Vl/hZEHLW+G91oG9MimgWJ8EKxabBujz42jG8NFWMrXMM0o2Jzt4aJMxHclZ
-         D+1ERJgSixbJNVjPuHFJzdDII2JTsWe2IRf9wjhW01/AESDb3t1lqT4pybhVwmXiufWA
-         Zd3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to;
-        bh=GXfG0dLHhcSc78SHKKLUp/gv80NUqVjr6FWI+zRyKPc=;
-        b=G0VttvBoufUwIZflndAAzWbCBaQ8oN/+GhqFUkb3lzKrRCTHC5g1p1Ws3/nOjgQC3C
-         Dz/yCpjNURj84AykjO/97/16Rm6R8nP5oblQJM89neXmE7RkynAHddbaZTLmzZ5RaOfX
-         Bq1jnRheyoG2UV/Ly6kAX7hiJP11hw3eGPwnQf7niz6EsbGBf2aQTaeSa4M+5U8/I4a8
-         gmjjgFTnl9RdCg7HsexkawYwt/Y7cgSsXN1DYOl499lCR7S+x5kY+Nwe9Bt0bQSFJLQ4
-         t9DnWyud13H+9BLJkRwq6Y6/r+NAeqa3/ettUD5gjtJsKr1AJj7GzpDYOkL67P7+tSE0
-         nYfA==
-X-Gm-Message-State: AOAM532T8qgcdi7sNr4BZGHpJiLNRZpPvOdUHFqazgPDTXiB2Z0lCQfF
-        vL864rIDI+fc4+13yGEpM/K2BzluF0LZyQ==
-X-Google-Smtp-Source: ABdhPJyMhK+kjvTvBGOGvPyeCKbyWUdJWZUTbj5kDulUQgHb5ccbLzrGYWl3A6fI0/GR86o4OsPk2Q==
-X-Received: by 2002:a17:902:860c:b0:153:36b3:89aa with SMTP id f12-20020a170902860c00b0015336b389aamr20538355plo.125.1647987582472;
-        Tue, 22 Mar 2022 15:19:42 -0700 (PDT)
-Received: from localhost (2603-800c-1a02-1bae-e24f-43ff-fee6-449f.res6.spectrum.com. [2603:800c:1a02:1bae:e24f:43ff:fee6:449f])
-        by smtp.gmail.com with ESMTPSA id j7-20020a17090a31c700b001c6dbb70c94sm4040431pjf.18.2022.03.22.15.19.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Mar 2022 15:19:41 -0700 (PDT)
-Sender: Tejun Heo <htejun@gmail.com>
-Date:   Tue, 22 Mar 2022 12:19:40 -1000
-From:   Tejun Heo <tj@kernel.org>
-To:     Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Dan Schatzberg <schatzberg.dan@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] loop: add WQ_MEM_RECLAIM flag to per device workqueue
-Message-ID: <YjpLfK+glfSPe09Q@slm.duckdns.org>
-References: <YjiuGnLVjj0Ouxtd@slm.duckdns.org>
- <886dee4b-ea74-a352-c9bf-cac16acffaa9@I-love.SAKURA.ne.jp>
- <YjkEjYVjLuo8imtn@slm.duckdns.org>
- <1c455861-3b42-c530-a99e-cce13e932f53@I-love.SAKURA.ne.jp>
- <YjkJ3S/1c8PxiA2Q@slm.duckdns.org>
- <2ce1e26c-9050-9a4d-03b1-fb6ad57a5ccf@I-love.SAKURA.ne.jp>
- <Yjn+vpHZzvxiAUaK@slm.duckdns.org>
- <20220322220007.GQ1544202@dread.disaster.area>
- <YjpHjRoq+WtOAmut@slm.duckdns.org>
- <342c3dee-2acc-3983-ab38-7afe6c5ea677@I-love.SAKURA.ne.jp>
+        with ESMTP id S229687AbiCVWnE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 18:43:04 -0400
+Received: from mail.skyhub.de (mail.skyhub.de [IPv6:2a01:4f8:190:11c2::b:1457])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD0DC5BD0B;
+        Tue, 22 Mar 2022 15:41:36 -0700 (PDT)
+Received: from zn.tnic (p200300ea971561dc329c23fffea6a903.dip0.t-ipconnect.de [IPv6:2003:ea:9715:61dc:329c:23ff:fea6:a903])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 60BF61EC0528;
+        Tue, 22 Mar 2022 23:41:31 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
+        t=1647988891;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
+        bh=oxVBXEGRaZMxVsz03TdTeYV9J4EiFdcLGB4SPDXJ+Y0=;
+        b=fu+uBFQHmi4ck26ugJBb44e35FYfvucppGnOJsqbbnRTp2g0SvWTDgLUTVnpZ3qDla8Ozp
+        XGeU29dXH7vtua96FxWV8fN6hi2UnHOpluk7Jtxe4FAYK99hP40I5WAx0VgID2gXz0izov
+        4uE/G8KDtp8txWZQDyidWmzGZx4qEZ4=
+Date:   Tue, 22 Mar 2022 23:41:26 +0100
+From:   Borislav Petkov <bp@alien8.de>
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     david@fromorbit.com, djwong@kernel.org, dan.j.williams@intel.com,
+        hch@infradead.org, vishal.l.verma@intel.com, dave.jiang@intel.com,
+        agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com,
+        ira.weiny@intel.com, willy@infradead.org, vgoyal@redhat.com,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v6 2/6] x86/mce: relocate set{clear}_mce_nospec()
+ functions
+Message-ID: <YjpQlmGCFFQueHS1@zn.tnic>
+References: <20220319062833.3136528-1-jane.chu@oracle.com>
+ <20220319062833.3136528-3-jane.chu@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <342c3dee-2acc-3983-ab38-7afe6c5ea677@I-love.SAKURA.ne.jp>
+In-Reply-To: <20220319062833.3136528-3-jane.chu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 23, 2022 at 07:05:56AM +0900, Tetsuo Handa wrote:
-> > Hmmm... yeah, I actually don't know the exact dependency here and the
-> > dependency may not be real - e.g. the conclusion might be that loop is
-> > conflating different uses and needs to split its use of workqueues into two
-> > separate ones. Tetsuo, can you post more details on the warning that you're
-> > seeing?
-> > 
+On Sat, Mar 19, 2022 at 12:28:29AM -0600, Jane Chu wrote:
+> Relocate the twin mce functions to arch/x86/mm/pat/set_memory.c
+> file where they belong.
 > 
-> It was reported at https://lore.kernel.org/all/20210322060334.GD32426@xsang-OptiPlex-9020/ .
+> Signed-off-by: Jane Chu <jane.chu@oracle.com>
+> ---
+>  arch/x86/include/asm/set_memory.h | 52 -------------------------------
+>  arch/x86/mm/pat/set_memory.c      | 48 ++++++++++++++++++++++++++++
+>  include/linux/set_memory.h        |  9 +++---
+>  3 files changed, 53 insertions(+), 56 deletions(-)
 
-Looks like a correct dependency to me. The work item is being flushed from
-good old write path. Dave?
+For the future, please use get_maintainers.pl so that you know who to Cc
+on patches. In this particular case, patches touching arch/x86/ should
+Cc x86@kernel.org
 
-Thanks.
+Thx.
 
 -- 
-tejun
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
