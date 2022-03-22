@@ -2,114 +2,190 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCE8DC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 04:57:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D76C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Mar 2022 05:14:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236498AbiCVE7O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Mar 2022 00:59:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41126 "EHLO
+        id S236669AbiCVFPg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Mar 2022 01:15:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236495AbiCVE7O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 00:59:14 -0400
+        with ESMTP id S236641AbiCVFPd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 01:15:33 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8798433A08
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 21:57:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 961A3DF95
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 22:14:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1647925063;
+        s=mimecast20190719; t=1647926044;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=NYVK7GUco8u1z+nbvIUDn7D1LBdX+dFnmPGapwkkTZM=;
-        b=Mefho2FAXpR69UNbBOzIiqHBSk1c1EuC50ccT4Bx/HSG17MRCVHwQKy1xPofxJv0MutV9E
-        peoQqM/tyMtzTEIha47sY7FHcp6SPA74E1x3GDyPXsRxhL11UUdt7L7PUscNyItLeaQS7w
-        ZTb4LMz97QzBUiCfxvv45DHXomNTkD8=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=hYTlbXTjgH3vKFtj13uZH7n+ak7Y8QVfZ3xE+Nn/wfI=;
+        b=P3mJzg/f+R61/vcoZEerAVgVzNkaq2E644XgwvnuZNPhLmTtaD7xUJHP9UNastcIwSzc7e
+        aIcU58xz9HCdEeytIgDx4bbutI25QNiUgkVq9Pn8FkNUEkBaXcWdLz1T5H9N5+8M7BHb9g
+        ymiUsXWXaUvt/uUWZZK9LaZgLlibcA8=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-549-pPyGvtPNPdSfkAtblLH38A-1; Tue, 22 Mar 2022 00:57:42 -0400
-X-MC-Unique: pPyGvtPNPdSfkAtblLH38A-1
-Received: by mail-pj1-f71.google.com with SMTP id om8-20020a17090b3a8800b001c68e7ccd5fso1024470pjb.9
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 21:57:41 -0700 (PDT)
+ us-mta-561-orM5JLBbNAaeWcmUTDjcow-1; Tue, 22 Mar 2022 01:14:02 -0400
+X-MC-Unique: orM5JLBbNAaeWcmUTDjcow-1
+Received: by mail-wr1-f69.google.com with SMTP id i64-20020adf90c6000000b00203f2b5e090so1943551wri.9
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Mar 2022 22:14:02 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id
          :mail-followup-to:references:mime-version:content-disposition
          :in-reply-to;
-        bh=NYVK7GUco8u1z+nbvIUDn7D1LBdX+dFnmPGapwkkTZM=;
-        b=pQivFGQF109vRsEZzVQnD/ffCHXSC5UyLXMxeTmd7p/kFy8flqVN9fWh9YNFSmIsFa
-         ELZxkg6Ax3gglY1krBD7KbSED4K3AHuTn4ErErvHkC6IqiEWMyIgL45qM5++NZOIVqLh
-         pmhLXOeSmrvYV5pug9O86WqweaAluxkDyiMYWwdNqagAQlFU0PW9hqZYOTeflgnQ/QX7
-         BLZ3yC9Oq4G+vmHwFH3KST+gYeijNxL7M/3CoqcWZSRg8fM5hvGNmeVLGeGgEpJ5gdwh
-         cx6pFgCzPYBKXT32x1tnOKw7dr9Yidf0Ziq0FaxGtzi7YLNJt/rjKy/MKvr6eaoJEmZD
-         fIDA==
-X-Gm-Message-State: AOAM530Br9w4ZM+qY/VMBrQUtg/dWFQAG4sNlUDzx3uPtKEBuq/2nqXi
-        RdqvwX3tq3W0wUV8F54T9bn/F08MHpK4jmeWZkRcV1KFlkUs7E3TM9QP+c6cqmJVX9/g+2p4Ff4
-        xZL4m6SaS4x5H54rPcO7c
-X-Received: by 2002:a05:6a00:1341:b0:4fa:a3af:6ba3 with SMTP id k1-20020a056a00134100b004faa3af6ba3mr7938165pfu.51.1647925061101;
-        Mon, 21 Mar 2022 21:57:41 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwuMUkx3a9whxFypKlbdnTAOAwQ1XqoymV8zDMYm/3cM2Ng4jZ70KcXblvMY6YLl+5/HwPKTA==
-X-Received: by 2002:a05:6a00:1341:b0:4fa:a3af:6ba3 with SMTP id k1-20020a056a00134100b004faa3af6ba3mr7938147pfu.51.1647925060728;
-        Mon, 21 Mar 2022 21:57:40 -0700 (PDT)
+        bh=hYTlbXTjgH3vKFtj13uZH7n+ak7Y8QVfZ3xE+Nn/wfI=;
+        b=Z3tC1d9sL84Ra4nF5FTxTnIePW014HrfSlKB8BlnQv3nOGsyGB2nZ8MPVYm1uyAJsd
+         iGtyxPJ83/roi94diZWBa69Q9PZSZkACnvBQ1f8aCzbjGYLzxa/ld3CsBcslUuXJZYr/
+         VOC2uzSAdODvEej3D6t04H6ziInKTN3ODLdnC5zYDTV3luhWlGbU3vqGCq3YUY+R0X0h
+         Y90nrwtEsVgqtLX9x/GMH7BJkkWKhB3dXwjY4qCx0675bIZ5Dio84Pp2+X7kqRKELxgQ
+         S3jbc3JM9CszEZAmO2jNQ9msA3eepw90qxAD/z6PVtKBOUBsYqTMtFpyOYZFv7lkmiKS
+         0xyA==
+X-Gm-Message-State: AOAM532g5Rr7WQc1Ugud987FefZ5n/+o7fjzrdqQ7qkH2o+99yshq5UD
+        G8XE1xsC3wIH0yrYR4JXwA/ChOJEU9Kuhx6qRxS9MEGJBXl8bFCAh+BGfuZs8QMw8e4dVbE6NJM
+        +361rallcM4R3tFiY6q5r
+X-Received: by 2002:a5d:47a7:0:b0:203:d1b4:8f6 with SMTP id 7-20020a5d47a7000000b00203d1b408f6mr21554667wrb.36.1647926041316;
+        Mon, 21 Mar 2022 22:14:01 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyXV1kV4RPyUpZoIjm1rybY94jMsV/9CqdxkTOfpNay7noAAgkcxisQu42cyIUrdnGAu6+uPg==
+X-Received: by 2002:a5d:47a7:0:b0:203:d1b4:8f6 with SMTP id 7-20020a5d47a7000000b00203d1b408f6mr21554654wrb.36.1647926041002;
+        Mon, 21 Mar 2022 22:14:01 -0700 (PDT)
 Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id i15-20020a63b30f000000b003803aee35a2sm16324655pgf.31.2022.03.21.21.57.38
+        by smtp.gmail.com with ESMTPSA id k35-20020a05600c1ca300b0038ca38626c0sm1026796wms.16.2022.03.21.22.13.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Mar 2022 21:57:40 -0700 (PDT)
-Date:   Tue, 22 Mar 2022 12:57:36 +0800
+        Mon, 21 Mar 2022 22:14:00 -0700 (PDT)
+Date:   Tue, 22 Mar 2022 13:13:54 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/4] common/xfs: fix broken code in _check_xfs_filesystem
-Message-ID: <20220322045736.rdjxmbfaquz6byn4@zlang-mailbox>
+Subject: Re: [PATCH 3/4] xfs/420: fix occasional test failures due to
+ pagecache readahead
+Message-ID: <20220322051354.yys6zipuxjfvkkgn@zlang-mailbox>
 Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 References: <164740140348.3371628.12967562090320741592.stgit@magnolia>
- <164740141477.3371628.6804259397500636490.stgit@magnolia>
+ <164740142033.3371628.11850774504699213977.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <164740141477.3371628.6804259397500636490.stgit@magnolia>
+In-Reply-To: <164740142033.3371628.11850774504699213977.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 15, 2022 at 08:30:14PM -0700, Darrick J. Wong wrote:
+On Tue, Mar 15, 2022 at 08:30:20PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Fix some problems with undefined variables in the scrub control code.
+> Every now and then, this test fails with this golden output:
 > 
+> --- xfs/420.out
+> +++ xfs/420.out.bad
+> @@ -29,7 +29,7 @@
+>  Whence Result
+>  DATA   0
+>  HOLE   131072
+> -DATA   196608
+> +DATA   192512
+>  HOLE   262144
+>  Compare files
+>  c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-420/file1
+
+Looks like this part easy to cause `git am` misunderstanding[1], Hmm...
+any method to deal with that?
+
+[1]
+Applying: xfs/420: fix occasional test failures due to pagecache readahead
+error: 420.out: does not exist in index
+Patch failed at 0001 xfs/420: fix occasional test failures due to pagecache readahead
+hint: Use 'git am --show-current-patch=diff' to see the failed patch
+When you have resolved this problem, run "git am --continue".
+If you prefer to skip this patch, run "git am --skip" instead.
+To restore the original branch and stop patching, run "git am --abort".
+
+> 
+> Curiously, the file checksums always match, and it's not *forbidden* for
+> the page cache to have a page backing an unwritten extent that hasn't
+> been written.
+> 
+> The condition that this test cares about is that block 3 (192k-256k) are
+> reported by SEEK_DATA as data even if the data fork has a hole and the
+> COW fork has an unwritten extent.  Matthew Wilcox thinks this is a side
+> effect of readahead.
+> 
+> To fix this occasional false failure, call SEEK_DATA and SEEK_HOLE only
+> on the offsets that we care about.
+> 
+> Suggested-by: Matthew Wilcox <willy@infradead.org>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
-
-Actually from the beginning I don't know what's the $scrubflag used for, due
-to it never be used in any other place of xfstests. I thought you left it for
-personal debug reason, or even thought you'd like to make it as XFS_SCRUB_FLAG
-to be a global parameter. Anyway I'm good if you'd like to remove it now.
-
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
->  common/xfs |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  tests/xfs/420 |   33 +++++++++++++++++++++------------
+>  1 file changed, 21 insertions(+), 12 deletions(-)
 > 
 > 
-> diff --git a/common/xfs b/common/xfs
-> index 053b6189..ac1d021e 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -568,12 +568,12 @@ _check_xfs_filesystem()
->  		# before executing a scrub operation.
->  		$XFS_IO_PROG -c syncfs $mntpt >> $seqres.full 2>&1
+> diff --git a/tests/xfs/420 b/tests/xfs/420
+> index 12b17588..d38772c9 100755
+> --- a/tests/xfs/420
+> +++ b/tests/xfs/420
+> @@ -50,6 +50,24 @@ _scratch_mount >> $seqres.full 2>&1
+>  testdir=$SCRATCH_MNT/test-$seq
+>  mkdir $testdir
 >  
-> -		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $mntpt > $tmp.scrub 2>&1
-> +		"$XFS_SCRUB_PROG" -v -d -n $mntpt > $tmp.scrub 2>&1
->  		if [ $? -ne 0 ]; then
->  			_log_err "_check_xfs_filesystem: filesystem on $device failed scrub"
-> -			echo "*** xfs_scrub $scrubflag -v -d -n output ***" >> $seqres.full
-> +			echo "*** xfs_scrub -v -d -n output ***" >> $seqres.full
->  			cat $tmp.scrub >> $seqres.full
-> -			echo "*** end xfs_scrub output" >> $serqres.full
-> +			echo "*** end xfs_scrub output" >> $seqres.full
->  			ok=0
->  		fi
->  		rm -f $tmp.scrub
+> +# pagecache readahead can sometimes cause extra pages to be inserted into the
+> +# file mapping where we have an unwritten extent in the COW fork.  Call lseek
+> +# on each $blksz offset that interests us (as opposed to the whole file) so
+> +# that these extra pages are not disclosed.
+> +#
+> +# The important thing we're testing is that SEEK_DATA reports block 3 as data
+> +# when the COW fork has an unwritten mapping and the data fork has a hole.
+> +exercise_lseek() {
+> +	echo "Seek holes and data in file1"
+> +	$XFS_IO_PROG -c "seek -d 0" $testdir/file1
+> +	$XFS_IO_PROG -c "seek -h $((2 * blksz))" $testdir/file1 | sed -e '/Whence/d'
+> +	echo "Seek holes and data in file2"
+> +	$XFS_IO_PROG -c "seek -d 0" $testdir/file2
+> +	$XFS_IO_PROG -c "seek -h $((2 * blksz))" $testdir/file2 | sed -e '/Whence/d'
+> +	$XFS_IO_PROG -c "seek -d $((3 * blksz))" $testdir/file2 | sed -e '/Whence/d'
+> +	$XFS_IO_PROG -c "seek -h $((4 * blksz))" $testdir/file2 | sed -e '/Whence/d'
+> +}
+> +
+>  blksz=65536
+>  nr=8
+>  filesize=$((blksz * nr))
+> @@ -83,10 +101,7 @@ $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file1 >> $seqres.full 2>&1
+>  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file2 >> $seqres.full 2>&1
+>  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file3 >> $seqres.full 2>&1
+>  
+> -echo "Seek holes and data in file1"
+> -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file1
+> -echo "Seek holes and data in file2"
+> -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file2
+> +exercise_lseek
+>  
+>  echo "Compare files"
+>  md5sum $testdir/file1 | _filter_scratch
+> @@ -102,10 +117,7 @@ $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file1 >> $seqres.full 2>&1
+>  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file2 >> $seqres.full 2>&1
+>  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file3 >> $seqres.full 2>&1
+>  
+> -echo "Seek holes and data in file1"
+> -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file1
+> -echo "Seek holes and data in file2"
+> -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file2
+> +exercise_lseek
+>  
+>  echo "Compare files"
+>  md5sum $testdir/file1 | _filter_scratch
+> @@ -121,10 +133,7 @@ $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file1 >> $seqres.full 2>&1
+>  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file2 >> $seqres.full 2>&1
+>  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file3 >> $seqres.full 2>&1
+>  
+> -echo "Seek holes and data in file1"
+> -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file1
+> -echo "Seek holes and data in file2"
+> -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file2
+> +exercise_lseek
+>  
+>  echo "Compare files"
+>  md5sum $testdir/file1 | _filter_scratch
 > 
 
