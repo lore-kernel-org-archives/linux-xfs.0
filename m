@@ -2,273 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD77FC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 03:07:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26529C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 05:46:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231958AbiCWDIi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Mar 2022 23:08:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39950 "EHLO
+        id S229870AbiCWFr4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Mar 2022 01:47:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231250AbiCWDIi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 23:08:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 76FE370877
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 20:07:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1648004825;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PRLIGhRIzRWp0EW+2x2uQlxVZBsyaMC4COEjifcFBXI=;
-        b=hh62ozpgurvN/iaKgc3+DhCbZ8IYvvBBnOrBrDvQ4ktorPJ4JSLeVwjgTzL/y0L00ZNpe0
-        2uy2NwqKF1RfA3W0bc3VlxIGIY7R1/xwODVgbdWJ/Fed+OC22loTL3DVCJd2jKw1pjB7vD
-        2xZshONrD1lB1RE/xgIfgw7oES8VTHs=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-501-UqXNROspMC6mtt8pGo1fHg-1; Tue, 22 Mar 2022 23:07:04 -0400
-X-MC-Unique: UqXNROspMC6mtt8pGo1fHg-1
-Received: by mail-pj1-f69.google.com with SMTP id n17-20020a17090ac69100b001c77ebd900fso326904pjt.8
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 20:07:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=PRLIGhRIzRWp0EW+2x2uQlxVZBsyaMC4COEjifcFBXI=;
-        b=NEZQ9IKbOzYWK/u7TiPfBfYWwjcArIwlNZeKK2HmkJZ9QI4UYri/cfwgOWagcR/g4v
-         Ue8R7GmvmXi20jmJG41xTFzOPLEiqXtdsB+O6EeBCI362YK0iP3rZYeY0TSrK6wDuZp9
-         9pQvGQRpsU/VnUvwsaxrr2mg5JTsYdx9gcqkrHNHccud8hxIkcHxnKptjbnoxBd2jtjm
-         Sp8AMcHGfadqrQ4SYlTlabGf6aLB6OuGRPbFWu8yLanAX98YZuK5asmXGYTI2TgvN5CS
-         puZvEOVqDiuiPeF7WVqdKmjemxqNMFf+AXpzAA4gz17nHLcTD6D+mG0avp4uSGnPviMW
-         dkXw==
-X-Gm-Message-State: AOAM533VtLavs9bCIXi27RtctEZnWVshgQHz2P8vpombPo6echFiTa9W
-        vMzdTizRbZBaNqbkWaim8fSPW6O3w0gDgTMUeczCogMmkBjmPQEqFcAb8VBemdGOOAH5PdPasqh
-        E+LIRICZYp+g2vbSW0x1x
-X-Received: by 2002:a17:90b:4d88:b0:1c7:3d39:34c5 with SMTP id oj8-20020a17090b4d8800b001c73d3934c5mr8833944pjb.20.1648004822876;
-        Tue, 22 Mar 2022 20:07:02 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxbeyLyr5cugwEv0XS5E5bn0B/ngiBFkFTaVRzJjJ8wlyzFH3nFl8XRXTyG7xoDtsdb05KLKw==
-X-Received: by 2002:a17:90b:4d88:b0:1c7:3d39:34c5 with SMTP id oj8-20020a17090b4d8800b001c73d3934c5mr8833929pjb.20.1648004822553;
-        Tue, 22 Mar 2022 20:07:02 -0700 (PDT)
-Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id pj9-20020a17090b4f4900b001c744034e7csm4359658pjb.2.2022.03.22.20.06.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Mar 2022 20:07:01 -0700 (PDT)
-Date:   Wed, 23 Mar 2022 11:06:57 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] generic: ensure we drop suid after fallocate
-Message-ID: <20220323030657.5al7wlxsvjzybbg3@zlang-mailbox>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-References: <164740142940.3371809.12686819717405148022.stgit@magnolia>
- <164740144051.3371809.17116490105069526891.stgit@magnolia>
+        with ESMTP id S241886AbiCWFrz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 01:47:55 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1022B710C8;
+        Tue, 22 Mar 2022 22:46:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=7ZAsD6U+OpZrl9q+vvF5BO0Ld/peFEuasZX9wg8w/7c=; b=nlGt60I9cy8CABM8dFM997RIev
+        lf+Vu/g9DqcVUJgBuwjYjHU9jOV3QQCh4gomYHEWmUbee1hju7Vb6RO0DEA9S5CmbmQe/zXKweFXn
+        8EVK7EgUoutyRvQb8bI9IhY1/UZJtuu/qqg9kSmpHJ1YGuAsMtO/ZauNT7m3eiq2M7Urm1DDCQ6cy
+        u9yF+0Tbj77cKFKrTYwHSOfN80W+1eYN9ITP5OdtfmjQfHxk1qXo0WX7STlhFRN4cS2UgCMWDrFen
+        cyC6TLzVbiAgxvrwxolPd8ULMLpgLYxqVhw8SAFfUge+NFNrjR50q2wFlEV6DOACqQ0c/5lF0epQv
+        0VigWM/g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nWtok-00CoLR-Fp; Wed, 23 Mar 2022 05:45:58 +0000
+Date:   Tue, 22 Mar 2022 22:45:58 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+        "dave.jiang@intel.com" <dave.jiang@intel.com>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "ira.weiny@intel.com" <ira.weiny@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "vgoyal@redhat.com" <vgoyal@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v6 4/6] dax: add DAX_RECOVERY flag and .recovery_write
+ dev_pgmap_ops
+Message-ID: <Yjq0FspfsLrN/mrx@infradead.org>
+References: <20220319062833.3136528-1-jane.chu@oracle.com>
+ <20220319062833.3136528-5-jane.chu@oracle.com>
+ <YjmQdJdOWUr2IYIP@infradead.org>
+ <3dabd58b-70f2-12af-419f-a7dfc07fbb1c@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <164740144051.3371809.17116490105069526891.stgit@magnolia>
+In-Reply-To: <3dabd58b-70f2-12af-419f-a7dfc07fbb1c@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 15, 2022 at 08:30:40PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Mar 22, 2022 at 11:05:09PM +0000, Jane Chu wrote:
+> > This DAX_RECOVERY doesn't actually seem to be used anywhere here or
+> > in the subsequent patches.  Did I miss something?
 > 
-> fallocate changes file contents, so make sure that we drop privileges
-> and file capabilities after each fallocate operation.
+> dax_iomap_iter() uses the flag in the same patch,
+> +               if ((map_len == -EIO) && (iov_iter_rw(iter) == WRITE)) {
+> +                       flags |= DAX_RECOVERY;
+> +                       map_len = dax_direct_access(dax_dev, pgoff, nrpg,
+> +                                               flags, &kaddr, NULL);
+
+Yes, it passes it on to dax_direct_access, and dax_direct_access passes
+it onto ->direct_access.  But nothing in this series actually checks
+for it as far as I can tell.
+
+> >> Also introduce a new dev_pagemap_ops .recovery_write function.
+> >> The function is applicable to FSDAX device only. The device
+> >> page backend driver provides .recovery_write function if the
+> >> device has underlying mechanism to clear the uncorrectable
+> >> errors on the fly.
+> > 
+> > Why is this not in struct dax_operations?
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  tests/generic/834     |  129 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/834.out |   33 +++++++++++++
->  tests/generic/835     |  129 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/835.out |   33 +++++++++++++
->  tests/generic/836     |  129 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/836.out |   33 +++++++++++++
->  tests/generic/837     |  129 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/837.out |   33 +++++++++++++
->  tests/generic/838     |  129 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/838.out |   33 +++++++++++++
->  tests/generic/839     |   79 ++++++++++++++++++++++++++++++
->  tests/generic/839.out |   13 +++++
->  12 files changed, 902 insertions(+)
->  create mode 100755 tests/generic/834
->  create mode 100644 tests/generic/834.out
->  create mode 100755 tests/generic/835
->  create mode 100644 tests/generic/835.out
->  create mode 100755 tests/generic/836
->  create mode 100644 tests/generic/836.out
->  create mode 100755 tests/generic/837
->  create mode 100644 tests/generic/837.out
->  create mode 100755 tests/generic/838
->  create mode 100644 tests/generic/838.out
->  create mode 100755 tests/generic/839
->  create mode 100755 tests/generic/839.out
-> 
-> 
-> diff --git a/tests/generic/834 b/tests/generic/834
-> new file mode 100755
-> index 00000000..27552221
-> --- /dev/null
-> +++ b/tests/generic/834
-> @@ -0,0 +1,129 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 834
-> +#
-> +# Functional test for dropping suid and sgid bits as part of a fallocate.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto clone quick
-> +
-> +# Override the default cleanup function.
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.* $junk_dir
-> +}
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +. ./common/reflink
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_require_user
-> +_require_test
-> +verb=falloc
-> +_require_xfs_io_command $verb
-> +
-> +_require_congruent_file_oplen $TEST_DIR 65536
-      ^^
+> Per Dan's comments to the v5 series, adding .recovery_write to
+> dax_operations causes a number of trivial dm targets changes.
+> Dan suggested that adding .recovery_write to pagemap_ops could
+> cut short the logistics of figuring out whether the driver backing
+> up a page is indeed capable of clearing poison. Please see
+> https://lkml.org/lkml/2022/2/4/31
 
-Is it a Darrick's unpublic secret weapon:)
+But at least in this series there is  1:1 association between the
+pgmap and the dax_device so that scheme won't work.   It would
+have to lookup the pgmap based on the return physical address from
+dax_direct_access.  Which sounds more complicated than just adding
+the (annoying) boilerplate code to DM.
 
-> +
-> +junk_dir=$TEST_DIR/$seq
-> +junk_file=$junk_dir/a
-> +mkdir -p $junk_dir/
-> +chmod a+rw $junk_dir/
-> +
+> include/linux/memremap.h doesn't know struct iov_iter which is defined 
+> in include/linux/uio.h,  would you prefer to adding include/linux/uio.h 
+> to include/linux/memremap.h ?
 
-[snip] ...
+As it is not derefences just adding a
 
-> diff --git a/tests/generic/839 b/tests/generic/839
-> new file mode 100755
-> index 00000000..a1e23916
-> --- /dev/null
-> +++ b/tests/generic/839
-> @@ -0,0 +1,79 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 839
-> +#
-> +# Functional test for dropping capability bits as part of an fallocate.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto fiexchange swapext quick
-                        ^^         ^^
+struct iov_iter;
 
-I think we don't have these two group names currently, this will cause failure.
-You can register them if you need :)
-
-Thanks,
-Zorro
-
-> +
-> +# Override the default cleanup function.
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.* $junk_dir
-> +}
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_require_user
-> +_require_command "$GETCAP_PROG" getcap
-> +_require_command "$SETCAP_PROG" setcap
-> +_require_xfs_io_command falloc
-> +_require_test
-> +
-> +_require_congruent_file_oplen $TEST_DIR 65536
-> +
-> +junk_dir=$TEST_DIR/$seq
-> +junk_file=$junk_dir/a
-> +mkdir -p $junk_dir/
-> +chmod a+rw $junk_dir/
-> +
-> +setup_testfile() {
-> +	rm -f $junk_file
-> +	touch $junk_file
-> +	chmod a+rwx $junk_file
-> +	$SETCAP_PROG cap_setgid,cap_setuid+ep $junk_file
-> +	sync
-> +}
-> +
-> +commit_and_check() {
-> +	local user="$1"
-> +
-> +	stat -c '%a %A %n' $junk_file | _filter_test_dir
-> +	_getcap -v $junk_file | _filter_test_dir
-> +
-> +	local cmd="$XFS_IO_PROG -c 'falloc 0 64k' $junk_file"
-> +	if [ -n "$user" ]; then
-> +		su - "$user" -c "$cmd" >> $seqres.full
-> +	else
-> +		$SHELL -c "$cmd" >> $seqres.full
-> +	fi
-> +
-> +	stat -c '%a %A %n' $junk_file | _filter_test_dir
-> +	_getcap -v $junk_file | _filter_test_dir
-> +
-> +	# Blank line in output
-> +	echo
-> +}
-> +
-> +# Commit by an unprivileged user clears capability bits.
-> +echo "Test 1 - qa_user"
-> +setup_testfile
-> +commit_and_check "$qa_user"
-> +
-> +# Commit by root leaves capability bits.
-> +echo "Test 2 - root"
-> +setup_testfile
-> +commit_and_check
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/839.out b/tests/generic/839.out
-> new file mode 100755
-> index 00000000..f571cd26
-> --- /dev/null
-> +++ b/tests/generic/839.out
-> @@ -0,0 +1,13 @@
-> +QA output created by 839
-> +Test 1 - qa_user
-> +777 -rwxrwxrwx TEST_DIR/839/a
-> +TEST_DIR/839/a cap_setgid,cap_setuid=ep
-> +777 -rwxrwxrwx TEST_DIR/839/a
-> +TEST_DIR/839/a
-> +
-> +Test 2 - root
-> +777 -rwxrwxrwx TEST_DIR/839/a
-> +TEST_DIR/839/a cap_setgid,cap_setuid=ep
-> +777 -rwxrwxrwx TEST_DIR/839/a
-> +TEST_DIR/839/a
-> +
-> 
-
+line to memremap.h below the includes should be all that is needed.
