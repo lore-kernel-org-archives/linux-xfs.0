@@ -2,121 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEAC9C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 20:39:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9382EC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 20:49:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240098AbiCWUkv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Mar 2022 16:40:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48038 "EHLO
+        id S245369AbiCWUua (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Mar 2022 16:50:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234077AbiCWUku (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 16:40:50 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E32DC74600
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 13:39:19 -0700 (PDT)
+        with ESMTP id S240768AbiCWUu3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 16:50:29 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C94638BE4
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 13:48:59 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 00439533C0B;
-        Thu, 24 Mar 2022 07:39:17 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 425E510E5104;
+        Thu, 24 Mar 2022 07:48:58 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nX7lE-0092tT-7R; Thu, 24 Mar 2022 07:39:16 +1100
-Date:   Thu, 24 Mar 2022 07:39:16 +1100
+        id 1nX7ua-0092zC-UV; Thu, 24 Mar 2022 07:48:56 +1100
+Date:   Thu, 24 Mar 2022 07:48:56 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: document the XFS_ALLOC_AGFL_RESERVE constant
-Message-ID: <20220323203916.GU1544202@dread.disaster.area>
+Subject: Re: [PATCH 2/6] xfs: actually set aside enough space to handle a
+ bmbt split
+Message-ID: <20220323204856.GV1544202@dread.disaster.area>
 References: <164779460699.550479.5112721232994728564.stgit@magnolia>
- <164779461278.550479.17511700626088235894.stgit@magnolia>
+ <164779461835.550479.15316047141170352189.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <164779461278.550479.17511700626088235894.stgit@magnolia>
+In-Reply-To: <164779461835.550479.15316047141170352189.stgit@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=623b8576
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=623b87ba
         a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
         a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=MOkL1H8AtZ1nbzZbzU8A:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
+        a=7-415B0cAAAA:8 a=Pitg15Sqe30maEZy9pkA:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
         a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Mar 20, 2022 at 09:43:32AM -0700, Darrick J. Wong wrote:
+On Sun, Mar 20, 2022 at 09:43:38AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Currently, we use this undocumented macro to encode the minimum number
-> of blocks needed to replenish a completely empty AGFL when an AG is
-> nearly full.  This has lead to confusion on the part of the maintainers,
-> so let's document what the value actually means, and move it to
-> xfs_alloc.c since it's not used outside of that module.
-
-Code change looks fine, but....
-
+> The comment for xfs_alloc_set_aside indicates that we want to set aside
+> enough space to handle a bmap btree split.  The code, unfortunately,
+> hardcodes this to 4.
+> 
+> This is incorrect, since file bmap btrees can be taller than that:
+> 
+> xfs_db> btheight bmapbt -n 4294967295 -b 512
+> bmapbt: worst case per 512-byte block: 13 records (leaf) / 13 keyptrs (node)
+> level 0: 4294967295 records, 330382100 blocks
+> level 1: 330382100 records, 25414008 blocks
+> level 2: 25414008 records, 1954924 blocks
+> level 3: 1954924 records, 150379 blocks
+> level 4: 150379 records, 11568 blocks
+> level 5: 11568 records, 890 blocks
+> level 6: 890 records, 69 blocks
+> level 7: 69 records, 6 blocks
+> level 8: 6 records, 1 block
+> 9 levels, 357913945 blocks total
+> 
+> Or, for V5 filesystems:
+> 
+> xfs_db> btheight bmapbt -n 4294967295 -b 1024
+> bmapbt: worst case per 1024-byte block: 29 records (leaf) / 29 keyptrs (node)
+> level 0: 4294967295 records, 148102321 blocks
+> level 1: 148102321 records, 5106977 blocks
+> level 2: 5106977 records, 176103 blocks
+> level 3: 176103 records, 6073 blocks
+> level 4: 6073 records, 210 blocks
+> level 5: 210 records, 8 blocks
+> level 6: 8 records, 1 block
+> 7 levels, 153391693 blocks total
+> 
+> Fix this by using the actual bmap btree maxlevel value for the
+> set-aside.  We subtract one because the root is always in the inode and
+> hence never splits.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > Reviewed-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_alloc.c |   23 ++++++++++++++++++-----
->  fs/xfs/libxfs/xfs_alloc.h |    1 -
->  2 files changed, 18 insertions(+), 6 deletions(-)
+>  fs/xfs/libxfs/xfs_alloc.c |    7 +++++--
+>  fs/xfs/libxfs/xfs_sb.c    |    2 --
+>  fs/xfs/xfs_mount.c        |    7 +++++++
+>  3 files changed, 12 insertions(+), 4 deletions(-)
 > 
 > 
 > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 353e53b892e6..b0678e96ce61 100644
+> index b0678e96ce61..747b3e45303f 100644
 > --- a/fs/xfs/libxfs/xfs_alloc.c
 > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -82,6 +82,19 @@ xfs_prealloc_blocks(
+> @@ -107,13 +107,16 @@ xfs_prealloc_blocks(
+>   * aside a few blocks which will not be reserved in delayed allocation.
+>   *
+>   * For each AG, we need to reserve enough blocks to replenish a totally empty
+> - * AGFL and 4 more to handle a potential split of the file's bmap btree.
+> + * AGFL and enough to handle a potential split of a file's bmap btree.
+>   */
+>  unsigned int
+>  xfs_alloc_set_aside(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return mp->m_sb.sb_agcount * (XFS_ALLOCBT_AGFL_RESERVE + 4);
+> +	unsigned int		bmbt_splits;
+> +
+> +	bmbt_splits = max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]) - 1;
+> +	return mp->m_sb.sb_agcount * (XFS_ALLOCBT_AGFL_RESERVE + bmbt_splits);
 >  }
->  
->  /*
-> + * The number of blocks per AG that we withhold from xfs_mod_fdblocks to
-> + * guarantee that we can refill the AGFL prior to allocating space in a nearly
-> + * full AG.  We require two blocks per free space btree because free space
-> + * btrees shrink to a single block as the AG fills up, and any allocation can
-> + * cause a btree split.  The rmap btree uses a per-AG reservation to withhold
-> + * space from xfs_mod_fdblocks, so we do not account for that here.
-> + */
-> +#define XFS_ALLOCBT_AGFL_RESERVE	4
 
-.... that comment is not correct.  this number had nothing to do
-with btree split reservations and is all about preventing
-oversubscription of the AG when the free space trees are completely
-empty.  By the time there is enough free space records in the AG for
-the bno/cnt trees to be at risk of a single level root split
-(several hundred free extent records), there is enough free space to
-fully allocate the 4 blocks that the AGFL needs for that split.
+So right now I'm trying to understand why this global space set
+aside ever needed to take into account the space used by a single
+BMBT split. ISTR it was done back in 2006 because the ag selection
+code, alloc args and/or xfs_alloc_space_available() didn't take into
+account the BMBT space via args->minleft correctly to ensure that
+the AGF we select had enough space in it for both the data extent
+and the followup BMBT split. Hence the original SET ASIDE (which
+wasn't per AG) was just 8 blocks - 4 for the AGFL, 4 for the BMBT.
 
-That is, the set aside was designed to prevent AG selection in
-xfs_alloc_vextent() having xfs_alloc_fixup_freelist() modifying an
-AG to fix up the AGFL and then fail to fully fill the AGFL because,
-say, there were only 2 blocks free in the AG and the AGFL needed 3.
-Then we try all other AGs and get ENOSPC from all of them, and we
-end up cancelling a dirty transaction and shutting down instead of
-propagating ENOSPC up to the user.
+The transaction reservation takes into account the space needed by
+BMBT splits so we don't over-commit global space on user allocation
+anymore, args->minleft takes it into account so we don't overcommit
+AG space on extent allocation, and we have the reserved block pool
+to handle situations were delalloc extents are fragmented more than
+the initial indirect block reservation that is taken with the
+delalloc extent reservation.
 
-This "not enough blocks to populate the AGFL" problem arose because
-we can allocate extents directly from the AGFL if the free space
-btree is empty, resulting in depletion of the AGFL and no free space
-to re-populate it. Freeing a block will then go back into the btree,
-and so the next allocation attempt might need 2 blocks for the AGFL,
-have one block in the free space tree, and then we fail to fill
-the AGFL completely because we still need one block for the AGFL and
-there's no space available anymore. If all other AGs are like this
-or ENOSPC, then kaboom.
-
-IOWs, I originally added this per-ag set aside so that when the AG
-was almost completely empty and we were down to allocating the last
-blocks from the AG, users couldn't oversubscribe global free space by
-consuming the blocks the AGs required to fill the AGFLs to allow the
-last blocks that users could allocate to be allocated safely.
-
-Hence the set aside of 4 blocks per AG was not to ensure the
-freespace trees could be split, but to ensure every last possible
-block could be allocated from the AG without causing the AG
-selection algorithms to select and modify AGs that could not have
-their AGFL fully fixed up to allocate the blocks that the caller
-needed when near ENOSPC...
+So where/why is this needed anymore?
 
 Cheers,
 
