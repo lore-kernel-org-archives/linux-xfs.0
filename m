@@ -2,153 +2,155 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE561C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 01:37:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7064DC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 02:44:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232089AbiCWBid (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Mar 2022 21:38:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40408 "EHLO
+        id S241392AbiCWCqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Mar 2022 22:46:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236805AbiCWBia (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 21:38:30 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C2166FA37
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 18:37:02 -0700 (PDT)
+        with ESMTP id S241387AbiCWCqN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Mar 2022 22:46:13 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C70370851
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 19:44:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1647999421;
+        s=mimecast20190719; t=1648003483;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=DeE+Ijhsmp8No9DKybg0kXW3B65MR+UJv9Bn/AeXmq0=;
-        b=Q+e+9b/JssmpH3j5nfXF6H6g2zXGL040RoJkfA/wgXZOS6D8AFuP/lnEgKoHCiRB7E1pgy
-        9xjfYfcKq3T+WZ6fvE+nyknWN+gJK2OGyjLRJRp+dXqshr2g1ZkcjEEAbcPUy0UOFBaMuR
-        kaNf+SfBJtqUljJFUp//9mkG/jSILkw=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=iqZJTiI3Axj6oVewHbRkIIjJ5aF5iBnJmE5907yPAVc=;
+        b=Y8dRgIDgAsBhWXvxodMMvujY077a600VpK9xknr+FtiyueE/zIgM0ayWTCmtO3rcef99qm
+        v3HwD8RgdIzlyWrosv2BWljrKnhhS06TGoqXZYXAfVYYBERvRTJsGzYaXFzrEn/T6QO4eC
+        tsxxu3xFApqMW0WzGpQ2axo7k74+Q6U=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-387-9QDF_zpRNuGHucq8cGB-Sg-1; Tue, 22 Mar 2022 21:36:59 -0400
-X-MC-Unique: 9QDF_zpRNuGHucq8cGB-Sg-1
-Received: by mail-pj1-f71.google.com with SMTP id fh22-20020a17090b035600b001c6a163499cso216022pjb.2
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 18:36:59 -0700 (PDT)
+ us-mta-90-e2dWYi89NY-_lZzR8IyWCA-1; Tue, 22 Mar 2022 22:44:39 -0400
+X-MC-Unique: e2dWYi89NY-_lZzR8IyWCA-1
+Received: by mail-qt1-f197.google.com with SMTP id k11-20020ac8604b000000b002e1a4109edeso181114qtm.15
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Mar 2022 19:44:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id
          :mail-followup-to:references:mime-version:content-disposition
-         :content-transfer-encoding:in-reply-to;
-        bh=DeE+Ijhsmp8No9DKybg0kXW3B65MR+UJv9Bn/AeXmq0=;
-        b=gkWAPK+YxM9MwV5ACrYRNIxJTSxNU3dnvvgsK0BRtiz6yGY0rrqggw5sZQgCyITNFa
-         NpPfDhbcCizL9Uq8etbBIcjdJaBSQsZyVGYqjW/Mxpz/W8bVFNDgNy/lDmNrm8D5tGuO
-         ZKmDbGnwOlXjQbKsM9Ncr4dHz5Yr6EbSjp74SDbwBfcJ7+wGJ8Vn2QAcLogS/qHitHvj
-         ZgYtOU1wMZsl9ypUiYT5CRkyrWUnX6HUJ/fckauzwHoRERIYeOVz6M1D/EBTye5kKjRR
-         bFlsCmnyD62qPOaAr69Idjzi+B17PRoAOzmw9poYaTggbBgxkmPtYDr3t8mFN6BZ5hrW
-         1x8w==
-X-Gm-Message-State: AOAM530iJwnt0Sy012hqfZeUpCjSd2SCjJGZ2xA5S51UIOshX9ZYJYmw
-        S2PQXHdAqAwW3xWqGicQCcUsKtj5rQ49OZPHmyrgPqFUBPdKJMe6BYd6pmxTJpomDzGM5wnLDdy
-        9cVOiRl46gH/hLUbE+DKr
-X-Received: by 2002:a65:6202:0:b0:382:1fbd:5bb3 with SMTP id d2-20020a656202000000b003821fbd5bb3mr21089850pgv.194.1647999418754;
-        Tue, 22 Mar 2022 18:36:58 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzmU3+vqpdReZPaGUNeZtG1HB6fwKFyYdEPsbS7JKGNwjl0S4Mmhmx00ZgU5AoedU4IomBanw==
-X-Received: by 2002:a65:6202:0:b0:382:1fbd:5bb3 with SMTP id d2-20020a656202000000b003821fbd5bb3mr21089835pgv.194.1647999418326;
-        Tue, 22 Mar 2022 18:36:58 -0700 (PDT)
+         :in-reply-to;
+        bh=iqZJTiI3Axj6oVewHbRkIIjJ5aF5iBnJmE5907yPAVc=;
+        b=L6RgUo8WSL5LLYiyHCs7iLAy4NntiHRQ7/SzdM/ADsaWo7XFnbqZv78D9leygxW8Pq
+         oO7pNfsoszSaHeRUpM2yv1JzUjZT2KF1kxcZFR4qPtBVzrCho/MdwTSbfhuFinKErC1n
+         Sw9Mz8rISRcZPvDPV9wf6P8ZfqbuhMEcpVB9lib6r7gZD3n1WRFvLJh2FBtXI4HLSPMt
+         ErDbFPVJD3fmoM76rS/0hG+8vqV/R0vTxbq5+mJ4u1oWAjYaODx/piA2hQw4fFGLEuj4
+         4l2grk39BvTmqV09tTRi8cKyfbmV7MDLDG1glU9ezDQ+fFXr2r4ytMWqYjwhWHoJInvP
+         qisQ==
+X-Gm-Message-State: AOAM531w5GsBwWCcTlWQ7GANIxTI5vkG9EoQnpNSfhqI+BNcMEPA68Mh
+        s/tck3NfAJHEeGw7MRX5j2+Sfkrgp9xjsGQMxz+YtiLEzY598bIXf12zBvAxSgHeG0U1gta6EoV
+        61SEsOinTtLor1eWdD7b6
+X-Received: by 2002:a37:9fca:0:b0:67e:5b65:8031 with SMTP id i193-20020a379fca000000b0067e5b658031mr12790652qke.168.1648003479352;
+        Tue, 22 Mar 2022 19:44:39 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyHcICZGirl5M3aoPOGEaZiiXCpjLSKyxtk4rktLVG9tkMm18HlEpj+QHcPEb0NPHD9KopUWQ==
+X-Received: by 2002:a37:9fca:0:b0:67e:5b65:8031 with SMTP id i193-20020a379fca000000b0067e5b658031mr12790641qke.168.1648003479030;
+        Tue, 22 Mar 2022 19:44:39 -0700 (PDT)
 Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id q21-20020a63e215000000b00373efe2cbcbsm18488546pgh.80.2022.03.22.18.36.55
+        by smtp.gmail.com with ESMTPSA id h8-20020ac87d48000000b002e1c6faae9csm15167579qtb.28.2022.03.22.19.44.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Mar 2022 18:36:57 -0700 (PDT)
-Date:   Wed, 23 Mar 2022 09:36:53 +0800
+        Tue, 22 Mar 2022 19:44:38 -0700 (PDT)
+Date:   Wed, 23 Mar 2022 10:44:32 +0800
 From:   Zorro Lang <zlang@redhat.com>
-To:     Catherine Hoang <catherine.hoang@oracle.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v1] xfs/019: extend protofile test
-Message-ID: <20220323013653.46d432ybh2zpdhhs@zlang-mailbox>
-Mail-Followup-To: Catherine Hoang <catherine.hoang@oracle.com>,
+Subject: Re: [PATCH 1/2] xfs: make sure syncfs(2) passes back
+ super_operations.sync_fs errors
+Message-ID: <20220323024432.44wf2xhpv3z55txp@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-References: <20220317232408.202636-1-catherine.hoang@oracle.com>
+References: <164740142940.3371809.12686819717405148022.stgit@magnolia>
+ <164740143497.3371809.2959237196772812909.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220317232408.202636-1-catherine.hoang@oracle.com>
+In-Reply-To: <164740143497.3371809.2959237196772812909.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 17, 2022 at 11:24:08PM +0000, Catherine Hoang wrote:
-> This test creates an xfs filesystem and verifies that the filesystem
-> matches what is specified by the protofile.
+On Tue, Mar 15, 2022 at 08:30:35PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> This patch extends the current test to check that a protofile can specify
-> setgid mode on directories. Also, check that the created symlink isn’t
-> broken.
+> This is a regression test to make sure that nonzero error returns from
+> a filesystem's ->sync_fs implementation are actually passed back to
+> userspace when the call stack involves syncfs(2).
 > 
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
+>  tests/xfs/839     |   42 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/839.out |    2 ++
+>  2 files changed, 44 insertions(+)
+>  create mode 100755 tests/xfs/839
+>  create mode 100644 tests/xfs/839.out
+> 
+> 
+> diff --git a/tests/xfs/839 b/tests/xfs/839
+> new file mode 100755
+> index 00000000..9bfe93ef
+> --- /dev/null
+> +++ b/tests/xfs/839
+> @@ -0,0 +1,42 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 839
+> +#
+> +# Regression test for kernel commits:
+> +#
+> +# 5679897eb104 ("vfs: make sync_filesystem return errors from ->sync_fs")
+> +# 2d86293c7075 ("xfs: return errors in xfs_fs_sync_fs")
+> +#
+> +# During a code inspection, I noticed that sync_filesystem ignores the return
+> +# value of the ->sync_fs calls that it makes.  sync_filesystem, in turn is used
+> +# by the syncfs(2) syscall to persist filesystem changes to disk.  This means
+> +# that syncfs(2) does not capture internal filesystem errors that are neither
+> +# visible from the block device (e.g. media error) nor recorded in s_wb_err.
+> +# XFS historically returned 0 from ->sync_fs even if there were log failures,
+> +# so that had to be corrected as well.
+> +#
+> +# The kernel commits above fix this problem, so this test tries to trigger the
+> +# bug by using the shutdown ioctl on a clean, freshly mounted filesystem in the
+> +# hope that the EIO generated as a result of the filesystem being shut down is
+> +# only visible via ->sync_fs.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick shutdown
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_require_xfs_io_command syncfs
+> +_require_scratch_nocheck
+> +_require_scratch_shutdown
 
-Any specific reason to add this test? Likes uncovering some one known
-bug/fix?
+Can this case be a generic case, with the help of _require_scratch_shutdown
+and _require_xfs_io_command?
 
 Thanks,
 Zorro
 
->  tests/xfs/019     |  6 ++++++
->  tests/xfs/019.out | 12 +++++++++++-
->  2 files changed, 17 insertions(+), 1 deletion(-)
-> 
-> diff --git a/tests/xfs/019 b/tests/xfs/019
-> index 3dfd5408..535b7af1 100755
-> --- a/tests/xfs/019
-> +++ b/tests/xfs/019
-> @@ -73,6 +73,10 @@ $
->  setuid -u-666 0 0 $tempfile
->  setgid --g666 0 0 $tempfile
->  setugid -ug666 0 0 $tempfile
-> +directory_setgid d-g755 3 2
-> +file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_5 ---755 3 1 $tempfile
-> +$
-> +: back in the root
->  block_device b--012 3 1 161 162 
->  char_device c--345 3 1 177 178
->  pipe p--670 0 0
-> @@ -114,6 +118,8 @@ _verify_fs()
->  		| xargs $here/src/lstat64 | _filter_stat)
->  	diff -q $SCRATCH_MNT/bigfile $tempfile.2 \
->  		|| _fail "bigfile corrupted"
-> +	diff -q $SCRATCH_MNT/symlink $tempfile.2 \
-> +		|| _fail "symlink broken"
->  
->  	echo "*** unmount FS"
->  	_full "umount"
-> diff --git a/tests/xfs/019.out b/tests/xfs/019.out
-> index 19614d9d..8584f593 100644
-> --- a/tests/xfs/019.out
-> +++ b/tests/xfs/019.out
-> @@ -7,7 +7,7 @@ Wrote 2048.00Kb (value 0x2c)
->   File: "."
->   Size: <DSIZE> Filetype: Directory
->   Mode: (0777/drwxrwxrwx) Uid: (3) Gid: (1)
-> -Device: <DEVICE> Inode: <INODE> Links: 3 
-> +Device: <DEVICE> Inode: <INODE> Links: 4 
->  
->   File: "./bigfile"
->   Size: 2097152 Filetype: Regular File
-> @@ -54,6 +54,16 @@ Device: <DEVICE> Inode: <INODE> Links: 1
->   Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
->  Device: <DEVICE> Inode: <INODE> Links: 1 
->  
-> + File: "./directory_setgid"
-> + Size: <DSIZE> Filetype: Directory
-> + Mode: (2755/drwxr-sr-x) Uid: (3) Gid: (2)
-> +Device: <DEVICE> Inode: <INODE> Links: 2 
 > +
-> + File: "./directory_setgid/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_5"
-> + Size: 5 Filetype: Regular File
-> + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (2)
-> +Device: <DEVICE> Inode: <INODE> Links: 1 
+> +# Reuse the fs formatted when we checked for the shutdown ioctl, and don't
+> +# bother checking the filesystem afterwards since we never wrote anything.
+> +_scratch_mount
+> +$XFS_IO_PROG -x -c 'shutdown -f ' -c syncfs $SCRATCH_MNT
 > +
->   File: "./pipe"
->   Size: 0 Filetype: Fifo File
->   Mode: (0670/frw-rwx---) Uid: (0) Gid: (0)
-> -- 
-> 2.25.1
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/839.out b/tests/xfs/839.out
+> new file mode 100644
+> index 00000000..f275cdcc
+> --- /dev/null
+> +++ b/tests/xfs/839.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 839
+> +syncfs: Input/output error
 > 
 
