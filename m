@@ -2,139 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9382EC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 20:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 034B5C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 20:51:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245369AbiCWUua (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Mar 2022 16:50:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45744 "EHLO
+        id S240759AbiCWUxM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Mar 2022 16:53:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240768AbiCWUu3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 16:50:29 -0400
+        with ESMTP id S240731AbiCWUxL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 16:53:11 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C94638BE4
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 13:48:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 26F268B6DD
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 13:51:41 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 425E510E5104;
-        Thu, 24 Mar 2022 07:48:58 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 200D810E50AD;
+        Thu, 24 Mar 2022 07:51:40 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nX7ua-0092zC-UV; Thu, 24 Mar 2022 07:48:56 +1100
-Date:   Thu, 24 Mar 2022 07:48:56 +1100
+        id 1nX7xC-009318-UY; Thu, 24 Mar 2022 07:51:38 +1100
+Date:   Thu, 24 Mar 2022 07:51:38 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/6] xfs: actually set aside enough space to handle a
- bmbt split
-Message-ID: <20220323204856.GV1544202@dread.disaster.area>
+Subject: Re: [PATCH 3/6] xfs: don't include bnobt blocks when reserving free
+ block pool
+Message-ID: <20220323205138.GW1544202@dread.disaster.area>
 References: <164779460699.550479.5112721232994728564.stgit@magnolia>
- <164779461835.550479.15316047141170352189.stgit@magnolia>
+ <164779462392.550479.11627083041484347485.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <164779461835.550479.15316047141170352189.stgit@magnolia>
+In-Reply-To: <164779462392.550479.11627083041484347485.stgit@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=623b87ba
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=623b885c
         a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
         a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=Pitg15Sqe30maEZy9pkA:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
-        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=7-415B0cAAAA:8 a=SZdB77bO8ckbU1GD5WsA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Mar 20, 2022 at 09:43:38AM -0700, Darrick J. Wong wrote:
+On Sun, Mar 20, 2022 at 09:43:43AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> The comment for xfs_alloc_set_aside indicates that we want to set aside
-> enough space to handle a bmap btree split.  The code, unfortunately,
-> hardcodes this to 4.
+> xfs_reserve_blocks controls the size of the user-visible free space
+> reserve pool.  Given the difference between the current and requested
+> pool sizes, it will try to reserve free space from fdblocks.  However,
+> the amount requested from fdblocks is also constrained by the amount of
+> space that we think xfs_mod_fdblocks will give us.  We'll keep trying to
+> reserve space so long as xfs_mod_fdblocks returns ENOSPC.
 > 
-> This is incorrect, since file bmap btrees can be taller than that:
+> In commit fd43cf600cf6, we decided that xfs_mod_fdblocks should not hand
+> out the "free space" used by the free space btrees, because some portion
+> of the free space btrees hold in reserve space for future btree
+> expansion.  Unfortunately, xfs_reserve_blocks' estimation of the number
+> of blocks that it could request from xfs_mod_fdblocks was not updated to
+> include m_allocbt_blks, so if space is extremely low, the caller hangs.
 > 
-> xfs_db> btheight bmapbt -n 4294967295 -b 512
-> bmapbt: worst case per 512-byte block: 13 records (leaf) / 13 keyptrs (node)
-> level 0: 4294967295 records, 330382100 blocks
-> level 1: 330382100 records, 25414008 blocks
-> level 2: 25414008 records, 1954924 blocks
-> level 3: 1954924 records, 150379 blocks
-> level 4: 150379 records, 11568 blocks
-> level 5: 11568 records, 890 blocks
-> level 6: 890 records, 69 blocks
-> level 7: 69 records, 6 blocks
-> level 8: 6 records, 1 block
-> 9 levels, 357913945 blocks total
+> Fix this by creating a function to estimate the number of blocks that
+> can be reserved from fdblocks, which needs to exclude the set-aside and
+> m_allocbt_blks.
 > 
-> Or, for V5 filesystems:
+> Found by running xfs/306 (which formats a single-AG 20MB filesystem)
+> with an fstests configuration that specifies a 1k blocksize and a
+> specially crafted log size that will consume 7/8 of the space (17920
+> blocks, specifically) in that AG.
 > 
-> xfs_db> btheight bmapbt -n 4294967295 -b 1024
-> bmapbt: worst case per 1024-byte block: 29 records (leaf) / 29 keyptrs (node)
-> level 0: 4294967295 records, 148102321 blocks
-> level 1: 148102321 records, 5106977 blocks
-> level 2: 5106977 records, 176103 blocks
-> level 3: 176103 records, 6073 blocks
-> level 4: 6073 records, 210 blocks
-> level 5: 210 records, 8 blocks
-> level 6: 8 records, 1 block
-> 7 levels, 153391693 blocks total
-> 
-> Fix this by using the actual bmap btree maxlevel value for the
-> set-aside.  We subtract one because the root is always in the inode and
-> hence never splits.
-> 
+> Cc: Brian Foster <bfoster@redhat.com>
+> Fixes: fd43cf600cf6 ("xfs: set aside allocation btree blocks from block reservation")
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c |    7 +++++--
->  fs/xfs/libxfs/xfs_sb.c    |    2 --
->  fs/xfs/xfs_mount.c        |    7 +++++++
->  3 files changed, 12 insertions(+), 4 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index b0678e96ce61..747b3e45303f 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -107,13 +107,16 @@ xfs_prealloc_blocks(
->   * aside a few blocks which will not be reserved in delayed allocation.
->   *
->   * For each AG, we need to reserve enough blocks to replenish a totally empty
-> - * AGFL and 4 more to handle a potential split of the file's bmap btree.
-> + * AGFL and enough to handle a potential split of a file's bmap btree.
->   */
->  unsigned int
->  xfs_alloc_set_aside(
->  	struct xfs_mount	*mp)
->  {
-> -	return mp->m_sb.sb_agcount * (XFS_ALLOCBT_AGFL_RESERVE + 4);
-> +	unsigned int		bmbt_splits;
-> +
-> +	bmbt_splits = max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]) - 1;
-> +	return mp->m_sb.sb_agcount * (XFS_ALLOCBT_AGFL_RESERVE + bmbt_splits);
->  }
 
-So right now I'm trying to understand why this global space set
-aside ever needed to take into account the space used by a single
-BMBT split. ISTR it was done back in 2006 because the ag selection
-code, alloc args and/or xfs_alloc_space_available() didn't take into
-account the BMBT space via args->minleft correctly to ensure that
-the AGF we select had enough space in it for both the data extent
-and the followup BMBT split. Hence the original SET ASIDE (which
-wasn't per AG) was just 8 blocks - 4 for the AGFL, 4 for the BMBT.
+Looks fine.
 
-The transaction reservation takes into account the space needed by
-BMBT splits so we don't over-commit global space on user allocation
-anymore, args->minleft takes it into account so we don't overcommit
-AG space on extent allocation, and we have the reserved block pool
-to handle situations were delalloc extents are fragmented more than
-the initial indirect block reservation that is taken with the
-delalloc extent reservation.
-
-So where/why is this needed anymore?
-
-Cheers,
-
-Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
