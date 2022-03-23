@@ -2,368 +2,217 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EC66C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 07:08:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B528C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 07:20:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232921AbiCWHKK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Mar 2022 03:10:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56512 "EHLO
+        id S231362AbiCWHVk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Mar 2022 03:21:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232122AbiCWHKK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 03:10:10 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2E99BF72;
-        Wed, 23 Mar 2022 00:08:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648019320; x=1679555320;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=nFfcLS/n1UgIu6ykqsZWlNP54RWJ3rWzqT7racZ7/Kc=;
-  b=AVDnTdysSU1/9Akzf+mllDdslzpUflXS8OPUpV4Y069Y34ljtrNvJY+C
-   MMiEe3vQ8L+EpoJrMx9FtVccUQdEfYOaaEbZY7xbZ76AzacDKfz3kRCNl
-   x/j3z8PqeLb8Wd7Bzi5Apq3ARWQ41VwIsiiPUtttP4LjZH+msrXFJi8hI
-   TIbN9kRZjZ19aO89kD/Wcztpb4WZZsE20vb1LjSnoce6nl2tafE08Ekb1
-   2SVg9JbQ1yReOy+vh7vun+dUkwHw3FuPKosnz0P4XB5WkbUhqepFpYZMj
-   cRqb7YFYQLZS/GDjJuFqTwuuFpfpeN9DGTCOQfp9DAWc8Px0DKljt0j9t
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10294"; a="258230534"
-X-IronPort-AV: E=Sophos;i="5.90,203,1643702400"; 
-   d="xz'?bad'?full'?scan'208";a="258230534"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 00:08:40 -0700
-X-IronPort-AV: E=Sophos;i="5.90,203,1643702400"; 
-   d="xz'?bad'?full'?scan'208";a="519246097"
-Received: from xsang-optiplex-9020.sh.intel.com (HELO xsang-OptiPlex-9020) ([10.239.159.143])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 00:08:37 -0700
-Date:   Wed, 23 Mar 2022 15:08:34 +0800
-From:   Oliver Sang <oliver.sang@intel.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     LKML <linux-kernel@vger.kernel.org>, lkp@lists.01.org,
-        lkp@intel.com, xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
-Subject: Re: [xfs]  1fc3f2c3c9: xfstests.xfs.529.fail
-Message-ID: <20220323070834.GB16885@xsang-OptiPlex-9020>
-References: <20220322135402.GB32582@xsang-OptiPlex-9020>
- <20220322162733.GP8241@magnolia>
+        with ESMTP id S233545AbiCWHVj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 03:21:39 -0400
+X-Greylist: delayed 64 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 23 Mar 2022 00:20:09 PDT
+Received: from esa13.fujitsucc.c3s2.iphmx.com (esa13.fujitsucc.c3s2.iphmx.com [68.232.156.96])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C42E373055
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 00:20:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
+  t=1648020011; x=1679556011;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=2PmTupBbObE1DpuZ1dwusgrqnJbMNIYhTPan62wTXJA=;
+  b=uQIE4E1ah4/yLK8hH/wq0M3xFyNqbcZzwgIKfsMig3IFq+7u8K7P3aAg
+   arv9qQommFm6/iEQt4niPNPV16zb12YJM/7Khop/ndaASkBCsUr+NNRaY
+   5k5+PB8rmP+JTgljMxJHCANzSA94m0SobhBYSqPxDRnjTV4IrR3yUZ+wz
+   WTg1/NfzF9mJp0S6pOVRmdgFtGb9NWmyz9qDfvlzUQST15LVkgRALNw5S
+   D/kqa2exPbXGtORmzray21UbuNrZGSofUWFpa8EX1BorPTyX8Wxai6bJQ
+   BQyHgl0AcWDk6VPpQdd67k1VXpXHefshm182oeQbEJ8rUJv13SovxNT71
+   g==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10294"; a="52126939"
+X-IronPort-AV: E=Sophos;i="5.90,203,1643641200"; 
+   d="scan'208";a="52126939"
+Received: from mail-tycjpn01lp2176.outbound.protection.outlook.com (HELO JPN01-TYC-obe.outbound.protection.outlook.com) ([104.47.23.176])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 16:19:03 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=bIhrepP+7i7SuUw4l6JOPg7W5KphNdCQwCx5Vbr3R8lkiVR18KrkVaODRQXmoIrNjNZX6DgCm79hqkLCrGAE+XebgM+ADX3g1ccDDsCTw0jvSwf5OL5SfNIjPMlCslQqsqXnBMZePoNPd96/9qTF/bvaxv0fqNkUXulaTt6kBGo/pBT+EMDPzRcaS1msV+kqTXRCSoZ/IhIST0Q9z+CAOdi5CxC3yextbcwkiGbnSAFzYmu/cGmhq4qJwN7jbd2C0yDVRJJxnfiyJioL3bILx/wpEe/wxNcntPxnIYqAtLs4Knthj7hR+FT+euiJZKv2qFWcrgiKMFm1ezAwznEwPw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2PmTupBbObE1DpuZ1dwusgrqnJbMNIYhTPan62wTXJA=;
+ b=clIYMUOPEZsHe4EHu4qHwWGoRJhP3QHFGOCgHIQoRltLTFBtT8VPSGxPbvU/wsDSnFrlFLknmQTk+FY7mSdbC7QqPmDeXpSG2hUbmJGEN03La12fYtf0p9iG++bbqHFbdRNVTXJRxt/RH+1UJf248WzVG+1wlHKLwAXGwGPisvBH9MxVxX3peDstZleqqQH3jZjrXefy+RziIHTrjAliW7wynHU88AVXW81ztZNSmEFDMGok3D1X+hT1mHd7a0rLDQWoAw0mIO1jrAsh3QhCCqPTwDH8PZ+6YZEsshZmJ5Ou+lMJs8rmdN5TwUjLUKOJc2xfTeFyX0okzPAh7z3wPQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2PmTupBbObE1DpuZ1dwusgrqnJbMNIYhTPan62wTXJA=;
+ b=aOQulevIs9UVj5Rkw1uFl1K6ka+x7IBzWCQ8rgk0118QXNqHfgY7u3nfGhQFzizn9fPB54cnChhve5edfCOLp00FqKv+H13Z3jOsyBhqFDY33P3WHoDHn5PPNh4461ElAVCPSG0YR65rLiN+NjS24V94JquWHpJaT+IW3Q8e/2g=
+Received: from TY2PR01MB4427.jpnprd01.prod.outlook.com (2603:1096:404:10d::20)
+ by TYYPR01MB7085.jpnprd01.prod.outlook.com (2603:1096:400:d0::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.14; Wed, 23 Mar
+ 2022 07:18:59 +0000
+Received: from TY2PR01MB4427.jpnprd01.prod.outlook.com
+ ([fe80::dd2e:e671:b3d5:d354]) by TY2PR01MB4427.jpnprd01.prod.outlook.com
+ ([fe80::dd2e:e671:b3d5:d354%6]) with mapi id 15.20.5081.023; Wed, 23 Mar 2022
+ 07:18:59 +0000
+From:   "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>
+To:     Dave Chinner <david@fromorbit.com>
+CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "pvorel@suse.cz" <pvorel@suse.cz>
+Subject: Re: [RFC RESEND] xfs: fix up non-directory creation in SGID
+ directories when umask S_IXGRP
+Thread-Topic: [RFC RESEND] xfs: fix up non-directory creation in SGID
+ directories when umask S_IXGRP
+Thread-Index: AQHYPcNfselsqwhzC0yUXxz4p072iKzLFj0AgAALLwCAAW/YAA==
+Date:   Wed, 23 Mar 2022 07:18:59 +0000
+Message-ID: <623ACA1C.9050203@fujitsu.com>
+References: <1647936257-3188-1-git-send-email-xuyang2018.jy@fujitsu.com>
+ <20220322084320.GN1544202@dread.disaster.area>
+ <20220322092322.GO1544202@dread.disaster.area>
+In-Reply-To: <20220322092322.GO1544202@dread.disaster.area>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=fujitsu.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: ca306e23-661a-4592-0424-08da0c9d6671
+x-ms-traffictypediagnostic: TYYPR01MB7085:EE_
+x-microsoft-antispam-prvs: <TYYPR01MB7085759046FCF921631C6897FD189@TYYPR01MB7085.jpnprd01.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 3Z69CP8XQ3kRugHE4b+O7fWTuI8LN5jFl+50N4RadJBwr6cam2KUkvzRmgPF6qB50iDwSWr37rd6Ozacm7clTQuMCp4UYUPxzu6rDHADlGcpGjpzJRFyrhjZB8EgjqRAXE8/OlybrXBOCW+3IdrHIunpOCoG1A42LlvKDbTKL61c4gcrvKWd3wHBJnImtv5g4iYkK1GnUNDxPYsZNTx+YhmGFAv+yCCHVjPAM0aBETwwh+bZ1Ef4XF1ZpKFvwUdz2voH36IECMtDFRt3hjBTfuPtgViK7/GWt7obIZkf053Bm+wJj8q+lf8ORjYFqU0Mi/Uw4ZoTa/H16uq01IuzOvthGu99OromlQRa7YsgzqL9ve9NQmJvfDXXIquOVtlobPh6NyBuQZG8P5HoHBTKMfhGIISUyzhq0Q/cbK2sei2Wj64wQzXweP7oY+M/7IPACb+ImbUam5XOrTgqgLV6o2eOjR5FyMW28iV2UcMreUHMJ7Lx0voX9TNB5XFosmnLW7GlGR+fnNkO5xMmOVVoznw/Z+pM9p7FTsfB7CpZ4JP6KgeBalglpFjiU1DmDI4Yam3URVOdSUtOTifyilqzLh+v/lqSt4/0WtAn6NNz2G3P2JI6zsUyUHJ/fi1EaqFJ30z8Yum/wmKizdy5K3Fsab4lgCu80j5X/Y07714e6PdaBtEZwEH0f++SKwdPxINhC04LXi+MyNC3e51wnWbjfQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY2PR01MB4427.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(38100700002)(54906003)(38070700005)(122000001)(85182001)(71200400001)(8936002)(83380400001)(82960400001)(5660300002)(508600001)(66556008)(66476007)(66446008)(66946007)(4326008)(6486002)(91956017)(2616005)(186003)(2906002)(26005)(87266011)(6512007)(6506007)(316002)(6916009)(86362001)(36756003)(8676002)(76116006)(64756008)(33656002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?gb2312?B?SWpMQ1gzT1NnaXlLYmtQQmZvWnpCazZxaU1BbWppU2I2ZEVueUR1dFRlU1lD?=
+ =?gb2312?B?TFoyMFNmRHJmZ0FEZG8xZDZ3ZnpvbGxmTnovejVFQnF4SDNUL0VScXdiSllt?=
+ =?gb2312?B?aS9MNGcwdDlmdEJleCtjUDdpWWFhb3hBRHpWRm1wMGFwdFh0TEVtOXMrL0c3?=
+ =?gb2312?B?WCtITDhuVk9PK28yUmdIR05qTVhyWE5XZHBkYmF1eWRxcEs5WW1TelN1TEtr?=
+ =?gb2312?B?T1FUc3BXWEFyWGpYN0N1YTZXYmpvWlVxSkJwWk1BL0c5eFBLbmtibVpZUnZi?=
+ =?gb2312?B?USs4S2FHeG83dWFvOHg0c2NwWHd3ektmVGFxSE5vN0JabnVGVTcwRzFCR1c2?=
+ =?gb2312?B?YVBkbFc0N0lHQVFxUHhkbW5XVXpzMStDRGg0ckRTelgzL0ZJdDF3OUNpbHhL?=
+ =?gb2312?B?WGVYKzg1RnpSZnNqSFpmMHF2NGt3MXJjdmhtVHBla3VneFBHZXA2Wjh0V0cy?=
+ =?gb2312?B?bkJqMGQ2YUt6STlhcWJQeU1QRG5tSXhkTWx3NVhQTXQ1UDdYUWNEb2l2Tko0?=
+ =?gb2312?B?S0hydDVEbFEzRzlGenp0My9NRGpzbklyWGhscEJaS0ZtUVVzNmxSRE9PYlBU?=
+ =?gb2312?B?TkhnMVhGNG5za1owaUNHMFhuZ0FSNjBBVGV3YmQrUFp3ZFh5aU9xQkhRWXpo?=
+ =?gb2312?B?bzZneXlNMCszK0ZndytoODVYUXlUeFhZYUNiOUQxQlZuTmVpTWM4RzZMMHFN?=
+ =?gb2312?B?V1V2NVc1YWRVa3JCckxieEtwNkRxWjhOWWZrR2ZkSDEwbjJScFdkbndlUXN6?=
+ =?gb2312?B?Tkd2cXdqS0tQT1ByY0U0SVhyaW1VZXpIRSt0S1ppd1RVb21KUGhtSkZtajVq?=
+ =?gb2312?B?alZ3MUI4anY4V2JaODFMMmZnVXRDNWRJWDFuai94NHQvd2t0M3MvVFU1Mkw5?=
+ =?gb2312?B?TUhKa2ZCQ25oRktNSWRsTU43SGhFbGI0UXpkWFpvUDJoT3hsejNxRmdkcVZs?=
+ =?gb2312?B?Y3dLTTg3bXVKV2Qvcm5rdm5yV3VDc0hwTFplZC9mRGM3VHR0NEovZ2YxQXFh?=
+ =?gb2312?B?TUF5OXNwa2FaMHNyMTRnNVBocWg1bzFzMlAvODZRNklnSXRKTXBsTVp4Q2RJ?=
+ =?gb2312?B?Y21ZcVlXUkFtLzhKZjVHZURERFNQK0hNcFNMenJnb1lOdUh0QWFTNExjaHpl?=
+ =?gb2312?B?WTN1VVhDUVE1a2xhemZVOWV1ZjJOREYvKzRHblNYTG1jV0pwRUVzNzNFREpQ?=
+ =?gb2312?B?T1ZZdHV6Z1ljNnNvcE1jRExYTERlU0taSDRUT0ZZUjhIQllUM2lhL1dpczV4?=
+ =?gb2312?B?YTZxNjdoaDNHN1VCSXc5Z09zSFN1NDRIT20yOHlLYlI5REY4M2dLZkpFWWFP?=
+ =?gb2312?B?eFRGeGtNa1dIZWZhbFR3WlIyRjl4KzdVV3ZRR2hrZVlVMFZnc0lYcS8rTEly?=
+ =?gb2312?B?b2pQZ0FnbkdOZmQrdEVZZFpkRHJ6N1pSRmppNjlNR1dPVWEwMmtqcGdYdHVp?=
+ =?gb2312?B?cTJVVzJVVG1tclVTSlI5cys3cmlBT00ySFpBSHgyQVk4Zjlqc2VoNXNHL0FM?=
+ =?gb2312?B?dzZ2MVlDSUJJOHJZbnFXMTRSK3BFT1Fvd2xrM3lhV2J1a0dOSi80d0EwaVls?=
+ =?gb2312?B?ZlJRUGpsay9uWGNobkJHbmlHZU4rWDlmQVZ6Sk1Zb1p1ZGV5SXpUazhHMUJw?=
+ =?gb2312?B?a0dMOVlnMDg0TUF1YnhkajJka0dES3JWTzg3dThES1hxQjZtNjFpb2hyWG5O?=
+ =?gb2312?B?bUhHRTZYdFNDVDVqZ2lNRVBEd3dtaHFyQVUzeXN3MlJ3WWc2KzI4Rlg5eWZi?=
+ =?gb2312?B?RlY5TVBCRW1uNXdLR2ZLTElqYzJCVklGKzlqKzBNSVp3UEdhSE9BNy95ejlW?=
+ =?gb2312?B?VE85bDZvVCsxOFlJWmhiUFRBeFBFWndvdjBGSURSMGJGWS85YUhFZ25kUWdu?=
+ =?gb2312?B?NVJqeTJrM0RGOWtWWGtYTVNuMmpCekM2NWdLMi9ENTZ3Q0RibWxmM1M2VHBy?=
+ =?gb2312?B?NG9JaGVxVHhXVVo1eEVkVWgvVUE2QjhoNHNidm5FTlhpa2cvQVJ2c2I5Y3NR?=
+ =?gb2312?Q?xR0CsQRSVvW+rOtopn1vHVIK/2aXTg=3D?=
+Content-Type: text/plain; charset="gb2312"
+Content-ID: <D4BA05081BDA664C84E258BB51508E72@jpnprd01.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="A6N2fC+uXW/VQSAv"
-Content-Disposition: inline
-In-Reply-To: <20220322162733.GP8241@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: TY2PR01MB4427.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ca306e23-661a-4592-0424-08da0c9d6671
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Mar 2022 07:18:59.4115
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: neH/r0ZcS7MXwIVensbjW+V3lE0I+F6nQICUkk+83nNukLcxgcZO6tp187R398QTcg2ujfBjYHcDsEAUbJ+Xt8JPh4og3Lkaiupn0Boe4NY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYYPR01MB7085
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
---A6N2fC+uXW/VQSAv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-hi, Darrick,
-
-On Tue, Mar 22, 2022 at 09:27:33AM -0700, Darrick J. Wong wrote:
-> On Tue, Mar 22, 2022 at 09:54:02PM +0800, kernel test robot wrote:
-> > 
-> > 
-> > Greeting,
-> > 
-> > FYI, we noticed the following commit (built with gcc-9):
-> > 
-> > commit: 1fc3f2c3c928c88654d4716af5cc4dee07b3a1c4 ("xfs: only free posteof blocks on first close")
-> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git vectorized-scrub
-> > 
-> > in testcase: xfstests
-> > version: xfstests-x86_64-1de1db8-1_20220217
-> > with following parameters:
-> > 
-> > 	disk: 4HDD
-> > 	fs: xfs
-> > 	test: xfs-group-52
-> > 	ucode: 0x21
-> > 
-> > test-description: xfstests is a regression test suite for xfs and other files ystems.
-> > test-url: git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> > 
-> > 
-> > on test machine: 4 threads 1 sockets Intel(R) Core(TM) i3-3220 CPU @ 3.30GHz with 8G memory
-> > 
-> > caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
-> > 
-> > 
-> > If you fix the issue, kindly add following tag
-> > Reported-by: kernel test robot <oliver.sang@intel.com>
-> > 
-> 
-> Could you export DIFF_LENGTH=0 in the test environment so that we get
-> the full diff here, please?
-
-the full diff is as below (also attached dmesg, full log, log for 529 in case
-helpful):
-
-xfs/529 [failed, exit status 1]- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/529.out.bad)
-    --- tests/xfs/529.out       2022-02-17 11:55:00.000000000 +0000
-    +++ /lkp/benchmarks/xfstests/results//xfs/529.out.bad       2022-03-23 06:18:39.815036267 +0000
-    @@ -4,21 +4,4 @@
-     Inject reduce_max_iextents error tag
-     Create fragmented file
-     Verify $testfile's extent count
-    -Disable reduce_max_iextents error tag
-    -* Fallocate unwritten extents
-    -Inject reduce_max_iextents error tag
-    -Fallocate fragmented file
-    -Verify $testfile's extent count
-    -Disable reduce_max_iextents error tag
-    -* Directio write
-    -Inject reduce_max_iextents error tag
-    -Create fragmented file via directio writes
-    -Verify $testfile's extent count
-    -Disable reduce_max_iextents error tag
-    -* Extend quota inodes
-    -Consume free space
-    -Create fragmented filesystem
-    -Inject reduce_max_iextents error tag
-    -Inject bmap_alloc_minlen_extent error tag
-    -Extend uquota file
-    -Verify uquota inode's extent count
-    +Extent count overflow check failed: nextents = 15
-
-
-> 
-> --D
-> 
-
---A6N2fC+uXW/VQSAv
-Content-Type: application/x-xz
-Content-Disposition: attachment; filename="dmesg.xz"
-Content-Transfer-Encoding: base64
-
-/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4JttF+VdAC2IMAZjZYdIpyWVi5AAv6LcFzpDXkJu
-d8pGJSQRiF3Gf2p+VtNBFyaSPNDdIIC7GZ5Ucds8BKUly1rz7RAlAHeYoGoL+Z8BIyE+5qhP
-xYsVdk2BWw0nC4gsfN06F/EMbgs1j8ac1Qty6zgiLyzkih81sKJaOIr95soVtRlVWwUR1jJj
-gcwkiKyrHbqQtiU9fsLlH1rptyQIZBEUqq7vPrNlT0ecqnGTfxj+SFPw0oJqGRelLaXLEF0v
-1ZT58e0Ov+FqF3KX+2DW0irYYJtEH/2Kdmkx6i38dDsf8V5NZba7kIp43X756/10NUszIwOL
-ONFHQxrG0HQm7Ab5j97j5MOOF/LfeZZOSgaFIbYfVvmCvMv55NYQw2FLHcn7Erty8gBcogUn
-Fvoa2WdA5jP+r7gX0Dzi/bcsTXmVGV/2nx+z/SNIh5mwdvtXv1QA04CCeKnsVYSOeLRIgA2R
-ku/2/4SWjLKHDgYIoGhWy+w7eSgeEomRaREXIuTGH6uujEJgJbb6nT/7jcSZb5IUOMVYsuQk
-lU4rO50XrcGSE7jiMsisJ0E125/M9TDlFkTqEjLk+WDcJ9jFT0Eq+Y1pzQgEOGKs30nzSkpN
-vLGWx5iJ7CGhgnp1oi/q13ArqVh//xRflUlNMEYitlPIN1aOsjorr2Vzp/GPL8B/lxEg5Od9
-fzmPz6uYwvL3TFyR60NfFus/XB0auPjRZxq4veUNCdUfZt23/Gb81S88420Zrjy0jkLq4q/a
-Ev8nR/k1rM8RC0hXsi1vPHW6qf5oDM8O/51BlGazrpxZ++KEEajCxGAFVtuWBC8Jc5XHVQif
-82q3hT13KYWH/5QI4muhnjTPSqljuw4oX1dSBldhZJOq7Rk56Wky23VO8s8obIokPURgiZDA
-6KQKVWm9ZkT6zVqOYs23KoJoluyOwq9ulKsbKpB2SuDEX+mBsgzQuYVtRDPA1dUjmenEvp0p
-CkM2C2U2Rpwc9tqYM2TvhZzkVNzBUJmgFZsN0EsmULqsbFw+NBzVuIYS2Ew8A94L+oU3FePj
-5FM9gaPT5A53WLH+9ou8LDEtHncJyDmnzH1kZrvUUI21Nxq1JiiMzlFGt4x//Mn/rNV1m9q0
-mzTc7mJBJdxeAlObBUv7O/pYMhyIxy2TVn5KHrXs0yEf70NF1kBSKFk0XlilZhfv2IG8T1Fe
-sbYvtEB6HZ7zyheqw+HmUwB4m9sUWdaCJm/is51ezTDhDEAYJpWpN3vGijC+T0nmx8MsT0tj
-nE0cDw9fF8w44lzHg7Pf2hJkyHZAbMlXeoo6vg/+wM2baXVpmgG+of+sCIdM6FYvOLkToSxM
-jfQ0GQg5Ajv+Clx1E57VyIHmxHjtinGhajs3NB+7ljXOjReEDUtjoQDdAs+lUCwalmV+sa3j
-e/X9PAFbjiaMbC4jA+epDMbmNMmtT5ird2S6bOgS9a3f9oK8P+Nora709Jq2pwYQvBoitgna
-bg50goQh2jDjuDWsoxHBpMSiB39Vb3IQJGgAIZN/xqEyL8rN9Ar1OKzRkhlv5gKVEiU6s1OH
-q2g+pMVDbGuTaXF4IqtZ4R7uKNZwbFZOroQ/GiAqbXEWiKqo2SPJ4EhhIpaYSN+FyYiVvzV7
-jsSNMaTbKMQlr8WVlQXUjiCutFRP/06hgngF0QV/rAbRtpk7GlPy6Q6D8dCcG5pzQEU8JjdL
-E1eSGJvTsYAaWMnxdocAUK/7/XIehX7QdZoGPH0UdLo2ZufjPjp0oxBCUnlYo45Czrg3R3sT
-vXGHfRmQCMnuMXjSTUDjXQizleChZiLlD7LcQmsTSSM1SLsuy4QkUBb65jn23dT+mg+uvp4n
-8ZPkddshAlz+ylOO0gtS0MM9STr55HaJob34v9mobTfweqXHMHkdpCVwc4HHsZ/m/agnjPzG
-FbQCLv/jBAXvqFmLtguxEE+Ovt5WhvXuAlDvRJTX1wFIVC1n3Tg8/AfrBKWnd1KyfZE581F8
-cQMvqhPh98IAbl0sFDp7ki8313ToIq8CMKemTAsn8nlVqyjLZWnUtWTZtyACB2sxR5nBe/qb
-L6yQyeKy/wmFJXCVlv6Rc9Im8XniPxlkZ2Nf1wz9o9DqH9shymKYdIFzS2250JH1GRgwpFpc
-Q4dldUsFKFSptSBTzTujHsC7LRFLIVVKItyg3ZmmJutjj4RYi9noSyY3tWZsXVhgXpOMhVrk
-GXuyw3EwqQaiN7YFF2cwprmSLurgvD3OYshLetXq2AcV9dCCX3TI3YJEcCcQtHPIyh0SqRab
-hKXYFvcppIC96SL+CB/cFLdjxI9fYKSK4B4YTdm5kBOj2t5qS8LdxXnY8EPsY/bSEZCRR676
-5My9AC6Nj8ZO/AtWMI4mN79H1FlDZPf8lyRmC13BoWX0E59aDDL0Ye9BdgPpLPvjhiNk2bMD
-glX9FsWRkTLViQkHdxV7C/vEK1oiRy+Hy8aNUW7K+WY0JsPdEK45qXtUL1YshogS5srUshSM
-RUSUlqm5k5LsKZSb3c/dSOYqaLitIgZr5hXB+YiAHzPEwek0oYUAgqEP781/2qjiDNaMnpS0
-0cidH/moiEQdVgehskGXxcGT1C5l0yGfPFMke0MurHoX5W8MuDBC42M8wI83SqThuynU+FFn
-7L1WyBz94UccjrwCN6C6R7RRLPWvwH/wAtZ39xCYAyn3R5mtHjOdK3jvkLyHSO01p1jCao2N
-BwrnZFBojPxwpb3diHYKAjbBUWNCA13Tge9jy9mhYVbZSSL4tPn9siCAUAwD9FUUXmmg/WlQ
-sdsFTLmE0Cygvx5pKnedSDGr0zq6Xh9gojO7HEwxlmb23GOgZk/1OcuODp8MunWluHKmnnGv
-raVrpxMU4+BKhep1lKsP+Xvf1qWJ5un2dWt9gb0BXjlI3b2JXTItS+Pd1enh/NhFphrmHhwW
-ADFnpE+pAxkC150dpbQ3ychKOEuYWNOk3AkeA9TJ9+ev9ymHKvDGgyRCglzs/ZejNWNTyq55
-Iv1PtrPSZU2bkWBhJQDJG7CyXHpEdlYb2uc7dWikdptEf7pMob42Ec/jwgkH29aTZ9Tn2+x2
-pvAm/ptpDI4nHII5h3IVc3W7XGXYRicvpx9izGEjjtjJr3J/fWJN8b3lBVL0bQJd5a+oJOuo
-9gZ83UoZzGh7YxRKPDUTj3BIdm5/mfKFiiB7107aVZa1qe4ZkDoaCFIqhfn8N3UL+ls4zy3F
-gS+PpGNaGk/UpE6O5XIzHupDOa+uqR+OxNH0IWFuz3guXOytT6B+zmxim6p6QfXSYzjOMV5D
-NvT5OLk1KkTOo6z8NLZ8lV2CR8xUbqncwJ+AFjym4qNIAgzhxA7qY5mmw9J4FfyIy8vBUPaX
-rh1VJ7+3FxitXTawfpijZmdlYVrPws9aW2C09Jye+JUaEJR1gFPO/DUm2CFgnkTP4io1VYmX
-r/cjD/Po7BKtqlD3+XxYfy24dic8WilWUctJa9A4X6j+4pcAdDtftKFcWg8VHPecHNrHXAPK
-lyUJuG8h/oSdyodG16g0/JAfWfjljq4CYINaMJo114uQBJIpRBm4Fn9IdBCfKMV0a8hUHwn+
-fFTsIDR04tElPVi9MZxQIu3tlYVaUKqb+uXtVZQp3RnLrV6fhjnHqckSc6SF9Gpgx9MJxwxo
-e3YItQObbOW65s8kU0S2qJOv5OvrOJWkd7YpQvg/j4cx972KMa17YNImp4xeo7sH6CyNGtmS
-l53kUTsCxRl+9mvtLODb/ImKAfYiM5rvZ7gUHtJ++gA49u3lLEH+70nNffexjb7bMuWYQliI
-g4DYX3JH1TZkR2d13qZa3Ia8utvjY78vqSxNdHeezZLEYqcml4HiFgZqZmk4aVjTCj6q9NXq
-0YTmpk79Z9dz+HJHbt5PtHl8n/sWRzn3OhkmMic1TT8LuASCpYey2uCeIm7ng8bsiW6hsfXi
-Q6JUGgbjiS+RJh043LqQFYyxfI1b/EIj2Ezm+kCIs+D+Z+PQtuxXWvSfjK5hUWjvnns0FhNg
-2RhLJo1mGsImb6Rr7xU6fA4aPqix7Vj3JbzUsyEWeO/LniMPuddSZB97VqLsn/cLVGxfp7XC
-tU7IE9e8MEyD4o0OAgS6Ztdq8q9KALfTrWhMoKa4e3FrWpK7Z0jjx+yfkgOqJY4uGz3w1Ru1
-YDbEO4hTafiZxtVIn9EIcVAmEgm90BFdvdGBzAoCCcmpvFHvV7kP+hv+HPqmXJmsfF7jBnWN
-wDKd383Za0YEVB2HFqyXZCThAnmeYj7HLpHVUo1hCyBbudH/Fht6oznHC+pXbhitmckBFa5L
-8FdI/OhvtRfiow0to1atfE4pKUMogi5eZw480AzR19mY4K0luJ4wKE3zXIAlUp9PndAvCFCx
-YxcPlvM//ai/i0r1AMF9bI3CaM4/yhq8KDnFUJQTvCvCw/KuIErXY24huYSWals0K94LyLxv
-5ya7CUbow5lYIByvYRbMKwPJdeFEP1MW4gWWqoZAqgu+gHVrFYQ2k8RhSqrYCyxxcx60CJhq
-/cchuyB/9HDsxRuJf0+ec76AAw7eFo5JHV2ZOe+AjCAleUQvGICbtE+DkxS1yzB2DZovVdAn
-pj793hfVjlkV+9DqBIy9BTFuUvqMiEbQ9f6g6Knvrb3LckDSaI5ctC6Qih+aAm9B1RAlDlgs
-ljE1zoF/of08k3zrtXK91bpW2G5D5Wq2uoEjsqSneBYhXRMj+aW5igdvzWj+lG3rGsMV218g
-dSzSDBRmMzyAC8r7eo0aKzMkpb6gJ6VqCqBJF0dwBUrReNO3k3oSTustXS1JQ6td58qUjMny
-5/Pk3YEH1p6KKjckMDm380MpxtuZLQhoBgDky/Q5QJ1x27ihTmUE4RH83eG+9kiPab16gFzP
-fr7mkfFYu+/bktLkO2fPeSUpGbe5iA6YsISqOKgm0OFnfAhsH8o26wCf/gWrvXipvGXEyQ3i
-TVXmc/iXJ/+KrnUPRuQXxAYjc4WfMKwlmwMLxmcXvlGXILSINsoRZ0/Y6y5kKD6nFIVaEUSl
-blvRbmbrulHQ9hF45n9PgtnjCby0ATHg5dhuNSVzEkIRqorYSJk5MOwx38/nYiGh+0USlNN5
-9F0nUVzpWrloOECurWXoMuTXN44lkAWWINNzHv5NF+a/fjr4HsA+4/XqAuODbv9YBxdA451Q
-spDKub3BbzTLT+uKjODPhOV0e/G+9ZTdJUuwx9EGbmvrn9eNnFRCs403s+3MR2awsTDzsnCG
-VHlrj3V66OJBq6TF+h26bIC4ivDDaxyOIspemLfdrBSWhKzlA/lCzfUeuvmAuQjhbt0aPbtt
-qOlJJ1jh+E3YeOuUog4PDmJ4finZsQnS6KwOpNWROXSr/UalwF8N7m5SwUiTPxhYTg56DXPy
-IM/jy+6ctg/hETRagjbJGTWBQ8ORn9OjAf/jTpIAucMs7Rrh4yuU+XkvPHWUGcCkMNR3T1z7
-Q8Tj1vO4UPxF/dNCoQnYi0Ps2FrVT6FdGB+Ds3DYIRgvH5gjRw5Zjy94FIZWV2HoKPUoYAvw
-91foZJMYWarA2wVaLov7W/XZ4h6PVI7dvMjvmetMjPUnh/AVMcXjb6RgTE0jv4VheiUjZWZN
-nSQIH8hCpJY733ZQsxUMYJgAUBZDcXdVXhfnlsT/Ttfc70LRyQeUujqXwiglZ8/X2zZHiWTa
-OsOzhZF3GwjfZJCqoYhYJ/+hkQo6RH0afIO/HQfDt8awjtKUnbOuF6+8E+xiH5+ULDE6agxC
-rhmqr7av+drOgo9grDH/nkEBqQk/2teayFffqJzH0VGi+kT79m+iGotESoymfKniJK7pYDVE
-/vcw4BVlqX6HPJ9H+xXeXaIw5gqQVAkx/UShE0PFJt375aVxGM1GQP9c2vP7e00oFIz7G+Do
-C0a0hoDBX0k3lDeWT6syc2XklyS1s/rZyecsDaqm0RcLky2n+VSp074stkxf7VRb21hSetcc
-59bkw4UFH865xj1SBIHYK/JC0JBdH5NUHJkJ5AQl23lk0ZK2SRxOkK+zDsyU8tu3maSvjGum
-Jpr252Nd46cqAM31ALnL8ZxomiMD/2GK6OnqGQoyMvBJbx8HXd6F93O0m6xGwkawn72JU3E9
-NnT1rVRGeH3DhAvQXoLdpyfzJPodWouc/8m07B3LAO1183esNdJAuLGtRvEjbHarxK7uRT44
-lAb6llEXUiwLJENWvN9bgC1ADyOJvErq4wSOtLQCmcxX4QmJQ03bVsPinCYEim4psRy4DGW2
-tmo8+S4NQn3yGmRTAq/rHkzS/cuncEbnhkLDEK+veVu17wdUGaXOxhsQlZfqSWgAvRRVgBmI
-FVfODP0hjPaWIlIAVxfEU4P02qSKFebZZo1LiVUtvGfbO/k7VFOJEqTF4pCJCnlSmPuOfKcG
-jgcxSoUl2jeDQvAWBsEwSOjb9T7HmaCpGiqHQdbqtT6yGuIeOJ78jf+HbwHO0O/JJ6Tq02wW
-PY4TS28VRgi0OJt42paFe5mx/RoKunhDXjYLGW6qOGmS5JUIAIRhJT8/KrtTZSlPBF602voJ
-/FLXmy8DQwII2Yb+ddvUAI0q8dctlJhb0oFzobLkGlAOoC4f3YsA7hyCctePgSiTtTSjNfHu
-5xy9AFzZPYMUFlgIDHIIX1Hk0o1/iLbuv4TSZhacD//q0oKFAWnwpxEj6T+vIz2bgBAGOWpR
-SHGlU+NwmLLJ7h8ggtl0KMghouKo15GvdOCLEIfNG8g0Dz/fKz4HAo8tg6iswkJMCq9/8uaP
-Lsq0hwfK/V8LryVO8Cyuw5qPZm3GShnfRG+AKjWqgNkvMq58O19/hyhwUGKV7zdhTQXlRJEL
-ZPd3lLyIfvRkM5/DIMMq8Mak3f9KUp31kv25cMw1zuueijU2QmyM5tRtZBikhKLzNAVNwuC0
-yCE/ak3GxzOqltGAsuHaI+6ahYtJi43bnd2EKGrfz51ALhXprszS9dzTmQWQooz7hUXQsv4v
-w9DTus932rwh9CYIPl1P51/PTdOF7OP0a8kPATBt4b/WSJPqrkHBwmAk5HF4ok1gKONIbGlu
-Zbmlv2bH/cmVjAIzOar3byxQgCgcMiceSVHJNyMvTJxw38aAzoTdhZX1Xar3TvvKcT5L6hYI
-lNzwvjD38X/aR8c67KV7XF/36me+YnwFfjfrAxGoe+EASCiYTnHNVdKnyfsWi9JYnH1hzptK
-8GZf/8/57m/SPrS1XzQuZB06+2Zd57qci8O/rz+tlmBJZb+GlCZpZHrAK3jHEm2NzcqXWuDP
-PM+Mit9rn70ocglYoRjI3NoZiOQJI+NN0KR6jUhu5vrLb+NxenHSjPMnUx7rrpq28XadEIC+
-P8RbKameMhWR7rVJXRDch13D7MWGUtPRttnu/THoZj/hEa5lAzNX7DEOaVxCw1UG1ps8yYY9
-j/1Eugfeu2I9HHO9KMjHIs90QUi2klTxEoZRvP+olfXgjvkxlY2IcwbsHzXN7AK5Oj9kJjA5
-Xv3UINm1PsWmwDcNBrJHWAWqFIl2E75R15N8oZcrqTFfC6DlUJ3kxF+yV2dmIQv1nNFm3Fe6
-6GSkob15tLQSIEL+JaNl8ncutNOR3tvx8YkzaKMjNEvVqH+ATu0e9JUulJojpAmzAyIkeFWX
-7EerTqpvLaqV40uS/EKbpEheTwRliNtEsv5a3HCJ3iaqpAyN4GpiaejsC3P8MKoI7R6h61g5
-kaeYIH9JLaBtnOS60djuamnfvCmLkID6A/D4d5vXqp9WnOJlKho0c+edEGgm0TkcYw+OCiDX
-iB9jzmtTrOrfrDsQ8OTRwRrM1/gfn3AoBGEFyWtD6fExuVJyqJlKV23izTYFenqMlV0eIRRu
-Z2f05NiTNfJiP5ASoQARmk13Og5idaUlBc0kmoJEu5TcPbhtn7Bt7vlY8XUqsueT4bz+Yx61
-CqLFNkcSTrWYCJ+84Pt/8nYyxOhroQtAKb/57c/Xc3Re6V8X5Ti7Dehjni9ntZvdj5yPxRya
-rpZ2FIdk09NIwRLjvIAXKDpzvTALOimhl/oB3RnoQ6kvBz3oOzfbVryJ7eb11WDwQCGsO9IH
-Ayu3EappIAzEqrlmJ6IBfYs1NeToUBxj2OXzREapiUf0sF7UhqOS5ej03AACr+JDLcENE9C1
-gm+wCQed3o8j3hBULRKlInt4Cx64y7/65nNg1N3Fe5og0XAmctBI5MkZGoy70wAAAACHjTXg
-eOMKOAABgTDutgIADX3dcrHEZ/sCAAAAAARZWg==
-
---A6N2fC+uXW/VQSAv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=xfstests
-
-2022-03-23 06:18:24 export TEST_DIR=/fs/sdb1
-2022-03-23 06:18:24 export TEST_DEV=/dev/sdb1
-2022-03-23 06:18:24 export FSTYP=xfs
-2022-03-23 06:18:24 export SCRATCH_MNT=/fs/scratch
-2022-03-23 06:18:24 mkdir /fs/scratch -p
-2022-03-23 06:18:24 export SCRATCH_DEV=/dev/sdb4
-2022-03-23 06:18:24 export SCRATCH_LOGDEV=/dev/sdb2
-2022-03-23 06:18:24 export SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
-2022-03-23 06:18:24 export SCRATCH_XFS_LIST_FUZZ_VERBS=random
-DIFF_LENGTH=
-0
-END
-2022-03-23 06:18:24 sed "s:^:xfs/:" //lkp/benchmarks/xfstests/tests/xfs-group-52
-2022-03-23 06:18:24 ./check xfs/520 xfs/522 xfs/523 xfs/524 xfs/525 xfs/526 xfs/527 xfs/529
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 lkp-ivb-d05 5.17.0-rc8-00340-g1fc3f2c3c928 #1 SMP Mon Mar 21 07:17:57 CST 2022
-MKFS_OPTIONS  -- -f /dev/sdb4
-MOUNT_OPTIONS -- /dev/sdb4 /fs/scratch
-
-xfs/520	 3s
-xfs/522	[not run] need configuration file support in mkfs.xfs
-xfs/523	[not run] need configuration file support in mkfs.xfs
-xfs/524	[not run] need configuration file support in mkfs.xfs
-xfs/525	[not run] need configuration file support in mkfs.xfs
-xfs/526	[not run] need configuration file support in mkfs.xfs
-xfs/527	 2s
-xfs/529	[failed, exit status 1]- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/529.out.bad)
-    --- tests/xfs/529.out	2022-02-17 11:55:00.000000000 +0000
-    +++ /lkp/benchmarks/xfstests/results//xfs/529.out.bad	2022-03-23 06:18:39.815036267 +0000
-    @@ -4,21 +4,4 @@
-     Inject reduce_max_iextents error tag
-     Create fragmented file
-     Verify $testfile's extent count
-    -Disable reduce_max_iextents error tag
-    -* Fallocate unwritten extents
-    -Inject reduce_max_iextents error tag
-    -Fallocate fragmented file
-    -Verify $testfile's extent count
-    -Disable reduce_max_iextents error tag
-    -* Directio write
-    -Inject reduce_max_iextents error tag
-    -Create fragmented file via directio writes
-    -Verify $testfile's extent count
-    -Disable reduce_max_iextents error tag
-    -* Extend quota inodes
-    -Consume free space
-    -Create fragmented filesystem
-    -Inject reduce_max_iextents error tag
-    -Inject bmap_alloc_minlen_extent error tag
-    -Extend uquota file
-    -Verify uquota inode's extent count
-    +Extent count overflow check failed: nextents = 15
-Ran: xfs/520 xfs/522 xfs/523 xfs/524 xfs/525 xfs/526 xfs/527 xfs/529
-Not run: xfs/522 xfs/523 xfs/524 xfs/525 xfs/526
-Failures: xfs/529
-Failed 1 of 8 tests
-
-
---A6N2fC+uXW/VQSAv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="529.full"
-
-meta-data=/dev/sdb4              isize=512    agcount=4, agsize=32768 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=0
-data     =                       bsize=4096   blocks=131072, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=1605, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-wrote 4096/4096 bytes at offset 0
-4 KiB, 1 ops; 0.0185 sec (216.099 KiB/sec and 54.0249 ops/sec)
-wrote 4096/4096 bytes at offset 8192
-4 KiB, 1 ops; 0.0157 sec (253.888 KiB/sec and 63.4719 ops/sec)
-wrote 4096/4096 bytes at offset 16384
-4 KiB, 1 ops; 0.0158 sec (251.620 KiB/sec and 62.9050 ops/sec)
-wrote 4096/4096 bytes at offset 24576
-4 KiB, 1 ops; 0.0160 sec (248.648 KiB/sec and 62.1620 ops/sec)
-wrote 4096/4096 bytes at offset 32768
-4 KiB, 1 ops; 0.0160 sec (249.423 KiB/sec and 62.3558 ops/sec)
-wrote 4096/4096 bytes at offset 40960
-4 KiB, 1 ops; 0.0158 sec (251.604 KiB/sec and 62.9010 ops/sec)
-wrote 4096/4096 bytes at offset 49152
-4 KiB, 1 ops; 0.0161 sec (247.755 KiB/sec and 61.9387 ops/sec)
-wrote 4096/4096 bytes at offset 57344
-4 KiB, 1 ops; 0.0159 sec (250.878 KiB/sec and 62.7195 ops/sec)
-pwrite: File too large
-pwrite: File too large
-pwrite: File too large
-pwrite: File too large
-pwrite: File too large
-pwrite: File too large
-pwrite: File too large
-
---A6N2fC+uXW/VQSAv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="529.out.bad"
-
-QA output created by 529
-Format and mount fs
-* Delalloc to written extent conversion
-Inject reduce_max_iextents error tag
-Create fragmented file
-Verify $testfile's extent count
-Extent count overflow check failed: nextents = 15
-
---A6N2fC+uXW/VQSAv--
+b24gMjAyMi8zLzIyIDE3OjIzLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+IE9uIFR1ZSwgTWFyIDIy
+LCAyMDIyIGF0IDA3OjQzOjIwUE0gKzExMDAsIERhdmUgQ2hpbm5lciB3cm90ZToNCj4+IE9uIFR1
+ZSwgTWFyIDIyLCAyMDIyIGF0IDA0OjA0OjE3UE0gKzA4MDAsIFlhbmcgWHUgd3JvdGU6DQo+Pj4g
+UGV0ciByZXBvcnRlZCBhIHByb2JsZW0gdGhhdCBTX0lTR0lEIGJpdCB3YXMgbm90IGNsZWFuIHdo
+ZW4gdGVzdGluZyBsdHANCj4+PiBjYXNlIGNyZWF0ZTA5WzFdIGJ5IHVzaW5nIHVtYXNrKDA3Nyku
+DQo+Pg0KPj4gT2suIFNvIHdoYXQgaXMgdGhlIGZhaWx1cmUgbWVzc2FnZSBmcm9tIHRoZSB0ZXN0
+Pw0KPj4NCj4+IFdoZW4gZGlkIHRoZSB0ZXN0IHN0YXJ0IGZhaWxpbmc/IElzIHRoaXMgYSByZWNl
+bnQgZmFpbHVyZSBvcg0KPj4gc29tZXRoaW5nIHRoYXQgaGFzIGJlZW4gYXJvdW5kIGZvciB5ZWFy
+cz8gSWYgaXQncyByZWNlbnQsIHdoYXQNCj4+IGNvbW1pdCBicm9rZSBpdD8NCj4NCj4gT2ssIEkg
+d2VudCBhbmQgbG9va2VkIGF0IHRoZSB0ZXN0LCBhbmQgaXQgY29uZmlybWVkIG15IHN1c3BpY2lv
+bi4gIEkNCj4gY2FuJ3QgZmluZCB0aGUgcGF0Y2ggdGhhdCBpbnRyb2R1Y2VkIHRoaXMgY2hhbmdl
+IG9uIGxvcmUua2VybmVsLm9yZy4NCj4gTG9va3MgbGlrZSBvbmUgb2YgdGhvc2Ugc2lsZW50IHNl
+Y3VyaXR5IGZpeGVzIHRoYXQgbm9ib2R5IGdldHMgdG9sZA0KPiBhYm91dCwgZ2V0cyBubyByZWFs
+IHJldmlldywgaGFzIG5vIHRlc3QgY2FzZXMgd3JpdHRlbiBmb3IgaXQsIGV0Yy4NCj4NCj4gQW5k
+IG5vYm9keSB3cm90ZSBhIHRlc3QgZm9yIHVudGlsIEF1Z3VzdCAyMDIxIGFuZCB0aGF0J3Mgd2hl
+biBwZW9wbGUNCj4gc3RhcnRlZCB0byBub3RpY2UgYnJva2VuIGZpbGVzeXN0ZW1zLg0KPg0KPiBU
+aGlzIGlzIHRoZSBjb21taXQgdGhhdCBmYWlsZWQgdG8gZml4IHNldmVyYWwgZmlsZXN5c3RlbXM6
+DQo+DQo+IGNvbW1pdCAwZmEzZWNkODc4NDhjOWM5M2MyYzgyOGVmNGMzYThjYTM2Y2U0NmM3DQo+
+IEF1dGhvcjogTGludXMgVG9ydmFsZHM8dG9ydmFsZHNAbGludXgtZm91bmRhdGlvbi5vcmc+DQo+
+IERhdGU6ICAgVHVlIEp1bCAzIDE3OjEwOjE5IDIwMTggLTA3MDANCj4NCj4gICAgICBGaXggdXAg
+bm9uLWRpcmVjdG9yeSBjcmVhdGlvbiBpbiBTR0lEIGRpcmVjdG9yaWVzDQo+DQo+ICAgICAgc2dp
+ZCBkaXJlY3RvcmllcyBoYXZlIHNwZWNpYWwgc2VtYW50aWNzLCBtYWtpbmcgbmV3bHkgY3JlYXRl
+ZCBmaWxlcyBpbg0KPiAgICAgIHRoZSBkaXJlY3RvcnkgYmVsb25nIHRvIHRoZSBncm91cCBvZiB0
+aGUgZGlyZWN0b3J5LCBhbmQgbmV3bHkgY3JlYXRlZA0KPiAgICAgIHN1YmRpcmVjdG9yaWVzIHdp
+bGwgYWxzbyBiZWNvbWUgc2dpZC4gIFRoaXMgaXMgaGlzdG9yaWNhbGx5IHVzZWQgZm9yDQo+ICAg
+ICAgZ3JvdXAtc2hhcmVkIGRpcmVjdG9yaWVzLg0KPg0KPiAgICAgIEJ1dCBncm91cCBkaXJlY3Rv
+cmllcyB3cml0YWJsZSBieSBub24tZ3JvdXAgbWVtYmVycyBzaG91bGQgbm90IGltcGx5DQo+ICAg
+ICAgdGhhdCBzdWNoIG5vbi1ncm91cCBtZW1iZXJzIGNhbiBtYWdpY2FsbHkgam9pbiB0aGUgZ3Jv
+dXAsIHNvIG1ha2Ugc3VyZQ0KPiAgICAgIHRvIGNsZWFyIHRoZSBzZ2lkIGJpdCBvbiBub24tZGly
+ZWN0b3JpZXMgZm9yIG5vbi1tZW1iZXJzIChidXQgcmVtZW1iZXINCj4gICAgICB0aGF0IHNnaWQg
+d2l0aG91dCBncm91cCBleGVjdXRlIG1lYW5zICJtYW5kYXRvcnkgbG9ja2luZyIsIGp1c3QgdG8N
+Cj4gICAgICBjb25mdXNlIHRoaW5ncyBldmVuIG1vcmUpLg0KPg0KPiAgICAgIFJlcG9ydGVkLWJ5
+OiBKYW5uIEhvcm48amFubmhAZ29vZ2xlLmNvbT4NCj4gICAgICBDYzogQW5keSBMdXRvbWlyc2tp
+PGx1dG9Aa2VybmVsLm9yZz4NCj4gICAgICBDYzogQWwgVmlybzx2aXJvQHplbml2LmxpbnV4Lm9y
+Zy51az4NCj4gICAgICBTaWduZWQtb2ZmLWJ5OiBMaW51cyBUb3J2YWxkczx0b3J2YWxkc0BsaW51
+eC1mb3VuZGF0aW9uLm9yZz4NCj4NCj4gZGlmZiAtLWdpdCBhL2ZzL2lub2RlLmMgYi9mcy9pbm9k
+ZS5jDQo+IGluZGV4IDJjMzAwZTk4MTc5Ni4uOGM4NmM4MDljYTE3IDEwMDY0NA0KPiAtLS0gYS9m
+cy9pbm9kZS5jDQo+ICsrKyBiL2ZzL2lub2RlLmMNCj4gQEAgLTE5OTksOCArMTk5OSwxNCBAQCB2
+b2lkIGlub2RlX2luaXRfb3duZXIoc3RydWN0IGlub2RlICppbm9kZSwgY29uc3Qgc3RydWN0IGlu
+b2RlICpkaXIsDQo+ICAgICAgICAgIGlub2RlLT5pX3VpZCA9IGN1cnJlbnRfZnN1aWQoKTsNCj4g
+ICAgICAgICAgaWYgKGRpciYmICBkaXItPmlfbW9kZSYgIFNfSVNHSUQpIHsNCj4gICAgICAgICAg
+ICAgICAgICBpbm9kZS0+aV9naWQgPSBkaXItPmlfZ2lkOw0KPiArDQo+ICsgICAgICAgICAgICAg
+ICAvKiBEaXJlY3RvcmllcyBhcmUgc3BlY2lhbCwgYW5kIGFsd2F5cyBpbmhlcml0IFNfSVNHSUQg
+Ki8NCj4gICAgICAgICAgICAgICAgICBpZiAoU19JU0RJUihtb2RlKSkNCj4gICAgICAgICAgICAg
+ICAgICAgICAgICAgIG1vZGUgfD0gU19JU0dJRDsNCj4gKyAgICAgICAgICAgICAgIGVsc2UgaWYg
+KChtb2RlJiAgKFNfSVNHSUQgfCBTX0lYR1JQKSkgPT0gKFNfSVNHSUQgfCBTX0lYR1JQKSYmDQo+
+ICsgICAgICAgICAgICAgICAgICAgICAgICAhaW5fZ3JvdXBfcChpbm9kZS0+aV9naWQpJiYNCj4g
+KyAgICAgICAgICAgICAgICAgICAgICAgICFjYXBhYmxlX3dydF9pbm9kZV91aWRnaWQoZGlyLCBD
+QVBfRlNFVElEKSkNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgbW9kZSY9IH5TX0lTR0lEOw0K
+PiAgICAgICAgICB9IGVsc2UNCj4gICAgICAgICAgICAgICAgICBpbm9kZS0+aV9naWQgPSBjdXJy
+ZW50X2ZzZ2lkKCk7DQo+ICAgICAgICAgIGlub2RlLT5pX21vZGUgPSBtb2RlOw0KPg0KPiBUaGUg
+cHJvYmxlbSBpcyBpdCB0YWtlcyBhd2F5IG1vZGUgYml0cyB0aGF0IHRoZSBWRlMgcGFzc2VkIHRv
+IHVzDQo+IGRlZXAgaW4gdGhlIFZGUyBpbm9kZSBpbml0aWFsaXNhdGlvbiBkb25lIGR1cmluZyBv
+bi1kaXNrIGlub2RlDQo+IGluaXRpYWxpc2F0aW9uLCBhbmQgaXQncyBoaWRkZW4gd2VsbCBhd2F5
+IGZyb20gc2lnaHQgb2YgdGhlDQo+IGZpbGVzeXN0ZW1zLg0KPg0KPiBPaCwgd2hhdCBhIG1lc3Mg
+LSB0aGlzIGluX2dyb3VwX3AoKSYmICBjYXBhYmxlX3dydF9pbm9kZV91aWRnaWQoKQ0KPiBjaGVj
+ayBpcyBzcGxhdHRlcmVkIGFsbCBvdmVyIGZpbGVzeXN0ZW1zIGluIHJhbmRvbSBwbGFjZXMgdG8g
+Y2xlYXINCj4gU0dJRCBiaXRzLiBlLmcgY2VwaF9maW5pc2hfYXN5bmNfY3JlYXRlKCkgaXMgYW4g
+b3BlbiBjb2RlZA0KPiBpbm9kZV9pbml0X293bmVyKCkgY2FsbC4gVGhlcmUncyBzcGVjaWFsIGNh
+c2UNCj4gY29kZSBpbiBmdXNlX3NldF9hY2woKSB0byBjbGVhciBTR0lELiBUaGVyZSdzIGEgc3Bl
+Y2lhbCBjYXNlIGluDQo+IG92bF9wb3NpeF9hY2xfeGF0dHJfc2V0KCkgZm9yIEFDTCB4YXR0cnMg
+dG8gY2xlYXIgU0dJRC4gQW5kIHNvIG9uLg0KPg0KPiBObyBjb25zaXN0ZW5jeSBhbnl3aGVyZSAt
+IHNob3VsZG4ndCB0aGUgVkZTIGp1c3QgYmUgc3RyaXBwaW5nIHRoZQ0KPiBTR0lEIGJpdCBiZWZv
+cmUgaXQgcGFzc2VzIHRoZSBtb2RlIGRvd24gdG8gZmlsZXN5c3RlbXM/IEl0IGhhcyBhbGwNCj4g
+dGhlIGluZm8gaXQgbmVlZHMgLSBpdCBkb2Vzbid0IG5lZWQgdGhlIGZpbGVzeXN0ZW1zIHRvIGRv
+IGV2ZXJ5dGhpbmcNCj4gY29ycmVjdGx5IHdpdGggdGhlIG1vZGUgYW5kIGVuc3VyaW5nIHRoYXQg
+dGhleSBvcmRlciB0aGluZ3MgbGlrZQ0KPiBwb3NpeCBhY2wgc2V0dXAgZnVuY3Rpb25zIGNvcnJl
+Y3RseSB3aXRoIGlub2RlX2luaXRfb3duZXIoKSB0byBzdHJpcA0KPiB0aGUgU0dJRCBiaXQuLi4N
+Cj4NCj4gSnVzdCBzdHJpcCB0aGUgU0dJRCBiaXQgYXQgdGhlIFZGUywgYW5kIHRoZW4gdGhlIGZp
+bGVzeXN0ZW1zIGNhbid0DQo+IGdldCBpdCB3cm9uZy4uLg0KVGhhbmtzIGZvciB5b3VyIHJlcGx5
+Lg0KDQpTb3VuZCByZWFzb25hYmxlLCBidXQgSSBhbSBub3Qgc3VyZSBJIGhhdmUgdGhlIGFiaWxp
+dHkgdG8gZG8gdGhpcy4NCldpbGwgdHJ5IC4uLg0KDQoNCkJlc3QgUmVnYXJkcw0KWWFuZyBYdQ0K
+Pg0KPiBDaGVlcnMsDQo+DQo+IERhdmUuDQo=
