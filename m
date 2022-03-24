@@ -2,127 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 706EEC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Mar 2022 23:28:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10DE1C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 00:21:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345473AbiCWXaP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Mar 2022 19:30:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53548 "EHLO
+        id S241627AbiCXAWj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Mar 2022 20:22:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239014AbiCWXaO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 19:30:14 -0400
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCACC27176
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 16:28:43 -0700 (PDT)
-Received: from fsav118.sakura.ne.jp (fsav118.sakura.ne.jp [27.133.134.245])
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 22NNSXIb028547;
-        Thu, 24 Mar 2022 08:28:33 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Received: from www262.sakura.ne.jp (202.181.97.72)
- by fsav118.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav118.sakura.ne.jp);
- Thu, 24 Mar 2022 08:28:33 +0900 (JST)
-X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav118.sakura.ne.jp)
-Received: from [192.168.1.9] (M106072142033.v4.enabler.ne.jp [106.72.142.33])
-        (authenticated bits=0)
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 22NNSXoF028544
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NO);
-        Thu, 24 Mar 2022 08:28:33 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Message-ID: <29f2af94-3f79-5044-aae1-9e10a30d4864@I-love.SAKURA.ne.jp>
-Date:   Thu, 24 Mar 2022 08:28:30 +0900
+        with ESMTP id S241621AbiCXAWi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 20:22:38 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 99BD874841
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 17:21:07 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DEB29533E91
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Mar 2022 11:21:06 +1100 (AEDT)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nXBDt-0096Zw-Lm
+        for linux-xfs@vger.kernel.org; Thu, 24 Mar 2022 11:21:05 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.95)
+        (envelope-from <david@fromorbit.com>)
+        id 1nXBDt-002z4a-JE
+        for linux-xfs@vger.kernel.org;
+        Thu, 24 Mar 2022 11:21:05 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 0/6 v2] xfs: more shutdown/recovery fixes
+Date:   Thu, 24 Mar 2022 11:20:57 +1100
+Message-Id: <20220324002103.710477-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: xfs: Temporary extra disk space consumption?
-Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <26806b4a-5953-e45e-3f89-cff2020309b6@I-love.SAKURA.ne.jp>
- <20220323191647.GT1544202@dread.disaster.area>
-From:   Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-In-Reply-To: <20220323191647.GT1544202@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=623bb972
+        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
+        a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=np4J-W9xBJrDHU-_H4sA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2022/03/24 4:16, Dave Chinner wrote:
-> On Wed, Mar 23, 2022 at 08:21:52PM +0900, Tetsuo Handa wrote:
->> Hello.
->>
->> I found that running a sample program shown below on xfs filesystem
->> results in consuming extra disk space until close() is called.
->> Is this expected result?
-> 
-> Yes. It's an anti-fragmentation mechanism that is intended to
-> prevent ecessive fragmentation when many files are being written at
-> once.
+Hi folks,
 
-OK, this is an xfs specific behavior.
+V2 of this patchset has blown out from 2 to 6 patches because of
+the sudden explosion of everyone having new problems with
+shutdown/recovery behaviour. Patches 3-6 are new patches in the
+series.
 
-> Looks like specualtive preallocation for sequential writes is
-> behaving exactly as designed....
+Patch 3 addresses the shutdown log force wakeup failure Brian
+reported here:
 
-Here is the result of "filefrag -v my_testfile" before close().
+https://lore.kernel.org/linux-xfs/YjneHEoFRDXu+EcA@bfoster/
 
-Filesystem type is: 58465342
-File size of my_testfile is 1073741824 (262144 blocks of 4096 bytes)
- ext:     logical_offset:        physical_offset: length:   expected: flags:
-   0:        0..   65519:   33363497..  33429016:  65520:
-   1:    65520..  229915:   62724762..  62889157: 164396:   33429017:
-   2:   229916..  262143:   63132138..  63164365:  32228:   62889158: eof
-   3:   262144..  294895:   63164366..  63197117:  32752:             unwritten,eof
-my_testfile: 3 extents found
+Patches 4-6 fix a long standing shutdown race where
+xfs_trans_commit() can abort modified log items and leave them
+unpinned and dirty in memory while the log is still running,
+allowing unjournalled, incomplete changes to be written back to disk
+before the log is shut down. This race condition has been around
+for a long time - it looks to be a zero-day bug in the original
+shutdown code introduced in January 1997.
 
-Filesystem type is: 58465342
-File size of my_testfile is 1073741824 (262144 blocks of 4096 bytes)
- ext:     logical_offset:        physical_offset: length:   expected: flags:
-   0:        0..  131055:   62724762..  62855817: 131056:
-   1:   131056..  240361:   63813369..  63922674: 109306:   62855818:
-   2:   240362..  262143:   32448944..  32470725:  21782:   63922675: eof
-   3:   262144..  349194:   32470726..  32557776:  87051:             unwritten,eof
-   4:   349195..  524271:          0..    175076: 175077:   32557777: unknown,delalloc,eof
-my_testfile: 4 extents found
+Fixing this requires the log to be able to shut down indepedently of
+the mount (i.e. from log IO completion context), mount shutdowns to
+be forced to wait until the log shutdown is complete and for log
+shutdowns to also shut down the mount because otherwise shit just
+breaks all over the place because random stuff errors out on log
+shutdown and xfs_is_shutdown() is not set so those errors are
+not handled appropriately by high level code. Or just assert fail
+because the mount isn't shutdown down.
 
+Once all that is done, we can fix xfs_trans_commit() and
+xfs_trans_cancel() to not leak aborted items into memory until the
+log is fully shut down.
 
+This now makes recoveryloop largely stable on my test machines. I am
+still seeing failures, but they are one-off, whacky things (like
+weird udev/netlink memory freeing warnings) that I'm unable to
+reproduce in any way.
 
-An interesting behavior I noticed is that, since "filefrag -v" opens this file
-for reading and then closes this file descriptor opened for reading, injecting
-close(open(filename, O_RDONLY)) like below causes consumption by speculative
-preallocation gone; close() of a file descriptor opened for writing is not
-required.
+-Dave.
 
-----------
-diff -u my_write_unlink.c my_write_unlink2.c
---- my_write_unlink.c
-+++ my_write_unlink2.c
-@@ -23,6 +23,8 @@
-                return 1;
-        printf("Before close().\n");
-        system("/bin/df -m .");
-+       close(open(filename, O_RDONLY));
-+       system("/bin/df -m .");
-        if (close(fd))
-                return 1;
-        printf("Before unlink().\n");
-----------
+Version 2:
+- rework inode cluster buffer checks in inode item pushing (patch 1)
+- clean up comments and separation of inode abort behaviour (p1)
+- Fix shutdown callback/log force wakeup ordering issue (p3)
+- Fix writeback of aborted, incomplete, unlogged changes during
+  shutdown races (p4-6)
 
-----------
-Before write().
-Filesystem     1M-blocks   Used Available Use% Mounted on
-/dev/sda1         255875 130396    125479  51% /
-Before close().
-Filesystem     1M-blocks   Used Available Use% Mounted on
-/dev/sda1         255875 132447    123428  52% /
-Filesystem     1M-blocks   Used Available Use% Mounted on
-/dev/sda1         255875 131420    124455  52% /
-Before unlink().
-Filesystem     1M-blocks   Used Available Use% Mounted on
-/dev/sda1         255875 131420    124455  52% /
-After unlink().
-Filesystem     1M-blocks   Used Available Use% Mounted on
-/dev/sda1         255875 130396    125479  51% /
-----------
+Version 1:
+- https://lore.kernel.org/linux-xfs/20220321012329.376307-1-david@fromorbit.com/
 
