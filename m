@@ -2,234 +2,148 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6231FC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 05:31:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CD6BC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 05:58:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346224AbiCXFdV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Mar 2022 01:33:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42330 "EHLO
+        id S1346218AbiCXF7r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Mar 2022 01:59:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347608AbiCXFdU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Mar 2022 01:33:20 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1990D939D3;
-        Wed, 23 Mar 2022 22:31:49 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9BBFF60B9F;
-        Thu, 24 Mar 2022 05:31:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2ADCC340ED;
-        Thu, 24 Mar 2022 05:31:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648099908;
-        bh=os3bm1B2+FNVW3MQRQJTczNi5tPtYTNSYb1u5n5+Apw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hH8hJWP0lJsoooAnsNX6zSq+ru8/kCxQ3oPMdMR+x0uCk72onSADEaP3uTuMklLKk
-         87aVKBPtJ6o62+R73lvWg+JluUygONSnk5/tTAguXpF+d35PiASgWRuM0XwJlhVs6s
-         SmA5N4hpRq5Mk9g13ZGU/izk6bAMDM39WT6E+smdOI+9/wTI1JxPtGn8y4Cq+dH+jM
-         n2boLHvF3DHaItvXLr8OdYfjRdetVC727I8utvSlWUctlnLMf/wxDVTLDVCRrzS7/V
-         c4x0YYwwmSKaxjwEaa4yE2iMVaEa1aiiaOYNeXP60HT7sVZuKRCyDqeFnOi6YJMdCA
-         1JDZC5IaizckA==
-Date:   Wed, 23 Mar 2022 22:31:47 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>, lkp@lists.01.org,
-        lkp@intel.com, xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>,
-        Oliver Sang <oliver.sang@intel.com>
-Subject: Re: [xfs]  1fc3f2c3c9: xfstests.xfs.529.fail
-Message-ID: <20220324053147.GR8224@magnolia>
-References: <20220322135402.GB32582@xsang-OptiPlex-9020>
- <20220322162733.GP8241@magnolia>
- <20220323070834.GB16885@xsang-OptiPlex-9020>
+        with ESMTP id S1347381AbiCXF7q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Mar 2022 01:59:46 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7B4497C161
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 22:58:14 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BEDE810E51FA;
+        Thu, 24 Mar 2022 16:58:13 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nXGU7-009CRG-Sg; Thu, 24 Mar 2022 16:58:11 +1100
+Date:   Thu, 24 Mar 2022 16:58:11 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: document the XFS_ALLOC_AGFL_RESERVE constant
+Message-ID: <20220324055811.GB1544202@dread.disaster.area>
+References: <164779460699.550479.5112721232994728564.stgit@magnolia>
+ <164779461278.550479.17511700626088235894.stgit@magnolia>
+ <20220323203916.GU1544202@dread.disaster.area>
+ <20220324051542.GR8241@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220323070834.GB16885@xsang-OptiPlex-9020>
+In-Reply-To: <20220324051542.GR8241@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=623c0876
+        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=nL-kbA5hzPAI5XtuF5AA:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[add chandan to cc since he wrote the extent count checking patches]
-
-On Wed, Mar 23, 2022 at 03:08:34PM +0800, Oliver Sang wrote:
-> hi, Darrick,
-> 
-> On Tue, Mar 22, 2022 at 09:27:33AM -0700, Darrick J. Wong wrote:
-> > On Tue, Mar 22, 2022 at 09:54:02PM +0800, kernel test robot wrote:
+On Wed, Mar 23, 2022 at 10:15:42PM -0700, Darrick J. Wong wrote:
+> On Thu, Mar 24, 2022 at 07:39:16AM +1100, Dave Chinner wrote:
+> > On Sun, Mar 20, 2022 at 09:43:32AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
 > > > 
-> > > 
-> > > Greeting,
-> > > 
-> > > FYI, we noticed the following commit (built with gcc-9):
-> > > 
-> > > commit: 1fc3f2c3c928c88654d4716af5cc4dee07b3a1c4 ("xfs: only free posteof blocks on first close")
-> > > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git vectorized-scrub
-> > > 
-> > > in testcase: xfstests
-> > > version: xfstests-x86_64-1de1db8-1_20220217
-> > > with following parameters:
-> > > 
-> > > 	disk: 4HDD
-> > > 	fs: xfs
-> > > 	test: xfs-group-52
-> > > 	ucode: 0x21
-> > > 
-> > > test-description: xfstests is a regression test suite for xfs and other files ystems.
-> > > test-url: git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> > > 
-> > > 
-> > > on test machine: 4 threads 1 sockets Intel(R) Core(TM) i3-3220 CPU @ 3.30GHz with 8G memory
-> > > 
-> > > caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
-> > > 
-> > > 
-> > > If you fix the issue, kindly add following tag
-> > > Reported-by: kernel test robot <oliver.sang@intel.com>
-> > > 
+> > > Currently, we use this undocumented macro to encode the minimum number
+> > > of blocks needed to replenish a completely empty AGFL when an AG is
+> > > nearly full.  This has lead to confusion on the part of the maintainers,
+> > > so let's document what the value actually means, and move it to
+> > > xfs_alloc.c since it's not used outside of that module.
 > > 
-> > Could you export DIFF_LENGTH=0 in the test environment so that we get
-> > the full diff here, please?
-> 
-> the full diff is as below (also attached dmesg, full log, log for 529 in case
-> helpful):
-> 
-> xfs/529 [failed, exit status 1]- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/529.out.bad)
->     --- tests/xfs/529.out       2022-02-17 11:55:00.000000000 +0000
->     +++ /lkp/benchmarks/xfstests/results//xfs/529.out.bad       2022-03-23 06:18:39.815036267 +0000
->     @@ -4,21 +4,4 @@
->      Inject reduce_max_iextents error tag
->      Create fragmented file
->      Verify $testfile's extent count
->     -Disable reduce_max_iextents error tag
->     -* Fallocate unwritten extents
->     -Inject reduce_max_iextents error tag
->     -Fallocate fragmented file
->     -Verify $testfile's extent count
->     -Disable reduce_max_iextents error tag
->     -* Directio write
->     -Inject reduce_max_iextents error tag
->     -Create fragmented file via directio writes
->     -Verify $testfile's extent count
->     -Disable reduce_max_iextents error tag
->     -* Extend quota inodes
->     -Consume free space
->     -Create fragmented filesystem
->     -Inject reduce_max_iextents error tag
->     -Inject bmap_alloc_minlen_extent error tag
->     -Extend uquota file
->     -Verify uquota inode's extent count
->     +Extent count overflow check failed: nextents = 15
-
-Hey Chandan, could you take a look at this, please?
-
---D
-
-> 
-> 
+> > Code change looks fine, but....
 > > 
-> > --D
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_alloc.c |   23 ++++++++++++++++++-----
+> > >  fs/xfs/libxfs/xfs_alloc.h |    1 -
+> > >  2 files changed, 18 insertions(+), 6 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > index 353e53b892e6..b0678e96ce61 100644
+> > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > @@ -82,6 +82,19 @@ xfs_prealloc_blocks(
+> > >  }
+> > >  
+> > >  /*
+> > > + * The number of blocks per AG that we withhold from xfs_mod_fdblocks to
+> > > + * guarantee that we can refill the AGFL prior to allocating space in a nearly
+> > > + * full AG.  We require two blocks per free space btree because free space
+> > > + * btrees shrink to a single block as the AG fills up, and any allocation can
+> > > + * cause a btree split.  The rmap btree uses a per-AG reservation to withhold
+> > > + * space from xfs_mod_fdblocks, so we do not account for that here.
+> > > + */
+> > > +#define XFS_ALLOCBT_AGFL_RESERVE	4
 > > 
-
-
-> 2022-03-23 06:18:24 export TEST_DIR=/fs/sdb1
-> 2022-03-23 06:18:24 export TEST_DEV=/dev/sdb1
-> 2022-03-23 06:18:24 export FSTYP=xfs
-> 2022-03-23 06:18:24 export SCRATCH_MNT=/fs/scratch
-> 2022-03-23 06:18:24 mkdir /fs/scratch -p
-> 2022-03-23 06:18:24 export SCRATCH_DEV=/dev/sdb4
-> 2022-03-23 06:18:24 export SCRATCH_LOGDEV=/dev/sdb2
-> 2022-03-23 06:18:24 export SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
-> 2022-03-23 06:18:24 export SCRATCH_XFS_LIST_FUZZ_VERBS=random
-> DIFF_LENGTH=
-> 0
-> END
-> 2022-03-23 06:18:24 sed "s:^:xfs/:" //lkp/benchmarks/xfstests/tests/xfs-group-52
-> 2022-03-23 06:18:24 ./check xfs/520 xfs/522 xfs/523 xfs/524 xfs/525 xfs/526 xfs/527 xfs/529
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 lkp-ivb-d05 5.17.0-rc8-00340-g1fc3f2c3c928 #1 SMP Mon Mar 21 07:17:57 CST 2022
-> MKFS_OPTIONS  -- -f /dev/sdb4
-> MOUNT_OPTIONS -- /dev/sdb4 /fs/scratch
+> > .... that comment is not correct.  this number had nothing to do
+> > with btree split reservations and is all about preventing
+> > oversubscription of the AG when the free space trees are completely
+> > empty.  By the time there is enough free space records in the AG for
+> > the bno/cnt trees to be at risk of a single level root split
+> > (several hundred free extent records), there is enough free space to
+> > fully allocate the 4 blocks that the AGFL needs for that split.
+> > 
+> > That is, the set aside was designed to prevent AG selection in
+> > xfs_alloc_vextent() having xfs_alloc_fixup_freelist() modifying an
+> > AG to fix up the AGFL and then fail to fully fill the AGFL because,
+> > say, there were only 2 blocks free in the AG and the AGFL needed 3.
+> > Then we try all other AGs and get ENOSPC from all of them, and we
+> > end up cancelling a dirty transaction and shutting down instead of
+> > propagating ENOSPC up to the user.
+> > 
+> > This "not enough blocks to populate the AGFL" problem arose because
+> > we can allocate extents directly from the AGFL if the free space
+> > btree is empty, resulting in depletion of the AGFL and no free space
+> > to re-populate it. Freeing a block will then go back into the btree,
+> > and so the next allocation attempt might need 2 blocks for the AGFL,
+> > have one block in the free space tree, and then we fail to fill
+> > the AGFL completely because we still need one block for the AGFL and
+> > there's no space available anymore. If all other AGs are like this
+> > or ENOSPC, then kaboom.
+> > 
+> > IOWs, I originally added this per-ag set aside so that when the AG
+> > was almost completely empty and we were down to allocating the last
+> > blocks from the AG, users couldn't oversubscribe global free space by
+> > consuming the blocks the AGs required to fill the AGFLs to allow the
+> > last blocks that users could allocate to be allocated safely.
+> > 
+> > Hence the set aside of 4 blocks per AG was not to ensure the
+> > freespace trees could be split, but to ensure every last possible
+> > block could be allocated from the AG without causing the AG
+> > selection algorithms to select and modify AGs that could not have
+> > their AGFL fully fixed up to allocate the blocks that the caller
+> > needed when near ENOSPC...
 > 
-> xfs/520	 3s
-> xfs/522	[not run] need configuration file support in mkfs.xfs
-> xfs/523	[not run] need configuration file support in mkfs.xfs
-> xfs/524	[not run] need configuration file support in mkfs.xfs
-> xfs/525	[not run] need configuration file support in mkfs.xfs
-> xfs/526	[not run] need configuration file support in mkfs.xfs
-> xfs/527	 2s
-> xfs/529	[failed, exit status 1]- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/529.out.bad)
->     --- tests/xfs/529.out	2022-02-17 11:55:00.000000000 +0000
->     +++ /lkp/benchmarks/xfstests/results//xfs/529.out.bad	2022-03-23 06:18:39.815036267 +0000
->     @@ -4,21 +4,4 @@
->      Inject reduce_max_iextents error tag
->      Create fragmented file
->      Verify $testfile's extent count
->     -Disable reduce_max_iextents error tag
->     -* Fallocate unwritten extents
->     -Inject reduce_max_iextents error tag
->     -Fallocate fragmented file
->     -Verify $testfile's extent count
->     -Disable reduce_max_iextents error tag
->     -* Directio write
->     -Inject reduce_max_iextents error tag
->     -Create fragmented file via directio writes
->     -Verify $testfile's extent count
->     -Disable reduce_max_iextents error tag
->     -* Extend quota inodes
->     -Consume free space
->     -Create fragmented filesystem
->     -Inject reduce_max_iextents error tag
->     -Inject bmap_alloc_minlen_extent error tag
->     -Extend uquota file
->     -Verify uquota inode's extent count
->     +Extent count overflow check failed: nextents = 15
-> Ran: xfs/520 xfs/522 xfs/523 xfs/524 xfs/525 xfs/526 xfs/527 xfs/529
-> Not run: xfs/522 xfs/523 xfs/524 xfs/525 xfs/526
-> Failures: xfs/529
-> Failed 1 of 8 tests
+> Hmmm, thanks for the context!  What do you think about this revised
+> comment?
 > 
+> /*
+>  * The number of blocks per AG that we withhold from xfs_mod_fdblocks to
+>  * guarantee that we can refill the AGFL prior to allocating space in a
+>  * nearly full AG.  Although the the space described in the free space
+>  * btrees, the freesp btrees, and the blocks owned by the agfl are all
+>  * added to the ondisk fdblocks, it's a mistake to let the ondisk free
+>  * space in the AG drop so low that the free space btrees cannot refill
+>  * an empty AGFL up to the minimum level.  Rather than grind through
+>  * empty AGs until the fs goes down, we subtract this many AG blocks
+>  * from the incore fdblocks to ENOSPC early.
 
-> meta-data=/dev/sdb4              isize=512    agcount=4, agsize=32768 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=4096   blocks=131072, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=1605, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> wrote 4096/4096 bytes at offset 0
-> 4 KiB, 1 ops; 0.0185 sec (216.099 KiB/sec and 54.0249 ops/sec)
-> wrote 4096/4096 bytes at offset 8192
-> 4 KiB, 1 ops; 0.0157 sec (253.888 KiB/sec and 63.4719 ops/sec)
-> wrote 4096/4096 bytes at offset 16384
-> 4 KiB, 1 ops; 0.0158 sec (251.620 KiB/sec and 62.9050 ops/sec)
-> wrote 4096/4096 bytes at offset 24576
-> 4 KiB, 1 ops; 0.0160 sec (248.648 KiB/sec and 62.1620 ops/sec)
-> wrote 4096/4096 bytes at offset 32768
-> 4 KiB, 1 ops; 0.0160 sec (249.423 KiB/sec and 62.3558 ops/sec)
-> wrote 4096/4096 bytes at offset 40960
-> 4 KiB, 1 ops; 0.0158 sec (251.604 KiB/sec and 62.9010 ops/sec)
-> wrote 4096/4096 bytes at offset 49152
-> 4 KiB, 1 ops; 0.0161 sec (247.755 KiB/sec and 61.9387 ops/sec)
-> wrote 4096/4096 bytes at offset 57344
-> 4 KiB, 1 ops; 0.0159 sec (250.878 KiB/sec and 62.7195 ops/sec)
-> pwrite: File too large
-> pwrite: File too large
-> pwrite: File too large
-> pwrite: File too large
-> pwrite: File too large
-> pwrite: File too large
-> pwrite: File too large
+s/ENOSPC early./ensure user allocation does not overcommit the space
+the filesystem needs for the AGFLs./
 
-> QA output created by 529
-> Format and mount fs
-> * Delalloc to written extent conversion
-> Inject reduce_max_iextents error tag
-> Create fragmented file
-> Verify $testfile's extent count
-> Extent count overflow check failed: nextents = 15
+And it's all good by me.
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
