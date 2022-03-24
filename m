@@ -2,163 +2,63 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BF18C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 20:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A023C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 21:31:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344186AbiCXUTF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Mar 2022 16:19:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56784 "EHLO
+        id S1355362AbiCXVdY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Mar 2022 17:33:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243089AbiCXUTF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Mar 2022 16:19:05 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE5C9B2448;
-        Thu, 24 Mar 2022 13:17:32 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1D64160B9C;
-        Thu, 24 Mar 2022 20:17:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CD9EC340EE;
-        Thu, 24 Mar 2022 20:17:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648153051;
-        bh=vcLlzo9+397KDmvqogTZA3p0XhVZ+SUsDfIkNwZJNEQ=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=mbdnqkcUx57RLV7/XHdU6LrXYI+32TAAf7MBCagCEcCYV39LSUiojBWOeZGfX74Pi
-         jNqZMEfPBQTcNewthM63ExyTk8ZmC/8KSFnMI5zqS6A+ZubjvmpqTiJp+tHn1G3YQp
-         3BgJMYIhXL2NgXA7dNsnKZdACPch3qRt0ZRN7ht8RJ3LVmAAGWrFBRNnebG7qI9eF9
-         9d7G3wwQVQstFtz5MrfsPLfSBYNSldviDHvpbaoDf1sDQZZfoZHM/T8dEBF5Qr/Fa4
-         3Y6m4IxrTmu3iedrMizBjj5KrzyaZMgrNpZeFXlDWelgpjyLK5xJj3iRkO19mQGYSk
-         vE2jH+DN+G1mg==
-Date:   Thu, 24 Mar 2022 13:17:30 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Catherine Hoang <catherine.hoang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>
-Subject: Re: [PATCH v1] xfs/019: extend protofile test
-Message-ID: <20220324201730.GS8224@magnolia>
-References: <20220317232408.202636-1-catherine.hoang@oracle.com>
- <20220323013653.46d432ybh2zpdhhs@zlang-mailbox>
- <641873A3-0E40-4099-9804-35D1D6792CFA@oracle.com>
- <20220324192600.5dx3vkmrl6z3snu5@zlang-mailbox>
+        with ESMTP id S1355285AbiCXVdO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Mar 2022 17:33:14 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BFA2F6FA21
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Mar 2022 14:31:42 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9D5F2533E9D;
+        Fri, 25 Mar 2022 08:31:41 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nXV3U-009SW1-68; Fri, 25 Mar 2022 08:31:40 +1100
+Date:   Fri, 25 Mar 2022 08:31:40 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH V8 05/19] xfs: Introduce xfs_dfork_nextents() helper
+Message-ID: <20220324213140.GE1544202@dread.disaster.area>
+References: <20220321051750.400056-1-chandan.babu@oracle.com>
+ <20220321051750.400056-6-chandan.babu@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220324192600.5dx3vkmrl6z3snu5@zlang-mailbox>
+In-Reply-To: <20220321051750.400056-6-chandan.babu@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=623ce33d
+        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=3YwxWECEsZYzhoExqm0A:9
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 25, 2022 at 03:26:00AM +0800, Zorro Lang wrote:
-> On Thu, Mar 24, 2022 at 03:44:00PM +0000, Catherine Hoang wrote:
-> > > On Mar 22, 2022, at 6:36 PM, Zorro Lang <zlang@redhat.com> wrote:
-> > > 
-> > > On Thu, Mar 17, 2022 at 11:24:08PM +0000, Catherine Hoang wrote:
-> > >> This test creates an xfs filesystem and verifies that the filesystem
-> > >> matches what is specified by the protofile.
-> > >> 
-> > >> This patch extends the current test to check that a protofile can specify
-> > >> setgid mode on directories. Also, check that the created symlink isn’t
-> > >> broken.
-> > >> 
-> > >> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> > >> ---
-> > > 
-> > > Any specific reason to add this test? Likes uncovering some one known
-> > > bug/fix?
-> > > 
-> > > Thanks,
-> > > Zorro
-> > 
-> > Hi Zorro,
-> > 
-> > We’ve been exploring alternate uses for protofiles and noticed a few holes
-> > in the testing.
+On Mon, Mar 21, 2022 at 10:47:36AM +0530, Chandan Babu R wrote:
+> This commit replaces the macro XFS_DFORK_NEXTENTS() with the helper function
+> xfs_dfork_nextents(). As of this commit, xfs_dfork_nextents() returns the same
+> value as XFS_DFORK_NEXTENTS(). A future commit which extends inode's extent
+> counter fields will add more logic to this helper.
 > 
-> That's great, but better to show some details in the patch/commit, likes
-> a commit id of xfsprogs?/kernel? (if there's one) which fix the bug you
-> metioned, to help others to know what's this change trying to cover.
-
-I think this patch is adding a check that protofile lines are actually
-being honored (in the case of the symlink file) and checking that setgid
-on a directory is not carried over into new children unless the
-protofile explicitly marks the children setgid.
-
-IOWs, this isn't adding a regression test for a fix in xfsprogs, it's
-increasing test coverage.
-
---D
-
-> Thanks,
-> Zorro
+> This commit also replaces direct accesses to xfs_dinode->di_[a]nextents
+> with calls to xfs_dfork_nextents().
 > 
-> > 
-> > Thanks,
-> > Catherine
-> > > 
-> > >> tests/xfs/019     |  6 ++++++
-> > >> tests/xfs/019.out | 12 +++++++++++-
-> > >> 2 files changed, 17 insertions(+), 1 deletion(-)
-> > >> 
-> > >> diff --git a/tests/xfs/019 b/tests/xfs/019
-> > >> index 3dfd5408..535b7af1 100755
-> > >> --- a/tests/xfs/019
-> > >> +++ b/tests/xfs/019
-> > >> @@ -73,6 +73,10 @@ $
-> > >> setuid -u-666 0 0 $tempfile
-> > >> setgid --g666 0 0 $tempfile
-> > >> setugid -ug666 0 0 $tempfile
-> > >> +directory_setgid d-g755 3 2
-> > >> +file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_5 ---755 3 1 $tempfile
-> > >> +$
-> > >> +: back in the root
-> > >> block_device b--012 3 1 161 162 
-> > >> char_device c--345 3 1 177 178
-> > >> pipe p--670 0 0
-> > >> @@ -114,6 +118,8 @@ _verify_fs()
-> > >> 		| xargs $here/src/lstat64 | _filter_stat)
-> > >> 	diff -q $SCRATCH_MNT/bigfile $tempfile.2 \
-> > >> 		|| _fail "bigfile corrupted"
-> > >> +	diff -q $SCRATCH_MNT/symlink $tempfile.2 \
-> > >> +		|| _fail "symlink broken"
-> > >> 
-> > >> 	echo "*** unmount FS"
-> > >> 	_full "umount"
-> > >> diff --git a/tests/xfs/019.out b/tests/xfs/019.out
-> > >> index 19614d9d..8584f593 100644
-> > >> --- a/tests/xfs/019.out
-> > >> +++ b/tests/xfs/019.out
-> > >> @@ -7,7 +7,7 @@ Wrote 2048.00Kb (value 0x2c)
-> > >>  File: "."
-> > >>  Size: <DSIZE> Filetype: Directory
-> > >>  Mode: (0777/drwxrwxrwx) Uid: (3) Gid: (1)
-> > >> -Device: <DEVICE> Inode: <INODE> Links: 3 
-> > >> +Device: <DEVICE> Inode: <INODE> Links: 4 
-> > >> 
-> > >>  File: "./bigfile"
-> > >>  Size: 2097152 Filetype: Regular File
-> > >> @@ -54,6 +54,16 @@ Device: <DEVICE> Inode: <INODE> Links: 1
-> > >>  Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
-> > >> Device: <DEVICE> Inode: <INODE> Links: 1 
-> > >> 
-> > >> + File: "./directory_setgid"
-> > >> + Size: <DSIZE> Filetype: Directory
-> > >> + Mode: (2755/drwxr-sr-x) Uid: (3) Gid: (2)
-> > >> +Device: <DEVICE> Inode: <INODE> Links: 2 
-> > >> +
-> > >> + File: "./directory_setgid/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_5"
-> > >> + Size: 5 Filetype: Regular File
-> > >> + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (2)
-> > >> +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > >> +
-> > >>  File: "./pipe"
-> > >>  Size: 0 Filetype: Fifo File
-> > >>  Mode: (0670/frw-rwx---) Uid: (0) Gid: (0)
-> > >> -- 
-> > >> 2.25.1
-> > >> 
-> > > 
-> > 
+> No functional changes have been made.
 > 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+
+Looks good now.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
