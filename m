@@ -2,313 +2,145 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D936C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 00:21:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 334F4C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 00:21:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241621AbiCXAWj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Mar 2022 20:22:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50498 "EHLO
+        id S241641AbiCXAWk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Mar 2022 20:22:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240524AbiCXAWi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 20:22:38 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B072878907
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 17:21:07 -0700 (PDT)
+        with ESMTP id S240524AbiCXAWj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Mar 2022 20:22:39 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DD96C7891B
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Mar 2022 17:21:08 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D0D2B533E48
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Mar 2022 11:21:06 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id AE4E110E506B
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Mar 2022 11:21:07 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nXBDt-0096Zx-Mm
+        id 1nXBDt-0096a5-Q1
         for linux-xfs@vger.kernel.org; Thu, 24 Mar 2022 11:21:05 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nXBDt-002z4d-Lv
+        id 1nXBDt-002z4v-PJ
         for linux-xfs@vger.kernel.org;
         Thu, 24 Mar 2022 11:21:05 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/6] xfs: aborting inodes on shutdown may need buffer lock
-Date:   Thu, 24 Mar 2022 11:20:58 +1100
-Message-Id: <20220324002103.710477-2-david@fromorbit.com>
+Subject: [PATCH 5/6] xfs: xfs_do_force_shutdown needs to block racing shutdowns
+Date:   Thu, 24 Mar 2022 11:21:02 +1100
+Message-Id: <20220324002103.710477-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220324002103.710477-1-david@fromorbit.com>
 References: <20220324002103.710477-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=623bb973
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=623bb973
         a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=45b4cX4q9fnkLCOmiR8A:9
+        a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=oz-SYxHX2ioO59wv_cgA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Most buffer io list operations are run with the bp->b_lock held, but
-xfs_iflush_abort() can be called without the buffer lock being held
-resulting in inodes being removed from the buffer list while other
-list operations are occurring. This causes problems with corrupted
-bp->b_io_list inode lists during filesystem shutdown, leading to
-traversals that never end, double removals from the AIL, etc.
+When we call xfs_forced_shutdown(), the caller often expects the
+filesystem to be completely shut down when it returns. However,
+if we have racing xfs_forced_shutdown() calls, the first caller sets
+the mount shutdown flag then goes to shutdown the log. The second
+caller sees the mount shutdown flag and returns immediately - it
+does not wait for the log to be shut down.
 
-Fix this by passing the buffer to xfs_iflush_abort() if we have
-it locked. If the inode is attached to the buffer, we're going to
-have to remove it from the buffer list and we'd have to get the
-buffer off the inode log item to do that anyway.
+Unfortunately, xfs_forced_shutdown() is used in some places that
+expect it to completely shut down the filesystem before it returns
+(e.g. xfs_trans_log_inode()). As such, returning before the log has
+been shut down leaves us in a place where the transaction failed to
+complete correctly but we still call xfs_trans_commit(). This
+situation arises because xfs_trans_log_inode() does not return an
+error and instead calls xfs_force_shutdown() to ensure that the
+transaction being committed is aborted.
 
-If we don't have a buffer passed in (e.g. from xfs_reclaim_inode())
-then we can determine if the inode has a log item and if it is
-attached to a buffer before we do anything else. If it does have an
-attached buffer, we can lock it safely (because the inode has a
-reference to it) and then perform the inode abort.
+Unfortunately, we have a race condition where xfs_trans_commit()
+needs to check xlog_is_shutdown() because it can't abort log items
+before the log is shut down, but it needs to use xfs_is_shutdown()
+because xfs_forced_shutdown() does not block waiting for the log to
+shut down.
+
+To fix this conundrum, first we make all calls to
+xfs_forced_shutdown() block until the log is also shut down. This
+means we can then safely use xfs_forced_shutdown() as a mechanism
+that ensures the currently running transaction will be aborted by
+xfs_trans_commit() regardless of the shutdown check it uses.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c     |   2 +-
- fs/xfs/xfs_inode.c      |   2 +-
- fs/xfs/xfs_inode_item.c | 165 +++++++++++++++++++++++++++++++++-------
- fs/xfs/xfs_inode_item.h |   1 +
- 4 files changed, 139 insertions(+), 31 deletions(-)
+ fs/xfs/xfs_fsops.c    |  6 +++++-
+ fs/xfs/xfs_log.c      |  1 +
+ fs/xfs/xfs_log_priv.h | 11 +++++++++++
+ 3 files changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 4148cdf7ce4a..6c7267451b82 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -883,7 +883,7 @@ xfs_reclaim_inode(
- 	 */
- 	if (xlog_is_shutdown(ip->i_mount->m_log)) {
- 		xfs_iunpin_wait(ip);
--		xfs_iflush_abort(ip);
-+		xfs_iflush_shutdown_abort(ip);
- 		goto reclaim;
- 	}
- 	if (xfs_ipincount(ip))
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index aab55a06ece7..07be0992321c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3612,7 +3612,7 @@ xfs_iflush_cluster(
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 33e26690a8c4..093a44aecec0 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -17,6 +17,7 @@
+ #include "xfs_fsops.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_log.h"
++#include "xfs_log_priv.h"
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_trace.h"
+@@ -528,8 +529,11 @@ xfs_do_force_shutdown(
+ 	int		tag;
+ 	const char	*why;
  
- 	/*
- 	 * We must use the safe variant here as on shutdown xfs_iflush_abort()
--	 * can remove itself from the list.
-+	 * will remove itself from the list.
- 	 */
- 	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
- 		iip = (struct xfs_inode_log_item *)lip;
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 11158fa81a09..28f92382a1d2 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -544,10 +544,17 @@ xfs_inode_item_push(
- 	uint			rval = XFS_ITEM_SUCCESS;
- 	int			error;
- 
--	ASSERT(iip->ili_item.li_buf);
-+	if (!bp || (ip->i_flags & XFS_ISTALE)) {
-+		/*
-+		 * Inode item/buffer is being being aborted due to cluster
-+		 * buffer deletion. Trigger a log force to have that operation
-+		 * completed and items removed from the AIL before the next push
-+		 * attempt.
-+		 */
-+		return XFS_ITEM_PINNED;
+-	if (test_and_set_bit(XFS_OPSTATE_SHUTDOWN, &mp->m_opstate))
++
++	if (test_and_set_bit(XFS_OPSTATE_SHUTDOWN, &mp->m_opstate)) {
++		xlog_shutdown_wait(mp->m_log);
+ 		return;
 +	}
+ 	if (mp->m_sb_bp)
+ 		mp->m_sb_bp->b_flags |= XBF_DONE;
  
--	if (xfs_ipincount(ip) > 0 || xfs_buf_ispinned(bp) ||
--	    (ip->i_flags & XFS_ISTALE))
-+	if (xfs_ipincount(ip) > 0 || xfs_buf_ispinned(bp))
- 		return XFS_ITEM_PINNED;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 6879d6d19d68..4336eb804a4a 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3909,6 +3909,7 @@ xlog_force_shutdown(
+ 	xlog_state_shutdown_callbacks(log);
+ 	spin_unlock(&log->l_icloglock);
  
- 	if (xfs_iflags_test(ip, XFS_IFLUSHING))
-@@ -834,46 +841,146 @@ xfs_buf_inode_io_fail(
++	wake_up_var(&log->l_opstate);
+ 	return log_error;
  }
  
- /*
-- * This is the inode flushing abort routine.  It is called when
-- * the filesystem is shutting down to clean up the inode state.  It is
-- * responsible for removing the inode item from the AIL if it has not been
-- * re-logged and clearing the inode's flush state.
-+ * Clear the inode logging fields so no more flushes are attempted.  If we are
-+ * on a buffer list, it is now safe to remove it because the buffer is
-+ * guaranteed to be locked. The caller will drop the reference to the buffer
-+ * the log item held.
-+ */
-+static void
-+xfs_iflush_abort_clean(
-+	struct xfs_inode_log_item *iip)
-+{
-+	iip->ili_last_fields = 0;
-+	iip->ili_fields = 0;
-+	iip->ili_fsync_fields = 0;
-+	iip->ili_flush_lsn = 0;
-+	iip->ili_item.li_buf = NULL;
-+	list_del_init(&iip->ili_item.li_bio_list);
-+}
-+
-+/*
-+ * Abort flushing the inode from a context holding the cluster buffer locked.
-+ *
-+ * This is the normal runtime method of aborting writeback of an inode that is
-+ * attached to a cluster buffer. It occurs when the inode and the backing
-+ * cluster buffer have been freed (i.e. inode is XFS_ISTALE), or when cluster
-+ * flushing or buffer IO completion encounters a log shutdown situation.
-+ *
-+ * If we need to abort inode writeback and we don't already hold the buffer
-+ * locked, call xfs_iflush_shutdown_abort() instead as this should only ever be
-+ * necessary in a shutdown situation.
-  */
- void
- xfs_iflush_abort(
- 	struct xfs_inode	*ip)
- {
- 	struct xfs_inode_log_item *iip = ip->i_itemp;
--	struct xfs_buf		*bp = NULL;
-+	struct xfs_buf		*bp;
- 
--	if (iip) {
--		/*
--		 * Clear the failed bit before removing the item from the AIL so
--		 * xfs_trans_ail_delete() doesn't try to clear and release the
--		 * buffer attached to the log item before we are done with it.
--		 */
--		clear_bit(XFS_LI_FAILED, &iip->ili_item.li_flags);
--		xfs_trans_ail_delete(&iip->ili_item, 0);
-+	if (!iip) {
-+		/* clean inode, nothing to do */
-+		xfs_iflags_clear(ip, XFS_IFLUSHING);
-+		return;
-+	}
-+
-+	/*
-+	 * Remove the inode item from the AIL before we clear it's internal
-+	 * state. Whilst the inode is in the AIL, it should have a valid buffer
-+	 * pointer for push operations to access - it is only safe to remove the
-+	 * inode from the buffer once it has been removed from the AIL.
-+	 *
-+	 * We also clear the failed bit before removing the item from the AIL
-+	 * as xfs_trans_ail_delete()->xfs_clear_li_failed() will release buffer
-+	 * references the inode item owns and needs to hold until we've fully
-+	 * aborted the inode log item and detatched it from the buffer.
-+	 */
-+	clear_bit(XFS_LI_FAILED, &iip->ili_item.li_flags);
-+	xfs_trans_ail_delete(&iip->ili_item, 0);
-+
-+	/*
-+	 * Capture the associated buffer and lock it if the caller didn't
-+	 * pass us the locked buffer to begin with.
-+	 */
-+	spin_lock(&iip->ili_lock);
-+	bp = iip->ili_item.li_buf;
-+	xfs_iflush_abort_clean(iip);
-+	spin_unlock(&iip->ili_lock);
-+
-+
-+	xfs_iflags_clear(ip, XFS_IFLUSHING);
-+
-+	/* we can now release the buffer reference the inode log item held. */
-+	if (bp)
-+		xfs_buf_rele(bp);
-+}
- 
-+/*
-+ * Abort an inode flush in the case of a shutdown filesystem. This can be called
-+ * from anywhere with just an inode reference and does not require holding the
-+ * inode cluster buffer locked. If the inode is attached to a cluster buffer,
-+ * it will grab and lock it safely, then abort the inode flush.
-+ */
-+void
-+xfs_iflush_shutdown_abort(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_inode_log_item *iip = ip->i_itemp;
-+	struct xfs_buf		*bp;
-+
-+	if (!iip) {
-+		/* clean inode, nothing to do */
-+		xfs_iflags_clear(ip, XFS_IFLUSHING);
-+		return;
-+	}
-+
-+	spin_lock(&iip->ili_lock);
-+	bp = iip->ili_item.li_buf;
-+	if (!bp) {
-+		spin_unlock(&iip->ili_lock);
-+		xfs_iflush_abort(ip);
-+		return;
-+	}
-+
-+	/*
-+	 * We have to take a reference to the buffer so that it doesn't get
-+	 * freed when we drop the ili_lock and then wait to lock the buffer.
-+	 * We'll clean up the extra reference after we pick up the ili_lock
-+	 * again.
-+	 */
-+	xfs_buf_hold(bp);
-+	spin_unlock(&iip->ili_lock);
-+	xfs_buf_lock(bp);
-+
-+	spin_lock(&iip->ili_lock);
-+	if (!iip->ili_item.li_buf) {
- 		/*
--		 * Clear the inode logging fields so no more flushes are
--		 * attempted.
-+		 * Raced with another removal, hold the only reference
-+		 * to bp now. Inode should not be in the AIL now, so just clean
-+		 * up and return;
- 		 */
--		spin_lock(&iip->ili_lock);
--		iip->ili_last_fields = 0;
--		iip->ili_fields = 0;
--		iip->ili_fsync_fields = 0;
--		iip->ili_flush_lsn = 0;
--		bp = iip->ili_item.li_buf;
--		iip->ili_item.li_buf = NULL;
--		list_del_init(&iip->ili_item.li_bio_list);
-+		ASSERT(list_empty(&iip->ili_item.li_bio_list));
-+		ASSERT(!test_bit(XFS_LI_IN_AIL, &iip->ili_item.li_flags));
-+		xfs_iflush_abort_clean(iip);
- 		spin_unlock(&iip->ili_lock);
-+		xfs_iflags_clear(ip, XFS_IFLUSHING);
-+		xfs_buf_relse(bp);
-+		return;
- 	}
--	xfs_iflags_clear(ip, XFS_IFLUSHING);
--	if (bp)
--		xfs_buf_rele(bp);
-+
-+	/*
-+	 * Got two references to bp. The first will get dropped by
-+	 * xfs_iflush_abort() when the item is removed from the buffer list, but
-+	 * we can't drop our reference until _abort() returns because we have to
-+	 * unlock the buffer as well. Hence we abort and then unlock and release
-+	 * our reference to the buffer.
-+	 */
-+	ASSERT(iip->ili_item.li_buf == bp);
-+	spin_unlock(&iip->ili_lock);
-+	xfs_iflush_abort(ip);
-+	xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 80d77aac6fe4..401cdc400980 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -484,6 +484,17 @@ xlog_is_shutdown(struct xlog *log)
+ 	return test_bit(XLOG_IO_ERROR, &log->l_opstate);
  }
  
++/*
++ * Wait until the xlog_force_shutdown() has marked the log as shut down
++ * so xlog_is_shutdown() will always return true.
++ */
++static inline void
++xlog_shutdown_wait(
++	struct xlog	*log)
++{
++	wait_var_event(&log->l_opstate, xlog_is_shutdown(log));
++}
 +
- /*
-  * convert an xfs_inode_log_format struct from the old 32 bit version
-  * (which can have different field alignments) to the native 64 bit version
-diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index 1a302000d604..bbd836a44ff0 100644
---- a/fs/xfs/xfs_inode_item.h
-+++ b/fs/xfs/xfs_inode_item.h
-@@ -44,6 +44,7 @@ static inline int xfs_inode_clean(struct xfs_inode *ip)
- extern void xfs_inode_item_init(struct xfs_inode *, struct xfs_mount *);
- extern void xfs_inode_item_destroy(struct xfs_inode *);
- extern void xfs_iflush_abort(struct xfs_inode *);
-+extern void xfs_iflush_shutdown_abort(struct xfs_inode *);
- extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
- 					 struct xfs_inode_log_format *);
- 
+ /* common routines */
+ extern int
+ xlog_recover(
 -- 
 2.35.1
 
