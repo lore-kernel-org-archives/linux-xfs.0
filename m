@@ -2,146 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2FC8C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 21:38:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ACB0C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 21:40:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355188AbiCXVk3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Mar 2022 17:40:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44132 "EHLO
+        id S1351432AbiCXVmH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Mar 2022 17:42:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354221AbiCXVk2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Mar 2022 17:40:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 789983F336;
-        Thu, 24 Mar 2022 14:38:56 -0700 (PDT)
+        with ESMTP id S1355212AbiCXVmG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Mar 2022 17:42:06 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5967EB0A5E
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Mar 2022 14:40:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 146E061359;
-        Thu, 24 Mar 2022 21:38:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69088C340EC;
-        Thu, 24 Mar 2022 21:38:55 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 00B78B82649
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Mar 2022 21:40:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 981BAC340EC;
+        Thu, 24 Mar 2022 21:40:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648157935;
-        bh=hhZo3GBcB74rH01qnpUvnw8P4Cw1qTVWAZJxRx0FaJI=;
+        s=k20201202; t=1648158030;
+        bh=gknODSm8fTc7X7JxkYxCkxSsFh/UcaejaANsdH5QMQc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QimPqtIAlf2ZRLLVVbgMci528d5A5qRtyHKSfdhjOSey9Cn8m9oukBqwXdSjGVBzs
-         c1rR1dKHA7+0KFYCYDtLBwp8uOU9zrjibcR+yJOAVbyoiVdhUvJ5GT7tx5e+OLPwCt
-         PvsN78nv4263oACADUYWhTis7oniV45ASnUrMn24Xq4bm5cxUqjqqlCDHvMWZthKv+
-         f5ubfpm1LRYBMECbwh0YIu9k6TANnZ7t0aQT4q1C5ONSzFcGxidyMnvf9pIQw5T0Vn
-         duiJPJtnQLcNfZOKzSmtfHxFVuoUiC6ruiCRO6LHCB91wxetUjr6Vhmq1z0GOe7ahS
-         I/qARFyY/Q4Ug==
-Date:   Thu, 24 Mar 2022 14:38:54 -0700
+        b=HGb0dZaIbzLhUkIHzy4oQR8MCAnmR64TFuGV8sZQIT6hF9hNlqGzx0SztHqpRb6U3
+         qJVKwy5sUaemLER5H77k8wqkJi4Gbo54Mu6MVvzoFD+Ks+uv40yNhNBQ8WarSlL6Sx
+         rQooY7RQUikAFTf3iyJ8AZcQGHlvtJoEuZg+FniFRwieEevGLVnXF/Swamh4XGUliP
+         dL5VVhXDmuaotj1JQEGnlEXfkrgZ9kwdrOoLEfd2BFg1ArqNZNuLKfyl7XzczRpwsT
+         3uAu6AaAuUBjMJ2NVOt0E8seY/Fi0jE88fOnycCCQc+4oflNIlKWONZmzGBL2nUv4J
+         HjB2fHWgaLB3g==
+Date:   Thu, 24 Mar 2022 14:40:30 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Cc:     Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH 1/2] xfs: make sure syncfs(2) passes back
- super_operations.sync_fs errors
-Message-ID: <20220324213854.GS8200@magnolia>
-References: <164740142940.3371809.12686819717405148022.stgit@magnolia>
- <164740143497.3371809.2959237196772812909.stgit@magnolia>
- <20220323024432.44wf2xhpv3z55txp@zlang-mailbox>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V8 08/19] xfs: Introduce XFS_SB_FEAT_INCOMPAT_NREXT64 and
+ associated per-fs feature bit
+Message-ID: <20220324214030.GT8224@magnolia>
+References: <20220321051750.400056-1-chandan.babu@oracle.com>
+ <20220321051750.400056-9-chandan.babu@oracle.com>
+ <20220324213719.GG1544202@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220323024432.44wf2xhpv3z55txp@zlang-mailbox>
+In-Reply-To: <20220324213719.GG1544202@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[adding tytso for the ext4 question]
-
-On Wed, Mar 23, 2022 at 10:44:32AM +0800, Zorro Lang wrote:
-> On Tue, Mar 15, 2022 at 08:30:35PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Mar 25, 2022 at 08:37:19AM +1100, Dave Chinner wrote:
+> On Mon, Mar 21, 2022 at 10:47:39AM +0530, Chandan Babu R wrote:
+> > XFS_SB_FEAT_INCOMPAT_NREXT64 incompat feature bit will be set on filesystems
+> > which support large per-inode extent counters. This commit defines the new
+> > incompat feature bit and the corresponding per-fs feature bit (along with
+> > inline functions to work on it).
 > > 
-> > This is a regression test to make sure that nonzero error returns from
-> > a filesystem's ->sync_fs implementation are actually passed back to
-> > userspace when the call stack involves syncfs(2).
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 > > ---
-> >  tests/xfs/839     |   42 ++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/839.out |    2 ++
-> >  2 files changed, 44 insertions(+)
-> >  create mode 100755 tests/xfs/839
-> >  create mode 100644 tests/xfs/839.out
+> >  fs/xfs/libxfs/xfs_format.h | 1 +
+> >  fs/xfs/libxfs/xfs_sb.c     | 3 +++
+> >  fs/xfs/xfs_mount.h         | 2 ++
+> >  3 files changed, 6 insertions(+)
 > > 
-> > 
-> > diff --git a/tests/xfs/839 b/tests/xfs/839
-> > new file mode 100755
-> > index 00000000..9bfe93ef
-> > --- /dev/null
-> > +++ b/tests/xfs/839
-> > @@ -0,0 +1,42 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 839
-> > +#
-> > +# Regression test for kernel commits:
-> > +#
-> > +# 5679897eb104 ("vfs: make sync_filesystem return errors from ->sync_fs")
-> > +# 2d86293c7075 ("xfs: return errors in xfs_fs_sync_fs")
-> > +#
-> > +# During a code inspection, I noticed that sync_filesystem ignores the return
-> > +# value of the ->sync_fs calls that it makes.  sync_filesystem, in turn is used
-> > +# by the syncfs(2) syscall to persist filesystem changes to disk.  This means
-> > +# that syncfs(2) does not capture internal filesystem errors that are neither
-> > +# visible from the block device (e.g. media error) nor recorded in s_wb_err.
-> > +# XFS historically returned 0 from ->sync_fs even if there were log failures,
-> > +# so that had to be corrected as well.
-> > +#
-> > +# The kernel commits above fix this problem, so this test tries to trigger the
-> > +# bug by using the shutdown ioctl on a clean, freshly mounted filesystem in the
-> > +# hope that the EIO generated as a result of the filesystem being shut down is
-> > +# only visible via ->sync_fs.
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto quick shutdown
+> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > index b5e9256d6d32..64ff0c310696 100644
+> > --- a/fs/xfs/libxfs/xfs_format.h
+> > +++ b/fs/xfs/libxfs/xfs_format.h
+> > @@ -372,6 +372,7 @@ xfs_sb_has_ro_compat_feature(
+> >  #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
+> >  #define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)	/* large timestamps */
+> >  #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
+> > +#define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)	/* large extent counters */
+> >  #define XFS_SB_FEAT_INCOMPAT_ALL \
+> >  		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+> >  		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
+> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> > index f4e84aa1d50a..bd632389ae92 100644
+> > --- a/fs/xfs/libxfs/xfs_sb.c
+> > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > @@ -124,6 +124,9 @@ xfs_sb_version_to_features(
+> >  		features |= XFS_FEAT_BIGTIME;
+> >  	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR)
+> >  		features |= XFS_FEAT_NEEDSREPAIR;
+> > +	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NREXT64)
+> > +		features |= XFS_FEAT_NREXT64;
 > > +
-> > +# real QA test starts here
-> > +
-> > +# Modify as appropriate.
-> > +_require_xfs_io_command syncfs
-> > +_require_scratch_nocheck
-> > +_require_scratch_shutdown
 > 
-> Can this case be a generic case, with the help of _require_scratch_shutdown
-> and _require_xfs_io_command?
+> Shouldn't enabling the feature be the last patch in the series, once
+> all the infrastructure to support the feature is in place? i.e. if
+> someone does a bisect on a XFS_FEAT_NREXT64 enabled filesystem, they
+> can land in the middle of this series where the fs tries to use
+> XFS_FEAT_NREXT64 but the functionality is not complete.
 
-I'm not sure.  Of the three filesystems that both have a ->sync_fs
-function and implement FS_IOC_SHUTDOWN, xfs and f2fs look like they
-passes errors like they should.
-
-ext4 is another story -- curiously, if the fs is shut down, it'll return
-0 and it doesn't check the return value of dquot_writeback_dquots.  I
-don't remember enough of ext to know if that's deliberate or merely an
-age-old artifact of the Bad Old Days when that whole code path didn't
-care about errors.
+The last patch of the series does exactly that, by adding NREXT64 to
+XFS_SB_FEAT_INCOMPAT_ALL.
 
 --D
 
-> Thanks,
-> Zorro
 > 
-> > +
-> > +# Reuse the fs formatted when we checked for the shutdown ioctl, and don't
-> > +# bother checking the filesystem afterwards since we never wrote anything.
-> > +_scratch_mount
-> > +$XFS_IO_PROG -x -c 'shutdown -f ' -c syncfs $SCRATCH_MNT
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/839.out b/tests/xfs/839.out
-> > new file mode 100644
-> > index 00000000..f275cdcc
-> > --- /dev/null
-> > +++ b/tests/xfs/839.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 839
-> > +syncfs: Input/output error
-> > 
+> Cheers,
 > 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
