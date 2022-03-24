@@ -2,72 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCA7EC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 06:38:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C797C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Mar 2022 10:22:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239878AbiCXGjb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Mar 2022 02:39:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33946 "EHLO
+        id S1344322AbiCXKYU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Mar 2022 06:24:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348257AbiCXGj2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Mar 2022 02:39:28 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A376C97B8B;
-        Wed, 23 Mar 2022 23:37:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Az4s3bgnP2MWmqVLeQ9zbh1ptxR6Ja+G4u6TZKomgpM=; b=b9oW72pO9kcKe2RPoYFeS5RvI5
-        v5/A8SCcQHs6Jg3mpv4MUevHfq/A2ays5LMEi/XH6sS6+1klLfjAufAcDkzQHjpQKKVXI2kWoj2lc
-        mjzJpmns+bOtpgCk/CqrN/DjKKIvLPhsOyDv9pTxVP24GO+kyu2b9+Vix2CrKNG9aHjhlEgLBAewa
-        VkFk4hWpVd6mS7Z7POqqk42oWB3QzppS4ZF78V3mUxoLfp8zztpbtGcquBebQjaHY3Ilo41f4tsqn
-        oRnbNQdJV8/KpAYrKyA6F7G59QeYDOyJysI/pG4UP0F1JphgVEJEtdO+p0r/kOLGZm+FXx6+mueiG
-        drV5ia6w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nXH6I-00FrP2-JJ; Thu, 24 Mar 2022 06:37:38 +0000
-Date:   Wed, 23 Mar 2022 23:37:38 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
-        "dave.jiang@intel.com" <dave.jiang@intel.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "ira.weiny@intel.com" <ira.weiny@intel.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "vgoyal@redhat.com" <vgoyal@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v6 4/6] dax: add DAX_RECOVERY flag and .recovery_write
- dev_pgmap_ops
-Message-ID: <YjwRssvQSMLx5xhc@infradead.org>
-References: <20220319062833.3136528-1-jane.chu@oracle.com>
- <20220319062833.3136528-5-jane.chu@oracle.com>
- <YjmQdJdOWUr2IYIP@infradead.org>
- <3dabd58b-70f2-12af-419f-a7dfc07fbb1c@oracle.com>
- <Yjq0FspfsLrN/mrx@infradead.org>
- <2897ca93-690b-72ed-751d-d0b457d3fbec@oracle.com>
+        with ESMTP id S238441AbiCXKYU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Mar 2022 06:24:20 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63E343DDE2
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Mar 2022 03:22:48 -0700 (PDT)
+Received: from ip4d144895.dynamic.kabel-deutschland.de ([77.20.72.149] helo=[192.168.66.200]); authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1nXKcA-0000Hv-L6; Thu, 24 Mar 2022 11:22:46 +0100
+Message-ID: <5d1a6abb-f2e7-55bb-a616-04890f3186f2@leemhuis.info>
+Date:   Thu, 24 Mar 2022 11:22:46 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2897ca93-690b-72ed-751d-d0b457d3fbec@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [Bug 215687] New: chown behavior on XFS is changed
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+References: <bug-215687-201763@https.bugzilla.kernel.org/>
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+Cc:     "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
+        linux-xfs@vger.kernel.org, bugzilla-daemon@kernel.org
+In-Reply-To: <bug-215687-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1648117368;6cf45b74;
+X-HE-SMSGID: 1nXKcA-0000Hv-L6
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 23, 2022 at 06:43:06PM +0000, Jane Chu wrote:
-> > it onto ->direct_access.  But nothing in this series actually checks
-> > for it as far as I can tell.
-> 
-> The flag is checked here, again, I'll spell out the flag rather than 
-> using it as a boolean.
+Hi, this is your Linux kernel regression tracker. Top-posting for once,
+to make this easily accessible to everyone.
 
-Yes.  The whole point of a flags value is that it is extensible..
+On 15.03.22 09:12, bugzilla-daemon@kernel.org wrote:
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=215687
+> 
+>            Summary: chown behavior on XFS is changed
+
+Darrick, what's up with this bug reported more than ten days ago? It's a
+a regression reported the reporter even bisected to a change of yours
+(e014f37db1a2 ("xfs: use setattr_copy to set vfs inode attributes") --
+see the ticket for details) – but nothing happened afaics. Did the
+discussion about this continue somewhere else or did it fall through the
+cracks?
+
+Anyway: I'm adding it to regzbot, my Linux kernel regression tracking bot:
+
+#regzbot ^introduced e014f37db1a2d109afa750042ac4d69cf3e3d88e
+#regzbot title xfs: chown behavior changed
+#regzbot link: https://bugzilla.kernel.org/show_bug.cgi?id=215687
+#regzbot ignore-activity
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+
+P.S.: As the Linux kernel's regression tracker I'm getting a lot of
+reports on my table. I can only look briefly into most of them and lack
+knowledge about most of the areas they concern. I thus unfortunately
+will sometimes get things wrong or miss something important. I hope
+that's not the case here; if you think it is, don't hesitate to tell me
+in a public reply, it's in everyone's interest to set the public record
+straight.
+
