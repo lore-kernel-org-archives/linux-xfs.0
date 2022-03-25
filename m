@@ -2,203 +2,180 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52738C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Mar 2022 13:34:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96021C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Mar 2022 13:52:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354681AbiCYNfm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Mar 2022 09:35:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55028 "EHLO
+        id S1358174AbiCYNyG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Mar 2022 09:54:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345662AbiCYNfl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Mar 2022 09:35:41 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 370CFDF9F
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Mar 2022 06:34:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1648215246;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=unCeDUSTtWJ5xh5sWcZRj3C3u6c9kumSjz2QTBkgbVA=;
-        b=GDWnXdlxt3gpFtBiGRgw9k5kLm2n0yX1IQ8WBZEYKhxiCmQXwojcwe7lBMir9WffYedCf3
-        wE/3eSl8wQySYwsPHqjE9QU1BTbHHEHVd7dvdyVBHsHuS+NtKlZPSoMdbW2DckIfzI1BbE
-        /cdRP9CovXUYvm4GLoYaDHRHVcJ1CYQ=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-140-guw8xnc3P-W_IFWhB5durQ-1; Fri, 25 Mar 2022 09:34:04 -0400
-X-MC-Unique: guw8xnc3P-W_IFWhB5durQ-1
-Received: by mail-wm1-f69.google.com with SMTP id l7-20020a05600c1d0700b0038c9c48f1e7so5257166wms.2
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Mar 2022 06:34:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :content-transfer-encoding:in-reply-to;
-        bh=unCeDUSTtWJ5xh5sWcZRj3C3u6c9kumSjz2QTBkgbVA=;
-        b=6RSPkA+ffj3xQk3c1ib6WciiuZ4xHwUyL3g/FDqfhkq8el7/wmttMqwdKRj/4nLSeK
-         yRtOqY3pRQDwiq0d6uxbbkyB9D8Ud9nv4LnMAiZXsvBXRxY1hvD5q/T5r6YV1IJUl9oq
-         mlZT9BW+tXT0/NhfThJlWqtEn1B9Ih7q/mkvIsd2Jo9AST3xaZcWL7vbImG+rKXjsvFx
-         +TDdTTDT7sXKeiZEBbcSIZmwaUvKph1lOmGudNqyrq9Fa7DpY4pKCemEZ+tCT741Hngu
-         6BJ8QhqcrgLbbVm+BO4bZDTS/LgQLuh+FNz/6qtGF7tFkfWDIAV/N6ZTVVhwYoOk+Yy3
-         Zm0g==
-X-Gm-Message-State: AOAM533lzwtVVHNWITAtx0fioZ9Z0OjHXviOQ6fHB/uWTJwnO5bjxlzc
-        nN5gI+tbIPtER6zulM+DYeQVtmu/SV/rm1Nt95wa9mt2leh8t8zls4xZLK5BQVsiEktKYShFEgV
-        L2Ztw+Kh3BBTAqJNrpKTI
-X-Received: by 2002:a1c:7518:0:b0:37c:7eb:f255 with SMTP id o24-20020a1c7518000000b0037c07ebf255mr19073934wmc.29.1648215243398;
-        Fri, 25 Mar 2022 06:34:03 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyo6PG7adMH7rvbYq2TLEQ1dY661F20SQt2BtKtd1GRNNU7pAeu+ZShm1I8326AEydvnACl3w==
-X-Received: by 2002:a1c:7518:0:b0:37c:7eb:f255 with SMTP id o24-20020a1c7518000000b0037c07ebf255mr19073905wmc.29.1648215243093;
-        Fri, 25 Mar 2022 06:34:03 -0700 (PDT)
-Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id v188-20020a1cacc5000000b00384b71a50d5sm4533167wme.24.2022.03.25.06.34.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Mar 2022 06:34:02 -0700 (PDT)
-Date:   Fri, 25 Mar 2022 21:33:56 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>
-Subject: Re: [PATCH v1] xfs/019: extend protofile test
-Message-ID: <20220325133356.ektmgzck7rpaghcz@zlang-mailbox>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>
-References: <20220317232408.202636-1-catherine.hoang@oracle.com>
- <20220323013653.46d432ybh2zpdhhs@zlang-mailbox>
- <641873A3-0E40-4099-9804-35D1D6792CFA@oracle.com>
- <20220324192600.5dx3vkmrl6z3snu5@zlang-mailbox>
- <20220324201730.GS8224@magnolia>
+        with ESMTP id S1354224AbiCYNyG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Mar 2022 09:54:06 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E7B6D0802
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Mar 2022 06:52:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1648216351; x=1679752351;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=vht9R8INJG/Zrt1+FoLzlTxtAGBlQ9M1E4aIOAYZOho=;
+  b=FBB6xJ1vy9ruDAbm+4ujrBuUK7beU9lrTuI28/E9AGCJBup5FunKgjYp
+   pO+dxq2r0DLBWXefSVqpTeYsgnhw7A0zRqIbJ+6l6N27FDNdJNN1Yzb9c
+   C1m4LIZTveSTQKdpPNTQ94zFx33lxDHC3w9BKZAlRvSFooX1iwEJiSVTG
+   +u7sg9l9OwauMLmRWiZOhAC0NOQFj2z6SYBjlzbOF/LuXTBGpjIr8XdtV
+   dyZ1tOKY6nIHiLoLJ/tK+IiNjJtUXOjhUwqZyx0+Dac8MpYv+tA75IEh4
+   p0t8hS3dD7+mwTONMCfaDUuNwJPrQoCnCAfNsrvL9fWZR9EkclmT829DK
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10296"; a="258603713"
+X-IronPort-AV: E=Sophos;i="5.90,209,1643702400"; 
+   d="scan'208";a="258603713"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2022 06:52:31 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,209,1643702400"; 
+   d="scan'208";a="826041096"
+Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
+  by fmsmga005.fm.intel.com with ESMTP; 25 Mar 2022 06:52:28 -0700
+Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nXkMd-000MGR-DT; Fri, 25 Mar 2022 13:52:27 +0000
+Date:   Fri, 25 Mar 2022 21:51:59 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Jonathan Lassoff <jof@thejof.com>, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        Dave Chinner <david@fromorbit.com>,
+        Chris Down <chris@chrisdown.name>,
+        Petr Mladek <pmladek@suse.com>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        John Ogness <john.ogness@linutronix.de>,
+        Jonathan Lassoff <jof@thejof.com>
+Subject: Re: [PATCH v2 1/2] Simplify XFS logging methods.
+Message-ID: <202203252101.MF3tnkGK-lkp@intel.com>
+References: <1db10d0c7c1d00dd4fd618f76997753784c91f36.1648193655.git.jof@thejof.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220324201730.GS8224@magnolia>
+In-Reply-To: <1db10d0c7c1d00dd4fd618f76997753784c91f36.1648193655.git.jof@thejof.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 24, 2022 at 01:17:30PM -0700, Darrick J. Wong wrote:
-> On Fri, Mar 25, 2022 at 03:26:00AM +0800, Zorro Lang wrote:
-> > On Thu, Mar 24, 2022 at 03:44:00PM +0000, Catherine Hoang wrote:
-> > > > On Mar 22, 2022, at 6:36 PM, Zorro Lang <zlang@redhat.com> wrote:
-> > > > 
-> > > > On Thu, Mar 17, 2022 at 11:24:08PM +0000, Catherine Hoang wrote:
-> > > >> This test creates an xfs filesystem and verifies that the filesystem
-> > > >> matches what is specified by the protofile.
-> > > >> 
-> > > >> This patch extends the current test to check that a protofile can specify
-> > > >> setgid mode on directories. Also, check that the created symlink isn’t
-> > > >> broken.
-> > > >> 
-> > > >> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> > > >> ---
-> > > > 
-> > > > Any specific reason to add this test? Likes uncovering some one known
-> > > > bug/fix?
-> > > > 
-> > > > Thanks,
-> > > > Zorro
-> > > 
-> > > Hi Zorro,
-> > > 
-> > > We’ve been exploring alternate uses for protofiles and noticed a few holes
-> > > in the testing.
-> > 
-> > That's great, but better to show some details in the patch/commit, likes
-> > a commit id of xfsprogs?/kernel? (if there's one) which fix the bug you
-> > metioned, to help others to know what's this change trying to cover.
-> 
-> I think this patch is adding a check that protofile lines are actually
-> being honored (in the case of the symlink file) and checking that setgid
-> on a directory is not carried over into new children unless the
-> protofile explicitly marks the children setgid.
-> 
-> IOWs, this isn't adding a regression test for a fix in xfsprogs, it's
-> increasing test coverage.
+Hi Jonathan,
 
-Oh, understand, I have no objection with this patch, just thought it covers
-a known bug :) If it's good to you too, let's ACK it.
+Thank you for the patch! Yet something to improve:
 
-Thanks,
-Zorro
+[auto build test ERROR on 34af78c4e616c359ed428d79fe4758a35d2c5473]
 
-> 
-> --D
-> 
-> > Thanks,
-> > Zorro
-> > 
-> > > 
-> > > Thanks,
-> > > Catherine
-> > > > 
-> > > >> tests/xfs/019     |  6 ++++++
-> > > >> tests/xfs/019.out | 12 +++++++++++-
-> > > >> 2 files changed, 17 insertions(+), 1 deletion(-)
-> > > >> 
-> > > >> diff --git a/tests/xfs/019 b/tests/xfs/019
-> > > >> index 3dfd5408..535b7af1 100755
-> > > >> --- a/tests/xfs/019
-> > > >> +++ b/tests/xfs/019
-> > > >> @@ -73,6 +73,10 @@ $
-> > > >> setuid -u-666 0 0 $tempfile
-> > > >> setgid --g666 0 0 $tempfile
-> > > >> setugid -ug666 0 0 $tempfile
-> > > >> +directory_setgid d-g755 3 2
-> > > >> +file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_5 ---755 3 1 $tempfile
-> > > >> +$
-> > > >> +: back in the root
-> > > >> block_device b--012 3 1 161 162 
-> > > >> char_device c--345 3 1 177 178
-> > > >> pipe p--670 0 0
-> > > >> @@ -114,6 +118,8 @@ _verify_fs()
-> > > >> 		| xargs $here/src/lstat64 | _filter_stat)
-> > > >> 	diff -q $SCRATCH_MNT/bigfile $tempfile.2 \
-> > > >> 		|| _fail "bigfile corrupted"
-> > > >> +	diff -q $SCRATCH_MNT/symlink $tempfile.2 \
-> > > >> +		|| _fail "symlink broken"
-> > > >> 
-> > > >> 	echo "*** unmount FS"
-> > > >> 	_full "umount"
-> > > >> diff --git a/tests/xfs/019.out b/tests/xfs/019.out
-> > > >> index 19614d9d..8584f593 100644
-> > > >> --- a/tests/xfs/019.out
-> > > >> +++ b/tests/xfs/019.out
-> > > >> @@ -7,7 +7,7 @@ Wrote 2048.00Kb (value 0x2c)
-> > > >>  File: "."
-> > > >>  Size: <DSIZE> Filetype: Directory
-> > > >>  Mode: (0777/drwxrwxrwx) Uid: (3) Gid: (1)
-> > > >> -Device: <DEVICE> Inode: <INODE> Links: 3 
-> > > >> +Device: <DEVICE> Inode: <INODE> Links: 4 
-> > > >> 
-> > > >>  File: "./bigfile"
-> > > >>  Size: 2097152 Filetype: Regular File
-> > > >> @@ -54,6 +54,16 @@ Device: <DEVICE> Inode: <INODE> Links: 1
-> > > >>  Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
-> > > >> Device: <DEVICE> Inode: <INODE> Links: 1 
-> > > >> 
-> > > >> + File: "./directory_setgid"
-> > > >> + Size: <DSIZE> Filetype: Directory
-> > > >> + Mode: (2755/drwxr-sr-x) Uid: (3) Gid: (2)
-> > > >> +Device: <DEVICE> Inode: <INODE> Links: 2 
-> > > >> +
-> > > >> + File: "./directory_setgid/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_5"
-> > > >> + Size: 5 Filetype: Regular File
-> > > >> + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (2)
-> > > >> +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > > >> +
-> > > >>  File: "./pipe"
-> > > >>  Size: 0 Filetype: Fifo File
-> > > >>  Mode: (0670/frw-rwx---) Uid: (0) Gid: (0)
-> > > >> -- 
-> > > >> 2.25.1
-> > > >> 
-> > > > 
-> > > 
-> > 
-> 
+url:    https://github.com/0day-ci/linux/commits/Jonathan-Lassoff/Simplify-XFS-logging-methods/20220325-153845
+base:   34af78c4e616c359ed428d79fe4758a35d2c5473
+config: x86_64-randconfig-a003 (https://download.01.org/0day-ci/archive/20220325/202203252101.MF3tnkGK-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 0f6d9501cf49ce02937099350d08f20c4af86f3d)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/0day-ci/linux/commit/2990fe0fadf416670e325c2bbc0648bf45861439
+        git remote add linux-review https://github.com/0day-ci/linux
+        git fetch --no-tags linux-review Jonathan-Lassoff/Simplify-XFS-logging-methods/20220325-153845
+        git checkout 2990fe0fadf416670e325c2bbc0648bf45861439
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash fs/
 
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   In file included from fs/xfs/kmem.c:6:
+   In file included from fs/xfs/xfs.h:22:
+   In file included from fs/xfs/xfs_linux.h:81:
+>> fs/xfs/xfs_message.h:13:23: error: expected ';' after top level declarator
+           const char *fmt, ...)
+                                ^
+                                ;
+   1 error generated.
+--
+   In file included from fs/xfs/xfs_log_recover.c:6:
+   In file included from fs/xfs/xfs.h:22:
+   In file included from fs/xfs/xfs_linux.h:81:
+>> fs/xfs/xfs_message.h:13:23: error: expected ';' after top level declarator
+           const char *fmt, ...)
+                                ^
+                                ;
+   fs/xfs/xfs_log_recover.c:3550:12: warning: variable 'ifree' set but not used [-Wunused-but-set-variable]
+           uint64_t                ifree;
+                                   ^
+   fs/xfs/xfs_log_recover.c:3549:12: warning: variable 'itotal' set but not used [-Wunused-but-set-variable]
+           uint64_t                itotal;
+                                   ^
+   fs/xfs/xfs_log_recover.c:3548:12: warning: variable 'freeblks' set but not used [-Wunused-but-set-variable]
+           uint64_t                freeblks;
+                                   ^
+   3 warnings and 1 error generated.
+--
+   In file included from fs/xfs/libxfs/xfs_bmap.c:6:
+   In file included from fs/xfs/xfs.h:22:
+   In file included from fs/xfs/xfs_linux.h:81:
+>> fs/xfs/xfs_message.h:13:23: error: expected ';' after top level declarator
+           const char *fmt, ...)
+                                ^
+                                ;
+   fs/xfs/libxfs/xfs_bmap.c:5059:18: warning: variable 'bno' set but not used [-Wunused-but-set-variable]
+                           xfs_fsblock_t   bno;
+                                           ^
+   1 warning and 1 error generated.
+--
+   In file included from fs/xfs/xfs_file.c:6:
+   In file included from fs/xfs/xfs.h:22:
+   In file included from fs/xfs/xfs_linux.h:81:
+>> fs/xfs/xfs_message.h:13:23: error: expected ';' after top level declarator
+           const char *fmt, ...)
+                                ^
+                                ;
+   In file included from fs/xfs/xfs_file.c:30:
+   include/linux/mman.h:158:9: warning: division by zero is undefined [-Wdivision-by-zero]
+                  _calc_vm_trans(flags, MAP_SYNC,       VM_SYNC      ) |
+                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/mman.h:136:21: note: expanded from macro '_calc_vm_trans'
+      : ((x) & (bit1)) / ((bit1) / (bit2))))
+                       ^ ~~~~~~~~~~~~~~~~~
+   1 warning and 1 error generated.
+
+
+vim +13 fs/xfs/xfs_message.h
+
+     8	
+     9	extern __printf(3, 4)
+    10	void xfs_printk_level(
+    11		const char *kern_level,
+    12		const struct xfs_mount *mp,
+  > 13		const char *fmt, ...)
+    14	#define xfs_emerg(mp, fmt, ...) \
+    15		xfs_printk_level(KERN_EMERG, mp, fmt, ##__VA_ARGS__)
+    16	#define xfs_alert(mp, fmt, ...) \
+    17		xfs_printk_level(KERN_ALERT, mp, fmt, ##__VA_ARGS__)
+    18	#define xfs_crit(mp, fmt, ...) \
+    19		xfs_printk_level(KERN_CRIT, mp, fmt, ##__VA_ARGS__)
+    20	#define xfs_err(mp, fmt, ...) \
+    21		xfs_printk_level(KERN_ERR, mp, fmt, ##__VA_ARGS__)
+    22	#define xfs_warn(mp, fmt, ...) \
+    23		xfs_printk_level(KERN_WARNING, mp, fmt, ##__VA_ARGS__)
+    24	#define xfs_notice(mp, fmt, ...) \
+    25		xfs_printk_level(KERN_NOTICE, mp, fmt, ##__VA_ARGS__)
+    26	#define xfs_info(mp, fmt, ...) \
+    27		xfs_printk_level(KERN_INFO, mp, fmt, ##__VA_ARGS__)
+    28	#ifdef DEBUG
+    29	#define xfs_debug(mp, fmt, ...) \
+    30		xfs_printk_level(KERN_DEBUG, mp, fmt, ##__VA_ARGS__)
+    31	#else
+    32	#define xfs_debug(mp, fmt, ...) do {} while (0)
+    33	#endif
+    34	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
