@@ -2,45 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A046C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Mar 2022 16:58:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F29CDC433F5
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Mar 2022 16:58:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236102AbiC0RAJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Mar 2022 13:00:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39202 "EHLO
+        id S236068AbiC0RAQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Mar 2022 13:00:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230236AbiC0RAI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Mar 2022 13:00:08 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D416DF4C
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 09:58:29 -0700 (PDT)
+        with ESMTP id S230236AbiC0RAP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Mar 2022 13:00:15 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93BCA237EA
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 09:58:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 18BC5610A0
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 16:58:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75A70C340EC;
-        Sun, 27 Mar 2022 16:58:28 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 53E96B80D9F
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 16:58:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EEBEC340EC;
+        Sun, 27 Mar 2022 16:58:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648400308;
-        bh=f2leHMr1Ir1vr3uL/cWshRpwGhXuz/w/78+IXrceuNc=;
+        s=k20201202; t=1648400314;
+        bh=NSpGqyYHSYnqWVnGRXqnDBF60fb/7RZwSOlbWLVAtwM=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=hDqzX7lYb8mP47BVoY55W/cey6nX5We3VodgfWvNdDAd0rt7LVGzbyh2MSZMHI36b
-         DAmcTNdQlCXEYb41KYHgpzEaU0j9T6nfYcDi69fAQiBV4nLtims5tNwUo+/Idobg9f
-         Muiwd+AHBcn265ZcpL7B88lDiz+oJqUnTXwrtNrSlkIrSqmjnNpLye64aD+wV2ML17
-         Z+RlCDhUotmUeEd04++bfvK3ToHbEFtKySstG1bL+JpvDOkOJlngo8vP1uiCmXcqwB
-         vh3lSlrN6dvgLHQDdJuomccJj9/egRT+ygXLFkMwATWtcY4kZeul52z1dgTkNmmG5O
-         S8+zdLR6QFePQ==
-Subject: [PATCH 2/6] xfs: don't include bnobt blocks when reserving free block
- pool
+        b=WJWhvCc4xkTMIGimlX3Pq5jC4tj/Z9iGObmIguoKTtG0X6xgUHpogFC1hJLscyUTj
+         7tEW6bs2jRyZoXxPGOQNLHzvxkUm+LUbDncET1OHaUMBzYd/P0D68XtprWWY4lKwKM
+         c5AqHFjCv0ARCDmyILmZ+SOaKrRrBWIv1VxGg4L8q8xU40E9yG44Bfx0c9h5a99U0N
+         qw5Etv4X9p6mKMnHQMIqQ8/4Td9xE377cuM13rOcmeDFQF/cbAVai/UpWF8V1iJdzf
+         +ysiqXrv9Co53LFdDfp3vzUlQB7FXpTGAGAwqPfSJONF+AHU+JiKuPJOHplMCxhr1K
+         h+AvvKVVDuenw==
+Subject: [PATCH 3/6] xfs: remove infinite loop when reserving free block pool
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
         bfoster@redhat.com, david@fromorbit.com
-Date:   Sun, 27 Mar 2022 09:58:28 -0700
-Message-ID: <164840030799.54920.14162809636198918115.stgit@magnolia>
+Date:   Sun, 27 Mar 2022 09:58:33 -0700
+Message-ID: <164840031362.54920.15815650183086189788.stgit@magnolia>
 In-Reply-To: <164840029642.54920.17464512987764939427.stgit@magnolia>
 References: <164840029642.54920.17464512987764939427.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -53,93 +50,87 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xfs_reserve_blocks controls the size of the user-visible free space
-reserve pool.  Given the difference between the current and requested
-pool sizes, it will try to reserve free space from fdblocks.  However,
-the amount requested from fdblocks is also constrained by the amount of
-space that we think xfs_mod_fdblocks will give us.  If we forget to
-subtract m_allocbt_blks before calling xfs_mod_fdblocks, it will will
-return ENOSPC and we'll hang the kernel at mount due to the infinite
+Infinite loops in kernel code are scary.  Calls to xfs_reserve_blocks
+should be rare (people should just use the defaults!) so we really don't
+need to try so hard.  Simplify the logic here by removing the infinite
 loop.
 
-In commit fd43cf600cf6, we decided that xfs_mod_fdblocks should not hand
-out the "free space" used by the free space btrees, because some portion
-of the free space btrees hold in reserve space for future btree
-expansion.  Unfortunately, xfs_reserve_blocks' estimation of the number
-of blocks that it could request from xfs_mod_fdblocks was not updated to
-include m_allocbt_blks, so if space is extremely low, the caller hangs.
-
-Fix this by creating a function to estimate the number of blocks that
-can be reserved from fdblocks, which needs to exclude the set-aside and
-m_allocbt_blks.
-
-Found by running xfs/306 (which formats a single-AG 20MB filesystem)
-with an fstests configuration that specifies a 1k blocksize and a
-specially crafted log size that will consume 7/8 of the space (17920
-blocks, specifically) in that AG.
-
 Cc: Brian Foster <bfoster@redhat.com>
-Fixes: fd43cf600cf6 ("xfs: set aside allocation btree blocks from block reservation")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_fsops.c |    2 +-
- fs/xfs/xfs_mount.c |    2 +-
- fs/xfs/xfs_mount.h |   15 +++++++++++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_fsops.c |   50 ++++++++++++++++++++------------------------------
+ 1 file changed, 20 insertions(+), 30 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 33e26690a8c4..710e857bb825 100644
+index 710e857bb825..3c6d9d6836ef 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -434,7 +434,7 @@ xfs_reserve_blocks(
- 	error = -ENOSPC;
- 	do {
- 		free = percpu_counter_sum(&mp->m_fdblocks) -
--						mp->m_alloc_set_aside;
-+						xfs_fdblocks_unavailable(mp);
- 		if (free <= 0)
- 			break;
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index bed73e8002a5..29ffa8c42795 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1146,7 +1146,7 @@ xfs_mod_fdblocks(
- 	 * problems (i.e. transaction abort, pagecache discards, etc.) than
- 	 * slightly premature -ENOSPC.
+@@ -430,46 +430,36 @@ xfs_reserve_blocks(
+ 	 * If the request is larger than the current reservation, reserve the
+ 	 * blocks before we update the reserve counters. Sample m_fdblocks and
+ 	 * perform a partial reservation if the request exceeds free space.
++	 *
++	 * The code below estimates how many blocks it can request from
++	 * fdblocks to stash in the reserve pool.  This is a classic TOCTOU
++	 * race since fdblocks updates are not always coordinated via
++	 * m_sb_lock.
  	 */
--	set_aside = mp->m_alloc_set_aside + atomic64_read(&mp->m_allocbt_blks);
-+	set_aside = xfs_fdblocks_unavailable(mp);
- 	percpu_counter_add_batch(&mp->m_fdblocks, delta, batch);
- 	if (__percpu_counter_compare(&mp->m_fdblocks, set_aside,
- 				     XFS_FDBLOCKS_BATCH) >= 0) {
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 00720a02e761..f6dc19de8322 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -479,6 +479,21 @@ extern void	xfs_unmountfs(xfs_mount_t *);
-  */
- #define XFS_FDBLOCKS_BATCH	1024
+-	error = -ENOSPC;
+-	do {
+-		free = percpu_counter_sum(&mp->m_fdblocks) -
++	free = percpu_counter_sum(&mp->m_fdblocks) -
+ 						xfs_fdblocks_unavailable(mp);
+-		if (free <= 0)
+-			break;
+-
+-		delta = request - mp->m_resblks;
+-		lcounter = free - delta;
+-		if (lcounter < 0)
+-			/* We can't satisfy the request, just get what we can */
+-			fdblks_delta = free;
+-		else
+-			fdblks_delta = delta;
+-
++	delta = request - mp->m_resblks;
++	if (delta > 0 && free > 0) {
+ 		/*
+ 		 * We'll either succeed in getting space from the free block
+-		 * count or we'll get an ENOSPC. If we get a ENOSPC, it means
+-		 * things changed while we were calculating fdblks_delta and so
+-		 * we should try again to see if there is anything left to
+-		 * reserve.
+-		 *
+-		 * Don't set the reserved flag here - we don't want to reserve
+-		 * the extra reserve blocks from the reserve.....
++		 * count or we'll get an ENOSPC.  Don't set the reserved flag
++		 * here - we don't want to reserve the extra reserve blocks
++		 * from the reserve.
+ 		 */
++		fdblks_delta = min(free, delta);
+ 		spin_unlock(&mp->m_sb_lock);
+ 		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
+ 		spin_lock(&mp->m_sb_lock);
+-	} while (error == -ENOSPC);
  
-+/*
-+ * Estimate the amount of free space that is not available to userspace and is
-+ * not explicitly reserved from the incore fdblocks.  This includes:
-+ *
-+ * - The minimum number of blocks needed to support splitting a bmap btree
-+ * - The blocks currently in use by the freespace btrees because they record
-+ *   the actual blocks that will fill per-AG metadata space reservations
-+ */
-+static inline uint64_t
-+xfs_fdblocks_unavailable(
-+	struct xfs_mount	*mp)
-+{
-+	return mp->m_alloc_set_aside + atomic64_read(&mp->m_allocbt_blks);
-+}
-+
- extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
- 				 bool reserved);
- extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
+-	/*
+-	 * Update the reserve counters if blocks have been successfully
+-	 * allocated.
+-	 */
+-	if (!error && fdblks_delta) {
+-		mp->m_resblks += fdblks_delta;
+-		mp->m_resblks_avail += fdblks_delta;
++		/*
++		 * Update the reserve counters if blocks have been successfully
++		 * allocated.
++		 */
++		if (!error) {
++			mp->m_resblks += fdblks_delta;
++			mp->m_resblks_avail += fdblks_delta;
++		}
+ 	}
+-
+ out:
+ 	if (outval) {
+ 		outval->resblks = mp->m_resblks;
 
