@@ -2,41 +2,45 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36218C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Mar 2022 16:58:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A046C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Mar 2022 16:58:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236115AbiC0RAF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Mar 2022 13:00:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38988 "EHLO
+        id S236102AbiC0RAJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Mar 2022 13:00:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230236AbiC0RAF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Mar 2022 13:00:05 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2D2CDF4C
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 09:58:25 -0700 (PDT)
+        with ESMTP id S230236AbiC0RAI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Mar 2022 13:00:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D416DF4C
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 09:58:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5119CB80D62
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 16:58:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEA1FC340EC;
-        Sun, 27 Mar 2022 16:58:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 18BC5610A0
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 16:58:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75A70C340EC;
+        Sun, 27 Mar 2022 16:58:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648400302;
-        bh=LPPIN++7ATtVHOxUoH0/5XqTW5u3cbUZuA/g0jq9fl0=;
+        s=k20201202; t=1648400308;
+        bh=f2leHMr1Ir1vr3uL/cWshRpwGhXuz/w/78+IXrceuNc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=h43/aBhXVBWAXyKOB+s56I1ezQnajiCJUnmf0k++GrgrKo2cNZQSyxCK89V5CKInE
-         W2jPlKPX2vyQVViKv26Od4z1LNAxkiR4pJ5tR27rIDhD73Rg2LWeHvcbwbhl+/7E/s
-         HLpyXSHcbGN0JFRua5FHTUUW39J0uGy7r70/rw2OaB+diYuHmy7mZ6M7LQv0KA5iGG
-         gRMvC1dgrZDL5MIxk/Zp3D8wKKOv5rq3fPhUtBnSykx+8Ne9kiBF4s0vNkrzCUQ75W
-         WM2GaeUJo7/ZltYdK0Gr5yOGjgbGo5U37hLvMitrADDZVAXw1nP+gGXNnDOQXY6TAh
-         ozC+hYq8U+a5Q==
-Subject: [PATCH 1/6] xfs: document the XFS_ALLOC_AGFL_RESERVE constant
+        b=hDqzX7lYb8mP47BVoY55W/cey6nX5We3VodgfWvNdDAd0rt7LVGzbyh2MSZMHI36b
+         DAmcTNdQlCXEYb41KYHgpzEaU0j9T6nfYcDi69fAQiBV4nLtims5tNwUo+/Idobg9f
+         Muiwd+AHBcn265ZcpL7B88lDiz+oJqUnTXwrtNrSlkIrSqmjnNpLye64aD+wV2ML17
+         Z+RlCDhUotmUeEd04++bfvK3ToHbEFtKySstG1bL+JpvDOkOJlngo8vP1uiCmXcqwB
+         vh3lSlrN6dvgLHQDdJuomccJj9/egRT+ygXLFkMwATWtcY4kZeul52z1dgTkNmmG5O
+         S8+zdLR6QFePQ==
+Subject: [PATCH 2/6] xfs: don't include bnobt blocks when reserving free block
+ pool
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com
-Date:   Sun, 27 Mar 2022 09:58:22 -0700
-Message-ID: <164840030231.54920.7952660071015931236.stgit@magnolia>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com, david@fromorbit.com
+Date:   Sun, 27 Mar 2022 09:58:28 -0700
+Message-ID: <164840030799.54920.14162809636198918115.stgit@magnolia>
 In-Reply-To: <164840029642.54920.17464512987764939427.stgit@magnolia>
 References: <164840029642.54920.17464512987764939427.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,91 +53,93 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, we use this undocumented macro to encode the minimum number
-of blocks needed to replenish a completely empty AGFL when an AG is
-nearly full.  This has lead to confusion on the part of the maintainers,
-so let's document what the value actually means, and move it to
-xfs_alloc.c since it's not used outside of that module.
+xfs_reserve_blocks controls the size of the user-visible free space
+reserve pool.  Given the difference between the current and requested
+pool sizes, it will try to reserve free space from fdblocks.  However,
+the amount requested from fdblocks is also constrained by the amount of
+space that we think xfs_mod_fdblocks will give us.  If we forget to
+subtract m_allocbt_blks before calling xfs_mod_fdblocks, it will will
+return ENOSPC and we'll hang the kernel at mount due to the infinite
+loop.
 
+In commit fd43cf600cf6, we decided that xfs_mod_fdblocks should not hand
+out the "free space" used by the free space btrees, because some portion
+of the free space btrees hold in reserve space for future btree
+expansion.  Unfortunately, xfs_reserve_blocks' estimation of the number
+of blocks that it could request from xfs_mod_fdblocks was not updated to
+include m_allocbt_blks, so if space is extremely low, the caller hangs.
+
+Fix this by creating a function to estimate the number of blocks that
+can be reserved from fdblocks, which needs to exclude the set-aside and
+m_allocbt_blks.
+
+Found by running xfs/306 (which formats a single-AG 20MB filesystem)
+with an fstests configuration that specifies a 1k blocksize and a
+specially crafted log size that will consume 7/8 of the space (17920
+blocks, specifically) in that AG.
+
+Cc: Brian Foster <bfoster@redhat.com>
+Fixes: fd43cf600cf6 ("xfs: set aside allocation btree blocks from block reservation")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   28 +++++++++++++++++++++++-----
- fs/xfs/libxfs/xfs_alloc.h |    1 -
- 2 files changed, 23 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_fsops.c |    2 +-
+ fs/xfs/xfs_mount.c |    2 +-
+ fs/xfs/xfs_mount.h |   15 +++++++++++++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 353e53b892e6..b52ed339727f 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -82,6 +82,24 @@ xfs_prealloc_blocks(
- }
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 33e26690a8c4..710e857bb825 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -434,7 +434,7 @@ xfs_reserve_blocks(
+ 	error = -ENOSPC;
+ 	do {
+ 		free = percpu_counter_sum(&mp->m_fdblocks) -
+-						mp->m_alloc_set_aside;
++						xfs_fdblocks_unavailable(mp);
+ 		if (free <= 0)
+ 			break;
  
- /*
-+ * The number of blocks per AG that we withhold from xfs_mod_fdblocks to
-+ * guarantee that we can refill the AGFL prior to allocating space in a nearly
-+ * full AG.  Although the the space described by the free space btrees, the
-+ * blocks used by the freesp btrees themselves, and the blocks owned by the
-+ * AGFL are counted in the ondisk fdblocks, it's a mistake to let the ondisk
-+ * free space in the AG drop so low that the free space btrees cannot refill an
-+ * empty AGFL up to the minimum level.  Rather than grind through empty AGs
-+ * until the fs goes down, we subtract this many AG blocks from the incore
-+ * fdblocks to ensure user allocation does not overcommit the space the
-+ * filesystem needs for the AGFLs.  The rmap btree uses a per-AG reservation to
-+ * withhold space from xfs_mod_fdblocks, so we do not account for that here.
-+ */
-+#define XFS_ALLOCBT_AGFL_RESERVE	4
-+
-+/*
-+ * Compute the number of blocks that we set aside to guarantee the ability to
-+ * refill the AGFL and handle a full bmap btree split.
-+ *
-  * In order to avoid ENOSPC-related deadlock caused by out-of-order locking of
-  * AGF buffer (PV 947395), we place constraints on the relationship among
-  * actual allocations for data blocks, freelist blocks, and potential file data
-@@ -93,14 +111,14 @@ xfs_prealloc_blocks(
-  * extents need to be actually allocated. To get around this, we explicitly set
-  * aside a few blocks which will not be reserved in delayed allocation.
-  *
-- * We need to reserve 4 fsbs _per AG_ for the freelist and 4 more to handle a
-- * potential split of the file's bmap btree.
-+ * For each AG, we need to reserve enough blocks to replenish a totally empty
-+ * AGFL and 4 more to handle a potential split of the file's bmap btree.
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bed73e8002a5..29ffa8c42795 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1146,7 +1146,7 @@ xfs_mod_fdblocks(
+ 	 * problems (i.e. transaction abort, pagecache discards, etc.) than
+ 	 * slightly premature -ENOSPC.
+ 	 */
+-	set_aside = mp->m_alloc_set_aside + atomic64_read(&mp->m_allocbt_blks);
++	set_aside = xfs_fdblocks_unavailable(mp);
+ 	percpu_counter_add_batch(&mp->m_fdblocks, delta, batch);
+ 	if (__percpu_counter_compare(&mp->m_fdblocks, set_aside,
+ 				     XFS_FDBLOCKS_BATCH) >= 0) {
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 00720a02e761..f6dc19de8322 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -479,6 +479,21 @@ extern void	xfs_unmountfs(xfs_mount_t *);
   */
- unsigned int
- xfs_alloc_set_aside(
- 	struct xfs_mount	*mp)
- {
--	return mp->m_sb.sb_agcount * (XFS_ALLOC_AGFL_RESERVE + 4);
-+	return mp->m_sb.sb_agcount * (XFS_ALLOCBT_AGFL_RESERVE + 4);
- }
+ #define XFS_FDBLOCKS_BATCH	1024
  
- /*
-@@ -124,12 +142,12 @@ xfs_alloc_ag_max_usable(
- 	unsigned int		blocks;
- 
- 	blocks = XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)); /* ag headers */
--	blocks += XFS_ALLOC_AGFL_RESERVE;
-+	blocks += XFS_ALLOCBT_AGFL_RESERVE;
- 	blocks += 3;			/* AGF, AGI btree root blocks */
- 	if (xfs_has_finobt(mp))
- 		blocks++;		/* finobt root block */
- 	if (xfs_has_rmapbt(mp))
--		blocks++; 		/* rmap root block */
-+		blocks++;		/* rmap root block */
- 	if (xfs_has_reflink(mp))
- 		blocks++;		/* refcount root block */
- 
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 1c14a0b1abea..d4c057b764f9 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -88,7 +88,6 @@ typedef struct xfs_alloc_arg {
- #define XFS_ALLOC_NOBUSY		(1 << 2)/* Busy extents not allowed */
- 
- /* freespace limit calculations */
--#define XFS_ALLOC_AGFL_RESERVE	4
- unsigned int xfs_alloc_set_aside(struct xfs_mount *mp);
- unsigned int xfs_alloc_ag_max_usable(struct xfs_mount *mp);
- 
++/*
++ * Estimate the amount of free space that is not available to userspace and is
++ * not explicitly reserved from the incore fdblocks.  This includes:
++ *
++ * - The minimum number of blocks needed to support splitting a bmap btree
++ * - The blocks currently in use by the freespace btrees because they record
++ *   the actual blocks that will fill per-AG metadata space reservations
++ */
++static inline uint64_t
++xfs_fdblocks_unavailable(
++	struct xfs_mount	*mp)
++{
++	return mp->m_alloc_set_aside + atomic64_read(&mp->m_allocbt_blks);
++}
++
+ extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
+ 				 bool reserved);
+ extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
 
