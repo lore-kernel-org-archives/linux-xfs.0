@@ -2,100 +2,128 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EB26C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Mar 2022 16:58:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54E9AC433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Mar 2022 22:55:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236083AbiC0RAd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Mar 2022 13:00:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40242 "EHLO
+        id S230002AbiC0W5S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Mar 2022 18:57:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236109AbiC0RAa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Mar 2022 13:00:30 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9E783527F
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 09:58:51 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 76FD9610A6
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 16:58:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D37AAC340EC;
-        Sun, 27 Mar 2022 16:58:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648400330;
-        bh=KwVg5xgXTEC0LmaSEuKrgNvZJnLKQECmltIheHZRis0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=RasNF5cMxq81EsPf/4xzOdEiSnFXnl/Iomtvg01D8J5HEfC7jo5h6pEKcz4wnK8Ob
-         TEwRChbZeaXVRUDlwuO5/00SCIxPLVyJzawGEft4S0Z/cU7yoUPWVXynrxA6G5ShJc
-         HtYdOGV0D2kBxnyQnT/lT3Cz76luy2EdIYqqvZ7mwcIeKF1j0mT51ggnYF0w2YV/eJ
-         cxoa4ES6PY9knED68ZwJPUHtcsl/w6EhK3H+yqUbf1icui0j9VPkDDtSEBcHveKFgX
-         R7BnwB7K3zwA9PEM8qqKueuqyw1nXy3XCru3awqguE+X4k0Jl1n2LPmZQ6y/nqHihx
-         y1/IZbm2PKMOQ==
-Subject: [PATCH 6/6] xfs: don't report reserved bnobt space as available
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-        bfoster@redhat.com, david@fromorbit.com
-Date:   Sun, 27 Mar 2022 09:58:50 -0700
-Message-ID: <164840033043.54920.18407468773094720534.stgit@magnolia>
-In-Reply-To: <164840029642.54920.17464512987764939427.stgit@magnolia>
-References: <164840029642.54920.17464512987764939427.stgit@magnolia>
-User-Agent: StGit/0.19
+        with ESMTP id S229508AbiC0W5R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Mar 2022 18:57:17 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 48C3D3151C
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 15:55:38 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8E100533F4E
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Mar 2022 09:55:36 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nYbnK-00Ag85-UG
+        for linux-xfs@vger.kernel.org; Mon, 28 Mar 2022 09:55:35 +1100
+Date:   Mon, 28 Mar 2022 09:55:34 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 7/6] xfs: xfs: shutdown during log recovery needs to mark the
+ log shutdown
+Message-ID: <20220327225534.GQ1544202@dread.disaster.area>
+References: <20220324002103.710477-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220324002103.710477-1-david@fromorbit.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6240eb68
+        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8
+        a=yAJUlvxGiVCaNyWj6gcA:9 a=CjuIK1q_8ugA:10
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
 
-On a modern filesystem, we don't allow userspace to allocate blocks for
-data storage from the per-AG space reservations, the user-controlled
-reservation pool that prevents ENOSPC in the middle of internal
-operations, or the internal per-AG set-aside that prevents unwanted
-filesystem shutdowns due to ENOSPC during a bmap btree split.
+From: Dave Chinner <dchinner@redhat.com>
 
-Since we now consider freespace btree blocks as unavailable for
-allocation for data storage, we shouldn't report those blocks via statfs
-either.  This makes the numbers that we return via the statfs f_bavail
-and f_bfree fields a more conservative estimate of actual free space.
+When a checkpoint writeback is run by log recovery, corruption
+propagated from the log can result in writeback verifiers failing
+and calling xfs_force_shutdown() from
+xfs_buf_delwri_submit_buffers().
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+This results in the mount being marked as shutdown, but the log does
+not get marked as shut down because:
+
+        /*
+         * If this happens during log recovery then we aren't using the runtime
+         * log mechanisms yet so there's nothing to shut down.
+         */
+        if (!log || xlog_in_recovery(log))
+                return false;
+
+If there are other buffers that then fail (say due to detecting the
+mount shutdown), they will now hang in xfs_do_force_shutdown()
+waiting for the log to shut down like this:
+
+  __schedule+0x30d/0x9e0
+  schedule+0x55/0xd0
+  xfs_do_force_shutdown+0x1cd/0x200
+  ? init_wait_var_entry+0x50/0x50
+  xfs_buf_ioend+0x47e/0x530
+  __xfs_buf_submit+0xb0/0x240
+  xfs_buf_delwri_submit_buffers+0xfe/0x270
+  xfs_buf_delwri_submit+0x3a/0xc0
+  xlog_do_recovery_pass+0x474/0x7b0
+  ? do_raw_spin_unlock+0x30/0xb0
+  xlog_do_log_recovery+0x91/0x140
+  xlog_do_recover+0x38/0x1e0
+  xlog_recover+0xdd/0x170
+  xfs_log_mount+0x17e/0x2e0
+  xfs_mountfs+0x457/0x930
+  xfs_fs_fill_super+0x476/0x830
+
+xlog_force_shutdown() always needs to mark the log as shut down,
+regardless of whether recovery is in progress or not, so that
+multiple calls to xfs_force_shutdown() during recovery don't end
+up waiting for the log to be shut down like this.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_fsops.c |    2 +-
- fs/xfs/xfs_super.c |    3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_log.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 5b5b68affe66..196e2c51309c 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -347,7 +347,7 @@ xfs_fs_counts(
- 	cnt->allocino = percpu_counter_read_positive(&mp->m_icount);
- 	cnt->freeino = percpu_counter_read_positive(&mp->m_ifree);
- 	cnt->freedata = percpu_counter_read_positive(&mp->m_fdblocks) -
--						mp->m_alloc_set_aside;
-+						xfs_fdblocks_unavailable(mp);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 6166348ce1d1..5f3f943c34b9 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3729,11 +3729,7 @@ xlog_force_shutdown(
+ {
+ 	bool		log_error = (shutdown_flags & SHUTDOWN_LOG_IO_ERROR);
  
- 	spin_lock(&mp->m_sb_lock);
- 	cnt->freertx = mp->m_sb.sb_frextents;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d84714e4e46a..54be9d64093e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -815,7 +815,8 @@ xfs_fs_statfs(
- 	spin_unlock(&mp->m_sb_lock);
+-	/*
+-	 * If this happens during log recovery then we aren't using the runtime
+-	 * log mechanisms yet so there's nothing to shut down.
+-	 */
+-	if (!log || xlog_in_recovery(log))
++	if (!log)
+ 		return false;
  
- 	/* make sure statp->f_bfree does not underflow */
--	statp->f_bfree = max_t(int64_t, fdblocks - mp->m_alloc_set_aside, 0);
-+	statp->f_bfree = max_t(int64_t, 0,
-+				fdblocks - xfs_fdblocks_unavailable(mp));
- 	statp->f_bavail = statp->f_bfree;
+ 	/*
+@@ -3742,10 +3738,16 @@ xlog_force_shutdown(
+ 	 * before the force will prevent the log force from flushing the iclogs
+ 	 * to disk.
+ 	 *
+-	 * Re-entry due to a log IO error shutdown during the log force is
+-	 * prevented by the atomicity of higher level shutdown code.
++	 * When we are in recovery, there are no transactions to flush, and
++	 * we don't want to touch the log because we don't want to perturb the
++	 * current head/tail for future recovery attempts. Hence we need to
++	 * avoid a log force in this case.
++	 *
++	 * If we are shutting down due to a log IO error, then we must avoid
++	 * trying to write the log as that may just result in more IO errors and
++	 * an endless shutdown/force loop.
+ 	 */
+-	if (!log_error)
++	if (!log_error && !xlog_in_recovery(log))
+ 		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
  
- 	fakeinos = XFS_FSB_TO_INO(mp, statp->f_bfree);
-
+ 	/*
