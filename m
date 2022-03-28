@@ -2,224 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4F58C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Mar 2022 23:05:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22834C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Mar 2022 23:11:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230272AbiC1XHQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Mar 2022 19:07:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54074 "EHLO
+        id S230295AbiC1XMz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Mar 2022 19:12:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230283AbiC1XHO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Mar 2022 19:07:14 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 963BB6270
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Mar 2022 16:05:32 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3A4A560E73
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Mar 2022 23:05:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FC0AC340EC;
-        Mon, 28 Mar 2022 23:05:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648508731;
-        bh=vUug5o5NjzWUeOjXP5zYav+ZHcJh9bEKApga/Df328Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XPYoutg+5tFHGVfQ4nVndJFHwE5VX2MSDH1QwKkstW/jvFJHhT/edjOXaT/QDylsZ
-         jIRArvZjuQoHP/SHJYmSNRqhMpDu6sxVtNt2p3iEZGFd8dbiNwolkQV7k6DDimO+YD
-         iI2uo6OYBKzjb3U3iZnFLhbgPWh05ap3m4OjO8cOdHjHD8gO7jtt/1w2SWR8GO2ncX
-         BoyKWdsar/ERqYMc+EhfmSebwdORCGZnQ3P9yyWLRXIjv01WCaqB/nEt3n6Nnz7HPW
-         Q6DWf7vonGcOJ2vPmAwVl0R2niU4ESjmqyGHIPtJTKNC9sDlZhkNc8BU1dy2iQ0Oqe
-         1awpVnxcdrxNg==
-Date:   Mon, 28 Mar 2022 16:05:31 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        with ESMTP id S230290AbiC1XMy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Mar 2022 19:12:54 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D2A5EBF7
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Mar 2022 16:11:12 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id EFDCA10E5081;
+        Tue, 29 Mar 2022 10:11:11 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nYyVx-00B4sP-0h; Tue, 29 Mar 2022 10:11:09 +1100
+Date:   Tue, 29 Mar 2022 10:11:09 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: run callbacks before waking waiters in
- xlog_state_shutdown_callbacks
-Message-ID: <20220328230531.GB27713@magnolia>
+Subject: Re: [PATCH 1/6] xfs: aborting inodes on shutdown may need buffer lock
+Message-ID: <20220328231109.GV1544202@dread.disaster.area>
 References: <20220324002103.710477-1-david@fromorbit.com>
- <20220324002103.710477-4-david@fromorbit.com>
+ <20220324002103.710477-2-david@fromorbit.com>
+ <20220328224452.GA27690@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220324002103.710477-4-david@fromorbit.com>
+In-Reply-To: <20220328224452.GA27690@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62424090
+        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
+        a=TuYxW_UxKIsRaeBSoBoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 24, 2022 at 11:21:00AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Mar 28, 2022 at 03:44:52PM -0700, Darrick J. Wong wrote:
+> On Thu, Mar 24, 2022 at 11:20:58AM +1100, Dave Chinner wrote:
+> >  xfs_iflush_abort(
+> >  	struct xfs_inode	*ip)
+> >  {
+> >  	struct xfs_inode_log_item *iip = ip->i_itemp;
+> > -	struct xfs_buf		*bp = NULL;
+> > +	struct xfs_buf		*bp;
+> >  
+> > -	if (iip) {
+> > -		/*
+> > -		 * Clear the failed bit before removing the item from the AIL so
+> > -		 * xfs_trans_ail_delete() doesn't try to clear and release the
+> > -		 * buffer attached to the log item before we are done with it.
+> > -		 */
+> > -		clear_bit(XFS_LI_FAILED, &iip->ili_item.li_flags);
+> > -		xfs_trans_ail_delete(&iip->ili_item, 0);
+> > +	if (!iip) {
+> > +		/* clean inode, nothing to do */
+> > +		xfs_iflags_clear(ip, XFS_IFLUSHING);
+> > +		return;
+> > +	}
+> > +
+> > +	/*
+> > +	 * Remove the inode item from the AIL before we clear it's internal
 > 
-> Brian reported a null pointer dereference failure during unmount in
-> xfs/006. He tracked the problem down to the AIL being torn down
-> before a log shutdown had completed and removed all the items from
-> the AIL. The failure occurred in this path while unmount was
-> proceeding in another task:
+> Nit: "it's" is a contraction, "its" is possessive.
 > 
->  xfs_trans_ail_delete+0x102/0x130 [xfs]
->  xfs_buf_item_done+0x22/0x30 [xfs]
->  xfs_buf_ioend+0x73/0x4d0 [xfs]
->  xfs_trans_committed_bulk+0x17e/0x2f0 [xfs]
->  xlog_cil_committed+0x2a9/0x300 [xfs]
->  xlog_cil_process_committed+0x69/0x80 [xfs]
->  xlog_state_shutdown_callbacks+0xce/0xf0 [xfs]
->  xlog_force_shutdown+0xdf/0x150 [xfs]
->  xfs_do_force_shutdown+0x5f/0x150 [xfs]
->  xlog_ioend_work+0x71/0x80 [xfs]
->  process_one_work+0x1c5/0x390
->  worker_thread+0x30/0x350
->  kthread+0xd7/0x100
->  ret_from_fork+0x1f/0x30
+> > +	 * state. Whilst the inode is in the AIL, it should have a valid buffer
+> > +	 * pointer for push operations to access - it is only safe to remove the
+> > +	 * inode from the buffer once it has been removed from the AIL.
+> > +	 *
+> > +	 * We also clear the failed bit before removing the item from the AIL
+> > +	 * as xfs_trans_ail_delete()->xfs_clear_li_failed() will release buffer
+> > +	 * references the inode item owns and needs to hold until we've fully
+> > +	 * aborted the inode log item and detatched it from the buffer.
 > 
-> This is processing an EIO error to a log write, and it's
-> triggering a force shutdown. This causes the log to be shut down,
-> and then it is running attached iclog callbacks from the shutdown
-> context. That means the fs and log has already been marked as
-> xfs_is_shutdown/xlog_is_shutdown and so high level code will abort
-> (e.g. xfs_trans_commit(), xfs_log_force(), etc) with an error
-> because of shutdown.
+> Nit: detached
 > 
-> The umount would have been blocked waiting for a log force
-> completion inside xfs_log_cover() -> xfs_sync_sb(). The first thing
-> for this situation to occur is for xfs_sync_sb() to exit without
-> waiting for the iclog buffer to be comitted to disk. The
-> above trace is the completion routine for the iclog buffer, and
-> it is shutting down the filesystem.
+> > +	 */
+> > +	clear_bit(XFS_LI_FAILED, &iip->ili_item.li_flags);
 > 
-> xlog_state_shutdown_callbacks() does this:
-> 
-> {
->         struct xlog_in_core     *iclog;
->         LIST_HEAD(cb_list);
-> 
->         spin_lock(&log->l_icloglock);
->         iclog = log->l_iclog;
->         do {
->                 if (atomic_read(&iclog->ic_refcnt)) {
->                         /* Reference holder will re-run iclog callbacks. */
->                         continue;
->                 }
->                 list_splice_init(&iclog->ic_callbacks, &cb_list);
-> >>>>>>           wake_up_all(&iclog->ic_write_wait);
-> >>>>>>           wake_up_all(&iclog->ic_force_wait);
->         } while ((iclog = iclog->ic_next) != log->l_iclog);
-> 
->         wake_up_all(&log->l_flush_wait);
->         spin_unlock(&log->l_icloglock);
-> 
-> >>>>>>  xlog_cil_process_committed(&cb_list);
-> }
-> 
-> It wakes forces waiters before shutdown processes all the pending
-> callbacks.
+> I wonder, is there any chance the AIL will stumble onto the inode item
+> right here?
 
-I'm not sure what this means.
+It can, but now it will fail to get the buffer lock because we
+currently hold it and so can't do anything writeback related with
+the inode item regardless of whether this bit is set or not.  i.e.
+This patch actually fixes the race you are refering to....
 
-Are you saying that log shutdown wakes up iclog waiters before it
-processes pending callbacks?  And then anyone who waits on an iclog (log
-forces, I guess?) will wake up and race with the callbacks?
+> > +	xfs_trans_ail_delete(&iip->ili_item, 0);
+> > +
+> > +	/*
+> > +	 * Capture the associated buffer and lock it if the caller didn't
+> > +	 * pass us the locked buffer to begin with.
+> 
+> I agree that we're capturing the buffer here, but this function is not
+> locking the buffer since the comment says that the caller has to hold
+> the buffer lock already, correct?  And AFAICT from looking at all the
+> callers, they all hold the buffer locked, like the comment requires.
 
-> That means the xfs_sync_sb() waiting on a sync
-> transaction in xfs_log_force() on iclog->ic_force_wait will get
-> woken before the callbacks attached to that iclog are run. This
-> results in xfs_sync_sb() returning an error, and so unmount unblocks
-> and continues to run whilst the log shutdown is still in progress.
-> 
-> Normally this is just fine because the force waiter has nothing to
-> do with AIL operations. But in the case of this unmount path, the
-> log force waiter goes on to tear down the AIL because the log is now
-> shut down and so nothing ever blocks it again from the wait point in
-> xfs_log_cover().
-> 
-> Hence it's a race to see who gets to the AIL first - the unmount
-> code or xlog_cil_process_committed() killing the superblock buffer.
-> 
-> To fix this, we just have to change the order of processing in
-> xlog_state_shutdown_callbacks() to run the callbacks before it wakes
-> any task waiting on completion of the iclog.
+I thought I killed that comment - you noted it was incorrect in
+the previous iteration. I'll kill it properly when I update the
+spulling misteaks above.
 
-Hmm.  I think my guess above is correct, then.  I /think/ the code looks
-ok based on my above guess at comprehension.
+Cheers,
 
---D
-
-> 
-> Reported-by: Brian Foster <bfoster@redhat.com>
-> Fixes: aad7272a9208 ("xfs: separate out log shutdown callback processing")
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_log.c | 22 +++++++++++++---------
->  1 file changed, 13 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index fbf1b08b698c..388d53df7620 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -487,7 +487,10 @@ xfs_log_reserve(
->   * Run all the pending iclog callbacks and wake log force waiters and iclog
->   * space waiters so they can process the newly set shutdown state. We really
->   * don't care what order we process callbacks here because the log is shut down
-> - * and so state cannot change on disk anymore.
-> + * and so state cannot change on disk anymore. However, we cannot wake waiters
-> + * until the callbacks have been processed because we may be in unmount and
-> + * we must ensure that all AIL operations the callbacks perform have completed
-> + * before we tear down the AIL.
->   *
->   * We avoid processing actively referenced iclogs so that we don't run callbacks
->   * while the iclog owner might still be preparing the iclog for IO submssion.
-> @@ -501,7 +504,6 @@ xlog_state_shutdown_callbacks(
->  	struct xlog_in_core	*iclog;
->  	LIST_HEAD(cb_list);
->  
-> -	spin_lock(&log->l_icloglock);
->  	iclog = log->l_iclog;
->  	do {
->  		if (atomic_read(&iclog->ic_refcnt)) {
-> @@ -509,14 +511,16 @@ xlog_state_shutdown_callbacks(
->  			continue;
->  		}
->  		list_splice_init(&iclog->ic_callbacks, &cb_list);
-> +		spin_unlock(&log->l_icloglock);
-> +
-> +		xlog_cil_process_committed(&cb_list);
-> +
-> +		spin_lock(&log->l_icloglock);
->  		wake_up_all(&iclog->ic_write_wait);
->  		wake_up_all(&iclog->ic_force_wait);
->  	} while ((iclog = iclog->ic_next) != log->l_iclog);
->  
->  	wake_up_all(&log->l_flush_wait);
-> -	spin_unlock(&log->l_icloglock);
-> -
-> -	xlog_cil_process_committed(&cb_list);
->  }
->  
->  /*
-> @@ -571,11 +575,8 @@ xlog_state_release_iclog(
->  		 * pending iclog callbacks that were waiting on the release of
->  		 * this iclog.
->  		 */
-> -		if (last_ref) {
-> -			spin_unlock(&log->l_icloglock);
-> +		if (last_ref)
->  			xlog_state_shutdown_callbacks(log);
-> -			spin_lock(&log->l_icloglock);
-> -		}
->  		return -EIO;
->  	}
->  
-> @@ -3889,7 +3890,10 @@ xlog_force_shutdown(
->  	wake_up_all(&log->l_cilp->xc_start_wait);
->  	wake_up_all(&log->l_cilp->xc_commit_wait);
->  	spin_unlock(&log->l_cilp->xc_push_lock);
-> +
-> +	spin_lock(&log->l_icloglock);
->  	xlog_state_shutdown_callbacks(log);
-> +	spin_unlock(&log->l_icloglock);
->  
->  	return log_error;
->  }
-> -- 
-> 2.35.1
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
