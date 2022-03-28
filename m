@@ -2,63 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26860C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Mar 2022 01:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C138EC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Mar 2022 03:27:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235396AbiC1BYX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Mar 2022 21:24:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54296 "EHLO
+        id S232816AbiC1D2g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Mar 2022 23:28:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229812AbiC1BYX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Mar 2022 21:24:23 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4C7394F459
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Mar 2022 18:22:44 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C408C10E6B08;
-        Mon, 28 Mar 2022 12:22:42 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nYe5h-00AiUx-O7; Mon, 28 Mar 2022 12:22:41 +1100
-Date:   Mon, 28 Mar 2022 12:22:41 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Subject: Re: [PATCH 5/6] xfs: fix overfilling of reserve pool
-Message-ID: <20220328012241.GU1544202@dread.disaster.area>
-References: <164840029642.54920.17464512987764939427.stgit@magnolia>
- <164840032479.54920.10404960270844945481.stgit@magnolia>
+        with ESMTP id S230218AbiC1D2f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Mar 2022 23:28:35 -0400
+Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C7C74757F;
+        Sun, 27 Mar 2022 20:26:56 -0700 (PDT)
+Received: by mail-qk1-x72e.google.com with SMTP id 85so10443454qkm.9;
+        Sun, 27 Mar 2022 20:26:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ombNCD2E1kEOXTkZKzTdQw3vNkWsQV7mKFpn1lZyTEI=;
+        b=SA+QodpcnT05y1Q3fra3dhwNhB5oa8XXxXp177wHxv62DDPf0lxVNfC3nqX0y10d4P
+         ScPYBqJBgRhxEv4kt94nQ2yCx9UOq3zmEp9vSN+lzrsD2Gba8fEJrIUZk9sX3OrFAy6r
+         F5a9hsDS4xxdDIyWp3edvlmnSzLg14fI4fovUHRo9oBNtc56VUzZuGlLezuINbaYE+rb
+         CYPPJ3AQos+lJMtwCQEnIKAQ3y7WovNkOidmZb0z8xs0xcBNYITH+L8s9/eVDFAKO4I0
+         CzKFNeHNFf6gGH4htfL8HqAx3xE7wEpxwtf8T96qO3W/EI0vrc5VRBlt+Q0DoY943cBM
+         Pd+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ombNCD2E1kEOXTkZKzTdQw3vNkWsQV7mKFpn1lZyTEI=;
+        b=TN5fmP5Pthr1CPGB1vApnAcwIBhic3cLj5IO8COlTRomFNq/z7IHyQ9Mhp2wx27Fap
+         HfxrtrkMSSWosGKS8ONpKfYOrockGYAqZx82M3z9e9g1+ukK1V8hBnJP8EeCBFVJTKWo
+         hfRN0jGK1VcKAb28/cHCKju79gCoTAvmxTBca2hEe37JYJlcqj+wS9l4FD1SW6nSwh7n
+         SUbCCtvQ3v2u8ZXloAgtcNqkmoeWxkAUifkMmksV5FMItbxpF8icvh/kNjh7spXL20vk
+         m+wb99bS8yCMOfzQPhBbq0/tW/X8uXTfF8W3GXk9eryVl04fHOrfq7CeTM1EW8ixjkG8
+         7jhg==
+X-Gm-Message-State: AOAM532+UBSRiOlCcyjcnIHeXnoWjWCyj4s9jYV9MGSXKTEP9DJYVHBE
+        pfep734rzFbHzb8vGnzL4RY=
+X-Google-Smtp-Source: ABdhPJy/L7PFrjNbdwwgtuKWMOX1nrqMWZtt0khYNk3KIrOLULqso6Jmx6gi3k1y1UqBfjdWvTv2Vw==
+X-Received: by 2002:a05:620a:2904:b0:67d:db5a:b27f with SMTP id m4-20020a05620a290400b0067ddb5ab27fmr13451964qkp.529.1648438014399;
+        Sun, 27 Mar 2022 20:26:54 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id s15-20020a05620a29cf00b00680ca4b3755sm2533193qkp.119.2022.03.27.20.26.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 27 Mar 2022 20:26:53 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: lv.ruyi@zte.com.cn
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, dchinner@redhat.com,
+        chandan.babu@oracle.com, bfoster@redhat.com,
+        allison.henderson@oracle.com, lv.ruyi@zte.com.cn,
+        linux-kernel@vger.kernel.org, Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] fs: xfs: add NULL pointer check
+Date:   Mon, 28 Mar 2022 03:26:42 +0000
+Message-Id: <20220328032642.2371596-1-lv.ruyi@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <164840032479.54920.10404960270844945481.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62410de3
-        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=xX8A-mVNdzcDI1DFrjMA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Mar 27, 2022 at 09:58:44AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Due to cycling of m_sb_lock, it's possible for multiple callers of
-> xfs_reserve_blocks to race at changing the pool size, subtracting blocks
-> from fdblocks, and actually putting it in the pool.  The result of all
-> this is that we can overfill the reserve pool to hilarious levels.
-> 
-> xfs_mod_fdblocks, when called with a positive value, already knows how
-> to take freed blocks and either fill the reserve until it's full, or put
-> them in fdblocks.  Use that instead of setting m_resblks_avail directly.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+From: Lv Ruyi <lv.ruyi@zte.com.cn>
 
-Another corner case fixed :)
+kmem_zalloc() is a memory allocation function which can return NULL when
+some internal memory errors happen. It is safer to check NULL pointer.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Lv Ruyi <lv.ruyi@zte.com.cn>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 014daa8c542d..e6694f49f563 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1571,6 +1571,8 @@ xfs_attr3_leaf_compact(
+ 	trace_xfs_attr_leaf_compact(args);
+ 
+ 	tmpbuffer = kmem_alloc(args->geo->blksize, 0);
++	if (!tmpbuffer)
++		return;
+ 	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
+ 	memset(bp->b_addr, 0, args->geo->blksize);
+ 	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
+@@ -2290,6 +2292,8 @@ xfs_attr3_leaf_unbalance(
+ 		struct xfs_attr3_icleaf_hdr tmphdr;
+ 
+ 		tmp_leaf = kmem_zalloc(state->args->geo->blksize, 0);
++		if (!tmp_leaf)
++			return;
+ 
+ 		/*
+ 		 * Copy the header into the temp leaf so that all the stuff
 -- 
-Dave Chinner
-david@fromorbit.com
+2.25.1
+
