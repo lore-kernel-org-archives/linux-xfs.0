@@ -2,83 +2,79 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91EEEC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Mar 2022 10:01:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB739C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Mar 2022 13:04:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234992AbiC2KDH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Mar 2022 06:03:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54980 "EHLO
+        id S237082AbiC2NFn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Mar 2022 09:05:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234974AbiC2KDB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Mar 2022 06:03:01 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 221A44C7BE
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 03:01:15 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S237081AbiC2NFn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Mar 2022 09:05:43 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AA5B2B1A4
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 06:04:01 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id C65E2210FC;
+        Tue, 29 Mar 2022 13:03:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1648559039; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YK9lMo/OgMJ93/gMXmyigUxJEYT4U8w/I0AKiGNIeCg=;
+        b=BunS35rg7hv29UVKJiRPiukLzsmjqHIYQh5386AYpD3jCWvpMSrDlAnig7jRtKHBAEwZrF
+        6Sh4iiKhPoH7k12CDhEj8EvRKoT8R4aymPjLEixQiPfFhLkZO/fSyRNPfAbtusLhiIJgxX
+        PiqDXyVKXmIy+9VcHj8jclnPU3ijPyA=
+Received: from suse.cz (unknown [10.100.216.66])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 841BE61180
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 10:01:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E9003C34111
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 10:01:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648548074;
-        bh=ooJnT9JsJzAq1LTVCoNJAEU0UzJFvd4UpftWlR3r/bk=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=oe4ZnAcsz1AozEYyjZiM4o3BKwh63CJp4gbjOeu21wWsk7ggIkIqwB5I4zq6PQOqE
-         k3ScC2yGgl2YBDY7DHwyzzu2RvZBIqmfW/krElllPum97Ww28t0sSI87k9M9j2I9yS
-         G+Y3oL+rCR+OgTN3Zng9FKEPmVWGpEc2D76GXsSqSWSW2i+gs7QM3JxeHKKcfDptv4
-         zq7ZZM5cmY/XVyTDJv8siZggr9omLKYWOqjWBhRH2a2wzSvoechxy+XdiC4YfO+KX3
-         6N1yX0axwDBpLXKJW6fd0ZiBP0PrLV0TKHSY7HVhdF8EqoWuxNb9ad4kBHWmJf9UaY
-         GHvmZpzBCazWw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id D5950C05F98; Tue, 29 Mar 2022 10:01:14 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 215693] [xfstests generic/673] file on XFS lose its sgid bit
- after reflink, if there's only sgid bit
-Date:   Tue, 29 Mar 2022 10:01:14 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215693-201763-ODkyHNZs99@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215693-201763@https.bugzilla.kernel.org/>
-References: <bug-215693-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        by relay2.suse.de (Postfix) with ESMTPS id 84917A3B83;
+        Tue, 29 Mar 2022 13:03:59 +0000 (UTC)
+Date:   Tue, 29 Mar 2022 15:03:56 +0200
+From:   Petr Mladek <pmladek@suse.com>
+To:     Jonathan Lassoff <jof@thejof.com>
+Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Chris Down <chris@chrisdown.name>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        John Ogness <john.ogness@linutronix.de>
+Subject: Re: [PATCH v3 1/2] Simplify XFS logging methods.
+Message-ID: <YkMDvMy0QOg2mo99@alley>
+References: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215693
+On Fri 2022-03-25 10:19:45, Jonathan Lassoff wrote:
+> Rather than have a constructor to define many nearly-identical
+> functions, use preprocessor macros to pass down a kernel logging level
+> to a common function.
+> 
+> diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
+> index bb9860ec9a93..2f609800e806 100644
+> --- a/fs/xfs/xfs_message.h
+> +++ b/fs/xfs/xfs_message.h
+> @@ -6,33 +6,36 @@
+> -void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
+> -{
+> -}
+> +#define xfs_debug(mp, fmt, ...) do {} while (0)
+>  #endif
+>  
+> +extern __printf(3, 4)
+> +void xfs_alert_tag(const struct xfs_mount *mp, int tag, const char *fmt, ...);
 
---- Comment #2 from Zorro Lang (zlang@redhat.com) ---
-(In reply to The Linux kernel's regression tracker (Thorsten Leemhuis) from
-comment #1)
-> Is this issue still happening? was it also discussed any maybe solved
-> already, like the other bug you mentioned? or should I poke the developers
-> to get things moving?
+The trend is to avoid "extern" because it just creates noise. Well, I
+am not sure what are the preferences in the XFS code.
 
-Please refer to:
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215687#c4
+Otherwise the changes look fine to me. Feel free to use:
 
---=20
-You may reply to this email to add a comment.
+Reviewed-by: Petr Mladek <pmladek@suse.com>
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Best Regards,
+Petr
