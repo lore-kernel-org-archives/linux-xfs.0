@@ -2,230 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 811AAC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Mar 2022 00:36:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F16B7C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Mar 2022 00:37:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231495AbiC2Aie (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Mar 2022 20:38:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55440 "EHLO
+        id S231512AbiC2AjD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Mar 2022 20:39:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231491AbiC2Aid (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Mar 2022 20:38:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16E631FAA0C
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Mar 2022 17:36:52 -0700 (PDT)
+        with ESMTP id S231491AbiC2AjC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Mar 2022 20:39:02 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA5991F9FE3
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Mar 2022 17:37:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A97E061181
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 00:36:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10709C340EC;
-        Tue, 29 Mar 2022 00:36:51 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AAF91B815A5
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 00:37:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63B2FC340F0;
+        Tue, 29 Mar 2022 00:37:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648514211;
-        bh=9Iuplo17bBeWx+W9nExliLiTKDwHWNsZtLHVULvDDU8=;
+        s=k20201202; t=1648514238;
+        bh=NJGG3+jRpJ7yszpt3mhFNpEjQPN0Du63fFRUDvB5St8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qPvP6RMJ+Gfg8mBIoTzZ8OvUU7sW2lHPQC1HY4Wc+d0ykQBdbPptpeQjpWNuOz1pi
-         JA52HpUFjVUaLVXWAmeksU7ch4ZY8Pc6EU692AtO0AwdHcLL6fc9l/30864Ku/stpU
-         FX/OY3flLr2BCW0ktq+t0Hoxw1Z/0SzkVoroI7kvAquBtVeeBxrFQL1NLYtgbGe49i
-         4vnY1W+uc6PKsOM+nb5dr8M/eRrcA633GxeTlcuhxxSr8w56D6JBPL6yZ+ut88jKDH
-         CN6DI3wBqne1SA2kvJPHAKaW+FWHtx2xbhq5ZB6jwId+MK5HginCKzoxK8wGuAOnwG
-         Goi34zRUgsu8A==
-Date:   Mon, 28 Mar 2022 17:36:50 -0700
+        b=EsB2v+SEeE/21GwJLqKNLgL0utEaGZztM/wVaDnEcSIhgnLX6WBnr1FPZ2gfH91a6
+         4A44057Fv4RaBkVp+LizoafUQktHysD2DjcCM6Fe5/xAYeTGePrG6nremBwNE/qRsI
+         ViM1SD/PEqF0tIv7jjgp+MtJSK5JT6QFLu+QJgUsTPkN3mYlzj/nvoO9V1ydOOyJiR
+         hKg1XamCT82/rwto91UAXgM9iU0HAL8S/Wd4eHokVMeqjVRrx1rzH3bkDXqcFCZ4Zw
+         sj+3xcSV/Ed43eyJLI36DPNL8EWVFZlmglQSjbwmqEImSNa6fVQ8lUG+3d6jmY8nO1
+         oQdT17fTRRGkQ==
+Date:   Mon, 28 Mar 2022 17:37:17 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: xfs_trans_commit() path must check for log
- shutdown
-Message-ID: <20220329003650.GD27690@magnolia>
+Subject: Re: [PATCH 7/6] xfs: xfs: shutdown during log recovery needs to mark
+ the log shutdown
+Message-ID: <20220329003717.GE27690@magnolia>
 References: <20220324002103.710477-1-david@fromorbit.com>
- <20220324002103.710477-7-david@fromorbit.com>
+ <20220327225534.GQ1544202@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220324002103.710477-7-david@fromorbit.com>
+In-Reply-To: <20220327225534.GQ1544202@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 24, 2022 at 11:21:03AM +1100, Dave Chinner wrote:
+On Mon, Mar 28, 2022 at 09:55:34AM +1100, Dave Chinner wrote:
+> 
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> If a shut races with xfs_trans_commit() and we have shut down the
-> filesystem but not the log, we will still cancel the transaction.
-> This can result in aborting dirty log items instead of committing and
-> pinning them whilst the log is still running. Hence we can end up
-> with dirty, unlogged metadata that isn't in the AIL in memory that
-> can be flushed to disk via writeback clustering.
-
-...because we cancelled the transaction, leaving (say) an inode with
-dirty uncommited changes?  And now iflush for an adjacent inode comes
-along and writes it to disk, because we haven't yet told the log to
-stop?  And blammo?
-
-> This was discovered from a g/388 trace where an inode log item was
-> having IO completed on it and it wasn't in the AIL, hence tripping
-> asserts xfs_ail_check(). Inode cluster writeback started long after
-> the filesystem shutdown started, and long after the transaction
-> containing the dirty inode was aborted and the log item marked
-> XFS_LI_ABORTED. The inode was seen as dirty and unpinned, so it
-> was flushed. IO completion tried to remove the inode from the AIL,
-> at which point stuff went bad:
+> When a checkpoint writeback is run by log recovery, corruption
+> propagated from the log can result in writeback verifiers failing
+> and calling xfs_force_shutdown() from
+> xfs_buf_delwri_submit_buffers().
 > 
->  XFS (pmem1): Log I/O Error (0x6) detected at xfs_fs_goingdown+0xa3/0xf0 (fs/xfs/xfs_fsops.c:500).  Shutting down filesystem.
->  XFS: Assertion failed: in_ail, file: fs/xfs/xfs_trans_ail.c, line: 67
->  XFS (pmem1): Please unmount the filesystem and rectify the problem(s)
->  Workqueue: xfs-buf/pmem1 xfs_buf_ioend_work
->  RIP: 0010:assfail+0x27/0x2d
->  Call Trace:
->   <TASK>
->   xfs_ail_check+0xa8/0x180
->   xfs_ail_delete_one+0x3b/0xf0
->   xfs_buf_inode_iodone+0x329/0x3f0
->   xfs_buf_ioend+0x1f8/0x530
->   xfs_buf_ioend_work+0x15/0x20
->   process_one_work+0x1ac/0x390
->   worker_thread+0x56/0x3c0
->   kthread+0xf6/0x120
->   ret_from_fork+0x1f/0x30
->   </TASK>
+> This results in the mount being marked as shutdown, but the log does
+> not get marked as shut down because:
 > 
-> xfs_trans_commit() needs to check log state for shutdown, not mount
-> state. It cannot abort dirty log items while the log is still
-> running as dirty items must remained pinned in memory until they are
-> either committed to the journal or the log has shut down and they
-> can be safely tossed away. Hence if the log has not shut down, the
-> xfs_trans_commit() path must allow completed transactions to commit
-> to the CIL and pin the dirty items even if a mount shutdown has
-> started.
+>         /*
+>          * If this happens during log recovery then we aren't using the runtime
+>          * log mechanisms yet so there's nothing to shut down.
+>          */
+>         if (!log || xlog_in_recovery(log))
+>                 return false;
+> 
+> If there are other buffers that then fail (say due to detecting the
+> mount shutdown), they will now hang in xfs_do_force_shutdown()
+> waiting for the log to shut down like this:
+> 
+>   __schedule+0x30d/0x9e0
+>   schedule+0x55/0xd0
+>   xfs_do_force_shutdown+0x1cd/0x200
+>   ? init_wait_var_entry+0x50/0x50
+>   xfs_buf_ioend+0x47e/0x530
+>   __xfs_buf_submit+0xb0/0x240
+>   xfs_buf_delwri_submit_buffers+0xfe/0x270
+>   xfs_buf_delwri_submit+0x3a/0xc0
+>   xlog_do_recovery_pass+0x474/0x7b0
+>   ? do_raw_spin_unlock+0x30/0xb0
+>   xlog_do_log_recovery+0x91/0x140
+>   xlog_do_recover+0x38/0x1e0
+>   xlog_recover+0xdd/0x170
+>   xfs_log_mount+0x17e/0x2e0
+>   xfs_mountfs+0x457/0x930
+>   xfs_fs_fill_super+0x476/0x830
+> 
+> xlog_force_shutdown() always needs to mark the log as shut down,
+> regardless of whether recovery is in progress or not, so that
+> multiple calls to xfs_force_shutdown() during recovery don't end
+> up waiting for the log to be shut down like this.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-If the answers are {yes, yes, yes} then yikes and:
-
+That sounds like a pretty straightforward premise.
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_trans.c | 48 +++++++++++++++++++++++++++++++---------------
->  1 file changed, 33 insertions(+), 15 deletions(-)
+>  fs/xfs/xfs_log.c | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 36a10298742d..c324d96f022d 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -836,6 +836,7 @@ __xfs_trans_commit(
->  	bool			regrant)
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 6166348ce1d1..5f3f943c34b9 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -3729,11 +3729,7 @@ xlog_force_shutdown(
 >  {
->  	struct xfs_mount	*mp = tp->t_mountp;
-> +	struct xlog		*log = mp->m_log;
->  	xfs_csn_t		commit_seq = 0;
->  	int			error = 0;
->  	int			sync = tp->t_flags & XFS_TRANS_SYNC;
-> @@ -864,7 +865,13 @@ __xfs_trans_commit(
->  	if (!(tp->t_flags & XFS_TRANS_DIRTY))
->  		goto out_unreserve;
+>  	bool		log_error = (shutdown_flags & SHUTDOWN_LOG_IO_ERROR);
 >  
-> -	if (xfs_is_shutdown(mp)) {
-> +	/*
-> +	 * We must check against log shutdown here because we cannot abort log
-> +	 * items and leave them dirty, inconsistent and unpinned in memory while
-> +	 * the log is active. This leaves them open to being written back to
-> +	 * disk, and that will lead to on-disk corruption.
-> +	 */
-> +	if (xlog_is_shutdown(log)) {
->  		error = -EIO;
->  		goto out_unreserve;
->  	}
-> @@ -878,7 +885,7 @@ __xfs_trans_commit(
->  		xfs_trans_apply_sb_deltas(tp);
->  	xfs_trans_apply_dquot_deltas(tp);
->  
-> -	xlog_cil_commit(mp->m_log, tp, &commit_seq, regrant);
-> +	xlog_cil_commit(log, tp, &commit_seq, regrant);
->  
->  	xfs_trans_free(tp);
->  
-> @@ -905,10 +912,10 @@ __xfs_trans_commit(
->  	 */
->  	xfs_trans_unreserve_and_mod_dquots(tp);
->  	if (tp->t_ticket) {
-> -		if (regrant && !xlog_is_shutdown(mp->m_log))
-> -			xfs_log_ticket_regrant(mp->m_log, tp->t_ticket);
-> +		if (regrant && !xlog_is_shutdown(log))
-> +			xfs_log_ticket_regrant(log, tp->t_ticket);
->  		else
-> -			xfs_log_ticket_ungrant(mp->m_log, tp->t_ticket);
-> +			xfs_log_ticket_ungrant(log, tp->t_ticket);
->  		tp->t_ticket = NULL;
->  	}
->  	xfs_trans_free_items(tp, !!error);
-> @@ -926,18 +933,27 @@ xfs_trans_commit(
->  }
->  
->  /*
-> - * Unlock all of the transaction's items and free the transaction.
-> - * The transaction must not have modified any of its items, because
-> - * there is no way to restore them to their previous state.
-> + * Unlock all of the transaction's items and free the transaction.  If the
-> + * transaction is dirty, we must shut down the filesystem because there is no
-> + * way to restore them to their previous state.
->   *
-> - * If the transaction has made a log reservation, make sure to release
-> - * it as well.
-> + * If the transaction has made a log reservation, make sure to release it as
-> + * well.
-> + *
-> + * This is a high level function (equivalent to xfs_trans_commit()) and so can
-> + * be called after the transaction has effectively been aborted due to the mount
-> + * being shut down. However, if the mount has not been shut down and the
-> + * transaction is dirty we will shut the mount down and, in doing so, that
-> + * guarantees that the log is shut down, too. Hence we don't need to be as
-> + * careful with shutdown state and dirty items here as we need to be in
-> + * xfs_trans_commit().
->   */
->  void
->  xfs_trans_cancel(
->  	struct xfs_trans	*tp)
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
-> +	struct xlog		*log = mp->m_log;
->  	bool			dirty = (tp->t_flags & XFS_TRANS_DIRTY);
->  
->  	trace_xfs_trans_cancel(tp, _RET_IP_);
-> @@ -955,16 +971,18 @@ xfs_trans_cancel(
->  	}
+> -	/*
+> -	 * If this happens during log recovery then we aren't using the runtime
+> -	 * log mechanisms yet so there's nothing to shut down.
+> -	 */
+> -	if (!log || xlog_in_recovery(log))
+> +	if (!log)
+>  		return false;
 >  
 >  	/*
-> -	 * See if the caller is relying on us to shut down the
-> -	 * filesystem.  This happens in paths where we detect
-> -	 * corruption and decide to give up.
-> +	 * See if the caller is relying on us to shut down the filesystem. We
-> +	 * only want an error report if there isn't already a shutdown in
-> +	 * progress, so we only need to check against the mount shutdown state
-> +	 * here.
+> @@ -3742,10 +3738,16 @@ xlog_force_shutdown(
+>  	 * before the force will prevent the log force from flushing the iclogs
+>  	 * to disk.
+>  	 *
+> -	 * Re-entry due to a log IO error shutdown during the log force is
+> -	 * prevented by the atomicity of higher level shutdown code.
+> +	 * When we are in recovery, there are no transactions to flush, and
+> +	 * we don't want to touch the log because we don't want to perturb the
+> +	 * current head/tail for future recovery attempts. Hence we need to
+> +	 * avoid a log force in this case.
+> +	 *
+> +	 * If we are shutting down due to a log IO error, then we must avoid
+> +	 * trying to write the log as that may just result in more IO errors and
+> +	 * an endless shutdown/force loop.
 >  	 */
->  	if (dirty && !xfs_is_shutdown(mp)) {
->  		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, mp);
->  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
->  	}
->  #ifdef DEBUG
-> -	if (!dirty && !xfs_is_shutdown(mp)) {
-> +	/* Log items need to be consistent until the log is shut down. */
-> +	if (!dirty && !xlog_is_shutdown(log)) {
->  		struct xfs_log_item *lip;
+> -	if (!log_error)
+> +	if (!log_error && !xlog_in_recovery(log))
+>  		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
 >  
->  		list_for_each_entry(lip, &tp->t_items, li_trans)
-> @@ -975,7 +993,7 @@ xfs_trans_cancel(
->  	xfs_trans_unreserve_and_mod_dquots(tp);
->  
->  	if (tp->t_ticket) {
-> -		xfs_log_ticket_ungrant(mp->m_log, tp->t_ticket);
-> +		xfs_log_ticket_ungrant(log, tp->t_ticket);
->  		tp->t_ticket = NULL;
->  	}
->  
-> -- 
-> 2.35.1
-> 
+>  	/*
