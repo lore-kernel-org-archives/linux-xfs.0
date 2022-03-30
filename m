@@ -2,114 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99DB2C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 10:58:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68B79C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 11:40:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242077AbiC3LAR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Mar 2022 07:00:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46362 "EHLO
+        id S232318AbiC3LmI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Mar 2022 07:42:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240799AbiC3LAQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 07:00:16 -0400
-Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 70CD6DF70;
-        Wed, 30 Mar 2022 03:58:29 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3AgNM4v69uJjWCds008lY+DrUD63+TJUtcMsCJ2f8?=
- =?us-ascii?q?bfWQNrUog1TAPymEXX2+EOv6PYjP9KNokaYqy8UwPvZHdzYIwTVdlrnsFo1Bi8?=
- =?us-ascii?q?5ScXYvDRqvT04J+FuWaFQQ/qZx2huDodKjYdVeB4Ef9WlTdhSMkj/vQHOKlULe?=
- =?us-ascii?q?s1h1ZHmeIdg9w0HqPpMZp2uaEsfDha++8kYuaT//3YTdJ6BYoWo4g0J9vnTs01?=
- =?us-ascii?q?BjEVJz0iXRlDRxDlAe2e3D4l/vzL4npR5fzatE88uJX24/+IL+FEmPxp3/BC/u?=
- =?us-ascii?q?ulPD1b08LXqXPewOJjxK6WYD72l4b+HN0if19aZLwam8O49mNt8pswdNWpNq+T?=
- =?us-ascii?q?xw1FqPRmuUBSAQeGCZ7VUFD0OadeiDu6JzNnyUqdFOpmZ2CFnoeMYQG++pfD3t?=
- =?us-ascii?q?J8PsCIjERKBuEgoqewLm7YuhqiN4qIMTiMMUYoH4I5T3QC7AkB4/CR6HL7NpD9?=
- =?us-ascii?q?DY2ms1KW/3ZYqIxZThwaxLPSx5CIFEaDNQ5hujArn3+dSBI7VeQjakp6mPQigt?=
- =?us-ascii?q?r39DFNsTZe9mPbcFUhVqD4GbH+XnpRB0XKrS3yzOD/zSnhvLnmjnyU4YfUra/8?=
- =?us-ascii?q?5ZChFyV23xWBgYaWEW2pdGnhUOkHdFSMUoZ/mwpt6da3EiqSMTtGh61uniJujY?=
- =?us-ascii?q?CVNdKVe438geAzuzT+QnxLmwFSCNRLcwor+coSjEwkFyEhdXkAXpoqrL9dJ433?=
- =?us-ascii?q?t94thvrYW5MczBEPnRCEGM4DxDYiNlbpnryohxLScZZVuHIJAw=3D?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A7pXWoarUc0yRRXUzYrKOZWAaV5oUeYIsimQD?=
- =?us-ascii?q?101hICG9vPbo7vxG/c5rrSMc7Qx6ZJhOo6HkBEDtewK/yXcx2/hzAV7AZmjbUQ?=
- =?us-ascii?q?mTXeVfBOLZqlWKJ8S9zI5gPMxbAs9D4bPLfD5HZAXBjDVQ0exM/DBKys+VbC7l?=
- =?us-ascii?q?oUtQcQ=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="123091868"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 30 Mar 2022 18:58:28 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id E2D7E4D17160;
-        Wed, 30 Mar 2022 18:58:22 +0800 (CST)
-Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Wed, 30 Mar 2022 18:58:22 +0800
-Received: from [10.167.201.8] (10.167.201.8) by
- G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Wed, 30 Mar 2022 18:58:22 +0800
-Message-ID: <4ed8baf7-7eb9-71e5-58ea-7c73b7e5bb73@fujitsu.com>
-Date:   Wed, 30 Mar 2022 18:58:21 +0800
+        with ESMTP id S229685AbiC3LmI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 07:42:08 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D303025CBBE
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 04:40:22 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 7187A218FC;
+        Wed, 30 Mar 2022 11:40:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1648640421; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=nVNckD3sJGBk3k5Xtqq84q1429ptCcLbogDHCYhMvag=;
+        b=s1aV8RiEeFQ2AR7hz4ylQNgl/qptMhON1B4N317biklRNmea90GoycA/evSVYEwhSFtUKj
+        4e5Sl4z1dsHSRXm5k06oUIiLMEcbRMT5gIPhx9Koc8iWLidz7lecbAEP9ftn5AxN3SBpV2
+        nyPzTnZhtYWJym5ey2Zw6QWuleqRbXo=
+Received: from suse.cz (pathway.suse.cz [10.100.12.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 0C266A3B92;
+        Wed, 30 Mar 2022 11:40:21 +0000 (UTC)
+Date:   Wed, 30 Mar 2022 13:40:20 +0200
+From:   Petr Mladek <pmladek@suse.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Jonathan Lassoff <jof@thejof.com>, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Chris Down <chris@chrisdown.name>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        John Ogness <john.ogness@linutronix.de>
+Subject: Re: [PATCH v3 1/2] Simplify XFS logging methods.
+Message-ID: <20220330114020.GA4384@pathway.suse.cz>
+References: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
+ <20220329235441.GZ1544202@dread.disaster.area>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH v11 1/8] dax: Introduce holder for dax_device
-To:     Christoph Hellwig <hch@infradead.org>
-CC:     Dan Williams <dan.j.williams@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, david <david@fromorbit.com>,
-        Jane Chu <jane.chu@oracle.com>
-References: <20220227120747.711169-1-ruansy.fnst@fujitsu.com>
- <20220227120747.711169-2-ruansy.fnst@fujitsu.com>
- <CAPcyv4jAqV7dZdmGcKrG=f8sYmUXaL7YCQtME6GANywncwd+zg@mail.gmail.com>
- <4fd95f0b-106f-6933-7bc6-9f0890012b53@fujitsu.com>
- <YkPtptNljNcJc1g/@infradead.org>
- <15a635d6-2069-2af5-15f8-1c0513487a2f@fujitsu.com>
- <YkQtOO/Z3SZ2Pksg@infradead.org>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <YkQtOO/Z3SZ2Pksg@infradead.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-yoursite-MailScanner-ID: E2D7E4D17160.A1BE2
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220329235441.GZ1544202@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-在 2022/3/30 18:13, Christoph Hellwig 写道:
-> On Wed, Mar 30, 2022 at 06:03:01PM +0800, Shiyang Ruan wrote:
->>
->> Because I am not sure if the offset between each layer is page aligned.  For
->> example, when pmem dirver handles ->memory_failure(), it should subtract its
->> ->data_offset when it calls dax_holder_notify_failure().
+On Wed 2022-03-30 10:54:41, Dave Chinner wrote:
+> On Fri, Mar 25, 2022 at 10:19:45AM -0700, Jonathan Lassoff wrote:
+> > Rather than have a constructor to define many nearly-identical
+> > functions, use preprocessor macros to pass down a kernel logging level
+> > to a common function.
+> > 
+> > Signed-off-by: Jonathan Lassoff <jof@thejof.com>
 > 
-> If they aren't, none of the DAX machinery would work.
+> Mostly looks good, mainly just whitespace/formatting consistency
+> issues now.
+> 
+> ....
+> > -define_xfs_printk_level(xfs_emerg, KERN_EMERG);
+> > -define_xfs_printk_level(xfs_alert, KERN_ALERT);
+> > -define_xfs_printk_level(xfs_crit, KERN_CRIT);
+> > -define_xfs_printk_level(xfs_err, KERN_ERR);
+> > -define_xfs_printk_level(xfs_warn, KERN_WARNING);
+> > -define_xfs_printk_level(xfs_notice, KERN_NOTICE);
+> > -define_xfs_printk_level(xfs_info, KERN_INFO);
+> > -#ifdef DEBUG
+> > -define_xfs_printk_level(xfs_debug, KERN_DEBUG);
+> > -#endif
+> > +void xfs_printk_level(
+> > +	const char *kern_level,
+> > +	const struct xfs_mount *mp,
+> > +	const char *fmt, ...)
+> 
+> Use the same format as __xfs_printk() and xfs_alert_tag():
+> 
+> void
+> xfs_printk_level(
+> 	const char		*kern_level,
+> 	const struct xfs_mount	*mp,
+> 	const char		*fmt, ...)
+> 
+> > +{
+> > +	struct va_format	vaf;
+> > +	va_list			args;
+> > +	int			level;
+> > +
+> > +	va_start(args, fmt);
+> > +	vaf.fmt = fmt;
+> > +	vaf.va = &args;
+> > +
+> > +	__xfs_printk(kern_level, mp, &vaf);
+> > +
+> > +	va_end(args);
+> > +
+> > +	if (!kstrtoint(kern_level, 0, &level) &&
+> > +	    level <= LOGLEVEL_ERR &&
+> > +	    xfs_error_level >= XFS_ERRLEVEL_HIGH)
+> > +		xfs_stack_trace();
+> > +}
+> >  
+> >  void
+> >  xfs_alert_tag(
+> > diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
+> > index bb9860ec9a93..2f609800e806 100644
+> > --- a/fs/xfs/xfs_message.h
+> > +++ b/fs/xfs/xfs_message.h
+> > @@ -6,33 +6,36 @@
+> >  
+> >  struct xfs_mount;
+> >  
+> > -extern __printf(2, 3)
+> > -void xfs_emerg(const struct xfs_mount *mp, const char *fmt, ...);
+> > -extern __printf(2, 3)
+> > -void xfs_alert(const struct xfs_mount *mp, const char *fmt, ...);
+> >  extern __printf(3, 4)
 
-OK. Got it.
+^^^^^^^
 
-So, use page-based function signature for ->memory_failure():
+> > -void xfs_alert_tag(const struct xfs_mount *mp, int tag, const char *fmt, ...);
+> > -extern __printf(2, 3)
+> > -void xfs_crit(const struct xfs_mount *mp, const char *fmt, ...);
+> > -extern __printf(2, 3)
+> > -void xfs_err(const struct xfs_mount *mp, const char *fmt, ...);
+> > -extern __printf(2, 3)
+> > -void xfs_warn(const struct xfs_mount *mp, const char *fmt, ...);
+> > -extern __printf(2, 3)
+> > -void xfs_notice(const struct xfs_mount *mp, const char *fmt, ...);
+> > -extern __printf(2, 3)
+> > -void xfs_info(const struct xfs_mount *mp, const char *fmt, ...);
+> > -
+> > +void xfs_printk_level(
+> > +	const char *kern_level,
+> > +	const struct xfs_mount *mp,
+> > +	const char *fmt, ...);
+> 
+> This still needs the __printf() attribute because we still want the
+> compiler to check the printf format string for issues. Also the
+> format for function prototypes should follow the ones that got
+> removed:
 
-int (*memory_failure)(struct dev_pagemap *pgmap, unsigned long pfn,
-		      unsigned long nr_pfns, int flags);
+It is actually there. But it is hidden in many removed lines.
 
+BTW: I missed it when reading the patch as well. I was surprised
+     when I saw it after applying the patch ;-)
 
-As the code I pasted before, pmem driver will subtract its 
-->data_offset, which is byte-based. And the filesystem who implements 
-->notify_failure() will calculate the offset in unit of byte again.
-
-So, leave its function signature byte-based, to avoid repeated conversions.
-
-int (*notify_failure)(struct dax_device *dax_dev, u64 offset,
-		      u64 len, int mf_flags);
-
-What do you think?
-
-
---
-Thanks,
-Ruan.
-
-
+Best Regards,
+Petr
