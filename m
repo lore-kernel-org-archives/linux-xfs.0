@@ -2,92 +2,168 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14677C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 21:02:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D22F0C43217
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 21:24:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344477AbiC3VEI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Mar 2022 17:04:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48540 "EHLO
+        id S233368AbiC3V0V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Mar 2022 17:26:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231735AbiC3VEI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 17:04:08 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E062942EF4
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 14:02:22 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B1C325341AB;
-        Thu, 31 Mar 2022 08:02:20 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nZfSN-00Bpo5-2A; Thu, 31 Mar 2022 08:02:19 +1100
-Date:   Thu, 31 Mar 2022 08:02:19 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Steven Rostedt <rostedt@goodmis.org>
-Cc:     Chris Down <chris@chrisdown.name>, Petr Mladek <pmladek@suse.com>,
-        Jonathan Lassoff <jof@thejof.com>, linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        John Ogness <john.ogness@linutronix.de>
-Subject: Re: [PATCH v3 2/2] Add XFS messages to printk index
-Message-ID: <20220330210219.GD1544202@dread.disaster.area>
-References: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
- <3c3ae424913cb921a9f8abddfcb1b418e7cfa601.1648228733.git.jof@thejof.com>
- <YkMKyN9w0S8VFJRk@alley>
- <20220330003457.GB1544202@dread.disaster.area>
- <YkREmrfoTcqOYbma@chrisdown.name>
- <20220330124739.70edca36@gandalf.local.home>
+        with ESMTP id S232691AbiC3V0U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 17:26:20 -0400
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2047.outbound.protection.outlook.com [40.107.94.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3429339B83;
+        Wed, 30 Mar 2022 14:24:34 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kPIJRmEYR3oEf5QR0Rc15ULPsaFQPVhtoKfyDYT8uI8dWDoTb6E11i0L0WL4BTI273gW6i+toBK+FKLirDWQVprritN2/Z5HHVq/18S6zPbleMZDt1UEL0x9KWliL7Z0GcvajhVNyzrHFbKn5yOkQSsBWeim0ByqP40Ahl5hYo6SFA2LH33OP9fL3b2lxKfZsl6rFzdjLNmLVq8zT2sceyYDiW+jO1pXkMT+5iwMwvhsVmrXcgzm8IdjuHgiM/xzr+p1glNnQ3yYh0RotSwnHeu20te9VipjcZGhHxGKxUUarh/pSrGPM1mhvvnrFjQS7+MPk+l1M/LHAEE01oQsDA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=nLIUZyRPEKUSzuG4lWIjaPQdPPxc6MOaIPQjEpwOAVI=;
+ b=AZ8u2p39KOS9q3ASIBirKlXEbERNZXSO6v9AJD1VBSKcInwGT4JNvzb01E9f3qbwm7MRLIFYy53T2bzG/kIMPMjyT7b86gvXEhGYfK+XQ3sKqeY75tFLbrgGZS2TqR7mJ444f4rGRnJNfa6fuDaukgdGLUSZ0/wzt2hqjTtoXJm3BTJltASXkuKHNFBgvNYCxVS9GtUFDzcHIS+ttkypJc59FRrVlahFivTWM9i7XMf2dFI8XqYDlLVyXVt5V2tMlS55/UHYlZALFYgxf0YtZARuz/nVw7+bvpVQqGpzuzM/95skd/tKXutYjDwHD/W3RbIVVzPOsxFLt1VjFjXZyw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nLIUZyRPEKUSzuG4lWIjaPQdPPxc6MOaIPQjEpwOAVI=;
+ b=uaUsVzNUrP53LAInUxzb/xTDSaOmhaw/Ev5E5OKcL4HlWhTqiJ+HKZmgy/km29YkeDKyH9LODCs8B2ajxFVN49wHdTXSzxRTOwMKLsMmPfWdC5nfIdq4d7CBDVBe0/VQwXv0Z5vCP84TNMQ7OgC1z5Ms016PVJ7uLHYAWaQu6e4=
+Received: from MW4PR03CA0012.namprd03.prod.outlook.com (2603:10b6:303:8f::17)
+ by DM5PR12MB1292.namprd12.prod.outlook.com (2603:10b6:3:73::9) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5102.19; Wed, 30 Mar 2022 21:24:32 +0000
+Received: from CO1NAM11FT013.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:8f:cafe::c3) by MW4PR03CA0012.outlook.office365.com
+ (2603:10b6:303:8f::17) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.13 via Frontend
+ Transport; Wed, 30 Mar 2022 21:24:32 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CO1NAM11FT013.mail.protection.outlook.com (10.13.174.227) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5123.19 via Frontend Transport; Wed, 30 Mar 2022 21:24:31 +0000
+Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 30 Mar
+ 2022 16:24:30 -0500
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     <jgg@nvidia.com>
+CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
+        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
+        <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
+        <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
+        <akpm@linux-foundation.org>
+Subject: [PATCH] drm/amdkfd: Add SVM API support capability bits
+Date:   Wed, 30 Mar 2022 16:24:20 -0500
+Message-ID: <20220330212420.12003-1-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220330124739.70edca36@gandalf.local.home>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6244c55e
-        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=07d9gI8wAAAA:8 a=7-415B0cAAAA:8
-        a=mMpGT428DGEWo3aVKB0A:9 a=CjuIK1q_8ugA:10 a=e2CUPOnPG4QKp8I52DXD:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: d8cfbc1c-0d29-4964-fc14-08da1293ae5b
+X-MS-TrafficTypeDiagnostic: DM5PR12MB1292:EE_
+X-Microsoft-Antispam-PRVS: <DM5PR12MB129275290485D25A510CF4F4FD1F9@DM5PR12MB1292.namprd12.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: aupQPbJRX2JzI8WvZf0zE+nSjLTyRAlKukftwyodn5s4jQEj71Y9zV+8v3Mx4m5d9f2X+SffVwGNyCb0Vutznub6qgvS4lE4f/f/8TizBGFLFftaL83fZdhXDc3Ux1RjcgOWCyLo7QXCrriZWbcOql3VQTmjQ6dsx6l9vYFNT1ZlbYp04eE+ggw2IEB9LrhqQKI44pXJ0e4xXPoFX9hBFwVJS/GKaXJLTlBNgAK7NXNjzVH31Y8FXtCQJRZrfrwSGMnl0TqvjSm6DKr1++wH9R9tVg82eUtlFH9Bi4RPWZYsjQouEywSp/jmE9paVAZLdqKK4BSsNvammDRLmyNZjYrBBAEiPWFLU/V++V9szMXbTfTGbenN4rBTWtKAwRzyXxhsGBhS8AsyEAoBF0m3tahpvXSPiM6ZMD/VwQnW8Y9ATjYsjTnI3qfJ6DHRWUjGprzWBRKPpz1MSeuusx24HsEWGUQfASRrE+aCNvhrHSBLVrq6b5H1BJ8zjETxXHthc7ysKu7v6jg921SIVnYmmIHuW8SD+ErrAKvSWc5a67RcCYW7/UCsih/jKxKwHkP9KVeBQjNO1ZN+W8zq9GJT5u6U2weVFcb6OvcF4EwqAyD1IyTBwWYkSViUQXyFE8+dv9PW6YCVe5csjps8VDuWH3rzyQVhr/nph2WvElbMMG2/DcK0uHibDxl+mAMRgeuEFpOt27otBNAvstQ9Y8GhXw==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(46966006)(36840700001)(40470700004)(4326008)(6666004)(426003)(336012)(70206006)(82310400004)(7416002)(2906002)(7696005)(70586007)(54906003)(86362001)(40460700003)(508600001)(316002)(5660300002)(8676002)(44832011)(8936002)(6916009)(356005)(36756003)(2616005)(83380400001)(36860700001)(26005)(16526019)(1076003)(47076005)(186003)(81166007)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Mar 2022 21:24:31.9384
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: d8cfbc1c-0d29-4964-fc14-08da1293ae5b
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT013.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1292
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 30, 2022 at 12:47:39PM -0400, Steven Rostedt wrote:
-> On Wed, 30 Mar 2022 12:52:58 +0100
-> Chris Down <chris@chrisdown.name> wrote:
-> 
-> > The policy, as with all debugfs APIs by default, is that it's completely 
-> > unstable and there are no API stability guarantees whatsoever. That's why 
-> > there's no extensive documentation for users: because this is a feature for 
-> > kernel developers.
-> > 
-> > 0: https://lwn.net/Articles/309298/
-> 
-> That article you reference states the opposite of what you said. And I got
-> burnt by it before. Because Linus stated, if it is available for users, it
-> is an ABI.
-> 
-> From the article above:
-> 
-> "Linus put it this way:
-> 
->    The fact that something is documented (whether correctly or not) has
->    absolutely _zero_ impact on anything at all. What makes something an ABI is
->    that it's useful and available. The only way something isn't an ABI is by
->    _explicitly_ making sure that it's not available even by mistake in a
->    stable form for binary use. Example: kernel internal data structures and
->    function calls. We make sure that you simply _cannot_ make a binary that
->    works across kernel versions. That is the only way for an ABI to not form."
-> 
-> IOW, files in debugfs are available for users, and if something is written
-> that depends on it and it is useful, it becomes ABI.
+From: Philip Yang <Philip.Yang@amd.com>
 
-Yup, that's exactly what happened with powertop and the tracepoints
-it used and why I pointed to it as is the canonical example of
-information exposed from within debugfs unintentionally becoming
-stable KABI....
+SVMAPISupported property added to HSA_CAPABILITY, the value match
+HSA_CAPABILITY defined in Thunk spec:
 
-Cheers,
+SVMAPISupported: it will not be supported on older kernels that don't
+have HMM or on systems with GFXv8 or older GPUs without support for
+48-bit virtual addresses.
 
-Dave.
+CoherentHostAccess property added to HSA_MEMORYPROPERTY, the value match
+HSA_MEMORYPROPERTY defined in Thunk spec:
+
+CoherentHostAccess: whether or not device memory can be coherently
+accessed by the host CPU.
+
+Signed-off-by: Philip Yang <Philip.Yang@amd.com>
+Reviewed-by: Felix Kuehling <Felix.Kuehling@amd.com>
+Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
+Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+---
+ drivers/gpu/drm/amd/amdkfd/kfd_topology.c |  6 ++++++
+ drivers/gpu/drm/amd/amdkfd/kfd_topology.h | 10 ++++++----
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_topology.c b/drivers/gpu/drm/amd/amdkfd/kfd_topology.c
+index cdef608db4f4..083ac9babfa8 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_topology.c
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_topology.c
+@@ -1419,6 +1419,12 @@ int kfd_topology_add_device(struct kfd_dev *gpu)
+ 		dev->node_props.capability |= (adev->ras_features != 0) ?
+ 			HSA_CAP_RASEVENTNOTIFY : 0;
+ 
++	/* SVM API and HMM page migration work together, device memory type
++	 * is initialized to not 0 when page migration register device memory.
++	 */
++	if (adev->kfd.dev->pgmap.type != 0)
++		dev->node_props.capability |= HSA_CAP_SVMAPI_SUPPORTED;
++
+ 	kfd_debug_print_topology();
+ 
+ 	if (!res)
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_topology.h b/drivers/gpu/drm/amd/amdkfd/kfd_topology.h
+index b8b68087bd7a..6bd6380b0ee0 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_topology.h
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_topology.h
+@@ -53,8 +53,9 @@
+ #define HSA_CAP_ASIC_REVISION_MASK		0x03c00000
+ #define HSA_CAP_ASIC_REVISION_SHIFT		22
+ #define HSA_CAP_SRAM_EDCSUPPORTED		0x04000000
++#define HSA_CAP_SVMAPI_SUPPORTED		0x08000000
+ 
+-#define HSA_CAP_RESERVED			0xf80f8000
++#define HSA_CAP_RESERVED			0xf00f8000
+ 
+ struct kfd_node_properties {
+ 	uint64_t hive_id;
+@@ -98,9 +99,10 @@ struct kfd_node_properties {
+ #define HSA_MEM_HEAP_TYPE_GPU_LDS	4
+ #define HSA_MEM_HEAP_TYPE_GPU_SCRATCH	5
+ 
+-#define HSA_MEM_FLAGS_HOT_PLUGGABLE	0x00000001
+-#define HSA_MEM_FLAGS_NON_VOLATILE	0x00000002
+-#define HSA_MEM_FLAGS_RESERVED		0xfffffffc
++#define HSA_MEM_FLAGS_HOT_PLUGGABLE		0x00000001
++#define HSA_MEM_FLAGS_NON_VOLATILE		0x00000002
++#define HSA_MEM_FLAGS_COHERENTHOSTACCESS	0x00000004
++#define HSA_MEM_FLAGS_RESERVED			0xfffffff8
+ 
+ struct kfd_mem_properties {
+ 	struct list_head	list;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.32.0
+
