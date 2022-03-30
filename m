@@ -2,77 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8454C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 16:18:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D7BC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 16:47:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240991AbiC3QUC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Mar 2022 12:20:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50374 "EHLO
+        id S1344057AbiC3Qtd convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Mar 2022 12:49:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238269AbiC3QUB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 12:20:01 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E872DE001;
-        Wed, 30 Mar 2022 09:18:15 -0700 (PDT)
+        with ESMTP id S1349026AbiC3Qtb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 12:49:31 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 486BB279722
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 09:47:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A6608B81D6E;
-        Wed, 30 Mar 2022 16:18:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51A51C340EC;
-        Wed, 30 Mar 2022 16:18:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648657093;
-        bh=cjFQuqoRMfu2TXAsiXRv9EQjKvH+MdFIXY9uc5fhIeE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qL9r9Yws/hUGzKuvIFY+RbuwntrMSK4P43CyL2/dnXSTyynijAjGxTx5jk0MciJBS
-         ZU3K1UIDqMzxA88epboJ1p59x5irJJj2JLdT3IY0tPJYmpTuab09WoUfTrxDR16Dfq
-         r8N4tXQdQIaPnia1AslHnGmOplVqsKsaI34w3RLi6u1e7bfXjxM+6aYBDQb0MMyTSr
-         YPN+3zKng+bKVx0qXsPftkro+4iih8aIVgkJzS6owkJGyF1RHMzDG9okK9EYv0u6/k
-         DPUA6Xn7fDXsQPvseUvtae8Ads0cYctEDf9QDUz5BscGpr2wMHyw7xssUbm6ZRtK/f
-         ndefofeH+jTig==
-Date:   Wed, 30 Mar 2022 09:18:12 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        david <david@fromorbit.com>, Jane Chu <jane.chu@oracle.com>
-Subject: Re: [PATCH v11 1/8] dax: Introduce holder for dax_device
-Message-ID: <20220330161812.GA27649@magnolia>
-References: <20220227120747.711169-1-ruansy.fnst@fujitsu.com>
- <20220227120747.711169-2-ruansy.fnst@fujitsu.com>
- <CAPcyv4jAqV7dZdmGcKrG=f8sYmUXaL7YCQtME6GANywncwd+zg@mail.gmail.com>
- <4fd95f0b-106f-6933-7bc6-9f0890012b53@fujitsu.com>
- <YkPtptNljNcJc1g/@infradead.org>
- <15a635d6-2069-2af5-15f8-1c0513487a2f@fujitsu.com>
- <YkQtOO/Z3SZ2Pksg@infradead.org>
- <4ed8baf7-7eb9-71e5-58ea-7c73b7e5bb73@fujitsu.com>
- <YkR8CUdkScEjMte2@infradead.org>
+        by ams.source.kernel.org (Postfix) with ESMTPS id D1A10B81D7D
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 16:47:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86345C340EC;
+        Wed, 30 Mar 2022 16:47:41 +0000 (UTC)
+Date:   Wed, 30 Mar 2022 12:47:39 -0400
+From:   Steven Rostedt <rostedt@goodmis.org>
+To:     Chris Down <chris@chrisdown.name>
+Cc:     Dave Chinner <david@fromorbit.com>, Petr Mladek <pmladek@suse.com>,
+        Jonathan Lassoff <jof@thejof.com>, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        John Ogness <john.ogness@linutronix.de>
+Subject: Re: [PATCH v3 2/2] Add XFS messages to printk index
+Message-ID: <20220330124739.70edca36@gandalf.local.home>
+In-Reply-To: <YkREmrfoTcqOYbma@chrisdown.name>
+References: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
+        <3c3ae424913cb921a9f8abddfcb1b418e7cfa601.1648228733.git.jof@thejof.com>
+        <YkMKyN9w0S8VFJRk@alley>
+        <20220330003457.GB1544202@dread.disaster.area>
+        <YkREmrfoTcqOYbma@chrisdown.name>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YkR8CUdkScEjMte2@infradead.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 30, 2022 at 08:49:29AM -0700, Christoph Hellwig wrote:
-> On Wed, Mar 30, 2022 at 06:58:21PM +0800, Shiyang Ruan wrote:
-> > As the code I pasted before, pmem driver will subtract its ->data_offset,
-> > which is byte-based. And the filesystem who implements ->notify_failure()
-> > will calculate the offset in unit of byte again.
-> > 
-> > So, leave its function signature byte-based, to avoid repeated conversions.
+On Wed, 30 Mar 2022 12:52:58 +0100
+Chris Down <chris@chrisdown.name> wrote:
+
+> The policy, as with all debugfs APIs by default, is that it's completely 
+> unstable and there are no API stability guarantees whatsoever. That's why 
+> there's no extensive documentation for users: because this is a feature for 
+> kernel developers.
 > 
-> I'm actually fine either way, so I'll wait for Dan to comment.
+> 0: https://lwn.net/Articles/309298/
 
-FWIW I'd convinced myself that the reason for using byte units is to
-make it possible to reduce the pmem failure blast radius to subpage
-units... but then I've also been distracted for months. :/
+That article you reference states the opposite of what you said. And I got
+burnt by it before. Because Linus stated, if it is available for users, it
+is an ABI.
 
---D
+From the article above:
+
+"Linus put it this way:
+
+   The fact that something is documented (whether correctly or not) has
+   absolutely _zero_ impact on anything at all. What makes something an ABI is
+   that it's useful and available. The only way something isn't an ABI is by
+   _explicitly_ making sure that it's not available even by mistake in a
+   stable form for binary use. Example: kernel internal data structures and
+   function calls. We make sure that you simply _cannot_ make a binary that
+   works across kernel versions. That is the only way for an ABI to not form."
+
+IOW, files in debugfs are available for users, and if something is written
+that depends on it and it is useful, it becomes ABI. The way I fixed my
+issue was to go and send patches to all the users that depended on the ABI,
+taking away the dependency, and then I was able to update debugfs.
+
+-- Steve
+
