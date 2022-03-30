@@ -2,96 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14C72C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 17:09:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B240C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 17:19:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239723AbiC3RLR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Mar 2022 13:11:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49496 "EHLO
+        id S1347990AbiC3RVS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Mar 2022 13:21:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236395AbiC3RLQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 13:11:16 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 452AA46B24
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 10:09:31 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id r13so42837862ejd.5
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 10:09:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=f7Hw5EOmIQu18d7FUqzTU59z6D5kFx1+GrlB8/bVCZs=;
-        b=MBIJUXZj80CWB9EDXSrg951unUnDYeUWWGtU8EoUiaRLPFu+kEPBDgx3LMm2wBJepU
-         doc47/AK7eKWcbxwBX7tjG0q4UHW5nK8ENAvPC9MvJ/x/1tQT9611DWr+8B6RUo0oKAA
-         kOpsEUTfqPtSa6pw/3zdVes6wBWFrmziix48E=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=f7Hw5EOmIQu18d7FUqzTU59z6D5kFx1+GrlB8/bVCZs=;
-        b=BHW21uzAPZp9rogv2hunRfRpGeLdRco8QFMP1QuL5BaQBgFy5Tx1hsKUssTUvYDEOk
-         4G2DtmajG/VxFKI8Eb8Dbo9lQVsDGsaB936aoPtx7Nvwda8syqev8N5bI1CLfSz0YFb0
-         Rrq3WCJMgMw/mLB+B6yrb5MtNbSEJ4Kf3dmEaapSVg7zj3UoeIm99nmhbVf79HsPAbDR
-         0ahGwe8WqrNyrbehXyjoMao/uTduyFB5rbETETu12RuDj1jnfZ2b7NguMtYpEYMZ5SCP
-         j/OdWVTHg0L0zxkygN3eYQ/1fl6YAqg8lURJggD1kO25PFdCK7aRguLo77kJJCiOj9dR
-         Bh2g==
-X-Gm-Message-State: AOAM530zv/fAjnC6nu1wSqbXDhRru0P7Htzsg63RxKaYGwRcTndZ2/qF
-        ZQb45mLCbjG0rWk0AbWfIHYMbQ==
-X-Google-Smtp-Source: ABdhPJzgFPc7M9VK6PWzH9GoSX3eNxg4olOw+WE7By+bwhbRZQyQaB/aZjucjEcD2xD+/gsVfxQFTA==
-X-Received: by 2002:a17:906:7746:b0:6ce:a12e:489f with SMTP id o6-20020a170906774600b006cea12e489fmr530032ejn.551.1648660169789;
-        Wed, 30 Mar 2022 10:09:29 -0700 (PDT)
-Received: from localhost ([2620:10d:c093:400::5:c1bb])
-        by smtp.gmail.com with ESMTPSA id n25-20020aa7db59000000b00415965e9727sm9838412edt.18.2022.03.30.10.09.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Mar 2022 10:09:29 -0700 (PDT)
-Date:   Wed, 30 Mar 2022 18:09:28 +0100
-From:   Chris Down <chris@chrisdown.name>
-To:     Steven Rostedt <rostedt@goodmis.org>
-Cc:     Dave Chinner <david@fromorbit.com>, Petr Mladek <pmladek@suse.com>,
-        Jonathan Lassoff <jof@thejof.com>, linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        John Ogness <john.ogness@linutronix.de>
-Subject: Re: [PATCH v3 2/2] Add XFS messages to printk index
-Message-ID: <YkSOyC+vEMVSDsdU@chrisdown.name>
-References: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
- <3c3ae424913cb921a9f8abddfcb1b418e7cfa601.1648228733.git.jof@thejof.com>
- <YkMKyN9w0S8VFJRk@alley>
- <20220330003457.GB1544202@dread.disaster.area>
- <YkREmrfoTcqOYbma@chrisdown.name>
- <20220330124739.70edca36@gandalf.local.home>
+        with ESMTP id S1348094AbiC3RVQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 13:21:16 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDD0D5BD3A
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 10:19:30 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 1B5BACE1E9A
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 17:19:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D9A8C340EC
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 17:19:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648660767;
+        bh=mLFAuXFyvua50VsnziSxgdmYPEjlqlloKWQFeqESs3A=;
+        h=Date:From:To:Subject:From;
+        b=NPz5zy6n/jiBOicBdltClA8nz6Pa4M+HQsZ5nXQxqNlYBYMYhUBC0/y0m7X9OmVp/
+         jro0fs4VRGR7GxoFDjs5FySERab8kdJLrZuBbNEo61fqJOsVPwe1rd5AvFS8xpASGE
+         UY8hIAPR3A9/8TdZ4ja/N/Jn8Lb+akhpA1FwspxU/1ey2Kezr7cfb99nL70NVfPxYT
+         J9K0FMmFUKQZVLLW047xR1EGjB+MfoCnPtNtHr8+1NWvyR7BmrQMDypWQ9vnKphEvL
+         hoMUJoo8wgRaiNoBznXMmmNJFoteVujJwj8bhrR0d4/ilg7/4WEPJ6etSW9FiZy6Il
+         JN38zspEewaxA==
+Date:   Wed, 30 Mar 2022 10:19:26 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 919edbadebe1
+Message-ID: <20220330171926.GJ27690@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220330124739.70edca36@gandalf.local.home>
-User-Agent: Mutt/2.2.2 (aa28abe8) (2022-03-25)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Steven Rostedt writes:
->On Wed, 30 Mar 2022 12:52:58 +0100
->Chris Down <chris@chrisdown.name> wrote:
->
->> The policy, as with all debugfs APIs by default, is that it's completely
->> unstable and there are no API stability guarantees whatsoever. That's why
->> there's no extensive documentation for users: because this is a feature for
->> kernel developers.
->>
->> 0: https://lwn.net/Articles/309298/
->
->That article you reference states the opposite of what you said. And I got
->burnt by it before. Because Linus stated, if it is available for users, it
->is an ABI.
+Hi folks,
 
-Hmm, even in 2011 after that article there were discussions about debugfs 
-explicitly being the "wild west"[0], no? I heard the same during LSFMM 
-discussions during recent years as well. Although I confess that I am not 
-frequently in discussions about debugfs so I don't really know where the 
-majority opinion is nowadays.
+The for-next branch of the xfs-linux repository at:
 
-Either way, as discussed the contents wouldn't be the ABI (as with my 
-/proc/self/smaps allusion), the file format would be, so it wouldn't imply that 
-printk() calls themselves or their locations become an ABI.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-0: https://lwn.net/Articles/429321/
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  These are all bug fixes that we've been working on for
+the past couple of weeks.
+
+A reminder: Dave Chinner will be taking over as XFS maintainer for one
+release cycle, starting from the day 5.18-rc1 drops until 5.19-rc1 is
+tagged so that I can focus on starting a massive design review for the
+(feature complete after five years) online repair feature.
+
+The new head of the for-next branch is commit:
+
+919edbadebe1 xfs: drop async cache flushes from CIL commits.
+
+14 new commits:
+
+Darrick J. Wong (6):
+      [93defd5a15dd] xfs: document the XFS_ALLOC_AGFL_RESERVE constant
+      [c8c568259772] xfs: don't include bnobt blocks when reserving free block pool
+      [15f04fdc75aa] xfs: remove infinite loop when reserving free block pool
+      [0baa2657dc4d] xfs: always succeed at setting the reserve pool size
+      [82be38bcf8a2] xfs: fix overfilling of reserve pool
+      [85bcfa26f9a3] xfs: don't report reserved bnobt space as available
+
+Dave Chinner (8):
+      [d2d7c0473586] xfs: aborting inodes on shutdown may need buffer lock
+      [ab9c81ef321f] xfs: shutdown in intent recovery has non-intent items in the AIL
+      [cd6f79d1fb32] xfs: run callbacks before waking waiters in xlog_state_shutdown_callbacks
+      [b5f17bec1213] xfs: log shutdown triggers should only shut down the log
+      [41e636218358] xfs: xfs_do_force_shutdown needs to block racing shutdowns
+      [3c4cb76bce43] xfs: xfs_trans_commit() path must check for log shutdown
+      [5652ef31705f] xfs: shutdown during log recovery needs to mark the log shutdown
+      [919edbadebe1] xfs: drop async cache flushes from CIL commits.
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_alloc.c |  28 ++++++--
+ fs/xfs/libxfs/xfs_alloc.h |   1 -
+ fs/xfs/xfs_bio_io.c       |  35 ----------
+ fs/xfs/xfs_fsops.c        |  60 ++++++++---------
+ fs/xfs/xfs_icache.c       |   2 +-
+ fs/xfs/xfs_inode.c        |   2 +-
+ fs/xfs/xfs_inode_item.c   | 164 +++++++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_inode_item.h   |   1 +
+ fs/xfs/xfs_linux.h        |   2 -
+ fs/xfs/xfs_log.c          | 109 ++++++++++++++++--------------
+ fs/xfs/xfs_log_cil.c      |  46 +++++--------
+ fs/xfs/xfs_log_priv.h     |  14 +++-
+ fs/xfs/xfs_log_recover.c  |  56 ++++++----------
+ fs/xfs/xfs_mount.c        |   3 +-
+ fs/xfs/xfs_mount.h        |  15 +++++
+ fs/xfs/xfs_super.c        |   3 +-
+ fs/xfs/xfs_trans.c        |  48 +++++++++-----
+ fs/xfs/xfs_trans_ail.c    |   8 +--
+ 18 files changed, 348 insertions(+), 249 deletions(-)
