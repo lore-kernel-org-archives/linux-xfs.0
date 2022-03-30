@@ -2,72 +2,56 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49462C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 06:49:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E134C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 10:03:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243399AbiC3GvT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Mar 2022 02:51:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33256 "EHLO
+        id S245107AbiC3KE6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Mar 2022 06:04:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237947AbiC3GvS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 02:51:18 -0400
+        with ESMTP id S238742AbiC3KE5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 06:04:57 -0400
 Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 254C51A394;
-        Tue, 29 Mar 2022 23:49:33 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3ApRIUU6zKP5o0Vfxdkx96t+dIxyrEfRIJ4+MujC/?=
- =?us-ascii?q?XYbTApGgmgzxSm2RLWz2BafeMZ2P2KtBzPY/ioEJVvZPXydE3HQtv/xmBbVoQ9?=
- =?us-ascii?q?5OdWo7xwmQcns+qBpSaChohtq3yU/GYRCwPZiKa9kfF3oTJ9yEmj/nSHuOkUYY?=
- =?us-ascii?q?oBwgqLeNaYHZ44f5cs75h6mJYqYDR7zKl4bsekeWGULOW82Ic3lYv1k62gEgHU?=
- =?us-ascii?q?MIeF98vlgdWifhj5DcynpSOZX4VDfnZw3DQGuG4EgMmLtsvwo1V/kuBl/ssIti?=
- =?us-ascii?q?j1LjmcEwWWaOUNg+L4pZUc/H6xEEc+WppieBmXBYfQR4/ZzGhhc14zs5c85K2U?=
- =?us-ascii?q?hsBMLDOmfgGTl9TFCQW0ahuoeWceSjh6JTJp6HBWz62qxl0N2k6NJMZ9s55G2Z?=
- =?us-ascii?q?L8uYSKSxLZReG78q2y7KTS+9inM0vIcDneoQFtRlIwTjfS/RgXpHHR6TD4MRw3?=
- =?us-ascii?q?TEsi8QIFvHbD+IVayVoahvoYBBVPFoTTpUkk4+Agnj5bi0drVe9prQ+6GuVyxZ?=
- =?us-ascii?q?+uJDrLtbUf9miQcROgl3eomPA4nS/DhwEXPSfwjqt9mmwwOPC9Qv5UYQfUra46?=
- =?us-ascii?q?9ZtmlSYwmFVAxoTPXO/oP+kmguwQN5SNUEQ0jQhoLJ090GxSNT5GRqirxasuh8?=
- =?us-ascii?q?aRsoVEOAg7gyJ4rTb7hzfBWUeSDNFLts8u6ceQT0sy0/Mj93yLSJgvafTSn+H8?=
- =?us-ascii?q?LqQ6zSoNkAowcUqDcMfZVJdpYC9/8do1VSSJuuP2ZWd1rXdcQwcCRjTxMTmu4g?=
- =?us-ascii?q?usA=3D=3D?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AcJ8cWqulWiGSYbbGKlIs1Bwy7skDStV00zEX?=
- =?us-ascii?q?/kB9WHVpm62j5qSTdZEguCMc5wx+ZJheo7q90cW7IE80lqQFhLX5X43SPzUO0V?=
- =?us-ascii?q?HARO5fBODZsl/d8kPFltJ15ONJdqhSLJnKB0FmsMCS2mKFOudl7N6Z0K3Av4vj?=
- =?us-ascii?q?80s=3D?=
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 67C1EBABA2;
+        Wed, 30 Mar 2022 03:03:09 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="123086102"
+   d="scan'208";a="123090685"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 30 Mar 2022 14:49:33 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 47D3F4D17163;
-        Wed, 30 Mar 2022 14:49:32 +0800 (CST)
-Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Wed, 30 Mar 2022 14:49:32 +0800
+  by heian.cn.fujitsu.com with ESMTP; 30 Mar 2022 18:03:08 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 70C084D16FF2;
+        Wed, 30 Mar 2022 18:03:02 +0800 (CST)
 Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Wed, 30 Mar 2022 14:49:32 +0800
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Wed, 30 Mar 2022 18:03:02 +0800
 Received: from [10.167.201.8] (10.167.201.8) by
  G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Wed, 30 Mar 2022 14:49:31 +0800
-Message-ID: <eb7c0403-1d1f-5de4-8cdd-52a8de148fbe@fujitsu.com>
-Date:   Wed, 30 Mar 2022 14:49:31 +0800
+ id 15.0.1497.23 via Frontend Transport; Wed, 30 Mar 2022 18:03:01 +0800
+Message-ID: <15a635d6-2069-2af5-15f8-1c0513487a2f@fujitsu.com>
+Date:   Wed, 30 Mar 2022 18:03:01 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [PATCH v11 5/8] mm: move pgoff_address() to vma_pgoff_address()
+Subject: Re: [PATCH v11 1/8] dax: Introduce holder for dax_device
 To:     Christoph Hellwig <hch@infradead.org>
-CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>, <djwong@kernel.org>,
-        <dan.j.williams@intel.com>, <david@fromorbit.com>,
-        <jane.chu@oracle.com>, Christoph Hellwig <hch@lst.de>
+CC:     Dan Williams <dan.j.williams@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, david <david@fromorbit.com>,
+        Jane Chu <jane.chu@oracle.com>
 References: <20220227120747.711169-1-ruansy.fnst@fujitsu.com>
- <20220227120747.711169-6-ruansy.fnst@fujitsu.com>
- <YkPuooGD139Wpg1v@infradead.org>
+ <20220227120747.711169-2-ruansy.fnst@fujitsu.com>
+ <CAPcyv4jAqV7dZdmGcKrG=f8sYmUXaL7YCQtME6GANywncwd+zg@mail.gmail.com>
+ <4fd95f0b-106f-6933-7bc6-9f0890012b53@fujitsu.com>
+ <YkPtptNljNcJc1g/@infradead.org>
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <YkPuooGD139Wpg1v@infradead.org>
+In-Reply-To: <YkPtptNljNcJc1g/@infradead.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-yoursite-MailScanner-ID: 47D3F4D17163.A0D9B
+X-yoursite-MailScanner-ID: 70C084D16FF2.A0C25
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
@@ -76,22 +60,58 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-在 2022/3/30 13:46, Christoph Hellwig 写道:
-> On Sun, Feb 27, 2022 at 08:07:44PM +0800, Shiyang Ruan wrote:
->> Since it is not a DAX-specific function, move it into mm and rename it
->> to be a generic helper.
+在 2022/3/30 13:41, Christoph Hellwig 写道:
+> On Wed, Mar 16, 2022 at 09:46:07PM +0800, Shiyang Ruan wrote:
+>>> Forgive me if this has been discussed before, but since dax_operations
+>>> are in terms of pgoff and nr pages and memory_failure() is in terms of
+>>> pfns what was the rationale for making the function signature byte
+>>> based?
+>>
+>> Maybe I didn't describe it clearly...  The @offset and @len here are
+>> byte-based.  And so is ->memory_failure().
 > 
-> FYI, there is a patch in -mm and linux-next:
-> 
->    "mm: rmap: introduce pfn_mkclean_range() to cleans PTEs"
-> 
-> that adds a vma_pgoff_address which seems like a bit of a superset of
-> the one added in this patch, but only is in mm/internal.h.
+> Yes, but is there a good reason for that when the rest of the DAX code
+> tends to work in page chunks?
 
-Yes.  The function in this patch handles more cases.
+Because I am not sure if the offset between each layer is page aligned. 
+  For example, when pmem dirver handles ->memory_failure(), it should 
+subtract its ->data_offset when it calls dax_holder_notify_failure().
 
-So, let me rebase onto this patch and move the function into 
-/include/linux/mm.h, so that fs/dax.c can also use it.  Is this ok?
+The implementation of ->memory_failure() by pmem driver:
++static int pmem_pagemap_memory_failure(struct dev_pagemap *pgmap,
++		phys_addr_t addr, u64 len, int mf_flags)
++{
++	struct pmem_device *pmem =
++			container_of(pgmap, struct pmem_device, pgmap);
++	u64 offset = addr - pmem->phys_addr - pmem->data_offset;
++
++	return dax_holder_notify_failure(pmem->dax_dev, offset, len, mf_flags);
++}
+
+So, I choose u64 as the type of @len.  And for consistency, the @addr is 
+using byte-based type as well.
+
+ > memory_failure()
+ > |* fsdax case
+ > |------------
+ > |pgmap->ops->memory_failure()      => pmem_pgmap_memory_failure()
+ > | dax_holder_notify_failure()      =>
+
+the offset from 'pmem driver' to 'dax holder'
+
+ > |  dax_device->holder_ops->notify_failure() =>
+ > |                                     - xfs_dax_notify_failure()
+ > |  |* xfs_dax_notify_failure()
+ > |  |--------------------------
+ > |  |   xfs_rmap_query_range()
+ > |  |    xfs_dax_failure_fn()
+ > |  |    * corrupted on metadata
+ > |  |       try to recover data, call xfs_force_shutdown()
+ > |  |    * corrupted on file data
+ > |  |       try to recover data, call mf_dax_kill_procs()
+ > |* normal case
+ > |-------------
+ > |mf_generic_kill_procs()
 
 
 --
