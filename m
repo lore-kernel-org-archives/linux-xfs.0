@@ -2,207 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 273E3C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 01:11:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7DB4C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 01:20:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241550AbiC3BMn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Mar 2022 21:12:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55728 "EHLO
+        id S234408AbiC3BWT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Mar 2022 21:22:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241551AbiC3BMl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Mar 2022 21:12:41 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2B2B7427E2
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 18:10:57 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id F3252534113
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 12:10:51 +1100 (AEDT)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nZMrK-00BVQ9-BA
-        for linux-xfs@vger.kernel.org; Wed, 30 Mar 2022 12:10:50 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.95)
-        (envelope-from <david@fromorbit.com>)
-        id 1nZMrK-005VF7-9g
-        for linux-xfs@vger.kernel.org;
-        Wed, 30 Mar 2022 12:10:50 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/8] xfs: shutdown in intent recovery has non-intent items in the AIL
-Date:   Wed, 30 Mar 2022 12:10:42 +1100
-Message-Id: <20220330011048.1311625-3-david@fromorbit.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220330011048.1311625-1-david@fromorbit.com>
-References: <20220330011048.1311625-1-david@fromorbit.com>
+        with ESMTP id S241599AbiC3BWS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Mar 2022 21:22:18 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5624E4739F
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 18:20:34 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id CE53ECE1A5A
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 01:20:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E8E8C340F0;
+        Wed, 30 Mar 2022 01:20:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648603231;
+        bh=VCpKXt3dP3HXRZplU5WWTgCtQwXLwjLV1A1KE16ewGI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=FCBEeMC/UbMa/f+LwVqvjjR7EzkEL5VFQdjwI3Q0vUXJbUyq/Y9tPTUnDDX9unJf3
+         El8PIQ6VzVpvDCJ29+5rbiEtCfNYeG2vrK6tkPsWJHhwKikf/JrNzUoiriyiKRzlnl
+         U4tOoXXXx82vupvq3MHPgA5al2vdIVhyfZL+yihp4NBzeSo4KYImxkW9isXadMlU5B
+         EwJLKF5M7cSJc/t95j0qgmmG8brRek4lvwNPn/aA9+hX2ejB9vQ7SLB4/ux0uefTFk
+         8I/3Cl4J+cJX/SdcMhSmYJepPeFfMV2V+tEk3rbg4v62Y9UTKXmn8tMr4OAYnT2QsG
+         +3yzWRHLcHy3w==
+Date:   Tue, 29 Mar 2022 18:20:30 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: aborting inodes on shutdown may need buffer lock
+Message-ID: <20220330012030.GF27690@magnolia>
+References: <20220324002103.710477-1-david@fromorbit.com>
+ <20220324002103.710477-2-david@fromorbit.com>
+ <20220328224452.GA27690@magnolia>
+ <20220328231109.GV1544202@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6243ae1c
-        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
-        a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=W2dFxmz-06ihNOqDruYA:9 a=AjGcO6oz07-iQ99wixmX:22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220328231109.GV1544202@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Mar 29, 2022 at 10:11:09AM +1100, Dave Chinner wrote:
+> On Mon, Mar 28, 2022 at 03:44:52PM -0700, Darrick J. Wong wrote:
+> > On Thu, Mar 24, 2022 at 11:20:58AM +1100, Dave Chinner wrote:
+> > >  xfs_iflush_abort(
+> > >  	struct xfs_inode	*ip)
+> > >  {
+> > >  	struct xfs_inode_log_item *iip = ip->i_itemp;
+> > > -	struct xfs_buf		*bp = NULL;
+> > > +	struct xfs_buf		*bp;
+> > >  
+> > > -	if (iip) {
+> > > -		/*
+> > > -		 * Clear the failed bit before removing the item from the AIL so
+> > > -		 * xfs_trans_ail_delete() doesn't try to clear and release the
+> > > -		 * buffer attached to the log item before we are done with it.
+> > > -		 */
+> > > -		clear_bit(XFS_LI_FAILED, &iip->ili_item.li_flags);
+> > > -		xfs_trans_ail_delete(&iip->ili_item, 0);
+> > > +	if (!iip) {
+> > > +		/* clean inode, nothing to do */
+> > > +		xfs_iflags_clear(ip, XFS_IFLUSHING);
+> > > +		return;
+> > > +	}
+> > > +
+> > > +	/*
+> > > +	 * Remove the inode item from the AIL before we clear it's internal
+> > 
+> > Nit: "it's" is a contraction, "its" is possessive.
+> > 
+> > > +	 * state. Whilst the inode is in the AIL, it should have a valid buffer
+> > > +	 * pointer for push operations to access - it is only safe to remove the
+> > > +	 * inode from the buffer once it has been removed from the AIL.
+> > > +	 *
+> > > +	 * We also clear the failed bit before removing the item from the AIL
+> > > +	 * as xfs_trans_ail_delete()->xfs_clear_li_failed() will release buffer
+> > > +	 * references the inode item owns and needs to hold until we've fully
+> > > +	 * aborted the inode log item and detatched it from the buffer.
+> > 
+> > Nit: detached
+> > 
+> > > +	 */
+> > > +	clear_bit(XFS_LI_FAILED, &iip->ili_item.li_flags);
+> > 
+> > I wonder, is there any chance the AIL will stumble onto the inode item
+> > right here?
+> 
+> It can, but now it will fail to get the buffer lock because we
+> currently hold it and so can't do anything writeback related with
+> the inode item regardless of whether this bit is set or not.  i.e.
+> This patch actually fixes the race you are refering to....
 
-generic/388 triggered a failure in RUI recovery due to a corrupted
-btree record and the system then locked up hard due to a subsequent
-assert failure while holding a spinlock cancelling intents:
+Ok.  I was thinking that these changes would eliminate that possibility,
+but wasn't 100% sure.
 
- XFS (pmem1): Corruption of in-memory data (0x8) detected at xfs_do_force_shutdown+0x1a/0x20 (fs/xfs/xfs_trans.c:964).  Shutting down filesystem.
- XFS (pmem1): Please unmount the filesystem and rectify the problem(s)
- XFS: Assertion failed: !xlog_item_is_intent(lip), file: fs/xfs/xfs_log_recover.c, line: 2632
- Call Trace:
-  <TASK>
-  xlog_recover_cancel_intents.isra.0+0xd1/0x120
-  xlog_recover_finish+0xb9/0x110
-  xfs_log_mount_finish+0x15a/0x1e0
-  xfs_mountfs+0x540/0x910
-  xfs_fs_fill_super+0x476/0x830
-  get_tree_bdev+0x171/0x270
-  ? xfs_init_fs_context+0x1e0/0x1e0
-  xfs_fs_get_tree+0x15/0x20
-  vfs_get_tree+0x24/0xc0
-  path_mount+0x304/0xba0
-  ? putname+0x55/0x60
-  __x64_sys_mount+0x108/0x140
-  do_syscall_64+0x35/0x80
-  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> > > +	xfs_trans_ail_delete(&iip->ili_item, 0);
+> > > +
+> > > +	/*
+> > > +	 * Capture the associated buffer and lock it if the caller didn't
+> > > +	 * pass us the locked buffer to begin with.
+> > 
+> > I agree that we're capturing the buffer here, but this function is not
+> > locking the buffer since the comment says that the caller has to hold
+> > the buffer lock already, correct?  And AFAICT from looking at all the
+> > callers, they all hold the buffer locked, like the comment requires.
+> 
+> I thought I killed that comment - you noted it was incorrect in
+> the previous iteration. I'll kill it properly when I update the
+> spulling misteaks above.
 
-Essentially, there's dirty metadata in the AIL from intent recovery
-transactions, so when we go to cancel the remaining intents we assume
-that all objects after the first non-intent log item in the AIL are
-not intents.
+hehehe.
 
-This is not true. Intent recovery can log new intents to continue
-the operations the original intent could not complete in a single
-transaction. The new intents are committed before they are deferred,
-which means if the CIL commits in the background they will get
-inserted into the AIL at the head.
+--D
 
-Hence if we shut down the filesystem while processing intent
-recovery, the AIL may have new intents active at the current head.
-Hence this check:
-
-                /*
-                 * We're done when we see something other than an intent.
-                 * There should be no intents left in the AIL now.
-                 */
-                if (!xlog_item_is_intent(lip)) {
-#ifdef DEBUG
-                        for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
-                                ASSERT(!xlog_item_is_intent(lip));
-#endif
-                        break;
-                }
-
-in both xlog_recover_process_intents() and
-log_recover_cancel_intents() is simply not valid. It was valid back
-when we only had EFI/EFD intents and didn't chain intents, but it
-hasn't been valid ever since intent recovery could create and commit
-new intents.
-
-Given that crashing the mount task like this pretty much prevents
-diagnosing what went wrong that lead to the initial failure that
-triggered intent cancellation, just remove the checks altogether.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_log_recover.c | 50 ++++++++++++++--------------------------
- 1 file changed, 17 insertions(+), 33 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 30e22cd943c2..bc8ddc4b78e8 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2519,21 +2519,22 @@ xlog_abort_defer_ops(
- 		xfs_defer_ops_capture_free(mp, dfc);
- 	}
- }
-+
- /*
-  * When this is called, all of the log intent items which did not have
-- * corresponding log done items should be in the AIL.  What we do now
-- * is update the data structures associated with each one.
-+ * corresponding log done items should be in the AIL.  What we do now is update
-+ * the data structures associated with each one.
-  *
-- * Since we process the log intent items in normal transactions, they
-- * will be removed at some point after the commit.  This prevents us
-- * from just walking down the list processing each one.  We'll use a
-- * flag in the intent item to skip those that we've already processed
-- * and use the AIL iteration mechanism's generation count to try to
-- * speed this up at least a bit.
-+ * Since we process the log intent items in normal transactions, they will be
-+ * removed at some point after the commit.  This prevents us from just walking
-+ * down the list processing each one.  We'll use a flag in the intent item to
-+ * skip those that we've already processed and use the AIL iteration mechanism's
-+ * generation count to try to speed this up at least a bit.
-  *
-- * When we start, we know that the intents are the only things in the
-- * AIL.  As we process them, however, other items are added to the
-- * AIL.
-+ * When we start, we know that the intents are the only things in the AIL. As we
-+ * process them, however, other items are added to the AIL. Hence we know we
-+ * have started recovery on all the pending intents when we find an non-intent
-+ * item in the AIL.
-  */
- STATIC int
- xlog_recover_process_intents(
-@@ -2556,17 +2557,8 @@ xlog_recover_process_intents(
- 	for (lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
- 	     lip != NULL;
- 	     lip = xfs_trans_ail_cursor_next(ailp, &cur)) {
--		/*
--		 * We're done when we see something other than an intent.
--		 * There should be no intents left in the AIL now.
--		 */
--		if (!xlog_item_is_intent(lip)) {
--#ifdef DEBUG
--			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
--				ASSERT(!xlog_item_is_intent(lip));
--#endif
-+		if (!xlog_item_is_intent(lip))
- 			break;
--		}
- 
- 		/*
- 		 * We should never see a redo item with a LSN higher than
-@@ -2607,8 +2599,9 @@ xlog_recover_process_intents(
- }
- 
- /*
-- * A cancel occurs when the mount has failed and we're bailing out.
-- * Release all pending log intent items so they don't pin the AIL.
-+ * A cancel occurs when the mount has failed and we're bailing out.  Release all
-+ * pending log intent items that we haven't started recovery on so they don't
-+ * pin the AIL.
-  */
- STATIC void
- xlog_recover_cancel_intents(
-@@ -2622,17 +2615,8 @@ xlog_recover_cancel_intents(
- 	spin_lock(&ailp->ail_lock);
- 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
- 	while (lip != NULL) {
--		/*
--		 * We're done when we see something other than an intent.
--		 * There should be no intents left in the AIL now.
--		 */
--		if (!xlog_item_is_intent(lip)) {
--#ifdef DEBUG
--			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
--				ASSERT(!xlog_item_is_intent(lip));
--#endif
-+		if (!xlog_item_is_intent(lip))
- 			break;
--		}
- 
- 		spin_unlock(&ailp->ail_lock);
- 		lip->li_ops->iop_release(lip);
--- 
-2.35.1
-
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
