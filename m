@@ -2,107 +2,172 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76B56C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 01:26:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7928C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 03:43:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241615AbiC3B2M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Mar 2022 21:28:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59106 "EHLO
+        id S235216AbiC3DpY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Mar 2022 23:45:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241610AbiC3B2M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Mar 2022 21:28:12 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 56474985A4
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 18:26:28 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 53B6A533EF8;
-        Wed, 30 Mar 2022 12:26:26 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nZN6O-00BVl4-4q; Wed, 30 Mar 2022 12:26:24 +1100
-Date:   Wed, 30 Mar 2022 12:26:24 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Petr Mladek <pmladek@suse.com>, Jonathan Lassoff <jof@thejof.com>,
-        linux-xfs@vger.kernel.org, Chris Down <chris@chrisdown.name>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        John Ogness <john.ogness@linutronix.de>
-Subject: Re: [PATCH v3 2/2] Add XFS messages to printk index
-Message-ID: <20220330012624.GC1544202@dread.disaster.area>
-References: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
- <3c3ae424913cb921a9f8abddfcb1b418e7cfa601.1648228733.git.jof@thejof.com>
- <YkMKyN9w0S8VFJRk@alley>
- <20220330003457.GB1544202@dread.disaster.area>
- <20220330004649.GG27713@magnolia>
+        with ESMTP id S229702AbiC3DpX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Mar 2022 23:45:23 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BDF460F6
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Mar 2022 20:43:37 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BC03CB81B2B
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 03:43:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F43DC340EC;
+        Wed, 30 Mar 2022 03:43:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648611814;
+        bh=faMv6j7PzjnTl9+bizmhdUF/O4GabjegauFbmNczHS4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=FxAyBxytNPmohZ8cf+//jACSDro071WCWx4d36nVHbfCwp/PpQHIl4vya/hK2ngEI
+         xaN4FP1tP72YEXW+g9e6qeTO3mLSTTb7oYthlGMwD2XelUI1JR/bnLmUgvboHFodax
+         1pwaeNLpWgzDbelHgQhHjQJCPkoxYaqcrwLzli6DcSoCa+nk3c6R6lGbDMX1MRTH7s
+         MNpoEwfhAYD14ud0Dkd/Chc7/7w2IYgNg7R3J3Rv8ytvKCql61JEtm5LKHU+pv8SP3
+         jdslQY4dEGZ8JONWefR1N0ngmU3HOlbDkv+BfS2q2/KJoj4qSXmC1GJhSxQRieCs92
+         kjL0NNmenqTKg==
+Date:   Tue, 29 Mar 2022 20:43:33 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V8 15/19] xfs: Directory's data fork extent counter can
+ never overflow
+Message-ID: <20220330034333.GG27690@magnolia>
+References: <20220321051750.400056-1-chandan.babu@oracle.com>
+ <20220321051750.400056-16-chandan.babu@oracle.com>
+ <20220324221406.GL1544202@dread.disaster.area>
+ <87sfr1nxj7.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220329062340.GY1544202@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220330004649.GG27713@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6243b1c3
-        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
-        a=bs8r4XP8z4bD3WZdm4oA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220329062340.GY1544202@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 29, 2022 at 05:46:49PM -0700, Darrick J. Wong wrote:
-> On Wed, Mar 30, 2022 at 11:34:57AM +1100, Dave Chinner wrote:
-> > I see no statement anywhere about what this printk index ABI
-> > requires in terms of code stablility, format string maintenance and
-> > modification, etc. I've seen it referred to as "semi-stable" but
-> > there is no clear, easily accessible definition as to what that
-> > means for either kernel developers or userspace app developers that
-> > might want to use this information. There's zero information
-> > available about how userspace will use this information, too, so at
-> > this point I can't even guess what the policy for this new ABI
-> > actually is.
+On Tue, Mar 29, 2022 at 05:23:40PM +1100, Dave Chinner wrote:
+> On Tue, Mar 29, 2022 at 10:52:04AM +0530, Chandan Babu R wrote:
+> > On 25 Mar 2022 at 03:44, Dave Chinner wrote:
+> > > On Mon, Mar 21, 2022 at 10:47:46AM +0530, Chandan Babu R wrote:
+> > >> The maximum file size that can be represented by the data fork extent counter
+> > >> in the worst case occurs when all extents are 1 block in length and each block
+> > >> is 1KB in size.
+> > >> 
+> > >> With XFS_MAX_EXTCNT_DATA_FORK_SMALL representing maximum extent count and with
+> > >> 1KB sized blocks, a file can reach upto,
+> > >> (2^31) * 1KB = 2TB
+> > >> 
+> > >> This is much larger than the theoretical maximum size of a directory
+> > >> i.e. 32GB * 3 = 96GB.
+> > >> 
+> > >> Since a directory's inode can never overflow its data fork extent counter,
+> > >> this commit replaces checking the return value of
+> > >> xfs_iext_count_may_overflow() with calls to ASSERT(error == 0).
+> > >
+> > > I'd really prefer that we don't add noise like this to a bunch of
+> > > call sites.  If directories can't overflow the extent count in
+> > > normal operation, then why are we even calling
+> > > xfs_iext_count_may_overflow() in these paths? i.e. an overflow would
+> > > be a sign of an inode corruption, and we should have flagged that
+> > > long before we do an operation that might overflow the extent count.
+> > >
+> > > So, really, I think you should document the directory size
+> > > constraints at the site where we define all the large extent count
+> > > values in xfs_format.h, remove the xfs_iext_count_may_overflow()
+> > > checks from the directory code and replace them with a simple inode
+> > > verifier check that we haven't got more than 100GB worth of
+> > > individual extents in the data fork for directory inodes....
 > > 
-> > If this was discussed and a policy was created, then great. But it
-> > *hasn't been documented* for the rest of the world to be able to
-> > read and understand so they know how to deal safely with the
-> > information this ABI now provides. So, can you please explain what
-> > the rules are, and then please write some documentation for the
-> > kernel admin guide defining the user ABI for application writers and
-> > what guarantees the kernel provides them with about the contents of
-> > this ABI.
+> > I don't think that we could trivially verify if the extents in a directory's
+> > data fork add up to more than 96GB.
 > 
-> FWIW if you /did/ accept this for 5.19, I would suggest adding:
+> dip->di_nextents tells us how many extents there are in the data
+> fork, we know what the block size of the filesystem is, so it should
+> be pretty easy to calculate a maximum extent count for 96GB of
+> space. i.e. absolute maximum valid dir data fork extent count
+> is (96GB / blocksize).
 > 
-> printk_index_subsys_emit("XFS log messages shall not be considered a stable kernel ABI as they can change at any time");
+> > 
+> > xfs_dinode->di_size tracks the size of XFS_DIR2_DATA_SPACE. This also includes
+> > holes that could be created by freeing directory entries in a single directory
+> > block. Also, there is no easy method to determine the space occupied by
+> > XFS_DIR2_LEAF_SPACE and XFS_DIR2_FREE_SPACE segments of a directory.
 > 
-> I base that largely on the evidence -- there's nothing saying that
-> catalogued strings are or are not a stable ABI.  That means it's up to
-> the subsystem or the maintainers or whoever to make a decision, and I
+> Sure there is. We do this sort of calc for things like transaction
+> reservations via definitions like XFS_DA_NODE_MAXDEPTH. That tells us
 
-Yup, that's largely what I want clarified before we make a
-decision one way or another. There must have been some discussion
-and decisions on what the policy is before it was merged, but it's
-not easily findable.
+Hmmm.  Seeing as I just replaced XFS_BTREE_MAXLEVELS with dynamic limits
+set for each filesytem, is XFS_DA_NODE_MAXDEPTH even appropriate for
+modern filesystems?  We're about to start allowing far more extended
+attributes in the form of parent pointers, so we should be careful about
+this.
 
-And, IMO, instead of every single subsystem having to go through the
-same question and answer process as we are currently doing, I want
-that policy to be documented such that a simple "git grep
-printk_index_subsys_emit" search returns the file in the
-Documentation/ directory that explains all this. That makes
-everyone's lives a whole lot easier.
+For a directory, there can be at most 32GB of directory entries, so the
+maximum number of directory entries is...
 
-> would decide that while some people somewhere might benefit from having
-> the message catalogue over not having it (e.g. i18n), someone would have
-> to show a /very/ strong case for letting XFS get powertop'd.
+32GB / (directory block size) * (max entries per dir block)
 
-Yeah, I'd push back very hard against that, too, but in the absence
-of any documentation defining the contract to either the kernel or
-userspace application developers, it's impossible to know where we
-stand to begin with. I much prefer to be able to quote letter and
-verse of the documentation than to have to repeatedly justify why
-we consider the (un)documented policy to be broken....
+The dabtree stores (u32 hash, u32 offset) records, so I guess it
+wouldn't be so hard to compute the number of blocks needed for each node
+level until we only need one block, and that's our real
+XFS_DA_NODE_MAXEPTH.
 
-Cheers,
+But then the second question is: what's the maximum height of a dabtree
+that indexes an xattr structure?  I don't think there's any maximum
+limit within XFS on the number of attrs you can set on a file, is there?
+At least until you hit the iext_max_count check.  I think the VFS
+institutes its own limit of 64k for the llistxattr buffer, but that's
+about all I can think of.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I suppose right now the xattr structure can't grow larger than 2^(16+21)
+blocks in size, which is 2^49 bytes, but that's a mix of attr leaves and
+dabtree blocks, unlike directories, right?
+
+> immediately how many blocks can be in the XFS_DIR2_LEAF_SPACE
+> segement....
+> 
+> We also know the maximum number of individual directory blocks in
+> the 32GB segment (fixed at 32GB / dir block size), so the free space
+> array is also a fixed size at (32GB / dir block size / free space
+> entries per block).
+> 
+> It's easy to just use (96GB / block size) and that will catch most
+> corruptions with no risk of a false positive detection, but we could
+> quite easily refine this to something like:
+> 
+> data	(32GB +				
+> leaf	 btree blocks(XFS_DA_NODE_MAXDEPTH) +
+> freesp	 (32GB / free space records per block))
+> frags					/ filesystem block size
+
+I think we ought to do a more careful study of XFS_DA_NODE_MAXDEPTH, but
+it could become more involved than we think.  In the interest of keeping
+this series moving, can we start with a new verifier check that
+(di_nextents < that formula from above) and then refine that based on
+whatever improvements we may or may not come up with for
+XFS_DA_NODE_MAXDEPTH?
+
+> 
+> > May be the following can be added to xfs_dinode_verify(),
+> > 
+> > 	if (S_ISDIR(mode) && ((xfs_dinode->di_size + 2 * 32GB) > 96GB))
+> >     		return __this_address
+> 
+> That doesn't validate that the on disk or in-memory di_nextents
+> value is withing the known valid range or not. We can do that
+> directly (as per above), so we shouldn't need a hueristic like this.
+
+Indeed, inode size is not a good proxy variable for extent count.
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
