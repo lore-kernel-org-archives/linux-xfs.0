@@ -2,65 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EA0CC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 21:29:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF7C9C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 22:00:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244671AbiC3VbA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Mar 2022 17:31:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44906 "EHLO
+        id S245439AbiC3WCm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Mar 2022 18:02:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232691AbiC3Va7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 17:30:59 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9585201AC;
-        Wed, 30 Mar 2022 14:29:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Zg8QPhUnRt/Hkzrm5cK28VQZtjF5KNBpCqCGW4kGEzU=; b=gp2AC7YFCqYvCrXLC6M96E8zJ/
-        wdbCazu0QWFmo2yWhiwDbt3O0LjagGcn4IuiW3kKlxDkIAICH5QTHAPGTzAm5iufn2OXW7f6V7uUC
-        ovTtJo90zGzlnzULvissA0T9mkrV+FgN3y5UukAnIkPA+2NW0mXIwC3z4AQSFzN7ArhKnHg2jrfLk
-        5SmSXpGlRFRJA448QClwxbyejE3sJeyc7xXl+PwT+mdAJz5h4qSdzSF9Z0D4C0yzyyTUFpUsuFQnE
-        HoorQOmrMhmn0sA8AKOlwOZznwnrRNuDhI/FZv1otAO07OJQgnEpqYVTBdF0wrcNLrRpqol7lcMAb
-        TfMfNV/A==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nZfsH-001ah9-Na; Wed, 30 Mar 2022 21:29:05 +0000
-Date:   Wed, 30 Mar 2022 22:29:05 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Alex Sierra <alex.sierra@amd.com>
-Cc:     jgg@nvidia.com, david@redhat.com, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        akpm@linux-foundation.org
-Subject: Re: [PATCH] drm/amdkfd: Add SVM API support capability bits
-Message-ID: <YkTLoQNBEOlkJ1tV@casper.infradead.org>
-References: <20220330212420.12003-1-alex.sierra@amd.com>
+        with ESMTP id S240323AbiC3WCk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 18:02:40 -0400
+Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A29C28E29;
+        Wed, 30 Mar 2022 15:00:54 -0700 (PDT)
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4KTL3N3kj0z4x7X;
+        Thu, 31 Mar 2022 09:00:48 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+        s=201702; t=1648677649;
+        bh=iYw+8p71E5LentbCi72ec4+D2MIP7YhO4dUvkY/SOJM=;
+        h=Date:From:To:Cc:Subject:From;
+        b=CQ9xfc6wBJdZMuw7HlbUc54Esw/v2xexRAT4w9dftdloZIP7doSy7ZsquOaiLu7us
+         KZxxr9w5H+5dtiPKRERAgrgKT5UhSqw6xjh/GDhYmM+cZDsrkeg1zRPk7OsYc6eIoR
+         //1fjlT1ZdXRteJ8OXBx6EbRQUnQkYQjeL4UIyU+Meaa9CcriVRRLQmdkKzV31gEju
+         AQ1CDUeD5ZjiRp20gqo5RqUOi6jY4s0mxSTlo1XKbhYpTGtr3qQ59hohvJMmDQlSgN
+         adYyzX0mos3whviTnBi6lzHVwkXisEZnJs+P1rndBbaovyYMDJktZwdKppM7Kmxo3b
+         2dlgzJ95h6UfA==
+Date:   Thu, 31 Mar 2022 09:00:47 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: linux-next: manual merge of the xfs tree with Linus' tree
+Message-ID: <20220331090047.7c6f2e1e@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220330212420.12003-1-alex.sierra@amd.com>
+Content-Type: multipart/signed; boundary="Sig_/TkjzsN7cULUEOTgjMQprT1M";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 30, 2022 at 04:24:20PM -0500, Alex Sierra wrote:
-> From: Philip Yang <Philip.Yang@amd.com>
-> 
-> SVMAPISupported property added to HSA_CAPABILITY, the value match
-> HSA_CAPABILITY defined in Thunk spec:
-> 
-> SVMAPISupported: it will not be supported on older kernels that don't
-> have HMM or on systems with GFXv8 or older GPUs without support for
-> 48-bit virtual addresses.
-> 
-> CoherentHostAccess property added to HSA_MEMORYPROPERTY, the value match
-> HSA_MEMORYPROPERTY defined in Thunk spec:
-> 
-> CoherentHostAccess: whether or not device memory can be coherently
-> accessed by the host CPU.
+--Sig_/TkjzsN7cULUEOTgjMQprT1M
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Could you translate this commit message into English?  Reviewing
-Documentation/process/5.Posting.rst might be helpful.
+Hi all,
+
+Today's linux-next merge of the xfs tree got a conflict in:
+
+  fs/xfs/xfs_bio_io.c
+
+between commit:
+
+  49add4966d79 ("block: pass a block_device and opf to bio_init")
+
+from Linus' tree and commit:
+
+  919edbadebe1 ("xfs: drop async cache flushes from CIL commits.")
+
+from the xfs tree.
+
+I fixed it up (the latter commit removes the code modified by the former,
+so I just did that) and can carry the fix as necessary. This is now fixed
+as far as linux-next is concerned, but any non trivial conflicts should
+be mentioned to your upstream maintainer when your tree is submitted for
+merging.  You may also want to consider cooperating with the maintainer
+of the conflicting tree to minimise any particularly complex conflicts.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/TkjzsN7cULUEOTgjMQprT1M
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmJE0w8ACgkQAVBC80lX
+0Gz2JAf+MLKwDWHfyvkRpkpCVU8KdW0edxJzcG0S8GwcKt3v36qLghe/oR5AckRl
+W/MIK+0tskRXMxMqfB7XD8MPlVRSBpbZPgPiE9oJtnUMTQose6ktRTkG9lSWom2l
+wv9BaazG2kQin6x0qL9YGRmMjJEmWZ7LMB1y7SfaAwRyL8uEX2bjMxvJZKROm1z6
+udV54BuCuU7ZJW+5Rpqqurvk0gcq9MAROZ27XJJWbhRCeMWYxogiIeEEMUnysSZn
+gcyu3hMpeHMFBXNB2p2VgZEXvK8Xqe5wL/lhn9Kd9gvlLIo4INytCy6B2mhzchIw
+XbkfINaUCEwGxba8lyUq8jXuG2wlVg==
+=F1V+
+-----END PGP SIGNATURE-----
+
+--Sig_/TkjzsN7cULUEOTgjMQprT1M--
