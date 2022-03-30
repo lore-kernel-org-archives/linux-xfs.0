@@ -2,260 +2,204 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67735C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 15:08:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 969B5C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Mar 2022 15:17:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347915AbiC3PKS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Mar 2022 11:10:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58350 "EHLO
+        id S1348065AbiC3PS7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Mar 2022 11:18:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347951AbiC3PJy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 11:09:54 -0400
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FFB1B1A85
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 08:07:41 -0700 (PDT)
-Received: by mail-ed1-x530.google.com with SMTP id u26so24758979eda.12
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 08:07:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=RyjF18HmRlEQ6PnpWtptQUg1nXj5Hy4HT8Q/ZRp8lAE=;
-        b=nwGAYuXKX+L3K32hhvaBYR+xxtFe35UI9wzh5/usrDgS7L8zqHpGzQ2xq6RxU2WT+0
-         F9BPbzCohYkUwgNnoyvI/7EJXw8CtbycOSavBHfcjSEyXq8Q1zXRrVqpEarVOnq9aDxz
-         KG808SpjYFuQJhMgW+8wYLvCjV0HCgRX7DCYc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=RyjF18HmRlEQ6PnpWtptQUg1nXj5Hy4HT8Q/ZRp8lAE=;
-        b=Zt5F3yWhVCp4QOVSv8Cz5seOHr+VuOkuzw5VZSKi8ps1V88VsgRLEDBaXDuxzQzTQf
-         jsUpXA3O4miEuLbWJ+iJlqrHYpJiCD+HPRpAPqkQmxzBbTEsQts+OxHw9dOsnQdi6DL5
-         KhSAB78UH6fllN7xUC356AWWC5CSXfcUcQxjzs3D22ZQiHs5wIx0t2zQOqHU9ILA5Fyk
-         Qc9K1Kt9BgVu5AWFu4qod0R1YOrxRoPchjmYQHl81KisEYPYmVlbt3YVUSQamP4POzWv
-         weUOJ9SdsRm9Iz5Gqp28XQiSgvvkfFZV6KJa9WsK8n0256h4bgtRzvGVQazpT+AwRPiR
-         YzEQ==
-X-Gm-Message-State: AOAM530Rl7FQlm0rIwCgjyix/KIF7t20UFtRpw9h20rxLHSUN4Lp4z7I
-        ep7CGgp0ynKB6aV/9VIB7P2tZA==
-X-Google-Smtp-Source: ABdhPJzxRbGJrxsA1Iov18JVQ8+jG2dv/nDNdAXsTSWiU20N4MJKhlLHPJ6LWuSDHO4e8dIicazRWw==
-X-Received: by 2002:a50:f10e:0:b0:41b:71c4:d57 with SMTP id w14-20020a50f10e000000b0041b71c40d57mr1362106edl.254.1648652857914;
-        Wed, 30 Mar 2022 08:07:37 -0700 (PDT)
-Received: from localhost ([2620:10d:c093:400::5:c1bb])
-        by smtp.gmail.com with ESMTPSA id u4-20020aa7db84000000b004136c2c357csm9940858edt.70.2022.03.30.08.07.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Mar 2022 08:07:37 -0700 (PDT)
-Date:   Wed, 30 Mar 2022 16:07:36 +0100
-From:   Chris Down <chris@chrisdown.name>
-To:     Petr Mladek <pmladek@suse.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Jonathan Lassoff <jof@thejof.com>, linux-xfs@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        John Ogness <john.ogness@linutronix.de>
-Subject: Re: [PATCH v3 2/2] Add XFS messages to printk index
-Message-ID: <YkRyOKZ+hJYysKrR@chrisdown.name>
-References: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
- <3c3ae424913cb921a9f8abddfcb1b418e7cfa601.1648228733.git.jof@thejof.com>
- <YkMKyN9w0S8VFJRk@alley>
- <20220330003457.GB1544202@dread.disaster.area>
- <20220330004649.GG27713@magnolia>
- <20220330012624.GC1544202@dread.disaster.area>
- <20220330145955.GB4384@pathway.suse.cz>
+        with ESMTP id S1348100AbiC3PSB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 11:18:01 -0400
+Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 77E261480F2;
+        Wed, 30 Mar 2022 08:16:15 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3AtwvaI6h4vvUoVt85m0RQnGMKX161CxEKZh0ujC4?=
+ =?us-ascii?q?5NGQNrF6WrkUEmGUWCmHVOa6OZTCnKNAnPovk908P7ZPRndZqHAtsrHw8FHgiR?=
+ =?us-ascii?q?ejtX4rAdhiqV8+xwmwvdGo+toNGLICowPkcFhcwnT/wdOixxZVA/fvQHOCkUra?=
+ =?us-ascii?q?dYnkZqTJME0/NtzoywobVvaY42bBVMyvV0T/Di5W31G2NglaYAUpIg063ky6Di?=
+ =?us-ascii?q?dyp0N8uUvPSUtgQ1LPWvyF94JvyvshdJVOgKmVfNrbSq+ouUNiEEm3lExcFUrt?=
+ =?us-ascii?q?Jk57wdAsEX7zTIROTzHFRXsBOgDAb/mprjPl9b6FaNC+7iB3Q9zx14M9QvJqrW?=
+ =?us-ascii?q?EEnOLbQsOoAURhECDw4NqpDkFPCCSHl6pTCnx2XIhMAxN0rVinaJ7Yw9u9pAG1?=
+ =?us-ascii?q?m++YfLTcXZBGfwemxxdqTSuJsrsUlItPiMI4Wtjdn1z6xJfovR9bBBbrL4dtZ1?=
+ =?us-ascii?q?TIrrsFIAfvaIcEebFJHYBbfZBtAElQaEpQzmKGvnHaXWzlZrk+F4K8yy2vNxQd?=
+ =?us-ascii?q?ylr/3P7L9fMKGRMBQtkKZvX7duWD4BAwKctCS11Kt8Huqi6nEnT7TX5gbH7m1s?=
+ =?us-ascii?q?PVthTW7wm0VFQ1TW0C3rOe0jmagVN9FbU8Z4Cwjqe417kPDZt38WQCo5X2JpBg?=
+ =?us-ascii?q?RX/JOHOAgrgKA0KzZ50CeHGdsZjpAbsE28d84XhQ02VKT2dDkHzpitPuSU331y?=
+ =?us-ascii?q?1s+hVteIgBMdSlbO3BCFlBDvrHeTEgIpkqnZr5e/GSd17UZwQ3N/g0=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AMHdCR6lcfaT+oQuP8yxoprJboKPpDfIQ3DAb?=
+ =?us-ascii?q?v31ZSRFFG/Fw9vre+MjzsCWYtN9/Yh8dcK+7UpVoLUm8yXcX2/h1AV7BZniEhI?=
+ =?us-ascii?q?LAFugLgrcKqAeQeREWmNQ86Y5QN4B6CPDVSWNxlNvG5mCDeOoI8Z2q97+JiI7l?=
+ =?us-ascii?q?o0tQcQ=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
+   d="scan'208";a="123098899"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 30 Mar 2022 23:16:14 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id AEC9B4D16FF5;
+        Wed, 30 Mar 2022 23:16:11 +0800 (CST)
+Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Wed, 30 Mar 2022 23:16:11 +0800
+Received: from [10.167.201.8] (10.167.201.8) by
+ G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Wed, 30 Mar 2022 23:16:11 +0800
+Message-ID: <894ed00b-b174-6a10-ee45-320007957ea4@fujitsu.com>
+Date:   Wed, 30 Mar 2022 23:16:10 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20220330145955.GB4384@pathway.suse.cz>
-User-Agent: Mutt/2.2.2 (aa28abe8) (2022-03-25)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v11 7/8] xfs: Implement ->notify_failure() for XFS
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <djwong@kernel.org>,
+        <dan.j.williams@intel.com>, <david@fromorbit.com>,
+        <jane.chu@oracle.com>
+References: <20220227120747.711169-1-ruansy.fnst@fujitsu.com>
+ <20220227120747.711169-8-ruansy.fnst@fujitsu.com>
+ <YkPyBQer+KRiregd@infradead.org>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <YkPyBQer+KRiregd@infradead.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-yoursite-MailScanner-ID: AEC9B4D16FF5.A4774
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Petr Mladek writes:
->I understand this fear. It was my very first reaction on the printk
->index feature as well.
->
->Chris explained to me that it is exactly the opposite. I have tried to
->summarize my undestanding in the following RFC patch. I could
->send it separately for a proper review if you agree that
->this is the right way to go.
->
->I think that we will actually need to extend the section about
->the subsystem specific prefix. It seems that Chris has another
->opinion based on his real life experience with this feature.
 
-Wow, thanks for writing this up! This looks great to me, feel free to send it 
-as a real patch and I will happily add my Reviewed-by.
 
-My general opinion is that debugfs files don't mandate user-facing 
-documentation since they are by their very nature kernel developer features, 
-but you're right that it would reduce confusion here to have something written 
-to reference for people who want to add printk index entries, so this makes 
-sense.
+在 2022/3/30 14:00, Christoph Hellwig 写道:
+>> @@ -1892,6 +1893,8 @@ xfs_free_buftarg(
+>>   	list_lru_destroy(&btp->bt_lru);
+>>   
+>>   	blkdev_issue_flush(btp->bt_bdev);
+>> +	if (btp->bt_daxdev)
+>> +		dax_unregister_holder(btp->bt_daxdev, btp->bt_mount);
+>>   	fs_put_dax(btp->bt_daxdev);
+>>   
+>>   	kmem_free(btp);
+>> @@ -1939,6 +1942,7 @@ xfs_alloc_buftarg(
+>>   	struct block_device	*bdev)
+>>   {
+>>   	xfs_buftarg_t		*btp;
+>> +	int			error;
+>>   
+>>   	btp = kmem_zalloc(sizeof(*btp), KM_NOFS);
+>>   
+>> @@ -1946,6 +1950,14 @@ xfs_alloc_buftarg(
+>>   	btp->bt_dev =  bdev->bd_dev;
+>>   	btp->bt_bdev = bdev;
+>>   	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off);
+>> +	if (btp->bt_daxdev) {
+>> +		error = dax_register_holder(btp->bt_daxdev, mp,
+>> +				&xfs_dax_holder_operations);
+>> +		if (error) {
+>> +			xfs_err(mp, "DAX device already in use?!");
+>> +			goto error_free;
+>> +		}
+>> +	}
+> 
+> It seems to me that just passing the holder and holder ops to
+> fs_dax_get_by_bdev and the holder to dax_unregister_holder would
+> significantly simply the interface here.
+> 
+> Dan, what do you think?
+> 
+>> +#if IS_ENABLED(CONFIG_MEMORY_FAILURE) && IS_ENABLED(CONFIG_FS_DAX)
+> 
+> No real need for the IS_ENABLED.  Also any reason to even build this
+> file if the options are not set?  It seems like
+> xfs_dax_holder_operations should just be defined to NULL and the
+> whole file not supported if we can't support the functionality.
 
->Anyway, I send this draft now. It is getting late here. I hope
->that it will answer some questions...
->
->Here we go:
->
->From 65a6fb3b9d183434ecdd96f286439696f868fa8e Mon Sep 17 00:00:00 2001
->From: Petr Mladek <pmladek@suse.com>
->Date: Wed, 30 Mar 2022 16:47:09 +0200
->Subject: [RFC] printk/index: Printk index feature documentation
->
->Document the printk index feature. The primary motivation is to
->explain that it is not creating KABI from particular printk() calls.
->
->Signed-off-by: Petr Mladek <pmladek@suse.com>
->---
-> Documentation/core-api/printk-index.rst | 139 ++++++++++++++++++++++++
-> 1 file changed, 139 insertions(+)
-> create mode 100644 Documentation/core-api/printk-index.rst
->
->diff --git a/Documentation/core-api/printk-index.rst b/Documentation/core-api/printk-index.rst
->new file mode 100644
->index 000000000000..b5f759e97a6a
->--- /dev/null
->+++ b/Documentation/core-api/printk-index.rst
->@@ -0,0 +1,139 @@
->+.. SPDX-License-Identifier: GPL-2.0
->+
->+============
->+Printk index
->+============
->+
->+There are many ways how to control the state of the system. One important
->+source of information is the system log. It provides a lot of information,
->+including more or less important warnings and error messages.
->+
->+The system log can be monitored by some tool. It is especially useful
->+when there are many monitored systems. Such tools try to filter out
->+less important messages or known problems. They might also trigger
->+some action when a particular message appears.
->+
->+The kernel messages are evolving together with the code. They are
->+not KABI and never will be!
->+
->+It is a huge challenge for maintaining the system log monitors. It requires
->+knowing what messages were udpated and why. Finding these changes in
->+the sources would require non-trivial parsers. Also it would require
->+matching the sources with the binary kernel which is not always trivial.
->+Various changes might be backported. Various kernel versions might be used
->+on different monitored systems.
->+
->+This is where the printk index feature might become useful. It provides
->+a dump of printk formats used all over the source code used for the kernel
->+and modules on the running system. It is accessible at runtime via debugfs.
->+
->+
->+User interface
->+==============
->+
->+The index of printk formats is split into separate files for
->+for vmlinux and loaded modules, for example::
->+
->+   /sys/kernel/debug/printk/index/vmlinux
->+   /sys/kernel/debug/printk/index/ext4
->+   /sys/kernel/debug/printk/index/scsi_mod
->+
->+The content is inspired by the dynamic debug interface and looks like::
->+
->+   $> head -1 /sys/kernel/debug/printk/index/vmlinux; shuf -n 5 vmlinux
->+   # <level[,flags]> filename:line function "format"
->+   <5> block/blk-settings.c:661 disk_stack_limits "%s: Warning: Device %s is misaligned\n"
->+   <4> kernel/trace/trace.c:8296 trace_create_file "Could not create tracefs '%s' entry\n"
->+   <6> arch/x86/kernel/hpet.c:144 _hpet_print_config "hpet: %s(%d):\n"
->+   <6> init/do_mounts.c:605 prepare_namespace "Waiting for root device %s...\n"
->+   <6> drivers/acpi/osl.c:1410 acpi_no_auto_serialize_setup "ACPI: auto-serialization disabled\n"
->+
->+, where the meaning is::
->+
->+   - level: log level
->+   - flags: optional flags: currently only 'c' for KERN_CONT
->+   - filename:line: source filename and line number of the related
->+	printk() call. Note that there are many wrappers, for example,
->+	pr_warn(), pr_warn_once(), dev_warn().
->+   - function: function name where the printk() call is used.
->+   - format: format string
->+
->+The extra information makes it a bit harder to find differences
->+between various kernels. Especially the line number might change
->+very often. On the other hand, it helps a lot to confirm that
->+it is the same string or find the commit that is responsible
->+for eventual changes.
->+
->+
->+printk() as a KABI
->+==================
->+
->+Many developers are afraid that exporting all these implementation
->+details into the user space will transform particular printk() calls
->+into KABI.
->+
->+But it is exactly the opposite. printk() calls must _not_ be KABI.
->+And the printk index helps user space tools to deal with this.
->+
->+It is similar to the dynamic debug interface. It shows what debugging
->+strings might be enabled. But it does not create ABI from them.
->+
->+Or it is similar to <debugfs>/tracing/available_filter_functions.
->+It provides a list of functions that can be traced. But it does
->+not create KABI from the function names. It would prevent any
->+further development.
->+
->+
->+Subsystem specific printk wrappers
->+==================================
->+
->+The printk index is generated using extra metadata that are stored in
->+a dedicated .elf section ".printk_index". It is achieved using macro
->+wrappers doing __printk_index_emit() together with the real printk()
->+call. The same technique is used also for the metadata used by
->+the dynamic debug feature.
->+
->+The metadata are stored for a particular message only when it is printed
->+using these special wrappers. It is implemented for the commonly
->+used printk() calls, including, for example, pr_warn(), or pr_once().
->+
->+It needs additional changes for variaous subsystem specific wrappers that
->+call the original printk() via a common helper function. These needs
->+they own wrappers adding __printk_index_emit().
->+
->+Only few subsystem specific wrappers have been updated so far,
->+for example, dev_printk(). Only the generic string from the common
->+helper function appears in the printk index for others.
->+
->+
->+Subsystem specific prefix
->+=========================
->+
->+The macro pr_fmt() macro allows to define a prefix that is printed
->+before the string generated by the related printk() calls.
->+
->+Subsystem specific wrappers usually add even more complicated
->+prefixes.
->+
->+These prefixes can be stored into the printk index metadata
->+by an optional parameter of __printk_index_emit(). The debugfs
->+interface might then show the printk formats including these prefixes.
->+For example, drivers/acpi/osl.c contains::
->+
->+  #define pr_fmt(fmt) "ACPI: OSL: " fmt
->+
->+  static int __init acpi_no_auto_serialize_setup(char *str)
->+  {
->+	acpi_gbl_auto_serialize_methods = FALSE;
->+	pr_info("Auto-serialization disabled\n");
->+
->+	return 1;
->+  }
->+
->+I results into printk index entry::
->+
->+  <6> drivers/acpi/osl.c:1410 acpi_no_auto_serialize_setup "ACPI: auto-serialization disabled\n"
->+
->+It helps matching messages from the real log with printk index.
->+Then the source file name, line number, and function name can
->+be used to match the string with the source code.
->-- 
->2.34.1
+Got it.  These two CONFIG seem not related for now.  So, I think I 
+should wrap these code with #ifdef CONFIG_MEMORY_FAILURE here, and add 
+`xfs-$(CONFIG_FS_DAX) += xfs_notify_failure.o` in the makefile.
+
+> 
+> Dan: not for this series, but is there any reason not to require
+> MEMORY_FAILURE for DAX to start with?
+> 
+>> +
+>> +	ddev_start = mp->m_ddev_targp->bt_dax_part_off;
+>> +	ddev_end = ddev_start +
+>> +		(mp->m_ddev_targp->bt_bdev->bd_nr_sectors << SECTOR_SHIFT) - 1;
+> 
+> This should use bdev_nr_bytes.
+
+OK.
+
+> 
+> But didn't we say we don't want to support notifications on partitioned
+> devices and thus don't actually need all this?
+> 
+>> +
+>> +	/* Ignore the range out of filesystem area */
+>> +	if ((offset + len) < ddev_start)
+> 
+> No need for the inner braces.
+> 
+>> +	if ((offset + len) > ddev_end)
+> 
+> No need for the braces either.
+
+Really no need?  It is to make sure the range to be handled won't out of 
+the filesystem area.  And make sure the @offset and @len are valid and 
+correct after subtract the bbdev_start.
+
+> 
+>> diff --git a/fs/xfs/xfs_notify_failure.h b/fs/xfs/xfs_notify_failure.h
+>> new file mode 100644
+>> index 000000000000..76187b9620f9
+>> --- /dev/null
+>> +++ b/fs/xfs/xfs_notify_failure.h
+>> @@ -0,0 +1,10 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+>> +/*
+>> + * Copyright (c) 2022 Fujitsu.  All Rights Reserved.
+>> + */
+>> +#ifndef __XFS_NOTIFY_FAILURE_H__
+>> +#define __XFS_NOTIFY_FAILURE_H__
+>> +
+>> +extern const struct dax_holder_operations xfs_dax_holder_operations;
+>> +
+>> +#endif  /* __XFS_NOTIFY_FAILURE_H__ */
+> 
+> Dowe really need a new header for this vs just sequeezing it into
+> xfs_super.h or something like that?
+
+Yes, I'll move it into xfs_super.h.  The xfs_notify_failure.c was 
+splitted from xfs_super.c in the old patch.  There is no need to create 
+a header file for only single line of code.
+
+> 
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index e8f37bdc8354..b8de6ed2c888 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -353,6 +353,12 @@ xfs_setup_dax_always(
+>>   		return -EINVAL;
+>>   	}
+>>   
+>> +	if (xfs_has_reflink(mp) && !xfs_has_rmapbt(mp)) {
+>> +		xfs_alert(mp,
+>> +			"need rmapbt when both DAX and reflink enabled.");
+>> +		return -EINVAL;
+>> +	}
+> 
+> Right now we can't even enable reflink with DAX yet, so adding this
+> here seems premature - it should go into the patch allowing DAX+reflink.
+> 
+
+Yes.  I'll remove it for now.
+
+
+--
+Thanks,
+Ruan.
+
+
