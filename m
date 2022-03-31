@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82003C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Mar 2022 01:38:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F271BC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Mar 2022 01:38:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229761AbiCaBkG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Mar 2022 21:40:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49450 "EHLO
+        id S230087AbiCaBkJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Mar 2022 21:40:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231608AbiCaBkF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 21:40:05 -0400
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53E9148397
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 18:38:19 -0700 (PDT)
-Received: by mail-pj1-x102b.google.com with SMTP id gp15-20020a17090adf0f00b001c7cd11b0b3so1286214pjb.3
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 18:38:19 -0700 (PDT)
+        with ESMTP id S229497AbiCaBkI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 21:40:08 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79DDA13FAA
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 18:38:22 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id h19so19532895pfv.1
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 18:38:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=thejof-com.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Xw7RLQ8jPr9pDvggZI8sJKLCi+qPLFlZH0oZobFefqw=;
-        b=V7gptV+GtHXrbrTHm84Ir4WaWeOAYnNUileySq5mYmvepeFbLmCoYHISEyUYvOOhKu
-         Jib3JZjyOu4aha1Z2h8j5xyC7Au66jMj/fy8x7E/opdvX239KHqthbi307uaBZcgAXch
-         PlLrvBQTKOYdSQjkeHCJEi0CoNWBaOExuJVcEVaQ3PFbnKscQ1/owBLiN8/f1w2GCvlM
-         iONiLiBgzb0vBDnICR2ttKDFo3kWNsfyJQtpihUrqb7tlY3wE42sPLFZbCIPpSE1otmc
-         yE5ycK4m5ckZQaJamGK+TSbFK4JVcG5pNvEH15j71zZnxd2IlrXHykVIERzSZiT9LJxA
-         RIaQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=kA66vukS9VAEicg9fn9XAr7dPAMS7NdsRB1eYEHKYnY=;
+        b=xos1tGABHRL8UcXpfb7bS5fkbDh35dA40zz9HNop5dE6g9ParLLRFB3CHd1GPxjqyX
+         I5fK7r9+vPAEVfd+s2FS+FRpnrDI3i+cnTexoKosIwQb/4MoJ1fXwIhiQcbrP2KZXBDz
+         VvM1IdCf+4nLCcFpPhRY9on42riEH/ecQY0Z50IW3TWwKxHcwBR9nY73/2j7jI+CfFl7
+         3br5ReU5yS0ahdU0Jk84d20CqNLVWzWb91hViC2n0RxEj4MVG2L8doZgphSR0LFhvWMx
+         kqGyOGmG27RfxYWGSGJvf9zVAsNszkmx9ov0WkZMnqXtP1nENpESGIsCZZZLDVWH93RI
+         iVsQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Xw7RLQ8jPr9pDvggZI8sJKLCi+qPLFlZH0oZobFefqw=;
-        b=1m9AensgDedKezhkWhoHlHoJWn0guD9zpoSFiFP9J5bv2utAMByekM9BGKmfJfoT8Q
-         biIc1KgoZlAwcVXErWI9VwtRuqPNYOTj3DcR6g9GOGB+XZpG4G3aPiOSvZfvfIoOg7Qm
-         ti5rttfEi7kVWg6GRGSZNybSFTl18TYYD304jQzIEh0orfgN4nABipm6F3+TmkC8D436
-         qCQRX9jRvDulMN3SaJcyBbJ6cIw4iw3V5MNdtfaTPsVre3GDyoo2ClMMGrh3mskv60ng
-         8IAyMiKRu0w6fHYTbs0F5Py6hdRV/U8+8uJewjkzNv6NEJSPl4cvcIbqrU6eVhYGFX9i
-         h8eA==
-X-Gm-Message-State: AOAM531OJkuD0OdndXabouS2RFU5gg1bJ3QCY2bL/TIJC6WyPTnuUMB+
-        AQ612vQEluHDgWNN0Bh5wEeHZKv6FATIjrnoPWbRNQ==
-X-Google-Smtp-Source: ABdhPJxPXmxDhDcpG/xr00G64nc2LvXbICU1R/w7Fpq8ypWjBl9rRkmPWUVy5xa0aUDK6+qGz35xVg==
-X-Received: by 2002:a17:90a:8d85:b0:1b8:a215:e3e4 with SMTP id d5-20020a17090a8d8500b001b8a215e3e4mr3128655pjo.175.1648690698193;
-        Wed, 30 Mar 2022 18:38:18 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=kA66vukS9VAEicg9fn9XAr7dPAMS7NdsRB1eYEHKYnY=;
+        b=X6um1Ox6Ia5O2kjtHhLddZyJmTVCbCpxrXzlkPpu4/hp8hF4ZZNmw0ZMukq0D3yMF0
+         oUSz+2U31sMQvi/cuhGRru+kEMKJgi5gKM3eTbnm2DN2qXQDzq6QL/v+f4bETmDXkO4g
+         RwMt2pIS6k+yDqqBFe4LGekvyScCDMgzhXVeW1jGvZh3X7v4UxtFahpxMb+KmNBwZzKj
+         Abf2dI5iYCgsqoizXzm7tnmhreXIJg/B81q/5GbQDSSxHqKWH0nrY8uzNsw7Shjl5GIF
+         aM1h4mfgZatoN5H4O7BknjqAm2v1omj8gesyYcue5QVgOZhocBYrR7aW9PtO1A7GIWIG
+         IQ2A==
+X-Gm-Message-State: AOAM532uArnJm9SOBMnNLGXOb2AtGC9UTIjMI7/s091rMdnG7TZuPDEH
+        uDQilfchlVQkuYpOVZcoiSyfWhMBYcl6K/ZpbReRVw==
+X-Google-Smtp-Source: ABdhPJxpP3XIjwOYYDvKoxezgM7qGszKlWc2CyVRA1MWgcQEp1Y5+e6adNlr2eYtWODzNwiBRBb4ZQ==
+X-Received: by 2002:a05:6a00:2990:b0:4fa:dacf:2e3 with SMTP id cj16-20020a056a00299000b004fadacf02e3mr2691339pfb.67.1648690701471;
+        Wed, 30 Mar 2022 18:38:21 -0700 (PDT)
 Received: from banyan.flat.jof.io (192-184-176-137.fiber.dynamic.sonic.net. [192.184.176.137])
-        by smtp.gmail.com with ESMTPSA id 13-20020aa7920d000000b004fa94f26b48sm24102882pfo.118.2022.03.30.18.38.16
+        by smtp.gmail.com with ESMTPSA id 13-20020aa7920d000000b004fa94f26b48sm24102882pfo.118.2022.03.30.18.38.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Mar 2022 18:38:17 -0700 (PDT)
+        Wed, 30 Mar 2022 18:38:20 -0700 (PDT)
 From:   Jonathan Lassoff <jof@thejof.com>
 To:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Dave Chinner <david@fromorbit.com>,
@@ -56,22 +56,36 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         Steven Rostedt <rostedt@goodmis.org>,
         John Ogness <john.ogness@linutronix.de>,
         Jonathan Lassoff <jof@thejof.com>
-Subject: [PATCH v4 1/2] Simplify XFS logging methods.
-Date:   Wed, 30 Mar 2022 18:38:05 -0700
-Message-Id: <d51e0e0ffc7709010f601ab3c910056379479143.1648690634.git.jof@thejof.com>
+Subject: [PATCH v4 2/2] Add XFS messages to printk index
+Date:   Wed, 30 Mar 2022 18:38:06 -0700
+Message-Id: <331dd6ef9d04ad836588d8ec417b5d5d6fc35393.1648690634.git.jof@thejof.com>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <d51e0e0ffc7709010f601ab3c910056379479143.1648690634.git.jof@thejof.com>
+References: <d51e0e0ffc7709010f601ab3c910056379479143.1648690634.git.jof@thejof.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Rather than have a constructor to define many nearly-identical
-functions, use preprocessor macros to pass down a kernel logging level
-to a common function.
+In order for end users to quickly react to new issues that come up in
+production, it is proving useful to leverage the printk indexing system.
+
+This printk index enables kernel developers to use calls to printk()
+with changeable format strings (as they always have; no change of
+expectations), while enabling end users to examine format strings to
+detect changes.
+Since end users are using regular expressions to match messages printed
+through printk(), being able to detect changes in chosen format strings
+from release to release provides a useful signal to review
+printk()-matching regular expressions for any necessary updates.
+
+So that detailed XFS messages are captures by this printk index, this
+patch wraps the xfs_<level> and xfs_alert_tag functions.
 
 Signed-off-by: Jonathan Lassoff <jof@thejof.com>
 Reviewed-by: Chris Down <chris@chrisdown.name>
+Reviewed-by: Petr Mladek <pmladek@suse.com>
 ---
 
 Notes:
@@ -84,140 +98,79 @@ Notes:
     [PATCH v3]
       * Add a missing semicolon. *facepalm*
     [PATCH v4]
-      * Fixup formatting, whitespace, and grouping.
-      * Update commit message to clarify intended usage.
+      * Fixup formatting in XFS printk simplification.
 
- fs/xfs/xfs_message.c | 54 +++++++++++++++++++-------------------------
- fs/xfs/xfs_message.h | 43 ++++++++++++++++++-----------------
- 2 files changed, 45 insertions(+), 52 deletions(-)
+ fs/xfs/xfs_message.c |  2 +-
+ fs/xfs/xfs_message.h | 29 ++++++++++++++++++++---------
+ 2 files changed, 21 insertions(+), 10 deletions(-)
 
 diff --git a/fs/xfs/xfs_message.c b/fs/xfs/xfs_message.c
-index bc66d95c8d4c..9ceebd4c9ff1 100644
+index 9ceebd4c9ff1..22c2adff1260 100644
 --- a/fs/xfs/xfs_message.c
 +++ b/fs/xfs/xfs_message.c
-@@ -27,37 +27,29 @@ __xfs_printk(
- 	printk("%sXFS: %pV\n", level, vaf);
+@@ -52,7 +52,7 @@ xfs_printk_level(
  }
  
--#define define_xfs_printk_level(func, kern_level)		\
--void func(const struct xfs_mount *mp, const char *fmt, ...)	\
--{								\
--	struct va_format	vaf;				\
--	va_list			args;				\
--	int			level;				\
--								\
--	va_start(args, fmt);					\
--								\
--	vaf.fmt = fmt;						\
--	vaf.va = &args;						\
--								\
--	__xfs_printk(kern_level, mp, &vaf);			\
--	va_end(args);						\
--								\
--	if (!kstrtoint(kern_level, 0, &level) &&		\
--	    level <= LOGLEVEL_ERR &&				\
--	    xfs_error_level >= XFS_ERRLEVEL_HIGH)		\
--		xfs_stack_trace();				\
--}								\
--
--define_xfs_printk_level(xfs_emerg, KERN_EMERG);
--define_xfs_printk_level(xfs_alert, KERN_ALERT);
--define_xfs_printk_level(xfs_crit, KERN_CRIT);
--define_xfs_printk_level(xfs_err, KERN_ERR);
--define_xfs_printk_level(xfs_warn, KERN_WARNING);
--define_xfs_printk_level(xfs_notice, KERN_NOTICE);
--define_xfs_printk_level(xfs_info, KERN_INFO);
--#ifdef DEBUG
--define_xfs_printk_level(xfs_debug, KERN_DEBUG);
--#endif
-+void
-+xfs_printk_level(
-+	const char *kern_level,
-+	const struct xfs_mount *mp,
-+	const char *fmt, ...)
-+{
-+	struct va_format	vaf;
-+	va_list			args;
-+	int			level;
-+
-+	va_start(args, fmt);
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	__xfs_printk(kern_level, mp, &vaf);
-+
-+	va_end(args);
-+
-+	if (!kstrtoint(kern_level, 0, &level) &&
-+	    level <= LOGLEVEL_ERR &&
-+	    xfs_error_level >= XFS_ERRLEVEL_HIGH)
-+		xfs_stack_trace();
-+}
- 
  void
- xfs_alert_tag(
+-xfs_alert_tag(
++_xfs_alert_tag(
+ 	const struct xfs_mount	*mp,
+ 	int			panic_tag,
+ 	const char		*fmt, ...)
 diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
-index bb9860ec9a93..a281b1cc13d5 100644
+index a281b1cc13d5..035ee3d244ac 100644
 --- a/fs/xfs/xfs_message.h
 +++ b/fs/xfs/xfs_message.h
-@@ -6,33 +6,34 @@
+@@ -10,29 +10,40 @@ extern __printf(3, 4)
+ void xfs_printk_level(const char *kern_level, const struct xfs_mount *mp,
+ 			const char *fmt, ...);
  
- struct xfs_mount;
- 
--extern __printf(2, 3)
--void xfs_emerg(const struct xfs_mount *mp, const char *fmt, ...);
--extern __printf(2, 3)
--void xfs_alert(const struct xfs_mount *mp, const char *fmt, ...);
- extern __printf(3, 4)
--void xfs_alert_tag(const struct xfs_mount *mp, int tag, const char *fmt, ...);
--extern __printf(2, 3)
--void xfs_crit(const struct xfs_mount *mp, const char *fmt, ...);
--extern __printf(2, 3)
--void xfs_err(const struct xfs_mount *mp, const char *fmt, ...);
--extern __printf(2, 3)
--void xfs_warn(const struct xfs_mount *mp, const char *fmt, ...);
--extern __printf(2, 3)
--void xfs_notice(const struct xfs_mount *mp, const char *fmt, ...);
--extern __printf(2, 3)
--void xfs_info(const struct xfs_mount *mp, const char *fmt, ...);
-+void xfs_printk_level(const char *kern_level, const struct xfs_mount *mp,
-+			const char *fmt, ...);
- 
-+#define xfs_emerg(mp, fmt, ...) \
-+	xfs_printk_level(KERN_EMERG, mp, fmt, ##__VA_ARGS__)
-+#define xfs_alert(mp, fmt, ...) \
-+	xfs_printk_level(KERN_ALERT, mp, fmt, ##__VA_ARGS__)
-+#define xfs_crit(mp, fmt, ...) \
-+	xfs_printk_level(KERN_CRIT, mp, fmt, ##__VA_ARGS__)
-+#define xfs_err(mp, fmt, ...) \
-+	xfs_printk_level(KERN_ERR, mp, fmt, ##__VA_ARGS__)
-+#define xfs_warn(mp, fmt, ...) \
-+	xfs_printk_level(KERN_WARNING, mp, fmt, ##__VA_ARGS__)
-+#define xfs_notice(mp, fmt, ...) \
-+	xfs_printk_level(KERN_NOTICE, mp, fmt, ##__VA_ARGS__)
-+#define xfs_info(mp, fmt, ...) \
-+	xfs_printk_level(KERN_INFO, mp, fmt, ##__VA_ARGS__)
++#define xfs_printk_index_wrap(kern_level, mp, fmt, ...)		\
++({								\
++	printk_index_subsys_emit("%sXFS%s: ", kern_level, fmt);	\
++	xfs_printk_level(kern_level, mp, fmt, ##__VA_ARGS__);	\
++})
+ #define xfs_emerg(mp, fmt, ...) \
+-	xfs_printk_level(KERN_EMERG, mp, fmt, ##__VA_ARGS__)
++	xfs_printk_index_wrap(KERN_EMERG, mp, fmt, ##__VA_ARGS__)
+ #define xfs_alert(mp, fmt, ...) \
+-	xfs_printk_level(KERN_ALERT, mp, fmt, ##__VA_ARGS__)
++	xfs_printk_index_wrap(KERN_ALERT, mp, fmt, ##__VA_ARGS__)
+ #define xfs_crit(mp, fmt, ...) \
+-	xfs_printk_level(KERN_CRIT, mp, fmt, ##__VA_ARGS__)
++	xfs_printk_index_wrap(KERN_CRIT, mp, fmt, ##__VA_ARGS__)
+ #define xfs_err(mp, fmt, ...) \
+-	xfs_printk_level(KERN_ERR, mp, fmt, ##__VA_ARGS__)
++	xfs_printk_index_wrap(KERN_ERR, mp, fmt, ##__VA_ARGS__)
+ #define xfs_warn(mp, fmt, ...) \
+-	xfs_printk_level(KERN_WARNING, mp, fmt, ##__VA_ARGS__)
++	xfs_printk_index_wrap(KERN_WARNING, mp, fmt, ##__VA_ARGS__)
+ #define xfs_notice(mp, fmt, ...) \
+-	xfs_printk_level(KERN_NOTICE, mp, fmt, ##__VA_ARGS__)
++	xfs_printk_index_wrap(KERN_NOTICE, mp, fmt, ##__VA_ARGS__)
+ #define xfs_info(mp, fmt, ...) \
+-	xfs_printk_level(KERN_INFO, mp, fmt, ##__VA_ARGS__)
++	xfs_printk_index_wrap(KERN_INFO, mp, fmt, ##__VA_ARGS__)
  #ifdef DEBUG
--extern __printf(2, 3)
--void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...);
-+#define xfs_debug(mp, fmt, ...) \
-+	xfs_printk_level(KERN_DEBUG, mp, fmt, ##__VA_ARGS__)
+ #define xfs_debug(mp, fmt, ...) \
+-	xfs_printk_level(KERN_DEBUG, mp, fmt, ##__VA_ARGS__)
++	xfs_printk_index_wrap(KERN_DEBUG, mp, fmt, ##__VA_ARGS__)
  #else
--static inline __printf(2, 3)
--void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
--{
--}
-+#define xfs_debug(mp, fmt, ...) do {} while (0)
+ #define xfs_debug(mp, fmt, ...) do {} while (0)
  #endif
  
-+extern __printf(3, 4)
-+void xfs_alert_tag(const struct xfs_mount *mp, int tag, const char *fmt, ...);
++#define xfs_alert_tag(mp, tag, fmt, ...)			\
++({								\
++	printk_index_subsys_emit("%sXFS%s: ", KERN_ALERT, fmt);	\
++	_xfs_alert_tag(mp, tag, fmt, ##__VA_ARGS__);		\
++})
 +
+ extern __printf(3, 4)
+-void xfs_alert_tag(const struct xfs_mount *mp, int tag, const char *fmt, ...);
++void _xfs_alert_tag(const struct xfs_mount *mp, int tag, const char *fmt, ...);
+ 
  #define xfs_printk_ratelimited(func, dev, fmt, ...)			\
  do {									\
- 	static DEFINE_RATELIMIT_STATE(_rs,				\
-
-base-commit: 787af64d05cd528aac9ad16752d11bb1c6061bb9
 -- 
 2.35.1
 
