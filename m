@@ -2,192 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E116BC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Mar 2022 01:38:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 325F3C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Mar 2022 04:14:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231608AbiCaBkO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Mar 2022 21:40:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49904 "EHLO
+        id S229491AbiCaEQE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Mar 2022 00:16:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbiCaBkN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Mar 2022 21:40:13 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B42C013FAA
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 18:38:25 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id b24so26450150edu.10
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Mar 2022 18:38:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=thejof-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=gAgRS/ShScj1cT+FPSiK6LTNDcAE+AwE8jKvwbqdpyY=;
-        b=LfQ6N5ooCoZT66+7rFuHe/SJy/tqUrRrTSfxpP2M6YCAXEdB5J/Qc5iM8lFB1OnZG0
-         7ioujkNeKR37d8Yin+sybUdHCb6AbHZBJS5QZ92Kmq0zZMWIYk8N8YH8lIHDQs277HhX
-         GvU9+/mLdxiLt8EtciQ4xl7V9XcXNmzphjeNHCyk4RMcEFFFQkobnOqfF956cGMC716T
-         J1XYK0oeS7/ZulGHiERnropTuZ1ATVfCZaYvmm8dmNbNQTTkSWBClMVTqtgyLAIUdIDV
-         MzUqv41CNsI8iK3FZAsKA+o/KQYBz0R/WKNPOyGua4Mvu3NHVAqU2Bzd6O5RLXICIg79
-         T4yA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=gAgRS/ShScj1cT+FPSiK6LTNDcAE+AwE8jKvwbqdpyY=;
-        b=Gj3YJY2uRiYlO+M8z0bbOcMdWWYMk8bLf444W+1r4V3oxweE5k51xxKVmhGUvBrg60
-         B9BwAS9m2cYRagAoyK9/wCh+tVmaqEX0yfS6jFB9mTKzLArltmkxATdc65OCcOnBGH5Q
-         mBHn8d+6B98kogcDtyv0ASbIbYcvvCiygrf1UlPa4fUirQO0YBw/Z2gBRNZDkwaNf7vz
-         NLNJq9FxMCu+FAKJHjGjVHRilVSY+tBru2x12p5km/KCNSF5+bCVkLcVNsw2R2SUputU
-         2bLQAtft3fU9ym54aK/ylfLLgDBJumWsBIInf2U4mdOenC7cLoqTK3X9jEtvTRlEm5in
-         zvJw==
-X-Gm-Message-State: AOAM532z/3MOiOdhjU/V74L81A4W2KpsXorXXohFXd0EY+kjCYFAirI6
-        W+dow8JMJ3ouUMRtHoTLp4fBgPXN/Lz+Rtx5qycQrA==
-X-Google-Smtp-Source: ABdhPJwBCWlYhyoiuImpTUNlab8CXn72EhWkk7+V5zC+tq3ch+5v+4uEd/TnDZ31R9wQpvmPHQJTptpQKvxlOm7YXTA=
-X-Received: by 2002:a05:6402:1706:b0:419:1548:8119 with SMTP id
- y6-20020a056402170600b0041915488119mr14239618edu.126.1648690704322; Wed, 30
- Mar 2022 18:38:24 -0700 (PDT)
-MIME-Version: 1.0
-References: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
- <3c3ae424913cb921a9f8abddfcb1b418e7cfa601.1648228733.git.jof@thejof.com> <YkRIBtx2qMtu9wPG@chrisdown.name>
-In-Reply-To: <YkRIBtx2qMtu9wPG@chrisdown.name>
-From:   Jonathan Lassoff <jof@thejof.com>
-Date:   Thu, 31 Mar 2022 01:38:13 +0000
-Message-ID: <CAHsqw9sgryk2icrij2Vax-=jO8RRG_MkdeiopYc+b+G6h+A0Rg@mail.gmail.com>
-Subject: Re: [PATCH v3 2/2] Add XFS messages to printk index
-To:     Chris Down <chris@chrisdown.name>
-Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Petr Mladek <pmladek@suse.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        John Ogness <john.ogness@linutronix.de>
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S230138AbiCaEPS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Mar 2022 00:15:18 -0400
+Received: from mxct.zte.com.cn (mxct.zte.com.cn [58.251.27.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A80044A19;
+        Wed, 30 Mar 2022 20:47:48 -0700 (PDT)
+Received: from mxde.zte.com.cn (unknown [10.35.8.64])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mxct.zte.com.cn (FangMail) with ESMTPS id 4KTTNP59wXzXq2m;
+        Thu, 31 Mar 2022 11:31:01 +0800 (CST)
+Received: from mxus.zte.com.cn (unknown [10.207.168.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mxde.zte.com.cn (FangMail) with ESMTPS id 4KTTMb2Zk4zB5lqQ;
+        Thu, 31 Mar 2022 11:30:19 +0800 (CST)
+Received: from mxhk.zte.com.cn (unknown [192.168.250.138])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mxus.zte.com.cn (FangMail) with ESMTPS id 4KTTLy24h1zdmX8j;
+        Thu, 31 Mar 2022 11:29:46 +0800 (CST)
+Received: from mse-fl2.zte.com.cn (unknown [10.30.14.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4KTTLL3NNKz7jZxb;
+        Thu, 31 Mar 2022 11:29:14 +0800 (CST)
+Received: from szxlzmapp04.zte.com.cn ([10.5.231.166])
+        by mse-fl2.zte.com.cn with SMTP id 22V3SxJ5037956;
+        Thu, 31 Mar 2022 11:28:59 +0800 (GMT-8)
+        (envelope-from wang.yi59@zte.com.cn)
+Received: from mapi (szxlzmapp02[null])
+        by mapi (Zmail) with MAPI id mid14;
+        Thu, 31 Mar 2022 11:28:59 +0800 (CST)
+Date:   Thu, 31 Mar 2022 11:28:59 +0800 (CST)
+X-Zmail-TransId: 2b0462451ffbffffffffa16-b94ad
+X-Mailer: Zmail v1.0
+Message-ID: <202203311128598207170@zte.com.cn>
+In-Reply-To: <20220331003826.GL27690@magnolia>
+References: 20220331080256.1874-1-wang.yi59@zte.com.cn,20220331003826.GL27690@magnolia
+Mime-Version: 1.0
+From:   <wang.yi59@zte.com.cn>
+To:     <djwong@kernel.org>
+Cc:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <xue.zhihong@zte.com.cn>, <wang.liang82@zte.com.cn>,
+        <cheng.lin130@zte.com.cn>
+Subject: =?UTF-8?B?UmU6W1BBVENIXSB4ZnM6IGdldGF0dHIgaWdub3JlIGJsb2NrcyBiZXlvbmQgZW9m?=
+Content-Type: text/plain;
+        charset="UTF-8"
+X-MAIL: mse-fl2.zte.com.cn 22V3SxJ5037956
+X-Fangmail-Gw-Spam-Type: 0
+X-FangMail-Miltered: at cgslv5.04-192.168.251.14.novalocal with ID 62452074.000 by FangMail milter!
+X-FangMail-Envelope: 1648697461/4KTTNP59wXzXq2m/62452074.000/10.35.8.64/[10.35.8.64]/mxde.zte.com.cn/<wang.yi59@zte.com.cn>
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 62452074.000/4KTTNP59wXzXq2m
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Thanks for the useful feedback from all. I've integrated the
-formatting suggestions and will follow up with a [PATCH v4] set.
+>> From: Cheng Lin <cheng.lin130@zte.com.cn>
+>>
+>> Blocks beyond EOF, which preallocated, will be reclaimed at some time.
+>> These blocks can be ignored when getattr.
+>>
+>> This patch will optimize query accuracy for getattr blocks.
+>Huh? This subtracts posteof blocks from the query results, which makes
+>the results *less accurate*. Those blocks are mapped to the file, hence
+>they are supposed to be counted in nblocks.
+>--D
+Yes, those blocks are mapped to the file. And the results including them are
+absolutely real for xfs, at the moment of query.
 
-My initial commit message describing a "semi-stable interface" was a
-poor choice of words on my part. My idea of "interface" was users
-comparing the index entries from release to release and developing on
-top of that; I didn't take into consideration the contextual meaning
-of "interface" in Kernel development. This change doesn't create or
-alter any interfaces, this just makes the backing store of information
-for an existing interface more correct and complete.
-It is my hope that once these changes are made, XFS maintainers will
-hardly need to engage with or keep track of this printk indexing
-effort. These are only needed because printk() isn't called directly.
+But, those blocks are like the credit without consumption, are unstalbe, and
+will be reclaimed at some time. This may cause trouble for the application.
+e.g. in a case,
+1. Firstly, write 100k data to file;
+2. query the result;
+3. close the file;
+4. query the result.
 
--- jof
+fd stat wrt[96 @ 393216]: blks[896], size[397312].
+fd stat wrt[97 @ 397312]: blks[896], size[401408].
+fd stat wrt[98 @ 401408]: blks[896], size[405504].
+fd stat wrt[99 @ 405504]: blks[896], size[409600].
+lstat open: blks[896], size[409600].
+lstat close: blks[800], size[409600].
 
-On Wed, 30 Mar 2022 at 12:07, Chris Down <chris@chrisdown.name> wrote:
->
-> Jonathan Lassoff writes:
-> >In order for end users to quickly react to new issues that come up in
-> >production, it is proving useful to leverage the printk indexing system.
-> >This printk index enables kernel developers to use calls to printk()
-> >with changeable ad-hoc format strings, while still enabling end users
-> >to detect changes from release to release.
-> >
-> >So that detailed XFS messages are captures by this printk index, this
-> >patch wraps the xfs_<level> and xfs_alert_tag functions.
-> >
-> >Signed-off-by: Jonathan Lassoff <jof@thejof.com>
->
-> After Dave's suggested whitespace/ordering fixup, feel free to add:
->
-> Reviewed-by: Chris Down <chris@chrisdown.name>
->
-> Thanks!
->
-> >---
-> >
-> >Notes:
-> >    [PATCH v1]
-> >      * De-duplicate kernel logging levels and tidy whitespace.
-> >    [PATCH v2]
-> >      * Split changes into two patches:
-> >         - function and prototype de-duplication.
-> >         - Adding printk indexing
-> >    [PATCH v3]
-> >      * Fix some whitespace and semicolon. *facepalm*
-> >
-> > fs/xfs/xfs_message.c |  2 +-
-> > fs/xfs/xfs_message.h | 29 ++++++++++++++++++++---------
-> > 2 files changed, 21 insertions(+), 10 deletions(-)
-> >
-> >diff --git a/fs/xfs/xfs_message.c b/fs/xfs/xfs_message.c
-> >index ede8a4f2f676..f01efad20420 100644
-> >--- a/fs/xfs/xfs_message.c
-> >+++ b/fs/xfs/xfs_message.c
-> >@@ -51,7 +51,7 @@ void xfs_printk_level(
-> > }
-> >
-> > void
-> >-xfs_alert_tag(
-> >+_xfs_alert_tag(
-> >       const struct xfs_mount  *mp,
-> >       int                     panic_tag,
-> >       const char              *fmt, ...)
-> >diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
-> >index 2f609800e806..6f9a1b67c4d7 100644
-> >--- a/fs/xfs/xfs_message.h
-> >+++ b/fs/xfs/xfs_message.h
-> >@@ -6,34 +6,45 @@
-> >
-> > struct xfs_mount;
-> >
-> >+#define xfs_printk_index_wrap(kern_level, mp, fmt, ...)               \
-> >+({                                                            \
-> >+      printk_index_subsys_emit("%sXFS%s: ", kern_level, fmt); \
-> >+      xfs_printk_level(kern_level, mp, fmt, ##__VA_ARGS__);   \
-> >+})
-> > extern __printf(3, 4)
-> > void xfs_printk_level(
-> >       const char *kern_level,
-> >       const struct xfs_mount *mp,
-> >       const char *fmt, ...);
-> > #define xfs_emerg(mp, fmt, ...) \
-> >-      xfs_printk_level(KERN_EMERG, mp, fmt, ##__VA_ARGS__)
-> >+      xfs_printk_index_wrap(KERN_EMERG, mp, fmt, ##__VA_ARGS__)
-> > #define xfs_alert(mp, fmt, ...) \
-> >-      xfs_printk_level(KERN_ALERT, mp, fmt, ##__VA_ARGS__)
-> >+      xfs_printk_index_wrap(KERN_ALERT, mp, fmt, ##__VA_ARGS__)
-> > #define xfs_crit(mp, fmt, ...) \
-> >-      xfs_printk_level(KERN_CRIT, mp, fmt, ##__VA_ARGS__)
-> >+      xfs_printk_index_wrap(KERN_CRIT, mp, fmt, ##__VA_ARGS__)
-> > #define xfs_err(mp, fmt, ...) \
-> >-      xfs_printk_level(KERN_ERR, mp, fmt, ##__VA_ARGS__)
-> >+      xfs_printk_index_wrap(KERN_ERR, mp, fmt, ##__VA_ARGS__)
-> > #define xfs_warn(mp, fmt, ...) \
-> >-      xfs_printk_level(KERN_WARNING, mp, fmt, ##__VA_ARGS__)
-> >+      xfs_printk_index_wrap(KERN_WARNING, mp, fmt, ##__VA_ARGS__)
-> > #define xfs_notice(mp, fmt, ...) \
-> >-      xfs_printk_level(KERN_NOTICE, mp, fmt, ##__VA_ARGS__)
-> >+      xfs_printk_index_wrap(KERN_NOTICE, mp, fmt, ##__VA_ARGS__)
-> > #define xfs_info(mp, fmt, ...) \
-> >-      xfs_printk_level(KERN_INFO, mp, fmt, ##__VA_ARGS__)
-> >+      xfs_printk_index_wrap(KERN_INFO, mp, fmt, ##__VA_ARGS__)
-> > #ifdef DEBUG
-> > #define xfs_debug(mp, fmt, ...) \
-> >-      xfs_printk_level(KERN_DEBUG, mp, fmt, ##__VA_ARGS__)
-> >+      xfs_printk_index_wrap(KERN_DEBUG, mp, fmt, ##__VA_ARGS__)
-> > #else
-> > #define xfs_debug(mp, fmt, ...) do {} while (0)
-> > #endif
-> >
-> >+#define xfs_alert_tag(mp, tag, fmt, ...)                      \
-> >+({                                                            \
-> >+      printk_index_subsys_emit("%sXFS%s: ", KERN_ALERT, fmt); \
-> >+      _xfs_alert_tag(mp, tag, fmt, ##__VA_ARGS__);            \
-> >+})
-> >+
-> > extern __printf(3, 4)
-> >-void xfs_alert_tag(const struct xfs_mount *mp, int tag, const char *fmt, ...);
-> >+void _xfs_alert_tag(const struct xfs_mount *mp, int tag, const char *fmt, ...);
-> >
-> >
-> > #define xfs_printk_ratelimited(func, dev, fmt, ...)                   \
-> >--
-> >2.35.1
-> >
+Here two problems:
+1. why the result different before between after file close?
+2. why the result not change after writing data, or a big change?
+
+The above problems can be explained by fs preallocation.
+If the impact of preallocation are closed in fs, not visible to the outside, the result is stable and real for the application.
+
+That is the reason for this patch.
+Thanks very much.
