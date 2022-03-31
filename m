@@ -2,54 +2,54 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5146FC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Mar 2022 04:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FC31C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Mar 2022 04:15:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230197AbiCaERE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Mar 2022 00:17:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39060 "EHLO
+        id S229801AbiCaER0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Mar 2022 00:17:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230239AbiCaEQn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Mar 2022 00:16:43 -0400
+        with ESMTP id S230255AbiCaEQp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Mar 2022 00:16:45 -0400
 Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAE0525EC88;
-        Wed, 30 Mar 2022 21:01:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 566A5B0D09;
+        Wed, 30 Mar 2022 21:01:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648699262; x=1680235262;
+  t=1648699267; x=1680235267;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=/WJjZChIo8N1c8iyIkTk+sLE9BhLskWf4w/kKr8E+fU=;
-  b=ThgFKeeLfVooXc15RA3hT18hmq+AqapRpEHsw3sACYiVxvWZIx5AnAez
-   JtjQkGbsPUMEc+7e+B7+10p/uIGflJ7NQ8UxJ1TunF3fnxWNWujZi23I+
-   Yx2TOob3LOtfMcJD4GJ5feQN6mye1i+wChz6OryFNWRZfA82t7puznC6U
-   MQ4WHSJqHbwss4ZU+g/K5nIq2vR/aSBpCQAlgOm3YvNld29NvKWdYe8WV
-   cg50gsZPRvCVGhpoo/XXF901h7GhYM9iMzrErli8SRM/8QmFG0w8nZYVx
-   0gCkbEB9hUWruXEx0e8cCgDEhkuR82f+DzOCXo3pXt5DXHMo6jjj4e/n+
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10302"; a="258538091"
+  bh=OrABZZQsphOZMKOKeJf4BcfF52I9DRZYnIsBfmD8D2Q=;
+  b=aTX0p1JLPgGoKYLT2dpsiGWsOvFbGbn0C2F4ynn8qBwX7YS7lWUHTRVG
+   8bdIFXfkD9CeXjwBkinBaGXGHi2HYx1sLXZvzqnPCoVMZCbbxUpkVaMz5
+   6xxpcZffsYhSJm0nUxv7VHp3f1XSigE3BHOl6bwFFBVf1q/OTnimIqK6e
+   0Jg8HarnsfKqxS4dhbbdtgjRaKXiEzmj+yV8NKKCE8NN4wqcxo4c39DuR
+   ZKEG3tTAbRUib4giCnJIGeKguFuAB7EvVFBaasBqebAWDwK1KW7jcRJAO
+   MVFk3v7lfX+xyoWqbQmM246I0B2MX0QPAyxOirZJys8F/hKs2d5hMUcAT
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10302"; a="258539615"
 X-IronPort-AV: E=Sophos;i="5.90,224,1643702400"; 
-   d="scan'208";a="258538091"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2022 19:57:53 -0700
+   d="scan'208";a="258539615"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2022 20:07:53 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.90,224,1643702400"; 
-   d="scan'208";a="520138912"
+   d="scan'208";a="547118109"
 Received: from lkp-server02.sh.intel.com (HELO 56431612eabd) ([10.239.97.151])
-  by orsmga002.jf.intel.com with ESMTP; 30 Mar 2022 19:57:50 -0700
+  by orsmga007.jf.intel.com with ESMTP; 30 Mar 2022 20:07:51 -0700
 Received: from kbuild by 56431612eabd with local (Exim 4.95)
         (envelope-from <lkp@intel.com>)
-        id 1nZl0P-0000mi-SJ;
-        Thu, 31 Mar 2022 02:57:49 +0000
-Date:   Thu, 31 Mar 2022 10:57:16 +0800
+        id 1nZlA6-0000nI-O1;
+        Thu, 31 Mar 2022 03:07:50 +0000
+Date:   Thu, 31 Mar 2022 11:07:35 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Yi Wang <wang.yi59@zte.com.cn>, djwong@kernel.org
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        xue.zhihong@zte.com.cn, wang.yi59@zte.com.cn,
-        wang.liang82@zte.com.cn, Cheng Lin <cheng.lin130@zte.com.cn>
+Cc:     kbuild-all@lists.01.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, xue.zhihong@zte.com.cn,
+        wang.yi59@zte.com.cn, wang.liang82@zte.com.cn,
+        Cheng Lin <cheng.lin130@zte.com.cn>
 Subject: Re: [PATCH] xfs: getattr ignore blocks beyond eof
-Message-ID: <202203311017.dWBicGOM-lkp@intel.com>
+Message-ID: <202203311022.9gnVNhj6-lkp@intel.com>
 References: <20220331080256.1874-1-wang.yi59@zte.com.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -72,30 +72,29 @@ https://git-scm.com/docs/git-format-patch]
 
 url:    https://github.com/intel-lab-lkp/linux/commits/Yi-Wang/xfs-getattr-ignore-blocks-beyond-eof/20220331-082944
 base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-config: s390-randconfig-r002-20220330 (https://download.01.org/0day-ci/archive/20220331/202203311017.dWBicGOM-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 0f6d9501cf49ce02937099350d08f20c4af86f3d)
+config: sparc-randconfig-r005-20220330 (https://download.01.org/0day-ci/archive/20220331/202203311022.9gnVNhj6-lkp@intel.com/config)
+compiler: sparc-linux-gcc (GCC) 11.2.0
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
-        # install s390 cross compiling tool for clang build
-        # apt-get install binutils-s390x-linux-gnu
         # https://github.com/intel-lab-lkp/linux/commit/e560188227f8fed285a1bd736e5708de984f0596
         git remote add linux-review https://github.com/intel-lab-lkp/linux
         git fetch --no-tags linux-review Yi-Wang/xfs-getattr-ignore-blocks-beyond-eof/20220331-082944
         git checkout e560188227f8fed285a1bd736e5708de984f0596
         # save the config file to linux build tree
         mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=s390 SHELL=/bin/bash
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=sparc SHELL=/bin/bash fs/xfs/
 
 If you fix the issue, kindly add following tag as appropriate
 Reported-by: kernel test robot <lkp@intel.com>
 
 All errors (new ones prefixed by >>):
 
->> fs/xfs/xfs_bmap_util.c:756:19: error: use of undeclared identifier 'end_fsb'
-           ip->i_last_fsb = end_fsb;
-                            ^
-   1 error generated.
+   fs/xfs/xfs_bmap_util.c: In function 'xfs_free_eofblocks':
+>> fs/xfs/xfs_bmap_util.c:756:26: error: 'end_fsb' undeclared (first use in this function)
+     756 |         ip->i_last_fsb = end_fsb;
+         |                          ^~~~~~~
+   fs/xfs/xfs_bmap_util.c:756:26: note: each undeclared identifier is reported only once for each function it appears in
 
 
 vim +/end_fsb +756 fs/xfs/xfs_bmap_util.c
