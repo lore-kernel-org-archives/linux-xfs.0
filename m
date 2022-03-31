@@ -2,134 +2,89 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F3A7C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Mar 2022 21:22:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25841C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Mar 2022 21:35:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241794AbiCaVXo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Mar 2022 17:23:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39486 "EHLO
+        id S241890AbiCaVha (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Mar 2022 17:37:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241800AbiCaVXn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Mar 2022 17:23:43 -0400
+        with ESMTP id S233986AbiCaVha (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Mar 2022 17:37:30 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1955323D779;
-        Thu, 31 Mar 2022 14:21:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8454022FD80
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Mar 2022 14:35:42 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B677B10E7293;
-        Fri,  1 Apr 2022 08:21:53 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6E9D010E7351;
+        Fri,  1 Apr 2022 08:35:41 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1na2Eq-00CEYy-AF; Fri, 01 Apr 2022 08:21:52 +1100
-Date:   Fri, 1 Apr 2022 08:21:52 +1100
+        id 1na2SB-00CEv9-NZ; Fri, 01 Apr 2022 08:35:39 +1100
+Date:   Fri, 1 Apr 2022 08:35:39 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     wang.yi59@zte.com.cn
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, xue.zhihong@zte.com.cn,
-        wang.liang82@zte.com.cn, cheng.lin130@zte.com.cn
-Subject: Re: [PATCH] xfs: getattr ignore blocks beyond eof
-Message-ID: <20220331212152.GG1544202@dread.disaster.area>
-References: <20220331053340.GE1544202@dread.disaster.area>
- <202203311632074775168@zte.com.cn>
+To:     bugzilla-daemon@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 215783] New: kernel NULL pointer dereference and general
+ protection fault in fs/xfs/xfs_buf_item_recover.c:
+ xlog_recover_do_reg_buffer() when mount a corrupted image
+Message-ID: <20220331213539.GH1544202@dread.disaster.area>
+References: <bug-215783-201763@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202203311632074775168@zte.com.cn>
+In-Reply-To: <bug-215783-201763@https.bugzilla.kernel.org/>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62461b72
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62461ead
         a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=1RTuLK3dAAAA:8 a=7-415B0cAAAA:8
-        a=CJxDh8eq4twOAiMNBa0A:9 a=CjuIK1q_8ugA:10 a=kRpfLKi8w9umh8uBmg1i:22
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=dZt0fa9Cfv-EBOP55oEA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
         a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 31, 2022 at 04:32:07PM +0800, wang.yi59@zte.com.cn wrote:
-> > We do not, and have not ever tried to, hide allocation or block
-> > usage artifacts from userspace because any application that depends
-> > on specific block allocation patterns or accounting from the
-> > filesystem is broken by design.
-> >
-> > Every filesystem accounts blocks differently, and more often than
-> > not the block count exposed to userspace also includes metadata
-> > blocks (extent maps, xattr blocks, etc) and it might multiple count
-> > other blocks (e.g. shared extents). Hence so you can't actually
-> > use it for anything useful in userspace except reporting how many
-> > blocks this file *might* use.
-> >
-> > If your application is dependent on block counts exactly matching
-> > the file data space for waht ever reason, then what speculative
-> > preallocation does is the least of your problems.
-> >
+On Thu, Mar 31, 2022 at 08:07:08PM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=215783
+> - Overview 
+> kernel NULL pointer dereference and general protection fault in
+> fs/xfs/xfs_buf_item_recover.c:xlog_recover_do_reg_buffer() when mount a
+> corrupted image, sometimes cause kernel hang
 > 
-> Thanks for your explaination.
+> - Reproduce 
+> tested on kernel 5.17.1, 5.15.32
 > 
-> Unfortunately, the app I'm using evaluates diskusage by querying
-> the changes of the backend filesystem (XFS) file before and after
-> the operation.
+> $ mkdir mnt
+> $ unzip tmp7.zip
+> $ ./mount.sh xfs 7  ##NULL pointer derefence
+> or
+> $ sudo mount -t xfs tmp7.img mnt ##general protection fault
+> 
+> - Kernel dump
 
-What application is this?
+You've now raised 4 bugs that all look very similar and are quite
+possibly all caused by the same corruption vector.
+Please do some triage on the failure to identify the
+source of the corruption that trigger this failure.
 
-What is it trying to use this information for?
+If you are going to run some scripted tool to randomly corrupt the
+filesystem to find failures, then you have an ethical and moral
+responsibility to do some of the work to narrow down and identify
+the cause of the failure, not just throw them at someone to do all
+the work.
 
-I'm trying to understand why someone thought this was a good idea,
-and without actually being able to look up the code and see what it
-is using the information for, I can't really say much more than
-"this seems broken by design".
+You can automate this - track the corruptions you add to the
+filesystem image, then when you have an image that reproduces a
+problem, iterate over it removing corruptions until you have just
+the minimum set of changes in the image that reproduce the issue.
+Then you can cull all the images that trip over the same corruptions
+and only report the actual corruption that causes the problem.
 
-> Without giving up the benefits of preallocation, the
-> app's statistics will become obsolete and no chance to correct it
-> at a small cost, because of the silence reclaim of posteof blocks.
-> That is the app's problem.
+Then list those corruptions in the bug report so that we don't have
+to do all this triage ourselves to weed out all the duplicates and
+noise that all the random corruptions that don't cause crashes
+induce.
 
-Yes it is.
-
-> Posteof blocks will be reclaimed sooner or later, it seems reasonable
-
-No, that is not guaranteed. If you the extend the file again, those
-post eof blocks will no longer be post-eof blocks and instead
-contain user data. Also, fallocate() can allocate post-eof blocks,
-and in that case they can be retained permanently because the user
-asked them to be placed beyond EOF.
-
-So the assertion that post-eof blocks always get removed sooner or
-later is not actually true.
-
-> to ignore them directly during query. This is my humble opinion in
-> this patch. At the query moment, it's not real, but it will become so
-> eventually. It's a speculative result for query.
-
-No, it's the _correct_ result for the current state of the file
-being queried. The statx() man page says:
-
-st_blocks
-     This field indicates the number of blocks allocated to the
-     file, in 512-byte units.  (This may be smaller than st_size/512
-     when the file has holes.)
-
-The POSIX specification just defines it as "Number of blocks
-allocated for this object."
-
-Neither say anything about how the filesystem should or shouldn't
-account those blocks, that it must be stable, that it must reflect
-the amount of data written to the file, etc. ALl they say is that
-it is the amount of blocks allocated for that file.
-
-As it is, hiding space usage like you propose is likely to cause
-more problems than it solaves, because not du will not report all
-the disk space used by a file and hence we'll end up with other
-users reporting that the disk space reported by du does not match up
-with the space the filesytem is using. Which, of course is also
-expected, because reflink/dedupe result in du multiple counting
-shared blocks.
-
-IOWs, userspace tracking and aggregation of filesystem space usage
-just doesn't work, and so papering over behaviours that expose the
-fact it doesn't and can't work are in no-ones best interests.
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
