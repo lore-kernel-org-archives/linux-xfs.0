@@ -2,145 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CAA7C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Mar 2022 23:17:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 726B0C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Apr 2022 01:27:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238692AbiCaXT0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Mar 2022 19:19:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60748 "EHLO
+        id S243203AbiDAB3D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Mar 2022 21:29:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238040AbiCaXT0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Mar 2022 19:19:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 817A224D994
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Mar 2022 16:17:38 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2281E61706
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Mar 2022 23:17:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 78BF4C34113
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Mar 2022 23:17:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648768657;
-        bh=b5A2ejO4adahjSE66Fbtnf7GLBlx7b5GMzGVSKAbqCA=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=Mij1THwwGPM6OvE2C9pbaZZ08Q5LizUJHqvNxo/RQJatIXo+8x4AmQiHkZuVFOCOK
-         bGt+YizjI364i8iIrkkG+aF3/mnSsOTls8ZFceC67RyMTRb8uoxK+OJzh+KUaHCx6v
-         IcaoKe22YAyl/3kZVmPFsIgpPt/UpkgUF41f9hKfIzVn+yyG4JmAdTQqRx52TIlcRu
-         ugnDNiLwGaROYOjUZ7LuU/Opo66r1c7ygiCegZ7JYcGCR5WcDb+afk2snSzdHPv60m
-         a7pkv2egqgnyGl0CsUxK6URQhhnQLM+UYxfk31XxI4ZmmHWMWls8PaYmgWOKYqoMqI
-         PP95P7pHcsXaw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 5F7ADC05FD6; Thu, 31 Mar 2022 23:17:37 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 215783] kernel NULL pointer dereference and general protection
- fault in fs/xfs/xfs_buf_item_recover.c: xlog_recover_do_reg_buffer() when
- mount a corrupted image
-Date:   Thu, 31 Mar 2022 23:17:36 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: david@fromorbit.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215783-201763-vUC9ERs95O@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215783-201763@https.bugzilla.kernel.org/>
-References: <bug-215783-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S230402AbiDAB3D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Mar 2022 21:29:03 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2786D1E017A
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Mar 2022 18:27:15 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id F17F5534270;
+        Fri,  1 Apr 2022 12:27:13 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1na64G-00CIqg-4i; Fri, 01 Apr 2022 12:27:12 +1100
+Date:   Fri, 1 Apr 2022 12:27:12 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V8 15/19] xfs: Directory's data fork extent counter can
+ never overflow
+Message-ID: <20220401012712.GJ1544202@dread.disaster.area>
+References: <20220321051750.400056-1-chandan.babu@oracle.com>
+ <20220321051750.400056-16-chandan.babu@oracle.com>
+ <20220324221406.GL1544202@dread.disaster.area>
+ <87sfr1nxj7.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220329062340.GY1544202@dread.disaster.area>
+ <20220330034333.GG27690@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220330034333.GG27690@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=624654f2
+        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=7-415B0cAAAA:8
+        a=Svv7V-RX2cpxqv_diF8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215783
+On Tue, Mar 29, 2022 at 08:43:33PM -0700, Darrick J. Wong wrote:
+> But then the second question is: what's the maximum height of a dabtree
+> that indexes an xattr structure?  I don't think there's any maximum
+> limit within XFS on the number of attrs you can set on a file, is there?
 
---- Comment #2 from Dave Chinner (david@fromorbit.com) ---
-On Fri, Apr 01, 2022 at 08:35:39AM +1100, Dave Chinner wrote:
-> On Thu, Mar 31, 2022 at 08:07:08PM +0000, bugzilla-daemon@kernel.org wrot=
-e:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D215783
-> > - Overview=20
-> > kernel NULL pointer dereference and general protection fault in
-> > fs/xfs/xfs_buf_item_recover.c:xlog_recover_do_reg_buffer() when mount a
-> > corrupted image, sometimes cause kernel hang
-> >=20
-> > - Reproduce=20
-> > tested on kernel 5.17.1, 5.15.32
-> >=20
-> > $ mkdir mnt
-> > $ unzip tmp7.zip
-> > $ ./mount.sh xfs 7  ##NULL pointer derefence
-> > or
-> > $ sudo mount -t xfs tmp7.img mnt ##general protection fault
-> >=20
-> > - Kernel dump
->=20
-> You've now raised 4 bugs that all look very similar and are quite
-> possibly all caused by the same corruption vector.
-> Please do some triage on the failure to identify the
-> source of the corruption that trigger this failure.
+Nope. But the attr btree is a different beast to the dirv2
+structure - it's a hashed index btree with the xattr records in the
+leaf, it's not an index of a fixed max size external data structure.
 
-Ok, the log has been intentionally corrupted in a way that does not
-happen in the real world. i.e.  The iclog header at the tail of the
-log has had the CRC zeroed, so CRC checking for media bit corruption
-has been intentionally bypassed by the tool that corrupted the log.
+> At least until you hit the iext_max_count check.  I think the VFS
+> institutes its own limit of 64k for the llistxattr buffer, but that's
+> about all I can think of.
 
-The first item is a superblock buffer item, which contains 2
-regions; a buf log item and a 384 byte long region containing the
-logged superblock data.
 
-However, the buf log item has been screwed with to say that it has 8
-regions rather than 2, and so when recovery goes to recovery the
-third region that doesn't exist, it falls off the end of the
-allocated transaction buffer.
+> I suppose right now the xattr structure can't grow larger than 2^(16+21)
+> blocks in size, which is 2^49 bytes, but that's a mix of attr leaves and
+> dabtree blocks, unlike directories, right?
 
-We only ever write iclogs with CRCs in them (except for mkfs when it
-writes an unmount record to intialise the log), so bit corruptions
-like this will get caught before we even started log recovery in
-production systems.
+Yes. ALso remote xattr blocks, which aren't stored in the dabtree
+at all, but are indexed by the attr fork BMBT address space.
 
-We've got enough issues with actual log recovery bugs that we don't
-need to be overloaded by being forced to play whack-a-mole with
-malicious corruptions that *will not happen in the real world*
-because "security!".
+So I think for XFS_DA_NODE_MAXDEPTH = 5, the xattr tree with a 4kB
+block size (minimum allowed, IIRC), we can index approximately
+(500^4) individual xattrs in the btree index (assuming 4 levels of
+index and 1 level of leaf nodes containing xattrs).
 
-Looking at the crash locations for the other bugs, they are all
-going to be the same thing - you've corrupted the vector index in
-the log item and so they all fall off the end of the buffer because
-the index no longer matches the actual contents of the log item.
+My math calculates that to be about 62.5 billion xattrs before we
+run out of index space in a 5 level tree with a 4kB block size.
+Hence I suspect we'll run out of attr fork extents even on a 32 bit
+extent count before we run out of xattr index space.
 
-vvvv THIS vvvv
+Also, 62.5 billion xattrs is more links than we can have to a single
+inode (4billion), so we're not going to exhaust the xattr index
+space just with parent pointers...
 
-> If you are going to run some scripted tool to randomly corrupt the
-> filesystem to find failures, then you have an ethical and moral
-> responsibility to do some of the work to narrow down and identify
-> the cause of the failure, not just throw them at someone to do all
-> the work.
+> > immediately how many blocks can be in the XFS_DIR2_LEAF_SPACE
+> > segement....
+> > 
+> > We also know the maximum number of individual directory blocks in
+> > the 32GB segment (fixed at 32GB / dir block size), so the free space
+> > array is also a fixed size at (32GB / dir block size / free space
+> > entries per block).
+> > 
+> > It's easy to just use (96GB / block size) and that will catch most
+> > corruptions with no risk of a false positive detection, but we could
+> > quite easily refine this to something like:
+> > 
+> > data	(32GB +				
+> > leaf	 btree blocks(XFS_DA_NODE_MAXDEPTH) +
+> > freesp	 (32GB / free space records per block))
+> > frags					/ filesystem block size
+> 
+> I think we ought to do a more careful study of XFS_DA_NODE_MAXDEPTH,
 
-^^^^ THIS ^^^^^
+*nod*
 
-Please confirm your other reports have the same root cause and close
-them if they are. If not, please point us to the unique corruption
-in the log that causes the failure.
+ISTR that Chandan had already done some of this when he
+characterised the attr fork btree behaviour w.r.t. suitabililty for
+large numbers of parent pointers before starting this extent count
+work.
 
--Dave.
+> but
+> it could become more involved than we think.  In the interest of keeping
+> this series moving, can we start with a new verifier check that
+> (di_nextents < that formula from above) and then refine that based on
+> whatever improvements we may or may not come up with for
+> XFS_DA_NODE_MAXDEPTH?
 
---=20
-You may reply to this email to add a comment.
+Yup, that sounds like a good plan.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
