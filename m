@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6165CC433EF
-	for <linux-xfs@archiver.kernel.org>; Sat,  2 Apr 2022 00:57:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 959F8C433F5
+	for <linux-xfs@archiver.kernel.org>; Sat,  2 Apr 2022 01:03:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234691AbiDBA7P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Apr 2022 20:59:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59064 "EHLO
+        id S1353376AbiDBBFk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Apr 2022 21:05:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229560AbiDBA7O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Apr 2022 20:59:14 -0400
+        with ESMTP id S1352895AbiDBBFa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Apr 2022 21:05:30 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B10D200967;
-        Fri,  1 Apr 2022 17:57:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 383B3DB1;
+        Fri,  1 Apr 2022 18:03:40 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F2ED260C42;
-        Sat,  2 Apr 2022 00:57:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FCB5C3410F;
-        Sat,  2 Apr 2022 00:57:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C705661BA0;
+        Sat,  2 Apr 2022 01:03:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C7B9C340F2;
+        Sat,  2 Apr 2022 01:03:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648861042;
-        bh=IFDwE594DCzQsjq0x5FHSp+rW4qKz3sHzkIG9fgrfmE=;
+        s=k20201202; t=1648861419;
+        bh=5VYMrcOx8O4wrYuwRZe41/ymZHbb4meqyu+BuXg43TM=;
         h=Date:From:To:Cc:Subject:From;
-        b=WtWvxvjafEr07RE05fbUzMD/naoKD8oMvA61OaHALbc7kwo+VzC9L1Q/eq8cKIsQQ
-         jVb7f8Yfl4RQyqqEf4neU43Kt5IhSv40x5EsOKjuykOyh8x5nGGb/MC8QHrOp35bzI
-         BYsUp/9beLuYdAsF1Y5y7TxW9BD3XArifUmUC18S3cHW7KSyqqqFHrGQ+ujEII9EUW
-         xgM8BlYRn5X4NGrub7RLxaUCK8cI7fS3K6Of8MrVJTFHnObWISL9ghgqTUzsVPbB+H
-         tPNO6U3pUDSRZ95s/jlS+kkfjVUCETp5s/VmX1j62o+iNWaZYRpiwjZ+WViMrjSp8I
-         V6Y1axZFWigAQ==
-Date:   Fri, 1 Apr 2022 17:57:21 -0700
+        b=o69ahH8l3DpKQWxIT9y2Xz/XqPazxGdZT0+BD6WzBAz/QjQhsG4vc8p7gpA9QdduD
+         lATi6RfDiaikw/gIAVxxLC04jtUjEbyVZLVShGq6i8H9poDRvJbkPSTbphvxANPN1s
+         HjU8kUA0P7eFP2pYeKby3qzpGxw45KWFfP/+QxXeEbPkoAaTQvZ4bxIqvKYMu74Lgr
+         ngh5ef4QymamT1n5s2HytcWC9uEDWJoUXS3qgCn2k5uOzwV2fmg5/dWGWcEGv6WXiV
+         y4LkRY3eX/LisT9f7SUs8vSaDRcYqncwfUTqBehSn0pyUTZ2IFuRoFDRnmSr5LmPBF
+         +WZEi8nHTPwRg==
+Date:   Fri, 1 Apr 2022 18:03:38 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Linus Torvalds <torvalds@linux-foundation.org>
 Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de, fstests <fstests@vger.kernel.org>
-Subject: [GIT PULL] xfs: bug fixes for 5.18-rc1
-Message-ID: <20220402005721.GO27690@magnolia>
+        sandeen@sandeen.net, hch@lst.de
+Subject: [GIT PULL] vfs: fixes for 5.18-rc1
+Message-ID: <20220402010338.GP27690@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -48,109 +48,41 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi Linus,
 
-Please pull this second branch containing more bug fixes for XFS for
-5.18-rc1.  This branch fixes multiple problems in the reserve pool
-sizing functions: an incorrect free space calculation, a pointless
-infinite loop, and even more braindamage that could result in the pool
-being overfilled.  The pile of patches from Dave fix myriad races and
-UAF bugs in the log recovery code that much to our mutual surprise
-nobody's tripped over.  Dave also fixed a performance optimization that
-had turned into a regression.
+Please pull this branch of VFS bugfixes for 5.18-rc1.  The erofs
+developers felt that FIEMAP should handle ranged requests starting at
+s_maxbytes by returning EFBIG instead of passing the filesystem
+implementation a nonsense 0-byte request.
 
-Dave Chinner is taking over as XFS maintainer starting Sunday and
-lasting until 5.19-rc1 is tagged so that I can focus on starting a
-massive design review for the (feature complete after five years) online
-repair feature.  From then on, he and I will be moving XFS to a
-co-maintainership model by trading duties every other release.
-
-NOTE: I hope very strongly that the other pieces of the (X)FS ecosystem
-(fstests and xfsprogs) will make similar changes to spread their
-maintenance load.
+Not sure why they keep tagging this 'iomap', but the VFS shouldn't be
+asking for information about ranges of a file that the filesystem
+already declared that it does not support.
 
 As usual, I did a test-merge with upstream master as of a few minutes
-ago.  Stephen Rothwell reported a merge conflict[1] with the "drop async
-cache flushes" patch, which I think you can resolve by deleting
-xfs_flush_bdev_async_endio and xfs_flush_bdev_async no matter what their
-contents.  At least, it worked for me.
-
-Please let me know if you encounter any problems.  At worst, we can
-rebase the branch against -rc1 and resubmit.
+ago, and didn't see any conflicts.  Please let me know if you encounter
+any problems.
 
 --D
 
-[1] https://lore.kernel.org/linux-xfs/20220331090047.7c6f2e1e@canb.auug.org.au/T/#u
+The following changes since commit 7e57714cd0ad2d5bb90e50b5096a0e671dec1ef3:
 
-The following changes since commit 01728b44ef1b714756607be0210fbcf60c78efce:
-
-  xfs: xfs_is_shutdown vs xlog_is_shutdown cage fight (2022-03-20 08:59:50 -0700)
+  Linux 5.17-rc6 (2022-02-27 14:36:33 -0800)
 
 are available in the Git repository at:
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.18-merge-4
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.18-merge-1
 
-for you to fetch changes up to 919edbadebe17a67193533f531c2920c03e40fa4:
+for you to fetch changes up to 49df34221804cfd6384135b28b03c9461a31d024:
 
-  xfs: drop async cache flushes from CIL commits. (2022-03-29 18:22:02 -0700)
-
-----------------------------------------------------------------
-Bug fixes for 5.18:
-- Fix an incorrect free space calculation in xfs_reserve_blocks that
-  could lead to a request for free blocks that will never succeed.
-- Fix a hang in xfs_reserve_blocks caused by an infinite loop and the
-  incorrect free space calculation.
-- Fix yet a third problem in xfs_reserve_blocks where multiple racing
-  threads can overfill the reserve pool.
-- Fix an accounting error that lead to us reporting reserved space as
-  "available".
-- Fix a race condition during abnormal fs shutdown that could cause UAF
-  problems when memory reclaim and log shutdown try to clean up inodes.
-- Fix a bug where log shutdown can race with unmount to tear down the
-  log, thereby causing UAF errors.
-- Disentangle log and filesystem shutdown to reduce confusion.
-- Fix some confusion in xfs_trans_commit such that a race between
-  transaction commit and filesystem shutdown can cause unlogged dirty
-  inode metadata to be committed, thereby corrupting the filesystem.
-- Remove a performance optimization in the log as it was discovered that
-  certain storage hardware handle async log flushes so poorly as to
-  cause serious performance regressions.  Recent restructuring of other
-  parts of the logging code mean that no performance benefit is seen on
-  hardware that handle it well.
+  fs: fix an infinite loop in iomap_fiemap (2022-03-30 09:49:28 -0700)
 
 ----------------------------------------------------------------
-Darrick J. Wong (6):
-      xfs: document the XFS_ALLOC_AGFL_RESERVE constant
-      xfs: don't include bnobt blocks when reserving free block pool
-      xfs: remove infinite loop when reserving free block pool
-      xfs: always succeed at setting the reserve pool size
-      xfs: fix overfilling of reserve pool
-      xfs: don't report reserved bnobt space as available
+Fixes for 5.18-rc1:
+ - Fix a potential infinite loop in FIEMAP by fixing an off by one error
+   when comparing the requested range against s_maxbytes.
 
-Dave Chinner (8):
-      xfs: aborting inodes on shutdown may need buffer lock
-      xfs: shutdown in intent recovery has non-intent items in the AIL
-      xfs: run callbacks before waking waiters in xlog_state_shutdown_callbacks
-      xfs: log shutdown triggers should only shut down the log
-      xfs: xfs_do_force_shutdown needs to block racing shutdowns
-      xfs: xfs_trans_commit() path must check for log shutdown
-      xfs: shutdown during log recovery needs to mark the log shutdown
-      xfs: drop async cache flushes from CIL commits.
+----------------------------------------------------------------
+Guo Xuenan (1):
+      fs: fix an infinite loop in iomap_fiemap
 
- fs/xfs/libxfs/xfs_alloc.c |  28 ++++++--
- fs/xfs/libxfs/xfs_alloc.h |   1 -
- fs/xfs/xfs_bio_io.c       |  35 ----------
- fs/xfs/xfs_fsops.c        |  60 ++++++++---------
- fs/xfs/xfs_icache.c       |   2 +-
- fs/xfs/xfs_inode.c        |   2 +-
- fs/xfs/xfs_inode_item.c   | 164 +++++++++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_inode_item.h   |   1 +
- fs/xfs/xfs_linux.h        |   2 -
- fs/xfs/xfs_log.c          | 109 ++++++++++++++++--------------
- fs/xfs/xfs_log_cil.c      |  46 +++++--------
- fs/xfs/xfs_log_priv.h     |  14 +++-
- fs/xfs/xfs_log_recover.c  |  56 ++++++----------
- fs/xfs/xfs_mount.c        |   3 +-
- fs/xfs/xfs_mount.h        |  15 +++++
- fs/xfs/xfs_super.c        |   3 +-
- fs/xfs/xfs_trans.c        |  48 +++++++++-----
- fs/xfs/xfs_trans_ail.c    |   8 +--
- 18 files changed, 348 insertions(+), 249 deletions(-)
+ fs/ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
