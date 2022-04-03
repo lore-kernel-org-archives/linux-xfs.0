@@ -2,98 +2,48 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9237BC433EF
-	for <linux-xfs@archiver.kernel.org>; Sat,  2 Apr 2022 13:04:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82975C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  3 Apr 2022 11:55:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354972AbiDBNGd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 2 Apr 2022 09:06:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38754 "EHLO
+        id S233471AbiDCL51 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 3 Apr 2022 07:57:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354973AbiDBNGb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Apr 2022 09:06:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 298796548B;
-        Sat,  2 Apr 2022 06:04:38 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4BD606149F;
-        Sat,  2 Apr 2022 13:04:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01528C340EE;
-        Sat,  2 Apr 2022 13:04:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648904677;
-        bh=YeyJTjeUzRFfKXdl59MUSFMYpruHVEiGvG1DK+lObhw=;
-        h=From:To:Cc:Subject:Date:From;
-        b=I3tYUGA3ifeZUHr/DaGOHctUMa9zdkXd4Wuq1SgKCe1WQCMse4gnoV1c+e1ZLgqcv
-         RGlQld5vjelbK482BgcUxulKPLYbeXJdHEHimvhWcsSRbHLkv5kg4Jr0NobhNua9/d
-         Kwzpv36j4ne7zRP7x5O1yZKnpSLgAt18TrVowPglEVy+vVnIqM+T6NZ8RrZQcj9qDH
-         8igJ0nUD6IvDfpDaZcL4X9naHwwts4JS/Cb6ol/Rx7E5+Pbr/6KxlxssdDZMXYLM8m
-         XU9SKj7yR9DdhXJzWt2dLV5Xb6BO12gvMT1H27FXfQ3aEGfDv82e5Lyxf8kqd5uvsB
-         az3EJ+/It8icA==
-From:   Sasha Levin <sashal@kernel.org>
-To:     stable-commits@vger.kernel.org, willy@infradead.org
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Patch "iomap: Fix iomap_invalidatepage tracepoint" has been added to the 5.17-stable tree
-Date:   Sat,  2 Apr 2022 09:04:35 -0400
-Message-Id: <20220402130435.2055998-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S237492AbiDCL51 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Apr 2022 07:57:27 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4250C27B00
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Apr 2022 04:55:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=trx0vt+ur3LAE+F0Vfo1N7IUO6px44pE29CgtBITrKM=; b=kL0HWY91eqceZAFgrws7MU/ibV
+        ZXvy728k20KxYbCl1P9NOZY2L3SUfc/obtuZ5xTnNM96rbrzZJg/Zf3mJl5bBhVgzMd2aFLWI/QOj
+        6FGljBPBjit/H2Dj0BkX+Gr/0ERs4rELp+myZlMe5JbZYde6YWklJCvsvnGvqzhrPet8MrsOd0Wvb
+        fPo22/jkQDj5JYIGzChGcqaELG+UQbwgbNm4xnfHciyJtGdlEAFK38lV2/do1sAEnSdbjNcNWMdeO
+        JirroCBrG5GPFc5JNQBXdl6iYdxLGy7cAJOctw3NG6WoccMcwVgMFh4f/ccE/gsVlF1P7goYYGapx
+        z8pQJdJA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1naypQ-00BJd8-AD; Sun, 03 Apr 2022 11:55:32 +0000
+Date:   Sun, 3 Apr 2022 04:55:32 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: lockless buffer lookup
+Message-ID: <YkmLNHUbQkcgnw8r@infradead.org>
+References: <20220328213810.1174688-1-david@fromorbit.com>
 MIME-Version: 1.0
-X-Patchwork-Hint: ignore
-X-stable: review
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220328213810.1174688-1-david@fromorbit.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is a note to let you know that I've just added the patch titled
-
-    iomap: Fix iomap_invalidatepage tracepoint
-
-to the 5.17-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-The filename of the patch is:
-     iomap-fix-iomap_invalidatepage-tracepoint.patch
-and it can be found in the queue-5.17 subdirectory.
-
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
-
-commit 8f9b67c3d57e4cabb1f03a0e28a806b082cd683e
-Author: Matthew Wilcox (Oracle) <willy@infradead.org>
-Date:   Wed Feb 9 20:21:22 2022 +0000
-
-    iomap: Fix iomap_invalidatepage tracepoint
-    
-    [ Upstream commit 1241ebeca3f94b417751cb3ff62454cefdac75bc ]
-    
-    This tracepoint is defined to take an offset in the file, not an
-    offset in the folio.
-    
-    Fixes: 1ac994525b9d ("iomap: Remove pgoff from tracepoints")
-    Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-    Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-    Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-    Tested-by: Mike Marshall <hubcap@omnibond.com> # orangefs
-    Tested-by: David Howells <dhowells@redhat.com> # afs
-    Signed-off-by: Sasha Levin <sashal@kernel.org>
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 6c51a75d0be6..d020a2e81a24 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -480,7 +480,8 @@ EXPORT_SYMBOL_GPL(iomap_releasepage);
- 
- void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len)
- {
--	trace_iomap_invalidatepage(folio->mapping->host, offset, len);
-+	trace_iomap_invalidatepage(folio->mapping->host,
-+					folio_pos(folio) + offset, len);
- 
- 	/*
- 	 * If we're invalidating the entire folio, clear the dirty state
+So while this patch looks correct and very useful to me, that special
+path reallyirked me.  The root cause is that the existing buffer lookup
+is a mess, so I spent some time this weekend to refactor this before
+applying a now simplified version of your patch.  I'll send out the
+series in a bit.
