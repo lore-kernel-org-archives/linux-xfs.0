@@ -2,138 +2,126 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81C1EC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Apr 2022 21:29:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81705C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Apr 2022 22:59:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1382531AbiDDVax (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Apr 2022 17:30:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42850 "EHLO
+        id S237207AbiDDXBE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Apr 2022 19:01:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379587AbiDDRlA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Apr 2022 13:41:00 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2043.outbound.protection.outlook.com [40.107.94.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31D7C31DE3;
-        Mon,  4 Apr 2022 10:39:02 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=COdoseiOPHuVKirxEue845b5mhPlXT7+39fMIeE9eIXUAvw1x1clHHaW89OO2IWm5Ire/ldURHoQRCp+EZueA53PMkn4UAKhnWE1lwvX+a0jvQ54qqweAfUCwZEppuSM26x+gKPNT8uqLkXqTVnTIORLVNRyZ0w9u7Bcp+KDs6BEI3U83wL74JklxX9v9UFfmK/YC0f5qlfAiTChjLnYOWPVv6gP2+qXJ8aBkriSlLQVxDwS/nsgnIKGECGEEFzf7v4Hmi/zo/fKNaKJHGSrRvWfzm+iCgudyNm5AHiNfiXNwCQcJp8TXYbb8tKtIOMWbONkYg5+KkWK5aTfjCRNTQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wYOAz7xmnugnzgiRIZHEfmhmpWd1Bc0+wkCtsfoWffk=;
- b=DvM2E4JBNFkfvKvJo9tLQLN5Ha5+fGp4k8/1tjkSvbUBEi50QHKYnP8uXZcS9aNk/YTD4SNSZdKhGwelOUhhIlut/bEdYfdOz6/a0fv5UXRRwplV1oRwzA3snDlqANaWh98zSfd9xfwIVi7p4eRT22G9qwuvIEcDcyHPWPFgTihtIfFZ/N2DzAf5qJZ2Z0gU+mlTJGBmoQggSU6Gg0IJXMpk7ZMsgMND5udPh9uCfsLIfNqIRmLDmETk5d827D6/53GmMmULUOsXZlEYapGulu+dxo05tmCTL/dSGCilCRYsvUcBpRRg3qOhaGzBlbR7xXrO294hkNfUvNEeOpkUiA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wYOAz7xmnugnzgiRIZHEfmhmpWd1Bc0+wkCtsfoWffk=;
- b=DZ2/QsHq+Ta2enkwAFWqO9aaDTgY3TKpdCeAXZGFEG0FDEFSLzpJtR/qV5NioOuGDTjaFsiigt6hCJKQSp75zIFCRG5WWbqclmYNAGbVGwmZeRqrTNac9RitKByt3jfL0qZCqoROMKxy5pGjWj58ZMOIrpeaFpHoLwxxrI4ztl6bwWl9qumnPUkHV7lYijGCw5O/sNg0Y5WvCFxuQk8u9FGpNSMJn21HDMLqBAH8O4p6pRTPeRRdLJA3XkBKql7XCerRRkERC1RCWmOPEETBHEno2gTqfJSdlTMZr8A4+owggulQ2yRhIkNFbG6YdvDWpMIKiJ+2UcI8ZvBq8fcZeg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
- by MWHPR12MB1422.namprd12.prod.outlook.com (2603:10b6:300:10::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.31; Mon, 4 Apr
- 2022 17:39:00 +0000
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::cdfb:f88e:410b:9374]) by MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::cdfb:f88e:410b:9374%5]) with mapi id 15.20.5123.031; Mon, 4 Apr 2022
- 17:39:00 +0000
-Date:   Mon, 4 Apr 2022 14:38:58 -0300
-From:   Jason Gunthorpe <jgg@nvidia.com>
-To:     Felix Kuehling <felix.kuehling@amd.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Alex Sierra <alex.sierra@amd.com>,
-        david@redhat.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        jglisse@redhat.com, apopple@nvidia.com, willy@infradead.org,
-        akpm@linux-foundation.org
-Subject: Re: [PATCH v2 1/3] mm: add vm_normal_lru_pages for LRU handled pages
- only
-Message-ID: <20220404173858.GQ2120790@nvidia.com>
-References: <20220330212537.12186-1-alex.sierra@amd.com>
- <20220330212537.12186-2-alex.sierra@amd.com>
- <20220331085341.GA22102@lst.de>
- <82ed845d-2534-490c-f9b9-a875e0283cc9@amd.com>
+        with ESMTP id S233001AbiDDXAd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Apr 2022 19:00:33 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8C1CA69712;
+        Mon,  4 Apr 2022 15:16:11 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B6385534A83;
+        Tue,  5 Apr 2022 08:16:07 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nbUzV-00Dp8B-4K; Tue, 05 Apr 2022 08:16:05 +1000
+Date:   Tue, 5 Apr 2022 08:16:05 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Build regressions/improvements in v5.18-rc1
+Message-ID: <20220404221605.GS1544202@dread.disaster.area>
+References: <CAHk-=wg6FWL1xjVyHx7DdjD2dHZETA5_=FqqW17Z19X-WTfWSg@mail.gmail.com>
+ <20220404074734.1092959-1-geert@linux-m68k.org>
+ <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
+ <20220404092655.GR1544202@dread.disaster.area>
+ <CAMuHMdWgqdR1o3wT9pjB=w8z=2xaDFv5DJX58-HPHOFRm3Tr8Q@mail.gmail.com>
+ <CAK8P3a0QrihBR_2FQ7uZ5w2JmLjv7czfrrarCMmJOhvNdJ3p9g@mail.gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <82ed845d-2534-490c-f9b9-a875e0283cc9@amd.com>
-X-ClientProxiedBy: MN2PR19CA0034.namprd19.prod.outlook.com
- (2603:10b6:208:178::47) To MN2PR12MB4192.namprd12.prod.outlook.com
- (2603:10b6:208:1d5::15)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: fdd41846-42d3-45ed-2777-08da166200a3
-X-MS-TrafficTypeDiagnostic: MWHPR12MB1422:EE_
-X-Microsoft-Antispam-PRVS: <MWHPR12MB142219285F1A4957E7EA458EC2E59@MWHPR12MB1422.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 6uJsoSle6nOY97uW25wGlfQ16+wj5DAz2n5Bd60rdgNPeI8L6JSY1ShWnWe6beSvkBBuyYJrBpG0R4PpDeECpzujFKtGCjbiPosnmjeYZLND+NiHfIpQo91vs97JGVOc5rkfL9wN11kfZvu9HCcPNOsI0aeQ4hZD9zOa8YD59AetxekhD/kGD0tliQZRwpnPI58mh8N6dXXqkDTT5LG35mg4JUh4zPnz2fZnrinJvcqrMa+MnrnwUbiKyHPNOD0neMDiwDgQxaHf8OlmuzSRBOaZX6Zo4+uBdmzgCRDSTDbMOoaHK3PJvilVzHLxwVkt+/qul9I1xDKy6EnIoJwMxmCJAnn6PKUiyFPWxXHS0Qt9jeQ0Tmv0f/zGLEnIW6Vnq1845IawYKvDWKAyOh5Csj4h3jL2zeu6VF5n/KNtC397Q4QG7ICJ5cnMUAixO6a+6eI+n6MzpQTi+aySPSq8RSOo04SCGkuqDXkJKsyxExPvtUvfmyCQUUFhqJyWyqkU+0zCglBAyY6spbIq29mu+4j12008pbJWUEkKwivUl0TuQW9gZSDC2HvAvNSnEkffjCvkDmVRQhlGojWeQj32Fdi7oto8xbxBcKdJoKMZRd5Onx1Ic3eh+muOHQ+hlWXmwJxiC1ROWgkTD82cIz8cHA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(7416002)(5660300002)(33656002)(54906003)(2616005)(6486002)(8936002)(86362001)(186003)(508600001)(26005)(4744005)(38100700002)(1076003)(6916009)(2906002)(66476007)(66556008)(66946007)(6506007)(6512007)(36756003)(8676002)(4326008)(316002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hnr1vzfh1ED8SBc/kdvoO4l+IVlu3YpXhBlGAKbUNJS3MR1yV8f6TVFRiELr?=
- =?us-ascii?Q?mL4z7nrFz8BAkf9utQ+zD/wCX+qxM9HiuFdrmS+3EJZkADG9ulgUwVyu3/f5?=
- =?us-ascii?Q?A5dBX61LeR2m6Gi4RKMCDc574RShFlhmmotQzkjq8pdpb/OHQtJ2fo51hGC3?=
- =?us-ascii?Q?a1l8Qi1syZt4Ktd7MgNKJCHe4LVLkUk9OPn+ZcRwHIeNze/8xIVTnewZkD1U?=
- =?us-ascii?Q?kCyVtJBbJdsxRAe9b4RpBPoqDYNkfj37mpaBhaKbe4MGPQoGJo3GuaDOTFD2?=
- =?us-ascii?Q?yzfjwRcQ/qQvWIUSqqRzZY/K0CYDAlOSouE/rIL/b+yh3lRCiN0srQ0dVe/Y?=
- =?us-ascii?Q?qyRjw+owoesBymD92AOlh2P0QopNQPGss9fmGTmOX+B5toy4cZyiW71q5rbX?=
- =?us-ascii?Q?O5PvZyEXJhjHudaHVZrV55OKaYgVh5pBQTesTeXVUjbyu01Erisg1J60077V?=
- =?us-ascii?Q?/uKuYl8qF/ntUuSxRnSp1ZH9YhPArGoFwvYk93g7V4TWDl2khk7yf5zemmio?=
- =?us-ascii?Q?nqcfIyWZolyVDhImvlODBjwcEarkboHdkNPJq+S1JImUXyZBQ9HpZz31pYFv?=
- =?us-ascii?Q?qvZBZGF+2XIS5BbnClovFifsBxtdZQLa6roiYrUe7VPpnMQ+8T16Xs4YHy8p?=
- =?us-ascii?Q?lGVkJWB42zUvGXJsgOKA70cjRXTHX4MldfZwOltQOfGWk6Ba9jMd4LXv4D0P?=
- =?us-ascii?Q?QZdMQsY4/ulmASO6H27/W8R8+3E8G+OjJllYSFc9bJT8fSMqpDqbYz9h10tE?=
- =?us-ascii?Q?032Xq25Wtz6boIghn6XEyFrkcZlk+7RS3WrEBikIN4qe80H8/b4BKecUI/V7?=
- =?us-ascii?Q?EKJIE9iGx9LEuPnibl77ZUfl4k0VsjCX6G/IlHSmGxCx6G15Dzk5RXrmBK0V?=
- =?us-ascii?Q?UeuKs6ZXgINu2OiSB/tSCHcbSUAcW9S2hO1PtSlClcW+rsNpyI7Tdj0nMByB?=
- =?us-ascii?Q?jOrIJRGX7EaB3Jp/4Rkx7D+/WQDtfUknkIn4y68ZMIM208a4lD+fK2B5RC+5?=
- =?us-ascii?Q?+ZCSrIHWODxe26p0qP3E/QcDprFbOHMLN+bz62hD8moAI+TtBCZbvAF8dPUl?=
- =?us-ascii?Q?GYZdpjLDfksstUP3zZN7ajnlsJ8wpxeZ+IT/6oPr782wPoNAxASM5ebcWkDz?=
- =?us-ascii?Q?nxpfQ2RQAf1huM1PhudVcLT+Mgir+GQdBsLhsoa6PPWroF2mGcWAbXupM1AQ?=
- =?us-ascii?Q?n8U2MlZxcd7Te7jMVENK5SR2islAmskBcUi8k+1IbPmzGO5CUEMaLxQ1585f?=
- =?us-ascii?Q?H7mZqduw+9BGMisHuT6/YhMPNgJIjohwp75sEdNZ1y1oFM3mZwdidYPg/LvN?=
- =?us-ascii?Q?1GkhiS1dM6Us5bnPuedDcfYVsY5r9290SgMiOyZgygZ6trI383lPZj8H60LV?=
- =?us-ascii?Q?dgcx5+s+D7tpGjAWXGpv7ndt1BzLrZRp+ePm+CpyH7jOds+6uoJLxnzEc2WE?=
- =?us-ascii?Q?FUSGm496uTr0rmb0k0CiEN97PrWtMlOjl+PWAs72xMmWNrRwcK9MnabRufwJ?=
- =?us-ascii?Q?UU9+xrgZOkXvpWEHWF1nseteVzDTz37Ok8ebNqkCgCeLf7YUm6VRFnfMFiV3?=
- =?us-ascii?Q?DFUZcejOFxs6vjAvYK6qAdD2Vbki8f7+pAWhdGwjNcGOWXnSTDHTnjvWERUU?=
- =?us-ascii?Q?Lsuq+MgZDXNL2RjCpgW4TrPVYfYvb/mBqm4xBBrIOGWdDQ2UyR/O7Od+ZW0V?=
- =?us-ascii?Q?fTfc9bGtc2CApw9fsUcjWpZXWqnxuEHjXaNUonke8vlk6XzHYUUXyuJ/V7+w?=
- =?us-ascii?Q?9FIsxWvuLw=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fdd41846-42d3-45ed-2777-08da166200a3
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Apr 2022 17:39:00.2127
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: rhMsb9VNMgcgWYIyQHd8XLg3f4+HH0SAuZ8mU+S2FoRm/8jXCakFGLSO1hPnWYdH
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR12MB1422
+In-Reply-To: <CAK8P3a0QrihBR_2FQ7uZ5w2JmLjv7czfrrarCMmJOhvNdJ3p9g@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=624b6e2a
+        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=tBb2bbeoAAAA:8 a=7-415B0cAAAA:8
+        a=oQ5jPsdEZ40rj4-7sxsA:9 a=CjuIK1q_8ugA:10 a=Oj-tNtZlA1e06AYgeCfH:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 01, 2022 at 04:08:35PM -0400, Felix Kuehling wrote:
-
-> > In general I find the vm_normal_lru_page vs vm_normal_page
-> > API highly confusing.  An explicit check for zone device pages
-> > in the dozen or so spots that care has a much better documentation
-> > value, especially if accompanied by comments where it isn't entirely
-> > obvious.
+On Mon, Apr 04, 2022 at 01:45:05PM +0200, Arnd Bergmann wrote:
+> On Mon, Apr 4, 2022 at 12:19 PM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
 > 
-> OK. We can do that. It would solve the function naming problem, and we'd
-> have more visibility of device page handling in more places in the kernel,
-> which has educational value.
+> > >
+> > > /kisskb/src/fs/xfs/./xfs_trace.h:432:2: note: in expansion of macro 'TP_printk'
+> > >   TP_printk("dev %d:%d daddr 0x%llx bbcount 0x%x hold %d pincount %d "
+> > >   ^
+> > > /kisskb/src/fs/xfs/./xfs_trace.h:440:5: note: in expansion of macro '__print_flags'
+> > >      __print_flags(__entry->flags, "|", XFS_BUF_FLAGS),
+> > >      ^
+> > > /kisskb/src/fs/xfs/xfs_buf.h:67:4: note: in expansion of macro 'XBF_UNMAPPED'
+> > >   { XBF_UNMAPPED,  "UNMAPPED" }
+> > >     ^
+> > > /kisskb/src/fs/xfs/./xfs_trace.h:440:40: note: in expansion of macro 'XFS_BUF_FLAGS'
+> > >      __print_flags(__entry->flags, "|", XFS_BUF_FLAGS),
+> > >                                         ^
+> > > /kisskb/src/fs/xfs/./xfs_trace.h: In function 'trace_raw_output_xfs_buf_flags_class':
+> > > /kisskb/src/fs/xfs/xfs_buf.h:46:23: error: initializer element is not constant
+> > >  #define XBF_UNMAPPED  (1 << 31)/* do not map the buffer */
+> > >
+> > > This doesn't make a whole lotta sense to me. It's blown up in a
+> > > tracepoint macro in XFS that was not changed at all in 5.18-rc1, nor
+> > > was any of the surrounding XFS code or contexts.  Perhaps something
+> > > outside XFS changed to cause this on these platforms?
+> >
+> > Upon closer look, all builds showing this issue are using gcc-5...
+> >
+> > > Can you bisect this, please?
+> >
+> > Fortunately I still have gcc-5 installed on an older machine,
+> > and I could reproduce the issue on amd64 with
+> > "make allmodconfig fs/xfs/xfs_trace.o".
+> >
+> > Bisection points to commit e8c07082a810fbb9 ("Kbuild: move to
+> > -std=gnu11").
+> >
+> > [1] gcc version 5.5.0 20171010 (Ubuntu 5.5.0-12ubuntu1
+> 
+> Thanks for the report. I've produced it and can see that the problem
+> is assigning
+> the value of "(1 << 31)" to an 'unsigned long' struct member. Since this is
+> a signed integer overflow, the result is technically undefined behavior,
+> which gcc-5 does not accept as an integer constant.
+> 
+> The patch below fixes it for me, but I have not checked if there are any
+> other instances. This could also be done using the 'BIT()' macro if the
+> XFS maintainers prefer:
 
-Personally I find the 'is page XYZ' pretty confusing, like I don't
-know half of what the PageKsm annotations are for..
+So XFS only uses these flags in unsigned int fields that are
+typed via:
 
-Testing against a specific property the code goes on to use right away
-seems more descriptive to me.
+typedef unsigned int xfs_buf_flags_t;
 
-Jason
+So on the surface, declaring the flag values as ULONG and then writing
+them into a UINT field is not a nice thing to be doing.
+
+I really don't want to change the xfs_buf_flags_t type to an
+unsigned long, because that changes the packing of the first
+cacheline of the struct xfs_buf and the contents of that cacheline
+are performance critical for the lookup fastpath....
+
+Looking at __print_flags, the internal array type declaration is:
+
+struct trace_print_flags {
+        unsigned long           mask;
+        const char              *name;
+};
+
+and that's the source of the problem.  I notice __print_flags_u64()
+exists, but __print_flags_u32() does not. Should it?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
