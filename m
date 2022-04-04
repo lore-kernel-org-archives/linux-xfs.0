@@ -2,126 +2,224 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81705C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Apr 2022 22:59:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3779FC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Apr 2022 23:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237207AbiDDXBE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Apr 2022 19:01:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36148 "EHLO
+        id S241936AbiDDXSD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Apr 2022 19:18:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233001AbiDDXAd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Apr 2022 19:00:33 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8C1CA69712;
-        Mon,  4 Apr 2022 15:16:11 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B6385534A83;
-        Tue,  5 Apr 2022 08:16:07 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nbUzV-00Dp8B-4K; Tue, 05 Apr 2022 08:16:05 +1000
-Date:   Tue, 5 Apr 2022 08:16:05 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Build regressions/improvements in v5.18-rc1
-Message-ID: <20220404221605.GS1544202@dread.disaster.area>
-References: <CAHk-=wg6FWL1xjVyHx7DdjD2dHZETA5_=FqqW17Z19X-WTfWSg@mail.gmail.com>
- <20220404074734.1092959-1-geert@linux-m68k.org>
- <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
- <20220404092655.GR1544202@dread.disaster.area>
- <CAMuHMdWgqdR1o3wT9pjB=w8z=2xaDFv5DJX58-HPHOFRm3Tr8Q@mail.gmail.com>
- <CAK8P3a0QrihBR_2FQ7uZ5w2JmLjv7czfrrarCMmJOhvNdJ3p9g@mail.gmail.com>
+        with ESMTP id S242361AbiDDXRt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Apr 2022 19:17:49 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9FF1EAE6F
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Apr 2022 16:08:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1649113715;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=VINO85focsV5N5Bc+IlPM1cKcyyYcY/+6j4BOLtecYA=;
+        b=Ba9/G4AuI4rQsugS7/JgcS0amna/3t31l7m+QrRMYSQLkXudZhl25dInAnlMw0KzukNHxg
+        rfOuothjX33MaEEWH45fTpyqEmEiF1zyaht7vyFVVD1t76I5lpelMGdPWsKkdDOP1a9o//
+        SNWtsqXSGmoDn/JVfJ7gGagbjSrwT58=
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com
+ [209.85.166.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-183-ZS-J0fOLMEGMMEYkImLUNA-1; Mon, 04 Apr 2022 19:08:31 -0400
+X-MC-Unique: ZS-J0fOLMEGMMEYkImLUNA-1
+Received: by mail-il1-f197.google.com with SMTP id y8-20020a056e020f4800b002ca498c9655so1956333ilj.20
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Apr 2022 16:08:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:message-id:date:mime-version:user-agent
+         :content-language:to:cc:subject:content-transfer-encoding;
+        bh=VINO85focsV5N5Bc+IlPM1cKcyyYcY/+6j4BOLtecYA=;
+        b=hNq5G42s12Zj9jndm41PQ6xLMsc66vYhvgetPfKqJZN3eU0yuNE8usNi3Etf2INPPn
+         AeeN4IKcNopASQlcgmwWE3CwXupNOCZ/HDKmhnIuDIeZy2kaVXjiWxkQX+9llfTEaBLE
+         RN5yc98un2qh7PTk7UA7JXY2Oft38WHchOw6Pc9eZx3AqsCxgHMgihwiCtDUR5s8Aunb
+         majB9Cuy6mp17Iv1uTmAU+IJNK7q3Yx7FSWG11sUkD/SfuuaPFGENwKoesm5I727mIBc
+         1wvlCmwimqgCp7K+yNk+yuSi+CGSXw/zsootKNGc6h6hZgAyzi6h4VKTB3XlHRpzJ9Yq
+         KIOw==
+X-Gm-Message-State: AOAM532mobZe9pdC/qIrIEPjV+x0F1rMp6Bj6voPZ99uzVkyqF6THPZX
+        7G0O1+0bk7EqCoKANrMPrP7QCYOrp6OxbeQS5kOUjtr9x7spHxDJ2Ux3grK41fBcnSHo+Ixj2XE
+        VX9WLG5aps37WX6y+ggxamvm8mqp911io+7y6+PjpsOTZEcd/b4yg74V5NJq/Bue3zZCUu1Ja
+X-Received: by 2002:a05:6638:3588:b0:323:bf36:4624 with SMTP id v8-20020a056638358800b00323bf364624mr404309jal.8.1649113710014;
+        Mon, 04 Apr 2022 16:08:30 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxKJeQgqyIRgLppJIt+fUTg9JzCHkVXijmqiGzmLDElDsMbrzd2vRdFZik9m6/WaG+g0Vpoyg==
+X-Received: by 2002:a05:6638:3588:b0:323:bf36:4624 with SMTP id v8-20020a056638358800b00323bf364624mr404293jal.8.1649113709615;
+        Mon, 04 Apr 2022 16:08:29 -0700 (PDT)
+Received: from [10.0.0.146] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id s5-20020a056602168500b0064c82210ce4sm7407329iow.13.2022.04.04.16.08.28
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 Apr 2022 16:08:29 -0700 (PDT)
+From:   Eric Sandeen <esandeen@redhat.com>
+X-Google-Original-From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <a8bc42f2-98db-2f16-2879-9ed62415ba01@redhat.com>
+Date:   Mon, 4 Apr 2022 18:08:28 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAK8P3a0QrihBR_2FQ7uZ5w2JmLjv7czfrrarCMmJOhvNdJ3p9g@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=624b6e2a
-        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=tBb2bbeoAAAA:8 a=7-415B0cAAAA:8
-        a=oQ5jPsdEZ40rj4-7sxsA:9 a=CjuIK1q_8ugA:10 a=Oj-tNtZlA1e06AYgeCfH:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.7.0
+Content-Language: en-US
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH V2] mkfs: increase the minimum log size to 64MB when possible
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 04, 2022 at 01:45:05PM +0200, Arnd Bergmann wrote:
-> On Mon, Apr 4, 2022 at 12:19 PM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-> 
-> > >
-> > > /kisskb/src/fs/xfs/./xfs_trace.h:432:2: note: in expansion of macro 'TP_printk'
-> > >   TP_printk("dev %d:%d daddr 0x%llx bbcount 0x%x hold %d pincount %d "
-> > >   ^
-> > > /kisskb/src/fs/xfs/./xfs_trace.h:440:5: note: in expansion of macro '__print_flags'
-> > >      __print_flags(__entry->flags, "|", XFS_BUF_FLAGS),
-> > >      ^
-> > > /kisskb/src/fs/xfs/xfs_buf.h:67:4: note: in expansion of macro 'XBF_UNMAPPED'
-> > >   { XBF_UNMAPPED,  "UNMAPPED" }
-> > >     ^
-> > > /kisskb/src/fs/xfs/./xfs_trace.h:440:40: note: in expansion of macro 'XFS_BUF_FLAGS'
-> > >      __print_flags(__entry->flags, "|", XFS_BUF_FLAGS),
-> > >                                         ^
-> > > /kisskb/src/fs/xfs/./xfs_trace.h: In function 'trace_raw_output_xfs_buf_flags_class':
-> > > /kisskb/src/fs/xfs/xfs_buf.h:46:23: error: initializer element is not constant
-> > >  #define XBF_UNMAPPED  (1 << 31)/* do not map the buffer */
-> > >
-> > > This doesn't make a whole lotta sense to me. It's blown up in a
-> > > tracepoint macro in XFS that was not changed at all in 5.18-rc1, nor
-> > > was any of the surrounding XFS code or contexts.  Perhaps something
-> > > outside XFS changed to cause this on these platforms?
-> >
-> > Upon closer look, all builds showing this issue are using gcc-5...
-> >
-> > > Can you bisect this, please?
-> >
-> > Fortunately I still have gcc-5 installed on an older machine,
-> > and I could reproduce the issue on amd64 with
-> > "make allmodconfig fs/xfs/xfs_trace.o".
-> >
-> > Bisection points to commit e8c07082a810fbb9 ("Kbuild: move to
-> > -std=gnu11").
-> >
-> > [1] gcc version 5.5.0 20171010 (Ubuntu 5.5.0-12ubuntu1
-> 
-> Thanks for the report. I've produced it and can see that the problem
-> is assigning
-> the value of "(1 << 31)" to an 'unsigned long' struct member. Since this is
-> a signed integer overflow, the result is technically undefined behavior,
-> which gcc-5 does not accept as an integer constant.
-> 
-> The patch below fixes it for me, but I have not checked if there are any
-> other instances. This could also be done using the 'BIT()' macro if the
-> XFS maintainers prefer:
+Recently, the upstream maintainers have been taking a lot of heat on
+account of writer threads encountering high latency when asking for log
+grant space when the log is small.  The reported use case is a heavily
+threaded indexing product logging trace information to a filesystem
+ranging in size between 20 and 250GB.  The meetings that result from the
+complaints about latency and stall warnings in dmesg both from this use
+case and also a large well known cloud product are now consuming 25% of
+the maintainer's weekly time and have been for months.
 
-So XFS only uses these flags in unsigned int fields that are
-typed via:
+For small filesystems, the log is small by default because we have
+defaulted to a ratio of 1:2048 (or even less).  For grown filesystems,
+this is even worse, because big filesystems generate big metadata.
+However, the log size is still insufficient even if it is formatted at
+the larger size.
 
-typedef unsigned int xfs_buf_flags_t;
+On a 220GB filesystem, the 99.95% latencies observed with a 200-writer
+file synchronous append workload running on a 44-AG filesystem (with 44
+CPUs) spread across 4 hard disks showed:
 
-So on the surface, declaring the flag values as ULONG and then writing
-them into a UINT field is not a nice thing to be doing.
+	99.5%
+Log(MB)	Latency(ms)	BW (MB/s)	xlog_grant_head_wait
+10	520		243		1875
+20	220		308		540
+40	140		360		6
+80	92		363		0
+160	86		364		0
 
-I really don't want to change the xfs_buf_flags_t type to an
-unsigned long, because that changes the packing of the first
-cacheline of the struct xfs_buf and the contents of that cacheline
-are performance critical for the lookup fastpath....
+For 4 NVME, the results were:
 
-Looking at __print_flags, the internal array type declaration is:
+10	201		409		898
+20	177		488		144
+40	122		550		0
+80	120		549		0
+160	121		545		0
 
-struct trace_print_flags {
-        unsigned long           mask;
-        const char              *name;
-};
+This shows pretty clearly that we could reduce the amount of time that
+threads spend waiting on the XFS log by increasing the log size to at
+least 40MB regardless of size.  We then repeated the benchmark with a
+cloud system and an old machine to see if there were any ill effects on
+less stable hardware.
 
-and that's the source of the problem.  I notice __print_flags_u64()
-exists, but __print_flags_u32() does not. Should it?
+For cloudy iscsi block storage, the results were:
 
-Cheers,
+10	390		176		2584
+20	173		186		357
+40	37		187		0
+80	40		183		0
+160	37		183		0
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+A decade-old machine w/ 24 CPUs and a giant spinning disk RAID6 array
+produced this:
+
+10	55		5.4		0
+20	40		5.9		0
+40	62		5.7		0
+80	66		5.7		0
+160	25		5.4		0
+
+From the first three scenarios, it is clear that there are gains to be
+had by sizing the log somewhere between 40 and 80MB -- the long tail
+latency drops quite a bit, and programs are no longer blocking on the
+log's transaction space grant heads.  Split the difference and set the
+log size floor to 64MB.
+
+Inspired-by: Darrick J. Wong <djwong@kernel.org>
+Commit-log-stolen-from: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+This is reworked, with dependencies on other patches removed; details in
+followup emails.
+
+diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
+index a16a9fe2..ef4443b0 100644
+--- a/include/xfs_multidisk.h
++++ b/include/xfs_multidisk.h
+@@ -17,8 +17,6 @@
+ #define	XFS_MIN_INODE_PERBLOCK	2		/* min inodes per block */
+ #define	XFS_DFL_IMAXIMUM_PCT	25		/* max % of space for inodes */
+ #define	XFS_MIN_REC_DIRSIZE	12		/* 4096 byte dirblocks (V2) */
+-#define	XFS_DFL_LOG_FACTOR	5		/* default log size, factor */
+-						/* with max trans reservation */
+ #define XFS_MAX_INODE_SIG_BITS	32		/* most significant bits in an
+ 						 * inode number that we'll
+ 						 * accept w/o warnings
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 96682f9a..e36c1083 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -18,6 +18,14 @@
+ #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
+ #define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
+ 
++/*
++ * Realistically, the log should never be smaller than 64MB.  Studies by the
++ * kernel maintainer in early 2022 have shown a dramatic reduction in long tail
++ * latency of the xlog grant head waitqueue when running a heavy metadata
++ * update workload when the log size is at least 64MB.
++ */
++#define XFS_MIN_REALISTIC_LOG_BLOCKS(blog)	(MEGABYTES(64, (blog)))
++
+ /*
+  * Use this macro before we have superblock and mount structure to
+  * convert from basic blocks to filesystem blocks.
+@@ -3266,7 +3274,7 @@ calculate_log_size(
+ 	struct xfs_mount	*mp)
+ {
+ 	struct xfs_sb		*sbp = &mp->m_sb;
+-	int			min_logblocks;
++	int			min_logblocks;	/* absolute minimum */
+ 	struct xfs_mount	mount;
+ 
+ 	/* we need a temporary mount to calculate the minimum log size. */
+@@ -3308,28 +3316,17 @@ _("external log device size %lld blocks too small, must be at least %lld blocks\
+ 
+ 	/* internal log - if no size specified, calculate automatically */
+ 	if (!cfg->logblocks) {
+-		if (cfg->dblocks < GIGABYTES(1, cfg->blocklog)) {
+-			/* tiny filesystems get minimum sized logs. */
+-			cfg->logblocks = min_logblocks;
+-		} else if (cfg->dblocks < GIGABYTES(16, cfg->blocklog)) {
++		/* Use a 2048:1 fs:log ratio for most filesystems */
++		cfg->logblocks = (cfg->dblocks << cfg->blocklog) / 2048;
++		cfg->logblocks = cfg->logblocks >> cfg->blocklog;
+ 
+-			/*
+-			 * For small filesystems, we want to use the
+-			 * XFS_MIN_LOG_BYTES for filesystems smaller than 16G if
+-			 * at all possible, ramping up to 128MB at 256GB.
+-			 */
+-			cfg->logblocks = min(XFS_MIN_LOG_BYTES >> cfg->blocklog,
+-					min_logblocks * XFS_DFL_LOG_FACTOR);
+-		} else {
+-			/*
+-			 * With a 2GB max log size, default to maximum size
+-			 * at 4TB. This keeps the same ratio from the older
+-			 * max log size of 128M at 256GB fs size. IOWs,
+-			 * the ratio of fs size to log size is 2048:1.
+-			 */
+-			cfg->logblocks = (cfg->dblocks << cfg->blocklog) / 2048;
+-			cfg->logblocks = cfg->logblocks >> cfg->blocklog;
+-		}
++		/* But don't go below a reasonable size */
++		cfg->logblocks = max(cfg->logblocks,
++				XFS_MIN_REALISTIC_LOG_BLOCKS(cfg->blocklog));
++
++		/* And for a tiny filesystem, use the absolute minimum size */
++		if (cfg->dblocks < MEGABYTES(512, cfg->blocklog))
++			cfg->logblocks = min_logblocks;
+ 
+ 		/* Ensure the chosen size meets minimum log size requirements */
+ 		cfg->logblocks = max(min_logblocks, cfg->logblocks);
+
