@@ -2,212 +2,157 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69E10C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 01:07:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16BF9C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 02:53:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229379AbiDEBJl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Apr 2022 21:09:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49388 "EHLO
+        id S230253AbiDECzE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Apr 2022 22:55:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbiDEBJl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Apr 2022 21:09:41 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D316A3A4293
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Apr 2022 18:06:22 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4A3B1B81B04
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 00:55:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFDDAC2BBE4;
-        Tue,  5 Apr 2022 00:55:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649120127;
-        bh=PjXzTpso1bU8Z1veQH3vcWTRI2cOypmFMSBJQkZylOo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=i7M+hbmW/Dzi4u5rAF/aT2E8WGl223j4NzqUDhNYP0S3oP7+wWT7IWCGWxNtdOmfN
-         tUVn1G3RtOiyDlkxSFibqZom3Q7qHJlnKIpMwhCfzeGda6Ej3b32c5O6cNpkZxRmOs
-         OQ8G9ZYbtK6etr81IcrBBeyGedAZCENWeVFJGI/6xy7Wl1OasbFWexFUifUFRFFjXD
-         mINlhsjXfYHMe7/DPRjygmk+qPSx4WQ49xT465tGJ3BU/M/JHReM6WxOZ5bMDZDCZu
-         4lwrWc69e3YUerovsexPydgihrAQUB1qqrYz0DjPL6gvPwdWyJqhY1alfs/AmEjhJ+
-         QRwxZWShB4w+Q==
-Date:   Mon, 4 Apr 2022 17:55:27 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <esandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH V2] mkfs: increase the minimum log size to 64MB when
- possible
-Message-ID: <20220405005527.GQ27690@magnolia>
-References: <a8bc42f2-98db-2f16-2879-9ed62415ba01@redhat.com>
+        with ESMTP id S230339AbiDECy5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Apr 2022 22:54:57 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B2F1D204284
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Apr 2022 19:03:15 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 7574B534462
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 12:03:14 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nbYXI-00Dt4I-Tu
+        for linux-xfs@vger.kernel.org; Tue, 05 Apr 2022 12:03:12 +1000
+Date:   Tue, 5 Apr 2022 12:03:12 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [5.19 cycle] Planning and goals
+Message-ID: <20220405020312.GU1544202@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a8bc42f2-98db-2f16-2879-9ed62415ba01@redhat.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=624ba362
+        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=7-415B0cAAAA:8
+        a=p6uJBkLvhlZeFVNXkkcA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 04, 2022 at 06:08:28PM -0500, Eric Sandeen wrote:
-> Recently, the upstream maintainers have been taking a lot of heat on
-> account of writer threads encountering high latency when asking for log
-> grant space when the log is small.  The reported use case is a heavily
-> threaded indexing product logging trace information to a filesystem
-> ranging in size between 20 and 250GB.  The meetings that result from the
-> complaints about latency and stall warnings in dmesg both from this use
-> case and also a large well known cloud product are now consuming 25% of
-> the maintainer's weekly time and have been for months.
-> 
-> For small filesystems, the log is small by default because we have
-> defaulted to a ratio of 1:2048 (or even less).  For grown filesystems,
-> this is even worse, because big filesystems generate big metadata.
-> However, the log size is still insufficient even if it is formatted at
-> the larger size.
-> 
-> On a 220GB filesystem, the 99.95% latencies observed with a 200-writer
-> file synchronous append workload running on a 44-AG filesystem (with 44
-> CPUs) spread across 4 hard disks showed:
-> 
-> 	99.5%
-> Log(MB)	Latency(ms)	BW (MB/s)	xlog_grant_head_wait
-> 10	520		243		1875
-> 20	220		308		540
-> 40	140		360		6
-> 80	92		363		0
-> 160	86		364		0
-> 
-> For 4 NVME, the results were:
-> 
-> 10	201		409		898
-> 20	177		488		144
-> 40	122		550		0
-> 80	120		549		0
-> 160	121		545		0
-> 
-> This shows pretty clearly that we could reduce the amount of time that
-> threads spend waiting on the XFS log by increasing the log size to at
-> least 40MB regardless of size.  We then repeated the benchmark with a
-> cloud system and an old machine to see if there were any ill effects on
-> less stable hardware.
-> 
-> For cloudy iscsi block storage, the results were:
-> 
-> 10	390		176		2584
-> 20	173		186		357
-> 40	37		187		0
-> 80	40		183		0
-> 160	37		183		0
-> 
-> A decade-old machine w/ 24 CPUs and a giant spinning disk RAID6 array
-> produced this:
-> 
-> 10	55		5.4		0
-> 20	40		5.9		0
-> 40	62		5.7		0
-> 80	66		5.7		0
-> 160	25		5.4		0
-> 
-> From the first three scenarios, it is clear that there are gains to be
-> had by sizing the log somewhere between 40 and 80MB -- the long tail
-> latency drops quite a bit, and programs are no longer blocking on the
-> log's transaction space grant heads.  Split the difference and set the
-> log size floor to 64MB.
-> 
-> Inspired-by: Darrick J. Wong <djwong@kernel.org>
-> Commit-log-stolen-from: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> This is reworked, with dependencies on other patches removed; details in
-> followup emails.
-> 
-> diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
-> index a16a9fe2..ef4443b0 100644
-> --- a/include/xfs_multidisk.h
-> +++ b/include/xfs_multidisk.h
-> @@ -17,8 +17,6 @@
->  #define	XFS_MIN_INODE_PERBLOCK	2		/* min inodes per block */
->  #define	XFS_DFL_IMAXIMUM_PCT	25		/* max % of space for inodes */
->  #define	XFS_MIN_REC_DIRSIZE	12		/* 4096 byte dirblocks (V2) */
-> -#define	XFS_DFL_LOG_FACTOR	5		/* default log size, factor */
-> -						/* with max trans reservation */
->  #define XFS_MAX_INODE_SIG_BITS	32		/* most significant bits in an
->  						 * inode number that we'll
->  						 * accept w/o warnings
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 96682f9a..e36c1083 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -18,6 +18,14 @@
->  #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
->  #define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
->  
-> +/*
-> + * Realistically, the log should never be smaller than 64MB.  Studies by the
-> + * kernel maintainer in early 2022 have shown a dramatic reduction in long tail
-> + * latency of the xlog grant head waitqueue when running a heavy metadata
-> + * update workload when the log size is at least 64MB.
-> + */
-> +#define XFS_MIN_REALISTIC_LOG_BLOCKS(blog)	(MEGABYTES(64, (blog)))
-> +
->  /*
->   * Use this macro before we have superblock and mount structure to
->   * convert from basic blocks to filesystem blocks.
-> @@ -3266,7 +3274,7 @@ calculate_log_size(
->  	struct xfs_mount	*mp)
->  {
->  	struct xfs_sb		*sbp = &mp->m_sb;
-> -	int			min_logblocks;
-> +	int			min_logblocks;	/* absolute minimum */
->  	struct xfs_mount	mount;
->  
->  	/* we need a temporary mount to calculate the minimum log size. */
-> @@ -3308,28 +3316,17 @@ _("external log device size %lld blocks too small, must be at least %lld blocks\
->  
->  	/* internal log - if no size specified, calculate automatically */
->  	if (!cfg->logblocks) {
-> -		if (cfg->dblocks < GIGABYTES(1, cfg->blocklog)) {
-> -			/* tiny filesystems get minimum sized logs. */
-> -			cfg->logblocks = min_logblocks;
-> -		} else if (cfg->dblocks < GIGABYTES(16, cfg->blocklog)) {
-> +		/* Use a 2048:1 fs:log ratio for most filesystems */
-> +		cfg->logblocks = (cfg->dblocks << cfg->blocklog) / 2048;
-> +		cfg->logblocks = cfg->logblocks >> cfg->blocklog;
->  
-> -			/*
-> -			 * For small filesystems, we want to use the
-> -			 * XFS_MIN_LOG_BYTES for filesystems smaller than 16G if
-> -			 * at all possible, ramping up to 128MB at 256GB.
-> -			 */
-> -			cfg->logblocks = min(XFS_MIN_LOG_BYTES >> cfg->blocklog,
-> -					min_logblocks * XFS_DFL_LOG_FACTOR);
-> -		} else {
-> -			/*
-> -			 * With a 2GB max log size, default to maximum size
-> -			 * at 4TB. This keeps the same ratio from the older
-> -			 * max log size of 128M at 256GB fs size. IOWs,
-> -			 * the ratio of fs size to log size is 2048:1.
-> -			 */
-> -			cfg->logblocks = (cfg->dblocks << cfg->blocklog) / 2048;
-> -			cfg->logblocks = cfg->logblocks >> cfg->blocklog;
-> -		}
-> +		/* But don't go below a reasonable size */
-> +		cfg->logblocks = max(cfg->logblocks,
-> +				XFS_MIN_REALISTIC_LOG_BLOCKS(cfg->blocklog));
-> +
-> +		/* And for a tiny filesystem, use the absolute minimum size */
-> +		if (cfg->dblocks < MEGABYTES(512, cfg->blocklog))
-> +			cfg->logblocks = min_logblocks;
+Hi folks,
 
-Heh, I was going to apply this to any filesystem under 300MB (and then
-cut everyone off at 300M) but I suppose if you'd rather set that at 512M
-then I'm not going to complain... maybe we're better off not creating
-absurd things like 20% of a tiny FS used for logs. :D
+I'd really like to try getting the merge bottlenecks we've had
+recently unstuck, so there are a few patchsets I want to try to get
+reviewed, tested and merged for 5.19. Hopefully not too many
+surprises will get in the way and so some planning to try to
+minimises surprised might be a good thing.  Hence I want to have a
+rough plan for the work I'd like to acheive during this 5.19 cycle,
+and so that everyone has an idea of what needs to be done to (maybe)
+achieve those goals over the next few weeks.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+First of all, a rough timeline that I'm working with:
 
---D
+5.18-rc1:	where we are now
+5.18-rc2:	Update linux-xfs master branch to 5.19-rc2
+5.18-rc4:	At least 2 of the major pending works merged
+5.18-rc6:	Last point for new work to be merged
+5.18-rc6+:	Bug fixes only will be merged 
 
->  
->  		/* Ensure the chosen size meets minimum log size requirements */
->  		cfg->logblocks = max(min_logblocks, cfg->logblocks);
-> 
+I'm assuming a -rc7 kernel will be released, hence this rough
+timeline gives us 2 weeks of testing/stabilisation time before 5.19
+merge window opens. 
+
+Patchsets for review should be based on either 5.17.0 or the
+linux-xfs master branch once it has been updated to 5.19-rc2. If
+there are important bug fixes for the 5.18 cycle, I may move the
+master branch forwards to a more recent release.
+
+In terms of merge process, I plan to keep each major set of work in
+a separate topic branch so that once it has been merged the commit
+IDs remain stable. I will then merge the topic branches into the
+for-next branch. Hence the for-next tree may still rebase (e.g. if I
+need to send fixes for 5.18-rcX), but I hope to keep the individual
+commits that make up the for-next branch as stable as possible. Bug
+fixes for patchsets will get appended to the topic branches and the
+for-next branch rebuilt via a new set of merges.
+
+The major patchsets that I'm hoping to get reviewed and merged this
+cycle:
+
+- large extent counts V8 (Chandan)
+	- Merge criteria and status:
+		- review complete: 95%
+		- no regressions when not enabled: 70%
+		- no major regressions when enabled: 0%
+	- Open questions:
+		- Experimental tag for the first couple of cycles?
+		  (Darrick says "YES" on #xfs)
+	- Needs more QA, but signs are good so far.
+	- Almost ready to merge.
+
+- Logged attributes V28 (Allison)
+	- I haven't looked at this since V24, so I'm not sure what
+	  the current status is. I will do that discovery later in
+	  the week.
+	- Merge criteria and status:
+		- review complete: Not sure
+		- no regressions when not enabled: v24 was OK
+		- no major regressions when enabled: v24 had issues
+	- Open questions:
+		- not sure what review will uncover
+		- don't know what problems testing will show
+		- what other log fixes does it depend on?
+		- is there a performance impact when not enabled?
+
+- DAX + reflink V11 (Ruan)
+	- Merge criteria and status:
+		- review complete: 75%
+		- no regressions when not enabled: unknown
+		- no major regressions when enabled: unknown
+	- Open questions:
+		- still a little bit of change around change
+		  notification?
+		- Not sure when V12 will arrive, hence can't really
+		  plan for this right now.
+		- external dependencies?
+
+- xlog_write() rework V8
+	- Merge criteria and status:
+		- review complete: 100%
+		- No regressions in testing: 100%
+	- Open questions:
+		- unchanged since last review/merge attempt,
+		  reverted because of problems with other code that
+		  was merged with it that isn't in this patchset
+		  now. Does it need re-reviewing?
+	- Ready to merge.
+
+- Intent Whiteouts V3
+	- Merge criteria and status:
+		- review complete: 0%
+		- No regressions in testing: 100%
+	- Open questions:
+		- will it get reviewed in time?
+		- what bits of the patchset does LARP depend on?
+		- Is LARP perf without intent whiteouts acceptible
+		  (Experimental tag tends to suggest yes).
+	- Functionally complete and tested, just needs review.
+
+Have I missed any of the major outstanding things that are nearly
+ready to go?
+
+Do the patchset authors have the time available in the next 2-3
+weeks to make enough progress to get their work merged? I'd kinda
+like to have the xlog_write() rework and the large extent counts
+merged ASAP so we have plenty of time to focus on the more
+complex/difficult pieces.  If you don't have time in the next few
+weeks, then let me know so I can adjust the plan appropriately for
+the cycle.
+
+What does everyone think of the plan?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
