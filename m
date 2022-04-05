@@ -2,107 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A754C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 06:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C926DC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 07:08:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231203AbiDEGyq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Apr 2022 02:54:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60172 "EHLO
+        id S231375AbiDEHKc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Apr 2022 03:10:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231161AbiDEGym (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 02:54:42 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BA948FE49;
-        Mon,  4 Apr 2022 23:52:44 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id ABD42B81B96;
-        Tue,  5 Apr 2022 06:52:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5887BC340F3;
-        Tue,  5 Apr 2022 06:52:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649141561;
-        bh=sfI+F1qddgBQPEPVyPm4UsT8iPzrWXdjhWe583jbPNo=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=V/qs96FwacDoAwIb3AYjsXmHxIyAPgkVCDF70o06rl9Kv/EU36wYnE2B+iVWmFDuY
-         9yuhSTxtp1RApbos0thzGGcgBcYzB4OUjwwadhMoCk9ddnMLEKl7z5ojHVyxLNPTxe
-         fkI47UjfZEnf1/Ud4Zb2n1JXmLeINpIf17so9GlwWdiyUMNfRV7wQ5S+MxBnAEYklV
-         Y8YdKnoXbq3CdeKDF/1PwekiJc2XNSMWQ0QvtapOIX7H8ZI+dMggm5cQNjfN6CVOOX
-         7Pm2r4QROcmMfAGlnaeACUWbHHdwgaBx6T+/ZTGZ0SVcsrXuQJQPOhC5ncYhaHg04Y
-         CE7JnbN9mYeEw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-m68k <linux-m68k@lists.linux-m68k.org>,
-        Parisc List <linux-parisc@vger.kernel.org>,
-        sparclinux <sparclinux@vger.kernel.org>,
-        DRI Development <dri-devel@lists.freedesktop.org>,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-um <linux-um@lists.infradead.org>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        "open list\:SERIAL DRIVERS" <linux-serial@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-xfs@vger.kernel.org,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        linux-s390 <linux-s390@vger.kernel.org>
-Subject: Re: Build regressions/improvements in v5.18-rc1
-In-Reply-To: <CAMuHMdV_-3TOHYehUsHeqwHjQtzN1Ot886K7vwPr4P-4u8eehw@mail.gmail.com>
-        (Geert Uytterhoeven's message of "Tue, 5 Apr 2022 08:46:06 +0200")
-References: <CAHk-=wg6FWL1xjVyHx7DdjD2dHZETA5_=FqqW17Z19X-WTfWSg@mail.gmail.com>
-        <20220404074734.1092959-1-geert@linux-m68k.org>
-        <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
-        <874k38u20c.fsf@tynnyri.adurom.net>
-        <CAMuHMdV_-3TOHYehUsHeqwHjQtzN1Ot886K7vwPr4P-4u8eehw@mail.gmail.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
-Date:   Tue, 05 Apr 2022 09:52:33 +0300
-Message-ID: <87czhwrphq.fsf@kernel.org>
+        with ESMTP id S230097AbiDEHKb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 03:10:31 -0400
+Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.74])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E3B8AE68;
+        Tue,  5 Apr 2022 00:08:31 -0700 (PDT)
+Received: from mail-wm1-f52.google.com ([209.85.128.52]) by
+ mrelayeu.kundenserver.de (mreue106 [213.165.67.113]) with ESMTPSA (Nemesis)
+ id 1N2mS2-1o0gYU13vQ-0138sv; Tue, 05 Apr 2022 09:08:30 +0200
+Received: by mail-wm1-f52.google.com with SMTP id h16so7369089wmd.0;
+        Tue, 05 Apr 2022 00:08:30 -0700 (PDT)
+X-Gm-Message-State: AOAM533uF+b4xAa6Ic2bQpbYjoG/RGOkmn+3taMPbMxBhp2EX5An+Xmo
+        rYi6zYE+2gSbnT9p+vHCWNu2AhFJO18VuGt1jJs=
+X-Google-Smtp-Source: ABdhPJxPvBD3liGjE4wcwAU/5uhv3UpZs9CP1VYRV8xEB/qANbka4xub+huj1JgZoNT228F8duYYmCMymQ3lWUBTDoI=
+X-Received: by 2002:a05:600c:4ecc:b0:38e:354d:909 with SMTP id
+ g12-20020a05600c4ecc00b0038e354d0909mr1768472wmq.33.1649142509779; Tue, 05
+ Apr 2022 00:08:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <CAHk-=wg6FWL1xjVyHx7DdjD2dHZETA5_=FqqW17Z19X-WTfWSg@mail.gmail.com>
+ <20220404074734.1092959-1-geert@linux-m68k.org> <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
+ <20220404092655.GR1544202@dread.disaster.area> <CAMuHMdWgqdR1o3wT9pjB=w8z=2xaDFv5DJX58-HPHOFRm3Tr8Q@mail.gmail.com>
+ <CAK8P3a0QrihBR_2FQ7uZ5w2JmLjv7czfrrarCMmJOhvNdJ3p9g@mail.gmail.com>
+ <20220404221605.GS1544202@dread.disaster.area> <CAMuHMdWak-zarKA_eCxWm5uhejWAXi0XkAuekfpAKRczLfhq3g@mail.gmail.com>
+In-Reply-To: <CAMuHMdWak-zarKA_eCxWm5uhejWAXi0XkAuekfpAKRczLfhq3g@mail.gmail.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Tue, 5 Apr 2022 09:08:13 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a1JArChbzRDFU0YPCy-7QZgqSoHe8JTH4g0yOz_Mi_MEA@mail.gmail.com>
+Message-ID: <CAK8P3a1JArChbzRDFU0YPCy-7QZgqSoHe8JTH4g0yOz_Mi_MEA@mail.gmail.com>
+Subject: Re: Build regressions/improvements in v5.18-rc1
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Dave Chinner <david@fromorbit.com>, Arnd Bergmann <arnd@arndb.de>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:v9JTIi8qJtPG3PIp92ZT1BP7xmoboLcO+2N58Y0rG8EUhOm7Txw
+ FajvsKKlzhdlcaQTsyIaUM9+ML0BjbRuHavN4q8FSwUzJTTJZoGPOucY4nJLuNxRD3agKmV
+ ZgLJvxMlCM3sXqoOLPU6f3WLfLUdVomfUMidgtlZAXRZq+SYumE+t+Z3zkFyEcjlKtj1j2O
+ zjLCHmOP1uoXs2JAYWOmQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:F6FWl9H0mQY=:mOtSjqg6Xn4k4DEScVdk+i
+ eP6YitvK+wB5dVoo6IPKnGVQ0bfZqOg0Px1eh4RgNlvtK57Z2UXVwF8ilqEfS2yoIX54o/4tR
+ nl5w5y5QluOsKaS9DlSLRgArTckW5TxPeOJYhBFo6zE5TaIes9hbwoRRpY9yWTBUjCxjzIzlP
+ w+l5k8hAPcjeiHaM+GsU/zmSEYGVPKQ/6dypB+nlFwqoUFDUhap9Kv9h/HVCYza0efskXOKjq
+ OChO11lkYvU0K8woTHHS8QfK9jXxYpNCc+Y3T3dzGHe22+zb86C6dd3hWdoGnNxxz3Xkrcef9
+ eeY87vUWZ+CfmX5fY9VRyxg064V4BEodsPkssn0FTnBzWXZdYUIAas5/gilcDo4o4/22Jfyfd
+ s0Pav7lxpHwLoAGKSFOMAr039TjniDo8goTEiI8LqsA4/duZIRgaXddEre4H6hSKTB9SvyT2W
+ IIgSP6egsS/uhMHRwi6kIDETHGC3Q8z7j3pkHZY5fuXVpj3t+yOekpRYuSNu8i3pBLKQG2r4F
+ jAmFyvnolPZaI7pcrhgQNY8ShbsEOCoeUf41S3LjjyBV9AsyvuBL/ohESvIDzzxz1XO1ZHY2p
+ +1DbeOI4WXHwTtuBlR5+XOS1v6h6D6HjHig1YdEL1IvAL7Hb4onVpfk1AgaRD+WhclR2ZF0mH
+ sZPFstixJXm5WwVOgSTfEVy4fQoZvVIQTVAstJbtFFg7nNZYkU4ZxEiVqCLtDRt2wOEdEJOVF
+ peC5Vt2EtABLN6SkGnWJmmIo26QN7iOuVFUtvpqbBoOot0HqUWCfqTg6D2dSLWjlAxusCiH5J
+ Q0E4ToUVgfOX8ictrwEugfM7VBvSXW6u/6TRa97HcDNxbfEj/E=
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
-
-> On Mon, Apr 4, 2022 at 8:39 PM Kalle Valo <kvalo@kernel.org> wrote:
->> Geert Uytterhoeven <geert@linux-m68k.org> writes:
->> >> /kisskb/src/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:
->> >> error: case label does not reduce to an integer constant: => 3798:2,
->> >> 3809:2
->> >
->> > arm64-gcc5.4/arm64-allmodconfig
->> > powerpc-gcc5/powerpc-allmodconfig
->> > powerpc-gcc5/ppc64_book3e_allmodconfig
->>
->> After v5.17 there were two commits to brcmfmac/sdio.c:
->>
->> $ git log --oneline v5.17.. drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->> ed26edf7bfd9 brcmfmac: Add BCM43454/6 support
->> 6d766d8cb505 brcmfmac: pcie: Declare missing firmware files in pcie.c
->>
->> I can't see how either of them could cause this warning. Could something
->> else cause this or am I missing something?
+?On Tue, Apr 5, 2022 at 8:47 AM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+> On Tue, Apr 5, 2022 at 12:16 AM Dave Chinner <david@fromorbit.com> wrote:
+> > So XFS only uses these flags in unsigned int fields that are
+> > typed via:
+> >
+> > typedef unsigned int xfs_buf_flags_t;
+> >
+> > So on the surface, declaring the flag values as ULONG and then writing
+> > them into a UINT field is not a nice thing to be doing.
+> >
+> > I really don't want to change the xfs_buf_flags_t type to an
+> > unsigned long, because that changes the packing of the first
+> > cacheline of the struct xfs_buf and the contents of that cacheline
+> > are performance critical for the lookup fastpath....
 >
-> Doh, I should not have reduced the CC list in the xfs subthread...
->
-> The builds above are all gcc-5 builds, so they are affected by the same
-> issue as XFS: unsigned constants that don't fit in int are lacking a
-> "U" suffix.
->
-> I assume Arnd's patch for
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> fixes this?
-> https://lore.kernel.org/all/CAK8P3a0wRiS03imdXk2WbGONkSSczEGdE-ue5ubF6UyyDE9dQg@mail.gmail.com
+> Hence just use "1u << n" instead of "1ul << n"?
 
-Great, thanks. I assume Arnd will submit it officially at some point.
+Right, that avoids the error as well. I picked '1ul' to match the type of
+the variable it's assigned to, but as Dave said the intended type is
+'u32', so '1u' is better here.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+> > Looking at __print_flags, the internal array type declaration is:
+> >
+> > struct trace_print_flags {
+> >         unsigned long           mask;
+> >         const char              *name;
+> > };
+> >
+> > and that's the source of the problem.  I notice __print_flags_u64()
+> > exists, but __print_flags_u32() does not. Should it?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+It's not the source of the error, as there is no signed integer
+overflow when assigning an unsigned int to an unsigned long.
+
+It may be helpful to add a __print_flags_u32(), but it's unrelated
+to the problem at hand.
+
+       Arnd
