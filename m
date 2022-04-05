@@ -2,120 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73A26C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 05:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA13AC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 05:37:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229786AbiDEF3I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Apr 2022 01:29:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51362 "EHLO
+        id S229722AbiDEFi7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Apr 2022 01:38:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229537AbiDEF3I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 01:29:08 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56617377EB
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Apr 2022 22:27:10 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id EC394B81B90
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 05:27:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B2D89C34114
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 05:27:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649136427;
-        bh=0SF96X5ka+eQ3mP+UjmTL076QvFUx0Z5K2cgAF0NNkc=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=LUN+WVLy2EhlI09gYtihAZ5yFoBqCvoL73Jj4JvcEwIJOChM7F5HGIde5/woXg1sT
-         eOyhZyqp/JpH1fHjLWXqIQi3jjy9rJKOQqnnsaFbbALr+JrwCPh7ZCKoiIPF+nl8b0
-         JcKJ5FQup0Vh0TvjJF69ltm8N0glDcd9Gw1Ib/O6OiK69tp6BRTxB9YdGAt2TXDiLU
-         oOvKhZso9AyX+X0xB6Hvo6MkwetQtoSu8XpeyAjJ9uy4S4UA9/uK0DSTaQQ8yQGqLn
-         w17ExY6/rFKi/c7qn5wZE6n+vpfOP5baGopZt1pQRMvzBJ7JVlZM7E/IuOYtIoZvg5
-         CZ1WtGhfVRvZA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 9FBA2CAC6E2; Tue,  5 Apr 2022 05:27:07 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 215804] [xfstests generic/670] Unable to handle kernel paging
- request at virtual address fffffbffff000008
-Date:   Tue, 05 Apr 2022 05:27:07 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: david@fromorbit.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215804-201763-yvs5Nhy9fK@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215804-201763@https.bugzilla.kernel.org/>
-References: <bug-215804-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229708AbiDEFi6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 01:38:58 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 531221CB20
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Apr 2022 22:37:00 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 852AD10E56CD;
+        Tue,  5 Apr 2022 15:36:59 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nbbsA-00DweP-D1; Tue, 05 Apr 2022 15:36:58 +1000
+Date:   Tue, 5 Apr 2022 15:36:58 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     sandeen@redhat.com
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH V2] mkfs: increase the minimum log size to 64MB when
+ possible
+Message-ID: <20220405053658.GW1544202@dread.disaster.area>
+References: <a8bc42f2-98db-2f16-2879-9ed62415ba01@redhat.com>
+ <ac764fd9-ddd9-3b44-02bc-c91c390881c5@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ac764fd9-ddd9-3b44-02bc-c91c390881c5@redhat.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=624bd57b
+        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=rOGq21PWSZxxjIaaS48A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215804
+On Mon, Apr 04, 2022 at 06:31:03PM -0500, Eric Sandeen wrote:
+> For starters I know the lack of if / else if in the co is a little
+> ugly but smashing into 80cols was uglier...
+> 
+> Here are the changes in log size for various filesystem geometries
+> (differing block sizes and filesystem sizes, with and without stripe
+> geometry to increase AG count). "--" means mkfs failed.
+> 
+> Blocksize: 4096
+> 	|	orig		|	new
+> size	|	log	striped	|	log	striped
+> -------------------------------------------------------
+> 128m	|	5m	m	|	5m	m
+> 256m	|	5m	18m	|	5m	18m
+> 511m	|	5m	18m	|	5m	18m
+> 512m	|	5m	18m	|	64m	18m
+> 513m	|	5m	18m	|	64m	64m
+> 1024m	|	10m	18m	|	64m	64m
+> 2047m	|	10m	18m	|	64m	64m
+> 2048m	|	10m	18m	|	64m	64m
+> 2049m	|	10m	18m	|	64m	64m
+> 4g	|	10m	20m	|	64m	64m
+> 8g	|	10m	20m	|	64m	64m
+> 15g	|	10m	20m	|	64m	64m
+> 16g	|	10m	20m	|	64m	64m
+> 17g	|	10m	20m	|	64m	64m
+> 32g	|	16m	20m	|	64m	64m
+> 64g	|	32m	32m	|	64m	64m
+> 256g	|	128m	128m	|	128m	128m
+> 512g	|	256m	256m	|	256m	256m
+> 1t	|	512m	512m	|	512m	512m
+> 2t	|	1024m	1024m	|	1024m	1024m
+> 4t	|	2038m	2038m	|	2038m	2038m
+> 8t	|	2038m	2038m	|	2038m	2038m
+> 
+> Blocksize: 1024
+> 	|	orig		|	new
+> size	|	log	striped	|	log	striped
+> ------------------------------------------------------------------------------
+> 128m	|	3m	15m	|	3m	15m
+> 256m	|	3m	15m	|	3m	15m
+> 511m	|	3m	15m	|	3m	15m
+> 512m	|	3m	15m	|	64m	15m
+> 513m	|	3m	15m	|	64m	64m
+> 1024m	|	10m	15m	|	64m	64m
+> 2047m	|	10m	16m	|	64m	64m
+> 2048m	|	10m	16m	|	64m	64m
+> 2049m	|	10m	16m	|	64m	64m
+> 4g	|	10m	16m	|	64m	64m
+> 8g	|	10m	16m	|	64m	64m
+> 15g	|	10m	16m	|	64m	64m
+> 16g	|	10m	16m	|	64m	64m
+> 17g	|	10m	16m	|	64m	64m
+> 32g	|	16m	16m	|	64m	64m
+> 64g	|	32m	32m	|	64m	64m
+> 256g	|	128m	128m	|	128m	128m
+> 512g	|	256m	256m	|	256m	256m
+> 1t	|	512m	512m	|	512m	512m
+> 2t	|	1024m	1024m	|	1024m	1024m
+> 4t	|	1024m	1024m	|	1024m	1024m
+> 8t	|	1024m	1024m	|	1024m	1024m
+> 
+> Blocksize: 65536
+> 	|	orig		|	new
+> size	|	log	striped	|	log	striped
+> ------------------------------------------------------------------------------
+> 128m	|	--	--	|	--	--
+> 256m	|	32m	--	|	32m	--
+> 511m	|	32m	32m	|	32m	32m
+> 512m	|	32m	32m	|	64m	32m
+> 513m	|	32m	32m	|	64m	63m
+> 1024m	|	32m	32m	|	64m	64m
+> 2047m	|	56m	45m	|	64m	64m
+> 2048m	|	56m	45m	|	64m	64m
+> 2049m	|	56m	45m	|	64m	64m
+> 4g	|	56m	69m	|	64m	69m
+> 8g	|	56m	69m	|	64m	69m
+> 15g	|	56m	69m	|	64m	69m
+> 16g	|	56m	69m	|	64m	69m
+> 17g	|	56m	69m	|	64m	69m
+> 32g	|	56m	69m	|	64m	69m
+> 64g	|	56m	69m	|	64m	69m
+> 256g	|	128m	128m	|	128m	128m
+> 512g	|	256m	256m	|	256m	256m
+> 1t	|	512m	512m	|	512m	512m
+> 2t	|	1024m	1024m	|	1024m	1024m
+> 4t	|	2038m	2038m	|	2038m	2038m
+> 8t	|	2038m	2038m	|	2038m	2038m
 
---- Comment #3 from Dave Chinner (david@fromorbit.com) ---
-Hi Zorro,
+Those new sizes look good to me.
 
-On Tue, Apr 05, 2022 at 04:44:35AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D215804
->=20
->             Bug ID: 215804
->            Summary: [xfstests generic/670] Unable to handle kernel paging
->                     request at virtual address fffffbffff000008
->            Product: File System
->            Version: 2.5
->     Kernel Version: xfs-5.18-merge-4
->           Hardware: All
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: XFS
->           Assignee: filesystem_xfs@kernel-bugs.kernel.org
->           Reporter: zlang@redhat.com
->         Regression: No
->=20
-> xfstests generic/670 hit a panic[1] on 64k directory block size XFS (mkfs=
-.xfs
-> -n size=3D65536 -m rmapbt=3D1 -b size=3D1024):
-.....
-> [37285.246770] Call trace:=20
-> [37285.246952]  __split_huge_pmd+0x1d8/0x34c=20
-> [37285.247246]  split_huge_pmd_address+0x10c/0x1a0=20
-> [37285.247577]  try_to_unmap_one+0xb64/0x125c=20
-> [37285.247878]  rmap_walk_file+0x1dc/0x4b0=20
-> [37285.248159]  try_to_unmap+0x134/0x16c=20
-> [37285.248427]  split_huge_page_to_list+0x5ec/0xcbc=20
-> [37285.248763]  truncate_inode_partial_folio+0x194/0x2ec=20
-> [37285.249128]  truncate_inode_pages_range+0x2e8/0x870=20
-> [37285.249483]  truncate_pagecache_range+0xa0/0xc0=20
+Acked-by: Dave Chinner <dchinner@redhat.com>
 
-That doesn't look like an XFS regression, more likely a bug in the
-new large folios in the page cache feature. Can you revert commit
-6795801366da ("xfs: Support large folios") and see if the problem
-goes away?
-
-Cheers,
-
-Dave.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+-- 
+Dave Chinner
+david@fromorbit.com
