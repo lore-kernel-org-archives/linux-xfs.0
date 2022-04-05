@@ -2,149 +2,256 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF7EC43217
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 02:54:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDB1EC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 02:54:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1839233AbiDFCzm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Apr 2022 22:55:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48534 "EHLO
+        id S1837657AbiDFCzf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Apr 2022 22:55:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1573618AbiDETZv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 15:25:51 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3035C20F71
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 12:23:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=aXCgck9hutmQpRmR/HhFlyVnMpeS/a110/GnI/PdWhw=; b=rHtmZfas+LnCSxB1BjmkY3XGKh
-        9INB/62JL5wgRFlnnL7gBowAKwfPKBUSRB+4Z75p2hTAWyL+S4hM5Ks66zWL6IiCGinBGIwuYdNzb
-        nQLyU24JGHiF++i+P+sdkmJa6BPs9oYDBViYkLkjv/IDevc0YpYtwa/FTTdbMO0gjRuhz+4vKPlnP
-        TPYUu3D82xBYVHE0txQQTZfh2saNySJFKgLl4Bs+sEYH7U7bZ2VnWEVx6SVa6d+bfz7D4KyiC4a5p
-        RlIxM1jv2zmInRo2LNgvfPh6PBNHFvrqPnF0hd9MhNI3A2CiPC+6p5mgAKvbxGn1PUOrDnIeOylfy
-        LgZGG+YA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbomM-006zJd-0Y; Tue, 05 Apr 2022 19:23:50 +0000
-Date:   Tue, 5 Apr 2022 20:23:50 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [Bug 215804] New: [xfstests generic/670] Unable to handle kernel
- paging request at virtual address fffffbffff000008
-Message-ID: <YkyXRsMubP8uNOF8@casper.infradead.org>
-References: <bug-215804-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        with ESMTP id S1457068AbiDFAyw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 20:54:52 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4406D19FF42
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 15:57:41 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 86EC5B81E7A
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 22:57:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2B2DEC385A9
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 22:57:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649199458;
+        bh=mcZVUgj3LSU59KD6TZkIqbSjfAuz8Zbnd9iH6lRaW3M=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=IJLr/oGGTPtqjwNLwyDjdAKYpjHN5OkZgj5uzVMOZ9syysI31MQi+YvxbKIC4/bul
+         A703hWs8z8zVzAv/+T4njLUbyPmXJDJ/AgQWSjayLoEIhCuSuP1An/wvu5FScLR0Fg
+         9XbmLGiSweKvGP1eYRjzlzHAkKyQBlgjv1HjTHUYrlVE4RiBLy+uGggWTMYLKrFHQX
+         OB3Vm9XUE0ZToOoG6QjMPWZs8rIJBe7NV+pL6t6nTcVuEi9bfhkuWsr/WzGyEB7sti
+         VgPjteXh75VPGmPDNBXG9YDO15EhkTSFILceNCLKCpHvUHt8KSxDBpErXzAFicXlf2
+         EqSj/RWBdOvXg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 12B4FC05FD4; Tue,  5 Apr 2022 22:57:38 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 215804] [xfstests generic/670] Unable to handle kernel paging
+ request at virtual address fffffbffff000008
+Date:   Tue, 05 Apr 2022 22:57:37 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: zlang@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-215804-201763-WVOhU47g79@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-215804-201763@https.bugzilla.kernel.org/>
+References: <bug-215804-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 05, 2022 at 04:44:35AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=215804
-[...]
-> [37285.232165] Unable to handle kernel paging request at virtual address
-> fffffbffff000008 
-> [37285.232776] KASAN: maybe wild-memory-access in range
-> [0x0003dffff8000040-0x0003dffff8000047] 
-> [37285.233332] Mem abort info: 
-> [37285.233520]   ESR = 0x96000006 
-> [37285.233725]   EC = 0x25: DABT (current EL), IL = 32 bits 
-> [37285.234077]   SET = 0, FnV = 0 
-> [37285.234281]   EA = 0, S1PTW = 0 
-> [37285.234544]   FSC = 0x06: level 2 translation fault 
-> [37285.234871] Data abort info: 
-> [37285.235065]   ISV = 0, ISS = 0x00000006 
-> [37285.235319]   CM = 0, WnR = 0 
-> [37285.235517] swapper pgtable: 4k pages, 48-bit VAs, pgdp=00000004574eb000 
-> [37285.235953] [fffffbffff000008] pgd=0000000458c71003, p4d=0000000458c71003,
-> pud=0000000458c72003, pmd=0000000000000000 
-> [37285.236651] Internal error: Oops: 96000006 [#1] SMP 
-> [37285.239187] CPU: 3 PID: 3302514 Comm: xfs_io Kdump: loaded Tainted: G       W         5.17.0+ #1 
-> [37285.239810] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/2015 
-> [37285.240292] pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--) 
-> [37285.240783] pc : __split_huge_pmd+0x1d8/0x34c 
-> [37285.241097] lr : __split_huge_pmd+0x174/0x34c 
-> [37285.241407] sp : ffff800023a56fe0 
-> [37285.241642] x29: ffff800023a56fe0 x28: 0000000000000000 x27:
-> ffff0001c54d4060 
-> [37285.242145] x26: 0000000000000000 x25: 0000000000000000 x24:
-> fffffc00056cf000 
-> [37285.242661] x23: 1ffff0000474ae0a x22: ffff0007104fe630 x21:
-> ffff00014fab66b0 
-> [37285.243175] x20: ffff800023a57080 x19: fffffbffff000000 x18:
-> 0000000000000000 
-> [37285.243689] x17: 0000000000000000 x16: ffffb109a2ec7e30 x15:
-> 0000ffffd9035c10 
-> [37285.244202] x14: 00000000f2040000 x13: 0000000000000000 x12:
-> ffff70000474aded 
-> [37285.244715] x11: 1ffff0000474adec x10: ffff70000474adec x9 :
-> dfff800000000000 
-> [37285.245230] x8 : ffff800023a56f63 x7 : 0000000000000001 x6 :
-> 0000000000000003 
-> [37285.245745] x5 : ffff800023a56f60 x4 : ffff70000474adec x3 :
-> 1fffe000cd086e01 
-> [37285.246257] x2 : 1fffff7fffe00001 x1 : 0000000000000000 x0 :
-> fffffbffff000008 
-> [37285.246770] Call trace: 
-> [37285.246952]  __split_huge_pmd+0x1d8/0x34c 
-> [37285.247246]  split_huge_pmd_address+0x10c/0x1a0 
-> [37285.247577]  try_to_unmap_one+0xb64/0x125c 
-> [37285.247878]  rmap_walk_file+0x1dc/0x4b0 
-> [37285.248159]  try_to_unmap+0x134/0x16c 
-> [37285.248427]  split_huge_page_to_list+0x5ec/0xcbc 
-> [37285.248763]  truncate_inode_partial_folio+0x194/0x2ec 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215804
 
-Clearly this is due to my changes, but I'm wondering why it doesn't
-happen with misaligned mappings and shmem today.  Here's the path I
-see as being problematic:
+--- Comment #7 from Zorro Lang (zlang@redhat.com) ---
+Get below messages from aarch64 with linux v5.18-rc1 (which reproduced this=
+ bug
+too):
 
-split_huge_page()
-  split_huge_page_to_list()
-    unmap_page()
-      ttu_flags = ... TTU_SPLIT_HUGE_PMD ...
-      try_to_unmap()
-        try_to_unmap_one()
-	  split_huge_pmd_address()
-	    pmd = pmd_offset(pud, address);
-	    __split_huge_pmd(vma, pmd, address, freeze, folio);
-	      if (folio) {
-                if (folio != page_folio(pmd_page(*pmd)))
+# ./scripts/faddr2line vmlinux __split_huge_pmd+0x1d8/0x34c
+__split_huge_pmd+0x1d8/0x34c:
+_compound_head at
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/./include/lin=
+ux/page-flags.h:263
+(inlined by) __split_huge_pmd at
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/huge_memor=
+y.c:2150
 
-I'm assuming it's crashing at that line.  Calling pmd_page() on a
-pmd that we haven't checked is pmd_trans_huge() seems like a really
-bad idea.  I probably compounded that problem by calling page_folio()
-on something that's not necessarily a PMD that points to a page, but
-I think the real sin here is that nobody checks before this that it's
-trans_huge.
+# ./scripts/decode_stacktrace.sh vmlinux <crash_calltrace.log
+[ 2129.736862] Unable to handle kernel paging request at virtual address
+fffffd1d59000008
+[ 2129.780524] KASAN: maybe wild-memory-access in range
+[0x0003e8eac8000040-0x0003e8eac8000047]
+[ 2129.783285] Mem abort info:
+[ 2129.783997]   ESR =3D 0x96000006
+[ 2129.784732]   EC =3D 0x25: DABT (current EL), IL =3D 32 bits
+[ 2129.786221]   SET =3D 0, FnV =3D 0
+[ 2129.787015]   EA =3D 0, S1PTW =3D 0
+[ 2129.787944]   FSC =3D 0x06: level 2 translation fault
+[ 2129.789120] Data abort info:
+[ 2129.789858]   ISV =3D 0, ISS =3D 0x00000006
+[ 2129.790801]   CM =3D 0, WnR =3D 0
+[ 2129.791542] swapper pgtable: 4k pages, 48-bit VAs, pgdp=3D00000000fa88b0=
+00
+[ 2129.793131] [fffffd1d59000008] pgd=3D10000001bf22e003, p4d=3D10000001bf2=
+2e003,
+pud=3D10000001bf22d003, pmd=3D0000000000000000
+[ 2129.797297] Internal error: Oops: 96000006 [#1] SMP
+[ 2129.798708] Modules linked in: tls rfkill sunrpc vfat fat drm fuse xfs
+libcrc32c crct10dif_ce ghash_ce sha2_ce virtio_console virtio_blk sha256_ar=
+m64
+sha1_ce virtio_net net_failover failover virtio_mmio
+[ 2129.805211] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/20=
+15
+[ 2129.806925] pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=
+=3D--)
+[ 2129.808682] pc : __split_huge_pmd
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/./include/li=
+nux/page-flags.h:263
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/huge_memor=
+y.c:2150)=20
+[ 2129.809909] lr : __split_huge_pmd
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/./arch/arm64=
+/include/asm/pgtable.h:387
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/huge_memor=
+y.c:2150)=20
+[ 2129.811003] sp : ffff80000e5a6fe0
+[ 2129.811834] x29: ffff80000e5a6fe0 x28: 0000000000000000 x27:
+ffff4757455eede0
+[ 2129.813645] x26: 0000000000000000 x25: 0000000000000000 x24:
+fffffd1d5eeb4800
+[ 2129.815412] x23: 1ffff00001cb4e0a x22: ffff4757943b0a50 x21:
+ffff475755a56270
+[ 2129.817219] x20: ffff80000e5a7080 x19: fffffd1d59000000 x18:
+0000000000000000
+[ 2129.819029] x17: 0000000000000000 x16: ffffb625b8e67e20 x15:
+1fffe8eaf65232e9
+[ 2129.820840] x14: 0000000000000000 x13: 0000000000000000 x12:
+ffff700001cb4ded
+[ 2129.822654] x11: 1ffff00001cb4dec x10: ffff700001cb4dec x9 :
+dfff800000000000
+[ 2129.824447] x8 : ffff80000e5a6f63 x7 : 0000000000000001 x6 :
+0000000000000003
+[ 2129.826256] x5 : ffff80000e5a6f60 x4 : ffff700001cb4dec x3 :
+1fffe8eaf8fd6c01
+[ 2129.828045] x2 : 1fffffa3ab200001 x1 : 0000000000000000 x0 :
+fffffd1d59000008
+[ 2129.829858] Call trace:
+[ 2129.830506] __split_huge_pmd
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/./include/li=
+nux/page-flags.h:263
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/huge_memor=
+y.c:2150)=20
+[ 2129.831525] split_huge_pmd_address
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/huge_memo=
+ry.c:2199)=20
+[ 2129.832667] try_to_unmap_one
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/internal.=
+h:504
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/rmap.c:145=
+2)=20
+[ 2129.833719] rmap_walk_file
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/rmap.c:23=
+23)=20
+[ 2129.834684] try_to_unmap
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/rmap.c:23=
+52
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/rmap.c:172=
+6)=20
+[ 2129.835628] split_huge_page_to_list
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/./arch/arm64=
+/include/asm/irqflags.h:70
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/./arch/arm64/=
+include/asm/irqflags.h:98
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/huge_memor=
+y.c:2567)=20
+[ 2129.836811] truncate_inode_partial_folio
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/truncate.=
+c:243)=20
+[ 2129.838119] truncate_inode_pages_range
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/truncate.=
+c:381)=20
+[ 2129.839360] truncate_pagecache_range
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/mm/truncate.=
+c:868)=20
+[ 2129.840518] xfs_flush_unmap_range
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/xfs/xfs_b=
+map_util.c:953)
+xfs
+[ 2129.842300] xfs_reflink_remap_prep
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/xfs/xfs_r=
+eflink.c:1372)
+xfs
+[ 2129.843932] xfs_file_remap_range
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/xfs/xfs_f=
+ile.c:1129)
+xfs
+[ 2129.845495] do_clone_file_range
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/remap_ran=
+ge.c:383)=20
+[ 2129.846573] vfs_clone_file_range
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/remap_ran=
+ge.c:401)=20
+[ 2129.847646] ioctl_file_clone
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/ioctl.c:2=
+41)=20
+[ 2129.848615] do_vfs_ioctl
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/ioctl.c:8=
+23)=20
+[ 2129.849606] __arm64_sys_ioctl
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/ioctl.c:8=
+69
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/ioctl.c:856
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/ioctl.c:85=
+6)=20
+[ 2129.850630] invoke_syscall.constprop.0
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/arch/arm64/k=
+ernel/syscall.c:38
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/arch/arm64/ke=
+rnel/syscall.c:52)=20
+[ 2129.851866] el0_svc_common.constprop.0
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/arch/arm64/k=
+ernel/syscall.c:158)=20
+[ 2129.853118] do_el0_svc
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/arch/arm64/k=
+ernel/syscall.c:182)=20
+[ 2129.853969] el0_svc
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/arch/arm64/k=
+ernel/entry-common.c:133
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/arch/arm64/ke=
+rnel/entry-common.c:142
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/arch/arm64/ke=
+rnel/entry-common.c:617)=20
+[ 2129.854850] el0t_64_sync_handler
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/arch/arm64/k=
+ernel/entry-common.c:635)=20
+[ 2129.855950] el0t_64_sync
+(/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/arch/arm64/k=
+ernel/entry.S:581)=20
+[ 2129.856898] Code: 91002260 d343fc02 38e16841 35000b41 (f9400660)
+All code
+=3D=3D=3D=3D=3D=3D=3D=3D
+   0:   91002260        add     x0, x19, #0x8
+   4:   d343fc02        lsr     x2, x0, #3
+   8:   38e16841        ldrsb   w1, [x2, x1]
+   c:   35000b41        cbnz    w1, 0x174
+  10:*  f9400660        ldr     x0, [x19, #8]           <-- trapping
+instruction
 
-Here's Option A for fixing it: Only check pmd_page() after checking
-pmd_trans_huge():
+Code starting with the faulting instruction
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+   0:   f9400660        ldr     x0, [x19, #8]
+[ 2129.858468] SMP: stopping secondary CPUs
+[ 2129.862796] Starting crashdump kernel...
+[ 2129.863839] Bye!
 
-+++ b/mm/huge_memory.c
-@@ -2145,15 +2145,14 @@ void __split_huge_pmd(struct vm_area_struct *vma, pmd_t *pmd,
-         * pmd against. Otherwise we can end up replacing wrong folio.
-         */
-        VM_BUG_ON(freeze && !folio);
--       if (folio) {
--               VM_WARN_ON_ONCE(!folio_test_locked(folio));
--               if (folio != page_folio(pmd_page(*pmd)))
--                       goto out;
--       }
-+       VM_WARN_ON_ONCE(folio && !folio_test_locked(folio));
+--=20
+You may reply to this email to add a comment.
 
-        if (pmd_trans_huge(*pmd) || pmd_devmap(*pmd) ||
--           is_pmd_migration_entry(*pmd))
-+           is_pmd_migration_entry(*pmd)) {
-+               if (folio && folio != page_folio(pmd_page(*pmd)))
-+                       goto out;
-                __split_huge_pmd_locked(vma, pmd, range.start, freeze);
-+       }
-
- out:
-        spin_unlock(ptl);
-
-I can think of a few more ways of fixing it, but that one seems best.
-Not tested in any meaningful way, more looking for feedback.
+You are receiving this mail because:
+You are watching the assignee of the bug.=
