@@ -2,102 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C926DC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 07:08:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6C05C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 15:02:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231375AbiDEHKc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Apr 2022 03:10:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37380 "EHLO
+        id S234782AbiDEPEk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Apr 2022 11:04:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230097AbiDEHKb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 03:10:31 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.74])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E3B8AE68;
-        Tue,  5 Apr 2022 00:08:31 -0700 (PDT)
-Received: from mail-wm1-f52.google.com ([209.85.128.52]) by
- mrelayeu.kundenserver.de (mreue106 [213.165.67.113]) with ESMTPSA (Nemesis)
- id 1N2mS2-1o0gYU13vQ-0138sv; Tue, 05 Apr 2022 09:08:30 +0200
-Received: by mail-wm1-f52.google.com with SMTP id h16so7369089wmd.0;
-        Tue, 05 Apr 2022 00:08:30 -0700 (PDT)
-X-Gm-Message-State: AOAM533uF+b4xAa6Ic2bQpbYjoG/RGOkmn+3taMPbMxBhp2EX5An+Xmo
-        rYi6zYE+2gSbnT9p+vHCWNu2AhFJO18VuGt1jJs=
-X-Google-Smtp-Source: ABdhPJxPvBD3liGjE4wcwAU/5uhv3UpZs9CP1VYRV8xEB/qANbka4xub+huj1JgZoNT228F8duYYmCMymQ3lWUBTDoI=
-X-Received: by 2002:a05:600c:4ecc:b0:38e:354d:909 with SMTP id
- g12-20020a05600c4ecc00b0038e354d0909mr1768472wmq.33.1649142509779; Tue, 05
- Apr 2022 00:08:29 -0700 (PDT)
+        with ESMTP id S239656AbiDENym (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 09:54:42 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93F5CBD2F7
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 05:56:01 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id B645A1F390;
+        Tue,  5 Apr 2022 12:55:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1649163359; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=SkNJx2Zz/6czn3S2t62HK4z7SqAzGkYuFV8XkGnNVs8=;
+        b=b92RT9ZSqfeVjJpyhw4iaKewh6drj464cUeqZh0GMriI+rCGV/vBptzKt/84OgqT9FzE7p
+        okTxCP5ZLIlYchwKyvvpi+Ua5eAEaIjUbjUKuhQ1qZ8vLCG4gXMlYpJsS5F5R/8fDiQWpN
+        IrXw3MCLcr5MZudXy/q3jr/80bWJwDQ=
+Received: from suse.cz (unknown [10.100.224.162])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 43868A3B87;
+        Tue,  5 Apr 2022 12:55:59 +0000 (UTC)
+Date:   Tue, 5 Apr 2022 14:55:58 +0200
+From:   Petr Mladek <pmladek@suse.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Chris Down <chris@chrisdown.name>,
+        Dave Chinner <david@fromorbit.com>,
+        Jonathan Lassoff <jof@thejof.com>, linux-xfs@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        John Ogness <john.ogness@linutronix.de>
+Subject: Re: [PATCH v3 2/2] Add XFS messages to printk index
+Message-ID: <Ykw8Xtam5b46stou@alley>
+References: <3e1f6011b22ca87ea3c0fad701286369daa2187f.1648228733.git.jof@thejof.com>
+ <3c3ae424913cb921a9f8abddfcb1b418e7cfa601.1648228733.git.jof@thejof.com>
+ <YkMKyN9w0S8VFJRk@alley>
+ <20220330003457.GB1544202@dread.disaster.area>
+ <20220330004649.GG27713@magnolia>
+ <20220330012624.GC1544202@dread.disaster.area>
+ <20220330145955.GB4384@pathway.suse.cz>
+ <YkRyOKZ+hJYysKrR@chrisdown.name>
+ <20220331150618.GM27690@magnolia>
 MIME-Version: 1.0
-References: <CAHk-=wg6FWL1xjVyHx7DdjD2dHZETA5_=FqqW17Z19X-WTfWSg@mail.gmail.com>
- <20220404074734.1092959-1-geert@linux-m68k.org> <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
- <20220404092655.GR1544202@dread.disaster.area> <CAMuHMdWgqdR1o3wT9pjB=w8z=2xaDFv5DJX58-HPHOFRm3Tr8Q@mail.gmail.com>
- <CAK8P3a0QrihBR_2FQ7uZ5w2JmLjv7czfrrarCMmJOhvNdJ3p9g@mail.gmail.com>
- <20220404221605.GS1544202@dread.disaster.area> <CAMuHMdWak-zarKA_eCxWm5uhejWAXi0XkAuekfpAKRczLfhq3g@mail.gmail.com>
-In-Reply-To: <CAMuHMdWak-zarKA_eCxWm5uhejWAXi0XkAuekfpAKRczLfhq3g@mail.gmail.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Tue, 5 Apr 2022 09:08:13 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a1JArChbzRDFU0YPCy-7QZgqSoHe8JTH4g0yOz_Mi_MEA@mail.gmail.com>
-Message-ID: <CAK8P3a1JArChbzRDFU0YPCy-7QZgqSoHe8JTH4g0yOz_Mi_MEA@mail.gmail.com>
-Subject: Re: Build regressions/improvements in v5.18-rc1
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Dave Chinner <david@fromorbit.com>, Arnd Bergmann <arnd@arndb.de>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:v9JTIi8qJtPG3PIp92ZT1BP7xmoboLcO+2N58Y0rG8EUhOm7Txw
- FajvsKKlzhdlcaQTsyIaUM9+ML0BjbRuHavN4q8FSwUzJTTJZoGPOucY4nJLuNxRD3agKmV
- ZgLJvxMlCM3sXqoOLPU6f3WLfLUdVomfUMidgtlZAXRZq+SYumE+t+Z3zkFyEcjlKtj1j2O
- zjLCHmOP1uoXs2JAYWOmQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:F6FWl9H0mQY=:mOtSjqg6Xn4k4DEScVdk+i
- eP6YitvK+wB5dVoo6IPKnGVQ0bfZqOg0Px1eh4RgNlvtK57Z2UXVwF8ilqEfS2yoIX54o/4tR
- nl5w5y5QluOsKaS9DlSLRgArTckW5TxPeOJYhBFo6zE5TaIes9hbwoRRpY9yWTBUjCxjzIzlP
- w+l5k8hAPcjeiHaM+GsU/zmSEYGVPKQ/6dypB+nlFwqoUFDUhap9Kv9h/HVCYza0efskXOKjq
- OChO11lkYvU0K8woTHHS8QfK9jXxYpNCc+Y3T3dzGHe22+zb86C6dd3hWdoGnNxxz3Xkrcef9
- eeY87vUWZ+CfmX5fY9VRyxg064V4BEodsPkssn0FTnBzWXZdYUIAas5/gilcDo4o4/22Jfyfd
- s0Pav7lxpHwLoAGKSFOMAr039TjniDo8goTEiI8LqsA4/duZIRgaXddEre4H6hSKTB9SvyT2W
- IIgSP6egsS/uhMHRwi6kIDETHGC3Q8z7j3pkHZY5fuXVpj3t+yOekpRYuSNu8i3pBLKQG2r4F
- jAmFyvnolPZaI7pcrhgQNY8ShbsEOCoeUf41S3LjjyBV9AsyvuBL/ohESvIDzzxz1XO1ZHY2p
- +1DbeOI4WXHwTtuBlR5+XOS1v6h6D6HjHig1YdEL1IvAL7Hb4onVpfk1AgaRD+WhclR2ZF0mH
- sZPFstixJXm5WwVOgSTfEVy4fQoZvVIQTVAstJbtFFg7nNZYkU4ZxEiVqCLtDRt2wOEdEJOVF
- peC5Vt2EtABLN6SkGnWJmmIo26QN7iOuVFUtvpqbBoOot0HqUWCfqTg6D2dSLWjlAxusCiH5J
- Q0E4ToUVgfOX8ictrwEugfM7VBvSXW6u/6TRa97HcDNxbfEj/E=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220331150618.GM27690@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-?On Tue, Apr 5, 2022 at 8:47 AM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-> On Tue, Apr 5, 2022 at 12:16 AM Dave Chinner <david@fromorbit.com> wrote:
-> > So XFS only uses these flags in unsigned int fields that are
-> > typed via:
-> >
-> > typedef unsigned int xfs_buf_flags_t;
-> >
-> > So on the surface, declaring the flag values as ULONG and then writing
-> > them into a UINT field is not a nice thing to be doing.
-> >
-> > I really don't want to change the xfs_buf_flags_t type to an
-> > unsigned long, because that changes the packing of the first
-> > cacheline of the struct xfs_buf and the contents of that cacheline
-> > are performance critical for the lookup fastpath....
->
-> Hence just use "1u << n" instead of "1ul << n"?
+On Thu 2022-03-31 08:06:18, Darrick J. Wong wrote:
+> On Wed, Mar 30, 2022 at 04:07:36PM +0100, Chris Down wrote:
+> > Petr Mladek writes:
+> > > Subject: [RFC] printk/index: Printk index feature documentation
+> > > 
+> > > Document the printk index feature. The primary motivation is to
+> > > explain that it is not creating KABI from particular printk() calls.
+> > > 
+> > > --- /dev/null
+> > > +++ b/Documentation/core-api/printk-index.rst
+> > > @@ -0,0 +1,139 @@
+> > > +.. SPDX-License-Identifier: GPL-2.0
+> > > +
+> > > +============
+> > > +Printk index
+> > > +============
+> > > +
+> > > +There are many ways how to control the state of the system. One important
+> 
+> I would say this is monitoring the state of the system more than it's
+> controlling it.
+> 
+> > > +source of information is the system log. It provides a lot of information,
+> > > +including more or less important warnings and error messages.
+> > > +
+> > > +The system log can be monitored by some tool. It is especially useful
+> > > +when there are many monitored systems. Such tools try to filter out
+> > > +less important messages or known problems. They might also trigger
+> > > +some action when a particular message appears.
+> 
+> TBH I thought the bigger promise of the printk index is the ability to
+> find where in the source code a message might have come from.
 
-Right, that avoids the error as well. I picked '1ul' to match the type of
-the variable it's assigned to, but as Dave said the intended type is
-'u32', so '1u' is better here.
+I personally use "git grep" to find a given message in the sources.
+IMHO, it is much easier than going via printk index.
 
-> > Looking at __print_flags, the internal array type declaration is:
-> >
-> > struct trace_print_flags {
-> >         unsigned long           mask;
-> >         const char              *name;
-> > };
-> >
-> > and that's the source of the problem.  I notice __print_flags_u64()
-> > exists, but __print_flags_u32() does not. Should it?
+I could imagine that people might use the printk index when they do
+not have the full git repo. But it should not be the main purpose
+of this interface. IMHO, it would not be worth it. "grep -R" or
+google does similar job.
 
-It's not the source of the error, as there is no signed integer
-overflow when assigning an unsigned int to an unsigned long.
+Or maybe I miss some particular use case.
 
-It may be helpful to add a __print_flags_u32(), but it's unrelated
-to the problem at hand.
+> I would like to see the problem statement part of this doc develop
+> further.  What do you think about reworking the above paragraph like so?
+> 
+> "Often it is useful for developers and support specialists to be able to
+> trace a kernel log message back to its exact position in source code.
+> Moreover, there are monitoring tools that filter and take action based
+> on messages logged.  For both of these use cases, it would be helpful to
+> provide an index of all possible printk format strings for the running
+> kernel."
 
-       Arnd
+I did not use this paragraph in the end. But I reworked the text a bit.
+
+
+> > > +
+> > > +The kernel messages are evolving together with the code. They are
+> > > +not KABI and never will be!
+> 
+> Ok.  You might want to make it explicit here that the format of the
+> debugfs file itself shouldn't change, unlike the file/line/formatspecificer
+> *contents* of those files.
+
+I rather made it more explicit that the particular messages are not
+KABI.
+
+The stability of the interface is kind of political issue. It depends
+if there are any tools using it. I will do my best to keep it stable
+as long as I am printk maintainer. But I do not want to promise it at the
+moment. The interface is still pretty young and there are just first
+users playing with it.
+
+
+> > > +It is a huge challenge for maintaining the system log monitors. It requires
+> > > +knowing what messages were udpated and why. Finding these changes in
+> 
+> s/udpated/updated/
+> 
+> > > +the sources would require non-trivial parsers. Also it would require
+> > > +matching the sources with the binary kernel which is not always trivial.
+> > > +Various changes might be backported. Various kernel versions might be used
+> > > +on different monitored systems.
+> > > +
+> > > +This is where the printk index feature might become useful. It provides
+> > > +a dump of printk formats used all over the source code used for the kernel
+> > > +and modules on the running system. It is accessible at runtime via debugfs.
+> > > +
+> > > +
+> > > +User interface
+> > > +==============
+> > > +
+> > > +The index of printk formats is split into separate files for
+> > > +for vmlinux and loaded modules, for example::
+> > > +
+> > > +   /sys/kernel/debug/printk/index/vmlinux
+> > > +   /sys/kernel/debug/printk/index/ext4
+> > > +   /sys/kernel/debug/printk/index/scsi_mod
+> 
+> If ext4 is built into the kernel (and not as a module), does its format
+> strings end up in index/vmlinux or index/ext4?
+
+It will be in vmlinux when the module is built-in. I mentioned this in v1.
+
+> > > +
+> > > +The content is inspired by the dynamic debug interface and looks like::
+> > > +
+
+Thanks a lot for the valuable feedback and suggestions. I used most of
+them, see
+https://lore.kernel.org/r/20220405114829.31837-1-pmladek@suse.com
+
+Best Regards,
+Petr
