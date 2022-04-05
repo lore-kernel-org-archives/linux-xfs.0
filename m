@@ -2,140 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA13AC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 05:37:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79513C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Apr 2022 06:46:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229722AbiDEFi7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Apr 2022 01:38:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35710 "EHLO
+        id S229450AbiDEGs0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Apr 2022 02:48:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229708AbiDEFi6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 01:38:58 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 531221CB20
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Apr 2022 22:37:00 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 852AD10E56CD;
-        Tue,  5 Apr 2022 15:36:59 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nbbsA-00DweP-D1; Tue, 05 Apr 2022 15:36:58 +1000
-Date:   Tue, 5 Apr 2022 15:36:58 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     sandeen@redhat.com
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH V2] mkfs: increase the minimum log size to 64MB when
- possible
-Message-ID: <20220405053658.GW1544202@dread.disaster.area>
-References: <a8bc42f2-98db-2f16-2879-9ed62415ba01@redhat.com>
- <ac764fd9-ddd9-3b44-02bc-c91c390881c5@redhat.com>
+        with ESMTP id S229961AbiDEGsT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 02:48:19 -0400
+Received: from mail-qt1-f181.google.com (mail-qt1-f181.google.com [209.85.160.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4D9A57175;
+        Mon,  4 Apr 2022 23:46:20 -0700 (PDT)
+Received: by mail-qt1-f181.google.com with SMTP id v2so9708009qtc.5;
+        Mon, 04 Apr 2022 23:46:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=UuWjfy1DmKGBwxecHn9QW28Mp8RGeP8Fe6idp3HhRGs=;
+        b=XM48JdQlRjpvDo6pAnEfInZQ02JydMyJSRb+hGGXieNxNU8mZ3kXD/gEu0mZV++O2k
+         BqS6NEIoz2gsS8qU754qXmlGGdecWLhxBKTy8nQHlXUP7/An4b0tCe6BQQkN8HUGP3mg
+         CZ/Aro8sSU0utf0rAYn2baDlmL3oNG88I8GpFzbPK/CacovKR6jKzxmPjLaSSRenV6Ph
+         BvXPV8XItBJUMXSpzEcjVzhTBf3m5fL8OHSPHARPfMlGu7keGZVa8qfRRKOu3BXJNv2O
+         2xdRgdMmflZWYsTNNuF3/AlnRJKOjBKcZ+veIgQodE67F/b2u0SX2U4pATdnsUqAv6g5
+         WrqA==
+X-Gm-Message-State: AOAM532nBU/gi9XQjDN33cMYjxk2EBLOmHtK3YNCKQilvc6FC+iT8SSA
+        ZP4ihtDGGD79/PMkzdXb+luSSoATM5GxDA==
+X-Google-Smtp-Source: ABdhPJwkZT+cT8EcW9YAwiSyF8z2cWBBKHK+j5v06cUcI/z3ZQE/vjvuRTuaahHCBiEU5I/o9Rlyjg==
+X-Received: by 2002:ac8:5c84:0:b0:2e1:eede:8b1b with SMTP id r4-20020ac85c84000000b002e1eede8b1bmr1709809qta.228.1649141179007;
+        Mon, 04 Apr 2022 23:46:19 -0700 (PDT)
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com. [209.85.219.169])
+        by smtp.gmail.com with ESMTPSA id q8-20020a05622a04c800b002e06d7c1eabsm10360081qtx.16.2022.04.04.23.46.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 Apr 2022 23:46:18 -0700 (PDT)
+Received: by mail-yb1-f169.google.com with SMTP id g9so21718806ybf.1;
+        Mon, 04 Apr 2022 23:46:18 -0700 (PDT)
+X-Received: by 2002:a25:45:0:b0:633:96e2:2179 with SMTP id 66-20020a250045000000b0063396e22179mr1490905yba.393.1649141178137;
+ Mon, 04 Apr 2022 23:46:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ac764fd9-ddd9-3b44-02bc-c91c390881c5@redhat.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=624bd57b
-        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=rOGq21PWSZxxjIaaS48A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <CAHk-=wg6FWL1xjVyHx7DdjD2dHZETA5_=FqqW17Z19X-WTfWSg@mail.gmail.com>
+ <20220404074734.1092959-1-geert@linux-m68k.org> <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
+ <874k38u20c.fsf@tynnyri.adurom.net>
+In-Reply-To: <874k38u20c.fsf@tynnyri.adurom.net>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Tue, 5 Apr 2022 08:46:06 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdV_-3TOHYehUsHeqwHjQtzN1Ot886K7vwPr4P-4u8eehw@mail.gmail.com>
+Message-ID: <CAMuHMdV_-3TOHYehUsHeqwHjQtzN1Ot886K7vwPr4P-4u8eehw@mail.gmail.com>
+Subject: Re: Build regressions/improvements in v5.18-rc1
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-m68k <linux-m68k@lists.linux-m68k.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-um <linux-um@lists.infradead.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        "open list:SERIAL DRIVERS" <linux-serial@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        linux-xfs@vger.kernel.org,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
+        linux-s390 <linux-s390@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 04, 2022 at 06:31:03PM -0500, Eric Sandeen wrote:
-> For starters I know the lack of if / else if in the co is a little
-> ugly but smashing into 80cols was uglier...
-> 
-> Here are the changes in log size for various filesystem geometries
-> (differing block sizes and filesystem sizes, with and without stripe
-> geometry to increase AG count). "--" means mkfs failed.
-> 
-> Blocksize: 4096
-> 	|	orig		|	new
-> size	|	log	striped	|	log	striped
-> -------------------------------------------------------
-> 128m	|	5m	m	|	5m	m
-> 256m	|	5m	18m	|	5m	18m
-> 511m	|	5m	18m	|	5m	18m
-> 512m	|	5m	18m	|	64m	18m
-> 513m	|	5m	18m	|	64m	64m
-> 1024m	|	10m	18m	|	64m	64m
-> 2047m	|	10m	18m	|	64m	64m
-> 2048m	|	10m	18m	|	64m	64m
-> 2049m	|	10m	18m	|	64m	64m
-> 4g	|	10m	20m	|	64m	64m
-> 8g	|	10m	20m	|	64m	64m
-> 15g	|	10m	20m	|	64m	64m
-> 16g	|	10m	20m	|	64m	64m
-> 17g	|	10m	20m	|	64m	64m
-> 32g	|	16m	20m	|	64m	64m
-> 64g	|	32m	32m	|	64m	64m
-> 256g	|	128m	128m	|	128m	128m
-> 512g	|	256m	256m	|	256m	256m
-> 1t	|	512m	512m	|	512m	512m
-> 2t	|	1024m	1024m	|	1024m	1024m
-> 4t	|	2038m	2038m	|	2038m	2038m
-> 8t	|	2038m	2038m	|	2038m	2038m
-> 
-> Blocksize: 1024
-> 	|	orig		|	new
-> size	|	log	striped	|	log	striped
-> ------------------------------------------------------------------------------
-> 128m	|	3m	15m	|	3m	15m
-> 256m	|	3m	15m	|	3m	15m
-> 511m	|	3m	15m	|	3m	15m
-> 512m	|	3m	15m	|	64m	15m
-> 513m	|	3m	15m	|	64m	64m
-> 1024m	|	10m	15m	|	64m	64m
-> 2047m	|	10m	16m	|	64m	64m
-> 2048m	|	10m	16m	|	64m	64m
-> 2049m	|	10m	16m	|	64m	64m
-> 4g	|	10m	16m	|	64m	64m
-> 8g	|	10m	16m	|	64m	64m
-> 15g	|	10m	16m	|	64m	64m
-> 16g	|	10m	16m	|	64m	64m
-> 17g	|	10m	16m	|	64m	64m
-> 32g	|	16m	16m	|	64m	64m
-> 64g	|	32m	32m	|	64m	64m
-> 256g	|	128m	128m	|	128m	128m
-> 512g	|	256m	256m	|	256m	256m
-> 1t	|	512m	512m	|	512m	512m
-> 2t	|	1024m	1024m	|	1024m	1024m
-> 4t	|	1024m	1024m	|	1024m	1024m
-> 8t	|	1024m	1024m	|	1024m	1024m
-> 
-> Blocksize: 65536
-> 	|	orig		|	new
-> size	|	log	striped	|	log	striped
-> ------------------------------------------------------------------------------
-> 128m	|	--	--	|	--	--
-> 256m	|	32m	--	|	32m	--
-> 511m	|	32m	32m	|	32m	32m
-> 512m	|	32m	32m	|	64m	32m
-> 513m	|	32m	32m	|	64m	63m
-> 1024m	|	32m	32m	|	64m	64m
-> 2047m	|	56m	45m	|	64m	64m
-> 2048m	|	56m	45m	|	64m	64m
-> 2049m	|	56m	45m	|	64m	64m
-> 4g	|	56m	69m	|	64m	69m
-> 8g	|	56m	69m	|	64m	69m
-> 15g	|	56m	69m	|	64m	69m
-> 16g	|	56m	69m	|	64m	69m
-> 17g	|	56m	69m	|	64m	69m
-> 32g	|	56m	69m	|	64m	69m
-> 64g	|	56m	69m	|	64m	69m
-> 256g	|	128m	128m	|	128m	128m
-> 512g	|	256m	256m	|	256m	256m
-> 1t	|	512m	512m	|	512m	512m
-> 2t	|	1024m	1024m	|	1024m	1024m
-> 4t	|	2038m	2038m	|	2038m	2038m
-> 8t	|	2038m	2038m	|	2038m	2038m
+Hi Kalle,
 
-Those new sizes look good to me.
+On Mon, Apr 4, 2022 at 8:39 PM Kalle Valo <kvalo@kernel.org> wrote:
+> Geert Uytterhoeven <geert@linux-m68k.org> writes:
+> >> /kisskb/src/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:
+> >> error: case label does not reduce to an integer constant: => 3798:2,
+> >> 3809:2
+> >
+> > arm64-gcc5.4/arm64-allmodconfig
+> > powerpc-gcc5/powerpc-allmodconfig
+> > powerpc-gcc5/ppc64_book3e_allmodconfig
+>
+> After v5.17 there were two commits to brcmfmac/sdio.c:
+>
+> $ git log --oneline v5.17.. drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> ed26edf7bfd9 brcmfmac: Add BCM43454/6 support
+> 6d766d8cb505 brcmfmac: pcie: Declare missing firmware files in pcie.c
+>
+> I can't see how either of them could cause this warning. Could something
+> else cause this or am I missing something?
 
-Acked-by: Dave Chinner <dchinner@redhat.com>
+Doh, I should not have reduced the CC list in the xfs subthread...
 
--- 
-Dave Chinner
-david@fromorbit.com
+The builds above are all gcc-5 builds, so they are affected by the same
+issue as XFS: unsigned constants that don't fit in int are lacking a
+"U" suffix.
+
+I assume Arnd's patch for
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+fixes this?
+https://lore.kernel.org/all/CAK8P3a0wRiS03imdXk2WbGONkSSczEGdE-ue5ubF6UyyDE9dQg@mail.gmail.com
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
