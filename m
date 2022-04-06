@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01FE7C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:24:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD81C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:24:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356442AbiDFJ0i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:26:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53042 "EHLO
+        id S1381575AbiDFJ0k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:26:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358536AbiDFJDW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:03:22 -0400
+        with ESMTP id S1350668AbiDFJCr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:02:47 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F25FD48F719;
-        Tue,  5 Apr 2022 23:06:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A789E48F712;
+        Tue,  5 Apr 2022 23:05:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=TxXl3MdplxU9MCO/Q7D4FJYRsok6DDTDVaSg962eOWw=; b=rucC9iJZF0nT1xLRSKT9tqQoP5
-        nL0SBYR/iPNSHB6wdcFxgaOg4ge9C2M4FP2p1JxUqmGG9zNBcpvn8l2ImaqSWUruwic5SBL+1Ka0A
-        N9OC/cngiat+LW2SmmgQgik6umVCvLvTWe7LVYau+JKoIVcB5LAd/jZAV15/t6fN+UTCCe2AFXibt
-        E1V1T10hMp3lTxlmDK2XsJoN/x/84A5CsbNWzJR1vr4eEH4n9FywvazpXPuwcYDJ3oSJzJmHtYcSR
-        fBAUwkO6DmJcsI89V/f7f2YpyrUwGe49T4osq7oE4lAOjncY7dpUANpsFS6qbMzskbxkKi/9ab/Dz
-        RphmF5Bw==;
+        bh=/VNrmVLKJsV7GQx7u+KW8uxbxcNBucKPfMuXZQkRDHQ=; b=jUohBlSW5WCTj76GUqjnlp1cx5
+        z/8reyGnmSuZxtLQhg0+jPM694lAAGAWkh+U5eA0mLRb/AgwoytsU4FvpOxPiaD65mDm8lb2j+qF+
+        t2HhJ4QddOVy3JK4d1MJddTe+d8VeGKgECeUXlf8UuGagztCqguNxvWacMCYDX5JxNW2p2RbmkW3q
+        t71K7/u0ylDWs298FO9Gv20PpcvMYBl6xYylCqBoDNwcq28w+01w7woZnggq/4L3O2hqvwkL98w78
+        x+x48h7Ao9LR48caKh9KX0fOy8aRUWWr0Tn3zUQaZ8j0meUpDZjDCysoSXFvl3p+a0P+BJJFXzCv6
+        7D21c1Rw==;
 Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbyo9-003vQV-AV; Wed, 06 Apr 2022 06:06:22 +0000
+        id 1nbynP-003upZ-Oq; Wed, 06 Apr 2022 06:05:36 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -43,9 +43,9 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
         ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 16/27] drbd: use bdev_alignment_offset instead of queue_alignment_offset
-Date:   Wed,  6 Apr 2022 08:05:05 +0200
-Message-Id: <20220406060516.409838-17-hch@lst.de>
+Subject: [PATCH 04/27] drbd: remove assign_p_sizes_qlim
+Date:   Wed,  6 Apr 2022 08:04:53 +0200
+Message-Id: <20220406060516.409838-5-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220406060516.409838-1-hch@lst.de>
 References: <20220406060516.409838-1-hch@lst.de>
@@ -56,27 +56,87 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The bdev version does the right thing for partitions, so use that.
+Fold each branch into its only caller.
 
-Fixes: 9104d31a759f ("drbd: introduce WRITE_SAME support")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/drbd/drbd_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/block/drbd/drbd_main.c | 50 ++++++++++++++++------------------
+ 1 file changed, 23 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-index d20d84ee7a88e..9d43aadde19ad 100644
+index 9676a1d214bc5..74b1b2424efff 100644
 --- a/drivers/block/drbd/drbd_main.c
 +++ b/drivers/block/drbd/drbd_main.c
-@@ -939,7 +939,7 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
- 		p->qlim->logical_block_size =
- 			cpu_to_be32(bdev_logical_block_size(bdev));
- 		p->qlim->alignment_offset =
--			cpu_to_be32(queue_alignment_offset(q));
-+			cpu_to_be32(bdev_alignment_offset(bdev));
- 		p->qlim->io_min = cpu_to_be32(bdev_io_min(bdev));
- 		p->qlim->io_opt = cpu_to_be32(bdev_io_opt(bdev));
- 		p->qlim->discard_enabled = blk_queue_discard(q);
+@@ -903,31 +903,6 @@ void drbd_gen_and_send_sync_uuid(struct drbd_peer_device *peer_device)
+ 	}
+ }
+ 
+-/* communicated if (agreed_features & DRBD_FF_WSAME) */
+-static void
+-assign_p_sizes_qlim(struct drbd_device *device, struct p_sizes *p,
+-					struct request_queue *q)
+-{
+-	if (q) {
+-		p->qlim->physical_block_size = cpu_to_be32(queue_physical_block_size(q));
+-		p->qlim->logical_block_size = cpu_to_be32(queue_logical_block_size(q));
+-		p->qlim->alignment_offset = cpu_to_be32(queue_alignment_offset(q));
+-		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
+-		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
+-		p->qlim->discard_enabled = blk_queue_discard(q);
+-		p->qlim->write_same_capable = 0;
+-	} else {
+-		q = device->rq_queue;
+-		p->qlim->physical_block_size = cpu_to_be32(queue_physical_block_size(q));
+-		p->qlim->logical_block_size = cpu_to_be32(queue_logical_block_size(q));
+-		p->qlim->alignment_offset = 0;
+-		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
+-		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
+-		p->qlim->discard_enabled = 0;
+-		p->qlim->write_same_capable = 0;
+-	}
+-}
+-
+ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enum dds_flags flags)
+ {
+ 	struct drbd_device *device = peer_device->device;
+@@ -957,14 +932,35 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
+ 		q_order_type = drbd_queue_order_type(device);
+ 		max_bio_size = queue_max_hw_sectors(q) << 9;
+ 		max_bio_size = min(max_bio_size, DRBD_MAX_BIO_SIZE);
+-		assign_p_sizes_qlim(device, p, q);
++		p->qlim->physical_block_size =
++			cpu_to_be32(queue_physical_block_size(q));
++		p->qlim->logical_block_size =
++			cpu_to_be32(queue_logical_block_size(q));
++		p->qlim->alignment_offset =
++			cpu_to_be32(queue_alignment_offset(q));
++		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
++		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
++		p->qlim->discard_enabled = blk_queue_discard(q);
++		p->qlim->write_same_capable =
++			!!q->limits.max_write_same_sectors;
+ 		put_ldev(device);
+ 	} else {
++		struct request_queue *q = device->rq_queue;
++
++		p->qlim->physical_block_size =
++			cpu_to_be32(queue_physical_block_size(q));
++		p->qlim->logical_block_size =
++			cpu_to_be32(queue_logical_block_size(q));
++		p->qlim->alignment_offset = 0;
++		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
++		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
++		p->qlim->discard_enabled = 0;
++		p->qlim->write_same_capable = 0;
++
+ 		d_size = 0;
+ 		u_size = 0;
+ 		q_order_type = QUEUE_ORDERED_NONE;
+ 		max_bio_size = DRBD_MAX_BIO_SIZE; /* ... multiple BIOs per peer_request */
+-		assign_p_sizes_qlim(device, p, NULL);
+ 	}
+ 
+ 	if (peer_device->connection->agreed_pro_version <= 94)
 -- 
 2.30.2
 
