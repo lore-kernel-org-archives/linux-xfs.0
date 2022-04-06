@@ -2,111 +2,171 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CEA4C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 21:30:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D88B2C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 21:49:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231822AbiDFVcr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Apr 2022 17:32:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35472 "EHLO
+        id S234895AbiDFVvX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 17:51:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232644AbiDFVc1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 17:32:27 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DA692D35CA;
-        Wed,  6 Apr 2022 13:39:04 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S235721AbiDFVvE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 17:51:04 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0FC667C7AF
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Apr 2022 14:40:11 -0700 (PDT)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B3C98B8254C;
-        Wed,  6 Apr 2022 20:39:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 757FFC385A5;
-        Wed,  6 Apr 2022 20:39:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649277541;
-        bh=PXUDYE1r6Gil/o9m5rfjYKx/BFUoyr1dI3rq+0GFdOc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Cd9d3yNYx5ueGCXvizdmPbLOeNrVL6KS5C9ulrFKncWNwuw/eFoj4ZgXMdrIGjDxv
-         a7fjB7+wNcj4jiIBOJK35xYyIsj6e+NpbqJQinyrR1FNlX3ZgTWjHUksIBI7YC3Omx
-         gGwXlXFrEFw+DdU48Ubs3JzmiTAVW17j0Naaa8et4nrA9ezYZlBmQvEKN9N6GxDyrt
-         V4EgEOqknmuYSsUSXN9oA2iX4BkcxxQbiFkg6SphOxCEbIr2ml5/lLBC4yKrLZ0z/f
-         UCHO7hgqZ6LQ5zOaQ7/07RWJJxT5VxoUEIQq2NGtk6k/McpEorw6y0xTMPEc3f1MqM
-         71yCvdJd8NJqQ==
-Date:   Wed, 6 Apr 2022 13:39:00 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Jane Chu <jane.chu@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        david <david@fromorbit.com>
-Subject: Re: [PATCH v11 1/8] dax: Introduce holder for dax_device
-Message-ID: <20220406203900.GR27690@magnolia>
-References: <CAPcyv4jAqV7dZdmGcKrG=f8sYmUXaL7YCQtME6GANywncwd+zg@mail.gmail.com>
- <4fd95f0b-106f-6933-7bc6-9f0890012b53@fujitsu.com>
- <YkPtptNljNcJc1g/@infradead.org>
- <15a635d6-2069-2af5-15f8-1c0513487a2f@fujitsu.com>
- <YkQtOO/Z3SZ2Pksg@infradead.org>
- <4ed8baf7-7eb9-71e5-58ea-7c73b7e5bb73@fujitsu.com>
- <YkR8CUdkScEjMte2@infradead.org>
- <20220330161812.GA27649@magnolia>
- <fd37cde6-318a-9faf-9bff-70bb8e5d3241@oracle.com>
- <CAPcyv4gqBmGCQM_u40cR6GVror6NjhxV5Xd7pdHedE2kHwueoQ@mail.gmail.com>
+        by sandeen.net (Postfix) with ESMTPSA id 9B2817BC4
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Apr 2022 16:38:16 -0500 (CDT)
+Message-ID: <21a805e0-3613-9a6b-4c19-49d92908258c@sandeen.net>
+Date:   Wed, 6 Apr 2022 16:40:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4gqBmGCQM_u40cR6GVror6NjhxV5Xd7pdHedE2kHwueoQ@mail.gmail.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.7.0
+Content-Language: en-US
+From:   Eric Sandeen <sandeen@sandeen.net>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfsprogs-5.15.0 released
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------gt0NeuSuxhMeJBMzF4B14jeL"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 05, 2022 at 06:22:48PM -0700, Dan Williams wrote:
-> On Tue, Apr 5, 2022 at 5:55 PM Jane Chu <jane.chu@oracle.com> wrote:
-> >
-> > On 3/30/2022 9:18 AM, Darrick J. Wong wrote:
-> > > On Wed, Mar 30, 2022 at 08:49:29AM -0700, Christoph Hellwig wrote:
-> > >> On Wed, Mar 30, 2022 at 06:58:21PM +0800, Shiyang Ruan wrote:
-> > >>> As the code I pasted before, pmem driver will subtract its ->data_offset,
-> > >>> which is byte-based. And the filesystem who implements ->notify_failure()
-> > >>> will calculate the offset in unit of byte again.
-> > >>>
-> > >>> So, leave its function signature byte-based, to avoid repeated conversions.
-> > >>
-> > >> I'm actually fine either way, so I'll wait for Dan to comment.
-> > >
-> > > FWIW I'd convinced myself that the reason for using byte units is to
-> > > make it possible to reduce the pmem failure blast radius to subpage
-> > > units... but then I've also been distracted for months. :/
-> > >
-> >
-> > Yes, thanks Darrick!  I recall that.
-> > Maybe just add a comment about why byte unit is used?
-> 
-> I think we start with page failure notification and then figure out
-> how to get finer grained through the dax interface in follow-on
-> changes. Otherwise, for finer grained error handling support,
-> memory_failure() would also need to be converted to stop upcasting
-> cache-line granularity to page granularity failures. The native MCE
-> notification communicates a 'struct mce' that can be in terms of
-> sub-page bytes, but the memory management implications are all page
-> based. I assume the FS implications are all FS-block-size based?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------gt0NeuSuxhMeJBMzF4B14jeL
+Content-Type: multipart/mixed; boundary="------------ih8QlLKABuiFmPZrUYRc6lrj";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Message-ID: <21a805e0-3613-9a6b-4c19-49d92908258c@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs-5.15.0 released
 
-I wouldn't necessarily make that assumption -- for regular files, the
-user program is in a better position to figure out how to reset the file
-contents.
+--------------ih8QlLKABuiFmPZrUYRc6lrj
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-For fs metadata, it really depends.  In principle, if (say) we could get
-byte granularity poison info, we could look up the space usage within
-the block to decide if the poisoned part was actually free space, in
-which case we can correct the problem by (re)zeroing the affected bytes
-to clear the poison.
+Hi folks,
 
-Obviously, if the blast radius hits the internal space info or something
-that was storing useful data, then you'd have to rebuild the whole block
-(or the whole data structure), but that's not necessarily a given.
+The xfsprogs repository at:
 
---D
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
+has just been updated and tagged for a v5.15.0 release. The condensed cha=
+ngelog
+is below, with changes since -rc1 after that.
+
+Notable behavioral changes include inobtcount and bigtime (Y2038 compatib=
+ility)
+by default, as well as larger log sizes for smallish filesystems.
+
+Tarballs are available at:
+
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.15.0.ta=
+r.gz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.15.0.ta=
+r.xz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.15.0.ta=
+r.sign
+
+The new head of the master branch is commit:
+
+19ee1446 (HEAD -> for-next, tag: v5.15.0, korg/master, korg/for-next) xfs=
+progs: Release v5.15.0
+
+xfsprogs-5.15.0 (06 Apr  2022)
+        - mkfs: increase the min log size to 64MB when possible (Eric San=
+deen)
+        - xfs_scrub: retry items that are ok except for XFAIL (Darrick J.=
+ Wong)
+        - xfs_scrub: fix xfrog_scrub_metadata error reporting (Darrick J.=
+ Wong)
+
+xfsprogs-5.15.0-rc1 (11 Mar 2022)
+        - mkfs: enable inobtcount and bigtime by default (Darrick J. Wong=
+)
+        - mkfs: prevent corruption of suboption string values (Darrick J.=
+ Wong)
+        - mkfs: document sample configuration file location (Darrick J. W=
+ong)
+        - mkfs: add configuration files for a few LTS kernels (Darrick J.=
+ Wong)
+        - mkfs: add a config file for x86_64 pmem filesystems (Darrick J.=
+ Wong)
+        - xfs_quota: don't exit on "project" cmd failure (Eric Sandeen)
+        - xfs_repair: don't guess about failure reason in phase6 (Eric Sa=
+ndeen)
+        - xfs_repair: update 2ndary superblocks after upgrades (Darrick J=
+=2E Wong)
+        - xfs_scrub: fix reporting if we can't open devices (Darrick J. W=
+ong)
+        - xfs_scrub: report optional features in version (Darrick J. Wong=
+)
+        - libxcmd: use emacs mode for command history editing (Darrick J.=
+ Wong)
+        - libfrog: always use the kernel GETFSMAP definitions (Darrick J.=
+ Wong)
+        - mkfs.xfs(8): fix default inode allocator description (Eric Sand=
+een)
+        - xfs_quota(8): fix up dump and report documentation (Eric Sandee=
+n)
+        - xfs_quota(8): document units in limit command (Eric Sandeen)
+        - misc: add a crc32c self test to mkfs and repair (Darrick J. Won=
+g)
+
+xfsprogs-5.15.0-rc0 (03 Feb 2022)
+        - libxfs changes merged from kernel 5.15
+
+New Commits:
+
+Darrick J. Wong (2):
+      [d9869446] xfs_scrub: fix xfrog_scrub_metadata error reporting
+      [882082d5] xfs_scrub: retry scrub (and repair) of items that are ok=
+ except for XFAIL
+
+Eric Sandeen (2):
+      [cdfa467e] mkfs: increase the minimum log size to 64MB when possibl=
+e
+      [19ee1446] xfsprogs: Release v5.15.0
+
+
+Code Diffstat:
+
+ VERSION                 |  2 +-
+ configure.ac            |  2 +-
+ debian/changelog        |  6 ++++++
+ doc/CHANGES             |  5 +++++
+ include/xfs_multidisk.h |  2 --
+ mkfs/xfs_mkfs.c         | 41 +++++++++++++++++++----------------------
+ scrub/scrub.c           | 33 ++++++++++++++++++++++++++++++---
+ 7 files changed, 62 insertions(+), 29 deletions(-)
+
+Thanks for your patience.
+Sincerely, the well-that's-a-bit-late department.
+
+--------------ih8QlLKABuiFmPZrUYRc6lrj--
+
+--------------gt0NeuSuxhMeJBMzF4B14jeL
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmJOCLkFAwAAAAAACgkQIK4WkuE93uCM
+3g//bEfLUm4kmc6ydGgtTMxC3McH2YQY1/b5J0QKyiqdCtmDEPw8w+j+TrxWWZ3xW6sjLVaLhjQ5
+QTQlIOdCIfMzcpvYOv+rQ8/RQOk4ePuURH9cZcnPfGJTDtvjBaShs+aPgL8gLpCCXMcqtBfHsoTj
+8JuRMC+J8cxbiQlvpgHY00kkcm/arMjNxxl9RKLG9DOw5uE28Q8N+BKuME+9r5oWQ8GBgPCVNJgP
+xqgmZmUZkB/Bn397rT6c5l5emHgZVdDx+KNsUOkTeVrRRmvuZLxCjoDNCnERddkDS1pLNVEs/b/8
+xJ17LR6fA0DmK/JfbOEvGpSt6M918RqQjDm0jpG0idKzK2PRti+TA709HBuvn5ppObQljDoqU0mi
+EMv8CqLQBKgnr1KTnhNHVV2owvKrWxKn1uFKWnUg+By8XFLB4JYVyudNknfmMaSWXmWZkHVt2+Uw
+jtT05R+9VR5tlJPW77Oulk+pLklOfRHjJNGDtyMHCUClhTlq+9/KT5c+hYpxbq7pYb1UA0s7xkk0
+1y3Jiw0aUOrYDOgelG/BI22lBpnoltLHsdeAUS2YdYXy6OFCGn7FmFmm36ovDSjVCGgb3ez9ileD
+nF5tLzN9cr98hxI26Q5/GjEB4O7P7QoogFEwxidzxJIGHSPDe0GT+Tw4cPavch4DdyRyZ5Uq7jeQ
+CsY=
+=UU+3
+-----END PGP SIGNATURE-----
+
+--------------gt0NeuSuxhMeJBMzF4B14jeL--
