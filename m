@@ -2,521 +2,247 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79876C3525B
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 19:31:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3A10C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 19:46:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231652AbiDFTc6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Apr 2022 15:32:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53190 "EHLO
+        id S231739AbiDFTr7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 15:47:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231386AbiDFTcC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 15:32:02 -0400
-Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB944DED6;
-        Wed,  6 Apr 2022 11:27:09 -0700 (PDT)
-Received: by mail-lj1-x22e.google.com with SMTP id 17so4428674lji.1;
-        Wed, 06 Apr 2022 11:27:09 -0700 (PDT)
+        with ESMTP id S232677AbiDFTrY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 15:47:24 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C596014346F;
+        Wed,  6 Apr 2022 10:32:48 -0700 (PDT)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 236FMiWY000752;
+        Wed, 6 Apr 2022 17:32:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=6+YOEqLXJ4ZRxuDBKaTFX+JC+XvGps7rJ6VNMz3NNDY=;
+ b=JGPZXye5w/vvKYgGjJehn0aM1RS7FdhNgSzXMfLI6yww1LgS4lxgJMyaHKDQ261ev7UG
+ Jg9ovPo4NxJ4HAdZ0DZZkUZNEDX4yuLwFO2Xo0BWSheYaZS+rrZPla58Yp6IfGSkz97L
+ S5R+ILl6Fj0V26xr7AZAEVEMlPdKc9V7PE4CJO/kmCbwAYDbPcpU332zIcYxkRfI2mGs
+ /tog337rWbsGs/e5zEm+DZnjigyNv0XDo4ePxsZC5VqF9glj7Jv/GcEEidedCjK32ziN
+ onaHY5nr2R4eCU6ejoOhJXcNgsw/RzCBWuHwUS/it3y8poSBj1ECahZsyr3YpvUf5Mvz nw== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3f6e3ssm3u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 06 Apr 2022 17:32:34 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 236HHKY1032416;
+        Wed, 6 Apr 2022 17:32:33 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2109.outbound.protection.outlook.com [104.47.58.109])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3f97uvusea-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 06 Apr 2022 17:32:33 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=egADxBfLpOZDNoBtCQn+Gb4qONiP/sYwnLh9bgWji0LeOTGhDjFD5B/u2gAKL37tOLFyFihb0DpOGhJOQz48cg7lI1xDeMYKaPWmiEDcMVYsp/YoSx1qNEe2xPlWdw8SE3R/p0UawaqE34VIuTlfp6DiaU9q8LNfCCNeFtS9SR5tUodlm3NFqFT7tKVcfvrtV6/sbmR3+iB7U9NiSvLTsnvxFhBuR5BKILuJ4amMhTk4ujVNo1TCCVKgx/FEHHkKaCP/FeW64xBvC4JDAvIx3JCQcXcFkBEt45fiD2noXMfb3suAYwuDbEAiiGtg+z7MqgJOjzVd/pCZh47W1jGfbg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=6+YOEqLXJ4ZRxuDBKaTFX+JC+XvGps7rJ6VNMz3NNDY=;
+ b=LjfZE1ArpNz3utYcxqCcN5YtV8zDxoi/gSjvT8eHwT5YHVmie/jHEEeAQ1gcJq3kIcQ6e8wb3Q8pvSfBy0LVXf221yNJOw3kTZmr5sU1w1v31lMlE14IIxF0bzpDfPaUN7NXxPoEY27zUK5GWMewu9EZXXdqU44cPWEefQHSSeD1KtDDkxWrwSxZL3o8+faN2J3J3Eo+UpgGzaz6Nu9osP4QIx4Aa7W/HLKiIQnJSwGLpoclYgO0Dlfq5CeF0oiJzIbDbXmSHh+2N+pQlUzPYvTrQ/2ppirGu98n56YDK55kJd+Vr6BfiWD8bUQghGppdLq9enpxYZub+XuNYVGPwQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=14ZeLO2m8aH+YS1qjEoT4F85qJZ7QGK39BPrvGxvzsc=;
-        b=FPNoADLl+t1rHvkAR4xL1rOVDAlhpOOGr+u25kx4PQUes2dgJf3VMVWx4RqhVzv0kX
-         5gpTEucABhvBe61J4YvVZaXJLzFCw916y+PHHhJE/Wk03gJslw060TSXfyhR1UHGywmM
-         tUGOjgO/tvv35BrogxJk0r3s4DdOfMfzpXGFBBL0VZ4D2j63zFHyR97t/y7gV0AKAs1R
-         hJGS19Gw9w9127XdxMP2Q/fLKeeUGVCZ+7PdNdPrfLy3sdigpvNPW6LqW6+cm1sSbapN
-         l5bvXsAYagi8cRbMUqlCJ8BHK39gp8H12JfHpjgHeRLKmO5URsKxvm9vLNu+PpYSBxuq
-         Nhnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=14ZeLO2m8aH+YS1qjEoT4F85qJZ7QGK39BPrvGxvzsc=;
-        b=NztxpoVwO6DaTpCClUnO2YM5hvcIOJ1s0JWVFNzArOJmfP9A+WIJlZvzxh0cYJTpx5
-         6/iNP+p7CIRaFFuCeCqj/w5i/D+HcToU1WxVs4b9Es72UTOUnE/RHwjmbXqH+p5qvUnZ
-         wB2JNpOuZbXq8UTGHhx9Xoahnv9Gvr4cjVyP8KiYrs+1jKKfYy/HGVX9q9KBFMcnVzsX
-         jAB7qpkGRGp0BMRjIxc/BYCNfIHxMcsHA6srW3P32UWipWKl6SQAq+PsI9to0U9L+3hQ
-         rHJ6J1sGwvTmW9PmvZ5eScFqutlzh8z6iDVUoTmsReaoUNz2/oy9aDQ0kf9M6Iw1TraJ
-         qoTQ==
-X-Gm-Message-State: AOAM533gg1ht9S0sImmTssn1zG59KFWScsdWfoZHPhY+t9Oj0NIJg4Ej
-        UDvHnixHP6OXWzG7TVL2q+yc6tDFk/7SJGiIz1c=
-X-Google-Smtp-Source: ABdhPJyXW8VZEbBsOkirhtMJbbJG7kJrgPict1d8+Pn0N6NHsEhNVlSmQmy+z/FM0XLhigCLmUpRJ5pzX/36OC/hFtE=
-X-Received: by 2002:a2e:b008:0:b0:249:83ad:ab65 with SMTP id
- y8-20020a2eb008000000b0024983adab65mr6004527ljk.350.1649269627731; Wed, 06
- Apr 2022 11:27:07 -0700 (PDT)
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6+YOEqLXJ4ZRxuDBKaTFX+JC+XvGps7rJ6VNMz3NNDY=;
+ b=GWNDM/iL9VY/pGhEOHd/V520K7TX+f+KN3AhONNSF3CpIDLBrKNRg6yHvqrNEETjkKsWUrhNWC05+ILc2Qx/uveZ2E2v5MonSfHeZP5G/gFgwzTmG3f9jL5wNn4FrnQgux+UevQ9/IixllQpdifjMo/hCC4Fc4ev/l+MOp+29hY=
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com (2603:10b6:a03:2d1::14)
+ by BY5PR10MB4194.namprd10.prod.outlook.com (2603:10b6:a03:20f::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.19; Wed, 6 Apr
+ 2022 17:32:31 +0000
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::1c44:15ca:b5c2:603e]) by SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::1c44:15ca:b5c2:603e%8]) with mapi id 15.20.5123.031; Wed, 6 Apr 2022
+ 17:32:31 +0000
+From:   Jane Chu <jane.chu@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     "david@fromorbit.com" <david@fromorbit.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+        "dave.jiang@intel.com" <dave.jiang@intel.com>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "ira.weiny@intel.com" <ira.weiny@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "vgoyal@redhat.com" <vgoyal@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH v7 4/6] dax: add DAX_RECOVERY flag and .recovery_write
+ dev_pgmap_ops
+Thread-Topic: [PATCH v7 4/6] dax: add DAX_RECOVERY flag and .recovery_write
+ dev_pgmap_ops
+Thread-Index: AQHYSSYdGKTdETDbkEmdZR/SZY7Ic6ziWZ4AgADMqgA=
+Date:   Wed, 6 Apr 2022 17:32:31 +0000
+Message-ID: <196d51a3-b3cc-02ae-0d7d-ee6fbb4d50e4@oracle.com>
+References: <20220405194747.2386619-1-jane.chu@oracle.com>
+ <20220405194747.2386619-5-jane.chu@oracle.com>
+ <Yk0i/pODntZ7lbDo@infradead.org>
+In-Reply-To: <Yk0i/pODntZ7lbDo@infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 563668be-15c7-4b04-253d-08da17f36ddb
+x-ms-traffictypediagnostic: BY5PR10MB4194:EE_
+x-microsoft-antispam-prvs: <BY5PR10MB41940A3C0459728438D5771EF3E79@BY5PR10MB4194.namprd10.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: g8sdYEbxWhoKjojwrfHFTOgKG+ELw/bgOgrSimEoUuVeh89j5oH6kqx0zMxKjJkHrFbDVJPsJtJ0B+zIZSmsLMUCL2pm7GT2d4sEF184wc9j2p9o9meJOachrxD5OiIQIzkjf1zh8IRnP/cbXnzl5aWcOYiOCy+0h9u9QdCltSHuqiMl19ZFowcn2afFq1WcZyHJkw0043WkMuZZYN6l9Cxd8JlerSljUcLtmOdBCGVFvPvs5PPoKpiO70hEjO5itkQzZSWjscD4jxwGb6AKAoEm4Kn10IwEoZDdDK/3/6tgY8BU2iC29w34eAobhOcXu/2mfE51+eXEb8Fzi05fBW06nnYNBKZuHNCSfW3XkdFtCdRu/qRbdD/oPxjMbT6W6dhX6gQbZgJET1dfA/92oWsGb0ruDx1ZlGbKmoDR+Mph1df7t2JTbfl14dFrj6OpUbrrczGomu5yJThdH9Wi0iUY7v6c1eNj9ifNRJoU0PWPSh5kR8FJXPScorpnAAKXXPvRcHCVzdB6df34pu5QA2hghV/n8Gfn5Bajj/uzVzfqY6uLMHIMjwRKh9hxuj65/wZ4Pg5P98FME/4zCOCw7PkbzcGXn+8X/jG3bKgeq/KYZcKpZQBtwrfwMCdyFtM/k813PjLWNvgnzvfWxVvB8/EwN65tqsSPr97NtYmzYlYzdBD4f8esCToAhrQonQDOdFW726AxAsn2FDjgdJzETO+cr2NFAd3E5DvSo0WyZGsb+fOz6e4JIJJJMT6UBgo914gB/N86XwzJwC3ckc1ubThP5i24yU2pZTDX2jGabjVyzWisweakJXe2qpspqg12
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4429.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(2906002)(31686004)(54906003)(7416002)(44832011)(38100700002)(8936002)(31696002)(38070700005)(86362001)(5660300002)(83380400001)(508600001)(76116006)(53546011)(66476007)(64756008)(8676002)(66556008)(186003)(122000001)(4326008)(26005)(2616005)(66446008)(6916009)(66946007)(36756003)(316002)(6512007)(6486002)(6506007)(71200400001)(142923001)(43740500002)(45980500001)(309714004);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?TXhXV3F6d0lxK1lUNnQ2QjNlcENvS3I4Nnhqc3FoTTkrZ244VTl4YVJiUUFZ?=
+ =?utf-8?B?VnI3UGU4dis1b2Fmdm5ZYlV4VjdGTDM4K1Y2T3U3dU5kRk9OenFjQUI1MGJB?=
+ =?utf-8?B?SjRoaTZWMjBNYU5GOFRNbTZNZW9remY3c2xYT21MZThqR3ZsMzZ3Y0JIN1Js?=
+ =?utf-8?B?elQwYWtDUDNPZThkN1MxVWRvZUM2dVJhSW5sQldpR0VuNm5hWmZyeWI5ZUVE?=
+ =?utf-8?B?WjArNWF5ZU50WDFaVlNVMVQ3REZZT3VnRDlXenV6MWE0TVBaSXR4M1FVMnFq?=
+ =?utf-8?B?TkVXNkhhOTFORzF6MlEybGFSdHBBaDJ6QkNDa3UyZHB0N2NnZE5QbVRFM3du?=
+ =?utf-8?B?NFNpNUhOVUtMYmJYRkVrV1ZIU1o2QnlYU1VKeExDN0NjY0FhZXNYb21FT3dW?=
+ =?utf-8?B?aUc2TDRWbTh4UkR0cmJDNGV0bElCbFl0U1lhQ2N2MllBMW8wLy93aWo1Nnp3?=
+ =?utf-8?B?WG1nWVB3OHB5ZVdjSU9SVmtlNUkzNG11QWFJNncyaVc3WFNHRm9lcmNpK2lI?=
+ =?utf-8?B?elRQeXJILzFaSHl5Z0VDcU1TRDNzcWttSjBMRlpqNjlUbGUreXZWbTBvUVMr?=
+ =?utf-8?B?eTlCclJUd0dITXlQS1UxZDByM2dSTnFXakNSZjlNTDNEOXZ0aTkxMWF6d3VJ?=
+ =?utf-8?B?Tmp1Q1V6U1VqOVRoTGwyR00xbnJBTjI2RVBCVjZsTEJYbmtabURHME8wdXZm?=
+ =?utf-8?B?VENybGwyR0VEOTVqTWpEQmxCclRpNjZsMlg3NTlSYStWODNNeXpjQ0dDSXIw?=
+ =?utf-8?B?VWdxOTFmRVpqZmpzeUx4S3FFOWZFb2IyaURKOHRhY00xT01TM1hDaktGc3lY?=
+ =?utf-8?B?UVo5VjRSOEwrajAxN3VJQmE1QzBHbzdZMXVySmZvRkJyUDdUR3BWQ2VDRGdW?=
+ =?utf-8?B?M2pvTDNKSFJ2U0pIbENSODJ6bFZGdmM5WGlyYk91SXI0UEFRRE9HWVBBbHN3?=
+ =?utf-8?B?VzQ4TGJVaHdkb0FjKzVrOURnWkV4bDB1SjJzakFlR1gyS0QxT2wwWElhYlhw?=
+ =?utf-8?B?eTAzUjFlS09BRFhsNTVzTUtycndUZU1JNGx6cTU4bDdpTnJMMzhvV01QbWEx?=
+ =?utf-8?B?dUJzOE9Bai80cGx5ZkxMbWRnN0Q5MERWa0RlbDVPZGEwM1FDeVNqVGlqTEZZ?=
+ =?utf-8?B?MEEwNk9tZ1p2ZXAxVHFUM3JDcVlXdkRjdnh3REtaVmFBMkJVckU1aHBleVp6?=
+ =?utf-8?B?Vm5nT25wamMrMXVOM0EzUlc2WFVDZlc4c3RzLyttYlhkMnhNUlJPOU9EWWE4?=
+ =?utf-8?B?TWJBQkFKSWNieDJpdWtBc0xieStxYVRMdTNMaFkveXJCYXhLQUpYdFNrcnk4?=
+ =?utf-8?B?ZTR5Ui85bUdXNFdKeXFBK2RWVE13WGI4K0dGU3lWRjFDcVNhVCtYSThEeVZU?=
+ =?utf-8?B?SkZTc3hESDd1ZlF3VmdyZTZWR0VzZHMzQVlKNUc2M2w3UmpCbmhrRWtFRGNV?=
+ =?utf-8?B?YlY3QkxxZDdiZkd1UUMwRmV1MmlpVTZ3Tk5sc1pHS2tMTWlxTkI1c1ZFRGF2?=
+ =?utf-8?B?a2RpamFTY1htM2pZWEcwY1pXRW9DT2hja3pNNVAvMVRqaHVhcGw2Ymt5bW9S?=
+ =?utf-8?B?UGcvV0ZOR05OS3Qvb21HZW1sUldQSU5jZFFrVXJSQnRGVGJOK0ZuOXQxWENZ?=
+ =?utf-8?B?UXR0ZG54Z0xBWjJZcktGVWxjWkJuVTg0dm96WXYrTncvdXJ0b0RscWl1b1Rv?=
+ =?utf-8?B?NCtEUjVSOGtBbjR0TEc5ZEh2T2FyVjQyanVBbmNHUDJrN2NneFVqV0p4MHBz?=
+ =?utf-8?B?ay9ZWlQ3K292c094UHBDZnlBcE05NmUxSjRuSzdEcFpyNEtRZ3Q0NTVnYmlS?=
+ =?utf-8?B?K084bWNVZHJHVFJ0YitHR25zZEk2RmU4NTF4L0F5eHFiNnZ3YlNCdHN5UXNR?=
+ =?utf-8?B?Y2p2RU5yWkdFYlhQUlhuNzdMRWlmSmxybFNzZytFOE1hYTR6STZsVUp1Ly9m?=
+ =?utf-8?B?NUo5U2lYL3lXNVJmeXBLWjNzMThwRHYrSzIvcWFxZ2pJT3dzdjBSc2lUY2NX?=
+ =?utf-8?B?SWFUWjlKT2FudUptV1QrVXpBVFBxSFNQZWhQQVI5Q0ZCM0xQTkx1ci9OSEh6?=
+ =?utf-8?B?VjY0ajZJa1cySkxNT1ZuUitzUks1ZHVWQzA1c3RLSVBDa2hUWWZReTRtOTNJ?=
+ =?utf-8?B?UEJKZUVPSTRMaEwxZE1nNmd4VXFxUDhHYWVndEVuVDVlSFJ3UEFPZDZpam1E?=
+ =?utf-8?B?d2ZEem5IU2RaazU1VjZCWXZIcCtBUjhJdGZ4WXd2cEhKLzlUQmVYbDNpb09G?=
+ =?utf-8?B?OHMrSVgrUzN3MkJlSEJGbDRramxncjdGNDZiSVJRcmNaMUZxSTN2S0VQT2c4?=
+ =?utf-8?Q?2jE2GOPyk4Sw5Vhyql?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <D25894A0F59B9B4EB755458807B215CD@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <20220406060516.409838-1-hch@lst.de> <20220406060516.409838-25-hch@lst.de>
-In-Reply-To: <20220406060516.409838-25-hch@lst.de>
-From:   Ryusuke Konishi <konishi.ryusuke@gmail.com>
-Date:   Thu, 7 Apr 2022 03:26:55 +0900
-Message-ID: <CAKFNMom3wHtwHyQ0f7gTF+hSNCc716Syn5EADtzb+Sx1iSUiEA@mail.gmail.com>
-Subject: Re: [PATCH 24/27] block: add a bdev_discard_granularity helper
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        device-mapper development <dm-devel@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
-        linux-nilfs <linux-nilfs@vger.kernel.org>, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, Linux MM <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4429.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 563668be-15c7-4b04-253d-08da17f36ddb
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Apr 2022 17:32:31.2354
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: ym3ROX5nIyO2TpcLHD12r6u+QVi97T7su5B3Y59fynUDRWOeZ0cCjEY9LyOO65WButGWNh37jeRdUscZKsfidQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4194
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.850
+ definitions=2022-04-06_09:2022-04-06,2022-04-06 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ bulkscore=0 mlxscore=0 adultscore=0 phishscore=0 suspectscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2204060086
+X-Proofpoint-ORIG-GUID: AttF8cHDVPgj3B68s1M8SyLakEdJNySz
+X-Proofpoint-GUID: AttF8cHDVPgj3B68s1M8SyLakEdJNySz
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 6, 2022 at 11:06 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> Abstract away implementation details from file systems by providing a
-> block_device based helper to retreive the discard granularity.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/blk-lib.c                     |  5 ++---
->  drivers/block/drbd/drbd_nl.c        |  9 +++++----
->  drivers/block/drbd/drbd_receiver.c  |  3 +--
->  drivers/block/loop.c                |  2 +-
->  drivers/target/target_core_device.c |  3 +--
->  fs/btrfs/ioctl.c                    | 12 ++++--------
->  fs/exfat/file.c                     |  3 +--
->  fs/ext4/mballoc.c                   |  6 +++---
->  fs/f2fs/file.c                      |  3 +--
->  fs/fat/file.c                       |  3 +--
->  fs/gfs2/rgrp.c                      |  7 +++----
->  fs/jfs/ioctl.c                      |  3 +--
->  fs/nilfs2/ioctl.c                   |  4 ++--
->  fs/ntfs3/file.c                     |  4 ++--
->  fs/ntfs3/super.c                    |  6 ++----
->  fs/ocfs2/ioctl.c                    |  3 +--
->  fs/xfs/xfs_discard.c                |  4 ++--
->  include/linux/blkdev.h              |  5 +++++
->  18 files changed, 38 insertions(+), 47 deletions(-)
->
-> diff --git a/block/blk-lib.c b/block/blk-lib.c
-> index 8b4b66d3a9bfc..43aa4d7fe859f 100644
-> --- a/block/blk-lib.c
-> +++ b/block/blk-lib.c
-> @@ -12,8 +12,7 @@
->
->  static sector_t bio_discard_limit(struct block_device *bdev, sector_t sector)
->  {
-> -       unsigned int discard_granularity =
-> -               bdev_get_queue(bdev)->limits.discard_granularity;
-> +       unsigned int discard_granularity = bdev_discard_granularity(bdev);
->         sector_t granularity_aligned_sector;
->
->         if (bdev_is_partition(bdev))
-> @@ -59,7 +58,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
->         }
->
->         /* In case the discard granularity isn't set by buggy device driver */
-> -       if (WARN_ON_ONCE(!q->limits.discard_granularity)) {
-> +       if (WARN_ON_ONCE(!bdev_discard_granularity(bdev))) {
->                 char dev_name[BDEVNAME_SIZE];
->
->                 bdevname(bdev, dev_name);
-> diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
-> index 8e28e0a8e5e41..94ac3737723a8 100644
-> --- a/drivers/block/drbd/drbd_nl.c
-> +++ b/drivers/block/drbd/drbd_nl.c
-> @@ -1440,7 +1440,6 @@ static void sanitize_disk_conf(struct drbd_device *device, struct disk_conf *dis
->                                struct drbd_backing_dev *nbc)
->  {
->         struct block_device *bdev = nbc->backing_bdev;
-> -       struct request_queue *q = bdev->bd_disk->queue;
->
->         if (disk_conf->al_extents < DRBD_AL_EXTENTS_MIN)
->                 disk_conf->al_extents = DRBD_AL_EXTENTS_MIN;
-> @@ -1457,12 +1456,14 @@ static void sanitize_disk_conf(struct drbd_device *device, struct disk_conf *dis
->         if (disk_conf->rs_discard_granularity) {
->                 int orig_value = disk_conf->rs_discard_granularity;
->                 sector_t discard_size = bdev_max_discard_sectors(bdev) << 9;
-> +               unsigned int discard_granularity = bdev_discard_granularity(bdev);
->                 int remainder;
->
-> -               if (q->limits.discard_granularity > disk_conf->rs_discard_granularity)
-> -                       disk_conf->rs_discard_granularity = q->limits.discard_granularity;
-> +               if (discard_granularity > disk_conf->rs_discard_granularity)
-> +                       disk_conf->rs_discard_granularity = discard_granularity;
->
-> -               remainder = disk_conf->rs_discard_granularity % q->limits.discard_granularity;
-> +               remainder = disk_conf->rs_discard_granularity %
-> +                               discard_granularity;
->                 disk_conf->rs_discard_granularity += remainder;
->
->                 if (disk_conf->rs_discard_granularity > discard_size)
-> diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
-> index 8a4a47da56fe9..275c53c7b629e 100644
-> --- a/drivers/block/drbd/drbd_receiver.c
-> +++ b/drivers/block/drbd/drbd_receiver.c
-> @@ -1511,7 +1511,6 @@ void drbd_bump_write_ordering(struct drbd_resource *resource, struct drbd_backin
->  int drbd_issue_discard_or_zero_out(struct drbd_device *device, sector_t start, unsigned int nr_sectors, int flags)
->  {
->         struct block_device *bdev = device->ldev->backing_bdev;
-> -       struct request_queue *q = bdev_get_queue(bdev);
->         sector_t tmp, nr;
->         unsigned int max_discard_sectors, granularity;
->         int alignment;
-> @@ -1521,7 +1520,7 @@ int drbd_issue_discard_or_zero_out(struct drbd_device *device, sector_t start, u
->                 goto zero_out;
->
->         /* Zero-sector (unknown) and one-sector granularities are the same.  */
-> -       granularity = max(q->limits.discard_granularity >> 9, 1U);
-> +       granularity = max(bdev_discard_granularity(bdev) >> 9, 1U);
->         alignment = (bdev_discard_alignment(bdev) >> 9) % granularity;
->
->         max_discard_sectors = min(bdev_max_discard_sectors(bdev), (1U << 22));
-> diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-> index 4b919b75205a7..d5499795a1fec 100644
-> --- a/drivers/block/loop.c
-> +++ b/drivers/block/loop.c
-> @@ -759,7 +759,7 @@ static void loop_config_discard(struct loop_device *lo)
->                 struct request_queue *backingq = bdev_get_queue(I_BDEV(inode));
->
->                 max_discard_sectors = backingq->limits.max_write_zeroes_sectors;
-> -               granularity = backingq->limits.discard_granularity ?:
-> +               granularity = bdev_discard_granularity(I_BDEV(inode)) ?:
->                         queue_physical_block_size(backingq);
->
->         /*
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index 7d510e4231713..ee93f0cca4228 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -834,7 +834,6 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
->  bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
->                                        struct block_device *bdev)
->  {
-> -       struct request_queue *q = bdev_get_queue(bdev);
->         int block_size = bdev_logical_block_size(bdev);
->
->         if (!bdev_max_discard_sectors(bdev))
-> @@ -846,7 +845,7 @@ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
->          * Currently hardcoded to 1 in Linux/SCSI code..
->          */
->         attrib->max_unmap_block_desc_count = 1;
-> -       attrib->unmap_granularity = q->limits.discard_granularity / block_size;
-> +       attrib->unmap_granularity = bdev_discard_granularity(bdev) / block_size;
->         attrib->unmap_granularity_alignment =
->                 bdev_discard_alignment(bdev) / block_size;
->         return true;
-> diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-> index fc7953755fd8b..f1a1e9519808e 100644
-> --- a/fs/btrfs/ioctl.c
-> +++ b/fs/btrfs/ioctl.c
-> @@ -468,7 +468,6 @@ static noinline int btrfs_ioctl_fitrim(struct btrfs_fs_info *fs_info,
->                                         void __user *arg)
->  {
->         struct btrfs_device *device;
-> -       struct request_queue *q;
->         struct fstrim_range range;
->         u64 minlen = ULLONG_MAX;
->         u64 num_devices = 0;
-> @@ -498,14 +497,11 @@ static noinline int btrfs_ioctl_fitrim(struct btrfs_fs_info *fs_info,
->         rcu_read_lock();
->         list_for_each_entry_rcu(device, &fs_info->fs_devices->devices,
->                                 dev_list) {
-> -               if (!device->bdev)
-> +               if (!device->bdev || !bdev_max_discard_sectors(device->bdev))
->                         continue;
-> -               q = bdev_get_queue(device->bdev);
-> -               if (bdev_max_discard_sectors(device->bdev)) {
-> -                       num_devices++;
-> -                       minlen = min_t(u64, q->limits.discard_granularity,
-> -                                    minlen);
-> -               }
-> +               num_devices++;
-> +               minlen = min_t(u64, bdev_discard_granularity(device->bdev),
-> +                                   minlen);
->         }
->         rcu_read_unlock();
->
-> diff --git a/fs/exfat/file.c b/fs/exfat/file.c
-> index 765e4f63dd18d..20d4e47f57ab2 100644
-> --- a/fs/exfat/file.c
-> +++ b/fs/exfat/file.c
-> @@ -351,7 +351,6 @@ int exfat_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
->
->  static int exfat_ioctl_fitrim(struct inode *inode, unsigned long arg)
->  {
-> -       struct request_queue *q = bdev_get_queue(inode->i_sb->s_bdev);
->         struct fstrim_range range;
->         int ret = 0;
->
-> @@ -365,7 +364,7 @@ static int exfat_ioctl_fitrim(struct inode *inode, unsigned long arg)
->                 return -EFAULT;
->
->         range.minlen = max_t(unsigned int, range.minlen,
-> -                               q->limits.discard_granularity);
-> +                               bdev_discard_granularity(inode->i_sb->s_bdev));
->
->         ret = exfat_trim_fs(inode, &range);
->         if (ret < 0)
-> diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
-> index c3668c977cd99..6d1820536d88d 100644
-> --- a/fs/ext4/mballoc.c
-> +++ b/fs/ext4/mballoc.c
-> @@ -6455,7 +6455,7 @@ ext4_trim_all_free(struct super_block *sb, ext4_group_t group,
->   */
->  int ext4_trim_fs(struct super_block *sb, struct fstrim_range *range)
->  {
-> -       struct request_queue *q = bdev_get_queue(sb->s_bdev);
-> +       unsigned int discard_granularity = bdev_discard_granularity(sb->s_bdev);
->         struct ext4_group_info *grp;
->         ext4_group_t group, first_group, last_group;
->         ext4_grpblk_t cnt = 0, first_cluster, last_cluster;
-> @@ -6475,9 +6475,9 @@ int ext4_trim_fs(struct super_block *sb, struct fstrim_range *range)
->             range->len < sb->s_blocksize)
->                 return -EINVAL;
->         /* No point to try to trim less than discard granularity */
-> -       if (range->minlen < q->limits.discard_granularity) {
-> +       if (range->minlen < discard_granularity) {
->                 minlen = EXT4_NUM_B2C(EXT4_SB(sb),
-> -                       q->limits.discard_granularity >> sb->s_blocksize_bits);
-> +                               discard_granularity >> sb->s_blocksize_bits);
->                 if (minlen > EXT4_CLUSTERS_PER_GROUP(sb))
->                         goto out;
->         }
-> diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-> index 5b89af0f27f05..8053d99f3920b 100644
-> --- a/fs/f2fs/file.c
-> +++ b/fs/f2fs/file.c
-> @@ -2285,7 +2285,6 @@ static int f2fs_ioc_fitrim(struct file *filp, unsigned long arg)
->  {
->         struct inode *inode = file_inode(filp);
->         struct super_block *sb = inode->i_sb;
-> -       struct request_queue *q = bdev_get_queue(sb->s_bdev);
->         struct fstrim_range range;
->         int ret;
->
-> @@ -2304,7 +2303,7 @@ static int f2fs_ioc_fitrim(struct file *filp, unsigned long arg)
->                 return ret;
->
->         range.minlen = max((unsigned int)range.minlen,
-> -                               q->limits.discard_granularity);
-> +                          bdev_discard_granularity(sb->s_bdev));
->         ret = f2fs_trim_fs(F2FS_SB(sb), &range);
->         mnt_drop_write_file(filp);
->         if (ret < 0)
-> diff --git a/fs/fat/file.c b/fs/fat/file.c
-> index e4c7d10e80129..bf91f977debea 100644
-> --- a/fs/fat/file.c
-> +++ b/fs/fat/file.c
-> @@ -127,7 +127,6 @@ static int fat_ioctl_fitrim(struct inode *inode, unsigned long arg)
->         struct super_block *sb = inode->i_sb;
->         struct fstrim_range __user *user_range;
->         struct fstrim_range range;
-> -       struct request_queue *q = bdev_get_queue(sb->s_bdev);
->         int err;
->
->         if (!capable(CAP_SYS_ADMIN))
-> @@ -141,7 +140,7 @@ static int fat_ioctl_fitrim(struct inode *inode, unsigned long arg)
->                 return -EFAULT;
->
->         range.minlen = max_t(unsigned int, range.minlen,
-> -                            q->limits.discard_granularity);
-> +                            bdev_discard_granularity(sb->s_bdev));
->
->         err = fat_trim_fs(inode, &range);
->         if (err < 0)
-> diff --git a/fs/gfs2/rgrp.c b/fs/gfs2/rgrp.c
-> index 7f20ac9133bc6..6d26bb5254844 100644
-> --- a/fs/gfs2/rgrp.c
-> +++ b/fs/gfs2/rgrp.c
-> @@ -1386,7 +1386,7 @@ int gfs2_fitrim(struct file *filp, void __user *argp)
->  {
->         struct inode *inode = file_inode(filp);
->         struct gfs2_sbd *sdp = GFS2_SB(inode);
-> -       struct request_queue *q = bdev_get_queue(sdp->sd_vfs->s_bdev);
-> +       struct block_device *bdev = sdp->sd_vfs->s_bdev;
->         struct buffer_head *bh;
->         struct gfs2_rgrpd *rgd;
->         struct gfs2_rgrpd *rgd_end;
-> @@ -1405,7 +1405,7 @@ int gfs2_fitrim(struct file *filp, void __user *argp)
->         if (!test_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags))
->                 return -EROFS;
->
-> -       if (!bdev_max_discard_sectors(sdp->sd_vfs->s_bdev))
-> +       if (!bdev_max_discard_sectors(bdev))
->                 return -EOPNOTSUPP;
->
->         if (copy_from_user(&r, argp, sizeof(r)))
-> @@ -1418,8 +1418,7 @@ int gfs2_fitrim(struct file *filp, void __user *argp)
->         start = r.start >> bs_shift;
->         end = start + (r.len >> bs_shift);
->         minlen = max_t(u64, r.minlen, sdp->sd_sb.sb_bsize);
-> -       minlen = max_t(u64, minlen,
-> -                      q->limits.discard_granularity) >> bs_shift;
-> +       minlen = max_t(u64, minlen, bdev_discard_granularity(bdev)) >> bs_shift;
->
->         if (end <= start || minlen > sdp->sd_max_rg_data)
->                 return -EINVAL;
-> diff --git a/fs/jfs/ioctl.c b/fs/jfs/ioctl.c
-> index 357ae6e5c36ec..1e7b177ece605 100644
-> --- a/fs/jfs/ioctl.c
-> +++ b/fs/jfs/ioctl.c
-> @@ -110,7 +110,6 @@ long jfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
->         case FITRIM:
->         {
->                 struct super_block *sb = inode->i_sb;
-> -               struct request_queue *q = bdev_get_queue(sb->s_bdev);
->                 struct fstrim_range range;
->                 s64 ret = 0;
->
-> @@ -127,7 +126,7 @@ long jfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
->                         return -EFAULT;
->
->                 range.minlen = max_t(unsigned int, range.minlen,
-> -                       q->limits.discard_granularity);
-> +                                    bdev_discard_granularity(sb->s_bdev));
->
->                 ret = jfs_ioc_trim(inode, &range);
->                 if (ret < 0)
-> diff --git a/fs/nilfs2/ioctl.c b/fs/nilfs2/ioctl.c
-> index 52b73f558fcb1..87e1004b606d2 100644
-> --- a/fs/nilfs2/ioctl.c
-> +++ b/fs/nilfs2/ioctl.c
-> @@ -1052,7 +1052,6 @@ static int nilfs_ioctl_resize(struct inode *inode, struct file *filp,
->  static int nilfs_ioctl_trim_fs(struct inode *inode, void __user *argp)
->  {
->         struct the_nilfs *nilfs = inode->i_sb->s_fs_info;
-> -       struct request_queue *q = bdev_get_queue(nilfs->ns_bdev);
->         struct fstrim_range range;
->         int ret;
->
-> @@ -1065,7 +1064,8 @@ static int nilfs_ioctl_trim_fs(struct inode *inode, void __user *argp)
->         if (copy_from_user(&range, argp, sizeof(range)))
->                 return -EFAULT;
->
-> -       range.minlen = max_t(u64, range.minlen, q->limits.discard_granularity);
-> +       range.minlen = max_t(u64, range.minlen,
-> +                            bdev_discard_granularity(nilfs->ns_bdev));
->
->         down_read(&nilfs->ns_segctor_sem);
->         ret = nilfs_sufile_trim_fs(nilfs->ns_sufile, &range);
-> diff --git a/fs/ntfs3/file.c b/fs/ntfs3/file.c
-> index e763236169331..15806eeae217a 100644
-> --- a/fs/ntfs3/file.c
-> +++ b/fs/ntfs3/file.c
-> @@ -22,7 +22,6 @@ static int ntfs_ioctl_fitrim(struct ntfs_sb_info *sbi, unsigned long arg)
->  {
->         struct fstrim_range __user *user_range;
->         struct fstrim_range range;
-> -       struct request_queue *q = bdev_get_queue(sbi->sb->s_bdev);
->         int err;
->
->         if (!capable(CAP_SYS_ADMIN))
-> @@ -35,7 +34,8 @@ static int ntfs_ioctl_fitrim(struct ntfs_sb_info *sbi, unsigned long arg)
->         if (copy_from_user(&range, user_range, sizeof(range)))
->                 return -EFAULT;
->
-> -       range.minlen = max_t(u32, range.minlen, q->limits.discard_granularity);
-> +       range.minlen = max_t(u32, range.minlen,
-> +                            bdev_discard_granularity(sbi->sb->s_bdev));
->
->         err = ntfs_trim_fs(sbi, &range);
->         if (err < 0)
-> diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
-> index c734085bcce4a..5f2e414cfa79b 100644
-> --- a/fs/ntfs3/super.c
-> +++ b/fs/ntfs3/super.c
-> @@ -882,7 +882,6 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)
->         int err;
->         struct ntfs_sb_info *sbi = sb->s_fs_info;
->         struct block_device *bdev = sb->s_bdev;
-> -       struct request_queue *rq;
->         struct inode *inode;
->         struct ntfs_inode *ni;
->         size_t i, tt;
-> @@ -912,9 +911,8 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)
->                 goto out;
->         }
->
-> -       rq = bdev_get_queue(bdev);
-> -       if (bdev_max_discard_sectors(bdev) && rq->limits.discard_granularity) {
-> -               sbi->discard_granularity = rq->limits.discard_granularity;
-> +       if (bdev_max_discard_sectors(bdev) && bdev_discard_granularity(bdev)) {
-> +               sbi->discard_granularity = bdev_discard_granularity(bdev);
->                 sbi->discard_granularity_mask_inv =
->                         ~(u64)(sbi->discard_granularity - 1);
->         }
-> diff --git a/fs/ocfs2/ioctl.c b/fs/ocfs2/ioctl.c
-> index 9b78ef103ada6..afd54ec661030 100644
-> --- a/fs/ocfs2/ioctl.c
-> +++ b/fs/ocfs2/ioctl.c
-> @@ -903,7 +903,6 @@ long ocfs2_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
->         case FITRIM:
->         {
->                 struct super_block *sb = inode->i_sb;
-> -               struct request_queue *q = bdev_get_queue(sb->s_bdev);
->                 struct fstrim_range range;
->                 int ret = 0;
->
-> @@ -916,7 +915,7 @@ long ocfs2_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
->                 if (copy_from_user(&range, argp, sizeof(range)))
->                         return -EFAULT;
->
-> -               range.minlen = max_t(u64, q->limits.discard_granularity,
-> +               range.minlen = max_t(u64, bdev_discard_granularity(sb->s_bdev),
->                                      range.minlen);
->                 ret = ocfs2_trim_fs(sb, &range);
->                 if (ret < 0)
-> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-> index a4e6609d616b7..e2ada115c23f9 100644
-> --- a/fs/xfs/xfs_discard.c
-> +++ b/fs/xfs/xfs_discard.c
-> @@ -152,8 +152,8 @@ xfs_ioc_trim(
->         struct xfs_mount                *mp,
->         struct fstrim_range __user      *urange)
->  {
-> -       struct request_queue    *q = bdev_get_queue(mp->m_ddev_targp->bt_bdev);
-> -       unsigned int            granularity = q->limits.discard_granularity;
-> +       unsigned int            granularity =
-> +               bdev_discard_granularity(mp->m_ddev_targp->bt_bdev);
->         struct fstrim_range     range;
->         xfs_daddr_t             start, end, minlen;
->         xfs_agnumber_t          start_agno, end_agno, agno;
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index ce16247d3afab..7b9c0cf95d2d5 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -1259,6 +1259,11 @@ static inline unsigned int bdev_max_discard_sectors(struct block_device *bdev)
->         return bdev_get_queue(bdev)->limits.max_discard_sectors;
->  }
->
-> +static inline unsigned int bdev_discard_granularity(struct block_device *bdev)
-> +{
-> +       return bdev_get_queue(bdev)->limits.discard_granularity;
-> +}
-> +
->  static inline unsigned int bdev_write_zeroes_sectors(struct block_device *bdev)
->  {
->         struct request_queue *q = bdev_get_queue(bdev);
-> --
-> 2.30.2
->
-
-I got the following checkpatch warning:
-
- WARNING: 'retreive' may be misspelled - perhaps 'retrieve'?
- #101:
- block_device based helper to retreive the discard granularity.
-                              ^^^^^^^^
-
- total: 0 errors, 1 warnings, 294 lines checked
-
-
-The changes themselves look good.
-
-Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com>
-
-Thanks,
-Ryusuke Konishi
+T24gNC81LzIwMjIgMTA6MTkgUE0sIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOg0KPiBPbiBUdWUs
+IEFwciAwNSwgMjAyMiBhdCAwMTo0Nzo0NVBNIC0wNjAwLCBKYW5lIENodSB3cm90ZToNCj4+IElu
+dHJvZHVjZSBEQVhfUkVDT1ZFUlkgZmxhZyB0byBkYXhfZGlyZWN0X2FjY2VzcygpLiBUaGUgZmxh
+ZyBpcw0KPj4gbm90IHNldCBieSBkZWZhdWx0IGluIGRheF9kaXJlY3RfYWNjZXNzKCkgc3VjaCB0
+aGF0IHRoZSBoZWxwZXINCj4+IGRvZXMgbm90IHRyYW5zbGF0ZSBhIHBtZW0gcmFuZ2UgdG8ga2Vy
+bmVsIHZpcnR1YWwgYWRkcmVzcyBpZiB0aGUNCj4+IHJhbmdlIGNvbnRhaW5zIHVuY29ycmVjdGFi
+bGUgZXJyb3JzLiAgV2hlbiB0aGUgZmxhZyBpcyBzZXQsDQo+PiB0aGUgaGVscGVyIGlnbm9yZXMg
+dGhlIFVFcyBhbmQgcmV0dXJuIGtlcm5lbCB2aXJ0dWFsIGFkZGVyc3Mgc28NCj4+IHRoYXQgdGhl
+IGNhbGxlciBtYXkgZ2V0IG9uIHdpdGggZGF0YSByZWNvdmVyeSB2aWEgd3JpdGUuDQo+Pg0KPj4g
+QWxzbyBpbnRyb2R1Y2UgYSBuZXcgZGV2X3BhZ2VtYXBfb3BzIC5yZWNvdmVyeV93cml0ZSBmdW5j
+dGlvbi4NCj4+IFRoZSBmdW5jdGlvbiBpcyBhcHBsaWNhYmxlIHRvIEZTREFYIGRldmljZSBvbmx5
+LiBUaGUgZGV2aWNlDQo+PiBwYWdlIGJhY2tlbmQgZHJpdmVyIHByb3ZpZGVzIC5yZWNvdmVyeV93
+cml0ZSBmdW5jdGlvbiBpZiB0aGUNCj4+IGRldmljZSBoYXMgdW5kZXJseWluZyBtZWNoYW5pc20g
+dG8gY2xlYXIgdGhlIHVuY29ycmVjdGFibGUNCj4+IGVycm9ycyBvbiB0aGUgZmx5Lg0KPiANCj4g
+SSBrbm93IERhbiBzdWdnZXN0ZWQgaXQsIGJ1dCBJIHN0aWxsIHRoaW5rIGRldl9wYWdlbWFwX29w
+cyBpcyB0aGUgdmVyeQ0KPiB3cm9uZyBjaG9pY2UgaGVyZS4gIEl0IGlzIGFib3V0IFZNIGNhbGxi
+YWNrcyB0byBaT05FX0RFVklDRSBvd25lcnMNCj4gaW5kZXBlbmRlbnQgb2Ygd2hhdCBwYWdlbWFw
+IHR5cGUgdGhleSBhcmUuICAucmVjb3Zlcnlfd3JpdGUgb24gdGhlDQo+IG90aGVyIGhhbmQgaXMg
+Y29tcGxldGVseSBzcGVjaWZpYyB0byB0aGUgREFYIHdyaXRlIHBhdGggYW5kIGhhcyBubw0KPiBN
+TSBpbnRlcmFjdGlvbnMgYXQgYWxsLg0KDQpZZXMsIEkgYmVsaWV2ZSBEYW4gd2FzIG1vdGl2YXRl
+ZCBieSBhdm9pZGluZyB0aGUgZG0gZGFuY2UgYXMgYSByZXN1bHQgb2YNCmFkZGluZyAucmVjb3Zl
+cnlfd3JpdGUgdG8gZGF4X29wZXJhdGlvbnMuDQoNCkkgdW5kZXJzdGFuZCB5b3VyIHBvaW50IGFi
+b3V0IC5yZWNvdmVyeV93cml0ZSBpcyBkZXZpY2Ugc3BlY2lmaWMgYW5kDQp0aHVzIG5vdCBzb21l
+dGhpbmcgYXBwcm9wcmlhdGUgZm9yIGRldmljZSBhZ25vc3RpYyBvcHMuDQoNCkkgY2FuIHNlZSAy
+IG9wdGlvbnMgc28gZmFyIC0NCg0KMSkgIGFkZCAucmVjb3Zlcnlfd3JpdGUgdG8gZGF4X29wZXJh
+dGlvbnMgYW5kIGRvIHRoZSBkbSBkYW5jZSB0byBodW50IA0KZG93biB0byB0aGUgYmFzZSBkZXZp
+Y2UgdGhhdCBhY3R1YWxseSBwcm92aWRlcyB0aGUgcmVjb3ZlcnkgYWN0aW9uDQoNCjIpICBhbiB1
+Z2x5IGJ1dCBleHBlZGllbnQgYXBwcm9hY2ggYmFzZWQgb24gdGhlIG9ic2VydmF0aW9uIHRoYXQg
+DQpkYXhfZGlyZWN0X2FjY2VzcygpIGhhcyBhbHJlYWR5IGdvbmUgdGhyb3VnaCB0aGUgZG0gZGFu
+Y2UgYW5kIHRodXMgY291bGQgDQpzY29vcCB1cCB0aGUgLnJlY292ZXJ5X3dyaXRlIGZ1bmN0aW9u
+IHBvaW50ZXIgaWYgREFYX1JFQ09WRVJZIGZsYWcgaXMgDQpzZXQuICBMaWtlIGJ1bmRsZSBhY3Rp
+b24tZmxhZyB3aXRoIGFjdGlvbiwgYW5kIGlmIHNob3VsZCB0aGVyZSBuZWVkIG1vcmUNCmRldmlj
+ZSBzcGVjaWZpYyBhY3Rpb25zLCBqdXN0IGFkZCBhbm90aGVyIGFjdGlvbiB3aXRoIGFzc29jaWF0
+ZWQgZmxhZy4NCg0KSSdtIHRoaW5raW5nIGFib3V0IHNvbWV0aGluZyBsaWtlIHRoaXMNCg0KICAg
+IGxvbmcgZGF4X2RpcmVjdF9hY2Nlc3Moc3RydWN0IGRheF9kZXZpY2UgKmRheF9kZXYsIHBnb2Zm
+X3QgcGdvZmYsDQogICAgICAgICAgICAgICAgICAgICAgICAgICBsb25nIG5yX3BhZ2VzLCBzdHJ1
+Y3QgZGF4ZGV2X3NwZWNpZmljICphY3Rpb24sDQogICAgICAgICAgICAgICAgICAgICAgICAgICBp
+bnQgZmxhZ3MsIHZvaWQgKiprYWRkciwgcGZuX3QgKnBmbikNCg0KICAgIHdoZXJlDQogICAgc3Ry
+dWN0IGRheGRldl9zcGVjaWZpYyB7DQoJaW50IGZsYWdzOwkvKiBEQVhfUkVDT1ZFUlksIGV0YyAq
+Lw0KCXNpemVfdCAoKnJlY292ZXJ5X3dyaXRlKSAocGZuX3QgcGZuLCBwZ29mZl90IHBnb2ZmLCB2
+b2lkICphZGRyLA0KCQkJCSBzaXplX3QgYnl0ZXMsIHZvaWQgKml0ZXIpOw0KICAgIH0NCg0KICAg
+IF9fcG1lbV9kaXJlY3RfYWNjZXNzKCkgcHJvdmlkZXMgdGhlIC5yZWNvdmVyeV93cml0ZSBmdW5j
+dGlvbiBwb2ludGVyOw0KICAgIGRheF9pb21hcF9pdGVyKCkgZW5kcyB1cCBkaXJlY3RseSBpbnZv
+a2UgdGhlIGZ1bmN0aW9uIGluIHBtZW0uYw0KICAgICAgd2hpY2ggZmluZHMgcGdtYXAgZnJvbSBw
+Zm5fdCwgYW5kIChzdHJ1Y3QgcG1lbSAqKSBmcm9tDQogICAgICBwZ21hcC0+b3duZXI7DQoNCklu
+IHRoaXMgd2F5LCB3ZSBnZXQgcmlkIG9mIGRheF9yZWNvdmVyeV93cml0ZSgpIGludGVyZmFjZSBh
+cyB3ZWxsIGFzIHRoZQ0KZG0gZGFuY2UuDQoNCldoYXQgZG8geW91IHRoaW5rPw0KDQpEYW4sIGNv
+dWxkIHlvdSBhbHNvIGNoaW1lIGluID8NCg0KPiANCj4+ICAgLyogc2VlICJzdHJvbmciIGRlY2xh
+cmF0aW9uIGluIHRvb2xzL3Rlc3RpbmcvbnZkaW1tL3BtZW0tZGF4LmMgKi8NCj4+ICAgX193ZWFr
+IGxvbmcgX19wbWVtX2RpcmVjdF9hY2Nlc3Moc3RydWN0IHBtZW1fZGV2aWNlICpwbWVtLCBwZ29m
+Zl90IHBnb2ZmLA0KPj4gLQkJbG9uZyBucl9wYWdlcywgdm9pZCAqKmthZGRyLCBwZm5fdCAqcGZu
+KQ0KPj4gKwkJbG9uZyBucl9wYWdlcywgaW50IGZsYWdzLCB2b2lkICoqa2FkZHIsIHBmbl90ICpw
+Zm4pDQo+PiAgIHsNCj4+ICAgCXJlc291cmNlX3NpemVfdCBvZmZzZXQgPSBQRk5fUEhZUyhwZ29m
+ZikgKyBwbWVtLT5kYXRhX29mZnNldDsNCj4+ICsJc2VjdG9yX3Qgc2VjdG9yID0gUEZOX1BIWVMo
+cGdvZmYpID4+IFNFQ1RPUl9TSElGVDsNCj4+ICsJdW5zaWduZWQgaW50IG51bSA9IFBGTl9QSFlT
+KG5yX3BhZ2VzKSA+PiBTRUNUT1JfU0hJRlQ7DQo+PiArCXN0cnVjdCBiYWRibG9ja3MgKmJiID0g
+JnBtZW0tPmJiOw0KPj4gKwlzZWN0b3JfdCBmaXJzdF9iYWQ7DQo+PiArCWludCBudW1fYmFkOw0K
+Pj4gKwlib29sIGJhZF9pbl9yYW5nZTsNCj4+ICsJbG9uZyBhY3R1YWxfbnI7DQo+PiArDQo+PiAr
+CWlmICghYmItPmNvdW50KQ0KPj4gKwkJYmFkX2luX3JhbmdlID0gZmFsc2U7DQo+PiArCWVsc2UN
+Cj4+ICsJCWJhZF9pbl9yYW5nZSA9ICEhYmFkYmxvY2tzX2NoZWNrKGJiLCBzZWN0b3IsIG51bSwg
+JmZpcnN0X2JhZCwgJm51bV9iYWQpOw0KPj4gICANCj4+IC0JaWYgKHVubGlrZWx5KGlzX2JhZF9w
+bWVtKCZwbWVtLT5iYiwgUEZOX1BIWVMocGdvZmYpIC8gNTEyLA0KPj4gLQkJCQkJUEZOX1BIWVMo
+bnJfcGFnZXMpKSkpDQo+PiArCWlmIChiYWRfaW5fcmFuZ2UgJiYgIShmbGFncyAmIERBWF9SRUNP
+VkVSWSkpDQo+PiAgIAkJcmV0dXJuIC1FSU87DQo+IA0KPiBUaGUgdXNlIG9mIGJhZF9pbl9yYW5n
+ZSBoZXJlIHNlZW1zIGEgbGl0bGUgY29udm9sdXRlZC4gIFNlZSB0aGUgYXR0YWNoZWQNCj4gcGF0
+Y2ggb24gaG93IEkgd291bGQgc3RydWN0dXJlIHRoZSBmdW5jdGlvbiB0byBhdm9pZCB0aGUgdmFy
+aWFibGUgYW5kDQo+IGhhdmUgdGhlIHJlb2N2ZXJ5IGNvZGUgaW4gYSBzZWxmLWNvbnRhaW5lZCBj
+aHVuay4NCg0KTXVjaCBiZXR0ZXIsIHdpbGwgdXNlIHlvdXIgdmVyc2lvbiwgdGhhbmtzIQ0KDQo+
+IA0KPj4gLQkJbWFwX2xlbiA9IGRheF9kaXJlY3RfYWNjZXNzKGRheF9kZXYsIHBnb2ZmLCBQSFlT
+X1BGTihzaXplKSwNCj4+IC0JCQkJJmthZGRyLCBOVUxMKTsNCj4+ICsJCW5ycGcgPSBQSFlTX1BG
+TihzaXplKTsNCj4+ICsJCW1hcF9sZW4gPSBkYXhfZGlyZWN0X2FjY2VzcyhkYXhfZGV2LCBwZ29m
+ZiwgbnJwZywgMCwgJmthZGRyLCBOVUxMKTsNCj4gDQo+IE92ZXJseSBsb25nIGxpbmUgaGVyZS4N
+Cg0KT2theSwgd2lsbCBydW4gdGhlIGNoZWNrcGF0Y2gucGwgdGVzdCBhZ2Fpbi4NCg0KdGhhbmtz
+IQ0KLWphbmUNCg==
