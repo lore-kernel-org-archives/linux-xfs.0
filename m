@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC367C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:23:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38DBFC43219
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:23:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242356AbiDFJZ3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:25:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52852 "EHLO
+        id S1357687AbiDFJZj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:25:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356441AbiDFJDI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:03:08 -0400
+        with ESMTP id S1353845AbiDFJCt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:02:49 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE0F148F717;
-        Tue,  5 Apr 2022 23:06:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D1E645C21B;
+        Tue,  5 Apr 2022 23:05:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=h9nRIyL4wrpJ3ypc009/z3A2dTvKLKo4vnaU7ryfwvk=; b=a9oCdCdHg2UWHjdBX3bxPs2eKR
-        5hve9tuJweiHtNscXmQk+Ivzu2Q7V3Mhv54LpOAbMMyQCJFe1pzLSFTspFhvQH5RSd3zutfvDVBle
-        gc7aQWZ1G4DVpBQSlfEnNf2ldCbJPt3gAAT/HH2ojp1/M3c6g9Su6hdyodjAivFbD+KIhySRZQL+J
-        uMGgYqy0Bvib+9naGiIp1U//m5d564u8ZAFKPpmnTrgGDKoliPoyKaR90tTLnVja4b5oVEZAers0q
-        p77NmZVl/ZfqKctngEgkCmQ/GGwXLM4DulJii5cEYj/W60uypGBwfA+RHY+qWe7ISyRLJtvjwNf2V
-        jwMR1eTA==;
+        bh=tRabeefOvFWuX0UGmN5W80/SEitu80or+ujXPxbBifU=; b=AOm4sjiAlP6tD5BDPG+nlvSOnr
+        a+eqmQqJ44Gu3hNVff0rp/i9EstWS6YUe61HZmqK+NgAP9RCVrUroq8zVL8cKV3zpQ5XL0vyJlmRK
+        NzewYB+71v3WGLpgxvDoCFkqDQNPtIyV060z8fdSvtAa8bXvOhTJAGc1uVeds1Z8SanWEw05KGQ3W
+        UFB/Fg7NmKib5Uv9tykTUx2ZTObJAhnLIWQguQ08ldvRIaVpq8BqAf/QlCjLYPeugVNgGqcQ31x4x
+        JN/Z3K777fE2OazN7ZPpQSN18xdxSBZinMwtnPgc6nyTQwlijNE+ESpNHGBXjEkXAjangL33mjfc5
+        dZArx7ow==;
 Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbyny-003vFI-1v; Wed, 06 Apr 2022 06:06:10 +0000
+        id 1nbyne-003v04-Nu; Wed, 06 Apr 2022 06:05:51 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -43,9 +43,9 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
         ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 13/27] block: add a bdev_stable_writes helper
-Date:   Wed,  6 Apr 2022 08:05:02 +0200
-Message-Id: <20220406060516.409838-14-hch@lst.de>
+Subject: [PATCH 08/27] ntfs3: use bdev_logical_block_size instead of open coding it
+Date:   Wed,  6 Apr 2022 08:04:57 +0200
+Message-Id: <20220406060516.409838-9-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220406060516.409838-1-hch@lst.de>
 References: <20220406060516.409838-1-hch@lst.de>
@@ -56,75 +56,24 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add a helper to check the stable writes flag based on the block_device
-instead of having to poke into the block layer internal request_queue.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/dm-table.c  | 4 +---
- fs/super.c             | 2 +-
- include/linux/blkdev.h | 6 ++++++
- mm/swapfile.c          | 2 +-
- 4 files changed, 9 insertions(+), 5 deletions(-)
+ fs/ntfs3/super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 5e38d0dd009d5..d46839faa0ca5 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -1950,9 +1950,7 @@ static int device_requires_stable_pages(struct dm_target *ti,
- 					struct dm_dev *dev, sector_t start,
- 					sector_t len, void *data)
- {
--	struct request_queue *q = bdev_get_queue(dev->bdev);
--
--	return blk_queue_stable_writes(q);
-+	return bdev_stable_writes(dev->bdev);
- }
- 
- int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
-diff --git a/fs/super.c b/fs/super.c
-index f1d4a193602d6..60f57c7bc0a69 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -1204,7 +1204,7 @@ static int set_bdev_super(struct super_block *s, void *data)
- 	s->s_dev = s->s_bdev->bd_dev;
- 	s->s_bdi = bdi_get(s->s_bdev->bd_disk->bdi);
- 
--	if (blk_queue_stable_writes(s->s_bdev->bd_disk->queue))
-+	if (bdev_stable_writes(s->s_bdev))
- 		s->s_iflags |= SB_I_STABLE_WRITES;
- 	return 0;
- }
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 075b16d4560e7..a433798c3343e 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1330,6 +1330,12 @@ static inline bool bdev_nonrot(struct block_device *bdev)
- 	return blk_queue_nonrot(bdev_get_queue(bdev));
- }
- 
-+static inline bool bdev_stable_writes(struct block_device *bdev)
-+{
-+	return test_bit(QUEUE_FLAG_STABLE_WRITES,
-+			&bdev_get_queue(bdev)->queue_flags);
-+}
-+
- static inline bool bdev_write_cache(struct block_device *bdev)
- {
- 	return test_bit(QUEUE_FLAG_WC, &bdev_get_queue(bdev)->queue_flags);
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index d5ab7ec4d92ca..4069f17a82c8e 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -3065,7 +3065,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
- 		goto bad_swap_unlock_inode;
+diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
+index 278dcf5024102..cd30e81abbce0 100644
+--- a/fs/ntfs3/super.c
++++ b/fs/ntfs3/super.c
+@@ -920,7 +920,7 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)
  	}
  
--	if (p->bdev && blk_queue_stable_writes(p->bdev->bd_disk->queue))
-+	if (p->bdev && bdev_stable_writes(p->bdev))
- 		p->flags |= SWP_STABLE_WRITES;
- 
- 	if (p->bdev && p->bdev->bd_disk->fops->rw_page)
+ 	/* Parse boot. */
+-	err = ntfs_init_from_boot(sb, rq ? queue_logical_block_size(rq) : 512,
++	err = ntfs_init_from_boot(sb, bdev_logical_block_size(bdev),
+ 				  bdev_nr_bytes(bdev));
+ 	if (err)
+ 		goto out;
 -- 
 2.30.2
 
