@@ -2,622 +2,243 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC6CFC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:24:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3DF1C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:37:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350085AbiDFJ0y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:26:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52062 "EHLO
+        id S1358398AbiDFJjf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:39:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1447763AbiDFJEi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:04:38 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFD68482513;
-        Tue,  5 Apr 2022 23:07:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=NOp84q6++z+7Q8uHeg5Eo+6RpSy907DQLMlmJxz0jNA=; b=x0wNRTcLaeYftxiAQHKnjFl7Vn
-        /hNIgg5ccry8wDU5TCE6WgYOjTiZp9YqujuI++whmFTqsw0fREkq1tH7klAVk3pmLAa/vHev3jFYr
-        5Uo3rvvo1MWb8QwRAP1dZFxhI0Bfnu3BhYUA18htho7Gml6Q9eqPi5Sf4OizAOcOpoH+YZW1H8RhC
-        099eZsjue0ogmbtNemjif1xsWLrKF+3Ham/efjGVY9mH4VelWmsVaGjlStwrG8r8LKRw52oTWsFAM
-        Fx2izGgUXVgVMYfVg1h9A89tjacutX9KXFnHjFje4IpvhhHqLIBqpqsszQ64x2qdAggtSvuRGQNGP
-        5ZrfWKSw==;
-Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbyoj-003vxb-Ew; Wed, 06 Apr 2022 06:06:58 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
-        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
-        nbd@other.debian.org, ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 25/27] block: remove QUEUE_FLAG_DISCARD
-Date:   Wed,  6 Apr 2022 08:05:14 +0200
-Message-Id: <20220406060516.409838-26-hch@lst.de>
+        with ESMTP id S1585723AbiDFJgp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:36:45 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D8781A8C03
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 23:20:32 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 235NpcNn006381;
+        Wed, 6 Apr 2022 06:20:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references :
+ content-transfer-encoding : content-type : mime-version;
+ s=corp-2021-07-09; bh=8BDNo2YTngyIwp7dSudpc0HkXlXCy9it+V3BSAD6C9k=;
+ b=Lk5qjxSgR9j52mBQxy3/WbWoZUBQT/7hp/flbPnrvKZ9KCID+k+dh6k/s2jtidWB9VBG
+ yK14TjlhB+ciWNq6Yt0OCckeOu03ij4+LhA744n8kAk0W82cJ019pI3z8J13+g/cxkE+
+ XlI2Q4ndU/wPGK23L94JrK/w1e4EI9k7nne0xXEkwp2fDpk5s/jbFrGF4hmu+oYc5Om6
+ 2g+43sAZ+On2qFB0CG8oTnUEHhvDPrtg7KFPkCygVSj12zoFMajcsuB0qqYauV1qnB6f
+ fcSPok4noO1HanLbtvY5qU4UxELkBgnUvC7TEQHoEITK7qVJOedZzmTg+pE2fGmG90w8 og== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3f6d31fyf7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 06 Apr 2022 06:20:28 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2366ARMV036403;
+        Wed, 6 Apr 2022 06:20:27 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2170.outbound.protection.outlook.com [104.47.57.170])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3f6cx473gx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 06 Apr 2022 06:20:27 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=IfGj9zTv7+JcFTkHFbw1LEbHU2STxjpGLhm5G7ISwKzvScsiVQduoHP29JfILfB0tySc9deXCuFnwhyabzODAXdHSpDeOqbzRPHQdGEqEl/k6cJxbH7/dp4I+V0IHrqPh+9C4eykMLyR4v2fQs4VNBwKAuAPGyUNktcz0uk0H1TIVnPJwqKBugQIWtFO4Tt7K+hicNq+0UiAB8wssv4pcKB/hvdaU4LOTfgPsKfZC2SCJkET2KjHcJF+LNPGdf6qllFpoygbvjKRGmGBY/KBqDWY98rPKygaUeTU4g5gsfPBp0jSwxYuHMVQcP1BP+DG7z7ROgIX2HJMkRYkXdSsfw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8BDNo2YTngyIwp7dSudpc0HkXlXCy9it+V3BSAD6C9k=;
+ b=ALEnVVtk/+HNBupcKUmAMVka1F8oy6ZlxG/d7AL/jWntzkKfqoBPjrCKeZcWMjv8ceyjL8ES5cmfSCXLZ5vKcMGJdRu3jyzhA23RJdPBeQAXCvASebOTZFvwFd4icJJ3Cjl+T9O+mL3+vKq8TMU/Tq8uk83n+a/r6tYkqKUpz0rkUwCnJjTreQRWnq7iXwHUC4NNOO+S97Mw8oMe1UFz00MAhJzbM7gNOF8GZgzG+QGMoN9D5TJa5rfXQZrFeqwA6vdT68qU0YNoAcEBfrRdvSQKNIaZrPuriuC5UViPL2ytEQCsiINKzadyBQ0cyNa2w9wCNN4zFBMRAuq64AIAEQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8BDNo2YTngyIwp7dSudpc0HkXlXCy9it+V3BSAD6C9k=;
+ b=NlXch0/DApkx1koD6hnl2Y0mBwNhe6fnwfCvERwhTHZglSY6PXjlhSeK6Z/cgUIZZ8Lg54oVJI9uDSI891BNndRbnSk2cOq0DUmUuqagH698MCuSyJ0+a33OrprpsWWgMXqaQS0nIqlsjMwA0LZ7kbXlWvDqcPEfSGiHIUbRQEk=
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+ by PH0PR10MB5564.namprd10.prod.outlook.com (2603:10b6:510:f3::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.31; Wed, 6 Apr
+ 2022 06:20:26 +0000
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::15c9:aed1:5abc:a48d]) by SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::15c9:aed1:5abc:a48d%8]) with mapi id 15.20.5144.021; Wed, 6 Apr 2022
+ 06:20:25 +0000
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
+        david@fromorbit.com, Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH V9 10/19] xfs: Introduce XFS_DIFLAG2_NREXT64 and associated helpers
+Date:   Wed,  6 Apr 2022 11:48:54 +0530
+Message-Id: <20220406061904.595597-11-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220406060516.409838-1-hch@lst.de>
-References: <20220406060516.409838-1-hch@lst.de>
-MIME-Version: 1.0
+In-Reply-To: <20220406061904.595597-1-chandan.babu@oracle.com>
+References: <20220406061904.595597-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
+X-ClientProxiedBy: TYCPR01CA0047.jpnprd01.prod.outlook.com
+ (2603:1096:405:1::35) To SA2PR10MB4587.namprd10.prod.outlook.com
+ (2603:10b6:806:114::12)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 0d906897-67f7-4dd2-51a2-08da179589d9
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5564:EE_
+X-Microsoft-Antispam-PRVS: <PH0PR10MB556440DA8EBBAE50EAB4B96DF6E79@PH0PR10MB5564.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: XPH+CvK+ild0Zdg8edFFoNPWUBtsjQcC7C9QydPaxJYF//oc1onEH5hw2aN/Lwcmtp31BTDjeYp0Vki6IwKxoYjRImsVXShwjn6UW/vwpMxBASwYoam2TjU6NDb7ZYEuFt9NTUk37wmnIUlVwio78R5YKWggCWmSASR5gWBtMhi9oI6K+p0h21RDOGBwUmcc3Fy7tMPMTPYcqP/6qBbdZnhKmgZkC5xlrKw6OkX/r0nWBjnGQRNxThVCricHwMZy/WG9/pMTYxFdFySSNicZ1IJfc1icG8HkC4Oxwp0GQJ4Qz5Z4vddKOhNB8iCH5cJ0aQFAvktwJOAbtJDoAFKw5BxSqTg3V1dlQ/uPbpZcDnA5t7XJPpmbr5PJuEUzT5G+zkBoO3eI2vd9Md2QvgurARLZJ0HyGEX9sGvc8WZYjv9M2Vj6Fe0mQKXkPGukSFkMIhKLXnM+kt9SIFaH6mnDC6ie6/1c8nPIuiQj643ZCC+O/HWWq+zLY9XII+zzAVlxXcCGaAzAKI6jAORB8bAKj/98HniIv6r59thgHhzfSD7OKNCvJ7Rgi4ZycbXdiwRT5sBTwOQIAMjZPnoh96noGQrRTFJZ3WAK4t1DJ+DiYkUue4WGMrT2fJhqP26YdGYeFJcIAjv+vEluXvqsvgHadH1C+2hhK+rSuPW1KPuWq0hxiXQWIPqM+9ATmyK8Dq47hgON7G4NmX28FjtXK49/3Q==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(508600001)(66476007)(66946007)(6506007)(66556008)(52116002)(6512007)(6486002)(54906003)(6916009)(4326008)(8676002)(6666004)(316002)(5660300002)(1076003)(8936002)(2616005)(83380400001)(86362001)(38350700002)(38100700002)(2906002)(26005)(186003)(36756003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?pDmZBl7Eob1yr/D9HCMUwMPrUfWnHzT0r+dPZwlNWYA0yKQG9HikAjrKG2qz?=
+ =?us-ascii?Q?/3+8s5T02ZXJ9xsPv2ioVW8Lb3ymT2w4eJbuitZimD2uwGAq9W5LW/RrQTtt?=
+ =?us-ascii?Q?ALtXm4oaNO0QQh+ysrj2PWk7CZp/PRq+Qb7bVxZcNS0lkB6lyMB2RvLhLtyX?=
+ =?us-ascii?Q?74BlwY9gRCAMSoqLIdT5lQgoFqlJlYoUlyCble14m0fwTjO4MEUdbd7x0mwd?=
+ =?us-ascii?Q?dQlCJllDSeU0Ry7M5H1l5wxAiDyKrok4nlvcBrULxuaa1UZlpUB9AiU+eUzq?=
+ =?us-ascii?Q?B/efgWAmfkDXWjGQmefmNxoTOmgneFGXKe7+3SrGLkD6jDXGYqn3p2ZEFpoi?=
+ =?us-ascii?Q?O2SebdpmI+a1OxEi/MFELJ4kYf+Qb4KJeTSbYUtbstR8em/6MBiriFCW34rG?=
+ =?us-ascii?Q?hP3MfFLVcgLbgM2tXc6/L2vnrWRvSaOo85o1mSMzKkkdAXD4CCmHC200Y6eT?=
+ =?us-ascii?Q?FuCF18pM3LpGNT5Z7UpCzvy9yOsMXoqTXKoMprPYePk4ltJ+zcEMsb0XOMhp?=
+ =?us-ascii?Q?sZ6UOCD9+tCYdgHmACKUA5X32S8KtRTy1pvg+91KJEYePkxz0X0JM/YHtdMb?=
+ =?us-ascii?Q?eaLtkXTPkzy7ISZXkAxl8jUDoyxn3zSIHptEfF1UQZHvzrvMXEusGywbqQ36?=
+ =?us-ascii?Q?U5cZFnp2xidWDlJGqYM0nos2zrBJfyUJeS0Rq8/9Vux4C656Ia3JHxQvUlPM?=
+ =?us-ascii?Q?kolEpR4bhKUEcIDmwjMWaG4lg3HUfHWhQcMmYzkW3zAx0NHTmm+SpvKSTGq3?=
+ =?us-ascii?Q?wnHardW0I4qgKBaqVV7EWEgKHXfn+TWTnhbyocJkiY00GLLHWYjxp2kxAy++?=
+ =?us-ascii?Q?7mDPrs/5AgXrrYYd+qfg05CnNQfmBAMq8NTQ8LxhtjIaJSaN+Spr8tuZzbl8?=
+ =?us-ascii?Q?LfN/x/9KC3Um7f9Ig7bqMXTqMgP7+En2L7qi933Rl8A0zCsQpE5temwBxd0E?=
+ =?us-ascii?Q?7mocKPWoJj0zW8H4a1jMPzH8mEg7B1GyG49YstDDGPQmGGyEv7wOtZRvbdZH?=
+ =?us-ascii?Q?ZsuInjKZNeBLRkL2XOcdsWMVe6x53rQYo2tV6gwgOg+L6YGbNEGYQM4DOem8?=
+ =?us-ascii?Q?amdml0ZXllG6C29co3KU75aLR+tt9DM69Hjg606/7U2X3DMQpvxxfTjVLLAx?=
+ =?us-ascii?Q?hkTETYelUEA9eSZ+1MruJ/8aY76P0oQN3IRMYqgOpDJx9f+ikbZ13dnYXoed?=
+ =?us-ascii?Q?7jpjQhsmWuqLprSQUWB7iOU3NobinqQRj7AL9fxyOBn0IHXXCKc8T147kpAt?=
+ =?us-ascii?Q?lCbxKP5gX3wc9OAz3ysdo4iA1VOXVI7vByk5Su8UzXKEWfbj+slYRWoo7sDa?=
+ =?us-ascii?Q?J+2LDVSS2od43IsaDfn5hRYQJMGzyA8FPJZORzXV9HWXJoIRW+0IYdLlwqFL?=
+ =?us-ascii?Q?fr+UfzTEico3YnXimxOY8NFT127Q3E+IamTqXtGY6Q3KlqCbLhMdyktB6Fag?=
+ =?us-ascii?Q?H05d0+mlSaUTMG3yeXMFKsldI6viwK8zGIMlfs4DPej+WdWtIHQohNwC0F3m?=
+ =?us-ascii?Q?ltI8aWpxJ3Yun05u5grW5O7RN4hz6lsaWYR6xETYyRfzzPCKWRmUBfR0hYbO?=
+ =?us-ascii?Q?N9nIA6s5tFfuWvgkpX8KhrnIaPil+r5EaNN4x13GvL/KoEEHV58L+DpTBuEu?=
+ =?us-ascii?Q?CM3QF89SjCKY6qTxXN8LOOxlL895u6YaCXaclCQRhxxlJa2MrSK1v5WHcekv?=
+ =?us-ascii?Q?c6tH47P5t1L6a4wt7+TNAJUH/NZ4dYWgRksffXJfWUxSCicXF82/FNfPHyF6?=
+ =?us-ascii?Q?nGFFsla/l+55ww+h3/0nyHIkYI3Zu0A=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0d906897-67f7-4dd2-51a2-08da179589d9
+X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Apr 2022 06:20:25.8506
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: TSW91Cm//usaIzVUG1odYPfnAeNLJUO7OaraQg7uu5NthA/ji5TRDd1foUhFJe5zxf/fY0A6MyUwHYmqdNcbQg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5564
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.850
+ definitions=2022-04-06_02:2022-04-04,2022-04-06 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 bulkscore=0
+ adultscore=0 mlxscore=0 phishscore=0 suspectscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2204060027
+X-Proofpoint-GUID: -H7qvwDAYh5vF6nuS6GdUf0BQTiN1B3F
+X-Proofpoint-ORIG-GUID: -H7qvwDAYh5vF6nuS6GdUf0BQTiN1B3F
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Just use a non-zero max_discard_sectors as an indicator for discard
-support, similar to what is done for write zeroes.
+This commit adds the new per-inode flag XFS_DIFLAG2_NREXT64 to indicate that
+an inode supports 64-bit extent counters. This flag is also enabled by default
+on newly created inodes when the corresponding filesystem has large extent
+counter feature bit (i.e. XFS_FEAT_NREXT64) set.
 
-The only places where needs special attention is the RAID5 driver,
-which must clear discard support for security reasons by default,
-even if the default stacking rules would allow for it.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- arch/um/drivers/ubd_kern.c    |  2 --
- block/blk-mq-debugfs.c        |  1 -
- drivers/block/drbd/drbd_nl.c  | 15 ---------------
- drivers/block/loop.c          |  2 --
- drivers/block/nbd.c           |  3 ---
- drivers/block/null_blk/main.c |  1 -
- drivers/block/rbd.c           |  1 -
- drivers/block/rnbd/rnbd-clt.c |  2 --
- drivers/block/virtio_blk.c    |  2 --
- drivers/block/xen-blkfront.c  |  2 --
- drivers/block/zram/zram_drv.c |  1 -
- drivers/md/bcache/super.c     |  1 -
- drivers/md/dm-table.c         |  5 +----
- drivers/md/dm-thin.c          |  2 --
- drivers/md/dm.c               |  1 -
- drivers/md/md-linear.c        |  9 ---------
- drivers/md/raid0.c            |  7 -------
- drivers/md/raid1.c            | 14 --------------
- drivers/md/raid10.c           | 14 --------------
- drivers/md/raid5.c            | 12 ++++--------
- drivers/mmc/core/queue.c      |  1 -
- drivers/mtd/mtd_blkdevs.c     |  1 -
- drivers/nvme/host/core.c      |  6 ++----
- drivers/s390/block/dasd_fba.c |  1 -
- drivers/scsi/sd.c             |  2 --
- include/linux/blkdev.h        |  2 --
- 26 files changed, 7 insertions(+), 103 deletions(-)
+ fs/xfs/libxfs/xfs_format.h      | 11 ++++++++++-
+ fs/xfs/libxfs/xfs_ialloc.c      |  2 ++
+ fs/xfs/xfs_inode.h              |  5 +++++
+ fs/xfs/xfs_inode_item_recover.c |  7 +++++++
+ 4 files changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/arch/um/drivers/ubd_kern.c b/arch/um/drivers/ubd_kern.c
-index b03269faef714..085ffdf98e57e 100644
---- a/arch/um/drivers/ubd_kern.c
-+++ b/arch/um/drivers/ubd_kern.c
-@@ -483,7 +483,6 @@ static void ubd_handler(void)
- 			if ((io_req->error == BLK_STS_NOTSUPP) && (req_op(io_req->req) == REQ_OP_DISCARD)) {
- 				blk_queue_max_discard_sectors(io_req->req->q, 0);
- 				blk_queue_max_write_zeroes_sectors(io_req->req->q, 0);
--				blk_queue_flag_clear(QUEUE_FLAG_DISCARD, io_req->req->q);
- 			}
- 			blk_mq_end_request(io_req->req, io_req->error);
- 			kfree(io_req);
-@@ -803,7 +802,6 @@ static int ubd_open_dev(struct ubd *ubd_dev)
- 		ubd_dev->queue->limits.discard_alignment = SECTOR_SIZE;
- 		blk_queue_max_discard_sectors(ubd_dev->queue, UBD_MAX_REQUEST);
- 		blk_queue_max_write_zeroes_sectors(ubd_dev->queue, UBD_MAX_REQUEST);
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, ubd_dev->queue);
- 	}
- 	blk_queue_flag_set(QUEUE_FLAG_NONROT, ubd_dev->queue);
- 	return 0;
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index aa0349e9f083b..fd111c5001256 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -113,7 +113,6 @@ static const char *const blk_queue_flag_name[] = {
- 	QUEUE_FLAG_NAME(FAIL_IO),
- 	QUEUE_FLAG_NAME(NONROT),
- 	QUEUE_FLAG_NAME(IO_STAT),
--	QUEUE_FLAG_NAME(DISCARD),
- 	QUEUE_FLAG_NAME(NOXMERGES),
- 	QUEUE_FLAG_NAME(ADD_RANDOM),
- 	QUEUE_FLAG_NAME(SECERASE),
-diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
-index 94ac3737723a8..0b3e43be6414d 100644
---- a/drivers/block/drbd/drbd_nl.c
-+++ b/drivers/block/drbd/drbd_nl.c
-@@ -1230,30 +1230,16 @@ static void decide_on_discard_support(struct drbd_device *device,
- 	 */
- 	blk_queue_discard_granularity(q, 512);
- 	q->limits.max_discard_sectors = drbd_max_discard_sectors(connection);
--	blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
- 	q->limits.max_write_zeroes_sectors =
- 		drbd_max_discard_sectors(connection);
- 	return;
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 64ff0c310696..57b24744a7c2 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -991,15 +991,17 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
+ #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
+ #define XFS_DIFLAG2_BIGTIME_BIT	3	/* big timestamps */
++#define XFS_DIFLAG2_NREXT64_BIT 4	/* large extent counters */
  
- not_supported:
--	blk_queue_flag_clear(QUEUE_FLAG_DISCARD, q);
- 	blk_queue_discard_granularity(q, 0);
- 	q->limits.max_discard_sectors = 0;
- 	q->limits.max_write_zeroes_sectors = 0;
- }
+ #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
+ #define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
+ #define XFS_DIFLAG2_COWEXTSIZE  (1 << XFS_DIFLAG2_COWEXTSIZE_BIT)
+ #define XFS_DIFLAG2_BIGTIME	(1 << XFS_DIFLAG2_BIGTIME_BIT)
++#define XFS_DIFLAG2_NREXT64	(1 << XFS_DIFLAG2_NREXT64_BIT)
  
--static void fixup_discard_if_not_supported(struct request_queue *q)
--{
--	/* To avoid confusion, if this queue does not support discard, clear
--	 * max_discard_sectors, which is what lsblk -D reports to the user.
--	 * Older kernels got this wrong in "stack limits".
--	 * */
--	if (!blk_queue_discard(q)) {
--		blk_queue_max_discard_sectors(q, 0);
--		blk_queue_discard_granularity(q, 0);
--	}
--}
--
- static void fixup_write_zeroes(struct drbd_device *device, struct request_queue *q)
+ #define XFS_DIFLAG2_ANY \
+ 	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
+-	 XFS_DIFLAG2_BIGTIME)
++	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64)
+ 
+ static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
  {
- 	/* Fixup max_write_zeroes_sectors after blk_stack_limits():
-@@ -1300,7 +1286,6 @@ static void drbd_setup_queue_param(struct drbd_device *device, struct drbd_backi
- 		blk_stack_limits(&q->limits, &b->limits, 0);
- 		disk_update_readahead(device->vdisk);
- 	}
--	fixup_discard_if_not_supported(q);
- 	fixup_write_zeroes(device, q);
+@@ -1007,6 +1009,13 @@ static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
+ 	       (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_BIGTIME));
  }
  
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index d5499795a1fec..976cf987b3920 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -784,12 +784,10 @@ static void loop_config_discard(struct loop_device *lo)
- 		q->limits.discard_granularity = granularity;
- 		blk_queue_max_discard_sectors(q, max_discard_sectors);
- 		blk_queue_max_write_zeroes_sectors(q, max_discard_sectors);
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
- 	} else {
- 		q->limits.discard_granularity = 0;
- 		blk_queue_max_discard_sectors(q, 0);
- 		blk_queue_max_write_zeroes_sectors(q, 0);
--		blk_queue_flag_clear(QUEUE_FLAG_DISCARD, q);
- 	}
- 	q->limits.discard_alignment = 0;
- }
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index 5a1f98494dddf..c7e03eabd205f 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -1231,8 +1231,6 @@ static void nbd_parse_flags(struct nbd_device *nbd)
- 		set_disk_ro(nbd->disk, true);
- 	else
- 		set_disk_ro(nbd->disk, false);
--	if (config->flags & NBD_FLAG_SEND_TRIM)
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, nbd->disk->queue);
- 	if (config->flags & NBD_FLAG_SEND_FLUSH) {
- 		if (config->flags & NBD_FLAG_SEND_FUA)
- 			blk_queue_write_cache(nbd->disk->queue, true, true);
-@@ -1320,7 +1318,6 @@ static void nbd_config_put(struct nbd_device *nbd)
- 		nbd->disk->queue->limits.discard_granularity = 0;
- 		nbd->disk->queue->limits.discard_alignment = 0;
- 		blk_queue_max_discard_sectors(nbd->disk->queue, UINT_MAX);
--		blk_queue_flag_clear(QUEUE_FLAG_DISCARD, nbd->disk->queue);
++static inline bool xfs_dinode_has_large_extent_counts(
++	const struct xfs_dinode *dip)
++{
++	return dip->di_version >= 3 &&
++	       (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_NREXT64));
++}
++
+ /*
+  * Inode number format:
+  * low inopblog bits - offset in block
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index b418fe0c0679..cdf8b63fcb22 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2772,6 +2772,8 @@ xfs_ialloc_setup_geometry(
+ 	igeo->new_diflags2 = 0;
+ 	if (xfs_has_bigtime(mp))
+ 		igeo->new_diflags2 |= XFS_DIFLAG2_BIGTIME;
++	if (xfs_has_large_extent_counts(mp))
++		igeo->new_diflags2 |= XFS_DIFLAG2_NREXT64;
  
- 		mutex_unlock(&nbd->config_lock);
- 		nbd_put(nbd);
-diff --git a/drivers/block/null_blk/main.c b/drivers/block/null_blk/main.c
-index 05b1120e66234..f6493a9e85ed3 100644
---- a/drivers/block/null_blk/main.c
-+++ b/drivers/block/null_blk/main.c
-@@ -1767,7 +1767,6 @@ static void null_config_discard(struct nullb *nullb)
- 	nullb->q->limits.discard_granularity = nullb->dev->blocksize;
- 	nullb->q->limits.discard_alignment = nullb->dev->blocksize;
- 	blk_queue_max_discard_sectors(nullb->q, UINT_MAX >> 9);
--	blk_queue_flag_set(QUEUE_FLAG_DISCARD, nullb->q);
+ 	/* Compute inode btree geometry. */
+ 	igeo->agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 740ab13d1aa2..aeab09882702 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -218,6 +218,11 @@ static inline bool xfs_inode_has_bigtime(struct xfs_inode *ip)
+ 	return ip->i_diflags2 & XFS_DIFLAG2_BIGTIME;
  }
  
- static const struct block_device_operations null_bio_ops = {
-diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-index b844432bad20b..2b21f717cce1a 100644
---- a/drivers/block/rbd.c
-+++ b/drivers/block/rbd.c
-@@ -4942,7 +4942,6 @@ static int rbd_init_disk(struct rbd_device *rbd_dev)
- 	blk_queue_io_opt(q, rbd_dev->opts->alloc_size);
- 
- 	if (rbd_dev->opts->trim) {
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
- 		q->limits.discard_granularity = rbd_dev->opts->alloc_size;
- 		blk_queue_max_discard_sectors(q, objset_bytes >> SECTOR_SHIFT);
- 		blk_queue_max_write_zeroes_sectors(q, objset_bytes >> SECTOR_SHIFT);
-diff --git a/drivers/block/rnbd/rnbd-clt.c b/drivers/block/rnbd/rnbd-clt.c
-index b66e8840b94b8..efa99a3884507 100644
---- a/drivers/block/rnbd/rnbd-clt.c
-+++ b/drivers/block/rnbd/rnbd-clt.c
-@@ -1364,8 +1364,6 @@ static void setup_request_queue(struct rnbd_clt_dev *dev)
- 	blk_queue_max_discard_sectors(dev->queue, dev->max_discard_sectors);
- 	dev->queue->limits.discard_granularity	= dev->discard_granularity;
- 	dev->queue->limits.discard_alignment	= dev->discard_alignment;
--	if (dev->max_discard_sectors)
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, dev->queue);
- 	if (dev->secure_discard)
- 		blk_queue_flag_set(QUEUE_FLAG_SECERASE, dev->queue);
- 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index a8bcf3f664af1..6ccf15253dee1 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -888,8 +888,6 @@ static int virtblk_probe(struct virtio_device *vdev)
- 			v = sg_elems;
- 		blk_queue_max_discard_segments(q,
- 					       min(v, MAX_DISCARD_SEGMENTS));
--
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
- 	}
- 
- 	if (virtio_has_feature(vdev, VIRTIO_BLK_F_WRITE_ZEROES)) {
-diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
-index 003056d4f7f5f..253bf835aca1f 100644
---- a/drivers/block/xen-blkfront.c
-+++ b/drivers/block/xen-blkfront.c
-@@ -944,7 +944,6 @@ static void blkif_set_queue_limits(struct blkfront_info *info)
- 	blk_queue_flag_set(QUEUE_FLAG_VIRT, rq);
- 
- 	if (info->feature_discard) {
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, rq);
- 		blk_queue_max_discard_sectors(rq, get_capacity(gd));
- 		rq->limits.discard_granularity = info->discard_granularity ?:
- 						 info->physical_sector_size;
-@@ -1606,7 +1605,6 @@ static irqreturn_t blkif_interrupt(int irq, void *dev_id)
- 				blkif_req(req)->error = BLK_STS_NOTSUPP;
- 				info->feature_discard = 0;
- 				info->feature_secdiscard = 0;
--				blk_queue_flag_clear(QUEUE_FLAG_DISCARD, rq);
- 				blk_queue_flag_clear(QUEUE_FLAG_SECERASE, rq);
- 			}
- 			break;
-diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-index e9474b02012de..59ff444bf6c76 100644
---- a/drivers/block/zram/zram_drv.c
-+++ b/drivers/block/zram/zram_drv.c
-@@ -1952,7 +1952,6 @@ static int zram_add(void)
- 	blk_queue_io_opt(zram->disk->queue, PAGE_SIZE);
- 	zram->disk->queue->limits.discard_granularity = PAGE_SIZE;
- 	blk_queue_max_discard_sectors(zram->disk->queue, UINT_MAX);
--	blk_queue_flag_set(QUEUE_FLAG_DISCARD, zram->disk->queue);
- 
- 	/*
- 	 * zram_bio_discard() will clear all logical blocks if logical block
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 296f200b2e208..2f49e31142f62 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -973,7 +973,6 @@ static int bcache_device_init(struct bcache_device *d, unsigned int block_size,
- 
- 	blk_queue_flag_set(QUEUE_FLAG_NONROT, d->disk->queue);
- 	blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, d->disk->queue);
--	blk_queue_flag_set(QUEUE_FLAG_DISCARD, d->disk->queue);
- 
- 	blk_queue_write_cache(q, true, true);
- 
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 4297c38328a9b..0dff6907fd00d 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -1968,15 +1968,12 @@ int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
- 		blk_queue_flag_clear(QUEUE_FLAG_NOWAIT, q);
- 
- 	if (!dm_table_supports_discards(t)) {
--		blk_queue_flag_clear(QUEUE_FLAG_DISCARD, q);
--		/* Must also clear discard limits... */
- 		q->limits.max_discard_sectors = 0;
- 		q->limits.max_hw_discard_sectors = 0;
- 		q->limits.discard_granularity = 0;
- 		q->limits.discard_alignment = 0;
- 		q->limits.discard_misaligned = 0;
--	} else
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
-+	}
- 
- 	if (dm_table_supports_secure_erase(t))
- 		blk_queue_flag_set(QUEUE_FLAG_SECERASE, q);
-diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
-index cd333a3e4c33b..eded4bcc4545f 100644
---- a/drivers/md/dm-thin.c
-+++ b/drivers/md/dm-thin.c
-@@ -4050,8 +4050,6 @@ static void pool_io_hints(struct dm_target *ti, struct queue_limits *limits)
- 		/*
- 		 * Must explicitly disallow stacking discard limits otherwise the
- 		 * block layer will stack them if pool's data device has support.
--		 * QUEUE_FLAG_DISCARD wouldn't be set but there is no way for the
--		 * user to see that, so make sure to set all discard limits to 0.
- 		 */
- 		limits->discard_granularity = 0;
- 		return;
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index ba75933cc22ca..dbbf64ce7e927 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -955,7 +955,6 @@ void disable_discard(struct mapped_device *md)
- 
- 	/* device doesn't really support DISCARD, disable it */
- 	limits->max_discard_sectors = 0;
--	blk_queue_flag_clear(QUEUE_FLAG_DISCARD, md->queue);
++static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
++{
++	return ip->i_diflags2 & XFS_DIFLAG2_NREXT64;
++}
++
+ /*
+  * Return the buftarg used for data allocations on a given inode.
+  */
+diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+index 239dd2e3384e..44b90614859e 100644
+--- a/fs/xfs/xfs_inode_item_recover.c
++++ b/fs/xfs/xfs_inode_item_recover.c
+@@ -142,6 +142,13 @@ xfs_log_dinode_to_disk_ts(
+ 	return ts;
  }
  
- void disable_write_zeroes(struct mapped_device *md)
-diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-index 4dd5afff72844..138a3b25c5c82 100644
---- a/drivers/md/md-linear.c
-+++ b/drivers/md/md-linear.c
-@@ -64,7 +64,6 @@ static struct linear_conf *linear_conf(struct mddev *mddev, int raid_disks)
- 	struct linear_conf *conf;
- 	struct md_rdev *rdev;
- 	int i, cnt;
--	bool discard_supported = false;
- 
- 	conf = kzalloc(struct_size(conf, disks, raid_disks), GFP_KERNEL);
- 	if (!conf)
-@@ -96,9 +95,6 @@ static struct linear_conf *linear_conf(struct mddev *mddev, int raid_disks)
- 
- 		conf->array_sectors += rdev->sectors;
- 		cnt++;
--
--		if (bdev_max_discard_sectors(rdev->bdev))
--			discard_supported = true;
- 	}
- 	if (cnt != raid_disks) {
- 		pr_warn("md/linear:%s: not enough drives present. Aborting!\n",
-@@ -106,11 +102,6 @@ static struct linear_conf *linear_conf(struct mddev *mddev, int raid_disks)
- 		goto out;
- 	}
- 
--	if (!discard_supported)
--		blk_queue_flag_clear(QUEUE_FLAG_DISCARD, mddev->queue);
--	else
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, mddev->queue);
--
- 	/*
- 	 * Here we calculate the device offsets.
- 	 */
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 02ac3ab213c72..7231f5e1eaa73 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -399,7 +399,6 @@ static int raid0_run(struct mddev *mddev)
- 	conf = mddev->private;
- 	if (mddev->queue) {
- 		struct md_rdev *rdev;
--		bool discard_supported = false;
- 
- 		blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
- 		blk_queue_max_write_zeroes_sectors(mddev->queue, mddev->chunk_sectors);
-@@ -412,13 +411,7 @@ static int raid0_run(struct mddev *mddev)
- 		rdev_for_each(rdev, mddev) {
- 			disk_stack_limits(mddev->gendisk, rdev->bdev,
- 					  rdev->data_offset << 9);
--			if (bdev_max_discard_sectors(rdev->bdev))
--				discard_supported = true;
- 		}
--		if (!discard_supported)
--			blk_queue_flag_clear(QUEUE_FLAG_DISCARD, mddev->queue);
--		else
--			blk_queue_flag_set(QUEUE_FLAG_DISCARD, mddev->queue);
- 	}
- 
- 	/* calculate array device size */
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 39b9cb4d54ee0..3da749d150a17 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1826,8 +1826,6 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			break;
- 		}
- 	}
--	if (mddev->queue && bdev_max_discard_sectors(rdev->bdev))
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, mddev->queue);
- 	print_conf(conf);
- 	return err;
- }
-@@ -3106,7 +3104,6 @@ static int raid1_run(struct mddev *mddev)
- 	int i;
- 	struct md_rdev *rdev;
- 	int ret;
--	bool discard_supported = false;
- 
- 	if (mddev->level != 1) {
- 		pr_warn("md/raid1:%s: raid level not set to mirroring (%d)\n",
-@@ -3141,8 +3138,6 @@ static int raid1_run(struct mddev *mddev)
- 			continue;
- 		disk_stack_limits(mddev->gendisk, rdev->bdev,
- 				  rdev->data_offset << 9);
--		if (bdev_max_discard_sectors(rdev->bdev))
--			discard_supported = true;
- 	}
- 
- 	mddev->degraded = 0;
-@@ -3179,15 +3174,6 @@ static int raid1_run(struct mddev *mddev)
- 
- 	md_set_array_sectors(mddev, raid1_size(mddev, 0, 0));
- 
--	if (mddev->queue) {
--		if (discard_supported)
--			blk_queue_flag_set(QUEUE_FLAG_DISCARD,
--						mddev->queue);
--		else
--			blk_queue_flag_clear(QUEUE_FLAG_DISCARD,
--						  mddev->queue);
--	}
--
- 	ret = md_integrity_register(mddev);
- 	if (ret) {
- 		md_unregister_thread(&mddev->thread);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index eaa86c6a35a55..36a460015cf58 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2144,8 +2144,6 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		rcu_assign_pointer(p->rdev, rdev);
- 		break;
- 	}
--	if (mddev->queue && bdev_max_discard_sectors(rdev->bdev))
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, mddev->queue);
- 
- 	print_conf(conf);
- 	return err;
-@@ -4069,7 +4067,6 @@ static int raid10_run(struct mddev *mddev)
- 	sector_t size;
- 	sector_t min_offset_diff = 0;
- 	int first = 1;
--	bool discard_supported = false;
- 
- 	if (mddev_init_writes_pending(mddev) < 0)
- 		return -ENOMEM;
-@@ -4140,20 +4137,9 @@ static int raid10_run(struct mddev *mddev)
- 					  rdev->data_offset << 9);
- 
- 		disk->head_position = 0;
--
--		if (bdev_max_discard_sectors(rdev->bdev))
--			discard_supported = true;
- 		first = 0;
- 	}
- 
--	if (mddev->queue) {
--		if (discard_supported)
--			blk_queue_flag_set(QUEUE_FLAG_DISCARD,
--						mddev->queue);
--		else
--			blk_queue_flag_clear(QUEUE_FLAG_DISCARD,
--						  mddev->queue);
--	}
- 	/* need to check that every block has at least one working mirror */
- 	if (!enough(conf, -1)) {
- 		pr_err("md/raid10:%s: not enough operational mirrors.\n",
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 0bbae0e638666..59f91e392a2ae 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7776,14 +7776,10 @@ static int raid5_run(struct mddev *mddev)
- 		 * A better idea might be to turn DISCARD into WRITE_ZEROES
- 		 * requests, as that is required to be safe.
- 		 */
--		if (devices_handle_discard_safely &&
--		    mddev->queue->limits.max_discard_sectors >= (stripe >> 9) &&
--		    mddev->queue->limits.discard_granularity >= stripe)
--			blk_queue_flag_set(QUEUE_FLAG_DISCARD,
--						mddev->queue);
--		else
--			blk_queue_flag_clear(QUEUE_FLAG_DISCARD,
--						mddev->queue);
-+		if (!devices_handle_discard_safely ||
-+		    mddev->queue->limits.max_discard_sectors < (stripe >> 9) ||
-+		    mddev->queue->limits.discard_granularity < stripe)
-+			blk_queue_max_discard_sectors(mddev->queue, 0);
- 
- 		blk_queue_max_hw_sectors(mddev->queue, UINT_MAX);
- 	}
-diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
-index c69b2d9df6f16..cac6315010a3d 100644
---- a/drivers/mmc/core/queue.c
-+++ b/drivers/mmc/core/queue.c
-@@ -183,7 +183,6 @@ static void mmc_queue_setup_discard(struct request_queue *q,
- 	if (!max_discard)
- 		return;
- 
--	blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
- 	blk_queue_max_discard_sectors(q, max_discard);
- 	q->limits.discard_granularity = card->pref_erase << 9;
- 	/* granularity must not be greater than max. discard */
-diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
-index 64d2b093f114b..f731721114655 100644
---- a/drivers/mtd/mtd_blkdevs.c
-+++ b/drivers/mtd/mtd_blkdevs.c
-@@ -377,7 +377,6 @@ int add_mtd_blktrans_dev(struct mtd_blktrans_dev *new)
- 	blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, new->rq);
- 
- 	if (tr->discard) {
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, new->rq);
- 		blk_queue_max_discard_sectors(new->rq, UINT_MAX);
- 		new->rq->limits.discard_granularity = tr->blksize;
- 	}
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index efb85c6d8e2d5..7e07dd69262a7 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -1607,10 +1607,8 @@ static void nvme_config_discard(struct gendisk *disk, struct nvme_ns *ns)
- 	struct request_queue *queue = disk->queue;
- 	u32 size = queue_logical_block_size(queue);
- 
--	if (ctrl->max_discard_sectors == 0) {
--		blk_queue_flag_clear(QUEUE_FLAG_DISCARD, queue);
-+	if (ctrl->max_discard_sectors == 0)
- 		return;
--	}
- 
- 	BUILD_BUG_ON(PAGE_SIZE / sizeof(struct nvme_dsm_range) <
- 			NVME_DSM_MAX_RANGES);
-@@ -1619,7 +1617,7 @@ static void nvme_config_discard(struct gendisk *disk, struct nvme_ns *ns)
- 	queue->limits.discard_granularity = size;
- 
- 	/* If discard is already enabled, don't reset queue limits */
--	if (blk_queue_flag_test_and_set(QUEUE_FLAG_DISCARD, queue))
-+	if (queue->limits.max_discard_sectors)
- 		return;
- 
- 	blk_queue_max_discard_sectors(queue, ctrl->max_discard_sectors);
-diff --git a/drivers/s390/block/dasd_fba.c b/drivers/s390/block/dasd_fba.c
-index e084f4deddddd..8bd5665db9198 100644
---- a/drivers/s390/block/dasd_fba.c
-+++ b/drivers/s390/block/dasd_fba.c
-@@ -791,7 +791,6 @@ static void dasd_fba_setup_blk_queue(struct dasd_block *block)
- 
- 	blk_queue_max_discard_sectors(q, max_discard_sectors);
- 	blk_queue_max_write_zeroes_sectors(q, max_discard_sectors);
--	blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
- }
- 
- static int dasd_fba_pe_handler(struct dasd_device *device,
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a390679cf4584..444479657b7fd 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -797,7 +797,6 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 	case SD_LBP_FULL:
- 	case SD_LBP_DISABLE:
- 		blk_queue_max_discard_sectors(q, 0);
--		blk_queue_flag_clear(QUEUE_FLAG_DISCARD, q);
- 		return;
- 
- 	case SD_LBP_UNMAP:
-@@ -830,7 +829,6 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 	}
- 
- 	blk_queue_max_discard_sectors(q, max_blocks * (logical_block_size >> 9));
--	blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
- }
- 
- static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 7b9c0cf95d2d5..f1cf557ea20ef 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -540,7 +540,6 @@ struct request_queue {
- #define QUEUE_FLAG_NONROT	6	/* non-rotational device (SSD) */
- #define QUEUE_FLAG_VIRT		QUEUE_FLAG_NONROT /* paravirt device */
- #define QUEUE_FLAG_IO_STAT	7	/* do disk/partitions IO accounting */
--#define QUEUE_FLAG_DISCARD	8	/* supports DISCARD */
- #define QUEUE_FLAG_NOXMERGES	9	/* No extended merges */
- #define QUEUE_FLAG_ADD_RANDOM	10	/* Contributes to random pool */
- #define QUEUE_FLAG_SECERASE	11	/* supports secure erase */
-@@ -582,7 +581,6 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
- 	test_bit(QUEUE_FLAG_STABLE_WRITES, &(q)->queue_flags)
- #define blk_queue_io_stat(q)	test_bit(QUEUE_FLAG_IO_STAT, &(q)->queue_flags)
- #define blk_queue_add_random(q)	test_bit(QUEUE_FLAG_ADD_RANDOM, &(q)->queue_flags)
--#define blk_queue_discard(q)	test_bit(QUEUE_FLAG_DISCARD, &(q)->queue_flags)
- #define blk_queue_zone_resetall(q)	\
- 	test_bit(QUEUE_FLAG_ZONE_RESETALL, &(q)->queue_flags)
- #define blk_queue_secure_erase(q) \
++static inline bool xfs_log_dinode_has_large_extent_counts(
++		const struct xfs_log_dinode *ld)
++{
++	return ld->di_version >= 3 &&
++	       (ld->di_flags2 & XFS_DIFLAG2_NREXT64);
++}
++
+ STATIC void
+ xfs_log_dinode_to_disk(
+ 	struct xfs_log_dinode	*from,
 -- 
 2.30.2
 
