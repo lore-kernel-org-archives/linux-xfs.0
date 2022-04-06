@@ -2,62 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0464C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 02:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C543C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 06:22:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1850696AbiDFCzo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Apr 2022 22:55:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59104 "EHLO
+        id S231130AbiDFGXe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 02:23:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1453370AbiDEP41 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Apr 2022 11:56:27 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9A74139AF3
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Apr 2022 08:00:31 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 0FD2968AFE; Tue,  5 Apr 2022 17:00:27 +0200 (CEST)
-Date:   Tue, 5 Apr 2022 17:00:27 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs: remove a superflous hash lookup when
- inserting new buffers
-Message-ID: <20220405150027.GB15992@lst.de>
-References: <20220403120119.235457-1-hch@lst.de> <20220403120119.235457-4-hch@lst.de> <20220403230452.GP1544202@dread.disaster.area>
+        with ESMTP id S1386973AbiDFGTp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 02:19:45 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87C161B757E;
+        Tue,  5 Apr 2022 22:21:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=xkKN41eLVrIheZpH/2SH1i+aJL00RRx4irbbX94rx9Q=; b=Q/3lDXWd19Mt0b3/k3Rb7zcP5h
+        p5Eze/s2YucUMuPYsP3/q20TplDhpywYDITWcq7DW8bCL9f9peotPecyp39tdZIQ1ExUkalAybXyS
+        Sxt54IpLbAnxVjk06D6a2NNMvqpMHsxgMeosQjblK8oh9AW6ILrD0OEcrPhOIK4bCqie2ImxZgB4X
+        gS/zqX5LtXLSyVWRgAmLMMXXDrccEDWzqicolNHUqaDXH8PiWuHSYpqXNQ8jCr6Cn3U5UgMr7P2gH
+        bzB3VhlCqf6aRtj6S9vDNsm1YM8SxrSXMJeCnnlVBFrEDH/mbtk/QwMI4mI6duvxeYNJiTCqNnT1B
+        dCRczSmQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nby6y-003oOR-F6; Wed, 06 Apr 2022 05:21:44 +0000
+Date:   Tue, 5 Apr 2022 22:21:44 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     david@fromorbit.com, djwong@kernel.org, dan.j.williams@intel.com,
+        hch@infradead.org, vishal.l.verma@intel.com, dave.jiang@intel.com,
+        agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com,
+        ira.weiny@intel.com, willy@infradead.org, vgoyal@redhat.com,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        x86@kernel.org
+Subject: Re: [PATCH v7 6/6] pmem: implement pmem_recovery_write()
+Message-ID: <Yk0jaC9rHwwoEV11@infradead.org>
+References: <20220405194747.2386619-1-jane.chu@oracle.com>
+ <20220405194747.2386619-7-jane.chu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220403230452.GP1544202@dread.disaster.area>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20220405194747.2386619-7-jane.chu@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 04, 2022 at 09:04:52AM +1000, Dave Chinner wrote:
-> On Sun, Apr 03, 2022 at 02:01:17PM +0200, Christoph Hellwig wrote:
-> > xfs_buf_get_map has a bit of a strange structure where the xfs_buf_find
-> > helper is called twice before we actually insert a new buffer on a cache
-> > miss.  Given that the rhashtable has an interface to insert a new entry
-> > and return the found one on a conflict we can easily get rid of the
-> > double lookup by using that.
-> 
-> We can do that without completely rewriting this code.
+On Tue, Apr 05, 2022 at 01:47:47PM -0600, Jane Chu wrote:
+> +	off = (unsigned long)addr & ~PAGE_MASK;
 
-We could.  And I had something similar earlier.  But I actually thing
-the structure of the code after this patch makes much more sense.  All
-the logic for the fast path buffer lookup is clearly layed out in one
-function, which then just calls a helper to perform the lookup.
-The new scheme also is slightly less code overall.  Even more so once
-the lockless lookup comes into play which requires different locking
-and refcount increments.
+offset_inpage()
 
-> The return cases of this function end up being a bit of a mess. We can return:
-> 
->  - error = 0 and a locked buffer in *bpp
->  - error = -EEXIST and an unlocked buffer in *bpp
->  - error != 0 and a modified *bpp pointer
->  - error != 0 and an unmodified *bpp pointer
+> +	if (off || !(PAGE_ALIGNED(bytes))) {
 
-The last two are the same  - the *bpp pointer simply is not valid on a
-"real" error return.  So the return really is a tristate, similar
-to many other places in xfs.
+No need for the inner braces.
+
+> +	mutex_lock(&pmem->recovery_lock);
+> +	pmem_off = PFN_PHYS(pgoff) + pmem->data_offset;
+> +	cleared = __pmem_clear_poison(pmem, pmem_off, len);
+> +	if (cleared > 0 && cleared < len) {
+> +		dev_warn(dev, "poison cleared only %ld out of %lu\n",
+> +			cleared, len);
+> +		mutex_unlock(&pmem->recovery_lock);
+> +		return 0;
+> +	} else if (cleared < 0) {
+
+No need for an else after a return.
