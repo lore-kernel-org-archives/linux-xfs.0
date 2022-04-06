@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57BC1C43219
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:23:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E876C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:23:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232093AbiDFJZq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:25:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39786 "EHLO
+        id S237461AbiDFJZm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:25:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353400AbiDFJCt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:02:49 -0400
+        with ESMTP id S1349951AbiDFJCq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:02:46 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03F8A43F1CB;
-        Tue,  5 Apr 2022 23:05:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BDEA48F70F;
+        Tue,  5 Apr 2022 23:05:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=8b7He7jKWHmQh3KokdF/PRePZ9Zk3nvKntDAn0vRB+A=; b=0omtD+HQtA616dFivyqA97DclF
-        5MCkQ36VFGZAUVgFUJvq7ULB9RxmAnnJK9Ru4GgkOHXwFqXqRHMXQ9LCogkUlyoM9wN6+7J7DekaY
-        q43/dVC7g/6yyYP+I8eJgSyycd7IVsGmMYkR1Clskvv1tDsGCaTWuQ8Rrf8sU79R1v0lw2bQt/AWB
-        OsOPsydboiChznz0eGpngaPA8w2OVY6Jf3YdqyKDFL16zctVHp5+n0d+GDis8Omgb+WFkLhPwAzdn
-        EsF+yQBNP9+37ibHq8jy0MV7lNP50mXC+UwgCTvOjOUrw+1nocIz3QcImLpc9EsYaF5HR/HZej/jt
-        LdNiWxFQ==;
+        Content-Type:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:
+        To:From:Sender:Reply-To:Content-ID:Content-Description;
+        bh=L9ybHoqkMQFtFgAKSKAUEOlBEraEcHfvZKxNTrnAqQ8=; b=txJ9J4YPrbulci+oxX/K1jvzXj
+        8gms4zn8OqR/RStS8wT9jgDaq6tCr0xQ50GF2QciDZSPopEVcnXqcG9w2/K5XJ1BTwpW2RGCMVDA3
+        jmixF0VaBheGVq3jZaojwfuYLAQ4/4Mglf66TIU/khX83gOPm4zJJDJ3ou8TXUFMlSJvyOL8I9hxL
+        hx9nNbqp2gLScWmRlyHDlcj4q4nSOat130S2f7AGVfoaMNZ1nXqC2ZbfhhUNn3oLONf4dJ00se0wZ
+        /QPbSgFP9I0m9WnIywznAmgQ/IfAzP4kiOxdsv2B4GrBWPwAkOiqBswZsWccIWUz5jFEPpf/f4t6x
+        GlFV09uw==;
 Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbynX-003uuj-EB; Wed, 06 Apr 2022 06:05:44 +0000
+        id 1nbynL-003uoA-Rk; Wed, 06 Apr 2022 06:05:32 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -43,129 +43,44 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
         ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 06/27] drbd: cleanup decide_on_discard_support
-Date:   Wed,  6 Apr 2022 08:04:55 +0200
-Message-Id: <20220406060516.409838-7-hch@lst.de>
+Subject: [PATCH 03/27] target: fix discard alignment on partitions
+Date:   Wed,  6 Apr 2022 08:04:52 +0200
+Message-Id: <20220406060516.409838-4-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220406060516.409838-1-hch@lst.de>
 References: <20220406060516.409838-1-hch@lst.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Sanitize the calling conventions and use a goto label to cleanup the
-code flow.
+Use the proper bdev_discard_alignment helper that accounts for partition
+offsets.
 
+Fіxes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/drbd/drbd_nl.c | 68 +++++++++++++++++++-----------------
- 1 file changed, 35 insertions(+), 33 deletions(-)
+ drivers/target/target_core_device.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
-index 02030c9c4d3b1..40bb0b356a6d6 100644
---- a/drivers/block/drbd/drbd_nl.c
-+++ b/drivers/block/drbd/drbd_nl.c
-@@ -1204,38 +1204,42 @@ static unsigned int drbd_max_discard_sectors(struct drbd_connection *connection)
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 3a1ec705cd80b..16e775bcf4a7c 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -849,8 +849,8 @@ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
+ 	 */
+ 	attrib->max_unmap_block_desc_count = 1;
+ 	attrib->unmap_granularity = q->limits.discard_granularity / block_size;
+-	attrib->unmap_granularity_alignment = q->limits.discard_alignment /
+-								block_size;
++	attrib->unmap_granularity_alignment =
++		bdev_discard_alignment(bdev) / block_size;
+ 	return true;
  }
- 
- static void decide_on_discard_support(struct drbd_device *device,
--			struct request_queue *q,
--			struct request_queue *b,
--			bool discard_zeroes_if_aligned)
-+		struct drbd_backing_dev *bdev)
- {
--	/* q = drbd device queue (device->rq_queue)
--	 * b = backing device queue (device->ldev->backing_bdev->bd_disk->queue),
--	 *     or NULL if diskless
--	 */
--	struct drbd_connection *connection = first_peer_device(device)->connection;
--	bool can_do = b ? blk_queue_discard(b) : true;
--
--	if (can_do && connection->cstate >= C_CONNECTED && !(connection->agreed_features & DRBD_FF_TRIM)) {
--		can_do = false;
--		drbd_info(connection, "peer DRBD too old, does not support TRIM: disabling discards\n");
--	}
--	if (can_do) {
--		/* We don't care for the granularity, really.
--		 * Stacking limits below should fix it for the local
--		 * device.  Whether or not it is a suitable granularity
--		 * on the remote device is not our problem, really. If
--		 * you care, you need to use devices with similar
--		 * topology on all peers. */
--		blk_queue_discard_granularity(q, 512);
--		q->limits.max_discard_sectors = drbd_max_discard_sectors(connection);
--		blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
--		q->limits.max_write_zeroes_sectors = drbd_max_discard_sectors(connection);
--	} else {
--		blk_queue_flag_clear(QUEUE_FLAG_DISCARD, q);
--		blk_queue_discard_granularity(q, 0);
--		q->limits.max_discard_sectors = 0;
--		q->limits.max_write_zeroes_sectors = 0;
-+	struct drbd_connection *connection =
-+		first_peer_device(device)->connection;
-+	struct request_queue *q = device->rq_queue;
-+
-+	if (bdev && !blk_queue_discard(bdev->backing_bdev->bd_disk->queue))
-+		goto not_supported;
-+
-+	if (connection->cstate >= C_CONNECTED &&
-+	    !(connection->agreed_features & DRBD_FF_TRIM)) {
-+		drbd_info(connection,
-+			"peer DRBD too old, does not support TRIM: disabling discards\n");
-+		goto not_supported;
- 	}
-+
-+	/*
-+	 * We don't care for the granularity, really.
-+	 *
-+	 * Stacking limits below should fix it for the local device.  Whether or
-+	 * not it is a suitable granularity on the remote device is not our
-+	 * problem, really. If you care, you need to use devices with similar
-+	 * topology on all peers.
-+	 */
-+	blk_queue_discard_granularity(q, 512);
-+	q->limits.max_discard_sectors = drbd_max_discard_sectors(connection);
-+	blk_queue_flag_set(QUEUE_FLAG_DISCARD, q);
-+	q->limits.max_write_zeroes_sectors =
-+		drbd_max_discard_sectors(connection);
-+	return;
-+
-+not_supported:
-+	blk_queue_flag_clear(QUEUE_FLAG_DISCARD, q);
-+	blk_queue_discard_granularity(q, 0);
-+	q->limits.max_discard_sectors = 0;
-+	q->limits.max_write_zeroes_sectors = 0;
- }
- 
- static void fixup_discard_if_not_supported(struct request_queue *q)
-@@ -1273,7 +1277,6 @@ static void drbd_setup_queue_param(struct drbd_device *device, struct drbd_backi
- 	unsigned int max_segments = 0;
- 	struct request_queue *b = NULL;
- 	struct disk_conf *dc;
--	bool discard_zeroes_if_aligned = true;
- 
- 	if (bdev) {
- 		b = bdev->backing_bdev->bd_disk->queue;
-@@ -1282,7 +1285,6 @@ static void drbd_setup_queue_param(struct drbd_device *device, struct drbd_backi
- 		rcu_read_lock();
- 		dc = rcu_dereference(device->ldev->disk_conf);
- 		max_segments = dc->max_bio_bvecs;
--		discard_zeroes_if_aligned = dc->discard_zeroes_if_aligned;
- 		rcu_read_unlock();
- 
- 		blk_set_stacking_limits(&q->limits);
-@@ -1292,7 +1294,7 @@ static void drbd_setup_queue_param(struct drbd_device *device, struct drbd_backi
- 	/* This is the workaround for "bio would need to, but cannot, be split" */
- 	blk_queue_max_segments(q, max_segments ? max_segments : BLK_MAX_SEGMENTS);
- 	blk_queue_segment_boundary(q, PAGE_SIZE-1);
--	decide_on_discard_support(device, q, b, discard_zeroes_if_aligned);
-+	decide_on_discard_support(device, bdev);
- 
- 	if (b) {
- 		blk_stack_limits(&q->limits, &b->limits, 0);
+ EXPORT_SYMBOL(target_configure_unmap_from_queue);
 -- 
 2.30.2
 
