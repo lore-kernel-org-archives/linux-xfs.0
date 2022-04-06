@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FAA5C43217
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:24:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4779CC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 09:24:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241648AbiDFJ03 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:26:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53136 "EHLO
+        id S1358567AbiDFJ0Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:26:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376837AbiDFJD3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:03:29 -0400
+        with ESMTP id S1349404AbiDFJCq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 05:02:46 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCFE5478A46;
-        Tue,  5 Apr 2022 23:06:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64CAF48F70C;
+        Tue,  5 Apr 2022 23:05:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=rlsVeHMg1hHe1r1+YuPgwXRF4/8zJamKMsqI05vg2XQ=; b=dEa4kNFmwX0SYcUFcc8Xi9cZiL
-        0YHBnhtVe3qzqowCIKMRB3fv14qh0IEapvyOiw9f3P2TSmik6xnIn650HHnwvUXy84tiN3zbnssTg
-        bDH/a8s5U5AtH87Q46R+MdZn/5zNmDyW2XAGsRKbf666enqb4maEJBeBUKRiT5IBnUoONGC/RElhk
-        R2OL8L7AkB7Ubnk5lUhjB16LEYlI2jSitkdlJ7GTrHY/8Pee2MpDAWz1qn3WxE7V0lFGXbe3hSOHh
-        45Avy2PKid7ei173qk3MzQTEY8YnmjD/8olfy3eNuGejl5sdeK7uQvol+EUTRrVgtV4C0kFycxISR
-        GBDMxuEg==;
+        bh=qk698qFB+7DuJ4AJ2sY5VQ7AD5pdtTim73QQqZ92loQ=; b=vV1BbnA55cPPAZB3254BK506im
+        Old6T+yuUYVQppmY4OvzxURFILotMc/oCVviEkRv2abUE0J0i0GHlFCQmQE6zN4zzMN0LyyGdxCxm
+        a3zAC2ibzPxxmh2esPJ31vQhU4t1hgSd4oolbLVJ30XUyZxO92DdwG6hQFMXNMNhWN7rcep7w4tlS
+        VBiExL3j/1rs3vSKxNFaeesN2dWuawOYgyTbMBu//+gVZzz/ekohyJi6Ui5YQzYrI1BTFh69BMJ40
+        8U0V0qb3pKlFpPgDI+reF/WlPNRxgS+0CgrkGxB17h8Jk2cVEx0UzjeLM8HRoV8yqMFF4OEOqQS3q
+        gljNqowQ==;
 Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbyoG-003vYE-MZ; Wed, 06 Apr 2022 06:06:29 +0000
+        id 1nbynH-003umG-Rn; Wed, 06 Apr 2022 06:05:28 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -43,9 +43,9 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
         ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 18/27] block: move bdev_alignment_offset and queue_limit_alignment_offset out of line
-Date:   Wed,  6 Apr 2022 08:05:07 +0200
-Message-Id: <20220406060516.409838-19-hch@lst.de>
+Subject: [PATCH 02/27] target: pass a block_device to target_configure_unmap_from_queue
+Date:   Wed,  6 Apr 2022 08:04:51 +0200
+Message-Id: <20220406060516.409838-3-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220406060516.409838-1-hch@lst.de>
 References: <20220406060516.409838-1-hch@lst.de>
@@ -56,83 +56,95 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-No need to inline these fairly larger helpers.
+The target code is a consumer of the block layer and should generally
+work on struct block_device.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-settings.c   | 23 +++++++++++++++++++++++
- include/linux/blkdev.h | 21 +--------------------
- 2 files changed, 24 insertions(+), 20 deletions(-)
+ drivers/target/target_core_device.c  | 5 +++--
+ drivers/target/target_core_file.c    | 7 ++++---
+ drivers/target/target_core_iblock.c  | 2 +-
+ include/target/target_core_backend.h | 4 ++--
+ 4 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index b83df3d2eebca..94410a13c0dee 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -468,6 +468,16 @@ void blk_queue_io_opt(struct request_queue *q, unsigned int opt)
- }
- EXPORT_SYMBOL(blk_queue_io_opt);
- 
-+static int queue_limit_alignment_offset(struct queue_limits *lim,
-+		sector_t sector)
-+{
-+	unsigned int granularity = max(lim->physical_block_size, lim->io_min);
-+	unsigned int alignment = sector_div(sector, granularity >> SECTOR_SHIFT)
-+		<< SECTOR_SHIFT;
-+
-+	return (granularity + lim->alignment_offset - alignment) % granularity;
-+}
-+
- static unsigned int blk_round_down_sectors(unsigned int sectors, unsigned int lbs)
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index fa866acef5bb2..3a1ec705cd80b 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -834,9 +834,10 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+  * in ATA and we need to set TPE=1
+  */
+ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
+-				       struct request_queue *q)
++				       struct block_device *bdev)
  {
- 	sectors = round_down(sectors, lbs >> SECTOR_SHIFT);
-@@ -901,3 +911,16 @@ void blk_queue_set_zoned(struct gendisk *disk, enum blk_zoned_model model)
- 	}
- }
- EXPORT_SYMBOL_GPL(blk_queue_set_zoned);
-+
-+int bdev_alignment_offset(struct block_device *bdev)
-+{
+-	int block_size = queue_logical_block_size(q);
 +	struct request_queue *q = bdev_get_queue(bdev);
-+
-+	if (q->limits.misaligned)
-+		return -1;
-+	if (bdev_is_partition(bdev))
-+		return queue_limit_alignment_offset(&q->limits,
-+				bdev->bd_start_sect);
-+	return q->limits.alignment_offset;
-+}
-+EXPORT_SYMBOL_GPL(bdev_alignment_offset);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d5346e72e3645..0a1795ac26275 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1251,26 +1251,7 @@ bdev_zone_write_granularity(struct block_device *bdev)
- 	return queue_zone_write_granularity(bdev_get_queue(bdev));
- }
++	int block_size = bdev_logical_block_size(bdev);
  
--static inline int queue_limit_alignment_offset(struct queue_limits *lim, sector_t sector)
--{
--	unsigned int granularity = max(lim->physical_block_size, lim->io_min);
--	unsigned int alignment = sector_div(sector, granularity >> SECTOR_SHIFT)
--		<< SECTOR_SHIFT;
--
--	return (granularity + lim->alignment_offset - alignment) % granularity;
--}
--
--static inline int bdev_alignment_offset(struct block_device *bdev)
--{
--	struct request_queue *q = bdev_get_queue(bdev);
--
--	if (q->limits.misaligned)
--		return -1;
--	if (bdev_is_partition(bdev))
--		return queue_limit_alignment_offset(&q->limits,
--				bdev->bd_start_sect);
--	return q->limits.alignment_offset;
--}
-+int bdev_alignment_offset(struct block_device *bdev);
+ 	if (!blk_queue_discard(q))
+ 		return false;
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 8190b840065f3..8d191fdc33217 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -134,10 +134,11 @@ static int fd_configure_device(struct se_device *dev)
+ 	 */
+ 	inode = file->f_mapping->host;
+ 	if (S_ISBLK(inode->i_mode)) {
+-		struct request_queue *q = bdev_get_queue(I_BDEV(inode));
++		struct block_device *bdev = I_BDEV(inode);
++		struct request_queue *q = bdev_get_queue(bdev);
+ 		unsigned long long dev_size;
  
- static inline int queue_discard_alignment(const struct request_queue *q)
+-		fd_dev->fd_block_size = bdev_logical_block_size(I_BDEV(inode));
++		fd_dev->fd_block_size = bdev_logical_block_size(bdev);
+ 		/*
+ 		 * Determine the number of bytes from i_size_read() minus
+ 		 * one (1) logical sector from underlying struct block_device
+@@ -150,7 +151,7 @@ static int fd_configure_device(struct se_device *dev)
+ 			dev_size, div_u64(dev_size, fd_dev->fd_block_size),
+ 			fd_dev->fd_block_size);
+ 
+-		if (target_configure_unmap_from_queue(&dev->dev_attrib, q))
++		if (target_configure_unmap_from_queue(&dev->dev_attrib, bdev))
+ 			pr_debug("IFILE: BLOCK Discard support available,"
+ 				 " disabled by default\n");
+ 		/*
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 87ede165ddba4..b886ce1770bfd 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -119,7 +119,7 @@ static int iblock_configure_device(struct se_device *dev)
+ 	dev->dev_attrib.hw_max_sectors = queue_max_hw_sectors(q);
+ 	dev->dev_attrib.hw_queue_depth = q->nr_requests;
+ 
+-	if (target_configure_unmap_from_queue(&dev->dev_attrib, q))
++	if (target_configure_unmap_from_queue(&dev->dev_attrib, bd))
+ 		pr_debug("IBLOCK: BLOCK Discard support available,"
+ 			 " disabled by default\n");
+ 
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index 675f3a1fe6139..773963a1e0b53 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -14,7 +14,7 @@
+ #define TRANSPORT_FLAG_PASSTHROUGH_ALUA		0x2
+ #define TRANSPORT_FLAG_PASSTHROUGH_PGR          0x4
+ 
+-struct request_queue;
++struct block_device;
+ struct scatterlist;
+ 
+ struct target_backend_ops {
+@@ -117,7 +117,7 @@ sense_reason_t passthrough_parse_cdb(struct se_cmd *cmd,
+ bool target_sense_desc_format(struct se_device *dev);
+ sector_t target_to_linux_sector(struct se_device *dev, sector_t lb);
+ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
+-				       struct request_queue *q);
++				       struct block_device *bdev);
+ 
+ static inline bool target_dev_configured(struct se_device *se_dev)
  {
 -- 
 2.30.2
