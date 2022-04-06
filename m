@@ -2,151 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3F85C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 20:47:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CEA4C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Apr 2022 21:30:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230174AbiDFUth (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Apr 2022 16:49:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43732 "EHLO
+        id S231822AbiDFVcr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 17:32:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233214AbiDFUt1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 16:49:27 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37B61320DB0
-        for <linux-xfs@vger.kernel.org>; Wed,  6 Apr 2022 12:04:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649271896; x=1680807896;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=woJs17ibg5Y9hXfyydhjUHZWLLnbcw6FGkVRqd+e07A=;
-  b=kKO6hsWIzKo6Rhlnr0fYGAmSeAfMKhsAOHks/bnwHZNudK8Zb0Lde4eR
-   vq0ouHzPF92rjbAt7X8BcQZ5epMK5pVJZd7V6PX6mJUgGOH8pln6CXulO
-   Eqy9ZuIQcvJTy1DtI9bZs6UmU82B7rKEnWn4vhA1dsIDluIDwfSsPSgHB
-   e0ZEZcZeW/BbAxXlAwdfLyS3u4OP4iatkIp46XkeQCZOOPMcz53pMgZRG
-   eIImFKynJ7vkwpyoDg2zhY7LN5puAiGvsC6IOHhcRN3JCX07f02+yoHR4
-   nhJzspLhJQeU1lc2Se9cxL06Q4/5Xo3pqnRrXSJXPtBaYnYJPJT1fyxV/
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10309"; a="347575856"
-X-IronPort-AV: E=Sophos;i="5.90,240,1643702400"; 
-   d="scan'208";a="347575856"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2022 12:04:31 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,240,1643702400"; 
-   d="scan'208";a="549679172"
-Received: from lkp-server02.sh.intel.com (HELO a44fdfb70b94) ([10.239.97.151])
-  by orsmga007.jf.intel.com with ESMTP; 06 Apr 2022 12:04:29 -0700
-Received: from kbuild by a44fdfb70b94 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1ncAxA-0004fR-R8;
-        Wed, 06 Apr 2022 19:04:28 +0000
-Date:   Thu, 7 Apr 2022 03:03:32 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, Chandan Babu R <chandan.babu@oracle.com>,
-        djwong@kernel.org, david@fromorbit.com,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH V9 14/19] xfs: Introduce per-inode 64-bit extent counters
-Message-ID: <202204070218.QyD2PQPx-lkp@intel.com>
-References: <20220406061904.595597-15-chandan.babu@oracle.com>
+        with ESMTP id S232644AbiDFVc1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 17:32:27 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DA692D35CA;
+        Wed,  6 Apr 2022 13:39:04 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B3C98B8254C;
+        Wed,  6 Apr 2022 20:39:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 757FFC385A5;
+        Wed,  6 Apr 2022 20:39:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649277541;
+        bh=PXUDYE1r6Gil/o9m5rfjYKx/BFUoyr1dI3rq+0GFdOc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Cd9d3yNYx5ueGCXvizdmPbLOeNrVL6KS5C9ulrFKncWNwuw/eFoj4ZgXMdrIGjDxv
+         a7fjB7+wNcj4jiIBOJK35xYyIsj6e+NpbqJQinyrR1FNlX3ZgTWjHUksIBI7YC3Omx
+         gGwXlXFrEFw+DdU48Ubs3JzmiTAVW17j0Naaa8et4nrA9ezYZlBmQvEKN9N6GxDyrt
+         V4EgEOqknmuYSsUSXN9oA2iX4BkcxxQbiFkg6SphOxCEbIr2ml5/lLBC4yKrLZ0z/f
+         UCHO7hgqZ6LQ5zOaQ7/07RWJJxT5VxoUEIQq2NGtk6k/McpEorw6y0xTMPEc3f1MqM
+         71yCvdJd8NJqQ==
+Date:   Wed, 6 Apr 2022 13:39:00 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Jane Chu <jane.chu@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        david <david@fromorbit.com>
+Subject: Re: [PATCH v11 1/8] dax: Introduce holder for dax_device
+Message-ID: <20220406203900.GR27690@magnolia>
+References: <CAPcyv4jAqV7dZdmGcKrG=f8sYmUXaL7YCQtME6GANywncwd+zg@mail.gmail.com>
+ <4fd95f0b-106f-6933-7bc6-9f0890012b53@fujitsu.com>
+ <YkPtptNljNcJc1g/@infradead.org>
+ <15a635d6-2069-2af5-15f8-1c0513487a2f@fujitsu.com>
+ <YkQtOO/Z3SZ2Pksg@infradead.org>
+ <4ed8baf7-7eb9-71e5-58ea-7c73b7e5bb73@fujitsu.com>
+ <YkR8CUdkScEjMte2@infradead.org>
+ <20220330161812.GA27649@magnolia>
+ <fd37cde6-318a-9faf-9bff-70bb8e5d3241@oracle.com>
+ <CAPcyv4gqBmGCQM_u40cR6GVror6NjhxV5Xd7pdHedE2kHwueoQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220406061904.595597-15-chandan.babu@oracle.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <CAPcyv4gqBmGCQM_u40cR6GVror6NjhxV5Xd7pdHedE2kHwueoQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Chandan,
+On Tue, Apr 05, 2022 at 06:22:48PM -0700, Dan Williams wrote:
+> On Tue, Apr 5, 2022 at 5:55 PM Jane Chu <jane.chu@oracle.com> wrote:
+> >
+> > On 3/30/2022 9:18 AM, Darrick J. Wong wrote:
+> > > On Wed, Mar 30, 2022 at 08:49:29AM -0700, Christoph Hellwig wrote:
+> > >> On Wed, Mar 30, 2022 at 06:58:21PM +0800, Shiyang Ruan wrote:
+> > >>> As the code I pasted before, pmem driver will subtract its ->data_offset,
+> > >>> which is byte-based. And the filesystem who implements ->notify_failure()
+> > >>> will calculate the offset in unit of byte again.
+> > >>>
+> > >>> So, leave its function signature byte-based, to avoid repeated conversions.
+> > >>
+> > >> I'm actually fine either way, so I'll wait for Dan to comment.
+> > >
+> > > FWIW I'd convinced myself that the reason for using byte units is to
+> > > make it possible to reduce the pmem failure blast radius to subpage
+> > > units... but then I've also been distracted for months. :/
+> > >
+> >
+> > Yes, thanks Darrick!  I recall that.
+> > Maybe just add a comment about why byte unit is used?
+> 
+> I think we start with page failure notification and then figure out
+> how to get finer grained through the dax interface in follow-on
+> changes. Otherwise, for finer grained error handling support,
+> memory_failure() would also need to be converted to stop upcasting
+> cache-line granularity to page granularity failures. The native MCE
+> notification communicates a 'struct mce' that can be in terms of
+> sub-page bytes, but the memory management implications are all page
+> based. I assume the FS implications are all FS-block-size based?
 
-Thank you for the patch! Perhaps something to improve:
+I wouldn't necessarily make that assumption -- for regular files, the
+user program is in a better position to figure out how to reset the file
+contents.
 
-[auto build test WARNING on xfs-linux/for-next]
-[also build test WARNING on v5.18-rc1 next-20220406]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+For fs metadata, it really depends.  In principle, if (say) we could get
+byte granularity poison info, we could look up the space usage within
+the block to decide if the poisoned part was actually free space, in
+which case we can correct the problem by (re)zeroing the affected bytes
+to clear the poison.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20220406-174647
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-config: i386-randconfig-s002 (https://download.01.org/0day-ci/archive/20220407/202204070218.QyD2PQPx-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.2.0-19) 11.2.0
-reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.4-dirty
-        # https://github.com/intel-lab-lkp/linux/commit/28be4fd3f13d4ba2bcedceb8951cd3bfe852cba2
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20220406-174647
-        git checkout 28be4fd3f13d4ba2bcedceb8951cd3bfe852cba2
-        # save the config file to linux build tree
-        mkdir build_dir
-        make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=i386 SHELL=/bin/bash fs/xfs/
+Obviously, if the blast radius hits the internal space info or something
+that was storing useful data, then you'd have to rebuild the whole block
+(or the whole data structure), but that's not necessarily a given.
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+--D
 
-
-sparse warnings: (new ones prefixed by >>)
->> fs/xfs/xfs_inode_item_recover.c:209:31: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __be64 [usertype] di_v3_pad @@     got unsigned long long [usertype] di_v3_pad @@
-   fs/xfs/xfs_inode_item_recover.c:209:31: sparse:     expected restricted __be64 [usertype] di_v3_pad
-   fs/xfs/xfs_inode_item_recover.c:209:31: sparse:     got unsigned long long [usertype] di_v3_pad
-
-vim +209 fs/xfs/xfs_inode_item_recover.c
-
-   167	
-   168	STATIC void
-   169	xfs_log_dinode_to_disk(
-   170		struct xfs_log_dinode	*from,
-   171		struct xfs_dinode	*to,
-   172		xfs_lsn_t		lsn)
-   173	{
-   174		to->di_magic = cpu_to_be16(from->di_magic);
-   175		to->di_mode = cpu_to_be16(from->di_mode);
-   176		to->di_version = from->di_version;
-   177		to->di_format = from->di_format;
-   178		to->di_onlink = 0;
-   179		to->di_uid = cpu_to_be32(from->di_uid);
-   180		to->di_gid = cpu_to_be32(from->di_gid);
-   181		to->di_nlink = cpu_to_be32(from->di_nlink);
-   182		to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
-   183		to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
-   184	
-   185		to->di_atime = xfs_log_dinode_to_disk_ts(from, from->di_atime);
-   186		to->di_mtime = xfs_log_dinode_to_disk_ts(from, from->di_mtime);
-   187		to->di_ctime = xfs_log_dinode_to_disk_ts(from, from->di_ctime);
-   188	
-   189		to->di_size = cpu_to_be64(from->di_size);
-   190		to->di_nblocks = cpu_to_be64(from->di_nblocks);
-   191		to->di_extsize = cpu_to_be32(from->di_extsize);
-   192		to->di_forkoff = from->di_forkoff;
-   193		to->di_aformat = from->di_aformat;
-   194		to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
-   195		to->di_dmstate = cpu_to_be16(from->di_dmstate);
-   196		to->di_flags = cpu_to_be16(from->di_flags);
-   197		to->di_gen = cpu_to_be32(from->di_gen);
-   198	
-   199		if (from->di_version == 3) {
-   200			to->di_changecount = cpu_to_be64(from->di_changecount);
-   201			to->di_crtime = xfs_log_dinode_to_disk_ts(from,
-   202								  from->di_crtime);
-   203			to->di_flags2 = cpu_to_be64(from->di_flags2);
-   204			to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
-   205			to->di_ino = cpu_to_be64(from->di_ino);
-   206			to->di_lsn = cpu_to_be64(lsn);
-   207			memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
-   208			uuid_copy(&to->di_uuid, &from->di_uuid);
- > 209			to->di_v3_pad = from->di_v3_pad;
-   210		} else {
-   211			to->di_flushiter = cpu_to_be16(from->di_flushiter);
-   212			memcpy(to->di_v2_pad, from->di_v2_pad, sizeof(to->di_v2_pad));
-   213		}
-   214	
-   215		xfs_log_dinode_to_disk_iext_counters(from, to);
-   216	}
-   217	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
