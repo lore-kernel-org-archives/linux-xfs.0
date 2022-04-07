@@ -2,147 +2,353 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F3AFC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Apr 2022 01:59:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60238C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Apr 2022 02:00:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231974AbiDGCA6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Apr 2022 22:00:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46212 "EHLO
+        id S229939AbiDGCCD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Apr 2022 22:02:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229939AbiDGCA5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 22:00:57 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C5155F8F5
-        for <linux-xfs@vger.kernel.org>; Wed,  6 Apr 2022 18:58:59 -0700 (PDT)
+        with ESMTP id S229942AbiDGCCC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Apr 2022 22:02:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8587A6E01
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Apr 2022 19:00:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 03A1ACE25B2
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Apr 2022 01:58:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 659A9C385A1;
-        Thu,  7 Apr 2022 01:58:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1F729617EE
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Apr 2022 02:00:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76714C385A3;
+        Thu,  7 Apr 2022 02:00:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649296736;
-        bh=9tLhofyY5Bd8Uzabjy2h5l7IFxTTwbzSxlg+Er5E4DE=;
+        s=k20201202; t=1649296801;
+        bh=9UGfpDL4EYZgmOiRxcq+bY41sDWrR6WXgI9wqNfVcz4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JyW75qSSc45j54DO7uZPaB86eQCIUwhFbq0sJxmn6rb8/i+xs3xLJoOpHbGPHply4
-         IRzUVb07fTdRim8m/fyKyXWZdUQK+BYFwgVK8rZPOBm5VpBnBo8PlPz63GknPsW925
-         Vpa8dA6rxkHdEP4IXQk0zbLY1Z8uLo/g7vCNUaAWzYxZcIZ1vTAN33dgGhGLnVGLBK
-         zxfLTivkEbo64KuAxQmVyXu63CaLfWvjvD2aAQNs+M6cBWOATatqL4VJA/X/urJbiT
-         iWE/tUFVWMH64jwIkQQN6zi2BIHTjIarVkbpO6fH2owCCKdxcjsRodYw4ZH0Jh2Mkp
-         mol3vMGKfSZOA==
-Date:   Wed, 6 Apr 2022 18:58:55 -0700
+        b=tQpGMu+Dq82Wnmt1lRqvxOfwoA1QgHGT0L+mq9TjbKU0wPzE0O8z+WWH5+7seE1Va
+         18lvZXtpD1EjB4b1tgWyto9pl7tY6CNBR7Qtj1AlAmdyTJuj2BTjcHs/51gU/oO4PY
+         +3FHYshhcb9NgB2fYmIElJ+F5nHdUIX1JMNbYypJlsUMoBSbDsquo0FAtkN8qLezAJ
+         WMqNZnIJz8/NMtg758Z7TXHsVlk2B4I0lrepDQYutNepqXGH38QxNDTuMRNb+3A7el
+         B0Q0P823+2AY1daLvWNGZT4VSsEnTqXLUv6S0VNqNkmn5zC61by/HHn+y1Yr4dhson
+         XSUklbWG0Mrqw==
+Date:   Wed, 6 Apr 2022 19:00:00 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V9 12/19] xfs: Introduce macros to represent new maximum
- extent counts for data/attr forks
-Message-ID: <20220407015855.GZ27690@magnolia>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH V9 16/19] xfs: Conditionally upgrade existing inodes to
+ use large extent counters
+Message-ID: <20220407020000.GA27690@magnolia>
 References: <20220406061904.595597-1-chandan.babu@oracle.com>
- <20220406061904.595597-13-chandan.babu@oracle.com>
- <20220407010544.GC1544202@dread.disaster.area>
+ <20220406061904.595597-17-chandan.babu@oracle.com>
+ <20220407014627.GV27690@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220407010544.GC1544202@dread.disaster.area>
+In-Reply-To: <20220407014627.GV27690@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 07, 2022 at 11:05:44AM +1000, Dave Chinner wrote:
-> On Wed, Apr 06, 2022 at 11:48:56AM +0530, Chandan Babu R wrote:
-> > This commit defines new macros to represent maximum extent counts allowed by
-> > filesystems which have support for large per-inode extent counters.
+On Wed, Apr 06, 2022 at 06:46:27PM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 06, 2022 at 11:49:00AM +0530, Chandan Babu R wrote:
+> > This commit enables upgrading existing inodes to use large extent counters
+> > provided that underlying filesystem's superblock has large extent counter
+> > feature enabled.
 > > 
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_bmap.c       |  9 ++++-----
-> >  fs/xfs/libxfs/xfs_bmap_btree.c |  3 ++-
-> >  fs/xfs/libxfs/xfs_format.h     | 24 ++++++++++++++++++++++--
-> >  fs/xfs/libxfs/xfs_inode_buf.c  |  4 +++-
-> >  fs/xfs/libxfs/xfs_inode_fork.c |  3 ++-
-> >  fs/xfs/libxfs/xfs_inode_fork.h | 21 +++++++++++++++++----
-> >  6 files changed, 50 insertions(+), 14 deletions(-)
+> >  fs/xfs/libxfs/xfs_attr.c       | 10 ++++++++++
+> >  fs/xfs/libxfs/xfs_bmap.c       |  6 ++++--
+> >  fs/xfs/libxfs/xfs_format.h     |  8 ++++++++
+> >  fs/xfs/libxfs/xfs_inode_fork.c | 19 +++++++++++++++++++
+> >  fs/xfs/libxfs/xfs_inode_fork.h |  2 ++
+> >  fs/xfs/xfs_bmap_item.c         |  2 ++
+> >  fs/xfs/xfs_bmap_util.c         | 13 +++++++++++++
+> >  fs/xfs/xfs_dquot.c             |  3 +++
+> >  fs/xfs/xfs_iomap.c             |  5 +++++
+> >  fs/xfs/xfs_reflink.c           |  5 +++++
+> >  fs/xfs/xfs_rtalloc.c           |  3 +++
+> >  11 files changed, 74 insertions(+), 2 deletions(-)
 > > 
+> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > index 23523b802539..66c4fc55c9d7 100644
+> > --- a/fs/xfs/libxfs/xfs_attr.c
+> > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > @@ -776,8 +776,18 @@ xfs_attr_set(
+> >  	if (args->value || xfs_inode_hasattr(dp)) {
+> >  		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
+> >  				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+> > +		if (error == -EFBIG)
+> > +			error = xfs_iext_count_upgrade(args->trans, dp,
+> > +					XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+> >  		if (error)
+> >  			goto out_trans_cancel;
+> > +
+> > +		if (error == -EFBIG) {
+> > +			error = xfs_iext_count_upgrade(args->trans, dp,
+> > +					XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+> > +			if (error)
+> > +				goto out_trans_cancel;
+> > +		}
+> >  	}
+> >  
+> >  	error = xfs_attr_lookup(args);
 > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index b317226fb4ba..1254d4d4821e 100644
+> > index 4fab0c92ab70..82d5467ddf2c 100644
 > > --- a/fs/xfs/libxfs/xfs_bmap.c
 > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -61,10 +61,8 @@ xfs_bmap_compute_maxlevels(
-> >  	int		sz;		/* root block size */
+> > @@ -4524,14 +4524,16 @@ xfs_bmapi_convert_delalloc(
+> >  		return error;
 > >  
-> >  	/*
-> > -	 * The maximum number of extents in a file, hence the maximum number of
-> > -	 * leaf entries, is controlled by the size of the on-disk extent count,
-> > -	 * either a signed 32-bit number for the data fork, or a signed 16-bit
-> > -	 * number for the attr fork.
-> > +	 * The maximum number of extents in a fork, hence the maximum number of
-> > +	 * leaf entries, is controlled by the size of the on-disk extent count.
-> >  	 *
-> >  	 * Note that we can no longer assume that if we are in ATTR1 that the
-> >  	 * fork offset of all the inodes will be
-> > @@ -74,7 +72,8 @@ xfs_bmap_compute_maxlevels(
-> >  	 * ATTR2 we have to assume the worst case scenario of a minimum size
-> >  	 * available.
-> >  	 */
-> > -	maxleafents = xfs_iext_max_nextents(whichfork);
-> > +	maxleafents = xfs_iext_max_nextents(xfs_has_large_extent_counts(mp),
-> > +				whichfork);
-> >  	if (whichfork == XFS_DATA_FORK)
-> >  		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
-> >  	else
-> 
-> Just to confirm, the large extent count feature bit can only be
-> added when the filesystem is unmounted?
-
-Yes, because we (currently) don't support /any/ online feature upgrades.
-IIRC Chandan said that you'd have to be careful about validating the min
-log size requirements are still met because the tx reservation sizes can
-change with the taller bmbts.
-
-> > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> > index 453309fc85f2..7aabeccea9ab 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> > @@ -611,7 +611,8 @@ xfs_bmbt_maxlevels_ondisk(void)
-> >  	minrecs[1] = xfs_bmbt_block_maxrecs(blocklen, false) / 2;
+> >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > +	xfs_trans_ijoin(tp, ip, 0);
 > >  
-> >  	/* One extra level for the inode root. */
-> > -	return xfs_btree_compute_maxlevels(minrecs, MAXEXTNUM) + 1;
-> > +	return xfs_btree_compute_maxlevels(minrecs,
-> > +			XFS_MAX_EXTCNT_DATA_FORK_LARGE) + 1;
+> >  	error = xfs_iext_count_may_overflow(ip, whichfork,
+> >  			XFS_IEXT_ADD_NOSPLIT_CNT);
+> > +	if (error == -EFBIG)
+> > +		error = xfs_iext_count_upgrade(tp, ip,
+> > +				XFS_IEXT_ADD_NOSPLIT_CNT);
+> >  	if (error)
+> >  		goto out_trans_cancel;
+> >  
+> > -	xfs_trans_ijoin(tp, ip, 0);
+> > -
+> >  	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &bma.icur, &bma.got) ||
+> >  	    bma.got.br_startoff > offset_fsb) {
+> >  		/*
+> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > index 43de892d0305..bb327ea43ca1 100644
+> > --- a/fs/xfs/libxfs/xfs_format.h
+> > +++ b/fs/xfs/libxfs/xfs_format.h
+> > @@ -934,6 +934,14 @@ enum xfs_dinode_fmt {
+> >  #define XFS_MAX_EXTCNT_DATA_FORK_SMALL	((xfs_extnum_t)((1ULL << 31) - 1))
+> >  #define XFS_MAX_EXTCNT_ATTR_FORK_SMALL	((xfs_extnum_t)((1ULL << 15) - 1))
+> >  
+> > +/*
+> > + * This macro represents the maximum value by which a filesystem operation can
+> > + * increase the value of an inode's data/attr fork extent count.
+> > + */
+> > +#define XFS_MAX_EXTCNT_UPGRADE_NR	\
+> > +	min(XFS_MAX_EXTCNT_ATTR_FORK_LARGE - XFS_MAX_EXTCNT_ATTR_FORK_SMALL,	\
+> > +	    XFS_MAX_EXTCNT_DATA_FORK_LARGE - XFS_MAX_EXTCNT_DATA_FORK_SMALL)
+> > +
+> >  /*
+> >   * Inode minimum and maximum sizes.
+> >   */
+> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > index bb5d841aac58..1245e9f1ca81 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > @@ -756,3 +756,22 @@ xfs_iext_count_may_overflow(
+> >  
+> >  	return 0;
 > >  }
+> > +
+> > +int
+> > +xfs_iext_count_upgrade(
 > 
-> Why is this set to XFS_MAX_EXTCNT_DATA_FORK_LARGE rather than being
-> conditional xfs_has_large_extent_counts(mp)? i.e. if the feature bit
-> is not set, the maximum on-disk levels in the bmbt is determined by
-> XFS_MAX_EXTCNT_DATA_FORK_SMALL, not XFS_MAX_EXTCNT_DATA_FORK_LARGE.
+> Hmm.  I think the @nr_to_add parameter is supposed to be the one
+> that caused xfs_iext_count_may_overflow to return -EFBIG, right?
+> 
+> I was about to comment that it would be really helpful to have a comment
+> above this function dropping a hint that this is the case:
+> 
+> /*
+>  * Upgrade this inode's extent counter fields to be able to handle a
+>  * potential increase in the extent count by this number.  Normally
+>  * this is the same quantity that caused xfs_iext_count_may_overflow to
+>  * return -EFBIG.
+>  */
+> int
+> xfs_iext_count_upgrade(...
+> 
+> ...though I worry that this will cause fatal warnings about the
+> otherwise unused parameter on non-debug kernels?  I'm not sure why it
+> matters that nr_to_add is constrained to a small value?  Is it just to
+> prevent obviously huge values?  AFAICT all the current callers pass in
+> small #defined integer values.
+> 
+> That said, if the assert here is something Dave asked for in a previous
+> review, then I won't stand in the way:
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> 
+> --D
+> 
+> > +	struct xfs_trans	*tp,
+> > +	struct xfs_inode	*ip,
+> > +	uint			nr_to_add)
+> > +{
+> > +	ASSERT(nr_to_add <= XFS_MAX_EXTCNT_UPGRADE_NR);
+> > +
+> > +	if (!xfs_has_large_extent_counts(ip->i_mount) ||
+> > +	    (ip->i_diflags2 & XFS_DIFLAG2_NREXT64) ||
 
-This function (and all the other _maxlevels_ondisk functions) compute
-the maximum possible btree height for any filesystem that we'd care to
-mount.  This value is then passed to the functions that create the btree
-cursor caches, which is why this is independent of any xfs_mount.
 
-That said ... depending on how much this inflates the size of the bmbt
-cursor cache, I think we could create multiple slabs.
-
-> The "_ondisk" suffix implies that it has something to do with the
-> on-disk format of the filesystem, but AFAICT what we are calculating
-> here is a constant used for in-memory structure allocation? There
-> needs to be something explained/changed here, because this is
-> confusing...
-
-You suggested it. ;)
-
-https://lore.kernel.org/linux-xfs/20211013075743.GG2361455@dread.disaster.area/
+	    xfs_inode_has_large_extent_counts(ip) || ?
 
 --D
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > +	    XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
+> > +		return -EFBIG;
+> > +
+> > +	ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
+> > +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> > +
+> > +	return 0;
+> > +}
+> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> > index 6f9d69f8896e..4f68c1f20beb 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> > @@ -275,6 +275,8 @@ int xfs_ifork_verify_local_data(struct xfs_inode *ip);
+> >  int xfs_ifork_verify_local_attr(struct xfs_inode *ip);
+> >  int xfs_iext_count_may_overflow(struct xfs_inode *ip, int whichfork,
+> >  		int nr_to_add);
+> > +int xfs_iext_count_upgrade(struct xfs_trans *tp, struct xfs_inode *ip,
+> > +		uint nr_to_add);
+> >  
+> >  /* returns true if the fork has extents but they are not read in yet. */
+> >  static inline bool xfs_need_iread_extents(struct xfs_ifork *ifp)
+> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> > index 761dde155099..593ac29cffc7 100644
+> > --- a/fs/xfs/xfs_bmap_item.c
+> > +++ b/fs/xfs/xfs_bmap_item.c
+> > @@ -506,6 +506,8 @@ xfs_bui_item_recover(
+> >  		iext_delta = XFS_IEXT_PUNCH_HOLE_CNT;
+> >  
+> >  	error = xfs_iext_count_may_overflow(ip, whichfork, iext_delta);
+> > +	if (error == -EFBIG)
+> > +		error = xfs_iext_count_upgrade(tp, ip, iext_delta);
+> >  	if (error)
+> >  		goto err_cancel;
+> >  
+> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > index 18c1b99311a8..52be58372c63 100644
+> > --- a/fs/xfs/xfs_bmap_util.c
+> > +++ b/fs/xfs/xfs_bmap_util.c
+> > @@ -859,6 +859,9 @@ xfs_alloc_file_space(
+> >  
+> >  		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> >  				XFS_IEXT_ADD_NOSPLIT_CNT);
+> > +		if (error == -EFBIG)
+> > +			error = xfs_iext_count_upgrade(tp, ip,
+> > +					XFS_IEXT_ADD_NOSPLIT_CNT);
+> >  		if (error)
+> >  			goto error;
+> >  
+> > @@ -914,6 +917,8 @@ xfs_unmap_extent(
+> >  
+> >  	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> >  			XFS_IEXT_PUNCH_HOLE_CNT);
+> > +	if (error == -EFBIG)
+> > +		error = xfs_iext_count_upgrade(tp, ip, XFS_IEXT_PUNCH_HOLE_CNT);
+> >  	if (error)
+> >  		goto out_trans_cancel;
+> >  
+> > @@ -1195,6 +1200,8 @@ xfs_insert_file_space(
+> >  
+> >  	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> >  			XFS_IEXT_PUNCH_HOLE_CNT);
+> > +	if (error == -EFBIG)
+> > +		error = xfs_iext_count_upgrade(tp, ip, XFS_IEXT_PUNCH_HOLE_CNT);
+> >  	if (error)
+> >  		goto out_trans_cancel;
+> >  
+> > @@ -1423,6 +1430,9 @@ xfs_swap_extent_rmap(
+> >  				error = xfs_iext_count_may_overflow(ip,
+> >  						XFS_DATA_FORK,
+> >  						XFS_IEXT_SWAP_RMAP_CNT);
+> > +				if (error == -EFBIG)
+> > +					error = xfs_iext_count_upgrade(tp, ip,
+> > +							XFS_IEXT_SWAP_RMAP_CNT);
+> >  				if (error)
+> >  					goto out;
+> >  			}
+> > @@ -1431,6 +1441,9 @@ xfs_swap_extent_rmap(
+> >  				error = xfs_iext_count_may_overflow(tip,
+> >  						XFS_DATA_FORK,
+> >  						XFS_IEXT_SWAP_RMAP_CNT);
+> > +				if (error == -EFBIG)
+> > +					error = xfs_iext_count_upgrade(tp, ip,
+> > +							XFS_IEXT_SWAP_RMAP_CNT);
+> >  				if (error)
+> >  					goto out;
+> >  			}
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index 5afedcbc78c7..eb211e0ede5d 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -322,6 +322,9 @@ xfs_dquot_disk_alloc(
+> >  
+> >  	error = xfs_iext_count_may_overflow(quotip, XFS_DATA_FORK,
+> >  			XFS_IEXT_ADD_NOSPLIT_CNT);
+> > +	if (error == -EFBIG)
+> > +		error = xfs_iext_count_upgrade(tp, quotip,
+> > +				XFS_IEXT_ADD_NOSPLIT_CNT);
+> >  	if (error)
+> >  		goto err_cancel;
+> >  
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index 87e1cf5060bd..5a393259a3a3 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> > @@ -251,6 +251,8 @@ xfs_iomap_write_direct(
+> >  		return error;
+> >  
+> >  	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK, nr_exts);
+> > +	if (error == -EFBIG)
+> > +		error = xfs_iext_count_upgrade(tp, ip, nr_exts);
+> >  	if (error)
+> >  		goto out_trans_cancel;
+> >  
+> > @@ -555,6 +557,9 @@ xfs_iomap_write_unwritten(
+> >  
+> >  		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> >  				XFS_IEXT_WRITE_UNWRITTEN_CNT);
+> > +		if (error == -EFBIG)
+> > +			error = xfs_iext_count_upgrade(tp, ip,
+> > +					XFS_IEXT_WRITE_UNWRITTEN_CNT);
+> >  		if (error)
+> >  			goto error_on_bmapi_transaction;
+> >  
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 54e68e5693fd..1ae6d3434ad2 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -620,6 +620,9 @@ xfs_reflink_end_cow_extent(
+> >  
+> >  	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> >  			XFS_IEXT_REFLINK_END_COW_CNT);
+> > +	if (error == -EFBIG)
+> > +		error = xfs_iext_count_upgrade(tp, ip,
+> > +				XFS_IEXT_REFLINK_END_COW_CNT);
+> >  	if (error)
+> >  		goto out_cancel;
+> >  
+> > @@ -1121,6 +1124,8 @@ xfs_reflink_remap_extent(
+> >  		++iext_delta;
+> >  
+> >  	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK, iext_delta);
+> > +	if (error == -EFBIG)
+> > +		error = xfs_iext_count_upgrade(tp, ip, iext_delta);
+> >  	if (error)
+> >  		goto out_cancel;
+> >  
+> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> > index b8c79ee791af..3e587e85d5bf 100644
+> > --- a/fs/xfs/xfs_rtalloc.c
+> > +++ b/fs/xfs/xfs_rtalloc.c
+> > @@ -806,6 +806,9 @@ xfs_growfs_rt_alloc(
+> >  
+> >  		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> >  				XFS_IEXT_ADD_NOSPLIT_CNT);
+> > +		if (error == -EFBIG)
+> > +			error = xfs_iext_count_upgrade(tp, ip,
+> > +					XFS_IEXT_ADD_NOSPLIT_CNT);
+> >  		if (error)
+> >  			goto out_trans_cancel;
+> >  
+> > -- 
+> > 2.30.2
+> > 
