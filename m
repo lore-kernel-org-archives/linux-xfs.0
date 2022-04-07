@@ -2,111 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89FCDC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Apr 2022 11:07:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D3FFC4167D
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Apr 2022 15:25:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232512AbiDGLJI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Apr 2022 07:09:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47012 "EHLO
+        id S1344648AbiDGP06 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Apr 2022 11:26:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235833AbiDGLJE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Apr 2022 07:09:04 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 314CD8F9A1
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Apr 2022 04:07:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1649329624;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        with ESMTP id S1344634AbiDGP0y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Apr 2022 11:26:54 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 965F821B425;
+        Thu,  7 Apr 2022 08:24:54 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id D66A6212CA;
+        Thu,  7 Apr 2022 15:24:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1649345092;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=cY1aDjBYdCizUYh+aHLT+USlT9By62PO7MzsOkY+P3o=;
-        b=GWhlOxUbwGIyWbCJwBnfanM6sFo25LL98mFRbLllum+xE0a9DkcQDm+AfHTnU1s+FwpPnl
-        Mebv9+HVPqubivZNmXLSdWexhf6si8TFQOqt8nEh5r1s8EPvmEzwBD2Pyl4ariJpQ7qIWh
-        MIdX8h/rgrenVLxQopHhK1GOuywuy6M=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-488-RmS8we0HNOSSlXLarb9QYw-1; Thu, 07 Apr 2022 07:07:03 -0400
-X-MC-Unique: RmS8we0HNOSSlXLarb9QYw-1
-Received: by mail-wr1-f69.google.com with SMTP id d29-20020adfa35d000000b002060fd92b14so1160805wrb.23
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Apr 2022 04:07:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=cY1aDjBYdCizUYh+aHLT+USlT9By62PO7MzsOkY+P3o=;
-        b=LVoXclkIGIoz/NtTFg8Y2gU8BINwJ2+lWsUWJKD9GAoeuJ8I5DoOQF7Lp/KWibXxvq
-         nWF0joWQ4gYWkESE9KN/nP2/Szq/tMYVUkXvW+VVJjJwS7scQA3Vzi3Otba7k43IMySE
-         PT2SnCnw53FPiMWX/pX2TkxOieDPhlzNiSVJTn5qMZIcjQWfs6RJ+WgI0Jwvlh8Tg1Dn
-         FANDl3btnahdqbvR1vpUd/M5koo+mWV2fVokZt/w7KunpaF74LVmiqkqb1ULyOzQ7Sss
-         l87Uq+RMjueP8iiEa3liappi1qh3/hSQ8wFyVQ9UNAg5V62wLllWxi2wq/DJnl9CH/YH
-         oXcA==
-X-Gm-Message-State: AOAM533pCLqMCn43HfF4AsjYrrVFxKlRYhIUjTjg/Gqb72OUTpyHOagH
-        x/Q6vpukOSVP1NkXJm5RsST1YV1+Xf/nyCwTEKTRHmZhcML5U+SfJsuSNIoM2SNz9x42zEIAjVZ
-        cO05d8vZScrwVVnHhimc=
-X-Received: by 2002:adf:cf12:0:b0:203:f917:82ba with SMTP id o18-20020adfcf12000000b00203f91782bamr10497700wrj.538.1649329621553;
-        Thu, 07 Apr 2022 04:07:01 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxNQsUTXGMOpmsNwAQdaQy5J1ipm6GI4cKBUpftVF4uCgO6lUbuSMiUlpuWPSpvdIaCmdvusA==
-X-Received: by 2002:adf:cf12:0:b0:203:f917:82ba with SMTP id o18-20020adfcf12000000b00203f91782bamr10497690wrj.538.1649329621372;
-        Thu, 07 Apr 2022 04:07:01 -0700 (PDT)
-Received: from aalbersh.remote.csb ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id p2-20020a1c7402000000b0038159076d30sm7391013wmc.22.2022.04.07.04.07.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Apr 2022 04:07:00 -0700 (PDT)
-Date:   Thu, 7 Apr 2022 13:06:56 +0200
-From:   Andrey Albershteyn <aalbersh@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs_quota: split get_quota() and
- report_mount()/dump_file()
-Message-ID: <Yk7F0CM+DKf2wEYA@aalbersh.remote.csb>
-References: <20220328222503.146496-1-aalbersh@redhat.com>
- <20220328222503.146496-4-aalbersh@redhat.com>
- <Yk3Bp4rPbukT9VC7@infradead.org>
+        bh=RtA+SPF4j8BVXsqmszO7xH0OxCICEh+Est/knHN20Pw=;
+        b=JdwcskixEmG8Id6CFcHmK2HMPcVcB071Gxs55mSKq7gYvR2Ikd8MNoO/fLtEbVpgdj1eqK
+        9zmwivWn67QHHcgD9Kfm5GQ7CXBQeMe5lW9iJ9AGGV3Pl0ul2ocJyd3loaCvdRBmNQxip+
+        WgCnpcThcFxRJmTkxC30BSU3q0i1qd4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1649345092;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RtA+SPF4j8BVXsqmszO7xH0OxCICEh+Est/knHN20Pw=;
+        b=pkLC9VLc/9JNFZ5DsOV/UM/28hXligCH1VLYaRzzl6m3sxWEGPlvl1H8p8FVldpalCYBR6
+        DsLUEWMcp0v/ApCw==
+Received: from ds.suse.cz (ds.suse.cz [10.100.12.205])
+        by relay2.suse.de (Postfix) with ESMTP id ADAE4A3B82;
+        Thu,  7 Apr 2022 15:24:52 +0000 (UTC)
+Received: by ds.suse.cz (Postfix, from userid 10065)
+        id 25B6BDA80E; Thu,  7 Apr 2022 17:20:50 +0200 (CEST)
+Date:   Thu, 7 Apr 2022 17:20:49 +0200
+From:   David Sterba <dsterba@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
+Subject: Re: [PATCH 07/27] btrfs: use bdev_max_active_zones instead of open
+ coding it
+Message-ID: <20220407152049.GH15609@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+Mail-Followup-To: dsterba@suse.cz, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
+References: <20220406060516.409838-1-hch@lst.de>
+ <20220406060516.409838-8-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yk3Bp4rPbukT9VC7@infradead.org>
+In-Reply-To: <20220406060516.409838-8-hch@lst.de>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hey Christoph,
+On Wed, Apr 06, 2022 at 08:04:56AM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-On Wed, Apr 06, 2022 at 09:36:55AM -0700, Christoph Hellwig wrote:
-> Can you explain the split and the reason for it a little more here?
-> 
-> >  dump_file(
-> >  	FILE		*fp,
-> >  	fs_disk_quota_t *d,
-> > -	uint		id,
-> > -	uint		*oid,
-> > -	uint		type,
-> > -	char		*dev,
-> > -	int		flags)
-> > +	char		*dev)
-> >  {
-> > -	if	(!get_quota(d, id, oid, type, dev, flags))
-> > -		return 0;
-> 
-> I think it would make more sense to move this into the previous
-> patch that passes the fs_disk_quota to dump_file.
-> 
-> And maybe this and the previous patch should be split into one for
-> dump_file and one for report_mount?
-
-I did it like this initially but it appeared to me that the diff was
-messy. As there were many &d -> d and report_mount ->
-get_quota/report_mount replacements, so I split it. But I'm not
-against reshaping this back, should I do it?
-
-> 
-> > +			while ((g = getgrent()) != NULL) {
-> > +				get_quota(&d, g->gr_gid, NULL, type, mount->fs_name, 0);
-> 
-> Overly long line.  (and a few more below).
-> 
-
--- 
-- Andrey
-
+As it's a standalone patch I can take it (possibly with other similar
+prep btrfs patches) in current development cycle to relieve the
+inter-tree dependencies.
