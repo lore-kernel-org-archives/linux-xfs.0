@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21A3CC3527B
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Apr 2022 04:51:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A77B3C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Apr 2022 04:51:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240844AbiDIExE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Apr 2022 00:53:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48306 "EHLO
+        id S230226AbiDIEx0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Apr 2022 00:53:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239543AbiDIExC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Apr 2022 00:53:02 -0400
+        with ESMTP id S240868AbiDIExK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Apr 2022 00:53:10 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FFDA186F5;
-        Fri,  8 Apr 2022 21:50:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2DB6B8997;
+        Fri,  8 Apr 2022 21:51:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=6JVZQz23Gg3oLV4oYc05UwmOH+nGeMd1Qpin5+I9KgM=; b=T+9t+qRVixcYOKTh1AUVT25z0M
-        +SeVr5+q6XffdW1kFW64UkJe5HiR1JzBYZYydkfDGnhvPDwIWt1BqK0kdRpQlzNS/wUGgV0dz2FlC
-        P9lWy4ngvRvWzpwNKC0K2fF5KsKRF9WdU7qIRMHjoHzTM+p/DmxnFS/6hYJwPtf1Atl9jbNqvHRbW
-        tlOYlU8ufbWGBydt1bUmPAZA5D8zkMlkbBnkY22C2NT6vnnROSTB46+rpRyEX5lzOjlaPcp8DwJyC
-        bbKS1PGTuIP4F/DHMFVbTCV/5B0d0tMWG8vDpg/SA6IBHxSKH9SXtm1xmXyImu30Ag6d2DwUVgBc6
-        Y9GfxcxA==;
+        bh=p7OacHYZtXHcRJcUjaO4g7N75FFwuFvyGKpz8CHLs7c=; b=Pzju2TytWziYGXeAIXOJqaZe7f
+        7ZGvsguzecelJ4kpYHFs039peENwElmJJQkOSiGYs68Q+CTFipoeD0GlcVPwvTxb8xwBmaIekN2yU
+        Rk4beWtSim6D708e6fSlV3YP5i7sNLfobnz5N1LWmB0773OmCuKgM8hPrOj00tHgKXSL2WCPSypp8
+        ErKpc93xT55Q9MUWv2vmwsuaSUJfwgL8pm1UrjQ6JfcKYWVBii/A8RoyrVNpZCMb2NMWyLhn7ceWa
+        xkvvl8VwB4N0A1xPbH8PCB21WFupHylrzncwQJ8sn/dqS6wML090d9Ks8PME8EXpA5KlHBwNJY9Qk
+        zEahGH1Q==;
 Received: from 213-147-167-116.nat.highway.webapn.at ([213.147.167.116] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nd33l-0020TC-Pz; Sat, 09 Apr 2022 04:50:54 +0000
+        id 1nd33s-0020WM-ET; Sat, 09 Apr 2022 04:51:01 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -42,11 +42,10 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 02/27] target: pass a block_device to target_configure_unmap_from_queue
-Date:   Sat,  9 Apr 2022 06:50:18 +0200
-Message-Id: <20220409045043.23593-3-hch@lst.de>
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
+Subject: [PATCH 04/27] drbd: remove assign_p_sizes_qlim
+Date:   Sat,  9 Apr 2022 06:50:20 +0200
+Message-Id: <20220409045043.23593-5-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220409045043.23593-1-hch@lst.de>
 References: <20220409045043.23593-1-hch@lst.de>
@@ -57,97 +56,84 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The SCSI target drivers is a consumer of the block layer and shoul
-d generally work on struct block_device.
+Fold each branch into its only caller.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/target/target_core_device.c  | 5 +++--
- drivers/target/target_core_file.c    | 7 ++++---
- drivers/target/target_core_iblock.c  | 2 +-
- include/target/target_core_backend.h | 4 ++--
- 4 files changed, 10 insertions(+), 8 deletions(-)
+ drivers/block/drbd/drbd_main.c | 47 +++++++++++++++-------------------
+ 1 file changed, 20 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index fa866acef5bb2..3a1ec705cd80b 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -834,9 +834,10 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
-  * in ATA and we need to set TPE=1
-  */
- bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
--				       struct request_queue *q)
-+				       struct block_device *bdev)
+diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
+index 9676a1d214bc5..1262fe1c33618 100644
+--- a/drivers/block/drbd/drbd_main.c
++++ b/drivers/block/drbd/drbd_main.c
+@@ -903,31 +903,6 @@ void drbd_gen_and_send_sync_uuid(struct drbd_peer_device *peer_device)
+ 	}
+ }
+ 
+-/* communicated if (agreed_features & DRBD_FF_WSAME) */
+-static void
+-assign_p_sizes_qlim(struct drbd_device *device, struct p_sizes *p,
+-					struct request_queue *q)
+-{
+-	if (q) {
+-		p->qlim->physical_block_size = cpu_to_be32(queue_physical_block_size(q));
+-		p->qlim->logical_block_size = cpu_to_be32(queue_logical_block_size(q));
+-		p->qlim->alignment_offset = cpu_to_be32(queue_alignment_offset(q));
+-		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
+-		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
+-		p->qlim->discard_enabled = blk_queue_discard(q);
+-		p->qlim->write_same_capable = 0;
+-	} else {
+-		q = device->rq_queue;
+-		p->qlim->physical_block_size = cpu_to_be32(queue_physical_block_size(q));
+-		p->qlim->logical_block_size = cpu_to_be32(queue_logical_block_size(q));
+-		p->qlim->alignment_offset = 0;
+-		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
+-		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
+-		p->qlim->discard_enabled = 0;
+-		p->qlim->write_same_capable = 0;
+-	}
+-}
+-
+ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enum dds_flags flags)
  {
--	int block_size = queue_logical_block_size(q);
-+	struct request_queue *q = bdev_get_queue(bdev);
-+	int block_size = bdev_logical_block_size(bdev);
+ 	struct drbd_device *device = peer_device->device;
+@@ -957,14 +932,32 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
+ 		q_order_type = drbd_queue_order_type(device);
+ 		max_bio_size = queue_max_hw_sectors(q) << 9;
+ 		max_bio_size = min(max_bio_size, DRBD_MAX_BIO_SIZE);
+-		assign_p_sizes_qlim(device, p, q);
++		p->qlim->physical_block_size =
++			cpu_to_be32(queue_physical_block_size(q));
++		p->qlim->logical_block_size =
++			cpu_to_be32(queue_logical_block_size(q));
++		p->qlim->alignment_offset =
++			cpu_to_be32(queue_alignment_offset(q));
++		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
++		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
++		p->qlim->discard_enabled = blk_queue_discard(q);
+ 		put_ldev(device);
+ 	} else {
++		struct request_queue *q = device->rq_queue;
++
++		p->qlim->physical_block_size =
++			cpu_to_be32(queue_physical_block_size(q));
++		p->qlim->logical_block_size =
++			cpu_to_be32(queue_logical_block_size(q));
++		p->qlim->alignment_offset = 0;
++		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
++		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
++		p->qlim->discard_enabled = 0;
++
+ 		d_size = 0;
+ 		u_size = 0;
+ 		q_order_type = QUEUE_ORDERED_NONE;
+ 		max_bio_size = DRBD_MAX_BIO_SIZE; /* ... multiple BIOs per peer_request */
+-		assign_p_sizes_qlim(device, p, NULL);
+ 	}
  
- 	if (!blk_queue_discard(q))
- 		return false;
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 8190b840065f3..8d191fdc33217 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -134,10 +134,11 @@ static int fd_configure_device(struct se_device *dev)
- 	 */
- 	inode = file->f_mapping->host;
- 	if (S_ISBLK(inode->i_mode)) {
--		struct request_queue *q = bdev_get_queue(I_BDEV(inode));
-+		struct block_device *bdev = I_BDEV(inode);
-+		struct request_queue *q = bdev_get_queue(bdev);
- 		unsigned long long dev_size;
- 
--		fd_dev->fd_block_size = bdev_logical_block_size(I_BDEV(inode));
-+		fd_dev->fd_block_size = bdev_logical_block_size(bdev);
- 		/*
- 		 * Determine the number of bytes from i_size_read() minus
- 		 * one (1) logical sector from underlying struct block_device
-@@ -150,7 +151,7 @@ static int fd_configure_device(struct se_device *dev)
- 			dev_size, div_u64(dev_size, fd_dev->fd_block_size),
- 			fd_dev->fd_block_size);
- 
--		if (target_configure_unmap_from_queue(&dev->dev_attrib, q))
-+		if (target_configure_unmap_from_queue(&dev->dev_attrib, bdev))
- 			pr_debug("IFILE: BLOCK Discard support available,"
- 				 " disabled by default\n");
- 		/*
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 87ede165ddba4..b886ce1770bfd 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -119,7 +119,7 @@ static int iblock_configure_device(struct se_device *dev)
- 	dev->dev_attrib.hw_max_sectors = queue_max_hw_sectors(q);
- 	dev->dev_attrib.hw_queue_depth = q->nr_requests;
- 
--	if (target_configure_unmap_from_queue(&dev->dev_attrib, q))
-+	if (target_configure_unmap_from_queue(&dev->dev_attrib, bd))
- 		pr_debug("IBLOCK: BLOCK Discard support available,"
- 			 " disabled by default\n");
- 
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 675f3a1fe6139..773963a1e0b53 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -14,7 +14,7 @@
- #define TRANSPORT_FLAG_PASSTHROUGH_ALUA		0x2
- #define TRANSPORT_FLAG_PASSTHROUGH_PGR          0x4
- 
--struct request_queue;
-+struct block_device;
- struct scatterlist;
- 
- struct target_backend_ops {
-@@ -117,7 +117,7 @@ sense_reason_t passthrough_parse_cdb(struct se_cmd *cmd,
- bool target_sense_desc_format(struct se_device *dev);
- sector_t target_to_linux_sector(struct se_device *dev, sector_t lb);
- bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
--				       struct request_queue *q);
-+				       struct block_device *bdev);
- 
- static inline bool target_dev_configured(struct se_device *se_dev)
- {
+ 	if (peer_device->connection->agreed_pro_version <= 94)
 -- 
 2.30.2
 
