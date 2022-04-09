@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28DD2C4167B
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Apr 2022 04:53:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FCB9C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Apr 2022 04:53:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241350AbiDIEzv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S241351AbiDIEzv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sat, 9 Apr 2022 00:55:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54074 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241123AbiDIEyi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Apr 2022 00:54:38 -0400
+        with ESMTP id S241093AbiDIEyh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Apr 2022 00:54:37 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24BAABAB84;
-        Fri,  8 Apr 2022 21:51:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EB32E438A;
+        Fri,  8 Apr 2022 21:51:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=q2ranmlO4Nl6vweHnkN5W/lhAXFqjXPKY6W4cI6bGNw=; b=ZwXWqq27tMeyVdjCd9/fIV+62b
-        YxoMIWLS5QBW9+N570g/a7MqnPHccUJQp/73S/ehTJ9VEsGu0nZXpLT2GsIb95dlGJnKSkFIT7WNJ
-        Q2sY9of4Z8TkC7fc/FklkIOgdhls0Ao3F7MloWBwUhbTcUSp/MjOHIau/ybVaMror8iobGwcOp0AA
-        +a4GNDWpu5gRhJyLqGbdZW5DNs6lIAJYj08W7f1olcpdRSmv2+7GaRf1xJ5QApQRYFU40mFosdlZy
-        0ALRAEA3rIIwBWnBlj8QEgYL1eIM3It3IcCM+Tc/eC3LmnRLah4kAgVmx2WJTHuXLjilmSIpHNWrZ
-        1FnhvyJg==;
+        bh=2RG8/4DncVNJBVxiwRZlDWFw3of1TwdfVdHLgkB+Spw=; b=bHToJbTwXX9JeK0n0FFEHck7oK
+        nA96qn4tsO9VvTxVN8oChK/ZngVrRM/0RF6G9ra3tv3c4LiSpAW93VdnTUb837bG7nj26lWP035AX
+        +oB1LRxVd3o4RNZBzKIPVYYv/AqgqQH13jSTRjPJXLj+fHe3sQ7lQiOs0AqFOPiV0QvmbZSG1K8qh
+        9AilEZ6nzAlZEnIp9Du8I20RfuJmhuvcocvyHX9G65n9qxdF8wS5MzRNFD9kn7Nula/Xd3cMLnifm
+        ikockttcbAn2ou+cROly75gq/5PqLm1F2FPp9pVf438qn2667h4Aje3z8zrXhBCgwdMkGUyOJsCBu
+        B0U5qlrw==;
 Received: from 213-147-167-116.nat.highway.webapn.at ([213.147.167.116] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nd34b-0021Bd-D3; Sat, 09 Apr 2022 04:51:45 +0000
+        id 1nd34Q-0020zD-BL; Sat, 09 Apr 2022 04:51:34 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -44,9 +44,9 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
         ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 17/27] block: use bdev_alignment_offset in disk_alignment_offset_show
-Date:   Sat,  9 Apr 2022 06:50:33 +0200
-Message-Id: <20220409045043.23593-18-hch@lst.de>
+Subject: [PATCH 14/27] block: add a bdev_stable_writes helper
+Date:   Sat,  9 Apr 2022 06:50:30 +0200
+Message-Id: <20220409045043.23593-15-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220409045043.23593-1-hch@lst.de>
 References: <20220409045043.23593-1-hch@lst.de>
@@ -57,48 +57,76 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This does the same as the open coded variant except for an extra branch,
-and allows to remove queue_alignment_offset entirely.
+Add a helper to check the stable writes flag based on the block_device
+instead of having to poke into the block layer internal request_queue.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/genhd.c          | 2 +-
- include/linux/blkdev.h | 8 --------
- 2 files changed, 1 insertion(+), 9 deletions(-)
+ drivers/md/dm-table.c  | 4 +---
+ fs/super.c             | 2 +-
+ include/linux/blkdev.h | 6 ++++++
+ mm/swapfile.c          | 2 +-
+ 4 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index b8b6759d670f0..712031ce19070 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1010,7 +1010,7 @@ static ssize_t disk_alignment_offset_show(struct device *dev,
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 5e38d0dd009d5..d46839faa0ca5 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1950,9 +1950,7 @@ static int device_requires_stable_pages(struct dm_target *ti,
+ 					struct dm_dev *dev, sector_t start,
+ 					sector_t len, void *data)
  {
- 	struct gendisk *disk = dev_to_disk(dev);
- 
--	return sprintf(buf, "%d\n", queue_alignment_offset(disk->queue));
-+	return sprintf(buf, "%d\n", bdev_alignment_offset(disk->part0));
+-	struct request_queue *q = bdev_get_queue(dev->bdev);
+-
+-	return blk_queue_stable_writes(q);
++	return bdev_stable_writes(dev->bdev);
  }
  
- static ssize_t disk_discard_alignment_show(struct device *dev,
+ int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+diff --git a/fs/super.c b/fs/super.c
+index f1d4a193602d6..60f57c7bc0a69 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -1204,7 +1204,7 @@ static int set_bdev_super(struct super_block *s, void *data)
+ 	s->s_dev = s->s_bdev->bd_dev;
+ 	s->s_bdi = bdi_get(s->s_bdev->bd_disk->bdi);
+ 
+-	if (blk_queue_stable_writes(s->s_bdev->bd_disk->queue))
++	if (bdev_stable_writes(s->s_bdev))
+ 		s->s_iflags |= SB_I_STABLE_WRITES;
+ 	return 0;
+ }
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f8c50b77543eb..d5346e72e3645 100644
+index 075b16d4560e7..a433798c3343e 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -1251,14 +1251,6 @@ bdev_zone_write_granularity(struct block_device *bdev)
- 	return queue_zone_write_granularity(bdev_get_queue(bdev));
+@@ -1330,6 +1330,12 @@ static inline bool bdev_nonrot(struct block_device *bdev)
+ 	return blk_queue_nonrot(bdev_get_queue(bdev));
  }
  
--static inline int queue_alignment_offset(const struct request_queue *q)
--{
--	if (q->limits.misaligned)
--		return -1;
--
--	return q->limits.alignment_offset;
--}
--
- static inline int queue_limit_alignment_offset(struct queue_limits *lim, sector_t sector)
++static inline bool bdev_stable_writes(struct block_device *bdev)
++{
++	return test_bit(QUEUE_FLAG_STABLE_WRITES,
++			&bdev_get_queue(bdev)->queue_flags);
++}
++
+ static inline bool bdev_write_cache(struct block_device *bdev)
  {
- 	unsigned int granularity = max(lim->physical_block_size, lim->io_min);
+ 	return test_bit(QUEUE_FLAG_WC, &bdev_get_queue(bdev)->queue_flags);
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index d5ab7ec4d92ca..4069f17a82c8e 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -3065,7 +3065,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
+ 		goto bad_swap_unlock_inode;
+ 	}
+ 
+-	if (p->bdev && blk_queue_stable_writes(p->bdev->bd_disk->queue))
++	if (p->bdev && bdev_stable_writes(p->bdev))
+ 		p->flags |= SWP_STABLE_WRITES;
+ 
+ 	if (p->bdev && p->bdev->bd_disk->fops->rw_page)
 -- 
 2.30.2
 
