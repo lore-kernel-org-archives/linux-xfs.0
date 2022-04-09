@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A7BDC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Apr 2022 04:53:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55D0AC4167D
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Apr 2022 04:54:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241361AbiDIEzx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Apr 2022 00:55:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53590 "EHLO
+        id S241201AbiDIE4R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Apr 2022 00:56:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230263AbiDIEyh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Apr 2022 00:54:37 -0400
+        with ESMTP id S241289AbiDIEzm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Apr 2022 00:55:42 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C536DB4B4;
-        Fri,  8 Apr 2022 21:51:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 220B5BAB9C;
+        Fri,  8 Apr 2022 21:52:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=EfN09E7KgfFk5NOTogRSBSf7jTlM22RGe5+0+tCjcRA=; b=t0aAiQOAgYh2xfMXnvLterJAh6
-        EsrOU2ANVhJA83bJAg/kUS0kihbC+selaMUlp7jnEi1JX3OTLxh72lWlfgaE8eU78RLO8Gy9T5ODC
-        DXAWEXuEQHMseAneboagWBhh9B2fR1FSBtVZj64dvRfuKz7Nu5BpqV4PvqlHtda/o34eSgrHO53ve
-        G63mK1qyCrWopUHxcEkJvB1wZJRMW+Ln5pkg0hEttKmUntLJOMDd4Pc2WSw2oow34+WQ73I+SrMDH
-        pspOR3Jzv2D4uwcmOaSzyhOpaHWNXDogcxcYxeAfE3yQCJHDRmr3vOgYqDt08xFB0zD2acAHWyCU2
-        Jy5+T74A==;
+        bh=eypoqjBCbHteIGJMjEE77faduCfiNIsAQ0ydQeu7OQ0=; b=nqH1nBV8lOr2r5wyOjol3g7s8X
+        NGopilIp147x4XNnQqzR5o2YWkY6IO58VVUojmV/ASvSDXVzRQHv+BqUNN8ISkIuVH5Huq+5W/+g6
+        Fx9NKN7nsNjG6IaaR01B6x8gfqb84JVGaMt2Mch/XsNqmw38mh/kWIOczl1+aSfojYjwvPWnkVT0z
+        zeBYxWSj02o09fDuqh1c1ftABUKI9QxyXU2GCBR2V2aNbgjbyvKcSUL75+QEIgn+hIxNaN3b6eMN+
+        HQ75AhIB7YFYQ9KIFGF2dUiaHQ4ZLNQzEzLlTd1WzYc4Lz5oFphMfcUxRdKyObtKnqHpozib+pvzE
+        Et/uKlCg==;
 Received: from 213-147-167-116.nat.highway.webapn.at ([213.147.167.116] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nd34U-00213P-4I; Sat, 09 Apr 2022 04:51:38 +0000
+        id 1nd35G-0021rI-Lh; Sat, 09 Apr 2022 04:52:27 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -42,13 +42,10 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 15/27] block: add a bdev_max_zone_append_sectors helper
-Date:   Sat,  9 Apr 2022 06:50:31 +0200
-Message-Id: <20220409045043.23593-16-hch@lst.de>
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
+Subject: [PATCH 27/27] direct-io: remove random prefetches
+Date:   Sat,  9 Apr 2022 06:50:43 +0200
+Message-Id: <20220409045043.23593-28-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220409045043.23593-1-hch@lst.de>
 References: <20220409045043.23593-1-hch@lst.de>
@@ -59,70 +56,66 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add a helper to check the max supported sectors for zone append based on
-the block_device instead of having to poke into the block layer internal
-request_queue.
+Randomly poking into block device internals for manual prefetches isn't
+exactly a very maintainable thing to do.  And none of the performance
+criticil direct I/O implementations still use this library function
+anyway, so just drop it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/nvme/target/zns.c | 3 +--
- fs/zonefs/super.c         | 3 +--
- include/linux/blkdev.h    | 6 ++++++
- 3 files changed, 8 insertions(+), 4 deletions(-)
+ fs/direct-io.c | 32 ++++----------------------------
+ 1 file changed, 4 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/nvme/target/zns.c b/drivers/nvme/target/zns.c
-index e34718b095504..82b61acf7a72b 100644
---- a/drivers/nvme/target/zns.c
-+++ b/drivers/nvme/target/zns.c
-@@ -34,8 +34,7 @@ static int validate_conv_zones_cb(struct blk_zone *z,
- 
- bool nvmet_bdev_zns_enable(struct nvmet_ns *ns)
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index aef06e607b405..840752006f601 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -1115,11 +1115,10 @@ static inline int drop_refcount(struct dio *dio)
+  * individual fields and will generate much worse code. This is important
+  * for the whole file.
+  */
+-static inline ssize_t
+-do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+-		      struct block_device *bdev, struct iov_iter *iter,
+-		      get_block_t get_block, dio_iodone_t end_io,
+-		      dio_submit_t submit_io, int flags)
++ssize_t __blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
++		struct block_device *bdev, struct iov_iter *iter,
++		get_block_t get_block, dio_iodone_t end_io,
++		dio_submit_t submit_io, int flags)
  {
--	struct request_queue *q = ns->bdev->bd_disk->queue;
--	u8 zasl = nvmet_zasl(queue_max_zone_append_sectors(q));
-+	u8 zasl = nvmet_zasl(bdev_max_zone_append_sectors(ns->bdev));
- 	struct gendisk *bd_disk = ns->bdev->bd_disk;
- 	int ret;
- 
-diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
-index 3614c7834007d..7a63807b736c4 100644
---- a/fs/zonefs/super.c
-+++ b/fs/zonefs/super.c
-@@ -678,13 +678,12 @@ static ssize_t zonefs_file_dio_append(struct kiocb *iocb, struct iov_iter *from)
- 	struct inode *inode = file_inode(iocb->ki_filp);
- 	struct zonefs_inode_info *zi = ZONEFS_I(inode);
- 	struct block_device *bdev = inode->i_sb->s_bdev;
--	unsigned int max;
-+	unsigned int max = bdev_max_zone_append_sectors(bdev);
- 	struct bio *bio;
- 	ssize_t size;
- 	int nr_pages;
- 	ssize_t ret;
- 
--	max = queue_max_zone_append_sectors(bdev_get_queue(bdev));
- 	max = ALIGN_DOWN(max << SECTOR_SHIFT, inode->i_sb->s_blocksize);
- 	iov_iter_truncate(from, max);
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index a433798c3343e..f8c50b77543eb 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1188,6 +1188,12 @@ static inline unsigned int queue_max_zone_append_sectors(const struct request_qu
- 	return min(l->max_zone_append_sectors, l->max_sectors);
+ 	unsigned i_blkbits = READ_ONCE(inode->i_blkbits);
+ 	unsigned blkbits = i_blkbits;
+@@ -1334,29 +1333,6 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+ 	kmem_cache_free(dio_cache, dio);
+ 	return retval;
  }
+-
+-ssize_t __blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+-			     struct block_device *bdev, struct iov_iter *iter,
+-			     get_block_t get_block,
+-			     dio_iodone_t end_io, dio_submit_t submit_io,
+-			     int flags)
+-{
+-	/*
+-	 * The block device state is needed in the end to finally
+-	 * submit everything.  Since it's likely to be cache cold
+-	 * prefetch it here as first thing to hide some of the
+-	 * latency.
+-	 *
+-	 * Attempt to prefetch the pieces we likely need later.
+-	 */
+-	prefetch(&bdev->bd_disk->part_tbl);
+-	prefetch(bdev->bd_disk->queue);
+-	prefetch((char *)bdev->bd_disk->queue + SMP_CACHE_BYTES);
+-
+-	return do_blockdev_direct_IO(iocb, inode, bdev, iter, get_block,
+-				     end_io, submit_io, flags);
+-}
+-
+ EXPORT_SYMBOL(__blockdev_direct_IO);
  
-+static inline unsigned int
-+bdev_max_zone_append_sectors(struct block_device *bdev)
-+{
-+	return queue_max_zone_append_sectors(bdev_get_queue(bdev));
-+}
-+
- static inline unsigned queue_logical_block_size(const struct request_queue *q)
- {
- 	int retval = 512;
+ static __init int dio_init(void)
 -- 
 2.30.2
 
