@@ -2,116 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2E4FC43219
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Apr 2022 14:33:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 911BCC433EF
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Apr 2022 15:52:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232649AbiDIOfT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Apr 2022 10:35:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56930 "EHLO
+        id S231217AbiDIPyk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Apr 2022 11:54:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229567AbiDIOfP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Apr 2022 10:35:15 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2512A35879;
-        Sat,  9 Apr 2022 07:33:07 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 207A11F864;
-        Sat,  9 Apr 2022 14:33:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1649514786; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=BmOfl4NqddautzOtQrZ0dLuhiQSp1fB0SDxF8v7gYBA=;
-        b=SJlQufjnXjTQtqgkhM6MsOUPDPwOMZ6xGLQ76UNS6RR1cEGIg2CW/GZ7A0Nq9xE2LKzjCQ
-        zm4gbJFRwGS5ZR58/OOlzltxzH57NlfDQ1MS9kgXiNk7elM8N3NSClk0AEwvrheO6NCJzw
-        l51uuNG8cURr+Q1l6/il4XbIWcEO2Fg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1649514786;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=BmOfl4NqddautzOtQrZ0dLuhiQSp1fB0SDxF8v7gYBA=;
-        b=yiH+qx8I6hbeCP31rtrhbZE5qxMo8OqYiXG+UWOpJ9wghAOQqadl62X34RS7V0fnDyonaX
-        HzX10h1d2uotqQBQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3F41913AA1;
-        Sat,  9 Apr 2022 14:32:56 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id m2GpARiZUWLHIgAAMHmgww
-        (envelope-from <colyli@suse.de>); Sat, 09 Apr 2022 14:32:56 +0000
-Message-ID: <f01ac878-9b0d-972b-70dc-6f3f61b9947b@suse.de>
-Date:   Sat, 9 Apr 2022 22:32:52 +0800
+        with ESMTP id S229489AbiDIPyb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Apr 2022 11:54:31 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 030A5C7F
+        for <linux-xfs@vger.kernel.org>; Sat,  9 Apr 2022 08:52:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=1grdnKfYuxtgQbaVyyPaw2Eoq/B1L5a+1QxbPi8I5IU=; b=OWHfYG02Pmk/db+dQA2Wz/lDRP
+        AxCetV8ykIzxZkzdCD76kazYBpLCT/dfVkg7E6gsCBBiVsP8tKG3tbm0E9HPOdH77FbY5NDk4GdNR
+        txXd/TBfKJrCmxKyh62CkxbjYSljOlIBARWIlttlsaFMV8nr1sJXLbJliyltxdtwQUvvFFsaELjqx
+        EjDSVAPbhOn/M/VVVUgrETCesn1xFHXZOXJjF6mgqi82McaWigFYp3UVowCBSYOqt5TOL8CP/+RI2
+        fXjsqafI9OmfdNZH1KFYpOrSBihAvac/bbae/OYFzWesFLN5PhYRKuLuvqXcfc1h17/fdqUVx/8jK
+        w3T7BS9A==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1ndDNu-00AnZS-Cw; Sat, 09 Apr 2022 15:52:22 +0000
+From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To:     linux-xfs@vger.kernel.org
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Subject: [PATCH] xfs: Use generic_file_open()
+Date:   Sat,  9 Apr 2022 16:52:20 +0100
+Message-Id: <20220409155220.2573777-1-willy@infradead.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [PATCH 26/27] block: decouple REQ_OP_SECURE_ERASE from
- REQ_OP_DISCARD
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
-        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
-        nbd@other.debian.org, ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org, Jens Axboe <axboe@kernel.dk>,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
-        ntfs3@lists.linux.dev, ocfs2-devel@oss.oracle.com,
-        linux-mm@kvack.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        David Sterba <dsterba@suse.com>
-References: <20220409045043.23593-1-hch@lst.de>
- <20220409045043.23593-27-hch@lst.de>
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220409045043.23593-27-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/9/22 12:50 PM, Christoph Hellwig wrote:
-> Secure erase is a very different operation from discard in that it is
-> a data integrity operation vs hint.  Fully split the limits and helper
-> infrastructure to make the separation more clear.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [drbd]
-> Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com> [nifs2]
-> Acked-by: Coly Li <colyli@suse.de> [drbd]
+Remove the open-coded check of O_LARGEFILE.  This changes the errno
+to be the same as other filesystems; it was changed generically in
+2.6.24 but that fix skipped XFS.
 
-Hi Christoph,
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ fs/xfs/xfs_file.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-My ACK is for bcache, not drbd here.
-
-Thanks.
-
-
-Coly Li
-
-
-
-> Acked-by: David Sterba <dsterba@suse.com> [btrfs]
-
-
-
-
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5bddb1e9e0b3..c5541d062d0d 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1167,12 +1167,10 @@ xfs_file_open(
+ 	struct inode	*inode,
+ 	struct file	*file)
+ {
+-	if (!(file->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
+-		return -EFBIG;
+ 	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
+ 		return -EIO;
+ 	file->f_mode |= FMODE_NOWAIT | FMODE_BUF_RASYNC;
+-	return 0;
++	return generic_file_open(inode, file);
+ }
+ 
+ STATIC int
+-- 
+2.34.1
 
