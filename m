@@ -2,276 +2,155 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10E9BC433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 Apr 2022 18:21:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE524C433FE
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 Apr 2022 18:58:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237663AbiDJSX1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 Apr 2022 14:23:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46922 "EHLO
+        id S231793AbiDJTAb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 Apr 2022 15:00:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233036AbiDJSX1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Apr 2022 14:23:27 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8454822534
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Apr 2022 11:21:15 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 46883B80E58
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Apr 2022 18:21:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 056D5C385AA;
-        Sun, 10 Apr 2022 18:21:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649614873;
-        bh=qBu/dthDllTqe5Gd/UBYUW5GeAkaFisnqSbQDY4AEtM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IzcbbCKlAujgzU3Ag8qOhaukHzBiGXKuLficYGAMLMvMFWGiDkshaIWNynNw4vCaG
-         0017rEZwFXFJ8k1pQ4ovhPMJC74Yt8aklSOAk9zJ86m5NVHmzUpNK0Cyo8cgeTuyam
-         bbVx5+j/Yi7wrvm0SmsHOBY2q1N314xZfM96vaqdIlnOTY2+H/YjgygVICW/ojBoGp
-         T0gJg+mGTR23TnOczgH0dFvBzbTI95l0Bw+cnxiJF5C3Y7vZ3p+fCHFv1lWnz2KB9E
-         FyQzLzseBXCtW/6TG20XgPtVYDfK0ltY7nFcvS5o15HnB6SJBxP2c569RdFfUt90zk
-         REHr6IjL7608A==
-Date:   Sun, 10 Apr 2022 11:21:12 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [5.19 cycle] Planning and goals
-Message-ID: <20220410182112.GA14125@magnolia>
-References: <20220405020312.GU1544202@dread.disaster.area>
- <20220407031106.GB27690@magnolia>
- <20220407054939.GJ1544202@dread.disaster.area>
+        with ESMTP id S229742AbiDJTAa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Apr 2022 15:00:30 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 508A3473AC;
+        Sun, 10 Apr 2022 11:58:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1649617098; x=1681153098;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=IdHg/Ig/+ixkBlzgiOkyOvi9xgI0/Xn8sOZpY2V2oac=;
+  b=dcFNJkROxLaUUQVibVXL2Os1iUj1/JnYavA3BZRvUmxVaYBUItB7FanN
+   xnSjK+SVhkMCxGOgmIkEW18A8ICPd/25rVO5Mbnib3zTyhZbSHVH0oAtF
+   w7g7KuZYK7yv+TcJqbk5bj76udG5Hr9BWTxjPZBqiD78RCBKWFjYJ52Qp
+   xztzSmCq/cbiGQBI8SwefTB0Fio/r8+CyPfanVADd7FjVRkzi7YBcgick
+   cP0yy3eR+BXjhv1MrezMgo+Is9G3MOALySHhzrYFvoFEAmYsz++Hfy5tw
+   aReCaTqcyOHZlqpKwjrheQfSbSvi0viYSzKIq0UygeUf3TjMBKSUqDASB
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10313"; a="243873377"
+X-IronPort-AV: E=Sophos;i="5.90,250,1643702400"; 
+   d="scan'208";a="243873377"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2022 11:58:17 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,250,1643702400"; 
+   d="scan'208";a="643813247"
+Received: from lkp-server02.sh.intel.com (HELO d3fc50ef50de) ([10.239.97.151])
+  by FMSMGA003.fm.intel.com with ESMTP; 10 Apr 2022 11:58:14 -0700
+Received: from kbuild by d3fc50ef50de with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1ndclJ-00012d-Um;
+        Sun, 10 Apr 2022 18:58:13 +0000
+Date:   Mon, 11 Apr 2022 02:58:09 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org
+Cc:     kbuild-all@lists.01.org, djwong@kernel.org,
+        dan.j.williams@intel.com, david@fromorbit.com, hch@infradead.org,
+        jane.chu@oracle.com
+Subject: Re: [PATCH v12 6/7] xfs: Implement ->notify_failure() for XFS
+Message-ID: <202204110240.oa3G7lsW-lkp@intel.com>
+References: <20220410160904.3758789-7-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220407054939.GJ1544202@dread.disaster.area>
+In-Reply-To: <20220410160904.3758789-7-ruansy.fnst@fujitsu.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 07, 2022 at 03:49:39PM +1000, Dave Chinner wrote:
-> On Wed, Apr 06, 2022 at 08:11:06PM -0700, Darrick J. Wong wrote:
-> > On Tue, Apr 05, 2022 at 12:03:12PM +1000, Dave Chinner wrote:
-> > > Hi folks,
-> > > 
-> > > I'd really like to try getting the merge bottlenecks we've had
-> > > recently unstuck, so there are a few patchsets I want to try to get
-> > > reviewed, tested and merged for 5.19. Hopefully not too many
-> > > surprises will get in the way and so some planning to try to
-> > > minimises surprised might be a good thing.  Hence I want to have a
-> > > rough plan for the work I'd like to acheive during this 5.19 cycle,
-> > > and so that everyone has an idea of what needs to be done to (maybe)
-> > > achieve those goals over the next few weeks.
-> > > 
-> > > First of all, a rough timeline that I'm working with:
-> > > 
-> > > 5.18-rc1:	where we are now
-> > > 5.18-rc2:	Update linux-xfs master branch to 5.19-rc2
-> > 
-> > Presumably you meant 5.18-rc2 here?
-> > 
-> > > 5.18-rc4:	At least 2 of the major pending works merged
-> > > 5.18-rc6:	Last point for new work to be merged
-> > > 5.18-rc6+:	Bug fixes only will be merged 
-> > > 
-> > > I'm assuming a -rc7 kernel will be released, hence this rough
-> > > timeline gives us 2 weeks of testing/stabilisation time before 5.19
-> > > merge window opens. 
-> > > 
-> > > Patchsets for review should be based on either 5.17.0 or the
-> > > linux-xfs master branch once it has been updated to 5.19-rc2. If
-> > 
-> > ...and here?
-> 
-> Yes, I meant 5.18-rc2.
-> 
-> > > - Logged attributes V28 (Allison)
-> > > 	- I haven't looked at this since V24, so I'm not sure what
-> > > 	  the current status is. I will do that discovery later in
-> > > 	  the week.
-> > > 	- Merge criteria and status:
-> > > 		- review complete: Not sure
-> > > 		- no regressions when not enabled: v24 was OK
-> > > 		- no major regressions when enabled: v24 had issues
-> > > 	- Open questions:
-> > > 		- not sure what review will uncover
-> > > 		- don't know what problems testing will show
-> > > 		- what other log fixes does it depend on?
-> > > 		- is there a performance impact when not enabled?
-> > 
-> > Hm.  Last time I went through this I was mostly satisfied except for (a)
-> > all of the subtle rules about who owns and frees the attr name/value
-> > buffers, and (b) all that stuff with the alignment/sizing asserts
-> > tripping on fsstress loop tests.
-> > 
-> > I /think/ Allison's fixed (a), and I think Dave had a patch or two for
-> > (b)?
-> 
-> Yup, I think the patches in the intent whiteout series fix the
-> issues with the log iovecs that came up.
-> 
-> > Oh one more thing:
-> > 
-> > ISTR one of the problems is that the VFS allocates an onstack
-> > buffer for the xattr name.  The buffer is char[], so the start of it
-> > isn't necessarily aligned to what the logging code wants; and the end of
-> > it (since it's 255 bytes long) almost assuredly isn't.
-> 
-> Not sure that is a problem - we're copying them into log iovecs in
-> the shadow buffer - the iovecs in the shadow buffer have alignment
-> constraints because xlog_write() needing 4 byte alignment of ophdrs,
-> but the source buffer they get memcpy()d from has no alignment
-> restrictions.
-> 
-> I still need check that the code hasn't changed since v24 when I
-> looked at this in detail, but I think the VFS buffer is fine.
-> 
-> > > - DAX + reflink V11 (Ruan)
-> > > 	- Merge criteria and status:
-> > > 		- review complete: 75%
-> > > 		- no regressions when not enabled: unknown
-> > > 		- no major regressions when enabled: unknown
-> > > 	- Open questions:
-> > > 		- still a little bit of change around change
-> > > 		  notification?
-> > > 		- Not sure when V12 will arrive, hence can't really
-> > > 		  plan for this right now.
-> > > 		- external dependencies?
-> > 
-> > I thought the XFS part of this patchset looked like it was in good
-> > enough shape to merge, but the actual infrastructure stuff (AKA messing
-> > with mm/ and dax code) hasn't gotten a review.  I don't really have the
-> > depth to know if the changes proposed are good or bad.
-> 
-> Most of the patches have RVBs when I checked a couple of days ago.
-> There's a couple that still need work. I'm mostly relying on Dan and
-> Christoph to finish the reviews of this, hopefully it won't take
-> more than one more round...
-> 
-> > > - xlog_write() rework V8
-> > > 	- Merge criteria and status:
-> > > 		- review complete: 100%
-> > > 		- No regressions in testing: 100%
-> > > 	- Open questions:
-> > > 		- unchanged since last review/merge attempt,
-> > > 		  reverted because of problems with other code that
-> > > 		  was merged with it that isn't in this patchset
-> > > 		  now. Does it need re-reviewing?
-> > 
-> > I suggest you rebase to something recent (5.17.0 + xfs-5.18-merge-4?)
-> > and send it to the list for a quick once-over before merging that.
-> > IIRC I understood it well enough to have been ok with putting it in.
-> 
-> When I last posted it (March 9) it was rebased against 5.17-rc4:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git/log/?h=xlog-write-rework-3
-> https://lore.kernel.org/linux-xfs/20220309052937.2696447-1-david@fromorbit.com/
-> 
-> And it I think there's only been a line or two change for rebasing
-> to the current for-next branch. 
-> 
-> I have a current base on 5.17+for-next, so if you need a newer
-> version to check over I can send that out easily enough...
+Hi Shiyang,
 
-Ah, ok, that rework-3 branch looks fine to me.
+Thank you for the patch! Yet something to improve:
 
-> > > 	- Ready to merge.
-> > > 
-> > > - Intent Whiteouts V3
-> > > 	- Merge criteria and status:
-> > > 		- review complete: 0%
-> > > 		- No regressions in testing: 100%
-> > > 	- Open questions:
-> > > 		- will it get reviewed in time?
-> > > 		- what bits of the patchset does LARP depend on?
-> > > 		- Is LARP perf without intent whiteouts acceptible
-> > > 		  (Experimental tag tends to suggest yes).
-> > > 	- Functionally complete and tested, just needs review.
-> > 
-> > <shrug> No opinions, having never seen this before(?)
-> 
-> First RFC was 7 months ago:
-> 
-> https://lore.kernel.org/linux-xfs/20210902095927.911100-1-david@fromorbit.com/
-> 
-> I mentioned it here in the 5.16 cycle planning discussion:
-> 
-> https://lore.kernel.org/linux-xfs/20210922053047.GS1756565@dread.disaster.area/
-> 
-> I posted v3 on 5.17-rc4 and xlog-write-rewrite back on about 3
-> weeks ago now:
-> 
-> https://lore.kernel.org/linux-xfs/20220314220631.3093283-1-david@fromorbit.com/
-> 
-> and like the xlog-write rework it is largely unchanged by a rebase
-> to 5.17.0+for-next.
+[auto build test ERROR on hnaz-mm/master]
+[also build test ERROR on next-20220408]
+[cannot apply to xfs-linux/for-next linus/master linux/master v5.18-rc1]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-Ok, I'll have a second look tomorrow (Monday).
+url:    https://github.com/intel-lab-lkp/linux/commits/Shiyang-Ruan/fsdax-introduce-fs-query-to-support-reflink/20220411-001048
+base:   https://github.com/hnaz/linux-mm master
+config: s390-defconfig (https://download.01.org/0day-ci/archive/20220411/202204110240.oa3G7lsW-lkp@intel.com/config)
+compiler: s390-linux-gcc (GCC) 11.2.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/bf68be0c39b8ecc4223b948a9ee126af167d74f0
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Shiyang-Ruan/fsdax-introduce-fs-query-to-support-reflink/20220411-001048
+        git checkout bf68be0c39b8ecc4223b948a9ee126af167d74f0
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=s390 SHELL=/bin/bash
 
-> > > Have I missed any of the major outstanding things that are nearly
-> > > ready to go?
-> > 
-> > At this point my rmap/reflink performance speedups series are ready for
-> > review,
-> 
-> OK, what's the timeframe for you getting them out for review? Today,
-> next week, -rc4?
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
 
-I'll send them as soon as the frextents bugfix series clears review.
+All errors (new ones prefixed by >>):
 
-> > but I think the xlog and nrext64 are more than enough for a
-> > single cycle.
-> 
-> Except we've already done most of the work needed to merge them and
-> we aren't even at -rc2. That leaves another 4 weeks of time to
-> review, test and merge other work before we hit the -rc6 cutoff.
-> The plan I've outlined is based on what I think *I* can acheive in
-> the cycle, but I have no doubt that some of it will not get done
-> because that's the way these things always go. SO I've aimed high,
-> knowing that we're more likely to hit the middle of the target
-> range...
-> 
-> That said, if the code is reviewed, ready to merge and passes initial
-> regression tests, then I'll merge it regardless of how much else
-> I've already got queued up.
+   s390-linux-ld: fs/xfs/xfs_buf.o: in function `xfs_alloc_buftarg':
+>> fs/xfs/xfs_buf.c:1968: undefined reference to `xfs_dax_holder_operations'
+   pahole: .tmp_vmlinux.btf: No such file or directory
+   .btf.vmlinux.bin.o: file not recognized: file format not recognized
 
-Ok.
 
-> > > Do the patchset authors have the time available in the next 2-3
-> > > weeks to make enough progress to get their work merged? I'd kinda
-> > > like to have the xlog_write() rework and the large extent counts
-> > > merged ASAP so we have plenty of time to focus on the more
-> > > complex/difficult pieces.  If you don't have time in the next few
-> > > weeks, then let me know so I can adjust the plan appropriately for
-> > > the cycle.
-> > > 
-> > > What does everyone think of the plan?
-> > 
-> > I like that you're making the plan explicit.  I'd wanted to talk about
-> > doing this back at LPC 2021, but nobody from RH registered... :(
-> 
-> Lead by example - you need to don't ask for permission or build
-> consensus for doing something you think needs to be done. We don't
-> need to discuss whether we should have a planning discussion, just
-> publish the plan and that will naturally lead to a discussion of
-> the plan.
+vim +1968 fs/xfs/xfs_buf.c
 
-Yeah, it's funny -- 20 years ago me would have done exactly this.
+  1955	
+  1956	struct xfs_buftarg *
+  1957	xfs_alloc_buftarg(
+  1958		struct xfs_mount	*mp,
+  1959		struct block_device	*bdev)
+  1960	{
+  1961		xfs_buftarg_t		*btp;
+  1962	
+  1963		btp = kmem_zalloc(sizeof(*btp), KM_NOFS);
+  1964	
+  1965		btp->bt_mount = mp;
+  1966		btp->bt_dev =  bdev->bd_dev;
+  1967		btp->bt_bdev = bdev;
+> 1968		btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off, mp,
+  1969						    &xfs_dax_holder_operations);
+  1970	
+  1971		/*
+  1972		 * Buffer IO error rate limiting. Limit it to no more than 10 messages
+  1973		 * per 30 seconds so as to not spam logs too much on repeated errors.
+  1974		 */
+  1975		ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
+  1976				     DEFAULT_RATELIMIT_BURST);
+  1977	
+  1978		if (xfs_setsize_buftarg_early(btp, bdev))
+  1979			goto error_free;
+  1980	
+  1981		if (list_lru_init(&btp->bt_lru))
+  1982			goto error_free;
+  1983	
+  1984		if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
+  1985			goto error_lru;
+  1986	
+  1987		btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
+  1988		btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
+  1989		btp->bt_shrinker.seeks = DEFAULT_SEEKS;
+  1990		btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
+  1991		if (register_shrinker(&btp->bt_shrinker))
+  1992			goto error_pcpu;
+  1993		return btp;
+  1994	
+  1995	error_pcpu:
+  1996		percpu_counter_destroy(&btp->bt_io_count);
+  1997	error_lru:
+  1998		list_lru_destroy(&btp->bt_lru);
+  1999	error_free:
+  2000		kmem_free(btp);
+  2001		return NULL;
+  2002	}
+  2003	
 
-> Speaking as the "merge shepherd" for this release, what I want from
-> this discussion is feedback that points out things I've missed, for
-> the authors of patchsets that I've flagged as merge candidates to
-> tell me if they are able to do the work needed in the next 4-6 weeks
-> to get their work merged, for people to voice their concerns about
-> aspects of the plan, etc.
-
-<nod> I hope you've gotten enough info to proceed, then?
-
---D
-
-> Cheers,
-> 
-> Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
