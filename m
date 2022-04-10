@@ -2,70 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 911BCC433EF
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Apr 2022 15:52:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4FD6C35274
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 Apr 2022 06:26:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231217AbiDIPyk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Apr 2022 11:54:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58592 "EHLO
+        id S233028AbiDJG2m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 Apr 2022 02:28:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229489AbiDIPyb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Apr 2022 11:54:31 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 030A5C7F
-        for <linux-xfs@vger.kernel.org>; Sat,  9 Apr 2022 08:52:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=1grdnKfYuxtgQbaVyyPaw2Eoq/B1L5a+1QxbPi8I5IU=; b=OWHfYG02Pmk/db+dQA2Wz/lDRP
-        AxCetV8ykIzxZkzdCD76kazYBpLCT/dfVkg7E6gsCBBiVsP8tKG3tbm0E9HPOdH77FbY5NDk4GdNR
-        txXd/TBfKJrCmxKyh62CkxbjYSljOlIBARWIlttlsaFMV8nr1sJXLbJliyltxdtwQUvvFFsaELjqx
-        EjDSVAPbhOn/M/VVVUgrETCesn1xFHXZOXJjF6mgqi82McaWigFYp3UVowCBSYOqt5TOL8CP/+RI2
-        fXjsqafI9OmfdNZH1KFYpOrSBihAvac/bbae/OYFzWesFLN5PhYRKuLuvqXcfc1h17/fdqUVx/8jK
-        w3T7BS9A==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1ndDNu-00AnZS-Cw; Sat, 09 Apr 2022 15:52:22 +0000
-From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To:     linux-xfs@vger.kernel.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH] xfs: Use generic_file_open()
-Date:   Sat,  9 Apr 2022 16:52:20 +0100
-Message-Id: <20220409155220.2573777-1-willy@infradead.org>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S232295AbiDJG2g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Apr 2022 02:28:36 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 039BD5A08F;
+        Sat,  9 Apr 2022 23:26:25 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id E057168AFE; Sun, 10 Apr 2022 08:26:20 +0200 (CEST)
+Date:   Sun, 10 Apr 2022 08:26:20 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Christoph =?iso-8859-1?Q?B=F6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>
+Cc:     Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, Jens Axboe <axboe@kernel.dk>,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
+        ntfs3@lists.linux.dev, ocfs2-devel@oss.oracle.com,
+        linux-mm@kvack.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Coly Li <colyli@suse.de>
+Subject: Re: [PATCH 24/27] block: remove QUEUE_FLAG_DISCARD
+Message-ID: <20220410062620.GA16234@lst.de>
+References: <20220409045043.23593-1-hch@lst.de> <20220409045043.23593-25-hch@lst.de> <72e9bd34-3380-e305-65f0-a17306f5bd08@linbit.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <72e9bd34-3380-e305-65f0-a17306f5bd08@linbit.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove the open-coded check of O_LARGEFILE.  This changes the errno
-to be the same as other filesystems; it was changed generically in
-2.6.24 but that fix skipped XFS.
+On Sat, Apr 09, 2022 at 10:15:33AM +0200, Christoph Böhmwalder wrote:
+> On 09.04.22 06:50, Christoph Hellwig wrote:
+>> Just use a non-zero max_discard_sectors as an indicator for discard
+>> support, similar to what is done for write zeroes.
+>>
+>> The only places where needs special attention is the RAID5 driver,
+>> which must clear discard support for security reasons by default,
+>> even if the default stacking rules would allow for it.
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+>> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [btrfs]
+>
+> I think you may have a typo there: my ACK was for drbd, not btrfs.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- fs/xfs/xfs_file.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5bddb1e9e0b3..c5541d062d0d 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1167,12 +1167,10 @@ xfs_file_open(
- 	struct inode	*inode,
- 	struct file	*file)
- {
--	if (!(file->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
--		return -EFBIG;
- 	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
- 		return -EIO;
- 	file->f_mode |= FMODE_NOWAIT | FMODE_BUF_RASYNC;
--	return 0;
-+	return generic_file_open(inode, file);
- }
- 
- STATIC int
--- 
-2.34.1
-
+Indeed, sorry.
