@@ -2,334 +2,171 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F560C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:08:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B714C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:20:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234062AbiDKWKN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Apr 2022 18:10:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52298 "EHLO
+        id S1350503AbiDKWWu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Apr 2022 18:22:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243367AbiDKWKJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:10:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9BC5205DA
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 15:07:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3A17C6172C
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 22:07:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E7D3C385A4;
-        Mon, 11 Apr 2022 22:07:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649714872;
-        bh=lp+av8LEFS6oXtLMD9XwNEcuuyzvYNU8RMkVRNP7F08=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EBlqOI9CZYyA0XDNQGKkUHncqDofiOwxz8lHQsKpLm5PRVWgzT1K5cBO7m2OzQNUU
-         HEqEJT0faQEIy6DGvcTsrk5fCc3v8XgDS4DD2GgK0wqtrkxvA4m9A3fKTb9jmZVLoA
-         YccbJ8sRRXz8MkenMnIrGCmyR7AfB42QbY1a7vDlW16hwGAno2Bn2NfYLQMzOGQJBB
-         QxW4lzE7WCGrrkVotM5lHDocLHu2oTHvkk8u9+FH9kOcwZxgY4qcj2x16H7093K/Nm
-         6Ianvj4NMHrE62zTJ1g6OcWbYjQf8iPktVBBPQjyZfbTCRHvlJRU9M1U0J3JIBFECM
-         QSf3ksdpFCXbw==
-Date:   Mon, 11 Apr 2022 15:07:52 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V9.1] xfs: Directory's data fork extent counter can never
- overflow
-Message-ID: <20220411220752.GA16824@magnolia>
-References: <20220406061904.595597-16-chandan.babu@oracle.com>
- <20220409134721.471501-1-chandan.babu@oracle.com>
+        with ESMTP id S1350438AbiDKWWh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:22:37 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A17E8DF47
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 15:20:22 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id h23-20020a17090a051700b001c9c1dd3acbso739958pjh.3
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 15:20:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ilC4hsjkYuKv6ebyejb/hqupiLMdVX0htffDOmrd7F4=;
+        b=FxqMOl+LQRjm4xHV3WMTnaWUoHHNIwNG2iGvDbblMfZ8JddwTKg3ZpTCrlFkBB6rBu
+         rSWbPPe9GjWLrChgxM3IBRCmVz5THofbIx0GGXctZmol6NievamWm9zkyAkJ24Cm0K9A
+         DCtKBvlvzxZRb7YquzNbT2PdlI832d7CHnSCwf1bN5nHFuq8QnFM4JqEliGFJoIQQMbh
+         jlPIO+ne9Hb8R7Ba1ZEnAjMWmLA+Qo6v4RY8WcEEkyOVuQrUjq+FZs7b6JFMuvp4LYVK
+         7gQv7b3itG0nRglCi6Aiz7vPQL4cblVgmQ9M0dGACks264GbH5DuU0YIA9ydPmcdahOM
+         Hryw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ilC4hsjkYuKv6ebyejb/hqupiLMdVX0htffDOmrd7F4=;
+        b=4urbiAuwZ2+rMZ63+5COmsIC0PBS/uQaOle6k+MT9XVm/Psc3oYDiMIn+AVKfUgwoK
+         nk3BkilJWof0QpYCSZraX1wSyJW8dxyG/gjbYQ4bLkdMtXY/Uf6c3XzogX3E4oHKaFd1
+         4iS0CQso1B31hi/mRP68g+38ztTeTCHxatvVWQN/XtTpVfDBPX9WrFUUKOQH0CKkfebp
+         XfzgfroOjnW0lAWVXQEbt6L8ZZ5GlSS39xP/nfGyHUuoVSld3BZAmF6o38DPV291IH6L
+         YmqGkATVRv4h0IQdvfHeixqXiAFdKlgss0X8V+6+eLQZhFCW5g8bumryxt6KpBCRpoVT
+         F1SA==
+X-Gm-Message-State: AOAM533TMs93kW2LXJkvI0pE4bVEDbk2trxuNKnTO0ELo6G5XXk2dHZ2
+        vt6ylYB2UlB6S2MUGG/SIc9Qcq1dXm8rso2TyUX/5Q==
+X-Google-Smtp-Source: ABdhPJwobl8Twz9/+FJGw8iwZ7aqkX15fxktugOjY8lPoNQzuoJOzcOfQ2MMC/mpkqomhSOO2S1HZ/lhTWtwo8KT1ZQ=
+X-Received: by 2002:a17:90a:ca:b0:1ca:5253:b625 with SMTP id
+ v10-20020a17090a00ca00b001ca5253b625mr1484772pjd.220.1649715621869; Mon, 11
+ Apr 2022 15:20:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220409134721.471501-1-chandan.babu@oracle.com>
+References: <20220405194747.2386619-1-jane.chu@oracle.com> <20220405194747.2386619-3-jane.chu@oracle.com>
+In-Reply-To: <20220405194747.2386619-3-jane.chu@oracle.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 11 Apr 2022 15:20:10 -0700
+Message-ID: <CAPcyv4iUWLsZRV4StCzHuVUhEsOB5WURD2r_w3L+LEjoQEheog@mail.gmail.com>
+Subject: Re: [PATCH v7 2/6] x86/mce: relocate set{clear}_mce_nospec() functions
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     david <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Vishal L Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Weiny, Ira" <ira.weiny@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Vivek Goyal <vgoyal@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>, X86 ML <x86@kernel.org>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Andy Lutomirski <luto@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Apr 09, 2022 at 07:17:21PM +0530, Chandan Babu R wrote:
-> The maximum file size that can be represented by the data fork extent counter
-> in the worst case occurs when all extents are 1 block in length and each block
-> is 1KB in size.
-> 
-> With XFS_MAX_EXTCNT_DATA_FORK_SMALL representing maximum extent count and with
-> 1KB sized blocks, a file can reach upto,
-> (2^31) * 1KB = 2TB
-> 
-> This is much larger than the theoretical maximum size of a directory
-> i.e. XFS_DIR2_SPACE_SIZE * 3 = ~96GB.
-> 
-> Since a directory's inode can never overflow its data fork extent counter,
-> this commit removes all the overflow checks associated with
-> it. xfs_dinode_verify() now performs a rough check to verify if a diretory's
-> data fork is larger than 96GB.
-> 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+I notice that none of the folks from "X86 MM" are on the cc, added.
+
+On Tue, Apr 5, 2022 at 12:49 PM Jane Chu <jane.chu@oracle.com> wrote:
+>
+> Relocate the twin mce functions to arch/x86/mm/pat/set_memory.c
+> file where they belong.
+>
+> Signed-off-by: Jane Chu <jane.chu@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c       | 20 -------------
->  fs/xfs/libxfs/xfs_da_btree.h   |  1 +
->  fs/xfs/libxfs/xfs_da_format.h  |  1 +
->  fs/xfs/libxfs/xfs_dir2.c       |  2 ++
->  fs/xfs/libxfs/xfs_format.h     | 13 ++++++++
->  fs/xfs/libxfs/xfs_inode_buf.c  |  3 ++
->  fs/xfs/libxfs/xfs_inode_fork.h | 13 --------
->  fs/xfs/xfs_inode.c             | 55 ++--------------------------------
->  fs/xfs/xfs_symlink.c           |  5 ----
->  9 files changed, 22 insertions(+), 91 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 1254d4d4821e..4fab0c92ab70 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5147,26 +5147,6 @@ xfs_bmap_del_extent_real(
->  		 * Deleting the middle of the extent.
->  		 */
->  
-> -		/*
-> -		 * For directories, -ENOSPC is returned since a directory entry
-> -		 * remove operation must not fail due to low extent count
-> -		 * availability. -ENOSPC will be handled by higher layers of XFS
-> -		 * by letting the corresponding empty Data/Free blocks to linger
-> -		 * until a future remove operation. Dabtree blocks would be
-> -		 * swapped with the last block in the leaf space and then the
-> -		 * new last block will be unmapped.
-> -		 *
-> -		 * The above logic also applies to the source directory entry of
-> -		 * a rename operation.
-> -		 */
-> -		error = xfs_iext_count_may_overflow(ip, whichfork, 1);
-> -		if (error) {
-> -			ASSERT(S_ISDIR(VFS_I(ip)->i_mode) &&
-> -				whichfork == XFS_DATA_FORK);
-> -			error = -ENOSPC;
-> -			goto done;
-> -		}
-> -
->  		old = got;
->  
->  		got.br_blockcount = del->br_startoff - got.br_startoff;
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-> index 0faf7d9ac241..7f08f6de48bf 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.h
-> +++ b/fs/xfs/libxfs/xfs_da_btree.h
-> @@ -30,6 +30,7 @@ struct xfs_da_geometry {
->  	unsigned int	free_hdr_size;	/* dir2 free header size */
->  	unsigned int	free_max_bests;	/* # of bests entries in dir2 free */
->  	xfs_dablk_t	freeblk;	/* blockno of free data v2 */
-> +	xfs_extnum_t	max_extents;	/* Max. extents in corresponding fork */
->  
->  	xfs_dir2_data_aoff_t data_first_offset;
->  	size_t		data_entry_offset;
-> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-> index 5a49caa5c9df..95354b7ab7f5 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.h
-> +++ b/fs/xfs/libxfs/xfs_da_format.h
-> @@ -277,6 +277,7 @@ xfs_dir2_sf_firstentry(struct xfs_dir2_sf_hdr *hdr)
->   * Directory address space divided into sections,
->   * spaces separated by 32GB.
->   */
-> +#define	XFS_DIR2_MAX_SPACES	3
->  #define	XFS_DIR2_SPACE_SIZE	(1ULL << (32 + XFS_DIR2_DATA_ALIGN_LOG))
->  #define	XFS_DIR2_DATA_SPACE	0
->  #define	XFS_DIR2_DATA_OFFSET	(XFS_DIR2_DATA_SPACE * XFS_DIR2_SPACE_SIZE)
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index 5f1e4799e8fa..52c764ecc015 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -150,6 +150,8 @@ xfs_da_mount(
->  	dageo->freeblk = xfs_dir2_byte_to_da(dageo, XFS_DIR2_FREE_OFFSET);
->  	dageo->node_ents = (dageo->blksize - dageo->node_hdr_size) /
->  				(uint)sizeof(xfs_da_node_entry_t);
-> +	dageo->max_extents = (XFS_DIR2_MAX_SPACES * XFS_DIR2_SPACE_SIZE) >>
-> +					mp->m_sb.sb_blocklog;
->  	dageo->magicpct = (dageo->blksize * 37) / 100;
->  
->  	/* set up attribute geometry - single fsb only */
-
-Shouldn't we set up mp->m_attr_geo.max_extents too?  Even if all we do
-is set it to XFS_MAX_EXTCNT_ATTR_FORK_{SMALL,LARGE}?  I get that nothing
-will use it anywhere, but we shouldn't leave uninitialized geometry
-structure variables around.
-
---D
-
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 82b404c99b80..43de892d0305 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -915,6 +915,19 @@ enum xfs_dinode_fmt {
->   *
->   * Rounding up 47 to the nearest multiple of bits-per-byte results in 48. Hence
->   * 2^48 was chosen as the maximum data fork extent count.
-> + *
-> + * The maximum file size that can be represented by the data fork extent counter
-> + * in the worst case occurs when all extents are 1 block in length and each
-> + * block is 1KB in size.
-> + *
-> + * With XFS_MAX_EXTCNT_DATA_FORK_SMALL representing maximum extent count and
-> + * with 1KB sized blocks, a file can reach upto,
-> + * 1KB * (2^31) = 2TB
-> + *
-> + * This is much larger than the theoretical maximum size of a directory
-> + * i.e. XFS_DIR2_SPACE_SIZE * XFS_DIR2_MAX_SPACES = ~96GB.
-> + *
-> + * Hence, a directory inode can never overflow its data fork extent counter.
->   */
->  #define XFS_MAX_EXTCNT_DATA_FORK_LARGE	((xfs_extnum_t)((1ULL << 48) - 1))
->  #define XFS_MAX_EXTCNT_ATTR_FORK_LARGE	((xfs_extnum_t)((1ULL << 32) - 1))
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index ee8d4eb7d048..74b82ec80f8e 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -491,6 +491,9 @@ xfs_dinode_verify(
->  	if (mode && nextents + naextents > nblocks)
->  		return __this_address;
->  
-> +	if (S_ISDIR(mode) && nextents > mp->m_dir_geo->max_extents)
-> +		return __this_address;
-> +
->  	if (mode && XFS_DFORK_BOFF(dip) > mp->m_sb.sb_inodesize)
->  		return __this_address;
->  
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> index fd5c3c2d77e0..6f9d69f8896e 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> @@ -39,19 +39,6 @@ struct xfs_ifork {
->   */
->  #define XFS_IEXT_PUNCH_HOLE_CNT		(1)
->  
+>  arch/x86/include/asm/set_memory.h | 52 -------------------------------
+>  arch/x86/mm/pat/set_memory.c      | 47 ++++++++++++++++++++++++++++
+>  include/linux/set_memory.h        |  9 +++---
+>  3 files changed, 52 insertions(+), 56 deletions(-)
+>
+> diff --git a/arch/x86/include/asm/set_memory.h b/arch/x86/include/asm/set_memory.h
+> index 78ca53512486..b45c4d27fd46 100644
+> --- a/arch/x86/include/asm/set_memory.h
+> +++ b/arch/x86/include/asm/set_memory.h
+> @@ -86,56 +86,4 @@ bool kernel_page_present(struct page *page);
+>
+>  extern int kernel_set_to_readonly;
+>
+> -#ifdef CONFIG_X86_64
 > -/*
-> - * Directory entry addition can cause the following,
-> - * 1. Data block can be added/removed.
-> - *    A new extent can cause extent count to increase by 1.
-> - * 2. Free disk block can be added/removed.
-> - *    Same behaviour as described above for Data block.
-> - * 3. Dabtree blocks.
-> - *    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these can be new
-> - *    extents. Hence extent count can increase by XFS_DA_NODE_MAXDEPTH.
+> - * Prevent speculative access to the page by either unmapping
+> - * it (if we do not require access to any part of the page) or
+> - * marking it uncacheable (if we want to try to retrieve data
+> - * from non-poisoned lines in the page).
 > - */
-> -#define XFS_IEXT_DIR_MANIP_CNT(mp) \
-> -	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
+> -static inline int set_mce_nospec(unsigned long pfn, bool unmap)
+> -{
+> -       unsigned long decoy_addr;
+> -       int rc;
 > -
->  /*
->   * Adding/removing an xattr can cause XFS_DA_NODE_MAXDEPTH extents to
->   * be added. One extra extent for dabtree in case a local attr is
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index adc1355ce853..20f15a0393e1 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1024,11 +1024,6 @@ xfs_create(
->  	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
->  	unlock_dp_on_error = true;
->  
-> -	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
-> -			XFS_IEXT_DIR_MANIP_CNT(mp));
-> -	if (error)
-> -		goto out_trans_cancel;
+> -       /* SGX pages are not in the 1:1 map */
+> -       if (arch_is_platform_page(pfn << PAGE_SHIFT))
+> -               return 0;
+> -       /*
+> -        * We would like to just call:
+> -        *      set_memory_XX((unsigned long)pfn_to_kaddr(pfn), 1);
+> -        * but doing that would radically increase the odds of a
+> -        * speculative access to the poison page because we'd have
+> -        * the virtual address of the kernel 1:1 mapping sitting
+> -        * around in registers.
+> -        * Instead we get tricky.  We create a non-canonical address
+> -        * that looks just like the one we want, but has bit 63 flipped.
+> -        * This relies on set_memory_XX() properly sanitizing any __pa()
+> -        * results with __PHYSICAL_MASK or PTE_PFN_MASK.
+> -        */
+> -       decoy_addr = (pfn << PAGE_SHIFT) + (PAGE_OFFSET ^ BIT(63));
 > -
->  	/*
->  	 * A newly created regular or special file just has one directory
->  	 * entry pointing to them, but a directory also the "." entry
-> @@ -1242,11 +1237,6 @@ xfs_link(
->  	if (error)
->  		goto std_return;
->  
-> -	error = xfs_iext_count_may_overflow(tdp, XFS_DATA_FORK,
-> -			XFS_IEXT_DIR_MANIP_CNT(mp));
-> -	if (error)
-> -		goto error_return;
+> -       if (unmap)
+> -               rc = set_memory_np(decoy_addr, 1);
+> -       else
+> -               rc = set_memory_uc(decoy_addr, 1);
+> -       if (rc)
+> -               pr_warn("Could not invalidate pfn=0x%lx from 1:1 map\n", pfn);
+> -       return rc;
+> -}
+> -#define set_mce_nospec set_mce_nospec
 > -
->  	/*
->  	 * If we are using project inheritance, we only allow hard link
->  	 * creation in our tree when the project IDs are the same; else
-> @@ -3210,35 +3200,6 @@ xfs_rename(
->  	/*
->  	 * Check for expected errors before we dirty the transaction
->  	 * so we can return an error without a transaction abort.
-> -	 *
-> -	 * Extent count overflow check:
-> -	 *
-> -	 * From the perspective of src_dp, a rename operation is essentially a
-> -	 * directory entry remove operation. Hence the only place where we check
-> -	 * for extent count overflow for src_dp is in
-> -	 * xfs_bmap_del_extent_real(). xfs_bmap_del_extent_real() returns
-> -	 * -ENOSPC when it detects a possible extent count overflow and in
-> -	 * response, the higher layers of directory handling code do the
-> -	 * following:
-> -	 * 1. Data/Free blocks: XFS lets these blocks linger until a
-> -	 *    future remove operation removes them.
-> -	 * 2. Dabtree blocks: XFS swaps the blocks with the last block in the
-> -	 *    Leaf space and unmaps the last block.
-> -	 *
-> -	 * For target_dp, there are two cases depending on whether the
-> -	 * destination directory entry exists or not.
-> -	 *
-> -	 * When destination directory entry does not exist (i.e. target_ip ==
-> -	 * NULL), extent count overflow check is performed only when transaction
-> -	 * has a non-zero sized space reservation associated with it.  With a
-> -	 * zero-sized space reservation, XFS allows a rename operation to
-> -	 * continue only when the directory has sufficient free space in its
-> -	 * data/leaf/free space blocks to hold the new entry.
-> -	 *
-> -	 * When destination directory entry exists (i.e. target_ip != NULL), all
-> -	 * we need to do is change the inode number associated with the already
-> -	 * existing entry. Hence there is no need to perform an extent count
-> -	 * overflow check.
->  	 */
->  	if (target_ip == NULL) {
->  		/*
-> @@ -3249,12 +3210,6 @@ xfs_rename(
->  			error = xfs_dir_canenter(tp, target_dp, target_name);
->  			if (error)
->  				goto out_trans_cancel;
-> -		} else {
-> -			error = xfs_iext_count_may_overflow(target_dp,
-> -					XFS_DATA_FORK,
-> -					XFS_IEXT_DIR_MANIP_CNT(mp));
-> -			if (error)
-> -				goto out_trans_cancel;
->  		}
->  	} else {
->  		/*
-> @@ -3422,18 +3377,12 @@ xfs_rename(
->  	 * inode number of the whiteout inode rather than removing it
->  	 * altogether.
->  	 */
-> -	if (wip) {
-> +	if (wip)
->  		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
->  					spaceres);
-> -	} else {
-> -		/*
-> -		 * NOTE: We don't need to check for extent count overflow here
-> -		 * because the dir remove name code will leave the dir block in
-> -		 * place if the extent count would overflow.
-> -		 */
-> +	else
->  		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
->  					   spaceres);
-> -	}
->  
->  	if (error)
->  		goto out_trans_cancel;
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index affbedf78160..4145ba872547 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -226,11 +226,6 @@ xfs_symlink(
->  		goto out_trans_cancel;
->  	}
->  
-> -	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
-> -			XFS_IEXT_DIR_MANIP_CNT(mp));
-> -	if (error)
-> -		goto out_trans_cancel;
+> -/* Restore full speculative operation to the pfn. */
+> -static inline int clear_mce_nospec(unsigned long pfn)
+> -{
+> -       return set_memory_wb((unsigned long) pfn_to_kaddr(pfn), 1);
+> -}
+> -#define clear_mce_nospec clear_mce_nospec
+> -#else
+> -/*
+> - * Few people would run a 32-bit kernel on a machine that supports
+> - * recoverable errors because they have too much memory to boot 32-bit.
+> - */
+> -#endif
 > -
->  	/*
->  	 * Allocate an inode for the symlink.
->  	 */
-> -- 
-> 2.30.2
-> 
+>  #endif /* _ASM_X86_SET_MEMORY_H */
+> diff --git a/arch/x86/mm/pat/set_memory.c b/arch/x86/mm/pat/set_memory.c
+> index 38af155aaba9..93dde949f224 100644
+> --- a/arch/x86/mm/pat/set_memory.c
+> +++ b/arch/x86/mm/pat/set_memory.c
+> @@ -1925,6 +1925,53 @@ int set_memory_wb(unsigned long addr, int numpages)
+>  }
+>  EXPORT_SYMBOL(set_memory_wb);
+>
+> +#ifdef CONFIG_X86_64
+
+It seems like the only X86_64 dependency in this routine is the
+address bit 63 usage, so how about:
+
+if (!IS_ENABLED(CONFIG_64BIT))
+    return 0;
+
+...and drop the ifdef?
+
+Other than that you can add:
+
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
