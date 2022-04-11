@@ -2,41 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B96BC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:54:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68C79C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:54:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237184AbiDKW4g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Apr 2022 18:56:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40186 "EHLO
+        id S244863AbiDKW4r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Apr 2022 18:56:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245197AbiDKW4e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:56:34 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84D7264DF;
-        Mon, 11 Apr 2022 15:54:18 -0700 (PDT)
+        with ESMTP id S1344838AbiDKW4p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:56:45 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77DA07656;
+        Mon, 11 Apr 2022 15:54:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DA2EE61787;
-        Mon, 11 Apr 2022 22:54:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3806BC385A3;
-        Mon, 11 Apr 2022 22:54:17 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 27C52B81996;
+        Mon, 11 Apr 2022 22:54:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D984FC385A5;
+        Mon, 11 Apr 2022 22:54:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649717657;
-        bh=PIHtYZilQTNkR8hF1vI1jRXkzxmPiuKzDfgRmK5COzQ=;
-        h=Subject:From:To:Cc:Date:From;
-        b=JclAxqVJEdvnRgzH2k3+sljxpT/nkNW35mHXi2J6VF9eAAaRnhhiVNcJc2S6FT/pc
-         6jaHafeyFEbg7pr+9KogkMNvLAuvVSiPtQREJQjEF04UPhtlqzqk3bNHI1hBhIN1oD
-         rNbxuurIZlhQtq4/eG+IMmAUmLIr0+khEW6pu77wJzJHIwis6p5fl/vjit6CgaqD/p
-         TwybxmEGjSzFT4hL1C9/BEm9V0Y3IDsh9ACvZHYYwHhBHG4Ozu/18iBGg/4yh4BcPH
-         f+PP4TwmlfqTmh7DfPYElqFkbdyMb/OV6n8L5nnoDEKnwxY2yPZkifXe/RlKxbDTfj
-         U3KrXDcDmwn7w==
-Subject: [PATCHSET 0/2] fstests: random fixes
+        s=k20201202; t=1649717662;
+        bh=hrgCphgBIJbdExB7fwLsooVx23IiXP1/Sq2+Mu1APAQ=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=PvIkidOj6GewYYIjKBa/w35YHI0CCzjuHBh6wgMpVK0j3H+4LlpoN7r/Hp0/boj9p
+         zRoJ+dStrcWiJl3OAd511tYVnNyjLtXe43bxCF7q1a8XyXf3iJccS3zqUKWbkK5b/t
+         YjKss7hVo/CQ6YN3stpkhak/B37QbxkzRWHd4vpM9/YO3YMBArm/rA5vPOZWGsDpQO
+         Wq6WfNMTlB0JC9wbsifKp82E+F7fHKj/+s405qcfn1wRd0/RH0WXLiExTOsqyHMEbw
+         A+pVpXgfr/xMKNHL90KXEUkahj0V8CDd8YbnVs/Ls28srAL64JO8PDavGoM7us7pw7
+         nv16Z757CDHTQ==
+Subject: [PATCH 1/2] xfs/187: don't rely on FSCOUNTS for free space data
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 11 Apr 2022 15:54:16 -0700
-Message-ID: <164971765670.169895.10730350919455923432.stgit@magnolia>
+Date:   Mon, 11 Apr 2022 15:54:22 -0700
+Message-ID: <164971766238.169895.2389864738831855587.stgit@magnolia>
+In-Reply-To: <164971765670.169895.10730350919455923432.stgit@magnolia>
+References: <164971765670.169895.10730350919455923432.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -45,28 +47,32 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's the usual batch of odd fixes for fstests.
+Currently, this test relies on the XFS_IOC_FSCOUNTS ioctl to return
+accurate free space information.  It doesn't.  Convert it to use statfs,
+which uses the accurate versions of the percpu counters.  Obviously,
+this only becomes a problem when we convert the free rtx count to use
+(sloppier) percpu counters instead of the (more precise and previously
+buggy) ondisk superblock counts.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
  tests/xfs/187 |    2 +-
- tests/xfs/507 |    6 +++++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/tests/xfs/187 b/tests/xfs/187
+index 1929e566..a9dfb30a 100755
+--- a/tests/xfs/187
++++ b/tests/xfs/187
+@@ -135,7 +135,7 @@ punch_off=$((bigfile_sz - frag_sz))
+ $here/src/punch-alternating $SCRATCH_MNT/bigfile -o $((punch_off / fsbsize)) -i $((rtextsize_blks * 2)) -s $rtextsize_blks
+ 
+ # Make sure we have some free rtextents.
+-free_rtx=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep counts.freertx | awk '{print $3}')
++free_rtx=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep statfs.f_bavail | awk '{print $3}')
+ if [ $free_rtx -eq 0 ]; then
+ 	echo "Expected fragmented free rt space, found none."
+ fi
 
