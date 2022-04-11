@@ -2,94 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA77C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 20:50:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18153C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:07:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350087AbiDKUwc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Apr 2022 16:52:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57984 "EHLO
+        id S1345328AbiDKWJi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Apr 2022 18:09:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350021AbiDKUw0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 16:52:26 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4CD0A1F620
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 13:50:05 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-233-190.pa.vic.optusnet.com.au [49.186.233.190])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 051FB10C89ED;
-        Tue, 12 Apr 2022 06:50:03 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ne0z4-00GZF1-0o; Tue, 12 Apr 2022 06:50:02 +1000
-Date:   Tue, 12 Apr 2022 06:50:02 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: pass explicit mount pointer to rtalloc query
- functions
-Message-ID: <20220411205002.GC1544202@dread.disaster.area>
-References: <164961485474.70555.18228016043917319266.stgit@magnolia>
- <164961486038.70555.14613665424255377303.stgit@magnolia>
- <20220411011725.GQ1544202@dread.disaster.area>
- <20220411194620.GA16799@magnolia>
+        with ESMTP id S244576AbiDKWJg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:09:36 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38E4020F42
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 15:07:21 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id d15so15035899pll.10
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 15:07:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=uGTALhbZONK07EnTqNzLb5OFo7sOJ1WnH/JS/fksxZ4=;
+        b=qW44w090em7gPbYvbMftkAX4Kvke2EP4xsZopvyQYxJet+uD2q9FrkvME10M9tUtmO
+         X0ArALnU4GOM4RpFLYtr4bx0MpBZA554kHWbufBfTUNaqHhLHDjr51XHQdOPMxkQgCXg
+         NV0mdNXOuzxeZUNmauE//Xw4ily3/UjO/MvX7UN7+CVRdmJUV6HF15N4VgrrGumDREwQ
+         mQr7NBQxJVjAKI7QuaN+TbxUCnrDwve7/GDCashxgzsy+utUcS00v8RMdQzi18ZQO+sj
+         C3gytJIJs+P+LCAmm5F7B8ZgvVAvSUSOeGPK1NcM/2jE17EGM2aXjbAO22u5NH5fWlQJ
+         NrxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=uGTALhbZONK07EnTqNzLb5OFo7sOJ1WnH/JS/fksxZ4=;
+        b=20n0DMpq993zIW3dpNuC3q5VqVSiqnP4zxYRqvKPQGiW9XlmZPziOc8VPQC/nqxqfY
+         gXOlkMRZxljtw5g4iWfTrd/FSwOYCMJCSXdCYS6zKCQ7mSbyfVvwFy3iR4fX6/nYFNtf
+         5XyfLsJVqjrYGCQSa4iXkgocNGay2OSV8ObQ7v7qEiVtzzIWyXJx4GEYLz9dPBwrmuHt
+         gjGQVrzG5rWNH9h6HL9rRGkAlKoSs2oEuGuXTxLAqCs9TC4DdqhCpQAWNTRoUKad481n
+         ZYrnQvddPWD9c4D6vzFiMk7TJlo75CJcHYbYSKY7p8zHVxbVlZFRZRlMIwJE3G5Iwmww
+         Fhrg==
+X-Gm-Message-State: AOAM530rN6dPnYqO7ojibFr9fGCMSEl8hvQ+jdSVuRZy+7AcUNZ02H0k
+        4L22mr/FVA7u31cJ1jLmMlBUyOPH1oNNZyfjyO6hbQ==
+X-Google-Smtp-Source: ABdhPJynx2l3cB2Gnxdh26yL6kd+AAVfXhzzqC3Ft2s9qeSNSOaR3yfL83lS+0+wlt4mWc4yp2miJE+sHJq1HcNQSls=
+X-Received: by 2002:a17:902:eb92:b0:158:4cc9:698e with SMTP id
+ q18-20020a170902eb9200b001584cc9698emr11070951plg.147.1649714840717; Mon, 11
+ Apr 2022 15:07:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220411194620.GA16799@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6254947c
-        a=bHAvQTfMiaNt/bo4vVGwyA==:117 a=bHAvQTfMiaNt/bo4vVGwyA==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=ssB4yFr3bcyC5Njy3coA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <20220405194747.2386619-1-jane.chu@oracle.com> <20220405194747.2386619-2-jane.chu@oracle.com>
+In-Reply-To: <20220405194747.2386619-2-jane.chu@oracle.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 11 Apr 2022 15:07:10 -0700
+Message-ID: <CAPcyv4gr7YzrmqNhA-S8h-nRhpr8OHhUkn16c8jiL1U3ypp1wQ@mail.gmail.com>
+Subject: Re: [PATCH v7 1/6] x86/mm: fix comment
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     david <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Vishal L Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Weiny, Ira" <ira.weiny@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Vivek Goyal <vgoyal@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>, X86 ML <x86@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 11, 2022 at 12:46:20PM -0700, Darrick J. Wong wrote:
-> On Mon, Apr 11, 2022 at 11:17:25AM +1000, Dave Chinner wrote:
-> > On Sun, Apr 10, 2022 at 11:21:00AM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Pass an explicit xfs_mount pointer to the rtalloc query functions so
-> > > that they can support transactionless queries.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Looks good, minor nit below.
-> > 
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > 
-> > > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> > > index 10e1cb71439e..e6677c690c1a 100644
-> > > --- a/fs/xfs/xfs_fsmap.c
-> > > +++ b/fs/xfs/xfs_fsmap.c
-> > > @@ -450,11 +450,11 @@ xfs_getfsmap_logdev(
-> > >  /* Transform a rtbitmap "record" into a fsmap */
-> > >  STATIC int
-> > >  xfs_getfsmap_rtdev_rtbitmap_helper(
-> > > +	struct xfs_mount		*mp,
-> > >  	struct xfs_trans		*tp,
-> > >  	const struct xfs_rtalloc_rec	*rec,
-> > >  	void				*priv)
-> > >  {
-> > > -	struct xfs_mount		*mp = tp->t_mountp;
-> > >  	struct xfs_getfsmap_info	*info = priv;
-> > >  	struct xfs_rmap_irec		irec;
-> > >  	xfs_daddr_t			rec_daddr;
-> > > @@ -535,7 +535,7 @@ xfs_getfsmap_rtdev_rtbitmap_query(
-> > >  	do_div(alow.ar_startext, mp->m_sb.sb_rextsize);
-> > >  	if (do_div(ahigh.ar_startext, mp->m_sb.sb_rextsize))
-> > >  		ahigh.ar_startext++;
-> > > -	error = xfs_rtalloc_query_range(tp, &alow, &ahigh,
-> > > +	error = xfs_rtalloc_query_range(tp->t_mountp, tp, &alow, &ahigh,
-> > 
-> > This can be mp rather than tp->t_mountp, right?
-> 
-> Yup.  Would you mind fixing that up on commit, please?
+On Tue, Apr 5, 2022 at 12:48 PM Jane Chu <jane.chu@oracle.com> wrote:
+>
+> There is no _set_memory_prot internal helper, while coming across
+> the code, might as well fix the comment.
 
-Done.
+Looks good,
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Jane Chu <jane.chu@oracle.com>
+> ---
+>  arch/x86/mm/pat/set_memory.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/arch/x86/mm/pat/set_memory.c b/arch/x86/mm/pat/set_memory.c
+> index abf5ed76e4b7..38af155aaba9 100644
+> --- a/arch/x86/mm/pat/set_memory.c
+> +++ b/arch/x86/mm/pat/set_memory.c
+> @@ -1816,7 +1816,7 @@ static inline int cpa_clear_pages_array(struct page **pages, int numpages,
+>  }
+>
+>  /*
+> - * _set_memory_prot is an internal helper for callers that have been passed
+> + * __set_memory_prot is an internal helper for callers that have been passed
+>   * a pgprot_t value from upper layers and a reservation has already been taken.
+>   * If you want to set the pgprot to a specific page protocol, use the
+>   * set_memory_xx() functions.
+> --
+> 2.18.4
+>
