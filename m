@@ -2,167 +2,234 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F4ECC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 13:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F888C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 13:49:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245273AbiDKNqp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Apr 2022 09:46:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50932 "EHLO
+        id S1346714AbiDKNvn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Apr 2022 09:51:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346655AbiDKNql (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 09:46:41 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AEF311147
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 06:44:25 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23BCL9bC022836;
-        Mon, 11 Apr 2022 13:44:24 GMT
+        with ESMTP id S1346716AbiDKNvl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 09:51:41 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EFEC240A0
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 06:49:19 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23BDVxVX028178;
+        Mon, 11 Apr 2022 13:49:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
  to : cc : subject : in-reply-to : message-id : date : content-type :
  mime-version; s=corp-2021-07-09;
- bh=qFHeGWjtla+ZHK+PXJiYB5iZoSGKL7YYMdotESBH/l0=;
- b=qQKKBZ792Q9QsrFVwADvAvmP6puHDFX/h2iEXcDQmLDL9nkkYoIoQg9YImzVVx0O2a4o
- vjETG4xNFqDEwVc8FeMmH+oxSyvOqv43xSMpQkksgvXufly7ymryZq4XyK3WfMuwkF8w
- Yu4jExOHNS7MoUl8zzq2zV8WrUSkNZB/w0dcRmPbeTXc/8NFbHyyg4tEQd61mavezMOY
- Wq2xuhOYdMwbR1e44yAxFMbXrh2mqYRZOe1PGLL5Iv0YX9fU4uPlW8gaNKw7meoGKhUM
- zMnu93ty9pXwk/q8HCaYbMTk7FSr6mzaVwcCOX74oPo9OyktbFdQLejqmROFjESkb6i9 yw== 
+ bh=tSp1BOgIBDpm9KfdoFTiVHBg3r5PgclUdycMLjVBQts=;
+ b=TwNWDameJAcuyIxP5mPuBc6IqU3sAsF1Z+8IDUw+vXwizy8NkooylW/Bi432R7xgQ9KK
+ nN+kmL341bAke8o2AQptdr/RwhLoBD5dRSwk9u94Yjd7e81gTAfewDBSFyVnQshmIVpD
+ bQ7uHsXxk2g2qsErNZTrLRRQhF0epdeGZSPv1YuyJ/hiBFYNIULd5OAt6oQl/t7YU1dI
+ 8ZB3CsfPlLInq+W5dB0VXkKjDVoO51GW0nSyw8BZRC4Yrxet/3DtrjGTvebXT35NYga4
+ BO11scYvlfPLTo/eZWBTJZ/DqqQz54h7cjVnP0ypuX2r/flVXTun49pfo6BTTe/YkrDn XA== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3fb0jd3mfb-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3fb219ukkx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Apr 2022 13:44:24 +0000
+        Mon, 11 Apr 2022 13:49:17 +0000
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23BDfJeS002584;
-        Mon, 11 Apr 2022 13:44:23 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2168.outbound.protection.outlook.com [104.47.59.168])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fb0k1qhqj-1
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23BDlKVr017680;
+        Mon, 11 Apr 2022 13:49:16 GMT
+Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam08lp2040.outbound.protection.outlook.com [104.47.74.40])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fb0k1qp9u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Apr 2022 13:44:23 +0000
+        Mon, 11 Apr 2022 13:49:16 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZgjjEFcNoW3zcwb4h9gNojGM++xfg+sEhMmfAyRW4Hvau5elzQC5wXUvSGemJ7/ZRqJEoo098QJrQ99TDEOpm6YS89DNtKq+81Pbm+nWtE/6+iNj1jSgQB6HIzNBwcb5BLkP4eg/cNntiEcMhCiSTofuxEgJ2ocaZj7fZh7jSWAoI9vb65qDPdTpjhTnTLURcQPzveNT39GVGatuKWuvPnCNgkNMlMYGGXWp3Qk8oxr6hBh+Hl+FK9Iel8DvJJVeiMgEDFZbBeivIJDJVm1bgAN9kcDB61PcvECUbiBhLyxv0aE9QMfulvs15YpjiK+oCqMn5lxkO8do2ld/JWRNcQ==
+ b=j6QkbAnKqGOcWQ1pJHjVG2mw0Xkq+DVM/aXteLIf+fFa35YZJA7shscyeTLK/aiYZedt/40c62/j9uUibP42tS+SE+3B0yptVksZcw93C+eEM6kS3REl8U4x8mf/Zkf5eLLyunKGT2gEL+gRQxVljVZhPyw6njk/Hcp4wB5WwL2Wjm7nX4yleUhbHXsCJikBjkbGDe7GWotLEVpSAqzB7IacDXG1JC2HjVTCO5dLTtANm5NNPg7SD/b2zvVoQoBeTvoEL+W/xRTb4ym2MA2edlinjaa8vH67TFVsQ51yxHpR3mb7HYsClEKeTWtuLetH9e4b8BtQlOWjsRSCtqyhFg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qFHeGWjtla+ZHK+PXJiYB5iZoSGKL7YYMdotESBH/l0=;
- b=UWPq0A2xoLS66lR3Dk3gmNmfXh8gy08dnvcVa5yG0a+IkU4AIdCULP+x3BFF4ItuHpMmWd6aYFo/QYwgUoy9iEfbQCByhVub+7dI95jHA8W0Utylfn1PUsfLi4YlBvGgZpT1RuR9CclJ2FgqvzF6nT4j4Qpmuba5WmpC/kKrHocY7p6W21VrRZ/3MK5fuzpE+gm8FtKzOGepZlx+I0hyGxkqpnjayI+3Cx70JFlWl/QS/B5mP5PJqRc+yXxbaK0NSi5YrPfD0MUEgnwgJim+jvtBCTEZC+jM+wJpNQkQtoGXIXuV+hatan/3HFuObiqC/GSABjWoBYQ5iKy4Wg1oZw==
+ bh=tSp1BOgIBDpm9KfdoFTiVHBg3r5PgclUdycMLjVBQts=;
+ b=OzAmdrXSjgtmag0dOiuhfHt4sK1nm4F38cF0tDMuGTZEHpv58up6kUdm6qEd1RyogKRwHKl7e7iyOpHnIaoNzRyGz3eBstvWJt+l1SEnhrp2cPXDC7rt4i5CpIsu5i+sAZ7to3GabhKzyN8YmhHjo0MbmbGQvMmZ6K60HizLAgkgO4R7FYpuVWkdWXR5cBUm3MKgLq/SZiVRAEnqDmcLtezZVdxIS9fBUKgTwUoG7VoqdDIgeu9Kmfc+4AoYf4Q181jBoW0Yj9C8R+aD5HCzk/MxQHUpaUoxQIkcHVOTiIypjGv8yYl4CSmc/FdpS3C5z124WrmK7p+mT4sk2dJU7Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qFHeGWjtla+ZHK+PXJiYB5iZoSGKL7YYMdotESBH/l0=;
- b=RTTz7Y13rtIzOP0hGq+4n64wAstaE/x1k8StJZQB18MiiRRwZ3wBX3WCbM2mXlOWI2jCF+DczIW0XT7gUuwBftxyy9x6/ZJe8kEeAwL+SffCgzAO0u43iu6g/24kTrEEJOXe3gCj5hJ6ty7kmEB9rXnBCP/Xk24GOHGZ0jv55q8=
+ bh=tSp1BOgIBDpm9KfdoFTiVHBg3r5PgclUdycMLjVBQts=;
+ b=JVg6Ig7zJQ2QHSx+9nR30GWr+EW8PFVd7Bi+9I0ea1WZkb+RlXuI2vTAuMmBXhCFUdjX1rSdpl58MWyecfaVTDiNz4GV9Ep5gfSX52dXxjhjOwIuSwGK1UeAa20u5LJAq7cdB9SCtCpN48QGn4r7dYqnpUzQzgYuxLZsWJAC5CY=
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by BLAPR10MB4979.namprd10.prod.outlook.com (2603:10b6:208:30d::15) with
+ by DM6PR10MB3164.namprd10.prod.outlook.com (2603:10b6:5:1ac::31) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.29; Mon, 11 Apr
- 2022 13:44:21 +0000
+ 2022 13:49:14 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::c95c:3552:3b30:30ee]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::c95c:3552:3b30:30ee%6]) with mapi id 15.20.5144.029; Mon, 11 Apr 2022
- 13:44:21 +0000
+ 13:49:14 +0000
 References: <20220411003147.2104423-1-david@fromorbit.com>
- <20220411003147.2104423-6-david@fromorbit.com>
- <87h76zvl10.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220411003147.2104423-8-david@fromorbit.com>
 User-agent: mu4e 1.4.15; emacs 27.1
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/17] xfs: convert bmapi flags to unsigned.
-In-reply-to: <87h76zvl10.fsf@debian-BULLSEYE-live-builder-AMD64>
-Message-ID: <87bkx7vioj.fsf@debian-BULLSEYE-live-builder-AMD64>
-Date:   Mon, 11 Apr 2022 19:14:12 +0530
+Subject: Re: [PATCH 07/17] xfs: convert AGI log flags to unsigned.
+In-reply-to: <20220411003147.2104423-8-david@fromorbit.com>
+Message-ID: <878rsbvige.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Mon, 11 Apr 2022 19:19:05 +0530
 Content-Type: text/plain
-X-ClientProxiedBy: TYAPR01CA0137.jpnprd01.prod.outlook.com
- (2603:1096:404:2d::29) To SA2PR10MB4587.namprd10.prod.outlook.com
+X-ClientProxiedBy: SI2PR02CA0050.apcprd02.prod.outlook.com
+ (2603:1096:4:196::11) To SA2PR10MB4587.namprd10.prod.outlook.com
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 170a1fe6-734e-42da-a793-08da1bc16216
-X-MS-TrafficTypeDiagnostic: BLAPR10MB4979:EE_
-X-Microsoft-Antispam-PRVS: <BLAPR10MB49798F91A43B37678BCDB3F5F6EA9@BLAPR10MB4979.namprd10.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: a245fabb-f711-4ea9-152e-08da1bc21085
+X-MS-TrafficTypeDiagnostic: DM6PR10MB3164:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR10MB31644858C22D4BEA49977C83F6EA9@DM6PR10MB3164.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: +hceDhEvYdXbo7hO1Sk0W/lTZRVyLe41bp8q5wkhFRZeKZuKZIR51ltOnwaO1c+6huUnlZUI9e1+flqUQNK7lignBFJAZfXF95FKYYlNXQSAdv76x9e6f9/vi1FccM3iK9XHxSo7hUAYq0IHgTi+/hjH/AhKy82HJLdytMt6WinEuD+/DygOm9GYKEHRay88ei0e4wRIT+Hn1PSfThBOpsXsOBjvPogrOM93+nAnpct+yovhDj41IaSspnMY2OK/6dR7ImYPE20BAh/qjgnbbJuIwa5544bKYiA1CHryAco4jx9QdVBfBdkCI7Z8YW2ajv3Tlr5+Y9EUpn4ZJGpu6K3YLxP8JZyfIn0Ku62GZFkKBDjlXjE0CE81q7kWi2WNulG4Vv0Ifz7YdBNrbCkUjej/iuyhvwhd+Q1JQ72rTkSeWLcHTc7j7otqXbfTftFWc2wYuNi17MH5inBAq7nIeJzHTEKaKQBuUey2NPmxSjolv+z/Sv7CdiTiRbCsD1eIb9sbQ1uauU4XGp0rS/5Lvy/b5tPoP5vOGMZGGSyNCk3pPKVIF8Iv/397DW3N6CKBaiFzFkKiM77tti+yBGN/7MW4BGMbqHfqDvNHJRj+byXOvWMY6Mc1CUQRlfWF0Ir9hfe8RjM3dd711XMzDmOpMv+VRBI3XO0mwomnf7B7Or/dw+E/ZEqoRXKHZh/fSsdHCXqHB9Fkuf1XrtKM3P1IvQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(2906002)(6506007)(316002)(53546011)(52116002)(508600001)(6666004)(26005)(5660300002)(86362001)(4744005)(6512007)(83380400001)(186003)(8676002)(4326008)(9686003)(38100700002)(38350700002)(66946007)(6486002)(33716001)(66476007)(6916009)(66556008)(8936002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: v/SdUKzrrGs73i0QTsFl7oBmD5bRh86V/7a8IWeyHuOspEBi1+6UDVbf/FWsDh6wK7TCe3+mchIXiINVMMITpYypt7qAtJgQKBbxrZbATDAke+LHTU326M1SX3ItqDCDUtLaC7O0dNTc/IUlDzEldZ6AwRsLeICPgpuc59whaq9jeS1e3no5bulo6bxrEg0kgQMNdRbUJw3G+ukFSb7eIBwsp4F/GHQ/Tt1ePda+MQPgRRq9KfU7bSH6cP/Yw71vvieBzA43RSss0qHxLDZGWsILaYNF+oHksaJokaoDl8g50L/z9XZOJL0+FnGdpIDvazOVY7zf4++68XpxfGqSzaXGvImmUSGUl5XW8cCPpg7pKqifUdW06P9IFyItMgOENspKIcCdZmfVSjy9HcCcXJYIeLmUvLfKtcUzfdp9glnSoFrcpgWJsv1lbNKN+cY3y0iGUGBIUh5JT3x4fIDX2J0k6c9GNiLK0YZZV+sk051CtAQmWrWRbhMDMKluSBe3GAKGLNNn3pWjuY2Qb0f2y5AUEeGxv60GQqBVXyCNHdZcoGDQwrrEX8pQtRGmpOHxB6uBaGbI0A449oK/K5UJaUsrr8kBNq3GHjB0Oi1MkoaNbiTPh4RGHMZUxRjsxIpAebWr5/9VIV40itantlzVPJV7A4y/if9T6SYaD79S6o2YvMzRPZTbYRbaJSEF8dn4VcpD0CqM3yh4svRLGlGyjg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(6486002)(83380400001)(38100700002)(8936002)(5660300002)(26005)(508600001)(186003)(2906002)(33716001)(4326008)(8676002)(86362001)(66946007)(6916009)(316002)(66556008)(66476007)(53546011)(6506007)(9686003)(6512007)(52116002)(6666004)(38350700002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?einQnsfp7WXr6IlNgEJa+38ndBKxfqo2geBIrkLFPW3MLSJ3+GMrLbKncrEh?=
- =?us-ascii?Q?W6Vr9eN6xVjz1lLfKQsEpFpxE2ydSXzyjVA5BT8F+SkNB9/FCdlFvxQvn/tv?=
- =?us-ascii?Q?mRCJ0MXxhHKfPFwPnch6PHf/B3XxemYHrxAcchgtA6sWRyj5Q2mo7LiXPCKW?=
- =?us-ascii?Q?ERzfIfgrLi9PaQvC8jEocKW4BEOxPBmJVxgQXgduB8j1w2xpcuP8TTeWmAKg?=
- =?us-ascii?Q?7B/ynoXFB7eI86eqW2TTABJVNLTdUteWHudeCHXOynRMpXTk3rTjQIadzbmp?=
- =?us-ascii?Q?FkpTjibRvoSaFn9gu3O6sVb0NVOH4/0kSSwgPoMS2pyhJrXoA1/+ICmLiL7Y?=
- =?us-ascii?Q?Jxuui2c0mKAXwPw4D3I2iPucpeNh4pntpdVpbd0ETTzL5bwpI1tbE+BcDCt2?=
- =?us-ascii?Q?/GJwQuFrJVbzs21m/JM9NHBiCisgMcYc20vctIXbMKhc+lKag7QJTMBSOjF0?=
- =?us-ascii?Q?pFAxIiGSq6/voZncb791OfaYp59ryADt2UI8uIY3VnuE+Wui1x+OF0OCFicA?=
- =?us-ascii?Q?sQieg5hc6dPa60XVkb9ivxujnjDU/tFx+M3f7hjqXVWMdAiplgsVVsa2MnuH?=
- =?us-ascii?Q?7sawvVBmOSdWMW2zp39XgRd1hWnmaEZZO0lUgOwmM4M1ydICK0cHgDsK156t?=
- =?us-ascii?Q?F6rO1rUYd8O4KUPcemV/PudMQ9QUzd/28tTMRiokdyMDhaHyuGUREjnymnHs?=
- =?us-ascii?Q?qn2aapUc2Lc/D8t1zz4/mgdSJ9yd7QyTg4KZFDmms59lPHjC1YKMsSUsyXFk?=
- =?us-ascii?Q?tYgt5fZLQ36Ar9CfZK9wQ6+bgP4mqjjK/O+vMDcAxxasNeD77Nj9lVbSQ6gy?=
- =?us-ascii?Q?wV6aB9cw/oUs7pgphm4AL/eCVf3FSwj7VTEhCqxcv0aojU0niOooqfYwfmPD?=
- =?us-ascii?Q?LNpodLU77XG7Ru0VOxeCr1QF0OBBEjo6OXpyRbLz8bAnp2fetcIZ5AndjVw3?=
- =?us-ascii?Q?M0lMh3ua3qNXx8vSDjssNGsICy4wP7YsoJvNbHUGagSyqXY5tBSGkrFw7MqE?=
- =?us-ascii?Q?inP/GlW2AjtQIJneRSIxABmnDkUDFdLU/oZO2fENQkd4FIOQMSidfJAl6qXQ?=
- =?us-ascii?Q?3tqw7lvwFLtxCHi0CxmfgTHA/cm0aCDHFiSv/lqlhpkA13uJMgLAx68pZe0I?=
- =?us-ascii?Q?r5wLD6OCCFVbt42hZ5rrii1M703Ldeib5CSdBUtRQIWWT9OBoqVtz+sdJX9P?=
- =?us-ascii?Q?23gypIOOEcqc8oeraCHhISA32KWqiOzPetv9NDNOZj99HvTo38iE5Yz/mF/P?=
- =?us-ascii?Q?m0Xc4auW6Lf16ae9R+VVED3MfXIKTQvsx10GP6THLuZtlltKc32XXJ3h80xX?=
- =?us-ascii?Q?NaIo/8Ug+TRpM94I3fW0uWnXhzh4+QmujRGNGw1AiKEi4ltI+dwE2RVre291?=
- =?us-ascii?Q?XLHzgXDogZfRyex7jr/NOlmQNlOFMc5VPSHgkuzzu+bY/xe7a80wUnSQ7T5i?=
- =?us-ascii?Q?QEGL7dnDiAn0fdAzsmoKRc2Dy5dUX2vXHSjPdCxCg9mbsELzzY9/VHGtYLmE?=
- =?us-ascii?Q?U8tb920nn8rUqQNjH8BfgBoDlfp5iipgGvVeVZgEVFZAOWcg/DeEXJd0gBdu?=
- =?us-ascii?Q?1vxeyy6tAaKDS/fb+dV6mJ5+NrYaReVHzilZyjORUnbCV9DKcpLDtUswgIVg?=
- =?us-ascii?Q?jynAdqoXwDE193ki5DPc36CW3W4FySjL5+WtblJGoAib7lukYN5CZvrqbjJF?=
- =?us-ascii?Q?XajHgbHvE2wbwAK3rN3pkCA0iuItiohTc6EnBlMnpHX+BEEkvaTgb3N5PYLk?=
- =?us-ascii?Q?95R+oFU6P0lWKZEIE8p7HLlPHqFtbnA=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?jtjUOhpfGVjljeqd4bC26GrOjqoCnRUx+ns0uXaVtmyWsbzJ6Fy3GBQxLnnU?=
+ =?us-ascii?Q?sOV3NZ9Ro88QLieb9T45QiugP88FgcAFsyTvKcBgRvE0OySYZV40tx437anv?=
+ =?us-ascii?Q?1OLWh28mDaeLybVGYl8lXFS67iV7mTredPlT25QXBRKJqPDMP9hTwV0iUcjQ?=
+ =?us-ascii?Q?86klj3TnL6hzxGasBBp/gaHQKhA080bvAzQaO5H8bXP5H5t545UqBQmX4II0?=
+ =?us-ascii?Q?5//Uc67KT8w8TJ1exXFRkRsxva0bJFMA/K/rnhgPXPGRmpwQIFoeoI403+X+?=
+ =?us-ascii?Q?D1YVTu7N/4p/ajY5kVnij0vug199nFGaxyAoWMf46md4AT8I2qc96hJTsWmj?=
+ =?us-ascii?Q?H1Jkg4UOrlAyGlYpZ0yR9wVvsKR9Fia6Vt+n2TvjyfEGl8cZSpu9yRXm/oZh?=
+ =?us-ascii?Q?NfV1F+VcdRdRp6oagwiesOs6IDp2xuQzXZWh0M+40TQ2sWUxfv5TFo55DB2p?=
+ =?us-ascii?Q?gtB+7Va6zUhBvMwbB58QF0twbgN2DiaT7sIY4KqCtmjiK279/PsjlwcJw129?=
+ =?us-ascii?Q?5rchvkGXfMIDfN74Jr/SYP+MPJh+KhB+cOOzddeOYu1a9W3EqLvNwTiDSlQj?=
+ =?us-ascii?Q?VH9AjkWTJS9Oyy9i6lab9LGS40fTIGMTSgBVmnv7neT5mgXQfUcXkLJCimRA?=
+ =?us-ascii?Q?U6mMLZunhLpjqHh0WPqlEGC/V2p08R2TqL40klFoO3sCzStTDhzeFuIUrLg+?=
+ =?us-ascii?Q?KIxIIz2CH+JVRJD6mTjwxrCtyB4++jqaa1/DEFvPNqC6RCHnbhrWUfu+oc/Y?=
+ =?us-ascii?Q?MKH3agGBDlaPzp0d9eIjELboLpeEW4XhrwJREeIumoQymEHltlMj7mASKza4?=
+ =?us-ascii?Q?WuaE+UfSIh4edbjR/EMA81nDUdeiIgN12177MuK0Buj5rUroedxf4ZeRuKwQ?=
+ =?us-ascii?Q?lsHVh7Gmwk3c36A8j+ied2vNc7mEsFnZVq0ljKmiw5nqyxuki8KpoOgG7b5s?=
+ =?us-ascii?Q?brNFEfo2odCqO6n/uVc708DJog+kowo8MKGR0dySA2muoMIey8rwF3DP3EW5?=
+ =?us-ascii?Q?AYZI837kL5tivWTg2bBqXzkoA0awy/dqKWV/sBpwBy5Z1+4uX1DO83B95Jbv?=
+ =?us-ascii?Q?U/+0egkJ0zniKzkhyxzG34X61VTefa1so3TPPLdYQU9nEmV7DoRl/otKrdrm?=
+ =?us-ascii?Q?uaMNDFF0YTv5cV2NY0jG2GiZt1wcxOu08BNzwrv0BRpxfwgRiKZJDt5o0vYH?=
+ =?us-ascii?Q?i5hyWwAvGG1/T7QV2jg5O0FpZ/+i9LAQ2liHT2W4uaOS5w2xQjh9kzUX1miA?=
+ =?us-ascii?Q?Lh3Dm2WMIOcQOuGMFKVqr7wk/ibrl2ad1N4gK6tPQCBCotQEbNGwpU2tZR14?=
+ =?us-ascii?Q?zIGnFJjU1ZNkUu3SYFoaHpRymeJ57ITVRzjrqfumI9/lSFv+ya5kXMwkCkFl?=
+ =?us-ascii?Q?SNNk19NTV7elpyoen2w7hdPhNT2MfhrEF2f2M8+XUVu+B0B1/seI2x6Pqsmm?=
+ =?us-ascii?Q?/gmdjYbZK68sa66DZy2Uu5qLIRJOC5eyxscL4UeY3NcYxKOIaUhvXuEsT1yh?=
+ =?us-ascii?Q?PSxAbwZgQE85vbJe0lfXkw9zpbeM4Y8WRP4sSHIN01utPwQZvrzorBm4M8ls?=
+ =?us-ascii?Q?EtR8Tl8qGEQAQB8gYONrM3BjxWuVMg9EH7K52M45jCbf7fxr7KJib3aJsIi6?=
+ =?us-ascii?Q?YFYC+QduluHfecbpiOIxOSBxdInR1IWN5wQKuLRoQGpth4VShOunk7GyTudm?=
+ =?us-ascii?Q?7ihRZKR7oAmQyZNyZeJXzsoi1fCvNmpXnzWQI1SI3NSsrHnol+6zlYq9kvfs?=
+ =?us-ascii?Q?87MN5HPKjR2i2W+eVfqjfssOFp6D8WU=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 170a1fe6-734e-42da-a793-08da1bc16216
+X-MS-Exchange-CrossTenant-Network-Message-Id: a245fabb-f711-4ea9-152e-08da1bc21085
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2022 13:44:21.5729
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2022 13:49:14.3921
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: HXfKBRo7HnNeeQImmSpYwXXViaGysDV2Dyp8CCbswyTpaFyz8p4uBhdaDdUlmGQYcKSDBeD5quMDp4f3rWXX/w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB4979
+X-MS-Exchange-CrossTenant-UserPrincipalName: QS8lN3RHORv/52/XfUxoxcsANZAe21PmRy9peGypK4MTusGldHvAt7+NtS3Ig/18wLOsT38gTgeqwgj7rhPd5w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB3164
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.858
  definitions=2022-04-11_05:2022-04-11,2022-04-11 signatures=0
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 bulkscore=0
  suspectscore=0 mlxlogscore=999 mlxscore=0 spamscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2204110075
-X-Proofpoint-ORIG-GUID: RtD-UDrbLithGHvjpnZmy8ZMlIXrONUC
-X-Proofpoint-GUID: RtD-UDrbLithGHvjpnZmy8ZMlIXrONUC
+ definitions=main-2204110076
+X-Proofpoint-GUID: FhM7FS_rsrojDo0ZZlR33rIsKDKtiXkG
+X-Proofpoint-ORIG-GUID: FhM7FS_rsrojDo0ZZlR33rIsKDKtiXkG
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11 Apr 2022 at 18:23, Chandan Babu R wrote:
-> On 11 Apr 2022 at 06:01, Dave Chinner wrote:
->> From: Dave Chinner <dchinner@redhat.com>
->>
->> 5.18 w/ std=gnu11 compiled with gcc-5 wants flags stored in unsigned
->> fields to be unsigned.
->>
+On 11 Apr 2022 at 06:01, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 >
-> The fourth argument of xfs_itruncate_extents_flags() and the return type of
-> xfs_bmapi_aflag() must be unsigned int.
+> 5.18 w/ std=gnu11 compiled with gcc-5 wants flags stored in unsigned
+> fields to be unsigned.
 >
-> Also, the data type of bmapi_flags variable in xfs_iomap_write_direct() and
-> xfs_fs_map_blocks() should be unsigned int.
 
-Please ignore the above two statements. The corresponding code has values
-being assigned to a signed int variable rather than an unsigned int variable.
+Looks correct.
 
+Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h | 30 +++++++++++++++---------------
+>  fs/xfs/libxfs/xfs_ialloc.c |  6 +++---
+>  fs/xfs/libxfs/xfs_ialloc.h |  2 +-
+>  3 files changed, 19 insertions(+), 19 deletions(-)
 >
-> The remaining changes look good to me.
->
-> Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
->
->> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 65e24847841e..0d6fa199a896 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -619,22 +619,22 @@ typedef struct xfs_agi {
+>  
+>  #define XFS_AGI_CRC_OFF		offsetof(struct xfs_agi, agi_crc)
+>  
+> -#define	XFS_AGI_MAGICNUM	(1 << 0)
+> -#define	XFS_AGI_VERSIONNUM	(1 << 1)
+> -#define	XFS_AGI_SEQNO		(1 << 2)
+> -#define	XFS_AGI_LENGTH		(1 << 3)
+> -#define	XFS_AGI_COUNT		(1 << 4)
+> -#define	XFS_AGI_ROOT		(1 << 5)
+> -#define	XFS_AGI_LEVEL		(1 << 6)
+> -#define	XFS_AGI_FREECOUNT	(1 << 7)
+> -#define	XFS_AGI_NEWINO		(1 << 8)
+> -#define	XFS_AGI_DIRINO		(1 << 9)
+> -#define	XFS_AGI_UNLINKED	(1 << 10)
+> +#define	XFS_AGI_MAGICNUM	(1u << 0)
+> +#define	XFS_AGI_VERSIONNUM	(1u << 1)
+> +#define	XFS_AGI_SEQNO		(1u << 2)
+> +#define	XFS_AGI_LENGTH		(1u << 3)
+> +#define	XFS_AGI_COUNT		(1u << 4)
+> +#define	XFS_AGI_ROOT		(1u << 5)
+> +#define	XFS_AGI_LEVEL		(1u << 6)
+> +#define	XFS_AGI_FREECOUNT	(1u << 7)
+> +#define	XFS_AGI_NEWINO		(1u << 8)
+> +#define	XFS_AGI_DIRINO		(1u << 9)
+> +#define	XFS_AGI_UNLINKED	(1u << 10)
+>  #define	XFS_AGI_NUM_BITS_R1	11	/* end of the 1st agi logging region */
+> -#define	XFS_AGI_ALL_BITS_R1	((1 << XFS_AGI_NUM_BITS_R1) - 1)
+> -#define	XFS_AGI_FREE_ROOT	(1 << 11)
+> -#define	XFS_AGI_FREE_LEVEL	(1 << 12)
+> -#define	XFS_AGI_IBLOCKS		(1 << 13) /* both inobt/finobt block counters */
+> +#define	XFS_AGI_ALL_BITS_R1	((1u << XFS_AGI_NUM_BITS_R1) - 1)
+> +#define	XFS_AGI_FREE_ROOT	(1u << 11)
+> +#define	XFS_AGI_FREE_LEVEL	(1u << 12)
+> +#define	XFS_AGI_IBLOCKS		(1u << 13) /* both inobt/finobt block counters */
+>  #define	XFS_AGI_NUM_BITS_R2	14
+>  
+>  /* disk block (xfs_daddr_t) in the AG */
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index b418fe0c0679..54c2be6a2972 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2414,9 +2414,9 @@ xfs_imap(
+>   */
+>  void
+>  xfs_ialloc_log_agi(
+> -	xfs_trans_t	*tp,		/* transaction pointer */
+> -	struct xfs_buf	*bp,		/* allocation group header buffer */
+> -	int		fields)		/* bitmask of fields to log */
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*bp,
+> +	uint32_t		fields)
+>  {
+>  	int			first;		/* first byte number */
+>  	int			last;		/* last byte number */
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+> index 8b5c2b709022..a7705b6a1fd3 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.h
+> +++ b/fs/xfs/libxfs/xfs_ialloc.h
+> @@ -60,7 +60,7 @@ void
+>  xfs_ialloc_log_agi(
+>  	struct xfs_trans *tp,		/* transaction pointer */
+>  	struct xfs_buf	*bp,		/* allocation group header buffer */
+> -	int		fields);	/* bitmask of fields to log */
+> +	uint32_t	fields);	/* bitmask of fields to log */
+>  
+>  /*
+>   * Read in the allocation group header (inode allocation section)
+
 
 -- 
 chandan
