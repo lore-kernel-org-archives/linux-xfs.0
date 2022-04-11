@@ -2,140 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13360C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 05:23:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 549ACC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 05:24:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244718AbiDKFZu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Apr 2022 01:25:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57404 "EHLO
+        id S244721AbiDKF0U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Apr 2022 01:26:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230426AbiDKFZu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 01:25:50 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43B6E2BEA
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Apr 2022 22:23:37 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23AN6TtP022836;
-        Mon, 11 Apr 2022 05:23:36 GMT
+        with ESMTP id S230426AbiDKF0P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 01:26:15 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 471DEF0A
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Apr 2022 22:24:02 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23B2ZdBn018439;
+        Mon, 11 Apr 2022 05:24:01 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : subject
  : from : to : date : in-reply-to : references : content-type :
  content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=QAtW2VrHVrnb4yDrDtcuJhuSG7KLFhQQ2VZIHLHHMdc=;
- b=LMziqP6fB8QVyTazGoFDfn9Npfz113gjczi0xD/cd3YfIBd0JCZzKp5NOWKKV2WK6GLr
- yh1nnVa20RSiETALETxpkx9OCEdQzJFk+USZz2inhulNr/TswATFhOk89LKACRhnCZkx
- UhfRdbJlPi+wE2OO025E8NLo4F7pLqc0R6OhUSYiM1WK1uivt4Bhjn0b8uEIl4rTjI7l
- jPTOddJJHbKFdJ0pHwQCAiLVV1geBTQIFmZb/4n3ViWuo1rKAatdeJHlWty3Nyif/lbi
- cLAHowm4iDUUwZkldjM71vWPva3MlAu9SPMUYxHqdVfInQ0T/eLpvV9gb1OcwdV14MMU TQ== 
+ bh=a7x76VUr81ERQFnT3mJlCH0rYqb2NQZvEMgr4ktO1fg=;
+ b=T5swE7tlDTamPq/EV+BQxf6dNM38Ojgr+6WH+U0Of5o15tdvQP8bgEs69sQrt9QVwFfm
+ Gh6UUHJjIEI4aL7Ge1/OY5PIHq33s7uxMFA78YTJEJvxIdavQ91QT/iBfpKRxlPugzaT
+ POqjnQbuW7oZUUaJP5xSkG1nWzG5M5oFbfhZciv0CQv5ULyR7xsiOA3lBpG0W9ughwMo
+ U97OImvx4Cn6Msw2eZ+Zk2gc5C+VmU2ixc5GP4hVE8/0kVW4OiERVsYrs2+HlWL0lzlt
+ AfAPK6mlZ+ivSg9i1BMwtwgu1DchHR59tgaTv8lKujQ30NX9rhIXgWrGkGSJlKB3pDTj ug== 
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3fb0jd2cc9-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3fb0r1acnh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Apr 2022 05:23:35 +0000
+        Mon, 11 Apr 2022 05:24:00 +0000
 Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23B5H6Is030192;
-        Mon, 11 Apr 2022 05:23:35 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2107.outbound.protection.outlook.com [104.47.55.107])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fb0k13mfg-1
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23B5H6Ix030192;
+        Mon, 11 Apr 2022 05:23:59 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2102.outbound.protection.outlook.com [104.47.55.102])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fb0k13mms-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Apr 2022 05:23:34 +0000
+        Mon, 11 Apr 2022 05:23:59 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LkTKS0SfwqPSw2FjuNeZ/ta2B/BkCGB0ymQ0inTGycBCwIul3oZwev1N0+si73mZ99sMDJlwgLv/4c+ai6tYmBGBPbtU6pl4JhquhmUwAjxuCe70TbeJtW9XJPih9tiJvm2nKxlYB/hCpjQPUbBNm7mHlHE28BBeLq19mRiN+ccDLHS5c9Rlr+PE4tSfKNBhpFafC79K30iVLdw7XJo8D71dAv9YK9DC8iKlIECPx8eJlTNh0Wj9svbg0x2c8fjdy7N7iF/X9wNhQPFkSc4Ngy6Zt4Qoq6GlC16Vz79Jql1nxFdNOQJOnj6NIVnWD64tsB6uPaffAIws8p9CJKn2pQ==
+ b=Q1vRe4zjlGbXYQK8t6VLULS4IztSkK4GRMnTi6tIyxgB88LNJWLME9CaQXRyZBwijxKc7q4pw4Jl8GF2U+nvJoAUUjlOgvB5HdH4Dc9eMUhjMWORUcXfcT4vHD5F1TS/WYoOy8sVmLNhmZJeEVksmRaPnkZsHt70jMa6TFwA8Mz/vl84EqT338lzAN5vE+JNJbBUOFJb61uU9JCCDXVBR+bFFLhjjNb8KxJALNwJ1CWXIgk9xgE3h5NpCggZt9+LVujuYj+/QIskTDx7Xt1fg4bSBry3WktGzBXkbW/M9Fi6a86LVN+rJYlul7AIBL1MsJEUDjxojBVX4h8VUcmwfA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=QAtW2VrHVrnb4yDrDtcuJhuSG7KLFhQQ2VZIHLHHMdc=;
- b=Jh347uD3leF1v5mdeqLaTZE90pX5676I1C+ty2TewiGKuEW0OBNX9KXsbNkbnGr9CQRXdfwrb+gjdaAAogqCTemBx4D0HqXae4O+A3E7pZGcG9Lj+9iCbxO4jZZ5Uu2xchPHgDRLUmF6FgxWxW7PNvU9FsdH7Ojto3ToZJP+YepNMldLBrDF6AhcfY/g7t0C5uMEAeAmALGHJjA6u4ASUodbgE0SaVOeI0+IfFEq9XyUXzXVVtnf6bdoYPO1/fGr31+EA2KrSbhvz6h4eBOwAkmj7+2f/UkJOU8sCAa/ijiTdhEz5y2BrCCLKosc/F5Ne2lohRqtN+kLsfwlNBTPzw==
+ bh=a7x76VUr81ERQFnT3mJlCH0rYqb2NQZvEMgr4ktO1fg=;
+ b=ACBLV04E4s4F8bJQu3GIzws1rKzKsaRsky9ug8ZEX5Qw3Z3CZahpBjt3w+2cQ6971YjlbUk8ElNOv68ctbDXW1RlddY2jAWilVaHW/OvYc2yyoonCtFwpT3QZ/R73GAs6OSsg4Y7ssOpz/4nuZcgh3q4K/TNNbHwuD9SY9L0wWDtOks/cMVcgQSX3YhAuF56vySe/zm2lqrHKcB0TYpqlPxvV7LHf4CajLD8UQGK/1D1IYEj8xesAqxesPgArXHg+5e++/eUTkm4GKiHtMHbRBjRF1gjvg15BeaeKSeAhVgk0bxfBDNG85YNy7WDRos0xYOup7wgAK6scA39DCbQIg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=QAtW2VrHVrnb4yDrDtcuJhuSG7KLFhQQ2VZIHLHHMdc=;
- b=0HNtUVfY8hR50tEhOI9OTSrg2U7iG7auBvXucq+T0v0Ph51LGgceCuU8+UCxL/7uOCE9lB4jMQG73Tsn1VkbkgK+b0sTU1UPwLfNNothuXD94VgmPfg6OlBHf9cf91WzS86wDvn7qX/gg2HMTDhbdCzEscB0NciCOlMbjYhPTTc=
+ bh=a7x76VUr81ERQFnT3mJlCH0rYqb2NQZvEMgr4ktO1fg=;
+ b=K/JUArcTDTUr3hR8dyHM5rTW/pEpEwYXUgrXVzChb0Hl8M370sd46Xy37mu9RAOAyayj8a0tz9uL/q4KVSIWhsAHB7Xigmbv+eoNz6pbrhZs8l0PeT+qVTCB3LmmXd9Zqrctpd/AxJJWSJrxXa7ehtdooC2NeOALqDrB9Y2UHH8=
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by BLAPR10MB4948.namprd10.prod.outlook.com (2603:10b6:208:307::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.29; Mon, 11 Apr
- 2022 05:23:32 +0000
+ 2022 05:23:56 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::4cac:3ab1:a828:34ca]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::4cac:3ab1:a828:34ca%4]) with mapi id 15.20.5144.029; Mon, 11 Apr 2022
- 05:23:32 +0000
-Message-ID: <064521b37753a99bbda8ed38f94c4fb1048dc80d.camel@oracle.com>
-Subject: Re: [PATCH 3/8] xfs: add log item flags to indicate intents
+ 05:23:56 +0000
+Message-ID: <6c9a6f0358503c28e0b63a778b15c1daba8898e5.camel@oracle.com>
+Subject: Re: [PATCH 4/8] xfs: tag transactions that contain intent done items
 From:   Alli <allison.henderson@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Date:   Sun, 10 Apr 2022 22:23:30 -0700
-In-Reply-To: <20220314220631.3093283-4-david@fromorbit.com>
+Date:   Sun, 10 Apr 2022 22:23:55 -0700
+In-Reply-To: <20220314220631.3093283-5-david@fromorbit.com>
 References: <20220314220631.3093283-1-david@fromorbit.com>
-         <20220314220631.3093283-4-david@fromorbit.com>
+         <20220314220631.3093283-5-david@fromorbit.com>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.5-0ubuntu1 
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: PH0P220CA0001.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:510:d3::6) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: SJ0PR05CA0152.namprd05.prod.outlook.com
+ (2603:10b6:a03:339::7) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 11aa8210-a038-4ad2-f8ba-08da1b7b6b7c
+X-MS-Office365-Filtering-Correlation-Id: 9dcf9327-dcb0-4514-fce3-08da1b7b79b6
 X-MS-TrafficTypeDiagnostic: BLAPR10MB4948:EE_
-X-Microsoft-Antispam-PRVS: <BLAPR10MB49481329B2273805F1885EE895EA9@BLAPR10MB4948.namprd10.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <BLAPR10MB4948210AC82AF2C22FB107BE95EA9@BLAPR10MB4948.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: onz8XnxcLxRCiSHnBQAy2hXfUtIXCuDvFG6zkUuKEKR6by98dU1TR1Hu7Dc3sUOv+sdf1beIxkcWYjN/bOc9KdHX7dB8sBHqvXnbEnkUtzXWzV9AHrKCjnscESo3MBESW7S1Mw7t7i15GkuKG0E8+ZC97BALA0uMyeFnb1+J4Mivg0rwa2pijvGbAVIYfdbqXZKafrsrUxN3NHrX4B75tU3horO0Zn8hrghFuZiYSJkxhmKbyaYFozCraNVpa54mF4P51FGg7nIYS2OW0okzSQlcZV5H4B+5tSTOyE42kNfPHgWVtIKTbnLGJdUqQ9LLjrF71rQV1m3/YZa/qOlGWkr6mLMK+9DT84pcXfQJzYvr1wtyGfP5GIc3mcbdIDN34jvE9DmcQSVhQJld4bA2vXUveRvy6sWDpxDw6S3BwvLFmp9mZicbU9opDt90SlYAwP5hwnOdihEEknvs+AS5rdnhCSG8wIMPh9QRulo4sNFyKHW3NJc9F2LTb9w2hxCVFNT/EoDEL34KwuKpiPdm2Kp1zDBjTbsGOd+7Le5pGoSsePj15PuGMUegXDnB+7CC48g6oHcm+tddmBQVDADG9yNlys9yfdg1ZFPfF+Io/uvYzB5KuJY+/LpuQRf7BflhJVqxGp0q+gm8v/43m6iAA8gA+HTacKG3rN01AQW7vl8lkK0QjUXDZWH64VgCh800OCdplnd2+TMDu/otWPmDxA==
+X-Microsoft-Antispam-Message-Info: KQppHafvouU0UhdZqJeAHpGM20+kdUgjeiDCd3petohFxSOyfM1YYBtYe0eh+BoHsNVRRjAKxhR5332yCYxN+YbnRNJpUDFgL9rPlxwglX631Rg6/ZQp2cTrx97S+oFff7tvdneqvAkVOThs5/7r+0FgxXSePmM/ik6pRUSZ8x+fBTNZT8MDJqGRN8VPc5cDDY4jxltMsCp0UI0qvjbm7PdlZkTRGixs7SGbaNU+bi13tp9k3/REjxXR2XO7g9Le+AFI65m/YiyG3QRGRbNFfCtH/nwHd6vzPZ0qkbYMWjekamrwqcoTpPQ0vAxXLdtgw/JVv7nRX0KRY8DswcOLIUnmP1Lmc6hCn1J/6ta9ZuBEiyVB9lm5iQ5+HFMtESD/g7ptutyIaumWDYkGnnhrwkxNnzumA9NMBDtWfUmGMWEZhc7WIRweao58qy0aG6A+uWUCY0SxojFe0D10fZi8oZriSzyQYPoJcg+Ivcwo/Dp7RQvvIZPfdFs4KB0gpYaym9h8e9qCvMxy/44h5+kCOx5j8igrsOQ2+gbrvI5YkiB8SJkRnkQ1l9S+CGjN78wI0CEBKpUs271TCICB9kjSCo6h0S2YHK44nbL69AaQ8y93oIUuj9HxtEqeaOm0Uy1s+zh5Hx92TxufGWf93sJKbG5Y6oEBOAVdZvLiEPx/Hx6KzlRzAMZKcWWDB57cwP2MmrNkAg5yyYVyjbQJy+d3eg==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(8936002)(86362001)(38350700002)(38100700002)(2906002)(316002)(5660300002)(6512007)(66476007)(26005)(52116002)(6506007)(2616005)(186003)(36756003)(508600001)(6486002)(66556008)(66946007)(8676002)(83380400001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?eG02ak4yY0NiUDA2TmI4OFpsQVFtRUIzNSsycEtadzV1amFpTW5uWDJITWtH?=
- =?utf-8?B?QjVYSnVseENMbkEyTk10Um9pU3BCQ0p2ZGJ5R3JoU3UrUlpOOWZ2TnUwVGc4?=
- =?utf-8?B?VnRVeEJQNXprSTZDam04cWNHSitZQ05rMnpQMmUraEsyTXoxVmtwSk9rYWY1?=
- =?utf-8?B?d2JzYlhHSHdoWXZuL0pRNkdjdWdVT0xCUDNUOEJZRHBGTzlhb1hUY0EvK2xG?=
- =?utf-8?B?NXRNZFRSZ3FzVE5ucldCSEpCZGxnYU5wVUpJV1FMQW1uY1g1OWpvbFhGVzlT?=
- =?utf-8?B?dksvL1c4ZjVTRXdIU1Jlc1dqdzhsdmpRNXlnV2hRN3g1Q1krRlNLQnBXajgw?=
- =?utf-8?B?TDExNkVZTkZlaG5oWGxpUGp6Qmcra1loTFZRMWNoZ3NFRDljMXpaYXJMOVpV?=
- =?utf-8?B?TGNmck01bnBoTGJCOVBkTGRkMTc5Y1ovaUxXdE0rYWpDSEdLdVlQRlpVbDJH?=
- =?utf-8?B?SGhWdnRtKzk4MmtnN1lzNHdvWHBJazFYNEFiRUZXd3YyMUFWZFdHQlFYSlpD?=
- =?utf-8?B?cXA4QlJ1RmRpL2FNSFhHSHFWVzUvNG5oaUxNa2hMeCsvYnFjeWUvM3lWOTlR?=
- =?utf-8?B?ckxvSlNvVzhDclJMNDkyMzdrVEJLaFNjR1NFV2piV1QxVGJqS25FdEhaYnZ5?=
- =?utf-8?B?NmtodWQxOFhRK1NYQWN0d25ReFFraWJhL1BiaHdkNTRzeVpSbFhCbFRzbDc3?=
- =?utf-8?B?YnQ0SkhMaHRUQU0xWmUxZndNellOSkgyaTd0My9QNWwvYjNLa001OThUUmtR?=
- =?utf-8?B?emR4R3BRS2orRE5TTGtleGJyVnArY2lwQ1k3WkxuWCsrbmFTdDFIUVRReUxs?=
- =?utf-8?B?bUo2Z1ZNUWoybm1DbTZzTkNYVHROenZIYXJRdDQvaTI2aFdidmRFa1AyV2hF?=
- =?utf-8?B?c1diUUxxL1MxbU1YSk42MUtGUnhaTzM0QlpPMkZKU08rdTZQVHczY2dWQUZj?=
- =?utf-8?B?RXA2d1JzNjJuTDZMVnFXd1FCdXhUQndKSHp3clU5Mjl4TE8vcU9tRFAxTVVz?=
- =?utf-8?B?cXBsWlVzVXQ2YzVoclFhNFR5ZExlay93cXk2NUoyeTh0MFJOTVpSTkNsc3Yw?=
- =?utf-8?B?Y3dGQm5LdVJ5MmkrbnZ4UXpWcytiU3dUU3RBdnNYNFYxalFseEY5bWlBK1Vj?=
- =?utf-8?B?Si9ObTlyMzR0aDJ3b1h5aXdadWlheXdUNjJuTVVrMUFRSDBKbkZhbFlZeU8v?=
- =?utf-8?B?eWFWeVVETGtrUm84VEhrNFdvOTJRdUhCbWxZR203N1lCVTl2WEo3eXZ5cVI2?=
- =?utf-8?B?RXFqZTNNeExpUTAreHZrK0wwU0JvOStzSyttQlE2SElPcC9XUk1UVjJOaWR2?=
- =?utf-8?B?ckZFUE9rc2Q2TDIwaVl6OVZVa0pPTFZhMm5DU0k1RW9qSDd2ejdmK0VyV1Ix?=
- =?utf-8?B?TUxXdzAraVlzdDhBU0lqQ1B4NjI4d0FpV1ZqTTZUWnRwNWQxeDVEalZpN0c4?=
- =?utf-8?B?TVNVU25ISU4yQWE4djloSkVmZVJpcUJzL1FYL3ZyTTdGRlFPclRuUzZyWjg3?=
- =?utf-8?B?S1Z1aFBTbGdVZlJOTHR6OWtmMWMyWU5XM1hjU3BrOFZCbTFwdThCOHA0SHpG?=
- =?utf-8?B?QUJqYmliMnFzeGlObGxiMmRQdWJOeGJwckJkYUw0NkRxWVFFZzFiU3pIeS9T?=
- =?utf-8?B?RGk0L1g4SjVSUFgzQmtOZHNrc3pMVFlLZ200ZzdBakh1VUora3RmalB3aHRD?=
- =?utf-8?B?N3dMY1RVejZxVldhQjdkZTcwUVdoWTJDZjcvbGd4L3NsejA4T3lZZUsvbzNT?=
- =?utf-8?B?b2Z0UEt4QjR3RnlSK1pXTmZ1dVJ0U1ljWnc3dEdqSVdTUXI1R2lpeTZUeXRp?=
- =?utf-8?B?eU1uZzFPakdOdkRLK2t0dFJHYU9mU0c2b1RZZXdBMlBkcjF3VGFsalRoNUpm?=
- =?utf-8?B?UEl0NmN2V3pKMW14QzdzeU5tUExXVGxoQnFnaDBpQkkxcGdZWlB2ak1mekta?=
- =?utf-8?B?NjFabUxuR2dKZHJyMGwyaDBuM21uOUFOVmx2ai9ySWUvT1ZYVlU4blVsbzhh?=
- =?utf-8?B?dlRvejRNb0xneHBPOWpZTzRMUGh5bEE0d3VpaTltaGZHdDFYMUQzQ2xzVjhS?=
- =?utf-8?B?NmFXaXpBWXhjdlVlVzUwSXZJeGV5cjMwNkxEdSsvNFJSOTRBWmJjL0NhaGk3?=
- =?utf-8?B?aFk4RUUrTWg5QnpOWDhic1BBVEZFL2hsMk5aMnBvNUoxWlJwYXFsSE56emlP?=
- =?utf-8?B?dVJwZkJMZFBWRkdscFhDcVdSTTBsWk9wME4zSGRCWTIrV1pxZm1QTS9laTli?=
- =?utf-8?B?YVVYUytPYkxCcUVIWTJLUGVneHZqeVpDbHpVektBbjBXOExWUzl1MEdTRlVz?=
- =?utf-8?B?M2NoejZlWnFDZXdZY1dEV1FBOFdGZG5qZjFHR2x1U1BCWGFtLytKMHRGR3Yy?=
- =?utf-8?Q?HoLmhiOG3dyVD2iU=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MzQvZEpMRmJudzVUN3dLTC83c2VMQlYyWVVZeEs2Rk56NFkwK1BsS2ZXTDJq?=
+ =?utf-8?B?QmVvbE5WTUN2eXFlT0QwNzZxVEJETmdrSDI0QnBrNGYwV2JxcE02Uk9XQ3p1?=
+ =?utf-8?B?cGFwSFJLaFFaLzlOb0NFZEkzTEVaNFIraVBIdXY0REJCQzdRc0phRTYxdS9W?=
+ =?utf-8?B?bDl5QVNGRCtGR2xEK2hJeWkvb2dKMHkzc2ZoNlFzZjhPL3VNU09zanNXUzBC?=
+ =?utf-8?B?OE52RjUxTzdVeG1GRkRYOVpvbFN4N1RyZU5uUkl4N2pwMlQ1bHdicG1NMDNy?=
+ =?utf-8?B?OXpqQ1VxVG0xWjVaZU04bVljRzNORmtWY1NZVUJZU2lBMWhvR0VOc1laZnRj?=
+ =?utf-8?B?UGZUdUxweGh5OHhMTDlwaFB3cDFPbHFhU2YzQ1ljYUtZYzNnZjBtTDl4K2NC?=
+ =?utf-8?B?ZXpHc25LS1JqVy96dk0rT3IzNHFMbkcyUUVZcE91Si9BRzdpTFI1R2hwcUFr?=
+ =?utf-8?B?OEF0M240M0hoR3lxRVMrZHVKMVVEOEhVMFFwTk9tc1BtQ3h3dG9MR1ozZlU4?=
+ =?utf-8?B?R091YU8xVHJvSTlTWWw0SWZadXJ2R2Q5dWE5K0tSemhyQ0MySXNZTW8zTklS?=
+ =?utf-8?B?emtyTnAxZTFMT29Ob2o3TGFRdFliME9EWU9raW5MVzgwSFFQRW5NaUw1cUxt?=
+ =?utf-8?B?NGhNanhuaTRPTjRiSE9tcTZUNVNRM0dGdEQyVlVRd2ZCa2dJK1BYdWsvaEYv?=
+ =?utf-8?B?ZXBYZmJ5THQ5UXV6VHB6WW4vaytMNkdZMzM4QUJFdWxidURscHFIVnpyc0hJ?=
+ =?utf-8?B?UGd5NXFudEo2SUpxSDc0QlFYTWVHNWNxYldPOGdlZGhVKy9ZWUNlcklFNWxE?=
+ =?utf-8?B?Uzc3dFBxeGNNTUJjelNaL241bDBOQnlIdGpLemIvUXUyN1JiUStSSCt5eFc1?=
+ =?utf-8?B?SXF6SmRRbDJ0M05jV2VsUDd6YTFJYVZCYjRGN2hJVEZ5aHMxall6cW13U1JW?=
+ =?utf-8?B?SFhRbVM5YWlkMTNsNDU2dTdhaXF0T2VxOFhFbkdOSFBKQTgvRXpWN0RMS04z?=
+ =?utf-8?B?REw0Zk40SlJRUFFDa0VmR1Q2c0xsdnFpVVZrWS9VZDVMa2lzZHlKOGJ3NHlD?=
+ =?utf-8?B?RTgyVkRrU2k4b2JIYzU0QjJ3N1dSR1NhdkZSVzVqdzNMQm45ZFN6S1pNMGN3?=
+ =?utf-8?B?UVVTODBzTXRyQ0hkbjlybWdOcVlFMjlUZEpmc1F3NjEvZHM1OTRTSUxVenNC?=
+ =?utf-8?B?VC9NMFFybGtxMFNaWW1vZ0xrTzJ3RXBmTVpwSHNGdE54bThRcW1DRXJjdmRB?=
+ =?utf-8?B?YmNvV2VDS1p0L3lHQ0QyNWZuRFdhVWpLV2JSVGM1NVJ4YVFZV1Z5NkdKRHFR?=
+ =?utf-8?B?eU42WXo0WHQvYTVmVEVXM1puVzhRODZKeGZBSmQ1dEFqUDZZbnNVWWREOHpR?=
+ =?utf-8?B?VXBjNnVyS3cwZWovVXpuTzk5cUpsOHEvdjJhWDNYdnh2TDRMZm4xd3Y3MFYw?=
+ =?utf-8?B?cnFabC9XTFo1b3VzVm5GVmY4YlJzSDZ6VGhMcGNaU04wZ2Nkb2NtNU1iSCtO?=
+ =?utf-8?B?M1hoZk10bm9JOTZxZzI4M1ljdW44WWN6aVpLcldNOEhtRC9KeUN1cENyd2Y3?=
+ =?utf-8?B?QkQ5NUNkZ3N4TnBMZ0NkVHR3R1lYM0F0cHh2cTJHd05oTXlaRnlLT1QzSHF0?=
+ =?utf-8?B?TG9BWW1BbTFNNElyRjB6c21TdU5naXdpUngyV0tJSzBwcnVqV01RUlRTaHEy?=
+ =?utf-8?B?VTF0MGptSXk4dFF0T281ZkhQN0NMS3lwNHoydEtuNjFGT09Dc2RGUmxTbzlS?=
+ =?utf-8?B?YWJOSGYxRlUwRThWL1BlbHJCMEJja1lKTWdDRUhhSzFwY3VkUXczOFloVlY1?=
+ =?utf-8?B?ajVwcThNT0Q5M1ZOeDJHM3IxdXY1YUFpenkvbkFvYkhSTi9mVXVPK3hSRWdM?=
+ =?utf-8?B?VW5qR2g0V3djMjI5bU1YMEU4TVpZK1hxdzgwQmttdEIwZ2IzWXM3aGNyQ3Fu?=
+ =?utf-8?B?T05HVTFoYnNCTTQvK25rVW4xM2Ywc1o0UEhaSGk0VVZSOXVQYkRBN0pXQzNy?=
+ =?utf-8?B?VzV2cFdtZ1JNRytaRXYva2tmbUNGZWdHenZhUmhWY2dBMnRIaWJSbjMxQUJr?=
+ =?utf-8?B?SHA1K0Nvd21rcWl0MW5LUHp6cVJYK2FMREcrdXZTNnNoaG1mbFFpalJmMFZ4?=
+ =?utf-8?B?aWprdTA3VEhoSjVCTWZhRWxLU0NuaDZxa0xZY1dJbDlTKzdGcE9IcElSUWYv?=
+ =?utf-8?B?SmNpQVU2QXI3Z0Q2dUQ3Ry91Sng4eS9HcWJVWUVvaXgxQWtCa0R1b29PU1JW?=
+ =?utf-8?B?Tzg0UU42d2l5WUZ4dXdGbWUrSGVRdllJWmhrZGp3aGYxZm5NNE1MQXBNRzBa?=
+ =?utf-8?B?bXQwNVZEanRScU9tTW1SSHo2eUpZRlpqWHRSYW43YUFNTzVrMVdCTXk3aHVY?=
+ =?utf-8?Q?Zx8J8CS2s5MJ8sCg=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 11aa8210-a038-4ad2-f8ba-08da1b7b6b7c
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9dcf9327-dcb0-4514-fce3-08da1b7b79b6
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2022 05:23:32.5719
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2022 05:23:56.4246
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: PaV99QrqkyHH3nXoCVrnJWwAPIAOZSE1uQ6BJGowr+oxeOLJp6AJpY/9ZtxRCOpCe4z6NRja9s8Zeh8OrKQc3hQURaoMUOEHRsMGB/psOXA=
+X-MS-Exchange-CrossTenant-UserPrincipalName: 18/kr8nGMAaeXhhu0jeVmyQgAkt1si9/EjKZKF5lYEh4UKE8JT24keVeXvLeHg8ZoLbTZSaKdyPDPpUMvMxDiPrq1de1hjRVQDa9pxnYQ1c=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB4948
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.858
  definitions=2022-04-11_01:2022-04-08,2022-04-11 signatures=0
@@ -143,8 +143,8 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 ad
  bulkscore=0 phishscore=0 spamscore=0 mlxlogscore=999 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
  definitions=main-2204110030
-X-Proofpoint-ORIG-GUID: skAmpGo5fbk8x2AD2sRhO0Nb7w0s0O6n
-X-Proofpoint-GUID: skAmpGo5fbk8x2AD2sRhO0Nb7w0s0O6n
+X-Proofpoint-GUID: lRoHd6UAazromLPo8z1qtTguL-AB033W
+X-Proofpoint-ORIG-GUID: lRoHd6UAazromLPo8z1qtTguL-AB033W
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -152,165 +152,125 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On Tue, 2022-03-15 at 09:06 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We currently have a couple of helper functions that try to infer
-> whether the log item is an intent or intent done item from the
-> combinations of operations it supports.  This is incredibly fragile
-> and not very efficient as it requires checking specific combinations
-> of ops.
+> Intent whiteouts will require extra work to be done during
+> transaction commit if the transaction contains an intent done item.
 > 
-> We need to be able to identify intent and intent done items quickly
-> and easily in upcoming patches, so simply add intent and intent done
-> type flags to the log item ops flags. These are static flags to
-> begin with, so intent items should have been typed like this from
-> the start.
+> To determine if a transaction contains an intent done item, we want
+> to avoid having to walk all the items in the transaction to check if
+> they are intent done items. Hence when we add an intent done item to
+> a transaction, tag the transaction to indicate that it contains such
+> an item.
+> 
+> We don't tag the transaction when the defer ops is relogging an
+> intent to move it forward in the log. Whiteouts will never apply to
+> these cases, so we don't need to bother looking for them.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Ok, this one looks pretty straight forward.
+Ok, makes sense:
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-
 > ---
->  fs/xfs/xfs_bmap_item.c     |  4 +++-
->  fs/xfs/xfs_extfree_item.c  |  4 +++-
->  fs/xfs/xfs_refcount_item.c |  4 +++-
->  fs/xfs/xfs_rmap_item.c     |  4 +++-
->  fs/xfs/xfs_trans.h         | 25 +++++++++++++------------
->  5 files changed, 25 insertions(+), 16 deletions(-)
+>  fs/xfs/libxfs/xfs_shared.h | 24 +++++++++++++++++-------
+>  fs/xfs/xfs_bmap_item.c     |  2 +-
+>  fs/xfs/xfs_extfree_item.c  |  2 +-
+>  fs/xfs/xfs_refcount_item.c |  2 +-
+>  fs/xfs/xfs_rmap_item.c     |  2 +-
+>  5 files changed, 21 insertions(+), 11 deletions(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> index 25c4cab58851..e96618dbde29 100644
+> --- a/fs/xfs/libxfs/xfs_shared.h
+> +++ b/fs/xfs/libxfs/xfs_shared.h
+> @@ -54,13 +54,23 @@ void	xfs_log_get_max_trans_res(struct
+> xfs_mount *mp,
+>  /*
+>   * Values for t_flags.
+>   */
+> -#define	XFS_TRANS_DIRTY		0x01	/* something needs to
+> be logged */
+> -#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is
+> modified */
+> -#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a
+> permanent log res */
+> -#define	XFS_TRANS_SYNC		0x08	/* make commit
+> synchronous */
+> -#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data
+> blocks */
+> -#define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount
+> */
+> -#define XFS_TRANS_RES_FDBLKS	0x80	/* reserve newly freed blocks
+> */
+> +/* Transaction needs to be logged */
+> +#define XFS_TRANS_DIRTY			(1 << 0)
+> +/* Superblock is dirty and needs to be logged */
+> +#define XFS_TRANS_SB_DIRTY		(1 << 1)
+> +/* Transaction took a permanent log reservation */
+> +#define XFS_TRANS_PERM_LOG_RES		(1 << 2)
+> +/* Synchronous transaction commit needed */
+> +#define XFS_TRANS_SYNC			(1 << 3)
+> +/* Transaction can use reserve block pool */
+> +#define XFS_TRANS_RESERVE		(1 << 4)
+> +/* Transaction should avoid VFS level superblock write accounting */
+> +#define XFS_TRANS_NO_WRITECOUNT		(1 << 5)
+> +/* Transaction has freed blocks returned to it's reservation */
+> +#define XFS_TRANS_RES_FDBLKS		(1 << 6)
+> +/* Transaction contains an intent done log item */
+> +#define XFS_TRANS_HAS_INTENT_DONE	(1 << 7)
+> +
+>  /*
+>   * LOWMODE is used by the allocator to activate the lowspace
+> algorithm - when
+>   * free space is running low the extent allocator may choose to
+> allocate an
 > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index e1f4d7d5a011..ead27d40ef78 100644
+> index ead27d40ef78..45dd03272e5d 100644
 > --- a/fs/xfs/xfs_bmap_item.c
 > +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -202,7 +202,8 @@ xfs_bud_item_release(
->  }
+> @@ -255,7 +255,7 @@ xfs_trans_log_finish_bmap_update(
+>  	 * 1.) releases the BUI and frees the BUD
+>  	 * 2.) shuts down the filesystem
+>  	 */
+> -	tp->t_flags |= XFS_TRANS_DIRTY;
+> +	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
+>  	set_bit(XFS_LI_DIRTY, &budp->bud_item.li_flags);
 >  
->  static const struct xfs_item_ops xfs_bud_item_ops = {
-> -	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
-> +	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
-> +			  XFS_ITEM_INTENT_DONE,
->  	.iop_size	= xfs_bud_item_size,
->  	.iop_format	= xfs_bud_item_format,
->  	.iop_release	= xfs_bud_item_release,
-> @@ -584,6 +585,7 @@ xfs_bui_item_relog(
->  }
->  
->  static const struct xfs_item_ops xfs_bui_item_ops = {
-> +	.flags		= XFS_ITEM_INTENT,
->  	.iop_size	= xfs_bui_item_size,
->  	.iop_format	= xfs_bui_item_format,
->  	.iop_unpin	= xfs_bui_item_unpin,
+>  	return error;
 > diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 47ef9c9c5c17..6913db61d770 100644
+> index 6913db61d770..ed1229cb6807 100644
 > --- a/fs/xfs/xfs_extfree_item.c
 > +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -307,7 +307,8 @@ xfs_efd_item_release(
->  }
+> @@ -381,7 +381,7 @@ xfs_trans_free_extent(
+>  	 * 1.) releases the EFI and frees the EFD
+>  	 * 2.) shuts down the filesystem
+>  	 */
+> -	tp->t_flags |= XFS_TRANS_DIRTY;
+> +	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
+>  	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
 >  
->  static const struct xfs_item_ops xfs_efd_item_ops = {
-> -	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
-> +	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
-> +			  XFS_ITEM_INTENT_DONE,
->  	.iop_size	= xfs_efd_item_size,
->  	.iop_format	= xfs_efd_item_format,
->  	.iop_release	= xfs_efd_item_release,
-> @@ -688,6 +689,7 @@ xfs_efi_item_relog(
->  }
->  
->  static const struct xfs_item_ops xfs_efi_item_ops = {
-> +	.flags		= XFS_ITEM_INTENT,
->  	.iop_size	= xfs_efi_item_size,
->  	.iop_format	= xfs_efi_item_format,
->  	.iop_unpin	= xfs_efi_item_unpin,
+>  	next_extent = efdp->efd_next_extent;
 > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> index d3da67772d57..bffde82b109c 100644
+> index bffde82b109c..642bcff72a71 100644
 > --- a/fs/xfs/xfs_refcount_item.c
 > +++ b/fs/xfs/xfs_refcount_item.c
-> @@ -208,7 +208,8 @@ xfs_cud_item_release(
->  }
+> @@ -260,7 +260,7 @@ xfs_trans_log_finish_refcount_update(
+>  	 * 1.) releases the CUI and frees the CUD
+>  	 * 2.) shuts down the filesystem
+>  	 */
+> -	tp->t_flags |= XFS_TRANS_DIRTY;
+> +	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
+>  	set_bit(XFS_LI_DIRTY, &cudp->cud_item.li_flags);
 >  
->  static const struct xfs_item_ops xfs_cud_item_ops = {
-> -	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
-> +	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
-> +			  XFS_ITEM_INTENT_DONE,
->  	.iop_size	= xfs_cud_item_size,
->  	.iop_format	= xfs_cud_item_format,
->  	.iop_release	= xfs_cud_item_release,
-> @@ -600,6 +601,7 @@ xfs_cui_item_relog(
->  }
->  
->  static const struct xfs_item_ops xfs_cui_item_ops = {
-> +	.flags		= XFS_ITEM_INTENT,
->  	.iop_size	= xfs_cui_item_size,
->  	.iop_format	= xfs_cui_item_format,
->  	.iop_unpin	= xfs_cui_item_unpin,
+>  	return error;
 > diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> index c3966b4c58ef..c78e31bc84e1 100644
+> index c78e31bc84e1..4285b94465d2 100644
 > --- a/fs/xfs/xfs_rmap_item.c
 > +++ b/fs/xfs/xfs_rmap_item.c
-> @@ -231,7 +231,8 @@ xfs_rud_item_release(
->  }
+> @@ -328,7 +328,7 @@ xfs_trans_log_finish_rmap_update(
+>  	 * 1.) releases the RUI and frees the RUD
+>  	 * 2.) shuts down the filesystem
+>  	 */
+> -	tp->t_flags |= XFS_TRANS_DIRTY;
+> +	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
+>  	set_bit(XFS_LI_DIRTY, &rudp->rud_item.li_flags);
 >  
->  static const struct xfs_item_ops xfs_rud_item_ops = {
-> -	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
-> +	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
-> +			  XFS_ITEM_INTENT_DONE,
->  	.iop_size	= xfs_rud_item_size,
->  	.iop_format	= xfs_rud_item_format,
->  	.iop_release	= xfs_rud_item_release,
-> @@ -630,6 +631,7 @@ xfs_rui_item_relog(
->  }
->  
->  static const struct xfs_item_ops xfs_rui_item_ops = {
-> +	.flags		= XFS_ITEM_INTENT,
->  	.iop_size	= xfs_rui_item_size,
->  	.iop_format	= xfs_rui_item_format,
->  	.iop_unpin	= xfs_rui_item_unpin,
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index a487b264a9eb..93cb4be33f7a 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -79,28 +79,29 @@ struct xfs_item_ops {
->  			struct xfs_trans *tp);
->  };
->  
-> -/* Is this log item a deferred action intent? */
-> +/*
-> + * Log item ops flags
-> + */
-> +/*
-> + * Release the log item when the journal commits instead of
-> inserting into the
-> + * AIL for writeback tracking and/or log tail pinning.
-> + */
-> +#define XFS_ITEM_RELEASE_WHEN_COMMITTED	(1 << 0)
-> +#define XFS_ITEM_INTENT			(1 << 1)
-> +#define XFS_ITEM_INTENT_DONE		(1 << 2)
-> +
->  static inline bool
->  xlog_item_is_intent(struct xfs_log_item *lip)
->  {
-> -	return lip->li_ops->iop_recover != NULL &&
-> -	       lip->li_ops->iop_match != NULL;
-> +	return lip->li_ops->flags & XFS_ITEM_INTENT;
->  }
->  
-> -/* Is this a log intent-done item? */
->  static inline bool
->  xlog_item_is_intent_done(struct xfs_log_item *lip)
->  {
-> -	return lip->li_ops->iop_unpin == NULL &&
-> -	       lip->li_ops->iop_push == NULL;
-> +	return lip->li_ops->flags & XFS_ITEM_INTENT_DONE;
->  }
->  
-> -/*
-> - * Release the log item as soon as committed.  This is for items
-> just logging
-> - * intents that never need to be written back in place.
-> - */
-> -#define XFS_ITEM_RELEASE_WHEN_COMMITTED	(1 << 0)
-> -
->  void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item
-> *item,
->  			  int type, const struct xfs_item_ops *ops);
->  
+>  	return error;
 
