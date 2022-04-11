@@ -2,74 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AC24C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 01:26:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF915C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 01:33:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232600AbiDKB3H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 Apr 2022 21:29:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34956 "EHLO
+        id S239660AbiDKBf5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 Apr 2022 21:35:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229834AbiDKB3H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Apr 2022 21:29:07 -0400
+        with ESMTP id S240223AbiDKBf4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Apr 2022 21:35:56 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5CC042D1C9
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Apr 2022 18:26:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 566A54131C
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Apr 2022 18:33:44 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-233-190.pa.vic.optusnet.com.au [49.186.233.190])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6B7E053BC20;
-        Mon, 11 Apr 2022 11:26:54 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 40A7453BA99;
+        Mon, 11 Apr 2022 11:33:43 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ndipR-00GFQY-67; Mon, 11 Apr 2022 11:26:53 +1000
-Date:   Mon, 11 Apr 2022 11:26:53 +1000
+        id 1ndiw1-00GFYg-QN; Mon, 11 Apr 2022 11:33:41 +1000
+Date:   Mon, 11 Apr 2022 11:33:41 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: use a separate frextents counter for rt extent
- reservations
-Message-ID: <20220411012653.GS1544202@dread.disaster.area>
-References: <164961485474.70555.18228016043917319266.stgit@magnolia>
- <164961487162.70555.13624412630554454462.stgit@magnolia>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH V9.1] xfs: Directory's data fork extent counter can never
+ overflow
+Message-ID: <20220411013341.GT1544202@dread.disaster.area>
+References: <20220406061904.595597-16-chandan.babu@oracle.com>
+ <20220409134721.471501-1-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <164961487162.70555.13624412630554454462.stgit@magnolia>
+In-Reply-To: <20220409134721.471501-1-chandan.babu@oracle.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=625383de
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62538577
         a=bHAvQTfMiaNt/bo4vVGwyA==:117 a=bHAvQTfMiaNt/bo4vVGwyA==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=AYytZR2idZ_oQYENMx0A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=XBDxVsr5D8Fr1aKvmF0A:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Apr 10, 2022 at 11:21:11AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Sat, Apr 09, 2022 at 07:17:21PM +0530, Chandan Babu R wrote:
+> The maximum file size that can be represented by the data fork extent counter
+> in the worst case occurs when all extents are 1 block in length and each block
+> is 1KB in size.
 > 
-> As mentioned in the previous commit, the kernel misuses sb_frextents in
-> the incore mount to reflect both incore reservations made by running
-> transactions as well as the actual count of free rt extents on disk.
-> This results in the superblock being written to the log with an
-> underestimate of the number of rt extents that are marked free in the
-> rtbitmap.
+> With XFS_MAX_EXTCNT_DATA_FORK_SMALL representing maximum extent count and with
+> 1KB sized blocks, a file can reach upto,
+> (2^31) * 1KB = 2TB
 > 
-> Teaching XFS to recompute frextents after log recovery avoids
-> operational problems in the current mount, but it doesn't solve the
-> problem of us writing undercounted frextents which are then recovered by
-> an older kernel that doesn't have that fix.
+> This is much larger than the theoretical maximum size of a directory
+> i.e. XFS_DIR2_SPACE_SIZE * 3 = ~96GB.
 > 
-> Create an incore percpu counter to mirror the ondisk frextents.  This
-> new counter will track transaction reservations and the only time we
-> will touch the incore super counter (i.e the one that gets logged) is
-> when those transactions commit updates to the rt bitmap.  This is in
-> contrast to the lazysbcount counters (e.g. fdblocks), where we know that
-> log recovery will always fix any incorrect counter that we log.
-> As a bonus, we only take m_sb_lock at transaction commit time.
+> Since a directory's inode can never overflow its data fork extent counter,
+> this commit removes all the overflow checks associated with
+> it. xfs_dinode_verify() now performs a rough check to verify if a diretory's
+> data fork is larger than 96GB.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 
-Looks good - much neater than th first version and I really like the
-way you did the xfs_mod_freecounter() factoring.
+Looks good now.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
