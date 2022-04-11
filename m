@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5370EC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:55:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BA1BC43217
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:55:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350482AbiDKW53 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Apr 2022 18:57:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43020 "EHLO
+        id S229488AbiDKW5j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Apr 2022 18:57:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350074AbiDKW51 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:57:27 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5061F13EAA;
-        Mon, 11 Apr 2022 15:55:11 -0700 (PDT)
+        with ESMTP id S1350488AbiDKW5a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:57:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 581FC13FBD;
+        Mon, 11 Apr 2022 15:55:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 5979FCE17B8;
-        Mon, 11 Apr 2022 22:55:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA71BC385A3;
-        Mon, 11 Apr 2022 22:55:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E9182616CA;
+        Mon, 11 Apr 2022 22:55:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5497BC385A4;
+        Mon, 11 Apr 2022 22:55:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649717708;
-        bh=X8F60IHIegEjJhWat+AIV02D9fXmBimiM6+QjhcCB18=;
+        s=k20201202; t=1649717714;
+        bh=BeLksA9BwxA4ffS1xEJjGHR2kUFHyaW+5K/3ICaXEzU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=eakN2IhxmFCosT4aHLMzI6HEzyNoygbR6r13wX/XsifTJb9mDtnzytAheEwIWv9mo
-         NU7Ct60MLUsZQau7X+oOIhflGqjU5H6PsoZvwf9KDTGlNsO3wzY+pww0J9X2KaIt/Z
-         LCgIkoUAbG/NRaoIf4Z2g9IFKsh9DUadd6fg1/0cMM7cksDt4tvIjEv5JziJ0wqOMf
-         7goCNnLK5P8r3Ygx1pD29UWs2AUOKVJXD9rDfcEp8gvXLBD1RgSgCZOulWjIpuNwKE
-         K1r55iUhkRPbQ8+h/Ub39nxujdNwAPSllLC0kuy2beRR/ATRWFETNqgMyhuB2S3UA9
-         3W1gM+3EgCZnw==
-Subject: [PATCH 2/3] xfs: test mkfs.xfs config file stack corruption issues
+        b=V3DoP+tzBR9B2lUPB6HQzy2vMK3B2obIGMIhOF/8T04D0Stm+Ml8PZp4uA2UQX4BT
+         45+9ILjs/0cr59OKX3K96o+nPpxll9XXnqAVeo7QHGQirfircWBbY8eVpXspX2kJVb
+         IHf9laOJ5+i+mUdP4hvwdJB38HOCHY6bVdOKB1Qas7QFc1Hv8zSI0hLVLR/BF+p3n9
+         l78DHVTEYPKOcrggRdZNUvDGfRzUC3Xm9mkMQQZ+WXgpcnTBVTV+aS2b+N2k218RGU
+         bmAVuXln1lPDl/6AY6lWAQUBnJuwmPlfd0WwtIxxe/5aEz47ge/cEvA6kcVhgrI/Ct
+         IBI8ZBCabIafw==
+Subject: [PATCH 3/3] xfs/216: handle larger log sizes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 11 Apr 2022 15:55:08 -0700
-Message-ID: <164971770833.170109.18299545219088346786.stgit@magnolia>
+Date:   Mon, 11 Apr 2022 15:55:13 -0700
+Message-ID: <164971771391.170109.16368399851366024102.stgit@magnolia>
 In-Reply-To: <164971769710.170109.8985299417765876269.stgit@magnolia>
 References: <164971769710.170109.8985299417765876269.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,98 +49,35 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a new regression test for a stack corruption problem uncovered in
-the mkfs config file parsing code.
+mkfs will soon refuse to format a log smaller than 64MB, so update this
+test to reflect the new log sizing calculations.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/831     |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/831.out |    2 ++
- 2 files changed, 70 insertions(+)
- create mode 100755 tests/xfs/831
- create mode 100644 tests/xfs/831.out
+ tests/xfs/216.out |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 
-diff --git a/tests/xfs/831 b/tests/xfs/831
-new file mode 100755
-index 00000000..a73f14ff
---- /dev/null
-+++ b/tests/xfs/831
-@@ -0,0 +1,68 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 831
-+#
-+# Regression test for xfsprogs commit:
-+#
-+# 99c78777 ("mkfs: prevent corruption of passed-in suboption string values")
-+#
-+. ./common/preamble
-+_begin_fstest auto quick mkfs
-+
-+_cleanup()
-+{
-+	rm -f $TEST_DIR/fubar.img
-+	cd /
-+	rm -r -f $tmp.*
-+}
-+
-+# Import common functions.
-+# . ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_require_test
-+_require_xfs_mkfs_cfgfile
-+
-+# Set up a configuration file with an exact block size and log stripe unit
-+# so that mkfs won't complain about having to correct the log stripe unit
-+# size that is implied by the provided data device stripe unit.
-+cfgfile=$tmp.cfg
-+cat << EOF >> $tmp.cfg
-+[block]
-+size=4096
-+
-+[data]
-+su=2097152
-+sw=1
-+EOF
-+
-+# Some mkfs options store the user's value string for processing after certain
-+# geometry parameters (e.g. the fs block size) have been settled.  This is how
-+# the su= option can accept arguments such as "8b" to mean eight filesystem
-+# blocks.
-+#
-+# Unfortunately, on Ubuntu 20.04, the libini parser uses an onstack char[]
-+# array to store value that it parse, and it passes the address of this array
-+# to the parse_cfgopt.  The getstr function returns its argument, which is
-+# stored in the cli_params structure by the D_SU parsing code.  By the time we
-+# get around to interpreting this string, of course, the stack array has long
-+# since lost scope and is now full of garbage.  If we're lucky, the value will
-+# cause a number interpretation failure.  If not, the fs is configured with
-+# garbage geometry.
-+#
-+# Either way, set up a config file to exploit this vulnerability so that we
-+# can prove that current mkfs works correctly.
-+$XFS_IO_PROG -f -c "truncate 1g" $TEST_DIR/fubar.img
-+options=(-c options=$cfgfile -l sunit=8 -f -N $TEST_DIR/fubar.img)
-+$MKFS_XFS_PROG "${options[@]}" >> $seqres.full ||
-+	echo "mkfs failed"
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/831.out b/tests/xfs/831.out
-new file mode 100644
-index 00000000..abe137e3
---- /dev/null
-+++ b/tests/xfs/831.out
-@@ -0,0 +1,2 @@
-+QA output created by 831
-+Silence is golden
+diff --git a/tests/xfs/216.out b/tests/xfs/216.out
+index cbd7b652..3c12085f 100644
+--- a/tests/xfs/216.out
++++ b/tests/xfs/216.out
+@@ -1,10 +1,10 @@
+ QA output created by 216
+-fssize=1g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=2g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=4g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=8g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=16g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=32g log      =internal log           bsize=4096   blocks=4096, version=2
+-fssize=64g log      =internal log           bsize=4096   blocks=8192, version=2
++fssize=1g log      =internal log           bsize=4096   blocks=16384, version=2
++fssize=2g log      =internal log           bsize=4096   blocks=16384, version=2
++fssize=4g log      =internal log           bsize=4096   blocks=16384, version=2
++fssize=8g log      =internal log           bsize=4096   blocks=16384, version=2
++fssize=16g log      =internal log           bsize=4096   blocks=16384, version=2
++fssize=32g log      =internal log           bsize=4096   blocks=16384, version=2
++fssize=64g log      =internal log           bsize=4096   blocks=16384, version=2
+ fssize=128g log      =internal log           bsize=4096   blocks=16384, version=2
+ fssize=256g log      =internal log           bsize=4096   blocks=32768, version=2
 
