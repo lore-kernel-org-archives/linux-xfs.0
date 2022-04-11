@@ -2,43 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23EDFC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D34FC43217
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:54:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245197AbiDKW4v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1350465AbiDKW4v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 11 Apr 2022 18:56:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40688 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346702AbiDKW4u (ORCPT
+        with ESMTP id S1348185AbiDKW4u (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:56:50 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44A42A185;
-        Mon, 11 Apr 2022 15:54:31 -0700 (PDT)
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44C0FA195;
+        Mon, 11 Apr 2022 15:54:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 394E9CE17B8;
-        Mon, 11 Apr 2022 22:54:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CF7CC385A4;
-        Mon, 11 Apr 2022 22:54:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6DBC161773;
+        Mon, 11 Apr 2022 22:54:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB233C385A5;
+        Mon, 11 Apr 2022 22:54:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649717668;
-        bh=H7PQ+1qIo+gwxATV4ELYpqYdJ4udgEcBhBxS4xEOib0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=u2jupRsmtkq969cQnAPfvyHS7W9slxtMe/sPu/bU059OUPrdx4RJbb7MeQ5mE+VVy
-         6QAHjRT0qByWPfnhbfpjUs7uzCDBROr9GzD86/7By63KXJBgaQ8uUqx0m87YvN29y+
-         i+KD7LwJIZnwgpSgXLbs5btR+KAKCk+UJoWP1pX1Go/8xno0psVdTAOheEmWi3HCip
-         UyIf6G1TtEIftJxzSwRFq2wG1q6QKRH6YHryRe05u0THW+xs76ZLKKkcgsLanJ2Syz
-         WU6Wkwdkr3/EjHVdAB2XZA9CowYrhJMeF8WpmiUx8e/a47jNpbmvuhbaOyTBVfOSxH
-         aN5sNPcIh3bgQ==
-Subject: [PATCH 2/2] xfs/507: add test to auto group
+        s=k20201202; t=1649717671;
+        bh=6c0PSMb/5v7u7faMEElV48N7fj9H4fs8ekzx127fTe0=;
+        h=Subject:From:To:Cc:Date:From;
+        b=gCDpXtbCB85/I/8UAnhdon+HO3aDeL3d4uBLIUkm5RaMl3k/533vxoVP9ovKHJAiR
+         i/MX40nVmAikTooM9hZhIYM7QoqvS9v0jSZ7mQMaAzRu6VvbbjNZHGAN5HkUG79iG8
+         7V+0CIFWGq/wqc8Ze2hFmpVt/JmQ+OGAP2aV+nse/nMKFf0z6D0gxiBznfalVU/MHe
+         Kd4MP1FxyvKQANDHSY/gSvTbcH+4PGXHlK/Xd073Shxz4tUaHp7yJgi11WUK0wIMX6
+         UtKYVGhv/OB+KhtNPcmktfi/JuOWjfWPcCvHFuwc0FmAGqWtpkhzVurf4JEWGdCodN
+         RnGhJcz6jC42g==
+Subject: [PATCHSET 0/4] fstests: new tests for kernel 5.18
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 11 Apr 2022 15:54:28 -0700
-Message-ID: <164971766805.169895.12082898167045363438.stgit@magnolia>
-In-Reply-To: <164971765670.169895.10730350919455923432.stgit@magnolia>
-References: <164971765670.169895.10730350919455923432.stgit@magnolia>
+Date:   Mon, 11 Apr 2022 15:54:31 -0700
+Message-ID: <164971767143.169983.12905331894414458027.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,38 +45,60 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-Add this regression test to the auto group now that it's been quite a
-while since the fix patches went upstream.
+Add new tests for bugfixes merged during 5.18.  Specifically, we now
+check quota enforcement when linking and renaming into a directory.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-merge-5.18
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=xfs-merge-5.18
 ---
- tests/xfs/507 |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-
-diff --git a/tests/xfs/507 b/tests/xfs/507
-index aa3d8eeb..b9c9ab29 100755
---- a/tests/xfs/507
-+++ b/tests/xfs/507
-@@ -4,13 +4,17 @@
- #
- # FS QA Test No. 507
- #
-+# Regression test for kernel commit:
-+#
-+# 394aafdc15da ("xfs: widen inode delalloc block counter to 64-bits")
-+#
- # Try to overflow i_delayed_blks by setting the largest cowextsize hint
- # possible, creating a sparse file with a single byte every cowextsize bytes,
- # reflinking it, and retouching every written byte to see if we can create
- # enough speculative COW reservations to overflow i_delayed_blks.
- #
- . ./common/preamble
--_begin_fstest clone
-+_begin_fstest auto clone
- 
- _register_cleanup "_cleanup" BUS
- 
+ tests/generic/832     |   67 ++++++++++++++++++++++++++
+ tests/generic/832.out |    3 +
+ tests/generic/833     |   71 +++++++++++++++++++++++++++
+ tests/generic/833.out |    3 +
+ tests/generic/834     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/834.out |   33 +++++++++++++
+ tests/generic/835     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/835.out |   33 +++++++++++++
+ tests/generic/836     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/836.out |   33 +++++++++++++
+ tests/generic/837     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/837.out |   33 +++++++++++++
+ tests/generic/838     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/838.out |   33 +++++++++++++
+ tests/generic/839     |   77 ++++++++++++++++++++++++++++++
+ tests/generic/839.out |   13 +++++
+ tests/xfs/839         |   42 ++++++++++++++++
+ tests/xfs/839.out     |    2 +
+ 18 files changed, 1078 insertions(+)
+ create mode 100755 tests/generic/832
+ create mode 100644 tests/generic/832.out
+ create mode 100755 tests/generic/833
+ create mode 100644 tests/generic/833.out
+ create mode 100755 tests/generic/834
+ create mode 100644 tests/generic/834.out
+ create mode 100755 tests/generic/835
+ create mode 100644 tests/generic/835.out
+ create mode 100755 tests/generic/836
+ create mode 100644 tests/generic/836.out
+ create mode 100755 tests/generic/837
+ create mode 100644 tests/generic/837.out
+ create mode 100755 tests/generic/838
+ create mode 100644 tests/generic/838.out
+ create mode 100755 tests/generic/839
+ create mode 100755 tests/generic/839.out
+ create mode 100755 tests/xfs/839
+ create mode 100644 tests/xfs/839.out
 
