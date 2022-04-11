@@ -2,94 +2,53 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 493B5C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 00:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3019C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 01:13:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235477AbiDKAeO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 Apr 2022 20:34:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59330 "EHLO
+        id S238901AbiDKBQB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 Apr 2022 21:16:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236439AbiDKAeI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Apr 2022 20:34:08 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6D293DED4
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Apr 2022 17:31:56 -0700 (PDT)
+        with ESMTP id S229492AbiDKBQA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Apr 2022 21:16:00 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EB0B63A5C0
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Apr 2022 18:13:48 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-233-190.pa.vic.optusnet.com.au [49.186.233.190])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DD8C310CE89A
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 10:31:50 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 3780453B9C3
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 11:13:48 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ndhy9-00GEMu-Dh
-        for linux-xfs@vger.kernel.org; Mon, 11 Apr 2022 10:31:49 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.95)
-        (envelope-from <david@fromorbit.com>)
-        id 1ndhy9-008pjX-Ck
-        for linux-xfs@vger.kernel.org;
-        Mon, 11 Apr 2022 10:31:49 +1000
+        id 1ndick-00GF8F-Aq
+        for linux-xfs@vger.kernel.org; Mon, 11 Apr 2022 11:13:46 +1000
+Date:   Mon, 11 Apr 2022 11:13:46 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 11/17] xfs: convert dquot flags to unsigned.
-Date:   Mon, 11 Apr 2022 10:31:41 +1000
-Message-Id: <20220411003147.2104423-12-david@fromorbit.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220411003147.2104423-1-david@fromorbit.com>
-References: <20220411003147.2104423-1-david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: master and for-next branches updated to v5.18-rc2
+Message-ID: <20220411011346.GP1544202@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=625376f6
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=625380cc
         a=bHAvQTfMiaNt/bo4vVGwyA==:117 a=bHAvQTfMiaNt/bo4vVGwyA==:17
-        a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8 a=vWCpcOARs_OZSg8Qgq0A:9
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=7-415B0cAAAA:8
+        a=JuDxSlhT3OO6blO4plAA:9 a=CjuIK1q_8ugA:10 a=n3xvM8a_0i4A:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-5.18 w/ std=gnu11 compiled with gcc-5 wants flags stored in unsigned
-fields to be unsigned.
+I've just updated the master and for-next branches of the
+xfs-linux tree to v5.18-rc2. I would appreciate it if patchsets
+for review and pull requests are based on this master branch so I
+have a common base to merge patchsets from.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_format.h     | 8 ++++----
- fs/xfs/libxfs/xfs_quota_defs.h | 4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Cheers,
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 0d6fa199a896..f524736d811e 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1085,10 +1085,10 @@ static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
- #define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
- #define XFS_DQUOT_VERSION	(uint8_t)0x01	/* latest version number */
- 
--#define XFS_DQTYPE_USER		0x01		/* user dquot record */
--#define XFS_DQTYPE_PROJ		0x02		/* project dquot record */
--#define XFS_DQTYPE_GROUP	0x04		/* group dquot record */
--#define XFS_DQTYPE_BIGTIME	0x80		/* large expiry timestamps */
-+#define XFS_DQTYPE_USER		(1u << 0)	/* user dquot record */
-+#define XFS_DQTYPE_PROJ		(1u << 1)	/* project dquot record */
-+#define XFS_DQTYPE_GROUP	(1u << 2)	/* group dquot record */
-+#define XFS_DQTYPE_BIGTIME	(1u << 7)	/* large expiry timestamps */
- 
- /* bitmask to determine if this is a user/group/project dquot */
- #define XFS_DQTYPE_REC_MASK	(XFS_DQTYPE_USER | \
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index a02c5062f9b2..fdfe3cc6f15c 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -29,8 +29,8 @@ typedef uint8_t		xfs_dqtype_t;
- /*
-  * flags for q_flags field in the dquot.
-  */
--#define XFS_DQFLAG_DIRTY	(1 << 0)	/* dquot is dirty */
--#define XFS_DQFLAG_FREEING	(1 << 1)	/* dquot is being torn down */
-+#define XFS_DQFLAG_DIRTY	(1u << 0)	/* dquot is dirty */
-+#define XFS_DQFLAG_FREEING	(1u << 1)	/* dquot is being torn down */
- 
- #define XFS_DQFLAG_STRINGS \
- 	{ XFS_DQFLAG_DIRTY,	"DIRTY" }, \
+Dave.
 -- 
-2.35.1
-
+Dave Chinner
+david@fromorbit.com
