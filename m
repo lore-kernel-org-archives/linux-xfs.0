@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D957EC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:54:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0DEC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 22:54:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350472AbiDKW5B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Apr 2022 18:57:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41188 "EHLO
+        id S1350471AbiDKW5H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Apr 2022 18:57:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350471AbiDKW5A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:57:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 345E2B873;
-        Mon, 11 Apr 2022 15:54:44 -0700 (PDT)
+        with ESMTP id S1350475AbiDKW5H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 18:57:07 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A0A7DF28;
+        Mon, 11 Apr 2022 15:54:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B545961773;
-        Mon, 11 Apr 2022 22:54:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2DECC385A3;
-        Mon, 11 Apr 2022 22:54:42 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 14FBBB8199A;
+        Mon, 11 Apr 2022 22:54:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7B7DC385A9;
+        Mon, 11 Apr 2022 22:54:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649717683;
-        bh=1OiR8bgNFfnx3MScPV5QH55Wm2L5VuEOgXNDNf2D8BU=;
+        s=k20201202; t=1649717688;
+        bh=IFRfpBkkmOLxiQESIeeEuh7UioZXxo4ZwgO+aWayNUQ=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=MfHBNyZ5kAQ8TeLJanv+mHgr0LRP0hQabESPsZz4gZUbVwRyqgyhBR6HR83IJsgMz
-         k1G6IyjTc69D2MwKRouABnbL8SfiDstXocy1+fYKqkD1TugX4sOwNnjjvGDwpciQgI
-         vxVx3/0hxfmU5aq1KkKVQ/v63zx6sWlxddjsI4jBEwed1k+lwexRYGjoXiNbdoOhOn
-         EWiWbzwC8LBaxM6O1Ffh+19A3+uTBewuJqLX2YAOz82Z55AlWg95zXJcMhBooG6mED
-         /GsXAbTl/hsq6sgoCdK+4TbLeFqT/RQrbybuaOoQqYPOWJaeXLDdBXOON9hDlyfCw+
-         p2jUK9me5YCew==
-Subject: [PATCH 2/4] generic: ensure we drop suid after fallocate
+        b=I7ccXA/DxEHi/dliFWG7wrUkcrRf1KhfxXfV3WxJ4SXaXp0LDSat1Mck+xIzsETw4
+         C0k9vPJbB8QizhdIkonrEhAl5FkJeiSntGec7+n6DKyNo2Ag7EDtO2KEdMXlx5eO00
+         8dm3Al74U/DKL/5azlhQU4SYGXY+wfWONZST5lUNhnUklDALgxp6sUkaTbdCS7Jl95
+         DPl/CP1vzAUmFzF2wmeut/z/0GZC4AN9DiqDjV909K1xYKrUYO3RNEqBMc44/IfoKn
+         IHVCs2hNSnrTOcBkZBxSR9NZXj4Lu+kuyx4xRqSHwzdGvxypIwx/GlBzSD7LwBybtk
+         N0w80HuPlkRwg==
+Subject: [PATCH 3/4] generic: test that linking into a directory fails with
+ EDQUOT
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 11 Apr 2022 15:54:42 -0700
-Message-ID: <164971768254.169983.13280225265874038241.stgit@magnolia>
+Date:   Mon, 11 Apr 2022 15:54:48 -0700
+Message-ID: <164971768834.169983.11537125892654404197.stgit@magnolia>
 In-Reply-To: <164971767143.169983.12905331894414458027.stgit@magnolia>
 References: <164971767143.169983.12905331894414458027.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,998 +50,99 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-fallocate changes file contents, so make sure that we drop privileges
-and file capabilities after each fallocate operation.
+Add a regression test to make sure that unprivileged userspace linking
+into a directory fails with EDQUOT when the directory quota limits have
+been exceeded.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/generic/834     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/834.out |   33 +++++++++++++
- tests/generic/835     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/835.out |   33 +++++++++++++
- tests/generic/836     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/836.out |   33 +++++++++++++
- tests/generic/837     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/837.out |   33 +++++++++++++
- tests/generic/838     |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/838.out |   33 +++++++++++++
- tests/generic/839     |   77 ++++++++++++++++++++++++++++++
- tests/generic/839.out |   13 +++++
- 12 files changed, 890 insertions(+)
- create mode 100755 tests/generic/834
- create mode 100644 tests/generic/834.out
- create mode 100755 tests/generic/835
- create mode 100644 tests/generic/835.out
- create mode 100755 tests/generic/836
- create mode 100644 tests/generic/836.out
- create mode 100755 tests/generic/837
- create mode 100644 tests/generic/837.out
- create mode 100755 tests/generic/838
- create mode 100644 tests/generic/838.out
- create mode 100755 tests/generic/839
- create mode 100755 tests/generic/839.out
+ tests/generic/832     |   67 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/832.out |    3 ++
+ 2 files changed, 70 insertions(+)
+ create mode 100755 tests/generic/832
+ create mode 100644 tests/generic/832.out
 
 
-diff --git a/tests/generic/834 b/tests/generic/834
+diff --git a/tests/generic/832 b/tests/generic/832
 new file mode 100755
-index 00000000..9302137b
+index 00000000..1190b795
 --- /dev/null
-+++ b/tests/generic/834
-@@ -0,0 +1,127 @@
++++ b/tests/generic/832
+@@ -0,0 +1,67 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2022 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test No. 834
++# FS QA Test No. 832
 +#
-+# Functional test for dropping suid and sgid bits as part of a fallocate.
++# Ensure that unprivileged userspace hits EDQUOT while linking files into a
++# directory when the directory's quota limits have been exceeded.
++#
++# Regression test for commit:
++#
++# 871b9316e7a7 ("xfs: reserve quota for dir expansion when linking/unlinking files")
 +#
 +. ./common/preamble
-+_begin_fstest auto clone quick
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.* $junk_dir
-+}
++_begin_fstest auto quick quota
 +
 +# Import common functions.
 +. ./common/filter
-+. ./common/reflink
++. ./common/quota
 +
 +# real QA test starts here
 +
 +# Modify as appropriate.
-+_supported_fs xfs btrfs ext4
++_supported_fs generic
++_require_quota
 +_require_user
-+_require_test
-+verb=falloc
-+_require_xfs_io_command $verb
++_require_scratch
 +
-+junk_dir=$TEST_DIR/$seq
-+junk_file=$junk_dir/a
-+mkdir -p $junk_dir/
-+chmod a+rw $junk_dir/
++_scratch_mkfs > "$seqres.full" 2>&1
++_qmount_option usrquota
++_qmount
 +
-+setup_testfile() {
-+	rm -f $junk_file
-+	_pwrite_byte 0x58 0 192k $junk_file >> $seqres.full
-+	sync
-+}
++blocksize=$(_get_block_size $SCRATCH_MNT)
++scratchdir=$SCRATCH_MNT/dir
++scratchfile=$SCRATCH_MNT/file
++mkdir $scratchdir
++touch $scratchfile
 +
-+commit_and_check() {
-+	local user="$1"
-+	local command="$2"
-+	local start="$3"
-+	local end="$4"
++# Create a 2-block directory for our 1-block quota limit
++total_size=$((blocksize * 2))
++dirents=$((total_size / 255))
 +
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
++for ((i = 0; i < dirents; i++)); do
++	name=$(printf "x%0254d" $i)
++	ln $scratchfile $scratchdir/$name
++done
 +
-+	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
-+	if [ -n "$user" ]; then
-+		su - "$user" -c "$cmd" >> $seqres.full
-+	else
-+		$SHELL -c "$cmd" >> $seqres.full
-+	fi
++# Set a low quota hardlimit for an unprivileged uid and chown the files to it
++echo "set up quota" >> $seqres.full
++setquota -u $qa_user 0 "$((blocksize / 1024))" 0 0 $SCRATCH_MNT
++chown $qa_user $scratchdir $scratchfile
++repquota -upn $SCRATCH_MNT >> $seqres.full
 +
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+
-+	# Blank line in output
-+	echo
-+}
-+
-+nr=0
-+# Commit to a non-exec file by an unprivileged user clears suid but
-+# leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by an unprivileged user clears suid but
-+# not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a non-exec file by root clears suid but leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by root clears suid but not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "" "$verb" 64k 64k
++# Fail at appending the directory as qa_user to ensure quota enforcement works
++echo "fail quota" >> $seqres.full
++for ((i = 0; i < dirents; i++)); do
++	name=$(printf "y%0254d" $i)
++	su - "$qa_user" -c "ln $scratchfile $scratchdir/$name" 2>&1 | \
++		_filter_scratch | sed -e 's/y[0-9]*/yXXX/g'
++	test "${PIPESTATUS[0]}" -ne 0 && break
++done
++repquota -upn $SCRATCH_MNT >> $seqres.full
 +
 +# success, all done
++echo Silence is golden
 +status=0
 +exit
-diff --git a/tests/generic/834.out b/tests/generic/834.out
+diff --git a/tests/generic/832.out b/tests/generic/832.out
 new file mode 100644
-index 00000000..2226eea6
+index 00000000..593afe8b
 --- /dev/null
-+++ b/tests/generic/834.out
-@@ -0,0 +1,33 @@
-+QA output created by 834
-+Test 1 - qa_user, non-exec file falloc
-+6666 -rwSrwSrw- TEST_DIR/834/a
-+666 -rw-rw-rw- TEST_DIR/834/a
-+
-+Test 2 - qa_user, group-exec file falloc
-+6676 -rwSrwsrw- TEST_DIR/834/a
-+676 -rw-rwxrw- TEST_DIR/834/a
-+
-+Test 3 - qa_user, user-exec file falloc
-+6766 -rwsrwSrw- TEST_DIR/834/a
-+766 -rwxrw-rw- TEST_DIR/834/a
-+
-+Test 4 - qa_user, all-exec file falloc
-+6777 -rwsrwsrwx TEST_DIR/834/a
-+777 -rwxrwxrwx TEST_DIR/834/a
-+
-+Test 5 - root, non-exec file falloc
-+6666 -rwSrwSrw- TEST_DIR/834/a
-+6666 -rwSrwSrw- TEST_DIR/834/a
-+
-+Test 6 - root, group-exec file falloc
-+6676 -rwSrwsrw- TEST_DIR/834/a
-+6676 -rwSrwsrw- TEST_DIR/834/a
-+
-+Test 7 - root, user-exec file falloc
-+6766 -rwsrwSrw- TEST_DIR/834/a
-+6766 -rwsrwSrw- TEST_DIR/834/a
-+
-+Test 8 - root, all-exec file falloc
-+6777 -rwsrwsrwx TEST_DIR/834/a
-+6777 -rwsrwsrwx TEST_DIR/834/a
-+
-diff --git a/tests/generic/835 b/tests/generic/835
-new file mode 100755
-index 00000000..b0dc9cc3
---- /dev/null
-+++ b/tests/generic/835
-@@ -0,0 +1,127 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 835
-+#
-+# Functional test for dropping suid and sgid bits as part of a fpunch.
-+#
-+. ./common/preamble
-+_begin_fstest auto clone quick
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.* $junk_dir
-+}
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs btrfs ext4
-+_require_user
-+_require_test
-+verb=fpunch
-+_require_xfs_io_command $verb
-+
-+junk_dir=$TEST_DIR/$seq
-+junk_file=$junk_dir/a
-+mkdir -p $junk_dir/
-+chmod a+rw $junk_dir/
-+
-+setup_testfile() {
-+	rm -f $junk_file
-+	_pwrite_byte 0x58 0 192k $junk_file >> $seqres.full
-+	sync
-+}
-+
-+commit_and_check() {
-+	local user="$1"
-+	local command="$2"
-+	local start="$3"
-+	local end="$4"
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+
-+	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
-+	if [ -n "$user" ]; then
-+		su - "$user" -c "$cmd" >> $seqres.full
-+	else
-+		$SHELL -c "$cmd" >> $seqres.full
-+	fi
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+
-+	# Blank line in output
-+	echo
-+}
-+
-+nr=0
-+# Commit to a non-exec file by an unprivileged user clears suid but
-+# leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by an unprivileged user clears suid but
-+# not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a non-exec file by root clears suid but leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by root clears suid but not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/835.out b/tests/generic/835.out
-new file mode 100644
-index 00000000..186d7da4
---- /dev/null
-+++ b/tests/generic/835.out
-@@ -0,0 +1,33 @@
-+QA output created by 835
-+Test 1 - qa_user, non-exec file fpunch
-+6666 -rwSrwSrw- TEST_DIR/835/a
-+666 -rw-rw-rw- TEST_DIR/835/a
-+
-+Test 2 - qa_user, group-exec file fpunch
-+6676 -rwSrwsrw- TEST_DIR/835/a
-+676 -rw-rwxrw- TEST_DIR/835/a
-+
-+Test 3 - qa_user, user-exec file fpunch
-+6766 -rwsrwSrw- TEST_DIR/835/a
-+766 -rwxrw-rw- TEST_DIR/835/a
-+
-+Test 4 - qa_user, all-exec file fpunch
-+6777 -rwsrwsrwx TEST_DIR/835/a
-+777 -rwxrwxrwx TEST_DIR/835/a
-+
-+Test 5 - root, non-exec file fpunch
-+6666 -rwSrwSrw- TEST_DIR/835/a
-+6666 -rwSrwSrw- TEST_DIR/835/a
-+
-+Test 6 - root, group-exec file fpunch
-+6676 -rwSrwsrw- TEST_DIR/835/a
-+6676 -rwSrwsrw- TEST_DIR/835/a
-+
-+Test 7 - root, user-exec file fpunch
-+6766 -rwsrwSrw- TEST_DIR/835/a
-+6766 -rwsrwSrw- TEST_DIR/835/a
-+
-+Test 8 - root, all-exec file fpunch
-+6777 -rwsrwsrwx TEST_DIR/835/a
-+6777 -rwsrwsrwx TEST_DIR/835/a
-+
-diff --git a/tests/generic/836 b/tests/generic/836
-new file mode 100755
-index 00000000..ff0cf092
---- /dev/null
-+++ b/tests/generic/836
-@@ -0,0 +1,127 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 836
-+#
-+# Functional test for dropping suid and sgid bits as part of a fzero.
-+#
-+. ./common/preamble
-+_begin_fstest auto clone quick
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.* $junk_dir
-+}
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs btrfs ext4
-+_require_user
-+_require_test
-+verb=fzero
-+_require_xfs_io_command $verb
-+
-+junk_dir=$TEST_DIR/$seq
-+junk_file=$junk_dir/a
-+mkdir -p $junk_dir/
-+chmod a+rw $junk_dir/
-+
-+setup_testfile() {
-+	rm -f $junk_file
-+	_pwrite_byte 0x58 0 192k $junk_file >> $seqres.full
-+	sync
-+}
-+
-+commit_and_check() {
-+	local user="$1"
-+	local command="$2"
-+	local start="$3"
-+	local end="$4"
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+
-+	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
-+	if [ -n "$user" ]; then
-+		su - "$user" -c "$cmd" >> $seqres.full
-+	else
-+		$SHELL -c "$cmd" >> $seqres.full
-+	fi
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+
-+	# Blank line in output
-+	echo
-+}
-+
-+nr=0
-+# Commit to a non-exec file by an unprivileged user clears suid but
-+# leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by an unprivileged user clears suid but
-+# not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a non-exec file by root clears suid but leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by root clears suid but not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/836.out b/tests/generic/836.out
-new file mode 100644
-index 00000000..9f9f5f12
---- /dev/null
-+++ b/tests/generic/836.out
-@@ -0,0 +1,33 @@
-+QA output created by 836
-+Test 1 - qa_user, non-exec file fzero
-+6666 -rwSrwSrw- TEST_DIR/836/a
-+666 -rw-rw-rw- TEST_DIR/836/a
-+
-+Test 2 - qa_user, group-exec file fzero
-+6676 -rwSrwsrw- TEST_DIR/836/a
-+676 -rw-rwxrw- TEST_DIR/836/a
-+
-+Test 3 - qa_user, user-exec file fzero
-+6766 -rwsrwSrw- TEST_DIR/836/a
-+766 -rwxrw-rw- TEST_DIR/836/a
-+
-+Test 4 - qa_user, all-exec file fzero
-+6777 -rwsrwsrwx TEST_DIR/836/a
-+777 -rwxrwxrwx TEST_DIR/836/a
-+
-+Test 5 - root, non-exec file fzero
-+6666 -rwSrwSrw- TEST_DIR/836/a
-+6666 -rwSrwSrw- TEST_DIR/836/a
-+
-+Test 6 - root, group-exec file fzero
-+6676 -rwSrwsrw- TEST_DIR/836/a
-+6676 -rwSrwsrw- TEST_DIR/836/a
-+
-+Test 7 - root, user-exec file fzero
-+6766 -rwsrwSrw- TEST_DIR/836/a
-+6766 -rwsrwSrw- TEST_DIR/836/a
-+
-+Test 8 - root, all-exec file fzero
-+6777 -rwsrwsrwx TEST_DIR/836/a
-+6777 -rwsrwsrwx TEST_DIR/836/a
-+
-diff --git a/tests/generic/837 b/tests/generic/837
-new file mode 100755
-index 00000000..477b8f21
---- /dev/null
-+++ b/tests/generic/837
-@@ -0,0 +1,127 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 837
-+#
-+# Functional test for dropping suid and sgid bits as part of a finsert.
-+#
-+. ./common/preamble
-+_begin_fstest auto clone quick
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.* $junk_dir
-+}
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs btrfs ext4
-+_require_user
-+_require_test
-+verb=finsert
-+_require_xfs_io_command $verb
-+
-+junk_dir=$TEST_DIR/$seq
-+junk_file=$junk_dir/a
-+mkdir -p $junk_dir/
-+chmod a+rw $junk_dir/
-+
-+setup_testfile() {
-+	rm -f $junk_file
-+	_pwrite_byte 0x58 0 192k $junk_file >> $seqres.full
-+	sync
-+}
-+
-+commit_and_check() {
-+	local user="$1"
-+	local command="$2"
-+	local start="$3"
-+	local end="$4"
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+
-+	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
-+	if [ -n "$user" ]; then
-+		su - "$user" -c "$cmd" >> $seqres.full
-+	else
-+		$SHELL -c "$cmd" >> $seqres.full
-+	fi
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+
-+	# Blank line in output
-+	echo
-+}
-+
-+nr=0
-+# Commit to a non-exec file by an unprivileged user clears suid but
-+# leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by an unprivileged user clears suid but
-+# not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a non-exec file by root clears suid but leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by root clears suid but not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/837.out b/tests/generic/837.out
-new file mode 100644
-index 00000000..686b806e
---- /dev/null
-+++ b/tests/generic/837.out
-@@ -0,0 +1,33 @@
-+QA output created by 837
-+Test 1 - qa_user, non-exec file finsert
-+6666 -rwSrwSrw- TEST_DIR/837/a
-+666 -rw-rw-rw- TEST_DIR/837/a
-+
-+Test 2 - qa_user, group-exec file finsert
-+6676 -rwSrwsrw- TEST_DIR/837/a
-+676 -rw-rwxrw- TEST_DIR/837/a
-+
-+Test 3 - qa_user, user-exec file finsert
-+6766 -rwsrwSrw- TEST_DIR/837/a
-+766 -rwxrw-rw- TEST_DIR/837/a
-+
-+Test 4 - qa_user, all-exec file finsert
-+6777 -rwsrwsrwx TEST_DIR/837/a
-+777 -rwxrwxrwx TEST_DIR/837/a
-+
-+Test 5 - root, non-exec file finsert
-+6666 -rwSrwSrw- TEST_DIR/837/a
-+6666 -rwSrwSrw- TEST_DIR/837/a
-+
-+Test 6 - root, group-exec file finsert
-+6676 -rwSrwsrw- TEST_DIR/837/a
-+6676 -rwSrwsrw- TEST_DIR/837/a
-+
-+Test 7 - root, user-exec file finsert
-+6766 -rwsrwSrw- TEST_DIR/837/a
-+6766 -rwsrwSrw- TEST_DIR/837/a
-+
-+Test 8 - root, all-exec file finsert
-+6777 -rwsrwsrwx TEST_DIR/837/a
-+6777 -rwsrwsrwx TEST_DIR/837/a
-+
-diff --git a/tests/generic/838 b/tests/generic/838
-new file mode 100755
-index 00000000..d7c7e5a8
---- /dev/null
-+++ b/tests/generic/838
-@@ -0,0 +1,127 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 838
-+#
-+# Functional test for dropping suid and sgid bits as part of a fcollapse.
-+#
-+. ./common/preamble
-+_begin_fstest auto clone quick
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.* $junk_dir
-+}
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs btrfs ext4
-+_require_user
-+_require_test
-+verb=fcollapse
-+_require_xfs_io_command $verb
-+
-+junk_dir=$TEST_DIR/$seq
-+junk_file=$junk_dir/a
-+mkdir -p $junk_dir/
-+chmod a+rw $junk_dir/
-+
-+setup_testfile() {
-+	rm -f $junk_file
-+	_pwrite_byte 0x58 0 192k $junk_file >> $seqres.full
-+	sync
-+}
-+
-+commit_and_check() {
-+	local user="$1"
-+	local command="$2"
-+	local start="$3"
-+	local end="$4"
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+
-+	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
-+	if [ -n "$user" ]; then
-+		su - "$user" -c "$cmd" >> $seqres.full
-+	else
-+		$SHELL -c "$cmd" >> $seqres.full
-+	fi
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+
-+	# Blank line in output
-+	echo
-+}
-+
-+nr=0
-+# Commit to a non-exec file by an unprivileged user clears suid but
-+# leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by an unprivileged user clears suid but
-+# not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by an unprivileged user clears suid and
-+# sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - qa_user, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "$qa_user" "$verb" 64k 64k
-+
-+# Commit to a non-exec file by root clears suid but leaves sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, non-exec file $verb"
-+setup_testfile
-+chmod a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a group-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, group-exec file $verb"
-+setup_testfile
-+chmod g+x,a+rws $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a user-exec file by root clears suid but not sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, user-exec file $verb"
-+setup_testfile
-+chmod u+x,a+rws,g-x $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# Commit to a all-exec file by root clears suid and sgid.
-+nr=$((nr + 1))
-+echo "Test $nr - root, all-exec file $verb"
-+setup_testfile
-+chmod a+rwxs $junk_file
-+commit_and_check "" "$verb" 64k 64k
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/838.out b/tests/generic/838.out
-new file mode 100644
-index 00000000..cdc29f4b
---- /dev/null
-+++ b/tests/generic/838.out
-@@ -0,0 +1,33 @@
-+QA output created by 838
-+Test 1 - qa_user, non-exec file fcollapse
-+6666 -rwSrwSrw- TEST_DIR/838/a
-+666 -rw-rw-rw- TEST_DIR/838/a
-+
-+Test 2 - qa_user, group-exec file fcollapse
-+6676 -rwSrwsrw- TEST_DIR/838/a
-+676 -rw-rwxrw- TEST_DIR/838/a
-+
-+Test 3 - qa_user, user-exec file fcollapse
-+6766 -rwsrwSrw- TEST_DIR/838/a
-+766 -rwxrw-rw- TEST_DIR/838/a
-+
-+Test 4 - qa_user, all-exec file fcollapse
-+6777 -rwsrwsrwx TEST_DIR/838/a
-+777 -rwxrwxrwx TEST_DIR/838/a
-+
-+Test 5 - root, non-exec file fcollapse
-+6666 -rwSrwSrw- TEST_DIR/838/a
-+6666 -rwSrwSrw- TEST_DIR/838/a
-+
-+Test 6 - root, group-exec file fcollapse
-+6676 -rwSrwsrw- TEST_DIR/838/a
-+6676 -rwSrwsrw- TEST_DIR/838/a
-+
-+Test 7 - root, user-exec file fcollapse
-+6766 -rwsrwSrw- TEST_DIR/838/a
-+6766 -rwsrwSrw- TEST_DIR/838/a
-+
-+Test 8 - root, all-exec file fcollapse
-+6777 -rwsrwsrwx TEST_DIR/838/a
-+6777 -rwsrwsrwx TEST_DIR/838/a
-+
-diff --git a/tests/generic/839 b/tests/generic/839
-new file mode 100755
-index 00000000..70bef5fc
---- /dev/null
-+++ b/tests/generic/839
-@@ -0,0 +1,77 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 839
-+#
-+# Functional test for dropping capability bits as part of an fallocate.
-+#
-+. ./common/preamble
-+_begin_fstest auto prealloc quick
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.* $junk_dir
-+}
-+
-+# Import common functions.
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs btrfs ext4
-+_require_user
-+_require_command "$GETCAP_PROG" getcap
-+_require_command "$SETCAP_PROG" setcap
-+_require_xfs_io_command falloc
-+_require_test
-+
-+junk_dir=$TEST_DIR/$seq
-+junk_file=$junk_dir/a
-+mkdir -p $junk_dir/
-+chmod a+rw $junk_dir/
-+
-+setup_testfile() {
-+	rm -f $junk_file
-+	touch $junk_file
-+	chmod a+rwx $junk_file
-+	$SETCAP_PROG cap_setgid,cap_setuid+ep $junk_file
-+	sync
-+}
-+
-+commit_and_check() {
-+	local user="$1"
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+	_getcap -v $junk_file | _filter_test_dir
-+
-+	local cmd="$XFS_IO_PROG -c 'falloc 0 64k' $junk_file"
-+	if [ -n "$user" ]; then
-+		su - "$user" -c "$cmd" >> $seqres.full
-+	else
-+		$SHELL -c "$cmd" >> $seqres.full
-+	fi
-+
-+	stat -c '%a %A %n' $junk_file | _filter_test_dir
-+	_getcap -v $junk_file | _filter_test_dir
-+
-+	# Blank line in output
-+	echo
-+}
-+
-+# Commit by an unprivileged user clears capability bits.
-+echo "Test 1 - qa_user"
-+setup_testfile
-+commit_and_check "$qa_user"
-+
-+# Commit by root leaves capability bits.
-+echo "Test 2 - root"
-+setup_testfile
-+commit_and_check
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/839.out b/tests/generic/839.out
-new file mode 100755
-index 00000000..f571cd26
---- /dev/null
-+++ b/tests/generic/839.out
-@@ -0,0 +1,13 @@
-+QA output created by 839
-+Test 1 - qa_user
-+777 -rwxrwxrwx TEST_DIR/839/a
-+TEST_DIR/839/a cap_setgid,cap_setuid=ep
-+777 -rwxrwxrwx TEST_DIR/839/a
-+TEST_DIR/839/a
-+
-+Test 2 - root
-+777 -rwxrwxrwx TEST_DIR/839/a
-+TEST_DIR/839/a cap_setgid,cap_setuid=ep
-+777 -rwxrwxrwx TEST_DIR/839/a
-+TEST_DIR/839/a
-+
++++ b/tests/generic/832.out
+@@ -0,0 +1,3 @@
++QA output created by 832
++ln: failed to create hard link 'SCRATCH_MNT/dir/yXXX': Disk quota exceeded
++Silence is golden
 
