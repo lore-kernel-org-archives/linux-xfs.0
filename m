@@ -2,45 +2,45 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 824FDC433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C96CDC4332F
 	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 00:31:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234982AbiDKAeG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S236575AbiDKAeG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sun, 10 Apr 2022 20:34:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59190 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231398AbiDKAeE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Apr 2022 20:34:04 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9819811A03
+        with ESMTP id S232656AbiDKAeD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Apr 2022 20:34:03 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 12B38DED4
         for <linux-xfs@vger.kernel.org>; Sun, 10 Apr 2022 17:31:51 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-233-190.pa.vic.optusnet.com.au [49.186.233.190])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C8E0010CE855
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 10:31:49 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 525D153AD07
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 10:31:50 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ndhy9-00GEMa-95
+        id 1ndhy9-00GEMV-7C
         for linux-xfs@vger.kernel.org; Mon, 11 Apr 2022 10:31:49 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1ndhy9-008pj8-8C
+        id 1ndhy9-008pix-6H
         for linux-xfs@vger.kernel.org;
         Mon, 11 Apr 2022 10:31:49 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 06/17] xfs: convert AGF log flags to unsigned.
-Date:   Mon, 11 Apr 2022 10:31:36 +1000
-Message-Id: <20220411003147.2104423-7-david@fromorbit.com>
+Subject: [PATCH 04/17] xfs: convert bmap extent type flags to unsigned.
+Date:   Mon, 11 Apr 2022 10:31:34 +1000
+Message-Id: <20220411003147.2104423-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220411003147.2104423-1-david@fromorbit.com>
 References: <20220411003147.2104423-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=625376f5
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=625376f6
         a=bHAvQTfMiaNt/bo4vVGwyA==:117 a=bHAvQTfMiaNt/bo4vVGwyA==:17
-        a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8 a=-XfM-_w09cZF3wrI41kA:9
+        a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8 a=iPUYN0WQYUd8Jtb8ip0A:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -52,109 +52,117 @@ fields to be unsigned.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c  | 10 +++++-----
- fs/xfs/libxfs/xfs_alloc.h  |  2 +-
- fs/xfs/libxfs/xfs_format.h | 38 +++++++++++++++++++-------------------
- 3 files changed, 25 insertions(+), 25 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 14 +++++++-------
+ fs/xfs/libxfs/xfs_bmap.h | 22 +++++++++++-----------
+ 2 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index b52ed339727f..1ff3fa67d4c9 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2777,7 +2777,7 @@ xfs_alloc_get_freelist(
- 	xfs_agblock_t		bno;
- 	__be32			*agfl_bno;
- 	int			error;
--	int			logflags;
-+	uint32_t		logflags;
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	struct xfs_perag	*pag;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 74198dd82b03..d53dfe8db8f2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1399,7 +1399,7 @@ xfs_bmap_add_extent_delay_real(
+ 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+ 					/* left is 0, right is 1, prev is 2 */
+ 	int			rval=0;	/* return value (logging flags) */
+-	int			state = xfs_bmap_fork_to_state(whichfork);
++	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
+ 	xfs_filblks_t		da_new; /* new count del alloc blocks used */
+ 	xfs_filblks_t		da_old; /* old count del alloc blocks used */
+ 	xfs_filblks_t		temp=0;	/* value for da_new calculations */
+@@ -1950,7 +1950,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+ 					/* left is 0, right is 1, prev is 2 */
+ 	int			rval=0;	/* return value (logging flags) */
+-	int			state = xfs_bmap_fork_to_state(whichfork);
++	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_bmbt_irec	old;
  
-@@ -2830,9 +2830,9 @@ xfs_alloc_get_freelist(
-  */
- void
- xfs_alloc_log_agf(
--	xfs_trans_t	*tp,	/* transaction pointer */
--	struct xfs_buf	*bp,	/* buffer for a.g. freelist header */
--	int		fields)	/* mask of fields to be logged (XFS_AGF_...) */
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp,
-+	uint32_t		fields)
- {
- 	int	first;		/* first byte offset */
- 	int	last;		/* last byte offset */
-@@ -2902,7 +2902,7 @@ xfs_alloc_put_freelist(
- 	struct xfs_perag	*pag;
- 	__be32			*blockp;
- 	int			error;
--	int			logflags;
-+	uint32_t		logflags;
- 	__be32			*agfl_bno;
- 	int			startoff;
+@@ -2479,7 +2479,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	xfs_filblks_t		newlen=0;	/* new indirect size */
+ 	xfs_filblks_t		oldlen=0;	/* old indirect size */
+ 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+-	int			state = xfs_bmap_fork_to_state(whichfork);
++	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
+ 	xfs_filblks_t		temp;	 /* temp for indirect calculations */
  
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index d4c057b764f9..84ca09b2223f 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -121,7 +121,7 @@ void
- xfs_alloc_log_agf(
- 	struct xfs_trans *tp,	/* transaction pointer */
- 	struct xfs_buf	*bp,	/* buffer for a.g. freelist header */
--	int		fields);/* mask of fields to be logged (XFS_AGF_...) */
-+	uint32_t	fields);/* mask of fields to be logged (XFS_AGF_...) */
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+@@ -2626,7 +2626,7 @@ xfs_bmap_add_extent_hole_real(
+ 	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
+ 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+ 	int			rval=0;	/* return value (logging flags) */
+-	int			state = xfs_bmap_fork_to_state(whichfork);
++	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
+ 	struct xfs_bmbt_irec	old;
  
+ 	ASSERT(!isnullstartblock(new->br_startblock));
+@@ -4801,7 +4801,7 @@ xfs_bmap_del_extent_delay(
+ 	int64_t			da_old, da_new, da_diff = 0;
+ 	xfs_fileoff_t		del_endoff, got_endoff;
+ 	xfs_filblks_t		got_indlen, new_indlen, stolen;
+-	int			state = xfs_bmap_fork_to_state(whichfork);
++	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
+ 	int			error = 0;
+ 	bool			isrt;
+ 
+@@ -4926,7 +4926,7 @@ xfs_bmap_del_extent_cow(
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+ 	struct xfs_bmbt_irec	new;
+ 	xfs_fileoff_t		del_endoff, got_endoff;
+-	int			state = BMAP_COWFORK;
++	uint32_t		state = BMAP_COWFORK;
+ 
+ 	XFS_STATS_INC(mp, xs_del_exlist);
+ 
+@@ -5015,7 +5015,7 @@ xfs_bmap_del_extent_real(
+ 	xfs_bmbt_irec_t		new;	/* new record to be inserted */
+ 	/* REFERENCED */
+ 	uint			qfield;	/* quota field to update */
+-	int			state = xfs_bmap_fork_to_state(whichfork);
++	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
+ 	struct xfs_bmbt_irec	old;
+ 
+ 	mp = ip->i_mount;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 03d9aaf87413..29d38c3c2607 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -124,16 +124,16 @@ static inline int xfs_bmapi_whichfork(int bmapi_flags)
  /*
-  * Interface for inode allocation to force the pag data to be initialized.
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index d665c04e69dd..65e24847841e 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -525,26 +525,26 @@ typedef struct xfs_agf {
+  * Flags for xfs_bmap_add_extent*.
+  */
+-#define BMAP_LEFT_CONTIG	(1 << 0)
+-#define BMAP_RIGHT_CONTIG	(1 << 1)
+-#define BMAP_LEFT_FILLING	(1 << 2)
+-#define BMAP_RIGHT_FILLING	(1 << 3)
+-#define BMAP_LEFT_DELAY		(1 << 4)
+-#define BMAP_RIGHT_DELAY	(1 << 5)
+-#define BMAP_LEFT_VALID		(1 << 6)
+-#define BMAP_RIGHT_VALID	(1 << 7)
+-#define BMAP_ATTRFORK		(1 << 8)
+-#define BMAP_COWFORK		(1 << 9)
++#define BMAP_LEFT_CONTIG	(1u << 0)
++#define BMAP_RIGHT_CONTIG	(1u << 1)
++#define BMAP_LEFT_FILLING	(1u << 2)
++#define BMAP_RIGHT_FILLING	(1u << 3)
++#define BMAP_LEFT_DELAY		(1u << 4)
++#define BMAP_RIGHT_DELAY	(1u << 5)
++#define BMAP_LEFT_VALID		(1u << 6)
++#define BMAP_RIGHT_VALID	(1u << 7)
++#define BMAP_ATTRFORK		(1u << 8)
++#define BMAP_COWFORK		(1u << 9)
  
- #define XFS_AGF_CRC_OFF		offsetof(struct xfs_agf, agf_crc)
+ #define XFS_BMAP_EXT_FLAGS \
+ 	{ BMAP_LEFT_CONTIG,	"LC" }, \
+@@ -243,7 +243,7 @@ void	xfs_bmap_map_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ void	xfs_bmap_unmap_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *imap);
  
--#define	XFS_AGF_MAGICNUM	0x00000001
--#define	XFS_AGF_VERSIONNUM	0x00000002
--#define	XFS_AGF_SEQNO		0x00000004
--#define	XFS_AGF_LENGTH		0x00000008
--#define	XFS_AGF_ROOTS		0x00000010
--#define	XFS_AGF_LEVELS		0x00000020
--#define	XFS_AGF_FLFIRST		0x00000040
--#define	XFS_AGF_FLLAST		0x00000080
--#define	XFS_AGF_FLCOUNT		0x00000100
--#define	XFS_AGF_FREEBLKS	0x00000200
--#define	XFS_AGF_LONGEST		0x00000400
--#define	XFS_AGF_BTREEBLKS	0x00000800
--#define	XFS_AGF_UUID		0x00001000
--#define	XFS_AGF_RMAP_BLOCKS	0x00002000
--#define	XFS_AGF_REFCOUNT_BLOCKS	0x00004000
--#define	XFS_AGF_REFCOUNT_ROOT	0x00008000
--#define	XFS_AGF_REFCOUNT_LEVEL	0x00010000
--#define	XFS_AGF_SPARE64		0x00020000
-+#define	XFS_AGF_MAGICNUM	(1u << 0)
-+#define	XFS_AGF_VERSIONNUM	(1u << 1)
-+#define	XFS_AGF_SEQNO		(1u << 2)
-+#define	XFS_AGF_LENGTH		(1u << 3)
-+#define	XFS_AGF_ROOTS		(1u << 4)
-+#define	XFS_AGF_LEVELS		(1u << 5)
-+#define	XFS_AGF_FLFIRST		(1u << 6)
-+#define	XFS_AGF_FLLAST		(1u << 7)
-+#define	XFS_AGF_FLCOUNT		(1u << 8)
-+#define	XFS_AGF_FREEBLKS	(1u << 9)
-+#define	XFS_AGF_LONGEST		(1u << 10)
-+#define	XFS_AGF_BTREEBLKS	(1u << 11)
-+#define	XFS_AGF_UUID		(1u << 12)
-+#define	XFS_AGF_RMAP_BLOCKS	(1u << 13)
-+#define	XFS_AGF_REFCOUNT_BLOCKS	(1u << 14)
-+#define	XFS_AGF_REFCOUNT_ROOT	(1u << 15)
-+#define	XFS_AGF_REFCOUNT_LEVEL	(1u << 16)
-+#define	XFS_AGF_SPARE64		(1u << 17)
- #define	XFS_AGF_NUM_BITS	18
--#define	XFS_AGF_ALL_BITS	((1 << XFS_AGF_NUM_BITS) - 1)
-+#define	XFS_AGF_ALL_BITS	((1u << XFS_AGF_NUM_BITS) - 1)
- 
- #define XFS_AGF_FLAGS \
- 	{ XFS_AGF_MAGICNUM,	"MAGICNUM" }, \
+-static inline int xfs_bmap_fork_to_state(int whichfork)
++static inline uint32_t xfs_bmap_fork_to_state(int whichfork)
+ {
+ 	switch (whichfork) {
+ 	case XFS_ATTR_FORK:
 -- 
 2.35.1
 
