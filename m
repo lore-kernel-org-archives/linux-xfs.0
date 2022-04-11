@@ -2,137 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F13C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 11:33:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D02F5C4167D
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Apr 2022 12:05:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244058AbiDKLfY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Apr 2022 07:35:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48022 "EHLO
+        id S1345964AbiDKMHx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Apr 2022 08:07:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237098AbiDKLfW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 07:35:22 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED3644553D;
-        Mon, 11 Apr 2022 04:33:08 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id q142so13896771pgq.9;
-        Mon, 11 Apr 2022 04:33:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=d0G3ixB92qwgTA41l9ocNesTRW2JojJDnB4Iqey5Sio=;
-        b=JBamKgIpJ9LTPyhHtA1OgmkyWh2tNfbjhdN8ot8D8DsgIwVwZrY5XmLlM0PXOFYeuY
-         9OvT+ROOBccpeVNtxmvscgur2ymuxDF8ZGzeanTP3Tleta5BUZzYQ/h6D6/r8Ze4rf16
-         53OOxHgZ7SUnf6fw41tnlNkUukfOYihOLQI0Q8WGJEjgNUVycKz32caBKRKBZogKd3gp
-         rDO7ep3AUbMA913Rhw+raJxuIF0WBey+9UalrRMUv5PpkDfVLnoPssdGN73m6GUr3RFu
-         Hyj7aUAYhBJL7/szsLpv61IbpjBDsktDTKdkTzdDhT7OVIsiXDOJ5g9kIrsaf8tG8lb0
-         PkDQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=d0G3ixB92qwgTA41l9ocNesTRW2JojJDnB4Iqey5Sio=;
-        b=aXGoyRxFtv+l+eZ57tP9RhN7ZaqKBELRAi086wh2eMZ7yFheZh0mKYtQshnR/u75j0
-         hxDPXjxiremmpnrWSf0db2PILvMhgPD1CdNhprqW6ryIW1rCuxeVNBd1bnTOGx7FnjuZ
-         f5+fkhiUdV3nuhUiTUH0YleUgiG7yTlpLPpFdi127iY/ujL0skFqBa8VLTr6EUI0BgNg
-         yZMorj2gjlKHa8zWpi0eo53u/CL7ic6AVO+Vugym1iwRfbzQBof3mhyIBRMkGH0i1Ki0
-         NacaHHI96Q6QKKrazW5XTMJGGaS6fXfCrmARsRdczeVG5IlrLa+PrBnIWqiZiidI3b5R
-         qqSg==
-X-Gm-Message-State: AOAM532ckXIIZaOQNjio4E+MF2tlrfLw7nNFjgD2uh+b2rGHQ3wGQNkA
-        iYcY4B+wmxctgQagFr88Gh0=
-X-Google-Smtp-Source: ABdhPJzlTUGEvYEO6cs4FWwL/g97zUiBYkIVYPfvOf7CBaVSJDSltEFU7/WCEt9uBFk7WjSXO5Bomw==
-X-Received: by 2002:a63:de45:0:b0:39c:c255:b30 with SMTP id y5-20020a63de45000000b0039cc2550b30mr18470548pgi.82.1649676788451;
-        Mon, 11 Apr 2022 04:33:08 -0700 (PDT)
-Received: from localhost ([166.111.139.106])
-        by smtp.gmail.com with ESMTPSA id x5-20020aa79a45000000b00505c1ab148esm3697360pfj.131.2022.04.11.04.33.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Apr 2022 04:33:07 -0700 (PDT)
-From:   Zixuan Fu <r33s3n6@gmail.com>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        baijiaju1990@gmail.com, Zixuan Fu <r33s3n6@gmail.com>,
-        TOTE Robot <oslab@tsinghua.edu.cn>
-Subject: [PATCH] fs: xfs: fix possible NULL pointer dereference in xfs_buf_ioapply_map()
-Date:   Mon, 11 Apr 2022 19:32:50 +0800
-Message-Id: <20220411113250.797833-1-r33s3n6@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229664AbiDKMHu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Apr 2022 08:07:50 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 268723A709;
+        Mon, 11 Apr 2022 05:05:35 -0700 (PDT)
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23B9NnvU025178;
+        Mon, 11 Apr 2022 12:03:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=gYNUMVwDP13qlMS4+UHaJJ3PaCFPgROQJTYtqXnOX7M=;
+ b=RDqgcHKph8Jm2BhrynHRzlAqx8nGWKQVGDEreK7n+J6njlw2fY/eROIb0LG1Go0keNpO
+ U7B7ao4FH0/uzQKEPYrHVhNG/pJ2E7Z6UBEEa2SxZlUdVDQJZ6TEFr72vPR9TSXOEBKG
+ MqlChSHpWchCsB0wZHoGw70dgQSIwe1Dr/3iyUd7QHcinyuGvNuFdGbEFCrbqw9Rsc9z
+ JkcowV5iFVIqo42z4/eOag4ZGEVEYQqZe/457g+H8egdMxH/HXBM9/jRkB0BPaAeZihE
+ GFX1OIArRJYPFHkICDQZB90KgaeOXTtU3/g2gqArNZA/NmuhAbDjv3WPLEAFQ6zGE6gp Sw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3fchnqtx4t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Apr 2022 12:03:59 +0000
+Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 23BAmtcM013717;
+        Mon, 11 Apr 2022 12:03:58 GMT
+Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3fchnqtx39-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Apr 2022 12:03:58 +0000
+Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
+        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23BC3gZm003276;
+        Mon, 11 Apr 2022 12:03:54 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma04ams.nl.ibm.com with ESMTP id 3fb1s8u242-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Apr 2022 12:03:54 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23BC40Q146596476
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 Apr 2022 12:04:01 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1327BA4065;
+        Mon, 11 Apr 2022 12:03:52 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C9DE7A404D;
+        Mon, 11 Apr 2022 12:03:50 +0000 (GMT)
+Received: from [9.145.81.78] (unknown [9.145.81.78])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Mon, 11 Apr 2022 12:03:50 +0000 (GMT)
+Message-ID: <e971095e-1015-c348-3c24-114193ee5ff0@linux.ibm.com>
+Date:   Mon, 11 Apr 2022 14:03:50 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH 24/27] block: remove QUEUE_FLAG_DISCARD
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>, Coly Li <colyli@suse.de>
+References: <20220409045043.23593-1-hch@lst.de>
+ <20220409045043.23593-25-hch@lst.de>
+From:   =?UTF-8?Q?Jan_H=c3=b6ppner?= <hoeppner@linux.ibm.com>
+In-Reply-To: <20220409045043.23593-25-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: fq1U6p5RSJi3IUi0XnNkXpRDl0Ogb6A0
+X-Proofpoint-ORIG-GUID: D9QlKI8GujOSuLx30db3fYGBx6ksQFZ5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.425,FMLib:17.11.64.514
+ definitions=2022-04-11_04,2022-04-11_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 priorityscore=1501
+ impostorscore=0 lowpriorityscore=0 spamscore=0 bulkscore=0 phishscore=0
+ adultscore=0 clxscore=1011 mlxlogscore=999 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2204110067
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In our fault-injection testing, bio_alloc() may fail with low memory and
-return NULL. In this case, the variable "bio" in xfs_buf_ioapply_map()
-would be NULL and then it is dereferenced by the next instruction
-"bio->bi_iter.bi_sector".
+On 09/04/2022 06:50, Christoph Hellwig wrote:
+> Just use a non-zero max_discard_sectors as an indicator for discard
+> support, similar to what is done for write zeroes.
+> 
+> The only places where needs special attention is the RAID5 driver,
+> which must clear discard support for security reasons by default,
+> even if the default stacking rules would allow for it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [btrfs]
+> Acked-by: Coly Li <colyli@suse.de> [bcache]
+> ---
 
-The failure log is listed as follows:
+For 
 
-[   11.929658] BUG: kernel NULL pointer dereference, address: 0000000000000015
-...
-[   11.932963] RIP: 0010:xfs_buf_ioapply_map+0x2cc/0x6f0 [xfs]
-...
-[   11.940043] Call Trace:
-[   11.940247]  <TASK>
-[   11.940416]  ? _raw_spin_unlock_irqrestore+0x3c/0x70
-[   11.940827]  _xfs_buf_ioapply+0x134/0x4d0 [xfs]
-[   11.941256]  __xfs_buf_submit+0x585/0x7a0 [xfs]
-[   11.941684]  ? _xfs_buf_read+0xb7/0x120 [xfs]
-[   11.942127]  _xfs_buf_read+0xb7/0x120 [xfs]
-[   11.942535]  xfs_buf_read_map+0x1ba/0x650 [xfs]
-[   11.942981]  ? xfs_read_agf+0x163/0x260 [xfs]
-[   11.943394]  xfs_trans_read_buf_map+0x37c/0x850 [xfs]
-[   11.943883]  ? xfs_read_agf+0x163/0x260 [xfs]
-[   11.944306]  ? xfs_read_agf+0x163/0x260 [xfs]
-[   11.944725]  xfs_read_agf+0x163/0x260 [xfs]
-[   11.945141]  xfs_alloc_read_agf+0xc5/0x480 [xfs]
-[   11.945574]  xfs_alloc_pagf_init+0x89/0x150 [xfs]
-[   11.946037]  xfs_ag_resv_init+0x14b/0x5c0 [xfs]
-[   11.946471]  xfs_fs_reserve_ag_blocks+0xf3/0x290 [xfs]
-[   11.946961]  xfs_mountfs+0x2298/0x2440 [xfs]
-[   11.947372]  xfs_fs_fill_super+0x1eaa/0x21e0 [xfs]
-[   11.947840]  get_tree_bdev+0x3c3/0x5f0
-[   11.948136]  ? xfs_fs_warn_deprecated+0x100/0x100 [xfs]
-[   11.948633]  xfs_fs_get_tree+0x68/0xb0 [xfs]
-[   11.949056]  vfs_get_tree+0x81/0x220
-[   11.949336]  path_mount+0x1061/0x2340
-[   11.949619]  ? kasan_quarantine_put+0x2c/0x1a0
-[   11.949991]  ? slab_free_freelist_hook+0xde/0x160
-[   11.950360]  ? mark_mounts_for_expiry+0x410/0x410
-[   11.950729]  ? user_path_at_empty+0xf6/0x160
-[   11.951072]  ? kmem_cache_free+0xb8/0x1a0
-[   11.951384]  ? user_path_at_empty+0xf6/0x160
-[   11.951717]  __se_sys_mount+0x217/0x2b0
-[   11.952001]  ? __x64_sys_mount+0xd0/0xd0
-[   11.952277]  ? exit_to_user_mode_prepare+0x32/0x130
-[   11.952664]  do_syscall_64+0x41/0x90
-[   11.952960]  entry_SYSCALL_64_after_hwframe+0x44/0xae
-...
-[   11.958483]  </TASK>
+>  drivers/s390/block/dasd_fba.c       |  1 -
 
-This patch adds a NULL check of "bio" and return immediately if it's NULL.
-
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-Signed-off-by: Zixuan Fu <r33s3n6@gmail.com>
----
- fs/xfs/xfs_buf.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index e1afb9e503e1..1be98503b538 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1447,6 +1447,9 @@ xfs_buf_ioapply_map(
- 	nr_pages = bio_max_segs(total_nr_pages);
- 
- 	bio = bio_alloc(bp->b_target->bt_bdev, nr_pages, op, GFP_NOIO);
-+	if (!bio)
-+		return;
-+
- 	bio->bi_iter.bi_sector = sector;
- 	bio->bi_end_io = xfs_buf_bio_end_io;
- 	bio->bi_private = bp;
--- 
-2.25.1
-
+Acked-by: Jan Höppner <hoeppner@linux.ibm.com>
