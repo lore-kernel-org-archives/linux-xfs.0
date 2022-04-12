@@ -2,130 +2,100 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85D21C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Apr 2022 11:23:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F35F9C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Apr 2022 11:33:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351220AbiDLLZv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Apr 2022 07:25:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51700 "EHLO
+        id S1347953AbiDLLfa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Apr 2022 07:35:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351255AbiDLLZk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Apr 2022 07:25:40 -0400
-Received: from mail.skyhub.de (mail.skyhub.de [IPv6:2a01:4f8:190:11c2::b:1457])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E6DA2B25A;
-        Tue, 12 Apr 2022 03:07:51 -0700 (PDT)
-Received: from zn.tnic (p200300ea97156149329c23fffea6a903.dip0.t-ipconnect.de [IPv6:2003:ea:9715:6149:329c:23ff:fea6:a903])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 9608C1EC04EC;
-        Tue, 12 Apr 2022 12:07:45 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
-        t=1649758065;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
-        bh=o3lXO1BKF/S5AzldA58rjm6HBnn56CuwTB6uiL2Y1Ag=;
-        b=MnAIT7Er8JwAM4b0GD9rgLkDQyjcarmya9EyILrxMvNLKZ0HrhcSex/LUG4qj5DimKo4xp
-        FUSPF+Ow9Iqn/lR66hENQLYudzalsAfqsYDdVNCEP3UQRqaJ97IASCFGZJ0A5WCoQftN+r
-        A6Lci8BJ2YNNbYwSUe5vjOAJqh086DM=
-Date:   Tue, 12 Apr 2022 12:07:46 +0200
-From:   Borislav Petkov <bp@alien8.de>
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     david@fromorbit.com, djwong@kernel.org, dan.j.williams@intel.com,
-        hch@infradead.org, vishal.l.verma@intel.com, dave.jiang@intel.com,
-        agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com,
-        ira.weiny@intel.com, willy@infradead.org, vgoyal@redhat.com,
-        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        x86@kernel.org
-Subject: Re: [PATCH v7 3/6] mce: fix set_mce_nospec to always unmap the whole
- page
-Message-ID: <YlVPcrK4SSXyPx+Y@zn.tnic>
-References: <20220405194747.2386619-1-jane.chu@oracle.com>
- <20220405194747.2386619-4-jane.chu@oracle.com>
+        with ESMTP id S1352429AbiDLLfW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Apr 2022 07:35:22 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B560C76E13
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Apr 2022 03:14:00 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-233-190.pa.vic.optusnet.com.au [49.186.233.190])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A9A9910C78EF;
+        Tue, 12 Apr 2022 20:13:59 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1neDX4-00Gmtd-6m; Tue, 12 Apr 2022 20:13:58 +1000
+Date:   Tue, 12 Apr 2022 20:13:58 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Alli <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/8] xfs: hide log iovec alignment constraints
+Message-ID: <20220412101358.GG1544202@dread.disaster.area>
+References: <20220314220631.3093283-1-david@fromorbit.com>
+ <20220314220631.3093283-2-david@fromorbit.com>
+ <aa95f0d19f78a94e8bcdbcf76979253bf97f8bcb.camel@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220405194747.2386619-4-jane.chu@oracle.com>
+In-Reply-To: <aa95f0d19f78a94e8bcdbcf76979253bf97f8bcb.camel@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=625550e7
+        a=bHAvQTfMiaNt/bo4vVGwyA==:117 a=bHAvQTfMiaNt/bo4vVGwyA==:17
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=_fPKMViU61f-qTab1ncA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 05, 2022 at 01:47:44PM -0600, Jane Chu wrote:
-> The set_memory_uc() approach doesn't work well in all cases.
-> For example, when "The VMM unmapped the bad page from guest
-> physical space and passed the machine check to the guest."
-> "The guest gets virtual #MC on an access to that page.
->  When the guest tries to do set_memory_uc() and instructs
->  cpa_flush() to do clean caches that results in taking another
->  fault / exception perhaps because the VMM unmapped the page
->  from the guest."
-
-I presume this is quoting someone...
-
-> Since the driver has special knowledge to handle NP or UC,
-> let's mark the poisoned page with NP and let driver handle it
-
-s/let's mark/mark/
-
-> when it comes down to repair.
+On Sun, Apr 10, 2022 at 10:23:09PM -0700, Alli wrote:
+> On Tue, 2022-03-15 at 09:06 +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Callers currently have to round out the size of buffers to match the
+> > aligment constraints of log iovecs and xlog_write(). They should not
+> > need to know this detail, so introduce a new function to calculate
+> > the iovec length (for use in ->iop_size implementations). Also
+> > modify xlog_finish_iovec() to round up the length to the correct
+> > alignment so the callers don't need to do this, either.
+> > 
+> > Convert the only user - inode forks - of this alignment rounding to
+> > use the new interface.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+.....
+> >  void *xlog_prepare_iovec(struct xfs_log_vec *lv, struct
+> > xfs_log_iovec **vecp,
+> >  		uint type);
+> >  
+> > @@ -29,6 +40,12 @@ xlog_finish_iovec(struct xfs_log_vec *lv, struct
+> > xfs_log_iovec *vec, int len)
+> >  {
+> >  	struct xlog_op_header	*oph = vec->i_addr;
+> >  
+> > +	/*
+> > +	 * Always round up the length to the correct alignment so
+> > callers don't
+> > +	 * need to know anything about this log vec layout requirement.
+> > +	 */
+> > +	len = xlog_calc_iovec_len(len);Hmm, what code base was this on?
+> > > 
+> Hmm, I'm getting some merge conflicts in this area.  It looks like the
+> round_up logic was already added in:
 > 
-> Please refer to discussions here for more details.
-> https://lore.kernel.org/all/CAPcyv4hrXPb1tASBZUg-GgdVs0OOFKXMXLiHmktg_kFi7YBMyQ@mail.gmail.com/
+> bde7cff67c39227c6ad503394e19e58debdbc5e3
+> "xfs: format log items write directly into the linear CIL buffer"
 > 
-> Now since poisoned page is marked as not-present, in order to
-> avoid writing to a 'np' page and trigger kernel Oops, also fix
+> So I think it's ok to drop this bit about rounding length.
 
-You can write it out: "non-present page..."
+Ok, I think that's why you are getting rounding assert failures in
+the log code - this code replaces the fixed 4 byte allocation
+roundup that is done for the inode fork data buffers, and if you
+remove both the round-up I added to xlog_finish_iovec() and the
+inode fork roundup, you get unaligned regions and assert failures in
+xlog_write()....
 
-> pmem_do_write().
-> 
-> Fixes: 284ce4011ba6 ("x86/memory_failure: Introduce {set, clear}_mce_nospec()")
-> Signed-off-by: Jane Chu <jane.chu@oracle.com>
-> ---
->  arch/x86/kernel/cpu/mce/core.c |  6 +++---
->  arch/x86/mm/pat/set_memory.c   | 18 ++++++------------
->  drivers/nvdimm/pmem.c          | 31 +++++++------------------------
->  include/linux/set_memory.h     |  4 ++--
->  4 files changed, 18 insertions(+), 41 deletions(-)
+The posted patchset was based on top of the xlog-write-rewrite
+patchset I posted before this one, so I'd say that's where the
+conflicts applying this to a base 5.18-rc2 kernel came from.
 
-For such mixed subsystem patches we probably should talk about who picks
-them up, eventually...
+Cheers,
 
-> diff --git a/arch/x86/kernel/cpu/mce/core.c b/arch/x86/kernel/cpu/mce/core.c
-> index 981496e6bc0e..fa67bb9d1afe 100644
-> --- a/arch/x86/kernel/cpu/mce/core.c
-> +++ b/arch/x86/kernel/cpu/mce/core.c
-> @@ -579,7 +579,7 @@ static int uc_decode_notifier(struct notifier_block *nb, unsigned long val,
->  
->  	pfn = mce->addr >> PAGE_SHIFT;
->  	if (!memory_failure(pfn, 0)) {
-> -		set_mce_nospec(pfn, whole_page(mce));
-> +		set_mce_nospec(pfn);
->  		mce->kflags |= MCE_HANDLED_UC;
->  	}
->  
-> @@ -1316,7 +1316,7 @@ static void kill_me_maybe(struct callback_head *cb)
->  
->  	ret = memory_failure(p->mce_addr >> PAGE_SHIFT, flags);
->  	if (!ret) {
-> -		set_mce_nospec(p->mce_addr >> PAGE_SHIFT, p->mce_whole_page);
-> +		set_mce_nospec(p->mce_addr >> PAGE_SHIFT);
->  		sync_core();
->  		return;
->  	}
-> @@ -1342,7 +1342,7 @@ static void kill_me_never(struct callback_head *cb)
->  	p->mce_count = 0;
->  	pr_err("Kernel accessed poison in user space at %llx\n", p->mce_addr);
->  	if (!memory_failure(p->mce_addr >> PAGE_SHIFT, 0))
-> -		set_mce_nospec(p->mce_addr >> PAGE_SHIFT, p->mce_whole_page);
-> +		set_mce_nospec(p->mce_addr >> PAGE_SHIFT);
->  }
-
-Both that ->mce_whole_page and whole_page() look unused after this.
-
+Dave.
 -- 
-Regards/Gruss,
-    Boris.
-
-https://people.kernel.org/tglx/notes-about-netiquette
+Dave Chinner
+david@fromorbit.com
