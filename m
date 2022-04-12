@@ -2,98 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 523E3C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Apr 2022 04:55:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8E9BC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Apr 2022 04:57:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233516AbiDLE6G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Apr 2022 00:58:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42522 "EHLO
+        id S235652AbiDLFAF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Apr 2022 01:00:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230409AbiDLE6G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Apr 2022 00:58:06 -0400
-Received: from loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DAB5211C07;
-        Mon, 11 Apr 2022 21:55:46 -0700 (PDT)
-Received: from [10.130.0.135] (unknown [113.200.148.30])
-        by mail.loongson.cn (Coremail) with SMTP id AQAAf9AxGsxLBlViWOkfAA--.10756S3;
-        Tue, 12 Apr 2022 12:55:40 +0800 (CST)
-Subject: Re: [PATCH] MAINTAINERS: update IOMAP FILESYSTEM LIBRARY and XFS
- FILESYSTEM
-To:     "Darrick J. Wong" <djwong@kernel.org>
-References: <1649733686-6128-1-git-send-email-yangtiezhu@loongson.cn>
- <20220412033917.GB16799@magnolia> <20220412035042.GC16799@magnolia>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-From:   Tiezhu Yang <yangtiezhu@loongson.cn>
-Message-ID: <0d629b54-a29c-aeed-1330-840b1b98a8a3@loongson.cn>
-Date:   Tue, 12 Apr 2022 12:55:39 +0800
-User-Agent: Mozilla/5.0 (X11; Linux mips64; rv:45.0) Gecko/20100101
- Thunderbird/45.4.0
+        with ESMTP id S237879AbiDLFAE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Apr 2022 01:00:04 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5CA63335E
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 21:57:47 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id y6so15763803plg.2
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 21:57:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=8TleCaBIhpvoj6MzJmrMyC3ucMSm6WO1y+eL8xleJY4=;
+        b=fkN36mDpM4Pd1sCv3rNuy9oyYD/gLOwueus4xphJV1YDbeNRSQ8IyujzwsptiZfgYe
+         QUQIV9qghorMpdWWz6Mmsr/1DpHVZ96zqos/O3uhBAyz4TBRkDPpFJ5YoWKm0lCFZweQ
+         RoEFhL/uQjowL2aggfNFdXl2Ztg3A9451oiIjvEilBdbF+7t1islEN8KsPhMNJASWFOK
+         SUVweWmAjr6bfH/tyV4dylbfizqkoRZTCLZaofjld5K7oDzCT9ORDsz4TyjMGKUqQ8M4
+         Qet/LWoJSVXRFpDjGoHVJDsMMopWIZP4HzpS68RD9q73tLwybQtTxPuEsqT+1brdIvEZ
+         etIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=8TleCaBIhpvoj6MzJmrMyC3ucMSm6WO1y+eL8xleJY4=;
+        b=7ZCvSCcFigvtbc8Bjux5likz4gygwy4V4Zuor//M5Rnmu8CWUAw9w+nK1/s88el/W5
+         eNkO8TJ5GRakOqJwECa+rur4713+w39CU9PDhpP9GRwzDIhASWfSp+l1m9JXk+V2VLzc
+         Ro0ZcIiQl23VAO8EIIVIw8JhSi24kQ2wG869oYG7DT6PZdIR3VQAnHMLgFwMmgqT74Bj
+         +IqeH0mUyyyRFNBDwMcBvMHjuv7Io8Y5H5Nnyzte+lJVHFxMcYF8Q/am5socw9LCqrel
+         Sv/e450L/iZIVLbDsh8cGHuFYjWJKGrHrlRFqhY6f7WcLoj1IPrKozw1Yf9FAlS1tEwk
+         ETiw==
+X-Gm-Message-State: AOAM531C78qLhq1phKdoa9cojFK0EKSV3/6DsBT+sie/b993MJKG9F3C
+        ZuSkH+lQ6mWtiIucMFurIvYJKoRxQq9dOKxRgRnK4w==
+X-Google-Smtp-Source: ABdhPJxBATyoJAyblOakoZzlFS+GtSy3AbBTLdouj+8YmPDRCb1cpkksbCSmeWKkXDHtWwI5LR7XG/b+KrOX8AklXlQ=
+X-Received: by 2002:a17:902:eb92:b0:158:4cc9:698e with SMTP id
+ q18-20020a170902eb9200b001584cc9698emr12430897plg.147.1649739467468; Mon, 11
+ Apr 2022 21:57:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20220412035042.GC16799@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: AQAAf9AxGsxLBlViWOkfAA--.10756S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7GFWDGr47AF48ZrykKF1kAFb_yoWkKwc_CF
-        4UCw4kG3yUXry5AFsakF17Zr98tF48Xr48J3W0qw17X3Z8Ja4Fyw40kr93Wr98GryIyr4D
-        CFWDWr17try2vjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbIkYjsxI4VWxJwAYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I
-        6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM2
-        8CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWUCVW8JwA2z4x0Y4vE2Ix0
-        cI8IcVCY1x0267AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4
-        A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IE
-        w4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26F4j6r4UJw
-        Am72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCY
-        02Avz4vE14v_Gryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
-        Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r12
-        6r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
-        kF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
-        14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-        9x07jnb18UUUUU=
-X-CM-SenderInfo: p1dqw3xlh2x3gn0dqz5rrqw2lrqou0/
+References: <20220405194747.2386619-1-jane.chu@oracle.com> <20220405194747.2386619-5-jane.chu@oracle.com>
+In-Reply-To: <20220405194747.2386619-5-jane.chu@oracle.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 11 Apr 2022 21:57:36 -0700
+Message-ID: <CAPcyv4jpOss6hzPgM913v_QsZ+PB6Jzo1WV=YdUvnKZiwtfjiA@mail.gmail.com>
+Subject: Re: [PATCH v7 4/6] dax: add DAX_RECOVERY flag and .recovery_write dev_pgmap_ops
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     david <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Vishal L Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Weiny, Ira" <ira.weiny@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Vivek Goyal <vgoyal@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>, X86 ML <x86@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 04/12/2022 11:50 AM, Darrick J. Wong wrote:
-> On Mon, Apr 11, 2022 at 08:39:17PM -0700, Darrick J. Wong wrote:
->> On Tue, Apr 12, 2022 at 11:21:26AM +0800, Tiezhu Yang wrote:
->>> Remove the following section entries of IOMAP FILESYSTEM LIBRARY:
->>>
->>> M:	linux-xfs@vger.kernel.org
->>> M:	linux-fsdevel@vger.kernel.org
->>>
->>> Remove the following section entry of XFS FILESYSTEM:
->>>
->>> M:	linux-xfs@vger.kernel.org
->>>
->>> Signed-off-by: Tiezhu Yang <yangtiezhu@loongson.cn>
->>
->> WTF?
->>
->>  ▄▄   ▄   ▄▄   ▄    ▄
->>  █▀▄  █   ██   █  ▄▀
->>  █ █▄ █  █  █  █▄█
->>  █  █ █  █▄▄█  █  █▄
->>  █   ██ █    █ █   ▀▄
+On Tue, Apr 5, 2022 at 12:48 PM Jane Chu <jane.chu@oracle.com> wrote:
 >
-> *OH*, I see, you're getting rid of the M(ail): entry, probably because
-> it's redundant with L(ist): or something??  Still... why does it matter?
+> Introduce DAX_RECOVERY flag to dax_direct_access(). The flag is
+> not set by default in dax_direct_access() such that the helper
+> does not translate a pmem range to kernel virtual address if the
+> range contains uncorrectable errors.  When the flag is set,
+> the helper ignores the UEs and return kernel virtual adderss so
+> that the caller may get on with data recovery via write.
 
-Yes, the section entries are redundant. Sorry for the unclear description.
+It strikes me that there is likely never going to be any other flags
+to dax_direct_access() and what this option really is an access type.
+I also find code changes like this error prone to read:
 
-The intention of this patch is to clean up the redundant section entries.
+ -       rc = dax_direct_access(iter->iomap.dax_dev, pgoff, 1, &kaddr, NULL);
+ +       rc = dax_direct_access(iter->iomap.dax_dev, pgoff, 1, 0, &kaddr, NULL);
 
->
-> Seriously, changelogs need to say /why/ they're changing something, not
-> simply restate what's already in the diff.
+...i.e. without looking at the prototype, which option is the nr_pages
+and which is the flags?
 
-OK, thank you. Should I send a v2 patch to update the commit message
-or just ignore this patch?
+So how about change 'int flags' to 'enum dax_access_mode mode' where
+dax_access_mode is:
 
-Thanks,
-Tiezhu
+/**
+ * enum dax_access_mode - operational mode for dax_direct_access()
+ * @DAX_ACCESS: nominal access, fail / trim access on encountering poison
+ * @DAX_RECOVERY_WRITE: ignore poison and provide a pointer suitable
+for use with dax_recovery_write()
+ */
+enum dax_access_mode {
+    DAX_ACCESS,
+    DAX_RECOVERY_WRITE,
+};
 
+Then the conversions look like this:
+
+ -       rc = dax_direct_access(iter->iomap.dax_dev, pgoff, 1, &kaddr, NULL);
+ +       rc = dax_direct_access(iter->iomap.dax_dev, pgoff, 1,
+DAX_ACCESS, &kaddr, NULL);
+
+...and there's less chance of confusion with the @nr_pages argument.
