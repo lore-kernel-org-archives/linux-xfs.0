@@ -2,97 +2,161 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63738C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Apr 2022 10:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A45FC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Apr 2022 10:38:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241168AbiDLKQz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Apr 2022 06:16:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35912 "EHLO
+        id S236826AbiDLKka (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Apr 2022 06:40:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353861AbiDLKC5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Apr 2022 06:02:57 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4DBBC340C1
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Apr 2022 02:09:19 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-233-190.pa.vic.optusnet.com.au [49.186.233.190])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 05203534515;
-        Tue, 12 Apr 2022 19:09:17 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1neCWS-00GlqL-JY; Tue, 12 Apr 2022 19:09:16 +1000
-Date:   Tue, 12 Apr 2022 19:09:16 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     allison.henderson@oracle.com
-Subject: [PATCH 11/10] xfs: initialise attrd item to zero
-Message-ID: <20220412090916.GF1544202@dread.disaster.area>
-References: <20220412042543.2234866-1-david@fromorbit.com>
+        with ESMTP id S1381735AbiDLKfY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Apr 2022 06:35:24 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 69FAB5F8C4
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Apr 2022 02:37:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1649756255;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=WjvePjoNps3WHzPA3kQ/inZHgSIM6RNRmnAXcju2jgw=;
+        b=SBAYV+Xdmbq2OCMFjotFkKEw1U83osdD/dv67kApmsWayVtPzJbVi/P1h9lOjjjSCIIuN6
+        xV6ZhSZcfndJmFtpraJDgQY1I/OWpgeP2XU3gKrUo6jxZ/ACNBk9krTSd++JlNrmq3+q1/
+        wo/b74K4u7YawmqExHqQv/GnLdqwTeI=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-611-9WFCbR0tM3SNpnX10X53qQ-1; Tue, 12 Apr 2022 05:37:34 -0400
+X-MC-Unique: 9WFCbR0tM3SNpnX10X53qQ-1
+Received: by mail-qk1-f197.google.com with SMTP id bj2-20020a05620a190200b005084968bb24so9247426qkb.23
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Apr 2022 02:37:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=WjvePjoNps3WHzPA3kQ/inZHgSIM6RNRmnAXcju2jgw=;
+        b=NXIbaiPsiihrgdzkF669RK0XStyqsZqHPDL028NW226wawuPemrYI6+bJmiuMS1lPW
+         bQ334abDW8HXGXI7cVve+6YNbqKvfJAWzhv4uveO5zBaS0yq7/xglE0WzBUiRE/7yn/v
+         3INUCUs0fJ8VjXj6FWPsmkkSQbH2VeSIfpEuyXFrvs6TA6m0XmzIdeYJINj9Fz7Ca475
+         3wJ9tCrBzoDuWEClWFQxA6TcOqSfi37kiXxjP7XCqcXFBuRN20nF+4ji4ycY/09LzcJY
+         zGBt5qFAe53/WFAYa5D4KAiyPuOlC7Q3Nfy+pbJxbkzpOZRDEpYVu3hOLbXcnQMapd2e
+         WQRw==
+X-Gm-Message-State: AOAM53097AULxSd5mrZM4AFhVujDYRdKklLkorEumZQN1RRkJP2Chbx5
+        Jpv6we1N0pl5m5I+iPLqVMGxJWEdR5ROuSiEvWt32UX4mhVfT1by88yROqYmdCdn0Gy5h2cq/RQ
+        MKgsGMsSNP2hbPby1SV09
+X-Received: by 2002:ac8:5851:0:b0:2e1:eba3:3beb with SMTP id h17-20020ac85851000000b002e1eba33bebmr2579258qth.20.1649756254072;
+        Tue, 12 Apr 2022 02:37:34 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJztKnQnu54fHqq+eZ3MNLUHFlQ75PMDmAL3rOlhuBTNSu19FBVt9D4f2wcMra63IISZpXN2nw==
+X-Received: by 2002:ac8:5851:0:b0:2e1:eba3:3beb with SMTP id h17-20020ac85851000000b002e1eba33bebmr2579249qth.20.1649756253701;
+        Tue, 12 Apr 2022 02:37:33 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id c13-20020a37e10d000000b0069c268c37f1sm2999524qkm.23.2022.04.12.02.37.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Apr 2022 02:37:32 -0700 (PDT)
+Date:   Tue, 12 Apr 2022 17:37:27 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: make sure syncfs(2) passes back
+ super_operations.sync_fs errors
+Message-ID: <20220412093727.5zsuh7mucv2wlwgm@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+References: <164971767143.169983.12905331894414458027.stgit@magnolia>
+ <164971767699.169983.772317637668809854.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220412042543.2234866-1-david@fromorbit.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=625541be
-        a=bHAvQTfMiaNt/bo4vVGwyA==:117 a=bHAvQTfMiaNt/bo4vVGwyA==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8
-        a=VdGwt750K41ze9-0lWsA:9 a=CjuIK1q_8ugA:10
+In-Reply-To: <164971767699.169983.772317637668809854.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Mon, Apr 11, 2022 at 03:54:37PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> This is a regression test to make sure that nonzero error returns from
+> a filesystem's ->sync_fs implementation are actually passed back to
+> userspace when the call stack involves syncfs(2).
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/xfs/839     |   42 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/839.out |    2 ++
+>  2 files changed, 44 insertions(+)
+>  create mode 100755 tests/xfs/839
+>  create mode 100644 tests/xfs/839.out
+> 
+> 
+> diff --git a/tests/xfs/839 b/tests/xfs/839
 
-From: Dave Chinner <dchinner@redhat.com>
+This case looks good to me. Just one question, is it possible to be a generic
+case? From the code logic, it doesn't use xfs specified operations, but I'm
+not sure if other filesystems would like to treat sync_fs return value as XFS.
 
-On the first allocation of a attrd item, xfs_trans_add_item() fires
-an assert like so:
+> new file mode 100755
+> index 00000000..9bfe93ef
+> --- /dev/null
+> +++ b/tests/xfs/839
+> @@ -0,0 +1,42 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 839
+> +#
+> +# Regression test for kernel commits:
+> +#
+> +# 5679897eb104 ("vfs: make sync_filesystem return errors from ->sync_fs")
+> +# 2d86293c7075 ("xfs: return errors in xfs_fs_sync_fs")
 
- XFS (pmem0): EXPERIMENTAL logged extended attributes feature added. Use at your own risk!
- XFS: Assertion failed: !test_bit(XFS_LI_DIRTY, &lip->li_flags), file: fs/xfs/xfs_trans.c, line: 683
- ------------[ cut here ]------------
- kernel BUG at fs/xfs/xfs_message.c:102!
- Call Trace:
-  <TASK>
-  xfs_trans_add_item+0x17e/0x190
-  xfs_trans_get_attrd+0x67/0x90
-  xfs_attr_create_done+0x13/0x20
-  xfs_defer_finish_noroll+0x100/0x690
-  __xfs_trans_commit+0x144/0x330
-  xfs_trans_commit+0x10/0x20
-  xfs_attr_set+0x3e2/0x4c0
-  xfs_initxattrs+0xaa/0xe0
-  security_inode_init_security+0xb0/0x130
-  xfs_init_security+0x18/0x20
-  xfs_generic_create+0x13a/0x340
-  xfs_vn_create+0x17/0x20
-  path_openat+0xff3/0x12f0
-  do_filp_open+0xb2/0x150
+BTW, after this change, now can I assume that sync(2) flushes all data and metadata
+to underlying disk, if it returns 0. Sorry, really confused on what these sync things
+really guarantee :)
 
-The attrd log item is allocated via kmem_cache_alloc, and
-xfs_log_item_init() does not zero the entire log item structure - it
-assumes that the structure is already all zeros as it only
-initialises non-zero fields. Fix the attr items to be allocated
-via the *zalloc methods.
+Thanks,
+Zorro
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
+> +#
+> +# During a code inspection, I noticed that sync_filesystem ignores the return
+> +# value of the ->sync_fs calls that it makes.  sync_filesystem, in turn is used
+> +# by the syncfs(2) syscall to persist filesystem changes to disk.  This means
+> +# that syncfs(2) does not capture internal filesystem errors that are neither
+> +# visible from the block device (e.g. media error) nor recorded in s_wb_err.
+> +# XFS historically returned 0 from ->sync_fs even if there were log failures,
+> +# so that had to be corrected as well.
+> +#
+> +# The kernel commits above fix this problem, so this test tries to trigger the
+> +# bug by using the shutdown ioctl on a clean, freshly mounted filesystem in the
+> +# hope that the EIO generated as a result of the filesystem being shut down is
+> +# only visible via ->sync_fs.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick shutdown
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_require_xfs_io_command syncfs
+> +_require_scratch_nocheck
+> +_require_scratch_shutdown
+> +
+> +# Reuse the fs formatted when we checked for the shutdown ioctl, and don't
+> +# bother checking the filesystem afterwards since we never wrote anything.
+> +_scratch_mount
+> +$XFS_IO_PROG -x -c 'shutdown -f ' -c syncfs $SCRATCH_MNT
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/839.out b/tests/xfs/839.out
+> new file mode 100644
+> index 00000000..f275cdcc
+> --- /dev/null
+> +++ b/tests/xfs/839.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 839
+> +syncfs: Input/output error
+> 
 
-With this patch, the series also passes the attr group fstests with
-larp enabled. This probably should be folded back into the original
-patchset where this allocation is added.
-
- fs/xfs/xfs_attr_item.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 0e2ef0dedb28..b6561861ef01 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -725,7 +725,7 @@ xfs_trans_get_attrd(struct xfs_trans		*tp,
- 
- 	ASSERT(tp != NULL);
- 
--	attrdp = kmem_cache_alloc(xfs_attrd_cache, GFP_NOFS | __GFP_NOFAIL);
-+	attrdp = kmem_cache_zalloc(xfs_attrd_cache, GFP_NOFS | __GFP_NOFAIL);
- 
- 	xfs_log_item_init(tp->t_mountp, &attrdp->attrd_item, XFS_LI_ATTRD,
- 			  &xfs_attrd_item_ops);
