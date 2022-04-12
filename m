@@ -2,168 +2,228 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F244C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Apr 2022 04:26:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0834C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Apr 2022 04:26:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345806AbiDLE2R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Apr 2022 00:28:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51522 "EHLO
+        id S1345847AbiDLE3F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Apr 2022 00:29:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345813AbiDLE2K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Apr 2022 00:28:10 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C95A329A0
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 21:25:53 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-233-190.pa.vic.optusnet.com.au [49.186.233.190])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 70D8E10C7C14;
-        Tue, 12 Apr 2022 14:25:47 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ne865-00Gh2K-So; Tue, 12 Apr 2022 14:25:45 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.95)
-        (envelope-from <david@fromorbit.com>)
-        id 1ne865-009NrI-Rg;
-        Tue, 12 Apr 2022 14:25:45 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     allison.henderson@oracle.com
-Subject: [PATCH 01/10] xfs: avoid empty xattr transaction when attrs are inline
-Date:   Tue, 12 Apr 2022 14:25:34 +1000
-Message-Id: <20220412042543.2234866-2-david@fromorbit.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220412042543.2234866-1-david@fromorbit.com>
-References: <20220412042543.2234866-1-david@fromorbit.com>
+        with ESMTP id S1345786AbiDLE3D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Apr 2022 00:29:03 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12A1432995
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 21:26:47 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id e8-20020a17090a118800b001cb13402ea2so1578869pja.0
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Apr 2022 21:26:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=UCrOTwn1Apaa4uQLVmk5UD3cOc527xiwJT4PNuBWV0U=;
+        b=qj1azZVRiLRWoOmK62O5jlUS3eBsOBIqGZrTPkVTrhXug25XR9RPlwdGNSyUk6Cn4Q
+         O2h7oNKaIwwR0F/KAXVsmKOmZQHsE4nq+VcPu6FVr2QkdlsNenKN4YVbKRVtAVD7u7b4
+         I3TXIiz7RmEJHBwtR9BUhZjSikRfkKsP2qKeq9uIwnIe5tR2LVuM+/vMUI/GaRim758K
+         qpLoQglwz9v9mBUy4ZF8OIj7vFFvKFSsACWjKZnX/zRinYHwXhHZ8rpo2gkwmxTBjBjs
+         SyNSru4EiN82wpRW3gwhJCjwubkugBNJd5Ve8Thx53DS0elOAsHJVybqbBJhleyoy6f0
+         XOqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=UCrOTwn1Apaa4uQLVmk5UD3cOc527xiwJT4PNuBWV0U=;
+        b=pdh2K0eIxbjWUka3DPhNWGHwWEurP61wgpHcmQHczLDuhnvu60AzDTkC8Gsj4oA7Yq
+         ZFr4GiObh9VC85JnunTFDZyf4VMwP0sNRL4bmTvPsTc1Eh3tttLYSu6c7ehaxz+QHOZN
+         PJEDWGr/M2YLaqfXi7L7zF3FSMwemcrw75G3y0z4JrwJz7+1Lc4SczATPtcu879YnYk1
+         mVfWrOAtucEhb4BOb8LUJQXm0NyyRZ0cGGw7nOeHbkaVIFNHepFqXbQw/AkT5zOf3b7u
+         edLYfMJIhZWt9qFW/WrZl0Nzu0WrLnuGswiMXMxPIF3ouD6Ig1X/jjiIl2ZMcWymD5zm
+         etvg==
+X-Gm-Message-State: AOAM5312FRMWOtjYl10evM1amsB0bpIsNztx0Ql24Y2pNvRpdiqzH9y0
+        Fq688pG0YVfiEHxZdSAK4Gq0eaA7yX0ydlXyy8fb2w==
+X-Google-Smtp-Source: ABdhPJykgObq290XUnROGzq2QfTK7LzFthT5iMS5THy+7CybmACgJItes+F9wWuzrX+7pufyRJ0OO61OHh/NWBRaQSs=
+X-Received: by 2002:a17:90b:1804:b0:1cb:82e3:5cd0 with SMTP id
+ lw4-20020a17090b180400b001cb82e35cd0mr2859224pjb.8.1649737606512; Mon, 11 Apr
+ 2022 21:26:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6254ff4b
-        a=bHAvQTfMiaNt/bo4vVGwyA==:117 a=bHAvQTfMiaNt/bo4vVGwyA==:17
-        a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8 a=z6sQ9X07RN1rA8HuyEwA:9
+References: <20220405194747.2386619-1-jane.chu@oracle.com> <20220405194747.2386619-6-jane.chu@oracle.com>
+In-Reply-To: <20220405194747.2386619-6-jane.chu@oracle.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 11 Apr 2022 21:26:35 -0700
+Message-ID: <CAPcyv4h4NGa7_mTrrY0EqXdGny5p9JtQZx+CVBcHxX6_ZuO9pg@mail.gmail.com>
+Subject: Re: [PATCH v7 5/6] pmem: refactor pmem_clear_poison()
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     david <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Vishal L Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Weiny, Ira" <ira.weiny@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Vivek Goyal <vgoyal@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>, X86 ML <x86@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Apr 5, 2022 at 12:48 PM Jane Chu <jane.chu@oracle.com> wrote:
+>
+> Refactor the pmem_clear_poison() in order to share common code
+> later.
+>
 
-generic/642 triggered a reproducable assert failure in
-xlog_cil_commit() that resulted from a xfs_attr_set() committing
-an empty but dirty transaction. When the CIL is empty and this
-occurs, xlog_cil_commit() tries a background push and this triggers
-a "pushing an empty CIL" assert.
+I would just add a note here about why, i.e. to factor out the common
+shared code between the typical write path and the recovery write
+path.
 
-XFS: Assertion failed: !list_empty(&cil->xc_cil), file: fs/xfs/xfs_log_cil.c, line: 1274
-Call Trace:
- <TASK>
- xlog_cil_commit+0xa5a/0xad0
- __xfs_trans_commit+0xb8/0x330
- xfs_trans_commit+0x10/0x20
- xfs_attr_set+0x3e2/0x4c0
- xfs_xattr_set+0x8d/0xe0
- __vfs_setxattr+0x6b/0x90
- __vfs_setxattr_noperm+0x76/0x220
- __vfs_setxattr_locked+0xdf/0x100
- vfs_setxattr+0x94/0x170
- setxattr+0x110/0x200
- path_setxattr+0xbf/0xe0
- __x64_sys_setxattr+0x2b/0x30
- do_syscall_64+0x35/0x80
+> Signed-off-by: Jane Chu <jane.chu@oracle.com>
+> ---
+>  drivers/nvdimm/pmem.c | 78 ++++++++++++++++++++++++++++---------------
+>  1 file changed, 52 insertions(+), 26 deletions(-)
+>
+> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+> index 0400c5a7ba39..56596be70400 100644
+> --- a/drivers/nvdimm/pmem.c
+> +++ b/drivers/nvdimm/pmem.c
+> @@ -45,10 +45,27 @@ static struct nd_region *to_region(struct pmem_device *pmem)
+>         return to_nd_region(to_dev(pmem)->parent);
+>  }
+>
+> -static void hwpoison_clear(struct pmem_device *pmem,
+> -               phys_addr_t phys, unsigned int len)
+> +static phys_addr_t to_phys(struct pmem_device *pmem, phys_addr_t offset)
+>  {
+> +       return (pmem->phys_addr + offset);
 
-The problem is related to the breakdown of attribute addition in
-xfs_attr_set_iter() and how it is called from deferred operations.
-When we have a pure leaf xattr insert, we add the xattr to the leaf
-and set the next state to XFS_DAS_FOUND_LBLK and return -EAGAIN.
-This requeues the xattr defered work, rolls the transaction and
-runs xfs_attr_set_iter() again. This then checks the xattr for
-being remote (it's not) and whether a replace op is being done (this
-is a create op) and if neither are true it returns without having
-done anything.
+Christoph already mentioned dropping the unnecessary parenthesis.
 
-xfs_xattri_finish_update() then unconditionally sets the transaction
-dirty, and the deferops finishes and returns to __xfs_trans_commit()
-which sees the transaction dirty and tries to commit it by calling
-xlog_cil_commit(). The transaction is empty, and then the assert
-fires if this happens when the CIL is empty.
+> +}
+> +
+> +static sector_t to_sect(struct pmem_device *pmem, phys_addr_t offset)
+> +{
+> +       return (offset - pmem->data_offset) >> SECTOR_SHIFT;
+> +}
+> +
+> +static phys_addr_t to_offset(struct pmem_device *pmem, sector_t sector)
+> +{
+> +       return ((sector << SECTOR_SHIFT) + pmem->data_offset);
+> +}
+> +
+> +static void pmem_clear_hwpoison(struct pmem_device *pmem, phys_addr_t offset,
+> +               unsigned int len)
 
-This patch addresses the structure of xfs_attr_set_iter() that
-requires re-entry on leaf add even when nothing will be done. This
-gets rid of the trailing empty transaction and so doesn't trigger
-the XFS_TRANS_DIRTY assignment in xfs_xattri_finish_update()
-incorrectly. Addressing that is for a different patch.
+Perhaps now is a good time to rename this to something else like
+pmem_clear_mce_nospec()? Just to make it more distinct from
+pmem_clear_poison(). While "hwpoison" is the page flag name
+pmem_clear_poison() is the function that's actually clearing the
+poison in hardware ("hw") and the new pmem_clear_mce_nospec() is
+toggling the page back into service.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_attr.c | 39 +++++++++++++++++++--------------------
- 1 file changed, 19 insertions(+), 20 deletions(-)
+> +{
+> +       phys_addr_t phys = to_phys(pmem, offset);
+>         unsigned long pfn_start, pfn_end, pfn;
+> +       unsigned int blks = len >> SECTOR_SHIFT;
+>
+>         /* only pmem in the linear map supports HWPoison */
+>         if (is_vmalloc_addr(pmem->virt_addr))
+> @@ -67,35 +84,44 @@ static void hwpoison_clear(struct pmem_device *pmem,
+>                 if (test_and_clear_pmem_poison(page))
+>                         clear_mce_nospec(pfn);
+>         }
+> +
+> +       dev_dbg(to_dev(pmem), "%#llx clear %u sector%s\n",
+> +               (unsigned long long) to_sect(pmem, offset), blks,
+> +               blks > 1 ? "s" : "");
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 48b7e7efbb30..b3d918195160 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -315,6 +315,7 @@ xfs_attr_leaf_addname(
- {
- 	struct xfs_da_args	*args = attr->xattri_da_args;
- 	struct xfs_inode	*dp = args->dp;
-+	enum xfs_delattr_state	next_state = XFS_DAS_UNINIT;
- 	int			error;
- 
- 	if (xfs_attr_is_leaf(dp)) {
-@@ -335,37 +336,35 @@ xfs_attr_leaf_addname(
- 			 * when we come back, we'll be a node, so we'll fall
- 			 * down into the node handling code below
- 			 */
--			trace_xfs_attr_set_iter_return(
--				attr->xattri_dela_state, args->dp);
--			return -EAGAIN;
-+			error = -EAGAIN;
-+			goto out;
- 		}
--
--		if (error)
--			return error;
--
--		attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
-+		next_state = XFS_DAS_FOUND_LBLK;
- 	} else {
- 		error = xfs_attr_node_addname_find_attr(attr);
- 		if (error)
- 			return error;
- 
-+		next_state = XFS_DAS_FOUND_NBLK;
- 		error = xfs_attr_node_addname(attr);
--		if (error)
--			return error;
--
--		/*
--		 * If addname was successful, and we dont need to alloc or
--		 * remove anymore blks, we're done.
--		 */
--		if (!args->rmtblkno &&
--		    !(args->op_flags & XFS_DA_OP_RENAME))
--			return 0;
-+	}
-+	if (error)
-+		return error;
- 
--		attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
-+	/*
-+	 * We need to commit and roll if we need to allocate remote xattr blocks
-+	 * or perform more xattr manipulations. Otherwise there is nothing more
-+	 * to do and we can return success.
-+	 */
-+	if (args->rmtblkno ||
-+	    (args->op_flags & XFS_DA_OP_RENAME)) {
-+		attr->xattri_dela_state = next_state;
-+		error = -EAGAIN;
- 	}
- 
-+out:
- 	trace_xfs_attr_leaf_addname_return(attr->xattri_dela_state, args->dp);
--	return -EAGAIN;
-+	return error;
- }
- 
- /*
--- 
-2.35.1
+In anticipation of better tracing support and the fact that this is no
+longer called from pmem_clear_poison() let's drop it for now.
 
+>  }
+>
+> -static blk_status_t pmem_clear_poison(struct pmem_device *pmem,
+> +static void pmem_clear_bb(struct pmem_device *pmem, sector_t sector, long blks)
+> +{
+> +       if (blks == 0)
+> +               return;
+> +       badblocks_clear(&pmem->bb, sector, blks);
+> +       if (pmem->bb_state)
+> +               sysfs_notify_dirent(pmem->bb_state);
+> +}
+> +
+> +static long __pmem_clear_poison(struct pmem_device *pmem,
+>                 phys_addr_t offset, unsigned int len)
+>  {
+> -       struct device *dev = to_dev(pmem);
+> -       sector_t sector;
+> -       long cleared;
+> -       blk_status_t rc = BLK_STS_OK;
+> -
+> -       sector = (offset - pmem->data_offset) / 512;
+> -
+> -       cleared = nvdimm_clear_poison(dev, pmem->phys_addr + offset, len);
+> -       if (cleared < len)
+> -               rc = BLK_STS_IOERR;
+> -       if (cleared > 0 && cleared / 512) {
+> -               hwpoison_clear(pmem, pmem->phys_addr + offset, cleared);
+> -               cleared /= 512;
+> -               dev_dbg(dev, "%#llx clear %ld sector%s\n",
+> -                               (unsigned long long) sector, cleared,
+> -                               cleared > 1 ? "s" : "");
+> -               badblocks_clear(&pmem->bb, sector, cleared);
+> -               if (pmem->bb_state)
+> -                       sysfs_notify_dirent(pmem->bb_state);
+> +       phys_addr_t phys = to_phys(pmem, offset);
+> +       long cleared = nvdimm_clear_poison(to_dev(pmem), phys, len);
+> +
+> +       if (cleared > 0) {
+> +               pmem_clear_hwpoison(pmem, offset, cleared);
+> +               arch_invalidate_pmem(pmem->virt_addr + offset, len);
+>         }
+> +       return cleared;
+> +}
+>
+> -       arch_invalidate_pmem(pmem->virt_addr + offset, len);
+> +static blk_status_t pmem_clear_poison(struct pmem_device *pmem,
+> +               phys_addr_t offset, unsigned int len)
+> +{
+> +       long cleared = __pmem_clear_poison(pmem, offset, len);
+>
+> -       return rc;
+> +       if (cleared < 0)
+> +               return BLK_STS_IOERR;
+> +
+> +       pmem_clear_bb(pmem, to_sect(pmem, offset), cleared >> SECTOR_SHIFT);
+> +       return (cleared < len) ? BLK_STS_IOERR : BLK_STS_OK;
+
+I prefer "if / else" syntax instead of a ternary conditional.
+
+>  }
+>
+>  static void write_pmem(void *pmem_addr, struct page *page,
+> @@ -143,7 +169,7 @@ static blk_status_t pmem_do_read(struct pmem_device *pmem,
+>                         sector_t sector, unsigned int len)
+>  {
+>         blk_status_t rc;
+> -       phys_addr_t pmem_off = sector * 512 + pmem->data_offset;
+> +       phys_addr_t pmem_off = to_offset(pmem, sector);
+>         void *pmem_addr = pmem->virt_addr + pmem_off;
+>
+>         if (unlikely(is_bad_pmem(&pmem->bb, sector, len)))
+> @@ -158,7 +184,7 @@ static blk_status_t pmem_do_write(struct pmem_device *pmem,
+>                         struct page *page, unsigned int page_off,
+>                         sector_t sector, unsigned int len)
+>  {
+> -       phys_addr_t pmem_off = sector * 512 + pmem->data_offset;
+> +       phys_addr_t pmem_off = to_offset(pmem, sector);
+>         void *pmem_addr = pmem->virt_addr + pmem_off;
+>
+>         if (unlikely(is_bad_pmem(&pmem->bb, sector, len))) {
+
+With those small fixups you can add:
+
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
