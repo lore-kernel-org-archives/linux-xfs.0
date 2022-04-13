@@ -2,118 +2,143 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEBD7C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Apr 2022 18:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 033E0C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Apr 2022 18:23:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236808AbiDMSKG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Apr 2022 14:10:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54496 "EHLO
+        id S237293AbiDMSZq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Apr 2022 14:25:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237601AbiDMSKE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Apr 2022 14:10:04 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DBC954D272
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Apr 2022 11:07:41 -0700 (PDT)
+        with ESMTP id S237515AbiDMSZp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Apr 2022 14:25:45 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B99A23F88A
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Apr 2022 11:23:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1649873260;
+        s=mimecast20190719; t=1649874202;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=zkvFgHSy+p/+KBEEQgNiFainpv/nh+lMrXOaRVKo6l4=;
-        b=JfCIcWgsZvN3bhCflfelSrjQVBbvut+kHKDUSiifNks60Hg/VOLDVrQVIzHj+s3RC8h0Uw
-        803aZHzMQwVag7rlYnJF5e6uYcQxiYYMF2dTVM3C/xjv1axgjyOVJDVgIxpO/Eyq2tHNNX
-        X9lU8p3CVsk57oLyemdDYOIWMdTI4NE=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=9lgnmBmciW2lq2Wz2KNbzk9pNp34wGGm9lnhfQal6pE=;
+        b=eU5Im4il7zHbS7RaOjmwbKsbDnQ/VDSsb9ksa+7YI/37hIuborQxMPFUilBd2TD0ymjp1K
+        cdUZ9SKIGUX+e36zRZp1zBcWSuH8qP0Utszl2OwXPe8xaYbtcA7xD+YvOLs7pCKlDFaxvt
+        9FRvMWdTyTHXHh+TlOROZjaf1VGyX64=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-47-9mhVjLRkOw2XPWSrMncL2w-1; Wed, 13 Apr 2022 14:07:39 -0400
-X-MC-Unique: 9mhVjLRkOw2XPWSrMncL2w-1
-Received: by mail-qv1-f69.google.com with SMTP id kl19-20020a056214519300b0044454fc4c9bso2394088qvb.7
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Apr 2022 11:07:39 -0700 (PDT)
+ us-mta-136-B5txT2niPQqNCfIDcd5frw-1; Wed, 13 Apr 2022 14:23:21 -0400
+X-MC-Unique: B5txT2niPQqNCfIDcd5frw-1
+Received: by mail-qk1-f198.google.com with SMTP id u6-20020a05620a430600b0069c0f5ad4e2so1716543qko.2
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Apr 2022 11:23:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id
          :mail-followup-to:references:mime-version:content-disposition
          :in-reply-to;
-        bh=zkvFgHSy+p/+KBEEQgNiFainpv/nh+lMrXOaRVKo6l4=;
-        b=zPLa4oDq4Om8Ki8msOmVrw4wuR0s5OSRbdYhUAn0LmR3sDXkOvIA9FLKKpzpTy0Z1I
-         rNQkrTEZLww8ex0uPCUzT0hMqXO/1uDRE7S5FcXEtzFDjed2UNkUVMaKaCd82tsLv6IP
-         6ybtgAXADgK/e93o/eJF1I3YBMmuTmvScDG+zmJ9pRiw/NBRBQG5mS820orujO4SFXRv
-         9/jXsLGMIDGCY1WmZcinsr7Yp3tyOdhVuoKGdxOsKNB7eMjC4dr2AQVCLr9D6JneGs6N
-         FnxufDnYMnU9l3DjupqqBxfZvJkUGwUUj2kbSy9qr1pDqTHOU762m0QrqIjbceJ+NIu2
-         M6ug==
-X-Gm-Message-State: AOAM532JnXOlXaU+mzfzlKOQ/NDzqdGy4fRKBpnNYGyCDcBFpPYmQ4x/
-        9zVw18RSBg2N2EyWLZX/s+CTEq4KDFoJ3lPfAAzDDW2+o05rAUW39vMd/UCzn2gEjfe5t1J3GQ5
-        KcutAoFWlfp5wkrv0XSv5
-X-Received: by 2002:a37:389:0:b0:69b:f56e:1672 with SMTP id 131-20020a370389000000b0069bf56e1672mr7967145qkd.614.1649873258903;
-        Wed, 13 Apr 2022 11:07:38 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxxPxpOnQDKrz6xF5IAmCYMQ4BIkafl4yvTLmofQQ2cVFwF6i1ccZfy2zFW+EEFGWfx1po5wA==
-X-Received: by 2002:a37:389:0:b0:69b:f56e:1672 with SMTP id 131-20020a370389000000b0069bf56e1672mr7967128qkd.614.1649873258602;
-        Wed, 13 Apr 2022 11:07:38 -0700 (PDT)
+        bh=9lgnmBmciW2lq2Wz2KNbzk9pNp34wGGm9lnhfQal6pE=;
+        b=nLNkmUYL0ksmd3lzF0m3551lL2NlBeKyoFZAd8kUd7j9KdJ9uXhMr1GrLIQWZgNn/o
+         MdJj159fXwc34CsOlZp7Ngcp0Q8qEqSbxkVpgSLoUi4R9AuOUGNwl1UN2cfjnxaIlTod
+         vpVNGNEReu1fCcBMoB1PFSbrwTSVQott32FTxluBxoN9Wlwbcw7hnLFIXrXtOHUx8UHC
+         gl4d3zGtS4loLNrZquXrK3wZbu+nsuyhsrNccWQBITdTbbZMeHFLvFSFU88VApP2r3bj
+         In0iHb0bTJAk+WfKDp6cUWQYwC2kcNkQePGlwe/7UpbAXSeSBJ6oWay21sAVWeGS93wH
+         //ag==
+X-Gm-Message-State: AOAM530LzgySrYzUtFupb7RkTc+zPIiiKUAzw1pVJQtNMTuotbeNK+li
+        F+XmEhUu8M7LeCEgsWUfeklbo6dLhJjpT/j6PzoLTne1vQOS1HwjJUOt7hQIAn+sFyuvVPIJjff
+        zS9NKLlQzn68B/vyS2zBr
+X-Received: by 2002:a05:620a:29d0:b0:680:9c1a:557a with SMTP id s16-20020a05620a29d000b006809c1a557amr7682816qkp.646.1649874201017;
+        Wed, 13 Apr 2022 11:23:21 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzCn2khQiDonjfLl9vGxiN/oxjzSDzqNMc6Ce8aesfGx67ikSSSU6uEItwFb7n1+JqH1V1sBA==
+X-Received: by 2002:a05:620a:29d0:b0:680:9c1a:557a with SMTP id s16-20020a05620a29d000b006809c1a557amr7682803qkp.646.1649874200721;
+        Wed, 13 Apr 2022 11:23:20 -0700 (PDT)
 Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id t19-20020ac85893000000b002e1afa26591sm32974412qta.52.2022.04.13.11.07.36
+        by smtp.gmail.com with ESMTPSA id p28-20020a05620a15fc00b0069c28de43casm4942331qkm.102.2022.04.13.11.23.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Apr 2022 11:07:38 -0700 (PDT)
-Date:   Thu, 14 Apr 2022 02:07:32 +0800
+        Wed, 13 Apr 2022 11:23:19 -0700 (PDT)
+Date:   Thu, 14 Apr 2022 02:23:14 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/3] common/rc: let xfs_scrub tell us about its unicode
- checker
-Message-ID: <20220413180732.6a356gzxv7n6nin2@zlang-mailbox>
+Subject: Re: [PATCH 1/2] xfs/187: don't rely on FSCOUNTS for free space data
+Message-ID: <20220413182314.bfk55f4axio5amc7@zlang-mailbox>
 Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-References: <164971769710.170109.8985299417765876269.stgit@magnolia>
- <164971770270.170109.8871111464246200861.stgit@magnolia>
+References: <164971765670.169895.10730350919455923432.stgit@magnolia>
+ <164971766238.169895.2389864738831855587.stgit@magnolia>
+ <20220412084716.vwljkrc7bpnzl75z@zlang-mailbox>
+ <20220412171156.GF16799@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <164971770270.170109.8871111464246200861.stgit@magnolia>
+In-Reply-To: <20220412171156.GF16799@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 11, 2022 at 03:55:02PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Apr 12, 2022 at 10:11:56AM -0700, Darrick J. Wong wrote:
+> On Tue, Apr 12, 2022 at 04:47:16PM +0800, Zorro Lang wrote:
+> > On Mon, Apr 11, 2022 at 03:54:22PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Currently, this test relies on the XFS_IOC_FSCOUNTS ioctl to return
+> > > accurate free space information.  It doesn't.  Convert it to use statfs,
+> > > which uses the accurate versions of the percpu counters.  Obviously,
+> > > this only becomes a problem when we convert the free rtx count to use
+> > > (sloppier) percpu counters instead of the (more precise and previously
+> > > buggy) ondisk superblock counts.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  tests/xfs/187 |    2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/tests/xfs/187 b/tests/xfs/187
+> > > index 1929e566..a9dfb30a 100755
+> > > --- a/tests/xfs/187
+> > > +++ b/tests/xfs/187
+> > > @@ -135,7 +135,7 @@ punch_off=$((bigfile_sz - frag_sz))
+> > >  $here/src/punch-alternating $SCRATCH_MNT/bigfile -o $((punch_off / fsbsize)) -i $((rtextsize_blks * 2)) -s $rtextsize_blks
+> > >  
+> > >  # Make sure we have some free rtextents.
+> > > -free_rtx=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep counts.freertx | awk '{print $3}')
+> > > +free_rtx=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep statfs.f_bavail | awk '{print $3}')
+> > 
+> > Do you mean the "cnt->freertx = mp->m_sb.sb_frextents" in xfs_fs_counts() isn't
+> > right?
 > 
-> Now that xfs_scrub can report whether or not it was built with the
-> Unicode name checker, rewrite _check_xfs_scrub_does_unicode to take
-> advantage of that.  This supersedes the old method of trying to observe
-> dynamic library linkages and grepping the binary, neither of which
-> worked very well.
+> Correct -- prior to the patches introduced here:
+> https://lore.kernel.org/linux-xfs/164961485474.70555.18228016043917319266.stgit@magnolia/T/#t
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+> The kernel would account actual ondisk rt extent usage *and* in-memory
+> transaction reservations in mp->m_sb.sb_frextents, which meant that one
+> thread calling xfs_log_sb racing with another thread allocating space on
+> the rt volume would write the wrong sb_frextents value to disk, which
+> corrupts the superblock counters.
+> 
+> The fix for that is to separate the two uses into separate counters --
+> now mp->m_sb.sb_frextents tracks the ondisk usage, and mp->m_frextents
+> also includes tx reservations.  m_frextents is a percpu counter, which
+> means that we won't be able to rely on it for a precise accounting after
+> the series is merged.  Hence the switch to statfs, which does use the
+> slow-but-accurate percpu_counter_sum method.
 
-Good to me,
+Thanks for your detailed explanation, so it's about this patch:
+[PATCH 3/3] xfs: use a separate frextents counter for rt extent reservations
+
+It's good to me, it would be better if we can add more content (as above) into commit log.
+
 Reviewed-by: Zorro Lang <zlang@redhat.com>
 
->  common/rc |   12 ++++++++++++
->  1 file changed, 12 insertions(+)
 > 
+> --D
 > 
-> diff --git a/common/rc b/common/rc
-> index 17629801..ec146c4e 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -4800,6 +4800,18 @@ _check_xfs_scrub_does_unicode() {
->  
->  	_supports_xfs_scrub "${mount}" "${dev}" || return 1
->  
-> +	# Newer versions of xfs_scrub advertise whether or not it supports
-> +	# Unicode name checks.
-> +	local xfs_scrub_ver="$("${XFS_SCRUB_PROG}" -VV)"
-> +
-> +	if echo "${xfs_scrub_ver}" | grep -q -- '-Unicode'; then
-> +		return 1
-> +	fi
-> +
-> +	if echo "${xfs_scrub_ver}" | grep -q -- '+Unicode'; then
-> +		return 0
-> +	fi
-> +
->  	# If the xfs_scrub binary contains the string "Unicode name.*%s", then
->  	# we know that it has the ability to complain about improper Unicode
->  	# names.
+> > Thanks,
+> > Zorro
+> > 
+> > >  if [ $free_rtx -eq 0 ]; then
+> > >  	echo "Expected fragmented free rt space, found none."
+> > >  fi
+> > > 
+> > 
 > 
 
