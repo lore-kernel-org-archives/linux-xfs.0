@@ -2,96 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4319C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Apr 2022 01:51:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCB68C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Apr 2022 02:02:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235864AbiDNByR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Apr 2022 21:54:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44888 "EHLO
+        id S234170AbiDNCEi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Apr 2022 22:04:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235553AbiDNByR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Apr 2022 21:54:17 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 893D6222B7;
-        Wed, 13 Apr 2022 18:51:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 44204B8276C;
-        Thu, 14 Apr 2022 01:51:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2F96C385A3;
-        Thu, 14 Apr 2022 01:51:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649901111;
-        bh=cDuWSp3LrK/aQkhD5BlNGXQ8Vq3HM0xWBv1SIl0modU=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=lvGHlEU7NVc6kMbvSXwfUsiURDnwR5BRhplzttRaOYeZmiOdZYvUDIJOo3V8sl3Np
-         mozM3scy1yJjnO2pMoO1bf/tfGBKHhKmPS+4xXoCLt5ToO3LNFyuN1bwg7SPtE0IJs
-         qUnqiHeBqtHV//DHHBWJCfY/tu1MDGmmoj3nuxUxvRw1FF9qWe85I0+cU9Tb2Krshj
-         IjKPUOe/fuEKH2NKZwQPNm3zMLkx1HZ77fP5Auh1P104XdTmCFYhszAiQq9WyI6TI8
-         dT+UKJBfEagDgJxGVw0GgVIcX1e1+E+Za/Y7ZswBA0564LqFrmMhpkl9mz6Yit6FUn
-         cHatkGYLnlw0Q==
-Date:   Wed, 13 Apr 2022 18:51:49 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs/216: handle larger log sizes
-Message-ID: <20220414015149.GD16774@magnolia>
-References: <164971769710.170109.8985299417765876269.stgit@magnolia>
- <164971771391.170109.16368399851366024102.stgit@magnolia>
- <20220413174400.kvbihaz6bcsgz4hy@zlang-mailbox>
+        with ESMTP id S232381AbiDNCEi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Apr 2022 22:04:38 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 060863DA73
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Apr 2022 19:02:15 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id j8so3468075pll.11
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Apr 2022 19:02:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Z/AZcNPpuzZDgumlPPShqA1y0wj8q3uDg5REQ7nWe+g=;
+        b=CwUaIxkVnLJ5l46nXB2s1sou59hINQM/ZRPp8PgQSytaOTFdj5NPDAXKC18NHxovTf
+         CNDUOsT39v7D12dS5ZQ5VyZCYQgsubRrs6eE1p6NOiKJwAVQat/29+jKEAzO88iWgLjp
+         HPfJAccDb5kf57+DK4SqQvGN9fk4p69oMWY/rZMpZW5mukjDtmuPneOpczL+g866T1zU
+         8H97LSBoYZFA4oXZ1O7XIzloSk/4XvVfoFgijXJAOAP7uz+a0wUxgTYGwM3ohg2+IOV1
+         xRawiPehfXvAI+97iMxaM4Bw3aLd8i2lcauheW1rlBaAIR435lzflqVSUD5yc2Jx95Ia
+         w1jw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Z/AZcNPpuzZDgumlPPShqA1y0wj8q3uDg5REQ7nWe+g=;
+        b=kYYzkdQTWsucBnZ3pGwKTzpNsvzs87fioPYvVclqWIxgwK63DECd4OSlNj4SO+trLY
+         cyHUoi+ytZNVR6gTER30qHJkhZcs/zQw/uQqJHBjf444an57J5Ygv2mZ3jjVyXWVKUvl
+         qIqvNtoiou9t7azstSfX8hHI0maUi1dO6vpCCv8eFy73ufGOYgFnFCY7t6VckcrmAwGF
+         Yn/YmJdPeEX6/FAxv2LCf3Gmj9U8TxxUF43NNRAAIAI/kFhuBwd4iLi2SwGe/erqo63a
+         aF55xLFbGM5Z4eAPmLeb5CMc8ZYy+gQ+ZhMEctCrw2kgBSGp03u/AvZSZ2WbjwhaUieM
+         wdjQ==
+X-Gm-Message-State: AOAM533sztnHPJDmF2i1oxvSDoxVuaLh+c8Oq1JgyCr9ycqgc6pQj5Ra
+        EJOGO8yis+wqKfSqUyCM7bXAz7dyo/TyPRTj92JHDw==
+X-Google-Smtp-Source: ABdhPJwLDKKH3DT9JFgarja/Tnh6p2mmAGJ/wOpJuSGyolYLRI59NHTREVIMzFOVSkYOQVAxzofLTctfLriOkXyPajc=
+X-Received: by 2002:a17:90a:ca:b0:1ca:5253:b625 with SMTP id
+ v10-20020a17090a00ca00b001ca5253b625mr1171605pjd.220.1649901734577; Wed, 13
+ Apr 2022 19:02:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220413174400.kvbihaz6bcsgz4hy@zlang-mailbox>
+References: <20220405194747.2386619-1-jane.chu@oracle.com> <20220405194747.2386619-6-jane.chu@oracle.com>
+ <CAPcyv4h4NGa7_mTrrY0EqXdGny5p9JtQZx+CVBcHxX6_ZuO9pg@mail.gmail.com> <9b01d57a-0170-5977-fcda-184617d8e2eb@oracle.com>
+In-Reply-To: <9b01d57a-0170-5977-fcda-184617d8e2eb@oracle.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 13 Apr 2022 19:02:03 -0700
+Message-ID: <CAPcyv4jrtUDf0zPB8aefVs2MsV8tW2Kmx2yq3D4ze2wr7SshsA@mail.gmail.com>
+Subject: Re: [PATCH v7 5/6] pmem: refactor pmem_clear_poison()
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     david <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Vishal L Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Weiny, Ira" <ira.weiny@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Vivek Goyal <vgoyal@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>, X86 ML <x86@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 14, 2022 at 01:44:00AM +0800, Zorro Lang wrote:
-> On Mon, Apr 11, 2022 at 03:55:13PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > mkfs will soon refuse to format a log smaller than 64MB, so update this
-> > test to reflect the new log sizing calculations.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/xfs/216.out |   14 +++++++-------
-> >  1 file changed, 7 insertions(+), 7 deletions(-)
-> > 
-> > 
-> > diff --git a/tests/xfs/216.out b/tests/xfs/216.out
-> > index cbd7b652..3c12085f 100644
-> > --- a/tests/xfs/216.out
-> > +++ b/tests/xfs/216.out
-> > @@ -1,10 +1,10 @@
-> >  QA output created by 216
-> > -fssize=1g log      =internal log           bsize=4096   blocks=2560, version=2
-> > -fssize=2g log      =internal log           bsize=4096   blocks=2560, version=2
-> > -fssize=4g log      =internal log           bsize=4096   blocks=2560, version=2
-> > -fssize=8g log      =internal log           bsize=4096   blocks=2560, version=2
-> > -fssize=16g log      =internal log           bsize=4096   blocks=2560, version=2
-> > -fssize=32g log      =internal log           bsize=4096   blocks=4096, version=2
-> > -fssize=64g log      =internal log           bsize=4096   blocks=8192, version=2
-> > +fssize=1g log      =internal log           bsize=4096   blocks=16384, version=2
-> > +fssize=2g log      =internal log           bsize=4096   blocks=16384, version=2
-> > +fssize=4g log      =internal log           bsize=4096   blocks=16384, version=2
-> > +fssize=8g log      =internal log           bsize=4096   blocks=16384, version=2
-> > +fssize=16g log      =internal log           bsize=4096   blocks=16384, version=2
-> > +fssize=32g log      =internal log           bsize=4096   blocks=16384, version=2
-> > +fssize=64g log      =internal log           bsize=4096   blocks=16384, version=2
-> 
-> So this will break downstream kernel testing too, except it follows this new
-> xfs behavior change. Is it possible to get the minimal log size, then help to
-> avoid the failure (if it won't mess up the code:)?
+On Wed, Apr 13, 2022 at 5:55 PM Jane Chu <jane.chu@oracle.com> wrote:
+>
+> On 4/11/2022 9:26 PM, Dan Williams wrote:
+> > On Tue, Apr 5, 2022 at 12:48 PM Jane Chu <jane.chu@oracle.com> wrote:
+> >>
+> >> Refactor the pmem_clear_poison() in order to share common code
+> >> later.
+> >>
+> >
+> > I would just add a note here about why, i.e. to factor out the common
+> > shared code between the typical write path and the recovery write
+> > path.
+>
+> Okay.
+>
+> >
+> >> Signed-off-by: Jane Chu <jane.chu@oracle.com>
+> >> ---
+> >>   drivers/nvdimm/pmem.c | 78 ++++++++++++++++++++++++++++---------------
+> >>   1 file changed, 52 insertions(+), 26 deletions(-)
+> >>
+> >> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+> >> index 0400c5a7ba39..56596be70400 100644
+> >> --- a/drivers/nvdimm/pmem.c
+> >> +++ b/drivers/nvdimm/pmem.c
+> >> @@ -45,10 +45,27 @@ static struct nd_region *to_region(struct pmem_device *pmem)
+> >>          return to_nd_region(to_dev(pmem)->parent);
+> >>   }
+> >>
+> >> -static void hwpoison_clear(struct pmem_device *pmem,
+> >> -               phys_addr_t phys, unsigned int len)
+> >> +static phys_addr_t to_phys(struct pmem_device *pmem, phys_addr_t offset)
+> >>   {
+> >> +       return (pmem->phys_addr + offset);
+> >
+> > Christoph already mentioned dropping the unnecessary parenthesis.
+> >
+> >> +}
+> >> +
+> >> +static sector_t to_sect(struct pmem_device *pmem, phys_addr_t offset)
+> >> +{
+> >> +       return (offset - pmem->data_offset) >> SECTOR_SHIFT;
+> >> +}
+> >> +
+> >> +static phys_addr_t to_offset(struct pmem_device *pmem, sector_t sector)
+> >> +{
+> >> +       return ((sector << SECTOR_SHIFT) + pmem->data_offset);
+> >> +}
+> >> +
+> >> +static void pmem_clear_hwpoison(struct pmem_device *pmem, phys_addr_t offset,
+> >> +               unsigned int len)
+> >
+> > Perhaps now is a good time to rename this to something else like
+> > pmem_clear_mce_nospec()? Just to make it more distinct from
+> > pmem_clear_poison(). While "hwpoison" is the page flag name
+> > pmem_clear_poison() is the function that's actually clearing the
+> > poison in hardware ("hw") and the new pmem_clear_mce_nospec() is
+> > toggling the page back into service.
+>
+> I get your point. How about calling the function explicitly
+> pmem_mkpage_present()?
 
-Hmm.  I suppose we could do a .out.XXX switcheroo type thing, though I
-don't know of a good way to detect which mkfs behavior you've got.
-
---D
-
-> 
-> >  fssize=128g log      =internal log           bsize=4096   blocks=16384, version=2
-> >  fssize=256g log      =internal log           bsize=4096   blocks=32768, version=2
-> > 
-> 
+Sure, I like pmem_mkpage_present().
