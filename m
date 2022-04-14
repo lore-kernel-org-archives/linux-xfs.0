@@ -2,178 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 656FAC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Apr 2022 02:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D3E4C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Apr 2022 04:08:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239356AbiDNCfY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Apr 2022 22:35:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55112 "EHLO
+        id S239806AbiDNELE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Apr 2022 00:11:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239501AbiDNCfX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Apr 2022 22:35:23 -0400
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 242F45371A
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Apr 2022 19:32:59 -0700 (PDT)
-Received: by mail-pg1-x52f.google.com with SMTP id h5so3528263pgc.7
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Apr 2022 19:32:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YSNIpToEpKx9C/PikZnCWZV0FikRekKMo16pPMd1DpA=;
-        b=LGvyFYmBi//2J872dwC4BWvIgavMY42bnfS/6eXxFjyQAxgAIQmx/fj2cZ5NGgLQJ0
-         Vj71Y/5rxksooccCGRxuVyYKJy0Vi/ysD/idUzToiZUWPz9xP526Vjd43hTc3P20brja
-         hMzCaQeubXgiZec4rGfcnX6iqTHx06cDAqA4Xh7ssUrCqd9mXR9fnvZnt4QoZ2Se3lPk
-         g8nY1MnrV2CVGmaTfsV8k2bQAGmQUpjHcwKEvQx8Hn+kYp3uV3prZLcy/41Qt2+ZWt50
-         +GDObPXKuVEPcRlyzFFyTzZOxPL2HWNMJvafbWCfk6g4HkMqj9uHEcPDlsqjpetzgtnW
-         IZng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=YSNIpToEpKx9C/PikZnCWZV0FikRekKMo16pPMd1DpA=;
-        b=cTBFo/FYDJGTWUIF/UhbB5/MjN0AykG0DrtcDvvVEiajxQSCQO9ja1n653i81WgG0U
-         TvrQ/jbFky5JCQ1sysqR472cuk4sv73iD/GeRbVOYSzYU3QSDVOn2mhvHaHuiQMDaaVI
-         N1XRy9GI26yNUHvryw65hrUCGnU0bCXeSnDoY7SnXth8guH7XdrdNJ8K9HukVsqg0zpm
-         nnnEnEklQ2EDyW1eZgSTDtRSqED/Cn80tTR0f89n2VOEHhcf3HMbbUhp1VsG18Rwpkce
-         OHhvGH/LaWW8HDGmw++78iDRZ9JMZb83LKHOE0zCrcRy6ps6kjb2KJeVVDcxRGkvjy5x
-         oXDA==
-X-Gm-Message-State: AOAM530Qt/zOOTUatXCqzxGjq6uJ17aYNJYzk7URlYa7qcnjdKVrYeXc
-        tvJqPSoIu+KdLsUnkmTs1aEIlZi7OMglw3gaRenvtw==
-X-Google-Smtp-Source: ABdhPJyJ7+lq6DXzFoR+6irZCG4YAQlpZndZMI7bifxiTNpKl3Ag2MIF6bdalp4DUmMY3P/bAV7PO08efRdZqcY2MLQ=
-X-Received: by 2002:a05:6a02:283:b0:342:703e:1434 with SMTP id
- bk3-20020a056a02028300b00342703e1434mr522640pgb.74.1649903578582; Wed, 13 Apr
- 2022 19:32:58 -0700 (PDT)
+        with ESMTP id S229485AbiDNELD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Apr 2022 00:11:03 -0400
+X-Greylist: delayed 492 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 13 Apr 2022 21:08:40 PDT
+Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 060D51FCCC
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Apr 2022 21:08:39 -0700 (PDT)
+Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id CECCE60E33
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Apr 2022 14:00:24 +1000 (EST)
+Received: from smtp1.onthe.net.au ([10.200.63.11])
+        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
+        with ESMTP id Er1aO6MhHdqu for <linux-xfs@vger.kernel.org>;
+        Thu, 14 Apr 2022 14:00:24 +1000 (AEST)
+Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id 95DB760E26
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Apr 2022 14:00:24 +1000 (EST)
+Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
+        id 827BB6802DC; Thu, 14 Apr 2022 14:00:24 +1000 (AEST)
+Date:   Thu, 14 Apr 2022 14:00:24 +1000
+From:   Chris Dunlop <chris@onthe.net.au>
+To:     linux-xfs@vger.kernel.org
+Subject: Limits to growth
+Message-ID: <20220414040024.GA550443@onthe.net.au>
 MIME-Version: 1.0
-References: <20220405194747.2386619-1-jane.chu@oracle.com> <20220405194747.2386619-4-jane.chu@oracle.com>
- <CAPcyv4jx=h+1QiB0NRRQrh1mHcD2TFQx4AH6JxnQDKukZ3KVZA@mail.gmail.com> <b511a483-4260-656a-ab04-2ba319e65ca7@oracle.com>
-In-Reply-To: <b511a483-4260-656a-ab04-2ba319e65ca7@oracle.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 13 Apr 2022 19:32:47 -0700
-Message-ID: <CAPcyv4jpwzMPKtzzc=DEbC340+zmzXkj+QtPVxfYbraskLKv8g@mail.gmail.com>
-Subject: Re: [PATCH v7 3/6] mce: fix set_mce_nospec to always unmap the whole page
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     david <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Vishal L Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        device-mapper development <dm-devel@redhat.com>,
-        "Weiny, Ira" <ira.weiny@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Vivek Goyal <vgoyal@redhat.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>, X86 ML <x86@kernel.org>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 13, 2022 at 4:36 PM Jane Chu <jane.chu@oracle.com> wrote:
->
-> On 4/11/2022 4:27 PM, Dan Williams wrote:
-> > On Tue, Apr 5, 2022 at 12:48 PM Jane Chu <jane.chu@oracle.com> wrote:
-> >>
-> >> The set_memory_uc() approach doesn't work well in all cases.
-> >> For example, when "The VMM unmapped the bad page from guest
-> >> physical space and passed the machine check to the guest."
-> >> "The guest gets virtual #MC on an access to that page.
-> >>   When the guest tries to do set_memory_uc() and instructs
-> >>   cpa_flush() to do clean caches that results in taking another
-> >>   fault / exception perhaps because the VMM unmapped the page
-> >>   from the guest."
-> >>
-> >> Since the driver has special knowledge to handle NP or UC,
-> >
-> > I think a patch is needed before this one to make this statement true? I.e.:
-> >
-> > diff --git a/drivers/acpi/nfit/mce.c b/drivers/acpi/nfit/mce.c
-> > index ee8d9973f60b..11641f55025a 100644
-> > --- a/drivers/acpi/nfit/mce.c
-> > +++ b/drivers/acpi/nfit/mce.c
-> > @@ -32,6 +32,7 @@ static int nfit_handle_mce(struct notifier_block
-> > *nb, unsigned long val,
-> >           */
-> >          mutex_lock(&acpi_desc_lock);
-> >          list_for_each_entry(acpi_desc, &acpi_descs, list) {
-> > +               unsigned int align = 1UL << MCI_MISC_ADDR_LSB(mce->misc);
-> >                  struct device *dev = acpi_desc->dev;
-> >                  int found_match = 0;
-> >
-> > @@ -63,8 +64,7 @@ static int nfit_handle_mce(struct notifier_block
-> > *nb, unsigned long val,
-> >
-> >                  /* If this fails due to an -ENOMEM, there is little we can do */
-> >                  nvdimm_bus_add_badrange(acpi_desc->nvdimm_bus,
-> > -                               ALIGN(mce->addr, L1_CACHE_BYTES),
-> > -                               L1_CACHE_BYTES);
-> > +                                       ALIGN(mce->addr, align), align);
-> >                  nvdimm_region_notify(nfit_spa->nd_region,
-> >                                  NVDIMM_REVALIDATE_POISON);
-> >
->
-> Dan, I tried the above change, and this is what I got after injecting 8
-> back-to-back poisons, then read them and received  SIGBUS/BUS_MCEERR_AR,
-> then repair via the v7 patch which works until this change is added.
->
-> [ 6240.955331] nfit ACPI0012:00: XXX, align = 100
-> [ 6240.960300] nfit ACPI0012:00: XXX, ALIGN(mce->addr,
-> L1_CACHE_BYTES)=1851600400, L1_CACHE_BYTES=40, ALIGN(mce->addr,
-> align)=1851600400
-> [..]
-> [ 6242.052277] nfit ACPI0012:00: XXX, align = 100
-> [ 6242.057243] nfit ACPI0012:00: XXX, ALIGN(mce->addr,
-> L1_CACHE_BYTES)=1851601000, L1_CACHE_BYTES=40, ALIGN(mce->addr,
-> align)=1851601000
-> [..]
-> [ 6244.917198] nfit ACPI0012:00: XXX, align = 1000
-> [ 6244.922258] nfit ACPI0012:00: XXX, ALIGN(mce->addr,
-> L1_CACHE_BYTES)=1851601200, L1_CACHE_BYTES=40, ALIGN(mce->addr,
-> align)=1851602000
-> [..]
->
-> All 8 poisons remain uncleared.
->
-> Without further investigation, I don't know why the failure.
-> Could we mark this change to a follow-on task?
+Hi,
 
-Perhaps a bit more debug before kicking this can down the road...
+I have a nearly full 30T xfs filesystem that I need to grow significantly, 
+e.g. to, say, 256T, and potentially further in future, e.g. up to, say, 
+1PB. Alternatively at some point I'll need to copy a LOT of data from the 
+existing fs to a newly-provisioned much larger fs. If I'm going to need to 
+copy data around I guess it's better to do it now, before there's a whole 
+lot more data to copy.
 
-I'm worried that this means that the driver is not accurately tracking
-poison data For example, that last case the hardware is indicating a
-full page clobber, but the old code would only track poison from
-1851601200 to 1851601400 (i.e. the first 512 bytes from the base error
-address).
+According to Dave Chinner:
 
-Oh... wait, I think there is a second bug here, that ALIGN should be
-ALIGN_DOWN(). Does this restore the result you expect?
+   https://www.spinics.net/lists/linux-xfs/msg20084.html
+   Rule of thumb we've stated every time it's been asked in the past 10-15 
+   years is "try not to grow by more than 10x the original size".
 
-diff --git a/drivers/acpi/nfit/mce.c b/drivers/acpi/nfit/mce.c
-index ee8d9973f60b..d7a52238a741 100644
---- a/drivers/acpi/nfit/mce.c
-+++ b/drivers/acpi/nfit/mce.c
-@@ -63,8 +63,7 @@ static int nfit_handle_mce(struct notifier_block
-*nb, unsigned long val,
+It's also explained the issue is the number of AGs.
 
-                /* If this fails due to an -ENOMEM, there is little we can do */
-                nvdimm_bus_add_badrange(acpi_desc->nvdimm_bus,
--                               ALIGN(mce->addr, L1_CACHE_BYTES),
--                               L1_CACHE_BYTES);
-+                                       ALIGN_DOWN(mce->addr, align), align);
-                nvdimm_region_notify(nfit_spa->nd_region,
-                                NVDIMM_REVALIDATE_POISON);
+Is it ONLY the number of AGs that's a concern when growing a fs?
 
+E.g. for a fs starting in the 10s of TB that may need to grow 
+substantially (e.g. >=10x), is it advisable to simply create it with the 
+maximum available agsize, and you can then grow to whatever multiple 
+without worrying about XFS getting ornery?
 
-> The driver knows a lot about how to clear poisons besides hardcoding
-> poison alignment to 0x40 bytes.
+Of course as Dave explains further in the thread it would probably be 
+better to just start with XFS on a large thin provisioned volume in the 
+first place, but that's not where I am currently. Sigh.
 
-It does, but the badblocks tracking should still be reliable, and if
-it's not reliable I expect there are cases where recovery_write() will
-not be triggered because the driver will not fail the
-dax_direct_access() attempt.
+Looking my fs and just considering the number of AGs (agcount)...
+
+My original fs has:
+
+meta-data=xxxx           isize=512    agcount=32, agsize=244184192 blks
+          =               sectsz=4096  attr=2, projid32bit=1
+          =               crc=1        finobt=1, sparse=1, rmapbt=1
+          =               reflink=1    bigtime=0 inobtcount=0
+data     =               bsize=4096   blocks=7813893120, imaxpct=5
+          =               sunit=128    swidth=512 blks
+naming   =version 2      bsize=4096   ascii-ci=0, ftype=1
+log      =internal log   bsize=4096   blocks=521728, version=2
+          =               sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none           extsz=4096   blocks=0, rtextents=0
+
+If I do a test xfs_grow to 256T, it shows:
+
+metadata=xxxxx           isize=512    agcount=282, agsize=244184192 blks
+
+Creating a new fs on 256T, I get:
+
+metadata=xxxxx           isize=512    agcount=257, agsize=268435328 blks
+
+So growing the fs from 30T to 256T I end up with an agcount ~10% larger 
+(and agsize ~10% smaller) than creating a 256T fs from scratch.
+
+Just for the exercise, creating a new FS on 1P (i.e. 33x the current fs) 
+gives:
+
+metadata=xxxxx           isize=512    agcount=1025, agsize=268435328 blks
+
+I.e. it looks like for this case the max agsize is 268435328 blocks. So 
+even if the current fs were to grow to a 1P or more, e.g. 30x - 60x 
+original, I'm still only going to be ~10% worse off in terms of agcount 
+than creating a large fs from scratch and copying all the data over.
+
+Is that really going to make a significant difference?
+
+Cheers,
+
+Chris
