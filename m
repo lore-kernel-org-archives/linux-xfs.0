@@ -2,85 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D33EDC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 13:42:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4256C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 14:09:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354101AbiDONpS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Apr 2022 09:45:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51752 "EHLO
+        id S1350363AbiDOOME (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Apr 2022 10:12:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354129AbiDONpQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 09:45:16 -0400
-Received: from mail-qv1-xf30.google.com (mail-qv1-xf30.google.com [IPv6:2607:f8b0:4864:20::f30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 232BEBA339;
-        Fri, 15 Apr 2022 06:42:46 -0700 (PDT)
-Received: by mail-qv1-xf30.google.com with SMTP id y19so6500166qvk.5;
-        Fri, 15 Apr 2022 06:42:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=R3T86T3mCsBpnlO1XOLs16Pr1tJsd/No9WFwt9RP4yg=;
-        b=X5/Q+yG0eSVrgSVa/dmxW8h9EEVkHIKGfSywOT9oRB2ph0W0kt3lajQPp957ZEvDmO
-         dxQDAgGvEDD0+cwjrNz+LchIr9R4EN+HKWZLayUzaKu3jhjKa0+o9XYdckbTAnLEmqmV
-         r+mupjQkUiACem3YTQzgMG6tEukwPHtVAoUZCY+QvaM0qoMtVEDd5B/LJXNu+K+++av0
-         OFVLyRYJ3nahi9NLnt+IB/kALFT+s017CCh777OZm5xKB4qjIP9FN2pCKdPmubdtF+de
-         2MH6QJ95uTHvzD8Ozco+WNz7VJCGGrvVRNWo3V4MC2dCei45oYg9RTillz94FFifUdt9
-         31nA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=R3T86T3mCsBpnlO1XOLs16Pr1tJsd/No9WFwt9RP4yg=;
-        b=OWLd0f1A3nwlrcHoTSebUqqNBoGB5ep8EMhSg3w8kUYs0DvsXE6n04JaGZU667nUO2
-         JVtGHkugFNv3dMRD0wMpjAQkduEwURruC77CwEpcnmQWkpwzt/7xJXIA5LE0pVIccCsV
-         raMQhXvkByVUVlFntYWfEF7jZkOn+AZMJFwAFOn/BD40lHtuUMgXWdNti2mbBsO7LqSl
-         6uokcAxhqH5u8Qc71adxNQDmz8Look52RIy+7DqgKfrSGIflg4VCaHHzY8EuOim/d3oh
-         CE3ZwdMRRC6sYnYEayS/RlITRu5pVz1NzjvdcoJeteckvJnBeE3DQOawX7HHxHcMGKi7
-         F3mw==
-X-Gm-Message-State: AOAM531k60UZhQso/gotivx0JtheA3NrvISuvqYiP1pkYrYSKPg5jyQW
-        7+9x//h/i9p289hrW78t7QKbk7B+OcXTXkF1uQk=
-X-Google-Smtp-Source: ABdhPJxQqaqiwphhhhCgWuHuODg9rdk6PU9vi+qIMlSU2vMdFy3aO443UJ7xrZtPVvllkVK+BxJU2O/SRuvKINQfqlk=
-X-Received: by 2002:ad4:4ee6:0:b0:446:3ad0:e26b with SMTP id
- dv6-20020ad44ee6000000b004463ad0e26bmr1521774qvb.12.1650030165152; Fri, 15
- Apr 2022 06:42:45 -0700 (PDT)
+        with ESMTP id S233185AbiDOOMD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 10:12:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D5956468;
+        Fri, 15 Apr 2022 07:09:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E548E6209F;
+        Fri, 15 Apr 2022 14:09:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41D62C385A5;
+        Fri, 15 Apr 2022 14:09:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650031774;
+        bh=8SN8pSQF26UhUrZ5RWRuwnWsg6JzFY4XPlBZTxxZw6g=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fPB68BrWZXRJZ2F7znRpyMQqUa+q5QVsVbv6bwxbm/vGGKcd5anVAFW2mHgvwlKMJ
+         cYkoqMAXQBZ5DwRe3gt5saZYeREPfLG7eUfR11mqmmqenTCmGbzqk7NBt9TwH6QSOB
+         JjJYWwO0r13SYJcnTp/Snq2RZYF9/NwEOtSXTlYOYva32t9kAe/lyRjbYvP2fl3R4r
+         w21nk+B3OrLEpTOInu4ubE9tZD9hWEe8jy0Z0ePkBfJTnGI+RVyvWfHxIA3XyW7SE4
+         qqlCBFF5wAzooiD2RbKY8O1oTsc/0NIbLvPOZ1T1l44asU6AL3DC7/A1ddP5cHZn7W
+         Tx89MwNkyN80A==
+Date:   Fri, 15 Apr 2022 16:09:24 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Yang Xu <xuyang2018.jy@fujitsu.com>
+Cc:     david@fromorbit.com, djwong@kernel.org,
+        linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        viro@zeniv.linux.org.uk, jlayton@kernel.org
+Subject: Re: [PATCH v3 1/7] fs/inode: move sgid strip operation from
+ inode_init_owner into inode_sgid_strip
+Message-ID: <20220415140924.oirar6dklelujnxs@wittgenstein>
+References: <1650020543-24908-1-git-send-email-xuyang2018.jy@fujitsu.com>
 MIME-Version: 1.0
-References: <164971767143.169983.12905331894414458027.stgit@magnolia>
- <164971768254.169983.13280225265874038241.stgit@magnolia> <20220412115205.d6jjudlkxs72vezd@zlang-mailbox>
- <CAOQ4uxiDW6=qgWtH8uHkOmAyZBR7vfgwgt-DA_Rn0QVihQZQLw@mail.gmail.com>
- <20220413154401.vun2usvgwlfers2r@zlang-mailbox> <20220414155007.GC17014@magnolia>
- <20220414191017.jmv7jmwwhfy2n75z@zlang-mailbox>
-In-Reply-To: <20220414191017.jmv7jmwwhfy2n75z@zlang-mailbox>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Fri, 15 Apr 2022 16:42:33 +0300
-Message-ID: <CAOQ4uxgSmxaOHCj1RdCOX2p1Zmu5enkc4f_fkOLC_muPiMk=PA@mail.gmail.com>
-Subject: Re: [PATCH 2/4] generic: ensure we drop suid after fallocate
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Eryu Guan <guaneryu@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <1650020543-24908-1-git-send-email-xuyang2018.jy@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> Hi Darrick, that's another story, you don't need to worry about that in this case :)
-> I'd like to ack this patch, but hope to move it from generic/ to shared/ . Maybe
-> Eryu can help to move it, or I can do that after I get the push permission.
->
-> The reason why I intend moving it to shared is:
-> Although we are trying to get rid of tests/shared/, but the tests/shared/ still help to
-> remind us what cases are still not real generic cases. We'll try to help all shared
-> cases to be generic. When the time is ready, I'd like to move this case to generic/
-> and change _supported_fs from "xfs btrfs ext4" to "generic".
->
+On Fri, Apr 15, 2022 at 07:02:17PM +0800, Yang Xu wrote:
+> This has no functional change. Just create and export inode_sgid_strip api for
+> the subsequent patch. This function is used to strip S_ISGID mode when init
+> a new inode.
+> 
+> Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
+> ---
+> v2->v3:
+> 1.Use const struct inode * instead of struct inode *
+> 2.replace sgid strip with inode_sgid_strip in a single patch
+>  fs/inode.c         | 24 ++++++++++++++++++++----
+>  include/linux/fs.h |  3 ++-
+>  2 files changed, 22 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 9d9b422504d1..1b569ad882ce 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -2246,10 +2246,8 @@ void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
+>  		/* Directories are special, and always inherit S_ISGID */
+>  		if (S_ISDIR(mode))
+>  			mode |= S_ISGID;
+> -		else if ((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP) &&
+> -			 !in_group_p(i_gid_into_mnt(mnt_userns, dir)) &&
+> -			 !capable_wrt_inode_uidgid(mnt_userns, dir, CAP_FSETID))
+> -			mode &= ~S_ISGID;
+> +		else
+> +			inode_sgid_strip(mnt_userns, dir, &mode);
+>  	} else
+>  		inode_fsgid_set(inode, mnt_userns);
+>  	inode->i_mode = mode;
+> @@ -2405,3 +2403,21 @@ struct timespec64 current_time(struct inode *inode)
+>  	return timestamp_truncate(now, inode);
+>  }
+>  EXPORT_SYMBOL(current_time);
+> +
+> +void inode_sgid_strip(struct user_namespace *mnt_userns,
+> +		      const struct inode *dir, umode_t *mode)
+> +{
+> +	if (!dir || !(dir->i_mode & S_ISGID))
+> +		return;
+> +	if ((*mode & (S_ISGID | S_IXGRP)) != (S_ISGID | S_IXGRP))
+> +		return;
+> +	if (S_ISDIR(*mode))
+> +		return;
 
-Sorry, but I have to object to this move.
-I do not think that is what tests/shared should be used for.
+I'd place that check first as this whole function is really only
+relevant for non-directories.
 
-My preferences are:
-1. _suppoted_fs generic && _require_xfs_io_command "finsert"
-2. _suppoted_fs generic
-3. _supported_fs xfs btrfs ext4 (without moving to tests/shared)
+Otherwise I can live with *mode being a pointer although I still find
+this unpleasant API wise but the bikeshed does it's job without having
+my color. :)
 
-Thanks,
-Amir.
+I'd like to do some good testing on this.
+
+Acked-by: Christian Brauner (Microsoft) <brauner@kernel.org>
