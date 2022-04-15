@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05997C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 04:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 178C2C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 04:55:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349996AbiDOE54 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Apr 2022 00:57:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48022 "EHLO
+        id S1350003AbiDOE56 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Apr 2022 00:57:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349810AbiDOE4b (ORCPT
+        with ESMTP id S1349813AbiDOE4b (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 00:56:31 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25623716D1;
-        Thu, 14 Apr 2022 21:53:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4B2D7B55D;
+        Thu, 14 Apr 2022 21:53:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=ZlX6tQSx9Ltba6eWidCjog7i9CmwA2DoDl+4xkJfBJs=; b=mK5Q76NpPUvc78f6UJP6DQWA/7
-        NKBjQM3eKggVVlsB90RP9nWbWfQQRf5B/jpgaA1Q9EfhEKM6lJIkbGZcu7PpXQpjIFw5FBt2pbsp/
-        MOoSSA4Ia9EScAPP1GzU9Z/ZQQucRFdEcK1J7IinCMg7xBNHzYM+zhxh9/8+JGCxjva2x2nAoCRtc
-        /jXC9gicBp3dw18FSq1x+PVYM/uSyKZyRhIEi86XF4FPTwvQg4pS+RVuHw79vZX329QreecldYuvL
-        XgVsFKXu2B19byXqlKObQtsOc9NysNwyvK+OIp8FWlGn58YTS0dBRTNV0sUd2V4lcvAVAxYH2RH2k
-        wQndRV7A==;
+        bh=EfN09E7KgfFk5NOTogRSBSf7jTlM22RGe5+0+tCjcRA=; b=HT20lFvm4eaWJQtGcnmbhRoft9
+        /gWueL2ezX0rtmvfD1y6vW4lHfpzH1cPIp08f4BIGZSC49RVBBYbHgbS+KAX1oiXK6QDo4EDns/41
+        oLVOfq3MekqhckOiTRP9I3u5vQgfRVLF/o2daYUi8nTXdLHpKUoyn49HYrmB7+ZqRfsquW9YDBu4p
+        D4uxvWlZnhsloYsO2zNcp/KkBQnezNnSaCF8uUycTEb/HLNgy42tQ7EfyQZm1uZruK006gQ9xmJK1
+        PsGSSD0WP/jCSlttlJweZM8gxob8/S6HjFCPWqpNQJhWwkjWmgqx1AWPPsqaJu3qLEkP5zbjSOfgd
+        w6iJtnUA==;
 Received: from [2a02:1205:504b:4280:f5dd:42a4:896c:d877] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nfDxq-008PC1-Gz; Fri, 15 Apr 2022 04:53:47 +0000
+        id 1nfDxv-008PIQ-ME; Fri, 15 Apr 2022 04:53:52 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -43,10 +43,12 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
         ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 13/27] block: add a bdev_fua helper
-Date:   Fri, 15 Apr 2022 06:52:44 +0200
-Message-Id: <20220415045258.199825-14-hch@lst.de>
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 15/27] block: add a bdev_max_zone_append_sectors helper
+Date:   Fri, 15 Apr 2022 06:52:46 +0200
+Message-Id: <20220415045258.199825-16-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220415045258.199825-1-hch@lst.de>
 References: <20220415045258.199825-1-hch@lst.de>
@@ -57,97 +59,70 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add a helper to check the FUA flag based on the block_device instead of
-having to poke into the block layer internal request_queue.
+Add a helper to check the max supported sectors for zone append based on
+the block_device instead of having to poke into the block layer internal
+request_queue.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/block/rnbd/rnbd-srv.c       | 3 +--
- drivers/target/target_core_iblock.c | 3 +--
- fs/iomap/direct-io.c                | 3 +--
- include/linux/blkdev.h              | 6 +++++-
- 4 files changed, 8 insertions(+), 7 deletions(-)
+ drivers/nvme/target/zns.c | 3 +--
+ fs/zonefs/super.c         | 3 +--
+ include/linux/blkdev.h    | 6 ++++++
+ 3 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/block/rnbd/rnbd-srv.c b/drivers/block/rnbd/rnbd-srv.c
-index f8cc3c5fecb4b..beaef43a67b9d 100644
---- a/drivers/block/rnbd/rnbd-srv.c
-+++ b/drivers/block/rnbd/rnbd-srv.c
-@@ -533,7 +533,6 @@ static void rnbd_srv_fill_msg_open_rsp(struct rnbd_msg_open_rsp *rsp,
- 					struct rnbd_srv_sess_dev *sess_dev)
+diff --git a/drivers/nvme/target/zns.c b/drivers/nvme/target/zns.c
+index e34718b095504..82b61acf7a72b 100644
+--- a/drivers/nvme/target/zns.c
++++ b/drivers/nvme/target/zns.c
+@@ -34,8 +34,7 @@ static int validate_conv_zones_cb(struct blk_zone *z,
+ 
+ bool nvmet_bdev_zns_enable(struct nvmet_ns *ns)
  {
- 	struct rnbd_dev *rnbd_dev = sess_dev->rnbd_dev;
--	struct request_queue *q = bdev_get_queue(rnbd_dev->bdev);
+-	struct request_queue *q = ns->bdev->bd_disk->queue;
+-	u8 zasl = nvmet_zasl(queue_max_zone_append_sectors(q));
++	u8 zasl = nvmet_zasl(bdev_max_zone_append_sectors(ns->bdev));
+ 	struct gendisk *bd_disk = ns->bdev->bd_disk;
+ 	int ret;
  
- 	rsp->hdr.type = cpu_to_le16(RNBD_MSG_OPEN_RSP);
- 	rsp->device_id =
-@@ -560,7 +559,7 @@ static void rnbd_srv_fill_msg_open_rsp(struct rnbd_msg_open_rsp *rsp,
- 	rsp->cache_policy = 0;
- 	if (bdev_write_cache(rnbd_dev->bdev))
- 		rsp->cache_policy |= RNBD_WRITEBACK;
--	if (blk_queue_fua(q))
-+	if (bdev_fua(rnbd_dev->bdev))
- 		rsp->cache_policy |= RNBD_FUA;
- }
+diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
+index 3614c7834007d..7a63807b736c4 100644
+--- a/fs/zonefs/super.c
++++ b/fs/zonefs/super.c
+@@ -678,13 +678,12 @@ static ssize_t zonefs_file_dio_append(struct kiocb *iocb, struct iov_iter *from)
+ 	struct inode *inode = file_inode(iocb->ki_filp);
+ 	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+ 	struct block_device *bdev = inode->i_sb->s_bdev;
+-	unsigned int max;
++	unsigned int max = bdev_max_zone_append_sectors(bdev);
+ 	struct bio *bio;
+ 	ssize_t size;
+ 	int nr_pages;
+ 	ssize_t ret;
  
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 03013e85ffc03..c4a903b8a47fc 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -727,14 +727,13 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 
- 	if (data_direction == DMA_TO_DEVICE) {
- 		struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
--		struct request_queue *q = bdev_get_queue(ib_dev->ibd_bd);
- 		/*
- 		 * Force writethrough using REQ_FUA if a volatile write cache
- 		 * is not enabled, or if initiator set the Force Unit Access bit.
- 		 */
- 		opf = REQ_OP_WRITE;
- 		miter_dir = SG_MITER_TO_SG;
--		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
-+		if (bdev_fua(ib_dev->ibd_bd)) {
- 			if (cmd->se_cmd_flags & SCF_FUA)
- 				opf |= REQ_FUA;
- 			else if (!bdev_write_cache(ib_dev->ibd_bd))
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index b08f5dc31780d..62da020d02a11 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -265,8 +265,7 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 		 * cache flushes on IO completion.
- 		 */
- 		if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
--		    (dio->flags & IOMAP_DIO_WRITE_FUA) &&
--		    blk_queue_fua(bdev_get_queue(iomap->bdev)))
-+		    (dio->flags & IOMAP_DIO_WRITE_FUA) && bdev_fua(iomap->bdev))
- 			use_fua = true;
- 	}
+-	max = queue_max_zone_append_sectors(bdev_get_queue(bdev));
+ 	max = ALIGN_DOWN(max << SECTOR_SHIFT, inode->i_sb->s_blocksize);
+ 	iov_iter_truncate(from, max);
  
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 807a49aa5a27a..075b16d4560e7 100644
+index a433798c3343e..f8c50b77543eb 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -602,7 +602,6 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
- 			     REQ_FAILFAST_DRIVER))
- #define blk_queue_quiesced(q)	test_bit(QUEUE_FLAG_QUIESCED, &(q)->queue_flags)
- #define blk_queue_pm_only(q)	atomic_read(&(q)->pm_only)
--#define blk_queue_fua(q)	test_bit(QUEUE_FLAG_FUA, &(q)->queue_flags)
- #define blk_queue_registered(q)	test_bit(QUEUE_FLAG_REGISTERED, &(q)->queue_flags)
- #define blk_queue_nowait(q)	test_bit(QUEUE_FLAG_NOWAIT, &(q)->queue_flags)
- 
-@@ -1336,6 +1335,11 @@ static inline bool bdev_write_cache(struct block_device *bdev)
- 	return test_bit(QUEUE_FLAG_WC, &bdev_get_queue(bdev)->queue_flags);
+@@ -1188,6 +1188,12 @@ static inline unsigned int queue_max_zone_append_sectors(const struct request_qu
+ 	return min(l->max_zone_append_sectors, l->max_sectors);
  }
  
-+static inline bool bdev_fua(struct block_device *bdev)
++static inline unsigned int
++bdev_max_zone_append_sectors(struct block_device *bdev)
 +{
-+	return test_bit(QUEUE_FLAG_FUA, &bdev_get_queue(bdev)->queue_flags);
++	return queue_max_zone_append_sectors(bdev_get_queue(bdev));
 +}
 +
- static inline enum blk_zoned_model bdev_zoned_model(struct block_device *bdev)
+ static inline unsigned queue_logical_block_size(const struct request_queue *q)
  {
- 	struct request_queue *q = bdev_get_queue(bdev);
+ 	int retval = 512;
 -- 
 2.30.2
 
