@@ -2,110 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2B65C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 10:04:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F091C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 11:01:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352070AbiDOKHT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Apr 2022 06:07:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41530 "EHLO
+        id S1352579AbiDOLDu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Apr 2022 07:03:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235926AbiDOKHS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 06:07:18 -0400
-Received: from mail1.bemta36.messagelabs.com (mail1.bemta36.messagelabs.com [85.158.142.113])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79E5B9FCB;
-        Fri, 15 Apr 2022 03:04:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1650017083; i=@fujitsu.com;
-        bh=2BEBt+KtqG1w23kjA03oL0N4j7CMYSd/9MBWpZADdAw=;
-        h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-         MIME-Version:Content-Type;
-        b=bW3TaDdV0Lz8DzgF0QxGg1uM2d1wZG8DuvE3UVTnNFOCzRUeV0eDd502znGoRedpd
-         TxpYEclkcTimdkKEyO8CddXIKpHyB23+e0JLMbm9E/ft4soDZEtXQclB4/9k5XwVWw
-         RqgpAPLfEEbzR72sWCWxUQ3stdFeZEnfUtESjkIVT7fl/ht9rGDo+pOGWdP7Pf0deU
-         GnZWBYVOoy7c7IfbiqCXxKd2xhDHk6n0DIxQ3bhjQG9mkq+HM3hT+ScW24Kmz2JgxT
-         JoISNSb6q6ZWt8kLW1axzLUNJB2S476DYA/+5BuMCXRuRiFYgpd2ttTqfrcumKRInk
-         rXAiUQm3QsEqQ==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpgleJIrShJLcpLzFFi42Kxs+GYpGvtHJl
-  k8KaT0+L14U+MFh9uTmKy2HLsHqPF5Sd8Fj+XrWK32LP3JIvFhQOnWS12/dnBbnH+73FWB06P
-  U4skPDat6mTz+LxJzmPTk7dMASxRrJl5SfkVCawZpzpPshX0slU8PHCRpYGxl7WLkYtDSGALo
-  8Sh+3sZIZwFTBLfPl1m6WLkBHL2MEp8ORIJYrMJaEo861zADGKLCLhILJywHqyBWeAKo8T19j
-  lgCWGBYIkp+1vBmlkEVCV6dkwDinNw8Ap4SrzrFAQJSwgoSEx5+B4szCngJfH/bC3EKk+JqZM
-  us4HYvAKCEidnPgGbwiwgIXHwxQtmiFZFiUsd3xgh7AqJWbPamCBsNYmr5zYxT2AUnIWkfRaS
-  9gWMTKsYbZOKMtMzSnITM3N0DQ0MdA0NTXXNLHWNjfUSq3QT9VJLdZNT80qKEoGyeonlxXqpx
-  cV6xZW5yTkpenmpJZsYgRGTUuyquIPxWt9PvUOMkhxMSqK8b0Ujk4T4kvJTKjMSizPii0pzUo
-  sPMcpwcChJ8P61B8oJFqWmp1akZeYAoxcmLcHBoyTCG2oNlOYtLkjMLc5Mh0idYlSUEucVdgJ
-  KCIAkMkrz4NpgCeMSo6yUMC8jAwODEE9BalFuZgmq/CtGcQ5GJWFeY5ApPJl5JXDTXwEtZgJa
-  /G1VKMjikkSElFQDk6KRdNR0Ld5fVzKaPO8Xm3fILncRsAuPy9j9xljL8cJ+7d2qLy3+vt2c8
-  rC0ReTm/UcVUjdfve4UMra+HCDwfZrrp1+f9gs45K/+trPFw9Wt2PPa2TYFx+XP776WmviltK
-  xa0PBvVtqV77MvSl5tWia85ryOWcHFAxsZJlqJfSj6Ifyg0mQ/c8WdinUVcVtneOR1Ni1wdDp
-  z6p+WzPJlr2SDk1pFDCsP5n8LlN47+/Fx3/e7bI7WJbPNvy9zTevTVsXGlQ+vnDSe8HbSbWG5
-  /P4fHmmPJm14wexfeiGvMfTfbQmjH1rli4OLs5peSly4Fnr4k158ZM9XU0v/VTnzWG9tfuPra
-  HFIPH9y7knWE0osxRmJhlrMRcWJAPSKhAmTAwAA
-X-Env-Sender: xuyang2018.jy@fujitsu.com
-X-Msg-Ref: server-12.tower-528.messagelabs.com!1650017082!67435!1
-X-Originating-IP: [62.60.8.146]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.85.8; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 4420 invoked from network); 15 Apr 2022 10:04:43 -0000
-Received: from unknown (HELO n03ukasimr02.n03.fujitsu.local) (62.60.8.146)
-  by server-12.tower-528.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 15 Apr 2022 10:04:43 -0000
-Received: from n03ukasimr02.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTP id 9E27110047A;
-        Fri, 15 Apr 2022 11:04:42 +0100 (BST)
-Received: from R01UKEXCASM126.r01.fujitsu.local (unknown [10.183.43.178])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        with ESMTP id S1352580AbiDOLD3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 07:03:29 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E40D5BF52B
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Apr 2022 04:00:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1650020450;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=swJmJjsyEir1ptFGEkx0uxAo7c+eDE2H3xRn7VWYphQ=;
+        b=IyYak90jj0HnWuOqkylXROFzabUoWUlkUVMnfOXlfdlLFBAQbXK96WbRV5P/rZzQmHQ5uV
+        6Bu+tN7iywngoTfqO42rK/lM/oB5Mc8xiV5Cd9DEGERBWPN8DI1iosIBysTVFt07Ec5Hhh
+        w4Wa4JfqaaQr3ndH6YO3KzKD07p+9To=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-85-AyWIkw6wMn-zgAe2jDt2yg-1; Fri, 15 Apr 2022 07:00:47 -0400
+X-MC-Unique: AyWIkw6wMn-zgAe2jDt2yg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTPS id 919E2100467;
-        Fri, 15 Apr 2022 11:04:42 +0100 (BST)
-Received: from localhost.localdomain (10.167.220.84) by
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
- (TLS) id 15.0.1497.32; Fri, 15 Apr 2022 11:04:18 +0100
-From:   Yang Xu <xuyang2018.jy@fujitsu.com>
-To:     <david@fromorbit.com>, <djwong@kernel.org>, <brauner@kernel.org>
-CC:     <linux-fsdevel@vger.kernel.org>, <ceph-devel@vger.kernel.org>,
-        <linux-nfs@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <viro@zeniv.linux.org.uk>, <jlayton@kernel.org>,
-        Yang Xu <xuyang2018.jy@fujitsu.com>
-Subject: [PATCH v3 7/7] ceph: Remove S_ISGID clear code in ceph_finish_async_create
-Date:   Fri, 15 Apr 2022 19:02:23 +0800
-Message-ID: <1650020543-24908-7-git-send-email-xuyang2018.jy@fujitsu.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1650020543-24908-1-git-send-email-xuyang2018.jy@fujitsu.com>
-References: <1650020543-24908-1-git-send-email-xuyang2018.jy@fujitsu.com>
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id DDEA638041DB;
+        Fri, 15 Apr 2022 11:00:46 +0000 (UTC)
+Received: from T590 (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D388C40EC01C;
+        Fri, 15 Apr 2022 11:00:42 +0000 (UTC)
+Date:   Fri, 15 Apr 2022 19:00:37 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        Changhui Zhong <czhong@redhat.com>
+Subject: Re: [PATCH V2] block: avoid io timeout in case of sync polled dio
+Message-ID: <YllQVT6n472eUB7+@T590>
+References: <20220415034703.2081695-1-ming.lei@redhat.com>
+ <20220415051844.GA22762@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.167.220.84]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
-X-Virus-Scanned: ClamAV using ClamSMTP
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220415051844.GA22762@lst.de>
+X-Scanned-By: MIMEDefang 2.84 on 10.11.54.2
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Since vfs has stripped S_ISGID, we don't need this code any more.
+On Fri, Apr 15, 2022 at 07:18:44AM +0200, Christoph Hellwig wrote:
+> On Fri, Apr 15, 2022 at 11:47:03AM +0800, Ming Lei wrote:
+> > +	/* make sure the bio is issued before polling */
+> > +	if (bio.bi_opf & REQ_POLLED)
+> > +		blk_flush_plug(current->plug, false);
+> 
+> I still think the core code should handle this.  Without that we'd need
+> to export the blk_flush_plug for anything that would want to poll bios
+> from modules, in addition to it generally being a mess.  See a proposed
 
-Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
----
- fs/ceph/file.c | 4 ----
- 1 file changed, 4 deletions(-)
+So far there isn't such usage yet. dm calls bio_poll() in ->iopoll(),
+and its caller(io_uring) will finish the plug.
 
-diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-index 6c9e837aa1d3..8e3b99853333 100644
---- a/fs/ceph/file.c
-+++ b/fs/ceph/file.c
-@@ -651,10 +651,6 @@ static int ceph_finish_async_create(struct inode *dir, struct dentry *dentry,
- 		/* Directories always inherit the setgid bit. */
- 		if (S_ISDIR(mode))
- 			mode |= S_ISGID;
--		else if ((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP) &&
--			 !in_group_p(dir->i_gid) &&
--			 !capable_wrt_inode_uidgid(&init_user_ns, dir, CAP_FSETID))
--			mode &= ~S_ISGID;
- 	} else {
- 		in.gid = cpu_to_le32(from_kgid(&init_user_ns, current_fsgid()));
- 	}
--- 
-2.27.0
+> patch for that below.  I'd also split the flush aspect from the poll
+> aspect into two patches.
+> 
+> > +		if (bio.bi_opf & REQ_POLLED)
+> > +			bio_poll(&bio, NULL, 0);
+> > +		else
+> >  			blk_io_schedule();
+> 
+> Instead of this duplicate logic everywhere I'd just make bio_boll
+> call blk_io_schedule for the !REQ_POLLED case and simplify all the
+> callers.
+
+bio_poll() may be called with rcu read lock held, so I'd suggest to
+not mix the two together.
+
+> 
+> > +			if (dio->submit.poll_bio &&
+> > +					(dio->submit.poll_bio->bi_opf &
+> > +						REQ_POLLED))
+> 
+> This indentation looks awfull,normal would be:
+> 
+> 			if (dio->submit.poll_bio &&
+> 			    (dio->submit.poll_bio->bi_opf & REQ_POLLED))
+
+That follows the indentation style of fs/iomap/direct-io.c for break in
+'if'.
+
+> 
+> ---
+> From 08ff61b0142eb708fc384cf867c72175561d974a Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Fri, 15 Apr 2022 07:15:42 +0200
+> Subject: blk-mq: don't plug for synchronously polled requests
+> 
+> For synchronous polling to work, the bio must be issued to the driver from
+> the submit_bio call, otherwise ->bi_cookie won't be set.
+> 
+> Based on a patch from Ming Lei.
+> 
+> Reported-by: Changhui Zhong <czhong@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  block/blk-mq.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index ed3ed86f7dd24..bcc7e3d11296c 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -2851,7 +2851,13 @@ void blk_mq_submit_bio(struct bio *bio)
+>  		return;
+>  	}
+>  
+> -	if (plug)
+> +	/*
+> +	 * We can't plug for synchronously polled submissions, otherwise
+> +	 * bio->bi_cookie won't be set directly after submission, which is the
+> +	 * indicator used by the submitter to check if a bio needs polling.
+> +	 */
+> +	if (plug &&
+> +	    (rq->bio->bi_opf & (REQ_POLLED | REQ_NOWAIT)) != REQ_POLLED)
+>  		blk_add_rq_to_plug(plug, rq);
+>  	else if ((rq->rq_flags & RQF_ELV) ||
+>  		 (rq->mq_hctx->dispatch_busy &&
+
+It is nothing to do with REQ_NOWAIT. sync polled dio can be marked as
+REQ_NOWAIT by userspace too. If '--nowait=1' is added in the fio
+reproducer, io timeout is triggered too.
+
+
+
+Thanks,
+Ming
 
