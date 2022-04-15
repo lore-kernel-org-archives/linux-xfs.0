@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 096FDC4707E
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 04:54:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E3B5C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 04:54:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244303AbiDOE4p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Apr 2022 00:56:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47844 "EHLO
+        id S1349646AbiDOE4G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Apr 2022 00:56:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349726AbiDOE4M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 00:56:12 -0400
+        with ESMTP id S233203AbiDOEzo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 00:55:44 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77B5A716E1;
-        Thu, 14 Apr 2022 21:53:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39F486A42B;
+        Thu, 14 Apr 2022 21:53:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=OGJvHxXgCvw9/l2/0Y6T0ivupEa5/VICLVgDi4pj6zk=; b=V1O5NFc1OlhQKBAtPUESXrscbH
-        +gcfK8CWzUYJRweVfHt/gmcJRbnnyENCL0uxhp1nElH2rQXnBLZskSDze6nM9j3gF5JGx31h7pu9N
-        vPub4AczDFXqMD/nyRBLgGmvIyYUqZBGTv5Cc6JJINS7BJNf0/btoIeeLCOjZ4a5fxHer4O2Wp+wl
-        3U3FDeLPVBAqUisUOlzqQt8zs+kHINf2usFr1NigldxLvR21wl2YG3uLr/6AwNNFGfA7YCs2iW8C/
-        bPJ75RbYfKAHSDs+/fiusGnx0gVrEkfUrP1ZPu0GLZCLsq5AzPGOB49mYYVnrdML7RbrD/GaYtdc7
-        GVJ2xQ0g==;
+        bh=UUS6y6SVPRCfJmQVPGCeD5o714qtaTT6EGogPxQdIy8=; b=x5agUVGSt4qUPiArfFruXQZEkh
+        ED5eIR3aSkNtXX7nLmypr4HghgJKhQCB8SBb7JsEb44bJsx67U0AujP5aBa1btb0b+S+xGwgwPD/7
+        RRQm+W0tVsP/DSqW5U9c8tVIT1qiiaD3HIowj1Lt7t2v4nBRlePLOFKu6cvzlYV9ePp50Bne//9CJ
+        umsrwM4RvhODoSk65phqK4ewBHRrL/nBunRhsHvf5+9CdNnqhx6U7RpMnn5jES/jOpBFGw0/3/808
+        G3CmRXGpdyxJMHizR5B5MMLpxywFyHZzcVohmA18ECgaE440XvejvcNkIHffvwRVbT/cfUPwhLobO
+        l5t6lMLg==;
 Received: from [2a02:1205:504b:4280:f5dd:42a4:896c:d877] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nfDxj-008P34-1w; Fri, 15 Apr 2022 04:53:39 +0000
+        id 1nfDxL-008Omo-Q5; Fri, 15 Apr 2022 04:53:16 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -42,10 +42,11 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 10/27] mm: use bdev_is_zoned in claim_swapfile
-Date:   Fri, 15 Apr 2022 06:52:41 +0200
-Message-Id: <20220415045258.199825-11-hch@lst.de>
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 01/27] target: remove an incorrect unmap zeroes data deduction
+Date:   Fri, 15 Apr 2022 06:52:32 +0200
+Message-Id: <20220415045258.199825-2-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220415045258.199825-1-hch@lst.de>
 References: <20220415045258.199825-1-hch@lst.de>
@@ -56,26 +57,32 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use the bdev based helper instead of poking into the queue.
+For block devices, the SCSI target drivers implements UNMAP as calls to
+blkdev_issue_discard, which does not guarantee zeroing just because
+Write Zeroes is supported.
 
+Note that this does not affect the file backed path which uses
+fallocate to punch holes.
+
+Fixes: 2237498f0b5c ("target/iblock: Convert WRITE_SAME to blkdev_issue_zeroout")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- mm/swapfile.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_device.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 63c61f8b26118..4c7537162af5e 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -2761,7 +2761,7 @@ static int claim_swapfile(struct swap_info_struct *p, struct inode *inode)
- 		 * write only restriction.  Hence zoned block devices are not
- 		 * suitable for swapping.  Disallow them here.
- 		 */
--		if (blk_queue_is_zoned(p->bdev->bd_disk->queue))
-+		if (bdev_is_zoned(p->bdev))
- 			return -EINVAL;
- 		p->flags |= SWP_BLKDEV;
- 	} else if (S_ISREG(inode->i_mode)) {
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 44bb380e7390c..fa866acef5bb2 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -850,7 +850,6 @@ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
+ 	attrib->unmap_granularity = q->limits.discard_granularity / block_size;
+ 	attrib->unmap_granularity_alignment = q->limits.discard_alignment /
+ 								block_size;
+-	attrib->unmap_zeroes_data = !!(q->limits.max_write_zeroes_sectors);
+ 	return true;
+ }
+ EXPORT_SYMBOL(target_configure_unmap_from_queue);
 -- 
 2.30.2
 
