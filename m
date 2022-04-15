@@ -2,141 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8A2C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 03:47:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 674C6C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 04:53:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349147AbiDODto (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Apr 2022 23:49:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58854 "EHLO
+        id S1349621AbiDOE4C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Apr 2022 00:56:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348395AbiDODtn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Apr 2022 23:49:43 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2EE505AA64
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Apr 2022 20:47:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1649994434;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=OmFzF4P+0ykVdRezfaRk2XA/8c8gib3FIWkPQg2gCgk=;
-        b=QQ5Ul/IFOUJMk6TZtuSpDOjbq+f1HZbtLZ5eNJP5TysaqBsJKXB46D4jAjSyiAoXoe6mUR
-        Ff8q49eD5YTqZf/sWLhcVmhUeiy0W1c4tGjqdL+dY7tH7cDRdHnuJXkFQyayLKPcrBYE8m
-        j9sBrMqXxgROgLNMKuOf1o5ZFFBP+p8=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-296-179hF6s6PbSjO_5l_uwFEw-1; Thu, 14 Apr 2022 23:47:11 -0400
-X-MC-Unique: 179hF6s6PbSjO_5l_uwFEw-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id D7F7A1C04B41;
-        Fri, 15 Apr 2022 03:47:10 +0000 (UTC)
-Received: from localhost (ovpn-8-19.pek2.redhat.com [10.72.8.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E6FA840EC010;
-        Fri, 15 Apr 2022 03:47:09 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
+        with ESMTP id S1349526AbiDOEzz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 00:55:55 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 371986A406;
+        Thu, 14 Apr 2022 21:53:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:
+        To:From:Sender:Reply-To:Content-ID:Content-Description;
+        bh=XZGhvwW8WnEXnqFpyMAZS4hEeSHoeSYBiqC69zbelFo=; b=Gxz7Y5uJ+XKe3DFB5F+glNf4Qd
+        +ilmHliKeg1fmYV7/5LLANJc72+LNxw8j97CHk5ziFCgc1uz7kS3J7fxsGIO6cnBRc/aEIND8YKio
+        0SkKbU86rwF6U+vXBBwyr3GFqwWasgE9TCw8n+hO0zPxSPP5I4ZPpiX7PrV0Nkluz9OYVJwj4Hmwy
+        oKidnHT0/AqxHbe4vf+J+1VyQBy8myzVvzFwGzWB5MOWnMsTyORGtxjAzgY+jPvDzJzijUERBo3GF
+        IuBPqJCO6mtg8vZGmw86bOvzf7HW3Tdf+1Wt8evubUZivpuvFh33FBjqoHj3OCwfnGHVCD1k5Crl7
+        crl4uuXw==;
+Received: from [2a02:1205:504b:4280:f5dd:42a4:896c:d877] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nfDxW-008OrQ-LX; Fri, 15 Apr 2022 04:53:27 +0000
+From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, Changhui Zhong <czhong@redhat.com>
-Subject: [PATCH V2] block: avoid io timeout in case of sync polled dio
-Date:   Fri, 15 Apr 2022 11:47:03 +0800
-Message-Id: <20220415034703.2081695-1-ming.lei@redhat.com>
+Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
+        =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>
+Subject: [PATCH 05/27] drbd: use bdev based limit helpers in drbd_send_sizes
+Date:   Fri, 15 Apr 2022 06:52:36 +0200
+Message-Id: <20220415045258.199825-6-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220415045258.199825-1-hch@lst.de>
+References: <20220415045258.199825-1-hch@lst.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.11.54.2
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-For POLLED bio, bio_poll() should be called for reaping io since
-there isn't irq for completing the request, so we can't call into
-blk_io_schedule() in case that bio_poll() returns zero, otherwise
-io timeout is easily triggered.
+Use the bdev based limits helpers where they exist.
 
-Also before calling bio_poll(), current->plug should be flushed out,
-otherwise the bio may not be issued to driver, and ->bi_cookie won't
-be set.
-
-CC: linux-mm@kvack.org
-Cc: linux-xfs@vger.kernel.org
-Reported-by: Changhui Zhong <czhong@redhat.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com>
 ---
-V2:
-	- as pointed out by Christoph, iomap & mm code should be covered
+ drivers/block/drbd/drbd_main.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
- block/fops.c         | 7 ++++++-
- fs/iomap/direct-io.c | 7 +++++--
- mm/page_io.c         | 8 +++++++-
- 3 files changed, 18 insertions(+), 4 deletions(-)
-
-diff --git a/block/fops.c b/block/fops.c
-index 9f2ecec406b0..c9bac700e072 100644
---- a/block/fops.c
-+++ b/block/fops.c
-@@ -101,11 +101,16 @@ static ssize_t __blkdev_direct_IO_simple(struct kiocb *iocb,
- 		bio_set_polled(&bio, iocb);
+diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
+index 367715205c860..c39b04bda261f 100644
+--- a/drivers/block/drbd/drbd_main.c
++++ b/drivers/block/drbd/drbd_main.c
+@@ -924,7 +924,9 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
  
- 	submit_bio(&bio);
-+	/* make sure the bio is issued before polling */
-+	if (bio.bi_opf & REQ_POLLED)
-+		blk_flush_plug(current->plug, false);
- 	for (;;) {
- 		set_current_state(TASK_UNINTERRUPTIBLE);
- 		if (!READ_ONCE(bio.bi_private))
- 			break;
--		if (!(iocb->ki_flags & IOCB_HIPRI) || !bio_poll(&bio, NULL, 0))
-+		if (bio.bi_opf & REQ_POLLED)
-+			bio_poll(&bio, NULL, 0);
-+		else
- 			blk_io_schedule();
- 	}
- 	__set_current_state(TASK_RUNNING);
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index b08f5dc31780..e67d2f63a163 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -654,8 +654,11 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 			if (!READ_ONCE(dio->submit.waiter))
- 				break;
- 
--			if (!dio->submit.poll_bio ||
--			    !bio_poll(dio->submit.poll_bio, NULL, 0))
-+			if (dio->submit.poll_bio &&
-+					(dio->submit.poll_bio->bi_opf &
-+						REQ_POLLED))
-+				bio_poll(dio->submit.poll_bio, NULL, 0);
-+			else
- 				blk_io_schedule();
- 		}
- 		__set_current_state(TASK_RUNNING);
-diff --git a/mm/page_io.c b/mm/page_io.c
-index b417f000b49e..16f2a63e2524 100644
---- a/mm/page_io.c
-+++ b/mm/page_io.c
-@@ -421,12 +421,18 @@ int swap_readpage(struct page *page, bool synchronous)
- 	count_vm_event(PSWPIN);
- 	bio_get(bio);
- 	submit_bio(bio);
+ 	memset(p, 0, packet_size);
+ 	if (get_ldev_if_state(device, D_NEGOTIATING)) {
+-		struct request_queue *q = bdev_get_queue(device->ldev->backing_bdev);
++		struct block_device *bdev = device->ldev->backing_bdev;
++		struct request_queue *q = bdev_get_queue(bdev);
 +
-+	/* make sure the bio is issued before polling */
-+	if (bio->bi_opf & REQ_POLLED)
-+		blk_flush_plug(current->plug, false);
- 	while (synchronous) {
- 		set_current_state(TASK_UNINTERRUPTIBLE);
- 		if (!READ_ONCE(bio->bi_private))
- 			break;
- 
--		if (!bio_poll(bio, NULL, 0))
-+		if (bio->bi_opf & REQ_POLLED)
-+			bio_poll(bio, NULL, 0);
-+		else
- 			blk_io_schedule();
- 	}
- 	__set_current_state(TASK_RUNNING);
+ 		d_size = drbd_get_max_capacity(device->ldev);
+ 		rcu_read_lock();
+ 		u_size = rcu_dereference(device->ldev->disk_conf)->disk_size;
+@@ -933,13 +935,13 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
+ 		max_bio_size = queue_max_hw_sectors(q) << 9;
+ 		max_bio_size = min(max_bio_size, DRBD_MAX_BIO_SIZE);
+ 		p->qlim->physical_block_size =
+-			cpu_to_be32(queue_physical_block_size(q));
++			cpu_to_be32(bdev_physical_block_size(bdev));
+ 		p->qlim->logical_block_size =
+-			cpu_to_be32(queue_logical_block_size(q));
++			cpu_to_be32(bdev_logical_block_size(bdev));
+ 		p->qlim->alignment_offset =
+ 			cpu_to_be32(queue_alignment_offset(q));
+-		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
+-		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
++		p->qlim->io_min = cpu_to_be32(bdev_io_min(bdev));
++		p->qlim->io_opt = cpu_to_be32(bdev_io_opt(bdev));
+ 		p->qlim->discard_enabled = blk_queue_discard(q);
+ 		put_ldev(device);
+ 	} else {
 -- 
-2.31.1
+2.30.2
 
