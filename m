@@ -2,75 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C5BC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 10:02:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07076C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 10:02:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352048AbiDOKEn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Apr 2022 06:04:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38242 "EHLO
+        id S1352095AbiDOKFP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Apr 2022 06:05:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231634AbiDOKEm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 06:04:42 -0400
-Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8425BB092;
-        Fri, 15 Apr 2022 03:02:13 -0700 (PDT)
+        with ESMTP id S1352075AbiDOKFN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 06:05:13 -0400
+Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64E99BB096;
+        Fri, 15 Apr 2022 03:02:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1650016932; i=@fujitsu.com;
-        bh=L39Zc6T31yhBdlKZJPZn+8BfrmfPaBm119Jec/uhYAA=;
-        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
-        b=KGvEO1qDW1f7azgJxx4j/+vZ2wx+7xAoJHrGP8SIABs1QyibzCU0Eu+sst64JFFUd
-         uoboTag2Us2lj1U3zBuUr9qD5LNaDeziHsm0xXGcud5q+THMHqkvgvtm80DQGU8qxV
-         12U96NqGkvSu9AKK5sCm2+adWDnE1Jex7TLtva7jZB0mBzBfb4XWPlBinG8qqHXgwZ
-         /z//E4n9LnnOkBjMxigTrXldz0mhwCaNOlr2JeHyChWw6Oj9oMszJIzbut/8yw+g2I
-         /TIsxMtEhhFnL8jGRG4wb5mDxkS8Xv8yyk1hRkqDyn/+K4YYSPKkDdsII8lGXGcZMo
-         9KFsvBT8vyp6Q==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrBIsWRWlGSWpSXmKPExsViZ8MxSXexU2S
-  SwZtZkhavD39itPhwcxKTxZZj9xgtLj/hs/i5bBW7xZ69J1ksLhw4zWqx688Odovzf4+zOnB6
-  nFok4bFpVSebx+dNch6bnrxlCmCJYs3MS8qvSGDNuH1tE2PBY6GKu8suMTYwPuXvYuTkEBLYw
-  ijxY4pZFyMXkL2ASWLW+x1MEM4eRomPTY9YQKrYBDQlnnUuYAaxRQRcJBZOWM8IUsQscIVR4n
-  r7HLCEsEC6RMuhr+wgNouAqsSUA/vZQGxeAU+JWee2gg2SEFCQmPLwPTNEXFDi5MwnYHFmAQm
-  Jgy9eMEPUKEpc6vjGCGFXSMya1cYEYatJXD23iXkCI/8sJO2zkLQvYGRaxWidVJSZnlGSm5iZ
-  o2toYKBraGiqa2ypa2RorJdYpZuol1qqW55aXKJrpJdYXqyXWlysV1yZm5yTopeXWrKJERgBK
-  cXqV3cwbl71U+8QoyQHk5Io71vRyCQhvqT8lMqMxOKM+KLSnNTiQ4wyHBxKErx/7YFygkWp6a
-  kVaZk5wGiESUtw8CiJ8IZaA6V5iwsSc4sz0yFSpxgVpcR5lRyBEgIgiYzSPLg2WAK4xCgrJcz
-  LyMDAIMRTkFqUm1mCKv+KUZyDUUmY9xvIFJ7MvBK46a+AFjMBLf62KhRkcUkiQkqqgWm2zIMr
-  BTor8v9dSTppq8/YfMI97NXhZYInZIsj3F8ke9+Y9TajUqDv6/4zxWLCsddfNRjoHvy5csGMh
-  668UxrMS2cdSP/5m/FmwFG/F8ufVh+tiJdKsIx05Lq19qOKy//1r65XBti0ps84dnL2dJk3sa
-  s+nDxTo3+MLbPv4M86mSNcXB0r3/j+4F59y9as6bDxzh9Hr+mWFs8wSLx4c9m8/qrHS4tXO0/
-  rjtOs+29qafIw995V8dd6jAvLjprMrQg+35z1XTw282HmmqmL9/tkPpmf9c5NuerZ2vfLT0oX
-  cj8/GJV0/viDb8dFUiXjQs0PlvyTyzwY01b8oaF7uW/T5KCWSSE3DK7NXVS4KVBGiaU4I9FQi
-  7moOBEA/dcPcnsDAAA=
+        s=170520fj; t=1650016963; i=@fujitsu.com;
+        bh=P+f9EIyUEbljZpZHlSR64Os55fmb75i3xES1pwHH2Mo=;
+        h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+         MIME-Version:Content-Type;
+        b=f52fZ/6Q6Q8vmwWotVd+qslURKbGpSCXzOhJANQu8rxIQMzdvxk9HzflJV56l/PV1
+         t3vF2CzJp7XUVagcojTNFs2ltCcgkwxHsqhFFb52LaltnrnNorChf4fiHoNEojZF/c
+         oPC7cnrsdjAH1G2oXltBgKuwhixO7wEGyo8nEjbmKPTrhWhGxw6TpQwLCnDjoEYT60
+         mdzXdUbNevzRTGpK7Rt2RWdUsu9EQgOKNY7+c/FtWBbSoK/aWbj9IXdS3fYVL1mg3s
+         A86KC53AsjmmqUecFr0vqSPv3ODcX0YBjptBtn/UZc0/apQJwd2J29dyR/txVf3WG0
+         UR8oqOVIrSqUQ==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupgleJIrShJLcpLzFFi42Kxs+FI1D3sFJl
+  k8OQUo8Xrw58YLT7cnMRkseXYPUaLy0/4LH4uW8VusWfvSRaLCwdOs1rs+rOD3eL83+OsDpwe
+  pxZJeGxa1cnm8XmTnMemJ2+ZAliiWDPzkvIrElgzJratZS/4y1Wx+mp4A+NCzi5GTg4hgS2ME
+  t92eUHYC5gkuv/bdjFyAdl7GCX+bTrBApJgE9CUeNa5gBnEFhFwkVg4YT0jSBGzwBVGievtc8
+  ASwgKJEhc3LwRrYBFQlWh7+IsVxOYV8JRoa1jMBGJLCChITHn4Hqieg4NTwEvi/9laiMWeElM
+  nXWaDKBeUODnzCdgYZgEJiYMvXjBDtCpKXOr4xghhV0jMmtUGNVJN4uq5TcwTGAVnIWmfhaR9
+  ASPTKkarpKLM9IyS3MTMHF1DAwNdQ0NTXWNLXVMjvcQq3US91FLd8tTiEl0gt7xYL7W4WK+4M
+  jc5J0UvL7VkEyMwUlKK1U12MHav/Kl3iFGSg0lJlPetaGSSEF9SfkplRmJxRnxRaU5q8SFGGQ
+  4OJQnev/ZAOcGi1PTUirTMHGDUwqQlOHiURHhDrYHSvMUFibnFmekQqVOMuhxrGw7sZRZiycv
+  PS5US5xUGpgAhAZCijNI8uBGwBHKJUVZKmJeRgYFBiKcgtSg3swRV/hWjOAejkjCvMcgUnsy8
+  ErhNr4COYAI64tuqUJAjShIRUlINTFmfN1ys2lKjp1iRLRh9J2C9Uiez6KfZR3/uvf5ty9GLH
+  IJ5RzM+l4bOzDn3xD5bZPnerrci8iUxjsGLmMv0F/xYJvSx435F7quzc1zdHDjPzW0KkZY89r
+  hkdYjJzYeJB55Iyy3e57nLeJaJTPKNyH/ZpxWjO2Wrs6vaJX8r/503Zb++DH/L4YU6O1ccXXH
+  7ztZDVv/kthx87fs4m/Hb5Sldz3X+iX4x90hl677C+nLeyhWht9Um/51wsXnGBN+U6cYckwPF
+  9/zzvxe7Z6e3zROJKo/cLO/bzDqPG7vvxWz7PjGydV6XtIzF8ql/lC61NEZbh3SaGK56fq/bt
+  q01VkA6Me+p0DR7+1y2T1fzE5VYijMSDbWYi4oTAcw7kSmbAwAA
 X-Env-Sender: xuyang2018.jy@fujitsu.com
-X-Msg-Ref: server-23.tower-548.messagelabs.com!1650016931!58992!1
-X-Originating-IP: [62.60.8.146]
+X-Msg-Ref: server-10.tower-548.messagelabs.com!1650016962!59551!1
+X-Originating-IP: [62.60.8.97]
 X-SYMC-ESS-Client-Auth: outbound-route-from=pass
 X-StarScan-Received: 
 X-StarScan-Version: 9.85.8; banners=-,-,-
 X-VirusChecked: Checked
-Received: (qmail 12238 invoked from network); 15 Apr 2022 10:02:11 -0000
-Received: from unknown (HELO n03ukasimr02.n03.fujitsu.local) (62.60.8.146)
-  by server-23.tower-548.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 15 Apr 2022 10:02:11 -0000
-Received: from n03ukasimr02.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTP id 05119100475;
-        Fri, 15 Apr 2022 11:02:11 +0100 (BST)
+Received: (qmail 31119 invoked from network); 15 Apr 2022 10:02:43 -0000
+Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
+  by server-10.tower-548.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 15 Apr 2022 10:02:43 -0000
+Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id 94DA21001A2;
+        Fri, 15 Apr 2022 11:02:42 +0100 (BST)
 Received: from R01UKEXCASM126.r01.fujitsu.local (unknown [10.183.43.178])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTPS id EBDD2100467;
-        Fri, 15 Apr 2022 11:02:10 +0100 (BST)
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id 86E7310004E;
+        Fri, 15 Apr 2022 11:02:42 +0100 (BST)
 Received: from localhost.localdomain (10.167.220.84) by
  R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
- (TLS) id 15.0.1497.32; Fri, 15 Apr 2022 11:01:45 +0100
+ (TLS) id 15.0.1497.32; Fri, 15 Apr 2022 11:02:17 +0100
 From:   Yang Xu <xuyang2018.jy@fujitsu.com>
 To:     <david@fromorbit.com>, <djwong@kernel.org>, <brauner@kernel.org>
 CC:     <linux-fsdevel@vger.kernel.org>, <ceph-devel@vger.kernel.org>,
         <linux-nfs@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <viro@zeniv.linux.org.uk>, <jlayton@kernel.org>,
         Yang Xu <xuyang2018.jy@fujitsu.com>
-Subject: [PATCH v3 1/7] fs/inode: move sgid strip operation from inode_init_owner into inode_sgid_strip
-Date:   Fri, 15 Apr 2022 19:02:17 +0800
-Message-ID: <1650020543-24908-1-git-send-email-xuyang2018.jy@fujitsu.com>
+Subject: [PATCH v3 3/7] xfs: Only do posix acl setup/release operation under CONFIG_XFS_POSIX_ACL
+Date:   Fri, 15 Apr 2022 19:02:19 +0800
+Message-ID: <1650020543-24908-3-git-send-email-xuyang2018.jy@fujitsu.com>
 X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1650020543-24908-1-git-send-email-xuyang2018.jy@fujitsu.com>
+References: <1650020543-24908-1-git-send-email-xuyang2018.jy@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.167.220.84]
@@ -81,72 +84,58 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This has no functional change. Just create and export inode_sgid_strip api for
-the subsequent patch. This function is used to strip S_ISGID mode when init
-a new inode.
+Usually, filesystem will use a function named as fs_init_acl function that belong
+to acl.c and this function is externed in acl.h by using CONFIG_FS_POSIX_ACL.
+
+If filesystem disable this switch, we should not call xfs_set_acl also not call
+posix_acl_create/posix_acl_release because it is useless(We have do umask
+strip in vfs).
 
 Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
 ---
-v2->v3:
-1.Use const struct inode * instead of struct inode *
-2.replace sgid strip with inode_sgid_strip in a single patch
- fs/inode.c         | 24 ++++++++++++++++++++----
- include/linux/fs.h |  3 ++-
- 2 files changed, 22 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_iops.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index 9d9b422504d1..1b569ad882ce 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2246,10 +2246,8 @@ void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
- 		/* Directories are special, and always inherit S_ISGID */
- 		if (S_ISDIR(mode))
- 			mode |= S_ISGID;
--		else if ((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP) &&
--			 !in_group_p(i_gid_into_mnt(mnt_userns, dir)) &&
--			 !capable_wrt_inode_uidgid(mnt_userns, dir, CAP_FSETID))
--			mode &= ~S_ISGID;
-+		else
-+			inode_sgid_strip(mnt_userns, dir, &mode);
- 	} else
- 		inode_fsgid_set(inode, mnt_userns);
- 	inode->i_mode = mode;
-@@ -2405,3 +2403,21 @@ struct timespec64 current_time(struct inode *inode)
- 	return timestamp_truncate(now, inode);
- }
- EXPORT_SYMBOL(current_time);
-+
-+void inode_sgid_strip(struct user_namespace *mnt_userns,
-+		      const struct inode *dir, umode_t *mode)
-+{
-+	if (!dir || !(dir->i_mode & S_ISGID))
-+		return;
-+	if ((*mode & (S_ISGID | S_IXGRP)) != (S_ISGID | S_IXGRP))
-+		return;
-+	if (S_ISDIR(*mode))
-+		return;
-+	if (in_group_p(i_gid_into_mnt(mnt_userns, dir)))
-+		return;
-+	if (capable_wrt_inode_uidgid(mnt_userns, dir, CAP_FSETID))
-+		return;
-+
-+	*mode &= ~S_ISGID;
-+}
-+EXPORT_SYMBOL(inode_sgid_strip);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index bbde95387a23..4a617aaab6f6 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1897,7 +1897,8 @@ extern long compat_ptr_ioctl(struct file *file, unsigned int cmd,
- void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
- 		      const struct inode *dir, umode_t mode);
- extern bool may_open_dev(const struct path *path);
--
-+void inode_sgid_strip(struct user_namespace *mnt_userns,
-+		      const struct inode *dir, umode_t *mode);
- /*
-  * This is the "filldir" function type, used by readdir() to let
-  * the kernel specify what kind of dirent layout it wants to have.
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index b34e8e4344a8..9487e68bdd3d 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -146,10 +146,12 @@ xfs_create_need_xattr(
+ 	struct posix_acl *default_acl,
+ 	struct posix_acl *acl)
+ {
++#ifdef CONFIG_XFS_POSIX_ACL
+ 	if (acl)
+ 		return true;
+ 	if (default_acl)
+ 		return true;
++#endif
+ #if IS_ENABLED(CONFIG_SECURITY)
+ 	if (dir->i_sb->s_security)
+ 		return true;
+@@ -184,9 +186,11 @@ xfs_generic_create(
+ 		rdev = 0;
+ 	}
+ 
++#ifdef CONFIG_XFS_POSIX_ACL
+ 	error = posix_acl_create(dir, &mode, &default_acl, &acl);
+ 	if (error)
+ 		return error;
++#endif
+ 
+ 	/* Verify mode is valid also for tmpfile case */
+ 	error = xfs_dentry_mode_to_name(&name, dentry, mode);
+@@ -241,8 +245,10 @@ xfs_generic_create(
+ 	xfs_finish_inode_setup(ip);
+ 
+  out_free_acl:
++#ifdef CONFIG_XFS_POSIX_ACL
+ 	posix_acl_release(default_acl);
+ 	posix_acl_release(acl);
++#endif
+ 	return error;
+ 
+  out_cleanup_inode:
 -- 
 2.27.0
 
