@@ -2,86 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D507C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Apr 2022 23:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54EB6C43217
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Apr 2022 02:29:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243579AbiDPAAa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Apr 2022 20:00:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55978 "EHLO
+        id S229865AbiDPCbf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Apr 2022 22:31:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231550AbiDPAA3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 20:00:29 -0400
+        with ESMTP id S229876AbiDPCbd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 22:31:33 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 322CD95A1A
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Apr 2022 16:58:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00FA134BB6;
+        Fri, 15 Apr 2022 19:29:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CC4C460E33
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Apr 2022 23:57:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3877BC385A4;
-        Fri, 15 Apr 2022 23:57:59 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9062F61F03;
+        Sat, 16 Apr 2022 02:29:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49BEAC385A9;
+        Sat, 16 Apr 2022 02:28:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650067079;
-        bh=QTM7U56FxNNX5SP6cf0JmKgInBvEo90G9IZwPdueMYg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=dGEFIiJT8YTGvBxQC+C8sRTiW4d4FldLeIu87zD98Jc9Dq2wzhqmyfB5hmzBuLmuB
-         QTZFtDixIdtYH3Pge/omfJIryDKgDvlA+m2tMwP9hP7Aj3jLYcgCyTLtA7JK7cVBtC
-         aYK7ip4KrtjBUrkBEttKtUM/Ys8+d2HJ+0xx1BbwbZERTdBRXdPCYfRq1jNXLmB0OY
-         TY6pFdh0T5PwICEVXH2abF+NOdPFbIcK4OGpwq9drvFGtquVaZFjSmX4lHy6nYRXIT
-         QOQ1V+dAvGeSvP9OdMve4TUAxXrDZ2qN9/lNfnROQUrEPpU8V9F0Z18Js9TmkR4yw5
-         fmv0fEF5/E+4Q==
-Date:   Fri, 15 Apr 2022 16:57:58 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     sandeen@sandeen.net
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH 6/4] mkfs: round log size down if rounding log start up
- causes overflow
-Message-ID: <20220415235758.GE17025@magnolia>
-References: <164996213753.226891.14458233911347178679.stgit@magnolia>
+        s=k20201202; t=1650076142;
+        bh=64fC476XAzTfqTSPn+hnDLb+pMKn+pGg/cu9T2ZYoeo=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=YR2swQd5bHjAFWTiUHuzi2CBAoBviVOC618ZH6KrZjKGz54+nb14CQuuZA/rg7rT4
+         HOUGUM1/um4+uLyDQbz+2PZe7eFGngBlsNfmtF55BEnpI8SeGgAW1TB9RPEF0hZ/gu
+         wadS+mRuD6cvw4fVgc6pYN09yVoj6blhm7pLMwx6SJQPqerB95uO3eDsfGVZkI1tAT
+         ypjbfbxn7+bT/FWjnusepnTR0gEoGRsC/NgAvlwAmFKhGsjLJGRbec9W3gsrNwS1xO
+         /N5W0GD6Xr6BMAFslHSxbnYfv+w/HrqJWAmw3dvOKrGV8WDuaNAVrqQjvW1ASku3np
+         CHDdJgFxl65YQ==
+Message-ID: <ffa14a07-b8f9-828e-97bc-cf7a2099bab5@kernel.org>
+Date:   Sat, 16 Apr 2022 10:28:49 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <164996213753.226891.14458233911347178679.stgit@magnolia>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [f2fs-dev] [PATCH 26/27] block: decouple REQ_OP_SECURE_ERASE from
+ REQ_OP_DISCARD
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     jfs-discussion@lists.sourceforge.net,
+        linux-nvme@lists.infradead.org,
+        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, target-devel@vger.kernel.org,
+        linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com,
+        linux-s390@vger.kernel.org, linux-nilfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, cluster-devel@redhat.com,
+        xen-devel@lists.xenproject.org, linux-ext4@vger.kernel.org,
+        linux-um@lists.infradead.org, nbd@other.debian.org,
+        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
+        David Sterba <dsterba@suse.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, ceph-devel@vger.kernel.org,
+        Coly Li <colyli@suse.de>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        linux-raid@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-mmc@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org,
+        =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org, ntfs3@lists.linux.dev,
+        linux-btrfs@vger.kernel.org
+References: <20220415045258.199825-1-hch@lst.de>
+ <20220415045258.199825-27-hch@lst.de>
+From:   Chao Yu <chao@kernel.org>
+In-Reply-To: <20220415045258.199825-27-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 2022/4/15 12:52, Christoph Hellwig wrote:
+> Secure erase is a very different operation from discard in that it is
+> a data integrity operation vs hint.  Fully split the limits and helper
+> infrastructure to make the separation more clear.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [drbd]
+> Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com> [nifs2]
+> Acked-by: Jaegeuk Kim <jaegeuk@kernel.org> [f2fs]
+> Acked-by: Coly Li <colyli@suse.de> [bcache]
+> Acked-by: David Sterba <dsterba@suse.com> [btrfs]
 
-If rounding the log start up to the next stripe unit would cause the log
-to overrun the end of the AG, round the log size down by a stripe unit.
-We already ensured that logblocks was small enough to fit inside the AG,
-so the minor adjustment should suffice.
+For f2fs part,
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- mkfs/xfs_mkfs.c |   12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+Acked-by: Chao Yu <chao@kernel.org>
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index b932acaa..cfa38f17 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3219,9 +3219,19 @@ align_internal_log(
- 	int			max_logblocks)
- {
- 	/* round up log start if necessary */
--	if ((cfg->logstart % sunit) != 0)
-+	if ((cfg->logstart % sunit) != 0) {
- 		cfg->logstart = ((cfg->logstart + (sunit - 1)) / sunit) * sunit;
- 
-+		/*
-+		 * If rounding up logstart to a stripe boundary moves the end
-+		 * of the log past the end of the AG, reduce logblocks to get
-+		 * it back under EOAG.
-+		 */
-+		if (!libxfs_verify_fsbext(mp, cfg->logstart, cfg->logblocks) &&
-+		    cfg->logblocks > sunit)
-+			cfg->logblocks -= sunit;
-+	}
-+
- 	/* If our log start overlaps the next AG's metadata, fail. */
- 	if (!libxfs_verify_fsbno(mp, cfg->logstart)) {
- 		fprintf(stderr,
+Thanks,
