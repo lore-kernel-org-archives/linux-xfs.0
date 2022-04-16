@@ -2,91 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54EB6C43217
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Apr 2022 02:29:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48303C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Apr 2022 05:49:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229865AbiDPCbf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Apr 2022 22:31:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59454 "EHLO
+        id S229445AbiDPFvs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 16 Apr 2022 01:51:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229876AbiDPCbd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Apr 2022 22:31:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00FA134BB6;
-        Fri, 15 Apr 2022 19:29:02 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9062F61F03;
-        Sat, 16 Apr 2022 02:29:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49BEAC385A9;
-        Sat, 16 Apr 2022 02:28:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650076142;
-        bh=64fC476XAzTfqTSPn+hnDLb+pMKn+pGg/cu9T2ZYoeo=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=YR2swQd5bHjAFWTiUHuzi2CBAoBviVOC618ZH6KrZjKGz54+nb14CQuuZA/rg7rT4
-         HOUGUM1/um4+uLyDQbz+2PZe7eFGngBlsNfmtF55BEnpI8SeGgAW1TB9RPEF0hZ/gu
-         wadS+mRuD6cvw4fVgc6pYN09yVoj6blhm7pLMwx6SJQPqerB95uO3eDsfGVZkI1tAT
-         ypjbfbxn7+bT/FWjnusepnTR0gEoGRsC/NgAvlwAmFKhGsjLJGRbec9W3gsrNwS1xO
-         /N5W0GD6Xr6BMAFslHSxbnYfv+w/HrqJWAmw3dvOKrGV8WDuaNAVrqQjvW1ASku3np
-         CHDdJgFxl65YQ==
-Message-ID: <ffa14a07-b8f9-828e-97bc-cf7a2099bab5@kernel.org>
-Date:   Sat, 16 Apr 2022 10:28:49 +0800
+        with ESMTP id S229379AbiDPFvr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Apr 2022 01:51:47 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09D702980B;
+        Fri, 15 Apr 2022 22:49:17 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 8C5F768AFE; Sat, 16 Apr 2022 07:49:13 +0200 (CEST)
+Date:   Sat, 16 Apr 2022 07:49:13 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Changhui Zhong <czhong@redhat.com>
+Subject: Re: [PATCH V2] block: avoid io timeout in case of sync polled dio
+Message-ID: <20220416054913.GA7405@lst.de>
+References: <20220415034703.2081695-1-ming.lei@redhat.com> <20220415051844.GA22762@lst.de> <YllQVT6n472eUB7+@T590>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [f2fs-dev] [PATCH 26/27] block: decouple REQ_OP_SECURE_ERASE from
- REQ_OP_DISCARD
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     jfs-discussion@lists.sourceforge.net,
-        linux-nvme@lists.infradead.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, target-devel@vger.kernel.org,
-        linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com,
-        linux-s390@vger.kernel.org, linux-nilfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, cluster-devel@redhat.com,
-        xen-devel@lists.xenproject.org, linux-ext4@vger.kernel.org,
-        linux-um@lists.infradead.org, nbd@other.debian.org,
-        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
-        David Sterba <dsterba@suse.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, ceph-devel@vger.kernel.org,
-        Coly Li <colyli@suse.de>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        linux-raid@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-mmc@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org,
-        =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org, ntfs3@lists.linux.dev,
-        linux-btrfs@vger.kernel.org
-References: <20220415045258.199825-1-hch@lst.de>
- <20220415045258.199825-27-hch@lst.de>
-From:   Chao Yu <chao@kernel.org>
-In-Reply-To: <20220415045258.199825-27-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <YllQVT6n472eUB7+@T590>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2022/4/15 12:52, Christoph Hellwig wrote:
-> Secure erase is a very different operation from discard in that it is
-> a data integrity operation vs hint.  Fully split the limits and helper
-> infrastructure to make the separation more clear.
+On Fri, Apr 15, 2022 at 07:00:37PM +0800, Ming Lei wrote:
+> On Fri, Apr 15, 2022 at 07:18:44AM +0200, Christoph Hellwig wrote:
+> > On Fri, Apr 15, 2022 at 11:47:03AM +0800, Ming Lei wrote:
+> > > +	/* make sure the bio is issued before polling */
+> > > +	if (bio.bi_opf & REQ_POLLED)
+> > > +		blk_flush_plug(current->plug, false);
+> > 
+> > I still think the core code should handle this.  Without that we'd need
+> > to export the blk_flush_plug for anything that would want to poll bios
+> > from modules, in addition to it generally being a mess.  See a proposed
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [drbd]
-> Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com> [nifs2]
-> Acked-by: Jaegeuk Kim <jaegeuk@kernel.org> [f2fs]
-> Acked-by: Coly Li <colyli@suse.de> [bcache]
-> Acked-by: David Sterba <dsterba@suse.com> [btrfs]
+> So far there isn't such usage yet. dm calls bio_poll() in ->iopoll(),
+> and its caller(io_uring) will finish the plug.
 
-For f2fs part,
+Yes.  But not doing this automatically also means you keep easily
+forgetting callsites.  For example iomap still does not flush the plug
+in your patch.
 
-Acked-by: Chao Yu <chao@kernel.org>
+> > patch for that below.  I'd also split the flush aspect from the poll
+> > aspect into two patches.
+> > 
+> > > +		if (bio.bi_opf & REQ_POLLED)
+> > > +			bio_poll(&bio, NULL, 0);
+> > > +		else
+> > >  			blk_io_schedule();
+> > 
+> > Instead of this duplicate logic everywhere I'd just make bio_boll
+> > call blk_io_schedule for the !REQ_POLLED case and simplify all the
+> > callers.
+> 
+> bio_poll() may be called with rcu read lock held, so I'd suggest to
+> not mix the two together.
 
-Thanks,
+Ok, makes sense.
+
+> > 
+> > > +			if (dio->submit.poll_bio &&
+> > > +					(dio->submit.poll_bio->bi_opf &
+> > > +						REQ_POLLED))
+> > 
+> > This indentation looks awfull,normal would be:
+> > 
+> > 			if (dio->submit.poll_bio &&
+> > 			    (dio->submit.poll_bio->bi_opf & REQ_POLLED))
+> 
+> That follows the indentation style of fs/iomap/direct-io.c for break in
+> 'if'.
+
+It doesn't.  Just look at the conditional you replaced for example :)
+
+> > +	/*
+> > +	 * We can't plug for synchronously polled submissions, otherwise
+> > +	 * bio->bi_cookie won't be set directly after submission, which is the
+> > +	 * indicator used by the submitter to check if a bio needs polling.
+> > +	 */
+> > +	if (plug &&
+> > +	    (rq->bio->bi_opf & (REQ_POLLED | REQ_NOWAIT)) != REQ_POLLED)
+> >  		blk_add_rq_to_plug(plug, rq);
+> >  	else if ((rq->rq_flags & RQF_ELV) ||
+> >  		 (rq->mq_hctx->dispatch_busy &&
+> 
+> It is nothing to do with REQ_NOWAIT. sync polled dio can be marked as
+> REQ_NOWAIT by userspace too. If '--nowait=1' is added in the fio
+> reproducer, io timeout is triggered too.
+
+True.  So I guess we'll need a new flag to distinguish the cases.
