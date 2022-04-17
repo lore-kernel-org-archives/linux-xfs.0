@@ -2,97 +2,126 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EBF1C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 17 Apr 2022 10:16:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38F9DC433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 17 Apr 2022 14:42:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233891AbiDQKSr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 17 Apr 2022 06:18:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49192 "EHLO
+        id S234234AbiDQOo6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 17 Apr 2022 10:44:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233873AbiDQKSq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Apr 2022 06:18:46 -0400
-X-Greylist: delayed 905 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 17 Apr 2022 03:16:06 PDT
-Received: from sender11-of-o53.zoho.eu (sender11-of-o53.zoho.eu [31.186.226.239])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00E3425EBD
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Apr 2022 03:16:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1650189650; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=EzWU1jjsrN2CTTRolpZYndgtvEega7cafivb9IkZCeu+foihaTtFYiRbUVFEfBvCEw0fVT5yaoZRlaTl2Mbvl2CVVAcIYwqhaIYKYRQHowKb7Qz0KNtU309g2uQAjOmFZTiIS2+71WiuXOcMqMkm4DJaU07nZFsDSTG/hPC5hkY=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1650189650; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=T8oo0G2292UGYvqCJYep97coqwsc0Ua5om8rLBb/9oE=; 
-        b=iuEJXr7ZRo7yet7/099YFZSEFvovux4Q2ranhOBiepazgHeK9Xg13Oe0vNGGSd/9gTb2esGEEpYSySeTCLcJcxCREGYqNtKqsgmqLDct7YRTNX6h58J7GqUf91DV0NDC9IYBQ2/dNMz4KM5P9Nte23ZXSa2eZ5YxBpffCjk0wPI=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=hostmaster@neglo.de;
-        dmarc=pass header.from=<bage@debian.org>
-Received: from [192.168.0.103] (nat2-3.finemedia.pl [188.122.20.100]) by mx.zoho.eu
-        with SMTPS id 1650189647934421.1760737456892; Sun, 17 Apr 2022 12:00:47 +0200 (CEST)
-Message-ID: <b51a775f-5fcd-a569-6a23-e9c91ab43c5f@debian.org>
-Date:   Sun, 17 Apr 2022 12:00:45 +0200
+        with ESMTP id S229496AbiDQOo6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Apr 2022 10:44:58 -0400
+Received: from out20-15.mail.aliyun.com (out20-15.mail.aliyun.com [115.124.20.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 995A8DF0C;
+        Sun, 17 Apr 2022 07:42:20 -0700 (PDT)
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07437606|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_alarm|0.0195173-0.00256377-0.977919;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047199;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.NSMzImJ_1650206536;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.NSMzImJ_1650206536)
+          by smtp.aliyun-inc.com(33.37.67.126);
+          Sun, 17 Apr 2022 22:42:16 +0800
+Date:   Sun, 17 Apr 2022 22:42:15 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     zlang@redhat.com
+Cc:     djwong@kernel.org, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v1.1 3/3] xfs/216: handle larger log sizes
+Message-ID: <YlwnR1SvEiNussG3@desktop>
+References: <164971769710.170109.8985299417765876269.stgit@magnolia>
+ <164971771391.170109.16368399851366024102.stgit@magnolia>
+ <20220415150458.GB17025@magnolia>
+ <20220416133518.sxow73joph3f7h7v@zlang-mailbox>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux i686; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v2 1/1] debian: Generate .gitcensus instead of .census
- (Closes: #999743)
-Content-Language: en-US
-To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J . Wong" <djwong@kernel.org>
-References: <20211207122110.1448-1-bage@debian.org>
- <20211207122110.1448-2-bage@debian.org>
-From:   Bastian Germann <bage@debian.org>
-In-Reply-To: <20211207122110.1448-2-bage@debian.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220416133518.sxow73joph3f7h7v@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi!
-
-Am 07.12.21 um 13:21 schrieb Bastian Germann:
-> Fix the Debian build outside a git tree (e.g., Debian archive builds) by
-> creating an empty .gitcensus instead of .census file on config.
+On Sat, Apr 16, 2022 at 09:35:18PM +0800, Zorro Lang wrote:
+> On Fri, Apr 15, 2022 at 08:04:58AM -0700, Darrick J. Wong wrote:
+> > mkfs will soon refuse to format a log smaller than 64MB, so update this
+> > test to reflect the new log sizing calculations.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  tests/xfs/216             |   19 +++++++++++++++++++
+> >  tests/xfs/216.out.64mblog |   10 ++++++++++
+> >  tests/xfs/216.out.classic |    0 
+> >  3 files changed, 29 insertions(+)
+> >  create mode 100644 tests/xfs/216.out.64mblog
+> >  rename tests/xfs/{216.out => 216.out.classic} (100%)
+> > 
+> > diff --git a/tests/xfs/216 b/tests/xfs/216
+> > index c3697db7..ebae8979 100755
+> > --- a/tests/xfs/216
+> > +++ b/tests/xfs/216
+> > @@ -29,6 +29,23 @@ $MKFS_XFS_PROG 2>&1 | grep -q rmapbt && \
+> >  $MKFS_XFS_PROG 2>&1 | grep -q reflink && \
+> >  	loop_mkfs_opts="$loop_mkfs_opts -m reflink=0"
+> >  
+> > +# Decide which golden output file we're using.  Starting with mkfs.xfs 5.15,
+> > +# the default minimum log size was raised to 64MB for all cases, so we detect
+> > +# that by test-formatting with a 512M filesystem.  This is a little handwavy,
+> > +# but it's the best we can do.
+> > +choose_golden_output() {
+> > +	local seqfull=$1
+> > +	local file=$2
+> > +
+> > +	if $MKFS_XFS_PROG -f -b size=4096 -l version=2 \
+> > +			-d name=$file,size=512m $loop_mkfs_opts | \
+> > +			grep -q 'log.*blocks=16384'; then
+> > +		ln -f -s $seqfull.out.64mblog $seqfull.out
+> > +	else
+> > +		ln -f -s $seqfull.out.classic $seqfull.out
+> > +	fi
 > 
-> Signed-off-by: Bastian Germann <bage@debian.org>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Actually there's a old common function in common/rc named _link_out_file(),
+> xfstests generally use it to deal with multiple .out files. It would be
+> better to keep in step with common helpers, but your "ln" command
+> isn't wrong :)
 
-2nd friendly ping on this.
-For the last few Debian releases, I applied this.
+I added tests/xfs/216.cfg file and updated test to use
+_link_out_file_named().
 
-> ---
->   debian/rules | 8 ++++----
->   1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> diff --git a/debian/rules b/debian/rules
-> index 615289b4..6d5b82a8 100755
-> --- a/debian/rules
-> +++ b/debian/rules
-> @@ -43,15 +43,15 @@ built: dibuild config
->   	$(MAKE) $(PMAKEFLAGS) default
->   	touch built
->   
-> -config: .census
-> -.census:
-> +config: .gitcensus
-> +.gitcensus:
->   	@echo "== dpkg-buildpackage: configure" 1>&2
->   	$(checkdir)
->   	AUTOHEADER=/bin/true dh_autoreconf
->   	dh_update_autotools_config
->   	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
->   	cp -f include/install-sh .
-> -	touch .census
-> +	touch .gitcensus
->   
->   dibuild:
->   	$(checkdir)
-> @@ -72,7 +72,7 @@ dibuild:
->   clean:
->   	@echo "== dpkg-buildpackage: clean" 1>&2
->   	$(checkdir)
-> -	-rm -f built .census mkfs/mkfs.xfs-$(bootpkg)
-> +	-rm -f built .gitcensus mkfs/mkfs.xfs-$(bootpkg)
->   	$(MAKE) distclean
->   	-rm -rf $(dirme) $(dirdev) $(dirdi)
->   	-rm -f debian/*substvars debian/files* debian/*.debhelper
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
 
+Thanks!
+Eryu
+
+> 
+> > +}
+> > +
+> >  _do_mkfs()
+> >  {
+> >  	for i in $*; do
+> > @@ -43,6 +60,8 @@ _do_mkfs()
+> >  # make large holey file
+> >  $XFS_IO_PROG -f -c "truncate 256g" $LOOP_DEV
+> >  
+> > +choose_golden_output $0 $LOOP_DEV
+> > +
+> >  #make loopback mount dir
+> >  mkdir $LOOP_MNT
+> >  
+> > diff --git a/tests/xfs/216.out.64mblog b/tests/xfs/216.out.64mblog
+> > new file mode 100644
+> > index 00000000..3c12085f
+> > --- /dev/null
+> > +++ b/tests/xfs/216.out.64mblog
+> > @@ -0,0 +1,10 @@
+> > +QA output created by 216
+> > +fssize=1g log      =internal log           bsize=4096   blocks=16384, version=2
+> > +fssize=2g log      =internal log           bsize=4096   blocks=16384, version=2
+> > +fssize=4g log      =internal log           bsize=4096   blocks=16384, version=2
+> > +fssize=8g log      =internal log           bsize=4096   blocks=16384, version=2
+> > +fssize=16g log      =internal log           bsize=4096   blocks=16384, version=2
+> > +fssize=32g log      =internal log           bsize=4096   blocks=16384, version=2
+> > +fssize=64g log      =internal log           bsize=4096   blocks=16384, version=2
+> > +fssize=128g log      =internal log           bsize=4096   blocks=16384, version=2
+> > +fssize=256g log      =internal log           bsize=4096   blocks=32768, version=2
+> > diff --git a/tests/xfs/216.out b/tests/xfs/216.out.classic
+> > similarity index 100%
+> > rename from tests/xfs/216.out
+> > rename to tests/xfs/216.out.classic
+> > 
