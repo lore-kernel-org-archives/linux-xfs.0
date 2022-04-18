@@ -2,186 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF802C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Apr 2022 08:39:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 230ADC433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Apr 2022 13:23:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237320AbiDRIlv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Apr 2022 04:41:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35256 "EHLO
+        id S241611AbiDRNZx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Apr 2022 09:25:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231152AbiDRIlu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Apr 2022 04:41:50 -0400
-Received: from esa7.fujitsucc.c3s2.iphmx.com (esa7.fujitsucc.c3s2.iphmx.com [68.232.159.87])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98CED19C13;
-        Mon, 18 Apr 2022 01:39:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
-  t=1650271152; x=1681807152;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=WW5LyLt2IQ1lWXI+rRrr7wPaJdak9GXo4XlGbFoOwGY=;
-  b=HcUOUoRG74oMCaE4QCVCCd15IQp0HIYTfdGOQxk6Vc2n4lqKZVkV2pQO
-   oANlCo9sO5g+7zPZUh3XqUm5QDoZAsJtJpgIPZMfCsJ91Bzk4AsqEkGkO
-   AZL/HpSn0xRlqZUno/ctjO2MKz6YiQJvG0c48kZDk0du/fkaAKygiMHAi
-   5z3tUUq66VZov9+aHnbJE0Hl/KSrgWreyO3cANOZHcCy6rc1m6lcVfkUg
-   1JLyjmCTjk/Cd3fZPBWH/5WrasbJdmnG1/Ay+RTieNj6eNpV6Z3xIE3yr
-   5TBTltHBBjxqG583RyyolPuTS2S3qFh72buF1xCwKFXgADcj31LLzVkeC
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10320"; a="54147800"
-X-IronPort-AV: E=Sophos;i="5.90,269,1643641200"; 
-   d="scan'208";a="54147800"
-Received: from mail-tycjpn01lp2169.outbound.protection.outlook.com (HELO JPN01-TYC-obe.outbound.protection.outlook.com) ([104.47.23.169])
-  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2022 17:39:07 +0900
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cu5XP6dyoytBYwY+dPdTJaDU4uUuvzB0qPPswNWYKHbVBzsPmAkulhVhLMbxUXFRA+m9puzliGIkeyLUSRYWpqZWoi6L+Gh/tWQhDA4KtakSCY2uvLbwbUFtJmqpxttRLC7D5NsXGcmIm5yDqH+Jtw4yde7axF5AZCX9dgr4qEeBQ9uCy8T8rr743Oj8kHnv38rZEt8o5TpTWylZIvExSDbfnRRwJnt5c+bQMqjaInShZtduPKxp4TLm69xA9UBU9Aqtv6NVInbR50qj9ji9dNZwPm5bgrsFrlP1TzSBDYDFp47/s8dIASWe0Z3G2W2FPPX8LIZg2WJHtbC5LB23VQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WW5LyLt2IQ1lWXI+rRrr7wPaJdak9GXo4XlGbFoOwGY=;
- b=XHXRZObZmOPw0BwOTE7LMaoZ15PY00HDlupEAiTVgDz44H6fuVFjZ5awt5tzUM0KHQDQ/wIdZmBK1NJj+olVR+4cm6sL/jDW+hEwLkKnWrpkCvahg8c0n+cfsDYBkfLf0iKcmpP0sqBqW32pO2HGHmn1FNsVCwb9MHojUciaLXRYBNQ6EkqIhHRdq7fd+TkJOd8688j0W89D5PJHsjT8QXPc+2QW+P1h02QHycuh1xQK00u/4DECdW136OSyI65SeLaDzuYksf+Z4GVo7jjkwEhwywCDU/UCsHKrCwMMKXjlwElSES351UtGGot7ffwDr2lL0yigVWMFjv/LKNsC7g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
- dkim=pass header.d=fujitsu.com; arc=none
+        with ESMTP id S241698AbiDRNY7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Apr 2022 09:24:59 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED1383DA5F
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Apr 2022 05:52:52 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id s14-20020a17090a880e00b001caaf6d3dd1so17190192pjn.3
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Apr 2022 05:52:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WW5LyLt2IQ1lWXI+rRrr7wPaJdak9GXo4XlGbFoOwGY=;
- b=G6OzCZiipc5eNkjDrX5hDtJ6eNXqo9vaCldUrRfPE3KKRl5KYEcyyGcDjceuCPUXuu35umg5ecY6KoED9iGEwdiuR87Sjm6hCU+ZfVZ6G5als+2KklcbFq3Z1Sgw7W3HRGwW68zONcd2oG+1VkP12NqLkbSLI2uglMZH/T6AySk=
-Received: from TY2PR01MB4427.jpnprd01.prod.outlook.com (2603:1096:404:10d::20)
- by TYWPR01MB10097.jpnprd01.prod.outlook.com (2603:1096:400:1e2::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5164.20; Mon, 18 Apr
- 2022 08:39:04 +0000
-Received: from TY2PR01MB4427.jpnprd01.prod.outlook.com
- ([fe80::fca9:dcb9:88b4:40fd]) by TY2PR01MB4427.jpnprd01.prod.outlook.com
- ([fe80::fca9:dcb9:88b4:40fd%7]) with mapi id 15.20.5164.025; Mon, 18 Apr 2022
- 08:39:04 +0000
-From:   "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     Christian Brauner <brauner@kernel.org>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "jlayton@kernel.org" <jlayton@kernel.org>
-Subject: Re: [PATCH v3 1/7] fs/inode: move sgid strip operation from
- inode_init_owner into inode_sgid_strip
-Thread-Topic: [PATCH v3 1/7] fs/inode: move sgid strip operation from
- inode_init_owner into inode_sgid_strip
-Thread-Index: AQHYUK/jJkL7Z7ciH0Owe804/6Pum6zxA3EAgAP+cYCAAG1aAA==
-Date:   Mon, 18 Apr 2022 08:39:04 +0000
-Message-ID: <625D31FE.9030706@fujitsu.com>
-References: <1650020543-24908-1-git-send-email-xuyang2018.jy@fujitsu.com>
- <20220415140924.oirar6dklelujnxs@wittgenstein>
- <YlzWQyF5e14/UVDs@casper.infradead.org>
-In-Reply-To: <YlzWQyF5e14/UVDs@casper.infradead.org>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=fujitsu.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 57d2b310-2a18-49af-38be-08da2116e52e
-x-ms-traffictypediagnostic: TYWPR01MB10097:EE_
-x-microsoft-antispam-prvs: <TYWPR01MB100970FAC60F26BFFBA429050FDF39@TYWPR01MB10097.jpnprd01.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: XuHbJdObhQDUskwqg/1b58n0T1WuLF24f7eCgk/U3SlKjdhBI2PanUAsrQkhEMg3qxKILXjsR8uF0nO13336n8D+J0jRluC055cRb41nmGsTqNWmpsPZleh6PPPkq4YoHOh631ZK/JVa2mtQ42UAPTz9pOosAshDhvVuI2qx7iYCuC0TYRTe89a7k/QfaUvZqqQqEeVmmhP4gcpIzjiBpv6F5LKBq0CVWuOQgSer7jwdId0TOdgJlKloBGW28vnUHyk5Oa4N4tC7a/ekbND/p2/KMo+y4UTIoMvUAQenDkALb1fDVetiMv/urkmFqWQIklza3lLlw0G1dCc3OF8lthQtffZzLbsnqzqpteBtmqBJtVJr/w9iIQzPUmYn81ASace5ov/NWL6qeTFwaMs0DaYGAzMyKSFHFwy0bAyfV/cv3pMX6ppW5ox4K+wxNOFBkHJ74KLFHGZlz9hZ++9xhtsLmutVI+r8SiJhzMvlfhOItae8S92XFfcPCm3iC7Q7CFNzGCbdkT7+pe1lNGB2Rth3CV8zkPpZk296xAYVXTlgE9aYc+la4JnhK+rHIlYRskZ/PYObOYkLmO3/8RoBrp7vk3sjgOQJ7v1PiaV5hyZ99sn3cBNX2QN1ztx8UeCkDd5t497F3N1gyW0WuDKE2Bc2yOdRbLQzjS90O5AK5h8ICMLhkdHJGZldJ8Rzd0GXwRas1oobbt5ZnKXjaNeJdg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY2PR01MB4427.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(76116006)(91956017)(64756008)(71200400001)(66446008)(26005)(508600001)(8676002)(4326008)(6916009)(6486002)(54906003)(36756003)(85182001)(33656002)(86362001)(87266011)(6506007)(6512007)(316002)(186003)(2616005)(83380400001)(2906002)(66476007)(82960400001)(122000001)(66556008)(66946007)(5660300002)(8936002)(7416002)(38070700005)(38100700002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?gb2312?B?bE5OSEFFT3d1RHFUZ2I1bzlQd3lIL2RwTjYxc281eE9mbk1JTlVHUFQ1WXJt?=
- =?gb2312?B?Y0xOQjZXYnF5MjVTR0lXVlplL1ZrWkdNdXYxd2ZUWU13VHBjTldRdVpUWHlY?=
- =?gb2312?B?VFVETEE5c2FwYVFwN2pKUmdLdHQ4bStxTVFva0VhbXVjbkpMdkR4TG1pZHBG?=
- =?gb2312?B?Y2NkVG53OUQ0SHF6b3pKNmIwVnhueFJoSjRqaXc5Q1JMZ0FtK2x6eXV6ZlJY?=
- =?gb2312?B?VzFIT0I2VFY3cjhQRHgzVUxldUNrdWhxdE8rQmxEYkhkWGM4M042OEwxUUFo?=
- =?gb2312?B?SzJyWk5KclRvMGd0elhWZThXZnpQTUlId25BT2N5Z0pXL016OFVKb2xBQnI1?=
- =?gb2312?B?Zy9rMjI5NkhDR0FkdFU0L2RjNVU5RzNEQmRtMWIrV3BJM0VTUEIwaXp5U094?=
- =?gb2312?B?VSs3NDJ2TUtiS0FQYUcrRlBKbGZlMVJlTXI0ejVWYlVxdVI0U2xlcXd4Sk9S?=
- =?gb2312?B?eXRxYVhseiswaW5hMzB6SkdjNTUzU05sWkFqdkkxVzVUZndRaWd3TjlnUnli?=
- =?gb2312?B?Y1BoWXl5NU1YaWZKWlBkYnBLVXZpOUhOMXVwYmxBZnlzOTdBcTcwakN4QXM4?=
- =?gb2312?B?cU5ySzB4OGZKOUM3WVh1Yi8wUmgwMEh5NGlFc2VISnRZLzNDYzR5MjRKOVZr?=
- =?gb2312?B?N0FjeGxxb011eTdKZEYrUXVGVVBWWUQ5bVBmNWI3dW5tbWJkNit4WGk0V0dr?=
- =?gb2312?B?QmoySGF5czhleDNVTzlscGE0aWZudXkrNzJ4NlE4THZHMUVpZHFZajlobzht?=
- =?gb2312?B?dVZDci9jYUVRNGxrRFJTNUQrTU91YlpKSlI4SkZVaHhqbHNKeUlBT0Y4ZHRY?=
- =?gb2312?B?cXlBT3JFOXJoQXhyRTJmSTd3cVdJWFVZc1FuNUxqWTZEaENrclhQblNkN1h5?=
- =?gb2312?B?Qi9ZWWtLWVR6WmV1QUlYLzU5WGpFdFVTVGRiY2VJSHQ3cDA5T1NBQ1Q4aVFZ?=
- =?gb2312?B?MFpXaEZPZHB1ckNkRGJNSUJ0UmtCTTNxZVkyWUNhbnhmTGFuMHZkNk11MUwx?=
- =?gb2312?B?MXZGZS9HUFlNdnNnTEpTZ2p4Z1Ruek5uSStHaGtZM1V5Y01TN01lajBFZWhT?=
- =?gb2312?B?NmlQU1dVeXJLSEtvOWRRV1JtT2IwT1NWRGxkOXk4ZGkwVE1vQ3J4TFpsZm41?=
- =?gb2312?B?VHFxd3J6b0p1cCtOYVpGMUxJWnptQklqeDBBZEtVUDZFNjliTFNZamFxa0Q0?=
- =?gb2312?B?S0N2RzVaRkNlYnJ6alZaalpSZEVxajVRZTNBWUlObjRtT1M4eDdvemFmdTBT?=
- =?gb2312?B?RHg4VnNUMlJQLzhYV0hBTTNibk1QMDdiNGtzZUk2MW5WVUtTMERZWFhLUCtn?=
- =?gb2312?B?QTl5WjZueWtKREd1OENDMVJJOFJMckYzOGR2SW1SeUNGT0N6MUp4Uml0NnBN?=
- =?gb2312?B?NW51Q1ZyOXRWUjErSWxNWXoxNzVyRFZCbFJiU1RLTHM5RXVlaXVOMWNYT3RT?=
- =?gb2312?B?VC9xOFZWQnlEbmtVRTNUemtOVHBSSk1PWGk0NVpBSmFDL096dm5RTS9wd3VP?=
- =?gb2312?B?RTUydDE4V0J6NTZmV0M3VDFxTmZINDFnNjY3VWZDVTVZaTI4RnZWSHkxZnFY?=
- =?gb2312?B?QndhSHZ1VVl5UDdTbUF4ckV3WHc1bVQraVJuTmRpSlorMXdPUFU4RkEyVTly?=
- =?gb2312?B?L0NCRGN3bXhXUndEc053MkwxaHBYZGRXMTI0N0hUa1N1cUszSU5XMDBrMG5S?=
- =?gb2312?B?R3pSWHVWeUFZNGZHYnpFbGNNcytNMTFRa3Z5bTdOTjRhZnQxRVc2c3hBWmVl?=
- =?gb2312?B?RDlOUVN3SDJBTjRjSEUzeHVudzVpR3dscllHOEcveDVKcERqR3lUMU1JclU1?=
- =?gb2312?B?QnYwQkdPdTFEMStLem9WRjRUeXU5MDUzTzJORWRtWktxTGUrOEhoYnMxTldS?=
- =?gb2312?B?S1pkcit6K1ZqQytzNXd4dEwwSnZkWDloK2hTZlF1WE5tcnN4NXFLaWFDNk1F?=
- =?gb2312?B?eWhTT05oNExyNTZTdlFNY0JWQVg3OVJlYkxVY0pxM3BkQVFJZzZPRDUxZXNw?=
- =?gb2312?B?S25IbUNOdnFhTFdtRVRtUWhhVUJqVUczdFBVUkwzc2dsVEZ3RVZvbmd3ODRC?=
- =?gb2312?B?WXFQelBhNTBCUGRRSnNFQURVTmhUcUhMRnhMblN6eTBGZmRjbHJOZFBjaVBH?=
- =?gb2312?B?VEFsQVFEZitRZzNwNkl4SFZMVTJUSFl4ZlRESUlqdkdWNFc2MVQ2QUIzSTgy?=
- =?gb2312?B?THBjMGZEY3pVdmxCRUpMbGtqTVJURjlNU1NwTHZDZm1nYTFPaEJibXZvMWhQ?=
- =?gb2312?B?S2w0UkI4WGFLMk9NOVFNOW9LYzh2TldFdjVoRTVILzB4U2dTVk5jZUdyV0FL?=
- =?gb2312?B?eUUwZUdLbjJoWk1aMjkvNHRweEhVbjRyckVJT0x5OWNtaW9wUWc4YUZzNnNT?=
- =?gb2312?Q?VcIZhGqGlNoE5XHn6L2ndz3cnEvUjqWFqlzcf?=
-Content-Type: text/plain; charset="gb2312"
-Content-ID: <1077B7C69E1F38448BDC638CC889163C@jpnprd01.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:in-reply-to:references:subject:message-id:date
+         :mime-version:content-transfer-encoding;
+        bh=F9FMycteyYrs8wEiBExwTDtAcc/2JBQ5GQqodkswvTM=;
+        b=zqMJx9kEO/syGgh/jfUujcMdgZO1Zk4th79yyPJcsdnvdIDI8Xk864jrHuyarDgv8c
+         gBt2ez+Ym/+EaLgC6MfWMHx5OVcgB54eOfckx7Cmdvf3bmGVDc/T0aLwM9rpN+nKDwcO
+         dWklV+ARMeZbUO1+GrFCqFc/xZjiULaGiN1ll1DVCyoNwgzG1P+0Y9ZhUcwBpI/7WQx/
+         gN/pYZdJuI935bVWCVcjkTqu2k20R+5oG6mGhil2uYi4X3QtR1zxXemtHM8NZ8XUvixz
+         3tQXFtvzqXbRCXIajCtyaq1nqo4kcpEpLyzsTyB3FvSvWQd/rTixV4XGHzsBwq9Bu/vV
+         stDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
+         :message-id:date:mime-version:content-transfer-encoding;
+        bh=F9FMycteyYrs8wEiBExwTDtAcc/2JBQ5GQqodkswvTM=;
+        b=3cH+Z3nsaKebhz15Xi5rwpXTPpMtOXag9U2IT9ocR+LDS/QfJA2UCSqkDQ+tXuvmni
+         SLIqQuG61j5etVrLqOOfPiIL5ywJub61hfKSYIj6xD8CzygTv3BVAfFtHaLlSieVAj1P
+         o51o44QDpAPNROuMgX/Iu9m3otwcw2Sr0/ckkAIrdpGiSHII8Jviln1igv2piODOGl1k
+         Qe4lbAxc+gUDSCJ4DuuTSY4i+fP1Zq2Ex1IXKpQbDrM7gYUjxtnJ3YHVdkmHC1pp4rvt
+         VTmZ/Pms0tmpr/q2ybUg+mn3F+CpLibSRAL1y+VfyfJjw0bbWhtuVLILfOGZQN9fQPiO
+         5X3g==
+X-Gm-Message-State: AOAM531PNsE7cKj1apIyPuihYKQa1QnZVI+jn5C5oDrPcgsUlSF8IAXS
+        3MlB89NomuILxnLP9v8ItagZEA==
+X-Google-Smtp-Source: ABdhPJyPDIaLEewZhdBb/81ulQRxH4lnSCW72QYENTWzgjKzLqW/EIFRVhnHg8tc4oCKtNOZ6kDuRg==
+X-Received: by 2002:a17:902:6b44:b0:154:4bee:c434 with SMTP id g4-20020a1709026b4400b001544beec434mr10858040plt.43.1650286372060;
+        Mon, 18 Apr 2022 05:52:52 -0700 (PDT)
+Received: from [127.0.1.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id s24-20020a17090a441800b001ca9b5724a6sm12663301pjg.36.2022.04.18.05.52.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Apr 2022 05:52:51 -0700 (PDT)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-f2fs-devel@lists.sourceforge.net,
+        jfs-discussion@lists.sourceforge.net, linux-raid@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, drbd-dev@lists.linbit.com,
+        xen-devel@lists.xenproject.org, nbd@other.debian.org,
+        linux-nvme@lists.infradead.org, linux-mmc@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-block@vger.kernel.org,
+        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
+        linux-ext4@vger.kernel.org, dm-devel@redhat.com,
+        linux-nilfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+        cluster-devel@redhat.com, linux-mtd@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, linux-bcache@vger.kernel.org,
+        ceph-devel@vger.kernel.org, ntfs3@lists.linux.dev,
+        linux-um@lists.infradead.org, target-devel@vger.kernel.org
+In-Reply-To: <20220415045258.199825-1-hch@lst.de>
+References: <20220415045258.199825-1-hch@lst.de>
+Subject: Re: use block_device based APIs in block layer consumers v3
+Message-Id: <165028636949.14872.7589996414521818725.b4-ty@kernel.dk>
+Date:   Mon, 18 Apr 2022 06:52:49 -0600
 MIME-Version: 1.0
-X-OriginatorOrg: fujitsu.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY2PR01MB4427.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 57d2b310-2a18-49af-38be-08da2116e52e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Apr 2022 08:39:04.1230
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: UI6IztnPMcefjSrRaghuzSvkBhOPTuzezFmR6P/Q2WbH3Qc5IlK+BjfcR+EtkELg5be/u7bDqW9HcBiP8vLACX+CuERwObSImxq6qHHMtvA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWPR01MB10097
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-b24gMjAyMi80LzE4IDExOjA4LCBNYXR0aGV3IFdpbGNveCB3cm90ZToNCj4gT24gRnJpLCBBcHIg
-MTUsIDIwMjIgYXQgMDQ6MDk6MjRQTSArMDIwMCwgQ2hyaXN0aWFuIEJyYXVuZXIgd3JvdGU6DQo+
-Pj4gKwkJCWlub2RlX3NnaWRfc3RyaXAobW50X3VzZXJucywgZGlyLCZtb2RlKTsNCj4+PiAgIAl9
-IGVsc2UNCj4+PiAgIAkJaW5vZGVfZnNnaWRfc2V0KGlub2RlLCBtbnRfdXNlcm5zKTsNCj4+PiAg
-IAlpbm9kZS0+aV9tb2RlID0gbW9kZTsNCj4+PiBAQCAtMjQwNSwzICsyNDAzLDIxIEBAIHN0cnVj
-dCB0aW1lc3BlYzY0IGN1cnJlbnRfdGltZShzdHJ1Y3QgaW5vZGUgKmlub2RlKQ0KPj4+ICAgCXJl
-dHVybiB0aW1lc3RhbXBfdHJ1bmNhdGUobm93LCBpbm9kZSk7DQo+Pj4gICB9DQo+Pj4gICBFWFBP
-UlRfU1lNQk9MKGN1cnJlbnRfdGltZSk7DQo+Pj4gKw0KPj4+ICt2b2lkIGlub2RlX3NnaWRfc3Ry
-aXAoc3RydWN0IHVzZXJfbmFtZXNwYWNlICptbnRfdXNlcm5zLA0KPj4+ICsJCSAgICAgIGNvbnN0
-IHN0cnVjdCBpbm9kZSAqZGlyLCB1bW9kZV90ICptb2RlKQ0KPj4+ICt7DQo+Pj4gKwlpZiAoIWRp
-ciB8fCAhKGRpci0+aV9tb2RlJiAgU19JU0dJRCkpDQo+Pj4gKwkJcmV0dXJuOw0KPj4+ICsJaWYg
-KCgqbW9kZSYgIChTX0lTR0lEIHwgU19JWEdSUCkpICE9IChTX0lTR0lEIHwgU19JWEdSUCkpDQo+
-Pj4gKwkJcmV0dXJuOw0KPj4+ICsJaWYgKFNfSVNESVIoKm1vZGUpKQ0KPj4+ICsJCXJldHVybjsN
-Cj4+DQo+PiBJJ2QgcGxhY2UgdGhhdCBjaGVjayBmaXJzdCBhcyB0aGlzIHdob2xlIGZ1bmN0aW9u
-IGlzIHJlYWxseSBvbmx5DQo+PiByZWxldmFudCBmb3Igbm9uLWRpcmVjdG9yaWVzLg0KPj4NCj4+
-IE90aGVyd2lzZSBJIGNhbiBsaXZlIHdpdGggKm1vZGUgYmVpbmcgYSBwb2ludGVyIGFsdGhvdWdo
-IEkgc3RpbGwgZmluZA0KPj4gdGhpcyB1bnBsZWFzYW50IEFQSSB3aXNlIGJ1dCB0aGUgYmlrZXNo
-ZWQgZG9lcyBpdCdzIGpvYiB3aXRob3V0IGhhdmluZw0KPj4gbXkgY29sb3IuIDopDQo+DQo+IE5v
-LCBJIHRoaW5rIHlvdXIgaW5zdGluY3RzIGFyZSBjb3JyZWN0LiAgVGhpcyBzaG91bGQgYmUNCkkg
-Y2FuJ3QgdW5kZXJzdGFuZCB3aHkgcmV0dXJuaW5nIHVtb2RlX3QgaXMgYmV0dGVyLiBTbyBEb2Vz
-IGtlcm5lbCBoYXZlIA0Kc29tZSBydWxlcyBmb3IgYWRkaW5nIG5ldyBmdW5jdGlvbiBJIGRvbid0
-IG5vdGljZSBiZWZvcmU/IEp1c3QgbmVlZCBhIA0KcmVhc29uLg0KDQpwczogSSB3aWxsIGRlY2lk
-ZSB3aGV0aGVyIHVzZSBwb2ludGVyIG9yIHVzZSByZXR1cm4gdW1vZGVfdCB2YWx1ZSBiZWZvcmUg
-DQpJIHNlbmQgdjQuDQoNCkJlc3QgUmVnYXJkcw0KWWFuZyBYdQ0KPg0KPiB1bW9kZV90IGlub2Rl
-X3NnaWRfc3RyaXAoc3RydWN0IHVzZXJfbmFtZXNwYWNlICptbnRfdXNlcm5zLA0KPiAJCWNvbnN0
-IHN0cnVjdCBpbm9kZSAqZGlyLCB1bW9kZV90IG1vZGUpDQo+IHsNCj4gCWlmIChTX0lTRElSKG1v
-ZGUpIHx8ICFkaXIgfHwgIShkaXItPmlfbW9kZSYgIFNfSVNHSUQpKQ0KPiAJCXJldHVybiBtb2Rl
-Ow0KPiAJaWYgKG1vZGUmICAoU19JU0dJRCB8IFNfSVhHUlApICE9IChTX0lTR0lEIHwgU19JWEdS
-UCkpDQo+IAkJcmV0dXJuIG1vZGU7DQo+IC4uLg0KPg0KPiBhbmQgdGhlIHNhbWUgZm9yIHByZXBh
-cmVfbW9kZSgpLg0KPg0KPiBBbmQgcmVhbGx5LCBJIHRoaW5rIHRoaXMgc2hvdWxkIGJlIGNhbGxl
-ZCBpbm9kZV9zdHJpcF9zZ2lkKCkuICBSaWdodD8NCg==
+On Fri, 15 Apr 2022 06:52:31 +0200, Christoph Hellwig wrote:
+> this series cleanups up the block layer API so that APIs consumed
+> by file systems are (almost) only struct block_devic based, so that
+> file systems don't have to poke into block layer internals like the
+> request_queue.
+> 
+> I also found a bunch of existing bugs related to partition offsets
+> and discard so these are fixed while going along.
+> 
+> [...]
+
+Applied, thanks!
+
+[01/27] target: remove an incorrect unmap zeroes data deduction
+        commit: 179d8609d8424529e95021df939ed7b0b82b37f1
+[02/27] target: pass a block_device to target_configure_unmap_from_queue
+        commit: 817e8b51eb3d927ce6d56ecf9f48bc3c5b26168b
+[03/27] target: fix discard alignment on partitions
+        commit: 968786b9ef56e75e0109158a4936ffffea962c1e
+[04/27] drbd: remove assign_p_sizes_qlim
+        commit: 40349d0e16cedd0de561f59752c3249780fb749b
+[05/27] drbd: use bdev based limit helpers in drbd_send_sizes
+        commit: 7a38acce229685968b770d1d9e64e01396b93643
+[06/27] drbd: use bdev_alignment_offset instead of queue_alignment_offset
+        commit: c6f23b1a05441a26f765e59dd95e8ba7354f9388
+[07/27] drbd: cleanup decide_on_discard_support
+        commit: 998e9cbcd615e5e6a7baa69e673ee845f812744e
+[08/27] btrfs: use bdev_max_active_zones instead of open coding it
+        commit: c1e7b24416400ef13ff92a1c60c336c9a2834d7b
+[09/27] ntfs3: use bdev_logical_block_size instead of open coding it
+        commit: f09dac9afb8e3ce4b6485dbc091a9b9c742db023
+[10/27] mm: use bdev_is_zoned in claim_swapfile
+        commit: 9964e674559b02619fee2012a56839624143d02e
+[11/27] block: add a bdev_nonrot helper
+        commit: 10f0d2a517796b8f6dc04fb0cc3e49003ae6b0bc
+[12/27] block: add a bdev_write_cache helper
+        commit: 08e688fdb8f7e862092ae64cee20bc8b463d1046
+[13/27] block: add a bdev_fua helper
+        commit: a557e82e5a01826f902bd94fc925c03f253cb712
+[14/27] block: add a bdev_stable_writes helper
+        commit: 36d254893aa6a6e204075c3cce94bb572ac32c04
+[15/27] block: add a bdev_max_zone_append_sectors helper
+        commit: 2aba0d19f4d8c8929b4b3b94a9cfde2aa20e6ee2
+[16/27] block: use bdev_alignment_offset in part_alignment_offset_show
+        commit: 64dcc7c2717395b7c83ffb10f040d3be795d03c1
+[17/27] block: use bdev_alignment_offset in disk_alignment_offset_show
+        commit: 640f2a23911b8388989547f89d055afbb910b88e
+[18/27] block: move bdev_alignment_offset and queue_limit_alignment_offset out of line
+        commit: 89098b075cb74a80083bc4ed6b71d0ee18b6898f
+[19/27] block: remove queue_discard_alignment
+        commit: 4e1462ffe8998749884d61f91be251a7a8719677
+[20/27] block: use bdev_discard_alignment in part_discard_alignment_show
+        commit: f0f975a4dde890bfe25ce17bf07a6495453988a4
+[21/27] block: move {bdev,queue_limit}_discard_alignment out of line
+        commit: 5c4b4a5c6f11c869a57c6bd977143430bc9dc43d
+[22/27] block: refactor discard bio size limiting
+        commit: e3cc28ea28b5f8794db2aed24f8a0282ad2e85a2
+[23/27] block: add a bdev_max_discard_sectors helper
+        commit: cf0fbf894bb543f472f682c486be48298eccf199
+[24/27] block: remove QUEUE_FLAG_DISCARD
+        commit: 70200574cc229f6ba038259e8142af2aa09e6976
+[25/27] block: add a bdev_discard_granularity helper
+        commit: 7b47ef52d0a2025fd1408a8a0990933b8e1e510f
+[26/27] block: decouple REQ_OP_SECURE_ERASE from REQ_OP_DISCARD
+        commit: 44abff2c0b970ae3d310b97617525dc01f248d7c
+[27/27] direct-io: remove random prefetches
+        commit: c22198e78d523c8fa079bbb70b2523bb6aa51849
+
+Best regards,
+-- 
+Jens Axboe
+
+
