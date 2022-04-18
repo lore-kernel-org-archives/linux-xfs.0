@@ -2,192 +2,254 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59B1EC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Apr 2022 17:04:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF1A6C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Apr 2022 17:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346826AbiDRRGu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Apr 2022 13:06:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50434 "EHLO
+        id S234715AbiDRRub (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Apr 2022 13:50:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346820AbiDRRGr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Apr 2022 13:06:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 47D212FE45
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Apr 2022 10:04:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1650301447;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WCo/QGFLBjQLX8Ek75RyAerrNZArOWt6dKMzwwveb5s=;
-        b=Fn/w45Uq0i7koSoOY3gBzmH6IJWWwGbXsvAVaniGo82spL0LhJWuFgY4EVXAAjW7EV6+Zv
-        C9gL+UAqBe3MTIQ/L8FOuJV1ExhZIosiMhFAHkKlX8ig07x7h0mMj4gKQcmnQhh0tuBMZy
-        or4xMy3V9pwoMVqlZckxhzVNtnuBZZ0=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-610-HXyen8LSNduKblo7SR30nA-1; Mon, 18 Apr 2022 13:04:04 -0400
-X-MC-Unique: HXyen8LSNduKblo7SR30nA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S229656AbiDRRub (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Apr 2022 13:50:31 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1F389FEE;
+        Mon, 18 Apr 2022 10:47:49 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CE5CD833962;
-        Mon, 18 Apr 2022 17:04:03 +0000 (UTC)
-Received: from zlang-laptop.redhat.com (ovpn-12-143.pek2.redhat.com [10.72.12.143])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 739E740D2826;
-        Mon, 18 Apr 2022 17:04:01 +0000 (UTC)
-From:   Zorro Lang <zlang@redhat.com>
-To:     fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, sandeen@redhat.com
-Subject: [PATCH v3 2/2] xfs: test xfsdump when an inode < root inode is present
-Date:   Tue, 19 Apr 2022 01:03:26 +0800
-Message-Id: <20220418170326.425762-3-zlang@redhat.com>
-In-Reply-To: <20220418170326.425762-1-zlang@redhat.com>
-References: <20220418170326.425762-1-zlang@redhat.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 351AC611DA;
+        Mon, 18 Apr 2022 17:47:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A642C385AA;
+        Mon, 18 Apr 2022 17:47:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650304068;
+        bh=WbLnQHpzkVDefpnU3Ge794JfCCPCsghoZNKvniJfD/A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OTPS2NKf83XD6xPGnHXvfUMsg4YsQwCv6fahu41kHPz7LOOc4RL86qCukxQNSIPyO
+         A+EcFDcYRul01dAhm8HS9sdrDQbCRBgmQEPPEapry9t3Qd4i4gufsYkwPmHNayVwmX
+         gNNVHWc6989J0H71LJxdwCKX3WHMGCerugViUkeNzFVtrkjvarDdT6leRpcMcdqaM4
+         DRj0EoLDIuorJdHzohN1wgAFyMTXASn5IMaLYI6IjR7ZoPEHEJXV4wVxK42S5FFB+B
+         mvzO5eHlfjQaxSWX8IetLiHLkplMYda/sPslilpc55Lw4zvUJiv0AIUmyIiAjGVse2
+         pyPqhXKZG5pgQ==
+Date:   Mon, 18 Apr 2022 10:47:47 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: generic/068 crash on 5.18-rc2?
+Message-ID: <20220418174747.GF17025@magnolia>
+References: <20220413033425.GM16799@magnolia>
+ <YlbjOPEQP66gc1WQ@casper.infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.11.54.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YlbjOPEQP66gc1WQ@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Sandeen <sandeen@redhat.com>
+On Wed, Apr 13, 2022 at 03:50:32PM +0100, Matthew Wilcox wrote:
+> On Tue, Apr 12, 2022 at 08:34:25PM -0700, Darrick J. Wong wrote:
+> > Hmm.  Two nights in a row I've seen the following crash.  Has anyone
+> > else seen this, or should I keep digging?  This is a fairly boring
+> > x86_64 VM with a XFS v5 filesystem + rmapbt.
+> 
+> I have not seen this before.  I test with:
+> MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1 -i sparse=1 -b size=1024 /dev/sdc
+> 
+> Maybe I should try a 4096 byte block size.
+> 
+> > mm/filemap.c:1653 is the BUG in:
+> > 
+> > void folio_end_writeback(struct folio *folio)
+> > {
+> > 	/*
+> > 	 * folio_test_clear_reclaim() could be used here but it is an
+> > 	 * atomic operation and overkill in this particular case.
+> > 	 * Failing to shuffle a folio marked for immediate reclaim is
+> > 	 * too mild a gain to justify taking an atomic operation penalty
+> > 	 * at the end of every folio writeback.
+> > 	 */
+> > 	if (folio_test_reclaim(folio)) {
+> > 		folio_clear_reclaim(folio);
+> > 		folio_rotate_reclaimable(folio);
+> > 	}
+> > 
+> > 	/*
+> > 	 * Writeback does not hold a folio reference of its own, relying
+> > 	 * on truncation to wait for the clearing of PG_writeback.
+> > 	 * But here we must make sure that the folio is not freed and
+> > 	 * reused before the folio_wake().
+> > 	 */
+> > 	folio_get(folio);
+> > 	if (!__folio_end_writeback(folio))
+> > >>>>		BUG();
+> 
+> Grr, that should have been a VM_BUG_ON_FOLIO(1, folio) so we get useful
+> information about the folio (like whether it has an iop, or what order
+> the folio is).  Can you make that change and try to reproduce?
 
-This tests a longstanding bug where xfsdumps are not properly
-created when an inode is present on the filesytsem which has
-a lower number than the root inode.
+> What's going on here is that we've called folio_end_writeback() on a
+> folio which does not have the writeback flag set.  That _should_ be
+> impossible, hence the use of BUG().  Either we've called
+> folio_end_writeback() twice on the same folio, or we neglected to set
+> the writeback flag on the folio.  I don't immediately see why either
+> of those two things would happen.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
- tests/xfs/999     | 62 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out | 47 +++++++++++++++++++++++++++++++++++
- 2 files changed, 109 insertions(+)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
+Well, I made that change and rebased to -rc3 to see if reverting that
+ZERO_PAGE thing would produce better results, I think I just got the
+same crash.  Curiously, the only VM that died this time was the one
+running the realtime configuration, but it's still generic/068:
 
-diff --git a/tests/xfs/999 b/tests/xfs/999
-new file mode 100755
-index 00000000..9b1f7f5b
---- /dev/null
-+++ b/tests/xfs/999
-@@ -0,0 +1,62 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Red Hat, Inc. All Rights Reserved.
-+#
-+# FS QA Test No. 999
-+#
-+# Create a filesystem which contains an inode with a lower number
-+# than the root inode. Ensure that xfsdump/xfsrestore handles this.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick dump
-+
-+# Import common functions.
-+. ./common/dump
-+
-+_supported_fs xfs
-+_require_scratch
-+
-+# A large stripe unit will put the root inode out quite far
-+# due to alignment, leaving free blocks ahead of it.
-+_scratch_mkfs_xfs -d sunit=1024,swidth=1024 > $seqres.full 2>&1
-+
-+# Mounting /without/ a stripe should allow inodes to be allocated
-+# in lower free blocks, without the stripe alignment.
-+_scratch_mount -o sunit=0,swidth=0
-+
-+root_inum=$(stat -c %i $SCRATCH_MNT)
-+
-+# Consume space after the root inode so that the blocks before
-+# root look "close" for the next inode chunk allocation
-+$XFS_IO_PROG -f -c "falloc 0 16m" $SCRATCH_MNT/fillfile
-+
-+# And make a bunch of inodes until we (hopefully) get one lower
-+# than root, in a new inode chunk.
-+echo "root_inum: $root_inum" >> $seqres.full
-+for i in $(seq 0 4096) ; do
-+	fname=$SCRATCH_MNT/$(printf "FILE_%03d" $i)
-+	touch $fname
-+	inum=$(stat -c "%i" $fname)
-+	[[ $inum -lt $root_inum ]] && break
-+done
-+
-+echo "created: $inum" >> $seqres.full
-+
-+[[ $inum -lt $root_inum ]] || _notrun "Could not set up test"
-+
-+# Now try a dump and restore. Cribbed from xfs/068
-+_create_dumpdir_stress
-+
-+echo -n "Before: " >> $seqres.full
-+_count_dumpdir_files | tee $tmp.before >> $seqres.full
-+
-+# filter out the file count, it changes as fsstress adds new operations
-+_do_dump_restore | sed -e "/entries processed$/s/[0-9][0-9]*/NUM/g"
-+
-+echo -n "After: " >> $seqres.full
-+_count_restoredir_files | tee $tmp.after >> $seqres.full
-+diff -u $tmp.before $tmp.after
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-new file mode 100644
-index 00000000..f6ab75d2
---- /dev/null
-+++ b/tests/xfs/999.out
-@@ -0,0 +1,47 @@
-+QA output created by 999
-+Creating directory system to dump using fsstress.
-+
-+-----------------------------------------------
-+fsstress : -f link=10 -f creat=10 -f mkdir=10 -f truncate=5 -f symlink=10
-+-----------------------------------------------
-+xfsdump|xfsrestore ...
-+xfsdump  -s DUMP_SUBDIR - SCRATCH_MNT | xfsrestore  - RESTORE_DIR
-+xfsrestore: using file dump (drive_simple) strategy
-+xfsrestore: searching media for dump
-+xfsrestore: examining media file 0
-+xfsrestore: dump description: 
-+xfsrestore: hostname: HOSTNAME
-+xfsrestore: mount point: SCRATCH_MNT
-+xfsrestore: volume: SCRATCH_DEV
-+xfsrestore: session time: TIME
-+xfsrestore: level: 0
-+xfsrestore: session label: ""
-+xfsrestore: media label: ""
-+xfsrestore: file system ID: ID
-+xfsrestore: session id: ID
-+xfsrestore: media ID: ID
-+xfsrestore: searching media for directory dump
-+xfsrestore: reading directories
-+xfsrestore: NUM directories and NUM entries processed
-+xfsrestore: directory post-processing
-+xfsrestore: restoring non-directory files
-+xfsrestore: restore complete: SECS seconds elapsed
-+xfsrestore: Restore Status: SUCCESS
-+xfsdump: using file dump (drive_simple) strategy
-+xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
-+xfsdump: dump date: DATE
-+xfsdump: session id: ID
-+xfsdump: session label: ""
-+xfsdump: ino map <PHASES>
-+xfsdump: ino map construction complete
-+xfsdump: estimated dump size: NUM bytes
-+xfsdump: /var/xfsdump/inventory created
-+xfsdump: creating dump session media file 0 (media 0, file 0)
-+xfsdump: dumping ino map
-+xfsdump: dumping directories
-+xfsdump: dumping non-directory files
-+xfsdump: ending media file
-+xfsdump: media file size NUM bytes
-+xfsdump: dump size (non-dir files) : NUM bytes
-+xfsdump: dump complete: SECS seconds elapsed
-+xfsdump: Dump Status: SUCCESS
--- 
-2.31.1
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 oci-mtr28 5.18.0-rc3-djwx #rc3 SMP PREEMPT_DYNAMIC Sun Apr 17 14:42:49 PDT 2022
+MKFS_OPTIONS  -- -f -rrtdev=/dev/sdb4 -llogdev=/dev/sdb2 -m reflink=0,rmapbt=0, -d rtinherit=1, /dev/sda4
+MOUNT_OPTIONS -- -ortdev=/dev/sdb4 -ologdev=/dev/sdb2 /dev/sda4 /opt
 
+I don't know if it'll help, but here's the sequence of tests that we
+were running just prior to crashing:
+
+generic/445      3s
+generic/225      76s
+xfs/306  22s
+xfs/290  3s
+generic/155     [not run] Reflink not supported by test filesystem type: xfs
+generic/525      6s
+generic/269      89s
+generic/1206    [not run] xfs_io swapext -v vfs -s 64k -l 64k ioctl support is missing
+xfs/504  198s
+xfs/192 [not run] Reflink not supported by scratch filesystem type: xfs
+xfs/303  1s
+generic/346      6s
+generic/512      5s
+xfs/227  308s
+generic/147     [not run] Reflink not supported by test filesystem type: xfs
+generic/230     [not run] Quotas not supported on realtime test device
+generic/008      4s
+generic/108      4s
+xfs/264  12s
+generic/200     [not run] Reflink not supported by scratch filesystem type: xfs
+generic/493     [not run] Dedupe not supported by scratch filesystem type: xfs
+xfs/021  5s
+generic/672     [not run] Reflink not supported by scratch filesystem type: xfs
+xfs/493  5s
+xfs/146  13s
+xfs/315 [not run] Reflink not supported by scratch filesystem type: xfs
+generic/068     
+
+And the dmesg output:
+
+run fstests generic/068 at 2022-04-17 16:57:16
+XFS (sda4): Mounting V5 Filesystem
+XFS (sda4): Ending clean mount
+page:ffffea0004a39c40 refcount:0 mapcount:0 mapping:0000000000000000 index:0x1 pfn:0x128e71
+flags: 0x17ff80000000000(node=0|zone=2|lastcpupid=0xfff)
+raw: 017ff80000000000 0000000000000000 ffffffff00000203 0000000000000000
+raw: 0000000000000001 0000000000000000 00000000ffffffff 0000000000000000
+page dumped because: VM_BUG_ON_FOLIO(((unsigned int) folio_ref_count(folio) + 127u <= 127u))
+------------[ cut here ]------------
+kernel BUG at include/linux/mm.h:1164!
+invalid opcode: 0000 [#1] PREEMPT SMP
+CPU: 3 PID: 1094085 Comm: 3:0 Tainted: G        W         5.18.0-rc3-djwx #rc3 0a707744ee7c555d54e50726c5b02515710a6aae
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20171121_152543-x86-ol7-builder-01.us.oracle.com-4.el7.1 04/01/2014
+Workqueue: xfs-conv/sda4 xfs_end_io [xfs]
+RIP: 0010:folio_end_writeback+0xd0/0x110
+Code: 80 60 02 fb 48 89 ef e8 5e 6d 01 00 8b 45 34 83 c0 7f 83 f8 7f 0f 87 6a ff ff ff 48 c7 c6 40 c7 e2 81 48 89 ef e8 30 69 04 00 <0f> 0b 48 89 ee e8 b6 51 02 00 eb 9a 48 c7 c6 c0 ad e5 81 48 89 ef
+RSP: 0018:ffffc900084f3d48 EFLAGS: 00010246
+RAX: 000000000000005c RBX: 0000000000001000 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: ffffffff81e56da3 RDI: 00000000ffffffff
+RBP: ffffea0004a39c40 R08: 0000000000000000 R09: ffffffff8205fe40
+R10: 0000000000017578 R11: 00000000000175f0 R12: 0000000000004000
+R13: ffff88814dc5cd40 R14: 000000000000002e R15: ffffea0004a39c40
+FS:  0000000000000000(0000) GS:ffff88843fd80000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f2b0ea47010 CR3: 000000043f00c000 CR4: 00000000001506a0
+Call Trace:
+ <TASK>
+ iomap_finish_ioend+0x1ee/0x6a0
+ iomap_finish_ioends+0x69/0x100
+ xfs_end_ioend+0x5a/0x160 [xfs e8251de1111d7958449fd159d84af12a2afc12f2]
+ xfs_end_io+0xb1/0xf0 [xfs e8251de1111d7958449fd159d84af12a2afc12f2]
+ process_one_work+0x1df/0x3c0
+ ? rescuer_thread+0x3b0/0x3b0
+ worker_thread+0x53/0x3b0
+ ? rescuer_thread+0x3b0/0x3b0
+ kthread+0xea/0x110
+ ? kthread_complete_and_exit+0x20/0x20
+ ret_from_fork+0x1f/0x30
+ </TASK>
+Modules linked in: xfs dm_zero btrfs blake2b_generic xor lzo_compress lzo_decompress zlib_deflate raid6_pq zstd_compress dm_delay dm_snapshot dm_thin_pool dm_persistent_data dm_bio_prison dm_bufio dm_flakey libcrc32c xt_REDIRECT iptable_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 auth_rpcgss oid_registry xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink ip6table_filter ip6_tables iptable_filter bfq sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet [last unloaded: scsi_debug]
+Dumping ftrace buffer:
+   (ftrace buffer empty)
+---[ end trace 0000000000000000 ]---
+RIP: 0010:folio_end_writeback+0xd0/0x110
+Code: 80 60 02 fb 48 89 ef e8 5e 6d 01 00 8b 45 34 83 c0 7f 83 f8 7f 0f 87 6a ff ff ff 48 c7 c6 40 c7 e2 81 48 89 ef e8 30 69 04 00 <0f> 0b 48 89 ee e8 b6 51 02 00 eb 9a 48 c7 c6 c0 ad e5 81 48 89 ef
+RSP: 0018:ffffc900084f3d48 EFLAGS: 00010246
+RAX: 000000000000005c RBX: 0000000000001000 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: ffffffff81e56da3 RDI: 00000000ffffffff
+RBP: ffffea0004a39c40 R08: 0000000000000000 R09: ffffffff8205fe40
+R10: 0000000000017578 R11: 00000000000175f0 R12: 0000000000004000
+R13: ffff88814dc5cd40 R14: 000000000000002e R15: ffffea0004a39c40
+FS:  0000000000000000(0000) GS:ffff88843fd80000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f2b0ea47010 CR3: 000000043f00c000 CR4: 00000000001506a0
+
+--D
+
+> 
+> > 
+> > 
+> > --D
+> > 
+> > run fstests generic/068 at 2022-04-12 17:57:11
+> > XFS (sda3): Mounting V5 Filesystem
+> > XFS (sda3): Ending clean mount
+> > XFS (sda4): Mounting V5 Filesystem
+> > XFS (sda4): Ending clean mount
+> > ------------[ cut here ]------------
+> > kernel BUG at mm/filemap.c:1653!
+> > invalid opcode: 0000 [#1] PREEMPT SMP
+> > CPU: 0 PID: 1349866 Comm: 0:116 Tainted: G        W         5.18.0-rc2-djwx #rc2 19cc48221d47ada6c8e5859639b6a0946c9a3777
+> > Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20171121_152543-x86-ol7-builder-01.us.oracle.com-4.el7.1 04/01/2014
+> > Workqueue: xfs-conv/sda4 xfs_end_io [xfs]
+> > RIP: 0010:folio_end_writeback+0x79/0x80
+> > Code: d2 75 1d f0 ff 4d 34 74 0e 5d c3 f0 80 67 02 fb e8 ac 29 01 00 eb ad 48 89 ef 5d e9 a1 0f 01 00 48 89 ee e8 b9 e8 01 00 eb d9 <0f> 0b 0f 1f 44 00 00 0f 1f 44 00 00 53 48 89 fb e8 62 f7 ff ff 48
+> > RSP: 0018:ffffc9000286fd50 EFLAGS: 00010246
+> > RAX: 0000000000000000 RBX: ffffea0007376840 RCX: 000000000000000c
+> > RDX: ffff88810d2de000 RSI: ffffffff81e55f0b RDI: ffff88810d2de000
+> > RBP: ffffea0007376840 R08: ffffea000b82c308 R09: ffffea000b82c308
+> > R10: 0000000000000001 R11: 000000000000000c R12: 0000000000000000
+> > R13: 000000000000c000 R14: 0000000000000005 R15: 0000000000000001
+> > FS:  0000000000000000(0000) GS:ffff88843fc00000(0000) knlGS:0000000000000000
+> > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > CR2: 00007f5b067d0000 CR3: 000000010d1bb000 CR4: 00000000001506b0
+> > Call Trace:
+> >  <TASK>
+> >  iomap_finish_ioend+0x19e/0x560
+> >  iomap_finish_ioends+0x69/0x100
+> >  xfs_end_ioend+0x5a/0x160 [xfs 513857e2ae300a835ce1fbd8065a84dc5382e649]
+> >  xfs_end_io+0xb1/0xf0 [xfs 513857e2ae300a835ce1fbd8065a84dc5382e649]
+> >  process_one_work+0x1df/0x3c0
+> >  ? rescuer_thread+0x3b0/0x3b0
+> >  worker_thread+0x53/0x3b0
+> >  ? rescuer_thread+0x3b0/0x3b0
+> >  kthread+0xea/0x110
+> >  ? kthread_complete_and_exit+0x20/0x20
+> >  ret_from_fork+0x1f/0x30
+> >  </TASK>
+> > Modules linked in: dm_snapshot dm_bufio dm_zero dm_flakey xfs libcrc32c xt_REDIRECT iptable_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 auth_rpcgss oid_registry xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink ip6table_filter ip6_tables iptable_filter bfq sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet [last unloaded: scsi_debug]
+> > Dumping ftrace buffer:
+> >    (ftrace buffer empty)
+> > ---[ end trace 0000000000000000 ]---
+> > RIP: 0010:folio_end_writeback+0x79/0x80
+> > Code: d2 75 1d f0 ff 4d 34 74 0e 5d c3 f0 80 67 02 fb e8 ac 29 01 00 eb ad 48 89 ef 5d e9 a1 0f 01 00 48 89 ee e8 b9 e8 01 00 eb d9 <0f> 0b 0f 1f 44 00 00 0f 1f 44 00 00 53 48 89 fb e8 62 f7 ff ff 48
+> > RSP: 0018:ffffc9000286fd50 EFLAGS: 00010246
+> > RAX: 0000000000000000 RBX: ffffea0007376840 RCX: 000000000000000c
+> > RDX: ffff88810d2de000 RSI: ffffffff81e55f0b RDI: ffff88810d2de000
+> > RBP: ffffea0007376840 R08: ffffea000b82c308 R09: ffffea000b82c308
+> > R10: 0000000000000001 R11: 000000000000000c R12: 0000000000000000
+> > R13: 000000000000c000 R14: 0000000000000005 R15: 0000000000000001
+> > FS:  0000000000000000(0000) GS:ffff88843fc00000(0000) knlGS:0000000000000000
+> > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > CR2: 00007f4b94008278 CR3: 0000000101ac9000 CR4: 00000000001506b0
+> > 
