@@ -2,130 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA639C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Apr 2022 18:23:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58C2AC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Apr 2022 18:35:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357170AbiDSS0A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Apr 2022 14:26:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42752 "EHLO
+        id S235701AbiDSSiX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Apr 2022 14:38:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358138AbiDSSYK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Apr 2022 14:24:10 -0400
-Received: from mail-qt1-x833.google.com (mail-qt1-x833.google.com [IPv6:2607:f8b0:4864:20::833])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC3CE3FBEB;
-        Tue, 19 Apr 2022 11:17:55 -0700 (PDT)
-Received: by mail-qt1-x833.google.com with SMTP id d14so4959229qtw.5;
-        Tue, 19 Apr 2022 11:17:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=00deVnNM39D80dvE24oUzB5jmNj/UYKM5ibGugzLeoQ=;
-        b=R3xnyLz3ImpVmQyMkGxkO5yw2z2cN7z8DudQfd04Ajx/zdZk58FC3GtEODAnLALsWs
-         mkZ14mCc6vqstI3JypoSCncEJLlfi2jzZ900VIHoCK2JX8aSgMJVowDUyeKYSeGpTBTl
-         dj+MYU/xfU9+CrZ/lOYQz+Kq8o9zKsgwyMnKyyDkeZruMEATJlbSOq49Qfmms6pT8nf0
-         lC8OjexQTAm5yB6n7vmZ/4ZCx3BYYcAPGM6BQ5O4a6y+bHWiHoz0umdjLebiEqo/0A1i
-         f/cNpUscsx6WEYJ13BoFamF6aseUDp172elwjyOhD3H67GtN1/Y0r6krbb7Xx9eBNQsJ
-         GURQ==
+        with ESMTP id S1357705AbiDSSiA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Apr 2022 14:38:00 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0A32424F0C
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Apr 2022 11:34:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1650393269;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=AyKeDt/G+be2E1gyLoCwi+1fRzVFrvAJkghfupIO6no=;
+        b=NKHgeixj8SIdf0jNJZUww5bDgmnGew+nze328i/HlVm+C+tERDGkI3zF7Xja9Mktzd1oja
+        RIZVIXgfCN9iiZ+s9pr/gv4FuiTczdz+ykxIDB44uPpgiSkTkG2FT+DPpb1s8nPofOvqZt
+        Ujg5LSiY7IYsVn9E3tq1IOys/V3Ke1s=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-468-ycXifQ9HObCqjewVONPtiA-1; Tue, 19 Apr 2022 14:34:28 -0400
+X-MC-Unique: ycXifQ9HObCqjewVONPtiA-1
+Received: by mail-qt1-f197.google.com with SMTP id cj27-20020a05622a259b00b002f334b76068so2255707qtb.4
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Apr 2022 11:34:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=00deVnNM39D80dvE24oUzB5jmNj/UYKM5ibGugzLeoQ=;
-        b=p6Becx5OBXDVfnhwUO/70JJzpxSVFQSP785C4yO8ZtoY3oaNhMhY2vVzuJocypD0Tv
-         teRPs2eAzg+FBVkVxpDe6YHTfTRdgo42iQmBCGiC2BTaQjvcBolkAPa5dbIwVvoQ7GF2
-         aeUUSYchyxslKq6tsczyepxMT1TuBIylNXg2rQikgUIcysDvuNytsvW03Ov9Uh12WQMw
-         O4haQwHwJ3tDL1IkD86PKK0pfYJRVoTwLrhKi3ysRJ5bVai1SLBKkxiwSk1c62GvsAVf
-         4lZoGhJNpVl3opcneoA0SLjsZsx//SNHPRJaeHbVxU0FgkT7n9LJ7RJIvREcw/CxuRxG
-         i8Qw==
-X-Gm-Message-State: AOAM5319A+HLxAd6ioxJqFbuh5QNJ2O8RJcXqfkfirhiE9ye3Y4l3YbC
-        DLiVQC4GWUujxoUML0B3YJunsnZJfr7tL7wY24M=
-X-Google-Smtp-Source: ABdhPJz3EzdvxdcAmafnCxp1fGtyDKH96vuBXzHPr0wwxis6A7Jt53zWcw6+HDksISrnsDuqQbgopx4oMDjXaUIV7jY=
-X-Received: by 2002:ac8:5fc4:0:b0:2f1:e898:2973 with SMTP id
- k4-20020ac85fc4000000b002f1e8982973mr11115532qta.157.1650392274551; Tue, 19
- Apr 2022 11:17:54 -0700 (PDT)
-MIME-Version: 1.0
-References: <165038952992.1677711.6313258860719066297.stgit@magnolia> <165038953550.1677711.12931148474635467556.stgit@magnolia>
-In-Reply-To: <165038953550.1677711.12931148474635467556.stgit@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 19 Apr 2022 21:17:43 +0300
-Message-ID: <CAOQ4uxhze7YVAcHbL=fjH+YT9geuujgNt4VjUV9haXdkW9ieSA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] xfs: make sure syncfs(2) passes back
- super_operations.sync_fs errors
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=AyKeDt/G+be2E1gyLoCwi+1fRzVFrvAJkghfupIO6no=;
+        b=n6PvVu/OnLEBVUu1OCy/Fwc5ihBbSRyhdWbRqN9sM58OQF2gqr5vA6t0EJNMLKwNhu
+         wQ6MaXDtE7S9ZrYtV4kh/rjmrZuF9XvpM9ukiDRJCGTbOI9oPNmmjHHmuFuz8DnfFuy1
+         BT3C8fQEcZQdWEz0/oXe86TtY5RH1v9PP78ik2Q/bf+C+iX8pJxUEXHp4e31Evc6jD8u
+         AHGqk8+JW8g6N52avqCb8h00BAjjGh1kXAXsHQbUols8B1VY7f4CFbOWZbmGlQSjDPP0
+         XG0ax+2KwTv5z8z5ZXGOqgvTfJJBB3Zpp6DAV+jDkDX9sWb/PvHgHN5nFr/pYOJKk3WG
+         e0JQ==
+X-Gm-Message-State: AOAM5317EEZrUM/55tInzDqR9pDNbBEJsqiAcpOk0kOGMWYo8CZ6yd/n
+        6VDiukoLICxCcIZifrivR7EQBs2lQGQNzrssMR2dOmlOOD5YT7UAIFI4aI8a+4NDObSuP2hBbcg
+        3lf8sNqdBwvm1iSJ2Ta0F
+X-Received: by 2002:ad4:5bc7:0:b0:441:53a2:169c with SMTP id t7-20020ad45bc7000000b0044153a2169cmr12977859qvt.8.1650393267595;
+        Tue, 19 Apr 2022 11:34:27 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyiKXC2/RiQDh5CJQRXIQmnuUQY+xhfR/93kuRANErdytCKje+pae6FFWxAjEY+Jyt60VC7Lw==
+X-Received: by 2002:ad4:5bc7:0:b0:441:53a2:169c with SMTP id t7-20020ad45bc7000000b0044153a2169cmr12977843qvt.8.1650393267365;
+        Tue, 19 Apr 2022 11:34:27 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id n8-20020ac85a08000000b002f1fc230725sm449116qta.31.2022.04.19.11.34.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 Apr 2022 11:34:26 -0700 (PDT)
+Date:   Wed, 20 Apr 2022 02:34:21 +0800
+From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, zlang@redhat.com, linux-xfs@vger.kernel.org,
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH 2/2] generic/019: fix incorrect unset statements
+Message-ID: <20220419183421.ohwmohh3tl3wi6li@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, guaneryu@gmail.com,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+References: <165038951495.1677615.10687913612774985228.stgit@magnolia>
+ <165038952637.1677615.2651496553218188517.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <165038952637.1677615.2651496553218188517.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 19, 2022 at 8:32 PM Darrick J. Wong <djwong@kernel.org> wrote:
->
+On Tue, Apr 19, 2022 at 10:32:06AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
->
-> This is a regression test to make sure that nonzero error returns from
-> a filesystem's ->sync_fs implementation are actually passed back to
-> userspace when the call stack involves syncfs(2).
->
+> 
+> Fix incorrect usage of unset -- one passes the name of the variable, not
+> the *value* contained within it.
+> 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Zorro Lang <zlang@redhat.com>
 > ---
->  tests/xfs/839     |   42 ++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/839.out |    2 ++
->  2 files changed, 44 insertions(+)
->  create mode 100755 tests/xfs/839
->  create mode 100644 tests/xfs/839.out
->
->
-> diff --git a/tests/xfs/839 b/tests/xfs/839
-> new file mode 100755
-> index 00000000..9bfe93ef
-> --- /dev/null
-> +++ b/tests/xfs/839
-> @@ -0,0 +1,42 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 839
-> +#
-> +# Regression test for kernel commits:
-> +#
-> +# 5679897eb104 ("vfs: make sync_filesystem return errors from ->sync_fs")
-> +# 2d86293c7075 ("xfs: return errors in xfs_fs_sync_fs")
-> +#
-> +# During a code inspection, I noticed that sync_filesystem ignores the return
-> +# value of the ->sync_fs calls that it makes.  sync_filesystem, in turn is used
-> +# by the syncfs(2) syscall to persist filesystem changes to disk.  This means
-> +# that syncfs(2) does not capture internal filesystem errors that are neither
-> +# visible from the block device (e.g. media error) nor recorded in s_wb_err.
-> +# XFS historically returned 0 from ->sync_fs even if there were log failures,
-> +# so that had to be corrected as well.
-> +#
-> +# The kernel commits above fix this problem, so this test tries to trigger the
-> +# bug by using the shutdown ioctl on a clean, freshly mounted filesystem in the
-> +# hope that the EIO generated as a result of the filesystem being shut down is
-> +# only visible via ->sync_fs.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick shutdown
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_require_xfs_io_command syncfs
-> +_require_scratch_nocheck
-> +_require_scratch_shutdown
-> +
 
-From all the commotion around generic vs. xfs, you forgot:
+Good to me,
+Reviewed-by: Zorro Lang <zlang@redhat.com>
 
-_supported_fs xfs
+>  tests/generic/019 |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/tests/generic/019 b/tests/generic/019
+> index 854ba57d..45c91624 100755
+> --- a/tests/generic/019
+> +++ b/tests/generic/019
+> @@ -140,8 +140,8 @@ _workout()
+>  	kill $fs_pid &> /dev/null
+>  	wait $fs_pid
+>  	wait $fio_pid
+> -	unset $fs_pid
+> -	unset $fio_pid
+> +	unset fs_pid
+> +	unset fio_pid
+>  
+>  	# We expect that broken FS still can be umounted
+>  	run_check _scratch_unmount
+> 
 
-Otherwise,
-
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-
-Thanks,
-Amir.
