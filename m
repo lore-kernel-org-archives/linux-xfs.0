@@ -2,251 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B88C6C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Apr 2022 04:52:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5373AC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Apr 2022 04:52:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239584AbiDSEza (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Apr 2022 00:55:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47232 "EHLO
+        id S1348544AbiDSEzd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Apr 2022 00:55:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348542AbiDSEzT (ORCPT
+        with ESMTP id S1348466AbiDSEzT (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Apr 2022 00:55:19 -0400
 Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E49B136314;
-        Mon, 18 Apr 2022 21:50:55 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3A4gKSU61Kne/WOz/trvbD5axwkn2cJEfYwER7XOP?=
- =?us-ascii?q?LsXnJ3Gt33zEEy2EbXmyDafqMZTP8f95xaoSz8h5U6J/SmNc2QQE+nZ1PZygU8?=
- =?us-ascii?q?JKaX7x1DatR0xu6d5SFFAQ+hyknQoGowPscEzmM9n9BDpC79SMmjfvQH+KlYAL?=
- =?us-ascii?q?5EnsZqTFMGX5JZS1Ly7ZRbr5A2bBVMivV0T/Ai5S31GyNh1aYBlkpB5er83uDi?=
- =?us-ascii?q?hhdVAQw5TTSbdgT1LPXeuJ84Jg3fcldJFOgKmVY83LTegrN8F251juxExYFAdX?=
- =?us-ascii?q?jnKv5c1ERX/jZOg3mZnh+AvDk20Yd4HdplPtT2Pk0MC+7jx2Tgtl308QLu5qrV?=
- =?us-ascii?q?S8nI6/NhP8AFRJfFkmSOIUfouSZfiHg7Jb7I0ruNiGEL+9VJE0/I4wU0uhtBmR?=
- =?us-ascii?q?J7/YZNHYGaRXrr+K9wJq6TOd2j8guJcWtO5kQ0llsxDefD7A5QJTHQqzP/vdZ2?=
- =?us-ascii?q?is9goZFGvO2T8Ybdj1pYzzDbgdJN1NRD4gx9M+sh3/iY3hdrXqWu6M84C7U1gM?=
- =?us-ascii?q?Z+L7zPNvQf/SORN5JhQCcp2Tb7yL1Dw9yHNyUyRKB6W7qiuKntSHyXo9UH72l3?=
- =?us-ascii?q?vlwiVaXyyoYDxh+fV+6p+Spz0ClV99BJkg85CUjt+4x+VatQ927WAe3yFaAvxg?=
- =?us-ascii?q?BS59THvc85QWl1KXZ+UCaC3ICQzoHb8Yp3OcyRDo3xhqZkcjBGzNiqvuWRGib+?=
- =?us-ascii?q?7PSqim9URX5h0dqiTQsFFNDuoe85tpoyE+nczqqK4bt5vWdJN0662niQPACuog?=
- =?us-ascii?q?u?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3ApTYmsK5cit15Vt+7HgPXwCzXdLJyesId70hD?=
- =?us-ascii?q?6qhwISY6TiX+rbHJoB17726MtN9/YhEdcLy7VJVoBEmskKKdgrNhWotKPjOW21?=
- =?us-ascii?q?dARbsKheCJrgEIWReOktK1vp0AT0ERMrLN5CBB/KTHCReDYqsd6ejC4Ka1nv3f?=
- =?us-ascii?q?0nsoaQlrbptr5wB/Bh3zKDwMeCB2QYo+CIGH5tdK4x6peXEsZMy9AXUfG8fZod?=
- =?us-ascii?q?mjruOdXTc2Qw4g9BKVjS6lrJrzEx2j1B8YVD9VhZcOmFK16zDE2g=3D=3D?=
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0C81032ECC;
+        Mon, 18 Apr 2022 21:50:49 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3Au2RBvKjQPIjEua4iyUkhZ8J3X161CxEKZh0ujC4?=
+ =?us-ascii?q?5NGQNrF6WrkUEyWUXXWCBOPmLYjbwfYx3aIXg/BkC78WDxoAwTFFqpXw8FHgiR?=
+ =?us-ascii?q?ejtX4rAdhiqV8+xwmwvdGo+toNGLICowPkcFhcwnT/wdOixxZVA/fvQHOCkUra?=
+ =?us-ascii?q?dYnkZqTJME0/NtzoywobVvaY42bBVMyvV0T/Di5W31G2NglaYAUpIg063ky6Di?=
+ =?us-ascii?q?dyp0N8uUvPSUtgQ1LPWvyF94JvyvshdJVOgKmVfNrbSq+ouUNiEEm3lExcFUrt?=
+ =?us-ascii?q?Jk57wdAsEX7zTIROTzHFRXsBOgDAb/mprjPl9b6FaNC+7iB3Q9zx14M9QvJqrW?=
+ =?us-ascii?q?EEnOLbQsOoAURhECDw4NqpDkFPCCSHl6pLMlhKaLRMAxN0rVinaJ7Yw9u9pAG1?=
+ =?us-ascii?q?m++YfLTcXZBGfwemxxdqTSuJsrsUlItPiMI4Wtjdn1z6xJfovR9bBBbrL4dtZ1?=
+ =?us-ascii?q?TIrrsFIAfvaIcEebFJHYBbfZBtAElQaEpQzmKGvnHaXWzlZrk+F4K8yy2vNxQd?=
+ =?us-ascii?q?ylr/3P7L9fMKGRMBQtkKZvX7duWD4BAwKctCS11Kt8Huqi6nEnT7TX5gbH7m1s?=
+ =?us-ascii?q?PVthTW7wm0VFQ1TW0C3rOe0jmagVN9FbU8Z4Cwjqe417kPDZt38WQCo5X2JpBg?=
+ =?us-ascii?q?RX/JOHOAgrgKA0KzZ50CeHGdsZjpAbsE28d84XhQ02VKT2dDkHzpitPuSU331y?=
+ =?us-ascii?q?1s+hVteIgBMdSlbO3BCFlBDvrHeTEgIpkqnZr5e/GSd0rUZwQ3N/g0=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AOx2m76hS8LA8xk4fM2ePciqv63BQXjAji2hC?=
+ =?us-ascii?q?6mlwRA09TySZ//rOoB19726StN9xYgBHpTnuAtjifZqxz/FICOoqTNOftWvdyQ?=
+ =?us-ascii?q?mVxehZhOOIqVCNJ8SUzI5gPMlbHZSWcOeAaGSSk/yKmjWQIpIxxsWd6qC0iaP7?=
+ =?us-ascii?q?x3dpdwtjbKZt9G5Ce36mO3wzVA9bHoA4CZbZwsJGogCrcXMRYt/+KWICW4H41q?=
+ =?us-ascii?q?b2vaOjcRgbHAQm9QXLqTup7YTxGx+e0gxbcx4n+8ZazVT4?=
 X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="123671752"
+   d="scan'208";a="123671746"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 19 Apr 2022 12:50:54 +0800
+  by heian.cn.fujitsu.com with ESMTP; 19 Apr 2022 12:50:48 +0800
 Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 0EC1C4D17171;
-        Tue, 19 Apr 2022 12:50:51 +0800 (CST)
-Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+        by cn.fujitsu.com (Postfix) with ESMTP id D439E4D17171;
+        Tue, 19 Apr 2022 12:50:47 +0800 (CST)
+Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
  G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Tue, 19 Apr 2022 12:50:50 +0800
+ (TLS) id 15.0.1497.23; Tue, 19 Apr 2022 12:50:47 +0800
+Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+ G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Tue, 19 Apr 2022 12:50:49 +0800
 Received: from irides.mr.mr (10.167.225.141) by
  G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Tue, 19 Apr 2022 12:50:48 +0800
+ id 15.0.1497.23 via Frontend Transport; Tue, 19 Apr 2022 12:50:45 +0800
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v13 5/7] mm: Introduce mf_dax_kill_procs() for fsdax case
-Date:   Tue, 19 Apr 2022 12:50:43 +0800
-Message-ID: <20220419045045.1664996-6-ruansy.fnst@fujitsu.com>
+        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>
+Subject: [PATCH v13 0/7] fsdax: introduce fs query to support reflink
+Date:   Tue, 19 Apr 2022 12:50:38 +0800
+Message-ID: <20220419045045.1664996-1-ruansy.fnst@fujitsu.com>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220419045045.1664996-1-ruansy.fnst@fujitsu.com>
-References: <20220419045045.1664996-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 0EC1C4D17171.A29BB
+X-yoursite-MailScanner-ID: D439E4D17171.A07DF
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This new function is a variant of mf_generic_kill_procs that accepts a
-file, offset pair instead of a struct to support multiple files sharing
-a DAX mapping.  It is intended to be called by the file systems as part
-of the memory_failure handler after the file system performed a reverse
-mapping from the storage address to the file and file offset.
+This patchset is aimed to support shared pages tracking for fsdax.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/mm.h  |  2 +
- mm/memory-failure.c | 96 ++++++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 88 insertions(+), 10 deletions(-)
+Changes since V12:
+  - Rebased onto next-20220414
+  - Do not continue ->notify_failure() if filesystem is not ready yet
+  - Simplify the logic of setting CoW flag
+  - Fix build warning/error and typo
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index ad4b6c15c814..52208d743546 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -3233,6 +3233,8 @@ enum mf_flags {
- 	MF_SOFT_OFFLINE = 1 << 3,
- 	MF_UNPOISON = 1 << 4,
- };
-+int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
-+		      unsigned long count, int mf_flags);
- extern int memory_failure(unsigned long pfn, int flags);
- extern void memory_failure_queue(unsigned long pfn, int flags);
- extern void memory_failure_queue_kick(int cpu);
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index a40e79e634a4..dc47c5f83d85 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -295,10 +295,9 @@ void shake_page(struct page *p)
- }
- EXPORT_SYMBOL_GPL(shake_page);
- 
--static unsigned long dev_pagemap_mapping_shift(struct page *page,
--		struct vm_area_struct *vma)
-+static unsigned long dev_pagemap_mapping_shift(struct vm_area_struct *vma,
-+		unsigned long address)
- {
--	unsigned long address = vma_address(page, vma);
- 	unsigned long ret = 0;
- 	pgd_t *pgd;
- 	p4d_t *p4d;
-@@ -338,10 +337,14 @@ static unsigned long dev_pagemap_mapping_shift(struct page *page,
- /*
-  * Schedule a process for later kill.
-  * Uses GFP_ATOMIC allocations to avoid potential recursions in the VM.
-+ *
-+ * Notice: @fsdax_pgoff is used only when @p is a fsdax page.
-+ *   In other cases, such as anonymous and file-backend page, the address to be
-+ *   killed can be caculated by @p itself.
-  */
- static void add_to_kill(struct task_struct *tsk, struct page *p,
--		       struct vm_area_struct *vma,
--		       struct list_head *to_kill)
-+			pgoff_t fsdax_pgoff, struct vm_area_struct *vma,
-+			struct list_head *to_kill)
- {
- 	struct to_kill *tk;
- 
-@@ -352,9 +355,15 @@ static void add_to_kill(struct task_struct *tsk, struct page *p,
- 	}
- 
- 	tk->addr = page_address_in_vma(p, vma);
--	if (is_zone_device_page(p))
--		tk->size_shift = dev_pagemap_mapping_shift(p, vma);
--	else
-+	if (is_zone_device_page(p)) {
-+		/*
-+		 * Since page->mapping is not used for fsdax, we need
-+		 * calculate the address based on the vma.
-+		 */
-+		if (p->pgmap->type == MEMORY_DEVICE_FS_DAX)
-+			tk->addr = vma_pgoff_address(fsdax_pgoff, 1, vma);
-+		tk->size_shift = dev_pagemap_mapping_shift(vma, tk->addr);
-+	} else
- 		tk->size_shift = page_shift(compound_head(p));
- 
- 	/*
-@@ -503,7 +512,7 @@ static void collect_procs_anon(struct page *page, struct list_head *to_kill,
- 			if (!page_mapped_in_vma(page, vma))
- 				continue;
- 			if (vma->vm_mm == t->mm)
--				add_to_kill(t, page, vma, to_kill);
-+				add_to_kill(t, page, 0, vma, to_kill);
- 		}
- 	}
- 	read_unlock(&tasklist_lock);
-@@ -539,13 +548,41 @@ static void collect_procs_file(struct page *page, struct list_head *to_kill,
- 			 * to be informed of all such data corruptions.
- 			 */
- 			if (vma->vm_mm == t->mm)
--				add_to_kill(t, page, vma, to_kill);
-+				add_to_kill(t, page, 0, vma, to_kill);
- 		}
- 	}
- 	read_unlock(&tasklist_lock);
- 	i_mmap_unlock_read(mapping);
- }
- 
-+#if IS_ENABLED(CONFIG_FS_DAX)
-+/*
-+ * Collect processes when the error hit a fsdax page.
-+ */
-+static void collect_procs_fsdax(struct page *page,
-+		struct address_space *mapping, pgoff_t pgoff,
-+		struct list_head *to_kill)
-+{
-+	struct vm_area_struct *vma;
-+	struct task_struct *tsk;
-+
-+	i_mmap_lock_read(mapping);
-+	read_lock(&tasklist_lock);
-+	for_each_process(tsk) {
-+		struct task_struct *t = task_early_kill(tsk, true);
-+
-+		if (!t)
-+			continue;
-+		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
-+			if (vma->vm_mm == t->mm)
-+				add_to_kill(t, page, pgoff, vma, to_kill);
-+		}
-+	}
-+	read_unlock(&tasklist_lock);
-+	i_mmap_unlock_read(mapping);
-+}
-+#endif /* CONFIG_FS_DAX */
-+
- /*
-  * Collect the processes who have the corrupted page mapped to kill.
-  */
-@@ -1582,6 +1619,45 @@ static int mf_generic_kill_procs(unsigned long long pfn, int flags,
- 	return rc;
- }
- 
-+#ifdef CONFIG_FS_DAX
-+/**
-+ * mf_dax_kill_procs - Collect and kill processes who are using this file range
-+ * @mapping:	the file in use
-+ * @index:	start pgoff of the range within the file
-+ * @count:	length of the range, in unit of PAGE_SIZE
-+ * @mf_flags:	memory failure flags
-+ */
-+int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
-+		unsigned long count, int mf_flags)
-+{
-+	LIST_HEAD(to_kill);
-+	dax_entry_t cookie;
-+	struct page *page;
-+	size_t end = index + count;
-+
-+	mf_flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
-+
-+	for (; index < end; index++) {
-+		page = NULL;
-+		cookie = dax_lock_mapping_entry(mapping, index, &page);
-+		if (!cookie)
-+			return -EBUSY;
-+		if (!page)
-+			goto unlock;
-+
-+		SetPageHWPoison(page);
-+
-+		collect_procs_fsdax(page, mapping, index, &to_kill);
-+		unmap_and_kill(&to_kill, page_to_pfn(page), mapping,
-+				index, mf_flags);
-+unlock:
-+		dax_unlock_mapping_entry(mapping, index, cookie);
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mf_dax_kill_procs);
-+#endif /* CONFIG_FS_DAX */
-+
- /*
-  * Called from hugetlb code with hugetlb_lock held.
-  *
+This patchset moves owner tracking from dax_assocaite_entry() to pmem
+device driver, by introducing an interface ->memory_failure() for struct
+pagemap.  This interface is called by memory_failure() in mm, and
+implemented by pmem device.
+
+Then call holder operations to find the filesystem which the corrupted
+data located in, and call filesystem handler to track files or metadata
+associated with this page.
+
+Finally we are able to try to fix the corrupted data in filesystem and
+do other necessary processing, such as killing processes who are using
+the files affected.
+
+The call trace is like this:
+memory_failure()
+|* fsdax case
+|------------
+|pgmap->ops->memory_failure()      => pmem_pgmap_memory_failure()
+| dax_holder_notify_failure()      =>
+|  dax_device->holder_ops->notify_failure() =>
+|                                     - xfs_dax_notify_failure()
+|  |* xfs_dax_notify_failure()
+|  |--------------------------
+|  |   xfs_rmap_query_range()
+|  |    xfs_dax_failure_fn()
+|  |    * corrupted on metadata
+|  |       try to recover data, call xfs_force_shutdown()
+|  |    * corrupted on file data
+|  |       try to recover data, call mf_dax_kill_procs()
+|* normal case
+|-------------
+|mf_generic_kill_procs()
+
+==
+Shiyang Ruan (7):
+  dax: Introduce holder for dax_device
+  mm: factor helpers for memory_failure_dev_pagemap
+  pagemap,pmem: Introduce ->memory_failure()
+  fsdax: Introduce dax_lock_mapping_entry()
+  mm: Introduce mf_dax_kill_procs() for fsdax case
+  xfs: Implement ->notify_failure() for XFS
+  fsdax: set a CoW flag when associate reflink mappings
+
+ drivers/dax/super.c         |  67 +++++++++-
+ drivers/md/dm.c             |   2 +-
+ drivers/nvdimm/pmem.c       |  17 +++
+ fs/dax.c                    | 113 ++++++++++++++--
+ fs/erofs/super.c            |  10 +-
+ fs/ext2/super.c             |   7 +-
+ fs/ext4/super.c             |   9 +-
+ fs/xfs/Makefile             |   5 +
+ fs/xfs/xfs_buf.c            |  10 +-
+ fs/xfs/xfs_fsops.c          |   3 +
+ fs/xfs/xfs_mount.h          |   1 +
+ fs/xfs/xfs_notify_failure.c | 220 +++++++++++++++++++++++++++++++
+ fs/xfs/xfs_super.h          |   1 +
+ include/linux/dax.h         |  48 +++++--
+ include/linux/memremap.h    |  12 ++
+ include/linux/mm.h          |   2 +
+ include/linux/page-flags.h  |   6 +
+ mm/memory-failure.c         | 255 +++++++++++++++++++++++++-----------
+ 18 files changed, 682 insertions(+), 106 deletions(-)
+ create mode 100644 fs/xfs/xfs_notify_failure.c
+
 -- 
 2.35.1
 
