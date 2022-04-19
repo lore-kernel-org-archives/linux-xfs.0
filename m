@@ -2,43 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF2AAC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Apr 2022 17:32:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37C25C43217
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Apr 2022 17:32:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352885AbiDSRes (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Apr 2022 13:34:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41426 "EHLO
+        id S1353501AbiDSRe7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Apr 2022 13:34:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350190AbiDSRer (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Apr 2022 13:34:47 -0400
+        with ESMTP id S1347669AbiDSRew (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Apr 2022 13:34:52 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E433137BE0;
-        Tue, 19 Apr 2022 10:32:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DC2C39153;
+        Tue, 19 Apr 2022 10:32:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8C915B81920;
-        Tue, 19 Apr 2022 17:32:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 398A8C385A7;
-        Tue, 19 Apr 2022 17:32:01 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3F748B81992;
+        Tue, 19 Apr 2022 17:32:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E215EC385A9;
+        Tue, 19 Apr 2022 17:32:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650389521;
-        bh=tps1+sWgLKwoNkHgkgrdlVpGGaQd7uHTSCEGzBQo8Gc=;
+        s=k20201202; t=1650389526;
+        bh=G3NlJ7RVaWZ521R4W7Wx5y0NDcwtb5tYNZC4SweAIYE=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=bqMkA4G9+Hbm5cyRTBEtBVLS0YtDs9IoJZqBD+VKPq6oMDkj3RjGKRob++/wV109d
-         ANE+2jUQaf0H9rSkZdHPWQAT498xWBNUZXxAN6+OPGVwusZgCweilnLrrq7kq0Suax
-         NGMdm2Pk76RUEfigKrURhuNv83Q0Ps7ZoxiQ8IlOj/KExFJcDEfJ0vLqgn/bNVukVE
-         u4OjEzH0H1IWliLrFJQu5jjFcJBeOpB0bmjuUPX+2aCHRNOQZ+wTmxr5Eogig8zKlh
-         RHr5elctwpAxqkipFoqSNr47kg7cOBjYCFJoZNp0MJbEnwNDd5nXlfPZW1MClzyQ6m
-         nnfEkUp6IJ07g==
-Subject: [PATCH 1/2] xfs/019: fix golden output for files created in setgid
- dir
+        b=Y9n5zrx2NiCQJr0tAIRzcc4irGMmw4xRXxuST7H+eK2/9cp6ZE4ZI4d+LFX+mfWzx
+         BZaYB+e6nMYdU42YWqtfMTuy+CUj/XMnmcoxz+GVOFUXFa4KBrg6LUW+jm7RtJZ3l7
+         4N6O1hstViXEOpXrwxwIzdHeW9g3qJ6ZafH2E5t5fDMm5wMHEuT/bPqquxvLYQ5Vca
+         +j9SipILd6vVceHE8MDPsQSBjnH8el0eY4iwvik8wa8qCN5oagMMTjCSgE+uL4DHT2
+         rQfQtnOTxBt4lrDAmlTWetXZo21tauvFi4nyrs1JvzLA6CwqXuPfCGM63Oxqah9Mt+
+         mlcxIo9SZhbkw==
+Subject: [PATCH 2/2] generic/019: fix incorrect unset statements
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 19 Apr 2022 10:32:00 -0700
-Message-ID: <165038952072.1677615.13209407698123810165.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Tue, 19 Apr 2022 10:32:06 -0700
+Message-ID: <165038952637.1677615.2651496553218188517.stgit@magnolia>
 In-Reply-To: <165038951495.1677615.10687913612774985228.stgit@magnolia>
 References: <165038951495.1677615.10687913612774985228.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,61 +49,28 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-A recent change to xfs/019 exposed a long-standing bug in mkfs where
-it would always set the gid of a new child created in a setgid directory
-to match the gid parent directory instead of what's in the protofile.
+Fix incorrect usage of unset -- one passes the name of the variable, not
+the *value* contained within it.
 
-Ignoring the user's directions is not the correct behavior, so update
-this test to reflect that.  Also don't erase the $seqres.full file,
-because that makes forensic analysis pointlessly difficult.
-
-Cc: Catherine Hoang <catherine.hoang@oracle.com>
-Fixes: 7834a740 ("xfs/019: extend protofile test")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/019     |    3 +--
- tests/xfs/019.out |    2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ tests/generic/019 |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/tests/xfs/019 b/tests/xfs/019
-index 535b7af1..790a6821 100755
---- a/tests/xfs/019
-+++ b/tests/xfs/019
-@@ -10,6 +10,7 @@
- _begin_fstest mkfs auto quick
+diff --git a/tests/generic/019 b/tests/generic/019
+index 854ba57d..45c91624 100755
+--- a/tests/generic/019
++++ b/tests/generic/019
+@@ -140,8 +140,8 @@ _workout()
+ 	kill $fs_pid &> /dev/null
+ 	wait $fs_pid
+ 	wait $fio_pid
+-	unset $fs_pid
+-	unset $fio_pid
++	unset fs_pid
++	unset fio_pid
  
- seqfull="$seqres.full"
-+rm -f $seqfull
- # Import common functions.
- . ./common/filter
- 
-@@ -97,7 +98,6 @@ _verify_fs()
- 	echo "*** create FS version $1"
- 	VERSION="-n version=$1"
- 
--	rm -f $seqfull
- 	_scratch_unmount >/dev/null 2>&1
- 
- 	_full "mkfs"
-@@ -131,6 +131,5 @@ _verify_fs()
- _verify_fs 2
- 
- echo "*** done"
--rm $seqfull
- status=0
- exit
-diff --git a/tests/xfs/019.out b/tests/xfs/019.out
-index 8584f593..9db157f9 100644
---- a/tests/xfs/019.out
-+++ b/tests/xfs/019.out
-@@ -61,7 +61,7 @@ Device: <DEVICE> Inode: <INODE> Links: 2
- 
-  File: "./directory_setgid/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_5"
-  Size: 5 Filetype: Regular File
-- Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (2)
-+ Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
- Device: <DEVICE> Inode: <INODE> Links: 1 
- 
-  File: "./pipe"
+ 	# We expect that broken FS still can be umounted
+ 	run_check _scratch_unmount
 
