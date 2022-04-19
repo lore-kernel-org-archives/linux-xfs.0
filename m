@@ -2,196 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AA1CC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Apr 2022 15:57:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C003C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Apr 2022 17:03:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354166AbiDSQAV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Apr 2022 12:00:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60468 "EHLO
+        id S1355693AbiDSRGE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Apr 2022 13:06:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354168AbiDSQAS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Apr 2022 12:00:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 067C224957;
-        Tue, 19 Apr 2022 08:57:33 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 974F66179A;
-        Tue, 19 Apr 2022 15:57:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9F0FC385AA;
-        Tue, 19 Apr 2022 15:57:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650383852;
-        bh=SC7FlWcwrwuxxYzmzwyfZ6rHjCjx9tvQ4rhTNhOnFZc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=DUtUbTj89AWR3Lyzj6VNRYNjZV18L6sS27Hvou8p1+YleaOgNea5eWu8tOkOcA0XQ
-         lHXWVQRNWUlpGt1ZEe6kNw5dB3kG7lY9mMdirPpzalmdiBkKG8i4LRgtp3bZ6wsaYO
-         Z//0fqMdTmj/Vyf7ROVrVHusNvwv9J0U/R7fZaoOdkvhW6aTOhiznA0QGZRHXlbHFt
-         CAmOzaqyImc8ChDm9qdWK3IxnevpRfwzannFPWMitjHrPWvgi1Vp3OEqK3GGpSrS0/
-         CMF4ckkKizF/nFsp6XWHsiCHzRtJXYppqAuC9e8KrYImz6MVIxI5p1pco7uGzVks5P
-         2AhtCZRk1LtYw==
-Date:   Tue, 19 Apr 2022 08:57:31 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, sandeen@redhat.com
-Subject: Re: [PATCH v3 2/2] xfs: test xfsdump when an inode < root inode is
- present
-Message-ID: <20220419155731.GK17025@magnolia>
-References: <20220418170326.425762-1-zlang@redhat.com>
- <20220418170326.425762-3-zlang@redhat.com>
+        with ESMTP id S1355538AbiDSRF2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Apr 2022 13:05:28 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 662AF4704A
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Apr 2022 09:56:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1650387365;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=qWg8tAHOYckYnfLrTKiESl8dWoV4SRJNOSGDwagA6Ok=;
+        b=IU8/C9+/c55R4wFpalbBZ2HQXwcxEFigny2HA9LPn/0vFDmoOxg6PRW5iZTWk5QiLyt56O
+        6+nx3hViqMHBerof4kHEJDM7w4j4FDz20megacyVoYfhR9ZYfNU1kiZGZuLqdNkFLUB10h
+        Tl0ce5WXgTd2gRN4mrZCpKkcpSuVcbo=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-675-wE-MiUM8ON2fh2QdWAhGew-1; Tue, 19 Apr 2022 12:56:04 -0400
+X-MC-Unique: wE-MiUM8ON2fh2QdWAhGew-1
+Received: by mail-ej1-f72.google.com with SMTP id oz37-20020a1709077da500b006e88d00043dso6273644ejc.15
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Apr 2022 09:56:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=qWg8tAHOYckYnfLrTKiESl8dWoV4SRJNOSGDwagA6Ok=;
+        b=MCNUCgeZCoDcCO1eWETsPCxjJwEGWfYtxTXUPjP4TS4Mnz9a1uxSxgiwKV1zgQlr38
+         XapJ+UFgf6ncG79xASQrN4Y8VJuHh3v1YOzRS97UgXt9mR5KfaN+/ciEfqbKbafpVzM4
+         v1ICRAs8s7OQKfTVcRLBgT4JRS+Y3W+EmUpzsQVf3pzDbmO7RjHBLsUb0YXCriNXHPaY
+         xqinrVB5Cz2Jw4IWPzV6ExmkLucOaHd1do9fuLXm853kOjidfWF9i1TfT2tnnZEodtpi
+         vqHTcVNSWcl1JAxNP6D9S1YVNKxmpP/Aypp2qnxmQUMbrC5V0Cu9JPOTBBGiEQCDMpLw
+         OehA==
+X-Gm-Message-State: AOAM533xPZuDS73ImUsc8ZfF4UJLa4JEFGfBVxg9srKo7SFzEnvKLh7z
+        OSDfVpM9gEyBDkna8y2HjbIcNwDa1LHpdO7v5DhaPnauPJpfpfBg4h02rJsYMZ3KZazRQ+mPL4Z
+        SVRPyCMDazfbq7mYtgEw=
+X-Received: by 2002:a05:6402:448a:b0:41d:793d:8252 with SMTP id er10-20020a056402448a00b0041d793d8252mr18137310edb.6.1650387362528;
+        Tue, 19 Apr 2022 09:56:02 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzDx+dXqOw357d9UFa3Myaj4WqYq/bS6D+lvHsWVBIy6zdFIcE7frfEBBEv4l/0hhMqKB5Wkg==
+X-Received: by 2002:a05:6402:448a:b0:41d:793d:8252 with SMTP id er10-20020a056402448a00b0041d793d8252mr18137290edb.6.1650387362192;
+        Tue, 19 Apr 2022 09:56:02 -0700 (PDT)
+Received: from aalbersh.remote.csb ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id g1-20020a170906348100b006efc26c7b1dsm1786473ejb.195.2022.04.19.09.56.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 Apr 2022 09:56:01 -0700 (PDT)
+Date:   Tue, 19 Apr 2022 18:56:00 +0200
+From:   Andrey Albershteyn <aalbersh@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs_db: take BB cluster offset into account when using
+ 'type' cmd
+Message-ID: <Yl7poFqm7X9+M3Up@aalbersh.remote.csb>
+References: <20220419121951.50412-1-aalbersh@redhat.com>
+ <20220419154750.GI17025@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220418170326.425762-3-zlang@redhat.com>
+In-Reply-To: <20220419154750.GI17025@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 19, 2022 at 01:03:26AM +0800, Zorro Lang wrote:
-> From: Eric Sandeen <sandeen@redhat.com>
+On Tue, Apr 19, 2022 at 08:47:50AM -0700, Darrick J. Wong wrote:
+> On Tue, Apr 19, 2022 at 02:19:51PM +0200, Andrey Albershteyn wrote:
+> > Changing the interpretation type of data under the cursor moves the
+> > cursor to the beginning of BB cluster. When cursor is set to an
+> > inode the cursor is offset in BB buffer. However, this offset is not
+> > considered when type of the data is changed - the cursor points to
+> > the beginning of BB buffer. For example:
+> > 
+> > $ xfs_db -c "inode 131" -c "daddr" -c "type text" \
+> > 	-c "daddr" /dev/sdb1
+> > current daddr is 131
+> > current daddr is 128
+> > 
+> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > ---
+> >  db/io.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/db/io.c b/db/io.c
+> > index df97ed91..107f2e11 100644
+> > --- a/db/io.c
+> > +++ b/db/io.c
+> > @@ -589,6 +589,7 @@ set_iocur_type(
+> >  	const typ_t	*type)
+> >  {
+> >  	int		bb_count = 1;	/* type's size in basic blocks */
+> > +	int boff = iocur_top->boff;
 > 
-> This tests a longstanding bug where xfsdumps are not properly
-> created when an inode is present on the filesytsem which has
-> a lower number than the root inode.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> Nit: Please line up the variable names.
 
-LGTM
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+sure ;)
 
---D
+> 
+> >  
+> >  	/*
+> >  	 * Inodes are special; verifier checks all inodes in the chunk, the
+> > @@ -613,6 +614,9 @@ set_iocur_type(
+> >  		bb_count = BTOBB(byteize(fsize(type->fields,
+> >  				       iocur_top->data, 0, 0)));
+> >  	set_cur(type, iocur_top->bb, bb_count, DB_RING_IGN, NULL);
+> > +	iocur_top->boff = boff;
+> > +	iocur_top->off = ((xfs_off_t)iocur_top->bb << BBSHIFT) + boff;
+> > +	iocur_top->data = (void *)((char *)iocur_top->buf + boff);
+> 
+> It seems reasonable to me to preserve the io cursor's boff when we're
+> setting /only/ the buffer type, but this function and off_cur() could
+> share these three lines of code that (re)set boff/off/data.
+> 
+> Alternately, I guess you could just call off_cur(boff, BBTOB(bb_count))
+> here.
 
-> ---
->  tests/xfs/999     | 62 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/999.out | 47 +++++++++++++++++++++++++++++++++++
->  2 files changed, 109 insertions(+)
->  create mode 100755 tests/xfs/999
->  create mode 100644 tests/xfs/999.out
+This won't pass the second condition in off_cur(). I suppose the
+purpose of off_cur() was to shift io cursor in BB buffer. But
+changing the type changes the blen which could be smaller (e.g.
+inode blen == 32 -> text blen == 1). Anyway, will try to come up
+with a meaningful name for this 3 lines function :)
+
+I think the other solution could be to set boff in set_cur(), but
+this will require more refactoring and I suppose this is the only
+place where newly added argument would be used.
+
 > 
-> diff --git a/tests/xfs/999 b/tests/xfs/999
-> new file mode 100755
-> index 00000000..9b1f7f5b
-> --- /dev/null
-> +++ b/tests/xfs/999
-> @@ -0,0 +1,62 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat, Inc. All Rights Reserved.
-> +#
-> +# FS QA Test No. 999
-> +#
-> +# Create a filesystem which contains an inode with a lower number
-> +# than the root inode. Ensure that xfsdump/xfsrestore handles this.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick dump
-> +
-> +# Import common functions.
-> +. ./common/dump
-> +
-> +_supported_fs xfs
-> +_require_scratch
-> +
-> +# A large stripe unit will put the root inode out quite far
-> +# due to alignment, leaving free blocks ahead of it.
-> +_scratch_mkfs_xfs -d sunit=1024,swidth=1024 > $seqres.full 2>&1
-> +
-> +# Mounting /without/ a stripe should allow inodes to be allocated
-> +# in lower free blocks, without the stripe alignment.
-> +_scratch_mount -o sunit=0,swidth=0
-> +
-> +root_inum=$(stat -c %i $SCRATCH_MNT)
-> +
-> +# Consume space after the root inode so that the blocks before
-> +# root look "close" for the next inode chunk allocation
-> +$XFS_IO_PROG -f -c "falloc 0 16m" $SCRATCH_MNT/fillfile
-> +
-> +# And make a bunch of inodes until we (hopefully) get one lower
-> +# than root, in a new inode chunk.
-> +echo "root_inum: $root_inum" >> $seqres.full
-> +for i in $(seq 0 4096) ; do
-> +	fname=$SCRATCH_MNT/$(printf "FILE_%03d" $i)
-> +	touch $fname
-> +	inum=$(stat -c "%i" $fname)
-> +	[[ $inum -lt $root_inum ]] && break
-> +done
-> +
-> +echo "created: $inum" >> $seqres.full
-> +
-> +[[ $inum -lt $root_inum ]] || _notrun "Could not set up test"
-> +
-> +# Now try a dump and restore. Cribbed from xfs/068
-> +_create_dumpdir_stress
-> +
-> +echo -n "Before: " >> $seqres.full
-> +_count_dumpdir_files | tee $tmp.before >> $seqres.full
-> +
-> +# filter out the file count, it changes as fsstress adds new operations
-> +_do_dump_restore | sed -e "/entries processed$/s/[0-9][0-9]*/NUM/g"
-> +
-> +echo -n "After: " >> $seqres.full
-> +_count_restoredir_files | tee $tmp.after >> $seqres.full
-> +diff -u $tmp.before $tmp.after
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-> new file mode 100644
-> index 00000000..f6ab75d2
-> --- /dev/null
-> +++ b/tests/xfs/999.out
-> @@ -0,0 +1,47 @@
-> +QA output created by 999
-> +Creating directory system to dump using fsstress.
-> +
-> +-----------------------------------------------
-> +fsstress : -f link=10 -f creat=10 -f mkdir=10 -f truncate=5 -f symlink=10
-> +-----------------------------------------------
-> +xfsdump|xfsrestore ...
-> +xfsdump  -s DUMP_SUBDIR - SCRATCH_MNT | xfsrestore  - RESTORE_DIR
-> +xfsrestore: using file dump (drive_simple) strategy
-> +xfsrestore: searching media for dump
-> +xfsrestore: examining media file 0
-> +xfsrestore: dump description: 
-> +xfsrestore: hostname: HOSTNAME
-> +xfsrestore: mount point: SCRATCH_MNT
-> +xfsrestore: volume: SCRATCH_DEV
-> +xfsrestore: session time: TIME
-> +xfsrestore: level: 0
-> +xfsrestore: session label: ""
-> +xfsrestore: media label: ""
-> +xfsrestore: file system ID: ID
-> +xfsrestore: session id: ID
-> +xfsrestore: media ID: ID
-> +xfsrestore: searching media for directory dump
-> +xfsrestore: reading directories
-> +xfsrestore: NUM directories and NUM entries processed
-> +xfsrestore: directory post-processing
-> +xfsrestore: restoring non-directory files
-> +xfsrestore: restore complete: SECS seconds elapsed
-> +xfsrestore: Restore Status: SUCCESS
-> +xfsdump: using file dump (drive_simple) strategy
-> +xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
-> +xfsdump: dump date: DATE
-> +xfsdump: session id: ID
-> +xfsdump: session label: ""
-> +xfsdump: ino map <PHASES>
-> +xfsdump: ino map construction complete
-> +xfsdump: estimated dump size: NUM bytes
-> +xfsdump: /var/xfsdump/inventory created
-> +xfsdump: creating dump session media file 0 (media 0, file 0)
-> +xfsdump: dumping ino map
-> +xfsdump: dumping directories
-> +xfsdump: dumping non-directory files
-> +xfsdump: ending media file
-> +xfsdump: media file size NUM bytes
-> +xfsdump: dump size (non-dir files) : NUM bytes
-> +xfsdump: dump complete: SECS seconds elapsed
-> +xfsdump: Dump Status: SUCCESS
-> -- 
-> 2.31.1
+> --D
 > 
+> >  }
+> >  
+> >  static void
+> > -- 
+> > 2.27.0
+> > 
+> 
+
+-- 
+- Andrey
+
