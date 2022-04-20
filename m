@@ -2,424 +2,176 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 814CBC433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Apr 2022 07:33:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68390C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Apr 2022 08:37:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346134AbiDTHgh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Apr 2022 03:36:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59004 "EHLO
+        id S1376776AbiDTIkJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Apr 2022 04:40:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238474AbiDTHgg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Apr 2022 03:36:36 -0400
-Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 09A3437A2D;
-        Wed, 20 Apr 2022 00:33:49 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3A/bRJzKudSLnaN53/gE4u3FJ1K+fnVClfMUV32f8?=
- =?us-ascii?q?akzHdYEJGY0x3xjcYWzqPbPnbYGCkfoh0boWy/RwO75XWz4M1SAU9pS5gHilAw?=
- =?us-ascii?q?SbnLY7Hdx+vZUt+DSFioHpPtpxYMp+ZRCwNZie0SiyFb/6x/RGQ6YnSHuCmULS?=
- =?us-ascii?q?cY3goLeNZYHxJZSxLyrdRbrFA0YDR7zOl4bsekuWHULOX82cc3lE8t8pvnChSU?=
- =?us-ascii?q?MHa41v0iLCRicdj5zcyn1FNZH4WyDrYw3HQGuG4FcbiLwrPIS3Qw4/Xw/stIov?=
- =?us-ascii?q?NfrfTeUtMTKPQPBSVlzxdXK3Kbhpq/3R0i/hkcqFHLxo/ZzahxridzP1XqJW2U?=
- =?us-ascii?q?hZvMKvXhMwTThtZDzpje6ZB/dcrJFDm65fMlxWfIiCEL/JGSRte0Zcj0up+H2B?=
- =?us-ascii?q?C3fICLzUKdBqCm6S9x7fTYulnhuwiKsfxNY8Ss30myivWZd4qSJaFQePV5Ntc3?=
- =?us-ascii?q?T41nehPG+rTY4wSbj8HRBjCfBpJNX8UBYg4kePugWPwGxVcqVSIte8y5kDQ0gV?=
- =?us-ascii?q?60/7qKtW9UtqUScRQm26cp3na5CL9AxcHJJqTxCTt2nKnhsfLhj+9VI96PL+x8?=
- =?us-ascii?q?PMsi12O7msJARYSWB2wpvzRokq/Xc9PbkIP9icwoKwa6kOmVJ/+Uge+rXrCuQQ?=
- =?us-ascii?q?TM/JUEusn+ESOx7DS7gKxGGcJVHhCZcYguctwQiYlvneNntX0FXl/vqa9V32Q7?=
- =?us-ascii?q?PGXoCm0NCxTKnUNDRLo5yNtD8LL+dl110yQCI04VvPdszE8IhmoqxjikcT0r+x?=
- =?us-ascii?q?7YRY36piG?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3Aq8ESf68fswowUSFMWbduk+A+I+orL9Y04lQ7?=
- =?us-ascii?q?vn2YSXRuE/Bw8Pre5cjztCWE8Ar5N0tQ+uxoVJPufZqYz+8Q3WBzB8bFYOCFgh?=
- =?us-ascii?q?rLEGgK1+KLqFeMdxEWtNQtspuIGJIfNDSfNzZHZL7BkWyF+sgbsaW62ZHtleHD?=
- =?us-ascii?q?1G1sUA0vT6lh6j1yAgGdHlYefng9ObMJUIqb+tFcpyetPVAebsGADHEDWOTZ4/?=
- =?us-ascii?q?LRkpaOW296OzcXrBmJkSiz6KP3VzyR3hIlWTtJxrs4tUjp+jaJnZmejw=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="123700193"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 20 Apr 2022 15:33:49 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id BEC754D1716F;
-        Wed, 20 Apr 2022 15:33:44 +0800 (CST)
-Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Wed, 20 Apr 2022 15:33:42 +0800
-Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Wed, 20 Apr 2022 15:33:44 +0800
-Received: from irides.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Wed, 20 Apr 2022 15:33:42 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <djwong@kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>,
-        "Christoph Hellwig" <hch@lst.de>
-Subject: [PATCH v13.1 6/7] xfs: Implement ->notify_failure() for XFS
-Date:   Wed, 20 Apr 2022 15:33:42 +0800
-Message-ID: <20220420073342.1998779-1-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220419153854.GH17025@magnolia>
-References: <20220419153854.GH17025@magnolia>
+        with ESMTP id S1376768AbiDTIkH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Apr 2022 04:40:07 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C792029C9B
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Apr 2022 01:37:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1650443840;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=E0ZbzWLWcjCqkijOMrHebJJtfI7mS5vAY5etb8nyWnM=;
+        b=IEIRs8aYFrkLpPXw3x9lk/3miTD6JLIi9RsdClMpEdhFIDlZmd0pAqKRpU3lD3WHYxAMyg
+        SkigBDfHDj0sVyqjadVKZOGI8KjWxRyUcXSPAI+rDKz6N5jRLaiTK3WHoQZEEcosmyl9Yl
+        AI+3M6BcINzjT79mqr83LY/bPvBq6kk=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-544-431U5lmxNpiQxkOrAnaDbQ-1; Wed, 20 Apr 2022 04:37:19 -0400
+X-MC-Unique: 431U5lmxNpiQxkOrAnaDbQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 1355E8038E3;
+        Wed, 20 Apr 2022 08:37:19 +0000 (UTC)
+Received: from zlang-laptop.redhat.com (ovpn-12-143.pek2.redhat.com [10.72.12.143])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7F24740D2969;
+        Wed, 20 Apr 2022 08:37:17 +0000 (UTC)
+From:   Zorro Lang <zlang@redhat.com>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH 2/4] fstests: avoid dedupe testing blocked on large fs long time
+Date:   Wed, 20 Apr 2022 16:36:51 +0800
+Message-Id: <20220420083653.1031631-3-zlang@redhat.com>
+In-Reply-To: <20220420083653.1031631-1-zlang@redhat.com>
+References: <20220420083653.1031631-1-zlang@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: BEC754D1716F.A14BC
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.11.54.2
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Introduce xfs_notify_failure.c to handle failure related works, such as
-implement ->notify_failure(), register/unregister dax holder in xfs, and
-so on.
+When test on large fs (--large-fs), xfstests allocates a large
+file in SCRATCH_MNT/ at first. g/559~561 try to dedupe of extents
+within the same file, so they'll waste lots of time to deal with
+that large file.
 
-If the rmap feature of XFS enabled, we can query it to find files and
-metadata which are associated with the corrupt data.  For now all we do
-is kill processes with that file mapped into their address spaces, but
-future patches could actually do something about corrupt metadata.
+So bring in a common function named _duperemove(), which decide if
+allow dedupe of extents with in the same file. If specify "same"
+or "nosame" in the 1st argument, follow the specified option. Else
+use "same" by default except testing on large filesystem.
 
-After that, the memory failure needs to notify the processes who are
-using those files.
-
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Zorro Lang <zlang@redhat.com>
 ---
- fs/xfs/Makefile             |   5 +
- fs/xfs/xfs_buf.c            |  11 +-
- fs/xfs/xfs_fsops.c          |   3 +
- fs/xfs/xfs_mount.h          |   1 +
- fs/xfs/xfs_notify_failure.c | 220 ++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_super.h          |   1 +
- 6 files changed, 238 insertions(+), 3 deletions(-)
- create mode 100644 fs/xfs/xfs_notify_failure.c
+ common/reflink    | 39 +++++++++++++++++++++++++++++++++++++++
+ tests/generic/559 | 10 +++++-----
+ tests/generic/560 |  3 +--
+ tests/generic/561 |  2 +-
+ 4 files changed, 46 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 04611a1068b4..09f5560e29f2 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -128,6 +128,11 @@ xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
- xfs-$(CONFIG_COMPAT)		+= xfs_ioctl32.o
- xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
- 
-+# notify failure
-+ifeq ($(CONFIG_MEMORY_FAILURE),y)
-+xfs-$(CONFIG_FS_DAX)		+= xfs_notify_failure.o
-+endif
-+
- # online scrub/repair
- ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
- 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index f9ca08398d32..084455f7e2ff 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -5,6 +5,7 @@
-  */
- #include "xfs.h"
- #include <linux/backing-dev.h>
-+#include <linux/dax.h>
- 
- #include "xfs_shared.h"
- #include "xfs_format.h"
-@@ -1911,7 +1912,7 @@ xfs_free_buftarg(
- 	list_lru_destroy(&btp->bt_lru);
- 
- 	blkdev_issue_flush(btp->bt_bdev);
--	fs_put_dax(btp->bt_daxdev, NULL);
-+	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
- 
- 	kmem_free(btp);
+diff --git a/common/reflink b/common/reflink
+index 76e9cb7d..48136650 100644
+--- a/common/reflink
++++ b/common/reflink
+@@ -488,3 +488,42 @@ _sweave_reflink_rainbow_delalloc() {
+ 		_pwrite_byte 0x62 $((blksz * i)) $blksz $dfile.chk
+ 	done
  }
-@@ -1958,14 +1959,18 @@ xfs_alloc_buftarg(
- 	struct block_device	*bdev)
- {
- 	xfs_buftarg_t		*btp;
-+	const struct dax_holder_operations *ops = NULL;
- 
-+#if defined(CONFIG_FS_DAX) && defined(CONFIG_MEMORY_FAILURE)
-+	ops = &xfs_dax_holder_operations;
-+#endif
- 	btp = kmem_zalloc(sizeof(*btp), KM_NOFS);
- 
- 	btp->bt_mount = mp;
- 	btp->bt_dev =  bdev->bd_dev;
- 	btp->bt_bdev = bdev;
--	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off, NULL,
--					    NULL);
-+	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off,
-+					    mp, ops);
- 
- 	/*
- 	 * Buffer IO error rate limiting. Limit it to no more than 10 messages
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 68f74549fa22..56530900bb86 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -536,6 +536,9 @@ xfs_do_force_shutdown(
- 	} else if (flags & SHUTDOWN_CORRUPT_INCORE) {
- 		tag = XFS_PTAG_SHUTDOWN_CORRUPT;
- 		why = "Corruption of in-memory data";
-+	} else if (flags & SHUTDOWN_CORRUPT_ONDISK) {
-+		tag = XFS_PTAG_SHUTDOWN_CORRUPT;
-+		why = "Corruption of on-disk metadata";
- 	} else {
- 		tag = XFS_PTAG_SHUTDOWN_IOERROR;
- 		why = "Metadata I/O Error";
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index f6dc19de8322..9237cc159542 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -435,6 +435,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
- #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
- #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
-+#define SHUTDOWN_CORRUPT_ONDISK	0x0010  /* corrupt metadata on device */
- 
- #define XFS_SHUTDOWN_STRINGS \
- 	{ SHUTDOWN_META_IO_ERROR,	"metadata_io" }, \
-diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-new file mode 100644
-index 000000000000..aa8dc27c599c
---- /dev/null
-+++ b/fs/xfs/xfs_notify_failure.c
-@@ -0,0 +1,220 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2022 Fujitsu.  All Rights Reserved.
-+ */
 +
-+#include "xfs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_alloc.h"
-+#include "xfs_bit.h"
-+#include "xfs_btree.h"
-+#include "xfs_inode.h"
-+#include "xfs_icache.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_trans.h"
-+
-+#include <linux/mm.h>
-+#include <linux/dax.h>
-+
-+struct failure_info {
-+	xfs_agblock_t		startblock;
-+	xfs_extlen_t		blockcount;
-+	int			mf_flags;
-+};
-+
-+static pgoff_t
-+xfs_failure_pgoff(
-+	struct xfs_mount		*mp,
-+	const struct xfs_rmap_irec	*rec,
-+	const struct failure_info	*notify)
++# Do De-dupe on a directory (or a file). $DUPEREMOVE_PROG is required if you
++# call this function, and -d -r options are recommended.
++#
++# The 1st argument can be used to forcibly decide if dedupe extents with in
++# the same file (better to use "same" if you run on a single file). If it's
++# not set to "same" or "nosame", the function will use "same" by default
++# except testing on large filesystem.
++_duperemove()
 +{
-+	loff_t				pos = XFS_FSB_TO_B(mp, rec->rm_offset);
++	local dedupe_opt=""
 +
-+	if (notify->startblock > rec->rm_startblock)
-+		pos += XFS_FSB_TO_B(mp,
-+				notify->startblock - rec->rm_startblock);
-+	return pos >> PAGE_SHIFT;
++	# Decide if allow dedupe of extents with in the same file. If specify
++	# "same" or "nosame", follow the specified option, else if test on
++	# large filesystem, "nosame" by default.
++	if [ "$1" = "same" ]; then
++		dedupe_opt="same"
++		shift
++	elif [ "$1" = "nosame" ]; then
++		dedupe_opt="nosame"
++		shift
++	elif [ "$LARGE_SCRATCH_DEV" = "yes" ]; then
++		# Don't allow dedupe of extents with in the same file if test
++		# on large filesystem. Due to xfstests pre-alloc a huge size
++		# file to take most fs free space at every test beginning if
++		# --large-fs option is used.
++		dedupe_opt="nosame"
++	fi
++
++	# If above judgements set $dedupe_opt, then use this option, or "same"
++	# by default.
++	if [ -n "$dedupe_opt" ]; then
++		dedupe_opt="--dedupe-options=${dedupe_opt}"
++	else
++		dedupe_opt="--dedupe-options=same"
++	fi
++
++	$DUPEREMOVE_PROG $dedupe_opt "$@"
 +}
-+
-+static unsigned long
-+xfs_failure_pgcnt(
-+	struct xfs_mount		*mp,
-+	const struct xfs_rmap_irec	*rec,
-+	const struct failure_info	*notify)
-+{
-+	xfs_agblock_t			end_rec;
-+	xfs_agblock_t			end_notify;
-+	xfs_agblock_t			start_cross;
-+	xfs_agblock_t			end_cross;
-+
-+	start_cross = max(rec->rm_startblock, notify->startblock);
-+
-+	end_rec = rec->rm_startblock + rec->rm_blockcount;
-+	end_notify = notify->startblock + notify->blockcount;
-+	end_cross = min(end_rec, end_notify);
-+
-+	return XFS_FSB_TO_B(mp, end_cross - start_cross) >> PAGE_SHIFT;
-+}
-+
-+static int
-+xfs_dax_failure_fn(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*rec,
-+	void				*data)
-+{
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_inode		*ip;
-+	struct failure_info		*notify = data;
-+	int				error = 0;
-+
-+	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-+	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	/* Get files that incore, filter out others that are not in use. */
-+	error = xfs_iget(mp, cur->bc_tp, rec->rm_owner, XFS_IGET_INCORE,
-+			 0, &ip);
-+	/* Continue the rmap query if the inode isn't incore */
-+	if (error == -ENODATA)
-+		return 0;
-+	if (error)
-+		return error;
-+
-+	error = mf_dax_kill_procs(VFS_I(ip)->i_mapping,
-+				  xfs_failure_pgoff(mp, rec, notify),
-+				  xfs_failure_pgcnt(mp, rec, notify),
-+				  notify->mf_flags);
-+	xfs_irele(ip);
-+	return error;
-+}
-+
-+static int
-+xfs_dax_notify_ddev_failure(
-+	struct xfs_mount	*mp,
-+	xfs_daddr_t		daddr,
-+	xfs_daddr_t		bblen,
-+	int			mf_flags)
-+{
-+	struct xfs_trans	*tp = NULL;
-+	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_buf		*agf_bp = NULL;
-+	int			error = 0;
-+	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, daddr);
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	xfs_fsblock_t		end_fsbno = XFS_DADDR_TO_FSB(mp, daddr + bblen);
-+	xfs_agnumber_t		end_agno = XFS_FSB_TO_AGNO(mp, end_fsbno);
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	for (; agno <= end_agno; agno++) {
-+		struct xfs_rmap_irec	ri_low = { };
-+		struct xfs_rmap_irec	ri_high;
-+		struct failure_info	notify;
-+		struct xfs_agf		*agf;
-+		xfs_agblock_t		agend;
-+
-+		error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-+		if (error)
-+			break;
-+
-+		cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agf_bp->b_pag);
-+
-+		/*
-+		 * Set the rmap range from ri_low to ri_high, which represents
-+		 * a [start, end] where we looking for the files or metadata.
-+		 */
-+		memset(&ri_high, 0xFF, sizeof(ri_high));
-+		ri_low.rm_startblock = XFS_FSB_TO_AGBNO(mp, fsbno);
-+		if (agno == end_agno)
-+			ri_high.rm_startblock = XFS_FSB_TO_AGBNO(mp, end_fsbno);
-+
-+		agf = agf_bp->b_addr;
-+		agend = min(be32_to_cpu(agf->agf_length),
-+				ri_high.rm_startblock);
-+		notify.startblock = ri_low.rm_startblock;
-+		notify.blockcount = agend - ri_low.rm_startblock;
-+
-+		error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
-+				xfs_dax_failure_fn, &notify);
-+		xfs_btree_del_cursor(cur, error);
-+		xfs_trans_brelse(tp, agf_bp);
-+		if (error)
-+			break;
-+
-+		fsbno = XFS_AGB_TO_FSB(mp, agno + 1, 0);
-+	}
-+
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
-+static int
-+xfs_dax_notify_failure(
-+	struct dax_device	*dax_dev,
-+	u64			offset,
-+	u64			len,
-+	int			mf_flags)
-+{
-+	struct xfs_mount	*mp = dax_holder(dax_dev);
-+	u64			ddev_start;
-+	u64			ddev_end;
-+
-+	if (!(mp->m_sb.sb_flags & SB_BORN)) {
-+		xfs_warn(mp, "filesystem is not ready for notify_failure()!");
-+		return -EIO;
-+	}
-+
-+	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_daxdev == dax_dev) {
-+		xfs_warn(mp,
-+			 "notify_failure() not supported on realtime device!");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
-+	    mp->m_logdev_targp != mp->m_ddev_targp) {
-+		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (!xfs_has_rmapbt(mp)) {
-+		xfs_warn(mp, "notify_failure() needs rmapbt enabled!");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	ddev_start = mp->m_ddev_targp->bt_dax_part_off;
-+	ddev_end = ddev_start + bdev_nr_bytes(mp->m_ddev_targp->bt_bdev) - 1;
-+
-+	/* Ignore the range out of filesystem area */
-+	if (offset + len < ddev_start)
-+		return -ENXIO;
-+	if (offset > ddev_end)
-+		return -ENXIO;
-+
-+	/* Calculate the real range when it touches the boundary */
-+	if (offset > ddev_start)
-+		offset -= ddev_start;
-+	else {
-+		len -= ddev_start - offset;
-+		offset = 0;
-+	}
-+	if (offset + len > ddev_end)
-+		len -= ddev_end - offset;
-+
-+	return xfs_dax_notify_ddev_failure(mp, BTOBB(offset), BTOBB(len),
-+			mf_flags);
-+}
-+
-+const struct dax_holder_operations xfs_dax_holder_operations = {
-+	.notify_failure		= xfs_dax_notify_failure,
-+};
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index 167d23f92ffe..27ab5087d0b3 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -93,6 +93,7 @@ extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
- extern const struct export_operations xfs_export_operations;
- extern const struct xattr_handler *xfs_xattr_handlers[];
- extern const struct quotactl_ops xfs_quotactl_operations;
-+extern const struct dax_holder_operations xfs_dax_holder_operations;
+diff --git a/tests/generic/559 b/tests/generic/559
+index 98ab4474..9817013f 100755
+--- a/tests/generic/559
++++ b/tests/generic/559
+@@ -21,18 +21,18 @@ fssize=$((2 * 1024 * 1024 * 1024))
+ _scratch_mkfs_sized $fssize > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
  
- extern void xfs_reinit_percpu_counters(struct xfs_mount *mp);
++testfile="$SCRATCH_MNT/${seq}.file"
+ # fill the fs with a big file has same contents
+-$XFS_IO_PROG -f -c "pwrite -S 0x55 0 $fssize" $SCRATCH_MNT/${seq}.file \
+-	>> $seqres.full 2>&1
+-md5sum $SCRATCH_MNT/${seq}.file > ${tmp}.md5sum
++$XFS_IO_PROG -f -c "pwrite -S 0x55 0 $fssize" $testfile >> $seqres.full 2>&1
++md5sum $testfile > ${tmp}.md5sum
  
+ echo "= before cycle mount ="
+ # Dedupe with 1M blocksize
+-$DUPEREMOVE_PROG -dr --dedupe-options=same -b 1048576 $SCRATCH_MNT/ >>$seqres.full 2>&1
++_duperemove -dr -b 1048576 $SCRATCH_MNT/ >>$seqres.full 2>&1
+ # Verify integrity
+ md5sum -c --quiet ${tmp}.md5sum
+ # Dedupe with 64k blocksize
+-$DUPEREMOVE_PROG -dr --dedupe-options=same -b 65536 $SCRATCH_MNT/ >>$seqres.full 2>&1
++_duperemove -dr -b 65536 $SCRATCH_MNT/ >>$seqres.full 2>&1
+ # Verify integrity again
+ md5sum -c --quiet ${tmp}.md5sum
+ 
+diff --git a/tests/generic/560 b/tests/generic/560
+index e3f28667..43b32293 100755
+--- a/tests/generic/560
++++ b/tests/generic/560
+@@ -35,8 +35,7 @@ function iterate_dedup_verify()
+ 		$FSSTRESS_PROG $fsstress_opts -d $noisedir \
+ 			       -n 200 -p $((5 * LOAD_FACTOR)) >/dev/null 2>&1
+ 		# Too many output, so only save error output
+-		$DUPEREMOVE_PROG -dr --dedupe-options=same $dupdir \
+-			>/dev/null 2>$seqres.full
++		_duperemove same -dr $dupdir >/dev/null 2>$seqres.full
+ 		md5sum -c --quiet $md5file$index
+ 		src=$dest
+ 		dest=$dupdir/$((index + 1))
+diff --git a/tests/generic/561 b/tests/generic/561
+index 44f07802..1d8109cf 100755
+--- a/tests/generic/561
++++ b/tests/generic/561
+@@ -67,7 +67,7 @@ for ((i = 0; i < $((2 * LOAD_FACTOR)); i++)); do
+ 		# dupremove processes in an arbitrary order, which leaves the
+ 		# memory in an inconsistent state long enough for the assert
+ 		# to trip.
+-		cmd="$DUPEREMOVE_PROG -dr --dedupe-options=same $testdir"
++		cmd="_duperemove -dr $testdir"
+ 		bash -c "$cmd" >> $seqres.full 2>&1
+ 	done 2>&1 | sed -e '/Terminated/d' &
+ 	dedup_pids="$! $dedup_pids"
 -- 
-2.35.1
-
-
+2.31.1
 
