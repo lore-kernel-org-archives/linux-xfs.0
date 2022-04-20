@@ -2,162 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08462C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Apr 2022 18:08:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 898D2C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Apr 2022 21:53:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381397AbiDTSKy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Apr 2022 14:10:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36370 "EHLO
+        id S1382693AbiDTVzq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Apr 2022 17:55:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230469AbiDTSKx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Apr 2022 14:10:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A43F3EB94;
-        Wed, 20 Apr 2022 11:08:07 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BCB8161ACE;
-        Wed, 20 Apr 2022 18:08:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23B8DC385A4;
-        Wed, 20 Apr 2022 18:08:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650478086;
-        bh=BtEavGAYaFygVq8iIGiatAQRY8CX6oossQfQE1hoHY0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=B6hJMiefc/J0uzwb3hwis3nfa4BiVhbuKNw9FecUuaN7pFy5tAOSzbS7mBShxOwbS
-         HawPosmFaWHMQfh9DAkR/v8ghjvhbLTnulZfOAgTz/bY+Ek/Asx/sVuzyExU3Cz4I5
-         5zK6/o396qNwfYvtx58jrRNmMBElIrKTy9jlcvIHedqpzO8R305trS5o08XA25sube
-         H9n/LjVZv8UNbPNGkg2jP+CP26Ue2eugQ6bl7VoCvHEyo7iYFWnxF/tiaLGQeA4lyp
-         uzxGfiS9BPj1OEGQTiUY4LTuVBsJE42Q4X4ELmfN4X6AdIdvQtF9BCBblulIhWu4PK
-         CISLHcQaRjhJw==
-Date:   Wed, 20 Apr 2022 11:08:05 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] fstests: test xfs swapext log replay
-Message-ID: <20220420180805.GZ17025@magnolia>
-References: <20220420083653.1031631-1-zlang@redhat.com>
- <20220420083653.1031631-5-zlang@redhat.com>
+        with ESMTP id S1357179AbiDTVzp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Apr 2022 17:55:45 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AEDB345513;
+        Wed, 20 Apr 2022 14:52:57 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-115-138.pa.nsw.optusnet.com.au [49.181.115.138])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A37F310E5CE6;
+        Thu, 21 Apr 2022 07:52:54 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nhIFo-002XWU-OW; Thu, 21 Apr 2022 07:52:52 +1000
+Date:   Thu, 21 Apr 2022 07:52:52 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>
+Cc:     Christian Brauner <brauner@kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "jlayton@kernel.org" <jlayton@kernel.org>,
+        "ntfs3@lists.linux.dev" <ntfs3@lists.linux.dev>,
+        "chao@kernel.org" <chao@kernel.org>,
+        "linux-f2fs-devel@lists.sourceforge.net" 
+        <linux-f2fs-devel@lists.sourceforge.net>
+Subject: Re: [PATCH v4 1/8] fs: move sgid strip operation from
+ inode_init_owner into inode_sgid_strip
+Message-ID: <20220420215252.GO1544202@dread.disaster.area>
+References: <1650368834-2420-1-git-send-email-xuyang2018.jy@fujitsu.com>
+ <20220419140508.b6c4uit3u5hmdql4@wittgenstein>
+ <625F6FE6.4010305@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220420083653.1031631-5-zlang@redhat.com>
+In-Reply-To: <625F6FE6.4010305@fujitsu.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=626080b7
+        a=/kVtbFzwtM2bJgxRVb+eeA==:117 a=/kVtbFzwtM2bJgxRVb+eeA==:17
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=omOdbC7AAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=dB9dRndzBIRXieEivdAA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 20, 2022 at 04:36:53PM +0800, Zorro Lang wrote:
-> If an inode had been in btree format and had a data fork owner change
-> logged (XFS_ILOG_DOWNER), after changing the format to non-btree, will
-> hit an ASSERT in xfs_recover_inode_owner_change() which enforces that
-> if XFS_ILOG_[AD]OWNER is set.
+On Wed, Apr 20, 2022 at 01:27:39AM +0000, xuyang2018.jy@fujitsu.com wrote:
+> on 2022/4/19 22:05, Christian Brauner wrote:
+> > On Tue, Apr 19, 2022 at 07:47:07PM +0800, Yang Xu wrote:
+> >> This has no functional change. Just create and export inode_sgid_strip api for
+> >> the subsequent patch. This function is used to strip S_ISGID mode when init
+> >> a new inode.
+> >>
+> >> Acked-by: Christian Brauner (Microsoft)<brauner@kernel.org>
+> >> Signed-off-by: Yang Xu<xuyang2018.jy@fujitsu.com>
+> >> ---
+> >>   fs/inode.c         | 22 ++++++++++++++++++----
+> >>   include/linux/fs.h |  3 ++-
+> >>   2 files changed, 20 insertions(+), 5 deletions(-)
+> >>
+> >> diff --git a/fs/inode.c b/fs/inode.c
+> >> index 9d9b422504d1..3215e61a0021 100644
+> >> --- a/fs/inode.c
+> >> +++ b/fs/inode.c
+> >> @@ -2246,10 +2246,8 @@ void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
+> >>   		/* Directories are special, and always inherit S_ISGID */
+> >>   		if (S_ISDIR(mode))
+> >>   			mode |= S_ISGID;
+> >> -		else if ((mode&  (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP)&&
+> >> -			 !in_group_p(i_gid_into_mnt(mnt_userns, dir))&&
+> >> -			 !capable_wrt_inode_uidgid(mnt_userns, dir, CAP_FSETID))
+> >> -			mode&= ~S_ISGID;
+> >> +		else
+> >> +			inode_sgid_strip(mnt_userns, dir,&mode);
+> >>   	} else
+> >>   		inode_fsgid_set(inode, mnt_userns);
+> >>   	inode->i_mode = mode;
+> >> @@ -2405,3 +2403,19 @@ struct timespec64 current_time(struct inode *inode)
+> >>   	return timestamp_truncate(now, inode);
+> >>   }
+> >>   EXPORT_SYMBOL(current_time);
+> >> +
+> >> +void inode_sgid_strip(struct user_namespace *mnt_userns,
+> >> +		      const struct inode *dir, umode_t *mode)
+> >> +{
+> >
+> > I think with Willy agreeing in an earlier version with me and you
+> > needing to resend anyway I'd say have this return umode_t instead of
+> > passing a pointer.
 > 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-> 
-> Hi,
-> 
-> 3+ years past, this test is still failed on latest upstream linux kernel,
-> as we talked below:
-> https://patchwork.kernel.org/project/fstests/patch/20181223141721.5318-1-zlang@redhat.com/
-> 
-> I think it's time to bring it back to talk again. If it's a case issue, I'll fix.
-> If it's a bug, means this case is good to merge.
+> IMO, I am fine with your and Willy way. But I need a reason otherwise
+> I can't convince myself why not use mode pointer directly.
 
-Uhoh.  So ... did you write this as a regression test for dc1baa715bbf
-and then discovered that it uncovered another problem?
+You should listen to experienced developers like Willy and Christian
+when they say "follow existing coding conventions".  Indeed, Darrick
+has also mentioned he'd prefer it to return the new mode, and I'd
+also prefer that it returns the new mode.
 
-> Thanks,
-> Zorro
-> 
->  tests/xfs/999     | 58 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/999.out |  2 ++
->  2 files changed, 60 insertions(+)
->  create mode 100755 tests/xfs/999
->  create mode 100644 tests/xfs/999.out
-> 
-> diff --git a/tests/xfs/999 b/tests/xfs/999
-> new file mode 100755
-> index 00000000..b1d58671
-> --- /dev/null
-> +++ b/tests/xfs/999
-> @@ -0,0 +1,58 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 999
-> +#
-> +# If an inode had been in btree format and had a data fork owner change
-> +# logged, after changing the format to non-btree, will hit an ASSERT or
-> +# fs corruption.
-> +# This case trys to cover: dc1baa715bbf ("xfs: do not log/recover swapext
-> +# extent owner changes for deleted inodes")
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick fsr
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_require_scratch
-> +_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-> +. $tmp.mkfs
-> +
-> +_scratch_mount
-> +localfile=$SCRATCH_MNT/fragfile
-> +
-> +# Try to create a file with 1024 * (3 blocks + 1 hole):
-> +# +----------+--------+-------+----------+--------+
-> +# | 3 blocks | 1 hole |  ...  | 3 blocks | 1 hole |
-> +# +----------+--------+-------+----------+--------+
-> +#
-> +# The number of extents we can get maybe more or less than 1024, this method
-> +# just to get a btree inode format.
-> +filesize=$((dbsize * 1024 * 4))
-> +for i in `seq $filesize -$dbsize 0`; do
-> +	if [ $((i % (3 * dbsize))) -eq 0 ]; then
-> +		continue
-> +	fi
-> +	$XFS_IO_PROG -f -d -c "pwrite $i $dbsize" $localfile >> $seqres.full
-> +done
+> I have asked you and Willy before why return umode_t value is better, 
+> why not modify mode pointer directly? Since we have use mode as 
+> argument, why not modify mode pointer directly in function?
 
-I wonder if you could use what _scratch_xfs_populate does to create
-S_IFREG.FMT_BTREE instead of open-coding it, but I bet this test
-predates that... :)
+If the function had mulitple return status (e.g. an error or a mode)
+the convention is to pass the mode output variable by reference and
+return the error status. But there is only one return value from
+this function - the mode - and hence it should be returned in the
+return value, not passed by reference.
 
-Anyway, this looks fine but I want to go try it to see what happens.
+Passing by reference unnecessarily makes the code more complex and
+less mainatainable.  Code that returns a single value is easy to
+understand, is more flexible in the way callers can use it and it's
+simpler to maintain.
 
---D
+Cheers,
 
-> +
-> +# Make a data fork owner change log
-> +$XFS_FSR_PROG -v -d $localfile >> $seqres.full 2>&1
-> +
-> +# Truncate the file to 0, and change the inode format to extent, then shutdown
-> +# the fs to keep the XFS_ILOG_DOWNER flag
-> +$XFS_IO_PROG -t -x -c "pwrite 0 $dbsize" \
-> +	     -c "fsync" \
-> +	     -c "shutdown" $localfile >> $seqres.full
-> +
-> +# Cycle mount, to replay the log
-> +_scratch_cycle_mount
-> +
-> +echo "Silence is golden"
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-> new file mode 100644
-> index 00000000..3b276ca8
-> --- /dev/null
-> +++ b/tests/xfs/999.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 999
-> +Silence is golden
-> -- 
-> 2.31.1
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
