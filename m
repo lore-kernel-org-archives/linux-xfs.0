@@ -2,177 +2,93 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6993FC433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Apr 2022 17:25:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE1E4C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Apr 2022 17:27:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381071AbiDTR1x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Apr 2022 13:27:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43300 "EHLO
+        id S1381086AbiDTRah (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Apr 2022 13:30:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381065AbiDTR1w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Apr 2022 13:27:52 -0400
+        with ESMTP id S1381084AbiDTRah (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Apr 2022 13:30:37 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19FB1DE9D;
-        Wed, 20 Apr 2022 10:25:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D500946B08
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Apr 2022 10:27:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C8E4CB82122;
-        Wed, 20 Apr 2022 17:25:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BE29C385A1;
-        Wed, 20 Apr 2022 17:25:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9292EB82113
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Apr 2022 17:27:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39590C385A0;
+        Wed, 20 Apr 2022 17:27:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650475502;
-        bh=nMmzOhxotCajNarK8awDNazXFZSTk/ACo0M6tq43FZA=;
+        s=k20201202; t=1650475668;
+        bh=hGmTuqc7ksuyVYXhH43FLX8XT4RmeCHWAQBJkFw6fc0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QQa34rruxXiAFXHJk3qqrOfyI5kmyPOK3mf493IK/V3XrQTC/4U6X1pSiI1xuBAtP
-         STMlkkCuhSEqfAyMsmfjt5B2E1gh04yndgLNkcTvj2y6FnYDKEOILIANpjAb+sPzeB
-         tQtza/q76f8zY5BGytldBTFWQpQt4nvr+2kEyC/hhGhOSo9AGN0i9iyo/bDV3W06HS
-         xTCdPXyHk6oQMOjQID/AlkMUTXeh7KA/C8Bk+9+03E9rfsoER6GIcMu1hqDZT16iIM
-         rhEgxUmJjUWEPae57GkywVLhO8LCGoP+BXl6LH6+XQ+v5OoYgqT2UzT0CIBZSCKJxA
-         oKFpnkVi5boEw==
-Date:   Wed, 20 Apr 2022 10:25:01 -0700
+        b=LEU77vyD5yZZ3OIqoA2WxUPX0HwE13RzHeeWej0kU7te2DSUHdgtr3T/NCltDPRht
+         /gsdSD+eMBcCfqEW+F/1CWvzHOrjNoPJ45fE/f3dR0SZmLJ8C3nV0INbPIL4ZJq8Ig
+         tzN2MJ6ib+YvrLBoYdbJrbrz6WWT236E6kEnA9jxaVbTpl2jRhNdXpd0cyd2L8SP9d
+         so6w81YSJjzuPI1xT97HsWA5091dTNE9tdR8IlCiN8WME6F9EYiHMkBeyZzsEGI71x
+         DCf/JN8aZ6ZTet26sk18Yvcanfj7rS+zl54NTG6jhNe4+GhfbOAAdDUDWYDtpJ9TJ2
+         kxoiWqM5es2pg==
+Date:   Wed, 20 Apr 2022 10:27:47 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] generic: test data corruption when blocksize <
- pagesize for mmaped data
-Message-ID: <20220420172501.GQ17025@magnolia>
-References: <20220420083653.1031631-1-zlang@redhat.com>
- <20220420083653.1031631-4-zlang@redhat.com>
+To:     sandeen@sandeen.net
+Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/4] mkfs: round log size down if rounding log start up
+ causes overflow
+Message-ID: <20220420172747.GR17025@magnolia>
+References: <164996213753.226891.14458233911347178679.stgit@magnolia>
+ <20220415235758.GE17025@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220420083653.1031631-4-zlang@redhat.com>
+In-Reply-To: <20220415235758.GE17025@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 20, 2022 at 04:36:52PM +0800, Zorro Lang wrote:
-> page_mkwrite() is used by filesystems to allocate blocks under a page
-> which is becoming writeably mmapped in some process' address space.
-> This allows a filesystem to return a page fault if there is not enough
-> space available, user exceeds quota or similar problem happens, rather
-> than silently discarding data later when writepage is called. However
-> VFS fails to call ->page_mkwrite() in all the cases where filesystems
-> need it when blocksize < pagesize.
+On Fri, Apr 15, 2022 at 04:57:58PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> At the moment page_mkwrite() is called, filesystem can allocate only
-> one block for the page if i_size < page size. Otherwise it would
-> create blocks beyond i_size which is generally undesirable. But later
-> at writepage() time, we also need to store data at offset 4095 but we
-> don't have block allocated for it.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
->  tests/generic/999     | 75 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/999.out |  5 +++
->  2 files changed, 80 insertions(+)
->  create mode 100755 tests/generic/999
->  create mode 100644 tests/generic/999.out
-> 
-> diff --git a/tests/generic/999 b/tests/generic/999
-> new file mode 100755
-> index 00000000..f1b65982
-> --- /dev/null
-> +++ b/tests/generic/999
-> @@ -0,0 +1,75 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 999
-> +#
-> +# Regression test for linux commit 90a80202 ("data corruption when
-> +# blocksize < pagesize for mmaped data")
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_require_scratch
-> +_require_block_device $SCRATCH_DEV
-> +_require_xfs_io_command mmap "-s <size>"
-> +_require_xfs_io_command mremap
-> +_require_xfs_io_command truncate
-> +_require_xfs_io_command mwrite
-> +
-> +sector_size=`_min_dio_alignment $SCRATCH_DEV`
-> +page_size=$(get_page_size)
-> +block_size=$((page_size/2))
-> +if [ $sector_size -gt $block_size ];then
-> +	_notrun "need sector size < page size"
-> +fi
-> +
-> +unset MKFS_OPTIONS
-> +# For save time, 512MiB is enough to reproduce bug
-> +_scratch_mkfs_sized 536870912 $block_size >$seqres.full 2>&1 || _fail "mkfs failed"
-> +_scratch_mount
-> +
-> +# take one block size space
-> +$XFS_IO_PROG -f -t -c "pwrite 0 $block_size" $SCRATCH_MNT/testfile >>$seqres.full 2>&1
-> +
-> +# Fill all free space, dd can keep writing until no space. Note: if the fs
-> +# isn't be full, this test will fail.
-> +for ((i=0; i<2; i++));do
-> +	dd if=/dev/zero of=$SCRATCH_MNT/full bs=$block_size >>$seqres.full 2>&1
-> +	_scratch_cycle_mount
-> +done
+> If rounding the log start up to the next stripe unit would cause the log
+> to overrun the end of the AG, round the log size down by a stripe unit.
+> We already ensured that logblocks was small enough to fit inside the AG,
+> so the minor adjustment should suffice.
 
-_fill_fs ?
-
-Also, this test ought to check that we actually consumed all the
-freespace and note that in the golden output so that a test runner can
-tell the difference between "test preconditions not satisfied" vs.
-"kernel needs patching".
+Self NAK, Eric pointed out more ways this can fail.  New patch coming
+soon.
 
 --D
 
-> +
-> +# truncate 0
-> +# pwrite -S 0x61 0 $block_size
-> +# mmap -rw -s $((page_size * 2)) 0 $block_size
-> +# mwrite -S 0x61 0 1  --> page_mkwrite() for index 0 is called
-> +# truncate $((page_size * 2))
-> +# mremap $((page_size * 2))
-> +# mwrite -S 0x61 $((page_size - 1)) 1  --> [bug] no page_mkwrite() called
-> +#
-> +# If there's a bug, the last step will be killed by SIGBUS, and it won't
-> +# write a "0x61" on the disk.
-> +#
-> +# Note: mremap maybe failed when memory load is heavy.
-> +$XFS_IO_PROG -f \
-> +             -c "truncate 0" \
-> +             -c "pwrite -S 0x61 0 $block_size" \
-> +             -c "mmap -rw -s $((page_size * 2)) 0 $block_size" \
-> +             -c "mwrite -S 0x61 0 1" \
-> +             -c "truncate $((page_size * 2))" \
-> +             -c "mremap $((page_size * 2))" \
-> +             -c "mwrite -S 0x61 $((page_size - 1)) 1" \
-> +             $SCRATCH_MNT/testfile | _filter_xfs_io
-> +
-> +# we will see 0x61 written by "mwrite -S 0x61 0 1", but we shouldn't see one
-> +# more 0x61 by the last mwrite (except this fs isn't be full, or a bug)
-> +od -An -c $SCRATCH_MNT/testfile
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/999.out b/tests/generic/999.out
-> new file mode 100644
-> index 00000000..f1c59e83
-> --- /dev/null
-> +++ b/tests/generic/999.out
-> @@ -0,0 +1,5 @@
-> +QA output created by 999
-> +   a   a   a   a   a   a   a   a   a   a   a   a   a   a   a   a
-> +*
-> +  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
-> +*
-> -- 
-> 2.31.1
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  mkfs/xfs_mkfs.c |   12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
 > 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index b932acaa..cfa38f17 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3219,9 +3219,19 @@ align_internal_log(
+>  	int			max_logblocks)
+>  {
+>  	/* round up log start if necessary */
+> -	if ((cfg->logstart % sunit) != 0)
+> +	if ((cfg->logstart % sunit) != 0) {
+>  		cfg->logstart = ((cfg->logstart + (sunit - 1)) / sunit) * sunit;
+>  
+> +		/*
+> +		 * If rounding up logstart to a stripe boundary moves the end
+> +		 * of the log past the end of the AG, reduce logblocks to get
+> +		 * it back under EOAG.
+> +		 */
+> +		if (!libxfs_verify_fsbext(mp, cfg->logstart, cfg->logblocks) &&
+> +		    cfg->logblocks > sunit)
+> +			cfg->logblocks -= sunit;
+> +	}
+> +
+>  	/* If our log start overlaps the next AG's metadata, fail. */
+>  	if (!libxfs_verify_fsbno(mp, cfg->logstart)) {
+>  		fprintf(stderr,
