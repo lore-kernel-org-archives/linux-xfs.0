@@ -2,242 +2,162 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD1BAC433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Apr 2022 17:58:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08462C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Apr 2022 18:08:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381353AbiDTSBY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Apr 2022 14:01:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48458 "EHLO
+        id S1381397AbiDTSKy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Apr 2022 14:10:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381385AbiDTSBH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Apr 2022 14:01:07 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF8F47558;
-        Wed, 20 Apr 2022 10:58:09 -0700 (PDT)
+        with ESMTP id S230469AbiDTSKx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Apr 2022 14:10:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A43F3EB94;
+        Wed, 20 Apr 2022 11:08:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id ED57ECE1F6D;
-        Wed, 20 Apr 2022 17:58:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34BF2C385A0;
-        Wed, 20 Apr 2022 17:58:05 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BCB8161ACE;
+        Wed, 20 Apr 2022 18:08:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23B8DC385A4;
+        Wed, 20 Apr 2022 18:08:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650477485;
-        bh=HjqNizz2UkQgCdLOC/F3s0q1QlXx1JsTyvOA/jgUXyw=;
+        s=k20201202; t=1650478086;
+        bh=BtEavGAYaFygVq8iIGiatAQRY8CX6oossQfQE1hoHY0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YlB03/js/4fzWqeo1WlTqDwGajsOcrbi219jHadJoI410A2TWR5KYbzmWkjj4FJTY
-         McQ/4WftYtN8zwEfhuKO/jH668k4OMSQqSyAxVyNC+PBNR9RO2K6n4+0qT7oeArkA2
-         dMtdNRL1SF4NOuUMpNuEAytkwh8o/l5/rUjmM7M40cHicBLnCzJz7cuse2cVUaHoQB
-         leiLBMZRfOYzv/N41lQ//R5wo9TPQfqwAK1FQ8jThkYv4I8plGVqwJmR7ynVFyVgy7
-         s6gQa6W3Y+VJb8xCGHCMKI8YDNtewZtUemj9SepwCeDbPkXEgam7v6o+Uydsmhh6rs
-         GoZI8BwVbjoaA==
-Date:   Wed, 20 Apr 2022 10:58:04 -0700
+        b=B6hJMiefc/J0uzwb3hwis3nfa4BiVhbuKNw9FecUuaN7pFy5tAOSzbS7mBShxOwbS
+         HawPosmFaWHMQfh9DAkR/v8ghjvhbLTnulZfOAgTz/bY+Ek/Asx/sVuzyExU3Cz4I5
+         5zK6/o396qNwfYvtx58jrRNmMBElIrKTy9jlcvIHedqpzO8R305trS5o08XA25sube
+         H9n/LjVZv8UNbPNGkg2jP+CP26Ue2eugQ6bl7VoCvHEyo7iYFWnxF/tiaLGQeA4lyp
+         uzxGfiS9BPj1OEGQTiUY4LTuVBsJE42Q4X4ELmfN4X6AdIdvQtF9BCBblulIhWu4PK
+         CISLHcQaRjhJw==
+Date:   Wed, 20 Apr 2022 11:08:05 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@infradead.org, jane.chu@oracle.com,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v13 5/7] mm: Introduce mf_dax_kill_procs() for fsdax case
-Message-ID: <20220420175804.GY17025@magnolia>
-References: <20220419045045.1664996-1-ruansy.fnst@fujitsu.com>
- <20220419045045.1664996-6-ruansy.fnst@fujitsu.com>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] fstests: test xfs swapext log replay
+Message-ID: <20220420180805.GZ17025@magnolia>
+References: <20220420083653.1031631-1-zlang@redhat.com>
+ <20220420083653.1031631-5-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220419045045.1664996-6-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20220420083653.1031631-5-zlang@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 19, 2022 at 12:50:43PM +0800, Shiyang Ruan wrote:
-> This new function is a variant of mf_generic_kill_procs that accepts a
-> file, offset pair instead of a struct to support multiple files sharing
-> a DAX mapping.  It is intended to be called by the file systems as part
-> of the memory_failure handler after the file system performed a reverse
-> mapping from the storage address to the file and file offset.
+On Wed, Apr 20, 2022 at 04:36:53PM +0800, Zorro Lang wrote:
+> If an inode had been in btree format and had a data fork owner change
+> logged (XFS_ILOG_DOWNER), after changing the format to non-btree, will
+> hit an ASSERT in xfs_recover_inode_owner_change() which enforces that
+> if XFS_ILOG_[AD]OWNER is set.
 > 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> 3+ years past, this test is still failed on latest upstream linux kernel,
+> as we talked below:
+> https://patchwork.kernel.org/project/fstests/patch/20181223141721.5318-1-zlang@redhat.com/
+> 
+> I think it's time to bring it back to talk again. If it's a case issue, I'll fix.
+> If it's a bug, means this case is good to merge.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Uhoh.  So ... did you write this as a regression test for dc1baa715bbf
+and then discovered that it uncovered another problem?
+
+> Thanks,
+> Zorro
+> 
+>  tests/xfs/999     | 58 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |  2 ++
+>  2 files changed, 60 insertions(+)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> new file mode 100755
+> index 00000000..b1d58671
+> --- /dev/null
+> +++ b/tests/xfs/999
+> @@ -0,0 +1,58 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022 Red Hat Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test 999
+> +#
+> +# If an inode had been in btree format and had a data fork owner change
+> +# logged, after changing the format to non-btree, will hit an ASSERT or
+> +# fs corruption.
+> +# This case trys to cover: dc1baa715bbf ("xfs: do not log/recover swapext
+> +# extent owner changes for deleted inodes")
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick fsr
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_require_scratch
+> +_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+> +. $tmp.mkfs
+> +
+> +_scratch_mount
+> +localfile=$SCRATCH_MNT/fragfile
+> +
+> +# Try to create a file with 1024 * (3 blocks + 1 hole):
+> +# +----------+--------+-------+----------+--------+
+> +# | 3 blocks | 1 hole |  ...  | 3 blocks | 1 hole |
+> +# +----------+--------+-------+----------+--------+
+> +#
+> +# The number of extents we can get maybe more or less than 1024, this method
+> +# just to get a btree inode format.
+> +filesize=$((dbsize * 1024 * 4))
+> +for i in `seq $filesize -$dbsize 0`; do
+> +	if [ $((i % (3 * dbsize))) -eq 0 ]; then
+> +		continue
+> +	fi
+> +	$XFS_IO_PROG -f -d -c "pwrite $i $dbsize" $localfile >> $seqres.full
+> +done
+
+I wonder if you could use what _scratch_xfs_populate does to create
+S_IFREG.FMT_BTREE instead of open-coding it, but I bet this test
+predates that... :)
+
+Anyway, this looks fine but I want to go try it to see what happens.
 
 --D
 
-> ---
->  include/linux/mm.h  |  2 +
->  mm/memory-failure.c | 96 ++++++++++++++++++++++++++++++++++++++++-----
->  2 files changed, 88 insertions(+), 10 deletions(-)
-> 
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index ad4b6c15c814..52208d743546 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -3233,6 +3233,8 @@ enum mf_flags {
->  	MF_SOFT_OFFLINE = 1 << 3,
->  	MF_UNPOISON = 1 << 4,
->  };
-> +int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
-> +		      unsigned long count, int mf_flags);
->  extern int memory_failure(unsigned long pfn, int flags);
->  extern void memory_failure_queue(unsigned long pfn, int flags);
->  extern void memory_failure_queue_kick(int cpu);
-> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-> index a40e79e634a4..dc47c5f83d85 100644
-> --- a/mm/memory-failure.c
-> +++ b/mm/memory-failure.c
-> @@ -295,10 +295,9 @@ void shake_page(struct page *p)
->  }
->  EXPORT_SYMBOL_GPL(shake_page);
->  
-> -static unsigned long dev_pagemap_mapping_shift(struct page *page,
-> -		struct vm_area_struct *vma)
-> +static unsigned long dev_pagemap_mapping_shift(struct vm_area_struct *vma,
-> +		unsigned long address)
->  {
-> -	unsigned long address = vma_address(page, vma);
->  	unsigned long ret = 0;
->  	pgd_t *pgd;
->  	p4d_t *p4d;
-> @@ -338,10 +337,14 @@ static unsigned long dev_pagemap_mapping_shift(struct page *page,
->  /*
->   * Schedule a process for later kill.
->   * Uses GFP_ATOMIC allocations to avoid potential recursions in the VM.
-> + *
-> + * Notice: @fsdax_pgoff is used only when @p is a fsdax page.
-> + *   In other cases, such as anonymous and file-backend page, the address to be
-> + *   killed can be caculated by @p itself.
->   */
->  static void add_to_kill(struct task_struct *tsk, struct page *p,
-> -		       struct vm_area_struct *vma,
-> -		       struct list_head *to_kill)
-> +			pgoff_t fsdax_pgoff, struct vm_area_struct *vma,
-> +			struct list_head *to_kill)
->  {
->  	struct to_kill *tk;
->  
-> @@ -352,9 +355,15 @@ static void add_to_kill(struct task_struct *tsk, struct page *p,
->  	}
->  
->  	tk->addr = page_address_in_vma(p, vma);
-> -	if (is_zone_device_page(p))
-> -		tk->size_shift = dev_pagemap_mapping_shift(p, vma);
-> -	else
-> +	if (is_zone_device_page(p)) {
-> +		/*
-> +		 * Since page->mapping is not used for fsdax, we need
-> +		 * calculate the address based on the vma.
-> +		 */
-> +		if (p->pgmap->type == MEMORY_DEVICE_FS_DAX)
-> +			tk->addr = vma_pgoff_address(fsdax_pgoff, 1, vma);
-> +		tk->size_shift = dev_pagemap_mapping_shift(vma, tk->addr);
-> +	} else
->  		tk->size_shift = page_shift(compound_head(p));
->  
->  	/*
-> @@ -503,7 +512,7 @@ static void collect_procs_anon(struct page *page, struct list_head *to_kill,
->  			if (!page_mapped_in_vma(page, vma))
->  				continue;
->  			if (vma->vm_mm == t->mm)
-> -				add_to_kill(t, page, vma, to_kill);
-> +				add_to_kill(t, page, 0, vma, to_kill);
->  		}
->  	}
->  	read_unlock(&tasklist_lock);
-> @@ -539,13 +548,41 @@ static void collect_procs_file(struct page *page, struct list_head *to_kill,
->  			 * to be informed of all such data corruptions.
->  			 */
->  			if (vma->vm_mm == t->mm)
-> -				add_to_kill(t, page, vma, to_kill);
-> +				add_to_kill(t, page, 0, vma, to_kill);
->  		}
->  	}
->  	read_unlock(&tasklist_lock);
->  	i_mmap_unlock_read(mapping);
->  }
->  
-> +#if IS_ENABLED(CONFIG_FS_DAX)
-> +/*
-> + * Collect processes when the error hit a fsdax page.
-> + */
-> +static void collect_procs_fsdax(struct page *page,
-> +		struct address_space *mapping, pgoff_t pgoff,
-> +		struct list_head *to_kill)
-> +{
-> +	struct vm_area_struct *vma;
-> +	struct task_struct *tsk;
 > +
-> +	i_mmap_lock_read(mapping);
-> +	read_lock(&tasklist_lock);
-> +	for_each_process(tsk) {
-> +		struct task_struct *t = task_early_kill(tsk, true);
+> +# Make a data fork owner change log
+> +$XFS_FSR_PROG -v -d $localfile >> $seqres.full 2>&1
 > +
-> +		if (!t)
-> +			continue;
-> +		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
-> +			if (vma->vm_mm == t->mm)
-> +				add_to_kill(t, page, pgoff, vma, to_kill);
-> +		}
-> +	}
-> +	read_unlock(&tasklist_lock);
-> +	i_mmap_unlock_read(mapping);
-> +}
-> +#endif /* CONFIG_FS_DAX */
+> +# Truncate the file to 0, and change the inode format to extent, then shutdown
+> +# the fs to keep the XFS_ILOG_DOWNER flag
+> +$XFS_IO_PROG -t -x -c "pwrite 0 $dbsize" \
+> +	     -c "fsync" \
+> +	     -c "shutdown" $localfile >> $seqres.full
 > +
->  /*
->   * Collect the processes who have the corrupted page mapped to kill.
->   */
-> @@ -1582,6 +1619,45 @@ static int mf_generic_kill_procs(unsigned long long pfn, int flags,
->  	return rc;
->  }
->  
-> +#ifdef CONFIG_FS_DAX
-> +/**
-> + * mf_dax_kill_procs - Collect and kill processes who are using this file range
-> + * @mapping:	the file in use
-> + * @index:	start pgoff of the range within the file
-> + * @count:	length of the range, in unit of PAGE_SIZE
-> + * @mf_flags:	memory failure flags
-> + */
-> +int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
-> +		unsigned long count, int mf_flags)
-> +{
-> +	LIST_HEAD(to_kill);
-> +	dax_entry_t cookie;
-> +	struct page *page;
-> +	size_t end = index + count;
+> +# Cycle mount, to replay the log
+> +_scratch_cycle_mount
 > +
-> +	mf_flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
-> +
-> +	for (; index < end; index++) {
-> +		page = NULL;
-> +		cookie = dax_lock_mapping_entry(mapping, index, &page);
-> +		if (!cookie)
-> +			return -EBUSY;
-> +		if (!page)
-> +			goto unlock;
-> +
-> +		SetPageHWPoison(page);
-> +
-> +		collect_procs_fsdax(page, mapping, index, &to_kill);
-> +		unmap_and_kill(&to_kill, page_to_pfn(page), mapping,
-> +				index, mf_flags);
-> +unlock:
-> +		dax_unlock_mapping_entry(mapping, index, cookie);
-> +	}
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(mf_dax_kill_procs);
-> +#endif /* CONFIG_FS_DAX */
-> +
->  /*
->   * Called from hugetlb code with hugetlb_lock held.
->   *
+> +echo "Silence is golden"
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+> new file mode 100644
+> index 00000000..3b276ca8
+> --- /dev/null
+> +++ b/tests/xfs/999.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 999
+> +Silence is golden
 > -- 
-> 2.35.1
-> 
-> 
+> 2.31.1
 > 
