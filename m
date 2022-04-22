@@ -2,183 +2,213 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43BD1C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Apr 2022 02:58:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C612C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Apr 2022 07:06:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353835AbiDVDBs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Apr 2022 23:01:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53258 "EHLO
+        id S1444554AbiDVHJN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Apr 2022 03:09:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229901AbiDVDBr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Apr 2022 23:01:47 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ACF83982A
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Apr 2022 19:58:55 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23LLUPiq025975;
-        Fri, 22 Apr 2022 02:58:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
- to : cc : subject : in-reply-to : message-id : date : content-type :
- mime-version; s=corp-2021-07-09;
- bh=O0dvsZYx2GUmAnHzKTkkcZSeCkgMUBRijPqxsQwucz4=;
- b=AZa47qgyBF/MldITLO6u9uB42m34ucpnml1hnz3erBMOEBPAHsmGfQ36xGPm20EG/krF
- Y+fV3mvo/I05F2UgBFj+oTx0Wlcp6HwotGu4eSEq6+jc0IOtkUmWtRr57PTg0DqowEkP
- exQ8gPrWiRPt+BlKcdRvybzbmLB1kMPSJ2JqD++/dkXD9zmKT8MnzsiaWQrMHgXRPWrT
- 2BNhDjhfHq+Qz/fCOwrBh+35/a8GuKt+P6qRSEmU518cY783RBW980mxFsmhnPgdruyw
- zxVZbP0sZ5m+/sHWiP4e9O9itvNz+m7rk2bDtQ34dpnvWY78dCTXCJWGP1Ua+GJy5C3v Xg== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ffm7cw9g4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Apr 2022 02:58:51 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23M2prZm038324;
-        Fri, 22 Apr 2022 02:58:50 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3ffm8a428a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Apr 2022 02:58:50 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LYvylHKce0yOpVhqacYwlMkaSUIQWAjtX8ni/aQhehogOR6wSvv2Vn7eokSy9jKHIi7wlhkd+AWjj7VmQio3d4T3WHEcIuoG/BXbhu5/hhr71SH58YPYskKDrEC/8cc4pO99viuV4BIJPQg8DXziZWEwTxcxXlfc1z8B/tPMwgfA7vYDp8zuRD5B9fTTmRaO8Xi/EvV/Led4wZ5EERhcfV+WsPy0pjRBzZ2gB+IwFj8ubXlFnFHvfZyQ6IYd/JI760haVJ589rtvRMT0dAH8MtWwjNkkGJ+1PUky7rPc0rvuSrWiwXL2l+EypNj/oGfVbDtfVHFza+xNxZYLOqzyxw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=O0dvsZYx2GUmAnHzKTkkcZSeCkgMUBRijPqxsQwucz4=;
- b=MiV5y9MU+onqV/4CpVcOCaHTRuS0hq2BIr5wqh8u2wrxINscDfQ9wcjCG+ik3JRW/vyuhk0iolAE2oSAT9VvBdnwCxLekhuu6eCaXp5M5yNoFGzjd4U7T6/WK8jD2+zIn7OFTF/kprLiNGbseAHz9XrWuuuM6f7TwCRftwE3Ua00SmQm/uqXuqWhQ6R1xuEaVuhfVNNL0pPp0N8rAIh+CgF8VMgFSBrduhXw03WGER3uH9a8lifYdrewzUjXIKvZp5BgU4+5StNUlioteEOyM6noAX6SOwIhcVazOsp7C2O690sU+ULYz2boUf7ud2ZNJxNP//0aNgq+Ko5FWQZh3Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=O0dvsZYx2GUmAnHzKTkkcZSeCkgMUBRijPqxsQwucz4=;
- b=Iz/DBSPgUxYsGn4P5rQ0yxfTsdKmF7nOKPQc1uxqu+X1c6IBJZdqCx9QUVli8PGZPO+L0tImN+D4xLmA7EtCd160SEDtj47QuyYd9X/1zJBCqNAd6vbMHbusFaRS3AICQJDTx3nlt2smPnSWcF6jL2UkPCJbKADbivExWQQRaS0=
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by CO1PR10MB4627.namprd10.prod.outlook.com (2603:10b6:303:9d::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.14; Fri, 22 Apr
- 2022 02:58:48 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::9874:fcc8:51fa:8fb5]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::9874:fcc8:51fa:8fb5%5]) with mapi id 15.20.5186.015; Fri, 22 Apr 2022
- 02:58:48 +0000
-References: <87r15vouta.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20220421225838.GU1544202@dread.disaster.area>
-User-agent: mu4e 1.4.15; emacs 27.1
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [GIT PULL] xfs: Large extent counters
-In-reply-to: <20220421225838.GU1544202@dread.disaster.area>
-Message-ID: <87o80tj02q.fsf@debian-BULLSEYE-live-builder-AMD64>
-Date:   Fri, 22 Apr 2022 08:28:37 +0530
-Content-Type: text/plain
-X-ClientProxiedBy: TY2PR04CA0011.apcprd04.prod.outlook.com
- (2603:1096:404:f6::23) To SA2PR10MB4587.namprd10.prod.outlook.com
- (2603:10b6:806:114::12)
+        with ESMTP id S1386931AbiDVHJL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Apr 2022 03:09:11 -0400
+Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 24BF5275EB;
+        Fri, 22 Apr 2022 00:06:17 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3AR6sMDq8uXGMKuPNHcCPcDrUDlX+TJUtcMsCJ2f8?=
+ =?us-ascii?q?bfWQNrUpx0TQDxzYbWWqPOq2KNDSgLttyb4uwpkwOsZfczIRjS1dlrnsFo1Bi8?=
+ =?us-ascii?q?5ScXYvDRqvT04J+FuWaFQQ/qZx2huDodKjYdVeB4Ef9WlTdhSMkj/vQHOKlULe?=
+ =?us-ascii?q?s1h1ZHmeIdg9w0HqPpMZp2uaEsfDha++8kYuaT//3YTdJ6BYoWo4g0J9vnTs01?=
+ =?us-ascii?q?BjEVJz0iXRlDRxDlAe2e3D4l/vzL4npR5fzatE88uJX24/+IL+FEmPxp3/BC/u?=
+ =?us-ascii?q?ulPD1b08LXqXPewOJjxK6WYD72l4b+HN0if19aZLwam8O49mNt8pswdNWpNq+T?=
+ =?us-ascii?q?xw1FqPRmuUBSAQeGCZ7VUFD0Oadeifi6JDKliUqdFOpmZ2CFnoeMYQG++pfD3t?=
+ =?us-ascii?q?J8PsCIjERKBuEgoqexLO9T+hlgcQuBMn2NZwSuzdryjSxJfYtQbjCRavQ7NNV1?=
+ =?us-ascii?q?Tt2gdpBdd7Sbsxfa3xwbRDEYhRKIX8WDo4zmKGjgXyXWzFat1WTqoI07nLVwQg?=
+ =?us-ascii?q?316LiWPLRe9qXVYBQm26buGvN/CL+GB5yHNqBxTuA91qoh/TThmX/WYQPBPu0+?=
+ =?us-ascii?q?+ACqF2YxkQXEwFQWVbTifuwjEP4UNJCA0sO8yEqoO4580nDZt38WQCo5XCfshM?=
+ =?us-ascii?q?CVt54DeI38keOx7DS7gLfAXILJhZFado7pIo1SCYs21uhgdzkH3psvaeTRHbb8?=
+ =?us-ascii?q?a2bxRu2OC4IPSoSazQsUwQI+Z/grZs1gxaJScxseJNZJPWd9SrYmmjM9XZhwe5?=
+ =?us-ascii?q?Iy5Nj6klyxnif6xrEm3QDZlRdCt3rY1+Y?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AHzrpH68EDCrr+Uz560Buk+DkI+orL9Y04lQ7?=
+ =?us-ascii?q?vn2ZKCYlFvBw8vrCoB1173HJYUkqMk3I9ergBEDiewK4yXcW2/hzAV7KZmCP11?=
+ =?us-ascii?q?dAR7sSj7cKrQeBJwTOssZZ1YpFN5N1EcDMCzFB5vrS0U2VFMkBzbC8nJyVuQ?=
+ =?us-ascii?q?=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
+   d="scan'208";a="123751411"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 22 Apr 2022 15:06:17 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 1CE444D17172;
+        Fri, 22 Apr 2022 15:06:16 +0800 (CST)
+Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 22 Apr 2022 15:06:16 +0800
+Received: from [10.167.216.24] (10.167.216.24) by
+ G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Fri, 22 Apr 2022 15:06:15 +0800
+Message-ID: <4a808b12-9215-9421-d114-951e70764778@fujitsu.com>
+Date:   Fri, 22 Apr 2022 15:06:15 +0800
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 09919d0a-24fe-4337-3ab6-08da240c056b
-X-MS-TrafficTypeDiagnostic: CO1PR10MB4627:EE_
-X-Microsoft-Antispam-PRVS: <CO1PR10MB4627E41A4B7D88E0ADA0BB0EF6F79@CO1PR10MB4627.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 82af6S2yZ2ONfhNww86GvcjlnefNao19a59d4voEhTtg2xX403EuGmvkGJ4IV2ezITQY5+zOaadU/HnYRQb1Vtk10I0mKaaOszHTe0EtdQPPZCpLkl0Rf2zmkb9Gl+KzvWUr8WMLJcTs4jZzo/Y5qIX1q770UdOZh5zUxq2qJVqf9TiulTmNW3JLfw5HRE3vSMbv44UT6clI3MaKSpwrDFgrUgOGKGMIoSVhNg1SWsaptcC9kWKMTZCrNpCfLF0JxoUhlDJw4pNgEuavQe5zJ6p5ODv4a0giTfBaiCxcO04nvNb/VNo1u3OIPW6UrR5SuXW7ZThsZCPGlruFEv5LjIwjTETjShEAm23F1IhEVcAQnpE8N63BkZTVyXBZrKHNrJQ8jaz0M0hptf1rXahMrHMnIukLOPOXry7YlDefwVUpVFriK/RNe7++NwwbBbNTd2QpjHoT7Pz1etF655UdIZ80Po7W94GEjiIwR5JNf7RQ1xLvLpLwKQpSVEkTPJ/JiIEcAU69IuW7HbGdd2XP2435UCuWzwjBXLy7BHXgVzNjdetmn6MsPeMT09d7QmwOGwtI7gzfkjvGDXh4CqeA/1fBf1AtJdXT0hCBb1BnEv/+3fMpC/kHCv/P+5TtdA8H6rUmu32qGtiE4Ya8nn/FQckFXUrZzLZiZEwJUsPbfa8EJrfs8MVwJDOxysNeacsWAZTEQhi8DW/EdIVFuBvBq3L5UTFbUcL3BQEfM68aDs9VBKX14C3mNOiOmmx317gqj+abjt5Sd+hbyuIvy/lGpQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(26005)(316002)(66946007)(6512007)(9686003)(186003)(6486002)(53546011)(6506007)(508600001)(6666004)(83380400001)(6916009)(52116002)(86362001)(2906002)(5660300002)(33716001)(966005)(66476007)(38100700002)(38350700002)(8936002)(66556008)(4326008)(8676002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?nFXw4alW8j5WDCRXpQYh9xeO8ha3xaDTGSlhi84gJ/Q2EUY8R8QTTHv8UkCr?=
- =?us-ascii?Q?1SZbkzJ/O7x7LyHb+ovyUG0p2U/S4lahbKx28M3fP6raDX+BRbW00/QEqS6O?=
- =?us-ascii?Q?FQcqEqrkSlj+9Ajl3CjjLYE3PbhwvrE2RidwVc2Xpsm6QZHyjhdXKFFBRfU9?=
- =?us-ascii?Q?aRs2vtFH1mh3h29fDVt6n+jWVi41ZDAJLm+PxeroPenTYjorA5UJ6OLl8rkm?=
- =?us-ascii?Q?j5FP+vGKuyHEQYVBmPAnV0xROKbyEfi981TJdI0jT6D55RM6plMOOYDoMM5p?=
- =?us-ascii?Q?a0u2yUXzUxC8LH23NCNmdwFfFi8MUjkYkcZCEMiktmDqYp9skIytOLCyS6V8?=
- =?us-ascii?Q?mMJHQCpTentmZ/8204dExNKix1O71J54usu6A4z+xCrrM8ECAGEgWyNjL9sT?=
- =?us-ascii?Q?sI4CJ48OybaWQqIb9Q0gunIOx0mhD5XXUkVSs8PuO/r9r+aOiJ9d8Abu1R+p?=
- =?us-ascii?Q?fmnfnEPDy7P2jyRMOZUcnanLHuxMzTtgLIc8dYUDrUtLyi6C8qPbNs0VCTm8?=
- =?us-ascii?Q?cpcPhuPgGOcPn4SOQy5dF+zqt351Ak0BBwu9kSCm5Mfkwn9qkgwlGszVZrzs?=
- =?us-ascii?Q?GMs0ZI76apZWbk1q4WCk2kpaS0C57HGIYyB6MgL3jP3cWbIVhLh26cAVMLWm?=
- =?us-ascii?Q?MBPGjOlitxgClA5d5SdlnkBVqAGssYD/Xkv1i2QqUV2vzDdkm4973tVunMbw?=
- =?us-ascii?Q?m8LeapkHViZrwVdvYgAp4NIAKB9Hv8X3bQNY+IMJfX6PIcBhrFX3DVkrRSPf?=
- =?us-ascii?Q?mwX3OeR4iCGJacKj1tspPTz5jwA5ZYH7A2ipfFbHE93PQXLnYabWqS34E21s?=
- =?us-ascii?Q?7BA0AbL9p7ZSwfc9uCHQs/WV5fKIKZeCZuKRTmRH9BLG2CNHAFQfJfkLnBWN?=
- =?us-ascii?Q?XCteNHK8Pbd9YIiUfVLUq5zi17vnQObXAn0+nsYuhf2A8RUXEofN7VlR5WW0?=
- =?us-ascii?Q?53s0dagQ1JKkdFLmgu3HOxqTCha3gYTOb5zFutkgaUu5jWZJzIp+c48/FweZ?=
- =?us-ascii?Q?TjVs8xxuKmtDLXas6vkISibXyVVCIPDBNaYyqDaGAMdZ7eM7MqquhrZIL569?=
- =?us-ascii?Q?2KbXvCkJX8hNxkEjdVwWd70kwli6qzWijgkcD5vFoVfM/jOp9ZyQvGJSRVMJ?=
- =?us-ascii?Q?7kOlAoD45j5KGt/QoDdf15ZJAlGpWaNYvEepmEmhSBE869Ydl6vE7oDBf5Z/?=
- =?us-ascii?Q?uWRtRRo7T2s6FL5uJBNh4l5inxbnWjUgriJOY5siPe+YhAMIjKicCOihUUC7?=
- =?us-ascii?Q?6XgUhYQsdsRpehitxeYF9Qb+mHEz9czPPmFAJj7AV5xNUj5hp4zMifeL04Yz?=
- =?us-ascii?Q?vLFeLUP9OArrWcpufdQXfotxlVnsAdjWYCy0x1BBnxH1TdmRRXU/dHoqe79c?=
- =?us-ascii?Q?ExahQojX20V0aK4inES/GmGq5B/yI3hR6G4666KigE4guE5AGSbA5tSRG5Lf?=
- =?us-ascii?Q?fqQ8XRzX7kijwed4DlczrkcRp8MXvZK6EFxKoRiZ6iKL/eQwsIz7kLbdhwz2?=
- =?us-ascii?Q?4zPAWojApGFn4A64TxZytlPuEkJxIyOQEv+pYybbxAydSSGF9PhVlh5D4HCh?=
- =?us-ascii?Q?M6LNPmjbARlJFeaz1ZnsUGfGdMdLS+GUlP7b/rv4937N+bpku4hvV0Lng7nF?=
- =?us-ascii?Q?IaHmLSJzO89NGQF7LpXLF1TNV/6Inba+A9LitQzDi4WNnYNxBPMYHefHYTWt?=
- =?us-ascii?Q?87dptpi1Tkh7E08Z0GOauPa+45otMLQcdgIh/boxxEY5cEv8otOhJ5n+5ZGK?=
- =?us-ascii?Q?E9q19hYbeQ=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 09919d0a-24fe-4337-3ab6-08da240c056b
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Apr 2022 02:58:48.0322
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 58WKvtQeRdfgFnHW1F166wCJxTMc7GvaI4FMV9ZOcw98cHy/hB3+cNvrDHXlHMWWJML+/u4Ztl2EoRIML9Ah5A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4627
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
- definitions=2022-04-21_06:2022-04-21,2022-04-21 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 mlxscore=0
- adultscore=0 mlxlogscore=999 suspectscore=0 spamscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2204220009
-X-Proofpoint-GUID: kUkNy68Na_ZUAiC26Lt4zdLQi3RE0a2f
-X-Proofpoint-ORIG-GUID: kUkNy68Na_ZUAiC26Lt4zdLQi3RE0a2f
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.1
+Subject: Re: [PATCH v13 3/7] pagemap,pmem: Introduce ->memory_failure()
+To:     Miaohe Lin <linmiaohe@huawei.com>
+CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, <linux-kernel@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-mm@kvack.org>, <linux-fsdevel@vger.kernel.org>
+References: <20220419045045.1664996-1-ruansy.fnst@fujitsu.com>
+ <20220419045045.1664996-4-ruansy.fnst@fujitsu.com>
+ <f173f091-d5ca-b049-a8ed-6616032ca83e@huawei.com>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <f173f091-d5ca-b049-a8ed-6616032ca83e@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-yoursite-MailScanner-ID: 1CE444D17172.A0528
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 22 Apr 2022 at 04:28, Dave Chinner wrote:
-> Hi Chandan,
->
-> On Mon, Apr 18, 2022 at 10:24:25AM +0530, Chandan Babu R wrote:
->> Hi Dave,
->> 
->> The following changes since commit ce522ba9ef7e2d9fb22a39eb3371c0c64e2a433e:
->> 
->>   Linux 5.18-rc2 (2022-04-10 14:21:36 -1000)
->> 
->> are available in the Git repository at:
->> 
->>   https://github.com/chandanr/linux.git tags/large-extent-counters-v9
->
-> I've pulled this down and it seems fine, but there's problem I can't
-> solve directly: the tag isn't signed so I can't tell if the tree
-> I've pulled is unmolested.
->
-> If you were asking me to pull from git.kernel.org, that wouldn't be
-> a problem. But I don't trust github to be safe - forget about
-> hackers, github's owners have demonstrated they will modify
-> repositories directly if it is convenient for them to do so. i.e.
-> they have overwritten hosted trees without the author's and/or
-> copyright owner's consent and locked out the owner(s) of the code
-> from ever being able to update their tree again.
->
-> As such, I don't consider github to be a trustworthy source, and so
-> if you are going to use it for pull requests I need the tag to be
-> signed with you gpg key so that I can verify the commits I'm pulling
-> match the ones you pushed to the hosting site.
->
-> Can you post on #xfs or DM on oftc the last five commits (--one-line
-> format is fine) from your local branch that you pushed to github so
-> that I have an OOB confirmation that the commit IDs I've pulled
-> match your original commits?
 
-Hi Dave,
 
-I have sent the details of the last five commits via DM on OFTC. Please let me
-know if you haven't received it.
+在 2022/4/21 16:24, Miaohe Lin 写道:
+> On 2022/4/19 12:50, Shiyang Ruan wrote:
+>> When memory-failure occurs, we call this function which is implemented
+>> by each kind of devices.  For the fsdax case, pmem device driver
+>> implements it.  Pmem device driver will find out the filesystem in which
+>> the corrupted page located in.
+>>
+>> With dax_holder notify support, we are able to notify the memory failure
+>> from pmem driver to upper layers.  If there is something not support in
+>> the notify routine, memory_failure will fall back to the generic hanlder.
+>>
+>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+>> ---
+>>   drivers/nvdimm/pmem.c    | 17 +++++++++++++++++
+>>   include/linux/memremap.h | 12 ++++++++++++
+>>   mm/memory-failure.c      | 14 ++++++++++++++
+>>   3 files changed, 43 insertions(+)
+>>
+>> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+>> index 58d95242a836..bd502957cfdf 100644
+>> --- a/drivers/nvdimm/pmem.c
+>> +++ b/drivers/nvdimm/pmem.c
+>> @@ -366,6 +366,21 @@ static void pmem_release_disk(void *__pmem)
+>>   	blk_cleanup_disk(pmem->disk);
+>>   }
+>>   
+>> +static int pmem_pagemap_memory_failure(struct dev_pagemap *pgmap,
+>> +		unsigned long pfn, unsigned long nr_pages, int mf_flags)
+>> +{
+>> +	struct pmem_device *pmem =
+>> +			container_of(pgmap, struct pmem_device, pgmap);
+>> +	u64 offset = PFN_PHYS(pfn) - pmem->phys_addr - pmem->data_offset;
+>> +	u64 len = nr_pages << PAGE_SHIFT;
+>> +
+>> +	return dax_holder_notify_failure(pmem->dax_dev, offset, len, mf_flags);
+>> +}
+>> +
+>> +static const struct dev_pagemap_ops fsdax_pagemap_ops = {
+>> +	.memory_failure		= pmem_pagemap_memory_failure,
+>> +};
+>> +
+>>   static int pmem_attach_disk(struct device *dev,
+>>   		struct nd_namespace_common *ndns)
+>>   {
+>> @@ -427,6 +442,7 @@ static int pmem_attach_disk(struct device *dev,
+>>   	pmem->pfn_flags = PFN_DEV;
+>>   	if (is_nd_pfn(dev)) {
+>>   		pmem->pgmap.type = MEMORY_DEVICE_FS_DAX;
+>> +		pmem->pgmap.ops = &fsdax_pagemap_ops;
+>>   		addr = devm_memremap_pages(dev, &pmem->pgmap);
+>>   		pfn_sb = nd_pfn->pfn_sb;
+>>   		pmem->data_offset = le64_to_cpu(pfn_sb->dataoff);
+>> @@ -440,6 +456,7 @@ static int pmem_attach_disk(struct device *dev,
+>>   		pmem->pgmap.range.end = res->end;
+>>   		pmem->pgmap.nr_range = 1;
+>>   		pmem->pgmap.type = MEMORY_DEVICE_FS_DAX;
+>> +		pmem->pgmap.ops = &fsdax_pagemap_ops;
+>>   		addr = devm_memremap_pages(dev, &pmem->pgmap);
+>>   		pmem->pfn_flags |= PFN_MAP;
+>>   		bb_range = pmem->pgmap.range;
+>> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+>> index ad6062d736cd..bcfb6bf4ce5a 100644
+>> --- a/include/linux/memremap.h
+>> +++ b/include/linux/memremap.h
+>> @@ -79,6 +79,18 @@ struct dev_pagemap_ops {
+>>   	 * the page back to a CPU accessible page.
+>>   	 */
+>>   	vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
+>> +
+>> +	/*
+>> +	 * Handle the memory failure happens on a range of pfns.  Notify the
+>> +	 * processes who are using these pfns, and try to recover the data on
+>> +	 * them if necessary.  The mf_flags is finally passed to the recover
+>> +	 * function through the whole notify routine.
+>> +	 *
+>> +	 * When this is not implemented, or it returns -EOPNOTSUPP, the caller
+>> +	 * will fall back to a common handler called mf_generic_kill_procs().
+>> +	 */
+>> +	int (*memory_failure)(struct dev_pagemap *pgmap, unsigned long pfn,
+>> +			      unsigned long nr_pages, int mf_flags);
+>>   };
+>>   
+>>   #define PGMAP_ALTMAP_VALID	(1 << 0)
+>> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+>> index 7c8c047bfdc8..a40e79e634a4 100644
+>> --- a/mm/memory-failure.c
+>> +++ b/mm/memory-failure.c
+>> @@ -1741,6 +1741,20 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+>>   	if (!pgmap_pfn_valid(pgmap, pfn))
+>>   		goto out;
+>>   
+>> +	/*
+>> +	 * Call driver's implementation to handle the memory failure, otherwise
+>> +	 * fall back to generic handler.
+>> +	 */
+>> +	if (pgmap->ops->memory_failure) {
+>> +		rc = pgmap->ops->memory_failure(pgmap, pfn, 1, flags);
+>> +		/*
+>> +		 * Fall back to generic handler too if operation is not
+>> +		 * supported inside the driver/device/filesystem.
+>> +		 */
+>> +		if (rc != -EOPNOTSUPP)
+>> +			goto out;
+>> +	}
+>> +
+> 
+> Thanks for your patch. There are two questions:
+> 
+> 1.Is dax_lock_page + dax_unlock_page pair needed here?
 
--- 
-chandan
+They are moved into mf_generic_kill_procs() in Patch2.  Callback will 
+implement its own dax lock/unlock method.  For example, for 
+mf_dax_kill_procs() in Patch4, we implemented 
+dax_lock_mapping_entry()/dax_unlock_mapping_entry() for it.
+
+> 2.hwpoison_filter and SetPageHWPoison will be handled by the callback or they're just ignored deliberately?
+
+SetPageHWPoison() will be handled by callback or by mf_generic_kill_procs().
+
+hwpoison_filter() is moved into mf_generic_kill_procs() too.  The 
+callback will make sure the page is correct, so it is ignored.
+
+
+--
+Thanks,
+Ruan.
+
+> 
+> Thanks!
+> 
+>>   	rc = mf_generic_kill_procs(pfn, flags, pgmap);
+>>   out:
+>>   	/* drop pgmap ref acquired in caller */
+>>
+> 
+
+
