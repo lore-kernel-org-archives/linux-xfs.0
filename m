@@ -2,213 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C612C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Apr 2022 07:06:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E89EDC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Apr 2022 14:12:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1444554AbiDVHJN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Apr 2022 03:09:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34360 "EHLO
+        id S1448257AbiDVOPZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Apr 2022 10:15:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1386931AbiDVHJL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Apr 2022 03:09:11 -0400
-Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 24BF5275EB;
-        Fri, 22 Apr 2022 00:06:17 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3AR6sMDq8uXGMKuPNHcCPcDrUDlX+TJUtcMsCJ2f8?=
- =?us-ascii?q?bfWQNrUpx0TQDxzYbWWqPOq2KNDSgLttyb4uwpkwOsZfczIRjS1dlrnsFo1Bi8?=
- =?us-ascii?q?5ScXYvDRqvT04J+FuWaFQQ/qZx2huDodKjYdVeB4Ef9WlTdhSMkj/vQHOKlULe?=
- =?us-ascii?q?s1h1ZHmeIdg9w0HqPpMZp2uaEsfDha++8kYuaT//3YTdJ6BYoWo4g0J9vnTs01?=
- =?us-ascii?q?BjEVJz0iXRlDRxDlAe2e3D4l/vzL4npR5fzatE88uJX24/+IL+FEmPxp3/BC/u?=
- =?us-ascii?q?ulPD1b08LXqXPewOJjxK6WYD72l4b+HN0if19aZLwam8O49mNt8pswdNWpNq+T?=
- =?us-ascii?q?xw1FqPRmuUBSAQeGCZ7VUFD0Oadeifi6JDKliUqdFOpmZ2CFnoeMYQG++pfD3t?=
- =?us-ascii?q?J8PsCIjERKBuEgoqexLO9T+hlgcQuBMn2NZwSuzdryjSxJfYtQbjCRavQ7NNV1?=
- =?us-ascii?q?Tt2gdpBdd7Sbsxfa3xwbRDEYhRKIX8WDo4zmKGjgXyXWzFat1WTqoI07nLVwQg?=
- =?us-ascii?q?316LiWPLRe9qXVYBQm26buGvN/CL+GB5yHNqBxTuA91qoh/TThmX/WYQPBPu0+?=
- =?us-ascii?q?+ACqF2YxkQXEwFQWVbTifuwjEP4UNJCA0sO8yEqoO4580nDZt38WQCo5XCfshM?=
- =?us-ascii?q?CVt54DeI38keOx7DS7gLfAXILJhZFado7pIo1SCYs21uhgdzkH3psvaeTRHbb8?=
- =?us-ascii?q?a2bxRu2OC4IPSoSazQsUwQI+Z/grZs1gxaJScxseJNZJPWd9SrYmmjM9XZhwe5?=
- =?us-ascii?q?Iy5Nj6klyxnif6xrEm3QDZlRdCt3rY1+Y?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AHzrpH68EDCrr+Uz560Buk+DkI+orL9Y04lQ7?=
- =?us-ascii?q?vn2ZKCYlFvBw8vrCoB1173HJYUkqMk3I9ergBEDiewK4yXcW2/hzAV7KZmCP11?=
- =?us-ascii?q?dAR7sSj7cKrQeBJwTOssZZ1YpFN5N1EcDMCzFB5vrS0U2VFMkBzbC8nJyVuQ?=
- =?us-ascii?q?=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="123751411"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 22 Apr 2022 15:06:17 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 1CE444D17172;
-        Fri, 22 Apr 2022 15:06:16 +0800 (CST)
-Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 22 Apr 2022 15:06:16 +0800
-Received: from [10.167.216.24] (10.167.216.24) by
- G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 22 Apr 2022 15:06:15 +0800
-Message-ID: <4a808b12-9215-9421-d114-951e70764778@fujitsu.com>
-Date:   Fri, 22 Apr 2022 15:06:15 +0800
+        with ESMTP id S1443862AbiDVOPY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Apr 2022 10:15:24 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9041B5A5B1
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Apr 2022 07:12:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1650636749;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=b4vVy2X/vSkmkisOYCtbR9YKcPHrgPRgzrCQb4ctjhU=;
+        b=M0F8t95EZ3rqjgFz4bePjZASSk/m9Q2CLapoR4Az71Rq8T1V+W9FXg+DYfP1En55wuhgnt
+        rLuwue2BtgIY4Ujn2HrU9xqv30aYSJTDljUJv8IWnas40h0YudOYNx4jnsObSHcw7iko5R
+        4NDivGiVmGvIufxCxEtXrSXfwZboDKY=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-336-2iM9K-EDMJi8v9NTYgS1Aw-1; Fri, 22 Apr 2022 10:12:27 -0400
+X-MC-Unique: 2iM9K-EDMJi8v9NTYgS1Aw-1
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B6DCD83397A
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Apr 2022 14:12:26 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.16.155])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9C8BA41636B
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Apr 2022 14:12:26 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: fix soft lockup via spinning in filestream ag selection loop
+Date:   Fri, 22 Apr 2022 10:12:26 -0400
+Message-Id: <20220422141226.1831426-1-bfoster@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [PATCH v13 3/7] pagemap,pmem: Introduce ->memory_failure()
-To:     Miaohe Lin <linmiaohe@huawei.com>
-CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, <linux-kernel@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <linux-mm@kvack.org>, <linux-fsdevel@vger.kernel.org>
-References: <20220419045045.1664996-1-ruansy.fnst@fujitsu.com>
- <20220419045045.1664996-4-ruansy.fnst@fujitsu.com>
- <f173f091-d5ca-b049-a8ed-6616032ca83e@huawei.com>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <f173f091-d5ca-b049-a8ed-6616032ca83e@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
-X-yoursite-MailScanner-ID: 1CE444D17172.A0528
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.10
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+The filestream AG selection loop uses pagf data to aid in AG
+selection, which depends on pagf initialization. If the in-core
+structure is not initialized, the caller invokes the AGF read path
+to do so and carries on. If another task enters the loop and finds
+a pagf init already in progress, the AGF read returns -EAGAIN and
+the task continues the loop. This does not increment the current ag
+index, however, which means the task spins on the current AGF buffer
+until unlocked.
 
+If the AGF read I/O submitted by the initial task happens to be
+delayed for whatever reason, this results in soft lockup warnings
+via the spinning task. This is reproduced by xfs/170. To avoid this
+problem, fix the AGF trylock failure path to properly iterate to the
+next AG. If a task iterates all AGs without making progress, the
+trylock behavior is dropped in favor of blocking locks and thus a
+soft lockup is no longer possible.
 
-在 2022/4/21 16:24, Miaohe Lin 写道:
-> On 2022/4/19 12:50, Shiyang Ruan wrote:
->> When memory-failure occurs, we call this function which is implemented
->> by each kind of devices.  For the fsdax case, pmem device driver
->> implements it.  Pmem device driver will find out the filesystem in which
->> the corrupted page located in.
->>
->> With dax_holder notify support, we are able to notify the memory failure
->> from pmem driver to upper layers.  If there is something not support in
->> the notify routine, memory_failure will fall back to the generic hanlder.
->>
->> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
->> ---
->>   drivers/nvdimm/pmem.c    | 17 +++++++++++++++++
->>   include/linux/memremap.h | 12 ++++++++++++
->>   mm/memory-failure.c      | 14 ++++++++++++++
->>   3 files changed, 43 insertions(+)
->>
->> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
->> index 58d95242a836..bd502957cfdf 100644
->> --- a/drivers/nvdimm/pmem.c
->> +++ b/drivers/nvdimm/pmem.c
->> @@ -366,6 +366,21 @@ static void pmem_release_disk(void *__pmem)
->>   	blk_cleanup_disk(pmem->disk);
->>   }
->>   
->> +static int pmem_pagemap_memory_failure(struct dev_pagemap *pgmap,
->> +		unsigned long pfn, unsigned long nr_pages, int mf_flags)
->> +{
->> +	struct pmem_device *pmem =
->> +			container_of(pgmap, struct pmem_device, pgmap);
->> +	u64 offset = PFN_PHYS(pfn) - pmem->phys_addr - pmem->data_offset;
->> +	u64 len = nr_pages << PAGE_SHIFT;
->> +
->> +	return dax_holder_notify_failure(pmem->dax_dev, offset, len, mf_flags);
->> +}
->> +
->> +static const struct dev_pagemap_ops fsdax_pagemap_ops = {
->> +	.memory_failure		= pmem_pagemap_memory_failure,
->> +};
->> +
->>   static int pmem_attach_disk(struct device *dev,
->>   		struct nd_namespace_common *ndns)
->>   {
->> @@ -427,6 +442,7 @@ static int pmem_attach_disk(struct device *dev,
->>   	pmem->pfn_flags = PFN_DEV;
->>   	if (is_nd_pfn(dev)) {
->>   		pmem->pgmap.type = MEMORY_DEVICE_FS_DAX;
->> +		pmem->pgmap.ops = &fsdax_pagemap_ops;
->>   		addr = devm_memremap_pages(dev, &pmem->pgmap);
->>   		pfn_sb = nd_pfn->pfn_sb;
->>   		pmem->data_offset = le64_to_cpu(pfn_sb->dataoff);
->> @@ -440,6 +456,7 @@ static int pmem_attach_disk(struct device *dev,
->>   		pmem->pgmap.range.end = res->end;
->>   		pmem->pgmap.nr_range = 1;
->>   		pmem->pgmap.type = MEMORY_DEVICE_FS_DAX;
->> +		pmem->pgmap.ops = &fsdax_pagemap_ops;
->>   		addr = devm_memremap_pages(dev, &pmem->pgmap);
->>   		pmem->pfn_flags |= PFN_MAP;
->>   		bb_range = pmem->pgmap.range;
->> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
->> index ad6062d736cd..bcfb6bf4ce5a 100644
->> --- a/include/linux/memremap.h
->> +++ b/include/linux/memremap.h
->> @@ -79,6 +79,18 @@ struct dev_pagemap_ops {
->>   	 * the page back to a CPU accessible page.
->>   	 */
->>   	vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
->> +
->> +	/*
->> +	 * Handle the memory failure happens on a range of pfns.  Notify the
->> +	 * processes who are using these pfns, and try to recover the data on
->> +	 * them if necessary.  The mf_flags is finally passed to the recover
->> +	 * function through the whole notify routine.
->> +	 *
->> +	 * When this is not implemented, or it returns -EOPNOTSUPP, the caller
->> +	 * will fall back to a common handler called mf_generic_kill_procs().
->> +	 */
->> +	int (*memory_failure)(struct dev_pagemap *pgmap, unsigned long pfn,
->> +			      unsigned long nr_pages, int mf_flags);
->>   };
->>   
->>   #define PGMAP_ALTMAP_VALID	(1 << 0)
->> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
->> index 7c8c047bfdc8..a40e79e634a4 100644
->> --- a/mm/memory-failure.c
->> +++ b/mm/memory-failure.c
->> @@ -1741,6 +1741,20 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
->>   	if (!pgmap_pfn_valid(pgmap, pfn))
->>   		goto out;
->>   
->> +	/*
->> +	 * Call driver's implementation to handle the memory failure, otherwise
->> +	 * fall back to generic handler.
->> +	 */
->> +	if (pgmap->ops->memory_failure) {
->> +		rc = pgmap->ops->memory_failure(pgmap, pfn, 1, flags);
->> +		/*
->> +		 * Fall back to generic handler too if operation is not
->> +		 * supported inside the driver/device/filesystem.
->> +		 */
->> +		if (rc != -EOPNOTSUPP)
->> +			goto out;
->> +	}
->> +
-> 
-> Thanks for your patch. There are two questions:
-> 
-> 1.Is dax_lock_page + dax_unlock_page pair needed here?
+Fixes: f48e2df8a877ca1c ("xfs: make xfs_*read_agf return EAGAIN to ALLOC_FLAG_TRYLOCK callers")
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-They are moved into mf_generic_kill_procs() in Patch2.  Callback will 
-implement its own dax lock/unlock method.  For example, for 
-mf_dax_kill_procs() in Patch4, we implemented 
-dax_lock_mapping_entry()/dax_unlock_mapping_entry() for it.
+I included the Fixes: tag because this looks like a regression in said
+commit, but I've not explicitly verified.
 
-> 2.hwpoison_filter and SetPageHWPoison will be handled by the callback or they're just ignored deliberately?
+Brian
 
-SetPageHWPoison() will be handled by callback or by mf_generic_kill_procs().
+ fs/xfs/xfs_filestream.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-hwpoison_filter() is moved into mf_generic_kill_procs() too.  The 
-callback will make sure the page is correct, so it is ignored.
-
-
---
-Thanks,
-Ruan.
-
-> 
-> Thanks!
-> 
->>   	rc = mf_generic_kill_procs(pfn, flags, pgmap);
->>   out:
->>   	/* drop pgmap ref acquired in caller */
->>
-> 
-
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index 6a3ce0f6dc9e..be9bcf8a1f99 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -128,11 +128,12 @@ xfs_filestream_pick_ag(
+ 		if (!pag->pagf_init) {
+ 			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
+ 			if (err) {
+-				xfs_perag_put(pag);
+-				if (err != -EAGAIN)
++				if (err != -EAGAIN) {
++					xfs_perag_put(pag);
+ 					return err;
++				}
+ 				/* Couldn't lock the AGF, skip this AG. */
+-				continue;
++				goto next_ag;
+ 			}
+ 		}
+ 
+-- 
+2.34.1
 
