@@ -2,150 +2,150 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB15BC433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Apr 2022 01:06:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE01C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Apr 2022 01:06:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230231AbiDWBJk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Apr 2022 21:09:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35546 "EHLO
+        id S230253AbiDWBJx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Apr 2022 21:09:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229941AbiDWBJj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Apr 2022 21:09:39 -0400
+        with ESMTP id S229941AbiDWBJw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Apr 2022 21:09:52 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C914E19981C
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Apr 2022 18:06:43 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23MKEaHj009092;
-        Sat, 23 Apr 2022 01:06:42 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD76B19C8DA
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Apr 2022 18:06:56 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23MK6Jcw025975;
+        Sat, 23 Apr 2022 01:06:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : subject
  : from : to : date : in-reply-to : references : content-type :
  content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=PorJbU+wMlGa5Cd+f3WI2cEAWzVU9+bXPmRrv9nzMHQ=;
- b=he61xvB9qf3zqfm/3OpNBOGHWMLsWvWLkf6GdSAmATEWSEFzb0/QmtHo3wCYQnGXTx6M
- lyEEW0qHs660mFK1j1jUIzrZtgvCjU7iwdEa6dRtTOjEbsCVpQTo0jermpZi7UeiMK99
- 7ilr4sS77J1LYLv8TiNUGt+e+Hry567so9i+YHtsOrQkkTur5+BGfrUWuvQm+K/NKZtK
- oVZHuJAJ0RDrgWJmy3BrgpA8QDGH2BDuiVxLHlN9aC4Q8ELT0SiANLuUYYUVlLd7VY3H
- zbHsyWHD+P+8kFPGvS2/JTx/XfrkeGeTw8OEfB90xbTYNe/SuvNVRIUMEKdUskhVKI2U 9Q== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ffmk3007w-1
+ bh=M4bVvHyLVuZi+ZjxpbEwwAmQxzq5lFPYNg1IS8nce/c=;
+ b=lv5FvBMjdkZ+FPedxCtRMd8dS2XUUfhZ2dm46wLBZI6u6sMIIPBltn+f3Q3r0C9B7/+K
+ 8VbhysXz3bkrg+J3Ns/kfM+ZqE8+shzGrxn4BLRVZj1EYprMZi6BLoePK8inKD7V9Iro
+ JMAZxOT2Jk2AG8DvB1IUQl4akEVwJk8Yinw8kuejgYS/o/aDIo7NxFwo7/JTtsL2nrub
+ rLt8wgekrfMKKIGdnDay2dfQ3SwD5ltGhnZ1QTd53+pAOgI5veqV+n6aH7zdNJpyoqU5
+ tEST+bIa1z3Pw1tXC2zfhSrZuNGDZcK50g8c7Wv5rS0/7wfdpbaI2bW/lzeob4ZddGSE 1A== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ffm7cyk5b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 23 Apr 2022 01:06:42 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23N0v3MP030980;
-        Sat, 23 Apr 2022 01:06:42 GMT
+        Sat, 23 Apr 2022 01:06:55 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23N16Jlk033473;
+        Sat, 23 Apr 2022 01:06:54 GMT
 Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2042.outbound.protection.outlook.com [104.47.56.42])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3ffm8btsb5-1
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3ffm8eg7rs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 23 Apr 2022 01:06:41 +0000
+        Sat, 23 Apr 2022 01:06:54 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lH8x9VgFHXpTRE/yu1ogyHir9Uh44jl2qV64ul3PLIkI5G7W/euWA1lByAxvArkpX4Lt9mM0129i9H20Jf1mA5/02ocs7XmVEuBcLrGpkHQQKrGIga7S5H5/vMOEybzboEVqteV3vPpVyV3vqgE7Is5A+7yy7T8YqQFs69THgEn8zze2aN1EoiHVrc+AH1IIgWbc4Jx7+c9OjMBdwpQtb3/lXe/7dvTq6kQgBt232j228Hy4Icb4rtwFmkhXPHDdp1GUL1ZHX6G+ab0CB8pF1B1+GqCTesA6YP8RmMugUVLBz50hjKao9mHkLFeJE3+LeGKFy1StpfsAASEOtVpj4w==
+ b=dmUeUsTAdOOfeuUPs8IGJkSgFdQ/IgEcdkt1/HNze4gccQi47wveONXvjbPQLjNzHRrAW67xaaWHjMQklRigrIMJ6Vhp3pihixOfhsDh1b1jrHM+ym9OQVQAHGgu8C7Dxy/s3SKs66NU9Nnyq2ptxFlCHncdipnjAWY9FiB8qNEqAVZB+0O4rmNJEP5O4aNsKkruCISr9xev7e6so6xQ4zUalq3U57bjTcMtwpl+Npqv8xZX5WGQX5nSFQ7dPxhzMofAnD7dS80THZyLRTWg9V0Qbl1mcFgGXBWr9uEeeAloWMoG90LV7dVgaBLjUSqFZj8TSQNkYQgavNSVTXE1sA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PorJbU+wMlGa5Cd+f3WI2cEAWzVU9+bXPmRrv9nzMHQ=;
- b=V23E4UbhKOKg4za8w7UWf5YBbFJTCIGuxtxAfgcquGd6V1zB8cqIwf/IFylHsg/1eTLXG3nbSie5/kilrodX+SbJOV5h8hMTVOJdq7v6FYWuWVNYy/a1odo1sPPejxdyUXT9qi/2Qu2zWyGCQ2Gf9EiBgLptSFTGknZqLTIxXRImTvq5FfmvgISPHZiwyj5QjVzWMpTs+9GYAHoffA0nQ/12yycnkdUXjyvLOk132FWJHHbJ1oEvDR0wzTGc3G3fzW6dgIa291Agu/UuzcvNAUOBlJr5xkNA3owsNok3Dx7Gj3Ifmxm8mPOevAXW1FHi3uvFIG/TtGQQWmPhhw8J5w==
+ bh=M4bVvHyLVuZi+ZjxpbEwwAmQxzq5lFPYNg1IS8nce/c=;
+ b=FC3oB+4vVOsshAhW+FnK/2KvVawnx6o7aCpigSwq36ive2P4/vmRDZ1jawVzcF1mOdi9m8kaWgWV6JcMRunBZzPgugZkXHSea/kz5DRUR13YEeazyBnzSCqWiP4ONsFGK9pHvlefo1c6i0uqNfjkB78g682SejkfCZ7gym1KZgIaerXqVeq1QkQjlvrVlREBF4X17THz5zhuGcFJzErULe7wOf4SS5hUaA97R0WridDfVYSCOvpXlkz60Djtpjj/uFc+uyRLBSlFAb/k81OoesQj2vXzC5tA68yVPderDWTKtYIhDRDBf4fdoRPbj12F2soU8QllGO+pc2kbiVeQDw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PorJbU+wMlGa5Cd+f3WI2cEAWzVU9+bXPmRrv9nzMHQ=;
- b=R/DPj436O7jFRAE4thASBYCPQ9fXkASO+XCN1wVVI/wUGEY6fzSovTPL8MTRGjf7pFuyg3tG6iQeoS4umRbQ0xH4Mub4sCZhKLKBoJa0hJ5ngDRYoZQeuZ9Ddzzcz+KSP/Wesv7LcA6T4QpIjm5NBx5dQIS6BfHnL95tPdTdbUs=
+ bh=M4bVvHyLVuZi+ZjxpbEwwAmQxzq5lFPYNg1IS8nce/c=;
+ b=JCIOLkOp5xrsHocOy9iCt9UqIR4v3L2CaV9lIQPR25J2YhLUS7R0TfZHt7RKYB2KiYiwUv6fiqaK0beUUfTkQf72CQPL6lE1pMednReo5PdjdcBRxqrt7NV7GtIwyLQXmB5xQRC9AOUCpViW/v93i+BfPoKvvhuK6FwIWqsaxoI=
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by MWHPR10MB1949.namprd10.prod.outlook.com (2603:10b6:300:10c::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.15; Sat, 23 Apr
- 2022 01:06:39 +0000
+ 2022 01:06:47 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::a0d7:21c9:1b7e:455f]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::a0d7:21c9:1b7e:455f%9]) with mapi id 15.20.5186.018; Sat, 23 Apr 2022
- 01:06:39 +0000
-Message-ID: <4a536bea577f3f49ddfce4bbe7a0d90290ab99a3.camel@oracle.com>
-Subject: Re: [PATCH 08/16] xfs: XFS_DAS_LEAF_REPLACE state only needed if
- !LARP
+ 01:06:47 +0000
+Message-ID: <5d4b79d43bee81b25df43eaec294ee9b8b58ec0d.camel@oracle.com>
+Subject: Re: [PATCH 10/16] xfs: clean up final attr removal in
+ xfs_attr_set_iter
 From:   Alli <allison.henderson@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Date:   Fri, 22 Apr 2022 18:06:38 -0700
-In-Reply-To: <20220414094434.2508781-9-david@fromorbit.com>
+Date:   Fri, 22 Apr 2022 18:06:46 -0700
+In-Reply-To: <20220414094434.2508781-11-david@fromorbit.com>
 References: <20220414094434.2508781-1-david@fromorbit.com>
-         <20220414094434.2508781-9-david@fromorbit.com>
+         <20220414094434.2508781-11-david@fromorbit.com>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.5-0ubuntu1 
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR13CA0097.namprd13.prod.outlook.com
- (2603:10b6:a03:2c5::12) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: SJ0PR03CA0379.namprd03.prod.outlook.com
+ (2603:10b6:a03:3a1::24) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d214127d-e7b5-4a37-edd5-08da24c58597
+X-MS-Office365-Filtering-Correlation-Id: 16fbb6d8-e2a8-4dcf-f324-08da24c58a1e
 X-MS-TrafficTypeDiagnostic: MWHPR10MB1949:EE_
-X-Microsoft-Antispam-PRVS: <MWHPR10MB1949878066357DCE9401012095F69@MWHPR10MB1949.namprd10.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <MWHPR10MB1949C5E2FC1ED103833859F295F69@MWHPR10MB1949.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: UkllHBrDmxQl79tJbo6MISFhmdYlYxmTJJIN+RGlq/rsPaRkE2BOdCpasvNhCKWNXGlZTLTgvP90nr1D8xXvPJG7uLeXu6U8+CYFzFTrcUKq42zu9xCHZLHS2PqBh+WAUuVt/DeLIqG0LQBFlILSeDFD0LnFPLcLZ30h/KWUthnpNNIuc/LsAqZ8gx3hwoTE/Grz4ei8iNyOn2xaOl/DwpUTLZbZtwEMTw2VmcGpDBLO+zLNHVgq9s9rwmaRPrJSbQuDk8JX4kFiOS2Vdw69HrkvGiYCqz7qONE2WT8xrPrbx3mA593apNF66F0xJC1RMLSVyAqPOZkeJotstxfoNKBmsnMN3zH5i5/EkPsXsiqc5A4XQjbzw1+UMDboU7si9PzW7dTnxdPQBRRPDseebmg1/fthky2ppY+E6+MzjF9VQcb93WAwGdG6Vhj/YxP4f6OqmqsvHr6ZjknzWNJUbiA69cVYBhpsagm5q0PnRpWPMylx6gz/+E6bnfc5sH5JXOudzTJXD6YMcXXYVHB+wRtYVlnY/1qI0humEYNetjnAYl32W9Z2NN8crw8KUY3O14z33rKKciZSxIjd81sYJ+WJ9T2U5lo+7JJP/v/n1pf3uV8JN2c10NkLyMuPvaa3NK8+FiyQgDI4g3qZ2BW9aLCxCsihH4J785CPHckLdtluMfAi4O+IBf+xLSeVhipHulHf+ZiGFssozRiTnCdqCA==
+X-Microsoft-Antispam-Message-Info: giP63HXvFd+odxOf5e2eh17OgVrji9mLcgMNetzkY0AtNTv4PzzMbpL0mxxhy0ytQywAQ4x1U3AdlPQHSuXFXZ1bzB2EFC9hpv7xdf1X7KamhFa5kBAnnLypQ3wG/lsABHMjymNvtOoXcciB6EARFBy2u5A0PGmWulg4EucAPWzOkLCAFKUxD0/CKJWekZxiVbgShxSP6mVCh8eojulSdPIYFlHqWEExeKrheoSFmr/QkDIv3xzbWhDd2qAKEDF6W6YDR16ZATytZ4LmFaa1t057uBJEldz7YYTAHz4727oxFOmGb+6WSgIlomisw4Behs0oFHKjjpBQTrvJKWWgGyabm8QwzoqktLZivdc2vcHtOi0JgnwkEtbYR60c4vmQ8jtoz0X5WPYT+1lvQnAHk9s8QG2xGghjzUfSgQJRDeZTkpJ6nx16lRmTWKIiq3hYRIojLsX4ql3kgyieYDrUMiHL5IpiioP115HCBnpqOm5XUEv8w268i9sjDxQe5/Kr70WoMVOVCNoRH4cPc0PqiwiQorcfxdDRqZ+CsHV5o1LuAGKBgS21JjhqDjAEjgWCW2mjhWhpHCP9miNErsDN19vbk5hM98DJg3UhzSHPlcK5zf3wrRVQQiITcLVIPEcvmNBqsQ7xqOUsFMafUL/wJ5AvlwRTl7KuH77Um70EFE1qO3pGXzMpdA6clhCLdK/h6JLtecOPaRtbLWEf7Yrafg==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(52116002)(6512007)(2906002)(8936002)(26005)(316002)(8676002)(66476007)(66556008)(66946007)(38350700002)(86362001)(38100700002)(5660300002)(2616005)(6506007)(186003)(508600001)(6486002)(83380400001)(36756003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?RTZXMnliRXJFSzhBNlh4M2t4d1JBU1JkTlQ0VXFKcng1ZnV5bjVSdm1kVnZV?=
- =?utf-8?B?UGl4ZlloTjA1QlFCNlhxSUNlbDBjdlg0bzVKZzd0V1hPUm1idVZ4VXJDVG9t?=
- =?utf-8?B?MnFBdThCcWk0cWMzRjNGNThmbGNvbldkMXZqb2xGZWdjSUg3NDR1b3NFcTJt?=
- =?utf-8?B?NkNlSGFtTXQzOTFDNHFWcUQ3VWFMRFNYZjQ1NjBDaUluVHAvd09GRnZpbUJB?=
- =?utf-8?B?OTkvUlNLVzNiN3hWY1orTVVLTU5kejdWM1FjZUF6bjRhWXVGMmlkYzMzUVNt?=
- =?utf-8?B?dGhlMkVSZXlWZmVyTlkxeXFvN29xZ3VVTkFIZ3IxRUFjVFZ5QjJxSnJ0YWV1?=
- =?utf-8?B?bUlkQzlwU0w5UGpVdXJkZHRYUDhPKzNMS0tDYmFRVWN2RUFDTFlGWXI3S1c3?=
- =?utf-8?B?UVFFanpZTVhNMHZ2UjZJRW1TVEdoSjN4eWtRaStydG8wQitadnBYcXNLY1FO?=
- =?utf-8?B?YllZRFJnanFpbnlJWXVMUlBvZjZpUmdPbTdNQzhKd2FBNkdGeGJsSTRNRVRa?=
- =?utf-8?B?NHAvem55akNlSVlkcFdyWkhjYnhHeXpVVTUrTVNGcGovUERvVS9xUUFBVkRK?=
- =?utf-8?B?S0JkM0JGNVBmWHB6QUhHek9hSXVnU2Y0cE10aEVOdHoxZWNVeVZFN1ByYkpq?=
- =?utf-8?B?U3U1THZwYWFDbjViVC9vcnZMdklnbTh0ZEE0MG5nN0sva1ZpZ2Q5Y25tUGFj?=
- =?utf-8?B?VmZWTTRNZzBqMSszY3g1RElDekMySWxyaEQ2amhLb051Y3FkMmxlanM4WmRk?=
- =?utf-8?B?WDFnQWZLd2Zqei8vUEpYMUs2WmdFdG9qSTZiaGJEdldSaUVqUVFndjEwcVlr?=
- =?utf-8?B?aWkvM3lOYldjaEM1cnA2bW9ZejlaVXNsQVhqam9QK3d6dDRwZTgyOWRYMCtS?=
- =?utf-8?B?UzMwVVY4ZE1Vd1krZ09BUnpjcThZamNFNzY1WnRMdkdOdnl6UTBSc1dIMmtM?=
- =?utf-8?B?Rk5KZVhRdTl6Y1VRS1Z4U1RXVDdMQ1Nzc0luU2dhV2FxVjhUSlhjVTJyTzhs?=
- =?utf-8?B?TGRtazlzWU5HUE0vc0I0MmJzSTNpNEdQOWZ4UVRzUXpSTm9WQlVQUGlNZFFw?=
- =?utf-8?B?SGlud0xlTVNhQkZLbVNqejlNZGMrU1U3TG8zdTlaOEpzZzFHYVB4SUNPcnoz?=
- =?utf-8?B?bmhpa2JTR0NMUXR4UjdNakpLZXBYS3JIenFMaDJyaGdZZGkxakxJZlJEb2Ra?=
- =?utf-8?B?WmRmZzdCMUkweTl2enNKYUtxWFg5Wk41N1dxbUpjdS9TTGQ2c3hNRVFVRU9t?=
- =?utf-8?B?YUQwV05xT24yNWtqTjFiM3BZSmtkRFZKR0VLZm9WRzhyejlpNW9iU2llSERQ?=
- =?utf-8?B?SjVFY1ZSR00xUW9MWnBLa2VqcVA0UC9oM2xHLzRmMmZvWWdtQVk4eUtaNytw?=
- =?utf-8?B?dlliTXNiNHBxUTZIQ0JscVhnTzZFMFE3UEVVWkxTWGgrQzJTYitaVHl5WWRl?=
- =?utf-8?B?bUxFYWRuNFJMNWc3TzE5akhvaStqTUVMdEJlTXV4dGhQN1V5WnJNTWhpUU4w?=
- =?utf-8?B?TlcwMVpSSnRKYzdhSzZGRHorZ1RsMklZcmJ1OHBOV1NhL0M1N08zRHpBVHdL?=
- =?utf-8?B?RVV5VnVNOGhnVkUyTUtPVWVrRW5RdnJlRWhpODJCVlIwUnJiQ2VnRUcyaUx4?=
- =?utf-8?B?SEFBb3pxMG9FRkM5V3A4WnZxT1Zia2k2aVRxNkl4amJKWFZOQnltdjJ6UEZj?=
- =?utf-8?B?cXlxNUpUcGZlSDFVVnNwNko4VkFhNXZuTGp0bTAvUExUelk3T2h5RXkvQWYv?=
- =?utf-8?B?WWlJWlpNU2M5Tjc3Q1RNakhmWDRKNFBMSlNvU3c0RGtOSUpsVUZnaWRBZnJ1?=
- =?utf-8?B?TUZMZUhReFJHWFMvZWdlMlh4MHYzUDJJU05QVVFiZllUOGRLNWdPaTg0K1Ix?=
- =?utf-8?B?aVUzTkUzWFllaEk0WEtueFI3b1FSa003dWJJekg3Y01NZHZ3c2xQSHlhYWcx?=
- =?utf-8?B?UmluSGF3SEtDTjF5ZzV0UXd5ZW9RTE9DcmFXZ0xLU1FCL2pSQURMNHVxdmtN?=
- =?utf-8?B?UnUvZkN1KzBIMVIzNWI4ZkpjZ0tHUWtBQnlCeXNKUWxray9SY3ExU2RZM0VG?=
- =?utf-8?B?aGZoWGcyc0J5eHZnVnhWRnQ0NlExZmxqZlBZYWkxRUxydXM4amV3MTArNWVZ?=
- =?utf-8?B?d1U4WVd0RmNzWTBvOXMwRUU3MkxwN1NlWm1BeFZQMWFuMWh2UE94TVJ0YzJH?=
- =?utf-8?B?ZWgvaU4yNHNnN2NDRkRCd3B1eDcxSHZqcVppRHptbGoydS9NZWw3MUZXZ2Vh?=
- =?utf-8?B?S3ZHa2lnRzJOM2ROVG5xNWdJdHhwYnRMeFlURHB6Uk1aWnRJN1BWT2hSYU5i?=
- =?utf-8?B?dmg0eGhFZkpCR3R4Y0k1Q3llTnBDSE9STVpSZlc3ck8wWWY2Q3h5TFdsbEwy?=
- =?utf-8?Q?Kuljq/Pceqrh5pZI=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Nk5xS29oM3ljWVdISVhMV3kzcnl4cmN6NGRLbUFBQTZFblF3bWVuT1RQTXFT?=
+ =?utf-8?B?MXBDZWF0bldSY0piOVZrbzZKK3ZVOVN2b2w5bkhqVktqZGNqcnhTYWpFWnND?=
+ =?utf-8?B?d0JiZUdvaWNmamUyb2Nud2dlZUNFdFZIVW1iS090ZVhUc25CeFNFWEFzNHdt?=
+ =?utf-8?B?c0pPNW0wTTQwZzFrOGlaMmgrZitvMzhoaDBqUUQvcisyOTArQzZ5M3laUWVH?=
+ =?utf-8?B?dzhXOUd3RlJIUG51TFBRZHJ5REZzMGVtSUZvU0pJNDlxWUNZNXF3M1V4S0E2?=
+ =?utf-8?B?UHpVUEdxVFJwQW9vWGRpWGRIbkhRT3gwSlZ5dTRja09hd3hxSUNXMDdWYk1W?=
+ =?utf-8?B?OTBGN3p2aVdNb2kwMm1sNU5YajV3K0UzZGI1Z1o0T2FPTlZuVEhrSmZMc05F?=
+ =?utf-8?B?RVovcytoMTlwU0NFZDFQT0hnV1VObU5GNHdkSkg3ajlXdnljVVViZTRJRnF1?=
+ =?utf-8?B?aDZYNUlOQUMvWm9UUEZic2RRdTY2K3BaMWpCYTF3bnBWNXlzYXVhRmRiWEd0?=
+ =?utf-8?B?WGF1Y2VzMmFjSmFzTHdFYmZhalBKbU41R01Zc2VQUGRVTGxBMEUzaGVoRjM2?=
+ =?utf-8?B?SCtKd0UzcGVaRUxiYkJYVDd4MXNHRUEvbkxKUDRFVG5nQ3lJakI2cHNnV1Fq?=
+ =?utf-8?B?czFSUmh0MzY2NGloeUVibFhnamFsWUNXY3VKMnNmRy9jak04UHBkdXN5UnBQ?=
+ =?utf-8?B?eXJwaWxZWkFKUFZiY21INjl4UzVTOHZBUkZCWGFEenBDSWdBNENVakJzdHBL?=
+ =?utf-8?B?ekQrUUVrdEFrTVpQU1lqUGJjVVFQcXpGOStkZzluOWdhRDN3RzhaQXEzcERp?=
+ =?utf-8?B?UFIweG5LTk5iUUt0UFFTS0JNb3NlLzlMUWFOVXFpVXlreGF1OWV6M1ZkMUJO?=
+ =?utf-8?B?eXdOR3NuaFFXK3dTSDJySDRCandtcHJDL0xrU3ZPS3hoR0tybENhcjkxOFYz?=
+ =?utf-8?B?OUVBQXVUUFdEeDlPMWlDSG1zRU50VXhCVHBja0NkNjBDOTk5ZjFMZ29NYzVT?=
+ =?utf-8?B?citubDVjdVMvWUwyWC91N1dtdU00bnRoRjZneTdmZGlGWFl1Q1hxM3orakJP?=
+ =?utf-8?B?RjhzT0xtNFg4VTBrNTFJbjJRSFR1TEFJZ3dqSXNRY1FVWXE3eUZaNEZ0WWZT?=
+ =?utf-8?B?dDNKc0szUXBYNHFuYlZvZXJKR1RJdEkvOFRrdmtTNjNROHlPSDZrb2JuRHRV?=
+ =?utf-8?B?TkZzSy9oL0FGQndwa0F3ajZyN1BhdUVPcUZoalpHVkdxelkzZGdLNzlpbHUz?=
+ =?utf-8?B?RjlsZGJINnhvdGpuaXUrRGRETHhBU05WQktoVXM4NEQreDU0RHAraFUwNWJO?=
+ =?utf-8?B?bmlKS09ZZFgvRTVHeXNlZURJb0ZpcXdLQVhLenptMFpFUW9NMlYvbEFZTnNx?=
+ =?utf-8?B?VVBManRJVWVNTndacEdHYUtja0NUZ1ppRWI4ak1ZalJ1WGJuTDh1UFBGN1FS?=
+ =?utf-8?B?cStPbngwN3FSdkRLbnZma1NMUko3cDFPQmEyRW12bkZSdjgxcDNhaXphRStX?=
+ =?utf-8?B?WFF1RnJSRDZwSHVVa0RWcVV2UVFnazh6Znk5QURkR3BTUHJhYUMwOHFUVmt4?=
+ =?utf-8?B?TkNZSHVFcml4QWdqVkJDeHo0WDRCTEtkRmhMSitxNmsrUmdDcVg5QjhCNFJr?=
+ =?utf-8?B?TlhQNlkxRkduYVh0cXM0SjFyVDdZOHIxYkFpaFdrcThFTy9NYVlZL2ltRmUr?=
+ =?utf-8?B?YW8rRHl6NmxnQ3BNbSttZ05jTEJWUVNaYU85eWpKOUozNW55cG4wcWVaWnV0?=
+ =?utf-8?B?NzdBN3FaSzl3YnVCRHpzWC9SU2ZhUWZrTUo2RFdHcGRDM1QzSDNPcmNTUFY5?=
+ =?utf-8?B?YmNEWkFxM0RTT0hPZ0g1cklDUTJtdlljcWtzTmVsMVJTb1hCWWVNUkJNYUky?=
+ =?utf-8?B?Nm5sSlRpUUhDS1lxYjducjVjS1NEQUpJRUhmWVJrNmZsaW9xTTBmZG5nMXhl?=
+ =?utf-8?B?REhtNFhCWW4yL25qMFJTc0RsT2lCbUozNXBIekNWWDZGZU5CbGxybkU4Rkda?=
+ =?utf-8?B?TE1jeWJtT0tIUVpIanpkaEdEMVJPdW0rUXFTYk1BeElyTWw0MVVSZldlNUla?=
+ =?utf-8?B?ZWlLUUhPRWhHSG1vbm03RFJXZG1COGJISU1jQnFYU3RwWjdHMHhWVlZGcm9i?=
+ =?utf-8?B?ZHdnQmxXcVR2bDJoM2JzZ3UwSGFGVzVIZUpEVFFTaHF0aVRXK3RpbVd3anpk?=
+ =?utf-8?B?SW5tTjkrbDBIdW9GdGVpcFVGeVdnbWxuQ3ZoVzVTd1JyQjZHckI5QmNOWS9I?=
+ =?utf-8?B?UDZLT3NGUnpMeFI5UHYzUnFzaW9wUmZ4L2pQekNkWHRKMFFEYjkxUWhObFZW?=
+ =?utf-8?B?ZGcvaEowZDh2VjJZNmtLOTc2T2dFV1lTZ21NTWMraHM3UVlka2c4czc3YXZJ?=
+ =?utf-8?Q?IgTFVo152SQsDDQE=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d214127d-e7b5-4a37-edd5-08da24c58597
+X-MS-Exchange-CrossTenant-Network-Message-Id: 16fbb6d8-e2a8-4dcf-f324-08da24c58a1e
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Apr 2022 01:06:39.5779
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Apr 2022 01:06:47.2037
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6STHLVZIdfDjo/bPfTeKTTnSGQUDz0aJALA7/jwlT4ru3z+rB3GfpgIPw96xOyJOHOCvsigtlKpqrTt4NbI+Mib0KnxuxUa4IpZHaqWvjZY=
+X-MS-Exchange-CrossTenant-UserPrincipalName: 7Xc9ioB5WmPpBwqZIJ+yEo1P8Y8XDPRuxvTRGKPtQmQrzaLJf06cf2niDFBLEIGqUI7zae19+hvNMCuP2CRMIWPdT/nOjhcfiUDx7u2roGQ=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR10MB1949
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
  definitions=2022-04-22_07:2022-04-22,2022-04-22 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
- suspectscore=0 mlxscore=0 spamscore=0 mlxlogscore=999 phishscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2204230002
-X-Proofpoint-GUID: PJKyN_y61dZBKCN3zcHwGQW7i8wnAygl
-X-Proofpoint-ORIG-GUID: PJKyN_y61dZBKCN3zcHwGQW7i8wnAygl
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0
+ malwarescore=0 mlxlogscore=999 suspectscore=0 spamscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2204230003
+X-Proofpoint-GUID: 3Gn5MB28ZAop1smAjv8dBggHFSSCgCui
+X-Proofpoint-ORIG-GUID: 3Gn5MB28ZAop1smAjv8dBggHFSSCgCui
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -153,284 +153,226 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On Thu, 2022-04-14 at 19:44 +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We can skip the REPLACE state when LARP is enabled, but that means
-> the XFS_DAS_FLIP_LFLAG state is now poorly named - it indicates
-> something that has been done rather than what the state is going to
-> do. Rename it to "REMOVE_OLD" to indicate that we are now going to
-> perform removal of the old attr.
+> Clean up the final leaf/node states in xfs_attr_set_iter() to
+> further simplify the highe level state machine and to set the
+> completion state correctly.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Ok, I can follow it
+Reviewed-by: Allison Henderson<allison.henderson@oracle.com>
+
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 79 ++++++++++++++++++++++++++----------
-> ----
->  fs/xfs/libxfs/xfs_attr.h | 44 +++++++++++-----------
->  fs/xfs/xfs_trace.h       |  4 +-
->  3 files changed, 75 insertions(+), 52 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c | 72 +++++++++++++++++++++++---------------
+> --
+>  fs/xfs/libxfs/xfs_attr.h | 12 +++----
+>  fs/xfs/xfs_trace.h       |  5 +--
+>  3 files changed, 50 insertions(+), 39 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 4b9c107fe5de..c72f98794bb3 100644
+> index 8762d3a0605a..9dc08d59e4a6 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -309,6 +309,23 @@ xfs_attr_sf_addname(
+> @@ -61,7 +61,7 @@ STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+>  STATIC void xfs_attr_restore_rmt_blk(struct xfs_da_args *args);
+>  static int xfs_attr_node_try_addname(struct xfs_attr_item *attr);
+>  STATIC int xfs_attr_node_addname_find_attr(struct xfs_attr_item
+> *attr);
+> -STATIC int xfs_attr_node_addname_clear_incomplete(struct
+> xfs_attr_item *attr);
+> +STATIC int xfs_attr_node_remove_attr(struct xfs_attr_item *attr);
+>  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+>  				 struct xfs_da_state **state);
+>  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+> @@ -451,6 +451,36 @@ xfs_attr_rmtval_alloc(
 >  	return error;
 >  }
 >  
 > +/*
-> + * When we bump the state to REPLACE, we may actually need to skip
-> over the
-> + * state. When LARP mode is enabled, we don't need to run the atomic
-> flags flip,
-> + * so we skip straight over the REPLACE state and go on to
-> REMOVE_OLD.
+> + * Remove the original attr we have just replaced. This is dependent
+> on the
+> + * original lookup and insert placing the old attr in args-
+> >blkno/args->index
+> + * and the new attr in args->blkno2/args->index2.
 > + */
-> +static void
-> +xfs_attr_dela_state_set_replace(
-> +	struct xfs_attr_item	*attr,
-> +	enum xfs_delattr_state	replace)
+> +static int
+> +xfs_attr_leaf_remove_attr(
+> +	struct xfs_attr_item		*attr)
 > +{
-> +	struct xfs_da_args	*args = attr->xattri_da_args;
+> +	struct xfs_da_args              *args = attr->xattri_da_args;
+> +	struct xfs_inode		*dp = args->dp;
+> +	struct xfs_buf			*bp = NULL;
+> +	int				forkoff;
+> +	int				error;
 > +
-	ASSERT(replace == XFS_DAS_LEAF_REPLACE ||
-	       replace == XFS_DAS_NODE_REPLACE)
-?
-
-> +	attr->xattri_dela_state = replace;
-> +	if (xfs_has_larp(args->dp->i_mount))
-> +		attr->xattri_dela_state++;
+> +	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno,
+> +				   &bp);
+> +	if (error)
+> +		return error;
+> +
+> +	xfs_attr3_leaf_remove(bp, args);
+> +
+> +	forkoff = xfs_attr_shortform_allfit(bp, dp);
+> +	if (forkoff)
+> +		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+> +		/* bp is gone due to xfs_da_shrink_inode */
+> +
+> +	return error;
 > +}
 > +
->  static int
->  xfs_attr_leaf_addname(
->  	struct xfs_attr_item	*attr)
-> @@ -351,7 +368,7 @@ xfs_attr_leaf_addname(
->  		attr->xattri_dela_state = XFS_DAS_LEAF_SET_RMT;
->  		error = -EAGAIN;
->  	} else if (args->op_flags & XFS_DA_OP_RENAME) {
-> -		attr->xattri_dela_state = XFS_DAS_LEAF_REPLACE;
-> +		xfs_attr_dela_state_set_replace(attr,
-> XFS_DAS_LEAF_REPLACE);
->  		error = -EAGAIN;
->  	} else {
->  		attr->xattri_dela_state = XFS_DAS_DONE;
-> @@ -382,7 +399,7 @@ xfs_attr_node_addname(
->  		attr->xattri_dela_state = XFS_DAS_NODE_SET_RMT;
->  		error = -EAGAIN;
->  	} else if (args->op_flags & XFS_DA_OP_RENAME) {
-> -		attr->xattri_dela_state = XFS_DAS_NODE_REPLACE;
-> +		xfs_attr_dela_state_set_replace(attr,
-> XFS_DAS_NODE_REPLACE);
->  		error = -EAGAIN;
->  	} else {
->  		attr->xattri_dela_state = XFS_DAS_DONE;
-> @@ -421,6 +438,13 @@ xfs_attr_rmtval_alloc(
->  	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
->  		error = xfs_attr3_leaf_clearflag(args);
->  		attr->xattri_dela_state = XFS_DAS_DONE;
-> +	} else {
-> +		/*
-> +		 * We are running a REPLACE operation, so we need to
-> bump the
-> +		 * state to the step in that operation.
-> +		 */
-> +		attr->xattri_dela_state++;
-> +		xfs_attr_dela_state_set_replace(attr, attr-
-> >xattri_dela_state);
->  	}
->  out:
->  	trace_xfs_attr_rmtval_alloc(attr->xattri_dela_state, args->dp);
-> @@ -442,7 +466,6 @@ xfs_attr_set_iter(
->  	struct xfs_inode		*dp = args->dp;
->  	struct xfs_buf			*bp = NULL;
->  	int				forkoff, error = 0;
-> -	struct xfs_mount		*mp = args->dp->i_mount;
+>  /*
+>   * Set the attribute specified in @args.
+>   * This routine is meant to function as a delayed operation, and may
+> return
+> @@ -463,9 +493,7 @@ xfs_attr_set_iter(
+>  	struct xfs_attr_item		*attr)
+>  {
+>  	struct xfs_da_args              *args = attr->xattri_da_args;
+> -	struct xfs_inode		*dp = args->dp;
+> -	struct xfs_buf			*bp = NULL;
+> -	int				forkoff, error = 0;
+> +	int				error = 0;
 >  
 >  	/* State machine switch */
 >  next_state:
-> @@ -470,39 +493,39 @@ xfs_attr_set_iter(
->  		error = xfs_attr_rmtval_alloc(attr);
->  		if (error)
->  			return error;
-> +		/*
-> +		 * If there is still more to allocate we need to roll
-> the
-> +		 * transaction so we have a full transaction
-> reservation for
-> +		 * the next allocation.
-> +		 */
-> +		if (attr->xattri_blkcnt > 0)
-> +			break;
-Hmm, if attr->xattri_blkcnt > 0, then xfs_attr_rmtval_alloc returned
--EAGAIN, and we would have bailed out by now, so I dont think this part
-ever gets executed.  Though I guess it doesnt hurt anything either?
- Rest looks ok though.
-
-Allison
->  		if (attr->xattri_dela_state == XFS_DAS_DONE)
->  			break;
-> -		attr->xattri_dela_state++;
-> -		fallthrough;
-> +
-> +		goto next_state;
->  
->  	case XFS_DAS_LEAF_REPLACE:
->  	case XFS_DAS_NODE_REPLACE:
->  		/*
-> -		 * If this is an atomic rename operation, we must
-> "flip" the
-> -		 * incomplete flags on the "new" and "old"
-> attribute/value pairs
-> -		 * so that one disappears and one appears
-> atomically.  Then we
-> -		 * must remove the "old" attribute/value pair.
-> -		 *
-> -		 * In a separate transaction, set the incomplete flag
-> on the
-> -		 * "old" attr and clear the incomplete flag on the
-> "new" attr.
-> +		 * We must "flip" the incomplete flags on the "new" and
-> "old"
-> +		 * attribute/value pairs so that one disappears and one
-> appears
-> +		 * atomically.  Then we must remove the "old"
-> attribute/value
-> +		 * pair.
->  		 */
-> -		if (!xfs_has_larp(mp)) {
-> -			error = xfs_attr3_leaf_flipflags(args);
-> -			if (error)
-> -				return error;
-> -			/*
-> -			 * Commit the flag value change and start the
-> next trans
-> -			 * in series at FLIP_FLAG.
-> -			 */
-> -			error = -EAGAIN;
-> -			attr->xattri_dela_state++;
-> -			break;
-> -		}
-> -
-> +		error = xfs_attr3_leaf_flipflags(args);
-> +		if (error)
-> +			return error;
-> +		/*
-> +		 * Commit the flag value change and start the next
-> trans
-> +		 * in series at REMOVE_OLD.
-> +		 */
-> +		error = -EAGAIN;
+> @@ -564,32 +592,14 @@ xfs_attr_set_iter(
 >  		attr->xattri_dela_state++;
-> -		fallthrough;
-> -	case XFS_DAS_FLIP_LFLAG:
-> -	case XFS_DAS_FLIP_NFLAG:
+>  		break;
+>  
+> -	case XFS_DAS_RD_LEAF:
+> -		/*
+> -		 * This is the last step for leaf format. Read the
+> block with
+> -		 * the old attr, remove the old attr, check for
+> shortform
+> -		 * conversion and return.
+> -		 */
+> -		error = xfs_attr3_leaf_read(args->trans, args->dp,
+> args->blkno,
+> -					   &bp);
+> -		if (error)
+> -			return error;
+> -
+> -		xfs_attr3_leaf_remove(bp, args);
+> -
+> -		forkoff = xfs_attr_shortform_allfit(bp, dp);
+> -		if (forkoff)
+> -			error = xfs_attr3_leaf_to_shortform(bp, args,
+> forkoff);
+> -			/* bp is gone due to xfs_da_shrink_inode */
+> -
+> -		return error;
+> +	case XFS_DAS_LEAF_REMOVE_ATTR:
+> +		error = xfs_attr_leaf_remove_attr(attr);
+> +		attr->xattri_dela_state = XFS_DAS_DONE;
 > +		break;
-> +
-> +	case XFS_DAS_LEAF_REMOVE_OLD:
-> +	case XFS_DAS_NODE_REMOVE_OLD:
->  		/*
->  		 * Dismantle the "old" attribute/value pair by removing
-> a
->  		 * "remote" value (if it exists).
+>  
+> -	case XFS_DAS_CLR_FLAG:
+> -		/*
+> -		 * The last state for node format. Look up the old attr
+> and
+> -		 * remove it.
+> -		 */
+> -		error = xfs_attr_node_addname_clear_incomplete(attr);
+> +	case XFS_DAS_NODE_REMOVE_ATTR:
+> +		error = xfs_attr_node_remove_attr(attr);
+> +		attr->xattri_dela_state = XFS_DAS_DONE;
+>  		break;
+>  	default:
+>  		ASSERT(0);
+> @@ -1262,8 +1272,8 @@ xfs_attr_node_try_addname(
+>  }
+>  
+>  
+> -STATIC int
+> -xfs_attr_node_addname_clear_incomplete(
+> +static int
+> +xfs_attr_node_remove_attr(
+>  	struct xfs_attr_item		*attr)
+>  {
+>  	struct xfs_da_args		*args = attr->xattri_da_args;
 > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 1de6c06b7f19..a4ff0a2305d6 100644
+> index 18e157bf19cb..f4f78d841857 100644
 > --- a/fs/xfs/libxfs/xfs_attr.h
 > +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -455,7 +455,7 @@ enum xfs_delattr_state {
+> @@ -451,21 +451,21 @@ enum xfs_delattr_state {
+>  	XFS_DAS_RM_NAME,		/* Remove attr name */
+>  	XFS_DAS_RM_SHRINK,		/* We are shrinking the tree
+> */
+>  
+> -	/* Leaf state set sequence */
+> +	/* Leaf state set/replace sequence */
 >  	XFS_DAS_LEAF_SET_RMT,		/* set a remote xattr from a
 > leaf */
 >  	XFS_DAS_LEAF_ALLOC_RMT,		/* We are allocating remote
 > blocks */
 >  	XFS_DAS_LEAF_REPLACE,		/* Perform replace ops on a
 > leaf */
-> -	XFS_DAS_FLIP_LFLAG,		/* Flipped leaf INCOMPLETE
-> attr flag */
-> +	XFS_DAS_LEAF_REMOVE_OLD,	/* Start removing old attr from leaf
+>  	XFS_DAS_LEAF_REMOVE_OLD,	/* Start removing old attr from leaf
 > */
->  	XFS_DAS_RM_LBLK,		/* A rename is removing leaf blocks
+>  	XFS_DAS_LEAF_REMOVE_RMT,	/* A rename is removing remote blocks
 > */
->  	XFS_DAS_RD_LEAF,		/* Read in the new leaf */
+> -	XFS_DAS_RD_LEAF,		/* Read in the new leaf */
+> +	XFS_DAS_LEAF_REMOVE_ATTR,	/* Remove the old attr from a leaf */
 >  
-> @@ -463,7 +463,7 @@ enum xfs_delattr_state {
+> -	/* Node state set sequence, must match leaf state above */
+> +	/* Node state set/replace sequence, must match leaf state above
+> */
 >  	XFS_DAS_NODE_SET_RMT,		/* set a remote xattr from a
 > node */
 >  	XFS_DAS_NODE_ALLOC_RMT,		/* We are allocating remote
 > blocks */
 >  	XFS_DAS_NODE_REPLACE,		/* Perform replace ops on a
 > node */
-> -	XFS_DAS_FLIP_NFLAG,		/* Flipped node INCOMPLETE
-> attr flag */
-> +	XFS_DAS_NODE_REMOVE_OLD,	/* Start removing old attr from node
+>  	XFS_DAS_NODE_REMOVE_OLD,	/* Start removing old attr from node
 > */
->  	XFS_DAS_RM_NBLK,		/* A rename is removing node blocks
+>  	XFS_DAS_NODE_REMOVE_RMT,	/* A rename is removing remote blocks
 > */
->  	XFS_DAS_CLR_FLAG,		/* Clear incomplete flag */
+> -	XFS_DAS_CLR_FLAG,		/* Clear incomplete flag */
+> +	XFS_DAS_NODE_REMOVE_ATTR,	/* Remove the old attr from a node */
 >  
-> @@ -471,26 +471,26 @@ enum xfs_delattr_state {
+>  	XFS_DAS_DONE,			/* finished operation */
 >  };
->  
->  #define XFS_DAS_STRINGS	\
-> -	{ XFS_DAS_UNINIT,	"XFS_DAS_UNINIT" }, \
-> -	{ XFS_DAS_SF_ADD,	"XFS_DAS_SF_ADD" }, \
-> -	{ XFS_DAS_LEAF_ADD,	"XFS_DAS_LEAF_ADD" }, \
-> -	{ XFS_DAS_NODE_ADD,	"XFS_DAS_NODE_ADD" }, \
-> -	{ XFS_DAS_RMTBLK,	"XFS_DAS_RMTBLK" }, \
-> -	{ XFS_DAS_RM_NAME,	"XFS_DAS_RM_NAME" }, \
-> -	{ XFS_DAS_RM_SHRINK,	"XFS_DAS_RM_SHRINK" }, \
-> -	{ XFS_DAS_LEAF_SET_RMT,	"XFS_DAS_LEAF_SET_RMT" }, \
-> -	{ XFS_DAS_LEAF_ALLOC_RMT, "XFS_DAS_LEAF_ALLOC_RMT" }, \
-> -	{ XFS_DAS_LEAF_REPLACE,	"XFS_DAS_LEAF_REPLACE" }, \
-> -	{ XFS_DAS_FLIP_LFLAG,	"XFS_DAS_FLIP_LFLAG" }, \
-> -	{ XFS_DAS_RM_LBLK,	"XFS_DAS_RM_LBLK" }, \
-> -	{ XFS_DAS_RD_LEAF,	"XFS_DAS_RD_LEAF" }, \
-> -	{ XFS_DAS_NODE_SET_RMT,	"XFS_DAS_NODE_SET_RMT" }, \
-> -	{ XFS_DAS_NODE_ALLOC_RMT, "XFS_DAS_NODE_ALLOC_RMT" },  \
-> -	{ XFS_DAS_NODE_REPLACE,	"XFS_DAS_NODE_REPLACE" },  \
-> -	{ XFS_DAS_FLIP_NFLAG,	"XFS_DAS_FLIP_NFLAG" }, \
-> -	{ XFS_DAS_RM_NBLK,	"XFS_DAS_RM_NBLK" }, \
-> -	{ XFS_DAS_CLR_FLAG,	"XFS_DAS_CLR_FLAG" }, \
-> -	{ XFS_DAS_DONE,		"XFS_DAS_DONE" }
-> +	{ XFS_DAS_UNINIT,		"XFS_DAS_UNINIT" }, \
-> +	{ XFS_DAS_SF_ADD,		"XFS_DAS_SF_ADD" }, \
-> +	{ XFS_DAS_LEAF_ADD,		"XFS_DAS_LEAF_ADD" }, \
-> +	{ XFS_DAS_NODE_ADD,		"XFS_DAS_NODE_ADD" }, \
-> +	{ XFS_DAS_RMTBLK,		"XFS_DAS_RMTBLK" }, \
-> +	{ XFS_DAS_RM_NAME,		"XFS_DAS_RM_NAME" }, \
-> +	{ XFS_DAS_RM_SHRINK,		"XFS_DAS_RM_SHRINK" }, \
-> +	{ XFS_DAS_LEAF_SET_RMT,		"XFS_DAS_LEAF_SET_RMT" }, \
-> +	{ XFS_DAS_LEAF_ALLOC_RMT,	"XFS_DAS_LEAF_ALLOC_RMT" }, \
-> +	{ XFS_DAS_LEAF_REPLACE,		"XFS_DAS_LEAF_REPLACE" }, \
-> +	{ XFS_DAS_LEAF_REMOVE_OLD,	"XFS_DAS_LEAF_REMOVE_OLD" },
+> @@ -483,13 +483,13 @@ enum xfs_delattr_state {
+>  	{ XFS_DAS_LEAF_REPLACE,		"XFS_DAS_LEAF_REPLACE" }, \
+>  	{ XFS_DAS_LEAF_REMOVE_OLD,	"XFS_DAS_LEAF_REMOVE_OLD" },
 > \
-> +	{ XFS_DAS_RM_LBLK,		"XFS_DAS_RM_LBLK" }, \
-> +	{ XFS_DAS_RD_LEAF,		"XFS_DAS_RD_LEAF" }, \
-> +	{ XFS_DAS_NODE_SET_RMT,		"XFS_DAS_NODE_SET_RMT" }, \
-> +	{ XFS_DAS_NODE_ALLOC_RMT,	"XFS_DAS_NODE_ALLOC_RMT" },  \
-> +	{ XFS_DAS_NODE_REPLACE,		"XFS_DAS_NODE_REPLACE" },  \
-> +	{ XFS_DAS_NODE_REMOVE_OLD,	"XFS_DAS_NODE_REMOVE_OLD" },
+>  	{ XFS_DAS_LEAF_REMOVE_RMT,	"XFS_DAS_LEAF_REMOVE_RMT" },
 > \
-> +	{ XFS_DAS_RM_NBLK,		"XFS_DAS_RM_NBLK" }, \
-> +	{ XFS_DAS_CLR_FLAG,		"XFS_DAS_CLR_FLAG" }, \
-> +	{ XFS_DAS_DONE,			"XFS_DAS_DONE" }
+> -	{ XFS_DAS_RD_LEAF,		"XFS_DAS_RD_LEAF" }, \
+> +	{ XFS_DAS_LEAF_REMOVE_ATTR,	"XFS_DAS_LEAF_REMOVE_ATTR" },
+> \
+>  	{ XFS_DAS_NODE_SET_RMT,		"XFS_DAS_NODE_SET_RMT" }, \
+>  	{ XFS_DAS_NODE_ALLOC_RMT,	"XFS_DAS_NODE_ALLOC_RMT" },  \
+>  	{ XFS_DAS_NODE_REPLACE,		"XFS_DAS_NODE_REPLACE" },  \
+>  	{ XFS_DAS_NODE_REMOVE_OLD,	"XFS_DAS_NODE_REMOVE_OLD" },
+> \
+>  	{ XFS_DAS_NODE_REMOVE_RMT,	"XFS_DAS_NODE_REMOVE_RMT" },
+> \
+> -	{ XFS_DAS_CLR_FLAG,		"XFS_DAS_CLR_FLAG" }, \
+> +	{ XFS_DAS_NODE_REMOVE_ATTR,	"XFS_DAS_NODE_REMOVE_ATTR" },
+> \
+>  	{ XFS_DAS_DONE,			"XFS_DAS_DONE" }
 >  
 >  /*
->   * Defines for xfs_attr_item.xattri_flags
 > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index cf99efc5ba5a..a4b99c7f8ef0 100644
+> index 91852b9721e4..3a215d298e62 100644
 > --- a/fs/xfs/xfs_trace.h
 > +++ b/fs/xfs/xfs_trace.h
-> @@ -4108,13 +4108,13 @@ TRACE_DEFINE_ENUM(XFS_DAS_RM_SHRINK);
->  TRACE_DEFINE_ENUM(XFS_DAS_LEAF_SET_RMT);
->  TRACE_DEFINE_ENUM(XFS_DAS_LEAF_ALLOC_RMT);
+> @@ -4110,13 +4110,14 @@ TRACE_DEFINE_ENUM(XFS_DAS_LEAF_ALLOC_RMT);
 >  TRACE_DEFINE_ENUM(XFS_DAS_LEAF_REPLACE);
-> -TRACE_DEFINE_ENUM(XFS_DAS_FLIP_LFLAG);
-> +TRACE_DEFINE_ENUM(XFS_DAS_LEAF_REMOVE_OLD);
->  TRACE_DEFINE_ENUM(XFS_DAS_RM_LBLK);
->  TRACE_DEFINE_ENUM(XFS_DAS_RD_LEAF);
+>  TRACE_DEFINE_ENUM(XFS_DAS_LEAF_REMOVE_OLD);
+>  TRACE_DEFINE_ENUM(XFS_DAS_LEAF_REMOVE_RMT);
+> -TRACE_DEFINE_ENUM(XFS_DAS_RD_LEAF);
+> +TRACE_DEFINE_ENUM(XFS_DAS_LEAF_REMOVE_ATTR);
 >  TRACE_DEFINE_ENUM(XFS_DAS_NODE_SET_RMT);
 >  TRACE_DEFINE_ENUM(XFS_DAS_NODE_ALLOC_RMT);
 >  TRACE_DEFINE_ENUM(XFS_DAS_NODE_REPLACE);
-> -TRACE_DEFINE_ENUM(XFS_DAS_FLIP_NFLAG);
-> +TRACE_DEFINE_ENUM(XFS_DAS_NODE_REMOVE_OLD);
->  TRACE_DEFINE_ENUM(XFS_DAS_RM_NBLK);
->  TRACE_DEFINE_ENUM(XFS_DAS_CLR_FLAG);
+>  TRACE_DEFINE_ENUM(XFS_DAS_NODE_REMOVE_OLD);
+>  TRACE_DEFINE_ENUM(XFS_DAS_NODE_REMOVE_RMT);
+> -TRACE_DEFINE_ENUM(XFS_DAS_CLR_FLAG);
+> +TRACE_DEFINE_ENUM(XFS_DAS_NODE_REMOVE_ATTR);
+> +TRACE_DEFINE_ENUM(XFS_DAS_DONE);
 >  
+>  DECLARE_EVENT_CLASS(xfs_das_state_class,
+>  	TP_PROTO(int das, struct xfs_inode *ip),
 
