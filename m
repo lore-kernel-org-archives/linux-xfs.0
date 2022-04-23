@@ -2,106 +2,121 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C66B9C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Apr 2022 23:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E16E7C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Apr 2022 00:01:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229894AbiDVXyc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Apr 2022 19:54:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33242 "EHLO
+        id S229524AbiDWAEX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Apr 2022 20:04:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230301AbiDVXya (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Apr 2022 19:54:30 -0400
+        with ESMTP id S229486AbiDWAEW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Apr 2022 20:04:22 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 51C3017859F
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Apr 2022 16:51:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2551CDF83;
+        Fri, 22 Apr 2022 17:01:27 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-115-138.pa.nsw.optusnet.com.au [49.181.115.138])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 65F9953470C;
-        Sat, 23 Apr 2022 09:51:34 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 060F35345C6;
+        Sat, 23 Apr 2022 10:01:22 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ni33l-003MZP-Ai; Sat, 23 Apr 2022 09:51:33 +1000
-Date:   Sat, 23 Apr 2022 09:51:33 +1000
+        id 1ni3DF-003Ms4-8J; Sat, 23 Apr 2022 10:01:21 +1000
+Date:   Sat, 23 Apr 2022 10:01:21 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: stop artificially limiting the length of bunmap
- calls
-Message-ID: <20220422235133.GG1544202@dread.disaster.area>
-References: <164997686569.383881.8935566398533700022.stgit@magnolia>
- <164997687142.383881.7160925177236303538.stgit@magnolia>
- <20220422220120.GA1544202@dread.disaster.area>
- <20220422221820.GH17059@magnolia>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Jane Chu <jane.chu@oracle.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Naoya Horiguchi <naoya.horiguchi@nec.com>
+Subject: Re: [PATCH v13 0/7] fsdax: introduce fs query to support reflink
+Message-ID: <20220423000121.GH1544202@dread.disaster.area>
+References: <20220419045045.1664996-1-ruansy.fnst@fujitsu.com>
+ <20220421012045.GR1544202@dread.disaster.area>
+ <86cb0ada-208c-02de-dbc9-53c6014892c3@fujitsu.com>
+ <CAPcyv4i0Noum8hqHtCpdM5HMVdmNHm3Aj2JCnZ+KZLgceiXYaA@mail.gmail.com>
+ <20220421043502.GS1544202@dread.disaster.area>
+ <YmDxs1Hj4H/cu2sd@infradead.org>
+ <20220421074653.GT1544202@dread.disaster.area>
+ <CAPcyv4jj_Z+P4BuC6EXXrzbVr1uHomQVu1A+cq55EFnSGmP7cQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220422221820.GH17059@magnolia>
+In-Reply-To: <CAPcyv4jj_Z+P4BuC6EXXrzbVr1uHomQVu1A+cq55EFnSGmP7cQ@mail.gmail.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62633f86
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=626341d5
         a=/kVtbFzwtM2bJgxRVb+eeA==:117 a=/kVtbFzwtM2bJgxRVb+eeA==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=Sqpns60_8NikWA0TIEcA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=7-415B0cAAAA:8
+        a=N97b58O49P40uwd1XQkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 22, 2022 at 03:18:20PM -0700, Darrick J. Wong wrote:
-> On Sat, Apr 23, 2022 at 08:01:20AM +1000, Dave Chinner wrote:
-> > On Thu, Apr 14, 2022 at 03:54:31PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > In commit e1a4e37cc7b6, we clamped the length of bunmapi calls on the
-> > > data forks of shared files to avoid two failure scenarios: one where the
-> > > extent being unmapped is so sparsely shared that we exceed the
-> > > transaction reservation with the sheer number of refcount btree updates
-> > > and EFI intent items; and the other where we attach so many deferred
-> > > updates to the transaction that we pin the log tail and later the log
-> > > head meets the tail, causing the log to livelock.
-> > > 
-> > > We avoid triggering the first problem by tracking the number of ops in
-> > > the refcount btree cursor and forcing a requeue of the refcount intent
-> > > item any time we think that we might be close to overflowing.  This has
-> > > been baked into XFS since before the original e1a4 patch.
-> > > 
-> > > A recent patchset fixed the second problem by changing the deferred ops
-> > > code to finish all the work items created by each round of trying to
-> > > complete a refcount intent item, which eliminates the long chains of
-> > > deferred items (27dad); and causing long-running transactions to relog
-> > > their intent log items when space in the log gets low (74f4d).
-> > > 
-> > > Because this clamp affects /any/ unmapping request regardless of the
-> > > sharing factors of the component blocks, it degrades the performance of
-> > > all large unmapping requests -- whereas with an unshared file we can
-> > > unmap millions of blocks in one go, shared files are limited to
-> > > unmapping a few thousand blocks at a time, which causes the upper level
-> > > code to spin in a bunmapi loop even if it wasn't needed.
-> > > 
-> > > This also eliminates one more place where log recovery behavior can
-> > > differ from online behavior, because bunmapi operations no longer need
-> > > to requeue.
-> > > 
-> > > Partial-revert-of: e1a4e37cc7b6 ("xfs: try to avoid blowing out the transaction reservation when bunmaping a shared extent")
-> > > Depends: 27dada070d59 ("xfs: change the order in which child and parent defer ops ar finished")
-> > > Depends: 74f4d6a1e065 ("xfs: only relog deferred intent items if free space in the log gets low")
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_bmap.c     |   22 +---------------------
-> > >  fs/xfs/libxfs/xfs_refcount.c |    5 ++---
-> > >  fs/xfs/libxfs/xfs_refcount.h |    8 ++------
-> > >  3 files changed, 5 insertions(+), 30 deletions(-)
-> > 
-> > This looks reasonable, but I'm wondering how the original problem
-> > was discovered and whether this has been tested against that
-> > original problem situation to ensure we aren't introducing a
-> > regression here....
+On Fri, Apr 22, 2022 at 02:27:32PM -0700, Dan Williams wrote:
+> On Thu, Apr 21, 2022 at 12:47 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Wed, Apr 20, 2022 at 10:54:59PM -0700, Christoph Hellwig wrote:
+> > > On Thu, Apr 21, 2022 at 02:35:02PM +1000, Dave Chinner wrote:
+> > > > Sure, I'm not a maintainer and just the stand-in patch shepherd for
+> > > > a single release. However, being unable to cleanly merge code we
+> > > > need integrated into our local subsystem tree for integration
+> > > > testing because a patch dependency with another subsystem won't gain
+> > > > a stable commit ID until the next merge window is .... distinctly
+> > > > suboptimal.
+> > >
+> > > Yes.  Which is why we've taken a lot of mm patchs through other trees,
+> > > sometimes specilly crafted for that.  So I guess in this case we'll
+> > > just need to take non-trivial dependencies into the XFS tree, and just
+> > > deal with small merge conflicts for the trivial ones.
+> >
+> > OK. As Naoyo has pointed out, the first dependency/conflict Ruan has
+> > listed looks trivial to resolve.
+> >
+> > The second dependency, OTOH, is on a new function added in the patch
+> > pointed to. That said, at first glance it looks to be independent of
+> > the first two patches in that series so I might just be able to pull
+> > that one patch in and have that leave us with a working
+> > fsdax+reflink tree.
+> >
+> > Regardless, I'll wait to see how much work the updated XFS/DAX
+> > reflink enablement patchset still requires when Ruan posts it before
+> > deciding what to do here.  If it isn't going to be a merge
+> > candidate, what to do with this patchset is moot because there's
+> > little to test without reflink enabled...
 > 
-> generic/447, and yes, I have forced it to run a deletion of 1 million
-> extents without incident. :)
+> I do have a use case for this work absent the reflink work.  Recall we
+> had a conversation about how to communicate "dax-device has been
+> ripped away from the fs" events and we ended up on the idea of reusing
+> ->notify_failure(), but with the device's entire logical address range
+> as the notification span. That will let me unwind and delete the
+> PTE_DEVMAP infrastructure for taking extra device references to hold
+> off device-removal. Instead ->notify_failure() arranges for all active
+> DAX mappings to be invalidated and allow the removal to proceed
+> especially since physical removal does not care about software pins.
 
-Ok, that's all I wanted to know :)
+Sure. My point is that if the reflink enablement isn't ready to go,
+then from an XFS POV none of this matters in this cycle and we can
+just leave the dependencies to commit via Andrew's tree. Hence by
+the time we get to the reflink enablement all the prior dependencies
+will have been merged and have stable commit IDs, and we can just
+stage this series and the reflink enablement as we normally would in
+the next cycle.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+However, if we don't get the XFS reflink dax enablement sorted out
+in the next week or two, then we don't need this patchset in this
+cycle. Hence if you still need this patchset for other code you need
+to merge in this cycle, then you're the poor schmuck that has to run
+the mm-tree conflict guantlet to get a stable commit ID for the
+dependent patches in this cycle, not me....
 
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
