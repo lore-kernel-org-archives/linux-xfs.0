@@ -2,135 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56AE5C433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Apr 2022 17:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1DB9C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Apr 2022 02:00:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236611AbiDWRf7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 23 Apr 2022 13:35:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53706 "EHLO
+        id S237551AbiDXCD1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 23 Apr 2022 22:03:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236610AbiDWRf6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Apr 2022 13:35:58 -0400
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 332E11A61EB
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Apr 2022 10:33:00 -0700 (PDT)
-Received: by mail-pg1-x530.google.com with SMTP id k29so9890329pgm.12
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Apr 2022 10:33:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=xxYgAVRvbeskBRCc62b6dd1b3P0m/iQAjdEflJjZwEw=;
-        b=cIGzVuvaHPW/VLTUuGNP05j8jEVx31lmj/3qbzCRsPPrbTPeSt32R9NgmplRr+LV2v
-         TPG/LcGufNFw0M7teCiF+6fVAYn4/IZUkzhvU151c+DtN5zNP6ijWWFEX0r7a0X7hpZ6
-         xO3b46N9BlD5HOH/6KjSBgqpCWBJDeBsMQZmm79J4gye6fRcxGTlCl4dKaFf6y1mAURp
-         E5R7bt7AOI4nxW4Mui2PMh/dI9vZ6rNafeuVBGnANyufcFvtdgr6zL9cseyBu2DWlLef
-         OiFipnPqxqKTZqc5cVuZn5+/7HX/WRUNoR6ULhHbqgV/g2kNVB4EiarR81JxPDgXZFsx
-         xVNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=xxYgAVRvbeskBRCc62b6dd1b3P0m/iQAjdEflJjZwEw=;
-        b=Qjv0WKsESJDEZqHMBlZ7PzuhEmLZsCnpa17AeflsZGGgAtaHIYdtdMSQ3+ehvxViNW
-         vFYiNSfVGF0CNjEDJuvNlSbsV0SaPCgYXsbpdUGHSi4IPr8zYiI9PikR4EbpwZiuc1Mn
-         ozPd/J4+AqS29fFws7XyPZQFExCJlLr9h3x7EFPg+ZVmDAb+mZk/J9WKx12IB0YcRyLz
-         1HOVpXclUe8X2dYGiPLXezzk3OopLGCpPstSXr5jVn3iGd6j8GiEzeJA/dip/A7CF0nz
-         dZg8fZru9YWa/vbmW80ykitoh9p8fB35RhgKJAwT/DMLzrTPJHh2tE4eoLK5X4zftOJX
-         Tgew==
-X-Gm-Message-State: AOAM532B+dAUcwDATdr3BFm4y/aHtHIrupwX58usU8YwY+wnemfTb9dA
-        xOPWL3VBafuX7iCLB5ZQ6/LlQoitUMlzYfkmC5TCeQ==
-X-Google-Smtp-Source: ABdhPJy0mhTUMjh9InWAjD5l2gEPa+UaJvVCIFLNzGQ3RNZPm0s50yYnG9o8IIvsa9ZqP9/kYJI8dbG4WyP4ubzay9s=
-X-Received: by 2002:a05:6a02:283:b0:342:703e:1434 with SMTP id
- bk3-20020a056a02028300b00342703e1434mr8647836pgb.74.1650735179515; Sat, 23
- Apr 2022 10:32:59 -0700 (PDT)
-MIME-Version: 1.0
+        with ESMTP id S231462AbiDXCD0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Apr 2022 22:03:26 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6928F161E8E;
+        Sat, 23 Apr 2022 19:00:26 -0700 (PDT)
+Received: from canpemm500002.china.huawei.com (unknown [172.30.72.53])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4KmBCp4fXkz1JBJC;
+        Sun, 24 Apr 2022 09:59:34 +0800 (CST)
+Received: from [10.174.177.76] (10.174.177.76) by
+ canpemm500002.china.huawei.com (7.192.104.244) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Sun, 24 Apr 2022 10:00:23 +0800
+Subject: Re: [PATCH v13 3/7] pagemap,pmem: Introduce ->memory_failure()
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, <linux-kernel@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-mm@kvack.org>, <linux-fsdevel@vger.kernel.org>
 References: <20220419045045.1664996-1-ruansy.fnst@fujitsu.com>
- <20220421012045.GR1544202@dread.disaster.area> <86cb0ada-208c-02de-dbc9-53c6014892c3@fujitsu.com>
- <CAPcyv4i0Noum8hqHtCpdM5HMVdmNHm3Aj2JCnZ+KZLgceiXYaA@mail.gmail.com>
- <20220421043502.GS1544202@dread.disaster.area> <YmDxs1Hj4H/cu2sd@infradead.org>
- <20220421074653.GT1544202@dread.disaster.area> <CAPcyv4jj_Z+P4BuC6EXXrzbVr1uHomQVu1A+cq55EFnSGmP7cQ@mail.gmail.com>
- <20220423000121.GH1544202@dread.disaster.area>
-In-Reply-To: <20220423000121.GH1544202@dread.disaster.area>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Sat, 23 Apr 2022 10:32:48 -0700
-Message-ID: <CAPcyv4h0wv3ecXP3q2QM2gnpxMggb7XJoJZcFdJD-xJ==mRGFg@mail.gmail.com>
-Subject: Re: [PATCH v13 0/7] fsdax: introduce fs query to support reflink
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Jane Chu <jane.chu@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Naoya Horiguchi <naoya.horiguchi@nec.com>
-Content-Type: text/plain; charset="UTF-8"
+ <20220419045045.1664996-4-ruansy.fnst@fujitsu.com>
+ <f173f091-d5ca-b049-a8ed-6616032ca83e@huawei.com>
+ <4a808b12-9215-9421-d114-951e70764778@fujitsu.com>
+From:   Miaohe Lin <linmiaohe@huawei.com>
+Message-ID: <cc219e5d-a400-776c-116b-21e5d1470045@huawei.com>
+Date:   Sun, 24 Apr 2022 10:00:23 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
+MIME-Version: 1.0
+In-Reply-To: <4a808b12-9215-9421-d114-951e70764778@fujitsu.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.177.76]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ canpemm500002.china.huawei.com (7.192.104.244)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 22, 2022 at 5:02 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Fri, Apr 22, 2022 at 02:27:32PM -0700, Dan Williams wrote:
-> > On Thu, Apr 21, 2022 at 12:47 AM Dave Chinner <david@fromorbit.com> wrote:
-> > >
-> > > On Wed, Apr 20, 2022 at 10:54:59PM -0700, Christoph Hellwig wrote:
-> > > > On Thu, Apr 21, 2022 at 02:35:02PM +1000, Dave Chinner wrote:
-> > > > > Sure, I'm not a maintainer and just the stand-in patch shepherd for
-> > > > > a single release. However, being unable to cleanly merge code we
-> > > > > need integrated into our local subsystem tree for integration
-> > > > > testing because a patch dependency with another subsystem won't gain
-> > > > > a stable commit ID until the next merge window is .... distinctly
-> > > > > suboptimal.
-> > > >
-> > > > Yes.  Which is why we've taken a lot of mm patchs through other trees,
-> > > > sometimes specilly crafted for that.  So I guess in this case we'll
-> > > > just need to take non-trivial dependencies into the XFS tree, and just
-> > > > deal with small merge conflicts for the trivial ones.
-> > >
-> > > OK. As Naoyo has pointed out, the first dependency/conflict Ruan has
-> > > listed looks trivial to resolve.
-> > >
-> > > The second dependency, OTOH, is on a new function added in the patch
-> > > pointed to. That said, at first glance it looks to be independent of
-> > > the first two patches in that series so I might just be able to pull
-> > > that one patch in and have that leave us with a working
-> > > fsdax+reflink tree.
-> > >
-> > > Regardless, I'll wait to see how much work the updated XFS/DAX
-> > > reflink enablement patchset still requires when Ruan posts it before
-> > > deciding what to do here.  If it isn't going to be a merge
-> > > candidate, what to do with this patchset is moot because there's
-> > > little to test without reflink enabled...
-> >
-> > I do have a use case for this work absent the reflink work.  Recall we
-> > had a conversation about how to communicate "dax-device has been
-> > ripped away from the fs" events and we ended up on the idea of reusing
-> > ->notify_failure(), but with the device's entire logical address range
-> > as the notification span. That will let me unwind and delete the
-> > PTE_DEVMAP infrastructure for taking extra device references to hold
-> > off device-removal. Instead ->notify_failure() arranges for all active
-> > DAX mappings to be invalidated and allow the removal to proceed
-> > especially since physical removal does not care about software pins.
->
-> Sure. My point is that if the reflink enablement isn't ready to go,
-> then from an XFS POV none of this matters in this cycle and we can
-> just leave the dependencies to commit via Andrew's tree. Hence by
-> the time we get to the reflink enablement all the prior dependencies
-> will have been merged and have stable commit IDs, and we can just
-> stage this series and the reflink enablement as we normally would in
-> the next cycle.
->
-> However, if we don't get the XFS reflink dax enablement sorted out
-> in the next week or two, then we don't need this patchset in this
-> cycle. Hence if you still need this patchset for other code you need
-> to merge in this cycle, then you're the poor schmuck that has to run
-> the mm-tree conflict guantlet to get a stable commit ID for the
-> dependent patches in this cycle, not me....
+On 2022/4/22 15:06, Shiyang Ruan wrote:
+> 
+> 
+...
+>>
+>> Thanks for your patch. There are two questions:
+>>
+>> 1.Is dax_lock_page + dax_unlock_page pair needed here?
+> 
+> They are moved into mf_generic_kill_procs() in Patch2.  Callback will implement its own dax lock/unlock method.  For example, for mf_dax_kill_procs() in Patch4, we implemented dax_lock_mapping_entry()/dax_unlock_mapping_entry() for it.
+> 
+>> 2.hwpoison_filter and SetPageHWPoison will be handled by the callback or they're just ignored deliberately?
+> 
+> SetPageHWPoison() will be handled by callback or by mf_generic_kill_procs().
+> 
+> hwpoison_filter() is moved into mf_generic_kill_procs() too.  The callback will make sure the page is correct, so it is ignored.
 
-Yup. Let's give it another week or so to see if the reflink rebase
-materializes and go from there.
+I see this when I read the other patches. Many thanks for clarifying!
+
+> 
+> 
+> -- 
+> Thanks,
+> Ruan.
+> 
+>>
+>> Thanks!
+>>
+>>>       rc = mf_generic_kill_procs(pfn, flags, pgmap);
+>>>   out:
+>>>       /* drop pgmap ref acquired in caller */
+>>>
+>>
+> 
+> 
+> .
+
