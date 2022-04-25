@@ -2,185 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EBB2C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Apr 2022 18:35:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8680C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Apr 2022 22:22:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244452AbiDYSit (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Apr 2022 14:38:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34404 "EHLO
+        id S230088AbiDYWZl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Apr 2022 18:25:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234489AbiDYSis (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Apr 2022 14:38:48 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D4C120198
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 11:35:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 08A0AB81A0C
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 18:35:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B096AC385A9;
-        Mon, 25 Apr 2022 18:35:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650911740;
-        bh=R7ZOfaVg8QHG4jjgVmMBq3VfmzqRGJN+XGYdZk7Ua7w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GNNsojOAuh3FPNC5T0fCrZybL41GB3HVGuqGvx//x6+R2XWGpL50OvDTAVh+B1Hlq
-         AwBRx6do9ORUFTfTOd/S4HmQFvlc3pueLGEmFiGtowJDQNjfvYe08YjKWiWy7gCoF2
-         kkpTfDCG3m5tE5alnB7ZSfRvKaV2joClrwZupHSdFEp8I7dwaCFdgh/i798yEEXUKF
-         iH6s3uzkEnN03OdL4aPbjwKU57IRvvu+p42Yd+5/C/i3BxwwH/gFft7bYf6lgpQHPM
-         VkI0Kw2s8Eru+ATew5h1DdaNeaTQCRxFcyDfNQhjE1TSK9MMMU+BTMJhhamvLWQqgY
-         sF+p0soyJt+iw==
-Date:   Mon, 25 Apr 2022 11:35:39 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: speed up rmap lookups by using non-overlapped
- lookups when possible
-Message-ID: <20220425183539.GM17025@magnolia>
-References: <164997683918.383709.10179435130868945685.stgit@magnolia>
- <164997685638.383709.4789775648712621300.stgit@magnolia>
- <20220422214336.GW1544202@dread.disaster.area>
+        with ESMTP id S236746AbiDYWYw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Apr 2022 18:24:52 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 074E178906
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 15:21:44 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-115-138.pa.nsw.optusnet.com.au [49.181.115.138])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 804B310E5F06;
+        Tue, 26 Apr 2022 08:21:42 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nj75Q-004WAn-1K; Tue, 26 Apr 2022 08:21:40 +1000
+Date:   Tue, 26 Apr 2022 08:21:40 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v1 0/2] xfs: remove quota warning limits
+Message-ID: <20220425222140.GI1544202@dread.disaster.area>
+References: <20220421165815.87837-1-catherine.hoang@oracle.com>
+ <43e8df67-5916-5f4a-ce85-8521729acbb2@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220422214336.GW1544202@dread.disaster.area>
+In-Reply-To: <43e8df67-5916-5f4a-ce85-8521729acbb2@sandeen.net>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62671ef6
+        a=/kVtbFzwtM2bJgxRVb+eeA==:117 a=/kVtbFzwtM2bJgxRVb+eeA==:17
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=VwQbUJbxAAAA:8 a=5xOlfOR4AAAA:8
+        a=7-415B0cAAAA:8 a=rTYq5MppkApK2LRI79cA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=SGlsW6VomvECssOqsvzv:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Apr 23, 2022 at 07:43:36AM +1000, Dave Chinner wrote:
-> On Thu, Apr 14, 2022 at 03:54:16PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Apr 25, 2022 at 01:19:35PM -0500, Eric Sandeen wrote:
+> On 4/21/22 11:58 AM, Catherine Hoang wrote:
+> > Hi all,
 > > 
-> > Reverse mapping on a reflink-capable filesystem has some pretty high
-> > overhead when performing file operations.  This is because the rmap
-> > records for logically and physically adjacent extents might not be
-> > adjacent in the rmap index due to data block sharing.  As a result, we
-> > use expensive overlapped-interval btree search, which walks every record
-> > that overlaps with the supplied key in the hopes of finding the record.
+> > Based on recent discussion, it seems like there is a consensus that quota
+> > warning limits should be removed from xfs quota.
+> > https://lore.kernel.org/linux-xfs/94893219-b969-c7d4-4b4e-0952ef54d575@sandeen.net/
 > > 
-> > However, profiling data shows that when the index contains a record that
-> > is an exact match for a query key, the non-overlapped btree search
-> > function can find the record much faster than the overlapped version.
-> > Try the non-overlapped lookup first, which will make scrub run much
-> > faster.
+> > Warning limits in xfs quota is an unused feature that is currently
+> > documented as unimplemented. These patches remove the quota warning limits
+> > and cleans up any related code. 
 > > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_rmap.c |   38 ++++++++++++++++++++++++++++++++------
-> >  1 file changed, 32 insertions(+), 6 deletions(-)
+> > Comments and feedback are appreciated!
 > > 
+> > Catherine
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > index 3eea8056e7bc..5aa94deb3afd 100644
-> > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > @@ -402,12 +402,38 @@ xfs_rmap_lookup_le_range(
-> >  	info.irec = irec;
-> >  	info.stat = stat;
-> >  
-> > -	trace_xfs_rmap_lookup_le_range(cur->bc_mp,
-> > -			cur->bc_ag.pag->pag_agno, bno, 0, owner, offset, flags);
-> > -	error = xfs_rmap_query_range(cur, &info.high, &info.high,
-> > -			xfs_rmap_lookup_le_range_helper, &info);
-> > -	if (error == -ECANCELED)
-> > -		error = 0;
-> > +	trace_xfs_rmap_lookup_le_range(cur->bc_mp, cur->bc_ag.pag->pag_agno,
-> > +			bno, 0, owner, offset, flags);
-> > +
-> > +	/*
-> > +	 * Historically, we always used the range query to walk every reverse
-> > +	 * mapping that could possibly overlap the key that the caller asked
-> > +	 * for, and filter out the ones that don't.  That is very slow when
-> > +	 * there are a lot of records.
-> > +	 *
-> > +	 * However, there are two scenarios where the classic btree search can
-> > +	 * produce correct results -- if the index contains a record that is an
-> > +	 * exact match for the lookup key; and if there are no other records
-> > +	 * between the record we want and the key we supplied.
-> > +	 *
-> > +	 * As an optimization, try a non-overlapped lookup first.  This makes
-> > +	 * scrub run much faster on most filesystems because bmbt records are
-> > +	 * usually an exact match for rmap records.  If we don't find what we
-> > +	 * want, we fall back to the overlapped query.
-> > +	 */
-> > +	error = xfs_rmap_lookup_le(cur, bno, owner, offset, flags, irec, stat);
-> > +	if (error)
-> > +		return error;
-> > +	if (*stat) {
-> > +		*stat = 0;
-> > +		xfs_rmap_lookup_le_range_helper(cur, irec, &info);
-> > +	}
-> > +	if (!(*stat)) {
-> > +		error = xfs_rmap_query_range(cur, &info.high, &info.high,
-> > +				xfs_rmap_lookup_le_range_helper, &info);
-> > +		if (error == -ECANCELED)
-> > +			error = 0;
-> > +	}
+> > Catherine Hoang (2):
+> >   xfs: remove quota warning limit from struct xfs_quota_limits
+> >   xfs: don't set warns on the id==0 dquot
+> > 
+> >  fs/xfs/xfs_qm.c          |  9 ---------
+> >  fs/xfs/xfs_qm.h          |  5 -----
+> >  fs/xfs/xfs_qm_syscalls.c | 19 +++++--------------
+> >  fs/xfs/xfs_quotaops.c    |  3 ---
+> >  fs/xfs/xfs_trans_dquot.c |  3 +--
+> >  5 files changed, 6 insertions(+), 33 deletions(-)
 > 
-> Ok, I can see what this is doing, but the code is nasty - zeroing
-> info.stat via *stat = 0, then having
-> xfs_rmap_lookup_le_range_helper() modify *stat via info.stat and
-> then relying on that implicit update to skip the very next if
-> (!(*stat)) clause is not very nice.
+> I have a question about the remaining warning counter infrastructure after these
+> patches are applied.
 > 
-> xfs_rmap_lookup_le_range_helper() returns -ECANCELED when it's
-> found a match, so we can use this rather than relying on *stat
-> to determine what to do:
+> We still have xfs_dqresv_check() incrementing the warning counter, as was added in
+> 4b8628d5 "xfs: actually bump warning counts when we send warnings"
 > 
-> 	error = xfs_rmap_lookup_le(cur, bno, owner, offset, flags, irec, stat);
-> 	if (error)
-> 		return error;
-> 
-> 	info.irec = irec;
-> 	info.stat = 0;
-> 	if (*stat)
-> 		error = xfs_rmap_lookup_le_range_helper(cur, irec, &info);
-> 	if (!error)
-> 		error = xfs_rmap_query_range(cur, &info.high, &info.high,
-> 				xfs_rmap_lookup_le_range_helper, &info);
-> 	if (error == -ECANCELED)
-> 		error = 0;
-> 
-> 	*stat = info.stat;
-> ....
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -589,6 +589,7 @@
+>                         return QUOTA_NL_ISOFTLONGWARN;
+>                 }
+>  
+> +               res->warnings++;
+>                 return QUOTA_NL_ISOFTWARN;
+>         }
 
-I think this can be simplified even further by removing the field
-xfs_find_left_neighbor_info.stat, and then the code becomes:
+/me reads another overnight #xfs explosion over this one line of
+code and sighs.
 
-	error = xfs_rmap_lookup_le(cur, bno, owner, offset, flags, irec,
-			&found);
-	if (error)
-		return error;
-	if (found)
-		error = xfs_rmap_lookup_le_range_helper(cur, irec, &info);
-	if (!error)
-		error = xfs_rmap_query_range(cur, &info.high, &info.high,
-				xfs_rmap_lookup_le_range_helper, &info);
-	if (error != -ECANCELED)
-		return error;
+Well, so much for hoping that there would be an amicable resolution
+to this sorry saga without having to get directly involved.  I'm fed
+up with watching the tantrums, the petty arguments, the refusal to
+compromise, acknowledge mistakes, etc.
 
-	*stat = 0;
-	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
-			cur->bc_ag.pag->pag_agno, irec->rm_startblock,
-			irec->rm_blockcount, irec->rm_owner, irec->rm_offset,
-			irec->rm_flags);
-	return 0;
+Enough, OK?
 
---D
+Commit 4b8628d5 is fundamentally broken and causes production
+systems regressions - it just doesn't work in any useful way as it
+stands.  Eric, send me a patch that reverts this commit, and I will
+review and commit it.
 
-> 
-> Cheers,
-> 
-> Dave.
-> 
-> >  	if (*stat)
-> >  		trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
-> >  				cur->bc_ag.pag->pag_agno, irec->rm_startblock,
-> > 
-> > 
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Further:
+
+- this is legacy functionality that was never implemented in Linux,
+- it cannot be implemented in Linux the (useful) way it was
+  implemented in Irix,
+- it is documented as unimplemented,
+- no use case for the functionality in Linux has been presented
+  ("do something useful" is not a use case),
+- no documentation has been written for it,
+- no fstests coverage of the functionality exists,
+- linux userspace already has quota warning infrastructure via
+  netlink so just accounting warnings in the kernel is of very
+  limited use,
+- it broke existing production systems.
+
+Given all this, and considering our new policy of not tolerating
+unused or questionable legacy code in the XFS code base any more
+(precendence: ALLOCSP), it is clear that all aspects of this quota
+warning code should simply be removed ASAP.
+
+Eric and/or Catherine, please send patches to first revert 4b8628d5
+and then remove *all* of this quota warning functionality completely
+(including making the user APIs see zeros on all reads and sliently
+ignore all writes) before I get sufficiently annoyed to simply
+remove the code directly myself.
+
+So disappointment.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
