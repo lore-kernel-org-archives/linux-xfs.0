@@ -2,249 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7223BC433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Apr 2022 20:43:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8443DC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Apr 2022 07:07:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233495AbiDXUqK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 24 Apr 2022 16:46:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42744 "EHLO
+        id S233189AbiDYHKp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Apr 2022 03:10:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230200AbiDXUqJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Apr 2022 16:46:09 -0400
-Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B95113526D;
-        Sun, 24 Apr 2022 13:43:06 -0700 (PDT)
-Received: by mail-qv1-xf36.google.com with SMTP id kc12so5254278qvb.0;
-        Sun, 24 Apr 2022 13:43:06 -0700 (PDT)
+        with ESMTP id S240603AbiDYHKi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Apr 2022 03:10:38 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDD6D1D0C3;
+        Mon, 25 Apr 2022 00:07:30 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id n18so25002889plg.5;
+        Mon, 25 Apr 2022 00:07:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=4xoPy8+dhKtJ0Xx6SesC3azCTijFiMpFee6us/XyeHE=;
-        b=G6C0yEz2DHxtZQK+4sGf3gIyTIK8K8DIDQqUWLlNcyKXujEW9E4dVOKpzSbhRDlnf4
-         TCojy3Ju2KtrJL19FXkgcJ4jCstN1bSzkBuBIbHW+kCLxqbohzy+nHcrSSg8IVdxIipy
-         4yus8KNX6b5dw+Nd3adIPbDXUGzfl1lREvZWAOtqpWBcxpMNlFSZbAKDCDuiuPxy/Ks8
-         xpWP/b0Et/ym+MLKj8vJmixRJEX0kTpZPHjECQ/mrtY8ot3CkVdd5wOq9YIkVvwGiuDm
-         rns5TFnMtPdp/pFWq+uggkKfnfodB/9KSU9u1iDHi8vcJQi0/4ggBNUvBdMGjIbhCe7g
-         hyPw==
+        h=from:to:cc:subject:date:message-id;
+        bh=ay3sdGiDRHAPLPYUlZwep9fc4pZc95saAfFzOSdMcB0=;
+        b=gIbi/PHa0EU9rMF4Zde9AU1LOrBfzDAXIPHTe64Ra5e831ug9HRk2d9vv03+sV8M3l
+         P4AVhu9f1oQ+2Nv+r9jp9XUWjtcJQzJGps3p/x/xDqyHq02NtfHDhnP4hXNqjKTpZAgw
+         xt6rK0EBVAKVKeux4HRf2ta7nvbFL4nCNjlw9iRT3Zg6PlorRkt+mbwtiUymhhUgupfd
+         ecJ49hTSje7EXfTACL9OGz/LLCqMiB10XpwLBl4JeK+5qUb1moWz3RXCJnN7I7mwhsd/
+         ITvmY3le3dE5hhS/MU+v2hu+QAaPCmSXZybhmtmiOCixVa21J93xRA4IZOkCQu3ocWiV
+         jixA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=4xoPy8+dhKtJ0Xx6SesC3azCTijFiMpFee6us/XyeHE=;
-        b=esn8iasTJKoSk9uiqGUiejFU15BUVe88NJI8+mZk/604Xm33mvc4pvgM+5Kt+95bVa
-         Enyqn995gkz1DXjxAyzauiUo1vHFaOgdMGUNZ7WeSW5TRk1ItcyB94yZA8Eww4bII4ca
-         V/CJjhs6VZoro5QCSz5fHR7hPDp1J5hpDK84yJLmbjs9pylFJY6CmekPGvdFMu1Bz1Ba
-         WUv6mWMcWGlLu4narqlUqDyjDPrbCx+lJHUpYonviEdKkpi2W1+wOL3TNf0NRf4C4FD1
-         ZP4m4+zzbOLbg/HBzmreqnC1K/vwuubKbXR+rkQDSTBpzuWgiOl/4XW3tY/AhPe/b88k
-         FxmQ==
-X-Gm-Message-State: AOAM531/uiRMdwuKo9gO296tL8Z8L7bWtBg9EGuv1dPvqsr8QwN9MMO7
-        2gCc4qRzoJpJ+wuFaYVBb2HHzk6XjDRkbOn54BLyaeckSmQ=
-X-Google-Smtp-Source: ABdhPJzZSrWnAEXARj1kzommzgU0jdYUtmjozk5tM7Yuh41zzZoTQQWtDovxArX5olMqxRHy5qoevmFrrpBAB9tupic=
-X-Received: by 2002:a05:6214:1cc4:b0:435:35c3:f0f1 with SMTP id
- g4-20020a0562141cc400b0043535c3f0f1mr10629953qvd.0.1650832985720; Sun, 24 Apr
- 2022 13:43:05 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220424063751.1067376-1-libaokun1@huawei.com>
- <CAOQ4uxgEXEgZ-uAYgiJi1sxX9Zzmg25NewBRiRQR6D8z+qOXHA@mail.gmail.com>
- <20220424132357.m4nxrmbgu2r6ljo4@zlang-mailbox> <CAOQ4uxiQ-aM4TJmU3QYhGsVzaPKphMg06k6gjAe8By5ZZ8DZgw@mail.gmail.com>
- <20220424184120.w7byatovi7plihkw@zlang-mailbox>
-In-Reply-To: <20220424184120.w7byatovi7plihkw@zlang-mailbox>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sun, 24 Apr 2022 23:42:54 +0300
-Message-ID: <CAOQ4uxguZ4aYSJkothDDSFoE9EfMcRuFZ7Jo9L0X7xEFy6p8sg@mail.gmail.com>
-Subject: Re: [RFC] common: overlay support tmpfs
-To:     Amir Goldstein <amir73il@gmail.com>,
-        fstests <fstests@vger.kernel.org>,
-        Eryu Guan <guaneryu@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ay3sdGiDRHAPLPYUlZwep9fc4pZc95saAfFzOSdMcB0=;
+        b=6hohWjkC2XBx2dQiHFoS3YJC6zrHLC7/FSOX3obxUWwvsnnOFn5rrDE9mvViOiSy2J
+         qk+PHjesw31M1xCbhmT5QHcQVT4SKRVHLmwyk1weD+y3micQJrHoQ9uX5VdpLBtYr5jM
+         ruZJUx5qP4ZJsetVbvrbAk8q8fAUDJAP+iJo6msYCfw6SV8ZamnXl9JTRGXVHvw5fwwI
+         ON2MkQrA//+kzfjPAZRvCxnIaF8CX1R43qOkzCJjN+iaEOieesvkPSNhpnXm65LZNgPc
+         AeskudOSiSDCqMRYzDdeUfpHPkPYC+RA5ziVOuJNtkSJEU4cVlmpNv+aOnZkqWb8vAzv
+         ixjw==
+X-Gm-Message-State: AOAM5306v9lo95RRJNBebBmpJJxOZHZwbCAyNJzg8c/gqJYBLj9sCajd
+        TQZ14xJkz8WSvpoFYSuzdXU=
+X-Google-Smtp-Source: ABdhPJxQ+cP+q/BEoK6qYVudcxKI/PH3V3h+WoY6dfVCeJ1LPwgv/snRJZdUHfu15PHsAzfQzMv3kg==
+X-Received: by 2002:a17:90a:af98:b0:1d4:67d4:d122 with SMTP id w24-20020a17090aaf9800b001d467d4d122mr19106442pjq.166.1650870450460;
+        Mon, 25 Apr 2022 00:07:30 -0700 (PDT)
+Received: from localhost.localdomain ([162.219.34.249])
+        by smtp.gmail.com with ESMTPSA id b2-20020a056a000a8200b004e1414f0bb1sm10794907pfl.135.2022.04.25.00.07.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Apr 2022 00:07:29 -0700 (PDT)
+From:   "Wang Jianchao (Kuaishou)" <jianchao.wan9@gmail.com>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] xfs: fix the ABBA deadlock around agf and inode
+Date:   Mon, 25 Apr 2022 15:06:20 +0800
+Message-Id: <20220425070620.19986-1-jianchao.wan9@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Apr 24, 2022 at 9:41 PM Zorro Lang <zlang@redhat.com> wrote:
->
-> On Sun, Apr 24, 2022 at 05:34:44PM +0300, Amir Goldstein wrote:
-> > On Sun, Apr 24, 2022 at 4:24 PM Zorro Lang <zlang@redhat.com> wrote:
-> > >
-> > > On Sun, Apr 24, 2022 at 03:02:03PM +0300, Amir Goldstein wrote:
-> > > > On Sun, Apr 24, 2022 at 2:21 PM Baokun Li <libaokun1@huawei.com> wrote:
-> > > > >
-> > > > > xfstests support overlay+tmpfs
-> > > >
-> > > > Thanks for this improvement.
-> > > > Can you please share the results of ./check -overlay -g auto ?
-> > > >
-> > > > How many tests ran? notran? failed?
-> > > >
-> > > > Best if you have those numbers compared to
-> > > > overlay+(already supported base fs)
-> > > >
-> > > >
-> > > > >
-> > > > > ```local.config.example
-> > > > > export FSTYP=tmpfs
-> > > > > export TEST_DEV=tmpfs_test
-> > > > > export TEST_DIR=/tmp/test
-> > > > > export TEST_FS_MOUNT_OPTS="-t tmpfs"
-> > > > > export SCRATCH_DEV=tmpfs_scratch
-> > > > > export SCRATCH_MNT=/tmp/scratch
-> > > > > export MOUNT_OPTIONS="-t tmpfs"
-> > > >
-> > > > These mount options for tmpfs are very awkward.
-> > > > Please fix _overlay_base_mount to use -t $OVL_BASE_FSTYP
-> > > > like _test_mount() and _try_scratch_mount() do
-> > > >
-> > > >
-> > > > > ```
-> > > > > Run `./check -overlay tests` to execute test case on overlay+tmpfs.
-> > > > >
-> > > > > Signed-off-by: Baokun Li <libaokun1@huawei.com>
-> > > > > ---
-> > > > >  common/config | 4 ++--
-> > > > >  common/rc     | 7 ++++++-
-> > > > >  2 files changed, 8 insertions(+), 3 deletions(-)
-> > > > >
-> > > > > diff --git a/common/config b/common/config
-> > > > > index 1033b890..3dc047e8 100644
-> > > > > --- a/common/config
-> > > > > +++ b/common/config
-> > > > > @@ -614,7 +614,7 @@ _overlay_config_override()
-> > > > >         #    the new OVL_BASE_SCRATCH/TEST_DEV/MNT vars are set to the values
-> > > > >         #    of the configured base fs and SCRATCH/TEST_DEV vars are set to the
-> > > > >         #    overlayfs base and mount dirs inside base fs mount.
-> > > > > -       [ -b "$TEST_DEV" ] || [ -c "$TEST_DEV" ] || return 0
-> > > > > +       [ -b "$TEST_DEV" ] || [ -c "$TEST_DEV" ] || [ "$FSTYP" == tmpfs ] || return 0
-> > > > >
-> > > > >         # Config file may specify base fs type, but we obay -overlay flag
-> > > > >         [ "$FSTYP" == overlay ] || export OVL_BASE_FSTYP="$FSTYP"
-> > > >
-> > > > Please move the setting of OVL_BASE_FSTYP to the top of the function and use
-> > > > [ "$OVL_BASE_FSTYP" == tmpfs ] consistently.
-> > >
-> > > Actually I'm wondering if we can bring in a parameter to clarify that xfstests need to
-> > > build uplying fs base on a underlying fs, don't depend on the "[ -b "$TEST_DEV" ] ||
-> > > [ -c "$TEST_DEV" ] || [ "$FSTYP" == tmpfs ]" things. Due to:
-> > > 1) overlayfs might not only base on localfs, it can over NFS or something likes it. (right?)
-> >
-> > No it cannot.
-> > The way that xfstests -overlay work is that both upper and lower layers
-> > are created on the base fs, therefore only fs supported as upper fs
-> > can be tested with -overlay.
-> > None of the network fs qualify as valid overlay upper fs.
-> > The only other non-blockdev fs besides tmpfs that could be tested
-> > with -overlay is virtiofs.
->
-> Oh, looks like my memory is a little jumbled, maybe overlayfs can be exported to NFS :)
->
+Recently, we encounter a deadlock case where there are many tasks
+hung on agi and agf xfs_buf. It end up with a deadlock between
+agf and inode xfs_buf as following,
 
-Yes it can.
+xfs_ifree()             xfs_bmap_btalloc()
+xfs_iunlink_remove()    xfs_alloc_vextent()
+  hold inode bp           hold agf
+xfs_difree()            xfs_trans_log_inode()
+  require agf             require inode bp
 
-> >
-> > >    If so, how many judgements we need to add at here?
-> > > 2) If xfstests can help overlayfs, that means it can help to build other fs (e.g. nfs, cifs,
-> > >    ceph, etc) from an underlying fs in one day.
->
-> Actually I asked for this ^^ mainly.
->
+The task requires inode bp with agf held block other tasks which
+want to require agf with agi held. Then the whole filesystem
+looks like a agi/agf deadlock. To fix this issue, get agf in
+xfs_iunlink_remove() after it get agi and before get indoe bp.
 
-Ahhh I completely misunderstood what you meant.
-It's interesting. I also wanted to improve test coverage of fuse by running
-fuse passthrough with xfstests.
+Signed-off-by: Wang Jianchao (Kuaishou) <jianchao.wan9@gmail.com>
+---
+ fs/xfs/xfs_inode.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9de6205fe134..c0a29fd00b0e 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -36,6 +36,7 @@
+ #include "xfs_reflink.h"
+ #include "xfs_ag.h"
+ #include "xfs_log_priv.h"
++#include "xfs_alloc.h"
+ 
+ struct kmem_cache *xfs_inode_cache;
+ 
+@@ -2337,6 +2338,7 @@ xfs_iunlink_remove(
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	struct xfs_agi		*agi;
++	struct xfs_buf		*agfbp;
+ 	struct xfs_buf		*agibp;
+ 	struct xfs_buf		*last_ibp;
+ 	struct xfs_dinode	*last_dip = NULL;
+@@ -2352,6 +2354,14 @@ xfs_iunlink_remove(
+ 	error = xfs_read_agi(mp, tp, pag->pag_agno, &agibp);
+ 	if (error)
+ 		return error;
++
++	/*
++	 * Get the agf buffer first to ensure the lock ordering against inode bp
++	 */
++	error = xfs_read_agf(mp, tp, pag->pag_agno, 0, &agfbp);
++	if (error)
++		return error;
++
+ 	agi = agibp->b_addr;
+ 
+ 	/*
+-- 
+2.17.1
 
-> > >
-> > > So how about bring in a parameter, maybe USE_UNDERLYING_FS=yes/no(default), or use "BASE_FSTYP"
-> > > directly, e.g.
-> > > export USE_UNDERLYING_FS=yes
-> > > export FSTYP=tmpfs
-> >
-> > This already exists:
-> >
-> > export OVERLAY=true
-> > export FSTYP=tmpfs
->
-> Yes, it's same with ./check -overlay, so how about
->
-> # need override
-> if [ "$OVERLAY" = "true" -a "$FSTYP" != "overlay" ];then
-> ...
-
-That could make sense.
-TBH, I never test overlay without ./check -overlay.
-I only tried to avoid breaking this config in case people are still
-using it. If someone is interested in making changes here they
-need to test those non-standard configurations and make sure
-they are not broken by these changes.
-
->
-> >
-> > means exactly that, but is usually set internally by ./check -overlay
-> >
-> > I think what you mean is that this should be a helper:
-> >
-> > _overlay_is_valid_upper_fs()
-> > {
-> >         local basedev=$1
-> >
-> >         case $FSTYP in
-> >         tmpfs)
-> >                 return 0
-> >                 ;;
-> >         *)
-> >                 [ -b "$basedev" ] || [ -c "$basedev" ]
-> >                 return $?
-> >                 ;;
-> >         esac
-> > }
->
-> Sure, if we don't leave this job to tester (tester makes sure he provide proper TEST_DEV
-> and SCRATCH_DEV), we help to judge that :)
->
-> ......
->
-> Now uplying fs testing in xfstests supports two ways:
-
-I am not a native English speaker myself, but I don't think this term
-fits so well to describe what you mean.
-Maybe "overlayed" fs sounds too overlayfs oriended, but it could describe
-other fs.
-
-> 1) Let testers prepare uplying fs TEST_DEV and SCRATCH_DEV, then set FSTYP=$upfs
-> 2) The testers prepare underlying fs TEST_DEV and SCRATCH_DEV, then set FSTYP=$underfs, and
->    run ./check -$upfs ...
->
-> Until now, only overlayfs supports both 2 ways (if I don't remember wrong), others (likes
-> nfs, cifs, glusterfs, ceph etc) are only support the 1st way.
->
-> So I'm thinking if other fs would like to be supported as overlay, we might can help to
-> provide:
-> 1) A parameter UPLYING_FS to record if we're testing a fs can be uplying fs, e.g:
->         -nfs)           FSTYP=nfs; UPLYING_FS=nfs ;;
->         -glusterfs)     FSTYP=glusterfs; UPLYING_FS=glusterfs ;;
->         -cifs)          FSTYP=cifs; export UPLYING_FS=cifs ;;
->         -overlay)       FSTYP=overlay; export UPLYING_FS=overly ;;
->
-> 2) A common _config_override() function, and different _${UPLYING_FS}_config_override()
->    functions.
-> 3) After source local.config, check if [ "$UPLYING_FS" != "$FSTYP" ]. If they're equal,
->    then return, else we need underlying things, then run _${UPLYING_FS}_is_valid() to check
->    the TEST_DEV and SCRATCH_DEV are good for ${UPLYING_FS}.
-> 4) Do real override.
->
-> As overlayfs is the only one supports the 2nd way, so maybe we can let overlay testing
-> to be a demonstration. Does that make sense?
->
-
-I think it does make sense, but the complications are in the details,
-so I'll need
-to look closer at some examples and mainly need some developers or testers
-of nfs/cifs/glusterfs to care about this.
-
-I may get around to look at fuse passthrough as the first target and see
-what benefits this could bring on top of standard fuse support [1]
-
-Thanks,
-Amir.
-
-[1] https://lore.kernel.org/fstests/20210812045950.3190-1-bhumit.attarde01@gmail.com/
