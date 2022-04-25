@@ -2,221 +2,245 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2091CC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Apr 2022 23:17:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C762CC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Apr 2022 23:39:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229816AbiDYXU0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Apr 2022 19:20:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47878 "EHLO
+        id S230338AbiDYXmQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Apr 2022 19:42:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235512AbiDYXUZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Apr 2022 19:20:25 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DF17B1A3BC
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 16:17:18 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-115-138.pa.nsw.optusnet.com.au [49.181.115.138])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 7DE895345BD
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 09:17:16 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nj7xC-004XF3-NH
-        for linux-xfs@vger.kernel.org; Tue, 26 Apr 2022 09:17:14 +1000
-Date:   Tue, 26 Apr 2022 09:17:14 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs: for-next tree updated to a44a027a8b2a
-Message-ID: <20220425231714.GK1544202@dread.disaster.area>
+        with ESMTP id S229807AbiDYXmP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Apr 2022 19:42:15 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A005C120100
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 16:39:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 15DAAB81BAB
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 23:39:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FBAEC385A7;
+        Mon, 25 Apr 2022 23:39:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650929946;
+        bh=PbNi32o8ee7pzz96TXhuAex9ZULaHBLijjOk0IlP/Kw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oiBm0l+YizuKXrqo4S+dW7iuMfaBaDWxAwZQiVcHx9eRPgJVGL5ZxyGNB5sxc4Tmc
+         PUMkbWJXvXLOrIcVzMSUzS0kqk9TH3quHJ7nUcE8HBGcQfLbzgLlLo/VGjU9XjjtnW
+         bBhWkQCVmYE0ukpJfehfmE8e8DyhioUAceES/LzGDokApMShf489AC4JHx2MaAz19H
+         5JQMjeedW/XyFbsEBHowTa2mxOnQ1eKaMZs4JzMixGWHt4xXNtu1dVoHeceCfiuYSH
+         CbprMLJik4UPSBAC8+VoJRrU4dQfgQKwTvMyRKLNU20MMRVzxafqIH36NraC8/JsjN
+         h4C/ivaYJAaAg==
+Date:   Mon, 25 Apr 2022 16:39:05 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/6] xfs: create shadow transaction reservations for
+ computing minimum log size
+Message-ID: <20220425233905.GN17025@magnolia>
+References: <164997686569.383881.8935566398533700022.stgit@magnolia>
+ <164997688275.383881.1038640482191339784.stgit@magnolia>
+ <20220422223635.GC1544202@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62672bfc
-        a=/kVtbFzwtM2bJgxRVb+eeA==:117 a=/kVtbFzwtM2bJgxRVb+eeA==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=NEAV23lmAAAA:8 a=7-415B0cAAAA:8
-        a=Ijo-PXENOAVyLxYNxYIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220422223635.GC1544202@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Sat, Apr 23, 2022 at 08:36:35AM +1000, Dave Chinner wrote:
+> On Thu, Apr 14, 2022 at 03:54:42PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Every time someone changes the transaction reservation sizes, they
+> > introduce potential compatibility problems if the changes affect the
+> > minimum log size that we validate at mount time.  If the minimum log
+> > size gets larger (which should be avoided because doing so presents a
+> > serious risk of log livelock), filesystems created with old mkfs will
+> > not mount on a newer kernel; if the minimum size shrinks, filesystems
+> > created with newer mkfs will not mount on older kernels.
+> > 
+> > Therefore, enable the creation of a shadow log reservation structure
+> > where we can "undo" the effects of tweaks when computing minimum log
+> > sizes.  These shadow reservations should never be used in practice, but
+> > they insulate us from perturbations in minimum log size.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_log_rlimit.c |   17 +++++++++++++----
+> >  fs/xfs/libxfs/xfs_trans_resv.c |   12 ++++++++++++
+> >  fs/xfs/libxfs/xfs_trans_resv.h |    2 ++
+> >  fs/xfs/xfs_trace.h             |   12 ++++++++++--
+> >  4 files changed, 37 insertions(+), 6 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
+> > index 67798ff5e14e..2bafc69cac15 100644
+> > --- a/fs/xfs/libxfs/xfs_log_rlimit.c
+> > +++ b/fs/xfs/libxfs/xfs_log_rlimit.c
+> > @@ -14,6 +14,7 @@
+> >  #include "xfs_trans_space.h"
+> >  #include "xfs_da_btree.h"
+> >  #include "xfs_bmap_btree.h"
+> > +#include "xfs_trace.h"
+> >  
+> >  /*
+> >   * Calculate the maximum length in bytes that would be required for a local
+> > @@ -47,18 +48,25 @@ xfs_log_get_max_trans_res(
+> >  	struct xfs_trans_res	*max_resp)
+> >  {
+> >  	struct xfs_trans_res	*resp;
+> > +	struct xfs_trans_res	*start_resp;
+> >  	struct xfs_trans_res	*end_resp;
+> > +	struct xfs_trans_resv	*resv;
+> >  	int			log_space = 0;
+> >  	int			attr_space;
+> >  
+> >  	attr_space = xfs_log_calc_max_attrsetm_res(mp);
+> >  
+> > -	resp = (struct xfs_trans_res *)M_RES(mp);
+> > -	end_resp = (struct xfs_trans_res *)(M_RES(mp) + 1);
+> > -	for (; resp < end_resp; resp++) {
+> > +	resv = kmem_zalloc(sizeof(struct xfs_trans_resv), 0);
+> > +	xfs_trans_resv_calc_logsize(mp, resv);
+> > +
+> > +	start_resp = (struct xfs_trans_res *)resv;
+> > +	end_resp = (struct xfs_trans_res *)(resv + 1);
+> > +	for (resp = start_resp; resp < end_resp; resp++) {
+> >  		int		tmp = resp->tr_logcount > 1 ?
+> >  				      resp->tr_logres * resp->tr_logcount :
+> >  				      resp->tr_logres;
+> > +
+> > +		trace_xfs_trans_resv_calc_logsize(mp, resp - start_resp, resp);
+> >  		if (log_space < tmp) {
+> >  			log_space = tmp;
+> >  			*max_resp = *resp;		/* struct copy */
+> 
+> This took me a while to get my head around. The minimum logsize
+> calculation stuff is all a bit of a mess.
+> 
+> Essentially, we call xfs_log_get_max_trans_res() from two places.
+> One is to calculate the minimum log size, the other is the
+> transaction reservation tracing code done when M_RES(mp) is set up
+> via xfs_trans_trace_reservations().  We don't need the call from
+> xfs_trans_trace_reservations() - it's trivial to scan the list of
+> tracepoints emitted by this function at mount time to find the
+> maximum reservation.
 
-I just pushed out a new for-next branch for the XFS tree. It
-contains:
+Here's the thing -- xfs_db also calls xfs_log_get_max_trans_res to
+figure out the transaction reservation that's used to compute the
+minimum log size.  Whenever I get a report about mount failing due to
+minlogsize checks, I can ask the reporter to send me the ftrace output
+from the mount attempt and compare it against what userspace thinks:
 
-- pending fixes for 5.18
-- various miscellaneous fixes
-- xlog_write() rework
-- conversions to unsigned for trace_printk flags
-- large on-disk extent counts
+# xfs_db /dev/sde -c logres
+type 0 logres 168184 logcount 5 flags 0x4
+type 1 logres 293760 logcount 5 flags 0x4
+type 2 logres 307936 logcount 2 flags 0x4
+type 3 logres 187760 logcount 2 flags 0x4
+type 4 logres 170616 logcount 2 flags 0x4
+type 5 logres 244720 logcount 3 flags 0x4
+type 6 logres 243568 logcount 2 flags 0x4
+type 7 logres 260352 logcount 2 flags 0x4
+type 8 logres 243568 logcount 3 flags 0x4
+type 9 logres 278648 logcount 2 flags 0x4
+type 10 logres 2168 logcount 0 flags 0x0
+type 11 logres 73728 logcount 2 flags 0x4
+type 12 logres 99960 logcount 2 flags 0x4
+type 13 logres 760 logcount 0 flags 0x0
+type 14 logres 292992 logcount 1 flags 0x4
+type 15 logres 23288 logcount 3 flags 0x4
+type 16 logres 13312 logcount 0 flags 0x0
+type 17 logres 147584 logcount 3 flags 0x4
+type 18 logres 640 logcount 0 flags 0x0
+type 19 logres 94968 logcount 2 flags 0x4
+type 20 logres 4224 logcount 0 flags 0x0
+type 21 logres 6512 logcount 0 flags 0x0
+type 22 logres 232 logcount 1 flags 0x0
+type 23 logres 172407 logcount 5 flags 0x4
+type 24 logres 640 logcount 1 flags 0x0
+type 25 logres 760 logcount 0 flags 0x0
+type 26 logres 243568 logcount 2 flags 0x4
+type 27 logres 170616 logcount 2 flags 0x4
+type -1 logres 547200 logcount 8 flags 0x4
 
-This all passes my local regression testing, though further smoke
-testing in different environments would be appreaciated.
+And this "-1" entry matches the last output of the kernel.  I'd rather
+not lose this tracing facility (which means keeping this function
+non-static) though I will move the tracepoint out of
+xfs_trans_trace_reservations.
 
-I haven't pulled in fixes from late last week yet - I'll work
-through those in the next couple of days to get them into the tree
-as well.
+> Hence I think we should start by removing that call to this
+> function, and making this a static function called only from
+> xfs_log_calc_minimum_size().
+> 
+> At this point, we can use an on-stack struct xfs_trans_resv for the
+> calculated values - no need for memory allocation here as we will
+> never be short of stack space in this path.
 
-If I've missed anything you were expecting to see in this update,
-let me know and I'll get them sorted for the next update.
+~312 bytes?  That's ~8% of the kernel stack.  I'll see if I run into any
+complaints, though I bet I won't on x64.
 
-Cheers,
+> The tracing in the loop also wants an integer index into the struct
+> xfs_trans_resv structure, so it should be changed to match what
+> xfs_trans_trace_reservations() does:
+> 
+> 	struct xfs_trans_resv	resv;
+> 	struct xfs_trans_res	*resp;
+> 	struct xfs_trans_res	*end_resp;
+> 
+> 	....
+> 
+> 	xfs_trans_resv_calc(mp, &resv)
+> 
+> 	resp = (struct xfs_trans_res *)&resv;
+> 	end_resp = (struct xfs_trans_res *)(&resv + 1);
+> 	for (i = 0; resp < end_resp; resp++) {
+> 		.....
+> 		trace_xfs_trans_resv_calc_logsize(mp, i, resp);
+> 		....
+> 	}
 
-Dave.
+Done.
 
----------------------------------------------------------------
+> 
+> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> > index 6f83d9b306ee..12d4e451e70e 100644
+> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> > @@ -933,3 +933,15 @@ xfs_trans_resv_calc(
+> >  	/* Put everything back the way it was.  This goes at the end. */
+> >  	mp->m_rmap_maxlevels = rmap_maxlevels;
+> >  }
+> > +
+> > +/*
+> > + * Compute an alternate set of log reservation sizes for use exclusively with
+> > + * minimum log size calculations.
+> > + */
+> > +void
+> > +xfs_trans_resv_calc_logsize(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_trans_resv	*resp)
+> > +{
+> > +	xfs_trans_resv_calc(mp, resp);
+> > +}
+> 
+> This function and it's name was waht confused me for a while - I
+> don't think it belongs in this patch, and I don't think it belongs
+> in this file when it's filled out in the next patch. It's basically
+> handling things specific to minimum log size calculations, so with
+> the above mods I think it should also end up being static to
+> libxfs/xfs_log_rlimit.c.
 
-Head commit:
+Moved.  I guess I should rename it to xfs_log_recalc_trans_resv or
+something.
 
-a44a027a8b2a Merge tag 'large-extent-counters-v9' of https://github.com/chandanr/linux into xfs-5.19-for-next
+--D
 
-----------------------------------------------------------------
-Chandan Babu R (19):
-      xfs: Move extent count limits to xfs_format.h
-      xfs: Define max extent length based on on-disk format definition
-      xfs: Introduce xfs_iext_max_nextents() helper
-      xfs: Use xfs_extnum_t instead of basic data types
-      xfs: Introduce xfs_dfork_nextents() helper
-      xfs: Use basic types to define xfs_log_dinode's di_nextents and di_anextents
-      xfs: Promote xfs_extnum_t and xfs_aextnum_t to 64 and 32-bits respectively
-      xfs: Introduce XFS_SB_FEAT_INCOMPAT_NREXT64 and associated per-fs feature bit
-      xfs: Introduce XFS_FSOP_GEOM_FLAGS_NREXT64
-      xfs: Introduce XFS_DIFLAG2_NREXT64 and associated helpers
-      xfs: Use uint64_t to count maximum blocks that can be used by BMBT
-      xfs: Introduce macros to represent new maximum extent counts for data/attr forks
-      xfs: Replace numbered inode recovery error messages with descriptive ones
-      xfs: Introduce per-inode 64-bit extent counters
-      xfs: Directory's data fork extent counter can never overflow
-      xfs: Conditionally upgrade existing inodes to use large extent counters
-      xfs: Decouple XFS_IBULK flags from XFS_IWALK flags
-      xfs: Enable bulkstat ioctl to support 64-bit per-inode extent counters
-      xfs: Add XFS_SB_FEAT_INCOMPAT_NREXT64 to the list of supported flags
-
-Christoph Hellwig (2):
-      xfs: change the type of ic_datap
-      xfs: remove xlog_verify_dest_ptr
-
-Darrick J. Wong (3):
-      xfs: pass explicit mount pointer to rtalloc query functions
-      xfs: recalculate free rt extents after log recovery
-      xfs: use a separate frextents counter for rt extent reservations
-
-Dave Chinner (36):
-      xfs: convert buffer flags to unsigned.
-      xfs: reorder iunlink remove operation in xfs_ifree
-      xfs: factor out the CIL transaction header building
-      xfs: only CIL pushes require a start record
-      xfs: embed the xlog_op_header in the unmount record
-      xfs: embed the xlog_op_header in the commit record
-      xfs: log tickets don't need log client id
-      xfs: move log iovec alignment to preparation function
-      xfs: reserve space and initialise xlog_op_header in item formatting
-      xfs: log ticket region debug is largely useless
-      xfs: pass lv chain length into xlog_write()
-      xfs: introduce xlog_write_full()
-      xfs: introduce xlog_write_partial()
-      xfs: xlog_write() no longer needs contwr state
-      xfs: xlog_write() doesn't need optype anymore
-      xfs: CIL context doesn't need to count iovecs
-      xfs: convert attr type flags to unsigned.
-      xfs: convert scrub type flags to unsigned.
-      xfs: convert bmap extent type flags to unsigned.
-      xfs: convert bmapi flags to unsigned.
-      xfs: convert AGF log flags to unsigned.
-      xfs: convert AGI log flags to unsigned.
-      xfs: convert btree buffer log flags to unsigned.
-      xfs: convert buffer log item flags to unsigned.
-      xfs: convert da btree operations flags to unsigned.
-      xfs: convert dquot flags to unsigned.
-      xfs: convert log item tracepoint flags to unsigned.
-      xfs: convert inode lock flags to unsigned.
-      xfs: convert ptag flags to unsigned.
-      xfs: convert quota options flags to unsigned.
-      xfs: convert shutdown reasons to unsigned.
-      xfs: convert log ticket and iclog flags to unsigned.
-      Merge branch 'guilt/5.19-miscellaneous' into xfs-5.19-for-next
-      Merge branch 'guilt/xfs-unsigned-flags-5.18' into xfs-5.19-for-next
-      Merge branch 'guilt/xlog-write-rework' into xfs-5.19-for-next
-      Merge tag 'large-extent-counters-v9' of https://github.com/chandanr/linux into xfs-5.19-for-next
-
-Jonathan Lassoff (2):
-      xfs: Simplify XFS logging methods.
-      xfs: Add XFS messages to printk index
-
-Kaixu Xia (1):
-      xfs: simplify local variable assignment in file write code
-
-Matthew Wilcox (Oracle) (1):
-      xfs: Use generic_file_open()
-
-Tiezhu Yang (1):
-      MAINTAINERS: update IOMAP FILESYSTEM LIBRARY and XFS FILESYSTEM
-
- MAINTAINERS                     |   3 -
- fs/xfs/libxfs/xfs_alloc.c       |  12 +-
- fs/xfs/libxfs/xfs_alloc.h       |   2 +-
- fs/xfs/libxfs/xfs_attr.c        |   3 +
- fs/xfs/libxfs/xfs_bmap.c        | 145 +++++++++-----------
- fs/xfs/libxfs/xfs_bmap.h        |  58 ++++----
- fs/xfs/libxfs/xfs_bmap_btree.c  |   9 +-
- fs/xfs/libxfs/xfs_btree.c       |  10 +-
- fs/xfs/libxfs/xfs_btree.h       |  26 ++--
- fs/xfs/libxfs/xfs_da_btree.h    |  17 +--
- fs/xfs/libxfs/xfs_da_format.h   |   9 +-
- fs/xfs/libxfs/xfs_dir2.c        |   8 ++
- fs/xfs/libxfs/xfs_format.h      | 180 ++++++++++++++++++-------
- fs/xfs/libxfs/xfs_fs.h          |  41 ++++--
- fs/xfs/libxfs/xfs_ialloc.c      |   8 +-
- fs/xfs/libxfs/xfs_ialloc.h      |   2 +-
- fs/xfs/libxfs/xfs_inode_buf.c   |  83 +++++++++---
- fs/xfs/libxfs/xfs_inode_fork.c  |  39 +++++-
- fs/xfs/libxfs/xfs_inode_fork.h  |  76 +++++++++--
- fs/xfs/libxfs/xfs_log_format.h  |  34 ++++-
- fs/xfs/libxfs/xfs_quota_defs.h  |  49 ++++---
- fs/xfs/libxfs/xfs_rtbitmap.c    |   9 +-
- fs/xfs/libxfs/xfs_sb.c          |  10 ++
- fs/xfs/libxfs/xfs_trans_resv.c  |  11 +-
- fs/xfs/libxfs/xfs_types.h       |  11 +-
- fs/xfs/scrub/bmap.c             |   2 +-
- fs/xfs/scrub/inode.c            |  20 +--
- fs/xfs/scrub/rtbitmap.c         |   9 +-
- fs/xfs/xfs_bmap_item.c          |   2 +
- fs/xfs/xfs_bmap_util.c          |  27 +++-
- fs/xfs/xfs_buf.c                |   6 +-
- fs/xfs/xfs_buf.h                |  42 +++---
- fs/xfs/xfs_buf_item.h           |  24 ++--
- fs/xfs/xfs_dquot.c              |   3 +
- fs/xfs/xfs_error.h              |  20 +--
- fs/xfs/xfs_file.c               |  24 ++--
- fs/xfs/xfs_fsmap.c              |   6 +-
- fs/xfs/xfs_fsops.c              |   7 +-
- fs/xfs/xfs_icache.c             |   9 +-
- fs/xfs/xfs_inode.c              | 104 ++++-----------
- fs/xfs/xfs_inode.h              |  29 ++--
- fs/xfs/xfs_inode_item.c         |  23 +++-
- fs/xfs/xfs_inode_item_recover.c | 141 ++++++++++++++------
- fs/xfs/xfs_ioctl.c              |   3 +
- fs/xfs/xfs_iomap.c              |  33 +++--
- fs/xfs/xfs_itable.c             |  15 ++-
- fs/xfs/xfs_itable.h             |   5 +-
- fs/xfs/xfs_iwalk.h              |   2 +-
- fs/xfs/xfs_log.c                | 766 +++++++++++++++++++++++++++++++++++++++++++++-------------------------------------------------------------
- fs/xfs/xfs_log.h                |  57 +++-----
- fs/xfs/xfs_log_cil.c            | 169 ++++++++++++++++--------
- fs/xfs/xfs_log_priv.h           |  55 ++------
- fs/xfs/xfs_message.c            |  58 ++++----
- fs/xfs/xfs_message.h            |  55 +++++---
- fs/xfs/xfs_mount.c              |  91 +++++++------
- fs/xfs/xfs_mount.h              |  32 +++--
- fs/xfs/xfs_reflink.c            |   5 +
- fs/xfs/xfs_rtalloc.c            |  41 ++++++
- fs/xfs/xfs_rtalloc.h            |   9 +-
- fs/xfs/xfs_super.c              |  18 ++-
- fs/xfs/xfs_symlink.c            |   5 -
- fs/xfs/xfs_trace.h              |  28 +---
- fs/xfs/xfs_trans.c              |  49 +++++--
- fs/xfs/xfs_trans.h              |  10 +-
- 64 files changed, 1585 insertions(+), 1274 deletions(-)
-
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
