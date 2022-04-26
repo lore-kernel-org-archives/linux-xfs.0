@@ -2,323 +2,226 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BB10C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Apr 2022 23:49:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ECB1C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 01:14:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238222AbiDYXwr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Apr 2022 19:52:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46104 "EHLO
+        id S234201AbiDZBRy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Apr 2022 21:17:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229717AbiDYXwr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Apr 2022 19:52:47 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C63D1102AC
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 16:49:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C08F4B81A2F
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 23:49:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56083C385A4;
-        Mon, 25 Apr 2022 23:49:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650930578;
-        bh=4QIrPKIPdODqxmfX+26GuiG1TCq7G+Ld7OhuYspGngU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bwd36TKVB7vYzvY+Dr9UBtcnWUpCmrvCXj70Tqh/xAG7ZlcAfDIbJpzps3YaYCjV1
-         DEhyPBBppVQfE7YFXjyMxnLr0Yz0MofICPxogsHWZQuMUrjMQqjeqqvcGhVzyA3Ov9
-         m3NBYM5I9ng0uxV9kaEU27VO+DeQcHeHrFX0QlNcuoJwOxiD82bmr/qWwfnYYwYsC4
-         gJjNjxsmv9cNaWRy3qgs2HtShiEyX7AIcCxCkshcjtpxIsNRMY3VmYprsT8OBjnxG1
-         egVPH3PhgFBHWxN4l+K2I87O5sgaEaj+J3yEtgrCh80MxyeoNwdjhXmYlqw1H008NM
-         iI6yekklPt7zQ==
-Date:   Mon, 25 Apr 2022 16:49:37 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/6] xfs: reduce transaction reservations with reflink
-Message-ID: <20220425234937.GP17025@magnolia>
-References: <164997686569.383881.8935566398533700022.stgit@magnolia>
- <164997689398.383881.16693790752445073096.stgit@magnolia>
- <20220422234238.GE1544202@dread.disaster.area>
+        with ESMTP id S229662AbiDZBRy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Apr 2022 21:17:54 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE36AF2A23;
+        Mon, 25 Apr 2022 18:14:46 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id i24so16456040pfa.7;
+        Mon, 25 Apr 2022 18:14:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=fCWvB464odNBf/ShDLHlbpM456OS0PdmNMNwSmxnbdw=;
+        b=S6lWrfiVnptzHmrsPXaktkm95tMgzaRZNIZ/Y4RlTu4Sjaq1pJ4nOW8YMp7thRXm6M
+         /rLpCZZEltPBuVURpXOcgsRUHnPYpEgRiqMZzWLcvCVWQyum04dIzeCbqlQLtOl2TPZA
+         K9BbsPgSVceIanf68eYdRAzug+nU3T/5H8VSasHOcw5PdCIARdLZzbmj1oFPqCtaoj8V
+         jwmE9YTclhmOjX9HKEC+KfRfifqA9eXfz0D8iePJtsG66RdCmK7rKFO63D9vTI17wt+t
+         r1TdNpiSyvcOorAZyr6fUernQuyJQTt+3ma8E8bx0cOcnL7PugcrESFeeAZl9pjH4c8B
+         kK9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=fCWvB464odNBf/ShDLHlbpM456OS0PdmNMNwSmxnbdw=;
+        b=IGT9I8oGSP4+WV/NwJBnZbQ6VpnBByAPcodROBEWETPKK6fhCPK1SQa8rr9xlQ70B4
+         S3mwHuoNPTu8E662TRuxb9ohwVAe8pampv3uqj7p1QUH6PQC4DJbvoUiJEt89buB0Fv9
+         sDvLIJv6WXCa7rf+8UfYhBm39vdcIdwejfMq1dAPZRLtq8dDkDgcoKmX300eGQEOVDFY
+         hagdDA/I0r6fNdst9BUkA/J3GxTM+1Tv+eJkwS83ULRfyuFrw5+RUA7O9TwkuNn89wFh
+         vzqAsagMrT/noZR7qqV4kikHAXn2cjbenKKY5aALPKNpOet+F9PbFSUwz9rZKEAc5xf9
+         zCVQ==
+X-Gm-Message-State: AOAM531PoHY1wsc6u8uu0b2t3PEapldIaLOV8sR86VMvBXZojDQPrr0q
+        OOl5TmzaQfjtbUrr/mR89r5m2CnFMuEzxg==
+X-Google-Smtp-Source: ABdhPJzMjo07FOU0xjwNR73clW5nEaFT1TPwWTYOK1ieJREH3tInCaoMKpFnhyNYV8746Nj/aoJfnA==
+X-Received: by 2002:a05:6a00:24cc:b0:50d:58bf:5104 with SMTP id d12-20020a056a0024cc00b0050d58bf5104mr791982pfv.36.1650935686298;
+        Mon, 25 Apr 2022 18:14:46 -0700 (PDT)
+Received: from [172.20.119.1] ([61.16.102.74])
+        by smtp.gmail.com with ESMTPSA id y126-20020a62ce84000000b0050d223013b6sm9244057pfg.11.2022.04.25.18.14.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Apr 2022 18:14:45 -0700 (PDT)
+Message-ID: <fd886bf6-3fd8-d786-5211-423d465603ef@gmail.com>
+Date:   Tue, 26 Apr 2022 09:14:42 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220422234238.GE1544202@dread.disaster.area>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.8.0
+Subject: Re: [PATCH] xfs: fix the ABBA deadlock around agf and inode
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220425070620.19986-1-jianchao.wan9@gmail.com>
+ <d2ecf0b8-3bd9-e992-f723-178aae58a0a4@gmail.com>
+ <20220425161650.GE17025@magnolia>
+From:   Wang Jianchao <jianchao.wan9@gmail.com>
+In-Reply-To: <20220425161650.GE17025@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Apr 23, 2022 at 09:42:38AM +1000, Dave Chinner wrote:
-> On Thu, Apr 14, 2022 at 03:54:54PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Before to the introduction of deferred refcount operations, reflink
-> > would try to cram refcount btree updates into the same transaction as an
-> > allocation or a free event.  Mainline XFS has never actually done that,
-> > but we never refactored the transaction reservations to reflect that we
-> > now do all refcount updates in separate transactions.  Fix this to
-> > reduce the transaction reservation size even farther, so that between
-> > this patch and the previous one, we reduce the tr_write and tr_itruncate
-> > sizes by 66%.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_refcount.c   |    9 +++-
-> >  fs/xfs/libxfs/xfs_trans_resv.c |   97 ++++++++++++++++++++++++++++++++++++++--
-> >  2 files changed, 98 insertions(+), 8 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> > index a07ebaecba73..e53544d52ee2 100644
-> > --- a/fs/xfs/libxfs/xfs_refcount.c
-> > +++ b/fs/xfs/libxfs/xfs_refcount.c
-> > @@ -886,8 +886,13 @@ xfs_refcount_still_have_space(
-> >  {
-> >  	unsigned long			overhead;
-> >  
-> > -	overhead = cur->bc_ag.refc.shape_changes *
-> > -			xfs_allocfree_log_count(cur->bc_mp, 1);
-> > +	/*
-> > +	 * Worst case estimate: full splits of the free space and rmap btrees
-> > +	 * to handle each of the shape changes to the refcount btree.
-> > +	 */
-> > +	overhead = xfs_allocfree_log_count(cur->bc_mp,
-> > +				cur->bc_ag.refc.shape_changes);
-> > +	overhead += cur->bc_mp->m_refc_maxlevels;
-> >  	overhead *= cur->bc_mp->m_sb.sb_blocksize;
-> >  
-> >  	/*
-> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > index 8d2f04dddb65..e5c3fcc2ab15 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > @@ -56,8 +56,7 @@ xfs_calc_buf_res(
-> >   * Per-extent log reservation for the btree changes involved in freeing or
-> >   * allocating an extent.  In classic XFS there were two trees that will be
-> >   * modified (bnobt + cntbt).  With rmap enabled, there are three trees
-> > - * (rmapbt).  With reflink, there are four trees (refcountbt).  The number of
-> > - * blocks reserved is based on the formula:
-> > + * (rmapbt).  The number of blocks reserved is based on the formula:
-> >   *
-> >   * num trees * ((2 blocks/level * max depth) - 1)
-> >   *
-> > @@ -73,12 +72,23 @@ xfs_allocfree_log_count(
-> >  	blocks = num_ops * 2 * (2 * mp->m_alloc_maxlevels - 1);
-> >  	if (xfs_has_rmapbt(mp))
-> >  		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
-> > -	if (xfs_has_reflink(mp))
-> > -		blocks += num_ops * (2 * mp->m_refc_maxlevels - 1);
-> >  
-> >  	return blocks;
-> >  }
-> >  
-> > +/*
-> > + * Per-extent log reservation for refcount btree changes.  These are never done
-> > + * in the same transaction as an allocation or a free, so we compute them
-> > + * separately.
-> > + */
-> > +static unsigned int
-> > +xfs_refcount_log_count(
-> > +	struct xfs_mount	*mp,
-> > +	unsigned int		num_ops)
-> > +{
-> > +	return num_ops * (2 * mp->m_refc_maxlevels - 1);
-> > +}
-> 
-> This is a block count, right? My brain just went "spoing!" because I
-> was just looking at transaction reservation log counts, and here we
-> have a "log count" reservation that isn't a reservation log count
-> but a block count used to calculate the transaction unit
-> reservation...
-> 
-> Yeah, I know, that's my fault for naming xfs_allocfree_log_count()
-> the way I did way back when, but I think this really should tell the
-> reader it is returning a block count for the refcount btree mods.
-> 
-> Maybe xfs_refcountbt_block_count(), perhaps?
 
-Ok.  I'll add in another patch to rename xfs_allocfree_log_count at the
-end.
 
-> > + * Compute the log reservation required to handle the refcount update
-> > + * transaction.  Refcount updates are always done via deferred log items.
-> > + *
-> > + * This is calculated as:
-> > + * Data device refcount updates (t1):
-> > + *    the agfs of the ags containing the blocks: nr_ops * sector size
-> > + *    the refcount btrees: nr_ops * 1 trees * (2 * max depth - 1) * block size
-> > + */
-> > +static unsigned int
-> > +xfs_refcount_log_reservation(
-> > +	struct xfs_mount	*mp,
-> > +	unsigned int		nr_ops)
-> > +{
-> > +	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
-> > +
-> > +	if (!xfs_has_reflink(mp))
-> > +		return 0;
-> > +
-> > +	return xfs_calc_buf_res(nr_ops, mp->m_sb.sb_sectsize) +
-> > +	       xfs_calc_buf_res(xfs_refcount_log_count(mp, nr_ops), blksz);
-> > +}
+On 2022/4/26 12:16 上午, Darrick J. Wong wrote:
+> On Mon, Apr 25, 2022 at 03:10:02PM +0800, Wang Jianchao wrote:
+>> The deadlock context is as following,
+>> hold inode, try to require agf
+>>
+>> inode buf xfs_buf.b_log_item ffff9ca7491eb2c0
+>>
+>> PID: 82240  TASK: ffff9ca4cd633d80  CPU: 88  COMMAND: ""
+>>  #0 [ffffb696ad7f7410] __schedule at ffffffffa0067073
+>>  #1 [ffffb696ad7f74b0] schedule at ffffffffa0067678
+>>  #2 [ffffb696ad7f74b8] schedule_timeout at ffffffffa006b88d
+>>  #3 [ffffb696ad7f7558] __down at ffffffffa0069dcb
+>>  #4 [ffffb696ad7f75b8] down at ffffffff9f90890b
+>>  #5 [ffffb696ad7f75d0] xfs_buf_lock at ffffffffc6cb1133 [xfs]
+>>  #6 [ffffb696ad7f75f0] xfs_buf_find at ffffffffc6cb15fa [xfs]
+>>  #7 [ffffb696ad7f7688] xfs_buf_get_map at ffffffffc6cb18e0 [xfs]
+>>  #8 [ffffb696ad7f76d0] xfs_buf_read_map at ffffffffc6cb20e8 [xfs]
+>>  #9 [ffffb696ad7f7710] xfs_trans_read_buf_map at ffffffffc6ce6796 [xfs]
+>> #10 [ffffb696ad7f7750] xfs_read_agf at ffffffffc6c66fde [xfs]
+>> #11 [ffffb696ad7f77b8] xfs_alloc_read_agf at ffffffffc6c670ae [xfs]
+>> #12 [ffffb696ad7f77f0] xfs_alloc_fix_freelist at ffffffffc6c675dc [xfs]
+>> #13 [ffffb696ad7f7900] xfs_alloc_vextent at ffffffffc6c6796b [xfs]
+>> #14 [ffffb696ad7f7940] __xfs_inobt_alloc_block at ffffffffc6c972f0 [xfs]
+>> #15 [ffffb696ad7f79f8] __xfs_btree_split at ffffffffc6c7ee5d [xfs]
+>> #16 [ffffb696ad7f7ab8] xfs_btree_split at ffffffffc6c7f34b [xfs]
+>> #17 [ffffb696ad7f7b68] xfs_btree_make_block_unfull at ffffffffc6c80882 [xfs]
+>> #18 [ffffb696ad7f7bc8] xfs_btree_insrec at ffffffffc6c80ccd [xfs]
+>> #19 [ffffb696ad7f7ca0] xfs_btree_insert at ffffffffc6c80e3b [xfs]
+>> #20 [ffffb696ad7f7d60] xfs_difree_finobt at ffffffffc6c94859 [xfs]
+>> #21 [ffffb696ad7f7db8] xfs_difree at ffffffffc6c9634e [xfs]
+>> #22 [ffffb696ad7f7e08] xfs_ifree at ffffffffc6cc63d2 [xfs]
+>> #23 [ffffb696ad7f7e58] xfs_inactive_ifree at ffffffffc6cc6551 [xfs]
+>> #24 [ffffb696ad7f7e88] xfs_inactive at ffffffffc6cc66fe [xfs]
+>> #25 [ffffb696ad7f7ea0] xfs_fs_destroy_inode at ffffffffc6ccfdb8 [xfs]
+>> #26 [ffffb696ad7f7ec0] do_unlinkat at ffffffff9face066
+>> #27 [ffffb696ad7f7f38] do_syscall_64 at ffffffff9f8041cb
+>> #28 [ffffb696ad7f7f50] entry_SYSCALL_64_after_hwframe at ffffffffa02000ad
+>>     RIP: 00007f5e27b64e57  RSP: 00007f5e0d1f9a98  RFLAGS: 00000202
+>>     RAX: ffffffffffffffda  RBX: 00007f578b4011a0  RCX: 00007f5e27b64e57
+>>     RDX: 00007f5b1684e680  RSI: 0000000000000070  RDI: 00007f5b1684e680
+>>     RBP: 00007f578b4011c0   R8: 00000000000002e8   R9: 0000000000000007
+>>     R10: 00007f5e0d1fae20  R11: 0000000000000202  R12: 00007f5e0d1f9c00
+>>     R13: 00007f5d191e2118  R14: 00007f5d191e22d0  R15: 00007f5e0d1f9b50
+>>     ORIG_RAX: 0000000000000057  CS: 0033  SS: 002b
+>>
+>>
+>> The task hold agf, try to require inode
+>>
+>>
+>> PID: 1653499  TASK: ffff9c9f5490bd80  CPU: 66  COMMAND: "kworker/u209:2"
+>>  #0 [ffffb696ccdff270] __schedule at ffffffffa0067073
+>>  #1 [ffffb696ccdff310] schedule at ffffffffa0067678
+>>  #2 [ffffb696ccdff318] schedule_timeout at ffffffffa006b88d
+>>  #3 [ffffb696ccdff3b8] __down at ffffffffa0069dcb
+>>  #4 [ffffb696ccdff410] down at ffffffff9f90890b
+>>  #5 [ffffb696ccdff428] xfs_buf_lock at ffffffffc6cb1133 [xfs]
+>>  #6 [ffffb696ccdff448] xfs_buf_find at ffffffffc6cb15fa [xfs]
+>>  #7 [ffffb696ccdff4e0] xfs_buf_get_map at ffffffffc6cb18e0 [xfs]
+>>  #8 [ffffb696ccdff528] xfs_buf_read_map at ffffffffc6cb20e8 [xfs]
+>>  #9 [ffffb696ccdff568] xfs_trans_read_buf_map at ffffffffc6ce6796 [xfs]
+>> #10 [ffffb696ccdff5a8] xfs_imap_to_bp at ffffffffc6c9a3e7 [xfs]
+>> #11 [ffffb696ccdff608] xfs_trans_log_inode at ffffffffc6ce757e [xfs]
+>> #12 [ffffb696ccdff658] xfs_bmap_btalloc at ffffffffc6c75ccc [xfs]
+>> #13 [ffffb696ccdff750] xfs_bmapi_write at ffffffffc6c77ca0 [xfs]
+>> #14 [ffffb696ccdff8a8] xfs_bmapi_convert_delalloc at ffffffffc6c782a4 [xfs]
+>> #15 [ffffb696ccdff8d0] xfs_iomap_write_allocate at ffffffffc6cc11a7 [xfs]
+>> #16 [ffffb696ccdff940] xfs_map_blocks at ffffffffc6ca9f97 [xfs]
+>> #17 [ffffb696ccdff9d0] xfs_do_writepage at ffffffffc6caa911 [xfs]
+>> #18 [ffffb696ccdffa48] write_cache_pages at ffffffff9fa20675
+>> #19 [ffffb696ccdffb40] xfs_vm_writepages at ffffffffc6caa3e4 [xfs]
+>> #20 [ffffb696ccdffba8] do_writepages at ffffffff9fa217c1
+>> #21 [ffffb696ccdffc10] __writeback_single_inode at ffffffff9faec1bd
+>> #22 [ffffb696ccdffc58] writeback_sb_inodes at ffffffff9faec953
+>> #23 [ffffb696ccdffd38] __writeback_inodes_wb at ffffffff9faecc1d
+>> #24 [ffffb696ccdffd78] wb_writeback at ffffffff9faecf9f
+>> #25 [ffffb696ccdffe08] wb_workfn at ffffffff9faed8a2
+>> #26 [ffffb696ccdffe98] process_one_work at ffffffff9f8cd9f7
+>> #27 [ffffb696ccdffed8] worker_thread at ffffffff9f8ce0fa
+>> #28 [ffffb696ccdfff10] kthread at ffffffff9f8d3802
+>> #29 [ffffb696ccdfff50] ret_from_fork at ffffffffa020023f
 > 
-> To follow convention, this calculates a reservation in bytes, so
-> xfs_calc_refcountbt_reservation() would match all the other
-> functions that do similar things...
+> Does this solve the same problem as[1]?
+> 
+> [1]
+> https://lore.kernel.org/linux-xfs/20220404232204.GT1544202@dread.disaster.area/
 
-Fixed.
+Yes, it is !
 
-> .....
-> 
-> > @@ -303,10 +338,42 @@ xfs_calc_write_reservation(
-> >   *    the realtime summary: 2 exts * 1 block
-> >   *    worst case split in allocation btrees per extent assuming 2 extents:
-> >   *		2 exts * 2 trees * (2 * max depth - 1) * block size
-> > + * And any refcount updates that happen in a separate transaction (t4).
-> >   */
-> >  STATIC uint
-> >  xfs_calc_itruncate_reservation(
-> >  	struct xfs_mount	*mp)
-> > +{
-> > +	unsigned int		t1, t2, t3, t4;
-> > +	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
-> > +
-> > +	t1 = xfs_calc_inode_res(mp, 1) +
-> > +	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1, blksz);
-> > +
-> > +	t2 = xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-> > +	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4), blksz);
-> > +
-> > +	if (xfs_has_realtime(mp)) {
-> > +		t3 = xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-> > +		     xfs_calc_buf_res(xfs_rtalloc_log_count(mp, 2), blksz) +
-> > +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
-> > +	} else {
-> > +		t3 = 0;
-> > +	}
-> > +
-> > +	t4 = xfs_refcount_log_reservation(mp, 2);
-> > +
-> > +	return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
-> > +}
-> > +
-> > +/*
-> > + * For log size calculation, this is the same as above except that we used to
-> > + * include refcount updates in the allocfree computation even though we've
-> > + * always run them as a separate transaction.
-> > + */
-> > +STATIC uint
-> > +xfs_calc_itruncate_reservation_logsize(
-> > +	struct xfs_mount	*mp)
-> >  {
-> >  	unsigned int		t1, t2, t3;
-> >  	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
-> > @@ -317,6 +384,9 @@ xfs_calc_itruncate_reservation(
-> >  	t2 = xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-> >  	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4), blksz);
-> >  
-> > +	if (xfs_has_reflink(mp))
-> > +	     t2 += xfs_calc_buf_res(xfs_refcount_log_count(mp, 4), blksz);
-> > +
-> 
-> Ok, so the legacy code gets 4 extra refcount ops accounted here
-> because we removed it from xfs_allocfree_log_count(), and we keep
-> this function around because the new code might select t4 as
-> the maximum reservation it needs and so we can't just add these
-> blocks to the newly calculated reservation. Correct?
-> 
-> If so, I'm not a great fan of duplicating this code when this is all
-> that differs between the two case. Can we pass in a "bool
-> for_minlogsize" variable and do:
-> 
-> uint
-> xfs_calc_itruncate_reservation(
-> 	struct xfs_mount	*mp,
-> 	bool			for_minlogsize)
-> {
-> 	unsigned int		t1, t2, t3, t4;
-> 	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
-> 
-> 	t1 = xfs_calc_inode_res(mp, 1) +
-> 	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1, blksz);
-> 
-> 	t2 = xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-> 	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4), blksz);
-> 
-> 	if (xfs_has_realtime(mp)) {
-> 		t3 = xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-> 		     xfs_calc_buf_res(xfs_rtalloc_log_count(mp, 2), blksz) +
-> 		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
-> 	} else {
-> 		t3 = 0;
-> 	}
-> 
-> 	if (!for_minlogsize) {
-> 		t4 = xfs_refcount_log_reservation(mp, 2);
-> 		return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
-> 	}
-> 
-> 	/*
-> 	 * add reason for minlogsize calculation differences here
-> 	 */
-> 	if (xfs_has_reflink(mp))
-> 		t2 += xfs_calc_buf_res(xfs_refcount_log_count(mp, 4), blksz);
-> 
-> 	return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
-> }
-> 
-> And now we can call xfs_calc_itruncate_reservation(mp, true)
-> directly from xfs_log_rlimits.c to get the correct reservation for
-> the logsize code with minimal extra code.
+Thanks so much
+Jianchao
 
-Yep.  This is an improvement, in terms of being able to compare before
-and after.  I"ll make sure to document exactly why the for_minlogsize
-case does what it does.
-
-> >  	if (xfs_has_realtime(mp)) {
-> >  		t3 = xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-> >  		     xfs_calc_buf_res(xfs_rtalloc_log_count(mp, 2), blksz) +
-> > @@ -956,6 +1026,9 @@ xfs_trans_resv_calc_logsize(
-> >  	xfs_trans_resv_calc(mp, resp);
-> >  
-> >  	if (xfs_has_reflink(mp)) {
-> > +		unsigned int	t4;
-> > +		unsigned int	blksz = XFS_FSB_TO_B(mp, 1);
-> > +
-> >  		/*
-> >  		 * In the early days of reflink we set the logcounts absurdly
-> >  		 * high.
-> > @@ -964,6 +1037,18 @@ xfs_trans_resv_calc_logsize(
-> >  		resp->tr_itruncate.tr_logcount =
-> >  				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
-> >  		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
-> > +
-> > +		/*
-> > +		 * We also used to account two refcount updates per extent into
-> > +		 * the alloc/free step of write and truncate calls, even though
-> > +		 * those are run in separate transactions.
-> > +		 */
-> > +		t4 = xfs_calc_buf_res(xfs_refcount_log_count(mp, 2), blksz);
-> > +		resp->tr_write.tr_logres += t4;
-> > +		resp->tr_qm_dqalloc.tr_logres += t4;
 > 
-> I think these have the same problem as itruncate - the write
-> reservation is conditional on the maximum reservation of several
-> different operations, and so dropping the refcountbt from that
-> comparison means it could select a different max reservation. Then
-> if we unconditionally add the refcount blocks to that, then we end
-> up with a different size to what the original code calculated.
+> --D
 > 
-> Hence I think these also need to be treated like I outline for
-> itruncate above.
-
-Yup.  Thanks for the comments!
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+>>
+>>
+>> Thanks
+>> Jianchao
+>>
+>> On 2022/4/25 3:06 下午, Wang Jianchao (Kuaishou) wrote:
+>>> Recently, we encounter a deadlock case where there are many tasks
+>>> hung on agi and agf xfs_buf. It end up with a deadlock between
+>>> agf and inode xfs_buf as following,
+>>>
+>>> xfs_ifree()             xfs_bmap_btalloc()
+>>> xfs_iunlink_remove()    xfs_alloc_vextent()
+>>>   hold inode bp           hold agf
+>>> xfs_difree()            xfs_trans_log_inode()
+>>>   require agf             require inode bp
+>>>
+>>> The task requires inode bp with agf held block other tasks which
+>>> want to require agf with agi held. Then the whole filesystem
+>>> looks like a agi/agf deadlock. To fix this issue, get agf in
+>>> xfs_iunlink_remove() after it get agi and before get indoe bp.
+>>>
+>>> Signed-off-by: Wang Jianchao (Kuaishou) <jianchao.wan9@gmail.com>
+>>> ---
+>>>  fs/xfs/xfs_inode.c | 10 ++++++++++
+>>>  1 file changed, 10 insertions(+)
+>>>
+>>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>>> index 9de6205fe134..c0a29fd00b0e 100644
+>>> --- a/fs/xfs/xfs_inode.c
+>>> +++ b/fs/xfs/xfs_inode.c
+>>> @@ -36,6 +36,7 @@
+>>>  #include "xfs_reflink.h"
+>>>  #include "xfs_ag.h"
+>>>  #include "xfs_log_priv.h"
+>>> +#include "xfs_alloc.h"
+>>>  
+>>>  struct kmem_cache *xfs_inode_cache;
+>>>  
+>>> @@ -2337,6 +2338,7 @@ xfs_iunlink_remove(
+>>>  {
+>>>  	struct xfs_mount	*mp = tp->t_mountp;
+>>>  	struct xfs_agi		*agi;
+>>> +	struct xfs_buf		*agfbp;
+>>>  	struct xfs_buf		*agibp;
+>>>  	struct xfs_buf		*last_ibp;
+>>>  	struct xfs_dinode	*last_dip = NULL;
+>>> @@ -2352,6 +2354,14 @@ xfs_iunlink_remove(
+>>>  	error = xfs_read_agi(mp, tp, pag->pag_agno, &agibp);
+>>>  	if (error)
+>>>  		return error;
+>>> +
+>>> +	/*
+>>> +	 * Get the agf buffer first to ensure the lock ordering against inode bp
+>>> +	 */
+>>> +	error = xfs_read_agf(mp, tp, pag->pag_agno, 0, &agfbp);
+>>> +	if (error)
+>>> +		return error;
+>>> +
+>>>  	agi = agibp->b_addr;
+>>>  
+>>>  	/*
