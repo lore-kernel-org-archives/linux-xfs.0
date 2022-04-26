@@ -2,77 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C9DFC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 14:53:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE19C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 17:43:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350846AbiDZO45 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Apr 2022 10:56:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51614 "EHLO
+        id S237897AbiDZRq6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 13:46:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244221AbiDZO45 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 10:56:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED4C664726
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 07:53:49 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C2830618A9
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 14:53:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26A24C385AA;
-        Tue, 26 Apr 2022 14:53:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650984828;
-        bh=d/KNHjuJmhlf1XTw0QU0YXKAgxNU9iUMbwwDCRjyp2o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PI1FXltVzJbBwlzDzvFz4sg4x1T/cpNVp+pDoIZeLZWD7ch9o9VfG+vWgyxHgxs9Q
-         YPDQ6CIimbz5mEkp0jVnwomX5iBsT2jUPgqhUWUG6lP7gLutOYT3SjQ65XoBAhXjtp
-         1D26sXKu7uDG33eKheZSdjANX5ejD3eCRm1gFzmgpEkNHE44nrLnxo5BhJWaDrrIfJ
-         7oRFeB1mJUUIQqpWOL5hdwQFR/gTc9RD9y6gMUT4lAzBJFe49FS0h0VqxFxVokjaG4
-         /NyJTMN6tLNAkuc5f8ZsEW/NV67db0XCcdd3GMFxNzIUcX/mLzq0Si4KJMp92pRLOM
-         F2QjcFoi22KQg==
-Date:   Tue, 26 Apr 2022 07:53:47 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 0/2] xfs: remove quota warning limits
-Message-ID: <20220426145347.GV17025@magnolia>
-References: <20220421165815.87837-1-catherine.hoang@oracle.com>
- <43e8df67-5916-5f4a-ce85-8521729acbb2@sandeen.net>
- <20220425222140.GI1544202@dread.disaster.area>
- <20220426024331.GR17025@magnolia>
- <Ymf+k9EA2bY/af4Y@bfoster>
+        with ESMTP id S235025AbiDZRq5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 13:46:57 -0400
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E0221816CD
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:43:49 -0700 (PDT)
+Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23QGQeK1017060
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:43:49 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=facebook;
+ bh=RE5Ox9xrEwOzRKnjCVzMX1uqjY05JgL92w/a4ut+Iv0=;
+ b=eaH6Ziv8m7op3mYRIgBG0LUAtnuGjKyWwpRtqTabOnfjQIpovWM3X7y5bJIPuBEozHuZ
+ CeusKCMhhyF6go7qIg8nXCu1tZ5rJmRtmB5P00xf+2nka7kvS7q9X+MvA9lRWxVUZgGd
+ a329XJdxMivuBMy0B1H2LHH1S/UpiCYQ9aI= 
+Received: from mail.thefacebook.com ([163.114.132.120])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3fp6a8d4jv-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:43:49 -0700
+Received: from twshared19572.14.frc2.facebook.com (2620:10d:c085:208::11) by
+ mail.thefacebook.com (2620:10d:c085:21d::4) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 26 Apr 2022 10:43:47 -0700
+Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
+        id 747B2E2D4855; Tue, 26 Apr 2022 10:43:40 -0700 (PDT)
+From:   Stefan Roesch <shr@fb.com>
+To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
+        <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <shr@fb.com>, <david@fromorbit.com>
+Subject: [RFC PATCH v1 01/18] block: add check for async buffered writes to generic_write_checks
+Date:   Tue, 26 Apr 2022 10:43:18 -0700
+Message-ID: <20220426174335.4004987-2-shr@fb.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220426174335.4004987-1-shr@fb.com>
+References: <20220426174335.4004987-1-shr@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Ymf+k9EA2bY/af4Y@bfoster>
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-GUID: 4A_m8MDPaIJzKgFNT4lJ-3UZW22QCb8T
+X-Proofpoint-ORIG-GUID: 4A_m8MDPaIJzKgFNT4lJ-3UZW22QCb8T
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-04-26_05,2022-04-26_02,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 26, 2022 at 10:15:47AM -0400, Brian Foster wrote:
-> On Mon, Apr 25, 2022 at 07:43:31PM -0700, Darrick J. Wong wrote:
-> ...
-> > 
-> > The biggest problem right now is that the pagecache is broken in 5.18
-> > and apparently I'm the only person who can trigger this.  It's the same
-> > problem willy and I have been working on since -rc1 (where the
-> > filemap/iomap debug asserts trip on generic/068 and generic/475) that's
-> > documented on the fsdevel list.  Unfortunately, I don't have much time
-> > to work on this, because as team lead:
-> > 
-> 
-> I seem to be able to reproduce this fairly reliably with generic/068.
-> I've started a bisect if it's of any use...
+This introduces the flag FMODE_BUF_WASYNC. If devices support async
+buffered writes, this flag can be set. It also modifies the check in
+generic_write_checks to take async buffered writes into consideration.
 
-Thank you!  Matthew has hinted that he suspects this is a case of the
-page cache returning the wrong folio in certain cases, but neither of us
-have been able to narrow it down to a specific commit, or even a range.
+Signed-off-by: Stefan Roesch <shr@fb.com>
+---
+ fs/read_write.c    | 3 ++-
+ include/linux/fs.h | 3 +++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
---D
+diff --git a/fs/read_write.c b/fs/read_write.c
+index e643aec2b0ef..f75d75f7bc84 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1633,7 +1633,8 @@ int generic_write_checks_count(struct kiocb *iocb, =
+loff_t *count)
+ 	if (iocb->ki_flags & IOCB_APPEND)
+ 		iocb->ki_pos =3D i_size_read(inode);
+=20
+-	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
++	if ((iocb->ki_flags & IOCB_NOWAIT) &&
++	    !((iocb->ki_flags & IOCB_DIRECT) || (file->f_mode & FMODE_BUF_WASYN=
+C)))
+ 		return -EINVAL;
+=20
+ 	return generic_write_check_limits(iocb->ki_filp, iocb->ki_pos, count);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index bbde95387a23..3b479d02e210 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -177,6 +177,9 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t=
+ offset,
+ /* File supports async buffered reads */
+ #define FMODE_BUF_RASYNC	((__force fmode_t)0x40000000)
+=20
++/* File supports async nowait buffered writes */
++#define FMODE_BUF_WASYNC	((__force fmode_t)0x80000000)
++
+ /*
+  * Attribute flags.  These should be or-ed together to figure out what
+  * has been changed!
+--=20
+2.30.2
 
-> Brian
-> 
