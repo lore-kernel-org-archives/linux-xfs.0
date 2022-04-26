@@ -2,46 +2,46 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6CF4C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 17:44:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79AC4C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 17:44:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350732AbiDZRrM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Apr 2022 13:47:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41298 "EHLO
+        id S1349342AbiDZRrR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 13:47:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353104AbiDZRrK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 13:47:10 -0400
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B4CB18326A
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:02 -0700 (PDT)
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23QGQSSl024604
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:02 -0700
+        with ESMTP id S1353327AbiDZRrN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 13:47:13 -0400
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B8E2182B36
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:05 -0700 (PDT)
+Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23QGQXa8011627
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:04 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=+afQfK4CT3eBlKnjt62h4RtRoU2YgtSppm+Z9dUCHYQ=;
- b=KO7YM2X6fVZ4BVJPYi4SSSIb9fy4LtrbQWtubnPaoeUNV0JfcUFTH3ZLMCTD8WMkqAXZ
- s+LByzPwwgiV93BndtG/AKuUFOUHIPWMBW5KvdlDF4qIRya9ZD0yvGoYf4F4+bRRO1V+
- Zbd27EHAHf+6zZTKTTId0dGsyyCHSd13jdw= 
+ bh=jZ8zm1AxxdEMBw4Xyg+B8XIbvk32PCxpRIjKZ5MQxFk=;
+ b=XbdBQubfBl2KLFaneN5G4B++9sQ3awWKiyTV7p3ugdPM0JE+ivN4kAR+or/3aDhsAHJ1
+ aRBQbpXdBS1pGqz0JVQG4ReEZzRhKg7niYZaYAVEMaNjqMtavkbUV5XiX4bX0O2+23pM
+ Td2DvaFFlDE/k+ggdGov/FhHRV5PwdSeKBE= 
 Received: from maileast.thefacebook.com ([163.114.130.16])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3fn1ge03fc-5
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3fmeyu3nxj-3
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:01 -0700
-Received: from twshared10896.25.frc3.facebook.com (2620:10d:c0a8:1b::d) by
- mail.thefacebook.com (2620:10d:c0a8:82::e) with Microsoft SMTP Server
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:04 -0700
+Received: from twshared13345.18.frc3.facebook.com (2620:10d:c0a8:1b::d) by
+ mail.thefacebook.com (2620:10d:c0a8:83::5) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 26 Apr 2022 10:43:58 -0700
+ 15.1.2375.24; Tue, 26 Apr 2022 10:44:03 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id A2809E2D4863; Tue, 26 Apr 2022 10:43:40 -0700 (PDT)
+        id B702BE2D4869; Tue, 26 Apr 2022 10:43:40 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>
-Subject: [RFC PATCH v1 08/18] fs: split off need_file_update_time and do_file_update_time
-Date:   Tue, 26 Apr 2022 10:43:25 -0700
-Message-ID: <20220426174335.4004987-9-shr@fb.com>
+Subject: [RFC PATCH v1 11/18] xfs: add async buffered write support
+Date:   Tue, 26 Apr 2022 10:43:28 -0700
+Message-ID: <20220426174335.4004987-12-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220426174335.4004987-1-shr@fb.com>
 References: <20220426174335.4004987-1-shr@fb.com>
@@ -49,8 +49,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: C6Vp0MNaUFHsf6SDKu7rV6bJNXKTLFEU
-X-Proofpoint-GUID: C6Vp0MNaUFHsf6SDKu7rV6bJNXKTLFEU
+X-Proofpoint-GUID: vWt4Fkw7k8g2if9wH_zPyBL-gUPHKAm_
+X-Proofpoint-ORIG-GUID: vWt4Fkw7k8g2if9wH_zPyBL-gUPHKAm_
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-04-26_05,2022-04-26_02,2022-02-23_01
@@ -58,159 +58,38 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This splits off the functions need_file_update_time() and
-do_file_update_time() from the function file_update_time().
-
-This is required to support async buffered writes.
-No intended functional changes in this patch.
+This adds the async buffered write support to XFS. For async buffered
+write requests, the request will return -EAGAIN if the ilock cannot be
+obtained immediately.
 
 Signed-off-by: Stefan Roesch <shr@fb.com>
 ---
- fs/inode.c         | 72 ++++++++++++++++++++++++++++++----------------
- include/linux/fs.h |  5 ++++
- 2 files changed, 52 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_file.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index 79c5702ef7c3..64047bb0b9f8 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2054,35 +2054,22 @@ int file_remove_privs(struct file *file)
- }
- EXPORT_SYMBOL(file_remove_privs);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 6f9da1059e8b..49d54b939502 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -739,12 +739,14 @@ xfs_file_buffered_write(
+ 	bool			cleared_space =3D false;
+ 	int			iolock;
 =20
--/**
-- *	file_update_time	-	update mtime and ctime time
-- *	@file: file accessed
-- *
-- *	Update the mtime and ctime members of an inode and mark the inode
-- *	for writeback.  Note that this function is meant exclusively for
-- *	usage in the file write path of filesystems, and filesystems may
-- *	choose to explicitly ignore update via this function with the
-- *	S_NOCMTIME inode flag, e.g. for network filesystem where these
-- *	timestamps are handled by the server.  This can return an error for
-- *	file systems who need to allocate space in order to update an inode.
-- */
+-	if (iocb->ki_flags & IOCB_NOWAIT)
+-		return -EOPNOTSUPP;
 -
--int file_update_time(struct file *file)
-+int need_file_update_time(struct inode *inode, struct file *file,
-+			struct timespec64 *now)
- {
--	struct inode *inode =3D file_inode(file);
--	struct timespec64 now;
- 	int sync_it =3D 0;
--	int ret;
-+
-+	if (unlikely(file->f_mode & FMODE_NOCMTIME))
-+		return 0;
+ write_retry:
+ 	iolock =3D XFS_IOLOCK_EXCL;
+-	xfs_ilock(ip, iolock);
++	if (iocb->ki_flags & IOCB_NOWAIT) {
++		if (!xfs_ilock_nowait(ip, iolock))
++			return -EAGAIN;
++	} else {
++		xfs_ilock(ip, iolock);
++	}
 =20
- 	/* First try to exhaust all avenues to not sync */
- 	if (IS_NOCMTIME(inode))
- 		return 0;
-=20
--	now =3D current_time(inode);
--	if (!timespec64_equal(&inode->i_mtime, &now))
-+	if (!timespec64_equal(&inode->i_mtime, now))
- 		sync_it =3D S_MTIME;
-=20
--	if (!timespec64_equal(&inode->i_ctime, &now))
-+	if (!timespec64_equal(&inode->i_ctime, now))
- 		sync_it |=3D S_CTIME;
-=20
- 	if (IS_I_VERSION(inode) && inode_iversion_need_inc(inode))
-@@ -2091,24 +2078,58 @@ int file_update_time(struct file *file)
- 	if (!sync_it)
- 		return 0;
-=20
-+	return sync_it;
-+}
-+
-+int do_file_update_time(struct inode *inode, struct file *file,
-+			struct timespec64 *now, int sync_mode)
-+{
-+	int ret;
-+
- 	/* Finally allowed to write? Takes lock. */
- 	if (__mnt_want_write_file(file))
- 		return 0;
-=20
--	ret =3D inode_update_time(inode, &now, sync_it);
-+	ret =3D inode_update_time(inode, now, sync_mode);
- 	__mnt_drop_write_file(file);
-=20
- 	return ret;
- }
-+
-+/**
-+ *	file_update_time	-	update mtime and ctime time
-+ *	@file: file accessed
-+ *
-+ *	Update the mtime and ctime members of an inode and mark the inode
-+ *	for writeback.  Note that this function is meant exclusively for
-+ *	usage in the file write path of filesystems, and filesystems may
-+ *	choose to explicitly ignore update via this function with the
-+ *	S_NOCMTIME inode flag, e.g. for network filesystem where these
-+ *	timestamps are handled by the server.  This can return an error for
-+ *	file systems who need to allocate space in order to update an inode.
-+ */
-+
-+int file_update_time(struct file *file)
-+{
-+	int err;
-+	struct inode *inode =3D file_inode(file);
-+	struct timespec64 now =3D current_time(inode);
-+
-+	err =3D need_file_update_time(inode, file, &now);
-+	if (err < 0)
-+		return err;
-+
-+	return do_file_update_time(inode, file, &now, err);
-+}
- EXPORT_SYMBOL(file_update_time);
-=20
- /* Caller must hold the file's inode lock */
- int file_modified(struct file *file)
- {
--	int err;
- 	int ret;
- 	struct dentry *dentry =3D file_dentry(file);
- 	struct inode *inode =3D file_inode(file);
-+	struct timespec64 now =3D current_time(inode);
-=20
- 	/*
- 	 * Clear the security bits if the process is not being run by root.
-@@ -2123,10 +2144,11 @@ int file_modified(struct file *file)
- 			return ret;
- 	}
-=20
--	if (unlikely(file->f_mode & FMODE_NOCMTIME))
--		return 0;
-+	ret =3D need_file_update_time(inode, file, &now);
-+	if (ret <=3D 0)
-+		return ret;
-=20
--	return file_update_time(file);
-+	return do_file_update_time(inode, file, &now, ret);
- }
- EXPORT_SYMBOL(file_modified);
-=20
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c2992d12601f..e268a1a50357 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2384,6 +2384,11 @@ static inline void file_accessed(struct file *file=
-)
- extern int need_file_remove_privs(struct inode *inode, struct dentry *de=
-ntry);
- extern int do_file_remove_privs(struct file *file, struct inode *inode,
- 				struct dentry *dentry, int kill);
-+extern int need_file_update_time(struct inode *inode, struct file *file,
-+				struct timespec64 *now);
-+extern int do_file_update_time(struct inode *inode, struct file *file,
-+			struct timespec64 *now, int sync_mode);
-+
- extern int file_modified(struct file *file);
-=20
- int sync_inode_metadata(struct inode *inode, int wait);
+ 	ret =3D xfs_file_write_checks(iocb, from, &iolock);
+ 	if (ret)
 --=20
 2.30.2
 
