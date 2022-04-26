@@ -2,46 +2,46 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08429C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 17:44:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D2F7C4167E
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 17:44:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353518AbiDZRrM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Apr 2022 13:47:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41260 "EHLO
+        id S1353048AbiDZRrR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 13:47:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352075AbiDZRrJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 13:47:09 -0400
+        with ESMTP id S1352303AbiDZRrN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 13:47:13 -0400
 Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A286183240
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:00 -0700 (PDT)
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23QGQMZm025035
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:00 -0700
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D8161816F3
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:04 -0700 (PDT)
+Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23QGQSpq024509
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:04 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=DMxeTOpqCEe+Tvocr/V6khKpI6cObsPyGo88EBQxCYQ=;
- b=hvlnd3V4HxFmkkcQbSVhcchro7WsRr2JGxiXSvC12JY3o1rd7//BSGTbNGUQTF6Zg/46
- mvgoZRKQ0zk3SUCQIolBP97y6khT+veGVL/lj45fYc8frK319E8kwfUa4lXUmXQvtkNM
- yKU470QMOHMfx/Tgj8JYARRMcMVXzBA1C0Y= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3fpbk8bt8b-1
+ bh=GH1+MXt5i7iBXahEfZX4x8k2bUloCbbTyddNdvbHmvI=;
+ b=grY+W0iF8mxETr4nBW/7EQZ4h3g49V0P8ELB/FIMqo4lLE2o4N8swA4V3p9e351v2U1L
+ 57Os3QgjIncIozKizxCjEjZNgVAcVuXzK4gW4CqIl7fGBfBMnCqe+s9Ti9R0+hYj1QlK
+ lIr8PH3rGGfSLce15FM6BjQBNyveD3oCbCE= 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3fn1ge03fx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:43:59 -0700
-Received: from twshared19572.14.frc2.facebook.com (2620:10d:c085:208::f) by
- mail.thefacebook.com (2620:10d:c085:11d::6) with Microsoft SMTP Server
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 10:44:04 -0700
+Received: from twshared13345.18.frc3.facebook.com (2620:10d:c0a8:1b::d) by
+ mail.thefacebook.com (2620:10d:c0a8:82::d) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 26 Apr 2022 10:43:59 -0700
+ 15.1.2375.24; Tue, 26 Apr 2022 10:44:02 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id 87F30E2D485B; Tue, 26 Apr 2022 10:43:40 -0700 (PDT)
+        id 95880E2D485F; Tue, 26 Apr 2022 10:43:40 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>
-Subject: [RFC PATCH v1 04/18] iomap: use iomap_page_create_gfp() in __iomap_write_begin
-Date:   Tue, 26 Apr 2022 10:43:21 -0700
-Message-ID: <20220426174335.4004987-5-shr@fb.com>
+Subject: [RFC PATCH v1 06/18] xfs: add iomap async buffered write support
+Date:   Tue, 26 Apr 2022 10:43:23 -0700
+Message-ID: <20220426174335.4004987-7-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220426174335.4004987-1-shr@fb.com>
 References: <20220426174335.4004987-1-shr@fb.com>
@@ -49,8 +49,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: rl-ozHFqf20dTeA2iT9yP_6OgubjarKE
-X-Proofpoint-GUID: rl-ozHFqf20dTeA2iT9yP_6OgubjarKE
+X-Proofpoint-ORIG-GUID: 7zQ1ICgzoHGKVn43F_C5TBQFNhr-SPIE
+X-Proofpoint-GUID: 7zQ1ICgzoHGKVn43F_C5TBQFNhr-SPIE
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-04-26_05,2022-04-26_02,2022-02-23_01
@@ -58,45 +58,99 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This change uses the new iomap_page_create_gfp() function in the
-function __iomap_write_begin().
-
-No intended functional changes in this patch.
+This adds the async buffered write support to the iomap layer of XFS. If
+a lock cannot be acquired or additional reads need to be performed, the
+request will return -EAGAIN in case this is an async buffered write reque=
+st.
 
 Signed-off-by: Stefan Roesch <shr@fb.com>
 ---
- fs/iomap/buffered-io.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_iomap.c | 33 +++++++++++++++++++++++++++++++--
+ 1 file changed, 31 insertions(+), 2 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 85aa32f50db0..1ffdc7078e7d 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -572,17 +572,22 @@ static int __iomap_write_begin(const struct iomap_i=
-ter *iter, loff_t pos,
- 		size_t len, struct folio *folio)
- {
- 	const struct iomap *srcmap =3D iomap_iter_srcmap(iter);
--	struct iomap_page *iop =3D iomap_page_create(iter->inode, folio);
-+	struct iomap_page *iop =3D to_iomap_page(folio);
- 	loff_t block_size =3D i_blocksize(iter->inode);
- 	loff_t block_start =3D round_down(pos, block_size);
- 	loff_t block_end =3D round_up(pos + len, block_size);
-+	unsigned int nr_blocks =3D i_blocks_per_folio(iter->inode, folio);
- 	size_t from =3D offset_in_folio(folio, pos), to =3D from + len;
- 	size_t poff, plen;
-+	gfp_t  gfp =3D GFP_NOFS | __GFP_NOFAIL;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index e552ce541ec2..80b6c48e88af 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -881,18 +881,28 @@ xfs_buffered_write_iomap_begin(
+ 	bool			eof =3D false, cow_eof =3D false, shared =3D false;
+ 	int			allocfork =3D XFS_DATA_FORK;
+ 	int			error =3D 0;
++	bool			no_wait =3D (flags & IOMAP_NOWAIT);
 =20
- 	if (folio_test_uptodate(folio))
- 		return 0;
- 	folio_clear_error(folio);
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
 =20
-+	if (!iop && nr_blocks > 1)
-+		iop =3D iomap_page_create_gfp(iter->inode, folio, nr_blocks, gfp);
+ 	/* we can't use delayed allocations when using extent size hints */
+-	if (xfs_get_extsz_hint(ip))
++	if (xfs_get_extsz_hint(ip)) {
++		if (no_wait)
++			return -EAGAIN;
 +
- 	do {
- 		iomap_adjust_read_range(iter->inode, folio, &block_start,
- 				block_end - block_start, &poff, &plen);
+ 		return xfs_direct_write_iomap_begin(inode, offset, count,
+ 				flags, iomap, srcmap);
++	}
+=20
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+=20
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	if (no_wait) {
++		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
++			return -EAGAIN;
++	} else {
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++	}
+=20
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
+ 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
+@@ -902,6 +912,11 @@ xfs_buffered_write_iomap_begin(
+=20
+ 	XFS_STATS_INC(mp, xs_blk_mapw);
+=20
++	if (no_wait && xfs_need_iread_extents(XFS_IFORK_PTR(ip, XFS_DATA_FORK))=
+) {
++		error =3D -EAGAIN;
++		goto out_unlock;
++	}
++
+ 	error =3D xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+ 	if (error)
+ 		goto out_unlock;
+@@ -933,6 +948,10 @@ xfs_buffered_write_iomap_begin(
+ 	if (xfs_is_cow_inode(ip)) {
+ 		if (!ip->i_cowfp) {
+ 			ASSERT(!xfs_is_reflink_inode(ip));
++			if (no_wait) {
++				error =3D -EAGAIN;
++				goto out_unlock;
++			}
+ 			xfs_ifork_init_cow(ip);
+ 		}
+ 		cow_eof =3D !xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
+@@ -956,6 +975,11 @@ xfs_buffered_write_iomap_begin(
+ 			goto found_imap;
+ 		}
+=20
++		if (no_wait) {
++			error =3D -EAGAIN;
++			goto out_unlock;
++		}
++
+ 		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+=20
+ 		/* Trim the mapping to the nearest shared extent boundary. */
+@@ -993,6 +1017,11 @@ xfs_buffered_write_iomap_begin(
+ 			allocfork =3D XFS_COW_FORK;
+ 	}
+=20
++	if (no_wait) {
++		error =3D -EAGAIN;
++		goto out_unlock;
++	}
++
+ 	error =3D xfs_qm_dqattach_locked(ip, false);
+ 	if (error)
+ 		goto out_unlock;
 --=20
 2.30.2
 
