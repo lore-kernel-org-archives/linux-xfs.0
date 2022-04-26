@@ -2,198 +2,167 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 683F5C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 02:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8436EC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 04:24:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242394AbiDZCql (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Apr 2022 22:46:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42794 "EHLO
+        id S243738AbiDZE15 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 00:27:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231448AbiDZCql (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Apr 2022 22:46:41 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1E7614035
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 19:43:34 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6A626B81BA9
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 02:43:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B658C385A7;
-        Tue, 26 Apr 2022 02:43:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650941012;
-        bh=mCuuTA78x5bmBLywVRgtbfqpei/K8sn15StqgxFWoM8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=l5KN1yF8swNHffGLbo5uHEl2X8MzQseFYDv3eQJlrLBNYK615aAdJRNSrycFCsHOw
-         tSuGnUT8mTaoqvCSxmfIM1MOPI3ialLO8o99VEoAE8gDELGNQP49p7Vyf0A3E2EbK3
-         xUMj7NA4Q9/hoEy3ktiUZvCwMN0QRJGP3eDbQ74C0OkkyDFCBTfjlAswmCVSmuzB4t
-         OO2KjwQTJHOAf24sY1iiDbqXIc7VrkUi56/fs6FceaRN1wNorM6vA4QBKxwUJqjsFF
-         RHmyhB8zL+rVoQmKZvHMK5Th370pEfHNSBfXKdnOrVFsb+sf0HdTpRPX69hRim70XE
-         wE20AerSmYGag==
-Date:   Mon, 25 Apr 2022 19:43:31 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 0/2] xfs: remove quota warning limits
-Message-ID: <20220426024331.GR17025@magnolia>
-References: <20220421165815.87837-1-catherine.hoang@oracle.com>
- <43e8df67-5916-5f4a-ce85-8521729acbb2@sandeen.net>
- <20220425222140.GI1544202@dread.disaster.area>
+        with ESMTP id S229874AbiDZE15 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 00:27:57 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4AED645AC5
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Apr 2022 21:24:48 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-115-138.pa.nsw.optusnet.com.au [49.181.115.138])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0819910E5DD2;
+        Tue, 26 Apr 2022 14:24:46 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1njCkm-004cPG-AB; Tue, 26 Apr 2022 14:24:44 +1000
+Date:   Tue, 26 Apr 2022 14:24:44 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/6] xfs: create shadow transaction reservations for
+ computing minimum log size
+Message-ID: <20220426042444.GL1544202@dread.disaster.area>
+References: <164997686569.383881.8935566398533700022.stgit@magnolia>
+ <164997688275.383881.1038640482191339784.stgit@magnolia>
+ <20220422223635.GC1544202@dread.disaster.area>
+ <20220425233905.GN17025@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220425222140.GI1544202@dread.disaster.area>
+In-Reply-To: <20220425233905.GN17025@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6267740f
+        a=/kVtbFzwtM2bJgxRVb+eeA==:117 a=/kVtbFzwtM2bJgxRVb+eeA==:17
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=7-415B0cAAAA:8
+        a=Q1LaOEyYxv42E9wHLM8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 26, 2022 at 08:21:40AM +1000, Dave Chinner wrote:
-> On Mon, Apr 25, 2022 at 01:19:35PM -0500, Eric Sandeen wrote:
-> > On 4/21/22 11:58 AM, Catherine Hoang wrote:
-> > > Hi all,
-> > > 
-> > > Based on recent discussion, it seems like there is a consensus that quota
-> > > warning limits should be removed from xfs quota.
-> > > https://lore.kernel.org/linux-xfs/94893219-b969-c7d4-4b4e-0952ef54d575@sandeen.net/
-> > > 
-> > > Warning limits in xfs quota is an unused feature that is currently
-> > > documented as unimplemented. These patches remove the quota warning limits
-> > > and cleans up any related code. 
-> > > 
-> > > Comments and feedback are appreciated!
-> > > 
-> > > Catherine
-> > > 
-> > > Catherine Hoang (2):
-> > >   xfs: remove quota warning limit from struct xfs_quota_limits
-> > >   xfs: don't set warns on the id==0 dquot
-> > > 
-> > >  fs/xfs/xfs_qm.c          |  9 ---------
-> > >  fs/xfs/xfs_qm.h          |  5 -----
-> > >  fs/xfs/xfs_qm_syscalls.c | 19 +++++--------------
-> > >  fs/xfs/xfs_quotaops.c    |  3 ---
-> > >  fs/xfs/xfs_trans_dquot.c |  3 +--
-> > >  5 files changed, 6 insertions(+), 33 deletions(-)
+On Mon, Apr 25, 2022 at 04:39:05PM -0700, Darrick J. Wong wrote:
+> On Sat, Apr 23, 2022 at 08:36:35AM +1000, Dave Chinner wrote:
+> > On Thu, Apr 14, 2022 at 03:54:42PM -0700, Darrick J. Wong wrote:
+....
+> > > @@ -47,18 +48,25 @@ xfs_log_get_max_trans_res(
+> > >  	struct xfs_trans_res	*max_resp)
+> > >  {
+> > >  	struct xfs_trans_res	*resp;
+> > > +	struct xfs_trans_res	*start_resp;
+> > >  	struct xfs_trans_res	*end_resp;
+> > > +	struct xfs_trans_resv	*resv;
+> > >  	int			log_space = 0;
+> > >  	int			attr_space;
+> > >  
+> > >  	attr_space = xfs_log_calc_max_attrsetm_res(mp);
+> > >  
+> > > -	resp = (struct xfs_trans_res *)M_RES(mp);
+> > > -	end_resp = (struct xfs_trans_res *)(M_RES(mp) + 1);
+> > > -	for (; resp < end_resp; resp++) {
+> > > +	resv = kmem_zalloc(sizeof(struct xfs_trans_resv), 0);
+> > > +	xfs_trans_resv_calc_logsize(mp, resv);
+> > > +
+> > > +	start_resp = (struct xfs_trans_res *)resv;
+> > > +	end_resp = (struct xfs_trans_res *)(resv + 1);
+> > > +	for (resp = start_resp; resp < end_resp; resp++) {
+> > >  		int		tmp = resp->tr_logcount > 1 ?
+> > >  				      resp->tr_logres * resp->tr_logcount :
+> > >  				      resp->tr_logres;
+> > > +
+> > > +		trace_xfs_trans_resv_calc_logsize(mp, resp - start_resp, resp);
+> > >  		if (log_space < tmp) {
+> > >  			log_space = tmp;
+> > >  			*max_resp = *resp;		/* struct copy */
 > > 
-> > I have a question about the remaining warning counter infrastructure after these
-> > patches are applied.
+> > This took me a while to get my head around. The minimum logsize
+> > calculation stuff is all a bit of a mess.
 > > 
-> > We still have xfs_dqresv_check() incrementing the warning counter, as was added in
-> > 4b8628d5 "xfs: actually bump warning counts when we send warnings"
+> > Essentially, we call xfs_log_get_max_trans_res() from two places.
+> > One is to calculate the minimum log size, the other is the
+> > transaction reservation tracing code done when M_RES(mp) is set up
+> > via xfs_trans_trace_reservations().  We don't need the call from
+> > xfs_trans_trace_reservations() - it's trivial to scan the list of
+> > tracepoints emitted by this function at mount time to find the
+> > maximum reservation.
+> 
+> Here's the thing -- xfs_db also calls xfs_log_get_max_trans_res to
+> figure out the transaction reservation that's used to compute the
+> minimum log size.  Whenever I get a report about mount failing due to
+> minlogsize checks, I can ask the reporter to send me the ftrace output
+> from the mount attempt and compare it against what userspace thinks:
+> 
+> # xfs_db /dev/sde -c logres
+> type 0 logres 168184 logcount 5 flags 0x4
+> type 1 logres 293760 logcount 5 flags 0x4
+> type 2 logres 307936 logcount 2 flags 0x4
+> type 3 logres 187760 logcount 2 flags 0x4
+> type 4 logres 170616 logcount 2 flags 0x4
+> type 5 logres 244720 logcount 3 flags 0x4
+> type 6 logres 243568 logcount 2 flags 0x4
+> type 7 logres 260352 logcount 2 flags 0x4
+> type 8 logres 243568 logcount 3 flags 0x4
+> type 9 logres 278648 logcount 2 flags 0x4
+> type 10 logres 2168 logcount 0 flags 0x0
+> type 11 logres 73728 logcount 2 flags 0x4
+> type 12 logres 99960 logcount 2 flags 0x4
+> type 13 logres 760 logcount 0 flags 0x0
+> type 14 logres 292992 logcount 1 flags 0x4
+> type 15 logres 23288 logcount 3 flags 0x4
+> type 16 logres 13312 logcount 0 flags 0x0
+> type 17 logres 147584 logcount 3 flags 0x4
+> type 18 logres 640 logcount 0 flags 0x0
+> type 19 logres 94968 logcount 2 flags 0x4
+> type 20 logres 4224 logcount 0 flags 0x0
+> type 21 logres 6512 logcount 0 flags 0x0
+> type 22 logres 232 logcount 1 flags 0x0
+> type 23 logres 172407 logcount 5 flags 0x4
+> type 24 logres 640 logcount 1 flags 0x0
+> type 25 logres 760 logcount 0 flags 0x0
+> type 26 logres 243568 logcount 2 flags 0x4
+> type 27 logres 170616 logcount 2 flags 0x4
+> type -1 logres 547200 logcount 8 flags 0x4
+> 
+> And this "-1" entry matches the last output of the kernel.
+
+I look at that and thing "xfs_db output is broken" because that last
+line cannot be derived from the individual transaction reservations
+that are listed. It makes no sense in isolation/without
+documentation. :/
+
+> I'd rather
+> not lose this tracing facility (which means keeping this function
+> non-static) though I will move the tracepoint out of
+> xfs_trans_trace_reservations.
+
+You mean "remove only the '-1' tracepoint" from
+xfs_trans_trace_reservations()?
+
+> > Hence I think we should start by removing that call to this
+> > function, and making this a static function called only from
+> > xfs_log_calc_minimum_size().
 > > 
-> > --- a/fs/xfs/xfs_trans_dquot.c
-> > +++ b/fs/xfs/xfs_trans_dquot.c
-> > @@ -589,6 +589,7 @@
-> >                         return QUOTA_NL_ISOFTLONGWARN;
-> >                 }
-> >  
-> > +               res->warnings++;
-> >                 return QUOTA_NL_ISOFTWARN;
-> >         }
+> > At this point, we can use an on-stack struct xfs_trans_resv for the
+> > calculated values - no need for memory allocation here as we will
+> > never be short of stack space in this path.
 > 
-> /me reads another overnight #xfs explosion over this one line of
-> code and sighs.
-> 
-> Well, so much for hoping that there would be an amicable resolution
-> to this sorry saga without having to get directly involved.  I'm fed
-> up with watching the tantrums, the petty arguments, the refusal to
-> compromise, acknowledge mistakes, etc.
-> 
-> Enough, OK?
-> 
-> Commit 4b8628d5 is fundamentally broken and causes production
-> systems regressions - it just doesn't work in any useful way as it
-> stands.  Eric, send me a patch that reverts this commit, and I will
-> review and commit it.
-> 
-> Further:
-> 
-> - this is legacy functionality that was never implemented in Linux,
-> - it cannot be implemented in Linux the (useful) way it was
->   implemented in Irix,
-> - it is documented as unimplemented,
-> - no use case for the functionality in Linux has been presented
->   ("do something useful" is not a use case),
-> - no documentation has been written for it,
-> - no fstests coverage of the functionality exists,
-> - linux userspace already has quota warning infrastructure via
->   netlink so just accounting warnings in the kernel is of very
->   limited use,
-> - it broke existing production systems.
-> 
-> Given all this, and considering our new policy of not tolerating
-> unused or questionable legacy code in the XFS code base any more
-> (precendence: ALLOCSP), it is clear that all aspects of this quota
-> warning code should simply be removed ASAP.
-> 
-> Eric and/or Catherine, please send patches to first revert 4b8628d5
-> and then remove *all* of this quota warning functionality completely
-> (including making the user APIs see zeros on all reads and sliently
-> ignore all writes) before I get sufficiently annoyed to simply
-> remove the code directly myself.
-> 
-> So disappointment.
+> ~312 bytes?  That's ~8% of the kernel stack.  I'll see if I run into any
+> complaints, though I bet I won't on x64.
 
-Yeah.  I'm sorry for the role I played in that, though later Eric and I
-sorted out quota stuff.  I have burned out and I need to stop working
-50+ hour weeks.  *After* I stopped being maintainer and dropped 30% of
-my workload, I thought I'd feel better, but instead:
+What architecture still uses 4kB stacks?  Filesystems have blown
+through 4kB stacks without even trying on 32bit systems for years
+now.
 
-The biggest problem right now is that the pagecache is broken in 5.18
-and apparently I'm the only person who can trigger this.  It's the same
-problem willy and I have been working on since -rc1 (where the
-filemap/iomap debug asserts trip on generic/068 and generic/475) that's
-documented on the fsdevel list.  Unfortunately, I don't have much time
-to work on this, because as team lead:
+Regardless, the mount path call chain here is nowhere near deep
+enough to be at risk of blowing stacks, and this is at the leaf so
+it's largely irrelevant if we put this on the stack...
 
-Every week I have to go teach a new person how reflink works, and how to
-make VM disk image reflinking not stall the VM until it gets evicted by
-the cluster manager.  They haven't fixed the problem yet, but every week
-I can start over with a new person who isn't familiar with the situation
-at all.
+Cheers,
 
-No matter how many distro bugs I clear per week, the same number of new
-reports are filed.  Almost all of them have me chasing corner cases and
-things that you'd think people wouldn't do, but no, tomorrow I have to
-teach people that the fs will crash and burn **when they unplug the
-storage**.  You'd think I could just close these things, but then people
-fight me on that, they argue with me about how this or that works on
-XFS, and when I tell them they're wrong, they just say "Are you sure??"
-
-Syzbot.  At least the Hulk Robot people actually send patches.
-
-That attr fork UAF thing -- adding smp_wmb/rmb made the symptoms go
-away, but as I was writing up the commit message I realized that the
-race window is still there.  Maybe I'll come up with a way to make the
-incore attr fork stick around, though both attempts so far have exploded
-on impact.
-
-Every week I lose somewhere between 10-70 emails because of some
-combination of overzealous spam filters on my kernel.org account, IT
-logging me out of random things, and Outlook.  I never have any idea if
-anyone is trying to reach me.
-
-Also the furnace is failing and I need to replace that.  $spouse has
-handled most of it but it's hard to get contractors to give us
-estimates, and between that and weeks of tax return preparation hell
-(five different jurisdictions, five separate calculations and five
-separate returns!  Thanks, US tax system!) there's nothing left.
-
-This whole quota warning thing has dragged on longer than necessary
-because I'm wiped out and do not know or have the mental energy to
-figure out how to deprecate this feature.  I'll ack whatever people send
-to make it go away.
-
-Sorry everyone.  I probably should not come back.  I will not be
-attending LSFMM, not even virtually.  I don't have the mental health to
-pull that off.
-
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
