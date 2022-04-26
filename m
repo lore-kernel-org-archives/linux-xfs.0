@@ -2,105 +2,77 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36907C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 14:52:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C9DFC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Apr 2022 14:53:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243963AbiDZOzW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Apr 2022 10:55:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45416 "EHLO
+        id S1350846AbiDZO45 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 10:56:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244221AbiDZOzV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 10:55:21 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 976B95F8EA
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 07:52:13 -0700 (PDT)
+        with ESMTP id S244221AbiDZO45 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 10:56:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED4C664726
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 07:53:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 01A4ECE1F25
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 14:52:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BCEDC385A0;
-        Tue, 26 Apr 2022 14:52:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C2830618A9
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 14:53:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26A24C385AA;
+        Tue, 26 Apr 2022 14:53:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650984730;
-        bh=t4++QJvJi8UhNLgMc/4xWDaeQrTmC/0o5fsH2ip/3Po=;
+        s=k20201202; t=1650984828;
+        bh=d/KNHjuJmhlf1XTw0QU0YXKAgxNU9iUMbwwDCRjyp2o=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=exy5jDAE6WZYzqpemRXECejTfDvdRnDKZJAA0s4990YgNgAtFdIORh7W1/mtEwhyO
-         6Juve7avp6x9mFvlAjrY6GdPknpmK0OVedg+Gr68MqkxjBaE/57DwRsaXQ0v4T98Ih
-         AaQTYXIuj6Sk1vdAleh0rwsuXAgfg/cZMvOdNIpLestuRkZ4buQ0onhZqJOPayBOYQ
-         SBT9aovjgY8fRsWylMF93+roTQeC4UxSLG1gnbYfPR+4cU+DKjXS3n+uXUqKN0B5qk
-         YIi/rTUSJUGCDvoHs0Db3LZ3fFOzDOs24qQecDrGrxoa9ft6NQdBZ9RS3L3zhGjDn2
-         LVoEGKe4qQ4BA==
-Date:   Tue, 26 Apr 2022 07:52:09 -0700
+        b=PI1FXltVzJbBwlzDzvFz4sg4x1T/cpNVp+pDoIZeLZWD7ch9o9VfG+vWgyxHgxs9Q
+         YPDQ6CIimbz5mEkp0jVnwomX5iBsT2jUPgqhUWUG6lP7gLutOYT3SjQ65XoBAhXjtp
+         1D26sXKu7uDG33eKheZSdjANX5ejD3eCRm1gFzmgpEkNHE44nrLnxo5BhJWaDrrIfJ
+         7oRFeB1mJUUIQqpWOL5hdwQFR/gTc9RD9y6gMUT4lAzBJFe49FS0h0VqxFxVokjaG4
+         /NyJTMN6tLNAkuc5f8ZsEW/NV67db0XCcdd3GMFxNzIUcX/mLzq0Si4KJMp92pRLOM
+         F2QjcFoi22KQg==
+Date:   Tue, 26 Apr 2022 07:53:47 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: stop artificially limiting the length of bunmap
- calls
-Message-ID: <20220426145209.GU17025@magnolia>
-References: <164997686569.383881.8935566398533700022.stgit@magnolia>
- <164997687142.383881.7160925177236303538.stgit@magnolia>
- <Ymf3wqypgyjXDLN2@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Catherine Hoang <catherine.hoang@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v1 0/2] xfs: remove quota warning limits
+Message-ID: <20220426145347.GV17025@magnolia>
+References: <20220421165815.87837-1-catherine.hoang@oracle.com>
+ <43e8df67-5916-5f4a-ce85-8521729acbb2@sandeen.net>
+ <20220425222140.GI1544202@dread.disaster.area>
+ <20220426024331.GR17025@magnolia>
+ <Ymf+k9EA2bY/af4Y@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Ymf3wqypgyjXDLN2@infradead.org>
+In-Reply-To: <Ymf+k9EA2bY/af4Y@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 26, 2022 at 06:46:42AM -0700, Christoph Hellwig wrote:
-> On Thu, Apr 14, 2022 at 03:54:31PM -0700, Darrick J. Wong wrote:
-> > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> > index 327ba25e9e17..a07ebaecba73 100644
-> > --- a/fs/xfs/libxfs/xfs_refcount.c
-> > +++ b/fs/xfs/libxfs/xfs_refcount.c
-> > @@ -960,6 +960,7 @@ xfs_refcount_adjust_extents(
-> >  			 * Either cover the hole (increment) or
-> >  			 * delete the range (decrement).
-> >  			 */
-> > +			cur->bc_ag.refc.nr_ops++;
-> >  			if (tmp.rc_refcount) {
-> >  				error = xfs_refcount_insert(cur, &tmp,
-> >  						&found_tmp);
-> > @@ -970,7 +971,6 @@ xfs_refcount_adjust_extents(
-> >  					error = -EFSCORRUPTED;
-> >  					goto out_error;
-> >  				}
-> > -				cur->bc_ag.refc.nr_ops++;
+On Tue, Apr 26, 2022 at 10:15:47AM -0400, Brian Foster wrote:
+> On Mon, Apr 25, 2022 at 07:43:31PM -0700, Darrick J. Wong wrote:
+> ...
+> > 
+> > The biggest problem right now is that the pagecache is broken in 5.18
+> > and apparently I'm the only person who can trigger this.  It's the same
+> > problem willy and I have been working on since -rc1 (where the
+> > filemap/iomap debug asserts trip on generic/068 and generic/475) that's
+> > documented on the fsdevel list.  Unfortunately, I don't have much time
+> > to work on this, because as team lead:
+> > 
 > 
-> How do these changes fit into the rest of the patch?
+> I seem to be able to reproduce this fairly reliably with generic/068.
+> I've started a bisect if it's of any use...
 
-Long ago before we used deferred ops to update the refcount btree, we
-would restrict the number of blocks that could be bunmapped in order to
-avoid overflowing the transaction reservation while doing refcount
-updates for an unmapped extent.
-
-Later on, I added deferred refcount updates so at least the refcountbt
-updates went in their own transaction, which meant that if we started
-running out of space because the unmapped extent had many many different
-refcount records, we could at least return EAGAIN to get a clean
-transaction to continue.  I needed a way to guess when we were getting
-close to the reservation limit, so I added this nr_ops counter to track
-the number of record updates.  Granted, 32 bytes per refcountbt record
-update is quite an overestimate, since the records are contiguous in a
-btree leaf block.
-
-In the past, the deferred ops code had a defect where it didn't maintain
-correct ordering of deferred ops when one dfops' ->finish_item function
-queued even more dfops to the transaction, which is what happens when a
-refcount update queues EFIs for blocks that are no longer referenced.
-This resulted in enormous chains of defer ops, so I left the bunmap
-piece in to throttle the chain lengths.
-
-Now we've fixed the deferred ops code to maintain correct dfops order
-between existing ops and newly queued ones, so the chaining problem went
-away, and we can get rid of the bunmap throttle.  However, as part of
-doing that, it's necessary to track the number of EFIs logged to the
-transaction as well, which is what the above code change fixes.
-
-Granted, Dave has also commented that EFIs use a bit more than 32 bytes,
-so I think it would be warranted to capture the above comment and the
-xfs_refcount.c changes in a separate patch now.
+Thank you!  Matthew has hinted that he suspects this is a case of the
+page cache returning the wrong folio in certain cases, but neither of us
+have been able to narrow it down to a specific commit, or even a range.
 
 --D
+
+> Brian
+> 
