@@ -2,127 +2,214 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AF8DC433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 16:45:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 815C3C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 17:32:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243351AbiD0QtG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Apr 2022 12:49:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52026 "EHLO
+        id S244082AbiD0RfS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Apr 2022 13:35:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243518AbiD0QtA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 12:49:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 955AA2359EC
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 09:45:48 -0700 (PDT)
+        with ESMTP id S244322AbiD0RfM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 13:35:12 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D33C120A400
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 10:31:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 348F061DD1
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 16:45:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B5C6C385AC;
-        Wed, 27 Apr 2022 16:45:47 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4F485B826BD
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 17:31:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAB2CC385AF;
+        Wed, 27 Apr 2022 17:31:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651077947;
-        bh=S9l0Dr+A3uQbfd1BavNyfJr5EeogGE+IAPRLwvyNRFo=;
+        s=k20201202; t=1651080706;
+        bh=IVj8WXNwduUgVWXc4WCujJmEclktk3zVNLJ65zdHI+M=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kw2RBex75syXr8CP7n+TJN9nOEyAOTyYHq3sJR2KUx0D6TKN6lDWJYnplPKyIq844
-         HgtLKtUJBjkefGHAFb2BWVm5DI3Ff4a+1I6qqcRv79HlcrAoIUi03C41/McxJNDFg0
-         7GvBRE/rvs+uXcVOaF67ZBUK/Qdx1lDLHNbHV1J3F5yjNqKh76bL7q6DZmytvnWGOl
-         M4Z2mi3869uauTxTc+TtNgBEbEtcuyELnXjIC2AJ2uz0OXQtpSQ3TK/pilasdALSx0
-         II/rE5TpyPPXINcDDMVjT6VwqdkTHJkzMh7f1WF4ECQ38gqKD/nKYHGTXiBpGtvczC
-         L0xJPn9tTUSNA==
-Date:   Wed, 27 Apr 2022 09:45:46 -0700
+        b=SdFYmcwAgk2v14/8ZhxWyXsdwhiVq1+ZVZ6rXTvcnzqRk6D868wMSZNLp+xc8pfcP
+         Ebj6sTZqmCVBC3RkNmIXPpeHraj0iX1OwIrXAbzNyQb61foBtOswRCPg6XGmAeSzUi
+         sO+oRVw1+uHKnIZx+AQhOFJ3a3HNtU6BBGnqvs2T2B7x1qqluPVGi6YSOZb9zyCK5J
+         5AHpbkZ4gQ4J0M9WXA8PJ0YTB9+EZ6PKYDj+H33LjyMsqSFoUL7mCZVlmOLLAQU+Bd
+         xgUAm3gaNv1dcStg3/y/2EbEQc6a9gTp5LCUKIl8pwHtOQ8DhK1iisYaobf/6SGgwJ
+         F8WxRFCWTSaMQ==
+Date:   Wed, 27 Apr 2022 10:31:45 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/8] xfs: hide log iovec alignment constraints
-Message-ID: <20220427164546.GI17025@magnolia>
+Subject: Re: [PATCH 8/8] xfs: intent item whiteouts
+Message-ID: <20220427173145.GK17059@magnolia>
 References: <20220427022259.695399-1-david@fromorbit.com>
- <20220427022259.695399-2-david@fromorbit.com>
- <20220427031445.GD17025@magnolia>
- <20220427045034.GL1098723@dread.disaster.area>
+ <20220427022259.695399-9-david@fromorbit.com>
+ <20220427033252.GH17025@magnolia>
+ <20220427054757.GO1098723@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220427045034.GL1098723@dread.disaster.area>
+In-Reply-To: <20220427054757.GO1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 27, 2022 at 02:50:34PM +1000, Dave Chinner wrote:
-> On Tue, Apr 26, 2022 at 08:14:45PM -0700, Darrick J. Wong wrote:
-> > On Wed, Apr 27, 2022 at 12:22:52PM +1000, Dave Chinner wrote:
+On Wed, Apr 27, 2022 at 03:47:57PM +1000, Dave Chinner wrote:
+> On Tue, Apr 26, 2022 at 08:32:52PM -0700, Darrick J. Wong wrote:
+> > On Wed, Apr 27, 2022 at 12:22:59PM +1000, Dave Chinner wrote:
 > > > From: Dave Chinner <dchinner@redhat.com>
 > > > 
-> > > Callers currently have to round out the size of buffers to match the
-> > > aligment constraints of log iovecs and xlog_write(). They should not
-> > > need to know this detail, so introduce a new function to calculate
-> > > the iovec length (for use in ->iop_size implementations). Also
-> > > modify xlog_finish_iovec() to round up the length to the correct
-> > > alignment so the callers don't need to do this, either.
+> > > When we log modifications based on intents, we add both intent
+> > > and intent done items to the modification being made. These get
+> > > written to the log to ensure that the operation is re-run if the
+> > > intent done is not found in the log.
 > > > 
-> > > Convert the only user - inode forks - of this alignment rounding to
-> > > use the new interface.
+> > > However, for operations that complete wholly within a single
+> > > checkpoint, the change in the checkpoint is atomic and will never
+> > > need replay. In this case, we don't need to actually write the
+> > > intent and intent done items to the journal because log recovery
+> > > will never need to manually restart this modification.
+> > > 
+> > > Log recovery currently handles intent/intent done matching by
+> > > inserting the intent into the AIL, then removing it when a matching
+> > > intent done item is found. Hence for all the intent-based operations
+> > > that complete within a checkpoint, we spend all that time parsing
+> > > the intent/intent done items just to cancel them and do nothing with
+> > > them.
+> > > 
+> > > Hence it follows that the only time we actually need intents in the
+> > > log is when the modification crosses checkpoint boundaries in the
+> > > log and so may only be partially complete in the journal. Hence if
+> > > we commit and intent done item to the CIL and the intent item is in
+> > > the same checkpoint, we don't actually have to write them to the
+> > > journal because log recovery will always cancel the intents.
+> > > 
+> > > We've never really worried about the overhead of logging intents
+> > > unnecessarily like this because the intents we log are generally
+> > > very much smaller than the change being made. e.g. freeing an extent
+> > > involves modifying at lease two freespace btree blocks and the AGF,
+> > > so the EFI/EFD overhead is only a small increase in space and
+> > > processing time compared to the overall cost of freeing an extent.
 > > 
-> > Hmm.  So currently, we require that the inode fork buffer be rounded up
-> > to the next 4 bytes, and then I guess the log will copy that into the
-> > log iovec?  IOWs, if we have a 37-byte data fork, we'll allocate a 40
-> > byte buffer for the xfs_ifork, and the log will copy all 40 bytes into a
-> > 40 byte iovec.
+> > Question: If we whiteout enough intent items, does that make it possible
+> > to cram more updates into a checkpoint?
 > 
-> Yes, that's how the current code works. It ends up leaking whatever
-> was in those 3 bytes into the shadow buffer that we then copy into
-> the log region. i.e. the existing code "leaks" non-zeroed allocated
-> memory to the journal.
-> 
-> > Now it looks like we'd allocate a 37-byte buffer for the xfs_ifork, but
-> > the log iovec will still be 40 bytes.  So ... do we copy 37 bytes out of
-> > the ifork buffer and zero the last 3 bytes in the iovec?
-> 
-> Yes, we copy 37 bytes out of the ifork buffer now into the shadow
-> buffer so we do not overrun the inode fork buffer.
-> 
-> > Does we leak
-> > kernel memory in those last 3 bytes?
-> 
-> We does indeed still leak the remaining 3 bytes as they are not
-> zeroed.
-> 
-> > Or do we copy 40 bytes and
-> > overrun?
-> 
-> No, we definitely don't do that - KASAN gets very unhappy when you
-> do that...
-> 
-> > It sorta looks like (at least for the local format case) xlog_copy_iovec
-> > will copy 37 bytes and leave the last 3 bytes of the iovec in whatever
-> > state it was in previously.  Is that zeroed?  Because it then looks like
-> > xlog_finish_iovec will round that 37 up to 40.
-> 
-> The shadow buffer is only partially zeroed - the part that makes io
-> the header and iovec pointer array is zeroed, but the region that
-> the journal data is written to is not zeroed.
-> 
-> > (FWIW I'm just checking for kernel memory exposure vectors here.)
-> 
-> Yup, I hadn't even considered that aspect of the code because we
-> aren't actually leaking anything to userspace. If an unprivileged
-> user can read 3 bytes of uninitialised data out of the journal we've
-> got much, much bigger security problems to deal with.
-> 
-> It should be trivial to fix, though. I'll do the initial fix as a
-> standalone patch, though, and then roll it into this one because the
-> problem has been around for a long while and fixing this patch
-> doesn't produce an easily backportable fix...
+> Yes - we release the space the cancelled intent pair used from the
+> ctx->space_used counter that tracks the size of the CIL checkpoint.
 
-<nod> I agree that it's a very minor disclosure vulnerability (certainly
-less severe than ALLOCSP) since you'd need CAP_SYS_RAWIO to exploit it.
-But certainly worth patching before someone discovers that a former
-pagecache page with your credit card numbers on it got recycled into a
-log vector page.  Thanks for doing the fix. :)
+<nod> Good, that's what I was thinking.
+
+> > Are changes required to the existing intent item code to support
+> > whiteouts, or does the log code autodetect an *I/*D pair in the same
+> > checkpoint and elide them automatically?
+> 
+> The log code automagically detects it. That's what the ->iop_intent
+> op is for - when a done intent committed, it looks up it's intent
+> pair via ->iop_intent and then checks if it is in the current
+> checkpoint via xlog_item_in_current_chkpt() and if that returns true
+> then we place a whiteout on the intent and release the space it
+> consumes.
+> 
+> We don't cull the intent from the CIL until the context checkpoint
+> commits - we could remove it immediately, but then when the CIL
+> scalability code gets placed on top of this we can't remove log
+> items from the per-cpu CIL in transaction commit context and so we
+> have to use whiteouts to delay removal to the push context. So I
+> just implemented it that way to start with....
+
+<nod> Sounds reasonable to me.
+
+> > (I might be fishing here for "Does this make generic/447 faster when it
+> > deletes the million extents?")
+> 
+> I think it knocks it down a little - maybe 10%? One machine would
+> appear to drop 126->116s, another it is 52->48s.
+> 
+> The intents are generally tiny compared to the rest of the changes
+> being (re-)logged, so I'm not expecting miracles for the
+> rmap/reflink code. The big wins come when intents contain large
+> chunks of data...
+
+I'll take a 10% win. :)
+
+> > > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> > > index 59aa5f9bf769..670d074a71cc 100644
+> > > --- a/fs/xfs/xfs_bmap_item.c
+> > > +++ b/fs/xfs/xfs_bmap_item.c
+> > > @@ -39,6 +39,7 @@ STATIC void
+> > >  xfs_bui_item_free(
+> > >  	struct xfs_bui_log_item	*buip)
+> > >  {
+> > > +	kmem_free(buip->bui_item.li_lv_shadow);
+> > 
+> > Why is it necessary for log items to free their own shadow buffer?
+> 
+> Twisty unpin passages...
+> 
+> Intents with whiteouts on them were leaking them when they
+> were unpinned from the whiteout list in xlog_cil_push_work(). The
+> log vectors no longer get attached to the CIL context and freed
+> via xlog_cil_committed()->xlog_cil_free_logvec(), and so when they
+> are unpinned by xlog_cil_push_work() the last reference is released
+> and we have to free the log vector attached to the item as it is
+> still attached.
+> 
+> The reason we can't do it directly from ->iop_unpin() is that we
+> also call ->iop_unpin from xlog_cil_committed()->
+> xfs_trans_committed_bulk(), and if we are aborting there we do not
+> want to free the shadow buffer because it is still linked into the
+> lv chain attached to the CIL ctx and will get freed once
+> xfs_trans_committed_bulk() returns....
+
+Huh.  So now that I'm more awake, I noticed that you didn't patch
+xfs_extfree_item.c to free the shadow buffers because the
+xfs_ef[id]_item_free functions already have code to free the shadow
+buffer.  git blame says that was added in:
+
+b1c5ebb21301 ("xfs: allocate log vector buffers outside CIL context lock")
+
+This commit was added in 4.8-rc1, and just prior to merging the rmap
+patches.
+
+When do log intent items get shadow buffers, since they should only be
+committed once?  Looking at that old commit, I think what's going on is
+that we preallocate the shadow buffers for every log item at commit time
+to avoid a memory allocation when we have the ctx lock, so now it's
+necessary for all log intent items to free them?
+
+Does that mean RUI/CUI/BUI log items could have been leaking shadow
+buffers since the beginning, and we just haven't noticed because the CIL
+has freed them for us?  Which means that the changes to xfs_*_item.c
+could, in theory, be a separate patch that fixes a theoretical memory
+leak?
+
+(I'm not asking for you to separate the changes; I'm checking my
+understanding of something that caused me to go "Eh???" on first
+reading.)
+
+> > > @@ -1393,7 +1463,11 @@ xlog_cil_commit(
+> > >  	/* lock out background commit */
+> > >  	down_read(&cil->xc_ctx_lock);
+> > >  
+> > > -	xlog_cil_insert_items(log, tp);
+> > > +	if (tp->t_flags & XFS_TRANS_HAS_INTENT_DONE)
+> > > +		released_space = xlog_cil_process_intents(cil, tp);
+> > > +
+> > > +	xlog_cil_insert_items(log, tp, released_space);
+> > > +	tp->t_ticket->t_curr_res += released_space;
+> > 
+> > I'm a little tired, so why isn't this adjustment a part of
+> > xlog_cil_insert_items?  A similar adjustment is made to
+> > ctx->space_used to release the unused space back to the committing tx,
+> > right?
+> 
+> Probably because it was a bug fix I added at some point and not
+> original code....
+> 
+> I'm not fussed where it ends up - I can move it if you want.
+
+Yes please, since xlog_cil_insert_items already adjusts
+tp->t_ticket->t_curr_res and it would seem to make more sense to keep
+all those adjustments together.
 
 --D
 
+> 
 > Cheers,
 > 
 > Dave.
