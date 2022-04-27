@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19211C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 00:52:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34CBAC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 00:52:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356527AbiD0Azt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Apr 2022 20:55:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53758 "EHLO
+        id S1356525AbiD0Azy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 20:55:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356533AbiD0Azs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 20:55:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB3B615A21
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 17:52:38 -0700 (PDT)
+        with ESMTP id S1356518AbiD0Azx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 20:55:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D66D17E17
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 17:52:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 69FCF61A5F
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 00:52:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB132C385A4;
-        Wed, 27 Apr 2022 00:52:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1901A61A5F
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 00:52:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71B38C385A0;
+        Wed, 27 Apr 2022 00:52:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651020757;
-        bh=gwEkI+4yf2OZ82UXB3p7ETLNP+e708TkX2n5Ox8/sfY=;
+        s=k20201202; t=1651020763;
+        bh=GkmlHlBaRUnMRIrImsoc+Uu3ZDK0GTiOXw/DzwuLWLM=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=FvMEEDV8+s4dWucranymbP3rZtvH6TOgJO6z3F5OpQaxUSdkd6OALPnnRxxUoQ7Wh
-         E0okLbRraWEsxf/ZLP5vv22XSanm5hl2TgfF0T1nJjfnUJIdRdT4vZtYoMw+qsNU6h
-         NCDKBQE9j7YSgf2sBUvutzUx3ewvthagjlGvGzJYA9qgqq3+3/PiGL02/C4fpM99zc
-         hXoYUdkb4rZ0mpq4pgMzQYRKUs2IxqM7LSCU8BXOPLQs7w6CWA0J47kFrSlqmmgZTS
-         yW38OYqYoq41tBFNumDcyZ6ItC5P7Ehe1mCmRDvqOX/zqh6PpJoBmxrqgc0hj6itu0
-         Pyh0JZu9m9UeA==
-Subject: [PATCH 8/9] xfs: rewrite xfs_reflink_end_cow to use intents
+        b=HRZiBS9FcioQJW7PIveaLEdziI9UqXO0uacwD2u0pu4R2dL2xctzdksdpmBkKcDvi
+         JGiJpehQRsEutLV6Mp4QSlMUG+CwAduXbS8QcYGDnS6FcAdsDL0luC3147YoK6TIBZ
+         3JikXdFPuEfS29zx2DjTrnd93EesVTaloHF5byBhvkMYMOjVzCLG/zZC9CRf7HtVnb
+         ZZ0+0ui6QjIIGTIE72GrjLnDpJywWVbya0ML8uvF2j8Xrf+P5wLVfEoWi/hnXfLJmq
+         /KMyrQWDnlMGLI5Hjvpcx1ZFpX4j4lwK5I8w/gPKLUV2EGgB6f/rpwvf0r9oLgW5/r
+         9NpUki4BhVq4A==
+Subject: [PATCH 9/9] xfs: rename xfs_*alloc*_log_count to _block_count
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, david@fromorbit.com
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Tue, 26 Apr 2022 17:52:37 -0700
-Message-ID: <165102075737.3922658.2470136533458678121.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Tue, 26 Apr 2022 17:52:43 -0700
+Message-ID: <165102076298.3922658.10000784148294313471.stgit@magnolia>
 In-Reply-To: <165102071223.3922658.5241787533081256670.stgit@magnolia>
 References: <165102071223.3922658.5241787533081256670.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,183 +49,197 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, the code that performs CoW remapping after a write has this
-odd behavior where it walks /backwards/ through the data fork to remap
-extents in reverse order.  Earlier, we rewrote the reflink remap
-function to use deferred bmap log items instead of trying to cram as
-much into the first transaction that we could.  Now do the same for the
-CoW remap code.  There doesn't seem to be any performance impact; we're
-just making better use of code that we added for the benefit of reflink.
+These functions return the maximum number of blocks that could be logged
+in a particular transaction.  "log count" is confusing since there's a
+separate concept of a log (operation) count in the reservation code, so
+let's change it to "block count" to be less confusing.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_reflink.c |   88 ++++++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_trace.h   |    3 +-
- 2 files changed, 58 insertions(+), 33 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c   |    2 +-
+ fs/xfs/libxfs/xfs_trans_resv.c |   38 +++++++++++++++++++-------------------
+ fs/xfs/libxfs/xfs_trans_resv.h |    2 +-
+ 3 files changed, 21 insertions(+), 21 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 960917628a44..e7a7c00d93be 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -586,21 +586,21 @@ xfs_reflink_cancel_cow_range(
- STATIC int
- xfs_reflink_end_cow_extent(
- 	struct xfs_inode	*ip,
--	xfs_fileoff_t		offset_fsb,
--	xfs_fileoff_t		*end_fsb)
-+	xfs_fileoff_t		*offset_fsb,
-+	xfs_fileoff_t		end_fsb)
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index e53544d52ee2..97e9e6020596 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -890,7 +890,7 @@ xfs_refcount_still_have_space(
+ 	 * Worst case estimate: full splits of the free space and rmap btrees
+ 	 * to handle each of the shape changes to the refcount btree.
+ 	 */
+-	overhead = xfs_allocfree_log_count(cur->bc_mp,
++	overhead = xfs_allocfree_block_count(cur->bc_mp,
+ 				cur->bc_ag.refc.shape_changes);
+ 	overhead += cur->bc_mp->m_refc_maxlevels;
+ 	overhead *= cur->bc_mp->m_sb.sb_blocksize;
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index ab688929d884..e9913c2c5a24 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -63,7 +63,7 @@ xfs_calc_buf_res(
+  * Keep in mind that max depth is calculated separately for each type of tree.
+  */
+ uint
+-xfs_allocfree_log_count(
++xfs_allocfree_block_count(
+ 	struct xfs_mount *mp,
+ 	uint		num_ops)
  {
--	struct xfs_bmbt_irec	got, del;
- 	struct xfs_iext_cursor	icur;
-+	struct xfs_bmbt_irec	got, del, data;
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp;
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	xfs_filblks_t		rlen;
- 	unsigned int		resblks;
-+	int			nmaps;
- 	int			error;
+@@ -146,7 +146,7 @@ xfs_calc_inobt_res(
+ {
+ 	return xfs_calc_buf_res(M_IGEO(mp)->inobt_maxlevels,
+ 			XFS_FSB_TO_B(mp, 1)) +
+-				xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
++				xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+ 			XFS_FSB_TO_B(mp, 1));
+ }
  
- 	/* No COW extents?  That's easy! */
- 	if (ifp->if_bytes == 0) {
--		*end_fsb = offset_fsb;
-+		*offset_fsb = end_fsb;
- 		return 0;
+@@ -193,7 +193,7 @@ xfs_calc_inode_chunk_res(
+ {
+ 	uint			res, size = 0;
+ 
+-	res = xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
++	res = xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+ 			       XFS_FSB_TO_B(mp, 1));
+ 	if (alloc) {
+ 		/* icreate tx uses ordered buffers */
+@@ -213,7 +213,7 @@ xfs_calc_inode_chunk_res(
+  * extents, as well as the realtime summary block.
+  */
+ static unsigned int
+-xfs_rtalloc_log_count(
++xfs_rtalloc_block_count(
+ 	struct xfs_mount	*mp,
+ 	unsigned int		num_ops)
+ {
+@@ -300,21 +300,21 @@ xfs_calc_write_reservation(
+ 	t1 = xfs_calc_inode_res(mp, 1) +
+ 	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), blksz) +
+ 	     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
++	     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 2), blksz);
+ 
+ 	if (xfs_has_realtime(mp)) {
+ 		t2 = xfs_calc_inode_res(mp, 1) +
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				     blksz) +
+ 		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(xfs_rtalloc_log_count(mp, 1), blksz) +
+-		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1), blksz);
++		     xfs_calc_buf_res(xfs_rtalloc_block_count(mp, 1), blksz) +
++		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1), blksz);
+ 	} else {
+ 		t2 = 0;
  	}
  
-@@ -631,42 +631,66 @@ xfs_reflink_end_cow_extent(
- 	 * left by the time I/O completes for the loser of the race.  In that
- 	 * case we are done.
- 	 */
--	if (!xfs_iext_lookup_extent_before(ip, ifp, end_fsb, &icur, &got) ||
--	    got.br_startoff + got.br_blockcount <= offset_fsb) {
--		*end_fsb = offset_fsb;
-+	if (!xfs_iext_lookup_extent(ip, ifp, *offset_fsb, &icur, &got) ||
-+	    got.br_startoff >= end_fsb) {
-+		*offset_fsb = end_fsb;
- 		goto out_cancel;
+ 	t3 = xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
++	     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 2), blksz);
+ 
+ 	/*
+ 	 * In the early days of reflink, we included enough reservation to log
+@@ -381,12 +381,12 @@ xfs_calc_itruncate_reservation(
+ 	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1, blksz);
+ 
+ 	t2 = xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+-	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4), blksz);
++	     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 4), blksz);
+ 
+ 	if (xfs_has_realtime(mp)) {
+ 		t3 = xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(xfs_rtalloc_log_count(mp, 2), blksz) +
+-		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
++		     xfs_calc_buf_res(xfs_rtalloc_block_count(mp, 2), blksz) +
++		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 2), blksz);
+ 	} else {
+ 		t3 = 0;
  	}
+@@ -441,7 +441,7 @@ xfs_calc_rename_reservation(
+ 		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 3),
++		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 3),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
  
- 	/*
--	 * Structure copy @got into @del, then trim @del to the range that we
--	 * were asked to remap.  We preserve @got for the eventual CoW fork
-+	 * Only remap real extents that contain data.  With AIO, speculative
-+	 * preallocations can leak into the range we are called upon, and we
-+	 * need to skip them.  Preserve @got for the eventual CoW fork
- 	 * deletion; from now on @del represents the mapping that we're
- 	 * actually remapping.
- 	 */
-+	while (!xfs_bmap_is_written_extent(&got)) {
-+		if (!xfs_iext_next_extent(ifp, &icur, &got) ||
-+		    got.br_startoff >= end_fsb) {
-+			*offset_fsb = end_fsb;
-+			goto out_cancel;
-+		}
-+	}
- 	del = got;
--	xfs_trim_extent(&del, offset_fsb, *end_fsb - offset_fsb);
+@@ -481,7 +481,7 @@ xfs_calc_link_reservation(
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
++		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
  
--	ASSERT(del.br_blockcount > 0);
--
--	/*
--	 * Only remap real extents that contain data.  With AIO, speculative
--	 * preallocations can leak into the range we are called upon, and we
--	 * need to skip them.
--	 */
--	if (!xfs_bmap_is_written_extent(&got)) {
--		*end_fsb = del.br_startoff;
--		goto out_cancel;
--	}
--
--	/* Unmap the old blocks in the data fork. */
--	rlen = del.br_blockcount;
--	error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1);
-+	/* Grab the corresponding mapping in the data fork. */
-+	nmaps = 1;
-+	error = xfs_bmapi_read(ip, del.br_startoff, del.br_blockcount, &data,
-+			&nmaps, 0);
- 	if (error)
- 		goto out_cancel;
+@@ -519,7 +519,7 @@ xfs_calc_remove_reservation(
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
  
--	/* Trim the extent to whatever got unmapped. */
--	xfs_trim_extent(&del, del.br_startoff + rlen, del.br_blockcount - rlen);
--	trace_xfs_reflink_cow_remap(ip, &del);
-+	/* We can only remap the smaller of the two extent sizes. */
-+	data.br_blockcount = min(data.br_blockcount, del.br_blockcount);
-+	del.br_blockcount = data.br_blockcount;
-+
-+	trace_xfs_reflink_cow_remap_from(ip, &del);
-+	trace_xfs_reflink_cow_remap_to(ip, &data);
-+
-+	if (xfs_bmap_is_real_extent(&data)) {
-+		/*
-+		 * If the extent we're remapping is backed by storage (written
-+		 * or not), unmap the extent and drop its refcount.
-+		 */
-+		xfs_bmap_unmap_extent(tp, ip, &data);
-+		xfs_refcount_decrease_extent(tp, &data);
-+		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT,
-+				-data.br_blockcount);
-+	} else if (data.br_startblock == DELAYSTARTBLOCK) {
-+		int		done;
-+
-+		/*
-+		 * If the extent we're remapping is a delalloc reservation,
-+		 * we can use the regular bunmapi function to release the
-+		 * incore state.  Dropping the delalloc reservation takes care
-+		 * of the quota reservation for us.
-+		 */
-+		error = xfs_bunmapi(NULL, ip, data.br_startoff,
-+				data.br_blockcount, 0, 1, &done);
-+		if (error)
-+			goto out_cancel;
-+		ASSERT(done);
-+	}
+@@ -664,7 +664,7 @@ xfs_calc_growdata_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
  
- 	/* Free the CoW orphan record. */
- 	xfs_refcount_free_cow_extent(tp, del.br_startblock, del.br_blockcount);
-@@ -687,7 +711,7 @@ xfs_reflink_end_cow_extent(
- 		return error;
+@@ -686,7 +686,7 @@ xfs_calc_growrtalloc_reservation(
+ 		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_inode_res(mp, 1) +
+-		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
  
- 	/* Update the caller about how much progress we made. */
--	*end_fsb = del.br_startoff;
-+	*offset_fsb = del.br_startoff + del.br_blockcount;
- 	return 0;
+@@ -762,7 +762,7 @@ xfs_calc_addafork_reservation(
+ 		xfs_calc_buf_res(1, mp->m_dir_geo->blksize) +
+ 		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
+ 				 XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
  
- out_cancel:
-@@ -715,7 +739,7 @@ xfs_reflink_end_cow(
- 	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
+@@ -785,7 +785,7 @@ xfs_calc_attrinval_reservation(
+ 		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
+ 				     XFS_FSB_TO_B(mp, 1))),
+ 		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+-		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
++		    xfs_calc_buf_res(xfs_allocfree_block_count(mp, 4),
+ 				     XFS_FSB_TO_B(mp, 1))));
+ }
  
- 	/*
--	 * Walk backwards until we're out of the I/O range.  The loop function
-+	 * Walk forwards until we've remapped the I/O range.  The loop function
- 	 * repeatedly cycles the ILOCK to allocate one transaction per remapped
- 	 * extent.
- 	 *
-@@ -747,7 +771,7 @@ xfs_reflink_end_cow(
- 	 * blocks will be remapped.
- 	 */
- 	while (end_fsb > offset_fsb && !error)
--		error = xfs_reflink_end_cow_extent(ip, offset_fsb, &end_fsb);
-+		error = xfs_reflink_end_cow_extent(ip, &offset_fsb, end_fsb);
+@@ -852,7 +852,7 @@ xfs_calc_attrrm_reservation(
+ 					XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), 0)),
+ 		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
  
- 	if (error)
- 		trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index a690987cc5f0..378f9dd1f66f 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3405,7 +3405,8 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+index 22b99042127a..0554b9d775d2 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.h
++++ b/fs/xfs/libxfs/xfs_trans_resv.h
+@@ -96,7 +96,7 @@ struct xfs_trans_resv {
+ #define	XFS_WRITE_LOG_COUNT_REFLINK	8
  
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
--DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap);
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap_from);
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap_to);
+ void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
+-uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
++uint xfs_allocfree_block_count(struct xfs_mount *mp, uint num_ops);
  
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_cow_range_error);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_end_cow_error);
+ unsigned int xfs_calc_itruncate_reservation_minlogsize(struct xfs_mount *mp);
+ unsigned int xfs_calc_write_reservation_minlogsize(struct xfs_mount *mp);
 
