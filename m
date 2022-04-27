@@ -2,170 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47EDDC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 05:48:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DC70C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 06:22:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357825AbiD0FvM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Apr 2022 01:51:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53512 "EHLO
+        id S1358073AbiD0G0A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Apr 2022 02:26:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345102AbiD0FvL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 01:51:11 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C60421804
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 22:48:00 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-62-197.pa.nsw.optusnet.com.au [49.195.62.197])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C5DFD10E5E76;
-        Wed, 27 Apr 2022 15:47:59 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1njaWr-0052WS-M6; Wed, 27 Apr 2022 15:47:57 +1000
-Date:   Wed, 27 Apr 2022 15:47:57 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/8] xfs: intent item whiteouts
-Message-ID: <20220427054757.GO1098723@dread.disaster.area>
-References: <20220427022259.695399-1-david@fromorbit.com>
- <20220427022259.695399-9-david@fromorbit.com>
- <20220427033252.GH17025@magnolia>
+        with ESMTP id S229813AbiD0G0A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 02:26:00 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B21618E18A
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 23:22:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1651040567;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2pLpD2XwOpuIFeAdnMHjXovEesIMLj0zcDPFKt27Fzc=;
+        b=LRBQE09yt8pLQd8cih9tbplj8xSFRyupMG61uSk5faGDuJlbayXLJaho24SD57j30+jSZi
+        0BfDI4jKxRhwlTeT9EhQhk791NYQli9FgLdfcmG1ba+t4diRv3/GgNGW7HRJYix/xXEE/g
+        PH+2V1wfEoGGl5Lp5g+pYI/4Vch6pa0=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-447-WdSpwPauPvy2zB-cJjzEug-1; Wed, 27 Apr 2022 02:22:45 -0400
+X-MC-Unique: WdSpwPauPvy2zB-cJjzEug-1
+Received: by mail-qk1-f197.google.com with SMTP id u129-20020a372e87000000b0069f8a79378eso594055qkh.5
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 23:22:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=2pLpD2XwOpuIFeAdnMHjXovEesIMLj0zcDPFKt27Fzc=;
+        b=H4hqehTAazujEe0AO2sfMbQmRlSt3WHVAcXdIG/tZTdzu83xujVDN0AaTBsFXLVemj
+         5/s67SwwcY/fMCuKMFQZYJ7HPa02EK2znmTOAAfeiFA0MdUuo7tTX7xwe5ZS980NGxQw
+         0F8ioHGTYkr9yTje6lY0Vd003f5eWpKgbtYd2SSdmAJPBlElZwBLg04yKngaih7XWu0H
+         qbD5VvHonzH9QXYuGqfnH5Ylgc/+zGi6ubCUK9OE+CnLIe+uDBd/H+BAMox62HeiPEOy
+         InmD6DVjczxEwVhh1Boup0MS6k5qSjRUgLZAswaYql2+ffoCja2xy/BPVWxKbpT1+vfg
+         F+Cg==
+X-Gm-Message-State: AOAM533nqlbBOu0UtqU8ofhGqQYuixvlCdySz4VkQ7hRRjMj4FHW7AWb
+        t7oOCeaK0gvKIHxSymbOPxui0nvtFxGanX3jyF1NluBvbMxYO1QVEs3zN27g/Bss3ljoRGpT9w5
+        7ZX0zGlnKXQCZCzs7KENi3yPo+hnVypCP5k3az3MRupj+sVkJGqLtBd5iMrf5kmm7zfw9
+X-Received: by 2002:a05:620a:f03:b0:67e:1e38:4a0 with SMTP id v3-20020a05620a0f0300b0067e1e3804a0mr15410437qkl.86.1651040564810;
+        Tue, 26 Apr 2022 23:22:44 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxoxbqf/EbUWqSDAh9cCEgxClMpvd0H6hi4x0GRD+e8EFnP9vA23kQorzMbeRv4KZRSNYXmrg==
+X-Received: by 2002:a05:620a:f03:b0:67e:1e38:4a0 with SMTP id v3-20020a05620a0f0300b0067e1e3804a0mr15410425qkl.86.1651040564530;
+        Tue, 26 Apr 2022 23:22:44 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id 19-20020a05620a079300b0069eb4c4e007sm7333581qka.29.2022.04.26.23.22.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Apr 2022 23:22:43 -0700 (PDT)
+Date:   Wed, 27 Apr 2022 14:22:38 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     fstests@vger.kernel.org, Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Subject: Re: [RFC PATCH 0/3] xfs: add memory failure tests for dax mode
+Message-ID: <20220427062238.dkgkuzyh3ho2oirt@zlang-mailbox>
+Mail-Followup-To: linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>
+References: <20220311151816.2174870-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220427033252.GH17025@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6268d910
-        a=KhGSFSjofVlN3/cgq4AT7A==:117 a=KhGSFSjofVlN3/cgq4AT7A==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=ilbA9Ygaj215wBof9c4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220311151816.2174870-1-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 26, 2022 at 08:32:52PM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 27, 2022 at 12:22:59PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When we log modifications based on intents, we add both intent
-> > and intent done items to the modification being made. These get
-> > written to the log to ensure that the operation is re-run if the
-> > intent done is not found in the log.
-> > 
-> > However, for operations that complete wholly within a single
-> > checkpoint, the change in the checkpoint is atomic and will never
-> > need replay. In this case, we don't need to actually write the
-> > intent and intent done items to the journal because log recovery
-> > will never need to manually restart this modification.
-> > 
-> > Log recovery currently handles intent/intent done matching by
-> > inserting the intent into the AIL, then removing it when a matching
-> > intent done item is found. Hence for all the intent-based operations
-> > that complete within a checkpoint, we spend all that time parsing
-> > the intent/intent done items just to cancel them and do nothing with
-> > them.
-> > 
-> > Hence it follows that the only time we actually need intents in the
-> > log is when the modification crosses checkpoint boundaries in the
-> > log and so may only be partially complete in the journal. Hence if
-> > we commit and intent done item to the CIL and the intent item is in
-> > the same checkpoint, we don't actually have to write them to the
-> > journal because log recovery will always cancel the intents.
-> > 
-> > We've never really worried about the overhead of logging intents
-> > unnecessarily like this because the intents we log are generally
-> > very much smaller than the change being made. e.g. freeing an extent
-> > involves modifying at lease two freespace btree blocks and the AGF,
-> > so the EFI/EFD overhead is only a small increase in space and
-> > processing time compared to the overall cost of freeing an extent.
+On Fri, Mar 11, 2022 at 11:18:13PM +0800, Shiyang Ruan wrote:
+> This patchset is to verify whether memory failure mechanism still works
+> with the dax-rmap feature[1].  With this feature, dax and reflink can be
+> used together[2].  So, we also test it for reflinked files in filesystem
+> mounted with dax option.
 > 
-> Question: If we whiteout enough intent items, does that make it possible
-> to cram more updates into a checkpoint?
-
-Yes - we release the space the cancelled intent pair used from the
-ctx->space_used counter that tracks the size of the CIL checkpoint.
-
-> Are changes required to the existing intent item code to support
-> whiteouts, or does the log code autodetect an *I/*D pair in the same
-> checkpoint and elide them automatically?
-
-The log code automagically detects it. That's what the ->iop_intent
-op is for - when a done intent committed, it looks up it's intent
-pair via ->iop_intent and then checks if it is in the current
-checkpoint via xlog_item_in_current_chkpt() and if that returns true
-then we place a whiteout on the intent and release the space it
-consumes.
-
-We don't cull the intent from the CIL until the context checkpoint
-commits - we could remove it immediately, but then when the CIL
-scalability code gets placed on top of this we can't remove log
-items from the per-cpu CIL in transaction commit context and so we
-have to use whiteouts to delay removal to the push context. So I
-just implemented it that way to start with....
-
-> (I might be fishing here for "Does this make generic/447 faster when it
-> deletes the million extents?")
-
-I think it knocks it down a little - maybe 10%? One machine would
-appear to drop 126->116s, another it is 52->48s.
-
-The intents are generally tiny compared to the rest of the changes
-being (re-)logged, so I'm not expecting miracles for the
-rmap/reflink code. The big wins come when intents contain large
-chunks of data...
-
-> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> > index 59aa5f9bf769..670d074a71cc 100644
-> > --- a/fs/xfs/xfs_bmap_item.c
-> > +++ b/fs/xfs/xfs_bmap_item.c
-> > @@ -39,6 +39,7 @@ STATIC void
-> >  xfs_bui_item_free(
-> >  	struct xfs_bui_log_item	*buip)
-> >  {
-> > +	kmem_free(buip->bui_item.li_lv_shadow);
+> [1] https://lore.kernel.org/linux-xfs/20220227120747.711169-1-ruansy.fnst@fujitsu.com/
+> [2] https://lore.kernel.org/linux-xfs/20210928062311.4012070-1-ruansy.fnst@fujitsu.com/
 > 
-> Why is it necessary for log items to free their own shadow buffer?
+> Shiyang Ruan (3):
+>   xfs: add memory failure test for dax mode
+>   xfs: add memory failure test for dax&reflink mode
+>   xfs: add memory failure test for partly-reflinked&dax file
 
-Twisty unpin passages...
+This patchset hang here for long time, the cases looks fine, can anyone familiar with
+DAX+XFS help to give it a double checking/reviewing :)
 
-Intents with whiteouts on them were leaking them when they
-were unpinned from the whiteout list in xlog_cil_push_work(). The
-log vectors no longer get attached to the CIL context and freed
-via xlog_cil_committed()->xlog_cil_free_logvec(), and so when they
-are unpinned by xlog_cil_push_work() the last reference is released
-and we have to free the log vector attached to the item as it is
-still attached.
+Thanks,
+Zorro
 
-The reason we can't do it directly from ->iop_unpin() is that we
-also call ->iop_unpin from xlog_cil_committed()->
-xfs_trans_committed_bulk(), and if we are aborting there we do not
-want to free the shadow buffer because it is still linked into the
-lv chain attached to the CIL ctx and will get freed once
-xfs_trans_committed_bulk() returns....
-
-> > @@ -1393,7 +1463,11 @@ xlog_cil_commit(
-> >  	/* lock out background commit */
-> >  	down_read(&cil->xc_ctx_lock);
-> >  
-> > -	xlog_cil_insert_items(log, tp);
-> > +	if (tp->t_flags & XFS_TRANS_HAS_INTENT_DONE)
-> > +		released_space = xlog_cil_process_intents(cil, tp);
-> > +
-> > +	xlog_cil_insert_items(log, tp, released_space);
-> > +	tp->t_ticket->t_curr_res += released_space;
 > 
-> I'm a little tired, so why isn't this adjustment a part of
-> xlog_cil_insert_items?  A similar adjustment is made to
-> ctx->space_used to release the unused space back to the committing tx,
-> right?
+>  .gitignore                      |   1 +
+>  src/Makefile                    |   3 +-
+>  src/t_mmap_cow_memory_failure.c | 154 ++++++++++++++++++++++++++++++++
+>  tests/xfs/900                   |  48 ++++++++++
+>  tests/xfs/900.out               |   9 ++
+>  tests/xfs/901                   |  49 ++++++++++
+>  tests/xfs/901.out               |   9 ++
+>  tests/xfs/902                   |  52 +++++++++++
+>  tests/xfs/902.out               |   9 ++
+>  9 files changed, 333 insertions(+), 1 deletion(-)
+>  create mode 100644 src/t_mmap_cow_memory_failure.c
+>  create mode 100755 tests/xfs/900
+>  create mode 100644 tests/xfs/900.out
+>  create mode 100755 tests/xfs/901
+>  create mode 100644 tests/xfs/901.out
+>  create mode 100755 tests/xfs/902
+>  create mode 100644 tests/xfs/902.out
+> 
+> -- 
+> 2.35.1
+> 
+> 
+> 
 
-Probably because it was a bug fix I added at some point and not
-original code....
-
-I'm not fussed where it ends up - I can move it if you want.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
