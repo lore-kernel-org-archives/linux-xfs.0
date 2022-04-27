@@ -2,142 +2,130 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC8AC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 14:09:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AF8DC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 16:45:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237249AbiD0OMS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Apr 2022 10:12:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54546 "EHLO
+        id S243351AbiD0QtG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Apr 2022 12:49:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237151AbiD0OMS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 10:12:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8FAA14EDCA
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 07:09:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1651068545;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LD70G1DdFlUCxtY0+RhQwVS23b0tg/L6YR0eORY2xmg=;
-        b=C/S1wOiXKiMdn0LzVmwIxD6w3/imp2tjSGdt14MePkN4PuTziIa2qeE1i29mIfVFbnaHV4
-        V8AHqEZ41+saFaY/nATVTVxbC7ojAC7dG5v/NqiSJedx7QEZp4nEILKuGEfqsmysd3QqV2
-        b3eI6yS44u5S+SQUNI7kBq9FXiGnovk=
-Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
- [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-9-r7IBE6v0M7CgCxb9hqCRRg-1; Wed, 27 Apr 2022 10:09:04 -0400
-X-MC-Unique: r7IBE6v0M7CgCxb9hqCRRg-1
-Received: by mail-qv1-f71.google.com with SMTP id kk23-20020a056214509700b004542af238feso1280752qvb.19
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 07:09:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=LD70G1DdFlUCxtY0+RhQwVS23b0tg/L6YR0eORY2xmg=;
-        b=CtUdqweoNydVddiqxYv1qqa2jazr1zqfa5OW/lAKzCd2CdcXKug5vLFIvrMk+sWC6v
-         qmNkyhLkfyZlw1Yhr27o9xLMPTNQIWAMsn2RR5fEwtt+Nd2P+FcC5bOf/10nqCEa//37
-         wSRSoodWkPJ5utuT21Nr2hpdvm+4G91foQoy8k0n7JHqGqjSXgfAitfpNEasgmgSoFu1
-         p176uSb+z1+NfNhou58Czv3MaNJTs37yBAIJh83DgZqkUMFsGPPCjhg2cQUCWutf0poh
-         p9MNA3x5HjYdNzga4vE9aCVRA40Utgksh7k5ksbv9JD5HFTkN5RH5+y5J18/AD//oZN+
-         COwA==
-X-Gm-Message-State: AOAM533uPUiUyMcm8RwTB6zoETedx9Mig6xkGN36HsMNPpISBFKHbWhf
-        AyqQtTInAOEZlZhdI7aMurOY2yvc2btAXvncwTv+NEnwXUU/AcpRgQE+NxBCXrna4O3lC+wZpWi
-        OVnOZpww4KqC2CdZ2KpdD
-X-Received: by 2002:a05:622a:509:b0:2f3:8407:48e1 with SMTP id l9-20020a05622a050900b002f3840748e1mr1939288qtx.66.1651068543566;
-        Wed, 27 Apr 2022 07:09:03 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzoiTgTPwuMKvoYL7Jf0wtVKg14MA3pT8cVq9QG305vkW6rgo4yY0CVqn1buftNbgyoCbsYNA==
-X-Received: by 2002:a05:622a:509:b0:2f3:8407:48e1 with SMTP id l9-20020a05622a050900b002f3840748e1mr1939267qtx.66.1651068543333;
-        Wed, 27 Apr 2022 07:09:03 -0700 (PDT)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id t186-20020a372dc3000000b0069ec8a9254esm8215053qkh.73.2022.04.27.07.09.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Apr 2022 07:09:02 -0700 (PDT)
-Date:   Wed, 27 Apr 2022 10:09:00 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 0/2] xfs: remove quota warning limits
-Message-ID: <YmlOfJljvI49sZyW@bfoster>
-References: <20220421165815.87837-1-catherine.hoang@oracle.com>
- <43e8df67-5916-5f4a-ce85-8521729acbb2@sandeen.net>
- <20220425222140.GI1544202@dread.disaster.area>
- <20220426024331.GR17025@magnolia>
- <Ymf+k9EA2bY/af4Y@bfoster>
- <20220426145347.GV17025@magnolia>
- <Ymg6yvbrE//70InS@bfoster>
+        with ESMTP id S243518AbiD0QtA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 12:49:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 955AA2359EC
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 09:45:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 348F061DD1
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 16:45:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B5C6C385AC;
+        Wed, 27 Apr 2022 16:45:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651077947;
+        bh=S9l0Dr+A3uQbfd1BavNyfJr5EeogGE+IAPRLwvyNRFo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=kw2RBex75syXr8CP7n+TJN9nOEyAOTyYHq3sJR2KUx0D6TKN6lDWJYnplPKyIq844
+         HgtLKtUJBjkefGHAFb2BWVm5DI3Ff4a+1I6qqcRv79HlcrAoIUi03C41/McxJNDFg0
+         7GvBRE/rvs+uXcVOaF67ZBUK/Qdx1lDLHNbHV1J3F5yjNqKh76bL7q6DZmytvnWGOl
+         M4Z2mi3869uauTxTc+TtNgBEbEtcuyELnXjIC2AJ2uz0OXQtpSQ3TK/pilasdALSx0
+         II/rE5TpyPPXINcDDMVjT6VwqdkTHJkzMh7f1WF4ECQ38gqKD/nKYHGTXiBpGtvczC
+         L0xJPn9tTUSNA==
+Date:   Wed, 27 Apr 2022 09:45:46 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/8] xfs: hide log iovec alignment constraints
+Message-ID: <20220427164546.GI17025@magnolia>
+References: <20220427022259.695399-1-david@fromorbit.com>
+ <20220427022259.695399-2-david@fromorbit.com>
+ <20220427031445.GD17025@magnolia>
+ <20220427045034.GL1098723@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Ymg6yvbrE//70InS@bfoster>
+In-Reply-To: <20220427045034.GL1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 26, 2022 at 02:32:42PM -0400, Brian Foster wrote:
-> On Tue, Apr 26, 2022 at 07:53:47AM -0700, Darrick J. Wong wrote:
-> > On Tue, Apr 26, 2022 at 10:15:47AM -0400, Brian Foster wrote:
-> > > On Mon, Apr 25, 2022 at 07:43:31PM -0700, Darrick J. Wong wrote:
-> > > ...
-> > > > 
-> > > > The biggest problem right now is that the pagecache is broken in 5.18
-> > > > and apparently I'm the only person who can trigger this.  It's the same
-> > > > problem willy and I have been working on since -rc1 (where the
-> > > > filemap/iomap debug asserts trip on generic/068 and generic/475) that's
-> > > > documented on the fsdevel list.  Unfortunately, I don't have much time
-> > > > to work on this, because as team lead:
-> > > > 
+On Wed, Apr 27, 2022 at 02:50:34PM +1000, Dave Chinner wrote:
+> On Tue, Apr 26, 2022 at 08:14:45PM -0700, Darrick J. Wong wrote:
+> > On Wed, Apr 27, 2022 at 12:22:52PM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
 > > > 
-> > > I seem to be able to reproduce this fairly reliably with generic/068.
-> > > I've started a bisect if it's of any use...
-> > 
-> > Thank you!  Matthew has hinted that he suspects this is a case of the
-> > page cache returning the wrong folio in certain cases, but neither of us
-> > have been able to narrow it down to a specific commit, or even a range.
-> > 
-> 
-> So my first stab at a bisect...
-> 
-> git bisect start 'fs' 'mm' 'include/'
-> ...
-> # good: [65722ff6181aa52c3d5b0929004af22a3a63e148] drm/amdkfd: CRIU export dmabuf handles for GTT BOs
-> git bisect good 65722ff6181aa52c3d5b0929004af22a3a63e148
-> # good: [89695196f0ba78a17453f9616355f2ca6b293402] Merge git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net
-> git bisect good 89695196f0ba78a17453f9616355f2ca6b293402
-> # bad: [52deda9551a01879b3562e7b41748e85c591f14c] Merge branch 'akpm' (patches from Andrew)
-> git bisect bad 52deda9551a01879b3562e7b41748e85c591f14c
-> # bad: [169e77764adc041b1dacba84ea90516a895d43b2] Merge tag 'net-next-5.18' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next
-> git bisect bad 169e77764adc041b1dacba84ea90516a895d43b2
-> # first bad commit: [169e77764adc041b1dacba84ea90516a895d43b2] Merge tag 'net-next-5.18' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next
-> 
-> ... landed on a netdev merge commit. :/ That doesn't seem terribly
-> informative. I suspect either I was too aggressive with the testing or
-> source dir tree filtering. I've manually confirmed that the last couple
-> of marked merge commits are good and bad respectively, so I'll probably
-> try a new bisect of that range without any filtering and a bit more
-> deliberate testing (which will take a bit longer) and see if that yields
-> anything more useful.
-> 
-
-Bisect round two lands on commit 56a4d67c264e ("mm/readahead: Switch to
-page_cache_ra_order"). I'm not sure how much of a smoking gun that is
-given it looks like it switches mmapped readahead over to a different
-code path, but I reproduced nearly instantly as of that commit and I'm
-now spinning the test against a HEAD of the immediately previous commit
-(1854bc6e2420 ("mm/readahead: Align file mappings for non-DAX")) with
-probably 130+ successful iterations so far. I'll let it spin a while
-longer just to be sure.
-
-Brian
-
-> Brian
-> 
-> > --D
-> > 
-> > > Brian
+> > > Callers currently have to round out the size of buffers to match the
+> > > aligment constraints of log iovecs and xlog_write(). They should not
+> > > need to know this detail, so introduce a new function to calculate
+> > > the iovec length (for use in ->iop_size implementations). Also
+> > > modify xlog_finish_iovec() to round up the length to the correct
+> > > alignment so the callers don't need to do this, either.
 > > > 
+> > > Convert the only user - inode forks - of this alignment rounding to
+> > > use the new interface.
 > > 
+> > Hmm.  So currently, we require that the inode fork buffer be rounded up
+> > to the next 4 bytes, and then I guess the log will copy that into the
+> > log iovec?  IOWs, if we have a 37-byte data fork, we'll allocate a 40
+> > byte buffer for the xfs_ifork, and the log will copy all 40 bytes into a
+> > 40 byte iovec.
+> 
+> Yes, that's how the current code works. It ends up leaking whatever
+> was in those 3 bytes into the shadow buffer that we then copy into
+> the log region. i.e. the existing code "leaks" non-zeroed allocated
+> memory to the journal.
+> 
+> > Now it looks like we'd allocate a 37-byte buffer for the xfs_ifork, but
+> > the log iovec will still be 40 bytes.  So ... do we copy 37 bytes out of
+> > the ifork buffer and zero the last 3 bytes in the iovec?
+> 
+> Yes, we copy 37 bytes out of the ifork buffer now into the shadow
+> buffer so we do not overrun the inode fork buffer.
+> 
+> > Does we leak
+> > kernel memory in those last 3 bytes?
+> 
+> We does indeed still leak the remaining 3 bytes as they are not
+> zeroed.
+> 
+> > Or do we copy 40 bytes and
+> > overrun?
+> 
+> No, we definitely don't do that - KASAN gets very unhappy when you
+> do that...
+> 
+> > It sorta looks like (at least for the local format case) xlog_copy_iovec
+> > will copy 37 bytes and leave the last 3 bytes of the iovec in whatever
+> > state it was in previously.  Is that zeroed?  Because it then looks like
+> > xlog_finish_iovec will round that 37 up to 40.
+> 
+> The shadow buffer is only partially zeroed - the part that makes io
+> the header and iovec pointer array is zeroed, but the region that
+> the journal data is written to is not zeroed.
+> 
+> > (FWIW I'm just checking for kernel memory exposure vectors here.)
+> 
+> Yup, I hadn't even considered that aspect of the code because we
+> aren't actually leaking anything to userspace. If an unprivileged
+> user can read 3 bytes of uninitialised data out of the journal we've
+> got much, much bigger security problems to deal with.
+> 
+> It should be trivial to fix, though. I'll do the initial fix as a
+> standalone patch, though, and then roll it into this one because the
+> problem has been around for a long while and fixing this patch
+> doesn't produce an easily backportable fix...
 
+<nod> I agree that it's a very minor disclosure vulnerability (certainly
+less severe than ALLOCSP) since you'd need CAP_SYS_RAWIO to exploit it.
+But certainly worth patching before someone discovers that a former
+pagecache page with your credit card numbers on it got recycled into a
+log vector page.  Thanks for doing the fix. :)
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
