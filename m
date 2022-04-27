@@ -2,189 +2,157 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5243C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 03:18:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A778C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 03:19:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233349AbiD0DWF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Apr 2022 23:22:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48064 "EHLO
+        id S236413AbiD0DW0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 23:22:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbiD0DWE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 23:22:04 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AAFC26575
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 20:18:54 -0700 (PDT)
+        with ESMTP id S229459AbiD0DW0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 23:22:26 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7BA226133
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 20:19:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1A0FAB822A9
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 03:18:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A802CC385A4;
-        Wed, 27 Apr 2022 03:18:51 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6D1A061C64
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 03:19:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6CB2C385A4;
+        Wed, 27 Apr 2022 03:19:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651029531;
-        bh=o7bKFzF+uI+Y50+3Rmt6WzbuVecOxhSqbJftg4t1Z60=;
+        s=k20201202; t=1651029555;
+        bh=4RRel/p2+/UJw0mDa/9b1NmDY3khlCVAayiaknUt59E=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bnOANiFvDNvS1seLIcytxuGMi3sCDUN8KeQVmBMETeoaAwOHzA00s95ZXoNV56ubS
-         HthFKNFIrutFYZXMHMw+DmgPzfdfBGPMHSwJw4AwEM/t83jwFxDeFsWZlTldgE2g6d
-         iU7itIypuow1/eHZexUxOMZf/eomrGKTVWELYeZtxHZK0zsn7LjgVTiPZvHbMFAyBD
-         l1aP82Cx7FQFsa70KXx78FzwoOTAIEZ8u3Y3cFRF53Vvi2uS9+PuvGd9ztW8CceCpV
-         uyKIWf0llzJnZNVwR/KZkhh+JCG2JvfMrA52XFxaZ7kUJ76gAlXr/9AYEiGnzS8oXG
-         Ol2OMEqRSpGxg==
-Date:   Tue, 26 Apr 2022 20:18:51 -0700
+        b=SZ+IYeCaeG89bbNXV1auJ7rWNxHygZmuH0sE0ZDPJ0R/XxI6KO69jmtdLrSF0EQNC
+         PNL9SqdiEE2DjzR2hbMNa+u7RmTWGZZ62ph2/Fly7GhC7WWlRmkFJ3nMsaSVsZ7jKE
+         Dixa8WetrbPu/DOzqV3dLw+XZXb3otHTLPN7JK2n5ITFRYTUaQLg7MePnGMYfgjdKD
+         JqbV/7Q5LFHENGxu9BY0+Dvz/7sdBGTZhlwn0PvjZV2eEGFMXoTtzP7QoivChP7PzA
+         mWjOEk9dbnsoERKhWnegN/r47y49lJFGxClKMi0sBZeyDRBmbnv1Fd0oUCrkMabFl4
+         Gj0Hseu1TYUZQ==
+Date:   Tue, 26 Apr 2022 20:19:15 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/8] xfs: add log item method to return related intents
-Message-ID: <20220427031851.GF17025@magnolia>
+Subject: Re: [PATCH 7/8] xfs: whiteouts release intents that are not in the
+ AIL
+Message-ID: <20220427031915.GG17025@magnolia>
 References: <20220427022259.695399-1-david@fromorbit.com>
- <20220427022259.695399-7-david@fromorbit.com>
+ <20220427022259.695399-8-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220427022259.695399-7-david@fromorbit.com>
+In-Reply-To: <20220427022259.695399-8-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 27, 2022 at 12:22:57PM +1000, Dave Chinner wrote:
+On Wed, Apr 27, 2022 at 12:22:58PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> To apply a whiteout to an intent item when an intent done item is
-> committed, we need to be able to retrieve the intent item from the
-> the intent done item. Add a log item op method for doing this, and
-> wire all the intent done items up to it.
+> When we release an intent that a whiteout applies to, it will not
+> have been committed to the journal and so won't be in the AIL. Hence
+> when we drop the last reference to the intent, we do not want to try
+> to remove it from the AIL as that will trigger a filesystem
+> shutdown. Hence make the removal of intents from the AIL conditional
+> on them actually being in the AIL so we do the correct thing.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-We'll see what I think about the last patch, but the code changes here
-look acceptable.
-
+Same provisional RVB as the last patch.
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_bmap_item.c     | 8 ++++++++
->  fs/xfs/xfs_extfree_item.c  | 8 ++++++++
->  fs/xfs/xfs_refcount_item.c | 8 ++++++++
->  fs/xfs/xfs_rmap_item.c     | 8 ++++++++
->  fs/xfs/xfs_trans.h         | 1 +
->  5 files changed, 33 insertions(+)
+>  fs/xfs/xfs_bmap_item.c     | 8 +++++---
+>  fs/xfs/xfs_extfree_item.c  | 8 +++++---
+>  fs/xfs/xfs_refcount_item.c | 8 +++++---
+>  fs/xfs/xfs_rmap_item.c     | 8 +++++---
+>  4 files changed, 20 insertions(+), 12 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index 3b968b31911b..e1b0e321d604 100644
+> index e1b0e321d604..59aa5f9bf769 100644
 > --- a/fs/xfs/xfs_bmap_item.c
 > +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -201,12 +201,20 @@ xfs_bud_item_release(
->  	kmem_cache_free(xfs_bud_cache, budp);
+> @@ -54,10 +54,12 @@ xfs_bui_release(
+>  	struct xfs_bui_log_item	*buip)
+>  {
+>  	ASSERT(atomic_read(&buip->bui_refcount) > 0);
+> -	if (atomic_dec_and_test(&buip->bui_refcount)) {
+> +	if (!atomic_dec_and_test(&buip->bui_refcount))
+> +		return;
+> +
+> +	if (test_bit(XFS_LI_IN_AIL, &buip->bui_item.li_flags))
+>  		xfs_trans_ail_delete(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
+> -		xfs_bui_item_free(buip);
+> -	}
+> +	xfs_bui_item_free(buip);
 >  }
 >  
-> +static struct xfs_log_item *
-> +xfs_bud_item_intent(
-> +	struct xfs_log_item	*lip)
-> +{
-> +	return &BUD_ITEM(lip)->bud_buip->bui_item;
-> +}
-> +
->  static const struct xfs_item_ops xfs_bud_item_ops = {
->  	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
->  			  XFS_ITEM_INTENT_DONE,
->  	.iop_size	= xfs_bud_item_size,
->  	.iop_format	= xfs_bud_item_format,
->  	.iop_release	= xfs_bud_item_release,
-> +	.iop_intent	= xfs_bud_item_intent,
->  };
 >  
->  static struct xfs_bud_log_item *
 > diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 96735f23d12d..032db5269e97 100644
+> index 032db5269e97..893a7dd15cbb 100644
 > --- a/fs/xfs/xfs_extfree_item.c
 > +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -306,12 +306,20 @@ xfs_efd_item_release(
->  	xfs_efd_item_free(efdp);
->  }
->  
-> +static struct xfs_log_item *
-> +xfs_efd_item_intent(
-> +	struct xfs_log_item	*lip)
-> +{
-> +	return &EFD_ITEM(lip)->efd_efip->efi_item;
-> +}
+> @@ -58,10 +58,12 @@ xfs_efi_release(
+>  	struct xfs_efi_log_item	*efip)
+>  {
+>  	ASSERT(atomic_read(&efip->efi_refcount) > 0);
+> -	if (atomic_dec_and_test(&efip->efi_refcount)) {
+> +	if (!atomic_dec_and_test(&efip->efi_refcount))
+> +		return;
 > +
->  static const struct xfs_item_ops xfs_efd_item_ops = {
->  	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
->  			  XFS_ITEM_INTENT_DONE,
->  	.iop_size	= xfs_efd_item_size,
->  	.iop_format	= xfs_efd_item_format,
->  	.iop_release	= xfs_efd_item_release,
-> +	.iop_intent	= xfs_efd_item_intent,
->  };
+> +	if (test_bit(XFS_LI_IN_AIL, &efip->efi_item.li_flags))
+>  		xfs_trans_ail_delete(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
+> -		xfs_efi_item_free(efip);
+> -	}
+> +	xfs_efi_item_free(efip);
+>  }
 >  
 >  /*
 > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> index b523ce2c775b..a2213b5ee344 100644
+> index a2213b5ee344..1b82b818f515 100644
 > --- a/fs/xfs/xfs_refcount_item.c
 > +++ b/fs/xfs/xfs_refcount_item.c
-> @@ -207,12 +207,20 @@ xfs_cud_item_release(
->  	kmem_cache_free(xfs_cud_cache, cudp);
+> @@ -53,10 +53,12 @@ xfs_cui_release(
+>  	struct xfs_cui_log_item	*cuip)
+>  {
+>  	ASSERT(atomic_read(&cuip->cui_refcount) > 0);
+> -	if (atomic_dec_and_test(&cuip->cui_refcount)) {
+> +	if (!atomic_dec_and_test(&cuip->cui_refcount))
+> +		return;
+> +
+> +	if (test_bit(XFS_LI_IN_AIL, &cuip->cui_item.li_flags))
+>  		xfs_trans_ail_delete(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
+> -		xfs_cui_item_free(cuip);
+> -	}
+> +	xfs_cui_item_free(cuip);
 >  }
 >  
-> +static struct xfs_log_item *
-> +xfs_cud_item_intent(
-> +	struct xfs_log_item	*lip)
-> +{
-> +	return &CUD_ITEM(lip)->cud_cuip->cui_item;
-> +}
-> +
->  static const struct xfs_item_ops xfs_cud_item_ops = {
->  	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
->  			  XFS_ITEM_INTENT_DONE,
->  	.iop_size	= xfs_cud_item_size,
->  	.iop_format	= xfs_cud_item_format,
->  	.iop_release	= xfs_cud_item_release,
-> +	.iop_intent	= xfs_cud_item_intent,
->  };
 >  
->  static struct xfs_cud_log_item *
 > diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> index b269e68407b9..053eb135380c 100644
+> index 053eb135380c..99dfb3ae7e9c 100644
 > --- a/fs/xfs/xfs_rmap_item.c
 > +++ b/fs/xfs/xfs_rmap_item.c
-> @@ -230,12 +230,20 @@ xfs_rud_item_release(
->  	kmem_cache_free(xfs_rud_cache, rudp);
+> @@ -53,10 +53,12 @@ xfs_rui_release(
+>  	struct xfs_rui_log_item	*ruip)
+>  {
+>  	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
+> -	if (atomic_dec_and_test(&ruip->rui_refcount)) {
+> +	if (!atomic_dec_and_test(&ruip->rui_refcount))
+> +		return;
+> +
+> +	if (test_bit(XFS_LI_IN_AIL, &ruip->rui_item.li_flags))
+>  		xfs_trans_ail_delete(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
+> -		xfs_rui_item_free(ruip);
+> -	}
+> +	xfs_rui_item_free(ruip);
 >  }
 >  
-> +static struct xfs_log_item *
-> +xfs_rud_item_intent(
-> +	struct xfs_log_item	*lip)
-> +{
-> +	return &RUD_ITEM(lip)->rud_ruip->rui_item;
-> +}
-> +
->  static const struct xfs_item_ops xfs_rud_item_ops = {
->  	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
->  			  XFS_ITEM_INTENT_DONE,
->  	.iop_size	= xfs_rud_item_size,
->  	.iop_format	= xfs_rud_item_format,
->  	.iop_release	= xfs_rud_item_release,
-> +	.iop_intent	= xfs_rud_item_intent,
->  };
->  
->  static struct xfs_rud_log_item *
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index f68e74e46026..d72a5995d33e 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -78,6 +78,7 @@ struct xfs_item_ops {
->  	bool (*iop_match)(struct xfs_log_item *item, uint64_t id);
->  	struct xfs_log_item *(*iop_relog)(struct xfs_log_item *intent,
->  			struct xfs_trans *tp);
-> +	struct xfs_log_item *(*iop_intent)(struct xfs_log_item *intent_done);
->  };
->  
->  /*
+>  STATIC void
 > -- 
 > 2.35.1
 > 
