@@ -2,530 +2,388 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CAACC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 00:42:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BA5CC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 00:45:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244560AbiD0Apz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Apr 2022 20:45:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44538 "EHLO
+        id S231542AbiD0As0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 20:48:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356425AbiD0Apy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 20:45:54 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 043E63A1BC
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 17:42:42 -0700 (PDT)
+        with ESMTP id S1356471AbiD0AsT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 20:48:19 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F142C3584A
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 17:45:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5CB2D61AA8
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 00:42:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C135C385A0;
-        Wed, 27 Apr 2022 00:42:41 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B44AEB82375
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 00:45:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49675C385A0;
+        Wed, 27 Apr 2022 00:45:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651020161;
-        bh=lKi4z6ZB1m4le75Jx1PLgRxJjD3KQguXS7rFluUEIOU=;
+        s=k20201202; t=1651020304;
+        bh=lsnUrXNR4PgcgxSs9/nlj9hRd8vSQIpnoOAPcgpgZEo=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=d/hH1AzzX9s+R/928JZJxO6nCa4RgWyNTkqVzMQ+WTTsZsEg/97zposNmeGkR3HBf
-         kEHWluAKk8iNp7nCyoA/H2CLUpgk2QZ9s8+x5lI4aSijtMRfvmLOHy9uoNHUSAItsj
-         MRA2hsSl460tqfYu0KoVnF9NBVvkdyPQB4ELR+WB1wRzJOwQ4hZ8NRlkGOJ3bYQQS6
-         7cdz1kXM2/w0HwvhcflvK7Zo9P83bjb4exAKQ/quxq+uK8qxk4Q/xEOdKxwp6vQYTG
-         Wdk0aRwqNZP55hLL7SfYq7cayK5rMQSz/ezMVauu6C4bWmCW/dHuWTHBWFmyQkMR12
-         WREAyQuPKPGOg==
-Date:   Tue, 26 Apr 2022 17:42:41 -0700
+        b=K7G+tMM8YIx3osojbtfkbKxmYFE/VBgP1i5azeSWVDOqcivJ/hrcaFMWHtL9CDiuQ
+         oy41y/Jr8HOcYD18BS8JOb6QljoRwbltJg2F8cFv37o8Mla0f6UuUJbxujeaMhOzzw
+         hZ08TKU+XLqMwc4l8wFvUPQH5wCG5c91+TaZnJA+rC8ZkLPwJBZhreeSkk4TezyQA0
+         8HhAIDH8pIfZ2dnH58FpcS6k3de6mO13mhIU1TQGt4ZWF4GeAJdkoJekJC+6xe5jSW
+         hDUc3Rx1PS1Fy49VxMmcyAUxSdALzuKj9TcHmY9M6Hho+LvIIxK7T+34t1fnrVrG7E
+         Z0B/YnFvrOK7Q==
+Date:   Tue, 26 Apr 2022 17:45:03 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfsprogs: autoconf modernisation
-Message-ID: <20220427004241.GY17025@magnolia>
+Subject: Re: [PATCH 1/4] metadump: handle corruption errors without aborting
+Message-ID: <20220427004503.GZ17025@magnolia>
 References: <20220426234453.682296-1-david@fromorbit.com>
- <20220426234453.682296-5-david@fromorbit.com>
+ <20220426234453.682296-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220426234453.682296-5-david@fromorbit.com>
+In-Reply-To: <20220426234453.682296-2-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 27, 2022 at 09:44:53AM +1000, Dave Chinner wrote:
+On Wed, Apr 27, 2022 at 09:44:50AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Because apparently AC_TRY_COMPILE and AC_TRY_LINK has been
-> deprecated and made obsolete.
+> Sean Caron reported that a metadump terminated after givin gthis
+> warning:
 > 
-> .....
-> configure.ac:164: warning: The macro `AC_TRY_COMPILE' is obsolete.
-> configure.ac:164: You should run autoupdate.
-> ./lib/autoconf/general.m4:2847: AC_TRY_COMPILE is expanded from...
-> m4/package_libcdev.m4:68: AC_HAVE_GETMNTENT is expanded from...
-> configure.ac:164: the top level
-> configure.ac:165: warning: The macro `AC_TRY_LINK' is obsolete.
-> configure.ac:165: You should run autoupdate.
-> ./lib/autoconf/general.m4:2920: AC_TRY_LINK is expanded from...
-> m4/package_libcdev.m4:84: AC_HAVE_FALLOCATE is expanded from...
-> configure.ac:165: the top level
-> .....
+> xfs_metadump: inode 2216156864 has unexpected extents
 > 
-> But "autoupdate" does nothing to fix this, so I have to manually do
-> these conversions:
+> Metadump is supposed to ignore corruptions and continue dumping the
+> filesystem as best it can. Whilst it warns about many situations
+> where it can't fully dump structures, it should stop processing that
+> structure and continue with the next one until the entire filesystem
+> has been processed.
 > 
-> 	- AC_TRY_COMPILE -> AC_COMPILE_IFELSE
-> 	- AC_TRY_LINK -> AC_LINK_IFELSE
+> Unfortunately, some warning conditions also return an "abort" error
+> status, causing metadump to abort if that condition is hit. Most of
+> these abort conditions should really be "continue on next object"
+> conditions so that the we attempt to dump the rest of the
+> filesystem.
 > 
-> because I have nothing better to do than fix currently working
-> code.
-> 
-> Also, running autoupdate forces the minimum pre-req to be autoconf
-> 2.71 because it replaces other stuff...
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Fix the returns for warnings that incorrectly cause aborts
+> such that the only abort conditions are read errors when
+> "stop-on-read-error" semantics are specified. Also make the return
+> values consistently mean abort/continue rather than returning -errno
+> to mean "stop because read error" and then trying to infer what
+> the error means in callers without the context it occurred in.
 
-I hate autoconf, and this seems like stupid pedantry on their part...
+I was almost about to say "This variable should be named success", but
+then noticed that there already /are/ variables named success.  Yuck.
 
+rval==0 means abort?  and rval!=0 means continue?  If so,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+> Reported-and-tested-by: Sean Caron <scaron@umich.edu>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  configure.ac          |   8 +--
->  m4/package_attr.m4    |   8 ++-
->  m4/package_libcdev.m4 | 158 ++++++++++++++++++++++++++----------------
->  m4/package_types.m4   |   8 ++-
->  m4/package_urcu.m4    |  18 +++--
->  5 files changed, 123 insertions(+), 77 deletions(-)
+>  db/metadump.c | 94 +++++++++++++++++++++++++--------------------------
+>  1 file changed, 47 insertions(+), 47 deletions(-)
 > 
-> diff --git a/configure.ac b/configure.ac
-> index 4278145fe74b..36e42394a9df 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -1,13 +1,13 @@
-> -AC_INIT([xfsprogs], [5.15.0], [linux-xfs@vger.kernel.org])
-> -AC_PREREQ(2.50)
-> +AC_INIT([xfsprogs],[5.15.0],[linux-xfs@vger.kernel.org])
-> +AC_PREREQ([2.71])
->  AC_CONFIG_AUX_DIR([.])
->  AC_CONFIG_MACRO_DIR([m4])
->  AC_CONFIG_SRCDIR([include/libxfs.h])
-> -AC_CONFIG_HEADER(include/platform_defs.h)
-> +AC_CONFIG_HEADERS([include/platform_defs.h])
->  AC_PREFIX_DEFAULT(/usr)
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 48cda88a3ea5..a21baa2070d9 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -1645,7 +1645,7 @@ process_symlink_block(
+>  {
+>  	struct bbmap	map;
+>  	char		*link;
+> -	int		ret = 0;
+> +	int		rval = 1;
 >  
->  AC_PROG_INSTALL
-> -AC_PROG_LIBTOOL
-> +LT_INIT
+>  	push_cur();
+>  	map.nmaps = 1;
+> @@ -1658,8 +1658,7 @@ process_symlink_block(
 >  
->  AC_PROG_CC
->  AC_ARG_VAR(BUILD_CC, [C compiler for build tools])
-> diff --git a/m4/package_attr.m4 b/m4/package_attr.m4
-> index 432492311d18..05e02b38fb5a 100644
-> --- a/m4/package_attr.m4
-> +++ b/m4/package_attr.m4
-> @@ -8,15 +8,17 @@ AC_DEFUN([AC_PACKAGE_WANT_ATTRIBUTES_H],
->  #
->  AC_DEFUN([AC_HAVE_LIBATTR],
->    [ AC_MSG_CHECKING([for struct attrlist_cursor])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #include <sys/types.h>
->  #include <attr/attributes.h>
-> -       ], [
-> +	]], [[
->  struct attrlist_cursor *cur;
->  struct attrlist *list;
->  struct attrlist_ent *ent;
->  int flags = ATTR_ROOT;
-> -       ], have_libattr=yes
-> +	]])
-> +    ], have_libattr=yes
->            AC_MSG_RESULT(yes),
->            AC_MSG_RESULT(no))
->      AC_SUBST(have_libattr)
-> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> index adab9bb9773a..94d76c7b3a19 100644
-> --- a/m4/package_libcdev.m4
-> +++ b/m4/package_libcdev.m4
-> @@ -3,11 +3,13 @@
->  #
->  AC_DEFUN([AC_HAVE_FADVISE],
->    [ AC_MSG_CHECKING([for fadvise ])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <fcntl.h>
-> -    ], [
-> -	posix_fadvise(0, 1, 0, POSIX_FADV_NORMAL);
-> +	]], [[
-> +posix_fadvise(0, 1, 0, POSIX_FADV_NORMAL);
-> +	]])
->      ],	have_fadvise=yes
->  	AC_MSG_RESULT(yes),
->  	AC_MSG_RESULT(no))
-> @@ -19,11 +21,13 @@ AC_DEFUN([AC_HAVE_FADVISE],
->  #
->  AC_DEFUN([AC_HAVE_MADVISE],
->    [ AC_MSG_CHECKING([for madvise ])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <sys/mman.h>
-> -    ], [
-> -	posix_madvise(0, 0, MADV_NORMAL);
-> +	]], [[
-> +posix_madvise(0, 0, MADV_NORMAL);
-> +	]])
->      ],	have_madvise=yes
->  	AC_MSG_RESULT(yes),
->  	AC_MSG_RESULT(no))
-> @@ -35,11 +39,13 @@ AC_DEFUN([AC_HAVE_MADVISE],
->  #
->  AC_DEFUN([AC_HAVE_MINCORE],
->    [ AC_MSG_CHECKING([for mincore ])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <sys/mman.h>
-> -    ], [
-> -	mincore(0, 0, 0);
-> +	]], [[
-> +mincore(0, 0, 0);
-> +	]])
->      ],	have_mincore=yes
->  	AC_MSG_RESULT(yes),
->  	AC_MSG_RESULT(no))
-> @@ -51,11 +57,13 @@ AC_DEFUN([AC_HAVE_MINCORE],
->  #
->  AC_DEFUN([AC_HAVE_SENDFILE],
->    [ AC_MSG_CHECKING([for sendfile ])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <sys/sendfile.h>
-> -    ], [
-> -         sendfile(0, 0, 0, 0);
-> +	]], [[
-> +sendfile(0, 0, 0, 0);
-> +	]])
->      ],	have_sendfile=yes
->  	AC_MSG_RESULT(yes),
->  	AC_MSG_RESULT(no))
-> @@ -67,11 +75,13 @@ AC_DEFUN([AC_HAVE_SENDFILE],
->  #
->  AC_DEFUN([AC_HAVE_GETMNTENT],
->    [ AC_MSG_CHECKING([for getmntent ])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #include <stdio.h>
->  #include <mntent.h>
-> -    ], [
-> -         getmntent(0);
-> +	]], [[
-> +getmntent(0);
-> +	]])
->      ], have_getmntent=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -83,12 +93,14 @@ AC_DEFUN([AC_HAVE_GETMNTENT],
->  #
->  AC_DEFUN([AC_HAVE_FALLOCATE],
->    [ AC_MSG_CHECKING([for fallocate])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <fcntl.h>
->  #include <linux/falloc.h>
-> -    ], [
-> -         fallocate(0, 0, 0, 0);
-> +	]], [[
-> +fallocate(0, 0, 0, 0);
-> +	]])
->      ], have_fallocate=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -100,13 +112,15 @@ AC_DEFUN([AC_HAVE_FALLOCATE],
->  #
->  AC_DEFUN([AC_HAVE_FIEMAP],
->    [ AC_MSG_CHECKING([for fiemap])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <linux/fs.h>
->  #include <linux/fiemap.h>
-> -    ], [
-> -         struct fiemap *fiemap;
-> -         ioctl(0, FS_IOC_FIEMAP, (unsigned long)fiemap);
-> +	]], [[
-> +struct fiemap *fiemap;
-> +ioctl(0, FS_IOC_FIEMAP, (unsigned long)fiemap);
-> +	]])
->      ], have_fiemap=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -118,12 +132,14 @@ AC_DEFUN([AC_HAVE_FIEMAP],
->  #
->  AC_DEFUN([AC_HAVE_PREADV],
->    [ AC_MSG_CHECKING([for preadv])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _BSD_SOURCE
->  #define _DEFAULT_SOURCE
->  #include <sys/uio.h>
-> -    ], [
-> -         preadv(0, 0, 0, 0);
-> +	]], [[
-> +preadv(0, 0, 0, 0);
-> +	]])
->      ], have_preadv=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -135,11 +151,13 @@ AC_DEFUN([AC_HAVE_PREADV],
->  #
->  AC_DEFUN([AC_HAVE_PWRITEV2],
->    [ AC_MSG_CHECKING([for pwritev2])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _BSD_SOURCE
->  #include <sys/uio.h>
-> -    ], [
-> -         pwritev2(0, 0, 0, 0, 0);
-> +	]], [[
-> +pwritev2(0, 0, 0, 0, 0);
-> +	]])
->      ], have_pwritev2=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -151,12 +169,14 @@ AC_DEFUN([AC_HAVE_PWRITEV2],
->  #
->  AC_DEFUN([AC_HAVE_COPY_FILE_RANGE],
->    [ AC_MSG_CHECKING([for copy_file_range])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <sys/syscall.h>
->  #include <unistd.h>
-> -    ], [
-> -         syscall(__NR_copy_file_range, 0, 0, 0, 0, 0, 0);
-> +	]], [[
-> +syscall(__NR_copy_file_range, 0, 0, 0, 0, 0, 0);
-> +	]])
->      ], have_copy_file_range=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -168,11 +188,13 @@ AC_DEFUN([AC_HAVE_COPY_FILE_RANGE],
->  #
->  AC_DEFUN([AC_HAVE_SYNC_FILE_RANGE],
->    [ AC_MSG_CHECKING([for sync_file_range])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <fcntl.h>
-> -    ], [
-> -         sync_file_range(0, 0, 0, 0);
-> +	]], [[
-> +sync_file_range(0, 0, 0, 0);
-> +	]])
->      ], have_sync_file_range=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -184,11 +206,13 @@ AC_DEFUN([AC_HAVE_SYNC_FILE_RANGE],
->  #
->  AC_DEFUN([AC_HAVE_SYNCFS],
->    [ AC_MSG_CHECKING([for syncfs])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <unistd.h>
-> -    ], [
-> -         syncfs(0);
-> +	]], [[
-> +syncfs(0);
-> +	]])
->      ], have_syncfs=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -200,10 +224,12 @@ AC_DEFUN([AC_HAVE_SYNCFS],
->  #
->  AC_DEFUN([AC_HAVE_READDIR],
->    [ AC_MSG_CHECKING([for readdir])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #include <dirent.h>
-> -    ], [
-> -         readdir(0);
-> +	]], [[
-> +readdir(0);
-> +	]])
->      ], have_readdir=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -304,15 +330,17 @@ AC_DEFUN([AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG],
->  #
->  AC_DEFUN([AC_HAVE_GETFSMAP],
->    [ AC_MSG_CHECKING([for GETFSMAP])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <sys/syscall.h>
->  #include <unistd.h>
->  #include <linux/fs.h>
->  #include <linux/fsmap.h>
-> -    ], [
-> -         unsigned long x = FS_IOC_GETFSMAP;
-> -         struct fsmap_head fh;
-> +	]], [[
-> +unsigned long x = FS_IOC_GETFSMAP;
-> +struct fsmap_head fh;
-> +	]])
->      ], have_getfsmap=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -338,11 +366,13 @@ AC_DEFUN([AC_HAVE_STATFS_FLAGS],
->  #
->  AC_DEFUN([AC_HAVE_MAP_SYNC],
->    [ AC_MSG_CHECKING([for MAP_SYNC])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #include <asm-generic/mman.h>
->  #include <asm-generic/mman-common.h>
-> -    ], [
-> -        int flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-> +	]], [[
-> +int flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-> +	]])
->      ], have_map_sync=yes
->  	AC_MSG_RESULT(yes),
->  	AC_MSG_RESULT(no))
-> @@ -354,13 +384,15 @@ AC_DEFUN([AC_HAVE_MAP_SYNC],
->  #
->  AC_DEFUN([AC_HAVE_MALLINFO],
->    [ AC_MSG_CHECKING([for mallinfo ])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #include <malloc.h>
-> -    ], [
-> -         struct mallinfo test;
-> +	]], [[
-> +struct mallinfo test;
+>  		print_warning("cannot read %s block %u/%u (%llu)",
+>  				typtab[btype].name, agno, agbno, s);
+> -		if (stop_on_read_error)
+> -			ret = -1;
+> +		rval = !stop_on_read_error;
+>  		goto out_pop;
+>  	}
+>  	link = iocur_top->data;
+> @@ -1682,10 +1681,11 @@ process_symlink_block(
+>  	}
 >  
-> -         test.arena = 0; test.hblkhd = 0; test.uordblks = 0; test.fordblks = 0;
-> -         test = mallinfo();
-> +test.arena = 0; test.hblkhd = 0; test.uordblks = 0; test.fordblks = 0;
-> +test = mallinfo();
-> +	]])
->      ], have_mallinfo=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -400,10 +432,13 @@ AC_DEFUN([AC_HAVE_FSTATAT],
->  #
->  AC_DEFUN([AC_HAVE_SG_IO],
->    [ AC_MSG_CHECKING([for struct sg_io_hdr ])
-> -    AC_TRY_COMPILE([#include <scsi/sg.h>],
-> -    [
-> -         struct sg_io_hdr hdr;
-> -         ioctl(0, SG_IO, &hdr);
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
-> +#include <scsi/sg.h>
-> +	]], [[
-> +struct sg_io_hdr hdr;
-> +ioctl(0, SG_IO, &hdr);
-> +	]])
->      ], have_sg_io=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -415,10 +450,13 @@ AC_DEFUN([AC_HAVE_SG_IO],
->  #
->  AC_DEFUN([AC_HAVE_HDIO_GETGEO],
->    [ AC_MSG_CHECKING([for struct hd_geometry ])
-> -    AC_TRY_COMPILE([#include <linux/hdreg.h>],
-> -    [
-> -         struct hd_geometry hdr;
-> -         ioctl(0, HDIO_GETGEO, &hdr);
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
-> +#include <linux/hdreg.h>,
-> +	]], [[
-> +struct hd_geometry hdr;
-> +ioctl(0, HDIO_GETGEO, &hdr);
-> +	]])
->      ], have_hdio_getgeo=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> diff --git a/m4/package_types.m4 b/m4/package_types.m4
-> index 1c35839319d6..6e817a310f79 100644
-> --- a/m4/package_types.m4
-> +++ b/m4/package_types.m4
-> @@ -4,9 +4,11 @@
->  AH_TEMPLATE([HAVE_UMODE_T], [Whether you have umode_t])
->  AC_DEFUN([AC_TYPE_UMODE_T],
->    [ AC_MSG_CHECKING([for umode_t])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #include <asm/types.h>
-> -    ], [
-> -         umode_t umode;
-> +	]], [[
-> +umode_t umode;
-> +	]])
->      ], AC_DEFINE(HAVE_UMODE_T) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
->    ])
-> diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
-> index f8e798b66136..ef116e0cda76 100644
-> --- a/m4/package_urcu.m4
-> +++ b/m4/package_urcu.m4
-> @@ -10,11 +10,13 @@ AC_DEFUN([AC_PACKAGE_NEED_URCU_H],
+>  	iocur_top->need_crc = 1;
+> -	ret = write_buf(iocur_top);
+> +	if (write_buf(iocur_top))
+> +		rval = 0;
+>  out_pop:
+>  	pop_cur();
+> -	return ret;
+> +	return rval;
+>  }
 >  
->  AC_DEFUN([AC_PACKAGE_NEED_RCU_INIT],
->    [ AC_MSG_CHECKING([for liburcu])
-> -    AC_TRY_COMPILE([
-> +    AC_COMPILE_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <urcu.h>
-> -    ], [
-> -       rcu_init();
-> +	]], [[
-> +rcu_init();
-> +	]])
->      ], liburcu=-lurcu
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
-> @@ -28,12 +30,14 @@ AC_DEFUN([AC_PACKAGE_NEED_RCU_INIT],
->  #
->  AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
->    [ AC_MSG_CHECKING([for atomic64_t support in liburcu])
-> -    AC_TRY_LINK([
-> +    AC_LINK_IFELSE(
-> +    [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <urcu.h>
-> -    ], [
-> -       long long f = 3;
-> -       uatomic_inc(&f);
-> +	]], [[
-> +long long f = 3;
-> +uatomic_inc(&f);
-> +	]])
->      ], have_liburcu_atomic64=yes
->         AC_MSG_RESULT(yes),
->         AC_MSG_RESULT(no))
+>  #define MAX_REMOTE_VALS		4095
+> @@ -1843,8 +1843,8 @@ process_single_fsb_objects(
+>  	typnm_t		btype,
+>  	xfs_fileoff_t	last)
+>  {
+> +	int		rval = 1;
+>  	char		*dp;
+> -	int		ret = 0;
+>  	int		i;
+>  
+>  	for (i = 0; i < c; i++) {
+> @@ -1858,8 +1858,7 @@ process_single_fsb_objects(
+>  
+>  			print_warning("cannot read %s block %u/%u (%llu)",
+>  					typtab[btype].name, agno, agbno, s);
+> -			if (stop_on_read_error)
+> -				ret = -EIO;
+> +			rval = !stop_on_read_error;
+>  			goto out_pop;
+>  
+>  		}
+> @@ -1925,16 +1924,17 @@ process_single_fsb_objects(
+>  		}
+>  
+>  write:
+> -		ret = write_buf(iocur_top);
+> +		if (write_buf(iocur_top))
+> +			rval = 0;
+>  out_pop:
+>  		pop_cur();
+> -		if (ret)
+> +		if (!rval)
+>  			break;
+>  		o++;
+>  		s++;
+>  	}
+>  
+> -	return ret;
+> +	return rval;
+>  }
+>  
+>  /*
+> @@ -1952,7 +1952,7 @@ process_multi_fsb_dir(
+>  	xfs_fileoff_t	last)
+>  {
+>  	char		*dp;
+> -	int		ret = 0;
+> +	int		rval = 1;
+>  
+>  	while (c > 0) {
+>  		unsigned int	bm_len;
+> @@ -1978,8 +1978,7 @@ process_multi_fsb_dir(
+>  
+>  				print_warning("cannot read %s block %u/%u (%llu)",
+>  						typtab[btype].name, agno, agbno, s);
+> -				if (stop_on_read_error)
+> -					ret = -1;
+> +				rval = !stop_on_read_error;
+>  				goto out_pop;
+>  
+>  			}
+> @@ -1998,18 +1997,19 @@ process_multi_fsb_dir(
+>  			}
+>  			iocur_top->need_crc = 1;
+>  write:
+> -			ret = write_buf(iocur_top);
+> +			if (write_buf(iocur_top))
+> +				rval = 0;
+>  out_pop:
+>  			pop_cur();
+>  			mfsb_map.nmaps = 0;
+> -			if (ret)
+> +			if (!rval)
+>  				break;
+>  		}
+>  		c -= bm_len;
+>  		s += bm_len;
+>  	}
+>  
+> -	return ret;
+> +	return rval;
+>  }
+>  
+>  static bool
+> @@ -2039,15 +2039,15 @@ process_multi_fsb_objects(
+>  		return process_symlink_block(o, s, c, btype, last);
+>  	default:
+>  		print_warning("bad type for multi-fsb object %d", btype);
+> -		return -EINVAL;
+> +		return 1;
+>  	}
+>  }
+>  
+>  /* inode copy routines */
+>  static int
+>  process_bmbt_reclist(
+> -	xfs_bmbt_rec_t 		*rp,
+> -	int 			numrecs,
+> +	xfs_bmbt_rec_t		*rp,
+> +	int			numrecs,
+>  	typnm_t			btype)
+>  {
+>  	int			i;
+> @@ -2059,7 +2059,7 @@ process_bmbt_reclist(
+>  	xfs_agnumber_t		agno;
+>  	xfs_agblock_t		agbno;
+>  	bool			is_multi_fsb = is_multi_fsb_object(mp, btype);
+> -	int			error;
+> +	int			rval = 1;
+>  
+>  	if (btype == TYP_DATA)
+>  		return 1;
+> @@ -2123,16 +2123,16 @@ process_bmbt_reclist(
+>  
+>  		/* multi-extent blocks require special handling */
+>  		if (is_multi_fsb)
+> -			error = process_multi_fsb_objects(o, s, c, btype,
+> +			rval = process_multi_fsb_objects(o, s, c, btype,
+>  					last);
+>  		else
+> -			error = process_single_fsb_objects(o, s, c, btype,
+> +			rval = process_single_fsb_objects(o, s, c, btype,
+>  					last);
+> -		if (error)
+> -			return 0;
+> +		if (!rval)
+> +			break;
+>  	}
+>  
+> -	return 1;
+> +	return rval;
+>  }
+>  
+>  static int
+> @@ -2331,7 +2331,7 @@ process_inode_data(
+>  	return 1;
+>  }
+>  
+> -static int
+> +static void
+>  process_dev_inode(
+>  	xfs_dinode_t		*dip)
+>  {
+> @@ -2339,15 +2339,13 @@ process_dev_inode(
+>  		if (show_warnings)
+>  			print_warning("inode %llu has unexpected extents",
+>  				      (unsigned long long)cur_ino);
+> -		return 0;
+> -	} else {
+> -		if (zero_stale_data) {
+> -			unsigned int	size = sizeof(xfs_dev_t);
+> +		return;
+> +	}
+> +	if (zero_stale_data) {
+> +		unsigned int	size = sizeof(xfs_dev_t);
+>  
+> -			memset(XFS_DFORK_DPTR(dip) + size, 0,
+> -					XFS_DFORK_DSIZE(dip, mp) - size);
+> -		}
+> -		return 1;
+> +		memset(XFS_DFORK_DPTR(dip) + size, 0,
+> +				XFS_DFORK_DSIZE(dip, mp) - size);
+>  	}
+>  }
+>  
+> @@ -2365,11 +2363,10 @@ process_inode(
+>  	xfs_dinode_t 		*dip,
+>  	bool			free_inode)
+>  {
+> -	int			success;
+> +	int			rval = 1;
+>  	bool			crc_was_ok = false; /* no recalc by default */
+>  	bool			need_new_crc = false;
+>  
+> -	success = 1;
+>  	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
+>  
+>  	/* we only care about crc recalculation if we will modify the inode. */
+> @@ -2390,32 +2387,34 @@ process_inode(
+>  	/* copy appropriate data fork metadata */
+>  	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
+>  		case S_IFDIR:
+> -			success = process_inode_data(dip, TYP_DIR2);
+> +			rval = process_inode_data(dip, TYP_DIR2);
+>  			if (dip->di_format == XFS_DINODE_FMT_LOCAL)
+>  				need_new_crc = 1;
+>  			break;
+>  		case S_IFLNK:
+> -			success = process_inode_data(dip, TYP_SYMLINK);
+> +			rval = process_inode_data(dip, TYP_SYMLINK);
+>  			if (dip->di_format == XFS_DINODE_FMT_LOCAL)
+>  				need_new_crc = 1;
+>  			break;
+>  		case S_IFREG:
+> -			success = process_inode_data(dip, TYP_DATA);
+> +			rval = process_inode_data(dip, TYP_DATA);
+>  			break;
+>  		case S_IFIFO:
+>  		case S_IFCHR:
+>  		case S_IFBLK:
+>  		case S_IFSOCK:
+> -			success = process_dev_inode(dip);
+> +			process_dev_inode(dip);
+>  			need_new_crc = 1;
+>  			break;
+>  		default:
+>  			break;
+>  	}
+>  	nametable_clear();
+> +	if (!rval)
+> +		goto done;
+>  
+>  	/* copy extended attributes if they exist and forkoff is valid */
+> -	if (success && XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
+> +	if (XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
+>  		attr_data.remote_val_count = 0;
+>  		switch (dip->di_aformat) {
+>  			case XFS_DINODE_FMT_LOCAL:
+> @@ -2425,11 +2424,11 @@ process_inode(
+>  				break;
+>  
+>  			case XFS_DINODE_FMT_EXTENTS:
+> -				success = process_exinode(dip, TYP_ATTR);
+> +				rval = process_exinode(dip, TYP_ATTR);
+>  				break;
+>  
+>  			case XFS_DINODE_FMT_BTREE:
+> -				success = process_btinode(dip, TYP_ATTR);
+> +				rval = process_btinode(dip, TYP_ATTR);
+>  				break;
+>  		}
+>  		nametable_clear();
+> @@ -2442,7 +2441,8 @@ done:
+>  
+>  	if (crc_was_ok && need_new_crc)
+>  		libxfs_dinode_calc_crc(mp, dip);
+> -	return success;
+> +
+> +	return rval;
+>  }
+>  
+>  static uint32_t	inodes_copied;
+> @@ -2541,7 +2541,7 @@ copy_inode_chunk(
+>  
+>  			/* process_inode handles free inodes, too */
+>  			if (!process_inode(agno, agino + ioff + i, dip,
+> -			    XFS_INOBT_IS_FREE_DISK(rp, ioff + i)))
+> +					XFS_INOBT_IS_FREE_DISK(rp, ioff + i)))
+>  				goto pop_out;
+>  
+>  			inodes_copied++;
+> @@ -2800,7 +2800,7 @@ copy_ino(
+>  	xfs_agblock_t		agbno;
+>  	xfs_agino_t		agino;
+>  	int			offset;
+> -	int			rval = 0;
+> +	int			rval = 1;
+>  
+>  	if (ino == 0 || ino == NULLFSINO)
+>  		return 1;
 > -- 
 > 2.35.1
 > 
