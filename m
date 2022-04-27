@@ -2,171 +2,166 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 907B0C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 22:05:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BEB3C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 23:02:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238114AbiD0WIc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Apr 2022 18:08:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55452 "EHLO
+        id S239738AbiD0XFo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Apr 2022 19:05:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238083AbiD0WIX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 18:08:23 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C035D617A
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 15:05:10 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-62-197.pa.nsw.optusnet.com.au [49.195.62.197])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B5BBB538C46;
-        Thu, 28 Apr 2022 08:05:09 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1njpmW-005JHZ-Cb; Thu, 28 Apr 2022 08:05:08 +1000
-Date:   Thu, 28 Apr 2022 08:05:08 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/8] xfs: intent item whiteouts
-Message-ID: <20220427220508.GQ1098723@dread.disaster.area>
-References: <20220427022259.695399-1-david@fromorbit.com>
- <20220427022259.695399-9-david@fromorbit.com>
- <20220427033252.GH17025@magnolia>
- <20220427054757.GO1098723@dread.disaster.area>
- <20220427173145.GK17059@magnolia>
+        with ESMTP id S241578AbiD0XEv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 19:04:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFAAAB6D21
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 15:59:24 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 82A9861EAC
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 22:59:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACDB3C385A7;
+        Wed, 27 Apr 2022 22:59:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651100363;
+        bh=Tcee6JgAKSxrQ4pGNaSb7aYdnnu1ucwPkcRe9QnTxlg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UkB0nExOZ3RCzDGuaw6EwCwWu0JDR8ZnVidN7CZPTTQ41bWez2C3pnXKU5ARB9E5T
+         CeiVaD2+mzTBnA3vsiom+h4v8+0K07QFDG5DsKqGP/IDx/LovBbtNbCsDYS0+eqleX
+         hhno+JmCD0mSEtlk/7yPA1wfHtOkLsCSgaQRRLsZ4C5P4hlhsNPOrh/xUpCpzxwkko
+         7rGbhIwrWL9VrpG5mVGc/nJE1y0b8uNfNhUHQei0EOAi0RUTtS4gWctqDCMYpEvPRA
+         E80UdgtJg48LWx2Mv+goLHn4+t8S3sOrtOqr8ab86sRX3YReR6XKOEq3795m6j2h5y
+         njxe2zHI6dIRg==
+Date:   Wed, 27 Apr 2022 15:59:23 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     david@fromorbit.com
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] xfs: count EFIs when deciding to ask for a
+ continuation of a refcount update
+Message-ID: <20220427225923.GN17025@magnolia>
+References: <165102071223.3922658.5241787533081256670.stgit@magnolia>
+ <165102071799.3922658.11838016511226658958.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220427173145.GK17059@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6269be16
-        a=KhGSFSjofVlN3/cgq4AT7A==:117 a=KhGSFSjofVlN3/cgq4AT7A==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=7-415B0cAAAA:8
-        a=zJvIgNVzU3aL44b28H4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <165102071799.3922658.11838016511226658958.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 27, 2022 at 10:31:45AM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 27, 2022 at 03:47:57PM +1000, Dave Chinner wrote:
-> > > > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> > > > index 59aa5f9bf769..670d074a71cc 100644
-> > > > --- a/fs/xfs/xfs_bmap_item.c
-> > > > +++ b/fs/xfs/xfs_bmap_item.c
-> > > > @@ -39,6 +39,7 @@ STATIC void
-> > > >  xfs_bui_item_free(
-> > > >  	struct xfs_bui_log_item	*buip)
-> > > >  {
-> > > > +	kmem_free(buip->bui_item.li_lv_shadow);
-> > > 
-> > > Why is it necessary for log items to free their own shadow buffer?
-> > 
-> > Twisty unpin passages...
-> > 
-> > Intents with whiteouts on them were leaking them when they
-> > were unpinned from the whiteout list in xlog_cil_push_work(). The
-> > log vectors no longer get attached to the CIL context and freed
-> > via xlog_cil_committed()->xlog_cil_free_logvec(), and so when they
-> > are unpinned by xlog_cil_push_work() the last reference is released
-> > and we have to free the log vector attached to the item as it is
-> > still attached.
-> > 
-> > The reason we can't do it directly from ->iop_unpin() is that we
-> > also call ->iop_unpin from xlog_cil_committed()->
-> > xfs_trans_committed_bulk(), and if we are aborting there we do not
-> > want to free the shadow buffer because it is still linked into the
-> > lv chain attached to the CIL ctx and will get freed once
-> > xfs_trans_committed_bulk() returns....
+On Tue, Apr 26, 2022 at 05:51:58PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Huh.  So now that I'm more awake, I noticed that you didn't patch
-> xfs_extfree_item.c to free the shadow buffers because the
-> xfs_ef[id]_item_free functions already have code to free the shadow
-> buffer.  git blame says that was added in:
+> A long time ago, I added to XFS the ability to use deferred reference
+> count operations as part of a transaction chain.  This enabled us to
+> avoid blowing out the transaction reservation when the blocks in a
+> physical extent all had different reference counts because we could ask
+> the deferred operation manager for a continuation, which would get us a
+> clean transaction.
 > 
-> b1c5ebb21301 ("xfs: allocate log vector buffers outside CIL context lock")
+> The refcount code asks for a continuation when the number of refcount
+> record updates reaches the point where we think that the transaction has
+> logged enough full btree blocks due to refcount (and free space) btree
+> shape changes and refcount record updates that we're in danger of
+> overflowing the transaction.
 > 
-> This commit was added in 4.8-rc1, and just prior to merging the rmap
-> patches.
-
-Right - that was the commit that introduced the shadow buffers...
-
-> When do log intent items get shadow buffers, since they should only be
-> committed once?  Looking at that old commit, I think what's going on is
-> that we preallocate the shadow buffers for every log item at commit time
-> to avoid a memory allocation when we have the ctx lock,
-
-Yes.
-
-> so now it's
-> necessary for all log intent items to free them?
-
-Ever since commit b1c5ebb21301 it's been necessary in certain
-situations. Not just for intents, but for all log items that are
-logged to the journal. i.e. inode, dquot and buffer log items free
-li_lv_shadow in their destroy routines.
-
-Essentially, until the last reference to the log item goes away, we
-don't know if the CIL holds the other reference to the log item and
-so may be actively using the shadow buffer. Hence the only time it
-is actually safe to free the shadow buffer is when there are no
-remaining references to the log item.
-
-> Does that mean RUI/CUI/BUI log items could have been leaking shadow
-> buffers since the beginning, and we just haven't noticed because the CIL
-> has freed them for us?  Which means that the changes to xfs_*_item.c
-> could, in theory, be a separate patch that fixes a theoretical memory
-> leak?
-
-Thinking on it, in theory you are right. In practice, I think this
-risk is very low, and KASAN certainly tells us it pretty much isn't
-occuring during testing.
-
-AFAICT the only likely time it was occurring is during forced
-shutdowns when transactions are being cancelled between intent
-commit and done-intent create/link. Once the done-intent is linked
-to the intent, cleanup on shutdown seems to works correctly and we
-don't have leaks occurring.
-
-However, whiteouts effectively release the done-intent during commit
-whilst leaving the whiteout intent as the sole reference to the log
-item in the CIL, which then unpin-aborts it to clean it up rather
-than chains it and frees it on checkpoint completion. Hence whiteouts
-effectively drive a bulldozer through this window and so it was
-leaking a BUI/RUI/CUI on every whiteout cancellation as the
-CIL wasn't chaining and freeing the log vector that was built for
-the commit.
-
-> (I'm not asking for you to separate the changes; I'm checking my
-> understanding of something that caused me to go "Eh???" on first
-> reading.)
+> We did not previously count the EFIs logged to the refcount update
+> transaction because the clamps on the length of a bunmap operation were
+> sufficient to avoid overflowing the transaction reservation even in the
+> worst case situation where every other block of the unmapped extent is
+> shared.
 > 
-> > > > @@ -1393,7 +1463,11 @@ xlog_cil_commit(
-> > > >  	/* lock out background commit */
-> > > >  	down_read(&cil->xc_ctx_lock);
-> > > >  
-> > > > -	xlog_cil_insert_items(log, tp);
-> > > > +	if (tp->t_flags & XFS_TRANS_HAS_INTENT_DONE)
-> > > > +		released_space = xlog_cil_process_intents(cil, tp);
-> > > > +
-> > > > +	xlog_cil_insert_items(log, tp, released_space);
-> > > > +	tp->t_ticket->t_curr_res += released_space;
-> > > 
-> > > I'm a little tired, so why isn't this adjustment a part of
-> > > xlog_cil_insert_items?  A similar adjustment is made to
-> > > ctx->space_used to release the unused space back to the committing tx,
-> > > right?
-> > 
-> > Probably because it was a bug fix I added at some point and not
-> > original code....
-> > 
-> > I'm not fussed where it ends up - I can move it if you want.
+> Unfortunately, the restrictions on bunmap length avoid failure in the
+> worst case by imposing a maximum unmap length of ~3000 blocks, even for
+> non-pathological cases.  This seriously limits performance when freeing
+> large extents.
 > 
-> Yes please, since xlog_cil_insert_items already adjusts
-> tp->t_ticket->t_curr_res and it would seem to make more sense to keep
-> all those adjustments together.
+> Therefore, track EFIs with the same counter as refcount record updates,
+> and use that information as input into when we should ask for a
+> continuation.  This enables the next patch to drop the clumsy bunmap
+> limitation.
+> 
+> Depends: 27dada070d59 ("xfs: change the order in which child and parent defer ops ar finished")
+> Depends: 74f4d6a1e065 ("xfs: only relog deferred intent items if free space in the log gets low")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_refcount.c |    5 ++---
+>  fs/xfs/libxfs/xfs_refcount.h |   13 ++++++++-----
+>  2 files changed, 10 insertions(+), 8 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> index 327ba25e9e17..a07ebaecba73 100644
+> --- a/fs/xfs/libxfs/xfs_refcount.c
+> +++ b/fs/xfs/libxfs/xfs_refcount.c
+> @@ -960,6 +960,7 @@ xfs_refcount_adjust_extents(
+>  			 * Either cover the hole (increment) or
+>  			 * delete the range (decrement).
+>  			 */
+> +			cur->bc_ag.refc.nr_ops++;
+>  			if (tmp.rc_refcount) {
+>  				error = xfs_refcount_insert(cur, &tmp,
+>  						&found_tmp);
+> @@ -970,7 +971,6 @@ xfs_refcount_adjust_extents(
+>  					error = -EFSCORRUPTED;
+>  					goto out_error;
+>  				}
+> -				cur->bc_ag.refc.nr_ops++;
+>  			} else {
+>  				fsbno = XFS_AGB_TO_FSB(cur->bc_mp,
+>  						cur->bc_ag.pag->pag_agno,
+> @@ -1001,11 +1001,11 @@ xfs_refcount_adjust_extents(
+>  		ext.rc_refcount += adj;
+>  		trace_xfs_refcount_modify_extent(cur->bc_mp,
+>  				cur->bc_ag.pag->pag_agno, &ext);
+> +		cur->bc_ag.refc.nr_ops++;
+>  		if (ext.rc_refcount > 1) {
+>  			error = xfs_refcount_update(cur, &ext);
+>  			if (error)
+>  				goto out_error;
+> -			cur->bc_ag.refc.nr_ops++;
+>  		} else if (ext.rc_refcount == 1) {
+>  			error = xfs_refcount_delete(cur, &found_rec);
+>  			if (error)
+> @@ -1014,7 +1014,6 @@ xfs_refcount_adjust_extents(
+>  				error = -EFSCORRUPTED;
+>  				goto out_error;
+>  			}
+> -			cur->bc_ag.refc.nr_ops++;
+>  			goto advloop;
+>  		} else {
+>  			fsbno = XFS_AGB_TO_FSB(cur->bc_mp,
+> diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+> index 9eb01edbd89d..e8b322de7f3d 100644
+> --- a/fs/xfs/libxfs/xfs_refcount.h
+> +++ b/fs/xfs/libxfs/xfs_refcount.h
+> @@ -67,14 +67,17 @@ extern int xfs_refcount_recover_cow_leftovers(struct xfs_mount *mp,
+>   * log (plus any key updates) so we'll conservatively assume 32 bytes
+>   * per record.  We must also leave space for btree splits on both ends
+>   * of the range and space for the CUD and a new CUI.
+> + *
+> + * Each EFI that we attach to the transaction is assumed to consume ~32 bytes.
+> + * This is a low estimate for an EFI tracking a single extent (16 bytes for the
+> + * EFI header, 16 for the extent, and 12 for the xlog op header), but the
+> + * estimate is acceptable if there's more than one extent being freed.
+> + * In the worst case of freeing every other block during a refcount decrease
+> + * operation, we amortize the space used for one EFI log item across 16
+> + * extents.
+>   */
+>  #define XFS_REFCOUNT_ITEM_OVERHEAD	32
+>  
+> -static inline xfs_fileoff_t xfs_refcount_max_unmap(int log_res)
+> -{
+> -	return (log_res * 3 / 4) / XFS_REFCOUNT_ITEM_OVERHEAD;
+> -}
 
-Ok, will do.
+Oops, this helper should not have been deleted until the next patch.
+I'll fix that before I send Dave a pull request.
 
-Cheers,
+--D
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> -
+>  extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
+>  		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
+>  union xfs_btree_rec;
+> 
