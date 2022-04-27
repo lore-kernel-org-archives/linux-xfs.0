@@ -2,347 +2,304 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35466C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 18:46:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44E57C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 18:58:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230084AbiD0Stt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Apr 2022 14:49:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54806 "EHLO
+        id S231254AbiD0TB2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Apr 2022 15:01:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232455AbiD0StI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 14:49:08 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B2DFF99E2
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 11:32:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 234D8B828AB
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 18:32:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7BC0C385A7;
-        Wed, 27 Apr 2022 18:32:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651084342;
-        bh=JnQKAXYP97q+xIzRd1/wobUCwhVIrzNgJO7AnsUkxtg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jmkT+3zNS1q7X7v8m+VyI8mNQ4olkGedOfqhoXCO30vlLHxLxj+chKre9PfWxN+H8
-         Ifn3H5jI2iLqh2O0I42MYdFJvr2N59y1ZczvD08s7JG+/ie4A/YVImOUMP7/Db/VGO
-         bq4XMmMbRNuut5J2+UUEnqJi8db0jB8VcQzipP6p9lDq5CHlXrRYQlF1M5pqBana5W
-         SG5BPMqkMrv4TRCwLe1umlUnr5vycY39l1HEI0VH/PUMmzhUBxHNnXgJA57mK3LPP+
-         6tTRB3aKgvn1m1BUkjYsYwuZBkFCqP/Q1nJtjTJjQoAC449YQyB23N5gEarK3Bdab7
-         jedONT53BLEmw==
-Date:   Wed, 27 Apr 2022 11:32:22 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [ANNOUNCE] xfs: for-next tree updated to a44a027a8b2a
-Message-ID: <20220427183222.GJ17025@magnolia>
-References: <20220425231714.GK1544202@dread.disaster.area>
+        with ESMTP id S232292AbiD0TBM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 15:01:12 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37C023B2B6
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 11:47:15 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23RHYbjY018590
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 18:47:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : subject
+ : from : to : date : in-reply-to : references : content-type :
+ content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=pKqiMHtBSLKIcBS1hyIEhCWFXeP0JZZV6TJ6mRNodck=;
+ b=EzoQZFFDPFsvsp2xRrqjlvwLPvkEwudK4w0jN5BdnWXPb2bmJQ2iUEIfxDTv/cxJ09mp
+ iIjyu87sb1rAomGoiukMkAcBuT06Tct9Ap75rm/t0IotD78YPhp5cC5/6zz7SMdZTG1x
+ icrY0H1iYEEek7EVO3KoyG7IAfZICK3O2yJBinKmj5tQ05B6Q81fbTrKHw7q8R7aQNDC
+ eRS51wbhJajGSozyw5ercKu3VTS0eMt9Karf61O+eWjLITa+hV7LgWHt6IAJr9nkfHVp
+ b05FH2FpLAErOa/0yhcGvK91gbXubCuN2tyFlZL+vB2M/bnqp6TojB/9p1L7ySqsauxr wg== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fmb5k20pq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 18:47:14 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23RIkaZF016813
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 18:47:13 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2168.outbound.protection.outlook.com [104.47.55.168])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fp5ymgc76-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 18:47:13 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=V8OgYn/f4s6OAUkMm8hQ863sx7SLUh1gIKu1RNNfuBtaqe5zxj85KPS8GueOIxBfffsJ2o6efpemTs+JFdHNHzJK47KuBi9++RmThEdl94JvtEPcXWqsYYz+xplnReVfe+81sFX0grT8fBmFFuKGer0Fho+vnC3OH13bu83E7rDXC6DKqavg011zJz98JcqcA/k4pBwN8o/FY4o4yuXLT++ilGBlcxiBaa4ea00jgdL2YS1LViJap3UpBeV0p/Gu7nORqhbhTuazXsYUrP796v2Piymaary+/eo/JbpUwBwj3CFiqpFZIjc9xMluRokEhkVjKT+GlqHmvMSPlGDUHQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pKqiMHtBSLKIcBS1hyIEhCWFXeP0JZZV6TJ6mRNodck=;
+ b=OdJlgkI6f4R4oacJw0B7c/AB3/+xuKG6L8U82W0nPOm0dMLT4sEvEXmdKa8eHQxAg0mNXj0U0jCuVB6WxXCAN26GD//8N1qBG5yMb19cXdcDkhbvIAx12DncrEJQT3/CNbkXVV2ntav+NqtvbWzn0vd1enDmPLmGcDmBPAKaVRf9qCLwShUKF9vVX75nqKoeRaJDJYGjFkBXqCr7/pLlrghOUodaOwbamK68XN7JFCTYfOD+f3xRIXjzVWr1FPRp6zs1Rnnf9nLOcsV9eakerTY/tDHXDU+Y5cXCxC+OVokrBknQPW5h9b9MaiJ7+Lda8OvWFSGw5TCP2dXC+XL8lg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pKqiMHtBSLKIcBS1hyIEhCWFXeP0JZZV6TJ6mRNodck=;
+ b=AIR+kudPlDLEenLNIK4LynGF1K6FNvfZYdHESrIXRzK80eeO2HXPharCfGfrg4rMnvfIyTeXqnUi74W6oJSUiS8H0LZJf8HRyv2TivT10Co01mqIWvruPKCuW4im7pbQMKWOkBqfp/Tdf6KipYB25FQTbziAaT1+Us4Uctg+rLQ=
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by DM5PR1001MB2075.namprd10.prod.outlook.com (2603:10b6:4:2b::37) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.13; Wed, 27 Apr
+ 2022 18:47:12 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::a0d7:21c9:1b7e:455f]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::a0d7:21c9:1b7e:455f%9]) with mapi id 15.20.5186.021; Wed, 27 Apr 2022
+ 18:47:12 +0000
+Message-ID: <f8ecd32553e8cc2eb67ea51f1ee5747f5a2312cc.camel@oracle.com>
+Subject: Re: [PATCH v1 1/2] xfs: remove quota warning limit from struct
+ xfs_quota_limits
+From:   Alli <allison.henderson@oracle.com>
+To:     Catherine Hoang <catherine.hoang@oracle.com>,
+        linux-xfs@vger.kernel.org
+Date:   Wed, 27 Apr 2022 11:47:10 -0700
+In-Reply-To: <20220421165815.87837-2-catherine.hoang@oracle.com>
+References: <20220421165815.87837-1-catherine.hoang@oracle.com>
+         <20220421165815.87837-2-catherine.hoang@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SJ0PR03CA0248.namprd03.prod.outlook.com
+ (2603:10b6:a03:3a0::13) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220425231714.GK1544202@dread.disaster.area>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 034ddb6c-ec81-4648-8213-08da287e5717
+X-MS-TrafficTypeDiagnostic: DM5PR1001MB2075:EE_
+X-Microsoft-Antispam-PRVS: <DM5PR1001MB2075176A39FC63305AAFB8D795FA9@DM5PR1001MB2075.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: uSpWEOvuen+6tY7XdFz0jnnT1VqoMc2o6cKtnJ6qBPV+5WhIaS/o65tH5ZCng2xzzeMhZwvngmAApoEAcUgll7o93x3trFZ97V9Lg1LUMV/vOqrQMcVbjM4uJvjhcqJNIiE0lmNTstGkRGKOrAAI3W1V7byNq7fScFtpk83Bka9cksyOg00sdBCfARlCmds7xQO7s5S0vGzuadMx8w7G9TMtNamsR59qNeu6oTtuP97761K72nQ8z5QqeDmbltykcEJuM7rGBulFjim+423G1U/7oYUJpPO3VghyS0mIXzR6CxJWNvu4Tr+yAL2xeTnQ9nucyo5TKFBq+mh0KIwQjRrMoySIr71avbi6HSZG++2CQ4cdGsFt1qOLBI/ytOyBrVDwy7quYISV92NVX+w/zwwGi2gQrFxHQS5rLFbtYxAGWLa0WlgSgADkD8UWEQfOzK44JnEaqJL+Wo0Xhrq/MgmDekucblwkv1GMD6BzULgskEJeV6OUwIksfSCwAuMrxagLAXf+6D3fBD8vLOtp1PykTPr8ZhNTJO/1HbGClws3VZHQYmEFq4Snre60htInti4wheOEI5xKAzlr4KryA+d40MVt6f9Ne690g1xN0WWtkRb83+9DaYm9od5l9W7B8RSPwwKYlMpE0fJqNGwsUFxJjkhnGOr7HxSvxjcnDUoSw1u+vnV0g9Tg0+DlDDnFbnbIqy0bmYTf+svqpWq6/A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(66946007)(186003)(26005)(2616005)(83380400001)(66556008)(8936002)(5660300002)(508600001)(6486002)(8676002)(52116002)(316002)(6512007)(6506007)(86362001)(38100700002)(38350700002)(2906002)(66476007)(36756003)(15650500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?YlVVS0ZLU3NOc3VtNXNmSk8vOVBTRmpCRkZSSlB0RWNvbUxxRkJlZ0l6bzVU?=
+ =?utf-8?B?TUF1U251SWlsdGlmVTByYzdzdnRoamd2anl6Yy9jWnZ3My9DNks1dGE4Vk1v?=
+ =?utf-8?B?bXRNaXFMMERla0JHczBLM2FwMU0yVjZuN1o1L2hELzhBcXNwOTI4UXNpaWFM?=
+ =?utf-8?B?b2Z2UGtjUkpVNEZYRmRlQkN2dnBaelNVZ1RQZ1JJZU9mVUVJSVB5a0pGTmZJ?=
+ =?utf-8?B?UlBsQ0g5TEM3WG5acDFqTWE1b040bnZhcWxISFpVOXVERTBRdTZ4M2xPdTV0?=
+ =?utf-8?B?RVZkQmZwMVdjNG8wL2k0OUpaQ0JWUkVPcEtRMEZBcWkrdlpZSEpJZU90TGoy?=
+ =?utf-8?B?cCttcUIxZkI1K2tBamhKM0RQb20yVHRFcnJzYjBOTnNCTFRqYytxRFlKMWNT?=
+ =?utf-8?B?WUVHRHBneUtXSzNPSnArRUtrNUFERDUwY0xLMkl0S0ZsL2YwUlF0dHM3M0ZE?=
+ =?utf-8?B?N1VUd09Tc1pEbzJsY1dmdXZrTzc3S0VtOGlwUFBUY3E4MS9wOHczcWV1M0hy?=
+ =?utf-8?B?Z0g4SW96bXB4bmVhcjFaTEh4d3o0aE9zb3puak1VQkNMZitXR2hmS1dycDNl?=
+ =?utf-8?B?MHRTYzgxazF6VlFUTUVYeS8ybDV1N3M1RThhVHJLOEpWL1Q1YndOdkE0VDRI?=
+ =?utf-8?B?YXhEYTNzNFF3cGozOTRpMTZEd0k4aEE0akpDc2N1Ni8rSDQ1c2pKbmlMUkJh?=
+ =?utf-8?B?QWhkSEcrMEpWeVhQRlA4WFJoRkV0T2xuMlgxemJNR0prV2hOZUNUZ1NBZGl1?=
+ =?utf-8?B?L1NzM1JEYTJrMTBBN29rN1JxV1ZFdUtUdkhPUnlzSnBBdFpubmdPdzlRdE91?=
+ =?utf-8?B?UWRLNkZGSWtQV2gwZ1FZaXZEMFlwR0xudGtGZFFrR1lpbWViZnZaM1R4LzhS?=
+ =?utf-8?B?bHRkSzh3dVdCUFUwM2RHNEZ5d1JRdC80aGd3c3BqdEVmNmV2UXRUWHpsRmJl?=
+ =?utf-8?B?eXpUREozckwyRCtVTExnN0xTZUZacUhUMVByNjlMbUIwUXdyQkIrNXczcGZD?=
+ =?utf-8?B?TDdycHFSbUhkT2xmak5Jamg1Ui9QSkxrK1FWQzRFREN6WTh3aUM3OEJUOVVE?=
+ =?utf-8?B?RXVKWCsxenBTQkRodGZKSkxXUGtiYWlDTEJKN1pMSzc2TWtxMVZLVEZLZlEx?=
+ =?utf-8?B?Zy8rcjc0bDNRSG5OQzEvTXRUTGxPSzlDUDJjaWt3blVSdEVxak8vZlhvN1ZN?=
+ =?utf-8?B?ME96dmF0OTJNakE1RkFvR3BqK2RpSCtETTF2dzh6MG5ac2d4WnI2YUlEVG95?=
+ =?utf-8?B?TExJemxhQzZUaDh4ZmhxN0lGSks0M1NnZ25RcXRBL04xeTJLSnBxWjE1ODJl?=
+ =?utf-8?B?RUgrc3AxZWhjamttL3VmZGw2YWVVZm5LcGErZXk2K1hjVFd4VjBvZFhLN1Mx?=
+ =?utf-8?B?UkxVenRseUIrNnVZNUc1TmJ3dGhhUHlGVlAycThOajd0aVdSVHBwVW9CUU10?=
+ =?utf-8?B?dlhBa2pMaW8yQVY5QmpsV3dHRHdvU2k1S1R1VTVqcEQ1WTlhV2dkUC9jRWpn?=
+ =?utf-8?B?dUdJRDlaZEkvZzRRN0xmTXlBMUhGWkw3cmovdEZyYlVFM2Y3eWlRL01UcnNz?=
+ =?utf-8?B?S0cyNHN5VktDN0JxTUd5amZRSTRJeFpmei9SQ0U2b1NsTDh1YmhCclVjcG5E?=
+ =?utf-8?B?ckppenpwYUg5WStDNmUwYmIyZmxqZUVpWFMvY0V3cXlsYnhUbUVBRkUxL2NR?=
+ =?utf-8?B?aFo0UndkRHV6UU9HSXAwL29ESkovK2tHbDkwa1dyYUJoMTNEWXhxN0tPVE1w?=
+ =?utf-8?B?bWRSRlROcEpHQXU4bk80SmREQjR2TlFjS0d3bGJSaERhWmI1SEFTUGJJMEhn?=
+ =?utf-8?B?VWkwU1M0R0N6NUxGK2dWcHlnZkQvbEFnWlRRTjBxVFlBMHZobldPaWZuOUps?=
+ =?utf-8?B?RWF5NGhNWGdlaWdzWFFub3VBdVNjeE9wNXViTnBjUE9JbnAyTWlHZWVvVSsy?=
+ =?utf-8?B?a3hhUTFOamdwRmZISWdSYVBlTjAzTEpuc1BiVlN4S2JBL2k3TW5Cem5IcENE?=
+ =?utf-8?B?bnZERm1LTEYvZjdTNlZqRSt3Z1RUWmlwOWlycFkyNjRHc0dvVDJENmxZZlB2?=
+ =?utf-8?B?WGp5WDBSdk5CbFhrZ1IyMFc5Yjl5OUp2Z0pzSFJFck8zWSs2d3R0MHZCK1Av?=
+ =?utf-8?B?MkJVSHA5Mnc3aXM1elBLOGd5MDg0dkpsUncvakVKQmZyS3lQWDFZZEkySVpu?=
+ =?utf-8?B?Z09vTWV6d1pkb3Z0UGtBbDlTTU9udjNnRE1RM0NPK1VsTjZtRFJ3L3pyY3Zy?=
+ =?utf-8?B?UTJYSmhYcUZUMDhvakcrQjNBWWNpVElzUlJmMGRQcTFhaHFUb1NpalJPdC9t?=
+ =?utf-8?B?ZmEvM3JITUg2TUF4K21FYUNzQUVNdzQ0ZWs1dXN5WFRIVjlEQnk3UjliUU92?=
+ =?utf-8?Q?hbchqd+R/EuGbbWY=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 034ddb6c-ec81-4648-8213-08da287e5717
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Apr 2022 18:47:12.0213
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: BhXesd5UkNoSWNXMADeH1+tyEf45VPWycHDtPyZT0/6Rrc1gws05ysJDZQbX6h+uK135wTFhfo/op2lg8GmsLDZcQ3XqGAeZAjU2WhNBTjU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR1001MB2075
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
+ definitions=2022-04-27_04:2022-04-27,2022-04-27 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999 mlxscore=0
+ suspectscore=0 malwarescore=0 spamscore=0 adultscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2204270117
+X-Proofpoint-GUID: r2QQq5g7sx07ruDFe8G9GUx6fR9Rn44U
+X-Proofpoint-ORIG-GUID: r2QQq5g7sx07ruDFe8G9GUx6fR9Rn44U
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 26, 2022 at 09:17:14AM +1000, Dave Chinner wrote:
-> Hi folks,
+On Thu, 2022-04-21 at 09:58 -0700, Catherine Hoang wrote:
+> Warning limits in xfs quota is an unused feature that is currently
+> documented as unimplemented, and it is unclear what the intended
+> behavior
+> of these limits are. Remove the ‘warn’ field from struct
+> xfs_quota_limits
+> and any other related code.
 > 
-> I just pushed out a new for-next branch for the XFS tree. It
-> contains:
-> 
-> - pending fixes for 5.18
-> - various miscellaneous fixes
-> - xlog_write() rework
-> - conversions to unsigned for trace_printk flags
-> - large on-disk extent counts
-> 
-> This all passes my local regression testing, though further smoke
-> testing in different environments would be appreaciated.
-> 
-> I haven't pulled in fixes from late last week yet - I'll work
-> through those in the next couple of days to get them into the tree
-> as well.
-> 
-> If I've missed anything you were expecting to see in this update,
-> let me know and I'll get them sorted for the next update.
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+From the previous quota discussions so far, I think most folks would
+agree with this first patch.  You can add my review
 
-Hmm.  I saw the following crash on an arm64 VM with 64k page size and an
-8k blocksize:
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/xfs_qm.c          |  9 ---------
+>  fs/xfs/xfs_qm.h          |  5 -----
+>  fs/xfs/xfs_qm_syscalls.c | 17 +++--------------
+>  fs/xfs/xfs_quotaops.c    |  3 ---
+>  fs/xfs/xfs_trans_dquot.c |  3 +--
+>  5 files changed, 4 insertions(+), 33 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index f165d1a3de1d..8fc813cb6011 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -582,9 +582,6 @@ xfs_qm_init_timelimits(
+>  	defq->blk.time = XFS_QM_BTIMELIMIT;
+>  	defq->ino.time = XFS_QM_ITIMELIMIT;
+>  	defq->rtb.time = XFS_QM_RTBTIMELIMIT;
+> -	defq->blk.warn = XFS_QM_BWARNLIMIT;
+> -	defq->ino.warn = XFS_QM_IWARNLIMIT;
+> -	defq->rtb.warn = XFS_QM_RTBWARNLIMIT;
+>  
+>  	/*
+>  	 * We try to get the limits from the superuser's limits fields.
+> @@ -608,12 +605,6 @@ xfs_qm_init_timelimits(
+>  		defq->ino.time = dqp->q_ino.timer;
+>  	if (dqp->q_rtb.timer)
+>  		defq->rtb.time = dqp->q_rtb.timer;
+> -	if (dqp->q_blk.warnings)
+> -		defq->blk.warn = dqp->q_blk.warnings;
+> -	if (dqp->q_ino.warnings)
+> -		defq->ino.warn = dqp->q_ino.warnings;
+> -	if (dqp->q_rtb.warnings)
+> -		defq->rtb.warn = dqp->q_rtb.warnings;
+>  
+>  	xfs_qm_dqdestroy(dqp);
+>  }
+> diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+> index 5bb12717ea28..9683f0457d19 100644
+> --- a/fs/xfs/xfs_qm.h
+> +++ b/fs/xfs/xfs_qm.h
+> @@ -34,7 +34,6 @@ struct xfs_quota_limits {
+>  	xfs_qcnt_t		hard;	/* default hard limit */
+>  	xfs_qcnt_t		soft;	/* default soft limit */
+>  	time64_t		time;	/* limit for timers */
+> -	xfs_qwarncnt_t		warn;	/* limit for warnings */
+>  };
+>  
+>  /* Defaults for each quota type: time limits, warn limits, usage
+> limits */
+> @@ -134,10 +133,6 @@ struct xfs_dquot_acct {
+>  #define XFS_QM_RTBTIMELIMIT	(7 * 24*60*60)          /* 1 week */
+>  #define XFS_QM_ITIMELIMIT	(7 * 24*60*60)          /* 1 week */
+>  
+> -#define XFS_QM_BWARNLIMIT	5
+> -#define XFS_QM_IWARNLIMIT	5
+> -#define XFS_QM_RTBWARNLIMIT	5
+> -
+>  extern void		xfs_qm_destroy_quotainfo(struct xfs_mount *);
+>  
+>  /* quota ops */
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index 7d5a31827681..e7f3ac60ebd9 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -250,17 +250,6 @@ xfs_setqlim_limits(
+>  	return true;
+>  }
+>  
+> -static inline void
+> -xfs_setqlim_warns(
+> -	struct xfs_dquot_res	*res,
+> -	struct xfs_quota_limits	*qlim,
+> -	int			warns)
+> -{
+> -	res->warnings = warns;
+> -	if (qlim)
+> -		qlim->warn = warns;
+> -}
+> -
+>  static inline void
+>  xfs_setqlim_timer(
+>  	struct xfs_mount	*mp,
+> @@ -355,7 +344,7 @@ xfs_qm_scall_setqlim(
+>  	if (xfs_setqlim_limits(mp, res, qlim, hard, soft, "blk"))
+>  		xfs_dquot_set_prealloc_limits(dqp);
+>  	if (newlim->d_fieldmask & QC_SPC_WARNS)
+> -		xfs_setqlim_warns(res, qlim, newlim->d_spc_warns);
+> +		res->warnings = newlim->d_spc_warns;
+>  	if (newlim->d_fieldmask & QC_SPC_TIMER)
+>  		xfs_setqlim_timer(mp, res, qlim, newlim->d_spc_timer);
+>  
+> @@ -371,7 +360,7 @@ xfs_qm_scall_setqlim(
+>  
+>  	xfs_setqlim_limits(mp, res, qlim, hard, soft, "rtb");
+>  	if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
+> -		xfs_setqlim_warns(res, qlim, newlim->d_rt_spc_warns);
+> +		res->warnings = newlim->d_rt_spc_warns;
+>  	if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
+>  		xfs_setqlim_timer(mp, res, qlim, newlim-
+> >d_rt_spc_timer);
+>  
+> @@ -387,7 +376,7 @@ xfs_qm_scall_setqlim(
+>  
+>  	xfs_setqlim_limits(mp, res, qlim, hard, soft, "ino");
+>  	if (newlim->d_fieldmask & QC_INO_WARNS)
+> -		xfs_setqlim_warns(res, qlim, newlim->d_ino_warns);
+> +		res->warnings = newlim->d_ino_warns;
+>  	if (newlim->d_fieldmask & QC_INO_TIMER)
+>  		xfs_setqlim_timer(mp, res, qlim, newlim->d_ino_timer);
+>  
+> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+> index 07989bd67728..8b80cc43a6d1 100644
+> --- a/fs/xfs/xfs_quotaops.c
+> +++ b/fs/xfs/xfs_quotaops.c
+> @@ -40,9 +40,6 @@ xfs_qm_fill_state(
+>  	tstate->spc_timelimit = (u32)defq->blk.time;
+>  	tstate->ino_timelimit = (u32)defq->ino.time;
+>  	tstate->rt_spc_timelimit = (u32)defq->rtb.time;
+> -	tstate->spc_warnlimit = defq->blk.warn;
+> -	tstate->ino_warnlimit = defq->ino.warn;
+> -	tstate->rt_spc_warnlimit = defq->rtb.warn;
+>  	if (tempqip)
+>  		xfs_irele(ip);
+>  }
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index 9ba7e6b9bed3..7b8c24ede1fd 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -597,8 +597,7 @@ xfs_dqresv_check(
+>  	if (softlimit && total_count > softlimit) {
+>  		time64_t	now = ktime_get_real_seconds();
+>  
+> -		if ((res->timer != 0 && now > res->timer) ||
+> -		    (res->warnings != 0 && res->warnings >= qlim-
+> >warn)) {
+> +		if (res->timer != 0 && now > res->timer) {
+>  			*fatal = true;
+>  			return QUOTA_NL_ISOFTLONGWARN;
+>  		}
 
-run fstests xfs/502 at 2022-04-26 20:54:15
-spectre-v4 mitigation disabled by command-line option
-XFS (sda2): Mounting V5 Filesystem
-XFS (sda2): Ending clean mount
-XFS (sda3): Mounting V5 Filesystem
-XFS (sda3): Ending clean mount
-XFS (sda3): Quotacheck needed: Please wait.
-XFS (sda3): Quotacheck: Done.
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS (sda3): Injecting error (false) at file fs/xfs/xfs_inode.c, line 1876, on filesystem "sda3"
-XFS: Assertion failed: IS_ALIGNED((unsigned long)lv->lv_buf, sizeof(uint64_t)), file: fs/xfs/xfs_log_cil.c, line: 431
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 3168300 at fs/xfs/xfs_message.c:112 assfail+0x44/0x54 [xfs]
-Modules linked in: xfs dm_delay dm_zero dm_flakey dm_snapshot dm_thin_pool dm_persistent_data dm_bio_prison dm_bufio libcrc32c xt_REDIRECT iptable_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 rputh_rpcgss xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip6table_filter ip6_tables bfq iptable_filter crct10dif_ce sch_fq_codel efivarfs ip_tables x_tables overlay nfsv4 [last unloaded: xfs]
-CPU: 1 PID: 3168300 Comm: t_open_tmpfiles Not tainted 5.17.0-xfsa #5.17.0 0288cc936a4dc1878aaf6a4c6fa6235f949bf1e9
-Hardware name: QEMU KVM Virtual Machine, BIOS 1.5.1 06/16/2021
-pstate: 60401005 (nZCv daif +PAN -UAO -TCO -DIT +SSBS BTYPE=--)
-pc : assfail+0x44/0x54 [xfs]
-lr : assfail+0x34/0x54 [xfs]
-sp : fffffe00213ef8b0
-x29: fffffe00213ef8b0 x28: 0000000000000000 x27: fffffc0102ce3c00
-x26: fffffc013c2bbeb0 x25: fffffc01830d8000 x24: fffffc01bc0d4f70
-x23: fffffc01825a41da x22: fffffc01bc0d5020 x21: fffffe00015bf0b8
-x20: fffffc006023c000 x19: fffffc0102ce3c00 x18: 0000000000000030
-x17: 7a6973202c667562 x16: 5f766c3e2d766c29 x15: 676e6f6c2064656e
-x14: 6769736e75282844 x13: 313334203a656e69 x12: 6c202c632e6c6963
-x11: fffffe00213ef7d0 x10: fffffe00015bb9d8 x9 : fffffe00815bb9d7
-x8 : 000000000000000a x7 : 00000000ffffffc0 x6 : 0000000000000021
-x5 : fffffe00015bb9d9 x4 : 00000000ffffffca x3 : 0000000000000000
-x2 : 0000000000000000 x1 : 0000000000000000 x0 : 0000000000000000
-Call trace:
- assfail+0x44/0x54 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- xlog_cil_commit+0x328/0x9b0 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- __xfs_trans_commit+0xe4/0x3a0 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- xfs_trans_commit+0x20/0x30 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- xfs_create_tmpfile+0x1ec/0x270 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- xfs_generic_create+0x324/0x390 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- xfs_vn_tmpfile+0x24/0x30 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- vfs_tmpfile+0xbc/0x160
- path_openat+0x9c0/0xeb0
- do_filp_open+0x8c/0x13c
- do_sys_openat2+0xbc/0x170
- __arm64_sys_openat+0x70/0xbc
- invoke_syscall.constprop.0+0x58/0xf0
- do_el0_svc+0x5c/0x160
- el0_svc+0x30/0x15c
- el0t_64_sync_handler+0x1a8/0x1b0
- el0t_64_sync+0x1a0/0x1a4
----[ end trace 0000000000000000 ]---
-Unable to handle kernel paging request at virtual address 9ac7c01eb06874e8
-Mem abort info:
-  ESR = 0x96000004
-  EC = 0x25: DABT (current EL), IL = 32 bits
-  SET = 0, FnV = 0
-  EA = 0, S1PTW = 0
-  FSC = 0x04: level 0 translation fault
-Data abort info:
-  ISV = 0, ISS = 0x00000004
-  CM = 0, WnR = 0
-[9ac7c01eb06874e8] address between user and kernel address ranges
-Internal error: Oops: 96000004 [#1] PREEMPT SMP
-Dumping ftrace buffer:
-   (ftrace buffer empty)
-Modules linked in: xfs dm_delay dm_zero dm_flakey dm_snapshot dm_thin_pool dm_persistent_data dm_bio_prison dm_bufio libcrc32c xt_REDIRECT iptable_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 rputh_rpcgss xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip6table_filter ip6_tables bfq iptable_filter crct10dif_ce sch_fq_codel efivarfs ip_tables x_tables overlay nfsv4 [last unloaded: xfs]
-CPU: 1 PID: 3168300 Comm: t_open_tmpfiles Tainted: G        W         5.17.0-xfsa #5.17.0 0288cc936a4dc1878aaf6a4c6fa6235f949bf1e9
-Hardware name: QEMU KVM Virtual Machine, BIOS 1.5.1 06/16/2021
-pstate: a0401005 (NzCv daif +PAN -UAO -TCO -DIT +SSBS BTYPE=--)
-pc : __kmalloc+0x120/0x3f0
-lr : __kmalloc+0xe8/0x3f0
-sp : fffffe00213ef840
-x29: fffffe00213ef840 x28: 0000000000000002 x27: fffffe0008fe6000
-x26: fffffc00e8740000 x25: fffffe00090e9000 x24: fffffe0001523c44
-x23: 0000000000000150 x22: 00000000000128c0 x21: 0000000000000000
-x20: 9ac7c01eb06874e8 x19: fffffc00e0010400 x18: 0000000000000000
-x17: 0000000000000000 x16: 0000000000000000 x15: 0000000000000000
-x14: 0000000000000000 x13: 0000f0ffffffffff x12: 0000000000000040
-x11: fffffc0133b5c678 x10: fffffc0133b5c67a x9 : fffffe0008294814
-x8 : 0000000000000001 x7 : fffffe01f68d0000 x6 : 8d4857517c5941da
-x5 : 00000000019ff6ec x4 : 0000000000000100 x3 : 0000000000000000
-x2 : e87468b01ec0c79a x1 : 0000000003a724a9 x0 : 9ac7c01eb06873e8
-Call trace:
- __kmalloc+0x120/0x3f0
- xlog_cil_commit+0x144/0x9b0 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- __xfs_trans_commit+0xe4/0x3a0 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- xfs_trans_commit+0x20/0x30 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- xfs_create_tmpfile+0x1ec/0x270 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- xfs_generic_create+0x324/0x390 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- xfs_vn_tmpfile+0x24/0x30 [xfs afa05b7bcc3355e0f6d54fdf0bba6e6ddd5eafff]
- vfs_tmpfile+0xbc/0x160
- path_openat+0x9c0/0xeb0
- do_filp_open+0x8c/0x13c
- do_sys_openat2+0xbc/0x170
- __arm64_sys_openat+0x70/0xbc
- invoke_syscall.constprop.0+0x58/0xf0
- do_el0_svc+0x5c/0x160
- el0_svc+0x30/0x15c
- el0t_64_sync_handler+0x1a8/0x1b0
- el0t_64_sync+0x1a0/0x1a4
-Code: f9405e66 8b040014 dac00e82 b9400b43 (f8646814) 
-
-Not sure what's going on there, but I'll add it to the list of things to
-dig into.
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> 
-> ---------------------------------------------------------------
-> 
-> Head commit:
-> 
-> a44a027a8b2a Merge tag 'large-extent-counters-v9' of https://github.com/chandanr/linux into xfs-5.19-for-next
-> 
-> ----------------------------------------------------------------
-> Chandan Babu R (19):
->       xfs: Move extent count limits to xfs_format.h
->       xfs: Define max extent length based on on-disk format definition
->       xfs: Introduce xfs_iext_max_nextents() helper
->       xfs: Use xfs_extnum_t instead of basic data types
->       xfs: Introduce xfs_dfork_nextents() helper
->       xfs: Use basic types to define xfs_log_dinode's di_nextents and di_anextents
->       xfs: Promote xfs_extnum_t and xfs_aextnum_t to 64 and 32-bits respectively
->       xfs: Introduce XFS_SB_FEAT_INCOMPAT_NREXT64 and associated per-fs feature bit
->       xfs: Introduce XFS_FSOP_GEOM_FLAGS_NREXT64
->       xfs: Introduce XFS_DIFLAG2_NREXT64 and associated helpers
->       xfs: Use uint64_t to count maximum blocks that can be used by BMBT
->       xfs: Introduce macros to represent new maximum extent counts for data/attr forks
->       xfs: Replace numbered inode recovery error messages with descriptive ones
->       xfs: Introduce per-inode 64-bit extent counters
->       xfs: Directory's data fork extent counter can never overflow
->       xfs: Conditionally upgrade existing inodes to use large extent counters
->       xfs: Decouple XFS_IBULK flags from XFS_IWALK flags
->       xfs: Enable bulkstat ioctl to support 64-bit per-inode extent counters
->       xfs: Add XFS_SB_FEAT_INCOMPAT_NREXT64 to the list of supported flags
-> 
-> Christoph Hellwig (2):
->       xfs: change the type of ic_datap
->       xfs: remove xlog_verify_dest_ptr
-> 
-> Darrick J. Wong (3):
->       xfs: pass explicit mount pointer to rtalloc query functions
->       xfs: recalculate free rt extents after log recovery
->       xfs: use a separate frextents counter for rt extent reservations
-> 
-> Dave Chinner (36):
->       xfs: convert buffer flags to unsigned.
->       xfs: reorder iunlink remove operation in xfs_ifree
->       xfs: factor out the CIL transaction header building
->       xfs: only CIL pushes require a start record
->       xfs: embed the xlog_op_header in the unmount record
->       xfs: embed the xlog_op_header in the commit record
->       xfs: log tickets don't need log client id
->       xfs: move log iovec alignment to preparation function
->       xfs: reserve space and initialise xlog_op_header in item formatting
->       xfs: log ticket region debug is largely useless
->       xfs: pass lv chain length into xlog_write()
->       xfs: introduce xlog_write_full()
->       xfs: introduce xlog_write_partial()
->       xfs: xlog_write() no longer needs contwr state
->       xfs: xlog_write() doesn't need optype anymore
->       xfs: CIL context doesn't need to count iovecs
->       xfs: convert attr type flags to unsigned.
->       xfs: convert scrub type flags to unsigned.
->       xfs: convert bmap extent type flags to unsigned.
->       xfs: convert bmapi flags to unsigned.
->       xfs: convert AGF log flags to unsigned.
->       xfs: convert AGI log flags to unsigned.
->       xfs: convert btree buffer log flags to unsigned.
->       xfs: convert buffer log item flags to unsigned.
->       xfs: convert da btree operations flags to unsigned.
->       xfs: convert dquot flags to unsigned.
->       xfs: convert log item tracepoint flags to unsigned.
->       xfs: convert inode lock flags to unsigned.
->       xfs: convert ptag flags to unsigned.
->       xfs: convert quota options flags to unsigned.
->       xfs: convert shutdown reasons to unsigned.
->       xfs: convert log ticket and iclog flags to unsigned.
->       Merge branch 'guilt/5.19-miscellaneous' into xfs-5.19-for-next
->       Merge branch 'guilt/xfs-unsigned-flags-5.18' into xfs-5.19-for-next
->       Merge branch 'guilt/xlog-write-rework' into xfs-5.19-for-next
->       Merge tag 'large-extent-counters-v9' of https://github.com/chandanr/linux into xfs-5.19-for-next
-> 
-> Jonathan Lassoff (2):
->       xfs: Simplify XFS logging methods.
->       xfs: Add XFS messages to printk index
-> 
-> Kaixu Xia (1):
->       xfs: simplify local variable assignment in file write code
-> 
-> Matthew Wilcox (Oracle) (1):
->       xfs: Use generic_file_open()
-> 
-> Tiezhu Yang (1):
->       MAINTAINERS: update IOMAP FILESYSTEM LIBRARY and XFS FILESYSTEM
-> 
->  MAINTAINERS                     |   3 -
->  fs/xfs/libxfs/xfs_alloc.c       |  12 +-
->  fs/xfs/libxfs/xfs_alloc.h       |   2 +-
->  fs/xfs/libxfs/xfs_attr.c        |   3 +
->  fs/xfs/libxfs/xfs_bmap.c        | 145 +++++++++-----------
->  fs/xfs/libxfs/xfs_bmap.h        |  58 ++++----
->  fs/xfs/libxfs/xfs_bmap_btree.c  |   9 +-
->  fs/xfs/libxfs/xfs_btree.c       |  10 +-
->  fs/xfs/libxfs/xfs_btree.h       |  26 ++--
->  fs/xfs/libxfs/xfs_da_btree.h    |  17 +--
->  fs/xfs/libxfs/xfs_da_format.h   |   9 +-
->  fs/xfs/libxfs/xfs_dir2.c        |   8 ++
->  fs/xfs/libxfs/xfs_format.h      | 180 ++++++++++++++++++-------
->  fs/xfs/libxfs/xfs_fs.h          |  41 ++++--
->  fs/xfs/libxfs/xfs_ialloc.c      |   8 +-
->  fs/xfs/libxfs/xfs_ialloc.h      |   2 +-
->  fs/xfs/libxfs/xfs_inode_buf.c   |  83 +++++++++---
->  fs/xfs/libxfs/xfs_inode_fork.c  |  39 +++++-
->  fs/xfs/libxfs/xfs_inode_fork.h  |  76 +++++++++--
->  fs/xfs/libxfs/xfs_log_format.h  |  34 ++++-
->  fs/xfs/libxfs/xfs_quota_defs.h  |  49 ++++---
->  fs/xfs/libxfs/xfs_rtbitmap.c    |   9 +-
->  fs/xfs/libxfs/xfs_sb.c          |  10 ++
->  fs/xfs/libxfs/xfs_trans_resv.c  |  11 +-
->  fs/xfs/libxfs/xfs_types.h       |  11 +-
->  fs/xfs/scrub/bmap.c             |   2 +-
->  fs/xfs/scrub/inode.c            |  20 +--
->  fs/xfs/scrub/rtbitmap.c         |   9 +-
->  fs/xfs/xfs_bmap_item.c          |   2 +
->  fs/xfs/xfs_bmap_util.c          |  27 +++-
->  fs/xfs/xfs_buf.c                |   6 +-
->  fs/xfs/xfs_buf.h                |  42 +++---
->  fs/xfs/xfs_buf_item.h           |  24 ++--
->  fs/xfs/xfs_dquot.c              |   3 +
->  fs/xfs/xfs_error.h              |  20 +--
->  fs/xfs/xfs_file.c               |  24 ++--
->  fs/xfs/xfs_fsmap.c              |   6 +-
->  fs/xfs/xfs_fsops.c              |   7 +-
->  fs/xfs/xfs_icache.c             |   9 +-
->  fs/xfs/xfs_inode.c              | 104 ++++-----------
->  fs/xfs/xfs_inode.h              |  29 ++--
->  fs/xfs/xfs_inode_item.c         |  23 +++-
->  fs/xfs/xfs_inode_item_recover.c | 141 ++++++++++++++------
->  fs/xfs/xfs_ioctl.c              |   3 +
->  fs/xfs/xfs_iomap.c              |  33 +++--
->  fs/xfs/xfs_itable.c             |  15 ++-
->  fs/xfs/xfs_itable.h             |   5 +-
->  fs/xfs/xfs_iwalk.h              |   2 +-
->  fs/xfs/xfs_log.c                | 766 +++++++++++++++++++++++++++++++++++++++++++++-------------------------------------------------------------
->  fs/xfs/xfs_log.h                |  57 +++-----
->  fs/xfs/xfs_log_cil.c            | 169 ++++++++++++++++--------
->  fs/xfs/xfs_log_priv.h           |  55 ++------
->  fs/xfs/xfs_message.c            |  58 ++++----
->  fs/xfs/xfs_message.h            |  55 +++++---
->  fs/xfs/xfs_mount.c              |  91 +++++++------
->  fs/xfs/xfs_mount.h              |  32 +++--
->  fs/xfs/xfs_reflink.c            |   5 +
->  fs/xfs/xfs_rtalloc.c            |  41 ++++++
->  fs/xfs/xfs_rtalloc.h            |   9 +-
->  fs/xfs/xfs_super.c              |  18 ++-
->  fs/xfs/xfs_symlink.c            |   5 -
->  fs/xfs/xfs_trace.h              |  28 +---
->  fs/xfs/xfs_trans.c              |  49 +++++--
->  fs/xfs/xfs_trans.h              |  10 +-
->  64 files changed, 1585 insertions(+), 1274 deletions(-)
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
