@@ -2,174 +2,265 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6976C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 03:07:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0344C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 03:14:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357357AbiD0DKV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Apr 2022 23:10:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58388 "EHLO
+        id S231514AbiD0DSA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 23:18:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357364AbiD0DJT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 23:09:19 -0400
+        with ESMTP id S232935AbiD0DR6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 23:17:58 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 025D43191D
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 20:06:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1825B13CE1
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 20:14:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 681D8B81FE0
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 03:06:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24F68C385A4;
-        Wed, 27 Apr 2022 03:06:06 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CB127B81FE0
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 03:14:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81897C385A4;
+        Wed, 27 Apr 2022 03:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651028766;
-        bh=xXb/H+SoJXn78D29Dz4bxAjQ18msRjqJX2Fsiqzg6SI=;
+        s=k20201202; t=1651029285;
+        bh=NYvDCBEFUyaC87ooE3XfQ1C1xbfNDEOy3nAvjfixAzA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=K3Lls/LxdkLZua8FXHeSbQv9vTpnrtwnvrfkVD9f1izfoH47U/q/uOci6j+7GToxS
-         XzCq/jAG0DwG/ayCuh8y1UDdUbLLPlz3WKB3YiK4GnYM9vsQQALHFQE2x2sIZRfs3n
-         +5lkocG/OM7lV1TT7sYDhXiya5xnR4rLyCj6uIyLt+/Wtfx+r6Xzlr5AbSQXODqCxU
-         toH9B+YBrhY2rmlfBlE0I7pzdwwwtSG/DQSgj1R/gLdKmwjhVmy8LEUW8WdxVpwSMc
-         DrVfzQpnQAfqf274TZQ5XAIgaUumvcg9Iq4eX/Q2Z3TEPNm6WTXXeIVi1mRGoArkOW
-         6ikt1b0jgmgIA==
-Date:   Tue, 26 Apr 2022 20:06:05 -0700
+        b=u9LSj2IRLmPBi/N8IlDFj/iHjilrlwHzB4xL67D5o2bn/C2bux8vPRGX8XG8DAZLq
+         6817BoMlzAYf0Il+EYtwjmqM6EQnQgr//mFQYcMN9i+PU/0lf3LxLHYe5zSL7a0iVe
+         pGQadjg6zXv0FxviayelUqoSmUCtY9wEp/Be0Kjuqc5bar4HgHufNmp3sOhFMAkpDt
+         v/M57u0Wn668UsXaocH7bVlHPv+wjB1aOM34CAeEGa7x6KNmfbJLo659AjT4/6OVp8
+         CPV7iUC4TSwd3/W6ZkE4L4jura2ztfZdm1CByI+k6tPKzJAna2Xk1mK3j4PwmL0Tqx
+         ZUxZYUZiwN6xA==
+Date:   Tue, 26 Apr 2022 20:14:45 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/8] xfs: tag transactions that contain intent done items
-Message-ID: <20220427030605.GC17025@magnolia>
+Subject: Re: [PATCH 1/8] xfs: hide log iovec alignment constraints
+Message-ID: <20220427031445.GD17025@magnolia>
 References: <20220427022259.695399-1-david@fromorbit.com>
- <20220427022259.695399-5-david@fromorbit.com>
+ <20220427022259.695399-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220427022259.695399-5-david@fromorbit.com>
+In-Reply-To: <20220427022259.695399-2-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 27, 2022 at 12:22:55PM +1000, Dave Chinner wrote:
+On Wed, Apr 27, 2022 at 12:22:52PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Intent whiteouts will require extra work to be done during
-> transaction commit if the transaction contains an intent done item.
+> Callers currently have to round out the size of buffers to match the
+> aligment constraints of log iovecs and xlog_write(). They should not
+> need to know this detail, so introduce a new function to calculate
+> the iovec length (for use in ->iop_size implementations). Also
+> modify xlog_finish_iovec() to round up the length to the correct
+> alignment so the callers don't need to do this, either.
 > 
-> To determine if a transaction contains an intent done item, we want
-> to avoid having to walk all the items in the transaction to check if
-> they are intent done items. Hence when we add an intent done item to
-> a transaction, tag the transaction to indicate that it contains such
-> an item.
-> 
-> We don't tag the transaction when the defer ops is relogging an
-> intent to move it forward in the log. Whiteouts will never apply to
-> these cases, so we don't need to bother looking for them.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_shared.h | 24 +++++++++++++++++-------
->  fs/xfs/xfs_bmap_item.c     |  2 +-
->  fs/xfs/xfs_extfree_item.c  |  2 +-
->  fs/xfs/xfs_refcount_item.c |  2 +-
->  fs/xfs/xfs_rmap_item.c     |  2 +-
->  5 files changed, 21 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-> index 25c4cab58851..c4381388c0c1 100644
-> --- a/fs/xfs/libxfs/xfs_shared.h
-> +++ b/fs/xfs/libxfs/xfs_shared.h
-> @@ -54,13 +54,23 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
->  /*
->   * Values for t_flags.
->   */
-> -#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
-> -#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
-> -#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
-> -#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
-> -#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
-> -#define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
-> -#define XFS_TRANS_RES_FDBLKS	0x80	/* reserve newly freed blocks */
-> +/* Transaction needs to be logged */
-> +#define XFS_TRANS_DIRTY			(1u << 0)
-> +/* Superblock is dirty and needs to be logged */
-> +#define XFS_TRANS_SB_DIRTY		(1u << 1)
-> +/* Transaction took a permanent log reservation */
-> +#define XFS_TRANS_PERM_LOG_RES		(1u << 2)
-> +/* Synchronous transaction commit needed */
-> +#define XFS_TRANS_SYNC			(1u << 3)
-> +/* Transaction can use reserve block pool */
-> +#define XFS_TRANS_RESERVE		(1u << 4)
-> +/* Transaction should avoid VFS level superblock write accounting */
-> +#define XFS_TRANS_NO_WRITECOUNT		(1u << 5)
-> +/* Transaction has freed blocks returned to it's reservation */
-> +#define XFS_TRANS_RES_FDBLKS		(1u << 6)
+> Convert the only user - inode forks - of this alignment rounding to
+> use the new interface.
 
-Yesssss documentation finally!
+Hmm.  So currently, we require that the inode fork buffer be rounded up
+to the next 4 bytes, and then I guess the log will copy that into the
+log iovec?  IOWs, if we have a 37-byte data fork, we'll allocate a 40
+byte buffer for the xfs_ifork, and the log will copy all 40 bytes into a
+40 byte iovec.
 
-> +/* Transaction contains an intent done log item */
-> +#define XFS_TRANS_HAS_INTENT_DONE	(1u << 7)
+Now it looks like we'd allocate a 37-byte buffer for the xfs_ifork, but
+the log iovec will still be 40 bytes.  So ... do we copy 37 bytes out of
+the ifork buffer and zero the last 3 bytes in the iovec?  Does we leak
+kernel memory in those last 3 bytes?  Or do we copy 40 bytes and
+overrun?
 
-I guess I'll see what this one does in the next few patches.
+It sorta looks like (at least for the local format case) xlog_copy_iovec
+will copy 37 bytes and leave the last 3 bytes of the iovec in whatever
+state it was in previously.  Is that zeroed?  Because it then looks like
+xlog_finish_iovec will round that 37 up to 40.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+(FWIW I'm just checking for kernel memory exposure vectors here.)
 
 --D
 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_inode_fork.c  | 12 +++---------
+>  fs/xfs/xfs_inode_item.c         | 25 +++++++------------------
+>  fs/xfs/xfs_inode_item_recover.c |  4 ++--
+>  fs/xfs/xfs_log.h                | 23 +++++++++++++++++++++++
+>  4 files changed, 35 insertions(+), 29 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 9aee4a1e2fe9..1a4cdf550f6d 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -36,7 +36,7 @@ xfs_init_local_fork(
+>  	int64_t			size)
+>  {
+>  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> -	int			mem_size = size, real_size = 0;
+> +	int			mem_size = size;
+>  	bool			zero_terminate;
+>  
+>  	/*
+> @@ -50,8 +50,7 @@ xfs_init_local_fork(
+>  		mem_size++;
+>  
+>  	if (size) {
+> -		real_size = roundup(mem_size, 4);
+> -		ifp->if_u1.if_data = kmem_alloc(real_size, KM_NOFS);
+> +		ifp->if_u1.if_data = kmem_alloc(mem_size, KM_NOFS);
+>  		memcpy(ifp->if_u1.if_data, data, size);
+>  		if (zero_terminate)
+>  			ifp->if_u1.if_data[size] = '\0';
+> @@ -497,12 +496,7 @@ xfs_idata_realloc(
+>  		return;
+>  	}
+>  
+> -	/*
+> -	 * For inline data, the underlying buffer must be a multiple of 4 bytes
+> -	 * in size so that it can be logged and stay on word boundaries.
+> -	 * We enforce that here.
+> -	 */
+> -	ifp->if_u1.if_data = krealloc(ifp->if_u1.if_data, roundup(new_size, 4),
+> +	ifp->if_u1.if_data = krealloc(ifp->if_u1.if_data, new_size,
+>  				      GFP_NOFS | __GFP_NOFAIL);
+>  	ifp->if_bytes = new_size;
+>  }
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 00733a18ccdc..721def0639fd 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -71,7 +71,7 @@ xfs_inode_item_data_fork_size(
+>  	case XFS_DINODE_FMT_LOCAL:
+>  		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
+>  		    ip->i_df.if_bytes > 0) {
+> -			*nbytes += roundup(ip->i_df.if_bytes, 4);
+> +			*nbytes += xlog_calc_iovec_len(ip->i_df.if_bytes);
+>  			*nvecs += 1;
+>  		}
+>  		break;
+> @@ -112,7 +112,7 @@ xfs_inode_item_attr_fork_size(
+>  	case XFS_DINODE_FMT_LOCAL:
+>  		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
+>  		    ip->i_afp->if_bytes > 0) {
+> -			*nbytes += roundup(ip->i_afp->if_bytes, 4);
+> +			*nbytes += xlog_calc_iovec_len(ip->i_afp->if_bytes);
+>  			*nvecs += 1;
+>  		}
+>  		break;
+> @@ -204,17 +204,12 @@ xfs_inode_item_format_data_fork(
+>  			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
+>  		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
+>  		    ip->i_df.if_bytes > 0) {
+> -			/*
+> -			 * Round i_bytes up to a word boundary.
+> -			 * The underlying memory is guaranteed
+> -			 * to be there by xfs_idata_realloc().
+> -			 */
+> -			data_bytes = roundup(ip->i_df.if_bytes, 4);
+>  			ASSERT(ip->i_df.if_u1.if_data != NULL);
+>  			ASSERT(ip->i_disk_size > 0);
+>  			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
+> -					ip->i_df.if_u1.if_data, data_bytes);
+> -			ilf->ilf_dsize = (unsigned)data_bytes;
+> +					ip->i_df.if_u1.if_data,
+> +					ip->i_df.if_bytes);
+> +			ilf->ilf_dsize = (unsigned)ip->i_df.if_bytes;
+>  			ilf->ilf_size++;
+>  		} else {
+>  			iip->ili_fields &= ~XFS_ILOG_DDATA;
+> @@ -288,17 +283,11 @@ xfs_inode_item_format_attr_fork(
+>  
+>  		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
+>  		    ip->i_afp->if_bytes > 0) {
+> -			/*
+> -			 * Round i_bytes up to a word boundary.
+> -			 * The underlying memory is guaranteed
+> -			 * to be there by xfs_idata_realloc().
+> -			 */
+> -			data_bytes = roundup(ip->i_afp->if_bytes, 4);
+>  			ASSERT(ip->i_afp->if_u1.if_data != NULL);
+>  			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_LOCAL,
+>  					ip->i_afp->if_u1.if_data,
+> -					data_bytes);
+> -			ilf->ilf_asize = (unsigned)data_bytes;
+> +					ip->i_afp->if_bytes);
+> +			ilf->ilf_asize = (unsigned)ip->i_afp->if_bytes;
+>  			ilf->ilf_size++;
+>  		} else {
+>  			iip->ili_fields &= ~XFS_ILOG_ADATA;
+> diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+> index 6d44f5fd6d7e..d28ffaebd067 100644
+> --- a/fs/xfs/xfs_inode_item_recover.c
+> +++ b/fs/xfs/xfs_inode_item_recover.c
+> @@ -462,7 +462,7 @@ xlog_recover_inode_commit_pass2(
+>  	ASSERT(in_f->ilf_size <= 4);
+>  	ASSERT((in_f->ilf_size == 3) || (fields & XFS_ILOG_AFORK));
+>  	ASSERT(!(fields & XFS_ILOG_DFORK) ||
+> -	       (len == in_f->ilf_dsize));
+> +	       (len == xlog_calc_iovec_len(in_f->ilf_dsize)));
+>  
+>  	switch (fields & XFS_ILOG_DFORK) {
+>  	case XFS_ILOG_DDATA:
+> @@ -497,7 +497,7 @@ xlog_recover_inode_commit_pass2(
+>  		}
+>  		len = item->ri_buf[attr_index].i_len;
+>  		src = item->ri_buf[attr_index].i_addr;
+> -		ASSERT(len == in_f->ilf_asize);
+> +		ASSERT(len == xlog_calc_iovec_len(in_f->ilf_asize));
+>  
+>  		switch (in_f->ilf_fields & XFS_ILOG_AFORK) {
+>  		case XFS_ILOG_ADATA:
+> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> index 8dafe8f771c7..d9aebca3f971 100644
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -21,6 +21,17 @@ struct xfs_log_vec {
+>  
+>  #define XFS_LOG_VEC_ORDERED	(-1)
+>  
+> +/*
+> + * Calculate the log iovec length for a given user buffer length. Intended to be
+> + * used by ->iop_size implementations when sizing buffers of arbitrary
+> + * alignments.
+> + */
+> +static inline int
+> +xlog_calc_iovec_len(int len)
+> +{
+> +	return roundup(len, 4);
+> +}
 > +
->  /*
->   * LOWMODE is used by the allocator to activate the lowspace algorithm - when
->   * free space is running low the extent allocator may choose to allocate an
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index ed67c0028a68..3b968b31911b 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -255,7 +255,7 @@ xfs_trans_log_finish_bmap_update(
->  	 * 1.) releases the BUI and frees the BUD
->  	 * 2.) shuts down the filesystem
->  	 */
-> -	tp->t_flags |= XFS_TRANS_DIRTY;
-> +	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
->  	set_bit(XFS_LI_DIRTY, &budp->bud_item.li_flags);
+>  void *xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
+>  		uint type);
 >  
->  	return error;
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 21a159f9d8c5..96735f23d12d 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -381,7 +381,7 @@ xfs_trans_free_extent(
->  	 * 1.) releases the EFI and frees the EFD
->  	 * 2.) shuts down the filesystem
->  	 */
-> -	tp->t_flags |= XFS_TRANS_DIRTY;
-> +	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
->  	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
+> @@ -29,6 +40,12 @@ xlog_finish_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec *vec, int len)
+>  {
+>  	struct xlog_op_header	*oph = vec->i_addr;
 >  
->  	next_extent = efdp->efd_next_extent;
-> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> index 6536eea4c6ea..b523ce2c775b 100644
-> --- a/fs/xfs/xfs_refcount_item.c
-> +++ b/fs/xfs/xfs_refcount_item.c
-> @@ -260,7 +260,7 @@ xfs_trans_log_finish_refcount_update(
->  	 * 1.) releases the CUI and frees the CUD
->  	 * 2.) shuts down the filesystem
->  	 */
-> -	tp->t_flags |= XFS_TRANS_DIRTY;
-> +	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
->  	set_bit(XFS_LI_DIRTY, &cudp->cud_item.li_flags);
+> +	/*
+> +	 * Always round up the length to the correct alignment so callers don't
+> +	 * need to know anything about this log vec layout requirement.
+> +	 */
+> +	len = xlog_calc_iovec_len(len);
+> +
+>  	/* opheader tracks payload length, logvec tracks region length */
+>  	oph->oh_len = cpu_to_be32(len);
 >  
->  	return error;
-> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> index c2bb8cfc231e..b269e68407b9 100644
-> --- a/fs/xfs/xfs_rmap_item.c
-> +++ b/fs/xfs/xfs_rmap_item.c
-> @@ -328,7 +328,7 @@ xfs_trans_log_finish_rmap_update(
->  	 * 1.) releases the RUI and frees the RUD
->  	 * 2.) shuts down the filesystem
->  	 */
-> -	tp->t_flags |= XFS_TRANS_DIRTY;
-> +	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
->  	set_bit(XFS_LI_DIRTY, &rudp->rud_item.li_flags);
+> @@ -36,8 +53,14 @@ xlog_finish_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec *vec, int len)
+>  	lv->lv_buf_len += len;
+>  	lv->lv_bytes += len;
+>  	vec->i_len = len;
+> +
+> +	/* Catch buffer overruns */
+> +	ASSERT((void *)lv->lv_buf + lv->lv_bytes <= (void *)lv + lv->lv_size);
+>  }
 >  
->  	return error;
+> +/*
+> + * Copy the amount of data requested by the caller into a new log iovec.
+> + */
+>  static inline void *
+>  xlog_copy_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
+>  		uint type, void *data, int len)
 > -- 
 > 2.35.1
 > 
