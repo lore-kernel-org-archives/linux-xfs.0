@@ -2,179 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2EF2C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 02:23:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34845C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Apr 2022 02:23:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357159AbiD0C0M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Apr 2022 22:26:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45522 "EHLO
+        id S233257AbiD0C0N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Apr 2022 22:26:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233257AbiD0C0M (ORCPT
+        with ESMTP id S1357158AbiD0C0M (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Apr 2022 22:26:12 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B65BF14B65D
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BFAEB14B67F
         for <linux-xfs@vger.kernel.org>; Tue, 26 Apr 2022 19:23:02 -0700 (PDT)
 Received: from dread.disaster.area (pa49-195-62-197.pa.nsw.optusnet.com.au [49.195.62.197])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 061E410E5EFB
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D6A2C10E5ECB
         for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 12:23:01 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1njXKW-004yyH-Ue
+        id 1njXKW-004yy6-O5
         for linux-xfs@vger.kernel.org; Wed, 27 Apr 2022 12:23:00 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1njXKW-002uvD-Th
+        id 1njXKW-002uuo-MT
         for linux-xfs@vger.kernel.org;
         Wed, 27 Apr 2022 12:23:00 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/8] xfs: add log item method to return related intents
-Date:   Wed, 27 Apr 2022 12:22:57 +1000
-Message-Id: <20220427022259.695399-7-david@fromorbit.com>
+Subject: [PATCH 0/8 v5] xfs: intent whiteouts
+Date:   Wed, 27 Apr 2022 12:22:51 +1000
+Message-Id: <20220427022259.695399-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220427022259.695399-1-david@fromorbit.com>
-References: <20220427022259.695399-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6268a906
         a=KhGSFSjofVlN3/cgq4AT7A==:117 a=KhGSFSjofVlN3/cgq4AT7A==:17
-        a=z0gMJWrwH1QA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=S1N-PUcTW3_U964qLncA:9
+        a=z0gMJWrwH1QA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=z5N34AlkwVaS4wSXBg8A:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-To apply a whiteout to an intent item when an intent done item is
-committed, we need to be able to retrieve the intent item from the
-the intent done item. Add a log item op method for doing this, and
-wire all the intent done items up to it.
+This is a patchset inspired by the performance regressions that were
+seen from logging 64k xattrs with Allison's delayed attribute
+patchset and trying to work out how to minimise the impact of
+logging xattrs. Most of that is explained in the "xfs: intent item
+whiteouts" patch, so I won't repeat it here.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/xfs_bmap_item.c     | 8 ++++++++
- fs/xfs/xfs_extfree_item.c  | 8 ++++++++
- fs/xfs/xfs_refcount_item.c | 8 ++++++++
- fs/xfs/xfs_rmap_item.c     | 8 ++++++++
- fs/xfs/xfs_trans.h         | 1 +
- 5 files changed, 33 insertions(+)
+The whiteouts massively reduce the journal write overhead of logging
+xattrs - with this patchset I've reduced 2.5GB/s of log traffic (16
+way file create w/64k xattr workload) down to approximately 220MB of
+log traffic, and performance has increased from 9k creates/s to 36k
+creates/s. The workload still writes to disk at 2.5GB/s, but that's
+what writing 35k x 64k xattrs to disk does.
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 3b968b31911b..e1b0e321d604 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -201,12 +201,20 @@ xfs_bud_item_release(
- 	kmem_cache_free(xfs_bud_cache, budp);
- }
- 
-+static struct xfs_log_item *
-+xfs_bud_item_intent(
-+	struct xfs_log_item	*lip)
-+{
-+	return &BUD_ITEM(lip)->bud_buip->bui_item;
-+}
-+
- static const struct xfs_item_ops xfs_bud_item_ops = {
- 	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
- 			  XFS_ITEM_INTENT_DONE,
- 	.iop_size	= xfs_bud_item_size,
- 	.iop_format	= xfs_bud_item_format,
- 	.iop_release	= xfs_bud_item_release,
-+	.iop_intent	= xfs_bud_item_intent,
- };
- 
- static struct xfs_bud_log_item *
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 96735f23d12d..032db5269e97 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -306,12 +306,20 @@ xfs_efd_item_release(
- 	xfs_efd_item_free(efdp);
- }
- 
-+static struct xfs_log_item *
-+xfs_efd_item_intent(
-+	struct xfs_log_item	*lip)
-+{
-+	return &EFD_ITEM(lip)->efd_efip->efi_item;
-+}
-+
- static const struct xfs_item_ops xfs_efd_item_ops = {
- 	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
- 			  XFS_ITEM_INTENT_DONE,
- 	.iop_size	= xfs_efd_item_size,
- 	.iop_format	= xfs_efd_item_format,
- 	.iop_release	= xfs_efd_item_release,
-+	.iop_intent	= xfs_efd_item_intent,
- };
- 
- /*
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index b523ce2c775b..a2213b5ee344 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -207,12 +207,20 @@ xfs_cud_item_release(
- 	kmem_cache_free(xfs_cud_cache, cudp);
- }
- 
-+static struct xfs_log_item *
-+xfs_cud_item_intent(
-+	struct xfs_log_item	*lip)
-+{
-+	return &CUD_ITEM(lip)->cud_cuip->cui_item;
-+}
-+
- static const struct xfs_item_ops xfs_cud_item_ops = {
- 	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
- 			  XFS_ITEM_INTENT_DONE,
- 	.iop_size	= xfs_cud_item_size,
- 	.iop_format	= xfs_cud_item_format,
- 	.iop_release	= xfs_cud_item_release,
-+	.iop_intent	= xfs_cud_item_intent,
- };
- 
- static struct xfs_cud_log_item *
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index b269e68407b9..053eb135380c 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -230,12 +230,20 @@ xfs_rud_item_release(
- 	kmem_cache_free(xfs_rud_cache, rudp);
- }
- 
-+static struct xfs_log_item *
-+xfs_rud_item_intent(
-+	struct xfs_log_item	*lip)
-+{
-+	return &RUD_ITEM(lip)->rud_ruip->rui_item;
-+}
-+
- static const struct xfs_item_ops xfs_rud_item_ops = {
- 	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED |
- 			  XFS_ITEM_INTENT_DONE,
- 	.iop_size	= xfs_rud_item_size,
- 	.iop_format	= xfs_rud_item_format,
- 	.iop_release	= xfs_rud_item_release,
-+	.iop_intent	= xfs_rud_item_intent,
- };
- 
- static struct xfs_rud_log_item *
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index f68e74e46026..d72a5995d33e 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -78,6 +78,7 @@ struct xfs_item_ops {
- 	bool (*iop_match)(struct xfs_log_item *item, uint64_t id);
- 	struct xfs_log_item *(*iop_relog)(struct xfs_log_item *intent,
- 			struct xfs_trans *tp);
-+	struct xfs_log_item *(*iop_intent)(struct xfs_log_item *intent_done);
- };
- 
- /*
--- 
-2.35.1
+This is still short of the non-logged attribute mechanism, which
+runs at 40-45k creates a second and 3.5-4GB/s to disk, but it brings
+logged attrs to within roughly 5-15% of non-logged attrs across the
+full range of attribute sizes.
+
+So, while this patchset was clearly insired and has major positive
+impact on Allison's delayed attribute work, it also applies
+generically to all other intent/intent done pairs that already
+exist. Hence I've created this patchset as a stand-alone patchset
+that isn't dependent on the delayed attributes being committed, nor
+does the delayed attribute patchset need this to funciton properly.
+IOWs, they can be merged in parallel and then the attribute log item
+implementation be updated to support whiteouts after the fact.
+
+This patchset is separate to the attr code, though, because
+intent whiteouts are not specific to the attr code. They are a
+generic mechanism that can be applied to all the intent/intent done
+item pairs we already have. This patch set modifies all those
+intents to use whiteouts, and so there is benefits from the patch
+set for all operations that use these intents.
+
+With respect to the delayed attribute patchset, it can be merged
+with/without whiteout support and still work correctly with/without
+this patchset in place. Once both intent whiteouts and delayed attrs
+are merged, we can add whiteout support to delayed attributes with
+only a few lines of extra code.
+
+-Dave.
+
+Changelog:
+
+Version 5:
+- rebased on 5.18-rc2 + linux-xfs/for-next
+- converted transaction flags to unsigned to match tp->t_flags definition
+
+Version 4:
+- not published
+- rebased on 5.17 + for-next + log shutdown fixes + xlog-write-rework
+- fixed memory leak of CUI shadow buffers from log recovery when clearing
+  leftover reflink entries.
+
+Version 3:
+- https://lore.kernel.org/linux-xfs/20220314220631.3093283-1-david@fromorbit.com/
+- rebased on 5.17-rc4 + xlog-write-rework
+- no longer dependent on xfs-cil-scalability, so there's some porting changes
+  that was needed to remove all the per-cpu CIL dependencies.
+
+Version 2:
+- not published
+- rebased on 5.15-rc2 + xfs-cil-scalability
+- dropped the kvmalloc changes for CIL shadow buffers as that's a
+  separate perf problem and not something related to intent
+  whiteouts.
+- dropped all the delayed attribute modifications so that the
+  patchset is not dependent on Allison's dev tree.
+- Thanks to Allison for an initial quick review pass - I haven't
+  included those RVB tags because every patch in the series has
+  changed since the original RFC posting.
+
+RFC:
+- https://lore.kernel.org/linux-xfs/20210909212133.GE2361455@dread.disaster.area/
 
