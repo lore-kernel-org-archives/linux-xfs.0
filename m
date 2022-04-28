@@ -2,116 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25361C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Apr 2022 17:47:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4CBFC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Apr 2022 18:16:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350595AbiD1Ru4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Apr 2022 13:50:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60302 "EHLO
+        id S1350813AbiD1STi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Apr 2022 14:19:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350582AbiD1Ru4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Apr 2022 13:50:56 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01F8CBAB86;
-        Thu, 28 Apr 2022 10:47:40 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 898BE1F745;
-        Thu, 28 Apr 2022 17:47:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1651168059; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=KrT9OotE4Hcl4npj66dN3ozvEYqDadpB3sUAPal3Wsw=;
-        b=n0gUX2+qpTxrBCCCko5bBy/VU1s0TBecEI93zE4o71YRCGtl5+ZLlRCsmUcwCwCvm3+kAd
-        CPhrFmF+ULlqczgfWbAy+GTeFElZT1S4ePHR+dosfCp2QHlfIrULfWqeRIjNzlCu32bfMn
-        W+ZVcYqvT3JriR4Bha0A+XRmYQ/ydfI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1651168059;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=KrT9OotE4Hcl4npj66dN3ozvEYqDadpB3sUAPal3Wsw=;
-        b=KbiTI7IP5HpOQP/8EwL12R8D8PbfrETF8o2utoE0CAAfiTkmRVLtV0UDqo5TMWBOGbY7h7
-        d+Q/nK/NzMAh35DA==
-Received: from quack3.suse.cz (unknown [10.100.224.230])
+        with ESMTP id S1350809AbiD1STh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Apr 2022 14:19:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEB163C4AA;
+        Thu, 28 Apr 2022 11:16:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 553E52C141;
-        Thu, 28 Apr 2022 17:47:39 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 149B7A061A; Thu, 28 Apr 2022 19:47:36 +0200 (CEST)
-Date:   Thu, 28 Apr 2022 19:47:36 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Stefan Roesch <shr@fb.com>
-Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com
-Subject: Re: [RFC PATCH v1 15/18] mm: support write throttling for async
- buffered writes
-Message-ID: <20220428174736.mgadsxfuiwmoxrzx@quack3.lan>
-References: <20220426174335.4004987-1-shr@fb.com>
- <20220426174335.4004987-16-shr@fb.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220426174335.4004987-16-shr@fb.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0817660F66;
+        Thu, 28 Apr 2022 18:16:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 600B2C385A0;
+        Thu, 28 Apr 2022 18:16:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651169781;
+        bh=qPdfhy27XT2yJCnYHpoLRsrZH9zttwQKzj7Jcr56RUY=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=f8I1H3wVH7ZCDZRoRGDFzdQLK9BocgRGfcnN7q6bU7EHQIlFYINtpoZzjcPDuquF6
+         yaS3Joszgbof1k0hWF2NkGCVfFSdPqr+ujd6ABFo2TSkDtoyJFX52dhy5hq5ae25dd
+         Me4P90Is4y8KdYozxV3fe7WvO1vPimD8S0ZE8TrlZvBhl6PWkV8mc6HGsv1RPuBzWm
+         2xC7iumcgHFL65kWe41O4mUgV3jlJIP6I2vDDO1Oa/jC52QBHdscG8eCm9wXk72fqy
+         n+xJn957OGtuZRTgdupskJla6akwT3r7CRxjcu78GSeB12DdtkmJXvHYUgCBOGcljg
+         Lz3FQt4aB+pIA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 4E495E85D90;
+        Thu, 28 Apr 2022 18:16:21 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: fixes for 5.18-rc5
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20220428061921.GS1098723@dread.disaster.area>
+References: <20220428061921.GS1098723@dread.disaster.area>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20220428061921.GS1098723@dread.disaster.area>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.18-fixes-1
+X-PR-Tracked-Commit-Id: 9a5280b312e2e7898b6397b2ca3cfd03f67d7be1
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 8061e16e203f36e7a5990535760ecb2e60a365f9
+Message-Id: <165116978131.27414.10717205621915392616.pr-tracker-bot@kernel.org>
+Date:   Thu, 28 Apr 2022 18:16:21 +0000
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-xfs@vger.kernel.org, djwong@kernel.org,
+        linux-kernel@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 26-04-22 10:43:32, Stefan Roesch wrote:
-> This change adds support for async write throttling in the function
-> balance_dirty_pages(). So far if throttling was required, the code was
-> waiting synchronously as long as the writes were throttled. This change
-> introduces asynchronous throttling. Instead of waiting in the function
-> balance_dirty_pages(), the timeout is set in the task_struct field
-> bdp_pause. Once the timeout has expired, the writes are no longer
-> throttled.
-> 
-> - Add a new parameter to the balance_dirty_pages() function
->   - This allows the caller to pass in the nowait flag
->   - When the nowait flag is specified, the code does not wait in
->     balance_dirty_pages(), but instead stores the wait expiration in the
->     new task_struct field bdp_pause.
-> 
-> - The function balance_dirty_pages_ratelimited() resets the new values
->   in the task_struct, once the timeout has expired
-> 
-> This change is required to support write throttling for the async
-> buffered writes. While the writes are throttled, io_uring still can make
-> progress with processing other requests.
-> 
-> Signed-off-by: Stefan Roesch <shr@fb.com>
+The pull request you sent on Thu, 28 Apr 2022 16:19:21 +1000:
 
-Maybe I miss something but I don't think this will throttle writers enough.
-For three reasons:
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.18-fixes-1
 
-1) The calculated throttling pauses should accumulate for the task so that
-if we compute that say it takes 0.1s to write 100 pages and the task writes
-300 pages, the delay adds up to 0.3s properly. Otherwise the task would not
-be throttled as long as we expect the writeback to take.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/8061e16e203f36e7a5990535760ecb2e60a365f9
 
-2) We must not allow the amount of dirty pages to exceed the dirty limit.
-That can easily lead to page reclaim getting into trouble reclaiming pages
-and thus machine stalls, oom kills etc. So if we are coming close to dirty
-limit and we cannot sleep, we must just fail the nowait write.
-
-3) Even with above two problems fixed I suspect results will be suboptimal
-because balance_dirty_pages() heuristics assume they get called reasonably
-often and throttle writes so if amount of dirty pages is coming close to
-dirty limit, they think we are overestimating writeback speed and update
-throttling parameters accordingly. So if io_uring code does not throttle
-writers often enough, I think dirty throttling parameters will be jumping
-wildly resulting in poor behavior.
-
-So what I'd probably suggest is that if balance_dirty_pages() is called in
-"async" mode, we'd give tasks a pass until dirty_freerun_ceiling(). If
-balance_dirty_pages() decides the task needs to wait, we store the pause
-and bail all the way up into the place where we can sleep (io_uring code I
-assume), sleep there, and then continue doing write.
-
-								Honza
+Thank you!
 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
