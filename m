@@ -2,78 +2,62 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1543FC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Apr 2022 03:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA104C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Apr 2022 03:31:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241706AbiD1DG1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Apr 2022 23:06:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56710 "EHLO
+        id S242203AbiD1Dev (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Apr 2022 23:34:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241759AbiD1DGU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 23:06:20 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C45BE255A6
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 20:03:06 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4969A14948B;
-        Wed, 27 Apr 2022 22:02:42 -0500 (CDT)
-Message-ID: <f18dea5c-a723-6317-9835-c1731bfe8b08@sandeen.net>
-Date:   Wed, 27 Apr 2022 22:03:06 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH 27/48] xfs_repair: fix AG header btree level comparisons
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        with ESMTP id S242206AbiD1Deu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Apr 2022 23:34:50 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3FCD97DA9F
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Apr 2022 20:31:36 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-62-197.pa.nsw.optusnet.com.au [49.195.62.197])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 83AFE10E5F4D;
+        Thu, 28 Apr 2022 13:31:33 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1njusP-005Opx-6n; Thu, 28 Apr 2022 13:31:33 +1000
+Date:   Thu, 28 Apr 2022 13:31:33 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Fabrice Fontaine <fontaine.fabrice@gmail.com>
 Cc:     linux-xfs@vger.kernel.org
-References: <164263819185.865554.6000499997543946756.stgit@magnolia>
- <164263834099.865554.12607282164360768854.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <164263834099.865554.12607282164360768854.stgit@magnolia>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] io/mmap.c: fix musl build on mips64
+Message-ID: <20220428033133.GR1098723@dread.disaster.area>
+References: <20220418203606.760110-1-fontaine.fabrice@gmail.com>
+ <20220418230222.GN1544202@dread.disaster.area>
+ <CAPi7W8206zDwkfbw4ruQ2B+TN+E3XX2NQ35mtzMT+aQ2+6BYAw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPi7W8206zDwkfbw4ruQ2B+TN+E3XX2NQ35mtzMT+aQ2+6BYAw@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=626a0a96
+        a=KhGSFSjofVlN3/cgq4AT7A==:117 a=KhGSFSjofVlN3/cgq4AT7A==:17
+        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=7-415B0cAAAA:8
+        a=EMJQmhU37cHKYb5OrV8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/19/22 6:25 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Apr 27, 2022 at 09:54:02PM +0200, Fabrice Fontaine wrote:
+> Hi,
 > 
-> It's not an error if repair encounters a btree with the maximal
-> height, so don't print warnings.  Also, we don't allow zero-height
-> btrees.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Were you able to go further in your tests?
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+I've looked into it a bit more, and this is a string that ends in a
+big tangled ball that I do not have time to untangle right now.
 
-> ---
->  repair/scan.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/repair/scan.c b/repair/scan.c
-> index 909c4494..e2d281a2 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-> @@ -2297,7 +2297,7 @@ validate_agf(
->  		priv.nr_blocks = 0;
->  
->  		levels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
-> -		if (levels >= XFS_BTREE_MAXLEVELS) {
-> +		if (levels == 0 || levels > XFS_BTREE_MAXLEVELS) {
->  			do_warn(_("bad levels %u for rmapbt root, agno %d\n"),
->  				levels, agno);
->  			rmap_avoid_check();
-> @@ -2323,7 +2323,7 @@ validate_agf(
->  		unsigned int	levels;
->  
->  		levels = be32_to_cpu(agf->agf_refcount_level);
-> -		if (levels >= XFS_BTREE_MAXLEVELS) {
-> +		if (levels == 0 || levels > XFS_BTREE_MAXLEVELS) {
->  			do_warn(_("bad levels %u for refcountbt root, agno %d\n"),
->  				levels, agno);
->  			refcount_avoid_check();
-> 
+Can you please fix the commit message to indicate why moving the
+header file avoids the build issue so we have a record of the reason
+for the issue occuring in the commit history?
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
