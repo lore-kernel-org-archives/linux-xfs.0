@@ -2,91 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 429CBC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Apr 2022 16:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25361C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Apr 2022 17:47:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345528AbiD1Qtu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Apr 2022 12:49:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39018 "EHLO
+        id S1350595AbiD1Ru4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Apr 2022 13:50:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231278AbiD1Qtt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Apr 2022 12:49:49 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05E864A90B
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Apr 2022 09:46:34 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id w1so9673333lfa.4
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Apr 2022 09:46:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=nUCMX2s+rfJjnCRjPBsqTrvIeHc/xB8tXJiukV/x6uw=;
-        b=CFs7namgLcbBdzCbwOWn2HbPugYal+FkQVh5xTQTuNZ4X2cDs80Xv/mDS6+440fwDi
-         CC2DbosLjDm+BxDHJcapajycT4b0+dLD2PsDJ3JXhK3ksFxCFasZN9PIAY59aQp8gteJ
-         Xpt91Gtmx1ig/8drEurcSZU7ZSUfFnYJPjHFU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=nUCMX2s+rfJjnCRjPBsqTrvIeHc/xB8tXJiukV/x6uw=;
-        b=I3gl7IuLgv+TvsXylTDxbL9kRaEG5SFGmMC3hpI/fbB2T00wz09EK3rINYW6RoNP9P
-         8PhWD3k5zZIEguqp3Zf96Mw+DyAXj6LqetkMMkNis4Ruim9lcARnq2ioqrUuWElu+dVX
-         Ed99sJLDKXpRrZAktL8IOwR4Zk5UYhdYrV/kVKnKiQLi58k9cUPkWW8XxPYaTNlujZ2Y
-         i2fBHEXrblBo4yjq0z4BVLg0sRXVs4bSSCtYHgoOU+4vMdnsIb2bdHcBSqKJFR+Hfox2
-         KumhjHkZtTxkXfhZcdW254yMeGAxAKsd4KoO4eAM4P9VEsU8xSIpV+pthR2w00Anw+Yj
-         QMIA==
-X-Gm-Message-State: AOAM5313kbKbj1qnG5b7fiOjQ5EYV0kbh24pJVfYoIDeToY2xdc9D93y
-        a7LVVvqP+DQeIJ55M7DvcnfXTYSvhaMBUWNbNio=
-X-Google-Smtp-Source: ABdhPJxr9A65ko7hN5eEQVybXGDCr0tfnIgNja2QoKFsaGjXWKhbI1FREq15TnG7DUgdYOBHRgDBMw==
-X-Received: by 2002:a05:6512:3fa0:b0:44a:f66c:8365 with SMTP id x32-20020a0565123fa000b0044af66c8365mr25282821lfa.152.1651164391941;
-        Thu, 28 Apr 2022 09:46:31 -0700 (PDT)
-Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com. [209.85.167.53])
-        by smtp.gmail.com with ESMTPSA id s13-20020a195e0d000000b00471fec5ec68sm45315lfb.18.2022.04.28.09.46.30
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Apr 2022 09:46:31 -0700 (PDT)
-Received: by mail-lf1-f53.google.com with SMTP id w19so9638837lfu.11
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Apr 2022 09:46:30 -0700 (PDT)
-X-Received: by 2002:a05:6512:3c93:b0:44b:4ba:c334 with SMTP id
- h19-20020a0565123c9300b0044b04bac334mr24872519lfv.27.1651164390506; Thu, 28
- Apr 2022 09:46:30 -0700 (PDT)
+        with ESMTP id S1350582AbiD1Ru4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Apr 2022 13:50:56 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01F8CBAB86;
+        Thu, 28 Apr 2022 10:47:40 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id 898BE1F745;
+        Thu, 28 Apr 2022 17:47:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1651168059; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=KrT9OotE4Hcl4npj66dN3ozvEYqDadpB3sUAPal3Wsw=;
+        b=n0gUX2+qpTxrBCCCko5bBy/VU1s0TBecEI93zE4o71YRCGtl5+ZLlRCsmUcwCwCvm3+kAd
+        CPhrFmF+ULlqczgfWbAy+GTeFElZT1S4ePHR+dosfCp2QHlfIrULfWqeRIjNzlCu32bfMn
+        W+ZVcYqvT3JriR4Bha0A+XRmYQ/ydfI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1651168059;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=KrT9OotE4Hcl4npj66dN3ozvEYqDadpB3sUAPal3Wsw=;
+        b=KbiTI7IP5HpOQP/8EwL12R8D8PbfrETF8o2utoE0CAAfiTkmRVLtV0UDqo5TMWBOGbY7h7
+        d+Q/nK/NzMAh35DA==
+Received: from quack3.suse.cz (unknown [10.100.224.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 553E52C141;
+        Thu, 28 Apr 2022 17:47:39 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 149B7A061A; Thu, 28 Apr 2022 19:47:36 +0200 (CEST)
+Date:   Thu, 28 Apr 2022 19:47:36 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Stefan Roesch <shr@fb.com>
+Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com
+Subject: Re: [RFC PATCH v1 15/18] mm: support write throttling for async
+ buffered writes
+Message-ID: <20220428174736.mgadsxfuiwmoxrzx@quack3.lan>
+References: <20220426174335.4004987-1-shr@fb.com>
+ <20220426174335.4004987-16-shr@fb.com>
 MIME-Version: 1.0
-References: <20220428061921.GS1098723@dread.disaster.area>
-In-Reply-To: <20220428061921.GS1098723@dread.disaster.area>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Thu, 28 Apr 2022 09:46:14 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wiVgPPczqyLyOg8fmGYc1z+-ngPKkS_bCTwefcLXfp4CQ@mail.gmail.com>
-Message-ID: <CAHk-=wiVgPPczqyLyOg8fmGYc1z+-ngPKkS_bCTwefcLXfp4CQ@mail.gmail.com>
-Subject: Re: [GIT PULL] xfs: fixes for 5.18-rc5
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220426174335.4004987-16-shr@fb.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 27, 2022 at 11:19 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> It's all minor stuff;  a 5.18 build regession fix, a deadlock fix
-> and an update to remove redundant fields from the XFS entry in the
-> MAINTAINERS file.
+On Tue 26-04-22 10:43:32, Stefan Roesch wrote:
+> This change adds support for async write throttling in the function
+> balance_dirty_pages(). So far if throttling was required, the code was
+> waiting synchronously as long as the writes were throttled. This change
+> introduces asynchronous throttling. Instead of waiting in the function
+> balance_dirty_pages(), the timeout is set in the task_struct field
+> bdp_pause. Once the timeout has expired, the writes are no longer
+> throttled.
+> 
+> - Add a new parameter to the balance_dirty_pages() function
+>   - This allows the caller to pass in the nowait flag
+>   - When the nowait flag is specified, the code does not wait in
+>     balance_dirty_pages(), but instead stores the wait expiration in the
+>     new task_struct field bdp_pause.
+> 
+> - The function balance_dirty_pages_ratelimited() resets the new values
+>   in the task_struct, once the timeout has expired
+> 
+> This change is required to support write throttling for the async
+> buffered writes. While the writes are throttled, io_uring still can make
+> progress with processing other requests.
+> 
+> Signed-off-by: Stefan Roesch <shr@fb.com>
 
-Done.
+Maybe I miss something but I don't think this will throttle writers enough.
+For three reasons:
 
-I had to look twice at that patch going "why does it complain about
-the xfs flags thing" until I realized it was due to XBF_UNMAPPED being
-(1 <<31) and the compiler then seeing explicit negative values being
-assigned.
+1) The calculated throttling pauses should accumulate for the task so that
+if we compute that say it takes 0.1s to write 100 pages and the task writes
+300 pages, the delay adds up to 0.3s properly. Otherwise the task would not
+be throttled as long as we expect the writeback to take.
 
-We have a lot of "int flags" in various places, very much not just
-xfs, and yeah, we should probably try to clean them up.
+2) We must not allow the amount of dirty pages to exceed the dirty limit.
+That can easily lead to page reclaim getting into trouble reclaiming pages
+and thus machine stalls, oom kills etc. So if we are coming close to dirty
+limit and we cannot sleep, we must just fail the nowait write.
 
-But 99% of the time it's just not worth the noise.
+3) Even with above two problems fixed I suspect results will be suboptimal
+because balance_dirty_pages() heuristics assume they get called reasonably
+often and throttle writes so if amount of dirty pages is coming close to
+dirty limit, they think we are overestimating writeback speed and update
+throttling parameters accordingly. So if io_uring code does not throttle
+writers often enough, I think dirty throttling parameters will be jumping
+wildly resulting in poor behavior.
 
-And xfs only hit it because you guys literally used up the whole 'int'
-for it, normally the compiler won't make a peep about it.
+So what I'd probably suggest is that if balance_dirty_pages() is called in
+"async" mode, we'd give tasks a pass until dirty_freerun_ceiling(). If
+balance_dirty_pages() decides the task needs to wait, we store the pause
+and bail all the way up into the place where we can sleep (io_uring code I
+assume), sleep there, and then continue doing write.
 
-Thanks,
-                     Linus
+								Honza
+
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
