@@ -2,271 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44682C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 May 2022 08:20:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A0FFC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 May 2022 09:44:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359303AbiEBIYM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 May 2022 04:24:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34070 "EHLO
+        id S1353113AbiEBJsB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 May 2022 05:48:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1383749AbiEBIXz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 May 2022 04:23:55 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 671E1644B
-        for <linux-xfs@vger.kernel.org>; Mon,  2 May 2022 01:20:26 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 94012534BB3
-        for <linux-xfs@vger.kernel.org>; Mon,  2 May 2022 18:20:22 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nlRI4-0073Tg-ML
-        for linux-xfs@vger.kernel.org; Mon, 02 May 2022 18:20:20 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.95)
-        (envelope-from <david@fromorbit.com>)
-        id 1nlRI4-004WM9-L5
-        for linux-xfs@vger.kernel.org;
-        Mon, 02 May 2022 18:20:20 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/4] xfs: detect self referencing btree sibling pointers
-Date:   Mon,  2 May 2022 18:20:15 +1000
-Message-Id: <20220502082018.1076561-2-david@fromorbit.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220502082018.1076561-1-david@fromorbit.com>
-References: <20220502082018.1076561-1-david@fromorbit.com>
+        with ESMTP id S1351744AbiEBJsB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 May 2022 05:48:01 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D50161CF
+        for <linux-xfs@vger.kernel.org>; Mon,  2 May 2022 02:44:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1651484672; x=1683020672;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=bqxSOvToufb2ubldzolaelfvFGZZokbcWKbp4ey/gbE=;
+  b=Ps5UAoTmw0XfeSy5Uau0P8zuCj0WfYtAll6fxQuTU8uak8oRSOYJL+u/
+   YYccLlS0hBNzDn2+VFUuHA0Oe4m6MHuvd1vCjIP+KVciym0qi31C6WEnk
+   vV7oqWtSt+IDZho82Q9ciPsMZ1ybKvHhG+GVsFGaWBmZLvXWS/NcBEwca
+   Ie+r37EiS4AVkpPbLby0FwkYBpXe3Wd49RZ8vvcMwj+377Vl/5pus7O6n
+   DqL9ZYRyUdm0E+BuigY+U31IwjtJoFAHAUWt1qfjO1VJvJnXS91QVRLz9
+   hFBtlvG3U7B8bp7G7GTrnJGoOxe7ggEQKiKikJt5xS+V88vpZcBhDwmIb
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10334"; a="264759235"
+X-IronPort-AV: E=Sophos;i="5.91,190,1647327600"; 
+   d="scan'208";a="264759235"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 May 2022 02:44:32 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,190,1647327600"; 
+   d="scan'208";a="516003394"
+Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 02 May 2022 02:44:30 -0700
+Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nlSbW-0009Sf-52;
+        Mon, 02 May 2022 09:44:30 +0000
+Date:   Mon, 2 May 2022 17:44:28 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     kbuild-all@lists.01.org
+Subject: Re: [PATCH 4/4] xfs: validate v5 feature fields
+Message-ID: <202205021726.Rr1K0yfS-lkp@intel.com>
+References: <20220502082018.1076561-5-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=626f9446
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=h5XfSTf-C_0QDq3dHd0A:9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220502082018.1076561-5-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi Dave,
 
-To catch the obvious graph cycle problem and hence potential endless
-looping.
+Thank you for the patch! Perhaps something to improve:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_btree.c | 137 ++++++++++++++++++++++++++++----------
- 1 file changed, 102 insertions(+), 35 deletions(-)
+[auto build test WARNING on xfs-linux/for-next]
+[also build test WARNING on next-20220429]
+[cannot apply to v5.18-rc5]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index a8c79e760d8a..991fae6f500a 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -51,6 +51,50 @@ xfs_btree_magic(
- 	return magic;
- }
- 
-+static xfs_failaddr_t
-+xfs_btree_check_lblock_siblings(
-+	struct xfs_mount	*mp,
-+	struct xfs_btree_cur	*cur,
-+	int			level,
-+	xfs_fsblock_t		fsb,
-+	xfs_fsblock_t		sibling)
-+{
-+	if (sibling == NULLFSBLOCK)
-+		return NULL;
-+	if (sibling == fsb)
-+		return __this_address;
-+	if (level >= 0) {
-+		if (!xfs_btree_check_lptr(cur, sibling, level + 1))
-+			return __this_address;
-+	} else if (!xfs_verify_fsbno(mp, sibling)) {
-+		return __this_address;
-+	}
-+
-+	return NULL;
-+}
-+
-+static xfs_failaddr_t
-+xfs_btree_check_sblock_siblings(
-+	struct xfs_mount	*mp,
-+	struct xfs_btree_cur	*cur,
-+	int			level,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno,
-+	xfs_agblock_t		sibling)
-+{
-+	if (sibling == NULLAGBLOCK)
-+		return NULL;
-+	if (sibling == agbno)
-+		return __this_address;
-+	if (level >= 0) {
-+		if (!xfs_btree_check_sptr(cur, sibling, level + 1))
-+			return __this_address;
-+	} else if (!xfs_verify_agbno(mp, agno, sibling)) {
-+		return __this_address;
-+	}
-+	return NULL;
-+}
-+
- /*
-  * Check a long btree block header.  Return the address of the failing check,
-  * or NULL if everything is ok.
-@@ -65,6 +109,8 @@ __xfs_btree_check_lblock(
- 	struct xfs_mount	*mp = cur->bc_mp;
- 	xfs_btnum_t		btnum = cur->bc_btnum;
- 	int			crc = xfs_has_crc(mp);
-+	xfs_failaddr_t		fa;
-+	xfs_fsblock_t		fsb = NULLFSBLOCK;
- 
- 	if (crc) {
- 		if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid))
-@@ -83,16 +129,16 @@ __xfs_btree_check_lblock(
- 	if (be16_to_cpu(block->bb_numrecs) >
- 	    cur->bc_ops->get_maxrecs(cur, level))
- 		return __this_address;
--	if (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
--	    !xfs_btree_check_lptr(cur, be64_to_cpu(block->bb_u.l.bb_leftsib),
--			level + 1))
--		return __this_address;
--	if (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
--	    !xfs_btree_check_lptr(cur, be64_to_cpu(block->bb_u.l.bb_rightsib),
--			level + 1))
--		return __this_address;
- 
--	return NULL;
-+	if (bp)
-+		fsb = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
-+
-+	fa = xfs_btree_check_lblock_siblings(mp, cur, level, fsb,
-+			be64_to_cpu(block->bb_u.l.bb_leftsib));
-+	if (!fa)
-+		fa = xfs_btree_check_lblock_siblings(mp, cur, level, fsb,
-+				be64_to_cpu(block->bb_u.l.bb_rightsib));
-+	return fa;
- }
- 
- /* Check a long btree block header. */
-@@ -130,6 +176,9 @@ __xfs_btree_check_sblock(
- 	struct xfs_mount	*mp = cur->bc_mp;
- 	xfs_btnum_t		btnum = cur->bc_btnum;
- 	int			crc = xfs_has_crc(mp);
-+	xfs_failaddr_t		fa;
-+	xfs_agblock_t		agbno = NULLAGBLOCK;
-+	xfs_agnumber_t		agno = NULLAGNUMBER;
- 
- 	if (crc) {
- 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
-@@ -146,16 +195,18 @@ __xfs_btree_check_sblock(
- 	if (be16_to_cpu(block->bb_numrecs) >
- 	    cur->bc_ops->get_maxrecs(cur, level))
- 		return __this_address;
--	if (block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) &&
--	    !xfs_btree_check_sptr(cur, be32_to_cpu(block->bb_u.s.bb_leftsib),
--			level + 1))
--		return __this_address;
--	if (block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK) &&
--	    !xfs_btree_check_sptr(cur, be32_to_cpu(block->bb_u.s.bb_rightsib),
--			level + 1))
--		return __this_address;
- 
--	return NULL;
-+	if (bp) {
-+		agbno = xfs_daddr_to_agbno(mp, xfs_buf_daddr(bp));
-+		agno = xfs_daddr_to_agno(mp, xfs_buf_daddr(bp));
-+	}
-+
-+	fa = xfs_btree_check_sblock_siblings(mp, cur, level, agno, agbno,
-+			be32_to_cpu(block->bb_u.s.bb_leftsib));
-+	if (!fa)
-+		fa = xfs_btree_check_sblock_siblings(mp, cur, level, agno,
-+				 agbno, be32_to_cpu(block->bb_u.s.bb_rightsib));
-+	return fa;
- }
- 
- /* Check a short btree block header. */
-@@ -4271,6 +4322,20 @@ xfs_btree_visit_block(
- 	if (xfs_btree_ptr_is_null(cur, &rptr))
- 		return -ENOENT;
- 
-+	/*
-+	 * We only visit blocks once in this walk, so we have to avoid the
-+	 * internal xfs_btree_lookup_get_block() optimisation where it will
-+	 * return the same block without checking if the right sibling points
-+	 * back to us and creates a cyclic reference in the btree.
-+	 */
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		if (be64_to_cpu(rptr.l) ==
-+				XFS_DADDR_TO_FSB(cur->bc_mp, xfs_buf_daddr(bp)))
-+			return -EFSCORRUPTED;
-+	} else if (be32_to_cpu(rptr.s) ==
-+			xfs_daddr_to_agbno(cur->bc_mp, xfs_buf_daddr(bp))) {
-+		return -EFSCORRUPTED;
-+	}
- 	return xfs_btree_lookup_get_block(cur, level, &rptr, &block);
- }
- 
-@@ -4445,20 +4510,21 @@ xfs_btree_lblock_verify(
- {
- 	struct xfs_mount	*mp = bp->b_mount;
- 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	xfs_fsblock_t		fsb;
-+	xfs_failaddr_t		fa;
- 
- 	/* numrecs verification */
- 	if (be16_to_cpu(block->bb_numrecs) > max_recs)
- 		return __this_address;
- 
- 	/* sibling pointer verification */
--	if (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
--	    !xfs_verify_fsbno(mp, be64_to_cpu(block->bb_u.l.bb_leftsib)))
--		return __this_address;
--	if (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
--	    !xfs_verify_fsbno(mp, be64_to_cpu(block->bb_u.l.bb_rightsib)))
--		return __this_address;
--
--	return NULL;
-+	fsb = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
-+	fa = xfs_btree_check_lblock_siblings(mp, NULL, -1, fsb,
-+			be64_to_cpu(block->bb_u.l.bb_leftsib));
-+	if (!fa)
-+		fa = xfs_btree_check_lblock_siblings(mp, NULL, -1, fsb,
-+				be64_to_cpu(block->bb_u.l.bb_rightsib));
-+	return fa;
- }
- 
- /**
-@@ -4499,7 +4565,9 @@ xfs_btree_sblock_verify(
- {
- 	struct xfs_mount	*mp = bp->b_mount;
- 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
--	xfs_agblock_t		agno;
-+	xfs_agnumber_t		agno;
-+	xfs_agblock_t		agbno;
-+	xfs_failaddr_t		fa;
- 
- 	/* numrecs verification */
- 	if (be16_to_cpu(block->bb_numrecs) > max_recs)
-@@ -4507,14 +4575,13 @@ xfs_btree_sblock_verify(
- 
- 	/* sibling pointer verification */
- 	agno = xfs_daddr_to_agno(mp, xfs_buf_daddr(bp));
--	if (block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) &&
--	    !xfs_verify_agbno(mp, agno, be32_to_cpu(block->bb_u.s.bb_leftsib)))
--		return __this_address;
--	if (block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK) &&
--	    !xfs_verify_agbno(mp, agno, be32_to_cpu(block->bb_u.s.bb_rightsib)))
--		return __this_address;
--
--	return NULL;
-+	agbno = xfs_daddr_to_agbno(mp, xfs_buf_daddr(bp));
-+	fa = xfs_btree_check_sblock_siblings(mp, NULL, -1, agno, agbno,
-+			be32_to_cpu(block->bb_u.s.bb_leftsib));
-+	if (!fa)
-+		fa = xfs_btree_check_sblock_siblings(mp, NULL, -1, agno, agbno,
-+				be32_to_cpu(block->bb_u.s.bb_rightsib));
-+	return fa;
- }
- 
- /*
+url:    https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/xfs-fix-random-format-verification-issues/20220502-162206
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+config: m68k-allyesconfig (https://download.01.org/0day-ci/archive/20220502/202205021726.Rr1K0yfS-lkp@intel.com/config)
+compiler: m68k-linux-gcc (GCC) 11.3.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/701c0cd0bdea877a997898941f62df6c05045f40
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Dave-Chinner/xfs-fix-random-format-verification-issues/20220502-162206
+        git checkout 701c0cd0bdea877a997898941f62df6c05045f40
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash fs/xfs/
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+>> fs/xfs/libxfs/xfs_sb.c:37:1: warning: no previous prototype for 'xfs_sb_validate_v5_features' [-Wmissing-prototypes]
+      37 | xfs_sb_validate_v5_features(
+         | ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+vim +/xfs_sb_validate_v5_features +37 fs/xfs/libxfs/xfs_sb.c
+
+    28	
+    29	/*
+    30	 * Physical superblock buffer manipulations. Shared with libxfs in userspace.
+    31	 */
+    32	
+    33	/*
+    34	 * Validate all the compulsory V4 feature bits are set on a V5 filesystem.
+    35	 */
+    36	bool
+  > 37	xfs_sb_validate_v5_features(
+    38		struct xfs_sb	*sbp)
+    39	{
+    40		/* We must not have any unknown V4 feature bits set */
+    41		if (sbp->sb_versionnum & ~XFS_SB_VERSION_OKBITS)
+    42			return false;
+    43	
+    44		/*
+    45		 * The CRC bit is considered an invalid V4 flag, so we have to add it
+    46		 * manually to the OKBITS mask.
+    47		 */
+    48		if (sbp->sb_features2 & ~(XFS_SB_VERSION2_OKBITS |
+    49					  XFS_SB_VERSION2_CRCBIT))
+    50			return false;
+    51	
+    52		/* Now check all the required V4 feature flags are set. */
+    53	
+
 -- 
-2.35.1
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
