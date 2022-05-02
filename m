@@ -2,112 +2,183 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8F4BC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 May 2022 15:03:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DB2CC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 May 2022 15:03:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1385651AbiEBPGr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 May 2022 11:06:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43070 "EHLO
+        id S241330AbiEBPHG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 May 2022 11:07:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235195AbiEBPGq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 May 2022 11:06:46 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AF3EA1114E
-        for <linux-xfs@vger.kernel.org>; Mon,  2 May 2022 08:03:17 -0700 (PDT)
+        with ESMTP id S235195AbiEBPHG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 May 2022 11:07:06 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6801410FFC
+        for <linux-xfs@vger.kernel.org>; Mon,  2 May 2022 08:03:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1651503796;
+        s=mimecast20190719; t=1651503816;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=x9rJOpkRL7hRigdGOPAVgb1iYg+cegvBAtmdolkhsck=;
-        b=ah/gJvgPyfljOuAOYhVmsKlFKF0v4ZgyKbi5opwaRt2YCSxw67bo7m6goiPZhw8g/qPEVk
-        5V/deiXuhA6Js4ep1PD1sknpmigcalcI7wrYytNfAwB6zj/gwtA+4LS71k/i0jqtB6a0SF
-        Md2y0PIMdKFshz68RzuRGIUeWxV7deo=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5n9LB+TgutgWaIDwPqNAtAcvVuSlBy1Wq3hDaWCM2k0=;
+        b=LggJjnGtZH1f7hLbIPVq+ZO5+Bv1eL+3O6CzIaOWKEvW2y+WLNQBV+4mj9PS/6E04Ul9sD
+        M3yn5HxDcpGRNqyeLAVq6tYKc2GLEqGCoVw8FYW/2+WlG8lz7oJ8C6fBPjPanE2UpJe6Cp
+        JwRjZaQULH1VADkIWzk1X2Em1kbrCNM=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-235-2UzeXLEFMQKnlKlFOC5-cg-1; Mon, 02 May 2022 11:03:15 -0400
-X-MC-Unique: 2UzeXLEFMQKnlKlFOC5-cg-1
-Received: by mail-wr1-f69.google.com with SMTP id t17-20020adfa2d1000000b0020ac519c222so5368419wra.4
-        for <linux-xfs@vger.kernel.org>; Mon, 02 May 2022 08:03:15 -0700 (PDT)
+ us-mta-616-qeJmO7zWMFeJce1t9q6Kcg-1; Mon, 02 May 2022 11:03:27 -0400
+X-MC-Unique: qeJmO7zWMFeJce1t9q6Kcg-1
+Received: by mail-wm1-f69.google.com with SMTP id i131-20020a1c3b89000000b00393fbb0718bso8941638wma.0
+        for <linux-xfs@vger.kernel.org>; Mon, 02 May 2022 08:03:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=x9rJOpkRL7hRigdGOPAVgb1iYg+cegvBAtmdolkhsck=;
-        b=8Ak1+03DSDxT/h28WaX83vjwl7Kc4PFXK8j/k7Jjhmr5+pkTA8aAF+VGhBHsHalEPx
-         NWI4bpDzpQVkeb6M4ItxGPVS7R34ylq/1K7vIU38w9/CN4eoDSd1W6paA/6TDAuOLPjE
-         uoNb4VznX4sAyI+3WBD5tYaLodiYz2TPD9oM8YMj2W3bhFiGgU3YvHa6K95rMhm266V0
-         x43tXIwvs8a1eML88g8ScFliK0RsFsilm88dDl6qrApQehnVGoVTA3zows6ilF97FTkx
-         KvM1SW74UMZUOWxKNlhm7dGp7RKRy0myDxdxqPP5Zz2jiDPdmab+LfGGc71M+YX9D4tk
-         8UYg==
-X-Gm-Message-State: AOAM530yAMEK0/qwqjDERVuFH9usPHRMAdTMXQAnGIF5uzPWehzo+l0j
-        NCyc7rjORN6U4Evis5+AR+eT0aV/Huz3xzuSeVYHURl2OG9s8QnSppOrzwQIxJUuaJeG34kR8iE
-        qa6q4PSwZ7BbxhkdEI6l29llgk+7Mf2iNc15wXdZggfvX1e5xZoASRCu+cCIzLcvybtZo1K8=
-X-Received: by 2002:a05:6000:2ae:b0:20c:57b6:32e1 with SMTP id l14-20020a05600002ae00b0020c57b632e1mr7980295wry.285.1651503794142;
-        Mon, 02 May 2022 08:03:14 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJw2nOSx7jE3C0M73rlgXdtQ/6GeGVbc/hDQY7J/Ozq2wPkMckx1XDi9ORVoZQ7oiO3/5KxfzA==
-X-Received: by 2002:a05:6000:2ae:b0:20c:57b6:32e1 with SMTP id l14-20020a05600002ae00b0020c57b632e1mr7980279wry.285.1651503793865;
-        Mon, 02 May 2022 08:03:13 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=5n9LB+TgutgWaIDwPqNAtAcvVuSlBy1Wq3hDaWCM2k0=;
+        b=x0s2H1ipqkfCqtB6WTBz33umU59s6h/Q5sq/4SDf2l6pbe43M6GUo5yvZpBoJSAIP6
+         Q6anPbie8qNF9c2XcnDSVriNCqUXw4oBxJ1ZIxWg9DyF8m31Szsvxl5GnbIdeBGJv0fN
+         e3gkdRIlflS+lsq0YTtAkVk1jXx+v4ul8oGE0hZ6wQc/YJX2wGQCqwHOrUOGScCP9yUW
+         uEL1e+TBqb7sIr9cmXtZ+EaiJJFBKlm5ZlK7OmzujT07+tcrUkt/26zoxZLLXidJwtpm
+         kSmMmVGjFtr/+aiWGsTe3nES2upRzNKASiYdmGVx8n6lZdEjkxfVJ+3n0i4x/rOMZiZu
+         lhbQ==
+X-Gm-Message-State: AOAM531hLjy06mFN4q6bbVvOIUsHcispLReeBCVYSPCRFVIjU69XoPMY
+        RFwFD4oNUncQd83B9EU5/XjUFkvfvM2SxINHnrwM7/GGhTdu4WZSeFhNgCj0kOYaRG7Md5xSmLT
+        u8O00YeEQbQgnQpEiog9LFuxQuHAcmRz9NDy+1xPtbrpPKpkGnlMCz4zxYaMQOBu3icOIGuQ=
+X-Received: by 2002:adf:e108:0:b0:1ef:97ad:5372 with SMTP id t8-20020adfe108000000b001ef97ad5372mr9349826wrz.658.1651503806468;
+        Mon, 02 May 2022 08:03:26 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJy5LHatRCugAiWXj2LyF33Tveun1K/7kzW3tBip/VL3S2vpVeNqc5H8RuLqrApIYsw3S2mZrw==
+X-Received: by 2002:adf:e108:0:b0:1ef:97ad:5372 with SMTP id t8-20020adfe108000000b001ef97ad5372mr9349812wrz.658.1651503806184;
+        Mon, 02 May 2022 08:03:26 -0700 (PDT)
 Received: from aalbersh.remote.csb ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id m6-20020a05600c3b0600b0039429bfebeasm198794wms.2.2022.05.02.08.03.12
+        by smtp.gmail.com with ESMTPSA id m6-20020a05600c3b0600b0039429bfebeasm198794wms.2.2022.05.02.08.03.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 May 2022 08:03:13 -0700 (PDT)
+        Mon, 02 May 2022 08:03:25 -0700 (PDT)
 From:   Andrey Albershteyn <aalbersh@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH v3 0/5] xfsprogs: optimize -L/-U range calls for xfs_quota's dump/report
-Date:   Mon,  2 May 2022 17:02:03 +0200
-Message-Id: <20220502150207.117112-1-aalbersh@redhat.com>
+Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH v3 1/5] xfs_quota: separate quota info acquisition into get_dquot()
+Date:   Mon,  2 May 2022 17:02:05 +0200
+Message-Id: <20220502150207.117112-2-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220502150207.117112-1-aalbersh@redhat.com>
+References: <20220502150207.117112-1-aalbersh@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The xfs_quota's 'report' and 'dump' commands have -L and -U
-arguments for restricting quota querying to the range of
-UIDs/GIDs/PIDs. The current implementation is using XFS_GETQUOTA to
-get every ID in specified range. It doesn't perform well on wider
-ranges. Also, the fallback case (UIDs from /etc/passwd) doesn't take
-into account range restriction and outputs all users with quota.
+Both report_mount() and dump_file() have identical code to get quota
+information. This could be used for further separation of the
+functions.
 
-First 3 patches do minor refactoring to split acquisition and
-outputting of the quota information. This is not that necessary, but
-makes it easier to manipulate with acquired data.
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ quota/report.c | 49 +++++++++++++++++++++++--------------------------
+ 1 file changed, 23 insertions(+), 26 deletions(-)
 
-The 4th one replaces XFS_GETQUOTA based loop with XFS_GETNEXTQUOTA
-one. The latter returns ID of the next user/group/project with
-non-empty quota. The ID is then used for further call.
-
-The last patch adds range checks for fallback case when
-XFS_GETNEXTQUOTA is not available.
-
-The fallback case will be also executed in case that empty range is
-specified (e.g. -L <too high>), but will print nothing.
-
-Changes from v1:
-Darrick J. Wong:
-- Renamed get_quota() -> get_dquot()
-Christoph Hellwig:
-- Formatting: if() with tab, operators without spaces, long lines
-- Replace 'fs_disk_quota_t' with 'struct fs_disk_quota'
-- Merge and then split patch 2 & 3, so dump_file() and
-  report_mount() are in separate patches
-Changes from v2:
-- Get rid of oid parameter
-
-Andrey Albershteyn (5):
-  xfs_quota: separate quota info acquisition into get_dquot()
-  xfs_quota: separate get_dquot() and dump_file()
-  xfs_quota: separate get_dquot() and report_mount()
-  xfs_quota: utilize XFS_GETNEXTQUOTA for ranged calls in report/dump
-  xfs_quota: apply -L/-U range limits in uid/gid/pid loops
-
- quota/report.c | 343 ++++++++++++++++++++++++-------------------------
- 1 file changed, 168 insertions(+), 175 deletions(-)
-
+diff --git a/quota/report.c b/quota/report.c
+index 2eb5b5a9..6994cba6 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -59,16 +59,15 @@ report_help(void)
+ "\n"));
+ }
+ 
+-static int 
+-dump_file(
+-	FILE		*fp,
++static int
++get_dquot(
++	struct fs_disk_quota *d,
+ 	uint		id,
+ 	uint		*oid,
+ 	uint		type,
+ 	char		*dev,
+ 	int		flags)
+ {
+-	fs_disk_quota_t	d;
+ 	int		cmd;
+ 
+ 	if (flags & GETNEXTQUOTA_FLAG)
+@@ -77,7 +76,7 @@ dump_file(
+ 		cmd = XFS_GETQUOTA;
+ 
+ 	/* Fall back silently if XFS_GETNEXTQUOTA fails, warn on XFS_GETQUOTA */
+-	if (xfsquotactl(cmd, dev, type, id, (void *)&d) < 0) {
++	if (xfsquotactl(cmd, dev, type, id, (void *)d) < 0) {
+ 		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH &&
+ 		    cmd == XFS_GETQUOTA)
+ 			perror("XFS_GETQUOTA");
+@@ -85,12 +84,29 @@ dump_file(
+ 	}
+ 
+ 	if (oid) {
+-		*oid = d.d_id;
++		*oid = d->d_id;
+ 		/* Did kernelspace wrap? */
+ 		if (*oid < id)
+ 			return 0;
+ 	}
+ 
++	return 1;
++}
++
++static int
++dump_file(
++	FILE		*fp,
++	uint		id,
++	uint		*oid,
++	uint		type,
++	char		*dev,
++	int		flags)
++{
++	struct fs_disk_quota d;
++
++	if (!get_dquot(&d, id, oid, type, dev, flags))
++		return 0;
++
+ 	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
+ 	    !d.d_ino_softlimit && !d.d_ino_hardlimit &&
+ 	    !d.d_rtb_softlimit && !d.d_rtb_hardlimit)
+@@ -329,31 +345,12 @@ report_mount(
+ {
+ 	fs_disk_quota_t	d;
+ 	time64_t	timer;
+-	char		*dev = mount->fs_name;
+ 	char		c[8], h[8], s[8];
+ 	uint		qflags;
+ 	int		count;
+-	int		cmd;
+ 
+-	if (flags & GETNEXTQUOTA_FLAG)
+-		cmd = XFS_GETNEXTQUOTA;
+-	else
+-		cmd = XFS_GETQUOTA;
+-
+-	/* Fall back silently if XFS_GETNEXTQUOTA fails, warn on XFS_GETQUOTA*/
+-	if (xfsquotactl(cmd, dev, type, id, (void *)&d) < 0) {
+-		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH &&
+-		    cmd == XFS_GETQUOTA)
+-			perror("XFS_GETQUOTA");
++	if (!get_dquot(&d, id, oid, type, mount->fs_name, flags))
+ 		return 0;
+-	}
+-
+-	if (oid) {
+-		*oid = d.d_id;
+-		/* Did kernelspace wrap? */
+-		if (* oid < id)
+-			return 0;
+-	}
+ 
+ 	if (flags & TERSE_FLAG) {
+ 		count = 0;
 -- 
 2.27.0
 
