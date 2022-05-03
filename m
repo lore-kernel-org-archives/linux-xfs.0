@@ -2,279 +2,383 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51DE3C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 May 2022 22:45:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D21BFC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 May 2022 22:50:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243822AbiECWtG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 May 2022 18:49:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36778 "EHLO
+        id S243885AbiECWyO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 May 2022 18:54:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243812AbiECWtF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 May 2022 18:49:05 -0400
+        with ESMTP id S243819AbiECWx6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 May 2022 18:53:58 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B224D2E9EB
-        for <linux-xfs@vger.kernel.org>; Tue,  3 May 2022 15:45:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A15930F6E
+        for <linux-xfs@vger.kernel.org>; Tue,  3 May 2022 15:50:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 56CD561764
-        for <linux-xfs@vger.kernel.org>; Tue,  3 May 2022 22:45:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B31ECC385A9;
-        Tue,  3 May 2022 22:45:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D70AB61771
+        for <linux-xfs@vger.kernel.org>; Tue,  3 May 2022 22:50:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FE9AC385A9;
+        Tue,  3 May 2022 22:50:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651617929;
-        bh=qewIsyQkwCG2sRK04thWqwyD9gT5w43XIVrDXJTzC8o=;
+        s=k20201202; t=1651618210;
+        bh=wOhs07C79rowBO7Qs2wlcpDVeOv2TKTECmUDyRDmrvc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QYqqlUIWkHlVnE4IAMzOtwvHGvVft+SqgQXhs3PwbTfjGwCSHG9Yzq9EHE0tSBUDJ
-         MMEnxf8lMQ6+Hh+T+T0ypVcbvZ6flyHegjcaYA5ZNYYArcLIg02ZxVmjuyGyRoehyU
-         ECll1nRFNI55o1KtOIQupk9u/kJ9zm9AWkxXrsZqaqK0n2UuKVRXTD3aCSVa8O/R9k
-         nj6rEt/CFzjELGDd8hCpkv2OXbPcvDPkTMODiFZdThMTn8h89APsYp5500W0tGv4er
-         QM3+PuUBZinPnCJjTvX/XKpCzXVDCM6Fx/tiF+Iq5b9AwSWF3ThcnewrSqio1BgvoU
-         hm7UoWiI2BWog==
-Date:   Tue, 3 May 2022 15:45:29 -0700
+        b=CqbjsbCtgGMm0Hx2xuILw+cmZqcwoRrLPlLBBj2/ETsPbaJufR8HGQocH8gg0Tw/A
+         0aA4vP+03klD4Rx8hALGSKk46zfTbz8+04DFiXE+fc65bOKD33NKuQtPsQEQkzYZXV
+         yjMVO9w0BJhhIvaA3HhdxVJg/00IgP7M0pwag7TjCRK32td4SeHq2tlPKWwiCXFHTa
+         f/zDzVthKyAYc+snOhm5yOa5Xvw5mHgcCnB8Hkd1XNrhCOJSCReJZmlHtIxR2fc1oC
+         KyJwkrmlMCYrKC9wy1HBqajwtTrrfqm9tqlhzxRVa93MT+RLIyhXTlsoKLoLyaz1Qk
+         2IUOixRPIcavA==
+Date:   Tue, 3 May 2022 15:50:09 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/10] xfs: hide log iovec alignment constraints
-Message-ID: <20220503224529.GD8265@magnolia>
+Subject: Re: [PATCH 10/10] xfs: intent item whiteouts
+Message-ID: <20220503225009.GE8265@magnolia>
 References: <20220503221728.185449-1-david@fromorbit.com>
- <20220503221728.185449-4-david@fromorbit.com>
+ <20220503221728.185449-11-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220503221728.185449-4-david@fromorbit.com>
+In-Reply-To: <20220503221728.185449-11-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 04, 2022 at 08:17:21AM +1000, Dave Chinner wrote:
+On Wed, May 04, 2022 at 08:17:28AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Callers currently have to round out the size of buffers to match the
-> aligment constraints of log iovecs and xlog_write(). They should not
-> need to know this detail, so introduce a new function to calculate
-> the iovec length (for use in ->iop_size implementations). Also
-> modify xlog_finish_iovec() to round up the length to the correct
-> alignment so the callers don't need to do this, either.
+> When we log modifications based on intents, we add both intent
+> and intent done items to the modification being made. These get
+> written to the log to ensure that the operation is re-run if the
+> intent done is not found in the log.
 > 
-> Convert the only user - inode forks - of this alignment rounding to
-> use the new interface.
+> However, for operations that complete wholly within a single
+> checkpoint, the change in the checkpoint is atomic and will never
+> need replay. In this case, we don't need to actually write the
+> intent and intent done items to the journal because log recovery
+> will never need to manually restart this modification.
+> 
+> Log recovery currently handles intent/intent done matching by
+> inserting the intent into the AIL, then removing it when a matching
+> intent done item is found. Hence for all the intent-based operations
+> that complete within a checkpoint, we spend all that time parsing
+> the intent/intent done items just to cancel them and do nothing with
+> them.
+> 
+> Hence it follows that the only time we actually need intents in the
+> log is when the modification crosses checkpoint boundaries in the
+> log and so may only be partially complete in the journal. Hence if
+> we commit and intent done item to the CIL and the intent item is in
+> the same checkpoint, we don't actually have to write them to the
+> journal because log recovery will always cancel the intents.
+> 
+> We've never really worried about the overhead of logging intents
+> unnecessarily like this because the intents we log are generally
+> very much smaller than the change being made. e.g. freeing an extent
+> involves modifying at lease two freespace btree blocks and the AGF,
+> so the EFI/EFD overhead is only a small increase in space and
+> processing time compared to the overall cost of freeing an extent.
+> 
+> However, delayed attributes change this cost equation dramatically,
+> especially for inline attributes. In the case of adding an inline
+> attribute, we only log the inode core and attribute fork at present.
+> With delayed attributes, we now log the attr intent which includes
+> the name and value, the inode core adn attr fork, and finally the
+> attr intent done item. We increase the number of items we log from 1
+> to 3, and the number of log vectors (regions) goes up from 3 to 7.
+> Hence we tripple the number of objects that the CIL has to process,
+> and more than double the number of log vectors that need to be
+> written to the journal.
+> 
+> At scale, this means delayed attributes cause a non-pipelined CIL to
+> become CPU bound processing all the extra items, resulting in a > 40%
+> performance degradation on 16-way file+xattr create worklaods.
+> Pipelining the CIL (as per 5.15) reduces the performance degradation
+> to 20%, but now the limitation is the rate at which the log items
+> can be written to the iclogs and iclogs be dispatched for IO and
+> completed.
+> 
+> Even log IO completion is slowed down by these intents, because it
+> now has to process 3x the number of items in the checkpoint.
+> Processing completed intents is especially inefficient here, because
+> we first insert the intent into the AIL, then remove it from the AIL
+> when the intent done is processed. IOWs, we are also doing expensive
+> operations in log IO completion we could completely avoid if we
+> didn't log completed intent/intent done pairs.
+> 
+> Enter log item whiteouts.
+> 
+> When an intent done is committed, we can check to see if the
+> associated intent is in the same checkpoint as we are currently
+> committing the intent done to. If so, we can mark the intent log
+> item with a whiteout and immediately free the intent done item
+> rather than committing it to the CIL. We can basically skip the
+> entire formatting and CIL insertion steps for the intent done item.
+> 
+> However, we cannot remove the intent item from the CIL at this point
+> because the unlocked per-cpu CIL item lists do not permit removal
+> without holding the CIL context lock exclusively. Transaction commit
+> only holds the context lock shared, hence the best we can do is mark
+> the intent item with a whiteout so that the CIL push can release it
+> rather than writing it to the log.
+> 
+> This means we never write the intent to the log if the intent done
+> has also been committed to the same checkpoint, but we'll always
+> write the intent if the intent done has not been committed or has
+> been committed to a different checkpoint. This will result in
+> correct log recovery behaviour in all cases, without the overhead of
+> logging unnecessary intents.
+> 
+> This intent whiteout concept is generic - we can apply it to all
+> intent/intent done pairs that have a direct 1:1 relationship. The
+> way deferred ops iterate and relog intents mean that all intents
+> currently have a 1:1 relationship with their done intent, and hence
+> we can apply this cancellation to all existing intent/intent done
+> implementations.
+> 
+> For delayed attributes with a 16-way 64kB xattr create workload,
+> whiteouts reduce the amount of journalled metadata from ~2.5GB/s
+> down to ~600MB/s and improve the creation rate from 9000/s to
+> 14000/s.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_inode_fork.c  | 20 ++++------------
->  fs/xfs/xfs_inode_item.c         | 25 ++++++--------------
->  fs/xfs/xfs_inode_item_recover.c |  4 ++--
->  fs/xfs/xfs_log.h                | 42 ++++++++++++++++++++++++++++++---
->  4 files changed, 52 insertions(+), 39 deletions(-)
+>  fs/xfs/xfs_log_cil.c | 78 ++++++++++++++++++++++++++++++++++++++++++--
+>  fs/xfs/xfs_trace.h   |  3 ++
+>  fs/xfs/xfs_trans.h   |  6 ++--
+>  3 files changed, 82 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index a15ff38c3d41..1a4cdf550f6d 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -36,7 +36,7 @@ xfs_init_local_fork(
->  	int64_t			size)
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 0d8d092447ad..fecd2ea3e935 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -476,7 +476,8 @@ xlog_cil_insert_format_items(
+>  static void
+>  xlog_cil_insert_items(
+>  	struct xlog		*log,
+> -	struct xfs_trans	*tp)
+> +	struct xfs_trans	*tp,
+> +	uint32_t		released_space)
 >  {
->  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-> -	int			mem_size = size, real_size = 0;
-> +	int			mem_size = size;
->  	bool			zero_terminate;
+>  	struct xfs_cil		*cil = log->l_cilp;
+>  	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
+> @@ -525,7 +526,9 @@ xlog_cil_insert_items(
+>  		ASSERT(tp->t_ticket->t_curr_res >= len);
+>  	}
+>  	tp->t_ticket->t_curr_res -= len;
+> +	tp->t_ticket->t_curr_res += released_space;
+>  	ctx->space_used += len;
+> +	ctx->space_used -= released_space;
 >  
 >  	/*
-> @@ -50,13 +50,7 @@ xfs_init_local_fork(
->  		mem_size++;
+>  	 * If we've overrun the reservation, dump the tx details before we move
+> @@ -970,11 +973,16 @@ xlog_cil_build_trans_hdr(
+>   * Pull all the log vectors off the items in the CIL, and remove the items from
+>   * the CIL. We don't need the CIL lock here because it's only needed on the
+>   * transaction commit side which is currently locked out by the flush lock.
+> + *
+> + * If a log item is marked with a whiteout, we do not need to write it to the
+> + * journal and so we just move them to the whiteout list for the caller to
+> + * dispose of appropriately.
+>   */
+>  static void
+>  xlog_cil_build_lv_chain(
+>  	struct xfs_cil		*cil,
+>  	struct xfs_cil_ctx	*ctx,
+> +	struct list_head	*whiteouts,
+>  	uint32_t		*num_iovecs,
+>  	uint32_t		*num_bytes)
+>  {
+> @@ -985,6 +993,13 @@ xlog_cil_build_lv_chain(
 >  
->  	if (size) {
-> -		/*
-> -		 * As we round up the allocation here, we need to ensure the
-> -		 * bytes we don't copy data into are zeroed because the log
-> -		 * vectors still copy them into the journal.
-> -		 */
-> -		real_size = roundup(mem_size, 4);
-> -		ifp->if_u1.if_data = kmem_zalloc(real_size, KM_NOFS);
-> +		ifp->if_u1.if_data = kmem_alloc(mem_size, KM_NOFS);
->  		memcpy(ifp->if_u1.if_data, data, size);
->  		if (zero_terminate)
->  			ifp->if_u1.if_data[size] = '\0';
-> @@ -502,14 +496,8 @@ xfs_idata_realloc(
->  		return;
+>  		item = list_first_entry(&cil->xc_cil,
+>  					struct xfs_log_item, li_cil);
+> +
+> +		if (test_bit(XFS_LI_WHITEOUT, &item->li_flags)) {
+> +			list_move(&item->li_cil, whiteouts);
+> +			trace_xfs_cil_whiteout_skip(item);
+> +			continue;
+> +		}
+> +
+>  		list_del_init(&item->li_cil);
+>  		if (!ctx->lv_chain)
+>  			ctx->lv_chain = item->li_lv;
+> @@ -1000,6 +1015,19 @@ xlog_cil_build_lv_chain(
 >  	}
->  
-> -	/*
-> -	 * For inline data, the underlying buffer must be a multiple of 4 bytes
-> -	 * in size so that it can be logged and stay on word boundaries.
-> -	 * We enforce that here, and use __GFP_ZERO to ensure that size
-> -	 * extensions always zero the unused roundup area.
-> -	 */
-> -	ifp->if_u1.if_data = krealloc(ifp->if_u1.if_data, roundup(new_size, 4),
-> -				      GFP_NOFS | __GFP_NOFAIL | __GFP_ZERO);
-> +	ifp->if_u1.if_data = krealloc(ifp->if_u1.if_data, new_size,
-> +				      GFP_NOFS | __GFP_NOFAIL);
->  	ifp->if_bytes = new_size;
 >  }
 >  
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 00733a18ccdc..721def0639fd 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -71,7 +71,7 @@ xfs_inode_item_data_fork_size(
->  	case XFS_DINODE_FMT_LOCAL:
->  		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
->  		    ip->i_df.if_bytes > 0) {
-> -			*nbytes += roundup(ip->i_df.if_bytes, 4);
-> +			*nbytes += xlog_calc_iovec_len(ip->i_df.if_bytes);
->  			*nvecs += 1;
->  		}
->  		break;
-> @@ -112,7 +112,7 @@ xfs_inode_item_attr_fork_size(
->  	case XFS_DINODE_FMT_LOCAL:
->  		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
->  		    ip->i_afp->if_bytes > 0) {
-> -			*nbytes += roundup(ip->i_afp->if_bytes, 4);
-> +			*nbytes += xlog_calc_iovec_len(ip->i_afp->if_bytes);
->  			*nvecs += 1;
->  		}
->  		break;
-> @@ -204,17 +204,12 @@ xfs_inode_item_format_data_fork(
->  			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
->  		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
->  		    ip->i_df.if_bytes > 0) {
-> -			/*
-> -			 * Round i_bytes up to a word boundary.
-> -			 * The underlying memory is guaranteed
-> -			 * to be there by xfs_idata_realloc().
-> -			 */
-> -			data_bytes = roundup(ip->i_df.if_bytes, 4);
->  			ASSERT(ip->i_df.if_u1.if_data != NULL);
->  			ASSERT(ip->i_disk_size > 0);
->  			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
-> -					ip->i_df.if_u1.if_data, data_bytes);
-> -			ilf->ilf_dsize = (unsigned)data_bytes;
-> +					ip->i_df.if_u1.if_data,
-> +					ip->i_df.if_bytes);
-> +			ilf->ilf_dsize = (unsigned)ip->i_df.if_bytes;
->  			ilf->ilf_size++;
->  		} else {
->  			iip->ili_fields &= ~XFS_ILOG_DDATA;
-> @@ -288,17 +283,11 @@ xfs_inode_item_format_attr_fork(
->  
->  		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
->  		    ip->i_afp->if_bytes > 0) {
-> -			/*
-> -			 * Round i_bytes up to a word boundary.
-> -			 * The underlying memory is guaranteed
-> -			 * to be there by xfs_idata_realloc().
-> -			 */
-> -			data_bytes = roundup(ip->i_afp->if_bytes, 4);
->  			ASSERT(ip->i_afp->if_u1.if_data != NULL);
->  			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_LOCAL,
->  					ip->i_afp->if_u1.if_data,
-> -					data_bytes);
-> -			ilf->ilf_asize = (unsigned)data_bytes;
-> +					ip->i_afp->if_bytes);
-> +			ilf->ilf_asize = (unsigned)ip->i_afp->if_bytes;
->  			ilf->ilf_size++;
->  		} else {
->  			iip->ili_fields &= ~XFS_ILOG_ADATA;
-> diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-> index 6d44f5fd6d7e..d28ffaebd067 100644
-> --- a/fs/xfs/xfs_inode_item_recover.c
-> +++ b/fs/xfs/xfs_inode_item_recover.c
-> @@ -462,7 +462,7 @@ xlog_recover_inode_commit_pass2(
->  	ASSERT(in_f->ilf_size <= 4);
->  	ASSERT((in_f->ilf_size == 3) || (fields & XFS_ILOG_AFORK));
->  	ASSERT(!(fields & XFS_ILOG_DFORK) ||
-> -	       (len == in_f->ilf_dsize));
-> +	       (len == xlog_calc_iovec_len(in_f->ilf_dsize)));
->  
->  	switch (fields & XFS_ILOG_DFORK) {
->  	case XFS_ILOG_DDATA:
-> @@ -497,7 +497,7 @@ xlog_recover_inode_commit_pass2(
->  		}
->  		len = item->ri_buf[attr_index].i_len;
->  		src = item->ri_buf[attr_index].i_addr;
-> -		ASSERT(len == in_f->ilf_asize);
-> +		ASSERT(len == xlog_calc_iovec_len(in_f->ilf_asize));
->  
->  		switch (in_f->ilf_fields & XFS_ILOG_AFORK) {
->  		case XFS_ILOG_ADATA:
-> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-> index 8dafe8f771c7..3a4f6a4e4eb7 100644
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -21,23 +21,59 @@ struct xfs_log_vec {
->  
->  #define XFS_LOG_VEC_ORDERED	(-1)
->  
-> +/*
-> + * Calculate the log iovec length for a given user buffer length. Intended to be
-> + * used by ->iop_size implementations when sizing buffers of arbitrary
-> + * alignments.
-> + */
-> +static inline int
-> +xlog_calc_iovec_len(int len)
-> +{
-> +	return roundup(len, sizeof(uint32_t));
-> +}
-> +
->  void *xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
->  		uint type);
->  
->  static inline void
-> -xlog_finish_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec *vec, int len)
-> +xlog_finish_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec *vec,
-> +		int data_len)
->  {
->  	struct xlog_op_header	*oph = vec->i_addr;
-> -
-> -	/* opheader tracks payload length, logvec tracks region length */
-> +	int			len;
-> +
-> +	/*
-> +	 * Always round up the length to the correct alignment so callers don't
-> +	 * need to know anything about this log vec layout requirement. This
-> +	 * means we have to zero the area the data to be written does not cover.
-> +	 * This is complicated by fact the payload region is offset into the
-> +	 * logvec region by the opheader that tracks the payload.
-> +	 */
-> +	len = xlog_calc_iovec_len(data_len);
-> +	if (len - data_len != 0) {
-> +		char	*buf = vec->i_addr + sizeof(struct xlog_op_header);
-> +
-> +		memset(buf + data_len, 0, len - data_len);
+> +static void
+> +xlog_cil_push_cleanup_whiteouts(
 
-Assuming this is the replacement for the kzalloc/kzrealloc calls above
-so that we don't write junk to disk,
+Pushing cleanup whiteouts?
+
+Oh, clean up whiteouts as part of pushing CIL.
+
+I almost want to ask for a comment here:
+
+/* Remove log items from the CIL that have been elided from the checkpoint. */
+static void
+xlog_cil_push_cleanup_whiteouts(
+
+But fmeh, aside from my own momentary confusion this isn't that big of a
+deal.
+
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 
+> +	struct list_head	*whiteouts)
+> +{
+> +	while (!list_empty(whiteouts)) {
+> +		struct xfs_log_item *item = list_first_entry(whiteouts,
+> +						struct xfs_log_item, li_cil);
+> +		list_del_init(&item->li_cil);
+> +		trace_xfs_cil_whiteout_unpin(item);
+> +		item->li_ops->iop_unpin(item, 1);
 > +	}
+> +}
 > +
-> +	/*
-> +	 * The opheader tracks aligned payload length, whilst the logvec tracks
-> +	 * the overall region length.
-> +	 */
->  	oph->oh_len = cpu_to_be32(len);
+>  /*
+>   * Push the Committed Item List to the log.
+>   *
+> @@ -1030,6 +1058,7 @@ xlog_cil_push_work(
+>  	struct xfs_log_vec	lvhdr = { NULL };
+>  	xfs_csn_t		push_seq;
+>  	bool			push_commit_stable;
+> +	LIST_HEAD		(whiteouts);
 >  
->  	len += sizeof(struct xlog_op_header);
->  	lv->lv_buf_len += len;
->  	lv->lv_bytes += len;
->  	vec->i_len = len;
-> +
-> +	/* Catch buffer overruns */
-> +	ASSERT((void *)lv->lv_buf + lv->lv_bytes <= (void *)lv + lv->lv_size);
+>  	new_ctx = xlog_cil_ctx_alloc();
+>  	new_ctx->ticket = xlog_cil_ticket_alloc(log);
+> @@ -1098,7 +1127,7 @@ xlog_cil_push_work(
+>  	list_add(&ctx->committing, &cil->xc_committing);
+>  	spin_unlock(&cil->xc_push_lock);
+>  
+> -	xlog_cil_build_lv_chain(cil, ctx, &num_iovecs, &num_bytes);
+> +	xlog_cil_build_lv_chain(cil, ctx, &whiteouts, &num_iovecs, &num_bytes);
+>  
+>  	/*
+>  	 * Switch the contexts so we can drop the context lock and move out
+> @@ -1201,6 +1230,7 @@ xlog_cil_push_work(
+>  	/* Not safe to reference ctx now! */
+>  
+>  	spin_unlock(&log->l_icloglock);
+> +	xlog_cil_push_cleanup_whiteouts(&whiteouts);
+>  	return;
+>  
+>  out_skip:
+> @@ -1212,6 +1242,7 @@ xlog_cil_push_work(
+>  out_abort_free_ticket:
+>  	xfs_log_ticket_ungrant(log, ctx->ticket);
+>  	ASSERT(xlog_is_shutdown(log));
+> +	xlog_cil_push_cleanup_whiteouts(&whiteouts);
+>  	if (!ctx->commit_iclog) {
+>  		xlog_cil_committed(ctx);
+>  		return;
+> @@ -1360,6 +1391,43 @@ xlog_cil_empty(
+>  	return empty;
 >  }
 >  
 > +/*
-> + * Copy the amount of data requested by the caller into a new log iovec.
+> + * If there are intent done items in this transaction and the related intent was
+> + * committed in the current (same) CIL checkpoint, we don't need to write either
+> + * the intent or intent done item to the journal as the change will be
+> + * journalled atomically within this checkpoint. As we cannot remove items from
+> + * the CIL here, mark the related intent with a whiteout so that the CIL push
+> + * can remove it rather than writing it to the journal. Then remove the intent
+> + * done item from the current transaction and release it so it doesn't get put
+> + * into the CIL at all.
 > + */
->  static inline void *
->  xlog_copy_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
->  		uint type, void *data, int len)
+> +static uint32_t
+> +xlog_cil_process_intents(
+> +	struct xfs_cil		*cil,
+> +	struct xfs_trans	*tp)
+> +{
+> +	struct xfs_log_item	*lip, *ilip, *next;
+> +	uint32_t		len = 0;
+> +
+> +	list_for_each_entry_safe(lip, next, &tp->t_items, li_trans) {
+> +		if (!(lip->li_ops->flags & XFS_ITEM_INTENT_DONE))
+> +			continue;
+> +
+> +		ilip = lip->li_ops->iop_intent(lip);
+> +		if (!ilip || !xlog_item_in_current_chkpt(cil, ilip))
+> +			continue;
+> +		set_bit(XFS_LI_WHITEOUT, &ilip->li_flags);
+> +		trace_xfs_cil_whiteout_mark(ilip);
+> +		len += ilip->li_lv->lv_bytes;
+> +		kmem_free(ilip->li_lv);
+> +		ilip->li_lv = NULL;
+> +
+> +		xfs_trans_del_item(lip);
+> +		lip->li_ops->iop_release(lip);
+> +	}
+> +	return len;
+> +}
+> +
+>  /*
+>   * Commit a transaction with the given vector to the Committed Item List.
+>   *
+> @@ -1382,6 +1450,7 @@ xlog_cil_commit(
+>  {
+>  	struct xfs_cil		*cil = log->l_cilp;
+>  	struct xfs_log_item	*lip, *next;
+> +	uint32_t		released_space = 0;
+>  
+>  	/*
+>  	 * Do all necessary memory allocation before we lock the CIL.
+> @@ -1393,7 +1462,10 @@ xlog_cil_commit(
+>  	/* lock out background commit */
+>  	down_read(&cil->xc_ctx_lock);
+>  
+> -	xlog_cil_insert_items(log, tp);
+> +	if (tp->t_flags & XFS_TRANS_HAS_INTENT_DONE)
+> +		released_space = xlog_cil_process_intents(cil, tp);
+> +
+> +	xlog_cil_insert_items(log, tp, released_space);
+>  
+>  	if (regrant && !xlog_is_shutdown(log))
+>  		xfs_log_ticket_regrant(log, tp->t_ticket);
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index e1197f9ad97e..75934e3c3f55 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1332,6 +1332,9 @@ DEFINE_LOG_ITEM_EVENT(xfs_ail_push);
+>  DEFINE_LOG_ITEM_EVENT(xfs_ail_pinned);
+>  DEFINE_LOG_ITEM_EVENT(xfs_ail_locked);
+>  DEFINE_LOG_ITEM_EVENT(xfs_ail_flushing);
+> +DEFINE_LOG_ITEM_EVENT(xfs_cil_whiteout_mark);
+> +DEFINE_LOG_ITEM_EVENT(xfs_cil_whiteout_skip);
+> +DEFINE_LOG_ITEM_EVENT(xfs_cil_whiteout_unpin);
+>  
+>  DECLARE_EVENT_CLASS(xfs_ail_class,
+>  	TP_PROTO(struct xfs_log_item *lip, xfs_lsn_t old_lsn, xfs_lsn_t new_lsn),
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index d72a5995d33e..9561f193e7e1 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -55,13 +55,15 @@ struct xfs_log_item {
+>  #define	XFS_LI_IN_AIL	0
+>  #define	XFS_LI_ABORTED	1
+>  #define	XFS_LI_FAILED	2
+> -#define	XFS_LI_DIRTY	3	/* log item dirty in transaction */
+> +#define	XFS_LI_DIRTY	3
+> +#define	XFS_LI_WHITEOUT	4
+>  
+>  #define XFS_LI_FLAGS \
+>  	{ (1u << XFS_LI_IN_AIL),	"IN_AIL" }, \
+>  	{ (1u << XFS_LI_ABORTED),	"ABORTED" }, \
+>  	{ (1u << XFS_LI_FAILED),	"FAILED" }, \
+> -	{ (1u << XFS_LI_DIRTY),		"DIRTY" }
+> +	{ (1u << XFS_LI_DIRTY),		"DIRTY" }, \
+> +	{ (1u << XFS_LI_WHITEOUT),	"WHITEOUT" }
+>  
+>  struct xfs_item_ops {
+>  	unsigned flags;
 > -- 
 > 2.35.1
 > 
