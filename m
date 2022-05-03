@@ -2,135 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 375DBC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 May 2022 22:55:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 506B9C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 May 2022 22:56:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231220AbiECW7C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 May 2022 18:59:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47770 "EHLO
+        id S232925AbiECW7j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 May 2022 18:59:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232925AbiECW67 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 May 2022 18:58:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93D2A1FA76
-        for <linux-xfs@vger.kernel.org>; Tue,  3 May 2022 15:55:25 -0700 (PDT)
+        with ESMTP id S229952AbiECW7e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 May 2022 18:59:34 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B47E41630
+        for <linux-xfs@vger.kernel.org>; Tue,  3 May 2022 15:56:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3079C6173B
-        for <linux-xfs@vger.kernel.org>; Tue,  3 May 2022 22:55:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C9FDC385A4;
-        Tue,  3 May 2022 22:55:24 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E6F19B82216
+        for <linux-xfs@vger.kernel.org>; Tue,  3 May 2022 22:55:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB808C385A4;
+        Tue,  3 May 2022 22:55:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651618524;
-        bh=hIAKHIQhKnrardfyjll7XaZoqPPiKHCSiXQBS4QGr6U=;
+        s=k20201202; t=1651618558;
+        bh=j7Phmm5pFHtS8CBl6QpROxHHtZsRaj7nykCRgD9edH4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Wy0fOb4xYdgcCcLvO/5M97kNZrKJUeYU7FeCrBuPW127z9PGNuvga9y4ohOtoUcJC
-         ZQ2BhsehnsAwC5UbbTn4AJuRZxQ4EFcLqarpcyRxwJcoDn0cHhDLjbA+EKMOgjeJZi
-         Sv2wNrycspUI+ltqVqSSUem2l8saNOrxpXeWf+Es7HKPhVYfFQGn9wWo4M0psMykqi
-         At9lCvTSyA3jdWNastwAY3k35xeRKWvYADFcdMHItrPpwqrmboeOxVOP2FCgc6L2+G
-         hPqXSTBEP1voPiRKdKUfMEQYFq2KQ3JrvWs+pwZctbfF1YM3BB7gAYXx4bvol8Fs7B
-         x+twvuKpyw6Gg==
-Date:   Tue, 3 May 2022 15:55:24 -0700
+        b=UwCl7g+2DQBD7nE99dxr+pEthSotB5TtE4quFC9KD818DL3ZQgfDnPp/CN0GacGij
+         2yjb47bIoIfe0qG+0arSw84QCJa7iRglHRoAIMmTZJ/tjQfTnxHeeB9jz/IeFBfoPS
+         mKWyKlSBX6eUld340QRVBswMm9VA3wG3p3Oms6PkjYiGhW7DL5yElNa00KIHALeJPl
+         kkKzNPi7OC/zXNiLrIVn2hYa1+jRvdruCDoHE26TjAtDIVU8ik5CHkjNnJ7kdux1sf
+         kyU/7seWrDj0K/p/xVFWYvQjrRn5v7sJOT3r6k6HDeVGl8fafNOfgyKRofyUQxa+O1
+         2wWw1MT+xaBIg==
+Date:   Tue, 3 May 2022 15:55:58 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: validate inode fork size against fork format
-Message-ID: <20220503225524.GG8265@magnolia>
+Subject: Re: [PATCH 3/4] xfs: set XFS_FEAT_NLINK correctly
+Message-ID: <20220503225558.GH8265@magnolia>
 References: <20220502082018.1076561-1-david@fromorbit.com>
- <20220502082018.1076561-3-david@fromorbit.com>
+ <20220502082018.1076561-4-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220502082018.1076561-3-david@fromorbit.com>
+In-Reply-To: <20220502082018.1076561-4-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 02, 2022 at 06:20:16PM +1000, Dave Chinner wrote:
+On Mon, May 02, 2022 at 06:20:17PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> xfs_repair catches fork size/format mismatches, but the in-kernel
-> verifier doesn't, leading to null pointer failures when attempting
-> to perform operations on the fork. This can occur in the
-> xfs_dir_is_empty() where the in-memory fork format does not match
-> the size and so the fork data pointer is accessed incorrectly.
-> 
-> Note: this causes new failures in xfs/348 which is testing mode vs
-> ftype mismatches. We now detect a regular file that has been changed
-> to a directory or symlink mode as being corrupt because the data
-> fork is for a symlink or directory should be in local form when
-> there are only 3 bytes of data in the data fork. Hence the inode
-> verify for the regular file now fires w/ -EFSCORRUPTED because
-> the inode fork format does not match the format the corrupted mode
-> says it should be in.
+> While xfs_has_nlink() is not used in kernel, it is used in userspace
+> (e.g. by xfs_db) so we need to set the XFS_FEAT_NLINK flag correctly
+> in xfs_sb_version_to_features().
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-/me wonders what the effect this is all going to have on the fuzz vs.
-xfs_{scrub,repair} results, but I guess we'll find out in a few weeks.
-:P
-
+Oops
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_inode_buf.c | 35 ++++++++++++++++++++++++++---------
->  1 file changed, 26 insertions(+), 9 deletions(-)
+>  fs/xfs/libxfs/xfs_sb.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 74b82ec80f8e..3b1b63f9d886 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -357,21 +357,38 @@ xfs_dinode_verify_fork(
->  {
->  	xfs_extnum_t		di_nextents;
->  	xfs_extnum_t		max_extents;
-> +	mode_t			mode = be16_to_cpu(dip->di_mode);
-> +	uint32_t		fork_size = XFS_DFORK_SIZE(dip, mp, whichfork);
-> +	uint32_t		fork_format = XFS_DFORK_FORMAT(dip, whichfork);
->  
->  	di_nextents = xfs_dfork_nextents(dip, whichfork);
->  
-> -	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
-> +	/*
-> +	 * For fork types that can contain local data, check that the fork
-> +	 * format matches the size of local data contained within the fork.
-> +	 *
-> +	 * For all types, check that when the size says the should be in extent
-> +	 * or btree format, the inode isn't claiming it is in local format.
-> +	 */
-> +	if (whichfork == XFS_DATA_FORK) {
-> +		if (S_ISDIR(mode) || S_ISLNK(mode)) {
-> +			if (be64_to_cpu(dip->di_size) <= fork_size &&
-> +			    fork_format != XFS_DINODE_FMT_LOCAL)
-> +				return __this_address;
-> +		}
-> +
-> +		if (be64_to_cpu(dip->di_size) > fork_size &&
-> +		    fork_format == XFS_DINODE_FMT_LOCAL)
-> +			return __this_address;
-> +	}
-> +
-> +	switch (fork_format) {
->  	case XFS_DINODE_FMT_LOCAL:
->  		/*
-> -		 * no local regular files yet
-> +		 * No local regular files yet.
->  		 */
-> -		if (whichfork == XFS_DATA_FORK) {
-> -			if (S_ISREG(be16_to_cpu(dip->di_mode)))
-> -				return __this_address;
-> -			if (be64_to_cpu(dip->di_size) >
-> -					XFS_DFORK_SIZE(dip, mp, whichfork))
-> -				return __this_address;
-> -		}
-> +		if (S_ISREG(mode) && whichfork == XFS_DATA_FORK)
-> +			return __this_address;
->  		if (di_nextents)
->  			return __this_address;
->  		break;
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index cf9e5b9374c1..ec6eec5c0e02 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -70,6 +70,8 @@ xfs_sb_version_to_features(
+>  	/* optional V4 features */
+>  	if (sbp->sb_rblocks > 0)
+>  		features |= XFS_FEAT_REALTIME;
+> +	if (sbp->sb_versionnum & XFS_SB_VERSION_NLINKBIT)
+> +		features |= XFS_FEAT_NLINK;
+>  	if (sbp->sb_versionnum & XFS_SB_VERSION_ATTRBIT)
+>  		features |= XFS_FEAT_ATTR;
+>  	if (sbp->sb_versionnum & XFS_SB_VERSION_QUOTABIT)
 > -- 
 > 2.35.1
 > 
