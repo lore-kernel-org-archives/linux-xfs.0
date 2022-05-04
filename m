@@ -2,306 +2,267 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B54C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 May 2022 16:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC3F5C43217
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 May 2022 18:02:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353410AbiEDQ1a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 May 2022 12:27:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60410 "EHLO
+        id S1376316AbiEDSG0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 May 2022 14:06:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353398AbiEDQ11 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 May 2022 12:27:27 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6DC04667E;
-        Wed,  4 May 2022 09:23:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=CmNIU4tdYylQH7CvbeH+XEIPPG8YbbseW7lFLeYKIJU=; b=qv2PNagW2oYK1Yr+Nl2MUf/vHY
-        IjinyxPbZuja+3qoPZl2KkUGzgr/bT+yrvqYV4bxRnTNwk/hP+XdA//csnZhXDmkGlPY9a+OTHv8z
-        7iOJtGlfFGgiaCcLxWEv4j88kCMGTgcRe2ONc6Rhq9b4Oy4+2jt8OJZu21Xv0FBqQFeJmx6aDu4qs
-        hxWjFDTfO7ySYObYq8gKeg0zWf5iGlaAFK3tBVYoFmBEEZTG+OyXjcW3b/Tci70E8v7O8fwqnl34x
-        cKCKwEAD9oHrAxVWSMrg/E/4Fv1d/KQO+qmj/I36pv1st4gTKb61/KaOnSYaHjaSlCa5t0FHtp0Ga
-        ApArqhfQ==;
-Received: from [8.34.116.185] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nmHn0-00BeEG-O7; Wed, 04 May 2022 16:23:46 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: [PATCH 5/5] btrfs: allocate the btrfs_dio_private as part of the iomap dio bio
-Date:   Wed,  4 May 2022 09:23:42 -0700
-Message-Id: <20220504162342.573651-6-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220504162342.573651-1-hch@lst.de>
-References: <20220504162342.573651-1-hch@lst.de>
+        with ESMTP id S1354203AbiEDSGM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 May 2022 14:06:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6C44850449
+        for <linux-xfs@vger.kernel.org>; Wed,  4 May 2022 10:21:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1651684905;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/9A/JxfDphEFRK9OqQKOMXsWhEjsMhB8rG/XvbinFZU=;
+        b=NAVKZ0vpFs3MIxx+T/sgarD9aWBKwzlaYhn9aL4yp/T2k2c1PxAAtJ8uZZZpRLnmkLHXWJ
+        wDnr3e7yM+7MZZjF7VmnH3YbJhYJv3QxiNc6ZwBELudYB1hxnCkHZ1wjyC/47h7WfLMFKO
+        K+H/j6UgK1d2hDnvBatDd98Z/50zbBQ=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-230-B0Uw75u_Nxynwu4p_sPkHA-1; Wed, 04 May 2022 13:21:44 -0400
+X-MC-Unique: B0Uw75u_Nxynwu4p_sPkHA-1
+Received: by mail-wr1-f69.google.com with SMTP id o13-20020adfa10d000000b0020c6fa5a77cso587622wro.23
+        for <linux-xfs@vger.kernel.org>; Wed, 04 May 2022 10:21:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=/9A/JxfDphEFRK9OqQKOMXsWhEjsMhB8rG/XvbinFZU=;
+        b=JQpVvUKmSX/z94daFrPm3wwwWgVxaUV1MQN393QUHhflts/DliF99soJNf/X6Ltr4O
+         DFKZzgMkqGqqKHp9seTHOM/i46N9O91I7QXJZNv5wHl+GQGtyA9HM4bqB00cZKHQ6x7v
+         jZNYnwzvu6TGkAC7ZOWfsvVQwuwKbu8PhG/TXEPK6JxkaLGwFk46D+49tuCdSl/vwsfV
+         giqZFjvi8akueqNXo5LIaPG+QCch7G8a7p5e7YfBaz5HAsHnKsNsxgYAU9rqIDHhYUoq
+         I/fxjCJ8MSWC5m/7+Q7X2koExgRHvADOQ9hKOfg3XbC6kl7IIvhGmuFKc32fhSEqZoVj
+         v5Pw==
+X-Gm-Message-State: AOAM533QGMGySfUDxwpB8oKNrZgii0zEAnHw6bgF2AuWJmSWT/w/cf46
+        9OOh3JyXi1Rbx74lHGvYH/P1xLnr613d8Q+aOdzm44epfi7o8Uy5LzMpUfyyIjIeq3tR9eF3SS7
+        VvcWVU859Iu651FWiLKkAndc0JNzXjiNDK1kI
+X-Received: by 2002:a5d:5547:0:b0:20c:7a44:d8e7 with SMTP id g7-20020a5d5547000000b0020c7a44d8e7mr5734297wrw.349.1651684903021;
+        Wed, 04 May 2022 10:21:43 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwhw3gb5v/mEPKh7r8VwTipBuMAB0N+L8Xe+ybr+CLWdmUu9tAw3sH4a+Eq71qNR2A2iRLDgP2nnyXO3MfJFR4=
+X-Received: by 2002:a5d:5547:0:b0:20c:7a44:d8e7 with SMTP id
+ g7-20020a5d5547000000b0020c7a44d8e7mr5734255wrw.349.1651684902709; Wed, 04
+ May 2022 10:21:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20220503213727.3273873-1-agruenba@redhat.com> <YnGkO9zpuzahiI0F@casper.infradead.org>
+ <CAHc6FU5_JTi+RJxYwa+CLc9tx_3_CS8_r8DjkEiYRhyjUvbFww@mail.gmail.com>
+ <20220503230226.GK8265@magnolia> <YnHIeHuAXr6WCk7M@casper.infradead.org> <YnKMFNtBshOa1eWs@infradead.org>
+In-Reply-To: <YnKMFNtBshOa1eWs@infradead.org>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Wed, 4 May 2022 19:21:31 +0200
+Message-ID: <CAHc6FU4psuQKXgueM6wH9pPMho+J1Rr2Xpbxx16N6fpX0FuJvw@mail.gmail.com>
+Subject: Re: [PATCH] iomap: iomap_write_end cleanup
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Create a new bio_set that contains all the per-bio private data needed
-by btrfs for direct I/O and tell the iomap code to use that instead
-of separately allocation the btrfs_dio_private structure.
+On Wed, May 4, 2022 at 4:22 PM Christoph Hellwig <hch@infradead.org> wrote:
+> On Wed, May 04, 2022 at 01:27:36AM +0100, Matthew Wilcox wrote:
+> > This is one of the things I noticed when folioising iomap and didn't
+> > get round to cleaning up, but I feel like we should change the calling
+> > convention here to bool (true = success, false = fail).  Changing
+> > block_write_end() might not be on the cards, unless someone's really
+> > motivated, but we can at least change iomap_write_end() to not have this
+> > stupid calling convention.
+>
+> I kinda hate the bools for something that is not a simple
+>
+>         if (foo()))
+>                 return;
+>
+> as propagating them is a bit of a mess.  I do however thing that
+> switching to 0 / -errno might work nicely here, completely untested
+> patch below:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/btrfs/btrfs_inode.h |  25 ----------
- fs/btrfs/ctree.h       |   1 -
- fs/btrfs/inode.c       | 108 ++++++++++++++++++++---------------------
- 3 files changed, 53 insertions(+), 81 deletions(-)
+This doesn't really strike me as better, just different.
 
-diff --git a/fs/btrfs/btrfs_inode.h b/fs/btrfs/btrfs_inode.h
-index 32131a5d321b3..33811e896623f 100644
---- a/fs/btrfs/btrfs_inode.h
-+++ b/fs/btrfs/btrfs_inode.h
-@@ -395,31 +395,6 @@ static inline bool btrfs_inode_can_compress(const struct btrfs_inode *inode)
- 	return true;
- }
- 
--struct btrfs_dio_private {
--	struct inode *inode;
--
--	/*
--	 * Since DIO can use anonymous page, we cannot use page_offset() to
--	 * grab the file offset, thus need a dedicated member for file offset.
--	 */
--	u64 file_offset;
--	u64 disk_bytenr;
--	/* Used for bio::bi_size */
--	u32 bytes;
--
--	/*
--	 * References to this structure. There is one reference per in-flight
--	 * bio plus one while we're still setting up.
--	 */
--	refcount_t refs;
--
--	/* dio_bio came from fs/direct-io.c */
--	struct bio *dio_bio;
--
--	/* Array of checksums */
--	u8 csums[];
--};
--
- /*
-  * btrfs_inode_item stores flags in a u64, btrfs_inode stores them in two
-  * separate u32s. These two functions convert between the two representations.
-diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
-index aa6e71fdc72b9..fa64323c453f5 100644
---- a/fs/btrfs/ctree.h
-+++ b/fs/btrfs/ctree.h
-@@ -3217,7 +3217,6 @@ int btrfs_del_orphan_item(struct btrfs_trans_handle *trans,
- int btrfs_find_orphan_item(struct btrfs_root *root, u64 offset);
- 
- /* file-item.c */
--struct btrfs_dio_private;
- int btrfs_del_csums(struct btrfs_trans_handle *trans,
- 		    struct btrfs_root *root, u64 bytenr, u64 len);
- blk_status_t btrfs_lookup_bio_sums(struct inode *inode, struct bio *bio, u8 *dst);
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 6ecff32c1fc22..f0c74bd1e6c19 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -68,6 +68,31 @@ struct btrfs_dio_data {
- 	bool nocow_done;
- };
- 
-+struct btrfs_dio_private {
-+	struct inode *inode;
-+
-+	/*
-+	 * Since DIO can use anonymous page, we cannot use page_offset() to
-+	 * grab the file offset, thus need a dedicated member for file offset.
-+	 */
-+	u64 file_offset;
-+	/* Used for bio::bi_size */
-+	u32 bytes;
-+
-+	/*
-+	 * References to this structure. There is one reference per in-flight
-+	 * bio plus one while we're still setting up.
-+	 */
-+	refcount_t refs;
-+
-+	/* Array of checksums */
-+	u8 *csums;
-+
-+	struct bio bio;
-+};
-+
-+static struct bio_set btrfs_dio_bioset;
-+
- struct btrfs_rename_ctx {
- 	/* Output field. Stores the index number of the old directory entry. */
- 	u64 index;
-@@ -7804,19 +7829,19 @@ static void btrfs_dio_private_put(struct btrfs_dio_private *dip)
- 	if (!refcount_dec_and_test(&dip->refs))
- 		return;
- 
--	if (btrfs_op(dip->dio_bio) == BTRFS_MAP_WRITE) {
-+	if (btrfs_op(&dip->bio) == BTRFS_MAP_WRITE) {
- 		__endio_write_update_ordered(BTRFS_I(dip->inode),
- 					     dip->file_offset,
- 					     dip->bytes,
--					     !dip->dio_bio->bi_status);
-+					     !dip->bio.bi_status);
- 	} else {
- 		unlock_extent(&BTRFS_I(dip->inode)->io_tree,
- 			      dip->file_offset,
- 			      dip->file_offset + dip->bytes - 1);
- 	}
- 
--	bio_endio(dip->dio_bio);
--	kfree(dip);
-+	kfree(dip->csums);
-+	bio_endio(&dip->bio);
- }
- 
- static void submit_dio_repair_bio(struct inode *inode, struct bio *bio,
-@@ -7918,7 +7943,7 @@ static void btrfs_end_dio_bio(struct bio *bio)
- 		err = btrfs_check_read_dio_bio(dip, bbio, !err);
- 
- 	if (err)
--		dip->dio_bio->bi_status = err;
-+		dip->bio.bi_status = err;
- 
- 	btrfs_record_physical_zoned(dip->inode, bbio->file_offset, bio);
- 
-@@ -7973,50 +7998,16 @@ static inline blk_status_t btrfs_submit_dio_bio(struct bio *bio,
- 	return ret;
- }
- 
--/*
-- * If this succeeds, the btrfs_dio_private is responsible for cleaning up locked
-- * or ordered extents whether or not we submit any bios.
-- */
--static struct btrfs_dio_private *btrfs_create_dio_private(struct bio *dio_bio,
--							  struct inode *inode,
--							  loff_t file_offset)
--{
--	const bool write = (btrfs_op(dio_bio) == BTRFS_MAP_WRITE);
--	const bool csum = !(BTRFS_I(inode)->flags & BTRFS_INODE_NODATASUM);
--	size_t dip_size;
--	struct btrfs_dio_private *dip;
--
--	dip_size = sizeof(*dip);
--	if (!write && csum) {
--		struct btrfs_fs_info *fs_info = btrfs_sb(inode->i_sb);
--		size_t nblocks;
--
--		nblocks = dio_bio->bi_iter.bi_size >> fs_info->sectorsize_bits;
--		dip_size += fs_info->csum_size * nblocks;
--	}
--
--	dip = kzalloc(dip_size, GFP_NOFS);
--	if (!dip)
--		return NULL;
--
--	dip->inode = inode;
--	dip->file_offset = file_offset;
--	dip->bytes = dio_bio->bi_iter.bi_size;
--	dip->disk_bytenr = dio_bio->bi_iter.bi_sector << 9;
--	dip->dio_bio = dio_bio;
--	refcount_set(&dip->refs, 1);
--	return dip;
--}
--
- static void btrfs_submit_direct(const struct iomap_iter *iter,
- 		struct bio *dio_bio, loff_t file_offset)
- {
-+	struct btrfs_dio_private *dip =
-+		container_of(dio_bio, struct btrfs_dio_private, bio);
- 	struct inode *inode = iter->inode;
- 	const bool write = (btrfs_op(dio_bio) == BTRFS_MAP_WRITE);
- 	struct btrfs_fs_info *fs_info = btrfs_sb(inode->i_sb);
- 	const bool raid56 = (btrfs_data_alloc_profile(fs_info) &
- 			     BTRFS_BLOCK_GROUP_RAID56_MASK);
--	struct btrfs_dio_private *dip;
- 	struct bio *bio;
- 	u64 start_sector;
- 	int async_submit = 0;
-@@ -8030,24 +8021,24 @@ static void btrfs_submit_direct(const struct iomap_iter *iter,
- 	struct btrfs_dio_data *dio_data = iter->private;
- 	struct extent_map *em = NULL;
- 
--	dip = btrfs_create_dio_private(dio_bio, inode, file_offset);
--	if (!dip) {
--		if (!write) {
--			unlock_extent(&BTRFS_I(inode)->io_tree, file_offset,
--				file_offset + dio_bio->bi_iter.bi_size - 1);
--		}
--		dio_bio->bi_status = BLK_STS_RESOURCE;
--		bio_endio(dio_bio);
--		return;
--	}
-+	dip->inode = inode;
-+	dip->file_offset = file_offset;
-+	dip->bytes = dio_bio->bi_iter.bi_size;
-+	refcount_set(&dip->refs, 1);
-+	dip->csums = NULL;
- 
--	if (!write) {
-+	if (!write && !(BTRFS_I(inode)->flags & BTRFS_INODE_NODATASUM)) {
- 		/*
- 		 * Load the csums up front to reduce csum tree searches and
- 		 * contention when submitting bios.
--		 *
--		 * If we have csums disabled this will do nothing.
- 		 */
-+		status = BLK_STS_RESOURCE;
-+		dip->csums = kzalloc(fs_info->csum_size *
-+			(dio_bio->bi_iter.bi_size >> fs_info->sectorsize_bits),
-+			GFP_NOFS);
-+		if (!dip)
-+			goto out_err;
-+
- 		status = btrfs_lookup_bio_sums(inode, dio_bio, dip->csums);
- 		if (status != BLK_STS_OK)
- 			goto out_err;
-@@ -8137,7 +8128,7 @@ static void btrfs_submit_direct(const struct iomap_iter *iter,
- out_err_em:
- 	free_extent_map(em);
- out_err:
--	dip->dio_bio->bi_status = status;
-+	dio_bio->bi_status = status;
- 	btrfs_dio_private_put(dip);
- }
- 
-@@ -8148,6 +8139,7 @@ static const struct iomap_ops btrfs_dio_iomap_ops = {
- 
- static const struct iomap_dio_ops btrfs_dio_ops = {
- 	.submit_io		= btrfs_submit_direct,
-+	.bio_set		= &btrfs_dio_bioset,
- };
- 
- ssize_t btrfs_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-@@ -8970,6 +8962,7 @@ void __cold btrfs_destroy_cachep(void)
- 	 * destroy cache.
- 	 */
- 	rcu_barrier();
-+	bioset_exit(&btrfs_dio_bioset);
- 	kmem_cache_destroy(btrfs_inode_cachep);
- 	kmem_cache_destroy(btrfs_trans_handle_cachep);
- 	kmem_cache_destroy(btrfs_path_cachep);
-@@ -9010,6 +9003,11 @@ int __init btrfs_init_cachep(void)
- 	if (!btrfs_free_space_bitmap_cachep)
- 		goto fail;
- 
-+	if (bioset_init(&btrfs_dio_bioset, BIO_POOL_SIZE,
-+			offsetof(struct btrfs_dio_private, bio),
-+			BIOSET_NEED_BVECS))
-+		goto fail;
-+
- 	return 0;
- fail:
- 	btrfs_destroy_cachep();
--- 
-2.30.2
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 8bc0989cf447fa..764174e2f1a183 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -685,13 +685,13 @@ static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
+>          * redo the whole thing.
+>          */
+>         if (unlikely(copied < len && !folio_test_uptodate(folio)))
+> -               return 0;
+> +               return -EIO;
+>         iomap_set_range_uptodate(folio, iop, offset_in_folio(folio, pos), len);
+>         filemap_dirty_folio(inode->i_mapping, folio);
+> -       return copied;
+> +       return 0;
+>  }
+>
+> -static size_t iomap_write_end_inline(const struct iomap_iter *iter,
+> +static void iomap_write_end_inline(const struct iomap_iter *iter,
+>                 struct folio *folio, loff_t pos, size_t copied)
+>  {
+>         const struct iomap *iomap = &iter->iomap;
+> @@ -706,23 +706,22 @@ static size_t iomap_write_end_inline(const struct iomap_iter *iter,
+>         kunmap_local(addr);
+>
+>         mark_inode_dirty(iter->inode);
+> -       return copied;
+>  }
+>
+> -/* Returns the number of bytes copied.  May be 0.  Cannot be an errno. */
+> -static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+> +static int iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+>                 size_t copied, struct folio *folio)
+>  {
+>         const struct iomap_page_ops *page_ops = iter->iomap.page_ops;
+>         const struct iomap *srcmap = iomap_iter_srcmap(iter);
+>         loff_t old_size = iter->inode->i_size;
+> -       size_t ret;
+> +       int ret = 0;
+>
+>         if (srcmap->type == IOMAP_INLINE) {
+> -               ret = iomap_write_end_inline(iter, folio, pos, copied);
+> +               iomap_write_end_inline(iter, folio, pos, copied);
+>         } else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
+> -               ret = block_write_end(NULL, iter->inode->i_mapping, pos, len,
+> -                               copied, &folio->page, NULL);
+> +               if (block_write_end(NULL, iter->inode->i_mapping, pos, len,
+> +                                   copied, &folio->page, NULL) < len)
+> +                       ret = -EIO;
+>         } else {
+>                 ret = __iomap_write_end(iter->inode, pos, len, copied, folio);
+>         }
+> @@ -732,8 +731,8 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+>          * cache.  It's up to the file system to write the updated size to disk,
+>          * preferably after I/O completion so that no stale data is exposed.
+>          */
+> -       if (pos + ret > old_size) {
+> -               i_size_write(iter->inode, pos + ret);
+> +       if (!ret && pos + len > old_size) {
+> +               i_size_write(iter->inode, pos + len);
+>                 iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
+>         }
+>         folio_unlock(folio);
+> @@ -741,10 +740,11 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+>         if (old_size < pos)
+>                 pagecache_isize_extended(iter->inode, old_size, pos);
+>         if (page_ops && page_ops->page_done)
+> -               page_ops->page_done(iter->inode, pos, ret, &folio->page);
+> +               page_ops->page_done(iter->inode, pos, ret ? ret : len,
+> +                                   &folio->page);
+>         folio_put(folio);
+>
+> -       if (ret < len)
+> +       if (ret)
+>                 iomap_write_failed(iter->inode, pos, len);
+>         return ret;
+>  }
+> @@ -754,7 +754,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>         loff_t length = iomap_length(iter);
+>         loff_t pos = iter->pos;
+>         ssize_t written = 0;
+> -       long status = 0;
+> +       int status = 0;
+>
+>         do {
+>                 struct folio *folio;
+> @@ -792,26 +792,24 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>                 copied = copy_page_from_iter_atomic(page, offset, bytes, i);
+>
+>                 status = iomap_write_end(iter, pos, bytes, copied, folio);
+> -
+> -               if (unlikely(copied != status))
+> -                       iov_iter_revert(i, copied - status);
+> -
+> -               cond_resched();
+> -               if (unlikely(status == 0)) {
+> +               if (unlikely(status)) {
+>                         /*
+>                          * A short copy made iomap_write_end() reject the
+>                          * thing entirely.  Might be memory poisoning
+>                          * halfway through, might be a race with munmap,
+>                          * might be severe memory pressure.
+>                          */
+> -                       if (copied)
+> +                       if (copied) {
+> +                               iov_iter_revert(i, copied);
+>                                 bytes = copied;
+> +                       }
+>                         goto again;
+>                 }
+> -               pos += status;
+> -               written += status;
+> -               length -= status;
+> +               pos += bytes;
+> +               written += bytes;
+> +               length -= bytes;
+
+Ought to turn 'status' into 'copied' here, not 'bytes'.
+
+>
+> +               cond_resched();
+>                 balance_dirty_pages_ratelimited(iter->inode->i_mapping);
+>         } while (iov_iter_count(i) && length);
+>
+> @@ -844,7 +842,6 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+>         const struct iomap *srcmap = iomap_iter_srcmap(iter);
+>         loff_t pos = iter->pos;
+>         loff_t length = iomap_length(iter);
+> -       long status = 0;
+>         loff_t written = 0;
+>
+>         /* don't bother with blocks that are not shared to start with */
+> @@ -858,20 +855,21 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+>                 unsigned long offset = offset_in_page(pos);
+>                 unsigned long bytes = min_t(loff_t, PAGE_SIZE - offset, length);
+>                 struct folio *folio;
+> +               int status;
+>
+>                 status = iomap_write_begin(iter, pos, bytes, &folio);
+>                 if (unlikely(status))
+>                         return status;
+>
+>                 status = iomap_write_end(iter, pos, bytes, bytes, folio);
+> -               if (WARN_ON_ONCE(status == 0))
+> -                       return -EIO;
+> +               if (WARN_ON_ONCE(status))
+> +                       return status;
+>
+>                 cond_resched();
+>
+> -               pos += status;
+> -               written += status;
+> -               length -= status;
+> +               pos += bytes;
+> +               written += bytes;
+> +               length -= bytes;
+>
+>                 balance_dirty_pages_ratelimited(iter->inode->i_mapping);
+>         } while (length);
+> @@ -925,9 +923,9 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+>                 folio_zero_range(folio, offset, bytes);
+>                 folio_mark_accessed(folio);
+>
+> -               bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
+> -               if (WARN_ON_ONCE(bytes == 0))
+> -                       return -EIO;
+> +               status = iomap_write_end(iter, pos, bytes, bytes, folio);
+> +               if (WARN_ON_ONCE(status))
+> +                       return status;
+>
+>                 pos += bytes;
+>                 length -= bytes;
+>
+
+Thanks,
+Andreas
 
