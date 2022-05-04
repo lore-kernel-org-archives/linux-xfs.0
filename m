@@ -2,55 +2,48 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D389C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 May 2022 14:10:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6DFBC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 May 2022 14:13:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237899AbiEDOOD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 May 2022 10:14:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58346 "EHLO
+        id S1351124AbiEDOQy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 May 2022 10:16:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351209AbiEDONn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 May 2022 10:13:43 -0400
+        with ESMTP id S239972AbiEDOQy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 May 2022 10:16:54 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E09A6433B5;
-        Wed,  4 May 2022 07:10:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFF6542490;
+        Wed,  4 May 2022 07:13:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=SfsnbVzUamDDwYSxHb3IxEH7g02ts4KSsBbvwnaHx+w=; b=OsmvvzBe+x2JP8XKFG7yBeZo2R
-        TGstnZxp/QtX1mBHGud2OkH795aV0UEB3zSm5e8tgbiDhAZTnip7C0puzyPfKW/Y0MBoJgMU0+bhc
-        L2UloEoi7e3apfh47yerferVgKq+UomJdE/G9mWyDiO5qITSYFzYWOEOGkuNqBAb/hzyoIFu89RbX
-        Ed1yJPt4mVCsCnLhqUa+iqskOF7WRXIf4W37rfdrh1/KuQoYfZ/moImz5+jJwdaCw6xA3vROFq6R3
-        N8z7BkXwGKmDlu7cPghyjtldKqeR9E8AuwCNrkz/RNke7AyEEB9pLuV1R/6tVPiiSY8MBnuHMZaUY
-        DQsos9pA==;
+        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=aAL0yYyasD8fk5RN2kd7/lnVtW
+        1kMTXgfCiVf1XXEhhkKMCQbLp1k4pZj7bNaJ5BZcmLKyQpNOxFzO3xETHITdzZrOz+dteSfrvMMFt
+        FqZwLh6XKAVZ1NfLnDh2xGP1cByJLFWXL2yJUjzvPpku9tIzYyQgYMyTl70VgjxAyrP6OpTs9W+lt
+        +OC+CFX7pc6CnUz3968IDwT43kZUHAZkur9Z5jCHkdW+5GuueZQfGPHswbp6boscI5hk4E28g972E
+        m7T9I4tV3lDIVZE6Px35guehhQjC9AV9qxy+08QB1d8RTvMGpW7aDXLcHIxxVzIWYw+KgmEIgg/je
+        CHHHJbQg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nmFhW-00BDra-Pw; Wed, 04 May 2022 14:09:58 +0000
-Date:   Wed, 4 May 2022 07:09:58 -0700
+        id 1nmFkg-00BEFK-Gf; Wed, 04 May 2022 14:13:14 +0000
+Date:   Wed, 4 May 2022 07:13:14 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Andreas Gruenbacher <agruenba@redhat.com>
 Cc:     Christoph Hellwig <hch@infradead.org>,
         "Darrick J . Wong" <djwong@kernel.org>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] iomap: iomap_write_failed fix
-Message-ID: <YnKJNvoeGYaxN/2f@infradead.org>
-References: <20220503213645.3273828-1-agruenba@redhat.com>
+Subject: Re: [PATCH] iomap: iomap_write_end cleanup
+Message-ID: <YnKJ+qcSrmqaB/Vp@infradead.org>
+References: <20220503213727.3273873-1-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220503213645.3273828-1-agruenba@redhat.com>
+In-Reply-To: <20220503213727.3273873-1-agruenba@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-
-On Tue, May 03, 2022 at 11:36:45PM +0200, Andreas Gruenbacher wrote:
-> The @lend parameter of truncate_pagecache_range() should be the offset
-> of the last byte of the hole, not the first byte beyond it.
-> 
-> Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure")
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 
 Looks good:
 
