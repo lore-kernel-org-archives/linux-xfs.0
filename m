@@ -2,176 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BC24C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 May 2022 05:49:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4801DC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 May 2022 08:03:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230474AbiEDFxL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 May 2022 01:53:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57994 "EHLO
+        id S1346009AbiEDIGd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 May 2022 04:06:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234470AbiEDFxK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 May 2022 01:53:10 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7EF852AC52
-        for <linux-xfs@vger.kernel.org>; Tue,  3 May 2022 22:49:35 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 88CE7534686;
-        Wed,  4 May 2022 15:49:34 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nm7tD-007nvp-Vi; Wed, 04 May 2022 15:49:32 +1000
-Date:   Wed, 4 May 2022 15:49:31 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Alli <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 16/16] xfs: ATTR_REPLACE algorithm with LARP enabled
- needs rework
-Message-ID: <20220504054931.GG1098723@dread.disaster.area>
-References: <20220414094434.2508781-1-david@fromorbit.com>
- <20220414094434.2508781-17-david@fromorbit.com>
- <e2f4ecdf730bda05f4b6dfc04945f206ddc3f450.camel@oracle.com>
- <20220503074045.GZ1098723@dread.disaster.area>
- <cd6282aa1e51edf417759084a9aabd68d50f9551.camel@oracle.com>
+        with ESMTP id S1345990AbiEDIGc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 May 2022 04:06:32 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AAF7F1FCE3
+        for <linux-xfs@vger.kernel.org>; Wed,  4 May 2022 01:02:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1651651376;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=QXs2GF6sBKWIeqbf7WfMBsD5HrZduvaTKSVFb36kok4=;
+        b=Y9yxr+rr4Z7Uw0ylgMBHwKPvhZNZJ48QBWoc5F2bXzZ149r5GXYkLbueIScbXV9IamTLw9
+        G2R+FnslngMvz8njuGBtxFr8MK4QLGJrDZqW+sf4vRvTAdMO4mERw99T3Dx23WWgqjNm04
+        Xy1kgyLCZ6g1M9N13Qqf6Nd6rLHfGLc=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-488-0V3H3fvjPUW3j_FiCAgx_w-1; Wed, 04 May 2022 04:02:55 -0400
+X-MC-Unique: 0V3H3fvjPUW3j_FiCAgx_w-1
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 15CB88039D7;
+        Wed,  4 May 2022 08:02:55 +0000 (UTC)
+Received: from max.localdomain (unknown [10.40.194.254])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CA750463E16;
+        Wed,  4 May 2022 08:02:53 +0000 (UTC)
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH] iomap: iomap_write_end cleanup
+Date:   Wed,  4 May 2022 10:02:52 +0200
+Message-Id: <20220504080252.3299512-1-agruenba@redhat.com>
+In-Reply-To: <YnHIeHuAXr6WCk7M@casper.infradead.org>
+References: <YnHIeHuAXr6WCk7M@casper.infradead.org> <20220503213727.3273873-1-agruenba@redhat.com> <YnGkO9zpuzahiI0F@casper.infradead.org> <CAHc6FU5_JTi+RJxYwa+CLc9tx_3_CS8_r8DjkEiYRhyjUvbFww@mail.gmail.com> <20220503230226.GK8265@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cd6282aa1e51edf417759084a9aabd68d50f9551.camel@oracle.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=627213ee
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=GYhOUErq2Ld-EwPGXjAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: quoted-printable
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.10
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 03, 2022 at 06:30:23PM -0700, Alli wrote:
-> On Tue, 2022-05-03 at 17:40 +1000, Dave Chinner wrote:
-> > On Thu, Apr 28, 2022 at 12:02:17AM -0700, Alli wrote:
-> > > On Thu, 2022-04-14 at 19:44 +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > We can't use the same algorithm for replacing an existing
-> > > > attribute
-> > > > when logging attributes. The existing algorithm is essentially:
-> > > > 
-> > > > 1. create new attr w/ INCOMPLETE
-> > > > 2. atomically flip INCOMPLETE flags between old + new attribute
-> > > > 3. remove old attr which is marked w/ INCOMPLETE
-> > > > 
-> > > > This algorithm guarantees that we see either the old or new
-> > > > attribute, and if we fail after the atomic flag flip, we don't
-> > > > have
-> > > > to recover the removal of the old attr because we never see
-> > > > INCOMPLETE attributes in lookups.
-> > ....
-> > > > diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> > > > index 39af681897a2..a46379a9e9df 100644
-> > > > --- a/fs/xfs/xfs_attr_item.c
-> > > > +++ b/fs/xfs/xfs_attr_item.c
-> > > > @@ -490,9 +490,14 @@ xfs_attri_validate(
-> > > >  	if (attrp->__pad != 0)
-> > > >  		return false;
-> > > >  
-> > > > -	/* alfi_op_flags should be either a set or remove */
-> > > > -	if (op != XFS_ATTR_OP_FLAGS_SET && op !=
-> > > > XFS_ATTR_OP_FLAGS_REMOVE)
-> > > > +	switch (op) {
-> > > > +	case XFS_ATTR_OP_FLAGS_SET:
-> > > > +	case XFS_ATTR_OP_FLAGS_REMOVE:
-> > > > +	case XFS_ATTR_OP_FLAGS_REPLACE:
-> > > > +		break;
-> > > > +	default:
-> > > >  		return false;
-> > > > +	}
-> > > >  
-> > > >  	if (attrp->alfi_value_len > XATTR_SIZE_MAX)
-> > > >  		return false;
-> > > > @@ -553,11 +558,27 @@ xfs_attri_item_recover(
-> > > >  	args->namelen = attrp->alfi_name_len;
-> > > >  	args->hashval = xfs_da_hashname(args->name, args->namelen);
-> > > >  	args->attr_filter = attrp->alfi_attr_flags;
-> > > > +	args->op_flags = XFS_DA_OP_RECOVERY;
-> > > >  
-> > > > -	if (attrp->alfi_op_flags == XFS_ATTR_OP_FLAGS_SET) {
-> > > > +	switch (attr->xattri_op_flags) {
-> > > > +	case XFS_ATTR_OP_FLAGS_SET:
-> > > > +	case XFS_ATTR_OP_FLAGS_REPLACE:
-> > > >  		args->value = attrip->attri_value;
-> > > >  		args->valuelen = attrp->alfi_value_len;
-> > > >  		args->total = xfs_attr_calc_size(args, &local);
-> > > > +		if (xfs_inode_hasattr(args->dp))
-> > > I ran into a test failure and tracked it down to the above line.  I
-> > > suspect because xfs_inode_hasattr only checks to see if the inode
-> > > has
-> > > an attr fork, it doesnt actually check to see if it has the attr
-> > > we're
-> > > replacing.
-> > 
-> > Right, that was intentional. It is based on the fact that if we
-> > are recovering a set or a replace operation, we have to remove the
-> > INCOMPLETE xattr first. However, if the attr fork is empty, there's
-> > no INCOMPLETE xattr to remove, and so we can just go straight to the
-> > set operation to create the new value.
-> > 
-> > Hmmm - what was the failure? Was it a null pointer dereference
-> > on ip->i_afp? I wonder if you hit the corner case where attr removal
-> > can remove the attr fork, and that's when it crashed and we've tried
-> > to recover from?
-> No, the actual shutdown was from the error inject that the test case
-> uses.  The unexpected part was a set operation returning -ENODATA
-> because we incorrectly fell down the rename path. 
+On Wed, May 4, 2022 at 2:27 AM Matthew Wilcox <willy@infradead.org> wrote:=
+=0D
+> On Tue, May 03, 2022 at 04:02:26PM -0700, Darrick J. Wong wrote:=0D
+> > On Wed, May 04, 2022 at 12:15:45AM +0200, Andreas Gruenbacher wrote:=0D
+> > > On Tue, May 3, 2022 at 11:53 PM Matthew Wilcox <willy@infradead.org> =
+wrote:=0D
+> > > > On Tue, May 03, 2022 at 11:37:27PM +0200, Andreas Gruenbacher wrote=
+:=0D
+> > > > > In iomap_write_end(), only call iomap_write_failed() on the byte =
+range=0D
+> > > > > that has failed.  This should improve code readability, but doesn=
+'t fix=0D
+> > > > > an actual bug because iomap_write_failed() is called after updati=
+ng the=0D
+> > > > > file size here and it only affects the memory beyond the end of t=
+he=0D
+> > > > > file.=0D
+> > > >=0D
+> > > > I can't find a way to set 'ret' to anything other than 0 or len.  I=
+ know=0D
+> > > > the code is written to make it look like we can return a short writ=
+e,=0D
+> > > > but I can't see a way to do it.=0D
+> > >=0D
+> > > Good point, but that doesn't make the code any less confusing in my e=
+yes.=0D
+> >=0D
+> > Not to mention it leaves a logic bomb if we ever /do/ start returning=0D
+> > 0 < ret < len.=0D
+>=0D
+> This is one of the things I noticed when folioising iomap and didn't=0D
+> get round to cleaning up, but I feel like we should change the calling=0D
+> convention here to bool (true =3D success, false =3D fail).  Changing=0D
+> block_write_end() might not be on the cards, unless someone's really=0D
+> motivated, but we can at least change iomap_write_end() to not have this=
+=0D
+> stupid calling convention.=0D
+>=0D
+> I mean, I won't NAK this patch, it is somewhat better with it than withou=
+t=0D
+> it, but it perpetuates the myth that this is in some way ever going to=0D
+> happen, and the code could be a lot simpler if we stopped pretending.=0D
+=0D
+Hmm, I don't really see how this would make things significantly=0D
+simpler.  Trying it out made me notice the following problem, though.=0D
+Any thoughts?=0D
+=0D
+Of course this was copied from generic_write_end(), and so we have the same=
+=0D
+issue there as well as in nobh_write_end().=0D
+=0D
+Thanks,=0D
+Andreas=0D
+=0D
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c=0D
+index 8fb9b2797fc5..1938dbbda1c0 100644=0D
+--- a/fs/iomap/buffered-io.c=0D
++++ b/fs/iomap/buffered-io.c=0D
+@@ -721,13 +721,13 @@ static size_t iomap_write_end(struct iomap_iter *iter=
+, loff_t pos, size_t len,=0D
+ 	 * cache.  It's up to the file system to write the updated size to disk,=
+=0D
+ 	 * preferably after I/O completion so that no stale data is exposed.=0D
+ 	 */=0D
+-	if (pos + ret > old_size) {=0D
++	if (ret && pos + ret > old_size) {=0D
+ 		i_size_write(iter->inode, pos + ret);=0D
+ 		iter->iomap.flags |=3D IOMAP_F_SIZE_CHANGED;=0D
+ 	}=0D
+ 	folio_unlock(folio);=0D
+=0D
+-	if (old_size < pos)=0D
++	if (ret && old_size < pos)=0D
+ 		pagecache_isize_extended(iter->inode, old_size, pos);=0D
+ 	if (page_ops && page_ops->page_done)=0D
+ 		page_ops->page_done(iter->inode, pos, ret, &folio->page);=0D
 
-That's not correct - recovery of a set operation has to remove
-the INCOMPLETE attr that is was in the process of being built. If
-we are in recovery and we don't find an existing entry, we should
-just then fall through the state machine to the set operation
-as there was nothing to remove.
-
--ENOATTR/-ENODATA in that case is valid, it just sounds like we
-didn't find an incomplete attr to remove and didn't handle the case
-correctly.
-
-> I suspect the reason
-> the parent pointers exposed it was because the presence of the parent
-> pointer caused the attr fork to not be empty and so xfs_inode_hasattr
-> succeeds. 
-
-I think it's the case where we fail immediately after logging the
-first SET intent to the journal, and haven't actually logged
-any other changes yet. That first intent can only be logged after
-the attr fork has been created and logged, so -ENODATA is a case
-recovery is supposed to handle for a SET operation.
-
-> > Oh, I think I might have missed a case there. If you look at
-> > xfs_attr_sf_removename() I added a case to avoid removing the attr
-> > fork when XFS_DA_OP_RENAME is set because we don't want to remove it
-> > when we are about to add to it again. But I didn't add the same
-> > logic to xfs_attr3_leaf_to_shortform() which can also trash the attr
-> > fork if the last attr we remove from the attr fork is larger than
-> > would fit in a sf attr fork. Hence we go straight from leaf form to
-> > no attr fork at all.
-> > 
-> > Ok, that's definitely a bug, I'll need to fix that, and it could be
-> > the cause of this issue as removing the attr fork will set
-> > forkoff to 0 and so the inode will not have an attr fork
-> > instantiated when it is read into memory...
-> > 
-> > 
-> Ah, that could be it then.  The last failing test case is: expanding
-> the fork into node form, setting the inject, and attempting a rename.
-
-Ah, so that's likely how we get the situation I suggested above - we
-commit the node form expansion without other modifications but
-include the SET intent, so if we recover that node form
-transformation, we most definitely have a SET intent without an
-INCOMPLETE attr to remove...
-
-I'll add it to the list.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
