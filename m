@@ -2,41 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2690C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 06:23:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC4A8C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 06:24:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244257AbiEEG1Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 May 2022 02:27:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41794 "EHLO
+        id S244273AbiEEG1x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 May 2022 02:27:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238683AbiEEG1P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 02:27:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6A692FE53
-        for <linux-xfs@vger.kernel.org>; Wed,  4 May 2022 23:23:36 -0700 (PDT)
+        with ESMTP id S235279AbiEEG1w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 02:27:52 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94D9F2F3B4
+        for <linux-xfs@vger.kernel.org>; Wed,  4 May 2022 23:24:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 50EE361949
-        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 06:23:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B3056C385B3
-        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 06:23:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 23F3261CC7
+        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 06:24:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8B92FC385B3
+        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 06:24:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651731815;
-        bh=l6bmBRZLn2PnF+F1BmlWlT5/IMNmumKDbG+4o+l2mEE=;
+        s=k20201202; t=1651731852;
+        bh=Cs3QkqFhbp5nc7hnQXFofrR8oQCe1sIu6nkFuQ/UBQQ=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=pu3yxXlcizrB4SUJpz+A993kBsFL/wrmYsCmf9dWtpGo8MTJ1Ya2TG6Sds2lIpHg7
-         BCnteehy+G/RAYwcyQC8fgZOByRp83I6nNyrdMC601DYEj5F3yW+yvoddnBZT4T3fO
-         bYc0hpnP++QPSK1umqfX6h5YVyq1ZgYklA47w5w6muu7tOx9tPR+agXSjFfarvroUQ
-         4hZupv+X2q1ETt2MQWIqwTmIVWcE2x2D3KsCyiu9RwN9vyEvQfNIY19Fi3yi5KKQxB
-         rn3JcIoLCFdLC15Go8tyFOmfll/zU4T0JDP+oDVMkaH+n21y4q2YQPIArNXUEJ/MVK
-         gFl5aKU4IpMGw==
+        b=CKE1de7PebTEfnybkfwKrJ6sf9aRgI8yxKo0l6GTRVG5mnJGd71++UCkAnQe/375q
+         39UzMB2WRWrvADP7ycLpu+WlWi4ocF4nKH6UijOP6VP+EFxSo/2xe/deR7dUYPHEp8
+         JKE1/jDbmDp/1OOkyd8n+D/buIxgRCU+5+4OEZK+EFlFlQXL6t224vRfwA1dCqP+R4
+         iEN7UjQupkudigyQguE7S7NXRB1maFs9Slyh8dITVA8Xr5/2Z7pCBVnC/N8bWmQKwb
+         VFI31EXtxYbnZe04K9SWjLXcwnc76bwYGYTrLfB+3pVKL25MeXAjMiZxECVPEgKtaU
+         oXHBKlakW07zA==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 9CA0CC05FCE; Thu,  5 May 2022 06:23:35 +0000 (UTC)
+        id 7C1BAC05FF5; Thu,  5 May 2022 06:24:12 +0000 (UTC)
 From:   bugzilla-daemon@kernel.org
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 215921] kernel BUG at fs/xfs/xfs_message.c:110!
-Date:   Thu, 05 May 2022 06:23:35 +0000
+Subject: [Bug 215786] unable to handle page fault BUG triggered in
+ fs/xfs/xfs_log_recover.c: xlog_recover_add_to_cont_trans()  when mount a
+ corrupted image
+Date:   Thu, 05 May 2022 06:24:11 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
@@ -52,9 +54,9 @@ X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215921-201763-70tOwUHKOy@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215921-201763@https.bugzilla.kernel.org/>
-References: <bug-215921-201763@https.bugzilla.kernel.org/>
+Message-ID: <bug-215786-201763-aVvqAiqNKq@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215786-201763@https.bugzilla.kernel.org/>
+References: <bug-215786-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -64,7 +66,7 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215921
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215786
 
 --- Comment #1 from Darrick J. Wong (djwong@kernel.org) ---
 If you are going to run some scripted tool to randomly
@@ -75,14 +77,17 @@ throw them at someone to do all the work.
 
 --D
 
-On Sat, Apr 30, 2022 at 07:17:27AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D215921
+On Thu, Mar 31, 2022 at 08:43:02PM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D215786
 >=20
->             Bug ID: 215921
->            Summary: kernel BUG at fs/xfs/xfs_message.c:110!
+>             Bug ID: 215786
+>            Summary: unable to handle page fault BUG triggered in
+>                     fs/xfs/xfs_log_recover.c:
+>                     xlog_recover_add_to_cont_trans()  when mount a
+>                     corrupted image
 >            Product: File System
 >            Version: 2.5
->     Kernel Version: 5.17
+>     Kernel Version: 5.17.1, 5.15.32
 >           Hardware: All
 >                 OS: Linux
 >               Tree: Mainline
@@ -91,116 +96,147 @@ On Sat, Apr 30, 2022 at 07:17:27AM +0000, bugzilla-daemon@kernel.org wrote:
 >           Priority: P1
 >          Component: XFS
 >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
->           Reporter: yanming@tju.edu.cn
+>           Reporter: wenqingliu0120@gmail.com
 >         Regression: No
 >=20
-> Created attachment 300858
->   --> https://bugzilla.kernel.org/attachment.cgi?id=3D300858&action=3Dedit
-> case.c, contains file operations to reproduce the bug
+> Created attachment 300674
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=3D300674&action=3Dedit
+> corrupted image and .config
 >=20
-> I have encountered a XFS bug in the kernel v5.17.
+> - Overview=20
+> unable to handle page fault BUG triggered in fs/xfs/xfs_log_recover.c:
+> xlog_recover_add_to_cont_trans() when mount a corrupted image
 >=20
-> I have uploaded the system call sequence as case.c, and a modified image =
-can
-> be
-> found on google net disk
->
-> (https://drive.google.com/file/d/1EzzOv74RIXjRdjMD1emDYN3241goinlp/view?u=
-sp=3Dsharing).
-> You can reproduce this bug by running the following commands:
+> - Reproduce=20
+> tested on kernel 5.17.1, 5.15.32
 >=20
-> gcc -o case case.c
-> losetup /dev/loop0 case.img
-> mount -o
-> "allocsize=3D4096,attr2,discard,nogrpid,filestreams,noikeep,noalign,wsync"
-> /dev/loop0 /mnt/test/
-> ./case
+> $ mkdir mnt
+> $ unzip tmp3.zip
+> $ sudo mount -t xfs tmp3.img mnt
 >=20
-> The kernel crash log is shown below:
->=20
-> 4,918,9602591861,-;XFS (loop0): correcting sb_features alignment problem
-> 0,919,9602592537,-;XFS: Assertion failed: mp->m_sb.sb_versionnum &
-> XFS_SB_VERSION_DIRV2BIT, file: fs/xfs/libxfs/xfs_dir2.c, line: 99
-> 4,920,9602592552,-;------------[ cut here ]------------
-> 2,921,9602592553,-;kernel BUG at fs/xfs/xfs_message.c:110!
-> 4,922,9602592559,-;invalid opcode: 0000 [#1] PREEMPT SMP KASAN PTI
-> 4,923,9602592564,-;CPU: 7 PID: 2786 Comm: mount Not tainted 5.17.0 #7
-> 4,924,9602592567,-;Hardware name: Dell Inc. OptiPlex 9020/03CPWF, BIOS A14
-> 09/14/2015
-> 4,925,9602592569,-;RIP: 0010:assfail+0x4f/0x54
-> 4,926,9602592576,-;Code: c1 e2 2a 83 e0 07 48 c1 e9 03 8a 14 11 38 c2 7f =
-10
-> 84
-> d2 74 0c 48 c7 c7 ac 72 da a9 e8 79 f7 7d fd 80 3d 7e 4e 3c 01 00 74 02 <=
-0f>
-> 0b
-> 0f 0b c3 48 8d 45 10 48 8d 54 24 28 4c 89 f6 48 c7 c7 00 a3
-> 4,927,9602592579,-;RSP: 0018:ffff88810f897b40 EFLAGS: 00010202
-> 4,928,9602592583,-;RAX: 0000000000000004 RBX: ffff88811c8d0000 RCX:
-> 1ffffffff53b4e55
-> 4,929,9602592585,-;RDX: dffffc0000000000 RSI: 000000000000000a RDI:
-> ffffed1021f12f5a
-> 4,930,9602592588,-;RBP: ffff88810f897cb0 R08: 00000000ffffffea R09:
-> ffffed103aafe4eb
-> 4,931,9602592590,-;R10: ffff8881d57f2757 R11: ffffed103aafe4ea R12:
-> ffff88811c8d05b8
-> 4,932,9602592592,-;R13: ffff88811c8d0000 R14: ffff88811c8d00c8 R15:
-> 000000002800c9fa
-> 4,933,9602592594,-;FS:  00007fa6c6b2a840(0000) GS:ffff8881d57c0000(0000)
+> - Kernel dump
+> [  148.130068] loop0: detected capacity change from 0 to 32768
+> [  148.154549] XFS (loop0): Deprecated V4 format (crc=3D0) will not be
+> supported
+> after September 2030.
+> [  148.154968] XFS (loop0): Mounting V10 Filesystem
+> [  148.186177] XFS (loop0): Starting recovery (logdev: internal)
+> [  148.186257] BUG: unable to handle page fault for address: ffffffffffff=
+fff8
+> [  148.186282] #PF: supervisor read access in kernel mode
+> [  148.186294] #PF: error_code(0x0000) - not-present page
+> [  148.186305] PGD 1ff60e067 P4D 1ff60e067 PUD 1ff610067 PMD 0=20
+> [  148.186319] Oops: 0000 [#1] PREEMPT SMP NOPTI
+> [  148.186329] CPU: 3 PID: 894 Comm: mount Not tainted 5.17.1 #1
+> [  148.186343] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS
+> 1.13.0-1ubuntu1.1 04/01/2014
+> [  148.186360] RIP: 0010:xlog_recover_add_to_cont_trans+0x46/0x1e0 [xfs]
+> [  148.186594] Code: 89 cb 48 83 ec 08 48 8b 46 30 48 39 c7 0f 84 d7 00 0=
+0 00
+> 4c 8b 66 38 49 63 44 24 10 49 8b 54 24 18 48 c1 e0 04 48 8d 44 02 f0 <4c>=
+ 63
+> 78
+> 08 48 8b 38 4c 89 fa 4c 89 fe 01 ca b9 c0 0c 00 00 48 63
+> [  148.186630] RSP: 0018:ffffa5e600c6fac8 EFLAGS: 00010246
+> [  148.186642] RAX: fffffffffffffff0 RBX: 0000000000000180 RCX:
+> 0000000000000180
+> [  148.186656] RDX: 0000000000000000 RSI: ffff950b9003fc40 RDI:
+> ffff950b9003fc70
+> [  148.186671] RBP: ffff950b9003fc40 R08: 0000000000000008 R09:
+> 0000000000000001
+> [  148.186685] R10: 0000000000000005 R11: ffff950b8b059ff8 R12:
+> ffff950b9003f300
+> [  148.186700] R13: ffff950b86c2f800 R14: ffff950b8b058058 R15:
+> ffff950b8b058058
+> [  148.186714] FS:  00007f366411e080(0000) GS:ffff950d75d80000(0000)
 > knlGS:0000000000000000
-> 4,934,9602592597,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> 4,935,9602592599,-;CR2: 00007fffe0409d30 CR3: 0000000112a58004 CR4:
-> 00000000001706e0
-> 4,936,9602592602,-;Call Trace:
-> 4,937,9602592604,-; <TASK>
-> 4,938,9602592605,-; xfs_da_mount+0x7e5/0xad0
-> 4,939,9602592612,-; ? xfs_uuid_mount+0x290/0x3a0
-> 4,940,9602592616,-; xfs_mountfs+0xab5/0x19f0
-> 4,941,9602592619,-; ? create_object+0x649/0xaf0
-> 4,942,9602592623,-; ? kasan_unpoison+0x23/0x50
-> 4,943,9602592627,-; ? xfs_mount_reset_sbqflags+0x100/0x100
-> 4,944,9602592631,-; ? kmem_alloc+0x8e/0x290
-> 4,945,9602592634,-; ? xfs_filestream_put_ag+0x30/0x30
-> 4,946,9602592638,-; ? xfs_mru_cache_create+0x339/0x540
-> 4,947,9602592642,-; xfs_fs_fill_super+0xc24/0x1710
-> 4,948,9602592646,-; get_tree_bdev+0x379/0x650
-> 4,949,9602592650,-; ? xfs_fs_sync_fs+0x210/0x210
-> 4,950,9602592654,-; vfs_get_tree+0x7f/0x2b0
-> 4,951,9602592658,-; ? ns_capable_common+0x52/0xd0
-> 4,952,9602592662,-; path_mount+0x47e/0x19b0
-> 4,953,9602592667,-; ? finish_automount+0x5d0/0x5d0
-> 4,954,9602592671,-; ? user_path_at_empty+0x40/0x50
-> 4,955,9602592674,-; ? kmem_cache_free+0xa5/0x300
-> 4,956,9602592677,-; do_mount+0xc5/0xe0
-> 4,957,9602592681,-; ? path_mount+0x19b0/0x19b0
-> 4,958,9602592684,-; ? _copy_from_user+0x38/0x70
-> 4,959,9602592690,-; ? copy_mount_options+0x69/0x120
-> 4,960,9602592694,-; __x64_sys_mount+0x127/0x190
-> 4,961,9602592698,-; do_syscall_64+0x3b/0x90
-> 4,962,9602592702,-; entry_SYSCALL_64_after_hwframe+0x44/0xae
-> 4,963,9602592707,-;RIP: 0033:0x7fa6c6d89cae
-> 4,964,9602592710,-;Code: 48 8b 0d e5 c1 0c 00 f7 d8 64 89 01 48 83 c8 ff =
-c3
-> 66
-> 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 <=
-48>
-> 3d
-> 01 f0 ff ff 73 01 c3 48 8b 0d b2 c1 0c 00 f7 d8 64 89 01 48
-> 4,965,9602592713,-;RSP: 002b:00007fffe040b588 EFLAGS: 00000246 ORIG_RAX:
-> 00000000000000a5
-> 4,966,9602592716,-;RAX: ffffffffffffffda RBX: 00007fa6c6ebb204 RCX:
-> 00007fa6c6d89cae
-> 4,967,9602592719,-;RDX: 0000557359be6830 RSI: 0000557359be6870 RDI:
-> 0000557359be6850
-> 4,968,9602592721,-;RBP: 0000557359be6530 R08: 0000557359be6790 R09:
-> 00007fffe040a300
-> 4,969,9602592723,-;R10: 0000000000000000 R11: 0000000000000246 R12:
+> [  148.186730] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  148.186742] CR2: fffffffffffffff8 CR3: 000000010f138005 CR4:
+> 0000000000370ee0
+> [  148.186759] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
 > 0000000000000000
-> 4,970,9602592725,-;R13: 0000557359be6850 R14: 0000557359be6830 R15:
-> 0000557359be6530
-> 4,971,9602592728,-; </TASK>
-> 4,972,9602592729,-;Modules linked in: x86_pkg_temp_thermal efivarfs
-> 4,973,9602592736,-;---[ end trace 0000000000000000 ]---
+> [  148.186773] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
+> 0000000000000400
+> [  148.186788] Call Trace:
+> [  148.186806]  <TASK>
+> [  148.186813]  xlog_recovery_process_trans+0x6b/0xc0 [xfs]
+> [  148.186899]  xlog_recover_process_data+0xab/0x130 [xfs]
+> [  148.186984]  xlog_do_recovery_pass+0x2d5/0x5c0 [xfs]
+> [  148.187092]  xlog_do_log_recovery+0x62/0xb0 [xfs]
+> [  148.187186]  xlog_do_recover+0x34/0x190 [xfs]
+> [  148.187280]  xlog_recover+0xbc/0x170 [xfs]
+> [  148.187356]  xfs_log_mount+0x125/0x2d0 [xfs]
+> [  148.187431]  xfs_mountfs+0x4e0/0xa50 [xfs]
+> [  148.187508]  ? kmem_alloc+0x88/0x140 [xfs]
+> [  148.187587]  ? xfs_filestream_get_parent+0x70/0x70 [xfs]
+> [  148.187660]  xfs_fs_fill_super+0x69f/0x880 [xfs]
+> [  148.187741]  ? sget_fc+0x1be/0x230
+> [  148.187751]  ? xfs_fs_inode_init_once+0x70/0x70 [xfs]
+> [  148.187825]  get_tree_bdev+0x16a/0x280
+> [  148.187835]  vfs_get_tree+0x22/0xc0
+> [  148.187844]  path_mount+0x59b/0x9a0
+> [  148.187854]  do_mount+0x75/0x90
+> [  148.187862]  __x64_sys_mount+0x86/0xd0
+> [  148.187871]  do_syscall_64+0x37/0xb0
+> [  148.187881]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [  148.187893] RIP: 0033:0x7f36639df15a
+> [  148.187905] Code: 48 8b 0d 31 8d 2c 00 f7 d8 64 89 01 48 83 c8 ff c3 6=
+6 2e
+> 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48>=
+ 3d
+> 01
+> f0 ff ff 73 01 c3 48 8b 0d fe 8c 2c 00 f7 d8 64 89 01 48
+> [  148.188671] RSP: 002b:00007ffe15780dc8 EFLAGS: 00000202 ORIG_RAX:
+> 00000000000000a5
+> [  148.189058] RAX: ffffffffffffffda RBX: 0000564b1f2ac420 RCX:
+> 00007f36639df15a
+> [  148.189481] RDX: 0000564b1f2ac600 RSI: 0000564b1f2ae320 RDI:
+> 0000564b1f2b5c40
+> [  148.189878] RBP: 0000000000000000 R08: 0000000000000000 R09:
+> 0000564b1f2ac620
+> [  148.190283] R10: 00000000c0ed0000 R11: 0000000000000202 R12:
+> 0000564b1f2b5c40
+> [  148.190677] R13: 0000564b1f2ac600 R14: 0000000000000000 R15:
+> 00007f3663f008a4
+> [  148.191071]  </TASK>
+> [  148.191471] Modules linked in: joydev input_leds serio_raw iscsi_tcp
+> libiscsi_tcp libiscsi qemu_fw_cfg scsi_transport_iscsi xfs autofs4 raid10
+> raid456 async_raid6_recov async_memcpy async_pq hid_generic async_xor
+> async_tx
+> usbhid raid1 hid raid0 multipath linear qxl drm_ttm_helper ttm drm_kms_he=
+lper
+> syscopyarea sysfillrect sysimgblt fb_sys_fops drm crct10dif_pclmul
+> crc32_pclmul
+> ghash_clmulni_intel psmouse aesni_intel crypto_simd cryptd
+> [  148.193140] CR2: fffffffffffffff8
+> [  148.193545] ---[ end trace 0000000000000000 ]---
+> [  148.193933] RIP: 0010:xlog_recover_add_to_cont_trans+0x46/0x1e0 [xfs]
+> [  148.194439] Code: 89 cb 48 83 ec 08 48 8b 46 30 48 39 c7 0f 84 d7 00 0=
+0 00
+> 4c 8b 66 38 49 63 44 24 10 49 8b 54 24 18 48 c1 e0 04 48 8d 44 02 f0 <4c>=
+ 63
+> 78
+> 08 48 8b 38 4c 89 fa 4c 89 fe 01 ca b9 c0 0c 00 00 48 63
+> [  148.195288] RSP: 0018:ffffa5e600c6fac8 EFLAGS: 00010246
+> [  148.195710] RAX: fffffffffffffff0 RBX: 0000000000000180 RCX:
+> 0000000000000180
+> [  148.196139] RDX: 0000000000000000 RSI: ffff950b9003fc40 RDI:
+> ffff950b9003fc70
+> [  148.196565] RBP: ffff950b9003fc40 R08: 0000000000000008 R09:
+> 0000000000000001
+> [  148.196983] R10: 0000000000000005 R11: ffff950b8b059ff8 R12:
+> ffff950b9003f300
+> [  148.197409] R13: ffff950b86c2f800 R14: ffff950b8b058058 R15:
+> ffff950b8b058058
+> [  148.197833] FS:  00007f366411e080(0000) GS:ffff950d75d80000(0000)
+> knlGS:0000000000000000
+> [  148.198261] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  148.198692] CR2: fffffffffffffff8 CR3: 000000010f138005 CR4:
+> 0000000000370ee0
+> [  148.199154] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+> 0000000000000000
+> [  148.199589] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
+> 0000000000000400
 >=20
 > --=20
 > You may reply to this email to add a comment.
