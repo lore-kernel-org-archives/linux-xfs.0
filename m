@@ -2,87 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D29DFC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 08:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C9CFC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 08:51:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349553AbiEEIhR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 May 2022 04:37:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48796 "EHLO
+        id S239091AbiEEIyr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 May 2022 04:54:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349585AbiEEIhP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 04:37:15 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8037149905;
-        Thu,  5 May 2022 01:33:34 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 3F15721882;
-        Thu,  5 May 2022 08:33:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1651739613; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rEynGZ+H2w9ylxLdHigGAaKeSCzGaYGzl+zGjlh++AI=;
-        b=EDwbKz5V9G3lRyQNsgKdCVf32/nEh34MV4fFSfgI9SZFi58EdyCUW+PQnLu4jyadbNKZPt
-        v5UY/ol1LtPk37RUaDhYEnADZZX4AsGyjYtV5h5F3d3I/0mZ3PFBtr+vziVzmhtrmcwd0j
-        rWvibBYIRKhGqzArBlIlOS3h3WAxB/Y=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A99F113B11;
-        Thu,  5 May 2022 08:33:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 8GihJtyLc2JJEAAAMHmgww
-        (envelope-from <nborisov@suse.com>); Thu, 05 May 2022 08:33:32 +0000
-Message-ID: <e96fcd60-7b2d-59f2-be72-a8f578afd583@suse.com>
-Date:   Thu, 5 May 2022 11:33:32 +0300
+        with ESMTP id S229476AbiEEIyr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 04:54:47 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 26BD02899B
+        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 01:51:07 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 64CB310E6268;
+        Thu,  5 May 2022 18:51:06 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nmXCS-008FmJ-Tb; Thu, 05 May 2022 18:51:04 +1000
+Date:   Thu, 5 May 2022 18:51:04 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     bugzilla-daemon@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 215927] kernel deadlock when mounting the image
+Message-ID: <20220505085104.GH1098723@dread.disaster.area>
+References: <bug-215927-201763@https.bugzilla.kernel.org/>
+ <bug-215927-201763-qVJPAGrN3y@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: reduce memory allocation in the btrfs direct I/O path
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20220504162342.573651-1-hch@lst.de>
-From:   Nikolay Borisov <nborisov@suse.com>
-In-Reply-To: <20220504162342.573651-1-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-215927-201763-qVJPAGrN3y@https.bugzilla.kernel.org/>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62738ffa
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=7YfXLusrAAAA:8
+        a=7-415B0cAAAA:8 a=sIvyb8evvIpBUfk83LEA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=SLz71HocmBbuEhFRYD3r:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 4.05.22 г. 19:23 ч., Christoph Hellwig wrote:
-> Hi all,
+On Thu, May 05, 2022 at 05:46:45AM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=215927
 > 
-> this series adds two minor improvements to iomap that allow btrfs
-> to avoid a memory allocation per read/write system call and another
-> one per submitted bio.  I also have at last two other pending uses
-> for the iomap functionality later on, so they are not really btrfs
-> specific either.
-> 
-> Diffstat:
->   fs/btrfs/btrfs_inode.h |   25 --------
->   fs/btrfs/ctree.h       |    6 -
->   fs/btrfs/file.c        |    6 -
->   fs/btrfs/inode.c       |  152 +++++++++++++++++++++++--------------------------
->   fs/iomap/direct-io.c   |   26 +++++++-
->   include/linux/iomap.h  |    4 +
->   6 files changed, 104 insertions(+), 115 deletions(-)
-> 
+> --- Comment #3 from Artem S. Tashkinov (aros@gmx.com) ---
+> XFS maintainers? This looks like a serious issue.
 
+A fix has already been written and pushed into the upstream tree.
 
-Apart from the silent disk_bytenr removal nit:
+It's not a real world problem - exposing this issue requires
+significant malicious tampering with multiple filesystem structures.
+We can't (and have never tried to) defend against such a threat
+model - our verification mechanisms are intended to defend against
+known storage corruption vectors and software bugs, not malicious
+actors.
 
-Reviewed-by: Nikolay Borisov <nborisov@suse.com>
+If anyone wants credit for discovering fuzzer induced bugs like
+this, then they need to be responsible in how they report them and
+perform some initial triage work to determine the scope of the issue
+they have discovered before they report it.  Making potentially
+malicious reproducer scripts public without any warning does not win
+any friends or gain influence.
+
+We're tired of having to immediately jump to investigate issues
+found by format verification attack tools that have been dumped in
+public with zero analysis, zero warning and, apparently, no clue
+of how serious the problem discovered might be.
+
+The right process for reporting issues found by format verification
+attacks is called "responsible disclosure". This is the process that
+reporting any issue that has potential system security impacts
+should use.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
