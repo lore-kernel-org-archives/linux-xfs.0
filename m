@@ -2,86 +2,87 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9DE3C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 15:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04899C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 16:03:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381554AbiEEQDZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 May 2022 12:03:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51562 "EHLO
+        id S231164AbiEEQH0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 May 2022 12:07:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381543AbiEEQDW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 12:03:22 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7360F5BE5E;
-        Thu,  5 May 2022 08:59:42 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S1381617AbiEEQHZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 12:07:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2646B5C34A
+        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 09:03:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 317F41F8D3;
-        Thu,  5 May 2022 15:59:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1651766381;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=AsP6YX4TfGGfSNFjh2NCubCPGG9c6qB90RBvm6iNh5M=;
-        b=AQQwNY2i4W2M6YAZasU2nOjQaelTtHwQaq4hJOYK9qjW2fz5iiNMgsVsNsqvgECmEpp328
-        qBUmGm6d6EqCPmhlfcIWqpLTS51DLDrA69+sUmnmbWBKCZsikEVI0mKlC7HA8WOLGZpGwQ
-        D+Eg0Z6ggJAIFYRkb/VxmAyoXcXb3Zc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1651766381;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=AsP6YX4TfGGfSNFjh2NCubCPGG9c6qB90RBvm6iNh5M=;
-        b=VZJPqdSHXW0v/tfC6AEu5zoxchKi81gXOkMuMDi87ZpHzuJrVoxqCck/BsjkvFiv80ZbCs
-        I9LymGPOD3pQ+fDg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EAF8E13B11;
-        Thu,  5 May 2022 15:59:40 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id LL5gOGz0c2LVXAAAMHmgww
-        (envelope-from <dsterba@suse.cz>); Thu, 05 May 2022 15:59:40 +0000
-Date:   Thu, 5 May 2022 17:55:29 +0200
-From:   David Sterba <dsterba@suse.cz>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: reduce memory allocation in the btrfs direct I/O path
-Message-ID: <20220505155529.GY18596@suse.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, Christoph Hellwig <hch@lst.de>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20220504162342.573651-1-hch@lst.de>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A502461D76
+        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 16:03:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BFDAC385A8;
+        Thu,  5 May 2022 16:03:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651766625;
+        bh=MKiTUAd7aykBOQd9xoEZ8zmD0u7d56gXDkkLHZJPO7k=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=tBL7DasDoUIFuF9yj4XU2zYAP3DKdL5OHeLVB0ihyCcABRgOHSz7I6A23nmtC7Q8u
+         MoFS6FzaGt1l7lv0r2HKI+9qmmvEEZi7UvWiINdIb6Hq/iyg0jcGIDdBEpyP4fIOrB
+         8xyvl1sqbvI9VpOM2WHg0AfHpxG3N2cemCJYu3/YmWH25QfzsYf+oBLC3GoWzTMMnP
+         voiSSXlKWNR8dKBJ+K1cHvBLAoAs+l+sF8iYVMJfvIaDJ3MFB/IiX+8YqFQGB3WCju
+         i1+uUtQ5v2s4WjzQ4+KRn8pvWtb7DNQyEEjLDqq4xw8UjVtwzJiK3J6xVGXh8XHUgW
+         uLKiuHmta7uRw==
+Subject: [PATCH 1/3] debian: refactor common options
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     sandeen@sandeen.net, djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Date:   Thu, 05 May 2022 09:03:44 -0700
+Message-ID: <165176662449.246788.9880873924749991016.stgit@magnolia>
+In-Reply-To: <165176661877.246788.7113237793899538040.stgit@magnolia>
+References: <165176661877.246788.7113237793899538040.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220504162342.573651-1-hch@lst.de>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 04, 2022 at 09:23:37AM -0700, Christoph Hellwig wrote:
-> Hi all,
-> 
-> this series adds two minor improvements to iomap that allow btrfs
-> to avoid a memory allocation per read/write system call and another
-> one per submitted bio.  I also have at last two other pending uses
-> for the iomap functionality later on, so they are not really btrfs
-> specific either.
+From: Darrick J. Wong <djwong@kernel.org>
 
-The series is reasonably short so I'd like to add it to 5.20 queue,
-provided that the iomap patches get acked by Darrick. Any fixups I'd
-rather fold into my local branch, no need to resend unless there are
-significant updates.
+Don't respecify identical configure options; move them into the
+configure_options variable.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ debian/rules |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+
+diff --git a/debian/rules b/debian/rules
+index 6d5b82a8..df023c65 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -26,13 +26,19 @@ pkgdev = DIST_ROOT=`pwd`/$(dirdev); export DIST_ROOT;
+ pkgdi  = DIST_ROOT=`pwd`/$(dirdi); export DIST_ROOT;
+ stdenv = @GZIP=-q; export GZIP;
+ 
+-configure_options = --build=$(DEB_BUILD_GNU_TYPE) --host=$(DEB_HOST_GNU_TYPE)
++configure_options = \
++	--build=$(DEB_BUILD_GNU_TYPE) \
++	--host=$(DEB_HOST_GNU_TYPE) \
++	--disable-ubsan \
++	--disable-addrsan \
++	--disable-threadsan \
++	--enable-lto
+ 
+ options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
+ 	  INSTALL_USER=root INSTALL_GROUP=root \
+-	  LOCAL_CONFIGURE_OPTIONS="$(configure_options) --enable-editline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
++	  LOCAL_CONFIGURE_OPTIONS="$(configure_options) --enable-editline=yes --enable-blkid=yes" ;
+ diopts  = $(options) \
+-	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="$(configure_options) --enable-gettext=no --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
++	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="$(configure_options) --enable-gettext=no" ;
+ checkdir = test -f debian/rules
+ 
+ build: build-arch build-indep
+
