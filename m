@@ -2,51 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27129C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4745C433F5
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 06:23:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234553AbiEEG1C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 May 2022 02:27:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41718 "EHLO
+        id S235614AbiEEG1D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 May 2022 02:27:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244273AbiEEG1B (ORCPT
+        with ESMTP id S244278AbiEEG1B (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 02:27:01 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D62D42FE66
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D62222FE53
         for <linux-xfs@vger.kernel.org>; Wed,  4 May 2022 23:23:22 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 89603B8279B
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6667661CD0
+        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 06:23:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C6139C385B3
         for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 06:23:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DBF8C385A4;
-        Thu,  5 May 2022 06:23:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651731800;
-        bh=UP0//6RppYoqwvH8fGvdywB3IuCBpPI8TIkpFr77H9M=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RW7VOIPHYAcX0jaU7YmfOeAAiE85T9SINmPVTY5giQR3qTsRpL4YkzLDMQOG0SvIQ
-         eaMW6FU7viwfr4PScgWLQACbftWhC4358wS5Mxqk0olifRlobZk/cytZ00nB+cX+NU
-         embvTt9HA5OGQ/IfbseMWFfN/mIQu4Lc4Eeu1tGrmIr7m+xwES8TGYdy/uGSmPAGM3
-         O12WJ/0mZS7r7BPCwMZUaA2N7J/syngRDJaw41QrLM/znTsrVpoJTl881k85FstK1i
-         sdJms1imRiMWHtulnBxe/h73jjnFCmRNJH0wxbTfMNg8qJIKP3fI+DLMrracStnXb3
-         TJRQA4mHz9f8A==
-Date:   Wed, 4 May 2022 23:23:19 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 215922] New: KASAN: null-ptr-deref in range
+        s=k20201202; t=1651731801;
+        bh=wDIx8J4kIhJmHlZCqV/1LRA7/l8Wl7E7JOuVwRQ/4RQ=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=aY2FpyHnybuGcwK0KFtyHtE8JjXFlnoeWXRJN7aTHqmK7+r/Gnap1+Pn3KzrgWQWW
+         ooRS4jPJngDfeZ7iYzDgYom1H7hGtpZWzB9coIa2cd6sD6ebOU/VsHB+ZO6/DS4sAo
+         2MAsNlIyRFxNXH/xpFWYo7JNrSiMRblEaK2MhDeMQyQBes9J/gPBIz4msbkctp51Mr
+         3wyrRCMnqQw8IO1DI5fFGuZTDngu2WPuV1XEJiSmipV+pxeN1jnxZlZIdp6Ak6DLV/
+         jAdyesa8q3SZgwaOZlBzqgycEDWTWWdhNO7XfKmZQs5Ddfpt8TwWK1+qe7LTuBtFNc
+         ZrIoDB31p7qsA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id B3B83C05FF5; Thu,  5 May 2022 06:23:21 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 215922] KASAN: null-ptr-deref in range
  [0x0000000000000000-0x0000000000000007]
-Message-ID: <20220505062319.GD27195@magnolia>
-References: <bug-215922-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Date:   Thu, 05 May 2022 06:23:21 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: djwong@kernel.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-215922-201763-rcZxscDBVZ@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-215922-201763@https.bugzilla.kernel.org/>
+References: <bug-215922-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215922
+
+--- Comment #1 from Darrick J. Wong (djwong@kernel.org) ---
 If you are going to run some scripted tool to randomly
 corrupt the filesystem to find failures, then you have an
 ethical and moral responsibility to do some of the work to
@@ -56,8 +77,8 @@ throw them at someone to do all the work.
 --D
 
 On Sat, Apr 30, 2022 at 08:08:38AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=215922
-> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D215922
+>=20
 >             Bug ID: 215922
 >            Summary: KASAN: null-ptr-deref in range
 >                     [0x0000000000000000-0x0000000000000007]
@@ -74,40 +95,49 @@ On Sat, Apr 30, 2022 at 08:08:38AM +0000, bugzilla-daemon@kernel.org wrote:
 >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
 >           Reporter: yanming@tju.edu.cn
 >         Regression: No
-> 
+>=20
 > Created attachment 300859
->   --> https://bugzilla.kernel.org/attachment.cgi?id=300859&action=edit
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=3D300859&action=3Dedit
 > case.c, which contains the related file operations.
-> 
+>=20
 > I've encountered an issue when using XFS file system in kernel 5.17.
-> 
-> When I tried to run some file operations, a segmentation fault occurred, and I
+>=20
+> When I tried to run some file operations, a segmentation fault occurred, =
+and
+> I
 > failed to umount the XFS image.
-> 
-> The related file operations are listed in case.c, and I have uploaded the XFS
+>=20
+> The related file operations are listed in case.c, and I have uploaded the=
+ XFS
 > image on the google net disk
-> (https://drive.google.com/file/d/1RJMr1AKtLtev8dinHBawWa7tTvHEytr3/view?usp=sharing).
-> 
-> The kernel should be configured with CONFIG_KASAN=y and CONFIG_KASAN_INLINE=y.
+>
+> (https://drive.google.com/file/d/1RJMr1AKtLtev8dinHBawWa7tTvHEytr3/view?u=
+sp=3Dsharing).
+>=20
+> The kernel should be configured with CONFIG_KASAN=3Dy and
+> CONFIG_KASAN_INLINE=3Dy.
 > You can reproduce this issue by running the following commands:
-> 
+>=20
 > gcc -o case case.c
 > losetup /dev/loop0 case.img
 > mount -o
-> "allocsize=4096,attr2,discard,nogrpid,filestreams,noikeep,noalign,wsync"
+> "allocsize=3D4096,attr2,discard,nogrpid,filestreams,noikeep,noalign,wsync"
 > /dev/loop0 /mnt/test/
 > ./case
-> 
+>=20
 > The kernel outputted the following messages:
-> 
+>=20
 > 1,1310,83736925,-;KASAN: null-ptr-deref in range
 > [0x0000000000000000-0x0000000000000007]
 > 4,1311,83736935,-;CPU: 6 PID: 1099 Comm: case Not tainted 5.17.0 #7
 > 4,1312,83736943,-;Hardware name: Dell Inc. OptiPlex 9020/03CPWF, BIOS A14
 > 09/14/2015
 > 4,1313,83736951,-;RIP: 0010:xfs_dir_isempty+0xfe/0x240
-> 4,1314,83736962,-;Code: 48 8d 7b 60 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 38
-> 01 00 00 48 b8 00 00 00 00 00 fc ff df 48 8b 5b 60 48 89 da 48 c1 ea 03 <0f> b6
+> 4,1314,83736962,-;Code: 48 8d 7b 60 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 8=
+5 38
+> 01 00 00 48 b8 00 00 00 00 00 fc ff df 48 8b 5b 60 48 89 da 48 c1 ea 03 <=
+0f>
+> b6
 > 04 02 48 89 da 83 e2 07 38 d0 7f 08 84 c0 0f 85 17 01 00 00
 > 4,1315,83736977,-;RSP: 0018:ffff88810300fca0 EFLAGS: 00010246
 > 4,1316,83736986,-;RAX: dffffc0000000000 RBX: 0000000000000000 RCX:
@@ -146,8 +176,11 @@ On Sat, Apr 30, 2022 at 08:08:38AM +0000, bugzilla-daemon@kernel.org wrote:
 > 4,1342,83737201,-; do_syscall_64+0x3b/0x90
 > 4,1343,83737209,-; entry_SYSCALL_64_after_hwframe+0x44/0xae
 > 4,1344,83737219,-;RIP: 0033:0x7f1c7b88d76d
-> 4,1345,83737226,-;Code: 00 c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48
-> 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d
+> 4,1345,83737226,-;Code: 00 c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e f=
+a 48
+> 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <=
+48>
+> 3d
 > 01 f0 ff ff 73 01 c3 48 8b 0d f3 36 0d 00 f7 d8 64 89 01 48
 > 4,1346,83737241,-;RSP: 002b:00007ffe5f49b288 EFLAGS: 00000286 ORIG_RAX:
 > 0000000000000054
@@ -164,9 +197,15 @@ On Sat, Apr 30, 2022 at 08:08:38AM +0000, bugzilla-daemon@kernel.org wrote:
 > 4,1352,83737294,-; </TASK>
 > 4,1353,83737299,-;Modules linked in: x86_pkg_temp_thermal efivarfs
 > 4,1354,83737331,-;---[ end trace 0000000000000000 ]---
-> 
-> -- 
+>=20
+> --=20
 > You may reply to this email to add a comment.
-> 
+>=20
 > You are receiving this mail because:
 > You are watching the assignee of the bug.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
