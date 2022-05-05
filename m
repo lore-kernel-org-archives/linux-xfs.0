@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 087DBC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 16:07:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EB1AC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 16:08:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233110AbiEEQLd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 May 2022 12:11:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59538 "EHLO
+        id S1381780AbiEEQLw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 May 2022 12:11:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381725AbiEEQLb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 12:11:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04E2F5C668
-        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 09:07:49 -0700 (PDT)
+        with ESMTP id S1381747AbiEEQLt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 12:11:49 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 970B35C65F
+        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 09:07:54 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 958FF61DD3
-        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 16:07:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1F9BC385AC;
-        Thu,  5 May 2022 16:07:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3411461DD3
+        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 16:07:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91BE7C385A8;
+        Thu,  5 May 2022 16:07:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651766868;
-        bh=Eg2SFFIYcpMb/n+/fC08kOOes3gFg+wzkxOlRhrnH5k=;
+        s=k20201202; t=1651766873;
+        bh=gJFDHujHI94fE5y9uN7S9hLjZSOQs1vfo6cSp4JTR3U=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=YZnDL9p6lOqjIlg+d3cN/YxNcPgYPRMXZSV97Heg9S4HISJXZf0G4CAWFbCSFNToo
-         +Y2AQEgt05xAOtljRo33ckmarnz8oi8GKurjYLu5F2GtiUhIdPHHK/MqV/OHcOwxy/
-         4iZie9Z3jUY/DhJhndYFr16/vng7nK7uqZz8kHBd2zUf+tVbhijgJh3fJtNY7qftQO
-         kD16QwABnEKwMsXUzyr6WMb1zn9laZtBlIdRYN2vvHBNF1n+mSQgt7zfinODMR+16F
-         n45RSwCCxvzdLtffpnojy9AbT4M0W716E9V8cz6kmXfPh7xrbRk7Ro14nESq+eIKoJ
-         qjQXC3yl0W7gw==
-Subject: [PATCH 1/6] xfs_scrub: collapse trivial file scrub helpers
+        b=Wqpb2DX468H+tYPsuea5p32tXssRaaPbqQfyR4X9iru0uSANSttzFyVElRgTlh6wZ
+         kdxQhHeM2lKYxt5WFraIEV/sJ/YQqYFruLR+a8zwhHDlj7avAVIm5u3LObXhc5FTND
+         FTK//geuuMWpdeGM8ofeV3qVh8zaPWRGwe9f9vk+v3mhLCIu0NzukYIuZ8fD+gaEd+
+         oXphWYVHHla56t7f/w21j8iFoIATAKHuH2xvBOCNiNyVxdAYRriQchHx024+VsQiUP
+         etNw2FQh9DMTjTtMtY+IwQXwANZR0rSsA1cBXN6hrY41Jd3wSgCj7X9ep+EaSSi8VO
+         a59t7+LJS5s6Q==
+Subject: [PATCH 2/6] xfs_scrub: in phase 3,
+ use the opened file descriptor for scrub calls
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 05 May 2022 09:07:47 -0700
-Message-ID: <165176686756.252160.8793537742478889025.stgit@magnolia>
+Date:   Thu, 05 May 2022 09:07:53 -0700
+Message-ID: <165176687314.252160.7990093715132347267.stgit@magnolia>
 In-Reply-To: <165176686186.252160.2880340500532409944.stgit@magnolia>
 References: <165176686186.252160.2880340500532409944.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,247 +50,176 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Remove all these trivial file scrub helper functions since they make
-tracing code paths difficult and will become annoying in the patches
-that follow.
+While profiling the performance of xfs_scrub, I noticed that phase3 only
+employs the scrub-by-handle interface.  The kernel has had the ability
+to skip the untrusted iget lookup if the fd matches the handle data
+since the beginning, and using it reduces the phase 3 runtime by 5% on
+the author's system.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/phase3.c |   33 +++++--------------
- scrub/scrub.c  |   95 ++++----------------------------------------------------
- scrub/scrub.h  |   18 +----------
- 3 files changed, 17 insertions(+), 129 deletions(-)
+ scrub/phase3.c |   32 ++++++++++++++++++++++----------
+ scrub/scrub.c  |   21 ++++++++++++++++++---
+ scrub/scrub.h  |    2 +-
+ 3 files changed, 41 insertions(+), 14 deletions(-)
 
 
 diff --git a/scrub/phase3.c b/scrub/phase3.c
-index c7ce0ada..868f444d 100644
+index 868f444d..7da11299 100644
 --- a/scrub/phase3.c
 +++ b/scrub/phase3.c
-@@ -20,22 +20,6 @@
+@@ -59,16 +59,27 @@ scrub_inode(
+ 	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
+ 	background_sleep();
  
- /* Phase 3: Scan all inodes. */
- 
--/*
-- * Run a per-file metadata scanner.  We use the ino/gen interface to
-- * ensure that the inode we're checking matches what the inode scan
-- * told us to look at.
-- */
--static int
--scrub_fd(
--	struct scrub_ctx	*ctx,
--	int			(*fn)(struct scrub_ctx *ctx, uint64_t ino,
--				      uint32_t gen, struct action_list *a),
--	struct xfs_bulkstat	*bs,
--	struct action_list	*alist)
--{
--	return fn(ctx, bs->bs_ino, bs->bs_gen, alist);
--}
--
- struct scrub_inode_ctx {
- 	struct ptcounter	*icount;
- 	bool			aborted;
-@@ -84,7 +68,7 @@ scrub_inode(
+-	/* Try to open the inode to pin it. */
++	/*
++	 * Open this regular file to pin it in memory.  Avoiding the use of
++	 * scan-by-handle means that the in-kernel scrubber doesn't pay the
++	 * cost of opening the handle (looking up the inode in the inode btree,
++	 * grabbing the inode, checking the generation) with every scrub call.
++	 *
++	 * Note: We cannot use this same trick for directories because the VFS
++	 * will try to reconnect directory file handles to the root directory
++	 * by walking '..' entries upwards, and loops in the dirent index
++	 * btree will cause livelocks.
++	 *
++	 * ESTALE means we scan the whole cluster again.
++	 */
+ 	if (S_ISREG(bstat->bs_mode)) {
+ 		fd = scrub_open_handle(handle);
+-		/* Stale inode means we scan the whole cluster again. */
+ 		if (fd < 0 && errno == ESTALE)
+ 			return ESTALE;
  	}
  
  	/* Scrub the inode. */
--	error = scrub_fd(ctx, scrub_inode_fields, bstat, &alist);
-+	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_INODE, &alist);
+-	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_INODE, &alist);
++	error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_INODE, &alist);
  	if (error)
  		goto out;
  
-@@ -93,13 +77,13 @@ scrub_inode(
+@@ -77,13 +88,13 @@ scrub_inode(
  		goto out;
  
  	/* Scrub all block mappings. */
--	error = scrub_fd(ctx, scrub_data_fork, bstat, &alist);
-+	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_BMBTD, &alist);
+-	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_BMBTD, &alist);
++	error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_BMBTD, &alist);
  	if (error)
  		goto out;
--	error = scrub_fd(ctx, scrub_attr_fork, bstat, &alist);
-+	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_BMBTA, &alist);
+-	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_BMBTA, &alist);
++	error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_BMBTA, &alist);
  	if (error)
  		goto out;
--	error = scrub_fd(ctx, scrub_cow_fork, bstat, &alist);
-+	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_BMBTC, &alist);
+-	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_BMBTC, &alist);
++	error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_BMBTC, &alist);
  	if (error)
  		goto out;
  
-@@ -109,22 +93,21 @@ scrub_inode(
+@@ -93,21 +104,22 @@ scrub_inode(
  
  	if (S_ISLNK(bstat->bs_mode)) {
  		/* Check symlink contents. */
--		error = scrub_symlink(ctx, bstat->bs_ino, bstat->bs_gen,
--				&alist);
-+		error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_SYMLINK, &alist);
+-		error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_SYMLINK, &alist);
++		error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_SYMLINK,
++				&alist);
  	} else if (S_ISDIR(bstat->bs_mode)) {
  		/* Check the directory entries. */
--		error = scrub_fd(ctx, scrub_dir, bstat, &alist);
-+		error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_DIR, &alist);
+-		error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_DIR, &alist);
++		error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_DIR, &alist);
  	}
  	if (error)
  		goto out;
  
  	/* Check all the extended attributes. */
--	error = scrub_fd(ctx, scrub_attr, bstat, &alist);
-+	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_XATTR, &alist);
+-	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_XATTR, &alist);
++	error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_XATTR, &alist);
  	if (error)
  		goto out;
  
  	/* Check parent pointers. */
--	error = scrub_fd(ctx, scrub_parent, bstat, &alist);
-+	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_PARENT, &alist);
+-	error = scrub_file(ctx, bstat, XFS_SCRUB_TYPE_PARENT, &alist);
++	error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_PARENT, &alist);
  	if (error)
  		goto out;
  
 diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 4ef19656..0034f11d 100644
+index 0034f11d..19a0b2d0 100644
 --- a/scrub/scrub.c
 +++ b/scrub/scrub.c
-@@ -446,14 +446,13 @@ scrub_estimate_ag_work(
- }
- 
- /*
-- * Scrub inode metadata.  If errors occur, this function will log them and
-- * return nonzero.
-+ * Scrub file metadata of some sort.  If errors occur, this function will log
-+ * them and return nonzero.
-  */
--static int
--__scrub_file(
-+int
-+scrub_file(
+@@ -122,6 +122,7 @@ scrub_warn_incomplete_scrub(
+ static enum check_outcome
+ xfs_check_metadata(
  	struct scrub_ctx		*ctx,
--	uint64_t			ino,
--	uint32_t			gen,
-+	const struct xfs_bulkstat	*bstat,
++	struct xfs_fd			*xfdp,
+ 	struct xfs_scrub_metadata	*meta,
+ 	bool				is_inode)
+ {
+@@ -135,7 +136,7 @@ xfs_check_metadata(
+ 
+ 	dbg_printf("check %s flags %xh\n", descr_render(&dsc), meta->sm_flags);
+ retry:
+-	error = -xfrog_scrub_metadata(&ctx->mnt, meta);
++	error = -xfrog_scrub_metadata(xfdp, meta);
+ 	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !error)
+ 		meta->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+ 	switch (error) {
+@@ -316,7 +317,7 @@ scrub_meta_type(
+ 	background_sleep();
+ 
+ 	/* Check the item. */
+-	fix = xfs_check_metadata(ctx, &meta, false);
++	fix = xfs_check_metadata(ctx, &ctx->mnt, &meta, false);
+ 	progress_add(1);
+ 
+ 	switch (fix) {
+@@ -452,11 +453,14 @@ scrub_estimate_ag_work(
+ int
+ scrub_file(
+ 	struct scrub_ctx		*ctx,
++	int				fd,
+ 	const struct xfs_bulkstat	*bstat,
  	unsigned int			type,
  	struct action_list		*alist)
  {
-@@ -464,8 +463,8 @@ __scrub_file(
- 	assert(xfrog_scrubbers[type].type == XFROG_SCRUB_TYPE_INODE);
+ 	struct xfs_scrub_metadata	meta = {0};
++	struct xfs_fd			xfd;
++	struct xfs_fd			*xfdp = &ctx->mnt;
+ 	enum check_outcome		fix;
  
- 	meta.sm_type = type;
--	meta.sm_ino = ino;
--	meta.sm_gen = gen;
-+	meta.sm_ino = bstat->bs_ino;
-+	meta.sm_gen = bstat->bs_gen;
+ 	assert(type < XFS_SCRUB_TYPE_NR);
+@@ -466,8 +470,19 @@ scrub_file(
+ 	meta.sm_ino = bstat->bs_ino;
+ 	meta.sm_gen = bstat->bs_gen;
  
++	/*
++	 * If the caller passed us a file descriptor for a scrub, use it
++	 * instead of scrub-by-handle because this enables the kernel to skip
++	 * costly inode btree lookups.
++	 */
++	if (fd >= 0) {
++		memcpy(&xfd, xfdp, sizeof(xfd));
++		xfd.fd = fd;
++		xfdp = &xfd;
++	}
++
  	/* Scrub the piece of metadata. */
- 	fix = xfs_check_metadata(ctx, &meta, true);
-@@ -477,86 +476,6 @@ __scrub_file(
- 	return scrub_save_repair(ctx, alist, &meta);
- }
- 
--int
--scrub_inode_fields(
--	struct scrub_ctx	*ctx,
--	uint64_t		ino,
--	uint32_t		gen,
--	struct action_list	*alist)
--{
--	return __scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_INODE, alist);
--}
--
--int
--scrub_data_fork(
--	struct scrub_ctx	*ctx,
--	uint64_t		ino,
--	uint32_t		gen,
--	struct action_list	*alist)
--{
--	return __scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_BMBTD, alist);
--}
--
--int
--scrub_attr_fork(
--	struct scrub_ctx	*ctx,
--	uint64_t		ino,
--	uint32_t		gen,
--	struct action_list	*alist)
--{
--	return __scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_BMBTA, alist);
--}
--
--int
--scrub_cow_fork(
--	struct scrub_ctx	*ctx,
--	uint64_t		ino,
--	uint32_t		gen,
--	struct action_list	*alist)
--{
--	return __scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_BMBTC, alist);
--}
--
--int
--scrub_dir(
--	struct scrub_ctx	*ctx,
--	uint64_t		ino,
--	uint32_t		gen,
--	struct action_list	*alist)
--{
--	return __scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_DIR, alist);
--}
--
--int
--scrub_attr(
--	struct scrub_ctx	*ctx,
--	uint64_t		ino,
--	uint32_t		gen,
--	struct action_list	*alist)
--{
--	return __scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_XATTR, alist);
--}
--
--int
--scrub_symlink(
--	struct scrub_ctx	*ctx,
--	uint64_t		ino,
--	uint32_t		gen,
--	struct action_list	*alist)
--{
--	return __scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_SYMLINK, alist);
--}
--
--int
--scrub_parent(
--	struct scrub_ctx	*ctx,
--	uint64_t		ino,
--	uint32_t		gen,
--	struct action_list	*alist)
--{
--	return __scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_PARENT, alist);
--}
--
- /*
-  * Test the availability of a kernel scrub command.  If errors occur (or the
-  * scrub ioctl is rejected) the errors will be logged and this function will
+-	fix = xfs_check_metadata(ctx, &meta, true);
++	fix = xfs_check_metadata(ctx, xfdp, &meta, true);
+ 	if (fix == CHECK_ABORT)
+ 		return ECANCELED;
+ 	if (fix == CHECK_DONE)
 diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 537a2ebe..5b5f6b65 100644
+index 5b5f6b65..325d8f95 100644
 --- a/scrub/scrub.h
 +++ b/scrub/scrub.h
-@@ -34,22 +34,8 @@ bool can_scrub_symlink(struct scrub_ctx *ctx);
+@@ -34,7 +34,7 @@ bool can_scrub_symlink(struct scrub_ctx *ctx);
  bool can_scrub_parent(struct scrub_ctx *ctx);
  bool xfs_can_repair(struct scrub_ctx *ctx);
  
--int scrub_inode_fields(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
--		struct action_list *alist);
--int scrub_data_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
--		struct action_list *alist);
--int scrub_attr_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
--		struct action_list *alist);
--int scrub_cow_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
--		struct action_list *alist);
--int scrub_dir(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
--		struct action_list *alist);
--int scrub_attr(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
--		struct action_list *alist);
--int scrub_symlink(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
--		struct action_list *alist);
--int scrub_parent(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
--		struct action_list *alist);
-+int scrub_file(struct scrub_ctx *ctx, const struct xfs_bulkstat *bstat,
-+		unsigned int type, struct action_list *alist);
+-int scrub_file(struct scrub_ctx *ctx, const struct xfs_bulkstat *bstat,
++int scrub_file(struct scrub_ctx *ctx, int fd, const struct xfs_bulkstat *bstat,
+ 		unsigned int type, struct action_list *alist);
  
  /* Repair parameters are the scrub inputs and retry count. */
- struct action_item {
 
