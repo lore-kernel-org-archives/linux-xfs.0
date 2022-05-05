@@ -2,100 +2,48 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBBC4C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 15:41:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B39AC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 15:46:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237915AbiEEPpN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 May 2022 11:45:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36974 "EHLO
+        id S1351332AbiEEPtm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 May 2022 11:49:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243704AbiEEPpK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 11:45:10 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5DCB532F3;
-        Thu,  5 May 2022 08:41:30 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 05939CE2E50;
-        Thu,  5 May 2022 15:41:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FD2AC385A4;
-        Thu,  5 May 2022 15:41:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651765287;
-        bh=8tY7ik2G1ldHRLbmbjw0SfsVLofsLwZPaHeobuJTuFE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oITRBP3x8dU+04yOvM2PSQR/7qNJeN8GhMlflfauPcTOKnY9PCT3O5oEXeADQorky
-         R5odvPIgXrkyhlTy+OaNw2xgmeDCnWRuTyEXRHq84+EEdaQ0HmyEk5Pwncz+vGBwGy
-         +I2n+q7mqvp/8VTEfl+Q3qav9EaEPq/XxpwgViy4puPurctepUfP6Zlsq+quNIBgl0
-         uSaDBuTiISuv4dhdSUkk66gzXyxPRvzUK+KO8UkCb4azCyqV2AItYruxDh0d/1Hc2A
-         2JZ5mcVmPDO3TfUINX+1lwFctOKO21dxddEsxxq9uDriKcRnKX8FefIB7i/trVLyj/
-         ZpXAKJPcOMJpQ==
-Date:   Thu, 5 May 2022 08:41:26 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        with ESMTP id S1348488AbiEEPtl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 11:49:41 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FFDE44A0A;
+        Thu,  5 May 2022 08:46:01 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id DD1ED68AA6; Thu,  5 May 2022 17:45:57 +0200 (CEST)
+Date:   Thu, 5 May 2022 17:45:57 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
         David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Subject: Re: [PATCH 2/5] iomap: add per-iomap_iter private data
-Message-ID: <20220505154126.GB27155@magnolia>
-References: <20220504162342.573651-1-hch@lst.de>
- <20220504162342.573651-3-hch@lst.de>
+Message-ID: <20220505154557.GA22763@lst.de>
+References: <20220504162342.573651-1-hch@lst.de> <20220504162342.573651-3-hch@lst.de> <20220505154126.GB27155@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220504162342.573651-3-hch@lst.de>
+In-Reply-To: <20220505154126.GB27155@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 04, 2022 at 09:23:39AM -0700, Christoph Hellwig wrote:
-> Allow the file system to keep state for all iterations.  For now only
-> wire it up for direct I/O as there is an immediate need for it there.
+On Thu, May 05, 2022 at 08:41:26AM -0700, Darrick J. Wong wrote:
+> > +	 */
+> > +	iomi.private = iocb->private;
+> > +	WRITE_ONCE(iocb->private, NULL);
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap/direct-io.c  | 8 ++++++++
->  include/linux/iomap.h | 1 +
->  2 files changed, 9 insertions(+)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 15929690d89e3..355abe2eacc6a 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -520,6 +520,14 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	dio->submit.waiter = current;
->  	dio->submit.poll_bio = NULL;
->  
-> +	/*
-> +	 * Transfer the private data that was passed by the caller to the
-> +	 * iomap_iter, and clear it in the iocb, as iocb->private will be
-> +	 * used for polled bio completion later.
-> +	 */
-> +	iomi.private = iocb->private;
-> +	WRITE_ONCE(iocb->private, NULL);
+> Do we need to transfer it back after the bio completes?  Or is it a
+> feature that iocb->private changes to the bio?
 
-Do we need to transfer it back after the bio completes?  Or is it a
-feature that iocb->private changes to the bio?
-
---D
-
-> +
->  	if (iov_iter_rw(iter) == READ) {
->  		if (iomi.pos >= dio->i_size)
->  			goto out_free_dio;
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index a5483020dad41..109c055865f73 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -188,6 +188,7 @@ struct iomap_iter {
->  	unsigned flags;
->  	struct iomap iomap;
->  	struct iomap srcmap;
-> +	void *private;
->  };
->  
->  int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops);
-> -- 
-> 2.30.2
-> 
+No need to transfer it back.  It ist just a creative way to pass private
+data in.  Initially I just added yet another argument to iomap_dio_rw,
+and maybe I should just go back to that to make the things easier to
+follow.
