@@ -2,183 +2,285 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74EB3C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 22:50:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F47C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 23:54:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231205AbiEEWyG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 May 2022 18:54:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36954 "EHLO
+        id S1343831AbiEEX5s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 May 2022 19:57:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1386512AbiEEWyD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 18:54:03 -0400
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2082.outbound.protection.outlook.com [40.107.220.82])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 875821B7A5;
-        Thu,  5 May 2022 15:50:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=isLFgay7CkbquwKKmH8xjrnYXQ3MaQXifpD/3zw3xBtAK0kMHjzDKDvMjY00dKS2s4s1wDaSGW9MHkS7yceXD329m8334ktW68HCY5LtqZyg7bP2gXL8J/DKbAVP+wMMOB3egFExPhMwouhlWnWvezSHPiEv9fZIB2SgD/kWEH2qsIqaqh+o0dFmOrfthiFVVZE+42j4nZllRVfE+iculwPCCqpKygXLjHPDkB7RrQDSw5tZ654N1/m8U6Og7/OCsH3D3Clt/WUXceeYQ+JopWmgMCNyRpkIR4Sm8xtZn9RH2fsUJa0XGRz/fzBMURugjGLSTAbQq0aRe0qHscsC+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aWHveaucWAMrlWiJbBp4VwJh/N/deTTy/Te2lM5AwGk=;
- b=Vh04sVyHN/dwvit8ZrkqdksDJ8cARIC7e2DgymTO58WzYBAtAnR6vwWpQNyc793a8LX8K6O2PnICCmlQDinPq/xBnbvr9ERnsiBSHJlCdG8h9pyeqBJcrkpPr61wkYhamH5wLHLjA7hrhgA0P8n8a1ipEVyvOLIhTSMFJZuGItZXdyRg7aetKxLCkLmdcfloRDRrkb5bgBlJJzsCyNALqD3SOAJeJzjpt7VMcB5WcPpjT81Lf2GsH8jS/al40rvupLM4GnFsyZYGdmAbjqCCLScVLnB9rSCKz5rDtALjMv7/7jO1snxd2pGVggJqGRyQROA03HftcjaifwEDUaNY4w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aWHveaucWAMrlWiJbBp4VwJh/N/deTTy/Te2lM5AwGk=;
- b=sHsckKYdZM/Qe3CAlFP6fXtSofoPyxIJauLY+LKquUdX/bRGCR14bxypCJjck8S1V46x6p3ZMEXoLJWg8ObUjRN/ttR784tofymNWnfxrtqycp3751WKlplJLq4WfdSz0f4TOdff3WqE2K1+XUsJZblqpsJ1Yy54jbnBzyFaFWSAtrjWHDi+bZLQmKAX/+mvfIh9DWdbfKZ/ZOzizbZlty1hN6R9RJXIIUsVlmnz1NU5DDrAyjFgtlwz12MKtOaFF2GNUPCRMwCf/3txhkv/AiSLMpMr95BePju71yi4dzNr/xgNvP3bDkiUuNGGWdac/FmF/woJLD7jXMqzbxeVig==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
- by MW2PR12MB2459.namprd12.prod.outlook.com (2603:10b6:907:c::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5206.24; Thu, 5 May
- 2022 22:50:19 +0000
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::2d17:b68a:e101:4c18]) by BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::2d17:b68a:e101:4c18%6]) with mapi id 15.20.5206.025; Thu, 5 May 2022
- 22:50:19 +0000
-From:   Alistair Popple <apopple@nvidia.com>
-To:     "Sierra Guiza, Alejandro (Alex)" <Alex.Sierra@amd.com>
-Cc:     "jgg@nvidia.com" <jgg@nvidia.com>,
-        "rcampbell@nvidia.com" <rcampbell@nvidia.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "david@redhat.com" <david@redhat.com>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "jglisse@redhat.com" <jglisse@redhat.com>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH v1 04/15] mm: add device coherent checker to remove
- migration pte
-Date:   Fri, 06 May 2022 08:48:37 +1000
-References: <20220505213438.25064-1-alex.sierra@amd.com>
- <20220505213438.25064-5-alex.sierra@amd.com>
- <SN6PR12MB27173F2F37294D6DDBC3457CFDC29@SN6PR12MB2717.namprd12.prod.outlook.com>
-User-agent: mu4e 1.6.9; emacs 27.1
-In-reply-to: <SN6PR12MB27173F2F37294D6DDBC3457CFDC29@SN6PR12MB2717.namprd12.prod.outlook.com>
-Message-ID: <87zgjvh9w5.fsf@nvdebian.thelocal>
-Content-Type: multipart/mixed; boundary="=-=-="
-X-ClientProxiedBy: BYAPR06CA0028.namprd06.prod.outlook.com
- (2603:10b6:a03:d4::41) To BYAPR12MB3176.namprd12.prod.outlook.com
- (2603:10b6:a03:134::26)
+        with ESMTP id S238237AbiEEX5r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 19:57:47 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4E32760AA5;
+        Thu,  5 May 2022 16:54:06 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 616DD53461A;
+        Fri,  6 May 2022 09:54:05 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nmlIJ-008VFj-95; Fri, 06 May 2022 09:54:03 +1000
+Date:   Fri, 6 May 2022 09:54:03 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH v7 1/1] xfstests: Add Log Attribute Replay test
+Message-ID: <20220505235403.GD1949718@dread.disaster.area>
+References: <20220223033751.97913-1-catherine.hoang@oracle.com>
+ <20220223033751.97913-2-catherine.hoang@oracle.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: dd80132e-8136-4330-b563-08da2ee9a138
-X-MS-TrafficTypeDiagnostic: MW2PR12MB2459:EE_
-X-Microsoft-Antispam-PRVS: <MW2PR12MB245982CE131E860C7626850FDFC29@MW2PR12MB2459.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: irnaT/bclar4rF0r+SspE4Q6qYLH+fYQ3eML4GKQ0brUQ6w5VUeimIiM0XCNmQII9aLW52gz9NU4I+jCALfx+xaH10EhSdOhGbIDSCk87mz+5l2jxtD8aA6r2VqaPR2ZFeGnI7pwnnxVpltRUNQFf0pz3gc5LmOgrvQGdG0PLB6WcpLOrTZ5oQe2FGrjettK2/5ZpcnFB4E/rvUMCqjigmwmFXf1893dAgxqc4o8eOOpjl3+LF/6pxVX9Sj5lqjW7UcJKZtHj/jLIoEPa7Iyp3eqrPSmA1SfKk36lxVrCzHq0RrKnZfs3Wk/7rZ8exurNR/tuc2ytWU1Q0f/MrHZrjKQapuMPKKLrinHd3aaF3SbsMvSuESNYHFDPdaajX17BM7b6VLKOWLQwV3ra5VnSgCbMz2v/e4cy2COXLvQhnj+ehPPj1t8cTnrrsv17lnOI6PowyZXKjyV8FCzESqLYjm3ZSCLE39ZyI7740YPAUC5HZ4ZJ1g10E3+VRZuBsj77aIvnIU62BB5Oh7ZqtZo6YXiUy5vDdb1GW0hXhhf7nObHw529KOc0ZqG2kYt29wArvO3/lNnG7Dek82OgVlL0/Dmcr3W1V0y6mbJvVf2STRsibq26LIr/T/lz5jpx/o7PUazF8LsgVXSn5qQCdMYAA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(86362001)(186003)(38100700002)(83380400001)(54906003)(6512007)(66476007)(8676002)(4326008)(66556008)(6916009)(316002)(6666004)(66946007)(2906002)(7416002)(8936002)(5660300002)(6486002)(9686003)(508600001)(53546011)(26005)(44144004)(6506007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?AsxTcloKkS+2MGtYP3sZ4MkVHXq37p3awq2Os2tj2NFrZcO3BsHQZC81BqY0?=
- =?us-ascii?Q?4J5kJw9fMgWishEYM42tVq50h0/dUrDR+EnzNprQ0g4Kq0h391S8S8gi3rW/?=
- =?us-ascii?Q?p/4aBwQ1QhZfXhon+v6FHenXRQyZjpwnQyf9CLlYeWasKvEsQi820vzugsuZ?=
- =?us-ascii?Q?CeDBwR7HKlpPz3+DyiwtijBR29kPSb9f2Us1Smxf1T/7BmgBVeGv7lJFM2Ou?=
- =?us-ascii?Q?5U8o4M0icMnilia2wR8IY3q+iVrGdEzAIppuR33HMyRESC6I9HfOn9udwYWt?=
- =?us-ascii?Q?6UgHrjT5t8eWTIgtUs7uEiTninPODXxddcJJZNOCO36oRYdWDPSJff8ZSCJE?=
- =?us-ascii?Q?iWCLPfmOJO8ubx2LVbUaOZeJXTFU3Ko11gCkqKKnON9rdf5aiiAb/0OwVLpT?=
- =?us-ascii?Q?S3EXd4449gpDwdJD1QWUDxHYqvLNSPOELHJhK3Dhtp92gjMPxPLSIOHCZRug?=
- =?us-ascii?Q?wR2/XbYyR5pqYPRoeil8QbFwhABKokx86Duaf3Pi1VkOGrh6m6RR6nzberVR?=
- =?us-ascii?Q?LIB7HZgovu2W+JEW9e2hP5tp/ViSNmW2CErf0sG2M/aOgpe9GrV3oTratpoz?=
- =?us-ascii?Q?BzRUzgBRsQH2egzPyfM2VexL4Fxj5owILLiQw1kKmPovDq7PaSRZdYvanmT4?=
- =?us-ascii?Q?UiYnwhWvI6qN/0CcTaA7t16z6IATBZqETgxJKHsKMtAOk1to8ARjWSppjizL?=
- =?us-ascii?Q?xVcs9BhvFpii3nV9OFvdPww6iXU4qqb2tiMT8zEBFs+LZ8HOoLujy6IRHC8H?=
- =?us-ascii?Q?h/QIR6yXwsr65WF1Uu3nQi0RRpNQpdbpczxfbVhooI/McVuIvVtVfOGlBMu5?=
- =?us-ascii?Q?pq+6NvaGV4RBTmpZpId7mWjnex2b29j7ip6Dk0m9cnPhUY5wneNNhA+qQ6Re?=
- =?us-ascii?Q?O6w0dK3rII/O5X98n75NLy7HBK/3GV6xP8uYy/Rrl0ipvDA7nkYs/tBxXcFg?=
- =?us-ascii?Q?1WZfKJJK0aihXPR/rQd2G83RRr/XcpQKECOkqelZqmGc42RV5QVAszVbFRH7?=
- =?us-ascii?Q?VDbxcgWwIceH5sJhRubPnlyOfsaKjJZseZmbTRY1PebGmaNxDTZMIAWF7Fz7?=
- =?us-ascii?Q?YUYBSROHTFrquTDP06HLP/HJ4kw5Who+m61wKsuQTmPPe3CuEa4vLiZ+zYfR?=
- =?us-ascii?Q?WFRjnVBx2pX2b2ePxnbZDkmCrdX6SWxOC8Kay7B9x6pkOg77nnjTu14/o4oA?=
- =?us-ascii?Q?Y7Zg7ChNOJw2GFP/0d6hSfFxDOW6awUAS1rmKDZM7dCYWGMnvpOeC+L/pKDh?=
- =?us-ascii?Q?buy4Xj22t0oOwsqcYyFWaI1CIHp3sj9pQkCi3MloPNT6K018pjbC1FKX1lne?=
- =?us-ascii?Q?10aQcws44UtUaclVIzLPks3XWFAvkftvSJujoM95qCwrRCGm/crjSq6cpflH?=
- =?us-ascii?Q?msk50n5dI9GIOERmHDB8TJqZMdwlwJNswp0b4FDPqmI/GNGPqLkktaYAxKUL?=
- =?us-ascii?Q?RDsvf7ncNP3WqyIOWaGU8JZ1GsMWXD2um+2lF/FKaMphEFsig0JSSpmkx7WZ?=
- =?us-ascii?Q?DVOmNtX0wfgmQ7rgW2qGoTdFSx+dlvMI4GjOg4rMwH3RBykVzgP2ZZmqkyVs?=
- =?us-ascii?Q?G3kbx67KudyL3NLIjtS5xrMVANR/apUJuWbcS7RZX2KEfWPXQrp0PsnR73EC?=
- =?us-ascii?Q?KqhVEWLqKlzdCPWYBN0v3+iW9D7h/VrldCfhfd91aaqC0N2x87Cu5Kt6GJii?=
- =?us-ascii?Q?5cXYmQoNZVW5U0Iifn9OMEZaoERZ5bJyUCC6+4epFW0HbTu0at1f7/FPRdEu?=
- =?us-ascii?Q?QMoaO9jRdA=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dd80132e-8136-4330-b563-08da2ee9a138
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2022 22:50:19.5639
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +mmshOUfxy0qU8KMplvQYEQC19YcgJfMQElm6WKavlrHaGd9kEJjpivLDOsunRCJqUty3oMT+cD5oMRaDVHg1g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW2PR12MB2459
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220223033751.97913-2-catherine.hoang@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6274639d
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
+        a=NvEMR8aOJ-g6-ogDSJ8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain
-Content-Disposition: inline
+On Wed, Feb 23, 2022 at 03:37:51AM +0000, Catherine Hoang wrote:
+> From: Allison Henderson <allison.henderson@oracle.com>
+> 
+> This patch adds tests to exercise the log attribute error
+> inject and log replay. These tests aim to cover cases where attributes
+> are added, removed, and overwritten in each format (shortform, leaf,
+> node). Error inject is used to replay these operations from the log.
+> 
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+>  tests/xfs/543     | 176 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/543.out | 149 +++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 325 insertions(+)
+>  create mode 100755 tests/xfs/543
+>  create mode 100644 tests/xfs/543.out
+> 
+> diff --git a/tests/xfs/543 b/tests/xfs/543
+> new file mode 100755
+> index 00000000..06f16f21
+> --- /dev/null
+> +++ b/tests/xfs/543
+> @@ -0,0 +1,176 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test 543
+> +#
+> +# Log attribute replay test
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick attr
+> +
+> +# get standard environment, filters and checks
+> +. ./common/filter
+> +. ./common/attr
+> +. ./common/inject
+> +
+> +_cleanup()
+> +{
+> +	rm -rf $tmp.* $testdir
+> +	test -w /sys/fs/xfs/debug/larp && \
+> +		echo 0 > /sys/fs/xfs/debug/larp
 
-"Sierra Guiza, Alejandro (Alex)" <Alex.Sierra@amd.com> writes:
+This is problematic - I set larp=1 before I start running fstests
+so all tests exercise the LARP paths. This will turn off LARP
+unconditionally, so after this runs nothing will exercise the LARP
+paths, even if that's what I want the tests to do.
 
-> @apopple@nvidia.com Could you please check this patch? It's somehow related to
-> migrate_device_page() for long term device coherent pages.
+Also, this does not replicate what the generic _cleanup() function
+does.
 
-Sure thing. This whole series is in my queue of things to review once I make it home from LSF/MM.
+Also, no need to remove $testdir - it's on the scratch device.
 
-- Alistair
+Also, don't call things "testdir" because "test directory" has
+specific meaning - i.e. the *test device mount* - and this is too
+easy to confuse when reading the test code.
 
-> Regards,
-> Alex Sierra
->> -----Original Message-----
->> From: amd-gfx <amd-gfx-bounces@lists.freedesktop.org> On Behalf Of Alex
->> Sierra
->> Sent: Thursday, May 5, 2022 4:34 PM
->> To: jgg@nvidia.com
->> Cc: rcampbell@nvidia.com; willy@infradead.org; david@redhat.com;
->> Kuehling, Felix <Felix.Kuehling@amd.com>; apopple@nvidia.com; amd-
->> gfx@lists.freedesktop.org; linux-xfs@vger.kernel.org; linux-mm@kvack.org;
->> jglisse@redhat.com; dri-devel@lists.freedesktop.org; akpm@linux-
->> foundation.org; linux-ext4@vger.kernel.org; hch@lst.de
->> Subject: [PATCH v1 04/15] mm: add device coherent checker to remove
->> migration pte
->>
->> During remove_migration_pte(), entries for device coherent type pages that
->> were not created through special migration ptes, ignore _PAGE_RW flag. This
->> path can be found at migrate_device_page(), where valid vma is not
->> required. In this case, migrate_vma_collect_pmd() is not called and special
->> migration ptes are not set.
->>
->> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
->> ---
->>  mm/migrate.c | 3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/mm/migrate.c b/mm/migrate.c index
->> 6c31ee1e1c9b..e18ddee56f37 100644
->> --- a/mm/migrate.c
->> +++ b/mm/migrate.c
->> @@ -206,7 +206,8 @@ static bool remove_migration_pte(struct folio *folio,
->>  		 * Recheck VMA as permissions can change since migration
->> started
->>  		 */
->>  		entry = pte_to_swp_entry(*pvmw.pte);
->> -		if (is_writable_migration_entry(entry))
->> +		if (is_writable_migration_entry(entry) ||
->> +		    is_device_coherent_page(pfn_to_page(pvmw.pfn)))
->>  			pte = maybe_mkwrite(pte, vma);
->>  		else if (pte_swp_uffd_wp(*pvmw.pte))
->>  			pte = pte_mkuffd_wp(pte);
->> --
->> 2.32.0
+> +}
+> +
+> +test_attr_replay()
+> +{
+> +	testfile=$testdir/$1
+> +	attr_name=$2
+> +	attr_value=$3
+> +	flag=$4
+> +	error_tag=$5
+> +
+> +	# Inject error
+> +	_scratch_inject_error $error_tag
+> +
+> +	# Set attribute
+> +	echo "$attr_value" | ${ATTR_PROG} -$flag "$attr_name" $testfile 2>&1 | \
+> +			    _filter_scratch
+> +
+> +	# FS should be shut down, touch will fail
+> +	touch $testfile 2>&1 | _filter_scratch
+> +
+> +	# Remount to replay log
+> +	_scratch_remount_dump_log >> $seqres.full
+> +
+> +	# FS should be online, touch should succeed
+> +	touch $testfile
+> +
+> +	# Verify attr recovery
+> +	{ $ATTR_PROG -g $attr_name $testfile | md5sum; } 2>&1 | _filter_scratch
+> +
+> +	echo ""
+> +}
+> +
+> +create_test_file()
+> +{
+> +	filename=$testdir/$1
+> +	count=$2
+> +	attr_value=$3
+> +
+> +	touch $filename
+> +
+> +	for i in `seq $count`
+> +	do
+> +		$ATTR_PROG -s "attr_name$i" -V $attr_value $filename >> \
+> +			$seqres.full
+> +	done
+> +}
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +
+> +_require_scratch
+> +_require_attrs
+> +_require_xfs_io_error_injection "larp"
+> +_require_xfs_io_error_injection "da_leaf_split"
+> +_require_xfs_io_error_injection "attr_leaf_to_node"
+> +_require_xfs_sysfs debug/larp
 
---=-=-=--
+These go first, before any code.
+
+> +test -w /sys/fs/xfs/debug/larp || _notrun "larp knob not writable"
+
+When is the sysfs not writeable?
+
+> +# turn on log attributes
+> +echo 1 > /sys/fs/xfs/debug/larp
+
+Needs to store the previous value so it can be restored at cleanup.
+
+> +attr16="0123456789ABCDEF"
+> +attr64="$attr16$attr16$attr16$attr16"
+> +attr256="$attr64$attr64$attr64$attr64"
+> +attr1k="$attr256$attr256$attr256$attr256"
+> +attr4k="$attr1k$attr1k$attr1k$attr1k"
+> +attr8k="$attr4k$attr4k"
+> +attr16k="$attr8k$attr8k"
+> +attr32k="$attr16k$attr16k"
+> +attr64k="$attr32k$attr32k"
+> +
+> +echo "*** mkfs"
+> +_scratch_mkfs >/dev/null
+> +
+> +echo "*** mount FS"
+> +_scratch_mount
+
+There's no need for echo lines like this in the golden output - it's
+obvious what failed from the diff...
+
+> +testdir=$SCRATCH_MNT/testdir
+> +mkdir $testdir
+
+Why not just use $SCRATCH_MNT directly?
+
+> +
+> +# empty, inline
+> +create_test_file empty_file1 0
+> +test_attr_replay empty_file1 "attr_name" $attr64 "s" "larp"
+> +test_attr_replay empty_file1 "attr_name" $attr64 "r" "larp"
+> +
+> +# empty, internal
+> +create_test_file empty_file2 0
+> +test_attr_replay empty_file2 "attr_name" $attr1k "s" "larp"
+> +test_attr_replay empty_file2 "attr_name" $attr1k "r" "larp"
+> +
+> +# empty, remote
+> +create_test_file empty_file3 0
+> +test_attr_replay empty_file3 "attr_name" $attr64k "s" "larp"
+> +test_attr_replay empty_file3 "attr_name" $attr64k "r" "larp"
+
+single attr insert/remove. OK.
+
+> +
+> +# inline, inline
+> +create_test_file inline_file1 1 $attr16
+> +test_attr_replay inline_file1 "attr_name2" $attr64 "s" "larp"
+> +test_attr_replay inline_file1 "attr_name2" $attr64 "r" "larp"
+
+...
+
+Insert/remove of a second attr and the format
+conversions they cause. OK.
+
+Doesn't check that the first xattr is retained and uncorrupted
+anywhere.
+
+> +# replace shortform
+> +create_test_file sf_file 2 $attr64
+> +test_attr_replay sf_file "attr_name2" $attr64 "s" "larp"
+
+This only replaces with same size. We also need coverage
+of replace with smaller size and larger size, as well as
+replace causing sf -> leaf and sf -> remote attr format conversions.
+
+> +# replace leaf
+> +create_test_file leaf_file 2 $attr1k
+> +test_attr_replay leaf_file "attr_name2" $attr1k "s" "larp"
+
+Need replace causing leaf -> sf (smaller) and well as leaf -> remote
+attr (larger). Also leaf w/ remote attr -> sf (much smaller!).
+
+> +# replace node
+> +create_test_file node_file 1 $attr64k
+> +$ATTR_PROG -s "attr_name2" -V $attr1k $testdir/node_file \
+> +		>> $seqres.full
+> +test_attr_replay node_file "attr_name2" $attr1k "s" "larp"
+
+Need node -> leaf, node -> sf and node w/ remote attr -> sf
+
+> --- /dev/null
+> +++ b/tests/xfs/543.out
+> @@ -0,0 +1,149 @@
+> +QA output created by 543
+> +*** mkfs
+> +*** mount FS
+> +attr_set: Input/output error
+> +Could not set "attr_name" for SCRATCH_MNT/testdir/empty_file1
+> +touch: cannot touch 'SCRATCH_MNT/testdir/empty_file1': Input/output error
+
+We don't really need to capture the error injection errors, all we
+care about is that the recovered md5sum matches the expected md5sum:
+
+> +21d850f99c43cc13abbe34838a8a3c8a  -
+
+That's the recovered md5sum, what was the expected md5sum of the
+original attr value that we stored? i.e. how do we validate taht we
+got the correct attr value?
+
+> +
+> +attr_remove: Input/output error
+> +Could not remove "attr_name" for SCRATCH_MNT/testdir/empty_file1
+> +touch: cannot touch 'SCRATCH_MNT/testdir/empty_file1': Input/output error
+> +attr_get: No data available
+> +Could not get "attr_name" for SCRATCH_MNT/testdir/empty_file1
+> +d41d8cd98f00b204e9800998ecf8427e  -
+
+Why do we have md5sum output for an attr that does not exist? We
+should be capturing the ENODATA error here, as that is the correct
+response after recovery of a remove operation.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
