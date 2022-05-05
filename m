@@ -2,238 +2,178 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8160DC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 21:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26554C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 21:38:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1385946AbiEEVjS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 May 2022 17:39:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34266 "EHLO
+        id S1385953AbiEEVmC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 May 2022 17:42:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1385958AbiEEViy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 17:38:54 -0400
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2068.outbound.protection.outlook.com [40.107.236.68])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 749E059308;
-        Thu,  5 May 2022 14:35:11 -0700 (PDT)
+        with ESMTP id S1385981AbiEEVlv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 17:41:51 -0400
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2079.outbound.protection.outlook.com [40.107.243.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75BA326AE2;
+        Thu,  5 May 2022 14:38:10 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JZbfoJlBCLdTu0z6wRgbRKSzhziJpeeA9X8nkrR92ZZjZOSs06lBsY8MSrxNlR8Udu3EXZJL/QkC7viXebbadVRyPpcRO/WA5C5ngWlPgBdO+wMGc2isXrdKdsqh3BVzMepctm7W4srWFYT0l3zUwak9XiErcd+CThpMTECELyxOP/kfpOR019aDyN64iQQYgPH5N6h57C1ONrmec5W8CUXfQc45OwgJkhpgNfW91s+FhIwCW2Wcbs9I4s0wp51TPSP9gVvsojN5Yodnp7lCZfkaDcSJqtT30hk6+TmvIntQp/kAcS9GNifJ75Ek2ebFClx3aDWgrtWFbey4CSNi6g==
+ b=kEqv6C2X9poGzvsLJ3GynIcrj0yqUzvnAYkWKrogW1wm2aBmP09wtK0/Kj/C8lALlfb8faPrev6NIxslEYwFpmR0W4nsrfy4H71UYXgvAgfOwbh3O1XN3PVToHQRD7yPeBsUMheZyANrP2Gv+aIEa03x/aWtBZC43z3dAy8ksgzpwBaTkh+yYBZLLCp0MjgN4PBqOY4n9JTLO8Lkqkvk2JIOzdRbR5PvBMERDyNvAREH/4qsRZd25gU1FCvxCy16I1kOOXkJTXWhuSufUx83s8nri+4nJLEV1vzXNRGHM4lXt1pr3Zmg7y/8isoc5OTp3hK9vdyjVlrTdOtMPgms6g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VrS9HrUH1LeQW+9lM86CVpRR7dCkow2uCtC4hBLoPZY=;
- b=R0RLm5VaENRPLZhqSU8aAi47QvoBDfc5V8BsxUIrTSSZFbCX1WBKQTIaixoHKuOc+wiVoBQAOanAp8wcT6ZdvDbSGK5aLfeYNhJ86+jSgMUB0opwkZqeO8Yn8MMAW/qusJ5X/mBHUdOyf5iEvPYU5gUauEJDlJTQkZkElAeo+nsqx6ezY9kb3fBJah6mFDpWSeEan3OP0evQy8srDUgHWV1BX5NTdJ+mBY7cwBBRlAsUagPS0S5Ijs+nwme5TLxRprPjVvBm5+hUjhOyEsj3HpBJ1e4xjxkzrz/tN6XFxl2/5urVfwJyI69HnT25btMBlknwC32qK1sTCdOjYBe0Yg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
+ bh=3irBkaw7MSw5EGYTgHR9KPyQK6kZCo+BSGv5T23HPDE=;
+ b=PbkDoKnpk2k389XedvcubpG0OYx73godnSJyJ0ylIgmv1uEAR8K3/Z1PwZzuPlBafyrZFxTkVx2UZnPgcOyzvEQLwSdeKo4cXXzkWI3laXsKDkAXKn+VzGxOHe/f3QB0+HGO1dW7hiKsQ8FsMUPM3HK+F4HF7yW3trnSxgNvQOjfII8c57MAO5VnUYdUnj/IayuBBC50tvyipTSnd8HzRKMg87VAAqexelpAQ2/kuarh/JZbRCYxS4uYPzW+qlDiBriHobxw58K1L3tzCx1Z/SjV1SzQQ8ZOhM47Hm7iuUA72ijM9GakZpTx/A0YJjVldlT+Da/xExaafPrD3qGUWw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VrS9HrUH1LeQW+9lM86CVpRR7dCkow2uCtC4hBLoPZY=;
- b=AWR/0KsP1gp1PlooUrsFdqI6tkUTPWkAmtcS8iZKQYYqDjtMBUKj4Hki3daR7vc5lp5c8DO6YiHKk+/0lgeR9yi7IO6DnDWgGPj3nq0bj5lFO9JYKBegTfsJoxh0FjkCcxu9m50eUaAG1pT30lmfRQ5h5DPHX2+a1DhF0ViPpv4=
-Received: from MW4P220CA0007.NAMP220.PROD.OUTLOOK.COM (2603:10b6:303:115::12)
- by DM6PR12MB3754.namprd12.prod.outlook.com (2603:10b6:5:1c4::28) with
+ bh=3irBkaw7MSw5EGYTgHR9KPyQK6kZCo+BSGv5T23HPDE=;
+ b=QRjjbEnlOHnK1WDB9+5cfXLL7iPaMtnLvHbohKphmKfMHCeYIBcwACr7Ormb6ZzVksW20QwIhOKEhVjiDE58ffgvWhA9csrtD5rawtmPHIhvpjfZXRQAU8vReTkfZGuF22pdD7HJIVvsWEnes6YU5MebUALPdpn0cYpMaMcYFBE=
+Received: from SN6PR12MB2717.namprd12.prod.outlook.com (2603:10b6:805:68::29)
+ by LV2PR12MB5991.namprd12.prod.outlook.com (2603:10b6:408:14f::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5206.24; Thu, 5 May
- 2022 21:35:08 +0000
-Received: from CO1NAM11FT066.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:115:cafe::2b) by MW4P220CA0007.outlook.office365.com
- (2603:10b6:303:115::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5206.13 via Frontend
- Transport; Thu, 5 May 2022 21:35:07 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CO1NAM11FT066.mail.protection.outlook.com (10.13.175.18) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5227.15 via Frontend Transport; Thu, 5 May 2022 21:35:07 +0000
-Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 5 May
- 2022 16:35:04 -0500
-From:   Alex Sierra <alex.sierra@amd.com>
-To:     <jgg@nvidia.com>
-CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
-        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
-        <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
-        <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
-        <akpm@linux-foundation.org>
-Subject: [PATCH v1 14/15] tools: add hmm gup tests for device coherent type
-Date:   Thu, 5 May 2022 16:34:37 -0500
-Message-ID: <20220505213438.25064-15-alex.sierra@amd.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220505213438.25064-1-alex.sierra@amd.com>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5206.25; Thu, 5 May
+ 2022 21:38:08 +0000
+Received: from SN6PR12MB2717.namprd12.prod.outlook.com
+ ([fe80::2c05:6d91:e76a:6e24]) by SN6PR12MB2717.namprd12.prod.outlook.com
+ ([fe80::2c05:6d91:e76a:6e24%4]) with mapi id 15.20.5206.025; Thu, 5 May 2022
+ 21:38:07 +0000
+From:   "Sierra Guiza, Alejandro (Alex)" <Alex.Sierra@amd.com>
+To:     "Sierra Guiza, Alejandro (Alex)" <Alex.Sierra@amd.com>,
+        "jgg@nvidia.com" <jgg@nvidia.com>,
+        "apopple@nvidia.com" <apopple@nvidia.com>
+CC:     "rcampbell@nvidia.com" <rcampbell@nvidia.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "david@redhat.com" <david@redhat.com>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "jglisse@redhat.com" <jglisse@redhat.com>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "hch@lst.de" <hch@lst.de>
+Subject: RE: [PATCH v1 04/15] mm: add device coherent checker to remove
+ migration pte
+Thread-Topic: [PATCH v1 04/15] mm: add device coherent checker to remove
+ migration pte
+Thread-Index: AQHYYMgGjgxyHrmtGk6QLDJATlgC2K0Qzsjg
+Date:   Thu, 5 May 2022 21:38:07 +0000
+Message-ID: <SN6PR12MB27173F2F37294D6DDBC3457CFDC29@SN6PR12MB2717.namprd12.prod.outlook.com>
 References: <20220505213438.25064-1-alex.sierra@amd.com>
+ <20220505213438.25064-5-alex.sierra@amd.com>
+In-Reply-To: <20220505213438.25064-5-alex.sierra@amd.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-Mentions: apopple@nvidia.com
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 0c917ea8-4da3-4a26-5ae6-08da2edf8b54
+x-ms-traffictypediagnostic: LV2PR12MB5991:EE_
+x-microsoft-antispam-prvs: <LV2PR12MB59911F586A94A9FE9A6041F9FDC29@LV2PR12MB5991.namprd12.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: e0cJaDWALjuUH+yTX6zCzyfcL5EvF35igo2w8hUZ2fUKbxKywtnlHxZFzlurlnZvyJ1sweyIjgc4lgMNIXZ7i5v0qjmmWNUmVcGRvyUXfPlLxV2zZLgLqggd6R/ihI33IzqBbViUu3r+qYcXan66A73OTIOgl3sEfukrvrWK7kWJTfxiqtOb2c+BhQrk0Tm10u11Mz/s3HG1X/594njCSKpyQUgh25i5ENcLa2s1RXRK65DABsYlPRUOO1koDv+msABu0DaGa7ytr+3LCt3pa9syRwbPRw9Y9Bnf5zo2msvyAMIRjCbnkucpNXMHkam7NYc0Qt+4y3KRU8dWWHtXnJluKSW1pdVayFqIfCYGxzh43orsz3/YKduZOdZbPxyGrCQ8y4BgYz8RaoC+2IUbBogsD8bVRQ+Kruf8cwpPdgh2+65aTRITdmXO7PVFcTSZE2iVOTDSltPesM4oQ1jrvkPAgwFJwk7f3vn5g7hvUAWv4CEKT3nzFNZBjQzgDK0oiXtjIVgj2qXqajx+El0mT/q8yGHlGENiZkGABOymUcQHbGduCZ5iYkVUd/5GIJ2xVuivW4RX2cf+SHfAUw184XIwaTza5Bz6KlurTkvzKbnVNsgeU2jI6uAkcwLvFbd4lxuObEhmT1Ovo/03NJPc2w6mnYs73ieECztlTvrfsJBIqgj4wO1v01WD/swgSZcLymWHtVz9xNKZuXpch/lRdQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB2717.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(9686003)(186003)(6506007)(53546011)(33656002)(7696005)(26005)(122000001)(86362001)(38070700005)(38100700002)(55016003)(110136005)(83380400001)(508600001)(5660300002)(7416002)(54906003)(316002)(76116006)(66556008)(4326008)(8676002)(66946007)(66476007)(52536014)(8936002)(64756008)(71200400001)(66446008)(2906002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?z96eIh5ESCSV5/dOLE/VRFh4gROWsa4oSxnft0n8d6psRoFH5vnJS6pNJYew?=
+ =?us-ascii?Q?Y1a3CSrbIXbO4zSzwQlB5TFheBOGjuFDPEEkfeNyf92PkFMMdn91LsmV2Tqj?=
+ =?us-ascii?Q?1bjx8tWuKP4Y8Z8fQ+GlNpD3UFN55uifMd4Rssm0cTeigm8pOtwFZdttU9eQ?=
+ =?us-ascii?Q?EpcafKdwkmifKLYR6vbnZ8NvsfhIfA1uLeAf3Nf4xx0FPU3tpcSY4SLov5Vt?=
+ =?us-ascii?Q?S/5hEYuw2pYeuDomss1Eb7L7CoognDQo259bNIA5riweVoZqk2c7x3TDjY6b?=
+ =?us-ascii?Q?gfYSidq9NO32mVkxOoXriqM3sxmNXKSd72l2tNAt8RcqJixfQO9dg7cA7Di6?=
+ =?us-ascii?Q?5u3AaCnBmpxNdFBacriWVjpBhrGto5e8eyY8xncIFg5TYTfADhJU9vDSNMDi?=
+ =?us-ascii?Q?gFjdIfQTVMODvbek0gpxmsk+IFcpxQctb2JeYQLUf7w/kx5NSF50BDdJl/eW?=
+ =?us-ascii?Q?U7xvz2jz+dnRWGk0bhL6ovzgeJyAAUMWCBAZyeLroo6vl564we+wxBrlSpCR?=
+ =?us-ascii?Q?Y01HGBOgYGNgy4yM+cjESjtmZAPuKy3nqdGl1Tl+ThPCO9bzA0LJvCLDPV+j?=
+ =?us-ascii?Q?ZCUJ9fUAEWBGAWAS9DDGTaNR/43dMYQD4hVC2M7y7kMQm+jN0Sr8HXOj94uW?=
+ =?us-ascii?Q?oX22cgKEOZQfaS7VUh6cstmzw5TOaEza7Zl/M7g8IxlpbxUuv0dMxeSdttDl?=
+ =?us-ascii?Q?CQY99Ky3VD22EevAljHKKOSyi25VU0HOvwUj/7FQzCq+brVq0Y11KJCY1QJq?=
+ =?us-ascii?Q?N0B73oGk9I2d1jQfrpD5nxuAEWo7b1jlDUck6iCpeRE4cE3MIV8HbS4UWWVf?=
+ =?us-ascii?Q?W5kI8IMFVjU/QvBJvHIXtuY/cyr25fnw3C/J9pDl800kCYt91vcqJszJtB9q?=
+ =?us-ascii?Q?t+qkIJvv+a99UDzLzNaFvw7949Snom8UoUukwe/nXNYOQrOVOdib7/btYj9Z?=
+ =?us-ascii?Q?Z6pjqoGPVuDEkxjYqrzhvukByoJw3s6Nzi1cgLaosn9SozqMNn4l/PyPb83O?=
+ =?us-ascii?Q?1gIbXiYgvFJ9EAMEuJwYfSFAJJrgJm/U6tl3cF4xkgWN1N5e9DruQaJM3JGe?=
+ =?us-ascii?Q?iF6yf9cmJzyrOV53H0ReriGb6ABqjCXUWZc2m2BuWWgMZmP+MW7vF4UC95ss?=
+ =?us-ascii?Q?dmrAcjofZkfeoos5BHVCl1kAMxEOqKlVZc17/QRhMg8fMCj2VeZhuyPNirjk?=
+ =?us-ascii?Q?qMztCruqPw+JKUQX7hf4ordxryQwkl8YjPMF0UcW46lq8irHoNVPYcdIKq87?=
+ =?us-ascii?Q?rzxejnSE5Ek0mU1iXwPhrhcGgs+1LMOWFqzU18oqF1Ekau5lHK4vLDE3lI9s?=
+ =?us-ascii?Q?9NrFResylkyC0fGPbsAZNTLYNPr9JyA4r7s9G416KXfaJJwihTwp6112GT8k?=
+ =?us-ascii?Q?OhyBJwgQHiwIth7z2Ho9RhueBzxqgjke5v+TwnuIEg0gIx7/yMJFUPhrmJnq?=
+ =?us-ascii?Q?MevYjhY7fNt2fngmBEXQci68lVMVeiNVs+AzdtXWai5siOOW8wvBTvOucl8T?=
+ =?us-ascii?Q?dB4ZDRANOztOfdHikYhpN5IpcDZJq0DB/KbpM6EcVMXb060trMQcAMIWnFiZ?=
+ =?us-ascii?Q?bwJJY32owKeuFuosSAdRXWgApWCwlaHBLPElF1pbhRVTo9pij90pUxMjun3O?=
+ =?us-ascii?Q?m9rk6IoonFJk5lgYdFDg0TVZsYfKxjk0hOR8+2RJKkin4T5ojtKXhIGjcwH5?=
+ =?us-ascii?Q?tAaV2sW++VrkTU5KSD7oZGTyy95oxLMhmja7E8Umi7brLmQH?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: f4422ace-138f-4185-401b-08da2edf2015
-X-MS-TrafficTypeDiagnostic: DM6PR12MB3754:EE_
-X-Microsoft-Antispam-PRVS: <DM6PR12MB3754E3FA03B16E9FF880AE4AFDC29@DM6PR12MB3754.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 2YUBEx2OQhABYoOxfepX95pGHs9nDBiLvT5CtRxA476Ci7el5YwS/uQ4Rf+/xcWW6SFu4mP8VZS4Z2j/+b/wViAC6K5KS1AdKE+EgC05Bb6K35lVhc/UbFEYAAwirLkGNcGSp/zihdtLpvWZxK4808Jh66nAEodp7Pagq7qM5kxz0RswJLvXO8ecLOSf4rxB8um8yoFcahvmU0BGCNq6/DD4m5V69CqO5RObaA4FAW2K2P1GAJL8s2OkH9URaT1hNRbjz273JgnZnWz4K3vsBfOmjaUc9G/6/47CaphuNmg7JHr5Fc3ZGDIc7pGgSDTxFAzxGRJQX2sQAGm+bYd3hNbOe/9jCKdL8PFGjh0MgcTSG2aAKqLDD/Y6RbLRKhOejj8LLlm1KlVt7iKbcl7y+SITxOi8uWTSXu8FRYZOVqxGRSK/P3jjib2Byq5Yk0QZxMCt4q+JsB7O+TkWbp1S/N77Fx0cM9itAhYjhpL7aUUxnRJaXhsfBY1+tpWC/7Z1FrLqKsX8cqdbEfc+INrtYWQ5X6hEl0D6EwM7xzd4UbcKwQIkjSI8SB7cxzOWk2Cs2D1a96xeib+DRZ7NvOouB3Sg+SnFY62+b4bmYD4GFjdByBSFZJDttU3DJG/Nyu9WBNFEuBizbClQVMEq213WSXGQ8Bn8k5wb309/lG+NfEQwcEEtEJuws7t5SFcHfbflXnwGaYLT6k9mxPTQCNvtjg==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(36840700001)(46966006)(7416002)(44832011)(356005)(40460700003)(6666004)(2906002)(6916009)(316002)(5660300002)(508600001)(36756003)(81166007)(82310400005)(36860700001)(47076005)(16526019)(83380400001)(86362001)(2616005)(186003)(336012)(426003)(7696005)(26005)(8936002)(8676002)(4326008)(70206006)(70586007)(1076003)(54906003)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2022 21:35:07.5319
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR12MB2717.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0c917ea8-4da3-4a26-5ae6-08da2edf8b54
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 May 2022 21:38:07.6023
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: f4422ace-138f-4185-401b-08da2edf2015
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT066.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB3754
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: nUHSTSIuR/+r3WgTV+FI6dEwxezN9wOcWVxFbKaQXRPGTdtahlkmyXLKeIv2HyiPuGbSGOh7v34bNy1jm8hQBg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5991
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The intention is to test hmm device coherent type under different get
-user pages paths. Also, test gup with FOLL_LONGTERM flag set in
-device coherent pages. These pages should get migrated back to system
-memory.
+@apopple@nvidia.com Could you please check this patch? It's somehow related=
+ to migrate_device_page() for long term device coherent pages.
 
-Signed-off-by: Alex Sierra <alex.sierra@amd.com>
----
- tools/testing/selftests/vm/hmm-tests.c | 104 +++++++++++++++++++++++++
- 1 file changed, 104 insertions(+)
-
-diff --git a/tools/testing/selftests/vm/hmm-tests.c b/tools/testing/selftests/vm/hmm-tests.c
-index 84ec8c4a1dc7..65e30ab6494c 100644
---- a/tools/testing/selftests/vm/hmm-tests.c
-+++ b/tools/testing/selftests/vm/hmm-tests.c
-@@ -36,6 +36,7 @@
-  * in the usual include/uapi/... directory.
-  */
- #include "../../../../lib/test_hmm_uapi.h"
-+#include "../../../../mm/gup_test.h"
- 
- struct hmm_buffer {
- 	void		*ptr;
-@@ -60,6 +61,8 @@ enum {
- #define NTIMES		10
- 
- #define ALIGN(x, a) (((x) + (a - 1)) & (~((a) - 1)))
-+/* Just the flags we need, copied from mm.h: */
-+#define FOLL_WRITE	0x01	/* check pte is writable */
- 
- FIXTURE(hmm)
- {
-@@ -1766,4 +1769,105 @@ TEST_F(hmm, exclusive_cow)
- 	hmm_buffer_free(buffer);
- }
- 
-+static int gup_test_exec(int gup_fd, unsigned long addr,
-+			 int cmd, int npages, int size)
-+{
-+	struct gup_test gup = {
-+		.nr_pages_per_call	= npages,
-+		.addr			= addr,
-+		.gup_flags		= FOLL_WRITE,
-+		.size			= size,
-+	};
-+
-+	if (ioctl(gup_fd, cmd, &gup)) {
-+		perror("ioctl on error\n");
-+		return errno;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Test get user device pages through gup_test. Setting PIN_LONGTERM flag.
-+ * This should trigger a migration back to system memory for both, private
-+ * and coherent type pages.
-+ * This test makes use of gup_test module. Make sure GUP_TEST_CONFIG is added
-+ * to your configuration before you run it.
-+ */
-+TEST_F(hmm, hmm_gup_test)
-+{
-+	struct hmm_buffer *buffer;
-+	int gup_fd;
-+	unsigned long npages;
-+	unsigned long size;
-+	unsigned long i;
-+	int *ptr;
-+	int ret;
-+	unsigned char *m;
-+
-+	gup_fd = open("/sys/kernel/debug/gup_test", O_RDWR);
-+	if (gup_fd == -1)
-+		SKIP(return, "Skipping test, could not find gup_test driver");
-+
-+	npages = 3;
-+	size = npages << self->page_shift;
-+
-+	buffer = malloc(sizeof(*buffer));
-+	ASSERT_NE(buffer, NULL);
-+
-+	buffer->fd = -1;
-+	buffer->size = size;
-+	buffer->mirror = malloc(size);
-+	ASSERT_NE(buffer->mirror, NULL);
-+
-+	buffer->ptr = mmap(NULL, size,
-+			   PROT_READ | PROT_WRITE,
-+			   MAP_PRIVATE | MAP_ANONYMOUS,
-+			   buffer->fd, 0);
-+	ASSERT_NE(buffer->ptr, MAP_FAILED);
-+
-+	/* Initialize buffer in system memory. */
-+	for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
-+		ptr[i] = i;
-+
-+	/* Migrate memory to device. */
-+	ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
-+	ASSERT_EQ(ret, 0);
-+	ASSERT_EQ(buffer->cpages, npages);
-+	/* Check what the device read. */
-+	for (i = 0, ptr = buffer->mirror; i < size / sizeof(*ptr); ++i)
-+		ASSERT_EQ(ptr[i], i);
-+
-+	ASSERT_EQ(gup_test_exec(gup_fd,
-+				(unsigned long)buffer->ptr,
-+				GUP_BASIC_TEST, 1, self->page_size), 0);
-+	ASSERT_EQ(gup_test_exec(gup_fd,
-+				(unsigned long)buffer->ptr + 1 * self->page_size,
-+				GUP_FAST_BENCHMARK, 1, self->page_size), 0);
-+	ASSERT_EQ(gup_test_exec(gup_fd,
-+				(unsigned long)buffer->ptr + 2 * self->page_size,
-+				PIN_LONGTERM_BENCHMARK, 1, self->page_size), 0);
-+
-+	/* Take snapshot to CPU pagetables */
-+	ret = hmm_dmirror_cmd(self->fd, HMM_DMIRROR_SNAPSHOT, buffer, npages);
-+	ASSERT_EQ(ret, 0);
-+	ASSERT_EQ(buffer->cpages, npages);
-+	m = buffer->mirror;
-+	if (hmm_is_coherent_type(variant->device_number)) {
-+		ASSERT_EQ(HMM_DMIRROR_PROT_DEV_COHERENT_LOCAL | HMM_DMIRROR_PROT_WRITE, m[0]);
-+		ASSERT_EQ(HMM_DMIRROR_PROT_DEV_COHERENT_LOCAL | HMM_DMIRROR_PROT_WRITE, m[1]);
-+	} else {
-+		ASSERT_EQ(HMM_DMIRROR_PROT_WRITE, m[0]);
-+		ASSERT_EQ(HMM_DMIRROR_PROT_WRITE, m[1]);
-+	}
-+	ASSERT_EQ(HMM_DMIRROR_PROT_WRITE, m[2]);
-+	/* Check again the content on the pages. Make sure there's no
-+	 * corrupted data.
-+	 */
-+	for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
-+		ASSERT_EQ(ptr[i], i);
-+
-+	close(gup_fd);
-+	hmm_buffer_free(buffer);
-+}
- TEST_HARNESS_MAIN
--- 
-2.32.0
+Regards,
+Alex Sierra
+> -----Original Message-----
+> From: amd-gfx <amd-gfx-bounces@lists.freedesktop.org> On Behalf Of Alex
+> Sierra
+> Sent: Thursday, May 5, 2022 4:34 PM
+> To: jgg@nvidia.com
+> Cc: rcampbell@nvidia.com; willy@infradead.org; david@redhat.com;
+> Kuehling, Felix <Felix.Kuehling@amd.com>; apopple@nvidia.com; amd-
+> gfx@lists.freedesktop.org; linux-xfs@vger.kernel.org; linux-mm@kvack.org;
+> jglisse@redhat.com; dri-devel@lists.freedesktop.org; akpm@linux-
+> foundation.org; linux-ext4@vger.kernel.org; hch@lst.de
+> Subject: [PATCH v1 04/15] mm: add device coherent checker to remove
+> migration pte
+>=20
+> During remove_migration_pte(), entries for device coherent type pages tha=
+t
+> were not created through special migration ptes, ignore _PAGE_RW flag. Th=
+is
+> path can be found at migrate_device_page(), where valid vma is not
+> required. In this case, migrate_vma_collect_pmd() is not called and speci=
+al
+> migration ptes are not set.
+>=20
+> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+> ---
+>  mm/migrate.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/mm/migrate.c b/mm/migrate.c index
+> 6c31ee1e1c9b..e18ddee56f37 100644
+> --- a/mm/migrate.c
+> +++ b/mm/migrate.c
+> @@ -206,7 +206,8 @@ static bool remove_migration_pte(struct folio *folio,
+>  		 * Recheck VMA as permissions can change since migration
+> started
+>  		 */
+>  		entry =3D pte_to_swp_entry(*pvmw.pte);
+> -		if (is_writable_migration_entry(entry))
+> +		if (is_writable_migration_entry(entry) ||
+> +		    is_device_coherent_page(pfn_to_page(pvmw.pfn)))
+>  			pte =3D maybe_mkwrite(pte, vma);
+>  		else if (pte_swp_uffd_wp(*pvmw.pte))
+>  			pte =3D pte_mkuffd_wp(pte);
+> --
+> 2.32.0
 
