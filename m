@@ -2,285 +2,295 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F47C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 May 2022 23:54:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FB45C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 04:59:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343831AbiEEX5s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 May 2022 19:57:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60290 "EHLO
+        id S235116AbiEFFDT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 May 2022 01:03:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238237AbiEEX5r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 May 2022 19:57:47 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4E32760AA5;
-        Thu,  5 May 2022 16:54:06 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 616DD53461A;
-        Fri,  6 May 2022 09:54:05 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nmlIJ-008VFj-95; Fri, 06 May 2022 09:54:03 +1000
-Date:   Fri, 6 May 2022 09:54:03 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Catherine Hoang <catherine.hoang@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v7 1/1] xfstests: Add Log Attribute Replay test
-Message-ID: <20220505235403.GD1949718@dread.disaster.area>
-References: <20220223033751.97913-1-catherine.hoang@oracle.com>
- <20220223033751.97913-2-catherine.hoang@oracle.com>
+        with ESMTP id S1389047AbiEFFDS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 01:03:18 -0400
+Received: from us-smtp-delivery-74.mimecast.com (us-smtp-delivery-74.mimecast.com [170.10.133.74])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3036743AC8
+        for <linux-xfs@vger.kernel.org>; Thu,  5 May 2022 21:59:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1651813175;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/nTGXde/7Tny4mUPzCUSJN45csnrVNJaPjIKsXb7Qug=;
+        b=a2IrnKnbIq3I5Gr1HI2SO9IDg+GJmU9MGJwPB8FQxLDHmMZvSQl0UniRpjNw6MdrYIlUZE
+        oMG2dHy/rrcSWNhSM+52k5dopdbEACw4RC/WVmhYHfTj4JW2qdKhus1n34rtWS20VC0eWC
+        I/CdkXA7siTPSxNfvdlfFnJ2S/Hgp9A=
+Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
+ [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-300-a9NTN2GjNWezu32WWrlq_Q-1; Fri, 06 May 2022 00:59:33 -0400
+X-MC-Unique: a9NTN2GjNWezu32WWrlq_Q-1
+Received: by mail-qv1-f72.google.com with SMTP id j2-20020a0cfd42000000b0045ad9cba5deso1732766qvs.5
+        for <linux-xfs@vger.kernel.org>; Thu, 05 May 2022 21:59:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=/nTGXde/7Tny4mUPzCUSJN45csnrVNJaPjIKsXb7Qug=;
+        b=KBArdkV+xhB1PG62VXRqfzrOTieEicwIz6RX0Ep9yEiHVruow/6OTQloRkcOwi1ckc
+         FQ+oq4WY9lV+4qza81cAIjrzgfPY9YpJjtLrOPA0etK3sjmZQxOl+MkpLmSzLagYeG8j
+         KENWYLm3gN5Sd1pHe+EB8rI2mH+eg1rVkk8ixYqWc+SPAphVY+WkbYyZAD/jDEbkMAsW
+         Zktu7tDQjXSij+mlbOviZLEo7a7fZm41NmszQUWG2PKikUoY1PRdzrmP7/LkUTHkN+ZD
+         A5gFYa9Fum31DIhlLtCiYGLeRMFIwbbcz1bNY2g/leUzgcYLcFVfF6y1shTp7WNtdc0B
+         8QiA==
+X-Gm-Message-State: AOAM530SDW555I0adYzeifyXCKcdJC2MOqd5t1EKKhBLmOT0zFmgtKAY
+        YjLT0ERgRN2kBtNwwLQTHks6PlZWvHDqoAdYaSN+o5B1Y2lSDl4+Aueg2hUpOoeje6yuLFGpYfD
+        Jll7V0OYhyGMxw9d2OOAN
+X-Received: by 2002:ac8:7c4e:0:b0:2f3:a1cd:b9d4 with SMTP id o14-20020ac87c4e000000b002f3a1cdb9d4mr1282040qtv.312.1651813172789;
+        Thu, 05 May 2022 21:59:32 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzPKnNGrcH5RF80fHiClFrfYqPpzPqGc5i6Ibs0nMmVpIxrY6OtRa6ofuYXa7f2sVItPEgsYA==
+X-Received: by 2002:ac8:7c4e:0:b0:2f3:a1cd:b9d4 with SMTP id o14-20020ac87c4e000000b002f3a1cdb9d4mr1282028qtv.312.1651813172441;
+        Thu, 05 May 2022 21:59:32 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id z6-20020ac84546000000b002f39b99f6b4sm1969207qtn.78.2022.05.05.21.59.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 May 2022 21:59:31 -0700 (PDT)
+Date:   Fri, 6 May 2022 12:59:26 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] generic: soft quota limits testing within grace time
+Message-ID: <20220506045926.apdcusyssfckzojs@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+References: <20220505182555.370074-1-zlang@kernel.org>
+ <20220505184344.GL27195@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220223033751.97913-2-catherine.hoang@oracle.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6274639d
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=NvEMR8aOJ-g6-ogDSJ8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220505184344.GL27195@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 23, 2022 at 03:37:51AM +0000, Catherine Hoang wrote:
-> From: Allison Henderson <allison.henderson@oracle.com>
+On Thu, May 05, 2022 at 11:43:44AM -0700, Darrick J. Wong wrote:
+> On Fri, May 06, 2022 at 02:25:55AM +0800, Zorro Lang wrote:
+> > After soft limits are exceeded, within the grace time, fs quota should
+> > allow more space allocation before exceeding hard limits, even if
+> > allocating many small files.
+> > 
+> > This case can cover bc37e4fb5cac (xfs: revert "xfs: actually bump
+> > warning counts when we send warnings"). And will help to expose later
+> > behavior changes on this side.
 > 
-> This patch adds tests to exercise the log attribute error
-> inject and log replay. These tests aim to cover cases where attributes
-> are added, removed, and overwritten in each format (shortform, leaf,
-> node). Error inject is used to replay these operations from the log.
+> Isn't this already covered by generic/230?
+
+No. They're similar, but the main difference at here:
+
+ +	# Exceed the soft quota limit a bit at first
+ +	su $qa_user -c "$XFS_IO_PROG -f -t -c 'pwrite 0 2m' -c fsync ${file}.0" >>$seqres.full 2>&1
+ +	# Write more data more times under soft quota limit exhausted condition,
+ +	# but not reach hard limit. To make sure the it won't trigger EDQUOT.
+ +	for ((i=1; i<=100; i++));do
+ +		su "$qa_user" -c "$XFS_IO_PROG -f -c 'pwrite 0 1m' -c fsync ${file}.$i" >>$seqres.full 2>&1
+ +		if [ $? -ne 0 ];then
+ +			log "Unexpected error (type=$type)!"
+ +			break
+ +		fi
+ +	done
+
+This case trys to exceed soft quota with *many writes*. We've talked about it in
+IRC last month, the detailed chat log at below[1].
+
+Thanks,
+Zorro
+
+
+[1]
+2022-04-14 16:49 < zlang> https://lore.kernel.org/fstests/161526483668.1214319.17667836667890283825.stgit@magnolia/
+2022-04-14 16:50 < zlang> djwong: About xfs/144 ^^, are we going to remove it, or change it to cover old quota warning behavior (without warn counter)?
+2022-04-14 17:04 < zlang> Just due to notice your discussion in https://lore.kernel.org/linux-xfs/20220314180914.GN8224@magnolia/, and our downstream testing fails on xfs/144. So ask your plan :)
+2022-04-14 22:53 < djwong> zlang: catherine is working on a patch to kill the warning counter limit feature entirely, since it's been largely busted for 20 years
+2022-04-14 22:53 < djwong> so with that xfs/144 can be removed entirely
+2022-04-14 23:11 < zlang> djwong: I'm wondering one thing, after the "the warning counter" feature being merged, why there's not any xfstests quota related cases fail on it
+2022-04-14 23:12 < zlang> That might mean we miss some testing coverage
+2022-04-14 23:13 < zlang> Maybe some code branches we never through, likes the place where you add "res->warnings++" :)
+2022-04-14 23:15 < zlang> Even for us, we get the complaint from customers, before we find this behavior change by our testing
+2022-04-14 23:19 < sandeen> djwong, if catherine would like to send the one-liner ASAP to make the next kernel, that would be fantastic, with a followup to remove the rest of the code ;)
+2022-04-14 23:19 < zlang> So I'd like to change xfs/144 to cover old quota warning expected behavior,  What do you think?
+2022-04-14 23:19 < sandeen> zlang, what old quota warning expected behavior?
+2022-04-14 23:21 < sandeen> to be clear, there are two notions of "warnings" here.  thre is a netlink interface which can send the user over-quota notices. That has been there a long time, and exists for vfs quota too. But that is not really related to the quota warning counter/limit code, which is unique to xfs, and broken.
+2022-04-14 23:22 < zlang> sandeen: https://paste.centos.org/view/c66654c0
+2022-04-14 23:22 < zlang> old behavior means this testing won't fail ^^
+2022-04-14 23:23 < zlang> Before, we always write one single file until exceed soft limit
+2022-04-14 23:23 < zlang> We never tested write several small files until exceed soft limit
+2022-04-14 23:23 < sandeen> if I am reading the test correctly, you have a soft limit of 2 megs and a hard limit of 500 megs. And you have a grace period of 6 days.
+2022-04-14 23:24 < sandeen> Then you write 202 megs immediately.
+2022-04-14 23:24 < zlang> Yes, create ~100 2M file
+2022-04-14 23:24 < sandeen> all of this happens before the 6 days grace period expires, so all writes should succeed.
+2022-04-14 23:25 < zlang> Yes
+2022-04-14 23:25 < zlang> Before, we generally write one single 200M file to test the soft limit
+2022-04-14 23:25 < sandeen> with the quota warning limit patch, they do not succeed. but that, IMHO, was a bug which needs to be fixed.
+2022-04-14 23:25 < sandeen> oh I see.
+2022-04-14 23:26 < sandeen> so you're suggesting that another test which exceeds soft quota with many writes is a good idea, and would have caught the quota warning /limit/ problem - right?
+2022-04-14 23:26 < sandeen> that sounds reasonable to me
+2022-04-14 23:33 < zlang> Due to the warning counter feature broke our customers' environment at first, but our regression test pass as usual.
+2022-04-14 23:36 < zlang> So I hope a test can detect this behavior change, even if we really like to change that in one day, we can remove/change this test then.
+2022-04-14 23:43 < zlang> And don't worry, I'll write that test after you revert that feature, just ask your plans :)
+
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> ---
->  tests/xfs/543     | 176 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/543.out | 149 +++++++++++++++++++++++++++++++++++++++
->  2 files changed, 325 insertions(+)
->  create mode 100755 tests/xfs/543
->  create mode 100644 tests/xfs/543.out
+> --D
 > 
-> diff --git a/tests/xfs/543 b/tests/xfs/543
-> new file mode 100755
-> index 00000000..06f16f21
-> --- /dev/null
-> +++ b/tests/xfs/543
-> @@ -0,0 +1,176 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# FS QA Test 543
-> +#
-> +# Log attribute replay test
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick attr
-> +
-> +# get standard environment, filters and checks
-> +. ./common/filter
-> +. ./common/attr
-> +. ./common/inject
-> +
-> +_cleanup()
-> +{
-> +	rm -rf $tmp.* $testdir
-> +	test -w /sys/fs/xfs/debug/larp && \
-> +		echo 0 > /sys/fs/xfs/debug/larp
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> >  tests/generic/690     | 125 ++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/690.out |   2 +
+> >  2 files changed, 127 insertions(+)
+> >  create mode 100755 tests/generic/690
+> >  create mode 100644 tests/generic/690.out
+> > 
+> > diff --git a/tests/generic/690 b/tests/generic/690
+> > new file mode 100755
+> > index 00000000..b1d055dc
+> > --- /dev/null
+> > +++ b/tests/generic/690
+> > @@ -0,0 +1,125 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2022 Red Hat Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test 690
+> > +#
+> > +# Make sure filesystem quota works well, after soft limits are exceeded. The
+> > +# fs quota should allow more space allocation before exceeding hard limits
+> > +# and with in grace time.
+> > +#
+> > +# But different with other similar testing, this case trys to write many small
+> > +# files, to cover bc37e4fb5cac (xfs: revert "xfs: actually bump warning counts
+> > +# when we send warnings"). If there's a behavior change in one day, this case
+> > +# might help to detect that too.
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto quota
+> > +
+> > +# Override the default cleanup function.
+> > +_cleanup()
+> > +{
+> > +	restore_project
+> > +	cd /
+> > +	rm -r -f $tmp.*
+> > +}
+> > +
+> > +# Import common functions.
+> > +. ./common/quota
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_require_scratch
+> > +_require_quota
+> > +_require_user
+> > +_require_group
+> > +
+> > +create_project()
+> > +{
+> > +	rm -rf $SCRATCH_MNT/t
+> > +	mkdir $SCRATCH_MNT/t
+> > +	$XFS_IO_PROG -r -c "chproj 100" -c "chattr +P" $SCRATCH_MNT/t
+> > +	chmod ugo+rwx $SCRATCH_MNT/t/
+> > +
+> > +	rm -f $tmp.projects $tmp.projid
+> > +	if [ -f /etc/projects ];then
+> > +		cat /etc/projects > $tmp.projects
+> > +	fi
+> > +	if [ -f /etc/projid ];then
+> > +		cat /etc/projid > $tmp.projid
+> > +	fi
+> > +
+> > +	cat >/etc/projects <<EOF
+> > +100:$SCRATCH_MNT/t
+> > +EOF
+> > +	cat >/etc/projid <<EOF
+> > +$qa_user:100
+> > +EOF
+> > +	PROJECT_CHANGED=1
+> > +}
+> > +
+> > +restore_project()
+> > +{
+> > +	if [ "$PROJECT_CHANGED" = "1" ];then
+> > +		rm -f /etc/projects /etc/projid
+> > +		if [ -f $tmp.projects ];then
+> > +			cat $tmp.projects > /etc/projects
+> > +		fi
+> > +		if [ -f $tmp.projid ];then
+> > +			cat $tmp.projid > /etc/projid
+> > +		fi
+> > +	fi
+> > +}
+> > +
+> > +# Make sure the kernel supports project quota
+> > +_scratch_mkfs >$seqres.full 2>&1
+> > +_scratch_enable_pquota
+> > +_qmount_option "prjquota"
+> > +_qmount
+> > +_require_prjquota $SCRATCH_DEV
+> > +
+> > +exercise()
+> > +{
+> > +	local type=$1
+> > +	local file=$SCRATCH_MNT/testfile
+> > +
+> > +	echo "= Test type=$type quota =" >>$seqres.full
+> > +	_scratch_unmount
+> > +	_scratch_mkfs >>$seqres.full 2>&1
+> > +	if [ "$1" = "P" ];then
+> > +		_scratch_enable_pquota
+> > +	fi
+> > +	_qmount
+> > +	if [ "$1" = "P" ];then
+> > +		create_project
+> > +		file=$SCRATCH_MNT/t/testfile
+> > +	fi
+> > +
+> > +	setquota -${type} $qa_user 1M 500M 0 0 $SCRATCH_MNT
+> > +	setquota -${type} -t 86400 86400 $SCRATCH_MNT
+> > +	repquota -v -${type} $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+> > +	# Exceed the soft quota limit a bit at first
+> > +	su $qa_user -c "$XFS_IO_PROG -f -t -c 'pwrite 0 2m' -c fsync ${file}.0" >>$seqres.full 2>&1
+> > +	# Write more data more times under soft quota limit exhausted condition,
+> > +	# but not reach hard limit. To make sure the it won't trigger EDQUOT.
+> > +	for ((i=1; i<=100; i++));do
+> > +		su "$qa_user" -c "$XFS_IO_PROG -f -c 'pwrite 0 1m' -c fsync ${file}.$i" >>$seqres.full 2>&1
+> > +		if [ $? -ne 0 ];then
+> > +			log "Unexpected error (type=$type)!"
+> > +			break
+> > +		fi
+> > +	done
+> > +	repquota -v -${type} $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+> > +}
+> > +
+> > +_qmount_option "usrquota"
+> > +exercise u
+> > +_qmount_option "grpquota"
+> > +exercise g
+> > +_qmount_option "prjquota"
+> > +exercise P
+> > +
+> > +echo "Silence is golden"
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/690.out b/tests/generic/690.out
+> > new file mode 100644
+> > index 00000000..6f3723e3
+> > --- /dev/null
+> > +++ b/tests/generic/690.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 690
+> > +Silence is golden
+> > -- 
+> > 2.31.1
+> > 
+> 
 
-This is problematic - I set larp=1 before I start running fstests
-so all tests exercise the LARP paths. This will turn off LARP
-unconditionally, so after this runs nothing will exercise the LARP
-paths, even if that's what I want the tests to do.
-
-Also, this does not replicate what the generic _cleanup() function
-does.
-
-Also, no need to remove $testdir - it's on the scratch device.
-
-Also, don't call things "testdir" because "test directory" has
-specific meaning - i.e. the *test device mount* - and this is too
-easy to confuse when reading the test code.
-
-> +}
-> +
-> +test_attr_replay()
-> +{
-> +	testfile=$testdir/$1
-> +	attr_name=$2
-> +	attr_value=$3
-> +	flag=$4
-> +	error_tag=$5
-> +
-> +	# Inject error
-> +	_scratch_inject_error $error_tag
-> +
-> +	# Set attribute
-> +	echo "$attr_value" | ${ATTR_PROG} -$flag "$attr_name" $testfile 2>&1 | \
-> +			    _filter_scratch
-> +
-> +	# FS should be shut down, touch will fail
-> +	touch $testfile 2>&1 | _filter_scratch
-> +
-> +	# Remount to replay log
-> +	_scratch_remount_dump_log >> $seqres.full
-> +
-> +	# FS should be online, touch should succeed
-> +	touch $testfile
-> +
-> +	# Verify attr recovery
-> +	{ $ATTR_PROG -g $attr_name $testfile | md5sum; } 2>&1 | _filter_scratch
-> +
-> +	echo ""
-> +}
-> +
-> +create_test_file()
-> +{
-> +	filename=$testdir/$1
-> +	count=$2
-> +	attr_value=$3
-> +
-> +	touch $filename
-> +
-> +	for i in `seq $count`
-> +	do
-> +		$ATTR_PROG -s "attr_name$i" -V $attr_value $filename >> \
-> +			$seqres.full
-> +	done
-> +}
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +
-> +_require_scratch
-> +_require_attrs
-> +_require_xfs_io_error_injection "larp"
-> +_require_xfs_io_error_injection "da_leaf_split"
-> +_require_xfs_io_error_injection "attr_leaf_to_node"
-> +_require_xfs_sysfs debug/larp
-
-These go first, before any code.
-
-> +test -w /sys/fs/xfs/debug/larp || _notrun "larp knob not writable"
-
-When is the sysfs not writeable?
-
-> +# turn on log attributes
-> +echo 1 > /sys/fs/xfs/debug/larp
-
-Needs to store the previous value so it can be restored at cleanup.
-
-> +attr16="0123456789ABCDEF"
-> +attr64="$attr16$attr16$attr16$attr16"
-> +attr256="$attr64$attr64$attr64$attr64"
-> +attr1k="$attr256$attr256$attr256$attr256"
-> +attr4k="$attr1k$attr1k$attr1k$attr1k"
-> +attr8k="$attr4k$attr4k"
-> +attr16k="$attr8k$attr8k"
-> +attr32k="$attr16k$attr16k"
-> +attr64k="$attr32k$attr32k"
-> +
-> +echo "*** mkfs"
-> +_scratch_mkfs >/dev/null
-> +
-> +echo "*** mount FS"
-> +_scratch_mount
-
-There's no need for echo lines like this in the golden output - it's
-obvious what failed from the diff...
-
-> +testdir=$SCRATCH_MNT/testdir
-> +mkdir $testdir
-
-Why not just use $SCRATCH_MNT directly?
-
-> +
-> +# empty, inline
-> +create_test_file empty_file1 0
-> +test_attr_replay empty_file1 "attr_name" $attr64 "s" "larp"
-> +test_attr_replay empty_file1 "attr_name" $attr64 "r" "larp"
-> +
-> +# empty, internal
-> +create_test_file empty_file2 0
-> +test_attr_replay empty_file2 "attr_name" $attr1k "s" "larp"
-> +test_attr_replay empty_file2 "attr_name" $attr1k "r" "larp"
-> +
-> +# empty, remote
-> +create_test_file empty_file3 0
-> +test_attr_replay empty_file3 "attr_name" $attr64k "s" "larp"
-> +test_attr_replay empty_file3 "attr_name" $attr64k "r" "larp"
-
-single attr insert/remove. OK.
-
-> +
-> +# inline, inline
-> +create_test_file inline_file1 1 $attr16
-> +test_attr_replay inline_file1 "attr_name2" $attr64 "s" "larp"
-> +test_attr_replay inline_file1 "attr_name2" $attr64 "r" "larp"
-
-...
-
-Insert/remove of a second attr and the format
-conversions they cause. OK.
-
-Doesn't check that the first xattr is retained and uncorrupted
-anywhere.
-
-> +# replace shortform
-> +create_test_file sf_file 2 $attr64
-> +test_attr_replay sf_file "attr_name2" $attr64 "s" "larp"
-
-This only replaces with same size. We also need coverage
-of replace with smaller size and larger size, as well as
-replace causing sf -> leaf and sf -> remote attr format conversions.
-
-> +# replace leaf
-> +create_test_file leaf_file 2 $attr1k
-> +test_attr_replay leaf_file "attr_name2" $attr1k "s" "larp"
-
-Need replace causing leaf -> sf (smaller) and well as leaf -> remote
-attr (larger). Also leaf w/ remote attr -> sf (much smaller!).
-
-> +# replace node
-> +create_test_file node_file 1 $attr64k
-> +$ATTR_PROG -s "attr_name2" -V $attr1k $testdir/node_file \
-> +		>> $seqres.full
-> +test_attr_replay node_file "attr_name2" $attr1k "s" "larp"
-
-Need node -> leaf, node -> sf and node w/ remote attr -> sf
-
-> --- /dev/null
-> +++ b/tests/xfs/543.out
-> @@ -0,0 +1,149 @@
-> +QA output created by 543
-> +*** mkfs
-> +*** mount FS
-> +attr_set: Input/output error
-> +Could not set "attr_name" for SCRATCH_MNT/testdir/empty_file1
-> +touch: cannot touch 'SCRATCH_MNT/testdir/empty_file1': Input/output error
-
-We don't really need to capture the error injection errors, all we
-care about is that the recovered md5sum matches the expected md5sum:
-
-> +21d850f99c43cc13abbe34838a8a3c8a  -
-
-That's the recovered md5sum, what was the expected md5sum of the
-original attr value that we stored? i.e. how do we validate taht we
-got the correct attr value?
-
-> +
-> +attr_remove: Input/output error
-> +Could not remove "attr_name" for SCRATCH_MNT/testdir/empty_file1
-> +touch: cannot touch 'SCRATCH_MNT/testdir/empty_file1': Input/output error
-> +attr_get: No data available
-> +Could not get "attr_name" for SCRATCH_MNT/testdir/empty_file1
-> +d41d8cd98f00b204e9800998ecf8427e  -
-
-Why do we have md5sum output for an attr that does not exist? We
-should be capturing the ENODATA error here, as that is the correct
-response after recovery of a remove operation.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
