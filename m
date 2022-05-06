@@ -2,140 +2,209 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A53DDC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 09:46:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FD83C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 21:29:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1390617AbiEFJtt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 May 2022 05:49:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34078 "EHLO
+        id S1444453AbiEFVdO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 May 2022 17:33:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1390678AbiEFJtn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 05:49:43 -0400
+        with ESMTP id S1343890AbiEFVdN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 17:33:13 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 15DB665D13
-        for <linux-xfs@vger.kernel.org>; Fri,  6 May 2022 02:46:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 538436F48A;
+        Fri,  6 May 2022 14:29:28 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B524353461C
-        for <linux-xfs@vger.kernel.org>; Fri,  6 May 2022 19:45:57 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 68B6C5345CA;
+        Sat,  7 May 2022 07:29:25 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nmuX6-008fMC-H4
-        for linux-xfs@vger.kernel.org; Fri, 06 May 2022 19:45:56 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.95)
-        (envelope-from <david@fromorbit.com>)
-        id 1nmuX6-0029Sn-G4
-        for linux-xfs@vger.kernel.org;
-        Fri, 06 May 2022 19:45:56 +1000
+        id 1nn5Vs-008rXR-Qn; Sat, 07 May 2022 07:29:24 +1000
+Date:   Sat, 7 May 2022 07:29:24 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: 
-Date:   Fri,  6 May 2022 19:45:36 +1000
-Message-Id: <20220506094553.512973-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.35.1
+To:     kernel test robot <oliver.sang@intel.com>
+Cc:     0day robot <lkp@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+        lkp@lists.01.org, ying.huang@intel.com, feng.tang@intel.com,
+        zhengjun.xing@linux.intel.com, fengwei.yin@intel.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [xfs]  32678f1513:  aim7.jobs-per-min -5.6% regression
+Message-ID: <20220506212924.GJ1098723@dread.disaster.area>
+References: <20220502082018.1076561-2-david@fromorbit.com>
+ <20220506092250.GI23061@xsang-OptiPlex-9020>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220506092250.GI23061@xsang-OptiPlex-9020>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6274ee55
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62759337
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=q30YGFRHdTyF80sAfkgA:9 a=xo5jKAKm-U-Zyk2_beg_:22
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=8nJEP1OIZ-IA:10 a=oZkIemNP1mAA:10 a=NEAV23lmAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8 a=QyXUC8HyAAAA:8 a=xEvadSHMmT4qNSc8GvgA:9
+        a=wPNLvfGTeEIA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[PATCH 00/17 V3] XFS: LARP state machine and recovery rework
+On Fri, May 06, 2022 at 05:22:50PM +0800, kernel test robot wrote:
+> 
+> 
+> Greeting,
+> 
+> FYI, we noticed a -5.6% regression of aim7.jobs-per-min due to commit:
+> 
+> 
+> commit: 32678f151338b9a321e9e27139a63c81f353acb7 ("[PATCH 1/4] xfs: detect self referencing btree sibling pointers")
+> url: https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/xfs-fix-random-format-verification-issues/20220502-162206
+> base: https://git.kernel.org/cgit/fs/xfs/xfs-linux.git for-next
+> patch link: https://lore.kernel.org/linux-xfs/20220502082018.1076561-2-david@fromorbit.com
 
-This patchset aims to simplify the state machine that the new logged
-attributes require to do their stuff. It also reworks the
-attribute logging and recovery algorithms to simplify them and to
-avoid leaving incomplete attributes around after recovery.
+Well, that answers the concern I had about the impact of 
+changing the way endian conversions were done in that patch.
 
-When I first dug into this code, I modified the state machine
-to try to simplify the set and replace operations as there was
-a lot of duplicate code in them. I also wasn't completely happy with
-the different transistions for replace operations when larp mode was
-enabled. I simplified the state machien and renumbered the states so
-that we can iterate through the same state progression for different
-attr formats just by having different inital leaf and node states.
+> a44a027a8b2a20fe 32678f151338b9a321e9e27139a 
+> ---------------- --------------------------- 
+>          %stddev     %change         %stddev
+>              \          |                \  
+>     464232            -5.6%     438315        aim7.jobs-per-min
+....
+>       0.13 ±  5%      +0.2        0.33 ±  6%  perf-profile.children.cycles-pp.__xfs_btree_check_sblock
+....
+>       0.11 ±  4%      +0.2        0.30 ±  5%  perf-profile.self.cycles-pp.__xfs_btree_check_sblock
 
-Once I'd largely done this and started testing it, I realised that
-recovery wasn't setting the initial state properly, so I started
-digging into the recovery code. At this point, I realised the
-recovery code didn't work correctly in all cases and could often
-leave unremovable incomplete attrs sitting around. The issues are
-larger documented in the last patch in the series, so I won't go
-over them here, just read that patch.
+Because there is it, right at the bottom of the profile.
 
-However, to get, the whole replace operation for LARP=1 needed to
-change. Luckily, that turned out to be pretty simple because it was
-largely already broken down into component operations in the state
-machine. hence I just needed to add new "remove" initial states to
-the set_iter state machine, and that allowed the new algorithm to
-function.
+Can you try the patch below and see if that fixes the issue?
 
-Then I realised that I'd just implemented the remove_iter algorithm
-in the set_iter state machine, so I removed the remove_iter code and
-it's states altogether and just pointed remove ops at the set-iter
-remove initial states. The code now uses the XFS_DA_OP_RENAME flag
-to determine if it should follow up an add or remove with a remove
-or add, and it all largely just works. All runtime algorithms run
-throught he same state machine just with different initial states
-and state progressions.
+Cheers,
 
-And with the last patch in the series, attr item log recovery uses
-that same state machine, too. It has a few quirks that need to be
-handled, so I added the XFS_DA_OP_RECOVERY flag to allow the right
-thing to be done with the INCOMPLETE flag deep in the guts of the
-attr lookup code. And so recovery with LARP=1 now seems to mostly
-work.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-This version passes fstests, several recoveryloop passes and the
-targeted error injection based attr recovery test that Catherine
-wrote. There's a fair bit of re-org in the patch series since V2,
-but most of that is pulling stuff from the last patch and putting it
-in the right place in the series. hence the only real logic iand bug
-fixes changes occurred in the last patch that changes the logging 
-and recovery algorithm.
 
-Comments, reviews and, most especially, testing welcome.
+xfs: avoid unnecessary runtime sibling pointer endian conversions
 
-A compose of the patchset I've been testing based on the current
-for-next tree can be found here:
+From: Dave Chinner <dchinner@redhat.com>
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git xfs-5.19-compose
+Commit dc04db2aa7c9 has caused a small aim7 regression, showing a
+small increase in CPU usage in __xfs_btree_check_sblock() as a
+result of the extra checking.
 
-Version 3:
-- rebased on 5.18-rc2 + for-next + rebased larp v29
-- added state asserts to xfs_attr_dela_state_set_replace()
-- only roll the transactions in ALLOC_RMT when we need to do more
-  extent allocation for the remote attr value container.
-- removed unnecessary attr->xattri_blkcnt check in ALLOC_RMT
-- added comments to commit message to explain why we are combining
-  the set and remove paths.
-- preserved and isolated the state path save/restore code for
-  avoiding repeated name entry path lookups when rolling transactins
-  across remove operations.  Left a big comment for Future Dave to
-  re-enable the optimisation.
-- fixed a transient attr fork removal bug in
-  xfs_attr3_leaf_to_shortform() in the new removal algorithm which
-  can result in the attr fork being removed between the remove and
-  set ops in a REPLACE operation.
-- moved defer operation setup changes ("split replace from set op")
-  to early on in the series and combined it with the refactoring
-  done immediately afterwards in the last patch of the series. This
-  allows for cleanly fixing the log recovery state initialisation
-  problem the patchset had.
-- pulled the state initialisation for log recovery up into the
-  patches that introduce the state machine changes for the given
-  operations.
-- Lots of changes to log recovery algorithm change in last patch.
+This is likely due to the endian conversion of the sibling poitners
+being unconditional instead of relying on the compiler to endian
+convert the NULL pointer at compile time and avoiding the runtime
+conversion for this common case.
 
-Version 2:
-https://lore.kernel.org/linux-xfs/20220414094434.2508781-1-david@fromorbit.com/
-- fixed attrd initialisation for LARP=1 mode
-- fixed REPLACE->REMOVE_OLD state transition for LARP=1 mode
-- added more comments to describe the assumptions that allow
-  xfs_attr_remove_leaf_attr() to work for both modes
+Rework the checks so that endian conversion of the sibling pointers
+is only done if they are not null as the original code did.
 
+Fixes: dc04db2aa7c9 ("xfs: detect self referencing btree sibling pointers")
+Reported-by: kernel test robot <oliver.sang@intel.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_btree.c | 37 +++++++++++++++++++++++++------------
+ 1 file changed, 25 insertions(+), 12 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 2aa300f7461f..4d673e943317 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -51,16 +51,25 @@ xfs_btree_magic(
+ 	return magic;
+ }
+ 
++/*
++ * These sibling pointer checks are optimised for null sibling pointers. This
++ * happens a lot, and we don't need to byte swap at runtime if the sibling
++ * pointer is NULL.
++ */
+ static xfs_failaddr_t
+ xfs_btree_check_lblock_siblings(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_btree_cur	*cur,
+ 	int			level,
+ 	xfs_fsblock_t		fsb,
+-	xfs_fsblock_t		sibling)
++	__be64			dsibling)
+ {
+-	if (sibling == NULLFSBLOCK)
++	xfs_fsblock_t		sibling;
++
++	if (dsibling == cpu_to_be64(NULLFSBLOCK))
+ 		return NULL;
++
++	sibling = be64_to_cpu(dsibling);
+ 	if (sibling == fsb)
+ 		return __this_address;
+ 	if (level >= 0) {
+@@ -81,10 +90,14 @@ xfs_btree_check_sblock_siblings(
+ 	int			level,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		agbno,
+-	xfs_agblock_t		sibling)
++	__be32			dsibling)
+ {
+-	if (sibling == NULLAGBLOCK)
++	xfs_agblock_t		sibling;
++
++	if (dsibling == cpu_to_be32(NULLAGBLOCK))
+ 		return NULL;
++
++	sibling = be32_to_cpu(dsibling);
+ 	if (sibling == agbno)
+ 		return __this_address;
+ 	if (level >= 0) {
+@@ -136,10 +149,10 @@ __xfs_btree_check_lblock(
+ 		fsb = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
+ 
+ 	fa = xfs_btree_check_lblock_siblings(mp, cur, level, fsb,
+-			be64_to_cpu(block->bb_u.l.bb_leftsib));
++			block->bb_u.l.bb_leftsib);
+ 	if (!fa)
+ 		fa = xfs_btree_check_lblock_siblings(mp, cur, level, fsb,
+-				be64_to_cpu(block->bb_u.l.bb_rightsib));
++				block->bb_u.l.bb_rightsib);
+ 	return fa;
+ }
+ 
+@@ -204,10 +217,10 @@ __xfs_btree_check_sblock(
+ 	}
+ 
+ 	fa = xfs_btree_check_sblock_siblings(mp, cur, level, agno, agbno,
+-			be32_to_cpu(block->bb_u.s.bb_leftsib));
++			block->bb_u.s.bb_leftsib);
+ 	if (!fa)
+ 		fa = xfs_btree_check_sblock_siblings(mp, cur, level, agno,
+-				 agbno, be32_to_cpu(block->bb_u.s.bb_rightsib));
++				 agbno, block->bb_u.s.bb_rightsib);
+ 	return fa;
+ }
+ 
+@@ -4523,10 +4536,10 @@ xfs_btree_lblock_verify(
+ 	/* sibling pointer verification */
+ 	fsb = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
+ 	fa = xfs_btree_check_lblock_siblings(mp, NULL, -1, fsb,
+-			be64_to_cpu(block->bb_u.l.bb_leftsib));
++			block->bb_u.l.bb_leftsib);
+ 	if (!fa)
+ 		fa = xfs_btree_check_lblock_siblings(mp, NULL, -1, fsb,
+-				be64_to_cpu(block->bb_u.l.bb_rightsib));
++				block->bb_u.l.bb_rightsib);
+ 	return fa;
+ }
+ 
+@@ -4580,10 +4593,10 @@ xfs_btree_sblock_verify(
+ 	agno = xfs_daddr_to_agno(mp, xfs_buf_daddr(bp));
+ 	agbno = xfs_daddr_to_agbno(mp, xfs_buf_daddr(bp));
+ 	fa = xfs_btree_check_sblock_siblings(mp, NULL, -1, agno, agbno,
+-			be32_to_cpu(block->bb_u.s.bb_leftsib));
++			block->bb_u.s.bb_leftsib);
+ 	if (!fa)
+ 		fa = xfs_btree_check_sblock_siblings(mp, NULL, -1, agno, agbno,
+-				be32_to_cpu(block->bb_u.s.bb_rightsib));
++				block->bb_u.s.bb_rightsib);
+ 	return fa;
+ }
+ 
