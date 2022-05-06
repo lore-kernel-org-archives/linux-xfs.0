@@ -2,163 +2,214 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 496B0C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 09:46:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A87DC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 09:46:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1390678AbiEFJtw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1390698AbiEFJtw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 6 May 2022 05:49:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34140 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1390701AbiEFJtp (ORCPT
+        with ESMTP id S1390697AbiEFJtp (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 05:49:45 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 11C1166F83
-        for <linux-xfs@vger.kernel.org>; Fri,  6 May 2022 02:46:01 -0700 (PDT)
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E750865D27
+        for <linux-xfs@vger.kernel.org>; Fri,  6 May 2022 02:46:00 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 162A410E6450
-        for <linux-xfs@vger.kernel.org>; Fri,  6 May 2022 19:45:58 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id BE703534621
+        for <linux-xfs@vger.kernel.org>; Fri,  6 May 2022 19:45:57 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nmuX6-008fMF-Je
-        for linux-xfs@vger.kernel.org; Fri, 06 May 2022 19:45:56 +1000
+        id 1nmuX7-008fMr-0N
+        for linux-xfs@vger.kernel.org; Fri, 06 May 2022 19:45:57 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nmuX6-0029Sy-Ir
+        id 1nmuX6-0029Tr-Vp
         for linux-xfs@vger.kernel.org;
         Fri, 06 May 2022 19:45:56 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 03/17] xfs: make xattri_leaf_bp more useful
-Date:   Fri,  6 May 2022 19:45:39 +1000
-Message-Id: <20220506094553.512973-4-david@fromorbit.com>
+Subject: [PATCH 14/17] xfs: switch attr remove to xfs_attri_set_iter
+Date:   Fri,  6 May 2022 19:45:50 +1000
+Message-Id: <20220506094553.512973-15-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220506094553.512973-1-david@fromorbit.com>
 References: <20220506094553.512973-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6274ee56
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6274ee56
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=MSQD5IXnzoLRaKXEXdcA:9
+        a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=LxarZF53s-dAh__6FAIA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We currently set it and hold it when converting from short to leaf
-form, then release it only to immediately look it back up again
-to do the leaf insert.
+Now that xfs_attri_set_iter() has initial states for removing
+attributes, switch the pure attribute removal code over to using it.
+This requires attrs being removed to always be marked as INCOMPLETE
+before we start the removal due to the fact we look up the attr to
+remove again in xfs_attr_node_remove_attr().
 
-Do a bit of refactoring to xfs_attr_leaf_try_add() to avoid this
-messy handling of the newly allocated leaf buffer.
+Note: this drops the fillstate/refillstate optimisations from
+the remove path that avoid having to look up the path again after
+setting the incomplete flag and removeing remote attrs. Restoring
+that optimisation to this path is future Dave's problem.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Allison Henderson<allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 50 +++++++++++++++++++++++++---------------
- 1 file changed, 32 insertions(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c | 21 +++++++++------------
+ fs/xfs/libxfs/xfs_attr.h | 10 ++++++++++
+ fs/xfs/xfs_attr_item.c   | 31 +++++++------------------------
+ 3 files changed, 26 insertions(+), 36 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index b3d918195160..a4b0b20a3bab 100644
+index 7ec3c1e8ea16..e2067aead818 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -319,7 +319,15 @@ xfs_attr_leaf_addname(
- 	int			error;
+@@ -499,13 +499,11 @@ int xfs_attr_node_removename_setup(
+ 	ASSERT((*state)->path.blk[(*state)->path.active - 1].magic ==
+ 		XFS_ATTR_LEAF_MAGIC);
  
- 	if (xfs_attr_is_leaf(dp)) {
-+
-+		/*
-+		 * Use the leaf buffer we may already hold locked as a result of
-+		 * a sf-to-leaf conversion. The held buffer is no longer valid
-+		 * after this call, regardless of the result.
-+		 */
- 		error = xfs_attr_leaf_try_add(args, attr->xattri_leaf_bp);
-+		attr->xattri_leaf_bp = NULL;
-+
- 		if (error == -ENOSPC) {
- 			error = xfs_attr3_leaf_to_node(args);
- 			if (error)
-@@ -341,6 +349,8 @@ xfs_attr_leaf_addname(
- 		}
- 		next_state = XFS_DAS_FOUND_LBLK;
- 	} else {
-+		ASSERT(!attr->xattri_leaf_bp);
-+
- 		error = xfs_attr_node_addname_find_attr(attr);
- 		if (error)
- 			return error;
-@@ -396,12 +406,6 @@ xfs_attr_set_iter(
- 		 */
- 		if (xfs_attr_is_shortform(dp))
- 			return xfs_attr_sf_addname(attr);
--		if (attr->xattri_leaf_bp != NULL) {
--			xfs_trans_bhold_release(args->trans,
--						attr->xattri_leaf_bp);
--			attr->xattri_leaf_bp = NULL;
--		}
+-	if (args->rmtblkno > 0) {
+-		error = xfs_attr_leaf_mark_incomplete(args, *state);
+-		if (error)
+-			goto out;
 -
- 		return xfs_attr_leaf_addname(attr);
++	error = xfs_attr_leaf_mark_incomplete(args, *state);
++	if (error)
++		goto out;
++	if (args->rmtblkno > 0)
+ 		error = xfs_attr_rmtval_invalidate(args);
+-	}
+ out:
+ 	if (error)
+ 		xfs_da_state_free(*state);
+@@ -778,7 +776,7 @@ xfs_attr_defer_remove(
+ 	if (error)
+ 		return error;
  
- 	case XFS_DAS_FOUND_LBLK:
-@@ -992,18 +996,31 @@ xfs_attr_leaf_try_add(
- 	struct xfs_da_args	*args,
- 	struct xfs_buf		*bp)
+-	new->xattri_dela_state = XFS_DAS_UNINIT;
++	new->xattri_dela_state = xfs_attr_init_remove_state(args);
+ 	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
+ 	trace_xfs_attr_defer_remove(new->xattri_dela_state, args->dp);
+ 
+@@ -1348,16 +1346,15 @@ xfs_attr_node_remove_attr(
  {
--	int			retval;
-+	int			error;
+ 	struct xfs_da_args		*args = attr->xattri_da_args;
+ 	struct xfs_da_state		*state = NULL;
+-	struct xfs_mount		*mp = args->dp->i_mount;
+ 	int				retval = 0;
+ 	int				error = 0;
  
  	/*
--	 * Look up the given attribute in the leaf block.  Figure out if
--	 * the given flags produce an error or call for an atomic rename.
-+	 * If the caller provided a buffer to us, it is locked and held in
-+	 * the transaction because it just did a shortform to leaf conversion.
-+	 * Hence we don't need to read it again. Otherwise read in the leaf
-+	 * buffer.
+-	 * Re-find the "old" attribute entry after any split ops. The INCOMPLETE
+-	 * flag means that we will find the "old" attr, not the "new" one.
++	 * The attr we are removing has already been marked incomplete, so
++	 * we need to set the filter appropriately to re-find the "old"
++	 * attribute entry after any split ops.
  	 */
--	retval = xfs_attr_leaf_hasname(args, &bp);
--	if (retval != -ENOATTR && retval != -EEXIST)
--		return retval;
--	if (retval == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
-+	if (bp) {
-+		xfs_trans_bhold_release(args->trans, bp);
-+	} else {
-+		error = xfs_attr3_leaf_read(args->trans, args->dp, 0, &bp);
-+		if (error)
-+			return error;
-+	}
-+
-+	/*
-+	 * Look up the xattr name to set the insertion point for the new xattr.
-+	 */
-+	error = xfs_attr3_leaf_lookup_int(bp, args);
-+	if (error != -ENOATTR && error != -EEXIST)
- 		goto out_brelse;
--	if (retval == -EEXIST) {
-+	if (error == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
-+		goto out_brelse;
-+	if (error == -EEXIST) {
- 		if (args->attr_flags & XATTR_CREATE)
- 			goto out_brelse;
- 
-@@ -1023,14 +1040,11 @@ xfs_attr_leaf_try_add(
- 		args->rmtvaluelen = 0;
- 	}
- 
--	/*
--	 * Add the attribute to the leaf block
--	 */
- 	return xfs_attr3_leaf_add(bp, args);
- 
- out_brelse:
- 	xfs_trans_brelse(args->trans, bp);
--	return retval;
-+	return error;
+-	if (!xfs_has_larp(mp))
+-		args->attr_filter |= XFS_ATTR_INCOMPLETE;
++	args->attr_filter |= XFS_ATTR_INCOMPLETE;
+ 	state = xfs_da_state_alloc(args);
+ 	state->inleaf = 0;
+ 	error = xfs_da3_node_lookup_int(state, &retval);
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 7ea7c7fa31ac..6bef522533a4 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -593,6 +593,16 @@ xfs_attr_init_add_state(struct xfs_da_args *args)
+ 	return XFS_DAS_NODE_ADD;
  }
  
- /*
++static inline enum xfs_delattr_state
++xfs_attr_init_remove_state(struct xfs_da_args *args)
++{
++	if (xfs_attr_is_shortform(args->dp))
++		return XFS_DAS_SF_REMOVE;
++	if (xfs_attr_is_leaf(args->dp))
++		return XFS_DAS_LEAF_REMOVE;
++	return XFS_DAS_NODE_REMOVE;
++}
++
+ static inline enum xfs_delattr_state
+ xfs_attr_init_replace_state(struct xfs_da_args *args)
+ {
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 740a55d07660..fb9549e7ea96 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -296,12 +296,9 @@ xfs_attrd_item_release(
+ STATIC int
+ xfs_xattri_finish_update(
+ 	struct xfs_attr_item		*attr,
+-	struct xfs_attrd_log_item	*attrdp,
+-	uint32_t			op_flags)
++	struct xfs_attrd_log_item	*attrdp)
+ {
+ 	struct xfs_da_args		*args = attr->xattri_da_args;
+-	unsigned int			op = op_flags &
+-					     XFS_ATTR_OP_FLAGS_TYPE_MASK;
+ 	int				error;
+ 
+ 	if (XFS_TEST_ERROR(false, args->dp->i_mount, XFS_ERRTAG_LARP)) {
+@@ -309,22 +306,9 @@ xfs_xattri_finish_update(
+ 		goto out;
+ 	}
+ 
+-	switch (op) {
+-	case XFS_ATTR_OP_FLAGS_SET:
+-	case XFS_ATTR_OP_FLAGS_REPLACE:
+-		error = xfs_attr_set_iter(attr);
+-		if (!error && attr->xattri_dela_state != XFS_DAS_DONE)
+-			error = -EAGAIN;
+-		break;
+-	case XFS_ATTR_OP_FLAGS_REMOVE:
+-		ASSERT(XFS_IFORK_Q(args->dp));
+-		error = xfs_attr_remove_iter(attr);
+-		break;
+-	default:
+-		error = -EFSCORRUPTED;
+-		break;
+-	}
+-
++	error = xfs_attr_set_iter(attr);
++	if (!error && attr->xattri_dela_state != XFS_DAS_DONE)
++		error = -EAGAIN;
+ out:
+ 	/*
+ 	 * Mark the transaction dirty, even on error. This ensures the
+@@ -432,8 +416,7 @@ xfs_attr_finish_item(
+ 	 */
+ 	attr->xattri_da_args->trans = tp;
+ 
+-	error = xfs_xattri_finish_update(attr, done_item,
+-					 attr->xattri_op_flags);
++	error = xfs_xattri_finish_update(attr, done_item);
+ 	if (error != -EAGAIN)
+ 		kmem_free(attr);
+ 
+@@ -581,7 +564,7 @@ xfs_attri_item_recover(
+ 		attr->xattri_dela_state = xfs_attr_init_add_state(args);
+ 		break;
+ 	case XFS_ATTR_OP_FLAGS_REMOVE:
+-		attr->xattri_dela_state = XFS_DAS_UNINIT;
++		attr->xattri_dela_state = xfs_attr_init_remove_state(args);
+ 		break;
+ 	default:
+ 		ASSERT(0);
+@@ -600,7 +583,7 @@ xfs_attri_item_recover(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+-	ret = xfs_xattri_finish_update(attr, done_item, attrp->alfi_op_flags);
++	ret = xfs_xattri_finish_update(attr, done_item);
+ 	if (ret == -EAGAIN) {
+ 		/* There's more work to do, so add it to this transaction */
+ 		xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &attr->xattri_list);
 -- 
 2.35.1
 
