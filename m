@@ -2,109 +2,286 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F277BC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 10:35:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BF43C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 16:02:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1390986AbiEFKin (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 May 2022 06:38:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45150 "EHLO
+        id S1443324AbiEFQGH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 May 2022 12:06:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379956AbiEFKin (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 06:38:43 -0400
-Received: from mailly.debian.org (mailly.debian.org [IPv6:2001:41b8:202:deb:6564:a62:52c3:4b72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBE2963398
-        for <linux-xfs@vger.kernel.org>; Fri,  6 May 2022 03:35:00 -0700 (PDT)
-Received: from [192.91.235.231] (port=33148 helo=fasolo.debian.org)
-        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-        by mailly.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94.2)
-        (envelope-from <envelope@ftp-master.debian.org>)
-        id 1nmvIa-002qRM-4b; Fri, 06 May 2022 10:34:58 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=ftp-master.debian.org; s=smtpauto.fasolo; h=Date:Message-Id:Subject:
-        Content-Transfer-Encoding:Content-Type:MIME-Version:To:From:Reply-To:Cc:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=QoyhzKAeSk3bxqqe85WBdKY4TuSuIc9ARmGeQ5mnOw8=; b=O3PEb7LUjUbhJi/VWhqgG5iLgA
-        ikEMD9MJDWZZKROwkW/Uz9hLbEzWYf1FGMwlYDYhM/nJ8rbJXsx50DAJVmyFx5dcZ4XCMfSd3IPnU
-        rkr28lA1yjOL7nBx+rTrgh6DJ1lOrj2uChJUZJOn82S4j0RIISsWM6vPsAy5U0pw6Ekn+fd+rvr0T
-        RUXb9wvnvxxjz7HbDzBTrhUHP+4N56YW1/3nU7QOLjoLZTaIsJe5zL1mO4t0wvTFYfGt9CJFTjNpg
-        JaIx89vuoJ5QfsiEGumbRyAwbC+fAiEfbR3/lNMwCXQJJO1d/AqMpCkDqfdQyLJ6s5y64YmCEa9bk
-        +sQ/hAvw==;
-Received: from dak by fasolo.debian.org with local (Exim 4.92)
-        (envelope-from <envelope@ftp-master.debian.org>)
-        id 1nmvIX-0008ri-G8; Fri, 06 May 2022 10:34:57 +0000
-From:   Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-To:     Nathan Scott <nathans@debian.org>,
-        XFS Development Team <linux-xfs@vger.kernel.org>,
-        <bage@debian.org>
-X-DAK:  dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-Auto-Submitted: auto-generated
+        with ESMTP id S1443321AbiEFQGE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 12:06:04 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEED869CCB;
+        Fri,  6 May 2022 09:02:19 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 91B46B832EB;
+        Fri,  6 May 2022 16:02:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34871C385A9;
+        Fri,  6 May 2022 16:02:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651852937;
+        bh=QXH+OPuHJNMDOY/M5AGaVhF+yHNv7bwLrQ8jZlJq8SU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=N5jQnI92MTvTl0J8tJsIYNgfnvgzuwfZI5WcU6U6T1N2C4/bru2hwmoWtPTmX285E
+         oRlsHMnJmIg551VHmN1BYheA4uezOqSx4vB/VYqbixZT3XAY0Tobj3LYJmChuLr0bx
+         0VcXj6W86305GWC68bEmY2koLCHtosbhL8YZrQ/81JBLzlKYkBOUTYGGNkEOqHDh4j
+         ef79tJYj7HWwim+mq7L7gzPhmzFGHE8//y6gKSc1VrdYYWzulIRhBlZ/m6w7nx238C
+         Sc/upbGRA+4gPb+nSkm7MNnbFxK5/n+Du6nDUuX2ezbTAJJiLZoLiCdpfcw3u2SroB
+         p6m63bnGsJgEA==
+Date:   Fri, 6 May 2022 09:02:16 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs/533: Delete test since directory's extent count can
+ never overflow
+Message-ID: <20220506160216.GN27195@magnolia>
+References: <20220506095746.1014345-1-chandan.babu@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: xfsprogs_5.16.0-1_source.changes ACCEPTED into unstable
-Message-Id: <E1nmvIX-0008ri-G8@fasolo.debian.org>
-Date:   Fri, 06 May 2022 10:34:57 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220506095746.1014345-1-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, May 06, 2022 at 03:27:46PM +0530, Chandan Babu R wrote:
+> The maximum file size that can be represented by the data fork extent counter
+> in the worst case occurs when all extents are 1 block in length and each block
+> is 1KB in size.
+> 
+> With XFS_MAX_EXTCNT_DATA_FORK_SMALL representing maximum extent count and with
+> 1KB sized blocks, a file can reach upto,
+> (2^31) * 1KB = 2TB
+> 
+> This is much larger than the theoretical maximum size of a directory
+> i.e. XFS_DIR2_SPACE_SIZE * 3 = ~96GB.
+> 
+> Since a directory can never overflow its data fork extent counter, the xfs
+> kernel driver removed code which checked for such a situation before any
+> directory modification operation could be executed. Instead, the kernel driver
+> verifies the sanity of directory's data fork extent counter when the inode is
+> read from disk.
+> 
+> This commit removes the test xfs/533 due to the reasons mentioned above.
+> 
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 
+Yeah, all this functionality is being removed from 5.19, so the test
+is no longer needed.
 
-Accepted:
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+--D
 
-Format: 1.8
-Date: Wed, 04 May 2022 14:50:48 -0400
-Source: xfsprogs
-Architecture: source
-Version: 5.16.0-1
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Nathan Scott <nathans@debian.org>
-Closes: 999743
-Changes:
- xfsprogs (5.16.0-1) unstable; urgency=medium
- .
-   * New upstream release
- .
-   [ Bastian Germann ]
-   * debian: Generate .gitcensus instead of .census (Closes: #999743)
-Checksums-Sha1:
- eb15265bf458c6c43916b43c9f2a415c59b92e43 2041 xfsprogs_5.16.0-1.dsc
- 259a52b8be50d3cf762d70ec24501c2b5d5c90b3 1306100 xfsprogs_5.16.0.orig.tar.xz
- 644eaa249e755bb569cb77eda7ee8549295f74d5 14348 xfsprogs_5.16.0-1.debian.tar.xz
- 567c88ac03589102f6c1cf49b2ba9de0dde82e18 6366 xfsprogs_5.16.0-1_source.buildinfo
-Checksums-Sha256:
- 95fea80d092a3e37466b3584bb11140c0ab17efff48ae716e6a43fc1fb7995fa 2041 xfsprogs_5.16.0-1.dsc
- 78b8c899999bd690441cb53d7c02ab671294940319c694ff7c82e23e8e46bb9f 1306100 xfsprogs_5.16.0.orig.tar.xz
- ca6e21010865e1f1e069feeb49cc72aa0eaf9b7eeebcd4b5eeb4e49072c4f7c2 14348 xfsprogs_5.16.0-1.debian.tar.xz
- 167d979bab05a00928bedebcc7f5d0f4eac095fe8aa78b271649f03b0635c09a 6366 xfsprogs_5.16.0-1_source.buildinfo
-Files:
- 82b9e303c192256d97306cbaa21f2ee9 2041 admin optional xfsprogs_5.16.0-1.dsc
- 20446fd3e857d1568c0ead3e88453f86 1306100 admin optional xfsprogs_5.16.0.orig.tar.xz
- 26a5dd49f4fc4cb044eab19d35b89ac0 14348 admin optional xfsprogs_5.16.0-1.debian.tar.xz
- 4d57accf043b529cd6eaf9f5ed9feef9 6366 admin optional xfsprogs_5.16.0-1_source.buildinfo
-
------BEGIN PGP SIGNATURE-----
-
-iQHEBAEBCgAuFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmJ07e4QHGJhZ2VAZGVi
-aWFuLm9yZwAKCRAfXHqLRVZDFJJbDADN6iot0JkmTZdB1ATg5Lm+mHZf8Bt2W/kb
-gTAi1DrT0cbOhO1mDzIdIMLg+QEbic2MQxNTTc3eG6dhfzmZrXsW6ReV+OUhilwF
-FfXd6nf19z2Zxz+wdW3URvJmEwiOA53NOYwmiby3/mvKwQYEpwvpMWBiAhOeTKgS
-aT5BuM8eYVBxBJKSNcNM+K5wH7YSq0OxdBTDR4zvKfIs1oAPrns3xOX970DeSU+j
-04meleEAKiCPMbv5Qh/BZqUeXSOIbvfftCsQbPymm7ZNM0o1ueH2wXR+2ZGawvNC
-VLQH/hfaWiBX7w5xJBjnt7+/n5i3aOxMYkK2yeUviJxp4AhYHsRUcPbWIFFBtrWb
-60kXAikzDK0Y13QXMca2+LuFgtzRsQ0rW7pr60tXO2vESjXaWa6bhMUiTVa+A7t/
-0mUEHPLxs2AuN1v7anDUMO5Yy91OFIEn5rUnh5qMtVpyT8O9DVgyGLJ+HFKI2Uyq
-/pv2chnGDK6FRL9rbPJsKM9x0n/07fI=
-=3q95
------END PGP SIGNATURE-----
-
-
-Thank you for your contribution to Debian.
+> ---
+>  tests/xfs/533     | 170 ----------------------------------------------
+>  tests/xfs/533.out |  17 -----
+>  2 files changed, 187 deletions(-)
+>  delete mode 100755 tests/xfs/533
+>  delete mode 100644 tests/xfs/533.out
+> 
+> diff --git a/tests/xfs/533 b/tests/xfs/533
+> deleted file mode 100755
+> index b85b5298..00000000
+> --- a/tests/xfs/533
+> +++ /dev/null
+> @@ -1,170 +0,0 @@
+> -#! /bin/bash
+> -# SPDX-License-Identifier: GPL-2.0
+> -# Copyright (c) 2021 Chandan Babu R.  All Rights Reserved.
+> -#
+> -# FS QA Test 533
+> -#
+> -# Verify that XFS does not cause inode fork's extent count to overflow when
+> -# adding/removing directory entries.
+> -. ./common/preamble
+> -_begin_fstest auto quick dir hardlink symlink
+> -
+> -# Import common functions.
+> -. ./common/filter
+> -. ./common/inject
+> -. ./common/populate
+> -
+> -# real QA test starts here
+> -
+> -_supported_fs xfs
+> -_require_scratch
+> -_require_xfs_debug
+> -_require_test_program "punch-alternating"
+> -_require_xfs_io_error_injection "reduce_max_iextents"
+> -_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+> -
+> -_scratch_mkfs_sized $((1024 * 1024 * 1024)) | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
+> -. $tmp.mkfs
+> -
+> -# Filesystems with directory block size greater than one FSB will not be tested,
+> -# since "7 (i.e. XFS_DA_NODE_MAXDEPTH + 1 data block + 1 free block) * 2 (fsb
+> -# count) = 14" is greater than the pseudo max extent count limit of 10.
+> -# Extending the pseudo max limit won't help either.  Consider the case where 1
+> -# FSB is 1k in size and 1 dir block is 64k in size (i.e. fsb count = 64). In
+> -# this case, the pseudo max limit has to be greater than 7 * 64 = 448 extents.
+> -if (( $dirbsize > $dbsize )); then
+> -	_notrun "Directory block size ($dirbsize) is larger than FSB size ($dbsize)"
+> -fi
+> -
+> -echo "Format and mount fs"
+> -_scratch_mkfs_sized $((1024 * 1024 * 1024)) >> $seqres.full
+> -_scratch_mount >> $seqres.full
+> -
+> -# Disable realtime inherit flag (if any) on root directory so that space on data
+> -# device gets fragmented rather than realtime device.
+> -_xfs_force_bdev data $SCRATCH_MNT
+> -
+> -echo "Consume free space"
+> -fillerdir=$SCRATCH_MNT/fillerdir
+> -nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
+> -nr_free_blks=$((nr_free_blks * 90 / 100))
+> -
+> -_fill_fs $((dbsize * nr_free_blks)) $fillerdir $dbsize 0 >> $seqres.full 2>&1
+> -
+> -echo "Create fragmented filesystem"
+> -for dentry in $(ls -1 $fillerdir/); do
+> -	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
+> -done
+> -
+> -echo "Inject reduce_max_iextents error tag"
+> -_scratch_inject_error reduce_max_iextents 1
+> -
+> -echo "Inject bmap_alloc_minlen_extent error tag"
+> -_scratch_inject_error bmap_alloc_minlen_extent 1
+> -
+> -dent_len=255
+> -
+> -echo "* Create directory entries"
+> -
+> -testdir=$SCRATCH_MNT/testdir
+> -mkdir $testdir
+> -
+> -nr_dents=$((dbsize * 20 / dent_len))
+> -for i in $(seq 1 $nr_dents); do
+> -	dentry="$(printf "%0255d" $i)"
+> -	touch ${testdir}/$dentry >> $seqres.full 2>&1 || break
+> -done
+> -
+> -echo "Verify directory's extent count"
+> -nextents=$(_xfs_get_fsxattr nextents $testdir)
+> -if (( $nextents > 10 )); then
+> -	echo "Extent count overflow check failed: nextents = $nextents"
+> -	exit 1
+> -fi
+> -
+> -rm -rf $testdir
+> -
+> -echo "* Rename: Populate destination directory"
+> -
+> -dstdir=$SCRATCH_MNT/dstdir
+> -mkdir $dstdir
+> -
+> -nr_dents=$((dirbsize * 20 / dent_len))
+> -
+> -echo "Populate \$dstdir by moving new directory entries"
+> -for i in $(seq 1 $nr_dents); do
+> -	dentry="$(printf "%0255d" $i)"
+> -	dentry=${SCRATCH_MNT}/${dentry}
+> -	touch $dentry || break
+> -	mv $dentry $dstdir >> $seqres.full 2>&1 || break
+> -done
+> -
+> -rm $dentry
+> -
+> -echo "Verify \$dstdir's extent count"
+> -
+> -nextents=$(_xfs_get_fsxattr nextents $dstdir)
+> -if (( $nextents > 10 )); then
+> -	echo "Extent count overflow check failed: nextents = $nextents"
+> -	exit 1
+> -fi
+> -
+> -rm -rf $dstdir
+> -
+> -echo "* Create multiple hard links to a single file"
+> -
+> -testdir=$SCRATCH_MNT/testdir
+> -mkdir $testdir
+> -
+> -testfile=$SCRATCH_MNT/testfile
+> -touch $testfile
+> -
+> -nr_dents=$((dirbsize * 20 / dent_len))
+> -
+> -echo "Create multiple hardlinks"
+> -for i in $(seq 1 $nr_dents); do
+> -	dentry="$(printf "%0255d" $i)"
+> -	ln $testfile ${testdir}/${dentry} >> $seqres.full 2>&1 || break
+> -done
+> -
+> -rm $testfile
+> -
+> -echo "Verify directory's extent count"
+> -nextents=$(_xfs_get_fsxattr nextents $testdir)
+> -if (( $nextents > 10 )); then
+> -	echo "Extent count overflow check failed: nextents = $nextents"
+> -	exit 1
+> -fi
+> -
+> -rm -rf $testdir
+> -
+> -echo "* Create multiple symbolic links to a single file"
+> -
+> -testdir=$SCRATCH_MNT/testdir
+> -mkdir $testdir
+> -
+> -testfile=$SCRATCH_MNT/testfile
+> -touch $testfile
+> -
+> -nr_dents=$((dirbsize * 20 / dent_len))
+> -
+> -echo "Create multiple symbolic links"
+> -for i in $(seq 1 $nr_dents); do
+> -	dentry="$(printf "%0255d" $i)"
+> -	ln -s $testfile ${testdir}/${dentry} >> $seqres.full 2>&1 || break;
+> -done
+> -
+> -rm $testfile
+> -
+> -echo "Verify directory's extent count"
+> -nextents=$(_xfs_get_fsxattr nextents $testdir)
+> -if (( $nextents > 10 )); then
+> -	echo "Extent count overflow check failed: nextents = $nextents"
+> -	exit 1
+> -fi
+> -
+> -rm -rf $testdir
+> -
+> -# success, all done
+> -status=0
+> -exit
+> diff --git a/tests/xfs/533.out b/tests/xfs/533.out
+> deleted file mode 100644
+> index c3cbe2e0..00000000
+> --- a/tests/xfs/533.out
+> +++ /dev/null
+> @@ -1,17 +0,0 @@
+> -QA output created by 533
+> -Format and mount fs
+> -Consume free space
+> -Create fragmented filesystem
+> -Inject reduce_max_iextents error tag
+> -Inject bmap_alloc_minlen_extent error tag
+> -* Create directory entries
+> -Verify directory's extent count
+> -* Rename: Populate destination directory
+> -Populate $dstdir by moving new directory entries
+> -Verify $dstdir's extent count
+> -* Create multiple hard links to a single file
+> -Create multiple hardlinks
+> -Verify directory's extent count
+> -* Create multiple symbolic links to a single file
+> -Create multiple symbolic links
+> -Verify directory's extent count
+> -- 
+> 2.30.2
+> 
