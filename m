@@ -2,134 +2,71 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F62DC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 20:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F5DC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 20:42:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241937AbiEFUeq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 May 2022 16:34:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34638 "EHLO
+        id S1443399AbiEFUpv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 May 2022 16:45:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236122AbiEFUen (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 16:34:43 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 07D1D4CD56
-        for <linux-xfs@vger.kernel.org>; Fri,  6 May 2022 13:30:54 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 537D27939;
-        Fri,  6 May 2022 15:30:17 -0500 (CDT)
-Message-ID: <995036a8-0624-3012-e97b-aeae2d7cc671@sandeen.net>
-Date:   Fri, 6 May 2022 15:30:51 -0500
+        with ESMTP id S233143AbiEFUpt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 16:45:49 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A5D7969CE5;
+        Fri,  6 May 2022 13:42:05 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E0B2810E627B;
+        Sat,  7 May 2022 06:42:04 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nn4m3-008qfi-Eq; Sat, 07 May 2022 06:42:03 +1000
+Date:   Sat, 7 May 2022 06:42:03 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs/533: Delete test since directory's extent count can
+ never overflow
+Message-ID: <20220506204203.GI1949718@dread.disaster.area>
+References: <20220506095746.1014345-1-chandan.babu@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.9.0
-Content-Language: en-US
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Chinner <dchinner@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs-5.18.0-rc0 released
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------MIvd0VaWM68gUi3pOs0mj0z4"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220506095746.1014345-1-chandan.babu@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6275881d
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=5FelmDt1foWAE_iMZk8A:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------MIvd0VaWM68gUi3pOs0mj0z4
-Content-Type: multipart/mixed; boundary="------------tL5n8V0FWy7CK0iasIVAi2JD";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <djwong@kernel.org>
-Message-ID: <995036a8-0624-3012-e97b-aeae2d7cc671@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs-5.18.0-rc0 released
+On Fri, May 06, 2022 at 03:27:46PM +0530, Chandan Babu R wrote:
+> The maximum file size that can be represented by the data fork extent counter
+> in the worst case occurs when all extents are 1 block in length and each block
+> is 1KB in size.
+> 
+> With XFS_MAX_EXTCNT_DATA_FORK_SMALL representing maximum extent count and with
+> 1KB sized blocks, a file can reach upto,
+> (2^31) * 1KB = 2TB
+> 
+> This is much larger than the theoretical maximum size of a directory
+> i.e. XFS_DIR2_SPACE_SIZE * 3 = ~96GB.
+> 
+> Since a directory can never overflow its data fork extent counter, the xfs
+> kernel driver removed code which checked for such a situation before any
+> directory modification operation could be executed. Instead, the kernel driver
+> verifies the sanity of directory's data fork extent counter when the inode is
+> read from disk.
+> 
+> This commit removes the test xfs/533 due to the reasons mentioned above.
+> 
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 
---------------tL5n8V0FWy7CK0iasIVAi2JD
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Thanks Chandan!
 
-Hi folks,
-
-The for-next branch of the xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated and tagged with v5.18.0-rc0
-
-libxfs/ is now up to date with v5.18 kernelspace and I'll start merging
-the functional changes, cleanups, and fixes that are on the list.
-
-Thanks,
--Eric
-
-The new head of the for-next branch is commit:
-
-24025262 xfsprogs: Release v5.18.0-rc0
-
-New Commits:
-
-Christoph Hellwig (1):
-      [8b4c5cd1] xfs: pass the mapping flags to xfs_bmbt_to_iomap
-
-Darrick J. Wong (5):
-      [e501cb44] xfs: remove the XFS_IOC_FSSETDM definitions
-      [7126f90b] xfs: remove the XFS_IOC_{ALLOC,FREE}SP* definitions
-      [c331b654] xfs: constify the name argument to various directory fun=
-ctions
-      [f040050e] xfs: constify xfs_name_dotdot
-      [bc4d60eb] xfs: document the XFS_ALLOC_AGFL_RESERVE constant
-
-Eric Sandeen (1):
-      [24025262] xfsprogs: Release v5.18.0-rc0
-
-Hugh Dickins (1):
-      [dabdb383] mm/fs: delete PF_SWAPWRITE
-
-
-Code Diffstat:
-
- VERSION                |  4 ++--
- configure.ac           |  2 +-
- doc/CHANGES            |  3 +++
- io/prealloc.c          | 11 +++++++++++
- libhandle/handle.c     | 21 +++------------------
- libxfs/libxfs_priv.h   |  4 ++--
- libxfs/xfs_alloc.c     | 28 +++++++++++++++++++++++-----
- libxfs/xfs_alloc.h     |  1 -
- libxfs/xfs_bmap.c      |  4 ++--
- libxfs/xfs_btree.c     |  2 +-
- libxfs/xfs_dir2.c      | 36 ++++++++++++++++++++----------------
- libxfs/xfs_dir2.h      |  8 ++++----
- libxfs/xfs_dir2_priv.h |  5 +++--
- libxfs/xfs_fs.h        | 37 ++++++++-----------------------------
- man/man3/xfsctl.3      |  2 ++
- man/man8/xfs_io.8      |  2 ++
- 16 files changed, 87 insertions(+), 83 deletions(-)
-
---------------tL5n8V0FWy7CK0iasIVAi2JD--
-
---------------MIvd0VaWM68gUi3pOs0mj0z4
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmJ1hXsFAwAAAAAACgkQIK4WkuE93uC0
-Yg//SMFoCoGDZIxRwNnxKOiA7Kg2kn+hqk8y/R2A8g4hxcRhjpCyxKj0N9NHjyejDeSdlmqY+euH
-w+bGwB8+oaXyv1pH95MLCt7LAQjTD0cR1/+7+5M6+xYD15/Vu69+tb4v1184GaEbvuO6iaMiW/rp
-ojUqMxildiUij0yFASTk0vp+R6vL8+COgA6YZ4pcKBJdRUJAd87SDQCAZHnCUDqsQ/X7SaFPQhWE
-qgDcuzGwnP9ciMpzVGS3BmLdqCuHGt6ZCFn1SHl22EPJsnvFh/8WPdXVkwBhdIyWk63dfcBe9RVj
-QAD8T0MT2iDRQzPrlnTRWsbxjO5b3LjQn0vgKThTteLGuoGwlWHtQW9OpXtkQxVlgx3brZTDN3aD
-Wpfua1qx5LGvzuvh4//gk5006G9F9qc30pMph/UU694us6JY5PgxvSVONcHJKB+n80GZpAcG2zwG
-SU2GdVgs9LW9xUPBEVBeD/RLNAB//bdIitaJcVkt/ey4kk1vXe8H3o/yOt1mlAX9EgLQlctdYRup
-BCvuo0iUbpYIsi1FLZpaWyzHl31yqgLEIDWH5/SeMOk4X+l8hh4miyw258JirN9TU8GUeZ2EL9w1
-8RFSsvZW5LNn7y4W70hNJByfJ9bn/4DvA/N/U8Qas9AdUQ3Vc4eSD6C1Vujw/07agKUFlB6LkJ74
-NYc=
-=9ujt
------END PGP SIGNATURE-----
-
---------------MIvd0VaWM68gUi3pOs0mj0z4--
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
