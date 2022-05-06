@@ -2,244 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C375EC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 17:12:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B788BC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 May 2022 17:18:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1444128AbiEFRQi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 May 2022 13:16:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50148 "EHLO
+        id S1444144AbiEFRVu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 May 2022 13:21:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379066AbiEFRQh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 13:16:37 -0400
+        with ESMTP id S237371AbiEFRVu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 May 2022 13:21:50 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E14B3E0E2;
-        Fri,  6 May 2022 10:12:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D90B36A05B;
+        Fri,  6 May 2022 10:18:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C8676B83751;
-        Fri,  6 May 2022 17:12:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86C54C385A8;
-        Fri,  6 May 2022 17:12:50 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 94901B837AA;
+        Fri,  6 May 2022 17:18:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 478C8C385A8;
+        Fri,  6 May 2022 17:18:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651857170;
-        bh=Vai0AaNbfrgMigw7HscMNxH/YOyU6OWn5I+/N+PmfvQ=;
+        s=k20201202; t=1651857484;
+        bh=oJ7BSJq4l6rV/LR2iCXzf3qzWLmMVgPG/blYMjbJj8U=;
         h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=T7M2MESWHeocswrLSP6HZUesU9+W0BUNf/RdkOhKhojs/N4+H1goFYFzn47HXUEme
-         J/nYTglaH1Tps9CeEblhxFZjH53yseS089o8H8KecyriCY7kVM8z5YoPWY1eYyLaz1
-         F6drnNblt40yNYi455k0OISaSr5sQNxBAxsxiA0rgKDnfm4opBxAqMMRqfnPESKpc+
-         ve7cHvGXbAUd5s7kzwR2n6hs/Y6UKxlGTSVgDB+NH7GPr2zdN+EIOT7IX48zVpDClC
-         WpFBQwwqLjbUQCcq61NnfNaIK2/OSJ7MzCvRHT+31lRDYs5LtlWuUi6F8sPSoWsSIk
-         tnoL/XAMwilEg==
-Date:   Fri, 6 May 2022 10:12:50 -0700
+        b=IrasRqSy/K3QMu6vkX8fPa93bkexvhleSoQf7qraOcz6j43plU/ehIMSCbLV8QyXp
+         +MZyiIXsy4aM7PNc4HJ/A/tkTbUx1KaDL98g+VaOXY5hGgJRunY2eSINOP7/RYjERd
+         O9109SGk0hmeCJ3iRh2p3OcYaJtegJE8m+QvMphBmN9cAobSwRBNwcyO2bJCHoLf7Y
+         1FmnFHjxeCB1Wk5wiaky/52Inx9tMnaigEPs5YDvoHEqkrl5G7F9AtfdBt5EZBf2cg
+         tZ+XEirZBjoQsJQFNMeAid5JBx1HGroIRqP6vb8OXsV3LFN0paPBpMi6cDszC0g6oS
+         R5TuZJHtW+7YQ==
+Date:   Fri, 6 May 2022 10:18:03 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] generic: soft quota limits testing within grace time
-Message-ID: <20220506171250.GT27195@magnolia>
-References: <20220505182555.370074-1-zlang@kernel.org>
- <20220506161929.GQ27195@magnolia>
- <20220506165441.3elwulgaipfdpruu@zlang-mailbox>
+To:     dsterba@suse.cz, Christoph Hellwig <hch@lst.de>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: reduce memory allocation in the btrfs direct I/O path
+Message-ID: <20220506171803.GA27137@magnolia>
+References: <20220504162342.573651-1-hch@lst.de>
+ <20220505155529.GY18596@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220506165441.3elwulgaipfdpruu@zlang-mailbox>
+In-Reply-To: <20220505155529.GY18596@suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 07, 2022 at 12:54:41AM +0800, Zorro Lang wrote:
-> On Fri, May 06, 2022 at 09:19:29AM -0700, Darrick J. Wong wrote:
-> > On Fri, May 06, 2022 at 02:25:55AM +0800, Zorro Lang wrote:
-> > > After soft limits are exceeded, within the grace time, fs quota should
-> > > allow more space allocation before exceeding hard limits, even if
-> > > allocating many small files.
-> > > 
-> > > This case can cover bc37e4fb5cac (xfs: revert "xfs: actually bump
-> > > warning counts when we send warnings"). And will help to expose later
-> > > behavior changes on this side.
-> > > 
-> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > > ---
-> > >  tests/generic/690     | 125 ++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/generic/690.out |   2 +
-> > >  2 files changed, 127 insertions(+)
-> > >  create mode 100755 tests/generic/690
-> > >  create mode 100644 tests/generic/690.out
-> > > 
-> > > diff --git a/tests/generic/690 b/tests/generic/690
-> > > new file mode 100755
-> > > index 00000000..b1d055dc
-> > > --- /dev/null
-> > > +++ b/tests/generic/690
-> > > @@ -0,0 +1,125 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2022 Red Hat Inc.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 690
-> > > +#
-> > > +# Make sure filesystem quota works well, after soft limits are exceeded. The
-> > > +# fs quota should allow more space allocation before exceeding hard limits
-> > > +# and with in grace time.
+On Thu, May 05, 2022 at 05:55:29PM +0200, David Sterba wrote:
+> On Wed, May 04, 2022 at 09:23:37AM -0700, Christoph Hellwig wrote:
+> > Hi all,
 > > 
-> > 'within'
+> > this series adds two minor improvements to iomap that allow btrfs
+> > to avoid a memory allocation per read/write system call and another
+> > one per submitted bio.  I also have at last two other pending uses
+> > for the iomap functionality later on, so they are not really btrfs
+> > specific either.
 > 
-> Thanks, a typo :-D
-> 
-> > 
-> > > +#
-> > > +# But different with other similar testing, this case trys to write many small
-> > > +# files, to cover bc37e4fb5cac (xfs: revert "xfs: actually bump warning counts
-> > > +# when we send warnings"). If there's a behavior change in one day, this case
-> > > +# might help to detect that too.
-> > > +#
-> > > +. ./common/preamble
-> > > +_begin_fstest auto quota
-> > > +
-> > > +# Override the default cleanup function.
-> > > +_cleanup()
-> > > +{
-> > > +	restore_project
-> > > +	cd /
-> > > +	rm -r -f $tmp.*
-> > > +}
-> > > +
-> > > +# Import common functions.
-> > > +. ./common/quota
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_fs generic
-> > > +_require_scratch
-> > > +_require_quota
-> > > +_require_user
-> > > +_require_group
-> > > +
-> > > +create_project()
-> > > +{
-> > > +	rm -rf $SCRATCH_MNT/t
-> > > +	mkdir $SCRATCH_MNT/t
-> > > +	$XFS_IO_PROG -r -c "chproj 100" -c "chattr +P" $SCRATCH_MNT/t
-> > > +	chmod ugo+rwx $SCRATCH_MNT/t/
-> > > +
-> > > +	rm -f $tmp.projects $tmp.projid
-> > > +	if [ -f /etc/projects ];then
-> > > +		cat /etc/projects > $tmp.projects
-> > > +	fi
-> > > +	if [ -f /etc/projid ];then
-> > > +		cat /etc/projid > $tmp.projid
-> > > +	fi
-> > > +
-> > > +	cat >/etc/projects <<EOF
-> > > +100:$SCRATCH_MNT/t
-> > > +EOF
-> > > +	cat >/etc/projid <<EOF
-> > > +$qa_user:100
-> > > +EOF
-> > > +	PROJECT_CHANGED=1
-> > > +}
-> > > +
-> > > +restore_project()
-> > > +{
-> > > +	if [ "$PROJECT_CHANGED" = "1" ];then
-> > > +		rm -f /etc/projects /etc/projid
-> > > +		if [ -f $tmp.projects ];then
-> > > +			cat $tmp.projects > /etc/projects
-> > > +		fi
-> > > +		if [ -f $tmp.projid ];then
-> > > +			cat $tmp.projid > /etc/projid
-> > > +		fi
-> > > +	fi
-> > > +}
-> > 
-> > Please just hoist these out of generic/603.
-> 
-> Do you mean make create_project() and restore_project() to be common functions
-> in common/quota ?
+> The series is reasonably short so I'd like to add it to 5.20 queue,
+> provided that the iomap patches get acked by Darrick. Any fixups I'd
+> rather fold into my local branch, no need to resend unless there are
+> significant updates.
 
-Yep.
-
-> > 
-> > > +
-> > > +# Make sure the kernel supports project quota
-> > > +_scratch_mkfs >$seqres.full 2>&1
-> > > +_scratch_enable_pquota
-> > > +_qmount_option "prjquota"
-> > > +_qmount
-> > > +_require_prjquota $SCRATCH_DEV
-> > > +
-> > > +exercise()
-> > > +{
-> > > +	local type=$1
-> > > +	local file=$SCRATCH_MNT/testfile
-> > > +
-> > > +	echo "= Test type=$type quota =" >>$seqres.full
-> > > +	_scratch_unmount
-> > > +	_scratch_mkfs >>$seqres.full 2>&1
-> > > +	if [ "$1" = "P" ];then
-> > > +		_scratch_enable_pquota
-> > > +	fi
-> > > +	_qmount
-> > > +	if [ "$1" = "P" ];then
-> > > +		create_project
-> > > +		file=$SCRATCH_MNT/t/testfile
-> > > +	fi
-> > > +
-> > > +	setquota -${type} $qa_user 1M 500M 0 0 $SCRATCH_MNT
-> > > +	setquota -${type} -t 86400 86400 $SCRATCH_MNT
-> > > +	repquota -v -${type} $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
-> > 
-> > So this sets a soft limit of 1M, a hard limit of 500M, and a grace
-> > period of one day?  And then we try to write 101M to a file?
-> 
-> Maybe 102M, due to the first file is 2M, to exceed soft limit(1M), then later
-> 100*1M files. Anyway, the 102M isn't necessary, just try to create a scattering
-> of hundred files. Hope 100 is enough :)
-
-<nod>
+Hm.  I'm planning on pushing out a (very late) iomap-5.19-merge branch,
+since (AFAICT) these changes are mostly plumbing.  Do you want me to
+push the first three patches of this series for 5.19?
 
 --D
-
-> > 
-> > I think this looks good other than the remarks I had above.
-> > 
-> > --D
-> > 
-> > > +	# Exceed the soft quota limit a bit at first
-> > > +	su $qa_user -c "$XFS_IO_PROG -f -t -c 'pwrite 0 2m' -c fsync ${file}.0" >>$seqres.full 2>&1
-> > > +	# Write more data more times under soft quota limit exhausted condition,
-> > > +	# but not reach hard limit. To make sure the it won't trigger EDQUOT.
-> > > +	for ((i=1; i<=100; i++));do
-> > > +		su "$qa_user" -c "$XFS_IO_PROG -f -c 'pwrite 0 1m' -c fsync ${file}.$i" >>$seqres.full 2>&1
-> > > +		if [ $? -ne 0 ];then
-> > > +			log "Unexpected error (type=$type)!"
-> > > +			break
-> > > +		fi
-> > > +	done
-> > > +	repquota -v -${type} $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
-> > > +}
-> > > +
-> > > +_qmount_option "usrquota"
-> > > +exercise u
-> > > +_qmount_option "grpquota"
-> > > +exercise g
-> > > +_qmount_option "prjquota"
-> > > +exercise P
-> > > +
-> > > +echo "Silence is golden"
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/generic/690.out b/tests/generic/690.out
-> > > new file mode 100644
-> > > index 00000000..6f3723e3
-> > > --- /dev/null
-> > > +++ b/tests/generic/690.out
-> > > @@ -0,0 +1,2 @@
-> > > +QA output created by 690
-> > > +Silence is golden
-> > > -- 
-> > > 2.31.1
-> > > 
-> > 
-> 
