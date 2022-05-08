@@ -2,52 +2,55 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 901F0C43217
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 May 2022 14:36:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCE39C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 May 2022 14:36:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234041AbiEHOk3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 May 2022 10:40:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52668 "EHLO
+        id S234164AbiEHOkn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 May 2022 10:40:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233979AbiEHOkX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 10:40:23 -0400
+        with ESMTP id S233985AbiEHOkZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 10:40:25 -0400
 Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D451AE0BE;
-        Sun,  8 May 2022 07:36:32 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3ABTxkxKMw4Thp17DvrR0glsFynXyQoLVcMsFnjC/?=
- =?us-ascii?q?WdQnthWgl0D0AzTNJUWGFb/+PYWOnL9B0Odu08xkO7MeGm99gGjLY11k3ESsS9?=
- =?us-ascii?q?pCt6fd1j6vIF3rLaJWFFSqL1u1GAjX7BJ1yHi+0SiuFaOC79yEmjfjQH9IQNca?=
- =?us-ascii?q?fUsxPbV49IMseoUI78wIJqtYAbemRW2thi/uryyHsEAPNNwpPD44hw/nrRCWDE?=
- =?us-ascii?q?xjFkGhwUlQWPZintbJF/pUfJMp3yaqZdxMUTmTId9NWSdovzJnhlo/Y1xwrTN2?=
- =?us-ascii?q?4kLfnaVBMSbnXVeSMoiMOHfH83V4Z/Wpvuko4HKN0hUN/kSiAmctgjttLroCYR?=
- =?us-ascii?q?xorP7HXhaIWVBww/yRWZPcaoOCafiPg2SCU5wicG5f2+N1iBV83MaUW4OFyBnt?=
- =?us-ascii?q?E9OBeIzcIBjiHhuSzwbu8SuREhtkqM8TqeogYvxlIzTrZJfcgT4rKT6jD6Zlfx?=
- =?us-ascii?q?jhYrt9PGfLPT8sfZyBmYBnJb1tIIFh/IJ43mqGqwGb+dzlZoVeOjasx/2XXigd?=
- =?us-ascii?q?21dDFPNjKfdqFbcZYhECVoiTB5WuRKhUbMsGPjD+A2nGyj+TM2yThV+o6Dryk+?=
- =?us-ascii?q?+VqgHWXx2oOGFsXX179qv684ma4Rd5eLkk8/is1sbN08E2tU8m7UxCmyFaEtR4?=
- =?us-ascii?q?0X8FMVeE3gCmLw63F6kCZAXIFQSNKaN0OssI9Azct0zehndrvCHpksKC9TmiU/?=
- =?us-ascii?q?bOZ6zi1PEA9N2AFYSMbXA0t+MT4rcc/g3rnStdlDb7wgMb5FC/9xxiUoyUkwbY?=
- =?us-ascii?q?el8gG0+O851+vqzatoIXZCw04/APaWkq74Q5jIo2ofYql7R7c9/koBIKYSESR+?=
- =?us-ascii?q?WgKgOCA4+0US5KAjiqARKMKBr7Bz+iEKjr0k1NpHodn8zWr5m7leppfpix9THq?=
- =?us-ascii?q?FmO5slSTBOReV4F0OosQIeibCUEO+WKrpY+xC8EQqPY+NuijoU+dz?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AiiA6TayJNfSnfB4MsbVPKrPwyL1zdoMgy1kn?=
- =?us-ascii?q?xilNoRw8SKKlfqeV7ZImPH7P+U8ssR4b+exoVJPtfZqYz+8R3WBzB8bEYOCFgh?=
- =?us-ascii?q?rKEGgK1+KLqFeMJ8S9zJ846U4KSclD4bPLYmSS9fyKgjVQDexQveWvweS5g/vE?=
- =?us-ascii?q?1XdxQUVPY6Fk1Q1wDQGWCSRNNXJ7LKt8BJyB/dBGujblXXwWa/6wDn4DU/OGiM?=
- =?us-ascii?q?bMkPvdEGQ7Li9i+A+Tlimp9bK/NxCZ2y0VWzRJzaxn0UWtqX2A2pme?=
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A7C3FFD19;
+        Sun,  8 May 2022 07:36:34 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3ABH7Aja0A+gWrByATGPbD5T9wkn2cJEfYwER7XOP?=
+ =?us-ascii?q?LsXnJgD9z3jYAzDQcDWGOO6qNZTGhfdBwOoqy/U4GvsDRzNY2QQE+nZ1PZygU8?=
+ =?us-ascii?q?JKaX7x1DatR0xu6d5SFFAQ+hyknQoGowPscEzmM9n9BDpC79SMmjfvQH+KlYAL?=
+ =?us-ascii?q?5EnsZqTFMGX5JZS1Ly7ZRbr5A2bBVMivV0T/Ai5S31GyNh1aYBlkpB5er83uDi?=
+ =?us-ascii?q?hhdVAQw5TTSbdgT1LPXeuJ84Jg3fcldJFOgKmVY83LTegrN8F251juxExYFAdX?=
+ =?us-ascii?q?jnKv5c1ERX/jZOg3mZnh+AvDk20Yd4HdplPtT2Pk0MC+7jx2Tgtl308QLu5qrV?=
+ =?us-ascii?q?S8nI6/NhP8AFRJfFkmSOIUfouOffiXg7ZX7I0ruNiGEL+9VJE0/I4wU0uhtBmR?=
+ =?us-ascii?q?J7/YZNHYGaRXrr+a3xre6Q+5si+wjMcD0MYJZsXZlpRnZBvYOQJbNWazG6NZUm?=
+ =?us-ascii?q?jAqiahmAvfaY9sxaDxhdh3MbhRDfFANB/oWkO6uwHu5bDxcrFOcoLEf4m7PwQg?=
+ =?us-ascii?q?327/oWPLZeMONQ8p9nUuCoG/CuWPjDXkyMN2Z1CrA93eEhfHGliC9X5gdfJW+6?=
+ =?us-ascii?q?PJrhVi7wm0IFAZQUVq9vOn/hkOgM/pfIEw8/jEy66Q/nGStR97sVlu4p2SFsQM?=
+ =?us-ascii?q?XW9t4FeAxrgqKz8L84Q+fCy4PTiNpb8Yvv8s7Azct0zehhdzuATBwobu9Um+G+?=
+ =?us-ascii?q?/GYoFuaPSkTMH9HazQIQBUI5/H9r4wpyBHCVNBuFOiylNKdMTXxxS2a6SsznbM?=
+ =?us-ascii?q?eieYV2Kihu1PKmTShot7OVAFdzgHWWH+1qxN3f6a7aIGyr1vW9/BNKMCeVFbpl?=
+ =?us-ascii?q?GYFgc+2/u0IDI/LkC2LXfVLG6umoeuGWAAwK3YH84IJrmzroiD8O9sLpmwWGau?=
+ =?us-ascii?q?gCe5cEReBXaMZkVk5CEdvAUaX?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AvXo0qa23PhXR77qd1J97oAqjBFQkLtp133Aq?=
+ =?us-ascii?q?2lEZdPRUGvb4qynIpoVj6faUskdoZJhOo6HiBEDtexzhHNtOkO0s1NSZLW/bUQ?=
+ =?us-ascii?q?mTXeNfBOLZqlWKcUCTygce79YGT0EUMr3N5DZB4/oSmDPIdurI3uP3jJyAtKPP?=
+ =?us-ascii?q?yWt3VwF2Z+VF5wd9MAySFUp7X2B9dOAEPavZ9sxavCChZHhSSsy6A0MOV+/Fq8?=
+ =?us-ascii?q?aOu4nhZXc9dmMawTjLnTW186T7DhTd+h8fVglEybAk/XOAsyGR3NTZj82G?=
 X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="124075737"
+   d="scan'208";a="124075741"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
   by heian.cn.fujitsu.com with ESMTP; 08 May 2022 22:36:31 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id 4C9FD4D1719C;
-        Sun,  8 May 2022 22:36:31 +0800 (CST)
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id A46A34D16FDF;
+        Sun,  8 May 2022 22:36:25 +0800 (CST)
+Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Sun, 8 May 2022 22:36:28 +0800
 Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Sun, 8 May 2022 22:36:30 +0800
+ G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Sun, 8 May 2022 22:36:28 +0800
 Received: from irides.mr.mr (10.167.225.141) by
  G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Sun, 8 May 2022 22:36:29 +0800
+ id 15.0.1497.23 via Frontend Transport; Sun, 8 May 2022 22:36:23 +0800
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
@@ -56,89 +59,144 @@ CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>,
         <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
         <willy@infradead.org>, <naoya.horiguchi@nec.com>,
-        <linmiaohe@huawei.com>, Ritesh Harjani <riteshh@linux.ibm.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v11 04/07] fsdax: Add dax_iomap_cow_copy() for dax zero
-Date:   Sun, 8 May 2022 22:36:17 +0800
-Message-ID: <20220508143620.1775214-12-ruansy.fnst@fujitsu.com>
+        <linmiaohe@huawei.com>, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v14 04/07] fsdax: Introduce dax_lock_mapping_entry()
+Date:   Sun, 8 May 2022 22:36:10 +0800
+Message-ID: <20220508143620.1775214-5-ruansy.fnst@fujitsu.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220508143620.1775214-1-ruansy.fnst@fujitsu.com>
 References: <20220508143620.1775214-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 4C9FD4D1719C.A116D
+X-yoursite-MailScanner-ID: A46A34D16FDF.A26AD
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Punch hole on a reflinked file needs dax_iomap_cow_copy() too.
-Otherwise, data in not aligned area will be not correct.  So, add the
-CoW operation for not aligned case in dax_memzero().
+The current dax_lock_page() locks dax entry by obtaining mapping and
+index in page.  To support 1-to-N RMAP in NVDIMM, we need a new function
+to lock a specific dax entry corresponding to this file's mapping,index.
+And output the page corresponding to the specific dax entry for caller
+use.
 
 Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-==
-This patch changed a lot when rebasing to next-20220504 branch.  Though it
-has been tested by myself, I think it needs a re-review.
-==
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/dax.c | 26 ++++++++++++++++++--------
- 1 file changed, 18 insertions(+), 8 deletions(-)
+ fs/dax.c            | 63 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h | 15 +++++++++++
+ 2 files changed, 78 insertions(+)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index 78e26204697b..b3aa863e9fec 100644
+index 1ac12e877f4f..57efd3f73655 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -1220,17 +1220,27 @@ static vm_fault_t dax_pmd_load_hole(struct xa_state *xas, struct vm_fault *vmf,
+@@ -455,6 +455,69 @@ void dax_unlock_page(struct page *page, dax_entry_t cookie)
+ 	dax_unlock_entry(&xas, (void *)cookie);
  }
- #endif /* CONFIG_FS_DAX_PMD */
  
--static int dax_memzero(struct dax_device *dax_dev, pgoff_t pgoff,
--		unsigned int offset, size_t size)
-+static int dax_memzero(struct iomap_iter *iter, loff_t pos, size_t size)
++/*
++ * dax_lock_mapping_entry - Lock the DAX entry corresponding to a mapping
++ * @mapping: the file's mapping whose entry we want to lock
++ * @index: the offset within this file
++ * @page: output the dax page corresponding to this dax entry
++ *
++ * Return: A cookie to pass to dax_unlock_mapping_entry() or 0 if the entry
++ * could not be locked.
++ */
++dax_entry_t dax_lock_mapping_entry(struct address_space *mapping, pgoff_t index,
++		struct page **page)
++{
++	XA_STATE(xas, NULL, 0);
++	void *entry;
++
++	rcu_read_lock();
++	for (;;) {
++		entry = NULL;
++		if (!dax_mapping(mapping))
++			break;
++
++		xas.xa = &mapping->i_pages;
++		xas_lock_irq(&xas);
++		xas_set(&xas, index);
++		entry = xas_load(&xas);
++		if (dax_is_locked(entry)) {
++			rcu_read_unlock();
++			wait_entry_unlocked(&xas, entry);
++			rcu_read_lock();
++			continue;
++		}
++		if (!entry ||
++		    dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
++			/*
++			 * Because we are looking for entry from file's mapping
++			 * and index, so the entry may not be inserted for now,
++			 * or even a zero/empty entry.  We don't think this is
++			 * an error case.  So, return a special value and do
++			 * not output @page.
++			 */
++			entry = (void *)~0UL;
++		} else {
++			*page = pfn_to_page(dax_to_pfn(entry));
++			dax_lock_entry(&xas, entry);
++		}
++		xas_unlock_irq(&xas);
++		break;
++	}
++	rcu_read_unlock();
++	return (dax_entry_t)entry;
++}
++
++void dax_unlock_mapping_entry(struct address_space *mapping, pgoff_t index,
++		dax_entry_t cookie)
++{
++	XA_STATE(xas, &mapping->i_pages, index);
++
++	if (cookie == ~0UL)
++		return;
++
++	dax_unlock_entry(&xas, (void *)cookie);
++}
++
+ /*
+  * Find page cache entry at given index. If it is a DAX entry, return it
+  * with the entry locked. If the page cache doesn't contain an entry at
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 9c426a207ba8..c152f315d1c9 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -143,6 +143,10 @@ struct page *dax_layout_busy_page(struct address_space *mapping);
+ struct page *dax_layout_busy_page_range(struct address_space *mapping, loff_t start, loff_t end);
+ dax_entry_t dax_lock_page(struct page *page);
+ void dax_unlock_page(struct page *page, dax_entry_t cookie);
++dax_entry_t dax_lock_mapping_entry(struct address_space *mapping,
++		unsigned long index, struct page **page);
++void dax_unlock_mapping_entry(struct address_space *mapping,
++		unsigned long index, dax_entry_t cookie);
+ #else
+ static inline struct page *dax_layout_busy_page(struct address_space *mapping)
  {
-+	const struct iomap *iomap = &iter->iomap;
-+	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-+	unsigned offset = offset_in_page(pos);
-+	pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
- 	void *kaddr;
- 	long ret;
- 
--	ret = dax_direct_access(dax_dev, pgoff, 1, &kaddr, NULL);
--	if (ret > 0) {
--		memset(kaddr + offset, 0, size);
--		dax_flush(dax_dev, kaddr + offset, size);
--	}
-+	ret = dax_direct_access(iomap->dax_dev, pgoff, 1, &kaddr, NULL);
-+	if (ret < 0)
-+		return ret;
-+	memset(kaddr + offset, 0, size);
-+	if (srcmap->addr != iomap->addr) {
-+		ret = dax_iomap_cow_copy(pos, size, PAGE_SIZE, srcmap,
-+					 kaddr);
-+		if (ret < 0)
-+			return ret;
-+		dax_flush(iomap->dax_dev, kaddr, PAGE_SIZE);
-+	} else
-+		dax_flush(iomap->dax_dev, kaddr + offset, size);
- 	return ret;
+@@ -170,6 +174,17 @@ static inline dax_entry_t dax_lock_page(struct page *page)
+ static inline void dax_unlock_page(struct page *page, dax_entry_t cookie)
+ {
  }
++
++static inline dax_entry_t dax_lock_mapping_entry(struct address_space *mapping,
++		unsigned long index, struct page **page)
++{
++	return 0;
++}
++
++static inline void dax_unlock_mapping_entry(struct address_space *mapping,
++		unsigned long index, dax_entry_t cookie)
++{
++}
+ #endif
  
-@@ -1257,7 +1267,7 @@ static s64 dax_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		if (IS_ALIGNED(pos, PAGE_SIZE) && size == PAGE_SIZE)
- 			rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
- 		else
--			rc = dax_memzero(iomap->dax_dev, pgoff, offset, size);
-+			rc = dax_memzero(iter, pos, size);
- 		dax_read_unlock(id);
- 
- 		if (rc < 0)
+ int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
 -- 
 2.35.1
 
