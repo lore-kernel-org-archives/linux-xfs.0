@@ -2,123 +2,145 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85077C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 May 2022 19:32:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD2FAC433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 May 2022 21:51:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230205AbiEHTgf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 May 2022 15:36:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60744 "EHLO
+        id S229970AbiEHVzk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 May 2022 17:55:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229903AbiEHTge (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 15:36:34 -0400
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AC82317
-        for <linux-xfs@vger.kernel.org>; Sun,  8 May 2022 12:32:42 -0700 (PDT)
-Received: by mail-wm1-x336.google.com with SMTP id p189so7304929wmp.3
-        for <linux-xfs@vger.kernel.org>; Sun, 08 May 2022 12:32:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=1KF1qkavnmnuxfJ180rz5FZAi2zQJkHShj224nVFYLY=;
-        b=Ao1DwLFyV9MzEHnfCPKlD4pMDQ/+ZgCvVWTJ/KZe5E4eiXi9op+UPO12u4XJD6R+An
-         vxpSkAoWJ/Tprgh48v+1OE0Fx0uAzCdXNBlXyjNi5uIPk31s91NJ34Rm63nG50IXSJmk
-         DVvLc9KcbaYL0E+0AhwfusTpuvreBSutThQxpolH+H+mulWxPlOdq2Kp6OxZZLTFqq4M
-         Pmm1ZprhZWNg13ugM9t6UJa7PqkJ36yjJYzaZtkLgDQW9XQS/mOV4qnda5RG+aDHnZKM
-         yF1yx3/+RQCdR7sx776CM4RIacETI35Rqs1AY5aVxyyAMsTrBmg88OJFwZ6wld04CK6U
-         9PzA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=1KF1qkavnmnuxfJ180rz5FZAi2zQJkHShj224nVFYLY=;
-        b=SH3SWQ5nZzDKrQS0KRv5WJvYHvjdix3Aei4KFmKmxcD1KSL3e5TpiCRn0muFHYNGZc
-         UQu12grPY/zdAdxU0yCc6Hz5uxKi2hMDjwV1HjJUElFqX7QoJjTLpbGUhJZb7JuIZAkS
-         bdVJSis2hfx2GZ+3x256iIs6JOEuOKAsda76IkRwVZxaRhnfjUhuPSDrkxxkWj3Usm9L
-         oV0gzsI62sOIcmkOEW4XP0FFRCUasskMHTQkQq1gQJCOTZh7sSVLXfDqN7QrgTrU9xv9
-         vSJtwuBnZEwhcB68lk8PZ5q4hgrUxsmnIEISDVLHZ2/br9BwBRalBuienTmMURFS0AS+
-         j2xg==
-X-Gm-Message-State: AOAM530fP0i4JvmSlX8lEFs/F10Pov1Jnf7Cw7XjHObLIPKxm6057yNA
-        bm0ABA9TU9vsWHro/AkuWKF32KyC0pM=
-X-Google-Smtp-Source: ABdhPJyUkH4aQnua3yWm41VFLyclJOARL6fZh5pp6o4OfwNUb9x5wsm98odhfrmKy+f8ge63uUpGCg==
-X-Received: by 2002:a7b:cb8f:0:b0:394:30b5:edab with SMTP id m15-20020a7bcb8f000000b0039430b5edabmr12818020wmi.148.1652038360951;
-        Sun, 08 May 2022 12:32:40 -0700 (PDT)
-Received: from kali.home (2a01cb088e0b5b002be75de2a1caa253.ipv6.abo.wanadoo.fr. [2a01:cb08:8e0b:5b00:2be7:5de2:a1ca:a253])
-        by smtp.gmail.com with ESMTPSA id a7-20020a05600c348700b003942a244ed7sm9853280wmq.28.2022.05.08.12.32.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 May 2022 12:32:40 -0700 (PDT)
-From:   Fabrice Fontaine <fontaine.fabrice@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Fabrice Fontaine <fontaine.fabrice@gmail.com>
-Subject: [PATCH v2] io/mmap.c: fix musl build on mips64
-Date:   Sun,  8 May 2022 21:30:29 +0200
-Message-Id: <20220508193029.1277260-1-fontaine.fabrice@gmail.com>
-X-Mailer: git-send-email 2.35.1
+        with ESMTP id S233536AbiEHVyT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 17:54:19 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A3D76120AC
+        for <linux-xfs@vger.kernel.org>; Sun,  8 May 2022 14:50:27 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4539A5346F1;
+        Mon,  9 May 2022 07:50:24 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nnonH-009edO-Q2; Mon, 09 May 2022 07:50:23 +1000
+Date:   Mon, 9 May 2022 07:50:23 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Alli <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 17/17] xfs: ATTR_REPLACE algorithm with LARP enabled
+ needs rework
+Message-ID: <20220508215023.GL1098723@dread.disaster.area>
+References: <20220506094553.512973-1-david@fromorbit.com>
+ <20220506094553.512973-18-david@fromorbit.com>
+ <c2159284a8b1c575140b7bbd3190fd38428b0a4d.camel@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c2159284a8b1c575140b7bbd3190fd38428b0a4d.camel@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62783b21
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=idSffjYRomP6fWbKisAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-musl undefines MAP_SYNC on some architectures such as mips64 since
-version 1.1.20 and
-https://github.com/ifduyue/musl/commit/9b57db3f958d9adc3b1c7371b5c6723aaee448b7
-resulting in the following build failure:
+On Fri, May 06, 2022 at 11:01:23PM -0700, Alli wrote:
+> On Fri, 2022-05-06 at 19:45 +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > We can't use the same algorithm for replacing an existing attribute
+> > when logging attributes. The existing algorithm is essentially:
+> > 
+> > 1. create new attr w/ INCOMPLETE
+> > 2. atomically flip INCOMPLETE flags between old + new attribute
+> > 3. remove old attr which is marked w/ INCOMPLETE
+> > 
+> > This algorithm guarantees that we see either the old or new
+> > attribute, and if we fail after the atomic flag flip, we don't have
+> > to recover the removal of the old attr because we never see
+> > INCOMPLETE attributes in lookups.
+> > 
+> > For logged attributes, however, this does not work. The logged
+> > attribute intents do not track the work that has been done as the
+> > transaction rolls, and hence the only recovery mechanism we have is
+> > "run the replace operation from scratch".
+> > 
+> > This is further exacerbated by the attempt to avoid needing the
+> > INCOMPLETE flag to create an atomic swap. This means we can create
+> > a second active attribute of the same name before we remove the
+> > original. If we fail at any point after the create but before the
+> > removal has completed, we end up with duplicate attributes in
+> > the attr btree and recovery only tries to replace one of them.
+> > 
+> > There are several other failure modes where we can leave partially
+> > allocated remote attributes that expose stale data, partially free
+> > remote attributes that enable UAF based stale data exposure, etc.
+> > 
+> > TO fix this, we need a different algorithm for replace operations
+> > when LARP is enabled. Luckily, it's not that complex if we take the
+> > right first step. That is, the first thing we log is the attri
+> > intent with the new name/value pair and mark the old attr as
+> > INCOMPLETE in the same transaction.
+> > 
+> > From there, we then remove the old attr and keep relogging the
+> > new name/value in the intent, such that we always know that we have
+> > to create the new attr in recovery. Once the old attr is removed,
+> > we then run a normal ATTR_CREATE operation relogging the intent as
+> > we go. If the new attr is local, then it gets created in a single
+> > atomic transaction that also logs the final intent done. If the new
+> > attr is remote, the we set INCOMPLETE on the new attr while we
+> > allocate and set the remote value, and then we clear the INCOMPLETE
+> > flag at in the last transaction taht logs the final intent done.
+> > 
+> > If we fail at any point in this algorithm, log recovery will always
+> > see the same state on disk: the new name/value in the intent, and
+> > either an INCOMPLETE attr or no attr in the attr btree. If we find
+> > an INCOMPLETE attr, we run the full replace starting with removing
+> > the INCOMPLETE attr. If we don't find it, then we simply create the
+> > new attr.
+> > 
+> > Notably, recovery of a failed create that has an INCOMPLETE flag set
+> > is now the same - we start with the lookup of the INCOMPLETE attr,
+> > and if that exists then we do the full replace recovery process,
+> > otherwise we just create the new attr.
+> > 
+> > Hence changing the way we do the replace operation when LARP is
+> > enabled allows us to use the same log recovery algorithm for both
+> > the ATTR_CREATE and ATTR_REPLACE operations. This is also the same
+> > algorithm we use for runtime ATTR_REPLACE operations (except for the
+> > step setting up the initial conditions).
+> > 
+> > The result is that:
+> > 
+> > - ATTR_CREATE uses the same algorithm regardless of whether LARP is
+> >   enabled or not
+> > - ATTR_REPLACE with larp=0 is identical to the old algorithm
+> > - ATTR_REPLACE with larp=1 runs an unmodified attr removal algorithm
+> >   from the larp=0 code and then runs the unmodified ATTR_CREATE
+> >   code.
+> > - log recovery when larp=1 runs the same ATTR_REPLACE algorithm as
+> >   it uses at runtime.
+> > 
+> > Because the state machine is now quite clean, changing the algorithm
+> > is really just a case of changing the initial state and how the
+> > states link together for the ATTR_REPLACE case. Hence it's not a
+> > huge amoutn of code for what is a fairly substantial rework
+> > of the attr logging and recovery algorithm....
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> This looks mostly good, though when I run it with the new tests, I seem
+> to run into a failed filesystem check at the end.  "bad attribute count
+> 0 in attr block 0".  I suspect we still dont have the removal of the
+> fork quite right.  It sounds like you're still working with things
+> though, I'll keep looking too.
 
-mmap.c: In function 'mmap_f':
-mmap.c:196:33: error: 'MAP_SYNC' undeclared (first use in this function); did you mean 'MS_SYNC'?
-  196 |                         flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-      |                                 ^~~~~~~~
-      |                                 MS_SYNC
+Yeah, that's a strange one. I didn't get it with the based branch
+testing (based on 5.18-rc+for-next) but over the weekend where it
+got merged with 5.18-rc5 it appears that the error has manifested
+in several test runs. I'll dig into it this morning.
 
-This build failure is raised because header includes have been tangled
-up:
+Cheers,
 
-input.h -> libfrog/projects.h -> xfs.h -> linux.h.
-
-As a result, linux.h will be included before sys/mman.h and the
-following piece of code from linux.h will be "overriden" on platforms
-without MAP_SYNC:
-
- #ifndef HAVE_MAP_SYNC
- #define MAP_SYNC 0
- #define MAP_SHARED_VALIDATE 0
- #else
- #include <asm-generic/mman.h>
- #include <asm-generic/mman-common.h>
- #endif /* HAVE_MAP_SYNC */
-
-To fix this build failure, include <sys/mman.h> before the other
-includes.
-
-A more long-term solution would be to untangle the headers.
-
-Fixes:
- - http://autobuild.buildroot.org/results/3296194907baf7d3fe039f59bcbf595aa8107a28
-
-Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
----
-Changes v1 -> v2 (after review of Dave Chinner):
- - Update commit message
-
- io/mmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/io/mmap.c b/io/mmap.c
-index 8c048a0a..b8609295 100644
---- a/io/mmap.c
-+++ b/io/mmap.c
-@@ -4,9 +4,9 @@
-  * All Rights Reserved.
-  */
- 
-+#include <sys/mman.h>
- #include "command.h"
- #include "input.h"
--#include <sys/mman.h>
- #include <signal.h>
- #include "init.h"
- #include "io.h"
+Dave.
 -- 
-2.35.1
-
+Dave Chinner
+david@fromorbit.com
