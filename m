@@ -2,229 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F672C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 May 2022 14:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85077C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 May 2022 19:32:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234409AbiEHOl1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 May 2022 10:41:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52696 "EHLO
+        id S230205AbiEHTgf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 May 2022 15:36:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234155AbiEHOkn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 10:40:43 -0400
-Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8B23E101F4;
-        Sun,  8 May 2022 07:36:40 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3AVCeG0KroByT6upQOk0pb1Qj5K9deBmL0ZBIvgKr?=
- =?us-ascii?q?LsJaIsI5as4F+vmoWWDyOPq3YMGejedx1Oom2o0pVvMOHxtBrQFY4rCswQiMRo?=
- =?us-ascii?q?6IpJ/zDcB6oYHn6wu4v7a5fx5xHLIGGdajYd1eEzvuWGuWn/SkUOZ2gHOKmUra?=
- =?us-ascii?q?eYnkpHGeIdQ964f5ds79g6mJXqYjha++9kYuaT/z3YDdJ6RYtWo4nw/7rRCdUg?=
- =?us-ascii?q?RjHkGhwUmrSyhx8lAS2e3E9VPrzLEwqRpfyatE88uWSH44vwFwll1418SvBCvv?=
- =?us-ascii?q?9+lr6WkYMBLDPPwmSkWcQUK+n6vRAjnVqlP9la7xHMgEK49mKt4kZJNFlr4G5T?=
- =?us-ascii?q?xw4eKPKg/g1XQRaEj1lIOtN/7qvzX2X6JbPlxKbLCe9qxlpJARsVWECwc57CH9?=
- =?us-ascii?q?P+dQWMjcIaQqJhv7wy7W+IsFoh8ImLcDsPI43umxp0jzYS/0hRPjrQ67Kzd5e0?=
- =?us-ascii?q?i05is1HEbDZfcVxQSVuaBDRSxxJNE0eBJ83kKGvnHaXWzFRrhSX47U252zSxQl?=
- =?us-ascii?q?q+LnrLNfRPNeNQK19kkSHoWTJ12f0GBcXMJqY0zXt2natgPLf2Cb+cIEMHba7s?=
- =?us-ascii?q?PlwjzW7wHIfCRgTfV+6uuWizEq/Xc9PbUAZ5EIGraMy3EiwUp/xUnWQpneDrxd?=
- =?us-ascii?q?aW91KEuIn4wGM4qzZ6ECSAW1sZjxIbtFgv88rbTsw31SNkpXiAjkHmKeaTnaR6?=
- =?us-ascii?q?aaShSivIiVTIWJqTSsFSxYVptf4rIwtgxbnUNluCui2g8fzFDW2xCqFxAA6hrM?=
- =?us-ascii?q?OnYsI2r+98FTvnT2hvN7KQxQz6wGRWXiqhit9ZYi4d8m450Pz8/lNNsCaQ0OHs?=
- =?us-ascii?q?XxCnNKRhMgQDIuKvD6ARuQTWrWo4euVdjrGjhhyHPEcG56Fk5K4VdkIpmggewE?=
- =?us-ascii?q?yaYBZEQIFqXT74Wt5jKK/9lP2BUOvX7+MNg=3D=3D?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3APwrT5a/T7DOupuOHy0Fuk+DkI+orL9Y04lQ7?=
- =?us-ascii?q?vn2ZKCYlFvBw8vrCoB1173HJYUkqMk3I9ergBEDiewK4yXcW2/hzAV7KZmCP11?=
- =?us-ascii?q?dAR7sSj7cKrQeBJwTOssZZ1YpFN5N1EcDMCzFB5vrS0U2VFMkBzbC8nJyVuQ?=
- =?us-ascii?q?=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="124075749"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 08 May 2022 22:36:38 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id E64034D17198;
-        Sun,  8 May 2022 22:36:33 +0800 (CST)
-Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Sun, 8 May 2022 22:36:37 +0800
-Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Sun, 8 May 2022 22:36:36 +0800
-Received: from irides.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Sun, 8 May 2022 22:36:32 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>,
-        <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
-        <willy@infradead.org>, <naoya.horiguchi@nec.com>,
-        <linmiaohe@huawei.com>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v11 07/07] xfs: Add dax dedupe support
-Date:   Sun, 8 May 2022 22:36:20 +0800
-Message-ID: <20220508143620.1775214-15-ruansy.fnst@fujitsu.com>
+        with ESMTP id S229903AbiEHTge (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 15:36:34 -0400
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AC82317
+        for <linux-xfs@vger.kernel.org>; Sun,  8 May 2022 12:32:42 -0700 (PDT)
+Received: by mail-wm1-x336.google.com with SMTP id p189so7304929wmp.3
+        for <linux-xfs@vger.kernel.org>; Sun, 08 May 2022 12:32:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=1KF1qkavnmnuxfJ180rz5FZAi2zQJkHShj224nVFYLY=;
+        b=Ao1DwLFyV9MzEHnfCPKlD4pMDQ/+ZgCvVWTJ/KZe5E4eiXi9op+UPO12u4XJD6R+An
+         vxpSkAoWJ/Tprgh48v+1OE0Fx0uAzCdXNBlXyjNi5uIPk31s91NJ34Rm63nG50IXSJmk
+         DVvLc9KcbaYL0E+0AhwfusTpuvreBSutThQxpolH+H+mulWxPlOdq2Kp6OxZZLTFqq4M
+         Pmm1ZprhZWNg13ugM9t6UJa7PqkJ36yjJYzaZtkLgDQW9XQS/mOV4qnda5RG+aDHnZKM
+         yF1yx3/+RQCdR7sx776CM4RIacETI35Rqs1AY5aVxyyAMsTrBmg88OJFwZ6wld04CK6U
+         9PzA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=1KF1qkavnmnuxfJ180rz5FZAi2zQJkHShj224nVFYLY=;
+        b=SH3SWQ5nZzDKrQS0KRv5WJvYHvjdix3Aei4KFmKmxcD1KSL3e5TpiCRn0muFHYNGZc
+         UQu12grPY/zdAdxU0yCc6Hz5uxKi2hMDjwV1HjJUElFqX7QoJjTLpbGUhJZb7JuIZAkS
+         bdVJSis2hfx2GZ+3x256iIs6JOEuOKAsda76IkRwVZxaRhnfjUhuPSDrkxxkWj3Usm9L
+         oV0gzsI62sOIcmkOEW4XP0FFRCUasskMHTQkQq1gQJCOTZh7sSVLXfDqN7QrgTrU9xv9
+         vSJtwuBnZEwhcB68lk8PZ5q4hgrUxsmnIEISDVLHZ2/br9BwBRalBuienTmMURFS0AS+
+         j2xg==
+X-Gm-Message-State: AOAM530fP0i4JvmSlX8lEFs/F10Pov1Jnf7Cw7XjHObLIPKxm6057yNA
+        bm0ABA9TU9vsWHro/AkuWKF32KyC0pM=
+X-Google-Smtp-Source: ABdhPJyUkH4aQnua3yWm41VFLyclJOARL6fZh5pp6o4OfwNUb9x5wsm98odhfrmKy+f8ge63uUpGCg==
+X-Received: by 2002:a7b:cb8f:0:b0:394:30b5:edab with SMTP id m15-20020a7bcb8f000000b0039430b5edabmr12818020wmi.148.1652038360951;
+        Sun, 08 May 2022 12:32:40 -0700 (PDT)
+Received: from kali.home (2a01cb088e0b5b002be75de2a1caa253.ipv6.abo.wanadoo.fr. [2a01:cb08:8e0b:5b00:2be7:5de2:a1ca:a253])
+        by smtp.gmail.com with ESMTPSA id a7-20020a05600c348700b003942a244ed7sm9853280wmq.28.2022.05.08.12.32.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 08 May 2022 12:32:40 -0700 (PDT)
+From:   Fabrice Fontaine <fontaine.fabrice@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Fabrice Fontaine <fontaine.fabrice@gmail.com>
+Subject: [PATCH v2] io/mmap.c: fix musl build on mips64
+Date:   Sun,  8 May 2022 21:30:29 +0200
+Message-Id: <20220508193029.1277260-1-fontaine.fabrice@gmail.com>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220508143620.1775214-1-ruansy.fnst@fujitsu.com>
-References: <20220508143620.1775214-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: E64034D17198.AF7AE
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Introduce xfs_mmaplock_two_inodes_and_break_dax_layout() for dax files
-who are going to be deduped.  After that, call compare range function
-only when files are both DAX or not.
+musl undefines MAP_SYNC on some architectures such as mips64 since
+version 1.1.20 and
+https://github.com/ifduyue/musl/commit/9b57db3f958d9adc3b1c7371b5c6723aaee448b7
+resulting in the following build failure:
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+mmap.c: In function 'mmap_f':
+mmap.c:196:33: error: 'MAP_SYNC' undeclared (first use in this function); did you mean 'MS_SYNC'?
+  196 |                         flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+      |                                 ^~~~~~~~
+      |                                 MS_SYNC
+
+This build failure is raised because header includes have been tangled
+up:
+
+input.h -> libfrog/projects.h -> xfs.h -> linux.h.
+
+As a result, linux.h will be included before sys/mman.h and the
+following piece of code from linux.h will be "overriden" on platforms
+without MAP_SYNC:
+
+ #ifndef HAVE_MAP_SYNC
+ #define MAP_SYNC 0
+ #define MAP_SHARED_VALIDATE 0
+ #else
+ #include <asm-generic/mman.h>
+ #include <asm-generic/mman-common.h>
+ #endif /* HAVE_MAP_SYNC */
+
+To fix this build failure, include <sys/mman.h> before the other
+includes.
+
+A more long-term solution would be to untangle the headers.
+
+Fixes:
+ - http://autobuild.buildroot.org/results/3296194907baf7d3fe039f59bcbf595aa8107a28
+
+Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
 ---
- fs/xfs/xfs_file.c    |  2 +-
- fs/xfs/xfs_inode.c   | 69 +++++++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_inode.h   |  1 +
- fs/xfs/xfs_reflink.c |  4 +--
- 4 files changed, 69 insertions(+), 7 deletions(-)
+Changes v1 -> v2 (after review of Dave Chinner):
+ - Update commit message
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5a4508b23b51..cf78eb393258 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -807,7 +807,7 @@ xfs_wait_dax_page(
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- }
+ io/mmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/io/mmap.c b/io/mmap.c
+index 8c048a0a..b8609295 100644
+--- a/io/mmap.c
++++ b/io/mmap.c
+@@ -4,9 +4,9 @@
+  * All Rights Reserved.
+  */
  
--static int
-+int
- xfs_break_dax_layouts(
- 	struct inode		*inode,
- 	bool			*retry)
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b2879870a17e..96308065a2b3 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3767,6 +3767,50 @@ xfs_iolock_two_inodes_and_break_layout(
- 	return 0;
- }
- 
-+static int
-+xfs_mmaplock_two_inodes_and_break_dax_layout(
-+	struct xfs_inode	*ip1,
-+	struct xfs_inode	*ip2)
-+{
-+	int			error;
-+	bool			retry;
-+	struct page		*page;
-+
-+	if (ip1->i_ino > ip2->i_ino)
-+		swap(ip1, ip2);
-+
-+again:
-+	retry = false;
-+	/* Lock the first inode */
-+	xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
-+	error = xfs_break_dax_layouts(VFS_I(ip1), &retry);
-+	if (error || retry) {
-+		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+		if (error == 0 && retry)
-+			goto again;
-+		return error;
-+	}
-+
-+	if (ip1 == ip2)
-+		return 0;
-+
-+	/* Nested lock the second inode */
-+	xfs_ilock(ip2, xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1));
-+	/*
-+	 * We cannot use xfs_break_dax_layouts() directly here because it may
-+	 * need to unlock & lock the XFS_MMAPLOCK_EXCL which is not suitable
-+	 * for this nested lock case.
-+	 */
-+	page = dax_layout_busy_page(VFS_I(ip2)->i_mapping);
-+	if (page && page_ref_count(page) != 1) {
-+		xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
-+		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+		goto again;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Lock two inodes so that userspace cannot initiate I/O via file syscalls or
-  * mmap activity.
-@@ -3781,8 +3825,19 @@ xfs_ilock2_io_mmap(
- 	ret = xfs_iolock_two_inodes_and_break_layout(VFS_I(ip1), VFS_I(ip2));
- 	if (ret)
- 		return ret;
--	filemap_invalidate_lock_two(VFS_I(ip1)->i_mapping,
--				    VFS_I(ip2)->i_mapping);
-+
-+	if (IS_DAX(VFS_I(ip1)) && IS_DAX(VFS_I(ip2))) {
-+		ret = xfs_mmaplock_two_inodes_and_break_dax_layout(ip1, ip2);
-+		if (ret) {
-+			inode_unlock(VFS_I(ip2));
-+			if (ip1 != ip2)
-+				inode_unlock(VFS_I(ip1));
-+			return ret;
-+		}
-+	} else
-+		filemap_invalidate_lock_two(VFS_I(ip1)->i_mapping,
-+					    VFS_I(ip2)->i_mapping);
-+
- 	return 0;
- }
- 
-@@ -3792,8 +3847,14 @@ xfs_iunlock2_io_mmap(
- 	struct xfs_inode	*ip1,
- 	struct xfs_inode	*ip2)
- {
--	filemap_invalidate_unlock_two(VFS_I(ip1)->i_mapping,
--				      VFS_I(ip2)->i_mapping);
-+	if (IS_DAX(VFS_I(ip1)) && IS_DAX(VFS_I(ip2))) {
-+		xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
-+		if (ip1 != ip2)
-+			xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+	} else
-+		filemap_invalidate_unlock_two(VFS_I(ip1)->i_mapping,
-+					      VFS_I(ip2)->i_mapping);
-+
- 	inode_unlock(VFS_I(ip2));
- 	if (ip1 != ip2)
- 		inode_unlock(VFS_I(ip1));
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 7be6f8e705ab..8313cc83b6ee 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -467,6 +467,7 @@ xfs_itruncate_extents(
- }
- 
- /* from xfs_file.c */
-+int	xfs_break_dax_layouts(struct inode *inode, bool *retry);
- int	xfs_break_layouts(struct inode *inode, uint *iolock,
- 		enum layout_break_reason reason);
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 10a9947e35d9..7cceea510a01 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1338,8 +1338,8 @@ xfs_reflink_remap_prep(
- 	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
- 		goto out_unlock;
- 
--	/* Don't share DAX file data for now. */
--	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-+	/* Don't share DAX file data with non-DAX file. */
-+	if (IS_DAX(inode_in) != IS_DAX(inode_out))
- 		goto out_unlock;
- 
- 	if (!IS_DAX(inode_in))
++#include <sys/mman.h>
+ #include "command.h"
+ #include "input.h"
+-#include <sys/mman.h>
+ #include <signal.h>
+ #include "init.h"
+ #include "io.h"
 -- 
 2.35.1
-
-
 
