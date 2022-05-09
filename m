@@ -2,84 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F8D4C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 08:08:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CF60C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 08:52:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229751AbiEIIMN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 May 2022 04:12:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36444 "EHLO
+        id S229486AbiEIIzD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 May 2022 04:55:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236906AbiEIHyc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 03:54:32 -0400
-Received: from mail-qt1-x82a.google.com (mail-qt1-x82a.google.com [IPv6:2607:f8b0:4864:20::82a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05F501C5E2D
-        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 00:50:33 -0700 (PDT)
-Received: by mail-qt1-x82a.google.com with SMTP id y3so10414499qtn.8
-        for <linux-xfs@vger.kernel.org>; Mon, 09 May 2022 00:50:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=PcRhePoH3gSb4wR7XboLUzwlGhfbRsR8T4rYYwFdS1g=;
-        b=fxQc4HvGsrEGNF8d6TfAlE+2ATR/sFi1wTwUmyudfVamDyHNadVHXbSz4zDfjKc2oA
-         hXhmmBF2ws7JLulMVdZ0k1jkN5xmi/86vWFmv238L7tNg1zEzSkyoWpgLF0qfxNgY976
-         lS+gMstcqFtTPg7lc0dvtYsTKBvQxC71aF4CqSwUsshB3WLbwA/YFbjW27gQ5eZCICHG
-         r61nto6iqCvCgnSXezkZqpu+a80wjnW8FqkRqX8jtztwtZDKe7l+HVUUDxKw3hOzr17i
-         ouOThQ8/lYq3Srjtbixz4ND8sRTyBwDoulkRlTIeym5vNYWcsLdVvMqW2OQq1Rter4FV
-         TKJQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=PcRhePoH3gSb4wR7XboLUzwlGhfbRsR8T4rYYwFdS1g=;
-        b=sPk84yH5suOUDAb53lnClHKJa+yrFyQKf8rDcFBe6f0WpDtejPyQA1CLZB5ASEcjLI
-         KCg/ZfO4dxcYXIamqyjPOdZHYB7ESG0C0Pk5geRcOP+etjabpSP1khF+b7n9G9nnUgfk
-         d9wC+Cbz6n7icYfe1CDHduy2GtnZCi+bfuc7ESiXnvX4AwpO1EG2ginPrytU7My9CX8d
-         ax6/g4Qeqf2naBGJpxZ/y8V2A5Jkr49RZiYd0tFK1hqqpRNk1HjEtI1aFPbYX237vDeC
-         +vcHTnTs2sLtgjEUNYgiV5t9PLRr2TvnLXKCThLwUhe3lQdubPZoEj7xJHaVA04AOXay
-         6v0w==
-X-Gm-Message-State: AOAM530Rfy1KRDJ0j5uZNyOfWzbMFOin3PKAgr4c9nk3tRxdvIgHVk3G
-        wNFLDvWXBIPO16zQf0XxUb4OTIjmn2E57M1Oy/A=
-X-Google-Smtp-Source: ABdhPJyuSGQ52/sk97vmC9yXgfy7eN9QwiAjqe29/iWhdr2HkKW/Ys7BEj49MahQkeg7Rfqhae0hUASPiyl8X8svOiU=
-X-Received: by 2002:ac8:7fc2:0:b0:2f3:d47d:487c with SMTP id
- b2-20020ac87fc2000000b002f3d47d487cmr6284749qtk.157.1652082632129; Mon, 09
- May 2022 00:50:32 -0700 (PDT)
+        with ESMTP id S237429AbiEIIW5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 04:22:57 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CC3051F0185
+        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 01:18:58 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D30F610E641B
+        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 18:17:40 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nnyaI-009pGQ-Ic
+        for linux-xfs@vger.kernel.org; Mon, 09 May 2022 18:17:38 +1000
+Date:   Mon, 9 May 2022 18:17:38 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 16/17] xfs: use XFS_DA_OP flags in deferred attr ops
+Message-ID: <20220509081738.GO1098723@dread.disaster.area>
+References: <20220506094553.512973-1-david@fromorbit.com>
+ <20220506094553.512973-17-david@fromorbit.com>
 MIME-Version: 1.0
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Mon, 9 May 2022 10:50:20 +0300
-Message-ID: <CAOQ4uxjBR_Z-j_g8teFBih7XPiUCtELgf=k8=_ye84J00ro+RA@mail.gmail.com>
-Subject: [QUESTION] Upgrade xfs filesystem to reflink support?
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220506094553.512973-17-david@fromorbit.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6278ce25
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
+        a=HmUQqCAQpMAkksBoIDYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick and Dave,
+On Fri, May 06, 2022 at 07:45:52PM +1000, Dave Chinner wrote:
+> @@ -1357,46 +1370,45 @@ xfs_attr_node_hasname(
+>  
+>  STATIC int
+>  xfs_attr_node_addname_find_attr(
+> -	 struct xfs_attr_item		*attr)
+> +	 struct xfs_attr_item	*attr)
+>  {
+> -	struct xfs_da_args		*args = attr->xattri_da_args;
+> -	int				retval;
+> +	struct xfs_da_args	*args = attr->xattri_da_args;
+> +	int			error;
+>  
+>  	/*
+>  	 * Search to see if name already exists, and get back a pointer
+>  	 * to where it should go.
+>  	 */
+> -	retval = xfs_attr_node_hasname(args, &attr->xattri_da_state);
+> -	if (retval != -ENOATTR && retval != -EEXIST)
+> -		goto error;
+> -
+> -	if (retval == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
+> -		goto error;
+> -	if (retval == -EEXIST) {
+> -		if (args->attr_flags & XATTR_CREATE)
+> +	error = xfs_attr_node_hasname(args, &attr->xattri_da_state);
+> +	switch (error) {
+> +	case -ENOATTR:
+> +		if (args->op_flags & XFS_DA_OP_REPLACE)
+> +			goto error;
+> +		break;
+> +	case -EEXIST:
+> +		if (!(args->op_flags & XFS_DA_OP_REPLACE))
+>  			goto error;
+>  
+> -		trace_xfs_attr_node_replace(args);
+> -
+> -		/* save the attribute state for later removal*/
+> -		args->op_flags |= XFS_DA_OP_RENAME;	/* atomic rename op */
+> -		xfs_attr_save_rmt_blk(args);
+>  
+> +		trace_xfs_attr_node_replace(args);
+>  		/*
+> -		 * clear the remote attr state now that it is saved so that the
+> -		 * values reflect the state of the attribute we are about to
+> +		 * Save the existing remote attr state so that the current
+> +		 * values reflect the state of the new attribute we are about to
+>  		 * add, not the attribute we just found and will remove later.
+>  		 */
+> -		args->rmtblkno = 0;
+> -		args->rmtblkcnt = 0;
+> -		args->rmtvaluelen = 0;
+> +		xfs_attr_save_rmt_blk(args);
 
-I might have asked this back when reflink was introduced, but cannot
-find the question nor answer.
+Ok, removing the rmtblk zeroing right there is a bug. Not sure how I
+introduced that, or why it didn't show up until this afternoon. The
+leaf version of this same code is correct, and it triggers on
+generic/026 when larp = 0 but not when larp = 1.
 
-Is there any a priori NACK or exceptional challenges w.r.t implementing
-upgrade of xfs to reflink support?
+I've fixed it, but vger is constipated again and I patches sent 8
+hours ago haven't reached the list yet so when I arrives I'll post
+an updated version of this patch against it....
 
-We have several customers with xfs formatted pre reflink that we would
-like to consider
-upgrading.
+Cheers,
 
-Back in the time of reflink circa v4.9 there were few xfs features
-that could be
-upgraded, but nowadays, there are several features that could be upgraded.
-
-If I am not mistaken, the target audience for this upgrade would be
-xfs formatted
-with xfsprogs 4.17 (defaults).
-I realize that journal size may have been smaller at that time (I need to check)
-which may be a source of additional problems, but hopefully, some of your work
-to do a diet for journal credits for reflink could perhaps mitigate
-that issue(?).
-
-Shall I take a swing at it?
-
-Thanks,
-Amir.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
