@@ -2,80 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 258CCC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 01:26:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5E9EC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 01:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233731AbiEIBaA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 May 2022 21:30:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44678 "EHLO
+        id S230012AbiEIBaF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 May 2022 21:30:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235619AbiEIAph (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 20:45:37 -0400
+        with ESMTP id S234318AbiEIAHW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 20:07:22 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C6ECB658B
-        for <linux-xfs@vger.kernel.org>; Sun,  8 May 2022 17:41:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CCB33DEF1;
+        Sun,  8 May 2022 17:03:29 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B7CF6534591
-        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 10:41:41 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 88BAC52DCAB;
+        Mon,  9 May 2022 10:03:28 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nnrT2-009hdc-Mm
-        for linux-xfs@vger.kernel.org; Mon, 09 May 2022 10:41:40 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.95)
-        (envelope-from <david@fromorbit.com>)
-        id 1nnrT2-003CQM-Ld
-        for linux-xfs@vger.kernel.org;
-        Mon, 09 May 2022 10:41:40 +1000
+        id 1nnqs2-009h1M-Jk; Mon, 09 May 2022 10:03:26 +1000
+Date:   Mon, 9 May 2022 10:03:26 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 18/18] xfs: detect empty attr leaf blocks in xfs_attr3_leaf_verify
-Date:   Mon,  9 May 2022 10:41:38 +1000
-Message-Id: <20220509004138.762556-19-david@fromorbit.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220509004138.762556-1-david@fromorbit.com>
-References: <20220509004138.762556-1-david@fromorbit.com>
+To:     Carel Si <beibei.si@intel.com>
+Cc:     lkp@intel.com, linux-kernel@vger.kernel.org, lkp@lists.01.org,
+        fengwei.yin@intel.com, linux-xfs@vger.kernel.org,
+        oliver.sang@intel.com
+Subject: Re: [LKP] Re: [xfs]  32678f1513:  aim7.jobs-per-min -5.6% regression
+Message-ID: <20220509000326.GN1098723@dread.disaster.area>
+References: <20220502082018.1076561-2-david@fromorbit.com>
+ <20220506092250.GI23061@xsang-OptiPlex-9020>
+ <20220506212924.GJ1098723@dread.disaster.area>
+ <20220507110941.GA10880@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220507110941.GA10880@linux.intel.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62786345
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62785a51
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=j0Z8cYLM2iZn_fZ0F7kA:9
+        a=8nJEP1OIZ-IA:10 a=oZkIemNP1mAA:10 a=NEAV23lmAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=OIWXXrKM4WwZCH1KPDMA:9 a=wPNLvfGTeEIA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Sat, May 07, 2022 at 07:09:46PM +0800, Carel Si wrote:
+> Hi Dave,
+> 
+> On Sat, May 07, 2022 at 07:29:24AM +1000, Dave Chinner wrote:
+> > On Fri, May 06, 2022 at 05:22:50PM +0800, kernel test robot wrote:
+> > > 
+> > > 
+> > > Greeting,
+> > > 
+> > > FYI, we noticed a -5.6% regression of aim7.jobs-per-min due to commit:
+> > > 
+> > > 
+> > > commit: 32678f151338b9a321e9e27139a63c81f353acb7 ("[PATCH 1/4] xfs: detect self referencing btree sibling pointers")
+> > > url: https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/xfs-fix-random-format-verification-issues/20220502-162206
+> > > base: https://git.kernel.org/cgit/fs/xfs/xfs-linux.git for-next
+> > > patch link: https://lore.kernel.org/linux-xfs/20220502082018.1076561-2-david@fromorbit.com
+> > 
+> > Well, that answers the concern I had about the impact of 
+> > changing the way endian conversions were done in that patch.
+> > 
+> > > a44a027a8b2a20fe 32678f151338b9a321e9e27139a 
+> > > ---------------- --------------------------- 
+> > >          %stddev     %change         %stddev
+> > >              \          |                \  
+> > >     464232            -5.6%     438315        aim7.jobs-per-min
+> > ....
+> > >       0.13 ±  5%      +0.2        0.33 ±  6%  perf-profile.children.cycles-pp.__xfs_btree_check_sblock
+> > ....
+> > >       0.11 ±  4%      +0.2        0.30 ±  5%  perf-profile.self.cycles-pp.__xfs_btree_check_sblock
+> > 
+> > Because there is it, right at the bottom of the profile.
+> > 
+> > Can you try the patch below and see if that fixes the issue?
+> 
+> We tested below patch, it didn't fix the issue, still has -6.4% regression [1] 
+> comparing to a44a027a8b ("Merge tag 'large-extent-counters-v9' of 
+> https://github.com/chandanr/linux into xfs-5.19-for-next"). 
 
-xfs_repair flags these as a corruption error, so the verifier should
-catch software bugs that result in empty leaf blocks being written
-to disk, too.
+Really? It made the regression *worse*?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Oh, wait, *that* wasn't in the last set of profiles:
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index d15e92858bf0..15a990409463 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -310,6 +310,15 @@ xfs_attr3_leaf_verify(
- 	if (fa)
- 		return fa;
- 
-+	/*
-+	 * Empty leaf blocks should never occur;  they imply the existence of a
-+	 * software bug that needs fixing. xfs_repair also flags them as a
-+	 * corruption that needs fixing, so we should never let these go to
-+	 * disk.
-+	 */
-+	if (ichdr.count == 0)
-+		return __this_address;
-+
- 	/*
- 	 * firstused is the block offset of the first name info structure.
- 	 * Make sure it doesn't go off the block or crash into the header.
+....
+>      35.30 ±  4%      +1.3       36.59 ±  3%      +1.9       37.24 ±  3%  perf-profile.children.cycles-pp.osq_lock
+>      36.88 ±  4%      +1.3       38.19 ±  2%      +1.9       38.83 ±  3%  perf-profile.children.cycles-pp.rwsem_optimistic_spin
+>      37.40 ±  4%      +1.4       38.77 ±  2%      +2.0       39.35 ±  3%  perf-profile.children.cycles-pp.rwsem_down_write_slowpath
+....
+>       1.89 ±  3%      +0.1        1.96 ±  4%      +0.0        1.90 ±  2%  perf-profile.self.cycles-pp.rwsem_spin_on_owner
+>       0.11 ±  4%      +0.2        0.30 ±  5%      +0.2        0.29        perf-profile.self.cycles-pp.__xfs_btree_check_sblock
+>      35.08 ±  4%      +1.3       36.33 ±  2%      +1.9       37.01 ±  3%  perf-profile.self.cycles-pp.osq_lock
+
+This test is hammering an rwsem which is them spinning on exclusive
+write locks somewhere. That's where all the increase in system time
+has come from, and that's what's causing the difference in
+perofrmance. I bet this test is hammering single file write IO from
+all 96 CPUs at once, and that's where all the problems start.
+
+IOWs, this likley has nothing to with the btree validation change,
+and everything to do with the system being driven into a lock and
+cacheline contention corner. When there is lock contention like this
+on a large CPU count system, we can't infer anything at all from any
+other measurement because the cacheline contention skews
+everything...
+
+I'm not going to look at this any further, and I think I'm going to
+ignore AIM7 write test regressions in future until the test is
+reconfigured to avoid this sort of "100 cpus all trying to do
+buffered writes to the same file" contention issue.
+
+Cheers,
+
+Dave.
+
 -- 
-2.35.1
-
+Dave Chinner
+david@fromorbit.com
