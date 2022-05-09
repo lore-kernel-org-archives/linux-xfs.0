@@ -2,258 +2,330 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73382C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 19:33:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43322C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 23:09:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240598AbiEIThE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 May 2022 15:37:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50022 "EHLO
+        id S231748AbiEIXNV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 May 2022 19:13:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240590AbiEIThB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 15:37:01 -0400
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07DDF2B4C8C;
-        Mon,  9 May 2022 12:33:05 -0700 (PDT)
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-        by m0089730.ppops.net (8.17.1.5/8.17.1.5) with ESMTP id 249ILcHI030394;
-        Mon, 9 May 2022 12:33:03 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=Nm1M0uP3vnvdI2rbyuwj3Vj7WctQnuSUBxq7YwwkY6E=;
- b=rY552W37wce5OG3ciH7Wmwj8K0NNpF/yhHV8JCVVaEdZxc1291HfjYvzGWnqmRuGNgBa
- an7e6XLycJhO0g82Rswdr2Slyi951MUWJRJEd/DYhYq2hmeUna7YJ8UgG+KuNBRHi05/
- +M7zMHuYg+bvHw72TKQf1Ksjmhg/pUA2kec= 
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2109.outbound.protection.outlook.com [104.47.58.109])
-        by m0089730.ppops.net (PPS) with ESMTPS id 3fxhwwxc8c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 09 May 2022 12:33:03 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gllD8UGw8kwGEz/17IgR+NbGyTvgK/jdgD8zgAZBTzW8Sk2XeQsrzuOBwmZOnM24YRID98plQfAJmz9CfFW9VTJ65A+75x6tWXS7zJJKHK/IJLJbIEfUISWbcwa2XxADPH7nH6+nfdL6EhtAdbVLxxZ1KW3fQwSTjMUNCHldqdIz3hvU15SHHV6y15WhQ/bKTsZI/75eqDI7QLVje/BDXmU6SYVkgS+mbAoeBjj0DL1oC8PVPYyY19l5dbvhg8vXAiZYcWNMH/46C1J1LmSmE9MfSWyIRTVUmfU8NnUdSnK222jn7NE2/7Hci6+S+6d3uAeykt+IYOsORWd/850ZhQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Nm1M0uP3vnvdI2rbyuwj3Vj7WctQnuSUBxq7YwwkY6E=;
- b=lQMWM4txTU1Okk3PyB90kmIVE4U80ow+WZlPtI/5aazJGaDdA48jycC1y3GOji/00a6VDcmmqKNX1sw/UJonJ1Ve3liRkls2FjGcO+u1Uu57hEtwa+Cnuc8vVZs+/sUFx46Uv6lCNfhGsqyYoPrxGCctCKCGBBxBbgLwnIggoSjoMrDVUpD4bzqM7dtmgM3CEHjTZTeB9Gv4KyBQ/u1xI1UR03Gz4IPGqnYPv8ujJooAWWl0FLyeStqiNYh6qHaaohcSlgM8W5p0DzoqDhl1jN7zxUPkqT7qEZDtWI1+ePsuyorbfuCtxW3OYnuADoz6MUl5EcB6EfjTRLfRmSSRVQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-Received: from MW4PR15MB4410.namprd15.prod.outlook.com (2603:10b6:303:bf::10)
- by DM6PR15MB3829.namprd15.prod.outlook.com (2603:10b6:5:2bb::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5227.23; Mon, 9 May
- 2022 19:33:01 +0000
-Received: from MW4PR15MB4410.namprd15.prod.outlook.com
- ([fe80::687a:3f7e:150b:1091]) by MW4PR15MB4410.namprd15.prod.outlook.com
- ([fe80::687a:3f7e:150b:1091%9]) with mapi id 15.20.5227.023; Mon, 9 May 2022
- 19:33:01 +0000
-Message-ID: <31f09969-2277-6692-b204-f884dc65348f@fb.com>
-Date:   Mon, 9 May 2022 12:32:59 -0700
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.8.0
-Subject: Re: [RFC PATCH v1 11/18] xfs: add async buffered write support
-Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20220426174335.4004987-1-shr@fb.com>
- <20220426174335.4004987-12-shr@fb.com>
- <20220426225652.GS1544202@dread.disaster.area>
- <30f2920c-5262-7cb0-05b5-6e84a76162a7@fb.com>
- <20220428215442.GW1098723@dread.disaster.area>
- <19d411e5-fe1f-a3f8-36e0-87284a1c02f3@fb.com>
- <20220506092915.GI1098723@dread.disaster.area>
-From:   Stefan Roesch <shr@fb.com>
-In-Reply-To: <20220506092915.GI1098723@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MW4PR03CA0202.namprd03.prod.outlook.com
- (2603:10b6:303:b8::27) To MW4PR15MB4410.namprd15.prod.outlook.com
- (2603:10b6:303:bf::10)
+        with ESMTP id S229493AbiEIXNS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 19:13:18 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9783D29743E
+        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 16:09:21 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id AE33810E685C;
+        Tue, 10 May 2022 09:09:20 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1noCVC-00A4co-S1; Tue, 10 May 2022 09:09:18 +1000
+Date:   Tue, 10 May 2022 09:09:18 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chris Dunlop <chris@onthe.net.au>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Highly reflinked and fragmented considered harmful?
+Message-ID: <20220509230918.GP1098723@dread.disaster.area>
+References: <20220509024659.GA62606@onthe.net.au>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0e719a17-ed89-4089-6f75-08da31f2bae9
-X-MS-TrafficTypeDiagnostic: DM6PR15MB3829:EE_
-X-Microsoft-Antispam-PRVS: <DM6PR15MB3829F94674C244E1CDE0FE29D8C69@DM6PR15MB3829.namprd15.prod.outlook.com>
-X-FB-Source: Internal
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7VFD5Ax6Zag4n5IxOoqVtIpKw7hGUM4GdjZFDkse8SlKomMIYh9xqSBEHTPq2KWPDGTVndeU3DV35+lSNcC3YpJP0LlDYjJDtloOcp8uvMaRwhOCfCpaT9K9mX3zjJ/bwnUHVItKv9eLIc+orhLUK0Mvep3BepKxEOPRAseqOMb+ggJYrUJ7uirCgIbvMr9O/txREfO4Fr5VtSMVq/f58WrdDSq0/7HrEPzhadCBZ1D1ZdZBIML6rxyYJjBygCMpj+2lwQKUCvJBxRtGHeI4y83tLr1w+NCpRddeQ83GIfmiZZe6Z5gpWsP3DamUe3+jqbOLsweKIBNzAYtGdFz9BBL+ePC9s4Fh7zJNMjWJUURyxCbkdv+7W2ucSgRAmFHTJmBKWR9OhDfK05tYo0Gb5sdnOUoMYluWWUYEiSa2RD4/O/OQ5o7yZtoIkfUrpeUyRxpyp0KXpzwxUMmrt0lDqYJuYfN6H9XXK96o4RpKxLW+epqgZffuOe+g6Dvo/j7/RovV2/QzjL5n19i3ebicRm2G7CfVkGcYC+suWiTJN5oMmtyfzQB8JDeZsKnC4HNCZCuczb8nPBDga/eXo/MKlgwvL+jYBK5Ae4rBDpm5Xpxas967z3pi2GWhM61/j+Zw8EF86F9dPM6t1Q5KUvGHrd5AbwMhr3oULPb7kUYc/I+HLE8PzLF5Kqoo9eW+nAlkPsAmwmjIok9dE6qhLYPTSLjBxiXDtB4CgI4zL5sfQi4=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR15MB4410.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(36756003)(38100700002)(66946007)(186003)(8936002)(66556008)(31696002)(66476007)(83380400001)(5660300002)(2616005)(6512007)(4326008)(8676002)(53546011)(31686004)(6916009)(86362001)(6506007)(508600001)(6486002)(2906002)(316002)(45980500001)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bEN6UzZwcGF5MVlXZHdKZVNIRk9YQ2xTY0pjaWFGaEE3U29ucTE0VnZaQkln?=
- =?utf-8?B?SjZYQ1VXdG1MNDFMK0JydVBjdkdOdmxuOHdUQ3lzMERwZFZWSkN5SmpZNFFx?=
- =?utf-8?B?Zjk4dktqZko2eUdnWFBmdENTNkN0anlBdERUcWVxT3o3ekFZOENZTkR1NkN4?=
- =?utf-8?B?TlU1S3FQMmM3WHBOdGhISncwQmRyYVkrelhlNUo0YmsrZW9ub21VUzRRMUJv?=
- =?utf-8?B?bTJZVmpDSUxtVWs1R0lWWTFTak9lU3Jmb0pBeGdXZi90VzRzR1Y1RlNMdzV2?=
- =?utf-8?B?K3poYUo2eTFWVGF5TTZieFlYQjhPQkRlMWR0V2xPOWJCTkN0bzBzeStYZmx5?=
- =?utf-8?B?a1cxOW43dWRjVElpUnBBamxYYUx3ek1RM3NkYlZMOEducXM3U0VMOWNIaEUy?=
- =?utf-8?B?bDBySTBRMUFYY0xpU2laaDBYRzluZTVoUWk1Q0Z2WVpPMVJZbnNYS1gwZ1lS?=
- =?utf-8?B?dEFhcmdqeE1RaDlVVUI0eCtKa1hIQ2tXT3J6eXZiS2ZQMURHM0pLZ1BFREhB?=
- =?utf-8?B?ZnkzdHRYZmxYbThEeFh4RURyeWs2YUU5Mit3djFoTDZmMjJVcGVFR1hmbFlE?=
- =?utf-8?B?KzYyRjM5RkljaVVWMnhQR3N2b1ZBRXZRV1NpcDBpSGZXNUZKdzIxZUYrSmgw?=
- =?utf-8?B?ZlYyamFqY25ubGxLN2QyRDUyT2NSSi9pZ3d0RHRxcjJaazhuYlRuMm9odFIy?=
- =?utf-8?B?MDVxTTVLY3QrUTN4c0RaYTljUE1Mblg5WDJwWVJqTldtNEN2cEtZdi9XeWJG?=
- =?utf-8?B?NkU0dmkyeStITXoxdXdEM2lVeXM1aWJRVTVzekpOWm10L1I0LzF4UVVtSVJN?=
- =?utf-8?B?RXUxaEllam5wZk8wVTUrNzErVXU2YmVWQzM5UVB4b0w1Y24wV0p6Q0pTSEtW?=
- =?utf-8?B?OS9lQUFpTlREa0lYVzFOVUpDaVEybEx5VmlUbGs0QVBHT1d0Q3crYVNUZVpE?=
- =?utf-8?B?bnhSbG1SV3VhQldqTjhuKzQvdTdyM09XQmY4NUpRZ2N5cmlsK2ZhVU52ejIv?=
- =?utf-8?B?WFZwbjFnb2FJL1RpbFN5c3JpelZrL2RnT2VnUmw3UkZXajl4NlhzemY1bTVu?=
- =?utf-8?B?ZHZCMktGZUVGVEk0czFDRFJTZkgycWlNWUVQeEsyWS8wTC9pUkQycnhCTStw?=
- =?utf-8?B?MWVRMGpLTzE0RUxqV2QxYjNDNk8wbVJ3NkNqazFoNzZ1Sm5NV3BVNCtCS3lx?=
- =?utf-8?B?aHkrTXZKTGcyL2VCQzg0ZTR1bzZlSGE1YzI1dUNkOGwvNHp0RjZTWWNIR2U5?=
- =?utf-8?B?eTU4WWlkWDlFZ0Rva1IzY1RRb0Z4N1NLeHI2dStUTnJvdGtGTGtFVWtoVEZl?=
- =?utf-8?B?NVNlWldUeXZNeStvcWVMRDhDdEtOczRMQm5ycGk3VWVab2VXMEVsbUhKN2FK?=
- =?utf-8?B?bkFJMmZyUEtPbTBRUHluMUhMdU9tVDJranVxWmRJeTE1N1IvTzYzVHBvQVRk?=
- =?utf-8?B?QXFwS1FxN3VxWmlXVnRHYW5zdnI4Q2RsbStoMkRZOWdZUkhUeFE4TGJ2RGFW?=
- =?utf-8?B?djVwWWpxT3ZkRmFkS3BGek00VnB0UW9QUWlUTzcvRFMyUllOdjhMWUszQ0pX?=
- =?utf-8?B?eDgxcG9VSmEwaHB2Vzh3QlovcTgzeXFPZGMrQlpEVEFYWWx6SkdpMlY3TUZ4?=
- =?utf-8?B?OVhaTndNVDdEV0tuM2Z5ZXovUUlHTjNKQkoyY25QaHkrUTh3eGVvZmJDY3NJ?=
- =?utf-8?B?QjVaY2h6L3g3UXhRTjIyOHpTRXE4TXVLZVZJR3RKVS9zWTJyOWV2WlhDVmdw?=
- =?utf-8?B?SkFFUTIxOWhRUDVSRVFsRCtweHNzczdnS1FtUjBZUW9BOXhlUGVnSTIwZ1ox?=
- =?utf-8?B?ejBTR1BhSDF1OUJRQURJV3BYK2JselROZWJqdXJwV21lcWY5c2F3RHdDcGVl?=
- =?utf-8?B?VzU2c1Z2QnNOWk5yaWdlV2swQ2w1UjVpdXNYOUhpWUZnT25PODc2RDF0S3lz?=
- =?utf-8?B?WVdQY0U5REJlZ2xuc2xSbWlBZG5wb3haRXZPQzNMVUl4OFhBdytnT1ZLNXNJ?=
- =?utf-8?B?eEFheWIzbmZwV1FoSEh3MDFQQWRtMzA1NVU0NjZhVElMSmNPektwdElXZ1h4?=
- =?utf-8?B?YzUwUVdOUXorRWxZNDNLVDA4ZTV2dmUxck44MWQ4YTRGQXRYVFYzSHdYV09s?=
- =?utf-8?B?THdITjNwQ3E1dW9ueEt5TUNHNThMQU5sbklwWHJyZjdieER2RitCSWU2UStU?=
- =?utf-8?B?OTh3cW5tZ3plMnpJa1dyelZHcWRkYU40NHZKN1Q2Z1RMZ2tPdnVzcEFNaXRF?=
- =?utf-8?B?ODFDZlNjV0pST2ljY3I3VXI2ajhieFkxRjhDTGNKRXNSdjlWV1RTa3VmTnBU?=
- =?utf-8?B?WVg3amJQbUFoTHAxeExxUVhNRVU1WUczY3h6TTI3bjBGRm1sYy9VUG1jYTVD?=
- =?utf-8?Q?djC7p62MtG5G0wD0=3D?=
-X-OriginatorOrg: fb.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0e719a17-ed89-4089-6f75-08da31f2bae9
-X-MS-Exchange-CrossTenant-AuthSource: MW4PR15MB4410.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 May 2022 19:33:01.5459
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: MEP8yeOwuMhZIPVNK+hb6SG9gBPt2qepM+y0CaWCRDZ6QRubUPFYkrVWIkj0mS2Z
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR15MB3829
-X-Proofpoint-GUID: Zyh-2hR63UQBr7CrUByCfGuhXRVR9y-E
-X-Proofpoint-ORIG-GUID: Zyh-2hR63UQBr7CrUByCfGuhXRVR9y-E
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-05-09_05,2022-05-09_02,2022-02-23_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220509024659.GA62606@onthe.net.au>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62799f20
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=OLL_FvSJAAAA:8 a=7-415B0cAAAA:8
+        a=8q2NJRt9hQQj-dwuChcA:9 a=CjuIK1q_8ugA:10 a=PZhDsIxkz20A:10
+        a=2wtbIlPCfvEA:10 a=k94env-yiv8A:10 a=WiLHPiwbDYUA:10 a=CCiWsZzRJ6MA:10
+        a=uKxFKzgTu3oA:10 a=oIrB72frpwYPwTMnlWqB:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 5/6/22 2:29 AM, Dave Chinner wrote:
-> On Mon, May 02, 2022 at 02:21:17PM -0700, Stefan Roesch wrote:
->>
->>
->> On 4/28/22 2:54 PM, Dave Chinner wrote:
->>> On Thu, Apr 28, 2022 at 12:58:59PM -0700, Stefan Roesch wrote:
->>>>
->>>>
->>>> On 4/26/22 3:56 PM, Dave Chinner wrote:
->>>>> On Tue, Apr 26, 2022 at 10:43:28AM -0700, Stefan Roesch wrote:
->>>>>> This adds the async buffered write support to XFS. For async buffered
->>>>>> write requests, the request will return -EAGAIN if the ilock cannot be
->>>>>> obtained immediately.
->>>>>>
->>>>>> Signed-off-by: Stefan Roesch <shr@fb.com>
->>>>>> ---
->>>>>>  fs/xfs/xfs_file.c | 10 ++++++----
->>>>>>  1 file changed, 6 insertions(+), 4 deletions(-)
->>>>>>
->>>>>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
->>>>>> index 6f9da1059e8b..49d54b939502 100644
->>>>>> --- a/fs/xfs/xfs_file.c
->>>>>> +++ b/fs/xfs/xfs_file.c
->>>>>> @@ -739,12 +739,14 @@ xfs_file_buffered_write(
->>>>>>  	bool			cleared_space = false;
->>>>>>  	int			iolock;
->>>>>>  
->>>>>> -	if (iocb->ki_flags & IOCB_NOWAIT)
->>>>>> -		return -EOPNOTSUPP;
->>>>>> -
->>>>>>  write_retry:
->>>>>>  	iolock = XFS_IOLOCK_EXCL;
->>>>>> -	xfs_ilock(ip, iolock);
->>>>>> +	if (iocb->ki_flags & IOCB_NOWAIT) {
->>>>>> +		if (!xfs_ilock_nowait(ip, iolock))
->>>>>> +			return -EAGAIN;
->>>>>> +	} else {
->>>>>> +		xfs_ilock(ip, iolock);
->>>>>> +	}
->>>>>
->>>>> xfs_ilock_iocb().
->>>>>
->>>>
->>>> The helper xfs_ilock_iocb cannot be used as it hardcoded to use iocb->ki_filp to
->>>> get a pointer to the xfs_inode.
->>>
->>> And the problem with that is?
->>>
->>> I mean, look at what xfs_file_buffered_write() does to get the
->>> xfs_inode 10 lines about that change:
->>>
->>> xfs_file_buffered_write(
->>>         struct kiocb            *iocb,
->>>         struct iov_iter         *from)
->>> {
->>>         struct file             *file = iocb->ki_filp;
->>>         struct address_space    *mapping = file->f_mapping;
->>>         struct inode            *inode = mapping->host;
->>>         struct xfs_inode        *ip = XFS_I(inode);
->>>
->>> In what cases does file_inode(iocb->ki_filp) point to a different
->>> inode than iocb->ki_filp->f_mapping->host? The dio write path assumes
->>> that file_inode(iocb->ki_filp) is correct, as do both the buffered
->>> and dio read paths.
->>>
->>> What makes the buffered write path special in that
->>> file_inode(iocb->ki_filp) is not correctly set whilst
->>> iocb->ki_filp->f_mapping->host is?
->>>
->>
->> In the function xfs_file_buffered_write() the code calls the function 
->> xfs_ilock(). The xfs_inode pointer that is passed in is iocb->ki_filp->f_mapping->host.
->> The one used in xfs_ilock_iocb is ki_filp->f_inode.
->>
->> After getting the lock, the code in xfs_file_buffered_write calls the
->> function xfs_buffered_write_iomap_begin(). In this function the code
->> calls xfs_ilock() for ki_filp->f_inode in exclusive mode.
->>
->> If I replace the first xfs_ilock() call with xfs_ilock_iocb(), then it looks
->> like I get a deadlock.
->>
->> Am I missing something?
+On Mon, May 09, 2022 at 12:46:59PM +1000, Chris Dunlop wrote:
+> Hi,
 > 
-> Yes. They take different locks. xfs_file_buffered_write() takes the
-> IOLOCK, xfs_buffered_write_iomap_begin() takes the ILOCK....
+> Is it to be expected that removing 29TB of highly reflinked and fragmented
+> data could take days, the entire time blocking other tasks like "rm" and
+> "df" on the same filesystem?
 > 
-
-Thanks for the clarification.
-
->> I can:
->> - replace the pointer to iocb with pointer to xfs_inode in the function xfs_ilock_iocb()
->>   and also pass in the flags value as a parameter.
->> or
->> - create function xfs_ilock_inode(), which xfs_ilock_iocb() calls. The existing
->>   calls will not need to change, only the xfs_ilock in xfs_file_buffered_write()
->>   will use xfs_ilock_inode().
+> - is any way to see progress and make an eta estimate?
+> - would 4700+ processes blocked on the same fs slow things down or they're
+> not relevant?
+> - with a reboot/remount, does the log replay continue from where it left
+> off, or start again?
+> - is there anything that might improve the situation in newer kernels?
 > 
-> You're making this way more complex than it needs to be. As I said:
+> Some details:
 > 
->>> Regardless, if this is a problem, then just pass the XFS inode to
->>> xfs_ilock_iocb() and this is a moot point.
+> # uname -r
+> 5.15.34-otn-00007-g6bff5dd37abb
 > 
-
-The function xfs_ilock_iocb() is expecting a pointer to the data structure kiocb, not
-a pointer to xfs_inode. I don't see how that's possible without changing the signature
-of xfs_ilock_iocb().
-
-Do you want to invoke xfs_ilock_nowait() directly()?
-
-
-> Cheers,
+> # xfs_info /chroot
+> meta-data=/dev/mapper/vg00-chroot isize=512    agcount=282, agsize=244184192 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>          =                       reflink=1    bigtime=0 inobtcount=0
+> data     =                       bsize=4096   blocks=68719475712, imaxpct=1
+>          =                       sunit=128    swidth=512 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=521728, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 > 
-> Dave.
+> The fs is sitting on lvm and the underlying block device is a ceph 8+3
+> erasure-coded rbd.
+
+Ok, so -slow- storage.
+
+> This fs was originally 30T and has been expanded to 256T:
+> 
+>   Limits to growth
+>   https://www.spinics.net/lists/linux-xfs/msg60451.html
+> 
+> And it's been the topic of a few other issues:
+> 
+>   Extreme fragmentation ho!
+>   https://www.spinics.net/lists/linux-xfs/msg47707.html
+> 
+>   Mysterious ENOSPC
+>   https://www.spinics.net/lists/linux-xfs/msg55446.html
+> 
+> The story...
+> 
+> I did an "rm -rf" of a directory containing a "du"-indicated 29TB spread
+> over maybe 50 files. The data would have been highly reflinked and
+> fragmented. A large part of the reflinking would be to files outside the dir
+> in question, and I imagine maybe only 2-3TB of data would actually be freed
+> by the "rm".
+
+But it's still got to clean up 29TB of shared extent references.
+Assuming worst case reflink extent fragmentation of 4kB filesystem
+blocks, 29TB is roughly 7 *billion* references that have to be
+cleaned up.
+
+TANSTAAFL.
+
+A single CPU running flat out that isn't limited by log space or
+metadata writeback can unshare and free about 80-100k extents a
+second. If you are either RAM or IO bound, then you might only be
+able to remove a few thousand a second as throughput is limited by
+the random metadata writeback rate to free journal space for the
+next transaction.
+
+OOOOOOH.
+
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+
+You have rmapbt enabled. That significantly increases the amount of
+metadata every reflink operation has to update. Every shared extent
+that is removed, the rmap index has to be updated to remove that
+back-reference from rmapbt. When there is heavy extent sharing
+occurring, the rmaps get *large*. e.g. share a single block 100
+times, there is one refcount record for the 100 references. BUt
+there are 100 rmap records - one for each of the 100 references to
+to the block. IOWs, reflink is efficiently recording reference
+counts, but rmap cannot as every owner/offset tuple is different for
+each shared extent owner.
+
+Likely that means that the maximum sustainable unshare rate is going
+to be halved - so maybe a max of 40-50k reference removals/s
+
+> The "rm" completed in less than a second, but an immediately following "df"
+> on that fs didn't return, even 60+ hours later(!!).
+
+At 10k refs/s removed , that's 3hrs/100M or 30hrs/billion references.
+
+At a 1k refs/s removed, that's 3.6 million refs/hr an hour, or
+~30hrs/100M refs.
+
+At a 100 refs/s removed, that's 360k million refs/hr an hour, or
+~300hrs/100M refs.
+
+And it's entire possible you asked the filesystem to remove a
+billion shared references.....
+
+> In the meantime, other background processes where also attempting to do
+> various "rm"s (small amounts of non-reflinked data) and "df"s on the same fs
+> which were also hanging - building up to an load average of 4700+(!!) over
+
+Nothing wrong with a load average of 4700 - it's common to see that
+sort of thing when there is lots of IO operations in flight.  All it
+is telling you is that the system has a massive IO backlog.
+
+> time. A flame graph showed the kernel with 75% idle and 3.75% xfsaild as the
+> largest users, and the rest a wide variety of other uninteresting stuff. A
+> "sysrq w" showed the tasks blocking in xfs_inodegc_flush, e.g.:
+
+Yeah, I've been considering removing that blocking flush for reasons
+like this.  That's not your problem, though.
+
+i.e. If the unlink hadn't been put in the background, you'd be
+complaining that rm had hung, the system is overloaded, IO bound
+and you can't kill the rm. ANd then after reboot, log recovery
+caused the same problem....
+
+So what you see really has nothing to do with background inodegc
+at all...
+
+> Iostat showed consistent high %util and high latencies. E.g. a combined load
+> average and iostat output at 66 hours after the initial "df" started:
+> 
+>            load %user %nice  %sys  %iow  %stl %idle  dev rrqm/s wrqm/s    r/s    w/s    rkB/s    wkB/s  arq-sz  aqu-sz    await   rwait   wwait %util
+> 07:55:32 4772.3   0.0   0.0   0.2   0.8   0.0  98.8 rbd0    0.0    0.0    0.5   27.9     1.80   530.20   37.46   25.87   911.07   34.67   925.2  97.0
+> 07:55:52 4772.1   0.0   0.0   0.2   0.0   0.0  99.7 rbd0    0.0    0.0    0.9   17.2     3.60   548.20   60.97    7.64   422.22   11.83   443.7  99.2
+> 07:56:12 4772.1   0.0   0.0   0.3   1.9   0.0  97.6 rbd0    0.0    0.5    0.2   46.9     1.00   513.00   21.80   46.06   976.91  304.40   980.5  96.3
+> 07:56:32 4773.1   0.0   0.0   0.3   1.7   0.0  97.8 rbd0    0.0    0.0    0.5   12.9     1.80   306.20   45.97    6.81   508.09    4.67   525.6  57.8
+> 07:56:52 4773.8   0.0   0.0   0.3   1.4   0.0  98.0 rbd0    0.0    0.1    0.7   40.4     2.60   591.80   28.96   32.70   796.60  163.23   806.8  92.2
+> 07:57:12 4774.4   0.1   0.0   0.3   1.8   0.0  97.7 rbd0    0.0    0.3    0.2   43.1     0.80   541.80   25.06   42.13   973.05   15.25   977.5  84.0
+> 07:57:32 4774.8   0.2   0.0   0.7   2.3   0.0  96.5 rbd0    0.0    0.1    0.5   35.2     2.00   496.40   27.92   30.25   847.35    9.00   859.3  85.7
+> 07:57:52 4775.4   0.0   0.0   0.4   1.6   0.0  97.7 rbd0    0.0    0.2    0.7   45.1     2.80   510.80   22.43   42.88   936.33   76.21   949.7  73.6
+
+Yup, the system is IO bound on 4kB random write IO, managing a
+healthy total of about _200 IOPS_ and less than 4MB/s to disk.
+In short, I don't think you system is even managing 100 reference
+removals a second - maybe 50 refs/s are being removed because it is
+completely IO bound on dirty metadata writeback...
+
+IOWs, the problem here is that  you asked the filesystem to perform
+*billions* of update operations by running that rm -rf command and
+your storage simply isn't up to performing such operations.
+
+What reflink giveth you, reflink taketh away.
+
+> Apart from the iostat there was no other indication any progress was being
+> made.
+> 
+> Eventually I thought that perhaps the excessive numbers of blocked processes
+> might be adding to the woes by causing thundering herd problems and the
+> like, and decided to reboot the box as the only way to remove those tasks,
+> with the understanding the journal to be replayed before the fs mount would
+> complete.
+
+Nope, I'd put my house on it not completing journal replay....
+
+> There were few more reboots and mount(-attempts) over the next day as I was
+> messing around with things - turning off the background processes causing
+> the ever-increasing loads, taking lvm snapshots, upgrading to the latest
+> stable version of the kernel etc.
+> 
+> I'm now wondering if each mount continues from whence the previous
+> mount(-attempt) left off, or does it start processing the replay log again
+> from the very beginning?
+
+.... because log recovery runs garbage collection of unlinked
+inodes, which was what was running when you rebooted the system.
+Only now, you can't access the filesystem at all because it won't
+complete the mount process....
+
+> It's now been 40 hours since the most recent reboot/mount and the mount
+> process is still running. The load average is a more reasonable <10, and the
+> iostat is similar to above.
+
+Yup, because there's only hte background inodegc workers operating
+on the filesystem and you don't have other processes trying to do
+data IO on it as it hasn't finished mounting yet. The filesystem is
+doing the same amount of work, making the same progress, yet the
+load average is only 10.
+
+Load average is a very poor measure of the load that is actually on
+the system......
+
+> Is there any way to see where the log replay is up to, and from there make a
+> judgement on how much longer it might take, e.g. something in xfs_db, or
+> some eBPF wizardry?
+
+Not really. tracepoints can tell you the operations going on, and if
+you know enough about the internals of XFS they might tell you how
+many extents still remain on the inodes to remove....
+
+> I tried using xfs_logprint but I'm not sure what it's telling me, and
+> multiple versions taken 10 minutes apart don't show any differences that are
+> obviously "progress" - the only differences are in q:0x[[:xdigit:]]+ in the
+> TRANS entries, and in a:0x[[:xdigit:]]+ in the INO entries, e.g.:
+
+logprint just dumps the active transactions in the log - the ones
+that are waiting on metadata writeback to move the tail of the log
+forwards and retire the transaction.
+
+What you see here:
+
+> t1:
+> TRANS: tid:0xcf6e0775  #items:50029  trans:0xcf6e0775  q:0x563417886560
+> ...
+> t1+10s:
+> TRANS: tid:0xcf6e0775  #items:50029  trans:0xcf6e0775  q:0x55b5d8815560
+
+Is the same transaction in the journal. all that changed was the
+"a:" fields which are the memory address of the region buffer in
+logprint and have nothing to do with what is in the journal itself.
+It's largely logprint debug information.
+
+IOWs, all this tells us is that the tail of the log is not moving
+very fast, which tallies with the really slow storage doing random
+writes and being unable to move the tail of the log forwards very
+quickly.
+
+Indeed, let me put that in context - this transaction has 50,000
+items in it. THat's going to take at _least_ 10,000 IOs to write
+back all that metadata. at maybe 100 IOs/s, just clearing this
+transaction to free up the log space (maybe 32MB of journal space
+out of 2GB) will take at least 2 minutes.....
+
+And the rest of the journal will have a similar density of items to
+be flushed, so 2GB/32MB = 128 * 2 minutes = 4 hours. SO even if the
+unlinks stopped right now, there's a backlog of at least 4 hours
+worth of dirty metadata to flush to disk. Either unmount of log
+recovery would take this long to run at that point.
+
+Also, that inode had 1.6 million extents and mapped just under 1TB
+of data. At 100 refs/s being removed, that's 16,000 seconds to clean
+up that inode. If that is representative of the other files, then 50
+x 16,0000 is roughly 10 days....
+
+At some point, you have to pay the price of creating billions of
+random fine-grained cross references in tens of TBs of data spread
+across weeks and months of production. You don't notice the scale of
+the cross-reference because it's taken weeks and months of normal
+operations to get there. It's only when you finally have to perform
+an operation that needs to iterate all those references that the
+scale suddenly becomes apparent. XFS scales to really large numbers
+without significant degradation, so people don't notice things like
+object counts or cross references until something like this
+happens.
+
+I don't think there's much we can do at the filesystem level to help
+you at this point - the inode output in the transaction dump above
+indicates that you haven't been using extent size hints to limit
+fragmentation or extent share/COW sizes, so the damage is already
+present and we can't really do anything to fix that up.
+
+I'm also not sure that xfs_repair will help at this point because it
+has to pull the entire filesystem metadata into memory.  I suspect
+that you don't have a couple of TB of RAM or really fast SSD swap
+space to throw at that problem (might need both!). I've seen repair
+take 3 weeks and 250GB of RAM to resolve a corrupted 14TB hardlink
+farm containing a couple of billion hardlinks on similar slow RAID 6
+storage. I don't expect repair will be any faster resolving a couple
+of billion reflink and rmap references, but I do expect that to
+require a whole lot more memory than hardlink resolution. repair
+will garbage collect the unlinked inodes without any additional
+overhead, but the baseline overhead is likely prohibitive....
+
+Another option might be to get a fast 1-2TB NVMe SSD (or two or 3)
+and build a cache teir over the top of the ceph rbds using dm-cache.
+That way the cache teir can suck up all the small random writes and
+the garbage collection will run much faster. When it is done, run a
+fstrim on the filesystem to clear all the previously written but now
+free space from the cache device, then flush the cache device back
+to storage. That last flush will likely take a long, long time
+because it will all be small random writes, but should be many less
+than what the filesystem needed to run to clean up the billions of
+cross references the reflinks created....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
