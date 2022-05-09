@@ -2,94 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07104C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 18:51:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17FFFC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 19:02:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240318AbiEISzQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 May 2022 14:55:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33134 "EHLO
+        id S240367AbiEITGj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 May 2022 15:06:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240337AbiEISzC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 14:55:02 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8D8B286C9;
-        Mon,  9 May 2022 11:51:05 -0700 (PDT)
+        with ESMTP id S235698AbiEITGj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 15:06:39 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B698293B5F;
+        Mon,  9 May 2022 12:02:45 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 9065C21C6C;
-        Mon,  9 May 2022 18:51:04 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id A9C541F96C;
+        Mon,  9 May 2022 19:02:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1652122264;
+        t=1652122963;
         h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
          cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=c3py2NGhSbKCur3EcRzQ7CQDlhCBGKamOhHgEIdujgQ=;
-        b=pO/BAromEsaPNf7vRHuACqEldnLsnLN99wrfQ1Wgv587K0WSkppQVHrPwT7tBKjvH0G/vn
-        y1lf/MwGYSBmMLaStKW5Vsod2km/7Sc/Y5lcOPPOcubNt7bRfyWEZm7YviubWefI7sHUDf
-        odQz0lPMl30SXY7obV1zHFSi7UQEHJ4=
+        bh=0ykKyMIAZZWt9ICnnH16PH6TVXq2wfTpzkXuGxpXGK0=;
+        b=AEE7HlUYcNSHbGxrOji9hPaqvSWOct1ZdZcW6C87bEZbhnLpmDyCU18BcS4ZSM5mC8V2/v
+        qyIM+Bi9+sxS8q51dgdhcCao1+sc95aI1X8Fzm1qGswtMHlv5piep8NfVnwosdAgLBEbED
+        ejqMrQBBOaLmX2OmI75DkdPtXdSbx6s=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1652122264;
+        s=susede2_ed25519; t=1652122963;
         h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
          cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=c3py2NGhSbKCur3EcRzQ7CQDlhCBGKamOhHgEIdujgQ=;
-        b=ynxC4q9BW3xp7FDB1UL7BHKUe8dYe5Vpal7l6WwAt57ziJ067LpKeyPBSNBax6sLMiyxXw
-        A1VoyR7dHY4W1OAA==
+        bh=0ykKyMIAZZWt9ICnnH16PH6TVXq2wfTpzkXuGxpXGK0=;
+        b=GlGNNQ4nY0z8QeCrI1qWMZkIoA+9aGF9RUeoe/kcRiRI3Jk7qilapcP2+e3EycnichPtu5
+        lk8lQOsmKHNRyEAg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 49BA113AA5;
-        Mon,  9 May 2022 18:51:04 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7622913AA5;
+        Mon,  9 May 2022 19:02:43 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id DPINEZhieWJabwAAMHmgww
-        (envelope-from <dsterba@suse.cz>); Mon, 09 May 2022 18:51:04 +0000
-Date:   Mon, 9 May 2022 20:46:50 +0200
+        id 4XfcG1NleWLDcwAAMHmgww
+        (envelope-from <dsterba@suse.cz>); Mon, 09 May 2022 19:02:43 +0000
+Date:   Mon, 9 May 2022 20:58:29 +0200
 From:   David Sterba <dsterba@suse.cz>
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, dsterba@suse.cz,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+Cc:     Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: reduce memory allocation in the btrfs direct I/O path
-Message-ID: <20220509184650.GA18596@twin.jikos.cz>
+Subject: Re: reduce memory allocation in the btrfs direct I/O path v2
+Message-ID: <20220509185829.GC18596@twin.jikos.cz>
 Reply-To: dsterba@suse.cz
 Mail-Followup-To: dsterba@suse.cz, Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <djwong@kernel.org>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
-        linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20220504162342.573651-1-hch@lst.de>
- <20220505155529.GY18596@suse.cz>
- <20220506171803.GA27137@magnolia>
- <20220507052649.GA28014@lst.de>
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20220505201115.937837-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220507052649.GA28014@lst.de>
+In-Reply-To: <20220505201115.937837-1-hch@lst.de>
 User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 07, 2022 at 07:26:49AM +0200, Christoph Hellwig wrote:
-> On Fri, May 06, 2022 at 10:18:03AM -0700, Darrick J. Wong wrote:
-> > > The series is reasonably short so I'd like to add it to 5.20 queue,
-                                                              ^^^^
-Sorry, I meant 5.19, ie. the one that's about to start soon.
-
-> > > provided that the iomap patches get acked by Darrick. Any fixups I'd
-> > > rather fold into my local branch, no need to resend unless there are
-> > > significant updates.
-> > 
-> > Hm.  I'm planning on pushing out a (very late) iomap-5.19-merge branch,
-> > since (AFAICT) these changes are mostly plumbing.  Do you want me to
-> > push the first three patches of this series for 5.19?
+On Thu, May 05, 2022 at 03:11:08PM -0500, Christoph Hellwig wrote:
+> Hi all,
 > 
-> Given that we have no conflicts it might be easiest to just merge the
-> whole series through the btrfs tree.
+> this series adds two minor improvements to iomap that allow btrfs
+> to avoid a memory allocation per read/write system call and another
+> one per submitted bio.  I also have at last two other pending uses
+> for the iomap functionality later on, so they are not really btrfs
+> specific either.
+> 
+> Changes since v1:
+>  - pass the private data direct to iomap_dio_rw instead of through the
+>    iocb
+>  - better document the bio_set in iomap_dio_ops
+>  - split a patch into three
+>  - use kcalloc to allocate the checksums
 
-Yeah, I'd rather take it via the btrfs tree.
+Added to misc-next and queued for 5.19, thanks.
