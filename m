@@ -2,124 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5E9EC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 01:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A767DC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 May 2022 01:26:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230012AbiEIBaF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 May 2022 21:30:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34794 "EHLO
+        id S230247AbiEIBaI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 May 2022 21:30:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234318AbiEIAHW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 20:07:22 -0400
+        with ESMTP id S235603AbiEIApg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 May 2022 20:45:36 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CCB33DEF1;
-        Sun,  8 May 2022 17:03:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1F89EBC0C
+        for <linux-xfs@vger.kernel.org>; Sun,  8 May 2022 17:41:44 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 88BAC52DCAB;
-        Mon,  9 May 2022 10:03:28 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5E29F534584
+        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 10:41:41 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nnqs2-009h1M-Jk; Mon, 09 May 2022 10:03:26 +1000
-Date:   Mon, 9 May 2022 10:03:26 +1000
+        id 1nnrT2-009hcp-5C
+        for linux-xfs@vger.kernel.org; Mon, 09 May 2022 10:41:40 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.95)
+        (envelope-from <david@fromorbit.com>)
+        id 1nnrT2-003CP4-3o
+        for linux-xfs@vger.kernel.org;
+        Mon, 09 May 2022 10:41:40 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Carel Si <beibei.si@intel.com>
-Cc:     lkp@intel.com, linux-kernel@vger.kernel.org, lkp@lists.01.org,
-        fengwei.yin@intel.com, linux-xfs@vger.kernel.org,
-        oliver.sang@intel.com
-Subject: Re: [LKP] Re: [xfs]  32678f1513:  aim7.jobs-per-min -5.6% regression
-Message-ID: <20220509000326.GN1098723@dread.disaster.area>
-References: <20220502082018.1076561-2-david@fromorbit.com>
- <20220506092250.GI23061@xsang-OptiPlex-9020>
- <20220506212924.GJ1098723@dread.disaster.area>
- <20220507110941.GA10880@linux.intel.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 02/18] xfs: initialise attrd item to zero
+Date:   Mon,  9 May 2022 10:41:22 +1000
+Message-Id: <20220509004138.762556-3-david@fromorbit.com>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220509004138.762556-1-david@fromorbit.com>
+References: <20220509004138.762556-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220507110941.GA10880@linux.intel.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62785a51
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62786345
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=8nJEP1OIZ-IA:10 a=oZkIemNP1mAA:10 a=NEAV23lmAAAA:8 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=OIWXXrKM4WwZCH1KPDMA:9 a=wPNLvfGTeEIA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
+        a=VdGwt750K41ze9-0lWsA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 07, 2022 at 07:09:46PM +0800, Carel Si wrote:
-> Hi Dave,
-> 
-> On Sat, May 07, 2022 at 07:29:24AM +1000, Dave Chinner wrote:
-> > On Fri, May 06, 2022 at 05:22:50PM +0800, kernel test robot wrote:
-> > > 
-> > > 
-> > > Greeting,
-> > > 
-> > > FYI, we noticed a -5.6% regression of aim7.jobs-per-min due to commit:
-> > > 
-> > > 
-> > > commit: 32678f151338b9a321e9e27139a63c81f353acb7 ("[PATCH 1/4] xfs: detect self referencing btree sibling pointers")
-> > > url: https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/xfs-fix-random-format-verification-issues/20220502-162206
-> > > base: https://git.kernel.org/cgit/fs/xfs/xfs-linux.git for-next
-> > > patch link: https://lore.kernel.org/linux-xfs/20220502082018.1076561-2-david@fromorbit.com
-> > 
-> > Well, that answers the concern I had about the impact of 
-> > changing the way endian conversions were done in that patch.
-> > 
-> > > a44a027a8b2a20fe 32678f151338b9a321e9e27139a 
-> > > ---------------- --------------------------- 
-> > >          %stddev     %change         %stddev
-> > >              \          |                \  
-> > >     464232            -5.6%     438315        aim7.jobs-per-min
-> > ....
-> > >       0.13 ±  5%      +0.2        0.33 ±  6%  perf-profile.children.cycles-pp.__xfs_btree_check_sblock
-> > ....
-> > >       0.11 ±  4%      +0.2        0.30 ±  5%  perf-profile.self.cycles-pp.__xfs_btree_check_sblock
-> > 
-> > Because there is it, right at the bottom of the profile.
-> > 
-> > Can you try the patch below and see if that fixes the issue?
-> 
-> We tested below patch, it didn't fix the issue, still has -6.4% regression [1] 
-> comparing to a44a027a8b ("Merge tag 'large-extent-counters-v9' of 
-> https://github.com/chandanr/linux into xfs-5.19-for-next"). 
+From: Dave Chinner <dchinner@redhat.com>
 
-Really? It made the regression *worse*?
+On the first allocation of a attrd item, xfs_trans_add_item() fires
+an assert like so:
 
-Oh, wait, *that* wasn't in the last set of profiles:
+ XFS (pmem0): EXPERIMENTAL logged extended attributes feature added. Use at your own risk!
+ XFS: Assertion failed: !test_bit(XFS_LI_DIRTY, &lip->li_flags), file: fs/xfs/xfs_trans.c, line: 683
+ ------------[ cut here ]------------
+ kernel BUG at fs/xfs/xfs_message.c:102!
+ Call Trace:
+  <TASK>
+  xfs_trans_add_item+0x17e/0x190
+  xfs_trans_get_attrd+0x67/0x90
+  xfs_attr_create_done+0x13/0x20
+  xfs_defer_finish_noroll+0x100/0x690
+  __xfs_trans_commit+0x144/0x330
+  xfs_trans_commit+0x10/0x20
+  xfs_attr_set+0x3e2/0x4c0
+  xfs_initxattrs+0xaa/0xe0
+  security_inode_init_security+0xb0/0x130
+  xfs_init_security+0x18/0x20
+  xfs_generic_create+0x13a/0x340
+  xfs_vn_create+0x17/0x20
+  path_openat+0xff3/0x12f0
+  do_filp_open+0xb2/0x150
 
-....
->      35.30 ±  4%      +1.3       36.59 ±  3%      +1.9       37.24 ±  3%  perf-profile.children.cycles-pp.osq_lock
->      36.88 ±  4%      +1.3       38.19 ±  2%      +1.9       38.83 ±  3%  perf-profile.children.cycles-pp.rwsem_optimistic_spin
->      37.40 ±  4%      +1.4       38.77 ±  2%      +2.0       39.35 ±  3%  perf-profile.children.cycles-pp.rwsem_down_write_slowpath
-....
->       1.89 ±  3%      +0.1        1.96 ±  4%      +0.0        1.90 ±  2%  perf-profile.self.cycles-pp.rwsem_spin_on_owner
->       0.11 ±  4%      +0.2        0.30 ±  5%      +0.2        0.29        perf-profile.self.cycles-pp.__xfs_btree_check_sblock
->      35.08 ±  4%      +1.3       36.33 ±  2%      +1.9       37.01 ±  3%  perf-profile.self.cycles-pp.osq_lock
+The attrd log item is allocated via kmem_cache_alloc, and
+xfs_log_item_init() does not zero the entire log item structure - it
+assumes that the structure is already all zeros as it only
+initialises non-zero fields. Fix the attr items to be allocated
+via the *zalloc methods.
 
-This test is hammering an rwsem which is them spinning on exclusive
-write locks somewhere. That's where all the increase in system time
-has come from, and that's what's causing the difference in
-perofrmance. I bet this test is hammering single file write IO from
-all 96 CPUs at once, and that's where all the problems start.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Allison Henderson<allison.henderson@oracle.com>
+---
+ fs/xfs/xfs_attr_item.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-IOWs, this likley has nothing to with the btree validation change,
-and everything to do with the system being driven into a lock and
-cacheline contention corner. When there is lock contention like this
-on a large CPU count system, we can't infer anything at all from any
-other measurement because the cacheline contention skews
-everything...
-
-I'm not going to look at this any further, and I think I'm going to
-ignore AIM7 write test regressions in future until the test is
-reconfigured to avoid this sort of "100 cpus all trying to do
-buffered writes to the same file" contention issue.
-
-Cheers,
-
-Dave.
-
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 9061adce3f16..5f8680b05079 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -721,7 +721,7 @@ xfs_trans_get_attrd(struct xfs_trans		*tp,
+ 
+ 	ASSERT(tp != NULL);
+ 
+-	attrdp = kmem_cache_alloc(xfs_attrd_cache, GFP_NOFS | __GFP_NOFAIL);
++	attrdp = kmem_cache_zalloc(xfs_attrd_cache, GFP_NOFS | __GFP_NOFAIL);
+ 
+ 	xfs_log_item_init(tp->t_mountp, &attrdp->attrd_item, XFS_LI_ATTRD,
+ 			  &xfs_attrd_item_ops);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.35.1
+
