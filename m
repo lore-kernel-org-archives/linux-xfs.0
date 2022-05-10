@@ -2,144 +2,57 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AD35C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 08:16:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7629EC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 09:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233227AbiEJIUf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 04:20:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49536 "EHLO
+        id S238809AbiEJJde (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 May 2022 05:33:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232607AbiEJIUd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 04:20:33 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0A96C24D5BA
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 01:16:34 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 469A110E63D8;
-        Tue, 10 May 2022 18:16:33 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1noL2m-00ADqI-3m; Tue, 10 May 2022 18:16:32 +1000
-Date:   Tue, 10 May 2022 18:16:32 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chris Dunlop <chris@onthe.net.au>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Amir Goldstein <amir73il@gmail.com>,
+        with ESMTP id S238843AbiEJJdd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 05:33:33 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73EAF28C9E3
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 02:29:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=LsaIIxKxUCyoxprtgkOQXSP4B3XvvlqBwTaONkppYbU=; b=Iu/Nuz6/cgh85yNU5n21WJDsWr
+        fzYffhsf/JL2ZQCSi1RZ1uarykcJMAmIxHXLT5vP8Hil8THut0SXtaPnwH64soLLxHsDZpEt7mGdy
+        MGv881c04AgvsibK+fWAaOIBMxNUh5nTW94NcxNRWq8mQm7/NEZuKQuE3Zm1My5KKxcayf+ID1169
+        heJ05OP0j8bB8wrADqtKg7rLJr1EWAQvuSN/VdHNtcVpTi2CDXLhG3/iY0bGOtjKTtu6ENUhtJeDh
+        rNsbsLRgWeOCprXK8nYtxTQBu66j5lgEeL4UqX0ddGD+w/PaYg+vaZdvxP8WtTXaDSobOuXF1XtI1
+        gzK9SLTw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1noMBT-000peP-Da; Tue, 10 May 2022 09:29:35 +0000
+Date:   Tue, 10 May 2022 02:29:35 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Dave Chinner <david@fromorbit.com>,
         linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Highly reflinked and fragmented considered harmful?
-Message-ID: <20220510081632.GS1098723@dread.disaster.area>
-References: <20220509024659.GA62606@onthe.net.au>
- <20220509230918.GP1098723@dread.disaster.area>
- <CAOQ4uxgf6AHzLM-mGte_L-A+piSZTRsbdLMBT3hZFNhk-yfxZQ@mail.gmail.com>
- <20220510051057.GY27195@magnolia>
- <20220510063051.GA215522@onthe.net.au>
+Subject: Re: [QUESTION] Upgrade xfs filesystem to reflink support?
+Message-ID: <Ynowf/rmU2UVPlqw@infradead.org>
+References: <CAOQ4uxjBR_Z-j_g8teFBih7XPiUCtELgf=k8=_ye84J00ro+RA@mail.gmail.com>
+ <20220509182043.GW27195@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220510063051.GA215522@onthe.net.au>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=627a1f61
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=nFhZ7IhdAAAA:8 a=7-415B0cAAAA:8
-        a=-iyxLQQW4BhfjrfHDYcA:9 a=CjuIK1q_8ugA:10 a=yLe6tduUrpv5X8hMBLWX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220509182043.GW27195@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 10, 2022 at 04:30:51PM +1000, Chris Dunlop wrote:
-> On Mon, May 09, 2022 at 10:10:57PM -0700, Darrick J. Wong wrote:
-> > On Tue, May 10, 2022 at 07:07:35AM +0300, Amir Goldstein wrote:
-> > > On Mon, May 09, 2022 at 12:46:59PM +1000, Chris Dunlop wrote:
-> > > > Is it to be expected that removing 29TB of highly reflinked and fragmented
-> > > > data could take days, the entire time blocking other tasks like "rm" and
-> > > > "df" on the same filesystem?
-> ...
-> > > From a product POV, I think what should have happened here is that
-> > > freeing up the space would have taken 10 days in the background, but
-> > > otherwise, filesystem should not have been blocking other processes
-> > > for long periods of time.
-
-Sure, that's obvious, and without looking at the code I know what
-that is: statfs()
-
-> > Indeed.  Chris, do you happen to have the sysrq-w output handy?  I'm
-> > curious if the stall warning backtraces all had xfs_inodegc_flush() in
-> > them, or were there other parts of the system stalling elsewhere too?
-> > 50 billion updates is a lot, but there shouldn't be stall warnings.
+On Mon, May 09, 2022 at 11:20:43AM -0700, Darrick J. Wong wrote:
+> > Is there any a priori NACK or exceptional challenges w.r.t implementing
+> > upgrade of xfs to reflink support?
 > 
-> Sure: https://file.io/25za5BNBlnU8  (6.8M)
-> 
-> Of the 3677 tasks in there, only 38 do NOT show xfs_inodegc_flush().
+> No, just lack of immediate user demand + time to develop and merge code
+> + time to QA the whole mess to make sure it doesn't introduce any
+> messes.
 
-yup, 3677 tasks in statfs(). The majority are rm, df, and check_disk
-processes, there's a couple of veeamagent processes stuck and
-an (ostnamed) process, whatever that is...
-
-No real surprises there, and it's not why the filesystem is taking
-so long to remove all the reflink references.
-
-There is just one background inodegc worker thread running, so
-there's no excessive load being generated by inodegc, either. It's
-no different to a single rm running xfs_inactive() directly on a
-slightly older kernel and filling the journal:
-
-May 06 09:49:01 d5 kernel: task:kworker/6:1     state:D stack:    0 pid:23258 ppid:     2 flags:0x00004000
-May 06 09:49:01 d5 kernel: Workqueue: xfs-inodegc/dm-1 xfs_inodegc_worker [xfs]
-May 06 09:49:01 d5 kernel: Call Trace:
-May 06 09:49:01 d5 kernel:  <TASK>
-May 06 09:49:01 d5 kernel:  __schedule+0x241/0x740
-May 06 09:49:01 d5 kernel:  schedule+0x3a/0xa0
-May 06 09:49:01 d5 kernel:  schedule_timeout+0x271/0x310
-May 06 09:49:01 d5 kernel:  __down+0x6c/0xa0
-May 06 09:49:01 d5 kernel:  down+0x3b/0x50
-May 06 09:49:01 d5 kernel:  xfs_buf_lock+0x40/0xe0 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_buf_find.isra.32+0x3ee/0x730 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_buf_get_map+0x3c/0x430 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_buf_read_map+0x37/0x2c0 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_trans_read_buf_map+0x1cb/0x300 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_btree_read_buf_block.constprop.40+0x75/0xb0 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_btree_lookup_get_block+0x85/0x150 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_btree_overlapped_query_range+0x33c/0x3c0 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_btree_query_range+0xd5/0x100 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_rmap_query_range+0x71/0x80 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_rmap_lookup_le_range+0x88/0x180 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_rmap_unmap_shared+0x89/0x560 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_rmap_finish_one+0x201/0x260 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_rmap_update_finish_item+0x33/0x60 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_defer_finish_noroll+0x215/0x5a0 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_defer_finish+0x13/0x70 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_itruncate_extents_flags+0xc4/0x240 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_inactive_truncate+0x7f/0xc0 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_inactive+0x10c/0x130 [xfs]
-May 06 09:49:01 d5 kernel:  xfs_inodegc_worker+0xb5/0x140 [xfs]
-May 06 09:49:01 d5 kernel:  process_one_work+0x2a8/0x4c0
-May 06 09:49:01 d5 kernel:  worker_thread+0x21b/0x3c0
-May 06 09:49:01 d5 kernel:  kthread+0x121/0x140
-
-There are 18 tasks in destroy_inode() blocked on a workqueue flush
-- these are new unlinks that are getting throttled because that
-per-cpu inodegc queue is full and work is ongoing. Not a huge
-deal, maybe we should look to hand full queues to another CPU if
-the neighbour CPU has an empty queue. That would reduce
-unnecessary throttling, though it may mean more long running
-inodegc processes in the background....
-
-Really, though, I don't see anything deadlocked, just a system
-backed up doing a really large amount of metadata modification.
-Everything is sitting on throttles or waiting on IO and making
-slow forwards progress as metadata writeback allows log space to be
-freed.
-
-I think we should just accept that statfs() can never really report
-exactly accurate space usagei to userspace and get rid of the flush.
-Work around the specific fstests dependencies on rm always
-immediately making unlinked inodes free space in fstests rather than
-in the kernel code.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I also have vague memory I did an in-kernel online upgrade back in the
+day but we decided to not bother in the end.  Maybe some list archive
+search could find it.
