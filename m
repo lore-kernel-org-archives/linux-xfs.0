@@ -2,159 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2DD6C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 05:11:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 357D5C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 05:14:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233131AbiEJFO6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 01:14:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51988 "EHLO
+        id S232892AbiEJFSb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 May 2022 01:18:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232976AbiEJFO4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 01:14:56 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF9F61A068
-        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 22:10:59 -0700 (PDT)
+        with ESMTP id S235008AbiEJFSb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 01:18:31 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A57602A83FB
+        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 22:14:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9E5F861794
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 05:10:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED12AC385C0;
-        Tue, 10 May 2022 05:10:57 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 31703B81816
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 05:14:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E18F3C385A6;
+        Tue, 10 May 2022 05:14:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652159458;
-        bh=yKf7rj5Qfo3K24uQUIO/oW/uAmFJJJ2ZN7tGJ9FaOVE=;
+        s=k20201202; t=1652159671;
+        bh=SGH6OItYppxGhWno/2nJospgS8wRFEgstrjtteDLasg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qEielhZKCzlibbAdyMZjBhq68MG+IZAEsvQ5rc3CuLyVPgsGp/3H4P0E1KWiTb89Z
-         /U3VHA9GM1TbZS0Er3ZewjfBuDjQl13W/FAM2rmVmHhQEjWu8bYPPxjKaLUiomREle
-         JkwPoiSwGnuBv4qZ0AUkQjB7WRTgP8QFO5AEmhOjMM5aWLpR1rD+/U9WhQ0DKS5K1c
-         C+uN68Zf19Adhx6J3/qO5u0AxWVeOh69BKBRirYkctQyrkDxQ+IMFT8dibtiHiVSll
-         Y65506ow4+CnG5BOKAa5ETYvRuwqQzkXCYDidmdJlJNTqFa7KoPc2qh5//YaSBYjNA
-         iXW2dBkCuEtkA==
-Date:   Mon, 9 May 2022 22:10:57 -0700
+        b=VnZk7A0LQGiuwe7/sa41KAeJO3cegZ/Abxx5thv6yCZSf+v+rNMQjMVO3zqaOiGwn
+         Ytss7U/jILH46ZsavVSIv0Wtu2AzFjtbuy3imjvT9jzSWlCShqXnwr/I5pg2RAAIq2
+         hUf/Vm8vjmQuiJUeKPmb7z3IEaNDBo0fX8E53U0PldmYSU8NNMt+0Yp0HC+dZwwj5X
+         lrDnc5iyOuwBjTC63zoOLNtNpXccxmiWfPk1SobStcP0nd8lrteeKlLRCTAuvKQ/LA
+         t42RUJhvE06FfnzbpCH/YcKw+ichrmqm8A1z8wYLJ9soZ3chxQwlE8UQoiPaQOhZdo
+         +jysHDDTaoL7A==
+Date:   Mon, 9 May 2022 22:14:31 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Chris Dunlop <chris@onthe.net.au>,
-        linux-xfs <linux-xfs@vger.kernel.org>
+To:     Chris Dunlop <chris@onthe.net.au>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 Subject: Re: Highly reflinked and fragmented considered harmful?
-Message-ID: <20220510051057.GY27195@magnolia>
-References: <20220509024659.GA62606@onthe.net.au>
- <20220509230918.GP1098723@dread.disaster.area>
- <CAOQ4uxgf6AHzLM-mGte_L-A+piSZTRsbdLMBT3hZFNhk-yfxZQ@mail.gmail.com>
+Message-ID: <20220510051431.GZ27195@magnolia>
+References: <20220510025541.GA192172@onthe.net.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgf6AHzLM-mGte_L-A+piSZTRsbdLMBT3hZFNhk-yfxZQ@mail.gmail.com>
+In-Reply-To: <20220510025541.GA192172@onthe.net.au>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 10, 2022 at 07:07:35AM +0300, Amir Goldstein wrote:
-> On Tue, May 10, 2022 at 2:25 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
+On Tue, May 10, 2022 at 12:55:41PM +1000, Chris Dunlop wrote:
+> Hi Dave,
+> 
+> On Tue, May 10, 2022 at 09:09:18AM +1000, Dave Chinner wrote:
 > > On Mon, May 09, 2022 at 12:46:59PM +1000, Chris Dunlop wrote:
-> > > Hi,
-> > >
 > > > Is it to be expected that removing 29TB of highly reflinked and fragmented
 > > > data could take days, the entire time blocking other tasks like "rm" and
 > > > "df" on the same filesystem?
-> > >
-> [...]
-> > > The story...
-> > >
-> > > I did an "rm -rf" of a directory containing a "du"-indicated 29TB spread
-> > > over maybe 50 files. The data would have been highly reflinked and
-> > > fragmented. A large part of the reflinking would be to files outside the dir
-> > > in question, and I imagine maybe only 2-3TB of data would actually be freed
-> > > by the "rm".
-> >
-> > But it's still got to clean up 29TB of shared extent references.
-> > Assuming worst case reflink extent fragmentation of 4kB filesystem
-> > blocks, 29TB is roughly 7 *billion* references that have to be
-> > cleaned up.
-> >
-> > TANSTAAFL.
-> >
-> [...]
-> >
-> > IOWs, the problem here is that  you asked the filesystem to perform
-> > *billions* of update operations by running that rm -rf command and
-> > your storage simply isn't up to performing such operations.
-> >
-> > What reflink giveth you, reflink taketh away.
-
-And here I was expecting "...and rmapbt taketh away." ;)
-
-> When I read this story, it reads like the filesystem is to blame and
-> not the user.
+> ...
+> > At some point, you have to pay the price of creating billions of
+> > random fine-grained cross references in tens of TBs of data spread
+> > across weeks and months of production. You don't notice the scale of
+> > the cross-reference because it's taken weeks and months of normal
+> > operations to get there. It's only when you finally have to perform
+> > an operation that needs to iterate all those references that the
+> > scale suddenly becomes apparent. XFS scales to really large numbers
+> > without significant degradation, so people don't notice things like
+> > object counts or cross references until something like this
+> > happens.
+> > 
+> > I don't think there's much we can do at the filesystem level to help
+> > you at this point - the inode output in the transaction dump above
+> > indicates that you haven't been using extent size hints to limit
+> > fragmentation or extent share/COW sizes, so the damage is already
+> > present and we can't really do anything to fix that up.
 > 
-> First of all, the user did not "ask the filesystem to perform
-> *billions* of updates",
-> the user asked the filesystem to remove 50 huge files.
+> Thanks for taking the time to provide a detailed and informative
+> exposition, it certainly helps me understand what I'm asking of the fs, the
+> areas that deserve more attention, and how to approach analyzing the
+> situation.
 > 
-> End users do not have to understand how filesystem unlink operation works.
-> But even if we agree that the user "asked the filesystem to perform *billions*
-> of updates" (as is the same with rm -rf of billions of files), If the
-> filesystem says
-> "ok I'll do it" and hogs the system for 10 days,
-> there might be something wrong with the system, not with the user.
+> At this point I'm about 3 days from completing copying the data (from a
+> snapshot of the troubled fs mounted with 'norecovery') over to a brand new
+> fs. Unfortunately the new fs is also rmapbt=1 so I'll go through all the
+> copying again (under more controlled circumstances) to get onto a rmapbt=0
+> fs (losing the ability to do online repairs whenever that arrives -
+> hopefully that won't come back to haunt me).
+
+Hmm.  Were most of the stuck processes running xfs_inodegc_flush?  Maybe
+we should try to switch that to something that will stop waiting after
+30s, since most of the (non-fsfreeze) callers don't actually *require*
+that the work actually finish, they're just trying to return accurate
+space accounting to userspace.
+
+> Out of interest:
 > 
-> Linux grew dirty page throttling for the same reason - so we can stop blaming
-> the users who copied the movie to their USB pen drive for their system getting
-> stuck.
-
-(Is the default dirty ratio still 20% of DRAM?)
-
-> This incident sounds like a very serious problem - the sort of problem that
-> makes users leave a filesystem with a door slam, never come back and
-> start tweeting about how awful fs X is.
+> > > - with a reboot/remount, does the log replay continue from where it left
+> > > off, or start again?
 > 
-> And most users won't even try to analyse the situation as Chris did and
-> write about it to xfs list before starting to tweet.
+> Sorry, if you provided an answer to this, I didn't understand it.
 > 
-> From a product POV, I think what should have happened here is that
-> freeing up the space would have taken 10 days in the background, but
-> otherwise, filesystem should not have been blocking other processes
-> for long periods of time.
+> Basically the question is, if a recovery on mount were going to take 10
+> hours, but the box rebooted and fs mounted again at 8 hours, would the
+> recovery this time take 2 hours or once again 10 hours?
 
-Indeed.  Chris, do you happen to have the sysrq-w output handy?  I'm
-curious if the stall warning backtraces all had xfs_inodegc_flush() in
-them, or were there other parts of the system stalling elsewhere too?
-50 billion updates is a lot, but there shouldn't be stall warnings.
-
-The one you pasted into your message is an ugly wart of the background
-inode gc code -- statfs (and getquota with root dqid) are slow-path
-summary counter reporting system calls, so they call flush_workqueue to
-make sure the background workers have collected *all* the garbage.
-
-I bet, however, that you and everyone else would rather have somewhat
-inaccurate results than a load average of 4700 and a dead machine.
-
-What I really want is flush_workqueue_timeout(), where we kick the
-workers and wait some amount of time, where the amount is a large number
-(say hangcheck_timeout-5) if we're near ENOSPC and a small one if not.
-IOWS, we'll try to have statfs return reasonably accurate results, but
-if it takes too long we'll get impatient and just return what we have.
-
-> Of course, it would have been nice if there was a friendly user interface
-> to notify users of background cg work progress.
-> 
-> All this is much easier said than done, but that does not make it less true.
-> 
-> Can we do anything to throttle background cg work to the point that it
-> has less catastrophic effect on end users? Perhaps limit the amount of
-> journal credits allowed to be consumed by gc work? so "foreground"
-> operations will be less likely to hang?
-
-...that said, if foreground writers are also stalling unacceptably,
-then we ought to throttle the background too.  Though that makes the
-"stuck in statfs" problem worse.  But I'd want to know that foreground
-threads are getting crushed before I started fiddling with that.
+In theory yes, it'll restart where it left off, but if 10 seconds go by
+and the extent count *hasn't changed* then yikes did we spend that
+entire time doing refcount btree updates??
 
 --D
 
-> I am willing to take a swing at it, if you point me at the right direction.
+> Cheers,
 > 
-> Thanks,
-> Amir.
+> Chris
