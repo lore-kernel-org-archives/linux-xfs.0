@@ -2,233 +2,282 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F29FC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 23:40:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D91CC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 23:40:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233707AbiEJXkJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 19:40:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46222 "EHLO
+        id S237851AbiEJXks (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 May 2022 19:40:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233259AbiEJXkI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 19:40:08 -0400
+        with ESMTP id S233259AbiEJXkr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 19:40:47 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCCB74A3F1
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 16:40:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D33B8DB
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 16:40:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6634561948
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 23:40:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6835C385D2;
-        Tue, 10 May 2022 23:40:06 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 605356192A
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 23:40:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9DB6C385D2;
+        Tue, 10 May 2022 23:40:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652226006;
-        bh=iiRAjM3ye0wY5CDiscwFVV/n5eWQxYc6H3Tb1wWiaTg=;
+        s=k20201202; t=1652226044;
+        bh=ge6wBtgDRl7JDBnP+3iG1c9S8VKa1aljGBv3MJB7L1E=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MznhGPTURPBh3xY7KUG5E9tUMPq78Pd+S7zlBQXPRM7r38GlPm2dWfb2gb/CgbX9Q
-         NviXl4P5cPpNdUIbIbo5iKelAHOTkiHaAW4VOO/7LJ7C/hLMf3Ovv9gmV34k/YvdWi
-         8bdSgPfwxZf/eJwXfWGcNM0Y4hzc/Cf99tchSWEclAQOPVGuDvQNXUg1bnf9tt+cqF
-         OjJcuPmf1HisMkwTOzZmV8K84cAWNityRyTLoYdhJ3HuOk26fSoNyZm/guYIdP60I3
-         1dMEKd5/awmCxeM6rm/fVYsEmufz3eGByIQUOhxoZYovl54RQ1LM/KpoCm98Hl2HJL
-         Gi6OuN8/69DCw==
-Date:   Tue, 10 May 2022 16:40:06 -0700
+        b=BaKrOMJhS9SrGwtTPp8Q2CrGXFPs/G+ddBNwsHKz/9/1l3d2977gmPqEiJf6Y3+4T
+         J4wWUIdK0qY18690oWg51GMliaYzpOMRoFGIgipUF/93boNVozo5BFm7lIR9JhNUb6
+         Olv4kg/Nvln2jywigZYTYxaI5yFuql1QEt0mkb798leo1E31gXvHRPGtF4cZSkV+Ln
+         QQCOVbzUPDkOnDGeKCInmIFK0AGERqxRYS81rk8ILg19HpQV+gVhv/KRHaABQaJ+XI
+         P3JMdUFa5IVL+KHexnKvBd3dzQxxxKndb0Iu2pQUrszLedp9AiianTPfV1btDJKcek
+         R/Tl4iSySIuVA==
+Date:   Tue, 10 May 2022 16:40:44 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 14/18] xfs: switch attr remove to xfs_attri_set_iter
-Message-ID: <20220510234006.GR27195@magnolia>
+Subject: Re: [PATCH 13/18] xfs: introduce attr remove initial states into
+ xfs_attr_set_iter
+Message-ID: <20220510234044.GS27195@magnolia>
 References: <20220509004138.762556-1-david@fromorbit.com>
- <20220509004138.762556-15-david@fromorbit.com>
+ <20220509004138.762556-14-david@fromorbit.com>
+ <20220510233736.GQ27195@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220509004138.762556-15-david@fromorbit.com>
+In-Reply-To: <20220510233736.GQ27195@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 09, 2022 at 10:41:34AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, May 10, 2022 at 04:37:36PM -0700, Darrick J. Wong wrote:
+> On Mon, May 09, 2022 at 10:41:33AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > We need to merge the add and remove code paths to enable safe
+> > recovery of replace operations. Hoist the initial remove states from
+> > xfs_attr_remove_iter into xfs_attr_set_iter. We will make use of
+> > them in the next patches.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Allison Henderson<allison.henderson@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_attr.c | 139 ++++++++++++++++++++++-----------------
+> >  fs/xfs/libxfs/xfs_attr.h |   4 ++
+> >  fs/xfs/xfs_trace.h       |   3 +
+> >  3 files changed, 84 insertions(+), 62 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > index 89e68d9e22c0..a6a9b1f8dce6 100644
+> > --- a/fs/xfs/libxfs/xfs_attr.c
+> > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > @@ -451,6 +451,68 @@ xfs_attr_rmtval_alloc(
+> >  	return error;
+> >  }
+> >  
+> > +/*
+> > + * Mark an attribute entry INCOMPLETE and save pointers to the relevant buffers
+> > + * for later deletion of the entry.
+> > + */
+> > +static int
+> > +xfs_attr_leaf_mark_incomplete(
+> > +	struct xfs_da_args	*args,
+> > +	struct xfs_da_state	*state)
+> > +{
+> > +	int			error;
+> > +
+> > +	/*
+> > +	 * Fill in disk block numbers in the state structure
+> > +	 * so that we can get the buffers back after we commit
+> > +	 * several transactions in the following calls.
+> > +	 */
+> > +	error = xfs_attr_fillstate(state);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	/*
+> > +	 * Mark the attribute as INCOMPLETE
+> > +	 */
+> > +	return xfs_attr3_leaf_setflag(args);
+> > +}
+> > +
+> > +/*
+> > + * Initial setup for xfs_attr_node_removename.  Make sure the attr is there and
+> > + * the blocks are valid.  Attr keys with remote blocks will be marked
+> > + * incomplete.
+> > + */
+> > +static
+> > +int xfs_attr_node_removename_setup(
+> > +	struct xfs_attr_item		*attr)
+> > +{
+> > +	struct xfs_da_args		*args = attr->xattri_da_args;
+> > +	struct xfs_da_state		**state = &attr->xattri_da_state;
+> > +	int				error;
+> > +
+> > +	error = xfs_attr_node_hasname(args, state);
+> > +	if (error != -EEXIST)
+> > +		goto out;
+> > +	error = 0;
+> > +
+> > +	ASSERT((*state)->path.blk[(*state)->path.active - 1].bp != NULL);
+> > +	ASSERT((*state)->path.blk[(*state)->path.active - 1].magic ==
+> > +		XFS_ATTR_LEAF_MAGIC);
+> > +
+> > +	if (args->rmtblkno > 0) {
+> > +		error = xfs_attr_leaf_mark_incomplete(args, *state);
+> > +		if (error)
+> > +			goto out;
+> > +
+> > +		error = xfs_attr_rmtval_invalidate(args);
+> > +	}
+> > +out:
+> > +	if (error)
+> > +		xfs_da_state_free(*state);
+> > +
+> > +	return error;
+> > +}
+> > +
+> >  /*
+> >   * Remove the original attr we have just replaced. This is dependent on the
+> >   * original lookup and insert placing the old attr in args->blkno/args->index
+> > @@ -550,6 +612,21 @@ xfs_attr_set_iter(
+> >  	case XFS_DAS_NODE_ADD:
+> >  		return xfs_attr_node_addname(attr);
+> >  
+> > +	case XFS_DAS_SF_REMOVE:
 > 
-> Now that xfs_attri_set_iter() has initial states for removing
-> attributes, switch the pure attribute removal code over to using it.
-> This requires attrs being removed to always be marked as INCOMPLETE
-> before we start the removal due to the fact we look up the attr to
-> remove again in xfs_attr_node_remove_attr().
+> I think attr removal is broken until the next patch, which adds
+> xfs_attr_init_remove_state to set dela_state to DAS_*_REMOVE, right?
+
+Aha, I was looking at the wrong tab, the old xfs_attr_remove_iter code
+is still in place, so ignore this question...
+
+> The rest of the state machine changes look solid.
 > 
-> Note: this drops the fillstate/refillstate optimisations from
-> the remove path that avoid having to look up the path again after
-> setting the incomplete flag and removeing remote attrs. Restoring
+> With that moved up by one patch to fix the bisection issue,
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-'removing'
-
-> that optimisation to this path is future Dave's problem.
-
-LOL.
-
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Allison Henderson<allison.henderson@oracle.com>
-
-Stupid nit: Probably ought to  ^^^ be a space between the 'son' and the
-bracket.
-
-With that stuff cleaned up,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+..and go straight to the RVB tag.
 
 --D
 
-
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 21 +++++++++------------
->  fs/xfs/libxfs/xfs_attr.h | 10 ++++++++++
->  fs/xfs/xfs_attr_item.c   | 31 +++++++------------------------
->  3 files changed, 26 insertions(+), 36 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index a6a9b1f8dce6..b935727cf517 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -499,13 +499,11 @@ int xfs_attr_node_removename_setup(
->  	ASSERT((*state)->path.blk[(*state)->path.active - 1].magic ==
->  		XFS_ATTR_LEAF_MAGIC);
->  
-> -	if (args->rmtblkno > 0) {
-> -		error = xfs_attr_leaf_mark_incomplete(args, *state);
-> -		if (error)
-> -			goto out;
-> -
-> +	error = xfs_attr_leaf_mark_incomplete(args, *state);
-> +	if (error)
-> +		goto out;
-> +	if (args->rmtblkno > 0)
->  		error = xfs_attr_rmtval_invalidate(args);
-> -	}
->  out:
->  	if (error)
->  		xfs_da_state_free(*state);
-> @@ -821,7 +819,7 @@ xfs_attr_defer_remove(
->  	if (error)
->  		return error;
->  
-> -	new->xattri_dela_state = XFS_DAS_UNINIT;
-> +	new->xattri_dela_state = xfs_attr_init_remove_state(args);
->  	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
->  	trace_xfs_attr_defer_remove(new->xattri_dela_state, args->dp);
->  
-> @@ -1391,16 +1389,15 @@ xfs_attr_node_remove_attr(
->  {
->  	struct xfs_da_args		*args = attr->xattri_da_args;
->  	struct xfs_da_state		*state = NULL;
-> -	struct xfs_mount		*mp = args->dp->i_mount;
->  	int				retval = 0;
->  	int				error = 0;
->  
->  	/*
-> -	 * Re-find the "old" attribute entry after any split ops. The INCOMPLETE
-> -	 * flag means that we will find the "old" attr, not the "new" one.
-> +	 * The attr we are removing has already been marked incomplete, so
-> +	 * we need to set the filter appropriately to re-find the "old"
-> +	 * attribute entry after any split ops.
->  	 */
-> -	if (!xfs_has_larp(mp))
-> -		args->attr_filter |= XFS_ATTR_INCOMPLETE;
-> +	args->attr_filter |= XFS_ATTR_INCOMPLETE;
->  	state = xfs_da_state_alloc(args);
->  	state->inleaf = 0;
->  	error = xfs_da3_node_lookup_int(state, &retval);
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 7ea7c7fa31ac..6bef522533a4 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -593,6 +593,16 @@ xfs_attr_init_add_state(struct xfs_da_args *args)
->  	return XFS_DAS_NODE_ADD;
->  }
->  
-> +static inline enum xfs_delattr_state
-> +xfs_attr_init_remove_state(struct xfs_da_args *args)
-> +{
-> +	if (xfs_attr_is_shortform(args->dp))
-> +		return XFS_DAS_SF_REMOVE;
-> +	if (xfs_attr_is_leaf(args->dp))
-> +		return XFS_DAS_LEAF_REMOVE;
-> +	return XFS_DAS_NODE_REMOVE;
-> +}
-> +
->  static inline enum xfs_delattr_state
->  xfs_attr_init_replace_state(struct xfs_da_args *args)
->  {
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 740a55d07660..fb9549e7ea96 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -296,12 +296,9 @@ xfs_attrd_item_release(
->  STATIC int
->  xfs_xattri_finish_update(
->  	struct xfs_attr_item		*attr,
-> -	struct xfs_attrd_log_item	*attrdp,
-> -	uint32_t			op_flags)
-> +	struct xfs_attrd_log_item	*attrdp)
->  {
->  	struct xfs_da_args		*args = attr->xattri_da_args;
-> -	unsigned int			op = op_flags &
-> -					     XFS_ATTR_OP_FLAGS_TYPE_MASK;
->  	int				error;
->  
->  	if (XFS_TEST_ERROR(false, args->dp->i_mount, XFS_ERRTAG_LARP)) {
-> @@ -309,22 +306,9 @@ xfs_xattri_finish_update(
->  		goto out;
->  	}
->  
-> -	switch (op) {
-> -	case XFS_ATTR_OP_FLAGS_SET:
-> -	case XFS_ATTR_OP_FLAGS_REPLACE:
-> -		error = xfs_attr_set_iter(attr);
-> -		if (!error && attr->xattri_dela_state != XFS_DAS_DONE)
-> -			error = -EAGAIN;
-> -		break;
-> -	case XFS_ATTR_OP_FLAGS_REMOVE:
-> -		ASSERT(XFS_IFORK_Q(args->dp));
-> -		error = xfs_attr_remove_iter(attr);
-> -		break;
-> -	default:
-> -		error = -EFSCORRUPTED;
-> -		break;
-> -	}
-> -
-> +	error = xfs_attr_set_iter(attr);
-> +	if (!error && attr->xattri_dela_state != XFS_DAS_DONE)
-> +		error = -EAGAIN;
->  out:
->  	/*
->  	 * Mark the transaction dirty, even on error. This ensures the
-> @@ -432,8 +416,7 @@ xfs_attr_finish_item(
->  	 */
->  	attr->xattri_da_args->trans = tp;
->  
-> -	error = xfs_xattri_finish_update(attr, done_item,
-> -					 attr->xattri_op_flags);
-> +	error = xfs_xattri_finish_update(attr, done_item);
->  	if (error != -EAGAIN)
->  		kmem_free(attr);
->  
-> @@ -581,7 +564,7 @@ xfs_attri_item_recover(
->  		attr->xattri_dela_state = xfs_attr_init_add_state(args);
->  		break;
->  	case XFS_ATTR_OP_FLAGS_REMOVE:
-> -		attr->xattri_dela_state = XFS_DAS_UNINIT;
-> +		attr->xattri_dela_state = xfs_attr_init_remove_state(args);
->  		break;
->  	default:
->  		ASSERT(0);
-> @@ -600,7 +583,7 @@ xfs_attri_item_recover(
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	xfs_trans_ijoin(tp, ip, 0);
->  
-> -	ret = xfs_xattri_finish_update(attr, done_item, attrp->alfi_op_flags);
-> +	ret = xfs_xattri_finish_update(attr, done_item);
->  	if (ret == -EAGAIN) {
->  		/* There's more work to do, so add it to this transaction */
->  		xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &attr->xattri_list);
-> -- 
-> 2.35.1
+> --D
 > 
+> > +		attr->xattri_dela_state = XFS_DAS_DONE;
+> > +		return xfs_attr_sf_removename(args);
+> > +	case XFS_DAS_LEAF_REMOVE:
+> > +		attr->xattri_dela_state = XFS_DAS_DONE;
+> > +		return xfs_attr_leaf_removename(args);
+> > +	case XFS_DAS_NODE_REMOVE:
+> > +		error = xfs_attr_node_removename_setup(attr);
+> > +		if (error)
+> > +			return error;
+> > +		attr->xattri_dela_state = XFS_DAS_NODE_REMOVE_RMT;
+> > +		if (args->rmtblkno == 0)
+> > +			attr->xattri_dela_state++;
+> > +		break;
+> > +
+> >  	case XFS_DAS_LEAF_SET_RMT:
+> >  	case XFS_DAS_NODE_SET_RMT:
+> >  		error = xfs_attr_rmtval_find_space(attr);
+> > @@ -1351,68 +1428,6 @@ xfs_attr_node_remove_attr(
+> >  }
+> >  
+> >  
+> > -/*
+> > - * Mark an attribute entry INCOMPLETE and save pointers to the relevant buffers
+> > - * for later deletion of the entry.
+> > - */
+> > -STATIC int
+> > -xfs_attr_leaf_mark_incomplete(
+> > -	struct xfs_da_args	*args,
+> > -	struct xfs_da_state	*state)
+> > -{
+> > -	int			error;
+> > -
+> > -	/*
+> > -	 * Fill in disk block numbers in the state structure
+> > -	 * so that we can get the buffers back after we commit
+> > -	 * several transactions in the following calls.
+> > -	 */
+> > -	error = xfs_attr_fillstate(state);
+> > -	if (error)
+> > -		return error;
+> > -
+> > -	/*
+> > -	 * Mark the attribute as INCOMPLETE
+> > -	 */
+> > -	return xfs_attr3_leaf_setflag(args);
+> > -}
+> > -
+> > -/*
+> > - * Initial setup for xfs_attr_node_removename.  Make sure the attr is there and
+> > - * the blocks are valid.  Attr keys with remote blocks will be marked
+> > - * incomplete.
+> > - */
+> > -STATIC
+> > -int xfs_attr_node_removename_setup(
+> > -	struct xfs_attr_item		*attr)
+> > -{
+> > -	struct xfs_da_args		*args = attr->xattri_da_args;
+> > -	struct xfs_da_state		**state = &attr->xattri_da_state;
+> > -	int				error;
+> > -
+> > -	error = xfs_attr_node_hasname(args, state);
+> > -	if (error != -EEXIST)
+> > -		goto out;
+> > -	error = 0;
+> > -
+> > -	ASSERT((*state)->path.blk[(*state)->path.active - 1].bp != NULL);
+> > -	ASSERT((*state)->path.blk[(*state)->path.active - 1].magic ==
+> > -		XFS_ATTR_LEAF_MAGIC);
+> > -
+> > -	if (args->rmtblkno > 0) {
+> > -		error = xfs_attr_leaf_mark_incomplete(args, *state);
+> > -		if (error)
+> > -			goto out;
+> > -
+> > -		error = xfs_attr_rmtval_invalidate(args);
+> > -	}
+> > -out:
+> > -	if (error)
+> > -		xfs_da_state_free(*state);
+> > -
+> > -	return error;
+> > -}
+> > -
+> >  STATIC int
+> >  xfs_attr_node_removename(
+> >  	struct xfs_da_args	*args,
+> > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> > index c318260f17d4..7ea7c7fa31ac 100644
+> > --- a/fs/xfs/libxfs/xfs_attr.h
+> > +++ b/fs/xfs/libxfs/xfs_attr.h
+> > @@ -451,6 +451,10 @@ enum xfs_delattr_state {
+> >  	XFS_DAS_RM_NAME,		/* Remove attr name */
+> >  	XFS_DAS_RM_SHRINK,		/* We are shrinking the tree */
+> >  
+> > +	XFS_DAS_SF_REMOVE,		/* Initial shortform set iter state */
+> > +	XFS_DAS_LEAF_REMOVE,		/* Initial leaf form set iter state */
+> > +	XFS_DAS_NODE_REMOVE,		/* Initial node form set iter state */
+> > +
+> >  	/* Leaf state set/replace sequence */
+> >  	XFS_DAS_LEAF_SET_RMT,		/* set a remote xattr from a leaf */
+> >  	XFS_DAS_LEAF_ALLOC_RMT,		/* We are allocating remote blocks */
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index 260760ce2d05..01b047d86cd1 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -4136,6 +4136,9 @@ TRACE_DEFINE_ENUM(XFS_DAS_NODE_ADD);
+> >  TRACE_DEFINE_ENUM(XFS_DAS_RMTBLK);
+> >  TRACE_DEFINE_ENUM(XFS_DAS_RM_NAME);
+> >  TRACE_DEFINE_ENUM(XFS_DAS_RM_SHRINK);
+> > +TRACE_DEFINE_ENUM(XFS_DAS_SF_REMOVE);
+> > +TRACE_DEFINE_ENUM(XFS_DAS_LEAF_REMOVE);
+> > +TRACE_DEFINE_ENUM(XFS_DAS_NODE_REMOVE);
+> >  TRACE_DEFINE_ENUM(XFS_DAS_LEAF_SET_RMT);
+> >  TRACE_DEFINE_ENUM(XFS_DAS_LEAF_ALLOC_RMT);
+> >  TRACE_DEFINE_ENUM(XFS_DAS_LEAF_REPLACE);
+> > -- 
+> > 2.35.1
+> > 
