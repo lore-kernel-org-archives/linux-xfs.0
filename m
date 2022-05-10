@@ -2,544 +2,412 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D62C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 23:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8684C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 23:47:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234533AbiEJXmx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 19:42:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55836 "EHLO
+        id S230108AbiEJXrJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 May 2022 19:47:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229837AbiEJXmw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 19:42:52 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C733E522CC
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 16:42:50 -0700 (PDT)
+        with ESMTP id S229927AbiEJXrI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 19:47:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49E9F29C8A
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 16:47:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id A9EB1CE21A5
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 23:42:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA1B2C385CC;
-        Tue, 10 May 2022 23:42:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D0AAC61949
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 23:47:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2787FC385D2;
+        Tue, 10 May 2022 23:47:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652226167;
-        bh=H6ERSdgZ/QqVgS8hE1Njm4T3bhYuW1PFH5cH0fu7QUg=;
+        s=k20201202; t=1652226426;
+        bh=cK9F6DyfXMBFiTXxvyrKfdnD8BoOAUoufnmBN6PfZ7M=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pHh1QLkExFt685OAvuTYtmoLJ0ClMJC0u3mPmYYg+7w0PJF/2OuntskrGphiekzaW
-         hQ/Gd/kbZ6TeAw2yiqSRGR/MV96Cr0RW0li7PC5pwrdHBSnj6AYgUWI0ITqcP0Wea+
-         ntFh2sLeHC+Ciuzt1MAe1FLh1O6+YYkaaspVMAHJr7PMxvoD2IPLaVLkYPtdJc4K8m
-         4gpJCajVXMQXhO6d5HHgocSsT60YF2hc7AN44shHUERNpF4KNVExjqP9tBwUlltC5X
-         MfzFTYoEVojtMxPEqrI+QfSMUJMNBRxWGZz8+Sobos/9Fkf/PYPXJZJe0rMRuVVYCl
-         A2vIf2nMMzqxw==
-Date:   Tue, 10 May 2022 16:42:46 -0700
+        b=MpBVgezzgOwPVc4d2tXiSTNx0a5brZ7VoRzvLXx2ylN0yKoEKZQzvbkWijs8Cj52s
+         89Bogz1ppW6gVTk9ze5hb/Xby30gADhMbv83EsNpDOyBSQgCSE/vp4bXQAPLwTgfZD
+         wKcBpTmkoJelV4Wt171dVlHB83BG5oG25afOiufA/RiWWeGqAmdjo//vpMlPfQp13W
+         uZINchxjcZzVJo0FlRscVSvYttXxUoMEkwJvnm4p9EE4hAQij0TrLBsoBuUD8iQZl/
+         LgwIQKxRCAuYXLIfnOKxGWXt02acC1cY5+PWQx6473PLU2zyHNEkvHoO2KjGoxPAtn
+         Bu3sC7oWgziWA==
+Date:   Tue, 10 May 2022 16:47:05 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 15/18] xfs: remove xfs_attri_remove_iter
-Message-ID: <20220510234246.GT27195@magnolia>
+Subject: Re: [PATCH 16/18 v2] xfs: use XFS_DA_OP flags in deferred attr ops
+Message-ID: <20220510234705.GU27195@magnolia>
 References: <20220509004138.762556-1-david@fromorbit.com>
- <20220509004138.762556-16-david@fromorbit.com>
+ <20220509004138.762556-17-david@fromorbit.com>
+ <20220510222015.GV1098723@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220509004138.762556-16-david@fromorbit.com>
+In-Reply-To: <20220510222015.GV1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 09, 2022 at 10:41:35AM +1000, Dave Chinner wrote:
+On Wed, May 11, 2022 at 08:20:15AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> xfs_attri_remove_iter is not used anymore, so remove it and all the
-> infrastructure it uses and is needed to drive it. THe
-> xfs_attr_refillstate() function now throws an unused warning, so
-> isolate the xfs_attr_fillstate()/xfs_attr_refillstate() code pair
-> with an #if 0 and a comment explaining why we want to keep this code
-> and restore the optimisation it provides in the near future.
+> We currently store the high level attr operation in
+> args->attr_flags. This falgs are what the VFS is telling us to do,
+
+"This flag contains what the VFS is telling us to do..."
+
+> but don't necessarily match what we are doing in the low level
+> modification state machine. e.g. XATTR_REPLACE implies both
+> XFS_DA_OP_ADDNAME and XFS_DA_OP_RENAME because it is doing both a
+> remove and adding a new attr.
+> 
+> However, deep in the individual state machine operations, we check
+> errors against this high level VFS op flags, not the low level
+> XFS_DA_OP flags. Indeed, we don't even have a low level flag for
+> a REMOVE operation, so the only way we know we are doing a remove
+> is the complete absence of XATTR_REPLACE, XATTR_CREATE,
+> XFS_DA_OP_ADDNAME and XFS_DA_OP_RENAME. And because there are other
+> flags in these fields, this is a pain to check if we need to.
+> 
+> As the XFS_DA_OP flags are only needed once the deferred operations
+> are set up, set these flags appropriately when we set the initial
+> operation state. We also introduce a XFS_DA_OP_REMOVE flag to make
+> it easy to know that we are doing a remove operation.
+
+Oh goody!
+
+> With these, we can remove the use of XATTR_REPLACE and XATTR_CREATE
+> in low level lookup operations, and manipulate the low level flags
+> according to the low level context that is operating. e.g. log
+> recovery does not have a VFS xattr operation state to copy into
+> args->attr_flags, and the low level state machine ops we do for
+> recovery do not match the high level VFS operations that were in
+> progress when the system failed...
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Allison Henderson<allison.henderson@oracle.com>
+> ---
+> Version 2 (now that vger has finally got this to me after 2 days):
+> - fixed bug by that removed clearing remote block values after save
+>   for node format blocks. Clearing is now done by
+>   xfs_attr_save_rmt_blk() for both callers.
+> 
 
-Heh.  The state machine traversal is muuuch easier to read now...
+With the minor sentence nit above fixed,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 418 +++++++++++++--------------------------
->  1 file changed, 139 insertions(+), 279 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c      | 136 +++++++++++++++++++++++-------------------
+>  fs/xfs/libxfs/xfs_attr.h      |   3 +
+>  fs/xfs/libxfs/xfs_attr_leaf.c |   2 +-
+>  fs/xfs/libxfs/xfs_da_btree.h  |   8 ++-
+>  4 files changed, 83 insertions(+), 66 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index b935727cf517..8be76f8d11c5 100644
+> index 8be76f8d11c5..a36364b27aa1 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -64,10 +64,6 @@ STATIC int xfs_attr_node_addname_find_attr(struct xfs_attr_item *attr);
->  STATIC int xfs_attr_node_remove_attr(struct xfs_attr_item *attr);
->  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
->  				 struct xfs_da_state **state);
-> -STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
-> -STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
-> -STATIC int xfs_attr_node_removename(struct xfs_da_args *args,
-> -				    struct xfs_da_state *state);
+> @@ -467,7 +467,7 @@ xfs_attr_leaf_addname(
+>  	 */
+>  	if (args->rmtblkno)
+>  		attr->xattri_dela_state = XFS_DAS_LEAF_SET_RMT;
+> -	else if (args->op_flags & XFS_DA_OP_RENAME)
+> +	else if (args->op_flags & XFS_DA_OP_REPLACE)
+>  		xfs_attr_dela_state_set_replace(attr, XFS_DAS_LEAF_REPLACE);
+>  	else
+>  		attr->xattri_dela_state = XFS_DAS_DONE;
+> @@ -512,7 +512,7 @@ xfs_attr_node_addname(
 >  
->  int
->  xfs_inode_hasattr(
-> @@ -100,6 +96,123 @@ xfs_attr_is_leaf(
->  	return imap.br_startoff == 0 && imap.br_blockcount == 1;
->  }
+>  	if (args->rmtblkno)
+>  		attr->xattri_dela_state = XFS_DAS_NODE_SET_RMT;
+> -	else if (args->op_flags & XFS_DA_OP_RENAME)
+> +	else if (args->op_flags & XFS_DA_OP_REPLACE)
+>  		xfs_attr_dela_state_set_replace(attr, XFS_DAS_NODE_REPLACE);
+>  	else
+>  		attr->xattri_dela_state = XFS_DAS_DONE;
+> @@ -548,7 +548,7 @@ xfs_attr_rmtval_alloc(
+>  		return error;
 >  
-> +/*
-> + * XXX (dchinner): name path state saving and refilling is an optimisation to
-> + * avoid needing to look up name entries after rolling transactions removing
-> + * remote xattr blocks between the name entry lookup and name entry removal.
-> + * This optimisation got sidelined when combining the set and remove state
-> + * machines, but the code has been left in place because it is worthwhile to
-> + * restore the optimisation once the combined state machine paths have settled.
-> + *
-> + * This comment is a public service announcement to remind Future Dave that he
-> + * still needs to restore this code to working order.
-> + */
-> +#if 0
-> +/*
-> + * Fill in the disk block numbers in the state structure for the buffers
-> + * that are attached to the state structure.
-> + * This is done so that we can quickly reattach ourselves to those buffers
-> + * after some set of transaction commits have released these buffers.
-> + */
-> +static int
-> +xfs_attr_fillstate(xfs_da_state_t *state)
-> +{
-> +	xfs_da_state_path_t *path;
-> +	xfs_da_state_blk_t *blk;
-> +	int level;
-> +
-> +	trace_xfs_attr_fillstate(state->args);
-> +
-> +	/*
-> +	 * Roll down the "path" in the state structure, storing the on-disk
-> +	 * block number for those buffers in the "path".
-> +	 */
-> +	path = &state->path;
-> +	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
-> +	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
-> +		if (blk->bp) {
-> +			blk->disk_blkno = xfs_buf_daddr(blk->bp);
-> +			blk->bp = NULL;
-> +		} else {
-> +			blk->disk_blkno = 0;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * Roll down the "altpath" in the state structure, storing the on-disk
-> +	 * block number for those buffers in the "altpath".
-> +	 */
-> +	path = &state->altpath;
-> +	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
-> +	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
-> +		if (blk->bp) {
-> +			blk->disk_blkno = xfs_buf_daddr(blk->bp);
-> +			blk->bp = NULL;
-> +		} else {
-> +			blk->disk_blkno = 0;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Reattach the buffers to the state structure based on the disk block
-> + * numbers stored in the state structure.
-> + * This is done after some set of transaction commits have released those
-> + * buffers from our grip.
-> + */
-> +static int
-> +xfs_attr_refillstate(xfs_da_state_t *state)
-> +{
-> +	xfs_da_state_path_t *path;
-> +	xfs_da_state_blk_t *blk;
-> +	int level, error;
-> +
-> +	trace_xfs_attr_refillstate(state->args);
-> +
-> +	/*
-> +	 * Roll down the "path" in the state structure, storing the on-disk
-> +	 * block number for those buffers in the "path".
-> +	 */
-> +	path = &state->path;
-> +	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
-> +	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
-> +		if (blk->disk_blkno) {
-> +			error = xfs_da3_node_read_mapped(state->args->trans,
-> +					state->args->dp, blk->disk_blkno,
-> +					&blk->bp, XFS_ATTR_FORK);
-> +			if (error)
-> +				return error;
-> +		} else {
-> +			blk->bp = NULL;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * Roll down the "altpath" in the state structure, storing the on-disk
-> +	 * block number for those buffers in the "altpath".
-> +	 */
-> +	path = &state->altpath;
-> +	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
-> +	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
-> +		if (blk->disk_blkno) {
-> +			error = xfs_da3_node_read_mapped(state->args->trans,
-> +					state->args->dp, blk->disk_blkno,
-> +					&blk->bp, XFS_ATTR_FORK);
-> +			if (error)
-> +				return error;
-> +		} else {
-> +			blk->bp = NULL;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +#else
-> +static int xfs_attr_fillstate(xfs_da_state_t *state) { return 0; }
-> +#endif
-> +
->  /*========================================================================
->   * Overall external interface routines.
->   *========================================================================*/
-> @@ -548,25 +661,16 @@ xfs_attr_leaf_remove_attr(
+>  	/* If this is not a rename, clear the incomplete flag and we're done. */
+> -	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
+> +	if (!(args->op_flags & XFS_DA_OP_REPLACE)) {
+>  		error = xfs_attr3_leaf_clearflag(args);
+>  		attr->xattri_dela_state = XFS_DAS_DONE;
+>  	} else {
+> @@ -967,8 +967,6 @@ xfs_attr_set(
+>  
+>  	if (args->value) {
+>  		XFS_STATS_INC(mp, xs_attr_set);
+> -
+> -		args->op_flags |= XFS_DA_OP_ADDNAME;
+>  		args->total = xfs_attr_calc_size(args, &local);
+>  
+>  		/*
+> @@ -1126,28 +1124,41 @@ static inline int xfs_attr_sf_totsize(struct xfs_inode *dp)
+>   * Add a name to the shortform attribute list structure
+>   * This is the external routine.
 >   */
->  static int
->  xfs_attr_leaf_shrink(
-> -	struct xfs_da_args	*args,
-> -	struct xfs_da_state     *state)
+> -STATIC int
+> -xfs_attr_shortform_addname(xfs_da_args_t *args)
+> +static int
+> +xfs_attr_shortform_addname(
 > +	struct xfs_da_args	*args)
 >  {
->  	struct xfs_inode	*dp = args->dp;
-> -	int			error, forkoff;
->  	struct xfs_buf		*bp;
-> +	int			forkoff;
+> -	int newsize, forkoff, retval;
+> +	int			newsize, forkoff;
 > +	int			error;
 >  
->  	if (!xfs_attr_is_leaf(dp))
->  		return 0;
+>  	trace_xfs_attr_sf_addname(args);
 >  
-> -	/*
-> -	 * Have to get rid of the copy of this dabuf in the state.
-> -	 */
-> -	if (state) {
-> -		ASSERT(state->path.active == 1);
-> -		ASSERT(state->path.blk[0].bp);
-> -		state->path.blk[0].bp = NULL;
-> -	}
-> -
->  	error = xfs_attr3_leaf_read(args->trans, args->dp, 0, &bp);
->  	if (error)
->  		return error;
-> @@ -709,7 +813,7 @@ xfs_attr_set_iter(
->  	case XFS_DAS_NODE_REMOVE_ATTR:
->  		error = xfs_attr_node_remove_attr(attr);
->  		if (!error)
-> -			error = xfs_attr_leaf_shrink(args, NULL);
-> +			error = xfs_attr_leaf_shrink(args);
->  		attr->xattri_dela_state = XFS_DAS_DONE;
->  		break;
->  	default:
-> @@ -1382,6 +1486,24 @@ xfs_attr_node_try_addname(
->  	return error;
+> -	retval = xfs_attr_shortform_lookup(args);
+> -	if (retval == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
+> -		return retval;
+> -	if (retval == -EEXIST) {
+> -		if (args->attr_flags & XATTR_CREATE)
+> -			return retval;
+> -		retval = xfs_attr_sf_removename(args);
+> -		if (retval)
+> -			return retval;
+> +	error = xfs_attr_shortform_lookup(args);
+> +	switch (error) {
+> +	case -ENOATTR:
+> +		if (args->op_flags & XFS_DA_OP_REPLACE)
+> +			return error;
+> +		break;
+> +	case -EEXIST:
+> +		if (!(args->op_flags & XFS_DA_OP_REPLACE))
+> +			return error;
+> +
+> +		error = xfs_attr_sf_removename(args);
+> +		if (error)
+> +			return error;
+> +
+>  		/*
+> -		 * Since we have removed the old attr, clear ATTR_REPLACE so
+> -		 * that the leaf format add routine won't trip over the attr
+> -		 * not being around.
+> +		 * Since we have removed the old attr, clear XFS_DA_OP_REPLACE
+> +		 * so that the new attr doesn't fit in shortform format, the
+> +		 * leaf format add routine won't trip over the attr not being
+> +		 * around.
+>  		 */
+> -		args->attr_flags &= ~XATTR_REPLACE;
+> +		args->op_flags &= ~XFS_DA_OP_REPLACE;
+> +		break;
+> +	case 0:
+> +		break;
+> +	default:
+> +		return error;
+>  	}
+>  
+>  	if (args->namelen >= XFS_ATTR_SF_ENTSIZE_MAX ||
+> @@ -1170,8 +1181,8 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+>   * External routines when attribute list is one block
+>   *========================================================================*/
+>  
+> -/* Store info about a remote block */
+> -STATIC void
+> +/* Save the current remote block info and clear the current pointers. */
+> +static void
+>  xfs_attr_save_rmt_blk(
+>  	struct xfs_da_args	*args)
+>  {
+> @@ -1180,10 +1191,13 @@ xfs_attr_save_rmt_blk(
+>  	args->rmtblkno2 = args->rmtblkno;
+>  	args->rmtblkcnt2 = args->rmtblkcnt;
+>  	args->rmtvaluelen2 = args->rmtvaluelen;
+> +	args->rmtblkno = 0;
+> +	args->rmtblkcnt = 0;
+> +	args->rmtvaluelen = 0;
 >  }
 >  
-> +static int
-> +xfs_attr_node_removename(
-> +	struct xfs_da_args	*args,
-> +	struct xfs_da_state	*state)
-> +{
-> +	struct xfs_da_state_blk	*blk;
-> +	int			retval;
-> +
-> +	/*
-> +	 * Remove the name and update the hashvals in the tree.
-> +	 */
-> +	blk = &state->path.blk[state->path.active-1];
-> +	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-> +	retval = xfs_attr3_leaf_remove(blk->bp, args);
-> +	xfs_da3_fixhashpath(state, &state->path);
-> +
-> +	return retval;
-> +}
+>  /* Set stored info about a remote block */
+> -STATIC void
+> +static void
+>  xfs_attr_restore_rmt_blk(
+>  	struct xfs_da_args	*args)
+>  {
+> @@ -1229,28 +1243,27 @@ xfs_attr_leaf_try_add(
+>  	 * Look up the xattr name to set the insertion point for the new xattr.
+>  	 */
+>  	error = xfs_attr3_leaf_lookup_int(bp, args);
+> -	if (error != -ENOATTR && error != -EEXIST)
+> -		goto out_brelse;
+> -	if (error == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
+> -		goto out_brelse;
+> -	if (error == -EEXIST) {
+> -		if (args->attr_flags & XATTR_CREATE)
+> +	switch (error) {
+> +	case -ENOATTR:
+> +		if (args->op_flags & XFS_DA_OP_REPLACE)
+> +			goto out_brelse;
+> +		break;
+> +	case -EEXIST:
+> +		if (!(args->op_flags & XFS_DA_OP_REPLACE))
+>  			goto out_brelse;
 >  
->  static int
->  xfs_attr_node_remove_attr(
-> @@ -1424,268 +1546,6 @@ xfs_attr_node_remove_attr(
->  	return retval;
->  }
+>  		trace_xfs_attr_leaf_replace(args);
+> -
+> -		/* save the attribute state for later removal*/
+> -		args->op_flags |= XFS_DA_OP_RENAME;	/* an atomic rename */
+> -		xfs_attr_save_rmt_blk(args);
+> -
+>  		/*
+> -		 * clear the remote attr state now that it is saved so that the
+> -		 * values reflect the state of the attribute we are about to
+> +		 * Save the existing remote attr state so that the current
+> +		 * values reflect the state of the new attribute we are about to
+>  		 * add, not the attribute we just found and will remove later.
+>  		 */
+> -		args->rmtblkno = 0;
+> -		args->rmtblkcnt = 0;
+> -		args->rmtvaluelen = 0;
+> +		xfs_attr_save_rmt_blk(args);
+> +		break;
+> +	case 0:
+> +		break;
+> +	default:
+> +		goto out_brelse;
+>  	}
 >  
-> -
-> -STATIC int
-> -xfs_attr_node_removename(
-> -	struct xfs_da_args	*args,
-> -	struct xfs_da_state	*state)
-> -{
-> -	struct xfs_da_state_blk	*blk;
-> -	int			retval;
-> -
-> -	/*
-> -	 * Remove the name and update the hashvals in the tree.
-> -	 */
-> -	blk = &state->path.blk[state->path.active-1];
-> -	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-> -	retval = xfs_attr3_leaf_remove(blk->bp, args);
-> -	xfs_da3_fixhashpath(state, &state->path);
-> -
-> -	return retval;
-> -}
-> -
-> -/*
-> - * Remove the attribute specified in @args.
-> - *
-> - * This will involve walking down the Btree, and may involve joining
-> - * leaf nodes and even joining intermediate nodes up to and including
-> - * the root node (a special case of an intermediate node).
-> - *
-> - * This routine is meant to function as either an in-line or delayed operation,
-> - * and may return -EAGAIN when the transaction needs to be rolled.  Calling
-> - * functions will need to handle this, and call the function until a
-> - * successful error code is returned.
-> - */
-> -int
-> -xfs_attr_remove_iter(
-> -	struct xfs_attr_item		*attr)
-> -{
+>  	return xfs_attr3_leaf_add(bp, args);
+> @@ -1389,46 +1402,45 @@ xfs_attr_node_hasname(
+>  
+>  STATIC int
+>  xfs_attr_node_addname_find_attr(
+> -	 struct xfs_attr_item		*attr)
+> +	 struct xfs_attr_item	*attr)
+>  {
 > -	struct xfs_da_args		*args = attr->xattri_da_args;
-> -	struct xfs_da_state		*state = attr->xattri_da_state;
-> -	int				retval, error = 0;
-> -	struct xfs_inode		*dp = args->dp;
+> -	int				retval;
+> +	struct xfs_da_args	*args = attr->xattri_da_args;
+> +	int			error;
+>  
+>  	/*
+>  	 * Search to see if name already exists, and get back a pointer
+>  	 * to where it should go.
+>  	 */
+> -	retval = xfs_attr_node_hasname(args, &attr->xattri_da_state);
+> -	if (retval != -ENOATTR && retval != -EEXIST)
+> -		goto error;
 > -
-> -	trace_xfs_attr_node_removename(args);
+> -	if (retval == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
+> -		goto error;
+> -	if (retval == -EEXIST) {
+> -		if (args->attr_flags & XATTR_CREATE)
+> +	error = xfs_attr_node_hasname(args, &attr->xattri_da_state);
+> +	switch (error) {
+> +	case -ENOATTR:
+> +		if (args->op_flags & XFS_DA_OP_REPLACE)
+> +			goto error;
+> +		break;
+> +	case -EEXIST:
+> +		if (!(args->op_flags & XFS_DA_OP_REPLACE))
+>  			goto error;
+>  
+> -		trace_xfs_attr_node_replace(args);
 > -
-> -	switch (attr->xattri_dela_state) {
-> -	case XFS_DAS_UNINIT:
-> -		if (!xfs_inode_hasattr(dp))
-> -			return -ENOATTR;
-> -
-> -		/*
-> -		 * Shortform or leaf formats don't require transaction rolls and
-> -		 * thus state transitions. Call the right helper and return.
-> -		 */
-> -		if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL)
-> -			return xfs_attr_sf_removename(args);
-> -
-> -		if (xfs_attr_is_leaf(dp))
-> -			return xfs_attr_leaf_removename(args);
-> -
-> -		/*
-> -		 * Node format may require transaction rolls. Set up the
-> -		 * state context and fall into the state machine.
-> -		 */
-> -		if (!attr->xattri_da_state) {
-> -			error = xfs_attr_node_removename_setup(attr);
-> -			if (error)
-> -				return error;
-> -			state = attr->xattri_da_state;
-> -		}
-> -
-> -		fallthrough;
-> -	case XFS_DAS_RMTBLK:
-> -		attr->xattri_dela_state = XFS_DAS_RMTBLK;
-> -
-> -		/*
-> -		 * If there is an out-of-line value, de-allocate the blocks.
-> -		 * This is done before we remove the attribute so that we don't
-> -		 * overflow the maximum size of a transaction and/or hit a
-> -		 * deadlock.
-> -		 */
-> -		if (args->rmtblkno > 0) {
-> -			/*
-> -			 * May return -EAGAIN. Roll and repeat until all remote
-> -			 * blocks are removed.
-> -			 */
-> -			error = xfs_attr_rmtval_remove(attr);
-> -			if (error == -EAGAIN) {
-> -				trace_xfs_attr_remove_iter_return(
-> -					attr->xattri_dela_state, args->dp);
-> -				return error;
-> -			} else if (error) {
-> -				goto out;
-> -			}
-> -
-> -			/*
-> -			 * Refill the state structure with buffers (the prior
-> -			 * calls released our buffers) and close out this
-> -			 * transaction before proceeding.
-> -			 */
-> -			ASSERT(args->rmtblkno == 0);
-> -			error = xfs_attr_refillstate(state);
-> -			if (error)
-> -				goto out;
-> -
-> -			attr->xattri_dela_state = XFS_DAS_RM_NAME;
-> -			trace_xfs_attr_remove_iter_return(
-> -					attr->xattri_dela_state, args->dp);
-> -			return -EAGAIN;
-> -		}
-> -
-> -		fallthrough;
-> -	case XFS_DAS_RM_NAME:
-> -		/*
-> -		 * If we came here fresh from a transaction roll, reattach all
-> -		 * the buffers to the current transaction.
-> -		 */
-> -		if (attr->xattri_dela_state == XFS_DAS_RM_NAME) {
-> -			error = xfs_attr_refillstate(state);
-> -			if (error)
-> -				goto out;
-> -		}
-> -
-> -		retval = xfs_attr_node_removename(args, state);
-> -
-> -		/*
-> -		 * Check to see if the tree needs to be collapsed. If so, roll
-> -		 * the transacton and fall into the shrink state.
-> -		 */
-> -		if (retval && (state->path.active > 1)) {
-> -			error = xfs_da3_join(state);
-> -			if (error)
-> -				goto out;
-> -
-> -			attr->xattri_dela_state = XFS_DAS_RM_SHRINK;
-> -			trace_xfs_attr_remove_iter_return(
-> -					attr->xattri_dela_state, args->dp);
-> -			return -EAGAIN;
-> -		}
-> -
-> -		fallthrough;
-> -	case XFS_DAS_RM_SHRINK:
-> -		/*
-> -		 * If the result is small enough, push it all into the inode.
-> -		 * This is our final state so it's safe to return a dirty
-> -		 * transaction.
-> -		 */
-> -		if (xfs_attr_is_leaf(dp))
-> -			error = xfs_attr_leaf_shrink(args, state);
-> -		ASSERT(error != -EAGAIN);
-> -		break;
-> -	default:
-> -		ASSERT(0);
-> -		error = -EINVAL;
-> -		goto out;
-> -	}
-> -out:
-> -	if (state)
-> -		xfs_da_state_free(state);
-> -	return error;
-> -}
-> -
-> -/*
-> - * Fill in the disk block numbers in the state structure for the buffers
-> - * that are attached to the state structure.
-> - * This is done so that we can quickly reattach ourselves to those buffers
-> - * after some set of transaction commits have released these buffers.
-> - */
-> -STATIC int
-> -xfs_attr_fillstate(xfs_da_state_t *state)
-> -{
-> -	xfs_da_state_path_t *path;
-> -	xfs_da_state_blk_t *blk;
-> -	int level;
-> -
-> -	trace_xfs_attr_fillstate(state->args);
-> -
-> -	/*
-> -	 * Roll down the "path" in the state structure, storing the on-disk
-> -	 * block number for those buffers in the "path".
-> -	 */
-> -	path = &state->path;
-> -	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
-> -	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
-> -		if (blk->bp) {
-> -			blk->disk_blkno = xfs_buf_daddr(blk->bp);
-> -			blk->bp = NULL;
-> -		} else {
-> -			blk->disk_blkno = 0;
-> -		}
-> -	}
-> -
-> -	/*
-> -	 * Roll down the "altpath" in the state structure, storing the on-disk
-> -	 * block number for those buffers in the "altpath".
-> -	 */
-> -	path = &state->altpath;
-> -	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
-> -	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
-> -		if (blk->bp) {
-> -			blk->disk_blkno = xfs_buf_daddr(blk->bp);
-> -			blk->bp = NULL;
-> -		} else {
-> -			blk->disk_blkno = 0;
-> -		}
-> -	}
-> -
-> -	return 0;
-> -}
-> -
-> -/*
-> - * Reattach the buffers to the state structure based on the disk block
-> - * numbers stored in the state structure.
-> - * This is done after some set of transaction commits have released those
-> - * buffers from our grip.
-> - */
-> -STATIC int
-> -xfs_attr_refillstate(xfs_da_state_t *state)
-> -{
-> -	xfs_da_state_path_t *path;
-> -	xfs_da_state_blk_t *blk;
-> -	int level, error;
-> -
-> -	trace_xfs_attr_refillstate(state->args);
-> -
-> -	/*
-> -	 * Roll down the "path" in the state structure, storing the on-disk
-> -	 * block number for those buffers in the "path".
-> -	 */
-> -	path = &state->path;
-> -	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
-> -	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
-> -		if (blk->disk_blkno) {
-> -			error = xfs_da3_node_read_mapped(state->args->trans,
-> -					state->args->dp, blk->disk_blkno,
-> -					&blk->bp, XFS_ATTR_FORK);
-> -			if (error)
-> -				return error;
-> -		} else {
-> -			blk->bp = NULL;
-> -		}
-> -	}
-> -
-> -	/*
-> -	 * Roll down the "altpath" in the state structure, storing the on-disk
-> -	 * block number for those buffers in the "altpath".
-> -	 */
-> -	path = &state->altpath;
-> -	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
-> -	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
-> -		if (blk->disk_blkno) {
-> -			error = xfs_da3_node_read_mapped(state->args->trans,
-> -					state->args->dp, blk->disk_blkno,
-> -					&blk->bp, XFS_ATTR_FORK);
-> -			if (error)
-> -				return error;
-> -		} else {
-> -			blk->bp = NULL;
-> -		}
-> -	}
-> -
-> -	return 0;
-> -}
-> -
+> -		/* save the attribute state for later removal*/
+> -		args->op_flags |= XFS_DA_OP_RENAME;	/* atomic rename op */
+> -		xfs_attr_save_rmt_blk(args);
+>  
+> +		trace_xfs_attr_node_replace(args);
+>  		/*
+> -		 * clear the remote attr state now that it is saved so that the
+> -		 * values reflect the state of the attribute we are about to
+> +		 * Save the existing remote attr state so that the current
+> +		 * values reflect the state of the new attribute we are about to
+>  		 * add, not the attribute we just found and will remove later.
+>  		 */
+> -		args->rmtblkno = 0;
+> -		args->rmtblkcnt = 0;
+> -		args->rmtvaluelen = 0;
+> +		xfs_attr_save_rmt_blk(args);
+> +		break;
+> +	case 0:
+> +		break;
+> +	default:
+> +		goto error;
+>  	}
+>  
+>  	return 0;
+>  error:
+>  	if (attr->xattri_da_state)
+>  		xfs_da_state_free(attr->xattri_da_state);
+> -	return retval;
+> +	return error;
+>  }
+>  
 >  /*
->   * Retrieve the attribute data from a node attribute list.
->   *
-> -- 
-> 2.35.1
-> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 6bef522533a4..e93efc8b11cd 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -584,6 +584,7 @@ xfs_attr_is_shortform(
+>  static inline enum xfs_delattr_state
+>  xfs_attr_init_add_state(struct xfs_da_args *args)
+>  {
+> +	args->op_flags |= XFS_DA_OP_ADDNAME;
+>  	if (!args->dp->i_afp)
+>  		return XFS_DAS_DONE;
+>  	if (xfs_attr_is_shortform(args->dp))
+> @@ -596,6 +597,7 @@ xfs_attr_init_add_state(struct xfs_da_args *args)
+>  static inline enum xfs_delattr_state
+>  xfs_attr_init_remove_state(struct xfs_da_args *args)
+>  {
+> +	args->op_flags |= XFS_DA_OP_REMOVE;
+>  	if (xfs_attr_is_shortform(args->dp))
+>  		return XFS_DAS_SF_REMOVE;
+>  	if (xfs_attr_is_leaf(args->dp))
+> @@ -606,6 +608,7 @@ xfs_attr_init_remove_state(struct xfs_da_args *args)
+>  static inline enum xfs_delattr_state
+>  xfs_attr_init_replace_state(struct xfs_da_args *args)
+>  {
+> +	args->op_flags |= XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE;
+>  	return xfs_attr_init_add_state(args);
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index e90bfd9d7551..53d02ce9ed78 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -1492,7 +1492,7 @@ xfs_attr3_leaf_add_work(
+>  	entry->flags = args->attr_filter;
+>  	if (tmp)
+>  		entry->flags |= XFS_ATTR_LOCAL;
+> -	if (args->op_flags & XFS_DA_OP_RENAME) {
+> +	if (args->op_flags & XFS_DA_OP_REPLACE) {
+>  		if (!xfs_has_larp(mp))
+>  			entry->flags |= XFS_ATTR_INCOMPLETE;
+>  		if ((args->blkno2 == args->blkno) &&
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+> index deb368d041e3..468ca70cd35d 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.h
+> +++ b/fs/xfs/libxfs/xfs_da_btree.h
+> @@ -85,19 +85,21 @@ typedef struct xfs_da_args {
+>   * Operation flags:
+>   */
+>  #define XFS_DA_OP_JUSTCHECK	(1u << 0) /* check for ok with no space */
+> -#define XFS_DA_OP_RENAME	(1u << 1) /* this is an atomic rename op */
+> +#define XFS_DA_OP_REPLACE	(1u << 1) /* this is an atomic replace op */
+>  #define XFS_DA_OP_ADDNAME	(1u << 2) /* this is an add operation */
+>  #define XFS_DA_OP_OKNOENT	(1u << 3) /* lookup op, ENOENT ok, else die */
+>  #define XFS_DA_OP_CILOOKUP	(1u << 4) /* lookup returns CI name if found */
+>  #define XFS_DA_OP_NOTIME	(1u << 5) /* don't update inode timestamps */
+> +#define XFS_DA_OP_REMOVE	(1u << 6) /* this is a remove operation */
+>  
+>  #define XFS_DA_OP_FLAGS \
+>  	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
+> -	{ XFS_DA_OP_RENAME,	"RENAME" }, \
+> +	{ XFS_DA_OP_REPLACE,	"REPLACE" }, \
+>  	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
+>  	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
+>  	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
+> -	{ XFS_DA_OP_NOTIME,	"NOTIME" }
+> +	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
+> +	{ XFS_DA_OP_REMOVE,	"REMOVE" }
+>  
+>  /*
+>   * Storage for holding state during Btree searches and split/join ops.
+> Dave Chinner
+> david@fromorbit.com
