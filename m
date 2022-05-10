@@ -2,93 +2,79 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF3EC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 02:55:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4C4C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 03:36:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233991AbiEJC7s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 May 2022 22:59:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44970 "EHLO
+        id S235569AbiEJDkl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 May 2022 23:40:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234799AbiEJC7m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 22:59:42 -0400
-Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6BA66BE07
-        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 19:55:43 -0700 (PDT)
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id C477660F66;
-        Tue, 10 May 2022 12:55:41 +1000 (EST)
-Received: from smtp1.onthe.net.au ([10.200.63.11])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id l1w3ZpkSbIEQ; Tue, 10 May 2022 12:55:41 +1000 (AEST)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 92E3160D15;
-        Tue, 10 May 2022 12:55:41 +1000 (EST)
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id 7E2E5680319; Tue, 10 May 2022 12:55:41 +1000 (AEST)
-Date:   Tue, 10 May 2022 12:55:41 +1000
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Highly reflinked and fragmented considered harmful?
-Message-ID: <20220510025541.GA192172@onthe.net.au>
-References: <20220509024659.GA62606@onthe.net.au>
- <20220509230918.GP1098723@dread.disaster.area>
+        with ESMTP id S235650AbiEJDjS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 23:39:18 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 626532397AE;
+        Mon,  9 May 2022 20:33:07 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A2C12616F7;
+        Tue, 10 May 2022 03:33:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2351C385C2;
+        Tue, 10 May 2022 03:33:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1652153586;
+        bh=+2uASBmsqYQqhttQPHm/MX34q5RgNamnUz7NmlzcT3Q=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=NR5ghk9WTaVDnOfP1O7QDYL5jmvHz7wxPbVVEAVuAgbvBz4j8+kDgpJiv8lRcCROR
+         6AGatA3RxmZj0Wq4hyNlsdAkt7kTNjzJGMhMhoVWfl2Ocz44afiIY9ADFE8usmT8B/
+         6j+2UJ1DR0VFsaPaFEcDRXLF71KAosLwanSMceytXNnj2naYPKCOln475AWS/L+Hxk
+         pDl0q2kZEpt/oFotvytbZSl/GM6gNW3SbkzAfvvRImjjyd+IfKvstKc62dVdU05qPo
+         lG+SmVi6UpbUoyyQ7cAvxJuuOdgMIoHKb+WwOonY8lRwgfEJTDnW+To3CoNRmM/Qgp
+         6ZmLYSJHY97Pg==
+Date:   Mon, 9 May 2022 20:33:05 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     dsterba@suse.cz, Christoph Hellwig <hch@lst.de>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: reduce memory allocation in the btrfs direct I/O path
+Message-ID: <20220510033305.GB27137@magnolia>
+References: <20220504162342.573651-1-hch@lst.de>
+ <20220505155529.GY18596@suse.cz>
+ <20220506171803.GA27137@magnolia>
+ <20220507052649.GA28014@lst.de>
+ <20220509184650.GA18596@twin.jikos.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220509230918.GP1098723@dread.disaster.area>
+In-Reply-To: <20220509184650.GA18596@twin.jikos.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+On Mon, May 09, 2022 at 08:46:50PM +0200, David Sterba wrote:
+> On Sat, May 07, 2022 at 07:26:49AM +0200, Christoph Hellwig wrote:
+> > On Fri, May 06, 2022 at 10:18:03AM -0700, Darrick J. Wong wrote:
+> > > > The series is reasonably short so I'd like to add it to 5.20 queue,
+>                                                               ^^^^
+> Sorry, I meant 5.19, ie. the one that's about to start soon.
+> 
+> > > > provided that the iomap patches get acked by Darrick. Any fixups I'd
+> > > > rather fold into my local branch, no need to resend unless there are
+> > > > significant updates.
+> > > 
+> > > Hm.  I'm planning on pushing out a (very late) iomap-5.19-merge branch,
+> > > since (AFAICT) these changes are mostly plumbing.  Do you want me to
+> > > push the first three patches of this series for 5.19?
+> > 
+> > Given that we have no conflicts it might be easiest to just merge the
+> > whole series through the btrfs tree.
+> 
+> Yeah, I'd rather take it via the btrfs tree.
 
-On Tue, May 10, 2022 at 09:09:18AM +1000, Dave Chinner wrote:
-> On Mon, May 09, 2022 at 12:46:59PM +1000, Chris Dunlop wrote:
->> Is it to be expected that removing 29TB of highly reflinked and fragmented
->> data could take days, the entire time blocking other tasks like "rm" and
->> "df" on the same filesystem?
-...
-> At some point, you have to pay the price of creating billions of
-> random fine-grained cross references in tens of TBs of data spread
-> across weeks and months of production. You don't notice the scale of
-> the cross-reference because it's taken weeks and months of normal
-> operations to get there. It's only when you finally have to perform
-> an operation that needs to iterate all those references that the
-> scale suddenly becomes apparent. XFS scales to really large numbers
-> without significant degradation, so people don't notice things like
-> object counts or cross references until something like this
-> happens.
->
-> I don't think there's much we can do at the filesystem level to help
-> you at this point - the inode output in the transaction dump above
-> indicates that you haven't been using extent size hints to limit
-> fragmentation or extent share/COW sizes, so the damage is already
-> present and we can't really do anything to fix that up.
+Ah, *5.19*.  Yes, this plan now sounds good to me!
 
-Thanks for taking the time to provide a detailed and informative
-exposition, it certainly helps me understand what I'm asking of the fs, 
-the areas that deserve more attention, and how to approach analyzing the 
-situation.
+(I had wondered, 5.20 seemed like an awfully long time to wait for
+something as straightforward as that.)
 
-At this point I'm about 3 days from completing copying the data (from a 
-snapshot of the troubled fs mounted with 'norecovery') over to a brand new 
-fs. Unfortunately the new fs is also rmapbt=1 so I'll go through all the 
-copying again (under more controlled circumstances) to get onto a rmapbt=0 
-fs (losing the ability to do online repairs whenever that arrives - 
-hopefully that won't come back to haunt me).
-
-Out of interest:
-
->> - with a reboot/remount, does the log replay continue from where it left
->> off, or start again?
-
-Sorry, if you provided an answer to this, I didn't understand it.
-
-Basically the question is, if a recovery on mount were going to take 10 
-hours, but the box rebooted and fs mounted again at 8 hours, would the 
-recovery this time take 2 hours or once again 10 hours?
-
-Cheers,
-
-Chris
+--D
