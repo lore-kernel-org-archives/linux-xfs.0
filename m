@@ -2,73 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A060C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 06:31:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3244BC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 06:48:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234021AbiEJGex (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 02:34:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44184 "EHLO
+        id S237322AbiEJGwB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 May 2022 02:52:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232711AbiEJGew (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 02:34:52 -0400
-Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8FC5326AEC
-        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 23:30:54 -0700 (PDT)
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 34D5660F7E;
-        Tue, 10 May 2022 16:30:52 +1000 (EST)
-Received: from smtp1.onthe.net.au ([10.200.63.11])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id nRHn0IUnlcUh; Tue, 10 May 2022 16:30:52 +1000 (AEST)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 3739860F66;
-        Tue, 10 May 2022 16:30:51 +1000 (EST)
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id 1A8EA680319; Tue, 10 May 2022 16:30:51 +1000 (AEST)
-Date:   Tue, 10 May 2022 16:30:51 +1000
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Highly reflinked and fragmented considered harmful?
-Message-ID: <20220510063051.GA215522@onthe.net.au>
-References: <20220509024659.GA62606@onthe.net.au>
- <20220509230918.GP1098723@dread.disaster.area>
- <CAOQ4uxgf6AHzLM-mGte_L-A+piSZTRsbdLMBT3hZFNhk-yfxZQ@mail.gmail.com>
- <20220510051057.GY27195@magnolia>
+        with ESMTP id S237316AbiEJGwA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 02:52:00 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 159AC24DC6E;
+        Mon,  9 May 2022 23:48:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=hSOy7qsmVu3PqugjLk/Ti9DKDnpY0bkOOlrS22BpeSQ=; b=Ei0kSog1Hutzu9lHEsIUI6Xylk
+        RdQyvqMN9IoS+J81JaK063GFA4StvRa6GL3KWcnid3qcm0X+egQhkjmAS/d7JW5VsqVRvf3FNOJlb
+        wvUpwkfWtpS0kBJ1rntxvhyWQWEu2OiI9vhoMzEwZUHm2d6CmlBSTw4G16xe7nFceoARw4mNtBucH
+        +rTGH1kg25iL6OU2PE6F34QTeDS1jB2SD9Mg65NSQKbRj0JVTLMMP1NvBPepfOimQxLVVN21y2Vs3
+        e9Sqund1zEwOiJ+JU8tycN01aXeq1stmRi40hWtNsjtcF0ZAvu8T84pOX2bX4eX/82doI5Xa9qvrc
+        4oDDS+KA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1noJf5-000DcC-OM; Tue, 10 May 2022 06:47:59 +0000
+Date:   Mon, 9 May 2022 23:47:59 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, Stefan Roesch <shr@fb.com>,
+        io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC PATCH v1 11/18] xfs: add async buffered write support
+Message-ID: <YnoKnyzqe3D70zoE@infradead.org>
+References: <20220426174335.4004987-12-shr@fb.com>
+ <20220426225652.GS1544202@dread.disaster.area>
+ <30f2920c-5262-7cb0-05b5-6e84a76162a7@fb.com>
+ <20220428215442.GW1098723@dread.disaster.area>
+ <19d411e5-fe1f-a3f8-36e0-87284a1c02f3@fb.com>
+ <20220506092915.GI1098723@dread.disaster.area>
+ <31f09969-2277-6692-b204-f884dc65348f@fb.com>
+ <20220509232425.GQ1098723@dread.disaster.area>
+ <20220509234424.GX27195@magnolia>
+ <20220510011205.GR1098723@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220510051057.GY27195@magnolia>
+In-Reply-To: <20220510011205.GR1098723@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 09, 2022 at 10:10:57PM -0700, Darrick J. Wong wrote:
-> On Tue, May 10, 2022 at 07:07:35AM +0300, Amir Goldstein wrote:
->> On Mon, May 09, 2022 at 12:46:59PM +1000, Chris Dunlop wrote:
->>> Is it to be expected that removing 29TB of highly reflinked and fragmented
->>> data could take days, the entire time blocking other tasks like "rm" and
->>> "df" on the same filesystem?
-...
->> From a product POV, I think what should have happened here is that
->> freeing up the space would have taken 10 days in the background, but
->> otherwise, filesystem should not have been blocking other processes
->> for long periods of time.
->
-> Indeed.  Chris, do you happen to have the sysrq-w output handy?  I'm
-> curious if the stall warning backtraces all had xfs_inodegc_flush() in
-> them, or were there other parts of the system stalling elsewhere too?
-> 50 billion updates is a lot, but there shouldn't be stall warnings.
+On Tue, May 10, 2022 at 11:12:05AM +1000, Dave Chinner wrote:
+> > I still don't understand why /any/ of this is necessary.  When does
+> > iocb->ki_filp->f_inode != iocb->ki_filp->f_mapping->host? 
+> 
+> I already asked that question because I don't know the answer,
+> either. I suspect the answer is "block dev inodes" but that then
+> just raises the question of "how do we get them here?" and I don't
+> know the answer to that, either. I don't have the time to dig into
+> this and I don't expect anyone to just pop up with an answer,
+> either. So in the mean time, we can just ignore it for the purpose
+> of this patch set...
 
-Sure: https://file.io/25za5BNBlnU8  (6.8M)
-
-Of the 3677 tasks in there, only 38 do NOT show xfs_inodegc_flush().
-
-> I bet, however, that you and everyone else would rather have somewhat
-> inaccurate results than a load average of 4700 and a dead machine.
-
-Yes, that would have been a nicer result.
-
-Chris
+Weird device nodes (including block device) is the answer.  It never
+happens for a normal file system file struct that we'd see in XFS.
