@@ -2,96 +2,93 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51EECC433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 01:12:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF3EC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 02:55:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231942AbiEJBQH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 May 2022 21:16:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58358 "EHLO
+        id S233991AbiEJC7s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 May 2022 22:59:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231551AbiEJBQF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 21:16:05 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4476A184314;
-        Mon,  9 May 2022 18:12:09 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 97FD910E642B;
-        Tue, 10 May 2022 11:12:07 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1noEQ1-00A6hb-TO; Tue, 10 May 2022 11:12:05 +1000
-Date:   Tue, 10 May 2022 11:12:05 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
-        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH v1 11/18] xfs: add async buffered write support
-Message-ID: <20220510011205.GR1098723@dread.disaster.area>
-References: <20220426174335.4004987-1-shr@fb.com>
- <20220426174335.4004987-12-shr@fb.com>
- <20220426225652.GS1544202@dread.disaster.area>
- <30f2920c-5262-7cb0-05b5-6e84a76162a7@fb.com>
- <20220428215442.GW1098723@dread.disaster.area>
- <19d411e5-fe1f-a3f8-36e0-87284a1c02f3@fb.com>
- <20220506092915.GI1098723@dread.disaster.area>
- <31f09969-2277-6692-b204-f884dc65348f@fb.com>
- <20220509232425.GQ1098723@dread.disaster.area>
- <20220509234424.GX27195@magnolia>
+        with ESMTP id S234799AbiEJC7m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 May 2022 22:59:42 -0400
+Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6BA66BE07
+        for <linux-xfs@vger.kernel.org>; Mon,  9 May 2022 19:55:43 -0700 (PDT)
+Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id C477660F66;
+        Tue, 10 May 2022 12:55:41 +1000 (EST)
+Received: from smtp1.onthe.net.au ([10.200.63.11])
+        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
+        with ESMTP id l1w3ZpkSbIEQ; Tue, 10 May 2022 12:55:41 +1000 (AEST)
+Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id 92E3160D15;
+        Tue, 10 May 2022 12:55:41 +1000 (EST)
+Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
+        id 7E2E5680319; Tue, 10 May 2022 12:55:41 +1000 (AEST)
+Date:   Tue, 10 May 2022 12:55:41 +1000
+From:   Chris Dunlop <chris@onthe.net.au>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Highly reflinked and fragmented considered harmful?
+Message-ID: <20220510025541.GA192172@onthe.net.au>
+References: <20220509024659.GA62606@onthe.net.au>
+ <20220509230918.GP1098723@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20220509234424.GX27195@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6279bbe8
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
-        a=a8yGhtGJrI05I1NV0l8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220509230918.GP1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 09, 2022 at 04:44:24PM -0700, Darrick J. Wong wrote:
-> On Tue, May 10, 2022 at 09:24:25AM +1000, Dave Chinner wrote:
-> > On Mon, May 09, 2022 at 12:32:59PM -0700, Stefan Roesch wrote:
-> > > On 5/6/22 2:29 AM, Dave Chinner wrote:
-> > > > On Mon, May 02, 2022 at 02:21:17PM -0700, Stefan Roesch wrote:
-> > > >> On 4/28/22 2:54 PM, Dave Chinner wrote:
-> > > >>> On Thu, Apr 28, 2022 at 12:58:59PM -0700, Stefan Roesch wrote:
-> > > >> - replace the pointer to iocb with pointer to xfs_inode in the function xfs_ilock_iocb()
-> > > >>   and also pass in the flags value as a parameter.
-> > > >> or
-> > > >> - create function xfs_ilock_inode(), which xfs_ilock_iocb() calls. The existing
-> > > >>   calls will not need to change, only the xfs_ilock in xfs_file_buffered_write()
-> > > >>   will use xfs_ilock_inode().
-> > > > 
-> > > > You're making this way more complex than it needs to be. As I said:
-> > > > 
-> > > >>> Regardless, if this is a problem, then just pass the XFS inode to
-> > > >>> xfs_ilock_iocb() and this is a moot point.
-> > > > 
-> > > 
-> > > The function xfs_ilock_iocb() is expecting a pointer to the data structure kiocb, not
-> > > a pointer to xfs_inode. I don't see how that's possible without changing the signature
-> > > of xfs_ilock_iocb().
-> > 
-> > For the *third time*: pass the xfs_inode to xfs_ilock_iocb() and
-> > update all the callers to do the same thing.
-> 
-> I still don't understand why /any/ of this is necessary.  When does
-> iocb->ki_filp->f_inode != iocb->ki_filp->f_mapping->host? 
+Hi Dave,
 
-I already asked that question because I don't know the answer,
-either. I suspect the answer is "block dev inodes" but that then
-just raises the question of "how do we get them here?" and I don't
-know the answer to that, either. I don't have the time to dig into
-this and I don't expect anyone to just pop up with an answer,
-either. So in the mean time, we can just ignore it for the purpose
-of this patch set...
+On Tue, May 10, 2022 at 09:09:18AM +1000, Dave Chinner wrote:
+> On Mon, May 09, 2022 at 12:46:59PM +1000, Chris Dunlop wrote:
+>> Is it to be expected that removing 29TB of highly reflinked and fragmented
+>> data could take days, the entire time blocking other tasks like "rm" and
+>> "df" on the same filesystem?
+...
+> At some point, you have to pay the price of creating billions of
+> random fine-grained cross references in tens of TBs of data spread
+> across weeks and months of production. You don't notice the scale of
+> the cross-reference because it's taken weeks and months of normal
+> operations to get there. It's only when you finally have to perform
+> an operation that needs to iterate all those references that the
+> scale suddenly becomes apparent. XFS scales to really large numbers
+> without significant degradation, so people don't notice things like
+> object counts or cross references until something like this
+> happens.
+>
+> I don't think there's much we can do at the filesystem level to help
+> you at this point - the inode output in the transaction dump above
+> indicates that you haven't been using extent size hints to limit
+> fragmentation or extent share/COW sizes, so the damage is already
+> present and we can't really do anything to fix that up.
+
+Thanks for taking the time to provide a detailed and informative
+exposition, it certainly helps me understand what I'm asking of the fs, 
+the areas that deserve more attention, and how to approach analyzing the 
+situation.
+
+At this point I'm about 3 days from completing copying the data (from a 
+snapshot of the troubled fs mounted with 'norecovery') over to a brand new 
+fs. Unfortunately the new fs is also rmapbt=1 so I'll go through all the 
+copying again (under more controlled circumstances) to get onto a rmapbt=0 
+fs (losing the ability to do online repairs whenever that arrives - 
+hopefully that won't come back to haunt me).
+
+Out of interest:
+
+>> - with a reboot/remount, does the log replay continue from where it left
+>> off, or start again?
+
+Sorry, if you provided an answer to this, I didn't understand it.
+
+Basically the question is, if a recovery on mount were going to take 10 
+hours, but the box rebooted and fs mounted again at 8 hours, would the 
+recovery this time take 2 hours or once again 10 hours?
 
 Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Chris
