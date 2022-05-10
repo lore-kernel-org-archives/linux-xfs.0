@@ -2,68 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3244BC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 06:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1482DC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 May 2022 07:56:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237322AbiEJGwB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 02:52:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44308 "EHLO
+        id S237549AbiEJIAh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 May 2022 04:00:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237316AbiEJGwA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 02:52:00 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 159AC24DC6E;
-        Mon,  9 May 2022 23:48:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=hSOy7qsmVu3PqugjLk/Ti9DKDnpY0bkOOlrS22BpeSQ=; b=Ei0kSog1Hutzu9lHEsIUI6Xylk
-        RdQyvqMN9IoS+J81JaK063GFA4StvRa6GL3KWcnid3qcm0X+egQhkjmAS/d7JW5VsqVRvf3FNOJlb
-        wvUpwkfWtpS0kBJ1rntxvhyWQWEu2OiI9vhoMzEwZUHm2d6CmlBSTw4G16xe7nFceoARw4mNtBucH
-        +rTGH1kg25iL6OU2PE6F34QTeDS1jB2SD9Mg65NSQKbRj0JVTLMMP1NvBPepfOimQxLVVN21y2Vs3
-        e9Sqund1zEwOiJ+JU8tycN01aXeq1stmRi40hWtNsjtcF0ZAvu8T84pOX2bX4eX/82doI5Xa9qvrc
-        4oDDS+KA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1noJf5-000DcC-OM; Tue, 10 May 2022 06:47:59 +0000
-Date:   Mon, 9 May 2022 23:47:59 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, Stefan Roesch <shr@fb.com>,
-        io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH v1 11/18] xfs: add async buffered write support
-Message-ID: <YnoKnyzqe3D70zoE@infradead.org>
-References: <20220426174335.4004987-12-shr@fb.com>
- <20220426225652.GS1544202@dread.disaster.area>
- <30f2920c-5262-7cb0-05b5-6e84a76162a7@fb.com>
- <20220428215442.GW1098723@dread.disaster.area>
- <19d411e5-fe1f-a3f8-36e0-87284a1c02f3@fb.com>
- <20220506092915.GI1098723@dread.disaster.area>
- <31f09969-2277-6692-b204-f884dc65348f@fb.com>
- <20220509232425.GQ1098723@dread.disaster.area>
- <20220509234424.GX27195@magnolia>
- <20220510011205.GR1098723@dread.disaster.area>
+        with ESMTP id S237566AbiEJIAg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 04:00:36 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB8A11E250C;
+        Tue, 10 May 2022 00:56:37 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7E8EF21ACC;
+        Tue, 10 May 2022 07:56:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1652169396; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ikXWKPX8o/GouZvJ9LZIaWDEDBv8HrzgGRMfitoYhn0=;
+        b=pX9etHdQYf6mCTXowBEDw+EnB3HcyZvG6ZnhjcKQvpA72vPEdCXNdrJZ2Y8Asw/+HuMqi7
+        pue33o0zxyIN1M4zKXKO9R6576UZr/0UM/7n1FBacp1HCc21QnoKPHCJM5vPB8U11pWl51
+        /7xHguKCZCw15PcViG5VyZfUKwtWHOM=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0A9BE13AC1;
+        Tue, 10 May 2022 07:56:35 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id WiRzO7MaemImBQAAMHmgww
+        (envelope-from <nborisov@suse.com>); Tue, 10 May 2022 07:56:35 +0000
+Message-ID: <3b294abc-1cec-278a-1d74-3eef938c683f@suse.com>
+Date:   Tue, 10 May 2022 10:56:35 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220510011205.GR1098723@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.1
+Subject: Re: reduce memory allocation in the btrfs direct I/O path v2
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20220505201115.937837-1-hch@lst.de>
+From:   Nikolay Borisov <nborisov@suse.com>
+In-Reply-To: <20220505201115.937837-1-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 10, 2022 at 11:12:05AM +1000, Dave Chinner wrote:
-> > I still don't understand why /any/ of this is necessary.  When does
-> > iocb->ki_filp->f_inode != iocb->ki_filp->f_mapping->host? 
-> 
-> I already asked that question because I don't know the answer,
-> either. I suspect the answer is "block dev inodes" but that then
-> just raises the question of "how do we get them here?" and I don't
-> know the answer to that, either. I don't have the time to dig into
-> this and I don't expect anyone to just pop up with an answer,
-> either. So in the mean time, we can just ignore it for the purpose
-> of this patch set...
 
-Weird device nodes (including block device) is the answer.  It never
-happens for a normal file system file struct that we'd see in XFS.
+
+On 5.05.22 г. 23:11 ч., Christoph Hellwig wrote:
+> Hi all,
+> 
+> this series adds two minor improvements to iomap that allow btrfs
+> to avoid a memory allocation per read/write system call and another
+> one per submitted bio.  I also have at last two other pending uses
+> for the iomap functionality later on, so they are not really btrfs
+> specific either.
+> 
+> Changes since v1:
+>   - pass the private data direct to iomap_dio_rw instead of through the
+>     iocb
+>   - better document the bio_set in iomap_dio_ops
+>   - split a patch into three
+>   - use kcalloc to allocate the checksums
+> 
+> Diffstat:
+>   fs/btrfs/btrfs_inode.h |   25 --------
+>   fs/btrfs/ctree.h       |    6 -
+>   fs/btrfs/file.c        |    6 -
+>   fs/btrfs/inode.c       |  152 +++++++++++++++++++++++--------------------------
+>   fs/erofs/data.c        |    2
+>   fs/ext4/file.c         |    4 -
+>   fs/f2fs/file.c         |    4 -
+>   fs/gfs2/file.c         |    4 -
+>   fs/iomap/direct-io.c   |   26 ++++++--
+>   fs/xfs/xfs_file.c      |    6 -
+>   fs/zonefs/super.c      |    4 -
+>   include/linux/iomap.h  |   16 ++++-
+>   12 files changed, 123 insertions(+), 132 deletions(-)
+> 
+
+
+Reviewed-by: Nikolay Borisov <nborisov@suse.com>
