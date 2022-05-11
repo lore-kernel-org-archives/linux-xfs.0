@@ -2,147 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E92C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 08:36:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80528C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 10:39:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239559AbiEKIgO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 May 2022 04:36:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34774 "EHLO
+        id S233239AbiEKKjO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 May 2022 06:39:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244095AbiEKIf6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 May 2022 04:35:58 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E2E4D2AC7F
-        for <linux-xfs@vger.kernel.org>; Wed, 11 May 2022 01:35:15 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C01B5534451;
-        Wed, 11 May 2022 18:35:14 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nohoP-00AcsS-9n; Wed, 11 May 2022 18:35:13 +1000
-Date:   Wed, 11 May 2022 18:35:13 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/18] xfs: separate out initial attr_set states
-Message-ID: <20220511083513.GJ1098723@dread.disaster.area>
-References: <20220509004138.762556-1-david@fromorbit.com>
- <20220509004138.762556-6-david@fromorbit.com>
- <20220510231234.GI27195@magnolia>
- <20220511010651.GZ1098723@dread.disaster.area>
- <20220511010848.GB27195@magnolia>
- <20220511013851.GD1098723@dread.disaster.area>
+        with ESMTP id S239215AbiEKKiv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 May 2022 06:38:51 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2C2E972EA;
+        Wed, 11 May 2022 03:38:21 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id 670E41F8BD;
+        Wed, 11 May 2022 10:38:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1652265500; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4tTLKw2T1YJw2h64F0XA5FNUzlXdoEokzJSTtL8FUkQ=;
+        b=bG8nnKVtGj3yFB2bYY0/5PA5bmjOTJDVIoLqqd9KdpcYSXf8QGJOiTW01XgUBeUAcPWzNE
+        Uxl4VehVcjthenpwvwdywRBSOY0/VzQn8O60bjFcdZJ0M/wEK6GL3tP02wHC6GvWVbNA+O
+        UygBNsCDCkHg7543KvneMVdPNUdOpXI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1652265500;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4tTLKw2T1YJw2h64F0XA5FNUzlXdoEokzJSTtL8FUkQ=;
+        b=iuSY6arEDo71FBr6jsiFeqwbiuG4a9UPmA9hWAbeTep9hfZ0YPmSP45i976ogH11bL7YbT
+        ZP2lVpFH6K19Z3Cw==
+Received: from quack3.suse.cz (unknown [10.163.43.118])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 389452C141;
+        Wed, 11 May 2022 10:38:20 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id E70D3A062A; Wed, 11 May 2022 12:38:19 +0200 (CEST)
+Date:   Wed, 11 May 2022 12:38:19 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Stefan Roesch <shr@fb.com>
+Cc:     Jan Kara <jack@suse.cz>, io-uring@vger.kernel.org,
+        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com
+Subject: Re: [RFC PATCH v1 15/18] mm: support write throttling for async
+ buffered writes
+Message-ID: <20220511103819.e2irxxm2tvb3k7cc@quack3.lan>
+References: <20220426174335.4004987-1-shr@fb.com>
+ <20220426174335.4004987-16-shr@fb.com>
+ <20220428174736.mgadsxfuiwmoxrzx@quack3.lan>
+ <88879649-57db-5102-1bed-66f610d13317@fb.com>
+ <20220510095036.6tbbwwf5hxcevzkh@quack3.lan>
+ <84f8da94-1227-a351-56ba-eabdba91027b@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220511013851.GD1098723@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=627b7543
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
-        a=rR3PqOsxpg0mHAKoVbIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <84f8da94-1227-a351-56ba-eabdba91027b@fb.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 11, 2022 at 11:38:51AM +1000, Dave Chinner wrote:
-> On Tue, May 10, 2022 at 06:08:48PM -0700, Darrick J. Wong wrote:
-> > On Wed, May 11, 2022 at 11:06:51AM +1000, Dave Chinner wrote:
-> > > On Tue, May 10, 2022 at 04:12:34PM -0700, Darrick J. Wong wrote:
-> > > > On Mon, May 09, 2022 at 10:41:25AM +1000, Dave Chinner wrote:
-> > > > > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> > > > > index c9c867e3406c..ad52b5dc59e4 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_attr.h
-> > > > > +++ b/fs/xfs/libxfs/xfs_attr.h
-> > > > > @@ -530,4 +553,35 @@ void xfs_attri_destroy_cache(void);
-> > > > >  int __init xfs_attrd_init_cache(void);
-> > > > >  void xfs_attrd_destroy_cache(void);
-> > > > >  
-> > > > > +/*
-> > > > > + * Check to see if the attr should be upgraded from non-existent or shortform to
-> > > > > + * single-leaf-block attribute list.
-> > > > > + */
-> > > > > +static inline bool
-> > > > > +xfs_attr_is_shortform(
-> > > > > +	struct xfs_inode    *ip)
-> > > > > +{
-> > > > > +	return ip->i_afp->if_format == XFS_DINODE_FMT_LOCAL ||
-> > > > > +	       (ip->i_afp->if_format == XFS_DINODE_FMT_EXTENTS &&
-> > > > > +		ip->i_afp->if_nextents == 0);
-> > > > > +}
-> > > > > +
-> > > > > +static inline enum xfs_delattr_state
-> > > > > +xfs_attr_init_add_state(struct xfs_da_args *args)
-> > > > > +{
-> > > > > +	if (!args->dp->i_afp)
-> > > > > +		return XFS_DAS_DONE;
-> > > > 
-> > > > If we're in add/replace attr call without an attr fork, why do we go
-> > > > straight to finished?
-> > > 
-> > > I suspect I've fixed all the issues that triggered crashes here
-> > > because args->dp->i_afp was null. THere were transient states in a
-> > > replace operaiton when the remove takes away the last attr, removes
-> > > the attr fork, then calls the ADD operation. The add operation
-> > > assumes that the attr fork has already been set up, and so bad
-> > > things happened here.
-> > > 
-> > > This also occurred when setting up recovery operations - recovery of
-> > > an add/replace could start from that same "there's no attr fork"
-> > > condition, and so calling xfs_inode_has_attr() or
-> > > xfs_attr_is_shortform() direct from the reocovery setup code would
-> > > go splat because ip->i_afp was null.
-> > > 
-> > > I'm going to leave this for the moment (cleanup note made) because I
-> > > don't want to have to find out that I missed a corner case somewhere
-> > > they hard way right now. It's basically there to stop log recovery
-> > > crashing hard, which only occurs when the experimental larp code is
-> > > running, so I think this is safe to leave for a later cleanup.
+On Tue 10-05-22 13:16:30, Stefan Roesch wrote:
+> On 5/10/22 2:50 AM, Jan Kara wrote:
+> > I know that you're using fields in task_struct to propagate the delay info.
+> > But IMHO that is unnecessary (although I don't care too much). Instead we
+> > could factor out a variant of balance_dirty_pages() that returns 'pause' to
+> > sleep, 0 if no sleeping needed. Normal balance_dirty_pages() would use this
+> > for pause calculation, places wanting async throttling would only get the
+> > pause to sleep. So e.g. iomap_write_iter() would then check and if returned
+> > pause is > 0, it would abort the loop similary as we'd abort it for any
+> > other reason when NOWAIT write is aborted because we need to sleep. Iouring
+> > code then detects short write / EAGAIN and offloads the write to the
+> > workqueue where normal balance_dirty_pages() can sleep as needed.
 > > 
-> > Hmm, in that case, can this become:
-> > 
-> > 	if (!args->dp->i_afp) {
-> > 		ASSERT(0);
-> > 		return XFS_DAS_DONE;
-> > 	}
+> > This will make sure dirty limits are properly observed and we don't need
+> > that much special handling for it.
+> >
 > 
-> OK.
+> I like the idea of factoring out a function out balance_dirty_pages(), however
+> 
+> I see two challenges:
+> - the write operation has already completed at this point,
+> - so we can't really sleep on its completion in the io-worker in io-uring
+> - we don't know how long to sleep in io-uring
+> 
+> Currently balance_dirty_pages_ratelimited() is called at the end of the
+> function iomap_write_iter(). If the function
+> balance_dirty_pages_ratelimited() would instead be called at the
+> beginning of the function iomap_write_iter() we could return -EAGAIN and
+> then complete it in the io-worker.
 
-Ok, now generic/051 has reminded me exactly what this was for.
+Well, we call balance_dirty_pages_ratelimited() after each page. So it does
+not really matter much if the sleep is pushed to happen one page later.
+balance_dirty_pages_ratelimited() does ratelimiting of when
+balance_dirty_pages() are called so we have to make sure
+current->nr_dirtied is not zeroed out before we really do wait (because
+that is what determines whether we enter balance_dirty_pages() and how long
+we sleep there) but looking at the code that should work out just fine.
 
-Shortform attr remove will remove the attr and the attr fork from
-this code:
-
-        case XFS_DAS_SF_REMOVE:                                                  
-                error = xfs_attr_sf_removename(args);                            
-                attr->xattri_dela_state = xfs_attr_complete_op(attr,             
-                                                xfs_attr_init_add_state(args));  
-                break;                                                           
-
-But if we are doing this as part of a REPLACE operation and we
-still need to add the new attr, it calls xfs_attr_init_add_state()
-to get the add state we should start with. That then hits the
-null args->dp->i_afp case because the fork got removed.
-
-This can't happen if we are doing a replace op, so we'd then check
-if it's a shortform attr fork and return XFS_DAS_SF_ADD for the
-replace to then execute. But it's not a replace op, so we can
-have a null attr fork.
-
-I'm going to restore the old code with a comment so that I don't
-forget this again.
-
-/*
- * If called from the completion of a attr remove to determine
- * the next state, the attribute fork may be null. This can occur on
- * a pure remove, but we grab the next state before we check if a
- * replace operation is being performed. Hence if the attr fork is
- * null, it's a pure remove operation and we are done.
- */
-
-Cheers,
-
-Dave.
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
