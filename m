@@ -2,109 +2,176 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB34C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 15:20:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25375C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 15:40:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245735AbiEKPUB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 May 2022 11:20:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56304 "EHLO
+        id S1343929AbiEKPkL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 May 2022 11:40:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245736AbiEKPUA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 May 2022 11:20:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB20A218FCD;
-        Wed, 11 May 2022 08:19:57 -0700 (PDT)
+        with ESMTP id S1343941AbiEKPkE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 May 2022 11:40:04 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DD4D22440A
+        for <linux-xfs@vger.kernel.org>; Wed, 11 May 2022 08:39:55 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 39A9B618C8;
-        Wed, 11 May 2022 15:19:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 831A7C34116;
-        Wed, 11 May 2022 15:19:56 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5005EB824D0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 May 2022 15:39:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10736C34113;
+        Wed, 11 May 2022 15:39:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652282396;
-        bh=joIzrZGOxLsqbcRc0VMzZQ0L7R/xhNhcMB/bFdMJecY=;
+        s=k20201202; t=1652283593;
+        bh=DrPqVm9VMSVPOffk7TxKgiUGgdhfJmPMh6iIwk2tsRg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qSot7MYj00eHckTgvQJT1nELlQjLTCT2Ti43H6u9Ym09lTZRWZ0lhyDvHku9kMw4O
-         /Ytp53/sJZmPYBee9BEaD4BEN2RixhSpGVgY7LkiG8E4fOFitcGy/5QDTpQX7rg2+G
-         JwhKHLV2GfEUYimBu6TtBQgK8CSLEzSXBnHkD6KuaaNiiYn9vrHDG/flbDwve77fdR
-         SyT16NuYUSHEmamagyHKZGDrVuhivSRV+/SB3X4+5fF6etuBMvGH9z/Q31mxJTnthu
-         VZxX37BdCldSE2iFSBX4FiGPQbkO3YZgK8hPgTykZE6XpS5W9LYqeOyBhlZL3qdYTj
-         XGb74FjcKl/aw==
-Date:   Wed, 11 May 2022 08:19:55 -0700
+        b=n3KfGachj3pug6h3U8nIO4jJ2AfZmSCpwkqvQhz0wBroD2sn5aGnpbDhOp2tFqDHH
+         uCg+fPaIeX+WJdwV1nGsfFUctPYuCfulg/H1TcYz6SyOriVcPg6hTaPCj6JUSRqVUP
+         35hYEMbwxekruE53cyaN18Z8f+HYrCGXfH0RHiYtu7C1TBIifgKqHjp1OAJ1o56p3t
+         qacHVOFz0wNW/PHF/69NCfhhdXqEx2NJxSdLU7RPQBKSreVSWg6cb4iRokWIjTJYQ8
+         1nheIA+Ac/9cc86Te2K4miF9+HuEM9PQYb90PLodxbhbm6J0atzBPPWC+tI4G9nBDC
+         jpuOKmB9NWpEg==
+Date:   Wed, 11 May 2022 08:39:52 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Matthew Wilcox <willy@infradead.org>,
-        Naoya Horiguchi <naoya.horiguchi@nec.com>, linmiaohe@huawei.com
-Subject: Re: [PATCHSETS] v14 fsdax-rmap + v11 fsdax-reflink
-Message-ID: <20220511151955.GC27212@magnolia>
-References: <20220508143620.1775214-1-ruansy.fnst@fujitsu.com>
- <20220511000352.GY27195@magnolia>
- <20220511014818.GE1098723@dread.disaster.area>
- <CAPcyv4h0a3aT3XH9qCBW3nbT4K3EwQvBSD_oX5W=55_x24-wFA@mail.gmail.com>
- <20220510192853.410ea7587f04694038cd01de@linux-foundation.org>
- <20220511024301.GD27195@magnolia>
- <20220510222428.0cc8a50bd007474c97b050b2@linux-foundation.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 05/18] xfs: separate out initial attr_set states
+Message-ID: <20220511153952.GF27195@magnolia>
+References: <20220509004138.762556-1-david@fromorbit.com>
+ <20220509004138.762556-6-david@fromorbit.com>
+ <20220510231234.GI27195@magnolia>
+ <20220511010651.GZ1098723@dread.disaster.area>
+ <20220511010848.GB27195@magnolia>
+ <20220511013851.GD1098723@dread.disaster.area>
+ <20220511083513.GJ1098723@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220510222428.0cc8a50bd007474c97b050b2@linux-foundation.org>
+In-Reply-To: <20220511083513.GJ1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Oan Tue, May 10, 2022 at 10:24:28PM -0700, Andrew Morton wrote:
-> On Tue, 10 May 2022 19:43:01 -0700 "Darrick J. Wong" <djwong@kernel.org> wrote:
-> 
-> > On Tue, May 10, 2022 at 07:28:53PM -0700, Andrew Morton wrote:
-> > > On Tue, 10 May 2022 18:55:50 -0700 Dan Williams <dan.j.williams@intel.com> wrote:
-> > > 
-> > > > > It'll need to be a stable branch somewhere, but I don't think it
-> > > > > really matters where al long as it's merged into the xfs for-next
-> > > > > tree so it gets filesystem test coverage...
+On Wed, May 11, 2022 at 06:35:13PM +1000, Dave Chinner wrote:
+> On Wed, May 11, 2022 at 11:38:51AM +1000, Dave Chinner wrote:
+> > On Tue, May 10, 2022 at 06:08:48PM -0700, Darrick J. Wong wrote:
+> > > On Wed, May 11, 2022 at 11:06:51AM +1000, Dave Chinner wrote:
+> > > > On Tue, May 10, 2022 at 04:12:34PM -0700, Darrick J. Wong wrote:
+> > > > > On Mon, May 09, 2022 at 10:41:25AM +1000, Dave Chinner wrote:
+> > > > > > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> > > > > > index c9c867e3406c..ad52b5dc59e4 100644
+> > > > > > --- a/fs/xfs/libxfs/xfs_attr.h
+> > > > > > +++ b/fs/xfs/libxfs/xfs_attr.h
+> > > > > > @@ -530,4 +553,35 @@ void xfs_attri_destroy_cache(void);
+> > > > > >  int __init xfs_attrd_init_cache(void);
+> > > > > >  void xfs_attrd_destroy_cache(void);
+> > > > > >  
+> > > > > > +/*
+> > > > > > + * Check to see if the attr should be upgraded from non-existent or shortform to
+> > > > > > + * single-leaf-block attribute list.
+> > > > > > + */
+> > > > > > +static inline bool
+> > > > > > +xfs_attr_is_shortform(
+> > > > > > +	struct xfs_inode    *ip)
+> > > > > > +{
+> > > > > > +	return ip->i_afp->if_format == XFS_DINODE_FMT_LOCAL ||
+> > > > > > +	       (ip->i_afp->if_format == XFS_DINODE_FMT_EXTENTS &&
+> > > > > > +		ip->i_afp->if_nextents == 0);
+> > > > > > +}
+> > > > > > +
+> > > > > > +static inline enum xfs_delattr_state
+> > > > > > +xfs_attr_init_add_state(struct xfs_da_args *args)
+> > > > > > +{
+> > > > > > +	if (!args->dp->i_afp)
+> > > > > > +		return XFS_DAS_DONE;
+> > > > > 
+> > > > > If we're in add/replace attr call without an attr fork, why do we go
+> > > > > straight to finished?
 > > > > 
-> > > > So how about let the notify_failure() bits go through -mm this cycle,
-> > > > if Andrew will have it, and then the reflnk work has a clean v5.19-rc1
-> > > > baseline to build from?
+> > > > I suspect I've fixed all the issues that triggered crashes here
+> > > > because args->dp->i_afp was null. THere were transient states in a
+> > > > replace operaiton when the remove takes away the last attr, removes
+> > > > the attr fork, then calls the ADD operation. The add operation
+> > > > assumes that the attr fork has already been set up, and so bad
+> > > > things happened here.
+> > > > 
+> > > > This also occurred when setting up recovery operations - recovery of
+> > > > an add/replace could start from that same "there's no attr fork"
+> > > > condition, and so calling xfs_inode_has_attr() or
+> > > > xfs_attr_is_shortform() direct from the reocovery setup code would
+> > > > go splat because ip->i_afp was null.
+> > > > 
+> > > > I'm going to leave this for the moment (cleanup note made) because I
+> > > > don't want to have to find out that I missed a corner case somewhere
+> > > > they hard way right now. It's basically there to stop log recovery
+> > > > crashing hard, which only occurs when the experimental larp code is
+> > > > running, so I think this is safe to leave for a later cleanup.
 > > > 
-> > > What are we referring to here?  I think a minimal thing would be the
-> > > memremap.h and memory-failure.c changes from
-> > > https://lkml.kernel.org/r/20220508143620.1775214-4-ruansy.fnst@fujitsu.com ?
+> > > Hmm, in that case, can this become:
 > > > 
-> > > Sure, I can scoot that into 5.19-rc1 if you think that's best.  It
-> > > would probably be straining things to slip it into 5.19.
-> > > 
-> > > The use of EOPNOTSUPP is a bit suspect, btw.  It *sounds* like the
-> > > right thing, but it's a networking errno.  I suppose livable with if it
-> > > never escapes the kernel, but if it can get back to userspace then a
-> > > user would be justified in wondering how the heck a filesystem
-> > > operation generated a networking errno?
+> > > 	if (!args->dp->i_afp) {
+> > > 		ASSERT(0);
+> > > 		return XFS_DAS_DONE;
+> > > 	}
 > > 
-> > <shrug> most filesystems return EOPNOTSUPP rather enthusiastically when
-> > they don't know how to do something...
+> > OK.
 > 
-> Can it propagate back to userspace?
+> Ok, now generic/051 has reminded me exactly what this was for.
+> 
+> Shortform attr remove will remove the attr and the attr fork from
+> this code:
+> 
+>         case XFS_DAS_SF_REMOVE:                                                  
+>                 error = xfs_attr_sf_removename(args);                            
+>                 attr->xattri_dela_state = xfs_attr_complete_op(attr,             
+>                                                 xfs_attr_init_add_state(args));  
+>                 break;                                                           
+> 
+> But if we are doing this as part of a REPLACE operation and we
+> still need to add the new attr, it calls xfs_attr_init_add_state()
+> to get the add state we should start with. That then hits the
+> null args->dp->i_afp case because the fork got removed.
+> 
+> This can't happen if we are doing a replace op, so we'd then check
+> if it's a shortform attr fork and return XFS_DAS_SF_ADD for the
+> replace to then execute. But it's not a replace op, so we can
+> have a null attr fork.
+> 
+> I'm going to restore the old code with a comment so that I don't
+> forget this again.
+> 
+> /*
+>  * If called from the completion of a attr remove to determine
+>  * the next state, the attribute fork may be null. This can occur on
+>  * a pure remove, but we grab the next state before we check if a
+>  * replace operation is being performed. Hence if the attr fork is
+>  * null, it's a pure remove operation and we are done.
+>  */
 
-AFAICT, the new code falls back to the current (mf_generic_kill_procs)
-failure code if the filesystem doesn't provide a ->memory_failure
-function or if it returns -EOPNOSUPP.  mf_generic_kill_procs can also
-return -EOPNOTSUPP, but all the memory_failure() callers (madvise, etc.)
-convert that to 0 before returning it to userspace.
+Ahh, I see -- sf_removename will /never/ kill i_afp if we're doing a
+DA_OP_REPLACE or ADDNAME, and leaf_removename also won't do that if
+we're doing DA_OP_REPLACE.  IOWs, only a removexattr operation can
+result in i_afp being freed.
 
-I suppose the weirder question is going to be what happens when madvise
-starts returning filesystem errors like EIO or EFSCORRUPTED when pmem
-loses half its brains and even the fs can't deal with it.
+And the XATTR_CREATE operation always guarantee that i_afp is non-null
+before we start, so xfs_attr_defer_add should never be called with
+args->dp->i_afp == NULL, hence it'll never hit that state.
+
+Would you mind adding a sentence to the comment?
+
+"A pure create ensures the existence of i_afp and never encounters this
+state."
+
+FBO of maintainers who aren't quite as uptodate on how xattrs work? ;)
+
+(Admittedly all this will probably go away if we stop freeing i_afp, but
+I wasn't going to push on that until the LARP stuff settles...)
 
 --D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
