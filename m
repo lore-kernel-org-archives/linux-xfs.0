@@ -2,95 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BCFEC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 03:58:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6A52C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 04:21:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229609AbiEKD6T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 23:58:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45082 "EHLO
+        id S230202AbiEKEVM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 May 2022 00:21:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231449AbiEKD6S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 23:58:18 -0400
-Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D913D219C0D
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 20:58:16 -0700 (PDT)
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 73F0960F60;
-        Wed, 11 May 2022 13:58:14 +1000 (EST)
-Received: from smtp1.onthe.net.au ([10.200.63.11])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id tMKU3FsGbSpj; Wed, 11 May 2022 13:58:14 +1000 (AEST)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 20D8B60E0B;
-        Wed, 11 May 2022 13:58:14 +1000 (EST)
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id 0A014680319; Wed, 11 May 2022 13:58:14 +1000 (AEST)
-Date:   Wed, 11 May 2022 13:58:13 +1000
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Highly reflinked and fragmented considered harmful?
-Message-ID: <20220511035813.GA342362@onthe.net.au>
-References: <CAOQ4uxgf6AHzLM-mGte_L-A+piSZTRsbdLMBT3hZFNhk-yfxZQ@mail.gmail.com>
- <20220510051057.GY27195@magnolia>
- <20220510063051.GA215522@onthe.net.au>
- <20220510081632.GS1098723@dread.disaster.area>
- <20220510191918.GD27195@magnolia>
- <20220510215411.GT1098723@dread.disaster.area>
- <20220511003708.GA27195@magnolia>
- <20220511013654.GC1098723@dread.disaster.area>
- <20220511021657.GA333471@onthe.net.au>
- <20220511025235.GG1098723@dread.disaster.area>
+        with ESMTP id S229538AbiEKEVL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 May 2022 00:21:11 -0400
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8513E3B3D5
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 21:21:08 -0700 (PDT)
+Received: by mail-pg1-x52e.google.com with SMTP id g184so752015pgc.1
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 21:21:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=jl1GZmm7QuKAbToF+dPGx7IgxaH6ShvhQAX01HB3wCc=;
+        b=ltUc6hKbTACE4zlFPJKf6Z+hO3WQcTTeuwKVHECbtUXdc3XEatIzd0n7tiO638vGBN
+         d/gZVhxS756AE2mPE3v7qYCixusH6wSltbX2Thocw8XnHb21P3uuEQBLfUeJnIrOH4Eb
+         u58jlZJltai+LVOH5tktxfMFkiDVx3LdYDF539tWHb2I/zqOJOpnW3wOvkCZGgcpn+Sw
+         MGS3qyclt4YGl06g+pdoTt82yqLPYimOr49UnkrgN4o98xHzmXwhJL/1vydGGNGYpLjh
+         eh/n2GFpyXsYuS+ZkiPitXl6gdr0JSVEkfwkCEd0sbz377Yo6JrzXqqW4AOxftLzp6Tm
+         I2GA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=jl1GZmm7QuKAbToF+dPGx7IgxaH6ShvhQAX01HB3wCc=;
+        b=vIXqh/+Ine4uKmmPafjhylXfCDgmVDZrqZapb6SEfZbc5mI/RiBxwHp4d5wdMKsjWa
+         PunmfozOThHALLlDj5zsvdzcvHMNBaZoj/06L0i/NUY87uFCOCWYGrYJyt4YprCDh24J
+         M3ftfctgpsRPjY5AviIGJH4ZfOPw+km8WPoNm/j3O/78wBs9X/sfvhmCG1frsx6XP7gZ
+         Uu1rZG3zbbZ2rV9XvFOIPe/oLYulk+Yzdvbz7naHkZMptmrPoSKwK6ZBp2VHj4pTLYdw
+         v7ACKBxiXle48q+NiRx/51ZiXzAAiYmGvTOtZHwRjoAMYDEJ1AxI+6XIHUSOgA6sAbOZ
+         rMKA==
+X-Gm-Message-State: AOAM530egPdrzuNYdtaRsYvqld73T2FCMq02eauhNtgKjkyQCy3YkgqL
+        m7+quiF63aavsHbX61UEb6tkb8xVbL+p1uL8PuXCAQ==
+X-Google-Smtp-Source: ABdhPJw956CGNInPJoX0Sue0mYEmFyYdP4GE5ILyG00rRUkMD+8mKrIiV5I/p/QBznNriBkyTAqhRy7FXF8Omnk+4mA=
+X-Received: by 2002:a05:6a00:22d4:b0:510:6d75:e3da with SMTP id
+ f20-20020a056a0022d400b005106d75e3damr23699430pfj.3.1652242868060; Tue, 10
+ May 2022 21:21:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20220511025235.GG1098723@dread.disaster.area>
+References: <20220508143620.1775214-1-ruansy.fnst@fujitsu.com>
+ <20220511000352.GY27195@magnolia> <20220511014818.GE1098723@dread.disaster.area>
+ <CAPcyv4h0a3aT3XH9qCBW3nbT4K3EwQvBSD_oX5W=55_x24-wFA@mail.gmail.com> <20220510192853.410ea7587f04694038cd01de@linux-foundation.org>
+In-Reply-To: <20220510192853.410ea7587f04694038cd01de@linux-foundation.org>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Tue, 10 May 2022 21:20:57 -0700
+Message-ID: <CAPcyv4ip6N6jvdb3LRjPnVr6xaFjiVg1OCE95pu9RiMG5_VNPw@mail.gmail.com>
+Subject: Re: [PATCHSETS] v14 fsdax-rmap + v11 fsdax-reflink
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Matthew Wilcox <willy@infradead.org>,
+        Naoya Horiguchi <naoya.horiguchi@nec.com>, linmiaohe@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 11, 2022 at 12:52:35PM +1000, Dave Chinner wrote:
-> On Wed, May 11, 2022 at 12:16:57PM +1000, Chris Dunlop wrote:
->> Out of interest, would this work also reduce the time spent mounting in 
->> my case? I.e. would a lot of the work from my recovery mount be punted 
->> off to a background thread?
+On Tue, May 10, 2022 at 7:29 PM Andrew Morton <akpm@linux-foundation.org> wrote:
 >
-> No. log recovery will punt the remaining inodegc work to background
-> threads so it might get slightly parallelised, but we have a hard
-> barrier between completing log recovery work and completing the
-> mount process at the moment. Hence we wait for inodegc to complete
-> before log recovery is marked as complete.
+> On Tue, 10 May 2022 18:55:50 -0700 Dan Williams <dan.j.williams@intel.com> wrote:
 >
-> In theory we could allow background inodegc to bleed into active
-> duty once log recovery has processed all the unlinked lists, but
-> that's a change of behaviour that would require a careful audit of
-> the last part of the mount path to ensure that it is safe to be
-> running concurrent background operations whilst complete mount state
-> updates.
+> > > It'll need to be a stable branch somewhere, but I don't think it
+> > > really matters where al long as it's merged into the xfs for-next
+> > > tree so it gets filesystem test coverage...
+> >
+> > So how about let the notify_failure() bits go through -mm this cycle,
+> > if Andrew will have it, and then the reflnk work has a clean v5.19-rc1
+> > baseline to build from?
 >
-> This hasn't been on my radar at all up until now, but I'll have a
-> think about it next time I look at those bits of recovery. I suspect
-> that probably won't be far away - I have a set of unlinked inode
-> list optimisations that rework the log recovery infrastructure near
-> the top of my current work queue, so I will be in that general
-> vicinity over the next few weeks...
+> What are we referring to here?  I think a minimal thing would be the
+> memremap.h and memory-failure.c changes from
+> https://lkml.kernel.org/r/20220508143620.1775214-4-ruansy.fnst@fujitsu.com ?
 
-I'll keep an eye out.
+Latest is here:
+https://lore.kernel.org/all/20220508143620.1775214-1-ruansy.fnst@fujitsu.com/
 
-> Regardless, the inodegc work is going to be slow on your system no
-> matter what we do because of the underlying storage layout. What we
-> need to do is try to remove all the places where stuff can get
-> blocked on inodegc completion, but that is somewhat complex because
-> we still need to be able to throttle queue depths in various
-> situations.
+> Sure, I can scoot that into 5.19-rc1 if you think that's best.  It
+> would probably be straining things to slip it into 5.19.
 
-That reminds of a something I've been wondering about for obvious reasons: 
-for workloads where metadata operations are dominant, do you have any 
-ponderings on allowing AGs to be put on fast storage whilst the bulk data 
-is on molasses storage?
+Hmm, if it's straining things and XFS will also target v5.20 I think
+the best course for all involved is just wait. Let some of the current
+conflicts in -mm land in v5.19 and then I can merge the DAX baseline
+and publish a stable branch for XFS and BTRFS to build upon for v5.20.
 
-Cheers,
-
-Chris
+> The use of EOPNOTSUPP is a bit suspect, btw.  It *sounds* like the
+> right thing, but it's a networking errno.  I suppose livable with if it
+> never escapes the kernel, but if it can get back to userspace then a
+> user would be justified in wondering how the heck a filesystem
+> operation generated a networking errno?
