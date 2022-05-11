@@ -2,108 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD0F2C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 01:14:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2400C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 01:37:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231802AbiEKBO5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 21:14:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37756 "EHLO
+        id S232578AbiEKBhA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 May 2022 21:37:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230042AbiEKBOy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 21:14:54 -0400
+        with ESMTP id S230440AbiEKBg7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 21:36:59 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 11330227B40
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 18:14:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6B72E56208
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 18:36:58 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 8F37810E6605;
-        Wed, 11 May 2022 11:14:51 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 48FE110E6A2D;
+        Wed, 11 May 2022 11:36:57 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1noawE-00AVKA-95; Wed, 11 May 2022 11:14:50 +1000
-Date:   Wed, 11 May 2022 11:14:50 +1000
+        id 1nobHb-00AVlc-06; Wed, 11 May 2022 11:36:55 +1000
+Date:   Wed, 11 May 2022 11:36:54 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/18] xfs: ATTR_REPLACE algorithm with LARP enabled
- needs rework
-Message-ID: <20220511011450.GB1098723@dread.disaster.area>
-References: <20220509004138.762556-1-david@fromorbit.com>
- <20220509004138.762556-18-david@fromorbit.com>
- <20220510235347.GV27195@magnolia>
+Cc:     Chris Dunlop <chris@onthe.net.au>,
+        Amir Goldstein <amir73il@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Highly reflinked and fragmented considered harmful?
+Message-ID: <20220511013654.GC1098723@dread.disaster.area>
+References: <20220509024659.GA62606@onthe.net.au>
+ <20220509230918.GP1098723@dread.disaster.area>
+ <CAOQ4uxgf6AHzLM-mGte_L-A+piSZTRsbdLMBT3hZFNhk-yfxZQ@mail.gmail.com>
+ <20220510051057.GY27195@magnolia>
+ <20220510063051.GA215522@onthe.net.au>
+ <20220510081632.GS1098723@dread.disaster.area>
+ <20220510191918.GD27195@magnolia>
+ <20220510215411.GT1098723@dread.disaster.area>
+ <20220511003708.GA27195@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220510235347.GV27195@magnolia>
+In-Reply-To: <20220511003708.GA27195@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=627b0e0c
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=627b1339
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=zJPKGTXYwHS9u7470LgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
+        a=iFpKcpqHwzTDbUVbHOIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 10, 2022 at 04:53:47PM -0700, Darrick J. Wong wrote:
-> On Mon, May 09, 2022 at 10:41:37AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Tue, May 10, 2022 at 05:37:08PM -0700, Darrick J. Wong wrote:
+> On Wed, May 11, 2022 at 07:54:11AM +1000, Dave Chinner wrote:
+> > On Tue, May 10, 2022 at 12:19:18PM -0700, Darrick J. Wong wrote:
+> > > On Tue, May 10, 2022 at 06:16:32PM +1000, Dave Chinner wrote:
+> > > > I think we should just accept that statfs() can never really report
+> > > > exactly accurate space usagei to userspace and get rid of the flush.
+> > > 
+> > > What about all the code that flushes gc work when we hit ENOSPC/EDQUOT?
+> > > Do we let those threads stall too because the fs is out of resources and
+> > > they can just wait?  Or would that also be better off with a flush
+> > > timeout and userspace can just eat the ENOSPC/EDQUOT after 30 seconds?
 > > 
-> > We can't use the same algorithm for replacing an existing attribute
-> > when logging attributes. The existing algorithm is essentially:
-> > 
-> > 1. create new attr w/ INCOMPLETE
-> > 2. atomically flip INCOMPLETE flags between old + new attribute
-> > 3. remove old attr which is marked w/ INCOMPLETE
-> > 
-> > This algorithm guarantees that we see either the old or new
-> > attribute, and if we fail after the atomic flag flip, we don't have
-> > to recover the removal of the old attr because we never see
-> > INCOMPLETE attributes in lookups.
-> > 
-> > For logged attributes, however, this does not work. The logged
-> > attribute intents do not track the work that has been done as the
-> > transaction rolls, and hence the only recovery mechanism we have is
-> > "run the replace operation from scratch".
-> > 
-> > This is further exacerbated by the attempt to avoid needing the
-> > INCOMPLETE flag to create an atomic swap. This means we can create
-> > a second active attribute of the same name before we remove the
-> > original. If we fail at any point after the create but before the
-> > removal has completed, we end up with duplicate attributes in
-> > the attr btree and recovery only tries to replace one of them.
-> > 
-> > There are several other failure modes where we can leave partially
-> > allocated remote attributes that expose stale data, partially free
-> > remote attributes that enable UAF based stale data exposure, etc.
-> > 
-> > TO fix this, we need a different algorithm for replace operations
-> > when LARP is enabled. Luckily, it's not that complex if we take the
-> > right first step. That is, the first thing we log is the attri
-> > intent with the new name/value pair and mark the old attr as
-> > INCOMPLETE in the same transaction.
-> > 
-> > From there, we then remove the old attr and keep relogging the
-> > new name/value in the intent, such that we always know that we have
-> > to create the new attr in recovery. Once the old attr is removed,
-> > we then run a normal ATTR_CREATE operation relogging the intent as
-> > we go. If the new attr is local, then it gets created in a single
-> > atomic transaction that also logs the final intent done. If the new
-> > attr is remote, the we set INCOMPLETE on the new attr while we
-> > allocate and set the remote value, and then we clear the INCOMPLETE
-> > flag at in the last transaction taht logs the final intent done.
-> > 
-> > If we fail at any point in this algorithm, log recovery will always
-> > see the same state on disk: the new name/value in the intent, and
-> > either an INCOMPLETE attr or no attr in the attr btree. If we find
-> > an INCOMPLETE attr, we run the full replace starting with removing
-> > the INCOMPLETE attr. If we don't find it, then we simply create the
-> > new attr.
+> > 1. Not an immediate problem we need to solve.
+> > 2. flush at enospc/edquot is best effort, so doesn't need to block
+> >    waiting on inodegc. the enospc/edquot flush will get repeated
+> >    soon enough, so that will take into account progress made by
+> >    long running inodegc ops.
+> > 3. we leave pending work on the per-cpu queues under the
+> >    flush/throttle thresholds indefinitely.
+> > 4. to be accurate, statfs() needs to flush #3.
 > 
-> ...assuming that the INCOMPLETE attr is preserved until we're completely
-> done unmapping the rmtval blocks, right?
+> Yes, that's the state of things currently...
+> 
+> > 5. While working on the rework of inode reclaimation, I converted the
+> >    inodegc queues to use delayed works to ensure work starts on
+> >    per-cpu queues within 10ms of queueing to avoid #3 causing
+> >    problems.
+> > 6. I added a non-blocking async flush mechanism that works by
+> >    modifying the queue timer to 0 to trigger immedate work
+> >    scheduling for anything that hasn't been run.
+> 
+> *OH*, you've already built those two things?  Well that makes this
+> /much/ easier.  I think all we'd need to fix #4 is an xfs_inodegc_push()
+> function that statfs/enospc/edquot can call to do xfs_inodegc_queue_all
+> and return immediately.
 
-Yes, it is preserved - the INCOMPLETE flag is held in
-the name entry and that's not removed until after the rmtval blocks
-have been fully removed.
+*nod*.
+
+I think that's the thing that some people have missed in in this
+thread - I've know for a while now the scope of problems blocking
+flushes from statfs() can cause - any issue with background
+inodegc not making progress can deadlock the filesystem. I've lost
+count of the number of times I had inodegc go wrong or crash and the
+only possible recovery was to power cycle because nothing could be
+executed from the command line.
+
+That's because statfs() appears to be used in some commonly used
+library function and so many utility programs on the system will get
+stuck and be unable to run when inodegc dies, deadlocks, or takes a
+real long time to make progress.
+
+Hence I didn't need to do any analysis of Chris' system to know
+exactly what was going on - I've seen it many, many times myself and
+have work in progress that avoids those issues with inodegc work
+that never completes.
+
+IOWs, everything is understood, fixes are already written, and
+there's no actual threat of data loss or corruption from this issue.
+It's just lots of stuff getting stuck behind a long running
+operation...
+
+All this report means is that I have to bump the priority of that
+work, separate it out into it's own series and make sure it's ready
+for the next cycle.
 
 Cheers,
 
