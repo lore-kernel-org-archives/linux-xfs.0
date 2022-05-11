@@ -2,149 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42908C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 01:10:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD0F2C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 01:14:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233586AbiEKBKU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 21:10:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46086 "EHLO
+        id S231802AbiEKBO5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 May 2022 21:14:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239955AbiEKBKS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 21:10:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60FA8210BB9
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 18:10:17 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EE99C61A46
-        for <linux-xfs@vger.kernel.org>; Wed, 11 May 2022 01:10:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BFE9C385D6;
-        Wed, 11 May 2022 01:10:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652231416;
-        bh=RXSE/xhE7wMwtcg4RPHEayqvV0fwCCtYighgped2gkc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rrFoNtpZvIO6OHgAKpIaHT1Ef6av3gaLEeWze2DvP9KWwsrepry8ssl/vtPElNNYE
-         rdZeVhHuMZpGc8MZXSO8UHKHmU9bPc4XB+vjw4aHFGyOuCIXqjpxpPBSX72SLDU0f3
-         Bk0gh/ZeuXhSBpwEjIamHCn3POaap/3/DIqe4Eje+WgJoAe+2G+J5n5OTgmf5X0Flb
-         9ufQuhWcrVN1U3tBGKyn0PkICY9inUGL0AsxhGnaflqK/4hyY1eVZLnAvUMXwW8VwX
-         9LURo/0L0k41CZNJUkr1oK+5NAiwCx6F/x01EQRE9kwmyOV7Kl1yAu/QqxTJ4djj18
-         Qsnc/6jufWaHQ==
-Date:   Tue, 10 May 2022 18:10:16 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        with ESMTP id S230042AbiEKBOy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 21:14:54 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 11330227B40
+        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 18:14:53 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 8F37810E6605;
+        Wed, 11 May 2022 11:14:51 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1noawE-00AVKA-95; Wed, 11 May 2022 11:14:50 +1000
+Date:   Wed, 11 May 2022 11:14:50 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 19/18] xfs: can't use kmem_zalloc() for attribute buffers
-Message-ID: <20220511011016.GC27195@magnolia>
+Subject: Re: [PATCH 17/18] xfs: ATTR_REPLACE algorithm with LARP enabled
+ needs rework
+Message-ID: <20220511011450.GB1098723@dread.disaster.area>
 References: <20220509004138.762556-1-david@fromorbit.com>
- <20220510222716.GW1098723@dread.disaster.area>
- <20220510235931.GX27195@magnolia>
- <20220511005420.GX1098723@dread.disaster.area>
+ <20220509004138.762556-18-david@fromorbit.com>
+ <20220510235347.GV27195@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220511005420.GX1098723@dread.disaster.area>
+In-Reply-To: <20220510235347.GV27195@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=627b0e0c
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=zJPKGTXYwHS9u7470LgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 11, 2022 at 10:54:20AM +1000, Dave Chinner wrote:
-> On Tue, May 10, 2022 at 04:59:31PM -0700, Darrick J. Wong wrote:
-> > On Wed, May 11, 2022 at 08:27:16AM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Because when running fsmark workloads with 64kB xattrs, heap
-> > > allocation of >64kB buffers for the attr item name/value buffer
-> > > will fail and deadlock.
-> .....
-> > > @@ -119,11 +119,11 @@ xfs_attri_item_format(
-> > >  			sizeof(struct xfs_attri_log_format));
-> > >  	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_NAME,
-> > >  			attrip->attri_name,
-> > > -			xlog_calc_iovec_len(attrip->attri_name_len));
-> > > +			attrip->attri_name_len);
+On Tue, May 10, 2022 at 04:53:47PM -0700, Darrick J. Wong wrote:
+> On Mon, May 09, 2022 at 10:41:37AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Are we fixing these because the xlog_{copy,finish}_iovec functions do
-> > the rounding themselves now?
-> 
-> Yes, I forgot that I cleaned this up here when I noticed it.
-> Probably should mention it in the commit log:
-> 
-> "We also clean up the attribute name and value lengths as they no
-> longer need to be rounded out to sizes compatible with log vectors."
-
-Ok.
-
+> > We can't use the same algorithm for replacing an existing attribute
+> > when logging attributes. The existing algorithm is essentially:
 > > 
-> > >  	if (attrip->attri_value_len > 0)
-> > >  		xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_VALUE,
-> > >  				attrip->attri_value,
-> > > -				xlog_calc_iovec_len(attrip->attri_value_len));
-> > > +				attrip->attri_value_len);
-> > >  }
-> > >  
-> > >  /*
-> > > @@ -163,26 +163,21 @@ xfs_attri_init(
-> > >  
-> > >  {
-> > >  	struct xfs_attri_log_item	*attrip;
-> > > -	uint32_t			name_vec_len = 0;
-> > > -	uint32_t			value_vec_len = 0;
-> > > -	uint32_t			buffer_size;
-> > > -
-> > > -	if (name_len)
-> > > -		name_vec_len = xlog_calc_iovec_len(name_len);
-> > > -	if (value_len)
-> > > -		value_vec_len = xlog_calc_iovec_len(value_len);
+> > 1. create new attr w/ INCOMPLETE
+> > 2. atomically flip INCOMPLETE flags between old + new attribute
+> > 3. remove old attr which is marked w/ INCOMPLETE
 > > 
-> > ...and we don't need to bloat up the internal structures anymore either,
-> > right?
-> 
-> Yup, because we only copy out the exact length of the name/val now.
-
-<nod>
-
+> > This algorithm guarantees that we see either the old or new
+> > attribute, and if we fail after the atomic flag flip, we don't have
+> > to recover the removal of the old attr because we never see
+> > INCOMPLETE attributes in lookups.
 > > 
-> > > -
-> > > -	buffer_size = name_vec_len + value_vec_len;
-> > > +	uint32_t			buffer_size = name_len + value_len;
-> > >  
-> > >  	if (buffer_size) {
-> > > -		attrip = kmem_zalloc(sizeof(struct xfs_attri_log_item) +
-> > > -				    buffer_size, KM_NOFS);
-> > > -		if (attrip == NULL)
-> > > -			return NULL;
-> > > +		/*
-> > > +		 * This could be over 64kB in length, so we have to use
-> > > +		 * kvmalloc() for this. But kvmalloc() utterly sucks, so we
-> > > +		 * use own version.
-> > > +		 */
-> > > +		attrip = xlog_kvmalloc(sizeof(struct xfs_attri_log_item) +
-> > > +					buffer_size);
-> > >  	} else {
-> > > -		attrip = kmem_cache_zalloc(xfs_attri_cache,
-> > > -					  GFP_NOFS | __GFP_NOFAIL);
-> > > +		attrip = kmem_cache_alloc(xfs_attri_cache,
-> > > +					GFP_NOFS | __GFP_NOFAIL);
-> > >  	}
-> > > +	memset(attrip, 0, sizeof(struct xfs_attri_log_item));
+> > For logged attributes, however, this does not work. The logged
+> > attribute intents do not track the work that has been done as the
+> > transaction rolls, and hence the only recovery mechanism we have is
+> > "run the replace operation from scratch".
 > > 
-> > I wonder if this memset should be right after the xlog_kvmalloc and
-> > leave the kmem_cache_zalloc alone?
+> > This is further exacerbated by the attempt to avoid needing the
+> > INCOMPLETE flag to create an atomic swap. This means we can create
+> > a second active attribute of the same name before we remove the
+> > original. If we fail at any point after the create but before the
+> > removal has completed, we end up with duplicate attributes in
+> > the attr btree and recovery only tries to replace one of them.
+> > 
+> > There are several other failure modes where we can leave partially
+> > allocated remote attributes that expose stale data, partially free
+> > remote attributes that enable UAF based stale data exposure, etc.
+> > 
+> > TO fix this, we need a different algorithm for replace operations
+> > when LARP is enabled. Luckily, it's not that complex if we take the
+> > right first step. That is, the first thing we log is the attri
+> > intent with the new name/value pair and mark the old attr as
+> > INCOMPLETE in the same transaction.
+> > 
+> > From there, we then remove the old attr and keep relogging the
+> > new name/value in the intent, such that we always know that we have
+> > to create the new attr in recovery. Once the old attr is removed,
+> > we then run a normal ATTR_CREATE operation relogging the intent as
+> > we go. If the new attr is local, then it gets created in a single
+> > atomic transaction that also logs the final intent done. If the new
+> > attr is remote, the we set INCOMPLETE on the new attr while we
+> > allocate and set the remote value, and then we clear the INCOMPLETE
+> > flag at in the last transaction taht logs the final intent done.
+> > 
+> > If we fail at any point in this algorithm, log recovery will always
+> > see the same state on disk: the new name/value in the intent, and
+> > either an INCOMPLETE attr or no attr in the attr btree. If we find
+> > an INCOMPLETE attr, we run the full replace starting with removing
+> > the INCOMPLETE attr. If we don't find it, then we simply create the
+> > new attr.
 > 
-> Then we memset the header twice in the common small attr case, and
-> the xfs_attri_log_item header is not exactly what you'd call small
-> (224 bytes).
+> ...assuming that the INCOMPLETE attr is preserved until we're completely
+> done unmapping the rmtval blocks, right?
 
-Eh, ok, NBD.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Yes, it is preserved - the INCOMPLETE flag is held in
+the name entry and that's not removed until after the rmtval blocks
+have been fully removed.
 
---D
+Cheers,
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
