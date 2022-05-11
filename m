@@ -2,117 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F1EDC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 01:38:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C9BFC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 01:48:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237260AbiEKBiz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 May 2022 21:38:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45720 "EHLO
+        id S234906AbiEKBs0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 May 2022 21:48:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234515AbiEKBiy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 21:38:54 -0400
+        with ESMTP id S233599AbiEKBsZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 May 2022 21:48:25 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 52FB1260863
-        for <linux-xfs@vger.kernel.org>; Tue, 10 May 2022 18:38:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E84495E162;
+        Tue, 10 May 2022 18:48:23 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7493010E6A5F;
-        Wed, 11 May 2022 11:38:52 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C137810E66A0;
+        Wed, 11 May 2022 11:48:19 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nobJT-00AVmx-DW; Wed, 11 May 2022 11:38:51 +1000
-Date:   Wed, 11 May 2022 11:38:51 +1000
+        id 1nobSc-00AVtI-9Y; Wed, 11 May 2022 11:48:18 +1000
+Date:   Wed, 11 May 2022 11:48:18 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/18] xfs: separate out initial attr_set states
-Message-ID: <20220511013851.GD1098723@dread.disaster.area>
-References: <20220509004138.762556-1-david@fromorbit.com>
- <20220509004138.762556-6-david@fromorbit.com>
- <20220510231234.GI27195@magnolia>
- <20220511010651.GZ1098723@dread.disaster.area>
- <20220511010848.GB27195@magnolia>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
+        hch@infradead.org, jane.chu@oracle.com, rgoldwyn@suse.de,
+        viro@zeniv.linux.org.uk, willy@infradead.org,
+        naoya.horiguchi@nec.com, linmiaohe@huawei.com
+Subject: Re: [PATCHSETS] v14 fsdax-rmap + v11 fsdax-reflink
+Message-ID: <20220511014818.GE1098723@dread.disaster.area>
+References: <20220508143620.1775214-1-ruansy.fnst@fujitsu.com>
+ <20220511000352.GY27195@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220511010848.GB27195@magnolia>
+In-Reply-To: <20220511000352.GY27195@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=627b13ac
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=627b15e7
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=vS09GEP_iI6d4CcACJ0A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=omOdbC7AAAAA:8
+        a=7-415B0cAAAA:8 a=AXPICKo_Apo_Re-Q38cA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 10, 2022 at 06:08:48PM -0700, Darrick J. Wong wrote:
-> On Wed, May 11, 2022 at 11:06:51AM +1000, Dave Chinner wrote:
-> > On Tue, May 10, 2022 at 04:12:34PM -0700, Darrick J. Wong wrote:
-> > > On Mon, May 09, 2022 at 10:41:25AM +1000, Dave Chinner wrote:
-> > > > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> > > > index c9c867e3406c..ad52b5dc59e4 100644
-> > > > --- a/fs/xfs/libxfs/xfs_attr.h
-> > > > +++ b/fs/xfs/libxfs/xfs_attr.h
-> > > > @@ -530,4 +553,35 @@ void xfs_attri_destroy_cache(void);
-> > > >  int __init xfs_attrd_init_cache(void);
-> > > >  void xfs_attrd_destroy_cache(void);
-> > > >  
-> > > > +/*
-> > > > + * Check to see if the attr should be upgraded from non-existent or shortform to
-> > > > + * single-leaf-block attribute list.
-> > > > + */
-> > > > +static inline bool
-> > > > +xfs_attr_is_shortform(
-> > > > +	struct xfs_inode    *ip)
-> > > > +{
-> > > > +	return ip->i_afp->if_format == XFS_DINODE_FMT_LOCAL ||
-> > > > +	       (ip->i_afp->if_format == XFS_DINODE_FMT_EXTENTS &&
-> > > > +		ip->i_afp->if_nextents == 0);
-> > > > +}
-> > > > +
-> > > > +static inline enum xfs_delattr_state
-> > > > +xfs_attr_init_add_state(struct xfs_da_args *args)
-> > > > +{
-> > > > +	if (!args->dp->i_afp)
-> > > > +		return XFS_DAS_DONE;
-> > > 
-> > > If we're in add/replace attr call without an attr fork, why do we go
-> > > straight to finished?
+On Tue, May 10, 2022 at 05:03:52PM -0700, Darrick J. Wong wrote:
+> On Sun, May 08, 2022 at 10:36:06PM +0800, Shiyang Ruan wrote:
+> > This is a combination of two patchsets:
+> >  1.fsdax-rmap: https://lore.kernel.org/linux-xfs/20220419045045.1664996-1-ruansy.fnst@fujitsu.com/
+> >  2.fsdax-reflink: https://lore.kernel.org/linux-xfs/20210928062311.4012070-1-ruansy.fnst@fujitsu.com/
 > > 
-> > I suspect I've fixed all the issues that triggered crashes here
-> > because args->dp->i_afp was null. THere were transient states in a
-> > replace operaiton when the remove takes away the last attr, removes
-> > the attr fork, then calls the ADD operation. The add operation
-> > assumes that the attr fork has already been set up, and so bad
-> > things happened here.
+> >  Changes since v13 of fsdax-rmap:
+> >   1. Fixed mistakes during rebasing code to latest next-
+> >   2. Rebased to next-20220504
 > > 
-> > This also occurred when setting up recovery operations - recovery of
-> > an add/replace could start from that same "there's no attr fork"
-> > condition, and so calling xfs_inode_has_attr() or
-> > xfs_attr_is_shortform() direct from the reocovery setup code would
-> > go splat because ip->i_afp was null.
+> >  Changes since v10 of fsdax-reflink:
+> >   1. Rebased to next-20220504 and fsdax-rmap
+> >   2. Dropped a needless cleanup patch: 'fsdax: Convert dax_iomap_zero to
+> >       iter model'
+> >   3. Fixed many conflicts during rebasing
+> >   4. Fixed a dedupe bug in Patch 05: the actuall length to compare could be
+> >       shorter than smap->length or dmap->length.
+> >   PS: There are many changes during rebasing.  I think it's better to
+> >       review again.
 > > 
-> > I'm going to leave this for the moment (cleanup note made) because I
-> > don't want to have to find out that I missed a corner case somewhere
-> > they hard way right now. It's basically there to stop log recovery
-> > crashing hard, which only occurs when the experimental larp code is
-> > running, so I think this is safe to leave for a later cleanup.
+> > ==
+> > Shiyang Ruan (14):
+> >   fsdax-rmap:
+> >     dax: Introduce holder for dax_device
+> >     mm: factor helpers for memory_failure_dev_pagemap
+> >     pagemap,pmem: Introduce ->memory_failure()
+> >     fsdax: Introduce dax_lock_mapping_entry()
+> >     mm: Introduce mf_dax_kill_procs() for fsdax case
 > 
-> Hmm, in that case, can this become:
-> 
-> 	if (!args->dp->i_afp) {
-> 		ASSERT(0);
-> 		return XFS_DAS_DONE;
-> 	}
+> Hmm.  This patchset touches at least the dax, pagecache, and xfs
+> subsystems.  Assuming it's too late for 5.19, how should we stage this
+> for 5.20?
 
-OK.
+Yeah, it's past my "last date for this merge cycle" which was
+-rc6. I expected stuff might slip a little - as it has with the LARP
+code - but I don't have the time and bandwidth to start working
+on merging another feature from scratch before the merge window
+comes around.
 
-> And then you can add:
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Getting the dax+reflink stuff in this cycle was always an optimistic
+stretch, but I wanted to try so that there was no doubt it would be
+ready for merge in the next cycle...
 
-Thanks!
+> I could just add the entire series to iomap-5.20-merge and base the
+> xfs-5.20-merge off of that?  But I'm not sure what else might be landing
+> in the other subsystems, so I'm open to input.
 
--Dave.
+It'll need to be a stable branch somewhere, but I don't think it
+really matters where al long as it's merged into the xfs for-next
+tree so it gets filesystem test coverage...
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
