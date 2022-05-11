@@ -2,106 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80528C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 10:39:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB34C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 May 2022 15:20:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233239AbiEKKjO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 May 2022 06:39:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36642 "EHLO
+        id S245735AbiEKPUB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 May 2022 11:20:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239215AbiEKKiv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 May 2022 06:38:51 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2C2E972EA;
-        Wed, 11 May 2022 03:38:21 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 670E41F8BD;
-        Wed, 11 May 2022 10:38:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1652265500; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4tTLKw2T1YJw2h64F0XA5FNUzlXdoEokzJSTtL8FUkQ=;
-        b=bG8nnKVtGj3yFB2bYY0/5PA5bmjOTJDVIoLqqd9KdpcYSXf8QGJOiTW01XgUBeUAcPWzNE
-        Uxl4VehVcjthenpwvwdywRBSOY0/VzQn8O60bjFcdZJ0M/wEK6GL3tP02wHC6GvWVbNA+O
-        UygBNsCDCkHg7543KvneMVdPNUdOpXI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1652265500;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4tTLKw2T1YJw2h64F0XA5FNUzlXdoEokzJSTtL8FUkQ=;
-        b=iuSY6arEDo71FBr6jsiFeqwbiuG4a9UPmA9hWAbeTep9hfZ0YPmSP45i976ogH11bL7YbT
-        ZP2lVpFH6K19Z3Cw==
-Received: from quack3.suse.cz (unknown [10.163.43.118])
+        with ESMTP id S245736AbiEKPUA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 May 2022 11:20:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB20A218FCD;
+        Wed, 11 May 2022 08:19:57 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 389452C141;
-        Wed, 11 May 2022 10:38:20 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id E70D3A062A; Wed, 11 May 2022 12:38:19 +0200 (CEST)
-Date:   Wed, 11 May 2022 12:38:19 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Stefan Roesch <shr@fb.com>
-Cc:     Jan Kara <jack@suse.cz>, io-uring@vger.kernel.org,
-        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, david@fromorbit.com
-Subject: Re: [RFC PATCH v1 15/18] mm: support write throttling for async
- buffered writes
-Message-ID: <20220511103819.e2irxxm2tvb3k7cc@quack3.lan>
-References: <20220426174335.4004987-1-shr@fb.com>
- <20220426174335.4004987-16-shr@fb.com>
- <20220428174736.mgadsxfuiwmoxrzx@quack3.lan>
- <88879649-57db-5102-1bed-66f610d13317@fb.com>
- <20220510095036.6tbbwwf5hxcevzkh@quack3.lan>
- <84f8da94-1227-a351-56ba-eabdba91027b@fb.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 39A9B618C8;
+        Wed, 11 May 2022 15:19:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 831A7C34116;
+        Wed, 11 May 2022 15:19:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1652282396;
+        bh=joIzrZGOxLsqbcRc0VMzZQ0L7R/xhNhcMB/bFdMJecY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=qSot7MYj00eHckTgvQJT1nELlQjLTCT2Ti43H6u9Ym09lTZRWZ0lhyDvHku9kMw4O
+         /Ytp53/sJZmPYBee9BEaD4BEN2RixhSpGVgY7LkiG8E4fOFitcGy/5QDTpQX7rg2+G
+         JwhKHLV2GfEUYimBu6TtBQgK8CSLEzSXBnHkD6KuaaNiiYn9vrHDG/flbDwve77fdR
+         SyT16NuYUSHEmamagyHKZGDrVuhivSRV+/SB3X4+5fF6etuBMvGH9z/Q31mxJTnthu
+         VZxX37BdCldSE2iFSBX4FiGPQbkO3YZgK8hPgTykZE6XpS5W9LYqeOyBhlZL3qdYTj
+         XGb74FjcKl/aw==
+Date:   Wed, 11 May 2022 08:19:55 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Matthew Wilcox <willy@infradead.org>,
+        Naoya Horiguchi <naoya.horiguchi@nec.com>, linmiaohe@huawei.com
+Subject: Re: [PATCHSETS] v14 fsdax-rmap + v11 fsdax-reflink
+Message-ID: <20220511151955.GC27212@magnolia>
+References: <20220508143620.1775214-1-ruansy.fnst@fujitsu.com>
+ <20220511000352.GY27195@magnolia>
+ <20220511014818.GE1098723@dread.disaster.area>
+ <CAPcyv4h0a3aT3XH9qCBW3nbT4K3EwQvBSD_oX5W=55_x24-wFA@mail.gmail.com>
+ <20220510192853.410ea7587f04694038cd01de@linux-foundation.org>
+ <20220511024301.GD27195@magnolia>
+ <20220510222428.0cc8a50bd007474c97b050b2@linux-foundation.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <84f8da94-1227-a351-56ba-eabdba91027b@fb.com>
+In-Reply-To: <20220510222428.0cc8a50bd007474c97b050b2@linux-foundation.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 10-05-22 13:16:30, Stefan Roesch wrote:
-> On 5/10/22 2:50 AM, Jan Kara wrote:
-> > I know that you're using fields in task_struct to propagate the delay info.
-> > But IMHO that is unnecessary (although I don't care too much). Instead we
-> > could factor out a variant of balance_dirty_pages() that returns 'pause' to
-> > sleep, 0 if no sleeping needed. Normal balance_dirty_pages() would use this
-> > for pause calculation, places wanting async throttling would only get the
-> > pause to sleep. So e.g. iomap_write_iter() would then check and if returned
-> > pause is > 0, it would abort the loop similary as we'd abort it for any
-> > other reason when NOWAIT write is aborted because we need to sleep. Iouring
-> > code then detects short write / EAGAIN and offloads the write to the
-> > workqueue where normal balance_dirty_pages() can sleep as needed.
+Oan Tue, May 10, 2022 at 10:24:28PM -0700, Andrew Morton wrote:
+> On Tue, 10 May 2022 19:43:01 -0700 "Darrick J. Wong" <djwong@kernel.org> wrote:
+> 
+> > On Tue, May 10, 2022 at 07:28:53PM -0700, Andrew Morton wrote:
+> > > On Tue, 10 May 2022 18:55:50 -0700 Dan Williams <dan.j.williams@intel.com> wrote:
+> > > 
+> > > > > It'll need to be a stable branch somewhere, but I don't think it
+> > > > > really matters where al long as it's merged into the xfs for-next
+> > > > > tree so it gets filesystem test coverage...
+> > > > 
+> > > > So how about let the notify_failure() bits go through -mm this cycle,
+> > > > if Andrew will have it, and then the reflnk work has a clean v5.19-rc1
+> > > > baseline to build from?
+> > > 
+> > > What are we referring to here?  I think a minimal thing would be the
+> > > memremap.h and memory-failure.c changes from
+> > > https://lkml.kernel.org/r/20220508143620.1775214-4-ruansy.fnst@fujitsu.com ?
+> > > 
+> > > Sure, I can scoot that into 5.19-rc1 if you think that's best.  It
+> > > would probably be straining things to slip it into 5.19.
+> > > 
+> > > The use of EOPNOTSUPP is a bit suspect, btw.  It *sounds* like the
+> > > right thing, but it's a networking errno.  I suppose livable with if it
+> > > never escapes the kernel, but if it can get back to userspace then a
+> > > user would be justified in wondering how the heck a filesystem
+> > > operation generated a networking errno?
 > > 
-> > This will make sure dirty limits are properly observed and we don't need
-> > that much special handling for it.
-> >
+> > <shrug> most filesystems return EOPNOTSUPP rather enthusiastically when
+> > they don't know how to do something...
 > 
-> I like the idea of factoring out a function out balance_dirty_pages(), however
-> 
-> I see two challenges:
-> - the write operation has already completed at this point,
-> - so we can't really sleep on its completion in the io-worker in io-uring
-> - we don't know how long to sleep in io-uring
-> 
-> Currently balance_dirty_pages_ratelimited() is called at the end of the
-> function iomap_write_iter(). If the function
-> balance_dirty_pages_ratelimited() would instead be called at the
-> beginning of the function iomap_write_iter() we could return -EAGAIN and
-> then complete it in the io-worker.
+> Can it propagate back to userspace?
 
-Well, we call balance_dirty_pages_ratelimited() after each page. So it does
-not really matter much if the sleep is pushed to happen one page later.
-balance_dirty_pages_ratelimited() does ratelimiting of when
-balance_dirty_pages() are called so we have to make sure
-current->nr_dirtied is not zeroed out before we really do wait (because
-that is what determines whether we enter balance_dirty_pages() and how long
-we sleep there) but looking at the code that should work out just fine.
+AFAICT, the new code falls back to the current (mf_generic_kill_procs)
+failure code if the filesystem doesn't provide a ->memory_failure
+function or if it returns -EOPNOSUPP.  mf_generic_kill_procs can also
+return -EOPNOTSUPP, but all the memory_failure() callers (madvise, etc.)
+convert that to 0 before returning it to userspace.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I suppose the weirder question is going to be what happens when madvise
+starts returning filesystem errors like EIO or EFSCORRUPTED when pmem
+loses half its brains and even the fs can't deal with it.
+
+--D
