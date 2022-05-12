@@ -2,169 +2,203 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1022C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 May 2022 03:11:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45C46C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 May 2022 06:03:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244952AbiELDLV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 May 2022 23:11:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58696 "EHLO
+        id S241825AbiELGDK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 May 2022 02:03:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245076AbiELDLJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 May 2022 23:11:09 -0400
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2044.outbound.protection.outlook.com [40.107.223.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E31B438BF0;
-        Wed, 11 May 2022 20:11:07 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eOsKcKVfw/K+9M0TnwI4b2gfeKewDPgrxIJVqOBTNvHtoECRvQpgKpFAJy1q7rKQmNNg+yjkA17nhmmWZJ6UDQAJv50/jXIhdL6TfHF+jVps0z2cmYsJ6d83yw5crWGyVo1mqvLPRhm4qRZi9+mqZU2iqbz1G/gkyeJf+pMF7GcLJP3g+7/cm1VdVL8I3jhYuDclvnaQGRUhp5yN5hBJjxic0dyLTjWCSNHZd5p3xMZCmmPJ+1LGTs8zuwlmpZzCDnkdUU0khJvRrhJJGsaC2O9NGjbs6mQ0AeakvoP2y+q8NlzucDRe9JJk2tWubbkDxHay9t6LdxkUWwXbgQNp6A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=l6zT2D9VN9oV3F7/KNGqO4SSdbSkt1pf7XgcUA4q9dA=;
- b=SxEYcNH1+PBQRtlVU2i1Nkd84iI8I5aL3zn/sbkxijLBWrO0e4i/pVaDGZqPo74EJF44swu1yCX7jd8MVGHiGd4bOoKQWM58/lpt8+9tkO4DWZt9usfE2MPEKzheUa2N1PZ0/kdWu2yvkF4q0wE9v5RS/7/nPyLSK7YTBgFPBwBByvlY94AqUQZVnsZSWq+o97bXJ8H2eurOl1p3K3wiz5mgyom6fwu8Kkszi2vjdyZCDlnpRWAVebM2Vo9F8K565Wf4rjnWw+cdezoclf4Q7HnmnXyroBSVR/RrcYCaxJ/n1+Zsha0StU4Y/NWKD9CqMNhu9qfuhsgVjW6SyR2ikQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=l6zT2D9VN9oV3F7/KNGqO4SSdbSkt1pf7XgcUA4q9dA=;
- b=AB1EX9OduTh/E8NFdiEjihv1gxyMPX2ewn2D7X9pNsMLzMhtP6aqdfNWa3mYWBWSK1mFjlzHUOrJ6qCdxB63uYaw9fLRchzlSFui0oorSZs7UkOeE2LdgC4O+auK8UShuUEJCUhjX+Zt9MJbg1FTPIc0tJ4pFR6/rjJANCnrwO/DLt6nbwWTxVFAebZ4VxtLKECAt73VF6kHExlrQ5l/1VCC9B41zGtRiKzmjL5cpwkXhIyxY5oOrnXISaAV3NQ6f/Ut5fPEbAKpj1zvAq49/11ew6H8zJ5myxgnn42y+jsM2HyXjHDFAEd7cIJq1Gbl8RGIsR8nXYAn14boTS+olg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
- by MWHPR12MB1838.namprd12.prod.outlook.com (2603:10b6:300:106::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.13; Thu, 12 May
- 2022 03:11:06 +0000
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::2d17:b68a:e101:4c18]) by BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::2d17:b68a:e101:4c18%6]) with mapi id 15.20.5227.023; Thu, 12 May 2022
- 03:11:06 +0000
-References: <20220505213438.25064-1-alex.sierra@amd.com>
- <20220505213438.25064-2-alex.sierra@amd.com>
-User-agent: mu4e 1.6.9; emacs 27.1
-From:   Alistair Popple <apopple@nvidia.com>
-To:     Alex Sierra <alex.sierra@amd.com>
-Cc:     jgg@nvidia.com, david@redhat.com, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, willy@infradead.org,
-        akpm@linux-foundation.org
-Subject: Re: [PATCH v1 01/15] mm: add zone device coherent type memory support
-Date:   Thu, 12 May 2022 12:58:00 +1000
-In-reply-to: <20220505213438.25064-2-alex.sierra@amd.com>
-Message-ID: <87bkw3qwc8.fsf@nvdebian.thelocal>
-Content-Type: text/plain
-X-ClientProxiedBy: BYAPR02CA0062.namprd02.prod.outlook.com
- (2603:10b6:a03:54::39) To BYAPR12MB3176.namprd12.prod.outlook.com
- (2603:10b6:a03:134::26)
+        with ESMTP id S1350110AbiELGDJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 May 2022 02:03:09 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AFC5073551
+        for <linux-xfs@vger.kernel.org>; Wed, 11 May 2022 23:03:07 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 51CFE10E73C4
+        for <linux-xfs@vger.kernel.org>; Thu, 12 May 2022 16:03:04 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1np1ug-00AytJ-NQ
+        for linux-xfs@vger.kernel.org; Thu, 12 May 2022 16:03:02 +1000
+Date:   Thu, 12 May 2022 16:03:02 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs: for-next tree updated to
+ efd409a4329f6927795be5ae080cd3ec8c014f49
+Message-ID: <20220512060302.GI2306852@dread.disaster.area>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ef979c7f-7b4a-4b30-f23a-08da33c50dda
-X-MS-TrafficTypeDiagnostic: MWHPR12MB1838:EE_
-X-Microsoft-Antispam-PRVS: <MWHPR12MB1838C5481D5B4DAF5B499FA0DFCB9@MWHPR12MB1838.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: iAa9vp+1oPJ74r5xCRsAD3reJr0xuxJksxtnU9bG25jd4IZgHbPMCcAu7v8zayxnR/ddb5ADkFNKJYgYIyPNtfEXVnzzq0Xb4B7WjYoTAhJqiodwq/uI0axOMTO9xLsET7NnuSgDDw5xyKq5/9QJR6DmZFQScIzeEN2ROq/ClV3MEcUtRtoi/iOzJvhMj35J7QIpH/2Q3cdNy1ZvbtkId6dUDrfJKKym266VhsFO5kweelmd5aIuarv3jWWyFA3QbDrpNDDLwp3JCz0brBb5gI98lWC8sDS2CKbDqHz/7X4N9qDlR03Ea5b8gJ6sZoG8uc2x5la24gFf5sAedgPWD8n8ZJh+lL7lRmxIfJmuyvdPX7G+1Sokv0s9XfqBWWfTZBLO/kcAqADKt+NQdX54k4gCGuj+Sp7zsZOfN43+4LPoA1jQj6bLVLLJ5uDmaPasm4KSwrYAPxNa9vhce7uoSGmlTvAiMyS7G9KbCdtXRRKCt0K7P8bQUIYniWqDDaFB4G7Rvs72SXRNlM6RuB4qEMzuhgN5d/UEPRjSjm4CZwJ+KEiaR6sr7nosfBfn5Uox5mShEGd9UMuezsEl9AGlzvw9UsO5YC+2CJVKYRK8Z7TozJk3k0lQQAMe/7ZcgR6AUpuYvhEaTWJhlPxx0y8zsQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(38100700002)(6506007)(186003)(6916009)(8936002)(26005)(5660300002)(6666004)(66556008)(6512007)(7416002)(66946007)(2906002)(66476007)(9686003)(316002)(8676002)(4326008)(86362001)(6486002)(508600001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?iTcyVnRgKnoKjSkDG+hS9UAssq2A/DHO27DP9SPLKKzmZJfbFi+in81EmXA7?=
- =?us-ascii?Q?/YarpqhZpAdpxk5UUsUaXl6XPwMsuwO1paBzzxtRaClSMfgp5IU/KJKTYExi?=
- =?us-ascii?Q?OmO3hY9D/AS/kBJurjUlwsft47BsEgoZzpulT/SwM5ZZAXb2OGHV6cBy/zdh?=
- =?us-ascii?Q?Mh+qdF3s5Kwj64Y9eln6Chqy0onH/3bf+PFwuyYA7Hg6eHLz9Nyeq2fyGlb+?=
- =?us-ascii?Q?k4cW4VysTHQrhbyCs4FTt0RGpXQfydR1yB4JQq/ifSH7EpXXo0NgyyeZO3Ec?=
- =?us-ascii?Q?AZ2tPpw/BNE9hqe0menLp7SZZAZtnz8Q3USNHxSkPnVWcrgIPZBd171gV9WS?=
- =?us-ascii?Q?pqL9uoyH0PF5ZtInyXaplyWlvB/E+EP4A/qgkes/b2Qq7IggrtpXKXJZZMZ2?=
- =?us-ascii?Q?q+fDOGFsFu2v0MRscl1ZD6udOsT35Mg8S176AwE8B8tTP9phDxDGCX432EMS?=
- =?us-ascii?Q?s8bTf1knKEIUveNToahF/y5O1p0WLOcaP17KTMNtuRzsiVV9RrQ02nbAVQ3f?=
- =?us-ascii?Q?phKLyhyGj/PxKGFkafjKc39Z0fTuZDBEnfgSAoKIUPml8Ath4Rl1kN6cGAAJ?=
- =?us-ascii?Q?7L9XkLQM6Sk0EfLPCMmdCCLhuYDytC+9B7O/P2ztUpXhN4WsPr1b7s4aTbqz?=
- =?us-ascii?Q?LVqw1dl0aDwCPeS8g8mYkHLRTuh78p+MmhKESyKd4po0f6DbHy5xAZtRLVfv?=
- =?us-ascii?Q?Kkkf9BEt0LhHMqRVgckXhCC7G0fcbaJ03efecXPd161JCiHzJ/ggaGzO+aYe?=
- =?us-ascii?Q?wo6Pr3Q/Bmix6NpmJg9fAvL/lew96DZC01vWy3UON3D+9nXMgImzMrkEGwpJ?=
- =?us-ascii?Q?imEFU1LZxCDYtMqdhdUFCNCXqBjda0QVSnrm2p17SZ3wbf+TgRAUGzd37J9q?=
- =?us-ascii?Q?PxtlsyjaoNWbBEPPBQZIj7JpZ3CZMaJGiPCU9dWaSAHhiJkiF//RSSuKBf/2?=
- =?us-ascii?Q?wxj6+mNpNWQ+LVBZoIlVhFUgXscs9PXZjCji5Ra/pmtYY0UqWslaKxW3GOAp?=
- =?us-ascii?Q?hFyf5FYJJtkupNPDMBvTv6pyDVlzj3GUZCKY/rHsKiZBHqQd/ocfV7D42Eb4?=
- =?us-ascii?Q?qFDy3D1pP1Fzduw2aLnsTGP9KesvZOY9xod/2hI+EXUdYkT2GYIDGrx55qyZ?=
- =?us-ascii?Q?4TMCsJ73pLqu01/w+nJoaoa7f0LIVTud3p6OJzcMwcG3ah3FfSiq0YDxvJy7?=
- =?us-ascii?Q?P4oF/7hqC1c14Bk9yy67aa/tsyZF5StwajH1buJJwg3DLBEWwBHGFsAO/qlc?=
- =?us-ascii?Q?TI9xbx4ng5UVbIqXxgW9JhLqxQnmQswyx9aFCE7tT05pcMev7ufAtcBaWun8?=
- =?us-ascii?Q?xNIok2tNW+3RMXtCrJdYjo1lRz3AtLP9T/aUH6wiBbM7OQuATVVmYCm/qtOj?=
- =?us-ascii?Q?hG/ZGtiA8tjyHAH2z/vCo4iZWlMwDaZYBDeM+1s/4ry1ej/OtyBdS43q8VtE?=
- =?us-ascii?Q?0nbrN9qIhTcmK/nBTuhPyMeJSB+y6E5WKRhDKIJjnNzQzZBrPNPmYQxcTwvJ?=
- =?us-ascii?Q?Mn+6hFmrxIk+baRjKpVaYNT0fAr6V9pWMxMxkD+dqTttDO2D14+8kU+HJ2Zl?=
- =?us-ascii?Q?+eN2IgsGxkaxsh8bLLCD1C2TKUFgUHt2my1pApF876/114NC2AhN9S83snqS?=
- =?us-ascii?Q?5zxjf9mfUqOB2LEGJazCRo/AHLbv8StobhigjOhQwI+P26BHI+Yy+jdsUtTS?=
- =?us-ascii?Q?pbqgsPj0uQuCcXGPdTmFNmUKhbWU1zvF7LEE/hiDLAC2zoMHhsWASNVdQk43?=
- =?us-ascii?Q?9391YgyjRw=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ef979c7f-7b4a-4b30-f23a-08da33c50dda
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2022 03:11:06.2404
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: wLn2sOjNCmpafpzoGK3/72lY7Bv9S4HEf+mTAv/ap1dLlSoGBaUkiAnCyDQ084RR75Qet7cbnF9B2sLrR3JAlQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR12MB1838
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=627ca319
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=Pj-rv1vzUh6meEShBOYA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi folks,
 
-Alex Sierra <alex.sierra@amd.com> writes:
+I've just pushed out a new for-next branch for XFS. You can find it
+here:
 
-[...]
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
 
-> diff --git a/mm/rmap.c b/mm/rmap.c
-> index fedb82371efe..d57102cd4b43 100644
-> --- a/mm/rmap.c
-> +++ b/mm/rmap.c
-> @@ -1995,7 +1995,8 @@ void try_to_migrate(struct folio *folio, enum ttu_flags flags)
->  					TTU_SYNC)))
->  		return;
->
-> -	if (folio_is_zone_device(folio) && !folio_is_device_private(folio))
-> +	if (folio_is_zone_device(folio) &&
-> +	    (!folio_is_device_private(folio) && !folio_is_device_coherent(folio)))
->  		return;
->
->  	/*
+This update contains the new Logged Attribute Replay functionality
+that Allison has been toiling over for a very long time. She has
+completely restructured how the attribute code works to lay the
+ground work for functionality that require attributes to be
+manipulated as part of complex atomic operations. This update
+includes that functionality as a new experimental feature which can
+be turned on via sysfs knob.
 
-I vaguely recall commenting on this previously, or at least intending
-to. In try_to_migrate_one() we have this:
+Great work, Allison, and thank you for all your hard work and help
+during this merge window so we could get to this point!
 
-		if (folio_is_zone_device(folio)) {
-			unsigned long pfn = folio_pfn(folio);
-			swp_entry_t entry;
-			pte_t swp_pte;
+The other functionality in the merge is the removal of all the quota
+warning infrastructure. The has never been used on Linux and really
+has no way of being used, so these changes clean up and remove the
+remaining pieces we never will use.
 
-			/*
-			 * Store the pfn of the page in a special migration
-			 * pte. do_swap_page() will wait until the migration
-			 * pte is removed and then restart fault handling.
-			 */
-			entry = pte_to_swp_entry(pteval);
-			if (is_writable_device_private_entry(entry))
-				entry = make_writable_migration_entry(pfn);
-			else
-				entry = make_readable_migration_entry(pfn);
-			swp_pte = swp_entry_to_pte(entry);
+At this point in the cycle (almost at -rc7) I'm not going to merge
+any more new functionality. I'm planning to spend the next week:
 
-The check in try_to_migrate() guarantees that if folio_is_zone_device()
-is true this must be a DEVICE_PRIVATE page and it treats it as such by
-assuming there is a special device private swap entry there.
+- more thoroughly testing a wider range of configurations
+- recoveryloop soak testing
+- fixing up all the tests that now fail due to changes merged during
+  the cycle
+- addressing any regressions and failures that I find
+- preparing for an early pull request during the merge window
 
-Relying on that assumption seems bad, and I have no idea why I didn't
-just use is_device_private_page() originally but I think the fix is just
-to change this to:
+I know of one failure that still needs to be analysed when LARP is
+enabled - the new recovery test fails on 1kB block size filesystems
+here. Otherwise, I did not see any unexpected failures during
+overnight testing on default configs, rmapbt=1, all quotas enabled,
+1kB block size or V4 only testing.
 
-		if (folio_is_device_private(folio))
+I would appreciate it if everyone could spend some cycles over the
+next week running tests against this for-next branch. we've merged a
+*lot* of new code this cycle so any extra test coverage we can get
+at this time will help ensure we find regressions sooner rather than
+later.
 
-And let DEVICE_COHERENT pages fall through to normal page processing.
+If I've missed anything that I should have picked up for this cycle,
+please let me know ASAP so we can determine an appropriate merge
+plan for it.
 
- - Alistair
+Cheers,
+
+Dave.
+
+
+The following changes since commit 86810a9ebd9e69498524c57a83f1271ade56ded8:
+
+  Merge branch 'guilt/xfs-5.19-fuzz-fixes' into xfs-5.19-for-next (2022-05-04 12:38:02 +1000)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+
+for you to fetch changes up to efd409a4329f6927795be5ae080cd3ec8c014f49:
+
+----------------------------------------------------------------
+Head Commit:
+
+efd409a4329f Merge branch 'xfs-5.19-quota-warn-remove' into xfs-5.19-for-next
+
+----------------------------------------------------------------
+Allison Henderson (14):
+      xfs: Fix double unlock in defer capture code
+      xfs: Return from xfs_attr_set_iter if there are no more rmtblks to process
+      xfs: Set up infrastructure for log attribute replay
+      xfs: Implement attr logging and replay
+      xfs: Skip flip flags for delayed attrs
+      xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+      xfs: Remove unused xfs_attr_*_args
+      xfs: Add log attribute error tag
+      xfs: Add larp debug option
+      xfs: Merge xfs_delattr_context into xfs_attr_item
+      xfs: Add helper function xfs_attr_leaf_addname
+      xfs: Add helper function xfs_init_attr_trans
+      xfs: add leaf split error tag
+      xfs: add leaf to node error tag
+
+Catherine Hoang (3):
+      xfs: remove quota warning limit from struct xfs_quota_limits
+      xfs: remove warning counters from struct xfs_dquot_res
+      xfs: don't set quota warning values
+
+Dave Chinner (20):
+      xfs: avoid empty xattr transaction when attrs are inline
+      xfs: initialise attrd item to zero
+      xfs: make xattri_leaf_bp more useful
+      xfs: rework deferred attribute operation setup
+      xfs: separate out initial attr_set states
+      xfs: kill XFS_DAC_LEAF_ADDNAME_INIT
+      xfs: consolidate leaf/node states in xfs_attr_set_iter
+      xfs: split remote attr setting out from replace path
+      xfs: XFS_DAS_LEAF_REPLACE state only needed if !LARP
+      xfs: remote xattr removal in xfs_attr_set_iter() is conditional
+      xfs: clean up final attr removal in xfs_attr_set_iter
+      xfs: xfs_attr_set_iter() does not need to return EAGAIN
+      xfs: introduce attr remove initial states into xfs_attr_set_iter
+      xfs: switch attr remove to xfs_attri_set_iter
+      xfs: remove xfs_attri_remove_iter
+      xfs: use XFS_DA_OP flags in deferred attr ops
+      xfs: ATTR_REPLACE algorithm with LARP enabled needs rework
+      xfs: detect empty attr leaf blocks in xfs_attr3_leaf_verify
+      xfs: can't use kmem_zalloc() for attribute buffers
+      Merge branch 'xfs-5.19-quota-warn-remove' into xfs-5.19-for-next
+
+ fs/xfs/Makefile                 |    1 +
+ fs/xfs/libxfs/xfs_attr.c        | 1641 ++++++++++++++++++++++++++++++++++++++++++++++------------------------------------------------
+ fs/xfs/libxfs/xfs_attr.h        |  198 ++++++++++--
+ fs/xfs/libxfs/xfs_attr_leaf.c   |   64 +++-
+ fs/xfs/libxfs/xfs_attr_remote.c |   37 +--
+ fs/xfs/libxfs/xfs_attr_remote.h |    6 +-
+ fs/xfs/libxfs/xfs_da_btree.c    |    4 +
+ fs/xfs/libxfs/xfs_da_btree.h    |   10 +-
+ fs/xfs/libxfs/xfs_defer.c       |   24 +-
+ fs/xfs/libxfs/xfs_defer.h       |    3 +
+ fs/xfs/libxfs/xfs_errortag.h    |    8 +-
+ fs/xfs/libxfs/xfs_format.h      |    9 +-
+ fs/xfs/libxfs/xfs_log_format.h  |   45 ++-
+ fs/xfs/libxfs/xfs_log_recover.h |    2 +
+ fs/xfs/libxfs/xfs_quota_defs.h  |    1 -
+ fs/xfs/scrub/common.c           |    2 +
+ fs/xfs/xfs_acl.c                |    4 +-
+ fs/xfs/xfs_attr_item.c          |  824 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr_item.h          |   46 +++
+ fs/xfs/xfs_attr_list.c          |    1 +
+ fs/xfs/xfs_dquot.c              |   15 +-
+ fs/xfs/xfs_dquot.h              |    8 -
+ fs/xfs/xfs_error.c              |    9 +
+ fs/xfs/xfs_globals.c            |    1 +
+ fs/xfs/xfs_ioctl.c              |    4 +-
+ fs/xfs/xfs_ioctl32.c            |    2 +
+ fs/xfs/xfs_iops.c               |    2 +
+ fs/xfs/xfs_log.c                |   41 +++
+ fs/xfs/xfs_log.h                |    1 +
+ fs/xfs/xfs_log_cil.c            |   35 +-
+ fs/xfs/xfs_log_priv.h           |   34 ++
+ fs/xfs/xfs_log_recover.c        |    2 +
+ fs/xfs/xfs_ondisk.h             |    2 +
+ fs/xfs/xfs_qm.c                 |    9 -
+ fs/xfs/xfs_qm.h                 |    5 -
+ fs/xfs/xfs_qm_syscalls.c        |   26 +-
+ fs/xfs/xfs_quotaops.c           |    8 +-
+ fs/xfs/xfs_sysctl.h             |    1 +
+ fs/xfs/xfs_sysfs.c              |   24 ++
+ fs/xfs/xfs_trace.h              |   32 +-
+ fs/xfs/xfs_trans_dquot.c        |    3 +-
+ fs/xfs/xfs_xattr.c              |    2 +-
+ 42 files changed, 2180 insertions(+), 1016 deletions(-)
+ create mode 100644 fs/xfs/xfs_attr_item.c
+ create mode 100644 fs/xfs/xfs_attr_item.h
+
+-- 
+Dave Chinner
+david@fromorbit.com
