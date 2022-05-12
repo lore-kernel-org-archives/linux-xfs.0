@@ -2,99 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 704D5C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 May 2022 20:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55645C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 May 2022 20:58:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244839AbiELUyR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 May 2022 16:54:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49528 "EHLO
+        id S1358590AbiELU6q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 May 2022 16:58:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241316AbiELUyR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 May 2022 16:54:17 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D98F644C4
-        for <linux-xfs@vger.kernel.org>; Thu, 12 May 2022 13:54:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S1358657AbiELU6c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 May 2022 16:58:32 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EE45C67D34
+        for <linux-xfs@vger.kernel.org>; Thu, 12 May 2022 13:58:21 -0700 (PDT)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0687FB80AEA
-        for <linux-xfs@vger.kernel.org>; Thu, 12 May 2022 20:54:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD796C34100;
-        Thu, 12 May 2022 20:54:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652388853;
-        bh=YRWgnZCm3xsBGPFklTF7LHQle6FJ2YNHQaSEUgADE1o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=e15kP8tllAvr7DtcxRPWRNYPEn4jjHHJTW7+0SLUMEsfkaAnRhg311nShrujCKxif
-         7vQlnzx/kJVJVB/yxxzSaHCQIam5W+f/lVFurnvBIrMFS5CsPh4d9AyuI7jI6vzhZf
-         WzA3ME7/xeqciSZCaeFhjLIVPCpCW+BpArkQH5oW8ExCXy5t+FvfKcaw/iN9HnwKPr
-         sdOP7qSonU59kvkNmNBcJcadBeABuK1ej2AFmTOu3UmgBUly+yJYp2ciHey0vyI96Y
-         OQ840exWKu+bxazNZfiUENUzwfoDmsGB7dqF5fDGLhZpVBf3bZ4t1OiHNE5dt2msdx
-         9QnvxxqyQgTkQ==
-Date:   Thu, 12 May 2022 13:54:13 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs_repair: improve checking of existing rmap and
- refcount btrees
-Message-ID: <20220512205413.GI27195@magnolia>
-References: <165176674590.248791.17672675617466150793.stgit@magnolia>
- <165176675706.248791.4099817268523543427.stgit@magnolia>
- <8f1a6bf5-ad9a-7bbe-c038-2b9a7ba58a69@redhat.com>
+        by sandeen.net (Postfix) with ESMTPSA id E3DFC4CEBA8;
+        Thu, 12 May 2022 15:58:19 -0500 (CDT)
+Message-ID: <e1337a2f-fcf3-d177-460c-c74a5a099e00@sandeen.net>
+Date:   Thu, 12 May 2022 15:58:20 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8f1a6bf5-ad9a-7bbe-c038-2b9a7ba58a69@redhat.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.9.0
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <165176686186.252160.2880340500532409944.stgit@magnolia>
+ <165176687875.252160.5549725159066325199.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 3/6] xfs_scrub: fall back to scrub-by-handle if opening
+ handles fails
+In-Reply-To: <165176687875.252160.5549725159066325199.stgit@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 12, 2022 at 02:39:13PM -0500, Eric Sandeen wrote:
-> On 5/5/22 11:05 AM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > There are a few deficiencies in the xfs_repair functions that check the
-> > existing reverse mapping and reference count btrees.  First of all, we
-> > don't report corruption or IO errors if we can't read the ondisk
-> > metadata.  Second, we don't consistently warn if we cannot allocate
-> > memory to perform the check.
+On 5/5/22 11:07 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Well, the caller used to report those, right? i.e.
+> Back when I originally wrote xfs_scrub, I decided that phase 3 (the file
+> scrubber) should try to open all regular files by handle to pin the file
+> during the scrub.  At the time, I decided that an ESTALE return value
+> should cause the entire inode group (aka an inobt record) to be
+> rescanned for thoroughness reasons.
 > 
->         error = check_refcounts(wq->wq_ctx, agno);
->         if (error)
->                 do_error(
-> _("%s while checking reference counts"),
->                          strerror(-error));
+> Over the past four years, I've realized that checking the return value
+> here isn't necessary.  For most runtime errors, we already fall back to
+> scrubbing with the file handle, at a fairly small performance cost.
 > 
-> So I think this patch is just changing from reporting strerror(-error)
-> when these things return, to hand-crafted error messages in the functions
-> that get called?
+> For ESTALE, if the file has been freed and reallocated, its metadata has
+> been rewritten completely since bulkstat, so it's not necessary to check
+> it for latent disk errors.  If the file was freed, we can simply move on
+> to the next file.  If the filesystem is corrupt enough that
+> open-by-handle fails (this also results in ESTALE), we actually /want/
+> to fall back to scrubbing that file by handle, not rescanning the entire
+> inode group.
 > 
-> AFAICT this patch changes
+> Therefore, remove the ESTALE check and leave a comment detailing these
+> findings.
 > 
-> "Cannot allocate memory while checking reverse-mappings"
-> to
-> "Not enough memory to check reverse mappings"
-> 
-> etc.
-> 
-> Granted, strerror(EFSCORRUPTED) isn't very pretty, and your messages are
-> probably more clear. But I just wanted to be sure I'm not missing something;
-> I think every error is actually reported today, and this is just changing
-> the error messages.
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-Yep, that's correct.  I guess I should have (re)written the commit
-message like this:
+ohhhkay, tbh mostly trusting you n this but it all; sounds plausible ;)
 
-"When we're checking the rmap and refcount btrees, push error reporting
-down to the exact locations of failures so that the user sees both a
-message specific to the failure that occurred and what repair was doing
-at the time.  This also removes quite a bit of return code handling,
-since all the errors were fatal anyway."
-
---D
-
-> Thanks,
-> -Eric
-> 
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
