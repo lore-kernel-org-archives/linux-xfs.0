@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D994C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE0A2C43219
 	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 23:15:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350280AbiEPXPL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 May 2022 19:15:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44528 "EHLO
+        id S1350282AbiEPXPO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 May 2022 19:15:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350248AbiEPXPE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 19:15:04 -0400
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1anam02on2060.outbound.protection.outlook.com [40.107.96.60])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0084C46B33;
+        with ESMTP id S1350244AbiEPXPC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 19:15:02 -0400
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2085.outbound.protection.outlook.com [40.107.237.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0791446B2B;
         Mon, 16 May 2022 16:15:02 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OrC5bI8PC08ZbO+rkM4cBR0Be01kxRXwr+QXvkGlsFoIVdvwL3YK5f9jFlZNbyVOphfkW1TDkCHpKc19Jbkf0TuhXFhWogzQ9JVMD0VH6GAFo952CsJVMEU5nIlsm4rnNZq6FxrJpeNn7HK6XuN24pvwmyHz+EI+m82EwG99XjevGO43Tq1/94dz6K884B4Q7Rze4bPtogGMifbWuum6SLNyN9H7hdL6EiMKaviGQddmeQ42TIKx/2Y8MYmr0W7nbJb3id+/rJEd4z+smfPAvzZ/5gPNtFFXuerfAX2913FG47WXQAY2wjultxXBJeXAed1ER3HnCN0zEICVScZMEQ==
+ b=bjZE2e9bcegl7298mZGuI+zJ8Aq7us6Td7xR3EBKsihJt4EOT8gD4Zn7NJPMLAKYsCSWtXUs/t7KWeEA+3BQ4/tKNR780P+vBI84hfqjptQKN+X0+aI4IEOHGy+5vSY51XYXIwNA3ATeKzq15dwblkQNaFvDa1IcuuL4PKsuNGNVXJwAxQQlOuzoQDmmqiXn0ckXoUEsh5/pusnE/jY+lN7mnbSrjxQxQXgNWPqMrTxu/zHgwjttKyA5g14+ale9+Tk459g8Bpf5c/26k2W2wQ24sOVwepOXUuFrK9GRNBWb2Xv4BqoCZK9Fb5Ps1wqVnuvJUqhLVJhCrGm3zTBWcw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BO1XgdLChGhcmXQYgQRlktGItGh1h3zZzS9U0EV0V6A=;
- b=BJjf1ginelt/sZwoIk+7Zsqia6FGiD5LZevghgnw250YI2Fm5vrk10Bpl6O5xbNEdvASgUayEZESfibJgLakVjPvBOJH5PE3WfXyd1h3Neq9S4rtCzd3kIKXuBBORUODy/KNRfAsRnm9qqRUGJr+HnIbJKdedEpFCBHuJzfC0Vz2Q2ZlSPHad8s587KEvuk+k0Ff6kOBeixu89LNsin9tCqEJO9H6LJIpr85uFX9tCBrvnsLiJqWHr6LQn+Bywktm9oFhIAwIKCimycxr+cUdrFyb/pAS9bnPtq/dbA0+xgtUSisBpPWUtIPPrqSlvF4bj2Hp+9U/tfzqilBl3QxRA==
+ bh=519oerrRDEbTv7GQOYa1mMQ+Fz3ORBOf1G9j+BglRrg=;
+ b=mGXoYneU/D5QPDNhf4VL+8cCX0vghYIbGZ0wqj4p+vY/JzRa5TWUpVjl0imxtgq2sWhh+J+TlT7LNwBSP1ljG5X6oOkFXLpemcVkE6mPLfh63l9M2nERLg43ISHGwjBepDD5U64wdI0TEkXt6IapFAX4aX27ZBAsQLwgAsxeBZp08SVVfUDD/JOmgJULwipcgo01biBsE0/ONEgKGByoE9JEB/4E48YeTn2+yCo3Cp4j+eMIrnxX+hXiGOcZUE2xR+lUqSmrwK37SNJJkbqh1E7mOXYqexEyrg+sJodW3GAlS0yySthSXYf+T8M3DS8mrfc8IDRvQ1hvKLjVn30/uw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BO1XgdLChGhcmXQYgQRlktGItGh1h3zZzS9U0EV0V6A=;
- b=CCgUYQG3x1TLvpRK4Qd6fpfEhmjTtkt0x67TdG72bLORK4P4OEojCCUjPWt85mwJF6yWGJnzMoHtQlahueF5cFy7CRzz71pH2qUTGLvh4slRXe6Tsp0ZZPqtyNODEFr0hk51rgJTPGIvGJqhlI9qeIDZuk02r19D7AqvvXVtRlI=
-Received: from BN9PR03CA0386.namprd03.prod.outlook.com (2603:10b6:408:f7::31)
- by DS7PR12MB5863.namprd12.prod.outlook.com (2603:10b6:8:7a::18) with
+ bh=519oerrRDEbTv7GQOYa1mMQ+Fz3ORBOf1G9j+BglRrg=;
+ b=QGof7MP+VX0skbHJTRpZFILF7FjXa7rte6Lil4eBMoIBrwursKSq5potuvOvdBPdJjBrYUbDNnqyK21XzSwZKR2VaQq6j579coVaSfu3JA8h6WNm1FQ4QqrSPNW+pE01/4M/1Q8RCDD08QeN49CaOkDxhUbs1S8143pSX+8Q13M=
+Received: from BN9PR03CA0387.namprd03.prod.outlook.com (2603:10b6:408:f7::32)
+ by DM6PR12MB4204.namprd12.prod.outlook.com (2603:10b6:5:212::23) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.18; Mon, 16 May
- 2022 23:15:01 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.14; Mon, 16 May
+ 2022 23:14:59 +0000
 Received: from BN8NAM11FT051.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:f7:cafe::85) by BN9PR03CA0386.outlook.office365.com
- (2603:10b6:408:f7::31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.18 via Frontend
- Transport; Mon, 16 May 2022 23:15:01 +0000
+ (2603:10b6:408:f7:cafe::8c) by BN9PR03CA0387.outlook.office365.com
+ (2603:10b6:408:f7::32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.14 via Frontend
+ Transport; Mon, 16 May 2022 23:14:58 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  BN8NAM11FT051.mail.protection.outlook.com (10.13.177.66) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5250.13 via Frontend Transport; Mon, 16 May 2022 23:15:01 +0000
+ 15.20.5250.13 via Frontend Transport; Mon, 16 May 2022 23:14:58 +0000
 Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 16 May
- 2022 18:14:59 -0500
+ 2022 18:14:57 -0500
 From:   Alex Sierra <alex.sierra@amd.com>
 To:     <jgg@nvidia.com>
 CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
@@ -61,9 +61,9 @@ CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
         <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
         <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
         <akpm@linux-foundation.org>
-Subject: [PATCH v2 06/13] lib: test_hmm add ioctl to get zone device type
-Date:   Mon, 16 May 2022 18:14:25 -0500
-Message-ID: <20220516231432.20200-7-alex.sierra@amd.com>
+Subject: [PATCH v2 03/13] mm: remove the vma check in migrate_vma_setup()
+Date:   Mon, 16 May 2022 18:14:22 -0500
+Message-ID: <20220516231432.20200-4-alex.sierra@amd.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220516231432.20200-1-alex.sierra@amd.com>
 References: <20220516231432.20200-1-alex.sierra@amd.com>
@@ -75,139 +75,97 @@ X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: fb9f560a-7a9a-4cb4-beff-08da3791e6f0
-X-MS-TrafficTypeDiagnostic: DS7PR12MB5863:EE_
-X-Microsoft-Antispam-PRVS: <DS7PR12MB586374033C0AD9AEE5F0A043FDCF9@DS7PR12MB5863.namprd12.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 561bb88d-291a-47f8-86e0-08da3791e58d
+X-MS-TrafficTypeDiagnostic: DM6PR12MB4204:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR12MB42045A3CA2A81DE0549EDFF9FDCF9@DM6PR12MB4204.namprd12.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 4Hf0ginmzvh8sgNXZpekH1EM82s/mYPXEIyasvq4iMnXeH5Tmadkxm0uwFNUDkuIjawjrhZXyDCOik+pHoXB8N+kZLzzB/7i63/2h8WnNLTiuNEgmce7dX5eC1LSJBdggg5vytjzT47VGunPddeAUbP337uk16L80zFyeOOySW0N4Qm/c9qDJWZd3cSCr6dZ5Tm4TLHv6zvT6Q3x3e7DXNQ4pKTGq6Y+xVrP1SOgpUC0s5RGzZOOnEYB3jOIlF1u9IyMqKsLdG1DnZD/9MjkiPDebOX6fXpLd9hyXj2xORjTeprCiY32tGBGty6fsWlvvuejibof2xI0e9wadcYxQx7QFN59HUTquKwZcPwM3dsSSvf4TJ3Tpzg4KgFngVn/k1UnSwlW0hd8cByEj/qzgXa3vB1TgNXuG3mOKLYN5CW2Pbwykn9XDpWQgJLopKO9HYjSJNzttCiCTW14kwPa1Q+ODrZm0rjIjIM5ub685T66bQdF1FHVtqNdqYWu/LrN8+1/KVtYuMPOELtQmcX+URBzoefPYRKqrVLco/pBCtA0J6qBmd0AChZrxjcHmQMO2lpX8nVy8ftBQX4CTLMAIzXQvo3fLHYoixo3WwCVbc878yt0IXSEs6745usycGxt2wG8uEPf2eP1E97wdAvtgsKuprBWU7I3QmrlezQItSkMbCAPgpgtoLmGzyNtP/PoqSmj9dhe7VWKzBPRUxz0/w==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(46966006)(36840700001)(40470700004)(4326008)(70586007)(70206006)(81166007)(8676002)(36860700001)(82310400005)(26005)(54906003)(6916009)(40460700003)(316002)(2906002)(1076003)(36756003)(2616005)(16526019)(186003)(8936002)(356005)(7696005)(83380400001)(86362001)(6666004)(5660300002)(336012)(426003)(44832011)(7416002)(508600001)(47076005)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: +khPt/n1FmZX8XqIAkfYFWqJQkQ0Yedk+XVR7mKqVJRuVgaq/Jl5kq/9drzq7KQxAOiwjavyAugYIjGdnOt5tFJKASN0JdvZIHTgACWqCnxVwC6eFwYbsobPF6skuba17Gh/6IeDjYydgbac9t+R+tv4AbJpL1+x207BwIg5+4VSPgbWSmW20FOSCKU2l/afo4oM5np/i6mT8WgYB8e0LTQnmEoPh43M3k9r5z+QlkTIvnu1c8ggASplgxSB1wpOurA0C18YVJl+nnBO9B3eyeDks4wXZlPcts9FPS6HRjz/HvFuAhJFOuyz3GhyIfTWGUbfRC4E+GaomTKvuuY5UflkRbiTrUR2/FASmmZ3eh5GcT3UZ8MCV1geq+xSkhrCClnUpmEX3nB39YNHU8YobpW8gsqTIWUlI7jQj9TRaP5TGxmDqVGsha+YuQcsOxYgnvR6WP60JJRs5mm6Dp29ETqGek7yhog2AlITMoLyQ953Wsfob+pErVI77o8q0tWsd8Pj8sEsEe1qMKVTcs4MHA632cCQ/m0gDXQOZEJTm6TS5pQqYHbfURTabR337YIwJ8u3DWU6UVeIHlrDig4EYGwV6jrHYidYWHmc6bJwofWIFTAVAPGcu1HjsKRw7mKjr/WZotC6a9Jsh6mHO97kowizyfOx7SrBwblIyzHmDmraV/0KCMl76QEdr/8IQBCoIRlQyzuE8RpspN9odVHP+A==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(36840700001)(46966006)(70586007)(8676002)(4326008)(70206006)(7696005)(6666004)(2616005)(36860700001)(86362001)(47076005)(1076003)(426003)(83380400001)(5660300002)(7416002)(8936002)(40460700003)(16526019)(186003)(36756003)(82310400005)(81166007)(26005)(336012)(44832011)(2906002)(508600001)(6916009)(54906003)(356005)(316002)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 May 2022 23:15:01.0044
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 May 2022 23:14:58.6764
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: fb9f560a-7a9a-4cb4-beff-08da3791e6f0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 561bb88d-291a-47f8-86e0-08da3791e58d
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT051.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB5863
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4204
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-new ioctl cmd added to query zone device type. This will be
-used once the test_hmm adds zone device coherent type.
+From: Alistair Popple <apopple@nvidia.com>
 
-Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+migrate_vma_setup() checks that a valid vma is passed so that the page
+tables can be walked to find the pfns associated with a given address
+range. However in some cases the pfns are already known, such as when
+migrating device coherent pages during pin_user_pages() meaning a valid
+vma isn't required.
+
+Signed-off-by: Alistair Popple <apopple@nvidia.com>
 Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
-Reviewed-by: Alistair Poppple <apopple@nvidia.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- lib/test_hmm.c      | 23 +++++++++++++++++++++--
- lib/test_hmm_uapi.h |  8 ++++++++
- 2 files changed, 29 insertions(+), 2 deletions(-)
+ mm/migrate_device.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/lib/test_hmm.c b/lib/test_hmm.c
-index cfe632047839..7a27584484ce 100644
---- a/lib/test_hmm.c
-+++ b/lib/test_hmm.c
-@@ -87,6 +87,7 @@ struct dmirror_chunk {
- struct dmirror_device {
- 	struct cdev		cdevice;
- 	struct hmm_devmem	*devmem;
-+	unsigned int            zone_device_type;
+diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+index a0b997935cf9..b399c498f0aa 100644
+--- a/mm/migrate_device.c
++++ b/mm/migrate_device.c
+@@ -467,24 +467,24 @@ int migrate_vma_setup(struct migrate_vma *args)
  
- 	unsigned int		devmem_capacity;
- 	unsigned int		devmem_count;
-@@ -1026,6 +1027,15 @@ static int dmirror_snapshot(struct dmirror *dmirror,
- 	return ret;
- }
- 
-+static int dmirror_get_device_type(struct dmirror *dmirror,
-+			    struct hmm_dmirror_cmd *cmd)
-+{
-+	mutex_lock(&dmirror->mutex);
-+	cmd->zone_device_type = dmirror->mdevice->zone_device_type;
-+	mutex_unlock(&dmirror->mutex);
-+
-+	return 0;
-+}
- static long dmirror_fops_unlocked_ioctl(struct file *filp,
- 					unsigned int command,
- 					unsigned long arg)
-@@ -1076,6 +1086,9 @@ static long dmirror_fops_unlocked_ioctl(struct file *filp,
- 		ret = dmirror_snapshot(dmirror, &cmd);
- 		break;
- 
-+	case HMM_DMIRROR_GET_MEM_DEV_TYPE:
-+		ret = dmirror_get_device_type(dmirror, &cmd);
-+		break;
- 	default:
+ 	args->start &= PAGE_MASK;
+ 	args->end &= PAGE_MASK;
+-	if (!args->vma || is_vm_hugetlb_page(args->vma) ||
+-	    (args->vma->vm_flags & VM_SPECIAL) || vma_is_dax(args->vma))
+-		return -EINVAL;
+-	if (nr_pages <= 0)
+-		return -EINVAL;
+-	if (args->start < args->vma->vm_start ||
+-	    args->start >= args->vma->vm_end)
+-		return -EINVAL;
+-	if (args->end <= args->vma->vm_start || args->end > args->vma->vm_end)
+-		return -EINVAL;
+ 	if (!args->src || !args->dst)
  		return -EINVAL;
- 	}
-@@ -1260,14 +1273,20 @@ static void dmirror_device_remove(struct dmirror_device *mdevice)
- static int __init hmm_dmirror_init(void)
- {
- 	int ret;
--	int id;
-+	int id = 0;
-+	int ndevices = 0;
- 
- 	ret = alloc_chrdev_region(&dmirror_dev, 0, DMIRROR_NDEVICES,
- 				  "HMM_DMIRROR");
- 	if (ret)
- 		goto err_unreg;
- 
--	for (id = 0; id < DMIRROR_NDEVICES; id++) {
-+	memset(dmirror_devices, 0, DMIRROR_NDEVICES * sizeof(dmirror_devices[0]));
-+	dmirror_devices[ndevices++].zone_device_type =
-+				HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
-+	dmirror_devices[ndevices++].zone_device_type =
-+				HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
-+	for (id = 0; id < ndevices; id++) {
- 		ret = dmirror_device_init(dmirror_devices + id, id);
- 		if (ret)
- 			goto err_chrdev;
-diff --git a/lib/test_hmm_uapi.h b/lib/test_hmm_uapi.h
-index f14dea5dcd06..17f842f1aa02 100644
---- a/lib/test_hmm_uapi.h
-+++ b/lib/test_hmm_uapi.h
-@@ -19,6 +19,7 @@
-  * @npages: (in) number of pages to read/write
-  * @cpages: (out) number of pages copied
-  * @faults: (out) number of device page faults seen
-+ * @zone_device_type: (out) zone device memory type
-  */
- struct hmm_dmirror_cmd {
- 	__u64		addr;
-@@ -26,6 +27,7 @@ struct hmm_dmirror_cmd {
- 	__u64		npages;
- 	__u64		cpages;
- 	__u64		faults;
-+	__u64		zone_device_type;
- };
- 
- /* Expose the address space of the calling process through hmm device file */
-@@ -35,6 +37,7 @@ struct hmm_dmirror_cmd {
- #define HMM_DMIRROR_SNAPSHOT		_IOWR('H', 0x03, struct hmm_dmirror_cmd)
- #define HMM_DMIRROR_EXCLUSIVE		_IOWR('H', 0x04, struct hmm_dmirror_cmd)
- #define HMM_DMIRROR_CHECK_EXCLUSIVE	_IOWR('H', 0x05, struct hmm_dmirror_cmd)
-+#define HMM_DMIRROR_GET_MEM_DEV_TYPE	_IOWR('H', 0x06, struct hmm_dmirror_cmd)
- 
- /*
-  * Values returned in hmm_dmirror_cmd.ptr for HMM_DMIRROR_SNAPSHOT.
-@@ -62,4 +65,9 @@ enum {
- 	HMM_DMIRROR_PROT_DEV_PRIVATE_REMOTE	= 0x30,
- };
- 
-+enum {
-+	/* 0 is reserved to catch uninitialized type fields */
-+	HMM_DMIRROR_MEMORY_DEVICE_PRIVATE = 1,
-+};
+-
+-	memset(args->src, 0, sizeof(*args->src) * nr_pages);
+-	args->cpages = 0;
+-	args->npages = 0;
+-
+-	migrate_vma_collect(args);
++	if (args->vma) {
++		if (is_vm_hugetlb_page(args->vma) ||
++		    (args->vma->vm_flags & VM_SPECIAL) || vma_is_dax(args->vma))
++			return -EINVAL;
++		if (args->start < args->vma->vm_start ||
++		    args->start >= args->vma->vm_end)
++			return -EINVAL;
++		if (args->end <= args->vma->vm_start ||
++		    args->end > args->vma->vm_end)
++			return -EINVAL;
++		memset(args->src, 0, sizeof(*args->src) * nr_pages);
++		args->cpages = 0;
++		args->npages = 0;
 +
- #endif /* _LIB_TEST_HMM_UAPI_H */
++		migrate_vma_collect(args);
++	}
+ 
+ 	if (args->cpages)
+ 		migrate_vma_unmap(args);
+@@ -666,7 +666,7 @@ void migrate_vma_pages(struct migrate_vma *migrate)
+ 			continue;
+ 		}
+ 
+-		if (!page) {
++		if (!page && migrate->vma) {
+ 			if (!(migrate->src[i] & MIGRATE_PFN_MIGRATE))
+ 				continue;
+ 			if (!notified) {
 -- 
 2.32.0
 
