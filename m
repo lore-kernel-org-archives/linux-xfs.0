@@ -2,41 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 114B9C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 03:34:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95586C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 03:37:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239670AbiEPDe5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 May 2022 23:34:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37998 "EHLO
+        id S234100AbiEPDhQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 May 2022 23:37:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234100AbiEPDez (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 May 2022 23:34:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C40B91FCC4
-        for <linux-xfs@vger.kernel.org>; Sun, 15 May 2022 20:34:54 -0700 (PDT)
+        with ESMTP id S231135AbiEPDhN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 May 2022 23:37:13 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84F67220E4;
+        Sun, 15 May 2022 20:37:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6201960EDC
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 03:34:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAE2BC385AA;
-        Mon, 16 May 2022 03:34:53 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 29B95B80E6D;
+        Mon, 16 May 2022 03:37:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B26E8C385B8;
+        Mon, 16 May 2022 03:37:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652672093;
-        bh=9a0bghvyB91TtoMoJJx+Rv2HsV3P4lMGCOOWBpbwEv4=;
-        h=Date:From:To:Subject:From;
-        b=Zx3Trlpq8wMdo0KDegxvQL432eLOgv79uuIxI1LK0iaX2pT0Pmf6PmW4uY7RyRLS6
-         QoFKHd1jFQq4Y1U6J5GfaN3SyAKrF7Yb8TcCfDqbCP7mSFhRQ0zXXfUOSDUAvwVv4v
-         Vwj4U1uXJapYvJr2u1LxWPOArKLQvGM1F/Rs57RiwG57zW0CGCdJIpv9wuo+uFFNtH
-         OutrZmWEgK7CHB/oD/kot4VKGq0FXgouXk8m+sh6KDJzYewBByrJOanDaJlYtAV+MY
-         U0pKbeAGppjto/RuM30WiV7uUVet9BJ+VEtz/Nkljs0N/o2cEiycno9X7XOjWXJL3J
-         Y6YBZ0x/JvDQw==
-Date:   Sun, 15 May 2022 20:34:53 -0700
+        s=k20201202; t=1652672229;
+        bh=ieVzGRCnG7/Hs96TdN+neqFFJ70o0yXplmMTTgyhMZw=;
+        h=Date:From:To:Cc:Subject:From;
+        b=T7CDPa4T86Eb07PDjrlTCp4pwqHdQuLpVwp1cGKS9NrvUE30oCsw2JxMhIix5yZhO
+         6QBti/vTQskrh9SegVxJVYl0JqT7et92HlGQYrLxtRw1RQKtOmByok7vT6uFfdzz1X
+         8KQcJUuWEVcBz6EgEmAC8ydwl8eZaWTy/2vQev/VwZECDD79KYcVUqJp5fgQs+xYJD
+         filvr5tj/7jB1QaLNSOTetaOh0HcvjlNm0njZSmrbAy85/QlLt1rVGy9SKei0ng6TX
+         F+EONuoXohUUANpHXq8ra/djhyDC9a3pM16Pm3b5g7akf9MTy6vQlwTc3u15+7w3c2
+         Mb1KNx42c9lEw==
+Date:   Sun, 15 May 2022 20:37:09 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, david@fromorbit.com,
-        allison.henderson@oracle.com
-Subject: [RFC]RAP xfs: don't crash when relogging xattri item
-Message-ID: <YoHGXehJko1sc/xr@magnolia>
+To:     Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] iomap: don't invalidate folios after writeback errors
+Message-ID: <YoHG5cMwvx8PSddI@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -46,66 +49,74 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-XXX DO NOT APPLY
+XFS has the unique behavior (as compared to the other Linux filesystems)
+that on writeback errors it will completely invalidate the affected
+folio and force the page cache to reread the contents from disk.  All
+other filesystems leave the page mapped and up to date.
 
-While running xfs/297 and generic/642, I noticed a crash in
-xfs_attri_item_relog when it tries to copy the attr name to the new
-xattri log item.  I think what happened here was that we called
-->iop_commit on the old attri item (which nulls out the pointers) as
-part of a log force at the same time that a chained attr operation was
-ongoing.  The system was busy enough that at some later point, the defer
-ops operation decided it was necessary to relog the attri log item, but
-as we've detached the name buffer from the old attri log item, we can't
-copy it to the new one, and kaboom.
+This is a rude awakening for user programs, since (in the case where
+write fails but reread doesn't) file contents will appear to revert to
+old disk contents with no notification other than an EIO on fsync.  This
+might have been annoying back in the days when iomap dealt with one page
+at a time, but with multipage folios, we can now throw away *megabytes*
+worth of data for a single write error.
 
-I think speaks to a broader refcounting problem with LARP mode -- the
-attr log item needs to be able to retain a reference to the name and
-value buffers until the log items have completely cleared the log.  I
-think it might be possible that the setxattr code can return to
-userspace before the CIL actually formats and commits the log item,
-leading to a UAF, but I don't really have the time to figure that one
-out without external help.
+On *most* Linux filesystems, a program can respond to an EIO on write by
+redirtying the entire file and scheduling it for writeback.  This isn't
+foolproof, since the page that failed writeback is no longer dirty and
+could be evicted, but programs that want to recover properly *also*
+have to detect XFS and regenerate every write they've made to the file.
 
-Skipping the memcpy is /not/ the correct solution here -- that means
-we'll relog the xattri with zeroed names and values, which breaks log
-recovery.
+When running xfs/314 on arm64, I noticed a UAF bug when xfs_discard_folio
+invalidates multipage folios that could be undergoing writeback.  If,
+say, we have a 256K folio caching a mix of written and unwritten
+extents, it's possible that we could start writeback of the first (say)
+64K of the folio and then hit a writeback error on the next 64K.  We
+then free the iop attached to the folio, which is really bad because
+writeback completion on the first 64k will trip over the "blocks per
+folio > 1 && !iop" assertion.
 
-Singed-off-by: Darrick J. Wong <djwong@kernel.org>
+This can't be fixed by only invalidating the folio if writeback fails at
+the start of the folio, since the folio is marked !uptodate, which trips
+other assertions elsewhere.  Get rid of the whole behavior entirely.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_attr_item.c |   22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
+ fs/iomap/buffered-io.c |    1 -
+ fs/xfs/xfs_aops.c      |    4 +---
+ 2 files changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index fb84f71388c4..47c3c44e375d 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -670,12 +670,24 @@ xfs_attri_item_relog(
- 	new_attrp->alfi_name_len = old_attrp->alfi_name_len;
- 	new_attrp->alfi_attr_filter = old_attrp->alfi_attr_filter;
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 8fb9b2797fc5..94b53cbdefad 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1387,7 +1387,6 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 		if (wpc->ops->discard_folio)
+ 			wpc->ops->discard_folio(folio, pos);
+ 		if (!count) {
+-			folio_clear_uptodate(folio);
+ 			folio_unlock(folio);
+ 			goto done;
+ 		}
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 90b7f4d127de..f6216d0fb0c2 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -464,7 +464,7 @@ xfs_discard_folio(
+ 	int			error;
  
--	memcpy(new_attrip->attri_name, old_attrip->attri_name,
--		new_attrip->attri_name_len);
-+	if (old_attrip->attri_name) {
-+		memcpy(new_attrip->attri_name, old_attrip->attri_name,
-+				new_attrip->attri_name_len);
-+	} else {
-+		xfs_emerg(tp->t_mountp, "%s namelen 0x%x name NULL!", __func__, new_attrip->attri_name_len);
-+		dump_stack();
-+	}
+ 	if (xfs_is_shutdown(mp))
+-		goto out_invalidate;
++		return;
  
--	if (new_attrip->attri_value_len > 0)
--		memcpy(new_attrip->attri_value, old_attrip->attri_value,
--		       new_attrip->attri_value_len);
-+	if (new_attrip->attri_value_len > 0) {
-+		if (old_attrip->attri_value) {
-+			memcpy(new_attrip->attri_value,
-+					old_attrip->attri_value,
-+					new_attrip->attri_value_len);
-+		} else {
-+			xfs_emerg(tp->t_mountp, "%s valuelen 0x%x value NULL!", __func__, new_attrip->attri_value_len);
-+			dump_stack();
-+		}
-+	}
+ 	xfs_alert_ratelimited(mp,
+ 		"page discard on page "PTR_FMT", inode 0x%llx, pos %llu.",
+@@ -474,8 +474,6 @@ xfs_discard_folio(
+ 			i_blocks_per_folio(inode, folio) - pageoff_fsb);
+ 	if (error && !xfs_is_shutdown(mp))
+ 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+-out_invalidate:
+-	iomap_invalidate_folio(folio, offset, folio_size(folio) - offset);
+ }
  
- 	xfs_trans_add_item(tp, &new_attrip->attri_item);
- 	set_bit(XFS_LI_DIRTY, &new_attrip->attri_item.li_flags);
+ static const struct iomap_writeback_ops xfs_writeback_ops = {
