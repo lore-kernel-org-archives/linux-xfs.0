@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC9DFC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 03:32:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FA7DC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 03:32:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232759AbiEPDcJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 May 2022 23:32:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32968 "EHLO
+        id S239666AbiEPDcL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 May 2022 23:32:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239665AbiEPDcI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 May 2022 23:32:08 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F28F1FCC4
-        for <linux-xfs@vger.kernel.org>; Sun, 15 May 2022 20:32:06 -0700 (PDT)
+        with ESMTP id S239665AbiEPDcL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 May 2022 23:32:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9101C1FCC1
+        for <linux-xfs@vger.kernel.org>; Sun, 15 May 2022 20:32:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 20AB2B80D2C
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 03:32:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC9EBC385AA;
-        Mon, 16 May 2022 03:32:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 344D960EBE
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 03:32:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 983A9C385AA;
+        Mon, 16 May 2022 03:32:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652671923;
-        bh=wjhQDDxUEWVl+wq8/HogUZ5eor/mfW5Y35gIqidtJ8g=;
+        s=k20201202; t=1652671929;
+        bh=H8zxR5o5TKCkoOOg45UVdKqu+zQR50zSJVlQ4o+bTL8=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=iqTLbOXaL5sNUiFSDIh1szqFcxscAk/xSDI2S3eg/7lFIgInZnphRjNKK8AihFAtj
-         Tf3MwGhIK0h7zhMpPioy0NxW8NcqZZarOi3uX8QvAxZTPAHoJf3alvjwgtyQJS/Xsx
-         BLuHmFinQr8lWF4tbpdUDFUjvJWWZMKoV/zf1iRKHvJGQHVjA3YFT4w1X+60v9MAO6
-         Ep4fgewmwr3Mtrp7H/VYR+0cBVVo04jE8PumBPsKVYrDdTDRPe/Td2nSJUbVx67Nlz
-         /7frvCmi5qiP2LiHzuTSetsWW+4oIcNtbBRmsROyihLGYwOWY7MOB4lGIEV1YiTuXv
-         a98iGJ51cJvmg==
-Subject: [PATCH 2/4] xfs: don't leak the retained da state when doing a leaf
- to node conversion
+        b=WO0P3PklTj8Gh3RdnPdUoik0Gn2gVLmG/FhT6T5uDPTMnrd67K/8m5QU5xoZZZXq0
+         ogU4MY+dFBsaj6BpFE14n2fvZWpzEHqkzYERw2bBFZ7B+Agpcqv/Fj24d6tr2rPjoF
+         ESyn+9cFiUEGekYVc7+W9rMMSTifLgDEhdXwhjLXKSIBY6kdmS7lCQQjf3ShOke2nA
+         2IwYJhwr1aAAUvCj4Hgub27L40RoJWCZB3QlrMULCnqEQikEz/p+vSsv0BQGX4Vf0G
+         9cGT26WprpxMNkqjg4uM2kA3MmB3HHbZbS36nLYFb/DeKzdZLXdSKepuXQeRfdDfPY
+         +8G03ss0D4wcQ==
+Subject: [PATCH 3/4] xfs: reject unknown xattri log item operation flags
+ during recovery
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
         allison.henderson@oracle.com
-Date:   Sun, 15 May 2022 20:32:03 -0700
-Message-ID: <165267192341.625255.6169607924858686457.stgit@magnolia>
+Date:   Sun, 15 May 2022 20:32:09 -0700
+Message-ID: <165267192904.625255.1227477138553372618.stgit@magnolia>
 In-Reply-To: <165267191199.625255.12173648515376165187.stgit@magnolia>
 References: <165267191199.625255.12173648515376165187.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,54 +51,56 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a setxattr operation finds an xattr structure in leaf format, adding
-the attr can fail due to lack of space and hence requires an upgrade to
-node format.  After this happens, we'll roll the transaction and
-re-enter the state machine, at which time we need to perform a second
-lookup of the attribute name to find its new location.  This lookup
-attaches a new da state structure to the xfs_attr_item but doesn't free
-the old one (from the leaf lookup) and leaks it.  Fix that.
+Make sure we screen the op flags field of recovered xattr intent log
+items to reject flag bits that we don't know about.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_attr_item.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 2da24954b2d7..499a15480b57 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1401,8 +1401,10 @@ xfs_attr_node_hasname(
- 	int			retval, error;
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 687cf517841a..459b6c93b40b 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -349,7 +349,8 @@ xfs_attr_log_item(
+ 	 */
+ 	attrp = &attrip->attri_format;
+ 	attrp->alfi_ino = attr->xattri_da_args->dp->i_ino;
+-	attrp->alfi_op_flags = attr->xattri_op_flags;
++	attrp->alfi_op_flags = attr->xattri_op_flags &
++						XFS_ATTR_OP_FLAGS_TYPE_MASK;
+ 	attrp->alfi_value_len = attr->xattri_da_args->valuelen;
+ 	attrp->alfi_name_len = attr->xattri_da_args->namelen;
+ 	attrp->alfi_attr_flags = attr->xattri_da_args->attr_filter;
+@@ -496,6 +497,9 @@ xfs_attri_validate(
+ 	if (attrp->__pad != 0)
+ 		return false;
  
- 	state = xfs_da_state_alloc(args);
--	if (statep != NULL)
-+	if (statep != NULL) {
-+		ASSERT(*statep == NULL);
- 		*statep = state;
-+	}
- 
- 	/*
- 	 * Search to see if name exists, and get back a pointer to it.
-@@ -1428,6 +1430,10 @@ xfs_attr_node_addname_find_attr(
- 	struct xfs_da_args	*args = attr->xattri_da_args;
- 	int			error;
- 
-+	if (attr->xattri_da_state)
-+		xfs_da_state_free(attr->xattri_da_state);
-+	attr->xattri_da_state = NULL;
++	if (attrp->alfi_op_flags & ~XFS_ATTR_OP_FLAGS_TYPE_MASK)
++		return false;
 +
- 	/*
- 	 * Search to see if name already exists, and get back a pointer
- 	 * to where it should go.
-@@ -1593,7 +1599,7 @@ STATIC int
- xfs_attr_node_get(
- 	struct xfs_da_args	*args)
- {
--	struct xfs_da_state	*state;
-+	struct xfs_da_state	*state = NULL;
- 	struct xfs_da_state_blk	*blk;
- 	int			i;
- 	int			error;
+ 	/* alfi_op_flags should be either a set or remove */
+ 	switch (op) {
+ 	case XFS_ATTR_OP_FLAGS_SET:
+@@ -556,7 +560,8 @@ xfs_attri_item_recover(
+ 	args = (struct xfs_da_args *)(attr + 1);
+ 
+ 	attr->xattri_da_args = args;
+-	attr->xattri_op_flags = attrp->alfi_op_flags;
++	attr->xattri_op_flags = attrp->alfi_op_flags &
++						XFS_ATTR_OP_FLAGS_TYPE_MASK;
+ 
+ 	args->dp = ip;
+ 	args->geo = mp->m_attr_geo;
+@@ -567,7 +572,7 @@ xfs_attri_item_recover(
+ 	args->attr_filter = attrp->alfi_attr_flags;
+ 	args->op_flags = XFS_DA_OP_RECOVERY | XFS_DA_OP_OKNOENT;
+ 
+-	switch (attrp->alfi_op_flags & XFS_ATTR_OP_FLAGS_TYPE_MASK) {
++	switch (attr->xattri_op_flags) {
+ 	case XFS_ATTR_OP_FLAGS_SET:
+ 	case XFS_ATTR_OP_FLAGS_REPLACE:
+ 		args->value = attrip->attri_value;
 
