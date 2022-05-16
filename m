@@ -2,125 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EABD9C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 17:59:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F80C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 18:11:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230212AbiEPR7q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 May 2022 13:59:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59338 "EHLO
+        id S1344608AbiEPSLp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 May 2022 14:11:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234971AbiEPR7p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 13:59:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8253B39BBA
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 10:59:44 -0700 (PDT)
+        with ESMTP id S242072AbiEPSLh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 14:11:37 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A07C13A1B1
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 11:11:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1A1ED610D5
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 17:59:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71FB8C385AA;
-        Mon, 16 May 2022 17:59:43 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4BBCBB8149C
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 18:11:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB8C8C385AA;
+        Mon, 16 May 2022 18:11:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652723983;
-        bh=7WZcbtG2C8XB++rumG8NnHTO4pmKZN0uhSRh2w45tR8=;
+        s=k20201202; t=1652724693;
+        bh=QQUGK6x0ymbzmKMY1mjabJZN+3Yr3HidOP09Efz13/M=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IcygrzSR4G4D93XCEDhl615Aq0U0GLWSWC23eXJTIKcLB5LCIZ7YGPvBwlSOWHkdv
-         qdaS+9kn51w+YGlh650OdTnQe7gYP32kt55zvx0UJ44doBqQmsp3UE4s8MhOeOMuau
-         FHLfO4DhQa5RON0RqKQMcS85WuB7kJdZvZLVGiEEizfuKxaNUEAxmTbZ2FagDFGlvU
-         Y/0VxLHY2XY7HK9ygkN1VHfNp18cDgne56AU9hjv+ZQA8JTV+OZ3jmzaPFaX1BL95x
-         Ash5r8u+7FC5J0EPunRvbHTTEl3MFDb+R5TNBQ55oLUc+TbJV3Tc7ncqqjg76Gh6E2
-         MGPc2ohLfd3sg==
-Date:   Mon, 16 May 2022 10:59:42 -0700
+        b=sq7Nfkakz5dJxHyz1uV/jViEpEZcWbdTa9wL76BeLDYb/vgzM33FSKDll2BKJe1yN
+         EXanpnT37GgPLwquryQ2BSxq+0ssr2X5vN7Qthujiyo1/eGzj1v+eJGMMOSs88k6dl
+         f3Sao/Dw55/yLGYDAONgvEWRd4HgQV7kwUyb/Pn9Hi44RGfgExm+JrDCxIuJvv2vzL
+         YrbZef7K2jvSDzUzAT8CbKaZrlfmsSl7XcsfaeimqwbDGo6TPRtHD98qW0YTYfHEUx
+         ZCgnkhP+KgjxOQjhnsV+CySXF8iLHfoQZRLnOf0Bia21kWhVpO2jeyU32RoeNs+JdC
+         fEPCATSVw7Smg==
+Date:   Mon, 16 May 2022 11:11:32 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Eric Sandeen <sandeen@redhat.com>, sandeen@sandeen.net,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs_repair: detect v5 featureset mismatches in
- secondary supers
-Message-ID: <YoKRDhAgythlT0if@magnolia>
+To:     sandeen@sandeen.net, david@fromorbit.com
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH 4/3] xfs_repair: always rewrite secondary supers when
+ needsrepair is set
+Message-ID: <YoKT1DRtLpY62WLR@magnolia>
 References: <165176674590.248791.17672675617466150793.stgit@magnolia>
- <165176675148.248791.14783205262181556770.stgit@magnolia>
- <57914c5f-c39a-e3de-14cf-6565ee82f834@redhat.com>
- <20220512191329.GH27195@magnolia>
- <20220516081153.GO1098723@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220516081153.GO1098723@dread.disaster.area>
+In-Reply-To: <165176674590.248791.17672675617466150793.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 16, 2022 at 06:11:53PM +1000, Dave Chinner wrote:
-> On Thu, May 12, 2022 at 12:13:29PM -0700, Darrick J. Wong wrote:
-> > On Thu, May 12, 2022 at 02:02:33PM -0500, Eric Sandeen wrote:
-> > > On 5/5/22 11:05 AM, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > Make sure we detect and correct mismatches between the V5 features
-> > > > described in the primary and the secondary superblocks.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > 
-> > > 
-> > > > +	if ((mp->m_sb.sb_features_incompat ^ sb->sb_features_incompat) &
-> > > > +			~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR) {
-> > > 
-> > > I'd like to add a comment about why XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR is special.
-> > > (Why is XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR special? Just because userspace doesn't
-> > > bother to set it on all superblocks in the upgrade paths, right?)
-> > 
-> > Right -- we only set it on the primary super to force users to run
-> > xfs_repair.  Repair will clear NEEDSREPAIR on the primary and all
-> > secondaries before it exits
-> 
-> Oh no it doesn't! :)
-> 
-> I just debugged the persistent xfs/158 failure down to repair only
-> writing the secondary superblocks with "features_changed" is true.
-> 
-> xfs/158 trashes the repair process after setting the inobtcnt and
-> needrepair feature bits in the primary superblock. That's the only
-> code that sets the internal "features_changed" flag that triggers
-> secondary superblock writeback. If repair then dies after this it
-> won't get set on the next run without the upgrade options set on the
-> command line. Hence we re-run repair without the upgrade feature
-> being enabled to check that it still recovers correctly.
-> 
-> The result is that repair does the right thing in completing the
-> feature upgrade because it sees the feature flag in the primary
-> superblock, but it *never sets "features_changed"* and so the
-> secondary superblocks are not updated when it is done. It then goes
-> on to check NEEDSREPAIR in the primary superblock and clears it,
-> allowing the fileystem to mount again.
-> 
-> This results in secondary superblocks with in-progress set and
-> mis-matched feature bits, resulting in xfs_scrub reporting corrupt
-> secondary superblocks and so failing the test.
-> 
-> This change will probably mask that specific bug - it'll still be
-> lying their waiting to pounce on some unsuspecting bystander, but it
-> will be masked by other code detecting the feature mismatch that it
-> causes and correcting it that way...
+From: Darrick J. Wong <djwong@kernel.org>
 
-Ah, ok.  You're pointing out that repair needs to set features_changed
-right after printing "clearing needsrepair flag and regenerating
-metadata", and that this patch sort of papers over the underlying issue.
+Dave Chinner complained about xfs_scrub failures coming from xfs/158.
+That test induces xfs_repair to fail while upgrading a filesystem to
+have the inobtcount feature, and then restarts xfs_repair to finish the
+upgrade.  When the second xfs_repair run starts, it will find that the
+primary super has NEEDSREPAIR set, along with whatever new feature that
+we were trying to add to the filesystem.
 
-The genesis of this patch wasn't xfs/158 failing, it was the secondary
-sb fuzz testing noticing that xfs_scrub reported a failure whereas
-xfs_repair didn't.
+From there, repair completes the upgrade in much the same manner as the
+first repair run would have, with one big exception -- it forgets to set
+features_changed to trigger rewriting of the secondary supers at the end
+of repair.  This results in discrepancies between the supers:
 
-So, I'll go add an extra patch to fix the upgrade case, and I think we
-can let Eric add this one to his tree.
+# XFS_REPAIR_FAIL_AFTER_PHASE=2 xfs_repair -c inobtcount=1 /dev/sdf
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Adding inode btree counts to filesystem.
+Killed
+# xfs_repair /dev/sdf
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+clearing needsrepair flag and regenerating metadata
+bad inobt block count 0, saw 1
+bad finobt block count 0, saw 1
+bad inobt block count 0, saw 1
+bad finobt block count 0, saw 1
+bad inobt block count 0, saw 1
+bad finobt block count 0, saw 1
+bad inobt block count 0, saw 1
+bad finobt block count 0, saw 1
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 1
+        - agno = 2
+        - agno = 0
+        - agno = 3
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+done
+# xfs_db -c 'sb 0' -c 'print' -c 'sb 1' -c 'print' /dev/sdf | \
+	egrep '(features_ro_compat|features_incompat)'
+features_ro_compat = 0xd
+features_incompat = 0xb
+features_ro_compat = 0x5
+features_incompat = 0xb
 
---D
+Curiously, re-running xfs_repair will not trigger any warnings about the
+featureset mismatch between the primary and secondary supers.  xfs_scrub
+immediately notices, which is what causes xfs/158 to fail.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+This discrepancy doesn't happen when the upgrade completes successfully
+in a single repair run, so we need to teach repair to rewrite the
+secondaries at the end of repair any time needsrepair was set.
+
+Reported-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ repair/agheader.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/repair/agheader.c b/repair/agheader.c
+index d8f912f2..7da5641b 100644
+--- a/repair/agheader.c
++++ b/repair/agheader.c
+@@ -460,6 +460,14 @@ secondary_sb_whack(
+ 			else
+ 				do_warn(
+ 	_("would clear needsrepair flag and regenerate metadata\n"));
++			/*
++			 * If needsrepair is set on the primary super, there's
++			 * a possibility that repair crashed during an upgrade.
++			 * Set features_changed to ensure that the secondary
++			 * supers are rewritten with the new feature bits once
++			 * we've finished the upgrade.
++			 */
++			features_changed = true;
+ 		} else {
+ 			/*
+ 			 * Quietly clear needsrepair on the secondary supers as
