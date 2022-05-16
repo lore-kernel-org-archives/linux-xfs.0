@@ -2,46 +2,46 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 651EEC38A02
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 16:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA2BC43217
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 16:49:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343821AbiEPQss (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 May 2022 12:48:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37424 "EHLO
+        id S1343900AbiEPQtA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 May 2022 12:49:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343822AbiEPQsi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 12:48:38 -0400
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3DFD3C72D
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:36 -0700 (PDT)
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-        by m0001303.ppops.net (8.17.1.5/8.17.1.5) with ESMTP id 24GGBLOX005545
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:36 -0700
+        with ESMTP id S1343853AbiEPQsm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 12:48:42 -0400
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AA753CA47
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:39 -0700 (PDT)
+Received: from pps.filterd (m0148461.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24GBAWdJ027419
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:38 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=DMxeTOpqCEe+Tvocr/V6khKpI6cObsPyGo88EBQxCYQ=;
- b=RpoCk+OMgk5qnqxR0wkNFB1Qmw37lZHA94WauSVkEYplpxcApNCtzDksIb9+kjQuH9Ys
- BiMRLp/xXvqL/QTqIrVIhURRfgj4OJPuVVgzCxkUV59DSEpBB+q+P8eMm9+RXYd9vo8E
- VC5Ze8DYVMdN4lTvFmK3NsK0pEe0gZRVNPA= 
-Received: from maileast.thefacebook.com ([163.114.130.16])
-        by m0001303.ppops.net (PPS) with ESMTPS id 3g283way8d-2
+ bh=ZB0I0bygTGrWfOs7D0mNHGqlVbLHHpR2apSClL45abY=;
+ b=euqVurTK/gZEO85M875k+9xB1Qj3rwAcCydyzNZvix+svD/mTouDXWZeJ8dgDvHxGSFA
+ k1vjJonSlB2OJ0Th4VvvtHdJaFx2STR55xu42cQtX+nOD4sE+VajDhFTQ1FEkKjLsu33
+ GlK4zG24OjuibZRUwb0vMlBOusEBeaAW2vk= 
+Received: from mail.thefacebook.com ([163.114.132.120])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g29hu2ru8-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:35 -0700
-Received: from twshared10276.08.ash9.facebook.com (2620:10d:c0a8:1b::d) by
- mail.thefacebook.com (2620:10d:c0a8:83::5) with Microsoft SMTP Server
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:38 -0700
+Received: from twshared6696.05.ash7.facebook.com (2620:10d:c085:108::4) by
+ mail.thefacebook.com (2620:10d:c085:11d::7) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 16 May 2022 09:48:34 -0700
+ 15.1.2375.24; Mon, 16 May 2022 09:48:37 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id 48B43F146DD5; Mon, 16 May 2022 09:48:25 -0700 (PDT)
+        id 5E6E2F146DDB; Mon, 16 May 2022 09:48:25 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>
-Subject: [RFC PATCH v2 03/16] iomap: use iomap_page_create_gfp() in __iomap_write_begin
-Date:   Mon, 16 May 2022 09:47:05 -0700
-Message-ID: <20220516164718.2419891-4-shr@fb.com>
+Subject: [RFC PATCH v2 06/16] fs: split off need_remove_file_privs() do_remove_file_privs()
+Date:   Mon, 16 May 2022 09:47:08 -0700
+Message-ID: <20220516164718.2419891-7-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220516164718.2419891-1-shr@fb.com>
 References: <20220516164718.2419891-1-shr@fb.com>
@@ -49,8 +49,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-GUID: Ka5ECiltUCCuJRjVAAUKWCV9kidgF0Wv
-X-Proofpoint-ORIG-GUID: Ka5ECiltUCCuJRjVAAUKWCV9kidgF0Wv
+X-Proofpoint-ORIG-GUID: SbS0uR2OSujLgkGX7L6I82DujcT32VwD
+X-Proofpoint-GUID: SbS0uR2OSujLgkGX7L6I82DujcT32VwD
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-05-16_15,2022-05-16_02,2022-02-23_01
@@ -58,45 +58,113 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This change uses the new iomap_page_create_gfp() function in the
-function __iomap_write_begin().
+This splits off the function need_remove_file_privs() from the function
+do_remove_file_privs() from the function file_remove_privs().
 
 No intended functional changes in this patch.
 
 Signed-off-by: Stefan Roesch <shr@fb.com>
 ---
- fs/iomap/buffered-io.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ fs/inode.c | 57 ++++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 38 insertions(+), 19 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 85aa32f50db0..1ffdc7078e7d 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -572,17 +572,22 @@ static int __iomap_write_begin(const struct iomap_i=
-ter *iter, loff_t pos,
- 		size_t len, struct folio *folio)
+diff --git a/fs/inode.c b/fs/inode.c
+index 9d9b422504d1..a6d70a1983f8 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2010,17 +2010,8 @@ static int __remove_privs(struct user_namespace *m=
+nt_userns,
+ 	return notify_change(mnt_userns, dentry, &newattrs, NULL);
+ }
+=20
+-/*
+- * Remove special file priviledges (suid, capabilities) when file is wri=
+tten
+- * to or truncated.
+- */
+-int file_remove_privs(struct file *file)
++static int need_file_remove_privs(struct inode *inode, struct dentry *de=
+ntry)
  {
- 	const struct iomap *srcmap =3D iomap_iter_srcmap(iter);
--	struct iomap_page *iop =3D iomap_page_create(iter->inode, folio);
-+	struct iomap_page *iop =3D to_iomap_page(folio);
- 	loff_t block_size =3D i_blocksize(iter->inode);
- 	loff_t block_start =3D round_down(pos, block_size);
- 	loff_t block_end =3D round_up(pos + len, block_size);
-+	unsigned int nr_blocks =3D i_blocks_per_folio(iter->inode, folio);
- 	size_t from =3D offset_in_folio(folio, pos), to =3D from + len;
- 	size_t poff, plen;
-+	gfp_t  gfp =3D GFP_NOFS | __GFP_NOFAIL;
-=20
- 	if (folio_test_uptodate(folio))
+-	struct dentry *dentry =3D file_dentry(file);
+-	struct inode *inode =3D file_inode(file);
+-	int kill;
+-	int error =3D 0;
+-
+ 	/*
+ 	 * Fast path for nothing security related.
+ 	 * As well for non-regular files, e.g. blkdev inodes.
+@@ -2030,16 +2021,37 @@ int file_remove_privs(struct file *file)
+ 	if (IS_NOSEC(inode) || !S_ISREG(inode->i_mode))
  		return 0;
- 	folio_clear_error(folio);
 =20
-+	if (!iop && nr_blocks > 1)
-+		iop =3D iomap_page_create_gfp(iter->inode, folio, nr_blocks, gfp);
+-	kill =3D dentry_needs_remove_privs(dentry);
+-	if (kill < 0)
+-		return kill;
+-	if (kill)
+-		error =3D __remove_privs(file_mnt_user_ns(file), dentry, kill);
++	return dentry_needs_remove_privs(dentry);
++}
 +
- 	do {
- 		iomap_adjust_read_range(iter->inode, folio, &block_start,
- 				block_end - block_start, &poff, &plen);
++static int do_file_remove_privs(struct file *file, struct inode *inode,
++				struct dentry *dentry, int kill)
++{
++	int error =3D 0;
++
++	error =3D __remove_privs(file_mnt_user_ns(file), dentry, kill);
+ 	if (!error)
+ 		inode_has_no_xattr(inode);
+=20
+ 	return error;
+ }
++
++/*
++ * Remove special file privileges (suid, capabilities) when file is writ=
+ten
++ * to or truncated.
++ */
++int file_remove_privs(struct file *file)
++{
++	struct dentry *dentry =3D file_dentry(file);
++	struct inode *inode =3D file_inode(file);
++	int kill;
++
++	kill =3D need_file_remove_privs(inode, dentry);
++	if (kill <=3D 0)
++		return kill;
++
++	return do_file_remove_privs(file, inode, dentry, kill);
++}
+ EXPORT_SYMBOL(file_remove_privs);
+=20
+ /**
+@@ -2093,15 +2105,22 @@ EXPORT_SYMBOL(file_update_time);
+ /* Caller must hold the file's inode lock */
+ int file_modified(struct file *file)
+ {
+-	int err;
++	int ret;
++	struct dentry *dentry =3D file_dentry(file);
++	struct inode *inode =3D file_inode(file);
+=20
+ 	/*
+ 	 * Clear the security bits if the process is not being run by root.
+ 	 * This keeps people from modifying setuid and setgid binaries.
+ 	 */
+-	err =3D file_remove_privs(file);
+-	if (err)
+-		return err;
++	ret =3D need_file_remove_privs(inode, dentry);
++	if (ret < 0) {
++		return ret;
++	} else if (ret > 0) {
++		ret =3D do_file_remove_privs(file, inode, dentry, ret);
++		if (ret)
++			return ret;
++	}
+=20
+ 	if (unlikely(file->f_mode & FMODE_NOCMTIME))
+ 		return 0;
 --=20
 2.30.2
 
