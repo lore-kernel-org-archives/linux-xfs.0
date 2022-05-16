@@ -2,69 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA4B4C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 16:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27572C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 16:48:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240443AbiEPQWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 May 2022 12:22:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38756 "EHLO
+        id S1343843AbiEPQsm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 May 2022 12:48:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238917AbiEPQWG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 12:22:06 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 261AF39168
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:22:05 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D3D9AB81255
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 16:22:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88782C385AA;
-        Mon, 16 May 2022 16:22:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652718122;
-        bh=HHbNSSRPkgAMZyy+KsGOGRjsME8YENsPof3YkqdtSec=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ieKrrO5IJQGP/GlKXZFwAy0PCu7YYp9PfUmOMSHm61SvQX4DeBomAeWzz2kSHYvIB
-         wBr58g92Yh6Ebv/WB9doV/w3kD2iid/BMlxj7IIeFTuX8+Xs2X1ejplBB1EkAx6/Nz
-         1XiNB26muXsMJpwc0HWbXBbVlWTrd9nUnntLNVvkZuUFQDp8y0+URJmmMVpb4VVNAm
-         ohVD4C+u/K7KwfrIDwyeiHcaFf1yG01AfTK1ypxbTj2SR5Rdm/3gnmnel5WzwyUBCJ
-         TCvCaaJlx97lQ+kmJQixRb69IqQ/cxCXOPVU0q/tfi4ERtHHncSUuuDiXvxvl9vrzb
-         yHUW4stJuNxzg==
-Date:   Mon, 16 May 2022 09:22:02 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Raghav Sharma <raghavself28@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [QUESTION] xfs version 5 new features
-Message-ID: <YoJ6Ko+m7Jx1Cxdg@magnolia>
-References: <CAGthhtKXimFugYicqrDEc_bjzPh8n=Ue96YO9VRJOQoD4A_ycA@mail.gmail.com>
+        with ESMTP id S244517AbiEPQsh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 12:48:37 -0400
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4443F3C716
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:34 -0700 (PDT)
+Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24GEFmgY009563
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:33 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=facebook;
+ bh=RE5Ox9xrEwOzRKnjCVzMX1uqjY05JgL92w/a4ut+Iv0=;
+ b=N8E6TStD7MRj3IhZgjcl/LRTtChYzn8nTonZVvZtFqJx8JBoyUlGMZC4zVxcEMd4HhuO
+ ogc6Y605nXmqzC+WyBsfct70eXCr2CqekgoDJQD9HLA5hA2Xj1KWYUyljwkvbi7aV1HP
+ 18VfjgSa47O3t+i9pk6JiPbpxXdLjnAsIjA= 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g29xxjmce-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:33 -0700
+Received: from twshared8508.05.ash9.facebook.com (2620:10d:c0a8:1b::d) by
+ mail.thefacebook.com (2620:10d:c0a8:83::4) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 16 May 2022 09:48:32 -0700
+Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
+        id 3B0C1F146DD1; Mon, 16 May 2022 09:48:25 -0700 (PDT)
+From:   Stefan Roesch <shr@fb.com>
+To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
+        <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>
+Subject: [RFC PATCH v2 01/16] block: add check for async buffered writes to generic_write_checks
+Date:   Mon, 16 May 2022 09:47:03 -0700
+Message-ID: <20220516164718.2419891-2-shr@fb.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220516164718.2419891-1-shr@fb.com>
+References: <20220516164718.2419891-1-shr@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAGthhtKXimFugYicqrDEc_bjzPh8n=Ue96YO9VRJOQoD4A_ycA@mail.gmail.com>
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-GUID: IaZTPBli5dNYJAXkpkcheLgLpANddjuY
+X-Proofpoint-ORIG-GUID: IaZTPBli5dNYJAXkpkcheLgLpANddjuY
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-05-16_15,2022-05-16_02,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 16, 2022 at 05:04:57PM +0530, Raghav Sharma wrote:
-> Hello!
-> 
-> I am working with the Haiku organization for adding xfs support for HaikuOS.
-> We currently have xfs version 4 read support, I want to extend it to
-> xfs version 5.
-> 
-> What are new features introduced in xfs V5?
-> 
-> Does "xfs_filesystem_structure" pdf documentation contain all
-> necessary fields for V5?
+This introduces the flag FMODE_BUF_WASYNC. If devices support async
+buffered writes, this flag can be set. It also modifies the check in
+generic_write_checks to take async buffered writes into consideration.
 
-That depends on where you're getting the pdf from.  There are many
-copies floating around on the internet.
+Signed-off-by: Stefan Roesch <shr@fb.com>
+---
+ fs/read_write.c    | 3 ++-
+ include/linux/fs.h | 3 +++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
---D
+diff --git a/fs/read_write.c b/fs/read_write.c
+index e643aec2b0ef..f75d75f7bc84 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1633,7 +1633,8 @@ int generic_write_checks_count(struct kiocb *iocb, =
+loff_t *count)
+ 	if (iocb->ki_flags & IOCB_APPEND)
+ 		iocb->ki_pos =3D i_size_read(inode);
+=20
+-	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
++	if ((iocb->ki_flags & IOCB_NOWAIT) &&
++	    !((iocb->ki_flags & IOCB_DIRECT) || (file->f_mode & FMODE_BUF_WASYN=
+C)))
+ 		return -EINVAL;
+=20
+ 	return generic_write_check_limits(iocb->ki_filp, iocb->ki_pos, count);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index bbde95387a23..3b479d02e210 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -177,6 +177,9 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t=
+ offset,
+ /* File supports async buffered reads */
+ #define FMODE_BUF_RASYNC	((__force fmode_t)0x40000000)
+=20
++/* File supports async nowait buffered writes */
++#define FMODE_BUF_WASYNC	((__force fmode_t)0x80000000)
++
+ /*
+  * Attribute flags.  These should be or-ed together to figure out what
+  * has been changed!
+--=20
+2.30.2
 
-> I don't know if this mailing list is the right place to ask for help
-> on this topic, so do let me know about it.
-> 
-> Thanks
-> Raghav
