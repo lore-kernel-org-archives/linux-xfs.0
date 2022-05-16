@@ -2,70 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD1EBC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 11:36:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E23C0C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 12:27:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243210AbiEPLgU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 May 2022 07:36:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37526 "EHLO
+        id S234311AbiEPM1a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 May 2022 08:27:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243213AbiEPLfm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 07:35:42 -0400
-Received: from mail-oa1-x2c.google.com (mail-oa1-x2c.google.com [IPv6:2001:4860:4864:20::2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E31DA38DBC
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 04:35:09 -0700 (PDT)
-Received: by mail-oa1-x2c.google.com with SMTP id 586e51a60fabf-e656032735so19680828fac.0
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 04:35:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=+4tDC2D0CMGWGTnhzvvFvlQy/8nHT19ELg+AEYRkeCk=;
-        b=VPZb2cxkBcNMgPk+zySNuRMiscYBBKCD1qLsGrNYkI9wKeEiZuQi1qbcqNN58fJ5jR
-         iDxcW5OC3kvHCnF01RNKOjlnnEm6Kn2JxV5SIBGToT3F1PF9sjxjtfeZDVw6vobranto
-         2QhIMRrirzvVNdKsgTVMH08wWMdhrynv7onuh4JF0CfizoCi0xFRe8pB1sCAu6Dv/k5q
-         8k9sP+72Jxb/9xkHueV3Yyo/bw+4Y2jSkVx68FqNiZcTZ15QvRzoyN/vPNso1itjFw8a
-         hTbLHLeMItIADXCP5q1kgcnfpgojET3nWbDctYtY5UuATIb6kjzjJtxM/sjcQsBE64Ec
-         0Z4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=+4tDC2D0CMGWGTnhzvvFvlQy/8nHT19ELg+AEYRkeCk=;
-        b=X/z9eviND1dR12nYDecE3tYOKwATwVPY9wVfcMeagECia/HFOwMPD5DqWIFKuVYySX
-         KYwzOIPxYYoPN/MYnE4zVeHcWix/wSvpqhE6lLCrhGpfbpKtHiI2eyV7Pr2cIjDG+rF2
-         2n0BRIY1TknROtnj0X8RlIOCaOskr+2ozPsIaLguDe8tY+47suxjPOI6HaoIIPjCsABR
-         E3uSAMGlhKpqurxngU9NSnATpxQDycN657qFLpwQxsuffh5Nz1cV8mrhAuSgvqv7eg6H
-         8BePCsZAaTGeGu+WR2XNdXlBlRm+Hav7c3S3Bl15EsERds2CaA8i9oIAP82m9aOKByPy
-         10ZQ==
-X-Gm-Message-State: AOAM531zB9HCzb6ltK510cJbybscE4cEtCstwsc7DAnKz2a/3EdSxmgh
-        uHICSPKyIcatuQT2Q4Nmgm0PlkplDunIwXrBEt9YIzQ7UgU=
-X-Google-Smtp-Source: ABdhPJy94+a+m2kajFJW/PC6FpFbfquFnbtDk/hHTvyKrcxDd7oLGnshMTVV/O7kKlrNLKa0xjIGW9S7TFDtah0bxtM=
-X-Received: by 2002:a05:6870:c8a5:b0:f1:65c3:b1e9 with SMTP id
- er37-20020a056870c8a500b000f165c3b1e9mr7083261oab.36.1652700908879; Mon, 16
- May 2022 04:35:08 -0700 (PDT)
+        with ESMTP id S233670AbiEPM12 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 08:27:28 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 978AAD128;
+        Mon, 16 May 2022 05:27:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=U5VI8zXdl6DIe/OLtIvojuzmBZau1HR66LEcIOGmLYA=; b=YIN6W0RGVkGgG4jkmn82oHGcFB
+        BMmgzziyDIbTfSDU1crJYgAEBlhNaPXNialMdCMRt0I+RYjZDNV/uSUpmzjK27Q8edP6X4iJKrPh0
+        COD2j8ZYHjK61xZy7Q6ElO0Fc7OKs231KZ9tnXXqR+/5FZsh1N7l/QgmH7TSH09OLQ/YOSdEtDvtG
+        ME6I9Y4YlsURdrUwXDhYGJTquYGYVLLjX3nZfCPEuV6T9bpX8Ct1w8E1vNrBUmDSp4R98Eeia82Kb
+        A1VDAfPWTpsguruHUPHlf/oHCu19EzU+NZrbJaW7NGeYBnT0p76aePmtdqArEWs6dmYc1YEIunSYf
+        iv4yMhgg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nqZom-009s9n-E6; Mon, 16 May 2022 12:27:20 +0000
+Date:   Mon, 16 May 2022 13:27:20 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] iomap: don't invalidate folios after writeback errors
+Message-ID: <YoJDKHczzm3dfjwG@casper.infradead.org>
+References: <YoHG5cMwvx8PSddI@magnolia>
 MIME-Version: 1.0
-From:   Raghav Sharma <raghavself28@gmail.com>
-Date:   Mon, 16 May 2022 17:04:57 +0530
-Message-ID: <CAGthhtKXimFugYicqrDEc_bjzPh8n=Ue96YO9VRJOQoD4A_ycA@mail.gmail.com>
-Subject: [QUESTION] xfs version 5 new features
-To:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YoHG5cMwvx8PSddI@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello!
+On Sun, May 15, 2022 at 08:37:09PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> XFS has the unique behavior (as compared to the other Linux filesystems)
+> that on writeback errors it will completely invalidate the affected
+> folio and force the page cache to reread the contents from disk.  All
+> other filesystems leave the page mapped and up to date.
+> 
+> This is a rude awakening for user programs, since (in the case where
+> write fails but reread doesn't) file contents will appear to revert to
+> old disk contents with no notification other than an EIO on fsync.  This
+> might have been annoying back in the days when iomap dealt with one page
+> at a time, but with multipage folios, we can now throw away *megabytes*
+> worth of data for a single write error.
+> 
+> On *most* Linux filesystems, a program can respond to an EIO on write by
+> redirtying the entire file and scheduling it for writeback.  This isn't
+> foolproof, since the page that failed writeback is no longer dirty and
+> could be evicted, but programs that want to recover properly *also*
+> have to detect XFS and regenerate every write they've made to the file.
+> 
+> When running xfs/314 on arm64, I noticed a UAF bug when xfs_discard_folio
+> invalidates multipage folios that could be undergoing writeback.  If,
+> say, we have a 256K folio caching a mix of written and unwritten
+> extents, it's possible that we could start writeback of the first (say)
+> 64K of the folio and then hit a writeback error on the next 64K.  We
+> then free the iop attached to the folio, which is really bad because
+> writeback completion on the first 64k will trip over the "blocks per
+> folio > 1 && !iop" assertion.
+> 
+> This can't be fixed by only invalidating the folio if writeback fails at
+> the start of the folio, since the folio is marked !uptodate, which trips
+> other assertions elsewhere.  Get rid of the whole behavior entirely.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-I am working with the Haiku organization for adding xfs support for HaikuOS.
-We currently have xfs version 4 read support, I want to extend it to
-xfs version 5.
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-What are new features introduced in xfs V5?
-
-Does "xfs_filesystem_structure" pdf documentation contain all
-necessary fields for V5?
-
-I don't know if this mailing list is the right place to ask for help
-on this topic, so do let me know about it.
-
-Thanks
-Raghav
