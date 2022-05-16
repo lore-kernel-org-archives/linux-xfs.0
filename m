@@ -2,52 +2,55 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4057CC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 16:48:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40A26C4321E
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 16:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244517AbiEPQsn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 May 2022 12:48:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37356 "EHLO
+        id S232786AbiEPQso (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 May 2022 12:48:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232786AbiEPQsm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 12:48:42 -0400
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3F2C3C737
+        with ESMTP id S1343835AbiEPQsl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 12:48:41 -0400
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83FAE3C711
         for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:37 -0700 (PDT)
-Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24GFGb6a007872
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:36 -0700
+Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24GG20jM000304
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:37 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-transfer-encoding :
- content-type; s=facebook; bh=lG16viWiL0fgqGwpPbfMTmF+zs4wNm89FAHhNuXwt9I=;
- b=jtsVzelj0G3GOjVBTz0uWkWszgSVWDwkNSVorSOspgU+2v/IUA6HuktkyMCFhLV4CKwE
- 7+KUTncFwNwrjgDyYv8LrEUinmUxeFmdyPxzxHiqqs0rksv+jXvIfJUF/V7zFW87EuQm
- 41W9fSwquC1HSFYkJmej44sjcs38ocaEm5g= 
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=facebook;
+ bh=uSExTQp1mBOLjPITMmOyzTZ7pNScVBnQfYVTQnZots8=;
+ b=lX7WyPky4+6RmHxwMJhWHxziMfeLQPlhWLW0+Iy8pVp9hLOSyewUNVkfgnfC/MX21S/7
+ 0dlyIJmb0jGgXMPpXFzdN0iZHIIdb1KjTjOu8C/M5U+pz6+6asR5sX1tDjah5D06udbz
+ Y8F92H7pHwS4vQTxFA3ZrMcAxbwsHyVM/tU= 
 Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g2a5yakeb-2
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g2a4ntn4y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:36 -0700
-Received: from twshared6696.05.ash7.facebook.com (2620:10d:c085:108::8) by
- mail.thefacebook.com (2620:10d:c085:11d::4) with Microsoft SMTP Server
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:37 -0700
+Received: from twshared6696.05.ash7.facebook.com (2620:10d:c085:108::4) by
+ mail.thefacebook.com (2620:10d:c085:11d::7) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 16 May 2022 09:48:34 -0700
+ 15.1.2375.24; Mon, 16 May 2022 09:48:36 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id 37B3EF146DCF; Mon, 16 May 2022 09:48:25 -0700 (PDT)
+        id 58101F146DD9; Mon, 16 May 2022 09:48:25 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>
-Subject: [RFC PATCH v2 00/16] io-uring/xfs: support async buffered writes
-Date:   Mon, 16 May 2022 09:47:02 -0700
-Message-ID: <20220516164718.2419891-1-shr@fb.com>
+Subject: [RFC PATCH v2 05/16] xfs: add iomap async buffered write support
+Date:   Mon, 16 May 2022 09:47:07 -0700
+Message-ID: <20220516164718.2419891-6-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220516164718.2419891-1-shr@fb.com>
+References: <20220516164718.2419891-1-shr@fb.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: gQEuNPjf6w5xcWyUknGbp6Ag7JW1dLv9
-X-Proofpoint-GUID: gQEuNPjf6w5xcWyUknGbp6Ag7JW1dLv9
+X-Proofpoint-GUID: vfkUiKV5Voy16IA1TobbPO4LmhYcDsYL
+X-Proofpoint-ORIG-GUID: vfkUiKV5Voy16IA1TobbPO4LmhYcDsYL
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-05-16_15,2022-05-16_02,2022-02-23_01
@@ -55,173 +58,75 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patch series adds support for async buffered writes when using both
-xfs and io-uring. Currently io-uring only supports buffered writes in the
-slow path, by processing them in the io workers. With this patch series i=
-t is
-now possible to support buffered writes in the fast path. To be able to u=
-se
-the fast path the required pages must be in the page cache, the required =
-locks
-in xfs can be granted immediately and no additional blocks need to be rea=
-d
-form disk.
+This adds the async buffered write support to the iomap layer of XFS. If
+a lock cannot be acquired or additional reads need to be performed, the
+request will return -EAGAIN in case this is an async buffered write reque=
+st.
 
-Updating the inode can take time. An optimization has been implemented fo=
-r
-the time update. Time updates will be processed in the slow path. While t=
-here
-is already a time update in process, other write requests for the same fi=
-le,
-can skip the update of the modification time.
- =20
+This patch changes the helper function xfs_ilock_for_iomap such that the
+lock mode needs to be passed in.
 
-Performance results:
-  For fio the following results have been obtained with a queue depth of
-  1 and 4k block size (runtime 600 secs):
+Signed-off-by: Stefan Roesch <shr@fb.com>
+---
+ fs/xfs/xfs_iomap.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-                 sequential writes:
-                 without patch           with patch      libaio     psync
-  iops:              77k                    209k          195K       233K
-  bw:               314MB/s                 854MB/s       790MB/s    953M=
-B/s
-  clat:            9600ns                   120ns         540ns     3000n=
-s
-
-
-For an io depth of 1, the new patch improves throughput by over three tim=
-es
-(compared to the exiting behavior, where buffered writes are processed by=
- an
-io-worker process) and also the latency is considerably reduced. To achie=
-ve the
-same or better performance with the exisiting code an io depth of 4 is re=
-quired.
-Increasing the iodepth further does not lead to improvements.
-
-In addition the latency of buffered write operations is reduced considera=
-bly.
-
-
-
-Support for async buffered writes:
-
-  To support async buffered writes the flag FMODE_BUF_WASYNC is introduce=
-d. In
-  addition the check in generic_write_checks is modified to allow for asy=
-nc
-  buffered writes that have this flag set.
-
-  Changes to the iomap page create function to allow the caller to specif=
-y
-  the gfp flags. Sets the IOMAP_NOWAIT flag in iomap if IOCB_NOWAIT has b=
-een set
-  and specifies the requested gfp flags.
-
-  Adds the iomap async buffered write support to the xfs iomap layer.
-  Adds async buffered write support to the xfs iomap layer.
-
-Support for async buffered write support and inode time modification
-
-  Splits the functions for checking if the file privileges need to be rem=
-oved in
-  two functions: check function and a function for the removal of file pr=
-ivileges.
-  The same split is also done for the function to update the file modific=
-ation time.
-
-  Implement an optimization that while a file modification time is pendin=
-g other
-  requests for the same file don't need to wait for the file modification=
- update.=20
-  This avoids that a considerable number of buffered async write requests=
- get
-  punted.
-
-  Take the ilock in nowait mode if async buffered writes are enabled and =
-enable
-  the async buffered writes optimization in io_uring.
-
-Support for write throttling of async buffered writes:
-
-  Split of a _balance_dirty_pages() function that tells wether to sleep o=
-r not.
-  The function is called by the async buffered writes in iomap_write_iter=
-() to
-  determine if write throttling is required or not. In case write throttl=
-ing is
-  necessary, return -EAGAIN to the caller in io-uring. The request will t=
-hen be
-  handled in io-uring io-worker.
- =20
-  The existing function balance_dirty_pages() will call _balance_dirty_pa=
-ges().
-
-Enable async buffered write support in xfs
-  Patch 18: xfs: enable async buffered write support
-    This enables the flag that enables async buffered writes for xfs.
-
-
-Testing:
-  This patch has been tested with xfstests and fio.
-
-
-Changes:
-  V2:
-  - Remove atomic allocation
-  - Use direct write in xfs_buffered_write_iomap_begin()
-  - Use xfs_ilock_for_iomap() in xfs_buffered_write_iomap_begin()
-  - Remove no_wait check at the end of xfs_buffered_write_iomap_begin() f=
-or
-    the COW path.
-  - Pass xfs_inode pointer to xfs_ilock_iocb and rename function to
-    xfs_lock_xfs_inode
-  - Replace exisitng uses of xfs_ilock_iocb with xfs_ilock_xfs_inode
-  - Use xfs_ilock_xfs_inode in xfs_file_buffered_write()
-  - Callers of xfs_ilock_for_iomap need to initialize lock mode. This is
-    required so writes use an exclusive lock
-  - Split of _balance_dirty_pages() from balance_dirty_pages() and return
-    sleep time
-  - Call _balance_dirty_pages() in balance_dirty_pages_ratelimited_flags(=
-)
-  - Move call to balance_dirty_pages_ratelimited_flags() in iomap_write_i=
-ter()
-    to the beginning of the loop
-   =20
-
-
-Stefan Roesch (16):
-  block: add check for async buffered writes to generic_write_checks
-  iomap: add iomap_page_create_gfp to allocate iomap_pages
-  iomap: use iomap_page_create_gfp() in __iomap_write_begin
-  iomap: add async buffered write support
-  xfs: add iomap async buffered write support
-  fs: split off need_remove_file_privs() do_remove_file_privs()
-  fs: split off need_file_update_time and do_file_update_time
-  fs: add pending file update time flag.
-  xfs: enable async write file modification handling.
-  xfs: add async buffered write support
-  io_uring: add support for async buffered writes
-  mm: factor out _balance_dirty_pages() from balance_dirty_pages()
-  mm: add balance_dirty_pages_ratelimited_flags() function
-  iomap: use balance_dirty_pages_ratelimited_flags in iomap_write_iter
-  io_uring: add tracepoint for short writes
-  xfs: enable async buffered write support
-
- fs/inode.c                      | 146 +++++++---
- fs/io_uring.c                   |  32 +-
- fs/iomap/buffered-io.c          |  67 ++++-
- fs/read_write.c                 |   3 +-
- fs/xfs/xfs_file.c               |  36 ++-
- fs/xfs/xfs_iomap.c              |  14 +-
- include/linux/fs.h              |   7 +
- include/linux/writeback.h       |   1 +
- include/trace/events/io_uring.h |  25 ++
- mm/page-writeback.c             | 500 +++++++++++++++++---------------
- 10 files changed, 520 insertions(+), 311 deletions(-)
-
-
-base-commit: 0cdd776ec92c0fec768c7079331804d3e52d4b27
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index e552ce541ec2..1aea962262ad 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -659,7 +659,7 @@ xfs_ilock_for_iomap(
+ 	unsigned		flags,
+ 	unsigned		*lockmode)
+ {
+-	unsigned		mode =3D XFS_ILOCK_SHARED;
++	unsigned int		mode =3D *lockmode;
+ 	bool			is_write =3D flags & (IOMAP_WRITE | IOMAP_ZERO);
+=20
+ 	/*
+@@ -737,7 +737,7 @@ xfs_direct_write_iomap_begin(
+ 	int			nimaps =3D 1, error =3D 0;
+ 	bool			shared =3D false;
+ 	u16			iomap_flags =3D 0;
+-	unsigned		lockmode;
++	unsigned int		lockmode =3D XFS_ILOCK_SHARED;
+=20
+ 	ASSERT(flags & (IOMAP_WRITE | IOMAP_ZERO));
+=20
+@@ -881,18 +881,22 @@ xfs_buffered_write_iomap_begin(
+ 	bool			eof =3D false, cow_eof =3D false, shared =3D false;
+ 	int			allocfork =3D XFS_DATA_FORK;
+ 	int			error =3D 0;
++	unsigned int		lockmode =3D XFS_ILOCK_EXCL;
+=20
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
+=20
+ 	/* we can't use delayed allocations when using extent size hints */
+-	if (xfs_get_extsz_hint(ip))
++	if (xfs_get_extsz_hint(ip)) {
+ 		return xfs_direct_write_iomap_begin(inode, offset, count,
+ 				flags, iomap, srcmap);
++	}
+=20
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+=20
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	error =3D xfs_ilock_for_iomap(ip, flags, &lockmode);
++	if (error)
++		return error;
+=20
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
+ 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
+@@ -1167,7 +1171,7 @@ xfs_read_iomap_begin(
+ 	xfs_fileoff_t		end_fsb =3D xfs_iomap_end_fsb(mp, offset, length);
+ 	int			nimaps =3D 1, error =3D 0;
+ 	bool			shared =3D false;
+-	unsigned		lockmode;
++	unsigned int		lockmode =3D XFS_ILOCK_SHARED;
+=20
+ 	ASSERT(!(flags & (IOMAP_WRITE | IOMAP_ZERO)));
+=20
 --=20
 2.30.2
 
