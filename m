@@ -2,178 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A540EC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 16:49:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EABD9C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 17:59:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343873AbiEPQtW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 May 2022 12:49:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37542 "EHLO
+        id S230212AbiEPR7q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 May 2022 13:59:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343869AbiEPQsq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 12:48:46 -0400
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29C8F3C723
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:46 -0700 (PDT)
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-        by m0001303.ppops.net (8.17.1.5/8.17.1.5) with ESMTP id 24GGB3XO003231
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:45 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=facebook;
- bh=LWT7/rgVKJvUBvBuLFTZOcg1EE8pCJNmk5mdhmfBzd4=;
- b=gZYxfK97wdUCGeLb5dvfu0lrsvtnU6sQ4ylHoOPsFriPUhIuHygm1DPCWIpRA2889ZF7
- hFN+75O8pZjV+KEkHQDoqeqWWMc8VfEmjOFCWVRm0me5/L1B7g0lYTgUswB0dy1PuAgF
- 3jMXGvRdhk/Smye1vFnSNC++tvtejLNoryI= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by m0001303.ppops.net (PPS) with ESMTPS id 3g283way9q-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:45 -0700
-Received: from twshared19572.14.frc2.facebook.com (2620:10d:c085:208::11) by
- mail.thefacebook.com (2620:10d:c085:11d::5) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 16 May 2022 09:48:43 -0700
-Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id 78798F146DE3; Mon, 16 May 2022 09:48:25 -0700 (PDT)
-From:   Stefan Roesch <shr@fb.com>
-To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
-        <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>
-Subject: [RFC PATCH v2 10/16] xfs: add async buffered write support
-Date:   Mon, 16 May 2022 09:47:12 -0700
-Message-ID: <20220516164718.2419891-11-shr@fb.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220516164718.2419891-1-shr@fb.com>
-References: <20220516164718.2419891-1-shr@fb.com>
+        with ESMTP id S234971AbiEPR7p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 13:59:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8253B39BBA
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 10:59:44 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1A1ED610D5
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 17:59:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71FB8C385AA;
+        Mon, 16 May 2022 17:59:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1652723983;
+        bh=7WZcbtG2C8XB++rumG8NnHTO4pmKZN0uhSRh2w45tR8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IcygrzSR4G4D93XCEDhl615Aq0U0GLWSWC23eXJTIKcLB5LCIZ7YGPvBwlSOWHkdv
+         qdaS+9kn51w+YGlh650OdTnQe7gYP32kt55zvx0UJ44doBqQmsp3UE4s8MhOeOMuau
+         FHLfO4DhQa5RON0RqKQMcS85WuB7kJdZvZLVGiEEizfuKxaNUEAxmTbZ2FagDFGlvU
+         Y/0VxLHY2XY7HK9ygkN1VHfNp18cDgne56AU9hjv+ZQA8JTV+OZ3jmzaPFaX1BL95x
+         Ash5r8u+7FC5J0EPunRvbHTTEl3MFDb+R5TNBQ55oLUc+TbJV3Tc7ncqqjg76Gh6E2
+         MGPc2ohLfd3sg==
+Date:   Mon, 16 May 2022 10:59:42 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Eric Sandeen <sandeen@redhat.com>, sandeen@sandeen.net,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs_repair: detect v5 featureset mismatches in
+ secondary supers
+Message-ID: <YoKRDhAgythlT0if@magnolia>
+References: <165176674590.248791.17672675617466150793.stgit@magnolia>
+ <165176675148.248791.14783205262181556770.stgit@magnolia>
+ <57914c5f-c39a-e3de-14cf-6565ee82f834@redhat.com>
+ <20220512191329.GH27195@magnolia>
+ <20220516081153.GO1098723@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-GUID: j3KqS5yBwxA-GBCoYHRFjjvDcmoYsEYb
-X-Proofpoint-ORIG-GUID: j3KqS5yBwxA-GBCoYHRFjjvDcmoYsEYb
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-05-16_15,2022-05-16_02,2022-02-23_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220516081153.GO1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This adds the async buffered write support to XFS. For async buffered
-write requests, the request will return -EAGAIN if the ilock cannot be
-obtained immediately.
+On Mon, May 16, 2022 at 06:11:53PM +1000, Dave Chinner wrote:
+> On Thu, May 12, 2022 at 12:13:29PM -0700, Darrick J. Wong wrote:
+> > On Thu, May 12, 2022 at 02:02:33PM -0500, Eric Sandeen wrote:
+> > > On 5/5/22 11:05 AM, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Make sure we detect and correct mismatches between the V5 features
+> > > > described in the primary and the secondary superblocks.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > 
+> > > 
+> > > > +	if ((mp->m_sb.sb_features_incompat ^ sb->sb_features_incompat) &
+> > > > +			~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR) {
+> > > 
+> > > I'd like to add a comment about why XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR is special.
+> > > (Why is XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR special? Just because userspace doesn't
+> > > bother to set it on all superblocks in the upgrade paths, right?)
+> > 
+> > Right -- we only set it on the primary super to force users to run
+> > xfs_repair.  Repair will clear NEEDSREPAIR on the primary and all
+> > secondaries before it exits
+> 
+> Oh no it doesn't! :)
+> 
+> I just debugged the persistent xfs/158 failure down to repair only
+> writing the secondary superblocks with "features_changed" is true.
+> 
+> xfs/158 trashes the repair process after setting the inobtcnt and
+> needrepair feature bits in the primary superblock. That's the only
+> code that sets the internal "features_changed" flag that triggers
+> secondary superblock writeback. If repair then dies after this it
+> won't get set on the next run without the upgrade options set on the
+> command line. Hence we re-run repair without the upgrade feature
+> being enabled to check that it still recovers correctly.
+> 
+> The result is that repair does the right thing in completing the
+> feature upgrade because it sees the feature flag in the primary
+> superblock, but it *never sets "features_changed"* and so the
+> secondary superblocks are not updated when it is done. It then goes
+> on to check NEEDSREPAIR in the primary superblock and clears it,
+> allowing the fileystem to mount again.
+> 
+> This results in secondary superblocks with in-progress set and
+> mis-matched feature bits, resulting in xfs_scrub reporting corrupt
+> secondary superblocks and so failing the test.
+> 
+> This change will probably mask that specific bug - it'll still be
+> lying their waiting to pounce on some unsuspecting bystander, but it
+> will be masked by other code detecting the feature mismatch that it
+> causes and correcting it that way...
 
-This splits off a new helper xfs_ilock_inode from the existing helper
-xfs_ilock_iocb so it can be used for this function. The exising helper
-cannot be used as it hardcoded the inode to be used.
+Ah, ok.  You're pointing out that repair needs to set features_changed
+right after printing "clearing needsrepair flag and regenerating
+metadata", and that this patch sort of papers over the underlying issue.
 
-Signed-off-by: Stefan Roesch <shr@fb.com>
----
- fs/xfs/xfs_file.c | 32 +++++++++++++++-----------------
- 1 file changed, 15 insertions(+), 17 deletions(-)
+The genesis of this patch wasn't xfs/158 failing, it was the secondary
+sb fuzz testing noticing that xfs_scrub reported a failure whereas
+xfs_repair didn't.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 793918c83755..ad3175b7d366 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -190,14 +190,13 @@ xfs_file_fsync(
- 	return error;
- }
-=20
--static int
--xfs_ilock_iocb(
--	struct kiocb		*iocb,
-+static inline int
-+xfs_ilock_xfs_inode(
-+	struct xfs_inode	*ip,
-+	int			flags,
- 	unsigned int		lock_mode)
- {
--	struct xfs_inode	*ip =3D XFS_I(file_inode(iocb->ki_filp));
--
--	if (iocb->ki_flags & IOCB_NOWAIT) {
-+	if (flags & IOCB_NOWAIT) {
- 		if (!xfs_ilock_nowait(ip, lock_mode))
- 			return -EAGAIN;
- 	} else {
-@@ -222,7 +221,7 @@ xfs_file_dio_read(
-=20
- 	file_accessed(iocb->ki_filp);
-=20
--	ret =3D xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
-+	ret =3D xfs_ilock_xfs_inode(ip, iocb->ki_flags, XFS_IOLOCK_SHARED);
- 	if (ret)
- 		return ret;
- 	ret =3D iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL, 0, 0);
-@@ -244,7 +243,7 @@ xfs_file_dax_read(
- 	if (!iov_iter_count(to))
- 		return 0; /* skip atime */
-=20
--	ret =3D xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
-+	ret =3D xfs_ilock_xfs_inode(ip, iocb->ki_flags, XFS_IOLOCK_SHARED);
- 	if (ret)
- 		return ret;
- 	ret =3D dax_iomap_rw(iocb, to, &xfs_read_iomap_ops);
-@@ -264,7 +263,7 @@ xfs_file_buffered_read(
-=20
- 	trace_xfs_file_buffered_read(iocb, to);
-=20
--	ret =3D xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
-+	ret =3D xfs_ilock_xfs_inode(ip, iocb->ki_flags, XFS_IOLOCK_SHARED);
- 	if (ret)
- 		return ret;
- 	ret =3D generic_file_read_iter(iocb, to);
-@@ -343,7 +342,7 @@ xfs_file_write_checks(
- 	if (*iolock =3D=3D XFS_IOLOCK_SHARED && !IS_NOSEC(inode)) {
- 		xfs_iunlock(ip, *iolock);
- 		*iolock =3D XFS_IOLOCK_EXCL;
--		error =3D xfs_ilock_iocb(iocb, *iolock);
-+		error =3D xfs_ilock_xfs_inode(ip, iocb->ki_flags, *iolock);
- 		if (error) {
- 			*iolock =3D 0;
- 			return error;
-@@ -516,7 +515,7 @@ xfs_file_dio_write_aligned(
- 	int			iolock =3D XFS_IOLOCK_SHARED;
- 	ssize_t			ret;
-=20
--	ret =3D xfs_ilock_iocb(iocb, iolock);
-+	ret =3D xfs_ilock_xfs_inode(ip, iocb->ki_flags, iolock);
- 	if (ret)
- 		return ret;
- 	ret =3D xfs_file_write_checks(iocb, from, &iolock);
-@@ -583,7 +582,7 @@ xfs_file_dio_write_unaligned(
- 		flags =3D IOMAP_DIO_FORCE_WAIT;
- 	}
-=20
--	ret =3D xfs_ilock_iocb(iocb, iolock);
-+	ret =3D xfs_ilock_xfs_inode(ip, iocb->ki_flags, iolock);
- 	if (ret)
- 		return ret;
-=20
-@@ -659,7 +658,7 @@ xfs_file_dax_write(
- 	ssize_t			ret, error =3D 0;
- 	loff_t			pos;
-=20
--	ret =3D xfs_ilock_iocb(iocb, iolock);
-+	ret =3D xfs_ilock_xfs_inode(ip, iocb->ki_flags, iolock);
- 	if (ret)
- 		return ret;
- 	ret =3D xfs_file_write_checks(iocb, from, &iolock);
-@@ -702,12 +701,11 @@ xfs_file_buffered_write(
- 	bool			cleared_space =3D false;
- 	int			iolock;
-=20
--	if (iocb->ki_flags & IOCB_NOWAIT)
--		return -EOPNOTSUPP;
--
- write_retry:
- 	iolock =3D XFS_IOLOCK_EXCL;
--	xfs_ilock(ip, iolock);
-+	ret =3D xfs_ilock_xfs_inode(ip, iocb->ki_flags, iolock);
-+	if (ret)
-+		return ret;
-=20
- 	ret =3D xfs_file_write_checks(iocb, from, &iolock);
- 	if (ret)
---=20
-2.30.2
+So, I'll go add an extra patch to fix the upgrade case, and I think we
+can let Eric add this one to his tree.
 
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
