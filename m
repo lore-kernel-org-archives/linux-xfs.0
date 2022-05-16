@@ -2,46 +2,46 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE5DC43219
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 16:49:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C095CC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 May 2022 16:49:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343921AbiEPQtG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 May 2022 12:49:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37938 "EHLO
+        id S1343864AbiEPQtH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 May 2022 12:49:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343928AbiEPQtB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 12:49:01 -0400
+        with ESMTP id S1343506AbiEPQtC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 May 2022 12:49:02 -0400
 Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7321F3CFDE
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 019FC3C71E
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:49:01 -0700 (PDT)
 Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24GF657c019213
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:57 -0700
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24GF657k019213
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:49:01 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=T6Nf5vvbSAgD76rs2Ks0JXOmFetMmsycSIKG8Fv6YWk=;
- b=C4vXe1DOYARU4E6ZwAe57ojhYXfaaT32ISu+1SkIAi2q2CQgsHeXVxYNDoJVrHVwhmYJ
- gEM6sQWDB6eMOmpKdS+g2K0uXxITuWsg4of1/sqhFJsYO59o8GuM8cohXQS7Fr8YPfcP
- hslOIdmb35IXVQfZqmJCGv1blE9eWw5wL3Y= 
+ bh=UfD+h75jLCqmGcJIFVAad9rZN/r0VFdoC8EFOxTjfII=;
+ b=iBjfdjKIckUqPOiHMiTPrsdQLxAb0+TVDGQA2Lrt08VvQKUQiwKmJOBIejPS/03K/diA
+ eBhaHHA3rgRtRpJpgARe7F1z0aMCTAcwLOfDiGCFjkYrwVjIREVkiZMhwzdc0YEi9kDt
+ KaaMo+6PAh21yuEM8s+tZZAdS5PDAgR4mz8= 
 Received: from maileast.thefacebook.com ([163.114.130.16])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g2a4ntn7e-6
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g2a4ntn7e-13
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:48:57 -0700
+        for <linux-xfs@vger.kernel.org>; Mon, 16 May 2022 09:49:01 -0700
 Received: from twshared10276.08.ash9.facebook.com (2620:10d:c0a8:1b::d) by
  mail.thefacebook.com (2620:10d:c0a8:82::c) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 16 May 2022 09:48:53 -0700
+ 15.1.2375.24; Mon, 16 May 2022 09:48:55 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id 8986BF146DE9; Mon, 16 May 2022 09:48:25 -0700 (PDT)
+        id 9586DF146DED; Mon, 16 May 2022 09:48:25 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>
-Subject: [RFC PATCH v2 13/16] mm: add balance_dirty_pages_ratelimited_flags() function
-Date:   Mon, 16 May 2022 09:47:15 -0700
-Message-ID: <20220516164718.2419891-14-shr@fb.com>
+Subject: [RFC PATCH v2 15/16] io_uring: add tracepoint for short writes
+Date:   Mon, 16 May 2022 09:47:17 -0700
+Message-ID: <20220516164718.2419891-16-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220516164718.2419891-1-shr@fb.com>
 References: <20220516164718.2419891-1-shr@fb.com>
@@ -49,8 +49,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-GUID: MycEBxZxX9MVl3KI26xO5NG_XH-4CXcp
-X-Proofpoint-ORIG-GUID: MycEBxZxX9MVl3KI26xO5NG_XH-4CXcp
+X-Proofpoint-GUID: gU0LLdvIuAu_9nCkYd2ga8plJIIxhoAl
+X-Proofpoint-ORIG-GUID: gU0LLdvIuAu_9nCkYd2ga8plJIIxhoAl
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-05-16_15,2022-05-16_02,2022-02-23_01
@@ -58,121 +58,68 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This adds the function balance_dirty_pages_ratelimited_flags(). It adds
-the parameter is_async to balance_dirty_pages_ratelimited(). In case
-this is an async write, it will call _balance_diirty_pages() to
-determine if write throttling needs to be enabled. If write throttling
-is enabled, it retuns -EAGAIN, so the write request can be punted to
-the io-uring worker.
-
-The new function is changed to return the sleep time, so callers can
-observe if the write has been punted.
-
-For non-async writes the current behavior is maintained.
+This adds the io_uring_short_write tracepoint to io_uring. A short write
+is issued if not all pages that are required for a write are in the page
+cache and the async buffered writes have to return EAGAIN.
 
 Signed-off-by: Stefan Roesch <shr@fb.com>
 ---
- include/linux/writeback.h |  1 +
- mm/page-writeback.c       | 48 ++++++++++++++++++++++++++-------------
- 2 files changed, 33 insertions(+), 16 deletions(-)
+ fs/io_uring.c                   |  3 +++
+ include/trace/events/io_uring.h | 25 +++++++++++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index fec248ab1fec..d589804bb3be 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -373,6 +373,7 @@ unsigned long wb_calc_thresh(struct bdi_writeback *wb=
-, unsigned long thresh);
+diff --git a/fs/io_uring.c b/fs/io_uring.c
+index f3aaac286509..7435a9c2007f 100644
+--- a/fs/io_uring.c
++++ b/fs/io_uring.c
+@@ -4032,6 +4032,9 @@ static int io_write(struct io_kiocb *req, unsigned =
+int issue_flags)
+ 		if (ret2 !=3D req->result && ret2 >=3D 0 && need_complete_io(req)) {
+ 			struct io_async_rw *rw;
 =20
- void wb_update_bandwidth(struct bdi_writeback *wb);
- void balance_dirty_pages_ratelimited(struct address_space *mapping);
-+int  balance_dirty_pages_ratelimited_flags(struct address_space *mapping=
-, bool is_async);
- bool wb_over_bg_thresh(struct bdi_writeback *wb);
-=20
- typedef int (*writepage_t)(struct page *page, struct writeback_control *=
-wbc,
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index cbb74c0666c6..78f1326f3f20 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1877,28 +1877,17 @@ static DEFINE_PER_CPU(int, bdp_ratelimits);
-  */
- DEFINE_PER_CPU(int, dirty_throttle_leaks) =3D 0;
-=20
--/**
-- * balance_dirty_pages_ratelimited - balance dirty memory state
-- * @mapping: address_space which was dirtied
-- *
-- * Processes which are dirtying memory should call in here once for each=
- page
-- * which was newly dirtied.  The function will periodically check the sy=
-stem's
-- * dirty state and will initiate writeback if needed.
-- *
-- * Once we're over the dirty memory limit we decrease the ratelimiting
-- * by a lot, to prevent individual processes from overshooting the limit
-- * by (ratelimit_pages) each.
-- */
--void balance_dirty_pages_ratelimited(struct address_space *mapping)
-+int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,=
- bool is_async)
- {
- 	struct inode *inode =3D mapping->host;
- 	struct backing_dev_info *bdi =3D inode_to_bdi(inode);
- 	struct bdi_writeback *wb =3D NULL;
- 	int ratelimit;
-+	int ret =3D 0;
- 	int *p;
-=20
- 	if (!(bdi->capabilities & BDI_CAP_WRITEBACK))
--		return;
-+		return ret;
-=20
- 	if (inode_cgwb_enabled(inode))
- 		wb =3D wb_get_create_current(bdi, GFP_KERNEL);
-@@ -1937,10 +1926,37 @@ void balance_dirty_pages_ratelimited(struct addre=
-ss_space *mapping)
- 	}
- 	preempt_enable();
-=20
--	if (unlikely(current->nr_dirtied >=3D ratelimit))
--		balance_dirty_pages(wb, current->nr_dirtied);
-+	if (unlikely(current->nr_dirtied >=3D ratelimit)) {
-+		if (is_async) {
-+			struct bdp_ctx ctx =3D { BDP_CTX_INIT(ctx, wb) };
++			trace_io_uring_short_write(req->ctx, kiocb->ki_pos - ret2,
++						req->result, ret2);
 +
-+			ret =3D _balance_dirty_pages(wb, current->nr_dirtied, &ctx);
-+			if (ret)
-+				ret =3D -EAGAIN;
-+		} else {
-+			balance_dirty_pages(wb, current->nr_dirtied);
-+		}
-+	}
+ 			/* This is a partial write. The file pos has already been
+ 			 * updated, setup the async struct to complete the request
+ 			 * in the worker. Also update bytes_done to account for
+diff --git a/include/trace/events/io_uring.h b/include/trace/events/io_ur=
+ing.h
+index cddf5b6fbeb4..661834361d33 100644
+--- a/include/trace/events/io_uring.h
++++ b/include/trace/events/io_uring.h
+@@ -543,6 +543,31 @@ TRACE_EVENT(io_uring_req_failed,
+ 		  (unsigned long long) __entry->pad2, __entry->error)
+ );
 =20
- 	wb_put(wb);
-+	return ret;
-+}
++TRACE_EVENT(io_uring_short_write,
 +
-+/**
-+ * balance_dirty_pages_ratelimited - balance dirty memory state
-+ * @mapping: address_space which was dirtied
-+ *
-+ * Processes which are dirtying memory should call in here once for each=
- page
-+ * which was newly dirtied.  The function will periodically check the sy=
-stem's
-+ * dirty state and will initiate writeback if needed.
-+ *
-+ * Once we're over the dirty memory limit we decrease the ratelimiting
-+ * by a lot, to prevent individual processes from overshooting the limit
-+ * by (ratelimit_pages) each.
-+ */
-+void balance_dirty_pages_ratelimited(struct address_space *mapping)
-+{
-+	balance_dirty_pages_ratelimited_flags(mapping, false);
- }
- EXPORT_SYMBOL(balance_dirty_pages_ratelimited);
++	TP_PROTO(void *ctx, u64 fpos, u64 wanted, u64 got),
++
++	TP_ARGS(ctx, fpos, wanted, got),
++
++	TP_STRUCT__entry(
++		__field(void *,	ctx)
++		__field(u64,	fpos)
++		__field(u64,	wanted)
++		__field(u64,	got)
++	),
++
++	TP_fast_assign(
++		__entry->ctx	=3D ctx;
++		__entry->fpos	=3D fpos;
++		__entry->wanted	=3D wanted;
++		__entry->got	=3D got;
++	),
++
++	TP_printk("ring %p, fpos %lld, wanted %lld, got %lld",
++			  __entry->ctx, __entry->fpos,
++			  __entry->wanted, __entry->got)
++);
++
+ #endif /* _TRACE_IO_URING_H */
 =20
+ /* This part must be outside protection */
 --=20
 2.30.2
 
