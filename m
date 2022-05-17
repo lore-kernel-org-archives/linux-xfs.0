@@ -2,300 +2,164 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A1AC433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 May 2022 17:28:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3865CC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 May 2022 17:53:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241322AbiEQR2c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 May 2022 13:28:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39036 "EHLO
+        id S1351629AbiEQRxw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 May 2022 13:53:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235561AbiEQR2b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 May 2022 13:28:31 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 808C830566;
-        Tue, 17 May 2022 10:28:30 -0700 (PDT)
+        with ESMTP id S235504AbiEQRxv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 May 2022 13:53:51 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3BAE3FBEA
+        for <linux-xfs@vger.kernel.org>; Tue, 17 May 2022 10:53:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1222BB81B31;
-        Tue, 17 May 2022 17:28:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1D6DC34116;
-        Tue, 17 May 2022 17:28:27 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4E955B81B3D
+        for <linux-xfs@vger.kernel.org>; Tue, 17 May 2022 17:53:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB171C385B8;
+        Tue, 17 May 2022 17:53:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652808507;
-        bh=dr6Tg8wdEuoq6wXsmiha1oYaNx4TEM96BStLVcETgEo=;
+        s=k20201202; t=1652810027;
+        bh=cpFcOTJ+8t/5PEIkL/iNVy/T9II0Qj0ROxoj4i4VzkM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=iuwhEzdh7oA5dyv23VpOXynMjj+2O+nsAYjhTRmdZ9O7ePgEZasbvTj+qu5apHmyT
-         ejlWmiNCD0tIGV9EdY5AFkI/RA9IpAd1PkvyYIrW+WoUyzw5x07wLBB4WGnSIs4eRq
-         scMS6/9RzRBeordIblOpekIjXGy0Ezie36Jk2KSAmPBwNLGjCeUSrG2zAkyOYEWrj5
-         +JVwoXnGO/5UNGCCv1hSOdEOabYwd4K++PCevlXtb2BnrRJ4OcitoIr6NLdUAzykWp
-         R7CuYDX2uRw2lPZuzUdGCivSf90NW1rGovsa4NAOEf0WC8/HOEtrDNbxNvCut9hp35
-         yNtI8k3jikxXw==
-Date:   Tue, 17 May 2022 10:28:27 -0700
+        b=qsfHY2yoh9E4YLfa/5LhgyMcE80t7rEXP48bKzthXf2v6U20wtXehTpWmqQ3Gi+Wu
+         DPBbVBbq/ZKMPHcXWuYvvpHAyBo0+TAQg0LRXUW5Z0V351ACC+Unur39MqtskOT6Nb
+         yI6iQjSSarBDnf4eIECcFICmByKmf7W45ONpP4/wKXG9ffMBlZRVFIZShvwTnBcC+S
+         kZD6a7giukWH5d35H/eR22xlsD8xsx/LY35r6V1D/XtcPGb2/k8WmIapH0JbpOX0Ph
+         P/j7QBTrshBT/DqeV94ahSLJgxa5LctDX9nBqO6oTSMaPWWwPXAtaDVc5dhF5NNz21
+         dm/7znWMTBurQ==
+Date:   Tue, 17 May 2022 10:53:46 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 1/2] generic: soft quota limits testing within grace
- time
-Message-ID: <YoPbO43PiXTS2bU2@magnolia>
-References: <20220517155730.327564-1-zlang@kernel.org>
+To:     Alli <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 4/4] xfs: reject unknown xattri log item filter flags
+ during recovery
+Message-ID: <YoPhKqgDlrsbGTsB@magnolia>
+References: <165267191199.625255.12173648515376165187.stgit@magnolia>
+ <165267193475.625255.2721960601959913094.stgit@magnolia>
+ <e31cb820dfd42734daeace193e08e1589804047e.camel@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220517155730.327564-1-zlang@kernel.org>
+In-Reply-To: <e31cb820dfd42734daeace193e08e1589804047e.camel@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 17, 2022 at 11:57:30PM +0800, Zorro Lang wrote:
-> After soft limits are exceeded, within the grace time, fs quota
-> should allow more space allocation before exceeding hard limits,
-> even if allocating many small files.
-> 
-> This case can cover bc37e4fb5cac (xfs: revert "xfs: actually bump
-> warning counts when we send warnings"). And will help to expose
-> later behavior changes on this side.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+On Mon, May 16, 2022 at 04:56:20PM -0700, Alli wrote:
+> On Sun, 2022-05-15 at 20:32 -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Make sure we screen the "attr flags" field of recovered xattr intent
+> > log
+> > items to reject flag bits that we don't know about.  This is really
+> > the
+> > attr *filter* flags, so rename the field and create properly
+> > namespaced
+> > flags to fill it.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_log_format.h |    9 ++++++++-
+> >  fs/xfs/xfs_attr_item.c         |   10 +++++++---
+> >  2 files changed, 15 insertions(+), 4 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_log_format.h
+> > b/fs/xfs/libxfs/xfs_log_format.h
+> > index f7edd1ecf6d9..5017500bfd8b 100644
+> > --- a/fs/xfs/libxfs/xfs_log_format.h
+> > +++ b/fs/xfs/libxfs/xfs_log_format.h
+> > @@ -911,6 +911,13 @@ struct xfs_icreate_log {
+> >  #define XFS_ATTR_OP_FLAGS_REPLACE	3	/* Replace the attribute */
+> >  #define XFS_ATTR_OP_FLAGS_TYPE_MASK	0xFF	/* Flags type mask */
+> >  
+> > +#define XFS_ATTRI_FILTER_ROOT		(1u <<
+> > XFS_ATTR_ROOT_BIT)
+> > +#define XFS_ATTRI_FILTER_SECURE		(1u <<
+> > XFS_ATTR_SECURE_BIT)
+> > +#define XFS_ATTRI_FILTER_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
+> > +#define XFS_ATTRI_FILTER_MASK		(XFS_ATTRI_FILTER_ROOT
+> > | \
+> > +					 XFS_ATTRI_FILTER_SECURE | \
+> > +					 XFS_ATTRI_FILTER_INCOMPLETE)
+> > +
+> It sounds like your already working on a v2 that doesnt use the new
+> flag scheme, but other than that, I think it looks ok.  Thanks!
 
-Looks good now,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Yeah.  The new patch simply defines XFS_ATTRI_FILTER_MASK and reuses the
+existing XFS_ATTR_{ROOT,SECURE,INCOMPLETE} flags:
+
+/*
+ * alfi_attr_filter captures the state of xfs_da_args.attr_filter, so
+ * it should never have any other bits set.
+ */
+#define XFS_ATTRI_FILTER_MASK		(XFS_ATTR_ROOT | \
+					 XFS_ATTR_SECURE | \
+					 XFS_ATTR_INCOMPLETE)
 
 --D
 
-> ---
+> Allison
 > 
-> Hi,
-> 
-> As the [PATCH 2/2] has been reviewed, so only send the 1st patch.
-> V4 did below changes according to [1]:
-> 1) Add new local function filter_quota.
-> 2) Don't filter out quota error output.
-> 
-> Thanks,
-> Zorro
-> 
-> [1]
-> https://lore.kernel.org/fstests/20220512190647.GC27174@magnolia/
-> 
->  common/quota          |  48 +++++++++++++++++++
->  tests/generic/999     | 107 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/999.out |  34 ++++++++++++++
->  3 files changed, 189 insertions(+)
->  create mode 100755 tests/generic/999
->  create mode 100644 tests/generic/999.out
-> 
-> diff --git a/common/quota b/common/quota
-> index 7fa1a61a..67698f74 100644
-> --- a/common/quota
-> +++ b/common/quota
-> @@ -351,5 +351,53 @@ _qsetup()
->  	echo "Using type=$type id=$id" >> $seqres.full
->  }
->  
-> +# Help to create project quota on directory, works for xfs and other fs.
-> +# Usage: _create_project_quota <dirname> <projid> [name]
-> +# Although the [name] is optional, better to specify it if need a fixed name.
-> +_create_project_quota()
-> +{
-> +	local prjdir=$1
-> +	local id=$2
-> +	local name=$3
-> +
-> +	if [ -z "$name" ];then
-> +		name=`echo $projdir | tr \/ \_`
-> +	fi
-> +
-> +	rm -rf $prjdir
-> +	mkdir $prjdir
-> +	chmod ugo+rwx $prjdir
-> +
-> +	if [ -f /etc/projects -a ! -f $tmp.projects.bk ];then
-> +		cat /etc/projects > $tmp.projects.bk
-> +		echo >/etc/projects
-> +	fi
-> +	if [ -f /etc/projid -a ! -f $tmp.projid.bk ];then
-> +		cat /etc/projid > $tmp.projid.bk
-> +		echo >/etc/projid
-> +	fi
-> +
-> +	cat >>/etc/projects <<EOF
-> +$id:$prjdir
-> +EOF
-> +	cat >>/etc/projid <<EOF
-> +$name:$id
-> +EOF
-> +	$XFS_IO_PROG -r -c "chproj $id" -c "chattr +P" $prjdir
-> +}
-> +
-> +# If you've called _create_project_quota, then use this function in _cleanup
-> +_restore_project_quota()
-> +{
-> +	if [ -f $tmp.projects.bk ];then
-> +		cat $tmp.projects.bk > /etc/projects && \
-> +			rm -f $tmp.projects.bk
-> +	fi
-> +	if [ -f $tmp.projid.bk ];then
-> +		cat $tmp.projid.bk > /etc/projid && \
-> +			rm -f $tmp.projid.bk
-> +	fi
-> +}
-> +
->  # make sure this script returns success
->  /bin/true
-> diff --git a/tests/generic/999 b/tests/generic/999
-> new file mode 100755
-> index 00000000..690a289f
-> --- /dev/null
-> +++ b/tests/generic/999
-> @@ -0,0 +1,107 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 999
-> +#
-> +# Make sure filesystem quota works well, after soft limits are exceeded. The
-> +# fs quota should allow more space allocation before exceeding hard limits
-> +# and with in grace time.
-> +#
-> +# But different with other similar testing, this case tries to write many small
-> +# files, to cover bc37e4fb5cac (xfs: revert "xfs: actually bump warning counts
-> +# when we send warnings"). If there's a behavior change some day, this case
-> +# might help to detect that too.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quota
-> +
-> +# Override the default cleanup function.
-> +_cleanup()
-> +{
-> +	_restore_project_quota
-> +	cd /
-> +	rm -r -f $tmp.*
-> +}
-> +
-> +# Import common functions.
-> +. ./common/quota
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_require_scratch
-> +_require_quota
-> +_require_user
-> +_require_group
-> +
-> +# Make sure the kernel supports project quota
-> +_scratch_mkfs >$seqres.full 2>&1
-> +_scratch_enable_pquota
-> +_qmount_option "prjquota"
-> +_qmount
-> +_require_prjquota $SCRATCH_DEV
-> +
-> +filter_quota()
-> +{
-> +	# Different filesystems might returns EDQUOT or ENOSPC if project
-> +	# quota is exceeded
-> +	if [ "$1" = "P" ];then
-> +		sed -e "s/.*: \(.*\)/Error: \1/g" \
-> +		    -e "s,Disk quota exceeded,EDQUOT|ENOSPC,g" \
-> +		    -e "s,No space left on device,EDQUOT|ENOSPC,g"
-> +	else
-> +		sed -e "s/.*: \(.*\)/Error: \1/g"
-> +	fi
-> +}
-> +
-> +exercise()
-> +{
-> +	local type=$1
-> +	local file=$SCRATCH_MNT/testfile
-> +
-> +	echo "= Test type=$type quota =" >>$seqres.full
-> +	_scratch_unmount
-> +	_scratch_mkfs >>$seqres.full 2>&1
-> +	if [ "$type" = "P" ];then
-> +		_scratch_enable_pquota
-> +	fi
-> +	_qmount
-> +	if [ "$type" = "P" ];then
-> +		_create_project_quota $SCRATCH_MNT/t 100 $qa_user
-> +		file=$SCRATCH_MNT/t/testfile
-> +	fi
-> +
-> +	setquota -${type} $qa_user 1M 200M 0 0 $SCRATCH_MNT
-> +	setquota -${type} -t 86400 86400 $SCRATCH_MNT
-> +	repquota -v -${type} $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
-> +	# Exceed the soft quota limit a bit at first
-> +	su $qa_user -c "$XFS_IO_PROG -f -t -c 'pwrite 0 2m' -c fsync ${file}.0" >>$seqres.full
-> +	# Write more data more times under soft quota limit exhausted condition,
-> +	# but not reach hard limit. To make sure each write won't trigger EDQUOT.
-> +	for ((i=1; i<=100; i++));do
-> +		su "$qa_user" -c "$XFS_IO_PROG -f -c 'pwrite 0 1m' -c fsync ${file}.$i" >>$seqres.full
-> +		if [ $? -ne 0 ];then
-> +			echo "Unexpected error (type=$type)!"
-> +			break
-> +		fi
-> +	done
-> +	repquota -v -${type} $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
-> +
-> +	# As we've tested soft limit, now exceed the hard limit and give it a
-> +	# test in passing.
-> +	su $qa_user -c "$XFS_IO_PROG -f -t -c 'pwrite 0 100m' -c fsync ${file}.hard.0" 2>&1 >/dev/null | filter_quota $type
-> +	for ((i=1; i<=10; i++));do
-> +		su "$qa_user" -c "$XFS_IO_PROG -f -c 'pwrite 0 1m' -c fsync ${file}.hard.$i" 2>&1 | filter_quota $type
-> +	done
-> +}
-> +
-> +_qmount_option "usrquota"
-> +exercise u
-> +_qmount_option "grpquota"
-> +exercise g
-> +_qmount_option "prjquota"
-> +exercise P
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/999.out b/tests/generic/999.out
-> new file mode 100644
-> index 00000000..e50942f7
-> --- /dev/null
-> +++ b/tests/generic/999.out
-> @@ -0,0 +1,34 @@
-> +QA output created by 999
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: Disk quota exceeded
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> +Error: EDQUOT|ENOSPC
-> -- 
-> 2.31.1
+> >  /*
+> >   * This is the structure used to lay out an attr log item in the
+> >   * log.
+> > @@ -924,7 +931,7 @@ struct xfs_attri_log_format {
+> >  	uint32_t	alfi_op_flags;	/* marks the op as a set or remove */
+> >  	uint32_t	alfi_name_len;	/* attr name length */
+> >  	uint32_t	alfi_value_len;	/* attr value length */
+> > -	uint32_t	alfi_attr_flags;/* attr flags */
+> > +	uint32_t	alfi_attr_filter;/* attr filter flags */
+> >  };
+> >  
+> >  struct xfs_attrd_log_format {
+> > diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> > index 459b6c93b40b..7cbb640d7856 100644
+> > --- a/fs/xfs/xfs_attr_item.c
+> > +++ b/fs/xfs/xfs_attr_item.c
+> > @@ -353,7 +353,8 @@ xfs_attr_log_item(
+> >  						XFS_ATTR_OP_FLAGS_TYPE_
+> > MASK;
+> >  	attrp->alfi_value_len = attr->xattri_da_args->valuelen;
+> >  	attrp->alfi_name_len = attr->xattri_da_args->namelen;
+> > -	attrp->alfi_attr_flags = attr->xattri_da_args->attr_filter;
+> > +	attrp->alfi_attr_filter = attr->xattri_da_args->attr_filter &
+> > +						XFS_ATTRI_FILTER_MASK;
+> >  
+> >  	memcpy(attrip->attri_name, attr->xattri_da_args->name,
+> >  	       attr->xattri_da_args->namelen);
+> > @@ -500,6 +501,9 @@ xfs_attri_validate(
+> >  	if (attrp->alfi_op_flags & ~XFS_ATTR_OP_FLAGS_TYPE_MASK)
+> >  		return false;
+> >  
+> > +	if (attrp->alfi_attr_filter & ~XFS_ATTRI_FILTER_MASK)
+> > +		return false;
+> > +
+> >  	/* alfi_op_flags should be either a set or remove */
+> >  	switch (op) {
+> >  	case XFS_ATTR_OP_FLAGS_SET:
+> > @@ -569,7 +573,7 @@ xfs_attri_item_recover(
+> >  	args->name = attrip->attri_name;
+> >  	args->namelen = attrp->alfi_name_len;
+> >  	args->hashval = xfs_da_hashname(args->name, args->namelen);
+> > -	args->attr_filter = attrp->alfi_attr_flags;
+> > +	args->attr_filter = attrp->alfi_attr_filter &
+> > XFS_ATTRI_FILTER_MASK;
+> >  	args->op_flags = XFS_DA_OP_RECOVERY | XFS_DA_OP_OKNOENT;
+> >  
+> >  	switch (attr->xattri_op_flags) {
+> > @@ -658,7 +662,7 @@ xfs_attri_item_relog(
+> >  	new_attrp->alfi_op_flags = old_attrp->alfi_op_flags;
+> >  	new_attrp->alfi_value_len = old_attrp->alfi_value_len;
+> >  	new_attrp->alfi_name_len = old_attrp->alfi_name_len;
+> > -	new_attrp->alfi_attr_flags = old_attrp->alfi_attr_flags;
+> > +	new_attrp->alfi_attr_filter = old_attrp->alfi_attr_filter;
+> >  
+> >  	memcpy(new_attrip->attri_name, old_attrip->attri_name,
+> >  		new_attrip->attri_name_len);
+> > 
 > 
