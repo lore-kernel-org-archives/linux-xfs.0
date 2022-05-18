@@ -2,46 +2,50 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D61C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EFB9C433F5
 	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 23:38:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231513AbiERXiI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 May 2022 19:38:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55410 "EHLO
+        id S231655AbiERXiH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 May 2022 19:38:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231161AbiERXiF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 19:38:05 -0400
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 593648721C
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 16:37:42 -0700 (PDT)
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-        by m0089730.ppops.net (8.17.1.5/8.17.1.5) with ESMTP id 24INKc0w016633
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 16:37:41 -0700
+        with ESMTP id S231559AbiERXhr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 19:37:47 -0400
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0828B65416
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 16:37:40 -0700 (PDT)
+Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24IN6DVm013743
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 16:37:40 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=JmNWcJ9S5BuVrDagcKBT8mAi6jQ8Go8fzpG+AeBXTsU=;
- b=nSwV6TGxyQ1d+z1t1nufrNDKyWZZ7Vk2UQBgZtiC99UTelKAvXo9bnE948IxFDHIruUI
- 0xyzfpeMMRlwHR0oMu0tY6UwWtnfY882azN19J5fEpknCab2F4DWxKQ2QyhKGOnv4MiY
- ezOPvNThFJ84G2fIFdPsIFcwYh3Py7pWl6A= 
+ bh=fdXvE+WWGkZbdDWaaWcycrFeF07NZ6/Rt8YdakSfT7c=;
+ b=obXWAbHm9xVuJ4SSxrm0Tz5QiPhr9yomkEgpd2BpiO4WjPjtVfdP+NfmD/+Rahtfr1qE
+ BVQPaeHZ3q0u27VHwxJLnznlMx+U2+rjgmOF3SLios3XkSHoZoRaq4K6lLVRLtfeHEmO
+ yIrXm1iQDSdjidF4EICsYYmEwEsXycHESaI= 
 Received: from mail.thefacebook.com ([163.114.132.120])
-        by m0089730.ppops.net (PPS) with ESMTPS id 3g5acy02th-4
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g4d823xja-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 16:37:41 -0700
-Received: from twshared6696.05.ash7.facebook.com (2620:10d:c085:108::4) by
- mail.thefacebook.com (2620:10d:c085:11d::4) with Microsoft SMTP Server
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 16:37:40 -0700
+Received: from snc-exhub201.TheFacebook.com (2620:10d:c085:21d::7) by
+ snc-exhub202.TheFacebook.com (2620:10d:c085:21d::5) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28; Wed, 18 May 2022 16:37:40 -0700
+Received: from twshared35748.07.ash9.facebook.com (2620:10d:c085:208::f) by
+ mail.thefacebook.com (2620:10d:c085:21d::7) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
  15.1.2375.28; Wed, 18 May 2022 16:37:39 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id 05A86F3ED86B; Wed, 18 May 2022 16:37:13 -0700 (PDT)
+        id EBEC6F3ED867; Wed, 18 May 2022 16:37:12 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>
-Subject: [RFC PATCH v3 13/18] mm: Move updates of dirty_exceeded into one place
-Date:   Wed, 18 May 2022 16:37:04 -0700
-Message-ID: <20220518233709.1937634-14-shr@fb.com>
+Subject: [RFC PATCH v3 11/18] io_uring: Add support for async buffered writes
+Date:   Wed, 18 May 2022 16:37:02 -0700
+Message-ID: <20220518233709.1937634-12-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220518233709.1937634-1-shr@fb.com>
 References: <20220518233709.1937634-1-shr@fb.com>
@@ -49,8 +53,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: 5DKsTYvJA-x6lSsPncYQzGAZVuIijU9m
-X-Proofpoint-GUID: 5DKsTYvJA-x6lSsPncYQzGAZVuIijU9m
+X-Proofpoint-GUID: 0XQ287sHPnFnwciLJ0lFpLKHRXfD9HzH
+X-Proofpoint-ORIG-GUID: 0XQ287sHPnFnwciLJ0lFpLKHRXfD9HzH
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-05-18_06,2022-05-17_02,2022-02-23_01
@@ -58,48 +62,81 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Jan Kara <jack@suse.cz>
+This enables the async buffered writes for the filesystems that support
+async buffered writes in io-uring. Buffered writes are enabled for
+blocks that are already in the page cache or can be acquired with noio.
 
-Transition of wb->dirty_exceeded from 0 to 1 happens before we go to
-sleep in balance_dirty_pages() while transition from 1 to 0 happens when
-exiting from balance_dirty_pages(), possibly based on old values. This
-does not make a lot of sense since wb->dirty_exceeded should simply
-reflect whether wb is over dirty limit and so we should ratelimit
-entering to balance_dirty_pages() less. Move the two updates together.
-
-Signed-off-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Stefan Roesch <shr@fb.com>
 ---
- mm/page-writeback.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ fs/io_uring.c | 29 ++++++++++++++++++++++++-----
+ 1 file changed, 24 insertions(+), 5 deletions(-)
 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 8e5e003f0093..89dcc7d8395a 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1720,8 +1720,8 @@ static void balance_dirty_pages(struct bdi_writebac=
-k *wb,
- 				sdtc =3D mdtc;
- 		}
-=20
--		if (dirty_exceeded && !wb->dirty_exceeded)
--			wb->dirty_exceeded =3D 1;
-+		if (dirty_exceeded !=3D wb->dirty_exceeded)
-+			wb->dirty_exceeded =3D dirty_exceeded;
-=20
- 		if (time_is_before_jiffies(READ_ONCE(wb->bw_time_stamp) +
- 					   BANDWIDTH_INTERVAL))
-@@ -1825,9 +1825,6 @@ static void balance_dirty_pages(struct bdi_writebac=
-k *wb,
- 		if (fatal_signal_pending(current))
- 			break;
- 	}
--
--	if (!dirty_exceeded && wb->dirty_exceeded)
--		wb->dirty_exceeded =3D 0;
+diff --git a/fs/io_uring.c b/fs/io_uring.c
+index 91de361ea9ab..f3aaac286509 100644
+--- a/fs/io_uring.c
++++ b/fs/io_uring.c
+@@ -3746,7 +3746,7 @@ static inline int io_iter_do_read(struct io_kiocb *=
+req, struct iov_iter *iter)
+ 		return -EINVAL;
  }
 =20
- static DEFINE_PER_CPU(int, bdp_ratelimits);
+-static bool need_read_all(struct io_kiocb *req)
++static bool need_complete_io(struct io_kiocb *req)
+ {
+ 	return req->flags & REQ_F_ISREG ||
+ 		S_ISBLK(file_inode(req->file)->i_mode);
+@@ -3875,7 +3875,7 @@ static int io_read(struct io_kiocb *req, unsigned i=
+nt issue_flags)
+ 	} else if (ret =3D=3D -EIOCBQUEUED) {
+ 		goto out_free;
+ 	} else if (ret =3D=3D req->result || ret <=3D 0 || !force_nonblock ||
+-		   (req->flags & REQ_F_NOWAIT) || !need_read_all(req)) {
++		   (req->flags & REQ_F_NOWAIT) || !need_complete_io(req)) {
+ 		/* read all, failed, already did sync or don't want to retry */
+ 		goto done;
+ 	}
+@@ -3971,9 +3971,10 @@ static int io_write(struct io_kiocb *req, unsigned=
+ int issue_flags)
+ 		if (unlikely(!io_file_supports_nowait(req)))
+ 			goto copy_iov;
+=20
+-		/* file path doesn't support NOWAIT for non-direct_IO */
+-		if (force_nonblock && !(kiocb->ki_flags & IOCB_DIRECT) &&
+-		    (req->flags & REQ_F_ISREG))
++		/* File path supports NOWAIT for non-direct_IO only for block devices.=
+ */
++		if (!(kiocb->ki_flags & IOCB_DIRECT) &&
++			!(kiocb->ki_filp->f_mode & FMODE_BUF_WASYNC) &&
++			(req->flags & REQ_F_ISREG))
+ 			goto copy_iov;
+=20
+ 		kiocb->ki_flags |=3D IOCB_NOWAIT;
+@@ -4027,6 +4028,24 @@ static int io_write(struct io_kiocb *req, unsigned=
+ int issue_flags)
+ 		/* IOPOLL retry should happen for io-wq threads */
+ 		if (ret2 =3D=3D -EAGAIN && (req->ctx->flags & IORING_SETUP_IOPOLL))
+ 			goto copy_iov;
++
++		if (ret2 !=3D req->result && ret2 >=3D 0 && need_complete_io(req)) {
++			struct io_async_rw *rw;
++
++			/* This is a partial write. The file pos has already been
++			 * updated, setup the async struct to complete the request
++			 * in the worker. Also update bytes_done to account for
++			 * the bytes already written.
++			 */
++			iov_iter_save_state(&s->iter, &s->iter_state);
++			ret =3D io_setup_async_rw(req, iovec, s, true);
++
++			rw =3D req->async_data;
++			if (rw)
++				rw->bytes_done +=3D ret2;
++
++			return ret ? ret : -EAGAIN;
++		}
+ done:
+ 		kiocb_done(req, ret2, issue_flags);
+ 	} else {
 --=20
 2.30.2
 
