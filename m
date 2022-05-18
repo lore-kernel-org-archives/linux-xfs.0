@@ -2,109 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B404EC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 22:36:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F53CC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 23:19:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230033AbiERWgN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 May 2022 18:36:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57886 "EHLO
+        id S229689AbiERXTq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 May 2022 19:19:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230030AbiERWgL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 18:36:11 -0400
-Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3A45A205FC
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 15:36:08 -0700 (PDT)
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 9E1C260FB5;
-        Thu, 19 May 2022 08:36:06 +1000 (EST)
-Received: from smtp1.onthe.net.au ([10.200.63.11])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id 8wUWdEkO1d1n; Thu, 19 May 2022 08:36:06 +1000 (AEST)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 7152360F6F;
-        Thu, 19 May 2022 08:36:06 +1000 (EST)
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id 5CCF168026D; Thu, 19 May 2022 08:36:06 +1000 (AEST)
-Date:   Thu, 19 May 2022 08:36:06 +1000
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: fstrim and strace considered harmful?
-Message-ID: <20220518223606.GA1343027@onthe.net.au>
-References: <20220518065949.GA1237408@onthe.net.au>
- <20220518070713.GA1238882@onthe.net.au>
- <YoUXxBe1d7b29wif@magnolia>
+        with ESMTP id S230325AbiERXTq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 19:19:46 -0400
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36B99C03A4;
+        Wed, 18 May 2022 16:19:45 -0700 (PDT)
+Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24IN6Ed3023688;
+        Wed, 18 May 2022 16:19:40 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=qwpE1qW1S9XyUAwO5/z78Btuuc80aJw22DTCElGyjMQ=;
+ b=eCr1Y9KQyLimtQyaGD0MBTvuA7684B4MQALzqmP6aM4oAr/WMi3mN6njmHiXlwVQuOtc
+ Wed3tB9bpQyAfC7NnZ3OqH8Xtza2uGAMH7qQY6r6XwJyUZYHrMeMwrh0mrGugW7xRigW
+ yxuEL96uRRTN8mgvSit9U+m0NNL5rI/bDF4= 
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2106.outbound.protection.outlook.com [104.47.55.106])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g59tbg83f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 18 May 2022 16:19:40 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=L3lwHMbtB0MK6wr5mUYfZ7+NxJ0LEW7n+yX3aLtPEZ0FSXrD+qT+wR3FF6V0+aSJrIsR5Rz58nVFGKRoMZR5Tbvv/0TZybydlerrdxQEMtbOBhD1mek7e+iUPtbQDWers9W6J06caZGdKQ4AiYj8LHD3aEp20uQZYUGeVndBKWlAXLK8xHjRRgxk7jlchzhvsGhwCVJ5VYzA3s2B279ga1ioa2bGQ13YvbKXXKNH+WFOtg9/8lkm91TbWyVJiAcOQmaly50RwfQaPkxM+bPJAS2kzYpvcNTcOYFYAQAxUFOCLjf3zAJBopyngXsFMFec5i18XTjvgnUqABpftBVhRg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=qwpE1qW1S9XyUAwO5/z78Btuuc80aJw22DTCElGyjMQ=;
+ b=j1wGALOK2dihvTlXqj5NQ/TMFoXqoUw403xSTSGK7CoAX/e4fwmVHY8u+f9X/yD+4iIn3f+ONw4oAfgdiu+4eahoGS40eTgQy6TE1h5KPsq56X5sUjTELf70tNX7gBProyqpprWmKpuEHM6/ucAcIGQtpqRWzRdSa1c4qQkbAc2IONyV/rYWWEKK4iNGtvZ3yAZ3Iiz5MJq8zd9hqGa/93rKTlCDYPCBWmDBxA7srZmZz5K83WqOFVcen9rk4YMNf5kuYr+yrKUvwEBa7Y3JEcfjptFhaQ9YTK03FnbXpu/DF5pcUEw3b8GDXaCchv+tiooXF+NP+a/75oV/l65+pg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
+ header.d=fb.com; arc=none
+Received: from PH0SPR01MB0020.namprd15.prod.outlook.com (2603:10b6:510:76::6)
+ by BYAPR15MB2773.namprd15.prod.outlook.com (2603:10b6:a03:150::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.13; Wed, 18 May
+ 2022 23:19:38 +0000
+Received: from PH0SPR01MB0020.namprd15.prod.outlook.com
+ ([fe80::ad90:787e:697e:3ed1]) by PH0SPR01MB0020.namprd15.prod.outlook.com
+ ([fe80::ad90:787e:697e:3ed1%2]) with mapi id 15.20.5273.015; Wed, 18 May 2022
+ 23:19:38 +0000
+Message-ID: <5189d281-4354-6c98-d2df-78e6434e6c48@fb.com>
+Date:   Wed, 18 May 2022 16:19:36 -0700
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.8.0
+Subject: Re: [RFC PATCH v2 04/16] iomap: add async buffered write support
+Content-Language: en-US
+To:     Jan Kara <jack@suse.cz>
+Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com
+References: <20220516164718.2419891-1-shr@fb.com>
+ <20220516164718.2419891-5-shr@fb.com>
+ <20220517111447.bzzmdbmx6cebnugc@quack3.lan>
+From:   Stefan Roesch <shr@fb.com>
+In-Reply-To: <20220517111447.bzzmdbmx6cebnugc@quack3.lan>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR03CA0013.namprd03.prod.outlook.com
+ (2603:10b6:a03:33a::18) To PH0SPR01MB0020.namprd15.prod.outlook.com
+ (2603:10b6:510:76::6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <YoUXxBe1d7b29wif@magnolia>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: a22a1bff-b146-4607-d9c4-08da3924e0b3
+X-MS-TrafficTypeDiagnostic: BYAPR15MB2773:EE_
+X-Microsoft-Antispam-PRVS: <BYAPR15MB27736E7E49C9A7B024E4B6D5D8D19@BYAPR15MB2773.namprd15.prod.outlook.com>
+X-FB-Source: Internal
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: oRaxVFGjtCTXpgAoQ6wVg1yMk5Lz8++87yXhqJZePx0hhT8rTOluOke4zFnL2YgdhjuGK89Uilf/3flnyOu16chO9LyIwt6/eZbCteqtOy54TrlcddNDrTkrMH5C51pbgCzl7vB+Bga3m/iIVvl0mlH0OjN4/pYnvYWoX6PC3mdzZk5tR6KwpUFYvymFwb5qjajAT6xdDkrftdD03MV5pOPzTykbYXBLk+XeMVVskmhzz7IqUyaGMC8M+G3IRsApJFJOP8PxO96lF+YgOpRNgIMyeTlAvGT7xr+aWdEqUiH3P69Zp/CZhGG2Pny1upDRxAi6NP1/4f39zk+UsglpL2yf1CvGM4b8Z4/QD73viWietep063LKbjKW9DUdICLKa5h9XeKD1HaPF6t7+5acWoXU48eR2iYYsHruZpEfzFyC7rmxBX38PaLxNKr52rQTEgnPIn+3rJzihkz2FqACB5b3Q3BaQUIU1RggczHhyCjzxRo3KTCzMtcNHdeyjD5Dt5HPctRA7ZX7sVH/jQsDnf4ugT2EVU0iMh3HJhDQ/MF9gjhhceJVFWJ1LmA26xkoxp4JBfPXfQQm3AcpzIDMO7uX7o5hH2sRpkADz+AYnVw3mk8jJVXEtJ3yDlbphHTE451TME9dpU9Nmcd3tQina6paV6soSCpb5YQt3SFHH1uUVJEDqeHW0nx6MCd+2owhd3hhpLZOwKrpFlPzd3i1Y1rB1syj4rKStNISRx+I1gg=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0SPR01MB0020.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(53546011)(31696002)(86362001)(6506007)(186003)(2616005)(83380400001)(38100700002)(2906002)(8936002)(6512007)(66556008)(8676002)(66946007)(4326008)(66476007)(5660300002)(31686004)(6486002)(6916009)(508600001)(316002)(36756003)(43740500002)(45980500001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Ull3M0NoYWViY0VMN1FBWG9ieWwwcUhsZlZ1ZGxrWkhiUG8wTUNXdHNjbDFh?=
+ =?utf-8?B?UTJIekdla1JoTmxjQUVZdTFkV0dGWWNQU1dBWWtKbTVqaXZtRCs0citLS0lu?=
+ =?utf-8?B?RDFiYjhKaTEyMlhCQW9VM1BYMDRPdnozWkFYYm4vdXQzR3hacHF0K2tRb0ZY?=
+ =?utf-8?B?NDFCeFAvM3NmSmFlQ1hpVllXNDU4bE1iRGZ2RCsrejYrdUNuemhnR1plR0dV?=
+ =?utf-8?B?NEhNL2wwZ081dE9BVkpkWlRBYVBlKzY1bm9rWEZ5ZjZxRUUrZ2dqdU81SUtY?=
+ =?utf-8?B?QVBYa09IMnAyem1WcHhaMzZKemF4N29DVmh1ekhvUjY3MnM2bVBaMlhISVpq?=
+ =?utf-8?B?RE9qNGJoWEU4YXVrakZDTWEzSThrVGlaUFNaZXhSYlhtdHk1UHRzSlhzQWxU?=
+ =?utf-8?B?UGJoZUE4TEpOc1VOMlBDNFBaL0lyOVAzbVpvN2E4OFd2amFCZVZCL0I4YUFK?=
+ =?utf-8?B?cjFLaFRHQitmck5lOHNYRzErYlFwcUtOcGNLamZpOGpaekJXdGJHbU5DTUZH?=
+ =?utf-8?B?WVpaYjNNTVhZTmV1SzNqNXFRbGRzK2VZekV2RHNoV2xtUllCbGNtbG1ERWVV?=
+ =?utf-8?B?MCtCQnpjRmNSMnBpTVl3STdkRmY4dndPMlptdnNiQ0p2d0ZHT0M5aFNOenR4?=
+ =?utf-8?B?R01kRlFZQm1zVE5pd0lHQlR3S041aUJndUtON04zTXV4VGtSeS9LSkllb3V2?=
+ =?utf-8?B?bGZLQkRoOEk5RGRNMktNN3pMY2FSZXJQVzV0YjZzTm55dWhxdzlxNDNyaHBu?=
+ =?utf-8?B?UEg4Z0RQK2xPOVRLaWVITWlDbWUvcThSZW1YV29wcVRLOVJRYm5uZWpnZW1D?=
+ =?utf-8?B?eFF2N1hSSXNHWFhZSjVKek5HbE11bFc1TDhabmEzM0t0dlZnZmVLTkp3Ry90?=
+ =?utf-8?B?U0ZoQ242bDVsY2xOUG42RU1jWDEyQTB0RHZRUk55S0hnelp2Njl0cjZ1UElR?=
+ =?utf-8?B?a29FL2RsZFhjTmp6UXdjVElmakJ0QkJKcU9rSzlwZzkvUFI0a0EyV0czMG43?=
+ =?utf-8?B?M1NjZXhFdEQrNEhMQmFPcWdIK2kxS3N4VXd2em1xdUJja3U4SGVIVW9xYTR4?=
+ =?utf-8?B?ZjE0L1F5aHZxaUxwUUpnRDd1VDByNnUzOThUbmxka2dNK3lJbnYwZitUVlBa?=
+ =?utf-8?B?UkNMYzNIcWdRTWhsRDBDTXhOcUlNRVhHYmlxT3EwMlFlSm9pbTlLTXNOczA4?=
+ =?utf-8?B?bXVocy94K3A4eGxrODF1a2FMWGlNOTN5WXVmOHp4YzlHdTBXRndnT2tLMzdY?=
+ =?utf-8?B?ZUt5eFhuZG1TZ0NZTGt6S2tqUDVJRjlkWUU0ZjE5dzNFdG9Ya0Y3K1phRzQv?=
+ =?utf-8?B?UTNnaEpEZmVPeG5oN0ZXU2syZDcveUdWOEFCd3JvSVZwZGxtMDZMQWxnUVc4?=
+ =?utf-8?B?RHU5ZXIyN2E4NGdwbVZGaHFCU0pqeStTU01aZUJSNENLcUVFamEwMkhzakFp?=
+ =?utf-8?B?S2tSUHBhQXF6WDJoelJqZHhnVHdWWDNxeFVjcjBSbG9FQUFreS9UaTlkcXlG?=
+ =?utf-8?B?Y1FDVGp2SjVBZnJMOFVRYjMxR0hZcWl6dXMrMy8rNTlHLzNZNWlKbWlyVVBj?=
+ =?utf-8?B?Y3ZMZnpiRWdmZlBLS1ZwcTRoMkZQQmFCbTJSYU5sZlV5VkdjcXNlY0pFM1Jj?=
+ =?utf-8?B?VDdtZWlXVUh0R1JROWRxYjNZdmQ0N09aWmpKTTJ1Z3dKNm9UbFVTcm0xL29O?=
+ =?utf-8?B?Y0lpUkJlYmZBVFZFU3F6K2l5aEdjTTlBTVVTUGN6Y1JJZGl1dmNIMmJocUNv?=
+ =?utf-8?B?c2lpVHJ0dVB1U3dFdi9XRlR2MFBpL2R2V0RiOEhRdng2S242Y3NsaU1wYlpX?=
+ =?utf-8?B?NG80eHRJZitpNDZvMS91UU9RTHVhOHpXcG91eDU0MUh0d1lOdEZrVGF0djBo?=
+ =?utf-8?B?OTVXZjlQMmliMGhrV2Q1aVFsZzBxNm9TanJXU3NuR2krZGRoOFlvL0dpWktK?=
+ =?utf-8?B?b0lES2NER1MxMW5CSDVoL3d0c3dha293TDMzK1NycTVMaFovaVhqaFFCQkFR?=
+ =?utf-8?B?YWJKbXpOdWZheVdHaTFNaEVGWEhNNXp0eitQYWFCMFNvMnpNa0wyRlV1dlYw?=
+ =?utf-8?B?RjFLNWhjTGhEL1J4eS9CSHpuc0djbjNUNkJGYWJLOU1INEJoKzltenl0K2xP?=
+ =?utf-8?B?dkd4dnVnMHgxaUNRam1zdGQwUGRSdHdxZURzWmdINmxNYThTQmNtY21KTU1I?=
+ =?utf-8?B?d200NVMrVUVheVo1ZmQyMFZQRUxuSmd3UVdheGo4RUxkdTlmUmNEY3NYMmk4?=
+ =?utf-8?B?RExpME82bnk2UENLcVVaNnlpRENST0tCNHpQYnJsRXFxL3p3NFF2VTc0RUFa?=
+ =?utf-8?B?ZXhjcG9EbkFvdmN1QTBBcVBOUVJpWFRUcHlaeG1LZmhxS1QwRzhGdlpPVzhh?=
+ =?utf-8?Q?eaNPn9/SUUATEMpc=3D?=
+X-OriginatorOrg: fb.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a22a1bff-b146-4607-d9c4-08da3924e0b3
+X-MS-Exchange-CrossTenant-AuthSource: PH0SPR01MB0020.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 May 2022 23:19:37.9398
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: qHfgQ2rw2n9iNzbaLCjTU+9Eq09hIF/FI9wiLuo0SK19jWja/2LcgYzzaHoH/h5/
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR15MB2773
+X-Proofpoint-ORIG-GUID: XhVh0QPqxBrMD5ScJQUCDzNftnHKHhES
+X-Proofpoint-GUID: XhVh0QPqxBrMD5ScJQUCDzNftnHKHhES
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-05-18_06,2022-05-17_02,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 18, 2022 at 08:59:00AM -0700, Darrick J. Wong wrote:
-> On Wed, May 18, 2022 at 05:07:13PM +1000, Chris Dunlop wrote:
->> Oh, sorry... on linux v5.15.34
+
+
+On 5/17/22 4:14 AM, Jan Kara wrote:
+> On Mon 16-05-22 09:47:06, Stefan Roesch wrote:
+>> This adds async buffered write support to iomap. The support is focused
+>> on the changes necessary to support XFS with iomap.
 >>
->> On Wed, May 18, 2022 at 04:59:49PM +1000, Chris Dunlop wrote:
->>> I have an fstrim that's been running for over 48 hours on a 256T thin
->>> provisioned XFS fs containing around 55T of actual data on a slow
->>> subsystem (ceph 8,3 erasure-encoded rbd). I don't think there would be
->>> an an enourmous amount of data to trim, maybe a few T, but I've no idea
->>> how long how long it might be expected to take. In an attempt to see
->>> what the what the fstrim was doing, I ran an strace on it. The strace
->>> has been sitting there without output and unkillable since then, now 5+
->>> hours ago.  Since the strace, on that same filesystem I now have 123 df
->>> processes and 615 rm processes -- and growing -- that are blocked in
->>> xfs_inodegc_flush, e.g.:
-...
-> It looks like the storage device is stalled on the discard, and most
-> everything else is stuck waiting for buffer locks?  The statfs threads
-> are the same symptom as last time.
+>> Support for other filesystems might require additional changes.
+>>
+>> Signed-off-by: Stefan Roesch <shr@fb.com>
+>> ---
+>>  fs/iomap/buffered-io.c | 21 ++++++++++++++++++++-
+>>  1 file changed, 20 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+>> index 1ffdc7078e7d..ceb3091f94c2 100644
+>> --- a/fs/iomap/buffered-io.c
+>> +++ b/fs/iomap/buffered-io.c
+>> @@ -580,13 +580,20 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+>>  	size_t from = offset_in_folio(folio, pos), to = from + len;
+>>  	size_t poff, plen;
+>>  	gfp_t  gfp = GFP_NOFS | __GFP_NOFAIL;
+>> +	bool no_wait = (iter->flags & IOMAP_NOWAIT);
+>> +
+>> +	if (no_wait)
+>> +		gfp = GFP_NOIO;
+> 
+> GFP_NOIO means that direct reclaim is still allowed. Not sure whether you
+> want to enter direct reclaim from io_uring fast path because in theory that
+> can still sleep. GFP_NOWAIT would be a more natural choice...
 
-Note: the box has been rebooted and it's back to normal after an anxious 
-30 minutes waiting for the mount recovery. (Not an entirely wasted 30 
-minutes - what a thrilling stage of the Giro d'Italia!)
-
-I'm not sure if the fstrim was stalled, unless the strace had stalled it 
-somehow: it had been running for ~48 hours without apparent issues before 
-the strace was attached, and then it was another hour before the first 
-process stuck on xfs_inodegc_flush appeared.
-
-The open question is what caused the stuck processes? It's possible the 
-strace was involved: the stuck process with the earliest start time, a 
-"df", was started an hour after the strace and it's entirely plausible 
-that was the very first df or rm issued after the strace. However it's 
-also plausible that was a coincidence and the strace had nothing to do 
-with it. Indeed it's even plausible the fstrim had nothing to do with the 
-stuck processes and there's something else entirely going on: I don't know 
-if there's a ticking time bomb somewhere in the system
-
-It's now no mystery to me why the fstrim was taking so long, nor why the 
-strace didn't produce any output: it turns out fstrim, without an explicit 
---offset --length range, issues a single ioctl() to trim from the start of 
-the device to the end, and without an explicit --minimum, uses 
-/sys/block/xxx/queue/discard_granularity as the minimum block size to 
-discard, in this case 64kB. So it would have been issuing a metric 
-shit-ton of discard requests to the underlying storage, something close 
-to:
-
-   (fs-size - fs-used) / discard-size
-   256T - 26T / 64k
-   3,858,759,680 requests
-
-It was after figuring out all that that I hit the reset.
-
-Note: it turns out the actual used space per the filesystem is 26T, whilst 
-the underlying storage shows 55T used, i.e. there's 29T of real discards 
-to process. With this ceph rbd storage I don't know if a "real" discard 
-takes any more or less time than a discard to already-unoccupied storage. 
-
-Next time I'll issue the fstrim in much smaller increments, e.g. starting 
-with perhaps 128G (at least at first), and use a --minimum that matches 
-the underlying object size (4MB). Then play around and monitor it to work 
-out what parameters work best for this system.
-
-Cheers,
-
-Chris - older, wiser, a little more sleep deprived
+I'll change it to GFP_NOWAIT in the next version of the patch series.
+> 
+> 								Honza
