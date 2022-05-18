@@ -2,170 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A145C4321E
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 23:53:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6234EC43219
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 23:53:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231797AbiERXxl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 May 2022 19:53:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54846 "EHLO
+        id S231817AbiERXxm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 May 2022 19:53:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229832AbiERXxd (ORCPT
+        with ESMTP id S229925AbiERXxd (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 19:53:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3AA319FAC;
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3B4860A96;
         Wed, 18 May 2022 16:53:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D9D2061762;
-        Wed, 18 May 2022 23:53:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F00AFC34113;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 26E76B81C03;
+        Wed, 18 May 2022 23:53:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76052C385A9;
         Wed, 18 May 2022 23:53:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652918009;
-        bh=W4in/ybmcjm+UrJuvAG7UeC7pkJyRJbDj25/2WE1Eh0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lOAtpiNFQkTYZE91Q/t5P4je8t/RVIkVfNdzALCn4RoRU4e4sFnMKtE93c6dW/6rZ
-         L//O7wlP73j+497ckrHMFzwwn8p0H6HbGOTHeoaSmWCFZADXvSqBBAH3IExgDuGJ2j
-         uB1z4wbDKYKUKl6H3vD43vI5utDgaLZSwkF30Ap9o6+SAfhV1CU/2O16gwjnaf0/Cx
-         O6WgzKb3DQ/d865dHztAoRmWomCcYWCmZECuR0Rj7/Wbi6yGhj5j6SqbWwrugT3/AZ
-         HNrSCu7xlXphpO/cuvQqNSqP0BdXAPtyBb+rJz/ndUVdzFELKDPmCfCgz5hGua/cDd
-         l/bdVDq9X6gtQ==
+        s=k20201202; t=1652918008;
+        bh=urChUY7g9muzenao6Op/35xCF3MRcXpVDil5q1s0Oy4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=OV61lWEayn3LYEHqqYjdbT4rDnSYkojA/uBcYiviKrLQosTqoljlBxdyQuag4D38t
+         QD3252d92imOW+XVDTj0qjrOJ+PoJ1FHyjBnZPYlsp6uvQj29AfMW/W9l/rAHYKyz1
+         EIhGcaMmM0JN4aG/HcXCFiYrX6jbcm36zLqiheYnoEV/n8g93nWWuHGTHlbljGZIyW
+         DwtikEg30uOxeLh6dEvCADQkuEKd5jCOvDNzz3suRYVpoI0hAgf8LBxjbIdG8fLEMv
+         52a1BO/Ce+DjZrrYEzZcYdQZR3Zhx1bno/f/yNbVWXKZAiVyJNYG5rA6eoaqmksXog
+         K4HSm1NvPH8FA==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         linux-xfs@vger.kernel.org, linux-api@vger.kernel.org,
         linux-fscrypt@vger.kernel.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, Keith Busch <kbusch@kernel.org>
-Subject: [RFC PATCH v2 1/7] statx: add I/O alignment information
-Date:   Wed, 18 May 2022 16:50:05 -0700
-Message-Id: <20220518235011.153058-2-ebiggers@kernel.org>
+Subject: [RFC PATCH v2 0/7] make statx() return I/O alignment information
+Date:   Wed, 18 May 2022 16:50:04 -0700
+Message-Id: <20220518235011.153058-1-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220518235011.153058-1-ebiggers@kernel.org>
-References: <20220518235011.153058-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+This patchset makes the statx() system call return I/O alignment
+information, roughly following the design that was suggested at
+https://lore.kernel.org/linux-fsdevel/20220120071215.123274-1-ebiggers@kernel.org/T/#u
 
-Traditionally, the conditions for when DIO (direct I/O) is supported
-were fairly simple: filesystems either supported DIO aligned to the
-block device's logical block size, or didn't support DIO at all.
+This feature solves two problems: (a) it allows userspace to determine
+when a file supports direct I/O, and with what alignment restrictions;
+and (b) it allows userspace to determine the optimum I/O alignment for a
+file.  For more details, see patch 1.
 
-However, due to filesystem features that have been added over time (e.g,
-data journalling, inline data, encryption, verity, compression,
-checkpoint disabling, log-structured mode), the conditions for when DIO
-is allowed on a file have gotten increasingly complex.  Whether a
-particular file supports DIO, and with what alignment, can depend on
-various file attributes and filesystem mount options, as well as which
-block device(s) the file's data is located on.
+This is an RFC.  I'd greatly appreciate any feedback on the UAPI, as
+that obviously needs to be gotten right from the beginning.  E.g., does
+the proposed set of fields make sense?  Am I including the right
+information in stx_offset_align_optimal?
 
-XFS has an ioctl XFS_IOC_DIOINFO which exposes this information to
-applications.  However, as discussed
-(https://lore.kernel.org/linux-fsdevel/20220120071215.123274-1-ebiggers@kernel.org/T/#u),
-this ioctl is rarely used and not known to be used outside of
-XFS-specific code.  It also was never intended to indicate when a file
-doesn't support DIO at all, and it only exposes the minimum I/O
-alignment, not the optimal I/O alignment which has been requested too.
+Patch 1 adds the VFS support for STATX_IOALIGN.  The remaining patches
+wire it up to ext4 and f2fs.  Support for other filesystems can be added
+later.  We could also support this on block device files; however, since
+block device nodes have different inodes from the block devices
+themselves, it wouldn't apply to statx("/dev/$foo") but rather just to
+'fd = open("/dev/foo"); statx(fd)'.  I'm unsure how useful that would be.
 
-Therefore, let's expose this information via statx().  Add the
-STATX_IOALIGN flag and three fields associated with it:
+Note, f2fs has one corner case where DIO reads are allowed but not DIO
+writes.  The proposed statx fields can't represent this.  My proposal
+(patch 5) is to just eliminate this case, as it seems much too weird.
+But I'd appreciate any feedback on that part.
 
-* stx_mem_align_dio: the alignment (in bytes) required for user memory
-  buffers for DIO, or 0 if DIO is not supported on the file.
+This patchset applies to v5.18-rc7.
 
-* stx_offset_align_dio: the alignment (in bytes) required for file
-  offsets and I/O segment lengths for DIO, or 0 if DIO is not supported
-  on the file.  This will only be nonzero if stx_mem_align_dio is
-  nonzero, and vice versa.
+No changes since v1, which I sent a few months ago; I'm resending this
+because people seem interested in it again
+(https://lore.kernel.org/r/20220518171131.3525293-1-kbusch@fb.com).
 
-* stx_offset_align_optimal: the alignment (in bytes) suggested for file
-  offsets and I/O segment lengths to get optimal performance.  This
-  applies to both DIO and buffered I/O.  It differs from stx_blocksize
-  in that stx_offset_align_optimal will contain the real optimum I/O
-  size, which may be a large value.  In contrast, for compatibility
-  reasons stx_blocksize is the minimum size needed to avoid page cache
-  read/write/modify cycles, which may be much smaller than the optimum
-  I/O size.  For more details about the motivation for this field, see
-  https://lore.kernel.org/r/20220210040304.GM59729@dread.disaster.area
+Eric Biggers (7):
+  statx: add I/O alignment information
+  fscrypt: change fscrypt_dio_supported() to prepare for STATX_IOALIGN
+  ext4: support STATX_IOALIGN
+  f2fs: move f2fs_force_buffered_io() into file.c
+  f2fs: don't allow DIO reads but not DIO writes
+  f2fs: simplify f2fs_force_buffered_io()
+  f2fs: support STATX_IOALIGN
 
-Note that as with other statx() extensions, if STATX_IOALIGN isn't set
-in the returned statx struct, then these new fields won't be filled in.
-This will happen if the filesystem doesn't support STATX_IOALIGN, or if
-the file isn't a regular file.  (It might be supported on block device
-files in the future.)  It might also happen if the caller didn't include
-STATX_IOALIGN in the request mask, since statx() isn't required to
-return information that wasn't requested.
+ fs/crypto/inline_crypt.c  | 48 +++++++++++++++---------------
+ fs/ext4/ext4.h            |  1 +
+ fs/ext4/file.c            | 10 +++----
+ fs/ext4/inode.c           | 31 ++++++++++++++++++++
+ fs/f2fs/f2fs.h            | 45 -----------------------------
+ fs/f2fs/file.c            | 61 ++++++++++++++++++++++++++++++++++++++-
+ fs/stat.c                 |  3 ++
+ include/linux/fscrypt.h   |  7 ++---
+ include/linux/stat.h      |  3 ++
+ include/uapi/linux/stat.h |  9 ++++--
+ 10 files changed, 136 insertions(+), 82 deletions(-)
 
-This commit adds the VFS-level plumbing for STATX_IOALIGN.  Individual
-filesystems will still need to add code to support it.
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- fs/stat.c                 | 3 +++
- include/linux/stat.h      | 3 +++
- include/uapi/linux/stat.h | 9 +++++++--
- 3 files changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/fs/stat.c b/fs/stat.c
-index 5c2c94464e8b0..9d477218545b8 100644
---- a/fs/stat.c
-+++ b/fs/stat.c
-@@ -611,6 +611,9 @@ cp_statx(const struct kstat *stat, struct statx __user *buffer)
- 	tmp.stx_dev_major = MAJOR(stat->dev);
- 	tmp.stx_dev_minor = MINOR(stat->dev);
- 	tmp.stx_mnt_id = stat->mnt_id;
-+	tmp.stx_mem_align_dio = stat->mem_align_dio;
-+	tmp.stx_offset_align_dio = stat->offset_align_dio;
-+	tmp.stx_offset_align_optimal = stat->offset_align_optimal;
- 
- 	return copy_to_user(buffer, &tmp, sizeof(tmp)) ? -EFAULT : 0;
- }
-diff --git a/include/linux/stat.h b/include/linux/stat.h
-index 7df06931f25d8..48b8b1ad1567c 100644
---- a/include/linux/stat.h
-+++ b/include/linux/stat.h
-@@ -50,6 +50,9 @@ struct kstat {
- 	struct timespec64 btime;			/* File creation time */
- 	u64		blocks;
- 	u64		mnt_id;
-+	u32		mem_align_dio;
-+	u32		offset_align_dio;
-+	u32		offset_align_optimal;
- };
- 
- #endif
-diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
-index 1500a0f58041a..f822b23e81091 100644
---- a/include/uapi/linux/stat.h
-+++ b/include/uapi/linux/stat.h
-@@ -124,9 +124,13 @@ struct statx {
- 	__u32	stx_dev_minor;
- 	/* 0x90 */
- 	__u64	stx_mnt_id;
--	__u64	__spare2;
-+	__u32	stx_mem_align_dio;	/* Memory buffer alignment for direct I/O */
-+	__u32	stx_offset_align_dio;	/* File offset alignment for direct I/O */
- 	/* 0xa0 */
--	__u64	__spare3[12];	/* Spare space for future expansion */
-+	__u32	stx_offset_align_optimal; /* Optimal file offset alignment for I/O */
-+	__u32	__spare2;
-+	/* 0xa8 */
-+	__u64	__spare3[11];	/* Spare space for future expansion */
- 	/* 0x100 */
- };
- 
-@@ -152,6 +156,7 @@ struct statx {
- #define STATX_BASIC_STATS	0x000007ffU	/* The stuff in the normal stat struct */
- #define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
- #define STATX_MNT_ID		0x00001000U	/* Got stx_mnt_id */
-+#define STATX_IOALIGN		0x00002000U	/* Want/got IO alignment info */
- 
- #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx expansion */
- 
+base-commit: 42226c989789d8da4af1de0c31070c96726d990c
 -- 
 2.36.1
 
