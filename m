@@ -2,182 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE068C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 03:00:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBBEDC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 06:59:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233997AbiERDAr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 May 2022 23:00:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41210 "EHLO
+        id S231690AbiERG7z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 May 2022 02:59:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229614AbiERDAq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 May 2022 23:00:46 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7CD913150C
-        for <linux-xfs@vger.kernel.org>; Tue, 17 May 2022 20:00:40 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 36D59170B67
-        for <linux-xfs@vger.kernel.org>; Tue, 17 May 2022 22:00:28 -0500 (CDT)
-Message-ID: <02a2b15a-f79f-5fa2-091a-6a28ae3f9757@sandeen.net>
-Date:   Tue, 17 May 2022 22:00:38 -0500
+        with ESMTP id S231751AbiERG7y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 02:59:54 -0400
+Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9E65617AA7
+        for <linux-xfs@vger.kernel.org>; Tue, 17 May 2022 23:59:51 -0700 (PDT)
+Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id 7FCB660F66
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 16:59:49 +1000 (EST)
+Received: from smtp1.onthe.net.au ([10.200.63.11])
+        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
+        with ESMTP id Clyw5OT-WroL for <linux-xfs@vger.kernel.org>;
+        Wed, 18 May 2022 16:59:49 +1000 (AEST)
+Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id 50FBC60EE7
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 16:59:49 +1000 (EST)
+Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
+        id 3B16A6801BC; Wed, 18 May 2022 16:59:49 +1000 (AEST)
+Date:   Wed, 18 May 2022 16:59:49 +1000
+From:   Chris Dunlop <chris@onthe.net.au>
+To:     linux-xfs@vger.kernel.org
+Subject: fstrim and strace considered harmful?
+Message-ID: <20220518065949.GA1237408@onthe.net.au>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.9.0
-Content-Language: en-US
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 9f4d6358
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------r7c3XDV6BwIG9KoibTvrEw7l"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------r7c3XDV6BwIG9KoibTvrEw7l
-Content-Type: multipart/mixed; boundary="------------aOLPwiz34xGLGJZUhB7PWBCc";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <02a2b15a-f79f-5fa2-091a-6a28ae3f9757@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 9f4d6358
+Hi,
 
---------------aOLPwiz34xGLGJZUhB7PWBCc
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+I have an fstrim that's been running for over 48 hours on a 256T thin 
+provisioned XFS fs containing around 55T of actual data on a slow 
+subsystem (ceph 8,3 erasure-encoded rbd). I don't think there would be an 
+an enourmous amount of data to trim, maybe a few T, but I've no idea how 
+long how long it might be expected to take. In an attempt to see what the 
+what the fstrim was doing, I ran an strace on it. The strace has been 
+sitting there without output and unkillable since then, now 5+ hours ago.  
+Since the strace, on that same filesystem I now have 123 df processes and 
+615 rm processes -- and growing -- that are blocked in xfs_inodegc_flush, 
+e.g.:
 
-Hi folks,
+May 18 15:31:52 d5 kernel: task:df              state:D stack:    0 pid:31741 ppid:     1 flags:0x00004004
+May 18 15:31:52 d5 kernel: Call Trace:
+May 18 15:31:52 d5 kernel:  <TASK>
+May 18 15:31:52 d5 kernel:  __schedule+0x241/0x740
+May 18 15:31:52 d5 kernel:  ? lock_is_held_type+0x97/0x100
+May 18 15:31:52 d5 kernel:  schedule+0x3a/0xa0
+May 18 15:31:52 d5 kernel:  schedule_timeout+0x271/0x310
+May 18 15:31:52 d5 kernel:  ? find_held_lock+0x2d/0x90
+May 18 15:31:52 d5 kernel:  ? sched_clock_cpu+0x9/0xa0
+May 18 15:31:52 d5 kernel:  ? lock_release+0x214/0x350
+May 18 15:31:52 d5 kernel:  wait_for_completion+0x7b/0xc0
+May 18 15:31:52 d5 kernel:  __flush_work+0x217/0x350
+May 18 15:31:52 d5 kernel:  ? flush_workqueue_prep_pwqs+0x120/0x120
+May 18 15:31:52 d5 kernel:  ? wait_for_completion+0x1c/0xc0
+May 18 15:31:52 d5 kernel:  xfs_inodegc_flush.part.24+0x62/0xc0 [xfs]
+May 18 15:31:52 d5 kernel:  xfs_fs_statfs+0x37/0x1a0 [xfs]
+May 18 15:31:52 d5 kernel:  statfs_by_dentry+0x3c/0x60
+May 18 15:31:52 d5 kernel:  vfs_statfs+0x16/0xd0
+May 18 15:31:52 d5 kernel:  user_statfs+0x44/0x80
+May 18 15:31:52 d5 kernel:  __do_sys_statfs+0x10/0x30
+May 18 15:31:52 d5 kernel:  do_syscall_64+0x34/0x80
+May 18 15:31:52 d5 kernel:  entry_SYSCALL_64_after_hwframe+0x44/0xae
+May 18 15:31:52 d5 kernel: RIP: 0033:0x7fe9e9db3c07
+May 18 15:31:52 d5 kernel: RSP: 002b:00007ffe08f50178 EFLAGS: 00000246 ORIG_RAX: 0000000000000089
+May 18 15:31:52 d5 kernel: RAX: ffffffffffffffda RBX: 0000555963fcae40 RCX: 00007fe9e9db3c07
+May 18 15:31:52 d5 kernel: RDX: 00007ffe08f50400 RSI: 00007ffe08f50180 RDI: 0000555963fcae40
+May 18 15:31:52 d5 kernel: RBP: 00007ffe08f50180 R08: 0000555963fcae80 R09: 0000000000000000
+May 18 15:31:52 d5 kernel: R10: 0000000000000000 R11: 0000000000000246 R12: 00007ffe08f50220
+May 18 15:31:52 d5 kernel: R13: 0000000000000000 R14: 0000555963fcae80 R15: 0000555963fcae40
+May 18 15:31:52 d5 kernel:  </TASK>
 
-The for-next branch of the xfsprogs repository at:
+Full 1.5M sysrq output at: https://file.io/bWOL8F7mzKI6
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+That stack trace is uncomfortably familiar:
 
-has just been updated.
+Subject: Highly reflinked and fragmented considered harmful?
+https://lore.kernel.org/linux-xfs/20220509024659.GA62606@onthe.net.au/
 
-This is just catching up w/ Darrick's recent patchsets. I'll scan
-the list for other outstanding patches next.  (Not forgetting about
-you, Andrey!) ;) Feel free to remind me of anything you're expecting
-or hoping to get merged, though.
+FYI:
 
-The new head of the for-next branch is commit:
+# xfs_info /vol
+meta-data=/dev/vg01/vol          isize=512    agcount=257, agsize=268434432 blks
+          =                       sectsz=4096  attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+          =                       reflink=1    bigtime=1 inobtcount=1
+data     =                       bsize=4096   blocks=68719475712, imaxpct=1
+          =                       sunit=1024   swidth=8192 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=521728, version=2
+          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-9f4d6358 (HEAD -> for-next) xfs_scrub: don't revisit scanned inodes when =
-reprocessing a stale inode
+Is there something I can do to "unstick" things, or is it time to hit the 
+reset, and hope the recovery on mount isn't onerous?
 
-New Commits:
+Aside from that immediate issue, what has gone wrong here?
 
-Darrick J. Wong (30):
-      [a9d09df8] debian: refactor common options
-      [920fd876] debian: bump compat level to 11
-      [e63257c0] debian: support multiarch for libhandle
-      [c74f0468] xfs_scrub: move to mallinfo2 when available
-      [75ff9c67] xfs_db: fix a complaint about a printf buffer overrun
-      [baf2beba] xfs: note the removal of XFS_IOC_FSSETDM in the document=
-ation
-      [9b9c121a] xfs_db: warn about suspicious finobt trees when metadump=
-ing
-      [744eb053] xfs_repair: warn about suspicious btree levels in AG hea=
-ders
-      [f0e1a584] xfs_db: support computing btheight for all cursor types
-      [462c38a5] xfs_db: report absolute maxlevels for each btree type
-      [3a7f7109] xfs_repair: fix sizing of the incore rt space usage map =
-calculation
-      [aba6743c] mkfs: fix missing validation of -l size against maximum =
-internal log size
-      [8d1bff2b] mkfs: reduce internal log size when log stripe units are=
- in play
-      [1b580a77] mkfs: don't let internal logs bump the root dir inode ch=
-unk to AG 1
-      [93a199f2] mkfs: improve log extent validation
-      [0da883dd] mkfs: round log size down if rounding log start up cause=
-s overflow
-      [79511c6a] mkfs: don't trample the gid set in the protofile
-      [ddba9088] xfs_repair: detect v5 featureset mismatches in secondary=
- supers
-      [97238aea] xfs_repair: improve error reporting when checking rmap a=
-nd refcount btrees
-      [9887f0ad] xfs_repair: check the ftype of dot and dotdot directory =
-entries
-      [3bc9ea15] xfs_scrub: collapse trivial file scrub helpers
-      [a7ee7b68] xfs_scrub: in phase 3, use the opened file descriptor fo=
-r scrub calls
-      [7ddf6e0f] xfs_scrub: fall back to scrub-by-handle if opening handl=
-es fails
-      [12ca67b3] xfs_scrub: don't try any file repairs during phase 3 if =
-AG metadata bad
-      [26289d58] xfs_scrub: make phase 4 go straight to fstrim if nothing=
- to fix
-      [bb9be147] xfs_scrub: in phase 3, use the opened file descriptor fo=
-r repair calls
-      [0e5dce33] xfs_scrub: widen action list length variables
-      [8f0c270f] xfs_scrub: prepare phase3 for per-inogrp worker threads
-      [245c72a6] xfs_scrub: balance inode chunk scan across CPUs
-      [9f4d6358] xfs_scrub: don't revisit scanned inodes when reprocessin=
-g a stale inode
+Cheers,
 
-
-Code Diffstat:
-
- configure.ac             |  12 ++
- db/btheight.c            |  99 ++++++++++++--
- db/io.c                  |   2 +-
- db/metadump.c            |  15 +++
- debian/compat            |   2 +-
- debian/rules             |  18 ++-
- include/builddefs.in     |   2 +
- include/xfs_inode.h      |  11 +-
- libxfs/libxfs_api_defs.h |   6 +
- libxfs/util.c            |   3 +-
- m4/multilib.m4           |  12 ++
- m4/package_libcdev.m4    |  18 +++
- man/man3/handle.3        |   1 +
- man/man3/xfsctl.3        |   2 +
- man/man8/xfs_db.8        |   8 +-
- mkfs/proto.c             |   3 +-
- mkfs/xfs_mkfs.c          | 121 +++++++++++++----
- repair/agheader.c        |  92 +++++++++++++
- repair/incore.c          |   2 +-
- repair/phase4.c          |  20 +--
- repair/phase6.c          |  79 ++++++++----
- repair/rmap.c            |  65 +++++++---
- repair/rmap.h            |   4 +-
- repair/scan.c            |  29 ++++-
- scrub/Makefile           |  15 ++-
- scrub/inodes.c           | 330 +++++++++++++++++++++++++++++++++++------=
-------
- scrub/phase3.c           | 162 +++++++++++++++++------
- scrub/phase4.c           |  59 +++++++--
- scrub/phase7.c           |   2 +-
- scrub/repair.c           |  19 ++-
- scrub/repair.h           |  10 +-
- scrub/scrub.c            | 120 ++++-------------
- scrub/scrub.h            |  23 +---
- scrub/xfs_scrub.c        |  47 ++++---
- 34 files changed, 1020 insertions(+), 393 deletions(-)
-
---------------aOLPwiz34xGLGJZUhB7PWBCc--
-
---------------r7c3XDV6BwIG9KoibTvrEw7l
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmKEYVYFAwAAAAAACgkQIK4WkuE93uCU
-ng/+NmQUYWsOhmgPpmcGyuRQC8QeDordRJyt1EU2Z9oEI39iRLwfVWR7DCRbxoufOVomLeOdsG9R
-mX77gFRA+dmLughQlr+8W5IRuNbgu1lMLtmT7yAYlWMn/9NGujOLOWlW9fTXLRVrjv33sbaEhucv
-ZX0mNRNJRfpmVAV1B1yQ9rCSivRSw0s+booVqPidsHwcocg9XEq7Cupnx2GPszUfOMWMj38Yx0XT
-RrEREVc6ehET5SeKU1BJtDlHSwsmGvBtXXUGb44yxo23Td/wpY+Q7vf7c4nyG5pk/jMmQ75Tz+Td
-2VjJYneeLRJ3PRqBFpXiifrighaXZyKaoSvyUO1UAELE8bNcODLzl8LQbSQO4k1ImXyJi93oBLPf
-St/0V+2K9OYXW/b6xhLK4HMGfPKJjikYtkXF0LL2hyb7xPyzdQeb5bK4S5GkVGC0RpMYlk4H177y
-VjcueydbyMii5tczTPBIUsWqRhG/Y8NBBQnMeTUqY/ZtQq+Tl5lUgtMfzIV5RxqnFyHHY7hn0N5K
-JkCpbmur8ehy1XoTx1j+mtjaONsy229JBSTN2xGdItHEp3aRCpGx22KBXlB3iEGxJA+4r1Gqr4p/
-5aHqF8gCWHU5Safvw6ZaukYcmylpIptPn/O0rGn5igbOIcVYnzHwMo90ug25fT1RCyIrsdPOkFV1
-uls=
-=Kuiu
------END PGP SIGNATURE-----
-
---------------r7c3XDV6BwIG9KoibTvrEw7l--
+Chris
