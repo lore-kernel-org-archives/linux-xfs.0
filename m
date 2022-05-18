@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D12BFC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 18:55:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FFEC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 18:55:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241699AbiERSzb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 May 2022 14:55:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36842 "EHLO
+        id S241642AbiERSzt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 May 2022 14:55:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241698AbiERSzb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 14:55:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93711230204
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 11:55:30 -0700 (PDT)
+        with ESMTP id S241708AbiERSzi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 14:55:38 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED71B1FB548
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 11:55:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1759A6189A
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 18:55:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78D96C385A9;
-        Wed, 18 May 2022 18:55:29 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 751C2B821B0
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 18:55:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FFACC34113;
+        Wed, 18 May 2022 18:55:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652900129;
-        bh=DiAm0aQKWTtPZpcp3YGY9mHthn0KUgaabg9l69W1JJY=;
+        s=k20201202; t=1652900135;
+        bh=o3hcC1x1Iwvb3w+2XNQEXWGK+QChOF8Vx8aCS0U/ZFU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ihbFC70Rk5iboIYgmNUAkWZ9QG3n8ijI/GFqnBA7vcKhKMF2kpWUa5tVWzRSGthVI
-         E10MNEYJO47vu7hKmwtL/Gl27AFmYMt/CitRtu19yQCRPairuW4UBu2FbR8dvfHZz5
-         DJZ5Pgds1GQ54HS3Ogl/xByWYhNoq5f5EgarbC9mP2P0yRO0dka3B0+2VWHmmkxmfl
-         8bZOLFVKq9cI/iYbCxUZCZjU/JerO0nGXlGxXJhYKH5saoEEac5d+dV31vt9PKaEQA
-         bwdPBoPzNNKN+9iQVSk/sstbp8eZPoFbjY+RDJ1I5C8mROFgi9q+B5S04Phifv6uaG
-         3rW9neXUBJeWg==
-Subject: [PATCH 1/3] xfs: refactor buffer cancellation table allocation
+        b=h3bQLEEsevV6beE/XKKfiv2XCfNPuMbZEuCRzwlZJ/uskaOCmkN6oH367j9QeVkmx
+         Hc2LrkavIQO02h1TZgeVSMjJwo8MsftdKOs26KYCWrX78JOEHILUMwIP1OthUxKCfx
+         XNZf8iwKynx6TD+Ro/qh0QJtNmt8aWADF4hSneZBNdhrL19+QczNpUqCLSMv7LEouP
+         lN2/tXD/o804JTTmfhukL092sFPK0XoMIkdNiuhXHyc2BUCDKDmrcks0dyJBNl3NmC
+         r8qB2NJn7Z+GXUSLPnifbc/cn0mb1NOcMyvcfETbtGuw2dhkNYRRj9yvP2dHWoe4a0
+         WDLn+0KfQw/CQ==
+Subject: [PATCH 2/3] xfs: don't leak xfs_buf_cancel structures when recovery
+ fails
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Date:   Wed, 18 May 2022 11:55:29 -0700
-Message-ID: <165290012900.1646290.13406779783177992762.stgit@magnolia>
+Date:   Wed, 18 May 2022 11:55:34 -0700
+Message-ID: <165290013462.1646290.6497497049561091089.stgit@magnolia>
 In-Reply-To: <165290012335.1646290.10769144718908005637.stgit@magnolia>
 References: <165290012335.1646290.10769144718908005637.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,111 +50,65 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move the code that allocates and frees the buffer cancellation tables
-used by log recovery into the file that actually uses the tables.  This
-is a precursor to some cleanups and a memory leak fix.
+If log recovery fails, we free the memory used by the buffer
+cancellation buckets, but we don't actually traverse each bucket list to
+free the individual xfs_buf_cancel objects.  This leads to a memory
+leak, as reported by kmemleak in xfs/051:
+
+unreferenced object 0xffff888103629560 (size 32):
+  comm "mount", pid 687045, jiffies 4296935916 (age 10.752s)
+  hex dump (first 32 bytes):
+    08 d3 0a 01 00 00 00 00 08 00 00 00 01 00 00 00  ................
+    d0 f5 0b 92 81 88 ff ff 80 64 64 25 81 88 ff ff  .........dd%....
+  backtrace:
+    [<ffffffffa0317c83>] kmem_alloc+0x73/0x140 [xfs]
+    [<ffffffffa03234a9>] xlog_recover_buf_commit_pass1+0x139/0x200 [xfs]
+    [<ffffffffa032dc27>] xlog_recover_commit_trans+0x307/0x350 [xfs]
+    [<ffffffffa032df15>] xlog_recovery_process_trans+0xa5/0xe0 [xfs]
+    [<ffffffffa032e12d>] xlog_recover_process_data+0x8d/0x140 [xfs]
+    [<ffffffffa032e49d>] xlog_do_recovery_pass+0x19d/0x740 [xfs]
+    [<ffffffffa032f22d>] xlog_do_log_recovery+0x6d/0x150 [xfs]
+    [<ffffffffa032f343>] xlog_do_recover+0x33/0x1d0 [xfs]
+    [<ffffffffa032faba>] xlog_recover+0xda/0x190 [xfs]
+    [<ffffffffa03194bc>] xfs_log_mount+0x14c/0x360 [xfs]
+    [<ffffffffa030bfed>] xfs_mountfs+0x50d/0xa60 [xfs]
+    [<ffffffffa03124b5>] xfs_fs_fill_super+0x6a5/0x950 [xfs]
+    [<ffffffff812b92a5>] get_tree_bdev+0x175/0x280
+    [<ffffffff812b7c3a>] vfs_get_tree+0x1a/0x80
+    [<ffffffff812e366f>] path_mount+0x6ff/0xaa0
+    [<ffffffff812e3b13>] __x64_sys_mount+0x103/0x140
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_log_recover.h |    2 ++
- fs/xfs/xfs_buf_item_recover.c   |   26 ++++++++++++++++++++++++++
- fs/xfs/xfs_log_recover.c        |   21 +++++++--------------
- 3 files changed, 35 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_buf_item_recover.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index 32e216255cb0..c96102484aa6 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -128,5 +128,7 @@ int xlog_recover_iget(struct xfs_mount *mp, xfs_ino_t ino,
- 		struct xfs_inode **ipp);
- void xlog_recover_release_intent(struct xlog *log, unsigned short intent_type,
- 		uint64_t intent_id);
-+void xlog_alloc_buf_cancel_table(struct xlog *log);
-+void xlog_free_buf_cancel_table(struct xlog *log);
- 
- #endif	/* __XFS_LOG_RECOVER_H__ */
 diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index e484251dc9c8..8624ac22ca4a 100644
+index 8624ac22ca4a..d1e484649a33 100644
 --- a/fs/xfs/xfs_buf_item_recover.c
 +++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -993,3 +993,29 @@ const struct xlog_recover_item_ops xlog_buf_item_ops = {
- 	.commit_pass1		= xlog_recover_buf_commit_pass1,
- 	.commit_pass2		= xlog_recover_buf_commit_pass2,
- };
-+
-+void
-+xlog_alloc_buf_cancel_table(
-+	struct xlog	*log)
-+{
+@@ -1013,9 +1013,22 @@ void
+ xlog_free_buf_cancel_table(
+ 	struct xlog	*log)
+ {
 +	int		i;
 +
-+	ASSERT(log->l_buf_cancel_table == NULL);
-+
-+	log->l_buf_cancel_table = kmem_zalloc(XLOG_BC_TABLE_SIZE *
-+						 sizeof(struct list_head),
-+						 0);
-+	for (i = 0; i < XLOG_BC_TABLE_SIZE; i++)
-+		INIT_LIST_HEAD(&log->l_buf_cancel_table[i]);
-+}
-+
-+void
-+xlog_free_buf_cancel_table(
-+	struct xlog	*log)
-+{
-+	if (!log->l_buf_cancel_table)
-+		return;
-+
-+	kmem_free(log->l_buf_cancel_table);
-+	log->l_buf_cancel_table = NULL;
-+}
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 97b941c07957..bb10686ef88a 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3230,7 +3230,7 @@ xlog_do_log_recovery(
- 	xfs_daddr_t	head_blk,
- 	xfs_daddr_t	tail_blk)
- {
--	int		error, i;
-+	int		error;
+ 	if (!log->l_buf_cancel_table)
+ 		return;
  
- 	ASSERT(head_blk != tail_blk);
- 
-@@ -3238,19 +3238,13 @@ xlog_do_log_recovery(
- 	 * First do a pass to find all of the cancelled buf log items.
- 	 * Store them in the buf_cancel_table for use in the second pass.
- 	 */
--	log->l_buf_cancel_table = kmem_zalloc(XLOG_BC_TABLE_SIZE *
--						 sizeof(struct list_head),
--						 0);
--	for (i = 0; i < XLOG_BC_TABLE_SIZE; i++)
--		INIT_LIST_HEAD(&log->l_buf_cancel_table[i]);
-+	xlog_alloc_buf_cancel_table(log);
- 
- 	error = xlog_do_recovery_pass(log, head_blk, tail_blk,
- 				      XLOG_RECOVER_PASS1, NULL);
--	if (error != 0) {
--		kmem_free(log->l_buf_cancel_table);
--		log->l_buf_cancel_table = NULL;
--		return error;
--	}
-+	if (error != 0)
-+		goto out_cancel;
++	for (i = 0; i < XLOG_BC_TABLE_SIZE; i++) {
++		struct xfs_buf_cancel	*bc;
 +
- 	/*
- 	 * Then do a second pass to actually recover the items in the log.
- 	 * When it is complete free the table of buf cancel items.
-@@ -3266,9 +3260,8 @@ xlog_do_log_recovery(
- 	}
- #endif	/* DEBUG */
- 
--	kmem_free(log->l_buf_cancel_table);
--	log->l_buf_cancel_table = NULL;
--
-+out_cancel:
-+	xlog_free_buf_cancel_table(log);
- 	return error;
++		while ((bc = list_first_entry_or_null(
++				&log->l_buf_cancel_table[i],
++				struct xfs_buf_cancel, bc_list))) {
++			list_del(&bc->bc_list);
++			kmem_free(bc);
++		}
++	}
++
+ 	kmem_free(log->l_buf_cancel_table);
+ 	log->l_buf_cancel_table = NULL;
  }
- 
 
