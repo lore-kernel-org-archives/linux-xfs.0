@@ -2,469 +2,150 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E62A9C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 18:56:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C957AC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 20:38:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241757AbiERS42 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 May 2022 14:56:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40082 "EHLO
+        id S242552AbiERUiQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 May 2022 16:38:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241746AbiERS41 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 14:56:27 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 357C619CB72
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 11:56:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B72316183D
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 18:56:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20BEEC34100;
-        Wed, 18 May 2022 18:56:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652900184;
-        bh=9boY4t5P1idJPwS6cOv8ggNtADJsbb/ZFC8gnafvG14=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Q3hWJuF8L2gfiQTrwUnSoSnyIWduW0GQWpJm+qeZx4be6KGgjzmuibyPCq3T67rTD
-         su/n9DqwKiSor9R8hWsmszXPlCrH+vPkm4sD18a/Y/OMV7L9/DrHEtHA1FQYlHgWVH
-         CJ/uuaQ/qvf4QYblgkcDMeifiHNFV3wVGpHDHGWmhjOpXDlTL6Lxv+NyfNroYlpNzg
-         YQAK7GyZzfAjWrBX6gk27GWPAZ3AAay2Huw/60CAptkyAtkgi0HUGhoypMbuDB9mtu
-         YPECy0s+SiH0YbQ9hNOhOcnnWcQYMTN+0xvrNPCMlXl712hrj1w4SKnvgxawkiRbWh
-         GpVLRCtg6aXog==
-Subject: [PATCH 7/7] xfs: rename struct xfs_attr_item to xfs_attr_intent
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org, david@fromorbit.com,
-        allison.henderson@oracle.com
-Date:   Wed, 18 May 2022 11:56:23 -0700
-Message-ID: <165290018363.1647637.1431221002395576716.stgit@magnolia>
-In-Reply-To: <165290014409.1647637.4876706578208264219.stgit@magnolia>
-References: <165290014409.1647637.4876706578208264219.stgit@magnolia>
-User-Agent: StGit/0.19
-MIME-Version: 1.0
+        with ESMTP id S242469AbiERUiP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 16:38:15 -0400
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2042.outbound.protection.outlook.com [40.107.244.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 522D417DDF1
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 13:38:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nijk2QMWDhjJjLkQ1rJz5BzTpUuje0pReE1PTqiJgWxKbSNxmeWTV9zO+d0INnxkPIhR32A0WeLbhjX0diq0tFu7xHesSDdohhrMtJst/XL97RmFYmRm7clHcCigFMpEW/Db1ohB4ICiHlPtBI9ug1OCHK+mrj+dIowcGV2TZa5l13SGDGHzeEc1EjqA1Jf1zoQH1Wq55iR1C1WmLuifS/sBsywC5wNXwYw4HdzElJ3qhZUen5a+Og/L41ZbxaVfXywjdoNIWC8qeRCUwsvp8N7CQZjrWqHP+kIa9PRPkmeflA4e+kA2MDdp3xt/B8rYjBd7BqooEe4duSju/W7JVg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=doW2MbZUTtqHdYHuuo83QAqRgDg7U4V8ArJ3hAXwcRs=;
+ b=SoMTvFPLMQgl1ar9tO7xSgbTRONwYoFNjLH10zEexJLBB7Z7GA5sLv4sKt6dCP/0bqmio9TMGsGQE58QI/Zsk+ZXRqx2wxahR7iQmOb2WHZ4V3jzoC81a1m4L/qwEXtPisz4QGfmHQz7WvJHHio0HMd4fU7DDmug1t5P4mUnLOyjAuQ0oHEmiDLLkOejYRQwO5AaUOo/bkPoNM4yhEYsPGrY2xbkC+oI+rtN+SCLCRsG9kEj+JTNDGlS1cgoXlY7vYdQo90cf7E2WurC6Wqtw8v/qCnYB6XroltOODz+nZI1reBgr/GlxnPfwHa++gutfoxkQkaWzdJ8B9dkYNmYiw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=doW2MbZUTtqHdYHuuo83QAqRgDg7U4V8ArJ3hAXwcRs=;
+ b=M8O3XzKMycQbhx7zmmYcs6LD6GT3nKONcdgGQj7jVXt5xuQKRe3tnShC0QeyjvN5jKnnRnM2r5bPt1u6PzOub4GDIv6yzim9FbcILwB1U3dbxlOQI8WIJnjRe4wNcC2TeTiouCcz4jNmFNh77MM9dk5H9LfwsWDB9D7eswRl6fI1gc3fqQ60Of/VGTC8kD5JkqlDKpnENju413XF6FjPaiRLjOQ8QyyEpVMU92i6HK9srZDE+zeKurhkCGN+Qoogb8vzyNMv74bzRMXZ8eXeBRyYrjRF3OA0mkHtMlsa9xiYb9iAh7SXMa8W0DYkspfExkTld149m+GPohXzlBzPQA==
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
+ by CY4PR1201MB0135.namprd12.prod.outlook.com (2603:10b6:910:17::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.15; Wed, 18 May
+ 2022 20:38:12 +0000
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::4925:327b:5c15:b393]) by MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::4925:327b:5c15:b393%3]) with mapi id 15.20.5250.019; Wed, 18 May 2022
+ 20:38:12 +0000
+From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To:     "xiakaixu1987@gmail.com" <xiakaixu1987@gmail.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+CC:     "djwong@kernel.org" <djwong@kernel.org>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [PATCH] xfs: reduce IOCB_NOWAIT judgment for retry exclusive
+ unaligned DIO
+Thread-Topic: [PATCH] xfs: reduce IOCB_NOWAIT judgment for retry exclusive
+ unaligned DIO
+Thread-Index: AQHYatDCNqGlarKHUkaa6u5n0dSSuK0lGL+A
+Date:   Wed, 18 May 2022 20:38:12 +0000
+Message-ID: <46821243-716a-86cc-e849-eafae5aa75d5@nvidia.com>
+References: <1652889671-30156-1-git-send-email-kaixuxia@tencent.com>
+In-Reply-To: <1652889671-30156-1-git-send-email-kaixuxia@tencent.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 215d1f9d-8d23-4c12-931b-08da390e53bc
+x-ms-traffictypediagnostic: CY4PR1201MB0135:EE_
+x-microsoft-antispam-prvs: <CY4PR1201MB0135ACA4CCBAB0808392921AA3D19@CY4PR1201MB0135.namprd12.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: XznavZbJuoSOqQc5EE9DcOQF5hRx+hv07GEXa7UMN04Dlm8GRMAhec1F5/31FzZ9on4vs/6jCslSvClqy4IAbQqiJtVEfcYvcob9SlDWuoSA5Je0uK9drp8AZErl0ymBtp5pGfiuQr9hTMcNU+JLBWuf0gTMw+RG5fL10t+rTIf7ArgAo3Xt44S/BF/4/zIMDos0tLF4cZmJSsahwNGB4ryxr/yBzRC/nQyZzSatJ0O7c9Tam3e+9wPo++UhP1Nja7FoaVlT/eAfG7vBo8QieFh7Nc4pwz3bkiQXEwMe899Vqbf+XGhFcipL5cP3joD2QGz0+U3oXja21+I4kigdHviF3UIU74w0u4518d/10YN5DmhnqOq56NlOemIqcqN+Ze51Cle/SNSnx+I/44K77Fmb6eDGjzgLxGNAGo2F83/rKVIHFCMidxZKnwfEC3M1RDseLS3WE1oqdXbrJ3Yg5ivDZ/TDbphRqKQNu2VK4x1aTwaOOdI3SeN4dmMW1ovHEQLJDCFEgOHF5/e9I1H7AaW+Ea8qSbAX0+MLOjvZN3SF6Ykdf+MYr9D+U49lW6LwTboN5swGxrNsWlr23Q2DfKI8WH/QJN/LUW3us0WEEPOpz6jyc4CnH/tk+jT6LxQScT/y5RCfXvQ3GOqnxxo5mnBgJHzbqyGLkadLMS7vci8NJqcYGr9Giuh68/uY4hazc/GaJNxu5D6hE0dBX+jNPPEUwO0suDDzEhb9npRkKiL8UXmthgZdcgFB92s6Tq2Rm/2CtboVRyPhNe8QHD6GXg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6486002)(2906002)(508600001)(71200400001)(4326008)(8676002)(76116006)(31696002)(54906003)(110136005)(91956017)(86362001)(316002)(31686004)(66946007)(6506007)(66446008)(4744005)(83380400001)(64756008)(66476007)(5660300002)(8936002)(66556008)(53546011)(36756003)(38070700005)(186003)(2616005)(122000001)(38100700002)(6512007)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 2
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?QUxZY0Zkc3gzYzZKdDgwb3g3ODZYUUljSWJlZVc4Ykp0RXJZeGExQnN3ckpz?=
+ =?utf-8?B?aDFHN0hrZHRYclEwdktKK0ZQRG10RDFqZ1hsNHZ2OGIzQWxKbFhnSHh3TzFV?=
+ =?utf-8?B?eC8vandSclFpMmsxaHBLaWl1UWl0dlkzTzRSMnEwc09kamNOaExIZkhCcUJY?=
+ =?utf-8?B?ZkgrWkxCaHlKUi9IeThKSkJySjQvQ1d6Z3ovVWVlN1ZEUXlRRnphaGowRkRR?=
+ =?utf-8?B?am1mSVl4MmxFY0tnbkJvclRFUGZ3YU10SWozMWtlK1JlTXBQMGdpTzBSMG5y?=
+ =?utf-8?B?dlowcE1aUGxRTDF3dVZlWG9FRDNQTVhVSUpheWc3d3M4SytxSzU1VlNNSmZs?=
+ =?utf-8?B?cWJlYSswZ1E3QzZSUTBxMklFSkFwQ1hSZDE1NTZabjF1alZQQWtJMkZUT3U1?=
+ =?utf-8?B?THNwQlZZMmZNVVJWUjBsRWY1SmwxRk4vU0VQb2ZiZlU0azJBbDlEalBEMlNY?=
+ =?utf-8?B?RUpSS2ZHMExTcW4wN3FiZ3lHeHRkSzZmS1dpL1N4MG5JVGNPVURxME80Y2NO?=
+ =?utf-8?B?U1JuZmNUZFN4bmpNYVNCWmhEbGFuMGE1VVJyckg5WFVXV09BNUM5SXNBamJz?=
+ =?utf-8?B?Nmlha2RzbHRRWEp5TzBFbmtURXJ3d255ZEpvMHlBb1JudWp6SU1Db0pBaVNX?=
+ =?utf-8?B?ZnZLZVRMc0tFV0FsRFJQL0RNbHRWbkhkMUp2cG00RHZ3ZGRGU0VBb05Qd1Ba?=
+ =?utf-8?B?bXJURjhudFFJYUNCMHhUakJXMWpSRExNeFFnUmxiR01pMTl3TS9oTGtsSkw4?=
+ =?utf-8?B?dmRWTzJsVjlBaTFHTUlLNzg1TEtVbkt1bmFHelVkSzlJOWV2RkdnMk50UVho?=
+ =?utf-8?B?OTRWWXZMRUJqajl2TVltcTQxTENVL2M1SU80MDRwTkNKNWNkYU5ZcHpxbGZC?=
+ =?utf-8?B?bTlSMDdQa2JyeEJHQUlNemlqWEJFbjMxakhCc0gvS25Ta3ovVVdYdlVjM2Zi?=
+ =?utf-8?B?WDFLMWFXZEpzUlVjV2NUWXRhbUxGbTBlUk5xYXdiOUdXSmJPQ3F6TmU4WS9M?=
+ =?utf-8?B?a05YUnhmcnJ0NGJBTlY2RHViQkJwcXRGdjZUWUhENlNoTTQ0MVdDMVYxZ3hJ?=
+ =?utf-8?B?eWlqMlFERE9NMDVPYUNxWWt4QUEvTld3cTZsMDlhRXRpUmlVa3AxSWR6RkZV?=
+ =?utf-8?B?R0lPa0IzQ1dkOWZzYnNvMVhDTXRpVFpESHlVdmN2ZThEQk9qNVRqaldoaWtw?=
+ =?utf-8?B?UjRaaFIrckorQnF0dXlIM2QvUlhhN09BVW9tV3kra1ExWXBRQ29ra0NuR2h3?=
+ =?utf-8?B?VFUyaVJhWE1Lb1NxMUVYa3NWZ1pueFNnZVNueTlrUnIrRmhydE1QTkt0MlND?=
+ =?utf-8?B?Z2xNekxKZ1lqVVRaODY0Lyt0Z1I3UGVJYkhKVjZzNHFjeDk4b2FVZ2o5d0NF?=
+ =?utf-8?B?SC95eWhwNENBT2h3TDZydkIvaWhXeVhLZjRTOFB2M2lWbG9IQ1pyeTcwQ1Fu?=
+ =?utf-8?B?dEQ4NnU0QXpFankyQzdTdktYenlzUnRMQ3hqREJhQzJWQzZMc01UZzFXdE56?=
+ =?utf-8?B?SUJJSTJSOHNtQVRiZ09YemozUmJCdzJzWC9ZUm5GV2hLVDd0Tjl5QWk2VlFr?=
+ =?utf-8?B?TFdKTm9nK043TGFid200bXNnUWlYbUw0ZGlVYkJPMnhSdDlSR3RXT0JFV1Rr?=
+ =?utf-8?B?UkwvaTA4TUV1MkdpRUZwNXI4Zm82MDZpOXA1VjlLcW1FTUw4dnhNMUo0b0Z2?=
+ =?utf-8?B?UHh3NEh6aUxjMVVXcDNycUU3YlliYXpwaXhvNDNoLzJMdDJFUHNPWktFYldF?=
+ =?utf-8?B?anRsanNMeGZRQ3ZtWTJIYk0wRmFuSzNyUXFLbU92bUZLVCt4WUJORjVLWk53?=
+ =?utf-8?B?bmEvd0pTSnhLRC9VUCt3S3RNU0dTTFdiNmJUUWNuWkpoV1pBa3p6WHhmSTVT?=
+ =?utf-8?B?S01RSVF2a1FZaTcwUTJPdW90cDVYTm1OQWN3MHZBejlrTzRITWpjei82VlBw?=
+ =?utf-8?B?Qm5McFpRM1k0WU5aUXg0M3dWRnlJeWZWSUJyN3lEREpkNVVwazViSVJUcXkw?=
+ =?utf-8?B?MDVPZ0dhQ0gxREdBQkdONkx4emgvdVk3K3gwOHhod1l4cWpZUCtrNC9aNEs4?=
+ =?utf-8?B?VTEwSitkcElwK29rQ1RCUWQ4ZVhIcFVodkdOVHNISTRHZU5vQXZGNTU3cXFP?=
+ =?utf-8?B?L3hsSHBTL3N4SVpNUThHS0VIYnROM1c5QTcrTzdTaERBT1lJRTlNYmJ6eUw1?=
+ =?utf-8?B?aVZ1c3RvR3VIUGJLc0JMMnpDcEhsdStoUS9mc2lxdlRlVktVWndaRWJWdVcv?=
+ =?utf-8?B?T3hray9Jb0RZTGlBTHJ5ajJTTEJEMlQ4SHVVME5PaExVc29iWmxhRzk4VWFo?=
+ =?utf-8?B?RnBCWHdUOEQyb1poVEQwUTBLY1dxTlBKZ2FzejR3QUR3bENQSG93eWxtcWF0?=
+ =?utf-8?Q?tpEXiCbEXQJQFZgV1MHP35khg+FhXHVyicAG5YdRjX29b?=
+x-ms-exchange-antispam-messagedata-1: rmLZCtf6dXlMeA==
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-ID: <51B992B7ACC0104BB4D4767DBD7BC36C@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 215d1f9d-8d23-4c12-931b-08da390e53bc
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 May 2022 20:38:12.3382
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: mDvH124XVoPudZJHWU3G5Me/dsi+53LX6C90wQUGSebI4hJoNEUJ5minjSkCfNK8UTlIeFvWvBfMmD/E0XwVNw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR1201MB0135
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
-
-Everywhere else in XFS, structures that capture the state of an ongoing
-deferred work item all have names that end with "_intent".  The new
-extended attribute deferred work items are not named as such, so fix it
-to follow the naming convention used elsewhere.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_attr.c        |   52 ++++++++++++++++++++-------------------
- fs/xfs/libxfs/xfs_attr.h        |    8 +++---
- fs/xfs/libxfs/xfs_attr_remote.c |    6 ++---
- fs/xfs/libxfs/xfs_attr_remote.h |    6 ++---
- fs/xfs/xfs_attr_item.c          |   26 ++++++++++----------
- fs/xfs/xfs_attr_item.h          |    6 ++---
- 6 files changed, 52 insertions(+), 52 deletions(-)
-
-
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index b1300bd10318..4a53a0f5f7ed 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -57,9 +57,9 @@ STATIC int xfs_attr_leaf_try_add(struct xfs_da_args *args, struct xfs_buf *bp);
-  */
- STATIC int xfs_attr_node_get(xfs_da_args_t *args);
- STATIC void xfs_attr_restore_rmt_blk(struct xfs_da_args *args);
--static int xfs_attr_node_try_addname(struct xfs_attr_item *attr);
--STATIC int xfs_attr_node_addname_find_attr(struct xfs_attr_item *attr);
--STATIC int xfs_attr_node_remove_attr(struct xfs_attr_item *attr);
-+static int xfs_attr_node_try_addname(struct xfs_attr_intent *attr);
-+STATIC int xfs_attr_node_addname_find_attr(struct xfs_attr_intent *attr);
-+STATIC int xfs_attr_node_remove_attr(struct xfs_attr_intent *attr);
- STATIC int xfs_attr_node_lookup(struct xfs_da_args *args,
- 		struct xfs_da_state *state);
- 
-@@ -376,7 +376,7 @@ xfs_attr_try_sf_addname(
- 
- static int
- xfs_attr_sf_addname(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args		*args = attr->xattri_da_args;
- 	struct xfs_inode		*dp = args->dp;
-@@ -422,7 +422,7 @@ xfs_attr_sf_addname(
-  */
- static enum xfs_delattr_state
- xfs_attr_complete_op(
--	struct xfs_attr_item	*attr,
-+	struct xfs_attr_intent	*attr,
- 	enum xfs_delattr_state	replace_state)
- {
- 	struct xfs_da_args	*args = attr->xattri_da_args;
-@@ -438,7 +438,7 @@ xfs_attr_complete_op(
- 
- static int
- xfs_attr_leaf_addname(
--	struct xfs_attr_item	*attr)
-+	struct xfs_attr_intent	*attr)
- {
- 	struct xfs_da_args	*args = attr->xattri_da_args;
- 	int			error;
-@@ -492,7 +492,7 @@ xfs_attr_leaf_addname(
-  */
- static int
- xfs_attr_node_addname(
--	struct xfs_attr_item	*attr)
-+	struct xfs_attr_intent	*attr)
- {
- 	struct xfs_da_args	*args = attr->xattri_da_args;
- 	int			error;
-@@ -529,7 +529,7 @@ xfs_attr_node_addname(
- 
- static int
- xfs_attr_rmtval_alloc(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args              *args = attr->xattri_da_args;
- 	int				error = 0;
-@@ -596,7 +596,7 @@ xfs_attr_leaf_mark_incomplete(
- /* Ensure the da state of an xattr deferred work item is ready to go. */
- static inline void
- xfs_attr_item_ensure_da_state(
--	struct xfs_attr_item	*attr)
-+	struct xfs_attr_intent	*attr)
- {
- 	struct xfs_da_args	*args = attr->xattri_da_args;
- 
-@@ -613,7 +613,7 @@ xfs_attr_item_ensure_da_state(
-  */
- static
- int xfs_attr_node_removename_setup(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args		*args = attr->xattri_da_args;
- 	struct xfs_da_state		*state;
-@@ -651,7 +651,7 @@ int xfs_attr_node_removename_setup(
-  */
- static int
- xfs_attr_leaf_remove_attr(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args              *args = attr->xattri_da_args;
- 	struct xfs_inode		*dp = args->dp;
-@@ -716,7 +716,7 @@ xfs_attr_leaf_shrink(
-  */
- int
- xfs_attr_set_iter(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args              *args = attr->xattri_da_args;
- 	int				error = 0;
-@@ -893,13 +893,13 @@ xfs_attr_lookup(
- }
- 
- static int
--xfs_attr_item_init(
-+xfs_attr_intent_init(
- 	struct xfs_da_args	*args,
- 	unsigned int		op_flags,	/* op flag (set or remove) */
--	struct xfs_attr_item	**attr)		/* new xfs_attr_item */
-+	struct xfs_attr_intent	**attr)		/* new xfs_attr_intent */
- {
- 
--	struct xfs_attr_item	*new;
-+	struct xfs_attr_intent	*new;
- 
- 	new = kmem_cache_zalloc(xfs_attr_intent_cache, GFP_NOFS | __GFP_NOFAIL);
- 	new->xattri_op_flags = op_flags;
-@@ -914,10 +914,10 @@ static int
- xfs_attr_defer_add(
- 	struct xfs_da_args	*args)
- {
--	struct xfs_attr_item	*new;
-+	struct xfs_attr_intent	*new;
- 	int			error = 0;
- 
--	error = xfs_attr_item_init(args, XFS_ATTRI_OP_FLAGS_SET, &new);
-+	error = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_SET, &new);
- 	if (error)
- 		return error;
- 
-@@ -933,10 +933,10 @@ static int
- xfs_attr_defer_replace(
- 	struct xfs_da_args	*args)
- {
--	struct xfs_attr_item	*new;
-+	struct xfs_attr_intent	*new;
- 	int			error = 0;
- 
--	error = xfs_attr_item_init(args, XFS_ATTRI_OP_FLAGS_REPLACE, &new);
-+	error = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_REPLACE, &new);
- 	if (error)
- 		return error;
- 
-@@ -953,10 +953,10 @@ xfs_attr_defer_remove(
- 	struct xfs_da_args	*args)
- {
- 
--	struct xfs_attr_item	*new;
-+	struct xfs_attr_intent	*new;
- 	int			error;
- 
--	error  = xfs_attr_item_init(args, XFS_ATTRI_OP_FLAGS_REMOVE, &new);
-+	error  = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_REMOVE, &new);
- 	if (error)
- 		return error;
- 
-@@ -1394,7 +1394,7 @@ xfs_attr_node_lookup(
- 
- STATIC int
- xfs_attr_node_addname_find_attr(
--	 struct xfs_attr_item	*attr)
-+	 struct xfs_attr_intent	*attr)
- {
- 	struct xfs_da_args	*args = attr->xattri_da_args;
- 	int			error;
-@@ -1447,7 +1447,7 @@ xfs_attr_node_addname_find_attr(
-  */
- static int
- xfs_attr_node_try_addname(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args		*args = attr->xattri_da_args;
- 	struct xfs_da_state		*state = attr->xattri_da_state;
-@@ -1513,7 +1513,7 @@ xfs_attr_node_removename(
- 
- static int
- xfs_attr_node_remove_attr(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args		*args = attr->xattri_da_args;
- 	struct xfs_da_state		*state = xfs_da_state_alloc(args);
-@@ -1616,8 +1616,8 @@ xfs_attr_namecheck(
- int __init
- xfs_attr_intent_init_cache(void)
- {
--	xfs_attr_intent_cache = kmem_cache_create("xfs_attr_item",
--			sizeof(struct xfs_attr_item),
-+	xfs_attr_intent_cache = kmem_cache_create("xfs_attr_intent",
-+			sizeof(struct xfs_attr_intent),
- 			0, 0, NULL);
- 
- 	return xfs_attr_intent_cache != NULL ? 0 : -ENOMEM;
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index e271462c4f04..b92fe707159a 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -434,7 +434,7 @@ struct xfs_attr_list_context {
-  */
- 
- /*
-- * Enum values for xfs_attr_item.xattri_da_state
-+ * Enum values for xfs_attr_intent.xattri_da_state
-  *
-  * These values are used by delayed attribute operations to keep track  of where
-  * they were before they returned -EAGAIN.  A return code of -EAGAIN signals the
-@@ -506,7 +506,7 @@ struct xfs_attri_log_nameval;
- /*
-  * Context used for keeping track of delayed attribute operations
-  */
--struct xfs_attr_item {
-+struct xfs_attr_intent {
- 	/*
- 	 * used to log this item to an intent containing a list of attrs to
- 	 * commit later
-@@ -559,8 +559,8 @@ bool xfs_attr_is_leaf(struct xfs_inode *ip);
- int xfs_attr_get_ilocked(struct xfs_da_args *args);
- int xfs_attr_get(struct xfs_da_args *args);
- int xfs_attr_set(struct xfs_da_args *args);
--int xfs_attr_set_iter(struct xfs_attr_item *attr);
--int xfs_attr_remove_iter(struct xfs_attr_item *attr);
-+int xfs_attr_set_iter(struct xfs_attr_intent *attr);
-+int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
- bool xfs_attr_namecheck(const void *name, size_t length);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
- void xfs_init_attr_trans(struct xfs_da_args *args, struct xfs_trans_res *tres,
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 4250159ecced..7298c148f848 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -568,7 +568,7 @@ xfs_attr_rmtval_stale(
-  */
- int
- xfs_attr_rmtval_find_space(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args		*args = attr->xattri_da_args;
- 	struct xfs_bmbt_irec		*map = &attr->xattri_map;
-@@ -598,7 +598,7 @@ xfs_attr_rmtval_find_space(
-  */
- int
- xfs_attr_rmtval_set_blk(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args		*args = attr->xattri_da_args;
- 	struct xfs_inode		*dp = args->dp;
-@@ -674,7 +674,7 @@ xfs_attr_rmtval_invalidate(
-  */
- int
- xfs_attr_rmtval_remove(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	struct xfs_da_args		*args = attr->xattri_da_args;
- 	int				error, done;
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
-index 62b398edec3f..d097ec6c4dc3 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.h
-+++ b/fs/xfs/libxfs/xfs_attr_remote.h
-@@ -12,9 +12,9 @@ int xfs_attr_rmtval_get(struct xfs_da_args *args);
- int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
- 		xfs_buf_flags_t incore_flags);
- int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
--int xfs_attr_rmtval_remove(struct xfs_attr_item *attr);
-+int xfs_attr_rmtval_remove(struct xfs_attr_intent *attr);
- int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
- int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
--int xfs_attr_rmtval_set_blk(struct xfs_attr_item *attr);
--int xfs_attr_rmtval_find_space(struct xfs_attr_item *attr);
-+int xfs_attr_rmtval_set_blk(struct xfs_attr_intent *attr);
-+int xfs_attr_rmtval_find_space(struct xfs_attr_intent *attr);
- #endif /* __XFS_ATTR_REMOTE_H__ */
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 4b7919ff0fc6..2d16961b95db 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -357,7 +357,7 @@ xfs_attrd_item_intent(
-  */
- STATIC int
- xfs_xattri_finish_update(
--	struct xfs_attr_item		*attr,
-+	struct xfs_attr_intent		*attr,
- 	struct xfs_attrd_log_item	*attrdp)
- {
- 	struct xfs_da_args		*args = attr->xattri_da_args;
-@@ -395,7 +395,7 @@ STATIC void
- xfs_attr_log_item(
- 	struct xfs_trans		*tp,
- 	struct xfs_attri_log_item	*attrip,
--	const struct xfs_attr_item	*attr)
-+	const struct xfs_attr_intent	*attr)
- {
- 	struct xfs_attri_log_format	*attrp;
- 
-@@ -403,9 +403,9 @@ xfs_attr_log_item(
- 	set_bit(XFS_LI_DIRTY, &attrip->attri_item.li_flags);
- 
- 	/*
--	 * At this point the xfs_attr_item has been constructed, and we've
-+	 * At this point the xfs_attr_intent has been constructed, and we've
- 	 * created the log intent. Fill in the attri log item and log format
--	 * structure with fields from this xfs_attr_item
-+	 * structure with fields from this xfs_attr_intent
- 	 */
- 	attrp = &attrip->attri_format;
- 	attrp->alfi_ino = attr->xattri_da_args->dp->i_ino;
-@@ -427,7 +427,7 @@ xfs_attr_create_intent(
- {
- 	struct xfs_mount		*mp = tp->t_mountp;
- 	struct xfs_attri_log_item	*attrip;
--	struct xfs_attr_item		*attr;
-+	struct xfs_attr_intent		*attr;
- 
- 	ASSERT(count == 1);
- 
-@@ -438,7 +438,7 @@ xfs_attr_create_intent(
- 	 * Each attr item only performs one attribute operation at a time, so
- 	 * this is a list of one
- 	 */
--	attr = list_first_entry_or_null(items, struct xfs_attr_item,
-+	attr = list_first_entry_or_null(items, struct xfs_attr_intent,
- 			xattri_list);
- 
- 	/*
-@@ -470,7 +470,7 @@ xfs_attr_create_intent(
- 
- static inline void
- xfs_attr_free_item(
--	struct xfs_attr_item		*attr)
-+	struct xfs_attr_intent		*attr)
- {
- 	if (attr->xattri_da_state)
- 		xfs_da_state_free(attr->xattri_da_state);
-@@ -490,11 +490,11 @@ xfs_attr_finish_item(
- 	struct list_head		*item,
- 	struct xfs_btree_cur		**state)
- {
--	struct xfs_attr_item		*attr;
-+	struct xfs_attr_intent		*attr;
- 	struct xfs_attrd_log_item	*done_item = NULL;
- 	int				error;
- 
--	attr = container_of(item, struct xfs_attr_item, xattri_list);
-+	attr = container_of(item, struct xfs_attr_intent, xattri_list);
- 	if (done)
- 		done_item = ATTRD_ITEM(done);
- 
-@@ -524,9 +524,9 @@ STATIC void
- xfs_attr_cancel_item(
- 	struct list_head		*item)
- {
--	struct xfs_attr_item		*attr;
-+	struct xfs_attr_intent		*attr;
- 
--	attr = container_of(item, struct xfs_attr_item, xattri_list);
-+	attr = container_of(item, struct xfs_attr_intent, xattri_list);
- 	xfs_attr_free_item(attr);
- }
- 
-@@ -586,7 +586,7 @@ xfs_attri_item_recover(
- 	struct list_head		*capture_list)
- {
- 	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
--	struct xfs_attr_item		*attr;
-+	struct xfs_attr_intent		*attr;
- 	struct xfs_mount		*mp = lip->li_log->l_mp;
- 	struct xfs_inode		*ip;
- 	struct xfs_da_args		*args;
-@@ -613,7 +613,7 @@ xfs_attri_item_recover(
- 	if (error)
- 		return error;
- 
--	attr = kmem_zalloc(sizeof(struct xfs_attr_item) +
-+	attr = kmem_zalloc(sizeof(struct xfs_attr_intent) +
- 			   sizeof(struct xfs_da_args), KM_NOFS);
- 	args = (struct xfs_da_args *)(attr + 1);
- 
-diff --git a/fs/xfs/xfs_attr_item.h b/fs/xfs/xfs_attr_item.h
-index 5141dc809d65..a00393144bca 100644
---- a/fs/xfs/xfs_attr_item.h
-+++ b/fs/xfs/xfs_attr_item.h
-@@ -23,13 +23,13 @@ struct xfs_attri_log_nameval {
-  * This is the "attr intention" log item.  It is used to log the fact that some
-  * extended attribute operations need to be processed.  An operation is
-  * currently either a set or remove.  Set or remove operations are described by
-- * the xfs_attr_item which may be logged to this intent.
-+ * the xfs_attr_intent which may be logged to this intent.
-  *
-  * During a normal attr operation, name and value point to the name and value
-  * fields of the caller's xfs_da_args structure.  During a recovery, the name
-  * and value buffers are copied from the log, and stored in a trailing buffer
-- * attached to the xfs_attr_item until they are committed.  They are freed when
-- * the xfs_attr_item itself is freed when the work is done.
-+ * attached to the xfs_attr_intent until they are committed.  They are freed
-+ * when the xfs_attr_intent itself is freed when the work is done.
-  */
- struct xfs_attri_log_item {
- 	struct xfs_log_item		attri_item;
-
+T24gNS8xOC8yMiAwOTowMSwgeGlha2FpeHUxOTg3QGdtYWlsLmNvbSB3cm90ZToNCj4gRnJvbTog
+S2FpeHUgWGlhIDxrYWl4dXhpYUB0ZW5jZW50LmNvbT4NCj4gDQo+IFJldHJ5IHVuYWxpZ25lZCBE
+SU8gd2l0aCBleGNsdXNpdmUgYmxvY2tpbmcgc2VtYW50aWNzIG9ubHkgd2hlbiB0aGUNCj4gSU9D
+Ql9OT1dBSVQgZmxhZyBpcyBub3Qgc2V0LiBJZiB3ZSBhcmUgZG9pbmcgbm9uYmxvY2tpbmcgdXNl
+ciBJL08sDQo+IHByb3BhZ2F0ZSB0aGUgZXJyb3IgZGlyZWN0bHkuDQo+IA0KPiBTaWduZWQtb2Zm
+LWJ5OiBLYWl4dSBYaWEgPGthaXh1eGlhQHRlbmNlbnQuY29tPg0KPiAtLS0NCg0KTG9va3MgZ29v
+ZC4NCg0KUmV2aWV3ZWQtYnk6IENoYWl0YW55YSBLdWxrYXJuaSA8a2NoQG52aWRpYS5jb20+DQoN
+Ci1jaw0KDQo+ICAgZnMveGZzL3hmc19maWxlLmMgfCAyICstDQo+ICAgMSBmaWxlIGNoYW5nZWQs
+IDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZnMveGZz
+L3hmc19maWxlLmMgYi9mcy94ZnMveGZzX2ZpbGUuYw0KPiBpbmRleCA1YmRkYjFlOWUwYjMuLjI1
+MGEzZjk3NDAwZCAxMDA2NDQNCj4gLS0tIGEvZnMveGZzL3hmc19maWxlLmMNCj4gKysrIGIvZnMv
+eGZzL3hmc19maWxlLmMNCj4gQEAgLTU3Niw5ICs1NzYsOSBAQCB4ZnNfZmlsZV9kaW9fd3JpdGVf
+dW5hbGlnbmVkKA0KPiAgIAkgKiBkb24ndCBldmVuIGJvdGhlciB0cnlpbmcgdGhlIGZhc3QgcGF0
+aCBpbiB0aGlzIGNhc2UuDQo+ICAgCSAqLw0KPiAgIAlpZiAoaW9jYi0+a2lfcG9zID4gaXNpemUg
+fHwgaW9jYi0+a2lfcG9zICsgY291bnQgPj0gaXNpemUpIHsNCj4gLXJldHJ5X2V4Y2x1c2l2ZToN
+Cj4gICAJCWlmIChpb2NiLT5raV9mbGFncyAmIElPQ0JfTk9XQUlUKQ0KPiAgIAkJCXJldHVybiAt
+RUFHQUlOOw0KPiArcmV0cnlfZXhjbHVzaXZlOg0KPiAgIAkJaW9sb2NrID0gWEZTX0lPTE9DS19F
+WENMOw0KPiAgIAkJZmxhZ3MgPSBJT01BUF9ESU9fRk9SQ0VfV0FJVDsNCj4gICAJfQ0K
