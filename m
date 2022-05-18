@@ -2,44 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E65C6C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 18:56:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9321C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 May 2022 18:56:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241722AbiERS4Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S241733AbiERS4Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 18 May 2022 14:56:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38762 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241761AbiERS4E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 14:56:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 401F265D29
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 11:56:02 -0700 (PDT)
+        with ESMTP id S241738AbiERS4A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 May 2022 14:56:00 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99BCE4BFE3
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 11:55:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2F5EA6189A
-        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 18:56:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9576EC385A9;
-        Wed, 18 May 2022 18:56:01 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 450B3B821AD
+        for <linux-xfs@vger.kernel.org>; Wed, 18 May 2022 18:55:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 018D9C385A5;
+        Wed, 18 May 2022 18:55:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652900161;
-        bh=dSDxTSuzoGDaY7JN9Tk5a80Xg/+4jxwDUrs+RAl9/Xk=;
+        s=k20201202; t=1652900156;
+        bh=nTQ3DzcG6RhoI793DhGS11csieR+D588Lu5KyYB4ECA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=LtIYgFw6bZcRPII6vvz1DC23of50OlyVdzX37NdDXoMqXS5kQp7LNYd38X/YdEtVL
-         PGEQDX/af3lYZseJSRV/uZkvgMxzBhv6UGVWX1HoqnI7xHvKL2aHp6Nub7FAW6O0Ls
-         gmi7UWDmixmiaTtM3e/rXWT+Y9kaWVha0uCul3nUfplKNXTZVtXykdFHR21SRAUb7g
-         PiDd1L2+NwSOvNL3ocYJjVfQldfuguSr7JHRa0y2+ooI3PCfpbj1ZwQDizhUHvQ13x
-         PVHyvdBE4DH74b+0+etM9fyrhjpYUDgflOIMjGChH3M+np9t1Np8tLFKQ72Gy9BYzh
-         4USuU3XVUDqPw==
-Subject: [PATCH 3/7] xfs: use a separate slab cache for deferred xattr work
- state
+        b=KyoC0sSV/pXCBGJohtWkenlK3JZNbNhBJ9gVlZl3PlqsEiY9xeiUHPnYgXucTf72C
+         Pc75NeHuiTFTIfeknbNXC3nbBNwePpG47SlOV7rQrHIY/gFisu1WtO3fJKhXLoQz5l
+         adV3meABFtlZnba7ZsEoV0nRjJC+vVZikp6cBE+DxPm+uhdhN/+UlVjGyTA40tvYfe
+         1Xv5prRCeTmzZE6BCL4qYEY64inwyjKT2VoIsvfHmboA6ocj8+slTn9pC7FGy5UQ9n
+         i2dMV2j48uYlz3xaVDxKTRxQMt3bgDK0E9zNOcnfxABUYXFUAObaHhOcX4ilVRarcK
+         vMENGxrQfgTDg==
+Subject: [PATCH 2/7] xfs: put the xattr intent item op flags in their own
+ namespace
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org, david@fromorbit.com,
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
         allison.henderson@oracle.com
-Date:   Wed, 18 May 2022 11:56:01 -0700
-Message-ID: <165290016116.1647637.7261522980413646490.stgit@magnolia>
+Date:   Wed, 18 May 2022 11:55:55 -0700
+Message-ID: <165290015553.1647637.9536028316314201783.stgit@magnolia>
 In-Reply-To: <165290014409.1647637.4876706578208264219.stgit@magnolia>
 References: <165290014409.1647637.4876706578208264219.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -52,112 +51,151 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a separate slab cache for struct xfs_attr_item objects, since we
-can pack the (104-byte) intent items more tightly than we can with the
-general slab cache objects.  On x86, this means 39 intents per memory
-page instead of 32.
+The flags that are stored in the extended attr intent log item really
+should have a separate namespace from the rest of the XFS_ATTR_* flags.
+Give them one to make it a little more obvious that they're intent item
+flags.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c  |   20 +++++++++++++++++++-
- fs/xfs/libxfs/xfs_attr.h  |    4 ++++
- fs/xfs/libxfs/xfs_defer.c |    4 ++++
- fs/xfs/xfs_attr_item.c    |    5 ++++-
- 4 files changed, 31 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c       |    6 +++---
+ fs/xfs/libxfs/xfs_attr.h       |    2 +-
+ fs/xfs/libxfs/xfs_log_format.h |    8 ++++----
+ fs/xfs/xfs_attr_item.c         |   20 ++++++++++----------
+ 4 files changed, 18 insertions(+), 18 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 56e56df9f9f0..350b7a997321 100644
+index 3838109ef288..56e56df9f9f0 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -29,6 +29,7 @@
- 
- struct kmem_cache		*xfs_attri_cache;
- struct kmem_cache		*xfs_attrd_cache;
-+struct kmem_cache		*xfs_attr_intent_cache;
- 
- /*
-  * xfs_attr.c
-@@ -902,7 +903,7 @@ xfs_attr_item_init(
- 
+@@ -918,7 +918,7 @@ xfs_attr_defer_add(
  	struct xfs_attr_item	*new;
+ 	int			error = 0;
  
--	new = kmem_zalloc(sizeof(struct xfs_attr_item), KM_NOFS);
-+	new = kmem_cache_zalloc(xfs_attr_intent_cache, GFP_NOFS | __GFP_NOFAIL);
- 	new->xattri_op_flags = op_flags;
- 	new->xattri_da_args = args;
+-	error = xfs_attr_item_init(args, XFS_ATTR_OP_FLAGS_SET, &new);
++	error = xfs_attr_item_init(args, XFS_ATTRI_OP_FLAGS_SET, &new);
+ 	if (error)
+ 		return error;
  
-@@ -1650,3 +1651,20 @@ xfs_attr_namecheck(
- 	/* There shouldn't be any nulls here */
- 	return !memchr(name, 0, length);
- }
-+
-+int __init
-+xfs_attr_intent_init_cache(void)
-+{
-+	xfs_attr_intent_cache = kmem_cache_create("xfs_attr_item",
-+			sizeof(struct xfs_attr_item),
-+			0, 0, NULL);
-+
-+	return xfs_attr_intent_cache != NULL ? 0 : -ENOMEM;
-+}
-+
-+void
-+xfs_attr_intent_destroy_cache(void)
-+{
-+	kmem_cache_destroy(xfs_attr_intent_cache);
-+	xfs_attr_intent_cache = NULL;
-+}
+@@ -937,7 +937,7 @@ xfs_attr_defer_replace(
+ 	struct xfs_attr_item	*new;
+ 	int			error = 0;
+ 
+-	error = xfs_attr_item_init(args, XFS_ATTR_OP_FLAGS_REPLACE, &new);
++	error = xfs_attr_item_init(args, XFS_ATTRI_OP_FLAGS_REPLACE, &new);
+ 	if (error)
+ 		return error;
+ 
+@@ -957,7 +957,7 @@ xfs_attr_defer_remove(
+ 	struct xfs_attr_item	*new;
+ 	int			error;
+ 
+-	error  = xfs_attr_item_init(args, XFS_ATTR_OP_FLAGS_REMOVE, &new);
++	error  = xfs_attr_item_init(args, XFS_ATTRI_OP_FLAGS_REMOVE, &new);
+ 	if (error)
+ 		return error;
+ 
 diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index ccb4f45f474a..0a3b010eb797 100644
+index 17746dcc2268..ccb4f45f474a 100644
 --- a/fs/xfs/libxfs/xfs_attr.h
 +++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -642,4 +642,8 @@ xfs_attr_init_replace_state(struct xfs_da_args *args)
- 	return xfs_attr_init_add_state(args);
- }
+@@ -538,7 +538,7 @@ struct xfs_attr_item {
+ 	enum xfs_delattr_state		xattri_dela_state;
  
-+extern struct kmem_cache *xfs_attr_intent_cache;
-+int __init xfs_attr_intent_init_cache(void);
-+void xfs_attr_intent_destroy_cache(void);
-+
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index ceb222b4f261..ed65f7e5a9c7 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -877,6 +877,9 @@ xfs_defer_init_item_caches(void)
- 	if (error)
- 		goto err;
- 	error = xfs_attrd_init_cache();
-+	if (error)
-+		goto err;
-+	error = xfs_attr_intent_init_cache();
- 	if (error)
- 		goto err;
- 	return 0;
-@@ -889,6 +892,7 @@ xfs_defer_init_item_caches(void)
- void
- xfs_defer_destroy_item_caches(void)
- {
-+	xfs_attr_intent_destroy_cache();
- 	xfs_attri_destroy_cache();
- 	xfs_attrd_destroy_cache();
- 	xfs_extfree_intent_destroy_cache();
+ 	/*
+-	 * Attr operation being performed - XFS_ATTR_OP_FLAGS_*
++	 * Attr operation being performed - XFS_ATTRI_OP_FLAGS_*
+ 	 */
+ 	unsigned int			xattri_op_flags;
+ 
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index a9d08f3d4682..b351b9dc6561 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -906,10 +906,10 @@ struct xfs_icreate_log {
+  * Flags for deferred attribute operations.
+  * Upper bits are flags, lower byte is type code
+  */
+-#define XFS_ATTR_OP_FLAGS_SET		1	/* Set the attribute */
+-#define XFS_ATTR_OP_FLAGS_REMOVE	2	/* Remove the attribute */
+-#define XFS_ATTR_OP_FLAGS_REPLACE	3	/* Replace the attribute */
+-#define XFS_ATTR_OP_FLAGS_TYPE_MASK	0xFF	/* Flags type mask */
++#define XFS_ATTRI_OP_FLAGS_SET		1	/* Set the attribute */
++#define XFS_ATTRI_OP_FLAGS_REMOVE	2	/* Remove the attribute */
++#define XFS_ATTRI_OP_FLAGS_REPLACE	3	/* Replace the attribute */
++#define XFS_ATTRI_OP_FLAGS_TYPE_MASK	0xFF	/* Flags type mask */
+ 
+ /*
+  * alfi_attr_filter captures the state of xfs_da_args.attr_filter, so it should
 diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 27b6bdc8a3aa..07f1208cf18c 100644
+index 9ef2c2455921..27b6bdc8a3aa 100644
 --- a/fs/xfs/xfs_attr_item.c
 +++ b/fs/xfs/xfs_attr_item.c
-@@ -473,7 +473,10 @@ xfs_attr_free_item(
- 		xfs_da_state_free(attr->xattri_da_state);
- 	if (attr->xattri_nameval)
- 		xfs_attri_log_nameval_put(attr->xattri_nameval);
--	kmem_free(attr);
-+	if (attr->xattri_da_args->op_flags & XFS_DA_OP_RECOVERY)
-+		kmem_free(attr);
-+	else
-+		kmem_cache_free(xfs_attr_intent_cache, attr);
- }
+@@ -406,7 +406,7 @@ xfs_attr_log_item(
+ 	 */
+ 	attrp = &attrip->attri_format;
+ 	attrp->alfi_ino = attr->xattri_da_args->dp->i_ino;
+-	ASSERT(!(attr->xattri_op_flags & ~XFS_ATTR_OP_FLAGS_TYPE_MASK));
++	ASSERT(!(attr->xattri_op_flags & ~XFS_ATTRI_OP_FLAGS_TYPE_MASK));
+ 	attrp->alfi_op_flags = attr->xattri_op_flags;
+ 	attrp->alfi_value_len = attr->xattri_nameval->anvl_value_len;
+ 	attrp->alfi_name_len = attr->xattri_nameval->anvl_name_len;
+@@ -539,12 +539,12 @@ xfs_attri_validate(
+ 	struct xfs_attri_log_format	*attrp)
+ {
+ 	unsigned int			op = attrp->alfi_op_flags &
+-					     XFS_ATTR_OP_FLAGS_TYPE_MASK;
++					     XFS_ATTRI_OP_FLAGS_TYPE_MASK;
  
- /* Process an attr. */
+ 	if (attrp->__pad != 0)
+ 		return false;
+ 
+-	if (attrp->alfi_op_flags & ~XFS_ATTR_OP_FLAGS_TYPE_MASK)
++	if (attrp->alfi_op_flags & ~XFS_ATTRI_OP_FLAGS_TYPE_MASK)
+ 		return false;
+ 
+ 	if (attrp->alfi_attr_filter & ~XFS_ATTRI_FILTER_MASK)
+@@ -552,9 +552,9 @@ xfs_attri_validate(
+ 
+ 	/* alfi_op_flags should be either a set or remove */
+ 	switch (op) {
+-	case XFS_ATTR_OP_FLAGS_SET:
+-	case XFS_ATTR_OP_FLAGS_REPLACE:
+-	case XFS_ATTR_OP_FLAGS_REMOVE:
++	case XFS_ATTRI_OP_FLAGS_SET:
++	case XFS_ATTRI_OP_FLAGS_REPLACE:
++	case XFS_ATTRI_OP_FLAGS_REMOVE:
+ 		break;
+ 	default:
+ 		return false;
+@@ -613,7 +613,7 @@ xfs_attri_item_recover(
+ 
+ 	attr->xattri_da_args = args;
+ 	attr->xattri_op_flags = attrp->alfi_op_flags &
+-						XFS_ATTR_OP_FLAGS_TYPE_MASK;
++						XFS_ATTRI_OP_FLAGS_TYPE_MASK;
+ 
+ 	/*
+ 	 * We're reconstructing the deferred work state structure from the
+@@ -632,8 +632,8 @@ xfs_attri_item_recover(
+ 	args->op_flags = XFS_DA_OP_RECOVERY | XFS_DA_OP_OKNOENT;
+ 
+ 	switch (attr->xattri_op_flags) {
+-	case XFS_ATTR_OP_FLAGS_SET:
+-	case XFS_ATTR_OP_FLAGS_REPLACE:
++	case XFS_ATTRI_OP_FLAGS_SET:
++	case XFS_ATTRI_OP_FLAGS_REPLACE:
+ 		args->value = xfs_attri_log_valbuf(attrip);
+ 		args->valuelen = attrp->alfi_value_len;
+ 		args->total = xfs_attr_calc_size(args, &local);
+@@ -642,7 +642,7 @@ xfs_attri_item_recover(
+ 		else
+ 			attr->xattri_dela_state = xfs_attr_init_add_state(args);
+ 		break;
+-	case XFS_ATTR_OP_FLAGS_REMOVE:
++	case XFS_ATTRI_OP_FLAGS_REMOVE:
+ 		if (!xfs_inode_hasattr(args->dp))
+ 			goto out;
+ 		attr->xattri_dela_state = xfs_attr_init_remove_state(args);
 
