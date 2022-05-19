@@ -2,51 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E241DC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 07:05:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8DA8C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 08:18:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233486AbiESHFb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 May 2022 03:05:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59504 "EHLO
+        id S235345AbiESISY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 May 2022 04:18:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232578AbiESHF0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 03:05:26 -0400
+        with ESMTP id S235197AbiESIST (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 04:18:19 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5D4DBA540;
-        Thu, 19 May 2022 00:05:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE40E65D3B;
+        Thu, 19 May 2022 01:17:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=Y8eCw9I+3GvyTeVsRu3iF7t/os
-        G5K0v/pABcPNYA/V0ySZ5E9fkOtBGPudPc7DriUmkcsyHFP8EsG9WxdN9TewBjWVOWV10Jxsbf/UN
-        Kf3GgIakz9FIVHnUru632fnhkjetHZQYyPHNbFFyQ7cAMakjsZLeTkuapE48frmxWX2ocElecbgnJ
-        JAZYj+qxEJPzjib8lR5dFxutcI0flYsVohHR/3ID1f0UiX+dAPFmPTCf4eqqurs0hfQvWqpQvlPRS
-        16P3nvlTZBXQnBV4/y+ZgZ+hbxzxdE1V5qysznl2OlcRjhL3slS9C/QSVMbKHfsEdm7X7Iazzwm5z
-        u4uWYH6g==;
+        bh=vsLx1/spK6mJV5vHHVr4BL4tfcrdDPT/6wGxnfZrwzQ=; b=Nueh0SVjlOcrYRUmlBQHIDStKp
+        q/JvdZWEKOA5UXUsvj37TSFUhVV2uWFXDbOuq93KlW5L4pDnA/cTiawA+Lz+Tgd8dPqZg/7bHWYNr
+        6cyCAUf7pd93hmnOetbaWxTqMmT5OY7Yz2ylPys5QmGdjNW5lgZKP8vNcKsZxCgEyzV/Sw5k+zmWI
+        lhLr1emyyulQrvY0od1NIv1cwaVflU4ZOM6d7hWVTD4iMOPcfbbKn1p0tbSdZ8ntpp54OVilGIA1E
+        CeTKwCHoO2IWsMIQwknGmZfRiqycfNxeJ57amsIU/0LIrjtt9Xh/vLHKuNp0DSr6VdJLZ0moyd3xz
+        eyiJA/ug==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nraDs-005QR0-D6; Thu, 19 May 2022 07:05:24 +0000
-Date:   Thu, 19 May 2022 00:05:24 -0700
+        id 1nrbLR-005kBD-Ai; Thu, 19 May 2022 08:17:17 +0000
+Date:   Thu, 19 May 2022 01:17:17 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: [RFC PATCH v2 1/7] statx: add I/O alignment information
-Message-ID: <YoXsNDG/WMbCzz0x@infradead.org>
-References: <20220518235011.153058-1-ebiggers@kernel.org>
- <20220518235011.153058-2-ebiggers@kernel.org>
+To:     Stefan Roesch <shr@fb.com>
+Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com, jack@suse.cz
+Subject: Re: [RFC PATCH v3 01/18] block: Add check for async buffered writes
+ to generic_write_checks
+Message-ID: <YoX9DVU5ds+GbKOK@infradead.org>
+References: <20220518233709.1937634-1-shr@fb.com>
+ <20220518233709.1937634-2-shr@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220518235011.153058-2-ebiggers@kernel.org>
+In-Reply-To: <20220518233709.1937634-2-shr@fb.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good:
+On Wed, May 18, 2022 at 04:36:52PM -0700, Stefan Roesch wrote:
+> @@ -1633,7 +1633,9 @@ int generic_write_checks_count(struct kiocb *iocb, loff_t *count)
+>  	if (iocb->ki_flags & IOCB_APPEND)
+>  		iocb->ki_pos = i_size_read(inode);
+>  
+> -	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
+> +	if ((iocb->ki_flags & IOCB_NOWAIT) &&
+> +		!((iocb->ki_flags & IOCB_DIRECT) ||
+> +		  (file->f_mode & FMODE_BUF_WASYNC)))
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This is some really odd indentation.  I'd expect something like:
+
+	if ((iocb->ki_flags & IOCB_NOWAIT) &&
+	    !((iocb->ki_flags & IOCB_DIRECT) ||
+	      (file->f_mode & FMODE_BUF_WASYNC)))
+
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index bbde95387a23..3b479d02e210 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -177,6 +177,9 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
+>  /* File supports async buffered reads */
+>  #define FMODE_BUF_RASYNC	((__force fmode_t)0x40000000)
+>  
+> +/* File supports async nowait buffered writes */
+> +#define FMODE_BUF_WASYNC	((__force fmode_t)0x80000000)
+
+This is the last available flag in fmode_t.
+
+At some point we should probably move the static capabilities to
+a member of file_operations.
