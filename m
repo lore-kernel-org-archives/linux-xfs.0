@@ -2,206 +2,192 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D5A3C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 23:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98339C4321E
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 23:06:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234288AbiESXFX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 May 2022 19:05:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36480 "EHLO
+        id S245659AbiESXGO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 May 2022 19:06:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232543AbiESXFW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 19:05:22 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 38C7724F3C
-        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 16:05:21 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 140EA10E6895;
-        Fri, 20 May 2022 09:05:19 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nrpCn-00E1nY-Eb; Fri, 20 May 2022 09:05:17 +1000
-Date:   Fri, 20 May 2022 09:05:17 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Theodore Tso <tytso@mit.edu>
-Subject: Re: [QUESTION] Upgrade xfs filesystem to reflink support?
-Message-ID: <20220519230517.GZ1098723@dread.disaster.area>
-References: <CAOQ4uxjBR_Z-j_g8teFBih7XPiUCtELgf=k8=_ye84J00ro+RA@mail.gmail.com>
- <20220509182043.GW27195@magnolia>
- <CAOQ4uxih7gP25XHh0wm6g9A0b8z05xAbvqEGHD8a_2uw-oDBSw@mail.gmail.com>
- <20220510190212.GC27195@magnolia>
- <20220510220523.GU1098723@dread.disaster.area>
- <YnvaT4TGUhb+94bI@bfoster>
- <20220511222401.GK1098723@dread.disaster.area>
- <YoJTEgS939eM1OgN@bfoster>
- <20220517093041.GP1098723@dread.disaster.area>
- <YoZrOYIkip5fTncN@bfoster>
+        with ESMTP id S232543AbiESXGL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 19:06:11 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA0DCDF93;
+        Thu, 19 May 2022 16:06:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A67DAB828CA;
+        Thu, 19 May 2022 23:06:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64BADC34113;
+        Thu, 19 May 2022 23:06:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653001566;
+        bh=KMqSVGwJXZoPClyc0+dns0g5106HUQ8FYrDrNyZ1+Ss=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fBlEfGZoJUrD9oClATZzZKLN8ZFJlQB8Dxuz5bkukbY+dXdMi2PGWRdrHIrfMtylZ
+         rAm/IQI6ygK94t2HHXYO51oagM4DGsDy6VWUgkZ0YRqX5fb/QlSfRQIB2R6nvprPNd
+         2Db0MBMJTladGran2Xl5jsm6oZEanP6WXFxRWT9G2uDo2fFTWfKp208ptQxqQHTlGR
+         qkd/+Mmx9fTNs0Nu9YOkfWfR5yS5pFsr9CtBeveGBTnqzfiahvMg7wmLh4jlL5lt8r
+         mz8b9uqFZpp/qbZ5cq5VOn9Cr0M1y8iKEEgwhwytFoF4WlY7Q17f6vID4KNjCwS15r
+         +n9QH9f76eLrw==
+Date:   Thu, 19 May 2022 16:06:05 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>
+Subject: Re: [RFC PATCH v2 1/7] statx: add I/O alignment information
+Message-ID: <YobNXbYnhBiqniTH@magnolia>
+References: <20220518235011.153058-1-ebiggers@kernel.org>
+ <20220518235011.153058-2-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YoZrOYIkip5fTncN@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6286cd30
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
-        a=3IqzvCCdJH4w8G7TvW0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220518235011.153058-2-ebiggers@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 19, 2022 at 12:07:21PM -0400, Brian Foster wrote:
-> On Tue, May 17, 2022 at 07:30:41PM +1000, Dave Chinner wrote:
-> > On Mon, May 16, 2022 at 09:35:14AM -0400, Brian Foster wrote:
-> > We can - and IMO should - run the physical location swap the
-> > entirely within the log code itself without involving transactions,
-> > log items, the CIL, AIL, etc. The log is capable of writing it's own
-> > records (example: log unmount records), hence we can implement the
-> > physical swap in a recoverable manner at that level without
-> > involving an high level transactions or log items at all.
-> > 
-> > If we separate the transactional allocation/freeing of extents from
-> > the exchange of the log location, then we don't have to try to work
-> > out how to run a recoverable transaction that creates a
-> > discontinuity in the mechanism that provides transaction recovery
-> > and is completely recoverable itself.
-> > 
-> > The high level filesystem operation can provide the log with a new
-> > extent that is already owned by the log and will remain that way
-> > through the quiesce process. With that, the log location swap
-> > doesn't need any other interactions with the transaction subsystem -
-> > We just need to be able to write to the old log directly, to
-> > initialise the new log with the same information, and to write the
-> > superblock directly. The log already writes the superblock directly
-> > as part of log recovery, so doing it as part of a log swap isn't an
-> > issue.
-> > 
+On Wed, May 18, 2022 at 04:50:05PM -0700, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
 > 
-> I think I follow the approach you're describing of burying extent
-> ownership into the log itself with a custom/open-coded log record. I
-> conceptualize this as sort of an xfs_log_remount() mechanism from an old
-> range to a new one. It sounds sensible enough, but I'm not sure I follow
-> what the low level switchover sequence looks like, particularly how
-> crash recovery is handled. Could you run through the key steps that
-> provide the basic atomicity of the operation?
+> Traditionally, the conditions for when DIO (direct I/O) is supported
+> were fairly simple: filesystems either supported DIO aligned to the
+> block device's logical block size, or didn't support DIO at all.
 > 
-> For example, I'll just take a stab and assume it goes something like:
+> However, due to filesystem features that have been added over time (e.g,
+> data journalling, inline data, encryption, verity, compression,
+> checkpoint disabling, log-structured mode), the conditions for when DIO
+> is allowed on a file have gotten increasingly complex.  Whether a
+> particular file supports DIO, and with what alignment, can depend on
+> various file attributes and filesystem mount options, as well as which
+> block device(s) the file's data is located on.
 > 
-> 1. Allocate the new log extent and commit it in a transaction with a
-> LOGCHANGE record that refers to the old range and new log range.
->
-> 2. Do some sort of (partial?) quiesce/freeze that drains the AIL but
-> doesn't lose the opencoded LOGCHANGE intent record (and ensures it isn't
-> lost by covering etc.)..?? Tear down old log subsystem and init new one.
+> XFS has an ioctl XFS_IOC_DIOINFO which exposes this information to
+> applications.  However, as discussed
+> (https://lore.kernel.org/linux-fsdevel/20220120071215.123274-1-ebiggers@kernel.org/T/#u),
+> this ioctl is rarely used and not known to be used outside of
+> XFS-specific code.  It also was never intended to indicate when a file
+> doesn't support DIO at all, and it only exposes the minimum I/O
+> alignment, not the optimal I/O alignment which has been requested too.
 > 
-> 3. Format the new log appropriately (cycle, etc.) with a copy
-> (essentially a relog) of the LOGCHANGE intent. 
+> Therefore, let's expose this information via statx().  Add the
+> STATX_IOALIGN flag and three fields associated with it:
 > 
-> 4. Sync update the superblock to point at the new log.
+> * stx_mem_align_dio: the alignment (in bytes) required for user memory
+>   buffers for DIO, or 0 if DIO is not supported on the file.
 > 
-> 5. Free the old log extent via transaction that also includes a
-> LOGCHANGE intent done (to the new log).
+> * stx_offset_align_dio: the alignment (in bytes) required for file
+>   offsets and I/O segment lengths for DIO, or 0 if DIO is not supported
+>   on the file.  This will only be nonzero if stx_mem_align_dio is
+>   nonzero, and vice versa.
+> 
+> * stx_offset_align_optimal: the alignment (in bytes) suggested for file
+>   offsets and I/O segment lengths to get optimal performance.  This
+>   applies to both DIO and buffered I/O.  It differs from stx_blocksize
+>   in that stx_offset_align_optimal will contain the real optimum I/O
+>   size, which may be a large value.  In contrast, for compatibility
+>   reasons stx_blocksize is the minimum size needed to avoid page cache
+>   read/write/modify cycles, which may be much smaller than the optimum
+>   I/O size.  For more details about the motivation for this field, see
+>   https://lore.kernel.org/r/20220210040304.GM59729@dread.disaster.area
 
+Hmm.  So I guess this is supposed to be the filesystem's best guess at
+the IO size that will minimize RMW cycles in the entire stack?  i.e. if
+the user does not want RMW of pagecache pages, of file allocation units
+(if COW is enabled), of RAID stripes, or in the storage itself, then it
+should ensure that all IOs are aligned to this value?
 
-> So essentially a crash after step 2 recovers the original log and
-> restarts the log change op at the new log format step (since recovery
-> can't confirm whether it occurred) or a crash after step 4 recovers the
-> new log and frees the old based on whether the intent done record exists
-> or not.
+I guess that means for XFS it's effectively max(pagesize, i_blocksize,
+bdev io_opt, sb_width, and (pretend XFS can reflink the realtime volume)
+the rt extent size)?  I didn't see a manpage update for statx(2) but
+that's mostly what I'm interested in. :)
 
-Yup, that's pretty much the idea.
+Looking ahead, it looks like the ext4/f2fs implementations only seem to
+be returning max(i_blocksize, bdev io_opt)?  But not the pagesize?  Did
+I misunderstood this, then?
 
-> Is that the right idea? If not, can you swizzle it into something that
-> is? If so, the part that is not so clear to me is what the magic looks
-> like to commit the extent alloc/frees with the open-coded log record(s)
-> without conflicting with quiesce (i.e. managing consistency with the
-> transactional part vs. the open coded record write part), or otherwise
-> managing consistency between the extent alloc and existence of the
-> custom record.
+(The plumbing changes in this patch look ok.)
 
-I was thinking of using CIL pinning to handle building the atomic
-log change transactions that contain the necessary alloc/free
-modifications.
+--D
 
-In doing so, it means we can implement the LOG CHANGE record as a
-different type of checkpoint transaction. The CIL flush just
-includes more information in the struct xfs_trans_header it writes
-at the start of the transaction to point at the old/new logs, and we
-call that a XFS_TRANS_LOG_CHANGE_CHECKPOINT type instead of
-XFS_TRANS_CHECKPOINT. Then we can recover the allocation
-modifications in the checkpoint transaction using the existing code,
-then perform the correct next recovery steps based on the current
-superblock state.
-
-With this trans header size change, old kernels will see a trans
-header that is too long, so will refuse to recover at this point as
-they think the log has been corrupted as they don't understand what
-is in it. If we want to make the process more complex, we can
-set a log incompat flag after the initial quiesce and clear it after
-the final unmount record is written on completion.
-
-Hence I think the overall process I think would be:
-
-1. freeze the filesystem, quiesce the log. Write an unmount record
-to place a hard recovery barrier in the log.
-
-2. pin the CIL so it can't flush.
-
-3. allocate an anonymous extent like we do in xfs_ag_shrink_space().
-Then update the rmap to say it's owned by the log. These are
-in-memory transactions at this point.
-
-4. hand the extent to the log.
-
-5. log formats the new extent.
-
-6. log creates a new xlog instance pointing at the new log. This
-completely duplicates all the log infrastructure (iclogs, etc).
-
-7. log flushes the pinned CIL to current iclog with a LOG CHANGE
-header record. iclog contents are duplicated into an iclog for the
-new log, and modified for new log's cycle/block. New log iclog is
-written first, then on completion the original iclog is written to
-the old log.
-
-8. update and write the superblock.
-
-9. tear down the old xlog structure but don't free it.
-
-10. memcpy() the new xlog over the top of the old one so we don't
-have to update ever pointer to the log in the filesytem (e.g. every
-log item attached to inodes that were once dirty, etc). This also
-updates grant heads, log head/tail, etc to match the new log.
-
-11. free the new xlog stucture without tearing it down.
-
-12. push the CIL log items into the AIL with commit LSNs from the
-new log.
-
-13. hand the old log extent back to the caller that provided the new
-log extent.
-
-14. run transactions to free the old extent and run all the
-associated deferops (e.g. rmap updates) that are needed.
-
-15. Unpin the CIL and return to quiesced log state. This forces the
-CIL to disk with a LOG CHANGE header record indicating completion of
-the log change. Quiesce then writes all the metadata and updates the
-tail with an unmount record, providing a hard recovery barrier in
-the log.
-
-16. unfreeze the filesystem with the new log active.
-
-I suspect that some of the ordering in and around the setup and
-changeover of the two logs will be needed - it's just a rough design
-at this point, but that should give you an idea of what I was
-thinking.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Note that as with other statx() extensions, if STATX_IOALIGN isn't set
+> in the returned statx struct, then these new fields won't be filled in.
+> This will happen if the filesystem doesn't support STATX_IOALIGN, or if
+> the file isn't a regular file.  (It might be supported on block device
+> files in the future.)  It might also happen if the caller didn't include
+> STATX_IOALIGN in the request mask, since statx() isn't required to
+> return information that wasn't requested.
+> 
+> This commit adds the VFS-level plumbing for STATX_IOALIGN.  Individual
+> filesystems will still need to add code to support it.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
+>  fs/stat.c                 | 3 +++
+>  include/linux/stat.h      | 3 +++
+>  include/uapi/linux/stat.h | 9 +++++++--
+>  3 files changed, 13 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/stat.c b/fs/stat.c
+> index 5c2c94464e8b0..9d477218545b8 100644
+> --- a/fs/stat.c
+> +++ b/fs/stat.c
+> @@ -611,6 +611,9 @@ cp_statx(const struct kstat *stat, struct statx __user *buffer)
+>  	tmp.stx_dev_major = MAJOR(stat->dev);
+>  	tmp.stx_dev_minor = MINOR(stat->dev);
+>  	tmp.stx_mnt_id = stat->mnt_id;
+> +	tmp.stx_mem_align_dio = stat->mem_align_dio;
+> +	tmp.stx_offset_align_dio = stat->offset_align_dio;
+> +	tmp.stx_offset_align_optimal = stat->offset_align_optimal;
+>  
+>  	return copy_to_user(buffer, &tmp, sizeof(tmp)) ? -EFAULT : 0;
+>  }
+> diff --git a/include/linux/stat.h b/include/linux/stat.h
+> index 7df06931f25d8..48b8b1ad1567c 100644
+> --- a/include/linux/stat.h
+> +++ b/include/linux/stat.h
+> @@ -50,6 +50,9 @@ struct kstat {
+>  	struct timespec64 btime;			/* File creation time */
+>  	u64		blocks;
+>  	u64		mnt_id;
+> +	u32		mem_align_dio;
+> +	u32		offset_align_dio;
+> +	u32		offset_align_optimal;
+>  };
+>  
+>  #endif
+> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
+> index 1500a0f58041a..f822b23e81091 100644
+> --- a/include/uapi/linux/stat.h
+> +++ b/include/uapi/linux/stat.h
+> @@ -124,9 +124,13 @@ struct statx {
+>  	__u32	stx_dev_minor;
+>  	/* 0x90 */
+>  	__u64	stx_mnt_id;
+> -	__u64	__spare2;
+> +	__u32	stx_mem_align_dio;	/* Memory buffer alignment for direct I/O */
+> +	__u32	stx_offset_align_dio;	/* File offset alignment for direct I/O */
+>  	/* 0xa0 */
+> -	__u64	__spare3[12];	/* Spare space for future expansion */
+> +	__u32	stx_offset_align_optimal; /* Optimal file offset alignment for I/O */
+> +	__u32	__spare2;
+> +	/* 0xa8 */
+> +	__u64	__spare3[11];	/* Spare space for future expansion */
+>  	/* 0x100 */
+>  };
+>  
+> @@ -152,6 +156,7 @@ struct statx {
+>  #define STATX_BASIC_STATS	0x000007ffU	/* The stuff in the normal stat struct */
+>  #define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
+>  #define STATX_MNT_ID		0x00001000U	/* Got stx_mnt_id */
+> +#define STATX_IOALIGN		0x00002000U	/* Want/got IO alignment info */
+>  
+>  #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx expansion */
+>  
+> -- 
+> 2.36.1
+> 
