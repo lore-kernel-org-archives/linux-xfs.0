@@ -2,52 +2,57 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF9ACC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 08:32:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F33DCC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 08:36:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234870AbiESIc6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 May 2022 04:32:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45106 "EHLO
+        id S232795AbiESIgE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 May 2022 04:36:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231171AbiESIc6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 04:32:58 -0400
+        with ESMTP id S235497AbiESIgA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 04:36:00 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 922ED71A33;
-        Thu, 19 May 2022 01:32:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33531E1E
+        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 01:35:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=nyposQICT0wzylt3w3i0i3fAC4ar1NheEvxWSf6gqWM=; b=dL0Y/1eYh8R0gXmfi5erVmow7p
-        h3JeSBaHeg0fGAPLOlkgIQ5DKg1FmqFFSUM5vN+eosQJwGboMAxb+WwI3D2UX3Yp6qFmqnjcRHVwf
-        dYiUYFqUd+CXIuO7/wqylM+0qdMduzhaFOuKjmO1dc7RhO7ossl4vkJQ0eecV8MoiPbhLXSxeEEt0
-        FudAUZdFyReV74cP/y8ak9PfG5NI3/U1vWiX728KLYBOhULzC6rdhGw+jIqo7Se+w+xISy1G1Abws
-        VIjpNwAfag3cmRrTKd3wjswP1/HyY6xRiDZZNIsJpK2pqMqHPMPGUYblYsTVLTUHVA2iBVwiOvItx
-        4BFVc2JQ==;
+        bh=nBNJWlmsOCX/tsnQGnpttf5mI0HDhmufojTx49LIo1g=; b=v/u7UrseS620PPkg4C6UbMoxXZ
+        EusVsjJfR+GPJvSP7k4di51k6aQTbdrSNaGJCuVfpbEvssIYL89RwaTq+spdEXf+uisAtr00uiYxE
+        BLUFBNgbfZmgun96PsXuSAL0/pqMGlxc2frAeIHp+hOJiqlBjW2gnHx9qMkq381ykh6S9CUHlmcbw
+        cb/jXQVjH8YHOmrwl/Lj5RbemrVb4phEY9P1vG3lwfzf9bPqE9ga5gBiY6jXS5cFaBYa5orRyRXqz
+        hL4lIw4mCA4sfYheeaeQqpNICXFhpiEJSkrK1dp/Vg9pjbLXsPb/kFvcb4eZD91qqWjfQh5sKOVEZ
+        9jdQPccA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nrbab-005sNt-5A; Thu, 19 May 2022 08:32:57 +0000
-Date:   Thu, 19 May 2022 01:32:57 -0700
+        id 1nrbdW-005tVA-Qx; Thu, 19 May 2022 08:35:58 +0000
+Date:   Thu, 19 May 2022 01:35:58 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Stefan Roesch <shr@fb.com>
-Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, jack@suse.cz
-Subject: Re: [RFC PATCH v3 18/18] xfs: Enable async buffered write support
-Message-ID: <YoYAuaT2y7dleHRZ@infradead.org>
-References: <20220518233709.1937634-1-shr@fb.com>
- <20220518233709.1937634-19-shr@fb.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 1/3] xfs: refactor buffer cancellation table allocation
+Message-ID: <YoYBbg59ktNdM2qJ@infradead.org>
+References: <165290012335.1646290.10769144718908005637.stgit@magnolia>
+ <165290012900.1646290.13406779783177992762.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220518233709.1937634-19-shr@fb.com>
+In-Reply-To: <165290012900.1646290.13406779783177992762.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 18, 2022 at 04:37:09PM -0700, Stefan Roesch wrote:
-> This turns on the async buffered write support for XFS.
+On Wed, May 18, 2022 at 11:55:29AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Move the code that allocates and frees the buffer cancellation tables
+> used by log recovery into the file that actually uses the tables.  This
+> is a precursor to some cleanups and a memory leak fix.
 
-Can you group the patches by code they are touching, i.e, first
-VFS enablement, the MM, then iomap, then xfs?  That shoud make
-things a bit easier to review sequentially.
+While you're at it, I'd also move XLOG_BC_TABLE_SIZE and
+XLOG_BUF_CANCEL_BUCKET to xfs_buf_item_recover.c.
+
+Otherwise looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
