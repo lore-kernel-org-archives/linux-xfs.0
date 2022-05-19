@@ -2,50 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A45CC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 08:37:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D46CC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 08:54:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231296AbiESIg7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 May 2022 04:36:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51942 "EHLO
+        id S235652AbiESIyP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 May 2022 04:54:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230155AbiESIg6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 04:36:58 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CF635FF15
-        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 01:36:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=lomdZGzXHnd2STK7Emc9p3aqbYUT+y2iQZlWB5/qY6Y=; b=463iI9XkwghNWwvEmRG5MGUb5I
-        G4g774BpHpWJ6g8Uzc7ORfn7zcAjD1/L/PyxALYIeo+LbGG+yx58pY9x2AK0RQYQlz9BWHEotXhTu
-        RIr5Ffn4UMQ1JwOl+aa3HS8RYcfoen/q4iLczqeR6rMO9p6AHVMmmnGqsvehaEV5zPrOvdVECkfCh
-        1Mie+kbQEMs5uF6la+ghUo/eoq3FSJv73WrHZlItYyQzu9dwfYsWsfoterWGuCJgec5uLfVyA7aVx
-        E/EM//PvXroeMEW5E5KVPgdwXA7gqFwfAn5zscyfXr1+GN+0fQNsDmJukcDmggTvUEL5UEadkqBiB
-        cKYG7XKw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nrbeT-005tnH-OC; Thu, 19 May 2022 08:36:57 +0000
-Date:   Thu, 19 May 2022 01:36:57 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH 3/3] xfs: convert buf_cancel_table allocation to
- kmalloc_array
-Message-ID: <YoYBqe1I5fjl9Dfl@infradead.org>
-References: <165290012335.1646290.10769144718908005637.stgit@magnolia>
- <165290014021.1646290.13716646283504726941.stgit@magnolia>
+        with ESMTP id S231418AbiESIyO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 04:54:14 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB4BB9CF5C;
+        Thu, 19 May 2022 01:54:13 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 87D632190C;
+        Thu, 19 May 2022 08:54:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1652950452; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Fcqmrpxaer0Q0d9KKEW1aRv2ycWgGPdWyzaSn+WUbBk=;
+        b=MCqflNXNG3ngH2MmJW00KgKiExOrIVLN0FjbU1tW/EjTGsQoOt4VFLU44GX9dgv4k0vDWj
+        oiGvElYDh1fZtGPXkj4GrjWCc4A2LzW2xS7tI5XSE5jLbx9+Qaj+1ajb/FG1EX2xEp6VHy
+        /TTH4BL7tSch0QManLpc1RCH/PFlWkY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1652950452;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Fcqmrpxaer0Q0d9KKEW1aRv2ycWgGPdWyzaSn+WUbBk=;
+        b=CSE0dPEFDF1WBQ1nOUVh0VvJ3pzuB+V0rQ9k1XNYeePdsxTD4zd1GicWO9Gw9VSL9LgghM
+        lUuBj/2cI6p+HwBg==
+Received: from quack3.suse.cz (unknown [10.100.224.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 76B932C143;
+        Thu, 19 May 2022 08:54:12 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 17A81A062F; Thu, 19 May 2022 10:54:12 +0200 (CEST)
+Date:   Thu, 19 May 2022 10:54:12 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
+        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com, jack@suse.cz
+Subject: Re: [RFC PATCH v3 15/18] mm: Add
+ balance_dirty_pages_ratelimited_async() function
+Message-ID: <20220519085412.ngnnhsf6iy35vqn3@quack3.lan>
+References: <20220518233709.1937634-1-shr@fb.com>
+ <20220518233709.1937634-16-shr@fb.com>
+ <YoX/4fwQOYyTL34a@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <165290014021.1646290.13716646283504726941.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <YoX/4fwQOYyTL34a@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 18, 2022 at 11:55:40AM -0700, Darrick J. Wong wrote:
-> +	p = kmalloc_array(XLOG_BC_TABLE_SIZE, sizeof(struct list_head),
-> +			GFP_KERNEL | __GFP_NOWARN);
+On Thu 19-05-22 01:29:21, Christoph Hellwig wrote:
+> > +static int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,
+> > +						bool no_wait)
+> >  {
+> 
+> This doesn't actully take flags, but a single boolean argument.  So
+> either it needs a new name, or we actually pass a descriptiv flag.
+>
+> > +/**
+> > + * balance_dirty_pages_ratelimited_async - balance dirty memory state
+> > + * @mapping: address_space which was dirtied
+> > + *
+> > + * Processes which are dirtying memory should call in here once for each page
+> > + * which was newly dirtied.  The function will periodically check the system's
+> > + * dirty state and will initiate writeback if needed.
+> > + *
+> > + * Once we're over the dirty memory limit we decrease the ratelimiting
+> > + * by a lot, to prevent individual processes from overshooting the limit
+> > + * by (ratelimit_pages) each.
+> > + *
+> > + * This is the async version of the API. It only checks if it is required to
+> > + * balance dirty pages. In case it needs to balance dirty pages, it returns
+> > + * -EAGAIN.
+> > + */
+> > +int  balance_dirty_pages_ratelimited_async(struct address_space *mapping)
+> > +{
+> > +	return balance_dirty_pages_ratelimited_flags(mapping, true);
+> > +}
+> > +EXPORT_SYMBOL(balance_dirty_pages_ratelimited_async);
+> 
+> I'd much rather export the underlying
+> balance_dirty_pages_ratelimited_flags helper than adding a pointless
+> wrapper here.  And as long as only iomap is supported there is no need
+> to export it at all.
 
-Why the __GFP_NOWARN?
+This was actually my suggestion so I take the blame ;) I have suggested
+this because I don't like non-static functions with bool arguments (it is
+unnecessarily complicated to understand what the argument means or grep for
+it etc.). If you don't like the wrapper, creating
+
+int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,
+					  unsigned int flags)
+
+and have something like:
+
+#define BDP_NOWAIT 0x0001
+
+is fine with me as well.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
