@@ -2,114 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D46CC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 08:54:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B85C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 15:28:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235652AbiESIyP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 May 2022 04:54:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34434 "EHLO
+        id S240964AbiESP2B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 May 2022 11:28:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231418AbiESIyO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 04:54:14 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB4BB9CF5C;
-        Thu, 19 May 2022 01:54:13 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 87D632190C;
-        Thu, 19 May 2022 08:54:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1652950452; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Fcqmrpxaer0Q0d9KKEW1aRv2ycWgGPdWyzaSn+WUbBk=;
-        b=MCqflNXNG3ngH2MmJW00KgKiExOrIVLN0FjbU1tW/EjTGsQoOt4VFLU44GX9dgv4k0vDWj
-        oiGvElYDh1fZtGPXkj4GrjWCc4A2LzW2xS7tI5XSE5jLbx9+Qaj+1ajb/FG1EX2xEp6VHy
-        /TTH4BL7tSch0QManLpc1RCH/PFlWkY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1652950452;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Fcqmrpxaer0Q0d9KKEW1aRv2ycWgGPdWyzaSn+WUbBk=;
-        b=CSE0dPEFDF1WBQ1nOUVh0VvJ3pzuB+V0rQ9k1XNYeePdsxTD4zd1GicWO9Gw9VSL9LgghM
-        lUuBj/2cI6p+HwBg==
-Received: from quack3.suse.cz (unknown [10.100.224.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 76B932C143;
-        Thu, 19 May 2022 08:54:12 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 17A81A062F; Thu, 19 May 2022 10:54:12 +0200 (CEST)
-Date:   Thu, 19 May 2022 10:54:12 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
-        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, david@fromorbit.com, jack@suse.cz
-Subject: Re: [RFC PATCH v3 15/18] mm: Add
- balance_dirty_pages_ratelimited_async() function
-Message-ID: <20220519085412.ngnnhsf6iy35vqn3@quack3.lan>
-References: <20220518233709.1937634-1-shr@fb.com>
- <20220518233709.1937634-16-shr@fb.com>
- <YoX/4fwQOYyTL34a@infradead.org>
+        with ESMTP id S240923AbiESPZv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 11:25:51 -0400
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE493B9
+        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 08:25:50 -0700 (PDT)
+Received: by mail-lf1-x133.google.com with SMTP id bu29so9810283lfb.0
+        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 08:25:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=colorremedies-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=25W06mVchCPbnzKsfnIcGoUdJPr+bzBze9f8dfzL7eY=;
+        b=CBe7xZqsrDjl/aqV6NdGA/5JqqlKDJbIQg4LjLRHdtUHt6VXRCH284Hg+kOFlhX02J
+         m7njjwRIV1GJkAUmdPkoEXR3FLTgzQJMoehvh83sVzq7tmbNF6m9OZWmGTKciMXmlbtm
+         Qp0zsJYJdFVsBIl0AgWeloHulck/eT4B5NhvubKYY2tzc8tRCMJxxt64GwwkQC+DES7b
+         8FeQC3uUR8YWw6u9QSadwXw2Gl03uR16kONin0I02zfRRH34Ye/hg9qdQo07fBJ5P+pb
+         PoIzWosyF9pl0el+c+RLVEJ21/sMlmEKeCbmGsfCWMq1nnGWjWyurzQwMxMlu5wcPEjF
+         7EEQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=25W06mVchCPbnzKsfnIcGoUdJPr+bzBze9f8dfzL7eY=;
+        b=UDNw8AFLPzuv0mpzEbshSgFFBKUr4zrnjDUlRIvQqzGLJppw2FPwQiIOvsOGXIgEYw
+         sDcZmN1XjWbl6gPcZOMw401zIN43iCL3cRRrwV9dnlyrqbNDPBfBWn6wgz2Uk3zMqL/o
+         f8Q//qbZ+5ps8POTMuPZKq0SeUwh+aITyFKDGlpdn2P4ILMp4jHEWJIM/tlYiO5MHPJl
+         Dv2l4G58capiyGtp0JvrazvW1FQAZ7m+qZCeBakO5/ZEDnJnyuwhm8N18s9w3o/jJWpO
+         O+kcRnEAWT1lwwlFFaFFy3hb32yuoX9A1m9plg3KVFkyDYzfekQrsO/UlijcjINcmrz4
+         VU9A==
+X-Gm-Message-State: AOAM5300RibOCY2V3HXjfkWQiKVJyqkxy3AOkZWTvMitRJ8X64+CouPL
+        tzXDycpnd0KE+jgLQkNu//xOdhrvfV7pNUUlDdSYwQ==
+X-Google-Smtp-Source: ABdhPJyVKHZcCAxqRyJwxMZIto53E+HC6JlH98tvw/XrPZ1de/jLnWbniW9A2g2+IwHsGsLU5JEoxoX9cIjJScvg3iM=
+X-Received: by 2002:a05:6512:92e:b0:477:a47e:cdf7 with SMTP id
+ f14-20020a056512092e00b00477a47ecdf7mr3618674lft.446.1652973948206; Thu, 19
+ May 2022 08:25:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YoX/4fwQOYyTL34a@infradead.org>
+References: <20220518065949.GA1237408@onthe.net.au> <20220518070713.GA1238882@onthe.net.au>
+ <YoUXxBe1d7b29wif@magnolia> <20220518223606.GA1343027@onthe.net.au> <20220519005014.GS1098723@dread.disaster.area>
+In-Reply-To: <20220519005014.GS1098723@dread.disaster.area>
+From:   Chris Murphy <lists@colorremedies.com>
+Date:   Thu, 19 May 2022 11:25:32 -0400
+Message-ID: <CAJCQCtR--zWjgGgFDfS5X9qTNn4in0bhFBOpeSxEJu+kWwx1jA@mail.gmail.com>
+Subject: Re: fstrim and strace considered harmful?
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Chris Dunlop <chris@onthe.net.au>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        xfs list <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 19-05-22 01:29:21, Christoph Hellwig wrote:
-> > +static int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,
-> > +						bool no_wait)
-> >  {
-> 
-> This doesn't actully take flags, but a single boolean argument.  So
-> either it needs a new name, or we actually pass a descriptiv flag.
->
-> > +/**
-> > + * balance_dirty_pages_ratelimited_async - balance dirty memory state
-> > + * @mapping: address_space which was dirtied
-> > + *
-> > + * Processes which are dirtying memory should call in here once for each page
-> > + * which was newly dirtied.  The function will periodically check the system's
-> > + * dirty state and will initiate writeback if needed.
-> > + *
-> > + * Once we're over the dirty memory limit we decrease the ratelimiting
-> > + * by a lot, to prevent individual processes from overshooting the limit
-> > + * by (ratelimit_pages) each.
-> > + *
-> > + * This is the async version of the API. It only checks if it is required to
-> > + * balance dirty pages. In case it needs to balance dirty pages, it returns
-> > + * -EAGAIN.
-> > + */
-> > +int  balance_dirty_pages_ratelimited_async(struct address_space *mapping)
-> > +{
-> > +	return balance_dirty_pages_ratelimited_flags(mapping, true);
-> > +}
-> > +EXPORT_SYMBOL(balance_dirty_pages_ratelimited_async);
-> 
-> I'd much rather export the underlying
-> balance_dirty_pages_ratelimited_flags helper than adding a pointless
-> wrapper here.  And as long as only iomap is supported there is no need
-> to export it at all.
+On Wed, May 18, 2022 at 8:50 PM Dave Chinner <david@fromorbit.com> wrote:
 
-This was actually my suggestion so I take the blame ;) I have suggested
-this because I don't like non-static functions with bool arguments (it is
-unnecessarily complicated to understand what the argument means or grep for
-it etc.). If you don't like the wrapper, creating
+> I suspect that it's just that your storage device is really slow at
+> small trims. If you didn't set a minimum trim size, XFS will issue
+> discards on every free space in it's trees. If you have fragmented
+> free space (quite possible if you're using reflink and removing
+> files that have been reflinked and modified) then you could have
+> millions of tiny free spaces that XFS is now asking the storage to
+> free.
 
-int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,
-					  unsigned int flags)
+Yeah, fstrim man page says minimum-size default is 0, so it'll trim
+every filesystem free block. I asked about it a while ago in
+linux-block@ list and didn't get a reply, maybe it's the wrong list.
+https://lore.kernel.org/linux-block/CAJCQCtRM4Gn_EY_A0Da7qz=MFfmw08+oD=syQEQt=9DrE8_gFw@mail.gmail.com/
 
-and have something like:
+If the context includes trim down to SSD hardware, and if the workload
+involves lots of small files, and many/most of the mixed used+free
+portions of the filesystem blocks look like swiss cheese, then I
+suppose 1M granularity means quite a lot isn't trimmed, and ends up
+getting needlessly moved around by the firmware's wear leveling? But
+oh well? Maybe in that case the discard mount option makes more sense.
 
-#define BDP_NOWAIT 0x0001
+But if context is only LVM thin provisioning, and not pass through to
+an SSD, then a 4M granularity is adequate (match the LVM logical
+extent size). I'm offhand not imagining a benefit to trimming thin
+provisioning less than LE size.
 
-is fine with me as well.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+--
+Chris Murphy
