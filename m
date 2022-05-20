@@ -2,51 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C531C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 23:05:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB9E9C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 23:05:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242118AbiETXFZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 19:05:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55096 "EHLO
+        id S240765AbiETXFc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 19:05:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240765AbiETXFZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 19:05:25 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 16DC1190D21
-        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 16:05:23 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CF1A510E6E46;
-        Sat, 21 May 2022 09:05:20 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nsBgL-00EQPk-Rr; Sat, 21 May 2022 09:05:17 +1000
-Date:   Sat, 21 May 2022 09:05:17 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 216007] New: XFS hangs in iowait when extracting large
- number of files
-Message-ID: <20220520230517.GL1098723@dread.disaster.area>
-References: <bug-216007-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        with ESMTP id S232171AbiETXFa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 19:05:30 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 710E9190D21
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 16:05:29 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3216CB82E19
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 23:05:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id DE7F7C34117
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 23:05:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653087926;
+        bh=h5eBAYwNiVyTZAQiUhCCQS1R0xMyiuXlZgt1yIjiCQE=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=U3Vp1lM37ObO3dPeNR3GAheo5vuXYYZtoQTJ6ZY1WgrbOE0x0PzbNSp63hph1u/Jy
+         NCVOU7cSZmoJuslHB9Thx369KUW4RzK8qQLCa+0Gh3b6zFJxXYJaINyAmWe4ZriJf3
+         oZXMwmINwUwdyNdHavk3emSh2fbbF3ow7KP2bN5Iff1OE5ZBVlWWa4W8+HpsLYtyVh
+         SipXXSgMzX5fRrzZ1bCI5WnzJV26GE09Iyd6mfCnU7bNWISVAhM64IR2VhdoKb2Jh3
+         44U0iX4vSylyYCL88NCTKtXJX7BxxAizSlrWh+8LQvWcFL0BEowYSyeweIYi0f0p5n
+         9J85QE80ytuhg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id CD99ACC13B0; Fri, 20 May 2022 23:05:26 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216007] XFS hangs in iowait when extracting large number of
+ files
+Date:   Fri, 20 May 2022 23:05:26 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216007-201763-kKQKjnHvn2@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-216007-201763@https.bugzilla.kernel.org/>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62881eb1
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=jW9XMcD_w1WAFi1Y:21 a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8
-        a=7mOBRU54AAAA:8 a=7-415B0cAAAA:8 a=iIXpL5o01sIEst5Xff0A:9
-        a=CjuIK1q_8ugA:10 a=zBcMGXd3NVIA:10 a=4XdoLCUCO_b63ij2jC9c:22
-        a=AjGcO6oz07-iQ99wixmX:22 a=wa9RWnbW_A1YIeRBVszw:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+References: <bug-216007-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
+
+--- Comment #3 from Dave Chinner (david@fromorbit.com) ---
 On Fri, May 20, 2022 at 11:56:06AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=216007
-> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
+>=20
 >             Bug ID: 216007
 >            Summary: XFS hangs in iowait when extracting large number of
 >                     files
@@ -63,40 +87,45 @@ On Fri, May 20, 2022 at 11:56:06AM +0000, bugzilla-daemon@kernel.org wrote:
 >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
 >           Reporter: bugzkernelorg8392@araxon.sk
 >         Regression: No
-> 
+>=20
 > Created attachment 301008
->   --> https://bugzilla.kernel.org/attachment.cgi?id=301008&action=edit
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=3D301008&action=3Dedit
 > output from dmesg after echo w > /proc/sysrq-trigger
-> 
+>=20
 > Overview:
-> 
-> When I try to extract an uncompressed tar archive (2.6 milion files, 760.3 GiB
+>=20
+> When I try to extract an uncompressed tar archive (2.6 milion files, 760.3
+> GiB
 > in size) on newly created (empty) XFS file system, after first low tens of
-> gigabytes extracted the process hangs in iowait indefinitely. One CPU core is
-> 100% occupied with iowait, the other CPU core is idle (on 2-core Intel Celeron
+> gigabytes extracted the process hangs in iowait indefinitely. One CPU cor=
+e is
+> 100% occupied with iowait, the other CPU core is idle (on 2-core Intel
+> Celeron
 > G1610T).
-> 
+>=20
 > I have kernel compiled with my .config file. When I try this with a more
 > "standard" kernel, the problem is not reproducible.
-> 
+>=20
 > Steps to Reproduce:
-> 
+>=20
 > 1) compile the kernel with the attached .config
-> 
+>=20
 > 2) reboot with this kernel
-> 
+>=20
 > 3) create a new XFS filesystem on a spare drive (just mkfs.xfs -f <dev>)
-> 
+>=20
 > 4) mount this new file system
-> 
+>=20
 > 5) try to extract large amount of data there
-> 
+>=20
 > Actual results:
-> 
+>=20
 > After 20-40 GiB written, the process hangs in iowait indefinitely, never
 > finishing the archive extraction.
 
-[  805.233836] task:tar             state:D stack:    0 pid: 2492 ppid:  2491 flags:0x00004000
+[  805.233836] task:tar             state:D stack:    0 pid: 2492 ppid:  24=
+91
+flags:0x00004000
 [  805.233840] Call Trace:
 [  805.233841]  <TASK>
 [  805.233842]  __schedule+0x1c9/0x510
@@ -126,12 +155,18 @@ On Fri, May 20, 2022 at 11:56:06AM +0000, bugzilla-daemon@kernel.org wrote:
 [  805.233946]  do_syscall_64+0x43/0x90
 [  805.233952]  entry_SYSCALL_64_after_hwframe+0x44/0xae
 [  805.233959] RIP: 0033:0x7f763ccc9572
-[  805.233962] RSP: 002b:00007ffef1391530 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
-[  805.233966] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f763ccc9572
-[  805.233969] RDX: 00000000000809c1 RSI: 000055b1d5b19270 RDI: 0000000000000004
-[  805.233971] RBP: 0000000000000180 R08: 000000000000c0c0 R09: 000055b1d5b145f0
-[  805.233973] R10: 0000000000000180 R11: 0000000000000246 R12: 0000000000000000
-[  805.233974] R13: 00000000000809c1 R14: 000055b1d5b19270 R15: 000055b1d59d2248
+[  805.233962] RSP: 002b:00007ffef1391530 EFLAGS: 00000246 ORIG_RAX:
+0000000000000101
+[  805.233966] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
+00007f763ccc9572
+[  805.233969] RDX: 00000000000809c1 RSI: 000055b1d5b19270 RDI:
+0000000000000004
+[  805.233971] RBP: 0000000000000180 R08: 000000000000c0c0 R09:
+000055b1d5b145f0
+[  805.233973] R10: 0000000000000180 R11: 0000000000000246 R12:
+0000000000000000
+[  805.233974] R13: 00000000000809c1 R14: 000055b1d5b19270 R15:
+000055b1d59d2248
 [  805.233977]  </TASK>
 
 It's waiting on memory allocation, which is probably waiting on IO
@@ -141,28 +176,34 @@ there's an issue with memory cleaning/reclaim stalling and not
 making progress.
 
 > Expected Results:
-> 
+>=20
 > Archive extraction continues smoothly until done.
-> 
+>=20
 > Build Date & Hardware:
-> 
+>=20
 > 2022-05-01 on HP ProLiant MicroServer Gen8, 4GB ECC RAM
-> 
+>=20
 > Additional Information:
-> 
-> No other filesystem tested with the same archive on the same hardware before or
-> after this (ext2, ext3, ext4, reiserfs3, jfs, nilfs2, f2fs, btrfs, zfs) has
-> shown this behavior. When I downgraded the kernel to 5.10.109, the XFS started
-> working again. Kernel versions higher than 5.15 seem to be affected, I tried
+>=20
+> No other filesystem tested with the same archive on the same hardware bef=
+ore
+> or
+> after this (ext2, ext3, ext4, reiserfs3, jfs, nilfs2, f2fs, btrfs, zfs) h=
+as
+> shown this behavior. When I downgraded the kernel to 5.10.109, the XFS
+> started
+> working again. Kernel versions higher than 5.15 seem to be affected, I tr=
+ied
 > 5.17.1, 5.17.6 and 5.18.0-rc7, they all hang up after a few minutes.
 
 Doesn't actually look like an XFS problem from the evidence
 supplied, though.
 
 What sort of storage subsystem does this machine have? If it's a
-spinning disk then you've probably just filled memory 
+spinning disk then you've probably just filled memory=20
 
-> More could be found here: https://forums.gentoo.org/viewtopic-p-8709116.html
+> More could be found here: https://forums.gentoo.org/viewtopic-p-8709116.h=
+tml
 
 Oh, wait:
 
@@ -181,6 +222,9 @@ XFS problem, either.
 Cheers,
 
 Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
