@@ -2,70 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19933C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 03:51:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4227AC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 04:05:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231455AbiETDvE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 May 2022 23:51:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56190 "EHLO
+        id S229790AbiETEFe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 00:05:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232268AbiETDuz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 23:50:55 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EFC803917C
-        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 20:50:53 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DC05D10E6859;
-        Fri, 20 May 2022 13:50:52 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nrtf9-00E6Z7-L0; Fri, 20 May 2022 13:50:51 +1000
-Date:   Fri, 20 May 2022 13:50:51 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/7] xfs: use a separate slab cache for deferred xattr
- work state
-Message-ID: <20220520035051.GF1098723@dread.disaster.area>
-References: <165290014409.1647637.4876706578208264219.stgit@magnolia>
- <165290016116.1647637.7261522980413646490.stgit@magnolia>
+        with ESMTP id S229537AbiETEFd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 00:05:33 -0400
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A2DE14A270;
+        Thu, 19 May 2022 21:05:32 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R211e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VDoVbWo_1653019520;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VDoVbWo_1653019520)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Fri, 20 May 2022 12:05:29 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH] xfs: Remove the redundant assignment
+Date:   Fri, 20 May 2022 12:05:18 +0800
+Message-Id: <20220520040518.73957-1-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <165290016116.1647637.7261522980413646490.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6287101d
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=MreqOf8DLQP65j5zHlwA:9
-        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 18, 2022 at 11:56:01AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Create a separate slab cache for struct xfs_attr_item objects, since we
-> can pack the (104-byte) intent items more tightly than we can with the
-> general slab cache objects.  On x86, this means 39 intents per memory
-> page instead of 32.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c  |   20 +++++++++++++++++++-
->  fs/xfs/libxfs/xfs_attr.h  |    4 ++++
->  fs/xfs/libxfs/xfs_defer.c |    4 ++++
->  fs/xfs/xfs_attr_item.c    |    5 ++++-
->  4 files changed, 31 insertions(+), 2 deletions(-)
+Variable 'ifree','freeblks' and 'itotal' set but not used.
 
-Looks ok.
+Eliminate the follow clang warning:
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+fs/xfs/xfs_log_recover.c:3534:12: warning: variable 'freeblks' set but
+not used [-Wunused-but-set-variable].
 
+fs/xfs/xfs_log_recover.c:3535:12: warning: variable 'itotal' set but not
+used [-Wunused-but-set-variable].
 
+fs/xfs/xfs_log_recover.c:3536:12: warning: variable 'ifree'
+set but not used [-Wunused-but-set-variable].
+
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+ fs/xfs/xfs_log_recover.c | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 97b941c07957..47736936ebba 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3531,14 +3531,8 @@ xlog_recover_check_summary(
+ 	struct xfs_buf		*agfbp;
+ 	struct xfs_buf		*agibp;
+ 	xfs_agnumber_t		agno;
+-	uint64_t		freeblks;
+-	uint64_t		itotal;
+-	uint64_t		ifree;
+ 	int			error;
+ 
+-	freeblks = 0LL;
+-	itotal = 0LL;
+-	ifree = 0LL;
+ 	for_each_perag(mp, agno, pag) {
+ 		error = xfs_read_agf(mp, NULL, pag->pag_agno, 0, &agfbp);
+ 		if (error) {
+@@ -3546,9 +3540,6 @@ xlog_recover_check_summary(
+ 						__func__, pag->pag_agno, error);
+ 		} else {
+ 			struct xfs_agf	*agfp = agfbp->b_addr;
+-
+-			freeblks += be32_to_cpu(agfp->agf_freeblks) +
+-				    be32_to_cpu(agfp->agf_flcount);
+ 			xfs_buf_relse(agfbp);
+ 		}
+ 
+@@ -3558,9 +3549,6 @@ xlog_recover_check_summary(
+ 						__func__, pag->pag_agno, error);
+ 		} else {
+ 			struct xfs_agi	*agi = agibp->b_addr;
+-
+-			itotal += be32_to_cpu(agi->agi_count);
+-			ifree += be32_to_cpu(agi->agi_freecount);
+ 			xfs_buf_relse(agibp);
+ 		}
+ 	}
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1.7.g153144c
+
