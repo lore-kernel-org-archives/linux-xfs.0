@@ -2,73 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43D3CC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 04:37:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3A9AC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 05:18:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345310AbiETEhj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 00:37:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43762 "EHLO
+        id S241071AbiETFS6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 01:18:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345232AbiETEhi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 00:37:38 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CDF3A8CCFD;
-        Thu, 19 May 2022 21:37:35 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9EEF9534526;
-        Fri, 20 May 2022 14:37:34 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nruOL-00E7Sy-70; Fri, 20 May 2022 14:37:33 +1000
-Date:   Fri, 20 May 2022 14:37:33 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
-Subject: Re: [PATCH] xfs: Remove the redundant assignment
-Message-ID: <20220520043733.GK1098723@dread.disaster.area>
-References: <20220520040518.73957-1-jiapeng.chong@linux.alibaba.com>
+        with ESMTP id S236946AbiETFS4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 01:18:56 -0400
+Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 189DB14A27E;
+        Thu, 19 May 2022 22:18:54 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3A5VLVKa+4syirCH9xfjiSDrUD63+TJUtcMsCJ2f8?=
+ =?us-ascii?q?bfWQNrUomhGYHzmcfCDjTOa6IZzCmf9F/btm0pB8A75GEmoNrGldlrnsFo1Bi8?=
+ =?us-ascii?q?5ScXYvDRqvT04J+FuWaFQQ/qZx2huDodKjYdVeB4Ef9WlTdhSMkj/vQHOKlULe?=
+ =?us-ascii?q?s1h1ZHmeIdg9w0HqPpMZp2uaEsfDha++8kYuaT//3YTdJ6BYoWo4g0J9vnTs01?=
+ =?us-ascii?q?BjEVJz0iXRlDRxDlAe2e3D4l/vzL4npR5fzatE88uJX24/+IL+FEmPxp3/BC/u?=
+ =?us-ascii?q?ulPD1b08LXqXPewOJjxK6WYD72l4b+HN0if19aZLwam8O49mNt8pswdNWpNq+T?=
+ =?us-ascii?q?xw1FqPRmuUBSAQeGCZ7VUFD0OadfSPh4JbCnyUqdFOpmZ2CFnoeMYQG++pfD3t?=
+ =?us-ascii?q?J8PsCIjERKBuEgoqewLm7YuhqiN4qIMTiMMUYoH4I5T3QC7AkB4/CR6HL7NpD9?=
+ =?us-ascii?q?DY2ms1KW/3ZYqIxZThwaxLPSx5CIFEaDNQ5hujArn3+dSBI7VeQjakp6mPQigt?=
+ =?us-ascii?q?r39DFNsTZe9mPbcFUhVqD4GbH+XnpRB0XKrS3yzOD/zSnhvLnmjnyU4YfUra/8?=
+ =?us-ascii?q?5ZChFyV23xWBgYaWEW2pdGnhUOkHdFSMUoZ/mwpt6da3EiqSMTtGh61uniJujY?=
+ =?us-ascii?q?CVNdKVe438geAzuzT+QnxLmwFSCNRLcwor+coSjEwkFyEhdXkAXpoqrL9dJ433?=
+ =?us-ascii?q?t94thvrYW5MczBEPnRCEGM4DxDYiNlbpnryohxLScZZVuHIJAw=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AW6c12a/LRHvcOJF+kT9uk+DVI+orL9Y04lQ7?=
+ =?us-ascii?q?vn2ZKCYlFfBw8vrFoB11726WtN98YhEdcLO7WZVoI0msl6KdiLN5VdyftWLdyQ?=
+ =?us-ascii?q?6Vxe9ZnO/fKv7bdxEWNNQx6U6tScdD4RTLY2RHsQ=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
+   d="scan'208";a="124369298"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 20 May 2022 13:18:54 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 3873B4D16FFC;
+        Fri, 20 May 2022 13:18:53 +0800 (CST)
+Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 20 May 2022 13:18:53 +0800
+Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
+ G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 20 May 2022 13:18:53 +0800
+Received: from [192.168.22.28] (10.167.225.141) by
+ G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Fri, 20 May 2022 13:18:52 +0800
+Message-ID: <bc0f3750-e339-d736-62ee-ef447790e7b1@fujitsu.com>
+Date:   Fri, 20 May 2022 13:18:52 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220520040518.73957-1-jiapeng.chong@linux.alibaba.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62871b0e
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=SRrdq9N9AAAA:8 a=7-415B0cAAAA:8
-        a=P0sVBlT4rgpVDXflfFAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.1
+Subject: Re: [RFC PATCH] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <djwong@kernel.org>,
+        <dan.j.williams@intel.com>, <david@fromorbit.com>,
+        <jane.chu@oracle.com>
+References: <20220410171623.3788004-1-ruansy.fnst@fujitsu.com>
+ <YlPTaexutZrus1kQ@infradead.org>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <YlPTaexutZrus1kQ@infradead.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-yoursite-MailScanner-ID: 3873B4D16FFC.A0799
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 20, 2022 at 12:05:18PM +0800, Jiapeng Chong wrote:
-> Variable 'ifree','freeblks' and 'itotal' set but not used.
-> 
-> Eliminate the follow clang warning:
-> 
-> fs/xfs/xfs_log_recover.c:3534:12: warning: variable 'freeblks' set but
-> not used [-Wunused-but-set-variable].
-> 
-> fs/xfs/xfs_log_recover.c:3535:12: warning: variable 'itotal' set but not
-> used [-Wunused-but-set-variable].
-> 
-> fs/xfs/xfs_log_recover.c:3536:12: warning: variable 'ifree'
-> set but not used [-Wunused-but-set-variable].
-> 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 
-Looks like it's been that way since 2010 - commit 1414a6046ab4
-("xfs: remove dead XFS_LOUD_RECOVERY code") removed the prints that
-dumped the differences between the in memory counters and the
-calculated values....
 
-IOWs, this entire function is dead code and has been for 12 years
-now. Can you just remove it, please?
+在 2022/4/11 15:06, Christoph Hellwig 写道:
+> On Mon, Apr 11, 2022 at 01:16:23AM +0800, Shiyang Ruan wrote:
+>> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+>> index bd502957cfdf..72d9e69aea98 100644
+>> --- a/drivers/nvdimm/pmem.c
+>> +++ b/drivers/nvdimm/pmem.c
+>> @@ -359,7 +359,6 @@ static void pmem_release_disk(void *__pmem)
+>>   	struct pmem_device *pmem = __pmem;
+>>   
+>>   	dax_remove_host(pmem->disk);
+>> -	kill_dax(pmem->dax_dev);
+>>   	put_dax(pmem->dax_dev);
+>>   	del_gendisk(pmem->disk);
+>>   
+>> @@ -597,6 +596,8 @@ static void nd_pmem_remove(struct device *dev)
+>>   		pmem->bb_state = NULL;
+>>   	}
+>>   	nvdimm_flush(to_nd_region(dev->parent), NULL);
+>> +
+>> +	kill_dax(pmem->dax_dev);
+> 
+> I think the put_dax will have to move as well.
 
-Cheers,
+After reading the implementation of 'devm_add_action_or_reset()', I 
+think there is no need to move kill_dax() and put_dax() into ->remove().
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+In unbind, it will call both drv->remove() and devres_release_all(). 
+The action, pmem_release_disk(), added in devm_add_action_or_reset() 
+will be execute in devres_release_all().  So, during the unbind process, 
+{kill,put}_dax() will finally be called to notify the REMOVE signal.
+
+In addition, if devm_add_action_or_reset() fails in pmem_attach_disk(), 
+pmem_release_disk() will be called to cleanup the pmem->dax_dev.
+
+
+--
+Thanks,
+Ruan.
+
+> 
+> This part should probably also be a separate, well-documented
+> cleanup patch.
+
+
