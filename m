@@ -2,47 +2,47 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C3F8C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 18:38:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D47CAC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 18:38:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347836AbiETSh5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 14:37:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60752 "EHLO
+        id S1352985AbiETSiW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 14:38:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352959AbiETShu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 14:37:50 -0400
+        with ESMTP id S1352803AbiETShw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 14:37:52 -0400
 Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D208195BE3
-        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D9FE195BCA
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:50 -0700 (PDT)
 Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24KHSNMH018068
-        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:47 -0700
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24KHSPmx018150
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:50 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=xpR2o1MxE5h1TGY+8JuoVPirJk4Gk5FbraTEzaT2FUw=;
- b=B+D0y/UOBtUJH2ThPdBKyBqjNoqp7Rs5HNASL+1AjHHDZ/k9j2dF4CH5z+0pQsMCunNp
- Ovaq6ag0+uprirMFmdaRjr+whE7wyzHYLOfiCOoBsWiqRPE9HHKmDXUh1Ggz2Ak5/eUE
- bVfkc5UczODbgZLKw4PoDCYBOpAEV0LkTj0= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g5xexdvyh-3
+ bh=YjR6bHdDemShrFnRSFoy0SU6vrzP5IeqvXhPCERFUGY=;
+ b=HyrVG9lcrV/CeHxThGHE9eYHZmtVobMA7KM9o6ChVmxZTPqIw9rYWQ0kIAJdLN1JEZsL
+ ZMyHGFbGfmv7xOondbNNrpaHKBRFvMf+NMuYNQ6UcpYtvAYme1A3UBSCmmtSYJQbaBD2
+ qq/CJEeCPnxARa7Hbv3SW76qcCq1eeU/tnc= 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g5xexdvyy-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:47 -0700
-Received: from twshared8307.18.frc3.facebook.com (2620:10d:c085:208::f) by
- mail.thefacebook.com (2620:10d:c085:11d::4) with Microsoft SMTP Server
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:49 -0700
+Received: from twshared4937.07.ash9.facebook.com (2620:10d:c0a8:1b::d) by
+ mail.thefacebook.com (2620:10d:c0a8:82::c) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Fri, 20 May 2022 11:37:46 -0700
+ 15.1.2375.28; Fri, 20 May 2022 11:37:48 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id B6C7BF5E5B3F; Fri, 20 May 2022 11:37:16 -0700 (PDT)
+        id A0629F5E5B39; Fri, 20 May 2022 11:37:16 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>,
         <hch@infradead.org>
-Subject: [RFC PATCH v4 15/17] xfs: Add iomap async buffered write support
-Date:   Fri, 20 May 2022 11:36:44 -0700
-Message-ID: <20220520183646.2002023-16-shr@fb.com>
+Subject: [RFC PATCH v4 12/17] fs: Optimization for concurrent file time updates.
+Date:   Fri, 20 May 2022 11:36:41 -0700
+Message-ID: <20220520183646.2002023-13-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220520183646.2002023-1-shr@fb.com>
 References: <20220520183646.2002023-1-shr@fb.com>
@@ -50,8 +50,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: MOcjB1HAiTZjsXDZhh8qgzk69VU4kuny
-X-Proofpoint-GUID: MOcjB1HAiTZjsXDZhh8qgzk69VU4kuny
+X-Proofpoint-ORIG-GUID: ZF_IaSaPyjCkxBe-zMpGoTMXzBbz7Sh9
+X-Proofpoint-GUID: ZF_IaSaPyjCkxBe-zMpGoTMXzBbz7Sh9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-05-20_06,2022-05-20_02,2022-02-23_01
@@ -59,75 +59,70 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This adds the async buffered write support to the iomap layer of XFS. If
-a lock cannot be acquired or additional reads need to be performed, the
-request will return -EAGAIN in case this is an async buffered write
-request.
+This introduces the S_PENDING_TIME flag. If an async buffered write
+needs to update the time, it cannot be processed in the fast path of
+io-uring. When a time update is pending this flag is set for async
+buffered writes. Other concurrent async buffered writes for the same
+file do not need to wait while this time update is pending.
 
-This patch changes the helper function xfs_ilock_for_iomap such that the
-lock mode needs to be passed in.
+This reduces the number of async buffered writes that need to get punted
+to the io-workers in io-uring.
 
 Signed-off-by: Stefan Roesch <shr@fb.com>
 ---
- fs/xfs/xfs_iomap.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ fs/inode.c         | 11 +++++++++--
+ include/linux/fs.h |  3 +++
+ 2 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index e552ce541ec2..1aea962262ad 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -659,7 +659,7 @@ xfs_ilock_for_iomap(
- 	unsigned		flags,
- 	unsigned		*lockmode)
- {
--	unsigned		mode =3D XFS_ILOCK_SHARED;
-+	unsigned int		mode =3D *lockmode;
- 	bool			is_write =3D flags & (IOMAP_WRITE | IOMAP_ZERO);
-=20
- 	/*
-@@ -737,7 +737,7 @@ xfs_direct_write_iomap_begin(
- 	int			nimaps =3D 1, error =3D 0;
- 	bool			shared =3D false;
- 	u16			iomap_flags =3D 0;
--	unsigned		lockmode;
-+	unsigned int		lockmode =3D XFS_ILOCK_SHARED;
-=20
- 	ASSERT(flags & (IOMAP_WRITE | IOMAP_ZERO));
-=20
-@@ -881,18 +881,22 @@ xfs_buffered_write_iomap_begin(
- 	bool			eof =3D false, cow_eof =3D false, shared =3D false;
- 	int			allocfork =3D XFS_DATA_FORK;
- 	int			error =3D 0;
-+	unsigned int		lockmode =3D XFS_ILOCK_EXCL;
-=20
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
-=20
- 	/* we can't use delayed allocations when using extent size hints */
--	if (xfs_get_extsz_hint(ip))
-+	if (xfs_get_extsz_hint(ip)) {
- 		return xfs_direct_write_iomap_begin(inode, offset, count,
- 				flags, iomap, srcmap);
+diff --git a/fs/inode.c b/fs/inode.c
+index 3a5d0fa468ab..5c5021787780 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2184,10 +2184,17 @@ int file_modified_async(struct file *file, int fl=
+ags)
+ 	ret =3D file_needs_update_time(inode, file, &now);
+ 	if (ret <=3D 0)
+ 		return ret;
+-	if (flags & IOCB_NOWAIT)
++	if (flags & IOCB_NOWAIT) {
++		if (IS_PENDING_TIME(inode))
++			return 0;
++
++		inode->i_flags |=3D S_PENDING_TIME;
+ 		return -EAGAIN;
 +	}
 =20
- 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+-	return __file_update_time(inode, file, &now, ret);
++	ret =3D __file_update_time(inode, file, &now, ret);
++	inode->i_flags &=3D ~S_PENDING_TIME;
++	return ret;
+ }
+ EXPORT_SYMBOL(file_modified_async);
 =20
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	error =3D xfs_ilock_for_iomap(ip, flags, &lockmode);
-+	if (error)
-+		return error;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 9760283af7dc..5f3aaf61fb4b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2141,6 +2141,8 @@ struct super_operations {
+ #define S_CASEFOLD	(1 << 15) /* Casefolded file */
+ #define S_VERITY	(1 << 16) /* Verity file (using fs/verity/) */
+ #define S_KERNEL_FILE	(1 << 17) /* File is in use by the kernel (eg. fs/=
+cachefiles) */
++#define S_PENDING_TIME (1 << 18) /* File update time is pending */
++
 =20
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
- 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-@@ -1167,7 +1171,7 @@ xfs_read_iomap_begin(
- 	xfs_fileoff_t		end_fsb =3D xfs_iomap_end_fsb(mp, offset, length);
- 	int			nimaps =3D 1, error =3D 0;
- 	bool			shared =3D false;
--	unsigned		lockmode;
-+	unsigned int		lockmode =3D XFS_ILOCK_SHARED;
+ /*
+  * Note that nosuid etc flags are inode-specific: setting some file-syst=
+em
+@@ -2183,6 +2185,7 @@ static inline bool sb_rdonly(const struct super_blo=
+ck *sb) { return sb->s_flags
+ #define IS_ENCRYPTED(inode)	((inode)->i_flags & S_ENCRYPTED)
+ #define IS_CASEFOLDED(inode)	((inode)->i_flags & S_CASEFOLD)
+ #define IS_VERITY(inode)	((inode)->i_flags & S_VERITY)
++#define IS_PENDING_TIME(inode) ((inode)->i_flags & S_PENDING_TIME)
 =20
- 	ASSERT(!(flags & (IOMAP_WRITE | IOMAP_ZERO)));
-=20
+ #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
+ 				 (inode)->i_rdev =3D=3D WHITEOUT_DEV)
 --=20
 2.30.2
 
