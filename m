@@ -2,47 +2,47 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F3F2C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 18:38:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE9DAC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 18:38:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352981AbiETSiX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 14:38:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32788 "EHLO
+        id S1353054AbiETSiZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 14:38:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352978AbiETShw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 14:37:52 -0400
+        with ESMTP id S1350623AbiETSiW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 14:38:22 -0400
 Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 501D3195937
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEEB0195E91
         for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:51 -0700 (PDT)
 Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24KHSGlj010565
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24KHSIWL010668
         for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:50 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=UfD+h75jLCqmGcJIFVAad9rZN/r0VFdoC8EFOxTjfII=;
- b=lIv14vGOMRnHDFARgipELlhdPcszdR2I58P/Whn4jzYXTZZ4ec1Vmzom9mFtk4L8Ov5J
- NFYJi3tVK5QCK2S1AFlFjVd27f/7KUPs6og0H7T7BuN9LZu+9tTtHoPttdCQXljMZ2de
- wEO78RQ+45FeV1k4bKav7lAGncnk/RDwwXA= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g6341cjgh-1
+ bh=eRv8uAwss7XyRCk6NE/nwLa4/tzHUoenyM8a0++XiQI=;
+ b=XQ08eS3KSB4jHhZUb7EAR5qmuBmfVV7iCeEhPidFWmvXxq6GHuvBsVPFCNn8qYXGjrim
+ 4GDi8zZXS9MWfcjB60aSQnJBukfiaD09V01DDbE/soswPZ451P6BAUIImlBCn4Tpw74s
+ 7iUnMBBDLoJik3k4YeYKLaeIHpSlGCHIvHs= 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g6341cjgn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
         for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:50 -0700
-Received: from twshared6696.05.ash7.facebook.com (2620:10d:c085:108::4) by
- mail.thefacebook.com (2620:10d:c085:11d::5) with Microsoft SMTP Server
+Received: from twshared24024.25.frc3.facebook.com (2620:10d:c0a8:1b::d) by
+ mail.thefacebook.com (2620:10d:c0a8:82::d) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Fri, 20 May 2022 11:37:48 -0700
+ 15.1.2375.28; Fri, 20 May 2022 11:37:49 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id B0017F5E5B3D; Fri, 20 May 2022 11:37:16 -0700 (PDT)
+        id 9ACD6F5E5B37; Fri, 20 May 2022 11:37:16 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>,
         <hch@infradead.org>
-Subject: [RFC PATCH v4 14/17] io_uring: Add tracepoint for short writes
-Date:   Fri, 20 May 2022 11:36:43 -0700
-Message-ID: <20220520183646.2002023-15-shr@fb.com>
+Subject: [RFC PATCH v4 11/17] fs: Add async write file modification handling.
+Date:   Fri, 20 May 2022 11:36:40 -0700
+Message-ID: <20220520183646.2002023-12-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220520183646.2002023-1-shr@fb.com>
 References: <20220520183646.2002023-1-shr@fb.com>
@@ -50,8 +50,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-GUID: s_XmQmapHHpJlJQEMCcpvxvk1TblxUDH
-X-Proofpoint-ORIG-GUID: s_XmQmapHHpJlJQEMCcpvxvk1TblxUDH
+X-Proofpoint-GUID: _S0RRnfwKoTWe9MXyOYuI7JkG_gQzpvb
+X-Proofpoint-ORIG-GUID: _S0RRnfwKoTWe9MXyOYuI7JkG_gQzpvb
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-05-20_06,2022-05-20_02,2022-02-23_01
@@ -59,68 +59,91 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This adds the io_uring_short_write tracepoint to io_uring. A short write
-is issued if not all pages that are required for a write are in the page
-cache and the async buffered writes have to return EAGAIN.
+This adds a file_modified_async() function to return -EAGAIN if the
+request either requires to remove privileges or needs to update the file
+modification time. This is required for async buffered writes, so the
+request gets handled in the io worker of io-uring.
 
 Signed-off-by: Stefan Roesch <shr@fb.com>
 ---
- fs/io_uring.c                   |  3 +++
- include/trace/events/io_uring.h | 25 +++++++++++++++++++++++++
- 2 files changed, 28 insertions(+)
+ fs/inode.c         | 25 ++++++++++++++++++++++++-
+ fs/xfs/xfs_file.c  |  2 +-
+ include/linux/fs.h |  1 +
+ 3 files changed, 26 insertions(+), 2 deletions(-)
 
-diff --git a/fs/io_uring.c b/fs/io_uring.c
-index f3aaac286509..7435a9c2007f 100644
---- a/fs/io_uring.c
-+++ b/fs/io_uring.c
-@@ -4032,6 +4032,9 @@ static int io_write(struct io_kiocb *req, unsigned =
-int issue_flags)
- 		if (ret2 !=3D req->result && ret2 >=3D 0 && need_complete_io(req)) {
- 			struct io_async_rw *rw;
+diff --git a/fs/inode.c b/fs/inode.c
+index 4bb7f583cc6b..3a5d0fa468ab 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2137,6 +2137,27 @@ EXPORT_SYMBOL(file_update_time);
+  * Return: 0 on success, negative errno on failure.
+  */
+ int file_modified(struct file *file)
++{
++	return file_modified_async(file, 0);
++}
++EXPORT_SYMBOL(file_modified);
++
++/**
++ * file_modified_async - handle mandated vfs changes when modifying a fi=
+le
++ * @file: file that was modified
++ * @flags: kiocb flags
++ *
++ * When file has been modified ensure that special
++ * file privileges are removed and time settings are updated.
++ *
++ * If IOCB_NOWAIT is set, special file privileges will not be removed an=
+d
++ * time settings will not be updated. It will return -EAGAIN.
++ *
++ * Context: Caller must hold the file's inode lock.
++ *
++ * Return: 0 on success, negative errno on failure.
++ */
++int file_modified_async(struct file *file, int flags)
+ {
+ 	int ret;
+ 	struct dentry *dentry =3D file_dentry(file);
+@@ -2163,10 +2184,12 @@ int file_modified(struct file *file)
+ 	ret =3D file_needs_update_time(inode, file, &now);
+ 	if (ret <=3D 0)
+ 		return ret;
++	if (flags & IOCB_NOWAIT)
++		return -EAGAIN;
 =20
-+			trace_io_uring_short_write(req->ctx, kiocb->ki_pos - ret2,
-+						req->result, ret2);
-+
- 			/* This is a partial write. The file pos has already been
- 			 * updated, setup the async struct to complete the request
- 			 * in the worker. Also update bytes_done to account for
-diff --git a/include/trace/events/io_uring.h b/include/trace/events/io_ur=
-ing.h
-index cddf5b6fbeb4..661834361d33 100644
---- a/include/trace/events/io_uring.h
-+++ b/include/trace/events/io_uring.h
-@@ -543,6 +543,31 @@ TRACE_EVENT(io_uring_req_failed,
- 		  (unsigned long long) __entry->pad2, __entry->error)
- );
+ 	return __file_update_time(inode, file, &now, ret);
+ }
+-EXPORT_SYMBOL(file_modified);
++EXPORT_SYMBOL(file_modified_async);
 =20
-+TRACE_EVENT(io_uring_short_write,
-+
-+	TP_PROTO(void *ctx, u64 fpos, u64 wanted, u64 got),
-+
-+	TP_ARGS(ctx, fpos, wanted, got),
-+
-+	TP_STRUCT__entry(
-+		__field(void *,	ctx)
-+		__field(u64,	fpos)
-+		__field(u64,	wanted)
-+		__field(u64,	got)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->ctx	=3D ctx;
-+		__entry->fpos	=3D fpos;
-+		__entry->wanted	=3D wanted;
-+		__entry->got	=3D got;
-+	),
-+
-+	TP_printk("ring %p, fpos %lld, wanted %lld, got %lld",
-+			  __entry->ctx, __entry->fpos,
-+			  __entry->wanted, __entry->got)
-+);
-+
- #endif /* _TRACE_IO_URING_H */
+ int inode_needs_sync(struct inode *inode)
+ {
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5bddb1e9e0b3..793918c83755 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -410,7 +410,7 @@ xfs_file_write_checks(
+ 		spin_unlock(&ip->i_flags_lock);
 =20
- /* This part must be outside protection */
+ out:
+-	return file_modified(file);
++	return file_modified_async(file, iocb->ki_flags);
+ }
+=20
+ static int
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 3b479d02e210..9760283af7dc 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2382,6 +2382,7 @@ static inline void file_accessed(struct file *file)
+ }
+=20
+ extern int file_modified(struct file *file);
++extern int file_modified_async(struct file *file, int flags);
+=20
+ int sync_inode_metadata(struct inode *inode, int wait);
+=20
 --=20
 2.30.2
 
