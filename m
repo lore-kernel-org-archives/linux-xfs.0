@@ -2,112 +2,159 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A823AC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 11:52:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA858C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 11:56:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348776AbiETLws (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 07:52:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35972 "EHLO
+        id S236136AbiETL4R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 07:56:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348762AbiETLwp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 07:52:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F31F615E48E;
-        Fri, 20 May 2022 04:52:44 -0700 (PDT)
+        with ESMTP id S236577AbiETL4M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 07:56:12 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82AA910FE2
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 04:56:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4FFC461DEB;
-        Fri, 20 May 2022 11:52:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BDA2C385A9;
-        Fri, 20 May 2022 11:52:40 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0B76CB82B3D
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:56:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C16CAC3411A
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:56:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653047563;
-        bh=KjobZP6O6Jgwt6QhmllP83ZeT6Jg+VwnOafaxcAZ+8c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bptv6Mg3TVFF3Sk1DQV4g4ILT2blHfHJLQtoU4tvyhqF7sBMSi7SFHPt3GYix9zDj
-         fmabFBKLLAt+mzYpio3Dnr/a7b1Bzz/E1lwcSx8VAf8RLyOdKVCKRepQRXrq4mW3NI
-         xqhUOLKtCR6bJJICVsEgK6en7zdhRbI3TuWM4uIQLCEtyDzROd1z4XU0U6Eg3HnHGC
-         6Vu5Fs1CZPey2sZjUfEvTvZXyBNZShJ6tvoIR9/5uN7AJh/Mv7cAPeyxtXUC8GLCOr
-         f3oZpQCpTLgA7aCs25q+jmOHsq0cBJOc1BrqKgBXL2hPTHR0+nkHa+zQP+BSejsGZ5
-         JQb/K98Kky8rA==
-Date:   Fri, 20 May 2022 13:52:37 +0200
-From:   Christian Brauner <brauner@kernel.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: [RFC PATCH v2 1/7] statx: add I/O alignment information
-Message-ID: <20220520115237.w2oa5bdzyzhkgwin@wittgenstein>
-References: <20220518235011.153058-1-ebiggers@kernel.org>
- <20220518235011.153058-2-ebiggers@kernel.org>
+        s=k20201202; t=1653047766;
+        bh=HaHVlJUf0VZSA82160Bum5CTe9Zl6XfClOBC8xAIcK0=;
+        h=From:To:Subject:Date:From;
+        b=fomJ/eGErGyb01jNiJGDiZDoDP3o1elCOayCHEkyRaghRGdX9dkEddb4ppKyaMCRY
+         Dw3TPb/yp8UQi/CEKrAZJRAi7u6+0iYLlcsvzt1oHU6hvNWVB4kWuEHvwDIs813Zdn
+         UX9SsPH7BALtGCDElj2osX0uiqFRPXohqPQk2csT/WTOlxdQTmfMHY20nc57D5z7EG
+         L8IfGkHNtmIRWB3Z7AWfCfjUgBqMABPV+8M/x0rQDannKP+TirY6RsxdOKCQH6sog8
+         eDRmIby2V8IKNmDtJ/vnimDPZlLIil1W+e3uoUBtucww727/IH4eJmN7znpXrNJcBO
+         YLGjwkspWc0Yg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id B0EE1CC13B0; Fri, 20 May 2022 11:56:06 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216007] New: XFS hangs in iowait when extracting large number
+ of files
+Date:   Fri, 20 May 2022 11:56:06 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: bugzkernelorg8392@araxon.sk
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression attachments.created
+Message-ID: <bug-216007-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20220518235011.153058-2-ebiggers@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 18, 2022 at 04:50:05PM -0700, Eric Biggers wrote:
-> From: Eric Biggers <ebiggers@google.com>
-> 
-> Traditionally, the conditions for when DIO (direct I/O) is supported
-> were fairly simple: filesystems either supported DIO aligned to the
-> block device's logical block size, or didn't support DIO at all.
-> 
-> However, due to filesystem features that have been added over time (e.g,
-> data journalling, inline data, encryption, verity, compression,
-> checkpoint disabling, log-structured mode), the conditions for when DIO
-> is allowed on a file have gotten increasingly complex.  Whether a
-> particular file supports DIO, and with what alignment, can depend on
-> various file attributes and filesystem mount options, as well as which
-> block device(s) the file's data is located on.
-> 
-> XFS has an ioctl XFS_IOC_DIOINFO which exposes this information to
-> applications.  However, as discussed
-> (https://lore.kernel.org/linux-fsdevel/20220120071215.123274-1-ebiggers@kernel.org/T/#u),
-> this ioctl is rarely used and not known to be used outside of
-> XFS-specific code.  It also was never intended to indicate when a file
-> doesn't support DIO at all, and it only exposes the minimum I/O
-> alignment, not the optimal I/O alignment which has been requested too.
-> 
-> Therefore, let's expose this information via statx().  Add the
-> STATX_IOALIGN flag and three fields associated with it:
-> 
-> * stx_mem_align_dio: the alignment (in bytes) required for user memory
->   buffers for DIO, or 0 if DIO is not supported on the file.
-> 
-> * stx_offset_align_dio: the alignment (in bytes) required for file
->   offsets and I/O segment lengths for DIO, or 0 if DIO is not supported
->   on the file.  This will only be nonzero if stx_mem_align_dio is
->   nonzero, and vice versa.
-> 
-> * stx_offset_align_optimal: the alignment (in bytes) suggested for file
->   offsets and I/O segment lengths to get optimal performance.  This
->   applies to both DIO and buffered I/O.  It differs from stx_blocksize
->   in that stx_offset_align_optimal will contain the real optimum I/O
->   size, which may be a large value.  In contrast, for compatibility
->   reasons stx_blocksize is the minimum size needed to avoid page cache
->   read/write/modify cycles, which may be much smaller than the optimum
->   I/O size.  For more details about the motivation for this field, see
->   https://lore.kernel.org/r/20220210040304.GM59729@dread.disaster.area
-> 
-> Note that as with other statx() extensions, if STATX_IOALIGN isn't set
-> in the returned statx struct, then these new fields won't be filled in.
-> This will happen if the filesystem doesn't support STATX_IOALIGN, or if
-> the file isn't a regular file.  (It might be supported on block device
-> files in the future.)  It might also happen if the caller didn't include
-> STATX_IOALIGN in the request mask, since statx() isn't required to
-> return information that wasn't requested.
-> 
-> This commit adds the VFS-level plumbing for STATX_IOALIGN.  Individual
-> filesystems will still need to add code to support it.
-> 
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
-> ---
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
 
-Looks good to me,
-Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
+            Bug ID: 216007
+           Summary: XFS hangs in iowait when extracting large number of
+                    files
+           Product: File System
+           Version: 2.5
+    Kernel Version: 5.15.32
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: bugzkernelorg8392@araxon.sk
+        Regression: No
+
+Created attachment 301008
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D301008&action=3Dedit
+output from dmesg after echo w > /proc/sysrq-trigger
+
+Overview:
+
+When I try to extract an uncompressed tar archive (2.6 milion files, 760.3 =
+GiB
+in size) on newly created (empty) XFS file system, after first low tens of
+gigabytes extracted the process hangs in iowait indefinitely. One CPU core =
+is
+100% occupied with iowait, the other CPU core is idle (on 2-core Intel Cele=
+ron
+G1610T).
+
+I have kernel compiled with my .config file. When I try this with a more
+"standard" kernel, the problem is not reproducible.
+
+Steps to Reproduce:
+
+1) compile the kernel with the attached .config
+
+2) reboot with this kernel
+
+3) create a new XFS filesystem on a spare drive (just mkfs.xfs -f <dev>)
+
+4) mount this new file system
+
+5) try to extract large amount of data there
+
+Actual results:
+
+After 20-40 GiB written, the process hangs in iowait indefinitely, never
+finishing the archive extraction.
+
+Expected Results:
+
+Archive extraction continues smoothly until done.
+
+Build Date & Hardware:
+
+2022-05-01 on HP ProLiant MicroServer Gen8, 4GB ECC RAM
+
+Additional Information:
+
+No other filesystem tested with the same archive on the same hardware befor=
+e or
+after this (ext2, ext3, ext4, reiserfs3, jfs, nilfs2, f2fs, btrfs, zfs) has
+shown this behavior. When I downgraded the kernel to 5.10.109, the XFS star=
+ted
+working again. Kernel versions higher than 5.15 seem to be affected, I tried
+5.17.1, 5.17.6 and 5.18.0-rc7, they all hang up after a few minutes.
+
+No error is reported to the system log or to dmesg when the process hangs. =
+No
+error shows on stdout or stderr of the tar process either.
+
+This is not a SMR problem. None of the disks present in the test setup are =
+SMR.
+All are CMR, and while they certainly are not brand new, they are all in go=
+od
+working condition.
+
+Attached is the dmesg output after issuing this command:
+
+echo w > /proc/sysrq-trigger
+
+More could be found here: https://forums.gentoo.org/viewtopic-p-8709116.html
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
