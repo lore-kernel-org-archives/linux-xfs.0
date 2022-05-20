@@ -2,273 +2,185 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A58C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 21:06:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C531C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 23:05:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353582AbiETVGo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 17:06:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58876 "EHLO
+        id S242118AbiETXFZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 19:05:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353570AbiETVGn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 17:06:43 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2069.outbound.protection.outlook.com [40.107.237.69])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A38107CDEC;
-        Fri, 20 May 2022 14:06:41 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=BFPfxsSBJ3t+SsLyNQISUHb/R+BFvETjtx/OBFuPBRtkLL/vnomhqqYrIMRi3FxQGPK6Z8NDhX0qFmfStIvue5ZoZfn51LLhaDExh+xl3BVIptdnWuCrwmQrDm3UQWHseGbDYuuc5GUj/ZB41w6SsGWwF9+BCEL8uGblryfcEPXdzFqMPT26BjPt3Qdfn5N2AzY666BBZAmN1cBHAI3cEJl+L7nl82+NVaSznob+rNs6tXmLzYTRneTy16PAtQML6mFDc79JHZD+4XkOHne7xEtBqigLV7FzvBw7ZZ0Wmz9bIVvaVpc/RalYTHhW53yYQFHIKku/RlwQpGIu9M6Gqw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=t1QdG9facp3hBuB9hy2EfGGZJ5FaVEfudHoNhwtDZL8=;
- b=k8pUQX3IulOUwyrAYEiAfbsgSRrSxAdOoQPVI9tdaMMOk09yBUxlG09mhUO9gp5TdnJAT6Fip1gEFzBgGNhxZIQDCh1UIgPBfreQMSw94mWJqaUvNa6vkZmZfWjvv42ZKTEjdvFZ+GYTtkeEkQFCLP8xJoDR/IrfuahmakHytq0OU/5mvAoxncBks6w25Oku6AzdizH9GndgdkM6ymTGGqZ7Sdrjd/CFIn7e/vJyNKB2HnBCh5pELgBAY4gsL5a7gvhfrAKspuEqHuS8HKtcUd8MGTy7IhvE5rXneauN6nOpClZYyNKiKNc75wXjNLTDcoZVUumN0+Z4BTAQuzxDFw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=t1QdG9facp3hBuB9hy2EfGGZJ5FaVEfudHoNhwtDZL8=;
- b=kfTc0GKX5IfjGzUlTxF2AayfIOa3loBIgoE61ccHvGA/kHBRY2srKz7wEKSFZFpvloWY0Qv2cE6oWiMmomP6zU7gl4NAFWFgGQO4Muy1qbu4JJylO541KsEgmSxKDBrH3dsPqxR4dSgikfbP4UQyRZ9hXGHPqbROZ2TJ056YGfA=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from BN9PR12MB5115.namprd12.prod.outlook.com (2603:10b6:408:118::14)
- by DS7PR12MB5765.namprd12.prod.outlook.com (2603:10b6:8:74::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.17; Fri, 20 May
- 2022 21:06:38 +0000
-Received: from BN9PR12MB5115.namprd12.prod.outlook.com
- ([fe80::1cf6:2a9d:41d6:e8c3]) by BN9PR12MB5115.namprd12.prod.outlook.com
- ([fe80::1cf6:2a9d:41d6:e8c3%4]) with mapi id 15.20.5273.018; Fri, 20 May 2022
- 21:06:38 +0000
-Message-ID: <b4ba75f6-88a1-5e63-5228-dbbdde82bb33@amd.com>
-Date:   Fri, 20 May 2022 17:06:35 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [PATCH v2 12/13] tools: add hmm gup tests for device coherent
- type
-Content-Language: en-US
-To:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
-Cc:     david@redhat.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org, akpm@linux-foundation.org
-References: <20220516231432.20200-1-alex.sierra@amd.com>
- <20220516231432.20200-13-alex.sierra@amd.com>
-From:   Felix Kuehling <felix.kuehling@amd.com>
-Organization: AMD Inc.
-In-Reply-To: <20220516231432.20200-13-alex.sierra@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BL1PR13CA0084.namprd13.prod.outlook.com
- (2603:10b6:208:2b8::29) To BN9PR12MB5115.namprd12.prod.outlook.com
- (2603:10b6:408:118::14)
+        with ESMTP id S240765AbiETXFZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 19:05:25 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 16DC1190D21
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 16:05:23 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CF1A510E6E46;
+        Sat, 21 May 2022 09:05:20 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nsBgL-00EQPk-Rr; Sat, 21 May 2022 09:05:17 +1000
+Date:   Sat, 21 May 2022 09:05:17 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     bugzilla-daemon@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 216007] New: XFS hangs in iowait when extracting large
+ number of files
+Message-ID: <20220520230517.GL1098723@dread.disaster.area>
+References: <bug-216007-201763@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7b2364a3-4408-4247-272e-08da3aa4a0fd
-X-MS-TrafficTypeDiagnostic: DS7PR12MB5765:EE_
-X-Microsoft-Antispam-PRVS: <DS7PR12MB57650F98ADD15273760389DB92D39@DS7PR12MB5765.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 34/X16/Jid8ugstLkjDw/C/Ldh/pAEf6j5d9PhkdNHc24MjwE/0uZX1FCRWj6xxTx5xxe0dnqtV7HKcYAVUwh0UfZol1cEtTWQk6+SYxdEPMrPL+kDC/uvf7x15H+Dqk5QY1vgrLKyTvq9dx7FLbsgLOKK4InrCVI2/BkLODSHB0e8rZXQbIsLh0plSYRvI4qFewf1/KHy1HBTt3E6Pz8+RY5axMQPXXAzAicEzPBExsPLWUI8Rh1Aib4xL+dVHfkDdzMZbMJLWQbpwE1zzys0N/uPbXflMDw44LgiE0aNBKlWQGa2z9mQWWeleDHbtNI4JY3G0XGFvhWJtF/Wi89T90PKhVulto2MMcW7/Gojz/qhgF/GcU2DEANEKG8lV4Cdo9QiMI5elCMuloFjq5/QflbihPOfjdIjutAOUDcIhdZLXGAcqV0IvCnKxoB4XDAFSuM3ADyKtTEJghQiPj03WAV3VAa6saq/2Rcqf9ymavfLHZ1QygKC11TS45QIWcJbjPX1URhuI9m0Z2oZ60b0+MkcNmUI2iiIpdu6nECe2ZR3Uefz4eLpzXl6vkMOJ6/oOUhrGk6yaV/F9MM9mpsfu3EP54mi9Qgkdt5myfbeHjJsfWCpahTh3whQpu3xCaacGslDdDiZ6RE6l5OhOXNHupf4VBtagLbC+8GiOL9hVIEYtsLBzyiQIG3qsd8wo0tymlcTPzBQaR+lnVHybw02LD/wScAaY+6+kxF/kgp+s=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR12MB5115.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(36756003)(36916002)(186003)(44832011)(83380400001)(2616005)(31686004)(2906002)(6512007)(66946007)(8676002)(4326008)(316002)(508600001)(8936002)(53546011)(7416002)(5660300002)(26005)(31696002)(86362001)(6666004)(6486002)(6506007)(66556008)(38100700002)(66476007)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Tm1kc2EvWGprNXpVVjhpWms0NUgyaE5UbW51TmdBeVh1am5YYWRyRUlVZ2Qz?=
- =?utf-8?B?WTQ0MmFRWTlWZk1Kd1laN3pYdUlFZUlPN2l0WXFILzd3Um9scW9DdFpwcExQ?=
- =?utf-8?B?MkU4Z1FVTVBRMi9sVU9xcHZVNDROTUJncjNjZ0swMW0ycm4zSFVQQlVMbVh1?=
- =?utf-8?B?SjZuWFFPK1VXRXVTa29xcGVWZkJETkhOaTBPZk53WXhmaFVjcXRMWFNoZ1FN?=
- =?utf-8?B?UTU2aXRJd1hMMWcrRmJ2eU9teUNJSEo1V2xGa21ZWk1PZkEzeit5UnFuMHFw?=
- =?utf-8?B?bVNZS1FZUHNnelRHMDVGQ2U1aDVNNVRwczBuNnRhU0hVdVYyN042SlNjN2Jt?=
- =?utf-8?B?aWxXSjdNdXpKbnlRNGhEdUdvUzVwekFoQUV6dUxiRWx2S1dWR0NhTFhVdUZ6?=
- =?utf-8?B?d0ZHd25jbXBsRVJWWU81MWFQUTBGZnhBVE0vTnByOTZDOHViOENaRVNKbEU5?=
- =?utf-8?B?UFdqK0pibkY2MGFLVmdiQjVWMDUzOHhrWU90TFl3M09jQlc4cGtYSk1VWWxH?=
- =?utf-8?B?VktuUXJKT21Kdzk5WFRrSGlSSlBpdHNYbEN5N3FwR20zTnpocW1ySEVWZ2po?=
- =?utf-8?B?QnVSTy9OVHZFS0grcXFMVTB4RXc1elF2L3ArUmdMU0pwOFQ0SlJBY3Y3aFRY?=
- =?utf-8?B?WFJRd3Ixc1A2K1JHQTVjL3hSVnhuRTNCQnhETWRQY1V4ZzhQYTd1T3VFZUxF?=
- =?utf-8?B?cmo3RlhJU3k2T1VadVRBOUJoREdJNDZPeEJhSmx5QzJ3eTNia2VkVkFLNjkv?=
- =?utf-8?B?eDJuZ3VLU1hlK2JIdnFwaXE5Z0tZdWN6MjJ1ZGVBaXlSMnNCeDlVbjB4SEhx?=
- =?utf-8?B?TjlPdW9uMjJBc0w0Vkt1YXd1VXJPNzlhMDBhSXVvZVZwWHNITkF5N3VmRm9t?=
- =?utf-8?B?UTZiZjlVcGtkVzBwdnZEaUNTZGZhazRNT2dFeU1KU21USHJySXNkSjkycU0y?=
- =?utf-8?B?NGRrL3NibVl4cUtrRDlNdzF3TlgyNmRRL1hITEttb2RlWGozd0ZDRGZVZGdH?=
- =?utf-8?B?VFpsM1pZaERscTVoWTlvQ09qeFRrSCtNUFZUamNxNzVGaXZqRStuUVRzUmRX?=
- =?utf-8?B?U0gxNWFQWGxSOUJiUytrV1N3VS9GdjNVN1UyZG9acGFpUWZIdGwrV3pLSVZG?=
- =?utf-8?B?N1pnUzZLSkZMM0ozc1V2YVlKYUVmRVlOZlVwc3NEWURmVXhuVDEvSjVEV214?=
- =?utf-8?B?aE9tY3lTUzBLWWVpRWhDUDNWc2l4R0d1L2dOZ0s4d1A5TVV0UVR2QVZOK2ZW?=
- =?utf-8?B?RHRpbnpRTXlueTlBL0duWU9GV255YmZoOS9HNkluT21XRC9JSllBa01NL3hv?=
- =?utf-8?B?WjZSV0lVb3BFOWYzOXFHT1hJWXRySWZaVzVPVTdKcEx5TjloOWwrbnRPU2Rn?=
- =?utf-8?B?TnBESUFGMHErL3I5ZGtYWWhiVzAxL1F6aCtqSEpNWjNndFdFTE51ODRKWHJX?=
- =?utf-8?B?b1VCSlZaYkgvSkc1M3FXV3l5eU1pVkVLdHBZYkJxNVRKeHovclE0WjRMVjBU?=
- =?utf-8?B?SG0xaUhXK0F6WjBuT2tINkVPV25uNW51MHdwd25WZ0dqcHduNmFsbkV4R0kv?=
- =?utf-8?B?RWNvTmp2eGxEeC9CV3hPVmYybi80aWpaSEJIYXdVZkNUcFpuK0VFTG1DRW1l?=
- =?utf-8?B?alVuQ0pKWXFHTkFRaXRpanlhU2NxRWdUdHJ1VEs0bUdqL1pIK0RNdGxpQklK?=
- =?utf-8?B?RytNWnd2N004Z1lFUXZrUUZxaG9va3BFVVhQWkpHU1N1REhjcVBlaWdMZFdy?=
- =?utf-8?B?d0k4OW1RcjVRaGFTMklGdWp0eXE1NVN6RTRwN09pQ08rR2hycGt1T0IwbDBo?=
- =?utf-8?B?UkluR3V1ZEFTcmhZSTAzbER1aVUwdERQRGRmSm91TU5qeWtkT0xwcFFQa0J3?=
- =?utf-8?B?VFcxbk43c2ZHY2E2ZjNpU2I0d294UkJVWFE2UnZIN1EwV3BjcHpVOUtuOXpz?=
- =?utf-8?B?a3hBZWw2V2pZRjljS0VrSXlyZW0wZHU0bWhVUXIyYmZtWW90WldEcDI5N2Fs?=
- =?utf-8?B?M21XVHMzTm5CeER4RnZkUmNhZTRyNnJPc1k4UnFEcnIvajAxZDY3ZmszR3Jn?=
- =?utf-8?B?ZzQ3M255Y01TemU4M0QxY3UyRlBnVVRITlVnNWFwUzR1a2t1ZlR5ZHJ5V3JC?=
- =?utf-8?B?cWowWWI0R3E2L29NTzlkSVlWQTFQUm1pbFYrRnBBQWtwQStQMFgycXFvZy9u?=
- =?utf-8?B?K0pleis2RFExVGlSRU4vUk5iOFZVaFBGWXB6S1VLRnYwWnZSNEVQbnZKMnN4?=
- =?utf-8?B?MHE2TXVwYTVqQ2M3cEpaaTNwamJ2VjdkVzdOczVHRTB0ejVwVkx3MEl1WTds?=
- =?utf-8?B?LzhuT1lSbUZYRlQ4ZjdLbTVuRkZWZUVrVmJudUovTEVmZFp6NG1Mdz09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7b2364a3-4408-4247-272e-08da3aa4a0fd
-X-MS-Exchange-CrossTenant-AuthSource: BN9PR12MB5115.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 May 2022 21:06:37.8057
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: UYu2NI/JdfJl7J4dg0/P9AST5mhqI6y7Wa6YzfoCuNwTjTXdTmns7wk1vsFLHm5j2mMNk8aIzvtzvjAGQVRhAw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB5765
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-216007-201763@https.bugzilla.kernel.org/>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62881eb1
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=jW9XMcD_w1WAFi1Y:21 a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8
+        a=7mOBRU54AAAA:8 a=7-415B0cAAAA:8 a=iIXpL5o01sIEst5Xff0A:9
+        a=CjuIK1q_8ugA:10 a=zBcMGXd3NVIA:10 a=4XdoLCUCO_b63ij2jC9c:22
+        a=AjGcO6oz07-iQ99wixmX:22 a=wa9RWnbW_A1YIeRBVszw:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, May 20, 2022 at 11:56:06AM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=216007
+> 
+>             Bug ID: 216007
+>            Summary: XFS hangs in iowait when extracting large number of
+>                     files
+>            Product: File System
+>            Version: 2.5
+>     Kernel Version: 5.15.32
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: bugzkernelorg8392@araxon.sk
+>         Regression: No
+> 
+> Created attachment 301008
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=301008&action=edit
+> output from dmesg after echo w > /proc/sysrq-trigger
+> 
+> Overview:
+> 
+> When I try to extract an uncompressed tar archive (2.6 milion files, 760.3 GiB
+> in size) on newly created (empty) XFS file system, after first low tens of
+> gigabytes extracted the process hangs in iowait indefinitely. One CPU core is
+> 100% occupied with iowait, the other CPU core is idle (on 2-core Intel Celeron
+> G1610T).
+> 
+> I have kernel compiled with my .config file. When I try this with a more
+> "standard" kernel, the problem is not reproducible.
+> 
+> Steps to Reproduce:
+> 
+> 1) compile the kernel with the attached .config
+> 
+> 2) reboot with this kernel
+> 
+> 3) create a new XFS filesystem on a spare drive (just mkfs.xfs -f <dev>)
+> 
+> 4) mount this new file system
+> 
+> 5) try to extract large amount of data there
+> 
+> Actual results:
+> 
+> After 20-40 GiB written, the process hangs in iowait indefinitely, never
+> finishing the archive extraction.
 
-On 2022-05-16 19:14, Alex Sierra wrote:
-> The intention is to test hmm device coherent type under different get
-> user pages paths. Also, test gup with FOLL_LONGTERM flag set in
-> device coherent pages. These pages should get migrated back to system
-> memory.
->
-> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-> Reviewed-by: Alistair Popple <apopple@nvidia.com>
+[  805.233836] task:tar             state:D stack:    0 pid: 2492 ppid:  2491 flags:0x00004000
+[  805.233840] Call Trace:
+[  805.233841]  <TASK>
+[  805.233842]  __schedule+0x1c9/0x510
+[  805.233846]  ? lock_timer_base+0x5c/0x80
+[  805.233850]  schedule+0x3f/0xa0
+[  805.233853]  schedule_timeout+0x7c/0xf0
+[  805.233858]  ? init_timer_key+0x30/0x30
+[  805.233862]  io_schedule_timeout+0x47/0x70
+[  805.233866]  congestion_wait+0x79/0xd0
+[  805.233872]  ? wait_woken+0x60/0x60
+[  805.233876]  xfs_buf_alloc_pages+0xd0/0x1b0
+[  805.233881]  xfs_buf_get_map+0x259/0x300
+[  805.233886]  ? xfs_buf_item_init+0x150/0x160
+[  805.233892]  xfs_trans_get_buf_map+0xa9/0x120
+[  805.233897]  xfs_ialloc_inode_init+0x129/0x2d0
+[  805.233901]  ? xfs_ialloc_ag_alloc+0x1df/0x630
+[  805.233904]  xfs_ialloc_ag_alloc+0x1df/0x630
+[  805.233908]  xfs_dialloc+0x1b4/0x720
+[  805.233912]  xfs_create+0x1d7/0x450
+[  805.233917]  xfs_generic_create+0x114/0x2d0
+[  805.233922]  path_openat+0x510/0xe10
+[  805.233925]  do_filp_open+0xad/0x150
+[  805.233929]  ? xfs_blockgc_clear_iflag+0x93/0xb0
+[  805.233932]  ? xfs_iunlock+0x52/0x90
+[  805.233937]  do_sys_openat2+0x91/0x150
+[  805.233942]  __x64_sys_openat+0x4e/0x90
+[  805.233946]  do_syscall_64+0x43/0x90
+[  805.233952]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[  805.233959] RIP: 0033:0x7f763ccc9572
+[  805.233962] RSP: 002b:00007ffef1391530 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+[  805.233966] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f763ccc9572
+[  805.233969] RDX: 00000000000809c1 RSI: 000055b1d5b19270 RDI: 0000000000000004
+[  805.233971] RBP: 0000000000000180 R08: 000000000000c0c0 R09: 000055b1d5b145f0
+[  805.233973] R10: 0000000000000180 R11: 0000000000000246 R12: 0000000000000000
+[  805.233974] R13: 00000000000809c1 R14: 000055b1d5b19270 R15: 000055b1d59d2248
+[  805.233977]  </TASK>
 
-Reviewed-by: Felix Kuehling <Felix.Kuehling@amd.com>
+It's waiting on memory allocation, which is probably waiting on IO
+completion somewhere to clean dirty pages. This suggests there's a
+problem with the storage hardware, the storage stack below XFS or
+there's an issue with memory cleaning/reclaim stalling and not
+making progress.
 
+> Expected Results:
+> 
+> Archive extraction continues smoothly until done.
+> 
+> Build Date & Hardware:
+> 
+> 2022-05-01 on HP ProLiant MicroServer Gen8, 4GB ECC RAM
+> 
+> Additional Information:
+> 
+> No other filesystem tested with the same archive on the same hardware before or
+> after this (ext2, ext3, ext4, reiserfs3, jfs, nilfs2, f2fs, btrfs, zfs) has
+> shown this behavior. When I downgraded the kernel to 5.10.109, the XFS started
+> working again. Kernel versions higher than 5.15 seem to be affected, I tried
+> 5.17.1, 5.17.6 and 5.18.0-rc7, they all hang up after a few minutes.
 
-> ---
->   tools/testing/selftests/vm/hmm-tests.c | 105 +++++++++++++++++++++++++
->   1 file changed, 105 insertions(+)
->
-> diff --git a/tools/testing/selftests/vm/hmm-tests.c b/tools/testing/selftests/vm/hmm-tests.c
-> index 84ec8c4a1dc7..61a02a6a3dea 100644
-> --- a/tools/testing/selftests/vm/hmm-tests.c
-> +++ b/tools/testing/selftests/vm/hmm-tests.c
-> @@ -36,6 +36,7 @@
->    * in the usual include/uapi/... directory.
->    */
->   #include "../../../../lib/test_hmm_uapi.h"
-> +#include "../../../../mm/gup_test.h"
->   
->   struct hmm_buffer {
->   	void		*ptr;
-> @@ -60,6 +61,8 @@ enum {
->   #define NTIMES		10
->   
->   #define ALIGN(x, a) (((x) + (a - 1)) & (~((a) - 1)))
-> +/* Just the flags we need, copied from mm.h: */
-> +#define FOLL_WRITE	0x01	/* check pte is writable */
->   
->   FIXTURE(hmm)
->   {
-> @@ -1766,4 +1769,106 @@ TEST_F(hmm, exclusive_cow)
->   	hmm_buffer_free(buffer);
->   }
->   
-> +static int gup_test_exec(int gup_fd, unsigned long addr,
-> +			 int cmd, int npages, int size)
-> +{
-> +	struct gup_test gup = {
-> +		.nr_pages_per_call	= npages,
-> +		.addr			= addr,
-> +		.gup_flags		= FOLL_WRITE,
-> +		.size			= size,
-> +	};
-> +
-> +	if (ioctl(gup_fd, cmd, &gup)) {
-> +		perror("ioctl on error\n");
-> +		return errno;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Test get user device pages through gup_test. Setting PIN_LONGTERM flag.
-> + * This should trigger a migration back to system memory for both, private
-> + * and coherent type pages.
-> + * This test makes use of gup_test module. Make sure GUP_TEST_CONFIG is added
-> + * to your configuration before you run it.
-> + */
-> +TEST_F(hmm, hmm_gup_test)
-> +{
-> +	struct hmm_buffer *buffer;
-> +	int gup_fd;
-> +	unsigned long npages;
-> +	unsigned long size;
-> +	unsigned long i;
-> +	int *ptr;
-> +	int ret;
-> +	unsigned char *m;
-> +
-> +	gup_fd = open("/sys/kernel/debug/gup_test", O_RDWR);
-> +	if (gup_fd == -1)
-> +		SKIP(return, "Skipping test, could not find gup_test driver");
-> +
-> +	npages = 3;
-> +	size = npages << self->page_shift;
-> +
-> +	buffer = malloc(sizeof(*buffer));
-> +	ASSERT_NE(buffer, NULL);
-> +
-> +	buffer->fd = -1;
-> +	buffer->size = size;
-> +	buffer->mirror = malloc(size);
-> +	ASSERT_NE(buffer->mirror, NULL);
-> +
-> +	buffer->ptr = mmap(NULL, size,
-> +			   PROT_READ | PROT_WRITE,
-> +			   MAP_PRIVATE | MAP_ANONYMOUS,
-> +			   buffer->fd, 0);
-> +	ASSERT_NE(buffer->ptr, MAP_FAILED);
-> +
-> +	/* Initialize buffer in system memory. */
-> +	for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
-> +		ptr[i] = i;
-> +
-> +	/* Migrate memory to device. */
-> +	ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
-> +	ASSERT_EQ(ret, 0);
-> +	ASSERT_EQ(buffer->cpages, npages);
-> +	/* Check what the device read. */
-> +	for (i = 0, ptr = buffer->mirror; i < size / sizeof(*ptr); ++i)
-> +		ASSERT_EQ(ptr[i], i);
-> +
-> +	ASSERT_EQ(gup_test_exec(gup_fd,
-> +				(unsigned long)buffer->ptr,
-> +				GUP_BASIC_TEST, 1, self->page_size), 0);
-> +	ASSERT_EQ(gup_test_exec(gup_fd,
-> +				(unsigned long)buffer->ptr + 1 * self->page_size,
-> +				GUP_FAST_BENCHMARK, 1, self->page_size), 0);
-> +	ASSERT_EQ(gup_test_exec(gup_fd,
-> +				(unsigned long)buffer->ptr + 2 * self->page_size,
-> +				PIN_LONGTERM_BENCHMARK, 1, self->page_size), 0);
-> +
-> +	/* Take snapshot to CPU pagetables */
-> +	ret = hmm_dmirror_cmd(self->fd, HMM_DMIRROR_SNAPSHOT, buffer, npages);
-> +	ASSERT_EQ(ret, 0);
-> +	ASSERT_EQ(buffer->cpages, npages);
-> +	m = buffer->mirror;
-> +	if (hmm_is_coherent_type(variant->device_number)) {
-> +		ASSERT_EQ(HMM_DMIRROR_PROT_DEV_COHERENT_LOCAL | HMM_DMIRROR_PROT_WRITE, m[0]);
-> +		ASSERT_EQ(HMM_DMIRROR_PROT_DEV_COHERENT_LOCAL | HMM_DMIRROR_PROT_WRITE, m[1]);
-> +	} else {
-> +		ASSERT_EQ(HMM_DMIRROR_PROT_WRITE, m[0]);
-> +		ASSERT_EQ(HMM_DMIRROR_PROT_WRITE, m[1]);
-> +	}
-> +	ASSERT_EQ(HMM_DMIRROR_PROT_WRITE, m[2]);
-> +	/*
-> +	 * Check again the content on the pages. Make sure there's no
-> +	 * corrupted data.
-> +	 */
-> +	for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
-> +		ASSERT_EQ(ptr[i], i);
-> +
-> +	close(gup_fd);
-> +	hmm_buffer_free(buffer);
-> +}
->   TEST_HARNESS_MAIN
+Doesn't actually look like an XFS problem from the evidence
+supplied, though.
+
+What sort of storage subsystem does this machine have? If it's a
+spinning disk then you've probably just filled memory 
+
+> More could be found here: https://forums.gentoo.org/viewtopic-p-8709116.html
+
+Oh, wait:
+
+"I compiled a more mainstream version of
+sys-kernel/gentoo-sources-5.15.32-r1 (removed my .config file and
+let genkernel to fill it with default options) and lo and behold, in
+this kernel I could not make it go stuck anymore.
+[....]
+However, after I altered my old kernel config to contain these
+values and rebooting, I'm still triggering the bug. It may not be a
+XFS issue after all."
+
+From the evidence presented, I'd agree that this doesn't look an
+XFS problem, either.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
