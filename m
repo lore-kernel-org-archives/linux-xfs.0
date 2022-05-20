@@ -2,95 +2,62 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4227AC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 04:05:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53D90C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 04:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229790AbiETEFe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 00:05:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48080 "EHLO
+        id S232262AbiETEHv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 00:07:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229537AbiETEFd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 00:05:33 -0400
-Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A2DE14A270;
-        Thu, 19 May 2022 21:05:32 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R211e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VDoVbWo_1653019520;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VDoVbWo_1653019520)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Fri, 20 May 2022 12:05:29 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] xfs: Remove the redundant assignment
-Date:   Fri, 20 May 2022 12:05:18 +0800
-Message-Id: <20220520040518.73957-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S232213AbiETEHu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 00:07:50 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3632A62A0A
+        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 21:07:50 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6080410E68E4;
+        Fri, 20 May 2022 14:07:49 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nrtvX-00E6wE-N6; Fri, 20 May 2022 14:07:47 +1000
+Date:   Fri, 20 May 2022 14:07:47 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Allison Henderson <allison.henderson@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/7] xfs: remove struct xfs_attr_item.xattri_flags
+Message-ID: <20220520040747.GG1098723@dread.disaster.area>
+References: <165290014409.1647637.4876706578208264219.stgit@magnolia>
+ <165290016673.1647637.1425622907766044312.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <165290016673.1647637.1425622907766044312.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62871415
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=T7__V0I6D-hyyCW4O2wA:9
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Variable 'ifree','freeblks' and 'itotal' set but not used.
+On Wed, May 18, 2022 at 11:56:06AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Nobody uses this field, so get rid of it and the unused flag definition.
+> Rearrange the structure layout to reduce its size from 104 to 96 bytes.
+> This gets us from 39 to 42 objects per page.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-Eliminate the follow clang warning:
+Looks good.
 
-fs/xfs/xfs_log_recover.c:3534:12: warning: variable 'freeblks' set but
-not used [-Wunused-but-set-variable].
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-fs/xfs/xfs_log_recover.c:3535:12: warning: variable 'itotal' set but not
-used [-Wunused-but-set-variable].
 
-fs/xfs/xfs_log_recover.c:3536:12: warning: variable 'ifree'
-set but not used [-Wunused-but-set-variable].
-
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- fs/xfs/xfs_log_recover.c | 12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 97b941c07957..47736936ebba 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3531,14 +3531,8 @@ xlog_recover_check_summary(
- 	struct xfs_buf		*agfbp;
- 	struct xfs_buf		*agibp;
- 	xfs_agnumber_t		agno;
--	uint64_t		freeblks;
--	uint64_t		itotal;
--	uint64_t		ifree;
- 	int			error;
- 
--	freeblks = 0LL;
--	itotal = 0LL;
--	ifree = 0LL;
- 	for_each_perag(mp, agno, pag) {
- 		error = xfs_read_agf(mp, NULL, pag->pag_agno, 0, &agfbp);
- 		if (error) {
-@@ -3546,9 +3540,6 @@ xlog_recover_check_summary(
- 						__func__, pag->pag_agno, error);
- 		} else {
- 			struct xfs_agf	*agfp = agfbp->b_addr;
--
--			freeblks += be32_to_cpu(agfp->agf_freeblks) +
--				    be32_to_cpu(agfp->agf_flcount);
- 			xfs_buf_relse(agfbp);
- 		}
- 
-@@ -3558,9 +3549,6 @@ xlog_recover_check_summary(
- 						__func__, pag->pag_agno, error);
- 		} else {
- 			struct xfs_agi	*agi = agibp->b_addr;
--
--			itotal += be32_to_cpu(agi->agi_count);
--			ifree += be32_to_cpu(agi->agi_freecount);
- 			xfs_buf_relse(agibp);
- 		}
- 	}
 -- 
-2.20.1.7.g153144c
-
+Dave Chinner
+david@fromorbit.com
