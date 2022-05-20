@@ -2,348 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FC1CC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 May 2022 23:17:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7ABDC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 03:22:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232689AbiESXRv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 May 2022 19:17:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33148 "EHLO
+        id S241667AbiETDWN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 May 2022 23:22:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343538AbiESXRt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 19:17:49 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C89C106A6E
-        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 16:17:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B7A4AB828D5
-        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 23:17:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C4EBC385AA;
-        Thu, 19 May 2022 23:17:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653002260;
-        bh=AF5y6oa8ZKt7Xe9rfwzsxSxjoMISZqQa/L07dw8W9CM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FO5zdIn0QW5SHYDGNQgyh74gofXSwQFuvgfhgF1cBu7I1tMPe3pWsyOKJaXNv2HdB
-         +eFQkAm3/RE7Ap/+2QrH5/R9LPJp0D+tW+6jBMmhDVunTGbEWLTqEgorGxOJMoeMOG
-         fJFUclBGOhSd+L9d1eUiH5UHfZZy3S6QUrt5gLdLXVJbSqS/4h/eCXslFkUbP5U3q8
-         ptben4RQMc1FHVTnG874y8cxNo6alXtjMDku0ufnyfGHA6a/GnFF6jdTaWaXrMOYzK
-         7JbzUe3JaQCyBXfl3BcQQAsK4kPPGECFAYrW/rFKpWtwvExpc8nOBxaaFJtjDmCKUn
-         Cprx1hnyXhUWw==
-Date:   Thu, 19 May 2022 16:17:40 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Alli <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/18] xfsprogs: Implement attr logging and replay
-Message-ID: <YobQFH8O+6fY0qqs@magnolia>
-References: <20220518001227.1779324-1-allison.henderson@oracle.com>
- <20220518001227.1779324-9-allison.henderson@oracle.com>
- <YoQ+RkkbPDDj0Get@magnolia>
- <8074f64681d94f506c5967869225714eeb5d9a0f.camel@oracle.com>
- <YoUmQuOAd+9mBzZH@magnolia>
- <9eaa2a04d6138bd992ac2a79768a46b8474e4f2e.camel@oracle.com>
+        with ESMTP id S234633AbiETDWM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 May 2022 23:22:12 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1A1445932F
+        for <linux-xfs@vger.kernel.org>; Thu, 19 May 2022 20:22:09 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 1465C53462A;
+        Fri, 20 May 2022 13:22:08 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nrtDL-00E62x-0k; Fri, 20 May 2022 13:22:07 +1000
+Date:   Fri, 20 May 2022 13:22:07 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+Subject: Re: [PATCH 2/3] xfs: share xattr name and value buffers when logging
+ xattr updates
+Message-ID: <20220520032207.GA1098723@dread.disaster.area>
+References: <165290010248.1646163.12346986876716116665.stgit@magnolia>
+ <165290011382.1646163.15379392968983343462.stgit@magnolia>
+ <20220519002727.GR1098723@dread.disaster.area>
+ <YoaHkOVuBDbF8+XD@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9eaa2a04d6138bd992ac2a79768a46b8474e4f2e.camel@oracle.com>
+In-Reply-To: <YoaHkOVuBDbF8+XD@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62870961
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
+        a=G2iu8kol_LjX9X6A0gAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 19, 2022 at 04:11:10PM -0700, Alli wrote:
-> On Wed, 2022-05-18 at 10:00 -0700, Darrick J. Wong wrote:
-> > On Wed, May 18, 2022 at 09:38:09AM -0700, Alli wrote:
-> > > On Tue, 2022-05-17 at 17:31 -0700, Darrick J. Wong wrote:
-> > > > On Tue, May 17, 2022 at 05:12:17PM -0700, Allison Henderson
-> > > > wrote:
-> > > > > Source kernel commit: 1d08e11d04d293cb7006d1c8641be1fdd8a8e397
-> > > > > 
-> > > > > This patch adds the needed routines to create, log and recover
-> > > > > logged
-> > > > > extended attribute intents.
-> > > > > 
-> > > > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > > > Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-> > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > Signed-off-by: Dave Chinner <david@fromorbit.com>
-> > > > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > > > ---
-> > > > >  libxfs/defer_item.c | 119
-> > > > > ++++++++++++++++++++++++++++++++++++++++++++
-> > > > >  libxfs/xfs_defer.c  |   1 +
-> > > > >  libxfs/xfs_defer.h  |   1 +
-> > > > >  libxfs/xfs_format.h |   9 +++-
-> > > > >  4 files changed, 129 insertions(+), 1 deletion(-)
-> > > > > 
-> > > > > diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-> > > > > index 1337fa5fa457..d2d12b50cce4 100644
-> > > > > --- a/libxfs/defer_item.c
-> > > > > +++ b/libxfs/defer_item.c
-> > > > > @@ -120,6 +120,125 @@ const struct xfs_defer_op_type
-> > > > > xfs_extent_free_defer_type = {
-> > > > >  	.cancel_item	= xfs_extent_free_cancel_item,
-> > > > >  };
-> > > > >  
-> > > > > +/*
-> > > > > + * Performs one step of an attribute update intent and marks
-> > > > > the
-> > > > > attrd item
-> > > > > + * dirty..  An attr operation may be a set or a remove.  Note
-> > > > > that
-> > > > > the
-> > > > > + * transaction is marked dirty regardless of whether the
-> > > > > operation
-> > > > > succeeds or
-> > > > > + * fails to support the ATTRI/ATTRD lifecycle rules.
-> > > > > + */
-> > > > > +STATIC int
-> > > > > +xfs_trans_attr_finish_update(
-> > > > 
-> > > > This ought to have a name indicating that it's an xattr
-> > > > operation,
-> > > > since
-> > > > defer_item.c contains stubs for what in the kernel are real
-> > > > logged
-> > > > operations.
-> > > Sure, maybe just xfs_trans_xattr_finish_update?   Or
-> > > xfs_xattr_finish_update?
+On Thu, May 19, 2022 at 11:08:16AM -0700, Darrick J. Wong wrote:
+> On Thu, May 19, 2022 at 10:27:27AM +1000, Dave Chinner wrote:
+> > On Wed, May 18, 2022 at 11:55:13AM -0700, Darrick J. Wong wrote:
+> > > @@ -158,41 +239,17 @@ xfs_attri_item_release(
+> > >  STATIC struct xfs_attri_log_item *
+> > >  xfs_attri_init(
+> > >  	struct xfs_mount		*mp,
+> > > -	uint32_t			name_len,
+> > > -	uint32_t			value_len)
+> > > -
+> > > +	struct xfs_attri_log_nameval	*anvl)
+> > >  {
+> > >  	struct xfs_attri_log_item	*attrip;
+> > > -	uint32_t			buffer_size = name_len + value_len;
+> > >  
+> > > -	if (buffer_size) {
+> > > -		/*
+> > > -		 * This could be over 64kB in length, so we have to use
+> > > -		 * kvmalloc() for this. But kvmalloc() utterly sucks, so we
+> > > -		 * use own version.
+> > > -		 */
+> > > -		attrip = xlog_kvmalloc(sizeof(struct xfs_attri_log_item) +
+> > > -					buffer_size);
+> > > -	} else {
+> > > -		attrip = kmem_cache_alloc(xfs_attri_cache,
+> > > -					GFP_NOFS | __GFP_NOFAIL);
+> > > -	}
+> > > -	memset(attrip, 0, sizeof(struct xfs_attri_log_item));
+> > > +	attrip = kmem_cache_zalloc(xfs_attri_cache, GFP_NOFS | __GFP_NOFAIL);
+> > >  
+> > > -	attrip->attri_name_len = name_len;
+> > > -	if (name_len)
+> > > -		attrip->attri_name = ((char *)attrip) +
+> > > -				sizeof(struct xfs_attri_log_item);
+> > > -	else
+> > > -		attrip->attri_name = NULL;
+> > > -
+> > > -	attrip->attri_value_len = value_len;
+> > > -	if (value_len)
+> > > -		attrip->attri_value = ((char *)attrip) +
+> > > -				sizeof(struct xfs_attri_log_item) +
+> > > -				name_len;
+> > > -	else
+> > > -		attrip->attri_value = NULL;
+> > > +	/*
+> > > +	 * Grab an extra reference to the name/value buffer for this log item.
+> > > +	 * The caller retains its own reference!
+> > > +	 */
+> > > +	attrip->attri_nameval = xfs_attri_log_nameval_get(anvl);
 > > 
-> > That could work.  Or...
-> > 
-> > > > --D
-> > > > 
-> > > > > +	struct xfs_delattr_context	*dac,
-> > > > > +	struct xfs_buf			**leaf_bp,
-> > > > > +	uint32_t			op_flags)
-> > > > > +{
-> > > > > +	struct xfs_da_args		*args = dac->da_args;
-> > > > > +	unsigned int			op = op_flags &
-> > > > > +					     XFS_ATTR_OP_FLAGS_
-> > > > > TYPE_MAS
-> > > > > K;
-> > > > > +	int				error;
-> > > > > +
-> > > > > +	switch (op) {
-> > > > > +	case XFS_ATTR_OP_FLAGS_SET:
-> > > > > +		error = xfs_attr_set_iter(dac, leaf_bp);
-> > > > > +		break;
-> > > > > +	case XFS_ATTR_OP_FLAGS_REMOVE:
-> > > > > +		ASSERT(XFS_IFORK_Q(args->dp));
-> > > > > +		error = xfs_attr_remove_iter(dac);
-> > > > > +		break;
-> > > > > +	default:
-> > > > > +		error = -EFSCORRUPTED;
-> > > > > +		break;
-> > > > > +	}
-> > 
-> > ...since xfsprogs doesn't have the overhead of actually doing log
-> > item
-> > operations, you could just put this chunk into the _finish_item
-> > function
-> > directly.
-> > 
-> > > > > +
-> > > > > +	/*
-> > > > > +	 * Mark the transaction dirty, even on error. This
-> > > > > ensures the
-> > > > > +	 * transaction is aborted, which:
-> > > > > +	 *
-> > > > > +	 * 1.) releases the ATTRI and frees the ATTRD
-> > > > > +	 * 2.) shuts down the filesystem
-> > > > > +	 */
-> > > > > +	args->trans->t_flags |= XFS_TRANS_DIRTY |
-> > > > > XFS_TRANS_HAS_INTENT_DONE;
-> > 
-> > Also, I don't think it's necessary to mark the transaction dirty,
-> > since
-> > the buffers logged by xfs_attr_*_iter will do that for you.
-> > 
-> > I'm not sure about whether or not userspace needs to set
-> > _INTENT_DONE; I
-> > haven't seen the userspace port of those patches.
+> > Handle _get failure here, or better, pass in an already referenced
+> > nv because the caller should always have a reference to begin
+> > with. Caller can probably handle allocation failure, too, because
+> > this should be called before we've dirtied the transaction, right?
 > 
-> Ok, well it seems to run ok with out it? I dont see the other items
-> setting the flags, so I suppose we are fine with out it.  Also, I am
-> fine with hoisting finish_update here as long as everyone else is. 
-
-<shrug> the other defer_item.c stubs already do that. :)
-
-> It's not clear to me if Eric uses these, or if he has his own method
-> for doing these ports.
-
-Usually I port the libxfs parts from for-next and pull in whatever other
-changes to the utilities that I can find on the list.  Later, Eric will
-do the same, and then we quietly discuss the discrepancies.  Usually
-Eric spends more time on his port and the resulting changes are better
-thought through.
-
-> But I mostly just wanted to build up enough of
-> the infrastructure to get the new log printing working and reviewed
-> since we'll need them for test cases.  Thanks!
-
-There are *some* parts of xfs_repair that can use deferred AGFL frees,
-deferred bmap intents, and deferred rmap intents.  I think that's it
-though.
-
---D
-
-> Allison  
-> > 
-> > --D
-> > 
-> > > > > +
-> > > > > +	return error;
-> > > > > +}
-> > > > > +
-> > > > > +/* Get an ATTRI. */
-> > > > > +static struct xfs_log_item *
-> > > > > +xfs_attr_create_intent(
-> > > > > +	struct xfs_trans		*tp,
-> > > > > +	struct list_head		*items,
-> > > > > +	unsigned int			count,
-> > > > > +	bool				sort)
-> > > > > +{
-> > > > > +	return NULL;
-> > > > > +}
-> > > > > +
-> > > > > +/* Abort all pending ATTRs. */
-> > > > > +STATIC void
-> > > > > +xfs_attr_abort_intent(
-> > > > > +	struct xfs_log_item		*intent)
-> > > > > +{
-> > > > > +}
-> > > > > +
-> > > > > +/* Get an ATTRD so we can process all the attrs. */
-> > > > > +static struct xfs_log_item *
-> > > > > +xfs_attr_create_done(
-> > > > > +	struct xfs_trans		*tp,
-> > > > > +	struct xfs_log_item		*intent,
-> > > > > +	unsigned int			count)
-> > > > > +{
-> > > > > +	return NULL;
-> > > > > +}
-> > > > > +
-> > > > > +/* Process an attr. */
-> > > > > +STATIC int
-> > > > > +xfs_attr_finish_item(
-> > > > > +	struct xfs_trans		*tp,
-> > > > > +	struct xfs_log_item		*done,
-> > > > > +	struct list_head		*item,
-> > > > > +	struct xfs_btree_cur		**state)
-> > > > > +{
-> > > > > +	struct xfs_attr_item		*attr;
-> > > > > +	int				error;
-> > > > > +	struct xfs_delattr_context	*dac;
-> > > > > +
-> > > > > +	attr = container_of(item, struct xfs_attr_item,
-> > > > > xattri_list);
-> > > > > +	dac = &attr->xattri_dac;
-> > > > > +
-> > > > > +	/*
-> > > > > +	 * Always reset trans after EAGAIN cycle
-> > > > > +	 * since the transaction is new
-> > > > > +	 */
-> > > > > +	dac->da_args->trans = tp;
-> > > > > +
-> > > > > +	error = xfs_trans_attr_finish_update(dac, &dac-
-> > > > > >leaf_bp,
-> > > > > +					     attr-
-> > > > > >xattri_op_flags);
-> > > > > +	if (error != -EAGAIN)
-> > > > > +		kmem_free(attr);
-> > > > > +
-> > > > > +	return error;
-> > > > > +}
-> > > > > +
-> > > > > +/* Cancel an attr */
-> > > > > +STATIC void
-> > > > > +xfs_attr_cancel_item(
-> > > > > +	struct list_head		*item)
-> > > > > +{
-> > > > > +	struct xfs_attr_item		*attr;
-> > > > > +
-> > > > > +	attr = container_of(item, struct xfs_attr_item,
-> > > > > xattri_list);
-> > > > > +	kmem_free(attr);
-> > > > > +}
-> > > > > +
-> > > > > +const struct xfs_defer_op_type xfs_attr_defer_type = {
-> > > > > +	.max_items	= 1,
-> > > > > +	.create_intent	= xfs_attr_create_intent,
-> > > > > +	.abort_intent	= xfs_attr_abort_intent,
-> > > > > +	.create_done	= xfs_attr_create_done,
-> > > > > +	.finish_item	= xfs_attr_finish_item,
-> > > > > +	.cancel_item	= xfs_attr_cancel_item,
-> > > > > +};
-> > > > > +
-> > > > >  /*
-> > > > >   * AGFL blocks are accounted differently in the reserve pools
-> > > > > and
-> > > > > are not
-> > > > >   * inserted into the busy extent list.
-> > > > > diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-> > > > > index 3a2576c14ee9..259ae39f90b5 100644
-> > > > > --- a/libxfs/xfs_defer.c
-> > > > > +++ b/libxfs/xfs_defer.c
-> > > > > @@ -180,6 +180,7 @@ static const struct xfs_defer_op_type
-> > > > > *defer_op_types[] = {
-> > > > >  	[XFS_DEFER_OPS_TYPE_RMAP]	=
-> > > > > &xfs_rmap_update_defer_type,
-> > > > >  	[XFS_DEFER_OPS_TYPE_FREE]	=
-> > > > > &xfs_extent_free_defer_type,
-> > > > >  	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	=
-> > > > > &xfs_agfl_free_defer_type,
-> > > > > +	[XFS_DEFER_OPS_TYPE_ATTR]	= &xfs_attr_defer_type,
-> > > > >  };
-> > > > >  
-> > > > >  static bool
-> > > > > diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-> > > > > index c3a540345fae..f18494c0d791 100644
-> > > > > --- a/libxfs/xfs_defer.h
-> > > > > +++ b/libxfs/xfs_defer.h
-> > > > > @@ -19,6 +19,7 @@ enum xfs_defer_ops_type {
-> > > > >  	XFS_DEFER_OPS_TYPE_RMAP,
-> > > > >  	XFS_DEFER_OPS_TYPE_FREE,
-> > > > >  	XFS_DEFER_OPS_TYPE_AGFL_FREE,
-> > > > > +	XFS_DEFER_OPS_TYPE_ATTR,
-> > > > >  	XFS_DEFER_OPS_TYPE_MAX,
-> > > > >  };
-> > > > >  
-> > > > > diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-> > > > > index d665c04e69dd..302b50bc5830 100644
-> > > > > --- a/libxfs/xfs_format.h
-> > > > > +++ b/libxfs/xfs_format.h
-> > > > > @@ -388,7 +388,9 @@ xfs_sb_has_incompat_feature(
-> > > > >  	return (sbp->sb_features_incompat & feature) != 0;
-> > > > >  }
-> > > > >  
-> > > > > -#define XFS_SB_FEAT_INCOMPAT_LOG_ALL 0
-> > > > > +#define XFS_SB_FEAT_INCOMPAT_LOG_XATTRS   (1 << 0)	/*
-> > > > > Delayed
-> > > > > Attributes */
-> > > > > +#define XFS_SB_FEAT_INCOMPAT_LOG_ALL \
-> > > > > +	(XFS_SB_FEAT_INCOMPAT_LOG_XATTRS)
-> > > > >  #define XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN	~XFS_SB_FEAT_IN
-> > > > > COMPAT_L
-> > > > > OG_ALL
-> > > > >  static inline bool
-> > > > >  xfs_sb_has_incompat_log_feature(
-> > > > > @@ -413,6 +415,11 @@ xfs_sb_add_incompat_log_features(
-> > > > >  	sbp->sb_features_log_incompat |= features;
-> > > > >  }
-> > > > >  
-> > > > > +static inline bool xfs_sb_version_haslogxattrs(struct xfs_sb
-> > > > > *sbp)
-> > > > > +{
-> > > > > +	return xfs_sb_is_v5(sbp) && (sbp-
-> > > > > >sb_features_log_incompat &
-> > > > > +		 XFS_SB_FEAT_INCOMPAT_LOG_XATTRS);
-> > > > > +}
-> > > > >  
-> > > > >  static inline bool
-> > > > >  xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
-> > > > > -- 
-> > > > > 2.25.1
-> > > > > 
+> _nameval_get merely bumps the refcount, so the caller should already
+> have a valid reference to begin with.  So I think the _get function can
+> become:
 > 
+> 	if (!refcount_inc_not_zero(anvl..))
+> 		return NULL;
+> 	return val;
+> 
+> and then this callsite can add a simple ASSERT to ensure that we never
+> pass around a zero-refcount object (in theory the refcount code will
+> also fail loudly):
+> 
+> 	attrip->attri_nameval = xfs_attri_log_nameval_get(anvl);
+> 	ASSERT(attrip->attri_nameval);
+
+I'm fine with that - it documents that the get should not fail at
+this point.
+
+> 
+> > .....
+> > 
+> > > @@ -385,16 +435,33 @@ xfs_attr_create_intent(
+> > >  	 * Each attr item only performs one attribute operation at a time, so
+> > >  	 * this is a list of one
+> > >  	 */
+> > > -	list_for_each_entry(attr, items, xattri_list) {
+> > > -		attrip = xfs_attri_init(mp, attr->xattri_da_args->namelen,
+> > > -					attr->xattri_da_args->valuelen);
+> > > -		if (attrip == NULL)
+> > > -			return NULL;
+> > > +	attr = list_first_entry_or_null(items, struct xfs_attr_item,
+> > > +			xattri_list);
+> > >  
+> > > -		xfs_trans_add_item(tp, &attrip->attri_item);
+> > > -		xfs_attr_log_item(tp, attrip, attr);
+> > > +	/*
+> > > +	 * Create a buffer to store the attribute name and value.  This buffer
+> > > +	 * will be shared between the higher level deferred xattr work state
+> > > +	 * and the lower level xattr log items.
+> > > +	 */
+> > > +	if (!attr->xattri_nameval) {
+> > > +		struct xfs_da_args	*args = attr->xattri_da_args;
+> > > +
+> > > +		/*
+> > > +		 * Transfer our reference to the name/value buffer to the
+> > > +		 * deferred work state structure.
+> > > +		 */
+> > > +		attr->xattri_nameval = xfs_attri_log_nameval_alloc(args->name,
+> > > +				args->namelen, args->value, args->valuelen);
+> > > +	}
+> > > +	if (!attr->xattri_nameval) {
+> > > +		xlog_force_shutdown(mp->m_log, SHUTDOWN_LOG_IO_ERROR);
+> > > +		return NULL;
+> > >  	}
+> > 
+> > Why shutdown on ENOMEM? I would have expects that we return to the
+> > caller so it can cancel the transaction. That way we only shut down
+> > if the transaction is dirty or the caller context can't handle
+> > errors....
+> 
+> ->create_intent can return NULL if they don't need to log any intent
+> items to restart a piece of deferred work.  xfs_defer_create_intent*()
+> currently have no means to convey an errno up to their callers, but that
+> could be a preparatory cleanup.
+
+Ok, if you add a brief comment then I'm fine with it. The cleanup so
+we have error paths here can be done later.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
