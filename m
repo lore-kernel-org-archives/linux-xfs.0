@@ -2,47 +2,47 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF71C388F3
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 18:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3865BC4167D
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 18:37:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352937AbiETShh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 14:37:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59120 "EHLO
+        id S1352903AbiETShi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 14:37:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352941AbiETShf (ORCPT
+        with ESMTP id S1352945AbiETShf (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 14:37:35 -0400
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B55C195939
+Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF9CA19593E
         for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:34 -0700 (PDT)
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24KHSOQK018095
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+        by m0001303.ppops.net (8.17.1.5/8.17.1.5) with ESMTP id 24KHScIc008454
         for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:34 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=NA8OmBU4jiEnjso+uqEe9kZ6Ah3dTXtaz03vpcJX2KM=;
- b=BfxRSx44mZzcgBh/2gmckixCs+DHoNRq1wHb7rRiN4nNCyhugiHjJmS3dr/8jz0cnAEY
- DGJBPKFhc/uBEa7Kc/HceyjKqdWyv5zrs4PnEmGmAvunGadjfRXHQzK1Pshbudnkj93R
- lsGIUZsiB6FIPUli3RwcG7s+B6Wo9L5yico= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g5xexdvwn-8
+ bh=mtjtBSFBboij+dZeJUy8sfQn/qaPHn8tVpe9eVt5tec=;
+ b=KEtuZFmnc7S13PpMRMlIu/rpwu7L3bcae8H0m3sa51fznvmCJ3fdBSAdtQ87LY2A+4ey
+ /xvfmLgU4JaCvF7nN2C/Tof/yPAm07Yvu8tQpXHnlB4J82N4DUkWWFKtMtWyUnUr/dPq
+ 5TA8/IiS5FWiFhs7HOwiXzJV5GEDVb7eqEw= 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by m0001303.ppops.net (PPS) with ESMTPS id 3g5wkre7my-7
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:33 -0700
-Received: from twshared8307.18.frc3.facebook.com (2620:10d:c085:108::8) by
- mail.thefacebook.com (2620:10d:c085:21d::5) with Microsoft SMTP Server
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:34 -0700
+Received: from twshared4937.07.ash9.facebook.com (2620:10d:c0a8:1b::d) by
+ mail.thefacebook.com (2620:10d:c0a8:83::7) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Fri, 20 May 2022 11:37:28 -0700
+ 15.1.2375.28; Fri, 20 May 2022 11:37:30 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id 6B6D3F5E5B25; Fri, 20 May 2022 11:37:16 -0700 (PDT)
+        id 7D316F5E5B2B; Fri, 20 May 2022 11:37:16 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>,
         <hch@infradead.org>
-Subject: [RFC PATCH v4 03/17] mm: Prepare balance_dirty_pages() for async buffered writes
-Date:   Fri, 20 May 2022 11:36:32 -0700
-Message-ID: <20220520183646.2002023-4-shr@fb.com>
+Subject: [RFC PATCH v4 06/17] iomap: Add async buffered write support
+Date:   Fri, 20 May 2022 11:36:35 -0700
+Message-ID: <20220520183646.2002023-7-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220520183646.2002023-1-shr@fb.com>
 References: <20220520183646.2002023-1-shr@fb.com>
@@ -50,8 +50,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: ovpPyxdWival2LgaqWCxk5y91te40gWg
-X-Proofpoint-GUID: ovpPyxdWival2LgaqWCxk5y91te40gWg
+X-Proofpoint-GUID: aYAh1AVuu5ANAPW9XxhxxJ2iggPjI473
+X-Proofpoint-ORIG-GUID: aYAh1AVuu5ANAPW9XxhxxJ2iggPjI473
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-05-20_06,2022-05-20_02,2022-02-23_01
@@ -59,95 +59,90 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Jan Kara <jack@suse.cz>
+This adds async buffered write support to iomap.
 
-If balance_dirty_pages() gets called for async buffered write, we don't
-want to wait. Instead we need to indicate to the caller that throttling
-is needed so that it can stop writing and offload the rest of the write
-to a context that can block.
-
-Signed-off-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Stefan Roesch <shr@fb.com>
 ---
- include/linux/writeback.h |  4 ++++
- mm/page-writeback.c       | 12 +++++++++---
- 2 files changed, 13 insertions(+), 3 deletions(-)
+ fs/iomap/buffered-io.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index fec248ab1fec..a9114c5090e9 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -372,6 +372,10 @@ void global_dirty_limits(unsigned long *pbackground,=
- unsigned long *pdirty);
- unsigned long wb_calc_thresh(struct bdi_writeback *wb, unsigned long thr=
-esh);
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 27e67bfc64f5..187f4ddd7ba7 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -555,15 +555,21 @@ static int __iomap_write_begin(const struct iomap_i=
+ter *iter, loff_t pos,
+ 	loff_t block_size =3D i_blocksize(iter->inode);
+ 	loff_t block_start =3D round_down(pos, block_size);
+ 	loff_t block_end =3D round_up(pos + len, block_size);
++	unsigned int nr_blocks =3D i_blocks_per_folio(iter->inode, folio);
+ 	size_t from =3D offset_in_folio(folio, pos), to =3D from + len;
+ 	size_t poff, plen;
+ 	gfp_t  gfp =3D GFP_NOFS | __GFP_NOFAIL;
 =20
- void wb_update_bandwidth(struct bdi_writeback *wb);
++	if (iter->flags & IOMAP_NOWAIT)
++		gfp =3D GFP_NOWAIT;
 +
-+/* Invoke balance dirty pages in async mode. */
-+#define BDP_ASYNC 0x0001
+ 	if (folio_test_uptodate(folio))
+ 		return 0;
+ 	folio_clear_error(folio);
+=20
+ 	iop =3D iomap_page_create(iter->inode, folio, gfp);
++	if ((iter->flags & IOMAP_NOWAIT) && !iop && nr_blocks > 1)
++		return -EAGAIN;
+=20
+ 	do {
+ 		iomap_adjust_read_range(iter->inode, folio, &block_start,
+@@ -581,7 +587,12 @@ static int __iomap_write_begin(const struct iomap_it=
+er *iter, loff_t pos,
+ 				return -EIO;
+ 			folio_zero_segments(folio, poff, from, to, poff + plen);
+ 		} else {
+-			int status =3D iomap_read_folio_sync(block_start, folio,
++			int status;
 +
- void balance_dirty_pages_ratelimited(struct address_space *mapping);
- bool wb_over_bg_thresh(struct bdi_writeback *wb);
++			if (iter->flags & IOMAP_NOWAIT)
++				return -EAGAIN;
++
++			status =3D iomap_read_folio_sync(block_start, folio,
+ 					poff, plen, srcmap);
+ 			if (status)
+ 				return status;
+@@ -610,6 +621,9 @@ static int iomap_write_begin(const struct iomap_iter =
+*iter, loff_t pos,
+ 	unsigned fgp =3D FGP_LOCK | FGP_WRITE | FGP_CREAT | FGP_STABLE | FGP_NO=
+FS;
+ 	int status =3D 0;
 =20
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 89dcc7d8395a..7a320fd2ad33 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1545,8 +1545,8 @@ static inline void wb_dirty_limits(struct dirty_thr=
-ottle_control *dtc)
-  * If we're over `background_thresh' then the writeback threads are woke=
-n to
-  * perform some writeout.
-  */
--static void balance_dirty_pages(struct bdi_writeback *wb,
--				unsigned long pages_dirtied)
-+static int balance_dirty_pages(struct bdi_writeback *wb,
-+			       unsigned long pages_dirtied, unsigned int flags)
- {
- 	struct dirty_throttle_control gdtc_stor =3D { GDTC_INIT(wb) };
- 	struct dirty_throttle_control mdtc_stor =3D { MDTC_INIT(wb, &gdtc_stor)=
- };
-@@ -1566,6 +1566,7 @@ static void balance_dirty_pages(struct bdi_writebac=
-k *wb,
- 	struct backing_dev_info *bdi =3D wb->bdi;
- 	bool strictlimit =3D bdi->capabilities & BDI_CAP_STRICTLIMIT;
- 	unsigned long start_time =3D jiffies;
-+	int ret =3D 0;
++	if (iter->flags & IOMAP_NOWAIT)
++		fgp |=3D FGP_NOWAIT;
++
+ 	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
+ 	if (srcmap !=3D &iter->iomap)
+ 		BUG_ON(pos + len > srcmap->offset + srcmap->length);
+@@ -767,6 +781,10 @@ static loff_t iomap_write_iter(struct iomap_iter *it=
+er, struct iov_iter *i)
+ 		 * Otherwise there's a nasty deadlock on copying from the
+ 		 * same page as we're writing to, without it being marked
+ 		 * up-to-date.
++		 *
++		 * For async buffered writes the assumption is that the user
++		 * page has already been faulted in. This can be optimized by
++		 * faulting the user page in the prepare phase of io-uring.
+ 		 */
+ 		if (unlikely(fault_in_iov_iter_readable(i, bytes) =3D=3D bytes)) {
+ 			status =3D -EFAULT;
+@@ -822,6 +840,9 @@ iomap_file_buffered_write(struct kiocb *iocb, struct =
+iov_iter *i,
+ 	};
+ 	int ret;
 =20
- 	for (;;) {
- 		unsigned long now =3D jiffies;
-@@ -1794,6 +1795,10 @@ static void balance_dirty_pages(struct bdi_writeba=
-ck *wb,
- 					  period,
- 					  pause,
- 					  start_time);
-+		if (flags & BDP_ASYNC) {
-+			ret =3D -EAGAIN;
-+			break;
-+		}
- 		__set_current_state(TASK_KILLABLE);
- 		wb->dirty_sleep =3D now;
- 		io_schedule_timeout(pause);
-@@ -1825,6 +1830,7 @@ static void balance_dirty_pages(struct bdi_writebac=
-k *wb,
- 		if (fatal_signal_pending(current))
- 			break;
- 	}
-+	return ret;
- }
-=20
- static DEFINE_PER_CPU(int, bdp_ratelimits);
-@@ -1906,7 +1912,7 @@ void balance_dirty_pages_ratelimited(struct address=
-_space *mapping)
- 	preempt_enable();
-=20
- 	if (unlikely(current->nr_dirtied >=3D ratelimit))
--		balance_dirty_pages(wb, current->nr_dirtied);
-+		balance_dirty_pages(wb, current->nr_dirtied, 0);
-=20
- 	wb_put(wb);
- }
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		iter.flags |=3D IOMAP_NOWAIT;
++
+ 	while ((ret =3D iomap_iter(&iter, ops)) > 0)
+ 		iter.processed =3D iomap_write_iter(&iter, i);
+ 	if (iter.pos =3D=3D iocb->ki_pos)
 --=20
 2.30.2
 
