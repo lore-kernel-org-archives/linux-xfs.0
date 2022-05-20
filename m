@@ -2,69 +2,137 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 310BEC43219
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 06:30:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BF7C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 06:44:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345853AbiETGaH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 02:30:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34726 "EHLO
+        id S244915AbiETGoa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 02:44:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345817AbiETGaG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 02:30:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89EC214AF51;
-        Thu, 19 May 2022 23:30:05 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2517A61D97;
-        Fri, 20 May 2022 06:30:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 342CEC385A9;
-        Fri, 20 May 2022 06:30:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653028204;
-        bh=zLcVAySAGbHavOCyzZ3mHIX/dLccYG2RDrRrXi8XEwY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mIi0kfLHATOya+xGeR0ur/w+CnAM2SQc8hib3dEpvbOubRYGldcau8s/33XCt2s76
-         SThI5nP5Bka/U8+8maJc8ic6ISPZUSR89qgmdoBjvGiqKfq7osmnUSaJHcB6JaG+kf
-         KbTo0iwc3dep7dA/EntYOhibh5zEl3e1WihnZHvrlzXhxsrS7FoVV8b6UdpGBAyRFf
-         Mgjw7EIhBzad06vU33Lx5bn2irSQTKaen9hMmsvds+j654UiaktBoZjKnKcWp+uVfB
-         Vi6Px9ntf2zfzBRwDwtTs3Xltn/kmUYIPpa1ptWnO+w7PtNiWQmW0CZDuhK4HMXxOi
-         7bR3YsuCNmwWQ==
-Date:   Thu, 19 May 2022 23:30:02 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: [RFC PATCH v2 1/7] statx: add I/O alignment information
-Message-ID: <Yoc1asB6Ud4Su3gf@sol.localdomain>
-References: <20220518235011.153058-1-ebiggers@kernel.org>
- <20220518235011.153058-2-ebiggers@kernel.org>
- <YobNXbYnhBiqniTH@magnolia>
+        with ESMTP id S229625AbiETGo3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 02:44:29 -0400
+Received: from out30-54.freemail.mail.aliyun.com (out30-54.freemail.mail.aliyun.com [115.124.30.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE16814CA35;
+        Thu, 19 May 2022 23:44:27 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04423;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VDpGp-p_1653029058;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VDpGp-p_1653029058)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Fri, 20 May 2022 14:44:25 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH v2] xfs: Remove dead code
+Date:   Fri, 20 May 2022 14:44:16 +0800
+Message-Id: <20220520064416.5092-1-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YobNXbYnhBiqniTH@magnolia>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 19, 2022 at 04:06:05PM -0700, Darrick J. Wong wrote:
-> I guess that means for XFS it's effectively max(pagesize, i_blocksize,
-> bdev io_opt, sb_width, and (pretend XFS can reflink the realtime volume)
-> the rt extent size)?  I didn't see a manpage update for statx(2) but
-> that's mostly what I'm interested in. :)
+Remove tht entire xlog_recover_check_summary() function, this entire
+function is dead code and has been for 12 years.
 
-I'll send out a man page update with the next version.  I don't think there will
-be much new information that isn't already included in this patchset, though.
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+Changes in v2:
+  -Remove dead code.
 
-> Looking ahead, it looks like the ext4/f2fs implementations only seem to
-> be returning max(i_blocksize, bdev io_opt)?  But not the pagesize?
+ fs/xfs/xfs_log_recover.c | 59 ----------------------------------------
+ 1 file changed, 59 deletions(-)
 
-I think that's just an oversight.  ext4 and f2fs should round the value up to
-PAGE_SIZE.
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 97b941c07957..b1980d7cbbee 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -39,13 +39,6 @@ STATIC int
+ xlog_clear_stale_blocks(
+ 	struct xlog	*,
+ 	xfs_lsn_t);
+-#if defined(DEBUG)
+-STATIC void
+-xlog_recover_check_summary(
+-	struct xlog *);
+-#else
+-#define	xlog_recover_check_summary(log)
+-#endif
+ STATIC int
+ xlog_do_recovery_pass(
+         struct xlog *, xfs_daddr_t, xfs_daddr_t, int, xfs_daddr_t *);
+@@ -3339,8 +3332,6 @@ xlog_do_recover(
+ 	}
+ 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+ 
+-	xlog_recover_check_summary(log);
+-
+ 	/* Normal transactions can now occur */
+ 	clear_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
+ 	return 0;
+@@ -3483,7 +3474,6 @@ xlog_recover_finish(
+ 	}
+ 
+ 	xlog_recover_process_iunlinks(log);
+-	xlog_recover_check_summary(log);
+ 
+ 	/*
+ 	 * Recover any CoW staging blocks that are still referenced by the
+@@ -3517,52 +3507,3 @@ xlog_recover_cancel(
+ 		xlog_recover_cancel_intents(log);
+ }
+ 
+-#if defined(DEBUG)
+-/*
+- * Read all of the agf and agi counters and check that they
+- * are consistent with the superblock counters.
+- */
+-STATIC void
+-xlog_recover_check_summary(
+-	struct xlog		*log)
+-{
+-	struct xfs_mount	*mp = log->l_mp;
+-	struct xfs_perag	*pag;
+-	struct xfs_buf		*agfbp;
+-	struct xfs_buf		*agibp;
+-	xfs_agnumber_t		agno;
+-	uint64_t		freeblks;
+-	uint64_t		itotal;
+-	uint64_t		ifree;
+-	int			error;
+-
+-	freeblks = 0LL;
+-	itotal = 0LL;
+-	ifree = 0LL;
+-	for_each_perag(mp, agno, pag) {
+-		error = xfs_read_agf(mp, NULL, pag->pag_agno, 0, &agfbp);
+-		if (error) {
+-			xfs_alert(mp, "%s agf read failed agno %d error %d",
+-						__func__, pag->pag_agno, error);
+-		} else {
+-			struct xfs_agf	*agfp = agfbp->b_addr;
+-
+-			freeblks += be32_to_cpu(agfp->agf_freeblks) +
+-				    be32_to_cpu(agfp->agf_flcount);
+-			xfs_buf_relse(agfbp);
+-		}
+-
+-		error = xfs_read_agi(mp, NULL, pag->pag_agno, &agibp);
+-		if (error) {
+-			xfs_alert(mp, "%s agi read failed agno %d error %d",
+-						__func__, pag->pag_agno, error);
+-		} else {
+-			struct xfs_agi	*agi = agibp->b_addr;
+-
+-			itotal += be32_to_cpu(agi->agi_count);
+-			ifree += be32_to_cpu(agi->agi_freecount);
+-			xfs_buf_relse(agibp);
+-		}
+-	}
+-}
+-#endif /* DEBUG */
+-- 
+2.20.1.7.g153144c
 
-- Eric
