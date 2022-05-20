@@ -2,47 +2,47 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17ACBC43219
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 18:37:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0D27C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 18:37:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352796AbiETShy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 14:37:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60806 "EHLO
+        id S1352896AbiETSh4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 14:37:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352985AbiETShv (ORCPT
+        with ESMTP id S1352987AbiETShv (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 14:37:51 -0400
 Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED1C8195939
-        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:49 -0700 (PDT)
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24KHSLUE006625
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 631F98A320
+        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:50 -0700 (PDT)
+Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24KHSadi020010
         for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:49 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=fdXvE+WWGkZbdDWaaWcycrFeF07NZ6/Rt8YdakSfT7c=;
- b=Tt5lHOjJNVkIS4uCIUASb50t7kdLJEYq39f8aS7Kd7BjvzyFlnPDFCyONQ/SgWl+LNtl
- aVgWGF6qI83wP8Lalp4X2OCnPOeoLkhExkXBHvX8OmB7OrDK8hOBqXSNZHbmKfZeK1+G
- R2ByHDAco573YRxstlhZ2KUbQcZzze94jNg= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g60b0naar-3
+ bh=4Gs4vhLGOpR5fcqmlVRzzwre6v2yRJXtVCNsF05UpCw=;
+ b=piBNszL9xwhOP650YDcXtZMudcup701DSRWDsZyjXfYZDZRSeD/kD0RLr/nYfZ1Nonq4
+ +UHo0MRzqFrB7TX1uKCZDhWxUMyZ4Ry1/FrQH9Wj0/TR+Twls829cKZoqIBYCAgB+irI
+ g0uSBPUp9TyPVvZ7sNNcJf67L+XUiBnCPPk= 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3g60bnn9k8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
         for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:37:49 -0700
-Received: from twshared6696.05.ash7.facebook.com (2620:10d:c085:108::4) by
- mail.thefacebook.com (2620:10d:c085:21d::4) with Microsoft SMTP Server
+Received: from twshared11660.23.frc3.facebook.com (2620:10d:c0a8:1b::d) by
+ mail.thefacebook.com (2620:10d:c0a8:83::5) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
  15.1.2375.28; Fri, 20 May 2022 11:37:48 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id A87FEF5E5B3B; Fri, 20 May 2022 11:37:16 -0700 (PDT)
+        id 94D73F5E5B33; Fri, 20 May 2022 11:37:16 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>,
         <hch@infradead.org>
-Subject: [RFC PATCH v4 13/17] io_uring: Add support for async buffered writes
-Date:   Fri, 20 May 2022 11:36:42 -0700
-Message-ID: <20220520183646.2002023-14-shr@fb.com>
+Subject: [RFC PATCH v4 10/17] fs: Split off file_needs_update_time and __file_update_time
+Date:   Fri, 20 May 2022 11:36:39 -0700
+Message-ID: <20220520183646.2002023-11-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220520183646.2002023-1-shr@fb.com>
 References: <20220520183646.2002023-1-shr@fb.com>
@@ -50,90 +50,148 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: DA5J8B3-WGk3AgC4qjT47O5AEC7bW-BX
-X-Proofpoint-GUID: DA5J8B3-WGk3AgC4qjT47O5AEC7bW-BX
+X-Proofpoint-ORIG-GUID: j8B6AVbmLFgxaPTW3Vn1B7dYm8TyEvrr
+X-Proofpoint-GUID: j8B6AVbmLFgxaPTW3Vn1B7dYm8TyEvrr
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-05-20_05,2022-05-20_02,2022-02-23_01
+ definitions=2022-05-20_06,2022-05-20_02,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This enables the async buffered writes for the filesystems that support
-async buffered writes in io-uring. Buffered writes are enabled for
-blocks that are already in the page cache or can be acquired with noio.
+This splits off the functions file_needs_update_time() and
+__file_update_time() from the function file_update_time().
+
+This is required to support async buffered writes.
+No intended functional changes in this patch.
 
 Signed-off-by: Stefan Roesch <shr@fb.com>
 ---
- fs/io_uring.c | 29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
+ fs/inode.c | 75 +++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 49 insertions(+), 26 deletions(-)
 
-diff --git a/fs/io_uring.c b/fs/io_uring.c
-index 91de361ea9ab..f3aaac286509 100644
---- a/fs/io_uring.c
-+++ b/fs/io_uring.c
-@@ -3746,7 +3746,7 @@ static inline int io_iter_do_read(struct io_kiocb *=
-req, struct iov_iter *iter)
- 		return -EINVAL;
+diff --git a/fs/inode.c b/fs/inode.c
+index 1bb8b7db836f..4bb7f583cc6b 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2059,35 +2059,19 @@ int file_remove_privs(struct file *file)
  }
+ EXPORT_SYMBOL(file_remove_privs);
 =20
--static bool need_read_all(struct io_kiocb *req)
-+static bool need_complete_io(struct io_kiocb *req)
+-/**
+- *	file_update_time	-	update mtime and ctime time
+- *	@file: file accessed
+- *
+- *	Update the mtime and ctime members of an inode and mark the inode
+- *	for writeback.  Note that this function is meant exclusively for
+- *	usage in the file write path of filesystems, and filesystems may
+- *	choose to explicitly ignore update via this function with the
+- *	S_NOCMTIME inode flag, e.g. for network filesystem where these
+- *	timestamps are handled by the server.  This can return an error for
+- *	file systems who need to allocate space in order to update an inode.
+- */
+-
+-int file_update_time(struct file *file)
++static int file_needs_update_time(struct inode *inode, struct file *file=
+,
++				struct timespec64 *now)
  {
- 	return req->flags & REQ_F_ISREG ||
- 		S_ISBLK(file_inode(req->file)->i_mode);
-@@ -3875,7 +3875,7 @@ static int io_read(struct io_kiocb *req, unsigned i=
-nt issue_flags)
- 	} else if (ret =3D=3D -EIOCBQUEUED) {
- 		goto out_free;
- 	} else if (ret =3D=3D req->result || ret <=3D 0 || !force_nonblock ||
--		   (req->flags & REQ_F_NOWAIT) || !need_read_all(req)) {
-+		   (req->flags & REQ_F_NOWAIT) || !need_complete_io(req)) {
- 		/* read all, failed, already did sync or don't want to retry */
- 		goto done;
- 	}
-@@ -3971,9 +3971,10 @@ static int io_write(struct io_kiocb *req, unsigned=
- int issue_flags)
- 		if (unlikely(!io_file_supports_nowait(req)))
- 			goto copy_iov;
+-	struct inode *inode =3D file_inode(file);
+-	struct timespec64 now;
+ 	int sync_it =3D 0;
+-	int ret;
 =20
--		/* file path doesn't support NOWAIT for non-direct_IO */
--		if (force_nonblock && !(kiocb->ki_flags & IOCB_DIRECT) &&
--		    (req->flags & REQ_F_ISREG))
-+		/* File path supports NOWAIT for non-direct_IO only for block devices.=
- */
-+		if (!(kiocb->ki_flags & IOCB_DIRECT) &&
-+			!(kiocb->ki_filp->f_mode & FMODE_BUF_WASYNC) &&
-+			(req->flags & REQ_F_ISREG))
- 			goto copy_iov;
+ 	/* First try to exhaust all avenues to not sync */
+ 	if (IS_NOCMTIME(inode))
+ 		return 0;
 =20
- 		kiocb->ki_flags |=3D IOCB_NOWAIT;
-@@ -4027,6 +4028,24 @@ static int io_write(struct io_kiocb *req, unsigned=
- int issue_flags)
- 		/* IOPOLL retry should happen for io-wq threads */
- 		if (ret2 =3D=3D -EAGAIN && (req->ctx->flags & IORING_SETUP_IOPOLL))
- 			goto copy_iov;
+-	now =3D current_time(inode);
+-	if (!timespec64_equal(&inode->i_mtime, &now))
++	if (!timespec64_equal(&inode->i_mtime, now))
+ 		sync_it =3D S_MTIME;
+=20
+-	if (!timespec64_equal(&inode->i_ctime, &now))
++	if (!timespec64_equal(&inode->i_ctime, now))
+ 		sync_it |=3D S_CTIME;
+=20
+ 	if (IS_I_VERSION(inode) && inode_iversion_need_inc(inode))
+@@ -2096,15 +2080,49 @@ int file_update_time(struct file *file)
+ 	if (!sync_it)
+ 		return 0;
+=20
+-	/* Finally allowed to write? Takes lock. */
+-	if (__mnt_want_write_file(file))
+-		return 0;
++	return sync_it;
++}
 +
-+		if (ret2 !=3D req->result && ret2 >=3D 0 && need_complete_io(req)) {
-+			struct io_async_rw *rw;
++static int __file_update_time(struct inode *inode, struct file *file,
++			struct timespec64 *now, int sync_mode)
++{
++	int ret =3D 0;
+=20
+-	ret =3D inode_update_time(inode, &now, sync_it);
+-	__mnt_drop_write_file(file);
++	/* try to update time settings */
++	if (!__mnt_want_write_file(file)) {
++		ret =3D inode_update_time(inode, now, sync_mode);
++		__mnt_drop_write_file(file);
++	}
+=20
+ 	return ret;
+ }
 +
-+			/* This is a partial write. The file pos has already been
-+			 * updated, setup the async struct to complete the request
-+			 * in the worker. Also update bytes_done to account for
-+			 * the bytes already written.
-+			 */
-+			iov_iter_save_state(&s->iter, &s->iter_state);
-+			ret =3D io_setup_async_rw(req, iovec, s, true);
++ /**
++  * file_update_time - update mtime and ctime time
++  * @file: file accessed
++  *
++  * Update the mtime and ctime members of an inode and mark the inode fo=
+r
++  * writeback. Note that this function is meant exclusively for usage in
++  * the file write path of filesystems, and filesystems may choose to
++  * explicitly ignore updates via this function with the _NOCMTIME inode
++  * flag, e.g. for network filesystem where these imestamps are handled
++  * by the server. This can return an error for file systems who need to
++  * allocate space in order to update an inode.
++  *
++  * Return: 0 on success, negative errno on failure.
++  */
++int file_update_time(struct file *file)
++{
++	int ret;
++	struct inode *inode =3D file_inode(file);
++	struct timespec64 now =3D current_time(inode);
 +
-+			rw =3D req->async_data;
-+			if (rw)
-+				rw->bytes_done +=3D ret2;
++	ret =3D file_needs_update_time(inode, file, &now);
++	if (ret <=3D 0)
++		return ret;
 +
-+			return ret ? ret : -EAGAIN;
-+		}
- done:
- 		kiocb_done(req, ret2, issue_flags);
- 	} else {
++	return __file_update_time(inode, file, &now, ret);
++}
+ EXPORT_SYMBOL(file_update_time);
+=20
+ /**
+@@ -2123,6 +2141,7 @@ int file_modified(struct file *file)
+ 	int ret;
+ 	struct dentry *dentry =3D file_dentry(file);
+ 	struct inode *inode =3D file_inode(file);
++	struct timespec64 now =3D current_time(inode);
+=20
+ 	/*
+ 	 * Clear the security bits if the process is not being run by root.
+@@ -2141,7 +2160,11 @@ int file_modified(struct file *file)
+ 	if (unlikely(file->f_mode & FMODE_NOCMTIME))
+ 		return 0;
+=20
+-	return file_update_time(file);
++	ret =3D file_needs_update_time(inode, file, &now);
++	if (ret <=3D 0)
++		return ret;
++
++	return __file_update_time(inode, file, &now, ret);
+ }
+ EXPORT_SYMBOL(file_modified);
+=20
 --=20
 2.30.2
 
