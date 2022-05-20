@@ -2,137 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BF7C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 06:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A823AC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 11:52:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244915AbiETGoa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 02:44:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59524 "EHLO
+        id S1348776AbiETLws (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 07:52:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229625AbiETGo3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 02:44:29 -0400
-Received: from out30-54.freemail.mail.aliyun.com (out30-54.freemail.mail.aliyun.com [115.124.30.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE16814CA35;
-        Thu, 19 May 2022 23:44:27 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04423;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VDpGp-p_1653029058;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VDpGp-p_1653029058)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Fri, 20 May 2022 14:44:25 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH v2] xfs: Remove dead code
-Date:   Fri, 20 May 2022 14:44:16 +0800
-Message-Id: <20220520064416.5092-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S1348762AbiETLwp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 07:52:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F31F615E48E;
+        Fri, 20 May 2022 04:52:44 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4FFC461DEB;
+        Fri, 20 May 2022 11:52:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BDA2C385A9;
+        Fri, 20 May 2022 11:52:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653047563;
+        bh=KjobZP6O6Jgwt6QhmllP83ZeT6Jg+VwnOafaxcAZ+8c=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bptv6Mg3TVFF3Sk1DQV4g4ILT2blHfHJLQtoU4tvyhqF7sBMSi7SFHPt3GYix9zDj
+         fmabFBKLLAt+mzYpio3Dnr/a7b1Bzz/E1lwcSx8VAf8RLyOdKVCKRepQRXrq4mW3NI
+         xqhUOLKtCR6bJJICVsEgK6en7zdhRbI3TuWM4uIQLCEtyDzROd1z4XU0U6Eg3HnHGC
+         6Vu5Fs1CZPey2sZjUfEvTvZXyBNZShJ6tvoIR9/5uN7AJh/Mv7cAPeyxtXUC8GLCOr
+         f3oZpQCpTLgA7aCs25q+jmOHsq0cBJOc1BrqKgBXL2hPTHR0+nkHa+zQP+BSejsGZ5
+         JQb/K98Kky8rA==
+Date:   Fri, 20 May 2022 13:52:37 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>
+Subject: Re: [RFC PATCH v2 1/7] statx: add I/O alignment information
+Message-ID: <20220520115237.w2oa5bdzyzhkgwin@wittgenstein>
+References: <20220518235011.153058-1-ebiggers@kernel.org>
+ <20220518235011.153058-2-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20220518235011.153058-2-ebiggers@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove tht entire xlog_recover_check_summary() function, this entire
-function is dead code and has been for 12 years.
+On Wed, May 18, 2022 at 04:50:05PM -0700, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
+> 
+> Traditionally, the conditions for when DIO (direct I/O) is supported
+> were fairly simple: filesystems either supported DIO aligned to the
+> block device's logical block size, or didn't support DIO at all.
+> 
+> However, due to filesystem features that have been added over time (e.g,
+> data journalling, inline data, encryption, verity, compression,
+> checkpoint disabling, log-structured mode), the conditions for when DIO
+> is allowed on a file have gotten increasingly complex.  Whether a
+> particular file supports DIO, and with what alignment, can depend on
+> various file attributes and filesystem mount options, as well as which
+> block device(s) the file's data is located on.
+> 
+> XFS has an ioctl XFS_IOC_DIOINFO which exposes this information to
+> applications.  However, as discussed
+> (https://lore.kernel.org/linux-fsdevel/20220120071215.123274-1-ebiggers@kernel.org/T/#u),
+> this ioctl is rarely used and not known to be used outside of
+> XFS-specific code.  It also was never intended to indicate when a file
+> doesn't support DIO at all, and it only exposes the minimum I/O
+> alignment, not the optimal I/O alignment which has been requested too.
+> 
+> Therefore, let's expose this information via statx().  Add the
+> STATX_IOALIGN flag and three fields associated with it:
+> 
+> * stx_mem_align_dio: the alignment (in bytes) required for user memory
+>   buffers for DIO, or 0 if DIO is not supported on the file.
+> 
+> * stx_offset_align_dio: the alignment (in bytes) required for file
+>   offsets and I/O segment lengths for DIO, or 0 if DIO is not supported
+>   on the file.  This will only be nonzero if stx_mem_align_dio is
+>   nonzero, and vice versa.
+> 
+> * stx_offset_align_optimal: the alignment (in bytes) suggested for file
+>   offsets and I/O segment lengths to get optimal performance.  This
+>   applies to both DIO and buffered I/O.  It differs from stx_blocksize
+>   in that stx_offset_align_optimal will contain the real optimum I/O
+>   size, which may be a large value.  In contrast, for compatibility
+>   reasons stx_blocksize is the minimum size needed to avoid page cache
+>   read/write/modify cycles, which may be much smaller than the optimum
+>   I/O size.  For more details about the motivation for this field, see
+>   https://lore.kernel.org/r/20220210040304.GM59729@dread.disaster.area
+> 
+> Note that as with other statx() extensions, if STATX_IOALIGN isn't set
+> in the returned statx struct, then these new fields won't be filled in.
+> This will happen if the filesystem doesn't support STATX_IOALIGN, or if
+> the file isn't a regular file.  (It might be supported on block device
+> files in the future.)  It might also happen if the caller didn't include
+> STATX_IOALIGN in the request mask, since statx() isn't required to
+> return information that wasn't requested.
+> 
+> This commit adds the VFS-level plumbing for STATX_IOALIGN.  Individual
+> filesystems will still need to add code to support it.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
-Changes in v2:
-  -Remove dead code.
-
- fs/xfs/xfs_log_recover.c | 59 ----------------------------------------
- 1 file changed, 59 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 97b941c07957..b1980d7cbbee 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -39,13 +39,6 @@ STATIC int
- xlog_clear_stale_blocks(
- 	struct xlog	*,
- 	xfs_lsn_t);
--#if defined(DEBUG)
--STATIC void
--xlog_recover_check_summary(
--	struct xlog *);
--#else
--#define	xlog_recover_check_summary(log)
--#endif
- STATIC int
- xlog_do_recovery_pass(
-         struct xlog *, xfs_daddr_t, xfs_daddr_t, int, xfs_daddr_t *);
-@@ -3339,8 +3332,6 @@ xlog_do_recover(
- 	}
- 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
- 
--	xlog_recover_check_summary(log);
--
- 	/* Normal transactions can now occur */
- 	clear_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
- 	return 0;
-@@ -3483,7 +3474,6 @@ xlog_recover_finish(
- 	}
- 
- 	xlog_recover_process_iunlinks(log);
--	xlog_recover_check_summary(log);
- 
- 	/*
- 	 * Recover any CoW staging blocks that are still referenced by the
-@@ -3517,52 +3507,3 @@ xlog_recover_cancel(
- 		xlog_recover_cancel_intents(log);
- }
- 
--#if defined(DEBUG)
--/*
-- * Read all of the agf and agi counters and check that they
-- * are consistent with the superblock counters.
-- */
--STATIC void
--xlog_recover_check_summary(
--	struct xlog		*log)
--{
--	struct xfs_mount	*mp = log->l_mp;
--	struct xfs_perag	*pag;
--	struct xfs_buf		*agfbp;
--	struct xfs_buf		*agibp;
--	xfs_agnumber_t		agno;
--	uint64_t		freeblks;
--	uint64_t		itotal;
--	uint64_t		ifree;
--	int			error;
--
--	freeblks = 0LL;
--	itotal = 0LL;
--	ifree = 0LL;
--	for_each_perag(mp, agno, pag) {
--		error = xfs_read_agf(mp, NULL, pag->pag_agno, 0, &agfbp);
--		if (error) {
--			xfs_alert(mp, "%s agf read failed agno %d error %d",
--						__func__, pag->pag_agno, error);
--		} else {
--			struct xfs_agf	*agfp = agfbp->b_addr;
--
--			freeblks += be32_to_cpu(agfp->agf_freeblks) +
--				    be32_to_cpu(agfp->agf_flcount);
--			xfs_buf_relse(agfbp);
--		}
--
--		error = xfs_read_agi(mp, NULL, pag->pag_agno, &agibp);
--		if (error) {
--			xfs_alert(mp, "%s agi read failed agno %d error %d",
--						__func__, pag->pag_agno, error);
--		} else {
--			struct xfs_agi	*agi = agibp->b_addr;
--
--			itotal += be32_to_cpu(agi->agi_count);
--			ifree += be32_to_cpu(agi->agi_freecount);
--			xfs_buf_relse(agibp);
--		}
--	}
--}
--#endif /* DEBUG */
--- 
-2.20.1.7.g153144c
-
+Looks good to me,
+Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
