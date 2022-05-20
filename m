@@ -2,78 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 943D6C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 11:56:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B041AC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 May 2022 13:10:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240582AbiETL4k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 May 2022 07:56:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40860 "EHLO
+        id S1349560AbiETNKF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 May 2022 09:10:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346192AbiETL4j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 07:56:39 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 480FE248D7
-        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 04:56:38 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D1A5061DF6
-        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:56:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4694BC34118
-        for <linux-xfs@vger.kernel.org>; Fri, 20 May 2022 11:56:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653047797;
-        bh=S4KBLgSAZE6UntP2kPlECHzypxXEPW+XWpuEShDRWpM=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=H9xTbcbBrkflsidQKvHTjUx92qcouqB/XS4kmOCOlyuBKF+qFOrXNPj6Xy7GWnvP2
-         fXhYDidfDlyfCNRxV4UJXrri4CORqOjD790iy+8JLnTiVgfEXWH4uyljUHoRySrcx9
-         wXvykgpboAgR50miuuaTTQfQIm5tNIQjsMWbGzKk97Jnv5CplD9c8uCcuQPQG8I77f
-         q7yQFZ/KLjXU3gKDXLWBFStP/MfYi5aVD4CCw/AITlikVoKLtJTgIu5+QvV+eQKUfG
-         Xs/RLc5um+9DHqFVVR2gAYXazO1O/JJqjhd7do6YMbT2xjuQ768jyZv3Saay9yHPrY
-         7Fw3bPhPV8x9Q==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 37BB2C05FD2; Fri, 20 May 2022 11:56:37 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216007] XFS hangs in iowait when extracting large number of
- files
-Date:   Fri, 20 May 2022 11:56:36 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bugzkernelorg8392@araxon.sk
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: attachments.created
-Message-ID: <bug-216007-201763-CIfj0dJPEm@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216007-201763@https.bugzilla.kernel.org/>
-References: <bug-216007-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S1343831AbiETNKB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 May 2022 09:10:01 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B4151632AC;
+        Fri, 20 May 2022 06:09:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1653052200; x=1684588200;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=JYvA0BL6yB7SFLBfiv6pDy7n04oHm5chtGpJPdO8AMI=;
+  b=ApywRSmx+SNEVgwzZJTJvdufX0Fx+jReJ+nN1DD9WgdwKGRAfBlA+dIy
+   xzReUFSN3Bswl+jdA6o/o6hAhf+ZRi1qiNkKsPOefoN9v7HG6YGApg84k
+   Bgbidf1CXN6BsqX8q2+yoaRvM0aBcuWKnpq6H1a8sI4dTyy1ZikMHU6+q
+   DtbN4QM/7VCuKGYNoCG5aPq0LQDSVLUlzccgoOYBlIjSc5fQlehMdsJBL
+   JmduFXah1cEF4AEhPh4u2mmWlVsBbyTBVE1do0mzAnoUbZwesGLEfLQ6v
+   /DGcIe9hqfeJ3yNjFcJaQloy3Q0k/yJeI5cuPcZ0re69Sbh9yuAod8bSR
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10352"; a="297909104"
+X-IronPort-AV: E=Sophos;i="5.91,239,1647327600"; 
+   d="scan'208";a="297909104"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2022 06:09:49 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,239,1647327600"; 
+   d="scan'208";a="715526492"
+Received: from lkp-server02.sh.intel.com (HELO 242b25809ac7) ([10.239.97.151])
+  by fmsmga001.fm.intel.com with ESMTP; 20 May 2022 06:09:45 -0700
+Received: from kbuild by 242b25809ac7 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1ns2O0-0004ii-Lb;
+        Fri, 20 May 2022 13:09:44 +0000
+Date:   Fri, 20 May 2022 21:08:52 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>, djwong@kernel.org
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: Re: [PATCH] xfs: Remove the redundant assignment
+Message-ID: <202205202134.P3H4KQ7S-lkp@intel.com>
+References: <20220520040518.73957-1-jiapeng.chong@linux.alibaba.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220520040518.73957-1-jiapeng.chong@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
+Hi Jiapeng,
 
---- Comment #1 from Peter Pavlisko (bugzkernelorg8392@araxon.sk) ---
-Created attachment 301009
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D301009&action=3Dedit
-kernel config file
+Thank you for the patch! Perhaps something to improve:
 
---=20
-You may reply to this email to add a comment.
+[auto build test WARNING on xfs-linux/for-next]
+[also build test WARNING on v5.18-rc7 next-20220519]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+url:    https://github.com/intel-lab-lkp/linux/commits/Jiapeng-Chong/xfs-Remove-the-redundant-assignment/20220520-120736
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+config: x86_64-randconfig-a005 (https://download.01.org/0day-ci/archive/20220520/202205202134.P3H4KQ7S-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project e00cbbec06c08dc616a0d52a20f678b8fbd4e304)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/890587fbe3e3934d20fcd39effdcefedd65e6b7f
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Jiapeng-Chong/xfs-Remove-the-redundant-assignment/20220520-120736
+        git checkout 890587fbe3e3934d20fcd39effdcefedd65e6b7f
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash fs/xfs/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+>> fs/xfs/xfs_log_recover.c:3542:20: warning: unused variable 'agfp' [-Wunused-variable]
+                           struct xfs_agf  *agfp = agfbp->b_addr;
+                                            ^
+>> fs/xfs/xfs_log_recover.c:3551:20: warning: unused variable 'agi' [-Wunused-variable]
+                           struct xfs_agi  *agi = agibp->b_addr;
+                                            ^
+   2 warnings generated.
+
+
+vim +/agfp +3542 fs/xfs/xfs_log_recover.c
+
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3519  
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3520  #if defined(DEBUG)
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3521  /*
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3522   * Read all of the agf and agi counters and check that they
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3523   * are consistent with the superblock counters.
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3524   */
+e89fbb5ee1893f Christoph Hellwig 2017-11-06  3525  STATIC void
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3526  xlog_recover_check_summary(
+9a8d2fdbb47aaa Mark Tinguely     2012-06-14  3527  	struct xlog		*log)
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3528  {
+934933c3eec9e4 Dave Chinner      2021-06-02  3529  	struct xfs_mount	*mp = log->l_mp;
+934933c3eec9e4 Dave Chinner      2021-06-02  3530  	struct xfs_perag	*pag;
+e82226138b20d4 Dave Chinner      2020-12-16  3531  	struct xfs_buf		*agfbp;
+e82226138b20d4 Dave Chinner      2020-12-16  3532  	struct xfs_buf		*agibp;
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3533  	xfs_agnumber_t		agno;
+5e1be0fb1a3950 Christoph Hellwig 2008-11-28  3534  	int			error;
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3535  
+934933c3eec9e4 Dave Chinner      2021-06-02  3536  	for_each_perag(mp, agno, pag) {
+934933c3eec9e4 Dave Chinner      2021-06-02  3537  		error = xfs_read_agf(mp, NULL, pag->pag_agno, 0, &agfbp);
+4805621a37d9b2 Christoph Hellwig 2008-11-28  3538  		if (error) {
+a0fa2b679ecd15 Dave Chinner      2011-03-07  3539  			xfs_alert(mp, "%s agf read failed agno %d error %d",
+934933c3eec9e4 Dave Chinner      2021-06-02  3540  						__func__, pag->pag_agno, error);
+4805621a37d9b2 Christoph Hellwig 2008-11-28  3541  		} else {
+9798f615ad2be4 Christoph Hellwig 2020-03-10 @3542  			struct xfs_agf	*agfp = agfbp->b_addr;
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3543  			xfs_buf_relse(agfbp);
+4805621a37d9b2 Christoph Hellwig 2008-11-28  3544  		}
+^1da177e4c3f41 Linus Torvalds    2005-04-16  3545  
+934933c3eec9e4 Dave Chinner      2021-06-02  3546  		error = xfs_read_agi(mp, NULL, pag->pag_agno, &agibp);
+a0fa2b679ecd15 Dave Chinner      2011-03-07  3547  		if (error) {
+a0fa2b679ecd15 Dave Chinner      2011-03-07  3548  			xfs_alert(mp, "%s agi read failed agno %d error %d",
+934933c3eec9e4 Dave Chinner      2021-06-02  3549  						__func__, pag->pag_agno, error);
+a0fa2b679ecd15 Dave Chinner      2011-03-07  3550  		} else {
+370c782b98436b Christoph Hellwig 2020-03-10 @3551  			struct xfs_agi	*agi = agibp->b_addr;
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
