@@ -2,77 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA9A4C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 21 May 2022 19:25:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B39C433F5
+	for <linux-xfs@archiver.kernel.org>; Sat, 21 May 2022 22:31:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239000AbiEUTZm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 21 May 2022 15:25:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35316 "EHLO
+        id S1343598AbiEUWbw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 21 May 2022 18:31:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232304AbiEUTZl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 May 2022 15:25:41 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 440433A73A;
-        Sat, 21 May 2022 12:25:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9CB3BB80A28;
-        Sat, 21 May 2022 19:25:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F33BC385A5;
-        Sat, 21 May 2022 19:25:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653161138;
-        bh=umQJ0S79Q6Znzu67c8gbyXiw118y/yIgf0qPciYSydY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pe2b0L9GjkVeQDemjHRmMDZxf0fZlD8g9jUd8sggftac2rexmqi2X7+kFQoBs3ddV
-         YNQTgK+PRI5QpXWKbu+H7XfbKSrm5AY83UtI4sAQ+KvCUYMHsWYcu5Iw252ixBNacn
-         k5asoIvN5/YLXxf8+d2R4rGhYCRWN4c1fMmV/MNVIFImnHeLyiuCy38zOD6nL7GDTc
-         as4gX4bh+Iepp9fZh6MPrxo/YPdRad+UBxSdLomeX10pdAAPmcudh82WyuXSeO+mVj
-         9p9DP2K827wAe3OoW7zvSpn9x+zgxtxDkidy3GuIoZ19T/PKwGaVIyrAi/aa/VdHCv
-         0sYSGnQpe7B2w==
-Date:   Sat, 21 May 2022 12:25:37 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Julia Lawall <Julia.Lawall@inria.fr>
-Cc:     kernel-janitors@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix typo in comment
-Message-ID: <Yok8sSk1kyF/tXFo@magnolia>
-References: <20220521111145.81697-72-Julia.Lawall@inria.fr>
+        with ESMTP id S234785AbiEUWbv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 May 2022 18:31:51 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B97831C914
+        for <linux-xfs@vger.kernel.org>; Sat, 21 May 2022 15:31:50 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 06A3F10E74BB;
+        Sun, 22 May 2022 08:31:49 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nsXdS-00EoEc-Vq; Sun, 22 May 2022 08:31:47 +1000
+Date:   Sun, 22 May 2022 08:31:46 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     bugzilla-daemon@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 216007] XFS hangs in iowait when extracting large number of
+ files
+Message-ID: <20220521223146.GM1098723@dread.disaster.area>
+References: <bug-216007-201763@https.bugzilla.kernel.org/>
+ <bug-216007-201763-l8R3pKFzHP@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220521111145.81697-72-Julia.Lawall@inria.fr>
+In-Reply-To: <bug-216007-201763-l8R3pKFzHP@https.bugzilla.kernel.org/>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62896856
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=jW9XMcD_w1WAFi1Y:21 a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=EvhzaQOGhtVETvwDhakA:9 a=CjuIK1q_8ugA:10
+        a=4XdoLCUCO_b63ij2jC9c:22 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 21, 2022 at 01:11:22PM +0200, Julia Lawall wrote:
-> Spelling mistake (triple letters) in comment.
-> Detected with the help of Coccinelle.
+On Sat, May 21, 2022 at 05:14:36AM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=216007
 > 
-> Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
+> --- Comment #4 from Peter Pavlisko (bugzkernelorg8392@araxon.sk) ---
+> > What sort of storage subsystem does this machine have? If it's a spinning
+> > disk then you've probably just filled memory
+> 
+> Yes, all the disks are classic spinning CMR disks. But, out of all file systems
+> tried, only XFS is doing this on the test machine. I can trigger this behavior
+> every time. And kernels from 5.10 and bellow still work, even with my
+> non-standard .config.
+> 
+> Here is the memory situation when it is stuck:
+> 
+> ftp-back ~ # free
+>                total        used        free      shared  buff/cache   available
+> Mem:         3995528      175872       69240         416     3750416     3763584
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Doesn't tell us a whole lot except for "no free memory to allocate
+without reclaim". /proc/meminfo, /proc/vmstat and /proc/slabinfo
+would tell us a lot more.
 
---D
+Also, knowing if you've tweaked things like dirty ratios, etc would
+also be helpful...
 
-> 
-> ---
->  fs/xfs/libxfs/xfs_symlink_remote.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-> index f0b38f4aba80..8b9bd178a487 100644
-> --- a/fs/xfs/libxfs/xfs_symlink_remote.c
-> +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-> @@ -213,7 +213,7 @@ xfs_symlink_shortform_verify(
->  
->  	/*
->  	 * Zero length symlinks should never occur in memory as they are
-> -	 * never alllowed to exist on disk.
-> +	 * never allowed to exist on disk.
->  	 */
->  	if (!size)
->  		return __this_address;
-> 
+> This may not be a XFS bug, but so far only XFS seems to suffer from it.
+
+Not that uncommon, really. XFS puts a different load on the memory
+allocation/reclaim and cache subsystems compared to other
+filesystems, so XFS tends to trip over bugs that others don't.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
