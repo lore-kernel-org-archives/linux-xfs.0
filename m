@@ -2,65 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B39C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 21 May 2022 22:31:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FFF7C433F5
+	for <linux-xfs@archiver.kernel.org>; Sat, 21 May 2022 22:32:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343598AbiEUWbw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 21 May 2022 18:31:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35914 "EHLO
+        id S1345078AbiEUWcD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 21 May 2022 18:32:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234785AbiEUWbv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 May 2022 18:31:51 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B97831C914
-        for <linux-xfs@vger.kernel.org>; Sat, 21 May 2022 15:31:50 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 06A3F10E74BB;
-        Sun, 22 May 2022 08:31:49 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nsXdS-00EoEc-Vq; Sun, 22 May 2022 08:31:47 +1000
-Date:   Sun, 22 May 2022 08:31:46 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 216007] XFS hangs in iowait when extracting large number of
+        with ESMTP id S234785AbiEUWcC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 May 2022 18:32:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFF2B1CB14
+        for <linux-xfs@vger.kernel.org>; Sat, 21 May 2022 15:32:00 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5B37860C6F
+        for <linux-xfs@vger.kernel.org>; Sat, 21 May 2022 22:32:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C4D99C34119
+        for <linux-xfs@vger.kernel.org>; Sat, 21 May 2022 22:31:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653172319;
+        bh=Tpfh81ZIiZ+Tu9qtU9IPjH339IzkUd1MufBkryOlmHc=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=N4gGlHS+d+pbhR51V38Zoo16K3RJA5n8HRBxNw8K9FuD3BxQqffsGa477xg/8nehM
+         6cwSnyoDH9MKET99ltJwyPFS+stYpTTr6TXkCsUiF0M4KnHHWRl5AuPgrmPI/XsixZ
+         BRT0MSGFgvOMmcbwdCx2YkslB3x+tbsKf/WgelI3Qjg8k8NO9NxS8PlNR6Nzra7X6x
+         wgKQPM6tG1gnLIUSwMktyM7NX6QePmORbJMwAxEUkRqzsbF9uowt5I5Nt9cucSn6Et
+         BJ+668NsJVWi8s2HmfwWR8xwOBaz2u2wxKHFKBSPpJYpHAQ4mbBT6G5xOKnyqeGdjh
+         ZsanMyuhTX3NQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id B6480CC13B0; Sat, 21 May 2022 22:31:59 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216007] XFS hangs in iowait when extracting large number of
  files
-Message-ID: <20220521223146.GM1098723@dread.disaster.area>
+Date:   Sat, 21 May 2022 22:31:59 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216007-201763-4bIsuoCV4o@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216007-201763@https.bugzilla.kernel.org/>
 References: <bug-216007-201763@https.bugzilla.kernel.org/>
- <bug-216007-201763-l8R3pKFzHP@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-216007-201763-l8R3pKFzHP@https.bugzilla.kernel.org/>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62896856
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=jW9XMcD_w1WAFi1Y:21 a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=EvhzaQOGhtVETvwDhakA:9 a=CjuIK1q_8ugA:10
-        a=4XdoLCUCO_b63ij2jC9c:22 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
+
+--- Comment #5 from Dave Chinner (david@fromorbit.com) ---
 On Sat, May 21, 2022 at 05:14:36AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=216007
-> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
+>=20
 > --- Comment #4 from Peter Pavlisko (bugzkernelorg8392@araxon.sk) ---
-> > What sort of storage subsystem does this machine have? If it's a spinning
+> > What sort of storage subsystem does this machine have? If it's a spinni=
+ng
 > > disk then you've probably just filled memory
-> 
-> Yes, all the disks are classic spinning CMR disks. But, out of all file systems
-> tried, only XFS is doing this on the test machine. I can trigger this behavior
+>=20
+> Yes, all the disks are classic spinning CMR disks. But, out of all file
+> systems
+> tried, only XFS is doing this on the test machine. I can trigger this
+> behavior
 > every time. And kernels from 5.10 and bellow still work, even with my
 > non-standard .config.
-> 
+>=20
 > Here is the memory situation when it is stuck:
-> 
+>=20
 > ftp-back ~ # free
->                total        used        free      shared  buff/cache   available
-> Mem:         3995528      175872       69240         416     3750416     3763584
+>                total        used        free      shared  buff/cache=20=20
+>                available
+> Mem:         3995528      175872       69240         416     3750416=20=
+=20=20=20
+> 3763584
 
 Doesn't tell us a whole lot except for "no free memory to allocate
 without reclaim". /proc/meminfo, /proc/vmstat and /proc/slabinfo
@@ -78,6 +108,9 @@ filesystems, so XFS tends to trip over bugs that others don't.
 Cheers,
 
 Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
