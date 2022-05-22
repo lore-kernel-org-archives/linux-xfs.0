@@ -2,136 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 333B2C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 May 2022 07:26:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB38FC433FE
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 May 2022 07:29:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237428AbiEVH0W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 22 May 2022 03:26:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45558 "EHLO
+        id S233375AbiEVH3s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 May 2022 03:29:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234813AbiEVH0V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 May 2022 03:26:21 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCB9C19287;
-        Sun, 22 May 2022 00:26:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1653204377; x=1684740377;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=PHkVjsQdDsWH4+Q1zKa7kO6PFtCgvH3iM3bFKiVfnBU=;
-  b=QgSvpfXabVFqcwsSrbJy/j8zyCIEz4sdzLDk0q+e+ehe5Zog8pPGsAoa
-   dA5acNm3zWGg59llFb6gWjs59zKKmx+NDna2phkyWe/1ZlbdbQdF1V9rj
-   sPIrR0pi4gGwuSLeYYaEfjeBR5XvgMfDReTEZ2AJYwj3Zn6IDbG4U29PE
-   o0yrNR38i+0mobCNFH+bxIu0WUG8FC8upEHywNRFyDmVObCd4G+A5d7KH
-   KtUvAUnr2zGWB4LgO0Ke1xKaEQRu/wMZmO7TPjdN+EAP3j5CGuQgqPc6m
-   r9QiILtR9OUNRl9lIPWghd6r3HXmUEJh5ZEccoiBhyKkj0U4TCFMOXHef
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10354"; a="270536935"
-X-IronPort-AV: E=Sophos;i="5.91,243,1647327600"; 
-   d="scan'208";a="270536935"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 00:26:16 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,243,1647327600"; 
-   d="scan'208";a="525365057"
-Received: from lkp-server01.sh.intel.com (HELO db63a1be7222) ([10.239.97.150])
-  by orsmga003.jf.intel.com with ESMTP; 22 May 2022 00:26:14 -0700
-Received: from kbuild by db63a1be7222 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nsfyg-0000B9-4X;
-        Sun, 22 May 2022 07:26:14 +0000
-Date:   Sun, 22 May 2022 15:25:58 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>, djwong@kernel.org
-Cc:     kbuild-all@lists.01.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: Re: [PATCH] xfs: Remove the redundant assignment
-Message-ID: <202205221503.Qj3T3w3A-lkp@intel.com>
-References: <20220520040518.73957-1-jiapeng.chong@linux.alibaba.com>
+        with ESMTP id S232975AbiEVH3r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 May 2022 03:29:47 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A50C39BBE;
+        Sun, 22 May 2022 00:29:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=D1vgKQCOzr8tyZxaNlssCNMEHDUpeBSFVtYkj+gPkKo=; b=PNFXKND4Tu3bYjfu6ohPH+JHPw
+        HoifqEgG0ytQiNWIjiUNRqJsunMjfOzIG7F4goa4LwPPTJh7kwM1Q8cb8G6Ll2FHcSlxj8qrud2AI
+        z3mWEnzytmgL23fMC18zOeXO3MRdaT+CZdTeBFFLDuqK24qO0DvsGJCuKNP19bM7l9r8/X9Xmn7fm
+        BOgOVvnbclbNNClRfGsHXpIzABAQxFlJi0e/Ej6N0TncvnPw4wxHwW0z+EF+fmzUdgZVgzPcg2cL+
+        3ilsr+ax/vbY08zh7k8Pz1J9nS7LT0X1ihOKJouOM2aeiJcBTNzBRjylw/3hRlMtXmtcs1v8gG6A3
+        P1SBgCYg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nsg25-000nUK-BE; Sun, 22 May 2022 07:29:45 +0000
+Date:   Sun, 22 May 2022 00:29:45 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Stefan Roesch <shr@fb.com>
+Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com, jack@suse.cz, hch@infradead.org
+Subject: Re: [RFC PATCH v4 10/17] fs: Split off file_needs_update_time and
+ __file_update_time
+Message-ID: <YonmadckyAqakY7d@infradead.org>
+References: <20220520183646.2002023-1-shr@fb.com>
+ <20220520183646.2002023-11-shr@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220520040518.73957-1-jiapeng.chong@linux.alibaba.com>
+In-Reply-To: <20220520183646.2002023-11-shr@fb.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Jiapeng,
+On Fri, May 20, 2022 at 11:36:39AM -0700, Stefan Roesch wrote:
+> +static int file_needs_update_time(struct inode *inode, struct file *file,
+> +				struct timespec64 *now)
+>  {
+>  	int sync_it = 0;
 
-Thank you for the patch! Perhaps something to improve:
+No need to pass both and inode and a file as the former can be trivially
+derived from the latter.  But if I'm not misreading the patch, file is
+entirely unused here anyway, so can't we just drop it and rename the
+function to inode_needs_update_time?
 
-[auto build test WARNING on xfs-linux/for-next]
-[also build test WARNING on v5.18-rc7 next-20220520]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+> +static int __file_update_time(struct inode *inode, struct file *file,
+> +			struct timespec64 *now, int sync_mode)
+> +{
+> +	int ret = 0;
+>  
+> +	/* try to update time settings */
+> +	if (!__mnt_want_write_file(file)) {
+> +		ret = inode_update_time(inode, now, sync_mode);
+> +		__mnt_drop_write_file(file);
+> +	}
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Jiapeng-Chong/xfs-Remove-the-redundant-assignment/20220520-120736
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-config: i386-randconfig-a005 (https://download.01.org/0day-ci/archive/20220522/202205221503.Qj3T3w3A-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.3.0-1) 11.3.0
-reproduce (this is a W=1 build):
-        # https://github.com/intel-lab-lkp/linux/commit/890587fbe3e3934d20fcd39effdcefedd65e6b7f
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Jiapeng-Chong/xfs-Remove-the-redundant-assignment/20220520-120736
-        git checkout 890587fbe3e3934d20fcd39effdcefedd65e6b7f
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash fs/xfs/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
-   fs/xfs/xfs_log_recover.c: In function 'xlog_recover_check_summary':
->> fs/xfs/xfs_log_recover.c:3542:42: warning: unused variable 'agfp' [-Wunused-variable]
-    3542 |                         struct xfs_agf  *agfp = agfbp->b_addr;
-         |                                          ^~~~
->> fs/xfs/xfs_log_recover.c:3551:42: warning: unused variable 'agi' [-Wunused-variable]
-    3551 |                         struct xfs_agi  *agi = agibp->b_addr;
-         |                                          ^~~
-
-
-vim +/agfp +3542 fs/xfs/xfs_log_recover.c
-
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3519  
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3520  #if defined(DEBUG)
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3521  /*
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3522   * Read all of the agf and agi counters and check that they
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3523   * are consistent with the superblock counters.
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3524   */
-e89fbb5ee1893f3 Christoph Hellwig 2017-11-06  3525  STATIC void
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3526  xlog_recover_check_summary(
-9a8d2fdbb47aaa1 Mark Tinguely     2012-06-14  3527  	struct xlog		*log)
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3528  {
-934933c3eec9e4a Dave Chinner      2021-06-02  3529  	struct xfs_mount	*mp = log->l_mp;
-934933c3eec9e4a Dave Chinner      2021-06-02  3530  	struct xfs_perag	*pag;
-e82226138b20d4f Dave Chinner      2020-12-16  3531  	struct xfs_buf		*agfbp;
-e82226138b20d4f Dave Chinner      2020-12-16  3532  	struct xfs_buf		*agibp;
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3533  	xfs_agnumber_t		agno;
-5e1be0fb1a39505 Christoph Hellwig 2008-11-28  3534  	int			error;
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3535  
-934933c3eec9e4a Dave Chinner      2021-06-02  3536  	for_each_perag(mp, agno, pag) {
-934933c3eec9e4a Dave Chinner      2021-06-02  3537  		error = xfs_read_agf(mp, NULL, pag->pag_agno, 0, &agfbp);
-4805621a37d9b2b Christoph Hellwig 2008-11-28  3538  		if (error) {
-a0fa2b679ecd15b Dave Chinner      2011-03-07  3539  			xfs_alert(mp, "%s agf read failed agno %d error %d",
-934933c3eec9e4a Dave Chinner      2021-06-02  3540  						__func__, pag->pag_agno, error);
-4805621a37d9b2b Christoph Hellwig 2008-11-28  3541  		} else {
-9798f615ad2be48 Christoph Hellwig 2020-03-10 @3542  			struct xfs_agf	*agfp = agfbp->b_addr;
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3543  			xfs_buf_relse(agfbp);
-4805621a37d9b2b Christoph Hellwig 2008-11-28  3544  		}
-^1da177e4c3f415 Linus Torvalds    2005-04-16  3545  
-934933c3eec9e4a Dave Chinner      2021-06-02  3546  		error = xfs_read_agi(mp, NULL, pag->pag_agno, &agibp);
-a0fa2b679ecd15b Dave Chinner      2011-03-07  3547  		if (error) {
-a0fa2b679ecd15b Dave Chinner      2011-03-07  3548  			xfs_alert(mp, "%s agi read failed agno %d error %d",
-934933c3eec9e4a Dave Chinner      2021-06-02  3549  						__func__, pag->pag_agno, error);
-a0fa2b679ecd15b Dave Chinner      2011-03-07  3550  		} else {
-370c782b98436bb Christoph Hellwig 2020-03-10 @3551  			struct xfs_agi	*agi = agibp->b_addr;
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+I'd be tempted to just open code this in the two callers, but either
+way works for me.  If we keep the function please don't pass the
+inode separately.
