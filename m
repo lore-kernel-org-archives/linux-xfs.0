@@ -2,115 +2,57 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FFF7C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 21 May 2022 22:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4293CC433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 May 2022 07:17:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345078AbiEUWcD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 21 May 2022 18:32:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36802 "EHLO
+        id S232658AbiEVHRy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 May 2022 03:17:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234785AbiEUWcC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 May 2022 18:32:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFF2B1CB14
-        for <linux-xfs@vger.kernel.org>; Sat, 21 May 2022 15:32:00 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5B37860C6F
-        for <linux-xfs@vger.kernel.org>; Sat, 21 May 2022 22:32:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C4D99C34119
-        for <linux-xfs@vger.kernel.org>; Sat, 21 May 2022 22:31:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653172319;
-        bh=Tpfh81ZIiZ+Tu9qtU9IPjH339IzkUd1MufBkryOlmHc=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=N4gGlHS+d+pbhR51V38Zoo16K3RJA5n8HRBxNw8K9FuD3BxQqffsGa477xg/8nehM
-         6cwSnyoDH9MKET99ltJwyPFS+stYpTTr6TXkCsUiF0M4KnHHWRl5AuPgrmPI/XsixZ
-         BRT0MSGFgvOMmcbwdCx2YkslB3x+tbsKf/WgelI3Qjg8k8NO9NxS8PlNR6Nzra7X6x
-         wgKQPM6tG1gnLIUSwMktyM7NX6QePmORbJMwAxEUkRqzsbF9uowt5I5Nt9cucSn6Et
-         BJ+668NsJVWi8s2HmfwWR8xwOBaz2u2wxKHFKBSPpJYpHAQ4mbBT6G5xOKnyqeGdjh
-         ZsanMyuhTX3NQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id B6480CC13B0; Sat, 21 May 2022 22:31:59 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216007] XFS hangs in iowait when extracting large number of
- files
-Date:   Sat, 21 May 2022 22:31:59 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: david@fromorbit.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-216007-201763-4bIsuoCV4o@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216007-201763@https.bugzilla.kernel.org/>
-References: <bug-216007-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S231909AbiEVHRy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 May 2022 03:17:54 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76FD43C498;
+        Sun, 22 May 2022 00:17:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=FYdUNpYTCKI9E//psNaQ4qfwx/AZlbpXMSBjSm3xLAI=; b=jfnCuOiWUTnVFCUfR715RoX543
+        ALG2snduf5sX62r4QAYIZQJY3+3FI7aWgxv5kcf4/cA+XT6g4VHAFGePDnHXOlKJTBVVepKTaVPgr
+        kzZKGBxQBr6Wx4FJKE/CEurvvAv+v0oKlGFLCMiHMn8sQxJwz+r1f0+hQicjHp/YskSQ7ElO5Iwl/
+        KPvhZ8OAfCKA1DT4B99UW7w9kHwJkPIQWcyIbpRyQJRqWjcUGGQ3lnLoqkzUtBjSeKmzSY22NL686
+        nP4tD70Y8sGdLrSEtUfVx/nmgBYb/swPIM8GgtHgb2xQIEJMAIEkogcaKs101kMCo+vvV+v/BtmZX
+        8Hhp4HHA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nsfqW-000m5s-Rj; Sun, 22 May 2022 07:17:48 +0000
+Date:   Sun, 22 May 2022 00:17:48 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Stefan Roesch <shr@fb.com>
+Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com, jack@suse.cz, hch@infradead.org
+Subject: Re: [RFC PATCH v4 03/17] mm: Prepare balance_dirty_pages() for async
+ buffered writes
+Message-ID: <YonjnENVHY0/s1dg@infradead.org>
+References: <20220520183646.2002023-1-shr@fb.com>
+ <20220520183646.2002023-4-shr@fb.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220520183646.2002023-4-shr@fb.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
+On Fri, May 20, 2022 at 11:36:32AM -0700, Stefan Roesch wrote:
+> From: Jan Kara <jack@suse.cz>
+> 
+> If balance_dirty_pages() gets called for async buffered write, we don't
+> want to wait. Instead we need to indicate to the caller that throttling
+> is needed so that it can stop writing and offload the rest of the write
+> to a context that can block.
 
---- Comment #5 from Dave Chinner (david@fromorbit.com) ---
-On Sat, May 21, 2022 at 05:14:36AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
->=20
-> --- Comment #4 from Peter Pavlisko (bugzkernelorg8392@araxon.sk) ---
-> > What sort of storage subsystem does this machine have? If it's a spinni=
-ng
-> > disk then you've probably just filled memory
->=20
-> Yes, all the disks are classic spinning CMR disks. But, out of all file
-> systems
-> tried, only XFS is doing this on the test machine. I can trigger this
-> behavior
-> every time. And kernels from 5.10 and bellow still work, even with my
-> non-standard .config.
->=20
-> Here is the memory situation when it is stuck:
->=20
-> ftp-back ~ # free
->                total        used        free      shared  buff/cache=20=20
->                available
-> Mem:         3995528      175872       69240         416     3750416=20=
-=20=20=20
-> 3763584
-
-Doesn't tell us a whole lot except for "no free memory to allocate
-without reclaim". /proc/meminfo, /proc/vmstat and /proc/slabinfo
-would tell us a lot more.
-
-Also, knowing if you've tweaked things like dirty ratios, etc would
-also be helpful...
-
-> This may not be a XFS bug, but so far only XFS seems to suffer from it.
-
-Not that uncommon, really. XFS puts a different load on the memory
-allocation/reclaim and cache subsystems compared to other
-filesystems, so XFS tends to trip over bugs that others don't.
-
-Cheers,
-
-Dave.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+I don't tink this really makes sense without the next patch, so I'd
+suggest to merge the two.
