@@ -2,166 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01305C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 May 2022 10:41:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA5C8C38162
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 May 2022 10:52:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234197AbiEWKlE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 May 2022 06:41:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44984 "EHLO
+        id S234569AbiEWKwJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 May 2022 06:52:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234194AbiEWKlD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 06:41:03 -0400
+        with ESMTP id S234448AbiEWKv4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 06:51:56 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE76C218D;
-        Mon, 23 May 2022 03:41:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 259A82E9D1;
+        Mon, 23 May 2022 03:51:54 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 7321E1F8F8;
-        Mon, 23 May 2022 10:40:59 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTP id 348AC1F8FC;
+        Mon, 23 May 2022 10:51:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1653302459; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1653303113; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=kgEfxB0bafp72pEF3bsPaBk5QKQf3h1LBgwkt9FtAcc=;
-        b=of8zcOWsFHZDIqcStn6jk0L07eCAkj7Z8H0ki9kjc3DijS92ipNJ6iheI7CXC+eRY55dlp
-        jfBJrpLFJA1MekBms+l+UXQKMg/e11EOmzROj8tK2vhzNechBjY3HNqFQo5MHrK3nvu4fJ
-        M8TdLfti2noZ+rLDNYrcMYnZVeK9xvc=
+        bh=er9JYArnLSJeQuHrUgEU6Pg3HhcWIglyAYqRTH2CiW0=;
+        b=BKTR8X/ocHJX69A557i5YSZLaDBaiQBIdAwGZx2Kh8YY1pfzT8IaH0twOttAKHtIj/dDiK
+        wQL5V90y6BlcT5aSJeq0fy8X1E+120v+oQwONU6zNNRrHNA38fslpFUTpT8CmlP5504vue
+        O6i5N9ceNydatQKdydO1C81gHH4vxAM=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1653302459;
+        s=susede2_ed25519; t=1653303113;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=kgEfxB0bafp72pEF3bsPaBk5QKQf3h1LBgwkt9FtAcc=;
-        b=7veQnmTX/Pu0sB8DVD6EluIlW9tBmC3bod58EvRvMEQBkGqgbBteza1HQVPZN7rZPxSsod
-        HWATcQrmHgWSoxAQ==
+        bh=er9JYArnLSJeQuHrUgEU6Pg3HhcWIglyAYqRTH2CiW0=;
+        b=DAfS6cAwiJcK146v8X+p9SwPWrG9J5hbRbAAHzs6Ign2VMVVRZ1Z1Nx8VYKxQbDrwFf+xd
+        dSOIxDRANxdGGFCA==
 Received: from quack3.suse.cz (unknown [10.100.224.230])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 3A0F52C141;
-        Mon, 23 May 2022 10:40:59 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTPS id 1F92B2C141;
+        Mon, 23 May 2022 10:51:53 +0000 (UTC)
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id DDD8CA0632; Mon, 23 May 2022 12:40:58 +0200 (CEST)
-Date:   Mon, 23 May 2022 12:40:58 +0200
+        id B547EA0632; Mon, 23 May 2022 12:51:52 +0200 (CEST)
+Date:   Mon, 23 May 2022 12:51:52 +0200
 From:   Jan Kara <jack@suse.cz>
 To:     Stefan Roesch <shr@fb.com>
 Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         david@fromorbit.com, jack@suse.cz, hch@infradead.org
-Subject: Re: [RFC PATCH v4 04/17] mm: Add
- balance_dirty_pages_ratelimited_flags() function
-Message-ID: <20220523104058.c727tj7tl2y43snu@quack3.lan>
+Subject: Re: [RFC PATCH v4 12/17] fs: Optimization for concurrent file time
+ updates.
+Message-ID: <20220523105152.36hpyx7jd2fsy2i5@quack3.lan>
 References: <20220520183646.2002023-1-shr@fb.com>
- <20220520183646.2002023-5-shr@fb.com>
+ <20220520183646.2002023-13-shr@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220520183646.2002023-5-shr@fb.com>
+In-Reply-To: <20220520183646.2002023-13-shr@fb.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 20-05-22 11:36:33, Stefan Roesch wrote:
-> This adds the helper function balance_dirty_pages_ratelimited_flags().
-> It adds the parameter flags to balance_dirty_pages_ratelimited().
-> The flags parameter is passed to balance_dirty_pages(). For async
-> buffered writes the flag value will be BDP_ASYNC.
+On Fri 20-05-22 11:36:41, Stefan Roesch wrote:
+> This introduces the S_PENDING_TIME flag. If an async buffered write
+> needs to update the time, it cannot be processed in the fast path of
+> io-uring. When a time update is pending this flag is set for async
+> buffered writes. Other concurrent async buffered writes for the same
+> file do not need to wait while this time update is pending.
 > 
-> The new helper function is also used by balance_dirty_pages_ratelimited().
+> This reduces the number of async buffered writes that need to get punted
+> to the io-workers in io-uring.
 > 
 > Signed-off-by: Stefan Roesch <shr@fb.com>
 
-Yeah, as Christoph says perhaps fold this into patch 3. Otherwise the
-changes look good to me.
+...
+
+> @@ -2184,10 +2184,17 @@ int file_modified_async(struct file *file, int flags)
+>  	ret = file_needs_update_time(inode, file, &now);
+>  	if (ret <= 0)
+>  		return ret;
+> -	if (flags & IOCB_NOWAIT)
+> +	if (flags & IOCB_NOWAIT) {
+> +		if (IS_PENDING_TIME(inode))
+> +			return 0;
+> +
+> +		inode->i_flags |= S_PENDING_TIME;
+>  		return -EAGAIN;
+> +	}
+>  
+> -	return __file_update_time(inode, file, &now, ret);
+> +	ret = __file_update_time(inode, file, &now, ret);
+> +	inode->i_flags &= ~S_PENDING_TIME;
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL(file_modified_async);
+
+You still didn't address my concern that i_flags is modified without the
+protection of i_rwsem here. That can lead to corruption of i_flags value
+and rather nasty (and hard to debug) consequences. You can use
+inode_set_flags() here to make things kinda safe. The whole inode->i_flags
+handling is a mess but not yours to resolve ;)
 
 								Honza
-
-> ---
->  include/linux/writeback.h |  3 +++
->  mm/page-writeback.c       | 38 +++++++++++++++++++++++---------------
->  2 files changed, 26 insertions(+), 15 deletions(-)
-> 
-> diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-> index a9114c5090e9..1bddad86a4f6 100644
-> --- a/include/linux/writeback.h
-> +++ b/include/linux/writeback.h
-> @@ -377,6 +377,9 @@ void wb_update_bandwidth(struct bdi_writeback *wb);
->  #define BDP_ASYNC 0x0001
->  
->  void balance_dirty_pages_ratelimited(struct address_space *mapping);
-> +int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,
-> +		unsigned int flags);
-> +
->  bool wb_over_bg_thresh(struct bdi_writeback *wb);
->  
->  typedef int (*writepage_t)(struct page *page, struct writeback_control *wbc,
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index 7a320fd2ad33..3701e813d05f 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -1851,28 +1851,18 @@ static DEFINE_PER_CPU(int, bdp_ratelimits);
->   */
->  DEFINE_PER_CPU(int, dirty_throttle_leaks) = 0;
->  
-> -/**
-> - * balance_dirty_pages_ratelimited - balance dirty memory state
-> - * @mapping: address_space which was dirtied
-> - *
-> - * Processes which are dirtying memory should call in here once for each page
-> - * which was newly dirtied.  The function will periodically check the system's
-> - * dirty state and will initiate writeback if needed.
-> - *
-> - * Once we're over the dirty memory limit we decrease the ratelimiting
-> - * by a lot, to prevent individual processes from overshooting the limit
-> - * by (ratelimit_pages) each.
-> - */
-> -void balance_dirty_pages_ratelimited(struct address_space *mapping)
-> +int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,
-> +					unsigned int flags)
->  {
->  	struct inode *inode = mapping->host;
->  	struct backing_dev_info *bdi = inode_to_bdi(inode);
->  	struct bdi_writeback *wb = NULL;
->  	int ratelimit;
-> +	int ret = 0;
->  	int *p;
->  
->  	if (!(bdi->capabilities & BDI_CAP_WRITEBACK))
-> -		return;
-> +		return ret;
->  
->  	if (inode_cgwb_enabled(inode))
->  		wb = wb_get_create_current(bdi, GFP_KERNEL);
-> @@ -1912,9 +1902,27 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
->  	preempt_enable();
->  
->  	if (unlikely(current->nr_dirtied >= ratelimit))
-> -		balance_dirty_pages(wb, current->nr_dirtied, 0);
-> +		balance_dirty_pages(wb, current->nr_dirtied, flags);
->  
->  	wb_put(wb);
-> +	return ret;
-> +}
-> +
-> +/**
-> + * balance_dirty_pages_ratelimited - balance dirty memory state
-> + * @mapping: address_space which was dirtied
-> + *
-> + * Processes which are dirtying memory should call in here once for each page
-> + * which was newly dirtied.  The function will periodically check the system's
-> + * dirty state and will initiate writeback if needed.
-> + *
-> + * Once we're over the dirty memory limit we decrease the ratelimiting
-> + * by a lot, to prevent individual processes from overshooting the limit
-> + * by (ratelimit_pages) each.
-> + */
-> +void balance_dirty_pages_ratelimited(struct address_space *mapping)
-> +{
-> +	balance_dirty_pages_ratelimited_flags(mapping, 0);
->  }
->  EXPORT_SYMBOL(balance_dirty_pages_ratelimited);
->  
-> -- 
-> 2.30.2
-> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
