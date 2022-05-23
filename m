@@ -2,169 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02B65C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 May 2022 22:44:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0AA7C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 May 2022 22:56:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229892AbiEWWn6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 May 2022 18:43:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45966 "EHLO
+        id S230138AbiEWW4s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 May 2022 18:56:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229379AbiEWWn5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 18:43:57 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B3286ABF48
-        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 15:43:56 -0700 (PDT)
+        with ESMTP id S230289AbiEWW4r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 18:56:47 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8A2B612D31
+        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 15:56:45 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id AA191536817;
-        Tue, 24 May 2022 08:43:54 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 86EAD10E9BC9;
+        Tue, 24 May 2022 08:56:44 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ntGmG-00FbKf-Dv; Tue, 24 May 2022 08:43:52 +1000
-Date:   Tue, 24 May 2022 08:43:52 +1000
+        id 1ntGyh-00FbcY-9i; Tue, 24 May 2022 08:56:43 +1000
+Date:   Tue, 24 May 2022 08:56:43 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Theodore Tso <tytso@mit.edu>
-Subject: Re: [PATCH V14 00/16] Bail out if transaction can cause extent count
- to overflow
-Message-ID: <20220523224352.GT1098723@dread.disaster.area>
-References: <20210110160720.3922965-1-chandanrlinux@gmail.com>
- <CAOQ4uxi8eNVCjqeSeVFRgrYC00gjdbuPyV4B2WPN0DmqjrfyFg@mail.gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+Subject: Re: [PATCH 5/5] xfs: move xfs_attr_use_log_assist out of libxfs
+Message-ID: <20220523225643.GU1098723@dread.disaster.area>
+References: <165323329374.78886.11371349029777433302.stgit@magnolia>
+ <165323332197.78886.8893427108008735872.stgit@magnolia>
+ <20220523033445.GQ1098723@dread.disaster.area>
+ <YovclVb71ZblumWh@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi8eNVCjqeSeVFRgrYC00gjdbuPyV4B2WPN0DmqjrfyFg@mail.gmail.com>
+In-Reply-To: <YovclVb71ZblumWh@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=628c0e2c
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=628c112c
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=pGLkceISAAAA:8 a=NEAV23lmAAAA:8
-        a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=7EEJWBEWIgfxi64L_SkA:9
-        a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=TI-TZNY8znSc10U2lckA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 23, 2022 at 02:15:44PM +0300, Amir Goldstein wrote:
-> On Sun, Jan 10, 2021 at 6:10 PM Chandan Babu R <chandanrlinux@gmail.com> wrote:
-> >
-> > XFS does not check for possible overflow of per-inode extent counter
-> > fields when adding extents to either data or attr fork.
-> >
-> > For e.g.
-> > 1. Insert 5 million xattrs (each having a value size of 255 bytes) and
-> >    then delete 50% of them in an alternating manner.
-> >
-> > 2. On a 4k block sized XFS filesystem instance, the above causes 98511
-> >    extents to be created in the attr fork of the inode.
-> >
-> >    xfsaild/loop0  2008 [003]  1475.127209: probe:xfs_inode_to_disk: (ffffffffa43fb6b0) if_nextents=98511 i_ino=131
-> >
-> > 3. The incore inode fork extent counter is a signed 32-bit
-> >    quantity. However, the on-disk extent counter is an unsigned 16-bit
-> >    quantity and hence cannot hold 98511 extents.
-> >
-> > 4. The following incorrect value is stored in the xattr extent counter,
-> >    # xfs_db -f -c 'inode 131' -c 'print core.naextents' /dev/loop0
-> >    core.naextents = -32561
-> >
-> > This patchset adds a new helper function
-> > (i.e. xfs_iext_count_may_overflow()) to check for overflow of the
-> > per-inode data and xattr extent counters and invokes it before
-> > starting an fs operation (e.g. creating a new directory entry). With
-> > this patchset applied, XFS detects counter overflows and returns with
-> > an error rather than causing a silent corruption.
-> >
-> > The patchset has been tested by executing xfstests with the following
-> > mkfs.xfs options,
-> > 1. -m crc=0 -b size=1k
-> > 2. -m crc=0 -b size=4k
-> > 3. -m crc=0 -b size=512
-> > 4. -m rmapbt=1,reflink=1 -b size=1k
-> > 5. -m rmapbt=1,reflink=1 -b size=4k
-> >
-> > The patches can also be obtained from
-> > https://github.com/chandanr/linux.git at branch xfs-reserve-extent-count-v14.
-> >
-> > I have two patches that define the newly introduced error injection
-> > tags in xfsprogs
-> > (https://lore.kernel.org/linux-xfs/20201104114900.172147-1-chandanrlinux@gmail.com/).
-> >
-> > I have also written tests
-> > (https://github.com/chandanr/xfstests/commits/extent-overflow-tests)
-> > for verifying the checks introduced in the kernel.
-> >
+On Mon, May 23, 2022 at 12:12:21PM -0700, Darrick J. Wong wrote:
+> On Mon, May 23, 2022 at 01:34:45PM +1000, Dave Chinner wrote:
+> > On Sun, May 22, 2022 at 08:28:42AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > libxfs itself should never be messing with whether or not to enable
+> > > logging for extended attribute updates -- this decision should be made
+> > > on a case-by-case basis by libxfs callers.  Move the code that actually
+> > > enables the log features to xfs_xattr.c, and adjust the callers.
+> > > 
+> > > This removes an awkward coupling point between libxfs and what would be
+> > > libxlog, if the XFS log were actually its own library.  Furthermore, it
+> > > makes bulk attribute updates and inode security initialization a tiny
+> > > bit more efficient, since they now avoid cycling the log feature between
+> > > every single xattr.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_attr.c |   12 +-------
+> > >  fs/xfs/xfs_acl.c         |   10 +++++++
+> > >  fs/xfs/xfs_ioctl.c       |   22 +++++++++++++---
+> > >  fs/xfs/xfs_ioctl.h       |    2 +
+> > >  fs/xfs/xfs_ioctl32.c     |    4 ++-
+> > >  fs/xfs/xfs_iops.c        |   25 ++++++++++++++----
+> > >  fs/xfs/xfs_log.c         |   45 --------------------------------
+> > >  fs/xfs/xfs_log.h         |    1 -
+> > >  fs/xfs/xfs_super.h       |    2 +
+> > >  fs/xfs/xfs_xattr.c       |   65 ++++++++++++++++++++++++++++++++++++++++++++++
+> > >  10 files changed, 120 insertions(+), 68 deletions(-)
+> > 
+> > This seems like the wrong way to approach this. I would have defined
+> > a wrapper function for xfs_attr_set() to do the log state futzing,
+> > not moved it all into callers that don't need (or want) to know
+> > anything about how attrs are logged internally....
 > 
-> Hi Chandan and XFS folks,
-> 
-> As you may have heard, I am working on producing a series of
-> xfs patches for stable v5.10.y.
-> 
-> My patch selection is documented at [1].
-> I am in the process of testing the backport patches against the 5.10.y
-> baseline using Luis' kdevops [2] fstests runner.
-> 
-> The configurations that we are testing are:
-> 1. -m rmbat=0,reflink=1 -b size=4k (default)
-> 2. -m crc=0 -b size=4k
-> 3. -m crc=0 -b size=512
-> 4. -m rmapbt=1,reflink=1 -b size=1k
-> 5. -m rmapbt=1,reflink=1 -b size=4k
-> 
-> This patch set is the only largish series that I selected, because:
-> - It applies cleanly to 5.10.y
-> - I evaluated it as low risk and high value
+> I started doing this, and within a few hours realized that I'd set upon
+> yet *another* refactoring of xfs_attr_set.  I'm not willing to do that
+> so soon after Allison's refactoring, so I'm dropping this patch.
 
-What value does it provide LTS users?
+I don't see why this ends up being a problem - xfs_attr_set() is
+only called by code in fs/xfs/*.c, so adding a wrapper function
+that just does this:
 
-This series adds almost no value to normal users - extent count
-overflows are just something that doesn't happen in production
-systems at this point in time. The largest data extent count I've
-ever seen is still an order of magnitude of extents away from
-overflowing (i.e. 400 million extents seen, 4 billion to overflow),
-and nobody is using the attribute fork sufficiently hard to overflow
-65536 extents (typically a couple of million xattrs per inode).
+int
+xfs_attr_change(
+	struct xfs_da_args      *args)
+{
+	struct xfs_mount	*mp = args->dp->i_mount;
 
-i.e. this series is ground work for upcoming internal filesystem
-functionality that require much larger attribute forks (parent
-pointers and fsverity merkle tree storage) to be supported, and
-allow scope for much larger, massively fragmented VM image files
-(beyond 16TB on 4kB block size fs for worst case
-fragmentation/reflink). 
+	if (xfs_has_larp(mp)) {
+		error = xfs_attr_use_log_assist(mp);
+		if (error)
+			return error;
+	}
 
-As a standalone patchset, this provides almost no real benefit to
-users but adds a whole new set of "hard stop" error paths across
-every operation that does inode data/attr extent allocation. i.e.
-the scope of affected functionality is very wide, the benefit
-to users is pretty much zero.
+	error = xfs_attr_set(args);
+	if (xfs_has_larp(mp))
+		xlog_drop_incompat_feat(mp->m_log);
+	return error;
+}
 
-Hence I'm left wondering what criteria ranks this as a high value
-change...
+into one of the files in fs/xfs will get this out of libxfs, won't
+it?
 
-> - Chandan has written good regression tests
->
-> I intend to post the rest of the individual selected patches
-> for review in small batches after they pass the tests, but w.r.t this
-> patch set -
-> 
-> Does anyone object to including it in the stable kernel
-> after it passes the tests?
-
-I prefer that the process doesn't result in taking random unnecesary
-functionality into stable kernels. The part of the LTS process that
-I've most disagreed with is the "backport random unnecessary
-changes" part of the stable selection criteria. It doesn't matter if
-it's selected by a bot or a human, the problems that causes are the
-same.
-
-Hence on those grounds, I'd say this isn't a stable backport
-candidate at all...
+What am I missing here?
 
 Cheers,
 
