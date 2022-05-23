@@ -2,179 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 925FAC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 May 2022 08:34:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5748AC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 May 2022 08:52:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231944AbiEWIed (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 May 2022 04:34:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37162 "EHLO
+        id S232260AbiEWIwF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 May 2022 04:52:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231960AbiEWIea (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 04:34:30 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56F0F11C2A
-        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 01:34:29 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24N4Fnfp026088;
-        Mon, 23 May 2022 08:34:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=VjNKsTFT5gGrPpaxayInv+3j/Y4S9FJ0V/6a7Q1tptI=;
- b=YjWf52s9GJ7mnTyNaeGAlnHwI0TwsxJ7tn7VelMWwMKA+6ryJqLD+AbEjRqgVAXa7M8D
- kf1qJ/AGVxp2bVexotiK7RzZDqstmG8CPJmSSb0pQAxr/wq9MpbsBnOco+Hv5W2chhUw
- bDR4Fx2FgSm/leFLGqsKymkMWR5NMeH898pGJ3aXR0LXnY7We37IWZx71HW/NV+YceXS
- H2eC7/Abn1C27FKufCrL5sbKjEWnF2BHsRxFHKykGSgHUQcWHmySo2HCSvmhCfmSti4E
- djsgV9Gi/ZHCEUZQnMYP9DMWXqVzpO/6g9XrNxVJChEUCt9pgHbXEmWk+8WcDTAVYPJ8 7w== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g6qya2k56-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 23 May 2022 08:34:27 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24N8UUdk002715;
-        Mon, 23 May 2022 08:34:26 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2100.outbound.protection.outlook.com [104.47.70.100])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3g6ph1c9bb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 23 May 2022 08:34:26 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iNWCy1sNXOQR+IjrBATnbcQbvuw73NOIhhZGzK0H2ejmhVfhiVIJXkeMihl9h0KlKpTc6ZXVywKeo2B60MYJBTLoupt1JocZt6yB+dDC28sm5VkLa2GS6nvBdv1teSnB8JLWbacSVH0N4GBDP7yEDvBW4JKgb1xYguy8SwDZbDPSdcMiz/oSBUL1t9iSHSihKl+6CxRQLGcX3ZMrqhf9S5wL2BeIy6cGsFO6d7lBonnxmCNazqMe7cfvuCTdhIs6v4Sdu7togDc/eEh7tyJrLZoHNrZ3DHziNi+AFf3exc98R1vW6EGVnVkVFLK/ZVX3VHBe4sDL111sj1subGmQkQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VjNKsTFT5gGrPpaxayInv+3j/Y4S9FJ0V/6a7Q1tptI=;
- b=Vy0PWB93YceWCuanWN3IOoo6sDW9SnZlKMaSpZ+nefO9Hv3XMf+MtAni3T7uc8Cprs7suP6oXTEUkgnKdyswRddEeaAcyNn6dk+K4pfvGQ3rtna9Cj9Ml2xSQHH/inf8cs1Nch4/DBr6e6sXMN1YwbeBZgj+sTaBV9RmJ9U178q5TdwUk6d2AqGve5afGhEMnLrzecrscAl7/0hwZFB+WyAn0CqKhCt1PYHX1j7ETFBtWVEEwjKEslm46HMbe8fpJDZKaIyNSdxaXMw8APwqRnX7uqEXSndVvjBzj3R50i6L4fvd0O84sb56rvJ4bSasaIZZwamAiHTd4/JenlBduw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VjNKsTFT5gGrPpaxayInv+3j/Y4S9FJ0V/6a7Q1tptI=;
- b=lUUXwMBhRYFnd33MUuvZ1V54duJHmOv4QcaUGjlMEvH55ViQEyeIdgj4tlkevcZ7aFOW4VzME+miGpdodPMqbeBwosRmflVFHICtcWVC8p7SzOQzjWJIzvB9BOCos8DL798U1miD6jD8edCJB2qugVOsZeSKh164lZyupGszezU=
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by CH2PR10MB4166.namprd10.prod.outlook.com (2603:10b6:610:78::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.17; Mon, 23 May
- 2022 08:34:24 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::5476:49e9:e3eb:e62]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::5476:49e9:e3eb:e62%5]) with mapi id 15.20.5273.022; Mon, 23 May 2022
- 08:34:24 +0000
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, sandeen@sandeen.net
-Subject: [PATCH V1.1] xfs_repair: Search for conflicts in inode_tree_ptrs[] when processing uncertain inodes
-Date:   Mon, 23 May 2022 14:04:10 +0530
-Message-Id: <20220523083410.1159518-1-chandan.babu@oracle.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220523043441.394700-1-chandan.babu@oracle.com>
-References: <20220523043441.394700-1-chandan.babu@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SGXP274CA0023.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:b8::35)
- To SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+        with ESMTP id S232281AbiEWIwE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 04:52:04 -0400
+Received: from out0.migadu.com (out0.migadu.com [IPv6:2001:41d0:2:267::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3BAF20F4D;
+        Mon, 23 May 2022 01:52:02 -0700 (PDT)
+To:     darrick.wong@oracle.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1653295920;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=p6JOuyT3DSojfUixE8gaeIKjisvo2m+Tz2TF4gr0GZo=;
+        b=M9vZ4/4mZO4gAUxBz5VrBszq9zvFM+CnIkIkEVmhn9/Yl5JBhNm1vDsAR2xSjnNs+JVqm4
+        35ugDJtwDA7hM71OUSEveydyQ6UXgeEYzr0VdaMDuy2OypNeVlY+baRfyBVhDYCN3CHdOS
+        59f1WG9EIW70VTUVsqR5FxKM54h8O8U=
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Jackie Liu <liu.yun@linux.dev>
+Subject: [BUG report] security_inode_alloc return -ENOMEM let xfs shutdown
+Message-ID: <5a3a9cdc-33c3-4196-b8f7-bfec485eae5b@linux.dev>
+Date:   Mon, 23 May 2022 16:51:50 +0800
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 72f4ee45-4b35-468f-028d-08da3c970aaa
-X-MS-TrafficTypeDiagnostic: CH2PR10MB4166:EE_
-X-Microsoft-Antispam-PRVS: <CH2PR10MB41667B2DE87961E8E13819BCF6D49@CH2PR10MB4166.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: vVn5Mb2v6AG19MfLPGBKcNkzIZhWm+DeLXOGsFV5ffOBTYbN5B3/TWepWwzuMdYcF73oef3HmXogkClTyFAdedgl7WSnpPf0IM/UgOSaSt0WtzzWt/dBoG0eMtBwPdv7NhjgnYY17qH8non6zCe8M2CerXe8g4Ry55zrKJxHzd9+7JHzaUst1voyI1Tk0o3hgA0Ww2a0oWIDgV2nZGf8RNaAi3xCdVHDpD1JPbQpDk1n8I+xks9vXuFHD9KpJlNohl33AKUv7TVnZkSsAsi28hPybzF5761FlY118Swj/lUiaJtrQWZW4XaZM/h86jhp6Ed15QZLwUxUhc1r5RZDTy0WptnEn8ErPcqUO+ifQMimJ0cCI6KoRq8YBNKTyJHMA2UBGwsGugxsqBtATRRtVJ9mmE2M+yXjseriSYzoEpEK0NYQGck65CVBcMNF6EjKA3vYlaI+6TuuWRr7bIueSZNAvvcVAiPkEYwGxMJGk6pq6AvfefRbhiqHnzrcpaHt7TlpbLSqevkkbLgHOfHqP/WDwJMSlzE3ahaC0nD4gXbQuLCb2K/iV38m9XRGRHnNhVDaf1aqFXxQR8XZXtRc+5921FdFOg9JdR3nvhNawsz9+ogFAbwEoQl4pRZdVU+vvaws/tsn70o33F7n0qQT4h+Q+0J32NTXqz1oYemSSodDZOX4C4lTZ79XnlkyH188vXOm+5o0nEnDb9foYw5nWQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(26005)(83380400001)(38350700002)(38100700002)(1076003)(186003)(2616005)(86362001)(6512007)(36756003)(2906002)(316002)(6916009)(8936002)(66476007)(66556008)(66946007)(5660300002)(8676002)(4326008)(508600001)(6506007)(52116002)(6666004)(6486002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ZChzOPKxoyoJQVOon4A9ClLZOFg9TLtgUbtOTIpOlpKtzXxSYuIjyUswh2rB?=
- =?us-ascii?Q?0gedW/OFmMJB3gUQ0nf7IgkgL6qEG2PZzaJCvwgnpaIoNlP7GyhAJ/B8KJbs?=
- =?us-ascii?Q?yqigpElI95R99v4ozosMMghs+ar5GVrZ+95JIerrlKvvZST5T6DT1qBtqoL/?=
- =?us-ascii?Q?JBC7pef4xOKIl3GzWT2TEGeO4UO2gN2PIWy2UAUIrCRGy88f397TI5HgWOSW?=
- =?us-ascii?Q?YvRj0KoXwn6tnpUBMXC8rNV7rIQDF0V6iqMFM/sCeV+wn8fkLVlRhPvOdGTN?=
- =?us-ascii?Q?jXAwC8ckbEsY4zWDyBlzTApvUY5j8tXyba5c7tioRlskvXgdMo1SRREdDEWZ?=
- =?us-ascii?Q?d+ecj+eB2dmDPwnyzWZfo+LjfjsYz6Fd5jEdNufWHRxzc2F3kzZuFLwUC4N+?=
- =?us-ascii?Q?GVLEE5JqY/FQW84PEra+6NidVIkudU3XyxF/5ci34MH8zY4I7GOq9w+55JYx?=
- =?us-ascii?Q?oItjhNY3al/H8xsfoUHGujqA3slK0f1HjpQtDCkGQVSDSb+zQGeCFGiZM0Mf?=
- =?us-ascii?Q?hRGSE06y0biOfENwzj76hxINNtAJPlfFnxOk3ze59Md6+kgrhqRRCjiSCWpQ?=
- =?us-ascii?Q?ZV7PgWJCoeat2FJokRrTKahq0jy95EuSwBzTy25mG2OJFSn+vnLAW8axDKQa?=
- =?us-ascii?Q?5IfLhkf0y3gb4w7z7extrG6QNYUVImEdjNUwoTTC/c1Ol6oYxa/9yxT9DJxD?=
- =?us-ascii?Q?hw1YmpdYQg9/kpc2b7W645F5nrXRD4ZEgVWqt40uG+r2KTi/7amoRrqOc9UC?=
- =?us-ascii?Q?4DtrJNMnosgEohKq8Crp3MlHrfUjD89y9BXHWfiM3gJgljprlkfJhlBylHIJ?=
- =?us-ascii?Q?WQr0q+9E6LgOi9QQnk1BBnIDfl0AtDSzNHj8fYbwpTlJuws04qoSRo23aZEZ?=
- =?us-ascii?Q?yo29fQk/wGAJmL5y2T2EGIpk6df4rzzC/KMuWstk1u7Wc/JJgv18zvR7oXRm?=
- =?us-ascii?Q?Pq7OADjrvxTG1PeigP24bXuoKqF+zPcnrirPUgAaf+Z92UjGncedrAPIWHmi?=
- =?us-ascii?Q?DDgsyrK/+uRwzGatiMW3Q5hliUDMjp3EXQRSSjRy+4IoeahTo0kjtd3sA8Pb?=
- =?us-ascii?Q?7XumMR/PYNujiHTP6waB7Ztz2UwKrhZZXCFU3L9bJZLGIbVAulwNDJKgeouG?=
- =?us-ascii?Q?VnSAVTQ05aVwCFdiB2m9ZbhSKpxgwDN8350pSIZIGo3g3M/D+iwXQZYksCRE?=
- =?us-ascii?Q?k36phAMv1gdnsQl8tekrmv2hFr2Wpv620x4jeGqHsdoEYHNlKLFefOP+zv6d?=
- =?us-ascii?Q?NjdslmtbilRaTa+7zlNnRe2++1fh53DSEMj08hSCy/dQzFO7FnFxdlr10u8C?=
- =?us-ascii?Q?/UfLyjudrZxrQXbDJ6vCDRPl2t4h/DOoeLMe5/raxFACZyuNXChxihxIU/Ul?=
- =?us-ascii?Q?kehMYtCSAtC5N9fwSKeZivyMwGQc7WCcJMAqHywvIHlh1L+XhlrZ+Epc+uL+?=
- =?us-ascii?Q?nmM1TGglNkOfkvv9NNG0mro1ithPhKZPP+/wRHfg8g27rrtyw61WH4qF+JmB?=
- =?us-ascii?Q?iIHBJXiCNQlgDB1uWcxgq+pHmsXldEyRA9qyQ3ozgpa9t8jWdIII8Jroat/X?=
- =?us-ascii?Q?+dsfka68glYCsQX2WfGf7O8xbw9iD9UmrSnkXis0mgCrNdA6X9IbXtkzENuK?=
- =?us-ascii?Q?iPgFvKraBT07DiUbv7qdrY9tuGp3muh3QZbk6BSCzT4D4Z691BDRr5eymbVX?=
- =?us-ascii?Q?wCCCqxb7vo5i2BoqzhynUViLOZgd6IkJS1JaEgsWu0Vkry49NKZmCkyATbHg?=
- =?us-ascii?Q?rqLeJJaQMg=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 72f4ee45-4b35-468f-028d-08da3c970aaa
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 May 2022 08:34:24.5956
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CmUYEu/f4CeGtybSZF2yaMlYAFYqUaPimz9bkBCo6f61UgzUoOzZUNWrnjSFouZ/NnMVEZLVAHnCYsC7wZge7Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4166
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.874
- definitions=2022-05-23_03:2022-05-20,2022-05-23 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
- phishscore=0 mlxlogscore=999 adultscore=0 malwarescore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2205230045
-X-Proofpoint-GUID: YxUwl5SU471wv-7YEq0kYxcETJpjlyFD
-X-Proofpoint-ORIG-GUID: YxUwl5SU471wv-7YEq0kYxcETJpjlyFD
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When processing an uncertain inode chunk record, if we lose 2 blocks worth of
-inodes or 25% of the chunk, xfs_repair decides to ignore the chunk. Otherwise,
-xfs_repair adds a new chunk record to inode_tree_ptrs[agno], marking each
-inode as either free or used. However, before adding the new chunk record,
-xfs_repair has to check for the existance of a conflicting record.
+Hello Maintainer and developer.
 
-The existing code incorrectly checks for the conflicting record in
-inode_uncertain_tree_ptrs[agno]. This check will succeed since the inode chunk
-record being processed was originally obtained from
-inode_uncertain_tree_ptrs[agno].
+    Syzkaller report an filesystem shutdown for me, It's very easy to
+trigger and also exists on the latest kernel version 5.18-rc7.
 
-This commit fixes the bug by changing xfs_repair to search
-inode_tree_ptrs[agno] for conflicts.
+dmesg shows:
 
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
----
-Changelog:
-V1 -> V1.1:
-   1. Fix commit message.
-   
- repair/dino_chunks.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+[  285.725893] FAULT_INJECTION: forcing a failure.
+                name failslab, interval 1, probability 0, space 0, times 0
+[  285.729625] CPU: 7 PID: 18034 Comm: syz-executor Not tainted 
+4.19.90-43+ #7
+[  285.731420] Source Version: b62cabdd86181d386998660ebf34ca653addd6c9
+[  285.733051] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 
+02/06/2015
+[  285.734796] Call trace:
+[  285.735614]  dump_backtrace+0x0/0x3e0
+[  285.736609]  show_stack+0x2c/0x38
+[  285.737525]  dump_stack+0x164/0x1fc
+[  285.738489]  should_fail+0x5c0/0x688
+[  285.739555]  __should_failslab+0x118/0x180
+[  285.740725]  should_failslab+0x2c/0x78
+[  285.741808]  kmem_cache_alloc_trace+0x270/0x410
+[  285.743120]  security_inode_alloc+0x100/0x1a8
+[  285.744356]  inode_init_always+0x48c/0xa28
+[  285.745524]  xfs_iget_cache_hit+0x9c0/0x2f28
+[  285.746739]  xfs_iget+0x33c/0x9e0
+[  285.747708]  xfs_ialloc+0x218/0x11c0
+[  285.748752]  xfs_dir_ialloc+0xe8/0x480
+[  285.749832]  xfs_create+0x5bc/0x1220
+[  285.750871]  xfs_generic_create+0x42c/0x568
+[  285.752053]  xfs_vn_mknod+0x48/0x58
+[  285.753067]  xfs_vn_create+0x40/0x50
+[  285.754106]  lookup_open+0x960/0x1580
+[  285.755176]  do_last+0xd44/0x2180
+[  285.756149]  path_openat+0x1a0/0x6d0
+[  285.757187]  do_filp_open+0x14c/0x208
+[  285.758245]  do_sys_open+0x340/0x470
+[  285.759289]  __arm64_sys_openat+0x98/0xd8
+[  285.760438]  el0_svc_common+0x230/0x3f0
+[  285.761541]  el0_svc_handler+0x144/0x1a8
+[  285.762674]  el0_svc+0x8/0x1b0
+[  285.763737] security_inode_alloc:796
+[  285.764733] inode_init_always:202
+[  285.765669] xfs_create:1213
+[  285.766485] XFS (dm-0): Internal error xfs_trans_cancel at line 1046 
+of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x700/0x1220
+[  285.769503] CPU: 7 PID: 18034 Comm: syz-executor Not tainted 
+4.19.90-43+ #7
+[  285.771275] Source Version: b62cabdd86181d386998660ebf34ca653addd6c9
+[  285.772892] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 
+02/06/2015
+[  285.774625] Call trace:
+[  285.775335]  dump_backtrace+0x0/0x3e0
+[  285.776324]  show_stack+0x2c/0x38
+[  285.777236]  dump_stack+0x164/0x1fc
+[  285.778188]  xfs_error_report+0xdc/0xe0
+[  285.779292]  xfs_trans_cancel+0x490/0x878
+[  285.780439]  xfs_create+0x700/0x1220
+[  285.781477]  xfs_generic_create+0x42c/0x568
+[  285.782673]  xfs_vn_mknod+0x48/0x58
+[  285.783687]  xfs_vn_create+0x40/0x50
+[  285.784724]  lookup_open+0x960/0x1580
+[  285.785782]  do_last+0xd44/0x2180
+[  285.786760]  path_openat+0x1a0/0x6d0
+[  285.787791]  do_filp_open+0x14c/0x208
+[  285.788844]  do_sys_open+0x340/0x470
+[  285.789880]  __arm64_sys_openat+0x98/0xd8
+[  285.791039]  el0_svc_common+0x230/0x3f0
+[  285.792139]  el0_svc_handler+0x144/0x1a8
+[  285.793260]  el0_svc+0x8/0x1b0
+[  285.794283] XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 
+1047 of file fs/xfs/xfs_trans.c.  Return address = 00000000a4a366b9
+[  285.816187] XFS (dm-0): Corruption of in-memory data detected. 
+Shutting down filesystem
+[  285.818476] XFS (dm-0): Please umount the filesystem and rectify the 
+problem(s)
 
-diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-index 11b0eb5f..80c52a43 100644
---- a/repair/dino_chunks.c
-+++ b/repair/dino_chunks.c
-@@ -229,8 +229,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
- 		/*
- 		 * ok, put the record into the tree, if no conflict.
- 		 */
--		if (find_uncertain_inode_rec(agno,
--				XFS_AGB_TO_AGINO(mp, start_agbno)))
-+		if (find_inode_rec(mp, agno, XFS_AGB_TO_AGINO(mp, start_agbno)))
- 			return(0);
- 
- 		start_agino = XFS_AGB_TO_AGINO(mp, start_agbno);
--- 
-2.35.1
+I found that it is not allowed to fail when alloc xfs_inode in
+xfs_inode_alloc , but allow inode_init_always to report -ENOMEM?
 
+inode_init_always is not failed by security_inode_alloc.
+
+I have test the patch:
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index ceee27b70384..609ad96e29e9 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -43,12 +43,14 @@ xfs_inode_alloc(
+          * code up to do this anyway.
+          */
+         ip = kmem_zone_alloc(xfs_inode_zone, KM_SLEEP);
+-       if (!ip)
+-               return NULL;
+-       if (inode_init_always(mp->m_super, VFS_I(ip))) {
+-               kmem_zone_free(xfs_inode_zone, ip);
++       if (!ip) {
++               pr_err("%s:%d\n", __func__, __LINE__);
+                 return NULL;
+         }
++       while (inode_init_always(mp->m_super, VFS_I(ip)) != 0) {
++               pr_err("%s:%d\n", __func__, __LINE__);
++               pr_err("111\n");
++       }
+
+         /* VFS doesn't initialise i_mode! */
+         VFS_I(ip)->i_mode = 0;
+@@ -280,7 +282,7 @@ xfs_reinit_inode(
+         struct xfs_mount        *mp,
+         struct inode            *inode)
+  {
+-       int             error;
++       int             error = 0;
+         uint32_t        nlink = inode->i_nlink;
+         uint32_t        generation = inode->i_generation;
+         uint64_t        version = inode_peek_iversion(inode);
+@@ -289,7 +291,7 @@ xfs_reinit_inode(
+         kuid_t          uid = inode->i_uid;
+         kgid_t          gid = inode->i_gid;
+
+-       error = inode_init_always(mp->m_super, inode);
++       while (inode_init_always(mp->m_super, inode) != 0);
+
+         set_nlink(inode, nlink);
+         inode->i_generation = generation;
+
+syzkaller works fine.
+
+Does anyone help me, Any suggestion is welcome.
+
+--
+BR, Jackie Liu
