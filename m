@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30B0BC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 05:36:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13887C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 05:36:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233079AbiEXFgr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 May 2022 01:36:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45922 "EHLO
+        id S234388AbiEXFgx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 01:36:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234388AbiEXFgq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 01:36:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ABA065D05
-        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 22:36:44 -0700 (PDT)
+        with ESMTP id S234516AbiEXFgw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 01:36:52 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 574D665D0A
+        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 22:36:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B97F061383
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 05:36:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FE79C385AA;
-        Tue, 24 May 2022 05:36:43 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0DB56B8175F
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 05:36:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A97D7C385AA;
+        Tue, 24 May 2022 05:36:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653370603;
-        bh=qqnkrng2SIT8O3jO2q59Qz0HZUJ3AExUl2g3peC9jy4=;
+        s=k20201202; t=1653370608;
+        bh=DwBg9n4Wbc/HFjBkrdtGTQAlyMYfjqtS7MVeTIll+2c=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Um1CdjuEKBSg8YRb2Bvf4xRW2J5+cDYrQYWGXX0dVCSLGoFJnwVu+l7I89E0MbGLC
-         OPYsYEIfRxkuF2re4OasgulZDZUvhzrtltKXnmxd9YpRtS4uwE/XZfBjZjBhJZ6DSS
-         5tMNCKlwCthwANqThB9PM0DgwP6x1AtMNQQeYumiMFqRC3xHgJcBnBin2iiSCZwJAw
-         9Y1EV6FBopf//7Mvr0/Qw080Tt0R6VUO1K8Vr/giCu4Sh6XG7KOUMJ9vvBbpahRVYi
-         tb0NARGn990aI5CVqswIpRG7bS50E3sJgNR1r2g5NvkNGJdr4s3iEMFJo21GaZVoTz
-         NneDEIpNPacZA==
-Subject: [PATCH 4/5] xfs: move xfs_attr_use_log_assist out of xfs_log.c
+        b=u+R7wb3lHZj+Ex0rOAolmw9dhPXssycnlDVU2A1Tgny+smwOQ91ip5uC+fQp31GZB
+         xfBwdDEsTE+D5tEMFRopb5luV7rf+3kP2z9bXcg2aUPd/a04+6HqdRWkL0rmK5LVd+
+         wYB9A7mL4OH4t7UeyORdUgD5012mLOemMEnL0ix1h3ctAS+MH17YHajX2G4MKsKyBO
+         9RPaCz53SINK9d0GqHhppLSnkoOZ+S4smF/43gYpvp3MjFTfMrgyoEz6ZS3kU8M62R
+         BG0q1d+5YI5xtuzYLXR39o5r3agkGBivYtXMdNQmoTtAsoydsHOik/ukbAwsSt8oKd
+         oi1Zzg6P+3TZQ==
+Subject: [PATCH 5/5] xfs: move xfs_attr_use_log_assist usage out of libxfs
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
         allison.henderson@oracle.com
-Date:   Mon, 23 May 2022 22:36:42 -0700
-Message-ID: <165337060268.994444.12050011484802879913.stgit@magnolia>
+Date:   Mon, 23 May 2022 22:36:48 -0700
+Message-ID: <165337060828.994444.7975135646390262956.stgit@magnolia>
 In-Reply-To: <165337058023.994444.12794741176651030531.stgit@magnolia>
 References: <165337058023.994444.12794741176651030531.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -52,208 +52,204 @@ From: Darrick J. Wong <djwong@kernel.org>
 
 The LARP patchset added an awkward coupling point between libxfs and
 what would be libxlog, if the XFS log were actually its own library.
-Move the code that enables logged xattr updates out of "lib"xlog and into
-xfs_xattr.c so that it no longer has to know about xlog_* functions.
-
-While we're at it, give xfs_xattr.c its own header file.
+Move the code that sets up logged xattr updates out of libxfs and into
+xfs_xattr.c so that libxfs no longer has to know about xlog_* functions.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c |    6 +++---
- fs/xfs/xfs_log.c         |   41 --------------------------------------
- fs/xfs/xfs_super.c       |    1 +
- fs/xfs/xfs_super.h       |    1 -
- fs/xfs/xfs_xattr.c       |   49 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_xattr.h       |   14 +++++++++++++
- 6 files changed, 67 insertions(+), 45 deletions(-)
- create mode 100644 fs/xfs/xfs_xattr.h
+ fs/xfs/libxfs/xfs_attr.c |   12 +-----------
+ fs/xfs/xfs_acl.c         |    3 ++-
+ fs/xfs/xfs_ioctl.c       |    3 ++-
+ fs/xfs/xfs_iops.c        |    3 ++-
+ fs/xfs/xfs_xattr.c       |   34 +++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_xattr.h       |    3 +--
+ 6 files changed, 39 insertions(+), 19 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 9f14aca29ec4..24fa213715c1 100644
+index 24fa213715c1..836ab1b8ed7b 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -25,7 +25,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- #include "xfs_attr_item.h"
--#include "xfs_log.h"
-+#include "xfs_xattr.h"
+@@ -982,7 +982,6 @@ xfs_attr_set(
+ 	int			error, local;
+ 	int			rmt_blks = 0;
+ 	unsigned int		total;
+-	bool			use_logging = xfs_has_larp(mp);
  
- struct kmem_cache		*xfs_attr_intent_cache;
- 
-@@ -1028,7 +1028,7 @@ xfs_attr_set(
+ 	if (xfs_is_shutdown(dp->i_mount))
+ 		return -EIO;
+@@ -1027,12 +1026,6 @@ xfs_attr_set(
+ 		rmt_blks = xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX);
  	}
  
- 	if (use_logging) {
--		error = xfs_attr_use_log_assist(mp);
-+		error = xfs_attr_grab_log_assist(mp);
- 		if (error)
- 			return error;
- 	}
-@@ -1102,7 +1102,7 @@ xfs_attr_set(
+-	if (use_logging) {
+-		error = xfs_attr_grab_log_assist(mp);
+-		if (error)
+-			return error;
+-	}
+-
+ 	/*
+ 	 * Root fork attributes can use reserved data blocks for this
+ 	 * operation if necessary
+@@ -1040,7 +1033,7 @@ xfs_attr_set(
+ 	xfs_init_attr_trans(args, &tres, &total);
+ 	error = xfs_trans_alloc_inode(dp, &tres, total, 0, rsvd, &args->trans);
+ 	if (error)
+-		goto drop_incompat;
++		return error;
+ 
+ 	if (args->value || xfs_inode_hasattr(dp)) {
+ 		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
+@@ -1100,9 +1093,6 @@ xfs_attr_set(
+ 	error = xfs_trans_commit(args->trans);
+ out_unlock:
  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- drop_incompat:
- 	if (use_logging)
--		xlog_drop_incompat_feat(mp->m_log);
-+		xfs_attr_rele_log_assist(mp);
+-drop_incompat:
+-	if (use_logging)
+-		xfs_attr_rele_log_assist(mp);
  	return error;
  
  out_trans_cancel:
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a75f4ffc75f9..1e972f884a81 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3877,44 +3877,3 @@ xlog_drop_incompat_feat(
- {
- 	up_read(&log->l_incompat_users);
- }
--
--/*
-- * Get permission to use log-assisted atomic exchange of file extents.
-- *
-- * Callers must not be running any transactions or hold any inode locks, and
-- * they must release the permission by calling xlog_drop_incompat_feat
-- * when they're done.
-- */
--int
--xfs_attr_use_log_assist(
--	struct xfs_mount	*mp)
--{
--	int			error = 0;
--
--	/*
--	 * Protect ourselves from an idle log clearing the logged xattrs log
--	 * incompat feature bit.
--	 */
--	xlog_use_incompat_feat(mp->m_log);
--
--	/*
--	 * If log-assisted xattrs are already enabled, the caller can use the
--	 * log assisted swap functions with the log-incompat reference we got.
--	 */
--	if (xfs_sb_version_haslogxattrs(&mp->m_sb))
--		return 0;
--
--	/* Enable log-assisted xattrs. */
--	error = xfs_add_incompat_log_feature(mp,
--			XFS_SB_FEAT_INCOMPAT_LOG_XATTRS);
--	if (error)
--		goto drop_incompat;
--
--	xfs_warn_mount(mp, XFS_OPSTATE_WARNED_LARP,
-- "EXPERIMENTAL logged extended attributes feature in use. Use at your own risk!");
--
--	return 0;
--drop_incompat:
--	xlog_drop_incompat_feat(mp->m_log);
--	return error;
--}
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 51ce127a0cc6..a6e7b4176faf 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -39,6 +39,7 @@
- #include "xfs_ag.h"
- #include "xfs_defer.h"
- #include "xfs_attr_item.h"
-+#include "xfs_xattr.h"
- 
- #include <linux/magic.h>
- #include <linux/fs_context.h>
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index 167d23f92ffe..3cd5a51bace1 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -91,7 +91,6 @@ extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
- 					   xfs_agnumber_t agcount);
- 
- extern const struct export_operations xfs_export_operations;
--extern const struct xattr_handler *xfs_xattr_handlers[];
- extern const struct quotactl_ops xfs_quotactl_operations;
- 
- extern void xfs_reinit_percpu_counters(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 7a044afd4c46..fc6acf7021a7 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -15,9 +15,58 @@
- #include "xfs_da_btree.h"
- #include "xfs_attr.h"
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 3df9c1782ead..b744c62052b6 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -17,6 +17,7 @@
+ #include "xfs_error.h"
  #include "xfs_acl.h"
-+#include "xfs_log.h"
+ #include "xfs_trans.h"
 +#include "xfs_xattr.h"
  
  #include <linux/posix_acl_xattr.h>
  
+@@ -202,7 +203,7 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ 		xfs_acl_to_disk(args.value, acl);
+ 	}
+ 
+-	error = xfs_attr_set(&args);
++	error = xfs_attr_change(&args);
+ 	kmem_free(args.value);
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 0e5cb7936206..5a364a7d58fd 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -37,6 +37,7 @@
+ #include "xfs_health.h"
+ #include "xfs_reflink.h"
+ #include "xfs_ioctl.h"
++#include "xfs_xattr.h"
+ 
+ #include <linux/mount.h>
+ #include <linux/namei.h>
+@@ -524,7 +525,7 @@ xfs_attrmulti_attr_set(
+ 		args.valuelen = len;
+ 	}
+ 
+-	error = xfs_attr_set(&args);
++	error = xfs_attr_change(&args);
+ 	if (!error && (flags & XFS_IOC_ATTR_ROOT))
+ 		xfs_forget_acl(inode, name);
+ 	kfree(args.value);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index e912b7fee714..29f5b8b8aca6 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -24,6 +24,7 @@
+ #include "xfs_iomap.h"
+ #include "xfs_error.h"
+ #include "xfs_ioctl.h"
++#include "xfs_xattr.h"
+ 
+ #include <linux/posix_acl.h>
+ #include <linux/security.h>
+@@ -61,7 +62,7 @@ xfs_initxattrs(
+ 			.value		= xattr->value,
+ 			.valuelen	= xattr->value_len,
+ 		};
+-		error = xfs_attr_set(&args);
++		error = xfs_attr_change(&args);
+ 		if (error < 0)
+ 			break;
+ 	}
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index fc6acf7021a7..35e13e125ec6 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -27,7 +27,7 @@
+  * they must release the permission by calling xlog_drop_incompat_feat
+  * when they're done.
+  */
+-int
++static inline int
+ xfs_attr_grab_log_assist(
+ 	struct xfs_mount	*mp)
+ {
+@@ -61,13 +61,41 @@ xfs_attr_grab_log_assist(
+ 	return error;
+ }
+ 
+-void
++static inline void
+ xfs_attr_rele_log_assist(
+ 	struct xfs_mount	*mp)
+ {
+ 	xlog_drop_incompat_feat(mp->m_log);
+ }
+ 
 +/*
-+ * Get permission to use log-assisted atomic exchange of file extents.
-+ *
-+ * Callers must not be running any transactions or hold any inode locks, and
-+ * they must release the permission by calling xlog_drop_incompat_feat
-+ * when they're done.
++ * Set or remove an xattr, having grabbed the appropriate logging resources
++ * prior to calling libxfs.
 + */
 +int
-+xfs_attr_grab_log_assist(
-+	struct xfs_mount	*mp)
++xfs_attr_change(
++	struct xfs_da_args	*args)
 +{
-+	int			error = 0;
++	struct xfs_mount	*mp = args->dp->i_mount;
++	bool			use_logging = false;
++	int			error;
 +
-+	/*
-+	 * Protect ourselves from an idle log clearing the logged xattrs log
-+	 * incompat feature bit.
-+	 */
-+	xlog_use_incompat_feat(mp->m_log);
++	if (xfs_has_larp(mp)) {
++		error = xfs_attr_grab_log_assist(mp);
++		if (error)
++			return error;
 +
-+	/*
-+	 * If log-assisted xattrs are already enabled, the caller can use the
-+	 * log assisted swap functions with the log-incompat reference we got.
-+	 */
-+	if (xfs_sb_version_haslogxattrs(&mp->m_sb))
-+		return 0;
++		use_logging = true;
++	}
 +
-+	/* Enable log-assisted xattrs. */
-+	error = xfs_add_incompat_log_feature(mp,
-+			XFS_SB_FEAT_INCOMPAT_LOG_XATTRS);
-+	if (error)
-+		goto drop_incompat;
++	error = xfs_attr_set(args);
 +
-+	xfs_warn_mount(mp, XFS_OPSTATE_WARNED_LARP,
-+ "EXPERIMENTAL logged extended attributes feature in use. Use at your own risk!");
-+
-+	return 0;
-+drop_incompat:
-+	xlog_drop_incompat_feat(mp->m_log);
++	if (use_logging)
++		xfs_attr_rele_log_assist(mp);
 +	return error;
 +}
 +
-+void
-+xfs_attr_rele_log_assist(
-+	struct xfs_mount	*mp)
-+{
-+	xlog_drop_incompat_feat(mp->m_log);
-+}
- 
++
  static int
  xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+ 		struct inode *inode, const char *name, void *value, size_t size)
+@@ -105,7 +133,7 @@ xfs_xattr_set(const struct xattr_handler *handler,
+ 	};
+ 	int			error;
+ 
+-	error = xfs_attr_set(&args);
++	error = xfs_attr_change(&args);
+ 	if (!error && (handler->flags & XFS_ATTR_ROOT))
+ 		xfs_forget_acl(inode, name);
+ 	return error;
 diff --git a/fs/xfs/xfs_xattr.h b/fs/xfs/xfs_xattr.h
-new file mode 100644
-index 000000000000..d34ef1835541
---- /dev/null
+index d34ef1835541..2b09133b1b9b 100644
+--- a/fs/xfs/xfs_xattr.h
 +++ b/fs/xfs/xfs_xattr.h
-@@ -0,0 +1,14 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ */
-+#ifndef __XFS_XATTR_H__
-+#define __XFS_XATTR_H__
-+
-+int xfs_attr_grab_log_assist(struct xfs_mount *mp);
-+void xfs_attr_rele_log_assist(struct xfs_mount *mp);
-+
-+extern const struct xattr_handler *xfs_xattr_handlers[];
-+
-+#endif /* __XFS_XATTR_H__ */
+@@ -6,8 +6,7 @@
+ #ifndef __XFS_XATTR_H__
+ #define __XFS_XATTR_H__
+ 
+-int xfs_attr_grab_log_assist(struct xfs_mount *mp);
+-void xfs_attr_rele_log_assist(struct xfs_mount *mp);
++int xfs_attr_change(struct xfs_da_args *args);
+ 
+ extern const struct xattr_handler *xfs_xattr_handlers[];
+ 
 
