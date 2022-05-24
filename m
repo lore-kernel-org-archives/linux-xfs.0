@@ -2,42 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55998C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 05:36:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0959C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 05:36:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234511AbiEXFg1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 May 2022 01:36:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44708 "EHLO
+        id S234277AbiEXFg3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 01:36:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234277AbiEXFgZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 01:36:25 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7547010FF5
-        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 22:36:23 -0700 (PDT)
+        with ESMTP id S234388AbiEXFg1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 01:36:27 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46B1F186EC
+        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 22:36:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0C769B81763
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 05:36:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADEE9C34116;
-        Tue, 24 May 2022 05:36:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D764661484
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 05:36:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FB7FC385AA;
+        Tue, 24 May 2022 05:36:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653370580;
-        bh=+IO4QV2sfhUTmnMorZAdCkzwu8ZRtRhvbot0kRJYm0E=;
-        h=Subject:From:To:Cc:Date:From;
-        b=rcRVepdGpxrzK6FcuQsK9LF8ocwwjhQ+nMq/yuCc6x9rWHwLkTpnrqGJHA0d4XvKe
-         ssFw7AI2ErUR0kI1+8pNfLq5Dm2eq8tvhmoFnPHhu1yY6oMz8cPnGQv08RC2/XEEWM
-         f4+J4Q/IbZhLPJD47aG4Mi1eOf8mCP34gc4noUeqa1I5NQ8xCch+UyOFzV2ISLTKxR
-         aiYooqsFFZ9Q+CS5k3LD8EuzVgcPbTLElVRrsQrVq5mnH4gwLYdmn0FF2PskvuDTRU
-         otClPaDWmPF5uZ4pDMB6hYRfsJ76rQJ6i2oBtwcTtnch5Pw03vJ1fVv+SrGhMgRHZC
-         7kpmMOB6/lNsA==
-Subject: [PATCHSET v2 0/5] xfs: last pile of LARP cleanups for 5.19
+        s=k20201202; t=1653370586;
+        bh=/8GHbawCsNAbBNrjumypRir8qz/Tf5jiGFWOTxY7SC8=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=nWglDYvUTEALtAIfY+dEXBqefayNJ+npY8OeEThTCVd+Ioqe6S/0NA9CqDM13P9bG
+         JtC8CACDI4nSW5rD3ITnPZHKvXEk/WYSI32PD88Y4Jp3PrLyHVUSWVCz5QPhvAvnib
+         znnOft0D8KEl94U+DAlCtZmdw+JBLmJL++ASFBiqK9zD6ndbcq9qh/1KUOUgTEUmts
+         wp8FDbMK73VrsLiOFh0dFNP4D/kXIDQqKqNcB4Qs7OXAGyT6k2U6mxoey5lyKZpXw5
+         9FoUVzz+ZM3RH4gnKS5AGb8dNzgdDPR43AakAL1iHoJl7Zt/Vznp6wCnm/fknzYV60
+         qeU8Y5mQ4BESw==
+Subject: [PATCH 1/5] xfs: don't log every time we clear the log incompat flags
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
         allison.henderson@oracle.com
-Date:   Mon, 23 May 2022 22:36:20 -0700
-Message-ID: <165337058023.994444.12794741176651030531.stgit@magnolia>
+Date:   Mon, 23 May 2022 22:36:25 -0700
+Message-ID: <165337058586.994444.2832013222792677840.stgit@magnolia>
+In-Reply-To: <165337058023.994444.12794741176651030531.stgit@magnolia>
+References: <165337058023.994444.12794741176651030531.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -46,50 +48,38 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This final series contains a two key cleanups for the new LARP code.
-Most of it is refactoring and tweaking the code that creates kernel log
-messages about enabling and disabling features -- we should be warning
-about LARP being turned on once per day, instead of once per insmod
-cycle; we shouldn't be spamming the logs so aggressively about turning
-*off* log incompat features.
+There's no need to spam the logs every time we clear the log incompat
+flags -- if someone is periodically using one of these features, they'll
+be cleared every time the log tries to clean itself, which can get
+pretty chatty:
 
-The second part of the series refactors the LARP code responsible for
-getting (and releasing) permission to use xattr log items.  The
-implementation code doesn't belong in xfs_log.c, and calls to logging
-functions don't belong in libxfs -- they really should be done by the
-VFS implementation functions before they start calling into libraries.
+$ dmesg | grep -i clear
+[ 5363.894711] XFS (sdd): Clearing log incompat feature flags.
+[ 5365.157516] XFS (sdd): Clearing log incompat feature flags.
+[ 5369.388543] XFS (sdd): Clearing log incompat feature flags.
+[ 5371.281246] XFS (sdd): Clearing log incompat feature flags.
 
-v2: use OPSTATE flags so that we warn about scrub/larp/shrink on a
-    per-mount basis, and reorganize the log assist rework based on
-    feedback
+These aren't high value messages either -- nothing's gone wrong, and
+nobody's trying anything tricky.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=larp-cleanups-5.19
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c |   14 +-------
- fs/xfs/scrub/scrub.c     |   17 +---------
- fs/xfs/xfs_acl.c         |    3 +-
- fs/xfs/xfs_fsops.c       |    7 +---
- fs/xfs/xfs_ioctl.c       |    3 +-
- fs/xfs/xfs_iops.c        |    3 +-
- fs/xfs/xfs_log.c         |   41 ------------------------
- fs/xfs/xfs_message.h     |    6 +++
- fs/xfs/xfs_mount.c       |    1 -
- fs/xfs/xfs_mount.h       |   18 ++++++++++
- fs/xfs/xfs_super.c       |    1 +
- fs/xfs/xfs_super.h       |    1 -
- fs/xfs/xfs_xattr.c       |   79 +++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_xattr.h       |   13 ++++++++
- 14 files changed, 126 insertions(+), 81 deletions(-)
- create mode 100644 fs/xfs/xfs_xattr.h
+ fs/xfs/xfs_mount.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 0c0bcbd4949d..daa8d29c46b4 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1356,7 +1356,6 @@ xfs_clear_incompat_log_features(
+ 
+ 	if (xfs_sb_has_incompat_log_feature(&mp->m_sb,
+ 				XFS_SB_FEAT_INCOMPAT_LOG_ALL)) {
+-		xfs_info(mp, "Clearing log incompat feature flags.");
+ 		xfs_sb_remove_incompat_log_features(&mp->m_sb);
+ 		ret = true;
+ 	}
 
