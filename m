@@ -2,139 +2,87 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99EFAC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 10:47:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B683BC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 10:49:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229824AbiEXKrw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 May 2022 06:47:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34822 "EHLO
+        id S236335AbiEXKtQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 06:49:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233418AbiEXKrv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 06:47:51 -0400
-Received: from mail-qt1-x830.google.com (mail-qt1-x830.google.com [IPv6:2607:f8b0:4864:20::830])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F07260AA6
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 03:47:48 -0700 (PDT)
-Received: by mail-qt1-x830.google.com with SMTP id v14so14440145qtc.3
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 03:47:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=3mUYpErWT/ENGOL6r7dnzJ9kNaD9CmxfzD81AuTe4KI=;
-        b=W0qsFXtVvepWx/aZTqh87Uy/ZIpqTx82qL1qxMsa50zAwQJsl5/Ix4kFsGUYbeMxsz
-         cttrCXDEQPguF1Ltk//C8pnD0M57npNMAKxoyCCDx/3ZhLDhWU2H7t4P2ks6pKOHRAsW
-         9L0arYzgS2QfttpQLGKS/xN6W6OVe9fE7f6HgLX7M/V0Dd1c+JqI1CDlMSoR3ix8XqOK
-         cAXGSNKwfsJ+st6e9utjRyZbvB1XDMO4eEFAKPUczDO6HxlDTU8uq5/gFPUEQqOMJ8QX
-         kdbauDJYGk41BqnNT2Q5E6/1KZ66xkvtArFsGc0HyBE2SiaaLWNZEXFxw5UoRCz1ct89
-         B9bA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=3mUYpErWT/ENGOL6r7dnzJ9kNaD9CmxfzD81AuTe4KI=;
-        b=JZabZzgdPGwHOdaXwBULQcAMy+Nf5yY6nlj4EuoqamEB64tQjvCMgrZX/u119XdcOy
-         hTHF6LjzcyV48IDsVZroaVUgGx8i9+qOdD4FheAhQo9ybWlNR6kKExU+F/LjK8cWmNjt
-         lxgd1/wLX8JmBKDIAMDwMbsW54E77eb6m2lUbEE0oU6aKgWeNkr8zEdWmiY3DtMbzIuI
-         vo1QSXdG3j/warkxd7ZAEsF2pulXgyKfUikDnYpMzPCN2dhCRoV2NhbSPaNnQmUzza4e
-         N7uorJm7/yRe908IbTYnPJ3AOGjRhyZ7gBbE+IhOfq7MixuEq+BYsJo5cIUq6VddK6sR
-         f4gg==
-X-Gm-Message-State: AOAM531u5WthaPfIFrTSS+2YXyrZK1U2j4iVWQWhAsRopWTLXsPXAoJo
-        Ps25eKTSNV4KaKASO7uIAMX8Qx5Uoe4sg3WT5PnvMk5cB1y78Q==
-X-Google-Smtp-Source: ABdhPJyWo6fqwaRXTS6Vc/J/wdWa3Iuk3MpSXHbYCcfB5U9KS52/OYg7GYknhzbXCNhNJViROkPYiaQPp//phOCk76Y=
-X-Received: by 2002:a05:622a:1a9c:b0:2f3:d873:4acc with SMTP id
- s28-20020a05622a1a9c00b002f3d8734accmr19689652qtc.424.1653389267308; Tue, 24
- May 2022 03:47:47 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220524063802.1938505-1-david@fromorbit.com> <20220524063802.1938505-3-david@fromorbit.com>
-In-Reply-To: <20220524063802.1938505-3-david@fromorbit.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 24 May 2022 13:47:36 +0300
-Message-ID: <CAOQ4uxj7q=XpAzPjcC46AUD3cmDzFwKaYsxmQSm=1pzCQrw+wQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] xfs: introduce xfs_inodegc_push()
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Chris Dunlop <chris@onthe.net.au>
+        with ESMTP id S233418AbiEXKtQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 06:49:16 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D10D260059
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 03:49:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6FE3C61370
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 10:49:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D9F8EC3411D
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 10:49:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653389354;
+        bh=b0u65amKclN2LJ/SAcWQHBWtgk2noKbOOLhiCWvODPE=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=JjNosXRel2nvO2qUrDGRTDSf/ckckddhcH00tTtp/CKiGt+7DRvtcWPMXoRPhEC7u
+         WpXC1wUxhYBjcNhgjTVLSkyFSl1JAPFJ4xDIUj4Lq8IwWM9cKF4eMWJr93jVOjr0hf
+         SLI8dOms3qtfSES4DPi6r+kblTQORhUoB7KS1nnI8XT1OmtZyWzUMfeh3QGhgKOv73
+         o/ENAakipeNZYt05y+SPrtPTftCGC03EMW4Ttu0ymY0OrVZLRzGMt82LKCrniupdHX
+         ilToeyhDuoa0VCZ8Y/VHZW5Nh4uniZHTqLxRsfk7KlHkmVwoNXjnU1JcqSpkRwC5x+
+         Ztt9ZiEaNWjAQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id C40C3C05FF5; Tue, 24 May 2022 10:49:14 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216007] XFS hangs in iowait when extracting large number of
+ files
+Date:   Tue, 24 May 2022 10:49:14 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: jack@suse.cz
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-216007-201763-IukPGkQ5ds@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216007-201763@https.bugzilla.kernel.org/>
+References: <bug-216007-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 24, 2022 at 1:37 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> From: Dave Chinner <dchinner@redhat.com>
->
-> The current blocking mechanism for pushing the inodegc queue out to
-> disk can result in systems becoming unusable when there is a long
-> running inodegc operation. This is because the statfs()
-> implementation currently issues a blocking flush of the inodegc
-> queue and a significant number of common system utilities will call
-> statfs() to discover something about the underlying filesystem.
->
-> This can result in userspace operations getting stuck on inodegc
-> progress, and when trying to remove a heavily reflinked file on slow
-> storage with a full journal, this can result in delays measuring in
-> hours.
->
-> Avoid this problem by adding "push" function that expedites the
-> flushing of the inodegc queue, but doesn't wait for it to complete.
->
-> Convert xfs_fs_statfs() to use this mechanism so it doesn't block
-> but it does ensure that queued operations are expedited.
->
-> Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
-> Reported-by: Chris Dunlop <chris@onthe.net.au>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_icache.c | 20 +++++++++++++++-----
->  fs/xfs/xfs_icache.h |  1 +
->  fs/xfs/xfs_super.c  |  7 +++++--
->  fs/xfs/xfs_trace.h  |  1 +
->  4 files changed, 22 insertions(+), 7 deletions(-)
->
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 786702273621..2609825d53ee 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1862,19 +1862,29 @@ xfs_inodegc_worker(
->  }
->
->  /*
-> - * Force all currently queued inode inactivation work to run immediately and
-> - * wait for the work to finish.
-> + * Expedite all pending inodegc work to run immediately. This does not wait for
-> + * completion of the work.
->   */
->  void
-> -xfs_inodegc_flush(
-> +xfs_inodegc_push(
->         struct xfs_mount        *mp)
->  {
->         if (!xfs_is_inodegc_enabled(mp))
->                 return;
-> +       trace_xfs_inodegc_push(mp, __return_address);
-> +       xfs_inodegc_queue_all(mp);
-> +}
->
-> +/*
-> + * Force all currently queued inode inactivation work to run immediately and
-> + * wait for the work to finish.
-> + */
-> +void
-> +xfs_inodegc_flush(
-> +       struct xfs_mount        *mp)
-> +{
-> +       xfs_inodegc_push(mp);
->         trace_xfs_inodegc_flush(mp, __return_address);
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
 
-Unintentional(?) change of behavior:
-trace_xfs_inodegc_flush() will be called in
-(!xfs_is_inodegc_enabled(mp)) case.
+Jan Kara (jack@suse.cz) changed:
 
-I also wonder if trace_xfs_inodegc_flush()
-should not be before trace_xfs_inodegc_push() in this flow,
-but this is just a matter of tracing conventions and you should
-know best how it will be convenient for xfs developers to be
-reading the trace events stream.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |mgorman@suse.de
 
-Thanks,
-Amir.
+--- Comment #12 from Jan Kara (jack@suse.cz) ---
+Interesting. Looks like a bug in the bulk allocator that it is not able to =
+make
+progress when reclaim is needed? From a quick look I don't see kswapd being
+kicked or direct reclaim happening from the bulk allocator so that could be=
+ the
+reason. Adding Mel to CC, maybe he has some ideas.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
