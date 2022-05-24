@@ -2,152 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAA2FC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 23:17:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E338BC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 23:44:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238044AbiEXXRR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 May 2022 19:17:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40198 "EHLO
+        id S239740AbiEXXof (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 19:44:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237123AbiEXXRR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 19:17:17 -0400
+        with ESMTP id S241080AbiEXXob (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 19:44:31 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E7103ED04
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 16:17:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 22D875996A;
+        Tue, 24 May 2022 16:44:30 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9BA735347B5;
-        Wed, 25 May 2022 09:17:14 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9E315534701;
+        Wed, 25 May 2022 09:44:28 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ntdm5-00G0bF-Hr; Wed, 25 May 2022 09:17:13 +1000
-Date:   Wed, 25 May 2022 09:17:13 +1000
+        id 1nteCQ-00G15a-WD; Wed, 25 May 2022 09:44:27 +1000
+Date:   Wed, 25 May 2022 09:44:26 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Chris Dunlop <chris@onthe.net.au>
-Subject: Re: [PATCH 2/2] xfs: introduce xfs_inodegc_push()
-Message-ID: <20220524231713.GD1098723@dread.disaster.area>
-References: <20220524063802.1938505-1-david@fromorbit.com>
- <20220524063802.1938505-3-david@fromorbit.com>
- <CAOQ4uxj7q=XpAzPjcC46AUD3cmDzFwKaYsxmQSm=1pzCQrw+wQ@mail.gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Zorro Lang <zlang@redhat.com>, Eryu Guan <guaneryu@gmail.com>,
+        fstests <fstests@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: test mkfs.xfs sizing of internal logs that
+Message-ID: <20220524234426.GQ2306852@dread.disaster.area>
+References: <Yo03mZ12X1nLGihK@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxj7q=XpAzPjcC46AUD3cmDzFwKaYsxmQSm=1pzCQrw+wQ@mail.gmail.com>
+In-Reply-To: <Yo03mZ12X1nLGihK@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=628d677a
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=628d6ddd
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8
-        a=N8xf_ed3AAAA:8 a=93vLQDYR59KmNjmNFe0A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22 a=sE4t997d3Q9FUvws1cBB:22
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=ItlZtdftdnIbX1GFPZQA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 24, 2022 at 01:47:36PM +0300, Amir Goldstein wrote:
-> On Tue, May 24, 2022 at 1:37 PM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > The current blocking mechanism for pushing the inodegc queue out to
-> > disk can result in systems becoming unusable when there is a long
-> > running inodegc operation. This is because the statfs()
-> > implementation currently issues a blocking flush of the inodegc
-> > queue and a significant number of common system utilities will call
-> > statfs() to discover something about the underlying filesystem.
-> >
-> > This can result in userspace operations getting stuck on inodegc
-> > progress, and when trying to remove a heavily reflinked file on slow
-> > storage with a full journal, this can result in delays measuring in
-> > hours.
-> >
-> > Avoid this problem by adding "push" function that expedites the
-> > flushing of the inodegc queue, but doesn't wait for it to complete.
-> >
-> > Convert xfs_fs_statfs() to use this mechanism so it doesn't block
-> > but it does ensure that queued operations are expedited.
-> >
-> > Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
-> > Reported-by: Chris Dunlop <chris@onthe.net.au>
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_icache.c | 20 +++++++++++++++-----
-> >  fs/xfs/xfs_icache.h |  1 +
-> >  fs/xfs/xfs_super.c  |  7 +++++--
-> >  fs/xfs/xfs_trace.h  |  1 +
-> >  4 files changed, 22 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index 786702273621..2609825d53ee 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -1862,19 +1862,29 @@ xfs_inodegc_worker(
-> >  }
-> >
-> >  /*
-> > - * Force all currently queued inode inactivation work to run immediately and
-> > - * wait for the work to finish.
-> > + * Expedite all pending inodegc work to run immediately. This does not wait for
-> > + * completion of the work.
-> >   */
-> >  void
-> > -xfs_inodegc_flush(
-> > +xfs_inodegc_push(
-> >         struct xfs_mount        *mp)
-> >  {
-> >         if (!xfs_is_inodegc_enabled(mp))
-> >                 return;
-> > +       trace_xfs_inodegc_push(mp, __return_address);
-> > +       xfs_inodegc_queue_all(mp);
-> > +}
-> >
-> > +/*
-> > + * Force all currently queued inode inactivation work to run immediately and
-> > + * wait for the work to finish.
-> > + */
-> > +void
-> > +xfs_inodegc_flush(
-> > +       struct xfs_mount        *mp)
-> > +{
-> > +       xfs_inodegc_push(mp);
-> >         trace_xfs_inodegc_flush(mp, __return_address);
+On Tue, May 24, 2022 at 12:52:57PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Unintentional(?) change of behavior:
-> trace_xfs_inodegc_flush() will be called in
-> (!xfs_is_inodegc_enabled(mp)) case.
+> This is a regression test that exercises the mkfs.xfs code that creates
+> log sizes that are very close to the AG size when stripe units are in
+> play and/or when the log is forced to be in AG 0.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/xfs/843     |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/843.out |    2 ++
+>  2 files changed, 58 insertions(+)
+>  create mode 100755 tests/xfs/843
+>  create mode 100644 tests/xfs/843.out
+> 
+> diff --git a/tests/xfs/843 b/tests/xfs/843
+> new file mode 100755
+> index 00000000..3384b1aa
+> --- /dev/null
+> +++ b/tests/xfs/843
+> @@ -0,0 +1,56 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test 843
+> +#
+> +# Now that we've increased the default log size calculation, test mkfs with
+> +# various stripe units and filesystem sizes to see if we can provoke mkfs into
+> +# breaking.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto mkfs
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -r -f $tmp.* $testfile
+> +}
 
-Intentional. inodegc can be disabled/enabled at runtime (e.g.
-freeze). This behaviour is to allow asynchronous push to minimise
-wait time when needing to expedite inodegc and wait for it to
-complete.
+I'd omit this completely.
 
-P1					P2
-----					-----
-xfs_inodegc_push()
-<do stuff>				xfs_inodegc_stop()
-.....					  inodegc disabled
-					  xfs_inodegc_queue_all()
-					  flush_workqueue()
-					<block waiting for stuff push queued>
-.....					.....
-xfs_inodegc_flush()
-  xfs_inodegc_push() (does nothing)
-  flush_workqueue()
-<block waiting for queued stuff>
-.....					.....
-					<inodegc completes>
-<unblocks>				<unblocks>
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs xfs
+> +_require_test
+> +
+> +testfile=$TEST_DIR/a
+> +rm -f $testfile
+> +
+> +test_format() {
+> +	local tag="$1"
+> +	shift
+> +
+> +	echo "$tag" >> $seqres.full
+> +	$MKFS_XFS_PROG $@ -d file,name=$testfile &>> $seqres.full
+> +	local res=$?
+> +	test $res -eq 0 || echo "$tag FAIL $res" | tee -a $seqres.full
 
-> I also wonder if trace_xfs_inodegc_flush()
-> should not be before trace_xfs_inodegc_push() in this flow,
-> but this is just a matter of tracing conventions and you should
-> know best how it will be convenient for xfs developers to be
-> reading the trace events stream.
+What breakage are you trying to provoke? Just the log size
+calculation? If so, why do we need to actually write the filesystem
+to disk? Won't "-N" still calculate everything and fail if it's
+broken or quit with success without needing to write anything to
+disk?
 
-push and flush have their own tracepoints and so we can easily see
-how flush has interacted with enable/disable - push+flush =
-xfs_inodegc_flush when enabled, flush = xfs_inodegc_flush when
-disabled, push = xfs_inodegc_push.
+> +}
+> +
+> +# First we try various small filesystems and stripe sizes.
+> +for M in `seq 298 302` `seq 490 520`; do
+> +	for S in `seq 32 4 64`; do
+> +		test_format "M=$M S=$S" -dsu=${S}k,sw=1,size=${M}m
+> +	done
+> +done
+> +
+> +# log so large it pushes the root dir into AG 1
+> +test_format "log pushes rootdir into AG 1" -d agcount=3200,size=6366g -lagnum=0
+> +
+> +# log end rounded beyond EOAG due to stripe unit
+> +test_format "log end beyond eoag" -d agcount=3200,size=6366g -d su=256k,sw=4
+> +
+> +echo Silence is golden
+
+Put this at the top where the test is being set up (i.e. where you
+define testfile). That tells the reader straight away that no output
+is expected on a successful run before they start reading the test
+code....
 
 Cheers,
 
