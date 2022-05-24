@@ -2,194 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FE74C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 06:38:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D4DC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 07:05:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232414AbiEXGiL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 May 2022 02:38:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36294 "EHLO
+        id S229656AbiEXHFr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 03:05:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232342AbiEXGiL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 02:38:11 -0400
+        with ESMTP id S229638AbiEXHFq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 03:05:46 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0A29A79394
-        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 23:38:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7B61782165
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 00:05:45 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B697110E6B54;
-        Tue, 24 May 2022 16:38:06 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BD25F10E6B44
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 17:05:44 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ntOBA-00FjS4-Pj; Tue, 24 May 2022 16:38:04 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.95)
-        (envelope-from <david@fromorbit.com>)
-        id 1ntOBA-0088W4-OM;
-        Tue, 24 May 2022 16:38:04 +1000
+        id 1ntObv-00Fjz6-4s
+        for linux-xfs@vger.kernel.org; Tue, 24 May 2022 17:05:43 +1000
+Date:   Tue, 24 May 2022 17:05:43 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     chris@onthe.net.au
-Subject: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
-Date:   Tue, 24 May 2022 16:38:01 +1000
-Message-Id: <20220524063802.1938505-2-david@fromorbit.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220524063802.1938505-1-david@fromorbit.com>
-References: <20220524063802.1938505-1-david@fromorbit.com>
+Subject: xfsprogs: 5.19 libxfs kernel sync
+Message-ID: <20220524070543.GA1098723@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=628c7d4e
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=628c83c8
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=MKQDRZKB9nwGUNYnySIA:9
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
+        a=7-415B0cAAAA:8 a=9-NPeEEhPnI-2cUCaMAA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Currently inodegc work can sit queued on the per-cpu queue until
-the workqueue is either flushed of the queue reaches a depth that
-triggers work queuing (and later throttling). This means that we
-could queue work that waits for a long time for some other event to
-trigger flushing.
+Now that the 5.19 kernel code is largely stablised for the first
+merge, I've been starting to get together the libxfs sync tree for
+xfsprogs with all those changes in it. I have built a branch
+that can be found here:
 
-Hence instead of just queueing work at a specific depth, use a
-delayed work that queues the work at a bound time. We can still
-schedule the work immediately at a given depth, but we no long need
-to worry about leaving a number of items on the list that won't get
-processed until external events prevail.
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsprogs-dev.git libxfs-5.19-sync
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
- fs/xfs/xfs_mount.h  |  2 +-
- fs/xfs/xfs_super.c  |  2 +-
- 3 files changed, 24 insertions(+), 16 deletions(-)
+that contains my work in progress so far. It's build on top of the
+current xfsprogs for-next branch. I've ported across everything up
+to the start of the LARP series so far, so I have done the porting
+of the large extent count work and all the other bits and pieces for
+log changes and so on.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 5269354b1b69..786702273621 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -440,7 +440,7 @@ xfs_inodegc_queue_all(
- 	for_each_online_cpu(cpu) {
- 		gc = per_cpu_ptr(mp->m_inodegc, cpu);
- 		if (!llist_empty(&gc->list))
--			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
-+			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
- 	}
- }
- 
-@@ -1841,8 +1841,8 @@ void
- xfs_inodegc_worker(
- 	struct work_struct	*work)
- {
--	struct xfs_inodegc	*gc = container_of(work, struct xfs_inodegc,
--							work);
-+	struct xfs_inodegc	*gc = container_of(to_delayed_work(work),
-+						struct xfs_inodegc, work);
- 	struct llist_node	*node = llist_del_all(&gc->list);
- 	struct xfs_inode	*ip, *n;
- 
-@@ -2014,6 +2014,7 @@ xfs_inodegc_queue(
- 	struct xfs_inodegc	*gc;
- 	int			items;
- 	unsigned int		shrinker_hits;
-+	unsigned long		queue_delay = 1;
- 
- 	trace_xfs_inode_set_need_inactive(ip);
- 	spin_lock(&ip->i_flags_lock);
-@@ -2025,19 +2026,26 @@ xfs_inodegc_queue(
- 	items = READ_ONCE(gc->items);
- 	WRITE_ONCE(gc->items, items + 1);
- 	shrinker_hits = READ_ONCE(gc->shrinker_hits);
--	put_cpu_ptr(gc);
- 
--	if (!xfs_is_inodegc_enabled(mp))
-+	/*
-+	 * We queue the work while holding the current CPU so that the work
-+	 * is scheduled to run on this CPU.
-+	 */
-+	if (!xfs_is_inodegc_enabled(mp)) {
-+		put_cpu_ptr(gc);
- 		return;
--
--	if (xfs_inodegc_want_queue_work(ip, items)) {
--		trace_xfs_inodegc_queue(mp, __return_address);
--		queue_work(mp->m_inodegc_wq, &gc->work);
- 	}
- 
-+	if (xfs_inodegc_want_queue_work(ip, items))
-+		queue_delay = 0;
-+
-+	trace_xfs_inodegc_queue(mp, __return_address);
-+	mod_delayed_work(mp->m_inodegc_wq, &gc->work, queue_delay);
-+	put_cpu_ptr(gc);
-+
- 	if (xfs_inodegc_want_flush_work(ip, items, shrinker_hits)) {
- 		trace_xfs_inodegc_throttle(mp, __return_address);
--		flush_work(&gc->work);
-+		flush_delayed_work(&gc->work);
- 	}
- }
- 
-@@ -2054,7 +2062,7 @@ xfs_inodegc_cpu_dead(
- 	unsigned int		count = 0;
- 
- 	dead_gc = per_cpu_ptr(mp->m_inodegc, dead_cpu);
--	cancel_work_sync(&dead_gc->work);
-+	cancel_delayed_work_sync(&dead_gc->work);
- 
- 	if (llist_empty(&dead_gc->list))
- 		return;
-@@ -2073,12 +2081,12 @@ xfs_inodegc_cpu_dead(
- 	llist_add_batch(first, last, &gc->list);
- 	count += READ_ONCE(gc->items);
- 	WRITE_ONCE(gc->items, count);
--	put_cpu_ptr(gc);
- 
- 	if (xfs_is_inodegc_enabled(mp)) {
- 		trace_xfs_inodegc_queue(mp, __return_address);
--		queue_work(mp->m_inodegc_wq, &gc->work);
-+		mod_delayed_work(mp->m_inodegc_wq, &gc->work, 0);
- 	}
-+	put_cpu_ptr(gc);
- }
- 
- /*
-@@ -2173,7 +2181,7 @@ xfs_inodegc_shrinker_scan(
- 			unsigned int	h = READ_ONCE(gc->shrinker_hits);
- 
- 			WRITE_ONCE(gc->shrinker_hits, h + 1);
--			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
-+			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
- 			no_items = false;
- 		}
- 	}
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 8c42786e4942..377c5e59f6a0 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -61,7 +61,7 @@ struct xfs_error_cfg {
-  */
- struct xfs_inodegc {
- 	struct llist_head	list;
--	struct work_struct	work;
-+	struct delayed_work	work;
- 
- 	/* approximate count of inodes in the list */
- 	unsigned int		items;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 51ce127a0cc6..62f6b97355a2 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1073,7 +1073,7 @@ xfs_inodegc_init_percpu(
- 		gc = per_cpu_ptr(mp->m_inodegc, cpu);
- 		init_llist_head(&gc->list);
- 		gc->items = 0;
--		INIT_WORK(&gc->work, xfs_inodegc_worker);
-+		INIT_DELAYED_WORK(&gc->work, xfs_inodegc_worker);
- 	}
- 	return 0;
- }
+For the large extent count work, I have not added any of the
+specific new xfsprogs functionality like mkfs, etc. Patches 14-18
+of Chandan's V7 patch series here:
+
+https://lore.kernel.org/linux-xfs/20220321052027.407099-1-chandan.babu@oracle.com/
+
+still need to be ported on top of this for the functionality to be
+fully supported in xfsprogs.
+
+Chandan, can you port those changes over to this libxfs sync branch
+and check that I haven't missed anything in the conversion? I did
+pick up one of your patches from that series - "Introduce per-inode
+64-bit extent counters" - because of all the xfs_db bits in it for
+the change in on-disk format, but otherwise I've largely just worked
+through fixing all the compiler errors and converting the xfsprogs
+code over to the new functions and types.
+
+If you port the ramin patches over to thsi branch and test them,
+I'll include them into the branch. I'll be checking for stability
+and regressions on this brnach for the next couple of days, and if
+everythign looks OK I'll send Eric a pull request for it....
+
+Once I've done that, I'll work through the same process with the
+LARP patches. I'll probably lean heavily on Allison's recent
+xfsprogs updates for that (no point doing the same work twice!), but
+right now I'm hoping to have the full 5.19 libxfs syncup done with
+both large extent counts and LARP fully functional in that branch
+before the end of the 5.19 merge window....
+
+Cheers,
+
+Dave.
 -- 
-2.35.1
-
+Dave Chinner
+david@fromorbit.com
