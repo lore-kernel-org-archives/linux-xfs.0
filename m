@@ -2,95 +2,178 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEB21C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 22:05:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A039DC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 23:03:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238937AbiEXWFT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 May 2022 18:05:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32788 "EHLO
+        id S241279AbiEXXDS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 19:03:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241099AbiEXWFS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 18:05:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DE50366222
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 15:05:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1653429917;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=IB48HDNMV1O0J2W8Uo4tfAHWDeNT5YlUZULP8ajEiVU=;
-        b=Fn1Qk4GW2M83c57cg0vmxX+2/YJD4VTGvN3JR+bmElOwAhlLh7hPORnJkp1XGeU6jsB0Ct
-        GNkTrOZyB5oYWwTyF4I2PE8NuUyWyNDlVppIHSMgW8v/sRVEqisp30vjE5KNUue75yu3xn
-        vkN5MMYzFFlz0rS79NM2h4NvvQyUEgI=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-202-nXkla9XBPDWSgzTtyCtHLA-1; Tue, 24 May 2022 18:05:15 -0400
-X-MC-Unique: nXkla9XBPDWSgzTtyCtHLA-1
-Received: by mail-wm1-f70.google.com with SMTP id m9-20020a05600c4f4900b0039746692dc2so3453086wmq.6
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 15:05:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=IB48HDNMV1O0J2W8Uo4tfAHWDeNT5YlUZULP8ajEiVU=;
-        b=ZlRwglJvaget3dVwhomD8veDYMWt31t+HVr9ckhxUTGr0CLJAcd9vzJlWINWi5JOp4
-         F26rptrUyYjezR0iC5hgnsP/4CVUYb6CtDUeLlI9aNu6G02tfgq5aVHuG1fkAUaK9Z11
-         eL2u0b5ITsuo8HNlRkNLGbbMHywGYRhBzwWpHrZaK+h/wDSL70uQPrT4LflgRrgbhkJx
-         PZPe/rCjl3VDg2KBZDwA0m6az7d2Qv2I3EWpAdBw0dqc5CAHBeKDZRWhsqV9OdCE8GJw
-         RDNESz8Fh8eqnbxlv9Kz2bjdRDYqT8EtowVniYb9ZCh2W3o8G4UxkU/9We9EnCVMziCq
-         nEJg==
-X-Gm-Message-State: AOAM531c6BGrbigXtGcmcRDFb5A5kUaBv740Zl9fDznsnFhivJSZPBXP
-        HwtF2TIVn/3qSMU75hSTexJy6cpTq2gcR+XNJUKlz52TAjkwGT9Ux8M2ZNwoGM2LfPlkXCvQ7gB
-        Ctbz+bc5xQBah5fSW60e1TXelmqYLkDOmjRImhyrc8QtulVo/sVPHu8eCDYW6Wjd/2brdFPc=
-X-Received: by 2002:adf:f291:0:b0:20d:bc00:61d1 with SMTP id k17-20020adff291000000b0020dbc0061d1mr24603941wro.203.1653429914354;
-        Tue, 24 May 2022 15:05:14 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxPT8K5+FQNVIjMnE/+ldPeMcGcDbBCjhPhZuaAvR+P05Z0mxsQNsGjhbkkYuH7dG0Yb1i57w==
-X-Received: by 2002:adf:f291:0:b0:20d:bc00:61d1 with SMTP id k17-20020adff291000000b0020dbc0061d1mr24603928wro.203.1653429914025;
-        Tue, 24 May 2022 15:05:14 -0700 (PDT)
-Received: from localhost.localdomain.com (gw19-pha-stl-mmo-1.avonet.cz. [131.117.213.203])
-        by smtp.gmail.com with ESMTPSA id c4-20020adfc6c4000000b0020e5d2a9d0bsm579885wrh.54.2022.05.24.15.05.12
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 May 2022 15:05:13 -0700 (PDT)
-From:   Pavel Reichl <preichl@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 1/1] mkfs: Fix memory leak
-Date:   Wed, 25 May 2022 00:05:09 +0200
-Message-Id: <20220524220509.967287-2-preichl@redhat.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220524220509.967287-1-preichl@redhat.com>
-References: <20220524220509.967287-1-preichl@redhat.com>
+        with ESMTP id S239226AbiEXXDR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 19:03:17 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 14928703EC
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 16:03:15 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0225E10E705D;
+        Wed, 25 May 2022 09:03:14 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ntdYX-00G0SD-0M; Wed, 25 May 2022 09:03:13 +1000
+Date:   Wed, 25 May 2022 09:03:12 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, chris@onthe.net.au
+Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
+Message-ID: <20220524230312.GB1098723@dread.disaster.area>
+References: <20220524063802.1938505-1-david@fromorbit.com>
+ <20220524063802.1938505-2-david@fromorbit.com>
+ <Yo0N234hm98uULNP@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yo0N234hm98uULNP@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=628d6433
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=JGA_wsmaz2XTebO_VLoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-'value' is allocated by strdup() in getstr(). It
-needs to be freed as we do not keep any permanent
-reference to it.
+On Tue, May 24, 2022 at 09:54:51AM -0700, Darrick J. Wong wrote:
+> On Tue, May 24, 2022 at 04:38:01PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Currently inodegc work can sit queued on the per-cpu queue until
+> > the workqueue is either flushed of the queue reaches a depth that
+> > triggers work queuing (and later throttling). This means that we
+> > could queue work that waits for a long time for some other event to
+> > trigger flushing.
+> > 
+> > Hence instead of just queueing work at a specific depth, use a
+> > delayed work that queues the work at a bound time. We can still
+> > schedule the work immediately at a given depth, but we no long need
+> 
+> Nit: "no longer need..."
+> 
+> > to worry about leaving a number of items on the list that won't get
+> > processed until external events prevail.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
+> >  fs/xfs/xfs_mount.h  |  2 +-
+> >  fs/xfs/xfs_super.c  |  2 +-
+> >  3 files changed, 24 insertions(+), 16 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > index 5269354b1b69..786702273621 100644
+> > --- a/fs/xfs/xfs_icache.c
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -440,7 +440,7 @@ xfs_inodegc_queue_all(
+> >  	for_each_online_cpu(cpu) {
+> >  		gc = per_cpu_ptr(mp->m_inodegc, cpu);
+> >  		if (!llist_empty(&gc->list))
+> > -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
+> > +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
+> >  	}
+> >  }
+> >  
+> > @@ -1841,8 +1841,8 @@ void
+> >  xfs_inodegc_worker(
+> >  	struct work_struct	*work)
+> >  {
+> > -	struct xfs_inodegc	*gc = container_of(work, struct xfs_inodegc,
+> > -							work);
+> > +	struct xfs_inodegc	*gc = container_of(to_delayed_work(work),
+> > +						struct xfs_inodegc, work);
+> >  	struct llist_node	*node = llist_del_all(&gc->list);
+> >  	struct xfs_inode	*ip, *n;
+> >  
+> > @@ -2014,6 +2014,7 @@ xfs_inodegc_queue(
+> >  	struct xfs_inodegc	*gc;
+> >  	int			items;
+> >  	unsigned int		shrinker_hits;
+> > +	unsigned long		queue_delay = 1;
+> 
+> A default delay of one clock tick, correct?
+> 
+> Just out of curiosity, how does this shake out wrt fstests that do a
+> thing and then measure free space?
 
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- mkfs/xfs_mkfs.c | 1 +
- 1 file changed, 1 insertion(+)
+No regressions on a 5.18+for-next kernel on the two machines (one
+ramdisk, one SSD) I ran it on yesterday. The runs were clean, which
+is why I posted it for comments.
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 01d2e8ca..a37d6848 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1714,6 +1714,7 @@ naming_opts_parser(
- 		} else {
- 			cli->sb_feat.dir_version = getnum(value, opts, subopt);
- 		}
-+		free((char *)value);
- 		break;
- 	case N_FTYPE:
- 		cli->sb_feat.dirftype = getnum(value, opts, subopt);
+> I have a dim recollection of a bug that I found in one of the
+> preproduction iterations of inodegc back when I used delayed_work to
+> schedule the background gc.  If memory serves, calling mod_delayed_work
+> on a delayed_work object that is currently running does /not/ cause the
+> delayed_work object to be requeued, even if delay==0.
+
+I don't think that is correct - I actually went through the code to
+check this because I wanted to be certain that it behaved the way I
+needed it to. Indeed, the documented behaviour of
+mod_delayed_work_on() is:
+
+ * If @dwork is idle, equivalent to queue_delayed_work_on(); otherwise,
+ * modify @dwork's timer so that it expires after @delay.  If @delay is
+ * zero, @work is guaranteed to be scheduled immediately regardless of its
+ * current state.
+
+In terms of the implementation, try_to_grab_pending() will grab the
+delayed work and set/steal the WORK_STRUCT_PENDING_BIT, and
+mod_delayed_work_on() will loop until it owns the bit or the dwork
+is cancelled. Once it owns the PENDING bit, it will call
+__queue_delayed_work(), which either queues the work immediately
+(delay = 0) or sets up a timer to expire in delay ticks. 
+
+The PENDING bit is cleared by the kworker thread before it calls the
+work->current_func() to execute the work, so if the work is
+currenlty running, try_to_grab_pending() will be able to set/steal
+the WORK_STRUCT_PENDING_BIT without issues, and so even if the work
+is currently running, we should be able queue it again via
+mod_delayed_work_on().
+
+So, AFAICT, the comment and behaviour match, and mod_delayed_work()
+will result in queuing of the dwork even if it is currently running.
+
+> Aha, I found a description in my notes.  I've adapted them to the
+> current patchset, since in those days inodegc used a radix tree tag
+> and per-AG workers instead of a locklesslist and per-cpu workers.
+> If the following occurs:
+> 
+> Worker 1			Thread 2
+> 
+> xfs_inodegc_worker
+> <starts up>
+> node = llist_del_all()
+> <start processing inodes>
+> <block on something, yield>
+> 				xfs_irele
+> 				xfs_inode_mark_reclaimable
+> 				llist_add
+> 				mod_delayed_work()
+> 				<exit>
+> <process the rest of nodelist>
+> return
+> 
+> Then at the end of this sequence, we'll end up with thread 2's inode
+> queued to the gc list but the delayed work is /not/ queued.  That inode
+> remains on the gc list (and unprocessed) until someone comes along to
+> push that CPU's gc list, whether it's a statfs, or an unmount, or
+> someone hitting ENOSPC and triggering blockgc.
+
+Right, if mod_delayed_work() didn't queue the work then this would
+be an issue, but AFAICT mod_delayed_work() will requeue in this
+case and it will not get hung up in this case. I certainly haven't
+seen any evidence that it's not working as I expected (so far).
+
+Cheers,
+
+Dave.
 -- 
-2.36.1
-
+Dave Chinner
+david@fromorbit.com
