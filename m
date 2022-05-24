@@ -2,129 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50188C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 03:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E069C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 04:00:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233911AbiEXDsw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 May 2022 23:48:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49116 "EHLO
+        id S234094AbiEXEAZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 00:00:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234016AbiEXDst (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 23:48:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A64816CAAD
-        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 20:48:47 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 420A66135A
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 03:48:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F555C385AA;
-        Tue, 24 May 2022 03:48:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653364126;
-        bh=m6+9znr7FuWVvb/B3P+6qLhe5yjlvzJspMD+Akx7jp0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=U8hQLBw6rk1CPbDafUqJk4tHDISAY/nD8E9vrinXIQssS71BD9tEZ05Np8NCO2I+P
-         nSLXKO4oG1NRQCecLyzkPwsTgILn/5stHi/e8JDTYN84K9fUlioCm/MqVfCE+34/Jw
-         662zAfF+QMk7DrRWe8XPvz+Sb2T1Pw/xg4xzuCkuoRYAdvA+syMhP/eBQcW6hlwl2K
-         wKdK+HPmaAE83wmfBGYp/wyVZho4L0emwTCImOjt6s6YwPYkRBfyWS113HpkQMcJ4g
-         TDXiAPpx6WJerPLwywEtsM2yIDj4zfbNOTaWF7c9oUQP2p35KblBJ/2fgMeDNQ/32Z
-         bmYaoZT9sFfSw==
-Date:   Mon, 23 May 2022 20:48:46 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        with ESMTP id S233309AbiEXEAY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 00:00:24 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4474B5C369
+        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 21:00:23 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 218EC53440C;
+        Tue, 24 May 2022 14:00:22 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ntLiR-00Fgmx-GS; Tue, 24 May 2022 14:00:15 +1000
+Date:   Tue, 24 May 2022 14:00:15 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: assert in xfs_btree_del_cursor should take into
- account error
-Message-ID: <YoxVnupPDEYB+9EG@magnolia>
+Subject: Re: [PATCH 2/3] xfs: don't assert fail on perag references on
+ teardown
+Message-ID: <20220524040015.GZ1098723@dread.disaster.area>
 References: <20220524022158.1849458-1-david@fromorbit.com>
- <20220524022158.1849458-4-david@fromorbit.com>
+ <20220524022158.1849458-3-david@fromorbit.com>
+ <YoxVdipmKR4PHUyH@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220524022158.1849458-4-david@fromorbit.com>
+In-Reply-To: <YoxVdipmKR4PHUyH@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=628c5856
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=49XdF8D72hN7BixIbX4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 24, 2022 at 12:21:58PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, May 23, 2022 at 08:48:06PM -0700, Darrick J. Wong wrote:
+> On Tue, May 24, 2022 at 12:21:57PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Not fatal, the assert is there to catch developer attention. I'm
+> > seeing this occasionally during recoveryloop testing after a
+> > shutdown, and I don't want this to stop an overnight recoveryloop
+> > run as it is currently doing.
+> > 
+> > Convert the ASSERT to a XFS_IS_CORRUPT() check so it will dump a
+> > corruption report into the log and cause a test failure that way,
+> > but it won't stop the machine dead.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_ag.c | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> > index 1e4ee042d52f..3e920cf1b454 100644
+> > --- a/fs/xfs/libxfs/xfs_ag.c
+> > +++ b/fs/xfs/libxfs/xfs_ag.c
+> > @@ -173,7 +173,6 @@ __xfs_free_perag(
+> >  	struct xfs_perag *pag = container_of(head, struct xfs_perag, rcu_head);
+> >  
+> >  	ASSERT(!delayed_work_pending(&pag->pag_blockgc_work));
+> > -	ASSERT(atomic_read(&pag->pag_ref) == 0);
 > 
-> xfs/538 on a 1kB block filesystem failed with this assert:
-> 
-> XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 || xfs_is_shutdown(cur->bc_mp), file: fs/xfs/libxfs/xfs_btree.c, line: 448
-> 
-> The problem was that an allocation failed unexpectedly in
-> xfs_bmbt_alloc_block() after roughly 150,000 minlen allocation error
-> injections, resulting in an EFSCORRUPTED error being returned to
-> xfs_bmapi_write(). The error occurred on extent-to-btree format
-> conversion allocating the new root block:
-> 
->  RIP: 0010:xfs_bmbt_alloc_block+0x177/0x210
->  Call Trace:
->   <TASK>
->   xfs_btree_new_iroot+0xdf/0x520
->   xfs_btree_make_block_unfull+0x10d/0x1c0
->   xfs_btree_insrec+0x364/0x790
->   xfs_btree_insert+0xaa/0x210
->   xfs_bmap_add_extent_hole_real+0x1fe/0x9a0
->   xfs_bmapi_allocate+0x34c/0x420
->   xfs_bmapi_write+0x53c/0x9c0
->   xfs_alloc_file_space+0xee/0x320
->   xfs_file_fallocate+0x36b/0x450
->   vfs_fallocate+0x148/0x340
->   __x64_sys_fallocate+0x3c/0x70
->   do_syscall_64+0x35/0x80
->   entry_SYSCALL_64_after_hwframe+0x44/0xa
-> 
-> Why the allocation failed at this point is unknown, but is likely
-> that we ran the transaction out of reserved space and filesystem out
-> of space with bmbt blocks because of all the minlen allocations
-> being done causing worst case fragmentation of a large allocation.
-> 
-> Regardless of the cause, we've then called xfs_bmapi_finish() which
-> calls xfs_btree_del_cursor(cur, error) to tear down the cursor.
-> 
-> So we have a failed operation, error != 0, cur->bc_ino.allocated > 0
-> and the filesystem is still up. The assert fails to take into
-> account that allocation can fail with an error and the transaction
-> teardown will shut the filesystem down if necessary. i.e. the
-> assert needs to check "|| error != 0" as well, because at this point
-> shutdown is pending because the current transaction is dirty....
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_btree.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 786ec1cb1bba..32100cfb9dfc 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -445,8 +445,14 @@ xfs_btree_del_cursor(
->  			break;
->  	}
->  
-> +	/*
-> +	 * If we are doing a BMBT update, the number of unaccounted blocks
-> +	 * allocated during this cursor life time should be zero. If it's not
-> +	 * zero, then we should be shut down or on our way to shutdown due to
-> +	 * cancelling a dirty transaction on error.
-> +	 */
->  	ASSERT(cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 ||
-> -	       xfs_is_shutdown(cur->bc_mp));
-> +	       xfs_is_shutdown(cur->bc_mp) || error != 0);
+> Er, shouldn't this also be converted to XFS_IS_CORRUPT?  That's what the
+> commit message said...
 
-Ewww, multiline assertions! 8-D
+That's in the RCU callback context and we never get here when the
+ASSERT fires. i.e. the assert in xfs_free_perag fires before we
+queue the rcu callback to free this, so checking it here is kinda
+redundant.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+i.e. it's not where this issue is being caught - it's
+being caught by the check below (in xfs_free_perag()) where the
+conversion to XFS_IS_CORRUPT is done....
 
---D
+Cheers,
 
->  	if (unlikely(cur->bc_flags & XFS_BTREE_STAGING))
->  		kmem_free(cur->bc_ops);
->  	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS) && cur->bc_ag.pag)
-> -- 
-> 2.35.1
+Dave.
+
+> >  	kmem_free(pag);
+> >  }
+> >  
+> > @@ -192,7 +191,7 @@ xfs_free_perag(
+> >  		pag = radix_tree_delete(&mp->m_perag_tree, agno);
+> >  		spin_unlock(&mp->m_perag_lock);
+> >  		ASSERT(pag);
+> > -		ASSERT(atomic_read(&pag->pag_ref) == 0);
+> > +		XFS_IS_CORRUPT(pag->pag_mount, atomic_read(&pag->pag_ref) != 0);
+> >  
+> >  		cancel_delayed_work_sync(&pag->pag_blockgc_work);
+> >  		xfs_iunlink_destroy(pag);
+> > -- 
+> > 2.35.1
+> > 
 > 
+
+-- 
+Dave Chinner
+david@fromorbit.com
