@@ -2,254 +2,148 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EC1FC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 16:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89FA7C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 18:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236672AbiEXQyy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 May 2022 12:54:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38284 "EHLO
+        id S232721AbiEXSFt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 14:05:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233792AbiEXQyx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 12:54:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF28B6D3B5
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 09:54:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6AADE61411
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 16:54:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFB31C34100;
-        Tue, 24 May 2022 16:54:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653411291;
-        bh=ZZNAKINehYd6dNmKwbmM811Vy/ZLSNuS7BMrfbaCWG0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=acl0pnBu5sNksWYrvd/cnvmKPbrj43hLCnQiIVMSbNkAF1dcSksuYeWultGZWishu
-         FOVD9hZKa1GziSh/6Q59cbqhEoL5ZkTV3cd8sA0sZMKznGyDen2+smFe7qW+6Hg+5V
-         k8+1CssJ7c7YvsDBizz7s7k41t6PKtBHYEKPVNj63cltyHjApxK1W8ZjdjsTNMlJfg
-         jVUB3sUId8ouGadEe2m4swfSfwBn8Q7/BceUuMWCzHmULuYu0j9qm0mAYx1mBr67/5
-         iKlWB24fsoZQ6Pa7D/lJY8bdJDydm/KZKA1V2ROhENltxIEnwYBKeAlISCDGfusxhb
-         smBTNRLg+Pf2g==
-Date:   Tue, 24 May 2022 09:54:51 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, chris@onthe.net.au
-Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
-Message-ID: <Yo0N234hm98uULNP@magnolia>
-References: <20220524063802.1938505-1-david@fromorbit.com>
- <20220524063802.1938505-2-david@fromorbit.com>
+        with ESMTP id S240131AbiEXSFs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 14:05:48 -0400
+Received: from mail-qt1-x832.google.com (mail-qt1-x832.google.com [IPv6:2607:f8b0:4864:20::832])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 005F6140A8
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 11:05:47 -0700 (PDT)
+Received: by mail-qt1-x832.google.com with SMTP id g3so15308000qtb.7
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 11:05:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=aZVbzC642qe2ohG7B3qHw3f/cYnmNDi7odCxBqYhovU=;
+        b=Zu9wTPhxwgeKrV2eDwHlBNxMzx281OFjPguR7vsqfIY7cTdId24p6wN0IU2ykuXTYp
+         hQk2etrfu7tzuRBAJ6Ywgxqvr3lgPIh8eLn+dKytPIAYeFTHEtTBw1Ds86cqoLAD4n7w
+         T2WjR9ae+8XnQMLDHOLRPhsEf9t23HiQeMc9YcBdLTxBZQ6fiqhRooD50ya3j7nSRFzN
+         15WkETsUQuGu/Y9nJ8eKQ2ZwZ/w8zQsuGWTbOgwOc6yY0Wn84jweq98yhjURlUrg50dy
+         qz0ksZSloB/kwYvJJcXEW/XMvwuBBxIPUdFbdRXntyOiPxKhoV8yywcBTHDO08W98qVo
+         cLCA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=aZVbzC642qe2ohG7B3qHw3f/cYnmNDi7odCxBqYhovU=;
+        b=4iijK2hmHZ+mjWiLapBtZ2cE+/6WAA7G99c+UN8xCpSytwfITHbe67rARRVcJuUpOn
+         WfzkV0ARbw5Sp6pjkbgr2WdpQJvTnJ1sVYm0sQGNV9zRYhUPqF4576XcQZb+tCqB61t/
+         ZV+Nvl90KRANOmS+qY2EGkcGufquC7RJNqFyb9418pAfezCrJICUEWjzGSD4afT0+Fzf
+         Iw4LOkkg/N0VfIuv3Rjkb5PVEDGrWS/HwHVMBRidKaRt760TiULj2Z3ISn6MpItABtxJ
+         QJ2o6V9f48dPGDzgPi2c7pHwSxk4e7CJhHu1tQmx9yWoDj64iNF1IlX8g3YRWYjl8el6
+         Mmig==
+X-Gm-Message-State: AOAM533Wo8pw/t3hvnxUVi+2Hw/PHdAAS+7hfWlPbJFKwQFKW+CYAL23
+        eg1Oy9Aut7UPgGU5QGtw0nVLatj0zVjwpHZ8rmVB7yjo+3q0PA==
+X-Google-Smtp-Source: ABdhPJwWP1PlX6kzJLu97H/0XQ4KlGORzE6hvLM7myV8wlSn3LKjDCT0AZSNo/GvVbXrVu9af10S1tjvgRKQ5a9/xkc=
+X-Received: by 2002:a05:622a:1a9c:b0:2f3:d873:4acc with SMTP id
+ s28-20020a05622a1a9c00b002f3d8734accmr21487181qtc.424.1653415547057; Tue, 24
+ May 2022 11:05:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220524063802.1938505-2-david@fromorbit.com>
+References: <20220524063802.1938505-1-david@fromorbit.com> <20220524063802.1938505-3-david@fromorbit.com>
+ <CAOQ4uxj7q=XpAzPjcC46AUD3cmDzFwKaYsxmQSm=1pzCQrw+wQ@mail.gmail.com> <Yo0EWSKaNsQB/ZF7@magnolia>
+In-Reply-To: <Yo0EWSKaNsQB/ZF7@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 24 May 2022 21:05:35 +0300
+Message-ID: <CAOQ4uxjpYv55CjcM3Gg-310cWKOxAKEOHfG7v+XE28ufgskmXw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs: introduce xfs_inodegc_push()
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Chris Dunlop <chris@onthe.net.au>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 24, 2022 at 04:38:01PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Currently inodegc work can sit queued on the per-cpu queue until
-> the workqueue is either flushed of the queue reaches a depth that
-> triggers work queuing (and later throttling). This means that we
-> could queue work that waits for a long time for some other event to
-> trigger flushing.
-> 
-> Hence instead of just queueing work at a specific depth, use a
-> delayed work that queues the work at a bound time. We can still
-> schedule the work immediately at a given depth, but we no long need
+On Tue, May 24, 2022 at 7:14 PM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> On Tue, May 24, 2022 at 01:47:36PM +0300, Amir Goldstein wrote:
+> > On Tue, May 24, 2022 at 1:37 PM Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > >
+> > > The current blocking mechanism for pushing the inodegc queue out to
+> > > disk can result in systems becoming unusable when there is a long
+> > > running inodegc operation. This is because the statfs()
+> > > implementation currently issues a blocking flush of the inodegc
+> > > queue and a significant number of common system utilities will call
+> > > statfs() to discover something about the underlying filesystem.
+> > >
+> > > This can result in userspace operations getting stuck on inodegc
+> > > progress, and when trying to remove a heavily reflinked file on slow
+> > > storage with a full journal, this can result in delays measuring in
+> > > hours.
+> > >
+> > > Avoid this problem by adding "push" function that expedites the
+> > > flushing of the inodegc queue, but doesn't wait for it to complete.
+> > >
+> > > Convert xfs_fs_statfs() to use this mechanism so it doesn't block
+> > > but it does ensure that queued operations are expedited.
+> > >
+> > > Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
+> > > Reported-by: Chris Dunlop <chris@onthe.net.au>
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_icache.c | 20 +++++++++++++++-----
+> > >  fs/xfs/xfs_icache.h |  1 +
+> > >  fs/xfs/xfs_super.c  |  7 +++++--
+> > >  fs/xfs/xfs_trace.h  |  1 +
+> > >  4 files changed, 22 insertions(+), 7 deletions(-)
+> > >
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index 786702273621..2609825d53ee 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -1862,19 +1862,29 @@ xfs_inodegc_worker(
+> > >  }
+> > >
+> > >  /*
+> > > - * Force all currently queued inode inactivation work to run immediately and
+> > > - * wait for the work to finish.
+> > > + * Expedite all pending inodegc work to run immediately. This does not wait for
+> > > + * completion of the work.
+> > >   */
+> > >  void
+> > > -xfs_inodegc_flush(
+> > > +xfs_inodegc_push(
+> > >         struct xfs_mount        *mp)
+> > >  {
+> > >         if (!xfs_is_inodegc_enabled(mp))
+> > >                 return;
+> > > +       trace_xfs_inodegc_push(mp, __return_address);
+> > > +       xfs_inodegc_queue_all(mp);
+> > > +}
+> > >
+> > > +/*
+> > > + * Force all currently queued inode inactivation work to run immediately and
+> > > + * wait for the work to finish.
+> > > + */
+> > > +void
+> > > +xfs_inodegc_flush(
+> > > +       struct xfs_mount        *mp)
+> > > +{
+> > > +       xfs_inodegc_push(mp);
+> > >         trace_xfs_inodegc_flush(mp, __return_address);
+> >
+> > Unintentional(?) change of behavior:
+> > trace_xfs_inodegc_flush() will be called in
+> > (!xfs_is_inodegc_enabled(mp)) case.
+>
+> At worst we end up waiting for any inodegc workers that are sti
+> running, right?  I think that's reasonable behavior for a flush
+> function, and shouldn't cause any weird interactions.
+>
 
-Nit: "no longer need..."
+Ah, can xfs_is_inodegc_enabled() be changed in runtime?
+Sorry for being thick.
+I did not understand why flush should be done in this case and
+push should not, but if you say its ok I'll take your word for it.
 
-> to worry about leaving a number of items on the list that won't get
-> processed until external events prevail.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
->  fs/xfs/xfs_mount.h  |  2 +-
->  fs/xfs/xfs_super.c  |  2 +-
->  3 files changed, 24 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 5269354b1b69..786702273621 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -440,7 +440,7 @@ xfs_inodegc_queue_all(
->  	for_each_online_cpu(cpu) {
->  		gc = per_cpu_ptr(mp->m_inodegc, cpu);
->  		if (!llist_empty(&gc->list))
-> -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
-> +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
->  	}
->  }
->  
-> @@ -1841,8 +1841,8 @@ void
->  xfs_inodegc_worker(
->  	struct work_struct	*work)
->  {
-> -	struct xfs_inodegc	*gc = container_of(work, struct xfs_inodegc,
-> -							work);
-> +	struct xfs_inodegc	*gc = container_of(to_delayed_work(work),
-> +						struct xfs_inodegc, work);
->  	struct llist_node	*node = llist_del_all(&gc->list);
->  	struct xfs_inode	*ip, *n;
->  
-> @@ -2014,6 +2014,7 @@ xfs_inodegc_queue(
->  	struct xfs_inodegc	*gc;
->  	int			items;
->  	unsigned int		shrinker_hits;
-> +	unsigned long		queue_delay = 1;
-
-A default delay of one clock tick, correct?
-
-Just out of curiosity, how does this shake out wrt fstests that do a
-thing and then measure free space?
-
-I have a dim recollection of a bug that I found in one of the
-preproduction iterations of inodegc back when I used delayed_work to
-schedule the background gc.  If memory serves, calling mod_delayed_work
-on a delayed_work object that is currently running does /not/ cause the
-delayed_work object to be requeued, even if delay==0.
-
-Aha, I found a description in my notes.  I've adapted them to the
-current patchset, since in those days inodegc used a radix tree tag
-and per-AG workers instead of a locklesslist and per-cpu workers.
-If the following occurs:
-
-Worker 1			Thread 2
-
-xfs_inodegc_worker
-<starts up>
-node = llist_del_all()
-<start processing inodes>
-<block on something, yield>
-				xfs_irele
-				xfs_inode_mark_reclaimable
-				llist_add
-				mod_delayed_work()
-				<exit>
-<process the rest of nodelist>
-return
-
-Then at the end of this sequence, we'll end up with thread 2's inode
-queued to the gc list but the delayed work is /not/ queued.  That inode
-remains on the gc list (and unprocessed) until someone comes along to
-push that CPU's gc list, whether it's a statfs, or an unmount, or
-someone hitting ENOSPC and triggering blockgc.
-
-I observed this bug while digging into online repair occasionally
-stalling for a long time or erroring out during inode scans.  If you'll
-recall, earlier inodegc iterations allowed iget to recycle inodes that
-were queued for inactivation, but later iterations didn't, so it became
-the responsibility of the online repair's inode scanner to push the
-inodegc workers when iget found an inode that was queued for
-inactivation.
-
-(The current online repair inode scanner is smarter in the sense that it
-will try inodegc_flush a few times before backing out to userspace, and
-if it does, xfs_scrub will generally requeue the entire scrub
-operation.)
-
---D
-
->  
->  	trace_xfs_inode_set_need_inactive(ip);
->  	spin_lock(&ip->i_flags_lock);
-> @@ -2025,19 +2026,26 @@ xfs_inodegc_queue(
->  	items = READ_ONCE(gc->items);
->  	WRITE_ONCE(gc->items, items + 1);
->  	shrinker_hits = READ_ONCE(gc->shrinker_hits);
-> -	put_cpu_ptr(gc);
->  
-> -	if (!xfs_is_inodegc_enabled(mp))
-> +	/*
-> +	 * We queue the work while holding the current CPU so that the work
-> +	 * is scheduled to run on this CPU.
-> +	 */
-> +	if (!xfs_is_inodegc_enabled(mp)) {
-> +		put_cpu_ptr(gc);
->  		return;
-> -
-> -	if (xfs_inodegc_want_queue_work(ip, items)) {
-> -		trace_xfs_inodegc_queue(mp, __return_address);
-> -		queue_work(mp->m_inodegc_wq, &gc->work);
->  	}
->  
-> +	if (xfs_inodegc_want_queue_work(ip, items))
-> +		queue_delay = 0;
-> +
-> +	trace_xfs_inodegc_queue(mp, __return_address);
-> +	mod_delayed_work(mp->m_inodegc_wq, &gc->work, queue_delay);
-> +	put_cpu_ptr(gc);
-> +
->  	if (xfs_inodegc_want_flush_work(ip, items, shrinker_hits)) {
->  		trace_xfs_inodegc_throttle(mp, __return_address);
-> -		flush_work(&gc->work);
-> +		flush_delayed_work(&gc->work);
->  	}
->  }
->  
-> @@ -2054,7 +2062,7 @@ xfs_inodegc_cpu_dead(
->  	unsigned int		count = 0;
->  
->  	dead_gc = per_cpu_ptr(mp->m_inodegc, dead_cpu);
-> -	cancel_work_sync(&dead_gc->work);
-> +	cancel_delayed_work_sync(&dead_gc->work);
->  
->  	if (llist_empty(&dead_gc->list))
->  		return;
-> @@ -2073,12 +2081,12 @@ xfs_inodegc_cpu_dead(
->  	llist_add_batch(first, last, &gc->list);
->  	count += READ_ONCE(gc->items);
->  	WRITE_ONCE(gc->items, count);
-> -	put_cpu_ptr(gc);
->  
->  	if (xfs_is_inodegc_enabled(mp)) {
->  		trace_xfs_inodegc_queue(mp, __return_address);
-> -		queue_work(mp->m_inodegc_wq, &gc->work);
-> +		mod_delayed_work(mp->m_inodegc_wq, &gc->work, 0);
->  	}
-> +	put_cpu_ptr(gc);
->  }
->  
->  /*
-> @@ -2173,7 +2181,7 @@ xfs_inodegc_shrinker_scan(
->  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
->  
->  			WRITE_ONCE(gc->shrinker_hits, h + 1);
-> -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
-> +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
->  			no_items = false;
->  		}
->  	}
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 8c42786e4942..377c5e59f6a0 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -61,7 +61,7 @@ struct xfs_error_cfg {
->   */
->  struct xfs_inodegc {
->  	struct llist_head	list;
-> -	struct work_struct	work;
-> +	struct delayed_work	work;
->  
->  	/* approximate count of inodes in the list */
->  	unsigned int		items;
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 51ce127a0cc6..62f6b97355a2 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1073,7 +1073,7 @@ xfs_inodegc_init_percpu(
->  		gc = per_cpu_ptr(mp->m_inodegc, cpu);
->  		init_llist_head(&gc->list);
->  		gc->items = 0;
-> -		INIT_WORK(&gc->work, xfs_inodegc_worker);
-> +		INIT_DELAYED_WORK(&gc->work, xfs_inodegc_worker);
->  	}
->  	return 0;
->  }
-> -- 
-> 2.35.1
-> 
+Thanks,
+Amir.
