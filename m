@@ -2,201 +2,177 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A43C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 00:52:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11883C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 01:02:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232468AbiEXAwo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 May 2022 20:52:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36300 "EHLO
+        id S230481AbiEXBCy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 May 2022 21:02:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230228AbiEXAwn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 20:52:43 -0400
-Received: from out0.migadu.com (out0.migadu.com [94.23.1.103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA76282171;
-        Mon, 23 May 2022 17:52:41 -0700 (PDT)
-Subject: Re: [BUG report] security_inode_alloc return -ENOMEM let xfs shutdown
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1653353559;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=hCV/Ckq4O2p5W7X5GbGmk3OnCZmzZP8cdc12qMa4RpE=;
-        b=fGNbOgTxC4upz17i5ocFOaBCDksXlvNQWxSSmfGoCNhpqtA2ew8ixNjPqOk2vV/LZP6zCI
-        Ni+xuWtp0EftBPtJ+OlDKVnLVOIWBslgIZj2FkByTPYiRQgFeT2NovY6ixhJYEtEMTljRo
-        upsPEpWbXCA4ywl267RZ3D1qjWyvrAQ=
-To:     Dave Chinner <david@fromorbit.com>,
-        liuzhengyuan <liuzhengyuan@kylinos.cn>,
-        =?UTF-8?B?6IOh5rW3?= <huhai@kylinos.cn>, zhangshida@kylinos.cn
-Cc:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <5a3a9cdc-33c3-4196-b8f7-bfec485eae5b@linux.dev>
- <20220523232009.GW1098723@dread.disaster.area>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Jackie Liu <liu.yun@linux.dev>
-Message-ID: <a05dfccc-33ff-4857-b68d-ddd64cae11d0@linux.dev>
-Date:   Tue, 24 May 2022 08:52:30 +0800
+        with ESMTP id S231398AbiEXBCx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 21:02:53 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D0214A0057
+        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 18:02:52 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 69FE3534523;
+        Tue, 24 May 2022 11:02:50 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ntIwj-00Fdkq-Fm; Tue, 24 May 2022 11:02:49 +1000
+Date:   Tue, 24 May 2022 11:02:49 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+Subject: Re: [PATCH 5/5] xfs: move xfs_attr_use_log_assist out of libxfs
+Message-ID: <20220524010249.GX1098723@dread.disaster.area>
+References: <165323329374.78886.11371349029777433302.stgit@magnolia>
+ <165323332197.78886.8893427108008735872.stgit@magnolia>
+ <20220523033445.GQ1098723@dread.disaster.area>
+ <YovclVb71ZblumWh@magnolia>
+ <20220523225643.GU1098723@dread.disaster.area>
+ <YowoXHly0w/kmKv2@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20220523232009.GW1098723@dread.disaster.area>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YowoXHly0w/kmKv2@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=628c2eba
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=g29s_Z_B74w-HdgNnHUA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-ÔÚ 2022/5/24 ÉÏÎç7:20, Dave Chinner Ð´µÀ:
-> On Mon, May 23, 2022 at 04:51:50PM +0800, Jackie Liu wrote:
->> Hello Maintainer and developer.
->>
->>     Syzkaller report an filesystem shutdown for me, It's very easy to
->> trigger and also exists on the latest kernel version 5.18-rc7.
+On Mon, May 23, 2022 at 05:35:40PM -0700, Darrick J. Wong wrote:
+> On Tue, May 24, 2022 at 08:56:43AM +1000, Dave Chinner wrote:
+> > On Mon, May 23, 2022 at 12:12:21PM -0700, Darrick J. Wong wrote:
+> > > On Mon, May 23, 2022 at 01:34:45PM +1000, Dave Chinner wrote:
+> > > > On Sun, May 22, 2022 at 08:28:42AM -0700, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > > 
+> > > > > libxfs itself should never be messing with whether or not to enable
+> > > > > logging for extended attribute updates -- this decision should be made
+> > > > > on a case-by-case basis by libxfs callers.  Move the code that actually
+> > > > > enables the log features to xfs_xattr.c, and adjust the callers.
+> > > > > 
+> > > > > This removes an awkward coupling point between libxfs and what would be
+> > > > > libxlog, if the XFS log were actually its own library.  Furthermore, it
+> > > > > makes bulk attribute updates and inode security initialization a tiny
+> > > > > bit more efficient, since they now avoid cycling the log feature between
+> > > > > every single xattr.
+> > > > > 
+> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > ---
+> > > > >  fs/xfs/libxfs/xfs_attr.c |   12 +-------
+> > > > >  fs/xfs/xfs_acl.c         |   10 +++++++
+> > > > >  fs/xfs/xfs_ioctl.c       |   22 +++++++++++++---
+> > > > >  fs/xfs/xfs_ioctl.h       |    2 +
+> > > > >  fs/xfs/xfs_ioctl32.c     |    4 ++-
+> > > > >  fs/xfs/xfs_iops.c        |   25 ++++++++++++++----
+> > > > >  fs/xfs/xfs_log.c         |   45 --------------------------------
+> > > > >  fs/xfs/xfs_log.h         |    1 -
+> > > > >  fs/xfs/xfs_super.h       |    2 +
+> > > > >  fs/xfs/xfs_xattr.c       |   65 ++++++++++++++++++++++++++++++++++++++++++++++
+> > > > >  10 files changed, 120 insertions(+), 68 deletions(-)
+> > > > 
+> > > > This seems like the wrong way to approach this. I would have defined
+> > > > a wrapper function for xfs_attr_set() to do the log state futzing,
+> > > > not moved it all into callers that don't need (or want) to know
+> > > > anything about how attrs are logged internally....
+> > > 
+> > > I started doing this, and within a few hours realized that I'd set upon
+> > > yet *another* refactoring of xfs_attr_set.  I'm not willing to do that
+> > > so soon after Allison's refactoring, so I'm dropping this patch.
+> > 
+> > I don't see why this ends up being a problem - xfs_attr_set() is
+> > only called by code in fs/xfs/*.c, so adding a wrapper function
+> > that just does this:
+> > 
+> > int
+> > xfs_attr_change(
+> > 	struct xfs_da_args      *args)
+> > {
+> > 	struct xfs_mount	*mp = args->dp->i_mount;
+> > 
+> > 	if (xfs_has_larp(mp)) {
+> > 		error = xfs_attr_use_log_assist(mp);
+> > 		if (error)
+> > 			return error;
+> > 	}
+> > 
+> > 	error = xfs_attr_set(args);
+> > 	if (xfs_has_larp(mp))
 > 
-> Shutdown is a perfectly reasonable way to handle a failure that we
-> can't recover cleanly from.
-> 
->> dmesg shows:
->>
->> [  285.725893] FAULT_INJECTION: forcing a failure.
->>                 name failslab, interval 1, probability 0, space 0, times 0
->> [  285.729625] CPU: 7 PID: 18034 Comm: syz-executor Not tainted 4.19.90-43+
->> #7
->> [  285.731420] Source Version: b62cabdd86181d386998660ebf34ca653addd6c9
->> [  285.733051] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0
->> 02/06/2015
->> [  285.734796] Call trace:
->> [  285.735614]  dump_backtrace+0x0/0x3e0
->> [  285.736609]  show_stack+0x2c/0x38
->> [  285.737525]  dump_stack+0x164/0x1fc
->> [  285.738489]  should_fail+0x5c0/0x688
->> [  285.739555]  __should_failslab+0x118/0x180
->> [  285.740725]  should_failslab+0x2c/0x78
->> [  285.741808]  kmem_cache_alloc_trace+0x270/0x410
->> [  285.743120]  security_inode_alloc+0x100/0x1a8
->> [  285.744356]  inode_init_always+0x48c/0xa28
->> [  285.745524]  xfs_iget_cache_hit+0x9c0/0x2f28
->> [  285.746739]  xfs_iget+0x33c/0x9e0
->> [  285.747708]  xfs_ialloc+0x218/0x11c0
->> [  285.748752]  xfs_dir_ialloc+0xe8/0x480
->> [  285.749832]  xfs_create+0x5bc/0x1220
->> [  285.750871]  xfs_generic_create+0x42c/0x568
->> [  285.752053]  xfs_vn_mknod+0x48/0x58
->> [  285.753067]  xfs_vn_create+0x40/0x50
->> [  285.754106]  lookup_open+0x960/0x1580
->> [  285.755176]  do_last+0xd44/0x2180
->> [  285.756149]  path_openat+0x1a0/0x6d0
->> [  285.757187]  do_filp_open+0x14c/0x208
->> [  285.758245]  do_sys_open+0x340/0x470
->> [  285.759289]  __arm64_sys_openat+0x98/0xd8
->> [  285.760438]  el0_svc_common+0x230/0x3f0
->> [  285.761541]  el0_svc_handler+0x144/0x1a8
->> [  285.762674]  el0_svc+0x8/0x1b0
->> [  285.763737] security_inode_alloc:796
->> [  285.764733] inode_init_always:202
->> [  285.765669] xfs_create:1213
->> [  285.766485] XFS (dm-0): Internal error xfs_trans_cancel at line 1046 of
->> file fs/xfs/xfs_trans.c.  Caller xfs_create+0x700/0x1220
->> [  285.769503] CPU: 7 PID: 18034 Comm: syz-executor Not tainted 4.19.90-43+
->> #7
->> [  285.771275] Source Version: b62cabdd86181d386998660ebf34ca653addd6c9
->> [  285.772892] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0
->> 02/06/2015
->> [  285.774625] Call trace:
->> [  285.775335]  dump_backtrace+0x0/0x3e0
->> [  285.776324]  show_stack+0x2c/0x38
->> [  285.777236]  dump_stack+0x164/0x1fc
->> [  285.778188]  xfs_error_report+0xdc/0xe0
->> [  285.779292]  xfs_trans_cancel+0x490/0x878
->> [  285.780439]  xfs_create+0x700/0x1220
->> [  285.781477]  xfs_generic_create+0x42c/0x568
->> [  285.782673]  xfs_vn_mknod+0x48/0x58
->> [  285.783687]  xfs_vn_create+0x40/0x50
->> [  285.784724]  lookup_open+0x960/0x1580
->> [  285.785782]  do_last+0xd44/0x2180
->> [  285.786760]  path_openat+0x1a0/0x6d0
->> [  285.787791]  do_filp_open+0x14c/0x208
->> [  285.788844]  do_sys_open+0x340/0x470
->> [  285.789880]  __arm64_sys_openat+0x98/0xd8
->> [  285.791039]  el0_svc_common+0x230/0x3f0
->> [  285.792139]  el0_svc_handler+0x144/0x1a8
->> [  285.793260]  el0_svc+0x8/0x1b0
->> [  285.794283] XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1047
->> of file fs/xfs/xfs_trans.c.  Return address = 00000000a4a366b9
->> [  285.816187] XFS (dm-0): Corruption of in-memory data detected. Shutting
->> down filesystem
->> [  285.818476] XFS (dm-0): Please umount the filesystem and rectify the
->> problem(s)
-> 
-> Yup, that's a shutdown with a dirty transaction because memory
-> allocation failed in the middle of a transaction. XFS can not
-> tolerate memory allocation failure within the scope of a dirty
-> transactions and, in practice, this almost never happens. Indeed,
-> I've never seen this allocation from security_inode_alloc():
-> 
-> int lsm_inode_alloc(struct inode *inode)
-> {
->          if (!lsm_inode_cache) {
->                  inode->i_security = NULL;
->                  return 0;
->          }
-> 
->>>>>>    inode->i_security = kmem_cache_zalloc(lsm_inode_cache, GFP_NOFS);
->          if (inode->i_security == NULL)
->                  return -ENOMEM;
->          return 0;
-> }
-> 
-> fail in all my OOM testing. Hence, to me, this is a theoretical
-> failure as I've never, ever seen this allocation fail in production
-> or test systems, even when driving them hard into OOM with excessive
-> inode allocation and triggering the OOM killer repeatedly until the
-> system kills init....
-> 
-> Hence I don't think there's anything we need to change here right
-> now. If users start hitting this, then we're going to have add new
-> memalloc_nofail_save/restore() functionality to XFS transaction
-> contexts. But until then, I don't think we need to worry about
-> syzkaller intentionally hitting this shutdown.
+> Race condition here ^^^ if we race with someone changing the debug knob,
+> we'll either drop something we never took, or leak something we did
+> take.
 
-Thanks Dave.
-
-   In the actual test, the x86 or arm64 device test will trigger this 
-error more easily when FAILSLAB is turned on. After our internal 
-discussion, we can try again through such a patch. Anyway, thank you for 
-your reply.
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index ceee27b70384..360304409c0c 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -435,6 +435,7 @@ xfs_iget_cache_hit(
-                                 wake_up_bit(&ip->i_flags, __XFS_INEW_BIT);
-                         ASSERT(ip->i_flags & XFS_IRECLAIMABLE);
-                         trace_xfs_iget_reclaim_fail(ip);
-+                       error = -EAGAIN;
-                         goto out_error;
-                 }
-
-@@ -503,7 +504,7 @@ xfs_iget_cache_miss(
-
-         ip = xfs_inode_alloc(mp, ino);
-         if (!ip)
--               return -ENOMEM;
-+               return -EAGAIN;
-
-         error = xfs_iread(mp, tp, ip, flags);
-         if (error)
-
-
---
-BR, Jackie Liu
+True, but largely irrelevant for the purposes of demonstration....
 
 > 
-> Cheers,
+> > 		xlog_drop_incompat_feat(mp->m_log);
+> > 	return error;
+> > }
+> > 
+> > into one of the files in fs/xfs will get this out of libxfs, won't
+> > it?
+> > 
+> > What am I missing here?
 > 
-> Dave.
+> After the last year and a half I've gotten in the bad habit of trying to
+> anticipate the likely style objections of various reviewers to try to
+> get patches into upstream with as few objections as possible, which then
+> leads me down the path of more and more scope creep from the voices
+> inside my head:
 > 
+> "These cleanups should be split into smaller changes for easy
+> backporting."
+>
+> "Setting xattr arguments via the da_args struct is a mess, make them
+> function parameters."
+> 
+> "It's nasty to have xfs_attr_change take 7 parameters, just make an
+> xfs_attrchange_args struct with the pieces we need, and use it to fill
+> out the da args internally."
+> 
+> "These calling conventions are still crap, transaction allocation
+> shouldn't even be in libxfs at all!"
+> 
+> "Why don't you make attr_change have its own flags namespace, and then
+> set attr_filter and attr_flags from that?  This would decouple the
+> interfaces and make them easier to figure out next time."
+> 
+> "There are too many little xfs_attr functions and it's really hard to
+> grok what they all do."
+
+Yes, I understand that we need to re-layer the attr code to get rid
+of all the twisty passages that are all alike, but we don't need to
+do that right now and it avoids tying a simple change up in knots
+that prevent progress from being made.
+
+[FWIW, I have a basic plan for that - split all the sf/leaf/node
+stuff out of xfs_attr_leaf.c into xfs_attr_sf/leaf/node.c, move all
+the sf/leaf/node add/remove/change/lookup stuff out of xfs_attr.c
+into the above files. High level API is in xfs_attr.c (same as
+xfs_dir.c for directories) and everything external interfaces with
+that API. Which we can then tailor to just the information needed
+to set up attr and da_args inside xfs_attr.c....
+
+Then we can start cleaning up all the internal attr APIs, fix all
+the whacky quirks like sf add will do a remove if it's actually a
+replace, clean up the lookup interfaces, etc. ]
+
+> OTOH if you'd be willing to take just that attr_change bit above (with
+> the race condition fixed, I *would* send you that in patch form.
+
+Yes, I think that's just fine. Simple is often best...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
