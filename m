@@ -2,88 +2,201 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEB89C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 00:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A43C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 00:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231145AbiEXAlP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 May 2022 20:41:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45452 "EHLO
+        id S232468AbiEXAwo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 May 2022 20:52:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230125AbiEXAlN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 20:41:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C49F3140DB
-        for <linux-xfs@vger.kernel.org>; Mon, 23 May 2022 17:41:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1653352871;
+        with ESMTP id S230228AbiEXAwn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 May 2022 20:52:43 -0400
+Received: from out0.migadu.com (out0.migadu.com [94.23.1.103])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA76282171;
+        Mon, 23 May 2022 17:52:41 -0700 (PDT)
+Subject: Re: [BUG report] security_inode_alloc return -ENOMEM let xfs shutdown
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1653353559;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=idPCA1Ojor4LlTh+O1e95QR6iGVjUCXmp+mNYdObBb0=;
-        b=e8dfWbhXc9HWRAIN9YhmsBUfj+rb07+Cp8mKmtpGRrzAg3nUW6YZkh2mIwtk883x6tVb7P
-        6bEuhOyjq150XrgEw+UThSKNAic/yVDrj9k5Wzhc+97mIavjHjtrfnqAE7j0B6hRu/HJrL
-        p15F09ELEU/h9+d0DA+WnD4Ov8/r43Q=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-167-erIJ1uDUOEqeqNxZvElaCA-1; Mon, 23 May 2022 20:41:09 -0400
-X-MC-Unique: erIJ1uDUOEqeqNxZvElaCA-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CC140101A52C;
-        Tue, 24 May 2022 00:41:08 +0000 (UTC)
-Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B63D7492C14;
-        Tue, 24 May 2022 00:40:55 +0000 (UTC)
-Date:   Tue, 24 May 2022 08:40:46 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Keith Busch <kbusch@kernel.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, Changhui Zhong <czhong@redhat.com>
-Subject: Re: [PATCH V2] block: ignore RWF_HIPRI hint for sync dio
-Message-ID: <YowpjtLfZPld1H6T@T590>
-References: <20220420143110.2679002-1-ming.lei@redhat.com>
- <YowMVODoNIyaqVdC@kbusch-mbp.dhcp.thefacebook.com>
+        bh=hCV/Ckq4O2p5W7X5GbGmk3OnCZmzZP8cdc12qMa4RpE=;
+        b=fGNbOgTxC4upz17i5ocFOaBCDksXlvNQWxSSmfGoCNhpqtA2ew8ixNjPqOk2vV/LZP6zCI
+        Ni+xuWtp0EftBPtJ+OlDKVnLVOIWBslgIZj2FkByTPYiRQgFeT2NovY6ixhJYEtEMTljRo
+        upsPEpWbXCA4ywl267RZ3D1qjWyvrAQ=
+To:     Dave Chinner <david@fromorbit.com>,
+        liuzhengyuan <liuzhengyuan@kylinos.cn>,
+        =?UTF-8?B?6IOh5rW3?= <huhai@kylinos.cn>, zhangshida@kylinos.cn
+Cc:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <5a3a9cdc-33c3-4196-b8f7-bfec485eae5b@linux.dev>
+ <20220523232009.GW1098723@dread.disaster.area>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Jackie Liu <liu.yun@linux.dev>
+Message-ID: <a05dfccc-33ff-4857-b68d-ddd64cae11d0@linux.dev>
+Date:   Tue, 24 May 2022 08:52:30 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YowMVODoNIyaqVdC@kbusch-mbp.dhcp.thefacebook.com>
-X-Scanned-By: MIMEDefang 2.85 on 10.11.54.10
+In-Reply-To: <20220523232009.GW1098723@dread.disaster.area>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 23, 2022 at 04:36:04PM -0600, Keith Busch wrote:
-> On Wed, Apr 20, 2022 at 10:31:10PM +0800, Ming Lei wrote:
-> > So far bio is marked as REQ_POLLED if RWF_HIPRI/IOCB_HIPRI is passed
-> > from userspace sync io interface, then block layer tries to poll until
-> > the bio is completed. But the current implementation calls
-> > blk_io_schedule() if bio_poll() returns 0, and this way causes io hang or
-> > timeout easily.
+
+
+ÔÚ 2022/5/24 ÉÏÎç7:20, Dave Chinner Ð´µÀ:
+> On Mon, May 23, 2022 at 04:51:50PM +0800, Jackie Liu wrote:
+>> Hello Maintainer and developer.
+>>
+>>     Syzkaller report an filesystem shutdown for me, It's very easy to
+>> trigger and also exists on the latest kernel version 5.18-rc7.
 > 
-> Wait a second. The task's current state is TASK_RUNNING when bio_poll() returns
-> zero, so calling blk_io_schedule() isn't supposed to hang.
+> Shutdown is a perfectly reasonable way to handle a failure that we
+> can't recover cleanly from.
+> 
+>> dmesg shows:
+>>
+>> [  285.725893] FAULT_INJECTION: forcing a failure.
+>>                 name failslab, interval 1, probability 0, space 0, times 0
+>> [  285.729625] CPU: 7 PID: 18034 Comm: syz-executor Not tainted 4.19.90-43+
+>> #7
+>> [  285.731420] Source Version: b62cabdd86181d386998660ebf34ca653addd6c9
+>> [  285.733051] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0
+>> 02/06/2015
+>> [  285.734796] Call trace:
+>> [  285.735614]  dump_backtrace+0x0/0x3e0
+>> [  285.736609]  show_stack+0x2c/0x38
+>> [  285.737525]  dump_stack+0x164/0x1fc
+>> [  285.738489]  should_fail+0x5c0/0x688
+>> [  285.739555]  __should_failslab+0x118/0x180
+>> [  285.740725]  should_failslab+0x2c/0x78
+>> [  285.741808]  kmem_cache_alloc_trace+0x270/0x410
+>> [  285.743120]  security_inode_alloc+0x100/0x1a8
+>> [  285.744356]  inode_init_always+0x48c/0xa28
+>> [  285.745524]  xfs_iget_cache_hit+0x9c0/0x2f28
+>> [  285.746739]  xfs_iget+0x33c/0x9e0
+>> [  285.747708]  xfs_ialloc+0x218/0x11c0
+>> [  285.748752]  xfs_dir_ialloc+0xe8/0x480
+>> [  285.749832]  xfs_create+0x5bc/0x1220
+>> [  285.750871]  xfs_generic_create+0x42c/0x568
+>> [  285.752053]  xfs_vn_mknod+0x48/0x58
+>> [  285.753067]  xfs_vn_create+0x40/0x50
+>> [  285.754106]  lookup_open+0x960/0x1580
+>> [  285.755176]  do_last+0xd44/0x2180
+>> [  285.756149]  path_openat+0x1a0/0x6d0
+>> [  285.757187]  do_filp_open+0x14c/0x208
+>> [  285.758245]  do_sys_open+0x340/0x470
+>> [  285.759289]  __arm64_sys_openat+0x98/0xd8
+>> [  285.760438]  el0_svc_common+0x230/0x3f0
+>> [  285.761541]  el0_svc_handler+0x144/0x1a8
+>> [  285.762674]  el0_svc+0x8/0x1b0
+>> [  285.763737] security_inode_alloc:796
+>> [  285.764733] inode_init_always:202
+>> [  285.765669] xfs_create:1213
+>> [  285.766485] XFS (dm-0): Internal error xfs_trans_cancel at line 1046 of
+>> file fs/xfs/xfs_trans.c.  Caller xfs_create+0x700/0x1220
+>> [  285.769503] CPU: 7 PID: 18034 Comm: syz-executor Not tainted 4.19.90-43+
+>> #7
+>> [  285.771275] Source Version: b62cabdd86181d386998660ebf34ca653addd6c9
+>> [  285.772892] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0
+>> 02/06/2015
+>> [  285.774625] Call trace:
+>> [  285.775335]  dump_backtrace+0x0/0x3e0
+>> [  285.776324]  show_stack+0x2c/0x38
+>> [  285.777236]  dump_stack+0x164/0x1fc
+>> [  285.778188]  xfs_error_report+0xdc/0xe0
+>> [  285.779292]  xfs_trans_cancel+0x490/0x878
+>> [  285.780439]  xfs_create+0x700/0x1220
+>> [  285.781477]  xfs_generic_create+0x42c/0x568
+>> [  285.782673]  xfs_vn_mknod+0x48/0x58
+>> [  285.783687]  xfs_vn_create+0x40/0x50
+>> [  285.784724]  lookup_open+0x960/0x1580
+>> [  285.785782]  do_last+0xd44/0x2180
+>> [  285.786760]  path_openat+0x1a0/0x6d0
+>> [  285.787791]  do_filp_open+0x14c/0x208
+>> [  285.788844]  do_sys_open+0x340/0x470
+>> [  285.789880]  __arm64_sys_openat+0x98/0xd8
+>> [  285.791039]  el0_svc_common+0x230/0x3f0
+>> [  285.792139]  el0_svc_handler+0x144/0x1a8
+>> [  285.793260]  el0_svc+0x8/0x1b0
+>> [  285.794283] XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1047
+>> of file fs/xfs/xfs_trans.c.  Return address = 00000000a4a366b9
+>> [  285.816187] XFS (dm-0): Corruption of in-memory data detected. Shutting
+>> down filesystem
+>> [  285.818476] XFS (dm-0): Please umount the filesystem and rectify the
+>> problem(s)
+> 
+> Yup, that's a shutdown with a dirty transaction because memory
+> allocation failed in the middle of a transaction. XFS can not
+> tolerate memory allocation failure within the scope of a dirty
+> transactions and, in practice, this almost never happens. Indeed,
+> I've never seen this allocation from security_inode_alloc():
+> 
+> int lsm_inode_alloc(struct inode *inode)
+> {
+>          if (!lsm_inode_cache) {
+>                  inode->i_security = NULL;
+>                  return 0;
+>          }
+> 
+>>>>>>    inode->i_security = kmem_cache_zalloc(lsm_inode_cache, GFP_NOFS);
+>          if (inode->i_security == NULL)
+>                  return -ENOMEM;
+>          return 0;
+> }
+> 
+> fail in all my OOM testing. Hence, to me, this is a theoretical
+> failure as I've never, ever seen this allocation fail in production
+> or test systems, even when driving them hard into OOM with excessive
+> inode allocation and triggering the OOM killer repeatedly until the
+> system kills init....
+> 
+> Hence I don't think there's anything we need to change here right
+> now. If users start hitting this, then we're going to have add new
+> memalloc_nofail_save/restore() functionality to XFS transaction
+> contexts. But until then, I don't think we need to worry about
+> syzkaller intentionally hitting this shutdown.
 
-void __sched io_schedule(void)
-{
-        int token;
+Thanks Dave.
 
-        token = io_schedule_prepare();
-        schedule();
-        io_schedule_finish(token);
-}
+   In the actual test, the x86 or arm64 device test will trigger this 
+error more easily when FAILSLAB is turned on. After our internal 
+discussion, we can try again through such a patch. Anyway, thank you for 
+your reply.
 
-But who can wakeup this task after scheduling out? There can't be irq
-handler for POLLED request.
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index ceee27b70384..360304409c0c 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -435,6 +435,7 @@ xfs_iget_cache_hit(
+                                 wake_up_bit(&ip->i_flags, __XFS_INEW_BIT);
+                         ASSERT(ip->i_flags & XFS_IRECLAIMABLE);
+                         trace_xfs_iget_reclaim_fail(ip);
++                       error = -EAGAIN;
+                         goto out_error;
+                 }
 
-The hang can be triggered on nvme/qemu reliably:
+@@ -503,7 +504,7 @@ xfs_iget_cache_miss(
 
-fio --bs=4k --size=1G --ioengine=pvsync2 --norandommap --hipri=1 --iodepth=64 \
-	--slat_percentiles=1 --nowait=0 --filename=/dev/nvme0n1 --direct=1 \
-	--runtime=10 --numjobs=1 --rw=rw --name=test --group_reporting
+         ip = xfs_inode_alloc(mp, ino);
+         if (!ip)
+-               return -ENOMEM;
++               return -EAGAIN;
 
-Thanks, 
-Ming
+         error = xfs_iread(mp, tp, ip, flags);
+         if (error)
 
+
+--
+BR, Jackie Liu
+
+> 
+> Cheers,
+> 
+> Dave.
+> 
