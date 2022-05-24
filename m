@@ -2,90 +2,145 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D4DC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 07:05:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79561C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 May 2022 07:54:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229656AbiEXHFr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 May 2022 03:05:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56110 "EHLO
+        id S234156AbiEXHyQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 03:54:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229638AbiEXHFq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 03:05:46 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7B61782165
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 00:05:45 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BD25F10E6B44
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 17:05:44 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ntObv-00Fjz6-4s
-        for linux-xfs@vger.kernel.org; Tue, 24 May 2022 17:05:43 +1000
-Date:   Tue, 24 May 2022 17:05:43 +1000
-From:   Dave Chinner <david@fromorbit.com>
+        with ESMTP id S233042AbiEXHyO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 03:54:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 062F87B9E4
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 00:54:14 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A0D6D61587
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 07:54:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 095E0C3411C
+        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 07:54:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653378853;
+        bh=+mDB/czA+lE0Iu++HPK+bJ9dNBCWed1wGgJdCxv5Eq4=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=qEaxN1Uw9XI2qCGIi3VYH0qMbC2DmRMNLN/kg+fAXO70bL2eRe/0qtA0vkC+zfWhx
+         jtyq13LXMimLjn0aj1iXNDfQ3oVzr9VHQArWOjVW/xi3hNmdiSUaOF7/z4if7uyDv7
+         qiBDURbMLJCrFAMc3IxyZiRZ8ApKFxmkcJUj4knaW83WhI6ieJWCws82XvqZthlJFI
+         2NH8nvXHQyyVW66WmMGmbMNOjO+bmcJPISZbUoRKSSnSIP5kmN9OgrM3dSbaQlulKt
+         HvFg8cRRAY2mEqC+eWfDk2nHlMvxultHQ2MUDDSFyNrQYts3C2m465L2dELoLCjKbm
+         YL2xtjh+rNP+g==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id E9CB1CC13B7; Tue, 24 May 2022 07:54:12 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
 To:     linux-xfs@vger.kernel.org
-Subject: xfsprogs: 5.19 libxfs kernel sync
-Message-ID: <20220524070543.GA1098723@dread.disaster.area>
+Subject: [Bug 216007] XFS hangs in iowait when extracting large number of
+ files
+Date:   Tue, 24 May 2022 07:54:12 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: jack@suse.cz
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-216007-201763-yqCmjiClvN@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216007-201763@https.bugzilla.kernel.org/>
+References: <bug-216007-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=628c83c8
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
-        a=7-415B0cAAAA:8 a=9-NPeEEhPnI-2cUCaMAA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
 
-Now that the 5.19 kernel code is largely stablised for the first
-merge, I've been starting to get together the libxfs sync tree for
-xfsprogs with all those changes in it. I have built a branch
-that can be found here:
+Jan Kara (jack@suse.cz) changed:
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsprogs-dev.git libxfs-5.19-sync
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |jack@suse.cz
 
-that contains my work in progress so far. It's build on top of the
-current xfsprogs for-next branch. I've ported across everything up
-to the start of the LARP series so far, so I have done the porting
-of the large extent count work and all the other bits and pieces for
-log changes and so on.
+--- Comment #10 from Jan Kara (jack@suse.cz) ---
+(In reply to Peter Pavlisko from comment #6)
+> (In reply to Chris Murphy from comment #2)
+> > number of CPUs
+>=20
+> 1 CPU, 2 cores (Intel Celeron G1610T @ 2.30GHz)
 
-For the large extent count work, I have not added any of the
-specific new xfsprogs functionality like mkfs, etc. Patches 14-18
-of Chandan's V7 patch series here:
+OK, not much CPU power :)
 
-https://lore.kernel.org/linux-xfs/20220321052027.407099-1-chandan.babu@oracle.com/
+> > contents of /proc/meminfo
+>=20
+> (at the time of iowait hangup)
+>=20
+> MemTotal:        3995528 kB
+> MemFree:           29096 kB
+> MemAvailable:    3749216 kB
+> Buffers:           19984 kB
+> Cached:          3556248 kB
+> SwapCached:            0 kB
+> Active:            62888 kB
+> Inactive:        3560968 kB
+> Active(anon):        272 kB
+> Inactive(anon):    47772 kB
+> Active(file):      62616 kB
+> Inactive(file):  3513196 kB
+> Unevictable:           0 kB
+> Mlocked:               0 kB
+> SwapTotal:       2097084 kB
+> SwapFree:        2097084 kB
+> Dirty:                28 kB
+> Writeback:             0 kB
 
-still need to be ported on top of this for the functionality to be
-fully supported in xfsprogs.
+Interestingly basically no dirty memory or memory under writeback. Basically
+everything is in Inactive(file) list which should be very easy to reclaim. =
+But
+given you say we make no progress in reclaiming memory and from the traces =
+we
+see process is hung waiting for memory allocation, it may be that the page
+cache pages are pinned in memory by extra references or something like that.
+The question is what could be XFS doing that clean page cache cannot be
+reclaimed? I have no good answer to that...
 
-Chandan, can you port those changes over to this libxfs sync branch
-and check that I haven't missed anything in the conversion? I did
-pick up one of your patches from that series - "Introduce per-inode
-64-bit extent counters" - because of all the xfs_db bits in it for
-the change in on-disk format, but otherwise I've largely just worked
-through fixing all the compiler errors and converting the xfsprogs
-code over to the new functions and types.
+...
 
-If you port the ramin patches over to thsi branch and test them,
-I'll include them into the branch. I'll be checking for stability
-and regressions on this brnach for the next couple of days, and if
-everythign looks OK I'll send Eric a pull request for it....
+>    8        0 1953514584 sda
+>    8        1     131072 sda1
+>    8        2    2097152 sda2
+>    8        3 1951285336 sda3
+>    8       16 1953514584 sdb
+>    8       17     131072 sdb1
+>    8       18    2097152 sdb2
+>    8       19 1951285336 sdb3
+>    8       32  976762584 sdc
+>    8       33  976761560 sdc1
+>   11        0    1048575 sr0
+>    9        3 1951285248 md3
+>    9        2    2097088 md2
+>    9        1     131008 md1
 
-Once I've done that, I'll work through the same process with the
-LARP patches. I'll probably lean heavily on Allison's recent
-xfsprogs updates for that (no point doing the same work twice!), but
-right now I'm hoping to have the full 5.19 libxfs syncup done with
-both large extent counts and LARP fully functional in that branch
-before the end of the 5.19 merge window....
+Actually not that much overall memory compared to the disk sizes or the siz=
+e of
+unpacked archive.
 
-Cheers,
+You've mentioned another kernel config does not exhibit the problem. Can you
+perhaps post it here for comparison?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
