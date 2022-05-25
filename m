@@ -2,72 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01044C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 May 2022 05:37:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63630C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 May 2022 05:37:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231952AbiEYFhF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 May 2022 01:37:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40854 "EHLO
+        id S241230AbiEYFhG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 May 2022 01:37:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244009AbiEYFhE (ORCPT
+        with ESMTP id S244010AbiEYFhE (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 May 2022 01:37:04 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 112FC28725
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 655F62B1A0
         for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 22:37:03 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24P01xtN023380;
-        Wed, 25 May 2022 05:36:58 GMT
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24ONo5sd018277;
+        Wed, 25 May 2022 05:36:57 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=BT5QaUbIM1djCy3EtrYKTZs9qJIHBq8ECVUF7GLuxSU=;
- b=RInnCsWWTOWnTMkI649p+PozMRq/X0rWN6Zbk2KwMziUhd+xG7hcO2WS9adAK0fwlBm8
- r4yoQHe/dlImcu5b8JpWhUsR04l4VZkSpQArvF2jBRqTAcHhHoGC9cj4yRJ8bXU4CCUu
- WVRe0/FQpLn+4UUOwqL8RRJSdPRSxolXZ6+1FKfYhTuMEZZCLDqfd6n6yhL8y/YIoW9b
- PIVQHFAtcrBvKS6tlZ+F8K5C+UU+xUy+Fe1YiuzTw6jG8su0amqTETcg7YvRM+K+v5f5
- qsywD3zHcf99h868Cv9LRF/j3N8mh3HLyphIvDvQ9Ikle8F7rsuiHjd4N+EdjirtguP7 tg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g93tbs3u7-1
+ s=corp-2021-07-09; bh=VsIW5PY4qMQZU2XhUEhn+gwqF1TmKOdnwPzfVw70PQQ=;
+ b=NxOBD2mb2HtKuFJ3DbCNSrd4cQIJwGHi1YBbYe+biy/QE6sV4gIuj5pnY3QwLOnx/+PX
+ DM2sRl3mz1KN/ZSASeFKE1abn5Za8nVR+ji8T+aq1Gt4/ZQuMO4BzVKC9cxnjx+NdkT5
+ gKSEAj16+V8b54m3ycwYEPthqabbFFgA9h5viQvGSqGPYDdsEDFH8eBsOvYpSsN+0ut/
+ wqSaXf/a1ypFVyvRifE4/kZxgT9hGhMAb8sDgX48dIdsttzB48Uk5ucKdag61+2Yrvgf
+ EuH/aoFk3zhsk00Jno/rdrECxP6Jl7YEpiG2iJRBDHixR3TEmxKY2FWee+U1fO52wfl8 Hw== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g93tas47g-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 May 2022 05:36:58 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24P5aNiO021496;
-        Wed, 25 May 2022 05:36:58 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2048.outbound.protection.outlook.com [104.47.66.48])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3g93x05ru0-1
+        Wed, 25 May 2022 05:36:56 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24P5a5sS034931;
+        Wed, 25 May 2022 05:36:56 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2045.outbound.protection.outlook.com [104.47.66.45])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3g93wux642-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 May 2022 05:36:57 +0000
+        Wed, 25 May 2022 05:36:55 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=M4v5YX/1NHoGgKg5XMgqff4p1djuktnGScg3sXEzK/zVCZmuaegXd68qqX9JGVbl/TaYJoCkGko0JwcTkNPpe/lHZ8fGHzmkj0tg8joscoiGWOEl5qMWcTDo+48liHYvlteFvxnLyZr7Q3hBis21K5FXrP/r53S2zZFVcNIGKubTNXqYxdYPWAiXX0vL/ryb+8Q2uE99oPQ/q2dpYn6nmFBXTled3slX1iCpEb7J0Oo5hMq89IxQoXMpT/PSCtV4pGlOra6ljpC/JmPA5/1yviBosvCJU8+lngr/lLixQxQXcLDh7/PI/82cdGw/wk+/veRBtmy9xloLT0AqQgmlNA==
+ b=Yg3rNWwKMbz5tRmaHJINXwSaUmyfAE7kCAbrFa/gS6JPoZksGjkk13dhwzuSYgx/eL6HTgnOnA/ApvsJzUaZHpJW/INePy9l/L670meSYUfQSTgvyP4rInBdzvJCNftKg8W4rJvKnz/V/6f79tg11n3SiH+6OjSGHwTHlSKA0IXAct71MmarglLVNsRJh63thCDXN/E64/UMjARbnUGOGECZZhCgSTkVfiprX95RMB5EXByYhlSElKAkamDM8LVaji8C7pyV7WeJQefUWWuDrmKg5wAshZiGtQ+OlH4kXVZG6JMse++MmGCP7h5DKDO0TBRroThxeAH7lWIaVGLQUg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BT5QaUbIM1djCy3EtrYKTZs9qJIHBq8ECVUF7GLuxSU=;
- b=IlGiP2+6Ul4zr0lG7AlKozjBnYGkEc+r+vkv3EUiCFsefi3JiSHWeMxplHf0sdRPiBW/KiKc84+cOTD7drkHmlVlsGPYeS2zySF+ViT3Cbn7TBdwkcLec4Jsvn+6t5WDGPJeRp80IeIQWf+lYFaVRJr5lYQ+zscY6RXLZuHEsYeEq4W49qvWiyhyA19XTuy6tgZe3EZzQMsOG6yCsO+9wASYkE/sUe0G+IMhPbvSBr4zvVwe/wIjuX4hmWmdyW8JWmLVE/XnF+qmUhUBKu0ZHMEjV/YksCxp37hiiYPi8xE8xX5Rwj75LD0g1vvx7zLYHsj/rbixzVf2eqwlHTfMOQ==
+ bh=VsIW5PY4qMQZU2XhUEhn+gwqF1TmKOdnwPzfVw70PQQ=;
+ b=Z243o3IhrwFviF1Q60aji8gAjleLNMmdPGFzPyK6d9wcd6ROSh9xgwuBmdSImO7dg7tle2po4SycWeitkYLQyByHTJvGqP4F0f0375E9vStNfGcjxo8IND4SQzOG1P/cKnX1YSrDtV/BMAoPCYlZZJvoHWdPluXr6Lhsxzpap74EaMTL1XiK9HmHfFBslTA9dsOCJvV5FMQ08815PhdcHaOgGfYJr939ZTR/M48KnRU2aoGvoCbl5KWtuPSd4DqwfUF9/QNp/wd/n6qk6ZVM4WxraPLFDvRtsUNCH7B+WXSCoIFLGmK/XUeG30UXFCRYWrfWHD9la6EK9GFXvzftWw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BT5QaUbIM1djCy3EtrYKTZs9qJIHBq8ECVUF7GLuxSU=;
- b=SYSouodqzL++OFSDAUP3rxjinCJF1CuVU5DiDNXHC/iPWMu+axUuYK2QZuOENJ1fLTIpSVJlFq+VeVoPghrLzxr0hbbzh6g/hUZxEWq9KsIXT3hAf19sCZkCfCuB4UjfDrHNtkb6tcTBBP+kAkH9n0v8Iai7SnZzeaT9teNA4/Y=
+ bh=VsIW5PY4qMQZU2XhUEhn+gwqF1TmKOdnwPzfVw70PQQ=;
+ b=puaOAhOmb1JZ0rs/y9Glj28FwKBYQ+HIrrsGfcv2oS7Yc04mdJY41tbOzs7HVv194uGwnVy2hEnQrdxmpbi9Gxe+t9cSgVU7A3OyqHP4SZ5KKdlGbI0RXdewocO3OFmRuLW48/Bq2YGEk4QztHozZ6qDM4UT9RClMA8RV6dYUNg=
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
  by BLAPR10MB4817.namprd10.prod.outlook.com (2603:10b6:208:321::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13; Wed, 25 May
- 2022 05:36:56 +0000
+ 2022 05:36:54 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::5476:49e9:e3eb:e62]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::5476:49e9:e3eb:e62%5]) with mapi id 15.20.5273.023; Wed, 25 May 2022
- 05:36:56 +0000
+ 05:36:54 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, david@fromorbit.com,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH 2/5] xfsprogs: Invoke bulkstat ioctl with XFS_BULK_IREQ_NREXT64 flag
-Date:   Wed, 25 May 2022 11:06:27 +0530
-Message-Id: <20220525053630.734938-3-chandan.babu@oracle.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, david@fromorbit.com,
+        Chandan Babu R <chandan.babu@oracle.com>
+Subject: [PATCH 1/5] xfs_repair: check filesystem geometry before allowing upgrades
+Date:   Wed, 25 May 2022 11:06:26 +0530
+Message-Id: <20220525053630.734938-2-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220525053630.734938-1-chandan.babu@oracle.com>
 References: <20220525053630.734938-1-chandan.babu@oracle.com>
@@ -78,245 +78,431 @@ X-ClientProxiedBy: TY2PR06CA0047.apcprd06.prod.outlook.com
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 6b46b452-bbe2-4442-0ae4-08da3e109491
+X-MS-Office365-Filtering-Correlation-Id: c79376fc-947b-4f3b-9156-08da3e109358
 X-MS-TrafficTypeDiagnostic: BLAPR10MB4817:EE_
-X-Microsoft-Antispam-PRVS: <BLAPR10MB481729CD82B4419E26CC30BCF6D69@BLAPR10MB4817.namprd10.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <BLAPR10MB4817B12493B2A32C78469A11F6D69@BLAPR10MB4817.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: NkGZ+rvcheQzgTh0d6FzilNQWE/4bz4uXaoMtExqc8gzMDfEeQ0jiuUy8lFIlDCikKRl8djv+Moay97a+jivtJbfuBEh1x7dnDJTmrVe/0LbseMikkcLTejHDAWZ+3JO+7xtfiYSxghVj9Q6BSdys3kyiOTZ7WgbC+jZ/DisREQZJWD050vaXRTTVZSkvEai4jo2jIq61GzNHJFE7dqXTWGi87zgkA5bO7Izztisuz9JjOZjAOpgO/rew+i+Z29mSHHzDvUK1E4COJBJXUAFJYv+XIEoIcVgOUpl8K/4Vj2N6T7VzK1BW2KiooujlVUnFqiv/IjaeCtmAW97Dlm35SPVSKkdZImFyPNXaX/Rq7GpzerfOVv4RVGBbab16bFI5rMmhAMNJzfa5s7MBWxVhTFxmjJoLRvlG+lI805c4w4GF9SIt7kWyHJsWb3YE9pW9aHyOOjv1IxZ3ZbomkLCm2y6USauu+rZZjnpTbZGlVQ29OOLYRiktx1t3mtfmNmakGnC+9zQmPKVVepK742vflIFfQNFb71nI/XjsYIpoGtKNbwI7kycImTYnOgIOtSA1KQ+Zb31kdu8PTS/TaOTZO0Xi3dib//MgIs4/MMgu3LhsbbDsfJFkDjZwmB3g4Sfswh3NbC5mfhWpVdH2WvJjU1cnk0l3+4zCiwaYk0G/GDizmW7H7P0xGOVucIy8vijMUBmHlFzSoQlttsNhfMZTA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(5660300002)(66946007)(66556008)(6512007)(4326008)(8676002)(66476007)(83380400001)(8936002)(508600001)(6486002)(6506007)(1076003)(316002)(38100700002)(6666004)(52116002)(86362001)(6916009)(186003)(54906003)(36756003)(2906002)(26005)(38350700002)(2616005);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: VOVURN2IanvxTdfHReJJIBQpH7zejapcC9IDo7dEFzx+FslosJPlpB7ciSrWksoQ0PxvHVP9lgNGJ27gRhFi4xXt4PWCMEVh8YCKUtX3SSLXnD0rusXhBDFdf35XruvaoyFtUqS/kLTtjHGzU3ECudfAbYRsAlHYs0W6Q8jK3sc/OvNEdQ35jdCu2KshHjiOjCGNsL2QvbBwHJFzwIy7YBLK37wCqL792suw+jQoNniKkowBs1Pxkwbgfi+eZFHaVb+0gsfTGZIJlbx2RaDf499QPPh0ngHh7ojlIa8P0c8p5I9OZaIV0QzzNUVZpCkM8/Z2Gb3nQ46ijSmm6pU13dqjNjKAP+1HwQlVmm9rQ+IjscvbouaWjVuFPJ3hYhYLyguGd3+NiKeZf8Q4YPmwg4yq9RhEeDDoPmdtprolrfqxAWHsUq3UAjh/aO9atC+LVZ86bPC5oSaJhSK41GiGGstpqWWUEtViAzOq2KjEWNUSYh2ka0+Wft7pB4IZ7I12Xspy83fN9/xkHghrQRJf+BqEWWcaQ41pFKUhls6vLx38Ve0WXnpyFKsSjIymUfukG4xjMJuo+vx/a+Yvk6q88Tn9bLDNqV3z58EvPyMHKWU0q3DtEONSK4rPG6JMKglEAB55BWVT3u/ETen998gG7t6fynEk5ZCALO+DYdOU1fGHkJ6s6EcimNI8IUhGSgkbC29YI2P5xrniPxhi1JUDAA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(5660300002)(66946007)(66556008)(6512007)(4326008)(8676002)(66476007)(83380400001)(8936002)(508600001)(6486002)(6506007)(1076003)(316002)(38100700002)(6666004)(52116002)(86362001)(6916009)(186003)(54906003)(36756003)(2906002)(26005)(30864003)(38350700002)(107886003)(2616005);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?AZbluQjsE6WbbArwoG4rPo4u272pOpsdqEjC+L6BiNEQYMRB6dPdUmqLzzSv?=
- =?us-ascii?Q?BpBe+IaI1tyHXwDCcNQ+ISCQG0e6Yq+/QD/G08qhrneLGAaWaOaFWlJYGWQX?=
- =?us-ascii?Q?wzVvlejPvQmZK33EMw3dway26ksZgaftTf6E5QDjg7WtJyh6rIHYqkrkZYKD?=
- =?us-ascii?Q?D4KIK2kqRj7K+9iu6ejIMBnkh0ctsCHpTRkn8vGpyZmQgwDLXvLytDx50Ztf?=
- =?us-ascii?Q?37SP8oeHr4QaLL9eHiHQjENjgXa34uFlNIh46wiLPUQLXtS33jxMwu5rThHF?=
- =?us-ascii?Q?avexV/R5Iuvm69Il2EHv+0Sh1iBwEkhF5PnXN4Uz3cw5toe/ZcjJ1j/LVABS?=
- =?us-ascii?Q?O7IqqdejoRw+yxR/PEx68ZqCWxGb++wGXSgPumBENSkqPo8jg95CtMmWaplu?=
- =?us-ascii?Q?KQnKKdSWqooVPa8cB+zSuYirtZYMQtYpsEhtpO2Rz+3WapYkckAozg5SKSx/?=
- =?us-ascii?Q?0XRtE8B9xdGuZc1o2klGFObro1UiqHuSNgZQVMbLEEF26yzcoATDAbfVfEqR?=
- =?us-ascii?Q?1mwvtr19QZaZGqWfuUsYiL3D15gd3jWoH8f/Mg0hktEA4IdkdAzCQ9Fseb/l?=
- =?us-ascii?Q?B0xLvIx/pzOXl3rI4bbYBmRP8k3dVG/tI+5IFvbQRCg0MS0PWbR7HLTf7BQz?=
- =?us-ascii?Q?dr/lV/+iE2X7vGy6MGrs5dAEqaHGXagtwJRAElFEXxt5EC0jvvPHDrdRSlto?=
- =?us-ascii?Q?nexNkJpsrxVgZIT0Ejyyvuv/TFDsglbU8VlclVzmFFq6ObGG9IulBD87CiXn?=
- =?us-ascii?Q?RK9cmjuT0yqz1Tj/FJOHiesBT2NvM4TWPZmPXj8FNzzVjfxn9mrKr2KjImNV?=
- =?us-ascii?Q?GNwOAtsgAYXEGJ+MZPGJWsC3tD9ivXJgFJ4Dh+CI0VeyZC9MgTP9AOROCurD?=
- =?us-ascii?Q?dpZvELJILOPZ7j+BcE6adMK3LnkaEiu/EHGizmuJwny9oJdpRC13UT8YRZ+6?=
- =?us-ascii?Q?p/b99QXTinaGlYv+d5KkATYJuQjPlBtrj9z6eGaMZ2dFjTIM+8LlQotYQAyK?=
- =?us-ascii?Q?UvQ/JvDGA8ApkUk2odgk6mV2o1beEvt46LzU3wQRClHfluoQZfPvzlf1JFOY?=
- =?us-ascii?Q?up5k4VWzoncxT4NRitUSmP1cUgzoIvLbJCmFNrz9lLbZJwVIkLQQ1fER3bpV?=
- =?us-ascii?Q?BTrawXepQjVFUvKxPagzy+2hZJU3KAi1I57O4cWUwLBmU8H1ptMXjTUUgvI+?=
- =?us-ascii?Q?ma90ucDD7jxUwbnkHyU0Wb6vhf1jniO7QSzW8N0MZ/QMpnKq0kVUDN6X7kUH?=
- =?us-ascii?Q?mPvPGJxFtdRQLc5JKR7pVCTlIBNg385e4YVUascHX7ivtn93AcHH0GMlkOqN?=
- =?us-ascii?Q?7sPvGA9hnWdHtOKjTYdcTciKrJwEC4Bzned+rbzYFsjpdezFer/5YT+O1PBd?=
- =?us-ascii?Q?d0n+JAsFZLl2mIVcr76f5vFr6j/dj0ybghLR9hOdgKRdvBv9bxYaRjEOe49q?=
- =?us-ascii?Q?9T3xWxhQbPnqCNgawhj6I/HKMMWm4K1DIFH1tgnCkPDSlGUdMqA8P70srC8q?=
- =?us-ascii?Q?GR0nKYn7qB7cqyBJpq3a9zLEIvAVIAz27Qq7eUvtNN4MKlYKomwjcc27RDSd?=
- =?us-ascii?Q?RxgExvxz7P6Z+PtrtaOYPGpzfJTjb5SUWhu3XK7GXdXWtrhjFC15XuEV6nlu?=
- =?us-ascii?Q?5Eo6k7XfAhpzKEC3d+sb1CZ8+O0PsYJYZg5IrmMrWh1jzOsa4hnAt0hmJ6fN?=
- =?us-ascii?Q?nduS65HVul+/jAN6sc60hpsDXP/QfnJjRA5z0KjmHF28xJJrD8hex/0i4jAj?=
- =?us-ascii?Q?kiHbYGg5+oNFNm11RNGikBHutDVfCbo=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?HO39mHyyXmTD2ZJJ1LGmWyxqMsQAlbcEs2yc1YG3UNNcWr9c+f+x9oSk0W/2?=
+ =?us-ascii?Q?/Te3UQBdTVVv9zET7HtGxFFHD/sAim+mMAeLhNeibJajrWi0ScsXhRsIsLVn?=
+ =?us-ascii?Q?QR63oKQtPRYFJVRglNzEWTwd/UTRdGFGhYuKNXDrjjaYkzeiY6Umyhn1LQOo?=
+ =?us-ascii?Q?iSS3VItSLO1lzbTjPOJtzuMgji5BaF8Z+QH7hkwLig7OOucNexts3sg8mWyC?=
+ =?us-ascii?Q?S7g4IObNPIFiAKonk4UwRXlygyJLkSuw7G6bq6PXj5s57xAvf9BbNz12Msry?=
+ =?us-ascii?Q?brVUK6g0gOnNh3WFEsDw4LGHaa2gmWK4TG7h8Z8vHXURx2tGaAe4nO6S1Jys?=
+ =?us-ascii?Q?txn8kKH5XV8HB+nUN1hX8Fml4DBdKQU9zP+f1jlokI5uAQDPoZ5+6TLwNCUA?=
+ =?us-ascii?Q?H94rBlq04r1XoC2HhQmx8FMsbf2zW+B/5C8q3XjpqYc+BH4okJTUBQe5h0+/?=
+ =?us-ascii?Q?CT71jBq/APPHqUmH86CTDd2hzeColiTa5JLXe+Bssk6gFo8Xu4M7uLfLZ4Nc?=
+ =?us-ascii?Q?wMezbTc1MsqhvchlZNlIZLHSdLaHBzRxOZCq9q8oWT1al9WGbc8ycxj/9e6h?=
+ =?us-ascii?Q?864G2VEngIzaRH7J0M7oDwVKnWtDYp7i9UmSkp64DXvxhmQrGLG2wvKAhZbX?=
+ =?us-ascii?Q?ecgGXbtHUAORhFlsIZl/vvTMp6skEwSG2m11361TgUD6oJpGgAfOR3wbwScY?=
+ =?us-ascii?Q?I/mSeVDsHxnpxLVW6R65ZUVT44gm5micLF7HvcATliHbwSz0tOz4jvMmByI0?=
+ =?us-ascii?Q?sklgTQvcKPgx+HMzhfToDeKJX+OktJQ/TrV6KoqwYXqJ35trDXKAAV8Hcesx?=
+ =?us-ascii?Q?m7RA5KH0olKY+dHXhMbpr/XZpLr9BG1Xgsy0bfmCxne25W5ohzBRsUGjQ+yZ?=
+ =?us-ascii?Q?NcUB2MczBxacjqcgPq7kDJM5oJGczP9NGFQzERh1jKRA5aGn9XQrAJcYNCdj?=
+ =?us-ascii?Q?rs9nsop6NaQBmXtDPL8oNLlNCkhyc43M+5PtIeEDK4oiLmg9vRs9jNjMnqQF?=
+ =?us-ascii?Q?45bLtAkBCe2iirs2sWsncjGx8HWvofB8MkEUnykEFEQ6GS7dg2Un9SUC7yoP?=
+ =?us-ascii?Q?6Zifql7nBiVTcBr0lbwJ4tmmnKf5K/Ao8MtPuagiceI3Cm9Crs2veFPR56Zf?=
+ =?us-ascii?Q?iX83EE4MDbnwQhlVB2aUI3NfdDYZVGseSsXp3DNbcG8O4sKHVmqpMxc8qt8f?=
+ =?us-ascii?Q?WtrT0YVUbwDIHFYU0JKhndBQep75eGqGK/h8hYgFElOVekw0KiR3bgz7KmF2?=
+ =?us-ascii?Q?inrT5NekUZ+Hq0I0qCse5xrf7YhxeRCYCeYOk5YhI7KFe08G37VKukqG/Ol5?=
+ =?us-ascii?Q?jN/2XpxH7BrCRInxL2M0Qe8GVtlxDJi0nfYtaEoJd4Q/K57UxZ0KTVTMXu8H?=
+ =?us-ascii?Q?jvV6fo8T6SYg1vWIRQXkZjAi/u2246rNRfr3z7d8U0F58gCd5ASAr9iewtuK?=
+ =?us-ascii?Q?9+UaA57eqZae0vhnZ+P6VkHxT5dv2sjkQ2liRVFKLAAMt50jj5WOVX0Px7BO?=
+ =?us-ascii?Q?o40B17NyjUu6f9IjXnbwFBVU+DVFTyN7cFTwmE4HsYQH71WHyS5vYoGyH6m3?=
+ =?us-ascii?Q?VidkG55dRVcpEz8TrFPaUbkqOIfjuQh6WJ4NOSqbDK+ri+gCSHvbOcAuyDGW?=
+ =?us-ascii?Q?aO4X60WK7KlPVBdMNWz37IBmOKtUKzLvAFST27jx5WRQzNSmOifi5Rxh5hyd?=
+ =?us-ascii?Q?TKUkm2D5mjEAj8lSOFOhK1XKr8kIBTPdM7ODMN2WNJxkpb3eXq05GeOHTo6H?=
+ =?us-ascii?Q?5pTwhRWv4HCz4x0QUwtXcD86NWFcHtM=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6b46b452-bbe2-4442-0ae4-08da3e109491
+X-MS-Exchange-CrossTenant-Network-Message-Id: c79376fc-947b-4f3b-9156-08da3e109358
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 May 2022 05:36:56.0997
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 May 2022 05:36:54.0518
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: T3HjppKlWImKaseGUAl8hmT9yZlCCZYUGhcDu3n7jF5J4y8fBOzT/Kkiay03jppsJfWmdzNrWGwJYK5Xi16sjQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: WgxlK6wPXVxNVz0FNEICBBUEfAdCpbjObs1fljiYIO0zW4Gg4/LvLjrLGfyG+lr1osN6y3RFKa4KEtkAYipY7A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB4817
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.874
  definitions=2022-05-25_01:2022-05-23,2022-05-25 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 mlxlogscore=999
- spamscore=0 suspectscore=0 adultscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2204290000
- definitions=main-2205250029
-X-Proofpoint-GUID: 8X8quxO21xeCykTf00jGPIOJO69J9j0d
-X-Proofpoint-ORIG-GUID: 8X8quxO21xeCykTf00jGPIOJO69J9j0d
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ adultscore=0 bulkscore=0 suspectscore=0 phishscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2204290000 definitions=main-2205250029
+X-Proofpoint-GUID: 38jRrQmityFauYdglNsxidLiDtkWW2jJ
+X-Proofpoint-ORIG-GUID: 38jRrQmityFauYdglNsxidLiDtkWW2jJ
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit adds support to libfrog to enable reporting 64-bit extent counters
-to its users. In order to do so, bulkstat ioctl is now invoked with the newly
-introduced XFS_BULK_IREQ_NREXT64 flag if the underlying filesystem's geometry
-supports 64-bit extent counters.
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Currently, the two V5 feature upgrades permitted by xfs_repair do not
+affect filesystem space usage, so we haven't needed to verify the
+geometry.
+
+However, this will change once we start to allow the sysadmin to add new
+metadata indexes to existing filesystems.  Add all the infrastructure we
+need to ensure that the log will still be large enough, that there's
+enough space for metadata space reservations, and the root inode will
+still be where we expect it to be after the upgrade.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+[Recompute transaction reservation values; Exit with error if upgrade fails]
 ---
- fsr/xfs_fsr.c                 |  4 ++--
- io/bulkstat.c                 |  1 +
- libfrog/bulkstat.c            | 29 +++++++++++++++++++++++++++--
- man/man2/ioctl_xfs_bulkstat.2 | 10 +++++++++-
- 4 files changed, 39 insertions(+), 5 deletions(-)
+ include/libxfs.h         |   1 +
+ include/xfs_mount.h      |   1 +
+ libxfs/init.c            |  24 +++--
+ libxfs/libxfs_api_defs.h |   3 +
+ repair/phase2.c          | 206 +++++++++++++++++++++++++++++++++++++--
+ 5 files changed, 218 insertions(+), 17 deletions(-)
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 6cf8bfb7..ba02506d 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -590,7 +590,7 @@ cmp(const void *s1, const void *s2)
- 		(bs1->bs_version == XFS_BULKSTAT_VERSION_V5 &&
- 		bs2->bs_version == XFS_BULKSTAT_VERSION_V5));
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 915bf511..7d6e9a33 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -77,6 +77,7 @@ struct iomap;
+ #include "xfs_refcount_btree.h"
+ #include "xfs_refcount.h"
+ #include "xfs_btree_staging.h"
++#include "xfs_ag_resv.h"
  
--	return (bs2->bs_extents - bs1->bs_extents);
-+	return (bs2->bs_extents64 - bs1->bs_extents64);
+ #ifndef ARRAY_SIZE
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index b32ca152..011f395a 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -259,6 +259,7 @@ __XFS_UNSUPP_OPSTATE(shutdown)
+ 
+ #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
+ 
++void libxfs_compute_all_maxlevels(struct xfs_mount *mp);
+ struct xfs_mount *libxfs_mount(struct xfs_mount *mp, struct xfs_sb *sb,
+ 		dev_t dev, dev_t logdev, dev_t rtdev, unsigned int flags);
+ int libxfs_flush_mount(struct xfs_mount *mp);
+diff --git a/libxfs/init.c b/libxfs/init.c
+index a01a41b2..15052696 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -728,6 +728,21 @@ xfs_agbtree_compute_maxlevels(
+ 	mp->m_agbtree_maxlevels = max(levels, mp->m_refc_maxlevels);
  }
  
++/* Compute maximum possible height of all btrees. */
++void
++libxfs_compute_all_maxlevels(
++	struct xfs_mount	*mp)
++{
++	xfs_alloc_compute_maxlevels(mp);
++	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
++	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
++	xfs_ialloc_setup_geometry(mp);
++	xfs_rmapbt_compute_maxlevels(mp);
++	xfs_refcountbt_compute_maxlevels(mp);
++
++	xfs_agbtree_compute_maxlevels(mp);
++}
++
  /*
-@@ -655,7 +655,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
- 		for (p = buf, endp = (buf + buflenout); p < endp ; p++) {
- 			/* Do some obvious checks now */
- 			if (((p->bs_mode & S_IFMT) != S_IFREG) ||
--			     (p->bs_extents < 2))
-+			     (p->bs_extents64 < 2))
- 				continue;
- 
- 			ret = -xfrog_bulkstat_v5_to_v1(&fsxfd, &bs1, p);
-diff --git a/io/bulkstat.c b/io/bulkstat.c
-index 41194200..a9ad87ca 100644
---- a/io/bulkstat.c
-+++ b/io/bulkstat.c
-@@ -57,6 +57,7 @@ dump_bulkstat(
- 	printf("\tbs_sick = 0x%"PRIx16"\n", bstat->bs_sick);
- 	printf("\tbs_checked = 0x%"PRIx16"\n", bstat->bs_checked);
- 	printf("\tbs_mode = 0%"PRIo16"\n", bstat->bs_mode);
-+	printf("\tbs_extents64 = %"PRIu64"\n", bstat->bs_extents64);
- };
- 
- static void
-diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
-index 195f6ea0..0a90947f 100644
---- a/libfrog/bulkstat.c
-+++ b/libfrog/bulkstat.c
-@@ -56,6 +56,9 @@ xfrog_bulkstat_single5(
- 	if (flags & ~(XFS_BULK_IREQ_SPECIAL))
- 		return -EINVAL;
- 
-+	if (xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)
-+		flags |= XFS_BULK_IREQ_NREXT64;
-+
- 	ret = xfrog_bulkstat_alloc_req(1, ino, &req);
- 	if (ret)
- 		return ret;
-@@ -73,6 +76,12 @@ xfrog_bulkstat_single5(
+  * Mount structure initialization, provides a filled-in xfs_mount_t
+  * such that the numerous XFS_* macros can be used.  If dev is zero,
+@@ -772,14 +787,7 @@ libxfs_mount(
+ 		mp->m_swidth = sbp->sb_width;
  	}
  
- 	memcpy(bulkstat, req->bulkstat, sizeof(struct xfs_bulkstat));
+-	xfs_alloc_compute_maxlevels(mp);
+-	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
+-	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
+-	xfs_ialloc_setup_geometry(mp);
+-	xfs_rmapbt_compute_maxlevels(mp);
+-	xfs_refcountbt_compute_maxlevels(mp);
+-
+-	xfs_agbtree_compute_maxlevels(mp);
++	libxfs_compute_all_maxlevels(mp);
+ 
+ 	/*
+ 	 * Check that the data (and log if separate) are an ok size.
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 370ad8b3..824f2c4d 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -21,6 +21,8 @@
+ 
+ #define xfs_ag_init_headers		libxfs_ag_init_headers
+ #define xfs_ag_block_count		libxfs_ag_block_count
++#define xfs_ag_resv_init		libxfs_ag_resv_init
++#define xfs_ag_resv_free		libxfs_ag_resv_free
+ 
+ #define xfs_alloc_ag_max_usable		libxfs_alloc_ag_max_usable
+ #define xfs_allocbt_maxlevels_ondisk	libxfs_allocbt_maxlevels_ondisk
+@@ -112,6 +114,7 @@
+ #define xfs_highbit64			libxfs_highbit64
+ #define xfs_ialloc_calc_rootino		libxfs_ialloc_calc_rootino
+ #define xfs_iallocbt_maxlevels_ondisk	libxfs_iallocbt_maxlevels_ondisk
++#define xfs_ialloc_read_agi		libxfs_ialloc_read_agi
+ #define xfs_idata_realloc		libxfs_idata_realloc
+ #define xfs_idestroy_fork		libxfs_idestroy_fork
+ #define xfs_iext_lookup_extent		libxfs_iext_lookup_extent
+diff --git a/repair/phase2.c b/repair/phase2.c
+index 13832701..4c315055 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -133,7 +133,8 @@ zero_log(
+ 
+ static bool
+ set_inobtcount(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
+ {
+ 	if (!xfs_has_crc(mp)) {
+ 		printf(
+@@ -153,14 +154,15 @@ set_inobtcount(
+ 	}
+ 
+ 	printf(_("Adding inode btree counts to filesystem.\n"));
+-	mp->m_sb.sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
+-	mp->m_sb.sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
++	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
++	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+ 	return true;
+ }
+ 
+ static bool
+ set_bigtime(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
+ {
+ 	if (!xfs_has_crc(mp)) {
+ 		printf(
+@@ -174,28 +176,214 @@ set_bigtime(
+ 	}
+ 
+ 	printf(_("Adding large timestamp support to filesystem.\n"));
+-	mp->m_sb.sb_features_incompat |= (XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR |
+-					  XFS_SB_FEAT_INCOMPAT_BIGTIME);
++	new_sb->sb_features_incompat |= (XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR |
++					 XFS_SB_FEAT_INCOMPAT_BIGTIME);
+ 	return true;
+ }
+ 
++struct check_state {
++	struct xfs_sb		sb;
++	uint64_t		features;
++	bool			finobt_nores;
++};
 +
-+	if (!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)) {
-+		bulkstat->bs_extents64 = bulkstat->bs_extents;
-+		bulkstat->bs_extents = 0;
++static inline void
++capture_old_state(
++	struct check_state	*old_state,
++	const struct xfs_mount	*mp)
++{
++	memcpy(&old_state->sb, &mp->m_sb, sizeof(struct xfs_sb));
++	old_state->finobt_nores = mp->m_finobt_nores;
++	old_state->features = mp->m_features;
++}
++
++static inline void
++restore_old_state(
++	struct xfs_mount		*mp,
++	const struct check_state	*old_state)
++{
++	memcpy(&mp->m_sb, &old_state->sb, sizeof(struct xfs_sb));
++	mp->m_finobt_nores = old_state->finobt_nores;
++	mp->m_features = old_state->features;
++	libxfs_compute_all_maxlevels(mp);
++	libxfs_trans_init(mp);
++}
++
++static inline void
++install_new_state(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
++{
++	memcpy(&mp->m_sb, new_sb, sizeof(struct xfs_sb));
++	mp->m_features |= libxfs_sb_version_to_features(new_sb);
++	libxfs_compute_all_maxlevels(mp);
++	libxfs_trans_init(mp);
++}
++
++/*
++ * Make sure we can actually upgrade this (v5) filesystem without running afoul
++ * of root inode or log size requirements that would prevent us from mounting
++ * the filesystem.  If everything checks out, commit the new geometry.
++ */
++static void
++install_new_geometry(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
++{
++	struct check_state	old;
++	struct xfs_perag	*pag;
++	xfs_ino_t		rootino;
++	xfs_agnumber_t		agno;
++	int			min_logblocks;
++	int			error;
++
++	capture_old_state(&old, mp);
++	install_new_state(mp, new_sb);
++
++	/*
++	 * The existing log must be large enough to satisfy the new minimum log
++	 * size requirements.
++	 */
++	min_logblocks = libxfs_log_calc_minimum_size(mp);
++	if (old.sb.sb_logblocks < min_logblocks) {
++		printf(
++	_("Filesystem log too small to upgrade filesystem; need %u blocks, have %u.\n"),
++				min_logblocks, old.sb.sb_logblocks);
++		exit(1);
 +	}
 +
- free:
- 	free(req);
- 	return ret;
-@@ -129,6 +138,7 @@ xfrog_bulkstat_single(
- 	switch (error) {
- 	case -EOPNOTSUPP:
- 	case -ENOTTY:
-+		assert(!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64));
- 		xfd->flags |= XFROG_FLAG_BULKSTAT_FORCE_V1;
- 		break;
- 	}
-@@ -259,10 +269,23 @@ xfrog_bulkstat5(
- 	struct xfs_bulkstat_req	*req)
- {
- 	int			ret;
-+	int			i;
++	/*
++	 * The root inode must be where xfs_repair will expect it to be with
++	 * the new geometry.
++	 */
++	rootino = libxfs_ialloc_calc_rootino(mp, new_sb->sb_unit);
++	if (old.sb.sb_rootino != rootino) {
++		printf(
++	_("Cannot upgrade filesystem, root inode (%llu) cannot be moved to %llu.\n"),
++				(unsigned long long)old.sb.sb_rootino,
++				(unsigned long long)rootino);
++		exit(1);
++	}
 +
-+	if (xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)
-+		req->hdr.flags |= XFS_BULK_IREQ_NREXT64;
- 
- 	ret = ioctl(xfd->fd, XFS_IOC_BULKSTAT, req);
- 	if (ret)
- 		return -errno;
++	/* Make sure we have enough space for per-AG reservations. */
++	for_each_perag(mp, agno, pag) {
++		struct xfs_trans	*tp;
++		struct xfs_agf		*agf;
++		struct xfs_buf		*agi_bp, *agf_bp;
++		unsigned int		avail, agblocks;
 +
-+	if (!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)) {
-+		for (i = 0; i < req->hdr.ocount; i++) {
-+			req->bulkstat[i].bs_extents64 =
-+				req->bulkstat[i].bs_extents;
-+			req->bulkstat[i].bs_extents = 0;
++		/* Put back the old super so that we can read AG headers. */
++		restore_old_state(mp, &old);
++
++		/*
++		 * Create a dummy transaction so that we can load the AGI and
++		 * AGF buffers in memory with the old fs geometry and pin them
++		 * there while we try to make a per-AG reservation with the new
++		 * geometry.
++		 */
++		error = -libxfs_trans_alloc_empty(mp, &tp);
++		if (error)
++			do_error(
++	_("Cannot reserve resources for upgrade check, err=%d.\n"),
++					error);
++
++		error = -libxfs_ialloc_read_agi(mp, tp, pag->pag_agno,
++				&agi_bp);
++		if (error)
++			do_error(
++	_("Cannot read AGI %u for upgrade check, err=%d.\n"),
++					pag->pag_agno, error);
++
++		error = -libxfs_alloc_read_agf(mp, tp, pag->pag_agno, 0,
++				&agf_bp);
++		if (error)
++			do_error(
++	_("Cannot read AGF %u for upgrade check, err=%d.\n"),
++					pag->pag_agno, error);
++		agf = agf_bp->b_addr;
++		agblocks = be32_to_cpu(agf->agf_length);
++
++		/*
++		 * Install the new superblock and try to make a per-AG space
++		 * reservation with the new geometry.  We pinned the AG header
++		 * buffers to the transaction, so we shouldn't hit any
++		 * corruption errors on account of the new geometry.
++		 */
++		install_new_state(mp, new_sb);
++
++		error = -libxfs_ag_resv_init(pag, tp);
++		if (error == ENOSPC) {
++			printf(
++	_("Not enough free space would remain in AG %u for metadata.\n"),
++					pag->pag_agno);
++			exit(1);
 +		}
++		if (error)
++			do_error(
++	_("Error %d while checking AG %u space reservation.\n"),
++					error, pag->pag_agno);
++
++		/*
++		 * Would we have at least 10% free space in this AG after
++		 * making per-AG reservations?
++		 */
++		avail = pag->pagf_freeblks + pag->pagf_flcount;
++		avail -= pag->pag_meta_resv.ar_reserved;
++		avail -= pag->pag_rmapbt_resv.ar_asked;
++		if (avail < agblocks / 10)
++			printf(
++	_("AG %u will be low on space after upgrade.\n"),
++					pag->pag_agno);
++		libxfs_trans_cancel(tp);
 +	}
 +
- 	return 0;
- }
- 
-@@ -316,6 +339,7 @@ xfrog_bulkstat(
- 	switch (error) {
- 	case -EOPNOTSUPP:
- 	case -ENOTTY:
-+		assert(!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64));
- 		xfd->flags |= XFROG_FLAG_BULKSTAT_FORCE_V1;
- 		break;
- 	}
-@@ -342,6 +366,7 @@ xfrog_bulkstat_v5_to_v1(
- 	const struct xfs_bulkstat	*bs5)
++	/*
++	 * Would we have at least 10% free space in the data device after all
++	 * the upgrades?
++	 */
++	if (mp->m_sb.sb_fdblocks < mp->m_sb.sb_dblocks / 10)
++		printf(_("Filesystem will be low on space after upgrade.\n"));
++
++	/*
++	 * Release the per-AG reservations and mark the per-AG structure as
++	 * uninitialized so that we don't trip over stale cached counters
++	 * after the upgrade/
++	 */
++	for_each_perag(mp, agno, pag) {
++		libxfs_ag_resv_free(pag);
++		pag->pagf_init = 0;
++		pag->pagi_init = 0;
++	}
++
++	/*
++	 * Restore the old state to get everything back to a clean state,
++	 * upgrade the featureset one more time, and recompute the btree max
++	 * levels for this filesystem.
++	 */
++	restore_old_state(mp, &old);
++	install_new_state(mp, new_sb);
++}
++
+ /* Perform the user's requested upgrades on filesystem. */
+ static void
+ upgrade_filesystem(
+ 	struct xfs_mount	*mp)
  {
- 	if (bs5->bs_aextents > UINT16_MAX ||
-+	    bs5->bs_extents64 > INT32_MAX ||
- 	    cvt_off_fsb_to_b(xfd, bs5->bs_extsize_blks) > UINT32_MAX ||
- 	    cvt_off_fsb_to_b(xfd, bs5->bs_cowextsize_blks) > UINT32_MAX ||
- 	    time_too_big(bs5->bs_atime) ||
-@@ -366,7 +391,7 @@ xfrog_bulkstat_v5_to_v1(
- 	bs1->bs_blocks = bs5->bs_blocks;
- 	bs1->bs_xflags = bs5->bs_xflags;
- 	bs1->bs_extsize = cvt_off_fsb_to_b(xfd, bs5->bs_extsize_blks);
--	bs1->bs_extents = bs5->bs_extents;
-+	bs1->bs_extents = bs5->bs_extents64;
- 	bs1->bs_gen = bs5->bs_gen;
- 	bs1->bs_projid_lo = bs5->bs_projectid & 0xFFFF;
- 	bs1->bs_forkoff = bs5->bs_forkoff;
-@@ -407,7 +432,6 @@ xfrog_bulkstat_v1_to_v5(
- 	bs5->bs_blocks = bs1->bs_blocks;
- 	bs5->bs_xflags = bs1->bs_xflags;
- 	bs5->bs_extsize_blks = cvt_b_to_off_fsbt(xfd, bs1->bs_extsize);
--	bs5->bs_extents = bs1->bs_extents;
- 	bs5->bs_gen = bs1->bs_gen;
- 	bs5->bs_projectid = bstat_get_projid(bs1);
- 	bs5->bs_forkoff = bs1->bs_forkoff;
-@@ -415,6 +439,7 @@ xfrog_bulkstat_v1_to_v5(
- 	bs5->bs_checked = bs1->bs_checked;
- 	bs5->bs_cowextsize_blks = cvt_b_to_off_fsbt(xfd, bs1->bs_cowextsize);
- 	bs5->bs_aextents = bs1->bs_aextents;
-+	bs5->bs_extents64 = bs1->bs_extents;
- }
++	struct xfs_sb		new_sb;
+ 	struct xfs_buf		*bp;
+ 	bool			dirty = false;
+ 	int			error;
  
- /* Allocate a bulkstat request.  Returns zero or a negative error code. */
-diff --git a/man/man2/ioctl_xfs_bulkstat.2 b/man/man2/ioctl_xfs_bulkstat.2
-index cd0a9b06..3203ca0c 100644
---- a/man/man2/ioctl_xfs_bulkstat.2
-+++ b/man/man2/ioctl_xfs_bulkstat.2
-@@ -94,6 +94,13 @@ field.
- This flag may not be set at the same time as the
- .B XFS_BULK_IREQ_AGNO
- flag.
-+.TP
-+.B XFS_BULK_IREQ_NREXT64
-+If this is set, data fork extent count is returned via bs_extents64 field and
-+0 is assigned to bs_extents.  Otherwise, data fork extent count is returned
-+via bs_extents field and bs_extents64 is assigned a value of 0. In the second
-+case, bs_extents is set to (2^31 - 1) if data fork extent count is larger than
-+2^31. This flag may be set independently of whether other flags have been set.
- .RE
- .PP
- .I hdr.icount
-@@ -161,8 +168,9 @@ struct xfs_bulkstat {
- 	uint16_t                bs_checked;
- 	uint16_t                bs_mode;
- 	uint16_t                bs_pad2;
-+	uint64_t                bs_extents64;
++	memcpy(&new_sb, &mp->m_sb, sizeof(struct xfs_sb));
++
+ 	if (add_inobtcount)
+-		dirty |= set_inobtcount(mp);
++		dirty |= set_inobtcount(mp, &new_sb);
+ 	if (add_bigtime)
+-		dirty |= set_bigtime(mp);
++		dirty |= set_bigtime(mp, &new_sb);
+ 	if (!dirty)
+ 		return;
  
--	uint64_t                bs_pad[7];
-+	uint64_t                bs_pad[6];
- };
- .fi
- .in
+-	mp->m_features |= libxfs_sb_version_to_features(&mp->m_sb);
++	install_new_geometry(mp, &new_sb);
+ 	if (no_modify)
+ 		return;
+ 
 -- 
 2.35.1
 
