@@ -2,102 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1273C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 May 2022 01:37:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8344C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 May 2022 03:08:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240191AbiEYBhc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 May 2022 21:37:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36344 "EHLO
+        id S243925AbiEYDIY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 May 2022 23:08:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236751AbiEYBhc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 21:37:32 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 23D837220D
-        for <linux-xfs@vger.kernel.org>; Tue, 24 May 2022 18:37:29 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DDA0C5345F3;
-        Wed, 25 May 2022 11:37:26 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ntfxl-00G33M-3a; Wed, 25 May 2022 11:37:25 +1000
-Date:   Wed, 25 May 2022 11:37:25 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: xfsprogs: 5.19 libxfs kernel sync
-Message-ID: <20220525013725.GE1098723@dread.disaster.area>
-References: <20220524070543.GA1098723@dread.disaster.area>
- <87tu9frtsq.fsf@debian-BULLSEYE-live-builder-AMD64>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87tu9frtsq.fsf@debian-BULLSEYE-live-builder-AMD64>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=628d8857
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
-        a=7-415B0cAAAA:8 a=aSPawknbC3q46MLxOgMA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        with ESMTP id S243759AbiEYDIY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 May 2022 23:08:24 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D7635372E;
+        Tue, 24 May 2022 20:08:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0245AB81C28;
+        Wed, 25 May 2022 03:08:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 9294CC34100;
+        Wed, 25 May 2022 03:08:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653448100;
+        bh=YiZS6n0h6kFNa2uLipNZc4as0ANHqgdnU1TCtmR7xJE=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=UhcZvKsAMiHN8rzDHzTIMesOJJbSJ54TwAqCAm11om+YayLdyRPA7JGvu7WB1Ix+W
+         t6YiNtk6BnCY7LritzBJbwYJL1e1YEAm9qIcAMm4CdU2TYqjj5ymPckgtWeGKysXFG
+         gQe9sRe/UCNLkO318zmeKnp8WIz/o1gN6+KaFG5kiLnETkJM0rI8tM+Ry4216t6OgC
+         VODIU2PUKoYoOTYxHjap48sqMopXH9kX8ShvWGIScBXXHgVp73aHP7uV9U1kzMJOes
+         xtNHvtTSaPW00q0DvAZs6/a5EuMCxz9IR+/EsmepM0WyforoOoGS7qrfg2d7Bp5gpo
+         iYkr9EbNznPTA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 7F66AE8DD61;
+        Wed, 25 May 2022 03:08:20 +0000 (UTC)
+Subject: Re: [GIT PULL] iomap: new code for 5.19
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <Yo06uCPonxSkD0Md@magnolia>
+References: <Yo06uCPonxSkD0Md@magnolia>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <Yo06uCPonxSkD0Md@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.19-merge-2
+X-PR-Tracked-Commit-Id: e9c3a8e820ed0eeb2be05072f29f80d1b79f053b
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 8642174b52214dde4d8113f28fb4c9be5a432126
+Message-Id: <165344810051.13784.2293510166540716212.pr-tracker-bot@kernel.org>
+Date:   Wed, 25 May 2022 03:08:20 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 24, 2022 at 06:01:15PM +0530, Chandan Babu R wrote:
-> On Tue, May 24, 2022 at 05:05:43 PM +1000, Dave Chinner wrote:
-> > Hi folks,
-> >
-> > Now that the 5.19 kernel code is largely stablised for the first
-> > merge, I've been starting to get together the libxfs sync tree for
-> > xfsprogs with all those changes in it. I have built a branch
-> > that can be found here:
-> >
-> > git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsprogs-dev.git libxfs-5.19-sync
-> >
-> > that contains my work in progress so far. It's build on top of the
-> > current xfsprogs for-next branch. I've ported across everything up
-> > to the start of the LARP series so far, so I have done the porting
-> > of the large extent count work and all the other bits and pieces for
-> > log changes and so on.
-> >
-> > For the large extent count work, I have not added any of the
-> > specific new xfsprogs functionality like mkfs, etc. Patches 14-18
-> > of Chandan's V7 patch series here:
-> >
-> > https://lore.kernel.org/linux-xfs/20220321052027.407099-1-chandan.babu@oracle.com/
-> >
-> > still need to be ported on top of this for the functionality to be
-> > fully supported in xfsprogs.
-> >
-> > Chandan, can you port those changes over to this libxfs sync branch
-> > and check that I haven't missed anything in the conversion? I did
-> > pick up one of your patches from that series - "Introduce per-inode
-> > 64-bit extent counters" - because of all the xfs_db bits in it for
-> > the change in on-disk format, but otherwise I've largely just worked
-> > through fixing all the compiler errors and converting the xfsprogs
-> > code over to the new functions and types.
-> >
-> > If you port the ramin patches over to thsi branch and test them,
-> > I'll include them into the branch. I'll be checking for stability
-> > and regressions on this brnach for the next couple of days, and if
-> > everythign looks OK I'll send Eric a pull request for it....
-> 
-> Apart from a single nit, The "large extent counter" patches already included
-> in libxfs sync branch look good.
-> 
-> My original patch "xfs: Introduce xfs_dfork_nextents() helper" had an
-> invocation of "xfs_dfork_data_extents(dip);" in process_dev_inode() instead of
-> "xfs_dfork_nextents(dip, XFS_DATA_FORK);".
+The pull request you sent on Tue, 24 May 2022 13:06:16 -0700:
 
-Ok, thatnks for finding that - I'll update the branch I have with
-that fix, it shouldn't affect anything else you do on top of it...
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.19-merge-2
 
-> I will try to port the remaining patches by today and will run xfstests
-> overnight. I will post the patches tomorrow if the test execution doesn't
-> reveal any bugs.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/8642174b52214dde4d8113f28fb4c9be5a432126
 
-Thanks!
+Thank you!
 
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
