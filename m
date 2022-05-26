@@ -2,132 +2,199 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17303C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 20:56:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0ECC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 21:53:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234046AbiEZU41 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 May 2022 16:56:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37976 "EHLO
+        id S234105AbiEZVxj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 May 2022 17:53:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238799AbiEZU40 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 16:56:26 -0400
-Received: from mail-qk1-x733.google.com (mail-qk1-x733.google.com [IPv6:2607:f8b0:4864:20::733])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 293C41D0E6
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 13:56:24 -0700 (PDT)
-Received: by mail-qk1-x733.google.com with SMTP id j6so2431096qkp.9
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 13:56:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=zgBi8UbgQCCe4hIsuqD4Dl5WuawaEJzeAGZrsDKtevg=;
-        b=avGSUPZIJU70CfwrgrcwgtAYhQxCB3FndlY3jLRYPN6uk5xydYCxTnwclacf+OAoCw
-         iV1nFXBdCsi9DWHz73QBcrsgqta5KZLx7X+cPffC7o7Fp52EDt61hXUCH9a9wKc/jMrl
-         sC+iH1J77eH7ByFtVchJHVJVRZyEodLfPM0gNYb2b2/kHVtogQ3PxZqPOI92nVQWxVbn
-         uMg4ZHDYqswcYj4Zt3S9MNn5EHewspmg0fzF+7el12PkCVNUQ2rtnSTm9fCalrn+rjOu
-         8thCsSv2QVjxvY8B3mggqQwM00nDgt++VT831SkPyu35ApKaYHxfDnsqVy5LJ68EOUPb
-         wpCQ==
+        with ESMTP id S230325AbiEZVxj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 17:53:39 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 05230E2762
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 14:53:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1653602015;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4APDAM/Lb2BqY07GXEO9WAVvlfuelYousWi/WbyKaP4=;
+        b=KRObSavgV2Dx/WEyZszh4EGN3A+Qvc52z+s8ww8/S0sz8ukhl7prf8nN54g5uSExPBpbxc
+        epyRr3bo/mOd4/8JNSvAR+u5SDfxt/NXCb2WUEPAiFIHhuXyrCOGT5SL06QOwK3a9SRSkt
+        9scdB7iuDnAPP3g66NxZRaZE0Zir2Yw=
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com
+ [209.85.166.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-503-6XDsYrUFMMaS1hEFkT4vYQ-1; Thu, 26 May 2022 17:53:33 -0400
+X-MC-Unique: 6XDsYrUFMMaS1hEFkT4vYQ-1
+Received: by mail-il1-f200.google.com with SMTP id j2-20020a056e02218200b002d16c950c5cso1910263ila.12
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 14:53:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=zgBi8UbgQCCe4hIsuqD4Dl5WuawaEJzeAGZrsDKtevg=;
-        b=0L+BbK6/onpXpnHVLdGRba6auWQPvxw7EI38Yy9FhDD727bRxAzdKkBrLVoSDWtkKs
-         cUevrmchKsDbD60RNWIN+rN+KzeJxvPwPTw0QBGJIw4bdCkVrbWm9kGkuXY+eutwrvdB
-         QhMUkTHFUOCzE/LgZeoYclqE/MXLvLuQe5ubLrhWQ83Jcfs54IxDvooXQJBlonuxvSFv
-         i0tsd0lbP1+3dRhMZPQliFEToPYTWBPQOx9ALKuo6p7hOgha60ayrGSd4xxXxIH0bm3N
-         17mB8RegmtBs/4kWIp2NO0A9NBeYfwXF1LmqHApP5PXuBqFvSc0Kb8WUlee8kCJtDDqT
-         gC3w==
-X-Gm-Message-State: AOAM533qYQ4y4qj6oYKD/0eiQ84+yeVsApH+Ps3Lezye6sPrcP25rJ8S
-        CDFn1RrED0EA+BOjmH3NgYx06v7ESM8TSCsLErU=
-X-Google-Smtp-Source: ABdhPJwixbo6xe2FGqiGFiAfiFyjy2NhaTVVLGriWPjg8IPzqcmZvHdYUFf4dJHt80PiwuniRdDha2hAzhyX/oAVauE=
-X-Received: by 2002:a37:8802:0:b0:6a3:4aa4:7cb4 with SMTP id
- k2-20020a378802000000b006a34aa47cb4mr22483445qkd.722.1653598583062; Thu, 26
- May 2022 13:56:23 -0700 (PDT)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=4APDAM/Lb2BqY07GXEO9WAVvlfuelYousWi/WbyKaP4=;
+        b=Iy6u4uF4t1zMTy/hHVuFhG1C/QntfAlLjXga1DSczNZZ52BROKh+HIfdRZrq4/xgcj
+         N5lU5lmESO3olVDMDhpDbY2s8yQwwNQWGZAlZhIbREKhIIuMzgDUQwXxJMZy/UlCDful
+         tmfAbi+aiocYAeqCXDoUXf6UleV9g/O8bEBtfzMm7wRC7dKaCm9mUuCGGZumQNweSw2Q
+         47x4/j5X/QfcdKr4wqCJgs5eJgmPr8/3YlBGM9+7XK5Khl0pNNHpvlynbofnDKRLrAfg
+         FUVcH9+gVlXJqHXAHCA7sFDyUs5dXeZUtj/k1hcqD9yHS5MktyxjaCUhoZYnS7cCylpZ
+         zgzw==
+X-Gm-Message-State: AOAM531Pl6h7HWeYawXyRi89y38Ypj7A56MY2vfNbeherTlK2LYv9ZSV
+        NlMLSEXKHoNg4GCKyx4JVERBQAXARP3o0+7ngKu4fDsU6ZWfYPh8QH1fC6kfRMiJ0RNgbSuFnfr
+        Z/FlUKLkwUIZqTSingVpr
+X-Received: by 2002:a5d:9ed7:0:b0:65b:3312:9946 with SMTP id a23-20020a5d9ed7000000b0065b33129946mr18199715ioe.10.1653602012519;
+        Thu, 26 May 2022 14:53:32 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzgtNRt4B7KmFwosqf7n1kAe9y3TlvOjlRpp3rWb6AQ+Rc92y410tgRGxc8rldjPdmPod0nbA==
+X-Received: by 2002:a5d:9ed7:0:b0:65b:3312:9946 with SMTP id a23-20020a5d9ed7000000b0065b33129946mr18199711ioe.10.1653602012252;
+        Thu, 26 May 2022 14:53:32 -0700 (PDT)
+Received: from [10.0.0.146] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id f13-20020a5ec60d000000b0065a47e16f37sm712934iok.9.2022.05.26.14.53.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 26 May 2022 14:53:31 -0700 (PDT)
+Message-ID: <337aa926-ba8c-3383-c200-e54fde4182f1@redhat.com>
+Date:   Thu, 26 May 2022 16:53:30 -0500
 MIME-Version: 1.0
-References: <20210222153442.897089-1-bfoster@redhat.com> <20210222182745.GA7272@magnolia>
- <20210223123106.GB946926@bfoster> <CAOQ4uxiWajRgGG2V=dYhBmVJYiRmdD+7YgkH2DMWGz6BAOXjvg@mail.gmail.com>
- <Yo+M6Jhjwt/ruOfi@bfoster> <CAOQ4uxjoLm_xwD1GBMNteHsd4zv_4vr+g7xF9_HoCquhq4yoFQ@mail.gmail.com>
- <Yo/ZZtqa5rkuh7VC@bfoster>
-In-Reply-To: <Yo/ZZtqa5rkuh7VC@bfoster>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 26 May 2022 23:56:11 +0300
-Message-ID: <CAOQ4uxh0NE4zHUSEqHv8nbpD4RR49Wd_S_DnXhiWCbNqgC0dSQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.9.1
+Subject: Re: [PATCH] xfs_repair: don't flag log_incompat inconsistencies as
+ corruptions
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+References: <Yo02nmlajIuFqVez@magnolia>
+From:   Eric Sandeen <sandeen@redhat.com>
+In-Reply-To: <Yo02nmlajIuFqVez@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> > I tested it on top of 5.10.109 + these 5 patches:
-> > https://github.com/amir73il/linux/commits/xfs-5.10.y-1
-> >
-> > I can test it in isolation if you like. Let me know if there are
-> > other forensics that you would like me to collect.
-> >
->
-> Hm. Still no luck if I move to .109 and pull in those few patches. I
-> assume there's nothing else potentially interesting about the test env
-> other than the sparse file scratch dev (i.e., default mkfs options,
+On 5/24/22 2:48 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> While testing xfs/233 and xfs/127 with LARP mode enabled, I noticed
+> errors such as the following:
+> 
+> xfs_growfs --BlockSize=4096 --Blocks=8192
+> data blocks changed from 8192 to 2579968
+> meta-data=/dev/sdf               isize=512    agcount=630, agsize=4096 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>          =                       reflink=1    bigtime=1 inobtcount=1
+> data     =                       bsize=4096   blocks=2579968, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=3075, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> _check_xfs_filesystem: filesystem on /dev/sdf is inconsistent (r)
+> *** xfs_repair -n output ***
+> Phase 1 - find and verify superblock...
+>         - reporting progress in intervals of 15 minutes
+> Phase 2 - using internal log
+>         - zero log...
+>         - 23:03:47: zeroing log - 3075 of 3075 blocks done
+>         - scan filesystem freespace and inode maps...
+> would fix log incompat feature mismatch in AG 30 super, 0x0 != 0x1
+> would fix log incompat feature mismatch in AG 8 super, 0x0 != 0x1
+> would fix log incompat feature mismatch in AG 12 super, 0x0 != 0x1
+> would fix log incompat feature mismatch in AG 24 super, 0x0 != 0x1
+> would fix log incompat feature mismatch in AG 18 super, 0x0 != 0x1
+> <snip>
+> 
+> 0x1 corresponds to XFS_SB_FEAT_INCOMPAT_LOG_XATTRS, which is the feature
+> bit used to indicate that the log contains extended attribute log intent
+> items.  This is a mechanism to prevent older kernels from trying to
+> recover log items that they won't know how to recover.
+> 
+> I thought about this a little bit more, and realized that log_incompat
+> features bits are set on the primary sb prior to writing certain types
+> of log records, and cleared once the log has written the committed
+> changes back to the filesystem.  If the secondary superblocks are
+> updated at any point during that interval (due to things like growfs or
+> setting labels), the log_incompat field will now be set on the secondary
+> supers.
+> 
+> Due to the ephemeral nature of the current log_incompat feature bits,
+> a discrepancy between the primary and secondary supers is not a
+> corruption.  If we're in dry run mode, we should log the discrepancy,
+> but that's not a reason to end with EXIT_FAILURE.
 
-Oh! right, this guest is debian/10 with xfsprogs 4.20, so the defaults
-are reflink=0.
+Interesting. This makes me wonder a few things.
 
-Actually, the section I am running is reflink_normapbt, but...
+This approach differs from the just-added handling of 
+XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR, where we /always/ ignore it. For now I think
+that's a little different, because that flag only gets set from userspace, but
+that could change in the future, maybe?
 
-** mkfs failed with extra mkfs options added to "-f -m
-reflink=1,rmapbt=0, -i sparse=1," by test 076 **
-** attempting to mkfs using only test 076 options: -m crc=1 -i sparse **
-** mkfs failed with extra mkfs options added to "-f -m
-reflink=1,rmapbt=0, -i sparse=1," by test 076 **
-** attempting to mkfs using only test 076 options: -d size=50m -m
-crc=1 -i sparse **
+So I wonder why we have this feature getting noted and cleared, but the other
+one always ignored.
 
-mkfs.xfs does not accept double sparse argument, so the
-test falls back to mkfs defaults (+ sparse)
+I also notice that scrub tries to avoid setting it in the first place:
 
-I checked and xfsprogs 5.3 behaves the same, I did not check newer
-xfsprogs, but that seems like a test bug(?)
+         * Don't write out a secondary super with NEEDSREPAIR or log incompat
+         * features set, since both are ignored when set on a secondary.
 
-IWO, unless xfsprogs was changed to be more tolerable to repeating
-arguments, then maybe nobody is testing xfs/076 with reflink=0 (?)
+... should growfs avoid it as well?
 
-> etc.)? If so and you can reliably reproduce, I suppose it couldn't hurt
-> to try and grab a tracepoint dump of the test when it fails (feel free
-> to send directly or upload somewhere as the list may punt it, and please
-> also include the dmesg output that goes along with it) and I can see if
-> that shows anything helpful.
->
-> I think what we want to know initially is what error code we're
-> producing (-ENOSPC?) and where it originates, and from there we can
-> probably work out how the transaction might be dirty. I'm not sure a
-> trace dump will express that conclusively. If you wanted to increase the
-> odds of getting some useful information it might be helpful to stick a
-> few trace_printk() calls in the various trans cancel error paths out of
-> xfs_create() to determine whether it's the inode allocation attempt that
-> fails or the subsequent attempt to create the directory entry..
->
+It feels like we're spreading this special handling around, copying (or not)
+and ignoring (or not) at various points.  I kinda want to step back and think
+about this a little.
 
-Well, the full output is filled with ENOSPC (also in a good run), so it's
-probably that, but I will try to get to that failing stack, no need for all the
-noisy traces. Signing off the day. hope I will get to it tomorrow.
+It seems like the most consistent approach would be to always keep all supers
+in sync, though I suppose that has costs. The 2nd most consistent approach would
+be to never copy these ephemeral features to the secondary.
 
-Thanks,
-Amir.
+Whatever the consistent future looks like, I guess we do have to deal with
+inconsistent stuff in the wild, already.
 
-P.S: this is how 076.full ends if it makes any difference:
+Thoughts?
 
-touch: cannot touch '/media/scratch/offset.21889024/63': No space left on device
-touch: cannot touch '/media/scratch/offset.21823488/63': No space left on device
-touch: cannot touch '/media/scratch/offset.21757952/63': No space left on device
-touch: cannot touch '/media/scratch/offset.21692416/63': No space left on device
-touch: cannot touch '/media/scratch/offset.21626880/63': No space left on device
-touch: cannot touch '/media/scratch/offset.21561344/63': No space left on device
-touch: cannot touch '/media/scratch/offset.21495808/63': No space left on device
-touch: cannot touch '/media/scratch/offset.21430272/63': No space left on device
-stat: Input/output error
-fpunch failed
+-Eric
+
+
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  repair/agheader.c |   15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+> 
+> diff --git a/repair/agheader.c b/repair/agheader.c
+> index 2c2a26d1..478ed7e5 100644
+> --- a/repair/agheader.c
+> +++ b/repair/agheader.c
+> @@ -286,15 +286,24 @@ check_v5_feature_mismatch(
+>  		}
+>  	}
+>  
+> +	/*
+> +	 * Log incompat feature bits are set and cleared from the primary super
+> +	 * as needed to protect against log replay on old kernels finding log
+> +	 * records that they cannot handle.  Secondary sb resyncs performed as
+> +	 * part of a geometry update to the primary sb (e.g. growfs, label/uuid
+> +	 * changes) will copy the log incompat feature bits, but it's not a
+> +	 * corruption for a secondary to have a bit set that is clear in the
+> +	 * primary super.
+> +	 */
+>  	if (mp->m_sb.sb_features_log_incompat != sb->sb_features_log_incompat) {
+>  		if (no_modify) {
+> -			do_warn(
+> -	_("would fix log incompat feature mismatch in AG %u super, 0x%x != 0x%x\n"),
+> +			do_log(
+> +	_("would sync log incompat feature in AG %u super, 0x%x != 0x%x\n"),
+>  					agno, mp->m_sb.sb_features_log_incompat,
+>  					sb->sb_features_log_incompat);
+>  		} else {
+>  			do_warn(
+> -	_("will fix log incompat feature mismatch in AG %u super, 0x%x != 0x%x\n"),
+> +	_("will sync log incompat feature in AG %u super, 0x%x != 0x%x\n"),
+>  					agno, mp->m_sb.sb_features_log_incompat,
+>  					sb->sb_features_log_incompat);
+>  			dirty = true;
+> 
+
