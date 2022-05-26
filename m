@@ -2,140 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 719FBC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 18:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C2F1C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 18:49:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244430AbiEZSrk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 May 2022 14:47:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50846 "EHLO
+        id S1343791AbiEZStk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 May 2022 14:49:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234426AbiEZSrj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 14:47:39 -0400
-Received: from mail-qt1-x82e.google.com (mail-qt1-x82e.google.com [IPv6:2607:f8b0:4864:20::82e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 824AF9FC4;
-        Thu, 26 May 2022 11:47:38 -0700 (PDT)
-Received: by mail-qt1-x82e.google.com with SMTP id h9so2745267qtx.2;
-        Thu, 26 May 2022 11:47:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=1oSwt00WNw6orq6T/Jm2yAJ1tsZDZcf1gPyOSl7Emgc=;
-        b=nAOXNnwQRnlPdkNQMGdRuflkPHx4sozvC1rubaxgndKee3muKW/KjFgHs4GIZaq4YP
-         zYawTnUdyDMpMwmoQl9FDNW5sZpogIsX7AbOInL/cJX+cOSnKCnPNWumq9LFLYTNHWGN
-         kEaFfG5Mm0uFO6BjlR7PGHi/YOsRj5SN3FnoqhSd/zYlaWTfqNtUOAyfnLtWxErl+OVQ
-         /NigE9e7lRVsymc93qPZ3z1sB76QovBPGoBCeTe/E7/Ry4QpDPE4/bNanWLJ0JgiAUX1
-         ROPMu3r87+E87b0VmWjAzk7kzpXhmPsL6tBP6L83EVwmx9SNV2E/N2g6r8/tGyOZFCWQ
-         gGXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=1oSwt00WNw6orq6T/Jm2yAJ1tsZDZcf1gPyOSl7Emgc=;
-        b=8GxMjPPSgZw7NEMM6UltKpRO7otC8Zxf8cMrS/IAf8aBuljue1SRJConLX65EEBXL1
-         wPUa35Vur0RxN2VBXss//5LMqf3GJ//K+5V22vJ4FKDDeKqWYFk5k2ra9WMZXB7adLNK
-         UOkpb1ibiRCPw5a2JtEMHojSPFUMqNvQ3ycSv9sIhea+/3hvkhvKpVx1eogFZ65yX41v
-         KVR4T3bKK2eG/RDhOGgF6BotsVxT9yjUMKk1p77Hn7/WRdthwfrpVQnNx1mV0E8UOzha
-         m3oJOI8hOvDjXHP09JD9dhez3F2HJMtsZaqYCEqN5EfCtHMMv+HIm/1QNgFbSqD+9dTh
-         Sbew==
-X-Gm-Message-State: AOAM533AsyjBlLcLSlZvIbjvSTC0kIn2X/PDm+mJNdKor4jvHp7U+ewX
-        Mb0+0aQqHwHxNXOv+M8G2sic+XqCg+daHd1g30FWHYBDwug=
-X-Google-Smtp-Source: ABdhPJy4Zwte7dDhAJgE9VGORxfSld5J4DKhtANT6j+e1QwNoXBwcYQ+18SveuQDtg3c9PLSsA5CtibfN2hQW47ksg0=
-X-Received: by 2002:ac8:4e42:0:b0:2f4:fc3c:b0c8 with SMTP id
- e2-20020ac84e42000000b002f4fc3cb0c8mr30262742qtw.684.1653590857604; Thu, 26
- May 2022 11:47:37 -0700 (PDT)
+        with ESMTP id S1345467AbiEZStg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 14:49:36 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6224655228
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 11:49:35 -0700 (PDT)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 45FA878D2;
+        Thu, 26 May 2022 13:49:29 -0500 (CDT)
+Message-ID: <393627ac-be5e-276b-65fb-6701679b958c@sandeen.net>
+Date:   Thu, 26 May 2022 13:49:32 -0500
 MIME-Version: 1.0
-References: <20220525111715.2769700-1-amir73il@gmail.com> <Yo+4jW0e4+fYIxX2@magnolia>
-In-Reply-To: <Yo+4jW0e4+fYIxX2@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 26 May 2022 21:47:26 +0300
-Message-ID: <CAOQ4uxi+5bt5-hnjWLhZe++CH6zN8Ym=9nhJaCoA0NtoM2sMdw@mail.gmail.com>
-Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        Tyler Hicks <code@tyhicks.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>,
-        Leah Rumancik <lrumancik@google.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.9.1
+Content-Language: en-US
+To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+References: <20220426234453.682296-1-david@fromorbit.com>
+ <20220426234453.682296-5-david@fromorbit.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 4/4] xfsprogs: autoconf modernisation
+In-Reply-To: <20220426234453.682296-5-david@fromorbit.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 26, 2022 at 8:27 PM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> On Wed, May 25, 2022 at 02:17:11PM +0300, Amir Goldstein wrote:
-> > Hi all!
-> >
-> > During LSFMM 2022, I have had an opportunity to speak with developers
-> > from several different companies that showed interest in collaborating
-> > on the effort of improving the state of xfs code in LTS kernels.
-> >
-> > I would like to kick-off this effort for the 5.10 LTS kernel, in the
-> > hope that others will join me in the future to produce a better common
-> > baseline for everyone to build on.
-> >
-> > This is the first of 6 series of stable patch candidates that
-> > I collected from xfs releases v5.11..v5.18 [1].
-> >
-> > My intention is to post the parts for review on the xfs list on
-> > a ~weekly basis and forward them to stable only after xfs developers
-> > have had the chance to review the selection.
-> >
-> > I used a gadget that I developed "b4 rn" that produces high level
-> > "release notes" with references to the posted patch series and also
-> > looks for mentions of fstest names in the discussions on lore.
-> > I then used an elimination process to select the stable tree candidate
-> > patches. The selection process is documented in the git log of [1].
-> >
-> > After I had candidates, Luis has helped me to set up a kdevops testing
-> > environment on a server that Samsung has contributed to the effort.
-> > Luis and I have spent a considerable amount of time to establish the
-> > expunge lists that produce stable baseline results for v5.10.y [2].
-> > Eventually, we ran the auto group test over 100 times to sanitize the
-> > baseline, on the following configurations:
-> > reflink_normapbt (default), reflink, reflink_1024, nocrc, nocrc_512.
-> >
-> > The patches in this part are from circa v5.11 release.
-> > They have been through 36 auto group runs with the configs listed above
-> > and no regressions from baseline were observed.
->
-> Woot!
->
-> > At least two of the fixes have regression tests in fstests that were used
-> > to verify the fix. I also annotated [3] the fix commits in the tests.
-> >
-> > I would like to thank Luis for his huge part in this still ongoing effort
-> > and I would like to thank Samsung for contributing the hardware resources
-> > to drive this effort.
-> >
-> > Your inputs on the selection in this part and in upcoming parts [1]
-> > are most welcome!
->
-> /me wonders if you need commit 9a5280b312e2 xfs: reorder iunlink remove
-> operation in xfs_ifree ?  Or did that one already get pulled in?
->
+On 4/26/22 6:44 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Because apparently AC_TRY_COMPILE and AC_TRY_LINK has been
+> deprecated and made obsolete.
+> 
+> .....
+> configure.ac:164: warning: The macro `AC_TRY_COMPILE' is obsolete.
+> configure.ac:164: You should run autoupdate.
+> ./lib/autoconf/general.m4:2847: AC_TRY_COMPILE is expanded from...
+> m4/package_libcdev.m4:68: AC_HAVE_GETMNTENT is expanded from...
+> configure.ac:164: the top level
+> configure.ac:165: warning: The macro `AC_TRY_LINK' is obsolete.
+> configure.ac:165: You should run autoupdate.
+> ./lib/autoconf/general.m4:2920: AC_TRY_LINK is expanded from...
+> m4/package_libcdev.m4:84: AC_HAVE_FALLOCATE is expanded from...
+> configure.ac:165: the top level
+> .....
+> 
+> But "autoupdate" does nothing to fix this, so I have to manually do
+> these conversions:
+> 
+> 	- AC_TRY_COMPILE -> AC_COMPILE_IFELSE
+> 	- AC_TRY_LINK -> AC_LINK_IFELSE
+> 
+> because I have nothing better to do than fix currently working
+> code.
+> 
+> Also, running autoupdate forces the minimum pre-req to be autoconf
+> 2.71 because it replaces other stuff...
 
-Ok. I added it to my branch.
-Note that 5.10.y was not getting any xfs fixes for 2 years, so for now I am
-working my way up from v5.11 and not expediting any fixes, because if
-downstream users waited for 2 years, they can wait a few more weeks.
+Bleah, to that part.  2.71 isn't even available on Fedora Core 35 which
+was released 6 months ago.
+I'm afraid this will break lots of builds in not-very-old environments.
 
-My list of candidates was extracted at time of 5.18-rc1 and I intentionally
-wanted to let the 5.18 patches soak before I consider them.
-I will get to the 5.18 release when I am done posting fixes up to 5.17.
+I'm inclined to look into whether I can just replace the obsolete
+macros to shut up the warnings for now, does that seem reasonable?
 
-> The changes proposed look reasonable to me, and moreso with the testing
-> to prove it.  Minor nit: patchsets should be tagged "PATCH", not "PATH".
->
-
-Oy :)
-
-I'll be sure to fix that when I post to stable.
+And then bumping the 2.50 minimum to the 8-year-old 2.69 is probably wise ;)
 
 Thanks,
-Amir.
+-Eric
