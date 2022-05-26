@@ -2,146 +2,181 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E969C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 15:28:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63AFAC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 15:52:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232045AbiEZP2h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 May 2022 11:28:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39228 "EHLO
+        id S244932AbiEZPwF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 May 2022 11:52:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230033AbiEZP2h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 11:28:37 -0400
-Received: from mail-qt1-x830.google.com (mail-qt1-x830.google.com [IPv6:2607:f8b0:4864:20::830])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2B14A88A8
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 08:28:35 -0700 (PDT)
-Received: by mail-qt1-x830.google.com with SMTP id g3so1922005qtb.7
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 08:28:35 -0700 (PDT)
+        with ESMTP id S239905AbiEZPwE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 11:52:04 -0400
+Received: from mail-qt1-x82d.google.com (mail-qt1-x82d.google.com [IPv6:2607:f8b0:4864:20::82d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C48E2DE335
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 08:52:03 -0700 (PDT)
+Received: by mail-qt1-x82d.google.com with SMTP id s31so2071015qtc.3
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 08:52:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=BaVNrMWWIKHt2xd8BrQ63IX5vX/dyinQJaaKVP6vrbo=;
-        b=ZpH8ztzXqwCA7A+n3LYx7i/3xxZTUN80hX6UIRW8qP1kOZM8I7VR78fcmbH8o9ho5p
-         gd/MARUAoWi7E4ZTjDAi36myNw/lAaDhAgrTdymCreUbKZ8hn+jfx6Fx5XpkBYb7UNEE
-         kpxudktxpzTVOnpm1+FUq7PXRx6r1DxVsECJVg4ROTAMWBRPC+nGwmmRKuBemP2plNUV
-         jzEY5224/JVrZaz/d2P0AA/Dnspyq3nxpnxJoM1r+zrsOKgHtBQ9O1cnh0H1te/Ovvh2
-         DysojUfZCA7jkoqBuOFkZywM8RIdhRfaEJlbuG4RA92nhNvtxyiHrEO1PCBvS94nNDE2
-         FuFw==
+         :cc:content-transfer-encoding;
+        bh=H9gsY8PQkmpsqphZH6WSs2NqeTKu15EXsMTvW5us2I0=;
+        b=D6tH1wi8LSblLWUDHerq8ix+sls4OjXN3RTfgpcPxDjgoYDINB98B9ssfZ8nWnlFss
+         +Erl1giBS49sBi7h8pYVf84Qq4reD0fAShu/QOfyNgZ0mSP6VYT3xtc20sNeK52SyVQx
+         OF+mvoHiFL2CR+urhwZeigg0Chu24nSrQ+9TgDOj9XLub6bemHCGfDKPwn5Fz/6jrCwb
+         38fg8ybTi0crbNl9Fa2zxYs0jF9mS4ySCI+BVKY83/5K2meA97bFnnKKo+bfbrWe0djx
+         l29OBrjPE4wj3cdRPvyOyn/Tfb0WJKzgZ4IVj7fB3+g/FNGjiMr/SazGoFFibD0j8zYk
+         KwyQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=BaVNrMWWIKHt2xd8BrQ63IX5vX/dyinQJaaKVP6vrbo=;
-        b=Y++7dOQUm1mBBsQcIXwFPJad9VuhCDguFSgbJiv7B0C3j1wxEKrx0x3QYnRemEOjBh
-         oS9rHVgUBcaw3cttDlZcAC4Fuh6ws2wfnAiMEZSY0e8fYOUeEdh2RbYrHl02zEDauqx6
-         W+F3sVuo/oZT14CX18lyS/x1P8ICctlw5JhGbReXXGyJ1WiWkfoOfKIOZxPD1NVtLJ0d
-         4AsINyAqf/zjr5Cr3P6t6alfurjoTAjt46/SHZd0bQNQMyJWRpNfNhkbGfkfM7FexRb2
-         /dsTJHnIYNoA8r8v5bVQdYXAadbbO7TYVBFGr58wbfwO+RlhE8zShDhRK/ayU2B669h6
-         Wfzw==
-X-Gm-Message-State: AOAM533rQ2xwPCOLACzhKZoTQY5l0TftdAkrkh+6J/NyppKp2aDnt5s0
-        +f66S+z+MLNTBxpS/76+gyXI3rc/L8bViWW8dLg=
-X-Google-Smtp-Source: ABdhPJzAK42U6snG8c9KhLvDU7TXvXmJwI6BmqH43dPCWmrPlo62Bhk1J1CWTYEgXMmMXLyNnKRqPOBgOBL8uWPc8UE=
-X-Received: by 2002:ac8:4e42:0:b0:2f4:fc3c:b0c8 with SMTP id
- e2-20020ac84e42000000b002f4fc3cb0c8mr29461089qtw.684.1653578914711; Thu, 26
- May 2022 08:28:34 -0700 (PDT)
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=H9gsY8PQkmpsqphZH6WSs2NqeTKu15EXsMTvW5us2I0=;
+        b=NYxYZuytEYzUVXfHhL2kQOFmsdgIHNeNFTL+v3Uc/+9TYKxadRYR5dd75empNQOoTE
+         QELxnObps1Ft8qYHMrxfb7DJkVK78BOTOSY8Yx98xeTeIYyx4lKIbqdhF5dScVh0/Dqf
+         NJG7XHklWMhNpqzIZzqtvKnhOdE68hPV/iKAIOnAhvg6fEOBe9vdmjldpjfa3jMaZ5T9
+         VhF/SSBfnYGt/xVImP95S8oShVvpfugZErsdsM53YqrTO7y/0K1qi+BhBLkjxeoOUoeK
+         lJV1FxRBqfWxFh3zMZI0FE3WTW3VAgiV7s9IAKVEp/V5LrFHTELgxBB0zWUzfWZ6zZ3k
+         T6SQ==
+X-Gm-Message-State: AOAM530wXvYio9R2b+98xJPhOzyQY/9hr0MZFxWKXC262Hk3/YpVwdWe
+        xjfBv+ouNQzT8HOTbnZ+Z5R2vJ0CT1FgVYAmY80Fa9LQBDs=
+X-Google-Smtp-Source: ABdhPJwoB0TggfTgzZck4K6Gk4mb7ncAJ+HyEeKuBSr1eEukEYSk5plIq9OmjYl+VuWx2kb+C2chYM6WLgB4gxfWhF0=
+X-Received: by 2002:ac8:7fc2:0:b0:2f3:d47d:487c with SMTP id
+ b2-20020ac87fc2000000b002f3d47d487cmr29271381qtk.157.1653580322855; Thu, 26
+ May 2022 08:52:02 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210222153442.897089-1-bfoster@redhat.com> <20210222182745.GA7272@magnolia>
- <20210223123106.GB946926@bfoster> <CAOQ4uxiWajRgGG2V=dYhBmVJYiRmdD+7YgkH2DMWGz6BAOXjvg@mail.gmail.com>
- <Yo+M6Jhjwt/ruOfi@bfoster>
-In-Reply-To: <Yo+M6Jhjwt/ruOfi@bfoster>
+References: <Yo6ePjvpC7nhgek+@magnolia> <Yo+WQl3OFsPMUAbl@google.com>
+In-Reply-To: <Yo+WQl3OFsPMUAbl@google.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 26 May 2022 18:28:23 +0300
-Message-ID: <CAOQ4uxjoLm_xwD1GBMNteHsd4zv_4vr+g7xF9_HoCquhq4yoFQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
-To:     Brian Foster <bfoster@redhat.com>
+Date:   Thu, 26 May 2022 18:51:51 +0300
+Message-ID: <CAOQ4uxhiAeO=EBVfphyJ7Y71kqYQJk721Df3W0Ek8nnYZw7LZg@mail.gmail.com>
+Subject: Re: XFS LTS backport cabal
+To:     Leah Rumancik <leah.rumancik@gmail.com>
 Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
+        xfs <linux-xfs@vger.kernel.org>, "Theodore Ts'o" <tytso@mit.edu>,
+        Shirley Ma <shirley.ma@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Konrad Wilk <konrad.wilk@oracle.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> > Hi Brian,
-> >
-> > This patch was one of my selected fixes to backport for v5.10.y.
-> > It has a very scary looking commit message and the change seems
-> > to be independent of any infrastructure changes(?).
-> >
-> > The problem is that applying this patch to v5.10.y reliably reproduces
-> > this buffer corruption assertion [*] with test xfs/076.
-> >
-> > This happens on the kdevops system that is using loop devices over
-> > sparse files inside qemu images. It does not reproduce on my small
-> > VM at home.
-> >
-> > Normally, I would just drop this patch from the stable candidates queue
-> > and move on, but I thought you might be interested to investigate this
-> > reliable reproducer, because maybe this system exercises an error
-> > that is otherwise rare to hit.
-> >
-> > It seemed weird to me that NOT reusing the extent would result in
-> > data corruption, but it could indicate that reusing the extent was masking
-> > the assertion and hiding another bug(?).
-> >
+On Thu, May 26, 2022 at 6:01 PM Leah Rumancik <leah.rumancik@gmail.com> wro=
+te:
 >
-> Indeed, this does seem like an odd failure. The shutdown on transaction
-> cancel implies cancellation of a dirty transaction. This is not
-> necessarily corruption as much as just being the generic
-> naming/messaging related to shutdowns due to unexpected in-core state.
-> The patch in question removes some modifications to in-core busy extent
-> state during extent allocation that are fundamentally unsafe in
-> combination with how allocation works. This change doesn't appear to
-> affect any transaction directly, so the correlation may be indirect.
->
-> xfs/076 looks like it's a sparse inode allocation test, which certainly
-> seems relevant in that it is stressing the ability to allocate inode
-> chunks under free space fragmentation. If this patch further restricts
-> extent allocation by removing availability of some set of (recently
-> freed, busy) extents, then perhaps there is some allocation failure
-> sequence that was previously unlikely enough to mask some poor error
-> handling logic or transaction handling (like an agfl fixup dirtying a
-> transaction followed by an allocation failure, for example) that we're
-> now running into.
->
-> > Can you think of another reason to explain the regression this fix
-> > introduces to 5.10.y?
+> On Wed, May 25, 2022 at 02:23:10PM -0700, Darrick J. Wong wrote:
+> > Hi everyone,
 > >
+> > 3. fstesting -- new patches proposed for stable branches shouldn't
+> > introduce new regressions, and ideally there would also be a regression
+> > test that would now pass.  As Dave and I have stated in the past,
+> > fstests is a big umbrella of a test suite, which implies that A/B
+> > testing is the way to go.  I think at least Zorro and I would like to
+> > improve the tagging in fstests to make it more obvious which tests
+> > contain enough randomness that they cannot be expected to behave 100%
+> > reliably.
+> It would be nice to find an agreement on testing requirements. I have
+> attached some ideas on configs/number of tests/etc as well as the status
+> of my work on 5.15 below.
 >
-> Not off the top of my head. Something along the lines of the above seems
-> plausible, but that's just speculation at this point.
 >
-> > Do you care to investigate this failure or shall I just move on?
+> > a> I've been following the recent fstests threads, and it seems to me
+> > that there are really two classes of users -- sustaining people who wan=
+t
+> > fstests to run reliably so they can tell if their backports have broken
+> > anything; and developers, who want the randomness to try to poke into
+> > dusty corners of the filesystem.  Can we make it easier to associate
+> > random bits of data (reliability rates, etc.) with a given fstests
+> > configuration?  And create a test group^Wtag for the tests that rely on
+> > RNGs to shake things up?
+> This would be great!
+>
 > >
+> >
+> > Thoughts? Flames?
+> >
+> > --D
+> This thread had good timing :) I have been working on setting up
+> some automated testing. Currently, 5.15.y is our priority so I have
+> started working on this branch.
 >
-> I think it would be good to understand whether there's a regression
-> introduced by this patch, a bug somewhere else or just some impedence
-> mismatch in logic between the combination of this change and whatever
-> else happens to be in v5.10.y. Unfortunately I'm not able to reproduce
-> if I pull just this commit back into latest 5.10.y (5.10.118). I've
-> tried with a traditional bdev as well as a preallocated and sparse
-> loopback scratch dev.
-
-I also failed to reproduce it on another VM, but it reproduces reliably
-on this system. That's why I thought we'd better use this opportunity.
-This system has lots of RAM and disk to spare so I have no problem
-running this test in a VM in parallel to my work.
-
-It is not actually my system, it's a system that Luis has setup for
-stable XFS testing and gave me access to, so if the need arises
-you could get direct access to the system, but for now, I have no
-problem running the test for you.
-
-> Have you tested this patch (backport) in isolation
-> in your reproducer env or only in combination with other pending
-> backports?
+> Patches are being selected by simply searching for the =E2=80=9CFixes=E2=
+=80=9D
+> tag and applying if the commit-to-be-fixed is in the stable branch,
+> but AUTOSEL would be nice, so I=E2=80=99ll start playing around with that=
+.
+> Amir, it would be nice to sync up the patch selection process. I can
+> help share the load, especially for 5.15.
 >
 
-I tested it on top of 5.10.109 + these 5 patches:
-https://github.com/amir73il/linux/commits/xfs-5.10.y-1
+I would like that :)
 
-I can test it in isolation if you like. Let me know if there are
-other forensics that you would like me to collect.
+> Selecting just the tagged =E2=80=9CFixes=E2=80=9D for 5.15.y for patches =
+through
+> 5.17.2, 15 patches were found and applied - if there are no
+> complaints about the testing setup, I can go ahead and send out this
+> batch:
+>
+> c30a0cbd07ec xfs: use kmem_cache_free() for kmem_cache objects
+> 5ca5916b6bc9 xfs: punch out data fork delalloc blocks on COW writeback fa=
+ilure
+> a1de97fe296c xfs: Fix the free logic of state in xfs_attr_node_hasname
+> 1090427bf18f xfs: remove xfs_inew_wait
+> 089558bc7ba7 xfs: remove all COW fork extents when remounting readonly
+> 7993f1a431bc xfs: only run COW extent recovery when there are no live ext=
+ents
+> 09654ed8a18c xfs: check sb_meta_uuid for dabuf buffer recovery
+> f8d92a66e810 xfs: prevent UAF in xfs_log_item_in_current_chkpt
+> b97cca3ba909 xfs: only bother with sync_filesystem during readonly remoun=
+t
+> eba0549bc7d1 xfs: don't generate selinux audit messages for capability te=
+sting
+> e014f37db1a2 xfs: use setattr_copy to set vfs inode attributes
+> 70447e0ad978 xfs: async CIL flushes need pending pushes to be made stable
+> c8c568259772 xfs: don't include bnobt blocks when reserving free block po=
+ol
+> cd6f79d1fb32 xfs: run callbacks before waking waiters in xlog_state_shutd=
+own_callbacks
+> 919edbadebe1 xfs: drop async cache flushes from CIL commits.
+>
+
+Here are my selection for v5.15..v5.17:
+
+* 1cd231d9fdb1 - (tag: xfs-5.10.y-7) xfs: use setattr_copy to set vfs
+inode attributes
+* af09d052db41 - xfs: fallocate() should call file_modified()
+* 0daebb90e096 - xfs: reject crazy array sizes being fed to XFS_IOC_GETBMAP=
+*
+* 35d876873c28 - xfs: prevent UAF in xfs_log_item_in_current_chkpt
+* 796e9e00071d - xfs: xfs_log_force_lsn isn't passed a LSN
+* fa33747dd25b - xfs: refactor xfs_file_fsync
+* 374a05b9a2de - xfs: check sb_meta_uuid for dabuf buffer recovery
+* 0b66f78d6af1 - (tag: xfs-5.10.y-6) xfs: remove all COW fork extents
+when remounting readonly
+* 44caa4c7aaf4 - xfs: remove incorrect ASSERT in xfs_rename
+* 4133fc82c95d - xfs: punch out data fork delalloc blocks on COW
+writeback failure
+
+The branch of the moment is at:
+https://github.com/amir73il/linux/commits/xfs-5.10.y
+But I keep force pushing the branch and tags when dropping patches
+from the queue.
+
+Note that only half of those commits have Fixes: tag.
+As I explained, I got to them by removing all the non-fixes and non-relevan=
+t
+commits and then tried to evaluate the remaining commits individually.
+This was only made scalable because I was working at the patch series
+level and not at commit level, although at many times, a single fix patch
+was selected from within a non-fix series.
+
+Note that many of the fixes that you selected are impact waves of
+big performance improvements that got merged after 5.10, so
+were not relevant for my 5.10.y selection.
 
 Thanks,
 Amir.
