@@ -2,143 +2,227 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2729BC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 10:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69BC0C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 11:35:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229871AbiEZKhi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 May 2022 06:37:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33530 "EHLO
+        id S236991AbiEZLfK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 May 2022 07:35:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234464AbiEZKhh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 06:37:37 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87C3130A
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 03:37:34 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 16F9CB81F14
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:37:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D6C0FC3411E
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:37:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653561451;
-        bh=DaG2BLvSGkWvpqRtClBbXXwGl+LdVOCF2OFzyh6/zBE=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=Psx6GTw6fvnGxhy8ai6deWa4Eh3OXWVhK59SNaa0ppJtKFKywukN7QElyyndnrM0l
-         TUfHr+RwGjXxPfdT2aTiZvUMKHs/F+7jjkO0FjOxPA7xQ2TolmIXBZkucxpxfhUQUt
-         wycu9zUQCsPRx5RrwldJWWMtr9i0DvzK90TqV9X3cXofJtvbbwjJfP3u+ZSPCsa3d7
-         AhXAhlucmnOpdOYxKHl5NK4yXLbmPOy3UPa935cZWtTGg95XZt3e1aUc/uyrnEdBLS
-         IjHpWVPW2C1jL2lCXIUMVVe3u/q+wES/O8uLXLokD0KgyLD+U9t4Rel0WfReWuaJdo
-         jZ4FQ87uZX4yw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id C71F7C05FD4; Thu, 26 May 2022 10:37:31 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216007] XFS hangs in iowait when extracting large number of
- files
-Date:   Thu, 26 May 2022 10:37:31 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: mgorman@suse.de
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-216007-201763-LVgZDLbN9c@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216007-201763@https.bugzilla.kernel.org/>
-References: <bug-216007-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S232235AbiEZLex (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 07:34:53 -0400
+Received: from mail-qv1-xf32.google.com (mail-qv1-xf32.google.com [IPv6:2607:f8b0:4864:20::f32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D4696AA57
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 04:34:50 -0700 (PDT)
+Received: by mail-qv1-xf32.google.com with SMTP id cv1so1406790qvb.5
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 04:34:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=kn+ORS0k9MpDFwY4Hc1SSyifLMeie44QmKSFRXngi6Y=;
+        b=Rp7SAxTtK+30Fy8+yHDXM/iolxNrmryv3St8aHk0q2Uh3c2LRAn7727b+8PvS0fhok
+         0NJQd11CT1btsxrBlDfj1j1eS/uIfpMa8TS6BjQfjZcnLUngnFipbQS0kZ38EfezSS72
+         AUaCb+uhdWiCnBa5kwdeDZdYI7JxSAm2rLKa2ew4m31iPbRrmrkStIWIOGz4lUq5eQik
+         fU32qTQ/fs6CYw/W6VVFzmplZtrfC+3m6mEmO61wYdNsvKm3mjdWlk2UUA5WoAADUdWm
+         jMSooBwVCkQJIp3VLxqh9ZnVAqJtQof206eXrUBvfzXzK+lniTsmi/BVpQX5t/X7eQ8A
+         h4Sw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=kn+ORS0k9MpDFwY4Hc1SSyifLMeie44QmKSFRXngi6Y=;
+        b=fyO7mnjdaFlrt5guuLx5+GaCQB2ZY9BSk6SQY/++71UHXwwvCuh0JxOZjz6aocddHP
+         Ko3YaiVlYM6yMDUM/zuLY9ClbVps4/6SwYpsQ6kZUWbJirNbB3DTUTsnJcyrhyD+zVIK
+         N4xHu0rUWtBRYE2b7ylSibnBB3kOgZEV+ADwz4b1T2sWG/Td3gdLStrFJjUVhuziEYWf
+         WCz/Epc7kzVHabaT0rLQ0pmm/gRVG7D8CC4YARJOOq/nJkh+6tbu9xtX3vFioVn8tSUT
+         ZcTayTw1eFyi/lFo582cYDYSnIFxH5zxq4FugkQQ+bkzOkYhJGaZ9s9AuOZaoWj2GmWd
+         yTdg==
+X-Gm-Message-State: AOAM531odPP5yHhf6Ert21V0BNpcl9EopKfJGIppWHxquOMqmfAzTgV2
+        xaLXSiFEekQfiBkG7pBewipk/TkffnXXnmu0Ims=
+X-Google-Smtp-Source: ABdhPJzZHL/giR5v5WzVwVoYYAm+KcSxDPFJwC1zzMzp2I4m1CHXd4sI47PVr00Ko6Sj84JXh3v4M+6Kj5cNm8Cz4TE=
+X-Received: by 2002:a05:6214:1c83:b0:443:6749:51f8 with SMTP id
+ ib3-20020a0562141c8300b00443674951f8mr29856600qvb.74.1653564889686; Thu, 26
+ May 2022 04:34:49 -0700 (PDT)
 MIME-Version: 1.0
+References: <20210222153442.897089-1-bfoster@redhat.com> <20210222182745.GA7272@magnolia>
+ <20210223123106.GB946926@bfoster>
+In-Reply-To: <20210223123106.GB946926@bfoster>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 26 May 2022 14:34:38 +0300
+Message-ID: <CAOQ4uxiWajRgGG2V=dYhBmVJYiRmdD+7YgkH2DMWGz6BAOXjvg@mail.gmail.com>
+Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
+On Tue, Feb 23, 2021 at 2:35 PM Brian Foster <bfoster@redhat.com> wrote:
+>
+> On Mon, Feb 22, 2021 at 10:27:45AM -0800, Darrick J. Wong wrote:
+> > On Mon, Feb 22, 2021 at 10:34:42AM -0500, Brian Foster wrote:
+> > > Freed extents are marked busy from the point the freeing transaction
+> > > commits until the associated CIL context is checkpointed to the log.
+> > > This prevents reuse and overwrite of recently freed blocks before
+> > > the changes are committed to disk, which can lead to corruption
+> > > after a crash. The exception to this rule is that metadata
+> > > allocation is allowed to reuse busy extents because metadata changes
+> > > are also logged.
+> > >
+> > > As of commit 97d3ac75e5e0 ("xfs: exact busy extent tracking"), XFS
+> > > has allowed modification or complete invalidation of outstanding
+> > > busy extents for metadata allocations. This implementation assumes
+> > > that use of the associated extent is imminent, which is not always
+> > > the case. For example, the trimmed extent might not satisfy the
+> > > minimum length of the allocation request, or the allocation
+> > > algorithm might be involved in a search for the optimal result based
+> > > on locality.
+> > >
+> > > generic/019 reproduces a corruption caused by this scenario. First,
+> > > a metadata block (usually a bmbt or symlink block) is freed from an
+> > > inode. A subsequent bmbt split on an unrelated inode attempts a near
+> > > mode allocation request that invalidates the busy block during the
+> > > search, but does not ultimately allocate it. Due to the busy state
+> > > invalidation, the block is no longer considered busy to subsequent
+> > > allocation. A direct I/O write request immediately allocates the
+> > > block and writes to it.
+> >
+> > I really hope there's a fstest case coming for this... :)
+> >
+>
+> generic/019? :) I'm not sure of a good way to reproduce on demand given
+> the conditions required to reproduce.
+>
+> > > Finally, the filesystem crashes while in a
+> > > state where the initial metadata block free had not committed to the
+> > > on-disk log. After recovery, the original metadata block is in its
+> > > original location as expected, but has been corrupted by the
+> > > aforementioned dio.
+> >
+> > Wheee!
+> >
+> > Looking at xfs_alloc_ag_vextent_exact, I guess the allocator will go
+> > find a freespace record, call xfs_extent_busy_trim (which could erase
+> > the busy extent entry), decide that it's not interested after all, and
+> > bail out without restoring the busy entry.
+> >
+> > Similarly, xfs_alloc_cur_check calls _busy_trim (same side effects) as
+> > we wander around the free space btrees looking for a good chunk of
+> > space... and doesn't restore the busy record if it decides to consider a
+> > different extent.
+> >
+>
+> Yep. I was originally curious whether the more recent allocator rework
+> introduced this problem somehow, but AFAICT that just refactored the
+> relevant allocator code and this bug has been latent in the existing
+> code for quite some time. That's not hugely surprising given the rare
+> combination of conditions required to reproduce.
+>
+> > So I guess this "speculatively remove busy records and forget to restore
+> > them" behavior opens the door to the write allocating blocks that aren't
+> > yet free and nonbusy, right?  And the solution presented here is to
+> > avoid letting go of the busy record for the bmbt allocation, and if the
+> > btree split caller decides it really /must/ have that block for the bmbt
+> > it can force the log and try again, just like we do for a file data
+> > allocation?
+> >
+>
+> Yes, pretty much. The metadata allocation that is allowed to safely
+> reuse busy extents ends up invalidating a set of blocks during a NEAR
+> mode search (i.e. bmbt allocation), but ends up only using one of those
+> blocks. A data allocation immediately comes along next, finds one of the
+> other invalidated blocks and writes to it. A crash/recovery leaves the
+> invalidated busy block in its original metadata location having already
+> been written to by the dio.
+>
+> > Another solution could have been to restore the record if we decide not
+> > to go ahead with the allocation, but as we haven't yet committed to
+> > using the space, there's no sense in thrashing the busy records?
+> >
+>
+> That was my original thought as well. Then after looking through the
+> code a bit I thought that something like allowing the allocator to
+> "track" a reusable, but still busy extent until allocation is imminent
+> might be a bit more straightforward of an implementation given the
+> layering between the allocator and busy extent tracking code. IOW, we'd
+> split the busy trim/available and busy invalidate logic into two steps
+> instead of doing it immediately in the busy trim path. That would allow
+> the allocator to consider the same set of reusable busy blocks but not
+> commit to any of them until the allocation search is complete.
+>
+> However, either of those options require a bit of thought and rework
+> (and perhaps some value proposition justification for the complexity)
+> while the current trim reuse code is pretty much bolted on and broken.
+> Therefore, I think it's appropriate to fix the bug in one step and
+> follow up with a different implementation separately.
+>
 
---- Comment #23 from Mel Gorman (mgorman@suse.de) ---
-(In reply to Peter Pavlisko from comment #21)
-> (In reply to Mel Gorman from comment #20)
-> > (In reply to Peter Pavlisko from comment #19)
-> > > (In reply to Mel Gorman from comment #18)
-> > > > Created attachment 301044 [details]
-> > > > Patch to always allocate at least one page
-> > > >=20
-> > > > Hi Peter,
-> > > >=20
-> > > > Could you try the attached patch against 5.18 please? I was unable =
-to
-> > > > reproduce the problem but I think what's happening is that an array=
- for
-> > > > receiving a bulk allocation is partially populated and the bulk
-> allocator
-> > > is
-> > > > returning without allocating at least one page. Allocating even one
-> page
-> > > > should hit the path where kswapd is woken.
-> > >=20
-> > > Hi Mel,
-> > >=20
-> > > I tried this patch and it does indeed work with 5.18.0-rc7. Without t=
-he
-> > > patch it freezes, after I apply the patch the archive extracts
-> flawlessly.
-> >=20
-> > Thanks Peter, I'll prepare a proper patch and post it today. You won't =
-be
-> > cc'd as I only have the bugzilla email alias for you but I'll post a
-> > lore.kernel.org link here.
->=20
-> Thank you very much.
->=20
-> I don't know if this is the proper place to discuss this, but I am curious
-> about the cause. Was it an issue with the way XFS is calling the allocator
-> in a for(;;) loop when it does not get the expected result? Or was it an
-> issue with the allocator itself not working in some obscure edge case? Or
-> was it my .config, stretching the kernel ability to function in a bad way?
+Hi Brian,
 
-I think blaming XFS would be excessive even though the API says it only
-attempts to allocate the requested number of pages with no guarantee the ex=
-act
-number will be returned. A glance at the implementation would show it was
-trying to return at least one page and the code flow of XFS hints that the =
-XFS
-developers expected that some progress would generally be made or kswapd wo=
-uld
-be woken as appropriate. The original intention was that the caller did not
-necessarily need all the pages but that's not true for XFS or NFS. While I
-could have altered XFS, it would have encouraged boiler-plate code to be
-created for NFS or any other user of the API that requires the exact number=
- of
-pages to be returned.
+This patch was one of my selected fixes to backport for v5.10.y.
+It has a very scary looking commit message and the change seems
+to be independent of any infrastructure changes(?).
 
-The allocator was working as intended but not necessarily working as desired
-for callers.
+The problem is that applying this patch to v5.10.y reliably reproduces
+this buffer corruption assertion [*] with test xfs/076.
 
-I don't think your .config is at fault. While I could not reproduce the
-problem, I could force the problem to occur by injecting failures. It's
-possible that the problem is easier to trigger on your particular machine b=
-ut
-the corner case existed since 5.13. It's an interesting coincidence that a
-similar problem was found on NFS at roughly the same time which might indic=
-ate
-that something else changed to make this corner case easier to trigger but =
-the
-corner case was always there.
+This happens on the kdevops system that is using loop devices over
+sparse files inside qemu images. It does not reproduce on my small
+VM at home.
 
---=20
-You may reply to this email to add a comment.
+Normally, I would just drop this patch from the stable candidates queue
+and move on, but I thought you might be interested to investigate this
+reliable reproducer, because maybe this system exercises an error
+that is otherwise rare to hit.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+It seemed weird to me that NOT reusing the extent would result in
+data corruption, but it could indicate that reusing the extent was masking
+the assertion and hiding another bug(?).
+
+Can you think of another reason to explain the regression this fix
+introduces to 5.10.y?
+
+Do you care to investigate this failure or shall I just move on?
+
+Thanks,
+Amir.
+
+[*]
+: XFS (loop5): Internal error xfs_trans_cancel at line 954 of file
+fs/xfs/xfs_trans.c.  Caller xfs_create+0x22f/0x590 [xfs]
+: CPU: 3 PID: 25481 Comm: touch Kdump: loaded Tainted: G            E
+   5.10.109-xfs-2 #8
+: Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1
+04/01/2014
+: Call Trace:
+:  dump_stack+0x6d/0x88
+:  xfs_trans_cancel+0x17b/0x1a0 [xfs]
+:  xfs_create+0x22f/0x590 [xfs]
+:  xfs_generic_create+0x245/0x310 [xfs]
+:  ? d_splice_alias+0x13a/0x3c0
+:  path_openat+0xe3f/0x1080
+:  do_filp_open+0x93/0x100
+:  ? handle_mm_fault+0x148e/0x1690
+:  ? __check_object_size+0x162/0x180
+:  do_sys_openat2+0x228/0x2d0
+:  do_sys_open+0x4b/0x80
+:  do_syscall_64+0x33/0x80
+:  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+: RIP: 0033:0x7f36b02eff1e
+: Code: 25 00 00 41 00 3d 00 00 41 00 74 48 48 8d 05 e9 57 0d 00 8b 00
+85 c0 75 69 89 f2 b8 01 01 00 00 48 89 fe bf 9c ff ff ff 0f 05 <48> 3d
+00 f0 ff ff 0
+: RSP: 002b:00007ffe7ef6ca10 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+: RAX: ffffffffffffffda RBX: 00000000ffffffff RCX: 00007f36b02eff1e
+: RDX: 0000000000000941 RSI: 00007ffe7ef6ebfa RDI: 00000000ffffff9c
+: RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+: R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000002
+: R13: 00007ffe7ef6ebfa R14: 0000000000000001 R15: 0000000000000001
+: XFS (loop5): xfs_do_force_shutdown(0x8) called from line 955 of file
+fs/xfs/xfs_trans.c. Return address = ffffffffc08f5764
+: XFS (loop5): Corruption of in-memory data detected.  Shutting down filesystem
+: XFS (loop5): Please unmount the filesystem and rectify the problem(s)
