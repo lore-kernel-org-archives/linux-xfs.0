@@ -2,94 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D053C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 09:19:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A93C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 10:27:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229627AbiEZJTC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 May 2022 05:19:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58350 "EHLO
+        id S230274AbiEZK1B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 May 2022 06:27:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236580AbiEZJTB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 05:19:01 -0400
-X-Greylist: delayed 405 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 26 May 2022 02:18:59 PDT
-Received: from outbound-smtp62.blacknight.com (outbound-smtp62.blacknight.com [46.22.136.251])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D0F8C6E5A
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 02:18:58 -0700 (PDT)
-Received: from mail.blacknight.com (pemlinmail02.blacknight.ie [81.17.254.11])
-        by outbound-smtp62.blacknight.com (Postfix) with ESMTPS id D7D27FAC0A
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:12:11 +0100 (IST)
-Received: (qmail 7312 invoked from network); 26 May 2022 09:12:11 -0000
-Received: from unknown (HELO techsingularity.net) (mgorman@techsingularity.net@[84.203.198.246])
-  by 81.17.254.9 with ESMTPSA (AES256-SHA encrypted, authenticated); 26 May 2022 09:12:11 -0000
-Date:   Thu, 26 May 2022 10:12:10 +0100
-From:   Mel Gorman <mgorman@techsingularity.net>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Jesper Dangaard Brouer <brouer@redhat.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Linux-NFS <linux-nfs@vger.kernel.org>,
-        Linux-MM <linux-mm@kvack.org>,
-        Linux-XFS <linux-xfs@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH] mm/page_alloc: Always attempt to allocate at least one page
- during bulk allocation
-Message-ID: <20220526091210.GC3441@techsingularity.net>
+        with ESMTP id S230117AbiEZK1A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 06:27:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C96E6C5E70
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 03:26:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0ED6161149
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:26:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 41A99C3411F
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:26:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653560815;
+        bh=fplu98nAgi5nmIv3qNrYN0GFfU7wQlAk2Es85vLhB6Y=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=ZOhIbTgo6YUAmsWtqUbnGihZxRE87E9LWcAJwzahLabqVi9CJp1STGsm5zu+LwfZa
+         B7TNfGOwC1mOteoxpSNXtsrjARna3exKKBfIMNoFwcpWue2UykLT+6mqAhcTi8bvG7
+         GTKhtpLY24GgmNJyKJmSvzH9iiFvT236SwXi/SPQ5ElDDywW1rX9/ux9NGZ/yHHFYK
+         PozJ0AkoVlSDArrxfqz9FE4p3k0D2v7X8tyab0BTfH1M3z2kVYs2AYmbFB/OyGGucX
+         tQC7A9AKmPIQvcPhwAsB/dWm/WLsv05QVJi9WFdK3/naawx3ItnNtfXvPqUUmDDVrN
+         qFkdaHdzbTXJA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 2F116C05FF5; Thu, 26 May 2022 10:26:55 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216007] XFS hangs in iowait when extracting large number of
+ files
+Date:   Thu, 26 May 2022 10:26:54 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: mgorman@suse.de
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216007-201763-cSoWm7t2fM@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216007-201763@https.bugzilla.kernel.org/>
+References: <bug-216007-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Peter Pavlisko reported the following problem on kernel bugzilla 216007.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216007
 
-	When I try to extract an uncompressed tar archive (2.6 milion
-	files, 760.3 GiB in size) on newly created (empty) XFS file system,
-	after first low tens of gigabytes extracted the process hangs in
-	iowait indefinitely. One CPU core is 100% occupied with iowait,
-	the other CPU core is idle (on 2-core Intel Celeron G1610T).
+--- Comment #22 from Mel Gorman (mgorman@suse.de) ---
+(In reply to Mel Gorman from comment #20)
+> (In reply to Peter Pavlisko from comment #19)
+> > (In reply to Mel Gorman from comment #18)
+> > > Created attachment 301044 [details]
+> > > Patch to always allocate at least one page
+> > >=20
+> > > Hi Peter,
+> > >=20
+> > > Could you try the attached patch against 5.18 please? I was unable to
+> > > reproduce the problem but I think what's happening is that an array f=
+or
+> > > receiving a bulk allocation is partially populated and the bulk alloc=
+ator
+> > is
+> > > returning without allocating at least one page. Allocating even one p=
+age
+> > > should hit the path where kswapd is woken.
+> >=20
+> > Hi Mel,
+> >=20
+> > I tried this patch and it does indeed work with 5.18.0-rc7. Without the
+> > patch it freezes, after I apply the patch the archive extracts flawless=
+ly.
+>=20
+> Thanks Peter, I'll prepare a proper patch and post it today. You won't be
+> cc'd as I only have the bugzilla email alias for you but I'll post a
+> lore.kernel.org link here.
 
-It was bisected to c9fa563072e1 ("xfs: use alloc_pages_bulk_array() for
-buffers") but XFS is only the messenger. The problem is that nothing
-is waking kswapd to reclaim some pages at a time the PCP lists cannot
-be refilled until some reclaim happens. The bulk allocator checks that
-there are some pages in the array and the original intent was that a bulk
-allocator did not necessarily need all the requested pages and it was
-best to return as quickly as possible. This was fine for the first user
-of the API but both NFS and XFS require the requested number of pages
-be available before making progress. Both could be adjusted to call the
-page allocator directly if a bulk allocation fails but it puts a burden on
-users of the API. Adjust the semantics to attempt at least one allocation
-via __alloc_pages() before returning so kswapd is woken if necessary.
+https://lore.kernel.org/all/20220526091210.GC3441@techsingularity.net/
 
-It was reported via bugzilla that the patch addressed the problem and
-that the tar extraction completed successfully. This may also address
-bug 215975 but has yet to be confirmed.
+--=20
+You may reply to this email to add a comment.
 
-BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=216007
-BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=215975
-Fixes: 387ba26fb1cb ("mm/page_alloc: add a bulk page allocator")
-Signed-off-by: Mel Gorman <mgorman@techsingularity.net>
-Cc: <stable@vger.kernel.org> # v5.13+
----
- mm/page_alloc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 0e42038382c1..5ced6cb260ed 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -5324,8 +5324,8 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
- 		page = __rmqueue_pcplist(zone, 0, ac.migratetype, alloc_flags,
- 								pcp, pcp_list);
- 		if (unlikely(!page)) {
--			/* Try and get at least one page */
--			if (!nr_populated)
-+			/* Try and allocate at least one page */
-+			if (!nr_account)
- 				goto failed_irq;
- 			break;
- 		}
+You are receiving this mail because:
+You are watching the assignee of the bug.=
