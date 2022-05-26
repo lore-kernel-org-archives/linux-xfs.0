@@ -2,149 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B07F7C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 18:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51BFFC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 19:33:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345624AbiEZS7d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 May 2022 14:59:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59748 "EHLO
+        id S1347746AbiEZTdV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 May 2022 15:33:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231196AbiEZS7d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 14:59:33 -0400
-Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DBFBCFE24;
-        Thu, 26 May 2022 11:59:32 -0700 (PDT)
-Received: by mail-qk1-x72e.google.com with SMTP id p63so2332766qkf.0;
-        Thu, 26 May 2022 11:59:32 -0700 (PDT)
+        with ESMTP id S233203AbiEZTdU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 15:33:20 -0400
+Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC4E23CFDA
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 12:33:18 -0700 (PDT)
+Received: by mail-qk1-x72c.google.com with SMTP id 14so2245985qkl.6
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 12:33:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=weY+EYNxcvGxOH+7TMih1ZKr+3Mghx/ygRt8J31EFDg=;
-        b=jaOwVcSyGLWyzzupmSslnUwVqqXsvKpJoOt3hwJ7ID4FpZTavxuN3o3NReLNn+60/7
-         H1u2J29DTJqUmoN9PrHfyJPxldheH52ygNAc+9TpWGaVQRFEghGC+s92Tz/mcFg0wZ/y
-         tDrFYsY0JtCumrtpGPzfR7TRTtDWHxm6VecNITthyELlMtP9S/FcVGFerf4qfvnM+QOg
-         DbZBHfWi7I4mqYEtVCpipvmKexY4ThvlNtcX+De+7DsmumE6tBVAzDD9ZTu6X5YdI9uf
-         FA+tPZ8h/XranTb0G7jD7ICpblcDk7Bm1qr5pnvJnnqxthJxDbPW0UuMyiXJ7lOGvrPe
-         jVZg==
+        bh=4YQsX9PEH8mSOT6tN93BNoliWSqCAIkxheh/nBeuams=;
+        b=NRbaNQA3BKXXkrLw3jEi/g4ee5Bt85xPZz0e9MSszz4/YiQWfUlMJeNvbT1aWmRXzL
+         N4jPk7usK+8Ba//tDoBX251oSZHUgBg/cwq0bGysAyZKiq0PrhBZq+YfDwMDHt/q1our
+         Oz9bbt9jahWSjOAorD7aEKWveQOgwpqvFoBcZSIrRqdDR/w1O2Egeu+ewO9KORoatby4
+         rMWmbjjQnhnX6PCOki03C9Y/hZ5kQUcLSH0GIncQ4uHVSO1kUIxPVcvMuoaxODx1lwSZ
+         APw9JlBf29ynJOafJ1kDlEjThrVju75q95xFZFGhzDPFbzQYzBNNB88lAGoeUpGQkRz8
+         7RyA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=weY+EYNxcvGxOH+7TMih1ZKr+3Mghx/ygRt8J31EFDg=;
-        b=MzL4qcSBtOV9lkHYST6cVUkSARph7/qY83lXED3MisHGSxXt7DFUdAGFb8OanbgMjZ
-         BbyEU9Ez4LJj6y5kOv1F3lZW32THB4CHCwlOxSy8lTV69uSVDZvwgJbzQu/PTIecqJAh
-         WLJJPbUjaqGaz0W+UY+cKm/wemgmJxhS/RhnyLwgH50dXtU5DX5Ux8kJc2MgoF9ZHyrj
-         qBcvc7XRc8GxbOipsCGwuVac6OCSRQKLZUh8rK1c6avMUwK+qI4vTw0czeA2g31saMNu
-         n+yLdkT/rM8cv4d+OH0nDXUueVXxSuT8u5HefGAQKRpLIC6vmib5g4cW4AFkq84RPB1B
-         dDng==
-X-Gm-Message-State: AOAM533hgtFEcXDc7PI2Zwp44FgGngB1JpvBzyFWMgQzdy57HTLcNpDF
-        WKN08SETrmSpkGJTkjf5tfVsHR3ZF62qctNsF9c=
-X-Google-Smtp-Source: ABdhPJxPSa7EMRKRnQQ3oHpXzm9Mks25PmqzGTYGvvst7KXcoT5x4g33fu+XPJ4ubb86FOC761RDyYp4B5IdeCH8/Ys=
-X-Received: by 2002:a37:6310:0:b0:6a5:71bf:17e6 with SMTP id
- x16-20020a376310000000b006a571bf17e6mr11011009qkb.258.1653591571204; Thu, 26
- May 2022 11:59:31 -0700 (PDT)
+        bh=4YQsX9PEH8mSOT6tN93BNoliWSqCAIkxheh/nBeuams=;
+        b=uqlc+NhHP6gUHVXY5aIypDkBJkoN5nXnnrquDgVZkvTFozd2AEeAaVsmNih902Y/+1
+         4osigBuk99LStS8yREw1JSm0EngGcq3FvAm6ICVhEVCDhZ6bKzsaQgEPoKxWFtLYbAM2
+         +oAsmCNiOsD11ufeznoD9b5HmkiH8DqDszmNzRzGen9DpoB2TAuduAz5msc87Z8RwsPl
+         jdYKftaqBfL0r4+d9fN8GeGV0pz0ux0L6WbVv6gh/hRUzg2L+YYruyVX/pd/RnwE0842
+         wrxxm4qNgxPmtNWVVpZRUTXgutq21WFLkHXeIQX88+qtI4yqomy254OmA2aolJ/c7X+b
+         E0QA==
+X-Gm-Message-State: AOAM531RAdQRuCVGLUWRT3xz5cnvJ5pCkLgJmm/zWgHkqMs/PDg0Y8XU
+        OjjRC2ANw3i9k2B0oGVxWp9KiPkuehCd12mJb00=
+X-Google-Smtp-Source: ABdhPJzyZiRQcJf0CrU0WEct6AN4nORQ+wIM9gFjvur0c99DvyV79bqYqwC5eAGlie7SyWuuzqs6p6qJCJEuqmX487g=
+X-Received: by 2002:a37:8802:0:b0:6a3:4aa4:7cb4 with SMTP id
+ k2-20020a378802000000b006a34aa47cb4mr22247596qkd.722.1653593597999; Thu, 26
+ May 2022 12:33:17 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220525111715.2769700-1-amir73il@gmail.com> <Yo+4jW0e4+fYIxX2@magnolia>
- <Yo/KibX8TOj+rZkV@bombadil.infradead.org>
-In-Reply-To: <Yo/KibX8TOj+rZkV@bombadil.infradead.org>
+References: <20210222153442.897089-1-bfoster@redhat.com> <20210222182745.GA7272@magnolia>
+ <20210223123106.GB946926@bfoster> <CAOQ4uxiWajRgGG2V=dYhBmVJYiRmdD+7YgkH2DMWGz6BAOXjvg@mail.gmail.com>
+ <Yo+M6Jhjwt/ruOfi@bfoster> <CAOQ4uxjoLm_xwD1GBMNteHsd4zv_4vr+g7xF9_HoCquhq4yoFQ@mail.gmail.com>
+In-Reply-To: <CAOQ4uxjoLm_xwD1GBMNteHsd4zv_4vr+g7xF9_HoCquhq4yoFQ@mail.gmail.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 26 May 2022 21:59:19 +0300
-Message-ID: <CAOQ4uxgSKFutWq03Yu2+AvucoZwJ5azz5G5KgDSztCczk_+OtA@mail.gmail.com>
-Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
-To:     Luis Chamberlain <mcgrof@kernel.org>
+Date:   Thu, 26 May 2022 22:33:06 +0300
+Message-ID: <CAOQ4uxjtOMBtcckeoGX3iBksmNGj2y-qKYys9nqeXJOsrqBc6w@mail.gmail.com>
+Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        Tyler Hicks <code@tyhicks.com>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>,
-        Leah Rumancik <lrumancik@google.com>, masahiroy@kernel.org
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 26, 2022 at 9:44 PM Luis Chamberlain <mcgrof@kernel.org> wrote:
+On Thu, May 26, 2022 at 6:28 PM Amir Goldstein <amir73il@gmail.com> wrote:
 >
-> On Thu, May 26, 2022 at 10:27:41AM -0700, Darrick J. Wong wrote:
-> > /me looks and sees a large collection of expunge lists, along with
-> > comments about how often failures occur and/or reasons.  Neat!
+> > > Hi Brian,
+> > >
+> > > This patch was one of my selected fixes to backport for v5.10.y.
+> > > It has a very scary looking commit message and the change seems
+> > > to be independent of any infrastructure changes(?).
+> > >
+> > > The problem is that applying this patch to v5.10.y reliably reproduces
+> > > this buffer corruption assertion [*] with test xfs/076.
+> > >
+> > > This happens on the kdevops system that is using loop devices over
+> > > sparse files inside qemu images. It does not reproduce on my small
+> > > VM at home.
+> > >
+> > > Normally, I would just drop this patch from the stable candidates queue
+> > > and move on, but I thought you might be interested to investigate this
+> > > reliable reproducer, because maybe this system exercises an error
+> > > that is otherwise rare to hit.
+> > >
+> > > It seemed weird to me that NOT reusing the extent would result in
+> > > data corruption, but it could indicate that reusing the extent was masking
+> > > the assertion and hiding another bug(?).
+> > >
 > >
-> > Leah mentioned on the ext4 call this morning that she would have found
-> > it helpful to know (before she started working on 5.15 backports) which
-> > tests were of the flaky variety so that she could better prioritize the
-> > time she had to look into fstests failures.  (IOWS: saw a test fail a
-> > small percentage of the time and then burned a lot of machine time only
-> > to figure out that 5.15.0 also failed a percentage of th time).
->
-> See my proposal to try to make this easier to parse:
->
-> https://lore.kernel.org/all/YoW0ZC+zM27Pi0Us@bombadil.infradead.org/
->
-> > We talked about where it would be most useful for maintainers and QA
-> > people to store their historical pass/fail data, before settling on
-> > "somewhere public where everyone can review their colleagues' notes" and
-> > "somewhere minimizing commit friction".  At the time, we were thinking
-> > about having people contribute their notes directly to the fstests
-> > source code, but I guess Luis has been doing that in the kdevops repo
-> > for a few years now.
+> > Indeed, this does seem like an odd failure. The shutdown on transaction
+> > cancel implies cancellation of a dirty transaction. This is not
+> > necessarily corruption as much as just being the generic
+> > naming/messaging related to shutdowns due to unexpected in-core state.
+> > The patch in question removes some modifications to in-core busy extent
+> > state during extent allocation that are fundamentally unsafe in
+> > combination with how allocation works. This change doesn't appear to
+> > affect any transaction directly, so the correlation may be indirect.
 > >
-> > So, maybe there?
+> > xfs/076 looks like it's a sparse inode allocation test, which certainly
+> > seems relevant in that it is stressing the ability to allocate inode
+> > chunks under free space fragmentation. If this patch further restricts
+> > extent allocation by removing availability of some set of (recently
+> > freed, busy) extents, then perhaps there is some allocation failure
+> > sequence that was previously unlikely enough to mask some poor error
+> > handling logic or transaction handling (like an agfl fixup dirtying a
+> > transaction followed by an allocation failure, for example) that we're
+> > now running into.
+> >
+> > > Can you think of another reason to explain the regression this fix
+> > > introduces to 5.10.y?
+> > >
+> >
+> > Not off the top of my head. Something along the lines of the above seems
+> > plausible, but that's just speculation at this point.
+> >
+> > > Do you care to investigate this failure or shall I just move on?
+> > >
+> >
+> > I think it would be good to understand whether there's a regression
+> > introduced by this patch, a bug somewhere else or just some impedence
+> > mismatch in logic between the combination of this change and whatever
+> > else happens to be in v5.10.y. Unfortunately I'm not able to reproduce
+> > if I pull just this commit back into latest 5.10.y (5.10.118). I've
+> > tried with a traditional bdev as well as a preallocated and sparse
+> > loopback scratch dev.
 >
-> For now sure, I'm happy to add others the linux-kdevops org on github
-> and they get immediate write access to the repo. This is working well
-> so far. Long term we need to decide if we want to spin off the
-> expunge list as a separate effort and make it a git subtree (note
-> it is different than a git sub module). Another example of a use case
-> for a git subtree, to use it as an example, is the way I forked
-> kconfig from Linux into a standalone git tree so to allow any project
-> to bump kconfig code with just one command. So different projects
-> don't need to fork kconfig as they do today.
+> I also failed to reproduce it on another VM, but it reproduces reliably
+> on this system. That's why I thought we'd better use this opportunity.
+> This system has lots of RAM and disk to spare so I have no problem
+> running this test in a VM in parallel to my work.
 >
-> The value in doing the git subtree for expunges is any runner can use
-> it. I did design kdevops though to run on *any* cloud, and support
-> local virtualization tech like libvirt and virtualbox.
+> It is not actually my system, it's a system that Luis has setup for
+> stable XFS testing and gave me access to, so if the need arises
+> you could get direct access to the system, but for now, I have no
+> problem running the test for you.
 >
-> The linux-kdevops git org also has other projects which both fstest
-> and blktests depend on, so for example dbench which I had forked and
-> cleaned up a while ago. It may make sense to share keeping oddball
-> efforts like thse which are no longer maintained in this repo.
+> > Have you tested this patch (backport) in isolation
+> > in your reproducer env or only in combination with other pending
+> > backports?
+> >
 >
-> There is other tech I'm evaluating for this sort of collaborative test
-> efforts such as ledgers, but that is in its infancy at this point in
-> time. I have a sense though it may be a good outlet for collection of
-> test artifacts in a decentralized way and also allow *any* entity to
-> participate in bringing confidence to stable kernel branches or dev
-> branches prior to release.
+> I tested it on top of 5.10.109 + these 5 patches:
+> https://github.com/amir73il/linux/commits/xfs-5.10.y-1
 >
+> I can test it in isolation if you like. Let me know if there are
+> other forensics that you would like me to collect.
+>.
 
-There are few problems I noticed with the current workflow.
-
-1. It will not scale to maintain this in git as more and more testers
-start using kdepops and adding more and more fs and configs and distros.
-How many more developers you want to give push access to linux-kdevops?
-I don't know how test labs report to KernelCI, but we need to look at their
-model and not invent the wheel.
-
-2. kdevops is very focused on stabilizing the baseline fast, which is
-very good, but there is no good process of getting a test out of expunge list.
-We have a very strong suspicion that some of the tests that we put in
-expunge lists failed due to some setup issue in the host OS that caused
-NVME IO errors in the guests. I tried to put that into comments when
-I noticed that, but I am afraid there may have been other tests that are
-falsely accused of failing. All developers make those mistakes in their
-own expunge lists, but if we start propagating those mistakes to the world,
-it becomes an issue.
-
-For those two reasons I think that the model to aspire to should be
-composed of a database where absolutely everyone can post data
-point to in the form of facts (i.e. the test failed after N runs on this kernel
-and this hardware...) and another process, partly AI, partly human to
-digest all those facts into a knowledge base that is valuable and
-maintained by experts. Much easier said than done...
+FWIW, the test fails with just that one patch over 5.10.109.
 
 Thanks,
 Amir.
