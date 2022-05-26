@@ -2,271 +2,449 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8153BC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 16:01:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F3B3C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 16:07:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348107AbiEZQBy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 May 2022 12:01:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60386 "EHLO
+        id S235979AbiEZQH4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 May 2022 12:07:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348081AbiEZQBp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 12:01:45 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3800BC1
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 09:01:43 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24QEM1X0012463;
-        Thu, 26 May 2022 16:01:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
- to : cc : subject : date : in-reply-to : message-id : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=lG4ao3NvWppJ1c9sH8sTeoJ35tOY3LKMQrmrJEyMSvM=;
- b=O9BVjhxKT5gLw3OYwlnaTogPey6/CkPcZVaduTfvUaBSpYkXDJP7rmcS77S08S2lkGiX
- Tf6MHtqymju0+6dWcP5i+YvW86nkGfhLHyB0WSaC1p667P/x6z9ZzMuFYogB9P+xjhXi
- qsfTrPKwvYcgO8CV4qy5AtcgIaBMYbwlFxBEH/eMoqMCV5WPU8EEfxP6fC9fKf64KBtl
- fDW/MwccHyAhnHKsIUMzhUcJhjLAYV4BibQNVnINa1CkygWwUEnkGEhZSc/5b6WnBA2e
- f9trwQEEoqXLqwVGLKSoZ/WuiZKcxb+EUDCjX0pxFC/ZlqC+RjMNpbVpHDpuUKQQ38Io HA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g93tbw8p3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 May 2022 16:01:34 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24QFuRWm023709;
-        Thu, 26 May 2022 16:01:32 GMT
-Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam08lp2047.outbound.protection.outlook.com [104.47.73.47])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3g93x1pbpe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 May 2022 16:01:32 +0000
+        with ESMTP id S231258AbiEZQHz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 12:07:55 -0400
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2075.outbound.protection.outlook.com [40.107.243.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6EE4EE15;
+        Thu, 26 May 2022 09:07:53 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HYnXN2LTMG3z7XirUG7vE5gHrg+4a5lozulFOQBk/iNV4QbkZDDMM6StAG/UdZWBJtZkluI3K4bTtFIxf6+7STo0nx7w4GWYeknSJ84eg2r9b25+Y4brf+IzQn5M1JZLEPOG+9k1bqIH+bHd7HdVPjGqH93dZ69wnMsC/Ykxj9DW9z0LqsZ5xrN5y8C/vrn4/6G23LV7HJjJs/LebKTTnqvTvXjhkqIdtOu1+uYb148wInysSt6otb8SqUdpFEUtFdtHcUGIvZmv9ghtOiScReWJc7apr6JAmca3HjpvDZ5nZzIz66T8jJFGdm31hBBjjnf/ZrwDUFF5sjGqLTC/TQ==
+ b=gXibm7fJyb3KAMQULG0GvIol8qVm+p6l9sXmMgx1H2C+OgSC+zAnvn4qlZPR3oC0v1l0Ik6U0D+ZhBzRY6QguTRXCmb1paI3zLNXqE107OFfve3H3mM31+mzViFQl3Q7RJ68W7NkB6r/ag8AfUBjn9x+KAsgKAo5AdkoSrc7HcteyDc2xbJgPDFx1tnY8PG0exJMEQTNqzuvmlc7+rS4HJ0koEOGmqc7gHVaSHghP2zgdBUXF7H8OD6rh+oClHHi+pqo6MoyxBJi/S290Mu1FCRi3xBDCqCmsUikTwKC/QUq+JDFwINP+wO1XmaF5en1ScLAFnGD9NMyNwKBL+OlZw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lG4ao3NvWppJ1c9sH8sTeoJ35tOY3LKMQrmrJEyMSvM=;
- b=i+IB9vCUH2zDNSG+aUjOEAr9kkrTv5t/uQPtimjdp96bfhCSxVPFHUH61tlaMMHEqnkgFLi2SpokrxhlAvU7KtFuVY7CNXG4G/gDdJzLqGfAGOOW1Q7iXtxwnU5/yZiAR9nbt0M8t8QSG0tUCj/2HQ2Ut50hc1zi8z+4DVt3RwflgrBn+LE5h79yZnf9fLY3U4hTogbgA6yMgAfjlJTlLGggttIq2ueiphxxkPhr0/jjv7Z4bMPSfeLozdfOt3nB2zyVKd0WVBJO6o3k4qr1JyLb3fOLn8nR16bDhwAUftc6gtMrG8OO68+M5PwGXG7daYDmq95oKNV0mqEApnUx3Q==
+ bh=58Ynfe8Khy4vRvlA+sUG1IGySsNmALCq9+wAm072MhY=;
+ b=QibBCHVG9jJ6zBEy0MvNuivEo2Dje6+3dClBjIqmb6AsEHLyCO2fOKM48ZhdO5XD2aX6JdC/xt5Kr39WwjZl4hjW7hi7on62aYfQlrj8gOYvjk0fHp+jgGsHuq0mvKMuiDzPa0n9hMlomrIXZTG2LUf5iSL+bSWIOxfzAd26NmpoapZs6PoxfbabND65e2hI1FXYYq3fF0YSJgf7NWnS3laMyQ+QmycwKR3YJx7S8aApNJDIZwh3QWhaXwXCj1e8f3syNaaRA6yxz/JhVGcfHHTFoeEYjkRoz4Pg7+LX6pAdMqmHUmpGys6NHil//a87+AvWcaKuilvFr1JcEeNtHA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lG4ao3NvWppJ1c9sH8sTeoJ35tOY3LKMQrmrJEyMSvM=;
- b=aeqwfRT32PxTrzEVT/WoMICUJQJNGe8Ql4LEF1SY4MUTR7hAY+FGH45EexSdfr0Jmrb9ZeLpH76M1Pdgpz65wq8vGN3PQsqPb/cre1r0QLq/MKf0JlGwYE2OsHyTBkIjuexLpP6YWRNcsr+/LNIhhjaBeLxiIRmT86/T7ufhiS8=
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by CY4PR10MB1783.namprd10.prod.outlook.com (2603:10b6:910:c::21) with
+ bh=58Ynfe8Khy4vRvlA+sUG1IGySsNmALCq9+wAm072MhY=;
+ b=FS8cSOPZ1NeQmnlcYZhHdVvhGzEoU3BK+02q8MBnX5Ydadn1a4wGoRL04TXRnjaEZNO/3Y2RiKFOpB17quMd9blk2gawV3zaQQC9JQhvjX10FcSnHCU8zQdSLbMEf1fOhtS8XOvFjwEzPwPPl9YQvfrl9OH49ASQLBQ1N0MWl44=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from SN6PR12MB2717.namprd12.prod.outlook.com (2603:10b6:805:68::29)
+ by MN0PR12MB5809.namprd12.prod.outlook.com (2603:10b6:208:375::7) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.18; Thu, 26 May
- 2022 16:01:30 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::5476:49e9:e3eb:e62]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::5476:49e9:e3eb:e62%5]) with mapi id 15.20.5273.023; Thu, 26 May 2022
- 16:01:30 +0000
-References: <Yo6ePjvpC7nhgek+@magnolia> <Yo+WQl3OFsPMUAbl@google.com>
-User-agent: mu4e 1.6.10; emacs 27.1
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>,
-        Shirley Ma <shirley.ma@oracle.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Konrad Wilk <konrad.wilk@oracle.com>
-Subject: Re: XFS LTS backport cabal
-Date:   Thu, 26 May 2022 21:25:32 +0530
-In-reply-to: <Yo+WQl3OFsPMUAbl@google.com>
-Message-ID: <878rqos2pd.fsf@debian-BULLSEYE-live-builder-AMD64>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: SG2PR02CA0010.apcprd02.prod.outlook.com
- (2603:1096:3:17::22) To SA2PR10MB4587.namprd10.prod.outlook.com
- (2603:10b6:806:114::12)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.23; Thu, 26 May
+ 2022 16:07:51 +0000
+Received: from SN6PR12MB2717.namprd12.prod.outlook.com
+ ([fe80::b9a8:66b3:9ed6:2db]) by SN6PR12MB2717.namprd12.prod.outlook.com
+ ([fe80::b9a8:66b3:9ed6:2db%5]) with mapi id 15.20.5273.023; Thu, 26 May 2022
+ 16:07:50 +0000
+Message-ID: <52fa81b5-c79e-6308-10f9-9304afa10727@amd.com>
+Date:   Thu, 26 May 2022 11:07:47 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: [PATCH v3 02/13] mm: handling Non-LRU pages returned by
+ vm_normal_pages
+Content-Language: en-US
+To:     Alistair Popple <apopple@nvidia.com>
+Cc:     jgg@nvidia.com, david@redhat.com, Felix.Kuehling@amd.com,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, willy@infradead.org,
+        akpm@linux-foundation.org
+References: <20220524190632.3304-1-alex.sierra@amd.com>
+ <20220524190632.3304-3-alex.sierra@amd.com>
+ <87leuqf4oj.fsf@nvdebian.thelocal>
+From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
+In-Reply-To: <87leuqf4oj.fsf@nvdebian.thelocal>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MN2PR16CA0057.namprd16.prod.outlook.com
+ (2603:10b6:208:234::26) To SN6PR12MB2717.namprd12.prod.outlook.com
+ (2603:10b6:805:68::29)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b38b347e-4379-4663-f8e5-08da3f30ff62
-X-MS-TrafficTypeDiagnostic: CY4PR10MB1783:EE_
-X-Microsoft-Antispam-PRVS: <CY4PR10MB1783E191C342078EA47CD1F7F6D99@CY4PR10MB1783.namprd10.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 8088a171-fc18-4aae-a4fd-08da3f31e223
+X-MS-TrafficTypeDiagnostic: MN0PR12MB5809:EE_
+X-Microsoft-Antispam-PRVS: <MN0PR12MB58090C7193A1115AB0D0F2C5FDD99@MN0PR12MB5809.namprd12.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: S3bNJSU5DLcqrsQtfQvUIf8bf8+JjD1Sm+qKjK7GXi8Lxc0zoUoirxbYtH0yz4As+SCB1x0l2tH6IjZuOzh5usV3Wqn5UV2asFOuQXGajHu5UAHJCcXOROsG7rc35/c3kz7sitVsEeF1uTAQaXmC8LOFPg6HBgib/V8uIh8UE+aYvVXJ86xbkuQNcYWzTnsRfWNi7paYH+j62bEjxieXnaRphnhcjGYDYa62YjKH2ZfBgLS7E0vsLNK/9zsR4HDowvSJpKnjprdazuR48A+HkF8evRauKk0wTMvoak7rz1DNwNcFvmhTkOjjR7RZfGAAouIcgspLfbppfEYkEJrnj7Y3TUonfzOUvyq2+uDgoYaYD6skN8/0WfyxW4A0Co1ets44OM1EXeK42ViW3JsfIFnINXfFGUsStVoq27/eN5u7F8BnmUmhkw2IzWvqA8tVxL4mhYJtGzUuCHzu/z7JdR6yOzk196Sd6I4bAHH/1TFFpGS0Ur4oSrwHjLuLfUj5SczNPvdK4cs8gnko0fBqyv6auMTaHj39whFoobOSKDZiMHZM4ihh1bXtlc6cc8c7UlTctfecj6Yj/+nUt6oBANfx9sdhx3jazUp8h0R2fRFecu9CtvkVRdjrxNqCjaFutmYJlnbPiCXX3J0kfWdPx8PRQCA5sAr0fPChBE6dTIyraZQUWzpFyqLjWK26a/OQ9wdTqMGUwkilLWqQe4DKFqHFqMzPiIxycXU5DLzTnlexjiDIM/uA1j8cnZHjMU455HGN5Uby+CgemEWENhkDxQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(38100700002)(6512007)(38350700002)(107886003)(316002)(26005)(8676002)(186003)(66556008)(66946007)(66476007)(6916009)(54906003)(6486002)(52116002)(83380400001)(6506007)(33716001)(86362001)(4326008)(3480700007)(8936002)(508600001)(2906002)(53546011)(966005)(5660300002)(9686003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 0uJ81CW2bYcRCMQceQl8dvRVPjsAGkhkctjexI1Jt0ifwGXTQt/xjZIxhPW29GY60OLvEOxPsMqB72He968kVaZOhuBWMv1iQm0BTZWjGqXWkGL1BalMYhmU+KuZ9ZjVRHh8o4Pc9DeCH4qXNPb/OXpdG563AN1I4nt3zAjdPN30fQOTV4X/n3QASpfmCayP3NwLty6ydUlDm+I7qvhlf5DAzTIGb1FiNo5gv/qK/3J3EkmfwemfWGidPGMIxBLeaExLlKialQobvGVwSLnSP+gawZ2ZJAeLhhfxKT5+jogf7MPXJKMVz07Bnhqub1e9LsL/9BggTwUD1X7V9DNl7n4Fw4Zky9awQyUfo7aD7qFrkgh9Tp3p93D4OtbRs9a/w8OmRBSOt6ZkgFZFuCa3ux0D72lCi+vgeisFeAhjAto8GIJGdJwjG9IXYuUU1cQdVuYejV0xLZoTftkkvtcrL3lu6mUpr/JtY94xFAyzo5eHA3hGSHpy6RDzZ6QdLLKUfW5PCacicdO6P/9PnM6LX+1ff1lf+mf6tYTaNUglPDyMC4YUe20WqcWeMTOVK5kPe+F4fWjvg+9NuyN0ZFwb0t95LRLdHk4FQbdAHkjHqJA6R5Z+Wd74xDfXiYube44IkEEM9teYBIIlMtgKnRnL3p1JBDTGhOWbIK/kTE8twRgS2A9C/Ycy6Im5pSPu8O9kY0J6mumG0/Kn/tcbO1+pS9E7Gmf+mhH5i1OENWD5lZc=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB2717.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(31696002)(83380400001)(31686004)(36756003)(4326008)(6916009)(86362001)(8936002)(5660300002)(186003)(2906002)(316002)(30864003)(66476007)(66556008)(66946007)(7416002)(6486002)(2616005)(6666004)(26005)(6506007)(53546011)(6512007)(508600001)(38100700002)(8676002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dUc5REdvazFPZnc3bFF1dTY0bG9aSjR6ZXQxRFZ1dEczWlEvZ0llSlM5Z05h?=
- =?utf-8?B?MVFIT3Mva3laem5JNEF0TnQ5cW1nb3VwRkZCZ1VsYVpsL3JKTEgxZk14bUhM?=
- =?utf-8?B?emEyTkE2cXZKWXFtem5NWDdsVjEvdXQzd1AwTEI4RW1OZHNNTlVSUDVsaWly?=
- =?utf-8?B?cnAzWWxXVEhwd1ZJUjg3NC92eGcxampIYTRsVmlHNWdMUnEzL1JRNENIQlg5?=
- =?utf-8?B?QkpNT3dmeFpoTGxOWTlvVVdzMTVZc1NoOWRSWVBQSlhNRHNjNG40dGFJbWhS?=
- =?utf-8?B?VHdtN0hyQkg2MUJ0dkJsMG5xbmdneGFPczhzVWRWZ0d6ZGVJMW5sMkdIWlZn?=
- =?utf-8?B?dGNDNDVWdDFYN2JYUkFPdCtjK1J2MHExcUUxYk5SRHhMbDBQZTdaQitHWHY1?=
- =?utf-8?B?SG54SlpJTDdkZGpiY2FPYTF0ZHZHMWU3aWpUZG4ySVUyMUpyM2JybGNpeEJj?=
- =?utf-8?B?YTUyOC90ZmRHMjRmdjl0RnJRMEpFOVNYampHRllURHRtNmJXeVpiNHphanNX?=
- =?utf-8?B?bk9oOGlnMjhkNDByTVFpN1JXcTU1clpBZGM4T0QrblJSYVRsa1dhdm9tcHlv?=
- =?utf-8?B?RXVWRGV5VGJiSFkzOHNRUnVFVmlsNDVsc05Kc0tDcXh3VUpHOUtFaVh1SlBi?=
- =?utf-8?B?c2R1OUZQT1dqUjB2SWVBenhUV1EyRmZYSmc3RkFPR1prN2lnNVlhUzd5eUFJ?=
- =?utf-8?B?a1BIVjNKMGp2RFh2NWR1Ti9seDIzd0hJNm1Dd1RvOW9NSWVudm53VjFWVWJq?=
- =?utf-8?B?c1hEL1cvRWpZajIrSUE0RlhKQkFNK0tDU2V2MTc0c092cVgwcDB4SklGakhn?=
- =?utf-8?B?QmhvUGdXWEFZZnNwNVdPNXZDaVJ5L3dLTFkzSlduL2w0ME92SXZBSFEyRWoy?=
- =?utf-8?B?WEhzMGRyMzNpTU4vVGJDSkRnZ1h3MGxjd0RqaEFwL3ZabTRqdGtPdW90WVRG?=
- =?utf-8?B?RE4ydXdrWlZGZ3BNc0pmRFltTWtqNjZoMmtibllNYWo1Sk9yMTFpbzRrRkNp?=
- =?utf-8?B?d0NYYVl4K2kwNVFuU0NlVHlSM1I5VDFQVkx2ZFFuZmdGK1lSZUlkNUF6amhN?=
- =?utf-8?B?anZLZ0I1YktzRmEwWGdxS2paRTVBK0pyZW5oSHhOYmlRWDhQSzRHWlVPWllB?=
- =?utf-8?B?bi9XN3JXUEt0aUVkaEpBODlVc2c2SmUrV2FuNDBwZmtSWXlvOXh6Z3loeHMw?=
- =?utf-8?B?c3JvU0tSVEh3M3NOQjJqQlJsNVVaOWhVbk9aelArbFU3eEdGTWhyMXpORW1r?=
- =?utf-8?B?ZWczK25BVTlEK3NOdzN4ajEzUVg4Rlo4eUVuVkk4ZHhGZHo5VWZ2dmtmbWE3?=
- =?utf-8?B?dHpCczRkb1I2ZWVPelR1K0JpMi9uN0Q2S2ZNWGIxc2NZb0U3M3BLc1VJdHcz?=
- =?utf-8?B?Nk9Pc2dUQWtoWTZFWUUxTTRYN1VUTGdmeHNWN3pjT3dSdUFYQWFxQWx0MHhY?=
- =?utf-8?B?dS9aY2N6RDVaM3ZQQ1lMaWxadVJFVXFnS2VldVg2d3YxQnZIQlZYeVpXQkNF?=
- =?utf-8?B?dEczNFF0OEpMRy9mV0dDVEhBa2ljdUo1cktxT3EzazcrWkdMWmM1cGVqV01w?=
- =?utf-8?B?Vml1bXhDTE1qOUIwY3R1dmw1RmlPT1ZvcnNYY1l4c1E4cHduSG1wMVd1Ui9I?=
- =?utf-8?B?b3pwMHNrQndpZW5NTFdrY2dRRWVQbnZjMCtjcmZMYjRmeXpsZ2pnbzNCUVZQ?=
- =?utf-8?B?U0xKZllTcmxRNUpDR1lLc2dzTDFKNG41QW51enNrN2dKK1pyUzc4alBoVlZF?=
- =?utf-8?B?YWEyNFE3bnhNVmNRZGtrRzh1M01SMHFES3BrOVR0R3ZVOTlvVFc3ZzArdEtP?=
- =?utf-8?B?bi82d1lLVU5WU3VKS295dWNWU1lyNVV2RVR3WHp3UkwvZnF5bGkzWVNLcGND?=
- =?utf-8?B?QkRHSDdkMldWeXlyQ283QlNuei9LWUVydElVUjNRTVh1eTg0MXpncDVZeGdh?=
- =?utf-8?B?Mml6bC9GeFIxZVI0YU8rZmduNVlCU2I3T2xsYnRINElibmVPN0szVG9jYWlX?=
- =?utf-8?B?YmFkTjNmbncxT1o5UDJVNklHMG80NUgyd3VMMnk1YlRlV1llcHBvVHNBNUMv?=
- =?utf-8?B?V3Y4ZXNFN1lmenpTTlpqaGxXMmJ3VjF2OU9qLzZYNEk5WHRWRjFGTmFJbG1v?=
- =?utf-8?B?RWZTQnFrZlU2YlZRNHZHN3o1L0tRNlYwVnBsUGt4bUF3d3dLc1h3R2dvZ0xI?=
- =?utf-8?B?SGF6a3R5MEZTNzlWbzhIMFRnejhPMlZvQ0RuL2VaOUhnYXE4RU02V2FwUDcx?=
- =?utf-8?B?Vm9SRjYxdU0zU0E4WlhUenZoRGhaNWhOaWVSZCtjYk5UamJuNUVQTEFhNHBZ?=
- =?utf-8?B?RWp6UEFLbkxwTE9GRUNNOGU1eFJZbFdSbW90WW9sL1lMYjMyaHU5SkIrYlNO?=
- =?utf-8?Q?R0VoR/rT+YY8yOf4=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b38b347e-4379-4663-f8e5-08da3f30ff62
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dEs2T1orb0R5Vno4NmxBOElyRmMwd043STlGaE1nZXlRblRXYWdiOU5YNDJW?=
+ =?utf-8?B?Z0RpVldxQlRKSUVER3F1MzE3Tis2ZTBFcS82d2hEaXVSWjNlc3RDNnRQZGhU?=
+ =?utf-8?B?UExKL0VtSmwvM3dTUUV6N29rUURFNy9mM1l2S3U2bzVyQ1h6UVUxUVlUNkgz?=
+ =?utf-8?B?dnZtQ2tzWVNTb2pwcS9OMXFFMnNZUzVLMUdpRTR2TElKZ2lPRTNyMEFiRjRZ?=
+ =?utf-8?B?MFpuVitiSi8wYXFtZHJpekdMM3RmYlpNVXFIdFB4TEY0N042d2ZPenhpdytX?=
+ =?utf-8?B?UWxCY3NDd0hXVmZnSHBtKzIvOFVncHdzS21rbklIR1RBSGdkc0NsZktEcDdj?=
+ =?utf-8?B?L0VoZTViczF6a1I4ZVFuQk9QV0Q0SDZaaVZZWkI3L0xrMFBRZWI5WXdmV0dN?=
+ =?utf-8?B?Qm5YZjFqZU1RUWRXTXF3NU1RRGZaYVZPTnQxQnpRTy91TFR2K055aUpCUWxV?=
+ =?utf-8?B?dm1lNExsK2t0ZjJHOGliZkxwbzJBOEd3aGZMa0lHbEp2TGlHY0REckpGRkIx?=
+ =?utf-8?B?MDNTaXVabVVnVnhvWUFzMlFTVFBhM0ZRaFhPY25TUU1IQ0I3ZXNIakI5OWs2?=
+ =?utf-8?B?dUtVYjJZbWlHY2ZDOE1ycjlHb1ZVMXpCWGZBTlU1b1VmblhEZjNKc2tNTkhM?=
+ =?utf-8?B?QWk2bDFQSC94dG5qV01vNWc3ZWlqMGxVUDhlWGpma1poVDZnNjNReDgzd3NR?=
+ =?utf-8?B?ek5vcy9WN2lDNDRQdGZaQThPelFLT2NraFFwU095UlY4U29IZ0EyTWFKcFUr?=
+ =?utf-8?B?MXhla0tJVmRXMUFpL1lSc2FmV0VQWFEzMHJUWEI5UDJaQy9JekRjakE2Vkhh?=
+ =?utf-8?B?d1E3dXJYak51L3hxeEhac253TWRDMVF0cWtHWXVVMUJnc3MwcEsrbVZybFJq?=
+ =?utf-8?B?bTBvOGhGR0I5bjd4QmE5UFZxb2JqSWU2UFBRODAzLzlOVUQ0WVNTQkdOQUpT?=
+ =?utf-8?B?OG1BNW1HL1NHb0I3U1JBeWRiYmN0dDFsRCtlcGV0cEZESW9GdytQS2JJM05I?=
+ =?utf-8?B?bGxOK2M2UE5DR0UzOE90YVYwUWo0V1VNYWkwWit2dkRrYzU2ZFhSblhSTEQz?=
+ =?utf-8?B?dEZLdTFTN09vZ25aZFNNc2NRUDFRMkhQWk91K1d5N2pOUDBzTU0zc040cmFU?=
+ =?utf-8?B?dlVWOUphOW5xZWRaUHAvZm9qSUVIQm9XZ0ZDZ2loUUxvaWpOSVg1VVFxKzd6?=
+ =?utf-8?B?NUs1NjgvTnhvWCtkTVhrZFB3NVIxVUdsTlZ5M3loZXRZVkFiaTNtSlRsL1Bo?=
+ =?utf-8?B?THZQOWZnMjJYdEcyYnFqR0FmT0IrZHlZaGpBOEs5akpqbUVqaHFVNDJ5a3h1?=
+ =?utf-8?B?UTdsZzJLZ0pLaCtJREUvV2ZyYkhSSjhVQmdSWCtPUnZxVGZkKzc4aWtTSk9m?=
+ =?utf-8?B?eXR4WDdQTVZZeXREbm80WHF4cERzREJaQkFxR2lVNTA0ZWhjc3RYK0hhSlFZ?=
+ =?utf-8?B?NWFDWUZyMkZiNXduQlF3eU5KazhJczVxUDNNbnNvamxyL01GZ1BLOEhlWVBG?=
+ =?utf-8?B?YXZLSmpYeW1sK0RmbjFzSDVLN1ZlanhSWUdsWFQyREpIdlFQYlR5aUdMMEFN?=
+ =?utf-8?B?RzBFU0krUFJzQys2cUFsRHZQLzh0cFMyWkczYTlRMGRMVk1XeDZJRHo2azRt?=
+ =?utf-8?B?aDExSEJJYUxDZkNhdDZvV3F2bkdzVCszblNSSnYwTTRjZk5GV25HUmxjS3k3?=
+ =?utf-8?B?bHc2UVF1S1pPTWc1MzVlbi9iMkk1bzQwNjUyTld6NW5FdzcwU0llYnZFeEwx?=
+ =?utf-8?B?RFlXU1c2blZHNTdlalBPR0JOcFFhNzA1dTdEOFVzMDEzS1dsd1RuOU5qUkV6?=
+ =?utf-8?B?WmM3UDRYYXlqM0JKUDc5dlJHWnJMaXdKbUxNV1RYOGl2c2VQT1hGaGQ4WC83?=
+ =?utf-8?B?UWhUd3VnOWFUeFE1cmJWTlVHYm5jZVJ3S2kwYWlpTGFITjQvT3ppYUpNWDkx?=
+ =?utf-8?B?Q1lPWi9LNTUvemNMTmVWNDMrOHBPU0hieXA1M0M1WTJENWdKUWFvNm1ZSXVS?=
+ =?utf-8?B?NGVYLzdrTHdGTTVTQVdURm9rVDdtYkxCd2ZuZHpPNEFvRnNUNTRkYVlnYlVq?=
+ =?utf-8?B?ajltK0lldktiN0tXNEUwUS9TQ0wvRTdQTWdqZldLaE1uN2c0SDhUcGlpZzFJ?=
+ =?utf-8?B?RHNHRWUwU0pRY3dGMXA3VmFZY1F6UjFpUFdJRURqN3d2TUlaOHFaVVFjdXdL?=
+ =?utf-8?B?QjlPN0pUV05NbHIrd2hDazFKNW5XdUdnYTBJVFcrN2huY2M1bUFPRC9HdEUr?=
+ =?utf-8?B?RGRsL0piQVE0YUtUSndzcTdodHJXb2NHY21UZnkxNFBHcmNpc0NzSDArbmQr?=
+ =?utf-8?B?M0RORThrUTIwRHJOZkxDTkxLVXFtT0JDOURpRHFlMFhtcis3ay9Qdz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8088a171-fc18-4aae-a4fd-08da3f31e223
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR12MB2717.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 May 2022 16:01:30.5439
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 May 2022 16:07:50.8624
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Ox2aTtP7fL/WPyI93fZ0V6qykbnOi5fv+GKMg3rjv/WBU7nIi7tvlJfRKMS8OP4NUlK6cOYJ3G30LiS1yskSNw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1783
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.874
- definitions=2022-05-26_06:2022-05-25,2022-05-26 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 mlxlogscore=999
- spamscore=0 suspectscore=0 adultscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2204290000
- definitions=main-2205260076
-X-Proofpoint-GUID: 2VSvcikmmXy3J8eUwQGgfwCCyhWJU4pf
-X-Proofpoint-ORIG-GUID: 2VSvcikmmXy3J8eUwQGgfwCCyhWJU4pf
+X-MS-Exchange-CrossTenant-UserPrincipalName: AbXuE9CecQ5powuyqHbFGbeY8J4GsLUvQad6pN+G6hteFYm3/lVq9NPxxaTHawZiwowk3/SiN+8aOZJAZkfW4g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB5809
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 26, 2022 at 08:01:22 AM -0700, Leah Rumancik wrote:
-> On Wed, May 25, 2022 at 02:23:10PM -0700, Darrick J. Wong wrote:
->> Hi everyone,
->>=20
->> 3. fstesting -- new patches proposed for stable branches shouldn't
->> introduce new regressions, and ideally there would also be a regression
->> test that would now pass.  As Dave and I have stated in the past,
->> fstests is a big umbrella of a test suite, which implies that A/B
->> testing is the way to go.  I think at least Zorro and I would like to
->> improve the tagging in fstests to make it more obvious which tests
->> contain enough randomness that they cannot be expected to behave 100%
->> reliably.
-> It would be nice to find an agreement on testing requirements. I have
-> attached some ideas on configs/number of tests/etc as well as the status
-> of my work on 5.15 below.
->
->
->> a> I've been following the recent fstests threads, and it seems to me
->> that there are really two classes of users -- sustaining people who want
->> fstests to run reliably so they can tell if their backports have broken
->> anything; and developers, who want the randomness to try to poke into
->> dusty corners of the filesystem.  Can we make it easier to associate
->> random bits of data (reliability rates, etc.) with a given fstests
->> configuration?  And create a test group^Wtag for the tests that rely on
->> RNGs to shake things up?
-> This would be great!
->
->>=20
->>=20
->> Thoughts? Flames?
->>=20
->> --D
-> This thread had good timing :) I have been working on setting up=20
-> some automated testing. Currently, 5.15.y is our priority so I have=20
-> started working on this branch.
->
-> Patches are being selected by simply searching for the =E2=80=9CFixes=E2=
-=80=9D=20
-> tag and applying if the commit-to-be-fixed is in the stable branch,=20
-> but AUTOSEL would be nice, so I=E2=80=99ll start playing around with that=
-.=20
-> Amir, it would be nice to sync up the patch selection process. I can=20
-> help share the load, especially for 5.15.
->
-> Selecting just the tagged =E2=80=9CFixes=E2=80=9D for 5.15.y for patches =
-through=20
-> 5.17.2, 15 patches were found and applied - if there are no=20
-> complaints about the testing setup, I can go ahead and send out this=20
-> batch:
->
-> c30a0cbd07ec xfs: use kmem_cache_free() for kmem_cache objects
-> 5ca5916b6bc9 xfs: punch out data fork delalloc blocks on COW writeback fa=
-ilure
-> a1de97fe296c xfs: Fix the free logic of state in xfs_attr_node_hasname
-> 1090427bf18f xfs: remove xfs_inew_wait
-> 089558bc7ba7 xfs: remove all COW fork extents when remounting readonly
-> 7993f1a431bc xfs: only run COW extent recovery when there are no live ext=
-ents
-> 09654ed8a18c xfs: check sb_meta_uuid for dabuf buffer recovery
-> f8d92a66e810 xfs: prevent UAF in xfs_log_item_in_current_chkpt
-> b97cca3ba909 xfs: only bother with sync_filesystem during readonly remoun=
-t
-> eba0549bc7d1 xfs: don't generate selinux audit messages for capability te=
-sting
-> e014f37db1a2 xfs: use setattr_copy to set vfs inode attributes
-> 70447e0ad978 xfs: async CIL flushes need pending pushes to be made stable
-> c8c568259772 xfs: don't include bnobt blocks when reserving free block po=
-ol
-> cd6f79d1fb32 xfs: run callbacks before waking waiters in xlog_state_shutd=
-own_callbacks
-> 919edbadebe1 xfs: drop async cache flushes from CIL commits.
->
 
-In our experience, we found that some of the patches which fix bugs would n=
-ot
-have the associated "Fixes" tag. Hence I am currently using the script
-https://gist.github.com/chandanr/c1e3affdb06eb2e025f955e7a77b2338 to identi=
-fy
-such commits along with the commits which have the "Fixes" tag.
+On 5/24/2022 11:11 PM, Alistair Popple wrote:
+> Alex Sierra <alex.sierra@amd.com> writes:
+>
+>> With DEVICE_COHERENT, we'll soon have vm_normal_pages() return
+>> device-managed anonymous pages that are not LRU pages. Although they
+>> behave like normal pages for purposes of mapping in CPU page, and for
+>> COW. They do not support LRU lists, NUMA migration or THP.
+>>
+>> We also introduced a FOLL_LRU flag that adds the same behaviour to
+>> follow_page and related APIs, to allow callers to specify that they
+>> expect to put pages on an LRU list.
+> Continuing the follow up from the thread for v2:
+>
+>>> This means by default GUP can return non-LRU pages. I didn't see
+>>> anywhere that would be a problem but I didn't check everything. Did you
+>>> check this or is there some other reason I've missed that makes this not
+>>> a problem?
+>> I have double checked all gup and pin_user_pages callers and none of them seem
+>> to have interaction with LRU APIs.
+> And actually if I'm understanding things correctly callers of
+> GUP/PUP/follow_page_pte() should already expect to get non-LRU pages
+> returned:
+>
+>      page = vm_normal_page(vma, address, pte);
+>      if ((flags & FOLL_LRU) && page && is_zone_device_page(page))
+>          page = NULL;
+>      if (!page && pte_devmap(pte) && (flags & (FOLL_GET | FOLL_PIN))) {
+>          /*
+>           * Only return device mapping pages in the FOLL_GET or FOLL_PIN
+>           * case since they are only valid while holding the pgmap
+>           * reference.
+>           */
+>          *pgmap = get_dev_pagemap(pte_pfn(pte), *pgmap);
+>          if (*pgmap)
+>              page = pte_page(pte);
+>
+> Which I think makes FOLL_LRU confusing, because if understand correctly
+> even with FOLL_LRU it is still possible for follow_page_pte() to return
+> a non-LRU page. Could we do something like this to make it consistent:
+>
+>      if ((flags & FOLL_LRU) && (page && is_zone_device_page(page) ||
+>          !page && pte_devmap(pte)))
 
-The following command line obtains the list of commits from v5.18,
+Hi Alistair,
+Not sure if this suggestion is a replacement for the first or the second 
+condition in the snip code above. We know device coherent type will not 
+be set with devmap. So we could do the following:
 
-# list-xfs-fix-commits.sh v5.17 v5.18
---- Actual fixes ---
-1:  eba0549bc7d10
-2:  e014f37db1a2d
-3:  70447e0ad9781
-4:  c8c5682597727
-5:  cd6f79d1fb324
-6:  919edbadebe17
-7:  9a5280b312e2e
+  if ((flags & FOLL_LRU) && page && is_zone_device_page(page))
+-	page = NULL;
++	goto no_page;
 
----- Possible fixes; Along with matching regex  ----
-1:  871b9316e7a77: bug
-2:  41667260bc84d: bug
-3:  83a44a4f47ad2: fix
-4:  a9a4bc8c76d74: rac.+
-5:  dbd0f5299302f: rac.+
-6:  941fbdfd6dd0f: rac.+
-7:  01728b44ef1b7: bug
-8:  b9b1335e64030: fix
-9:  82be38bcf8a2e: fix
-10:  d2d7c0473586d: fix
-11:  ab9c81ef321f9: assert
-12:  b5f17bec1213a: rac.+
-13:  41e6362183589: fix
-14:  3c4cb76bce438: rac.+
-15:  5652ef31705f2: fail
+Regards,
+Alex Sierra
 
-I go through each commit in the "Possible fixes" section and determine if a=
-ny
-of those need to be backported.
-
---=20
-chandan
+>
+> Looking at callers that currently use FOLL_LRU I don't think this would
+> change any behaviour as they already filter out devmap through various
+> other means.
+>
+>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+>> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
+>> ---
+>>   fs/proc/task_mmu.c | 2 +-
+>>   include/linux/mm.h | 3 ++-
+>>   mm/gup.c           | 2 ++
+>>   mm/huge_memory.c   | 2 +-
+>>   mm/khugepaged.c    | 9 ++++++---
+>>   mm/ksm.c           | 6 +++---
+>>   mm/madvise.c       | 4 ++--
+>>   mm/memory.c        | 9 ++++++++-
+>>   mm/mempolicy.c     | 2 +-
+>>   mm/migrate.c       | 4 ++--
+>>   mm/mlock.c         | 2 +-
+>>   mm/mprotect.c      | 2 +-
+>>   12 files changed, 30 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+>> index f46060eb91b5..5d620733f173 100644
+>> --- a/fs/proc/task_mmu.c
+>> +++ b/fs/proc/task_mmu.c
+>> @@ -1785,7 +1785,7 @@ static struct page *can_gather_numa_stats(pte_t pte, struct vm_area_struct *vma,
+>>   		return NULL;
+>>
+>>   	page = vm_normal_page(vma, addr, pte);
+>> -	if (!page)
+>> +	if (!page || is_zone_device_page(page))
+>>   		return NULL;
+>>
+>>   	if (PageReserved(page))
+>> diff --git a/include/linux/mm.h b/include/linux/mm.h
+>> index 9f44254af8ce..d7f253a0c41e 100644
+>> --- a/include/linux/mm.h
+>> +++ b/include/linux/mm.h
+>> @@ -601,7 +601,7 @@ struct vm_operations_struct {
+>>   #endif
+>>   	/*
+>>   	 * Called by vm_normal_page() for special PTEs to find the
+>> -	 * page for @addr.  This is useful if the default behavior
+>> +	 * page for @addr. This is useful if the default behavior
+>>   	 * (using pte_page()) would not find the correct page.
+>>   	 */
+>>   	struct page *(*find_special_page)(struct vm_area_struct *vma,
+>> @@ -2929,6 +2929,7 @@ struct page *follow_page(struct vm_area_struct *vma, unsigned long address,
+>>   #define FOLL_NUMA	0x200	/* force NUMA hinting page fault */
+>>   #define FOLL_MIGRATION	0x400	/* wait for page to replace migration entry */
+>>   #define FOLL_TRIED	0x800	/* a retry, previous pass started an IO */
+>> +#define FOLL_LRU        0x1000  /* return only LRU (anon or page cache) */
+>>   #define FOLL_REMOTE	0x2000	/* we are working on non-current tsk/mm */
+>>   #define FOLL_COW	0x4000	/* internal GUP flag */
+>>   #define FOLL_ANON	0x8000	/* don't do file mappings */
+>> diff --git a/mm/gup.c b/mm/gup.c
+>> index 501bc150792c..c9cbac06bcc5 100644
+>> --- a/mm/gup.c
+>> +++ b/mm/gup.c
+>> @@ -479,6 +479,8 @@ static struct page *follow_page_pte(struct vm_area_struct *vma,
+>>   	}
+>>
+>>   	page = vm_normal_page(vma, address, pte);
+>> +	if ((flags & FOLL_LRU) && page && is_zone_device_page(page))
+>> +		page = NULL;
+>>   	if (!page && pte_devmap(pte) && (flags & (FOLL_GET | FOLL_PIN))) {
+>>   		/*
+>>   		 * Only return device mapping pages in the FOLL_GET or FOLL_PIN
+>> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+>> index 910a138e9859..eed80696c5fd 100644
+>> --- a/mm/huge_memory.c
+>> +++ b/mm/huge_memory.c
+>> @@ -2856,7 +2856,7 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
+>>   		}
+>>
+>>   		/* FOLL_DUMP to ignore special (like zero) pages */
+>> -		page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP);
+>> +		page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP | FOLL_LRU);
+>>
+>>   		if (IS_ERR(page))
+>>   			continue;
+>> diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+>> index a4e5eaf3eb01..8bf4126b6b9c 100644
+>> --- a/mm/khugepaged.c
+>> +++ b/mm/khugepaged.c
+>> @@ -627,7 +627,7 @@ static int __collapse_huge_page_isolate(struct vm_area_struct *vma,
+>>   			goto out;
+>>   		}
+>>   		page = vm_normal_page(vma, address, pteval);
+>> -		if (unlikely(!page)) {
+>> +		if (unlikely(!page) || unlikely(is_zone_device_page(page))) {
+>>   			result = SCAN_PAGE_NULL;
+>>   			goto out;
+>>   		}
+>> @@ -1276,7 +1276,7 @@ static int khugepaged_scan_pmd(struct mm_struct *mm,
+>>   			writable = true;
+>>
+>>   		page = vm_normal_page(vma, _address, pteval);
+>> -		if (unlikely(!page)) {
+>> +		if (unlikely(!page) || unlikely(is_zone_device_page(page))) {
+>>   			result = SCAN_PAGE_NULL;
+>>   			goto out_unmap;
+>>   		}
+>> @@ -1484,7 +1484,8 @@ void collapse_pte_mapped_thp(struct mm_struct *mm, unsigned long addr)
+>>   			goto abort;
+>>
+>>   		page = vm_normal_page(vma, addr, *pte);
+>> -
+>> +		if (WARN_ON_ONCE(page && is_zone_device_page(page)))
+>> +			page = NULL;
+>>   		/*
+>>   		 * Note that uprobe, debugger, or MAP_PRIVATE may change the
+>>   		 * page table, but the new page will not be a subpage of hpage.
+>> @@ -1502,6 +1503,8 @@ void collapse_pte_mapped_thp(struct mm_struct *mm, unsigned long addr)
+>>   		if (pte_none(*pte))
+>>   			continue;
+>>   		page = vm_normal_page(vma, addr, *pte);
+>> +		if (WARN_ON_ONCE(page && is_zone_device_page(page)))
+>> +			goto abort;
+>>   		page_remove_rmap(page, vma, false);
+>>   	}
+>>
+>> diff --git a/mm/ksm.c b/mm/ksm.c
+>> index 063a48eeb5ee..f16056efca21 100644
+>> --- a/mm/ksm.c
+>> +++ b/mm/ksm.c
+>> @@ -474,7 +474,7 @@ static int break_ksm(struct vm_area_struct *vma, unsigned long addr)
+>>   	do {
+>>   		cond_resched();
+>>   		page = follow_page(vma, addr,
+>> -				FOLL_GET | FOLL_MIGRATION | FOLL_REMOTE);
+>> +				FOLL_GET | FOLL_MIGRATION | FOLL_REMOTE | FOLL_LRU);
+>>   		if (IS_ERR_OR_NULL(page))
+>>   			break;
+>>   		if (PageKsm(page))
+>> @@ -559,7 +559,7 @@ static struct page *get_mergeable_page(struct rmap_item *rmap_item)
+>>   	if (!vma)
+>>   		goto out;
+>>
+>> -	page = follow_page(vma, addr, FOLL_GET);
+>> +	page = follow_page(vma, addr, FOLL_GET | FOLL_LRU);
+>>   	if (IS_ERR_OR_NULL(page))
+>>   		goto out;
+>>   	if (PageAnon(page)) {
+>> @@ -2288,7 +2288,7 @@ static struct rmap_item *scan_get_next_rmap_item(struct page **page)
+>>   		while (ksm_scan.address < vma->vm_end) {
+>>   			if (ksm_test_exit(mm))
+>>   				break;
+>> -			*page = follow_page(vma, ksm_scan.address, FOLL_GET);
+>> +			*page = follow_page(vma, ksm_scan.address, FOLL_GET | FOLL_LRU);
+>>   			if (IS_ERR_OR_NULL(*page)) {
+>>   				ksm_scan.address += PAGE_SIZE;
+>>   				cond_resched();
+>> diff --git a/mm/madvise.c b/mm/madvise.c
+>> index 1873616a37d2..e9c24c834e98 100644
+>> --- a/mm/madvise.c
+>> +++ b/mm/madvise.c
+>> @@ -413,7 +413,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+>>   			continue;
+>>
+>>   		page = vm_normal_page(vma, addr, ptent);
+>> -		if (!page)
+>> +		if (!page || is_zone_device_page(page))
+>>   			continue;
+>>
+>>   		/*
+>> @@ -628,7 +628,7 @@ static int madvise_free_pte_range(pmd_t *pmd, unsigned long addr,
+>>   		}
+>>
+>>   		page = vm_normal_page(vma, addr, ptent);
+>> -		if (!page)
+>> +		if (!page || is_zone_device_page(page))
+>>   			continue;
+>>
+>>   		/*
+>> diff --git a/mm/memory.c b/mm/memory.c
+>> index 76e3af9639d9..571a26805ee1 100644
+>> --- a/mm/memory.c
+>> +++ b/mm/memory.c
+>> @@ -621,6 +621,13 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
+>>   		if (is_zero_pfn(pfn))
+>>   			return NULL;
+>>   		if (pte_devmap(pte))
+>> +/*
+>> + * NOTE: New uers of ZONE_DEVICE will not set pte_devmap() and will have
+>> + * refcounts incremented on their struct pages when they are inserted into
+>> + * PTEs, thus they are safe to return here. Legacy ZONE_DEVICE pages that set
+>> + * pte_devmap() do not have refcounts. Example of legacy ZONE_DEVICE is
+>> + * MEMORY_DEVICE_FS_DAX type in pmem or virtio_fs drivers.
+>> + */
+>>   			return NULL;
+>>
+>>   		print_bad_pte(vma, addr, pte, NULL);
+>> @@ -4422,7 +4429,7 @@ static vm_fault_t do_numa_page(struct vm_fault *vmf)
+>>   	pte = pte_modify(old_pte, vma->vm_page_prot);
+>>
+>>   	page = vm_normal_page(vma, vmf->address, pte);
+>> -	if (!page)
+>> +	if (!page || is_zone_device_page(page))
+>>   		goto out_map;
+>>
+>>   	/* TODO: handle PTE-mapped THP */
+>> diff --git a/mm/mempolicy.c b/mm/mempolicy.c
+>> index 8c74107a2b15..e32edbecb0cd 100644
+>> --- a/mm/mempolicy.c
+>> +++ b/mm/mempolicy.c
+>> @@ -528,7 +528,7 @@ static int queue_pages_pte_range(pmd_t *pmd, unsigned long addr,
+>>   		if (!pte_present(*pte))
+>>   			continue;
+>>   		page = vm_normal_page(vma, addr, *pte);
+>> -		if (!page)
+>> +		if (!page || is_zone_device_page(page))
+>>   			continue;
+>>   		/*
+>>   		 * vm_normal_page() filters out zero pages, but there might
+>> diff --git a/mm/migrate.c b/mm/migrate.c
+>> index 6c31ee1e1c9b..c5d50e96ecd7 100644
+>> --- a/mm/migrate.c
+>> +++ b/mm/migrate.c
+>> @@ -1611,7 +1611,7 @@ static int add_page_for_migration(struct mm_struct *mm, unsigned long addr,
+>>   		goto out;
+>>
+>>   	/* FOLL_DUMP to ignore special (like zero) pages */
+>> -	page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP);
+>> +	page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP | FOLL_LRU);
+>>
+>>   	err = PTR_ERR(page);
+>>   	if (IS_ERR(page))
+>> @@ -1802,7 +1802,7 @@ static void do_pages_stat_array(struct mm_struct *mm, unsigned long nr_pages,
+>>   			goto set_status;
+>>
+>>   		/* FOLL_DUMP to ignore special (like zero) pages */
+>> -		page = follow_page(vma, addr, FOLL_DUMP);
+>> +		page = follow_page(vma, addr, FOLL_DUMP | FOLL_LRU);
+>>
+>>   		err = PTR_ERR(page);
+>>   		if (IS_ERR(page))
+>> diff --git a/mm/mlock.c b/mm/mlock.c
+>> index 716caf851043..b14e929084cc 100644
+>> --- a/mm/mlock.c
+>> +++ b/mm/mlock.c
+>> @@ -333,7 +333,7 @@ static int mlock_pte_range(pmd_t *pmd, unsigned long addr,
+>>   		if (!pte_present(*pte))
+>>   			continue;
+>>   		page = vm_normal_page(vma, addr, *pte);
+>> -		if (!page)
+>> +		if (!page || is_zone_device_page(page))
+>>   			continue;
+>>   		if (PageTransCompound(page))
+>>   			continue;
+>> diff --git a/mm/mprotect.c b/mm/mprotect.c
+>> index b69ce7a7b2b7..a6f3587ea29a 100644
+>> --- a/mm/mprotect.c
+>> +++ b/mm/mprotect.c
+>> @@ -91,7 +91,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+>>   					continue;
+>>
+>>   				page = vm_normal_page(vma, addr, oldpte);
+>> -				if (!page || PageKsm(page))
+>> +				if (!page || is_zone_device_page(page) || PageKsm(page))
+>>   					continue;
+>>
+>>   				/* Also skip shared copy-on-write pages */
