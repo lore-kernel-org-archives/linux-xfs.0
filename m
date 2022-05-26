@@ -2,141 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B27CC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 02:28:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB152C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 02:56:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233616AbiEZC2D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 May 2022 22:28:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38036 "EHLO
+        id S239442AbiEZC4x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 May 2022 22:56:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240504AbiEZC2C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 May 2022 22:28:02 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3DA595B3C5;
-        Wed, 25 May 2022 19:28:01 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1515C10E6C26;
-        Thu, 26 May 2022 12:28:00 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nu3EE-00GSbl-Ek; Thu, 26 May 2022 12:27:58 +1000
-Date:   Thu, 26 May 2022 12:27:58 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Zorro Lang <zlang@redhat.com>, Eryu Guan <guaneryu@gmail.com>,
-        fstests <fstests@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: test mkfs.xfs sizing of internal logs that
-Message-ID: <20220526022758.GZ2306852@dread.disaster.area>
-References: <Yo03mZ12X1nLGihK@magnolia>
- <20220524234426.GQ2306852@dread.disaster.area>
- <Yo1vCizXEK7+AkZi@magnolia>
- <20220525002413.GT2306852@dread.disaster.area>
- <Yo66ACF65ao6Akis@magnolia>
- <20220526001149.GW2306852@dread.disaster.area>
- <Yo7ZWKYseetNITrj@magnolia>
+        with ESMTP id S239244AbiEZC4w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 May 2022 22:56:52 -0400
+Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFF61BCE9E
+        for <linux-xfs@vger.kernel.org>; Wed, 25 May 2022 19:56:50 -0700 (PDT)
+Received: by mail-ej1-x630.google.com with SMTP id wh22so601760ejb.7
+        for <linux-xfs@vger.kernel.org>; Wed, 25 May 2022 19:56:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=/f+kIrdBFHC65DVHSr+BTnTC0fF5q81rMDDOfyiD654=;
+        b=Z/rNiCa09OUBCMiQjoRDx83QdZD702DaqjPDsUPMD9T+5L1M4LKv/sAnmlOalu/TF9
+         vfhab89ZlrhWprBxvUy4qqjmS6TXouMB1W2bCmtdC+y4kkhHTAIXEWexSFGb8rPos9eF
+         bVnf4I0g2l86xNx+ofyWhsIQeBy7iubJ3LdDQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=/f+kIrdBFHC65DVHSr+BTnTC0fF5q81rMDDOfyiD654=;
+        b=m2lU/G7WXJ776FuI5rzKZWKkxqjEvhaBNRHphaukcs00F+VmwS59MeoxOsw5+s+JVO
+         R2V4I6tKRjV6GWwsYoOEG4n+8MJo6iqQLBRgl3yEkcXO3nTATOaCHp3rBhS44uMt0F8r
+         8xHVWGGbfXela2wvVl7dt/0hblOwd7z6Iwc6I8Wre9TKHrX3a1JmMwN1uOjMTVlVbrHJ
+         h6rnzBLeKXm0bUvZBiGTiHGotqjF6ohNPubSVmXyXFWSPso+yog3/6O4QYEd2NVNcsqv
+         g8YQF+mkHG3jq6FKcyXXjv/ZuXai6CnSxpSOEWh6hkqFFqyqTB2PGvMTHS9T2rQ4+74w
+         IgFA==
+X-Gm-Message-State: AOAM530BCZ0LkIz/AmVBF9ps5oWYSptXcFfrzo8MOLh801AKmOCsoZmT
+        Y5lcs1K4klyD13jNJTZSfn28aT4GPS9Cp8x31EA=
+X-Google-Smtp-Source: ABdhPJzCf4M3xqG4vYkI+l8IMFJth4OGOpHtYcX6GMhOXUojZ4cis9z8mhvZKcmDoILGh3OL3ifTyA==
+X-Received: by 2002:a17:907:6da4:b0:6fe:fa71:a726 with SMTP id sb36-20020a1709076da400b006fefa71a726mr14089437ejc.518.1653533808997;
+        Wed, 25 May 2022 19:56:48 -0700 (PDT)
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com. [209.85.221.54])
+        by smtp.gmail.com with ESMTPSA id v19-20020a50d093000000b0042bd2d0b40csm176753edd.17.2022.05.25.19.56.47
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 May 2022 19:56:48 -0700 (PDT)
+Received: by mail-wr1-f54.google.com with SMTP id k30so480038wrd.5
+        for <linux-xfs@vger.kernel.org>; Wed, 25 May 2022 19:56:47 -0700 (PDT)
+X-Received: by 2002:a5d:58cc:0:b0:20e:643d:e46a with SMTP id
+ o12-20020a5d58cc000000b0020e643de46amr28382959wrf.97.1653533807553; Wed, 25
+ May 2022 19:56:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yo7ZWKYseetNITrj@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=628ee5b0
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
-        a=S0sJzlskRkG4FF7Pwy4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <20220526022053.GY2306852@dread.disaster.area>
+In-Reply-To: <20220526022053.GY2306852@dread.disaster.area>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Wed, 25 May 2022 19:56:31 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wg8R2sYVKi7bgwVN8n-exN766PSJwYg+18SLbR=+vQtVA@mail.gmail.com>
+Message-ID: <CAHk-=wg8R2sYVKi7bgwVN8n-exN766PSJwYg+18SLbR=+vQtVA@mail.gmail.com>
+Subject: Re: [GIT PULL] xfs: new code for 5.19
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 25, 2022 at 06:35:20PM -0700, Darrick J. Wong wrote:
-> On Thu, May 26, 2022 at 10:11:49AM +1000, Dave Chinner wrote:
-> > On Wed, May 25, 2022 at 04:21:36PM -0700, Darrick J. Wong wrote:
-> > > On Wed, May 25, 2022 at 10:24:13AM +1000, Dave Chinner wrote:
-> > > > On Tue, May 24, 2022 at 04:49:30PM -0700, Darrick J. Wong wrote:
-> > > > > On Wed, May 25, 2022 at 09:44:26AM +1000, Dave Chinner wrote:
-> > > > > > On Tue, May 24, 2022 at 12:52:57PM -0700, Darrick J. Wong wrote:
-> > > > > > > +# First we try various small filesystems and stripe sizes.
-> > > > > > > +for M in `seq 298 302` `seq 490 520`; do
-> > > > > > > +	for S in `seq 32 4 64`; do
-> > > > > > > +		test_format "M=$M S=$S" -dsu=${S}k,sw=1,size=${M}m
-> > > > > > > +	done
-> > > > > > > +done
-> > > > > > > +
-> > > > > > > +# log so large it pushes the root dir into AG 1
-> > > > > > > +test_format "log pushes rootdir into AG 1" -d agcount=3200,size=6366g -lagnum=0
-> > > > > 
-> > > > > ...this particular check in mkfs only happens after we allocate the root
-> > > > > directory, which an -N invocation doesn't do.
-> > > > 
-> > > > Ok, so for this test can we drop the -N? We don't need to do 30 IOs
-> > > > and write 64MB logs for every config we test - I think there's ~35 *
-> > > > 8 invocations of test_format in the loop above before we get here...
-> > > > 
-> > > > Also, why do we need a 6.3TB filesystem with 2.1GB AGs and a 2GB log
-> > > > to trigger this? That means we have to write 2GB to disk, plus
-> > > > ~20,000 write IOs for the AG headers and btree root blocks before we
-> > > > get to the failure case, yes?
-> > > > 
-> > > > Why not just exercise the failure case with something like this:
-> > > > 
-> > > > # mkfs.xfs -d agcount=2,size=64M -l size=8180b,agnum=0 -d file,name=test.img
-> > > > meta-data=test.img               isize=512    agcount=2, agsize=8192 blks
-> > > >          =                       sectsz=512   attr=2, projid32bit=1
-> > > >          =                       crc=1        finobt=1, sparse=1, rmapbt=0
-> > > >          =                       reflink=1    bigtime=0 inobtcount=0
-> > > > data     =                       bsize=4096   blocks=16384, imaxpct=25
-> > > >          =                       sunit=0      swidth=0 blks
-> > > > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> > > > log      =internal log           bsize=4096   blocks=8180, version=2
-> > > >          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > > > mkfs.xfs: root inode created in AG 1, not AG 0
-> > > 
-> > > Welll... a better reason for why this test can't do that -- one of my
-> > > fixes also made mkfs reject -l size=XXX when XXX is not possible.
-> > 
-> > So you make other changes to mkfs that aren't yet upstream that
-> > check whether the log causes the root inode to change position?
-> 
-> It's in for-next, is that not good enough?
+On Wed, May 25, 2022 at 7:21 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> Can you please pull the XFS updates for 5.19 from the tag listed
+> below? It merges cleanly with the TOT kernel I just pulled a couple
+> of minutes ago, though the diffstat I got on merge:
+>
+> 105 files changed, 4862 insertions(+), 2773 deletions(-)
+>
+> is slightly different to the diffstat the pull request generated.
 
-Sorry, I didn't realise Eric had pulled it in. I'm not keep a close
-eye on exactly what non-libxfs-sync stuff going into xfsprogs right
-now - I've had to filter that stuff out to concentrate on the kernel
-cycle stuff...
+Funky. I get the same diffstat that you list below in the pull
+request, not the above.
 
-As it is, it's fine however we reject this case, isn't? it doesn't
-have to be the root inode error message that causes it to abort, as
-long as we get a non-zero exit value. Hence the above method would
-fail with both old and new mkfs binaries, even if they are detecting
-the issue differently.
+Different diff algorithms do get different results, so the actual line
+numbers vary a bit with the default myers vs minimal vs patience vs
+histogram algorithms. But while that changes line numbers, it
+shouldn't then change the actual number of files...
 
-> > I mean, '-l size=8180b' results in a log that fits perfectly fine in
-> > an empty AG, and so you must have added more checks to detect this
-> > moves the root inode somehow?
-> > 
-> > > That said... -d agcount=3200,size=6366g -lagnum=0 -N seems to work?
-> > 
-> > On a new mkfs binary with those checks that you mention above?  If
-> > so, it seems to me that those new checks trigger for this case, too,
-> > before we write anything?
-> >
-> > IOWs, this won't fail on older mkfs.xfs binaries that don't have
-> > these new log size checks because we never get around to allocating
-> > the root inode and checking it's location, right?  Yet what we
-> > really want here is for it to fail on an old mkfs binary?
-> 
-> Yeah, something like that.  It's been so long since Eric and I were
-> actively poking on this that I don't remember so well anymore.
+I wonder what the difference is, but I'm not going to delve into it
+further since what I see matches the pull request and it all looks
+fine.
 
-Worth checking, because ISTM that if it doesn't fail on old mkfs,
-then we'd still the non "-N" version or the targetted log size
-variant like above. Of course, I could still be misunderstanding
-what you're trying to exercise here...
+I do notice that if I use
 
-Cheers,
+   git diff -C10 ..
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+to make git more eagerly find file copies, I get
+
+ [...]
+ 104 files changed, 4444 insertions(+), 3125 deletions(-)
+ copy fs/xfs/{xfs_bmap_item.c => xfs_attr_item.c} (13%)
+ create mode 100644 fs/xfs/xfs_attr_item.h
+
+and adding "-B/10%" to make git also look for rewrites (ie files that
+might be better shown as "remove file and then re-add") gives:
+
+ [..]
+ 104 files changed, 5449 insertions(+), 4130 deletions(-)
+ rewrite fs/xfs/libxfs/xfs_attr.c (43%)
+ copy fs/xfs/{xfs_bmap_item.c => xfs_attr_item.c} (13%)
+ create mode 100644 fs/xfs/xfs_attr_item.h
+ rewrite fs/xfs/xfs_log.h (31%)
+ rewrite fs/xfs/xfs_message.h (30%)
+
+so it might be something along those lines where our git configs
+differ. I couldn't get it to give "105 files", though.
+
+Not important. I just got curious.
+
+And it might also be as simple as you just having had something else
+in your tree at the same time, that you didn't want to send, but
+forgot about when you did the test-merge. That would be the simplest
+explanation..
+
+> If I've made any mistakes or done stuff that is considered wrong or
+> out of date, let me know and I'll fix them up - it's been a while
+> since I built a tree for upstream merge.
+
+It all looks fine.
+
+I might wish that your merge commit messages were a bit more
+consistent about the merge details ("why and what"), but you are most
+definitely not the only one with that, and a number of them are quite
+nice (ie the merge of the large extent counters has a nice informative
+commit message, as does the rmap speedup one).
+
+And then some of them are the uninformative one-lines that just say
+"Merge branch X"
+
+               Linus
