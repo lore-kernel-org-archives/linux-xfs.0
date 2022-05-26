@@ -2,47 +2,47 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA804C43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AD1CC433EF
 	for <linux-xfs@archiver.kernel.org>; Thu, 26 May 2022 17:39:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348324AbiEZRjK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 May 2022 13:39:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59890 "EHLO
+        id S235974AbiEZRjJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 May 2022 13:39:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343972AbiEZRjI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 13:39:08 -0400
+        with ESMTP id S1348326AbiEZRjF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 13:39:05 -0400
 Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FCE49A980
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:39:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53DFD996BC
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:39:04 -0700 (PDT)
 Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-        by m0001303.ppops.net (8.17.1.5/8.17.1.5) with ESMTP id 24QF3hSF012028
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:39:05 -0700
+        by m0001303.ppops.net (8.17.1.5/8.17.1.5) with ESMTP id 24QF3hS8012028
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:39:03 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=CHkVmanun6GHuUP4Cg6nbmQ2wQHDke+Cbgl3CRSd104=;
- b=HF8SUG8KP44A//ltyEBb1Twa4WG7C7D+d7U6W3YEHmRiHfqa5f6TKbeAE+pH2A9AJg7X
- sotUKP85d6hERENJMfUp9e/m/Z+8RcJqb6h23iKf7sHK/k/INs6DWflOQquA9CZ8GUGO
- 16PorU0AKE0AUP+gxcM3CWt0gKYBPsftU/Y= 
+ bh=rv7J0LdI0Ppmj5mCGCobLN9xMm7ObF9QxqSwF5hjIfM=;
+ b=ghU6rRBlo3YFvcDWKuXzielvJQp/ssaOZqDvzmAQIrABwjw4WK3SkaIaw9JDpacz6uTd
+ KLC1eOmWRNFoPFIJe15oxYzyhm67EXN0KZV1zoYWWBLqPKUkpqsiF/PD0iytwcKQNqZE
+ bPBDwcsZK41K+360cOxooxXaLZQsuGAoKfs= 
 Received: from maileast.thefacebook.com ([163.114.130.16])
-        by m0001303.ppops.net (PPS) with ESMTPS id 3g9qtug2fy-13
+        by m0001303.ppops.net (PPS) with ESMTPS id 3g9qtug2fy-6
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:39:05 -0700
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 10:39:03 -0700
 Received: from twshared19572.14.frc2.facebook.com (2620:10d:c0a8:1b::d) by
  mail.thefacebook.com (2620:10d:c0a8:83::6) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
  15.1.2375.28; Thu, 26 May 2022 10:39:01 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id 80733FA621D8; Thu, 26 May 2022 10:38:45 -0700 (PDT)
+        id 753FFFA621D4; Thu, 26 May 2022 10:38:45 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>,
         <hch@infradead.org>
-Subject: [PATCH v6 06/16] fs: Add check for async buffered writes to generic_write_checks
-Date:   Thu, 26 May 2022 10:38:30 -0700
-Message-ID: <20220526173840.578265-7-shr@fb.com>
+Subject: [PATCH v6 04/16] iomap: Add flags parameter to iomap_page_create()
+Date:   Thu, 26 May 2022 10:38:28 -0700
+Message-ID: <20220526173840.578265-5-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220526173840.578265-1-shr@fb.com>
 References: <20220526173840.578265-1-shr@fb.com>
@@ -50,8 +50,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-GUID: GgBbK2SHwZbjB0SMUq1YIid3QI5FbgNO
-X-Proofpoint-ORIG-GUID: GgBbK2SHwZbjB0SMUq1YIid3QI5FbgNO
+X-Proofpoint-GUID: FWBDMOMkGiwW25EXTrK4gOJJdhZ1K6c9
+X-Proofpoint-ORIG-GUID: FWBDMOMkGiwW25EXTrK4gOJJdhZ1K6c9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-05-26_09,2022-05-25_02,2022-02-23_01
@@ -59,47 +59,99 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This introduces the flag FMODE_BUF_WASYNC. If devices support async
-buffered writes, this flag can be set. It also modifies the check in
-generic_write_checks to take async buffered writes into consideration.
+Add the kiocb flags parameter to the function iomap_page_create().
+Depending on the value of the flags parameter it enables different gfp
+flags.
+
+No intended functional changes in this patch.
 
 Signed-off-by: Stefan Roesch <shr@fb.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/read_write.c    | 4 +++-
- include/linux/fs.h | 3 +++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ fs/iomap/buffered-io.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index e643aec2b0ef..175d98713b9a 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1633,7 +1633,9 @@ int generic_write_checks_count(struct kiocb *iocb, =
-loff_t *count)
- 	if (iocb->ki_flags & IOCB_APPEND)
- 		iocb->ki_pos =3D i_size_read(inode);
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 8ce8720093b9..d6ddc54e190e 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -44,16 +44,21 @@ static inline struct iomap_page *to_iomap_page(struct=
+ folio *folio)
+ static struct bio_set iomap_ioend_bioset;
 =20
--	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
-+	if ((iocb->ki_flags & IOCB_NOWAIT) &&
-+	    !((iocb->ki_flags & IOCB_DIRECT) ||
-+	      (file->f_mode & FMODE_BUF_WASYNC)))
- 		return -EINVAL;
+ static struct iomap_page *
+-iomap_page_create(struct inode *inode, struct folio *folio)
++iomap_page_create(struct inode *inode, struct folio *folio, unsigned int=
+ flags)
+ {
+ 	struct iomap_page *iop =3D to_iomap_page(folio);
+ 	unsigned int nr_blocks =3D i_blocks_per_folio(inode, folio);
++	gfp_t gfp =3D GFP_NOFS | __GFP_NOFAIL;
 =20
- 	return generic_write_check_limits(iocb->ki_filp, iocb->ki_pos, count);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 87b5af1d9fbe..407ad5004f54 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -177,6 +177,9 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t=
- offset,
- /* File supports async buffered reads */
- #define FMODE_BUF_RASYNC	((__force fmode_t)0x40000000)
+ 	if (iop || nr_blocks <=3D 1)
+ 		return iop;
 =20
-+/* File supports async nowait buffered writes */
-+#define FMODE_BUF_WASYNC	((__force fmode_t)0x80000000)
++	if (flags & IOMAP_NOWAIT)
++		gfp =3D GFP_NOWAIT;
 +
- /*
-  * Attribute flags.  These should be or-ed together to figure out what
-  * has been changed!
+ 	iop =3D kzalloc(struct_size(iop, uptodate, BITS_TO_LONGS(nr_blocks)),
+-			GFP_NOFS | __GFP_NOFAIL);
++		      gfp);
++
+ 	spin_lock_init(&iop->uptodate_lock);
+ 	if (folio_test_uptodate(folio))
+ 		bitmap_fill(iop->uptodate, nr_blocks);
+@@ -226,7 +231,7 @@ static int iomap_read_inline_data(const struct iomap_=
+iter *iter,
+ 	if (WARN_ON_ONCE(size > iomap->length))
+ 		return -EIO;
+ 	if (offset > 0)
+-		iop =3D iomap_page_create(iter->inode, folio);
++		iop =3D iomap_page_create(iter->inode, folio, iter->flags);
+ 	else
+ 		iop =3D to_iomap_page(folio);
+=20
+@@ -264,7 +269,7 @@ static loff_t iomap_readpage_iter(const struct iomap_=
+iter *iter,
+ 		return iomap_read_inline_data(iter, folio);
+=20
+ 	/* zero post-eof blocks as the page may be mapped */
+-	iop =3D iomap_page_create(iter->inode, folio);
++	iop =3D iomap_page_create(iter->inode, folio, iter->flags);
+ 	iomap_adjust_read_range(iter->inode, folio, &pos, length, &poff, &plen)=
+;
+ 	if (plen =3D=3D 0)
+ 		goto done;
+@@ -550,7 +555,7 @@ static int __iomap_write_begin(const struct iomap_ite=
+r *iter, loff_t pos,
+ 		size_t len, struct folio *folio)
+ {
+ 	const struct iomap *srcmap =3D iomap_iter_srcmap(iter);
+-	struct iomap_page *iop =3D iomap_page_create(iter->inode, folio);
++	struct iomap_page *iop;
+ 	loff_t block_size =3D i_blocksize(iter->inode);
+ 	loff_t block_start =3D round_down(pos, block_size);
+ 	loff_t block_end =3D round_up(pos + len, block_size);
+@@ -561,6 +566,8 @@ static int __iomap_write_begin(const struct iomap_ite=
+r *iter, loff_t pos,
+ 		return 0;
+ 	folio_clear_error(folio);
+=20
++	iop =3D iomap_page_create(iter->inode, folio, iter->flags);
++
+ 	do {
+ 		iomap_adjust_read_range(iter->inode, folio, &block_start,
+ 				block_end - block_start, &poff, &plen);
+@@ -1332,7 +1339,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc=
+,
+ 		struct writeback_control *wbc, struct inode *inode,
+ 		struct folio *folio, u64 end_pos)
+ {
+-	struct iomap_page *iop =3D iomap_page_create(inode, folio);
++	struct iomap_page *iop =3D iomap_page_create(inode, folio, 0);
+ 	struct iomap_ioend *ioend, *next;
+ 	unsigned len =3D i_blocksize(inode);
+ 	unsigned nblocks =3D i_blocks_per_folio(inode, folio);
 --=20
 2.30.2
 
