@@ -2,78 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D8A4C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 15:40:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0882C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 16:10:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346319AbiE0PkV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 11:40:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33270 "EHLO
+        id S237031AbiE0QKt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 12:10:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237983AbiE0PkU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 11:40:20 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 612CD108A9B;
-        Fri, 27 May 2022 08:40:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=1im2zbHEc3hQkZgSdxFkdu60S9CPZEI+N3LtuKc0Sq0=; b=hkhSk2Nn++xzvaOl8s8FlU+05o
-        W7XrKZZET/qU5A4DD4TAsVlpiTxuEJjVpnywcqi8r50zywK9QCjd9FUjy+TbXd0YwJqPJGUUJ7rXN
-        iB6D3Sutbcx+66qwG88fSCy4uKC4vFXV5Dm6KmYHkuxpp4zvkMT5AWpgTJlMUUQmZCM1IBLf1oTi5
-        0A/MxHZzObmjN7IqmdnjrSjIvC+OE+rRcbB3u4tXfSMNHoWS16/ZVSjLj5B0lN7sRJpbFRL07EwpP
-        2LAQIMa+A00MdH88iEZW64OI55YMHPqa24M0hPJPkSvQjP29N2AuaqFesHprA9UcFdWweA0BNGQzk
-        n/69HxJA==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nuc4U-000RWN-Fj; Fri, 27 May 2022 15:40:14 +0000
-Date:   Fri, 27 May 2022 08:40:14 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        Tyler Hicks <code@tyhicks.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
-Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
-Message-ID: <YpDw3uVFB7LjPquX@bombadil.infradead.org>
-References: <20220525111715.2769700-1-amir73il@gmail.com>
- <YpBqfdmwQ675m72G@infradead.org>
- <CAOQ4uxjek9331geZGVbVT=gqkNTyVA_vjyjuB=2eGZD-ufeqNQ@mail.gmail.com>
- <20220527090838.GD3923443@dread.disaster.area>
- <CAOQ4uxgc9Zu0rvTY3oOqycGG+MoYEL3-+qghm9_qEn67D8OukA@mail.gmail.com>
+        with ESMTP id S235741AbiE0QKr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 12:10:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A6DC149AAE;
+        Fri, 27 May 2022 09:10:47 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B992161DCE;
+        Fri, 27 May 2022 16:10:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25BE4C385B8;
+        Fri, 27 May 2022 16:10:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653667846;
+        bh=itJVIn2kS9CTYYtN7F5XJg9N57RQi68GqnXIyBbsDbA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=joYS+nl4UxW45XHGqcuafMlcSrRrjugnBPqgF3oBzTltLYf6wHBeAkim+u/T4/cPR
+         W/qqKoC6iLaQHzv+o9CcPfJ503d5zdPR/rKQvMbLaf4ZlTAapRUohLV6eRTtSrrGCs
+         gZ82TjggIc4JwT/TUmp7C99vDIpSuaihpeqHFPzmeLtt7InLkZZh42ZPgcQxianCz9
+         D7JdlFSX+RDGT2b7ySgpalSsy0YtLlgOmTA/tTBna/S5VZxdxKDhtuVfVVpjaKikLR
+         hDHMPHCg61mRSEfWeF5L4hrkA3h+f3TepE8nKnCqQotBzsMmUZ4JXXp/ZtG1tMlFcw
+         sww9DCcnADGvw==
+Date:   Fri, 27 May 2022 09:10:45 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Mel Gorman <mgorman@techsingularity.net>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Jesper Dangaard Brouer <brouer@redhat.com>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Linux-NFS <linux-nfs@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>,
+        Linux-XFS <linux-xfs@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] mm/page_alloc: Always attempt to allocate at least one
+ page during bulk allocation
+Message-ID: <YpD4BSZDgF5xv0mL@magnolia>
+References: <20220526091210.GC3441@techsingularity.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgc9Zu0rvTY3oOqycGG+MoYEL3-+qghm9_qEn67D8OukA@mail.gmail.com>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <20220526091210.GC3441@techsingularity.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 27, 2022 at 03:24:02PM +0300, Amir Goldstein wrote:
-> On Fri, May 27, 2022 at 12:08 PM Dave Chinner <david@fromorbit.com> wrote:
-> > Backport candidate: yes. Severe: absolutely not.
-> In the future, if you are writing a cover letter for an improvement
-> series or internal pull request and you know there is a backport
-> candidate inside, if you happen to remember to mention it, it would
-> be of great help to me.
+On Thu, May 26, 2022 at 10:12:10AM +0100, Mel Gorman wrote:
+> Peter Pavlisko reported the following problem on kernel bugzilla 216007.
+> 
+> 	When I try to extract an uncompressed tar archive (2.6 milion
+> 	files, 760.3 GiB in size) on newly created (empty) XFS file system,
+> 	after first low tens of gigabytes extracted the process hangs in
+> 	iowait indefinitely. One CPU core is 100% occupied with iowait,
+> 	the other CPU core is idle (on 2-core Intel Celeron G1610T).
+> 
+> It was bisected to c9fa563072e1 ("xfs: use alloc_pages_bulk_array() for
+> buffers") but XFS is only the messenger. The problem is that nothing
+> is waking kswapd to reclaim some pages at a time the PCP lists cannot
+> be refilled until some reclaim happens. The bulk allocator checks that
+> there are some pages in the array and the original intent was that a bulk
+> allocator did not necessarily need all the requested pages and it was
+> best to return as quickly as possible. This was fine for the first user
+> of the API but both NFS and XFS require the requested number of pages
+> be available before making progress. Both could be adjusted to call the
+> page allocator directly if a bulk allocation fails but it puts a burden on
+> users of the API. Adjust the semantics to attempt at least one allocation
+> via __alloc_pages() before returning so kswapd is woken if necessary.
+> 
+> It was reported via bugzilla that the patch addressed the problem and
+> that the tar extraction completed successfully. This may also address
+> bug 215975 but has yet to be confirmed.
+> 
+> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=216007
+> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=215975
+> Fixes: 387ba26fb1cb ("mm/page_alloc: add a bulk page allocator")
+> Signed-off-by: Mel Gorman <mgorman@techsingularity.net>
+> Cc: <stable@vger.kernel.org> # v5.13+
 
-Amir, since you wrote a tool enhancement to scrape for possible
-candidates, *if* we defined some sort of meta-data to describe
-this sort of stuff on the cover letter:
+Seems to have survived overnight fstests on XFS, so...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Backport candidate: yes. Severe: absolutely not
+--D
 
-It would be useful when scraping. Therefore, leaving the effort
-to try to backport / feasibility to others. This would be different
-than a stable Cc tag, as those have a high degree of certainty.
-
-How about something like:
-
-Backport-candidate: yes
-Impact: low
-
-  Luis
+> ---
+>  mm/page_alloc.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> index 0e42038382c1..5ced6cb260ed 100644
+> --- a/mm/page_alloc.c
+> +++ b/mm/page_alloc.c
+> @@ -5324,8 +5324,8 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+>  		page = __rmqueue_pcplist(zone, 0, ac.migratetype, alloc_flags,
+>  								pcp, pcp_list);
+>  		if (unlikely(!page)) {
+> -			/* Try and get at least one page */
+> -			if (!nr_populated)
+> +			/* Try and allocate at least one page */
+> +			if (!nr_account)
+>  				goto failed_irq;
+>  			break;
+>  		}
