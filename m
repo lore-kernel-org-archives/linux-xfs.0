@@ -2,112 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0882C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 16:10:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5E6C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 16:12:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237031AbiE0QKt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 12:10:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52988 "EHLO
+        id S242165AbiE0QMF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 12:12:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235741AbiE0QKr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 12:10:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A6DC149AAE;
-        Fri, 27 May 2022 09:10:47 -0700 (PDT)
+        with ESMTP id S1348589AbiE0QMD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 12:12:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1E7B48E58
+        for <linux-xfs@vger.kernel.org>; Fri, 27 May 2022 09:12:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B992161DCE;
-        Fri, 27 May 2022 16:10:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25BE4C385B8;
-        Fri, 27 May 2022 16:10:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3A2DE61DCB
+        for <linux-xfs@vger.kernel.org>; Fri, 27 May 2022 16:12:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9393FC385A9;
+        Fri, 27 May 2022 16:12:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653667846;
-        bh=itJVIn2kS9CTYYtN7F5XJg9N57RQi68GqnXIyBbsDbA=;
+        s=k20201202; t=1653667921;
+        bh=lafImoAQBPsAPjgYNCNL/JXOBUzs3TKCMACeKzillI4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=joYS+nl4UxW45XHGqcuafMlcSrRrjugnBPqgF3oBzTltLYf6wHBeAkim+u/T4/cPR
-         W/qqKoC6iLaQHzv+o9CcPfJ503d5zdPR/rKQvMbLaf4ZlTAapRUohLV6eRTtSrrGCs
-         gZ82TjggIc4JwT/TUmp7C99vDIpSuaihpeqHFPzmeLtt7InLkZZh42ZPgcQxianCz9
-         D7JdlFSX+RDGT2b7ySgpalSsy0YtLlgOmTA/tTBna/S5VZxdxKDhtuVfVVpjaKikLR
-         hDHMPHCg61mRSEfWeF5L4hrkA3h+f3TepE8nKnCqQotBzsMmUZ4JXXp/ZtG1tMlFcw
-         sww9DCcnADGvw==
-Date:   Fri, 27 May 2022 09:10:45 -0700
+        b=eeH6xjlTusfNWWnTC7VS54nNTvZ/65wVOomLPAhe43yLO1w/FPkcTpeKJWApajSKB
+         DyWxbwqhl7VwRfm06+OGTmvEvK87EwFKovAWGQIBAGPgaNgEvhPfPSx16T4vviAaqD
+         y185mBc4c1jQKYyLDlOr8PwK0EQ1AgiS6/gTRWa8TOJQ8rFL6XL5iVa0m05xKEUC24
+         JiXbOyaDRZR9f8uwFmC1p7kTkEuHecLfMeGegFqIodel2eSfaUf338Xt010TwTeqhW
+         F9d6vNxbji+y2/vnJTSf1JSsRDiTyCPLKEOkDkcmFZodM1sL59smFWpfMCu0kBqTRC
+         A4E6A6HPeGzXA==
+Date:   Fri, 27 May 2022 09:12:01 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Mel Gorman <mgorman@techsingularity.net>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Jesper Dangaard Brouer <brouer@redhat.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Linux-NFS <linux-nfs@vger.kernel.org>,
-        Linux-MM <linux-mm@kvack.org>,
-        Linux-XFS <linux-xfs@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] mm/page_alloc: Always attempt to allocate at least one
- page during bulk allocation
-Message-ID: <YpD4BSZDgF5xv0mL@magnolia>
-References: <20220526091210.GC3441@techsingularity.net>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix xfs_ifree() error handling to not leak perag ref
+Message-ID: <YpD4UQRIefSW8s2O@magnolia>
+References: <20220527133428.2291945-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220526091210.GC3441@techsingularity.net>
+In-Reply-To: <20220527133428.2291945-1-bfoster@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 26, 2022 at 10:12:10AM +0100, Mel Gorman wrote:
-> Peter Pavlisko reported the following problem on kernel bugzilla 216007.
+On Fri, May 27, 2022 at 09:34:28AM -0400, Brian Foster wrote:
+> For some reason commit 9a5280b312e2e ("xfs: reorder iunlink remove
+> operation in xfs_ifree") replaced a jump to the exit path in the
+> event of an xfs_difree() error with a direct return, which skips
+> releasing the perag reference acquired at the top of the function.
+> Restore the original code to drop the reference on error.
 > 
-> 	When I try to extract an uncompressed tar archive (2.6 milion
-> 	files, 760.3 GiB in size) on newly created (empty) XFS file system,
-> 	after first low tens of gigabytes extracted the process hangs in
-> 	iowait indefinitely. One CPU core is 100% occupied with iowait,
-> 	the other CPU core is idle (on 2-core Intel Celeron G1610T).
-> 
-> It was bisected to c9fa563072e1 ("xfs: use alloc_pages_bulk_array() for
-> buffers") but XFS is only the messenger. The problem is that nothing
-> is waking kswapd to reclaim some pages at a time the PCP lists cannot
-> be refilled until some reclaim happens. The bulk allocator checks that
-> there are some pages in the array and the original intent was that a bulk
-> allocator did not necessarily need all the requested pages and it was
-> best to return as quickly as possible. This was fine for the first user
-> of the API but both NFS and XFS require the requested number of pages
-> be available before making progress. Both could be adjusted to call the
-> page allocator directly if a bulk allocation fails but it puts a burden on
-> users of the API. Adjust the semantics to attempt at least one allocation
-> via __alloc_pages() before returning so kswapd is woken if necessary.
-> 
-> It was reported via bugzilla that the patch addressed the problem and
-> that the tar extraction completed successfully. This may also address
-> bug 215975 but has yet to be confirmed.
-> 
-> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=216007
-> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=215975
-> Fixes: 387ba26fb1cb ("mm/page_alloc: add a bulk page allocator")
-> Signed-off-by: Mel Gorman <mgorman@techsingularity.net>
-> Cc: <stable@vger.kernel.org> # v5.13+
+> Fixes: 9a5280b312e2e ("xfs: reorder iunlink remove operation in xfs_ifree")
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Seems to have survived overnight fstests on XFS, so...
+Doh.  Good catch!
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  mm/page_alloc.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_inode.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index 0e42038382c1..5ced6cb260ed 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -5324,8 +5324,8 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->  		page = __rmqueue_pcplist(zone, 0, ac.migratetype, alloc_flags,
->  								pcp, pcp_list);
->  		if (unlikely(!page)) {
-> -			/* Try and get at least one page */
-> -			if (!nr_populated)
-> +			/* Try and allocate at least one page */
-> +			if (!nr_account)
->  				goto failed_irq;
->  			break;
->  		}
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index b2879870a17e..52d6f2c7d58b 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2622,7 +2622,7 @@ xfs_ifree(
+>  	 */
+>  	error = xfs_difree(tp, pag, ip->i_ino, &xic);
+>  	if (error)
+> -		return error;
+> +		goto out;
+>  
+>  	error = xfs_iunlink_remove(tp, pag, ip);
+>  	if (error)
+> -- 
+> 2.34.1
+> 
