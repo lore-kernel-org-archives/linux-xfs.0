@@ -2,454 +2,321 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A16C0C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 01:36:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBF96C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 06:07:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232676AbiE0Bgn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 May 2022 21:36:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39148 "EHLO
+        id S234351AbiE0GHI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 02:07:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232035AbiE0Bgm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 May 2022 21:36:42 -0400
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2078.outbound.protection.outlook.com [40.107.223.78])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ECBAC8BE8;
-        Thu, 26 May 2022 18:36:40 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NOY704Brudh7TPiiNK8lOAPf/7aaaWW2fywfDGP7hV5kF9QAhjh3ov7DnAYne66wVJQW14+/AbwgKT4Agq1NsXt5QxVncZnE8cc7aWwFV2RiEHzlogWPC1sx1AapeaX3C2tRhP2cNaiuhL4QIcA0WGXwuH+Q7SITCVgu3hGEzedt56AvAzfibsTjr6/nqkUG4T1s6lq3ew2KzjMi/Ze8YvzcBpXYMYeiWY5AltBM8/+JDUEMiBx9ncIsICOC7keUejOa6fMkX1brQcOh34AaRtq4biZR02MVf0rggOAsCP28Mi+JKvDT17F+P99nA/mrUNlRwdb2RRMl2KkHqkr1Mw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BVzR4L0pQ0Ruj5IfvG27yAj3M4DdYESeY/+SmcuO9mg=;
- b=QYz8GS0cmwCHLunqs2JXKYj7ybjmRyNnlVPo+1C6uYq5Ur2DcREMcYyv4mora6YM9SVk39GYov8er/Ml61cwZBhPqQXJcNUGOgF32wZsvmhabQmhc4LTiPjIirTxMRfOAjJ6bc+J7R9k5a0EuihfdDZssOJ0E6lMdPL0xnCkSnQAvZ0tHXG2/A7O71qcyqhRawQO5CCL4mo1j353/A4huYYSWQVilr/6+l1T5hCGaqjT2JEkDjE3l8xKrBeJY5kddTcF4Ncjl4fi30qWo8ZUDpXg9tJU3PFNV5kMpzSNVtxwoBYOvcIho33585Db2JdHLEphtpQEYnxjEbQG0Y33NQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BVzR4L0pQ0Ruj5IfvG27yAj3M4DdYESeY/+SmcuO9mg=;
- b=r1YITTOLv5iUQ33MpA1CJ2PkV5pY5e9T4w+367j+//1Z0Qn/ONSfelvO2prlEsaiyduwgS1prkJWmuVmm7Vb6maD74GhC3CL19iilSQuDQ3lSgFzuknO6ABKuBDFD/BjZlDuubowv38fcjgRCNKc4vW73VXku/7k/xmSFRXFAkS/OKQ3TYA9LJmbKWWEdqd9o7oqdN8mqO45ZM63MnN76kWKkefc9apwFQPhwAe4nqLcG5EPGvT55BYYZI7Uoam1G3jow3OFTPpgAkXvK/06QANntCMkDEVUpa2S5/pAqsnADgZi4I+17NZWf19IdM9fuiEvvtdes3gQrq7Du49OVA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
- by MN0PR12MB6102.namprd12.prod.outlook.com (2603:10b6:208:3ca::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13; Fri, 27 May
- 2022 01:36:37 +0000
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::59cf:d090:5d26:6e7b]) by BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::59cf:d090:5d26:6e7b%5]) with mapi id 15.20.5293.013; Fri, 27 May 2022
- 01:36:36 +0000
-References: <20220524190632.3304-1-alex.sierra@amd.com>
- <20220524190632.3304-3-alex.sierra@amd.com>
- <87leuqf4oj.fsf@nvdebian.thelocal>
- <52fa81b5-c79e-6308-10f9-9304afa10727@amd.com>
-User-agent: mu4e 1.6.9; emacs 27.1
-From:   Alistair Popple <apopple@nvidia.com>
-To:     "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
-Cc:     jgg@nvidia.com, david@redhat.com, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, willy@infradead.org,
-        akpm@linux-foundation.org
-Subject: Re: [PATCH v3 02/13] mm: handling Non-LRU pages returned by
- vm_normal_pages
-Date:   Fri, 27 May 2022 11:28:15 +1000
-In-reply-to: <52fa81b5-c79e-6308-10f9-9304afa10727@amd.com>
-Message-ID: <87o7zjiwny.fsf@nvdebian.thelocal>
-Content-Type: text/plain
-X-ClientProxiedBy: BYAPR08CA0006.namprd08.prod.outlook.com
- (2603:10b6:a03:100::19) To BYAPR12MB3176.namprd12.prod.outlook.com
- (2603:10b6:a03:134::26)
+        with ESMTP id S243145AbiE0GHG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 02:07:06 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7716D13D54;
+        Thu, 26 May 2022 23:07:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=zgkmDWgaB+Ofb/O7cYee/Eysh6HdBJJRuXenx5ArmDU=; b=gurBkFUqvIEVUScAcaX8lShgQY
+        UL4kYNzTo+3iyPZIEyN52AxZFmSAr8Xb661Cx2SAykGDRl1TXdmDwkUyG7+f5nukLenO5uCCdpwMU
+        hMzJm/UMyM3CCqYixqjdGjbIjLyD8/y1LZXPXYMaNKtdmajQDGh/5kVs9yCAYN12cCm5SqPfv80AT
+        f/dGQ8VHUSMaCtHjCXS84Lj15B04fBeR29ynsIrpW8Up4i3kGrcxSSztT6RN9aOBI86GJkTPagFlw
+        yJ9w2ky7NLB+ZGnQnnOKKtBR21WLelFX1dRrhlj9prz4reli6IQC4VrIySHml8najILtRVlvaRMiM
+        RlVbsogQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nuT7d-00Gje1-IH; Fri, 27 May 2022 06:06:53 +0000
+Date:   Thu, 26 May 2022 23:06:53 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        Tyler Hicks <code@tyhicks.com>, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
+Message-ID: <YpBqfdmwQ675m72G@infradead.org>
+References: <20220525111715.2769700-1-amir73il@gmail.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 32062256-c3e2-486f-3425-08da3f815698
-X-MS-TrafficTypeDiagnostic: MN0PR12MB6102:EE_
-X-Microsoft-Antispam-PRVS: <MN0PR12MB610257F2B14138727BB4531EDFD89@MN0PR12MB6102.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: JnjEVGSxWnVIZQIRcj35zhmO5JTsc3HZUzVewUgzUUWlj7UwHbnkG19Awu84Ze9Wit9lVR/MIe/wrXDrSGq8Z3Mw5zFBFYdzdk7r7YHh2/q5sgsILtK1Ab6q0Kr8POhGp91ru+nQItlxPSEtx969z7THaKrNXS08uRsKcsB660Kz4TMu/hcJ6qEQcxr8ZgAZAYx92SKX/mUTnP2FXtFBOkXIsIRoX6J6vX957ErASQs4LlQYGc2o1nmChkr50le2ySiG1BN1WtSG5oPBnDI4az9OGULcMKLlIjNRIV7EwEDzo5SUUYnsPKsKuNKLpy1M1DvrEfPYYYTlnIIxJsax/89yNq/4CaHRlH4l/1ko2SAzS7cXosbvJ2QdUc/JFhLcuyjUD+/iT4kI7QEekLMVgE/gUbBR4MGZ3vMUpnr8EzY6kku0noEMqITtKxR/RkaO9nI8YCFEgFJ3XsP+Ufh2ekhhQ/TpeTvLAVHaJi+HRyYugzb5PPDtaz3uroZj2YTaVQFAzuk3VKhNp2Q/AeUzwcfjWSPYcscDmIwzkeB25evJVXe2x2v9PX54uei5vNnVL5CXermTAYNXeqB4wJN5NScO3/8L/mZTS4AM7Eegy7Cl6NeQAqxVix1KQT+MI14GV5EzQ0SW5MvmTqV9H7Nvfg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(86362001)(4326008)(66946007)(66476007)(8936002)(6916009)(316002)(8676002)(66556008)(9686003)(6666004)(53546011)(6512007)(26005)(6506007)(38100700002)(6486002)(508600001)(83380400001)(7416002)(5660300002)(30864003)(186003)(2906002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?1FVFKJsXxhjVMKF2VsKLGNzoofDDUiWT6qG+tE5Oxgf6L5KeSuDCQKnhx0cs?=
- =?us-ascii?Q?4MsZp4YzznOxb5H1FYE2OyRlO0rubWhUhJHefE6TZKRP3tuIXQCqzCfAZz76?=
- =?us-ascii?Q?Z+icE5/VaLt3WxaqSAcmQg6YBBbZSEIHgidhNfZkHOR6qRsvIig/hI1Oy9F1?=
- =?us-ascii?Q?V4JzBp0SEGxrwD3x/zbW6nRCwD40+TIkyF4cAZYWs7tWqvh4JO6XZgz1vgP8?=
- =?us-ascii?Q?4JouI9irq4FzIWsrCdSZDGpGj1y8rzaU1UC9N2yoLDlJtaDGrJjcHZ1Sk4Rz?=
- =?us-ascii?Q?1Oz4sv3NZJFiRHTJepCHNxcwYbHqk2eXmRyNgVgrKJicVaP5WkwgViFGMIj5?=
- =?us-ascii?Q?61snqOcZTiT0HtdaBOIbJoIXyM22sFCb3uMj4zNbrTJvB/Ll0+wwzdzZjnuT?=
- =?us-ascii?Q?bsJLxophdPDoG6Q+11T8zxzhYl3uDFT81WB3GSOQsyktJl3zTtL76btScZiv?=
- =?us-ascii?Q?na+KNQehl+kQKKpEY6TO1yl5t6ug6eUH4sO4xQV7nTv3JmIlF1GqdcugASCL?=
- =?us-ascii?Q?46sU6q85vse9RHtplRJNANIyjUPGjtpTor36+FS8yyGA1aTfGObu3OCGQWk9?=
- =?us-ascii?Q?8Y1Qgzhq1Hmtg2h8YbaNKj0TxLcPV2FokmAbeGVHKGIFVEG22tGhdtCFZYiZ?=
- =?us-ascii?Q?YRDmEdMA+HNftdOBYFup47XsnW/Q/Js5gifruIROsvM/ZGdHD3CGd8eK4WJ2?=
- =?us-ascii?Q?yDPRk79h2mZCWOdY3lDGAeh7mxloRzcWPY8Hw7qKypU2GpIU3LgfbnuGWWfI?=
- =?us-ascii?Q?6vHl3qqqmzatoESkptF8gqeRrsxGcB62j0LtTqlSKv9eUxJ2CCDaZhNBdmu9?=
- =?us-ascii?Q?L70OmuIE/NUf2EXEISt77qcUSGHLBYZ6v2rCdv3/3e2Ha6bToCj0D2WYf1oi?=
- =?us-ascii?Q?00vxw9YgZ3cUQEabFpXjdoI9bUVFyGAae2UtDefl4XMvDkB3L7NFQX2xUwK7?=
- =?us-ascii?Q?0mAbsZEVJHWpg2oZP6Gnhc34sDMDPYdkc+XK6MB/re/QFHMAwlIfddC/tAky?=
- =?us-ascii?Q?AeWxPtCQvPlVG37iVQ0w7q/NqvDrFUT1CRQ828qMt1hhkPkIZxxYzTUhiLTv?=
- =?us-ascii?Q?Y5lPIUbZceG5hZwXTkepef3jGU8lc1/RvwP886og32DX1w58s8RAQ4774o7b?=
- =?us-ascii?Q?C1AH5f57tDboRDpB5banAvK4fTO5ILhHrRIC3Q2OpnLwRG153RmggrG7xjAV?=
- =?us-ascii?Q?uzi9WxTltg3qpge0H3piKpZM355ZyqhStC2I0gVDv41sU4QkU9AKkkAORWFe?=
- =?us-ascii?Q?Uuv7/LMyd0A4K6L3XTrnWXsZNni77eikK9gtozUdn25Te0LTVdYmPFnIXoAy?=
- =?us-ascii?Q?o7Gds+9lBd3+Nlxq+PQIW2776rDUMfqu2SvDUDCzyhzKzUn19hra7cC1W7+r?=
- =?us-ascii?Q?8GGADaFbXKKDOMV5Et5R/2Og2L7LWZ31jX+prq3+QZsXo73Y1PxfECvb6b9f?=
- =?us-ascii?Q?Bjb7zCszv6bYusUQO84YG6VegrFGn6wy3g2d88IAwZ7eutEWUXKGsm9UZTT0?=
- =?us-ascii?Q?lIsHeFpB+MmpHlq7KrXgmnkIBGwwwuwK6t7sOQ+YTRSgNrPuyRwq5w9x0bWZ?=
- =?us-ascii?Q?ZfDiy81hSQdJIGuFi7J03PMIh9M3RM5h0avpjLKy9vdrBCdt6eu/fY4KlnYO?=
- =?us-ascii?Q?Lnb6CsxFZjGpbRTGo4XABYXGhmGEsxBwpG06wWoGT3D9x0X4Gf3sbCkr6H3/?=
- =?us-ascii?Q?YVeW7nHTerUI+iZy5zWOt0VHqE8r/MDaD8DEjNEMdOFd/RSHHKEDXoYz4DFC?=
- =?us-ascii?Q?e+DmE3GNwQ=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 32062256-c3e2-486f-3425-08da3f815698
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 May 2022 01:36:36.3742
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JEUR8LxllBFi0kk1tcCtiBvCd+MbPEr7dZ1zhSs1ZUwwhsqIrevs8QBu8fPNk4RMcTq20Kz8VjQXlKVGIxn+vw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB6102
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220525111715.2769700-1-amir73il@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+FYI, below is the 5.10-stable backport I have been testing earlier this
+week that fixes a bugzilla reported hang:
 
-"Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=214767
 
-> On 5/24/2022 11:11 PM, Alistair Popple wrote:
->> Alex Sierra <alex.sierra@amd.com> writes:
->>
->>> With DEVICE_COHERENT, we'll soon have vm_normal_pages() return
->>> device-managed anonymous pages that are not LRU pages. Although they
->>> behave like normal pages for purposes of mapping in CPU page, and for
->>> COW. They do not support LRU lists, NUMA migration or THP.
->>>
->>> We also introduced a FOLL_LRU flag that adds the same behaviour to
->>> follow_page and related APIs, to allow callers to specify that they
->>> expect to put pages on an LRU list.
->> Continuing the follow up from the thread for v2:
->>
->>>> This means by default GUP can return non-LRU pages. I didn't see
->>>> anywhere that would be a problem but I didn't check everything. Did you
->>>> check this or is there some other reason I've missed that makes this not
->>>> a problem?
->>> I have double checked all gup and pin_user_pages callers and none of them seem
->>> to have interaction with LRU APIs.
->> And actually if I'm understanding things correctly callers of
->> GUP/PUP/follow_page_pte() should already expect to get non-LRU pages
->> returned:
->>
->>      page = vm_normal_page(vma, address, pte);
->>      if ((flags & FOLL_LRU) && page && is_zone_device_page(page))
->>          page = NULL;
->>      if (!page && pte_devmap(pte) && (flags & (FOLL_GET | FOLL_PIN))) {
->>          /*
->>           * Only return device mapping pages in the FOLL_GET or FOLL_PIN
->>           * case since they are only valid while holding the pgmap
->>           * reference.
->>           */
->>          *pgmap = get_dev_pagemap(pte_pfn(pte), *pgmap);
->>          if (*pgmap)
->>              page = pte_page(pte);
->>
->> Which I think makes FOLL_LRU confusing, because if understand correctly
->> even with FOLL_LRU it is still possible for follow_page_pte() to return
->> a non-LRU page. Could we do something like this to make it consistent:
->>
->>      if ((flags & FOLL_LRU) && (page && is_zone_device_page(page) ||
->>          !page && pte_devmap(pte)))
->
-> Hi Alistair,
-> Not sure if this suggestion is a replacement for the first or the second
-> condition in the snip code above. We know device coherent type will not
-> be set with devmap. So we could do the following:
+I was just going to submit it to the stable maintaines today after
+beeing out of the holiday, but if you want to add it to this queue
+that is fine with me as well.
 
-Sorry, I must not have been clear enough. My understanding is if the
-following condition is true:
+---
+From 8e0464752b24f2b3919e8e92298759d116b283eb Mon Sep 17 00:00:00 2001
+From: Dave Chinner <dchinner@redhat.com>
+Date: Fri, 18 Jun 2021 08:21:51 -0700
+Subject: xfs: Fix CIL throttle hang when CIL space used going backwards
 
->>      if (!page && pte_devmap(pte) && (flags & (FOLL_GET | FOLL_PIN))) {
+commit 19f4e7cc819771812a7f527d7897c2deffbf7a00 upstream.
 
-Then follow_page_pte() could return a non-LRU page even when FOLL_LRU is
-specified (because I think a devmap page is a non-LRU page). That seems
-confusing, so for consistency I was suggesting we should not return
-devmap pages for FOLL_LRU.
+A hang with tasks stuck on the CIL hard throttle was reported and
+largely diagnosed by Donald Buczek, who discovered that it was a
+result of the CIL context space usage decrementing in committed
+transactions once the hard throttle limit had been hit and processes
+were already blocked.  This resulted in the CIL push not waking up
+those waiters because the CIL context was no longer over the hard
+throttle limit.
 
-To be clear I don't think there is an actual problem here atm, but the
-inconsistency could easily lead to one in future.
+The surprising aspect of this was the CIL space usage going
+backwards regularly enough to trigger this situation. Assumptions
+had been made in design that the relogging process would only
+increase the size of the objects in the CIL, and so that space would
+only increase.
 
->  if ((flags & FOLL_LRU) && page && is_zone_device_page(page))
-> -	page = NULL;
-> +	goto no_page;
->
-> Regards,
-> Alex Sierra
->
->>
->> Looking at callers that currently use FOLL_LRU I don't think this would
->> change any behaviour as they already filter out devmap through various
->> other means.
->>
->>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
->>> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
->>> ---
->>>   fs/proc/task_mmu.c | 2 +-
->>>   include/linux/mm.h | 3 ++-
->>>   mm/gup.c           | 2 ++
->>>   mm/huge_memory.c   | 2 +-
->>>   mm/khugepaged.c    | 9 ++++++---
->>>   mm/ksm.c           | 6 +++---
->>>   mm/madvise.c       | 4 ++--
->>>   mm/memory.c        | 9 ++++++++-
->>>   mm/mempolicy.c     | 2 +-
->>>   mm/migrate.c       | 4 ++--
->>>   mm/mlock.c         | 2 +-
->>>   mm/mprotect.c      | 2 +-
->>>   12 files changed, 30 insertions(+), 17 deletions(-)
->>>
->>> diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
->>> index f46060eb91b5..5d620733f173 100644
->>> --- a/fs/proc/task_mmu.c
->>> +++ b/fs/proc/task_mmu.c
->>> @@ -1785,7 +1785,7 @@ static struct page *can_gather_numa_stats(pte_t pte, struct vm_area_struct *vma,
->>>   		return NULL;
->>>
->>>   	page = vm_normal_page(vma, addr, pte);
->>> -	if (!page)
->>> +	if (!page || is_zone_device_page(page))
->>>   		return NULL;
->>>
->>>   	if (PageReserved(page))
->>> diff --git a/include/linux/mm.h b/include/linux/mm.h
->>> index 9f44254af8ce..d7f253a0c41e 100644
->>> --- a/include/linux/mm.h
->>> +++ b/include/linux/mm.h
->>> @@ -601,7 +601,7 @@ struct vm_operations_struct {
->>>   #endif
->>>   	/*
->>>   	 * Called by vm_normal_page() for special PTEs to find the
->>> -	 * page for @addr.  This is useful if the default behavior
->>> +	 * page for @addr. This is useful if the default behavior
->>>   	 * (using pte_page()) would not find the correct page.
->>>   	 */
->>>   	struct page *(*find_special_page)(struct vm_area_struct *vma,
->>> @@ -2929,6 +2929,7 @@ struct page *follow_page(struct vm_area_struct *vma, unsigned long address,
->>>   #define FOLL_NUMA	0x200	/* force NUMA hinting page fault */
->>>   #define FOLL_MIGRATION	0x400	/* wait for page to replace migration entry */
->>>   #define FOLL_TRIED	0x800	/* a retry, previous pass started an IO */
->>> +#define FOLL_LRU        0x1000  /* return only LRU (anon or page cache) */
->>>   #define FOLL_REMOTE	0x2000	/* we are working on non-current tsk/mm */
->>>   #define FOLL_COW	0x4000	/* internal GUP flag */
->>>   #define FOLL_ANON	0x8000	/* don't do file mappings */
->>> diff --git a/mm/gup.c b/mm/gup.c
->>> index 501bc150792c..c9cbac06bcc5 100644
->>> --- a/mm/gup.c
->>> +++ b/mm/gup.c
->>> @@ -479,6 +479,8 @@ static struct page *follow_page_pte(struct vm_area_struct *vma,
->>>   	}
->>>
->>>   	page = vm_normal_page(vma, address, pte);
->>> +	if ((flags & FOLL_LRU) && page && is_zone_device_page(page))
->>> +		page = NULL;
->>>   	if (!page && pte_devmap(pte) && (flags & (FOLL_GET | FOLL_PIN))) {
->>>   		/*
->>>   		 * Only return device mapping pages in the FOLL_GET or FOLL_PIN
->>> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
->>> index 910a138e9859..eed80696c5fd 100644
->>> --- a/mm/huge_memory.c
->>> +++ b/mm/huge_memory.c
->>> @@ -2856,7 +2856,7 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
->>>   		}
->>>
->>>   		/* FOLL_DUMP to ignore special (like zero) pages */
->>> -		page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP);
->>> +		page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP | FOLL_LRU);
->>>
->>>   		if (IS_ERR(page))
->>>   			continue;
->>> diff --git a/mm/khugepaged.c b/mm/khugepaged.c
->>> index a4e5eaf3eb01..8bf4126b6b9c 100644
->>> --- a/mm/khugepaged.c
->>> +++ b/mm/khugepaged.c
->>> @@ -627,7 +627,7 @@ static int __collapse_huge_page_isolate(struct vm_area_struct *vma,
->>>   			goto out;
->>>   		}
->>>   		page = vm_normal_page(vma, address, pteval);
->>> -		if (unlikely(!page)) {
->>> +		if (unlikely(!page) || unlikely(is_zone_device_page(page))) {
->>>   			result = SCAN_PAGE_NULL;
->>>   			goto out;
->>>   		}
->>> @@ -1276,7 +1276,7 @@ static int khugepaged_scan_pmd(struct mm_struct *mm,
->>>   			writable = true;
->>>
->>>   		page = vm_normal_page(vma, _address, pteval);
->>> -		if (unlikely(!page)) {
->>> +		if (unlikely(!page) || unlikely(is_zone_device_page(page))) {
->>>   			result = SCAN_PAGE_NULL;
->>>   			goto out_unmap;
->>>   		}
->>> @@ -1484,7 +1484,8 @@ void collapse_pte_mapped_thp(struct mm_struct *mm, unsigned long addr)
->>>   			goto abort;
->>>
->>>   		page = vm_normal_page(vma, addr, *pte);
->>> -
->>> +		if (WARN_ON_ONCE(page && is_zone_device_page(page)))
->>> +			page = NULL;
->>>   		/*
->>>   		 * Note that uprobe, debugger, or MAP_PRIVATE may change the
->>>   		 * page table, but the new page will not be a subpage of hpage.
->>> @@ -1502,6 +1503,8 @@ void collapse_pte_mapped_thp(struct mm_struct *mm, unsigned long addr)
->>>   		if (pte_none(*pte))
->>>   			continue;
->>>   		page = vm_normal_page(vma, addr, *pte);
->>> +		if (WARN_ON_ONCE(page && is_zone_device_page(page)))
->>> +			goto abort;
->>>   		page_remove_rmap(page, vma, false);
->>>   	}
->>>
->>> diff --git a/mm/ksm.c b/mm/ksm.c
->>> index 063a48eeb5ee..f16056efca21 100644
->>> --- a/mm/ksm.c
->>> +++ b/mm/ksm.c
->>> @@ -474,7 +474,7 @@ static int break_ksm(struct vm_area_struct *vma, unsigned long addr)
->>>   	do {
->>>   		cond_resched();
->>>   		page = follow_page(vma, addr,
->>> -				FOLL_GET | FOLL_MIGRATION | FOLL_REMOTE);
->>> +				FOLL_GET | FOLL_MIGRATION | FOLL_REMOTE | FOLL_LRU);
->>>   		if (IS_ERR_OR_NULL(page))
->>>   			break;
->>>   		if (PageKsm(page))
->>> @@ -559,7 +559,7 @@ static struct page *get_mergeable_page(struct rmap_item *rmap_item)
->>>   	if (!vma)
->>>   		goto out;
->>>
->>> -	page = follow_page(vma, addr, FOLL_GET);
->>> +	page = follow_page(vma, addr, FOLL_GET | FOLL_LRU);
->>>   	if (IS_ERR_OR_NULL(page))
->>>   		goto out;
->>>   	if (PageAnon(page)) {
->>> @@ -2288,7 +2288,7 @@ static struct rmap_item *scan_get_next_rmap_item(struct page **page)
->>>   		while (ksm_scan.address < vma->vm_end) {
->>>   			if (ksm_test_exit(mm))
->>>   				break;
->>> -			*page = follow_page(vma, ksm_scan.address, FOLL_GET);
->>> +			*page = follow_page(vma, ksm_scan.address, FOLL_GET | FOLL_LRU);
->>>   			if (IS_ERR_OR_NULL(*page)) {
->>>   				ksm_scan.address += PAGE_SIZE;
->>>   				cond_resched();
->>> diff --git a/mm/madvise.c b/mm/madvise.c
->>> index 1873616a37d2..e9c24c834e98 100644
->>> --- a/mm/madvise.c
->>> +++ b/mm/madvise.c
->>> @@ -413,7 +413,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
->>>   			continue;
->>>
->>>   		page = vm_normal_page(vma, addr, ptent);
->>> -		if (!page)
->>> +		if (!page || is_zone_device_page(page))
->>>   			continue;
->>>
->>>   		/*
->>> @@ -628,7 +628,7 @@ static int madvise_free_pte_range(pmd_t *pmd, unsigned long addr,
->>>   		}
->>>
->>>   		page = vm_normal_page(vma, addr, ptent);
->>> -		if (!page)
->>> +		if (!page || is_zone_device_page(page))
->>>   			continue;
->>>
->>>   		/*
->>> diff --git a/mm/memory.c b/mm/memory.c
->>> index 76e3af9639d9..571a26805ee1 100644
->>> --- a/mm/memory.c
->>> +++ b/mm/memory.c
->>> @@ -621,6 +621,13 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
->>>   		if (is_zero_pfn(pfn))
->>>   			return NULL;
->>>   		if (pte_devmap(pte))
->>> +/*
->>> + * NOTE: New uers of ZONE_DEVICE will not set pte_devmap() and will have
->>> + * refcounts incremented on their struct pages when they are inserted into
->>> + * PTEs, thus they are safe to return here. Legacy ZONE_DEVICE pages that set
->>> + * pte_devmap() do not have refcounts. Example of legacy ZONE_DEVICE is
->>> + * MEMORY_DEVICE_FS_DAX type in pmem or virtio_fs drivers.
->>> + */
->>>   			return NULL;
->>>
->>>   		print_bad_pte(vma, addr, pte, NULL);
->>> @@ -4422,7 +4429,7 @@ static vm_fault_t do_numa_page(struct vm_fault *vmf)
->>>   	pte = pte_modify(old_pte, vma->vm_page_prot);
->>>
->>>   	page = vm_normal_page(vma, vmf->address, pte);
->>> -	if (!page)
->>> +	if (!page || is_zone_device_page(page))
->>>   		goto out_map;
->>>
->>>   	/* TODO: handle PTE-mapped THP */
->>> diff --git a/mm/mempolicy.c b/mm/mempolicy.c
->>> index 8c74107a2b15..e32edbecb0cd 100644
->>> --- a/mm/mempolicy.c
->>> +++ b/mm/mempolicy.c
->>> @@ -528,7 +528,7 @@ static int queue_pages_pte_range(pmd_t *pmd, unsigned long addr,
->>>   		if (!pte_present(*pte))
->>>   			continue;
->>>   		page = vm_normal_page(vma, addr, *pte);
->>> -		if (!page)
->>> +		if (!page || is_zone_device_page(page))
->>>   			continue;
->>>   		/*
->>>   		 * vm_normal_page() filters out zero pages, but there might
->>> diff --git a/mm/migrate.c b/mm/migrate.c
->>> index 6c31ee1e1c9b..c5d50e96ecd7 100644
->>> --- a/mm/migrate.c
->>> +++ b/mm/migrate.c
->>> @@ -1611,7 +1611,7 @@ static int add_page_for_migration(struct mm_struct *mm, unsigned long addr,
->>>   		goto out;
->>>
->>>   	/* FOLL_DUMP to ignore special (like zero) pages */
->>> -	page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP);
->>> +	page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP | FOLL_LRU);
->>>
->>>   	err = PTR_ERR(page);
->>>   	if (IS_ERR(page))
->>> @@ -1802,7 +1802,7 @@ static void do_pages_stat_array(struct mm_struct *mm, unsigned long nr_pages,
->>>   			goto set_status;
->>>
->>>   		/* FOLL_DUMP to ignore special (like zero) pages */
->>> -		page = follow_page(vma, addr, FOLL_DUMP);
->>> +		page = follow_page(vma, addr, FOLL_DUMP | FOLL_LRU);
->>>
->>>   		err = PTR_ERR(page);
->>>   		if (IS_ERR(page))
->>> diff --git a/mm/mlock.c b/mm/mlock.c
->>> index 716caf851043..b14e929084cc 100644
->>> --- a/mm/mlock.c
->>> +++ b/mm/mlock.c
->>> @@ -333,7 +333,7 @@ static int mlock_pte_range(pmd_t *pmd, unsigned long addr,
->>>   		if (!pte_present(*pte))
->>>   			continue;
->>>   		page = vm_normal_page(vma, addr, *pte);
->>> -		if (!page)
->>> +		if (!page || is_zone_device_page(page))
->>>   			continue;
->>>   		if (PageTransCompound(page))
->>>   			continue;
->>> diff --git a/mm/mprotect.c b/mm/mprotect.c
->>> index b69ce7a7b2b7..a6f3587ea29a 100644
->>> --- a/mm/mprotect.c
->>> +++ b/mm/mprotect.c
->>> @@ -91,7 +91,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
->>>   					continue;
->>>
->>>   				page = vm_normal_page(vma, addr, oldpte);
->>> -				if (!page || PageKsm(page))
->>> +				if (!page || is_zone_device_page(page) || PageKsm(page))
->>>   					continue;
->>>
->>>   				/* Also skip shared copy-on-write pages */
+This change and commit message fixes the issue and documents the
+result of an audit of the triggers that can cause the CIL space to
+go backwards, how large the backwards steps tend to be, the
+frequency in which they occur, and what the impact on the CIL
+accounting code is.
+
+Even though the CIL ctx->space_used can go backwards, it will only
+do so if the log item is already logged to the CIL and contains a
+space reservation for it's entire logged state. This is tracked by
+the shadow buffer state on the log item. If the item is not
+previously logged in the CIL it has no shadow buffer nor log vector,
+and hence the entire size of the logged item copied to the log
+vector is accounted to the CIL space usage. i.e.  it will always go
+up in this case.
+
+If the item has a log vector (i.e. already in the CIL) and the size
+decreases, then the existing log vector will be overwritten and the
+space usage will go down. This is the only condition where the space
+usage reduces, and it can only occur when an item is already tracked
+in the CIL. Hence we are safe from CIL space usage underruns as a
+result of log items decreasing in size when they are relogged.
+
+Typically this reduction in CIL usage occurs from metadata blocks
+being free, such as when a btree block merge occurs or a directory
+enter/xattr entry is removed and the da-tree is reduced in size.
+This generally results in a reduction in size of around a single
+block in the CIL, but also tends to increase the number of log
+vectors because the parent and sibling nodes in the tree needs to be
+updated when a btree block is removed. If a multi-level merge
+occurs, then we see reduction in size of 2+ blocks, but again the
+log vector count goes up.
+
+The other vector is inode fork size changes, which only log the
+current size of the fork and ignore the previously logged size when
+the fork is relogged. Hence if we are removing items from the inode
+fork (dir/xattr removal in shortform, extent record removal in
+extent form, etc) the relogged size of the inode for can decrease.
+
+No other log items can decrease in size either because they are a
+fixed size (e.g. dquots) or they cannot be relogged (e.g. relogging
+an intent actually creates a new intent log item and doesn't relog
+the old item at all.) Hence the only two vectors for CIL context
+size reduction are relogging inode forks and marking buffers active
+in the CIL as stale.
+
+Long story short: the majority of the code does the right thing and
+handles the reduction in log item size correctly, and only the CIL
+hard throttle implementation is problematic and needs fixing. This
+patch makes that fix, as well as adds comments in the log item code
+that result in items shrinking in size when they are relogged as a
+clear reminder that this can and does happen frequently.
+
+The throttle fix is based upon the change Donald proposed, though it
+goes further to ensure that once the throttle is activated, it
+captures all tasks until the CIL push issues a wakeup, regardless of
+whether the CIL space used has gone back under the throttle
+threshold.
+
+This ensures that we prevent tasks reducing the CIL slightly under
+the throttle threshold and then making more changes that push it
+well over the throttle limit. This is acheived by checking if the
+throttle wait queue is already active as a condition of throttling.
+Hence once we start throttling, we continue to apply the throttle
+until the CIL context push wakes everything on the wait queue.
+
+We can use waitqueue_active() for the waitqueue manipulations and
+checks as they are all done under the ctx->xc_push_lock. Hence the
+waitqueue has external serialisation and we can safely peek inside
+the wait queue without holding the internal waitqueue locks.
+
+Many thanks to Donald for his diagnostic and analysis work to
+isolate the cause of this hang.
+
+Reported-and-tested-by: Donald Buczek <buczek@molgen.mpg.de>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_buf_item.c   | 37 ++++++++++++++++++-------------------
+ fs/xfs/xfs_inode_item.c | 14 ++++++++++++++
+ fs/xfs/xfs_log_cil.c    | 22 +++++++++++++++++-----
+ 3 files changed, 49 insertions(+), 24 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 0356f2e340a10e..8c6e26d62ef288 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -56,14 +56,12 @@ xfs_buf_log_format_size(
+ }
+ 
+ /*
+- * This returns the number of log iovecs needed to log the
+- * given buf log item.
++ * Return the number of log iovecs and space needed to log the given buf log
++ * item segment.
+  *
+- * It calculates this as 1 iovec for the buf log format structure
+- * and 1 for each stretch of non-contiguous chunks to be logged.
+- * Contiguous chunks are logged in a single iovec.
+- *
+- * If the XFS_BLI_STALE flag has been set, then log nothing.
++ * It calculates this as 1 iovec for the buf log format structure and 1 for each
++ * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
++ * in a single iovec.
+  */
+ STATIC void
+ xfs_buf_item_size_segment(
+@@ -119,11 +117,8 @@ xfs_buf_item_size_segment(
+ }
+ 
+ /*
+- * This returns the number of log iovecs needed to log the given buf log item.
+- *
+- * It calculates this as 1 iovec for the buf log format structure and 1 for each
+- * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
+- * in a single iovec.
++ * Return the number of log iovecs and space needed to log the given buf log
++ * item.
+  *
+  * Discontiguous buffers need a format structure per region that is being
+  * logged. This makes the changes in the buffer appear to log recovery as though
+@@ -133,7 +128,11 @@ xfs_buf_item_size_segment(
+  * what ends up on disk.
+  *
+  * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
+- * format structures.
++ * format structures. If the item has previously been logged and has dirty
++ * regions, we do not relog them in stale buffers. This has the effect of
++ * reducing the size of the relogged item by the amount of dirty data tracked
++ * by the log item. This can result in the committing transaction reducing the
++ * amount of space being consumed by the CIL.
+  */
+ STATIC void
+ xfs_buf_item_size(
+@@ -147,9 +146,9 @@ xfs_buf_item_size(
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	if (bip->bli_flags & XFS_BLI_STALE) {
+ 		/*
+-		 * The buffer is stale, so all we need to log
+-		 * is the buf log format structure with the
+-		 * cancel flag in it.
++		 * The buffer is stale, so all we need to log is the buf log
++		 * format structure with the cancel flag in it as we are never
++		 * going to replay the changes tracked in the log item.
+ 		 */
+ 		trace_xfs_buf_item_size_stale(bip);
+ 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+@@ -164,9 +163,9 @@ xfs_buf_item_size(
+ 
+ 	if (bip->bli_flags & XFS_BLI_ORDERED) {
+ 		/*
+-		 * The buffer has been logged just to order it.
+-		 * It is not being included in the transaction
+-		 * commit, so no vectors are used at all.
++		 * The buffer has been logged just to order it. It is not being
++		 * included in the transaction commit, so no vectors are used at
++		 * all.
+ 		 */
+ 		trace_xfs_buf_item_size_ordered(bip);
+ 		*nvecs = XFS_LOG_VEC_ORDERED;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 17e20a6d8b4e27..6ff91e5bf3cd73 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -28,6 +28,20 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
+ 	return container_of(lip, struct xfs_inode_log_item, ili_item);
+ }
+ 
++/*
++ * The logged size of an inode fork is always the current size of the inode
++ * fork. This means that when an inode fork is relogged, the size of the logged
++ * region is determined by the current state, not the combination of the
++ * previously logged state + the current state. This is different relogging
++ * behaviour to most other log items which will retain the size of the
++ * previously logged changes when smaller regions are relogged.
++ *
++ * Hence operations that remove data from the inode fork (e.g. shortform
++ * dir/attr remove, extent form extent removal, etc), the size of the relogged
++ * inode gets -smaller- rather than stays the same size as the previously logged
++ * size and this can result in the committing transaction reducing the amount of
++ * space being consumed by the CIL.
++ */
+ STATIC void
+ xfs_inode_item_data_fork_size(
+ 	struct xfs_inode_log_item *iip,
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index b0ef071b3cb53a..cd5c04dabe2e18 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -668,9 +668,14 @@ xlog_cil_push_work(
+ 	ASSERT(push_seq <= ctx->sequence);
+ 
+ 	/*
+-	 * Wake up any background push waiters now this context is being pushed.
++	 * As we are about to switch to a new, empty CIL context, we no longer
++	 * need to throttle tasks on CIL space overruns. Wake any waiters that
++	 * the hard push throttle may have caught so they can start committing
++	 * to the new context. The ctx->xc_push_lock provides the serialisation
++	 * necessary for safely using the lockless waitqueue_active() check in
++	 * this context.
+ 	 */
+-	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
++	if (waitqueue_active(&cil->xc_push_wait))
+ 		wake_up_all(&cil->xc_push_wait);
+ 
+ 	/*
+@@ -907,7 +912,7 @@ xlog_cil_push_background(
+ 	ASSERT(!list_empty(&cil->xc_cil));
+ 
+ 	/*
+-	 * don't do a background push if we haven't used up all the
++	 * Don't do a background push if we haven't used up all the
+ 	 * space available yet.
+ 	 */
+ 	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
+@@ -931,9 +936,16 @@ xlog_cil_push_background(
+ 
+ 	/*
+ 	 * If we are well over the space limit, throttle the work that is being
+-	 * done until the push work on this context has begun.
++	 * done until the push work on this context has begun. Enforce the hard
++	 * throttle on all transaction commits once it has been activated, even
++	 * if the committing transactions have resulted in the space usage
++	 * dipping back down under the hard limit.
++	 *
++	 * The ctx->xc_push_lock provides the serialisation necessary for safely
++	 * using the lockless waitqueue_active() check in this context.
+ 	 */
+-	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
++	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log) ||
++	    waitqueue_active(&cil->xc_push_wait)) {
+ 		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
+ 		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
+ 		xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
+-- 
+2.30.2
+
