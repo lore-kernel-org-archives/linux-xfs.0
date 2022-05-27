@@ -2,338 +2,289 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC3EC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 13:02:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 691F7C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 13:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351675AbiE0NCw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 09:02:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47816 "EHLO
+        id S1345710AbiE0NKc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 09:10:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351708AbiE0NCw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 09:02:52 -0400
-Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C3A112775;
-        Fri, 27 May 2022 06:02:50 -0700 (PDT)
-Received: by mail-wr1-x42f.google.com with SMTP id h11so2075884wrb.0;
-        Fri, 27 May 2022 06:02:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=awDlFL+bYrWYCpmdDy8d4vZm/t1y9I17P2EbBw7saVA=;
-        b=FUeZElUhH19V2GJPnZdvy7a075a9NzFq3aWU8zWRbPz3e+psiKDQu7I9GevfY/92Ct
-         3JGg+RTekbkIW6vapm/9DcYJK0wlvh99dDe/4CfnWcoQrfTStjZ6NDT7Oq7ff3M78uia
-         7XF9LFZ689ehOkmbxjkw2Lwub7U7Lj8x88QKG9JZjYpAMbl6GJFFteGO/LfN0A8p5J9g
-         IP82sBZi8zshUaN4pheuCmjdR6KpMBxZdAi2XM2pxzRCL/ldJDALfs8rBaVtxVbGEci3
-         JdRXZQ0TMYtgxWScmZSKDF+L9AOTOJt52ZWQTyGG9Ccgg9nwXJYR6s+Pcqc2JglNr3qz
-         DA9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=awDlFL+bYrWYCpmdDy8d4vZm/t1y9I17P2EbBw7saVA=;
-        b=5F/Ehp9Qqn26C0I9aA42lk4wJsOtOOv9wjbQnhSawO/9v+1E3sv/eVplxEEDNZv76z
-         V1GfMAVshCKuSr5v+jgiis5aht7rZ0DtGkqL9GJoOAkdtDBAYfGvXbTgXIH9n61SxzVV
-         FfCNQIQcImziqCmhIg5/1NyJNXoRJYkoV/fKRYwwLYUtbXVjvI8tH1bMrmy8OG/vIYLB
-         gcRrTBb8t3SXDHhWROmB/r2VA6GAAnGHEPaQN7GTQoHV0lr7n/8IwTCid2Ot81+ZHqKq
-         mFvgdNHJ9uF+fMoPwk1uwYz+xR4+APKu/TAaAcLbT7Jj5Q4mWAxW/XMzmiLhMBD0ooNc
-         liTA==
-X-Gm-Message-State: AOAM5326AJb2CzaINnOoctQrUQ+0zDYzRh13xUhYcONkMLvjSdMfvsVj
-        bbSUQ94bZC7YP7seBD1ziY8RS8ht2IQEgKO7
-X-Google-Smtp-Source: ABdhPJzRwa2zCPmWPGrgLkyIau4FZN7ampo7iIuQPtwohObZRbrJBnqlD5rXTHD5pnBLyPSpRf5a3g==
-X-Received: by 2002:adf:f20a:0:b0:20f:fcf7:b07f with SMTP id p10-20020adff20a000000b0020ffcf7b07fmr11108034wro.476.1653656568834;
-        Fri, 27 May 2022 06:02:48 -0700 (PDT)
-Received: from amir-ThinkPad-T480.lan ([77.137.79.96])
-        by smtp.gmail.com with ESMTPSA id l36-20020a05600c08a400b003942a244f48sm1932569wmp.33.2022.05.27.06.02.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 May 2022 06:02:48 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Sasha Levin <sashal@kernel.org>,
+        with ESMTP id S245012AbiE0NKb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 09:10:31 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9776122B6A;
+        Fri, 27 May 2022 06:10:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:
+        Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
+        Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description;
+        bh=5Az+ZM6zR+VBdw1NGFNlmoDJi0KU/Qp5ykVRjIaXV3c=; b=xULUh7vkKkdDjvdX7KAUya19Y7
+        vQMaWYEzpACR78D67OFPFafIL+UN+ww8SNtUGcemJWFwt8hDJakwIfP9paaa/uYwLrG3p+UVLHn2D
+        p2HZEbhrqqP8SGzP96vysB/KQ0bRCtHfqh27UGIFKRbAanMNcZutlDIVlpINHhQnOtYlOigZg22Hj
+        OymJkAIfQy6rqCvGew/Gv6zYn6yep3GueUIIO3n03njAlnz50W745g5jXeMTLfrY931yYiBcB+1Gy
+        86mR1jfBldHDXMOMLwoHfwv6ermMbUUBCMZYdYfGW5sNhh3bISreSJ1OuLEoJYufAmDXv/yyrBVqe
+        IaRw7zUQ==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nuZjO-0006HE-5W; Fri, 27 May 2022 13:10:18 +0000
+Date:   Fri, 27 May 2022 06:10:18 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         Dave Chinner <david@fromorbit.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Luis Chamberlain <mcgrof@kernel.org>,
         Theodore Ts'o <tytso@mit.edu>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
         Adam Manzanares <a.manzanares@samsung.com>,
-        Tyler Hicks <code@tyhicks.com>, Jan Kara <jack@suse.cz>,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>,
-        Donald Buczek <buczek@molgen.mpg.de>,
-        Brian Foster <bfoster@redhat.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 5.10 v2 5/5] xfs: Fix CIL throttle hang when CIL space used going backwards
-Date:   Fri, 27 May 2022 16:02:19 +0300
-Message-Id: <20220527130219.3110260-6-amir73il@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220527130219.3110260-1-amir73il@gmail.com>
-References: <20220527130219.3110260-1-amir73il@gmail.com>
+        Tyler Hicks <code@tyhicks.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>,
+        Leah Rumancik <lrumancik@google.com>, masahiroy@kernel.org,
+        Klaus Jensen <its@irrelevant.dk>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "Paul E. McKenney" <paulmck@kernel.org>
+Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
+Message-ID: <YpDNuqr0cRsiVBjv@bombadil.infradead.org>
+References: <20220525111715.2769700-1-amir73il@gmail.com>
+ <Yo+4jW0e4+fYIxX2@magnolia>
+ <Yo/KibX8TOj+rZkV@bombadil.infradead.org>
+ <CAOQ4uxgSKFutWq03Yu2+AvucoZwJ5azz5G5KgDSztCczk_+OtA@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxgSKFutWq03Yu2+AvucoZwJ5azz5G5KgDSztCczk_+OtA@mail.gmail.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, May 26, 2022 at 09:59:19PM +0300, Amir Goldstein wrote:
+> On Thu, May 26, 2022 at 9:44 PM Luis Chamberlain <mcgrof@kernel.org> wrote:
+> >
+> > On Thu, May 26, 2022 at 10:27:41AM -0700, Darrick J. Wong wrote:
+> > > /me looks and sees a large collection of expunge lists, along with
+> > > comments about how often failures occur and/or reasons.  Neat!
+> > >
+> > > Leah mentioned on the ext4 call this morning that she would have found
+> > > it helpful to know (before she started working on 5.15 backports) which
+> > > tests were of the flaky variety so that she could better prioritize the
+> > > time she had to look into fstests failures.  (IOWS: saw a test fail a
+> > > small percentage of the time and then burned a lot of machine time only
+> > > to figure out that 5.15.0 also failed a percentage of th time).
+> >
+> > See my proposal to try to make this easier to parse:
+> >
+> > https://lore.kernel.org/all/YoW0ZC+zM27Pi0Us@bombadil.infradead.org/
+> >
+> > > We talked about where it would be most useful for maintainers and QA
+> > > people to store their historical pass/fail data, before settling on
+> > > "somewhere public where everyone can review their colleagues' notes" and
+> > > "somewhere minimizing commit friction".  At the time, we were thinking
+> > > about having people contribute their notes directly to the fstests
+> > > source code, but I guess Luis has been doing that in the kdevops repo
+> > > for a few years now.
+> > >
+> > > So, maybe there?
+> >
+> > For now sure, I'm happy to add others the linux-kdevops org on github
+> > and they get immediate write access to the repo. This is working well
+> > so far. Long term we need to decide if we want to spin off the
+> > expunge list as a separate effort and make it a git subtree (note
+> > it is different than a git sub module). Another example of a use case
+> > for a git subtree, to use it as an example, is the way I forked
+> > kconfig from Linux into a standalone git tree so to allow any project
+> > to bump kconfig code with just one command. So different projects
+> > don't need to fork kconfig as they do today.
+> >
+> > The value in doing the git subtree for expunges is any runner can use
+> > it. I did design kdevops though to run on *any* cloud, and support
+> > local virtualization tech like libvirt and virtualbox.
+> >
+> > The linux-kdevops git org also has other projects which both fstest
+> > and blktests depend on, so for example dbench which I had forked and
+> > cleaned up a while ago. It may make sense to share keeping oddball
+> > efforts like thse which are no longer maintained in this repo.
+> >
+> > There is other tech I'm evaluating for this sort of collaborative test
+> > efforts such as ledgers, but that is in its infancy at this point in
+> > time. I have a sense though it may be a good outlet for collection of
+> > test artifacts in a decentralized way and also allow *any* entity to
+> > participate in bringing confidence to stable kernel branches or dev
+> > branches prior to release.
+> >
+> 
+> There are few problems I noticed with the current workflow.
+> 
+> 1. It will not scale to maintain this in git as more and more testers
+> start using kdepops and adding more and more fs and configs and distros.
 
-commit 19f4e7cc819771812a7f527d7897c2deffbf7a00 upstream.
+You say that but do not explain why you think this is the case.
+Quite the contrary, I don't think so and I'll expain why. Let's
+just stic to the expunge list as that is what matters here in this
+context.
 
-A hang with tasks stuck on the CIL hard throttle was reported and
-largely diagnosed by Donald Buczek, who discovered that it was a
-result of the CIL context space usage decrementing in committed
-transactions once the hard throttle limit had been hit and processes
-were already blocked.  This resulted in the CIL push not waking up
-those waiters because the CIL context was no longer over the hard
-throttle limit.
+The expunge list is already divided by target kernels if using upstream
+kernels by directory. So this applies to any stable kernel, vanilla
+kernels, or linux-next. Folks working on these kernels would very likely
+be collaborating just as you and I have.
 
-The surprising aspect of this was the CIL space usage going
-backwards regularly enough to trigger this situation. Assumptions
-had been made in design that the relogging process would only
-increase the size of the objects in the CIL, and so that space would
-only increase.
+Distro kernels also have their own directory, and so they'd very likely
+collaborate.
 
-This change and commit message fixes the issue and documents the
-result of an audit of the triggers that can cause the CIL space to
-go backwards, how large the backwards steps tend to be, the
-frequency in which they occur, and what the impact on the CIL
-accounting code is.
+> How many more developers you want to give push access to linux-kdevops?
 
-Even though the CIL ctx->space_used can go backwards, it will only
-do so if the log item is already logged to the CIL and contains a
-space reservation for it's entire logged state. This is tracked by
-the shadow buffer state on the log item. If the item is not
-previously logged in the CIL it has no shadow buffer nor log vector,
-and hence the entire size of the logged item copied to the log
-vector is accounted to the CIL space usage. i.e.  it will always go
-up in this case.
+Only those really collaborating, the idea is not to give access to the
+world here. The challenge I'm thinking about for the future though is
+how to scale this beyond just those few in a meaningful way in such a
+way that you don't limit your scope of evaluation only to what resources
+these folks have.
 
-If the item has a log vector (i.e. already in the CIL) and the size
-decreases, then the existing log vector will be overwritten and the
-space usage will go down. This is the only condition where the space
-usage reduces, and it can only occur when an item is already tracked
-in the CIL. Hence we are safe from CIL space usage underruns as a
-result of log items decreasing in size when they are relogged.
+That is a research question and beyond the scope of just using git in a
+shared linux repo.
 
-Typically this reduction in CIL usage occurs from metadata blocks
-being free, such as when a btree block merge occurs or a directory
-enter/xattr entry is removed and the da-tree is reduced in size.
-This generally results in a reduction in size of around a single
-block in the CIL, but also tends to increase the number of log
-vectors because the parent and sibling nodes in the tree needs to be
-updated when a btree block is removed. If a multi-level merge
-occurs, then we see reduction in size of 2+ blocks, but again the
-log vector count goes up.
+> I don't know how test labs report to KernelCI, but we need to look at their
+> model and not invent the wheel.
 
-The other vector is inode fork size changes, which only log the
-current size of the fork and ignore the previously logged size when
-the fork is relogged. Hence if we are removing items from the inode
-fork (dir/xattr removal in shortform, extent record removal in
-extent form, etc) the relogged size of the inode for can decrease.
+I looked at and to say the least I was not in any way shape or form
+drawn to it or what it was using. You are free to look at it too.
 
-No other log items can decrease in size either because they are a
-fixed size (e.g. dquots) or they cannot be relogged (e.g. relogging
-an intent actually creates a new intent log item and doesn't relog
-the old item at all.) Hence the only two vectors for CIL context
-size reduction are relogging inode forks and marking buffers active
-in the CIL as stale.
+The distributed aspect is what I don't agree with, and it is why I am
+evaluating alternative decentralized technologies for the future.
 
-Long story short: the majority of the code does the right thing and
-handles the reduction in log item size correctly, and only the CIL
-hard throttle implementation is problematic and needs fixing. This
-patch makes that fix, as well as adds comments in the log item code
-that result in items shrinking in size when they are relogged as a
-clear reminder that this can and does happen frequently.
+It relies on a LAVA, Linaro Automated Validation Architecture. The
+project home page to LAVA [0], mentions "LAVA is an automated validation
+architecture primarily aimed at testing deployments of systems based
+around the Linux kernel on ARM devices, specifically ARMv7 and later".
+The SOC [1] page however now lists x86, but it is not the main focus of
+the project. You can add a new test lab and add new tests, these tests
+are intended to be public. If running tests for private consumption
+you’d have to set up your own backend and front end. All this and the
+experience with the results page was enough for me to decide this
+wasn't an immediate good fit for automation for fstests and blktests
+when I started considering this for enterprise Linux.
 
-The throttle fix is based upon the change Donald proposed, though it
-goes further to ensure that once the throttle is activated, it
-captures all tasks until the CIL push issues a wakeup, regardless of
-whether the CIL space used has gone back under the throttle
-threshold.
+[0] https://git.lavasoftware.org
+[1] https://linux.kernelci.org/soc/
 
-This ensures that we prevent tasks reducing the CIL slightly under
-the throttle threshold and then making more changes that push it
-well over the throttle limit. This is acheived by checking if the
-throttle wait queue is already active as a condition of throttling.
-Hence once we start throttling, we continue to apply the throttle
-until the CIL context push wakes everything on the wait queue.
+It does not mean one cannot use a centralized methodology to share an
+expunge list / artifacts, etc for fstests or blktests. A shared expunge
+set on linux-kdevops organization is a *simple* centralized way to do that
+to start off with, and if you limit access to folks who collaborate on
+one directory (as you kind of do in Linux development with maintainers)
+you avoid merge conflicts. We're not at a point yet where we're going to
+have 100 folks who want access to say the v5.10.y directory for expunges
+for XFS for example.... it's just you and me right now. Likewise for
+other filesystems it would be similar. But from a research perspective
+it does invite one to consider how to scale this in a sensible way
+beyond those. When I looked at kernelci, I didn't personally think that
+was an optimal way to scale, but that is beyond the scope of the simple
+ramp up we're still discussing.
 
-We can use waitqueue_active() for the waitqueue manipulations and
-checks as they are all done under the ctx->xc_push_lock. Hence the
-waitqueue has external serialisation and we can safely peek inside
-the wait queue without holding the internal waitqueue locks.
+> 2. kdevops is very focused on stabilizing the baseline fast, 
 
-Many thanks to Donald for his diagnostic and analysis work to
-isolate the cause of this hang.
+Although it does help with this, I still think there is small efforts to
+help automate this further in the future. A runner should be able to
+spin this off without intervention if possible. Today upon failures it
+requires manual verification, adding a new failure to an expunge list,
+etc.  We can do better, and the goal is to slowly automate each of those
+menial tasks which today we do manually. Building a completely new
+baseline without manual intervention I think is possible and we should
+strive towards it slowly and carefully.
 
-Reported-and-tested-by: Donald Buczek <buczek@molgen.mpg.de>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf_item.c   | 37 ++++++++++++++++++-------------------
- fs/xfs/xfs_inode_item.c | 14 ++++++++++++++
- fs/xfs/xfs_log_cil.c    | 22 +++++++++++++++++-----
- 3 files changed, 49 insertions(+), 24 deletions(-)
+> which is
+> very good, but there is no good process of getting a test out of expunge list.
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 0356f2e340a1..8c6e26d62ef2 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -56,14 +56,12 @@ xfs_buf_log_format_size(
- }
- 
- /*
-- * This returns the number of log iovecs needed to log the
-- * given buf log item.
-+ * Return the number of log iovecs and space needed to log the given buf log
-+ * item segment.
-  *
-- * It calculates this as 1 iovec for the buf log format structure
-- * and 1 for each stretch of non-contiguous chunks to be logged.
-- * Contiguous chunks are logged in a single iovec.
-- *
-- * If the XFS_BLI_STALE flag has been set, then log nothing.
-+ * It calculates this as 1 iovec for the buf log format structure and 1 for each
-+ * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
-+ * in a single iovec.
-  */
- STATIC void
- xfs_buf_item_size_segment(
-@@ -119,11 +117,8 @@ xfs_buf_item_size_segment(
- }
- 
- /*
-- * This returns the number of log iovecs needed to log the given buf log item.
-- *
-- * It calculates this as 1 iovec for the buf log format structure and 1 for each
-- * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
-- * in a single iovec.
-+ * Return the number of log iovecs and space needed to log the given buf log
-+ * item.
-  *
-  * Discontiguous buffers need a format structure per region that is being
-  * logged. This makes the changes in the buffer appear to log recovery as though
-@@ -133,7 +128,11 @@ xfs_buf_item_size_segment(
-  * what ends up on disk.
-  *
-  * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
-- * format structures.
-+ * format structures. If the item has previously been logged and has dirty
-+ * regions, we do not relog them in stale buffers. This has the effect of
-+ * reducing the size of the relogged item by the amount of dirty data tracked
-+ * by the log item. This can result in the committing transaction reducing the
-+ * amount of space being consumed by the CIL.
-  */
- STATIC void
- xfs_buf_item_size(
-@@ -147,9 +146,9 @@ xfs_buf_item_size(
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 	if (bip->bli_flags & XFS_BLI_STALE) {
- 		/*
--		 * The buffer is stale, so all we need to log
--		 * is the buf log format structure with the
--		 * cancel flag in it.
-+		 * The buffer is stale, so all we need to log is the buf log
-+		 * format structure with the cancel flag in it as we are never
-+		 * going to replay the changes tracked in the log item.
- 		 */
- 		trace_xfs_buf_item_size_stale(bip);
- 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
-@@ -164,9 +163,9 @@ xfs_buf_item_size(
- 
- 	if (bip->bli_flags & XFS_BLI_ORDERED) {
- 		/*
--		 * The buffer has been logged just to order it.
--		 * It is not being included in the transaction
--		 * commit, so no vectors are used at all.
-+		 * The buffer has been logged just to order it. It is not being
-+		 * included in the transaction commit, so no vectors are used at
-+		 * all.
- 		 */
- 		trace_xfs_buf_item_size_ordered(bip);
- 		*nvecs = XFS_LOG_VEC_ORDERED;
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 17e20a6d8b4e..6ff91e5bf3cd 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -28,6 +28,20 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
- 	return container_of(lip, struct xfs_inode_log_item, ili_item);
- }
- 
-+/*
-+ * The logged size of an inode fork is always the current size of the inode
-+ * fork. This means that when an inode fork is relogged, the size of the logged
-+ * region is determined by the current state, not the combination of the
-+ * previously logged state + the current state. This is different relogging
-+ * behaviour to most other log items which will retain the size of the
-+ * previously logged changes when smaller regions are relogged.
-+ *
-+ * Hence operations that remove data from the inode fork (e.g. shortform
-+ * dir/attr remove, extent form extent removal, etc), the size of the relogged
-+ * inode gets -smaller- rather than stays the same size as the previously logged
-+ * size and this can result in the committing transaction reducing the amount of
-+ * space being consumed by the CIL.
-+ */
- STATIC void
- xfs_inode_item_data_fork_size(
- 	struct xfs_inode_log_item *iip,
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b0ef071b3cb5..cd5c04dabe2e 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -668,9 +668,14 @@ xlog_cil_push_work(
- 	ASSERT(push_seq <= ctx->sequence);
- 
- 	/*
--	 * Wake up any background push waiters now this context is being pushed.
-+	 * As we are about to switch to a new, empty CIL context, we no longer
-+	 * need to throttle tasks on CIL space overruns. Wake any waiters that
-+	 * the hard push throttle may have caught so they can start committing
-+	 * to the new context. The ctx->xc_push_lock provides the serialisation
-+	 * necessary for safely using the lockless waitqueue_active() check in
-+	 * this context.
- 	 */
--	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
-+	if (waitqueue_active(&cil->xc_push_wait))
- 		wake_up_all(&cil->xc_push_wait);
- 
- 	/*
-@@ -907,7 +912,7 @@ xlog_cil_push_background(
- 	ASSERT(!list_empty(&cil->xc_cil));
- 
- 	/*
--	 * don't do a background push if we haven't used up all the
-+	 * Don't do a background push if we haven't used up all the
- 	 * space available yet.
- 	 */
- 	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
-@@ -931,9 +936,16 @@ xlog_cil_push_background(
- 
- 	/*
- 	 * If we are well over the space limit, throttle the work that is being
--	 * done until the push work on this context has begun.
-+	 * done until the push work on this context has begun. Enforce the hard
-+	 * throttle on all transaction commits once it has been activated, even
-+	 * if the committing transactions have resulted in the space usage
-+	 * dipping back down under the hard limit.
-+	 *
-+	 * The ctx->xc_push_lock provides the serialisation necessary for safely
-+	 * using the lockless waitqueue_active() check in this context.
- 	 */
--	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
-+	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log) ||
-+	    waitqueue_active(&cil->xc_push_wait)) {
- 		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
- 		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
- 		xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
--- 
-2.25.1
+Yes, *part* of this involves a nice atomic task which can be dedicated to a
+runner. So this goal alone needs to broken up in to parts:
 
+a) Is this task still failing? --> easily automated today
+b) How can we avoid this to fail --> not easily autmated today
+
+As for a), a simple dedicated guest could for example evaluate a target kernel
+on a fileystem configuration and run through each expunge and *verify* it
+is indeed still failing. If it is not, and there is high confidence that
+this is the case (say it verified that it is not failing many times), then
+clearly the issue may have been fixed (say a stable kernel update) and
+the task can inform us of that.
+
+Thas task b) requires years, and years of work.
+
+> We have a very strong suspicion that some of the tests that we put in
+> expunge lists failed due to some setup issue in the host OS that caused
+> NVME IO errors in the guests.
+
+We already know that qemu with qcow2 nvme files does incur some delays
+when doing full swing drive discards and this can cause some of these
+nvme IO errors (timeouts). We now also are aware that the odds of this
+timeout happening twice is also low but *is* possible. We *also* now
+know that when two consecutive nvme timeoutes happen due to this it can
+also *somehow* trigger an RCU false positive for blktests in some corner
+cases when testing ZNS [0] but this was *what* made us realize that this
+issue was a qemu issue and the qemu nvme maintainer has noted that
+this needs to be fixed in qemu.
+
+[0] https://lkml.kernel.org/r/YliZ9M6QWISXvhAJ@bombadil.infradead.org
+
+But these sorts of qemu bugs should should not cause filesystem
+issues. We also already know that this is a qemu bug and that this will
+be fixed in the long term. Upon review with the qemu nvme maintainer
+the way kdevops uses nvme is not incorrect.
+
+Yes we can switch to raw format to skip the suboptimal way to do
+discards, but we *want* to find more bugs, not less. We could
+simply just make a new Kconfig entry on kdevops to enable users to use
+raw files for the nvme drives for those that want to opt-out of these
+timeouts for now.
+
+> I tried to put that into comments when
+> I noticed that, but I am afraid there may have been other tests that are
+> falsely accused of failing.
+
+There are two things we should consider in light of this:
+
+c) We do need semantics for common exceptions to failures
+d) We need an appreciation for why some of these exceptions may be
+   real odd issues and it may take time to either fix them or
+   to acknoledge they are non-issue somehow.
+
+As for c) I had proposed a way to annotate failure rate, perhaps
+we need a way to annotate these odd issues as well.
+
+In my talk at LSFMM I mentioned how 25% of time *alone* on the test
+automation effort consists of dealing with low hanging fruit. Since
+companies are now trying to dedicate some resources towards stable
+filesystem efforts it maybe worthy for them to consider this so that
+they are aware that some of these oddball issues may end up with them
+lurking in odd corners. I gave one example which took 8 months to root
+cause on the blktests front alone at LSFMM.
+
+> All developers make those mistakes in their
+> own expunge lists, but if we start propagating those mistakes to the world,
+> it becomes an issue.
+
+Agreed, but note that the conversation is shifting from not sharing
+expunges to possibly sharing some notion of expunges *somehow*. That is
+a small step forward. I agree we need to address these semantics issues
+and they are important, but without the will to share expunges there
+would have been no point to address some of these common pain points.
+
+> For those two reasons I think that the model to aspire to should be
+> composed of a database where absolutely everyone can post data
+> point to in the form of facts (i.e. the test failed after N runs on this kernel
+> and this hardware...) and another process, partly AI, partly human to
+> digest all those facts into a knowledge base that is valuable and
+> maintained by experts. Much easier said than done...
+
+Anything is possible, sure. A centralized database is one way to go
+about some of these things. I'm however suspicious that perhaps there
+is a better way, and am still evaluating a ledger as a way to scale
+test results. Both paths can be taken, in fact. One does not negate
+the other.
+
+*For now*... I do think a simple repo with those who *are* collaborating
+on expunges can share a simple repo as we have been doing for a few
+months.
+
+The need for scaling has to be addressed but for the long term of growth
+of the endeavour.
+
+  Luis
