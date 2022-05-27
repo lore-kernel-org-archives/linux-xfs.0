@@ -2,84 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C4DC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 22:43:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AB26C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 22:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236430AbiE0WnD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 18:43:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44314 "EHLO
+        id S1355058AbiE0Wwo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 18:52:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235014AbiE0WnC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 18:43:02 -0400
+        with ESMTP id S233958AbiE0Wwo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 18:52:44 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C0A9F5E771
-        for <linux-xfs@vger.kernel.org>; Fri, 27 May 2022 15:43:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 17278126992;
+        Fri, 27 May 2022 15:52:43 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E7E41537A2C;
-        Sat, 28 May 2022 08:43:00 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id AD254537B91;
+        Sat, 28 May 2022 08:52:41 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nuifa-00HBoV-TX; Sat, 28 May 2022 08:42:58 +1000
-Date:   Sat, 28 May 2022 08:42:58 +1000
+        id 1nuioy-00HBur-8l; Sat, 28 May 2022 08:52:40 +1000
+Date:   Sat, 28 May 2022 08:52:40 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix xfs_ifree() error handling to not leak perag ref
-Message-ID: <20220527224258.GU1098723@dread.disaster.area>
-References: <20220527133428.2291945-1-bfoster@redhat.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
+        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, hch@infradead.org
+Subject: Re: [PATCH v6 05/16] iomap: Add async buffered write support
+Message-ID: <20220527225240.GV1098723@dread.disaster.area>
+References: <20220526173840.578265-1-shr@fb.com>
+ <20220526173840.578265-6-shr@fb.com>
+ <20220526223705.GJ1098723@dread.disaster.area>
+ <20220527084203.jzufgln7oqfdghvy@quack3.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220527133428.2291945-1-bfoster@redhat.com>
+In-Reply-To: <20220527084203.jzufgln7oqfdghvy@quack3.lan>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=629153f5
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6291563a
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=siDB9RYKOpbEWRo_QVgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
+        a=56L3rgyCVsvNkpJbsA4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 27, 2022 at 09:34:28AM -0400, Brian Foster wrote:
-> For some reason commit 9a5280b312e2e ("xfs: reorder iunlink remove
-> operation in xfs_ifree") replaced a jump to the exit path in the
-> event of an xfs_difree() error with a direct return, which skips
-
-Reason: the patchset that the fix was promoted from had moved all
-the pag handling out of xfs_ifree to the caller, so direct return
-was, in fact, the correct behaviour in the code it originated from.
-
-The patch applied to upstream with no errors or fuzz, and I had
-completely forgotten that somewhere in the ~50 patches in the stack
-before that fix had completely reworked unlink pag handling...
-
-How did you find this? I haven't noticed any specific increase in
-unmount perag accounting leaks as a result of this, so I'm curious
-as to how you noticed it and isolated it to this specific bug.
-
-> Restore the original code to drop the reference on error.
+On Fri, May 27, 2022 at 10:42:03AM +0200, Jan Kara wrote:
+> On Fri 27-05-22 08:37:05, Dave Chinner wrote:
+> > On Thu, May 26, 2022 at 10:38:29AM -0700, Stefan Roesch wrote:
+> > > This adds async buffered write support to iomap.
+> > > 
+> > > This replaces the call to balance_dirty_pages_ratelimited() with the
+> > > call to balance_dirty_pages_ratelimited_flags. This allows to specify if
+> > > the write request is async or not.
+> > > 
+> > > In addition this also moves the above function call to the beginning of
+> > > the function. If the function call is at the end of the function and the
+> > > decision is made to throttle writes, then there is no request that
+> > > io-uring can wait on. By moving it to the beginning of the function, the
+> > > write request is not issued, but returns -EAGAIN instead. io-uring will
+> > > punt the request and process it in the io-worker.
+> > > 
+> > > By moving the function call to the beginning of the function, the write
+> > > throttling will happen one page later.
+> > 
+> > Won't it happen one page sooner? I.e. on single page writes we'll
+> > end up throttling *before* we dirty the page, not *after* we dirty
+> > the page. IOWs, we can't wait for the page that we just dirtied to
+> > be cleaned to make progress and so this now makes the loop dependent
+> > on pages dirtied by other writers being cleaned to guarantee
+> > forwards progress?
+> > 
+> > That seems like a subtle but quite significant change of
+> > algorithm...
 > 
-> Fixes: 9a5280b312e2e ("xfs: reorder iunlink remove operation in xfs_ifree")
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_inode.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> So I'm convinced the difference will be pretty much in the noise because of
+> how many dirty pages there have to be to even start throttling processes
+> but some more arguments are:
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index b2879870a17e..52d6f2c7d58b 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2622,7 +2622,7 @@ xfs_ifree(
->  	 */
->  	error = xfs_difree(tp, pag, ip->i_ino, &xic);
->  	if (error)
-> -		return error;
-> +		goto out;
+> * we ratelimit calls to balance_dirty_pages() based on number of pages
+>   dirtied by the current process in balance_dirty_pages_ratelimited()
+> 
+> * balance_dirty_pages() uses number of pages dirtied by the current process
+>   to decide about the delay.
+> 
+> So the only situation where I could see this making a difference would be
+> if dirty limit is a handful of pages and even there I have hard time to see
+> how exactly.
 
-Looks good,
+That's kinda what worries me - we do see people winding the dirty
+thresholds way down to work around various niche problems with
+dirty page buildup.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+We also have small extra accounting overhead for cases where we've
+stacked layers to so the lower layers don't dirty throttle before
+the higher layer. If the lower layer throttles first, then the
+higher layer can't clean pages and we can deadlock.
 
+Those are the sorts of subtle, niche situations where I worry that
+the subtle "throttle first, write second" change could manifest...
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
