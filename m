@@ -2,107 +2,145 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AB26C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 22:52:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE804C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 23:42:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355058AbiE0Wwo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 18:52:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39584 "EHLO
+        id S1348483AbiE0XmI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 19:42:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233958AbiE0Wwo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 18:52:44 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 17278126992;
-        Fri, 27 May 2022 15:52:43 -0700 (PDT)
+        with ESMTP id S244886AbiE0XmI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 19:42:08 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C21DE39687;
+        Fri, 27 May 2022 16:42:06 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id AD254537B91;
-        Sat, 28 May 2022 08:52:41 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D651E10EAD77;
+        Sat, 28 May 2022 09:42:03 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nuioy-00HBur-8l; Sat, 28 May 2022 08:52:40 +1000
-Date:   Sat, 28 May 2022 08:52:40 +1000
+        id 1nujak-00HCpQ-Ds; Sat, 28 May 2022 09:42:02 +1000
+Date:   Sat, 28 May 2022 09:42:02 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
-        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH v6 05/16] iomap: Add async buffered write support
-Message-ID: <20220527225240.GV1098723@dread.disaster.area>
-References: <20220526173840.578265-1-shr@fb.com>
- <20220526173840.578265-6-shr@fb.com>
- <20220526223705.GJ1098723@dread.disaster.area>
- <20220527084203.jzufgln7oqfdghvy@quack3.lan>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        Tyler Hicks <code@tyhicks.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
+Message-ID: <20220527234202.GF3923443@dread.disaster.area>
+References: <20220525111715.2769700-1-amir73il@gmail.com>
+ <YpBqfdmwQ675m72G@infradead.org>
+ <CAOQ4uxjek9331geZGVbVT=gqkNTyVA_vjyjuB=2eGZD-ufeqNQ@mail.gmail.com>
+ <20220527090838.GD3923443@dread.disaster.area>
+ <CAOQ4uxgc9Zu0rvTY3oOqycGG+MoYEL3-+qghm9_qEn67D8OukA@mail.gmail.com>
+ <YpDw3uVFB7LjPquX@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220527084203.jzufgln7oqfdghvy@quack3.lan>
+In-Reply-To: <YpDw3uVFB7LjPquX@bombadil.infradead.org>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6291563a
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=629161cd
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
         a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
-        a=56L3rgyCVsvNkpJbsA4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=zxJDezhdzid2LMDuc1kA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 27, 2022 at 10:42:03AM +0200, Jan Kara wrote:
-> On Fri 27-05-22 08:37:05, Dave Chinner wrote:
-> > On Thu, May 26, 2022 at 10:38:29AM -0700, Stefan Roesch wrote:
-> > > This adds async buffered write support to iomap.
-> > > 
-> > > This replaces the call to balance_dirty_pages_ratelimited() with the
-> > > call to balance_dirty_pages_ratelimited_flags. This allows to specify if
-> > > the write request is async or not.
-> > > 
-> > > In addition this also moves the above function call to the beginning of
-> > > the function. If the function call is at the end of the function and the
-> > > decision is made to throttle writes, then there is no request that
-> > > io-uring can wait on. By moving it to the beginning of the function, the
-> > > write request is not issued, but returns -EAGAIN instead. io-uring will
-> > > punt the request and process it in the io-worker.
-> > > 
-> > > By moving the function call to the beginning of the function, the write
-> > > throttling will happen one page later.
-> > 
-> > Won't it happen one page sooner? I.e. on single page writes we'll
-> > end up throttling *before* we dirty the page, not *after* we dirty
-> > the page. IOWs, we can't wait for the page that we just dirtied to
-> > be cleaned to make progress and so this now makes the loop dependent
-> > on pages dirtied by other writers being cleaned to guarantee
-> > forwards progress?
-> > 
-> > That seems like a subtle but quite significant change of
-> > algorithm...
-> 
-> So I'm convinced the difference will be pretty much in the noise because of
-> how many dirty pages there have to be to even start throttling processes
-> but some more arguments are:
-> 
-> * we ratelimit calls to balance_dirty_pages() based on number of pages
->   dirtied by the current process in balance_dirty_pages_ratelimited()
-> 
-> * balance_dirty_pages() uses number of pages dirtied by the current process
->   to decide about the delay.
-> 
-> So the only situation where I could see this making a difference would be
-> if dirty limit is a handful of pages and even there I have hard time to see
-> how exactly.
+On Fri, May 27, 2022 at 08:40:14AM -0700, Luis Chamberlain wrote:
+> On Fri, May 27, 2022 at 03:24:02PM +0300, Amir Goldstein wrote:
+> > On Fri, May 27, 2022 at 12:08 PM Dave Chinner <david@fromorbit.com> wrote:
+> > > Backport candidate: yes. Severe: absolutely not.
+> > In the future, if you are writing a cover letter for an improvement
+> > series or internal pull request and you know there is a backport
+> > candidate inside, if you happen to remember to mention it, it would
+> > be of great help to me.
 
-That's kinda what worries me - we do see people winding the dirty
-thresholds way down to work around various niche problems with
-dirty page buildup.
+That's what "fixes" and "cc: stable" tags in the commit itself are
+for, not the cover letter.
 
-We also have small extra accounting overhead for cases where we've
-stacked layers to so the lower layers don't dirty throttle before
-the higher layer. If the lower layer throttles first, then the
-higher layer can't clean pages and we can deadlock.
+> Amir, since you wrote a tool enhancement to scrape for possible
+> candidates, *if* we defined some sort of meta-data to describe
+> this sort of stuff on the cover letter:
+> 
+> Backport candidate: yes. Severe: absolutely not
+> 
+> It would be useful when scraping. Therefore, leaving the effort
+> to try to backport / feasibility to others. This would be different
+> than a stable Cc tag, as those have a high degree of certainty.
+> 
+> How about something like:
+> 
+> Backport-candidate: yes
+> Impact: low
 
-Those are the sorts of subtle, niche situations where I worry that
-the subtle "throttle first, write second" change could manifest...
+No.
+
+This placing the responsibility/burden on upstream developers to
+classify everything they do that *might* get backported regardless
+of the context the change is being made under. Stable maintainers
+have the benefit of hindsight, user bug reports, etc and can make
+much better determinations of whether any particular change should
+be backported.
+
+Indeed, a single user reporting a bug doesn't make the fix an
+automatic backport candidate. The fix might be too complex to
+backport, it might have serious dependency requirements, it might be
+specific to a really niche configuration or workload, the user might
+be running their own custom kernel and does their own backports, it
+might be impossible for anyone but the person fixing the bug to
+validate that the fix works correctly and it might take days or
+weeks of effort to perform that validation, etc.
+
+IOWs, there are many reasons that bug fixes may not be considered
+backport candidates at the time they are fixed and committed. If
+circumstances change 6 months later and only then it becomes clear
+that we need to backport the fix, then that is not a problem the
+upstream process can solve. Upstream has not done anything wrong
+here, nor could they have known that the initial classification of
+"rare, whacky, almost no exposure anywhere" might be completely
+wrong because of something else they did not know about at the
+time...
+
+IMO, placing the responsibility on upstream developers to accurately
+identify and classify every possible commit that might be a backport
+candidate for the benefit of stable kernel maintainers is completely
+upside down.
+
+Identifying the fixes for problems that that stable kernel users are
+hitting is the responsibility of the stable kernel maintainers. A
+stable kernel maintainer is not just a role of "do backports and
+test kernels". The stable kernel maintainer must also provide front
+line user support so they are aware of the bugs those users are
+hitting that *haven't already been identified* as affecting users of
+those kernels. Stable kernel maintainers are *always* going to miss
+bug fixes or changes that happen upstream that unintentionally fix
+or mitigate problems that occur in older kernels.
+
+Hence stable maintainers need to start from the position of "users
+will always hit stuff we haven't fixed", not start from the position
+of "upstream developers should tell us what we should fix". Many of
+the upstream bug fixes come from user bug reports on stable kernels,
+not from users on bleeding edge upstream kernels. Stable kernel
+maintainers need to be triaging these bug reports and determining if
+the problem is fixed upstream and the commit that fixes it, or if it
+hasn't been fixed working with upstream to get the bugs fixed and
+then backported.
+
+If the upstream developer knows that it is a regression fix or a new
+bug that likely needs to be backported, then we already have
+"Fixes:" and "cc: stable" for communicating "please backport this"
+back down the stack. Anything more is just asking us to make wild
+guesses about an unknown future.
 
 Cheers,
 
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
