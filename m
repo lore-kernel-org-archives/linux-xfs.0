@@ -2,321 +2,281 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBF96C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 06:07:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BADC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 06:12:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234351AbiE0GHI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 02:07:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49920 "EHLO
+        id S244634AbiE0GMy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 02:12:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243145AbiE0GHG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 02:07:06 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7716D13D54;
-        Thu, 26 May 2022 23:07:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=zgkmDWgaB+Ofb/O7cYee/Eysh6HdBJJRuXenx5ArmDU=; b=gurBkFUqvIEVUScAcaX8lShgQY
-        UL4kYNzTo+3iyPZIEyN52AxZFmSAr8Xb661Cx2SAykGDRl1TXdmDwkUyG7+f5nukLenO5uCCdpwMU
-        hMzJm/UMyM3CCqYixqjdGjbIjLyD8/y1LZXPXYMaNKtdmajQDGh/5kVs9yCAYN12cCm5SqPfv80AT
-        f/dGQ8VHUSMaCtHjCXS84Lj15B04fBeR29ynsIrpW8Up4i3kGrcxSSztT6RN9aOBI86GJkTPagFlw
-        yJ9w2ky7NLB+ZGnQnnOKKtBR21WLelFX1dRrhlj9prz4reli6IQC4VrIySHml8najILtRVlvaRMiM
-        RlVbsogQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nuT7d-00Gje1-IH; Fri, 27 May 2022 06:06:53 +0000
-Date:   Thu, 26 May 2022 23:06:53 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        Tyler Hicks <code@tyhicks.com>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
-Message-ID: <YpBqfdmwQ675m72G@infradead.org>
-References: <20220525111715.2769700-1-amir73il@gmail.com>
+        with ESMTP id S245362AbiE0GMm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 02:12:42 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F72B5DA57
+        for <linux-xfs@vger.kernel.org>; Thu, 26 May 2022 23:12:31 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24R5iiBZ011997;
+        Fri, 27 May 2022 06:12:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : date : in-reply-to : message-id : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=0sC/jb1WmCbjv4fu4665h8jAly1yYESSfXd8EiRHt0Q=;
+ b=m2AuTmB/SRA12CyQiJdG5oZtd4iMeWILEceq+P9ie3BkNc7Puof8s2homA9Q6MjmiD3S
+ 7cTPNikVMFnLYuXK60ZQzK9grcSvdlmRU9L5yCBPp4mOytyhMFNXuwnu66zQkyn8DC0i
+ E2Ga5g5BGTzTShzF2D3pfR0nrWTH5o/7sdBgTYja1e75uqvT0N4DDzuTtyJRs+/76Ji8
+ NTq04AzHTgBe+Y0Sstkn653EQ85wti9uCImFCIw0BhvwNxYNNqjlT3byAbj2ApxWAA3Z
+ BJYmP52/yJqzSKiEJ++cpdmtlH+QIUq0zbVNN0FNGrSLREPFbJHEv7m7qXN42bvJHbSP sw== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g93tc6gwk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 27 May 2022 06:12:26 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24R65dbx030965;
+        Fri, 27 May 2022 06:12:25 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2171.outbound.protection.outlook.com [104.47.55.171])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3g93ws5cug-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 27 May 2022 06:12:25 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ZXor6F3sx4bXFn+lmy2aJ2XTRbOXKk9X0eHqo8DikBAa+II7ouYm3PFislhus3Tse8oDKv0Cj3InV0XRIC53izogM9hjb0RmaakBPNpi9KEj+GZ7MBEY0+R4Nr37SUMY2oVpk/yRR2m97lflwdr2kF06tthuyBI+uDlR85W4NBiaJCI2npcMes3gOwRgSRLA9dOeNBdno+H+YBQby+vtPGFSlbcOgSAvAV+qN8ZxjeSDqe4WYf92PR9YMaGxBncImr6P58vF+CyghXpNUg7A52X02TumCAxU3NnDWzYcrrIzrd2WRweC0AABfCJnRBaHltKTf1vj1fqWPQbQ4z0MDA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0sC/jb1WmCbjv4fu4665h8jAly1yYESSfXd8EiRHt0Q=;
+ b=WR9DBDz9OIFClvMrss/JUp3wyZMgUa2Hpf32s8zdssGBqcF+30+M7jjVwNgoEZ2xKRdQKQfA7iqsBDKilABW0xDaURyuyqLP1p8FXyy4it/jpLPAOKTLwb4QJkOgzlGY0My/Xet+SRmaPDYwLq8UTIn/IYG+tKmeNGZ+3s8kmWpr/lyHLumBmo3EOFLW5WJwACPy21wkuVeNJOPQ59crtlOiZLQyRk/2CckWKiRPV6r9mbmdgxyQH0uGOFrHoLsH6T8P9gCkDG5jGiYaB11R1h4eD8boX6XM94xWB+SJUoVH3L/5zIZ56KHkC6dudW79jl2J4Rmn+zb6bRHTqRmSYQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0sC/jb1WmCbjv4fu4665h8jAly1yYESSfXd8EiRHt0Q=;
+ b=bFlreTlFL0XVoB6P7+f2jIauKKGT6oE/KTDb5KiTcbbRVSCo+PaJSjRdHNkk2i4zgeqpufNzpMkiOapEdcIpHte4JsPdUt8j9ZcNVRsrB3j+MqYT7VBn5/g+7cIh9H/UNloGbocpMiZ4YcZoqrra8m/kksLz0yK6xZw3DyPCavU=
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+ by CY4PR1001MB2054.namprd10.prod.outlook.com (2603:10b6:910:40::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.15; Fri, 27 May
+ 2022 06:12:24 +0000
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::5476:49e9:e3eb:e62]) by SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::5476:49e9:e3eb:e62%5]) with mapi id 15.20.5293.015; Fri, 27 May 2022
+ 06:12:24 +0000
+References: <20220523043441.394700-1-chandan.babu@oracle.com>
+ <20220523083410.1159518-1-chandan.babu@oracle.com>
+ <Yovuf/JZiMkJzot6@magnolia> <20220523230813.GV1098723@dread.disaster.area>
+ <87v8tsmncq.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <Yo+xl0gEWL3Kr+q0@magnolia>
+User-agent: mu4e 1.6.10; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        sandeen@sandeen.net
+Subject: Re: [PATCH V1.1] xfs_repair: Search for conflicts in
+ inode_tree_ptrs[] when processing uncertain inodes
+Date:   Fri, 27 May 2022 11:21:00 +0530
+In-reply-to: <Yo+xl0gEWL3Kr+q0@magnolia>
+Message-ID: <87leunijwh.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Type: text/plain
+X-ClientProxiedBy: TYAPR04CA0002.apcprd04.prod.outlook.com
+ (2603:1096:404:15::14) To SA2PR10MB4587.namprd10.prod.outlook.com
+ (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220525111715.2769700-1-amir73il@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 0925699e-e6a6-4dcf-7ae8-08da3fa7dda8
+X-MS-TrafficTypeDiagnostic: CY4PR1001MB2054:EE_
+X-Microsoft-Antispam-PRVS: <CY4PR1001MB205487D769F4610ADC1D4795F6D89@CY4PR1001MB2054.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Gpgh8n6PJsyVWpTJ94Vl2vXcAl1ah2I/lccIwKcT5V5MMbvyPJv/VP9I32N5bJb+Fi+T/rYyKDkTGUWO5pOADQv11AsDQRP0+sqn6FuKLWFNtzKbgtJK0K8i61byDoZ/sI+ROb2+A2m8wuoi+fvBt4BN8eASDaJM3/EDvU/m6Nic1KI+uw2xhdFAOG8x2GURMwQzfXYiWnbOtbMQx1UlgvJ+uU9ZBjkvpRrN078pwpp90Ukoi02jNpv64SzrUAJwTbv9HsgOIADuEVH5HmGT8pLhJq9MQHnDryUajWwD85jOjbnaBC4o9hiZWftJi7hxNrTuEbPakV31oyv9tDZb3WvjgLcO4t+59mFLY5tIhWgFLP+5slCNvFtXrjEmm25w5JrpF9aueE7PIKMsdJpU8Kq9H2qzQ68ptkyVJLW8rPtqacW7cMIgBCQ/UQ1BrrEyH6rjyKgJanZakLiQnYZGgO5AWXEvDL99xGXRZPFj/a3kleFEFT6Fcv2/RkVInmy+uEXu/RhlYfzYhUp+AdyRG/x8kRur20nQQ7go2IL6YF87W5WFWzvCYtICrVlGZlL1lbujgmYcBsupKxhu+vHaTR5YKUbXAWkWjUrSQcQTJ/dSTqq/Qm0YrZ0gQ2NtxEOtvO6N3bFN4hPBr5PH7Z0hXOOW0wVSv13pQVQaCMFGr3EPZqe0yiTybFPgv3EWUqQVr7zxXZeUtazO+FF1co751w1ToQ5BtSS0ikmOSg4CZpX7m6fgSHVDp4qLRxE2YugoI+8gZXVtI7mryz4HKPIj4A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(316002)(66556008)(6916009)(4326008)(186003)(66946007)(86362001)(6486002)(2906002)(8676002)(5660300002)(38350700002)(38100700002)(66476007)(8936002)(33716001)(26005)(53546011)(83380400001)(52116002)(6506007)(6666004)(508600001)(9686003)(6512007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?pLP2m1+wPivKc+nEBWud35JvDPDF4nA5kMx2+Y3hm16v4+LDxXrvcNmVD3MP?=
+ =?us-ascii?Q?df0VzsjTQ3vVdCGN8NydeKY2dURQFhe0naB2ojMbsmzxnYTjePRe36A2/Zdu?=
+ =?us-ascii?Q?RA1lbeXkf0Pi1lus0sRFwoIe087lcvAAAR9EmaHQCH8zQzphthjgw9d8tioo?=
+ =?us-ascii?Q?i4aFXQS2DI+AVTKGCExgjiLuJQ4fjuXKvB56iOKr2eP/woB0ZYt7duf6gyOV?=
+ =?us-ascii?Q?ftIGODF0ZuCKA+HqIhxv7GQSVB4nxKAALtAe3BabQFZiyqI3md4UbrAZptCE?=
+ =?us-ascii?Q?oQqNvcMeKW4qMqaojhSHuRs3xSfFfDeEYGhNEz8KjAp29sCGociJ41qq25Oc?=
+ =?us-ascii?Q?UqAnFb1kOhnks5IPNbpxg1hsMZIjFsRGKiipBZK/iBsUsDmFkBgw3mbXQLPo?=
+ =?us-ascii?Q?H3kFX7c8cMnNiaom+T7nxjeYQgITMtCK1EUvENIb4p16nCm44FW+Do7j5Ixc?=
+ =?us-ascii?Q?qlTErXaR/LpVV6DzSSEvnc45o8oVplL0OxRktuhLfkJoQkB0aemPbvFf/MSD?=
+ =?us-ascii?Q?CD6wW3VtGivA6Mqu/ddcgOjNn5L6fMXdeIgQFJj+ZVXMe8a5KG85XGt+I6Qt?=
+ =?us-ascii?Q?/VAK4OjK1lLb3DdYBA05wpVz5/qIzM/C2LGPjJDClFzsmWo+bGR1CkXf56vb?=
+ =?us-ascii?Q?jF+WwCLVZNFq2RApXK4AYXwmNud6nECa4F7KB5d8uwE3ckDEtmaMjQKBrxO7?=
+ =?us-ascii?Q?EkdbLM+qx2OQg/jSQEEWGsPFKeC4BT1nSDkYc5zr9t5BIMpGq+7Mwu+21Jwa?=
+ =?us-ascii?Q?Dpc/C4HCUaUppz/X3t2BxAZt52sfDdNMN76XRp1mo4+PNPbqZoy58TDbdfRS?=
+ =?us-ascii?Q?n1zHKNPSgRCADHnz2U/de7H69MZDHOOQSxv8JKShYbmGtCK9jTnz645x04WX?=
+ =?us-ascii?Q?g71XOg3YHVdTkuGWAH1pR6Dk77sHEopg4yOQ1LyR0wqnz3o6sVAIOjbvvTrW?=
+ =?us-ascii?Q?5p9Z8+ZGexcXBxxE4SFl2Z5nRCqwXRghSAIlS00PqKYkIMeOuCEL8jXyV28W?=
+ =?us-ascii?Q?K89t55emSBZoF83qZAM21WK10Cs2BKQYEaSZlXaBnijcJCvj4EX0qN3hAR7a?=
+ =?us-ascii?Q?zXiA3t1wdm/39QwAWsW+GPx9zrys9jnMDx6rRhKP1qJmZzLlpLbIe7UoZEKf?=
+ =?us-ascii?Q?zde6Lf1SPMS1v5aWShPAnmE/MYcnZbqGI/Rlwosop1cMgsnuXF6rh+xHUJwo?=
+ =?us-ascii?Q?EYrDc4cCAGJwgyPKZf1Etnk1OOU3wMfMf7pbvVRCKR8eqaFNpEFDzBqYvnET?=
+ =?us-ascii?Q?Qrpbu7DXIlxVZKh4V1B2lHOpLXE1Nm7Uf18NH1EW3WU1E7yYs9dqmBXtWmyn?=
+ =?us-ascii?Q?eWutw9bQQYkbsdUQpXJWlG+WDH0IK1JQhkQnkHfd7MVToOsi8bkhJg/XJTdz?=
+ =?us-ascii?Q?GKEtfRdu5NKb1HOXQ0F8yEByzhz9dKnIR/STHZNnyzvJ31FWig3irBonE0+a?=
+ =?us-ascii?Q?q+GzMHcmjN+0Ie44fC0pSZ7shvRV/Kp09Fbfzftc3dw5DaWTR6LDPTIfvnN7?=
+ =?us-ascii?Q?LHE9nNDoiDZTyVg5Tjvc94AWxr9dD7JuClb9Vi5GxsbUr3Uv+i92N/8FVSb8?=
+ =?us-ascii?Q?hbP00dqE3GaUC1u4vSMIHRECEvQiRoGRkpA7LmgC41yo2sdKgqeLtUfCuLqR?=
+ =?us-ascii?Q?GZF0ZUnSIes8HS7wyRCKgEX4KbX+BxLbRCztCUoa+FfaiJp9rzzGFY/0arsX?=
+ =?us-ascii?Q?oYkgB/Qzv9Fb2nQ8NzD89sFGMjAPHMcGEiroYXSfo0DwTfomY+WV1qsVgJoe?=
+ =?us-ascii?Q?uleH2BCQRA=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0925699e-e6a6-4dcf-7ae8-08da3fa7dda8
+X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 May 2022 06:12:24.0053
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: htJ9sjqMqG0/NmwsDOHMQup6AFlmUR4LUK4EVXddjiZ+ftFs9mXHqK9P+Q2zO1+geKXV9dBDcq/EdJ3PSnRVOw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR1001MB2054
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.874
+ definitions=2022-05-27_02:2022-05-25,2022-05-27 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
+ malwarescore=0 phishscore=0 mlxlogscore=999 adultscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2204290000 definitions=main-2205270030
+X-Proofpoint-ORIG-GUID: FGr0a6dAtGQYFSHRglcMe08NnGp-UNUA
+X-Proofpoint-GUID: FGr0a6dAtGQYFSHRglcMe08NnGp-UNUA
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-FYI, below is the 5.10-stable backport I have been testing earlier this
-week that fixes a bugzilla reported hang:
+On Thu, May 26, 2022 at 09:57:59 AM -0700, Darrick J. Wong wrote:
+> On Thu, May 26, 2022 at 05:34:41PM +0530, Chandan Babu R wrote:
+>> On Tue, May 24, 2022 at 09:08:13 AM +1000, Dave Chinner wrote:
+>> > On Mon, May 23, 2022 at 01:28:47PM -0700, Darrick J. Wong wrote:
+>> >> On Mon, May 23, 2022 at 02:04:10PM +0530, Chandan Babu R wrote:
+>> >> > When processing an uncertain inode chunk record, if we lose 2 blocks worth of
+>> >> > inodes or 25% of the chunk, xfs_repair decides to ignore the chunk. Otherwise,
+>> >> > xfs_repair adds a new chunk record to inode_tree_ptrs[agno], marking each
+>> >> > inode as either free or used. However, before adding the new chunk record,
+>> >> > xfs_repair has to check for the existance of a conflicting record.
+>> >> > 
+>> >> > The existing code incorrectly checks for the conflicting record in
+>> >> > inode_uncertain_tree_ptrs[agno]. This check will succeed since the inode chunk
+>> >> > record being processed was originally obtained from
+>> >> > inode_uncertain_tree_ptrs[agno].
+>> >> > 
+>> >> > This commit fixes the bug by changing xfs_repair to search
+>> >> > inode_tree_ptrs[agno] for conflicts.
+>> >> 
+>> >> Just out of curiosity -- how did you come across this bug?  I /think/ it
+>> >> looks reasonable, but want to know more context...
+>> >> 
+>> >> > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+>> >> > ---
+>> >> > Changelog:
+>> >> > V1 -> V1.1:
+>> >> >    1. Fix commit message.
+>> >> >    
+>> >> >  repair/dino_chunks.c | 3 +--
+>> >> >  1 file changed, 1 insertion(+), 2 deletions(-)
+>> >> > 
+>> >> > diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+>> >> > index 11b0eb5f..80c52a43 100644
+>> >> > --- a/repair/dino_chunks.c
+>> >> > +++ b/repair/dino_chunks.c
+>> >> > @@ -229,8 +229,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+>> >> >  		/*
+>> >> >  		 * ok, put the record into the tree, if no conflict.
+>> >> >  		 */
+>> >> > -		if (find_uncertain_inode_rec(agno,
+>> >> > -				XFS_AGB_TO_AGINO(mp, start_agbno)))
+>> >> > +		if (find_inode_rec(mp, agno, XFS_AGB_TO_AGINO(mp, start_agbno)))
+>> >> 
+>> >> ...because the big question I have is: why not check both the certain
+>> >> and the uncertain records for confliects?
+>> >
+>> > Yeah, that was my question, too.
+>> 
+>> I came across this issue while reading code in order to better understand
+>> xfs_repair.
+>> 
+>> The following steps illustrate how the code flows from phase 2 and 3 of
+>> xfs_repair.
+>> 
+>> During phase 2,
+>> 1. Scan inobt records.
+>> 2. For valid records, add corresponding entries to certain inode tree
+>>    (i.e. inode_tree_ptrs[agno]).
+>> 3. For suspect records (e.g. Inobt leaf blocks which have a CRC mismatch), add
+>>    entries to uncertain inode tree (i.e. inode_uncertain_tree_ptrs[agno]).
+>> 
+>> Uncertain inode chunk records are processed at the beginning of Phase 3
+>> (please refer to check_uncertain_aginodes()). We pick one inode chunk at a
+>> time from the uncertain inode tree and verify each inode's ondisk contents. If
+>> most of the chunk's inodes turn out to be valid, we would want to treat the
+>> chunk's inodes as certain i.e. move them over to the certain inode tree.
+>> 
+>> Existing code would check for the presence of the inode chunk in the uncertain
+>> inode tree and when such an entry is found, we skip further processing of the
+>> inode chunk. Since the inode chunk was obtained from the uncertain inode tree
+>> in the first place, this check succeeds and the code ended up ignoring
+>> uncertain inodes which were actually valid inodes.
+>> 
+>> I think checking uncertain inode tree for conflicts is a programming error. We
+>> should actually be checking only the certain inode tree for conflicts before
+>> moving the inode chunk to certain inode tree.
+>
+> Oh, ok, so repair is walking the uncertain inode chunks to see if they
+> really correspond to inodes.  Having decided that the chunk is good, the
+> last little piece is to check that the uncertain chunk doesn't overlap
+> with any of the known-good chunks, and if /that/ passes, repair moves
+> the uncertain chunk to inode_tree_ptrs[]?  And therefore it makes no
+> sense at all to compare one uncertain chunk against the rest of the
+> uncertain chunks, because (a) that's where it just came from and
 
-https://bugzilla.kernel.org/show_bug.cgi?id=214767
+Here are the exact steps involved in processing inode chunks obtained from
+uncertain inode chunk tree:
+1. For each inode chunk in the uncertain inode chunk tree
+   1.1. Verify inodes in the chunk.
+   1.2. If most of the inodes in the chunk are found to be valid,
+        1.2.1. If there are no overlapping inode chunks in the uncertain inode
+               chunk tree.
+               1.2.1.1. Add inode chunk to certain inode tree.
+   1.3. Remove inode chunk from uncertain inode chunk tree.
 
-I was just going to submit it to the stable maintaines today after
-beeing out of the holiday, but if you want to add it to this queue
-that is fine with me as well.
+The check in 1.2.1 is bound to fail since the inode chunk being processed was
+obtained from the uncertain inode chunk tree and it continues to be there
+until step 1.3 is executed.
 
----
-From 8e0464752b24f2b3919e8e92298759d116b283eb Mon Sep 17 00:00:00 2001
-From: Dave Chinner <dchinner@redhat.com>
-Date: Fri, 18 Jun 2021 08:21:51 -0700
-Subject: xfs: Fix CIL throttle hang when CIL space used going backwards
+This patch changes 1.2.1 to check for overlapping inode chunks in the certain
+inode chunk tree.
 
-commit 19f4e7cc819771812a7f527d7897c2deffbf7a00 upstream.
+> (b) we could discard any of the remaining uncertain chunks?
+>
+> If the answers are yes and yes, then:
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>
+> Though you might want to augment the commit message to include that last
+> sentence about why it doesn't make sense to check the uncertain ichunk
+> list, since that's where I tripped up. :/
+>
 
-A hang with tasks stuck on the CIL hard throttle was reported and
-largely diagnosed by Donald Buczek, who discovered that it was a
-result of the CIL context space usage decrementing in committed
-transactions once the hard throttle limit had been hit and processes
-were already blocked.  This resulted in the CIL push not waking up
-those waiters because the CIL context was no longer over the hard
-throttle limit.
+I think I should will add the sequence of steps described above and the cause
+of failure as part of the commit message.
 
-The surprising aspect of this was the CIL space usage going
-backwards regularly enough to trigger this situation. Assumptions
-had been made in design that the relogging process would only
-increase the size of the objects in the CIL, and so that space would
-only increase.
+>> I wrote the script
+>> (https://gist.github.com/chandanr/5ad2da06a7863c2918ad793636537536) to
+>> illustrate the problem. This script create an inobt with two fully populated
+>> leaves. It then changes 2nd leaf's lsn value to cause a CRC check
+>> failure. This causes phase 2 of xfs_repair to add inodes in the 2nd leaf to
+>> uncertain inode tree.
+>
+> Looks like a reasonably good candidate for an fstest :)
+>
 
-This change and commit message fixes the issue and documents the
-result of an audit of the triggers that can cause the CIL space to
-go backwards, how large the backwards steps tend to be, the
-frequency in which they occur, and what the impact on the CIL
-accounting code is.
+Ok. I will create an fstest script and post it on fstests mailing list soon.
 
-Even though the CIL ctx->space_used can go backwards, it will only
-do so if the log item is already logged to the CIL and contains a
-space reservation for it's entire logged state. This is tracked by
-the shadow buffer state on the log item. If the item is not
-previously logged in the CIL it has no shadow buffer nor log vector,
-and hence the entire size of the logged item copied to the log
-vector is accounted to the CIL space usage. i.e.  it will always go
-up in this case.
+>> Without the fix provided by the patch, phase 3 will skip converting inodes
+>> from the 2nd leaf into certain inodes and hence xfs_repair ends up trashing
+>> these inodes.
+>
+> <nod>
+>
 
-If the item has a log vector (i.e. already in the CIL) and the size
-decreases, then the existing log vector will be overwritten and the
-space usage will go down. This is the only condition where the space
-usage reduces, and it can only occur when an item is already tracked
-in the CIL. Hence we are safe from CIL space usage underruns as a
-result of log items decreasing in size when they are relogged.
-
-Typically this reduction in CIL usage occurs from metadata blocks
-being free, such as when a btree block merge occurs or a directory
-enter/xattr entry is removed and the da-tree is reduced in size.
-This generally results in a reduction in size of around a single
-block in the CIL, but also tends to increase the number of log
-vectors because the parent and sibling nodes in the tree needs to be
-updated when a btree block is removed. If a multi-level merge
-occurs, then we see reduction in size of 2+ blocks, but again the
-log vector count goes up.
-
-The other vector is inode fork size changes, which only log the
-current size of the fork and ignore the previously logged size when
-the fork is relogged. Hence if we are removing items from the inode
-fork (dir/xattr removal in shortform, extent record removal in
-extent form, etc) the relogged size of the inode for can decrease.
-
-No other log items can decrease in size either because they are a
-fixed size (e.g. dquots) or they cannot be relogged (e.g. relogging
-an intent actually creates a new intent log item and doesn't relog
-the old item at all.) Hence the only two vectors for CIL context
-size reduction are relogging inode forks and marking buffers active
-in the CIL as stale.
-
-Long story short: the majority of the code does the right thing and
-handles the reduction in log item size correctly, and only the CIL
-hard throttle implementation is problematic and needs fixing. This
-patch makes that fix, as well as adds comments in the log item code
-that result in items shrinking in size when they are relogged as a
-clear reminder that this can and does happen frequently.
-
-The throttle fix is based upon the change Donald proposed, though it
-goes further to ensure that once the throttle is activated, it
-captures all tasks until the CIL push issues a wakeup, regardless of
-whether the CIL space used has gone back under the throttle
-threshold.
-
-This ensures that we prevent tasks reducing the CIL slightly under
-the throttle threshold and then making more changes that push it
-well over the throttle limit. This is acheived by checking if the
-throttle wait queue is already active as a condition of throttling.
-Hence once we start throttling, we continue to apply the throttle
-until the CIL context push wakes everything on the wait queue.
-
-We can use waitqueue_active() for the waitqueue manipulations and
-checks as they are all done under the ctx->xc_push_lock. Hence the
-waitqueue has external serialisation and we can safely peek inside
-the wait queue without holding the internal waitqueue locks.
-
-Many thanks to Donald for his diagnostic and analysis work to
-isolate the cause of this hang.
-
-Reported-and-tested-by: Donald Buczek <buczek@molgen.mpg.de>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf_item.c   | 37 ++++++++++++++++++-------------------
- fs/xfs/xfs_inode_item.c | 14 ++++++++++++++
- fs/xfs/xfs_log_cil.c    | 22 +++++++++++++++++-----
- 3 files changed, 49 insertions(+), 24 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 0356f2e340a10e..8c6e26d62ef288 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -56,14 +56,12 @@ xfs_buf_log_format_size(
- }
- 
- /*
-- * This returns the number of log iovecs needed to log the
-- * given buf log item.
-+ * Return the number of log iovecs and space needed to log the given buf log
-+ * item segment.
-  *
-- * It calculates this as 1 iovec for the buf log format structure
-- * and 1 for each stretch of non-contiguous chunks to be logged.
-- * Contiguous chunks are logged in a single iovec.
-- *
-- * If the XFS_BLI_STALE flag has been set, then log nothing.
-+ * It calculates this as 1 iovec for the buf log format structure and 1 for each
-+ * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
-+ * in a single iovec.
-  */
- STATIC void
- xfs_buf_item_size_segment(
-@@ -119,11 +117,8 @@ xfs_buf_item_size_segment(
- }
- 
- /*
-- * This returns the number of log iovecs needed to log the given buf log item.
-- *
-- * It calculates this as 1 iovec for the buf log format structure and 1 for each
-- * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
-- * in a single iovec.
-+ * Return the number of log iovecs and space needed to log the given buf log
-+ * item.
-  *
-  * Discontiguous buffers need a format structure per region that is being
-  * logged. This makes the changes in the buffer appear to log recovery as though
-@@ -133,7 +128,11 @@ xfs_buf_item_size_segment(
-  * what ends up on disk.
-  *
-  * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
-- * format structures.
-+ * format structures. If the item has previously been logged and has dirty
-+ * regions, we do not relog them in stale buffers. This has the effect of
-+ * reducing the size of the relogged item by the amount of dirty data tracked
-+ * by the log item. This can result in the committing transaction reducing the
-+ * amount of space being consumed by the CIL.
-  */
- STATIC void
- xfs_buf_item_size(
-@@ -147,9 +146,9 @@ xfs_buf_item_size(
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 	if (bip->bli_flags & XFS_BLI_STALE) {
- 		/*
--		 * The buffer is stale, so all we need to log
--		 * is the buf log format structure with the
--		 * cancel flag in it.
-+		 * The buffer is stale, so all we need to log is the buf log
-+		 * format structure with the cancel flag in it as we are never
-+		 * going to replay the changes tracked in the log item.
- 		 */
- 		trace_xfs_buf_item_size_stale(bip);
- 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
-@@ -164,9 +163,9 @@ xfs_buf_item_size(
- 
- 	if (bip->bli_flags & XFS_BLI_ORDERED) {
- 		/*
--		 * The buffer has been logged just to order it.
--		 * It is not being included in the transaction
--		 * commit, so no vectors are used at all.
-+		 * The buffer has been logged just to order it. It is not being
-+		 * included in the transaction commit, so no vectors are used at
-+		 * all.
- 		 */
- 		trace_xfs_buf_item_size_ordered(bip);
- 		*nvecs = XFS_LOG_VEC_ORDERED;
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 17e20a6d8b4e27..6ff91e5bf3cd73 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -28,6 +28,20 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
- 	return container_of(lip, struct xfs_inode_log_item, ili_item);
- }
- 
-+/*
-+ * The logged size of an inode fork is always the current size of the inode
-+ * fork. This means that when an inode fork is relogged, the size of the logged
-+ * region is determined by the current state, not the combination of the
-+ * previously logged state + the current state. This is different relogging
-+ * behaviour to most other log items which will retain the size of the
-+ * previously logged changes when smaller regions are relogged.
-+ *
-+ * Hence operations that remove data from the inode fork (e.g. shortform
-+ * dir/attr remove, extent form extent removal, etc), the size of the relogged
-+ * inode gets -smaller- rather than stays the same size as the previously logged
-+ * size and this can result in the committing transaction reducing the amount of
-+ * space being consumed by the CIL.
-+ */
- STATIC void
- xfs_inode_item_data_fork_size(
- 	struct xfs_inode_log_item *iip,
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b0ef071b3cb53a..cd5c04dabe2e18 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -668,9 +668,14 @@ xlog_cil_push_work(
- 	ASSERT(push_seq <= ctx->sequence);
- 
- 	/*
--	 * Wake up any background push waiters now this context is being pushed.
-+	 * As we are about to switch to a new, empty CIL context, we no longer
-+	 * need to throttle tasks on CIL space overruns. Wake any waiters that
-+	 * the hard push throttle may have caught so they can start committing
-+	 * to the new context. The ctx->xc_push_lock provides the serialisation
-+	 * necessary for safely using the lockless waitqueue_active() check in
-+	 * this context.
- 	 */
--	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
-+	if (waitqueue_active(&cil->xc_push_wait))
- 		wake_up_all(&cil->xc_push_wait);
- 
- 	/*
-@@ -907,7 +912,7 @@ xlog_cil_push_background(
- 	ASSERT(!list_empty(&cil->xc_cil));
- 
- 	/*
--	 * don't do a background push if we haven't used up all the
-+	 * Don't do a background push if we haven't used up all the
- 	 * space available yet.
- 	 */
- 	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
-@@ -931,9 +936,16 @@ xlog_cil_push_background(
- 
- 	/*
- 	 * If we are well over the space limit, throttle the work that is being
--	 * done until the push work on this context has begun.
-+	 * done until the push work on this context has begun. Enforce the hard
-+	 * throttle on all transaction commits once it has been activated, even
-+	 * if the committing transactions have resulted in the space usage
-+	 * dipping back down under the hard limit.
-+	 *
-+	 * The ctx->xc_push_lock provides the serialisation necessary for safely
-+	 * using the lockless waitqueue_active() check in this context.
- 	 */
--	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
-+	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log) ||
-+	    waitqueue_active(&cil->xc_push_wait)) {
- 		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
- 		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
- 		xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
 -- 
-2.30.2
-
+chandan
