@@ -2,144 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F2D0C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 17:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5033C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 20:52:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353221AbiE0RaK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 13:30:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34470 "EHLO
+        id S1347857AbiE0UwC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 16:52:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354334AbiE0RaG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 13:30:06 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 678CE5C362
-        for <linux-xfs@vger.kernel.org>; Fri, 27 May 2022 10:30:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1653672604;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=cefitV8uX/6feCDJMEsFPG76wT6MNXuBQFQNrynOdh0=;
-        b=B8VKkZamol0rMkxsAtoG6KQ9DYFjp5e1bvqXaTNY1mdtUHd0n/xJfA9IhUTi0WYQ/haFeE
-        9WJcxylxlPL8B4LXt/9xlr8vMOnKuZyQAqQiEdZ5/BsctVrXGYqImZwqRND79cj13P3tmr
-        cUBRwcjcpaI06eCRwjOg4OdYGQnbwgE=
-Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
- [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-474-6X5FNzUCM22mbFsDJNkxwQ-1; Fri, 27 May 2022 13:30:03 -0400
-X-MC-Unique: 6X5FNzUCM22mbFsDJNkxwQ-1
-Received: by mail-lj1-f200.google.com with SMTP id k9-20020a2e9209000000b00253dffc9556so1439849ljg.2
-        for <linux-xfs@vger.kernel.org>; Fri, 27 May 2022 10:30:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:message-id:date:mime-version:user-agent:cc
-         :subject:content-language:to:references:in-reply-to
-         :content-transfer-encoding;
-        bh=cefitV8uX/6feCDJMEsFPG76wT6MNXuBQFQNrynOdh0=;
-        b=GpHPT7cvaVKQtcxeHM25gH9tYvV9PDBwFm2neZ3Av9wlZLfmLBRs4SHWxMLguzBiKa
-         SyhHaxTKVcsSgvb8C4whI0hyba8VwtvIgja4BNGP8l/ZcbTTAmAEOqUBhP5LmcPJMuV6
-         XJAz6eODKJc7EtOiJTsFaPYsZqLYG2yayvaIDYjCcTBudblZ7vvxxU8x3xmz371/U+Oq
-         M9cvjTgjtndZhkRNx4Q06hy56kzSrH0i5Z2tm4Gumd0oWqjH0xrXgHG7TKtg+0H1MJKn
-         ril2cyNZ9hof7FU9ULFXJmdNOrZcF9hul2qnhJEfZu/d2ui6w4W7jQmhCjv6Cvi9v/6l
-         22Yg==
-X-Gm-Message-State: AOAM532KHyMvNrQ3IEIXuUPD8LnoMvZzUREdkeB+OoPi2A1QWc7CdwKG
-        cv/EGARM5+OxOWTBB5k06NUmoQy1ElXVKwj1Uuc9qw57YnRLv0BhHI2OepDu/a/IMSnOWN0CZi4
-        nii2dWGqh3Ir43n1aQ+yY
-X-Received: by 2002:a05:6512:1189:b0:478:8b81:d3b2 with SMTP id g9-20020a056512118900b004788b81d3b2mr13924877lfr.247.1653672601597;
-        Fri, 27 May 2022 10:30:01 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzHy8Z11UyDeJF1PfQehPGRpRB2pdmd+NOjG8IQ3dm26jx4WasEfdOhzMuSV+x3EkYQK3j+tQ==
-X-Received: by 2002:a05:6512:1189:b0:478:8b81:d3b2 with SMTP id g9-20020a056512118900b004788b81d3b2mr13924859lfr.247.1653672601309;
-        Fri, 27 May 2022 10:30:01 -0700 (PDT)
-Received: from [192.168.0.50] (87-59-106-155-cable.dk.customer.tdc.net. [87.59.106.155])
-        by smtp.gmail.com with ESMTPSA id bj38-20020a2eaaa6000000b0025541ce7ef1sm134106ljb.11.2022.05.27.10.29.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 27 May 2022 10:30:00 -0700 (PDT)
-From:   Jesper Dangaard Brouer <jbrouer@redhat.com>
-X-Google-Original-From: Jesper Dangaard Brouer <brouer@redhat.com>
-Message-ID: <16e1aba3-99af-9cc9-88d5-2cf0f1ed618b@redhat.com>
-Date:   Fri, 27 May 2022 19:29:59 +0200
+        with ESMTP id S237744AbiE0UwC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 16:52:02 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3BBC43C4BA
+        for <linux-xfs@vger.kernel.org>; Fri, 27 May 2022 13:51:58 -0700 (PDT)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id A2B6948FB;
+        Fri, 27 May 2022 15:51:50 -0500 (CDT)
+Message-ID: <f182471d-f4e1-744f-a487-a01063f67201@sandeen.net>
+Date:   Fri, 27 May 2022 15:51:55 -0500
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Cc:     brouer@redhat.com, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Linux-NFS <linux-nfs@vger.kernel.org>,
-        Linux-MM <linux-mm@kvack.org>,
-        Linux-XFS <linux-xfs@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] mm/page_alloc: Always attempt to allocate at least one
- page during bulk allocation
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.9.1
 Content-Language: en-US
-To:     Mel Gorman <mgorman@techsingularity.net>,
-        Andrew Morton <akpm@linux-foundation.org>
-References: <20220526091210.GC3441@techsingularity.net>
-In-Reply-To: <20220526091210.GC3441@techsingularity.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Cc:     Dave Chinner <dchinner@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Andrey Albershteyn <aalbersh@redhat.com>,
+        Pavel Reichl <preichl@redhat.com>
+Subject: [ANNOUNCE] xfsprogs-5.18.0-rc1 released
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------cKsJJK7upM0oUzvNiyu2zzf0"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------cKsJJK7upM0oUzvNiyu2zzf0
+Content-Type: multipart/mixed; boundary="------------T0LUjXHIdnWLuXWtY7EQpAPA";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong"
+ <djwong@kernel.org>, Andrey Albershteyn <aalbersh@redhat.com>,
+ Pavel Reichl <preichl@redhat.com>
+Message-ID: <f182471d-f4e1-744f-a487-a01063f67201@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs-5.18.0-rc1 released
+
+--------------T0LUjXHIdnWLuXWtY7EQpAPA
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated and tagged with xfsprogs-5.18.0-rc1
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please let me know, either by resubmitting them to
+linux-xfs@vger.kernel.org or via other methods, so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+f6b82f45 xfsprogs: Release v5.18.0-rc1
+
+New Commits:
+
+Andrey Albershteyn (1):
+      [0d376f6c] xfs_db: take BB cluster offset into account when using '=
+type' cmd
+
+Dave Chinner (4):
+      [a196ca65] metadump: handle corruption errors without aborting
+      [38feb6e5] metadump: be careful zeroing corrupt inode forks
+      [7f6791f7] xfs_io: add a quiet option to bulkstat
+      [69d66277] xfsprogs: autoconf modernisation
+
+Eric Sandeen (1):
+      [f6b82f45] xfsprogs: Release v5.18.0-rc1
+
+Pavel Reichl (1):
+      [8b4002e0] mkfs: Fix memory leak
 
 
-On 26/05/2022 11.12, Mel Gorman wrote:
-> Peter Pavlisko reported the following problem on kernel bugzilla 216007.
-> 
-> 	When I try to extract an uncompressed tar archive (2.6 milion
-> 	files, 760.3 GiB in size) on newly created (empty) XFS file system,
-> 	after first low tens of gigabytes extracted the process hangs in
-> 	iowait indefinitely. One CPU core is 100% occupied with iowait,
-> 	the other CPU core is idle (on 2-core Intel Celeron G1610T).
-> 
-> It was bisected to c9fa563072e1 ("xfs: use alloc_pages_bulk_array() for
-> buffers") but XFS is only the messenger. The problem is that nothing
-> is waking kswapd to reclaim some pages at a time the PCP lists cannot
-> be refilled until some reclaim happens. The bulk allocator checks that
-> there are some pages in the array and the original intent was that a bulk
-> allocator did not necessarily need all the requested pages and it was
-> best to return as quickly as possible. This was fine for the first user
-> of the API but both NFS and XFS require the requested number of pages
-> be available before making progress. Both could be adjusted to call the
-> page allocator directly if a bulk allocation fails but it puts a burden on
-> users of the API. Adjust the semantics to attempt at least one allocation
-> via __alloc_pages() before returning so kswapd is woken if necessary.
-> 
-> It was reported via bugzilla that the patch addressed the problem and
-> that the tar extraction completed successfully. This may also address
-> bug 215975 but has yet to be confirmed.
-> 
-> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=216007
-> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=215975
-> Fixes: 387ba26fb1cb ("mm/page_alloc: add a bulk page allocator")
-> Signed-off-by: Mel Gorman <mgorman@techsingularity.net>
-> Cc: <stable@vger.kernel.org> # v5.13+
-> ---
->   mm/page_alloc.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+Code Diffstat:
 
+ VERSION               |   2 +-
+ configure.ac          |   8 +--
+ db/io.c               |  13 ++++-
+ db/metadump.c         | 143 +++++++++++++++++++++++++++-----------------=
+-
+ doc/CHANGES           |  23 ++++++++
+ io/bulkstat.c         |   9 ++-
+ m4/package_attr.m4    |   8 ++-
+ m4/package_libcdev.m4 | 158 +++++++++++++++++++++++++++++++-------------=
+------
+ m4/package_types.m4   |   8 ++-
+ m4/package_urcu.m4    |  18 +++---
+ man/man8/xfs_io.8     |   6 +-
+ mkfs/xfs_mkfs.c       |   1 +
+ 12 files changed, 257 insertions(+), 140 deletions(-)
 
-Change looks good, and I checked page_pool will be fine with this change :-)
+--------------T0LUjXHIdnWLuXWtY7EQpAPA--
 
-Acked-by: Jesper Dangaard Brouer <brouer@redhat.com>
+--------------cKsJJK7upM0oUzvNiyu2zzf0
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
 
+-----BEGIN PGP SIGNATURE-----
 
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index 0e42038382c1..5ced6cb260ed 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -5324,8 +5324,8 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->   		page = __rmqueue_pcplist(zone, 0, ac.migratetype, alloc_flags,
->   								pcp, pcp_list);
->   		if (unlikely(!page)) {
-> -			/* Try and get at least one page */
-> -			if (!nr_populated)
-> +			/* Try and allocate at least one page */
-> +			if (!nr_account)
->   				goto failed_irq;
->   			break;
->   		}
-> 
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmKROesFAwAAAAAACgkQIK4WkuE93uAT
+rxAAheNlipKoJ6do8rsTRCylH5cEccgHfwNY0z64flj1nLJeooScm9mC1gX5r3grDk1YG01wITCa
+1GYBwqr+RnL7IiBSEvY4DznPjDBr0qGAij4cPUiHSagPdme2OHg+4eHQDze9oPxIYiv5wmZ3vA2r
+93MF+pl+Yk5met0xkh9nkjFAZACg0qS4tWIqrFdYVqrM+keAAx/5jp81qhJSVee6FhQg5pWn5HyK
+CzLYphyMF45vXTG+sVOMtgag/KR2o1wmHntTvVwcLuicwSYDICBJkZMVLRlSi+G1IQv16JAN2wA3
+QABGZCS0zgbuQ4mY7Va7iR3z3oYm546F10csJfN0BnX/yrCnGaZZaiJ0SP9qVppRgMptB8Ra799y
+q2otQQIC0aDSh1n1kcOzP3vsLfb1Hww8rsdc8hOBgVPBRQL30YVK215MkmztPhgnbkkharvit6zZ
+VZQZ5FAFM/flMP13w1HSqOxgR6/b/2VRjAdePeIXJkkK10Jhz5nKhgtllIfpN54bFxmI6a/736eJ
+CsBOR6Kr7ipb+vTtt/ldGd/s/gOdryXJuMWJ6k8US64ikLW55aLbVWOH9po1mKmstyPlsBh/9Y0d
+3zweASDBNe4zdPZwD7mKQA4Li5f9UKQU8kk2bdLw8R3GkPeDi7xoYlTaCJetnn7zBY2++dJh019k
+FLk=
+=Y3vj
+-----END PGP SIGNATURE-----
 
+--------------cKsJJK7upM0oUzvNiyu2zzf0--
