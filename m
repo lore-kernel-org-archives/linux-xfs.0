@@ -2,87 +2,126 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 126DDC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 09:06:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5211BC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 09:13:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242536AbiE0JGl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 05:06:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49668 "EHLO
+        id S1345414AbiE0JMz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 05:12:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351228AbiE0JGB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 05:06:01 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DF9611157FE
-        for <linux-xfs@vger.kernel.org>; Fri, 27 May 2022 02:02:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1653642176;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=VxSx5WHE/is7ha0Qn9ZHkh6x3/barWbE89a+k35Foho=;
-        b=f3I/j/1PYhWWo4EG7Metng1eJY8hMgbdDwFNA0cuIPTBGMzneb+3H8l1aWDYvT3Spg9ngV
-        fGv1LMl27ki9Zx7sYvVSBcCV2yLinJCDjkpYzn0jVdq4WHoh2r8RSK9jWDizGRgEO4NsHY
-        HSIMnHklZNbKY19Zf9mLzkOaKftxmTM=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-391-NTi_t_sZMdal6y7vIU_a0A-1; Fri, 27 May 2022 05:02:51 -0400
-X-MC-Unique: NTi_t_sZMdal6y7vIU_a0A-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id BF12E858EEE;
-        Fri, 27 May 2022 09:02:50 +0000 (UTC)
-Received: from oldenburg.str.redhat.com (unknown [10.39.192.71])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 64FE7492C3B;
-        Fri, 27 May 2022 09:02:48 +0000 (UTC)
-From:   Florian Weimer <fweimer@redhat.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: [RFC PATCH v2 1/7] statx: add I/O alignment information
-References: <20220518235011.153058-1-ebiggers@kernel.org>
-        <20220518235011.153058-2-ebiggers@kernel.org>
-Date:   Fri, 27 May 2022 11:02:46 +0200
-In-Reply-To: <20220518235011.153058-2-ebiggers@kernel.org> (Eric Biggers's
-        message of "Wed, 18 May 2022 16:50:05 -0700")
-Message-ID: <87r14ffivd.fsf@oldenburg.str.redhat.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.2 (gnu/linux)
+        with ESMTP id S1349938AbiE0JMO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 05:12:14 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 08DFA13C4E1;
+        Fri, 27 May 2022 02:08:41 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4E621534581;
+        Fri, 27 May 2022 19:08:39 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nuVxW-00Gxti-5K; Fri, 27 May 2022 19:08:38 +1000
+Date:   Fri, 27 May 2022 19:08:38 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        Tyler Hicks <code@tyhicks.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
+Message-ID: <20220527090838.GD3923443@dread.disaster.area>
+References: <20220525111715.2769700-1-amir73il@gmail.com>
+ <YpBqfdmwQ675m72G@infradead.org>
+ <CAOQ4uxjek9331geZGVbVT=gqkNTyVA_vjyjuB=2eGZD-ufeqNQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Scanned-By: MIMEDefang 2.85 on 10.11.54.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjek9331geZGVbVT=gqkNTyVA_vjyjuB=2eGZD-ufeqNQ@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62909517
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=JfrnYn6hAAAA:8 a=VwQbUJbxAAAA:8
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=lqPp78sISulBoH7tflwA:9
+        a=CjuIK1q_8ugA:10 a=1CNFftbPRP8L7MoqJWF3:22 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-* Eric Biggers:
+On Fri, May 27, 2022 at 10:01:48AM +0300, Amir Goldstein wrote:
+> On Fri, May 27, 2022 at 9:06 AM Christoph Hellwig <hch@infradead.org> wrote:
+> >
+> > FYI, below is the 5.10-stable backport I have been testing earlier this
+> > week that fixes a bugzilla reported hang:
+> >
+> > https://bugzilla.kernel.org/show_bug.cgi?id=214767
+> >
+> > I was just going to submit it to the stable maintaines today after
+> > beeing out of the holiday, but if you want to add it to this queue
+> > that is fine with me as well.
+> >
+> 
+> Let me take it for a short spin in out xfs stable test environment, since
+> this env has caught one regression with an allegedly safe fix.
+> This env has also VMs with old xfsprogs, which is kind of important to
+> test since those LTS patches may end up in distros with old xfsprogs.
+> 
+> If all is well, I'll send your patch later today to stable maintainers
+> with this first for-5.10 series.
+> 
+> > ---
+> > From 8e0464752b24f2b3919e8e92298759d116b283eb Mon Sep 17 00:00:00 2001
+> > From: Dave Chinner <dchinner@redhat.com>
+> > Date: Fri, 18 Jun 2021 08:21:51 -0700
+> > Subject: xfs: Fix CIL throttle hang when CIL space used going backwards
+> >
+> 
+> Damn! this patch slipped through my process (even though I did see
+> the correspondence on the list).
+> 
+> My (human) process has eliminated the entire 38 patch series
+> https://lore.kernel.org/linux-xfs/20210603052240.171998-1-david@fromorbit.com/
+> without noticing the fix that was inside it.
 
-> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
-> index 1500a0f58041a..f822b23e81091 100644
-> --- a/include/uapi/linux/stat.h
-> +++ b/include/uapi/linux/stat.h
-> @@ -124,9 +124,13 @@ struct statx {
->  	__u32	stx_dev_minor;
->  	/* 0x90 */
->  	__u64	stx_mnt_id;
-> -	__u64	__spare2;
-> +	__u32	stx_mem_align_dio;	/* Memory buffer alignment for direct I/O */
-> +	__u32	stx_offset_align_dio;	/* File offset alignment for direct I/O */
->  	/* 0xa0 */
-> -	__u64	__spare3[12];	/* Spare space for future expansion */
-> +	__u32	stx_offset_align_optimal; /* Optimal file offset alignment for I/O */
-> +	__u32	__spare2;
-> +	/* 0xa8 */
-> +	__u64	__spare3[11];	/* Spare space for future expansion */
->  	/* 0x100 */
->  };
+The first two times it was in much smaller patch series (5 and 8
+patches total).
 
-Are 32 bits enough?  Would it make sense to store the base-2 logarithm
-instead?
 
-Thanks,
-Florian
+Also, you probably need to search for commit IDs on the list, too,
+because this discussion was held in November about backporting the
+fix to 5.10 stable kernels:
 
+Subject: Help deciding about backported patch (kernel bug 214767, 19f4e7cc8197 xfs: Fix CIL throttle hang when CIL space used going backwards)
+https://lore.kernel.org/linux-xfs/C1EC87A2-15B4-45B1-ACE2-F225E9E30DA9@flyingcircus.io/
+
+> In this case, I guess Dave was not aware of the severity of the bug fixed
+
+I was very aware of the severity of the problem, and I don't need
+anyone trying to tell me what I should have been doing 18 months
+ago.
+
+It simply wasn't a severe bug. We had one user reporting it, and the
+when I found the bug I realised that it was a zero-day thinko in
+delayed logging accounting I made back in 2010 (~2.6.38 timeframe,
+IIRC).  IOWs, it took 10 years before we got the first indication
+there was a deep, dark corner case bug lurking in that code.
+
+The time between first post of the bug fix and merge was about 6
+months, so it also wasn't considered serious by anyone at the time
+as it missed 2 whole kernel releases before it was reviewed and
+merged...
+
+There's been a small handful of user reports of this bug since (e.g
+the bz above and the backport discussions), but it's pretty clear
+that this bug is not (and never has been) a widespread issue.  It
+just doesn't fit any of the criteria for a severe bug.
+
+Backport candidate: yes. Severe: absolutely not.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
