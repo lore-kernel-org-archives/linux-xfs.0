@@ -2,113 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37011C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 07:02:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D24C9C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 May 2022 07:07:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344713AbiE0HCD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 03:02:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40792 "EHLO
+        id S1344835AbiE0HHG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 May 2022 03:07:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344712AbiE0HCC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 03:02:02 -0400
-Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC698E2777;
-        Fri, 27 May 2022 00:02:00 -0700 (PDT)
-Received: by mail-qv1-xf36.google.com with SMTP id e2so3013467qvq.13;
-        Fri, 27 May 2022 00:02:00 -0700 (PDT)
+        with ESMTP id S1345528AbiE0HHB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 03:07:01 -0400
+Received: from mail-qk1-x72b.google.com (mail-qk1-x72b.google.com [IPv6:2607:f8b0:4864:20::72b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C3726452
+        for <linux-xfs@vger.kernel.org>; Fri, 27 May 2022 00:06:59 -0700 (PDT)
+Received: by mail-qk1-x72b.google.com with SMTP id r84so3664358qke.10
+        for <linux-xfs@vger.kernel.org>; Fri, 27 May 2022 00:06:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=yGtyTEdveXRcSR/o79WVTSJwn3zC4/L8aLctM+0PAFI=;
-        b=pRWa0t0GYx+8p5KHFLie4wV53c/aEH7XGbL/2DXeRg2+7fNI3VIWZS6fNSmkfr1Ka0
-         hB73Hr5CziNNFLaNk9XioEOvfHhIzJoDb7vO7XzEjFNZOxlI7dcQPx0l7+S5bifRstuh
-         V5WI0wn2bctDjr3RBVfSmbPIZWfHdW1z7/SYW+FPIl6LNRvvl1L1fll+YEttrzoj2Wov
-         DtX4f7U4Fsks1i5eOI3ZmkVdMkpQXVy+2TAFGHGsu/EQVYLi9xpf17V+6op5TWLiROua
-         LNMxuLq0kvB5qXkk3TNy5aXQPKsYjXAF5Ih3pjB33dUG6hKPFQiaOgnI5A9BEnuaiWyG
-         PTog==
+        bh=wDk/LpocLlT2sKmtzNThgAKQcoU6QhAJ8+NtV/qX2fE=;
+        b=McK0q/kZwDDPH9ybu3UGjgHdZlfGArlln6YutzN3vnk1yOuYbEThPfvHVPzUm3GHjI
+         3wlRFThMOpBhZjxiio7JWA1Bfzte3YFayzXFjNlKaL/0TJXv30xfkSVZuzAo20m7TlyA
+         diEtNfU0Xf2kJspiAf22ziDWC+B8d49k69I/f3TQtG+oUEBNwiIPLBPPLFPbmpztlGAf
+         UtsdSog0MD6jlf1ascn/7uL4I5Trqyv9MTpysU35ILReu0Qh+2bZ8AaD484cSnmQuglM
+         4WMeA+fxF56Q7t/kdjjCWgSaNO2KHvK7kunz3HgHMSb0ffEuvqM3I+Y+rs1vquJ6OkMC
+         EztQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=yGtyTEdveXRcSR/o79WVTSJwn3zC4/L8aLctM+0PAFI=;
-        b=3+ZPpRo7FqMoK26vA6DAMqeD+4wxzvdWLYTcav0cCJP4PbWMZDPjnBthjeLcA+Wt8V
-         gWnPh+Qd83BzuGmzVHxu+mzUmwHAeUoUwljkWKk/g2IATExYjYIGhLNs7ImquoS464WD
-         m7FKGveFD25NxfsNf1ldTc5fjQvuBlklQNJaBaFlIQKDf1bsnKpNAlsoaumrBHhbw477
-         vVOTyJVGdOGHManUaRz4FveiKelwqnWbsYYKXWySSrWipyqG6y9lQ/ae7SRCb/rFba58
-         c/rLU2LSej4RdQeif23r0/lfo1D5ozEPcLMAxfwAdQjJkPo5xehA3Z/f3BbuThsl8a/Q
-         Nzfw==
-X-Gm-Message-State: AOAM531KTLb/Pi9BY3eO+oyOrrntIocJ4WvYFzZgPN0xOLgOvUSuvYhw
-        QGPCsNTkcvIuN6zQwic15k7LFcma57SYAO3E7nM=
-X-Google-Smtp-Source: ABdhPJyOuuMsQeq/7b+s5cnhGc/m7E9zf967H+H8ogM0Zzanzh9j7PrRZf5gQFOM8L+Fr8AF+e32pKDIVtANCXRHQ7s=
-X-Received: by 2002:a05:6214:5296:b0:461:d3bb:ba01 with SMTP id
- kj22-20020a056214529600b00461d3bbba01mr33814685qvb.12.1653634919984; Fri, 27
- May 2022 00:01:59 -0700 (PDT)
+        bh=wDk/LpocLlT2sKmtzNThgAKQcoU6QhAJ8+NtV/qX2fE=;
+        b=LA2XbH5PfAlu6gvvVR3Ppwt9sE372nK3VZMh7YMVVwAhp14jmOllt9eMKCbe+bB7HH
+         23Zorcy9TudD8j8FcdoLPgJvm10n5bWNZZBbqwuccjTmIdwUzJHMAZCXi7zwnRbg0yCA
+         4ti2r/+T+mhemobWehxq9ZzMdfZrDZ86Mx1egvHGjVEME/c8yBYruZTaLoUInm1BI496
+         5ujcu2iz8iA+u5f+ZH6l2tGjPNPJQ5w0bIUP9poOC+AcL3cwxuS5Aj3LRJNf1V2tFjcP
+         5+Un5zTkYYZ9Gpt5MhfP9Zku5sKL12Nj03/kkEO8OakNe/IBARtpbW6nXgowCIrYrTvC
+         QnYQ==
+X-Gm-Message-State: AOAM533xZEqwsR3E7GL8ihpuoIzTVXGO0ix+WIjiU0Ym9+yG4bR/7JO0
+        6eb7gkEWTTrnG2/8QTEI01jBRIsXK1CbQ08njjE=
+X-Google-Smtp-Source: ABdhPJxVB8syEBneXZfgPPelRKFNPtoa3UFpVcdFQLgPqDp1R5Kgvxmx1pzZKmIUNplDuLC94uQO1NcaMQFjSnSQsgU=
+X-Received: by 2002:a05:620a:2728:b0:6a5:dac2:2311 with SMTP id
+ b40-20020a05620a272800b006a5dac22311mr957208qkp.722.1653635218196; Fri, 27
+ May 2022 00:06:58 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220525111715.2769700-1-amir73il@gmail.com> <YpBqfdmwQ675m72G@infradead.org>
-In-Reply-To: <YpBqfdmwQ675m72G@infradead.org>
+References: <20210222153442.897089-1-bfoster@redhat.com> <20210222182745.GA7272@magnolia>
+ <20210223123106.GB946926@bfoster> <CAOQ4uxiWajRgGG2V=dYhBmVJYiRmdD+7YgkH2DMWGz6BAOXjvg@mail.gmail.com>
+ <Yo+M6Jhjwt/ruOfi@bfoster> <CAOQ4uxjoLm_xwD1GBMNteHsd4zv_4vr+g7xF9_HoCquhq4yoFQ@mail.gmail.com>
+ <Yo/ZZtqa5rkuh7VC@bfoster> <CAOQ4uxh0NE4zHUSEqHv8nbpD4RR49Wd_S_DnXhiWCbNqgC0dSQ@mail.gmail.com>
+In-Reply-To: <CAOQ4uxh0NE4zHUSEqHv8nbpD4RR49Wd_S_DnXhiWCbNqgC0dSQ@mail.gmail.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Fri, 27 May 2022 10:01:48 +0300
-Message-ID: <CAOQ4uxjek9331geZGVbVT=gqkNTyVA_vjyjuB=2eGZD-ufeqNQ@mail.gmail.com>
-Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        Tyler Hicks <code@tyhicks.com>,
+Date:   Fri, 27 May 2022 10:06:46 +0300
+Message-ID: <CAOQ4uxjB3L3eVd6WF-pqAx12P_bMpW0O1Om_p6Xnue-edif-cA@mail.gmail.com>
+Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Zorro Lang <zlang@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 27, 2022 at 9:06 AM Christoph Hellwig <hch@infradead.org> wrote:
+On Thu, May 26, 2022 at 11:56 PM Amir Goldstein <amir73il@gmail.com> wrote:
 >
-> FYI, below is the 5.10-stable backport I have been testing earlier this
-> week that fixes a bugzilla reported hang:
+> > > I tested it on top of 5.10.109 + these 5 patches:
+> > > https://github.com/amir73il/linux/commits/xfs-5.10.y-1
+> > >
+> > > I can test it in isolation if you like. Let me know if there are
+> > > other forensics that you would like me to collect.
+> > >
+> >
+> > Hm. Still no luck if I move to .109 and pull in those few patches. I
+> > assume there's nothing else potentially interesting about the test env
+> > other than the sparse file scratch dev (i.e., default mkfs options,
 >
-> https://bugzilla.kernel.org/show_bug.cgi?id=214767
+> Oh! right, this guest is debian/10 with xfsprogs 4.20, so the defaults
+> are reflink=0.
 >
-> I was just going to submit it to the stable maintaines today after
-> beeing out of the holiday, but if you want to add it to this queue
-> that is fine with me as well.
+> Actually, the section I am running is reflink_normapbt, but...
 >
-
-Let me take it for a short spin in out xfs stable test environment, since
-this env has caught one regression with an allegedly safe fix.
-This env has also VMs with old xfsprogs, which is kind of important to
-test since those LTS patches may end up in distros with old xfsprogs.
-
-If all is well, I'll send your patch later today to stable maintainers
-with this first for-5.10 series.
-
-> ---
-> From 8e0464752b24f2b3919e8e92298759d116b283eb Mon Sep 17 00:00:00 2001
-> From: Dave Chinner <dchinner@redhat.com>
-> Date: Fri, 18 Jun 2021 08:21:51 -0700
-> Subject: xfs: Fix CIL throttle hang when CIL space used going backwards
+> ** mkfs failed with extra mkfs options added to "-f -m
+> reflink=1,rmapbt=0, -i sparse=1," by test 076 **
+> ** attempting to mkfs using only test 076 options: -m crc=1 -i sparse **
+> ** mkfs failed with extra mkfs options added to "-f -m
+> reflink=1,rmapbt=0, -i sparse=1," by test 076 **
+> ** attempting to mkfs using only test 076 options: -d size=50m -m
+> crc=1 -i sparse **
+>
+> mkfs.xfs does not accept double sparse argument, so the
+> test falls back to mkfs defaults (+ sparse)
+>
+> I checked and xfsprogs 5.3 behaves the same, I did not check newer
+> xfsprogs, but that seems like a test bug(?)
 >
 
-Damn! this patch slipped through my process (even though I did see
-the correspondence on the list).
+xfsprogs 5.16 still behaves the same, meaning that xfs/076 and many many
+other tests ignore the custom mkfs options for the specific sections.
+That is a big test coverage issue!
 
-My (human) process has eliminated the entire 38 patch series
-https://lore.kernel.org/linux-xfs/20210603052240.171998-1-david@fromorbit.com/
-without noticing the fix that was inside it.
+> IWO, unless xfsprogs was changed to be more tolerable to repeating
+> arguments, then maybe nobody is testing xfs/076 with reflink=0 (?)
+>
 
-I did read every cover letter carefully for optimization series that I
-eliminated
-to look for important fixes and more than once I did pick singular fix patches
-from optimization/cleanup series.
+Bingo!
+Test passes 100 runs with debian/testing - xfsprogs v5.16
 
-In this case, I guess Dave was not aware of the severity of the bug fixed
-when he wrote the cover letter(?), but the fact that the series is not only
-an improvement was not mentioned.
+I shall try to amend the test to force reflink=0 to see what happens.
+You should try it as well.
 
-It's good that we have many vectors to find stable fixes :)
-
-Cheers,
+Thanks,
 Amir.
