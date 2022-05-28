@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E86C433FE
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 May 2022 09:46:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09DC0C433FE
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 May 2022 09:47:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232644AbiE1JqI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 28 May 2022 05:46:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40800 "EHLO
+        id S1354425AbiE1Jrb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 28 May 2022 05:47:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232586AbiE1JqH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 May 2022 05:46:07 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A38EC1C11F;
-        Sat, 28 May 2022 02:46:02 -0700 (PDT)
+        with ESMTP id S1355945AbiE1Jr1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 May 2022 05:47:27 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B11DF2BB3D;
+        Sat, 28 May 2022 02:47:19 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 57B69B816EC;
-        Sat, 28 May 2022 09:46:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D4DEC34113;
-        Sat, 28 May 2022 09:45:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0366B60C7F;
+        Sat, 28 May 2022 09:47:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C06AC34100;
+        Sat, 28 May 2022 09:47:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653731160;
+        s=k20201202; t=1653731238;
         bh=w0C2j/BIsuDvbE/8om3cJzXe5n4sfisbuZ71XVbWfi0=;
         h=From:To:Cc:Subject:Date:From;
-        b=bWhSd1Hb94rXu0d+5aGyjCamk/HESOP8ro7wp9eEMVuCw6gzCM/lyoYOi7Q3S2Yz+
-         f+oKx+govZJikTJ/5SpEaaT9Wj1xRc7p+22ktmo/oOm2gheCz0mot6lTT78EA0YOkc
-         BvAPGgoXjNi/yrTthMq49/sst77tkxaZm5sOqdnmqclqIgnKl/+DVA5YikYAksd0bm
-         Zd4iuFG1Kcp4h1raAb0U8WbhfJoEU4L1t7MzOASiVbT0AUlEK2aUjXgAyMQ/Tti9Wz
-         3SUNyUL2y2zdk4QtSYEChPXWfoE56SMdLXY8+CjKqb1raMG1octRFQ8Zwl9Kgn6Y5P
-         fnRKP8lFOPMAg==
+        b=e78KdeldQe+h7qje/n9/3tCV9rxWW6vlfnQOS6NRQf1ydofPi5Tjz/ihHDw+xeICV
+         nuChxaBlim84kQcjnCT6Up5knICCn81+G5gp7PfO/Wl9pY/9XzKd/qv/p+WfGlb4wR
+         qRx4MNdSyddLjU+EwPvZ/WQfHUKnNl6i+qN5rnS4Ey5XyPJlqosHRJUYBQHL7DUrp2
+         x1fbf6Wga8Wmcpa/IKtMf5hqlzVLDdkmRBgXEbV4kCXk0aCxhGaauabQne3akVS1tv
+         sWXCtcfGxeO38RNREcygRTJcgozIEFoKWSaV6xlAIrB9rH480mwcQxvyEbYVTHWEOn
+         zQ0NuYNhYo2Eg==
 From:   Zorro Lang <zlang@kernel.org>
 To:     fstests@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, xuyang2018.jy@fujitsu.com
 Subject: [PATCH] xfs: corrupted xattr should not block removexattr
-Date:   Sat, 28 May 2022 17:45:56 +0800
-Message-Id: <20220528094556.309525-1-zlang@kernel.org>
+Date:   Sat, 28 May 2022 17:47:15 +0800
+Message-Id: <20220528094715.309876-1-zlang@kernel.org>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
