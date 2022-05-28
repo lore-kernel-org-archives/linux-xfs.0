@@ -2,170 +2,130 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62DE1C433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 May 2022 01:42:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21873C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 May 2022 05:01:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347634AbiE1Bmk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 May 2022 21:42:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40884 "EHLO
+        id S1343902AbiE1FBE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 28 May 2022 01:01:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231386AbiE1Bmk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 May 2022 21:42:40 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58CD913C1DE;
-        Fri, 27 May 2022 18:42:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 172B2B82649;
-        Sat, 28 May 2022 01:42:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADD6BC34113;
-        Sat, 28 May 2022 01:42:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653702156;
-        bh=j+FxAMoUxjrnMrkR7+D1UfkLzawirXG78XCfbEzPawQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=R0J7/2/Z1LOYV6ZvC1PmKypkWwchOrYxwuMKAaqcXJCLnOBI88CcuguJD/eVPIiD2
-         IsG0nubaNWnNBM8znoo03xQnRefWQPH9rizLT2ZwJdACppyXUh7yWz/5eLaZxwIWl2
-         h+v2nxcdpsZoXSTlMZ//vPxAFjloY8TS3atKPXPvMRZfNrtEbZPq0O5NN9lqDtR/mk
-         dvzcW2qG5BE8/0LnkGXadkRLYjyZ4FIoeMgRP9u0Uz+wf3xJzt+2zQGV5JvClIkEYu
-         1uvQaMaphfvDY5ijvLX149ZhOgdk68QXAS3j4+vz7lWkVsRGywmr7bQgwTh0QPBn3E
-         x/DziNugDCEPQ==
-Date:   Fri, 27 May 2022 18:42:36 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jaegeuk Kim <jaegeuk@kernel.org>
-Cc:     Eric Biggers <ebiggers@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] f2fs: add sysfs entry to avoid FUA
-Message-ID: <YpF+DIuXQFhzflag@magnolia>
-References: <20220527205955.3251982-1-jaegeuk@kernel.org>
- <YpFDw3mQjN1LBd2j@gmail.com>
- <YpF1gPrQY3UFsgwC@google.com>
+        with ESMTP id S235749AbiE1FBB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 May 2022 01:01:01 -0400
+Received: from mail-qk1-x730.google.com (mail-qk1-x730.google.com [IPv6:2607:f8b0:4864:20::730])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B166D11E1C9;
+        Fri, 27 May 2022 22:01:00 -0700 (PDT)
+Received: by mail-qk1-x730.google.com with SMTP id b200so7220619qkc.7;
+        Fri, 27 May 2022 22:01:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=QfoCFbsIaTzbUTDNfxd62r8kv2gQci5/4cPHaz9Hxaw=;
+        b=nhq2jxc4rg/3RlfZWcR1v1hxLVKsFubIeHo3Xg1PZe0fxhgnbo2kqZDcO/DhO9vjNc
+         T2GiLBufGjkXnEYgMsdWisRizDM58vAA8ru2OJagEIK/bsHVXgyNp4LRQqpgP06MWGh8
+         jPrQeyCa4T3/5gLVsCI/maIuIzKq0Ar5VOJrUNOF8HZSVTWSgOHWtFVfuPVo4e2qAWk1
+         8mD0GDxnr9AJymlRwRHtKI8Hjw49pF/Cr1Ka/Rvs999KFlIw1ABEwAcZFYVXqyNULGzP
+         7kqOsCLuLZvjErayV81YCZfW4M4Pn9lQtZwtXNUBgKb6BdybnNjeD4qJz62EG81mAXAg
+         wk6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=QfoCFbsIaTzbUTDNfxd62r8kv2gQci5/4cPHaz9Hxaw=;
+        b=Xcoz+Acj1rYCYSdz2ABeEZZpXq1FZ26TdvNdOV/h0c5j6onHn7LJMLRvla5zRgGwKV
+         smGMdJ0n4BFzCCdvSIs2iIy9BKwelVxIxBz3MyRs1nIKiITYkMwkSgEMAipJHFyPY145
+         H/MgTPuBTF4D0WXjbc2p5oKXBBXLLQ4zPluh1SQTejx1ZbeZ5peyziXAMTttRkIWvxM5
+         6GK6i8DJRWdk7AgAuN+hDK23Uz9gdSzOXN8JLN8iV9A+OshAJj7F+AYzT7+AKbEunhNY
+         zH8amVEP29azzAf1zLd5wTB7tNQBFITdtroH9nhWt9OKIsaNxSCVQDyLwYEtWo+UjOZC
+         nL0A==
+X-Gm-Message-State: AOAM533Wcwhvkwg1Vuz5Xk9iFumot3mwz7xUtTSlZd3UiEhKtdnTv9yb
+        f6k9GinamQ6c4gK+zSpqd4Mb7x/MwdRiRTGDG4Y=
+X-Google-Smtp-Source: ABdhPJxifkgqmEmHcGHYdo1w3pAaR9o5Z0Y/bcYjgCk/73Dlr9rCeZdXsBC1jKzXXHwBidwzGJ8T4JzzDrsk+q5MSpU=
+X-Received: by 2002:a37:6310:0:b0:6a5:71bf:17e6 with SMTP id
+ x16-20020a376310000000b006a571bf17e6mr15988378qkb.258.1653714059793; Fri, 27
+ May 2022 22:00:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YpF1gPrQY3UFsgwC@google.com>
+References: <20220525111715.2769700-1-amir73il@gmail.com> <YpBqfdmwQ675m72G@infradead.org>
+ <CAOQ4uxjek9331geZGVbVT=gqkNTyVA_vjyjuB=2eGZD-ufeqNQ@mail.gmail.com>
+ <20220527090838.GD3923443@dread.disaster.area> <CAOQ4uxgc9Zu0rvTY3oOqycGG+MoYEL3-+qghm9_qEn67D8OukA@mail.gmail.com>
+ <YpDw3uVFB7LjPquX@bombadil.infradead.org> <20220527234202.GF3923443@dread.disaster.area>
+In-Reply-To: <20220527234202.GF3923443@dread.disaster.area>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Sat, 28 May 2022 08:00:48 +0300
+Message-ID: <CAOQ4uxgYoK=mE=Fpt8BizgHxXmgajCk=t2k6nzHb2mM=C-HvAg@mail.gmail.com>
+Subject: Re: [PATH 5.10 0/4] xfs stable candidate patches for 5.10.y (part 1)
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        Tyler Hicks <code@tyhicks.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 27, 2022 at 06:06:08PM -0700, Jaegeuk Kim wrote:
-> On 05/27, Eric Biggers wrote:
-> > [+Cc linux-block for FUA, and linux-xfs for iomap]
-> > 
-> > On Fri, May 27, 2022 at 01:59:55PM -0700, Jaegeuk Kim wrote:
-> > > Some UFS storage gives slower performance on FUA than write+cache_flush.
-> > > Let's give a way to manage it.
-> > > 
-> > > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
-> > 
-> > Should the driver even be saying that it has FUA support in this case?  If the
-> > driver didn't claim FUA support, that would also solve this problem.
-> 
-> I think there's still some benefit to use FUA such as small chunk writes
-> for checkpoint.
-> 
-> > 
-> > > ---
-> > >  Documentation/ABI/testing/sysfs-fs-f2fs | 7 +++++++
-> > >  fs/f2fs/data.c                          | 2 ++
-> > >  fs/f2fs/f2fs.h                          | 1 +
-> > >  fs/f2fs/sysfs.c                         | 2 ++
-> > >  4 files changed, 12 insertions(+)
-> > > 
-> > > diff --git a/Documentation/ABI/testing/sysfs-fs-f2fs b/Documentation/ABI/testing/sysfs-fs-f2fs
-> > > index 9b583dd0298b..cd96b09d7182 100644
-> > > --- a/Documentation/ABI/testing/sysfs-fs-f2fs
-> > > +++ b/Documentation/ABI/testing/sysfs-fs-f2fs
-> > > @@ -434,6 +434,7 @@ Date:		April 2020
-> > >  Contact:	"Daeho Jeong" <daehojeong@google.com>
-> > >  Description:	Give a way to change iostat_period time. 3secs by default.
-> > >  		The new iostat trace gives stats gap given the period.
-> > > +
-> > >  What:		/sys/fs/f2fs/<disk>/max_io_bytes
-> > >  Date:		December 2020
-> > >  Contact:	"Jaegeuk Kim" <jaegeuk@kernel.org>
-> > > @@ -442,6 +443,12 @@ Description:	This gives a control to limit the bio size in f2fs.
-> > >  		whereas, if it has a certain bytes value, f2fs won't submit a
-> > >  		bio larger than that size.
-> > >  
-> > > +What:		/sys/fs/f2fs/<disk>/no_fua_dio
-> > > +Date:		May 2022
-> > > +Contact:	"Jaegeuk Kim" <jaegeuk@kernel.org>
-> > > +Description:	This gives a signal to iomap, which should not use FUA for
-> > > +		direct IOs. Default: 0.
-> > 
-> > iomap is an implementation detail, so it shouldn't be mentioned in UAPI
-> > documentation.  UAPI documentation should describe user-visible behavior only.
-> 
-> Ok.
-> 
-> > 
-> > > +
-> > >  What:		/sys/fs/f2fs/<disk>/stat/sb_status
-> > >  Date:		December 2020
-> > >  Contact:	"Chao Yu" <yuchao0@huawei.com>
-> > > diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-> > > index f5f2b7233982..23486486eab2 100644
-> > > --- a/fs/f2fs/data.c
-> > > +++ b/fs/f2fs/data.c
-> > > @@ -4153,6 +4153,8 @@ static int f2fs_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
-> > >  	if ((inode->i_state & I_DIRTY_DATASYNC) ||
-> > >  	    offset + length > i_size_read(inode))
-> > >  		iomap->flags |= IOMAP_F_DIRTY;
-> > > +	if (F2FS_I_SB(inode)->no_fua_dio)
-> > > +		iomap->flags |= IOMAP_F_DIRTY;
-> > 
-> > This is overloading the IOMAP_F_DIRTY flag to mean something other than dirty.
-> > Perhaps this flag needs to be renamed, or a new flag should be added?
-> 
-> I'm not sure it's acceptable to add another flag for f2fs only.
+On Sat, May 28, 2022 at 2:42 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Fri, May 27, 2022 at 08:40:14AM -0700, Luis Chamberlain wrote:
+> > On Fri, May 27, 2022 at 03:24:02PM +0300, Amir Goldstein wrote:
+> > > On Fri, May 27, 2022 at 12:08 PM Dave Chinner <david@fromorbit.com> wrote:
+> > > > Backport candidate: yes. Severe: absolutely not.
+> > > In the future, if you are writing a cover letter for an improvement
+> > > series or internal pull request and you know there is a backport
+> > > candidate inside, if you happen to remember to mention it, it would
+> > > be of great help to me.
+>
+> That's what "fixes" and "cc: stable" tags in the commit itself are
+> for, not the cover letter.
 
-I think Al and willy have been throwing around patches to tell
-iomap_dio_rw or someone that the caller will handle cache flushes and
-that it shouldn't initiate them on its own; would that help here?
+Cover letter is an overview of the work.
+A good cover letter includes an overview of the individual patches
+in the context of the whole work as your cover letter did:
 
---D
+Summary of series:
 
-> > 
-> > > diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-> > > index e10838879538..c2400ea0080b 100644
-> > > --- a/fs/f2fs/f2fs.h
-> > > +++ b/fs/f2fs/f2fs.h
-> > > @@ -1671,6 +1671,7 @@ struct f2fs_sb_info {
-> > >  	int dir_level;				/* directory level */
-> > >  	int readdir_ra;				/* readahead inode in readdir */
-> > >  	u64 max_io_bytes;			/* max io bytes to merge IOs */
-> > > +	int no_fua_dio;				/* avoid FUA in DIO */
-> > 
-> > Make this a bool?
-> 
-> Done.
-> 
-> > 
-> > > diff --git a/fs/f2fs/sysfs.c b/fs/f2fs/sysfs.c
-> > > index 4c50aedd5144..24d628ca92cc 100644
-> > > --- a/fs/f2fs/sysfs.c
-> > > +++ b/fs/f2fs/sysfs.c
-> > > @@ -771,6 +771,7 @@ F2FS_RW_ATTR(F2FS_SBI, f2fs_sb_info, iostat_period_ms, iostat_period_ms);
-> > >  #endif
-> > >  F2FS_RW_ATTR(F2FS_SBI, f2fs_sb_info, readdir_ra, readdir_ra);
-> > >  F2FS_RW_ATTR(F2FS_SBI, f2fs_sb_info, max_io_bytes, max_io_bytes);
-> > > +F2FS_RW_ATTR(F2FS_SBI, f2fs_sb_info, no_fua_dio, no_fua_dio);
-> > >  F2FS_RW_ATTR(F2FS_SBI, f2fs_sb_info, gc_pin_file_thresh, gc_pin_file_threshold);
-> > >  F2FS_RW_ATTR(F2FS_SBI, f2fs_super_block, extension_list, extension_list);
-> > >  #ifdef CONFIG_F2FS_FAULT_INJECTION
-> > > @@ -890,6 +891,7 @@ static struct attribute *f2fs_attrs[] = {
-> > >  #endif
-> > >  	ATTR_LIST(readdir_ra),
-> > >  	ATTR_LIST(max_io_bytes),
-> > > +	ATTR_LIST(no_fua_dio),
-> > 
-> > Where is it validated that only valid values (0 or 1) can be written to this
-> > file?
-> 
-> Added.
-> 
-> > 
-> > - Eric
+Patches Modifications
+------- -------------
+1-7: log write FUA/FLUSH optimisations
+8: bug fix
+9-11: Async CIL pushes
+12-25: xlog_write() rework
+26-39: CIL commit scalability
+
+So it was lapse of judgement on my part or carelessness that made me
+eliminate the series without noting patch #8.
+
+Furthermore, the subject of the patch has Fix and trailer has
+Reported-and-tested-by:
+so auto candidate selection would have picked it up easily, but my scripts
+only looked for the obvious Fixes: tag inside the eliminated series, so that
+is a problem with my process that I need to improve.
+
+So the blame is entirely on me! not on you!
+
+And yet.
+"bug fix"?
+Really?
+
+I may not have been expecting more of other developers.
+But I consider you to be one of the best when it comes to analyzing and
+documenting complex and subtle code, so forgive me for expecting more.
+I am not talking about severity or rareness or other things that may change
+in time perspective. I am talking about describing the changes in a way that
+benefits the prospective consumers of the cover letter (i.e. me).
+
+It makes me sad that you are being defensive about this, because I wish
+to be able to provide feedback to developers without having deal with a
+responses like:
+"I don't need anyone trying to tell me what I should have been doing"
+
+Not every suggestion for an improvement is an attack.
+You do not have to agree with my suggestions nor to adopt them,
+but please do not dismiss them, because they come in good faith.
+
+Thanks,
+Amir.
