@@ -2,112 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 107DAC433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 May 2022 05:12:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E86C433FE
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 May 2022 09:46:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239773AbiE1FMn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 28 May 2022 01:12:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50546 "EHLO
+        id S232644AbiE1JqI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 28 May 2022 05:46:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230025AbiE1FMm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 May 2022 01:12:42 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E27CCB41CF;
-        Fri, 27 May 2022 22:12:41 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id EE07A10C8B4E;
-        Sat, 28 May 2022 15:12:40 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nuokg-00HIOO-Pz; Sat, 28 May 2022 15:12:38 +1000
-Date:   Sat, 28 May 2022 15:12:38 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jaegeuk Kim <jaegeuk@kernel.org>
-Cc:     Eric Biggers <ebiggers@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] f2fs: add sysfs entry to avoid FUA
-Message-ID: <20220528051238.GX1098723@dread.disaster.area>
-References: <20220527205955.3251982-1-jaegeuk@kernel.org>
- <YpFDw3mQjN1LBd2j@gmail.com>
- <20220527235509.GW1098723@dread.disaster.area>
- <YpFsOLz/GScXvhkb@google.com>
+        with ESMTP id S232586AbiE1JqH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 May 2022 05:46:07 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A38EC1C11F;
+        Sat, 28 May 2022 02:46:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 57B69B816EC;
+        Sat, 28 May 2022 09:46:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D4DEC34113;
+        Sat, 28 May 2022 09:45:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653731160;
+        bh=w0C2j/BIsuDvbE/8om3cJzXe5n4sfisbuZ71XVbWfi0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=bWhSd1Hb94rXu0d+5aGyjCamk/HESOP8ro7wp9eEMVuCw6gzCM/lyoYOi7Q3S2Yz+
+         f+oKx+govZJikTJ/5SpEaaT9Wj1xRc7p+22ktmo/oOm2gheCz0mot6lTT78EA0YOkc
+         BvAPGgoXjNi/yrTthMq49/sst77tkxaZm5sOqdnmqclqIgnKl/+DVA5YikYAksd0bm
+         Zd4iuFG1Kcp4h1raAb0U8WbhfJoEU4L1t7MzOASiVbT0AUlEK2aUjXgAyMQ/Tti9Wz
+         3SUNyUL2y2zdk4QtSYEChPXWfoE56SMdLXY8+CjKqb1raMG1octRFQ8Zwl9Kgn6Y5P
+         fnRKP8lFOPMAg==
+From:   Zorro Lang <zlang@kernel.org>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, xuyang2018.jy@fujitsu.com
+Subject: [PATCH] xfs: corrupted xattr should not block removexattr
+Date:   Sat, 28 May 2022 17:45:56 +0800
+Message-Id: <20220528094556.309525-1-zlang@kernel.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YpFsOLz/GScXvhkb@google.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6291af49
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=8RavHqeXKao-3GyEar0A:9 a=CjuIK1q_8ugA:10 a=igBNqPyMv6gA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 27, 2022 at 05:26:32PM -0700, Jaegeuk Kim wrote:
-> On 05/28, Dave Chinner wrote:
-> > On Fri, May 27, 2022 at 09:33:55PM +0000, Eric Biggers wrote:
-> > > [+Cc linux-block for FUA, and linux-xfs for iomap]
-> > 
-> > linux-fsdevel should really be used for iomap stuff...
-> > 
-> > > 
-> > > On Fri, May 27, 2022 at 01:59:55PM -0700, Jaegeuk Kim wrote:
-> > > > Some UFS storage gives slower performance on FUA than write+cache_flush.
-> > > > Let's give a way to manage it.
-> > > > 
-> > > > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
-> > > 
-> > > Should the driver even be saying that it has FUA support in this case?  If the
-> > > driver didn't claim FUA support, that would also solve this problem.
-> > 
-> > Agreed, this is a hardware problem that need to addressed with a
-> > driver quirk to stop it advertising FUA support. The high level
-> > fs/iomap code should always issue FUA writes where possible and
-> > the lower layers tell the block layer whether to issue the FUA as
-> > a FUA or write+cache flush pair.
-> 
-> I was thinking to turn off FUA in driver side quickly tho, one concern
-> was the bandwidth vs. latency. What if the device can support FUA having
-> short latency while giving low bandwidth?
+After we corrupted an attr leaf block (under node block), getxattr
+might hit EFSCORRUPTED in xfs_attr_node_get when it does
+xfs_attr_node_hasname. A known bug cause xfs_attr_node_get won't do
+xfs_buf_trans release job, then a subsequent removexattr will hang.
 
-Seriously, how is a user supposed to know this sort of thing about
-the hardware they are using? They don't, and to expect them to not
-only know about the existing of a weird sysfs knob, let alone how it
-applies to their hardware and their workload is totally
-unreasonable.
+This case covers a1de97fe296c ("xfs: Fix the free logic of state in
+xfs_attr_node_hasname")
 
-If the hardware has non-deterministic FUA write performance, or
-requires very careful switch over between cache flushes and FUA to
-get the most out of the hardware, then that's not something we can
-tune or optimise for - that's just broken hardware and the drive
-should quirk the brokeness away so nobody has to care about it. Tell
-the hardware manufacturer to fix their hardware, don't try to hack
-around it in software and then expect the user to know how to tune
-for that broken hardware.
+Signed-off-by: Zorro Lang <zlang@kernel.org>
+---
 
-> In that case, we still have
-> a room to utilize FUA for small-sized  writes such as filesystem metadata
-> writes, but avoid DIO w/ FUA for sequential write stream.
+Hi,
 
-Strawman.
+It's been long time past, since Yang Xu tried to cover a regression bug
+by changing xfs/126 (be Nacked):
+https://lore.kernel.org/fstests/1642407736-3898-1-git-send-email-xuyang2018.jy@fujitsu.com/
 
-We don't use FUA for normal DIO writes - they only get used for
-O_DSYNC writes, in which case we either use FUA if the device
-supports it, or we do a normal write followed by a cache flush.
-If there are metadata updates that the O_DSYNC needs to also flush,
-we don't use FUA by let the fileystem issue a cache flush in the
-most optimal possible after the write completes.
+As we (Red Hat) need to cover this regression issue too, and have waited so
+long time. I think no one is doing this job now, so I'm trying to write a new one
+case to cover it. If Yang has completed his test case but forgot to send out,
+feel free to tell me :)
 
-Either way, using O_DSYNC DIO writes for streaming, sequential data
-is a really poor choice for an application to make. Normal DIO
-writes followed by fdatasync() to flush the metadata and caches once
-will be much faster and far more efficient than a metadata and cache
-flush after every single data write, FUA or not.
+Thanks,
+Zorro
 
--Dave.
+ tests/xfs/999     | 80 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/999.out |  2 ++
+ 2 files changed, 82 insertions(+)
+ create mode 100755 tests/xfs/999
+ create mode 100644 tests/xfs/999.out
+
+diff --git a/tests/xfs/999 b/tests/xfs/999
+new file mode 100755
+index 00000000..65d99883
+--- /dev/null
++++ b/tests/xfs/999
+@@ -0,0 +1,80 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 999
++#
++# This's a regression test for:
++#   a1de97fe296c ("xfs: Fix the free logic of state in xfs_attr_node_hasname")
++#
++# After we corrupted an attr leaf block (under node block), getxattr might hit
++# EFSCORRUPTED in xfs_attr_node_get when it does xfs_attr_node_hasname. A bug
++# cause xfs_attr_node_get won't do xfs_buf_trans release job, then a subsequent
++# removexattr will hang.
++#
++. ./common/preamble
++_begin_fstest auto quick attr
++
++# Import common functions.
++. ./common/filter
++. ./common/attr
++. ./common/populate
++
++# real QA test starts here
++_supported_fs xfs
++_fixed_by_kernel_commit a1de97fe296c \
++       "xfs: Fix the free logic of state in xfs_attr_node_hasname"
++
++_require_scratch_nocheck
++# Only test with v5 xfs on-disk format
++_require_scratch_xfs_crc
++_require_attrs
++_require_populate_commands
++_require_xfs_db_blocktrash_z_command
++
++_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
++source $tmp.mkfs
++_scratch_mount
++
++# This case will use 10 bytes xattr namelen and 11+ bytes valuelen, so:
++#   sizeof(xfs_attr_leaf_name_local) = 2 + 1 + 10 + 11 = 24,
++#   sizeof(xfs_attr_leaf_entry) = 8
++# So count in the header, if I create more than $((dbsize / 32)) xattr entries,
++# it will out of a leaf block (not much), then get one node block and two or
++# more leaf blocks, that's the testing need.
++nr_xattr="$((dbsize / 32))"
++localfile="${SCRATCH_MNT}/attrfile"
++touch $localfile
++for ((i=0; i<nr_xattr; i++));do
++	$SETFATTR_PROG -n user.x$(printf "%.09d" "$i") -v "aaaaaaaaaaaaaaaa" $localfile
++done
++inumber="$(stat -c '%i' $localfile)"
++_scratch_unmount
++
++# Expect the ablock 0 is a node block, later ablocks(>=1) are leaf blocks, then corrupt
++# the last leaf block. (Don't corrupt node block, or can't reproduce the bug)
++magic=$(_scratch_xfs_get_metadata_field "hdr.info.hdr.magic" "inode $inumber" "ablock 0")
++level=$(_scratch_xfs_get_metadata_field "hdr.level" "inode $inumber" "ablock 0")
++count=$(_scratch_xfs_get_metadata_field "hdr.count" "inode $inumber" "ablock 0")
++if [ "$magic" = "0x3ebe" -a "$level" = "1" ];then
++	# Corrupt the last leaf block
++	_scratch_xfs_db -x -c "inode ${inumber}" -c "ablock $count" -c "stack" \
++		-c "blocktrash -x 32 -y $((dbsize*8)) -3 -z" >> $seqres.full
++else
++	_fail "The ablock 0 isn't a root node block, maybe case issue"
++fi
++
++# This's the real testing, expect removexattr won't hang or panic.
++if _try_scratch_mount >> $seqres.full 2>&1; then
++	for ((i=0; i<nr_xattr; i++));do
++		$GETFATTR_PROG -n user.x$(printf "%.09d" "$i") $localfile >/dev/null 2>&1
++		$SETFATTR_PROG -x user.x$(printf "%.09d" "$i") $localfile 2>/dev/null
++	done
++else
++	_notrun "XFS refused to mount with this xattr corrutpion, test skipped"
++fi
++
++echo "Silence is golden"
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+new file mode 100644
+index 00000000..3b276ca8
+--- /dev/null
++++ b/tests/xfs/999.out
+@@ -0,0 +1,2 @@
++QA output created by 999
++Silence is golden
 -- 
-Dave Chinner
-david@fromorbit.com
+2.31.1
+
