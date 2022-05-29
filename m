@@ -2,158 +2,311 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF4F0C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 May 2022 07:33:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0967C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 May 2022 09:46:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229557AbiE2HdN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 29 May 2022 03:33:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34666 "EHLO
+        id S229707AbiE2Jqe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 29 May 2022 05:46:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229660AbiE2HdM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 May 2022 03:33:12 -0400
-Received: from mail-qt1-x832.google.com (mail-qt1-x832.google.com [IPv6:2607:f8b0:4864:20::832])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E92CA6C0EF;
-        Sun, 29 May 2022 00:33:10 -0700 (PDT)
-Received: by mail-qt1-x832.google.com with SMTP id bl14so7932277qtb.1;
-        Sun, 29 May 2022 00:33:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bYq3vQuCdnezBT2j4wTiX0LEL50VNv2m5hHXVSL4Fiw=;
-        b=b4/MSopQHJycvIT7ykeP+K0RBhWBCgKOybDmh0GHxhScy/v8SnBtikhKPUp43nsTLB
-         Lf9KJfNeT7yFybBB2WwmdTmEE8bNSEdPc4Fn+HwZXACNWdScZMEjbU3MYXi5/ffxqJ6k
-         tL4kmlq5fKXuUGkiQhBhOj+1nAV1DlyN/Nm4GfsFp04DX+rb8yAhzrtZKMvIeXoISK/V
-         kWh4kTsMe9+T7seWGh0+XHQE4e4Sw644sD2FyavPbHdVJ0xAgFfx+KISjiVHIi2XWvpz
-         AViW2wSxVQFVatrXYmHSStSmH1tVtHnQlQ068rjpjW4golTbYbaN1tOL4E6w80ubYgmc
-         cHXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bYq3vQuCdnezBT2j4wTiX0LEL50VNv2m5hHXVSL4Fiw=;
-        b=Av2Xb/Lm7a78TtRTb3brpiSvJIChVLqc2efMplV0FJQIwcmVsywFBYdpco6J9ue2lP
-         e6yOYGZO4ujw24F5slze2bu5K8hJENnfphHDhb2Z6Yla0Q+R7aSS537fQlMKnauLGzZ7
-         rsYg61cMJp7eyn/O9phs5/PlUS8A1fSZd5hv8IhCsagFIo+YjBfu6Jme4pMDkKVli5kz
-         vf4dh5VkB2TiUfxzgTEMmI434XuNSy4T8srVBXMEe38DojX7GkCsgcx0bxnwEs2yT1u3
-         rWsA3qr+VUspfAkWLURb2hWFoBmXkvWsO/Z5zrAVMBhxr/ZI8bz0ff6E/o9ywx0oVorX
-         rumg==
-X-Gm-Message-State: AOAM530mRbJpoNGQFbZS68ZEmFFnX7UMEGLONTVVTLzBvpen2nydMby/
-        CpwuT7bJeWWEOvPUxWcpiLqmFvqdhQKIyWHrOLE=
-X-Google-Smtp-Source: ABdhPJxPEv1IMCOnLF4nSVpUkRyZGQx3uroNLeeI727osWze1PPI2TKEJJSPuKFX0IuRVg8VWihM847kIROzFK57fBE=
-X-Received: by 2002:ac8:5a56:0:b0:2f9:40c0:32a5 with SMTP id
- o22-20020ac85a56000000b002f940c032a5mr22728436qta.477.1653809589966; Sun, 29
- May 2022 00:33:09 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220526022053.GY2306852@dread.disaster.area> <CAHk-=wg8R2sYVKi7bgwVN8n-exN766PSJwYg+18SLbR=+vQtVA@mail.gmail.com>
- <20220526035317.GI1098723@dread.disaster.area>
-In-Reply-To: <20220526035317.GI1098723@dread.disaster.area>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sun, 29 May 2022 10:32:58 +0300
-Message-ID: <CAOQ4uxg_O_dC2Le7RZDTaBqtA650jD6BLZE24rpZXx=xpEedkg@mail.gmail.com>
-Subject: Re: [GIT PULL] xfs: new code for 5.19
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+        with ESMTP id S229529AbiE2Jqd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 May 2022 05:46:33 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 451C210E8
+        for <linux-xfs@vger.kernel.org>; Sun, 29 May 2022 02:46:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A5950B80AED
+        for <linux-xfs@vger.kernel.org>; Sun, 29 May 2022 09:46:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 59AFBC3411F
+        for <linux-xfs@vger.kernel.org>; Sun, 29 May 2022 09:46:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653817588;
+        bh=6hKVx9GF6sasGlrnXG44xmRaLufE+Th7JTvPpm0s5yE=;
+        h=From:To:Subject:Date:From;
+        b=qdztNyjwPzSkse7F8VXMhqxSIponvteZ/jEHLhZx8dpBfr6Q/++D+ZfWedy1odEQT
+         +sYAHT4bYBmUIBFfD/9xCs2gx/Kq9iMfFletAb/+W12H631RHMg0887qzX8hKW6+KY
+         AUUhAodzUUJTuRj2oWm1B79BWpmuO4PHwmirV8sCg3nvInKXUtmZEtkwiVN1GU6+sj
+         rZk2U4mfRiBfiM441nbXEaZs3358oUFKaUnDIJKgFCgF75qD3btWPI5n/M/R77ZFtO
+         PZ+z31zYhmILlc8owW7awMrpDtiiS8z8wOpVXl0WUAClWE8OVGTm1xWiYg3trenkFA
+         3nYj9/QY2ttVg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 46622C05FD5; Sun, 29 May 2022 09:46:28 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216047] New: [generic/623 DAX with XFS] kernel BUG at
+ mm/page_table_check.c:51!
+Date:   Sun, 29 May 2022 09:46:27 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: zlang@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression
+Message-ID: <bug-216047-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> > I might wish that your merge commit messages were a bit more
-> > consistent about the merge details ("why and what"), but you are most
-> > definitely not the only one with that, and a number of them are quite
-> > nice (ie the merge of the large extent counters has a nice informative
-> > commit message, as does the rmap speedup one).
->
-> Those one came from pull requests with informative signed
-> tags. We're trying to move more of our development processes to
-> using signed pull reqs when eveything is done, so this hopefully
-> will happen more often.
->
-> > And then some of them are the uninformative one-lines that just say
-> > "Merge branch X"
->
-> Yeah, those are merges from local topic branches where I pulled in
-> individual patches or entire series from the mailing list via 'b4 am
-> -o - <msg_id> | git am -s'. AFAICT there is no way to have this
-> retain the patch series cover letter, which generally contains what
-> I would want to be putting into the merge commit message.
->
-> I'll keep that in mind for future composes, though I do wish there
-> was an easy way to just have b4/git manage cover letters as part of
-> the topic branch so they can feed into local merge commits just as
-> easily remote pulls do....
->
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216047
 
-There is.
-I have been hacking on b4 and found many hidden features :)
+            Bug ID: 216047
+           Summary: [generic/623 DAX with XFS] kernel BUG at
+                    mm/page_table_check.c:51!
+           Product: File System
+           Version: 2.5
+    Kernel Version: 5.19.0-0.rc0
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zlang@redhat.com
+        Regression: No
 
-b4 am 20220510202800.40339-1-catherine.hoang@oracle.com -n
-xfs-5.19-quota-warn-remove.mbx
-git am -s xfs-5.19-quota-warn-remove.mbx
-git tag -F xfs-5.19-quota-warn-remove.cover xfs-5.19-quota-warn-remove
+On Fedora rawhide system with kernel
+5.19.0-0.rc0.20220526gitbabf0bb978e3.4.fc37.x86_64, which base on latest
+upstream mailine linux which HEAD is:
+babf0bb978e3 Merge tag 'xfs-5.19-for-linus' of
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux
 
-Konstantine has added the "b4 shazam" combo recently for
-'b4 am -o - <msg_id> | git am -s'
+I hit a bug with DAX testing on xfs. Not sure if it's a bug from XFS side o=
+r mm
+side. Report to xfs list at first, feel free to change it to other componen=
+t if
+it's not a xfs/iomap bug.
 
-The shazam command is not well documented, so most info can be found in
-the git log, but that seems like it might be a good place to add an auto tagging
-feature. It will also help to include a link to lore in the "topic
-tag" to make it
-easier for people to get to the developer discussions on the topic.
+# ./check generic/623 generic/139 generic/591 generic/506
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64 hp-xxxxxx-xx
+5.19.0-0.rc0.20220526gitbabf0bb978e3.4.fc37.x86_64 #1 SMP PREEMPT_DYNAMIC T=
+hu
+May 26 16:02:31 UTC 2022
+MKFS_OPTIONS  -- -f -m reflink=3D0 /dev/pmem0p2
+MOUNT_OPTIONS -- -o dax=3Dalways -o context=3Dsystem_u:object_r:root_t:s0
+/dev/pmem0p2 /mnt/scratch
 
-My dream is that all linux pull requests will have links to lore patch series.
+generic/139 5s ... [not run] Reflink not supported by test filesystem type:=
+ xfs
+generic/506 6s ...  5s
+generic/591 3s ...  2s
+generic/623 4s ... ^C^C
 
-Below is an example output of a gadget I created [1] to help maintainers
-and git archaeologists to generate those links automatically from PRs
-(pre or post merge).
+# dmesg
+[91876.709062] run fstests generic/623 at 2022-05-29 17:32:56
+[91877.213522] systemd[1]: Started fstests-generic-623.scope - /usr/bin/bas=
+h -c
+test -w /proc/self/oom_score_adj && echo 250 > /proc/self/oom_score_adj; ex=
+ec
+./tests/generic/623.
+[91878.417157] XFS (pmem0p2): DAX enabled. Warning: EXPERIMENTAL, use at yo=
+ur
+own risk
+[91878.417443] XFS (pmem0p2): Mounting V5 Filesystem
+[91878.486455] XFS (pmem0p2): Ending clean mount
+[91878.497348] XFS (pmem0p2): User initiated shutdown received.
+[91878.497467] XFS (pmem0p2): Metadata I/O Error (0x4) detected at
+xfs_fs_goingdown+0x6b/0xa0 [xfs] (fs/xfs/xfs_fsops.c:485).  Shutting down
+filesystem.
+[91878.497651] XFS (pmem0p2): Please unmount the filesystem and rectify the
+problem(s)
+[91878.513406] systemd[1]: mnt-scratch.mount: Deactivated successfully.
+[91878.534953] XFS (pmem0p2): Unmounting Filesystem
+[91878.966315] XFS (pmem0p2): DAX enabled. Warning: EXPERIMENTAL, use at yo=
+ur
+own risk
+[91878.966650] XFS (pmem0p2): Mounting V5 Filesystem
+[91878.979236] XFS (pmem0p2): Ending clean mount
+[91879.014998] ------------[ cut here ]------------
+[91879.015001] kernel BUG at mm/page_table_check.c:51!
+[91879.015012] invalid opcode: 0000 [#1] PREEMPT SMP PTI
+[91879.015019] CPU: 12 PID: 48184 Comm: xfs_io Tainted: G S        I=20=20=
+=20=20=20
+--------  ---  5.19.0-0.rc0.20220526gitbabf0bb978e3.4.fc37.x86_64 #1
+[91879.015022] Hardware name: HP ProLiant DL380p Gen8, BIOS P70 08/02/2014
+[91879.015024] RIP: 0010:page_table_check_set.part.0+0x89/0xe0
+[91879.015037] Code: 75 64 44 89 c1 f0 0f c1 08 83 c1 01 83 f9 01 7e 04 84 =
+db
+75 67 48 83 c6 01 48 03 15 41 a4 e6 01 4c 39 e6 74 4f 48 85 d2 75 c2 <0f> 0=
+b f7
+c5 ff 0f 00 00 75 a4 48 8b 45 00
+a9 00 00 01 00 74 99 48
+[91879.015040] RSP: 0000:ffffbdb2a1437b30 EFLAGS: 00010246
+[91879.015044] RAX: ffff970cc3dbdd30 RBX: 0000000000000001 RCX:
+0000000000000000
+[91879.015047] RDX: 0000000000000000 RSI: 0000000000000001 RDI:
+0000000000000000
+[91879.015048] RBP: fffff49809008300 R08: 0000000000000000 R09:
+0000000000000000
+[91879.015050] R10: 0000000000000001 R11: 0000000000000001 R12:
+0000000000000001
+[91879.015052] R13: fffff49809008300 R14: ffff9711fe8d7bb0 R15:
+ffff971191976200
+[91879.015054] FS:  00007fceec2f4740(0000) GS:ffff9714eae00000(0000)
+knlGS:0000000000000000
+[91879.015056] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[91879.015058] CR2: 00007fceec576000 CR3: 000000053742a001 CR4:
+00000000001706e0
+[91879.015061] Call Trace:
+[91879.015063]  <TASK>
+[91879.015066]  insert_pfn+0x10e/0x160
+[91879.015074]  __vm_insert_mixed+0xb0/0xd0
+[91879.015079]  dax_fault_iter+0x742/0xa40
+[91879.015088]  ? lock_is_held_type+0xd0/0x140
+[91879.015101]  dax_iomap_pte_fault+0x1c9/0x640
+[91879.015113]  __xfs_filemap_fault+0x305/0x410 [xfs]
+[91879.015265]  __do_fault+0x36/0x1a0
+[91879.015270]  __handle_mm_fault+0xc66/0x1470
+[91879.015277]  handle_mm_fault+0x11a/0x3a0
+[91879.015282]  do_user_addr_fault+0x1e0/0x6a0
+[91879.015292]  exc_page_fault+0x77/0x2d0
+[91879.015297]  asm_exc_page_fault+0x27/0x30
+[91879.015304] RIP: 0033:0x558d1bd1488e
+[91879.015330] Code: c0 0f 84 e1 00 00 00 48 8b 05 8e c2 02 00 48 2b 58 10 =
+49
+8d 14 1c 45 85 f6 75 55 4d 85 e4 0f 8e c7 fe ff ff 48 8b 00 44 89 ee <44> 8=
+8 2c
+18 48 8d 43 01 49 83 fc 01 0f 8e af fe ff ff 48 8b 0d 59
+[91879.015333] RSP: 002b:00007ffd5dc58990 EFLAGS: 00010206
+[91879.015336] RAX: 00007fceec576000 RBX: 0000000000000000 RCX:
+0000000000001000
+[91879.015338] RDX: 0000000000001000 RSI: 0000000000000058 RDI:
+0000000000000000
+[91879.015340] RBP: 0000558d1c2e83e0 R08: 1999999999999999 R09:
+0000000000000000
+[91879.015342] R10: 00007fceec4a0ac0 R11: 00007fceec4a13c0 R12:
+0000000000001000
+[91879.015343] R13: 0000000000000058 R14: 0000000000000000 R15:
+0000000000001000
+[91879.015350]  </TASK>
+[91879.015352] Modules linked in: scsi_debug nls_utf8 hfsplus hfs vfat fat
+isofs binfmt_misc tls dm_dust nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib
+nft_reject_inet nf_reject_ipv4 nf_rejec
+t_ipv6 nft_reject nft_ct nft_chain_nat nf_nat nf_conntrack iTCO_wdt
+nf_defrag_ipv6 intel_pmc_bxt nf_defrag_ipv4 intel_rapl_msr iTCO_vendor_supp=
+ort
+intel_rapl_common sb_edac x86_pkg_temp_thermal ip_set intel_powerclamp core=
+temp
+rfkill nf_tables nfnetlink qrtr kvm_intel kvm irqbypass rapl sunrpc
+intel_cstate lpc_ich hpilo ipmi_ssif pktcdvd intel_uncore dax_pmem acpi_ipmi
+ioatdma tg
+3 dca ipmi_si acpi_power_meter fuse zram xfs nd_pmem nd_btt crct10dif_pclmul
+crc32_pclmul crc32c_intel hpsa nd_e820 libnvdimm ghash_clmulni_intel serio_=
+raw
+mgag200 scsi_transport_sas hpwdt at
+a_generic pata_acpi scsi_dh_rdac scsi_dh_emc scsi_dh_alua dm_multipath
+ipmi_devintf ipmi_msghandler
+[91879.015432] ---[ end trace 0000000000000000 ]---
+[91879.042514] RIP: 0010:page_table_check_set.part.0+0x89/0xe0
+[91879.042522] Code: 75 64 44 89 c1 f0 0f c1 08 83 c1 01 83 f9 01 7e 04 84 =
+db
+75 67 48 83 c6 01 48 03 15 41 a4 e6 01 4c 39 e6 74 4f 48 85 d2 75 c2 <0f> 0=
+b f7
+c5 ff 0f 00 00 75 a4 48 8b 45 00=20
+a9 00 00 01 00 74 99 48
+[91879.042524] RSP: 0000:ffffbdb2a1437b30 EFLAGS: 00010246
+[91879.042527] RAX: ffff970cc3dbdd30 RBX: 0000000000000001 RCX:
+0000000000000000
+[91879.042528] RDX: 0000000000000000 RSI: 0000000000000001 RDI:
+0000000000000000
+[91879.042529] RBP: fffff49809008300 R08: 0000000000000000 R09:
+0000000000000000
+[91879.042531] R10: 0000000000000001 R11: 0000000000000001 R12:
+0000000000000001
+[91879.042532] R13: fffff49809008300 R14: ffff9711fe8d7bb0 R15:
+ffff971191976200
+[91879.042534] FS:  00007fceec2f4740(0000) GS:ffff9714eae00000(0000)
+knlGS:0000000000000000
+[91879.042536] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[91879.042537] CR2: 00007fceec576000 CR3: 000000053742a001 CR4:
+00000000001706e0
+[91879.042539] note: xfs_io[48184] exited with preempt_count 1
+[91882.423346] systemd[1]: Created slice
+system-dbus\x2d:1.2\x2dorg.freedesktop.problems.slice - Slice
+/system/dbus-:1.2-org.freedesktop.problems.
+[91882.429366] systemd[1]: Started dbus-:1.2-org.freedesktop.problems@0.ser=
+vice
+[92015.775618] systemd[1]: dbus-:1.2-org.freedesktop.problems@0.service:
+Deactivated successfully.
+[92332.353087] systemd[1]: Starting dnf-makecache.service - dnf makecache...
+[92347.887809] systemd[1]: dnf-makecache.service: Deactivated successfully.
+[92347.934938] systemd[1]: Finished dnf-makecache.service - dnf makecache.
+[92347.935805] systemd[1]: dnf-makecache.service: Consumed 6.327s CPU time.
 
-The gadget is far from perfect, it still has some rough edges, but it fits my
-needs so far.
-If folks are interested, you are welcome to try it out and provide me
-feedback so I can get it in shape for upstream b4.
+[92397.345084] sysrq: Show Blocked State
+[92397.365912] task:xfs_io          state:D stack:14528 pid:48187 ppid: 479=
+65
+flags:0x00004006
+[92397.408219] Call Trace:
+[92397.420926]  <TASK>
+[92397.430899]  __schedule+0x492/0x1640
+[92397.447320]  ? lock_acquire+0x26a/0x2d0
+[92397.464582]  ? rcu_read_lock_sched_held+0x10/0x70
+[92397.485899]  ? lock_release+0x215/0x460
+[92397.503192]  schedule+0x4e/0xb0
+[92397.517338]  rwsem_down_write_slowpath+0x35a/0x710
+[92397.538897]  down_write+0xad/0x110
+[92397.554207]  exit_mmap+0x46/0x1a0
+[92397.569167]  ? uprobe_clear_state+0x25/0x120
+[92397.588450]  ? __mutex_unlock_slowpath+0x2a/0x260
+[92397.610111]  ? uprobe_clear_state+0x68/0x120
+[92397.630130]  mmput+0x71/0x150
+[92397.643507]  do_exit+0x324/0xc40
+[92397.658063]  ? rcu_read_lock_sched_held+0x10/0x70
+[92397.679239]  do_group_exit+0x33/0xb0
+[92397.695338]  get_signal+0xbbc/0xbc0
+[92397.711029]  arch_do_signal_or_restart+0x30/0x770
+[92397.732360]  ? __schedule+0x49a/0x1640
+[92397.749793]  ? lock_is_held_type+0xe8/0x140
+[92397.768690]  exit_to_user_mode_prepare+0x172/0x270
+[92397.790278]  syscall_exit_to_user_mode+0x16/0x50
+[92397.811059]  do_syscall_64+0x67/0x80
+[92397.827127]  ? sched_clock_cpu+0xb/0xb0
+[92397.844438]  ? lock_release+0x14f/0x460
+[92397.861976]  ? _raw_spin_unlock_irq+0x24/0x50
+[92397.883664]  ? lock_is_held_type+0xe8/0x140
+[92397.904426]  ? do_syscall_64+0x67/0x80
+[92397.922912]  ? lockdep_hardirqs_on+0x7d/0x100
+[92397.944397]  ? do_syscall_64+0x67/0x80
+[92397.961255]  ? lockdep_hardirqs_on+0x7d/0x100
+[92397.981189]  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+[92398.004672] RIP: 0033:0x7fceec3fc422
+[92398.020394] RSP: 002b:00007fceec2f2e30 EFLAGS: 00000293 ORIG_RAX:
+0000000000000022
+[92398.054524] RAX: fffffffffffffdfe RBX: 00007fceec2f3640 RCX:
+00007fceec3fc422
+[92398.086955] RDX: 0000000000000002 RSI: 0000000000000000 RDI:
+0000000000000000
+[92398.119583] RBP: 0000000000000000 R08: 0000000000000000 R09:
+00007ffd5dc5891f
+[92398.151800] R10: 0000000000000008 R11: 0000000000000293 R12:
+ffffffffffffff80
+[92398.183959] R13: 0000000000000016 R14: 00007ffd5dc58820 R15:
+00007fceebaf3000
+[92398.216164]  </TASK>
 
-But the tool won't be needed for maintainers that work with topic
-branches if each internal topic merge contains a link to the lore thread
-the topic was applied from.
+--=20
+You may reply to this email to add a comment.
 
-Thanks,
-Amir.
-
-[1] https://github.com/amir73il/b4/commits/release-notes
-
-This example analyses a range of commits that did not originate
-from a single patch series to demonstrate how an analysis of
-PR topics looks like:
-
-$ git show 1499b8a3a37b
-commit 1499b8a3a37baf5a78ee8044e9a8fa0471268d74
-Merge: 9a5280b312e2 2d9ac4319b99
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Thu Apr 21 11:40:17 2022 +1000
-
-    Merge branch 'guilt/5.19-miscellaneous' into xfs-5.19-for-next
-
-$ git format-patch 1499b8a3a37b^..1499b8a3a37b^2 --stdout | b4 rn -m - 2>rn.log
-
----
-
-- [PATH ?/?] xfs: Simplify XFS logging methods.
-
-- [PATCHSET v2 0/3] xfs: fix corruption of free rt extent count
-  [https://lore.kernel.org/r/164961485474.70555.18228016043917319266.stgit@magnolia]
-  Tests: xfs/141
-
-- [PATH ?/?] xfs: Add XFS messages to printk index
-
-- [PATCH] xfs: Use generic_file_open()
-  [https://lore.kernel.org/r/20220409155220.2573777-1-willy@infradead.org]
-
-- [PATH ?/?] xfs: simplify local variable assignment in file write code
-
----
+You are receiving this mail because:
+You are watching the assignee of the bug.=
