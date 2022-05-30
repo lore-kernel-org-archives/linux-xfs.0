@@ -2,83 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3063CC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 May 2022 07:42:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4DBAC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 May 2022 08:06:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232400AbiE3HmJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 May 2022 03:42:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50560 "EHLO
+        id S229668AbiE3IGp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 May 2022 04:06:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233697AbiE3HmI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 May 2022 03:42:08 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6719F25EAF
-        for <linux-xfs@vger.kernel.org>; Mon, 30 May 2022 00:42:07 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F414560DD3
-        for <linux-xfs@vger.kernel.org>; Mon, 30 May 2022 07:42:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 65ABCC341C4
-        for <linux-xfs@vger.kernel.org>; Mon, 30 May 2022 07:42:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653896526;
-        bh=QsnVM0x3GuGvE4NlKyZDGP4GTxuRm/PW2zb1U9vk2BI=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=Slp6M6PRir9yV8tSubdCJy5c6QjNYd+cb8tYBeILCYQVdkn032BQ6Z+bZnX7Uj3jn
-         U1lawNfyThuNCteN+vu5JG8OfvZtRGO/J6M7TZaM7YvkrzeysjjTjNvosvJLC6ex8l
-         kHmZBxM1gEIaSQ7v2UJ5e+XGLRleR/mQP0/Xd+bWzD+oV83zsMHE5VmRg7c9sV/MU8
-         DzG7OwodBZIA+mB5ByhHhkPfo4lRChrREoo5QFYbkEXd4JTVnmFwerCSX57yQeQ3kC
-         JdtDDkGagvzR5IATDmGaQaD+AfhXwnnTi/5lXC7UMhBbxnGv463tSRftoQnaebANOS
-         5lr1m4oKj9OAQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 5421BC05FD4; Mon, 30 May 2022 07:42:06 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216047] [generic/623 DAX] kernel BUG at
+        with ESMTP id S232713AbiE3IGm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 May 2022 04:06:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8F34CDBD
+        for <linux-xfs@vger.kernel.org>; Mon, 30 May 2022 01:06:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1653897992;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=FANm1doqZnuvQp8dqoXUwCaygSCiGRLAv8O5pwgkd1I=;
+        b=Ry8EkZgojbXzbgmiK8FcRFSy9WkYMxDqBf1+1ncGx0DX3PmXB0jwQANG98DER0yEMmstFp
+        4fR3ShFV7aVzLUAjuaz5nPbm89LmJ6sOq742rnLUUD1GJBE8NeA4/D7YR4HOCkbciObD8V
+        OG7KeAvi1nUtW+V8T2Q8L0di6tfdcO0=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-241-QkAcy7D2N1W_gGw1g4fvDw-1; Mon, 30 May 2022 04:06:31 -0400
+X-MC-Unique: QkAcy7D2N1W_gGw1g4fvDw-1
+Received: by mail-qk1-f200.google.com with SMTP id o18-20020a05620a2a1200b006a0cc3d8463so8240169qkp.4
+        for <linux-xfs@vger.kernel.org>; Mon, 30 May 2022 01:06:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=FANm1doqZnuvQp8dqoXUwCaygSCiGRLAv8O5pwgkd1I=;
+        b=LiQG4hQSgQBBvmbKkrhYRfAguuXKPfBSC2013/Uyv/ash7WQeBo01Jk30RYbvq9El4
+         F3GEnuVKBb/ObVxYYyqzHm2toP+YuMiRpNAMf+fzBVv0H8bZ9oAp0h4gPjImLtnk88gA
+         GU2xut+CWsJiMEx5a54RPQALk7kbTX/x318NGZz5VUP7hAsSzldq5yNxTlK9CCRPxcPk
+         Re9vBSEA3Zgx4QJdAOxBFRSozfNCO/GhjNM4zW3QS7yNhJpWdCVQkRewL5nWqrXyiZMV
+         AbF5F2tJCksKJ8CWVBV4OU4FnzzV9BZZfxLoN/UUPedKJ9fpCp46JxGJlWSZDvSy4KnK
+         C0Xg==
+X-Gm-Message-State: AOAM533hUUCKhNHMkw2CFIw2sB2imabUMV7FPlEpdXPeO97lRqZqWckg
+        S/Cbw9O6fzjgU1Sgrt2UAZTsM4tK8k2hvgQhWKO5Qqo47+4meb7KCRkecACjPV8Gsl0wSi3Sp2/
+        rGpC4Jvzd4oROftyv3FDR
+X-Received: by 2002:a05:620a:1999:b0:6a3:9689:a673 with SMTP id bm25-20020a05620a199900b006a39689a673mr25290033qkb.209.1653897983113;
+        Mon, 30 May 2022 01:06:23 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwwtUPQf7QR5FM8wxuF5OVRrZVbK4JcSC+4x2oKkmbJnqwcopcmaJy1biTf/RjE44gViBJnag==
+X-Received: by 2002:a05:620a:1999:b0:6a3:9689:a673 with SMTP id bm25-20020a05620a199900b006a39689a673mr25290026qkb.209.1653897982871;
+        Mon, 30 May 2022 01:06:22 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id 2-20020a370802000000b0069fc13ce204sm7173565qki.53.2022.05.30.01.06.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 May 2022 01:06:22 -0700 (PDT)
+Date:   Mon, 30 May 2022 16:06:16 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     linux-mm@kvack.org
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Potential regression on kernel 5.19-rc0: kernel BUG at
  mm/page_table_check.c:51!
-Date:   Mon, 30 May 2022 07:42:05 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: Memory Management
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: component product short_desc
-Message-ID: <bug-216047-201763-LLo82UpXi8@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216047-201763@https.bugzilla.kernel.org/>
-References: <bug-216047-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+Message-ID: <20220530080616.6h77ppymilyvjqus@zlang-mailbox>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216047
+Hi mm folks:
 
-Zorro Lang (zlang@redhat.com) changed:
+I reported a regression bug on latest upstream linux:
+https://bugzilla.kernel.org/show_bug.cgi?id=216047
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-          Component|XFS                         |Other
-            Product|File System                 |Memory Management
-            Summary|[generic/623 DAX with XFS]  |[generic/623 DAX] kernel
-                   |kernel BUG at               |BUG at
-                   |mm/page_table_check.c:51!   |mm/page_table_check.c:51!
+It's about xfs/ext4 + DAX, panic at mm/page_table_check.c:51!
 
---=20
-You may reply to this email to add a comment.
+  static struct page_table_check *get_page_table_check(struct page_ext *page_ext)
+  {
+==>     BUG_ON(!page_ext);
+        return (void *)(page_ext) + page_table_check_ops.offset;
+  }
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+It's 100% reproducible for me, by running fstests generic/623:
+  https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git/tree/tests/generic/623
+on xfs or ext4 with DAX enabled.
+
+It doesn't look like a xfs or ext4 issue, so send to linux-mm to get more
+reviewing. More details please refer to above bug link. I changed its Pruduct
+to mm, but the Assignee isn't changed by default.
+
+Thanks,
+Zorro
+
