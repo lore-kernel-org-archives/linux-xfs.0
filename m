@@ -2,180 +2,215 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 907DEC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 May 2022 03:40:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BED6CC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 May 2022 07:19:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229839AbiE3DkV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 29 May 2022 23:40:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55074 "EHLO
+        id S229782AbiE3HTe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 May 2022 03:19:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbiE3DkU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 May 2022 23:40:20 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C3A9719F3
-        for <linux-xfs@vger.kernel.org>; Sun, 29 May 2022 20:40:19 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24U1XbaJ026549;
-        Mon, 30 May 2022 03:40:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2021-07-09;
- bh=oNVCP9mIkE3iz3cDQDVN5veQyEWmS5/8hFqAzLKjV34=;
- b=yteV0phrKxv+njI6XwEIVtIpbVq6Y0+6NkIEVWwRQnBGPefZ4ehxTQDqarxmd/Sit1vU
- Y1kEYzd8suV+BVlbo2xePenBGShCEHZNZKUwkbbrnBRbf5V3k5v1hw6d8wPQH2xXPScV
- pxHH1wiQodxmQTRmi/VJ4BKmRQTX0gMwrWhmgRWon5I6tdaqWCh5knhT4px7OVOEWYcs
- KTl14uZDhGOSiiSxb4uXXQnEmG5nE/nSFcmpz7VSXtE/JaAtg5zPiQE74bDgYwrVUHjA
- X94NneCW01IfDWui+xkovywiGMQ9xuq64cdUeC232d26izZatRDN9GUmZtHgfm6ZYxk1 BA== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gbgwm1n6u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 30 May 2022 03:40:09 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24U3Zo6R019190;
-        Mon, 30 May 2022 03:40:08 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2173.outbound.protection.outlook.com [104.47.56.173])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gc8hqah50-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 30 May 2022 03:40:08 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TpUir8GHxDzOeF+fu4LKyEwd2booCXTJcQthXRicR+Q5MkjNZcVwninlE2stmU83RrnTt/YvtndNZzNkfI4JiayE6VZ/vqmPnik+lcBX8jQxRIUYClwCtuCd52HqXva9jBzFQFaonwE13F3VXByK0bcO6Du+4FpMznz8qOqTpcAom4y/IL3DvCGALRRtmk1nIYxR1wZz2egIo3aQES1+yTge7V+7ZZB6rOW6dTkrxYvlcCzDS0mw2V5MlO3Ct4g3zVXzjF4aTEZK7dPuKgxnZBT8lLMi1rrJoseBTtvi9dOBNIBpvpLQn6j2q1HgWtRkXzSX9HmY4UX6tv2ktG5xow==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oNVCP9mIkE3iz3cDQDVN5veQyEWmS5/8hFqAzLKjV34=;
- b=YF4IDHcdg8q9ankOWw1wLllPLULnEmdL8nAaJqvV+xao1I0kQqrZU/AgVhF8u3KmuLcvZcwIjuGpOY0LpV6T+iyjCkyeremRBjl9W6myRYz8v5TbK9ykqQVy5PW7cYu3y2lhLTmApUKwszrcpSJ89aVP4JoGhCpXJWPz1xzw8cYMhMR+y5KAA2gfn2SjMfuyWZx2hj9uZkAAIuXn85y82YGDULwHvYpQ7yjxi3+PUS8hDLDtC39PKFEKKy8eZ9X3oZaJgf/eZ02yq5eEksboHg9CvwOPmZ/pmL0/nZPWqj7ILuEaSJwGi9JNqtu/QIw6uNw4L7Jm7aB8Ze0kC5Pz0A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oNVCP9mIkE3iz3cDQDVN5veQyEWmS5/8hFqAzLKjV34=;
- b=lm4dGX0B/NmQaDx0BsN36U8KGHP3NrWwN2mn09GLNdv60lRGlqgjmMKrEYs27mhsmLtC2ar4SpV/ULKIuUgLfelB5x9MmK3ngGuBGH7EgQViormac+sXuqK+YnbW9EQfTjPcC8jVXFgbf+clLKEVT5jB8e3OJJA/YNZdX6SGiH0=
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by PH0PR10MB5872.namprd10.prod.outlook.com (2603:10b6:510:146::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.19; Mon, 30 May
- 2022 03:40:05 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::5476:49e9:e3eb:e62]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::5476:49e9:e3eb:e62%5]) with mapi id 15.20.5293.019; Mon, 30 May 2022
- 03:40:05 +0000
-From:   Chandan Babu R <chandan.babu@oracle.com>
+        with ESMTP id S230074AbiE3HT1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 May 2022 03:19:27 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E516B6FD03
+        for <linux-xfs@vger.kernel.org>; Mon, 30 May 2022 00:19:21 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 904D7B8094C
+        for <linux-xfs@vger.kernel.org>; Mon, 30 May 2022 07:19:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1E336C3411E
+        for <linux-xfs@vger.kernel.org>; Mon, 30 May 2022 07:19:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653895159;
+        bh=0JM1kxWDld59XP0IdYXUADqI6hOd7PmdK7p4ct5UAAQ=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=jl3ivpPvm2zCGKAeHq+6jo2HFm/wy2h96w4IzMzLEQhXTPGdFTihcxmWHLBJ0Jj25
+         6mF2I2zmk5EX0enLDQ2OzeTq8CtFFDpn4dojgF5gI2lkiXjcYTWPBwGViJCbGy1Ecg
+         Au/8k501EC7lqngIHvA//Z4s+GLrlVMUJVC5iIuH50jY3wDtgEd7OUWJ82KX8Rx5//
+         IoIz2u8g6S/2BoCjrw+qsL+U8OM9mpGncbYvrGqLaCLVenAwXOxdSUJbVPUDiJNeDj
+         vuOKZOdP2QOuJM7T0P6j0tcvkUfdI+tbZLtcZ+wtXn8w+ZT5MfSknOXzzw+fSfN6wL
+         NMQ2Gp6KbaqTA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 0A05DCC13AD; Mon, 30 May 2022 07:19:19 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
 To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, sandeen@sandeen.net,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH V2] xfs_repair: Search for conflicts in certain inode tree when processing uncertain inodes
-Date:   Mon, 30 May 2022 09:09:47 +0530
-Message-Id: <20220530033947.167843-1-chandan.babu@oracle.com>
-X-Mailer: git-send-email 2.35.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SGXP274CA0024.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:b8::36)
- To SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+Subject: [Bug 216047] [generic/623 DAX with XFS] kernel BUG at
+ mm/page_table_check.c:51!
+Date:   Mon, 30 May 2022 07:19:18 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: zlang@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216047-201763-oScwqvYUUE@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216047-201763@https.bugzilla.kernel.org/>
+References: <bug-216047-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 1c899cd2-551c-455a-b61f-08da41ee15c2
-X-MS-TrafficTypeDiagnostic: PH0PR10MB5872:EE_
-X-Microsoft-Antispam-PRVS: <PH0PR10MB5872C15CAFB46EEC16446512F6DD9@PH0PR10MB5872.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: gwudUWrUywEfByER6gh5MtaTTIzR7lZ2lpvE6K2NYq9lFmbPgdrDUqy14Zu6959ogFXYy5uZFVJyJA2xgF+83UtBd0BsyswoFvS5gk08uvVYkVe+40y+aLek5DNB19gOH0e6NGpxuqF0HSE0SBUFgpMCGfli4j4JCeZCTcC/O3ORjE2mgMK1OAA+dcEF3YsIJL56pU/xC5cH1EZzFZMs7qj8IukOFNxqCkIxILWxDLimrUU27e21MuIp3QnSb9CkQ3hVIBr4prkN76mWhgbMUK2elUkhY19KqZOAg3Uj1YigZNVlF1jyJlRQTUMhtp7hrhCxKns6NQ+hseBk+IwB+iPLxIC9eKo54mlKcaD0YUKOOVbHfFUlUjy6ygHnxgNgmUMgAqlYLUq2pfLTutwEd6C72kNpJZaQZudxmClqUolvvHEud9eDaEo6r2CfhS56k4ViBBpRefi96/PWKmwrz1RcNeK/Sn1IH7W0TnHxKO+4fmAzz9OgQL5c0B1rF83osxU669U5xcjh0zu/ZavNRE4xI9bEeLXjx4sSp7Wxnx/MNISrF1HBcDzjQsJRckSaWi2Wo4pYGRZSTFgCMaEgkj6IDUnhPImbrgf/u1O1AzlhxpgCvPkWvbpzHA1T5K0DhTBqkWzRWttz6g67Nc8OcyP6/ajYRoHglbV76DL74UeVzBVHRfOyW3uY2Kt/BfqxePJLi3/kOueMiU7sbcssCg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(36756003)(6506007)(316002)(6916009)(54906003)(83380400001)(66556008)(66476007)(8676002)(66946007)(38350700002)(4326008)(1076003)(2616005)(38100700002)(6486002)(186003)(508600001)(86362001)(8936002)(26005)(6512007)(5660300002)(6666004)(2906002)(52116002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?LqVB2VZrnNncQgs8wPCC/ltw30oML7kzYhctaQxSsvg+M9wMMXTYYOFobQrc?=
- =?us-ascii?Q?3fsZzw0A6g50U6CnEh2g2Es6TZ0HDr9bgAodXelmtE0g7y9EaZV6zVxLsvR4?=
- =?us-ascii?Q?C5dSDksnns5i1csBUk+O6ZNVBQBozh+B8daAsdwE5+/nx7/rnVnIAWvXA1VY?=
- =?us-ascii?Q?MQEk04EW+kmm2MpzozlyvWXfAHqZW4ohtSwEGyqCK086HCY9ndlm+N/CfzMk?=
- =?us-ascii?Q?v4KKD6aTlbBDXRury4O+qfPT7Gl73YWxCBAa+QDN53LX3K3eJ05GhQV0Dj0/?=
- =?us-ascii?Q?jW6NlCSlnbZp5D7larKp8vvg/0t8oTno+oUmlZgrCkfpuqCet8idFoXOpJfE?=
- =?us-ascii?Q?oUf+V5yw8+wUwYbuy7CDjUs8aJOUQps4t0RkublCcegKL1mYX5STxNRd+gr8?=
- =?us-ascii?Q?qCuDSICv/7LXaUkF0dJN8nehMRq3soObMQC7JI1hsag10SUdbDI2PZuvqPEA?=
- =?us-ascii?Q?WWGMnLi6YXcyLVea2x33k0BrLP0cpGHbStiH1b5p314uarsCq4ljpvKKvyQz?=
- =?us-ascii?Q?CmOr3Wybx0tzvIz5FJSMGxOcTtl5oFxD2VDMT1zER8pcuTMUUem8hqyJ3DYW?=
- =?us-ascii?Q?CfZOV1hZCZdgzMFOWjIXVIaXTXQdnSqt18bOKrvDy+at8588Z9d18lsHWfs+?=
- =?us-ascii?Q?AaFqKxJd3vqhGCxsPe+0+W9rLaXKsHw6AoSbJLIh6MhaNCaFQI3zjhGdCYBI?=
- =?us-ascii?Q?Cto+tc46vl3/iCRuIitFJhRvuXyPjdyUQom18bps5PcCG3aF/s7hrsYaazcc?=
- =?us-ascii?Q?m1940ddgZ5HSZgM7uWOtfdoo6gIN1gvsfbEHishjnKnCALB6dO4JZiRT0Cbl?=
- =?us-ascii?Q?vcuYO2MAtKT5QD3HAGWE22NrseSDhUKpa4rjxaH6xszOMJOj40y86QPyc9XM?=
- =?us-ascii?Q?h5nkggJlKpL+5VHJ1Ay/XlEVfrFCJ/YO4SAjAYbGSWE45AluAp5J83rX7Az7?=
- =?us-ascii?Q?i2MdtqgcwsFseSUMtes0GjG8GGuzf0NFRNYP7PYxJ1o4CuYCRsPazkIvClHm?=
- =?us-ascii?Q?TqiC+tNuD/XE4HFMima/SH7GzftD+pnFvNFPm6p+EBr6TH8PyKrmo/hfQ1Y6?=
- =?us-ascii?Q?UCUfA+pa00xNKBX4VglqeAH2+Q2GgfdT1qCIbdl7KKTjFqHrdrRiXwC5vQkf?=
- =?us-ascii?Q?3GwEpXwZz9pnOFFqatdlmIKel5jKgSqmiLawf/Ub6mHMnWebhnb779gP8gid?=
- =?us-ascii?Q?HfkhKcFa9VCnbHNTBtN/DFSa5UNV0hf9d8unqi9wGQFZi67NagTmw9elU8F5?=
- =?us-ascii?Q?0TTQEE+4Cqtlbl3QzdVWN2eVrKr9il+dWWNGbQXaWsg7OAPOt783nPkJUOma?=
- =?us-ascii?Q?jBTujAlsWpj6UUmlW8DfM7C7FbFMgWTRikByx/Urb1xN6ohWvyuFd9VewvvY?=
- =?us-ascii?Q?pCZkXHq/yZMupjPujPMHv+OAB3NMqksg07r/iPQv9Lri92K2o0vee0MFfkNC?=
- =?us-ascii?Q?A50euuSbwZkYhC1DNjMPwJYWovOyVWlfj+5oUWn2gE+7Imm1xZvphKWLO8XP?=
- =?us-ascii?Q?VfK8z+StiHYbwz7cwD9jbTXvVRKa0CM7vYpLQRYBhaBeEarNcLJ2kwczwUkG?=
- =?us-ascii?Q?OPaxpwqim3ssBz+J/ugebwvqfUuVYvOJMkCupwtDpYfaKjpClxYYdZUHWxtb?=
- =?us-ascii?Q?DxxHxWEH8A6ILZr8Hxk4OsZiHZNfbGAzQK1AnGmrji1JRV8pD6MEuWx0t7Pc?=
- =?us-ascii?Q?hz45sLNdIZfBMB9cDBlTOfkHUIVKCeRNuDeGTvhfsBUBQgqKUo3zdzgOXSro?=
- =?us-ascii?Q?pAz/3sF36A=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1c899cd2-551c-455a-b61f-08da41ee15c2
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 May 2022 03:40:05.2731
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: vvGzaEoBUFcBcEoUIiBGqbVAfH2HEVjVasp0rtnxpUQtB44qwqbwwv36CJPhXgEQae04JPvg3W0WllkhTkdiMA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5872
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.874
- definitions=2022-05-30_01:2022-05-27,2022-05-30 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
- mlxlogscore=999 malwarescore=0 mlxscore=0 spamscore=0 phishscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2204290000 definitions=main-2205300018
-X-Proofpoint-GUID: suf9OO4ooCgXsuV_1aSQWDEEWAxy_B2U
-X-Proofpoint-ORIG-GUID: suf9OO4ooCgXsuV_1aSQWDEEWAxy_B2U
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The following are the list of steps executed by phase 3 w.r.t processing inode
-chunks obtained from the uncertain inode chunk tree:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216047
 
-1. For each inode chunk in the uncertain inode chunk tree
-   1.1. Verify inodes in the chunk.
-   1.2. If most of the inodes in the chunk are found to be valid,
-        1.2.1. If there are no overlapping inode chunks in the uncertain inode
-               chunk tree.
-               1.2.1.1. Add inode chunk to certain inode tree.
-   1.3. Remove inode chunk from uncertain inode chunk tree.
+--- Comment #1 from Zorro Lang (zlang@redhat.com) ---
+I just tried the lastest mainline upstream linux, it's 100% reproducible for
+me. And it's not only reproducible on xfs, ext4 with DAX can reproduce it
+too[1]. So it might be a common bug from mm?
 
-The check in 1.2.1 is bound to fail since the inode chunk being processed was
-obtained from the uncertain inode chunk tree and it continues to be there
-until step 1.3 is executed.
+[1]
+[  291.434410] run fstests generic/623 at 2022-05-30 15:14:32
+[  291.768382] systemd[1]: Started fstests-generic-623.scope - /usr/bin/bas=
+h -c
+test -w /proc/self/oom_score_adj && echo 250 > /proc/self/oom_score_adj; ex=
+ec
+./tests/generic/623.
+[  294.406254] EXT4-fs (pmem0p2): mounted filesystem with ordered data mode.
+Quota mode: none.
+[  294.442928] EXT4-fs (pmem0p2): shut down requested (1)
+[  294.443089] Aborting journal on device pmem0p2-8.
+[  294.477893] EXT4-fs (pmem0p2): unmounting filesystem.
+[  294.479943] systemd[1]: mnt-scratch.mount: Deactivated successfully.
+[  294.960374] EXT4-fs (pmem0p2): mounted filesystem with ordered data mode.
+Quota mode: none.
+[  295.043716] ------------[ cut here ]------------
+[  295.043722] kernel BUG at mm/page_table_check.c:51!
+[  295.043736] invalid opcode: 0000 [#1] PREEMPT SMP KASAN PTI
+[  295.112220] CPU: 23 PID: 1936 Comm: xfs_io Tainted: G S        I=20=20=
+=20=20=20=20
+5.18.0-mainline+ #2
+[  295.149570] Hardware name: HP ProLiant DL380p Gen8, BIOS P70 08/02/2014
+[  295.180088] RIP: 0010:page_table_check_set.part.0+0x184/0x300
+[  295.208336] Code: 48 8b 04 24 80 38 00 0f 85 2b 01 00 00 48 83 c3 01 4c =
+03
+3d 5e e9 5a 03 4c 39 eb 0f 84 05 01 00 00 4d 85 ff 0f 85 53 ff ff ff <0f> 0=
+b f7
+c3 ff 0f 00 00 0f 85 f5 fe ff ff=20
+be 08 00 00 00 48 89 df
+[  295.293142] RSP: 0000:ffffc9000d50f708 EFLAGS: 00010246
+[  295.316834] RAX: dffffc0000000000 RBX: ffffea00092180c0 RCX:
+ffffffff85a98a25
+[  295.349059] RDX: 1ffffd400124301b RSI: 0000000000000001 RDI:
+ffffea00092180d8
+[  295.381191] RBP: ffffea00092180c0 R08: 0000000000000000 R09:
+ffff88801bfa7607
+[  295.413394] R10: ffffed10037f4ec0 R11: 0000000000000005 R12:
+0000000000000000
+[  295.445718] R13: 0000000000000001 R14: ffff88801bfa7600 R15:
+0000000000000000
+[  295.477844] FS:  00007f590a83f740(0000) GS:ffff888085000000(0000)
+knlGS:0000000000000000
+[  295.518073] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  295.547270] CR2: 00007f590aac1000 CR3: 0000000049404003 CR4:
+00000000001706e0
+[  295.581391] Call Trace:
+[  295.602075]  __page_table_check_pte_set+0x28f/0x350
+[  295.624144]  ? __page_table_check_pte_clear+0x2b0/0x2b0
+[  295.647669]  ? percpu_ref_put_many.constprop.0+0x1a0/0x1a0
+[  295.672391]  ? __get_locked_pte+0x1b8/0x2e0
+[  295.691432]  insert_pfn+0x22d/0x340
+[  295.707093]  ? vm_map_pages_zero+0x10/0x10
+[  295.725738]  ? pfn_modify_allowed+0x64/0x2b0
+[  295.745392]  ? track_pfn_remap+0x1d0/0x1d0
+[  295.764201]  __vm_insert_mixed+0x17f/0x1e0
+[  295.782965]  ? vmf_insert_pfn+0x60/0x60
+[  295.800382]  ? __dax_invalidate_entry+0x1c0/0x1c0
+[  295.822137]  ? dax_direct_access+0x111/0x1b0
+[  295.841356]  dax_fault_iter+0x100f/0x1bf0
+[  295.859436]  ? grab_mapping_entry+0x4e0/0x4e0
+[  295.879076]  ? iomap_iter+0xa02/0x10a0
+[  295.895964]  dax_iomap_pte_fault+0x3f4/0xb80
+[  295.915252]  ? dax_writeback_mapping_range+0xeb0/0xeb0
+[  295.938698]  ? __ext4_journal_start_sb+0x345/0x460
+[  295.960264]  ext4_dax_huge_fault+0x44f/0x940
+[  295.979436]  ? ext4_file_open+0xa50/0xa50
+[  295.998477]  ? var_wake_function+0x260/0x260
+[  296.020138]  __do_fault+0xf8/0x4e0
+[  296.037077]  do_fault+0x778/0xee0
+[  296.053492]  ? restore_exclusive_pte+0x5d0/0x5d0
+[  296.076166]  __handle_mm_fault+0xf82/0x26d0
+[  296.095032]  ? vm_iomap_memory+0x140/0x140
+[  296.113504]  ? count_memcg_events.constprop.0+0x40/0x50
+[  296.137317]  handle_mm_fault+0x20e/0x750
+[  296.154958]  do_user_addr_fault+0x345/0xd70
+[  296.173803]  ? rcu_read_lock_sched_held+0x3c/0x70
+[  296.194972]  exc_page_fault+0x65/0x100
+[  296.213635]  asm_exc_page_fault+0x27/0x30
+[  296.232854] RIP: 0033:0x55d4406da88e
+[  296.249860] Code: c0 0f 84 e1 00 00 00 48 8b 05 8e c2 02 00 48 2b 58 10 =
+49
+8d 14 1c 45 85 f6 75 55 4d 85 e4 0f 8e c7 fe ff ff 48 8b 00 44 89 ee <44> 8=
+8 2c
+18 48 8d 43 01 49 83 fc 01 0f 8e=20
+af fe ff ff 48 8b 0d 59
+[  296.334980] RSP: 002b:00007fff29d58370 EFLAGS: 00010206
+[  296.358575] RAX: 00007f590aac1000 RBX: 0000000000000000 RCX:
+0000000000001000
+[  296.390927] RDX: 0000000000001000 RSI: 0000000000000058 RDI:
+0000000000000000
+[  296.423124] RBP: 000055d441b093e0 R08: 1999999999999999 R09:
+0000000000000000
+[  296.455428] R10: 00007f590a9ebac0 R11: 00007f590a9ec3c0 R12:
+0000000000001000
+[  296.489563] R13: 0000000000000058 R14: 0000000000000000 R15:
+0000000000000200
+[  296.524615]  </TASK>
+[  296.535495] Modules linked in: nft_fib_inet nft_fib_ipv4 nft_fib_ipv6
+nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct
+nft_chain_nat nf_nat nf_conntrack nf_defrag_ip
+v6 iTCO_wdt intel_rapl_msr intel_pmc_bxt nf_defrag_ipv4 iTCO_vendor_support
+intel_rapl_common sb_edac x86_pkg_temp_thermal intel_powerclamp ip_set core=
+temp
+kvm_intel kvm irqbypass nf_tables rfkill rapl intel_cstate nfnetlink qrtr
+intel_uncore dax_pmem pcspkr sunrpc lpc_ich hpilo pktcdvd ipmi_ssif acpi_ip=
+mi
+tg3 ioatdma ipmi_si acpi_power_meter dca fuse zram xfs nd_pmem nd_btt crct
+10dif_pclmul crc32_pclmul nd_e820 crc32c_intel libnvdimm ghash_clmulni_intel
+hpsa serio_raw mgag200 hpwdt scsi_transport_sas ata_generic pata_acpi
+scsi_dh_rdac scsi_dh_emc scsi_dh_alua dm_mul
+tipath ipmi_devintf ipmi_msghandler
+[  296.859756] ---[ end trace 0000000000000000 ]---
+[  296.897217] RIP: 0010:page_table_check_set.part.0+0x184/0x300
+[  296.897228] Code: 48 8b 04 24 80 38 00 0f 85 2b 01 00 00 48 83 c3 01 4c =
+03
+3d 5e e9 5a 03 4c 39 eb 0f 84 05 01 00 00 4d 85 ff 0f 85 53 ff ff ff <0f> 0=
+b f7
+c3 ff 0f 00 00 0f 85 f5 fe ff ff=20
+be 08 00 00 00 48 89 df
+[  296.897233] RSP: 0000:ffffc9000d50f708 EFLAGS: 00010246
+[  296.897238] RAX: dffffc0000000000 RBX: ffffea00092180c0 RCX:
+ffffffff85a98a25
+[  296.897241] RDX: 1ffffd400124301b RSI: 0000000000000001 RDI:
+ffffea00092180d8
+[  296.897244] RBP: ffffea00092180c0 R08: 0000000000000000 R09:
+ffff88801bfa7607
+[  296.897247] R10: ffffed10037f4ec0 R11: 0000000000000005 R12:
+0000000000000000
+[  296.897249] R13: 0000000000000001 R14: ffff88801bfa7600 R15:
+0000000000000000
+[  296.897253] FS:  00007f590a83f740(0000) GS:ffff888085000000(0000)
+knlGS:0000000000000000
+[  296.897256] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  296.897260] CR2: 00007f590aac1000 CR3: 0000000049404003 CR4:
+00000000001706e0
+[  296.897264] note: xfs_io[1936] exited with preempt_count 1
 
-This patch changes step 1.2.1 to check for overlapping inode chunks in the
-certain inode chunk tree, since adding the new inode chunk can cause
-overlapping entries to be introduced.
+--=20
+You may reply to this email to add a comment.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
----
- repair/dino_chunks.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-index 11b0eb5f..80c52a43 100644
---- a/repair/dino_chunks.c
-+++ b/repair/dino_chunks.c
-@@ -229,8 +229,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
- 		/*
- 		 * ok, put the record into the tree, if no conflict.
- 		 */
--		if (find_uncertain_inode_rec(agno,
--				XFS_AGB_TO_AGINO(mp, start_agbno)))
-+		if (find_inode_rec(mp, agno, XFS_AGB_TO_AGINO(mp, start_agbno)))
- 			return(0);
- 
- 		start_agino = XFS_AGB_TO_AGINO(mp, start_agbno);
--- 
-2.35.1
-
+You are receiving this mail because:
+You are watching the assignee of the bug.=
