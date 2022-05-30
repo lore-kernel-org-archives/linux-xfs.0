@@ -2,136 +2,180 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70068C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 May 2022 23:36:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 907DEC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 May 2022 03:40:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231330AbiE2Xgi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 29 May 2022 19:36:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38248 "EHLO
+        id S229839AbiE3DkV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 29 May 2022 23:40:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230131AbiE2Xgh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 May 2022 19:36:37 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B55DB630A;
-        Sun, 29 May 2022 16:36:34 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4C2A953458E;
-        Mon, 30 May 2022 09:36:31 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nvSST-000OUT-Eu; Mon, 30 May 2022 09:36:29 +1000
-Date:   Mon, 30 May 2022 09:36:29 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Konstantin Ryabitsev <konstantin@linuxfoundation.org>
-Subject: Re: [GIT PULL] xfs: new code for 5.19
-Message-ID: <20220529233629.GY1098723@dread.disaster.area>
-References: <20220526022053.GY2306852@dread.disaster.area>
- <CAHk-=wg8R2sYVKi7bgwVN8n-exN766PSJwYg+18SLbR=+vQtVA@mail.gmail.com>
- <20220526035317.GI1098723@dread.disaster.area>
- <CAOQ4uxg_O_dC2Le7RZDTaBqtA650jD6BLZE24rpZXx=xpEedkg@mail.gmail.com>
+        with ESMTP id S229533AbiE3DkU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 May 2022 23:40:20 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C3A9719F3
+        for <linux-xfs@vger.kernel.org>; Sun, 29 May 2022 20:40:19 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24U1XbaJ026549;
+        Mon, 30 May 2022 03:40:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=oNVCP9mIkE3iz3cDQDVN5veQyEWmS5/8hFqAzLKjV34=;
+ b=yteV0phrKxv+njI6XwEIVtIpbVq6Y0+6NkIEVWwRQnBGPefZ4ehxTQDqarxmd/Sit1vU
+ Y1kEYzd8suV+BVlbo2xePenBGShCEHZNZKUwkbbrnBRbf5V3k5v1hw6d8wPQH2xXPScV
+ pxHH1wiQodxmQTRmi/VJ4BKmRQTX0gMwrWhmgRWon5I6tdaqWCh5knhT4px7OVOEWYcs
+ KTl14uZDhGOSiiSxb4uXXQnEmG5nE/nSFcmpz7VSXtE/JaAtg5zPiQE74bDgYwrVUHjA
+ X94NneCW01IfDWui+xkovywiGMQ9xuq64cdUeC232d26izZatRDN9GUmZtHgfm6ZYxk1 BA== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gbgwm1n6u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 May 2022 03:40:09 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24U3Zo6R019190;
+        Mon, 30 May 2022 03:40:08 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2173.outbound.protection.outlook.com [104.47.56.173])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gc8hqah50-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 May 2022 03:40:08 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=TpUir8GHxDzOeF+fu4LKyEwd2booCXTJcQthXRicR+Q5MkjNZcVwninlE2stmU83RrnTt/YvtndNZzNkfI4JiayE6VZ/vqmPnik+lcBX8jQxRIUYClwCtuCd52HqXva9jBzFQFaonwE13F3VXByK0bcO6Du+4FpMznz8qOqTpcAom4y/IL3DvCGALRRtmk1nIYxR1wZz2egIo3aQES1+yTge7V+7ZZB6rOW6dTkrxYvlcCzDS0mw2V5MlO3Ct4g3zVXzjF4aTEZK7dPuKgxnZBT8lLMi1rrJoseBTtvi9dOBNIBpvpLQn6j2q1HgWtRkXzSX9HmY4UX6tv2ktG5xow==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=oNVCP9mIkE3iz3cDQDVN5veQyEWmS5/8hFqAzLKjV34=;
+ b=YF4IDHcdg8q9ankOWw1wLllPLULnEmdL8nAaJqvV+xao1I0kQqrZU/AgVhF8u3KmuLcvZcwIjuGpOY0LpV6T+iyjCkyeremRBjl9W6myRYz8v5TbK9ykqQVy5PW7cYu3y2lhLTmApUKwszrcpSJ89aVP4JoGhCpXJWPz1xzw8cYMhMR+y5KAA2gfn2SjMfuyWZx2hj9uZkAAIuXn85y82YGDULwHvYpQ7yjxi3+PUS8hDLDtC39PKFEKKy8eZ9X3oZaJgf/eZ02yq5eEksboHg9CvwOPmZ/pmL0/nZPWqj7ILuEaSJwGi9JNqtu/QIw6uNw4L7Jm7aB8Ze0kC5Pz0A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oNVCP9mIkE3iz3cDQDVN5veQyEWmS5/8hFqAzLKjV34=;
+ b=lm4dGX0B/NmQaDx0BsN36U8KGHP3NrWwN2mn09GLNdv60lRGlqgjmMKrEYs27mhsmLtC2ar4SpV/ULKIuUgLfelB5x9MmK3ngGuBGH7EgQViormac+sXuqK+YnbW9EQfTjPcC8jVXFgbf+clLKEVT5jB8e3OJJA/YNZdX6SGiH0=
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+ by PH0PR10MB5872.namprd10.prod.outlook.com (2603:10b6:510:146::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.19; Mon, 30 May
+ 2022 03:40:05 +0000
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::5476:49e9:e3eb:e62]) by SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::5476:49e9:e3eb:e62%5]) with mapi id 15.20.5293.019; Mon, 30 May 2022
+ 03:40:05 +0000
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Chandan Babu R <chandan.babu@oracle.com>, sandeen@sandeen.net,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH V2] xfs_repair: Search for conflicts in certain inode tree when processing uncertain inodes
+Date:   Mon, 30 May 2022 09:09:47 +0530
+Message-Id: <20220530033947.167843-1-chandan.babu@oracle.com>
+X-Mailer: git-send-email 2.35.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SGXP274CA0024.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:b8::36)
+ To SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxg_O_dC2Le7RZDTaBqtA650jD6BLZE24rpZXx=xpEedkg@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62940380
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=oZkIemNP1mAA:10 a=yPCof4ZbAAAA:8 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=wNBJl4j-QUBApV6RE_4A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1c899cd2-551c-455a-b61f-08da41ee15c2
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5872:EE_
+X-Microsoft-Antispam-PRVS: <PH0PR10MB5872C15CAFB46EEC16446512F6DD9@PH0PR10MB5872.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: gwudUWrUywEfByER6gh5MtaTTIzR7lZ2lpvE6K2NYq9lFmbPgdrDUqy14Zu6959ogFXYy5uZFVJyJA2xgF+83UtBd0BsyswoFvS5gk08uvVYkVe+40y+aLek5DNB19gOH0e6NGpxuqF0HSE0SBUFgpMCGfli4j4JCeZCTcC/O3ORjE2mgMK1OAA+dcEF3YsIJL56pU/xC5cH1EZzFZMs7qj8IukOFNxqCkIxILWxDLimrUU27e21MuIp3QnSb9CkQ3hVIBr4prkN76mWhgbMUK2elUkhY19KqZOAg3Uj1YigZNVlF1jyJlRQTUMhtp7hrhCxKns6NQ+hseBk+IwB+iPLxIC9eKo54mlKcaD0YUKOOVbHfFUlUjy6ygHnxgNgmUMgAqlYLUq2pfLTutwEd6C72kNpJZaQZudxmClqUolvvHEud9eDaEo6r2CfhS56k4ViBBpRefi96/PWKmwrz1RcNeK/Sn1IH7W0TnHxKO+4fmAzz9OgQL5c0B1rF83osxU669U5xcjh0zu/ZavNRE4xI9bEeLXjx4sSp7Wxnx/MNISrF1HBcDzjQsJRckSaWi2Wo4pYGRZSTFgCMaEgkj6IDUnhPImbrgf/u1O1AzlhxpgCvPkWvbpzHA1T5K0DhTBqkWzRWttz6g67Nc8OcyP6/ajYRoHglbV76DL74UeVzBVHRfOyW3uY2Kt/BfqxePJLi3/kOueMiU7sbcssCg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(36756003)(6506007)(316002)(6916009)(54906003)(83380400001)(66556008)(66476007)(8676002)(66946007)(38350700002)(4326008)(1076003)(2616005)(38100700002)(6486002)(186003)(508600001)(86362001)(8936002)(26005)(6512007)(5660300002)(6666004)(2906002)(52116002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?LqVB2VZrnNncQgs8wPCC/ltw30oML7kzYhctaQxSsvg+M9wMMXTYYOFobQrc?=
+ =?us-ascii?Q?3fsZzw0A6g50U6CnEh2g2Es6TZ0HDr9bgAodXelmtE0g7y9EaZV6zVxLsvR4?=
+ =?us-ascii?Q?C5dSDksnns5i1csBUk+O6ZNVBQBozh+B8daAsdwE5+/nx7/rnVnIAWvXA1VY?=
+ =?us-ascii?Q?MQEk04EW+kmm2MpzozlyvWXfAHqZW4ohtSwEGyqCK086HCY9ndlm+N/CfzMk?=
+ =?us-ascii?Q?v4KKD6aTlbBDXRury4O+qfPT7Gl73YWxCBAa+QDN53LX3K3eJ05GhQV0Dj0/?=
+ =?us-ascii?Q?jW6NlCSlnbZp5D7larKp8vvg/0t8oTno+oUmlZgrCkfpuqCet8idFoXOpJfE?=
+ =?us-ascii?Q?oUf+V5yw8+wUwYbuy7CDjUs8aJOUQps4t0RkublCcegKL1mYX5STxNRd+gr8?=
+ =?us-ascii?Q?qCuDSICv/7LXaUkF0dJN8nehMRq3soObMQC7JI1hsag10SUdbDI2PZuvqPEA?=
+ =?us-ascii?Q?WWGMnLi6YXcyLVea2x33k0BrLP0cpGHbStiH1b5p314uarsCq4ljpvKKvyQz?=
+ =?us-ascii?Q?CmOr3Wybx0tzvIz5FJSMGxOcTtl5oFxD2VDMT1zER8pcuTMUUem8hqyJ3DYW?=
+ =?us-ascii?Q?CfZOV1hZCZdgzMFOWjIXVIaXTXQdnSqt18bOKrvDy+at8588Z9d18lsHWfs+?=
+ =?us-ascii?Q?AaFqKxJd3vqhGCxsPe+0+W9rLaXKsHw6AoSbJLIh6MhaNCaFQI3zjhGdCYBI?=
+ =?us-ascii?Q?Cto+tc46vl3/iCRuIitFJhRvuXyPjdyUQom18bps5PcCG3aF/s7hrsYaazcc?=
+ =?us-ascii?Q?m1940ddgZ5HSZgM7uWOtfdoo6gIN1gvsfbEHishjnKnCALB6dO4JZiRT0Cbl?=
+ =?us-ascii?Q?vcuYO2MAtKT5QD3HAGWE22NrseSDhUKpa4rjxaH6xszOMJOj40y86QPyc9XM?=
+ =?us-ascii?Q?h5nkggJlKpL+5VHJ1Ay/XlEVfrFCJ/YO4SAjAYbGSWE45AluAp5J83rX7Az7?=
+ =?us-ascii?Q?i2MdtqgcwsFseSUMtes0GjG8GGuzf0NFRNYP7PYxJ1o4CuYCRsPazkIvClHm?=
+ =?us-ascii?Q?TqiC+tNuD/XE4HFMima/SH7GzftD+pnFvNFPm6p+EBr6TH8PyKrmo/hfQ1Y6?=
+ =?us-ascii?Q?UCUfA+pa00xNKBX4VglqeAH2+Q2GgfdT1qCIbdl7KKTjFqHrdrRiXwC5vQkf?=
+ =?us-ascii?Q?3GwEpXwZz9pnOFFqatdlmIKel5jKgSqmiLawf/Ub6mHMnWebhnb779gP8gid?=
+ =?us-ascii?Q?HfkhKcFa9VCnbHNTBtN/DFSa5UNV0hf9d8unqi9wGQFZi67NagTmw9elU8F5?=
+ =?us-ascii?Q?0TTQEE+4Cqtlbl3QzdVWN2eVrKr9il+dWWNGbQXaWsg7OAPOt783nPkJUOma?=
+ =?us-ascii?Q?jBTujAlsWpj6UUmlW8DfM7C7FbFMgWTRikByx/Urb1xN6ohWvyuFd9VewvvY?=
+ =?us-ascii?Q?pCZkXHq/yZMupjPujPMHv+OAB3NMqksg07r/iPQv9Lri92K2o0vee0MFfkNC?=
+ =?us-ascii?Q?A50euuSbwZkYhC1DNjMPwJYWovOyVWlfj+5oUWn2gE+7Imm1xZvphKWLO8XP?=
+ =?us-ascii?Q?VfK8z+StiHYbwz7cwD9jbTXvVRKa0CM7vYpLQRYBhaBeEarNcLJ2kwczwUkG?=
+ =?us-ascii?Q?OPaxpwqim3ssBz+J/ugebwvqfUuVYvOJMkCupwtDpYfaKjpClxYYdZUHWxtb?=
+ =?us-ascii?Q?DxxHxWEH8A6ILZr8Hxk4OsZiHZNfbGAzQK1AnGmrji1JRV8pD6MEuWx0t7Pc?=
+ =?us-ascii?Q?hz45sLNdIZfBMB9cDBlTOfkHUIVKCeRNuDeGTvhfsBUBQgqKUo3zdzgOXSro?=
+ =?us-ascii?Q?pAz/3sF36A=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1c899cd2-551c-455a-b61f-08da41ee15c2
+X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 May 2022 03:40:05.2731
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: vvGzaEoBUFcBcEoUIiBGqbVAfH2HEVjVasp0rtnxpUQtB44qwqbwwv36CJPhXgEQae04JPvg3W0WllkhTkdiMA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5872
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.874
+ definitions=2022-05-30_01:2022-05-27,2022-05-30 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ mlxlogscore=999 malwarescore=0 mlxscore=0 spamscore=0 phishscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2204290000 definitions=main-2205300018
+X-Proofpoint-GUID: suf9OO4ooCgXsuV_1aSQWDEEWAxy_B2U
+X-Proofpoint-ORIG-GUID: suf9OO4ooCgXsuV_1aSQWDEEWAxy_B2U
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, May 29, 2022 at 10:32:58AM +0300, Amir Goldstein wrote:
-> > > I might wish that your merge commit messages were a bit more
-> > > consistent about the merge details ("why and what"), but you are most
-> > > definitely not the only one with that, and a number of them are quite
-> > > nice (ie the merge of the large extent counters has a nice informative
-> > > commit message, as does the rmap speedup one).
-> >
-> > Those one came from pull requests with informative signed
-> > tags. We're trying to move more of our development processes to
-> > using signed pull reqs when eveything is done, so this hopefully
-> > will happen more often.
-> >
-> > > And then some of them are the uninformative one-lines that just say
-> > > "Merge branch X"
-> >
-> > Yeah, those are merges from local topic branches where I pulled in
-> > individual patches or entire series from the mailing list via 'b4 am
-> > -o - <msg_id> | git am -s'. AFAICT there is no way to have this
-> > retain the patch series cover letter, which generally contains what
-> > I would want to be putting into the merge commit message.
-> >
-> > I'll keep that in mind for future composes, though I do wish there
-> > was an easy way to just have b4/git manage cover letters as part of
-> > the topic branch so they can feed into local merge commits just as
-> > easily remote pulls do....
-> >
-> 
-> There is.
-> I have been hacking on b4 and found many hidden features :)
-> 
-> b4 am 20220510202800.40339-1-catherine.hoang@oracle.com -n
-> xfs-5.19-quota-warn-remove.mbx
-> git am -s xfs-5.19-quota-warn-remove.mbx
-> git tag -F xfs-5.19-quota-warn-remove.cover xfs-5.19-quota-warn-remove
+The following are the list of steps executed by phase 3 w.r.t processing inode
+chunks obtained from the uncertain inode chunk tree:
 
-That's a tag on a commit, not a persistent object associated with a
-branch. I've considered this, but if I append a new commit, rebase
-the branch, or do anything I normally do with topic branches, then
-that tag ends up pointing at the wrong commit or even a non-existent
-commit. It just adds another thing to forget/get wrong when managing
-topic branches for merge. i.e. it doesn't make things simpler.
+1. For each inode chunk in the uncertain inode chunk tree
+   1.1. Verify inodes in the chunk.
+   1.2. If most of the inodes in the chunk are found to be valid,
+        1.2.1. If there are no overlapping inode chunks in the uncertain inode
+               chunk tree.
+               1.2.1.1. Add inode chunk to certain inode tree.
+   1.3. Remove inode chunk from uncertain inode chunk tree.
 
-As it is, I use guilt for managing the contents of all my git
-branches in all my git trees. I already have a local hack in guilt
-to use the first commit of a series as the series description/cover
-letter. I pass a special flag to 'guilt patchbomb' and it turns the
-first commit into the cover letter for editing and sending. With
-this, I have an object associated with the topic branch that follows
-all operations on the branch (including rebases) and so is always
-there in the same place.
+The check in 1.2.1 is bound to fail since the inode chunk being processed was
+obtained from the uncertain inode chunk tree and it continues to be there
+until step 1.3 is executed.
 
-However, I can't use such topic branches for merges - the series
-description commit needs to be purged and the series rebased before
-I merge it. You can see this in this old branch here:
+This patch changes step 1.2.1 to check for overlapping inode chunks in the
+certain inode chunk tree, since adding the new inode chunk can cause
+overlapping entries to be introduced.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git/log/?h=xfs-iunlink-item
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+---
+ repair/dino_chunks.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-In that branch there are actually two description commits:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git/commit/?h=xfs-iunlink-item&id=35d3b6ac52b5870484182d476cb253021e44acc5
-https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git/commit/?h=xfs-iunlink-item&id=a561cb0e09fa7886d034be0ae94f5f77d327014d
-
-because the second line of development (unlinked inode mods) was
-dependent on another set of patches (async inode reclaim).
-
-That's the text and changelog for the cover letter for that specific
-line of development. As a "here's a topic branch with all the
-changes in it" push, I didn't sanitise them.
-
-I think what I'm going to end up doing is add a 'guilt am' command
-that runs b4, extracts the cover letter as an internal guilt file
-(in .git/patches/<branch>/series-description) and add a `guilt
-series -d [-e]` command to print or edit it directly. Then that file
-exists, guilt patchbomb will just pick it up. If I add a `guilt
-merge` wrapper then it will get picked up as the merge description
-automatically, too...
-
-This way the cover letter follows the topic branch no matter what I
-do with the branch once I've downloaded it from the mailing list,
-and it doesn't show up in the commit history and hence I can merge
-the branches easily.
-
--Dave.
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 11b0eb5f..80c52a43 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -229,8 +229,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 		/*
+ 		 * ok, put the record into the tree, if no conflict.
+ 		 */
+-		if (find_uncertain_inode_rec(agno,
+-				XFS_AGB_TO_AGINO(mp, start_agbno)))
++		if (find_inode_rec(mp, agno, XFS_AGB_TO_AGINO(mp, start_agbno)))
+ 			return(0);
+ 
+ 		start_agino = XFS_AGB_TO_AGINO(mp, start_agbno);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.35.1
+
