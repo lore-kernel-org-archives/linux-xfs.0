@@ -2,203 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50031C43217
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 May 2022 20:01:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D692AC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 May 2022 20:15:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347663AbiEaUBb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 May 2022 16:01:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40712 "EHLO
+        id S245568AbiEaUP1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 May 2022 16:15:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347643AbiEaUBT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 May 2022 16:01:19 -0400
-Received: from NAM04-BN8-obe.outbound.protection.outlook.com (mail-bn8nam08on2067.outbound.protection.outlook.com [40.107.100.67])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FD0A90CC3;
-        Tue, 31 May 2022 13:01:07 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RKa5ezAysuEbZar9iOYpt4YLcjUcNWpseiLHqdzJgreXe8Hnzn5yD3HgREyXF6rYsv7WJ6is05h/wOaH1EqIjhKFwsYzyajfMYtzwGBYhROQDACLCRWTv/9Lpjyhi+zuilQPdaFFShkW4J09Q0emq4cVz7TM6cVhGNfFLith8770VZ/b3D1cdi0hYb/AULPMfmTNP/L0u7r9vlUVNag6QooGj/QAncWqeXUthznpd4NqNe1rBRk3TEGZ1M+ko9X9ekqWp0xpACNg13hTmnsKeAMDzyHKkCzyPjitf8QU23/rALSxeMWS3SRCaZAG/DkJnvN5ARsQLjcWAxHTMZ1Ayg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=RGFoeMuycSLm0T3Ola5avl2Wy7hr3oRWaQlczxEFybc=;
- b=I8KWR9oOMsxXFeY2W2lw1Fx2bl4WJOIfzAa1hIsXw5/twDV5szF1f08sqMs9cAFsAyyJa3DaHXM1xfG1z/3E0kGJi2erFXOvQLVDaRZNLY4lcgNuT9uS+So064R4YmFXA8RVXkuIIyMwOK+BsatNa+eNoxJA1LLMixgXQSmly64PpiL9NRSBHyoNAvSyddD5oDfjJvJqCcmL3VIQpglRsLX6DJx5yNIumlpO045EA6aB4OV7NVo/QcAjnu/5qrpSpSL8wytc744rmHOomoB0R4Z5M5QblOu85aV3zJY2lufBbPf9FdMzHEi5CxJTp2Q61U/9mi1P8lGw4y34EevpxA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RGFoeMuycSLm0T3Ola5avl2Wy7hr3oRWaQlczxEFybc=;
- b=IZMOOOpxwDYm1Wzbfjbkbe5XtbUUGJ+tdu2AyNDuwbLBwO3F5w+kTBNsbqKqpiekWbJFHO3ePZQv9Q1Xg4k7oM93PiLP6d5AgN0Y1zTaHyzyuv094/0fCnI0X5uW7SPMuWbkZG3QaWb1VSdkOfuh/QapJLywio3oWz51fRqNXZQ=
-Received: from BN9PR03CA0392.namprd03.prod.outlook.com (2603:10b6:408:111::7)
- by CH2PR12MB3654.namprd12.prod.outlook.com (2603:10b6:610:22::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.16; Tue, 31 May
- 2022 20:01:05 +0000
-Received: from BN8NAM11FT027.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:111:cafe::bf) by BN9PR03CA0392.outlook.office365.com
- (2603:10b6:408:111::7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13 via Frontend
- Transport; Tue, 31 May 2022 20:01:05 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- BN8NAM11FT027.mail.protection.outlook.com (10.13.177.96) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5293.13 via Frontend Transport; Tue, 31 May 2022 20:01:05 +0000
-Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Tue, 31 May
- 2022 15:01:03 -0500
-From:   Alex Sierra <alex.sierra@amd.com>
-To:     <jgg@nvidia.com>
-CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
-        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
-        <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
-        <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
-        <akpm@linux-foundation.org>
-Subject: [PATCH v5 13/13] tools: add selftests to hmm for COW in device memory
-Date:   Tue, 31 May 2022 15:00:41 -0500
-Message-ID: <20220531200041.24904-14-alex.sierra@amd.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220531200041.24904-1-alex.sierra@amd.com>
-References: <20220531200041.24904-1-alex.sierra@amd.com>
+        with ESMTP id S1344224AbiEaUP0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 May 2022 16:15:26 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A23198089;
+        Tue, 31 May 2022 13:15:25 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0F372B81644;
+        Tue, 31 May 2022 20:15:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DB84C385A9;
+        Tue, 31 May 2022 20:15:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654028122;
+        bh=BFanbqOhtsJfdsE0t1WgCWXCbNVZbf6rMzjnBDejGko=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HTExhv82IFTfAX9On7K7/OBjqiJbZE6iPiLVuvD4xx82SDjLP9P74u8VjQUVFAjYl
+         ipwq3tQzLRu4WCAoOB9JIjZvP0W8r6gnw6qcSNx7RiF1RvUBlur0Axirx9QoHRO4xQ
+         mIa5TUL/xyxubDp51oQbQjoddfa2708yaXR7QhTbDyXUch3iGCMttd33LEyVHbjjT9
+         gq98XIBn/tlCG0GYwnLfHur6a6GxGG911xMwSm8K4GCtR51UsL7NzWgvbXkVlJGppV
+         og6hGBkGa9DhTnwHtJ5GGoTvNVvSzmeqXzaqVn+W2rpE3QZ9cgjwzIA2RaKx8qJWFD
+         Xo/D5sYinC2bg==
+Date:   Tue, 31 May 2022 13:15:20 -0700
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Eric Biggers <ebiggers@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] f2fs: add sysfs entry to avoid FUA
+Message-ID: <YpZ3WI/Vjgk/CwFE@google.com>
+References: <20220527205955.3251982-1-jaegeuk@kernel.org>
+ <YpFDw3mQjN1LBd2j@gmail.com>
+ <YpF1gPrQY3UFsgwC@google.com>
+ <YpGtDhV7V7gDk430@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c2c9df9a-bc52-4466-e8e1-08da43404b8d
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3654:EE_
-X-Microsoft-Antispam-PRVS: <CH2PR12MB3654A197BD41BC433CF237AFFDDC9@CH2PR12MB3654.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: EzoQ7MLxyDuO69NzGWKIK8gAuHeSzqrQrO6Wq4xw0Ssw+DbNLSj8IH63ScxQrg59p3yAA3u+lhqgi0Xpu/4RpC7ijNKtSZNaN0VGj37EiHXERm13/oLp1RGbc4VzJnndPSkWdZ3yneJ5eKTMYKYtplS56Kmq69e034xqUmB2OcSNS+Frbrn7nEtFH+AWlOr3Dyiv1zwSPRgAQeAnRWINcSUfwTzWG4QSv5z1iKX6WEvSZTh3p3BFaH1qD3CkxVNgAdtpTzSsHCbh39wF8QWVQT6+sX9Ehs4E6brTGz8A1eLQOFIfOL4vf9t+QwwlB2+Z9R8HAxiRMWvaNyWFsexrhe5ZOW3IckAiKfPenaksxHV+4F5GsugKIWsrDXvyZminGgo8t8cHWPS4P6MzSyfZB+mjKgUIAK5W7aw7pnTa2+NSVMURgVuxFnrR01/kUGfX5fyqptuU7nAiEWyIjD3PpK3utkmzWOjrgdgDWiUPqZ56w/lJ1bxSzomwC6G+n4daX+zabkd78bqJV7EjUJL8xOJcDEMWlpYKy5a/6NVjaToIdm66423FOmU3XYf1iuue4Q95yY2zM+8pVgsCkJyvBhl0/OgTN4zYMqhTCSoqOj6cFnDyo9DVXSpDeuMXTxr7pOsvAEqiJJvtuk30QjBASZyg0QkY40DU8zsElf8nF3yb2EOlOOvCFcHdXSdPk+BFFAST15Ck9VDxB+763fywPw==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(46966006)(40470700004)(316002)(86362001)(7416002)(356005)(6916009)(81166007)(54906003)(5660300002)(36860700001)(2906002)(83380400001)(44832011)(47076005)(4326008)(8676002)(82310400005)(2616005)(70586007)(1076003)(70206006)(186003)(426003)(16526019)(336012)(8936002)(6666004)(40460700003)(508600001)(36756003)(7696005)(26005)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 May 2022 20:01:05.0280
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c2c9df9a-bc52-4466-e8e1-08da43404b8d
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT027.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB3654
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YpGtDhV7V7gDk430@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The objective is to test device migration mechanism in pages marked
-as COW, for private and coherent device type. In case of writing to
-COW private page(s), a page fault will migrate pages back to system
-memory first. Then, these pages will be duplicated. In case of COW
-device coherent type, pages are duplicated directly from device
-memory.
+On 05/27, Christoph Hellwig wrote:
+> On Fri, May 27, 2022 at 06:06:08PM -0700, Jaegeuk Kim wrote:
+> > I think there's still some benefit to use FUA such as small chunk writes
+> > for checkpoint.
+> 
+> Did you measure if there is?  Because some SSDs basically implemented
+> FUA as an implied flush after the write, in which case it would not
+> really help there either (but also not hurt).
+> 
+> But as the previous two maintainers already said - this needs quirking
+> at the driver layer, not in the submitter.
 
-Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
----
- tools/testing/selftests/vm/hmm-tests.c | 80 ++++++++++++++++++++++++++
- 1 file changed, 80 insertions(+)
+Thanks, I indeed measured this using UFS, and it turned out cache_flush
+is better than FUA all the time like this. Hence, I posted a quirk [1].
 
-diff --git a/tools/testing/selftests/vm/hmm-tests.c b/tools/testing/selftests/vm/hmm-tests.c
-index 3295c8bf6c63..2da9d5baf339 100644
---- a/tools/testing/selftests/vm/hmm-tests.c
-+++ b/tools/testing/selftests/vm/hmm-tests.c
-@@ -1869,4 +1869,84 @@ TEST_F(hmm, hmm_gup_test)
- 	close(gup_fd);
- 	hmm_buffer_free(buffer);
- }
-+
-+/*
-+ * Test copy-on-write in device pages.
-+ * In case of writing to COW private page(s), a page fault will migrate pages
-+ * back to system memory first. Then, these pages will be duplicated. In case
-+ * of COW device coherent type, pages are duplicated directly from device
-+ * memory.
-+ */
-+TEST_F(hmm, hmm_cow_in_device)
-+{
-+	struct hmm_buffer *buffer;
-+	unsigned long npages;
-+	unsigned long size;
-+	unsigned long i;
-+	int *ptr;
-+	int ret;
-+	unsigned char *m;
-+	pid_t pid;
-+	int status;
-+
-+	npages = 4;
-+	size = npages << self->page_shift;
-+
-+	buffer = malloc(sizeof(*buffer));
-+	ASSERT_NE(buffer, NULL);
-+
-+	buffer->fd = -1;
-+	buffer->size = size;
-+	buffer->mirror = malloc(size);
-+	ASSERT_NE(buffer->mirror, NULL);
-+
-+	buffer->ptr = mmap(NULL, size,
-+			   PROT_READ | PROT_WRITE,
-+			   MAP_PRIVATE | MAP_ANONYMOUS,
-+			   buffer->fd, 0);
-+	ASSERT_NE(buffer->ptr, MAP_FAILED);
-+
-+	/* Initialize buffer in system memory. */
-+	for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
-+		ptr[i] = i;
-+
-+	/* Migrate memory to device. */
-+
-+	ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
-+	ASSERT_EQ(ret, 0);
-+	ASSERT_EQ(buffer->cpages, npages);
-+
-+	pid = fork();
-+	if (pid == -1)
-+		ASSERT_EQ(pid, 0);
-+	if (!pid) {
-+		/* Child process waitd for SIGTERM from the parent. */
-+		while (1) {
-+		}
-+		perror("Should not reach this\n");
-+		exit(0);
-+	}
-+	/* Parent process writes to COW pages(s) and gets a
-+	 * new copy in system. In case of device private pages,
-+	 * this write causes a migration to system mem first.
-+	 */
-+	for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
-+		ptr[i] = i;
-+
-+	/* Terminate child and wait */
-+	EXPECT_EQ(0, kill(pid, SIGTERM));
-+	EXPECT_EQ(pid, waitpid(pid, &status, 0));
-+	EXPECT_NE(0, WIFSIGNALED(status));
-+	EXPECT_EQ(SIGTERM, WTERMSIG(status));
-+
-+	/* Take snapshot to CPU pagetables */
-+	ret = hmm_dmirror_cmd(self->fd, HMM_DMIRROR_SNAPSHOT, buffer, npages);
-+	ASSERT_EQ(ret, 0);
-+	ASSERT_EQ(buffer->cpages, npages);
-+	m = buffer->mirror;
-+	for (i = 0; i < npages; i++)
-+		ASSERT_EQ(HMM_DMIRROR_PROT_WRITE, m[i]);
-+
-+	hmm_buffer_free(buffer);
-+}
- TEST_HARNESS_MAIN
--- 
-2.32.0
+Write(us/KB)	4	64	256	1024	2048
+FUA		873.792	754.604	995.624	1011.67	1067.99
+CACHE_FLUSH	824.703	712.98	800.307	1019.5	1037.37
 
+[1] https://lore.kernel.org/linux-scsi/20220531201053.3300018-1-jaegeuk@kernel.org/T/#u
