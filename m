@@ -2,51 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC2AC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 May 2022 07:05:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8E6CC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 May 2022 07:55:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244434AbiEaHFm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 May 2022 03:05:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40748 "EHLO
+        id S244642AbiEaHzp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 May 2022 03:55:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243395AbiEaHFl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 May 2022 03:05:41 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 055F7972A8;
-        Tue, 31 May 2022 00:05:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ZWTAexFEZbhBo5spKs3rq2FWdrwX8G7RgSIvxHi5RmQ=; b=YB/ZZBr77bLyjSaRO09WsY3nsv
-        8IVQsPttfbJfnnSaPOF9wx9w92qczr7FA0aDIB6yVx24cuVdrAXKgUN2DcT9mAPxQCVfuZAP3RvS4
-        o8opr/EPGUlHb1vwBzt8KW14aHhQd7iwPapqlnmP9p2D51P0ocvsIW8sjtMzuEVGYSolBiH5idvkW
-        qiiXgmrcpB8ZtD1tXMugFo7r7EJRMwmnRzc1gLUNC28p00IGVK/9OUz9Lkdluby5U317CaUWRh4aC
-        pJVPFwgs4aNrY5uUWj2ofWLlvnnegvyUvPfme0mSDp1gKAI7hDEdSX3va1A4rC4WAJhVXTeIpO0AA
-        I+p81lSA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nvvwi-009env-HB; Tue, 31 May 2022 07:05:40 +0000
-Date:   Tue, 31 May 2022 00:05:40 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Stefan Roesch <shr@fb.com>
-Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        with ESMTP id S244654AbiEaHzp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 May 2022 03:55:45 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71D3F6CF5B;
+        Tue, 31 May 2022 00:55:43 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id F354421BF2;
+        Tue, 31 May 2022 07:55:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1653983742; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PswY31FHbVOwds2z63DtKhwt0E5jVJXSOd7VzyxUuTY=;
+        b=PiiO74VpExAHtyAE1UtiGsrZi1RFfxQ88hMlK52YfNv2Q+Ocqvt7Ih3M9aEZ1hNBP4M1s4
+        MjBv6hDkwMp7MxsYbfpGBtmlWP7mFv5huy7PkunQ0Qkf4yWXo6ULL0SahYZ29WaWenlZc6
+        laamMwxwZ9Aq/yBtt8kvJmxv8MqkZ3o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1653983742;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PswY31FHbVOwds2z63DtKhwt0E5jVJXSOd7VzyxUuTY=;
+        b=pZ2WUUJ79BbjWszc5KRQe3eC831iokT0PAe2YB50+b7eHjaWToA4x/x04ylZif11NPi53r
+        E6ODJrDfJmobqMAw==
+Received: from quack3.suse.cz (unknown [10.163.28.18])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id DF0542C141;
+        Tue, 31 May 2022 07:55:41 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 92009A0633; Tue, 31 May 2022 09:55:41 +0200 (CEST)
+Date:   Tue, 31 May 2022 09:55:41 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Jan Kara <jack@suse.cz>, Stefan Roesch <shr@fb.com>,
+        io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, jack@suse.cz, hch@infradead.org
-Subject: Re: [PATCH v6 16/16] xfs: Enable async buffered write support
-Message-ID: <YpW+RKOGGkywMheu@infradead.org>
+        hch@infradead.org
+Subject: Re: [PATCH v6 05/16] iomap: Add async buffered write support
+Message-ID: <20220531075541.jezkoc6kgikdzk6w@quack3.lan>
 References: <20220526173840.578265-1-shr@fb.com>
- <20220526173840.578265-17-shr@fb.com>
+ <20220526173840.578265-6-shr@fb.com>
+ <20220526223705.GJ1098723@dread.disaster.area>
+ <20220527084203.jzufgln7oqfdghvy@quack3.lan>
+ <20220527225240.GV1098723@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220526173840.578265-17-shr@fb.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20220527225240.GV1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 26, 2022 at 10:38:40AM -0700, Stefan Roesch wrote:
-> This turns on the async buffered write support for XFS.
+On Sat 28-05-22 08:52:40, Dave Chinner wrote:
+> On Fri, May 27, 2022 at 10:42:03AM +0200, Jan Kara wrote:
+> > On Fri 27-05-22 08:37:05, Dave Chinner wrote:
+> > > On Thu, May 26, 2022 at 10:38:29AM -0700, Stefan Roesch wrote:
+> > > > This adds async buffered write support to iomap.
+> > > > 
+> > > > This replaces the call to balance_dirty_pages_ratelimited() with the
+> > > > call to balance_dirty_pages_ratelimited_flags. This allows to specify if
+> > > > the write request is async or not.
+> > > > 
+> > > > In addition this also moves the above function call to the beginning of
+> > > > the function. If the function call is at the end of the function and the
+> > > > decision is made to throttle writes, then there is no request that
+> > > > io-uring can wait on. By moving it to the beginning of the function, the
+> > > > write request is not issued, but returns -EAGAIN instead. io-uring will
+> > > > punt the request and process it in the io-worker.
+> > > > 
+> > > > By moving the function call to the beginning of the function, the write
+> > > > throttling will happen one page later.
+> > > 
+> > > Won't it happen one page sooner? I.e. on single page writes we'll
+> > > end up throttling *before* we dirty the page, not *after* we dirty
+> > > the page. IOWs, we can't wait for the page that we just dirtied to
+> > > be cleaned to make progress and so this now makes the loop dependent
+> > > on pages dirtied by other writers being cleaned to guarantee
+> > > forwards progress?
+> > > 
+> > > That seems like a subtle but quite significant change of
+> > > algorithm...
+> > 
+> > So I'm convinced the difference will be pretty much in the noise because of
+> > how many dirty pages there have to be to even start throttling processes
+> > but some more arguments are:
+> > 
+> > * we ratelimit calls to balance_dirty_pages() based on number of pages
+> >   dirtied by the current process in balance_dirty_pages_ratelimited()
+> > 
+> > * balance_dirty_pages() uses number of pages dirtied by the current process
+> >   to decide about the delay.
+> > 
+> > So the only situation where I could see this making a difference would be
+> > if dirty limit is a handful of pages and even there I have hard time to see
+> > how exactly.
+> 
+> That's kinda what worries me - we do see people winding the dirty
+> thresholds way down to work around various niche problems with
+> dirty page buildup.
+> 
+> We also have small extra accounting overhead for cases where we've
+> stacked layers to so the lower layers don't dirty throttle before
+> the higher layer. If the lower layer throttles first, then the
+> higher layer can't clean pages and we can deadlock.
+> 
+> Those are the sorts of subtle, niche situations where I worry that
+> the subtle "throttle first, write second" change could manifest...
 
-I think this belongs into the previous patch, but otherwise this looks
-obviously fine.
+Well, I'd think about the change more as "write first, throttle on next
+write" because balance_dirty_pages_ratelimited() throttles based on the
+number of pages dirtied until the moment it is called. So first invocation
+of balance_dirty_pages_ratelimited() will not do anything because
+current->nr_dirtied will be zero. So effectively we always let the process
+run longer than before the change before we throttle it. But number of
+dirtied pages until we throttle should be the same for both cases.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
