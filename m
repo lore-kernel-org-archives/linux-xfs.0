@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CCDCC43219
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 May 2022 15:56:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FACC4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 May 2022 15:56:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345940AbiEaP4v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1345952AbiEaP4v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 31 May 2022 11:56:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33122 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345941AbiEaP4p (ORCPT
+        with ESMTP id S1345942AbiEaP4p (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 May 2022 11:56:45 -0400
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1anam02on2055.outbound.protection.outlook.com [40.107.96.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBEC8AE4D;
-        Tue, 31 May 2022 08:56:43 -0700 (PDT)
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2084.outbound.protection.outlook.com [40.107.244.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0C37B495;
+        Tue, 31 May 2022 08:56:44 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lV3NFX8vWvVzoj4b2f4wXaxD66XGtyoEshJvqbgMnoN91bwoxONLLD4gPlSCRFjpm4XeuF8RyK2VHad0fPApGdxbVCAqwGdCuZ8v1k3KtPJ7PdcfmOyP5OkIE9jbRgb4ve/o0xey5z9Fq86sM9OJq6XbLXavLuzi8W+aLXelm4SPpj3uY8q+11uhS48D9tnTbxab/xbDw56+nrXc8buqT/3EbKGpIXBMtjN/lYu65PYPt7Zhxg1cUwgcypJvoH+GG1F26qnV+5xNU81C6A5gRmzLuqsDGmSFNPYn2syTqO7VPE1WXWFyUp8GpVjICj2d0StN10WnzSMn5P14cTrasw==
+ b=lnuAVYykDZjOAnnfUCz4sF57Cmx1U7NTL07BTlQAgNe6h+3R77Z4vPCEMe1f48PoW3BHil/jjja8TQ3KbOENEL2QQJlJ75Gau+UgwXRxWxEBar7O8VHybKkVk7MHkbe2GidWQZqm3n1oi4aJgMc/LrHKnXPElqtMWPddcqf4+6tVKmKAqJgZGXzzlYg8+sJEsMFLG0p21en7+LRla0ZAdsRCe/4AsiZ5YpyR7Cq7WwUFtowd8a872L9jCUn49wsruFw3zVmLvdWbeg13gyp/VsZJB3IV4dcTevIDyRn/gcnTs2oRsLHgeT8hlqHaTAuQueihdbMhYoxOeL+c1/nrVg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yM1u4yCkqEAz9mq9J47hjozDMbEz1XEieINgg7ldrfs=;
- b=NTIDymA6KRVpfvKUa1ZsmcJCVgOBjXzx9W4/AdJDZFbkbmPGODdbP+5bzNxeDP+rIj77IlWqyxOqq/e2EL28XEcvPgV/iNdDGcX5gKMzLAbOBv4OvnSd8V1MYSHNyTW+xJjUTA9qkJMymK63fT/zFAZNxWaXVzUD5LsmV9kwTBrWd31kt+KDw5HI6mR+Bj+2S03P+6vSjzkz8K9WJVO2LFCCCGCY/1xMYvqZ4dilXceIeM9i3RsdI7bNIPkFxfQL8RBt/wdaXE4OzQPdSvzfQcEsN5RnUrmBtazgpYG8FRpObZpAzQs42CTnpeQY0h0tiazaumTUJvpl6aCaKqy7YA==
+ bh=Tsm1npeQJz5adlkprwdiF30iBrFOX7mFKo901b9QP1o=;
+ b=kblmqDAZG2IqiEyNpAI14A4Y4Qp7lFOFnxC+9cdEKO6mEbyn87vpUaIvnqrgePzKAd7lZRHIXQUufZf1ir7s3kMYL1WMBPm4wQBK8XVTmyWU1ATbKb45v2i9+2oYnYke0B/JivU4NbFjKGRfdM4J6I7EFuQb7WarAkZbUe56GVhWoM/4JCXbTjxR+GytHNu5+Xg5cy6yyW7nBRUvT5ZZHkXuC/d0Szj8z2ooDkMW9UQLnLhYusvAUpEK9953N2JQTTrjybO0r+TaJ48/86AExLWryWK7yliO6pQnLCDLMDR31lIi6uQhz6kZdUAkHEn4HYTMQinIN2UaVrpt64OOjA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yM1u4yCkqEAz9mq9J47hjozDMbEz1XEieINgg7ldrfs=;
- b=tYndGtoAG/6aevOTiwohYgQVdq9AY4z6CLJImNu0ztwLVkazhawsoYNKRIPm2DqDMT7/g1wxBojIgSkl2MFO5ztFQ6cn9oktRnHNWcfUlr6/vB0qRLBniiU+IlKP/3hmSUAlkDdaIs3fvWHkxZFQE2eUnsCCBbgxj8f6CuCW+mg=
+ bh=Tsm1npeQJz5adlkprwdiF30iBrFOX7mFKo901b9QP1o=;
+ b=oYgQs81+qO3AS69IpjZAH4Qs8jhU9+Qt7Zfy3zd9cTQKYhsiOFUTBnLQjWVajZrg2tEj3z5Tbe5pgUiEVIDrN06+XM87DGsOq1pYBjuz+6qFQhxVbJd924mhyHS5uMhqytyXdNJyKrD87p0RPTZJlmbDKrCu0hh7cJ975c8QOnI=
 Received: from BN6PR13CA0050.namprd13.prod.outlook.com (2603:10b6:404:11::12)
- by MWHPR12MB1214.namprd12.prod.outlook.com (2603:10b6:300:e::12) with
+ by SN1PR12MB2445.namprd12.prod.outlook.com (2603:10b6:802:31::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.15; Tue, 31 May
- 2022 15:56:41 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.17; Tue, 31 May
+ 2022 15:56:42 +0000
 Received: from BN8NAM11FT053.eop-nam11.prod.protection.outlook.com
- (2603:10b6:404:11:cafe::5f) by BN6PR13CA0050.outlook.office365.com
+ (2603:10b6:404:11:cafe::37) by BN6PR13CA0050.outlook.office365.com
  (2603:10b6:404:11::12) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.12 via Frontend
- Transport; Tue, 31 May 2022 15:56:40 +0000
+ Transport; Tue, 31 May 2022 15:56:42 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  BN8NAM11FT053.mail.protection.outlook.com (10.13.177.209) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5293.13 via Frontend Transport; Tue, 31 May 2022 15:56:40 +0000
+ 15.20.5293.13 via Frontend Transport; Tue, 31 May 2022 15:56:42 +0000
 Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Tue, 31 May
- 2022 10:56:39 -0500
+ 2022 10:56:41 -0500
 From:   Alex Sierra <alex.sierra@amd.com>
 To:     <jgg@nvidia.com>
 CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
@@ -61,9 +61,9 @@ CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
         <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
         <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
         <akpm@linux-foundation.org>
-Subject: [PATCH v4 01/13] mm: add zone device coherent type memory support
-Date:   Tue, 31 May 2022 10:56:17 -0500
-Message-ID: <20220531155629.20057-2-alex.sierra@amd.com>
+Subject: [PATCH v4 03/13] mm: add device coherent vma selection for memory migration
+Date:   Tue, 31 May 2022 10:56:19 -0500
+Message-ID: <20220531155629.20057-4-alex.sierra@amd.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220531155629.20057-1-alex.sierra@amd.com>
 References: <20220531155629.20057-1-alex.sierra@amd.com>
@@ -75,227 +75,82 @@ X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a80e9a18-f1ca-4b70-bab7-08da431e26f8
-X-MS-TrafficTypeDiagnostic: MWHPR12MB1214:EE_
-X-Microsoft-Antispam-PRVS: <MWHPR12MB12147AB1CDCC3F05F9F7D8EAFDDC9@MWHPR12MB1214.namprd12.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 52e155d4-b24e-4722-e79b-08da431e27eb
+X-MS-TrafficTypeDiagnostic: SN1PR12MB2445:EE_
+X-Microsoft-Antispam-PRVS: <SN1PR12MB2445278930DC44DBEFF8570EFDDC9@SN1PR12MB2445.namprd12.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 1XtWpGgGB3ur3sx+ublBcvdCwpKj+ELF3V1wChAXl7sfUFqf5PKhZMHJ8RQSsXaw9/LE6wVJIW6qT6WIl/1tr4+vdp7/q9ttYoqfWvShjBNpqDMExwUrJQKO33o1EhVeMkdhF3lAuYhFpnRTEAxyeNld5KIUgrQc+tJ1S8tZMFK8CBPjAtSreZjWSrfFaWEa3xsH7LB5jlzi3MO8C61lFRD+bQU7Yno1tkG9Xfj3U+Fp6nS9lqDvBsuN3fCf6bG08ryS4QCIOKwlaHmFgK5uPFM9WKoZdC/xqJajsggapqbLSLr9U2yfntCITANy2mVpR61+Rq1kIQIv6Q57WfmpdbM9Y4q2z1bwE4N5KHKhE8P8vCti9bGJ6X4NyecAnVJa/LOz7KKz/MLnAE94QfNgaQmFaZ2E4l0AnM7wzn1BquQOAMUp9AbD2Ueerg4k+sHzXVKjnGDjFTRJdj3Xe+uyif2+LWt1g9Szh4TjlJPIPXmUKx16t/mwUQZxgMwucmnM9MFovDopocDb/vxk6V4JWW0WQdsQFCddXv7Ci8NshTjLz4rgD+nnZQjknprpWXQqWc3tNXk+blNubNURJbrTJe8lCL7g6+gMf8Xa2QLQLoxMMDEH6rYsVJHmVgSG6GrsjaEy4EOD1HukUA4bAxY3VbXpD7oDedTiel6Egj1X/3H0SV+y3zR/yjE8t46/DQYZRwEiw2Q1iqvWV+mrNGwU0g==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(46966006)(36840700001)(81166007)(356005)(44832011)(36860700001)(82310400005)(316002)(40460700003)(26005)(54906003)(6916009)(70586007)(47076005)(70206006)(4326008)(508600001)(36756003)(86362001)(7696005)(6666004)(1076003)(2906002)(83380400001)(2616005)(426003)(16526019)(336012)(186003)(5660300002)(8936002)(7416002)(8676002)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: tHpksrVOEX9knmB5+Efsh4SXPHhrknUbFYo+Db2CJSAtrncfHIB3ze5YWZHn4B50oSEKjpBtNF+IOPreYXLOkPMNv4vhDSUReXFroKdublybOT5tVcR6A5hVSjGacfpLXWBtFj2xNtoriogu2ZN4eqxWjRtEwqFSqKEey0mw2s2SaKAP78J013dvfJGfQ0o86RZ7k8xtrZ8Dk8DAdGgQ2YdEXIIQEOiWWX3VwSvfAb9+jRqFLX/7oSP2D9EjCr33bZ5w1w7HjTgAdiy7wyxl6fof1diGU5THsGCq6YCk5Rprlhjoof1IzjZ7pqz7fjVtulgoac3e/lVHCqKTVKmJK6iFAGxIvnvZXw8Z6vmY8w9+sMnyvpM85z/m8B57gWRNKS+x97qH8cAjw+Xi69i8MK6u8cOf252huey33tXpLCIlnhkU1ULOQ6Ds/If/KUGOzGlxQJcVHQOJft8j1P7BIVt5mZlEYLBi4ZifZt4OYXPt29Ru4g1+eXJg+1CjS2JGhIMxXDie+6YpAsoC2q4EgCOGeUYOdTBabhgd+EXKyH5zjZ/Enti/THkR4Op0F8BR4g+rHZzSIINzarpO6iVNh/N1xoYuP2wyJdSqZ10+9QIds4Ie+qDYzP2k93eNH7FHIF1NMxycfX3+C18XwSOrXTc5xrQLppJdpCds9jiFmj3UL1fiSutwYnEmB1wTNBzS33xs7fsoEw0+egI5k0+TQg==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(40470700004)(46966006)(86362001)(70586007)(356005)(4326008)(8676002)(186003)(70206006)(16526019)(5660300002)(7696005)(7416002)(508600001)(44832011)(336012)(6666004)(47076005)(83380400001)(426003)(8936002)(6916009)(2906002)(54906003)(36756003)(316002)(1076003)(2616005)(36860700001)(81166007)(40460700003)(82310400005)(26005)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 May 2022 15:56:40.7636
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 May 2022 15:56:42.3573
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: a80e9a18-f1ca-4b70-bab7-08da431e26f8
+X-MS-Exchange-CrossTenant-Network-Message-Id: 52e155d4-b24e-4722-e79b-08da431e27eb
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT053.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR12MB1214
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN1PR12MB2445
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Device memory that is cache coherent from device and CPU point of view.
-This is used on platforms that have an advanced system bus (like CAPI
-or CXL). Any page of a process can be migrated to such memory. However,
-no one should be allowed to pin such memory so that it can always be
-evicted.
+This case is used to migrate pages from device memory, back to system
+memory. Device coherent type memory is cache coherent from device and CPU
+point of view.
 
 Signed-off-by: Alex Sierra <alex.sierra@amd.com>
 Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
-Reviewed-by: Alistair Popple <apopple@nvidia.com>
-[hch: rebased ontop of the refcount changes,
-      removed is_dev_private_or_coherent_page]
+Reviewed-by: Alistair Poppple <apopple@nvidia.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/memremap.h | 19 +++++++++++++++++++
- mm/memcontrol.c          |  7 ++++---
- mm/memory-failure.c      |  8 ++++++--
- mm/memremap.c            | 10 ++++++++++
- mm/migrate_device.c      | 16 +++++++---------
- mm/rmap.c                |  5 +++--
- 6 files changed, 49 insertions(+), 16 deletions(-)
+ include/linux/migrate.h |  1 +
+ mm/migrate_device.c     | 12 +++++++++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 8af304f6b504..9f752ebed613 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -41,6 +41,13 @@ struct vmem_altmap {
-  * A more complete discussion of unaddressable memory may be found in
-  * include/linux/hmm.h and Documentation/vm/hmm.rst.
-  *
-+ * MEMORY_DEVICE_COHERENT:
-+ * Device memory that is cache coherent from device and CPU point of view. This
-+ * is used on platforms that have an advanced system bus (like CAPI or CXL). A
-+ * driver can hotplug the device memory using ZONE_DEVICE and with that memory
-+ * type. Any page of a process can be migrated to such memory. However no one
-+ * should be allowed to pin such memory so that it can always be evicted.
-+ *
-  * MEMORY_DEVICE_FS_DAX:
-  * Host memory that has similar access semantics as System RAM i.e. DMA
-  * coherent and supports page pinning. In support of coordinating page
-@@ -61,6 +68,7 @@ struct vmem_altmap {
- enum memory_type {
- 	/* 0 is reserved to catch uninitialized type fields */
- 	MEMORY_DEVICE_PRIVATE = 1,
-+	MEMORY_DEVICE_COHERENT,
- 	MEMORY_DEVICE_FS_DAX,
- 	MEMORY_DEVICE_GENERIC,
- 	MEMORY_DEVICE_PCI_P2PDMA,
-@@ -143,6 +151,17 @@ static inline bool folio_is_device_private(const struct folio *folio)
- 	return is_device_private_page(&folio->page);
- }
+diff --git a/include/linux/migrate.h b/include/linux/migrate.h
+index 069a89e847f3..b84908debe5c 100644
+--- a/include/linux/migrate.h
++++ b/include/linux/migrate.h
+@@ -148,6 +148,7 @@ static inline unsigned long migrate_pfn(unsigned long pfn)
+ enum migrate_vma_direction {
+ 	MIGRATE_VMA_SELECT_SYSTEM = 1 << 0,
+ 	MIGRATE_VMA_SELECT_DEVICE_PRIVATE = 1 << 1,
++	MIGRATE_VMA_SELECT_DEVICE_COHERENT = 1 << 2,
+ };
  
-+static inline bool is_device_coherent_page(const struct page *page)
-+{
-+	return is_zone_device_page(page) &&
-+		page->pgmap->type == MEMORY_DEVICE_COHERENT;
-+}
-+
-+static inline bool folio_is_device_coherent(const struct folio *folio)
-+{
-+	return is_device_coherent_page(&folio->page);
-+}
-+
- static inline bool is_pci_p2pdma_page(const struct page *page)
- {
- 	return IS_ENABLED(CONFIG_PCI_P2PDMA) &&
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index abec50f31fe6..93f80d7ca148 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5665,8 +5665,8 @@ static int mem_cgroup_move_account(struct page *page,
-  *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
-  *     target for charge migration. if @target is not NULL, the entry is stored
-  *     in target->ent.
-- *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_PRIVATE
-- *     (so ZONE_DEVICE page and thus not on the lru).
-+ *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is device memory and
-+ *   thus not on the lru.
-  *     For now we such page is charge like a regular page would be as for all
-  *     intent and purposes it is just special memory taking the place of a
-  *     regular page.
-@@ -5704,7 +5704,8 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
- 		 */
- 		if (page_memcg(page) == mc.from) {
- 			ret = MC_TARGET_PAGE;
--			if (is_device_private_page(page))
-+			if (is_device_private_page(page) ||
-+			    is_device_coherent_page(page))
- 				ret = MC_TARGET_DEVICE;
- 			if (target)
- 				target->page = page;
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index b85661cbdc4a..0b6a0a01ee09 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -1683,12 +1683,16 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
- 		goto unlock;
- 	}
- 
--	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
-+	switch (pgmap->type) {
-+	case MEMORY_DEVICE_PRIVATE:
-+	case MEMORY_DEVICE_COHERENT:
- 		/*
--		 * TODO: Handle HMM pages which may need coordination
-+		 * TODO: Handle device pages which may need coordination
- 		 * with device-side memory.
- 		 */
- 		goto unlock;
-+	default:
-+		break;
- 	}
- 
- 	/*
-diff --git a/mm/memremap.c b/mm/memremap.c
-index 2b92e97cb25b..dbd2631b3520 100644
---- a/mm/memremap.c
-+++ b/mm/memremap.c
-@@ -315,6 +315,16 @@ void *memremap_pages(struct dev_pagemap *pgmap, int nid)
- 			return ERR_PTR(-EINVAL);
- 		}
- 		break;
-+	case MEMORY_DEVICE_COHERENT:
-+		if (!pgmap->ops->page_free) {
-+			WARN(1, "Missing page_free method\n");
-+			return ERR_PTR(-EINVAL);
-+		}
-+		if (!pgmap->owner) {
-+			WARN(1, "Missing owner\n");
-+			return ERR_PTR(-EINVAL);
-+		}
-+		break;
- 	case MEMORY_DEVICE_FS_DAX:
- 		if (IS_ENABLED(CONFIG_FS_DAX_LIMITED)) {
- 			WARN(1, "File system DAX not supported\n");
+ struct migrate_vma {
 diff --git a/mm/migrate_device.c b/mm/migrate_device.c
-index 5052093d0262..a4847ad65da3 100644
+index a4847ad65da3..18bc6483f63a 100644
 --- a/mm/migrate_device.c
 +++ b/mm/migrate_device.c
-@@ -518,7 +518,7 @@ EXPORT_SYMBOL(migrate_vma_setup);
-  *     handle_pte_fault()
-  *       do_anonymous_page()
-  * to map in an anonymous zero page but the struct page will be a ZONE_DEVICE
-- * private page.
-+ * private or coherent page.
-  */
- static void migrate_vma_insert_page(struct migrate_vma *migrate,
- 				    unsigned long addr,
-@@ -594,11 +594,8 @@ static void migrate_vma_insert_page(struct migrate_vma *migrate,
- 						page_to_pfn(page));
- 		entry = swp_entry_to_pte(swp_entry);
- 	} else {
--		/*
--		 * For now we only support migrating to un-addressable device
--		 * memory.
--		 */
--		if (is_zone_device_page(page)) {
-+		if (is_zone_device_page(page) &&
-+		    !is_device_coherent_page(page)) {
- 			pr_warn_once("Unsupported ZONE_DEVICE page type.\n");
- 			goto abort;
+@@ -148,15 +148,21 @@ static int migrate_vma_collect_pmd(pmd_t *pmdp,
+ 			if (is_writable_device_private_entry(entry))
+ 				mpfn |= MIGRATE_PFN_WRITE;
+ 		} else {
+-			if (!(migrate->flags & MIGRATE_VMA_SELECT_SYSTEM))
+-				goto next;
+ 			pfn = pte_pfn(pte);
+-			if (is_zero_pfn(pfn)) {
++			if (is_zero_pfn(pfn) &&
++			    (migrate->flags & MIGRATE_VMA_SELECT_SYSTEM)) {
+ 				mpfn = MIGRATE_PFN_MIGRATE;
+ 				migrate->cpages++;
+ 				goto next;
+ 			}
+ 			page = vm_normal_page(migrate->vma, addr, pte);
++			if (page && !is_zone_device_page(page) &&
++			    !(migrate->flags & MIGRATE_VMA_SELECT_SYSTEM))
++				goto next;
++			else if (page && is_device_coherent_page(page) &&
++			    (!(migrate->flags & MIGRATE_VMA_SELECT_DEVICE_COHERENT) ||
++			     page->pgmap->owner != migrate->pgmap_owner))
++				goto next;
+ 			mpfn = migrate_pfn(pfn) | MIGRATE_PFN_MIGRATE;
+ 			mpfn |= pte_write(pte) ? MIGRATE_PFN_WRITE : 0;
  		}
-@@ -701,10 +698,11 @@ void migrate_vma_pages(struct migrate_vma *migrate)
- 
- 		mapping = page_mapping(page);
- 
--		if (is_device_private_page(newpage)) {
-+		if (is_device_private_page(newpage) ||
-+		    is_device_coherent_page(newpage)) {
- 			/*
--			 * For now only support private anonymous when migrating
--			 * to un-addressable device memory.
-+			 * For now only support anonymous memory migrating to
-+			 * device private or coherent memory.
- 			 */
- 			if (mapping) {
- 				migrate->src[i] &= ~MIGRATE_PFN_MIGRATE;
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 5bcb334cd6f2..04fac1af870b 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1957,7 +1957,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
- 		/* Update high watermark before we lower rss */
- 		update_hiwater_rss(mm);
- 
--		if (folio_is_zone_device(folio)) {
-+		if (folio_is_device_private(folio)) {
- 			unsigned long pfn = folio_pfn(folio);
- 			swp_entry_t entry;
- 			pte_t swp_pte;
-@@ -2131,7 +2131,8 @@ void try_to_migrate(struct folio *folio, enum ttu_flags flags)
- 					TTU_SYNC)))
- 		return;
- 
--	if (folio_is_zone_device(folio) && !folio_is_device_private(folio))
-+	if (folio_is_zone_device(folio) &&
-+	    (!folio_is_device_private(folio) && !folio_is_device_coherent(folio)))
- 		return;
- 
- 	/*
 -- 
 2.32.0
 
