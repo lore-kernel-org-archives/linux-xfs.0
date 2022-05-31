@@ -2,245 +2,219 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BA9FC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 May 2022 15:55:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45574C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 May 2022 15:56:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343961AbiEaPz5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 May 2022 11:55:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60510 "EHLO
+        id S1345948AbiEaP4u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 May 2022 11:56:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243830AbiEaPz4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 May 2022 11:55:56 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2A9B9527F4
-        for <linux-xfs@vger.kernel.org>; Tue, 31 May 2022 08:55:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1654012553;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=RUDXutJ8APH8d/I1GU3fIKEHfTHPOCuxM1ESo7xpfbg=;
-        b=ZDa3Hqjg2Z0pWIe8Twxi9sjaCPJGvwa12rhXwKiyFyjSzR4Kj/xGt8XpaPxj2PpldKLHP2
-        jsqNsFHPT19COnuviz8Qcj67iFPecD+i0msQyr/HSw66ev4rM9ji24FtJ9NXJViJCtxtY1
-        2PGuUc1xEnIIYofaTnCSUNjfReuMn48=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-324-JCodX-Y8PEmfbTz0CFRzgw-1; Tue, 31 May 2022 11:55:52 -0400
-X-MC-Unique: JCodX-Y8PEmfbTz0CFRzgw-1
-Received: by mail-qt1-f197.google.com with SMTP id m6-20020ac866c6000000b002f52f9fb4edso12514176qtp.19
-        for <linux-xfs@vger.kernel.org>; Tue, 31 May 2022 08:55:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=RUDXutJ8APH8d/I1GU3fIKEHfTHPOCuxM1ESo7xpfbg=;
-        b=4CMvhROOo6fQNCuLakCMrF5ZxBm3ZVDDyEkvhuQnwQ5Qdo3AUI3dcOAX6teCi5ekUZ
-         kg7BZUSmTlWGmtwL3yzt3n1+orTW+LC5hBfxjn/pq7KaIVLpK1m4sPI3UnIeUZATC5/7
-         KzUNCPNJkEydh+xMmHmFWyeoYiWggwUqP0efVoeiMrcyM32PE0LODBMU+oOSUnV7vHzI
-         hV+eUZgFOvJtjV5oYJ7PrLr+sMuc1jNpJ+urbHA/8OxkWjfNgRCwdA3scFxATB93DKEI
-         4Le+cLhaaC4hPiCpBfage7TvWSjNKexsQYFQu9QT759+WU5XDX4HmTda+YYod7rmICsr
-         6Nmw==
-X-Gm-Message-State: AOAM532/3C23WjX+epC4s0RtO/1T9+yG68tAHKit5fssp+qwdFPNf8nx
-        5Ab0Nt/Hd1FnK7Ps+TDgsPR+7F0jzRLwaLYMynVRd96WLYiechb83sCs1sxZ+iULuY7un4Ebr0E
-        e9/eJR29APXDGa6npF499
-X-Received: by 2002:ac8:7dd5:0:b0:301:fe8:dedf with SMTP id c21-20020ac87dd5000000b003010fe8dedfmr12294878qte.208.1654012551612;
-        Tue, 31 May 2022 08:55:51 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyqcQmgx9tXR2o24ntwL6ngDCf3NND2sIHPiisE0Ubw8vAGzvbIZfHPaGvV07glZd3K8eYdtw==
-X-Received: by 2002:ac8:7dd5:0:b0:301:fe8:dedf with SMTP id c21-20020ac87dd5000000b003010fe8dedfmr12294850qte.208.1654012551263;
-        Tue, 31 May 2022 08:55:51 -0700 (PDT)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id ew10-20020a05622a514a00b00304b41fa057sm3218562qtb.57.2022.05.31.08.55.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 31 May 2022 08:55:50 -0700 (PDT)
-Date:   Tue, 31 May 2022 11:55:49 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Gao Xiang <hsiangkao@redhat.com>
-Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
-Message-ID: <YpY6hUknor2S1iMd@bfoster>
-References: <20210222153442.897089-1-bfoster@redhat.com>
- <20210222182745.GA7272@magnolia>
- <20210223123106.GB946926@bfoster>
- <CAOQ4uxiWajRgGG2V=dYhBmVJYiRmdD+7YgkH2DMWGz6BAOXjvg@mail.gmail.com>
- <Yo+M6Jhjwt/ruOfi@bfoster>
- <CAOQ4uxjoLm_xwD1GBMNteHsd4zv_4vr+g7xF9_HoCquhq4yoFQ@mail.gmail.com>
- <Yo/ZZtqa5rkuh7VC@bfoster>
- <CAOQ4uxgAiJFSUcEcWZo6qT_Pe84pOQ-B8ZORz_y5TQw4NQMjBA@mail.gmail.com>
+        with ESMTP id S1345940AbiEaP4p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 May 2022 11:56:45 -0400
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2058.outbound.protection.outlook.com [40.107.92.58])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBA3195AF;
+        Tue, 31 May 2022 08:56:42 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=R6jZVGecvQ9B5bj8MvxHPRAYXzRUmNAt8MXXVmTnFIKFcXbllNeQRGXYDgMt62ujJxXqleAbGGSkwxEfGpwyplWfWqC9N9kCNKKTb1Igw6Em98pMoUHTDV3MQDBrmXHDEcUBrVzA6cEVzZdgNe46o006ce6tib7FRDcLjDKgv86PIWFSp8HqrZSLbD1BY0Tcx0y1Cba+t5kTUNMhKrbmNwlW67/KA1McswG6c408fe5iyTkltwix0gP0aXfhT8iJXI/SrKv6xTw6ZdDU++mVbfgAdF1Wv2gL2Yn0zFYwgs7Wnp8/gjGG/CdHVdIuCOH3S6KUIWKNTX3mMKiKsjQwTg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xnc8usG2hiLxhUCDunRzmLgxAs3b89EEbdNkFuFoVko=;
+ b=FoyL5Fp8z/uJZDLKsCwkNt8WKqERtRdh9Vri1Tca1c1fIh8jzAyfubZhT+OLp9wjd7YkOJpPNyAuxvcBf16RhPfxaE1TSTbv1uyQnqqi5StNQyG0XE5FvlXhXXk5NwwzLo310wRtrbJtkAFzGfaE87NaRk+Zz+dcrujDkzg0xxAr7LZe7QCGmR11obpCwCgVSH4Nnffedkz24oK9oQUU8h593okok+N+t/pvpZbXZwiTel9/HpoHbY9v0NFO+AEV0BHL9uHX5G3GFDlk6k++nIkcT/ayel5NlkbSiT6WSKE2dVwQx/eUFVgH93qIenC8CwX6u1NlfDSjgQSkn2WW0A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xnc8usG2hiLxhUCDunRzmLgxAs3b89EEbdNkFuFoVko=;
+ b=vvYWeZrSomSK7AyYE1OfXCwkEEkGsgJSY5ZbzeWLSO6MD1EiRNCxSDXkpRdgLksOk1rxV9jvSfPFReQD0GY7ZijBW76IlqjEp2baSdSlf6ycIhfE3kzTlqBl/ZOgCmLmf0yrmlW4ERoGtN6jKpw6wcA9UgsATx8JgPaQujDQSys=
+Received: from BN6PR13CA0065.namprd13.prod.outlook.com (2603:10b6:404:11::27)
+ by DM6PR12MB3036.namprd12.prod.outlook.com (2603:10b6:5:119::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13; Tue, 31 May
+ 2022 15:56:40 +0000
+Received: from BN8NAM11FT053.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:404:11:cafe::9e) by BN6PR13CA0065.outlook.office365.com
+ (2603:10b6:404:11::27) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.12 via Frontend
+ Transport; Tue, 31 May 2022 15:56:40 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ BN8NAM11FT053.mail.protection.outlook.com (10.13.177.209) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5293.13 via Frontend Transport; Tue, 31 May 2022 15:56:40 +0000
+Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Tue, 31 May
+ 2022 10:56:38 -0500
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     <jgg@nvidia.com>
+CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
+        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
+        <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
+        <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
+        <akpm@linux-foundation.org>
+Subject: [PATCH v4 00/13] Add MEMORY_DEVICE_COHERENT for coherent device memory mapping
+Date:   Tue, 31 May 2022 10:56:16 -0500
+Message-ID: <20220531155629.20057-1-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgAiJFSUcEcWZo6qT_Pe84pOQ-B8ZORz_y5TQw4NQMjBA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 9a426932-990c-4ee0-fb72-08da431e2696
+X-MS-TrafficTypeDiagnostic: DM6PR12MB3036:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR12MB30368E1873E50C2BA32E8445FDDC9@DM6PR12MB3036.namprd12.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 0EbsWl+huwEFanW8GE5VRN/SY22qdWgW4aPJieo3a0keDzKGD52ZhdaIGK4BJyJArC+CjDAMLLv/Feqo8ctdV2RiVSLVEREdNMXqIeGM+iZIe2tGkxtauiKyZxjFggK3AwCDSyXSB0QHswt7H17hgR2Hb1pa5Pwh5/umpVC5nkpThCoQSrQav7HN5gsHdizQddT4cWTyWqrBABl0CoPMAK2XAaktS2SUsfmB38ap3oGs6tcIRcrQ5cpaF627bfxtvANwkr5NtOrB0DYiAc5tPsOncvFC/88Ltm/g3wI5xg1+b+k1IDqG2lPTQ6CAPZqtzSQG0Imcess3qRnj5K+VdwxF+MqXYCMXun0+rFjBCyPgFQRMEJP8ghXomlbfUY6UwhGpI8ss6JI7jgc+Idd7t+qG6j5z65/sS+0vqPXHqfrKkOJIO0u1uBI8dyIEZv+C0n3sDL8gQL8cV5EUCw39Qq2r2VDxfdihTWKW4vE23+aBeeI0MKXDpK/sTZ50S4UdDTJcJ3qI8tZ13iMVqTH/PVokGXbtPxAwdmWIR/8e2olbZ4d+l9fLSmwKvxO5WzDqr+/MJ+rQyCPG9sORykPc+2T8zQuxgHGi3o/fNEybQU85W2ENQWvG12PqkCmS9ky46yg44Bbo7i64Wu4ie400blMO4P3J+LP01DD+q0khPhSuB6cFpz+/VxPv+mQYbm/JZaw/8mpOeLvKZEpEtkGWTQ==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(46966006)(40470700004)(36840700001)(6666004)(16526019)(86362001)(316002)(508600001)(186003)(81166007)(2906002)(36860700001)(1076003)(336012)(26005)(54906003)(6916009)(47076005)(426003)(7416002)(356005)(5660300002)(7696005)(40460700003)(83380400001)(8676002)(44832011)(36756003)(82310400005)(4326008)(70586007)(70206006)(2616005)(8936002)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 May 2022 15:56:40.1074
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9a426932-990c-4ee0-fb72-08da431e2696
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT053.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB3036
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 28, 2022 at 05:23:19PM +0300, Amir Goldstein wrote:
-> On Thu, May 26, 2022 at 10:47 PM Brian Foster <bfoster@redhat.com> wrote:
-> >
-> > On Thu, May 26, 2022 at 06:28:23PM +0300, Amir Goldstein wrote:
-> > > > > Hi Brian,
-> > > > >
-> > > > > This patch was one of my selected fixes to backport for v5.10.y.
-> > > > > It has a very scary looking commit message and the change seems
-> > > > > to be independent of any infrastructure changes(?).
-> > > > >
-> > > > > The problem is that applying this patch to v5.10.y reliably reproduces
-> > > > > this buffer corruption assertion [*] with test xfs/076.
-> > > > >
-> > > > > This happens on the kdevops system that is using loop devices over
-> > > > > sparse files inside qemu images. It does not reproduce on my small
-> > > > > VM at home.
-> > > > >
-> > > > > Normally, I would just drop this patch from the stable candidates queue
-> > > > > and move on, but I thought you might be interested to investigate this
-> > > > > reliable reproducer, because maybe this system exercises an error
-> > > > > that is otherwise rare to hit.
-> > > > >
-> > > > > It seemed weird to me that NOT reusing the extent would result in
-> > > > > data corruption, but it could indicate that reusing the extent was masking
-> > > > > the assertion and hiding another bug(?).
-> > > > >
-> > > >
-> > > > Indeed, this does seem like an odd failure. The shutdown on transaction
-> > > > cancel implies cancellation of a dirty transaction. This is not
-> > > > necessarily corruption as much as just being the generic
-> > > > naming/messaging related to shutdowns due to unexpected in-core state.
-> > > > The patch in question removes some modifications to in-core busy extent
-> > > > state during extent allocation that are fundamentally unsafe in
-> > > > combination with how allocation works. This change doesn't appear to
-> > > > affect any transaction directly, so the correlation may be indirect.
-> > > >
-> > > > xfs/076 looks like it's a sparse inode allocation test, which certainly
-> > > > seems relevant in that it is stressing the ability to allocate inode
-> > > > chunks under free space fragmentation. If this patch further restricts
-> > > > extent allocation by removing availability of some set of (recently
-> > > > freed, busy) extents, then perhaps there is some allocation failure
-> > > > sequence that was previously unlikely enough to mask some poor error
-> > > > handling logic or transaction handling (like an agfl fixup dirtying a
-> > > > transaction followed by an allocation failure, for example) that we're
-> > > > now running into.
-> > > >
-> > > > > Can you think of another reason to explain the regression this fix
-> > > > > introduces to 5.10.y?
-> > > > >
-> > > >
-> > > > Not off the top of my head. Something along the lines of the above seems
-> > > > plausible, but that's just speculation at this point.
-> > > >
-> > > > > Do you care to investigate this failure or shall I just move on?
-> > > > >
-> > > >
-> > > > I think it would be good to understand whether there's a regression
-> > > > introduced by this patch, a bug somewhere else or just some impedence
-> > > > mismatch in logic between the combination of this change and whatever
-> > > > else happens to be in v5.10.y. Unfortunately I'm not able to reproduce
-> > > > if I pull just this commit back into latest 5.10.y (5.10.118). I've
-> > > > tried with a traditional bdev as well as a preallocated and sparse
-> > > > loopback scratch dev.
-> > >
-> > > I also failed to reproduce it on another VM, but it reproduces reliably
-> > > on this system. That's why I thought we'd better use this opportunity.
-> > > This system has lots of RAM and disk to spare so I have no problem
-> > > running this test in a VM in parallel to my work.
-> > >
-> > > It is not actually my system, it's a system that Luis has setup for
-> > > stable XFS testing and gave me access to, so if the need arises
-> > > you could get direct access to the system, but for now, I have no
-> > > problem running the test for you.
-> > >
-> > > > Have you tested this patch (backport) in isolation
-> > > > in your reproducer env or only in combination with other pending
-> > > > backports?
-> > > >
-> > >
-> > > I tested it on top of 5.10.109 + these 5 patches:
-> > > https://github.com/amir73il/linux/commits/xfs-5.10.y-1
-> > >
-> > > I can test it in isolation if you like. Let me know if there are
-> > > other forensics that you would like me to collect.
-> > >
-> >
-> > Hm. Still no luck if I move to .109 and pull in those few patches. I
-> > assume there's nothing else potentially interesting about the test env
-> > other than the sparse file scratch dev (i.e., default mkfs options,
-> > etc.)? If so and you can reliably reproduce, I suppose it couldn't hurt
-> > to try and grab a tracepoint dump of the test when it fails (feel free
-> > to send directly or upload somewhere as the list may punt it, and please
-> > also include the dmesg output that goes along with it) and I can see if
-> > that shows anything helpful.
-> >
-> > I think what we want to know initially is what error code we're
-> > producing (-ENOSPC?) and where it originates, and from there we can
-> > probably work out how the transaction might be dirty. I'm not sure a
-> > trace dump will express that conclusively. If you wanted to increase the
-> > odds of getting some useful information it might be helpful to stick a
-> > few trace_printk() calls in the various trans cancel error paths out of
-> > xfs_create() to determine whether it's the inode allocation attempt that
-> > fails or the subsequent attempt to create the directory entry..
-> >
-> 
-> The error (-ENOSPC) comes from this v5.10 code in xfs_dir_ialloc():
-> 
->         if (!ialloc_context && !ip) {
->                 *ipp = NULL;
->                 return -ENOSPC;
->         }
-> 
-> Which theoretically might trip after xfs_ialloc() has marked the transaction
-> dirty(?).
-> 
+This is our MEMORY_DEVICE_COHERENT patch series rebased and updated
+for current 5.18.0
 
-Yeah, I think the first part that might have dirtied the transaction at
-this point is fixing up the AGFL on a block allocation attempt. Ideally
-the AG selection code would prevent taking this step for an AG that
-can't satisfy an allocation, but realistically I'm not sure this
-approach will ever work perfectly unless it separates out the extent
-search algorithm from the prospect of dirtying the transaction and thus
-committing to the allocation. This may not be trivial because the AGFL
-fixup can require extent allocation itself.
+Changes since the last version:
+- Fixed problems with migration during long-term pinning in
+get_user_pages
+- Open coded vm_normal_lru_pages as suggested in previous code review
+- Update hmm_gup_test with more get_user_pages calls, include
+hmm_cow_in_device in hmm-test.
 
-It's not terribly surprising that limiting reuse of busy extents could
-increase the likelihood of allocation failure, though I think most cases
-should flush busy extents and retry. I wonder a bit whether changes to
-the near mode allocation algorithm may have introduced a potential
-regression in that regard.
+This patch series introduces MEMORY_DEVICE_COHERENT, a type of memory
+owned by a device that can be mapped into CPU page tables like
+MEMORY_DEVICE_GENERIC and can also be migrated like
+MEMORY_DEVICE_PRIVATE.
 
-> This specific code is gone with this cleanup series in v5.11:
-> 
-> https://lore.kernel.org/linux-xfs/20201209112820.114863-1-hsiangkao@redhat.com/
-> 
-> When the $SUBJECT patch is applied to v5.11.16 the test xfs/076 does not fail.
-> 
-> So either the $SUBJECT patch (from 5.12) is incompatible with v5.10 code
-> or the cleanup series somehow managed to make my system not reproduce
-> the bug anymore.
-> 
+This patch series is mostly self-contained except for a few places where
+it needs to update other subsystems to handle the new memory type.
 
-I thought this was mostly refactoring and reworking the ugly retry
-pattern in the former code vs. major functional changes. I think the
-fundamental prospect of allocation failure still exists in current code,
-but clearly your tests demonstrate some practical difference. Perhaps
-there are some subtle logic changes in that rework that help prevent
-this problem.
+System stability and performance are not affected according to our
+ongoing testing, including xfstests.
 
-> I will assume the former and drop this patch from v5.10.y candidates.
-> If you want me to continue to research the bug on v5.10 let me know
-> what else you want me to check.
-> 
+How it works: The system BIOS advertises the GPU device memory
+(aka VRAM) as SPM (special purpose memory) in the UEFI system address
+map.
 
-I think that's reasonable. Realistically the bug fixed by this patch is
-so old and long standing (v3.0?) I don't think it's terribly important
-to pull it from v5.12 to v5.10.y unless real users started hitting it.
-My curiosity around the cause is moreso to identify whether there's a
-bug in mainline that needs fixing..
+The amdgpu driver registers the memory with devmap as
+MEMORY_DEVICE_COHERENT using devm_memremap_pages. The initial user for
+this hardware page migration capability is the Frontier supercomputer
+project. This functionality is not AMD-specific. We expect other GPU
+vendors to find this functionality useful, and possibly other hardware
+types in the future.
 
-Brian
+Our test nodes in the lab are similar to the Frontier configuration,
+with .5 TB of system memory plus 256 GB of device memory split across
+4 GPUs, all in a single coherent address space. Page migration is
+expected to improve application efficiency significantly. We will
+report empirical results as they become available.
 
-> Thanks,
-> Amir.
-> 
+Coherent device type pages at gup are now migrated back to system
+memory if they are being pinned long-term (FOLL_LONGTERM). The reason
+is, that long-term pinning would interfere with the device memory
+manager owning the device-coherent pages (e.g. evictions in TTM).
+These series incorporate Alistair Popple patches to do this
+migration from pin_user_pages() calls. hmm_gup_test has been added to
+hmm-test to test different get user pages calls.
+
+This series includes handling of device-managed anonymous pages
+returned by vm_normal_pages. Although they behave like normal pages
+for purposes of mapping in CPU page tables and for COW, they do not
+support LRU lists, NUMA migration or THP.
+
+We also introduced a FOLL_LRU flag that adds the same behaviour to
+follow_page and related APIs, to allow callers to specify that they
+expect to put pages on an LRU list.
+
+v2:
+- Rebase to latest 5.18-rc7.
+- Drop patch "mm: add device coherent checker to remove migration pte"
+and modify try_to_migrate_one, to let DEVICE_COHERENT pages fall
+through to normal page path. Based on Alistair Popple's comment.
+- Fix comment formatting.
+- Reword comment in vm_normal_page about pte_devmap().
+- Merge "drm/amdkfd: coherent type as sys mem on migration to ram" to
+"drm/amdkfd: add SPM support for SVM".
+
+v3:
+- Rebase to latest 5.18.0.
+- Patch "mm: handling Non-LRU pages returned by vm_normal_pages"
+reordered.
+- Add WARN_ON_ONCE for thp device coherent case.
+
+v4:
+- Rebase to latest 5.18.0
+- Fix consitency between pages with FOLL_LRU flag set and pte_devmap
+at follow_page_pte.
+
+Alex Sierra (11):
+  mm: add zone device coherent type memory support
+  mm: handling Non-LRU pages returned by vm_normal_pages
+  mm: add device coherent vma selection for memory migration
+  drm/amdkfd: add SPM support for SVM
+  lib: test_hmm add ioctl to get zone device type
+  lib: test_hmm add module param for zone device type
+  lib: add support for device coherent type in test_hmm
+  tools: update hmm-test to support device coherent type
+  tools: update test_hmm script to support SP config
+  tools: add hmm gup tests for device coherent type
+  tools: add selftests to hmm for COW in device memory
+
+Alistair Popple (2):
+  mm: remove the vma check in migrate_vma_setup()
+  mm/gup: migrate device coherent pages when pinning instead of failing
+
+ drivers/gpu/drm/amd/amdkfd/kfd_migrate.c |  34 ++-
+ fs/proc/task_mmu.c                       |   2 +-
+ include/linux/memremap.h                 |  19 ++
+ include/linux/migrate.h                  |   1 +
+ include/linux/mm.h                       |   3 +-
+ lib/test_hmm.c                           | 349 +++++++++++++++++------
+ lib/test_hmm_uapi.h                      |  22 +-
+ mm/gup.c                                 |  53 +++-
+ mm/huge_memory.c                         |   2 +-
+ mm/internal.h                            |   1 +
+ mm/khugepaged.c                          |   9 +-
+ mm/ksm.c                                 |   6 +-
+ mm/madvise.c                             |   4 +-
+ mm/memcontrol.c                          |   7 +-
+ mm/memory-failure.c                      |   8 +-
+ mm/memory.c                              |   9 +-
+ mm/mempolicy.c                           |   2 +-
+ mm/memremap.c                            |  10 +
+ mm/migrate.c                             |   4 +-
+ mm/migrate_device.c                      | 115 ++++++--
+ mm/mlock.c                               |   2 +-
+ mm/mprotect.c                            |   2 +-
+ mm/rmap.c                                |   5 +-
+ tools/testing/selftests/vm/hmm-tests.c   | 308 ++++++++++++++++++--
+ tools/testing/selftests/vm/test_hmm.sh   |  24 +-
+ 25 files changed, 817 insertions(+), 184 deletions(-)
+
+-- 
+2.32.0
 
