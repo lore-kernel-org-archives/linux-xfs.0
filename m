@@ -2,131 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 542CFC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jun 2022 12:18:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC189C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jun 2022 12:34:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351997AbiFAMSx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jun 2022 08:18:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41414 "EHLO
+        id S1352914AbiFAMeX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jun 2022 08:34:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348212AbiFAMSw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jun 2022 08:18:52 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D4215D5CC;
-        Wed,  1 Jun 2022 05:18:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=g8FVAL5R+OVZFW0X+arv2MOpnNnrIY+mq+TEzocA8+M=; b=U2jvK8cW8xz8WfMjngKCBR+3lZ
-        oFNSSU1gDzN+LCScEhZoebQzCHr2FkjUL4r57ksv/B4/J2sS6W2LIvbjx3rNjTp0nY3frSUNPnRBT
-        PlPgTvI+82d//SuZGQ2s7zSZvQfivYRWjc12Oz+o0xjseTFwlLweWIViSRtwW2Ws9UEy3M4rHV0o8
-        v9E5DILAfyTO4Y74mbn+u3J5COAj6ALLzQH4b4qQiRj59S+dJU/CmlW9OzUJBzXcSxLL+3QtRN9Of
-        WW3wGmSHhU1PwreBPRE/29xL/ktrIQpQOATQwKn/GMQFArXTwmDp+aNbh7m6omgHSzXeGIzGMl3uH
-        C/B7rFnQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nwNJJ-00G16s-1r; Wed, 01 Jun 2022 12:18:49 +0000
-Date:   Wed, 1 Jun 2022 05:18:49 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Chris Mason <clm@fb.com>
-Cc:     djwong@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org,
-        dchinner@redhat.com
-Subject: Re: [PATCH RFC] iomap: invalidate pages past eof in
- iomap_do_writepage()
-Message-ID: <YpdZKbrtXJJ9mWL7@infradead.org>
-References: <20220601011116.495988-1-clm@fb.com>
+        with ESMTP id S1348177AbiFAMeW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jun 2022 08:34:22 -0400
+Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18A8F9BAC3;
+        Wed,  1 Jun 2022 05:34:21 -0700 (PDT)
+Received: by mail-wr1-x42a.google.com with SMTP id u3so2168519wrg.3;
+        Wed, 01 Jun 2022 05:34:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=gISDPF1V5a3NWXBvppkjujgtPAJ0uyftRP2lWslVlMM=;
+        b=pgQmxFsBdKekVsfAjDuzsYI56xDt4BcX++J86mHFsRBGzLuQkymEYCJUnv5KB18ijY
+         R1KLQEF+OLHXLu8TfDVMk5F+m7IcyLtQVvjWdJnKn5//XzZFV0vp8lfBrdwgLb4/97rn
+         dUYhZNUcnuwifBq4hZwmpNFiw6pp0x8s6M8QSzPrEbjIbz8S8ZY1rbeFM/XMni9yx8L/
+         mSJc1Ag0PmR/ISpi/qg3a278moRE+zFRaAVtvt6FnqRw38rl/Ullp3EkTBuOEyLht1ct
+         yHUTEbcCSzxkmBUpNUGECRu7duDC0BTD0gAARUIkUM2XO2n6MBzuTFQoApdN7F/QI9iN
+         //zw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=gISDPF1V5a3NWXBvppkjujgtPAJ0uyftRP2lWslVlMM=;
+        b=l/M8j/10eAkI4jJV1fw+NJQ4iDISfIF9JEzj1gMjTXM6UpRqLEvhD1T7Teqimz8eRL
+         7hbY3sTDfaFj5MXtQlulnTgiGCvrdWzjZYqdHSmiBwKeL2OJdSPVsguZh/G4nx0cBh7g
+         gO02MgSWfkThLLIxQKyTkm5WEUfBfPcNL2JlwIPHYFHApQoLDZTDrOzJNakMAHoGCvXR
+         9Kre3yxyTEJii0aI8GPSvEN8cn6AJm4ShYr6kBPGvio4nDoGU0hHmsDGIzcniyI2Y5dF
+         v0Ex2UtBBrw5FRnxqxftVM3stFpyaq5iptaF0qInhsdHlFsAk9f+l7caiGg8G5dU8ThM
+         bgDg==
+X-Gm-Message-State: AOAM5300l/6yVSlnCgF25NeaFTmNyuh3z4899Ew5sbZOWYyIUlKfqQB+
+        2tj+e95zHrM4nRdhwv9bEtc=
+X-Google-Smtp-Source: ABdhPJzJeuKk57i0PH40YI4dQ97/YZc+yV7okvFt07Gr+P5/D8Q8eTFRBpUfx4iFuRyUb/ymp3vu1Q==
+X-Received: by 2002:a05:6000:1b03:b0:210:3372:2bd9 with SMTP id f3-20020a0560001b0300b0021033722bd9mr13111196wrz.704.1654086859489;
+        Wed, 01 Jun 2022 05:34:19 -0700 (PDT)
+Received: from localhost.localdomain ([77.137.79.96])
+        by smtp.gmail.com with ESMTPSA id i6-20020a05600c290600b00397470a8226sm1819887wmd.15.2022.06.01.05.34.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Jun 2022 05:34:19 -0700 (PDT)
+From:   Amir Goldstein <amir73il@gmail.com>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: [PATCH v2] generic/623: fix test for runing on overlayfs
+Date:   Wed,  1 Jun 2022 15:34:06 +0300
+Message-Id: <20220601123406.265475-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220601011116.495988-1-clm@fb.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This does look sane to me.  How much testing did this get?  Especially
-for the block size < page sie case?  Also adding Dave as he has spent
-a lot of time on this code.
+For this test to run on overlayfs we open a different file to perform
+shutdown while keeping the writeback target file open.
 
-On Tue, May 31, 2022 at 06:11:17PM -0700, Chris Mason wrote:
-> iomap_do_writepage() sends pages past i_size through
-> folio_redirty_for_writepage(), which normally isn't a problem because
-> truncate and friends clean them very quickly.
-> 
-> When the system a variety of cgroups,
+xfs_io -c fsync perform fsync also on the writeback target file, which
+is needed for triggering the write fault.
 
-^^^ This sentence does not parse ^^^
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
 
-> we can end up in situations where
-> one cgroup has almost no dirty pages at all.  This is especially common
-> in our XFS workloads in production because they tend to use O_DIRECT for
-> everything.
-> 
-> We've hit storms where the redirty path hits millions of times in a few
-> seconds, on all a single file that's only ~40 pages long.  This ends up
-> leading to long tail latencies for file writes because the page reclaim
-> workers are hogging the CPU from some kworkers bound to the same CPU.
-> 
-> That's the theory anyway.  We know the storms exist, but the tail
-> latencies are so sporadic that it's hard to have any certainty about the
-> cause without patching a large number of boxes.
-> 
-> There are a few different problems here.  First is just that I don't
-> understand how invalidating the page instead of redirtying might upset
-> the rest of the iomap/xfs world.  Btrfs invalidates in this case, which
-> seems like the right thing to me, but we all have slightly different
-> sharp corners in the truncate path so I thought I'd ask for comments.
-> 
-> Second is the VM should take wbc->pages_skipped into account, or use
-> some other way to avoid looping over and over.  I think we actually want
-> both but I wanted to understand the page invalidation path first.
-> 
-> Signed-off-by: Chris Mason <clm@fb.com>
-> Reported-by: Domas Mituzas <domas@fb.com>
-> ---
->  fs/iomap/buffered-io.c | 13 +++++++------
->  1 file changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 8ce8720093b9..4a687a2a9ed9 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1482,10 +1482,8 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
->  		pgoff_t end_index = isize >> PAGE_SHIFT;
->  
->  		/*
-> -		 * Skip the page if it's fully outside i_size, e.g. due to a
-> -		 * truncate operation that's in progress. We must redirty the
-> -		 * page so that reclaim stops reclaiming it. Otherwise
-> -		 * iomap_vm_releasepage() is called on it and gets confused.
-> +		 * invalidate the page if it's fully outside i_size, e.g.
-> +		 * due to a truncate operation that's in progress.
->  		 *
->  		 * Note that the end_index is unsigned long.  If the given
->  		 * offset is greater than 16TB on a 32-bit system then if we
-> @@ -1499,8 +1497,10 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
->  		 * offset is just equal to the EOF.
->  		 */
->  		if (folio->index > end_index ||
-> -		    (folio->index == end_index && poff == 0))
-> -			goto redirty;
-> +		    (folio->index == end_index && poff == 0)) {
-> +			folio_invalidate(folio, 0, folio_size(folio));
-> +			goto unlock;
-> +		}
->  
->  		/*
->  		 * The page straddles i_size.  It must be zeroed out on each
-> @@ -1518,6 +1518,7 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
->  
->  redirty:
->  	folio_redirty_for_writepage(wbc, folio);
-> +unlock:
->  	folio_unlock(folio);
->  	return 0;
->  }
-> -- 
-> 2.30.2
-> 
----end quoted text---
+Zorro,
+
+Following your comment on v1, this version does not change the
+behavior of the test when running on non-overlayfs.
+
+I tested that this test passes for both xfs and overlayfs+xfs on v5.18
+and tested that both configs fail with the same warning on v5.10.109.
+
+Thanks,
+Amir.
+
+ tests/generic/623 | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/tests/generic/623 b/tests/generic/623
+index ea016d91..5971717c 100755
+--- a/tests/generic/623
++++ b/tests/generic/623
+@@ -24,10 +24,22 @@ _scratch_mount
+ # XFS had a regression where it failed to check shutdown status in the fault
+ # path. This produced an iomap warning because writeback failure clears Uptodate
+ # status on the page.
++
++# For this test to run on overlayfs we open a different file to perform
++# shutdown while keeping the writeback target file open.
++# xfs_io -c fsync post-shutdown performs fsync also on the writeback target file,
++# which is critical for trigerring the writeback failure.
++shutdown_cmd=()
++shutdown_handle="$(_scratch_shutdown_handle)"
++if [ "$shutdown_handle" != "$SCRATCH_MNT" ];then
++	shutdown_cmd+=("-c" "open $shutdown_handle")
++fi
++shutdown_cmd+=("-c" "shutdown")
++
+ file=$SCRATCH_MNT/file
+ $XFS_IO_PROG -fc "pwrite 0 4k" -c fsync $file | _filter_xfs_io
+ ulimit -c 0
+-$XFS_IO_PROG -x -c "mmap 0 4k" -c "mwrite 0 4k" -c shutdown -c fsync \
++$XFS_IO_PROG -x -c "mmap 0 4k" -c "mwrite 0 4k" "${shutdown_cmd[@]}" -c fsync \
+ 	-c "mwrite 0 4k" $file | _filter_xfs_io
+ 
+ # success, all done
+-- 
+2.25.1
+
