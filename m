@@ -2,87 +2,120 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B491C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jun 2022 17:42:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC22CCA473
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jun 2022 17:56:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356401AbiFARm0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jun 2022 13:42:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57070 "EHLO
+        id S1356482AbiFAR4q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jun 2022 13:56:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352351AbiFARmY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jun 2022 13:42:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BC2652B08
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Jun 2022 10:42:24 -0700 (PDT)
+        with ESMTP id S1356484AbiFAR4j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jun 2022 13:56:39 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FDCD9C2C4;
+        Wed,  1 Jun 2022 10:56:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B649E61645
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Jun 2022 17:42:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 262F7C341C5
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Jun 2022 17:42:23 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 19BEBB81806;
+        Wed,  1 Jun 2022 17:56:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B10F7C385A5;
+        Wed,  1 Jun 2022 17:56:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654105343;
-        bh=wNzgA7Fl6ojuR3oVT9qM9a3nS+gvFqy2jaEMGYwPckw=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=Hr7HieOdbv2ZnOuW59XHwcOANAkWbX1g8z82LOv7A76r6BkdFEgnDagMnxWlfq3VE
-         q9823r0oY3iNflSshhrjEHcIEGVx+Ieq+4ey5wJtoAeYrruuvYwjS0f1zMEEI0cRH6
-         HsOv8JWRLbwSv5wOZ+l6HPozoinMPK3FFNQYX3h64OPthVgLaksn8JOPSIh8+j/8A8
-         E6YAWNYOK6RxKDf14RUPDVel7dhbPmBnPDbXI7MNQIl7JFD//FCcCM6md+4ROHBroh
-         KoMr8gKWNUK//zb+k9cmS3hYsRvBj8Dc9iTtBuHNvwjwteNYy8vmroGCDm5mBvsVmh
-         i7NaZC6ar2gDw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 15B4CCC13B0; Wed,  1 Jun 2022 17:42:23 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: =?UTF-8?B?W0J1ZyAyMTU3MzFdIFNlcmlhbCBwb3J0IGNvbnRpbnVvdXNseSBv?=
- =?UTF-8?B?dXRwdXRzIOKAnFhGUyAoZG0tMCk6IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0?=
- =?UTF-8?B?ZWN0ZWTigJ0=?=
-Date:   Wed, 01 Jun 2022 17:42:22 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: sandeen@redhat.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: INVALID
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_status cc resolution
-Message-ID: <bug-215731-201763-3kz7gWLDho@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215731-201763@https.bugzilla.kernel.org/>
-References: <bug-215731-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        s=k20201202; t=1654106187;
+        bh=5rCSgi5B7s546iDUg/FGz27j5Ykan4/jwu+PQ2y0Emk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=J3NkZAgk9CcW5kc1N6TE8dB8uPamSLV49ZxIRXRLEYbCs1flaOpxyx/tcRXMfGURC
+         h8buw6lTX1IQBR3N5nKEJg1TP4fx+FWH7JWMRPIWqD7VHeBro+KzSZbiBd31u7/MIM
+         9m5XHJx8Y+vX/IQpkNNMF02/ElHjgjtR+8lkWN1MfASAPlmgJ1+WtT7oTDkZuQmTwd
+         krAhnwy5IbiefBURs8yagojsGWsaZuMDXR0Z4he3hpy2H1/pg0JG+AInz8ZIObW/LE
+         k5Rvda11meXsqYW+Zq1LOPS40RFF+O2UHLFWFhmhSRY7P8caxMFZmL/c/HXTyg0zXa
+         v3pLP3i8roCYQ==
+Date:   Wed, 1 Jun 2022 10:56:27 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Stefan Roesch <shr@fb.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, io-uring@vger.kernel.org,
+        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com, jack@suse.cz
+Subject: Re: [PATCH v6 04/16] iomap: Add flags parameter to
+ iomap_page_create()
+Message-ID: <YpeoS90UUOF7IAhH@magnolia>
+References: <20220526173840.578265-1-shr@fb.com>
+ <20220526173840.578265-5-shr@fb.com>
+ <YpW7nKoUB9dJk3ee@infradead.org>
+ <a2d5f74f-b354-6590-9910-82c3beca5c88@fb.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a2d5f74f-b354-6590-9910-82c3beca5c88@fb.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215731
+On Tue, May 31, 2022 at 11:12:38AM -0700, Stefan Roesch wrote:
+> 
+> 
+> On 5/30/22 11:54 PM, Christoph Hellwig wrote:
+> > On Thu, May 26, 2022 at 10:38:28AM -0700, Stefan Roesch wrote:
+> >> Add the kiocb flags parameter to the function iomap_page_create().
+> >> Depending on the value of the flags parameter it enables different gfp
+> >> flags.
+> >>
+> >> No intended functional changes in this patch.
+> >>
+> >> Signed-off-by: Stefan Roesch <shr@fb.com>
+> >> Reviewed-by: Jan Kara <jack@suse.cz>
+> >> ---
+> >>  fs/iomap/buffered-io.c | 19 +++++++++++++------
+> >>  1 file changed, 13 insertions(+), 6 deletions(-)
+> >>
+> >> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> >> index 8ce8720093b9..d6ddc54e190e 100644
+> >> --- a/fs/iomap/buffered-io.c
+> >> +++ b/fs/iomap/buffered-io.c
+> >> @@ -44,16 +44,21 @@ static inline struct iomap_page *to_iomap_page(struct folio *folio)
+> >>  static struct bio_set iomap_ioend_bioset;
+> >>  
+> >>  static struct iomap_page *
+> >> -iomap_page_create(struct inode *inode, struct folio *folio)
+> >> +iomap_page_create(struct inode *inode, struct folio *folio, unsigned int flags)
+> >>  {
+> >>  	struct iomap_page *iop = to_iomap_page(folio);
+> >>  	unsigned int nr_blocks = i_blocks_per_folio(inode, folio);
+> >> +	gfp_t gfp = GFP_NOFS | __GFP_NOFAIL;
+> >>  
+> >>  	if (iop || nr_blocks <= 1)
+> >>  		return iop;
+> >>  
+> >> +	if (flags & IOMAP_NOWAIT)
+> >> +		gfp = GFP_NOWAIT;
+> >> +
+> > 
+> > Maybe this would confuse people less if it was:
+> > 
+> > 	if (flags & IOMAP_NOWAIT)
+> > 		gfp = GFP_NOWAIT;
+> > 	else
+> > 		gfp = GFP_NOFS | __GFP_NOFAIL;
+> > 
+> 
+> I made the above change.
 
-Eric Sandeen (sandeen@redhat.com) changed:
+Thanks.  I misread all the gfp handling as:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-                 CC|                            |sandeen@redhat.com
-         Resolution|---                         |INVALID
+	gfp_t gfp = GFP_NOFS | __GFP_NOFAIL;
 
---- Comment #2 from Eric Sandeen (sandeen@redhat.com) ---
-Agreed, this is simply a report of corruption, and there is not nearly enou=
-gh
-information to act on or triage.
+	if (flags & IOMAP_NOWAIT)
+		gfp |= GFP_NOWAIT;
 
---=20
-You may reply to this email to add a comment.
+Which was why my question did not make sense.  Sorry about that. :(
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+--D
+
+> 
+> > but even as is it is perfectly fine (and I tend to write these kinds of
+> > shortcuts as well).
+> > 
+> > Looks good either way:
+> > 
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
