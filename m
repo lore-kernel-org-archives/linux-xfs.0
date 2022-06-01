@@ -2,93 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5A2CC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jun 2022 18:24:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C1C5CCA473
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jun 2022 21:01:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344932AbiFASYS convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jun 2022 14:24:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43954 "EHLO
+        id S230471AbiFAVBt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jun 2022 17:01:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229584AbiFASYR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jun 2022 14:24:17 -0400
-X-Greylist: delayed 3255 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 01 Jun 2022 11:24:16 PDT
-Received: from cloud48395.mywhc.ca (cloud48395.mywhc.ca [173.209.37.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 331B7A30B0;
-        Wed,  1 Jun 2022 11:24:15 -0700 (PDT)
-Received: from [45.44.224.220] (port=40682 helo=[192.168.1.179])
-        by cloud48395.mywhc.ca with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.95)
-        (envelope-from <olivier@trillion01.com>)
-        id 1nwSAP-000142-Ov;
-        Wed, 01 Jun 2022 13:29:57 -0400
-Message-ID: <32fa2fa1db1adcc3c60974fa84a88c74aad82cae.camel@trillion01.com>
-Subject: Re: [PATCH v6 04/16] iomap: Add flags parameter to
- iomap_page_create()
-From:   Olivier Langlois <olivier@trillion01.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, Stefan Roesch <shr@fb.com>,
-        io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, hch@infradead.org
-Date:   Wed, 01 Jun 2022 13:29:55 -0400
-In-Reply-To: <20220601082131.rem4qaqabu4ktofl@quack3.lan>
-References: <20220526173840.578265-1-shr@fb.com>
-         <20220526173840.578265-5-shr@fb.com> <Yo/GIF1EoK7Acvmy@magnolia>
-         <12a76c029e9f3cac279c025776dfb2f59331dca0.camel@olivierlanglois.net>
-         <20220601082131.rem4qaqabu4ktofl@quack3.lan>
-Organization: Trillion01 Inc
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8BIT
-User-Agent: Evolution 3.44.1 
+        with ESMTP id S230411AbiFAVBt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jun 2022 17:01:49 -0400
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 554F21BF167
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Jun 2022 14:01:48 -0700 (PDT)
+Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 251ItdQC009936
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jun 2022 14:01:48 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=facebook;
+ bh=kEVeF1raHjzqCCTZ1PYGpmk3OQwPxUvEougAHhggs/M=;
+ b=MIQLVDM65hkWiJ0lj6EVBtpJJYyYIf98ZkTWo1bMxOEy0y4v9tHTqrLZMDRFnnGQdBNi
+ kxmJQW35KHX88Mf2FMrS70P0sgPJ7aRlnDnVRolIVskefxOf5xtsWa7upTHJNv+N6tCy
+ scjCwY3fbHsQKcFPW1kcApydM3OYFm2c2J4= 
+Received: from mail.thefacebook.com ([163.114.132.120])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3ge5vcm8xy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jun 2022 14:01:48 -0700
+Received: from snc-exhub201.TheFacebook.com (2620:10d:c085:21d::7) by
+ snc-exhub202.TheFacebook.com (2620:10d:c085:21d::5) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28; Wed, 1 Jun 2022 14:01:47 -0700
+Received: from twshared4937.07.ash9.facebook.com (2620:10d:c085:108::8) by
+ mail.thefacebook.com (2620:10d:c085:21d::7) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28; Wed, 1 Jun 2022 14:01:47 -0700
+Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
+        id BB990FEB2396; Wed,  1 Jun 2022 14:01:42 -0700 (PDT)
+From:   Stefan Roesch <shr@fb.com>
+To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
+        <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>,
+        <hch@infradead.org>, <axboe@kernel.dk>
+Subject: [PATCH v7 02/15] mm: Move updates of dirty_exceeded into one place
+Date:   Wed, 1 Jun 2022 14:01:28 -0700
+Message-ID: <20220601210141.3773402-3-shr@fb.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220601210141.3773402-1-shr@fb.com>
+References: <20220601210141.3773402-1-shr@fb.com>
 MIME-Version: 1.0
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - cloud48395.mywhc.ca
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - trillion01.com
-X-Get-Message-Sender-Via: cloud48395.mywhc.ca: authenticated_id: olivier@trillion01.com
-X-Authenticated-Sender: cloud48395.mywhc.ca: olivier@trillion01.com
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-GUID: 2Hxz_TqGkmdnQkozW8ri5SsyXP2C4wLo
+X-Proofpoint-ORIG-GUID: 2Hxz_TqGkmdnQkozW8ri5SsyXP2C4wLo
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
+ definitions=2022-06-01_08,2022-06-01_01,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2022-06-01 at 10:21 +0200, Jan Kara wrote:
-> > I have a question that is a bit offtopic but since it is concerning
-> > GFP
-> > flags and this is what is discussed here maybe a participant will
-> > kindly give me some hints about this mystery that has burned me for
-> > so
-> > long...
-> > 
-> > Why does out_of_memory() requires GFP_FS to kill a process? AFAIK,
-> > no
-> > filesystem-dependent operations are needed to kill a process...
-> 
-> AFAIK it is because without GFP_FS, the chances for direct reclaim
-> are
-> fairly limited so we are not sure whether the machine is indeed out
-> of
-> memory or whether it is just that we need to reclaim from fs pools to
-> free
-> up memory.
-> 
->                                                                 Honza
-Jan,
+From: Jan Kara <jack@suse.cz>
 
-thx a lot for this lead. I will study it further. Your answer made me
-realized that the meaning of direct reclaim was not crystal clear to
-me. I'll return to my Bovet & Cesati book to clear that out (That is
-probably the book in my bookshelf that I have read the most).
+Transition of wb->dirty_exceeded from 0 to 1 happens before we go to
+sleep in balance_dirty_pages() while transition from 1 to 0 happens when
+exiting from balance_dirty_pages(), possibly based on old values. This
+does not make a lot of sense since wb->dirty_exceeded should simply
+reflect whether wb is over dirty limit and so we should ratelimit
+entering to balance_dirty_pages() less. Move the two updates together.
 
-After having sending out my question, I have came up with another
-possible explanation...
+Signed-off-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Stefan Roesch <shr@fb.com>
+---
+ mm/page-writeback.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-Maybe it is not so much to send the killing signal to the oom victim
-that requires GFP_FS but maybe the trouble the condition is avoiding is
-the oom victim process trying to return memory to VFS as it exits while
-VFS is busy waiting for its allocation request to succeed...
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index e59c523aed1a..90b1998c16a1 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1729,8 +1729,8 @@ static void balance_dirty_pages(struct bdi_writebac=
+k *wb,
+ 				sdtc =3D mdtc;
+ 		}
+=20
+-		if (dirty_exceeded && !wb->dirty_exceeded)
+-			wb->dirty_exceeded =3D 1;
++		if (dirty_exceeded !=3D wb->dirty_exceeded)
++			wb->dirty_exceeded =3D dirty_exceeded;
+=20
+ 		if (time_is_before_jiffies(READ_ONCE(wb->bw_time_stamp) +
+ 					   BANDWIDTH_INTERVAL))
+@@ -1834,9 +1834,6 @@ static void balance_dirty_pages(struct bdi_writebac=
+k *wb,
+ 		if (fatal_signal_pending(current))
+ 			break;
+ 	}
+-
+-	if (!dirty_exceeded && wb->dirty_exceeded)
+-		wb->dirty_exceeded =3D 0;
+ }
+=20
+ static DEFINE_PER_CPU(int, bdp_ratelimits);
+--=20
+2.30.2
 
