@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17128C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jun 2022 10:46:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACF9FC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jun 2022 10:46:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352358AbiFAKqC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jun 2022 06:46:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50226 "EHLO
+        id S1352368AbiFAKqF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jun 2022 06:46:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352264AbiFAKp7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jun 2022 06:45:59 -0400
-Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48888813C6;
-        Wed,  1 Jun 2022 03:45:56 -0700 (PDT)
-Received: by mail-wm1-x333.google.com with SMTP id z17so737458wmf.1;
-        Wed, 01 Jun 2022 03:45:56 -0700 (PDT)
+        with ESMTP id S1352372AbiFAKp6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jun 2022 06:45:58 -0400
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3F067E1F3;
+        Wed,  1 Jun 2022 03:45:54 -0700 (PDT)
+Received: by mail-wr1-x429.google.com with SMTP id e2so1785237wrc.1;
+        Wed, 01 Jun 2022 03:45:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=dTtVKM9UT0CLXD1zwfcjWb0IVAoLGPcfVYgpuoOmr9I=;
-        b=f7DxPeDuS8HGSyat8Ed08BgrgGjpLdyuBfoh6GpcEHsdj0t1uSwCjMeWJ44L6jDpjL
-         ICH4FVLIlmkb97ICah1qsJlTJyVSeCprbh42N7FStXOS7gJJcWjt6/C2X7s73bKDzWsO
-         pxrlRICgDKJHOUoezTEYdYL1e7kPQn4kDPcIGrsyLwPRsZhqizjNHqLTChByHEydj93I
-         VeWprcatXOiO6HOGTMdHxSg9BYjnSYwYKAEq3d77ViQHdK7hMSq74huilwum30QAAGSM
-         5Sh4NEbH1PP51nAclMvZhIWasbwfgSlAYlV+nJ29FAi1b1JfJteKZU3NDXcxfXsCVfxR
-         fKfw==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=C7Jpet0hdXo8X//QPFYfddVJxAi84AMUAgkUSX7O5VE=;
+        b=m7GtlVpz4QBmqcpmkVjr4mEN1djL8+zdxtS9tuIN4mAn3TelZYZ0EnveI5SF/N0Cn5
+         HwdiUBtxEwqBmScN72SZTxGZtzc2YVU8+8DWxZ40ti46Bwq4q/VT6VXboMQlg28ZZOwE
+         PQTH8su6oI9k7/luDh42mSxxlxbQQtbYzF3IXlNWGTQl7DzAIH2CtEn8N+7cUrFyhB0b
+         LTtR6FEMjzLDBKAymDsImmOx5JqQIPpiaWPLDcODSoZwBg8BdWpZBC3iAtisRl+nDi3U
+         YfW8AxPIUgnfXFkYvRrTH7IF+tvDUYRfUK3As60tvX3NaAH/1xv3W1dKr8JsrOcEQA11
+         GQdA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=dTtVKM9UT0CLXD1zwfcjWb0IVAoLGPcfVYgpuoOmr9I=;
-        b=jsDUEodCqLTkPSPISl4QdktW8JaMf9aVfCmQrXiYOeBedAgokpMz7hGI83zrxyu+Ec
-         42vVHtpJA0ZY4MUI63k/M4f+N3O89MkYhbX6Vkze9uOMpDGJHzdAIaK0SNwHOeeIaqHS
-         WKd/bFo/XypFV62afnkz+4EteR1RIiWgMbglnRijidwByLdySHI21kt95h0mLUfSjxho
-         HN0cyRas01JnnoVoPEfymgFpH42wbLEt8vN7khu31f+PKLKcKCgX7W+to31dkQnAUxy4
-         BntxL9rkFRWb6YRi/GFltWs2Ca3JosOULR1ow0OzEdC2Z9zVLEj+r86viMnxhUPT62kS
-         9HMQ==
-X-Gm-Message-State: AOAM532gGAfsSc6d3HqZ5x5PNAIi7/3MA64ZsVALwJoKaUPq6uOnhEsB
-        WLk+nr7tFZJBpEhx+BtSaZc=
-X-Google-Smtp-Source: ABdhPJxSSaYbxMlqeAvyOWjTvhw3BpQAGjxNPmTKLqJlSjVA4egLp8rO1W2CyNU3o/+h1+pAxiQgVg==
-X-Received: by 2002:a05:600c:1e2a:b0:397:780a:b7f1 with SMTP id ay42-20020a05600c1e2a00b00397780ab7f1mr27948417wmb.188.1654080354517;
-        Wed, 01 Jun 2022 03:45:54 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=C7Jpet0hdXo8X//QPFYfddVJxAi84AMUAgkUSX7O5VE=;
+        b=QD+SYRhp74WqY7md4ns6OTrWib5Lhznp+Yc14j4BPduCnMf/vrX6+epkyoai65WTbU
+         b8U0vI1mJCmgMM/O8bpvMk01wE8kMBP2svFrgfNwWpTWCsUMlShV3eKEfmJioR3DESsy
+         CAKwvdqS/jvJVeaTcWDBTvlkQbnEJdYbklUMfEIiF1N8cE7z5nhYUh7UP/GWpZLabmo3
+         ssPtVbOlj1S7eqC5iWOb3/M40Rbq1XvrJSbmlbUcSzX3kpWsPD4EwxEoVxbHh0qaHcZD
+         TqtObBkMyf62dS6DnLDGpq0KUex3+ejMvfV1RsdiX7SSfAKLQQVJ08MBDRJ60Qmh4mPt
+         jCoA==
+X-Gm-Message-State: AOAM532VhjwLUyr23vFZZMLtuFZnwROgxzeTcLNFvCw0G60mEwFvk5Po
+        GiwZ7D+96070003CQ9KdZ3k=
+X-Google-Smtp-Source: ABdhPJwO+DDk8YunLkIoMcA4SL7SUlrXUUajgkWaRT3L9so/UVUc0sRof/jR4+8cJGv89eO8i6Qgiw==
+X-Received: by 2002:a5d:650f:0:b0:20d:77b:702b with SMTP id x15-20020a5d650f000000b0020d077b702bmr53613547wru.78.1654080352829;
+        Wed, 01 Jun 2022 03:45:52 -0700 (PDT)
 Received: from localhost.localdomain ([77.137.79.96])
-        by smtp.gmail.com with ESMTPSA id h9-20020a5d4309000000b002102af52a2csm1562150wrq.9.2022.06.01.03.45.53
+        by smtp.gmail.com with ESMTPSA id h9-20020a5d4309000000b002102af52a2csm1562150wrq.9.2022.06.01.03.45.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Jun 2022 03:45:54 -0700 (PDT)
+        Wed, 01 Jun 2022 03:45:52 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Dave Chinner <david@fromorbit.com>,
@@ -55,80 +55,83 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         Luis Chamberlain <mcgrof@kernel.org>,
         Adam Manzanares <a.manzanares@samsung.com>,
         Tyler Hicks <code@tyhicks.com>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH 5.10 CANDIDATE 1/8] xfs: fix up non-directory creation in SGID directories
-Date:   Wed,  1 Jun 2022 13:45:40 +0300
-Message-Id: <20220601104547.260949-2-amir73il@gmail.com>
+        fstests@vger.kernel.org
+Subject: [PATCH 5.10 CANDIDATE 0/8] xfs stable candidate patches for 5.10.y (part 2)
+Date:   Wed,  1 Jun 2022 13:45:39 +0300
+Message-Id: <20220601104547.260949-1-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220601104547.260949-1-amir73il@gmail.com>
-References: <20220601104547.260949-1-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+Hi all!
 
-commit 01ea173e103edd5ec41acec65b9261b87e123fc2 upstream.
+This is the 2nd part of a collection of stable patch candidates that
+I collected from xfs releases v5.11..v5.18 [1][2].
 
-XFS always inherits the SGID bit if it is set on the parent inode, while
-the generic inode_init_owner does not do this in a few cases where it can
-create a possible security problem, see commit 0fa3ecd87848
-("Fix up non-directory creation in SGID directories") for details.
+The patches in this part are from circa v5.11..v5.12.
+They have been through >30 auto group runs with the kdevops configs
+reflink_normapbt, reflink, reflink_1024, nocrc, nocrc_512.
+No regressions from baseline were observed.
 
-Switch XFS to use the generic helper for the normal path to fix this,
-just keeping the simple field inheritance open coded for the case of the
-non-sgid case with the bsdgrpid mount option.
+At least three of the fixes have regression tests in fstests that were
+used to verify the fix. I also annotated [3] the fix commits in the tests.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Reported-by: Christian Brauner <christian.brauner@ubuntu.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/xfs/xfs_inode.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+It is worth noting that one series and another patch from v5.12 were
+removed from the stable candidates queue before this posting.
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e958b1c74561..e20d8af80216 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -802,6 +802,7 @@ xfs_ialloc(
- 	xfs_buf_t	**ialloc_context,
- 	xfs_inode_t	**ipp)
- {
-+	struct inode	*dir = pip ? VFS_I(pip) : NULL;
- 	struct xfs_mount *mp = tp->t_mountp;
- 	xfs_ino_t	ino;
- 	xfs_inode_t	*ip;
-@@ -847,18 +848,17 @@ xfs_ialloc(
- 		return error;
- 	ASSERT(ip != NULL);
- 	inode = VFS_I(ip);
--	inode->i_mode = mode;
- 	set_nlink(inode, nlink);
--	inode->i_uid = current_fsuid();
- 	inode->i_rdev = rdev;
- 	ip->i_d.di_projid = prid;
- 
--	if (pip && XFS_INHERIT_GID(pip)) {
--		inode->i_gid = VFS_I(pip)->i_gid;
--		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
--			inode->i_mode |= S_ISGID;
-+	if (dir && !(dir->i_mode & S_ISGID) &&
-+	    (mp->m_flags & XFS_MOUNT_GRPID)) {
-+		inode->i_uid = current_fsuid();
-+		inode->i_gid = dir->i_gid;
-+		inode->i_mode = mode;
- 	} else {
--		inode->i_gid = current_fsgid();
-+		inode_init_owner(inode, dir, mode);
- 	}
- 
- 	/*
+The "extent count overflow" series [4] was removed following feedback
+from Dave Chinner that is it not practically relevant for LTS users.
+
+The patch "xfs: don't reuse busy extents on extent trim" was removed
+following a regression it caused in 5.10.y [5] that was discovered in
+early stages of testing of this part.  The process works! :-)
+
+I would like to thank Luis for his huge part in this still ongoing effort
+and I would like to thank Samsung for contributing the hardware resources
+to drive this effort.
+
+Your inputs on these stable candidates are most welcome!
+
+Thanks,
+Amir.
+
+[1] https://github.com/amir73il/b4/blob/xfs-5.10.y/xfs-5.10..5.17-fixes.rst
+[2] https://github.com/amir73il/b4/blob/xfs-5.10.y/xfs-5.18-fixes.rst
+[3] https://lore.kernel.org/fstests/20220520143249.2103631-1-amir73il@gmail.com/
+[4] https://lore.kernel.org/linux-xfs/20220525083814.GH1098723@dread.disaster.area/
+[5] https://lore.kernel.org/linux-xfs/YpY6hUknor2S1iMd@bfoster/T/#mf1add66b8309a75a8984f28ea08718f22033bce7
+
+Brian Foster (3):
+  xfs: sync lazy sb accounting on quiesce of read-only mounts
+  xfs: restore shutdown check in mapped write fault path
+  xfs: consider shutdown in bmapbt cursor delete assert
+
+Christoph Hellwig (1):
+  xfs: fix up non-directory creation in SGID directories
+
+Darrick J. Wong (3):
+  xfs: fix chown leaking delalloc quota blocks when fssetxattr fails
+  xfs: fix incorrect root dquot corruption error when switching
+    group/project quota types
+  xfs: force log and push AIL to clear pinned inodes when aborting mount
+
+Jeffrey Mitchell (1):
+  xfs: set inode size after creating symlink
+
+ fs/xfs/libxfs/xfs_btree.c | 33 +++++---------
+ fs/xfs/xfs_dquot.c        | 39 +++++++++++++++-
+ fs/xfs/xfs_inode.c        | 14 +++---
+ fs/xfs/xfs_iomap.c        |  3 ++
+ fs/xfs/xfs_log.c          | 28 ++++++++----
+ fs/xfs/xfs_log.h          |  1 +
+ fs/xfs/xfs_mount.c        | 93 +++++++++++++++++++--------------------
+ fs/xfs/xfs_qm.c           | 92 +++++++++++++++-----------------------
+ fs/xfs/xfs_symlink.c      |  1 +
+ 9 files changed, 161 insertions(+), 143 deletions(-)
+
 -- 
 2.25.1
 
