@@ -2,167 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88FE7C43334
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jun 2022 05:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96B50C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jun 2022 06:40:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230122AbiFBF4B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Jun 2022 01:56:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56188 "EHLO
+        id S231339AbiFBGkM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Jun 2022 02:40:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230048AbiFBF4A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jun 2022 01:56:00 -0400
-Received: from mail-qk1-x734.google.com (mail-qk1-x734.google.com [IPv6:2607:f8b0:4864:20::734])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0B8E62CEA;
-        Wed,  1 Jun 2022 22:55:58 -0700 (PDT)
-Received: by mail-qk1-x734.google.com with SMTP id b200so2983477qkc.7;
-        Wed, 01 Jun 2022 22:55:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=t6RAyF25ytXyKTJzA2P6dHrfEAgocqjrgR3cOBzPBf4=;
-        b=PyOZ9ycyOYS9EX2bhpJwdU6mGXbMZ7RhKoRVF3cAshCxiscO0q6BaFu5DWCcVlgcVA
-         nq5zSfL/5URua43qYjY2cypkztqdNrwr/3OuTXw4HjjP9HMvsz6QJGDOZUFiAd8BFmKQ
-         7u3wouITEJQqJLIQWjzfpnxJv6xE915VoCZl+AV6JVhe0CqcKquJBeOUN3OL9b9kCmMu
-         mNNf5URD05O9cK+bXf82U+gXXyPfwMGCkoF0W4tgduTScoyTqoFzM5ED6MYBJ67yV/h3
-         mn00usSSVKFNhGf06HuAI4Y5a0zGD6l7432ip4KVHUuGK+xfb8Rfw04AlWKzighUlNa9
-         iY8w==
+        with ESMTP id S230483AbiFBGkI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jun 2022 02:40:08 -0400
+Received: from mail-pl1-f193.google.com (mail-pl1-f193.google.com [209.85.214.193])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 883DF2A1412;
+        Wed,  1 Jun 2022 23:40:06 -0700 (PDT)
+Received: by mail-pl1-f193.google.com with SMTP id d22so3733761plr.9;
+        Wed, 01 Jun 2022 23:40:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=t6RAyF25ytXyKTJzA2P6dHrfEAgocqjrgR3cOBzPBf4=;
-        b=0aCN4VocttmChswZ7OBndJIt0DUVvxOZeyWjQpr1eJX9yMKu0586LRPfgAQDZsGXpd
-         512PoG4ME9IXQGsIrASxtoYsgLtl1au7LDlwkg2hR23E3VxVe3zH/6Z+YN+XBlgdFZLS
-         Wqcc37IZ1oTejyU1s/ZzlnAIoJRO2/beBjdKAfGnTW1FY/qmdwpG4bt3ADFjGgNCg3Lj
-         AISLrWpCu9HOL5VuiteYYrM0Van/nxS4xh7RDtQqSR7/RHL6se9nXAIb87S2wr8ibP+R
-         Yv0uE9BNXs5dWcA0odvJPB+N1RZU+ALsEt4eY1jlL7wtMQMWKEKBELf3c7rFfJayzuYS
-         wE+A==
-X-Gm-Message-State: AOAM533m0hENzCVn2GfSy82un9ICM7oYY3hAMm7EBS8fBDQ+ue2Fy4Pl
-        pa4RsPFradV2Gku9TUVJyy2hCQBwxCYeYR9E2sQ=
-X-Google-Smtp-Source: ABdhPJzcP2eXAwR7p7/OoNemRoCsdw1HEjGXUge8NpX2JLsP+mOHUMcKnjaqUnmeRdO6Y83n/HZp7WzlAZqNWAgKKj8=
-X-Received: by 2002:a37:6cc2:0:b0:6a3:769c:e5ba with SMTP id
- h185-20020a376cc2000000b006a3769ce5bamr2127098qkc.19.1654149358063; Wed, 01
- Jun 2022 22:55:58 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=zLPxQsb3PCndRUmUZRmCzH68VaNogXUV5kan2s/llbY=;
+        b=007eLhPR9LEgBpwFCcadv0reVcbBw/lkhtBfTFJT6zsjE2I0G+WfFQXMtoJCxwOxwY
+         mM4Z0XsG3BRnx448UVXjHrBV5n8/4DRwDUQPJRo3VX9oyXbGe/UxwU3GQsK2WDuOz9dM
+         Iue/TF5MwJianCYOVCKrQw7cs4cT1II/07iF/p97dWystVtRWTVMP4ESdTq7jm03NbzW
+         WpmD/0Qgj7pe7PIAiNJg7JY4YqdQvbj8Q8T+FjgixE9oiUe6EszPP8e0MAAOtLI7R6xL
+         rdZHQYnGa0wYip2kVWG9uUZUJhMcO4zxux1jspmKplijrUH+tfa6Z/nI02dB8LD075OI
+         C9JQ==
+X-Gm-Message-State: AOAM530H3d9gmHF7DGzNOEaJzVBsxykewA0u4LhG9l9ylS9Tj4vCjoTv
+        OznE9/8eru0EiQC8rx5yRA==
+X-Google-Smtp-Source: ABdhPJxBkU9NJC7MTGevv0kjPBA0Cad/4iSKEaZVuaJmMBYtriHhArgxGxx/fbNol5aDBsWR/3m9MQ==
+X-Received: by 2002:a17:903:240f:b0:158:b871:33ac with SMTP id e15-20020a170903240f00b00158b87133acmr3220825plo.135.1654152005988;
+        Wed, 01 Jun 2022 23:40:05 -0700 (PDT)
+Received: from localhost.localdomain (ns1003916.ip-51-81-154.us. [51.81.154.37])
+        by smtp.gmail.com with ESMTPSA id e15-20020a056a001a8f00b0050dc762818dsm2625119pfv.103.2022.06.01.23.40.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Jun 2022 23:40:05 -0700 (PDT)
+From:   sunliming <sunliming@kylinos.cn>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sunliming@kylinos.cn, kelulanainsley@gmail.com,
+        kernel test robot <lkp@intel.com>
+Subject: [PATCH] xfs: Fix build error for implicit function declaration
+Date:   Thu,  2 Jun 2022 14:39:58 +0800
+Message-Id: <20220602063958.527493-1-sunliming@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20220601104547.260949-1-amir73il@gmail.com> <20220601104547.260949-8-amir73il@gmail.com>
- <20220602003804.GJ227878@dread.disaster.area> <CAOQ4uxg8Y_7mkf+ieWBAuspCDG+H5Ci2P7xMudxF49nV5M0czg@mail.gmail.com>
- <20220602051504.GL227878@dread.disaster.area>
-In-Reply-To: <20220602051504.GL227878@dread.disaster.area>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 2 Jun 2022 08:55:46 +0300
-Message-ID: <CAOQ4uxgzLaGHaUEuVNJ39On9Dt3xoSTpVWJGsc6t+=4v-AGHKg@mail.gmail.com>
-Subject: Re: [PATCH 5.10 CANDIDATE 7/8] xfs: consider shutdown in bmapbt
- cursor delete assert
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J . Wong" <djwong@kernel.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        Tyler Hicks <code@tyhicks.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 2, 2022 at 8:15 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Thu, Jun 02, 2022 at 07:24:26AM +0300, Amir Goldstein wrote:
-> > On Thu, Jun 2, 2022 at 3:38 AM Dave Chinner <david@fromorbit.com> wrote:
-> > >
-> > > On Wed, Jun 01, 2022 at 01:45:46PM +0300, Amir Goldstein wrote:
-> > > > From: Brian Foster <bfoster@redhat.com>
-> > > >
-> > > > commit 1cd738b13ae9b29e03d6149f0246c61f76e81fcf upstream.
-> > > >
-> > > > The assert in xfs_btree_del_cursor() checks that the bmapbt block
-> > > > allocation field has been handled correctly before the cursor is
-> > > > freed. This field is used for accurate calculation of indirect block
-> > > > reservation requirements (for delayed allocations), for example.
-> > > > generic/019 reproduces a scenario where this assert fails because
-> > > > the filesystem has shutdown while in the middle of a bmbt record
-> > > > insertion. This occurs after a bmbt block has been allocated via the
-> > > > cursor but before the higher level bmap function (i.e.
-> > > > xfs_bmap_add_extent_hole_real()) completes and resets the field.
-> > > >
-> > > > Update the assert to accommodate the transient state if the
-> > > > filesystem has shutdown. While here, clean up the indentation and
-> > > > comments in the function.
-> > > >
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_btree.c | 33 ++++++++++++---------------------
-> > > >  1 file changed, 12 insertions(+), 21 deletions(-)
-> > >
-> > > https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?h=for-next&id=56486f307100e8fc66efa2ebd8a71941fa10bf6f
-> > >
-> >
-> > Warm from the over :)
-> >
-> > I will need more time to verify that this new fix is not breaking LTS
-> > but I don't think that it should be blocking taking the old 5.12 fix now.
-> > Right?
->
-> Rule #1: don't introduce new bugs into stable kernels.
->
-> This commit has a known (and fixed) bug in it. If you are going to
-> back port it to a stable kernel, then you need to also pull in the
-> fix for that commit, too.
+   fs/xfs/libxfs/xfs_btree.c: In function '__xfs_btree_check_lblock':
+>> fs/xfs/libxfs/xfs_btree.c:140:23: error: implicit declaration of function 'xfs_daddr_to_xfo'; did you mean 'xfs_daddr_to_agno'? [-Werror=implicit-function-declaration]
+     140 |                 fsb = xfs_daddr_to_xfo(xfs_buf_daddr(bp));
+         |                       ^~~~~~~~~~~~~~~~
+         |                       xfs_daddr_to_agno
+   cc1: some warnings being treated as errors
 
-Oh. I misunderstood.
-I thought this wasn't a Fixes: situation.
-I thought you pointed me to another related bug fix.
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: sunliming <sunliming@kylinos.cn>
+---
+ fs/xfs/scrub/xfile.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
->
-> But the bigger question is this: why propose backports of commits
-> that only change debug code?
->
-> ASSERT()s are not compiled into production kernels - they are only
-> compiled into developer builds when CONFIG_XFS_DEBUG=y is set. It is
-> test code, not production code, hence nobody will be using this in
-> production kernels.
->
-> I don't see the value in backporting debug fixes unless there
-> is some other dependency that requires them.
+diff --git a/fs/xfs/scrub/xfile.h b/fs/xfs/scrub/xfile.h
+index 973b0641b88a..a7ae99d32b5d 100644
+--- a/fs/xfs/scrub/xfile.h
++++ b/fs/xfs/scrub/xfile.h
+@@ -122,6 +122,13 @@ static inline loff_t xfile_size(struct xfile *xf)
+ {
+ 	return 0;
+ }
++
++static inline loff_t xfo_to_b(xfileoff_t xfoff) {}
++static inline xfileoff_t b_to_xfo(loff_t pos) {}
++static inline xfileoff_t b_to_xfot(loff_t pos) {}
++static inline xfs_daddr_t xfo_to_daddr(xfileoff_t xfoff) {}
++static inline xfileoff_t xfs_daddr_to_xfo(xfs_daddr_t bb) {}
++static inline xfileoff_t xfs_daddr_to_xfot(xfs_daddr_t bb) {}
+ #endif /* CONFIG_XFS_IN_MEMORY_FILE */
+ 
+ #endif /* __XFS_SCRUB_XFILE_H__ */
+-- 
+2.25.1
 
-The value is in testing of LTS kernel.
-
-For my backport work to be serious, I need to do serious testing.
-Serious means running as many tests as I can and running the tests
-on many configs and many times over.
-
-When I first joined Luis in testing LTS baseline, CONFIG_XFS_DEBUG
-was not enabled on the tested kernels.
-
-I enabled it so I could get better test coverage for fstests that use
-error injection and tests that check for asserts.
-
-This helped me find a regression with one of the backported patches [1].
-
-IOW, for LTS code to be in good quality, it needs to also have the
-correct assertions.
-
-For the same reason, I am also going to queue the following as stable
-candidate:
-
-756b1c343333 xfs: use current->journal_info for detecting transaction recursion
-
-Because it has already proved to be helpful in detecting bugs on
-our internal product tests.
-
-> But if you are going to back port them, Rule #1 applies.
->
-
-Of course. I will defer sending this patch to stable and test
-it along with the new fix.
-
-Thanks!
-Amir.
-
-[1] https://lore.kernel.org/linux-xfs/YpY6hUknor2S1iMd@bfoster/T/#mf1add66b8309a75a8984f28ea08718f22033bce7
