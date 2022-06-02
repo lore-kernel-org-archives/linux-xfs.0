@@ -2,135 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75DECC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jun 2022 21:44:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91E05C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jun 2022 22:06:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239462AbiFBVok (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Jun 2022 17:44:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48258 "EHLO
+        id S239540AbiFBWGa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Jun 2022 18:06:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239443AbiFBVok (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jun 2022 17:44:40 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1772D2DAA4;
-        Thu,  2 Jun 2022 14:44:39 -0700 (PDT)
+        with ESMTP id S229873AbiFBWG3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jun 2022 18:06:29 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 797DF344D3;
+        Thu,  2 Jun 2022 15:06:28 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0FB4410E6D63;
-        Fri,  3 Jun 2022 07:44:37 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id BC1F05EC4CD;
+        Fri,  3 Jun 2022 08:06:25 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nwscO-001wk0-OV; Fri, 03 Jun 2022 07:44:36 +1000
-Date:   Fri, 3 Jun 2022 07:44:36 +1000
+        id 1nwsxV-001xA9-1q; Fri, 03 Jun 2022 08:06:25 +1000
+Date:   Fri, 3 Jun 2022 08:06:25 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     kernel test robot <oliver.sang@intel.com>
-Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
+To:     Johannes Weiner <hannes@cmpxchg.org>
+Cc:     Chris Mason <clm@fb.com>, Christoph Hellwig <hch@infradead.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
-        lkp@lists.01.org, lkp@intel.com
-Subject: Re: [xfs]  1eb70f54c4: xfstests.xfs.348.fail
-Message-ID: <20220602214436.GF1098723@dread.disaster.area>
-References: <20220602090409.GD27190@xsang-OptiPlex-9020>
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "dchinner@redhat.com" <dchinner@redhat.com>
+Subject: Re: [PATCH RFC] iomap: invalidate pages past eof in
+ iomap_do_writepage()
+Message-ID: <20220602220625.GG1098723@dread.disaster.area>
+References: <20220601011116.495988-1-clm@fb.com>
+ <YpdZKbrtXJJ9mWL7@infradead.org>
+ <BB5F778F-BFE5-4CC9-94DE-3118C60E13B6@fb.com>
+ <20220602065252.GD1098723@dread.disaster.area>
+ <YpjYDjeR2Wpx3ImB@cmpxchg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20220602090409.GD27190@xsang-OptiPlex-9020>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <YpjYDjeR2Wpx3ImB@cmpxchg.org>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62992f46
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62993463
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=VwQbUJbxAAAA:8 a=QyXUC8HyAAAA:8
-        a=7-415B0cAAAA:8 a=-aPHgg1e-4_rmetnlIoA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=IkcTkHD0fZMA:10 a=JPEYwPQDsx4A:10 a=7-415B0cAAAA:8
+        a=c6t9A_BoYkh8vOYkvQ8A:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 02, 2022 at 05:04:09PM +0800, kernel test robot wrote:
+On Thu, Jun 02, 2022 at 11:32:30AM -0400, Johannes Weiner wrote:
+> On Thu, Jun 02, 2022 at 04:52:52PM +1000, Dave Chinner wrote:
+> > On Wed, Jun 01, 2022 at 02:13:42PM +0000, Chris Mason wrote:
+> > > In prod, bpftrace showed looping on a single inode inside a mysql
+> > > cgroup.  That inode was usually in the middle of being deleted,
+> > > i_size set to zero, but it still had 40-90 pages sitting in the
+> > > xarray waiting for truncation.  We’d loop through the whole call
+> > > path above over and over again, mostly because writepages() was
+> > > returning progress had been made on this one inode.  The
+> > > redirty_page_for_writepage() path does drop wbc->nr_to_write, so
+> > > the rest of the writepages machinery believes real work is being
+> > > done.  nr_to_write is LONG_MAX, so we’ve got a while to loop.
+> > 
+> > Yup, this code relies on truncate making progress to avoid looping
+> > forever. Truncate should only block on the page while it locks it
+> > and waits for writeback to complete, then it gets forcibly
+> > invalidated and removed from the page cache.
 > 
-> (please be noted we reported
-> "[xfs]  1eb70f54c4: xfstests.xfs.348.fail"
-> on
-> https://lore.kernel.org/all/20220518144504.GB22659@xsang-OptiPlex-9020/
-> while this commit was on linux-next/master
-> now we noticed the issue is still existing on mainline.
-> report again FYI)
+> It's not looping forever, truncate can just take a relatively long
+> time during which the flusher is busy-spinning full bore on a
+> relatively small number of unflushable pages (range_cyclic).
 > 
+> But you raise a good point asking "why is truncate stuck?". I first
+> thought they might be cannibalizing each other over the page locks,
+> but that wasn't it (and wouldn't explain the clear asymmetry between
+> truncate and flusher). That leaves the waiting for writeback. I just
+> confirmed with tracing that that's exactly where truncate sits while
+> the flusher goes bananas on the same inode. So the race must be this:
 > 
-> Greeting,
-> 
-> FYI, we noticed the following commit (built with gcc-11):
-> 
-> commit: 1eb70f54c445fcbb25817841e774adb3d912f3e8 ("xfs: validate inode fork size against fork format")
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
-> 
-> in testcase: xfstests
-> version: xfstests-x86_64-46e1b83-1_20220414
-> with following parameters:
-> 
-> 	disk: 4HDD
-> 	fs: xfs
-> 	test: xfs-group-34
-> 	ucode: 0x21
-> 
-> test-description: xfstests is a regression test suite for xfs and other files ystems.
-> test-url: git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> 
-> 
-> on test machine: 4 threads 1 sockets Intel(R) Core(TM) i3-3220 CPU @ 3.30GHz with 8G memory
-> 
-> caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
-> 
-> 
-> 
-> 
-> If you fix the issue, kindly add following tag
-> Reported-by: kernel test robot <oliver.sang@intel.com>
-> 
-> 2022-05-18 11:47:42 export TEST_DIR=/fs/sdb1
-> 2022-05-18 11:47:42 export TEST_DEV=/dev/sdb1
-> 2022-05-18 11:47:42 export FSTYP=xfs
-> 2022-05-18 11:47:42 export SCRATCH_MNT=/fs/scratch
-> 2022-05-18 11:47:42 mkdir /fs/scratch -p
-> 2022-05-18 11:47:42 export SCRATCH_DEV=/dev/sdb4
-> 2022-05-18 11:47:42 export SCRATCH_LOGDEV=/dev/sdb2
-> 2022-05-18 11:47:42 export SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
-> 2022-05-18 11:47:42 export SCRATCH_XFS_LIST_FUZZ_VERBS=random
-> 2022-05-18 11:47:42 sed "s:^:xfs/:" //lkp/benchmarks/xfstests/tests/xfs-group-34
-> 2022-05-18 11:47:42 ./check xfs/348 xfs/349
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 lkp-ivb-d05 5.18.0-rc2-00067-g1eb70f54c445 #1 SMP Thu May 12 04:39:22 CST 2022
-> MKFS_OPTIONS  -- -f /dev/sdb4
-> MOUNT_OPTIONS -- /dev/sdb4 /fs/scratch
-> 
-> xfs/348	- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/348.out.bad)
->     --- tests/xfs/348.out	2022-05-16 16:42:32.000000000 +0000
->     +++ /lkp/benchmarks/xfstests/results//xfs/348.out.bad	2022-05-18 11:47:58.897287914 +0000
->     @@ -108,7 +108,7 @@
->      would have junked entry "EMPTY" in directory PARENT_INO
->      would have junked entry "FIFO" in directory PARENT_INO
->      stat: 'SCRATCH_MNT/test/DIR' is a directory
->     -stat: 'SCRATCH_MNT/test/DATA' is a directory
->     +stat: cannot statx 'SCRATCH_MNT/test/DATA': Structure needs cleaning
->      stat: cannot statx 'SCRATCH_MNT/test/EMPTY': Structure needs cleaning
->      stat: cannot statx 'SCRATCH_MNT/test/SYMLINK': Structure needs cleaning
+> truncate:                flusher
+>                          put a subset of pages under writeback
+> i_size_write(0)
+> wait_on_page_writeback()
+>                          loop with range_cyclic over remaining dirty >EOF pages
 
-Not a kernel issue - this is fixed in the latest fstests.
+But write_cache_pages() doesn't repeatedly loop over the pages.
 
->     ...
->     (Run 'diff -u /lkp/benchmarks/xfstests/tests/xfs/348.out /lkp/benchmarks/xfstests/results//xfs/348.out.bad'  to see the entire diff)
-> xfs/349	[failed, exit status 1]- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/349.out.bad)
->     --- tests/xfs/349.out	2022-05-16 16:42:32.000000000 +0000
->     +++ /lkp/benchmarks/xfstests/results//xfs/349.out.bad	2022-05-18 11:53:51.101272360 +0000
->     @@ -1,3 +1,2 @@
->      QA output created by 349
->      Format and populate
->     -Scrub
->     ...
->     (Run 'diff -u /lkp/benchmarks/xfstests/tests/xfs/349.out /lkp/benchmarks/xfstests/results//xfs/349.out.bad'  to see the entire diff)
+The flusher is
 
-You are running a test in the "dangerous_fuzzers" group that isn't
-in the auto group. This is a test for developers to find error
-detection issues and, as such, failure is kinda expected. It is not
-regression test that can be used for pass/fail testing....
+->writepages
+  iomap_writepages
+    write_cache_pages()
+      loop over mapping tree
+        lock page
+	iomap_do_writepage
+	  set_page_writeback()
+	  add page to ioend
+     <end of mapping reached>
+  iomap_submit_ioend()
+    <pages under writeback get sent for IO>
+return to high level writeback
+
+And eventually IO completion will clear page writeback state.
+
+i.e. write_cache_pages() should not be hard looping over the pages
+beyond EOF even if range_cyclic is set - it's skipping those pages,
+submitting any that are under writeback, and the, going back to high
+level code for it to make a decision about continuation of
+writeback. It may call back down and we loop over dirty pages beyond
+EOF again, but the flusher should not be holding on to pages under
+writeback for any signification length of time before they are
+submitted for IO.
+
+IOWs, if truncate is getting stuck waiting on writeback, then that
+implies something is holding up IO completions for a long time, not
+that there's a problem in writeback submission. i.e. you might
+actually be looking at a workqueue backlog or scheduling starvation
+problem here preventing IO completion from clearing writeback
+state....
+
+> > Hence I think we can remove the redirtying completely - it's not
+> > needed and hasn't been for some time.
+> > 
+> > Further, I don't think we need to invalidate the folio, either. If
+> > it's beyond EOF, then it is because a truncate is in progress that
+> > means it is somebody else's problem to clean up. Hence we should
+> > leave it to the truncate to deal with, just like the pre-2013 code
+> > did....
+> 
+> Perfect, that works.
+
+If there's actually a IO completion latency problem, this will not
+fix it - it'll just hide the soft-lockup symptom that the pages
+stuck in writeback are manifested through this path.
 
 Cheers,
 
