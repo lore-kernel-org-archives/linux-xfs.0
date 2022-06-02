@@ -2,56 +2,56 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6DFAC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jun 2022 21:40:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75DECC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jun 2022 21:44:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239445AbiFBVkn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Jun 2022 17:40:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36448 "EHLO
+        id S239462AbiFBVok (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Jun 2022 17:44:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239443AbiFBVkm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jun 2022 17:40:42 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E4AA23BFD;
-        Thu,  2 Jun 2022 14:40:41 -0700 (PDT)
+        with ESMTP id S239443AbiFBVok (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jun 2022 17:44:40 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1772D2DAA4;
+        Thu,  2 Jun 2022 14:44:39 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C1BF55EC4E7;
-        Fri,  3 Jun 2022 07:40:39 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0FB4410E6D63;
+        Fri,  3 Jun 2022 07:44:37 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nwsYX-001whT-IF; Fri, 03 Jun 2022 07:40:37 +1000
-Date:   Fri, 3 Jun 2022 07:40:37 +1000
+        id 1nwscO-001wk0-OV; Fri, 03 Jun 2022 07:44:36 +1000
+Date:   Fri, 3 Jun 2022 07:44:36 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     kernel test robot <oliver.sang@intel.com>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
+Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
         "Darrick J. Wong" <djwong@kernel.org>,
         LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
         lkp@lists.01.org, lkp@intel.com
-Subject: Re: [xfs]  5349b2afc1: xfstests.xfs.299.fail
-Message-ID: <20220602214037.GE1098723@dread.disaster.area>
-References: <20220602085053.GC27190@xsang-OptiPlex-9020>
+Subject: Re: [xfs]  1eb70f54c4: xfstests.xfs.348.fail
+Message-ID: <20220602214436.GF1098723@dread.disaster.area>
+References: <20220602090409.GD27190@xsang-OptiPlex-9020>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220602085053.GC27190@xsang-OptiPlex-9020>
+In-Reply-To: <20220602090409.GD27190@xsang-OptiPlex-9020>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62992e58
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62992f46
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
         a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=VwQbUJbxAAAA:8 a=QyXUC8HyAAAA:8
-        a=7-415B0cAAAA:8 a=-A5qU4moq-8n6FO1PKwA:9 a=CjuIK1q_8ugA:10
+        a=7-415B0cAAAA:8 a=-aPHgg1e-4_rmetnlIoA:9 a=CjuIK1q_8ugA:10
         a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 02, 2022 at 04:50:53PM +0800, kernel test robot wrote:
+On Thu, Jun 02, 2022 at 05:04:09PM +0800, kernel test robot wrote:
 > 
 > (please be noted we reported
-> "[xfs]  5349b2afc1: xfstests.xfs.050.fail"
+> "[xfs]  1eb70f54c4: xfstests.xfs.348.fail"
 > on
-> https://lore.kernel.org/all/20220518094120.GB15472@xsang-OptiPlex-9020/
-> when this commit was on linux-next/master
-> now we found there are still xfstests failure including xfs.050 on mainline.
+> https://lore.kernel.org/all/20220518144504.GB22659@xsang-OptiPlex-9020/
+> while this commit was on linux-next/master
+> now we noticed the issue is still existing on mainline.
 > report again FYI)
 > 
 > 
@@ -59,7 +59,7 @@ On Thu, Jun 02, 2022 at 04:50:53PM +0800, kernel test robot wrote:
 > 
 > FYI, we noticed the following commit (built with gcc-11):
 > 
-> commit: 5349b2afc117d87d35502f2fe1930692d6bfc68b ("xfs: don't set quota warning values")
+> commit: 1eb70f54c445fcbb25817841e774adb3d912f3e8 ("xfs: validate inode fork size against fork format")
 > https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
 > 
 > in testcase: xfstests
@@ -68,7 +68,7 @@ On Thu, Jun 02, 2022 at 04:50:53PM +0800, kernel test robot wrote:
 > 
 > 	disk: 4HDD
 > 	fs: xfs
-> 	test: xfs-group-29
+> 	test: xfs-group-34
 > 	ucode: 0x21
 > 
 > test-description: xfstests is a regression test suite for xfs and other files ystems.
@@ -85,43 +85,56 @@ On Thu, Jun 02, 2022 at 04:50:53PM +0800, kernel test robot wrote:
 > If you fix the issue, kindly add following tag
 > Reported-by: kernel test robot <oliver.sang@intel.com>
 > 
-> 2022-05-17 15:49:39 export TEST_DIR=/fs/sdb1
-> 2022-05-17 15:49:39 export TEST_DEV=/dev/sdb1
-> 2022-05-17 15:49:39 export FSTYP=xfs
-> 2022-05-17 15:49:39 export SCRATCH_MNT=/fs/scratch
-> 2022-05-17 15:49:39 mkdir /fs/scratch -p
-> 2022-05-17 15:49:39 export SCRATCH_DEV=/dev/sdb4
-> 2022-05-17 15:49:39 export SCRATCH_LOGDEV=/dev/sdb2
-> 2022-05-17 15:49:39 export SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
-> 2022-05-17 15:49:39 export SCRATCH_XFS_LIST_FUZZ_VERBS=random
-> 2022-05-17 15:49:39 sed "s:^:xfs/:" //lkp/benchmarks/xfstests/tests/xfs-group-29
-> 2022-05-17 15:49:39 ./check xfs/290 xfs/291 xfs/292 xfs/293 xfs/294 xfs/295 xfs/296 xfs/297 xfs/298 xfs/299
+> 2022-05-18 11:47:42 export TEST_DIR=/fs/sdb1
+> 2022-05-18 11:47:42 export TEST_DEV=/dev/sdb1
+> 2022-05-18 11:47:42 export FSTYP=xfs
+> 2022-05-18 11:47:42 export SCRATCH_MNT=/fs/scratch
+> 2022-05-18 11:47:42 mkdir /fs/scratch -p
+> 2022-05-18 11:47:42 export SCRATCH_DEV=/dev/sdb4
+> 2022-05-18 11:47:42 export SCRATCH_LOGDEV=/dev/sdb2
+> 2022-05-18 11:47:42 export SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
+> 2022-05-18 11:47:42 export SCRATCH_XFS_LIST_FUZZ_VERBS=random
+> 2022-05-18 11:47:42 sed "s:^:xfs/:" //lkp/benchmarks/xfstests/tests/xfs-group-34
+> 2022-05-18 11:47:42 ./check xfs/348 xfs/349
 > FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 lkp-ivb-d05 5.18.0-rc2-00103-g5349b2afc117 #1 SMP Sun May 15 12:16:43 CST 2022
+> PLATFORM      -- Linux/x86_64 lkp-ivb-d05 5.18.0-rc2-00067-g1eb70f54c445 #1 SMP Thu May 12 04:39:22 CST 2022
 > MKFS_OPTIONS  -- -f /dev/sdb4
 > MOUNT_OPTIONS -- /dev/sdb4 /fs/scratch
 > 
-> xfs/290	 2s
-> xfs/291	 130s
-> xfs/292	 3s
-> xfs/293	 1s
-> xfs/294	 63s
-> xfs/295	 30s
-> xfs/296	 14s
-> xfs/297	 209s
-> xfs/298	 14s
-> xfs/299	- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/299.out.bad)
->     --- tests/xfs/299.out	2022-05-16 16:42:32.000000000 +0000
->     +++ /lkp/benchmarks/xfstests/results//xfs/299.out.bad	2022-05-17 15:57:43.078827071 +0000
->     @@ -6,6 +6,7 @@
->      log      =LDEV bsize=XXX blocks=XXX
->      realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
->      *** user, group, and project
->     +xfs_quota: cannot set warnings: Invalid argument
+> xfs/348	- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/348.out.bad)
+>     --- tests/xfs/348.out	2022-05-16 16:42:32.000000000 +0000
+>     +++ /lkp/benchmarks/xfstests/results//xfs/348.out.bad	2022-05-18 11:47:58.897287914 +0000
+>     @@ -108,7 +108,7 @@
+>      would have junked entry "EMPTY" in directory PARENT_INO
+>      would have junked entry "FIFO" in directory PARENT_INO
+>      stat: 'SCRATCH_MNT/test/DIR' is a directory
+>     -stat: 'SCRATCH_MNT/test/DATA' is a directory
+>     +stat: cannot statx 'SCRATCH_MNT/test/DATA': Structure needs cleaning
+>      stat: cannot statx 'SCRATCH_MNT/test/EMPTY': Structure needs cleaning
+>      stat: cannot statx 'SCRATCH_MNT/test/SYMLINK': Structure needs cleaning
 
-Not a kernel issue - this is fixed in the latest fstests release.
+Not a kernel issue - this is fixed in the latest fstests.
 
--Dave.
+>     ...
+>     (Run 'diff -u /lkp/benchmarks/xfstests/tests/xfs/348.out /lkp/benchmarks/xfstests/results//xfs/348.out.bad'  to see the entire diff)
+> xfs/349	[failed, exit status 1]- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/349.out.bad)
+>     --- tests/xfs/349.out	2022-05-16 16:42:32.000000000 +0000
+>     +++ /lkp/benchmarks/xfstests/results//xfs/349.out.bad	2022-05-18 11:53:51.101272360 +0000
+>     @@ -1,3 +1,2 @@
+>      QA output created by 349
+>      Format and populate
+>     -Scrub
+>     ...
+>     (Run 'diff -u /lkp/benchmarks/xfstests/tests/xfs/349.out /lkp/benchmarks/xfstests/results//xfs/349.out.bad'  to see the entire diff)
+
+You are running a test in the "dangerous_fuzzers" group that isn't
+in the auto group. This is a test for developers to find error
+detection issues and, as such, failure is kinda expected. It is not
+regression test that can be used for pass/fail testing....
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
