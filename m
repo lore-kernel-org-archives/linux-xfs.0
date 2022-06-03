@@ -2,79 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D07BFCCA47D
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 14:33:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A62FC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 15:06:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244909AbiFCOdF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jun 2022 10:33:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49496 "EHLO
+        id S245333AbiFCPG1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jun 2022 11:06:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244009AbiFCOdE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 10:33:04 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1A3728E20;
-        Fri,  3 Jun 2022 07:33:02 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 82E02CE23A2;
-        Fri,  3 Jun 2022 14:33:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6E9DC385A9;
-        Fri,  3 Jun 2022 14:32:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1654266778;
-        bh=9g1TkF5RXob++DVAvJ+Q08Uj4F4cigdkgziPEkQcNKI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PaEBXFLkd999DgjHojB5rIBkxN4fShXq0Axh7Mm2K4brW7abK+50HFo38AXe8Ehup
-         Fah9YLt8V+rYQR483J44HuACH1IlnN6wJSl55HB5fR+RKynEOJLauxOTd9rMoQ0HHC
-         26TswkItKoiwukThReV7kWA2h5/I7mLCDRZgK3C0=
-Date:   Fri, 3 Jun 2022 16:32:55 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        Tyler Hicks <code@tyhicks.com>, Jan Kara <jack@suse.cz>,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH 5.10 v2 0/5] xfs fixes for 5.10.y (part 1)
-Message-ID: <Ypoblx9ilQOGh50E@kroah.com>
-References: <20220527130219.3110260-1-amir73il@gmail.com>
+        with ESMTP id S245332AbiFCPG0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 11:06:26 -0400
+Received: from mail-qv1-xf2e.google.com (mail-qv1-xf2e.google.com [IPv6:2607:f8b0:4864:20::f2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E68606547
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Jun 2022 08:06:24 -0700 (PDT)
+Received: by mail-qv1-xf2e.google.com with SMTP id el14so5741475qvb.7
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Jun 2022 08:06:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=JYSh5kn5ThMI8CCaOPSJ53f4sBIED+WUhUG7FktR1dY=;
+        b=siZl67/nQ8Im4grN9O1OmTzhS3rdMxs0Bq48muqZNNe5/kMScYOTWAg34Q2P5CPUR9
+         H9wMUyjObyZlrxS9/BifA3LVTjcekusU8qt4jMRlpb+LGXEcnA1DVdo3JSiqMRomVZaw
+         Zm7MIIujnZRxNpYqYWsTVaDfwte+vWvmZcSCVTlrx4a/Fo2ZVVUydCpQuLA7YpBVCyWm
+         KKCKa2y5cyt1sxdcu3H5POuCIGXq0FtYDtNpHsoGwF/IJ6+l61esjOg3pu+39mPVAk3W
+         n9DV4PFS6XX8kTP+SlqZOUFnyfK5+QUCxZ547WkydNEMrd1mFeTV4lS8mQwVS9P/XPVp
+         LiMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=JYSh5kn5ThMI8CCaOPSJ53f4sBIED+WUhUG7FktR1dY=;
+        b=mzkQFr3Vc0s5h9i7Gz1llJvVb6dEWE7nQSJqWoUlVlEJKGHthHE6FnN8E7s9ynLjA8
+         2NCuuvO4lwK/ECiJhQ4hn7hZpsyNErC2lKVJBFT63CkDAtUO6fU1dedUGfYNOzB46irB
+         pUZjWEUTfQR6yjOOajGHoBM/8pSfRN8up7Bl1CB/FQ0RA7KIyFXTzzLKvYCmTjL+v/jc
+         Kr/HKY2Gob3EnAiO/ntYau1OkfiwkTZ+8OO0gBV+EBuJkAk+GVl0vCSiBKUGm8ewwUF6
+         Cj6MbL5RtWVgnWwtjMNhauC6aZqgzIna3BkDVUMfOIY4caEEa/e/8FG1hIwpHC6sGgUf
+         wo/A==
+X-Gm-Message-State: AOAM531CGB3Sy7TIhBUtoEVfPPxk8w39sGKbwbl3fIRnZKOzc8Zf94B1
+        JxHuCSDszN8DoTApxILmVXeQNA==
+X-Google-Smtp-Source: ABdhPJzNuFC4GmuFvrERREiLuT2vBmWyVZTMOB3y8uBoWR8lo3pSSZ4wrdBEYDTWNNb6mBUa7vtirg==
+X-Received: by 2002:a05:6214:301b:b0:461:f5e9:5f9a with SMTP id ke27-20020a056214301b00b00461f5e95f9amr62557099qvb.2.1654268784051;
+        Fri, 03 Jun 2022 08:06:24 -0700 (PDT)
+Received: from localhost ([2620:10d:c091:480::1:1d66])
+        by smtp.gmail.com with ESMTPSA id g27-20020a05620a109b00b006a34bdb0c36sm5212260qkk.31.2022.06.03.08.06.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Jun 2022 08:06:23 -0700 (PDT)
+Date:   Fri, 3 Jun 2022 11:06:22 -0400
+From:   Johannes Weiner <hannes@cmpxchg.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Chris Mason <clm@fb.com>, Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "dchinner@redhat.com" <dchinner@redhat.com>
+Subject: Re: [PATCH RFC] iomap: invalidate pages past eof in
+ iomap_do_writepage()
+Message-ID: <YpojbvB/+wPqHT8y@cmpxchg.org>
+References: <20220601011116.495988-1-clm@fb.com>
+ <YpdZKbrtXJJ9mWL7@infradead.org>
+ <BB5F778F-BFE5-4CC9-94DE-3118C60E13B6@fb.com>
+ <20220602065252.GD1098723@dread.disaster.area>
+ <YpjYDjeR2Wpx3ImB@cmpxchg.org>
+ <20220602220625.GG1098723@dread.disaster.area>
+ <B186E2FB-BCAF-4019-9DFF-9FF05BAC557E@fb.com>
+ <20220603052047.GJ1098723@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20220527130219.3110260-1-amir73il@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220603052047.GJ1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 27, 2022 at 04:02:14PM +0300, Amir Goldstein wrote:
-> Hi Greg and Shasha!
-> 
-> It has been a while since you heard from xfs team.
-> 
-> We are trying to change things and get xfs fixes flowing to stable
-> again. Crossing my fingers that we will make this last this time :)
-> 
-> Please see this message from Darrick [4] about xfs stable plans.
-> My team will be focusing on 5.10.y and Ted and Leah's team will be
-> focusing on 5.15.y at this time.
-> 
-> This v2 is being sent to stable after testing and after v1 was sent
-> for review of the xfs list [5].
-> 
-> v2 includes an extra patch that Christoph has backported and tested
-> and was going to send to stable.
-> 
-> Please see my cover letter to xfs with more details about my plans
-> for 5.10.y below:
+Hello Dave,
 
-All now queued up, thanks for doing this and I look forward to more xfs
-patches being sent to us!
+On Fri, Jun 03, 2022 at 03:20:47PM +1000, Dave Chinner wrote:
+> On Fri, Jun 03, 2022 at 01:29:40AM +0000, Chris Mason wrote:
+> > As you describe above, the loops are definitely coming from higher
+> > in the stack.  wb_writeback() will loop as long as
+> > __writeback_inodes_wb() returns that it’s making progress and
+> > we’re still globally over the bg threshold, so write_cache_pages()
+> > is just being called over and over again.  We’re coming from
+> > wb_check_background_flush(), so:
+> > 
+> >                 struct wb_writeback_work work = {
+> >                         .nr_pages       = LONG_MAX,
+> >                         .sync_mode      = WB_SYNC_NONE,
+> >                         .for_background = 1,
+> >                         .range_cyclic   = 1,
+> >                         .reason         = WB_REASON_BACKGROUND,
+> >                 };
+> 
+> Sure, but we end up in writeback_sb_inodes() which does this after
+> the __writeback_single_inode()->do_writepages() call that iterates
+> the dirty pages:
+> 
+>                if (need_resched()) {
+>                         /*
+>                          * We're trying to balance between building up a nice
+>                          * long list of IOs to improve our merge rate, and
+>                          * getting those IOs out quickly for anyone throttling
+>                          * in balance_dirty_pages().  cond_resched() doesn't
+>                          * unplug, so get our IOs out the door before we
+>                          * give up the CPU.
+>                          */
+>                         blk_flush_plug(current->plug, false);
+>                         cond_resched();
+>                 }
+> 
+> So if there is a pending IO completion on this CPU on a work queue
+> here, we'll reschedule to it because the work queue kworkers are
+> bound to CPUs and they take priority over user threads.
 
-greg k-h
+The flusher thread is also a kworker, though. So it may hit this
+cond_resched(), but it doesn't yield until the timeslice expires.
+
+> Also, this then requeues the inode of the b_more_io queue, and
+> wb_check_background_flush() won't come back to it until all other
+> inodes on all other superblocks on the bdi have had writeback
+> attempted. So if the system truly is over the background dirty
+> threshold, why is writeback getting stuck on this one inode in this
+> way?
+
+The explanation for this part at least is that the bdi/flush domain is
+split per cgroup. The cgroup in question is over its proportional bg
+thresh. It has very few dirty pages, but it also has very few
+*dirtyable* pages, which makes for a high dirty ratio. And those
+handful of dirty pages are the unflushable ones past EOF.
+
+There is no next inode to move onto on subsequent loops.
