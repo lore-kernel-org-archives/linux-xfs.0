@@ -2,59 +2,58 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54ACFC43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 18:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98646C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 18:58:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347688AbiFCS6B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jun 2022 14:58:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46192 "EHLO
+        id S1343774AbiFCS6C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jun 2022 14:58:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348477AbiFCS6B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 14:58:01 -0400
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25FFF29833
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Jun 2022 11:58:00 -0700 (PDT)
-Received: by mail-pg1-x52f.google.com with SMTP id q123so7881387pgq.6
-        for <linux-xfs@vger.kernel.org>; Fri, 03 Jun 2022 11:58:00 -0700 (PDT)
+        with ESMTP id S1348477AbiFCS6C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 14:58:02 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1420A29C80
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Jun 2022 11:58:01 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id t2so7435162pld.4
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Jun 2022 11:58:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=wTlWpfXfAxQYNQYEDwfa9Wr0ugnfomGul3z3MRRGO7c=;
-        b=jTif5rQMXAj5joF+PHQck4EJE9koTdefnyibeLR2gK/3mvtwcSug3tYxsqQ3lD3FAF
-         lAzAwSjOg+v3CA3mqcBNXdczQx7eq9JBOGCL9X9BcpxgA9Jg7MK6bSO+tyicIEp6gGoL
-         3LzBE9NU984VLGDfur3RGr7DHH+fDVk+wWN9vWTaLlWcgBiF3CbGjZGG7S7dYpXX0/3/
-         YoXxi071JrZmDZ/oBTq9sHdfVOEubNNk/lCDTtmDSPTuMtv6QwGmteGULvwvtVFQS/WU
-         xanD44yELKiMg0YWjNHZTV1RCSiS++eV46++DQSgfDume+WfcD34hevKNpq6wxZAbeyD
-         QfbQ==
+        bh=BvpYpnpa17wvKk0wvWKH0EpP2ddvCNlGe8oegcdXbvo=;
+        b=JrM+YO+2rdc7rvq3I+VPeImtrM51f0z3Ut+4wvFV629D0i7Ttfx6OPtA1GNLvzjg+1
+         NO67wD5ywBERgV9LRVguTf7MuGrOJXXOXlcmoWbx+NsaZw9p7BfQA1ouuWJuszRK+Tm5
+         VlJfw1atPZxU3MBU2+Ofp0z+xt9uvi4MDU8sIfuceuhSBmMHNYDNxVzew8cW/EGVwxZX
+         vh3Z2kIgrlitba45r1zdcq/eq7ZUxtbF7+1NsfZJ/kkNKv7/g52w6n9ajgSoi6t6iqdz
+         yzlJIc6A5fvqomKTgSPYSXGPI9UjRb1xQ/ASph2RsBCe0sQ9ySmALkWQnUjmDtYoQaSg
+         FFTw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=wTlWpfXfAxQYNQYEDwfa9Wr0ugnfomGul3z3MRRGO7c=;
-        b=dtpcEVHBQ0FKM1VjvdR92GDsYMt1peKiKPufh7rtB9mL7lRkaXOCeqs8loK1lXFw2O
-         ZqxV9zjm/k5ZyBkA2SlMS7d4iKt9PpWHcxYI2ueFmIEYrfIJHBHmG/Zro1pRSAMwv8Sl
-         BwjbuWvq/N09gUf8FvRKWIII7CnTu23rSQsChHuv/G4UgVDrIG14v1VZ2c5lUcU5mI0+
-         P6Zsr4mA/eL+i6U6n186ST2bHZ4M1KV6/UUqOZXQ9cs3SIvhhzt+qhVEDTBZwg3mJ7ch
-         2TUfotA6Ko/RqUlS5tMiFimgV7ZQowr42b96VbDv+H85ya6I/yjerHH/qrYWxzp/W2M2
-         kw/Q==
-X-Gm-Message-State: AOAM533KbpJcZoCKdDJjBT+QrgBw+jfH87pkgmmnF7cVIHmdu6nRNrdz
-        Msbby3R8VfnG72PX6wq3uSOBc2+NELZlQQ==
-X-Google-Smtp-Source: ABdhPJw/dNfNbFA0kVPc5iMVyMyktqmn0uYBXHtxjQXtdiZ+uwfleMIF7B8WPcFleaomzEXcMxewGQ==
-X-Received: by 2002:a65:6d08:0:b0:3c6:8a08:3b9f with SMTP id bf8-20020a656d08000000b003c68a083b9fmr10202573pgb.147.1654282679343;
-        Fri, 03 Jun 2022 11:57:59 -0700 (PDT)
+        bh=BvpYpnpa17wvKk0wvWKH0EpP2ddvCNlGe8oegcdXbvo=;
+        b=FYJI7dkyIlurcIbvCUpoBOmroJiQ4N+JKmk1HrjPKyOvXKuz93PVSj2al4gMRRBj4i
+         sGND8kqWyPBiOIgLR9YG+FtvgjB+3O2rZW4Ie62UNvelidixMDL0fQMcqfaQffs4AI8f
+         179TRfcpP0EURypbFPnKu6+Ei9sf9T2QvOJoCWymNNHC5Xb3OkUxgI/C5akuE9dsFlPq
+         /Qt9GaoYxGf21SJ4ume+lKGEzY/a3uNHerli4nBAzJvfp/T0JJJ96uMiMGHX7cFSpLoF
+         HODON7IU42xQNYlS+7caynbuouqnrA+kQXjyEbWIvAGb4ICKDUcGInT/ZZs8NGUDV6pG
+         hzfg==
+X-Gm-Message-State: AOAM532zvRePZ3MtJ2EzcD39jV9JMR2mVbT6DMMadc3frayvaRnix74s
+        j7r2hY3TY9sUQIvKeQq6fbJR9nY8XBh6pw==
+X-Google-Smtp-Source: ABdhPJxvSXOt00WVmhtfQPZCfYqNAHeEG1sftb65c57LSsnEUjXocK9uVAys0Hea+pJiSVbuLW0XGw==
+X-Received: by 2002:a17:902:830a:b0:161:b926:2c3d with SMTP id bd10-20020a170902830a00b00161b9262c3dmr11504205plb.103.1654282680338;
+        Fri, 03 Jun 2022 11:58:00 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2cd:202:e74e:a023:a0be:b6a8])
-        by smtp.gmail.com with ESMTPSA id b14-20020a170902650e00b001621ce92196sm4480969plk.86.2022.06.03.11.57.58
+        by smtp.gmail.com with ESMTPSA id b14-20020a170902650e00b001621ce92196sm4480969plk.86.2022.06.03.11.57.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Jun 2022 11:57:58 -0700 (PDT)
+        Fri, 03 Jun 2022 11:57:59 -0700 (PDT)
 From:   Leah Rumancik <leah.rumancik@gmail.com>
 To:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
+Cc:     Dave Chinner <dchinner@redhat.com>,
         Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 06/15] xfs: only run COW extent recovery when there are no live extents
-Date:   Fri,  3 Jun 2022 11:57:12 -0700
-Message-Id: <20220603185721.3121645-6-leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 07/15] xfs: check sb_meta_uuid for dabuf buffer recovery
+Date:   Fri,  3 Jun 2022 11:57:13 -0700
+Message-Id: <20220603185721.3121645-7-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.36.1.255.ge46751e96f-goog
 In-Reply-To: <20220603185721.3121645-1-leah.rumancik@gmail.com>
 References: <20220603185721.3121645-1-leah.rumancik@gmail.com>
@@ -64,180 +63,83 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-[ Upstream commit 7993f1a431bc5271369d359941485a9340658ac3 ]
+[ Upstream commit 09654ed8a18cfd45027a67d6cbca45c9ea54feab ]
 
-As part of multiple customer escalations due to file data corruption
-after copy on write operations, I wrote some fstests that use fsstress
-to hammer on COW to shake things loose.  Regrettably, I caught some
-filesystem shutdowns due to incorrect rmap operations with the following
-loop:
+Got a report that a repeated crash test of a container host would
+eventually fail with a log recovery error preventing the system from
+mounting the root filesystem. It manifested as a directory leaf node
+corruption on writeback like so:
 
-mount <filesystem>				# (0)
-fsstress <run only readonly ops> &		# (1)
-while true; do
-	fsstress <run all ops>
-	mount -o remount,ro			# (2)
-	fsstress <run only readonly ops>
-	mount -o remount,rw			# (3)
-done
+ XFS (loop0): Mounting V5 Filesystem
+ XFS (loop0): Starting recovery (logdev: internal)
+ XFS (loop0): Metadata corruption detected at xfs_dir3_leaf_check_int+0x99/0xf0, xfs_dir3_leaf1 block 0x12faa158
+ XFS (loop0): Unmount and run xfs_repair
+ XFS (loop0): First 128 bytes of corrupted metadata buffer:
+ 00000000: 00 00 00 00 00 00 00 00 3d f1 00 00 e1 9e d5 8b  ........=.......
+ 00000010: 00 00 00 00 12 fa a1 58 00 00 00 29 00 00 1b cc  .......X...)....
+ 00000020: 91 06 78 ff f7 7e 4a 7d 8d 53 86 f2 ac 47 a8 23  ..x..~J}.S...G.#
+ 00000030: 00 00 00 00 17 e0 00 80 00 43 00 00 00 00 00 00  .........C......
+ 00000040: 00 00 00 2e 00 00 00 08 00 00 17 2e 00 00 00 0a  ................
+ 00000050: 02 35 79 83 00 00 00 30 04 d3 b4 80 00 00 01 50  .5y....0.......P
+ 00000060: 08 40 95 7f 00 00 02 98 08 41 fe b7 00 00 02 d4  .@.......A......
+ 00000070: 0d 62 ef a7 00 00 01 f2 14 50 21 41 00 00 00 0c  .b.......P!A....
+ XFS (loop0): Corruption of in-memory data (0x8) detected at xfs_do_force_shutdown+0x1a/0x20 (fs/xfs/xfs_buf.c:1514).  Shutting down.
+ XFS (loop0): Please unmount the filesystem and rectify the problem(s)
+ XFS (loop0): log mount/recovery failed: error -117
+ XFS (loop0): log mount failed
 
-When (2) happens, notice that (1) is still running.  xfs_remount_ro will
-call xfs_blockgc_stop to walk the inode cache to free all the COW
-extents, but the blockgc mechanism races with (1)'s reader threads to
-take IOLOCKs and loses, which means that it doesn't clean them all out.
-Call such a file (A).
+Tracing indicated that we were recovering changes from a transaction
+at LSN 0x29/0x1c16 into a buffer that had an LSN of 0x29/0x1d57.
+That is, log recovery was overwriting a buffer with newer changes on
+disk than was in the transaction. Tracing indicated that we were
+hitting the "recovery immediately" case in
+xfs_buf_log_recovery_lsn(), and hence it was ignoring the LSN in the
+buffer.
 
-When (3) happens, xfs_remount_rw calls xfs_reflink_recover_cow, which
-walks the ondisk refcount btree and frees any COW extent that it finds.
-This function does not check the inode cache, which means that incore
-COW forks of inode (A) is now inconsistent with the ondisk metadata.  If
-one of those former COW extents are allocated and mapped into another
-file (B) and someone triggers a COW to the stale reservation in (A), A's
-dirty data will be written into (B) and once that's done, those blocks
-will be transferred to (A)'s data fork without bumping the refcount.
+The code was extracting the LSN correctly, then ignoring it because
+the UUID in the buffer did not match the superblock UUID. The
+problem arises because the UUID check uses the wrong UUID - it
+should be checking the sb_meta_uuid, not sb_uuid. This filesystem
+has sb_uuid != sb_meta_uuid (which is fine), and the buffer has the
+correct matching sb_meta_uuid in it, it's just the code checked it
+against the wrong superblock uuid.
 
-The results are catastrophic -- file (B) and the refcount btree are now
-corrupt.  In the first patch, we fixed the race condition in (2) so that
-(A) will always flush the COW fork.  In this second patch, we move the
-_recover_cow call to the initial mount call in (0) for safety.
+The is no corruption in the filesystem, and failing to recover the
+buffer due to a write verifier failure means the recovery bug did
+not propagate the corruption to disk. Hence there is no corruption
+before or after this bug has manifested, the impact is limited
+simply to an unmountable filesystem....
 
-As mentioned previously, xfs_reflink_recover_cow walks the refcount
-btree looking for COW staging extents, and frees them.  This was
-intended to be run at mount time (when we know there are no live inodes)
-to clean up any leftover staging events that may have been left behind
-during an unclean shutdown.  As a time "optimization" for readonly
-mounts, we deferred this to the ro->rw transition, not realizing that
-any failure to clean all COW forks during a rw->ro transition would
-result in catastrophic corruption.
+This was missed back in 2015 during an audit of incorrect sb_uuid
+usage that resulted in commit fcfbe2c4ef42 ("xfs: log recovery needs
+to validate against sb_meta_uuid") that fixed the magic32 buffers to
+validate against sb_meta_uuid instead of sb_uuid. It missed the
+magicda buffers....
 
-Therefore, remove this optimization and only run the recovery routine
-when we're guaranteed not to have any COW staging extents anywhere,
-which means we always run this at mount time.  While we're at it, move
-the callsite to xfs_log_mount_finish because any refcount btree
-expansion (however unlikely given that we're removing records from the
-right side of the index) must be fed by a per-AG reservation, which
-doesn't exist in its current location.
-
-Fixes: 174edb0e46e5 ("xfs: store in-progress CoW allocations in the refcount btree")
+Fixes: ce748eaa65f2 ("xfs: create new metadata UUID field and incompat flag")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_log_recover.c | 24 +++++++++++++++++++++++-
- fs/xfs/xfs_mount.c       | 10 ----------
- fs/xfs/xfs_reflink.c     |  5 ++++-
- fs/xfs/xfs_super.c       |  9 ---------
- 4 files changed, 27 insertions(+), 21 deletions(-)
+ fs/xfs/xfs_buf_item_recover.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 10562ecbd9ea..581aeb288b32 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -27,7 +27,7 @@
- #include "xfs_buf_item.h"
- #include "xfs_ag.h"
- #include "xfs_quota.h"
--
-+#include "xfs_reflink.h"
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index a476c7ef5d53..991fbf1eb564 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -816,7 +816,7 @@ xlog_recover_get_buf_lsn(
+ 	}
  
- #define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
- 
-@@ -3502,6 +3502,28 @@ xlog_recover_finish(
- 
- 	xlog_recover_process_iunlinks(log);
- 	xlog_recover_check_summary(log);
-+
-+	/*
-+	 * Recover any CoW staging blocks that are still referenced by the
-+	 * ondisk refcount metadata.  During mount there cannot be any live
-+	 * staging extents as we have not permitted any user modifications.
-+	 * Therefore, it is safe to free them all right now, even on a
-+	 * read-only mount.
-+	 */
-+	error = xfs_reflink_recover_cow(log->l_mp);
-+	if (error) {
-+		xfs_alert(log->l_mp,
-+	"Failed to recover leftover CoW staging extents, err %d.",
-+				error);
-+		/*
-+		 * If we get an error here, make sure the log is shut down
-+		 * but return zero so that any log items committed since the
-+		 * end of intents processing can be pushed through the CIL
-+		 * and AIL.
-+		 */
-+		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 06dac09eddbd..62f3c153d4b2 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -922,15 +922,6 @@ xfs_mountfs(
- 			xfs_warn(mp,
- 	"Unable to allocate reserve blocks. Continuing without reserve pool.");
- 
--		/* Recover any CoW blocks that never got remapped. */
--		error = xfs_reflink_recover_cow(mp);
--		if (error) {
--			xfs_err(mp,
--	"Error %d recovering leftover CoW allocations.", error);
--			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
--			goto out_quota;
--		}
--
- 		/* Reserve AG blocks for future btree expansion. */
- 		error = xfs_fs_reserve_ag_blocks(mp);
- 		if (error && error != -ENOSPC)
-@@ -941,7 +932,6 @@ xfs_mountfs(
- 
-  out_agresv:
- 	xfs_fs_unreserve_ag_blocks(mp);
-- out_quota:
- 	xfs_qm_unmount_quotas(mp);
-  out_rtunmount:
- 	xfs_rtunmount_inodes(mp);
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 76355f293488..36832e4bc803 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -749,7 +749,10 @@ xfs_reflink_end_cow(
- }
- 
- /*
-- * Free leftover CoW reservations that didn't get cleaned out.
-+ * Free all CoW staging blocks that are still referenced by the ondisk refcount
-+ * metadata.  The ondisk metadata does not track which inode created the
-+ * staging extent, so callers must ensure that there are no cached inodes with
-+ * live CoW staging extents.
-  */
- int
- xfs_reflink_recover_cow(
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 23673703618a..8d85114ea047 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1742,15 +1742,6 @@ xfs_remount_rw(
- 	 */
- 	xfs_restore_resvblks(mp);
- 	xfs_log_work_queue(mp);
--
--	/* Recover any CoW blocks that never got remapped. */
--	error = xfs_reflink_recover_cow(mp);
--	if (error) {
--		xfs_err(mp,
--			"Error %d recovering leftover CoW allocations.", error);
--		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
--		return error;
--	}
- 	xfs_blockgc_start(mp);
- 
- 	/* Create the per-AG metadata reservation pool .*/
+ 	if (lsn != (xfs_lsn_t)-1) {
+-		if (!uuid_equal(&mp->m_sb.sb_uuid, uuid))
++		if (!uuid_equal(&mp->m_sb.sb_meta_uuid, uuid))
+ 			goto recover_immediately;
+ 		return lsn;
+ 	}
 -- 
 2.36.1.255.ge46751e96f-goog
 
