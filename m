@@ -2,50 +2,52 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FFCAC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 05:38:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57AC8C43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 05:38:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241052AbiFCFiK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jun 2022 01:38:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55174 "EHLO
+        id S241070AbiFCFiL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jun 2022 01:38:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241005AbiFCFh7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 01:37:59 -0400
+        with ESMTP id S241018AbiFCFiD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 01:38:03 -0400
 Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 960EC2F019;
-        Thu,  2 Jun 2022 22:37:56 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3AJiNtoq11cU2gqP1CWPbD5VJwkn2cJEfYwER7XOP?=
- =?us-ascii?q?LsXnJgTxwhjMByGQbX2iCbqvfYWKnL4wla9zj8kkOu8XVnNA2QQE+nZ1PZygU8?=
- =?us-ascii?q?JKaX7x1DatR0xu6d5SFFAQ+hyknQoGowPscEzmM9n9BDpC79SMmjfvQH+KlYAL?=
- =?us-ascii?q?5EnsZqTFMGX5JZS1Ly7ZRbr5A2bBVMivV0T/Ai5S31GyNh1aYBlkpB5er83uDi?=
- =?us-ascii?q?hhdVAQw5TTSbdgT1LPXeuJ84Jg3fcldJFOgKmVY83LTegrN8F251juxExYFAdX?=
- =?us-ascii?q?jnKv5c1ERX/jZOg3mZnh+AvDk20Yd4HdplPtT2Pk0MC+7jx2Tgtl308QLu5qrV?=
- =?us-ascii?q?S8nI6/NhP8AFRJfFkmSOIUfouOZcSbv6ZP7I0ruNiGEL+9VJE0/I4wU0uhtBmR?=
- =?us-ascii?q?J7/YZNHYGaRXrr+a3xre6Q+5si+wjMcD0MYJZsXZlpRnZBvYOQJbNWazG6NZUm?=
- =?us-ascii?q?jAqiahmAvfaY9sxaDxhdh3MbhRDfFANB/oWkO6uwHu5bDxcrFOcoLEf4m7PwQg?=
- =?us-ascii?q?327/oWPLZeMONQ8p9nUuCoG/CuWPjDXkyMN2Z1CrA93eEhfHGliC9X5gdfJWx9?=
- =?us-ascii?q?eZvqFmSwHEDTRMRSF23qOW4jUj4XMhQQ2QS5CYvqK0a8E2wUsK7Wxy+vW7CshM?=
- =?us-ascii?q?CM/JQGO0S7BqRjKbZiy6fD28VR3hBb8Ynu9I9RT0C0FKC2djuAFRHsrSTRDSW9?=
- =?us-ascii?q?qq8qim7MiwYa2QFYEcsVwQC59X8sYcblQ/UQ5BvHcaditzzBCG1zSuGoTYzg50?=
- =?us-ascii?q?NgsMRkaa251bKh3SrvJehZgo04BjHG2Go9AV0YKa7aIGyr1vW9/BNKMCeVFbpl?=
- =?us-ascii?q?HwFndWOqfAAFrmTmyGXBuYABrek47CCKjK0qUBuBZ4J5Tmr+mDleYFW/SE4I11?=
- =?us-ascii?q?mdNsHEQIFyme7VRh5vccVZSX1K/QsJd/ZNijj9oC4ffyNaxweRocmjkBNSTK6?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AD3e4ZK3aYGiRSOWyrsI5vgqjBI4kLtp133Aq?=
- =?us-ascii?q?2lEZdPU1SL39qynKppkmPHDP5gr5J0tLpTntAsi9qBDnhPtICOsqTNSftWDd0Q?=
- =?us-ascii?q?PGEGgI1/qB/9SPIU3D398Y/aJhXow7M9foEGV95PyQ3CCIV/om3/mLmZrFudvj?=
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7CD0539148;
+        Thu,  2 Jun 2022 22:37:57 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3AyjHkN6tvtxIC77XxE+YU5Vict+fnVKtfMUV32f8?=
+ =?us-ascii?q?akzHdYEJGY0x3yWQYXWiBOPyLYGDzc49wO4rn9EwP75OEz983T1dsqyFgHilAw?=
+ =?us-ascii?q?SbnLY7Hdx+vZUt+DSFioHpPtpxYMp+ZRCwNZie0SiyFb/6x/RGQ6YnSHuCmULS?=
+ =?us-ascii?q?cY3goLeNZYHxJZSxLyrdRbrFA0YDR7zOl4bsekuWHULOX82cc3lE8t8pvnChSU?=
+ =?us-ascii?q?MHa41v0iLCRicdj5zcyn1FNZH4WyDrYw3HQGuG4FcbiLwrPIS3Qw4/Xw/stIov?=
+ =?us-ascii?q?NfrfTeUtMTKPQPBSVlzxdXK3Kbhpq/3R0i/hkcqFHLxo/ZzahxridzP1XqJW2U?=
+ =?us-ascii?q?hZvMKvXhMwTThtZDzpje6ZB/dcrJFDm65DNnxOWKiCEL/JGSRte0Zcj0up+H2B?=
+ =?us-ascii?q?C3fICLzUKdBqCm6S9x7fTYu1tgMEiJc7rMasfp3h/wDCfBvEjKbjDSKXi5NlWx?=
+ =?us-ascii?q?j48i8lCW/HEaKIxdjtraAXoYhtBIF4bBZsy2uCyiRHXfzRe7lDTuqsz52nayRd?=
+ =?us-ascii?q?Z0b7xPd6TcduPLe1ZnFmfoG3u/GnjBBwectuFxlKt9nOqm/+KmCbTW5wbH77+8?=
+ =?us-ascii?q?eRl6HWaxXQWIBkXU0ar5Pe+l0iyUs5eLEpS/TAhxYA06kCqS9zVWxyjvGXCuh8?=
+ =?us-ascii?q?aRsoWH+AkgCmLw63F6kCZAXIFQSNKaN0OssI9Azct0zehndrvCHpksKC9TmiU/?=
+ =?us-ascii?q?bOZ6zi1PEA9N2AFYSMbXA0t+MT4rcc/g3rnStdlDb7wgMb5FC/9xxiUoyUkwbY?=
+ =?us-ascii?q?el8gG0+O851+vqzatoIXZCw04/APaWkq74Q5jIo2ofYql7R7c9/koBIKYSESR+?=
+ =?us-ascii?q?WgKgOCA4+0US5KAjiqARKMKBr7Bz+iEKjr0k1NpHodn8zWr5m7leppfpix9THq?=
+ =?us-ascii?q?FmO5slSTBOReV4F0OosQIeibCUEO+WKrpY+xC8EQqPY6NuijoU+dz?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3ALGg+1a1PUa5cDnoMW94PpgqjBFYkLtp133Aq?=
+ =?us-ascii?q?2lEZdPRUGvb3qynIpoV86faUskdpZJhOo7C90cW7LU80sKQFhLX5Xo3SOzUO2l?=
+ =?us-ascii?q?HYT72KhLGKq1aLdhEWtNQtsZuIGJIeNDSfNzdHZL7BkWuF+sgbsaS62ZHtleHD?=
+ =?us-ascii?q?1G1sUA0vT6lh6j1yAgGdHlYefng8ObMJUIqb+tFcpyetPVAebsGADHEDWOTZ4/?=
+ =?us-ascii?q?LRkpaOW299OzcXrBmJkSiz6KP3VzyR3hIlWTtJxrs4tUjp+jaJnpmejw=3D=3D?=
 X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="124686807"
+   d="scan'208";a="124686813"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 03 Jun 2022 13:37:51 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 14BB04D17198;
-        Fri,  3 Jun 2022 13:37:46 +0800 (CST)
+  by heian.cn.fujitsu.com with ESMTP; 03 Jun 2022 13:37:57 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 254EA4D17198;
+        Fri,  3 Jun 2022 13:37:52 +0800 (CST)
 Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 3 Jun 2022 13:37:46 +0800
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 3 Jun 2022 13:37:51 +0800
 Received: from irides.mr.mr (10.167.225.141) by
  G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 3 Jun 2022 13:37:45 +0800
+ id 15.0.1497.23 via Frontend Transport; Fri, 3 Jun 2022 13:37:52 +0800
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
@@ -55,370 +57,160 @@ CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
         <akpm@linux-foundation.org>, <jane.chu@oracle.com>,
         <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
         <willy@infradead.org>, <naoya.horiguchi@nec.com>,
-        <linmiaohe@huawei.com>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 06/14] xfs: Implement ->notify_failure() for XFS
-Date:   Fri, 3 Jun 2022 13:37:30 +0800
-Message-ID: <20220603053738.1218681-7-ruansy.fnst@fujitsu.com>
+        <linmiaohe@huawei.com>
+Subject: [PATCH v2 13/14] xfs: support CoW in fsdax mode
+Date:   Fri, 3 Jun 2022 13:37:37 +0800
+Message-ID: <20220603053738.1218681-14-ruansy.fnst@fujitsu.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
 References: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 14BB04D17198.A3E07
+X-yoursite-MailScanner-ID: 254EA4D17198.A0CE1
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Introduce xfs_notify_failure.c to handle failure related works, such as
-implement ->notify_failure(), register/unregister dax holder in xfs, and
-so on.
-
-If the rmap feature of XFS enabled, we can query it to find files and
-metadata which are associated with the corrupt data.  For now all we do
-is kill processes with that file mapped into their address spaces, but
-future patches could actually do something about corrupt metadata.
-
-After that, the memory failure needs to notify the processes who are
-using those files.
+In fsdax mode, WRITE and ZERO on a shared extent need CoW performed.
+After that, new allocated extents needs to be remapped to the file.
+So, add a CoW identification in ->iomap_begin(), and implement
+->iomap_end() to do the remapping work.
 
 Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Makefile             |   5 +
- fs/xfs/xfs_buf.c            |  11 +-
- fs/xfs/xfs_fsops.c          |   3 +
- fs/xfs/xfs_mount.h          |   1 +
- fs/xfs/xfs_notify_failure.c | 220 ++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_super.h          |   1 +
- 6 files changed, 238 insertions(+), 3 deletions(-)
- create mode 100644 fs/xfs/xfs_notify_failure.c
+ fs/xfs/xfs_file.c  | 33 ++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_iomap.c | 30 +++++++++++++++++++++++++++++-
+ fs/xfs/xfs_iomap.h |  1 +
+ 3 files changed, 58 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index b056cfc6398e..805a0d0a88c1 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -129,6 +129,11 @@ xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
- xfs-$(CONFIG_COMPAT)		+= xfs_ioctl32.o
- xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a60632ecc3f0..07ec4ada5163 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -25,6 +25,7 @@
+ #include "xfs_iomap.h"
+ #include "xfs_reflink.h"
  
-+# notify failure
-+ifeq ($(CONFIG_MEMORY_FAILURE),y)
-+xfs-$(CONFIG_FS_DAX)		+= xfs_notify_failure.o
-+endif
-+
- # online scrub/repair
- ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
- 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 1ec2a7b6d44e..59c6b62fde57 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -5,6 +5,7 @@
-  */
- #include "xfs.h"
++#include <linux/dax.h>
+ #include <linux/falloc.h>
  #include <linux/backing-dev.h>
-+#include <linux/dax.h>
+ #include <linux/mman.h>
+@@ -669,7 +670,7 @@ xfs_file_dax_write(
+ 	pos = iocb->ki_pos;
  
- #include "xfs_shared.h"
- #include "xfs_format.h"
-@@ -1911,7 +1912,7 @@ xfs_free_buftarg(
- 	list_lru_destroy(&btp->bt_lru);
- 
- 	blkdev_issue_flush(btp->bt_bdev);
--	fs_put_dax(btp->bt_daxdev, NULL);
-+	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
- 
- 	kmem_free(btp);
+ 	trace_xfs_file_dax_write(iocb, from);
+-	ret = dax_iomap_rw(iocb, from, &xfs_direct_write_iomap_ops);
++	ret = dax_iomap_rw(iocb, from, &xfs_dax_write_iomap_ops);
+ 	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
+ 		i_size_write(inode, iocb->ki_pos);
+ 		error = xfs_setfilesize(ip, pos, ret);
+@@ -1254,6 +1255,31 @@ xfs_file_llseek(
+ 	return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
  }
-@@ -1958,14 +1959,18 @@ xfs_alloc_buftarg(
- 	struct block_device	*bdev)
- {
- 	xfs_buftarg_t		*btp;
-+	const struct dax_holder_operations *ops = NULL;
  
-+#if defined(CONFIG_FS_DAX) && defined(CONFIG_MEMORY_FAILURE)
-+	ops = &xfs_dax_holder_operations;
++#ifdef CONFIG_FS_DAX
++int
++xfs_dax_fault(
++	struct vm_fault		*vmf,
++	enum page_entry_size	pe_size,
++	bool			write_fault,
++	pfn_t			*pfn)
++{
++	return dax_iomap_fault(vmf, pe_size, pfn, NULL,
++			(write_fault && !vmf->cow_page) ?
++				&xfs_dax_write_iomap_ops :
++				&xfs_read_iomap_ops);
++}
++#else
++int
++xfs_dax_fault(
++	struct vm_fault		*vmf,
++	enum page_entry_size	pe_size,
++	bool			write_fault,
++	pfn_t			*pfn)
++{
++	return 0;
++}
 +#endif
- 	btp = kmem_zalloc(sizeof(*btp), KM_NOFS);
++
+ /*
+  * Locking for serialisation of IO during page faults. This results in a lock
+  * ordering of:
+@@ -1285,10 +1311,7 @@ __xfs_filemap_fault(
+ 		pfn_t pfn;
  
- 	btp->bt_mount = mp;
- 	btp->bt_dev =  bdev->bd_dev;
- 	btp->bt_bdev = bdev;
--	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off, NULL,
--					    NULL);
-+	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off,
-+					    mp, ops);
+ 		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
+-				(write_fault && !vmf->cow_page) ?
+-				 &xfs_direct_write_iomap_ops :
+-				 &xfs_read_iomap_ops);
++		ret = xfs_dax_fault(vmf, pe_size, write_fault, &pfn);
+ 		if (ret & VM_FAULT_NEEDDSYNC)
+ 			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
+ 		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 5a393259a3a3..4c07f5e718fb 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -773,7 +773,8 @@ xfs_direct_write_iomap_begin(
  
- 	/*
- 	 * Buffer IO error rate limiting. Limit it to no more than 10 messages
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 888839e75d11..ea9159967eaa 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -533,6 +533,9 @@ xfs_do_force_shutdown(
- 	} else if (flags & SHUTDOWN_CORRUPT_INCORE) {
- 		tag = XFS_PTAG_SHUTDOWN_CORRUPT;
- 		why = "Corruption of in-memory data";
-+	} else if (flags & SHUTDOWN_CORRUPT_ONDISK) {
-+		tag = XFS_PTAG_SHUTDOWN_CORRUPT;
-+		why = "Corruption of on-disk metadata";
- 	} else {
- 		tag = XFS_PTAG_SHUTDOWN_IOERROR;
- 		why = "Metadata I/O Error";
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 8c42786e4942..540924b9e583 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -438,6 +438,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, uint32_t flags, char *fname,
- #define SHUTDOWN_LOG_IO_ERROR	(1u << 1) /* write attempt to the log failed */
- #define SHUTDOWN_FORCE_UMOUNT	(1u << 2) /* shutdown from a forced unmount */
- #define SHUTDOWN_CORRUPT_INCORE	(1u << 3) /* corrupt in-memory structures */
-+#define SHUTDOWN_CORRUPT_ONDISK	(1u << 4)  /* corrupt metadata on device */
+ 		/* may drop and re-acquire the ilock */
+ 		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
+-				&lockmode, flags & IOMAP_DIRECT);
++				&lockmode,
++				(flags & IOMAP_DIRECT) || IS_DAX(inode));
+ 		if (error)
+ 			goto out_unlock;
+ 		if (shared)
+@@ -867,6 +868,33 @@ const struct iomap_ops xfs_direct_write_iomap_ops = {
+ 	.iomap_begin		= xfs_direct_write_iomap_begin,
+ };
  
- #define XFS_SHUTDOWN_STRINGS \
- 	{ SHUTDOWN_META_IO_ERROR,	"metadata_io" }, \
-diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-new file mode 100644
-index 000000000000..aa8dc27c599c
---- /dev/null
-+++ b/fs/xfs/xfs_notify_failure.c
-@@ -0,0 +1,220 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2022 Fujitsu.  All Rights Reserved.
-+ */
-+
-+#include "xfs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_alloc.h"
-+#include "xfs_bit.h"
-+#include "xfs_btree.h"
-+#include "xfs_inode.h"
-+#include "xfs_icache.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_trans.h"
-+
-+#include <linux/mm.h>
-+#include <linux/dax.h>
-+
-+struct failure_info {
-+	xfs_agblock_t		startblock;
-+	xfs_extlen_t		blockcount;
-+	int			mf_flags;
-+};
-+
-+static pgoff_t
-+xfs_failure_pgoff(
-+	struct xfs_mount		*mp,
-+	const struct xfs_rmap_irec	*rec,
-+	const struct failure_info	*notify)
-+{
-+	loff_t				pos = XFS_FSB_TO_B(mp, rec->rm_offset);
-+
-+	if (notify->startblock > rec->rm_startblock)
-+		pos += XFS_FSB_TO_B(mp,
-+				notify->startblock - rec->rm_startblock);
-+	return pos >> PAGE_SHIFT;
-+}
-+
-+static unsigned long
-+xfs_failure_pgcnt(
-+	struct xfs_mount		*mp,
-+	const struct xfs_rmap_irec	*rec,
-+	const struct failure_info	*notify)
-+{
-+	xfs_agblock_t			end_rec;
-+	xfs_agblock_t			end_notify;
-+	xfs_agblock_t			start_cross;
-+	xfs_agblock_t			end_cross;
-+
-+	start_cross = max(rec->rm_startblock, notify->startblock);
-+
-+	end_rec = rec->rm_startblock + rec->rm_blockcount;
-+	end_notify = notify->startblock + notify->blockcount;
-+	end_cross = min(end_rec, end_notify);
-+
-+	return XFS_FSB_TO_B(mp, end_cross - start_cross) >> PAGE_SHIFT;
-+}
-+
 +static int
-+xfs_dax_failure_fn(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*rec,
-+	void				*data)
++xfs_dax_write_iomap_end(
++	struct inode		*inode,
++	loff_t			pos,
++	loff_t			length,
++	ssize_t			written,
++	unsigned		flags,
++	struct iomap		*iomap)
 +{
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_inode		*ip;
-+	struct failure_info		*notify = data;
-+	int				error = 0;
++	struct xfs_inode	*ip = XFS_I(inode);
 +
-+	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-+	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	/* Get files that incore, filter out others that are not in use. */
-+	error = xfs_iget(mp, cur->bc_tp, rec->rm_owner, XFS_IGET_INCORE,
-+			 0, &ip);
-+	/* Continue the rmap query if the inode isn't incore */
-+	if (error == -ENODATA)
++	if (!xfs_is_cow_inode(ip))
 +		return 0;
-+	if (error)
-+		return error;
 +
-+	error = mf_dax_kill_procs(VFS_I(ip)->i_mapping,
-+				  xfs_failure_pgoff(mp, rec, notify),
-+				  xfs_failure_pgcnt(mp, rec, notify),
-+				  notify->mf_flags);
-+	xfs_irele(ip);
-+	return error;
++	if (!written) {
++		xfs_reflink_cancel_cow_range(ip, pos, length, true);
++		return 0;
++	}
++
++	return xfs_reflink_end_cow(ip, pos, written);
 +}
 +
-+static int
-+xfs_dax_notify_ddev_failure(
-+	struct xfs_mount	*mp,
-+	xfs_daddr_t		daddr,
-+	xfs_daddr_t		bblen,
-+	int			mf_flags)
-+{
-+	struct xfs_trans	*tp = NULL;
-+	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_buf		*agf_bp = NULL;
-+	int			error = 0;
-+	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, daddr);
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	xfs_fsblock_t		end_fsbno = XFS_DADDR_TO_FSB(mp, daddr + bblen);
-+	xfs_agnumber_t		end_agno = XFS_FSB_TO_AGNO(mp, end_fsbno);
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	for (; agno <= end_agno; agno++) {
-+		struct xfs_rmap_irec	ri_low = { };
-+		struct xfs_rmap_irec	ri_high;
-+		struct failure_info	notify;
-+		struct xfs_agf		*agf;
-+		xfs_agblock_t		agend;
-+
-+		error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-+		if (error)
-+			break;
-+
-+		cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agf_bp->b_pag);
-+
-+		/*
-+		 * Set the rmap range from ri_low to ri_high, which represents
-+		 * a [start, end] where we looking for the files or metadata.
-+		 */
-+		memset(&ri_high, 0xFF, sizeof(ri_high));
-+		ri_low.rm_startblock = XFS_FSB_TO_AGBNO(mp, fsbno);
-+		if (agno == end_agno)
-+			ri_high.rm_startblock = XFS_FSB_TO_AGBNO(mp, end_fsbno);
-+
-+		agf = agf_bp->b_addr;
-+		agend = min(be32_to_cpu(agf->agf_length),
-+				ri_high.rm_startblock);
-+		notify.startblock = ri_low.rm_startblock;
-+		notify.blockcount = agend - ri_low.rm_startblock;
-+
-+		error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
-+				xfs_dax_failure_fn, &notify);
-+		xfs_btree_del_cursor(cur, error);
-+		xfs_trans_brelse(tp, agf_bp);
-+		if (error)
-+			break;
-+
-+		fsbno = XFS_AGB_TO_FSB(mp, agno + 1, 0);
-+	}
-+
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
-+static int
-+xfs_dax_notify_failure(
-+	struct dax_device	*dax_dev,
-+	u64			offset,
-+	u64			len,
-+	int			mf_flags)
-+{
-+	struct xfs_mount	*mp = dax_holder(dax_dev);
-+	u64			ddev_start;
-+	u64			ddev_end;
-+
-+	if (!(mp->m_sb.sb_flags & SB_BORN)) {
-+		xfs_warn(mp, "filesystem is not ready for notify_failure()!");
-+		return -EIO;
-+	}
-+
-+	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_daxdev == dax_dev) {
-+		xfs_warn(mp,
-+			 "notify_failure() not supported on realtime device!");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
-+	    mp->m_logdev_targp != mp->m_ddev_targp) {
-+		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (!xfs_has_rmapbt(mp)) {
-+		xfs_warn(mp, "notify_failure() needs rmapbt enabled!");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	ddev_start = mp->m_ddev_targp->bt_dax_part_off;
-+	ddev_end = ddev_start + bdev_nr_bytes(mp->m_ddev_targp->bt_bdev) - 1;
-+
-+	/* Ignore the range out of filesystem area */
-+	if (offset + len < ddev_start)
-+		return -ENXIO;
-+	if (offset > ddev_end)
-+		return -ENXIO;
-+
-+	/* Calculate the real range when it touches the boundary */
-+	if (offset > ddev_start)
-+		offset -= ddev_start;
-+	else {
-+		len -= ddev_start - offset;
-+		offset = 0;
-+	}
-+	if (offset + len > ddev_end)
-+		len -= ddev_end - offset;
-+
-+	return xfs_dax_notify_ddev_failure(mp, BTOBB(offset), BTOBB(len),
-+			mf_flags);
-+}
-+
-+const struct dax_holder_operations xfs_dax_holder_operations = {
-+	.notify_failure		= xfs_dax_notify_failure,
++const struct iomap_ops xfs_dax_write_iomap_ops = {
++	.iomap_begin	= xfs_direct_write_iomap_begin,
++	.iomap_end	= xfs_dax_write_iomap_end,
 +};
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index 167d23f92ffe..27ab5087d0b3 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -93,6 +93,7 @@ extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
- extern const struct export_operations xfs_export_operations;
- extern const struct xattr_handler *xfs_xattr_handlers[];
- extern const struct quotactl_ops xfs_quotactl_operations;
-+extern const struct dax_holder_operations xfs_dax_holder_operations;
++
+ static int
+ xfs_buffered_write_iomap_begin(
+ 	struct inode		*inode,
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index e88dc162c785..c782e8c0479c 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -51,5 +51,6 @@ extern const struct iomap_ops xfs_direct_write_iomap_ops;
+ extern const struct iomap_ops xfs_read_iomap_ops;
+ extern const struct iomap_ops xfs_seek_iomap_ops;
+ extern const struct iomap_ops xfs_xattr_iomap_ops;
++extern const struct iomap_ops xfs_dax_write_iomap_ops;
  
- extern void xfs_reinit_percpu_counters(struct xfs_mount *mp);
- 
+ #endif /* __XFS_IOMAP_H__*/
 -- 
 2.36.1
 
