@@ -2,229 +2,263 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC27BCCA482
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 05:38:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB2CEC43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 08:03:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241096AbiFCFiQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jun 2022 01:38:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55476 "EHLO
+        id S240286AbiFCIDl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jun 2022 04:03:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241028AbiFCFiF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 01:38:05 -0400
-Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 84D1539149;
-        Thu,  2 Jun 2022 22:37:59 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3AxeOwdK7chXUbYdZzXXSiBwxRtLnGchMFZxGqfqr?=
- =?us-ascii?q?LsXjdYENS1mQCzmpKC2/TPvjYMWbxfdByYYW1/E8DsZ/Wy9dlHlQ5pCpnJ55og?=
- =?us-ascii?q?ZCbXIzGdC8cHM8zwvXrFRsht4NHAjX5BJhcokT0+1H9YtANkVEmjfvSHuCkUba?=
- =?us-ascii?q?dUsxMbVQMpBkJ2EsLd9ER0tYAbeiRW2thiPuqyyHtEAbNNw1cbgr435m+RCZH5?=
- =?us-ascii?q?5wejt+3UmsWPpintHeG/5Uc4Ql2yauZdxMUSaEMdgK2qnqq8V23wo/Z109F5tK?=
- =?us-ascii?q?NmbC9fFAIQ6LJIE6FjX8+t6qK20AE/3JtlP1gcqd0hUR/0l1lm/hr1dxLro32R?=
- =?us-ascii?q?wEyIoXCheYcTwJFVSp5OMWq/ZeeeyTh4ZLDlhCun3zEhq8G4FsNFYER5Od7KW9?=
- =?us-ascii?q?U8vkfMjoMclaIgOfe6La6TOxtj8MjIeHrIYoAt3AmxjbcZd4mSpDrQqPE/9ZU0?=
- =?us-ascii?q?T48wMdUEp72eMsdbStHbRLOeRRDN14bTpUkk4+AinD5NT8et1ORoas+5nP7zQp?=
- =?us-ascii?q?t3byrO93QEvSGR9pSmEmwpW/c+Wn9RBYAO7S3zTuD72Lpg+rnnj3yU4FUE6e3n?=
- =?us-ascii?q?tZjg0WW7mgSDgAGEFW8vP+1g1K/XNQZLFYbkgIos6Qz8UmDStjmQwb+pH+Cow5?=
- =?us-ascii?q?aV9dOe8U64wGlzrHIpQqUbkACRzlQYZoms9U3SiEh1l6hmd7iQzdotdW9S3ub+?=
- =?us-ascii?q?/GfrS6aPjIcJmsPIyQDSGMt+dbkpI0snxTnVct4Hei5g7XdHTD23iDPojMyiqs?=
- =?us-ascii?q?eieYV2Kihu1PKmTShot7OVAFdzgHWWH+1qwB0foioY6S25lXBq/VNNoCUSh+Gp?=
- =?us-ascii?q?ndss8yf6v0eSIGDjwSTT+gXWrKk/fCINHvbm1EHN4cg7TOF6XOlfJ4W5DB4OVc?=
- =?us-ascii?q?vNdwLPyLqCHI/Eys5CIR7ZSPsNPEoJdnqTZlC8EQpLvy9Pti8UzaESsQZmNe7w?=
- =?us-ascii?q?RxT?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3ArEtrYq7CpTBYfigboQPXwCzXdLJyesId70hD?=
- =?us-ascii?q?6qhwISY6TiX+rbHJoB17726MtN9/YhEdcLy7VJVoBEmskKKdgrNhWotKPjOW21?=
- =?us-ascii?q?dARbsKheCJrgEIWReOktK1vp0AT0ERMrLN5CBB/KTHCReDYqsd6ejC4Ka1nv3f?=
- =?us-ascii?q?0nsoaQlrbptr5wB/Bh3zKDwMeCB2QYo+CIGH5tdK4x6peXEsZMy9AXUfG8fZod?=
- =?us-ascii?q?mjruOdXTc2Qw4g9BKVjS6lrJrzEx2j1B8YVD9VhZcOmFK16zDE2g=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="124686815"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 03 Jun 2022 13:37:57 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id EE6884D17199;
-        Fri,  3 Jun 2022 13:37:52 +0800 (CST)
-Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 3 Jun 2022 13:37:53 +0800
-Received: from irides.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 3 Jun 2022 13:37:52 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@infradead.org>,
-        <akpm@linux-foundation.org>, <jane.chu@oracle.com>,
-        <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
-        <willy@infradead.org>, <naoya.horiguchi@nec.com>,
-        <linmiaohe@huawei.com>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 14/14] xfs: Add dax dedupe support
-Date:   Fri, 3 Jun 2022 13:37:38 +0800
-Message-ID: <20220603053738.1218681-15-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
-References: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
+        with ESMTP id S238752AbiFCIDk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 04:03:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B9CD762ED
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Jun 2022 01:03:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1654243417;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=FWW3ivYUjChU0NYDe6xjTszI5q/b919uaZhsyAe5Fh0=;
+        b=Rt0vqIYRI2DEvBbnAII5+N3TDrvEoj6CCiYspmc0ZGQHHgL/gjKgUvH9N+vFg0hLaxN8XI
+        whdqSjm8QYGqe78Yu8UsGVF5ADN/ufRpwOb3xXewY1Bqj3rBdqlsXBpcsXJMtzde4Bff3x
+        p+SZzRG2sml1MgqzBu6oaV9+wwi6ajM=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-62-MzWlR2awMT6uGgjtzkfALA-1; Fri, 03 Jun 2022 04:03:36 -0400
+X-MC-Unique: MzWlR2awMT6uGgjtzkfALA-1
+Received: by mail-qk1-f200.google.com with SMTP id g3-20020a05620a108300b006a329bc4da3so5436627qkk.3
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Jun 2022 01:03:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=FWW3ivYUjChU0NYDe6xjTszI5q/b919uaZhsyAe5Fh0=;
+        b=bUE0r4e+zQPQhsM/zs87QEewXDZ32TfjyKFEsETJnBVi4EoLIho7pcXA/KVCFqBliQ
+         x9sHXgpcGEFE9F5PtuBpgP95FScrpqYXoStWkCoI85D8VjWrGFiylkEis9h123j+d+2/
+         +To8qo2xayHZxQy6FnVU3wne+nYFj5vsEjY3U46XdZy4FgAVFdt+aBGiEJFsoKGcVR4p
+         c4KiU7mqnLsdGB9aN5AWTL0+0c1xoRT5Zo38jadT4sFp7/qcM8SXqyrihBbzS4l7cVL+
+         ryeoX4lPQ4+3/5za8G/a1mNHqWt69Cr9imBDiwX1alJiD3Im4KexS5QTSXfgLx/K0EcS
+         tSeQ==
+X-Gm-Message-State: AOAM531QnBYU7XvdjGINZigIkD0/YL+powJ4tZ0YiM826iqLIETa8lzD
+        f5a5BLqZrXFP8LkbxE64td6Cm7iVkBchpuhx3LXoZzrZsgb6cJfpygCv6qvY6Dlp4QSeou5488W
+        fi7QusTiZkw7MxrURsYns
+X-Received: by 2002:a05:620a:244e:b0:6a0:49a5:f409 with SMTP id h14-20020a05620a244e00b006a049a5f409mr5715266qkn.750.1654243416134;
+        Fri, 03 Jun 2022 01:03:36 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxzVymv8ywHtG3lmOJ6RkehIvUi2cOkNF7oKzzz6sruz2BhyzKpMUZH/0TOcTj5LPA9pakjrw==
+X-Received: by 2002:a05:620a:244e:b0:6a0:49a5:f409 with SMTP id h14-20020a05620a244e00b006a049a5f409mr5715253qkn.750.1654243415835;
+        Fri, 03 Jun 2022 01:03:35 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id bm38-20020a05620a19a600b006a6941cc9e5sm1369059qkb.42.2022.06.03.01.03.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Jun 2022 01:03:35 -0700 (PDT)
+Date:   Fri, 3 Jun 2022 16:03:29 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: corrupted xattr should not block removexattr
+Message-ID: <20220603080329.v2nxz6fzmnvzz2v5@zlang-mailbox>
+References: <20220528094715.309876-1-zlang@kernel.org>
+ <Ypjm1WbL/Mu7hBUQ@magnolia>
+ <20220602190635.yvxqu6ubquragt7x@zlang-mailbox>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: EE6884D17199.A0B2C
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220602190635.yvxqu6ubquragt7x@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Introduce xfs_mmaplock_two_inodes_and_break_dax_layout() for dax files
-who are going to be deduped.  After that, call compare range function
-only when files are both DAX or not.
+On Fri, Jun 03, 2022 at 03:06:35AM +0800, Zorro Lang wrote:
+> On Thu, Jun 02, 2022 at 09:35:33AM -0700, Darrick J. Wong wrote:
+> > On Sat, May 28, 2022 at 05:47:15PM +0800, Zorro Lang wrote:
+> > > After we corrupted an attr leaf block (under node block), getxattr
+> > > might hit EFSCORRUPTED in xfs_attr_node_get when it does
+> > > xfs_attr_node_hasname. A known bug cause xfs_attr_node_get won't do
+> > > xfs_buf_trans release job, then a subsequent removexattr will hang.
+> > > 
+> > > This case covers a1de97fe296c ("xfs: Fix the free logic of state in
+> > > xfs_attr_node_hasname")
+> > > 
+> > > Signed-off-by: Zorro Lang <zlang@kernel.org>
+> > > ---
+> > > 
+> > > Hi,
+> > > 
+> > > It's been long time past, since Yang Xu tried to cover a regression bug
+> > > by changing xfs/126 (be Nacked):
+> > > https://lore.kernel.org/fstests/1642407736-3898-1-git-send-email-xuyang2018.jy@fujitsu.com/
+> > > 
+> > > As we (Red Hat) need to cover this regression issue too, and have waited so
+> > > long time. I think no one is doing this job now, so I'm trying to write a new one
+> > > case to cover it. If Yang has completed his test case but forgot to send out,
+> > > feel free to tell me :)
+> > > 
+> > > Thanks,
+> > > Zorro
+> > > 
+> > >  tests/xfs/999     | 80 +++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/999.out |  2 ++
+> > >  2 files changed, 82 insertions(+)
+> > >  create mode 100755 tests/xfs/999
+> > >  create mode 100644 tests/xfs/999.out
+> > > 
+> > > diff --git a/tests/xfs/999 b/tests/xfs/999
+> > > new file mode 100755
+> > > index 00000000..65d99883
+> > > --- /dev/null
+> > > +++ b/tests/xfs/999
+> > > @@ -0,0 +1,80 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 999
+> > > +#
+> > > +# This's a regression test for:
+> > > +#   a1de97fe296c ("xfs: Fix the free logic of state in xfs_attr_node_hasname")
+> > > +#
+> > > +# After we corrupted an attr leaf block (under node block), getxattr might hit
+> > > +# EFSCORRUPTED in xfs_attr_node_get when it does xfs_attr_node_hasname. A bug
+> > > +# cause xfs_attr_node_get won't do xfs_buf_trans release job, then a subsequent
+> > > +# removexattr will hang.
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest auto quick attr
+> > > +
+> > > +# Import common functions.
+> > > +. ./common/filter
+> > > +. ./common/attr
+> > > +. ./common/populate
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_fs xfs
+> > > +_fixed_by_kernel_commit a1de97fe296c \
+> > > +       "xfs: Fix the free logic of state in xfs_attr_node_hasname"
+> > > +
+> > > +_require_scratch_nocheck
+> > > +# Only test with v5 xfs on-disk format
+> > > +_require_scratch_xfs_crc
+> > > +_require_attrs
+> > > +_require_populate_commands
+> > > +_require_xfs_db_blocktrash_z_command
+> > > +
+> > > +_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
+> > > +source $tmp.mkfs
+> > > +_scratch_mount
+> > > +
+> > > +# This case will use 10 bytes xattr namelen and 11+ bytes valuelen, so:
+> > > +#   sizeof(xfs_attr_leaf_name_local) = 2 + 1 + 10 + 11 = 24,
+> > > +#   sizeof(xfs_attr_leaf_entry) = 8
+> > > +# So count in the header, if I create more than $((dbsize / 32)) xattr entries,
+> > > +# it will out of a leaf block (not much), then get one node block and two or
+> > > +# more leaf blocks, that's the testing need.
+> > 
+> > I think this last sentence could be clearer:
+> > 
+> > "Create more than $((dbsize / 32)) xattr entries to force the creation
+> > of a node block, which we need for this test."
+> 
+> Hi Darrick,
+> 
+> Thanks for your reviewing! Sure, I'll remove redundant comments.
+> 
+> > 
+> > > +nr_xattr="$((dbsize / 32))"
+> > > +localfile="${SCRATCH_MNT}/attrfile"
+> > > +touch $localfile
+> > > +for ((i=0; i<nr_xattr; i++));do
+> > > +	$SETFATTR_PROG -n user.x$(printf "%.09d" "$i") -v "aaaaaaaaaaaaaaaa" $localfile
+> > > +done
+> > > +inumber="$(stat -c '%i' $localfile)"
+> > 
+> > Though I also wonder, could you just steal this line:
+> > 
+> > __populate_create_attr "${SCRATCH_MNT}/ATTR.FMT_NODE" "$((8 * blksz / 40))"
+> > 
+> > from _scratch_xfs_populate?
+> 
+> Oh, I don't know there's a helper like that. But I'm wondering is it recommended
+> using a function begin with "__" directly?
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c    |  2 +-
- fs/xfs/xfs_inode.c   | 69 +++++++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_inode.h   |  1 +
- fs/xfs/xfs_reflink.c |  4 +--
- 4 files changed, 69 insertions(+), 7 deletions(-)
+I think I tend to not use the __populate_create_attr, due to above setxattr
+while loop need to correspond to later getxattr and removexattr testing.
+There's not a helper correspond to __populate_create_attr, so if I use it
+at first, then have to use the manual while loop later, that might look
+a little abrupt :)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 07ec4ada5163..9f433006edcd 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -808,7 +808,7 @@ xfs_wait_dax_page(
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- }
- 
--static int
-+int
- xfs_break_dax_layouts(
- 	struct inode		*inode,
- 	bool			*retry)
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b2879870a17e..96308065a2b3 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3767,6 +3767,50 @@ xfs_iolock_two_inodes_and_break_layout(
- 	return 0;
- }
- 
-+static int
-+xfs_mmaplock_two_inodes_and_break_dax_layout(
-+	struct xfs_inode	*ip1,
-+	struct xfs_inode	*ip2)
-+{
-+	int			error;
-+	bool			retry;
-+	struct page		*page;
-+
-+	if (ip1->i_ino > ip2->i_ino)
-+		swap(ip1, ip2);
-+
-+again:
-+	retry = false;
-+	/* Lock the first inode */
-+	xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
-+	error = xfs_break_dax_layouts(VFS_I(ip1), &retry);
-+	if (error || retry) {
-+		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+		if (error == 0 && retry)
-+			goto again;
-+		return error;
-+	}
-+
-+	if (ip1 == ip2)
-+		return 0;
-+
-+	/* Nested lock the second inode */
-+	xfs_ilock(ip2, xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1));
-+	/*
-+	 * We cannot use xfs_break_dax_layouts() directly here because it may
-+	 * need to unlock & lock the XFS_MMAPLOCK_EXCL which is not suitable
-+	 * for this nested lock case.
-+	 */
-+	page = dax_layout_busy_page(VFS_I(ip2)->i_mapping);
-+	if (page && page_ref_count(page) != 1) {
-+		xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
-+		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+		goto again;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Lock two inodes so that userspace cannot initiate I/O via file syscalls or
-  * mmap activity.
-@@ -3781,8 +3825,19 @@ xfs_ilock2_io_mmap(
- 	ret = xfs_iolock_two_inodes_and_break_layout(VFS_I(ip1), VFS_I(ip2));
- 	if (ret)
- 		return ret;
--	filemap_invalidate_lock_two(VFS_I(ip1)->i_mapping,
--				    VFS_I(ip2)->i_mapping);
-+
-+	if (IS_DAX(VFS_I(ip1)) && IS_DAX(VFS_I(ip2))) {
-+		ret = xfs_mmaplock_two_inodes_and_break_dax_layout(ip1, ip2);
-+		if (ret) {
-+			inode_unlock(VFS_I(ip2));
-+			if (ip1 != ip2)
-+				inode_unlock(VFS_I(ip1));
-+			return ret;
-+		}
-+	} else
-+		filemap_invalidate_lock_two(VFS_I(ip1)->i_mapping,
-+					    VFS_I(ip2)->i_mapping);
-+
- 	return 0;
- }
- 
-@@ -3792,8 +3847,14 @@ xfs_iunlock2_io_mmap(
- 	struct xfs_inode	*ip1,
- 	struct xfs_inode	*ip2)
- {
--	filemap_invalidate_unlock_two(VFS_I(ip1)->i_mapping,
--				      VFS_I(ip2)->i_mapping);
-+	if (IS_DAX(VFS_I(ip1)) && IS_DAX(VFS_I(ip2))) {
-+		xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
-+		if (ip1 != ip2)
-+			xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+	} else
-+		filemap_invalidate_unlock_two(VFS_I(ip1)->i_mapping,
-+					      VFS_I(ip2)->i_mapping);
-+
- 	inode_unlock(VFS_I(ip2));
- 	if (ip1 != ip2)
- 		inode_unlock(VFS_I(ip1));
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 7be6f8e705ab..8313cc83b6ee 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -467,6 +467,7 @@ xfs_itruncate_extents(
- }
- 
- /* from xfs_file.c */
-+int	xfs_break_dax_layouts(struct inode *inode, bool *retry);
- int	xfs_break_layouts(struct inode *inode, uint *iolock,
- 		enum layout_break_reason reason);
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index cbaf36d21020..d07f06ff0f13 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1363,8 +1363,8 @@ xfs_reflink_remap_prep(
- 	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
- 		goto out_unlock;
- 
--	/* Don't share DAX file data for now. */
--	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-+	/* Don't share DAX file data with non-DAX file. */
-+	if (IS_DAX(inode_in) != IS_DAX(inode_out))
- 		goto out_unlock;
- 
- 	if (!IS_DAX(inode_in))
--- 
-2.36.1
-
-
+> 
+> BTW, may I ask why you prefer the number "40"? You use this number in some cases
+> likes x/124, x/125, x/126. Likes nr=((blksz / 40)) or nr = ((8 * blksz / 40)).
+> 
+> 
+> I tried to calculate, but didn't find anything match 40 bytes perfectly.
+> You used 9 bytes xattr name and 16 bytes xattr value, so the size of attr
+> leaf_name_local and leaf_entry is 28+8=36. So I think in order to make
+> attr entries out of a block, better to make the blksz divided by a
+> number <= 36. Why 40? I know I might miss something, so really hope to get
+> the details from you :)
+> 
+> > 
+> > > +_scratch_unmount
+> > > +
+> > > +# Expect the ablock 0 is a node block, later ablocks(>=1) are leaf blocks, then corrupt
+> > > +# the last leaf block. (Don't corrupt node block, or can't reproduce the bug)
+> > > +magic=$(_scratch_xfs_get_metadata_field "hdr.info.hdr.magic" "inode $inumber" "ablock 0")
+> > > +level=$(_scratch_xfs_get_metadata_field "hdr.level" "inode $inumber" "ablock 0")
+> > > +count=$(_scratch_xfs_get_metadata_field "hdr.count" "inode $inumber" "ablock 0")
+> > > +if [ "$magic" = "0x3ebe" -a "$level" = "1" ];then
+> > > +	# Corrupt the last leaf block
+> > > +	_scratch_xfs_db -x -c "inode ${inumber}" -c "ablock $count" -c "stack" \
+> > > +		-c "blocktrash -x 32 -y $((dbsize*8)) -3 -z" >> $seqres.full
+> > > +else
+> > > +	_fail "The ablock 0 isn't a root node block, maybe case issue"
+> > 
+> > Might want to capture the magic and level here so that we can diagnose
+> > test setup failures.
+> 
+> Sure
+> 
+> > 
+> > > +fi
+> > > +
+> > > +# This's the real testing, expect removexattr won't hang or panic.
+> > > +if _try_scratch_mount >> $seqres.full 2>&1; then
+> > > +	for ((i=0; i<nr_xattr; i++));do
+> > > +		$GETFATTR_PROG -n user.x$(printf "%.09d" "$i") $localfile >/dev/null 2>&1
+> > > +		$SETFATTR_PROG -x user.x$(printf "%.09d" "$i") $localfile 2>/dev/null
+> > > +	done
+> > > +else
+> > > +	_notrun "XFS refused to mount with this xattr corrutpion, test skipped"
+> > 
+> > When does mount fail?  Or is this a precaution?
+> 
+> Oh, it doesn't fail currently. But I can't be sure it always mount succeed,
+> especially I corrupt this fs manually. So add this judgement :)
+> 
+> Thanks,
+> Zorro
+> 
+> > 
+> > --D
+> > 
+> > > +fi
+> > > +
+> > > +echo "Silence is golden"
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+> > > new file mode 100644
+> > > index 00000000..3b276ca8
+> > > --- /dev/null
+> > > +++ b/tests/xfs/999.out
+> > > @@ -0,0 +1,2 @@
+> > > +QA output created by 999
+> > > +Silence is golden
+> > > -- 
+> > > 2.31.1
+> > > 
+> > 
 
