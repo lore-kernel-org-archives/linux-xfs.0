@@ -2,234 +2,288 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4E47C43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 05:20:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3B93C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 05:37:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240365AbiFCFUy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jun 2022 01:20:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45086 "EHLO
+        id S240850AbiFCFhw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jun 2022 01:37:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239190AbiFCFUx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 01:20:53 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 180202A71E;
-        Thu,  2 Jun 2022 22:20:52 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 1CE805EC50D;
-        Fri,  3 Jun 2022 15:20:50 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nwzjr-0024P8-N0; Fri, 03 Jun 2022 15:20:47 +1000
-Date:   Fri, 3 Jun 2022 15:20:47 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chris Mason <clm@fb.com>
-Cc:     Johannes Weiner <hannes@cmpxchg.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        "dchinner@redhat.com" <dchinner@redhat.com>
-Subject: Re: [PATCH RFC] iomap: invalidate pages past eof in
- iomap_do_writepage()
-Message-ID: <20220603052047.GJ1098723@dread.disaster.area>
-References: <20220601011116.495988-1-clm@fb.com>
- <YpdZKbrtXJJ9mWL7@infradead.org>
- <BB5F778F-BFE5-4CC9-94DE-3118C60E13B6@fb.com>
- <20220602065252.GD1098723@dread.disaster.area>
- <YpjYDjeR2Wpx3ImB@cmpxchg.org>
- <20220602220625.GG1098723@dread.disaster.area>
- <B186E2FB-BCAF-4019-9DFF-9FF05BAC557E@fb.com>
+        with ESMTP id S230374AbiFCFhv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 01:37:51 -0400
+Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 148312873A;
+        Thu,  2 Jun 2022 22:37:45 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3AbCmCqq1M7JuFZmOvw/bD5VJwkn2cJEfYwER7XOP?=
+ =?us-ascii?q?LsXnJh2h0hjEFxmEXC26FM6yIZ2rxf912Pt/i9BgE7cWGnN82QQE+nZ1PZygU8?=
+ =?us-ascii?q?JKaX7x1DatR0xu6d5SFFAQ+hyknQoGowPscEzmM9n9BDpC79SMmjfvQH+KlYAL?=
+ =?us-ascii?q?5EnsZqTFMGX5JZS1Ly7ZRbr5A2bBVMivV0T/Ai5S31GyNh1aYBlkpB5er83uDi?=
+ =?us-ascii?q?hhdVAQw5TTSbdgT1LPXeuJ84Jg3fcldJFOgKmVY83LTegrN8F251juxExYFAdX?=
+ =?us-ascii?q?jnKv5c1ERX/jZOg3mZnh+AvDk20Yd4HdplPtT2Pk0MC+7jx2Tgtl308QLu5qrV?=
+ =?us-ascii?q?S8nI6/NhP8AFRJfFkmSOIUfouOZcSbg4Jz7I0ruNiGEL+9VJE0/I4wU0uhtBmR?=
+ =?us-ascii?q?J7/YZNHYGaRXrr+a3xre6Q+5si+wjMcD0MYJZsXZlpRnZBvYOQJbNWazG6NZUm?=
+ =?us-ascii?q?jAqiahmAvfaY9sxaDxhdh3MbhRDfFANB/oWkO6uwHu5bDxcrFOcoLEf4m7PwQg?=
+ =?us-ascii?q?327/oWPLZeMONQ8p9nUuCoG/CuWPjDXkyMN2Z1CrA93eEhfHGliC9X5gdfJWx9?=
+ =?us-ascii?q?eZvqFmSwHEDTRMRSF23qOW4jUj4XMhQQ2QS5CYvqK0a8E2wUsK7Wxy+vW7CshM?=
+ =?us-ascii?q?CM/JQGO0S7BqRjKbZiy6fD28VR3hBb8Ynu9I9RT0C0FKC2djuAFRHsrSTRDSW9?=
+ =?us-ascii?q?qq8qim7MiwYa2QFYEcsVwQC59X8sYcblQ/UQ5BvHcaditzzBCG1zSuGoTYzg50?=
+ =?us-ascii?q?NgsMRkaa251bKh3SrvJehZgo04BjHG2Go9AV0YKa7aIGyr1vW9/BNKMCeVFbpl?=
+ =?us-ascii?q?HwFndWOqfAAFrmTmyGXBuYABrek47CCKjK0qUBuBZ4J5Tmr+mDleYFW/SE4I11?=
+ =?us-ascii?q?mdNsHEQIFyme7VRh5vccVZSX1K/QsJd/ZNijj9oC4ffyNaxweRoMmjkBNSTK6?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AcdLwSKBufTgKKjDlHemQ55DYdb4zR+YMi2TD?=
+ =?us-ascii?q?tnoBLSC9F/b0qynAppomPGDP4gr5NEtApTniAtjkfZq/z+8X3WB5B97LMzUO01?=
+ =?us-ascii?q?HYTr2Kg7GD/xTQXwX69sN4kZxrarVCDrTLZmRSvILX5xaZHr8brOW6zA=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
+   d="scan'208";a="124686798"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 03 Jun 2022 13:37:44 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id EEC204D17199;
+        Fri,  3 Jun 2022 13:37:42 +0800 (CST)
+Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 3 Jun 2022 13:37:41 +0800
+Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
+ G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 3 Jun 2022 13:37:43 +0800
+Received: from irides.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Fri, 3 Jun 2022 13:37:42 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@infradead.org>,
+        <akpm@linux-foundation.org>, <jane.chu@oracle.com>,
+        <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
+        <willy@infradead.org>, <naoya.horiguchi@nec.com>,
+        <linmiaohe@huawei.com>, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v2 02/14] mm: factor helpers for memory_failure_dev_pagemap
+Date:   Fri, 3 Jun 2022 13:37:26 +0800
+Message-ID: <20220603053738.1218681-3-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
+References: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <B186E2FB-BCAF-4019-9DFF-9FF05BAC557E@fb.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62999a32
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=IkcTkHD0fZMA:10 a=JPEYwPQDsx4A:10 a=7-415B0cAAAA:8
-        a=Xvn0XkXP7fblPhEtvuMA:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: EEC204D17199.A22E2
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[ Chris, can you lne wrap your emails at 72 columns, please? ]
+memory_failure_dev_pagemap code is a bit complex before introduce RMAP
+feature for fsdax.  So it is needed to factor some helper functions to
+simplify these code.
 
-On Fri, Jun 03, 2022 at 01:29:40AM +0000, Chris Mason wrote:
-> > On Jun 2, 2022, at 6:06 PM, Dave Chinner <david@fromorbit.com>
-> > wrote: On Thu, Jun 02, 2022 at 11:32:30AM -0400, Johannes Weiner
-> > wrote:
-> >> On Thu, Jun 02, 2022 at 04:52:52PM +1000, Dave Chinner wrote:
-> >>> On Wed, Jun 01, 2022 at 02:13:42PM +0000, Chris Mason wrote:
-> >>>> In prod, bpftrace showed looping on a single inode inside a
-> >>>> mysql cgroup. That inode was usually in the middle of being
-> >>>> deleted, i_size set to zero, but it still had 40-90 pages
-> >>>> sitting in the xarray waiting for truncation. We’d loop
-> >>>> through the whole call path above over and over again, mostly
-> >>>> because writepages() was returning progress had been made on
-> >>>> this one inode. The redirty_page_for_writepage() path does
-> >>>> drop wbc->nr_to_write, so the rest of the writepages
-> >>>> machinery believes real work is being done. nr_to_write is
-> >>>> LONG_MAX, so we’ve got a while to loop.
-> >>> 
-> >>> Yup, this code relies on truncate making progress to avoid
-> >>> looping forever. Truncate should only block on the page while
-> >>> it locks it and waits for writeback to complete, then it gets
-> >>> forcibly invalidated and removed from the page cache.
-> >> 
-> >> It's not looping forever, truncate can just take a relatively
-> >> long time during which the flusher is busy-spinning full bore
-> >> on a relatively small number of unflushable pages
-> >> (range_cyclic).
-> >> 
-> >> But you raise a good point asking "why is truncate stuck?". I
-> >> first thought they might be cannibalizing each other over the
-> >> page locks, but that wasn't it (and wouldn't explain the clear
-> >> asymmetry between truncate and flusher). That leaves the
-> >> waiting for writeback. I just confirmed with tracing that
-> >> that's exactly where truncate sits while the flusher goes
-> >> bananas on the same inode. So the race must be this:
-> >> 
-> >> truncate: flusher put a subset of pages under writeback
-> >> i_size_write(0) wait_on_page_writeback() loop with range_cyclic
-> >> over remaining dirty >EOF pages
-> > 
-> > But write_cache_pages() doesn't repeatedly loop over the
-> > pages.
-> > 
-> > The flusher is
-> > 
-> > ->writepages iomap_writepages write_cache_pages() loop over
-> > mapping tree lock page iomap_do_writepage set_page_writeback()
-> > add page to ioend <end of mapping reached> iomap_submit_ioend()
-> > <pages under writeback get sent for IO> return to high level
-> > writeback
-> > 
-> > And eventually IO completion will clear page writeback state.
-> > 
-> 
-> Yes, this is actually happening before the truncate starts.  The
-> truncate finds these writeback pages and waits for them to finish
-> IO, and while it’s waiting wb_check_background_flush() goes wild
-> on the redirty path.
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Miaohe Lin <linmiaohe@huawei.com>
+---
+ mm/memory-failure.c | 167 ++++++++++++++++++++++++--------------------
+ 1 file changed, 92 insertions(+), 75 deletions(-)
 
-I still don't think the redirty path is the underlying problem. Yes,
-it triggers it, but it looks to be triggering an existing behaviour
-that the writeback path should not have...
-
-> > i.e. write_cache_pages() should not be hard looping over the
-> > pages beyond EOF even if range_cyclic is set - it's skipping
-> > those pages, submitting any that are under writeback, and the,
-> > going back to high level code for it to make a decision about
-> > continuation of writeback. It may call back down and we loop
-> > over dirty pages beyond EOF again, but the flusher should not be
-> > holding on to pages under writeback for any signification length
-> > of time before they are submitted for IO.
-> > 
-> 
-> I spent a while trying to blame write_cache_pages() for looping
-> repeatedly, and ended up making a series of bpftrace scripts that
-> collected call stack frequency counters for all the different ways
-> to wander into write_cache_pages().  I eventually ran it across
-> 100K systems to figure out exactly how we were getting into
-> trouble.  It was (thankfully) really consistent.
-> 
-> As you describe above, the loops are definitely coming from higher
-> in the stack.  wb_writeback() will loop as long as
-> __writeback_inodes_wb() returns that it’s making progress and
-> we’re still globally over the bg threshold, so write_cache_pages()
-> is just being called over and over again.  We’re coming from
-> wb_check_background_flush(), so:
-> 
->                 struct wb_writeback_work work = {
->                         .nr_pages       = LONG_MAX,
->                         .sync_mode      = WB_SYNC_NONE,
->                         .for_background = 1,
->                         .range_cyclic   = 1,
->                         .reason         = WB_REASON_BACKGROUND,
->                 };
-
-Sure, but we end up in writeback_sb_inodes() which does this after
-the __writeback_single_inode()->do_writepages() call that iterates
-the dirty pages:
-
-               if (need_resched()) {
-                        /*
-                         * We're trying to balance between building up a nice
-                         * long list of IOs to improve our merge rate, and
-                         * getting those IOs out quickly for anyone throttling
-                         * in balance_dirty_pages().  cond_resched() doesn't
-                         * unplug, so get our IOs out the door before we
-                         * give up the CPU.
-                         */
-                        blk_flush_plug(current->plug, false);
-                        cond_resched();
-                }
-
-So if there is a pending IO completion on this CPU on a work queue
-here, we'll reschedule to it because the work queue kworkers are
-bound to CPUs and they take priority over user threads.
-
-Also, this then requeues the inode of the b_more_io queue, and
-wb_check_background_flush() won't come back to it until all other
-inodes on all other superblocks on the bdi have had writeback
-attempted. So if the system truly is over the background dirty
-threshold, why is writeback getting stuck on this one inode in this
-way?
-
-> > IOWs, if truncate is getting stuck waiting on writeback, then that
-> > implies something is holding up IO completions for a long time,
-> 
-> From Johannes’s tracing today, that’s about 17us.
-
-Which means there should only be a delay of 17us between IO completion
-being queued on this CPU and the flusher thread being preempted and
-completion being run, right?
-
-> Our victim cgroup has just a handful of files, so we can burn
-> through a lot of write_cache_pages loops in the time truncate is
-> waiting for a single IO on a relatively fast ssd.
-
-Yes, I'm not denying that, but background writeback when over global
-dirty thresholds should not be spinning on a single inode with
-50-100 pages attached to it. It should visit it, try to flush it,
-and then move on to the next.
-
-> > not
-> > that there's a problem in writeback submission. i.e. you might
-> > actually be looking at a workqueue backlog
-> 
-> I actually think a workqueue backlog is coming from the flusher
-> thread hogging the CPU.
-
-I can't see how that happens with that need_resched() check in
-writeback_sb_inodes().
-
-> The investigation started by looking for long tail latencies in
-> write() systemcalls, and Domas’s original finding was IO
-> completion workers were waiting for CPUs.  That’s how he ended up
-> finding the redirty calls using high levels of CPU.  We honestly
-> won’t be sure until we live patch a lot of boxes and look for long
-> tail latency improvements, but I’m pretty optimistic.
-
-Something still doesn't add up. I don't see how submission spinning
-is holding off completion because it plays nice with resched
-checks. You're now saying that this started because someone found
-long tail completion latencies, and that explains truncate getting
-stuck. But AFAICT the writeback behaviour isn't responsible for
-completion latencies as writeback will give up the CPU to any other
-thread scheduled to run on that CPU pretty quickly.
-
-It feels like there still something unknown behaviour here, and it
-still smells to me like IO completions are getting backed up by
-something. I wonder - are there large files getting written using
-buffered IO on these machines? Commit ebb7fb1557b1 ("xfs, iomap:
-limit individual ioend chain lengths in writeback") might be
-relevant if that is the case....
-
-Cheers,
-
-Dave.
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index 36072c10658a..b39424da7625 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -1502,6 +1502,95 @@ static int try_to_split_thp_page(struct page *page, const char *msg)
+ 	return 0;
+ }
+ 
++static void unmap_and_kill(struct list_head *to_kill, unsigned long pfn,
++		struct address_space *mapping, pgoff_t index, int flags)
++{
++	struct to_kill *tk;
++	unsigned long size = 0;
++
++	list_for_each_entry(tk, to_kill, nd)
++		if (tk->size_shift)
++			size = max(size, 1UL << tk->size_shift);
++
++	if (size) {
++		/*
++		 * Unmap the largest mapping to avoid breaking up device-dax
++		 * mappings which are constant size. The actual size of the
++		 * mapping being torn down is communicated in siginfo, see
++		 * kill_proc()
++		 */
++		loff_t start = (index << PAGE_SHIFT) & ~(size - 1);
++
++		unmap_mapping_range(mapping, start, size, 0);
++	}
++
++	kill_procs(to_kill, flags & MF_MUST_KILL, false, pfn, flags);
++}
++
++static int mf_generic_kill_procs(unsigned long long pfn, int flags,
++		struct dev_pagemap *pgmap)
++{
++	struct page *page = pfn_to_page(pfn);
++	LIST_HEAD(to_kill);
++	dax_entry_t cookie;
++	int rc = 0;
++
++	/*
++	 * Pages instantiated by device-dax (not filesystem-dax)
++	 * may be compound pages.
++	 */
++	page = compound_head(page);
++
++	/*
++	 * Prevent the inode from being freed while we are interrogating
++	 * the address_space, typically this would be handled by
++	 * lock_page(), but dax pages do not use the page lock. This
++	 * also prevents changes to the mapping of this pfn until
++	 * poison signaling is complete.
++	 */
++	cookie = dax_lock_page(page);
++	if (!cookie)
++		return -EBUSY;
++
++	if (hwpoison_filter(page)) {
++		rc = -EOPNOTSUPP;
++		goto unlock;
++	}
++
++	switch (pgmap->type) {
++	case MEMORY_DEVICE_PRIVATE:
++	case MEMORY_DEVICE_COHERENT:
++		/*
++		 * TODO: Handle device pages which may need coordination
++		 * with device-side memory.
++		 */
++		rc = -ENXIO;
++		goto unlock;
++	default:
++		break;
++	}
++
++	/*
++	 * Use this flag as an indication that the dax page has been
++	 * remapped UC to prevent speculative consumption of poison.
++	 */
++	SetPageHWPoison(page);
++
++	/*
++	 * Unlike System-RAM there is no possibility to swap in a
++	 * different physical page at a given virtual address, so all
++	 * userspace consumption of ZONE_DEVICE memory necessitates
++	 * SIGBUS (i.e. MF_MUST_KILL)
++	 */
++	flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
++	collect_procs(page, &to_kill, true);
++
++	unmap_and_kill(&to_kill, pfn, page->mapping, page->index, flags);
++unlock:
++	dax_unlock_page(page, cookie);
++	return rc;
++}
++
+ /*
+  * Called from hugetlb code with hugetlb_lock held.
+  *
+@@ -1636,12 +1725,7 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+ 		struct dev_pagemap *pgmap)
+ {
+ 	struct page *page = pfn_to_page(pfn);
+-	unsigned long size = 0;
+-	struct to_kill *tk;
+-	LIST_HEAD(tokill);
+-	int rc = -EBUSY;
+-	loff_t start;
+-	dax_entry_t cookie;
++	int rc = -ENXIO;
+ 
+ 	if (flags & MF_COUNT_INCREASED)
+ 		/*
+@@ -1650,77 +1734,10 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+ 		put_page(page);
+ 
+ 	/* device metadata space is not recoverable */
+-	if (!pgmap_pfn_valid(pgmap, pfn)) {
+-		rc = -ENXIO;
+-		goto out;
+-	}
+-
+-	/*
+-	 * Pages instantiated by device-dax (not filesystem-dax)
+-	 * may be compound pages.
+-	 */
+-	page = compound_head(page);
+-
+-	/*
+-	 * Prevent the inode from being freed while we are interrogating
+-	 * the address_space, typically this would be handled by
+-	 * lock_page(), but dax pages do not use the page lock. This
+-	 * also prevents changes to the mapping of this pfn until
+-	 * poison signaling is complete.
+-	 */
+-	cookie = dax_lock_page(page);
+-	if (!cookie)
++	if (!pgmap_pfn_valid(pgmap, pfn))
+ 		goto out;
+ 
+-	if (hwpoison_filter(page)) {
+-		rc = -EOPNOTSUPP;
+-		goto unlock;
+-	}
+-
+-	switch (pgmap->type) {
+-	case MEMORY_DEVICE_PRIVATE:
+-	case MEMORY_DEVICE_COHERENT:
+-		/*
+-		 * TODO: Handle device pages which may need coordination
+-		 * with device-side memory.
+-		 */
+-		goto unlock;
+-	default:
+-		break;
+-	}
+-
+-	/*
+-	 * Use this flag as an indication that the dax page has been
+-	 * remapped UC to prevent speculative consumption of poison.
+-	 */
+-	SetPageHWPoison(page);
+-
+-	/*
+-	 * Unlike System-RAM there is no possibility to swap in a
+-	 * different physical page at a given virtual address, so all
+-	 * userspace consumption of ZONE_DEVICE memory necessitates
+-	 * SIGBUS (i.e. MF_MUST_KILL)
+-	 */
+-	flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
+-	collect_procs(page, &tokill, true);
+-
+-	list_for_each_entry(tk, &tokill, nd)
+-		if (tk->size_shift)
+-			size = max(size, 1UL << tk->size_shift);
+-	if (size) {
+-		/*
+-		 * Unmap the largest mapping to avoid breaking up
+-		 * device-dax mappings which are constant size. The
+-		 * actual size of the mapping being torn down is
+-		 * communicated in siginfo, see kill_proc()
+-		 */
+-		start = (page->index << PAGE_SHIFT) & ~(size - 1);
+-		unmap_mapping_range(page->mapping, start, size, 0);
+-	}
+-	kill_procs(&tokill, true, false, pfn, flags);
+-	rc = 0;
+-unlock:
+-	dax_unlock_page(page, cookie);
++	rc = mf_generic_kill_procs(pfn, flags, pgmap);
+ out:
+ 	/* drop pgmap ref acquired in caller */
+ 	put_dev_pagemap(pgmap);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.36.1
+
+
+
