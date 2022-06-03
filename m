@@ -2,168 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2404AC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 08:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E856AC43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 09:40:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237127AbiFCIZI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jun 2022 04:25:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45528 "EHLO
+        id S243123AbiFCJkH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jun 2022 05:40:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229744AbiFCIZH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 04:25:07 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9C4B1C12E;
-        Fri,  3 Jun 2022 01:25:04 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 70F5DB82234;
-        Fri,  3 Jun 2022 08:25:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BE52C34114;
-        Fri,  3 Jun 2022 08:24:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654244701;
-        bh=KYJyqbiy4NSg0fidZ6aYjs/VPfyn0QQrpQcVL+FaLIc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=pOQCw87nCfW2dLzcbrH04jBMq5b2JaMNk4FgCBESCEkGf5GztESYmmymIKkNwKcyO
-         S0W2knHNuDVyeEwgiV/weD9956tfpVVf22gjhxRYy3zMNRr4uWretSiMYeSqAPzu5h
-         G0n3FOlh9U0xJ0wq6S7gPDmEsncP64oCg/X/L5Zb8n/rLcKaYmiKW2V5MoK3tL+sI2
-         Xp+1cgj/57LhNuJL1MEbJsc5c4l9qtmgVPDD4X3enXpjQzbbgfJmP6Y/0Ka8vCm7q1
-         VjKTIkKpJuncwpdHmwEHfpTHHDLKfmyF3bkldOdtlXFrqt8TJjObuEsFP43lARkCMp
-         71kkWpWTNVvgw==
-From:   Zorro Lang <zlang@kernel.org>
-To:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     djwong@kernel.org
-Subject: [PATCH v2] xfs: corrupted xattr should not block removexattr
-Date:   Fri,  3 Jun 2022 16:24:57 +0800
-Message-Id: <20220603082457.2449343-1-zlang@kernel.org>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S243124AbiFCJkG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 05:40:06 -0400
+Received: from mail-qk1-x730.google.com (mail-qk1-x730.google.com [IPv6:2607:f8b0:4864:20::730])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C5BF3A708;
+        Fri,  3 Jun 2022 02:40:05 -0700 (PDT)
+Received: by mail-qk1-x730.google.com with SMTP id br33so3763732qkb.0;
+        Fri, 03 Jun 2022 02:40:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NgSKsAc7gDewGfKHy6geKvhpHPniCMotsC5LkPk1zn0=;
+        b=Gn/pxj2vSvmcwe9fC8VRAhL7FSKGjzpeuieh37dgajH3B0aKWxooOakV5wyI62qnFD
+         RRsatD7znpfDASl4DGURVGP80HS636dWGg321wI6XY7pejLcApzklposbwJ+Hj1MLodn
+         qbRaPqFSXFJTou5vOXOsLhwHaVbQ9fI2papK4M48dsEfvn9TLehMhpb6uW4GjX5PrrQD
+         rb7cg8v3eL8rIQ+Z5J7NFCbfE6S+KuI49mDhs2EPj+xFpT+9zflq8ItPrmDjtRnN2hi+
+         fWzixOybMTHX+prLs+pSpNnA5eh/NGKMrissZuY4ZpPQ/T1l7lc5EA3OSqpxvLJDwB9W
+         D/9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=NgSKsAc7gDewGfKHy6geKvhpHPniCMotsC5LkPk1zn0=;
+        b=SGY4xNKfE7N2H7W2oytiEtwo9v6WoKvDDYqzaYzVuA1CkdbVW46MYDoBBnH7fPPTUS
+         BbT/bD+AzFQAstGxP70fhxSFDfRnKEq3AT2hTcwsY1cfMElJOVgxLvjv3glJBHK0j2ra
+         pxOf2prMnhTyqoBeFe4v99V1SUalvBtO+/AmlFGauvoBB0xT0aKQIvPkFnDxYs8uGimp
+         KOh0d09HPgitsNFM8QGKI2rQsMyo2syN1+kFl5WR6aKKJTNJHk62Vhs4U1UVIYN1WAv4
+         p15a0BvbjH3g79qtEP2LDDYan5tknm+8PSyXH2j3MgPeHWOZEEFQwqIli5te7/t5NYgA
+         t/UQ==
+X-Gm-Message-State: AOAM532AQNayd//3fpuV09OpEfIAMmiAAZQf2/KVoktUjOiVpyYHKIYV
+        fEt6jxsfgeWs0ZxokkOhrgChMet4ftoVdj29GU8=
+X-Google-Smtp-Source: ABdhPJz/KxYumBff+Ps2NMjARJAVelWVb8zgtbn7GCtt94t9vwPaZP143JNGtNL3A9DCI9hNeYvwM8ZneZmiyILJ+Jk=
+X-Received: by 2002:a05:620a:c52:b0:6a6:6b8f:eac2 with SMTP id
+ u18-20020a05620a0c5200b006a66b8feac2mr5771352qki.643.1654249204506; Fri, 03
+ Jun 2022 02:40:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220601104547.260949-1-amir73il@gmail.com> <20220601104547.260949-8-amir73il@gmail.com>
+ <20220602003804.GJ227878@dread.disaster.area> <CAOQ4uxg8Y_7mkf+ieWBAuspCDG+H5Ci2P7xMudxF49nV5M0czg@mail.gmail.com>
+ <20220602051504.GL227878@dread.disaster.area> <CAOQ4uxgzLaGHaUEuVNJ39On9Dt3xoSTpVWJGsc6t+=4v-AGHKg@mail.gmail.com>
+In-Reply-To: <CAOQ4uxgzLaGHaUEuVNJ39On9Dt3xoSTpVWJGsc6t+=4v-AGHKg@mail.gmail.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Fri, 3 Jun 2022 12:39:53 +0300
+Message-ID: <CAOQ4uxhxLRTUfyhSy9D6nsGdVANrUOgRM8msVPVmFmw0oaky+w@mail.gmail.com>
+Subject: Re: [PATCH 5.10 CANDIDATE 7/8] xfs: consider shutdown in bmapbt
+ cursor delete assert
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J . Wong" <djwong@kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        Tyler Hicks <code@tyhicks.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-After we corrupted an attr leaf block (under node block), getxattr
-might hit EFSCORRUPTED in xfs_attr_node_get when it does
-xfs_attr_node_hasname. A known bug cause xfs_attr_node_get won't do
-xfs_buf_trans release job, then a subsequent removexattr will hang.
+On Thu, Jun 2, 2022 at 8:55 AM Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> On Thu, Jun 2, 2022 at 8:15 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Thu, Jun 02, 2022 at 07:24:26AM +0300, Amir Goldstein wrote:
+> > > On Thu, Jun 2, 2022 at 3:38 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > >
+> > > > On Wed, Jun 01, 2022 at 01:45:46PM +0300, Amir Goldstein wrote:
+> > > > > From: Brian Foster <bfoster@redhat.com>
+> > > > >
+> > > > > commit 1cd738b13ae9b29e03d6149f0246c61f76e81fcf upstream.
+> > > > >
+> > > > > The assert in xfs_btree_del_cursor() checks that the bmapbt block
+> > > > > allocation field has been handled correctly before the cursor is
+> > > > > freed. This field is used for accurate calculation of indirect block
+> > > > > reservation requirements (for delayed allocations), for example.
+> > > > > generic/019 reproduces a scenario where this assert fails because
+> > > > > the filesystem has shutdown while in the middle of a bmbt record
+> > > > > insertion. This occurs after a bmbt block has been allocated via the
+> > > > > cursor but before the higher level bmap function (i.e.
+> > > > > xfs_bmap_add_extent_hole_real()) completes and resets the field.
+> > > > >
+> > > > > Update the assert to accommodate the transient state if the
+> > > > > filesystem has shutdown. While here, clean up the indentation and
+> > > > > comments in the function.
+> > > > >
+> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > > > > ---
+> > > > >  fs/xfs/libxfs/xfs_btree.c | 33 ++++++++++++---------------------
+> > > > >  1 file changed, 12 insertions(+), 21 deletions(-)
+> > > >
+> > > > https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?h=for-next&id=56486f307100e8fc66efa2ebd8a71941fa10bf6f
+> > > >
+> > >
+> > > Warm from the over :)
+> > >
+> > > I will need more time to verify that this new fix is not breaking LTS
+> > > but I don't think that it should be blocking taking the old 5.12 fix now.
+> > > Right?
+> >
+> > Rule #1: don't introduce new bugs into stable kernels.
+> >
+> > This commit has a known (and fixed) bug in it. If you are going to
+> > back port it to a stable kernel, then you need to also pull in the
+> > fix for that commit, too.
+>
+> Oh. I misunderstood.
+> I thought this wasn't a Fixes: situation.
+> I thought you pointed me to another related bug fix.
+>
 
-This case covers a1de97fe296c ("xfs: Fix the free logic of state in
-xfs_attr_node_hasname")
+Just to make sure we are all on the same page.
 
-Signed-off-by: Zorro Lang <zlang@kernel.org>
----
+I have applied both patches to my test tree:
+1. 1cd738b13ae9 xfs: consider shutdown in bmapbt cursor delete assert
+2. 56486f307100 xfs: assert in xfs_btree_del_cursor should take into
+account error
 
-Thanks the review from Darrick, V2 add/remove some comments, and give
-more information to that _fail line. There might be still some disputed
-places, likes the _try_scratch_mount fail return and the way to create
-and get/remove xattrs. Please Feel free to tell me if you feel something
-isn't good enough.
+Patch #2 looks pretty safe and it only affects builds with XFS_WARN/DEBUG,
+so I am not too concerned about a soaking period.
+I plan to send it along with patch #1 to stable after a few more test runs.
+
+If my understanding is correct, the ASSERT has been there since git epoc.
+The too strict ASSERT was relaxed two times by patch #1 and then by patch #2.
+
+Maybe I am missing something, but I do not see how applying patch #1
+introduces a bug, but anyway, I am going to send both patches together.
 
 Thanks,
-Zorro
-
- tests/xfs/999     | 80 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out |  2 ++
- 2 files changed, 82 insertions(+)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
-
-diff --git a/tests/xfs/999 b/tests/xfs/999
-new file mode 100755
-index 00000000..73577577
---- /dev/null
-+++ b/tests/xfs/999
-@@ -0,0 +1,80 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 999
-+#
-+# This's a regression test for:
-+#   a1de97fe296c ("xfs: Fix the free logic of state in xfs_attr_node_hasname")
-+#
-+# After we corrupted an attr leaf block (under node block), getxattr might hit
-+# EFSCORRUPTED in xfs_attr_node_get when it does xfs_attr_node_hasname. A bug
-+# cause xfs_attr_node_get won't do xfs_buf_trans release job, then a subsequent
-+# removexattr will hang.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick attr
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/attr
-+. ./common/populate
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_fixed_by_kernel_commit a1de97fe296c \
-+       "xfs: Fix the free logic of state in xfs_attr_node_hasname"
-+
-+_require_scratch_nocheck
-+# Only test with v5 xfs on-disk format
-+_require_scratch_xfs_crc
-+_require_attrs
-+_require_populate_commands
-+_require_xfs_db_blocktrash_z_command
-+
-+_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-+source $tmp.mkfs
-+_scratch_mount
-+
-+# Create more than $((dbsize / 32)) xattr entries to force the creation of a
-+# node block and two (or more) leaf blocks, which we need for this test.
-+nr_xattr="$((dbsize / 32))"
-+localfile="${SCRATCH_MNT}/attrfile"
-+touch $localfile
-+for ((i=0; i<nr_xattr; i++));do
-+	$SETFATTR_PROG -n user.x$(printf "%.09d" "$i") -v "aaaaaaaaaaaaaaaa" $localfile
-+done
-+inumber="$(stat -c '%i' $localfile)"
-+_scratch_unmount
-+
-+# Expect the ablock 0 is a node block, later ablocks(>=1) are leaf blocks, then corrupt
-+# the last leaf block. (Don't corrupt node block, or can't reproduce the bug)
-+magic=$(_scratch_xfs_get_metadata_field "hdr.info.hdr.magic" "inode $inumber" "ablock 0")
-+level=$(_scratch_xfs_get_metadata_field "hdr.level" "inode $inumber" "ablock 0")
-+count=$(_scratch_xfs_get_metadata_field "hdr.count" "inode $inumber" "ablock 0")
-+if [ "$magic" = "0x3ebe" -a "$level" = "1" ];then
-+	# Corrupt the last leaf block
-+	_scratch_xfs_db -x -c "inode ${inumber}" -c "ablock $count" -c "stack" \
-+		-c "blocktrash -x 32 -y $((dbsize*8)) -3 -z" >> $seqres.full
-+else
-+	_fail "The ablock 0 (magic=$magic, level=$level) isn't a root node block, maybe case issue"
-+fi
-+
-+# This's the real testing, expect removexattr won't hang or panic.
-+if _try_scratch_mount >> $seqres.full 2>&1; then
-+	for ((i=0; i<nr_xattr; i++));do
-+		$GETFATTR_PROG -n user.x$(printf "%.09d" "$i") $localfile >/dev/null 2>&1
-+		$SETFATTR_PROG -x user.x$(printf "%.09d" "$i") $localfile 2>/dev/null
-+	done
-+else
-+	# Due to we corrupt the xfs manually, so can't be sure if xfs can
-+	# detect this corruption and refuse the mount directly in one day.
-+	# If so, it's not a testing fail, so "notrun" directly to mark this
-+	# test isn't really done
-+	_notrun "XFS refused to mount with this xattr corrutpion, test skipped"
-+fi
-+
-+echo "Silence is golden"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-new file mode 100644
-index 00000000..3b276ca8
---- /dev/null
-+++ b/tests/xfs/999.out
-@@ -0,0 +1,2 @@
-+QA output created by 999
-+Silence is golden
--- 
-2.31.1
-
+Amir.
