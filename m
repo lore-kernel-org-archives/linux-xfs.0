@@ -2,52 +2,53 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57AC8C43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 05:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D145CCA47F
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 05:38:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241070AbiFCFiL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jun 2022 01:38:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55358 "EHLO
+        id S241032AbiFCFiO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jun 2022 01:38:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241018AbiFCFiD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 01:38:03 -0400
+        with ESMTP id S241003AbiFCFh7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 01:37:59 -0400
 Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7CD0539148;
-        Thu,  2 Jun 2022 22:37:57 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3AyjHkN6tvtxIC77XxE+YU5Vict+fnVKtfMUV32f8?=
- =?us-ascii?q?akzHdYEJGY0x3yWQYXWiBOPyLYGDzc49wO4rn9EwP75OEz983T1dsqyFgHilAw?=
- =?us-ascii?q?SbnLY7Hdx+vZUt+DSFioHpPtpxYMp+ZRCwNZie0SiyFb/6x/RGQ6YnSHuCmULS?=
- =?us-ascii?q?cY3goLeNZYHxJZSxLyrdRbrFA0YDR7zOl4bsekuWHULOX82cc3lE8t8pvnChSU?=
- =?us-ascii?q?MHa41v0iLCRicdj5zcyn1FNZH4WyDrYw3HQGuG4FcbiLwrPIS3Qw4/Xw/stIov?=
- =?us-ascii?q?NfrfTeUtMTKPQPBSVlzxdXK3Kbhpq/3R0i/hkcqFHLxo/ZzahxridzP1XqJW2U?=
- =?us-ascii?q?hZvMKvXhMwTThtZDzpje6ZB/dcrJFDm65DNnxOWKiCEL/JGSRte0Zcj0up+H2B?=
- =?us-ascii?q?C3fICLzUKdBqCm6S9x7fTYu1tgMEiJc7rMasfp3h/wDCfBvEjKbjDSKXi5NlWx?=
- =?us-ascii?q?j48i8lCW/HEaKIxdjtraAXoYhtBIF4bBZsy2uCyiRHXfzRe7lDTuqsz52nayRd?=
- =?us-ascii?q?Z0b7xPd6TcduPLe1ZnFmfoG3u/GnjBBwectuFxlKt9nOqm/+KmCbTW5wbH77+8?=
- =?us-ascii?q?eRl6HWaxXQWIBkXU0ar5Pe+l0iyUs5eLEpS/TAhxYA06kCqS9zVWxyjvGXCuh8?=
- =?us-ascii?q?aRsoWH+AkgCmLw63F6kCZAXIFQSNKaN0OssI9Azct0zehndrvCHpksKC9TmiU/?=
- =?us-ascii?q?bOZ6zi1PEA9N2AFYSMbXA0t+MT4rcc/g3rnStdlDb7wgMb5FC/9xxiUoyUkwbY?=
- =?us-ascii?q?el8gG0+O851+vqzatoIXZCw04/APaWkq74Q5jIo2ofYql7R7c9/koBIKYSESR+?=
- =?us-ascii?q?WgKgOCA4+0US5KAjiqARKMKBr7Bz+iEKjr0k1NpHodn8zWr5m7leppfpix9THq?=
- =?us-ascii?q?FmO5slSTBOReV4F0OosQIeibCUEO+WKrpY+xC8EQqPY6NuijoU+dz?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3ALGg+1a1PUa5cDnoMW94PpgqjBFYkLtp133Aq?=
- =?us-ascii?q?2lEZdPRUGvb3qynIpoV86faUskdpZJhOo7C90cW7LU80sKQFhLX5Xo3SOzUO2l?=
- =?us-ascii?q?HYT72KhLGKq1aLdhEWtNQtsZuIGJIeNDSfNzdHZL7BkWuF+sgbsaS62ZHtleHD?=
- =?us-ascii?q?1G1sUA0vT6lh6j1yAgGdHlYefng8ObMJUIqb+tFcpyetPVAebsGADHEDWOTZ4/?=
- =?us-ascii?q?LRkpaOW299OzcXrBmJkSiz6KP3VzyR3hIlWTtJxrs4tUjp+jaJnpmejw=3D=3D?=
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F2F2336E06;
+        Thu,  2 Jun 2022 22:37:54 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3A/3kW2a4n6Lup+U4CuxQZcwxRtKbGchMFZxGqfqr?=
+ =?us-ascii?q?LsXjdYENShT1TzmJJXm7TaPvYM2WjLY0gYdm0oUMA78XSm9I3TFM5pCpnJ55og?=
+ =?us-ascii?q?ZCbXIzGdC8cHM8zwvXrFRsht4NHAjX5BJhcokT0+1H9YtANkVEmjfvSHuCkUba?=
+ =?us-ascii?q?dUsxMbVQMpBkJ2EsLd9ER0tYAbeiRW2thiPuqyyHtEAbNNw1cbgr435m+RCZH5?=
+ =?us-ascii?q?5wejt+3UmsWPpintHeG/5Uc4Ql2yauZdxMUSaEMdgK2qnqq8V23wo/Z109F5tK?=
+ =?us-ascii?q?NmbC9fFAIQ6LJIE6FjX8+t6qK20AE/3JtlP1gcqd0hUR/0l1lm/hr1dxLro32R?=
+ =?us-ascii?q?wEyIoXCheYcTwJFVSp5OMWq/ZeeeyTh4ZLDlhWun3zEhq8G4FsNFYER5Od7KW9?=
+ =?us-ascii?q?U8vkfMjoMclaIgOfe6La6TOxtj8MjIeHrIYoAt3AmxjbcZd4mSpDrQqPE/9ZU0?=
+ =?us-ascii?q?T48wMdUEp72eMsdbStHbRLOeRRDN14bTpUkk4+AinD5NT8et1ORoas+5nP7zQp?=
+ =?us-ascii?q?t3byrO93QEvSGR9pSmEmwpW/c+Wn9RBYAO7S3zTuD72Lpg+rnnj3yU4FUE6e3n?=
+ =?us-ascii?q?tZjg0WW7mgSDgAGEFW8vP+1g1K/XNQZLFYbkgI0rLQ/70yrZt38WQCo5n+Ou1g?=
+ =?us-ascii?q?XXN84O+sk5ACIz4LQ4h2FHS4ATzhceJoqudFebTwh1neNhM+vCTEHmLucTmOUs?=
+ =?us-ascii?q?LeTtzK9JCMVLEcEaCRCRgwAi/HhqYc+yBnPU/5kCqe+itCzEjb1qxiQoy86i6o?=
+ =?us-ascii?q?Ci+YQyr62u1zK6xqop57UXks7/QnaQG+hxh12aZTjZIGy71Xfq/FaI+6xSliHo?=
+ =?us-ascii?q?WhBmMWE6u0KJY+CmTbLQ+gXGrytofGfP1X0hV9pAolk5zq202CscJoW4zxkIkp?=
+ =?us-ascii?q?tdMEedlfBfk7JvitD6ZlSIj2ubKlqc8S2Ects0KuIKDhPfpg4dfIXOt4oKlDBp?=
+ =?us-ascii?q?3ooOCatM6nWuBBEuckC1V2zLK5A1UonNJk=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AojWqpKxUFZ0Ub+hHgdSOKrPwyL1zdoMgy1kn?=
+ =?us-ascii?q?xilNoRw8SKKlfqeV7ZImPH7P+U8ssR4b+exoVJPtfZqYz+8R3WBzB8bEYOCFgh?=
+ =?us-ascii?q?rKEGgK1+KLqFeMJ8S9zJ846U4KSclD4bPLYmSS9fyKgjVQDexQveWvweS5g/vE?=
+ =?us-ascii?q?1XdxQUVPY6Fk1Q1wDQGWCSRNNXJ7LKt8BJyB/dBGujblXXwWa/6wDn4DU/OGiM?=
+ =?us-ascii?q?bMkPvdEGQ7Li9i+A+Tlimp9bK/NxCZ2y0VWzRJzaxn0UWtqX2A2pme?=
 X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="124686813"
+   d="scan'208";a="124686810"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 03 Jun 2022 13:37:57 +0800
+  by heian.cn.fujitsu.com with ESMTP; 03 Jun 2022 13:37:51 +0800
 Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id 254EA4D17198;
-        Fri,  3 Jun 2022 13:37:52 +0800 (CST)
+        by cn.fujitsu.com (Postfix) with ESMTP id BDB044D1719A;
+        Fri,  3 Jun 2022 13:37:47 +0800 (CST)
 Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
  G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 3 Jun 2022 13:37:51 +0800
+ (TLS) id 15.0.1497.23; Fri, 3 Jun 2022 13:37:46 +0800
 Received: from irides.mr.mr (10.167.225.141) by
  G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 3 Jun 2022 13:37:52 +0800
+ id 15.0.1497.23 via Frontend Transport; Fri, 3 Jun 2022 13:37:47 +0800
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
@@ -57,160 +58,89 @@ CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
         <akpm@linux-foundation.org>, <jane.chu@oracle.com>,
         <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
         <willy@infradead.org>, <naoya.horiguchi@nec.com>,
-        <linmiaohe@huawei.com>
-Subject: [PATCH v2 13/14] xfs: support CoW in fsdax mode
-Date:   Fri, 3 Jun 2022 13:37:37 +0800
-Message-ID: <20220603053738.1218681-14-ruansy.fnst@fujitsu.com>
+        <linmiaohe@huawei.com>, Christoph Hellwig <hch@lst.de>,
+        Ritesh Harjani <riteshh@linux.ibm.com>
+Subject: [PATCH v2 08/14] fsdax: Output address in dax_iomap_pfn() and rename it
+Date:   Fri, 3 Jun 2022 13:37:32 +0800
+Message-ID: <20220603053738.1218681-9-ruansy.fnst@fujitsu.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
 References: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 254EA4D17198.A0CE1
+X-yoursite-MailScanner-ID: BDB044D1719A.A29A6
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In fsdax mode, WRITE and ZERO on a shared extent need CoW performed.
-After that, new allocated extents needs to be remapped to the file.
-So, add a CoW identification in ->iomap_begin(), and implement
-->iomap_end() to do the remapping work.
+Add address output in dax_iomap_pfn() in order to perform a memcpy() in
+CoW case.  Since this function both output address and pfn, rename it to
+dax_iomap_direct_access().
 
 Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_file.c  | 33 ++++++++++++++++++++++++++++-----
- fs/xfs/xfs_iomap.c | 30 +++++++++++++++++++++++++++++-
- fs/xfs/xfs_iomap.h |  1 +
- 3 files changed, 58 insertions(+), 6 deletions(-)
+ fs/dax.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index a60632ecc3f0..07ec4ada5163 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -25,6 +25,7 @@
- #include "xfs_iomap.h"
- #include "xfs_reflink.h"
- 
-+#include <linux/dax.h>
- #include <linux/falloc.h>
- #include <linux/backing-dev.h>
- #include <linux/mman.h>
-@@ -669,7 +670,7 @@ xfs_file_dax_write(
- 	pos = iocb->ki_pos;
- 
- 	trace_xfs_file_dax_write(iocb, from);
--	ret = dax_iomap_rw(iocb, from, &xfs_direct_write_iomap_ops);
-+	ret = dax_iomap_rw(iocb, from, &xfs_dax_write_iomap_ops);
- 	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
- 		i_size_write(inode, iocb->ki_pos);
- 		error = xfs_setfilesize(ip, pos, ret);
-@@ -1254,6 +1255,31 @@ xfs_file_llseek(
- 	return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+diff --git a/fs/dax.c b/fs/dax.c
+index b59b864017ad..ab659c9f142a 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1026,8 +1026,8 @@ int dax_writeback_mapping_range(struct address_space *mapping,
  }
+ EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
  
-+#ifdef CONFIG_FS_DAX
-+int
-+xfs_dax_fault(
-+	struct vm_fault		*vmf,
-+	enum page_entry_size	pe_size,
-+	bool			write_fault,
-+	pfn_t			*pfn)
-+{
-+	return dax_iomap_fault(vmf, pe_size, pfn, NULL,
-+			(write_fault && !vmf->cow_page) ?
-+				&xfs_dax_write_iomap_ops :
-+				&xfs_read_iomap_ops);
-+}
-+#else
-+int
-+xfs_dax_fault(
-+	struct vm_fault		*vmf,
-+	enum page_entry_size	pe_size,
-+	bool			write_fault,
-+	pfn_t			*pfn)
-+{
-+	return 0;
-+}
-+#endif
-+
- /*
-  * Locking for serialisation of IO during page faults. This results in a lock
-  * ordering of:
-@@ -1285,10 +1311,7 @@ __xfs_filemap_fault(
- 		pfn_t pfn;
+-static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
+-			 pfn_t *pfnp)
++static int dax_iomap_direct_access(const struct iomap *iomap, loff_t pos,
++		size_t size, void **kaddr, pfn_t *pfnp)
+ {
+ 	pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
+ 	int id, rc;
+@@ -1035,11 +1035,13 @@ static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
  
- 		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
--				(write_fault && !vmf->cow_page) ?
--				 &xfs_direct_write_iomap_ops :
--				 &xfs_read_iomap_ops);
-+		ret = xfs_dax_fault(vmf, pe_size, write_fault, &pfn);
- 		if (ret & VM_FAULT_NEEDDSYNC)
- 			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
- 		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 5a393259a3a3..4c07f5e718fb 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -773,7 +773,8 @@ xfs_direct_write_iomap_begin(
+ 	id = dax_read_lock();
+ 	length = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(size),
+-				   DAX_ACCESS, NULL, pfnp);
++				   DAX_ACCESS, kaddr, pfnp);
+ 	if (length < 0) {
+ 		rc = length;
+ 		goto out;
+ 	}
++	if (!pfnp)
++		goto out_check_addr;
+ 	rc = -EINVAL;
+ 	if (PFN_PHYS(length) < size)
+ 		goto out;
+@@ -1049,6 +1051,12 @@ static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
+ 	if (length > 1 && !pfn_t_devmap(*pfnp))
+ 		goto out;
+ 	rc = 0;
++
++out_check_addr:
++	if (!kaddr)
++		goto out;
++	if (!*kaddr)
++		rc = -EFAULT;
+ out:
+ 	dax_read_unlock(id);
+ 	return rc;
+@@ -1456,7 +1464,7 @@ static vm_fault_t dax_fault_iter(struct vm_fault *vmf,
+ 		return pmd ? VM_FAULT_FALLBACK : VM_FAULT_SIGBUS;
+ 	}
  
- 		/* may drop and re-acquire the ilock */
- 		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
--				&lockmode, flags & IOMAP_DIRECT);
-+				&lockmode,
-+				(flags & IOMAP_DIRECT) || IS_DAX(inode));
- 		if (error)
- 			goto out_unlock;
- 		if (shared)
-@@ -867,6 +868,33 @@ const struct iomap_ops xfs_direct_write_iomap_ops = {
- 	.iomap_begin		= xfs_direct_write_iomap_begin,
- };
+-	err = dax_iomap_pfn(&iter->iomap, pos, size, &pfn);
++	err = dax_iomap_direct_access(&iter->iomap, pos, size, NULL, &pfn);
+ 	if (err)
+ 		return pmd ? VM_FAULT_FALLBACK : dax_fault_return(err);
  
-+static int
-+xfs_dax_write_iomap_end(
-+	struct inode		*inode,
-+	loff_t			pos,
-+	loff_t			length,
-+	ssize_t			written,
-+	unsigned		flags,
-+	struct iomap		*iomap)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+
-+	if (!xfs_is_cow_inode(ip))
-+		return 0;
-+
-+	if (!written) {
-+		xfs_reflink_cancel_cow_range(ip, pos, length, true);
-+		return 0;
-+	}
-+
-+	return xfs_reflink_end_cow(ip, pos, written);
-+}
-+
-+const struct iomap_ops xfs_dax_write_iomap_ops = {
-+	.iomap_begin	= xfs_direct_write_iomap_begin,
-+	.iomap_end	= xfs_dax_write_iomap_end,
-+};
-+
- static int
- xfs_buffered_write_iomap_begin(
- 	struct inode		*inode,
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index e88dc162c785..c782e8c0479c 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -51,5 +51,6 @@ extern const struct iomap_ops xfs_direct_write_iomap_ops;
- extern const struct iomap_ops xfs_read_iomap_ops;
- extern const struct iomap_ops xfs_seek_iomap_ops;
- extern const struct iomap_ops xfs_xattr_iomap_ops;
-+extern const struct iomap_ops xfs_dax_write_iomap_ops;
- 
- #endif /* __XFS_IOMAP_H__*/
 -- 
 2.36.1
 
