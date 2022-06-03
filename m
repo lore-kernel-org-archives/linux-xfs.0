@@ -2,52 +2,52 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF5DCCA481
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 05:37:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACBFAC43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jun 2022 05:37:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240902AbiFCFhw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jun 2022 01:37:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54588 "EHLO
+        id S240927AbiFCFhx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jun 2022 01:37:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240805AbiFCFhv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 01:37:51 -0400
+        with ESMTP id S240872AbiFCFhw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 01:37:52 -0400
 Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A4E0C2F019;
-        Thu,  2 Jun 2022 22:37:48 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3Arn50ua8DEZ9sGKuWVkEZDrUDAX+TJUtcMsCJ2f8?=
- =?us-ascii?q?bfWQNrUor0TdWzWcdDTiCP/eOZTDwfNF3bo/i80IPucTRmNRqQVdlrnsFo1Bi8?=
- =?us-ascii?q?5ScXYvDRqvT04J+FuWaFQQ/qZx2huDodKjYdVeB4Ef9WlTdhSMkj/vQHOKlULe?=
- =?us-ascii?q?s1h1ZHmeIdg9w0HqPpMZp2uaEsfDha++8kYuaT//3YTdJ6BYoWo4g0J9vnTs01?=
- =?us-ascii?q?BjEVJz0iXRlDRxDlAe2e3D4l/vzL4npR5fzatE88uJX24/+IL+FEmPxp3/BC/u?=
- =?us-ascii?q?ulPD1b08LXqXPewOJjxK6WYD72l4b+HN0if19aZLwam8O49mNt8pswdNWpNq+T?=
- =?us-ascii?q?xw1FqPRmuUBSAQeGCZ7VUFD0OadfSbv75PCniUqdFOpmZ2CFnoeMYQG++pfD3t?=
- =?us-ascii?q?J8PsCIjERKBuEgoqexLO9T+hlgcQuBMn2NZwSuzdryjSxJfYtQbjCRavQ7NNV1?=
- =?us-ascii?q?Tt2gdpBdd7BZs4deBJuahraahFCM1tRD4gx9M+kj3+5cXtHqVaRpKMy+EDSyhB?=
- =?us-ascii?q?81P7mN9+9UtCIWsJTkW6bq3jA8mC/BQsVXPSbyDyY4jepg8fMgyrwW8QVDrLQ3?=
- =?us-ascii?q?vdpmFi7wm0VFQ1TW1ymp/Wwlk+5XZRYMUN80iwwoak38WSvT8LhRFu8oXiZrlg?=
- =?us-ascii?q?QVsQ4O+0x6CmJ0baS7wvxLm4NSS9ILtwhrs45WDcq13ePktivDjtq2JWXQHSQs?=
- =?us-ascii?q?LyUsBu1IyEeKWJEbigBJSMf7N7nrJ4iiDrUU81uVqK45vXxGDft03WEtyQzmbg?=
- =?us-ascii?q?XpdAE2r/9/l3dhT+o4J/TQWYd4gTRQ3Lg7Q5jYoOhT5Kn5EKd7vtaKoudCF6bs?=
- =?us-ascii?q?xAsn8mY8fBLHZ+WvDKCTf9LH7yz4fuBdjrGjjZHAZg78By/9niiY8ZU4TdjNAF?=
- =?us-ascii?q?uKMlCZDyBXaN5kWu9/7cKZD3zM/AxONn3VqwXIWHbPYyNfpjpghBmO/CdrDO6w?=
- =?us-ascii?q?Rw=3D?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AgO6QWqocm2G5sIxIpnsgamoaV5oXeYIsimQD?=
- =?us-ascii?q?101hICG9E/bo8/xG+c536faaslgssQ4b8+xoVJPgfZq+z+8R3WByB8bAYOCOgg?=
- =?us-ascii?q?LBQ72KhrGSoQEIdRefysdtkY9kc4VbTOb7FEVGi6/BizWQIpINx8am/cmT6dvj?=
- =?us-ascii?q?8w=3D=3D?=
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A99E836E01;
+        Thu,  2 Jun 2022 22:37:50 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3AoybKC6IRENG85+JmFE+RLJQlxSXFcZb7ZxGrkP8?=
+ =?us-ascii?q?bfHCwhT4mgzMFzjcbDG/SPPqMZTCgfNl+Pdi3oR4F7Z7QzINqS1BcGVNFFSwT8?=
+ =?us-ascii?q?ZWfbTi6wuYcBwvLd4ubChsPA/w2MrEsF+hpCC+MzvuRGuK59yMkj/nRHuOU5NP?=
+ =?us-ascii?q?sYUideyc1EU/Ntjozw4bVsqYw6TSIK1vlVeHa+qUzC3f5s9JACV/43orYwP9ZU?=
+ =?us-ascii?q?FsejxtD1rA2TagjUFYzDBD5BrpHTU26ByOQroW5goeHq+j/ILGRpgs1/j8mDJW?=
+ =?us-ascii?q?rj7T6blYXBLXVOGBiiFIPA+773EcE/Xd0j87XN9JFAatToy+UltZq2ZNDs4esY?=
+ =?us-ascii?q?Qk0PKzQg/lbWB5de817FfQcpOGXfyjn66R/yGWDKRMA2c5GAEgoPIEw9PxwBGZ?=
+ =?us-ascii?q?U//0EbjsKa3irg+OwxbOyTelhrsQ+JdbmPcUUvXQI5THSDd4nR57ZSqnH7NMe2?=
+ =?us-ascii?q?y0/7uhRHPLaduIYbzR1ZRjNahEJPU0YYLoyleHuhD/gcjlcqVuQvoI25XTeyEp?=
+ =?us-ascii?q?6172FGNbXZduMSu1Wk1yeq2aA+H72ajkeNdqC2X+A91qvmObEnmX8Qo16PLS77?=
+ =?us-ascii?q?vtChFyV23xWBhoLU1eyvfi+jAi5Qd03A0oK9isrqIA29Ve3VZ/5XhulsDiIswB?=
+ =?us-ascii?q?0c9xZFPwzrgGK0Kvb/g2ZB0ACQzUHY9sj3Oc0TDonkFSJgvvuHzVktLDTQnWYn?=
+ =?us-ascii?q?p+OojS2NTcEK0cZeDQJCwcIi/HnoYcunlfBVdpuDqOxpsP6FCu2wD2QqiU6wbI?=
+ =?us-ascii?q?JgqYj06S94ECCgD+2oJXNZhA66x+RXW+/6A59Iom/aOSA7Vnd8OYFPIiCZkeOs?=
+ =?us-ascii?q?WJCmMWE6u0KS5aXm0SlXuQXG5m76vCELnvYgFhyD98m7Tvr5n3LQGz6yFmSP28?=
+ =?us-ascii?q?waoBdJ2CvOxSV5GtsCFZoFCPCRcdKj0iZV6zGFZTdKOk=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AV2RlyakWU/iGSUXqst/NsziZbFLpDfLE3DAb?=
+ =?us-ascii?q?v31ZSRFFG/Fxl6iV8sjzsiWE7Ar5OUtQ/uxoV5PhfZqxz/JICOoqTNKftWvdyQ?=
+ =?us-ascii?q?iVxehZhOOIqVDd8kbFl9K1u50OT0EHMqyTMbFlt7eA3CCIV8Yn3MKc8L2lwcPX?=
+ =?us-ascii?q?z3JWRwlsbK16hj0JczqzIwlnQhVcH5olGN657spDnTCpfnMadYCVHX8ANtKz3+?=
+ =?us-ascii?q?Hjpdb3ZwIcHR475E2rhTOs0rTzFB+VxVM/flp0sNEfzVQ=3D?=
 X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="124686799"
+   d="scan'208";a="124686802"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 03 Jun 2022 13:37:44 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 90EA54D1719A;
-        Fri,  3 Jun 2022 13:37:43 +0800 (CST)
+  by heian.cn.fujitsu.com with ESMTP; 03 Jun 2022 13:37:45 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id ECBEC4D17189;
+        Fri,  3 Jun 2022 13:37:40 +0800 (CST)
 Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 3 Jun 2022 13:37:43 +0800
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 3 Jun 2022 13:37:41 +0800
 Received: from irides.mr.mr (10.167.225.141) by
  G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 3 Jun 2022 13:37:43 +0800
+ id 15.0.1497.23 via Frontend Transport; Fri, 3 Jun 2022 13:37:40 +0800
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
@@ -57,133 +57,78 @@ CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
         <akpm@linux-foundation.org>, <jane.chu@oracle.com>,
         <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
         <willy@infradead.org>, <naoya.horiguchi@nec.com>,
-        <linmiaohe@huawei.com>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 03/14] pagemap,pmem: Introduce ->memory_failure()
-Date:   Fri, 3 Jun 2022 13:37:27 +0800
-Message-ID: <20220603053738.1218681-4-ruansy.fnst@fujitsu.com>
+        <linmiaohe@huawei.com>
+Subject: [PATCHSETS v2]  v14 fsdax-rmap + v11 fsdax-reflink
+Date:   Fri, 3 Jun 2022 13:37:24 +0800
+Message-ID: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
 X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
-References: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 90EA54D1719A.A17CB
+X-yoursite-MailScanner-ID: ECBEC4D17189.A392F
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When memory-failure occurs, we call this function which is implemented
-by each kind of devices.  For the fsdax case, pmem device driver
-implements it.  Pmem device driver will find out the filesystem in which
-the corrupted page located in.
+ Changes since v1[1]:
+  1. Rebased to mm-unstable, solved many conflicts
 
-With dax_holder notify support, we are able to notify the memory failure
-from pmem driver to upper layers.  If there is something not support in
-the notify routine, memory_failure will fall back to the generic hanlder.
+[1] https://lore.kernel.org/linux-xfs/20220508143620.1775214-1-ruansy.fnst@fujitsu.com/
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Naoya Horiguchi <naoya.horiguchi@nec.com>
----
- drivers/nvdimm/pmem.c    | 17 +++++++++++++++++
- include/linux/memremap.h | 12 ++++++++++++
- mm/memory-failure.c      | 14 ++++++++++++++
- 3 files changed, 43 insertions(+)
 
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 629d10fcf53b..107c9cb3d57d 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -453,6 +453,21 @@ static void pmem_release_disk(void *__pmem)
- 	blk_cleanup_disk(pmem->disk);
- }
- 
-+static int pmem_pagemap_memory_failure(struct dev_pagemap *pgmap,
-+		unsigned long pfn, unsigned long nr_pages, int mf_flags)
-+{
-+	struct pmem_device *pmem =
-+			container_of(pgmap, struct pmem_device, pgmap);
-+	u64 offset = PFN_PHYS(pfn) - pmem->phys_addr - pmem->data_offset;
-+	u64 len = nr_pages << PAGE_SHIFT;
-+
-+	return dax_holder_notify_failure(pmem->dax_dev, offset, len, mf_flags);
-+}
-+
-+static const struct dev_pagemap_ops fsdax_pagemap_ops = {
-+	.memory_failure		= pmem_pagemap_memory_failure,
-+};
-+
- static int pmem_attach_disk(struct device *dev,
- 		struct nd_namespace_common *ndns)
- {
-@@ -514,6 +529,7 @@ static int pmem_attach_disk(struct device *dev,
- 	pmem->pfn_flags = PFN_DEV;
- 	if (is_nd_pfn(dev)) {
- 		pmem->pgmap.type = MEMORY_DEVICE_FS_DAX;
-+		pmem->pgmap.ops = &fsdax_pagemap_ops;
- 		addr = devm_memremap_pages(dev, &pmem->pgmap);
- 		pfn_sb = nd_pfn->pfn_sb;
- 		pmem->data_offset = le64_to_cpu(pfn_sb->dataoff);
-@@ -527,6 +543,7 @@ static int pmem_attach_disk(struct device *dev,
- 		pmem->pgmap.range.end = res->end;
- 		pmem->pgmap.nr_range = 1;
- 		pmem->pgmap.type = MEMORY_DEVICE_FS_DAX;
-+		pmem->pgmap.ops = &fsdax_pagemap_ops;
- 		addr = devm_memremap_pages(dev, &pmem->pgmap);
- 		pmem->pfn_flags |= PFN_MAP;
- 		bb_range = pmem->pgmap.range;
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 9f752ebed613..334ce79a3b91 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -87,6 +87,18 @@ struct dev_pagemap_ops {
- 	 * the page back to a CPU accessible page.
- 	 */
- 	vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
-+
-+	/*
-+	 * Handle the memory failure happens on a range of pfns.  Notify the
-+	 * processes who are using these pfns, and try to recover the data on
-+	 * them if necessary.  The mf_flags is finally passed to the recover
-+	 * function through the whole notify routine.
-+	 *
-+	 * When this is not implemented, or it returns -EOPNOTSUPP, the caller
-+	 * will fall back to a common handler called mf_generic_kill_procs().
-+	 */
-+	int (*memory_failure)(struct dev_pagemap *pgmap, unsigned long pfn,
-+			      unsigned long nr_pages, int mf_flags);
- };
- 
- #define PGMAP_ALTMAP_VALID	(1 << 0)
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index b39424da7625..a9d93c30a1e4 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -1737,6 +1737,20 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
- 	if (!pgmap_pfn_valid(pgmap, pfn))
- 		goto out;
- 
-+	/*
-+	 * Call driver's implementation to handle the memory failure, otherwise
-+	 * fall back to generic handler.
-+	 */
-+	if (pgmap->ops->memory_failure) {
-+		rc = pgmap->ops->memory_failure(pgmap, pfn, 1, flags);
-+		/*
-+		 * Fall back to generic handler too if operation is not
-+		 * supported inside the driver/device/filesystem.
-+		 */
-+		if (rc != -EOPNOTSUPP)
-+			goto out;
-+	}
-+
- 	rc = mf_generic_kill_procs(pfn, flags, pgmap);
- out:
- 	/* drop pgmap ref acquired in caller */
+This is an *updated* combination of two patchsets:
+ 1.fsdax-rmap: https://lore.kernel.org/linux-xfs/20220419045045.1664996-1-ruansy.fnst@fujitsu.com/
+ 2.fsdax-reflink: https://lore.kernel.org/linux-xfs/20210928062311.4012070-1-ruansy.fnst@fujitsu.com/
+
+
+==
+Shiyang Ruan (14):
+  dax: Introduce holder for dax_device
+  mm: factor helpers for memory_failure_dev_pagemap
+  pagemap,pmem: Introduce ->memory_failure()
+  fsdax: Introduce dax_lock_mapping_entry()
+  mm: Introduce mf_dax_kill_procs() for fsdax case
+  xfs: Implement ->notify_failure() for XFS
+  fsdax: set a CoW flag when associate reflink mappings
+  fsdax: Output address in dax_iomap_pfn() and rename it
+  fsdax: Introduce dax_iomap_cow_copy()
+  fsdax: Replace mmap entry in case of CoW
+  fsdax: Add dax_iomap_cow_copy() for dax zero
+  fsdax: Dedup file range to use a compare function
+  xfs: support CoW in fsdax mode
+  xfs: Add dax dedupe support
+
+ drivers/dax/super.c         |  67 +++++-
+ drivers/md/dm.c             |   2 +-
+ drivers/nvdimm/pmem.c       |  17 ++
+ fs/dax.c                    | 399 ++++++++++++++++++++++++++++++------
+ fs/erofs/super.c            |  10 +-
+ fs/ext2/super.c             |   7 +-
+ fs/ext4/super.c             |   9 +-
+ fs/remap_range.c            |  31 ++-
+ fs/xfs/Makefile             |   5 +
+ fs/xfs/xfs_buf.c            |  10 +-
+ fs/xfs/xfs_file.c           |  35 +++-
+ fs/xfs/xfs_fsops.c          |   3 +
+ fs/xfs/xfs_inode.c          |  69 ++++++-
+ fs/xfs/xfs_inode.h          |   1 +
+ fs/xfs/xfs_iomap.c          |  30 ++-
+ fs/xfs/xfs_iomap.h          |   1 +
+ fs/xfs/xfs_mount.h          |   1 +
+ fs/xfs/xfs_notify_failure.c | 220 ++++++++++++++++++++
+ fs/xfs/xfs_reflink.c        |  12 +-
+ fs/xfs/xfs_super.h          |   1 +
+ include/linux/dax.h         |  56 ++++-
+ include/linux/fs.h          |  12 +-
+ include/linux/memremap.h    |  12 ++
+ include/linux/mm.h          |   2 +
+ include/linux/page-flags.h  |   6 +
+ mm/memory-failure.c         | 265 +++++++++++++++++-------
+ 26 files changed, 1098 insertions(+), 185 deletions(-)
+ create mode 100644 fs/xfs/xfs_notify_failure.c
+
 -- 
 2.36.1
 
