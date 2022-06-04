@@ -2,179 +2,132 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB442C43334
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jun 2022 00:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C964CCA473
+	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jun 2022 00:34:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231880AbiFDAcE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jun 2022 20:32:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58798 "EHLO
+        id S237245AbiFDAeJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jun 2022 20:34:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231737AbiFDAcD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 20:32:03 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADB7E55B4;
-        Fri,  3 Jun 2022 17:32:01 -0700 (PDT)
+        with ESMTP id S231737AbiFDAeI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jun 2022 20:34:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF8D41EAEC
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Jun 2022 17:34:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5B94CB8251F;
-        Sat,  4 Jun 2022 00:32:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2704C385A9;
-        Sat,  4 Jun 2022 00:31:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8B73960F2A
+        for <linux-xfs@vger.kernel.org>; Sat,  4 Jun 2022 00:34:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1448C385A9;
+        Sat,  4 Jun 2022 00:34:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654302719;
-        bh=pP2VesXp9SxAzgPXqkoMz3hfXLeHGRzttI9hwLfFpSc=;
+        s=k20201202; t=1654302846;
+        bh=fyPHOuskJULXMe/LaUwbRWtB0ZfJVc8ik6ierAlzUaQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tYzzsGR9TnxAqMnGdwZKKe6FsJqnXTcr6D0CuacZMQI+P97l0zaIkDHokZt+Ri2F9
-         dOsoIIFCdU77OxjXAnUUuHtQ/QTduOBF9dto5TeEogTjGug6f7Y6jBiMnKNYkU83oM
-         mjXcGiLhEqipeQOgHhZr34+QstkKhTGb4r+tCOWI3R5lm9sSt5zAQULymfCWReum2i
-         nL1aJfB0GHj8sjQi1AhG7WjglZv+P+Ha1UtHeh4pZ6aygYCO1IrLZe7nsF1TAyl9c5
-         ulkdIXxkxtnHX/lk/04xF0MLp4aPfdrOrmtAn0GpP6q/BfMTtyU+UKiozFaw7v0V/D
-         UWZJLlrhslIIw==
-Date:   Fri, 3 Jun 2022 17:31:58 -0700
+        b=XJRbF7N7fi3zMve3fcNjW8PoUTThy5N6DnvlTp1G7lyWcY9fK6MR8BneifTPxeLh1
+         RcUfzvZAy0cFqkZjT8b2Gswp5wmzL+sfDbRKd2feR5T7UyAZB/+8LyD3p/Tt2x6hxE
+         ACWdwv5UhnwpJDFMQPYW2QazrOs/+PQubya0F/EBvMAXiV/Pyg0a51YiXR6QMH4j+c
+         lPM1b5prdHv5qe8ClMSGxRuFpGGUry+8zVTwi7snz094BrwMLW8SCVr7cHEsCn3sJ0
+         DEL5KTxmSz6b56jNjdZ70+kOY3TDYLO3okiBQzIrBN2QshWINBI3nMUtRTborEVaaa
+         /eQVjVgBwh7VA==
+Date:   Fri, 3 Jun 2022 17:34:05 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: corrupted xattr should not block removexattr
-Message-ID: <Ypqn/qqIY3TsSdlk@magnolia>
-References: <20220603082457.2449343-1-zlang@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Lukas Herbolt <lukas@herbolt.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RFC v2] xfs: Print XFS UUID on mount and umount events.
+Message-ID: <YpqofakhfvHIBWK/@magnolia>
+References: <20210519152247.1853357-1-lukas@herbolt.com>
+ <781bf2c0-5983-954e-49a5-570e365be515@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220603082457.2449343-1-zlang@kernel.org>
+In-Reply-To: <781bf2c0-5983-954e-49a5-570e365be515@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 03, 2022 at 04:24:57PM +0800, Zorro Lang wrote:
-> After we corrupted an attr leaf block (under node block), getxattr
-> might hit EFSCORRUPTED in xfs_attr_node_get when it does
-> xfs_attr_node_hasname. A known bug cause xfs_attr_node_get won't do
-> xfs_buf_trans release job, then a subsequent removexattr will hang.
+On Fri, Jun 03, 2022 at 11:14:13AM -0500, Eric Sandeen wrote:
+> On 5/19/21 10:22 AM, Lukas Herbolt wrote:
+> > As of now only device names are printed out over __xfs_printk().
+> > The device names are not persistent across reboots which in case
+> > of searching for origin of corruption brings another task to properly
+> > identify the devices. This patch add XFS UUID upon every mount/umount
+> > event which will make the identification much easier.
+> > 
+> > Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> > ---
+> > V2: Drop void casts and fix long lines
 > 
-> This case covers a1de97fe296c ("xfs: Fix the free logic of state in
-> xfs_attr_node_hasname")
+> Can we revisit this? I think it's a nice enhancement.
 > 
-> Signed-off-by: Zorro Lang <zlang@kernel.org>
-> ---
-> 
-> Thanks the review from Darrick, V2 add/remove some comments, and give
-> more information to that _fail line. There might be still some disputed
-> places, likes the _try_scratch_mount fail return and the way to create
-> and get/remove xattrs. Please Feel free to tell me if you feel something
-> isn't good enough.
-> 
+> The "nouuid" concern raised in the thread doesn't seem like a problem;
+> if someone mounts with "-o nouuid" then you'll see 2 different devices
+> mounted with the same uuid printed. I don't think that's an argument
+> against the patch. Printing the uuid still provides more info than not.
+
+Ok fair.
+
+> I, uh, also don't think the submitter should be required to do a tree-wide
+> change for an xfs printk enhancement. Sure, it'd be nice to have ext4
+> and btrfs and and and but we have no other requirements that mount-time
+> messages must be consistent across all filesystems....
+
+As you pointed out on irc, btrfs already prints its own uuids.  So that
+leaves ext4 -- are you all planning to send a patch for that?
+
+(Otherwise, I don't mind this patch, if it helps support perform
+forensics on systems with a lot of filesystem activity.)
+
 > Thanks,
-> Zorro
+> -Eric
 > 
->  tests/xfs/999     | 80 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/999.out |  2 ++
->  2 files changed, 82 insertions(+)
->  create mode 100755 tests/xfs/999
->  create mode 100644 tests/xfs/999.out
-> 
-> diff --git a/tests/xfs/999 b/tests/xfs/999
-> new file mode 100755
-> index 00000000..73577577
-> --- /dev/null
-> +++ b/tests/xfs/999
-> @@ -0,0 +1,80 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 999
-> +#
-> +# This's a regression test for:
-> +#   a1de97fe296c ("xfs: Fix the free logic of state in xfs_attr_node_hasname")
-> +#
-> +# After we corrupted an attr leaf block (under node block), getxattr might hit
-> +# EFSCORRUPTED in xfs_attr_node_get when it does xfs_attr_node_hasname. A bug
-> +# cause xfs_attr_node_get won't do xfs_buf_trans release job, then a subsequent
-> +# removexattr will hang.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick attr
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +. ./common/attr
-> +. ./common/populate
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_fixed_by_kernel_commit a1de97fe296c \
-> +       "xfs: Fix the free logic of state in xfs_attr_node_hasname"
-> +
-> +_require_scratch_nocheck
-> +# Only test with v5 xfs on-disk format
-> +_require_scratch_xfs_crc
-> +_require_attrs
-> +_require_populate_commands
-> +_require_xfs_db_blocktrash_z_command
-> +
-> +_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-> +source $tmp.mkfs
-> +_scratch_mount
-> +
-> +# Create more than $((dbsize / 32)) xattr entries to force the creation of a
-> +# node block and two (or more) leaf blocks, which we need for this test.
-> +nr_xattr="$((dbsize / 32))"
-> +localfile="${SCRATCH_MNT}/attrfile"
-> +touch $localfile
-> +for ((i=0; i<nr_xattr; i++));do
-> +	$SETFATTR_PROG -n user.x$(printf "%.09d" "$i") -v "aaaaaaaaaaaaaaaa" $localfile
-> +done
-> +inumber="$(stat -c '%i' $localfile)"
-> +_scratch_unmount
-> +
-> +# Expect the ablock 0 is a node block, later ablocks(>=1) are leaf blocks, then corrupt
-> +# the last leaf block. (Don't corrupt node block, or can't reproduce the bug)
-> +magic=$(_scratch_xfs_get_metadata_field "hdr.info.hdr.magic" "inode $inumber" "ablock 0")
-> +level=$(_scratch_xfs_get_metadata_field "hdr.level" "inode $inumber" "ablock 0")
-> +count=$(_scratch_xfs_get_metadata_field "hdr.count" "inode $inumber" "ablock 0")
-> +if [ "$magic" = "0x3ebe" -a "$level" = "1" ];then
-> +	# Corrupt the last leaf block
-> +	_scratch_xfs_db -x -c "inode ${inumber}" -c "ablock $count" -c "stack" \
-> +		-c "blocktrash -x 32 -y $((dbsize*8)) -3 -z" >> $seqres.full
-> +else
-> +	_fail "The ablock 0 (magic=$magic, level=$level) isn't a root node block, maybe case issue"
-> +fi
-> +
-> +# This's the real testing, expect removexattr won't hang or panic.
-> +if _try_scratch_mount >> $seqres.full 2>&1; then
-> +	for ((i=0; i<nr_xattr; i++));do
-> +		$GETFATTR_PROG -n user.x$(printf "%.09d" "$i") $localfile >/dev/null 2>&1
-> +		$SETFATTR_PROG -x user.x$(printf "%.09d" "$i") $localfile 2>/dev/null
-> +	done
-> +else
-> +	# Due to we corrupt the xfs manually, so can't be sure if xfs can
-> +	# detect this corruption and refuse the mount directly in one day.
-> +	# If so, it's not a testing fail, so "notrun" directly to mark this
-> +	# test isn't really done
-> +	_notrun "XFS refused to mount with this xattr corrutpion, test skipped"
+> > 
+> >  fs/xfs/xfs_log.c   | 10 ++++++----
+> >  fs/xfs/xfs_super.c |  2 +-
+> >  2 files changed, 7 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > index 06041834daa31..8f4f671fd80d5 100644
+> > --- a/fs/xfs/xfs_log.c
+> > +++ b/fs/xfs/xfs_log.c
+> > @@ -570,12 +570,14 @@ xfs_log_mount(
+> >  	int		min_logfsbs;
+> >  
+> >  	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY)) {
+> > -		xfs_notice(mp, "Mounting V%d Filesystem",
+> > -			   XFS_SB_VERSION_NUM(&mp->m_sb));
+> > +		xfs_notice(mp, "Mounting V%d Filesystem %pU",
+> > +			   XFS_SB_VERSION_NUM(&mp->m_sb),
+> > +			   &mp->m_sb.sb_uuid);
+> >  	} else {
+> >  		xfs_notice(mp,
+> > -"Mounting V%d filesystem in no-recovery mode. Filesystem will be inconsistent.",
+> > -			   XFS_SB_VERSION_NUM(&mp->m_sb));
+> > +"Mounting V%d filesystem %pU in no-recovery mode. Filesystem will be inconsistent.",
+> > +			   XFS_SB_VERSION_NUM(&mp->m_sb),
+> > +			   &mp->m_sb.sb_uuid);
 
-s/corrutpion/corruption/
-
-With that fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+sb_uuid is the uuid that the user can set, not the one that's encoded
+identically in all the cloud vm images, right?
 
 --D
 
-> +fi
-> +
-> +echo "Silence is golden"
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-> new file mode 100644
-> index 00000000..3b276ca8
-> --- /dev/null
-> +++ b/tests/xfs/999.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 999
-> +Silence is golden
-> -- 
-> 2.31.1
-> 
+> >  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+> >  	}
+> >  
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index e5e0713bebcd8..a4b8a5ad8039f 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -1043,7 +1043,7 @@ xfs_fs_put_super(
+> >  	if (!sb->s_fs_info)
+> >  		return;
+> >  
+> > -	xfs_notice(mp, "Unmounting Filesystem");
+> > +	xfs_notice(mp, "Unmounting Filesystem %pU", &mp->m_sb.sb_uuid);
+> >  	xfs_filestream_unmount(mp);
+> >  	xfs_unmountfs(mp);
+> >  
