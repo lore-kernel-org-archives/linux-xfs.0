@@ -2,161 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5483AC43334
-	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jun 2022 22:47:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31006C43334
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jun 2022 23:32:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348649AbiFEWrt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 5 Jun 2022 18:47:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33256 "EHLO
+        id S1348618AbiFEXcU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 5 Jun 2022 19:32:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240474AbiFEWrs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Jun 2022 18:47:48 -0400
+        with ESMTP id S242272AbiFEXcT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Jun 2022 19:32:19 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 839BE1172
-        for <linux-xfs@vger.kernel.org>; Sun,  5 Jun 2022 15:47:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id ECB2F17E3F;
+        Sun,  5 Jun 2022 16:32:16 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 2543310E706C;
-        Mon,  6 Jun 2022 08:47:45 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4E11F10E70B8;
+        Mon,  6 Jun 2022 09:32:15 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nxz27-0038zS-O9; Mon, 06 Jun 2022 08:47:43 +1000
-Date:   Mon, 6 Jun 2022 08:47:43 +1000
+        id 1nxzjB-0039qy-9W; Mon, 06 Jun 2022 09:32:13 +1000
+Date:   Mon, 6 Jun 2022 09:32:13 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 1/2] xfs: fix TOCTOU race involving the new logged xattrs
- control knob
-Message-ID: <20220605224743.GM1098723@dread.disaster.area>
-References: <YpzbrQdA9voYKRCE@magnolia>
+To:     Chris Mason <clm@fb.com>
+Cc:     Johannes Weiner <hannes@cmpxchg.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "dchinner@redhat.com" <dchinner@redhat.com>
+Subject: Re: [PATCH RFC] iomap: invalidate pages past eof in
+ iomap_do_writepage()
+Message-ID: <20220605233213.GN1098723@dread.disaster.area>
+References: <20220601011116.495988-1-clm@fb.com>
+ <YpdZKbrtXJJ9mWL7@infradead.org>
+ <BB5F778F-BFE5-4CC9-94DE-3118C60E13B6@fb.com>
+ <20220602065252.GD1098723@dread.disaster.area>
+ <YpjYDjeR2Wpx3ImB@cmpxchg.org>
+ <20220602220625.GG1098723@dread.disaster.area>
+ <B186E2FB-BCAF-4019-9DFF-9FF05BAC557E@fb.com>
+ <20220603052047.GJ1098723@dread.disaster.area>
+ <YpojbvB/+wPqHT8y@cmpxchg.org>
+ <c3620e1f-91c5-777c-4193-2478c69a033c@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <YpzbrQdA9voYKRCE@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <c3620e1f-91c5-777c-4193-2478c69a033c@fb.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=629d3291
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=629d3d00
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=LP08cwMIPuYS6LvU-34A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=IkcTkHD0fZMA:10 a=JPEYwPQDsx4A:10 a=7-415B0cAAAA:8
+        a=WK0IlTMwbJH2blhR84wA:9 a=QEXdDO2ut3YA:10 a=igBNqPyMv6gA:10
         a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jun 05, 2022 at 09:37:01AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Jun 03, 2022 at 12:09:06PM -0400, Chris Mason wrote:
+> [ From a different message, Dave asks wtf my email client was doing. Thanks
+> Dave, apparently exchange is being exchangey with base64 in unpredictable
+> ways.  This was better in my test reply, lets see. ]
 > 
-> I found a race involving the larp control knob, aka the debugging knob
-> that lets developers enable logging of extended attribute updates:
-> 
-> Thread 1			Thread 2
-> 
-> echo 0 > /sys/fs/xfs/debug/larp
-> 				setxattr(REPLACE)
-> 				xfs_has_larp (returns false)
-> 				xfs_attr_set
-> 
-> echo 1 > /sys/fs/xfs/debug/larp
-> 
-> 				xfs_attr_defer_replace
-> 				xfs_attr_init_replace_state
-> 				xfs_has_larp (returns true)
-> 				xfs_attr_init_remove_state
-> 
-> 				<oops, wrong DAS state!>
-> 
-> This isn't a particularly severe problem right now because xattr logging
-> is only enabled when CONFIG_XFS_DEBUG=y, and developers *should* know
-> what they're doing.
-> 
-> However, the eventual intent is that callers should be able to ask for
-> the assistance of the log in persisting xattr updates.  This capability
-> might not be required for /all/ callers, which means that dynamic
-> control must work correctly.  Once an xattr update has decided whether
-> or not to use logged xattrs, it needs to stay in that mode until the end
-> of the operation regardless of what subsequent parallel operations might
-> do.
-> 
-> Therefore, it is an error to continue sampling xfs_globals.larp once
-> xfs_attr_change has made a decision about larp, and it was not correct
-> for me to have told Allison that ->create_intent functions can sample
-> the global log incompat feature bitfield to decide to elide a log item.
-> 
-> Instead, create a new op flag for the xfs_da_args structure, and convert
-> all other callers of xfs_has_larp and xfs_sb_version_haslogxattrs within
-> the attr update state machine to look for the operations flag.
+> On 6/3/22 11:06 AM, Johannes Weiner wrote:
+> > Hello Dave,
+> > 
+> > On Fri, Jun 03, 2022 at 03:20:47PM +1000, Dave Chinner wrote:
+> > > On Fri, Jun 03, 2022 at 01:29:40AM +0000, Chris Mason wrote:
+> > > > As you describe above, the loops are definitely coming from higher
+> > > > in the stack.  wb_writeback() will loop as long as
+> > > > __writeback_inodes_wb() returns that it’s making progress and
+> > > > we’re still globally over the bg threshold, so write_cache_pages()
+> > > > is just being called over and over again.  We’re coming from
+> > > > wb_check_background_flush(), so:
+> > > > 
+> > > >                  struct wb_writeback_work work = {
+> > > >                          .nr_pages       = LONG_MAX,
+> > > >                          .sync_mode      = WB_SYNC_NONE,
+> > > >                          .for_background = 1,
+> > > >                          .range_cyclic   = 1,
+> > > >                          .reason         = WB_REASON_BACKGROUND,
+> > > >                  };
+> > > 
+> > > Sure, but we end up in writeback_sb_inodes() which does this after
+> > > the __writeback_single_inode()->do_writepages() call that iterates
+> > > the dirty pages:
+> > > 
+> > >                 if (need_resched()) {
+> > >                          /*
+> > >                           * We're trying to balance between building up a nice
+> > >                           * long list of IOs to improve our merge rate, and
+> > >                           * getting those IOs out quickly for anyone throttling
+> > >                           * in balance_dirty_pages().  cond_resched() doesn't
+> > >                           * unplug, so get our IOs out the door before we
+> > >                           * give up the CPU.
+> > >                           */
+> > >                          blk_flush_plug(current->plug, false);
+> > >                          cond_resched();
+> > >                  }
+> > > 
+> > > So if there is a pending IO completion on this CPU on a work queue
+> > > here, we'll reschedule to it because the work queue kworkers are
+> > > bound to CPUs and they take priority over user threads.
+> > 
+> > The flusher thread is also a kworker, though. So it may hit this
+> > cond_resched(), but it doesn't yield until the timeslice expires.
 
-*nod*
+17us or 10ms, it doesn't matter. The fact is the writeback thread
+will give up the CPU long before the latency durations (seconds)
+that were reported upthread are seen. Writeback spinning can
+not explain why truncate is not making progress - everything points
+to it being a downstream symptom, not a cause.
 
-....
+Also important to note, as we are talking about kworker sheduling
+hold-offs, the writeback flusher work is unbound (can run on any
+CPU), whilst the IO completion workers in XFS are per-CPU and bound
+to individual CPUs. Bound kernel tasks usually take run queue
+priority on a CPU over unbound and/or user tasks that can be punted
+to a different CPU. So, again, with this taken into account I don't
+see how the flusher thread consuming CPU would cause long duration
+hold-offs of IO completion work....
 
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 4a28c2d77070..135d44133477 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -413,18 +413,20 @@ xfs_attr_create_intent(
->  	struct xfs_mount		*mp = tp->t_mountp;
->  	struct xfs_attri_log_item	*attrip;
->  	struct xfs_attr_intent		*attr;
-> +	struct xfs_da_args		*args;
->  
->  	ASSERT(count == 1);
->  
-> -	if (!xfs_sb_version_haslogxattrs(&mp->m_sb))
-> -		return NULL;
-> -
->  	/*
->  	 * Each attr item only performs one attribute operation at a time, so
->  	 * this is a list of one
->  	 */
->  	attr = list_first_entry_or_null(items, struct xfs_attr_intent,
->  			xattri_list);
-> +	args = attr->xattri_da_args;
-> +
-> +	if (!(args->op_flags & XFS_DA_OP_LOGGED))
-> +		return NULL;
+> Just to underline this, the long tail latencies aren't softlockups or major
+> explosions.  It's just suboptimal enough that different metrics and
+> dashboards noticed it.
 
-Hmmmm.  For the non-LARP case, do we need to be checking
+Sure, but you've brought a problem we don't understand the root
+cause of to my attention. I want to know what the root cause is so
+that I can determine that there are no other unknown underlying
+issues that are contributing to this issue.
 
-	if (!attr)
-		return NULL;
-
-now?
-
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index 35e13e125ec6..149a8f537b06 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -68,6 +68,18 @@ xfs_attr_rele_log_assist(
->  	xlog_drop_incompat_feat(mp->m_log);
->  }
->  
-> +#ifdef DEBUG
-> +static inline bool
-> +xfs_attr_want_log_assist(
-> +	struct xfs_mount	*mp)
-> +{
-> +	/* Logged xattrs require a V5 super for log_incompat */
-> +	return xfs_has_crc(mp) && xfs_globals.larp;
-> +}
-> +#else
-> +# define xfs_attr_want_log_assist(mp)	false
-> +#endif
-
-If you are moving this code, let's clean it up a touch so that it
-is the internal logic that is conditional, not the function itself.
-
-static inline bool
-xfs_attr_want_log_assist(
-	struct xfs_mount	*mp)
-{
-#ifdef DEBUG
-	/* Logged xattrs require a V5 super for log_incompat */
-	return xfs_has_crc(mp) && xfs_globals.larp;
-#else
-	return false;
-#endif
-}
+Nothing found so far explains why truncate is not making progress
+and that's what *I* need to understand here. Sure, go ahead and
+patch your systems to get rid of the bad writeback looping
+behaviour, but that does not explain or solve the underlying long IO
+completion tail latency issue that originally lead to finding
+writeback spinning.
 
 Cheers,
 
