@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3520BCCA482
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 16:06:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5608C43334
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 16:06:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241523AbiFFQGB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 12:06:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42748 "EHLO
+        id S241565AbiFFQGC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 12:06:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241568AbiFFQF4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 12:05:56 -0400
+        with ESMTP id S241502AbiFFQF6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 12:05:58 -0400
 Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F22F1912E8;
-        Mon,  6 Jun 2022 09:05:55 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id k16so20493968wrg.7;
-        Mon, 06 Jun 2022 09:05:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2ED7194245;
+        Mon,  6 Jun 2022 09:05:56 -0700 (PDT)
+Received: by mail-wr1-x434.google.com with SMTP id q7so20485566wrg.5;
+        Mon, 06 Jun 2022 09:05:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=wIQ8SbeGnrxRzelf44sWZSiCxelEYptJHBoYPCZkwKo=;
-        b=Ot/xSCCYP8hNUNiAXKSvq6f4tZNmZ7rKO+T8XkRRg78MzTw/gUBlH4hrdkLg/oY150
-         y1CJIJ2wWb2D/ramGOvdlnPU+tjUkf2F9I/TtATnFolCnTxcU567ImRvG4g/+FfKOUh1
-         tqjeeJtmHD88Mog3RQJ2HoKx01oHyrcVQLLRtEjhlmjTVSWFTkov9yHQqlTF0mLjX6u/
-         Wmt2vIwN8ihAubO98dZ0LC89A7NsPYAtiYCeGNeztiC+YrjgJbnXkgeqbbLhnWNQx7BE
-         nUzkWZwHCiIug8NXk70VPf8Emd5tIKUBSJIfBDBMkRbqDvC3Ts3Y6MkYf7DMlohLWmPp
-         3iKQ==
+        bh=wn1Y0ouYIlg+N/jjxBw0yK9UaqWrXu4rdEIsXBdfBz4=;
+        b=Id2XcDvMXeGJVF8CP8qD0XBsFV2IrImmdisr0qE/hjB0P+E2eVVCpB7t1g+wuAEOEf
+         ZxlhY9uQNNfYlZ47K1en1vwGfp6Wiaagvi38XTO40An8gKpOc+riYeKzy5DHLRPOR+3s
+         yVuNHOsiqiJJYvNHqmnJILuCBH5Je2774KAj0RBfsawt/cSWX+oLPx/QcLi5zXLoztEm
+         6LyRonDRunQuiGpUyGc5+XKhlcOxugkuEq3GgrSf3CHfEX9oclsD+UXMgCadoWhcNDQY
+         +uHotwK7BiiVasMyj5FcGvVbTH83CKR+ra1/BGJAPHAka3l/rwFMlO39f90AD65M5Yqk
+         HnxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=wIQ8SbeGnrxRzelf44sWZSiCxelEYptJHBoYPCZkwKo=;
-        b=m8zuvX3gen+HVwXKaIRvKQHl9ug1t9n8iXJtNNlEwrBrmPvtzW1GDApaO8ZyWN8Hxv
-         KSnWHZtl/eeCEPPlmWvazGzaaOeUQKbpilRywnyFlREX4ootAHghsP39D9iVCCYBVzct
-         M75GAnf+bLa18X4VOvH/3nbDGom9DNaC8iBi4abnO/6WuKgwgNtsiWfqGS3ispFNppTz
-         c0z0ozI3ohaMbclvUoAe4hx9g1LblIPl8nRESxoBtVNFSsUW+egapSwD0ldJW+Z7gCOW
-         Xpfkwu9OwN9rjpbIRO5Wx9h76eJ7pHyxuS/MSlOm3a9SgFSnss/gJscbyGVBMbZ+ByVy
-         1ndw==
-X-Gm-Message-State: AOAM530H/XWjjzyoEFxj7jQhCC5cD8apU9/igxwUJ9bhMSO2JqYg6MbW
-        bJuOJ2GjBvnh5MAxAj9buwE=
-X-Google-Smtp-Source: ABdhPJx9FnVRP+SlLfBgtMNCXzFwR6wPt/+IqDxGi8T6pBsKLFVzUzJDfJrFbTV9YM6wRrYyPD7vVg==
-X-Received: by 2002:a5d:6b8b:0:b0:211:6641:628c with SMTP id n11-20020a5d6b8b000000b002116641628cmr22847695wrx.105.1654531553904;
-        Mon, 06 Jun 2022 09:05:53 -0700 (PDT)
+        bh=wn1Y0ouYIlg+N/jjxBw0yK9UaqWrXu4rdEIsXBdfBz4=;
+        b=GiK1WbiOgReJNmcvEdhCmniR5Ak8zPeZ5b+DUdxHgTwRv88mPdMRvEhIRKuqlOOzC5
+         LZUWmIU2fjGfBut/np6t/M+0FKnzlsuJ42nhXllgz2Xfppyv/8C1eHURzlQQ2IkOkcp4
+         7wjz7FxxN6iytpkEYD01ARbSXHNUfLmQO6TN2X+k3dJbl6BCLkYVl5jkODOdzDVjBrUY
+         qyCgT1rhDm65FPZy/71sUNkNDluzxagMUoaBjIw8eZjRUskoJge7mFOwcRqKMNoeDPxq
+         HyrYNtqoY5797V5oILR+wt2rIqlEpUtD91Leg5KWxhXPok3p9mk3PUON+LGEbQX43950
+         8h7Q==
+X-Gm-Message-State: AOAM531yUYJ9FQU+yqspUCLsYLwqgzQNsrJiU/ebK+mV7VdsP6dNvwLr
+        E9wYHcaSUACSLub/LJD676R4uCIgdASN2A==
+X-Google-Smtp-Source: ABdhPJx0EuuKTqHzjeEC05qbzWQ4uifR4RM5Wqs3QG0akKETn0fU0+QbLzy5R23D7sT5d3GKLsQQ4g==
+X-Received: by 2002:a5d:5452:0:b0:216:f80e:f7c6 with SMTP id w18-20020a5d5452000000b00216f80ef7c6mr10240940wrv.472.1654531555333;
+        Mon, 06 Jun 2022 09:05:55 -0700 (PDT)
 Received: from amir-ThinkPad-T480.ctera.local (bzq-166-168-31-246.red.bezeqint.net. [31.168.166.246])
-        by smtp.gmail.com with ESMTPSA id n22-20020a05600c3b9600b00397342e3830sm25681327wms.0.2022.06.06.09.05.52
+        by smtp.gmail.com with ESMTPSA id n22-20020a05600c3b9600b00397342e3830sm25681327wms.0.2022.06.06.09.05.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Jun 2022 09:05:53 -0700 (PDT)
+        Mon, 06 Jun 2022 09:05:54 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Dave Chinner <david@fromorbit.com>,
@@ -55,10 +55,11 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         Luis Chamberlain <mcgrof@kernel.org>,
         Adam Manzanares <a.manzanares@samsung.com>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Anthony Iliopoulos <ailiop@suse.com>
-Subject: [PATCH 5.10 CANDIDATE 5/7] xfs: fix xfs_trans slab cache name
-Date:   Mon,  6 Jun 2022 19:05:35 +0300
-Message-Id: <20220606160537.689915-6-amir73il@gmail.com>
+        Dave Chinner <dchinner@redhat.com>,
+        Zorro Lang <zlang@redhat.com>, Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH 5.10 CANDIDATE 6/7] xfs: update superblock counters correctly for !lazysbcount
+Date:   Mon,  6 Jun 2022 19:05:36 +0300
+Message-Id: <20220606160537.689915-7-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220606160537.689915-1-amir73il@gmail.com>
 References: <20220606160537.689915-1-amir73il@gmail.com>
@@ -68,36 +69,76 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Anthony Iliopoulos <ailiop@suse.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-commit 25dfa65f814951a33072bcbae795989d817858da upstream.
+commit 6543990a168acf366f4b6174d7bd46ba15a8a2a6 upstream.
 
-Removal of kmem_zone_init wrappers accidentally changed a slab cache
-name from "xfs_trans" to "xf_trans". Fix this so that userspace
-consumers of /proc/slabinfo and /sys/kernel/slab can find it again.
+Keep the mount superblock counters up to date for !lazysbcount
+filesystems so that when we log the superblock they do not need
+updating in any way because they are already correct.
 
-Fixes: b1231760e443 ("xfs: Remove slab init wrappers")
-Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+It's found by what Zorro reported:
+1. mkfs.xfs -f -l lazy-count=0 -m crc=0 $dev
+2. mount $dev $mnt
+3. fsstress -d $mnt -p 100 -n 1000 (maybe need more or less io load)
+4. umount $mnt
+5. xfs_repair -n $dev
+and I've seen no problem with this patch.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reported-by: Zorro Lang <zlang@redhat.com>
+Reviewed-by: Gao Xiang <hsiangkao@redhat.com>
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/xfs_super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_sb.c | 16 +++++++++++++---
+ fs/xfs/xfs_trans.c     |  3 +++
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index b4a3a71bd667..d220a63d7883 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1926,7 +1926,7 @@ xfs_init_zones(void)
- 	if (!xfs_ifork_zone)
- 		goto out_destroy_da_state_zone;
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 5aeafa59ed27..66e8353da2f3 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -956,9 +956,19 @@ xfs_log_sb(
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	struct xfs_buf		*bp = xfs_trans_getsb(tp);
  
--	xfs_trans_zone = kmem_cache_create("xf_trans",
-+	xfs_trans_zone = kmem_cache_create("xfs_trans",
- 					   sizeof(struct xfs_trans),
- 					   0, 0, NULL);
- 	if (!xfs_trans_zone)
+-	mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+-	mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+-	mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
++	/*
++	 * Lazy sb counters don't update the in-core superblock so do that now.
++	 * If this is at unmount, the counters will be exactly correct, but at
++	 * any other time they will only be ballpark correct because of
++	 * reservations that have been taken out percpu counters. If we have an
++	 * unclean shutdown, this will be corrected by log recovery rebuilding
++	 * the counters from the AGF block counts.
++	 */
++	if (xfs_sb_version_haslazysbcount(&mp->m_sb)) {
++		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
++		mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
++		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
++	}
+ 
+ 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 2d7deacea2cf..36166bae24a6 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -615,6 +615,9 @@ xfs_trans_unreserve_and_mod_sb(
+ 
+ 	/* apply remaining deltas */
+ 	spin_lock(&mp->m_sb_lock);
++	mp->m_sb.sb_fdblocks += tp->t_fdblocks_delta + tp->t_res_fdblocks_delta;
++	mp->m_sb.sb_icount += idelta;
++	mp->m_sb.sb_ifree += ifreedelta;
+ 	mp->m_sb.sb_frextents += rtxdelta;
+ 	mp->m_sb.sb_dblocks += tp->t_dblocks_delta;
+ 	mp->m_sb.sb_agcount += tp->t_agcount_delta;
 -- 
 2.25.1
 
