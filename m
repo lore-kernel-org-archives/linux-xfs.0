@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 762B6C43334
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 20:47:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50328C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 20:47:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229567AbiFFUrp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 16:47:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46420 "EHLO
+        id S233561AbiFFUrw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 16:47:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234317AbiFFUrV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 16:47:21 -0400
+        with ESMTP id S234352AbiFFUrc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 16:47:32 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F36313CA13;
-        Mon,  6 Jun 2022 13:41:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60F9A312;
+        Mon,  6 Jun 2022 13:41:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=2zqEa9EzjfvcCB/R36xszZ4AMZtdcV59XiMVDc9jTyM=; b=U+BqaoSQWdsShi/y8CPTtTig63
-        HCMa7+gIZx7Yyb6cusLNuXKWsG06WN8xz/erKBPWuYizRThCX0iiljqhNcZd2weflUVCtiqE770D/
-        Vb15aA5PxUQlAGcLo3M0XEH41Q/fMFbQWUysBrY6PEG35YJKOueNndbkU/J8qu3X5pGzhsOP7ol4W
-        F3RaDu2I/zP67juMsLCzxygZBIwXjKCl86d9jfX6rvdn+U142VP0hON97WCqvsixaBkAVbsODa0Rm
-        STrW9jc4kjH9X53B35Fdz629pIYD4+nkkWKOdWUlig7kbghCKRcjBc7pf8npYNE/LtOnrV8sVT0Vs
-        SEGqa5Hg==;
+        bh=2z1jX0yhTDltG7l7TM/WGDPE6d/xoDTeJDDQMbm1wg8=; b=Cv8slqe8iqqf4HOlLgutAaOA1A
+        aFZHrqpp1ecJXz6/5OQgJaQgKmewa4IH+xNKntZNhPPNG2mq0TdCdUt37Lr1Rlb0d1jJiC5N0NY/k
+        MH0U/aTkoMggca8NkpnWB2GfbEv8k3Qmd5IKV0bs9olGVEmGhjFUfhCNRkX82E7h2m4gIdzJIK83s
+        bHNkdkHR2JrVCWQENaRdn/efg9EVXp1QQpLyXEb/+OSm01Xpgs6y+Nu8g5hE+zcuMzIc9U7qF5UHc
+        CxDD3zjR9BkFUEuw/J+/y4QTlNqlIzj7jIvBLCnybLdxlLB62DbDIFf5GndYJbQZ9TUlgPwmGmbBf
+        0wr7BlYg==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nyJWx-00B19i-Jy; Mon, 06 Jun 2022 20:40:55 +0000
+        id 1nyJWw-00B19Q-Rb; Mon, 06 Jun 2022 20:40:54 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -37,9 +37,9 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
         linux-mtd@lists.infradead.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 13/20] aio: Convert to migrate_folio
-Date:   Mon,  6 Jun 2022 21:40:43 +0100
-Message-Id: <20220606204050.2625949-14-willy@infradead.org>
+Subject: [PATCH 04/20] mm/migrate: Convert buffer_migrate_page() to buffer_migrate_folio()
+Date:   Mon,  6 Jun 2022 21:40:34 +0100
+Message-Id: <20220606204050.2625949-5-willy@infradead.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220606204050.2625949-1-willy@infradead.org>
 References: <20220606204050.2625949-1-willy@infradead.org>
@@ -49,97 +49,301 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use a folio throughout this function.
+Use a folio throughout __buffer_migrate_folio(), add kernel-doc for
+buffer_migrate_folio() and buffer_migrate_folio_norefs(), move their
+declarations to buffer.h and switch all filesystems that have wired
+them up.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/aio.c | 36 ++++++++++++++++++------------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+ block/fops.c                |  2 +-
+ fs/ext2/inode.c             |  4 +-
+ fs/ext4/inode.c             |  4 +-
+ fs/ntfs/aops.c              |  6 +--
+ fs/ocfs2/aops.c             |  2 +-
+ include/linux/buffer_head.h | 10 +++++
+ include/linux/fs.h          | 12 ------
+ mm/migrate.c                | 76 ++++++++++++++++++++++---------------
+ 8 files changed, 65 insertions(+), 51 deletions(-)
 
-diff --git a/fs/aio.c b/fs/aio.c
-index 3c249b938632..a1911e86859c 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -400,8 +400,8 @@ static const struct file_operations aio_ring_fops = {
+diff --git a/block/fops.c b/block/fops.c
+index d6b3276a6c68..743fc46d0aad 100644
+--- a/block/fops.c
++++ b/block/fops.c
+@@ -417,7 +417,7 @@ const struct address_space_operations def_blk_aops = {
+ 	.write_end	= blkdev_write_end,
+ 	.writepages	= blkdev_writepages,
+ 	.direct_IO	= blkdev_direct_IO,
+-	.migratepage	= buffer_migrate_page_norefs,
++	.migrate_folio	= buffer_migrate_folio_norefs,
+ 	.is_dirty_writeback = buffer_check_dirty_writeback,
  };
  
- #if IS_ENABLED(CONFIG_MIGRATION)
--static int aio_migratepage(struct address_space *mapping, struct page *new,
--			struct page *old, enum migrate_mode mode)
-+static int aio_migrate_folio(struct address_space *mapping, struct folio *dst,
-+			struct folio *src, enum migrate_mode mode)
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index 360ce3604a2d..84570c6265aa 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -973,7 +973,7 @@ const struct address_space_operations ext2_aops = {
+ 	.bmap			= ext2_bmap,
+ 	.direct_IO		= ext2_direct_IO,
+ 	.writepages		= ext2_writepages,
+-	.migratepage		= buffer_migrate_page,
++	.migrate_folio		= buffer_migrate_folio,
+ 	.is_partially_uptodate	= block_is_partially_uptodate,
+ 	.error_remove_page	= generic_error_remove_page,
+ };
+@@ -989,7 +989,7 @@ const struct address_space_operations ext2_nobh_aops = {
+ 	.bmap			= ext2_bmap,
+ 	.direct_IO		= ext2_direct_IO,
+ 	.writepages		= ext2_writepages,
+-	.migratepage		= buffer_migrate_page,
++	.migrate_folio		= buffer_migrate_folio,
+ 	.error_remove_page	= generic_error_remove_page,
+ };
+ 
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 1aaea53e67b5..53877ffe3c41 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3633,7 +3633,7 @@ static const struct address_space_operations ext4_aops = {
+ 	.invalidate_folio	= ext4_invalidate_folio,
+ 	.release_folio		= ext4_release_folio,
+ 	.direct_IO		= noop_direct_IO,
+-	.migratepage		= buffer_migrate_page,
++	.migrate_folio		= buffer_migrate_folio,
+ 	.is_partially_uptodate  = block_is_partially_uptodate,
+ 	.error_remove_page	= generic_error_remove_page,
+ 	.swap_activate		= ext4_iomap_swap_activate,
+@@ -3668,7 +3668,7 @@ static const struct address_space_operations ext4_da_aops = {
+ 	.invalidate_folio	= ext4_invalidate_folio,
+ 	.release_folio		= ext4_release_folio,
+ 	.direct_IO		= noop_direct_IO,
+-	.migratepage		= buffer_migrate_page,
++	.migrate_folio		= buffer_migrate_folio,
+ 	.is_partially_uptodate  = block_is_partially_uptodate,
+ 	.error_remove_page	= generic_error_remove_page,
+ 	.swap_activate		= ext4_iomap_swap_activate,
+diff --git a/fs/ntfs/aops.c b/fs/ntfs/aops.c
+index 9e3964ea2ea0..5f4fb6ca6f2e 100644
+--- a/fs/ntfs/aops.c
++++ b/fs/ntfs/aops.c
+@@ -1659,7 +1659,7 @@ const struct address_space_operations ntfs_normal_aops = {
+ 	.dirty_folio	= block_dirty_folio,
+ #endif /* NTFS_RW */
+ 	.bmap		= ntfs_bmap,
+-	.migratepage	= buffer_migrate_page,
++	.migrate_folio	= buffer_migrate_folio,
+ 	.is_partially_uptodate = block_is_partially_uptodate,
+ 	.error_remove_page = generic_error_remove_page,
+ };
+@@ -1673,7 +1673,7 @@ const struct address_space_operations ntfs_compressed_aops = {
+ 	.writepage	= ntfs_writepage,
+ 	.dirty_folio	= block_dirty_folio,
+ #endif /* NTFS_RW */
+-	.migratepage	= buffer_migrate_page,
++	.migrate_folio	= buffer_migrate_folio,
+ 	.is_partially_uptodate = block_is_partially_uptodate,
+ 	.error_remove_page = generic_error_remove_page,
+ };
+@@ -1688,7 +1688,7 @@ const struct address_space_operations ntfs_mst_aops = {
+ 	.writepage	= ntfs_writepage,	/* Write dirty page to disk. */
+ 	.dirty_folio	= filemap_dirty_folio,
+ #endif /* NTFS_RW */
+-	.migratepage	= buffer_migrate_page,
++	.migrate_folio	= buffer_migrate_folio,
+ 	.is_partially_uptodate	= block_is_partially_uptodate,
+ 	.error_remove_page = generic_error_remove_page,
+ };
+diff --git a/fs/ocfs2/aops.c b/fs/ocfs2/aops.c
+index 767df51f8657..1d489003f99d 100644
+--- a/fs/ocfs2/aops.c
++++ b/fs/ocfs2/aops.c
+@@ -2462,7 +2462,7 @@ const struct address_space_operations ocfs2_aops = {
+ 	.direct_IO		= ocfs2_direct_IO,
+ 	.invalidate_folio	= block_invalidate_folio,
+ 	.release_folio		= ocfs2_release_folio,
+-	.migratepage		= buffer_migrate_page,
++	.migrate_folio		= buffer_migrate_folio,
+ 	.is_partially_uptodate	= block_is_partially_uptodate,
+ 	.error_remove_page	= generic_error_remove_page,
+ };
+diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+index c9d1463bb20f..b0366c89d6a4 100644
+--- a/include/linux/buffer_head.h
++++ b/include/linux/buffer_head.h
+@@ -267,6 +267,16 @@ int nobh_truncate_page(struct address_space *, loff_t, get_block_t *);
+ int nobh_writepage(struct page *page, get_block_t *get_block,
+                         struct writeback_control *wbc);
+ 
++#ifdef CONFIG_MIGRATION
++extern int buffer_migrate_folio(struct address_space *,
++		struct folio *dst, struct folio *src, enum migrate_mode);
++extern int buffer_migrate_folio_norefs(struct address_space *,
++		struct folio *dst, struct folio *src, enum migrate_mode);
++#else
++#define buffer_migrate_folio NULL
++#define buffer_migrate_folio_norefs NULL
++#endif
++
+ void buffer_init(void);
+ 
+ /*
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 7b380fa66983..5737c92ed286 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3217,18 +3217,6 @@ extern int generic_check_addressable(unsigned, u64);
+ 
+ extern void generic_set_encrypted_ci_d_ops(struct dentry *dentry);
+ 
+-#ifdef CONFIG_MIGRATION
+-extern int buffer_migrate_page(struct address_space *,
+-				struct page *, struct page *,
+-				enum migrate_mode);
+-extern int buffer_migrate_page_norefs(struct address_space *,
+-				struct page *, struct page *,
+-				enum migrate_mode);
+-#else
+-#define buffer_migrate_page NULL
+-#define buffer_migrate_page_norefs NULL
+-#endif
+-
+ int may_setattr(struct user_namespace *mnt_userns, struct inode *inode,
+ 		unsigned int ia_valid);
+ int setattr_prepare(struct user_namespace *, struct dentry *, struct iattr *);
+diff --git a/mm/migrate.c b/mm/migrate.c
+index f19246c12fe9..77b8c662c9ca 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -657,23 +657,23 @@ static bool buffer_migrate_lock_buffers(struct buffer_head *head,
+ 	return true;
+ }
+ 
+-static int __buffer_migrate_page(struct address_space *mapping,
+-		struct page *newpage, struct page *page, enum migrate_mode mode,
++static int __buffer_migrate_folio(struct address_space *mapping,
++		struct folio *dst, struct folio *src, enum migrate_mode mode,
+ 		bool check_refs)
  {
- 	struct kioctx *ctx;
- 	unsigned long flags;
-@@ -435,10 +435,10 @@ static int aio_migratepage(struct address_space *mapping, struct page *new,
- 		goto out;
+ 	struct buffer_head *bh, *head;
+ 	int rc;
+ 	int expected_count;
+ 
+-	if (!page_has_buffers(page))
+-		return migrate_page(mapping, newpage, page, mode);
++	head = folio_buffers(src);
++	if (!head)
++		return migrate_page(mapping, &dst->page, &src->page, mode);
+ 
+ 	/* Check whether page does not have extra refs before we do more work */
+-	expected_count = expected_page_refs(mapping, page);
+-	if (page_count(page) != expected_count)
++	expected_count = expected_page_refs(mapping, &src->page);
++	if (folio_ref_count(src) != expected_count)
+ 		return -EAGAIN;
+ 
+-	head = page_buffers(page);
+ 	if (!buffer_migrate_lock_buffers(head, mode))
+ 		return -EAGAIN;
+ 
+@@ -704,23 +704,22 @@ static int __buffer_migrate_page(struct address_space *mapping,
+ 		}
  	}
  
--	idx = old->index;
-+	idx = src->index;
- 	if (idx < (pgoff_t)ctx->nr_pages) {
--		/* Make sure the old page hasn't already been changed */
--		if (ctx->ring_pages[idx] != old)
-+		/* Make sure the old folio hasn't already been changed */
-+		if (ctx->ring_pages[idx] != &src->page)
- 			rc = -EAGAIN;
- 	} else
- 		rc = -EINVAL;
-@@ -447,27 +447,27 @@ static int aio_migratepage(struct address_space *mapping, struct page *new,
- 		goto out_unlock;
+-	rc = migrate_page_move_mapping(mapping, newpage, page, 0);
++	rc = folio_migrate_mapping(mapping, dst, src, 0);
+ 	if (rc != MIGRATEPAGE_SUCCESS)
+ 		goto unlock_buffers;
  
- 	/* Writeback must be complete */
--	BUG_ON(PageWriteback(old));
--	get_page(new);
-+	BUG_ON(folio_test_writeback(src));
-+	folio_get(dst);
+-	attach_page_private(newpage, detach_page_private(page));
++	folio_attach_private(dst, folio_detach_private(src));
  
--	rc = migrate_page_move_mapping(mapping, new, old, 1);
-+	rc = folio_migrate_mapping(mapping, dst, src, 1);
- 	if (rc != MIGRATEPAGE_SUCCESS) {
--		put_page(new);
-+		folio_put(dst);
- 		goto out_unlock;
- 	}
+ 	bh = head;
+ 	do {
+-		set_bh_page(bh, newpage, bh_offset(bh));
++		set_bh_page(bh, &dst->page, bh_offset(bh));
+ 		bh = bh->b_this_page;
+-
+ 	} while (bh != head);
  
- 	/* Take completion_lock to prevent other writes to the ring buffer
--	 * while the old page is copied to the new.  This prevents new
-+	 * while the old folio is copied to the new.  This prevents new
- 	 * events from being lost.
- 	 */
- 	spin_lock_irqsave(&ctx->completion_lock, flags);
--	migrate_page_copy(new, old);
--	BUG_ON(ctx->ring_pages[idx] != old);
--	ctx->ring_pages[idx] = new;
-+	folio_migrate_copy(dst, src);
-+	BUG_ON(ctx->ring_pages[idx] != &src->page);
-+	ctx->ring_pages[idx] = &dst->page;
- 	spin_unlock_irqrestore(&ctx->completion_lock, flags);
+ 	if (mode != MIGRATE_SYNC_NO_COPY)
+-		migrate_page_copy(newpage, page);
++		folio_migrate_copy(dst, src);
+ 	else
+-		migrate_page_states(newpage, page);
++		folio_migrate_flags(dst, src);
  
--	/* The old page is no longer accessible. */
--	put_page(old);
-+	/* The old folio is no longer accessible. */
-+	folio_put(src);
+ 	rc = MIGRATEPAGE_SUCCESS;
+ unlock_buffers:
+@@ -730,34 +729,51 @@ static int __buffer_migrate_page(struct address_space *mapping,
+ 	do {
+ 		unlock_buffer(bh);
+ 		bh = bh->b_this_page;
+-
+ 	} while (bh != head);
  
- out_unlock:
- 	mutex_unlock(&ctx->ring_lock);
-@@ -475,13 +475,13 @@ static int aio_migratepage(struct address_space *mapping, struct page *new,
- 	spin_unlock(&mapping->private_lock);
  	return rc;
  }
-+#else
-+#define aio_migrate_folio NULL
+ 
+-/*
+- * Migration function for pages with buffers. This function can only be used
+- * if the underlying filesystem guarantees that no other references to "page"
+- * exist. For example attached buffer heads are accessed only under page lock.
++/**
++ * buffer_migrate_folio() - Migration function for folios with buffers.
++ * @mapping: The address space containing @src.
++ * @dst: The folio to migrate to.
++ * @src: The folio to migrate from.
++ * @mode: How to migrate the folio.
++ *
++ * This function can only be used if the underlying filesystem guarantees
++ * that no other references to @src exist. For example attached buffer
++ * heads are accessed only under the folio lock.  If your filesystem cannot
++ * provide this guarantee, buffer_migrate_folio_noref() may be more
++ * appropriate.
++ *
++ * Return: 0 on success or a negative errno on failure.
+  */
+-int buffer_migrate_page(struct address_space *mapping,
+-		struct page *newpage, struct page *page, enum migrate_mode mode)
++int buffer_migrate_folio(struct address_space *mapping,
++		struct folio *dst, struct folio *src, enum migrate_mode mode)
+ {
+-	return __buffer_migrate_page(mapping, newpage, page, mode, false);
++	return __buffer_migrate_folio(mapping, dst, src, mode, false);
+ }
+-EXPORT_SYMBOL(buffer_migrate_page);
++EXPORT_SYMBOL(buffer_migrate_folio);
+ 
+-/*
+- * Same as above except that this variant is more careful and checks that there
+- * are also no buffer head references. This function is the right one for
+- * mappings where buffer heads are directly looked up and referenced (such as
+- * block device mappings).
++/**
++ * buffer_migrate_folio_noref() - Migration function for folios with buffers.
++ * @mapping: The address space containing @src.
++ * @dst: The folio to migrate to.
++ * @src: The folio to migrate from.
++ * @mode: How to migrate the folio.
++ *
++ * Like buffer_migrate_folio() except that this variant is more careful
++ * and checks that there are also no buffer head references. This function
++ * is the right one for mappings where buffer heads are directly looked
++ * up and referenced (such as block device mappings).
++ *
++ * Return: 0 on success or a negative errno on failure.
+  */
+-int buffer_migrate_page_norefs(struct address_space *mapping,
+-		struct page *newpage, struct page *page, enum migrate_mode mode)
++int buffer_migrate_folio_norefs(struct address_space *mapping,
++		struct folio *dst, struct folio *src, enum migrate_mode mode)
+ {
+-	return __buffer_migrate_page(mapping, newpage, page, mode, true);
++	return __buffer_migrate_folio(mapping, dst, src, mode, true);
+ }
  #endif
  
- static const struct address_space_operations aio_ctx_aops = {
- 	.dirty_folio	= noop_dirty_folio,
--#if IS_ENABLED(CONFIG_MIGRATION)
--	.migratepage	= aio_migratepage,
--#endif
-+	.migrate_folio	= aio_migrate_folio,
- };
- 
- static int aio_setup_ring(struct kioctx *ctx, unsigned int nr_events)
 -- 
 2.35.1
 
