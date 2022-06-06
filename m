@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 854D9CCA483
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 20:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29586C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 20:51:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234762AbiFFUvg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 16:51:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50252 "EHLO
+        id S234896AbiFFUvi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 16:51:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234625AbiFFUtq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 16:49:46 -0400
+        with ESMTP id S234588AbiFFUtp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 16:49:45 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA2FEF5B6;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E638FE0DC;
         Mon,  6 Jun 2022 13:41:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=52TXjMDH2lUY3R09liZNjO+IjMsaCFATm2t/b+KQCF8=; b=SZdEFZWXMJtFPOJuECFsGH4n90
-        q7ier+E1yPXVQU4Nd1lYIGA05aBdagpFc4iTt8PjgeKc8E++hHnQYInhlsw3wbFpf5nxp3H2fcfme
-        0Xx+q8n2owHljzIVuJKc0MDo+cUizE5viLTjZLfP5xwl/nmCSSlMfDWIQiYSrFSnV+41z2epAxAgz
-        c5hI+6eJnPB8FSW9f2DBRPcvqpAvUVkxshVm7oCqFdrliaskJ+h+S7JjdTqvzkHPpD7vXrhjHIlQV
-        QHRESAfyNVHF1VHQMM7Gir9jrNAHNPAhLTN9Pq43f+cwmm1aYDR8JwDm6N7iYlMQcSUd+o2cWsMba
-        zygq/t9A==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=pP2rySBonQba80aJJurpf3Ufu7YzAk6PE/UfFF5JjqU=; b=CVvFIaE3DO4F579aJn2Gv8sjJ1
+        3s4aun59FYY8/cIm392ktBNn3Yfrt/zZI2FAKlmO4E3xMwJb3V8p0zjyiYNlXYHugx4ESqJjlHfb1
+        QG1qZiDzGvDgU/60lg9IfnGfI2mfaTj+stxEAcrFL6CEOIqb5GzPU9vw1qrk6uFLJAOZ3IkEmbCQE
+        LzelMikinFLOzolvWeyxZFad1TDhzqH1x/JkOTw+Xol4LnPrnKqEGccXqc7eFHbh9ziaHCXeJ+DmM
+        rrw8vPHosmQOe6zaJs4TsqpU+ayfdzgl+HFiB3jtxCoXtL62mYflqoIljhWxTii99IWQIy6G281e+
+        VVfyP2fw==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nyJWw-00B19H-IZ; Mon, 06 Jun 2022 20:40:54 +0000
+        id 1nyJWx-00B19W-2b; Mon, 06 Jun 2022 20:40:55 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -37,88 +37,100 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
         linux-mtd@lists.infradead.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 00/20] Convert aops->migratepage to aops->migrate_folio
-Date:   Mon,  6 Jun 2022 21:40:30 +0100
-Message-Id: <20220606204050.2625949-1-willy@infradead.org>
+Subject: [PATCH 07/20] nfs: Convert to migrate_folio
+Date:   Mon,  6 Jun 2022 21:40:37 +0100
+Message-Id: <20220606204050.2625949-8-willy@infradead.org>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220606204050.2625949-1-willy@infradead.org>
+References: <20220606204050.2625949-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I plan to submit these patches through my pagecache tree in the upcoming
-merge window.  I'm pretty happy that most filesystems are now using
-common code for ->migrate_folio; it's not something that most filesystem
-people want to care about.  I'm running xfstests using xfs against it now,
-but it's little more than compile tested for other filesystems.
+Use a folio throughout this function.  migrate_page() will be converted
+later.
 
-Matthew Wilcox (Oracle) (20):
-  fs: Add aops->migrate_folio
-  mm/migrate: Convert fallback_migrate_page() to
-    fallback_migrate_folio()
-  mm/migrate: Convert writeout() to take a folio
-  mm/migrate: Convert buffer_migrate_page() to buffer_migrate_folio()
-  mm/migrate: Convert expected_page_refs() to folio_expected_refs()
-  btrfs: Convert btree_migratepage to migrate_folio
-  nfs: Convert to migrate_folio
-  mm/migrate: Convert migrate_page() to migrate_folio()
-  mm/migrate: Add filemap_migrate_folio()
-  btrfs: Convert btrfs_migratepage to migrate_folio
-  ubifs: Convert to filemap_migrate_folio()
-  f2fs: Convert to filemap_migrate_folio()
-  aio: Convert to migrate_folio
-  hugetlb: Convert to migrate_folio
-  balloon: Convert to migrate_folio
-  secretmem: Convert to migrate_folio
-  z3fold: Convert to migrate_folio
-  zsmalloc: Convert to migrate_folio
-  fs: Remove aops->migratepage()
-  mm/folio-compat: Remove migration compatibility functions
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ fs/nfs/file.c     |  4 +---
+ fs/nfs/internal.h |  6 ++++--
+ fs/nfs/write.c    | 16 ++++++++--------
+ 3 files changed, 13 insertions(+), 13 deletions(-)
 
- Documentation/filesystems/locking.rst       |   5 +-
- Documentation/filesystems/vfs.rst           |  13 +-
- Documentation/vm/page_migration.rst         |  33 +--
- block/fops.c                                |   2 +-
- drivers/gpu/drm/i915/gem/i915_gem_userptr.c |   4 +-
- fs/aio.c                                    |  36 ++--
- fs/btrfs/disk-io.c                          |  22 +-
- fs/btrfs/inode.c                            |  26 +--
- fs/ext2/inode.c                             |   4 +-
- fs/ext4/inode.c                             |   4 +-
- fs/f2fs/checkpoint.c                        |   4 +-
- fs/f2fs/data.c                              |  40 +---
- fs/f2fs/f2fs.h                              |   4 -
- fs/f2fs/node.c                              |   4 +-
- fs/gfs2/aops.c                              |   2 +-
- fs/hugetlbfs/inode.c                        |  19 +-
- fs/iomap/buffered-io.c                      |  25 ---
- fs/nfs/file.c                               |   4 +-
- fs/nfs/internal.h                           |   6 +-
- fs/nfs/write.c                              |  16 +-
- fs/ntfs/aops.c                              |   6 +-
- fs/ocfs2/aops.c                             |   2 +-
- fs/ubifs/file.c                             |  29 +--
- fs/xfs/xfs_aops.c                           |   2 +-
- fs/zonefs/super.c                           |   2 +-
- include/linux/buffer_head.h                 |  10 +
- include/linux/fs.h                          |  18 +-
- include/linux/iomap.h                       |   6 -
- include/linux/migrate.h                     |  22 +-
- include/linux/pagemap.h                     |   6 +
- mm/balloon_compaction.c                     |  15 +-
- mm/compaction.c                             |   5 +-
- mm/folio-compat.c                           |  22 --
- mm/ksm.c                                    |   2 +-
- mm/migrate.c                                | 217 ++++++++++++--------
- mm/migrate_device.c                         |   3 +-
- mm/secretmem.c                              |   6 +-
- mm/shmem.c                                  |   2 +-
- mm/swap_state.c                             |   2 +-
- mm/z3fold.c                                 |   8 +-
- mm/zsmalloc.c                               |   8 +-
- 41 files changed, 287 insertions(+), 379 deletions(-)
-
+diff --git a/fs/nfs/file.c b/fs/nfs/file.c
+index 2d72b1b7ed74..549baed76351 100644
+--- a/fs/nfs/file.c
++++ b/fs/nfs/file.c
+@@ -533,9 +533,7 @@ const struct address_space_operations nfs_file_aops = {
+ 	.write_end = nfs_write_end,
+ 	.invalidate_folio = nfs_invalidate_folio,
+ 	.release_folio = nfs_release_folio,
+-#ifdef CONFIG_MIGRATION
+-	.migratepage = nfs_migrate_page,
+-#endif
++	.migrate_folio = nfs_migrate_folio,
+ 	.launder_folio = nfs_launder_folio,
+ 	.is_dirty_writeback = nfs_check_dirty_writeback,
+ 	.error_remove_page = generic_error_remove_page,
+diff --git a/fs/nfs/internal.h b/fs/nfs/internal.h
+index 8f8cd6e2d4db..437ebe544aaf 100644
+--- a/fs/nfs/internal.h
++++ b/fs/nfs/internal.h
+@@ -578,8 +578,10 @@ void nfs_clear_pnfs_ds_commit_verifiers(struct pnfs_ds_commit_info *cinfo)
+ #endif
+ 
+ #ifdef CONFIG_MIGRATION
+-extern int nfs_migrate_page(struct address_space *,
+-		struct page *, struct page *, enum migrate_mode);
++int nfs_migrate_folio(struct address_space *, struct folio *dst,
++		struct folio *src, enum migrate_mode);
++#else
++#define nfs_migrate_folio NULL
+ #endif
+ 
+ static inline int
+diff --git a/fs/nfs/write.c b/fs/nfs/write.c
+index 1c706465d090..649b9e633459 100644
+--- a/fs/nfs/write.c
++++ b/fs/nfs/write.c
+@@ -2119,27 +2119,27 @@ int nfs_wb_page(struct inode *inode, struct page *page)
+ }
+ 
+ #ifdef CONFIG_MIGRATION
+-int nfs_migrate_page(struct address_space *mapping, struct page *newpage,
+-		struct page *page, enum migrate_mode mode)
++int nfs_migrate_folio(struct address_space *mapping, struct folio *dst,
++		struct folio *src, enum migrate_mode mode)
+ {
+ 	/*
+-	 * If PagePrivate is set, then the page is currently associated with
++	 * If the private flag is set, the folio is currently associated with
+ 	 * an in-progress read or write request. Don't try to migrate it.
+ 	 *
+ 	 * FIXME: we could do this in principle, but we'll need a way to ensure
+ 	 *        that we can safely release the inode reference while holding
+-	 *        the page lock.
++	 *        the folio lock.
+ 	 */
+-	if (PagePrivate(page))
++	if (folio_test_private(src))
+ 		return -EBUSY;
+ 
+-	if (PageFsCache(page)) {
++	if (folio_test_fscache(src)) {
+ 		if (mode == MIGRATE_ASYNC)
+ 			return -EBUSY;
+-		wait_on_page_fscache(page);
++		folio_wait_fscache(src);
+ 	}
+ 
+-	return migrate_page(mapping, newpage, page, mode);
++	return migrate_page(mapping, &dst->page, &src->page, mode);
+ }
+ #endif
+ 
 -- 
 2.35.1
 
