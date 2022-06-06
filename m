@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F422C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 16:05:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D273DCCA482
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 16:05:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241529AbiFFQFy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 12:05:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42376 "EHLO
+        id S241491AbiFFQFz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 12:05:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241491AbiFFQFx (ORCPT
+        with ESMTP id S241523AbiFFQFx (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 12:05:53 -0400
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78C2D18E448;
-        Mon,  6 Jun 2022 09:05:51 -0700 (PDT)
-Received: by mail-wm1-x331.google.com with SMTP id i17-20020a7bc951000000b0039c4760ec3fso2026361wml.0;
-        Mon, 06 Jun 2022 09:05:51 -0700 (PDT)
+Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A14D518F2EC;
+        Mon,  6 Jun 2022 09:05:52 -0700 (PDT)
+Received: by mail-wm1-x32a.google.com with SMTP id z9so1133392wmf.3;
+        Mon, 06 Jun 2022 09:05:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=QRhtSMfP7nSm/2tSi5M5oC7ypK4we5cxq3/aNo6/e8Y=;
-        b=XPB5PmaUDXmMT32mD1/2VkZV79VL9YJssT0/k8rVfz7YkGbiOFY8M7HqTJEU/FXods
-         4vVTvSwZsgefZF4qYxgGfTSbV/EGeQ4uIB5CGlau/tOjkj0hcwLON5ydpSgH2KRwmiNe
-         dzJBudjlclOuEvUHsRPRc7gNYGQI30WPJfmgnpss08JhC1eN6XfpP+C9jhustQ4aHjDZ
-         fdWrk48mV0gwVSTDuAFImN5SyhSDBRTv9zQY1R52xA7osTuvZdLGv39moxf2G/5MFxFl
-         NhDKm1OfJbRRuqA4l9QiftTp9+YNw7wajlzXmWEjYCLc7KzTmOG4DDFIozUML8/rA2X9
-         oCaQ==
+        bh=SjunFKBhrKFJ/HQv/88WssDIELUD5Mh1teOcnQSIQqw=;
+        b=DEaVT/QusonOGR7Pk3H7c7Hf2d/Qoq/o9e9Cr739AWVAtgqG30bWY+RGPjdQCc/8UR
+         Fgfs60I+SBPCk10wBebBP4eeI7Vdfkrvog6zeGIs2sh0ujhjlu9prNAq16Mvs25Y0zU0
+         M45JQ+qKDyp5zqkvk8y+1vIDdSCX+OhuvD0n7/nE2ATxDv+n491LCK1cH8ZhNZY62nFF
+         iOBFUQUmi07XyX7CeQcT0d6sQf5pe61vk3lqWWcd8xTVhkUM18CQmPnwRsbS7uzQkveB
+         UbBZUJ3drwvppG7gmDJW8ePNA3NnNw74p2UKE2oC6YzGYJK+Ami0GIGHTvkYbQ+bnO0n
+         aisg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=QRhtSMfP7nSm/2tSi5M5oC7ypK4we5cxq3/aNo6/e8Y=;
-        b=55zK7RpuCA2SdOCGiALxHqmHtfXeQ/kkxzsZlL0ORvU60rE+IvD9fre/gBPfjFSdqg
-         6PxsnLvTNH6VWJhg+msGqJR8KTVAGVD+jq5QejvWLn8PsltAFhB14b+ySrYtKPdvZnJm
-         ggT1SkfHGmDHNwJf1t2CpJUSjW2tV5ZoYKvtdZfSAraFvYNSR+49HIKEJGbdLqMSXAhy
-         M/DQZCoVxlPZUBtkBjJrby7sqnttAV2fCliTYBUBljS8KRcyPu4ZBo1G53Pivp16SiBi
-         wbIroLbYhjzwW0BhaLrDT/bj5eHQRLNAw05wCUbAjkuTMuktNrFCQvy+5NfPLGO5J7jo
-         mexw==
-X-Gm-Message-State: AOAM533OxGmpVlT7XDX7OA2p6/keUO/JNAhmXaubnaIuSTRocWUwfjDG
-        GVEgDrTjQaaJ2JGfhwhvDRU=
-X-Google-Smtp-Source: ABdhPJwaVjQHlc1pZA+yk4W0HRH3ZQ3TsRf/yKmXpD75EIt11ueNm6DG3L/H4GgH6mdfePuG/sv1QQ==
-X-Received: by 2002:a05:600c:35d4:b0:39c:2541:7571 with SMTP id r20-20020a05600c35d400b0039c25417571mr24057171wmq.33.1654531549764;
-        Mon, 06 Jun 2022 09:05:49 -0700 (PDT)
+        bh=SjunFKBhrKFJ/HQv/88WssDIELUD5Mh1teOcnQSIQqw=;
+        b=zbGWQt4Oi3UqA+rlIHE24eeoV5lLO4iJf4D8SnVdXZ4hoo6H7DLM7TniLjHiyZNHaJ
+         pc7AxBAMPPOgkDPzRcD1SZH3VP5Yms+pF+sIYxMApSqR5S7WKbDEnOwgytM39oHn5g76
+         wxkNmbzNXbMxKcjmvvRyrf+eCoYm00JQtM0cnA51A0fhSlLy1h7wJfsp1Ts1Ey1M510O
+         wp0sfs3S91dCiibLjGoONoWEG5w9WhhouqeE0ZP5xGQt+0+fJLoaIeRpQUhupVhzbi4A
+         G4CrYP+l3rJFvcBbyuDZCAhQMm1eF5tCww5FT5qR1o3uz3fJjes9hRf6e2fmqrfCoHOg
+         hQZg==
+X-Gm-Message-State: AOAM531hLhJZqxGBXJPrLqyWkDD78xRneXwNF1qRE4RURBxRDnaf4JlN
+        ji/ALmn2mUoWmPdCa6jloj8=
+X-Google-Smtp-Source: ABdhPJx7rnZ6nAjVlZL/lfs6cNXzm+cLv5NKvLemgQwWxdf4cfMcvMhB5cU/3TjLz1LFI30emHh1mg==
+X-Received: by 2002:a05:600c:511a:b0:397:50b9:f5be with SMTP id o26-20020a05600c511a00b0039750b9f5bemr54536380wms.188.1654531551185;
+        Mon, 06 Jun 2022 09:05:51 -0700 (PDT)
 Received: from amir-ThinkPad-T480.ctera.local (bzq-166-168-31-246.red.bezeqint.net. [31.168.166.246])
-        by smtp.gmail.com with ESMTPSA id n22-20020a05600c3b9600b00397342e3830sm25681327wms.0.2022.06.06.09.05.48
+        by smtp.gmail.com with ESMTPSA id n22-20020a05600c3b9600b00397342e3830sm25681327wms.0.2022.06.06.09.05.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Jun 2022 09:05:49 -0700 (PDT)
+        Mon, 06 Jun 2022 09:05:50 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Dave Chinner <david@fromorbit.com>,
@@ -58,9 +58,9 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         Pavel Reichl <preichl@redhat.com>,
         Eric Sandeen <sandeen@redhat.com>,
         Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 5.10 CANDIDATE 2/7] xfs: rename variable mp to parsing_mp
-Date:   Mon,  6 Jun 2022 19:05:32 +0300
-Message-Id: <20220606160537.689915-3-amir73il@gmail.com>
+Subject: [PATCH 5.10 CANDIDATE 3/7] xfs: Skip repetitive warnings about mount options
+Date:   Mon,  6 Jun 2022 19:05:33 +0300
+Message-Id: <20220606160537.689915-4-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220606160537.689915-1-amir73il@gmail.com>
 References: <20220606160537.689915-1-amir73il@gmail.com>
@@ -72,13 +72,13 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Pavel Reichl <preichl@redhat.com>
 
-commit 0f98b4ece18da9d8287bb4cc4e8f78b8760ea0d0 upstream.
+commit 92cf7d36384b99d5a57bf4422904a3c16dc4527a upstream.
 
-Rename mp variable to parsisng_mp so it is easy to distinguish
-between current mount point handle and handle for mount point
-which mount options are being parsed.
+Skip the warnings about mount option being deprecated if we are
+remounting and deprecated option state is not changing.
 
-Suggested-by: Eric Sandeen <sandeen@redhat.com>
+Bug: https://bugzilla.kernel.org/show_bug.cgi?id=211605
+Fix-suggested-by: Eric Sandeen <sandeen@redhat.com>
 Signed-off-by: Pavel Reichl <preichl@redhat.com>
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
@@ -86,215 +86,60 @@ Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/xfs_super.c | 102 ++++++++++++++++++++++-----------------------
- 1 file changed, 51 insertions(+), 51 deletions(-)
+ fs/xfs/xfs_super.c | 24 ++++++++++++++++++++----
+ 1 file changed, 20 insertions(+), 4 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 5ebd6cdc44a7..f667be85f454 100644
+index f667be85f454..b4a3a71bd667 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1165,7 +1165,7 @@ xfs_fc_parse_param(
- 	struct fs_context	*fc,
- 	struct fs_parameter	*param)
- {
--	struct xfs_mount	*mp = fc->s_fs_info;
-+	struct xfs_mount	*parsing_mp = fc->s_fs_info;
- 	struct fs_parse_result	result;
- 	int			size = 0;
- 	int			opt;
-@@ -1176,142 +1176,142 @@ xfs_fc_parse_param(
+@@ -1155,6 +1155,22 @@ suffix_kstrtoint(
+ 	return ret;
+ }
  
- 	switch (opt) {
- 	case Opt_logbufs:
--		mp->m_logbufs = result.uint_32;
-+		parsing_mp->m_logbufs = result.uint_32;
- 		return 0;
- 	case Opt_logbsize:
--		if (suffix_kstrtoint(param->string, 10, &mp->m_logbsize))
-+		if (suffix_kstrtoint(param->string, 10, &parsing_mp->m_logbsize))
- 			return -EINVAL;
- 		return 0;
- 	case Opt_logdev:
--		kfree(mp->m_logname);
--		mp->m_logname = kstrdup(param->string, GFP_KERNEL);
--		if (!mp->m_logname)
-+		kfree(parsing_mp->m_logname);
-+		parsing_mp->m_logname = kstrdup(param->string, GFP_KERNEL);
-+		if (!parsing_mp->m_logname)
- 			return -ENOMEM;
- 		return 0;
- 	case Opt_rtdev:
--		kfree(mp->m_rtname);
--		mp->m_rtname = kstrdup(param->string, GFP_KERNEL);
--		if (!mp->m_rtname)
-+		kfree(parsing_mp->m_rtname);
-+		parsing_mp->m_rtname = kstrdup(param->string, GFP_KERNEL);
-+		if (!parsing_mp->m_rtname)
- 			return -ENOMEM;
- 		return 0;
- 	case Opt_allocsize:
- 		if (suffix_kstrtoint(param->string, 10, &size))
- 			return -EINVAL;
--		mp->m_allocsize_log = ffs(size) - 1;
--		mp->m_flags |= XFS_MOUNT_ALLOCSIZE;
-+		parsing_mp->m_allocsize_log = ffs(size) - 1;
-+		parsing_mp->m_flags |= XFS_MOUNT_ALLOCSIZE;
- 		return 0;
- 	case Opt_grpid:
- 	case Opt_bsdgroups:
--		mp->m_flags |= XFS_MOUNT_GRPID;
-+		parsing_mp->m_flags |= XFS_MOUNT_GRPID;
- 		return 0;
- 	case Opt_nogrpid:
- 	case Opt_sysvgroups:
--		mp->m_flags &= ~XFS_MOUNT_GRPID;
-+		parsing_mp->m_flags &= ~XFS_MOUNT_GRPID;
- 		return 0;
- 	case Opt_wsync:
--		mp->m_flags |= XFS_MOUNT_WSYNC;
-+		parsing_mp->m_flags |= XFS_MOUNT_WSYNC;
- 		return 0;
- 	case Opt_norecovery:
--		mp->m_flags |= XFS_MOUNT_NORECOVERY;
-+		parsing_mp->m_flags |= XFS_MOUNT_NORECOVERY;
- 		return 0;
- 	case Opt_noalign:
--		mp->m_flags |= XFS_MOUNT_NOALIGN;
-+		parsing_mp->m_flags |= XFS_MOUNT_NOALIGN;
- 		return 0;
- 	case Opt_swalloc:
--		mp->m_flags |= XFS_MOUNT_SWALLOC;
-+		parsing_mp->m_flags |= XFS_MOUNT_SWALLOC;
- 		return 0;
- 	case Opt_sunit:
--		mp->m_dalign = result.uint_32;
-+		parsing_mp->m_dalign = result.uint_32;
- 		return 0;
- 	case Opt_swidth:
--		mp->m_swidth = result.uint_32;
-+		parsing_mp->m_swidth = result.uint_32;
- 		return 0;
- 	case Opt_inode32:
--		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-+		parsing_mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
- 		return 0;
- 	case Opt_inode64:
--		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
-+		parsing_mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
- 		return 0;
- 	case Opt_nouuid:
--		mp->m_flags |= XFS_MOUNT_NOUUID;
-+		parsing_mp->m_flags |= XFS_MOUNT_NOUUID;
- 		return 0;
- 	case Opt_largeio:
--		mp->m_flags |= XFS_MOUNT_LARGEIO;
-+		parsing_mp->m_flags |= XFS_MOUNT_LARGEIO;
- 		return 0;
- 	case Opt_nolargeio:
--		mp->m_flags &= ~XFS_MOUNT_LARGEIO;
-+		parsing_mp->m_flags &= ~XFS_MOUNT_LARGEIO;
- 		return 0;
- 	case Opt_filestreams:
--		mp->m_flags |= XFS_MOUNT_FILESTREAMS;
-+		parsing_mp->m_flags |= XFS_MOUNT_FILESTREAMS;
- 		return 0;
- 	case Opt_noquota:
--		mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
--		mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
--		mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
-+		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
-+		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
-+		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
- 		return 0;
- 	case Opt_quota:
- 	case Opt_uquota:
- 	case Opt_usrquota:
--		mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
-+		parsing_mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
- 				 XFS_UQUOTA_ENFD);
- 		return 0;
- 	case Opt_qnoenforce:
- 	case Opt_uqnoenforce:
--		mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
--		mp->m_qflags &= ~XFS_UQUOTA_ENFD;
-+		parsing_mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
-+		parsing_mp->m_qflags &= ~XFS_UQUOTA_ENFD;
- 		return 0;
- 	case Opt_pquota:
- 	case Opt_prjquota:
--		mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
-+		parsing_mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
- 				 XFS_PQUOTA_ENFD);
- 		return 0;
- 	case Opt_pqnoenforce:
--		mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
--		mp->m_qflags &= ~XFS_PQUOTA_ENFD;
-+		parsing_mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
-+		parsing_mp->m_qflags &= ~XFS_PQUOTA_ENFD;
- 		return 0;
- 	case Opt_gquota:
- 	case Opt_grpquota:
--		mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
-+		parsing_mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
- 				 XFS_GQUOTA_ENFD);
- 		return 0;
- 	case Opt_gqnoenforce:
--		mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
--		mp->m_qflags &= ~XFS_GQUOTA_ENFD;
-+		parsing_mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
-+		parsing_mp->m_qflags &= ~XFS_GQUOTA_ENFD;
- 		return 0;
- 	case Opt_discard:
--		mp->m_flags |= XFS_MOUNT_DISCARD;
-+		parsing_mp->m_flags |= XFS_MOUNT_DISCARD;
- 		return 0;
- 	case Opt_nodiscard:
--		mp->m_flags &= ~XFS_MOUNT_DISCARD;
-+		parsing_mp->m_flags &= ~XFS_MOUNT_DISCARD;
- 		return 0;
- #ifdef CONFIG_FS_DAX
- 	case Opt_dax:
--		xfs_mount_set_dax_mode(mp, XFS_DAX_ALWAYS);
-+		xfs_mount_set_dax_mode(parsing_mp, XFS_DAX_ALWAYS);
- 		return 0;
- 	case Opt_dax_enum:
--		xfs_mount_set_dax_mode(mp, result.uint_32);
-+		xfs_mount_set_dax_mode(parsing_mp, result.uint_32);
- 		return 0;
++static inline void
++xfs_fs_warn_deprecated(
++	struct fs_context	*fc,
++	struct fs_parameter	*param,
++	uint64_t		flag,
++	bool			value)
++{
++	/* Don't print the warning if reconfiguring and current mount point
++	 * already had the flag set
++	 */
++	if ((fc->purpose & FS_CONTEXT_FOR_RECONFIGURE) &&
++			!!(XFS_M(fc->root->d_sb)->m_flags & flag) == value)
++		return;
++	xfs_warn(fc->s_fs_info, "%s mount option is deprecated.", param->key);
++}
++
+ /*
+  * Set mount state from a mount option.
+  *
+@@ -1294,19 +1310,19 @@ xfs_fc_parse_param(
  #endif
  	/* Following mount options will be removed in September 2025 */
  	case Opt_ikeep:
--		xfs_warn(mp, "%s mount option is deprecated.", param->key);
--		mp->m_flags |= XFS_MOUNT_IKEEP;
-+		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
-+		parsing_mp->m_flags |= XFS_MOUNT_IKEEP;
+-		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
++		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_IKEEP, true);
+ 		parsing_mp->m_flags |= XFS_MOUNT_IKEEP;
  		return 0;
  	case Opt_noikeep:
--		xfs_warn(mp, "%s mount option is deprecated.", param->key);
--		mp->m_flags &= ~XFS_MOUNT_IKEEP;
-+		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
-+		parsing_mp->m_flags &= ~XFS_MOUNT_IKEEP;
+-		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
++		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_IKEEP, false);
+ 		parsing_mp->m_flags &= ~XFS_MOUNT_IKEEP;
  		return 0;
  	case Opt_attr2:
--		xfs_warn(mp, "%s mount option is deprecated.", param->key);
--		mp->m_flags |= XFS_MOUNT_ATTR2;
-+		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
-+		parsing_mp->m_flags |= XFS_MOUNT_ATTR2;
+-		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
++		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_ATTR2, true);
+ 		parsing_mp->m_flags |= XFS_MOUNT_ATTR2;
  		return 0;
  	case Opt_noattr2:
--		xfs_warn(mp, "%s mount option is deprecated.", param->key);
--		mp->m_flags &= ~XFS_MOUNT_ATTR2;
--		mp->m_flags |= XFS_MOUNT_NOATTR2;
-+		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
-+		parsing_mp->m_flags &= ~XFS_MOUNT_ATTR2;
-+		parsing_mp->m_flags |= XFS_MOUNT_NOATTR2;
+-		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
++		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_NOATTR2, true);
+ 		parsing_mp->m_flags &= ~XFS_MOUNT_ATTR2;
+ 		parsing_mp->m_flags |= XFS_MOUNT_NOATTR2;
  		return 0;
- 	default:
--		xfs_warn(mp, "unknown mount option [%s].", param->key);
-+		xfs_warn(parsing_mp, "unknown mount option [%s].", param->key);
- 		return -EINVAL;
- 	}
- 
 -- 
 2.25.1
 
