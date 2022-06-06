@@ -2,112 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E73A7C43334
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 14:29:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A354CCA481
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 14:33:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239844AbiFFO3i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 10:29:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35872 "EHLO
+        id S239627AbiFFOdF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 10:33:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239882AbiFFO3a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 10:29:30 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 09C27CA3C7
-        for <linux-xfs@vger.kernel.org>; Mon,  6 Jun 2022 07:29:29 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id AF01C323BF9;
-        Mon,  6 Jun 2022 09:29:05 -0500 (CDT)
-Message-ID: <cadc327b-2370-1b1d-6822-ae8a1da6d58c@sandeen.net>
-Date:   Mon, 6 Jun 2022 09:29:27 -0500
+        with ESMTP id S239740AbiFFOdE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 10:33:04 -0400
+Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4AD81C12D;
+        Mon,  6 Jun 2022 07:33:03 -0700 (PDT)
+Received: by mail-wr1-x42d.google.com with SMTP id m26so8695767wrb.4;
+        Mon, 06 Jun 2022 07:33:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=nVR5L8pspyH8NCr87V+bK6vtRmqrZxyBwvj97tjuvy4=;
+        b=BhvdPrPlWlMtDRNqjlxgshk0rVK9LKGjvoRHJCjo6bUxBWDOtJXIMJWYVF3Zumh1rW
+         DEZzd2wncAUOgkPYJC50POmzqOmhpBRe4Q3LOMuiB7PqWcaG2L3pnGCUoVehx34yJazJ
+         DRVG9LM/9SOIpiYifS3notFDC7YGAMmR+LkTIJdUB4NBgkWhM8/hILXSjByg79vvqTse
+         Kzl4DRkt+aNtY8E4Vt3V/Hc3yZmmTk9GjcdCkndJYBJVxrSNGPaEv8sb8RpCAdVL9ur7
+         V4f8D90hN42kankghU43OXbgEUpmFIUNzMNPjfCJEg4hpvk6O6H91i+w5Gu0ufAzPX49
+         pkRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=nVR5L8pspyH8NCr87V+bK6vtRmqrZxyBwvj97tjuvy4=;
+        b=J4756VYbSZobB3P+0scDmO/tnuQlWbGrWCWsIEMeVH63ytx0RMzUWVkfRB/0yW3deG
+         cnyhrAJuHCwfcwCvv2gQcR9kJm94sfulZX052tvQ/VwodeVR7kWe5lFC1wyqHutnE/Gr
+         0op6ENCnBzRqZqON55Rhxj5ybHwnDc6lhrIR8YhR6pokDbC+rH3TWHcgSYN9qG0pC6hu
+         tbW5KPPRPclTpLmIkE+0nQiuQftX2+q2jKUsEhlFX6EQ+9SbAN2GjjJcfBq9Oxbk5Hno
+         WK3Lsjl3XNOd8Q/Ht3uxfXnZsDla7B6n1CRNSReq+Dp09asFe6bCXrmjzyPYONj+ndP+
+         yTqA==
+X-Gm-Message-State: AOAM533bVK9JmLLLCI+w2TB7A7uKNpW3+EsjqxktQbxM4M4/n5ZBFJXX
+        ooX9HLslbWNSgqjn/MslhZc=
+X-Google-Smtp-Source: ABdhPJylzdvM9GzeuYhXM5miLG/eUUvIWmUQE1Nr3ztvhQCz8zoB9BjoIRdQpuNKlsiAa36bHH+ByQ==
+X-Received: by 2002:a5d:64ac:0:b0:211:7f3b:8151 with SMTP id m12-20020a5d64ac000000b002117f3b8151mr20861946wrp.166.1654525982330;
+        Mon, 06 Jun 2022 07:33:02 -0700 (PDT)
+Received: from amir-ThinkPad-T480.ctera.local (bzq-166-168-31-246.red.bezeqint.net. [31.168.166.246])
+        by smtp.gmail.com with ESMTPSA id h24-20020a05600c145800b0039c54bb28f2sm1622958wmi.36.2022.06.06.07.33.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Jun 2022 07:33:01 -0700 (PDT)
+From:   Amir Goldstein <amir73il@gmail.com>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Sasha Levin <sashal@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Brian Foster <bfoster@redhat.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH 5.10 v2 0/8] xfs fixes for 5.10.y (part 2)
+Date:   Mon,  6 Jun 2022 17:32:47 +0300
+Message-Id: <20220606143255.685988-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.10.0
-Content-Language: en-US
-To:     zhanchengbin <zhanchengbin1@huawei.com>, djwong@kernel.org
-Cc:     liuzhiqiang26@huawei.com, linfeilong <linfeilong@huawei.com>,
-        linux-xfs@vger.kernel.org
-References: <7f4abf2a-5ea5-e2ee-786e-88d871d29475@huawei.com>
- <44ef0950-791d-e17e-1fe8-f58d3148603f@huawei.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 1/3] mkfs/proto.c: avoid to use NULL pointer
-In-Reply-To: <44ef0950-791d-e17e-1fe8-f58d3148603f@huawei.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/6/22 7:33 AM, zhanchengbin wrote:
-> Change malloc to xmalloc.
+Hi Greg,
 
-The commit log and cover letter say nothing about this, but apparently
-"xmalloc" is often defined locally to abort() on a memory failure, so I
-guess you are trying to make (some of?) xfsprogs do that.
+This is the 2nd round of xfs fixes for 5.10.y.
 
-First, this doesn't seem to build....
+The fixes in this part are from circa v5.11..v5.12.
+Per Luis' advise, I am trying to post a small number
+of fixes per LTS release.
 
-Building mkfs
-    [CC]     proto.o
-proto.c: In function ‘setup_proto’:
-proto.c:73:15: warning: implicit declaration of function ‘xmalloc’; did you mean ‘malloc’? [-Wimplicit-function-declaration]
-   73 |         buf = xmalloc(size + 1);
-      |               ^~~~~~~
-      |               malloc
-proto.c:73:13: warning: assignment to ‘char *’ from ‘int’ makes pointer from integer without a cast [-Wint-conversion]
-   73 |         buf = xmalloc(size + 1);
-      |             ^
-proto.c: In function ‘newregfile’:
-proto.c:306:21: warning: assignment to ‘char *’ from ‘int’ makes pointer from integer without a cast [-Wint-conversion]
-  306 |                 buf = xmalloc(size);
-      |                     ^
-    [LD]     mkfs.xfs
-/usr/bin/ld: proto.o: in function `setup_proto':
-/src/git/xfsprogs-dev/mkfs/proto.c:73: undefined reference to `xmalloc'
-/usr/bin/ld: proto.o: in function `newregfile':
-/src/git/xfsprogs-dev/mkfs/proto.c:306: undefined reference to `xmalloc'
-collect2: error: ld returned 1 exit status
-gmake[2]: *** [../include/buildrules:65: mkfs.xfs] Error 1
-gmake[1]: *** [include/buildrules:36: mkfs] Error 2
-make: *** [Makefile:92: default] Error 2
+These fixes have been soaking in the kdevops test env for the past
+week with no regressions observed from baseline 5.10.y.
+One backported fix was identified as a stable regression, so it
+was removed even before being posted as a candidate.
 
-Second, we have calls to malloc all over the codebase, including around
-100 outside of the internal libraries in the various userspace utilities.
-Why change only mkfs/db/repair?
+These fixes have been posted to review on xfs list [1].
 
-Third, what problem are you solving? Granted, we should be checking every
-malloc call, and it seems that we don't. But have you ever seen these
-failures in practice? Your commit log should at least explain why this
-makes the code better (and, I guess, where xmalloc is supposed to come 
-from...)
+Following review of stable candidates, one fix was removed
+("xfs: fix up non-directory creation in SGID directories")
+because some effects of this change are still being fixed upstream
+and there was no consensus whether applying this fix alone is
+desired.  It is still in my queue and will be posted to stable
+sometime later when remaining upstream issues are resolved.
 
--Eric
+Following review of another candidate, Dave has pointed me to a
+related fix that just got merged ("xfs: assert in xfs_btree_del_cursor
+should take into account error"), so I included it in my test tree and
+in this round of stable patches.
 
-> Signed-off-by: zhanchengbin <zhanchengbin1@huawei.com>
-> ---
->  mkfs/proto.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index 127d87dd..f3b8710c 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -70,7 +70,7 @@ setup_proto(
->          goto out_fail;
->      }
-> 
-> -    buf = malloc(size + 1);
-> +    buf = xmalloc(size + 1);
->      if (read(fd, buf, size) < size) {
->          fprintf(stderr, _("%s: read failed on %s: %s\n"),
->              progname, fname, strerror(errno));
-> @@ -303,7 +303,7 @@ newregfile(
->          exit(1);
->      }
->      if ((*len = (int)size)) {
-> -        buf = malloc(size);
-> +        buf = xmalloc(size);
->          if (read(fd, buf, size) < size) {
->              fprintf(stderr, _("%s: read failed on %s: %s\n"),
->                  progname, fname, strerror(errno));
+I would like to thank all the xfs developers that helped in the review
+of the stable candidates.
+
+I would like to thank Samsung for contributing the hardware for the
+kdevops test environment and especially to Luis for his ongoing support
+in the test environment, which does most of the work for me :)
+
+Thanks,
+Amir.
+
+[1] https://lore.kernel.org/linux-xfs/20220601104547.260949-1-amir73il@gmail.com/
+
+Brian Foster (3):
+  xfs: sync lazy sb accounting on quiesce of read-only mounts
+  xfs: restore shutdown check in mapped write fault path
+  xfs: consider shutdown in bmapbt cursor delete assert
+
+Darrick J. Wong (3):
+  xfs: fix chown leaking delalloc quota blocks when fssetxattr fails
+  xfs: fix incorrect root dquot corruption error when switching
+    group/project quota types
+  xfs: force log and push AIL to clear pinned inodes when aborting mount
+
+Dave Chinner (1):
+  xfs: assert in xfs_btree_del_cursor should take into account error
+
+Jeffrey Mitchell (1):
+  xfs: set inode size after creating symlink
+
+ fs/xfs/libxfs/xfs_btree.c | 35 +++++++--------
+ fs/xfs/xfs_dquot.c        | 39 +++++++++++++++-
+ fs/xfs/xfs_iomap.c        |  3 ++
+ fs/xfs/xfs_log.c          | 28 ++++++++----
+ fs/xfs/xfs_log.h          |  1 +
+ fs/xfs/xfs_mount.c        | 93 +++++++++++++++++++--------------------
+ fs/xfs/xfs_qm.c           | 92 +++++++++++++++-----------------------
+ fs/xfs/xfs_symlink.c      |  1 +
+ 8 files changed, 158 insertions(+), 134 deletions(-)
+
+-- 
+2.25.1
+
