@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59250CCA473
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 854D9CCA483
 	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 20:51:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234498AbiFFUve (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 16:51:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33332 "EHLO
+        id S234762AbiFFUvg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 16:51:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234664AbiFFUt4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 16:49:56 -0400
+        with ESMTP id S234625AbiFFUtq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 16:49:46 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA339F5BE;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA2FEF5B6;
         Mon,  6 Jun 2022 13:41:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=PTb1fSw49y2qxNUUq4k5t2uIOYf1rKQU0qM36b/uqdM=; b=moAsLc7xAe9cCO2yLS/2VDmHEw
-        YBwWTVJr9kJRjwoeFhsNnd8JLuuJjbq0xBtc3hJNd0koz0AzNRiu2y+N5Os1g1/u53LaRvxXW4rdM
-        tHwy5XlETEs430Lov51yIttD+nu/AmMuCt1+6O5d08aKIMBYPTBY0Yt54xqFYELLNo0/O6twSwDnU
-        wa3c1U/y/ETekmwC5gKHpa1nMck5VNxLTjucI7KCgMp9l5cOztmW0nCXmpkBfBeAli7aijjbj7GhC
-        zHPVo0ax+4QE/HagbZZ6pGGOB2yVWmyQYd5p+40+xWsAl8Ab1eGJlEDyjqzfn+/+j35DgUlM4Y7a4
-        FS4d0iCw==;
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=52TXjMDH2lUY3R09liZNjO+IjMsaCFATm2t/b+KQCF8=; b=SZdEFZWXMJtFPOJuECFsGH4n90
+        q7ier+E1yPXVQU4Nd1lYIGA05aBdagpFc4iTt8PjgeKc8E++hHnQYInhlsw3wbFpf5nxp3H2fcfme
+        0Xx+q8n2owHljzIVuJKc0MDo+cUizE5viLTjZLfP5xwl/nmCSSlMfDWIQiYSrFSnV+41z2epAxAgz
+        c5hI+6eJnPB8FSW9f2DBRPcvqpAvUVkxshVm7oCqFdrliaskJ+h+S7JjdTqvzkHPpD7vXrhjHIlQV
+        QHRESAfyNVHF1VHQMM7Gir9jrNAHNPAhLTN9Pq43f+cwmm1aYDR8JwDm6N7iYlMQcSUd+o2cWsMba
+        zygq/t9A==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nyJWw-00B19S-UW; Mon, 06 Jun 2022 20:40:54 +0000
+        id 1nyJWw-00B19H-IZ; Mon, 06 Jun 2022 20:40:54 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -37,72 +37,88 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
         linux-mtd@lists.infradead.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 05/20] mm/migrate: Convert expected_page_refs() to folio_expected_refs()
-Date:   Mon,  6 Jun 2022 21:40:35 +0100
-Message-Id: <20220606204050.2625949-6-willy@infradead.org>
+Subject: [PATCH 00/20] Convert aops->migratepage to aops->migrate_folio
+Date:   Mon,  6 Jun 2022 21:40:30 +0100
+Message-Id: <20220606204050.2625949-1-willy@infradead.org>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20220606204050.2625949-1-willy@infradead.org>
-References: <20220606204050.2625949-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Now that both callers have a folio, convert this function to
-take a folio & rename it.
+I plan to submit these patches through my pagecache tree in the upcoming
+merge window.  I'm pretty happy that most filesystems are now using
+common code for ->migrate_folio; it's not something that most filesystem
+people want to care about.  I'm running xfstests using xfs against it now,
+but it's little more than compile tested for other filesystems.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- mm/migrate.c | 19 ++++++++++++-------
- 1 file changed, 12 insertions(+), 7 deletions(-)
+Matthew Wilcox (Oracle) (20):
+  fs: Add aops->migrate_folio
+  mm/migrate: Convert fallback_migrate_page() to
+    fallback_migrate_folio()
+  mm/migrate: Convert writeout() to take a folio
+  mm/migrate: Convert buffer_migrate_page() to buffer_migrate_folio()
+  mm/migrate: Convert expected_page_refs() to folio_expected_refs()
+  btrfs: Convert btree_migratepage to migrate_folio
+  nfs: Convert to migrate_folio
+  mm/migrate: Convert migrate_page() to migrate_folio()
+  mm/migrate: Add filemap_migrate_folio()
+  btrfs: Convert btrfs_migratepage to migrate_folio
+  ubifs: Convert to filemap_migrate_folio()
+  f2fs: Convert to filemap_migrate_folio()
+  aio: Convert to migrate_folio
+  hugetlb: Convert to migrate_folio
+  balloon: Convert to migrate_folio
+  secretmem: Convert to migrate_folio
+  z3fold: Convert to migrate_folio
+  zsmalloc: Convert to migrate_folio
+  fs: Remove aops->migratepage()
+  mm/folio-compat: Remove migration compatibility functions
 
-diff --git a/mm/migrate.c b/mm/migrate.c
-index 77b8c662c9ca..e0a593e5b5f9 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -337,13 +337,18 @@ void pmd_migration_entry_wait(struct mm_struct *mm, pmd_t *pmd)
- }
- #endif
- 
--static int expected_page_refs(struct address_space *mapping, struct page *page)
-+static int folio_expected_refs(struct address_space *mapping,
-+		struct folio *folio)
- {
--	int expected_count = 1;
-+	int refs = 1;
-+	if (!mapping)
-+		return refs;
- 
--	if (mapping)
--		expected_count += compound_nr(page) + page_has_private(page);
--	return expected_count;
-+	refs += folio_nr_pages(folio);
-+	if (folio_get_private(folio))
-+		refs++;
-+
-+	return refs;;
- }
- 
- /*
-@@ -360,7 +365,7 @@ int folio_migrate_mapping(struct address_space *mapping,
- 	XA_STATE(xas, &mapping->i_pages, folio_index(folio));
- 	struct zone *oldzone, *newzone;
- 	int dirty;
--	int expected_count = expected_page_refs(mapping, &folio->page) + extra_count;
-+	int expected_count = folio_expected_refs(mapping, folio) + extra_count;
- 	long nr = folio_nr_pages(folio);
- 
- 	if (!mapping) {
-@@ -670,7 +675,7 @@ static int __buffer_migrate_folio(struct address_space *mapping,
- 		return migrate_page(mapping, &dst->page, &src->page, mode);
- 
- 	/* Check whether page does not have extra refs before we do more work */
--	expected_count = expected_page_refs(mapping, &src->page);
-+	expected_count = folio_expected_refs(mapping, src);
- 	if (folio_ref_count(src) != expected_count)
- 		return -EAGAIN;
- 
+ Documentation/filesystems/locking.rst       |   5 +-
+ Documentation/filesystems/vfs.rst           |  13 +-
+ Documentation/vm/page_migration.rst         |  33 +--
+ block/fops.c                                |   2 +-
+ drivers/gpu/drm/i915/gem/i915_gem_userptr.c |   4 +-
+ fs/aio.c                                    |  36 ++--
+ fs/btrfs/disk-io.c                          |  22 +-
+ fs/btrfs/inode.c                            |  26 +--
+ fs/ext2/inode.c                             |   4 +-
+ fs/ext4/inode.c                             |   4 +-
+ fs/f2fs/checkpoint.c                        |   4 +-
+ fs/f2fs/data.c                              |  40 +---
+ fs/f2fs/f2fs.h                              |   4 -
+ fs/f2fs/node.c                              |   4 +-
+ fs/gfs2/aops.c                              |   2 +-
+ fs/hugetlbfs/inode.c                        |  19 +-
+ fs/iomap/buffered-io.c                      |  25 ---
+ fs/nfs/file.c                               |   4 +-
+ fs/nfs/internal.h                           |   6 +-
+ fs/nfs/write.c                              |  16 +-
+ fs/ntfs/aops.c                              |   6 +-
+ fs/ocfs2/aops.c                             |   2 +-
+ fs/ubifs/file.c                             |  29 +--
+ fs/xfs/xfs_aops.c                           |   2 +-
+ fs/zonefs/super.c                           |   2 +-
+ include/linux/buffer_head.h                 |  10 +
+ include/linux/fs.h                          |  18 +-
+ include/linux/iomap.h                       |   6 -
+ include/linux/migrate.h                     |  22 +-
+ include/linux/pagemap.h                     |   6 +
+ mm/balloon_compaction.c                     |  15 +-
+ mm/compaction.c                             |   5 +-
+ mm/folio-compat.c                           |  22 --
+ mm/ksm.c                                    |   2 +-
+ mm/migrate.c                                | 217 ++++++++++++--------
+ mm/migrate_device.c                         |   3 +-
+ mm/secretmem.c                              |   6 +-
+ mm/shmem.c                                  |   2 +-
+ mm/swap_state.c                             |   2 +-
+ mm/z3fold.c                                 |   8 +-
+ mm/zsmalloc.c                               |   8 +-
+ 41 files changed, 287 insertions(+), 379 deletions(-)
+
 -- 
 2.35.1
 
