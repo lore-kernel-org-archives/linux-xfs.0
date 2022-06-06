@@ -2,79 +2,79 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE632C3F2D4
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 15:36:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5621CCA473
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 15:40:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240916AbiFFPgO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 11:36:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43202 "EHLO
+        id S240978AbiFFPkv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 11:40:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241123AbiFFPfW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 11:35:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63AC139823;
-        Mon,  6 Jun 2022 08:35:21 -0700 (PDT)
+        with ESMTP id S240929AbiFFPku (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 11:40:50 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A12A5000A;
+        Mon,  6 Jun 2022 08:40:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 004FD6150E;
-        Mon,  6 Jun 2022 15:35:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 594ECC34115;
-        Mon,  6 Jun 2022 15:35:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E5AEE61585;
+        Mon,  6 Jun 2022 15:40:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4731AC385A9;
+        Mon,  6 Jun 2022 15:40:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654529720;
-        bh=YfhYxd0KW2EX3cqQwW/XmmCJopVcYnjBZToBDLNd3Eo=;
+        s=k20201202; t=1654530048;
+        bh=w9q/4uGWop59/YIjcGpVDumy0qIxzhCDhXOuc85q8Cg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=D00wBxSEb/HqBaHNP7sFfqKZ/j8NL0t0IivlWtAUgNr2ybahR+4+bSsr8EaCQlHSI
-         UkCHmR7DrVaea3LhX37oWTEfssYXuwkhrpNnYtEZbNM4T4FLdiQWMwGzwLkO6k06ga
-         b1x4hbPXUMXfOEFOQFvoYdcy7j0jx/ohPRuJtY3YFqDvag51DSuWGHBYsMYm5D8+52
-         F+emZdxwq7IB+v57PZeBbndv600j49llRqIKIHgFyogd8/ScfhPzQbZW9/uK+MQQCo
-         iKdLL6QtxcfymN/2rxjw53YRqpYrXVSeKiq6NNr3CqgO/HvKiASimIw7liUWGHlhPs
-         Eel5Mppf0mLhA==
-Date:   Mon, 6 Jun 2022 08:35:19 -0700
+        b=us23WqVNS6yZTpMZSqHz7Y+2kfsc3hIUoS5Zdjro+E3mY59w+kGwBOe994zs60C7D
+         MQNXyLjgo08m1hE2jhm/+jJSWR6NEp+dzspzzRD+wi7Qg1Lx6hsOJbmWWSKPOW8uuq
+         5McmlscamHHnh0m0HtOug/jwqCSjaYgCndcLGRVkJvr4u5FgSSk8SXMyf2fEVmp33l
+         eAiRhU549VA0DRtbbBPV/Rxia7YpNH5hJzsv7jb30cBQZeC4HxxJ4mRWXvMuThA6F0
+         z0i/pfHOmpTChO6fijS43s1Ju4tu6nAAcLx+Sw7xAfU6ROQvUJmU2c3klQoBfKv6Ti
+         4bq7HKTLE7pIA==
+Date:   Mon, 6 Jun 2022 08:40:47 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     fstests@vger.kernel.org, zlang@kernel.org,
         linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs/548: Verify correctness of upgrading an fs to
- support large extent counters
-Message-ID: <Yp4etwsUF/B6aSbe@magnolia>
+Subject: Re: [PATCH 3/4] xfs/547: Verify that the correct inode extent
+ counters are updated with/without nrext64
+Message-ID: <Yp4f/yalwFunfEgz@magnolia>
 References: <20220606124101.263872-1-chandan.babu@oracle.com>
- <20220606124101.263872-5-chandan.babu@oracle.com>
+ <20220606124101.263872-4-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220606124101.263872-5-chandan.babu@oracle.com>
+In-Reply-To: <20220606124101.263872-4-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 06, 2022 at 06:11:01PM +0530, Chandan Babu R wrote:
-> This commit adds a test to verify upgrade of an existing V5 filesystem to
-> support large extent counters.
+On Mon, Jun 06, 2022 at 06:11:00PM +0530, Chandan Babu R wrote:
+> This commit adds a new test to verify if the correct inode extent counter
+> fields are updated with/without nrext64 mkfs option.
 > 
 > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 > ---
->  tests/xfs/548     | 109 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/548.out |  12 +++++
->  2 files changed, 121 insertions(+)
->  create mode 100755 tests/xfs/548
->  create mode 100644 tests/xfs/548.out
+>  tests/xfs/547     | 91 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/547.out | 13 +++++++
+>  2 files changed, 104 insertions(+)
+>  create mode 100755 tests/xfs/547
+>  create mode 100644 tests/xfs/547.out
 > 
-> diff --git a/tests/xfs/548 b/tests/xfs/548
+> diff --git a/tests/xfs/547 b/tests/xfs/547
 > new file mode 100755
-> index 00000000..6c577584
+> index 00000000..d5137ca7
 > --- /dev/null
-> +++ b/tests/xfs/548
-> @@ -0,0 +1,109 @@
+> +++ b/tests/xfs/547
+> @@ -0,0 +1,91 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
 > +#
-> +# FS QA Test 548
+> +# FS QA Test 547
 > +#
-> +# Test to verify upgrade of an existing V5 filesystem to support large extent
-> +# counters.
+> +# Verify that correct inode extent count fields are populated with and without
+> +# nrext64 feature.
 > +#
 > +. ./common/preamble
 > +_begin_fstest auto quick metadata
@@ -94,114 +94,100 @@ On Mon, Jun 06, 2022 at 06:11:01PM +0530, Chandan Babu R wrote:
 > +_require_test_program "punch-alternating"
 > +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
 > +
-> +_scratch_mkfs -d size=$((512 * 1024 * 1024)) >> $seqres.full
-> +_scratch_mount >> $seqres.full
+> +for nrext64 in 0 1; do
+> +	echo "* Verify extent counter fields with nrext64=${nrext64} option"
 > +
-> +bsize=$(_get_file_block_size $SCRATCH_MNT)
+> +	_scratch_mkfs -i nrext64=${nrext64} -d size=$((512 * 1024 * 1024)) \
+> +		      >> $seqres.full
+> +	_scratch_mount >> $seqres.full
 > +
-> +testfile=$SCRATCH_MNT/testfile
+> +	bsize=$(_get_file_block_size $SCRATCH_MNT)
 > +
-> +nr_blks=20
+> +	testfile=$SCRATCH_MNT/testfile
 > +
-> +echo "Add blocks to file's data fork"
-> +$XFS_IO_PROG -f -c "pwrite 0 $((nr_blks * bsize))" $testfile \
-> +	     >> $seqres.full
-> +$here/src/punch-alternating $testfile
+> +	nr_blks=20
 > +
-> +echo "Consume free space"
-> +fillerdir=$SCRATCH_MNT/fillerdir
-> +nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
-> +nr_free_blks=$((nr_free_blks * 90 / 100))
+> +	echo "Add blocks to test file's data fork"
+> +	$XFS_IO_PROG -f -c "pwrite 0 $((nr_blks * bsize))" $testfile \
+> +		     >> $seqres.full
+> +	$here/src/punch-alternating $testfile
 > +
-> +_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 \
-> +	 >> $seqres.full 2>&1
+> +	echo "Consume free space"
+> +	fillerdir=$SCRATCH_MNT/fillerdir
+> +	nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
+> +	nr_free_blks=$((nr_free_blks * 90 / 100))
 > +
-> +echo "Create fragmented filesystem"
-> +for dentry in $(ls -1 $fillerdir/); do
-> +	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
-> +done
+> +	_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 \
+> +		 >> $seqres.full 2>&1
 > +
-> +echo "Inject bmap_alloc_minlen_extent error tag"
-> +_scratch_inject_error bmap_alloc_minlen_extent 1
+> +	echo "Create fragmented filesystem"
+> +	for dentry in $(ls -1 $fillerdir/); do
+> +		$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
+> +	done
 > +
-> +echo "Add blocks to file's attr fork"
-> +nr_blks=10
-> +attr_len=255
-> +nr_attrs=$((nr_blks * bsize / attr_len))
-> +for i in $(seq 1 $nr_attrs); do
-> +	attr="$(printf "trusted.%0247d" $i)"
-> +	$SETFATTR_PROG -n "$attr" $testfile >> $seqres.full 2>&1
-> +	[[ $? != 0 ]] && break
-> +done
+> +	echo "Inject bmap_alloc_minlen_extent error tag"
+> +	_scratch_inject_error bmap_alloc_minlen_extent 1
 > +
-> +testino=$(stat -c '%i' $testfile)
+> +	echo "Add blocks to test file's attr fork"
+> +	attr_len=255
+> +	nr_attrs=$((nr_blks * bsize / attr_len))
+> +	for i in $(seq 1 $nr_attrs); do
+> +		attr="$(printf "trusted.%0247d" $i)"
+> +		$SETFATTR_PROG -n "$attr" $testfile >> $seqres.full 2>&1
+> +		[[ $? != 0 ]] && break
+> +	done
 > +
-> +echo "Unmount filesystem"
-> +_scratch_unmount >> $seqres.full
+> +	testino=$(stat -c '%i' $testfile)
 > +
-> +orig_dcnt=$(_scratch_xfs_get_metadata_field core.nextents "inode $testino")
-> +orig_acnt=$(_scratch_xfs_get_metadata_field core.naextents "inode $testino")
+> +	_scratch_unmount >> $seqres.full
 > +
-> +echo "Upgrade filesystem to support large extent counters"
-> +_scratch_xfs_admin -O nrext64=1 >> $seqres.full 2>&1
-> +if [[ $? != 0 ]]; then
-> +	_notrun "Filesystem geometry is not suitable for upgrading"
-> +fi
-> +
-> +
-> +echo "Mount filesystem"
-> +_scratch_mount >> $seqres.full
-> +
-> +echo "Modify inode core"
-> +touch $testfile
-> +
-> +echo "Unmount filesystem"
-> +_scratch_unmount >> $seqres.full
-> +
-> +dcnt=$(_scratch_xfs_get_metadata_field core.nextents "inode $testino")
-> +acnt=$(_scratch_xfs_get_metadata_field core.naextents "inode $testino")
-> +
-> +echo "Verify inode extent counter values after fs upgrade"
+> +	dcnt=$(_scratch_xfs_get_metadata_field core.nextents "inode $testino")
+> +	acnt=$(_scratch_xfs_get_metadata_field core.naextents "inode $testino")
 
-Is there a scenario where the inode counters would become corrupt after
-enabling the superblock feature bit?  IIRC repair doesn't rewrite the
-inodes during the upgrade... so is this test merely being cautious?  Or
-is this covering a failure you found somewhere while writing the feature?
+Note: For any test requiring functionality added after 5.10, you can use
+the xfs_db path command to avoid this sort of inode number saving:
+
+dcnt=$(_scratch_xfs_get_metadata_field core.nextents "path /testfile")
+
+Up to you if you want to change the test to do that; otherwise,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > +
-> +if [[ $orig_dcnt != $dcnt ]]; then
-> +	echo "Corrupt data extent counter"
-> +	exit 1
-> +fi
+> +	if (( $dcnt != 10 )); then
+> +		echo "Invalid data fork extent count: $dextcnt"
+> +		exit 1
+> +	fi
 > +
-> +if [[ $orig_acnt != $acnt ]]; then
-> +	echo "Corrupt attr extent counter"
-> +	exit 1
-> +fi
+> +	if (( $acnt < 10 )); then
+> +		echo "Invalid attr fork extent count: $aextcnt"
+> +		exit 1
+> +	fi
+> +done
 > +
 > +# success, all done
 > +status=0
 > +exit
-> diff --git a/tests/xfs/548.out b/tests/xfs/548.out
+> diff --git a/tests/xfs/547.out b/tests/xfs/547.out
 > new file mode 100644
-> index 00000000..19a7f907
+> index 00000000..49fcc3c2
 > --- /dev/null
-> +++ b/tests/xfs/548.out
-> @@ -0,0 +1,12 @@
-> +QA output created by 548
-> +Add blocks to file's data fork
+> +++ b/tests/xfs/547.out
+> @@ -0,0 +1,13 @@
+> +QA output created by 547
+> +* Verify extent counter fields with nrext64=0 option
+> +Add blocks to test file's data fork
 > +Consume free space
 > +Create fragmented filesystem
 > +Inject bmap_alloc_minlen_extent error tag
-> +Add blocks to file's attr fork
-> +Unmount filesystem
-> +Upgrade filesystem to support large extent counters
-> +Mount filesystem
-> +Modify inode core
-> +Unmount filesystem
-> +Verify inode extent counter values after fs upgrade
+> +Add blocks to test file's attr fork
+> +* Verify extent counter fields with nrext64=1 option
+> +Add blocks to test file's data fork
+> +Consume free space
+> +Create fragmented filesystem
+> +Inject bmap_alloc_minlen_extent error tag
+> +Add blocks to test file's attr fork
 > -- 
 > 2.35.1
 > 
