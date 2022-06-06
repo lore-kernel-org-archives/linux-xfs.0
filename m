@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89F38CCA482
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 20:47:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F99EC43334
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 20:47:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229571AbiFFUrd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 16:47:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46748 "EHLO
+        id S234386AbiFFUrg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 16:47:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234195AbiFFUrQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 16:47:16 -0400
+        with ESMTP id S234482AbiFFUqs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 16:46:48 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBC7AAFB3B;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20CD513B8F2;
         Mon,  6 Jun 2022 13:40:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=jShwzeL+5O6p6+KB8AXJd8QTjTM3rLlLO0YNnyhkzoU=; b=j8WB6rbesWftHu8QIJhuNjLLRv
-        8UGF1DKSTdZLPDZ0Kov24duPgp8KMpi6m8VEsqm5e1sZdIO0hAb54JNjAbS00XQgXdsCx8+PvicwO
-        rYdGhK7Gy6I6AX03/exLoIxL+gMZQDduaqInpnkGl13x/6LHcmOMXo+u8SO/crNY4L5fIgFOEe3TY
-        clMZRMy11m0K44+Yi9a6EjLXZgw7NLEoTTdV/oEJbaeKVMorPM13Ba1mk7M/T/X6/bkJL+qWpRRnS
-        1wANzqWwYhqp/CK739JNy4OmGeFkTAhy3sEt9IXLj+oIA+NjHnNm9hNBqc/doCVMUizMtdR2GOaOc
-        gaaqEAJA==;
+        bh=dRkMHaR981UE2djNCVPW4MUdY2rPYJAa6UnQ1arpxn4=; b=VhRq5mA6U/Le0FhZhCp9BX9vX0
+        eEJWByASrVCSrm9WetxXqV0UXZBjF0SuYe4mFnGXMFsUgOilHz8p+squ/1rM4gM36CwhSe5BBEQp6
+        i1dQyrlxzSUP+hK9Ax4brjnRi7zxuvpEv+ymkWeCRkQK8HkgmO0y7Vc+lYVUA7Hlj90Pkf8iPWxqv
+        CYXqz3bl8ul96I36GIcF4ldupbg1VWOjM55w+RuDYjPUC/TOKQiKqMH+XKBjwoHp0p03NK+LpBfPw
+        iNV++FmUm87jwl9SX46KBPV+Ri5X6qeVBMjICnW8mirhgRNBkbRKdvNkLwdTh42fXKSQ5I7volu41
+        cllWb9Yg==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nyJWy-00B19u-3f; Mon, 06 Jun 2022 20:40:56 +0000
+        id 1nyJWw-00B19O-PM; Mon, 06 Jun 2022 20:40:54 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -37,9 +37,9 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
         linux-mtd@lists.infradead.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 19/20] fs: Remove aops->migratepage()
-Date:   Mon,  6 Jun 2022 21:40:49 +0100
-Message-Id: <20220606204050.2625949-20-willy@infradead.org>
+Subject: [PATCH 03/20] mm/migrate: Convert writeout() to take a folio
+Date:   Mon,  6 Jun 2022 21:40:33 +0100
+Message-Id: <20220606204050.2625949-4-willy@infradead.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220606204050.2625949-1-willy@infradead.org>
 References: <20220606204050.2625949-1-willy@infradead.org>
@@ -49,79 +49,73 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-With all users converted to migrate_folio(), remove this operation.
+Use a folio throughout this function.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- include/linux/fs.h |  2 --
- mm/compaction.c    |  5 ++---
- mm/migrate.c       | 10 +---------
- 3 files changed, 3 insertions(+), 14 deletions(-)
+ mm/migrate.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 5737c92ed286..95347cc035ae 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -367,8 +367,6 @@ struct address_space_operations {
- 	 */
- 	int (*migrate_folio)(struct address_space *, struct folio *dst,
- 			struct folio *src, enum migrate_mode);
--	int (*migratepage) (struct address_space *,
--			struct page *, struct page *, enum migrate_mode);
- 	bool (*isolate_page)(struct page *, isolate_mode_t);
- 	void (*putback_page)(struct page *);
- 	int (*launder_folio)(struct folio *);
-diff --git a/mm/compaction.c b/mm/compaction.c
-index db34b459e5d9..f0dc62159c0e 100644
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -1034,7 +1034,7 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
- 
- 			/*
- 			 * Only pages without mappings or that have a
--			 * ->migratepage callback are possible to migrate
-+			 * ->migrate_folio callback are possible to migrate
- 			 * without blocking. However, we can be racing with
- 			 * truncation so it's necessary to lock the page
- 			 * to stabilise the mapping as truncation holds
-@@ -1046,8 +1046,7 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
- 
- 			mapping = page_mapping(page);
- 			migrate_dirty = !mapping ||
--					mapping->a_ops->migrate_folio ||
--					mapping->a_ops->migratepage;
-+					mapping->a_ops->migrate_folio;
- 			unlock_page(page);
- 			if (!migrate_dirty)
- 				goto isolate_fail_put;
 diff --git a/mm/migrate.c b/mm/migrate.c
-index a8edd226c72d..c5560430dce4 100644
+index d772ce63d7e2..f19246c12fe9 100644
 --- a/mm/migrate.c
 +++ b/mm/migrate.c
-@@ -911,9 +911,6 @@ static int move_to_new_folio(struct folio *dst, struct folio *src,
- 			 */
- 			rc = mapping->a_ops->migrate_folio(mapping, dst, src,
- 								mode);
--		else if (mapping->a_ops->migratepage)
--			rc = mapping->a_ops->migratepage(mapping, &dst->page,
--							&src->page, mode);
- 		else
- 			rc = fallback_migrate_folio(mapping, dst, src, mode);
- 	} else {
-@@ -928,12 +925,7 @@ static int move_to_new_folio(struct folio *dst, struct folio *src,
- 			goto out;
- 		}
+@@ -762,11 +762,10 @@ int buffer_migrate_page_norefs(struct address_space *mapping,
+ #endif
  
--		if (mapping->a_ops->migrate_folio)
--			rc = mapping->a_ops->migrate_folio(mapping, dst, src,
--								mode);
--		else
--			rc = mapping->a_ops->migratepage(mapping, &dst->page,
--							&src->page, mode);
-+		rc = mapping->a_ops->migrate_folio(mapping, dst, src, mode);
- 		WARN_ON_ONCE(rc == MIGRATEPAGE_SUCCESS &&
- 				!folio_test_isolated(src));
+ /*
+- * Writeback a page to clean the dirty state
++ * Writeback a folio to clean the dirty state
+  */
+-static int writeout(struct address_space *mapping, struct page *page)
++static int writeout(struct address_space *mapping, struct folio *folio)
+ {
+-	struct folio *folio = page_folio(page);
+ 	struct writeback_control wbc = {
+ 		.sync_mode = WB_SYNC_NONE,
+ 		.nr_to_write = 1,
+@@ -780,25 +779,25 @@ static int writeout(struct address_space *mapping, struct page *page)
+ 		/* No write method for the address space */
+ 		return -EINVAL;
+ 
+-	if (!clear_page_dirty_for_io(page))
++	if (!folio_clear_dirty_for_io(folio))
+ 		/* Someone else already triggered a write */
+ 		return -EAGAIN;
+ 
+ 	/*
+-	 * A dirty page may imply that the underlying filesystem has
+-	 * the page on some queue. So the page must be clean for
+-	 * migration. Writeout may mean we loose the lock and the
+-	 * page state is no longer what we checked for earlier.
++	 * A dirty folio may imply that the underlying filesystem has
++	 * the folio on some queue. So the folio must be clean for
++	 * migration. Writeout may mean we lose the lock and the
++	 * folio state is no longer what we checked for earlier.
+ 	 * At this point we know that the migration attempt cannot
+ 	 * be successful.
+ 	 */
+ 	remove_migration_ptes(folio, folio, false);
+ 
+-	rc = mapping->a_ops->writepage(page, &wbc);
++	rc = mapping->a_ops->writepage(&folio->page, &wbc);
+ 
+ 	if (rc != AOP_WRITEPAGE_ACTIVATE)
+ 		/* unlocked. Relock */
+-		lock_page(page);
++		folio_lock(folio);
+ 
+ 	return (rc < 0) ? -EIO : -EAGAIN;
+ }
+@@ -818,7 +817,7 @@ static int fallback_migrate_folio(struct address_space *mapping,
+ 		default:
+ 			return -EBUSY;
+ 		}
+-		return writeout(mapping, &src->page);
++		return writeout(mapping, src);
  	}
+ 
+ 	/*
 -- 
 2.35.1
 
