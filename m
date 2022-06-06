@@ -2,192 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5621CCA473
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 15:40:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F187C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 15:55:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240978AbiFFPkv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 11:40:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39112 "EHLO
+        id S241073AbiFFPz3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 11:55:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240929AbiFFPku (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 11:40:50 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A12A5000A;
-        Mon,  6 Jun 2022 08:40:49 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E5AEE61585;
-        Mon,  6 Jun 2022 15:40:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4731AC385A9;
-        Mon,  6 Jun 2022 15:40:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654530048;
-        bh=w9q/4uGWop59/YIjcGpVDumy0qIxzhCDhXOuc85q8Cg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=us23WqVNS6yZTpMZSqHz7Y+2kfsc3hIUoS5Zdjro+E3mY59w+kGwBOe994zs60C7D
-         MQNXyLjgo08m1hE2jhm/+jJSWR6NEp+dzspzzRD+wi7Qg1Lx6hsOJbmWWSKPOW8uuq
-         5McmlscamHHnh0m0HtOug/jwqCSjaYgCndcLGRVkJvr4u5FgSSk8SXMyf2fEVmp33l
-         eAiRhU549VA0DRtbbBPV/Rxia7YpNH5hJzsv7jb30cBQZeC4HxxJ4mRWXvMuThA6F0
-         z0i/pfHOmpTChO6fijS43s1Ju4tu6nAAcLx+Sw7xAfU6ROQvUJmU2c3klQoBfKv6Ti
-         4bq7HKTLE7pIA==
-Date:   Mon, 6 Jun 2022 08:40:47 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     fstests@vger.kernel.org, zlang@kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs/547: Verify that the correct inode extent
- counters are updated with/without nrext64
-Message-ID: <Yp4f/yalwFunfEgz@magnolia>
-References: <20220606124101.263872-1-chandan.babu@oracle.com>
- <20220606124101.263872-4-chandan.babu@oracle.com>
+        with ESMTP id S240974AbiFFPz2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 11:55:28 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9DE3235B07
+        for <linux-xfs@vger.kernel.org>; Mon,  6 Jun 2022 08:55:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=l+/xeOQkhMZjOIguuuJMrmMY1dTbjHGIix2I+/MIi7o=; b=veLeiWbFTQlpHOzIMCQCyqzM87
+        Xu5KpbtualHRwSVb0Za9mSLPlWK3SMej2wBRRmihKlp7Sf8qr3kmnyNh/676Vp5K4t52kIRYUw0Qw
+        Nee1UHEGNfunrQuVVYF2XprHazl51J5CZF3x5YPIHSwtnOzXtb1h5JPzd9mMMVfl5huX7xTqNR2p7
+        qajMxg2sJmBpkXkojlsxf6csJuswEvnNNSwhubMS+qqD+7NwhIKJ4TVvtKzZJAhYDphqyqGoo5Y76
+        Q4BzYcDukdJ+dil5FeweSxwhfDxbvkPxsrAkcaLNDCz5aHp5WlnSvb1q3Zs6bLdoWNdwpMLmcLyFE
+        gTHoUqAA==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nyF4e-001vQc-2s; Mon, 06 Jun 2022 15:55:24 +0000
+Date:   Mon, 6 Jun 2022 08:55:24 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Leah Rumancik <lrumancik@google.com>,
+        Theodore Tso <tytso@mit.edu>
+Subject: Re: [PATCH 5.15 00/15] xfs stable candidate patches for 5.15.y
+Message-ID: <Yp4jbET5GqubQTlk@bombadil.infradead.org>
+References: <20220603184701.3117780-1-leah.rumancik@gmail.com>
+ <CAOQ4uxjzq1BQeO3-BkzLVKi8=95ohVU-UHJhR_zWZze5O_G=gA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220606124101.263872-4-chandan.babu@oracle.com>
+In-Reply-To: <CAOQ4uxjzq1BQeO3-BkzLVKi8=95ohVU-UHJhR_zWZze5O_G=gA@mail.gmail.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 06, 2022 at 06:11:00PM +0530, Chandan Babu R wrote:
-> This commit adds a new test to verify if the correct inode extent counter
-> fields are updated with/without nrext64 mkfs option.
-> 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> ---
->  tests/xfs/547     | 91 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/547.out | 13 +++++++
->  2 files changed, 104 insertions(+)
->  create mode 100755 tests/xfs/547
->  create mode 100644 tests/xfs/547.out
-> 
-> diff --git a/tests/xfs/547 b/tests/xfs/547
-> new file mode 100755
-> index 00000000..d5137ca7
-> --- /dev/null
-> +++ b/tests/xfs/547
-> @@ -0,0 +1,91 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test 547
-> +#
-> +# Verify that correct inode extent count fields are populated with and without
-> +# nrext64 feature.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick metadata
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +. ./common/attr
-> +. ./common/inject
-> +. ./common/populate
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_scratch
-> +_require_scratch_xfs_nrext64
-> +_require_attrs
-> +_require_xfs_debug
-> +_require_test_program "punch-alternating"
-> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-> +
-> +for nrext64 in 0 1; do
-> +	echo "* Verify extent counter fields with nrext64=${nrext64} option"
-> +
-> +	_scratch_mkfs -i nrext64=${nrext64} -d size=$((512 * 1024 * 1024)) \
-> +		      >> $seqres.full
-> +	_scratch_mount >> $seqres.full
-> +
-> +	bsize=$(_get_file_block_size $SCRATCH_MNT)
-> +
-> +	testfile=$SCRATCH_MNT/testfile
-> +
-> +	nr_blks=20
-> +
-> +	echo "Add blocks to test file's data fork"
-> +	$XFS_IO_PROG -f -c "pwrite 0 $((nr_blks * bsize))" $testfile \
-> +		     >> $seqres.full
-> +	$here/src/punch-alternating $testfile
-> +
-> +	echo "Consume free space"
-> +	fillerdir=$SCRATCH_MNT/fillerdir
-> +	nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
-> +	nr_free_blks=$((nr_free_blks * 90 / 100))
-> +
-> +	_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 \
-> +		 >> $seqres.full 2>&1
-> +
-> +	echo "Create fragmented filesystem"
-> +	for dentry in $(ls -1 $fillerdir/); do
-> +		$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
-> +	done
-> +
-> +	echo "Inject bmap_alloc_minlen_extent error tag"
-> +	_scratch_inject_error bmap_alloc_minlen_extent 1
-> +
-> +	echo "Add blocks to test file's attr fork"
-> +	attr_len=255
-> +	nr_attrs=$((nr_blks * bsize / attr_len))
-> +	for i in $(seq 1 $nr_attrs); do
-> +		attr="$(printf "trusted.%0247d" $i)"
-> +		$SETFATTR_PROG -n "$attr" $testfile >> $seqres.full 2>&1
-> +		[[ $? != 0 ]] && break
-> +	done
-> +
-> +	testino=$(stat -c '%i' $testfile)
-> +
-> +	_scratch_unmount >> $seqres.full
-> +
-> +	dcnt=$(_scratch_xfs_get_metadata_field core.nextents "inode $testino")
-> +	acnt=$(_scratch_xfs_get_metadata_field core.naextents "inode $testino")
+On Sat, Jun 04, 2022 at 11:38:35AM +0300, Amir Goldstein wrote:
+> On Sat, Jun 4, 2022 at 6:53 AM Leah Rumancik <leah.rumancik@gmail.com> wrote:
+> >
+> > From: Leah Rumancik <lrumancik@google.com>
+> >
+> > This first round of patches aims to take care of the easy cases - patches
+> > with the Fixes tag that apply cleanly. I have ~30 more patches identified
+> > which will be tested next, thanks everyone for the various suggestions
+> > for tracking down more bug fixes. No regressions were seen during
+> > testing when running fstests 3 times per config with the following configs:
 
-Note: For any test requiring functionality added after 5.10, you can use
-the xfs_db path command to avoid this sort of inode number saving:
+Leah,
 
-dcnt=$(_scratch_xfs_get_metadata_field core.nextents "path /testfile")
+It is great to see this work move forward.
 
-Up to you if you want to change the test to do that; otherwise,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+How many times was fstest run *without* the patches to establish the
+baseline? Do you have a baseline for known failures published somewhere?
 
---D
+For v5.10.y effort we aimed for 100 times so to ensure we have a high
+confidence in the baseline. That baseline is here:
 
-> +
-> +	if (( $dcnt != 10 )); then
-> +		echo "Invalid data fork extent count: $dextcnt"
-> +		exit 1
-> +	fi
-> +
-> +	if (( $acnt < 10 )); then
-> +		echo "Invalid attr fork extent count: $aextcnt"
-> +		exit 1
-> +	fi
-> +done
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/547.out b/tests/xfs/547.out
-> new file mode 100644
-> index 00000000..49fcc3c2
-> --- /dev/null
-> +++ b/tests/xfs/547.out
-> @@ -0,0 +1,13 @@
-> +QA output created by 547
-> +* Verify extent counter fields with nrext64=0 option
-> +Add blocks to test file's data fork
-> +Consume free space
-> +Create fragmented filesystem
-> +Inject bmap_alloc_minlen_extent error tag
-> +Add blocks to test file's attr fork
-> +* Verify extent counter fields with nrext64=1 option
-> +Add blocks to test file's data fork
-> +Consume free space
-> +Create fragmented filesystem
-> +Inject bmap_alloc_minlen_extent error tag
-> +Add blocks to test file's attr fork
-> -- 
-> 2.35.1
-> 
+https://github.com/linux-kdevops/kdevops/tree/master/workflows/fstests/expunges/5.10.105/xfs/unassigned
+
+For XFS the latest baseline we are tracking on kdevops is v5.17 and you can
+see the current results here:
+
+https://github.com/linux-kdevops/kdevops/tree/master/workflows/fstests/expunges/5.17.0-rc7/xfs/unassigned
+
+This passed 100 loops of fstests already. The target "test steady state"
+of 100 is set in kdevops using CONFIG_KERNEL_CI_STEADY_STATE_GOAL=100.
+
+As discussed at LSFMM is there a chance we can collaborate on a baseline
+together? One way I had suggested we could do this for different test
+runners is to have git subtree with the expunges which we can all share
+for different test runner.
+
+The configuration used is dynamically generated for the target
+test dev and pool, but the rest is pretty standard:
+
+https://github.com/linux-kdevops/kdevops/blob/master/playbooks/roles/fstests/templates/xfs/xfs.config
+
+Hearing that only 3 loops of running fstests is run gives me a bit of
+concern for introducing a regression with a low failure rate. I realize
+that we may be limited in resources to test running fstests in a loop
+but just 3 tests should take a bit over a day. I think we can do better.
+At the very last you can give me your baseline and I can try to confirm
+if matches what I see. Then, 30 patches seems like a lot, so I think it
+would be best to add patches to stable 10 at a time max.
+
+  Luis
