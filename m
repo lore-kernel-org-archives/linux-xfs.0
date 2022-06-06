@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1383DC43334
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 12:33:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 908DDC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jun 2022 12:34:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237138AbiFFMdn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 08:33:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36478 "EHLO
+        id S237141AbiFFMeK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 08:34:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237137AbiFFMdm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 08:33:42 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C61761000
-        for <linux-xfs@vger.kernel.org>; Mon,  6 Jun 2022 05:33:41 -0700 (PDT)
-Received: from dggpeml500026.china.huawei.com (unknown [172.30.72.53])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4LGtCY6jJ5z1K9H8;
-        Mon,  6 Jun 2022 20:31:53 +0800 (CST)
+        with ESMTP id S237148AbiFFMeK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 08:34:10 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A75D82A305C
+        for <linux-xfs@vger.kernel.org>; Mon,  6 Jun 2022 05:34:08 -0700 (PDT)
+Received: from dggpeml500025.china.huawei.com (unknown [172.30.72.53])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4LGtFp3fNkzpVBj;
+        Mon,  6 Jun 2022 20:33:50 +0800 (CST)
 Received: from dggpeml100016.china.huawei.com (7.185.36.216) by
- dggpeml500026.china.huawei.com (7.185.36.106) with Microsoft SMTP Server
+ dggpeml500025.china.huawei.com (7.185.36.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 6 Jun 2022 20:33:40 +0800
+ 15.1.2375.24; Mon, 6 Jun 2022 20:34:07 +0800
 Received: from [10.174.176.102] (10.174.176.102) by
  dggpeml100016.china.huawei.com (7.185.36.216) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 6 Jun 2022 20:33:39 +0800
-Message-ID: <534c6d3c-4bd1-c07d-d927-3715eb8c19b2@huawei.com>
-Date:   Mon, 6 Jun 2022 20:33:39 +0800
+ 15.1.2375.24; Mon, 6 Jun 2022 20:34:06 +0800
+Message-ID: <3725e3ef-2206-8244-e14d-5ffc28e1a68b@huawei.com>
+Date:   Mon, 6 Jun 2022 20:34:06 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.3.2
-Subject: [PATCH 2/3] db: avoid to use NULL pointer
+Subject: [PATCH 3/3] repair/slab.c: avoid to use NULL pointer
 From:   zhanchengbin <zhanchengbin1@huawei.com>
 To:     <sandeen@sandeen.net>, <djwong@kernel.org>
 CC:     <liuzhiqiang26@huawei.com>, linfeilong <linfeilong@huawei.com>,
@@ -51,91 +51,22 @@ Changed malloc to xmalloc.
 
 Signed-off-by: zhanchengbin <zhanchengbin1@huawei.com>
 ---
-  db/block.c | 2 +-
-  db/check.c | 4 ++--
-  db/faddr.c | 6 +++---
-  db/namei.c | 2 +-
-  4 files changed, 7 insertions(+), 7 deletions(-)
+  repair/slab.c | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/db/block.c b/db/block.c
-index f31f9544..349cf6ec 100644
---- a/db/block.c
-+++ b/db/block.c
-@@ -180,7 +180,7 @@ dblock_f(
-  		return 0;
-  	}
-  	nex = nb = type == TYP_DIR2 ? mp->m_dir_geo->fsbcount : 1;
--	bmp = malloc(nb * sizeof(*bmp));
-+	bmp = xmalloc(nb * sizeof(*bmp));
-  	bmap(bno, nb, XFS_DATA_FORK, &nex, bmp);
-  	if (nex == 0) {
-  		dbprintf(_("file data block is unmapped\n"));
-diff --git a/db/check.c b/db/check.c
-index a9c6e632..cc3c7832 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -1782,7 +1782,7 @@ dir_hash_add(
-  	dirhash_t		*p;
-
-  	i = DIR_HASH_FUNC(hash, addr);
--	p = malloc(sizeof(*p));
-+	p = xmalloc(sizeof(*p));
-  	p->next = dirhash[i];
-  	dirhash[i] = p;
-  	p->hashval = hash;
-@@ -3094,7 +3094,7 @@ process_leaf_node_dir_v2(
-  	v2 = verbose || id->ilist;
-  	v = parent = 0;
-  	dbno = NULLFILEOFF;
--	freetab = malloc(FREETAB_SIZE(dirsize / mp->m_dir_geo->blksize));
-+	freetab = xmalloc(FREETAB_SIZE(dirsize / mp->m_dir_geo->blksize));
-  	freetab->naents = (int)(dirsize / mp->m_dir_geo->blksize);
-  	freetab->nents = 0;
-  	for (i = 0; i < freetab->naents; i++)
-diff --git a/db/faddr.c b/db/faddr.c
-index 0127c5d1..cc21faaf 100644
---- a/db/faddr.c
-+++ b/db/faddr.c
-@@ -137,7 +137,7 @@ fa_cfileoffd(
-  		return;
-  	}
-  	nex = nb = next == TYP_DIR2 ? mp->m_dir_geo->fsbcount : 1;
--	bmp = malloc(nb * sizeof(*bmp));
-+	bmp = xmalloc(nb * sizeof(*bmp));
-  	bmap(bno, nb, XFS_DATA_FORK, &nex, bmp);
-  	if (nex == 0) {
-  		dbprintf(_("file block is unmapped\n"));
-@@ -221,7 +221,7 @@ fa_dfiloffd(
-  		return;
-  	}
-  	nex = nb = next == TYP_DIR2 ? mp->m_dir_geo->fsbcount : 1;
--	bmp = malloc(nb * sizeof(*bmp));
-+	bmp = xmalloc(nb * sizeof(*bmp));
-  	bmap(bno, nb, XFS_DATA_FORK, &nex, bmp);
-  	if (nex == 0) {
-  		dbprintf(_("file block is unmapped\n"));
-@@ -274,7 +274,7 @@ fa_dirblock(
-  		return;
-  	}
-  	nex = mp->m_dir_geo->fsbcount;
--	bmp = malloc(nex * sizeof(*bmp));
-+	bmp = xmalloc(nex * sizeof(*bmp));
-  	bmap(bno, mp->m_dir_geo->fsbcount, XFS_DATA_FORK, &nex, bmp);
-  	if (nex == 0) {
-  		dbprintf(_("directory block is unmapped\n"));
-diff --git a/db/namei.c b/db/namei.c
-index e44667a9..d1a9904b 100644
---- a/db/namei.c
-+++ b/db/namei.c
-@@ -266,7 +266,7 @@ dir_emit(
-  		 * copy the string to a buffer so that we can add the null
-  		 * terminator.
-  		 */
--		display_name = malloc(namelen + 1);
-+		display_name = xmalloc(namelen + 1);
-  		memcpy(display_name, name, namelen);
-  		display_name[namelen] = 0;
-  		xname.len = namelen;
+diff --git a/repair/slab.c b/repair/slab.c
+index 165f97ef..13fc8203 100644
+--- a/repair/slab.c
++++ b/repair/slab.c
+@@ -237,7 +237,7 @@ qsort_slab(
+  	create_work_queue(&wq, NULL, platform_nproc());
+  	hdr = slab->s_first;
+  	while (hdr) {
+-		qs = malloc(sizeof(struct qsort_slab));
++		qs = xmalloc(sizeof(struct qsort_slab));
+  		qs->slab = slab;
+  		qs->hdr = hdr;
+  		qs->compare_fn = compare_fn;
 -- 
 2.27.0
 
