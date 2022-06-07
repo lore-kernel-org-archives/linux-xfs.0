@@ -2,235 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A8DBC43334
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 06:10:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C625C3F2D4
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 06:13:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236939AbiFGGKD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 02:10:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44944 "EHLO
+        id S236945AbiFGGN4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 02:13:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236938AbiFGGKB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 02:10:01 -0400
-Received: from mail-vk1-xa35.google.com (mail-vk1-xa35.google.com [IPv6:2607:f8b0:4864:20::a35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 748F8A8695;
-        Mon,  6 Jun 2022 23:10:00 -0700 (PDT)
-Received: by mail-vk1-xa35.google.com with SMTP id bj33so6768917vkb.12;
-        Mon, 06 Jun 2022 23:10:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dNP+/aiDSZmQj5Q9vK/A8mfM/f+ezUW2eGs0EmxXPaE=;
-        b=D+fbDzm5ff/z3r00EXjNHqeHY3ziY7vc5lx0Ve8TZNwfYd+YnVEBRga9famwyCVMh3
-         BBrdJ9U0QWnt6etPc0A5WV8V4OqYGd2FwcFfq07NdF6Kz5HriOBecFGH4Wj2PD/Zd/9p
-         HxJG9wMIlDgYKJ3h9+0tcsGV2B85WV+WeN+mnofka+5C5ORyL/5/9AXMILIRX0bm946s
-         TKeHj71z6fwtUW8DVlvYOyd9FDouUs9WuBPP85KsXKwU/Vi3m4xZY4bdq8YaDNK8cZJN
-         W+kX1Cgl9GaTp6hGFwVNHOIvLB4ht0KWbwXuFJmrMLdoG/BpY3OM6B/8knfq9kTpznBn
-         o3ug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=dNP+/aiDSZmQj5Q9vK/A8mfM/f+ezUW2eGs0EmxXPaE=;
-        b=UzZ4bx8Zrb24BDrPJv9pzC+5OwTjDL7+3JwG7gCvL0N49gXI9oeemH+CCFNjUgNrue
-         yKozdCl3vopHLwmY5PfzS7B2AANnghSu/OKqYZNUumKqqXM7ghhw9y9yqZKsehaCc6+D
-         snEHV5AERtH7wT1ZXvtqMXYfvU3gRd+XyoP9fW6oRxd7fa1ldxRhTBtINGgx9+qvyBcW
-         89yR6Dh9grygIIoE3ZijoP+dJ69vngchE6ANyGJK+yg0xOGwMcyMLexudt/w5Y9TpGnC
-         ZYYhxfmfjQpRdURzhibuKS+P9a2v9ksEYo8ifsBomQhlcLv3NC9peg45guwvZUYHWgwE
-         D7dg==
-X-Gm-Message-State: AOAM531g5Qg7aGQU8ZKKPti6Ks7OLErHtuhz7nXgxiU5r37SwnJ1nKWW
-        kzNVh/h049rhoi/c/z3OUfbNu+hP2L8c+bBaE0JVpPbcxGHJBrgw
-X-Google-Smtp-Source: ABdhPJzEV6nPCU/zsT6+CvbV29dvuQfaXGO4MBfjT7yqIEduNB7WrrYwE5/OIHVDUV+RB1Jr715R1c86Rb5f1TQZWxY=
-X-Received: by 2002:a05:6122:509:b0:35d:9478:ac57 with SMTP id
- x9-20020a056122050900b0035d9478ac57mr6990206vko.11.1654582199534; Mon, 06 Jun
- 2022 23:09:59 -0700 (PDT)
+        with ESMTP id S230292AbiFGGNx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 02:13:53 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C35C9BC6DF;
+        Mon,  6 Jun 2022 23:13:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654582431; x=1686118431;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=pViZck3K1Rq0vF4B9iREn005L3q1DYrrwNaeY+v9f0c=;
+  b=QKKK+0byDSz1oDYDQEy0NxbMp9GB7AJHHAgkEbJKEqqdIzvCnxvOVR3F
+   pVB/L1QThNbZR0pE7ABG8PH0GA8n0QVT/hiDebOWw0UUI3RVidqB6h0hr
+   fhKWWYtwTKJX28nMgds1JbInUg3GgllVvV53505tfavHMvHwQAWwuJnrG
+   ravYW1EfUwogg/PjR3GcSeUbTvXjVSf/sSL6poHhmlFOJvY3jTfGhdSWL
+   ixY7SqGrJMEbuBla9Sf3PDmNN/gbhZDYV1Fhufy3XjqS+kX//PknmvFOf
+   Sa6GtkIY8Itzz86d4Xfl//y+BnDPzMg3Z/psOmOi9lm/yGIBFonxb2az5
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10370"; a="277338689"
+X-IronPort-AV: E=Sophos;i="5.91,282,1647327600"; 
+   d="scan'208";a="277338689"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2022 23:13:49 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,282,1647327600"; 
+   d="scan'208";a="614746862"
+Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 06 Jun 2022 23:13:44 -0700
+Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nySTI-000DQ5-17;
+        Tue, 07 Jun 2022 06:13:44 +0000
+Date:   Tue, 7 Jun 2022 14:13:26 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-fsdevel@vger.kernel.org
+Cc:     kbuild-all@lists.01.org,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
+        linux-mtd@lists.infradead.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 14/20] hugetlb: Convert to migrate_folio
+Message-ID: <202206071414.41wGG8fp-lkp@intel.com>
+References: <20220606204050.2625949-15-willy@infradead.org>
 MIME-Version: 1.0
-References: <20220606143255.685988-1-amir73il@gmail.com> <20220606143255.685988-9-amir73il@gmail.com>
- <20220606213042.GS227878@dread.disaster.area> <CAOQ4uxhCjLoYOd7X-yFQOA24YtychwKz3wUfX79zUwFs2o3ziw@mail.gmail.com>
- <20220607030147.GU227878@dread.disaster.area>
-In-Reply-To: <20220607030147.GU227878@dread.disaster.area>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 7 Jun 2022 09:09:47 +0300
-Message-ID: <CAOQ4uxgP_knOriJPyU6PS_TYhsMRfAJon2nsJ2FO34SUbY6Ygw@mail.gmail.com>
-Subject: Re: [PATCH 5.10 v2 8/8] xfs: assert in xfs_btree_del_cursor should
- take into account error
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Sasha Levin <sashal@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Brian Foster <bfoster@redhat.com>,
-        Christian Brauner <brauner@kernel.org>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Theodore Tso <tytso@mit.edu>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220606204050.2625949-15-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 7, 2022 at 6:01 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Tue, Jun 07, 2022 at 01:33:06AM +0300, Amir Goldstein wrote:
-> > On Tue, Jun 7, 2022 at 12:30 AM Dave Chinner <david@fromorbit.com> wrote:
-> > >
-> > > On Mon, Jun 06, 2022 at 05:32:55PM +0300, Amir Goldstein wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > >
-> > > > commit 56486f307100e8fc66efa2ebd8a71941fa10bf6f upstream.
-> > > >
-> > > > xfs/538 on a 1kB block filesystem failed with this assert:
-> > > >
-> > > > XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 || xfs_is_shutdown(cur->bc_mp), file: fs/xfs/libxfs/xfs_btree.c, line: 448
-> > >
-> > > You haven't mentioned that you combined a second upstream
-> > > commit into this patch to fix the bug in this commit.....
-> > >
-> >
-> > I am confused.
-> >
-> > patch [5.10 7/8] xfs: consider shutdown in bmapbt cursor delete assert
-> > is the patch that I backported from 5.12 and posted for review.
-> > This patch [5.10 8/8] is the patch from 5.19-rc1 that you pointed out
-> > that I should take to fix the bug in patch [5.10 7/8].
->
-> Sorry, I missed that this was a new patch because the set looked
-> the same as the last posting and you said in the summary letter:
->
-> "These fixes have been posted to review on xfs list [1]."
+Hi "Matthew,
 
-Sorry, I forgot to edit this part of the template.
+I love your patch! Yet something to improve:
 
->
-> Except this patch *wasn't part of that set*. I mistook it for the
-> patch that introduced the assert because I assumed from the above
-> statement, the absence of a changelog in cover letter and that you'd
-> sent it to Greg meant for inclusion meant *no new patches had been
-> added*.
->
-> Add to that the fact I rushed through them because I saw that Greg
-> has already queued these before anyone had any time to actually
-> review the posting. Hence the timing of the release of unreviewed
-> patches has been taken completely out of our control, and so I
-> rushed through them and misinterpreted what I was seeing.
->
-> That's not how the review process is supposed to work. You need to
-> wait for people to review the changes and ACK them before then
-> asking for them to be merged into the stable trees. You need to have
-> changelogs in your summary letters. You need to do all the things
-> that you've been complaining bitterly about over the past month that
-> upstream developers weren't doing 18 months ago.
+[auto build test ERROR on linus/master]
+[also build test ERROR on v5.19-rc1 next-20220607]
+[cannot apply to jaegeuk-f2fs/dev-test trondmy-nfs/linux-next kdave/for-next xfs-linux/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-Of course I need to do all things.
-If I am not doing them it could be because I made a mistake
-or misunderstood something.
-I am always trying to improve and incorporate feedback on my mistakes.
+url:    https://github.com/intel-lab-lkp/linux/commits/Matthew-Wilcox-Oracle/Convert-aops-migratepage-to-aops-migrate_folio/20220607-044509
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git f2906aa863381afb0015a9eb7fefad885d4e5a56
+config: ia64-randconfig-r015-20220605 (https://download.01.org/0day-ci/archive/20220607/202206071414.41wGG8fp-lkp@intel.com/config)
+compiler: ia64-linux-gcc (GCC) 11.3.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/b038962c9c8c2ab77c71dfba24356ce24bd7a242
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Matthew-Wilcox-Oracle/Convert-aops-migratepage-to-aops-migrate_folio/20220607-044509
+        git checkout b038962c9c8c2ab77c71dfba24356ce24bd7a242
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=ia64 SHELL=/bin/bash fs/hugetlbfs/
 
-Regarding changelogs, I do not understand what you mean.
-Isn't that a changelog at the bottom of my cover letter?
-Do you mean something else?
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
-Regarding explicit ACKs, I wasn't sure what to do.
-Ted has asked this on this thread [1].
+All errors (new ones prefixed by >>):
 
-[1] https://lore.kernel.org/linux-fsdevel/YieG8rZkgnfwygyu@mit.edu/
+   fs/hugetlbfs/inode.c: In function 'hugetlbfs_migrate_folio':
+>> fs/hugetlbfs/inode.c:990:17: error: implicit declaration of function 'folio_migrate_copy' [-Werror=implicit-function-declaration]
+     990 |                 folio_migrate_copy(dst, src);
+         |                 ^~~~~~~~~~~~~~~~~~
+>> fs/hugetlbfs/inode.c:992:17: error: implicit declaration of function 'folio_migrate_flags'; did you mean 'folio_mapping_flags'? [-Werror=implicit-function-declaration]
+     992 |                 folio_migrate_flags(dst, src);
+         |                 ^~~~~~~~~~~~~~~~~~~
+         |                 folio_mapping_flags
+   cc1: some warnings being treated as errors
 
-I asked this in my reply [2] to Darrick's email, but got no reply:
 
-:Should we post to xfs list and wait for explicit ACK/RVB on every patch?
-:Should we post to xfs list and if no objections are raised post to stable?
+vim +/folio_migrate_copy +990 fs/hugetlbfs/inode.c
 
-[2] https://lore.kernel.org/linux-xfs/CAOQ4uxjtOJ_=65MXVv0Ry0Z224dBxeLJ44FB_O-Nr9ke1epQ=Q@mail.gmail.com/
+   972	
+   973	static int hugetlbfs_migrate_folio(struct address_space *mapping,
+   974					struct folio *dst, struct folio *src,
+   975					enum migrate_mode mode)
+   976	{
+   977		int rc;
+   978	
+   979		rc = migrate_huge_page_move_mapping(mapping, dst, src);
+   980		if (rc != MIGRATEPAGE_SUCCESS)
+   981			return rc;
+   982	
+   983		if (hugetlb_page_subpool(&src->page)) {
+   984			hugetlb_set_page_subpool(&dst->page,
+   985						hugetlb_page_subpool(&src->page));
+   986			hugetlb_set_page_subpool(&src->page, NULL);
+   987		}
+   988	
+   989		if (mode != MIGRATE_SYNC_NO_COPY)
+ > 990			folio_migrate_copy(dst, src);
+   991		else
+ > 992			folio_migrate_flags(dst, src);
+   993	
+   994		return MIGRATEPAGE_SUCCESS;
+   995	}
+   996	
 
-Since I had no explicit rules, I used my common sense, which is a recipe
-for misunderstandings... :-/
-
-I posted the candidates one week ago, so I thought everyone had the
-opportunity to comment.
-You gave me comments on patches 1 and 7 so I had assumed that
-you had seen the entire series and had no objections to the rest.
-
-I incorporated your feedback and wrote my plans in this email [3]
-
-:Just to make sure we are all on the same page.
-:
-:I have applied both patches to my test tree:
-:1. 1cd738b13ae9 xfs: consider shutdown in bmapbt cursor delete assert
-:2. 56486f307100 xfs: assert in xfs_btree_del_cursor should take into
-:account error
-:
-:Patch #2 looks pretty safe and it only affects builds with XFS_WARN/DEBUG,
-:so I am not too concerned about a soaking period.
-:I plan to send it along with patch #1 to stable after a few more test runs.
-
-Once again, I *assumed* that you saw that because this was part of
-an ongoing conversation, not some random email.
-
-4 days later (after more testing) I did what I said I would do
-and posted the revised series to stable with feedback incorporated.
-This was also detailed in the cover letter to stable.
-
-[3] https://lore.kernel.org/linux-xfs/CAOQ4uxhxLRTUfyhSy9D6nsGdVANrUOgRM8msVPVmFmw0oaky+w@mail.gmail.com/
-
-If this situation repeats itself in the future, I will post v2 to xfs
-list first.
-
->
-> And I notice that you've already sent out yet another set of stable
-> patches for review despite the paint not even being dry on these
-> ones. Not to mention that there's a another set of different 5.15
-> stable patches out for review as well.
-
-I will pace myself going forward and collaborate closer with Leah.
-I have two years of kernel releases to catch up with, but once we
-reach the point of selecting patches from the present releases
-Hopefully, some of the reviews for candidates for different LTS
-kernels will be shared.
-
->
-> This is not a sustainable process.
->
-> Seriously: slow down and stop being so damn aggressive. Let everyone
-> catch up and build sustainable processes and timetables. If you keep
-> going like this, you are going break people.
-
-I do not want that.
-
-Let me explain my process. As I described in the meta-cover letter [4] for
-the multi part series:
-
-:My intention is to post the parts for review on the xfs list on
-:a ~weekly basis and forward them to stable only after xfs developers
-:have had the chance to review the selection.
-
-[4] https://lore.kernel.org/linux-xfs/20220525111715.2769700-1-amir73il@gmail.com/
-
-To you, it may appear that "paint not even being dry on these ones"
-but to me, I perceived part 2 was already out of review and part 3 was already
-spinning in xfstests for a week, so I wanted to post those patches
-and give as much time for review as needed.
-
-My idea of sustainable was posting ~7 stable candidates per week.
-This pace may be a bit higher than normal fixes flow, but I do need
-to catch up with 2 years of fixes, so the rate has to be a bit higher
-than the normal rate of fixes that go into upstream.
-
-I had to choose something based on no other feedback, but of course
-the idea is to take feedback and incorporate it into the process
-in order to make it sustainable.
-
-I will do my best to amend the things that were broken in this posting.
-I am sure this is not the last time I am going to make mistakes.
-I am trying to fix a process that has been broken for years.
-I invest a lot of my time and energy in this effort.
-
-My request is that you assume good intentions on my part and if there
-are rules that you want me to follow please spell them out, so I won't
-end up guessing wrong again.
-
-Thanks,
-Amir.
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
