@@ -2,173 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8126DC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 07:10:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD09FCCA47C
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 07:36:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237504AbiFGHJx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 03:09:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34488 "EHLO
+        id S230134AbiFGHg3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 03:36:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237498AbiFGHJw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 03:09:52 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5758813C6;
-        Tue,  7 Jun 2022 00:09:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654585790; x=1686121790;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=b7w0Jo4X5Q0tbJ+Lb1gNZkkGF0RFAjloOAMdaSUTUHM=;
-  b=aKVsvKxQhE3yKVlXRWjUoihs2OB74OR01RPGt5hXLb2dhEGkq/IehFff
-   4ezjB8ds9G+/8KU9lL75emBVPY9wiWjfaFLmPNO+aCbP0GRq/YuwlL4Ti
-   AfkGDenUke08OspHDgfB9pyyMj27VHPS9PL5yaNaWYKuvUtnFhW1qmvqQ
-   8Js/snQZQ8tPrHBlxCAFUEnxqjivm1oRrkS/DZzyW1NPJvXQOuIIry3bM
-   VtaJbWMv2Vdl8ngpBMhL2K9IDsRvaS2QdaI7/a7BN/U4kemS66VpBfTO1
-   /huZtwlKtdR151hBuU2ENEuG8OBblV+vGCz5zkr9R5u7MUeFaMIDD0i5s
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10370"; a="340335748"
-X-IronPort-AV: E=Sophos;i="5.91,283,1647327600"; 
-   d="scan'208";a="340335748"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jun 2022 00:09:48 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,283,1647327600"; 
-   d="scan'208";a="579488785"
-Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
-  by orsmga007.jf.intel.com with ESMTP; 07 Jun 2022 00:09:46 -0700
-Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nyTLV-000DSR-GA;
-        Tue, 07 Jun 2022 07:09:45 +0000
-Date:   Tue, 7 Jun 2022 15:09:18 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     kbuild-all@lists.01.org,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [linux-next:master 728/1207] fs/xfs/xfs_file.c:1266:31: sparse:
- sparse: incorrect type in return expression (different base types)
-Message-ID: <202206071511.FI7WLdZo-lkp@intel.com>
+        with ESMTP id S235842AbiFGHg2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 03:36:28 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3D5AC71DB3
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Jun 2022 00:36:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1654587386;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=poSLf3SQpSQVqGAvfY9ZUAc4mDsdNw09sPQoA12+Xn0=;
+        b=hfSm24hAkAxOtxAdK5RtalOFpv2znDhW0w8uprj18UcuDvaE1104doT8gg0EGQRE7IVVae
+        Iv9ibPBqibKHQJSPOIOBqaEpuEYNNXoxMCplEm6QKG0vQjt/Q4MwCr3NAXeroafSH4Hism
+        Hc6SSzDGX6eaNpnk8i7CZOns7zf1qCw=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-616-LY56DaPNO-aTnaHnKvlZ2w-1; Tue, 07 Jun 2022 03:36:25 -0400
+X-MC-Unique: LY56DaPNO-aTnaHnKvlZ2w-1
+Received: by mail-wr1-f72.google.com with SMTP id p10-20020adfaa0a000000b0020c4829af5fso3574162wrd.16
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Jun 2022 00:36:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:organization:in-reply-to
+         :content-transfer-encoding;
+        bh=poSLf3SQpSQVqGAvfY9ZUAc4mDsdNw09sPQoA12+Xn0=;
+        b=SvSS368ruFJG4uhN7n++VeOWoPKD0KaMGKTi+MV4LgbTjLV/KZeYOJ9OestR4aTsHc
+         yf6HLHKAKTX5EYS23HOUDuOeJrpJQKYvVEHTW+QXH3JwmT97sgtV6JzlNWQKIGoSTldc
+         aHHUq0lRoy3A6WeEIzSdB8d4ovrS/NxKtaOocfkFcMUGI2kPA4q74YqNghPZFzdh3M0R
+         ICT06ZZhmpe35Mwpyh3hcIxGFZF8MRc4WeISun0I86YNhzAab4ctvXcVuCeuQmzS1TnA
+         PRAcWQfl7a/Jhd2IEecCYs+oHnw2oMZs3pjns02F3oi1ac2+sCyS4dh9uBDTahSSufYC
+         alcw==
+X-Gm-Message-State: AOAM531N+z6mYJ7cO6e06/NmkD7+Nxt0ELp9AKsj4NbUopSFk553kTIu
+        EB4fRtkfypL+w4jhsMNjzgzN71IUR8+zHON844n8lyE1GPlwa7nqDcha9ePQzfvT8kdTnmu2Jy8
+        RQ+TpYj37cJdcV7qlFvPU
+X-Received: by 2002:a05:600c:4ec9:b0:397:750a:798a with SMTP id g9-20020a05600c4ec900b00397750a798amr56010314wmq.169.1654587384018;
+        Tue, 07 Jun 2022 00:36:24 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJz/TT1zDaD6ih4ST/0Z6l6/VJexv/LUjWrit9gRiSM2S633qB8aLjqIdjv8Hs+falCUt0H+YA==
+X-Received: by 2002:a05:600c:4ec9:b0:397:750a:798a with SMTP id g9-20020a05600c4ec900b00397750a798amr56010293wmq.169.1654587383789;
+        Tue, 07 Jun 2022 00:36:23 -0700 (PDT)
+Received: from ?IPV6:2003:cb:c709:500:4c8d:4886:f874:7b6f? (p200300cbc70905004c8d4886f8747b6f.dip0.t-ipconnect.de. [2003:cb:c709:500:4c8d:4886:f874:7b6f])
+        by smtp.gmail.com with ESMTPSA id j37-20020a05600c1c2500b0039c235fb6a5sm19943141wms.8.2022.06.07.00.36.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 07 Jun 2022 00:36:22 -0700 (PDT)
+Message-ID: <e4d017a4-556d-bb5f-9830-a8843591bc8d@redhat.com>
+Date:   Tue, 7 Jun 2022 09:36:21 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: [PATCH 15/20] balloon: Convert to migrate_folio
+Content-Language: en-US
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-fsdevel@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
+        linux-mtd@lists.infradead.org,
+        virtualization@lists.linux-foundation.org
+References: <20220606204050.2625949-1-willy@infradead.org>
+ <20220606204050.2625949-16-willy@infradead.org>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+In-Reply-To: <20220606204050.2625949-16-willy@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-head:   73d0e32571a0786151eb72634f1a4c5891166176
-commit: d5f5b32dee7c09e3152cbbce45c73f0b1ea7d94c [728/1207] xfs: support CoW in fsdax mode
-config: x86_64-rhel-8.3-kselftests (https://download.01.org/0day-ci/archive/20220607/202206071511.FI7WLdZo-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.3.0-1) 11.3.0
-reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.4-18-g56afb504-dirty
-        # https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?id=d5f5b32dee7c09e3152cbbce45c73f0b1ea7d94c
-        git remote add linux-next https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-        git fetch --no-tags linux-next master
-        git checkout d5f5b32dee7c09e3152cbbce45c73f0b1ea7d94c
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=x86_64 SHELL=/bin/bash fs/xfs/
+On 06.06.22 22:40, Matthew Wilcox (Oracle) wrote:
+> This is little more than changing the types over; there's no real work
+> being done in this function.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> ---
+>  mm/balloon_compaction.c | 15 +++++++--------
+>  1 file changed, 7 insertions(+), 8 deletions(-)
+> 
+> diff --git a/mm/balloon_compaction.c b/mm/balloon_compaction.c
+> index 4b8eab4b3f45..3f75b876ad76 100644
+> --- a/mm/balloon_compaction.c
+> +++ b/mm/balloon_compaction.c
+> @@ -230,11 +230,10 @@ static void balloon_page_putback(struct page *page)
+>  
+>  
+>  /* move_to_new_page() counterpart for a ballooned page */
+> -static int balloon_page_migrate(struct address_space *mapping,
+> -		struct page *newpage, struct page *page,
+> -		enum migrate_mode mode)
+> +static int balloon_migrate_folio(struct address_space *mapping,
+> +		struct folio *dst, struct folio *src, enum migrate_mode mode)
+>  {
+> -	struct balloon_dev_info *balloon = balloon_page_device(page);
+> +	struct balloon_dev_info *balloon = balloon_page_device(&src->page);
+>  
+>  	/*
+>  	 * We can not easily support the no copy case here so ignore it as it
+> @@ -244,14 +243,14 @@ static int balloon_page_migrate(struct address_space *mapping,
+>  	if (mode == MIGRATE_SYNC_NO_COPY)
+>  		return -EINVAL;
+>  
+> -	VM_BUG_ON_PAGE(!PageLocked(page), page);
+> -	VM_BUG_ON_PAGE(!PageLocked(newpage), newpage);
+> +	VM_BUG_ON_FOLIO(!folio_test_locked(src), src);
+> +	VM_BUG_ON_FOLIO(!folio_test_locked(dst), dst);
+>  
+> -	return balloon->migratepage(balloon, newpage, page, mode);
+> +	return balloon->migratepage(balloon, &dst->page, &src->page, mode);
+>  }
+>  
+>  const struct address_space_operations balloon_aops = {
+> -	.migratepage = balloon_page_migrate,
+> +	.migrate_folio = balloon_migrate_folio,
+>  	.isolate_page = balloon_page_isolate,
+>  	.putback_page = balloon_page_putback,
+>  };
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
+I assume you're working on conversion of the other callbacks as well,
+because otherwise, this ends up looking a bit inconsistent and confusing :)
 
-
-sparse warnings: (new ones prefixed by >>)
->> fs/xfs/xfs_file.c:1266:31: sparse: sparse: incorrect type in return expression (different base types) @@     expected int @@     got restricted vm_fault_t @@
-   fs/xfs/xfs_file.c:1266:31: sparse:     expected int
-   fs/xfs/xfs_file.c:1266:31: sparse:     got restricted vm_fault_t
->> fs/xfs/xfs_file.c:1260:1: sparse: sparse: symbol 'xfs_dax_fault' was not declared. Should it be static?
->> fs/xfs/xfs_file.c:1314:21: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted vm_fault_t [usertype] ret @@     got int @@
-   fs/xfs/xfs_file.c:1314:21: sparse:     expected restricted vm_fault_t [usertype] ret
-   fs/xfs/xfs_file.c:1314:21: sparse:     got int
-
-Please review and possibly fold the followup patch.
-
-vim +1266 fs/xfs/xfs_file.c
-
-  1257	
-  1258	#ifdef CONFIG_FS_DAX
-  1259	int
-> 1260	xfs_dax_fault(
-  1261		struct vm_fault		*vmf,
-  1262		enum page_entry_size	pe_size,
-  1263		bool			write_fault,
-  1264		pfn_t			*pfn)
-  1265	{
-> 1266		return dax_iomap_fault(vmf, pe_size, pfn, NULL,
-  1267				(write_fault && !vmf->cow_page) ?
-  1268					&xfs_dax_write_iomap_ops :
-  1269					&xfs_read_iomap_ops);
-  1270	}
-  1271	#else
-  1272	int
-  1273	xfs_dax_fault(
-  1274		struct vm_fault		*vmf,
-  1275		enum page_entry_size	pe_size,
-  1276		bool			write_fault,
-  1277		pfn_t			*pfn)
-  1278	{
-  1279		return 0;
-  1280	}
-  1281	#endif
-  1282	
-  1283	/*
-  1284	 * Locking for serialisation of IO during page faults. This results in a lock
-  1285	 * ordering of:
-  1286	 *
-  1287	 * mmap_lock (MM)
-  1288	 *   sb_start_pagefault(vfs, freeze)
-  1289	 *     invalidate_lock (vfs/XFS_MMAPLOCK - truncate serialisation)
-  1290	 *       page_lock (MM)
-  1291	 *         i_lock (XFS - extent map serialisation)
-  1292	 */
-  1293	static vm_fault_t
-  1294	__xfs_filemap_fault(
-  1295		struct vm_fault		*vmf,
-  1296		enum page_entry_size	pe_size,
-  1297		bool			write_fault)
-  1298	{
-  1299		struct inode		*inode = file_inode(vmf->vma->vm_file);
-  1300		struct xfs_inode	*ip = XFS_I(inode);
-  1301		vm_fault_t		ret;
-  1302	
-  1303		trace_xfs_filemap_fault(ip, pe_size, write_fault);
-  1304	
-  1305		if (write_fault) {
-  1306			sb_start_pagefault(inode->i_sb);
-  1307			file_update_time(vmf->vma->vm_file);
-  1308		}
-  1309	
-  1310		if (IS_DAX(inode)) {
-  1311			pfn_t pfn;
-  1312	
-  1313			xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> 1314			ret = xfs_dax_fault(vmf, pe_size, write_fault, &pfn);
-  1315			if (ret & VM_FAULT_NEEDDSYNC)
-  1316				ret = dax_finish_sync_fault(vmf, pe_size, pfn);
-  1317			xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-  1318		} else {
-  1319			if (write_fault) {
-  1320				xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-  1321				ret = iomap_page_mkwrite(vmf,
-  1322						&xfs_buffered_write_iomap_ops);
-  1323				xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-  1324			} else {
-  1325				ret = filemap_fault(vmf);
-  1326			}
-  1327		}
-  1328	
-  1329		if (write_fault)
-  1330			sb_end_pagefault(inode->i_sb);
-  1331		return ret;
-  1332	}
-  1333	
+Change LGTM.
 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Thanks,
+
+David / dhildenb
+
