@@ -2,98 +2,186 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E353CCA47C
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 15:05:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CDD6C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 15:20:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245581AbiFGPFj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 11:05:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47214 "EHLO
+        id S1343977AbiFGPUZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 11:20:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343902AbiFGPFQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 11:05:16 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16E3D56434;
-        Tue,  7 Jun 2022 08:05:16 -0700 (PDT)
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 257EgoIm004830;
-        Tue, 7 Jun 2022 15:05:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=pp1; bh=qEjB72O42+7+wW+vipA5kyBhxbvkx24CGXk6clNMCIg=;
- b=szPVjog+UcFvZ0t+OjTCX6uMPvEvfuztekOFUqEFAkuT76+fjHO7MN9a0ogWj+Ri729a
- QasGnvCpc9vcOUldr3m2Z4qdJwsR7ciA4nBA98n8CVig4bn+5O0AgjaTT3Tl1w0s78Pu
- C4JiJPe5AQoF3+XoDPcmQbQOIo225ivdjU6q13ewm4owDOVhvdvprkCPEVlIpS8KNaVV
- Jl0nDdF6R6pv5dofX4X6v8lFy/4emqzo7Yz7IDH+k1b39Ih4P2OwRbQFR3fPDfKED/g5
- rRsAhWfh+e6cEX0nCcplrM/1iX0dTr/0ZTa+ME431zUPedPIF7lceWoO8GxPyN8LX4/u 3A== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3gj8p20hht-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 07 Jun 2022 15:05:08 +0000
-Received: from m0098410.ppops.net (m0098410.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 257EggRV004434;
-        Tue, 7 Jun 2022 15:05:07 GMT
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3gj8p20hg5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 07 Jun 2022 15:05:07 +0000
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 257EnsNU023305;
-        Tue, 7 Jun 2022 15:05:05 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma03ams.nl.ibm.com with ESMTP id 3gfy19bxg8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 07 Jun 2022 15:05:05 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 257F53iZ15270202
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 7 Jun 2022 15:05:03 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 21589A4053;
-        Tue,  7 Jun 2022 15:05:03 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B282CA4040;
-        Tue,  7 Jun 2022 15:05:02 +0000 (GMT)
-Received: from li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com (unknown [9.145.174.83])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Tue,  7 Jun 2022 15:05:02 +0000 (GMT)
-Date:   Tue, 7 Jun 2022 17:05:01 +0200
-From:   Alexander Gordeev <agordeev@linux.ibm.com>
-To:     zlang@redhat.com
-Cc:     bugzilla-daemon@kernel.org, linux-s390@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bug 216073] New: [s390x] kernel BUG at mm/usercopy.c:101!
- usercopy: Kernel memory exposure attempt detected from vmalloc 'n  o area'
- (offset 0, size 1)!
-Message-ID: <Yp9pHV14OqvH0n02@li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com>
-References: <bug-216073-27@https.bugzilla.kernel.org/>
- <20220606151312.6a9d098c85ed060d36519600@linux-foundation.org>
+        with ESMTP id S230093AbiFGPUX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 11:20:23 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93FB4F5049;
+        Tue,  7 Jun 2022 08:20:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3B147B81FD1;
+        Tue,  7 Jun 2022 15:20:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAC0BC385A5;
+        Tue,  7 Jun 2022 15:20:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654615219;
+        bh=f+T8wKpMUYP+kTLpLknhwr/nxUQ0vSrraelpXdlIjDE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=LQCafVypCjnjCLM5+gyGAGDh8rv54YudL9cRPt37pm5Lf0Qx2yBXOfxdzGPuxgd5o
+         NFpNh81C+7PDIE4oMRcN23yvSR4tW7r54Rli5+QzOKPPDtDfIOo1r2I0z2J92KJVip
+         PC+Nz4qeONzWCu29lDl0ZeupTvVe4wgvWKN0wmwY4ezkYxigI3sBI6oYKLydr565uE
+         TbrNeDEwN6qprUatVzYPvTlWaupzR6b7kbwlegrAt1odMQ2upUCeIEiA6B4Of64lIP
+         45dnrq9egqjzpLbGHcE+4tCfe5ZaodJby37hH1qWIlvH6Gj1xsiuzvC/Vf6M6vNHgJ
+         EcfP97Bh/8Y5w==
+Date:   Tue, 7 Jun 2022 08:20:19 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     fstests@vger.kernel.org, zlang@kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs/548: Verify correctness of upgrading an fs to
+ support large extent counters
+Message-ID: <Yp9ss8hzVRD7VYLR@magnolia>
+References: <20220606124101.263872-1-chandan.babu@oracle.com>
+ <20220606124101.263872-5-chandan.babu@oracle.com>
+ <Yp4etwsUF/B6aSbe@magnolia>
+ <874k0wol8x.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220606151312.6a9d098c85ed060d36519600@linux-foundation.org>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: UZFHjEcs-ydRRnRTpxNaifi-9E9yQaUA
-X-Proofpoint-GUID: E5VbUGLm4lLfrXt6zTg_DqW6In9G_5lP
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
- definitions=2022-06-07_06,2022-06-07_02,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 spamscore=0
- lowpriorityscore=0 mlxlogscore=999 impostorscore=0 mlxscore=0 phishscore=0
- malwarescore=0 suspectscore=0 bulkscore=0 priorityscore=1501 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2204290000
- definitions=main-2206070061
+In-Reply-To: <874k0wol8x.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 06, 2022 at 03:13:12PM -0700, Andrew Morton wrote:
-> (switched to email.  Please respond via emailed reply-to-all, not via the
-> bugzilla web interface).
+On Tue, Jun 07, 2022 at 03:17:01PM +0530, Chandan Babu R wrote:
+> On Mon, Jun 06, 2022 at 08:35:19 AM -0700, Darrick J. Wong wrote:
+> > On Mon, Jun 06, 2022 at 06:11:01PM +0530, Chandan Babu R wrote:
+> >> This commit adds a test to verify upgrade of an existing V5 filesystem to
+> >> support large extent counters.
+> >> 
+> >> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> >> ---
+> >>  tests/xfs/548     | 109 ++++++++++++++++++++++++++++++++++++++++++++++
+> >>  tests/xfs/548.out |  12 +++++
+> >>  2 files changed, 121 insertions(+)
+> >>  create mode 100755 tests/xfs/548
+> >>  create mode 100644 tests/xfs/548.out
+> >> 
+> >> diff --git a/tests/xfs/548 b/tests/xfs/548
+> >> new file mode 100755
+> >> index 00000000..6c577584
+> >> --- /dev/null
+> >> +++ b/tests/xfs/548
+> >> @@ -0,0 +1,109 @@
+> >> +#! /bin/bash
+> >> +# SPDX-License-Identifier: GPL-2.0
+> >> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
+> >> +#
+> >> +# FS QA Test 548
+> >> +#
+> >> +# Test to verify upgrade of an existing V5 filesystem to support large extent
+> >> +# counters.
+> >> +#
+> >> +. ./common/preamble
+> >> +_begin_fstest auto quick metadata
+> >> +
+> >> +# Import common functions.
+> >> +. ./common/filter
+> >> +. ./common/attr
+> >> +. ./common/inject
+> >> +. ./common/populate
+> >> +
+> >> +# real QA test starts here
+> >> +_supported_fs xfs
+> >> +_require_scratch
+> >> +_require_scratch_xfs_nrext64
+> >> +_require_attrs
+> >> +_require_xfs_debug
+> >> +_require_test_program "punch-alternating"
+> >> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+> >> +
+> >> +_scratch_mkfs -d size=$((512 * 1024 * 1024)) >> $seqres.full
+> >> +_scratch_mount >> $seqres.full
+> >> +
+> >> +bsize=$(_get_file_block_size $SCRATCH_MNT)
+> >> +
+> >> +testfile=$SCRATCH_MNT/testfile
+> >> +
+> >> +nr_blks=20
+> >> +
+> >> +echo "Add blocks to file's data fork"
+> >> +$XFS_IO_PROG -f -c "pwrite 0 $((nr_blks * bsize))" $testfile \
+> >> +	     >> $seqres.full
+> >> +$here/src/punch-alternating $testfile
+> >> +
+> >> +echo "Consume free space"
+> >> +fillerdir=$SCRATCH_MNT/fillerdir
+> >> +nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
+> >> +nr_free_blks=$((nr_free_blks * 90 / 100))
+> >> +
+> >> +_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 \
+> >> +	 >> $seqres.full 2>&1
+> >> +
+> >> +echo "Create fragmented filesystem"
+> >> +for dentry in $(ls -1 $fillerdir/); do
+> >> +	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
+> >> +done
+> >> +
+> >> +echo "Inject bmap_alloc_minlen_extent error tag"
+> >> +_scratch_inject_error bmap_alloc_minlen_extent 1
+> >> +
+> >> +echo "Add blocks to file's attr fork"
+> >> +nr_blks=10
+> >> +attr_len=255
+> >> +nr_attrs=$((nr_blks * bsize / attr_len))
+> >> +for i in $(seq 1 $nr_attrs); do
+> >> +	attr="$(printf "trusted.%0247d" $i)"
+> >> +	$SETFATTR_PROG -n "$attr" $testfile >> $seqres.full 2>&1
+> >> +	[[ $? != 0 ]] && break
+> >> +done
+> >> +
+> >> +testino=$(stat -c '%i' $testfile)
+> >> +
+> >> +echo "Unmount filesystem"
+> >> +_scratch_unmount >> $seqres.full
+> >> +
+> >> +orig_dcnt=$(_scratch_xfs_get_metadata_field core.nextents "inode $testino")
+> >> +orig_acnt=$(_scratch_xfs_get_metadata_field core.naextents "inode $testino")
+> >> +
+> >> +echo "Upgrade filesystem to support large extent counters"
+> >> +_scratch_xfs_admin -O nrext64=1 >> $seqres.full 2>&1
+> >> +if [[ $? != 0 ]]; then
+> >> +	_notrun "Filesystem geometry is not suitable for upgrading"
+> >> +fi
+> >> +
+> >> +
+> >> +echo "Mount filesystem"
+> >> +_scratch_mount >> $seqres.full
+> >> +
+> >> +echo "Modify inode core"
+> >> +touch $testfile
+> >> +
+> >> +echo "Unmount filesystem"
+> >> +_scratch_unmount >> $seqres.full
+> >> +
+> >> +dcnt=$(_scratch_xfs_get_metadata_field core.nextents "inode $testino")
+> >> +acnt=$(_scratch_xfs_get_metadata_field core.naextents "inode $testino")
+> >> +
+> >> +echo "Verify inode extent counter values after fs upgrade"
+> >
+> > Is there a scenario where the inode counters would become corrupt after
+> > enabling the superblock feature bit?  IIRC repair doesn't rewrite the
+> > inodes during the upgrade... so is this test merely being cautious?  Or
+> > is this covering a failure you found somewhere while writing the feature?
+> >
+> 
+> I was just being cautious w.r.t "Large extent counters" functionality working
+> correctly. I used this test during my development to make sure that I was able
+> to capture failures before I ran the entire xfstests suite.
 
-Hi Zorro,
+Fair enough,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Unfortunately, I am not able to reproduce the issue. Could you please
-clarify your test environment details and share your xfstests config?
+--D
 
-Thanks!
+> 
+> -- 
+> chandan
