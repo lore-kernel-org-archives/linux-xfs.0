@@ -2,161 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6542FCCA47F
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 21:32:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C0F6CCA485
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 21:56:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379517AbiFGVcq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 17:32:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57638 "EHLO
+        id S1351428AbiFGV4P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 17:56:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380746AbiFGVbM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 17:31:12 -0400
-Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C70822AE41;
-        Tue,  7 Jun 2022 12:03:17 -0700 (PDT)
-Received: by mail-wr1-x42b.google.com with SMTP id m26so13980608wrb.4;
-        Tue, 07 Jun 2022 12:03:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YvJr1HjhCxOrlCoCkGFSV+IIsFWm48YyeI3AKcRnUIQ=;
-        b=Hms/G7n+Cgo9Oo8KkEEkY+zOKSfNSr0x2sJyW+zhwaVgQz3O94b2GcLqEXQ5rpNStl
-         0HKAm9+ZoLlNQPtIgr4cociDPkwCkncIQHflys8+rX7ekkN9msPRJi3y7Z32ZVcY4EiS
-         7BqJ/vQjOoHIBqnzmxcFtWqT7QYEfBo1Q/O2ARB7Zezb9YKydEPEtT4frki2lnbWxGbh
-         +l4HGgVODycuk5l12Ov27ifMex6LzR4b2/m50DSQAyRbCNVvVRI16BLqIO5hxeYWqMZf
-         1B5FmkDuafNHVx7eJh5UtqIQKDfI2oiQry9cQbb6BsPHPbHKrMcf9dIskCLmEL3K7DH1
-         6oNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=YvJr1HjhCxOrlCoCkGFSV+IIsFWm48YyeI3AKcRnUIQ=;
-        b=DIYfuo3zHhXm0kxxbEBtJtyx6IyhTTpKGeEoNhHAM9ncitOxQvoIhcM8yF0Np3zdLd
-         70tQILsSWCgXNPMGxpY5HpiWbAd58wEoZgV1XaGmlO3eyC3kuZLqQE5sqowhO1xUvF6H
-         uBABo5tXEPn6gFb6oGqf6MDGIwH0hLuGEt8okXxFY7gWEitZljAjG9ex//z68kw9CNhh
-         4MVvvV/xVHtGzAMHa/W3EpTlAUblNnfAO9HkkGHy6yqVr+9LIUwCmK3G+kMfYp6d9VNF
-         PI1MA+tMp+U4t7KgH4sgCxVszR3JCIFh5hMnQeE9HXly80sFgJ2Qv8O+kgLfSe3vHiDw
-         s7qA==
-X-Gm-Message-State: AOAM5329wag/9ouEN6sPFCUufn5/SIeOTeRXdSzvqwQ3ztChRVLXpflV
-        OmuSokHQR98TgutBSsdnDJuSLuF4e73dRFA5smw=
-X-Google-Smtp-Source: ABdhPJzCEhxBgnE2TvKp0j//I+yGIGt10PvMUBcSniQ/uliTPAhBtZXCX4ft7FKRwzuXla8IHTC/85U5DKgXrpVCjbg=
-X-Received: by 2002:a5d:62c7:0:b0:216:fa41:2f81 with SMTP id
- o7-20020a5d62c7000000b00216fa412f81mr17337284wrv.249.1654628595478; Tue, 07
- Jun 2022 12:03:15 -0700 (PDT)
+        with ESMTP id S1383978AbiFGVx4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 17:53:56 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68FE51498CC;
+        Tue,  7 Jun 2022 12:12:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Y43DC+2YfSdMJE+0wfWBBaNfHVhOwNjTbW5CSeqHnSQ=; b=K9O7whU4/R+zGDFYBk45Xz+N3g
+        CwtIs0BZo7IQx/VQDtriYNujQf8s9UhzyvyrTVeigBasiScz6mmn7YPu/2sGn7BjgMKQ9ABVy70Wx
+        JWzDYTWG1H3arMSiHpVh3JVjBfaHDgLnN1RXzsFLWLoCIlUsq+E8XiRGVEaFtd1iT85xLDSI7RJLf
+        CxMNHs+OSEyJBah8PGcJ/Sykmmmb39N+u7MKRvreRiRipDhIPTUCIgIYkQW2mfMURgkr050dVXdYM
+        1/nNBEXQ/SzrMxXDRbdbuSfPORXEQ+mLIPX/LGXVVFVn62XmF2eTi/2m8OAeBj8vappFZ14Dk6EAg
+        z1yV4Qmw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nyecc-008yhF-2R; Tue, 07 Jun 2022 19:12:10 +0000
+Date:   Tue, 7 Jun 2022 12:12:10 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Sasha Levin <sashal@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Brian Foster <bfoster@redhat.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Theodore Tso <tytso@mit.edu>
+Subject: Re: [PATCH 5.10 v2 8/8] xfs: assert in xfs_btree_del_cursor should
+ take into account error
+Message-ID: <Yp+jCv13n1II1b3V@bombadil.infradead.org>
+References: <20220606143255.685988-1-amir73il@gmail.com>
+ <20220606143255.685988-9-amir73il@gmail.com>
+ <20220606213042.GS227878@dread.disaster.area>
+ <CAOQ4uxhCjLoYOd7X-yFQOA24YtychwKz3wUfX79zUwFs2o3ziw@mail.gmail.com>
+ <20220607030147.GU227878@dread.disaster.area>
+ <CAOQ4uxgP_knOriJPyU6PS_TYhsMRfAJon2nsJ2FO34SUbY6Ygw@mail.gmail.com>
+ <Yp+ahuC1tWy1BOQm@magnolia>
 MIME-Version: 1.0
-References: <20220606204050.2625949-1-willy@infradead.org> <20220606204050.2625949-8-willy@infradead.org>
-In-Reply-To: <20220606204050.2625949-8-willy@infradead.org>
-From:   Anna Schumaker <schumaker.anna@gmail.com>
-Date:   Tue, 7 Jun 2022 15:02:59 -0400
-Message-ID: <CAFX2Jf=ugChaWF0Je=ew_-shhdSJYXy5dkjqsoL=9B37QWv3bA@mail.gmail.com>
-Subject: Re: [PATCH 07/20] nfs: Convert to migrate_folio
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-block@vger.kernel.org, linux-aio@kvack.org,
-        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-mm@kvack.org, linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
-        linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
-        linux-mtd@lists.infradead.org,
-        virtualization@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yp+ahuC1tWy1BOQm@magnolia>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 6, 2022 at 7:37 PM Matthew Wilcox (Oracle)
-<willy@infradead.org> wrote:
->
-> Use a folio throughout this function.  migrate_page() will be converted
-> later.
->
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+On Tue, Jun 07, 2022 at 11:35:50AM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 07, 2022 at 09:09:47AM +0300, Amir Goldstein wrote:
+> > Regarding explicit ACKs, I wasn't sure what to do.
+> 
+> Me neither.  It feels a little funny to ACK a patch in a stable queue
+> that I already RVB'd for upstream, but is that peoples' expectation?
 
-Looks fairly straightforward.
+I think that's up to us, in particular because we don't want bots to do this
+work for XFS, and so we must define what we feel comfortable with.
 
-Acked-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
+How about this: having at least one XFS maintainer Ack each of the
+patches for the intent of getting into stable? If no Acks come back
+by *2 weeks* the stable branch maintainers can use their discretion
+to send upstream to the stable team.
 
-> ---
->  fs/nfs/file.c     |  4 +---
->  fs/nfs/internal.h |  6 ++++--
->  fs/nfs/write.c    | 16 ++++++++--------
->  3 files changed, 13 insertions(+), 13 deletions(-)
->
-> diff --git a/fs/nfs/file.c b/fs/nfs/file.c
-> index 2d72b1b7ed74..549baed76351 100644
-> --- a/fs/nfs/file.c
-> +++ b/fs/nfs/file.c
-> @@ -533,9 +533,7 @@ const struct address_space_operations nfs_file_aops = {
->         .write_end = nfs_write_end,
->         .invalidate_folio = nfs_invalidate_folio,
->         .release_folio = nfs_release_folio,
-> -#ifdef CONFIG_MIGRATION
-> -       .migratepage = nfs_migrate_page,
-> -#endif
-> +       .migrate_folio = nfs_migrate_folio,
->         .launder_folio = nfs_launder_folio,
->         .is_dirty_writeback = nfs_check_dirty_writeback,
->         .error_remove_page = generic_error_remove_page,
-> diff --git a/fs/nfs/internal.h b/fs/nfs/internal.h
-> index 8f8cd6e2d4db..437ebe544aaf 100644
-> --- a/fs/nfs/internal.h
-> +++ b/fs/nfs/internal.h
-> @@ -578,8 +578,10 @@ void nfs_clear_pnfs_ds_commit_verifiers(struct pnfs_ds_commit_info *cinfo)
->  #endif
->
->  #ifdef CONFIG_MIGRATION
-> -extern int nfs_migrate_page(struct address_space *,
-> -               struct page *, struct page *, enum migrate_mode);
-> +int nfs_migrate_folio(struct address_space *, struct folio *dst,
-> +               struct folio *src, enum migrate_mode);
-> +#else
-> +#define nfs_migrate_folio NULL
->  #endif
->
->  static inline int
-> diff --git a/fs/nfs/write.c b/fs/nfs/write.c
-> index 1c706465d090..649b9e633459 100644
-> --- a/fs/nfs/write.c
-> +++ b/fs/nfs/write.c
-> @@ -2119,27 +2119,27 @@ int nfs_wb_page(struct inode *inode, struct page *page)
->  }
->
->  #ifdef CONFIG_MIGRATION
-> -int nfs_migrate_page(struct address_space *mapping, struct page *newpage,
-> -               struct page *page, enum migrate_mode mode)
-> +int nfs_migrate_folio(struct address_space *mapping, struct folio *dst,
-> +               struct folio *src, enum migrate_mode mode)
->  {
->         /*
-> -        * If PagePrivate is set, then the page is currently associated with
-> +        * If the private flag is set, the folio is currently associated with
->          * an in-progress read or write request. Don't try to migrate it.
->          *
->          * FIXME: we could do this in principle, but we'll need a way to ensure
->          *        that we can safely release the inode reference while holding
-> -        *        the page lock.
-> +        *        the folio lock.
->          */
-> -       if (PagePrivate(page))
-> +       if (folio_test_private(src))
->                 return -EBUSY;
->
-> -       if (PageFsCache(page)) {
-> +       if (folio_test_fscache(src)) {
->                 if (mode == MIGRATE_ASYNC)
->                         return -EBUSY;
-> -               wait_on_page_fscache(page);
-> +               folio_wait_fscache(src);
->         }
->
-> -       return migrate_page(mapping, newpage, page, mode);
-> +       return migrate_page(mapping, &dst->page, &src->page, mode);
->  }
->  #endif
->
-> --
-> 2.35.1
->
+> > I incorporated your feedback and wrote my plans in this email [3]
+> 
+> I'm going to offer my (probably controversial) opinion here: I would
+> like to delegate /all/ of the power and responsibility for stable
+> maintenance to all of you (Amir/Leah/Chandan/etc.) who are doing the
+> work.  What Amir did here (send a candidate patchset, take suggestions
+> for a week, run the batch through fstests) is more or less what I'd
+> expect from whoever owns the LTS backport process.
+
+I'm happy to provide advice as a paranoid developer who has seen
+the incredibly odd things come up before and had to deal with them.
+People can either ignore it or take it.
+
+> I've been pondering this overnight, and I don't agree that the above
+> scenario is the inevitable outcome.  Are you (LTS branch maintainers)
+> willing to put your names in the MAINTAINERS file for the LTS kernels
+> and let us (upstream maintainers) point downstream consumers (and their
+> bug report) of those branches at you?  If so, then I see that as
+> effective delegation of responsibilities to people who have taken
+> ownership of the LTS branches, not merely blame shifting.
+
+*This* is why when I volunteered to do xfs stable work a long time ago my
+own bar for regression testing was and still remains *very high*. You really
+need to put the fear in $deity in terms of responsibility because
+without that, it is not fair to upstream developers for what loose
+cannons there are for stable candidate patches for a filesystem. As
+anyone doing "enterprise" could attest to, *that* work alone requires a
+lot of time, and so one can't realistically multitask to both.
+
+It is also why this work stopped eventually, because I lost my test rig after
+one $EMPLOYER change and my focus was more on the "enterprise" side at SUSE.
+It is why after yet another $EMPLOYER change this remains a long
+priority, and I try to do what I can to help with this.
+
+If we care about stable we need to seriously consider a scalable
+solution which *includes* testing. And, I also think even the "bot"
+enabled stable fixed filesystem could benefit from these best practices
+as well.
+
+> If yes, then ... do as you like, you're the branch owner.  I expect
+> things to be rocky for a while, but it beats burning myself out with too
+> many responsibilities that I have not been able to keep up with.  It's
+> probably better for the long term stability of each LTS branch if
+> there's one or two people who are really familiar with how that LTS has
+> been doing, instead of me trying and failing to multiplex.
+> 
+> Also, as Greg points out, at worst, you /can/ decide to revert something
+> that initially looked good but later turned out smelly.
+
+If testing is paranoid the chances of these reverts are reduced.
+The reason for paranoia is reasonably higher for filesystems since
+we don't want to break a user's filesystem. It is up to each stable
+branch maintainer to decide their level of paranoia, as they incur
+the responsibility for the branch.
+
+  Luis
