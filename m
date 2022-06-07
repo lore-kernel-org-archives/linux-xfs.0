@@ -2,135 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59BDDC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 06:49:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8126DC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 07:10:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235361AbiFGGtX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 02:49:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41984 "EHLO
+        id S237504AbiFGHJx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 03:09:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237299AbiFGGtK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 02:49:10 -0400
-Received: from mail-vk1-xa2f.google.com (mail-vk1-xa2f.google.com [IPv6:2607:f8b0:4864:20::a2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B0CA3EF23
-        for <linux-xfs@vger.kernel.org>; Mon,  6 Jun 2022 23:49:09 -0700 (PDT)
-Received: by mail-vk1-xa2f.google.com with SMTP id m30so3200959vkf.11
-        for <linux-xfs@vger.kernel.org>; Mon, 06 Jun 2022 23:49:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=nFxNrb6LPP6PKfmdys05Glsg4xiWkCgcg8ZZ3TfXGCw=;
-        b=R06kiFfM7s03+8CW7D4tG5rWKIN+2czOp+Kbe7oAssb4payg42Ae+RAQjq/bz6NY/B
-         Rpk39upD+oqV8xwAhKAhP+4QE/C20JCfMYs2e4OZWwYm/eeuVumRytiREQ39+dBJi2Z1
-         VxE0uZylZmrVQQF+toc0BWxHA5Bast0cwHI9lZ/f442oyCzvYRCLnXyDtOKE/nZhp0dn
-         V1KLPbkaxZsr5i33F0m8MQM0XQYag96hU4i5R+jVmszZ1qgDVZPiR3ShbYx7+NWbti8m
-         qVlZTk7GQSZQQqMZhmEpstCsoNsLlgje0mntSnc2oIc4XvwqG0l2eVZBiQjpNOaG4KgZ
-         O8OQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=nFxNrb6LPP6PKfmdys05Glsg4xiWkCgcg8ZZ3TfXGCw=;
-        b=q1wj+NWsYLvq5WnqmLtnLzUfD8pNwPx4xlAPWaVv4kbetY7XUj1ry2SGjEYGZmfRx5
-         BUq3sy60yZFpEw4T/EpuXjYw0eOcX+L5922F6jHXtG6oCsy/LP6DzmH8jRG8T/7E8k5a
-         jali4hXJSgmXp90iSZUxbFBXwSpN9LF6vWHwWnfl2UtE39VxeVNeJtqDZAXmbX9fZRvu
-         khumboow20Doj/jnv6R5JpP/9MgqH9kptyuecTEtxZorT1WMKTy9WXG68xhnQbQtmxA2
-         VWSddFDRLSquztGXbXrz/woFufe37G9mUiGgcgLMx31LMdb+G3KWiePvxs2poU5/w99P
-         fFgA==
-X-Gm-Message-State: AOAM530OzIAVr8xLwM7T3HPNn6+k4Wbt340TdNFO+izb4TWapVrCKM39
-        kuh9q5kXBhYpJpqkZNIAqJ7LcrHXmIKBqLMX0zE0xOA83kY=
-X-Google-Smtp-Source: ABdhPJz/gTK32rnYF6qnAbnNE+uGZCKJmWN8nFenS88V9Tbb9c3lPX0pl7nCssmp39ffmyuK/UnDTac1DXC/lK+B6w4=
-X-Received: by 2002:a05:6122:214d:b0:35d:94e0:55fb with SMTP id
- m13-20020a056122214d00b0035d94e055fbmr6900608vkd.3.1654584548155; Mon, 06 Jun
- 2022 23:49:08 -0700 (PDT)
+        with ESMTP id S237498AbiFGHJw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 03:09:52 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5758813C6;
+        Tue,  7 Jun 2022 00:09:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654585790; x=1686121790;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=b7w0Jo4X5Q0tbJ+Lb1gNZkkGF0RFAjloOAMdaSUTUHM=;
+  b=aKVsvKxQhE3yKVlXRWjUoihs2OB74OR01RPGt5hXLb2dhEGkq/IehFff
+   4ezjB8ds9G+/8KU9lL75emBVPY9wiWjfaFLmPNO+aCbP0GRq/YuwlL4Ti
+   AfkGDenUke08OspHDgfB9pyyMj27VHPS9PL5yaNaWYKuvUtnFhW1qmvqQ
+   8Js/snQZQ8tPrHBlxCAFUEnxqjivm1oRrkS/DZzyW1NPJvXQOuIIry3bM
+   VtaJbWMv2Vdl8ngpBMhL2K9IDsRvaS2QdaI7/a7BN/U4kemS66VpBfTO1
+   /huZtwlKtdR151hBuU2ENEuG8OBblV+vGCz5zkr9R5u7MUeFaMIDD0i5s
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10370"; a="340335748"
+X-IronPort-AV: E=Sophos;i="5.91,283,1647327600"; 
+   d="scan'208";a="340335748"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jun 2022 00:09:48 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,283,1647327600"; 
+   d="scan'208";a="579488785"
+Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
+  by orsmga007.jf.intel.com with ESMTP; 07 Jun 2022 00:09:46 -0700
+Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nyTLV-000DSR-GA;
+        Tue, 07 Jun 2022 07:09:45 +0000
+Date:   Tue, 7 Jun 2022 15:09:18 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     kbuild-all@lists.01.org,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [linux-next:master 728/1207] fs/xfs/xfs_file.c:1266:31: sparse:
+ sparse: incorrect type in return expression (different base types)
+Message-ID: <202206071511.FI7WLdZo-lkp@intel.com>
 MIME-Version: 1.0
-References: <YpzbX/5sgRIcN2LC@magnolia> <20220605222940.GL1098723@dread.disaster.area>
- <Yp1EGf+d/rzCgvJ4@magnolia> <CAOQ4uxiMJ9gGATN8pdPhJhR-_3m2N4vcFTeBPLdLL1DFddRy9g@mail.gmail.com>
- <Yp41aUNK/TnC3dQ8@magnolia>
-In-Reply-To: <Yp41aUNK/TnC3dQ8@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 7 Jun 2022 09:48:57 +0300
-Message-ID: <CAOQ4uxiY7mtM=O-SO=1oL-XA9Zn3HwCNM-6QtCDGzR8V=t9O=A@mail.gmail.com>
-Subject: Re: [PATCH] xfs: preserve DIFLAG2_NREXT64 when setting other inode attributes
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 6, 2022 at 8:12 PM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> On Mon, Jun 06, 2022 at 10:22:03AM +0300, Amir Goldstein wrote:
-> > On Mon, Jun 6, 2022 at 8:24 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> > >
-> > > On Mon, Jun 06, 2022 at 08:29:40AM +1000, Dave Chinner wrote:
-> > > > On Sun, Jun 05, 2022 at 09:35:43AM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > >
-> > > > > It is vitally important that we preserve the state of the NREXT64 inode
-> > > > > flag when we're changing the other flags2 fields.
-> > > > >
-> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > ---
-> > > > >  fs/xfs/xfs_ioctl.c |    3 ++-
-> > > > >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > > >
-> > > > Fixes tag?
-> >
-> > Thank you Dave!
-> >
-> > >
-> > > Does this really need one?
-> >
-> > I say why not.
->
-> Every one of these asks adds friction for patch authors.  For code that
-> has already shipped in a Linus release it's a reasonable ask, but...
->
-> > I am not looking for a fight. Really, it's up to xfs maintainers how to manage
-> > experimental features. That is completely outside of scope for LTS.
-> > I only want to explain my POV as a developer.
-> >
-> > You know my interest is in backporting fixes for LTS, so this one won't be
-> > relevant anyway, but if I were you, I would send this patch to stable 5.18.y
-> > to *reduce* burden on myself -
->
-> ...WHY?
->
-> This is a fix for a new ondisk feature that landed in 5.19-rc1.  The
-> feature is EXPERIMENTAL, which means that it **should not** be
-> backported to 5.18, 5.15, or any other LTS kernel.  New features do NOT
-> fit the criteria for LTS backports.
->
-> That's why I didn't bother attaching a fixes tag!
->
-> > The mental burden of having to carry the doubt of whether a certain
-> > reported bug could have been involved with user booting into 5.18.y
-> > and back.
-> >
-> > When you think about it, it kind of makes sense to have the latest .y
-> > in your grub menu when you are running upstream...
-> > Users do that - heck, user do anything you don't want them to do,
-> > even if eventually you can tell the users they did something that is
-> > not expected to work, you had already invested the time in triage.
-> >
-> > Sure, there is always the possibility that someone in the future of 5.19.y
-> > will boot into 5.18.0, but that is a far less likely possibility.
-> >
-> > For this reason, when I write new features I really try to treat the .y
-> > release as the true release cycle of that feature rather than the .0,
-> > regardless of LTS.
-> > If I were the developer of the feature, I would have wanted to see
-> > this fix applied to 5.18.y.
->
-> This fix **WILL NOT APPLY** to 5.18!
->
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+head:   73d0e32571a0786151eb72634f1a4c5891166176
+commit: d5f5b32dee7c09e3152cbbce45c73f0b1ea7d94c [728/1207] xfs: support CoW in fsdax mode
+config: x86_64-rhel-8.3-kselftests (https://download.01.org/0day-ci/archive/20220607/202206071511.FI7WLdZo-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-1) 11.3.0
+reproduce:
+        # apt-get install sparse
+        # sparse version: v0.6.4-18-g56afb504-dirty
+        # https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?id=d5f5b32dee7c09e3152cbbce45c73f0b1ea7d94c
+        git remote add linux-next https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+        git fetch --no-tags linux-next master
+        git checkout d5f5b32dee7c09e3152cbbce45c73f0b1ea7d94c
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=x86_64 SHELL=/bin/bash fs/xfs/
 
-I stand corrected.
-Sorry for the noise.
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
-Amir.
+
+sparse warnings: (new ones prefixed by >>)
+>> fs/xfs/xfs_file.c:1266:31: sparse: sparse: incorrect type in return expression (different base types) @@     expected int @@     got restricted vm_fault_t @@
+   fs/xfs/xfs_file.c:1266:31: sparse:     expected int
+   fs/xfs/xfs_file.c:1266:31: sparse:     got restricted vm_fault_t
+>> fs/xfs/xfs_file.c:1260:1: sparse: sparse: symbol 'xfs_dax_fault' was not declared. Should it be static?
+>> fs/xfs/xfs_file.c:1314:21: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted vm_fault_t [usertype] ret @@     got int @@
+   fs/xfs/xfs_file.c:1314:21: sparse:     expected restricted vm_fault_t [usertype] ret
+   fs/xfs/xfs_file.c:1314:21: sparse:     got int
+
+Please review and possibly fold the followup patch.
+
+vim +1266 fs/xfs/xfs_file.c
+
+  1257	
+  1258	#ifdef CONFIG_FS_DAX
+  1259	int
+> 1260	xfs_dax_fault(
+  1261		struct vm_fault		*vmf,
+  1262		enum page_entry_size	pe_size,
+  1263		bool			write_fault,
+  1264		pfn_t			*pfn)
+  1265	{
+> 1266		return dax_iomap_fault(vmf, pe_size, pfn, NULL,
+  1267				(write_fault && !vmf->cow_page) ?
+  1268					&xfs_dax_write_iomap_ops :
+  1269					&xfs_read_iomap_ops);
+  1270	}
+  1271	#else
+  1272	int
+  1273	xfs_dax_fault(
+  1274		struct vm_fault		*vmf,
+  1275		enum page_entry_size	pe_size,
+  1276		bool			write_fault,
+  1277		pfn_t			*pfn)
+  1278	{
+  1279		return 0;
+  1280	}
+  1281	#endif
+  1282	
+  1283	/*
+  1284	 * Locking for serialisation of IO during page faults. This results in a lock
+  1285	 * ordering of:
+  1286	 *
+  1287	 * mmap_lock (MM)
+  1288	 *   sb_start_pagefault(vfs, freeze)
+  1289	 *     invalidate_lock (vfs/XFS_MMAPLOCK - truncate serialisation)
+  1290	 *       page_lock (MM)
+  1291	 *         i_lock (XFS - extent map serialisation)
+  1292	 */
+  1293	static vm_fault_t
+  1294	__xfs_filemap_fault(
+  1295		struct vm_fault		*vmf,
+  1296		enum page_entry_size	pe_size,
+  1297		bool			write_fault)
+  1298	{
+  1299		struct inode		*inode = file_inode(vmf->vma->vm_file);
+  1300		struct xfs_inode	*ip = XFS_I(inode);
+  1301		vm_fault_t		ret;
+  1302	
+  1303		trace_xfs_filemap_fault(ip, pe_size, write_fault);
+  1304	
+  1305		if (write_fault) {
+  1306			sb_start_pagefault(inode->i_sb);
+  1307			file_update_time(vmf->vma->vm_file);
+  1308		}
+  1309	
+  1310		if (IS_DAX(inode)) {
+  1311			pfn_t pfn;
+  1312	
+  1313			xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> 1314			ret = xfs_dax_fault(vmf, pe_size, write_fault, &pfn);
+  1315			if (ret & VM_FAULT_NEEDDSYNC)
+  1316				ret = dax_finish_sync_fault(vmf, pe_size, pfn);
+  1317			xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+  1318		} else {
+  1319			if (write_fault) {
+  1320				xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+  1321				ret = iomap_page_mkwrite(vmf,
+  1322						&xfs_buffered_write_iomap_ops);
+  1323				xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+  1324			} else {
+  1325				ret = filemap_fault(vmf);
+  1326			}
+  1327		}
+  1328	
+  1329		if (write_fault)
+  1330			sb_end_pagefault(inode->i_sb);
+  1331		return ret;
+  1332	}
+  1333	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
