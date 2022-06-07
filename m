@@ -2,128 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8468CCA47E
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 03:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F237CCA47C
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 04:47:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236375AbiFGDjE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 23:39:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40416 "EHLO
+        id S236630AbiFGErx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 00:47:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236186AbiFGDit (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 23:38:49 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5B88387BA;
-        Mon,  6 Jun 2022 20:38:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654573128; x=1686109128;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=w4xeyqU+kOhDYzyqy82v69OYCHkAH6xk8Nd95qrz48A=;
-  b=cI2CtkAJJHCwTU24iLHMl95jI+TLyqQ/r3CzxiuMBsum3Zv2lOijhywx
-   7DQxnW0svepR7cp/Rauiczc3JEk/wEP7uw+iZJv1Ee5IL74PR6EiMkyxq
-   D7kbQjvry7tdZe4f42EZ/drgMjgpCADrgfxO3h3i3qQ1FeSLQWIkDJQYB
-   kieFIk5f/kvR16vOGkqCCcMAg/9btpMI1Y088XhRrhM/chcTLjbk9KAPd
-   Ho5/plGjKvI5ADJA8DLH/y62CuUwY1ISoqsWmZM36GUBflL+xLtTSWE3x
-   /dgtopIsWdfkoEzeAqYkJ9xLs+k8sMlFV0uH6o0ehNoz6lj9zRqRFrxQB
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10370"; a="275480643"
-X-IronPort-AV: E=Sophos;i="5.91,282,1647327600"; 
-   d="scan'208";a="275480643"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2022 20:38:44 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,282,1647327600"; 
-   d="scan'208";a="579430786"
-Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
-  by orsmga007.jf.intel.com with ESMTP; 06 Jun 2022 20:38:40 -0700
-Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nyQ3D-000DJf-KE;
-        Tue, 07 Jun 2022 03:38:39 +0000
-Date:   Tue, 7 Jun 2022 11:37:45 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-fsdevel@vger.kernel.org
-Cc:     kbuild-all@lists.01.org,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
-        linux-mtd@lists.infradead.org,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 04/20] mm/migrate: Convert buffer_migrate_page() to
- buffer_migrate_folio()
-Message-ID: <202206071139.aWSx4GHH-lkp@intel.com>
-References: <20220606204050.2625949-5-willy@infradead.org>
+        with ESMTP id S236663AbiFGErk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 00:47:40 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ABCF4FC50;
+        Mon,  6 Jun 2022 21:47:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 97BDEB81CA9;
+        Tue,  7 Jun 2022 04:47:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8543DC385A5;
+        Tue,  7 Jun 2022 04:47:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1654577249;
+        bh=76beSbAffKgR1ju5ajqnTe0btnAx0H79wqEaXuHKV84=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=vdznkf0hzD5GoIe2jdZ7YMCofYd3kNDph5qA3gb884gpKNyzvplB8+kpRTAVkA4Tp
+         AKynY7LKnpscONFXPmS+y03uIbJduuGre07QmYHITwSXReGSuED5lq2tTa1eAlScnL
+         r2dC2vROka4IQM9HQ/fgyd0xDi9I9i1cTPMjzdEo=
+Date:   Tue, 7 Jun 2022 06:47:26 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Sasha Levin <sashal@kernel.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Brian Foster <bfoster@redhat.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 5.10 v2 8/8] xfs: assert in xfs_btree_del_cursor should
+ take into account error
+Message-ID: <Yp7YXqn4BIZrebq7@kroah.com>
+References: <20220606143255.685988-1-amir73il@gmail.com>
+ <20220606143255.685988-9-amir73il@gmail.com>
+ <20220606213042.GS227878@dread.disaster.area>
+ <CAOQ4uxhCjLoYOd7X-yFQOA24YtychwKz3wUfX79zUwFs2o3ziw@mail.gmail.com>
+ <20220607030147.GU227878@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220606204050.2625949-5-willy@infradead.org>
+In-Reply-To: <20220607030147.GU227878@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi "Matthew,
+On Tue, Jun 07, 2022 at 01:01:47PM +1000, Dave Chinner wrote:
+> On Tue, Jun 07, 2022 at 01:33:06AM +0300, Amir Goldstein wrote:
+> > On Tue, Jun 7, 2022 at 12:30 AM Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > On Mon, Jun 06, 2022 at 05:32:55PM +0300, Amir Goldstein wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > >
+> > > > commit 56486f307100e8fc66efa2ebd8a71941fa10bf6f upstream.
+> > > >
+> > > > xfs/538 on a 1kB block filesystem failed with this assert:
+> > > >
+> > > > XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 || xfs_is_shutdown(cur->bc_mp), file: fs/xfs/libxfs/xfs_btree.c, line: 448
+> > >
+> > > You haven't mentioned that you combined a second upstream
+> > > commit into this patch to fix the bug in this commit.....
+> > >
+> > 
+> > I am confused.
+> > 
+> > patch [5.10 7/8] xfs: consider shutdown in bmapbt cursor delete assert
+> > is the patch that I backported from 5.12 and posted for review.
+> > This patch [5.10 8/8] is the patch from 5.19-rc1 that you pointed out
+> > that I should take to fix the bug in patch [5.10 7/8].
+> 
+> Sorry, I missed that this was a new patch because the set looked
+> the same as the last posting and you said in the summary letter:
+> 
+> "These fixes have been posted to review on xfs list [1]."
+> 
+> Except this patch *wasn't part of that set*. I mistook it for the
+> patch that introduced the assert because I assumed from the above
+> statement, the absence of a changelog in cover letter and that you'd
+> sent it to Greg meant for inclusion meant *no new patches had been
+> added*.
+> 
+> Add to that the fact I rushed through them because I saw that Greg
+> has already queued these before anyone had any time to actually
+> review the posting. Hence the timing of the release of unreviewed
+> patches has been taken completely out of our control, and so I
+> rushed through them and misinterpreted what I was seeing.
+> 
+> That's not how the review process is supposed to work. You need to
+> wait for people to review the changes and ACK them before then
+> asking for them to be merged into the stable trees. You need to have
+> changelogs in your summary letters. You need to do all the things
+> that you've been complaining bitterly about over the past month that
+> upstream developers weren't doing 18 months ago.
 
-I love your patch! Perhaps something to improve:
+I thought these had already been reviewed, which is why I took them.
 
-[auto build test WARNING on linus/master]
-[also build test WARNING on v5.19-rc1 next-20220606]
-[cannot apply to jaegeuk-f2fs/dev-test trondmy-nfs/linux-next kdave/for-next xfs-linux/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+And there still are days before these go anywhere, just adding them to
+the stable queue doesn't mean they are "set in stone".
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Matthew-Wilcox-Oracle/Convert-aops-migratepage-to-aops-migrate_folio/20220607-044509
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git f2906aa863381afb0015a9eb7fefad885d4e5a56
-config: i386-defconfig (https://download.01.org/0day-ci/archive/20220607/202206071139.aWSx4GHH-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.3.0-1) 11.3.0
-reproduce (this is a W=1 build):
-        # https://github.com/intel-lab-lkp/linux/commit/96e64ba8b1be545885d89f44b1d8b968b22bdb4d
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Matthew-Wilcox-Oracle/Convert-aops-migratepage-to-aops-migrate_folio/20220607-044509
-        git checkout 96e64ba8b1be545885d89f44b1d8b968b22bdb4d
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash
+Heck, even if they do get merged into a stable release, 'git revert' is
+our friend here, and we can easily revert anything that is found to be
+wrong.
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
+> And I notice that you've already sent out yet another set of stable
+> patches for review despite the paint not even being dry on these
+> ones. Not to mention that there's a another set of different 5.15
+> stable patches out for review as well.
+> 
+> This is not a sustainable process.
+> 
+> Seriously: slow down and stop being so damn aggressive. Let everyone
+> catch up and build sustainable processes and timetables. If you keep
+> going like this, you are going break people.
 
-All warnings (new ones prefixed by >>):
+What am I supposed to do here, not take patches you all send me?  Wait
+X number of days?
 
->> mm/migrate.c:775: warning: expecting prototype for buffer_migrate_folio_noref(). Prototype was for buffer_migrate_folio_norefs() instead
+totally confused,
 
-
-vim +775 mm/migrate.c
-
-89cb0888ca1483a Jan Kara                2018-12-28  758  
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  759) /**
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  760)  * buffer_migrate_folio_noref() - Migration function for folios with buffers.
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  761)  * @mapping: The address space containing @src.
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  762)  * @dst: The folio to migrate to.
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  763)  * @src: The folio to migrate from.
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  764)  * @mode: How to migrate the folio.
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  765)  *
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  766)  * Like buffer_migrate_folio() except that this variant is more careful
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  767)  * and checks that there are also no buffer head references. This function
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  768)  * is the right one for mappings where buffer heads are directly looked
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  769)  * up and referenced (such as block device mappings).
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  770)  *
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  771)  * Return: 0 on success or a negative errno on failure.
-89cb0888ca1483a Jan Kara                2018-12-28  772   */
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  773) int buffer_migrate_folio_norefs(struct address_space *mapping,
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  774) 		struct folio *dst, struct folio *src, enum migrate_mode mode)
-89cb0888ca1483a Jan Kara                2018-12-28 @775  {
-96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  776) 	return __buffer_migrate_folio(mapping, dst, src, mode, true);
-89cb0888ca1483a Jan Kara                2018-12-28  777  }
-9361401eb7619c0 David Howells           2006-09-30  778  #endif
-1d8b85ccf1ed53a Christoph Lameter       2006-06-23  779  
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+greg k-h
