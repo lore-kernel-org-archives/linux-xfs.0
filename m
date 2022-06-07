@@ -2,140 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C625C3F2D4
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 06:13:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59BDDC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 06:49:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236945AbiFGGN4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 02:13:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52448 "EHLO
+        id S235361AbiFGGtX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 02:49:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230292AbiFGGNx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 02:13:53 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C35C9BC6DF;
-        Mon,  6 Jun 2022 23:13:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654582431; x=1686118431;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=pViZck3K1Rq0vF4B9iREn005L3q1DYrrwNaeY+v9f0c=;
-  b=QKKK+0byDSz1oDYDQEy0NxbMp9GB7AJHHAgkEbJKEqqdIzvCnxvOVR3F
-   pVB/L1QThNbZR0pE7ABG8PH0GA8n0QVT/hiDebOWw0UUI3RVidqB6h0hr
-   fhKWWYtwTKJX28nMgds1JbInUg3GgllVvV53505tfavHMvHwQAWwuJnrG
-   ravYW1EfUwogg/PjR3GcSeUbTvXjVSf/sSL6poHhmlFOJvY3jTfGhdSWL
-   ixY7SqGrJMEbuBla9Sf3PDmNN/gbhZDYV1Fhufy3XjqS+kX//PknmvFOf
-   Sa6GtkIY8Itzz86d4Xfl//y+BnDPzMg3Z/psOmOi9lm/yGIBFonxb2az5
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10370"; a="277338689"
-X-IronPort-AV: E=Sophos;i="5.91,282,1647327600"; 
-   d="scan'208";a="277338689"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2022 23:13:49 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,282,1647327600"; 
-   d="scan'208";a="614746862"
-Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 06 Jun 2022 23:13:44 -0700
-Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nySTI-000DQ5-17;
-        Tue, 07 Jun 2022 06:13:44 +0000
-Date:   Tue, 7 Jun 2022 14:13:26 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-fsdevel@vger.kernel.org
-Cc:     kbuild-all@lists.01.org,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
-        linux-mtd@lists.infradead.org,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 14/20] hugetlb: Convert to migrate_folio
-Message-ID: <202206071414.41wGG8fp-lkp@intel.com>
-References: <20220606204050.2625949-15-willy@infradead.org>
+        with ESMTP id S237299AbiFGGtK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 02:49:10 -0400
+Received: from mail-vk1-xa2f.google.com (mail-vk1-xa2f.google.com [IPv6:2607:f8b0:4864:20::a2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B0CA3EF23
+        for <linux-xfs@vger.kernel.org>; Mon,  6 Jun 2022 23:49:09 -0700 (PDT)
+Received: by mail-vk1-xa2f.google.com with SMTP id m30so3200959vkf.11
+        for <linux-xfs@vger.kernel.org>; Mon, 06 Jun 2022 23:49:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=nFxNrb6LPP6PKfmdys05Glsg4xiWkCgcg8ZZ3TfXGCw=;
+        b=R06kiFfM7s03+8CW7D4tG5rWKIN+2czOp+Kbe7oAssb4payg42Ae+RAQjq/bz6NY/B
+         Rpk39upD+oqV8xwAhKAhP+4QE/C20JCfMYs2e4OZWwYm/eeuVumRytiREQ39+dBJi2Z1
+         VxE0uZylZmrVQQF+toc0BWxHA5Bast0cwHI9lZ/f442oyCzvYRCLnXyDtOKE/nZhp0dn
+         V1KLPbkaxZsr5i33F0m8MQM0XQYag96hU4i5R+jVmszZ1qgDVZPiR3ShbYx7+NWbti8m
+         qVlZTk7GQSZQQqMZhmEpstCsoNsLlgje0mntSnc2oIc4XvwqG0l2eVZBiQjpNOaG4KgZ
+         O8OQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=nFxNrb6LPP6PKfmdys05Glsg4xiWkCgcg8ZZ3TfXGCw=;
+        b=q1wj+NWsYLvq5WnqmLtnLzUfD8pNwPx4xlAPWaVv4kbetY7XUj1ry2SGjEYGZmfRx5
+         BUq3sy60yZFpEw4T/EpuXjYw0eOcX+L5922F6jHXtG6oCsy/LP6DzmH8jRG8T/7E8k5a
+         jali4hXJSgmXp90iSZUxbFBXwSpN9LF6vWHwWnfl2UtE39VxeVNeJtqDZAXmbX9fZRvu
+         khumboow20Doj/jnv6R5JpP/9MgqH9kptyuecTEtxZorT1WMKTy9WXG68xhnQbQtmxA2
+         VWSddFDRLSquztGXbXrz/woFufe37G9mUiGgcgLMx31LMdb+G3KWiePvxs2poU5/w99P
+         fFgA==
+X-Gm-Message-State: AOAM530OzIAVr8xLwM7T3HPNn6+k4Wbt340TdNFO+izb4TWapVrCKM39
+        kuh9q5kXBhYpJpqkZNIAqJ7LcrHXmIKBqLMX0zE0xOA83kY=
+X-Google-Smtp-Source: ABdhPJz/gTK32rnYF6qnAbnNE+uGZCKJmWN8nFenS88V9Tbb9c3lPX0pl7nCssmp39ffmyuK/UnDTac1DXC/lK+B6w4=
+X-Received: by 2002:a05:6122:214d:b0:35d:94e0:55fb with SMTP id
+ m13-20020a056122214d00b0035d94e055fbmr6900608vkd.3.1654584548155; Mon, 06 Jun
+ 2022 23:49:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220606204050.2625949-15-willy@infradead.org>
+References: <YpzbX/5sgRIcN2LC@magnolia> <20220605222940.GL1098723@dread.disaster.area>
+ <Yp1EGf+d/rzCgvJ4@magnolia> <CAOQ4uxiMJ9gGATN8pdPhJhR-_3m2N4vcFTeBPLdLL1DFddRy9g@mail.gmail.com>
+ <Yp41aUNK/TnC3dQ8@magnolia>
+In-Reply-To: <Yp41aUNK/TnC3dQ8@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 7 Jun 2022 09:48:57 +0300
+Message-ID: <CAOQ4uxiY7mtM=O-SO=1oL-XA9Zn3HwCNM-6QtCDGzR8V=t9O=A@mail.gmail.com>
+Subject: Re: [PATCH] xfs: preserve DIFLAG2_NREXT64 when setting other inode attributes
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi "Matthew,
+On Mon, Jun 6, 2022 at 8:12 PM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> On Mon, Jun 06, 2022 at 10:22:03AM +0300, Amir Goldstein wrote:
+> > On Mon, Jun 6, 2022 at 8:24 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> > >
+> > > On Mon, Jun 06, 2022 at 08:29:40AM +1000, Dave Chinner wrote:
+> > > > On Sun, Jun 05, 2022 at 09:35:43AM -0700, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > >
+> > > > > It is vitally important that we preserve the state of the NREXT64 inode
+> > > > > flag when we're changing the other flags2 fields.
+> > > > >
+> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > ---
+> > > > >  fs/xfs/xfs_ioctl.c |    3 ++-
+> > > > >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > > >
+> > > > Fixes tag?
+> >
+> > Thank you Dave!
+> >
+> > >
+> > > Does this really need one?
+> >
+> > I say why not.
+>
+> Every one of these asks adds friction for patch authors.  For code that
+> has already shipped in a Linus release it's a reasonable ask, but...
+>
+> > I am not looking for a fight. Really, it's up to xfs maintainers how to manage
+> > experimental features. That is completely outside of scope for LTS.
+> > I only want to explain my POV as a developer.
+> >
+> > You know my interest is in backporting fixes for LTS, so this one won't be
+> > relevant anyway, but if I were you, I would send this patch to stable 5.18.y
+> > to *reduce* burden on myself -
+>
+> ...WHY?
+>
+> This is a fix for a new ondisk feature that landed in 5.19-rc1.  The
+> feature is EXPERIMENTAL, which means that it **should not** be
+> backported to 5.18, 5.15, or any other LTS kernel.  New features do NOT
+> fit the criteria for LTS backports.
+>
+> That's why I didn't bother attaching a fixes tag!
+>
+> > The mental burden of having to carry the doubt of whether a certain
+> > reported bug could have been involved with user booting into 5.18.y
+> > and back.
+> >
+> > When you think about it, it kind of makes sense to have the latest .y
+> > in your grub menu when you are running upstream...
+> > Users do that - heck, user do anything you don't want them to do,
+> > even if eventually you can tell the users they did something that is
+> > not expected to work, you had already invested the time in triage.
+> >
+> > Sure, there is always the possibility that someone in the future of 5.19.y
+> > will boot into 5.18.0, but that is a far less likely possibility.
+> >
+> > For this reason, when I write new features I really try to treat the .y
+> > release as the true release cycle of that feature rather than the .0,
+> > regardless of LTS.
+> > If I were the developer of the feature, I would have wanted to see
+> > this fix applied to 5.18.y.
+>
+> This fix **WILL NOT APPLY** to 5.18!
+>
 
-I love your patch! Yet something to improve:
+I stand corrected.
+Sorry for the noise.
 
-[auto build test ERROR on linus/master]
-[also build test ERROR on v5.19-rc1 next-20220607]
-[cannot apply to jaegeuk-f2fs/dev-test trondmy-nfs/linux-next kdave/for-next xfs-linux/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Matthew-Wilcox-Oracle/Convert-aops-migratepage-to-aops-migrate_folio/20220607-044509
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git f2906aa863381afb0015a9eb7fefad885d4e5a56
-config: ia64-randconfig-r015-20220605 (https://download.01.org/0day-ci/archive/20220607/202206071414.41wGG8fp-lkp@intel.com/config)
-compiler: ia64-linux-gcc (GCC) 11.3.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/b038962c9c8c2ab77c71dfba24356ce24bd7a242
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Matthew-Wilcox-Oracle/Convert-aops-migratepage-to-aops-migrate_folio/20220607-044509
-        git checkout b038962c9c8c2ab77c71dfba24356ce24bd7a242
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=ia64 SHELL=/bin/bash fs/hugetlbfs/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
-   fs/hugetlbfs/inode.c: In function 'hugetlbfs_migrate_folio':
->> fs/hugetlbfs/inode.c:990:17: error: implicit declaration of function 'folio_migrate_copy' [-Werror=implicit-function-declaration]
-     990 |                 folio_migrate_copy(dst, src);
-         |                 ^~~~~~~~~~~~~~~~~~
->> fs/hugetlbfs/inode.c:992:17: error: implicit declaration of function 'folio_migrate_flags'; did you mean 'folio_mapping_flags'? [-Werror=implicit-function-declaration]
-     992 |                 folio_migrate_flags(dst, src);
-         |                 ^~~~~~~~~~~~~~~~~~~
-         |                 folio_mapping_flags
-   cc1: some warnings being treated as errors
-
-
-vim +/folio_migrate_copy +990 fs/hugetlbfs/inode.c
-
-   972	
-   973	static int hugetlbfs_migrate_folio(struct address_space *mapping,
-   974					struct folio *dst, struct folio *src,
-   975					enum migrate_mode mode)
-   976	{
-   977		int rc;
-   978	
-   979		rc = migrate_huge_page_move_mapping(mapping, dst, src);
-   980		if (rc != MIGRATEPAGE_SUCCESS)
-   981			return rc;
-   982	
-   983		if (hugetlb_page_subpool(&src->page)) {
-   984			hugetlb_set_page_subpool(&dst->page,
-   985						hugetlb_page_subpool(&src->page));
-   986			hugetlb_set_page_subpool(&src->page, NULL);
-   987		}
-   988	
-   989		if (mode != MIGRATE_SYNC_NO_COPY)
- > 990			folio_migrate_copy(dst, src);
-   991		else
- > 992			folio_migrate_flags(dst, src);
-   993	
-   994		return MIGRATEPAGE_SUCCESS;
-   995	}
-   996	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Amir.
