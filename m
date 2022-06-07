@@ -2,60 +2,60 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5086CCA47C
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 04:56:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A8DBC43334
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 06:10:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229713AbiFGE4U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 00:56:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33870 "EHLO
+        id S236939AbiFGGKD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 02:10:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236638AbiFGE4T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 00:56:19 -0400
-Received: from mail-vk1-xa31.google.com (mail-vk1-xa31.google.com [IPv6:2607:f8b0:4864:20::a31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FCF8D4122;
-        Mon,  6 Jun 2022 21:56:18 -0700 (PDT)
-Received: by mail-vk1-xa31.google.com with SMTP id q186so7110457vkh.8;
-        Mon, 06 Jun 2022 21:56:18 -0700 (PDT)
+        with ESMTP id S236938AbiFGGKB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 02:10:01 -0400
+Received: from mail-vk1-xa35.google.com (mail-vk1-xa35.google.com [IPv6:2607:f8b0:4864:20::a35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 748F8A8695;
+        Mon,  6 Jun 2022 23:10:00 -0700 (PDT)
+Received: by mail-vk1-xa35.google.com with SMTP id bj33so6768917vkb.12;
+        Mon, 06 Jun 2022 23:10:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=UhWlXfl5Re+maVi7dCfRsMXwTSTdIFVk4uVyvF1WRDI=;
-        b=Tdq+Qj9nXsx16tEGZLBrmkW9RrjTi6X6KORDm/9+CVyQi0gbRdKfxqoYQY/4ksjUVQ
-         gE3zo4Jlfipt1VnDFXB4Gcn3OJ5eTdhpzRB9/4ri/BfpMRSbGGmbEudMufijbRxfPvJU
-         IhmOV1ibKERM/Ep3X0J9ibVK7gxYPa9fFshPla/45tMrQRBiQ6jznDFWGcOGrNag0P/2
-         WMaz7JEfcB9rjk9mEr7HxwgTUCh67c75fRLCJpnybVGnyW1ApO5m9oEFF1SvoArjNu0t
-         Z5UTVynEhwin/MUR3AZE3t4f3vw/yPS0vVAC8gDr+gqYjC+o5tvefkbyKqWmhD9ACmVb
-         vkBA==
+        bh=dNP+/aiDSZmQj5Q9vK/A8mfM/f+ezUW2eGs0EmxXPaE=;
+        b=D+fbDzm5ff/z3r00EXjNHqeHY3ziY7vc5lx0Ve8TZNwfYd+YnVEBRga9famwyCVMh3
+         BBrdJ9U0QWnt6etPc0A5WV8V4OqYGd2FwcFfq07NdF6Kz5HriOBecFGH4Wj2PD/Zd/9p
+         HxJG9wMIlDgYKJ3h9+0tcsGV2B85WV+WeN+mnofka+5C5ORyL/5/9AXMILIRX0bm946s
+         TKeHj71z6fwtUW8DVlvYOyd9FDouUs9WuBPP85KsXKwU/Vi3m4xZY4bdq8YaDNK8cZJN
+         W+kX1Cgl9GaTp6hGFwVNHOIvLB4ht0KWbwXuFJmrMLdoG/BpY3OM6B/8knfq9kTpznBn
+         o3ug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=UhWlXfl5Re+maVi7dCfRsMXwTSTdIFVk4uVyvF1WRDI=;
-        b=EK4KbhHLcapgkp0tWhz9MU51ge0YOD4rBlUsrj8fXtUuw2wOiX1D5UOWrse1nYsaTS
-         iqvP83z76+MxQzK2CLAFJvODiSwp31CEj5N0IdGVk7AUAK4z3vXhdcWm87iSFnHRuRR5
-         3kKDNv72lO5EO25FOxB1JTOfPPU6kn2otJmVim2uTFw8xvunQG4kbwJjxZcCKqc4D2wv
-         bsh9a1H7SgTlJCs/Mws0F4V4EPs3Fc7lTKKrTbu0xegFpp4q7MOBhWpIKqBcxMPyVXE7
-         2FS3jR3UDcPcf7hCSvvbv/qJ+gGE415MTQKqHP0U+7qVsyZkVOG6WBmkE2bWbcrdp7es
-         MmSQ==
-X-Gm-Message-State: AOAM532aYpKpYn8WtPX2GBx+0LVcFvonMBA6OMYAOEVJVwc5yhVVETT4
-        dkHA9rW/E8IFVjBs2hHLeZeUNv+RR+u4bqvrM9w=
-X-Google-Smtp-Source: ABdhPJyUIX89kOf0vNVQQVZlCJ7e7pEmTvdqXybdpOeoemcYAxtdFo+5eU7gH42tREqyzGY/TQgubDl5oN56AjrSgOw=
+        bh=dNP+/aiDSZmQj5Q9vK/A8mfM/f+ezUW2eGs0EmxXPaE=;
+        b=UzZ4bx8Zrb24BDrPJv9pzC+5OwTjDL7+3JwG7gCvL0N49gXI9oeemH+CCFNjUgNrue
+         yKozdCl3vopHLwmY5PfzS7B2AANnghSu/OKqYZNUumKqqXM7ghhw9y9yqZKsehaCc6+D
+         snEHV5AERtH7wT1ZXvtqMXYfvU3gRd+XyoP9fW6oRxd7fa1ldxRhTBtINGgx9+qvyBcW
+         89yR6Dh9grygIIoE3ZijoP+dJ69vngchE6ANyGJK+yg0xOGwMcyMLexudt/w5Y9TpGnC
+         ZYYhxfmfjQpRdURzhibuKS+P9a2v9ksEYo8ifsBomQhlcLv3NC9peg45guwvZUYHWgwE
+         D7dg==
+X-Gm-Message-State: AOAM531g5Qg7aGQU8ZKKPti6Ks7OLErHtuhz7nXgxiU5r37SwnJ1nKWW
+        kzNVh/h049rhoi/c/z3OUfbNu+hP2L8c+bBaE0JVpPbcxGHJBrgw
+X-Google-Smtp-Source: ABdhPJzEV6nPCU/zsT6+CvbV29dvuQfaXGO4MBfjT7yqIEduNB7WrrYwE5/OIHVDUV+RB1Jr715R1c86Rb5f1TQZWxY=
 X-Received: by 2002:a05:6122:509:b0:35d:9478:ac57 with SMTP id
- x9-20020a056122050900b0035d9478ac57mr6918081vko.11.1654577777561; Mon, 06 Jun
- 2022 21:56:17 -0700 (PDT)
+ x9-20020a056122050900b0035d9478ac57mr6990206vko.11.1654582199534; Mon, 06 Jun
+ 2022 23:09:59 -0700 (PDT)
 MIME-Version: 1.0
 References: <20220606143255.685988-1-amir73il@gmail.com> <20220606143255.685988-9-amir73il@gmail.com>
  <20220606213042.GS227878@dread.disaster.area> <CAOQ4uxhCjLoYOd7X-yFQOA24YtychwKz3wUfX79zUwFs2o3ziw@mail.gmail.com>
- <20220607030147.GU227878@dread.disaster.area> <Yp7YXqn4BIZrebq7@kroah.com>
-In-Reply-To: <Yp7YXqn4BIZrebq7@kroah.com>
+ <20220607030147.GU227878@dread.disaster.area>
+In-Reply-To: <20220607030147.GU227878@dread.disaster.area>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 7 Jun 2022 07:56:05 +0300
-Message-ID: <CAOQ4uxj2BgvgLz9wR=rcrrAY1CYxeg=zPLA35LYQC=1HEsLXTA@mail.gmail.com>
+Date:   Tue, 7 Jun 2022 09:09:47 +0300
+Message-ID: <CAOQ4uxgP_knOriJPyU6PS_TYhsMRfAJon2nsJ2FO34SUbY6Ygw@mail.gmail.com>
 Subject: Re: [PATCH 5.10 v2 8/8] xfs: assert in xfs_btree_del_cursor should
  take into account error
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Sasha Levin <sashal@kernel.org>,
         "Darrick J . Wong" <djwong@kernel.org>,
         Christoph Hellwig <hch@lst.de>,
@@ -66,100 +66,171 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         Adam Manzanares <a.manzanares@samsung.com>,
         linux-xfs <linux-xfs@vger.kernel.org>,
         stable <stable@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>
+        Dave Chinner <dchinner@redhat.com>,
+        Theodore Tso <tytso@mit.edu>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 7, 2022 at 7:47 AM Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
+On Tue, Jun 7, 2022 at 6:01 AM Dave Chinner <david@fromorbit.com> wrote:
 >
-> On Tue, Jun 07, 2022 at 01:01:47PM +1000, Dave Chinner wrote:
-> > On Tue, Jun 07, 2022 at 01:33:06AM +0300, Amir Goldstein wrote:
-> > > On Tue, Jun 7, 2022 at 12:30 AM Dave Chinner <david@fromorbit.com> wrote:
-> > > >
-> > > > On Mon, Jun 06, 2022 at 05:32:55PM +0300, Amir Goldstein wrote:
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > >
-> > > > > commit 56486f307100e8fc66efa2ebd8a71941fa10bf6f upstream.
-> > > > >
-> > > > > xfs/538 on a 1kB block filesystem failed with this assert:
-> > > > >
-> > > > > XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 || xfs_is_shutdown(cur->bc_mp), file: fs/xfs/libxfs/xfs_btree.c, line: 448
-> > > >
-> > > > You haven't mentioned that you combined a second upstream
-> > > > commit into this patch to fix the bug in this commit.....
-> > > >
+> On Tue, Jun 07, 2022 at 01:33:06AM +0300, Amir Goldstein wrote:
+> > On Tue, Jun 7, 2022 at 12:30 AM Dave Chinner <david@fromorbit.com> wrote:
 > > >
-> > > I am confused.
+> > > On Mon, Jun 06, 2022 at 05:32:55PM +0300, Amir Goldstein wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > >
+> > > > commit 56486f307100e8fc66efa2ebd8a71941fa10bf6f upstream.
+> > > >
+> > > > xfs/538 on a 1kB block filesystem failed with this assert:
+> > > >
+> > > > XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 || xfs_is_shutdown(cur->bc_mp), file: fs/xfs/libxfs/xfs_btree.c, line: 448
 > > >
-> > > patch [5.10 7/8] xfs: consider shutdown in bmapbt cursor delete assert
-> > > is the patch that I backported from 5.12 and posted for review.
-> > > This patch [5.10 8/8] is the patch from 5.19-rc1 that you pointed out
-> > > that I should take to fix the bug in patch [5.10 7/8].
+> > > You haven't mentioned that you combined a second upstream
+> > > commit into this patch to fix the bug in this commit.....
+> > >
 > >
-> > Sorry, I missed that this was a new patch because the set looked
-> > the same as the last posting and you said in the summary letter:
+> > I am confused.
 > >
-> > "These fixes have been posted to review on xfs list [1]."
-> >
-> > Except this patch *wasn't part of that set*. I mistook it for the
-> > patch that introduced the assert because I assumed from the above
-> > statement, the absence of a changelog in cover letter and that you'd
-> > sent it to Greg meant for inclusion meant *no new patches had been
-> > added*.
-> >
-> > Add to that the fact I rushed through them because I saw that Greg
-> > has already queued these before anyone had any time to actually
-> > review the posting. Hence the timing of the release of unreviewed
-> > patches has been taken completely out of our control, and so I
-> > rushed through them and misinterpreted what I was seeing.
-> >
-> > That's not how the review process is supposed to work. You need to
-> > wait for people to review the changes and ACK them before then
-> > asking for them to be merged into the stable trees. You need to have
-> > changelogs in your summary letters. You need to do all the things
-> > that you've been complaining bitterly about over the past month that
-> > upstream developers weren't doing 18 months ago.
+> > patch [5.10 7/8] xfs: consider shutdown in bmapbt cursor delete assert
+> > is the patch that I backported from 5.12 and posted for review.
+> > This patch [5.10 8/8] is the patch from 5.19-rc1 that you pointed out
+> > that I should take to fix the bug in patch [5.10 7/8].
 >
-> I thought these had already been reviewed, which is why I took them.
+> Sorry, I missed that this was a new patch because the set looked
+> the same as the last posting and you said in the summary letter:
 >
-> And there still are days before these go anywhere, just adding them to
-> the stable queue doesn't mean they are "set in stone".
->
-> Heck, even if they do get merged into a stable release, 'git revert' is
-> our friend here, and we can easily revert anything that is found to be
-> wrong.
->
-> > And I notice that you've already sent out yet another set of stable
-> > patches for review despite the paint not even being dry on these
-> > ones. Not to mention that there's a another set of different 5.15
-> > stable patches out for review as well.
-> >
-> > This is not a sustainable process.
-> >
-> > Seriously: slow down and stop being so damn aggressive. Let everyone
-> > catch up and build sustainable processes and timetables. If you keep
-> > going like this, you are going break people.
->
-> What am I supposed to do here, not take patches you all send me?  Wait
-> X number of days?
->
-> totally confused,
+> "These fixes have been posted to review on xfs list [1]."
 
-I think the above was addressing me.
-I should be managing the review and grace period of xfs stable candidates
-for 5.10 and should adapt my rhythm to the xfs developers requests.
+Sorry, I forgot to edit this part of the template.
 
-When I send patches to stable, they are supposed to be good to go,
-so you should not worry about that.
+>
+> Except this patch *wasn't part of that set*. I mistook it for the
+> patch that introduced the assert because I assumed from the above
+> statement, the absence of a changelog in cover letter and that you'd
+> sent it to Greg meant for inclusion meant *no new patches had been
+> added*.
+>
+> Add to that the fact I rushed through them because I saw that Greg
+> has already queued these before anyone had any time to actually
+> review the posting. Hence the timing of the release of unreviewed
+> patches has been taken completely out of our control, and so I
+> rushed through them and misinterpreted what I was seeing.
+>
+> That's not how the review process is supposed to work. You need to
+> wait for people to review the changes and ACK them before then
+> asking for them to be merged into the stable trees. You need to have
+> changelogs in your summary letters. You need to do all the things
+> that you've been complaining bitterly about over the past month that
+> upstream developers weren't doing 18 months ago.
 
-The patches in this posting are according to xfs developers suggestion
-as elaborated in the cover letter, but there was a breakage in my process
-that caused this alarm.
+Of course I need to do all things.
+If I am not doing them it could be because I made a mistake
+or misunderstood something.
+I am always trying to improve and incorporate feedback on my mistakes.
 
-I am going to fix it going forward.
+Regarding changelogs, I do not understand what you mean.
+Isn't that a changelog at the bottom of my cover letter?
+Do you mean something else?
+
+Regarding explicit ACKs, I wasn't sure what to do.
+Ted has asked this on this thread [1].
+
+[1] https://lore.kernel.org/linux-fsdevel/YieG8rZkgnfwygyu@mit.edu/
+
+I asked this in my reply [2] to Darrick's email, but got no reply:
+
+:Should we post to xfs list and wait for explicit ACK/RVB on every patch?
+:Should we post to xfs list and if no objections are raised post to stable?
+
+[2] https://lore.kernel.org/linux-xfs/CAOQ4uxjtOJ_=65MXVv0Ry0Z224dBxeLJ44FB_O-Nr9ke1epQ=Q@mail.gmail.com/
+
+Since I had no explicit rules, I used my common sense, which is a recipe
+for misunderstandings... :-/
+
+I posted the candidates one week ago, so I thought everyone had the
+opportunity to comment.
+You gave me comments on patches 1 and 7 so I had assumed that
+you had seen the entire series and had no objections to the rest.
+
+I incorporated your feedback and wrote my plans in this email [3]
+
+:Just to make sure we are all on the same page.
+:
+:I have applied both patches to my test tree:
+:1. 1cd738b13ae9 xfs: consider shutdown in bmapbt cursor delete assert
+:2. 56486f307100 xfs: assert in xfs_btree_del_cursor should take into
+:account error
+:
+:Patch #2 looks pretty safe and it only affects builds with XFS_WARN/DEBUG,
+:so I am not too concerned about a soaking period.
+:I plan to send it along with patch #1 to stable after a few more test runs.
+
+Once again, I *assumed* that you saw that because this was part of
+an ongoing conversation, not some random email.
+
+4 days later (after more testing) I did what I said I would do
+and posted the revised series to stable with feedback incorporated.
+This was also detailed in the cover letter to stable.
+
+[3] https://lore.kernel.org/linux-xfs/CAOQ4uxhxLRTUfyhSy9D6nsGdVANrUOgRM8msVPVmFmw0oaky+w@mail.gmail.com/
+
+If this situation repeats itself in the future, I will post v2 to xfs
+list first.
+
+>
+> And I notice that you've already sent out yet another set of stable
+> patches for review despite the paint not even being dry on these
+> ones. Not to mention that there's a another set of different 5.15
+> stable patches out for review as well.
+
+I will pace myself going forward and collaborate closer with Leah.
+I have two years of kernel releases to catch up with, but once we
+reach the point of selecting patches from the present releases
+Hopefully, some of the reviews for candidates for different LTS
+kernels will be shared.
+
+>
+> This is not a sustainable process.
+>
+> Seriously: slow down and stop being so damn aggressive. Let everyone
+> catch up and build sustainable processes and timetables. If you keep
+> going like this, you are going break people.
+
+I do not want that.
+
+Let me explain my process. As I described in the meta-cover letter [4] for
+the multi part series:
+
+:My intention is to post the parts for review on the xfs list on
+:a ~weekly basis and forward them to stable only after xfs developers
+:have had the chance to review the selection.
+
+[4] https://lore.kernel.org/linux-xfs/20220525111715.2769700-1-amir73il@gmail.com/
+
+To you, it may appear that "paint not even being dry on these ones"
+but to me, I perceived part 2 was already out of review and part 3 was already
+spinning in xfstests for a week, so I wanted to post those patches
+and give as much time for review as needed.
+
+My idea of sustainable was posting ~7 stable candidates per week.
+This pace may be a bit higher than normal fixes flow, but I do need
+to catch up with 2 years of fixes, so the rate has to be a bit higher
+than the normal rate of fixes that go into upstream.
+
+I had to choose something based on no other feedback, but of course
+the idea is to take feedback and incorporate it into the process
+in order to make it sustainable.
+
+I will do my best to amend the things that were broken in this posting.
+I am sure this is not the last time I am going to make mistakes.
+I am trying to fix a process that has been broken for years.
+I invest a lot of my time and energy in this effort.
+
+My request is that you assume good intentions on my part and if there
+are rules that you want me to follow please spell them out, so I won't
+end up guessing wrong again.
 
 Thanks,
 Amir.
