@@ -2,162 +2,128 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA73AC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 03:20:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8468CCA47E
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 03:39:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236245AbiFGDUY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jun 2022 23:20:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56428 "EHLO
+        id S236375AbiFGDjE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jun 2022 23:39:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236272AbiFGDUT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 23:20:19 -0400
-Received: from out0.migadu.com (out0.migadu.com [IPv6:2001:41d0:2:267::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C251C56227
-        for <linux-xfs@vger.kernel.org>; Mon,  6 Jun 2022 20:20:17 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1654572015;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=/t46xjI0MIGrHW2L7sqHryo03TWnUDRmRVcno8yc4+4=;
-        b=pX94oVU2nwyy7ok5dVnSrsM0gCnzVGiBGuTERiCyctZ17bOGqAAlIgu5qB8nF7rKleW222
-        widsUponxNCnJOtXKhagvlOqkaSE25jHtQZl6EHHdD3Y2MuuyaklLNZT/Ip5xFISQ9jESW
-        Z1mLBE5OeHwJdpLk/+CE3pPKjrWbZHU=
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Subject: xfs/148 fails with 5.19-rc1 kernel
-To:     linux-xfs@vger.kernel.org
-Message-ID: <f7de0b18-f10b-6b2e-65a2-3c7e1593b096@linux.dev>
-Date:   Tue, 7 Jun 2022 11:20:12 +0800
+        with ESMTP id S236186AbiFGDit (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jun 2022 23:38:49 -0400
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5B88387BA;
+        Mon,  6 Jun 2022 20:38:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654573128; x=1686109128;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=w4xeyqU+kOhDYzyqy82v69OYCHkAH6xk8Nd95qrz48A=;
+  b=cI2CtkAJJHCwTU24iLHMl95jI+TLyqQ/r3CzxiuMBsum3Zv2lOijhywx
+   7DQxnW0svepR7cp/Rauiczc3JEk/wEP7uw+iZJv1Ee5IL74PR6EiMkyxq
+   D7kbQjvry7tdZe4f42EZ/drgMjgpCADrgfxO3h3i3qQ1FeSLQWIkDJQYB
+   kieFIk5f/kvR16vOGkqCCcMAg/9btpMI1Y088XhRrhM/chcTLjbk9KAPd
+   Ho5/plGjKvI5ADJA8DLH/y62CuUwY1ISoqsWmZM36GUBflL+xLtTSWE3x
+   /dgtopIsWdfkoEzeAqYkJ9xLs+k8sMlFV0uH6o0ehNoz6lj9zRqRFrxQB
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10370"; a="275480643"
+X-IronPort-AV: E=Sophos;i="5.91,282,1647327600"; 
+   d="scan'208";a="275480643"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2022 20:38:44 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,282,1647327600"; 
+   d="scan'208";a="579430786"
+Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
+  by orsmga007.jf.intel.com with ESMTP; 06 Jun 2022 20:38:40 -0700
+Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nyQ3D-000DJf-KE;
+        Tue, 07 Jun 2022 03:38:39 +0000
+Date:   Tue, 7 Jun 2022 11:37:45 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-fsdevel@vger.kernel.org
+Cc:     kbuild-all@lists.01.org,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
+        linux-mtd@lists.infradead.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 04/20] mm/migrate: Convert buffer_migrate_page() to
+ buffer_migrate_folio()
+Message-ID: <202206071139.aWSx4GHH-lkp@intel.com>
+References: <20220606204050.2625949-5-willy@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220606204050.2625949-5-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+Hi "Matthew,
 
-The latest 5.19-rc1 kernel failed with xfs/148 test as follows, is it a 
-known issue?
+I love your patch! Perhaps something to improve:
 
-[root@localhost fstest]# ./check xfs/148
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 localhost 5.19.0-rc1-default #19 SMP 
-PREEMPT_DYNAMIC Mon Jun 6 17:32:05 CST 2022
-MKFS_OPTIONS  -- -f /dev/vde
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/vde 
-/mnt/scratch
+[auto build test WARNING on linus/master]
+[also build test WARNING on v5.19-rc1 next-20220606]
+[cannot apply to jaegeuk-f2fs/dev-test trondmy-nfs/linux-next kdave/for-next xfs-linux/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-xfs/148 - output mismatch (see /root/fstest/results//xfs/148.out.bad)
-     --- tests/xfs/148.out       2021-06-07 17:24:30.000000000 +0800
-     +++ /root/fstest/results//xfs/148.out.bad   2022-06-07 
-11:05:34.016737438 +0800
-     @@ -46,5 +46,5 @@
-      attr_get: No data available
-      Could not get "a_too_many" for TEST_DIR/mount-148/testfile
-      ls: cannot access 'TEST_DIR/mount-148/testdir/f_are_bad/for_you': 
-No such file or directory
-     -Attribute "a_are_bad/for_you" had a 3 byte value for 
-TEST_DIR/mount-148/testfile:
-     -heh
-     +attr_get: No data available
-     +Could not get "a_are_bad/for_you" for TEST_DIR/mount-148/testfile
-     ...
-     (Run 'diff -u /root/fstest/tests/xfs/148.out 
-/root/fstest/results//xfs/148.out.bad'  to see the entire diff)
-Ran: xfs/148
-Failures: xfs/148
-Failed 1 of 1 tests
+url:    https://github.com/intel-lab-lkp/linux/commits/Matthew-Wilcox-Oracle/Convert-aops-migratepage-to-aops-migrate_folio/20220607-044509
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git f2906aa863381afb0015a9eb7fefad885d4e5a56
+config: i386-defconfig (https://download.01.org/0day-ci/archive/20220607/202206071139.aWSx4GHH-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-1) 11.3.0
+reproduce (this is a W=1 build):
+        # https://github.com/intel-lab-lkp/linux/commit/96e64ba8b1be545885d89f44b1d8b968b22bdb4d
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Matthew-Wilcox-Oracle/Convert-aops-migratepage-to-aops-migrate_folio/20220607-044509
+        git checkout 96e64ba8b1be545885d89f44b1d8b968b22bdb4d
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash
 
-Also some calltraces appeared in dmesg.
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
-[  356.595147] XFS (loop0): Corruption detected. Unmount and run xfs_repair
-[  356.595150] XFS (loop0): Internal error 
-!xfs_dir2_namecheck(sfep->name, sfep->namelen) at line 122 of file 
-fs/xfs/xfs_dir2_readdir.c.  Caller 
-xfs_dir2_sf_getdents.isra.8+0x1f1/0x280 [xfs]
-[  356.595171] CPU: 3 PID: 6619 Comm: ls Kdump: loaded Tainted: 
-G            E     5.19.0-rc1-default #19
-[  356.595172] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), 
-BIOS rel-1.14.0-0-g155821a-rebuilt.opensuse.org 04/01/2014
-[  356.595173] Call Trace:
-[  356.595173]  <TASK>
-[  356.595174]  dump_stack_lvl+0x44/0x57
-[  356.595176]  xfs_corruption_error+0x92/0xa0 [xfs]
-[  356.595196]  ? xfs_dir2_sf_getdents.isra.8+0x1f1/0x280 [xfs]
-[  356.595224]  xfs_dir2_sf_getdents.isra.8+0x21c/0x280 [xfs]
-[  356.595245]  ? xfs_dir2_sf_getdents.isra.8+0x1f1/0x280 [xfs]
-[  356.595268]  xfs_readdir+0x1e3/0x250 [xfs]
-[  356.595296]  iterate_dir+0x88/0x1b0
-[  356.595301]  __x64_sys_getdents64+0x89/0x130
-[  356.595302]  ? filldir+0x190/0x190
-[  356.595307]  ? do_syscall_64+0x3a/0x80
-[  356.595308]  ? __x64_sys_getdents+0x130/0x130
-[  356.595309]  do_syscall_64+0x3a/0x80
-[  356.595310]  entry_SYSCALL_64_after_hwframe+0x46/0xb0
-[  356.595311] RIP: 0033:0x7f7f286d4a2b
-[  356.595312] Code: 89 e0 5b 5d 41 5c c3 0f 1f 84 00 00 00 00 00 f3 0f 
-1e fa 48 81 fa ff ff ff 7f b8 ff ff ff 7f 48 0f 47 d0 b8 d9 00 00 00 0f 
-05 <48> 3d 00 f0 ff ff 77 05 c3 0f 1f 40 00 4
-8 8b 15 b9 c3 11 00 f7 d8
-[  356.595313] RSP: 002b:00007ffea3c48da8 EFLAGS: 00000293 ORIG_RAX: 
-00000000000000d9
-[  356.595314] RAX: ffffffffffffffda RBX: 0000556710442650 RCX: 
-00007f7f286d4a2b
-[  356.595314] RDX: 0000000000008000 RSI: 0000556710442650 RDI: 
-0000000000000003
-[  356.595314] RBP: 0000556710442624 R08: 0000000000000003 R09: 
-0000000000000078
-[  356.595315] R10: 0000000000000000 R11: 0000000000000293 R12: 
-fffffffffffffe98
-[  356.595315] R13: 0000000000000000 R14: 0000556710442620 R15: 
-0000556710442693
-[  356.595323]  </TASK>
-[  356.595324] XFS (loop0): Corruption detected. Unmount and run xfs_repair
-[  356.600830] XFS (loop0): Internal error !xfs_attr_namecheck(name, 
-namelen) at line 469 of file fs/xfs/xfs_attr_list.c.  Caller 
-xfs_attr3_leaf_list_int+0x341/0x4d0 [xfs]
-[  356.600871] CPU: 0 PID: 6620 Comm: attr Kdump: loaded Tainted: 
-G            E     5.19.0-rc1-default #19
-[  356.600873] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), 
-BIOS rel-1.14.0-0-g155821a-rebuilt.opensuse.org 04/01/2014
-[  356.600874] Call Trace:
-[  356.600874]  <TASK>
-[  356.600875]  dump_stack_lvl+0x44/0x57
-[  356.600879]  xfs_corruption_error+0x92/0xa0 [xfs]
-[  356.600908]  ? xfs_attr3_leaf_list_int+0x341/0x4d0 [xfs]
-[  356.600936]  xfs_attr3_leaf_list_int+0x36f/0x4d0 [xfs]
-[  356.600960]  ? xfs_attr3_leaf_list_int+0x341/0x4d0 [xfs]
-[  356.600990]  xfs_attr_leaf_list+0x61/0x140 [xfs]
-[  356.601015]  xfs_attr_list+0x74/0x90 [xfs]
-[  356.601040]  xfs_vn_listxattr+0x64/0xa0 [xfs]
-[  356.601080]  ? __xfs_xattr_put_listent+0xb0/0xb0 [xfs]
-[  356.601108]  listxattr+0x5b/0xf0
-[  356.601113]  path_listxattr+0x5f/0xb0
-[  356.601118]  do_syscall_64+0x3a/0x80
-[  356.601120]  entry_SYSCALL_64_after_hwframe+0x46/0xb0
-[  356.601121] RIP: 0033:0x7f5fc790970b
-[  356.601123] Code: f0 ff ff 73 01 c3 48 8b 0d 0a 77 0e 00 f7 d8 64 89 
-01 48 83 c8 ff c3 0f 1f 84 00 00 00 00 00 f3 0f 1e fa b8 c3 00 00 00 0f 
-05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d dd 76 0e 00 f7 d8 64 89 01 48
-[  356.601124] RSP: 002b:00007ffe09e59368 EFLAGS: 00000202 ORIG_RAX: 
-00000000000000c3
-[  356.601125] RAX: ffffffffffffffda RBX: 00007ffe09e594c0 RCX: 
-00007f5fc790970b
-[  356.601126] RDX: 0000000000010000 RSI: 00007ffe09e594c0 RDI: 
-00007ffe09e6bdd0
-[  356.601127] RBP: 000000000000f000 R08: 00007ffe09e69540 R09: 
-0000000000000078
-[  356.601127] R10: 000000000000007d R11: 0000000000000202 R12: 
-0000000000000001
-[  356.601128] R13: 0000000000000001 R14: 00007ffe09e6bdd0 R15: 
-0000000000000000
-[  356.601138]  </TASK>
+All warnings (new ones prefixed by >>):
+
+>> mm/migrate.c:775: warning: expecting prototype for buffer_migrate_folio_noref(). Prototype was for buffer_migrate_folio_norefs() instead
 
 
-Thanks,
-Guoqing
+vim +775 mm/migrate.c
+
+89cb0888ca1483a Jan Kara                2018-12-28  758  
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  759) /**
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  760)  * buffer_migrate_folio_noref() - Migration function for folios with buffers.
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  761)  * @mapping: The address space containing @src.
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  762)  * @dst: The folio to migrate to.
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  763)  * @src: The folio to migrate from.
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  764)  * @mode: How to migrate the folio.
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  765)  *
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  766)  * Like buffer_migrate_folio() except that this variant is more careful
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  767)  * and checks that there are also no buffer head references. This function
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  768)  * is the right one for mappings where buffer heads are directly looked
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  769)  * up and referenced (such as block device mappings).
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  770)  *
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  771)  * Return: 0 on success or a negative errno on failure.
+89cb0888ca1483a Jan Kara                2018-12-28  772   */
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  773) int buffer_migrate_folio_norefs(struct address_space *mapping,
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  774) 		struct folio *dst, struct folio *src, enum migrate_mode mode)
+89cb0888ca1483a Jan Kara                2018-12-28 @775  {
+96e64ba8b1be545 Matthew Wilcox (Oracle  2022-06-06  776) 	return __buffer_migrate_folio(mapping, dst, src, mode, true);
+89cb0888ca1483a Jan Kara                2018-12-28  777  }
+9361401eb7619c0 David Howells           2006-09-30  778  #endif
+1d8b85ccf1ed53a Christoph Lameter       2006-06-23  779  
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
