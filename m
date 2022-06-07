@@ -2,63 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27CE3CCA47C
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 15:03:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8504CC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 15:05:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343823AbiFGPDF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 11:03:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38818 "EHLO
+        id S244928AbiFGPFi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 11:05:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343804AbiFGPDC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 11:03:02 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA73565EC;
-        Tue,  7 Jun 2022 08:02:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=4jzHTv5Sc0MldAT+k988WZMZ/PcoJBlwM2totgWZy1o=; b=kAmWthY2O8UluBnxjle5Z4b8CR
-        wMBrQhwOGev5bLR4SD2g4KFCVqn0rNm7UKcacjYNHOp4Zi9DN4hFNNpg/rdYnkQ2Bitnt2jS/8yep
-        J4RQx8E76Apo84LVth+zXy/EGiNNhGntaPmOyPt7MAf32pEy9j0ya4oCKAyveSeAvj+/Bahjw/WS5
-        PkxrMT8th9jzoXK8Ozl9TZiDmysXQUNCSiVKvMvkBzEn1CjwgpXgRMlrbmn3RA54WDQPV+9+5Dfdw
-        DH8s3QnSLteEcLhDUV0m22q0hL+gDPGr4PGZVl9no1Krcd/RbUTmqDuxBUlxLXzpM46q69eZL4xIc
-        YyTs3kwg==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nyajP-00Bj6v-LJ; Tue, 07 Jun 2022 15:02:55 +0000
-Date:   Tue, 7 Jun 2022 16:02:55 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     kernel test robot <lkp@intel.com>
-Cc:     linux-fsdevel@vger.kernel.org, kbuild-all@lists.01.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com,
-        linux-mtd@lists.infradead.org,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 14/20] hugetlb: Convert to migrate_folio
-Message-ID: <Yp9on0GvbGbdN+cv@casper.infradead.org>
-References: <20220606204050.2625949-15-willy@infradead.org>
- <202206071414.41wGG8fp-lkp@intel.com>
+        with ESMTP id S1343904AbiFGPFS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 11:05:18 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2539F5FF8
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Jun 2022 08:05:18 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B22E0616B6
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Jun 2022 15:05:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1E10DC341CC
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Jun 2022 15:05:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654614317;
+        bh=1/SbG5g9eMlWftKOmhn0QiJo7P9Cs9dIYRWVXfzRm3o=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=s2VE6WbQz1xnupbzcSy+IuVVbg/Z32kB1Tzlm5m5MiC/zZZw214Ja21GTeIDj1ewb
+         tX48nd81BPamifE6W5nD3QaL9AbPRTkeQfCPK+8aYoeDKqRiqwNOj91hlWPjm5kNmS
+         qpxR3/LE9hNAt+3mR0MVYDQjfdhI6q7os4V1ZAHTs9WkTBq5Dhr3mo6sJQZDSG88kq
+         hidGiYG9fZ2krZg0oX87Su/3Xk78XCyznsJ368ONGo47L0OCW+iPOIExouI1orBocZ
+         H522cnJQg2WGYQgEv2oMuoEGOxq7PSDDRbVjeMODLD3b9LncLwmsYfkuW2wnxsMqSA
+         lJbs3H5+1O+uQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 0D3C4C05FD4; Tue,  7 Jun 2022 15:05:17 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216073] [s390x] kernel BUG at mm/usercopy.c:101! usercopy:
+ Kernel memory exposure attempt detected from vmalloc 'n  o area' (offset 0,
+ size 1)!
+Date:   Tue, 07 Jun 2022 15:05:16 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: CC filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: Memory Management
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: agordeev@linux.ibm.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: akpm@linux-foundation.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216073-201763-snYTLCtV3h@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216073-201763@https.bugzilla.kernel.org/>
+References: <bug-216073-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202206071414.41wGG8fp-lkp@intel.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 07, 2022 at 02:13:26PM +0800, kernel test robot wrote:
->    fs/hugetlbfs/inode.c: In function 'hugetlbfs_migrate_folio':
-> >> fs/hugetlbfs/inode.c:990:17: error: implicit declaration of function 'folio_migrate_copy' [-Werror=implicit-function-declaration]
->      990 |                 folio_migrate_copy(dst, src);
->          |                 ^~~~~~~~~~~~~~~~~~
-> >> fs/hugetlbfs/inode.c:992:17: error: implicit declaration of function 'folio_migrate_flags'; did you mean 'folio_mapping_flags'? [-Werror=implicit-function-declaration]
->      992 |                 folio_migrate_flags(dst, src);
->          |                 ^~~~~~~~~~~~~~~~~~~
->          |                 folio_mapping_flags
->    cc1: some warnings being treated as errors
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216073
 
-Thanks, fixed.
+--- Comment #4 from agordeev@linux.ibm.com ---
+On Mon, Jun 06, 2022 at 03:13:12PM -0700, Andrew Morton wrote:
+> (switched to email.  Please respond via emailed reply-to-all, not via the
+> bugzilla web interface).
+
+Hi Zorro,
+
+Unfortunately, I am not able to reproduce the issue. Could you please
+clarify your test environment details and share your xfstests config?
+
+Thanks!
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching someone on the CC list of the bug.=
