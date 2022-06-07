@@ -2,184 +2,339 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23F56C43334
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 16:42:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F55FC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jun 2022 20:35:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345129AbiFGQmC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 12:42:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44868 "EHLO
+        id S1359376AbiFGUf0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 16:35:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344075AbiFGQmB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 12:42:01 -0400
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1288210051D;
-        Tue,  7 Jun 2022 09:41:57 -0700 (PDT)
-Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 257G4BZR015562;
-        Tue, 7 Jun 2022 09:41:40 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=unM1XoUjNCh+V0jlaf5h6UfncjoFdglEzDvDCAVWE5E=;
- b=jAzGZQIKcISKe/+OxbpmlL6PEok/C2GxxgJ9MMXUcevKrDAD2BnFvkNH0ApazosFRVqA
- r4makAsOEcMsJehF8Uy9I+1IMZGnImP1yNISeHIwM6AO/8Z+jyXEVmLp7IYoDOOr8VKW
- 8QLxrGWEk72XpF29tTq8UqzUQYMb+SPSsmU= 
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2177.outbound.protection.outlook.com [104.47.58.177])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3gj13ck9at-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 07 Jun 2022 09:41:40 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aMbwdwJ0FEOrSEBIjFsvZcSGJIF0Jaj95X2DAg0KJsjWwp9GyA3F6awiwWOt6lxirrI1Rc7nh5wZ3dQxNsex/IDYyFXA2Zmz0oek48mnJAcCS+g/Rz0KdEk0Pk3Z2bKJmGceRc/cRO1ocCMgevCEonkVQO2VUS1hrmqLj7wb5uHETg6BhnDFHpqa0PVVk0rcrOeSVkeFvtFQ5SNxHdqqN+mb76LQUocvCf/UmstEEX7pXVLMCERPMarPiipggJoRe0rMTpot/o+sVzYV+YZPwwZg3LCuzCMTUHQ/2u9STYsHkUiGoV5T6/0GcizlSm6mQ3Qlr3pOB8MWc+e4szMEFQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=unM1XoUjNCh+V0jlaf5h6UfncjoFdglEzDvDCAVWE5E=;
- b=gZjz6fG5PkDhCpGj3pLu6Ch4wPi5DDVQK8io3G/pkt5RbxH9OCc3DG4ldK8BSLje8S1Qihrgx/wjtzSPk2dh6ff8aSHWEXI3v5oZJUemD3jde2Joj25UZ/WIcq9mwfCCkyWQ50rtlC28V/A7goabRDbO83bX8TZ5dw3d0NBHQnjpFQPdN0rRjmQAoyp73JdEnIO8QGeFNW5+gKszTvOJSdO0Zk09ZMiSN+YGquGmRoaaMinxdyQeT+IwWyySqiqSs+z3CJ1gS+4FnbK+YWHgxkW5aBA/4FFvG4+1wVT0RCxopNYrPT324XLxEc5GnxCx23PM1tf3J+2YMrzBkW+sNQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-Received: from MWHPR15MB1791.namprd15.prod.outlook.com (2603:10b6:301:4e::20)
- by SA0PR15MB4064.namprd15.prod.outlook.com (2603:10b6:806:89::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.19; Tue, 7 Jun
- 2022 16:41:36 +0000
-Received: from MWHPR15MB1791.namprd15.prod.outlook.com
- ([fe80::e17e:e90d:7675:24b8]) by MWHPR15MB1791.namprd15.prod.outlook.com
- ([fe80::e17e:e90d:7675:24b8%11]) with mapi id 15.20.5314.019; Tue, 7 Jun 2022
- 16:41:36 +0000
-Message-ID: <774288d8-3282-6264-383b-96251f3858f2@fb.com>
-Date:   Tue, 7 Jun 2022 09:41:34 -0700
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.10.0
-Subject: Re: [PATCH v7 00/15] io-uring/xfs: support async buffered writes
-Content-Language: en-US
-To:     Jens Axboe <axboe@kernel.dk>, Dave Chinner <david@fromorbit.com>
-Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        jack@suse.cz, hch@infradead.org
-References: <20220601210141.3773402-1-shr@fb.com>
- <545ab14b-a95a-de2e-dbc6-f5688b09b47c@kernel.dk>
- <20220603024329.GI1098723@dread.disaster.area>
- <324b506e-ad35-797d-d7d7-cfc8bec26e8e@kernel.dk>
-From:   Stefan Roesch <shr@fb.com>
-In-Reply-To: <324b506e-ad35-797d-d7d7-cfc8bec26e8e@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BY5PR17CA0037.namprd17.prod.outlook.com
- (2603:10b6:a03:167::14) To MWHPR15MB1791.namprd15.prod.outlook.com
- (2603:10b6:301:4e::20)
+        with ESMTP id S1377751AbiFGUeD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 16:34:03 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9321D1E716D;
+        Tue,  7 Jun 2022 11:35:53 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 247FDB8237D;
+        Tue,  7 Jun 2022 18:35:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4C97C34115;
+        Tue,  7 Jun 2022 18:35:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654626950;
+        bh=Bim1OVAnFA6EnLNutNwHm5Oyq0m/QSz9QB+4ZUGYea4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=rxZhXqrEBRnVMBU9vU93xrTy7Q3aKKjdis4NPrmF1Iwx8eV42FPak7+lko8K9FamS
+         fO8G68CJXlF3fwo4K/RyK3FcGiSQhiEtItk5ECD0QKTSlN9Hfpcqj3M1upDopMMf6h
+         uwoWk/GXWN439zWNRDjbZIICUqwBLmoshUFb2CGowwfzUy7OUmSkDcs/LXzGR2QCBV
+         AL9NgE3cq60sAyUQ0yPDtfUgXv1nuFeTax9NvR4qaE/T4bgjRJaSKR9yywhxQXaxhi
+         hc3HAepLikyx2IDYEDqDqUmp+MoToXoXFF0X76feN4fJxgBLrsB+I2lbDFqMLKl7IV
+         ZUxgwqmxoYcyg==
+Date:   Tue, 7 Jun 2022 11:35:50 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Sasha Levin <sashal@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Brian Foster <bfoster@redhat.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Theodore Tso <tytso@mit.edu>
+Subject: Re: [PATCH 5.10 v2 8/8] xfs: assert in xfs_btree_del_cursor should
+ take into account error
+Message-ID: <Yp+ahuC1tWy1BOQm@magnolia>
+References: <20220606143255.685988-1-amir73il@gmail.com>
+ <20220606143255.685988-9-amir73il@gmail.com>
+ <20220606213042.GS227878@dread.disaster.area>
+ <CAOQ4uxhCjLoYOd7X-yFQOA24YtychwKz3wUfX79zUwFs2o3ziw@mail.gmail.com>
+ <20220607030147.GU227878@dread.disaster.area>
+ <CAOQ4uxgP_knOriJPyU6PS_TYhsMRfAJon2nsJ2FO34SUbY6Ygw@mail.gmail.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 68711eaf-3120-49ba-0ecf-08da48a49690
-X-MS-TrafficTypeDiagnostic: SA0PR15MB4064:EE_
-X-Microsoft-Antispam-PRVS: <SA0PR15MB40648680664ADF4D962A5AAFD8A59@SA0PR15MB4064.namprd15.prod.outlook.com>
-X-FB-Source: Internal
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: hwLNNsrswil2+VOxsKkwBQARie7f7UZPfmFb/ERmGuycMnwzdkBV4QriLptjmKHvhHyISUybFJBJp0oWoR2Tq3e0cnszmcN6wN7hh8JKa3aa+PJziXwqMn7IrTVRwf+zimONp8tYsaFiMkHLEk17Ci1jKbxdekgT7XVBXF84vob79AoQZfbXs5Oj8pZltZgRq+umSMP0/pXrdxWGOGIpjxBu6o4/YHSnhCGmFCmqVds7aynfuDlpL80WsbZt7QhOMyDUBClMAlcUeBi9h1WeQB5m9ixLFimyIEHaDdFtSA3dQMJV/P/F8KFTjRJkRRuMV6e4mSkrx31mMnGuo5FA4AkU3t2fmNknR3kHzsEoCrVpF0DGzKyodY9XgmS4fOErUAHnjqAPv7Fd37BgFTJlk2GWFruO4RdRlWm1+MsD5SM5iGdRReY9SCd33M7DQ2dJtHbr69eyziWN2KroQA3OyWx2NTQ59BElzPgcV0SEkZGU/PbKbKkByQq6Sz3KkFKb7Q2gxFNDP9GzVQfbeelB5a6WYaM34kLMAOEVJS34WnIUk4/FRfso8d2dgVdZt1RJSUGUxklyGva1qxCgDojWEpFOrWt2cwen8x/up+J96NPXeHmRU6Er90CfQbEBktLhzREp83g4npOD3MD8N6YNk725HHZLKWcD3KP9lUx+iQOUfXq1VCCy6ntnHNf4D34xhz2wixPPw9NTwIcIk2jUeuNA6heosY+ESj4M5wLmKPk=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR15MB1791.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(86362001)(38100700002)(5660300002)(31686004)(4326008)(8676002)(66946007)(66476007)(66556008)(6506007)(6486002)(110136005)(316002)(8936002)(53546011)(83380400001)(186003)(2906002)(508600001)(2616005)(36756003)(31696002)(6512007)(45980500001)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?YUlkS3ppajRXNTFoN3JVTjN0dERmTHUxUlh3UVhNbFFuNktnRFN0T1NyN3ZO?=
- =?utf-8?B?cHAwU3ZwT3RtNjFRdzNMYVczUWlQZUN1NjlvVi9oNXJ2MkhEUXY1ZEdHUHFy?=
- =?utf-8?B?UldTODhKa1FBSDZkM0w4WWdXOW8vMW5pL21oOHNuYVpnWVUwcklaU1YwQUEx?=
- =?utf-8?B?bDhDQmo3S3l1WHFMbCtqVnEzRUU1aGg4YUJ5WUFUNkhxektGNzhzQzBTUlhr?=
- =?utf-8?B?QjJSK3JyQ3Fnb3IvL055cXA3RENTcEEwMHBrNWNOeDdCNTFEVXhwWHlGMjhu?=
- =?utf-8?B?Rm9kazlwL3YyWHF1UDlxaXlOcnBWUHF4SHc0bFlWeG40RTcwUWhtQ3hMc1Iy?=
- =?utf-8?B?NDVPM09HYnErTndqWVg4NXprbmNJMWVMSlRCM2hJcDFKVkcrWFp0ZjBCNnFv?=
- =?utf-8?B?VjVPUnFmVGRYVy9lTXVrOStkU1VENlBOS1o3NjRlV2Y2cUtZUnVOT1F6S1Vs?=
- =?utf-8?B?VDhyS1VsL2RkS3hoRVpFc0FOcUFsWFBnZCtsR2lKY09UbkhnLzFvZHQxVTdl?=
- =?utf-8?B?VTNsU0VZUC8wbnZPdnBJTEZXTXUxajdCZUdKQmFtcTFIVVFwV1p1dG94T2l2?=
- =?utf-8?B?VzhFdURQdDh3ZUgwbWtGT0g1alFuRnRLMk9UNmZVZXB0eGlDRDQrYVlBd0xz?=
- =?utf-8?B?WGMrdTV0U2plRDdFU1U5ZXFydlZITU9tRzlNMnhpQTdPMG9DOWNvQUpRMElN?=
- =?utf-8?B?anRKNkMrcHVvSFJTZzZVcmRPOVVWZXRXVGFiR1ZjaW9oQ2lrQndYRklXMEl0?=
- =?utf-8?B?UDZ1M2NJZW1YV2QxVzhHVXAxRDZaWC9XMm9WNjNlRTQ0MTZnUXRSaEsvNXgz?=
- =?utf-8?B?MFNYeDZ2UlRnK3JWczNqc3ZkUkhKcm1NRG9YNERLRVVVSEZWVWlKbmduanY2?=
- =?utf-8?B?TjE0MGlpeHMyUlZWcFQyckMrY0RjQmQ2MHlmQUFPN3A4RGxyUmloSXcwZkpJ?=
- =?utf-8?B?a0E2ajR4N1pMNytkL2lNaWQrV3Y1SHVUbmFxOVJXdDZmbHpCeGFSTGtCM1ps?=
- =?utf-8?B?UHlYTWI5N01mQ0ZEcFo0MzJ4cFRSK2Ezdk1WbUtWRjFMNjVhd0RTQzNIUFUr?=
- =?utf-8?B?T1RCaDVTd01rOVBkUm4xMzBCcDNiR2VNbXM5a2RmSWlmWE9vYUkzMlNSNDB2?=
- =?utf-8?B?S09KNHpEMTl6aWpGNTRkdlZyazFjNHFGVzR6VGl3Y0dtUi9BallNdlptT1Bi?=
- =?utf-8?B?L0ZkcnB0RUdlMG1TZ2xuWDdFeWNUSnh6NjdPOTlFazhJdVNHdG1nU2hZcFdj?=
- =?utf-8?B?QTRoMmkxL3NYcGQ3TmR5TVphbThRQ3JwTHd3ZW9XSEM0ejE4cTFhQy9SK0xH?=
- =?utf-8?B?V05OTFMyY3FXckZDVWZnWVliS0xtSXYvSi9ZcnJ4ZFRQYWhzTElzTy9TcUtp?=
- =?utf-8?B?dFNSOS9pM25pUEQ2L2JvWlBCMVZiWkkyWmMwVkhDUjdDZEpaQnREQWNqVUtF?=
- =?utf-8?B?bE81T25zZU1QRms4bEdkb1VtNU9vbUk1eWRoMTNFalBaSFRVUmh6QXAzN0Vj?=
- =?utf-8?B?LytkYUFyMnRuazFHK25EZUpTVmF0UlRzZzJsTi81NzlJUzUzTExYTUFIbGdu?=
- =?utf-8?B?aTdnNFVZd0RNV0JTZXArQmtHR0tVTURLRUlIQ3U2S21zc3hjVFFlc0h4U2dX?=
- =?utf-8?B?Vm9nZElweW9BajlnUUF5azlJRW5OaU1CeThuRWFiazRIaEpZSWVHa3dmMUZn?=
- =?utf-8?B?NTc0a2RDUGI1dDFrcEV0MU02WmlzZGJsUTRFSjNMUWs0R1hjU2Q2ekdZc0Mv?=
- =?utf-8?B?WEJ2T1V2c1ptTjZrdmJ3bS82dlR1b29PT2hGZUtXbW5zRXdZcUVnYzkxc2R5?=
- =?utf-8?B?Y2dUV2licGEyZU0rd2NBVlZudVQyYlUzUW1xRHB4YlBldzF5R3NiSjhnTW1x?=
- =?utf-8?B?b041OVRtR3A5TS9QczZFRGFzeks4Z3BxYjRsQjJ0c3FHU3AxV09ic2I3dEFG?=
- =?utf-8?B?UHdGT1VWd290alQrNkNIWHNXV1U3WXJqcVJvcktQUXk4ZHUrUzIzei9YNFVP?=
- =?utf-8?B?cHc0bXhvTk5QUzYrdHl5a0JhZ2hVWXNVeXhIdy80N3hLVnh3ZVNqaDREVld3?=
- =?utf-8?B?ck1EWk44RytlckF2MjhoYjFYOG5VcnlsU1kzbWxaeUlwSDhIckhHdDRaT09p?=
- =?utf-8?B?bHg4dEQrT0V5WjBDTTYzZlhkRmt4blVPNW00OWd4RE01MlgrZmNjZTJEVjFV?=
- =?utf-8?B?QncraFYrODdmSVN5bU9UeVNiN1ltaG5YL0YvNmpXS2tHRjNObExjYm5ZYkp2?=
- =?utf-8?B?akU1eEkxQ2pSTVZmRmx0RGM2REV2WkJadzdxMjRmUTFWdjQzSjV0TGFjTU43?=
- =?utf-8?B?Z3dqZG40MzNUalV3UXBTSGJlY1JuR1VqdXltNTNVSVViaGNZM1pBUHErRlpR?=
- =?utf-8?Q?F8t1A0huKDoPzqiw=3D?=
-X-OriginatorOrg: fb.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 68711eaf-3120-49ba-0ecf-08da48a49690
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR15MB1791.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jun 2022 16:41:36.6081
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Xj4nRlFw34fe9I57OmiRyKvmeNecXykh4xC3HjAouKR2TyK7lotmmBU4MKOYgbqo
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR15MB4064
-X-Proofpoint-GUID: Kl5qJ6QgNRmBUoORrJv7oCaIaK_TEwIm
-X-Proofpoint-ORIG-GUID: Kl5qJ6QgNRmBUoORrJv7oCaIaK_TEwIm
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
- definitions=2022-06-07_07,2022-06-07_02,2022-02-23_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxgP_knOriJPyU6PS_TYhsMRfAJon2nsJ2FO34SUbY6Ygw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 6/3/22 6:04 AM, Jens Axboe wrote:
-> On 6/2/22 8:43 PM, Dave Chinner wrote:
->> On Thu, Jun 02, 2022 at 02:09:00AM -0600, Jens Axboe wrote:
->>> On 6/1/22 3:01 PM, Stefan Roesch wrote:
->>>> This patch series adds support for async buffered writes when using both
->>>> xfs and io-uring. Currently io-uring only supports buffered writes in the
->>>> slow path, by processing them in the io workers. With this patch series it is
->>>> now possible to support buffered writes in the fast path. To be able to use
->>>> the fast path the required pages must be in the page cache, the required locks
->>>> in xfs can be granted immediately and no additional blocks need to be read
->>>> form disk.
->>>
->>> This series looks good to me now, but will need some slight rebasing
->>> since the 5.20 io_uring branch has split up the code a bit. Trivial to
->>> do though, I suspect it'll apply directly if we just change
->>> fs/io_uring.c to io_uring/rw.c instead.
->>>
->>> The bigger question is how to stage this, as it's touching a bit of fs,
->>> mm, and io_uring...
->>
->> What data integrity testing has this had? Has it been run through a
->> few billion fsx operations with w/ io_uring read/write enabled?
+On Tue, Jun 07, 2022 at 09:09:47AM +0300, Amir Goldstein wrote:
+> On Tue, Jun 7, 2022 at 6:01 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Tue, Jun 07, 2022 at 01:33:06AM +0300, Amir Goldstein wrote:
+> > > On Tue, Jun 7, 2022 at 12:30 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > >
+> > > > On Mon, Jun 06, 2022 at 05:32:55PM +0300, Amir Goldstein wrote:
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > >
+> > > > > commit 56486f307100e8fc66efa2ebd8a71941fa10bf6f upstream.
+> > > > >
+> > > > > xfs/538 on a 1kB block filesystem failed with this assert:
+> > > > >
+> > > > > XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 || xfs_is_shutdown(cur->bc_mp), file: fs/xfs/libxfs/xfs_btree.c, line: 448
+> > > >
+> > > > You haven't mentioned that you combined a second upstream
+> > > > commit into this patch to fix the bug in this commit.....
+> > > >
+> > >
+> > > I am confused.
+> > >
+> > > patch [5.10 7/8] xfs: consider shutdown in bmapbt cursor delete assert
+> > > is the patch that I backported from 5.12 and posted for review.
+> > > This patch [5.10 8/8] is the patch from 5.19-rc1 that you pointed out
+> > > that I should take to fix the bug in patch [5.10 7/8].
+> >
+> > Sorry, I missed that this was a new patch because the set looked
+> > the same as the last posting and you said in the summary letter:
+> >
+> > "These fixes have been posted to review on xfs list [1]."
 > 
-> I'll let Stefan expand on this, but just mention what I know - it has
-> been fun via fio at least. Each of the performance tests were hour long
-> each, and also specific test cases were written to test the boundary
-> conditions of what pages of a range where in page cache, etc. Also with
-> data verification.
+> Sorry, I forgot to edit this part of the template.
 > 
-
-I performed the following tests:
-- fio tests with various block sizes and different modes (psysnc, io_uring, libaio)
-- fsx tests with one billion ops
-- individual test program
-  - to test with different block sizes
-  - test short writes
-  - test holes
-  - test without readahead
-
-> Don't know if fsx specifically has been used it.
+> >
+> > Except this patch *wasn't part of that set*. I mistook it for the
+> > patch that introduced the assert because I assumed from the above
+> > statement, the absence of a changelog in cover letter and that you'd
+> > sent it to Greg meant for inclusion meant *no new patches had been
+> > added*.
+> >
+> > Add to that the fact I rushed through them because I saw that Greg
+> > has already queued these before anyone had any time to actually
+> > review the posting. Hence the timing of the release of unreviewed
+> > patches has been taken completely out of our control, and so I
+> > rushed through them and misinterpreted what I was seeing.
+> >
+> > That's not how the review process is supposed to work. You need to
+> > wait for people to review the changes and ACK them before then
+> > asking for them to be merged into the stable trees. You need to have
+> > changelogs in your summary letters. You need to do all the things
+> > that you've been complaining bitterly about over the past month that
+> > upstream developers weren't doing 18 months ago.
 > 
+> Of course I need to do all things.
+> If I am not doing them it could be because I made a mistake
+> or misunderstood something.
+> I am always trying to improve and incorporate feedback on my mistakes.
+
+One thing I've noticed watching the candidate series going by on the
+list -- is there something consistent that could go in the subject line of a
+candidate series from the first posting all the way until the stable
+maintainers queue them up?
+
+"[PATCH 5.10 v2 0/8] xfs fixes for 5.10.y (part 2)"
+
+isn't quite specific enough to make it easy to find the threads in
+mutt, at least not if they're all called "xfs fixes for 5.10.y".  I'm
+not sure what to suggest here though -- pick two random dictionary
+words?
+
+"xfs: fixes for 5.10.y (trews sphenic)"
+
+But that just looks like your $pet walked over the keyboard.  Maybe
+something boring like the date the candidate series was first posted?
+
+> Regarding changelogs, I do not understand what you mean.
+> Isn't that a changelog at the bottom of my cover letter?
+> Do you mean something else?
+
+I /think/ Dave wanted to see something at the bottom of the cover letter
+like this.  Actually, I won't speak for Dave, but this is what I'd like
+to see if you make substantive changes between the CANDIDATE patchset
+and the one that actually gets sent to -stable:
+
+"I would like to thank Samsung for contributing the hardware for the
+kdevops test environment and especially to Luis for his ongoing support
+in the test environment, which does most of the work for me :)
+
+"v3: Change frob to brof, per maintainer request.
+v2: Add patch 7, which it turns out was a hidden prerequisite for patch 8.
+
+"Thanks,
+Amir."
+
+> Regarding explicit ACKs, I wasn't sure what to do.
+
+Me neither.  It feels a little funny to ACK a patch in a stable queue
+that I already RVB'd for upstream, but is that peoples' expectation?
+
+> Ted has asked this on this thread [1].
+> 
+> [1] https://lore.kernel.org/linux-fsdevel/YieG8rZkgnfwygyu@mit.edu/
+> 
+> I asked this in my reply [2] to Darrick's email, but got no reply:
+> 
+> :Should we post to xfs list and wait for explicit ACK/RVB on every patch?
+> :Should we post to xfs list and if no objections are raised post to stable?
+> 
+> [2] https://lore.kernel.org/linux-xfs/CAOQ4uxjtOJ_=65MXVv0Ry0Z224dBxeLJ44FB_O-Nr9ke1epQ=Q@mail.gmail.com/
+
+TBH there have been enough stable process discussion threads in the past
+month that I've probably lost track of ... well, clearly, those two. :/
+
+> Since I had no explicit rules, I used my common sense, which is a recipe
+> for misunderstandings... :-/
+> 
+> I posted the candidates one week ago, so I thought everyone had the
+> opportunity to comment.
+> You gave me comments on patches 1 and 7 so I had assumed that
+> you had seen the entire series and had no objections to the rest.
+> 
+> I incorporated your feedback and wrote my plans in this email [3]
+
+I'm going to offer my (probably controversial) opinion here: I would
+like to delegate /all/ of the power and responsibility for stable
+maintenance to all of you (Amir/Leah/Chandan/etc.) who are doing the
+work.  What Amir did here (send a candidate patchset, take suggestions
+for a week, run the batch through fstests) is more or less what I'd
+expect from whoever owns the LTS backport process.
+
+Frankly, I don't see so much difference between what I do between -rc1
+and -rc4 and what Amir's doing -- propose a bunch of fixpatches, wait a
+few days, and if there aren't any strenuous objections, send them on
+their way.  IOWS, I own whatever's going to the upstream tree; Amir owns
+whatever's going to 5.10; Leah and Chandan own whatever's going to 5.15;
+and (I guess?) Chandan owns whatever's going to 5.4.
+
+I think Dave's afraid that if something goes wrong with an LTS kernel
+then the downstream consumers of those LTS kernels will show up on the
+list with bug reports and asking for fixes, and that will just put more
+pressure on the upstream maintainers since those consumers don't care
+about who they're talking to, they just want a resolution.  But I'll let
+him express his thoughts.
+
+I've been pondering this overnight, and I don't agree that the above
+scenario is the inevitable outcome.  Are you (LTS branch maintainers)
+willing to put your names in the MAINTAINERS file for the LTS kernels
+and let us (upstream maintainers) point downstream consumers (and their
+bug report) of those branches at you?  If so, then I see that as
+effective delegation of responsibilities to people who have taken
+ownership of the LTS branches, not merely blame shifting.
+
+If yes, then ... do as you like, you're the branch owner.  I expect
+things to be rocky for a while, but it beats burning myself out with too
+many responsibilities that I have not been able to keep up with.  It's
+probably better for the long term stability of each LTS branch if
+there's one or two people who are really familiar with how that LTS has
+been doing, instead of me trying and failing to multiplex.
+
+Also, as Greg points out, at worst, you /can/ decide to revert something
+that initially looked good but later turned out smelly.
+
+The one thing I /will/ caution you about -- watch out for changes that
+affect what gets persisted to disk.  Those need more review because
+fixing those things up after the fact (look at the AGFL padding
+corrections we had to do to fix some uncaught problems upstream) is
+/not/ fun.
+
+> :Just to make sure we are all on the same page.
+> :
+> :I have applied both patches to my test tree:
+> :1. 1cd738b13ae9 xfs: consider shutdown in bmapbt cursor delete assert
+> :2. 56486f307100 xfs: assert in xfs_btree_del_cursor should take into
+> :account error
+> :
+> :Patch #2 looks pretty safe and it only affects builds with XFS_WARN/DEBUG,
+> :so I am not too concerned about a soaking period.
+> :I plan to send it along with patch #1 to stable after a few more test runs.
+> 
+> Once again, I *assumed* that you saw that because this was part of
+> an ongoing conversation, not some random email.
+> 
+> 4 days later (after more testing) I did what I said I would do
+> and posted the revised series to stable with feedback incorporated.
+> This was also detailed in the cover letter to stable.
+> 
+> [3] https://lore.kernel.org/linux-xfs/CAOQ4uxhxLRTUfyhSy9D6nsGdVANrUOgRM8msVPVmFmw0oaky+w@mail.gmail.com/
+> 
+> If this situation repeats itself in the future, I will post v2 to xfs
+> list first.
+
+Yes, please do.  It has been customary to push a final patchset for 24h
+prior to submission just to see if anything shakes out at the last
+minute.
+
+> > And I notice that you've already sent out yet another set of stable
+> > patches for review despite the paint not even being dry on these
+> > ones. Not to mention that there's a another set of different 5.15
+> > stable patches out for review as well.
+> 
+> I will pace myself going forward and collaborate closer with Leah.
+> I have two years of kernel releases to catch up with, but once we
+> reach the point of selecting patches from the present releases
+> Hopefully, some of the reviews for candidates for different LTS
+> kernels will be shared.
+
+Admittedly, a new patchset every week is kind of a lot to pick through
+with everything /else/ going on ... particularly this week, since I
+/was/ busy trying to get the online fsck design doc review started, and
+dealing with a CVE for the grub xfs driver, and also trying to get the
+new LARP/NREXT64 itself sorted.  That said, a couple of years is a lot
+of stuff to get through, so if we need to do a continuous trickle of
+patches to get caught up then so be it.
+
+As long as you all end up doing a better job with LTS maintenance than I
+was doing, it's an improvement, even with the lumps and bumps. :)
+
+> >
+> > This is not a sustainable process.
+> >
+> > Seriously: slow down and stop being so damn aggressive. Let everyone
+> > catch up and build sustainable processes and timetables. If you keep
+> > going like this, you are going break people.
+> 
+> I do not want that.
+> 
+> Let me explain my process. As I described in the meta-cover letter [4] for
+> the multi part series:
+> 
+> :My intention is to post the parts for review on the xfs list on
+> :a ~weekly basis and forward them to stable only after xfs developers
+> :have had the chance to review the selection.
+> 
+> [4] https://lore.kernel.org/linux-xfs/20220525111715.2769700-1-amir73il@gmail.com/
+> 
+> To you, it may appear that "paint not even being dry on these ones"
+> but to me, I perceived part 2 was already out of review and part 3 was already
+> spinning in xfstests for a week, so I wanted to post those patches
+> and give as much time for review as needed.
+> 
+> My idea of sustainable was posting ~7 stable candidates per week.
+> This pace may be a bit higher than normal fixes flow, but I do need
+> to catch up with 2 years of fixes, so the rate has to be a bit higher
+> than the normal rate of fixes that go into upstream.
+
+Pipelining is a bit more troublesome -- it's difficult for me to
+concentrate on two similarly named patchsets at the same time.  If you
+have (say) part 3 running through its paces internally but only post
+part 3 after Greg lands part 2, that sounds acceptable to me.
+
+> I had to choose something based on no other feedback, but of course
+> the idea is to take feedback and incorporate it into the process
+> in order to make it sustainable.
+> 
+> I will do my best to amend the things that were broken in this posting.
+> I am sure this is not the last time I am going to make mistakes.
+> I am trying to fix a process that has been broken for years.
+> I invest a lot of my time and energy in this effort.
+> 
+> My request is that you assume good intentions on my part and if there
+> are rules that you want me to follow please spell them out, so I won't
+> end up guessing wrong again.
+
+I know, and thank you all for your willingness to take on LTS
+maintainership.  There will undoubtedly be more, uh, learning
+opportunities, but I'll try to roll with them as gently as I can.
+Emotional self-regulation has not been one of my strong points the last
+year or so.
+
+--D
+
+> 
+> Thanks,
+> Amir.
