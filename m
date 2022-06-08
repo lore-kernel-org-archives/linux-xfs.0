@@ -2,78 +2,199 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CAAECCA47B
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 03:17:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC6B3C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 03:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236827AbiFHDRa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jun 2022 23:17:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48822 "EHLO
+        id S229496AbiFHDaj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jun 2022 23:30:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356269AbiFHDQw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 23:16:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19F2420E17D
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Jun 2022 14:03:05 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0B6E1617D1
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Jun 2022 21:03:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 696CCC3411E;
-        Tue,  7 Jun 2022 21:03:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654635783;
-        bh=XQfE142NgK3apIGAf7mufwgpUJiTxP6kDjxTDh7EX2E=;
-        h=Subject:From:To:Cc:Date:From;
-        b=KEDKIC1tekZg3J9lHrYQpzV0bymz2W80G8R/k8tpSF2bJ0JO3jf86FsLTrkiVvnfY
-         ZtoibK6xx0BR0XkutjDMMUYMiAChOuNebqMhIL9hu47MUckhEMFtRoa1uj6rsG4UbV
-         rflZusUWmuhM5wt8dSsXotGGoM//WUM1XSPIq/5YBWrGHlsyEzIa3ELvelNurT2+DD
-         K2+OccNaa/zTDve5n4GZ9gX+bVQkMysEgct7wtn5FWfw1UecgUKi9srkUsJUvnmhw1
-         3xF0ZGvhReLkxRIH3plDbRQkgCt6X4gA+ZsC4K6dFrCKvUjp0IfPsArJWzJqOimgeX
-         +ACMfAC65TJ6g==
-Subject: [PATCHSET v2 0/3] xfs: random fixes for 5.19-rc2
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, allison.henderson@oracle.com,
-        chandan.babu@oracle.com
-Date:   Tue, 07 Jun 2022 14:03:02 -0700
-Message-ID: <165463578282.417102.208108580175553342.stgit@magnolia>
-User-Agent: StGit/0.19
+        with ESMTP id S231907AbiFHDae (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jun 2022 23:30:34 -0400
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9169319A710
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Jun 2022 17:45:33 -0700 (PDT)
+Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 257NtE9a022611
+        for <linux-xfs@vger.kernel.org>; Tue, 7 Jun 2022 17:44:20 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : subject :
+ date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=facebook; bh=mN2w1Mw8T1gj8MghJ6bggafHvQVRo1kwqVFlNfUTqKU=;
+ b=TOcIQXP9Xco71XEbczHC6WOqE7RuFeLyNrEKe3aH5qTFYPUkdeCqJB+JGt9tnLRW4sMD
+ vwfW9EN5EwEaQ7ty/nA2VhLBloj4spFWgFtbJ1ybHOuHfUK945Er5j1T7oNlZIRxfFpo
+ +mnk/sngxtXtbD34ATWO9pH1tKlnV7KCc1U= 
+Received: from mail.thefacebook.com ([163.114.132.120])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3gjadujwdy-4
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Jun 2022 17:44:20 -0700
+Received: from twshared25107.07.ash9.facebook.com (2620:10d:c085:208::11) by
+ mail.thefacebook.com (2620:10d:c085:11d::4) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28; Tue, 7 Jun 2022 17:44:19 -0700
+Received: by devbig003.nao1.facebook.com (Postfix, from userid 8731)
+        id 5834A4EC4229; Tue,  7 Jun 2022 17:44:08 -0700 (PDT)
+From:   Chris Mason <clm@fb.com>
+To:     <djwong@kernel.org>, <hch@infradead.org>,
+        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <hannes@cmpxchg.org>, <david@fromorbit.com>
+Subject: [PATCH v2] iomap: skip pages past eof in iomap_do_writepage()
+Date:   Tue, 7 Jun 2022 17:42:29 -0700
+Message-ID: <20220608004228.3658429-1-clm@fb.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-GUID: lcF9Fc81THUKOWW2zH47rqPRfud1Q6f6
+X-Proofpoint-ORIG-GUID: lcF9Fc81THUKOWW2zH47rqPRfud1Q6f6
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
+ definitions=2022-06-07_11,2022-06-07_02,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+iomap_do_writepage() sends pages past i_size through
+folio_redirty_for_writepage(), which normally isn't a problem because
+truncate and friends clean them very quickly.
 
-Here's a quick rollup of all the fixes I've queued for the new LARP and
-NREXT64 features.  This time you all get a nice patchset instead of
-hand-mailed patches.
+When the system has cgroups configured, we can end up in situations
+where one cgroup has almost no dirty pages at all, and other cgroups
+consume the entire background dirty limit.  This is especially common in
+our XFS workloads in production because they have cgroups using O_DIRECT
+for almost all of the IO mixed in with cgroups that do more traditional
+buffered IO work.
 
-v2: Fix a bug with XFS_DA_OP_LOGGED masking, don't get ambitious with
-#idef cleanups.
+We've hit storms where the redirty path hits millions of times in a few
+seconds, on all a single file that's only ~40 pages long.  This leads to
+long tail latencies for file writes because the pdflush workers are
+hogging the CPU from some kworkers bound to the same CPU.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+Reproducing this on 5.18 was tricky because 869ae85dae ("xfs: flush new
+eof page on truncate...") ends up writing/waiting most of these dirty pag=
+es
+before truncate gets a chance to wait on them.
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+The actual repro looks like this:
 
---D
+/*
+ * run me in a cgroup all alone.  Start a second cgroup with dd
+ * streaming IO into the block device.
+ */
+int main(int ac, char **av) {
+	int fd;
+	int ret;
+	char buf[BUFFER_SIZE];
+	char *filename =3D av[1];
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-fixes-5.19
+	memset(buf, 0, BUFFER_SIZE);
+
+	if (ac !=3D 2) {
+		fprintf(stderr, "usage: looper filename\n");
+		exit(1);
+	}
+	fd =3D open(filename, O_WRONLY | O_CREAT, 0600);
+	if (fd < 0) {
+		err(errno, "failed to open");
+	}
+	fprintf(stderr, "looping on %s\n", filename);
+	while(1) {
+		/*
+		 * skip past page 0 so truncate doesn't write and wait
+		 * on our extent before changing i_size
+		 */
+		ret =3D lseek(fd, 8192, SEEK_SET);
+		if (ret < 0)
+			err(errno, "lseek");
+		ret =3D write(fd, buf, BUFFER_SIZE);
+		if (ret !=3D BUFFER_SIZE)
+			err(errno, "write failed");
+		/* start IO so truncate has to wait after i_size is 0 */
+		ret =3D sync_file_range(fd, 16384, 4095, SYNC_FILE_RANGE_WRITE);
+		if (ret < 0)
+			err(errno, "sync_file_range");
+		ret =3D ftruncate(fd, 0);
+		if (ret < 0)
+			err(errno, "truncate");
+		usleep(1000);
+	}
+}
+
+And this bpftrace script will show when you've hit a redirty storm:
+
+kretprobe:xfs_vm_writepages {
+    delete(@dirty[pid]);
+}
+
+kprobe:xfs_vm_writepages {
+    @dirty[pid] =3D 1;
+}
+
+kprobe:folio_redirty_for_writepage /@dirty[pid] > 0/ {
+    $inode =3D ((struct folio *)arg1)->mapping->host->i_ino;
+    @inodes[$inode] =3D count();
+    @redirty++;
+    if (@redirty > 90000) {
+        printf("inode %d redirty was %d", $inode, @redirty);
+        exit();
+    }
+}
+
+This patch has the same number of failures on xfstests as unpatched 5.18:
+Failures: generic/648 xfs/019 xfs/050 xfs/168 xfs/299 xfs/348 xfs/506
+xfs/543
+
+I also ran it through a long stress of multiple fsx processes hammering.
+
+(Johannes Weiner did significant tracing and debugging on this as well)
+
+Signed-off-by: Chris Mason <clm@fb.com>
+Co-authored-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+Reported-by: Domas Mituzas <domas@fb.com>
 ---
- fs/xfs/libxfs/xfs_attr.c      |    9 +++++----
- fs/xfs/libxfs/xfs_attr.h      |   12 +-----------
- fs/xfs/libxfs/xfs_attr_leaf.c |    2 +-
- fs/xfs/libxfs/xfs_da_btree.h  |    4 +++-
- fs/xfs/xfs_attr_item.c        |   15 +++++++++------
- fs/xfs/xfs_ioctl.c            |    3 ++-
- fs/xfs/xfs_xattr.c            |   17 ++++++++++++++++-
- 7 files changed, 37 insertions(+), 25 deletions(-)
+ fs/iomap/buffered-io.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 8ce8720093b9..64d1476c457d 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1482,10 +1482,10 @@ iomap_do_writepage(struct page *page, struct writ=
+eback_control *wbc, void *data)
+ 		pgoff_t end_index =3D isize >> PAGE_SHIFT;
+=20
+ 		/*
+-		 * Skip the page if it's fully outside i_size, e.g. due to a
+-		 * truncate operation that's in progress. We must redirty the
+-		 * page so that reclaim stops reclaiming it. Otherwise
+-		 * iomap_vm_releasepage() is called on it and gets confused.
++		 * Skip the page if it's fully outside i_size, e.g.
++		 * due to a truncate operation that's in progress.  We've
++		 * cleaned this page and truncate will finish things off for
++		 * us.
+ 		 *
+ 		 * Note that the end_index is unsigned long.  If the given
+ 		 * offset is greater than 16TB on a 32-bit system then if we
+@@ -1500,7 +1500,7 @@ iomap_do_writepage(struct page *page, struct writeb=
+ack_control *wbc, void *data)
+ 		 */
+ 		if (folio->index > end_index ||
+ 		    (folio->index =3D=3D end_index && poff =3D=3D 0))
+-			goto redirty;
++			goto unlock;
+=20
+ 		/*
+ 		 * The page straddles i_size.  It must be zeroed out on each
+@@ -1518,6 +1518,7 @@ iomap_do_writepage(struct page *page, struct writeb=
+ack_control *wbc, void *data)
+=20
+ redirty:
+ 	folio_redirty_for_writepage(wbc, folio);
++unlock:
+ 	folio_unlock(folio);
+ 	return 0;
+ }
+--=20
+2.30.2
 
