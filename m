@@ -2,82 +2,100 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD66AC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 19:06:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABA9DC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 19:13:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235090AbiFHTGH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jun 2022 15:06:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40222 "EHLO
+        id S235297AbiFHTNl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jun 2022 15:13:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235329AbiFHTF4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 15:05:56 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BF4A43EC9;
-        Wed,  8 Jun 2022 12:02:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=lKNuhahX7MpW+BqerUiiqsAbQFI1rN+WZNKVSeWbP9U=; b=FvxJJOVVniWXVrz5zIIvPNBea1
-        ZZ7ymXS+CzkoRp3+RjNcXodDDTao0Dm2C6CFN1vL3QtaeanLXsUBf6zq5JpFMGjOJutuwWGHs/ANo
-        IRe1IQ1cgJUyDmAU3xjvSXgYkeY7COH8TfGDUSKsTR6tNHDBu8GNcm36cIo5ejJdx60PdPYsaQz0U
-        99QhXS0V6tvSy3gjlCoUS2uIimyr6vjl94HS8lSUZFSqec7G1sN97NbirURfBgENunQyQmicYZizC
-        U9/dTJNyHUB99XGF2jNPRU010AXDs3/yY6hlVHpZ/ERln6fJCIxFxPBFc3O4BZdNPGAmA6CkqKxXh
-        x//wkGWA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nz0wx-00CtOa-Ta; Wed, 08 Jun 2022 19:02:39 +0000
-Date:   Wed, 8 Jun 2022 20:02:39 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Stefan Roesch <shr@fb.com>
-Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, jack@suse.cz, hch@infradead.org,
-        axboe@kernel.dk
-Subject: Re: [PATCH v8 06/14] iomap: Return -EAGAIN from iomap_write_iter()
-Message-ID: <YqDyT7uSd0vv15aL@casper.infradead.org>
-References: <20220608171741.3875418-1-shr@fb.com>
- <20220608171741.3875418-7-shr@fb.com>
+        with ESMTP id S235054AbiFHTN1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 15:13:27 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E523E72;
+        Wed,  8 Jun 2022 12:13:24 -0700 (PDT)
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 258HgICS010210;
+        Wed, 8 Jun 2022 19:13:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=pp1; bh=B9eu3Gppk93iL3sO6HkMh3ZMUeXL+5aSdT4YYlhXVSc=;
+ b=plN62VaKWZxGZJAOEuuXgKTOXyzWmUucdvdn4O+VtvIyKog5yppWPo5Fk2lpEq9giRXo
+ RH/0wVJ6Au2Ar72OP/I2QciJwDcthH0p6dbDNCAEvv02mT/EmOAaLqzZKQR36jJ4Bcbk
+ fNUHXByB4AupteHXkYwvzgbMNDg3rAXReyloAsJJP9TOOPiZQ74JMgEHamyQpHMKK4mS
+ /jgoxRyNfV/mTZLcQhOe4rvWB9dUfhwPFow9Jda82CN77AF4Ry10XwZo/kHsANNIfpfI
+ VITsKMPXZDWmOjc9ThsloRIAzJb8LB6OcJT2CiPJrEuaV+9Cn+PY5rsfWNlYODWOGSK5 hg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3gk0d7ht90-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 08 Jun 2022 19:13:21 +0000
+Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 258IdnlB040642;
+        Wed, 8 Jun 2022 19:13:20 GMT
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3gk0d7ht8d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 08 Jun 2022 19:13:20 +0000
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 258IoZJ2009595;
+        Wed, 8 Jun 2022 19:13:18 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma03fra.de.ibm.com with ESMTP id 3gfy18vp8f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 08 Jun 2022 19:13:18 +0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 258JDFq216646498
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 8 Jun 2022 19:13:15 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 52C275204E;
+        Wed,  8 Jun 2022 19:13:15 +0000 (GMT)
+Received: from li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com (unknown [9.145.174.83])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTPS id DBF1D5204F;
+        Wed,  8 Jun 2022 19:13:14 +0000 (GMT)
+Date:   Wed, 8 Jun 2022 21:13:12 +0200
+From:   Alexander Gordeev <agordeev@linux.ibm.com>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     bugzilla-daemon@kernel.org, linux-s390@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bug 216073] New: [s390x] kernel BUG at mm/usercopy.c:101!
+ usercopy: Kernel memory exposure attempt detected from vmalloc 'n  o area'
+ (offset 0, size 1)!
+Message-ID: <YqD0yAELzHxdRBU6@li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com>
+References: <bug-216073-27@https.bugzilla.kernel.org/>
+ <20220606151312.6a9d098c85ed060d36519600@linux-foundation.org>
+ <Yp9pHV14OqvH0n02@li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com>
+ <20220608021922.n2izu7n4yoadknkx@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220608171741.3875418-7-shr@fb.com>
+In-Reply-To: <20220608021922.n2izu7n4yoadknkx@zlang-mailbox>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: vrBXhuEJjZ1CFOf-k1V2V41Lgub9cbJ2
+X-Proofpoint-ORIG-GUID: veUc2VfaDJND0NMMS2XmMm1AM-poPNj0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
+ definitions=2022-06-08_05,2022-06-07_02,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ bulkscore=0 clxscore=1015 lowpriorityscore=0 malwarescore=0
+ impostorscore=0 mlxlogscore=690 suspectscore=0 phishscore=0
+ priorityscore=1501 spamscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2204290000 definitions=main-2206080074
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 08, 2022 at 10:17:33AM -0700, Stefan Roesch wrote:
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index b06a5c24a4db..f701dcb7c26a 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -829,7 +829,13 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  		length -= status;
->  	} while (iov_iter_count(i) && length);
->  
-> -	return written ? written : status;
-> +	if (status == -EAGAIN) {
-> +		iov_iter_revert(i, written);
-> +		return -EAGAIN;
-> +	}
-> +	if (written)
-> +		return written;
-> +	return status;
->  }
+On Wed, Jun 08, 2022 at 10:19:22AM +0800, Zorro Lang wrote:
+> One of the test environment details as [1]. The xfstests config as [2].
+> It's easier to reproduce on 64k directory size xfs by running xfstests
+> auto group.
 
-I still don't understand how this can possibly work.  Walk me through it.
 
-Let's imagine we have a file laid out such that extent 1 is bytes
-0-4095 of the file and extent 2 is extent 4096-16385 of the file.
-We do a write of 5000 bytes starting at offset 4000 of the file.
+Thanks for the details, Zorro!
 
-iomap_iter() tells us about the first extent and we write the first
-96 bytes of our data to the first extent, returning 96.  iomap_iter()
-tells us about the second extent, and we write the next 4000 bytes to
-the second extent.  Then we get a page fault and get to the -EAGAIN case.
-We rewind the iter 4000 bytes.
+Do you create test and scratch device with xfs_io, as README suggests?
+If yes, what are sizes of the files?
+Also, do you run always xfs/auto or xfs/294 hits for you reliably?
 
-How do we not end up writing garbage when the kworker does the retry?
-I'd understand if we rewound the iter all the way to the start.  Or if
-we didn't rewind the iter at all and were able to pick up partway through
-the write.  But rewinding to the start of the extent feels like it can't
-possibly work.
+Thanks!
