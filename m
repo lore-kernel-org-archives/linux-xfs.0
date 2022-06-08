@@ -2,125 +2,55 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85F02C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 17:27:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0DFEC43334
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 18:27:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231328AbiFHR1d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jun 2022 13:27:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34480 "EHLO
+        id S230223AbiFHS1i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jun 2022 14:27:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232618AbiFHR1E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 13:27:04 -0400
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 573841AD
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Jun 2022 10:25:04 -0700 (PDT)
-Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 258FPRqU015573
-        for <linux-xfs@vger.kernel.org>; Wed, 8 Jun 2022 10:25:04 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=facebook;
- bh=dBECpqCYbzZu09VC/8f600yJ9kRuprLL6hMW7ZpMyPY=;
- b=QTjODgNQvpWUdwYFAppkxKyFGqYJEuYpcHKJV/81iJxSjvbhu2ZCmO7seGA8MMhBVnTP
- DWj7hpsz92yXOG90PIHNiDRIFStsb2f41X5/g4jVB01FyCGAZATNHup6lbx1RwZ8Vh0r
- KPc9E49Yxv26EPorT8DoUCmYDAigx17gzrs= 
-Received: from maileast.thefacebook.com ([163.114.130.16])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3gj13cty0u-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Jun 2022 10:25:04 -0700
-Received: from twshared18317.08.ash9.facebook.com (2620:10d:c0a8:1b::d) by
- mail.thefacebook.com (2620:10d:c0a8:83::4) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Wed, 8 Jun 2022 10:25:01 -0700
-Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id A23D8103BFB62; Wed,  8 Jun 2022 10:17:43 -0700 (PDT)
-From:   Stefan Roesch <shr@fb.com>
-To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
-        <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>,
-        <hch@infradead.org>, <axboe@kernel.dk>
-Subject: [PATCH v8 12/14] io_uring: Add tracepoint for short writes
-Date:   Wed, 8 Jun 2022 10:17:39 -0700
-Message-ID: <20220608171741.3875418-13-shr@fb.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220608171741.3875418-1-shr@fb.com>
-References: <20220608171741.3875418-1-shr@fb.com>
+        with ESMTP id S230209AbiFHS1h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 14:27:37 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B9742C559A;
+        Wed,  8 Jun 2022 11:27:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=GLjbBQoi0nk2K651V8p8IClJJzyzafU6jr5TlcGFPGc=; b=nyGKYxUUBoZkL9Aa7zrFofOzeL
+        u2vEHsFFoq5lI3EIMw2S7wETkwk6EDHMV5/xFyHon9IvHnMN7ZgQw/BCuWIexav3jzavmPxg89eaY
+        5NKRyAebkgJQXlBuEQ+QydhnvtSWof6lMcanBiTi1A7VuxAc3n/aVjiXethjVGJNviipVmd0ud5Oz
+        E/fWVUPfForUfFbNPZpURapju3VAXWnSmQt3HhFDQIl1CtCDbE1nJtvqh1LLzadWVcmmsYQPkJgQz
+        zZjQI6K5FoYJkhuTHJ8VdpGR8rfWtQHsHamcOKrZE4ddAd/0y/Se0xVmMxEAwQDY+5dD4Pb9sFL6a
+        XWtTrhWA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nz0Ou-00Crrj-LR; Wed, 08 Jun 2022 18:27:28 +0000
+Date:   Wed, 8 Jun 2022 19:27:28 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Chris Mason <clm@fb.com>
+Cc:     djwong@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org,
+        david@fromorbit.com
+Subject: Re: [PATCH v2] iomap: skip pages past eof in iomap_do_writepage()
+Message-ID: <YqDqEF9kbqDdRBW+@casper.infradead.org>
+References: <20220608004228.3658429-1-clm@fb.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-GUID: NWUKOKRxN3_7KcPtvQKobDWb3rrlG53E
-X-Proofpoint-ORIG-GUID: NWUKOKRxN3_7KcPtvQKobDWb3rrlG53E
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
- definitions=2022-06-08_05,2022-06-07_02,2022-02-23_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220608004228.3658429-1-clm@fb.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This adds the io_uring_short_write tracepoint to io_uring. A short write
-is issued if not all pages that are required for a write are in the page
-cache and the async buffered writes have to return EAGAIN.
+On Tue, Jun 07, 2022 at 05:42:29PM -0700, Chris Mason wrote:
+> iomap_do_writepage() sends pages past i_size through
+> folio_redirty_for_writepage(), which normally isn't a problem because
+> truncate and friends clean them very quickly.
+[...]
+> Signed-off-by: Chris Mason <clm@fb.com>
+> Co-authored-by: Johannes Weiner <hannes@cmpxchg.org>
+> Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+> Reported-by: Domas Mituzas <domas@fb.com>
 
-Signed-off-by: Stefan Roesch <shr@fb.com>
----
- fs/io_uring.c                   |  3 +++
- include/trace/events/io_uring.h | 25 +++++++++++++++++++++++++
- 2 files changed, 28 insertions(+)
-
-diff --git a/fs/io_uring.c b/fs/io_uring.c
-index cb5bf672b85e..176a157e4523 100644
---- a/fs/io_uring.c
-+++ b/fs/io_uring.c
-@@ -4597,6 +4597,9 @@ static int io_write(struct io_kiocb *req, unsigned =
-int issue_flags)
- 		if (ret2 !=3D req->cqe.res && ret2 >=3D 0 && need_complete_io(req)) {
- 			struct io_async_rw *rw;
-=20
-+			trace_io_uring_short_write(req->ctx, kiocb->ki_pos - ret2,
-+						req->cqe.res, ret2);
-+
- 			/* This is a partial write. The file pos has already been
- 			 * updated, setup the async struct to complete the request
- 			 * in the worker. Also update bytes_done to account for
-diff --git a/include/trace/events/io_uring.h b/include/trace/events/io_ur=
-ing.h
-index 66fcc5a1a5b1..25df513660cc 100644
---- a/include/trace/events/io_uring.h
-+++ b/include/trace/events/io_uring.h
-@@ -600,6 +600,31 @@ TRACE_EVENT(io_uring_cqe_overflow,
- 		  __entry->cflags, __entry->ocqe)
- );
-=20
-+TRACE_EVENT(io_uring_short_write,
-+
-+	TP_PROTO(void *ctx, u64 fpos, u64 wanted, u64 got),
-+
-+	TP_ARGS(ctx, fpos, wanted, got),
-+
-+	TP_STRUCT__entry(
-+		__field(void *,	ctx)
-+		__field(u64,	fpos)
-+		__field(u64,	wanted)
-+		__field(u64,	got)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->ctx	=3D ctx;
-+		__entry->fpos	=3D fpos;
-+		__entry->wanted	=3D wanted;
-+		__entry->got	=3D got;
-+	),
-+
-+	TP_printk("ring %p, fpos %lld, wanted %lld, got %lld",
-+			  __entry->ctx, __entry->fpos,
-+			  __entry->wanted, __entry->got)
-+);
-+
- #endif /* _TRACE_IO_URING_H */
-=20
- /* This part must be outside protection */
---=20
-2.30.2
-
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
