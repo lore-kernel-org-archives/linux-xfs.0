@@ -2,127 +2,137 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6470DC43334
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 08:17:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 253F7C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 08:37:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229992AbiFHIQ4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jun 2022 04:16:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57886 "EHLO
+        id S230361AbiFHIhh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jun 2022 04:37:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231229AbiFHIPW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 04:15:22 -0400
-Received: from mail-vs1-xe35.google.com (mail-vs1-xe35.google.com [IPv6:2607:f8b0:4864:20::e35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 463D892D34
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Jun 2022 00:44:09 -0700 (PDT)
-Received: by mail-vs1-xe35.google.com with SMTP id r12so16233202vsg.8
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Jun 2022 00:44:09 -0700 (PDT)
+        with ESMTP id S230527AbiFHIgJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 04:36:09 -0400
+Received: from mail-ua1-x92e.google.com (mail-ua1-x92e.google.com [IPv6:2607:f8b0:4864:20::92e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2254514AF4A
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Jun 2022 00:56:36 -0700 (PDT)
+Received: by mail-ua1-x92e.google.com with SMTP id 90so6641247uam.8
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Jun 2022 00:56:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=iRB06EVD3amCRgzMOHbbyx10Eft7aMcniaNBoJrZfGY=;
-        b=UFZX90SV8Oii7IsP5m+lXFzfv5jlgUqCIH9fNqhEraWbsfTuB8QN6IqSfb4MdcBc54
-         SfM4fF46uQKvPxu1VtF15YBPpFDKCmaC0Vx5q/xBcCJ1h3FgB3TFfajMM4DsrV9P0JYC
-         86iY2u6iLjb14+tthb1Cnf6qM/D4SOw6ANp2qRQ7qYaHxPMXR/GkwMFrntrLC/1vQHet
-         9v6vlo8qmgHrVN33xbNb++xcDKw8GXesjxqBQlV6cCCzpQa/p0DHHEB5vh3xxtwDCNNh
-         8AZleuGB2SjehcfQYeEmqbfcC0vMuq2xiEA47xlRtOQPSyfm9jvQN1FQNB94Z6qVY9gX
-         0PCQ==
+        bh=Gnto89XOKt+hyq37gx9BINxvc51J1AW5aQpldrLwhGs=;
+        b=q3ppcw0Scp/59RxYx+cE7jiYq1JLRArwwpJX4b2ETEsLcCTxbl2pU4273KnwDJUtXR
+         M7EPCVJGluhMjUT80pEU6qSBerGSbXCZQjBVeAsmY9ynFPFi3Nn954gu/4suiMEL7iaa
+         ZsxXInq29NzcRvrLV7bKo6hmDfg0M8qteOeuUjezEgXg99YdZcraIqtgesInNTjQrbay
+         2mO3FdQnOlmglsIISUyuXQPzdzpxLlKQ8nyGY72uH1tA8R1OEQiJV16dYH+LGtpWpERg
+         4dDKgILmuGF9XWHikEzLAavUJZALRHNEcydIYqO8YSW9Zd7jlX5MzFyAk1R1TyodCwVE
+         00Ig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=iRB06EVD3amCRgzMOHbbyx10Eft7aMcniaNBoJrZfGY=;
-        b=jXCWamy2KIjTh4M4PHmWcsZk310WQhLk8H0Errsj9pP4aeY8LUVtgFga8SMCgH/436
-         38VHYeiqSN5uheFqnmlAabKsaIK3r5za5xNWWJrIkhruR7CklpJB7KsoLr10xQWPmA4w
-         ZgkQU+p0HJy+7aLV63D4LBSh1XVpRx9ppgdd/68JywAixcrGK/P8bDC8lsmVrw4QHx/0
-         rfbbkNsSqxMhi6eTEzr9RoM/Tjsa1dM08oTraUxXnsAipyrp4sNUop4GAJNh/pXtRkoX
-         tqUHj7aHbJLVMlV6WdKljvf2iPtvuVUe0wUshZeqZg8zm4b3mT9sufC4ev+RWLK9ixti
-         IQ7A==
-X-Gm-Message-State: AOAM533qUQUtB18m0N0YSp02GPc8Tiz46HjUmYqoIeoDelLHgD0rVjm9
-        ptj4sjhyENijVGlQI1diZINmRaSyW1lQ4q2Sl8cf7Sx5cairkQ==
-X-Google-Smtp-Source: ABdhPJyS00+cfa1G+5Tww/oimiCi6C+EZd8I6sozI3gJGIzOTb74lnYxadzkjvRg96sVCBsMmpjRNSmM7idwtTL48a4=
-X-Received: by 2002:a67:d28f:0:b0:34b:9225:6fda with SMTP id
- z15-20020a67d28f000000b0034b92256fdamr12931693vsi.72.1654674248335; Wed, 08
- Jun 2022 00:44:08 -0700 (PDT)
+        bh=Gnto89XOKt+hyq37gx9BINxvc51J1AW5aQpldrLwhGs=;
+        b=lsWmtc4NOkGa63tIsXD3YZzGe/o3fMV709tR0CAUuzYnplL/lrctJy2SlyIZuLpMjo
+         6IkLjpf543hvHir48Xoy3sW2UWp5b5kuPa+PRHNzzwzrgZ0LM20LYLqlViGbyuYVG8Vu
+         SL37BHv90X0gIp2vpRfPTgD45Au8O8XQKdoBHkSAxN2Bpq0f5t2IwVna9RHe9SRMphQI
+         GKh4KaHv104Adw7zoEw0NKQc0cyxXyLSU1RCSFOeaCVJw10CjAhygLebBaQUb/UFU39c
+         R0oilUIoUivK5TilxRe7wJR2STovwbzhTTu2GBV9kmB71nakORXWX4rxFhO9ldwVNJSR
+         amsQ==
+X-Gm-Message-State: AOAM531/NKhbKiJ9ZKEG+5JYvjcKRVFbIBTAoX5VUq5mRv/SnP83sy6s
+        ROW0jVFM9h14svgIzpp3kOB6p5+KokD6TjcjCs8=
+X-Google-Smtp-Source: ABdhPJyuVz/EuT8VhtNOl+4+ZOa7GiTOmuI3+v4sDwKWgb7fVX8E0muDCfqZPh1eANi1Se4AAOMvtnjkudW4ahcWIdg=
+X-Received: by 2002:ab0:3da8:0:b0:35d:1e90:ee26 with SMTP id
+ l40-20020ab03da8000000b0035d1e90ee26mr36492833uac.80.1654674988117; Wed, 08
+ Jun 2022 00:56:28 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220603185721.3121645-1-leah.rumancik@gmail.com> <20220603185721.3121645-12-leah.rumancik@gmail.com>
-In-Reply-To: <20220603185721.3121645-12-leah.rumancik@gmail.com>
+References: <20220603184701.3117780-1-leah.rumancik@gmail.com>
+ <CAOQ4uxjzq1BQeO3-BkzLVKi8=95ohVU-UHJhR_zWZze5O_G=gA@mail.gmail.com> <Yp48nGoE0cbdbteU@google.com>
+In-Reply-To: <Yp48nGoE0cbdbteU@google.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Wed, 8 Jun 2022 10:43:57 +0300
-Message-ID: <CAOQ4uxh__DXycqz+6AFZK3JxLw0Bb_xCNv3eAmX-FdTk0miq8g@mail.gmail.com>
-Subject: Re: [PATCH 5.15 12/15] xfs: async CIL flushes need pending pushes to
- be made stable
-To:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Dave Chinner <dchinner@redhat.com>
+Date:   Wed, 8 Jun 2022 10:56:17 +0300
+Message-ID: <CAOQ4uxhJfcZQcy0xNBi2Fp7e+z4V9CAqEW26f8ZxctruN0tFFQ@mail.gmail.com>
+Subject: Re: [PATCH 5.15 00/15] xfs stable candidate patches for 5.15.y
+To:     Leah Rumancik <leah.rumancik@gmail.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Theodore Tso <tytso@mit.edu>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 6, 2022 at 8:12 AM Leah Rumancik <leah.rumancik@gmail.com> wrote:
+On Mon, Jun 6, 2022 at 8:42 PM Leah Rumancik <leah.rumancik@gmail.com> wrote:
 >
-> From: Dave Chinner <dchinner@redhat.com>
+> On Sat, Jun 04, 2022 at 11:38:35AM +0300, Amir Goldstein wrote:
+> > On Sat, Jun 4, 2022 at 6:53 AM Leah Rumancik <leah.rumancik@gmail.com> wrote:
+> > >
+> > > From: Leah Rumancik <lrumancik@google.com>
+> > >
+> > > This first round of patches aims to take care of the easy cases - patches
+> > > with the Fixes tag that apply cleanly. I have ~30 more patches identified
+> > > which will be tested next, thanks everyone for the various suggestions
+> > > for tracking down more bug fixes. No regressions were seen during
+> > > testing when running fstests 3 times per config with the following configs:
+> >
+> > Hi Leah!
+> >
+> > I'll let the xfs developers comment on the individual patches.
+> > General comments about stable process and collaboration.
+> >
+> > Some of the patches in this series are relevant to 5.10 and even apply
+> > cleanly to 5.10 (see below).
+> > They are in my queue but I did not get to test them thoroughly yet,
+> > because I am working chronologically.
+> >
+> > To avoid misunderstanding with stable maintainers, when you post to
+> > stable, please make sure to state clearly in the cover letter that those
+> > patches have only been tested on 5.15.y and should only be applied
+> > to 5.15.y.
+> > I know you have 5.15 in subject, but I would rather be safe than sorry.
 >
-> [ Upstream commit 70447e0ad9781f84e60e0990888bd8c84987f44e ]
+> Fair concern, will do.
 >
-> When the AIL tries to flush the CIL, it relies on the CIL push
-> ending up on stable storage without having to wait for and
-> manipulate iclog state directly. However, if there is already a
-> pending CIL push when the AIL tries to flush the CIL, it won't set
-> the cil->xc_push_commit_stable flag and so the CIL push will not
-> actively flush the commit record iclog.
+> >
+> > Luis has advised me to post up to 10 patches in each round.
+> > The rationale is that after we test and patches are applied to stable
+> > regressions may be detected and reported by downstream users.
+> >
+> > Regressions will be easier to bisect if there are less fixes in every
+> > LTS release. For this reason, I am holding on to my part 2 patches
+> > until 5.10.120 is released. LTS releases are usually on weekly basis
+> > so the delay is not much.
+> >
+> > I don't think that this series is terribly big, so I am fine with you
+> > posting it at one go, but please consider splitting it pre 5.16
+> > and post 5.16 or any other way that you see fit when you post
+> > to stable, but let's wait for xfs developers review - if they tell you to
+> > drop a few patches my comment will become moot ;-)
+> >
 >
-> generic/530 when run on a single CPU test VM can trigger this fairly
-> reliably. This test exercises unlinked inode recovery, and can
-> result in inodes being pinned in memory by ongoing modifications to
-> the inode cluster buffer to record unlinked list modifications. As a
-> result, the first inode unlinked in a buffer can pin the tail of the
-> log whilst the inode cluster buffer is pinned by the current
-> checkpoint that has been pushed but isn't on stable storage because
-> because the cil->xc_push_commit_stable was not set. This results in
-> the log/AIL effectively deadlocking until something triggers the
-> commit record iclog to be pushed to stable storage (i.e. the
-> periodic log worker calling xfs_log_force()).
+> Sure, that is no problem for me, I'll go ahead and split into sets of 10
+> or fewer.
 >
-> The fix is two-fold - first we should always set the
-> cil->xc_push_commit_stable when xlog_cil_flush() is called,
-> regardless of whether there is already a pending push or not.
->
-> Second, if the CIL is empty, we should trigger an iclog flush to
-> ensure that the iclogs of the last checkpoint have actually been
-> submitted to disk as that checkpoint may not have been run under
-> stable completion constraints.
->
-> Reported-and-tested-by: Matthew Wilcox <willy@infradead.org>
-> Fixes: 0020a190cf3e ("xfs: AIL needs asynchronous CIL forcing")
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
-> ---
 
-Two questions/suggestions regarding backporting this patch.
+FWIW, the following subset of your 5.15 patches (or backported version thereof)
+have been sitting in my xfs-5.10.y-8 tag since Saturday and have been
+spinning in kdevops since (~20 auto runs) with no regressions observed
+from v5.10.y baseline:
 
-DISCLAIMER: I am raising questions/suggestions.
-There is no presumption that I know the answers.
-The author of the patch is the best authority when it comes to answering
-those questions and w.r.t adopting or discarding my suggestions.
+xfs: punch out data fork delalloc blocks on COW writeback failure
+xfs: remove all COW fork extents when remounting readonly
+xfs: prevent UAF in xfs_log_item_in_current_chkpt
+xfs: only bother with sync_filesystem during readonly remount
+xfs: use setattr_copy to set vfs inode attributes
+xfs: check sb_meta_uuid for dabuf buffer recovery
+xfs: use kmem_cache_free() for kmem_cache objects
+xfs: Fix the free logic of state in xfs_attr_node_hasname
 
-1. I think the backport should also be tested with a single CPU VM as
-    described above
-2. I wonder if it would make sense to backport the 3 "defensive fixes" that
-    Dave mentioned in the cover letter [1] along with this fix?
-
-The rationale being that it is not enough to backport the fix itself.
-Anything that is required to test the fix reliably should be backported with it
-and since this issue involves subtle timing and races (maybe not as much
-on a single CPU VM?), the "defensive fixes" that change the timing and
-amount of wakeups/pushes may impact the ability to test the fix?
+So perhaps you could use that as the smaller subset for first posting.
+To reduce review burden on xfs maintainers, I could break out of the
+chronological patches order and use the same subset for my next set
+of candidates for 5.10 after testing them in isolation on top of xfs-5.10.y-3
+(at least the ones that apply out of order).
 
 Thanks,
 Amir.
-
-[1] https://lore.kernel.org/all/20220317053907.164160-1-david@fromorbit.com/
