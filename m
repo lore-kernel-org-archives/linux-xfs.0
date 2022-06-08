@@ -2,47 +2,47 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F302ECCA485
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 17:24:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB8A4CCA47B
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 17:25:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229904AbiFHRYk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jun 2022 13:24:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52018 "EHLO
+        id S230196AbiFHRZj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jun 2022 13:25:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232004AbiFHRYR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 13:24:17 -0400
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C99D257B3D
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Jun 2022 10:18:05 -0700 (PDT)
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-        by m0089730.ppops.net (8.17.1.5/8.17.1.5) with ESMTP id 258H6JYL008864
-        for <linux-xfs@vger.kernel.org>; Wed, 8 Jun 2022 10:18:05 -0700
+        with ESMTP id S231303AbiFHRZK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 13:25:10 -0400
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D7EF2C119
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Jun 2022 10:20:57 -0700 (PDT)
+Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 258FPPVP015663
+        for <linux-xfs@vger.kernel.org>; Wed, 8 Jun 2022 10:20:56 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=+IYV+ohWMnP9Z2WqVp2E+CnW9cqqI1fK3UacqUP+NEU=;
- b=RayINXxBvT2rxnITMQ4oZC3cu2ht47zy1jhXkYvLr1qdhQsXVc6QB/LBGa8EzDB+Fhpe
- BAzenCliN0/RruEAV/EkUsDUvYDTjRBmKh5Or9gnO5D98o3I96raKkUoI2iqyulGNSOR
- q5p2yncSUr9j0ejOgPIKQh+y/33/b3ysDUg= 
+ bh=5ItZSRlDpp93NCxXJnbpg8Ob55iDqoZopIqRlksHV28=;
+ b=CrtVBjCbRYfADhh4pYO+r0DdOnKe4kSJ5T3/gB0vE2M8iSJkGNd2TRVfPHJFhwtSjKIE
+ lwhEpBYU+7h1sOSl/Eq9NStchOUHPmhUBr3awawlxE/Uct0YXSh5y4u2Z6oDVl0NT2Ud
+ cIsVl5cWL50e4V7PANiemiNR0nhmjb06bRI= 
 Received: from maileast.thefacebook.com ([163.114.130.16])
-        by m0089730.ppops.net (PPS) with ESMTPS id 3gjyva0311-3
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3gjr0jb0w1-3
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Jun 2022 10:18:04 -0700
-Received: from twshared17349.03.ash7.facebook.com (2620:10d:c0a8:1b::d) by
- mail.thefacebook.com (2620:10d:c0a8:82::c) with Microsoft SMTP Server
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Jun 2022 10:20:56 -0700
+Received: from twshared14577.08.ash8.facebook.com (2620:10d:c0a8:1b::d) by
+ mail.thefacebook.com (2620:10d:c0a8:83::4) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Wed, 8 Jun 2022 10:18:03 -0700
+ 15.1.2375.28; Wed, 8 Jun 2022 10:20:54 -0700
 Received: by devvm225.atn0.facebook.com (Postfix, from userid 425415)
-        id 96805103BFB57; Wed,  8 Jun 2022 10:17:43 -0700 (PDT)
+        id 9E4BB103BFB5F; Wed,  8 Jun 2022 10:17:43 -0700 (PDT)
 From:   Stefan Roesch <shr@fb.com>
 To:     <io-uring@vger.kernel.org>, <kernel-team@fb.com>,
         <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
         <linux-fsdevel@vger.kernel.org>
 CC:     <shr@fb.com>, <david@fromorbit.com>, <jack@suse.cz>,
         <hch@infradead.org>, <axboe@kernel.dk>
-Subject: [PATCH v8 01/14] mm: Move starting of background writeback into the main balancing loop
-Date:   Wed, 8 Jun 2022 10:17:28 -0700
-Message-ID: <20220608171741.3875418-2-shr@fb.com>
+Subject: [PATCH v8 09/14] fs: Split off inode_needs_update_time and __file_update_time
+Date:   Wed, 8 Jun 2022 10:17:36 -0700
+Message-ID: <20220608171741.3875418-10-shr@fb.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220608171741.3875418-1-shr@fb.com>
 References: <20220608171741.3875418-1-shr@fb.com>
@@ -50,8 +50,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-GUID: 3ZF9BPKtKo5HlR0vODidHS1IiiX8z9B9
-X-Proofpoint-ORIG-GUID: 3ZF9BPKtKo5HlR0vODidHS1IiiX8z9B9
+X-Proofpoint-ORIG-GUID: 60SygZhMx5EcaWZK0E8jfN59uyGy4Ml1
+X-Proofpoint-GUID: 60SygZhMx5EcaWZK0E8jfN59uyGy4Ml1
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
  definitions=2022-06-08_05,2022-06-07_02,2022-02-23_01
@@ -59,81 +59,140 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Jan Kara <jack@suse.cz>
+This splits off the functions inode_needs_update_time() and
+__file_update_time() from the function file_update_time().
 
-We start background writeback if we are over background threshold after
-exiting the main loop in balance_dirty_pages(). This may result in
-basing the decision on already stale values (we may have slept for
-significant amount of time) and it is also inconvenient for refactoring
-needed for async dirty throttling. Move the check into the main waiting
-loop.
+This is required to support async buffered writes.
+No intended functional changes in this patch.
 
-Signed-off-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Stefan Roesch <shr@fb.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- mm/page-writeback.c | 31 ++++++++++++++-----------------
- 1 file changed, 14 insertions(+), 17 deletions(-)
+ fs/inode.c | 76 +++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 50 insertions(+), 26 deletions(-)
 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 55c2776ae699..e59c523aed1a 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1627,6 +1627,19 @@ static void balance_dirty_pages(struct bdi_writeba=
-ck *wb,
- 			}
- 		}
-=20
-+		/*
-+		 * In laptop mode, we wait until hitting the higher threshold
-+		 * before starting background writeout, and then write out all
-+		 * the way down to the lower threshold.  So slow writers cause
-+		 * minimal disk activity.
-+		 *
-+		 * In normal mode, we start background writeout at the lower
-+		 * background_thresh, to keep the amount of dirty memory low.
-+		 */
-+		if (!laptop_mode && nr_reclaimable > gdtc->bg_thresh &&
-+		    !writeback_in_progress(wb))
-+			wb_start_background_writeback(wb);
-+
- 		/*
- 		 * Throttle it only when the background writeback cannot
- 		 * catch-up. This avoids (excessively) small writeouts
-@@ -1657,6 +1670,7 @@ static void balance_dirty_pages(struct bdi_writebac=
-k *wb,
- 			break;
- 		}
-=20
-+		/* Start writeback even when in laptop mode */
- 		if (unlikely(!writeback_in_progress(wb)))
- 			wb_start_background_writeback(wb);
-=20
-@@ -1823,23 +1837,6 @@ static void balance_dirty_pages(struct bdi_writeba=
-ck *wb,
-=20
- 	if (!dirty_exceeded && wb->dirty_exceeded)
- 		wb->dirty_exceeded =3D 0;
--
--	if (writeback_in_progress(wb))
--		return;
--
--	/*
--	 * In laptop mode, we wait until hitting the higher threshold before
--	 * starting background writeout, and then write out all the way down
--	 * to the lower threshold.  So slow writers cause minimal disk activity=
-.
--	 *
--	 * In normal mode, we start background writeout at the lower
--	 * background_thresh, to keep the amount of dirty memory low.
--	 */
--	if (laptop_mode)
--		return;
--
--	if (nr_reclaimable > gdtc->bg_thresh)
--		wb_start_background_writeback(wb);
+diff --git a/fs/inode.c b/fs/inode.c
+index ac1cf5aa78c8..30b933216c61 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2049,35 +2049,18 @@ int file_remove_privs(struct file *file)
  }
+ EXPORT_SYMBOL(file_remove_privs);
 =20
- static DEFINE_PER_CPU(int, bdp_ratelimits);
+-/**
+- *	file_update_time	-	update mtime and ctime time
+- *	@file: file accessed
+- *
+- *	Update the mtime and ctime members of an inode and mark the inode
+- *	for writeback.  Note that this function is meant exclusively for
+- *	usage in the file write path of filesystems, and filesystems may
+- *	choose to explicitly ignore update via this function with the
+- *	S_NOCMTIME inode flag, e.g. for network filesystem where these
+- *	timestamps are handled by the server.  This can return an error for
+- *	file systems who need to allocate space in order to update an inode.
+- */
+-
+-int file_update_time(struct file *file)
++static int inode_needs_update_time(struct inode *inode, struct timespec6=
+4 *now)
+ {
+-	struct inode *inode =3D file_inode(file);
+-	struct timespec64 now;
+ 	int sync_it =3D 0;
+-	int ret;
+=20
+ 	/* First try to exhaust all avenues to not sync */
+ 	if (IS_NOCMTIME(inode))
+ 		return 0;
+=20
+-	now =3D current_time(inode);
+-	if (!timespec64_equal(&inode->i_mtime, &now))
++	if (!timespec64_equal(&inode->i_mtime, now))
+ 		sync_it =3D S_MTIME;
+=20
+-	if (!timespec64_equal(&inode->i_ctime, &now))
++	if (!timespec64_equal(&inode->i_ctime, now))
+ 		sync_it |=3D S_CTIME;
+=20
+ 	if (IS_I_VERSION(inode) && inode_iversion_need_inc(inode))
+@@ -2086,15 +2069,50 @@ int file_update_time(struct file *file)
+ 	if (!sync_it)
+ 		return 0;
+=20
+-	/* Finally allowed to write? Takes lock. */
+-	if (__mnt_want_write_file(file))
+-		return 0;
++	return sync_it;
++}
++
++static int __file_update_time(struct file *file, struct timespec64 *now,
++			int sync_mode)
++{
++	int ret =3D 0;
++	struct inode *inode =3D file_inode(file);
+=20
+-	ret =3D inode_update_time(inode, &now, sync_it);
+-	__mnt_drop_write_file(file);
++	/* try to update time settings */
++	if (!__mnt_want_write_file(file)) {
++		ret =3D inode_update_time(inode, now, sync_mode);
++		__mnt_drop_write_file(file);
++	}
+=20
+ 	return ret;
+ }
++
++/**
++ * file_update_time - update mtime and ctime time
++ * @file: file accessed
++ *
++ * Update the mtime and ctime members of an inode and mark the inode for
++ * writeback. Note that this function is meant exclusively for usage in
++ * the file write path of filesystems, and filesystems may choose to
++ * explicitly ignore updates via this function with the _NOCMTIME inode
++ * flag, e.g. for network filesystem where these imestamps are handled
++ * by the server. This can return an error for file systems who need to
++ * allocate space in order to update an inode.
++ *
++ * Return: 0 on success, negative errno on failure.
++ */
++int file_update_time(struct file *file)
++{
++	int ret;
++	struct inode *inode =3D file_inode(file);
++	struct timespec64 now =3D current_time(inode);
++
++	ret =3D inode_needs_update_time(inode, &now);
++	if (ret <=3D 0)
++		return ret;
++
++	return __file_update_time(file, &now, ret);
++}
+ EXPORT_SYMBOL(file_update_time);
+=20
+ /**
+@@ -2111,6 +2129,8 @@ EXPORT_SYMBOL(file_update_time);
+ int file_modified(struct file *file)
+ {
+ 	int ret;
++	struct inode *inode =3D file_inode(file);
++	struct timespec64 now =3D current_time(inode);
+=20
+ 	/*
+ 	 * Clear the security bits if the process is not being run by root.
+@@ -2123,7 +2143,11 @@ int file_modified(struct file *file)
+ 	if (unlikely(file->f_mode & FMODE_NOCMTIME))
+ 		return 0;
+=20
+-	return file_update_time(file);
++	ret =3D inode_needs_update_time(inode, &now);
++	if (ret <=3D 0)
++		return ret;
++
++	return __file_update_time(file, &now, ret);
+ }
+ EXPORT_SYMBOL(file_modified);
+=20
 --=20
 2.30.2
 
