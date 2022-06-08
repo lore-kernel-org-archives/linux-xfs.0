@@ -2,153 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A0BC43334
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 22:16:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36048C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jun 2022 22:24:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229957AbiFHWQp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jun 2022 18:16:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48950 "EHLO
+        id S234263AbiFHWYJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jun 2022 18:24:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229837AbiFHWQp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 18:16:45 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3099230F51
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Jun 2022 15:16:44 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id e24so19897291pjt.0
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Jun 2022 15:16:44 -0700 (PDT)
+        with ESMTP id S231240AbiFHWYG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 18:24:06 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E65024F15
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Jun 2022 15:24:06 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id f9so8382825plg.0
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Jun 2022 15:24:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=3y3cjlvBWca9BOHphvXWKxpzNa3K8stb0hlmE/Mkg/w=;
-        b=DSCiEk6xLxSwLSS92fAYjriHrUrODrZSfGqjHX/Whuw8qu6+4rp0c6X/w7kbkymLWC
-         ugmghCtTYapeImECy3pOkGHa8perGJHL4FeqN5RjocLrKVjexXiXcjiEr0MxoBmktBi1
-         DhT0I0SO/ABD4gPOQAbfXjgi4eemEbxYmPzZIR11c0S5cj0qDN/cUFcBEYQHSjLuuQ1r
-         Lh2K8/XOjYxc8yG9hWSZOeg+5OIgFc27hp0NI0aHLQtPLB87OPmDMSFkKDTNmwRnBO2Q
-         vN3M+FC6xDKYuR8Y9YBK0S9tFxBEct4bT9gw3oaReDLcHtb3qHRDUfYEyaVklPlQ3RU6
-         PZmQ==
+        bh=ogntuR0OR9OK74KgQbp34dMbGjLbyjKe+6G9CzMZczw=;
+        b=czC03vLkMVBQMgUyl5Isd2jGmRXjpCDkSk7IRhN1AxJq1MXgAAVMGVfu6pDg+eUXty
+         QoY5yPwGE20cbSVRyShJe4Wfkk6EJD+2YBv5z3JVqlfGLT7JE/A1qA8RomV7132whL27
+         Y4FJCBjSAzHHo4UaY4XtY4MKsEpF47UjizS1Ye93VFJoZjOafEXiZsjp4aHfusyyNx4Y
+         ungUIgdGq4LDQD+GpewShM8svisq82rQElLsly1R2b7HzbLcapsZlRaVpuH/nBszwEEW
+         pQmDkQzYNKNEdk76CeBdieM4V1TKlE+/hOpDFES7vJKdQKJ9HlV8TAv/CAIkvWj27Uq+
+         aDKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=3y3cjlvBWca9BOHphvXWKxpzNa3K8stb0hlmE/Mkg/w=;
-        b=BTFXAvTwAosTcTD0obJVDISGw8q3Dczp1Vxd120AB2lN7mGrt2IoeX+GfQG9n+Zb61
-         KTqDknZP9+7VE5QaI1DlmKdSIm0wLITt6wfElWkBZmc5ABDOxkzT5WRn4JyWKpuXADgF
-         vH9zuj+mtzxZG5hLn16YGsPgoDQHa442iOIzygviQmRVsFCZ8ndLZl2cPrmzVbXS1pub
-         +lxpZkxhm8utC1307yrZxYSdFN2rFZDZJ7b3eephMxbpPyFrQvRmCp5SI062ocQ646A0
-         M2/zx23cKuN3YwdRNYmx84gX2qXXoVA0uwlCmv218RobNpIV4lmgm5CY8zsqkFj6nqvN
-         5xYw==
-X-Gm-Message-State: AOAM532o0BkPOyenCQdTEltIHVvRA5fC0DMACHnrXh7XhrXtI4MvyEr9
-        Nyk5S6T0a/9E2ZUC/i8TWxI=
-X-Google-Smtp-Source: ABdhPJzRHQwvduu8u1IDaPm/lCg9sRWD+2fiNVfveTziNV4g91h4g3gT2887m2OeHbCFq1GwqUtKwQ==
-X-Received: by 2002:a17:903:40c9:b0:167:5411:3536 with SMTP id t9-20020a17090340c900b0016754113536mr27036945pld.2.1654726603509;
-        Wed, 08 Jun 2022 15:16:43 -0700 (PDT)
+        bh=ogntuR0OR9OK74KgQbp34dMbGjLbyjKe+6G9CzMZczw=;
+        b=4pDu9w1at7ws3OhzhyCCEq9Zmyj/cTFvXTDtoKvlliv5yeMY6qe4X5cbQdfOSXEG0f
+         DaxY5Vgc1FgVS0OEBO6G9q0hIq+LEKFTZIUHtPKmKfdX8Yg90nCwAU1B+dsExi/RzIzH
+         cyaYMUplnuCRX0VcKpY9EP9xo0t5QqzlkeLI+4CJ6XTmHaqEJ0+8bO1t4GNoQF6b7Yc9
+         PmY0x5REYCUNiZsOiKRvkAKjmOAMZiWoq1TzrM2tijA13xGr7jq6Q+4K7vAh9cG9ktlb
+         JuwcY9Zwh+KzsBYd4TMMe1vf9RrG4TRTxevOQTbhxiGnw7EN2gpbwNykDdn6+0HqfniV
+         4A6w==
+X-Gm-Message-State: AOAM533x5Q+4CkaAGqMSSLxc2HREgSoVcyKuBa6DDKnXmfldYeXGuFcN
+        e0tMJuSF8y2Hms4kFwlEgw3wZuPVWETGXA==
+X-Google-Smtp-Source: ABdhPJwuBxQiarBEcqhV1+Znh1K0R3K7WfOEy1pb7kOoVu0GlCdZKM5+oLQekR3lHDZNsKhHjmsNCQ==
+X-Received: by 2002:a17:902:a502:b0:15e:c251:b769 with SMTP id s2-20020a170902a50200b0015ec251b769mr34903756plq.115.1654727045314;
+        Wed, 08 Jun 2022 15:24:05 -0700 (PDT)
 Received: from google.com ([2620:15c:2c1:200:7b7:e310:ec9d:18c6])
-        by smtp.gmail.com with ESMTPSA id 202-20020a6302d3000000b003fd6034de24sm9755496pgc.40.2022.06.08.15.16.42
+        by smtp.gmail.com with ESMTPSA id z20-20020a634c14000000b003fd8438db7bsm8401432pga.58.2022.06.08.15.24.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jun 2022 15:16:43 -0700 (PDT)
-Date:   Wed, 8 Jun 2022 15:16:41 -0700
+        Wed, 08 Jun 2022 15:24:04 -0700 (PDT)
+Date:   Wed, 8 Jun 2022 15:24:02 -0700
 From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, Theodore Tso <tytso@mit.edu>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Theodore Tso <tytso@mit.edu>
 Subject: Re: [PATCH 5.15 00/15] xfs stable candidate patches for 5.15.y
-Message-ID: <YqEfyR0DBbQEFv9s@google.com>
+Message-ID: <YqEhgoQg8c9ZHDMR@google.com>
 References: <20220603184701.3117780-1-leah.rumancik@gmail.com>
  <CAOQ4uxjzq1BQeO3-BkzLVKi8=95ohVU-UHJhR_zWZze5O_G=gA@mail.gmail.com>
- <Yp4jbET5GqubQTlk@bombadil.infradead.org>
- <Yp5OBN8fj+lFQaW0@google.com>
- <Yp5V80/7KuM3sdiW@bombadil.infradead.org>
+ <Yp48nGoE0cbdbteU@google.com>
+ <CAOQ4uxhJfcZQcy0xNBi2Fp7e+z4V9CAqEW26f8ZxctruN0tFFQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yp5V80/7KuM3sdiW@bombadil.infradead.org>
+In-Reply-To: <CAOQ4uxhJfcZQcy0xNBi2Fp7e+z4V9CAqEW26f8ZxctruN0tFFQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 06, 2022 at 12:30:59PM -0700, Luis Chamberlain wrote:
-> On Mon, Jun 06, 2022 at 11:57:08AM -0700, Leah Rumancik wrote:
-> > On Mon, Jun 06, 2022 at 08:55:24AM -0700, Luis Chamberlain wrote:
-> > > On Sat, Jun 04, 2022 at 11:38:35AM +0300, Amir Goldstein wrote:
-> > > > On Sat, Jun 4, 2022 at 6:53 AM Leah Rumancik <leah.rumancik@gmail.com> wrote:
-> > > > >
-> > > > > From: Leah Rumancik <lrumancik@google.com>
-> > > > >
-> > > > > This first round of patches aims to take care of the easy cases - patches
-> > > > > with the Fixes tag that apply cleanly. I have ~30 more patches identified
-> > > > > which will be tested next, thanks everyone for the various suggestions
-> > > > > for tracking down more bug fixes. No regressions were seen during
-> > > > > testing when running fstests 3 times per config with the following configs:
-> > > 
-> > > Leah,
-> > > 
-> > > It is great to see this work move forward.
-> > > 
-> > > How many times was fstest run *without* the patches to establish the
-> > > baseline? Do you have a baseline for known failures published somewhere?
-> > 
-> > Currently, the tests are being run 10x per config without the patches.
-> > If a failure is seen with the patches, the tests are rerun on the
-> > baseline several hundred times to see if the failure was a regression or
-> > to determine the baseline failure rate.
+On Wed, Jun 08, 2022 at 10:56:17AM +0300, Amir Goldstein wrote:
+> On Mon, Jun 6, 2022 at 8:42 PM Leah Rumancik <leah.rumancik@gmail.com> wrote:
+> >
+> > On Sat, Jun 04, 2022 at 11:38:35AM +0300, Amir Goldstein wrote:
+> > > On Sat, Jun 4, 2022 at 6:53 AM Leah Rumancik <leah.rumancik@gmail.com> wrote:
+> > > >
+> > > > From: Leah Rumancik <lrumancik@google.com>
+> > > >
 > 
-> This is certainly one way to go about it. This just means that you have
-> to do this work then as a second step. Whereas if you first have a high
-> confidence in a baseline you then are pretty certain you have a
-> regression once a test fails after you start testing deltas on
-> a stable release.
+> FWIW, the following subset of your 5.15 patches (or backported version thereof)
+> have been sitting in my xfs-5.10.y-8 tag since Saturday and have been
+> spinning in kdevops since (~20 auto runs) with no regressions observed
+> from v5.10.y baseline:
 > 
-> Average failure rates for non-deterministic tests tend to be about
-> 1/2 - 1/30. Although things such as 1/60, anything beyond 1/100
-> exist is *very* rare. So running fstests just 10 times seems to me
-> rather low to have any sort of high confidence in a baseline.
+> xfs: punch out data fork delalloc blocks on COW writeback failure
+> xfs: remove all COW fork extents when remounting readonly
+> xfs: prevent UAF in xfs_log_item_in_current_chkpt
+> xfs: only bother with sync_filesystem during readonly remount
+> xfs: use setattr_copy to set vfs inode attributes
+> xfs: check sb_meta_uuid for dabuf buffer recovery
+> xfs: use kmem_cache_free() for kmem_cache objects
+> xfs: Fix the free logic of state in xfs_attr_node_hasname
 > 
+> So perhaps you could use that as the smaller subset for first posting.
+> To reduce review burden on xfs maintainers, I could break out of the
+> chronological patches order and use the same subset for my next set
+> of candidates for 5.10 after testing them in isolation on top of xfs-5.10.y-3
+> (at least the ones that apply out of order).
+> 
+> Thanks,
+> Amir.
 
-Unfortunately, I am seeing some failures pop up with a fail rate of
-~0.5-2% :( I typically end up rerunning failing tests up to 1000 times to
-be confident about the failure rate on both the baseline and the backports
-branch. Running each test 1000 times from the start is a bit much, but I
-upped the test runs on both the baseline and backports branches to 100
-runs per test to hopefully filter out some of the tests that fail more
-consistently.
-
-
-> > > 
-> > > As discussed at LSFMM is there a chance we can collaborate on a baseline
-> > > together? One way I had suggested we could do this for different test
-> > > runners is to have git subtree with the expunges which we can all share
-> > > for different test runner.
-> > > 
-> > 
-> > Could you elaborate on this a bit? Are you hoping to gain insight from
-> > comparing 5.10.y baseline with 5.15.y baseline or are you hoping to
-> > allow people working on the same stable branch to have a joint record of
-> > test run output?
-> 
-> Not output, but to share failures known to exist per kernel release and
-> per filesystem, and even Linux distribution. We can shared this as
-> expressed in an expunge file which can be used as input to running
-> fstests so that tests are skipped for the release.
-> 
-> Annotations can be made with comments, you can see an existin list here:
-> 
-> https://github.com/linux-kdevops/kdevops/tree/master/workflows/fstests/expunges/
-> 
-> I currently track *.bad and *.dmesg outputs into gists and refer to them
-> with a URL. Likewise when possible I annotate the failure rate.
-> 
-> *If* it makes sense to collaborate on that front I can extract *just*
-> the expunges directory and make its own git subtree which then kdevops
-> uses. Other test runner can then use the same git tree as a git subtree.
-
-Personally, I don't think I would have much use for a git subtree. I have
-been using expunges very sparingly - only for tests which cause crashes -
-as I like to run even the failing tests to keep tabs on the failure rates.
-
-> 
->   Luis
+Sure, good idea! I was going to split it into a smaller batch anyways,
+so this selection works for me.
 
 Best,
 Leah
