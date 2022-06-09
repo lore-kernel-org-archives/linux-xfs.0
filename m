@@ -2,59 +2,94 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EFA6CCA473
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jun 2022 16:25:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA4A3C43334
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jun 2022 16:30:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237101AbiFIQZB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Jun 2022 12:25:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44138 "EHLO
+        id S1344726AbiFIQaZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Jun 2022 12:30:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234159AbiFIQZA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jun 2022 12:25:00 -0400
-Received: from mitropoulos.debian.org (mitropoulos.debian.org [IPv6:2001:648:2ffc:deb:216:61ff:fe9d:958d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C79AD1F2D0
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Jun 2022 09:24:58 -0700 (PDT)
-Received: from usper.debian.org ([2603:400a:ffff:bb8::801f:45]:44962)
-        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
-        by mitropoulos.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94.2)
-        (envelope-from <ftpmaster@ftp-master.debian.org>)
-        id 1nzKxs-0046IV-Jn
-        for linux-xfs@vger.kernel.org; Thu, 09 Jun 2022 16:24:56 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=ftp-master.debian.org; s=smtpauto.usper; h=Message-Id:Date:Subject:From:To:
-        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=wuOdmRvr0EHYhjrUxgKdhA9o8owkfjEJa0mePShFZWs=; b=SuiUiz4LkKdoy+jCdwa9b97/vW
-        QtCFOgf2H2wUazMjZXNDHsfJzF3CCBbOE5aMazH9byQONo2p0mBMhqKZ8LttUCJ3ny+QpUtmC3Z6O
-        F9v3dTw77QqCMBKhg14FYeAVVSrkzeEbBwUSD/qrfd9aw+Nh3zGBYd+h6HH2fV91SPS+yi7J9AOE0
-        kd7B+J3U/hFXr3Vb/18XEhbK+nXoHM715he95fqFms0D4Kfolki/xN/ADe6/C/nzpcdm+/AhtrW1l
-        Fr4sqj9TmtlN4P0bbTqRujedHSk5OuTlegTFqno50ackkyrWiiA0bH+1BjI2K5ztgYGnWKias4V0E
-        IruYmiRw==;
-Received: from dak-unpriv by usper.debian.org with local (Exim 4.92)
-        (envelope-from <ftpmaster@ftp-master.debian.org>)
-        id 1nzKxq-0006zU-TP
-        for linux-xfs@vger.kernel.org; Thu, 09 Jun 2022 16:24:54 +0000
-To:     linux-xfs@vger.kernel.org
-From:   Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-Subject: Processing of xfsprogs_5.18.0-1_source.changes
-Date:   Thu, 09 Jun 2022 16:24:54 +0000
-X-Debian: DAK
-X-DAK:  DAK
-Auto-Submitted: auto-generated
-X-Debian-Package: xfsprogs
-Message-Id: <E1nzKxq-0006zU-TP@usper.debian.org>
+        with ESMTP id S1344261AbiFIQaW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jun 2022 12:30:22 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ADB8296319;
+        Thu,  9 Jun 2022 09:30:21 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id B0F6121F84;
+        Thu,  9 Jun 2022 16:30:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1654792220;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DRY3PTJ3qzHWltMKRtpiQYHbxR9H9lvdTVSDJqkZDfo=;
+        b=DwYTzXJjJEcZyVTnR2LXUD9bO582jfvat2LZZMaNEJEzhW48fA0IdNDUNIrqkGRtMEgNRw
+        eDsjd8JfQMK+DXVsQFfhFbWfQDLFw4FjQ0HtFU2P8ZpenpzC58c2iQ0OIdKwpO6xDUb7fH
+        SKQMK5thmUS9fW7CcZdcVt6AHZMg5tw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1654792220;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DRY3PTJ3qzHWltMKRtpiQYHbxR9H9lvdTVSDJqkZDfo=;
+        b=r711ZorCuK6qm0qrAc7rlFb1iJZ1hwrAWtDVvOq4y49i+HhbE2GKNA0i1qsunxQawdIutH
+        dMWes8/2VlE/dzBA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 33DD413A8C;
+        Thu,  9 Jun 2022 16:30:20 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id SM9zCxwgomKzJQAAMHmgww
+        (envelope-from <dsterba@suse.cz>); Thu, 09 Jun 2022 16:30:20 +0000
+Date:   Thu, 9 Jun 2022 18:25:49 +0200
+From:   David Sterba <dsterba@suse.cz>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-aio@kvack.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        ocfs2-devel@oss.oracle.com, linux-mtd@lists.infradead.org,
+        virtualization@lists.linux-foundation.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 08/19] btrfs: Convert btree_migratepage to
+ migrate_folio
+Message-ID: <20220609162548.GT20633@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+Mail-Followup-To: dsterba@suse.cz,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-aio@kvack.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        ocfs2-devel@oss.oracle.com, linux-mtd@lists.infradead.org,
+        virtualization@lists.linux-foundation.org,
+        Christoph Hellwig <hch@lst.de>
+References: <20220608150249.3033815-1-willy@infradead.org>
+ <20220608150249.3033815-9-willy@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220608150249.3033815-9-willy@infradead.org>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfsprogs_5.18.0-1_source.changes uploaded successfully to localhost
-along with the files:
-  xfsprogs_5.18.0-1.dsc
-  xfsprogs_5.18.0.orig.tar.xz
-  xfsprogs_5.18.0-1.debian.tar.xz
-  xfsprogs_5.18.0-1_source.buildinfo
+On Wed, Jun 08, 2022 at 04:02:38PM +0100, Matthew Wilcox (Oracle) wrote:
+> Use a folio throughout this function.  migrate_page() will be converted
+> later.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Greetings,
-
-	Your Debian queue daemon (running on host usper.debian.org)
+Acked-by: David Sterba <dsterba@suse.com>
