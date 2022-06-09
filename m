@@ -2,113 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A803CCA47A
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jun 2022 00:53:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4645C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jun 2022 02:49:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229690AbiFIAxT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jun 2022 20:53:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33806 "EHLO
+        id S237118AbiFICt2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jun 2022 22:49:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbiFIAxS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 20:53:18 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AF09A4B875;
-        Wed,  8 Jun 2022 17:53:16 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1A22E10E70BC;
-        Thu,  9 Jun 2022 10:53:15 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nz6QD-004Mhp-7R; Thu, 09 Jun 2022 10:53:13 +1000
-Date:   Thu, 9 Jun 2022 10:53:13 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chris Mason <clm@fb.com>
-Cc:     djwong@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org
-Subject: Re: [PATCH v2] iomap: skip pages past eof in iomap_do_writepage()
-Message-ID: <20220609005313.GX227878@dread.disaster.area>
-References: <20220608004228.3658429-1-clm@fb.com>
+        with ESMTP id S237113AbiFICt0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jun 2022 22:49:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B3EBD1A0AF8
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Jun 2022 19:49:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1654742963;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/0YpjuW68HNELekQLFsdSYJRUrxNvsJVXmGH2rDIGvE=;
+        b=hsaeGx+aCumNHDyAXnwI7E23YQh+49Rsagx5zOJzKZmII+Q04fBFgDizPtqPQjrc1XK06i
+        D/vbCqO+vRIbGFl43UB8R5uUZumNsHZUKd+FyZYMCjP1Ylu+pkwK7AHuDaPDhfFHKvWBzi
+        9ddx7YLHmMxPuTpjoeRGqdla/0mJdDo=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-637-5yBJVxomO1y10A6zsfqWgw-1; Wed, 08 Jun 2022 22:49:22 -0400
+X-MC-Unique: 5yBJVxomO1y10A6zsfqWgw-1
+Received: by mail-qv1-f69.google.com with SMTP id q36-20020a0c9127000000b00461e3828064so14130045qvq.12
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Jun 2022 19:49:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=/0YpjuW68HNELekQLFsdSYJRUrxNvsJVXmGH2rDIGvE=;
+        b=nCvGi6SjgItUCYk9zM4Jc7bzVoUzHf7ANgQfQ9GtjXczYP0/smoPH4GMScbdrUdPho
+         PHiCF9oIeY7mkyXwlI6eJsds0Aw3v4J/faKBexWpd4xJC6HJY8eF6s5A+gR1Paem0l0A
+         W2esIGO6HQGnpQQT0jZJdLGroOxsgApH0qXpB/5JUedUoJuP7bJ6A0AjDDhQwzf/JRN4
+         kmBku9oUgJHc/piTul/MFrSVqp0AKfWwLADoP24a3eK0Tg8zsb8pSyoERE6d1oER2WHj
+         qJQmpAtiePZlGIi/YYsULE2J2FTVa8FYrKIcQmmeAw0BHQHZGFAq+PzPtTmmxP7FyhVd
+         ED5A==
+X-Gm-Message-State: AOAM5314iVIfmoygzX4hJdF6mhc5e0G2XTYjjOT7p6EjCdLO0MvWlBtG
+        njp3jKjzNdohDxPnuNOZqwmpbthU03xgzcNm6uQAKybHc9f/kH8WXOVGIqASojHgP61O/7MBxlg
+        oFwvZuBF1TR8hKCKgMAKI
+X-Received: by 2002:a05:620a:884:b0:6a7:347:386 with SMTP id b4-20020a05620a088400b006a703470386mr4112877qka.7.1654742962228;
+        Wed, 08 Jun 2022 19:49:22 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxBK1tIWNCe57tZEsE8mUnnp/UpdYnyXz4Zm8gvU2pKB7qcEdewVRclbUm+yfr4AUtK27ViWw==
+X-Received: by 2002:a05:620a:884:b0:6a7:347:386 with SMTP id b4-20020a05620a088400b006a703470386mr4112866qka.7.1654742961980;
+        Wed, 08 Jun 2022 19:49:21 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id y28-20020a05620a0e1c00b006a0ffae114fsm16842033qkm.120.2022.06.08.19.49.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Jun 2022 19:49:21 -0700 (PDT)
+Date:   Thu, 9 Jun 2022 10:49:15 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Alexander Gordeev <agordeev@linux.ibm.com>
+Cc:     bugzilla-daemon@kernel.org, linux-s390@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bug 216073] New: [s390x] kernel BUG at mm/usercopy.c:101!
+ usercopy: Kernel memory exposure attempt detected from vmalloc 'n  o area'
+ (offset 0, size 1)!
+Message-ID: <20220609024915.geephkxchu2fgpwk@zlang-mailbox>
+References: <bug-216073-27@https.bugzilla.kernel.org/>
+ <20220606151312.6a9d098c85ed060d36519600@linux-foundation.org>
+ <Yp9pHV14OqvH0n02@li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com>
+ <20220608021922.n2izu7n4yoadknkx@zlang-mailbox>
+ <YqD0yAELzHxdRBU6@li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220608004228.3658429-1-clm@fb.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62a1447c
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=aaJEA_Hj0o49BXF2jZMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <YqD0yAELzHxdRBU6@li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 07, 2022 at 05:42:29PM -0700, Chris Mason wrote:
-> iomap_do_writepage() sends pages past i_size through
-> folio_redirty_for_writepage(), which normally isn't a problem because
-> truncate and friends clean them very quickly.
+On Wed, Jun 08, 2022 at 09:13:12PM +0200, Alexander Gordeev wrote:
+> On Wed, Jun 08, 2022 at 10:19:22AM +0800, Zorro Lang wrote:
+> > One of the test environment details as [1]. The xfstests config as [2].
+> > It's easier to reproduce on 64k directory size xfs by running xfstests
+> > auto group.
 > 
-> When the system has cgroups configured, we can end up in situations
-> where one cgroup has almost no dirty pages at all, and other cgroups
-> consume the entire background dirty limit.  This is especially common in
-> our XFS workloads in production because they have cgroups using O_DIRECT
-> for almost all of the IO mixed in with cgroups that do more traditional
-> buffered IO work.
 > 
-> We've hit storms where the redirty path hits millions of times in a few
-> seconds, on all a single file that's only ~40 pages long.  This leads to
-> long tail latencies for file writes because the pdflush workers are
-> hogging the CPU from some kworkers bound to the same CPU.
+> Thanks for the details, Zorro!
 > 
-> Reproducing this on 5.18 was tricky because 869ae85dae ("xfs: flush new
-> eof page on truncate...") ends up writing/waiting most of these dirty pages
-> before truncate gets a chance to wait on them.
+> Do you create test and scratch device with xfs_io, as README suggests?
+> If yes, what are sizes of the files?
 
-That commit went into 5.10, so this would mean it's not easily
-reproducable on kernels released since then?
+# fallocate -l 5G /home/test_dev.img
+# fallocate -l 10G /home/scratch_dev.img
+Then create loop devices.
 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 8ce8720093b9..64d1476c457d 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1482,10 +1482,10 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
->  		pgoff_t end_index = isize >> PAGE_SHIFT;
->  
->  		/*
-> -		 * Skip the page if it's fully outside i_size, e.g. due to a
-> -		 * truncate operation that's in progress. We must redirty the
-> -		 * page so that reclaim stops reclaiming it. Otherwise
-> -		 * iomap_vm_releasepage() is called on it and gets confused.
-> +		 * Skip the page if it's fully outside i_size, e.g.
-> +		 * due to a truncate operation that's in progress.  We've
-> +		 * cleaned this page and truncate will finish things off for
-> +		 * us.
->  		 *
->  		 * Note that the end_index is unsigned long.  If the given
->  		 * offset is greater than 16TB on a 32-bit system then if we
-> @@ -1500,7 +1500,7 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
->  		 */
->  		if (folio->index > end_index ||
->  		    (folio->index == end_index && poff == 0))
-> -			goto redirty;
-> +			goto unlock;
->  
->  		/*
->  		 * The page straddles i_size.  It must be zeroed out on each
-> @@ -1518,6 +1518,7 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
->  
->  redirty:
->  	folio_redirty_for_writepage(wbc, folio);
-> +unlock:
->  	folio_unlock(folio);
->  	return 0;
->  }
 
-Regardless, the change looks fine.
+> Also, do you run always xfs/auto or xfs/294 hits for you reliably?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+100% for on my testing, I tried 10 times, then hit it 10 times last
+weekend. Will test again this week.
 
-Cheers,
+> 
+> Thanks!
+> 
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
