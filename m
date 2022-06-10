@@ -2,87 +2,53 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 683B8C43334
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jun 2022 05:38:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B0DC43334
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jun 2022 05:46:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244285AbiFJFiU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jun 2022 01:38:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47488 "EHLO
+        id S238858AbiFJFqK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jun 2022 01:46:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243950AbiFJFiU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 01:38:20 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7126D2584C2;
-        Thu,  9 Jun 2022 22:38:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654839499; x=1686375499;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=Mm671fARQkehGag+uwU37hxKBr75xWcEw+/mL45ZIZ4=;
-  b=nj8fJ9FHgGK5L6gQaJSgHpsiw2c5qhr+KB0zxXV3o31Lmp6rs3RQ4DkF
-   j9R9i6bYHrqPIKjq8bQsdev2m9zCkU0TqWkl5SuMDE7gOAMyYJ6IPsCvl
-   bOahgEi0oBkwSxGBloaNn5JD0ytkVvmw2Ll3fVjx/gg8iAngp5xbmomCw
-   lu7FZImkEzbihDaHyBbyD+YzulE6vf0nEHU3+jeTwHkuYIN97plNGiYKl
-   HnEzNqIU1ioPjtGADr7rOV2JH8LCD7M6Jw+NPOj1sDjSqHOLbPQmkZxim
-   SeiBpkhPQhc9Ih/7EMGaH7FNQDEbTCxMEjuxNkzDJzy924SgdgAFrca6e
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10373"; a="341586257"
-X-IronPort-AV: E=Sophos;i="5.91,288,1647327600"; 
-   d="scan'208";a="341586257"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2022 22:38:18 -0700
-X-IronPort-AV: E=Sophos;i="5.91,288,1647327600"; 
-   d="scan'208";a="637944682"
-Received: from xsang-optiplex-9020.sh.intel.com (HELO xsang-OptiPlex-9020) ([10.239.159.143])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2022 22:38:16 -0700
-Date:   Fri, 10 Jun 2022 13:38:07 +0800
-From:   Oliver Sang <oliver.sang@intel.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
-        lkp@lists.01.org, lkp@intel.com
-Subject: Re: [xfs]  1eb70f54c4: xfstests.xfs.348.fail
-Message-ID: <20220610053807.GA9136@xsang-OptiPlex-9020>
-References: <20220602090409.GD27190@xsang-OptiPlex-9020>
- <20220602214436.GF1098723@dread.disaster.area>
+        with ESMTP id S235507AbiFJFqI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 01:46:08 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 188CEB4B5;
+        Thu,  9 Jun 2022 22:46:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=fQQYd8rH7yJgcH0WS5t7Iydx1WYbX6aTpNe9zlkn5xY=; b=knb9VjPHC+6O7WDiHU1GAHcTAG
+        vRgrANbZCRTzUEEFNEjFJ1RdGOfNA/zo2JrBBPC+yL6tSluDm289+6nyXfosJtKmlyZlBieC7vkkz
+        QE+AGKTlV/bfs9e2X6gg8YTXmB+lbg9RldomOdR9TXR7wcDPHzZYjcFA9ivk5gypnNfJ+PG8MIqWv
+        jb3fC56WsabH27bAKa+26acnxmxXetekXbR4k99gDJ1eLm8bsipbbeON7lqnj3i1K4QksMVFK2MiX
+        UWkr5+1IN9mWvoqKgH+esAlnwDVxmlsDwGC2wYggJwT9uExQr93/yAyGe32WwmBfYGoeEox9EeC0X
+        fd4876rA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nzXTB-0061yU-Ai; Fri, 10 Jun 2022 05:46:05 +0000
+Date:   Thu, 9 Jun 2022 22:46:05 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+        djwong@kernel.org, david@fromorbit.com, hch@infradead.org
+Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
+Message-ID: <YqLanVuXPaIJOtAW@infradead.org>
+References: <20220609143435.393724-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220602214436.GF1098723@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20220609143435.393724-1-ruansy.fnst@fujitsu.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+On Thu, Jun 09, 2022 at 10:34:35PM +0800, Shiyang Ruan wrote:
+> Failure notification is not supported on partitions.  So, when we mount
+> a reflink enabled xfs on a partition with dax option, let it fail with
+> -EINVAL code.
 
-On Fri, Jun 03, 2022 at 07:44:36AM +1000, Dave Chinner wrote:
-> >     ...
-> >     (Run 'diff -u /lkp/benchmarks/xfstests/tests/xfs/348.out /lkp/benchmarks/xfstests/results//xfs/348.out.bad'  to see the entire diff)
-> > xfs/349	[failed, exit status 1]- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/349.out.bad)
-> >     --- tests/xfs/349.out	2022-05-16 16:42:32.000000000 +0000
-> >     +++ /lkp/benchmarks/xfstests/results//xfs/349.out.bad	2022-05-18 11:53:51.101272360 +0000
-> >     @@ -1,3 +1,2 @@
-> >      QA output created by 349
-> >      Format and populate
-> >     -Scrub
-> >     ...
-> >     (Run 'diff -u /lkp/benchmarks/xfstests/tests/xfs/349.out /lkp/benchmarks/xfstests/results//xfs/349.out.bad'  to see the entire diff)
-> 
-> You are running a test in the "dangerous_fuzzers" group that isn't
-> in the auto group. This is a test for developers to find error
-> detection issues and, as such, failure is kinda expected. It is not
-> regression test that can be used for pass/fail testing....
+Looks good:
 
-Thanks a lot for guidance! we will disable auto tests in "dangerous_fuzzers"
-group.
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
