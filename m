@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B88D6CCA47E
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 01:27:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DBE4C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 01:27:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346475AbiFKB1Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jun 2022 21:27:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60884 "EHLO
+        id S1346797AbiFKB1R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jun 2022 21:27:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346797AbiFKB1M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 21:27:12 -0400
+        with ESMTP id S1347367AbiFKB1N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 21:27:13 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 437DE3A481D
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 550983A4820
         for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 18:27:10 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 3BF1510E71FB
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 554F310E71FE
         for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 11:27:04 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu3-005AOH-4h
+        id 1nzpu3-005AOB-1g
         for linux-xfs@vger.kernel.org; Sat, 11 Jun 2022 11:27:03 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu3-00ELL3-3e
+        id 1nzpu3-00ELKo-0e
         for linux-xfs@vger.kernel.org;
         Sat, 11 Jun 2022 11:27:03 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 06/50] xfs: pass perag to xfs_read_agi
-Date:   Sat, 11 Jun 2022 11:26:15 +1000
-Message-Id: <20220611012659.3418072-7-david@fromorbit.com>
+Subject: [PATCH 03/50] xfs: pass perag to xfs_ialloc_read_agi()
+Date:   Sat, 11 Jun 2022 11:26:12 +1000
+Message-Id: <20220611012659.3418072-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220611012659.3418072-1-david@fromorbit.com>
 References: <20220611012659.3418072-1-david@fromorbit.com>
@@ -40,241 +40,292 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62a3ef68
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=Ru3meIeGREELRzOxrq8A:9
+        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=f84wIbli6KdFIQT5XmUA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We have the perag in most palces we call xfs_read_agi, so pass the
-perag instead of a mount/agno pair.
+xfs_ialloc_read_agi() initialises the perag if it hasn't been done
+yet, so it makes sense to pass it the perag rather than pull a
+reference from the buffer. This allows callers to be per-ag centric
+rather than passing mount/agno pairs everywhere.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 21 ++++++++++-----------
- fs/xfs/libxfs/xfs_ialloc.h | 10 +++-------
- fs/xfs/xfs_inode.c         | 14 ++++++++------
- fs/xfs/xfs_log_recover.c   | 38 +++++++++++++++++++-------------------
- 4 files changed, 40 insertions(+), 43 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c           | 23 +++++++++++++----------
+ fs/xfs/libxfs/xfs_ialloc.c       | 23 ++++++++++-------------
+ fs/xfs/libxfs/xfs_ialloc.h       |  7 ++-----
+ fs/xfs/libxfs/xfs_ialloc_btree.c |  9 ++++-----
+ fs/xfs/scrub/common.c            |  2 +-
+ fs/xfs/scrub/fscounters.c        |  2 +-
+ fs/xfs/scrub/repair.c            |  2 +-
+ 7 files changed, 32 insertions(+), 36 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 355af8fe90c8..74862823311a 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -128,11 +128,13 @@ xfs_initialize_perag_data(
+ 		if (error)
+ 			return error;
+ 
+-		error = xfs_ialloc_read_agi(mp, NULL, index, NULL);
+-		if (error)
++		pag = xfs_perag_get(mp, index);
++		error = xfs_ialloc_read_agi(pag, NULL, NULL);
++		if (error) {
++			xfs_perag_put(pag);
+ 			return error;
++		}
+ 
+-		pag = xfs_perag_get(mp, index);
+ 		ifree += pag->pagi_freecount;
+ 		ialloc += pag->pagi_count;
+ 		bfree += pag->pagf_freeblks;
+@@ -784,7 +786,7 @@ xfs_ag_shrink_space(
+ 	int			error, err2;
+ 
+ 	ASSERT(pag->pag_agno == mp->m_sb.sb_agcount - 1);
+-	error = xfs_ialloc_read_agi(mp, *tpp, pag->pag_agno, &agibp);
++	error = xfs_ialloc_read_agi(pag, *tpp, &agibp);
+ 	if (error)
+ 		return error;
+ 
+@@ -816,7 +818,7 @@ xfs_ag_shrink_space(
+ 	 * Disable perag reservations so it doesn't cause the allocation request
+ 	 * to fail. We'll reestablish reservation before we return.
+ 	 */
+-	error = xfs_ag_resv_free(agibp->b_pag);
++	error = xfs_ag_resv_free(pag);
+ 	if (error)
+ 		return error;
+ 
+@@ -833,7 +835,7 @@ xfs_ag_shrink_space(
+ 		xfs_trans_bhold(*tpp, agfbp);
+ 		err2 = xfs_trans_roll(tpp);
+ 		if (err2)
+-			return err2;
++			return error;
+ 		xfs_trans_bjoin(*tpp, agfbp);
+ 		goto resv_init_out;
+ 	}
+@@ -845,7 +847,7 @@ xfs_ag_shrink_space(
+ 	be32_add_cpu(&agi->agi_length, -delta);
+ 	be32_add_cpu(&agf->agf_length, -delta);
+ 
+-	err2 = xfs_ag_resv_init(agibp->b_pag, *tpp);
++	err2 = xfs_ag_resv_init(pag, *tpp);
+ 	if (err2) {
+ 		be32_add_cpu(&agi->agi_length, delta);
+ 		be32_add_cpu(&agf->agf_length, delta);
+@@ -869,8 +871,9 @@ xfs_ag_shrink_space(
+ 	xfs_ialloc_log_agi(*tpp, agibp, XFS_AGI_LENGTH);
+ 	xfs_alloc_log_agf(*tpp, agfbp, XFS_AGF_LENGTH);
+ 	return 0;
++
+ resv_init_out:
+-	err2 = xfs_ag_resv_init(agibp->b_pag, *tpp);
++	err2 = xfs_ag_resv_init(pag, *tpp);
+ 	if (!err2)
+ 		return error;
+ resv_err:
+@@ -895,7 +898,7 @@ xfs_ag_extend_space(
+ 
+ 	ASSERT(pag->pag_agno == pag->pag_mount->m_sb.sb_agcount - 1);
+ 
+-	error = xfs_ialloc_read_agi(pag->pag_mount, tp, pag->pag_agno, &bp);
++	error = xfs_ialloc_read_agi(pag, tp, &bp);
+ 	if (error)
+ 		return error;
+ 
+@@ -946,7 +949,7 @@ xfs_ag_get_geometry(
+ 	int			error;
+ 
+ 	/* Lock the AG headers. */
+-	error = xfs_ialloc_read_agi(pag->pag_mount, NULL, pag->pag_agno, &agi_bp);
++	error = xfs_ialloc_read_agi(pag, NULL, &agi_bp);
+ 	if (error)
+ 		return error;
+ 	error = xfs_alloc_read_agf(pag->pag_mount, NULL, pag->pag_agno, 0, &agf_bp);
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index dfa8061f65d9..55757b990ac6 100644
+index cefac2a1ba0c..a7259404377d 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2571,25 +2571,24 @@ const struct xfs_buf_ops xfs_agi_buf_ops = {
+@@ -1610,7 +1610,7 @@ xfs_dialloc_good_ag(
+ 		return false;
+ 
+ 	if (!pag->pagi_init) {
+-		error = xfs_ialloc_read_agi(mp, tp, pag->pag_agno, NULL);
++		error = xfs_ialloc_read_agi(pag, tp, NULL);
+ 		if (error)
+ 			return false;
+ 	}
+@@ -1679,7 +1679,7 @@ xfs_dialloc_try_ag(
+ 	 * Then read in the AGI buffer and recheck with the AGI buffer
+ 	 * lock held.
+ 	 */
+-	error = xfs_ialloc_read_agi(pag->pag_mount, *tpp, pag->pag_agno, &agbp);
++	error = xfs_ialloc_read_agi(pag, *tpp, &agbp);
+ 	if (error)
+ 		return error;
+ 
+@@ -2169,7 +2169,7 @@ xfs_difree(
+ 	/*
+ 	 * Get the allocation group header.
+ 	 */
+-	error = xfs_ialloc_read_agi(mp, tp, pag->pag_agno, &agbp);
++	error = xfs_ialloc_read_agi(pag, tp, &agbp);
+ 	if (error) {
+ 		xfs_warn(mp, "%s: xfs_ialloc_read_agi() returned error %d.",
+ 			__func__, error);
+@@ -2215,7 +2215,7 @@ xfs_imap_lookup(
+ 	int			error;
+ 	int			i;
+ 
+-	error = xfs_ialloc_read_agi(mp, tp, pag->pag_agno, &agbp);
++	error = xfs_ialloc_read_agi(pag, tp, &agbp);
+ 	if (error) {
+ 		xfs_alert(mp,
+ 			"%s: xfs_ialloc_read_agi() returned error %d, agno %d",
+@@ -2599,24 +2599,21 @@ xfs_read_agi(
   */
  int
- xfs_read_agi(
+ xfs_ialloc_read_agi(
 -	struct xfs_mount	*mp,	/* file system mount structure */
 -	struct xfs_trans	*tp,	/* transaction pointer */
 -	xfs_agnumber_t		agno,	/* allocation group number */
--	struct xfs_buf		**bpp)	/* allocation group hdr buf */
 +	struct xfs_perag	*pag,
 +	struct xfs_trans	*tp,
-+	struct xfs_buf		**agibpp)
+ 	struct xfs_buf		**agibpp)
  {
-+	struct xfs_mount	*mp = pag->pag_mount;
+ 	struct xfs_buf		*agibp;
+-	struct xfs_agi		*agi;	/* allocation group header */
+-	struct xfs_perag	*pag;	/* per allocation group data */
++	struct xfs_agi		*agi;
  	int			error;
  
--	trace_xfs_read_agi(mp, agno);
-+	trace_xfs_read_agi(pag->pag_mount, pag->pag_agno);
- 
--	ASSERT(agno != NULLAGNUMBER);
- 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
--			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1), 0, bpp, &xfs_agi_buf_ops);
-+			XFS_AG_DADDR(mp, pag->pag_agno, XFS_AGI_DADDR(mp)),
-+			XFS_FSS_TO_BB(mp, 1), 0, agibpp, &xfs_agi_buf_ops);
- 	if (error)
- 		return error;
- 	if (tp)
--		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_AGI_BUF);
-+		xfs_trans_buf_set_type(tp, *agibpp, XFS_BLFT_AGI_BUF);
- 
--	xfs_buf_set_ref(*bpp, XFS_AGI_REF);
-+	xfs_buf_set_ref(*agibpp, XFS_AGI_REF);
- 	return 0;
- }
- 
-@@ -2609,7 +2608,7 @@ xfs_ialloc_read_agi(
- 
- 	trace_xfs_ialloc_read_agi(pag->pag_mount, pag->pag_agno);
- 
--	error = xfs_read_agi(pag->pag_mount, tp, pag->pag_agno, &agibp);
-+	error = xfs_read_agi(pag, tp, &agibp);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-index 72cb33170d9f..9bbbca6ac4ed 100644
---- a/fs/xfs/libxfs/xfs_ialloc.h
-+++ b/fs/xfs/libxfs/xfs_ialloc.h
-@@ -62,11 +62,9 @@ xfs_ialloc_log_agi(
- 	struct xfs_buf	*bp,		/* allocation group header buffer */
- 	uint32_t	fields);	/* bitmask of fields to log */
- 
--/*
-- * Read in the allocation group header (inode allocation section)
-- */
--int					/* error */
--xfs_ialloc_read_agi(struct xfs_perag *pag, struct xfs_trans *tp,
-+int xfs_read_agi(struct xfs_perag *pag, struct xfs_trans *tp,
-+		struct xfs_buf **agibpp);
-+int xfs_ialloc_read_agi(struct xfs_perag *pag, struct xfs_trans *tp,
- 		struct xfs_buf **agibpp);
- 
- /*
-@@ -89,8 +87,6 @@ int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
- 			  xfs_agnumber_t agno, xfs_agblock_t agbno,
- 			  xfs_agblock_t length, unsigned int gen);
- 
--int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
--		xfs_agnumber_t agno, struct xfs_buf **bpp);
- 
- union xfs_btree_rec;
- void xfs_inobt_btrec_to_irec(struct xfs_mount *mp,
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 52d6f2c7d58b..6dcb9b0fa852 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2157,7 +2157,7 @@ xfs_iunlink(
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
- 
- 	/* Get the agi buffer first.  It ensures lock ordering on the list. */
--	error = xfs_read_agi(mp, tp, pag->pag_agno, &agibp);
-+	error = xfs_read_agi(pag, tp, &agibp);
- 	if (error)
- 		goto out;
- 	agi = agibp->b_addr;
-@@ -2342,7 +2342,7 @@ xfs_iunlink_remove(
- 	trace_xfs_iunlink_remove(ip);
- 
- 	/* Get the agi buffer first.  It ensures lock ordering on the list. */
--	error = xfs_read_agi(mp, tp, pag->pag_agno, &agibp);
-+	error = xfs_read_agi(pag, tp, &agibp);
- 	if (error)
- 		return error;
- 	agi = agibp->b_addr;
-@@ -3243,11 +3243,13 @@ xfs_rename(
- 		if (inodes[i] == wip ||
- 		    (inodes[i] == target_ip &&
- 		     (VFS_I(target_ip)->i_nlink == 1 || src_is_directory))) {
--			struct xfs_buf	*bp;
--			xfs_agnumber_t	agno;
-+			struct xfs_perag	*pag;
-+			struct xfs_buf		*bp;
- 
--			agno = XFS_INO_TO_AGNO(mp, inodes[i]->i_ino);
--			error = xfs_read_agi(mp, tp, agno, &bp);
-+			pag = xfs_perag_get(mp,
-+					XFS_INO_TO_AGNO(mp, inodes[i]->i_ino));
-+			error = xfs_read_agi(pag, tp, &bp);
-+			xfs_perag_put(pag);
- 			if (error)
- 				goto out_trans_cancel;
- 		}
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 5f7e4e6e33ce..38aae3409c96 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2629,21 +2629,21 @@ xlog_recover_cancel_intents(
-  */
- STATIC void
- xlog_recover_clear_agi_bucket(
--	xfs_mount_t	*mp,
--	xfs_agnumber_t	agno,
--	int		bucket)
-+	struct xfs_perag	*pag,
-+	int			bucket)
- {
--	xfs_trans_t	*tp;
--	xfs_agi_t	*agi;
--	struct xfs_buf	*agibp;
--	int		offset;
--	int		error;
-+	struct xfs_mount	*mp = pag->pag_mount;
-+	struct xfs_trans	*tp;
-+	struct xfs_agi		*agi;
-+	struct xfs_buf		*agibp;
-+	int			offset;
-+	int			error;
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_clearagi, 0, 0, 0, &tp);
- 	if (error)
- 		goto out_error;
+-	trace_xfs_ialloc_read_agi(mp, agno);
++	trace_xfs_ialloc_read_agi(pag->pag_mount, pag->pag_agno);
  
 -	error = xfs_read_agi(mp, tp, agno, &agibp);
-+	error = xfs_read_agi(pag, tp, &agibp);
++	error = xfs_read_agi(pag->pag_mount, tp, pag->pag_agno, &agibp);
  	if (error)
- 		goto out_abort;
+ 		return error;
  
-@@ -2662,14 +2662,14 @@ xlog_recover_clear_agi_bucket(
- out_abort:
- 	xfs_trans_cancel(tp);
- out_error:
--	xfs_warn(mp, "%s: failed to clear agi %d. Continuing.", __func__, agno);
-+	xfs_warn(mp, "%s: failed to clear agi %d. Continuing.", __func__,
-+			pag->pag_agno);
- 	return;
- }
+ 	agi = agibp->b_addr;
+-	pag = agibp->b_pag;
+ 	if (!pag->pagi_init) {
+ 		pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
+ 		pag->pagi_count = be32_to_cpu(agi->agi_count);
+@@ -2628,7 +2625,7 @@ xfs_ialloc_read_agi(
+ 	 * we are in the middle of a forced shutdown.
+ 	 */
+ 	ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
+-		xfs_is_shutdown(mp));
++		xfs_is_shutdown(pag->pag_mount));
+ 	if (agibpp)
+ 		*agibpp = agibp;
+ 	else
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index 1ff42bf1e4b3..72cb33170d9f 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -66,11 +66,8 @@ xfs_ialloc_log_agi(
+  * Read in the allocation group header (inode allocation section)
+  */
+ int					/* error */
+-xfs_ialloc_read_agi(
+-	struct xfs_mount *mp,		/* file system mount structure */
+-	struct xfs_trans *tp,		/* transaction pointer */
+-	xfs_agnumber_t	agno,		/* allocation group number */
+-	struct xfs_buf	**bpp);		/* allocation group hdr buf */
++xfs_ialloc_read_agi(struct xfs_perag *pag, struct xfs_trans *tp,
++		struct xfs_buf **agibpp);
  
- STATIC xfs_agino_t
- xlog_recover_process_one_iunlink(
--	struct xfs_mount		*mp,
--	xfs_agnumber_t			agno,
-+	struct xfs_perag		*pag,
- 	xfs_agino_t			agino,
- 	int				bucket)
+ /*
+  * Lookup a record by ino in the btree given by cur.
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index b2ad2fdc40f5..aa4367a0a0de 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -722,7 +722,7 @@ xfs_inobt_cur(
+ 	ASSERT(*agi_bpp == NULL);
+ 	ASSERT(*curpp == NULL);
+ 
+-	error = xfs_ialloc_read_agi(mp, tp, pag->pag_agno, agi_bpp);
++	error = xfs_ialloc_read_agi(pag, tp, agi_bpp);
+ 	if (error)
+ 		return error;
+ 
+@@ -757,16 +757,15 @@ xfs_inobt_count_blocks(
+ /* Read finobt block count from AGI header. */
+ static int
+ xfs_finobt_read_blocks(
+-	struct xfs_mount	*mp,
+-	struct xfs_trans	*tp,
+ 	struct xfs_perag	*pag,
++	struct xfs_trans	*tp,
+ 	xfs_extlen_t		*tree_blocks)
  {
-@@ -2679,15 +2679,15 @@ xlog_recover_process_one_iunlink(
- 	xfs_ino_t			ino;
- 	int				error;
- 
--	ino = XFS_AGINO_TO_INO(mp, agno, agino);
--	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
-+	ino = XFS_AGINO_TO_INO(pag->pag_mount, pag->pag_agno, agino);
-+	error = xfs_iget(pag->pag_mount, NULL, ino, 0, 0, &ip);
- 	if (error)
- 		goto fail;
- 
- 	/*
- 	 * Get the on disk inode to find the next inode in the bucket.
- 	 */
--	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &ibp);
-+	error = xfs_imap_to_bp(pag->pag_mount, NULL, &ip->i_imap, &ibp);
- 	if (error)
- 		goto fail_iput;
- 	dip = xfs_buf_offset(ibp, ip->i_imap.im_boffset);
-@@ -2714,7 +2714,7 @@ xlog_recover_process_one_iunlink(
- 	 * Call xlog_recover_clear_agi_bucket() to perform a transaction to
- 	 * clear the inode pointer in the bucket.
- 	 */
--	xlog_recover_clear_agi_bucket(mp, agno, bucket);
-+	xlog_recover_clear_agi_bucket(pag, bucket);
- 	return NULLAGINO;
- }
- 
-@@ -2755,7 +2755,7 @@ xlog_recover_process_iunlinks(
+ 	struct xfs_buf		*agbp;
+ 	struct xfs_agi		*agi;
  	int			error;
  
- 	for_each_perag(mp, agno, pag) {
--		error = xfs_read_agi(mp, NULL, pag->pag_agno, &agibp);
-+		error = xfs_read_agi(pag, NULL, &agibp);
- 		if (error) {
- 			/*
- 			 * AGI is b0rked. Don't process it.
-@@ -2780,8 +2780,8 @@ xlog_recover_process_iunlinks(
- 		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
- 			agino = be32_to_cpu(agi->agi_unlinked[bucket]);
- 			while (agino != NULLAGINO) {
--				agino = xlog_recover_process_one_iunlink(mp,
--						pag->pag_agno, agino, bucket);
-+				agino = xlog_recover_process_one_iunlink(pag,
-+						agino, bucket);
- 				cond_resched();
- 			}
- 		}
+-	error = xfs_ialloc_read_agi(mp, tp, pag->pag_agno, &agbp);
++	error = xfs_ialloc_read_agi(pag, tp, &agbp);
+ 	if (error)
+ 		return error;
+ 
+@@ -794,7 +793,7 @@ xfs_finobt_calc_reserves(
+ 		return 0;
+ 
+ 	if (xfs_has_inobtcounts(mp))
+-		error = xfs_finobt_read_blocks(mp, tp, pag, &tree_len);
++		error = xfs_finobt_read_blocks(pag, tp, &tree_len);
+ 	else
+ 		error = xfs_inobt_count_blocks(mp, tp, pag, XFS_BTNUM_FINO,
+ 				&tree_len);
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 97b54ac3075f..62997791694a 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -416,7 +416,7 @@ xchk_ag_read_headers(
+ 	if (!sa->pag)
+ 		return -ENOENT;
+ 
+-	error = xfs_ialloc_read_agi(mp, sc->tp, agno, &sa->agi_bp);
++	error = xfs_ialloc_read_agi(sa->pag, sc->tp, &sa->agi_bp);
+ 	if (error && want_ag_read_header_failure(sc, XFS_SCRUB_TYPE_AGI))
+ 		return error;
+ 
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index 48a6cbdf95d0..bd06a184c81c 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -78,7 +78,7 @@ xchk_fscount_warmup(
+ 			continue;
+ 
+ 		/* Lock both AG headers. */
+-		error = xfs_ialloc_read_agi(mp, sc->tp, agno, &agi_bp);
++		error = xfs_ialloc_read_agi(pag, sc->tp, &agi_bp);
+ 		if (error)
+ 			break;
+ 		error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, &agf_bp);
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 1e7b6b209ee8..14acf1df3dd3 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -199,7 +199,7 @@ xrep_calc_ag_resblks(
+ 		icount = pag->pagi_count;
+ 	} else {
+ 		/* Try to get the actual counters from disk. */
+-		error = xfs_ialloc_read_agi(mp, NULL, sm->sm_agno, &bp);
++		error = xfs_ialloc_read_agi(pag, NULL, &bp);
+ 		if (!error) {
+ 			icount = pag->pagi_count;
+ 			xfs_buf_relse(bp);
 -- 
 2.35.1
 
