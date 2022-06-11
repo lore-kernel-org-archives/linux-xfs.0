@@ -2,267 +2,313 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CC19C43334
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB30CCA47E
 	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 01:27:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348832AbiFKB1U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jun 2022 21:27:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60944 "EHLO
+        id S1349060AbiFKB1V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jun 2022 21:27:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348466AbiFKB1O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 21:27:14 -0400
+        with ESMTP id S1348760AbiFKB1P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 21:27:15 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 503E13FB113
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 50E983FB123
         for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 18:27:13 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DA5B15EC7F1
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A3A565EC7B5
         for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 11:27:04 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu3-005APP-Sq
-        for linux-xfs@vger.kernel.org; Sat, 11 Jun 2022 11:27:03 +1000
+        id 1nzpu2-005AO7-Vb
+        for linux-xfs@vger.kernel.org; Sat, 11 Jun 2022 11:27:02 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu3-00ELMp-Rp
+        id 1nzpu2-00ELKf-Tz
         for linux-xfs@vger.kernel.org;
-        Sat, 11 Jun 2022 11:27:03 +1000
+        Sat, 11 Jun 2022 11:27:02 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 28/50] xfs: use xfs_alloc_vextent_first_ag() where appropriate
-Date:   Sat, 11 Jun 2022 11:26:37 +1000
-Message-Id: <20220611012659.3418072-29-david@fromorbit.com>
+Subject: [PATCH 01/50] xfs: make last AG grow/shrink perag centric
+Date:   Sat, 11 Jun 2022 11:26:10 +1000
+Message-Id: <20220611012659.3418072-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220611012659.3418072-1-david@fromorbit.com>
 References: <20220611012659.3418072-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62a3ef68
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62a3ef68
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=ZhFqD0eVvR8hr9dqqfwA:9
+        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=K2zskSmaP2PQqXKSW-0A:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Change obvious callers of single AG allocation to use
-xfs_alloc_vextent_first_ag(). This gets rid of
-XFS_ALLOCTYPE_FIRST_AG as the type used within
-xfs_alloc_vextent_first_ag() during iteration is _THIS_AG. Hence we
-can remove the setting of args->type from all the callers of
-_first_ag() and remove the alloctype.
-
-While doing this, pass the allocation target fsb as a parameter
-rather than encoding it in args->fsbno. This starts the process
-of making args->fsbno an output only variable rather than
-input/output.
+Because the perag must exist for these operations, look it up as
+part of the common shrink operations and pass it instead of the
+mount/agno pair.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c      | 26 ++++++++++++++------------
- fs/xfs/libxfs/xfs_alloc.h      | 10 ++++++++--
- fs/xfs/libxfs/xfs_bmap.c       | 15 +++++----------
- fs/xfs/libxfs/xfs_bmap_btree.c |  4 +---
- 4 files changed, 28 insertions(+), 27 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c | 48 ++++++++++++++++--------------------------
+ fs/xfs/libxfs/xfs_ag.h | 11 +++++-----
+ fs/xfs/xfs_fsops.c     | 11 ++++++----
+ fs/xfs/xfs_ioctl.c     |  8 ++++++-
+ 4 files changed, 37 insertions(+), 41 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 63a8c6c0b927..6a13be14600c 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -3186,7 +3186,8 @@ xfs_alloc_read_agf(
-  */
- static int
- xfs_alloc_vextent_check_args(
--	struct xfs_alloc_arg	*args)
-+	struct xfs_alloc_arg	*args,
-+	xfs_rfsblock_t		target)
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 3e920cf1b454..71d727c1546b 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -761,11 +761,11 @@ xfs_ag_init_headers(
+ 
+ int
+ xfs_ag_shrink_space(
+-	struct xfs_mount	*mp,
++	struct xfs_perag	*pag,
+ 	struct xfs_trans	**tpp,
+-	xfs_agnumber_t		agno,
+ 	xfs_extlen_t		delta)
  {
- 	struct xfs_mount	*mp = args->mp;
- 	xfs_agblock_t		agsize;
-@@ -3204,13 +3205,13 @@ xfs_alloc_vextent_check_args(
- 		args->maxlen = agsize;
- 	if (args->alignment == 0)
- 		args->alignment = 1;
--	ASSERT(XFS_FSB_TO_AGNO(mp, args->fsbno) < mp->m_sb.sb_agcount);
--	ASSERT(XFS_FSB_TO_AGBNO(mp, args->fsbno) < agsize);
-+	ASSERT(XFS_FSB_TO_AGNO(mp, target) < mp->m_sb.sb_agcount);
-+	ASSERT(XFS_FSB_TO_AGBNO(mp, target) < agsize);
- 	ASSERT(args->minlen <= args->maxlen);
- 	ASSERT(args->minlen <= agsize);
- 	ASSERT(args->mod < args->prod);
--	if (XFS_FSB_TO_AGNO(mp, args->fsbno) >= mp->m_sb.sb_agcount ||
--	    XFS_FSB_TO_AGBNO(mp, args->fsbno) >= agsize ||
-+	if (XFS_FSB_TO_AGNO(mp, target) >= mp->m_sb.sb_agcount ||
-+	    XFS_FSB_TO_AGBNO(mp, target) >= agsize ||
- 	    args->minlen > args->maxlen || args->minlen > agsize ||
- 	    args->mod >= args->prod) {
- 		args->fsbno = NULLFSBLOCK;
-@@ -3219,6 +3220,7 @@ xfs_alloc_vextent_check_args(
- 	}
- 	return 0;
- }
-+
- /*
-  * Post-process allocation results to set the allocated block number correctly
-  * for the caller.
-@@ -3257,7 +3259,7 @@ xfs_alloc_vextent_this_ag(
- 	struct xfs_mount	*mp = args->mp;
- 	int			error;
++	struct xfs_mount	*mp = pag->pag_mount;
+ 	struct xfs_alloc_arg	args = {
+ 		.tp	= *tpp,
+ 		.mp	= mp,
+@@ -782,14 +782,14 @@ xfs_ag_shrink_space(
+ 	xfs_agblock_t		aglen;
+ 	int			error, err2;
  
--	error = xfs_alloc_vextent_check_args(args);
-+	error = xfs_alloc_vextent_check_args(args, args->fsbno);
- 	if (error) {
- 		if (error == -ENOSPC)
- 			return 0;
-@@ -3371,7 +3373,7 @@ xfs_alloc_vextent_start_ag(
- 	bool			bump_rotor = false;
- 	int			error;
- 
--	error = xfs_alloc_vextent_check_args(args);
-+	error = xfs_alloc_vextent_check_args(args, args->fsbno);
- 	if (error) {
- 		if (error == -ENOSPC)
- 			return 0;
-@@ -3412,14 +3414,15 @@ xfs_alloc_vextent_start_ag(
-  * filesystem attempting blocking allocation. This does not wrap or try a second
-  * pass, so will not recurse into AGs lower than indicated by fsbno.
-  */
--static int
-+int
- xfs_alloc_vextent_first_ag(
--	struct xfs_alloc_arg	*args)
-+	struct xfs_alloc_arg	*args,
-+	xfs_rfsblock_t		target)
- {
- 	struct xfs_mount	*mp = args->mp;
- 	int			error;
- 
--	error = xfs_alloc_vextent_check_args(args);
-+	error = xfs_alloc_vextent_check_args(args, target);
- 	if (error) {
- 		if (error == -ENOSPC)
- 			return 0;
-@@ -3427,6 +3430,7 @@ xfs_alloc_vextent_first_ag(
- 	}
- 
- 	args->type = XFS_ALLOCTYPE_THIS_AG;
-+	args->fsbno = target;
- 	error =  xfs_alloc_vextent_iterate_ags(args,
- 			XFS_FSB_TO_AGNO(mp, args->fsbno), 0);
- 	if (error)
-@@ -3455,8 +3459,6 @@ xfs_alloc_vextent(
- 		return error;
- 	case XFS_ALLOCTYPE_START_BNO:
- 		return xfs_alloc_vextent_start_ag(args);
--	case XFS_ALLOCTYPE_FIRST_AG:
--		return xfs_alloc_vextent_first_ag(args);
- 	default:
- 		ASSERT(0);
- 		/* NOTREACHED */
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 0a9ad6cd18e2..73697dd3ca55 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -19,7 +19,6 @@ unsigned int xfs_agfl_size(struct xfs_mount *mp);
- /*
-  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
-  */
--#define XFS_ALLOCTYPE_FIRST_AG	0x02	/* ... start at ag 0 */
- #define XFS_ALLOCTYPE_THIS_AG	0x08	/* anywhere in this a.g. */
- #define XFS_ALLOCTYPE_START_BNO	0x10	/* near this block else anywhere */
- #define XFS_ALLOCTYPE_NEAR_BNO	0x20	/* in this a.g. and near this block */
-@@ -29,7 +28,6 @@ unsigned int xfs_agfl_size(struct xfs_mount *mp);
- typedef unsigned int xfs_alloctype_t;
- 
- #define XFS_ALLOC_TYPES \
--	{ XFS_ALLOCTYPE_FIRST_AG,	"FIRST_AG" }, \
- 	{ XFS_ALLOCTYPE_THIS_AG,	"THIS_AG" }, \
- 	{ XFS_ALLOCTYPE_START_BNO,	"START_BNO" }, \
- 	{ XFS_ALLOCTYPE_NEAR_BNO,	"NEAR_BNO" }, \
-@@ -130,6 +128,14 @@ xfs_alloc_vextent(
-  */
- int xfs_alloc_vextent_this_ag(struct xfs_alloc_arg *args);
- 
-+/*
-+ * Iterate from the AG indicated from args->fsbno through to the end of the
-+ * filesystem attempting blocking allocation. This is for use in last
-+ * resort allocation attempts when everything else has failed.
-+ */
-+int xfs_alloc_vextent_first_ag(struct xfs_alloc_arg *args,
-+		xfs_rfsblock_t target);
-+
- /*
-  * Free an extent.
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index edb8f71674b2..7009f48de520 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3476,9 +3476,7 @@ xfs_bmap_exact_minlen_extent_alloc(
- 		ap->blkno = ap->tp->t_firstblock;
- 	}
- 
--	args.fsbno = ap->blkno;
- 	args.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
--	args.type = XFS_ALLOCTYPE_FIRST_AG;
- 	args.minlen = args.maxlen = ap->minlen;
- 	args.total = ap->total;
- 
-@@ -3490,7 +3488,7 @@ xfs_bmap_exact_minlen_extent_alloc(
- 	args.resv = XFS_AG_RESV_NONE;
- 	args.datatype = ap->datatype;
- 
--	error = xfs_alloc_vextent(&args);
-+	error = xfs_alloc_vextent_first_ag(&args, ap->blkno);
+-	ASSERT(agno == mp->m_sb.sb_agcount - 1);
+-	error = xfs_ialloc_read_agi(mp, *tpp, agno, &agibp);
++	ASSERT(pag->pag_agno == mp->m_sb.sb_agcount - 1);
++	error = xfs_ialloc_read_agi(mp, *tpp, pag->pag_agno, &agibp);
  	if (error)
  		return error;
  
-@@ -3715,10 +3713,8 @@ xfs_btalloc_nullfb(
- 	 * so they don't waste time on allocation modes that are unlikely to
- 	 * succeed.
+ 	agi = agibp->b_addr;
+ 
+-	error = xfs_alloc_read_agf(mp, *tpp, agno, 0, &agfbp);
++	error = xfs_alloc_read_agf(mp, *tpp, pag->pag_agno, 0, &agfbp);
+ 	if (error)
+ 		return error;
+ 
+@@ -801,13 +801,13 @@ xfs_ag_shrink_space(
+ 	if (delta >= aglen)
+ 		return -EINVAL;
+ 
+-	args.fsbno = XFS_AGB_TO_FSB(mp, agno, aglen - delta);
++	args.fsbno = XFS_AGB_TO_FSB(mp, pag->pag_agno, aglen - delta);
+ 
+ 	/*
+ 	 * Make sure that the last inode cluster cannot overlap with the new
+ 	 * end of the AG, even if it's sparse.
  	 */
--	args->fsbno = 0;
--	args->type = XFS_ALLOCTYPE_FIRST_AG;
- 	args->total = ap->minlen;
--	error = xfs_alloc_vextent(args);
-+	error = xfs_alloc_vextent_first_ag(args, 0);
+-	error = xfs_ialloc_check_shrink(*tpp, agno, agibp, aglen - delta);
++	error = xfs_ialloc_check_shrink(*tpp, pag->pag_agno, agibp, aglen - delta);
  	if (error)
  		return error;
- 	ap->tp->t_flags |= XFS_TRANS_LOWMODE;
-@@ -3736,13 +3732,12 @@ xfs_btalloc_low_mode(
+ 
+@@ -883,9 +883,8 @@ xfs_ag_shrink_space(
+  */
+ int
+ xfs_ag_extend_space(
+-	struct xfs_mount	*mp,
++	struct xfs_perag	*pag,
+ 	struct xfs_trans	*tp,
+-	struct aghdr_init_data	*id,
+ 	xfs_extlen_t		len)
  {
- 	ap->blkno = ap->tp->t_firstblock;
- 	xfs_bmap_adjacent(ap);
--	args->fsbno = ap->blkno;
- 	args->total = args->minlen = ap->minlen;
- 	if (xfs_inode_is_filestream(ap->ip))
--		args->type = XFS_ALLOCTYPE_FIRST_AG;
--	else
--		args->type = XFS_ALLOCTYPE_START_BNO;
-+		return xfs_alloc_vextent_first_ag(args, ap->blkno);
+ 	struct xfs_buf		*bp;
+@@ -893,23 +892,20 @@ xfs_ag_extend_space(
+ 	struct xfs_agf		*agf;
+ 	int			error;
  
-+	args->fsbno = ap->blkno;
-+	args->type = XFS_ALLOCTYPE_START_BNO;
- 	return xfs_alloc_vextent(args);
+-	/*
+-	 * Change the agi length.
+-	 */
+-	error = xfs_ialloc_read_agi(mp, tp, id->agno, &bp);
++	ASSERT(pag->pag_agno == pag->pag_mount->m_sb.sb_agcount - 1);
++
++	error = xfs_ialloc_read_agi(pag->pag_mount, tp, pag->pag_agno, &bp);
+ 	if (error)
+ 		return error;
+ 
+ 	agi = bp->b_addr;
+ 	be32_add_cpu(&agi->agi_length, len);
+-	ASSERT(id->agno == mp->m_sb.sb_agcount - 1 ||
+-	       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
+ 	xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
+ 
+ 	/*
+ 	 * Change agf length.
+ 	 */
+-	error = xfs_alloc_read_agf(mp, tp, id->agno, 0, &bp);
++	error = xfs_alloc_read_agf(pag->pag_mount, tp, pag->pag_agno, 0, &bp);
+ 	if (error)
+ 		return error;
+ 
+@@ -924,13 +920,12 @@ xfs_ag_extend_space(
+ 	 * XFS_RMAP_OINFO_SKIP_UPDATE is used here to tell the rmap btree that
+ 	 * this doesn't actually exist in the rmap btree.
+ 	 */
+-	error = xfs_rmap_free(tp, bp, bp->b_pag,
+-				be32_to_cpu(agf->agf_length) - len,
++	error = xfs_rmap_free(tp, bp, pag, be32_to_cpu(agf->agf_length) - len,
+ 				len, &XFS_RMAP_OINFO_SKIP_UPDATE);
+ 	if (error)
+ 		return error;
+ 
+-	return  xfs_free_extent(tp, XFS_AGB_TO_FSB(mp, id->agno,
++	return  xfs_free_extent(tp, XFS_AGB_TO_FSB(pag->pag_mount, pag->pag_agno,
+ 					be32_to_cpu(agf->agf_length) - len),
+ 				len, &XFS_RMAP_OINFO_SKIP_UPDATE,
+ 				XFS_AG_RESV_NONE);
+@@ -939,34 +934,27 @@ xfs_ag_extend_space(
+ /* Retrieve AG geometry. */
+ int
+ xfs_ag_get_geometry(
+-	struct xfs_mount	*mp,
+-	xfs_agnumber_t		agno,
++	struct xfs_perag	*pag,
+ 	struct xfs_ag_geometry	*ageo)
+ {
+ 	struct xfs_buf		*agi_bp;
+ 	struct xfs_buf		*agf_bp;
+ 	struct xfs_agi		*agi;
+ 	struct xfs_agf		*agf;
+-	struct xfs_perag	*pag;
+ 	unsigned int		freeblks;
+ 	int			error;
+ 
+-	if (agno >= mp->m_sb.sb_agcount)
+-		return -EINVAL;
+-
+ 	/* Lock the AG headers. */
+-	error = xfs_ialloc_read_agi(mp, NULL, agno, &agi_bp);
++	error = xfs_ialloc_read_agi(pag->pag_mount, NULL, pag->pag_agno, &agi_bp);
+ 	if (error)
+ 		return error;
+-	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agf_bp);
++	error = xfs_alloc_read_agf(pag->pag_mount, NULL, pag->pag_agno, 0, &agf_bp);
+ 	if (error)
+ 		goto out_agi;
+ 
+-	pag = agi_bp->b_pag;
+-
+ 	/* Fill out form. */
+ 	memset(ageo, 0, sizeof(*ageo));
+-	ageo->ag_number = agno;
++	ageo->ag_number = pag->pag_agno;
+ 
+ 	agi = agi_bp->b_addr;
+ 	ageo->ag_icount = be32_to_cpu(agi->agi_count);
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index e411d51c2589..1132cda9a92f 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -168,11 +168,10 @@ struct aghdr_init_data {
+ };
+ 
+ int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
+-int xfs_ag_shrink_space(struct xfs_mount *mp, struct xfs_trans **tpp,
+-			xfs_agnumber_t agno, xfs_extlen_t delta);
+-int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
+-			struct aghdr_init_data *id, xfs_extlen_t len);
+-int xfs_ag_get_geometry(struct xfs_mount *mp, xfs_agnumber_t agno,
+-			struct xfs_ag_geometry *ageo);
++int xfs_ag_shrink_space(struct xfs_perag *pag, struct xfs_trans **tpp,
++			xfs_extlen_t delta);
++int xfs_ag_extend_space(struct xfs_perag *pag, struct xfs_trans *tp,
++			xfs_extlen_t len);
++int xfs_ag_get_geometry(struct xfs_perag *pag, struct xfs_ag_geometry *ageo);
+ 
+ #endif /* __LIBXFS_AG_H */
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index d4a77c53f94b..7be4d83d5884 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -41,6 +41,7 @@ xfs_resizefs_init_new_ags(
+ 	xfs_agnumber_t		oagcount,
+ 	xfs_agnumber_t		nagcount,
+ 	xfs_rfsblock_t		delta,
++	struct xfs_perag	*last_pag,
+ 	bool			*lastag_extended)
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+@@ -73,7 +74,7 @@ xfs_resizefs_init_new_ags(
+ 
+ 	if (delta) {
+ 		*lastag_extended = true;
+-		error = xfs_ag_extend_space(mp, tp, id, delta);
++		error = xfs_ag_extend_space(last_pag, tp, delta);
+ 	}
+ 	return error;
  }
+@@ -96,6 +97,7 @@ xfs_growfs_data_private(
+ 	xfs_agnumber_t		oagcount;
+ 	struct xfs_trans	*tp;
+ 	struct aghdr_init_data	id = {};
++	struct xfs_perag	*last_pag;
  
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index cf52a2c23bb9..ab3877bf4aaf 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -240,9 +240,7 @@ xfs_bmbt_alloc_block(
- 			 * satisfy a full btree split.  Try again and if
- 			 * successful activate the lowspace algorithm.
- 			 */
--			args.fsbno = 0;
--			args.type = XFS_ALLOCTYPE_FIRST_AG;
--			error = xfs_alloc_vextent(&args);
-+			error = xfs_alloc_vextent_first_ag(&args, 0);
- 			if (error)
- 				goto error0;
- 			cur->bc_tp->t_flags |= XFS_TRANS_LOWMODE;
+ 	nb = in->newblocks;
+ 	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
+@@ -128,7 +130,6 @@ xfs_growfs_data_private(
+ 		return -EINVAL;
+ 
+ 	oagcount = mp->m_sb.sb_agcount;
+-
+ 	/* allocate the new per-ag structures */
+ 	if (nagcount > oagcount) {
+ 		error = xfs_initialize_perag(mp, nagcount, &nagimax);
+@@ -145,15 +146,17 @@ xfs_growfs_data_private(
+ 	if (error)
+ 		return error;
+ 
++	last_pag = xfs_perag_get(mp, oagcount - 1);
+ 	if (delta > 0) {
+ 		error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
+-						  delta, &lastag_extended);
++				delta, last_pag, &lastag_extended);
+ 	} else {
+ 		xfs_warn_mount(mp, XFS_OPSTATE_WARNED_SHRINK,
+ 	"EXPERIMENTAL online shrink feature in use. Use at your own risk!");
+ 
+-		error = xfs_ag_shrink_space(mp, &tp, nagcount - 1, -delta);
++		error = xfs_ag_shrink_space(last_pag, &tp, -delta);
+ 	}
++	xfs_perag_put(last_pag);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 5a364a7d58fd..f10da0830c84 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -955,6 +955,7 @@ xfs_ioc_ag_geometry(
+ 	struct xfs_mount	*mp,
+ 	void			__user *arg)
+ {
++	struct xfs_perag	*pag;
+ 	struct xfs_ag_geometry	ageo;
+ 	int			error;
+ 
+@@ -965,7 +966,12 @@ xfs_ioc_ag_geometry(
+ 	if (memchr_inv(&ageo.ag_reserved, 0, sizeof(ageo.ag_reserved)))
+ 		return -EINVAL;
+ 
+-	error = xfs_ag_get_geometry(mp, ageo.ag_number, &ageo);
++	pag = xfs_perag_get(mp, ageo.ag_number);
++	if (!pag)
++		return -EINVAL;
++
++	error = xfs_ag_get_geometry(pag, &ageo);
++	xfs_perag_put(pag);
+ 	if (error)
+ 		return error;
+ 
 -- 
 2.35.1
 
