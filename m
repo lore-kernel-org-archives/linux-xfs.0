@@ -2,266 +2,215 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FCA3CCA47C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB70AC43334
 	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 01:27:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347923AbiFKB1m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jun 2022 21:27:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33426 "EHLO
+        id S1348229AbiFKB1n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jun 2022 21:27:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348595AbiFKB1W (ORCPT
+        with ESMTP id S1349279AbiFKB1W (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 21:27:22 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A5F943FB13B
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 18:27:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 34A433A4823
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 18:27:19 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 8E34210E7217
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 8A5BC10E7216
         for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 11:27:05 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu4-005APk-3z
+        id 1nzpu4-005AQH-Gs
         for linux-xfs@vger.kernel.org; Sat, 11 Jun 2022 11:27:04 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu4-00ELNN-2s
+        id 1nzpu4-00ELOH-FE
         for linux-xfs@vger.kernel.org;
         Sat, 11 Jun 2022 11:27:04 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 35/50] xfs: convert xfs_alloc_vextent_iterate_ags() to use perag walker
-Date:   Sat, 11 Jun 2022 11:26:44 +1000
-Message-Id: <20220611012659.3418072-36-david@fromorbit.com>
+Subject: [PATCH 46/50] xfs: use for_each_perag_wrap in xfs_filestream_pick_ag
+Date:   Sat, 11 Jun 2022 11:26:55 +1000
+Message-Id: <20220611012659.3418072-47-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220611012659.3418072-1-david@fromorbit.com>
 References: <20220611012659.3418072-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62a3ef69
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62a3ef69
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=rPMLGPRgkIbOATDFbHwA:9
+        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=ujRYxpyJSx5Mmk0jHOIA:9
+        a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that the AG iteration code in the core allocation code has been
-cleaned up, we can easily convert it to use a for_each_perag..()
-variant to use active references and skip AGs that it can't get
-active references on.
+xfs_filestream_pick_ag() is now ready to rework to use
+for_each_perag_wrap() for iterating the perags during the AG
+selection scan.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ag.h    | 22 ++++++---
- fs/xfs/libxfs/xfs_alloc.c | 97 ++++++++++++++++++++-------------------
- 2 files changed, 65 insertions(+), 54 deletions(-)
+ fs/xfs/xfs_filestream.c | 101 ++++++++++++++++------------------------
+ 1 file changed, 41 insertions(+), 60 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 23040a1094b9..2198166efa2f 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -244,6 +244,7 @@ xfs_perag_next_wrap(
- 	struct xfs_perag	*pag,
- 	xfs_agnumber_t		*agno,
- 	xfs_agnumber_t		stop_agno,
-+	xfs_agnumber_t		restart_agno,
- 	xfs_agnumber_t		wrap_agno)
- {
- 	struct xfs_mount	*mp = pag->pag_mount;
-@@ -251,10 +252,11 @@ xfs_perag_next_wrap(
- 	*agno = pag->pag_agno + 1;
- 	xfs_perag_rele(pag);
- 	while (*agno != stop_agno) {
--		if (*agno >= wrap_agno)
--			*agno = 0;
--		if (*agno == stop_agno)
--			break;
-+		if (*agno >= wrap_agno) {
-+			if (restart_agno >= stop_agno)
-+				break;
-+			*agno = restart_agno;
-+		}
- 
- 		pag = xfs_perag_grab(mp, *agno);
- 		if (pag)
-@@ -265,14 +267,20 @@ xfs_perag_next_wrap(
- }
- 
- /*
-- * Iterate all AGs from start_agno through wrap_agno, then 0 through
-+ * Iterate all AGs from start_agno through wrap_agno, then restart_agno through
-  * (start_agno - 1).
-  */
--#define for_each_perag_wrap_at(mp, start_agno, wrap_agno, agno, pag) \
-+#define for_each_perag_wrap_range(mp, start_agno, restart_agno, wrap_agno, agno, pag) \
- 	for ((agno) = (start_agno), (pag) = xfs_perag_grab((mp), (agno)); \
- 		(pag) != NULL; \
- 		(pag) = xfs_perag_next_wrap((pag), &(agno), (start_agno), \
--				(wrap_agno)))
-+				(restart_agno), (wrap_agno)))
-+/*
-+ * Iterate all AGs from start_agno through wrap_agno, then 0 through
-+ * (start_agno - 1).
-+ */
-+#define for_each_perag_wrap_at(mp, start_agno, wrap_agno, agno, pag) \
-+	for_each_perag_wrap_range((mp), (start_agno), 0, (wrap_agno), (agno), (pag))
- 
- /*
-  * Iterate all AGs from start_agno through to the end of the filesystem, then 0
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index a3ce5f28f84b..abf78453d155 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -3150,6 +3150,7 @@ xfs_alloc_vextent_prepare_ag(
- 	if (need_pag)
- 		args->pag = xfs_perag_get(args->mp, args->agno);
- 
-+	args->agbp = NULL;
- 	error = xfs_alloc_fix_freelist(args, 0);
- 	if (error) {
- 		trace_xfs_alloc_vextent_nofix(args);
-@@ -3271,6 +3272,10 @@ xfs_alloc_vextent_this_ag(
-  * transaction. This will result in an out-of-order locking of AGFs and hence
-  * can cause deadlocks.
-  *
-+ * On return, args->pag may be left referenced if we finish before the "all
-+ * failed" return point. The allocation finish still needs the perag, and
-+ * so the caller will release it once they've finished the allocation.
-+ *
-  * XXX(dgc): when wrapping in potential deadlock scenarios, we could use
-  * try-locks on the AGFs below the critical AG rather than skip them entirely.
-  * We won't deadlock in that case, we'll just skip the AGFs we can't lock.
-@@ -3283,67 +3288,65 @@ xfs_alloc_vextent_iterate_ags(
- 	uint32_t		flags)
- {
- 	struct xfs_mount	*mp = args->mp;
-+	xfs_agnumber_t		restart_agno = 0;
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index 99013a9d3361..7b540898062e 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -83,9 +83,9 @@ xfs_filestream_pick_ag(
+ 	struct xfs_perag	*max_pag = NULL;
+ 	xfs_extlen_t		minlen = *longest;
+ 	xfs_extlen_t		free = 0, minfree, maxfree = 0;
+-	xfs_agnumber_t		startag = *agp;
+-	xfs_agnumber_t		ag = startag;
+-	int			err, trylock, nscan;
++	xfs_agnumber_t		start_agno = *agp;
 +	xfs_agnumber_t		agno;
- 	int			error = 0;
++	int			err, trylock;
  
- 	/*
--	 * Loop over allocation groups twice; first time with
--	 * trylock set, second time without.
-+	 * If we already have allocated a block in this transaction, we don't
-+	 * want to lock AGs whose number is below the start AG. This results in
-+	 * out-of-order locking of AGF and deadlocks will result.
- 	 */
--	args->agno = start_agno;
--	for (;;) {
-+	if (args->tp->t_firstblock != NULLFSBLOCK)
-+		restart_agno = start_agno;
-+
-+restart:
-+	for_each_perag_wrap_range(mp, start_agno, restart_agno,
-+			mp->m_sb.sb_agcount, agno, args->pag) {
-+		args->agno = agno;
- 		args->agbno = target_agbno;
--		args->pag = xfs_perag_get(args->mp, args->agno);
-+		trace_printk("sag %u rag %u agno %u pag %u, agbno %u, agcnt %u",
-+			start_agno, restart_agno, agno, args->pag->pag_agno,
-+			target_agbno, mp->m_sb.sb_agcount);
-+
- 		error = xfs_alloc_vextent_prepare_ag(args);
- 		if (error)
- 			break;
+ 	ASSERT(S_ISDIR(VFS_I(ip)->i_mode));
+ 
+@@ -97,13 +97,9 @@ xfs_filestream_pick_ag(
+ 	/* For the first pass, don't sleep trying to init the per-AG. */
+ 	trylock = XFS_ALLOC_FLAG_TRYLOCK;
+ 
+-	for (nscan = 0; 1; nscan++) {
+-		trace_xfs_filestream_scan(mp, ip->i_ino, ag);
 -
--		if (args->agbp) {
--			/*
--			 * Allocation is supposed to succeed now, so break out
--			 * of the loop regardless of whether we succeed or not.
--			 */
--			if (args->agno == start_agno && target_agbno)
--				error = xfs_alloc_ag_vextent_near(args);
--			else
--				error = xfs_alloc_ag_vextent_size(args);
--			break;
-+		if (!args->agbp) {
-+			trace_xfs_alloc_vextent_loopfailed(args);
-+			continue;
+-		err = 0;
+-		pag = xfs_perag_grab(mp, ag);
+-		if (!pag)
+-			goto next_ag;
++restart:
++	for_each_perag_wrap(mp, start_agno, agno, pag) {
++		trace_xfs_filestream_scan(mp, ip->i_ino, agno);
+ 		*longest = 0;
+ 		err = xfs_bmap_longest_free_extent(pag, NULL, longest);
+ 		if (err) {
+@@ -111,6 +107,7 @@ xfs_filestream_pick_ag(
+ 			if (err != -EAGAIN)
+ 				break;
+ 			/* Couldn't lock the AGF, skip this AG. */
++			err = 0;
+ 			goto next_ag;
  		}
  
--		trace_xfs_alloc_vextent_loopfailed(args);
--
- 		/*
--		* For the first allocation, we can try any AG to get
--		* space.  However, if we already have allocated a
--		* block, we don't want to try AGs whose number is below
--		* sagno. Otherwise, we may end up with out-of-order
--		* locking of AGF, which might cause deadlock.
--		*/
--		if (++(args->agno) == mp->m_sb.sb_agcount) {
--			if (args->tp->t_firstblock != NULLFSBLOCK)
--				args->agno = start_agno;
--			else
--				args->agno = 0;
--		}
--		/*
--		 * Reached the starting a.g., must either be done
--		 * or switch to non-trylock mode.
-+		 * Allocation is supposed to succeed now, so break out of the
-+		 * loop regardless of whether we succeed or not.
+@@ -129,77 +126,61 @@ xfs_filestream_pick_ag(
+ 		 * loop, and it guards against two filestreams being established
+ 		 * in the same AG as each other.
  		 */
--		if (args->agno == start_agno) {
--			if (flags == 0) {
--				args->agbno = NULLAGBLOCK;
--				trace_xfs_alloc_vextent_allfailed(args);
--				break;
--			}
--			flags = 0;
+-		if (atomic_inc_return(&pag->pagf_fstrms) > 1) {
+-			atomic_dec(&pag->pagf_fstrms);
+-			xfs_perag_rele(pag);
+-			goto next_ag;
 -		}
--		xfs_perag_put(args->pag);
-+		if (args->agno == start_agno && target_agbno)
-+			error = xfs_alloc_ag_vextent_near(args);
-+		else
-+			error = xfs_alloc_ag_vextent_size(args);
-+		break;
-+	}
-+	if (error) {
-+		xfs_perag_rele(args->pag);
- 		args->pag = NULL;
-+		return error;
- 	}
-+	if (args->agbp)
-+		return 0;
-+
- 	/*
--	 * On success, perag is left referenced in args for the caller to clean
--	 * up after they've finished the allocation.
-+	 * We didn't find an AG we can alloation from. If we were given
-+	 * constraining flags by the caller, drop them and retry the allocation
-+	 * without any constraints being set.
- 	 */
--	return error;
-+	if (flags) {
-+		flags = 0;
-+		goto restart;
-+	}
-+
-+	trace_xfs_alloc_vextent_allfailed(args);
-+	return 0;
- }
+-
+-		if (((minlen && *longest >= minlen) ||
+-		     (!minlen && pag->pagf_freeblks >= minfree)) &&
+-		    (!xfs_perag_prefers_metadata(pag) ||
+-		     !(flags & XFS_PICK_USERDATA) ||
+-		     (flags & XFS_PICK_LOWSPACE))) {
+-
+-			/* Break out, retaining the reference on the AG. */
+-			free = pag->pagf_freeblks;
+-			break;
++		if (atomic_inc_return(&pag->pagf_fstrms) <= 1) {
++			if (((minlen && *longest >= minlen) ||
++			     (!minlen && pag->pagf_freeblks >= minfree)) &&
++			    (!xfs_perag_prefers_metadata(pag) ||
++			     !(flags & XFS_PICK_USERDATA) ||
++			     (flags & XFS_PICK_LOWSPACE))) {
++				/* Break out, retaining the reference on the AG. */
++				free = pag->pagf_freeblks;
++				break;
++			}
+ 		}
  
- /*
-@@ -3385,7 +3388,7 @@ xfs_alloc_vextent_start_ag(
- 	if (!error)
- 		error = xfs_alloc_vextent_finish(args);
- 	if (args->pag) {
--		xfs_perag_put(args->pag);
-+		xfs_perag_rele(args->pag);
- 		args->pag = NULL;
+ 		/* Drop the reference on this AG, it's not usable. */
+ 		atomic_dec(&pag->pagf_fstrms);
+-next_ag:
+-		/* Move to the next AG, wrapping to AG 0 if necessary. */
+-		if (++ag >= mp->m_sb.sb_agcount)
+-			ag = 0;
++	}
+ 
+-		/* If a full pass of the AGs hasn't been done yet, continue. */
+-		if (ag != startag)
+-			continue;
++	if (err) {
++		xfs_perag_rele(pag);
++		if (max_pag)
++			xfs_perag_rele(max_pag);
++		return err;
++	}
+ 
++	if (!pag) {
+ 		/* Allow sleeping in xfs_alloc_read_agf() on the 2nd pass. */
+-		if (trylock != 0) {
++		if (trylock) {
+ 			trylock = 0;
+-			continue;
++			goto restart;
+ 		}
+ 
+ 		/* Finally, if lowspace wasn't set, set it for the 3rd pass. */
+ 		if (!(flags & XFS_PICK_LOWSPACE)) {
+ 			flags |= XFS_PICK_LOWSPACE;
+-			continue;
++			goto restart;
+ 		}
+ 
+ 		/*
+-		 * Take the AG with the most free space, regardless of whether
+-		 * it's already in use by another filestream.
++		 * No unassociated AGs are available, so select the AG with the
++		 * most free space, regardless of whether it's already in use by
++		 * another filestream. It none suit, return NULLAGNUMBER.
+ 		 */
+-		if (max_pag) {
+-			pag = max_pag;
+-			atomic_inc(&pag->pagf_fstrms);
+-			free = maxfree;
+-			break;
++		if (!max_pag) {
++			*agp = NULLAGNUMBER;
++			trace_xfs_filestream_pick(ip, *agp, free, 0);
++			return 0;
+ 		}
+-
+-		/* take AG 0 if none matched */
+-		trace_xfs_filestream_pick(ip, *agp, free, nscan);
+-		*agp = 0;
+-		return 0;
+-	}
+-
+-	trace_xfs_filestream_pick(ip, pag ? pag->pag_agno : NULLAGNUMBER,
+-			free, nscan);
+-
+-	if (max_pag)
++		pag = max_pag;
++		free = maxfree;
++		atomic_inc(&pag->pagf_fstrms);
++	} else if (max_pag) {
+ 		xfs_perag_rele(max_pag);
+-
+-	if (err)
+-		return err;
+-
+-	if (!pag) {
+-		*agp = NULLAGNUMBER;
+-		return 0;
  	}
  
-@@ -3426,7 +3429,7 @@ xfs_alloc_vextent_first_ag(
- 	if (!error)
- 		error = xfs_alloc_vextent_finish(args);
- 	if (args->pag) {
--		xfs_perag_put(args->pag);
-+		xfs_perag_rele(args->pag);
- 		args->pag = NULL;
- 	}
- 	return error;
++	trace_xfs_filestream_pick(ip, pag->pag_agno, free, 0);
++
+ 	err = -ENOMEM;
+ 	item = kmem_alloc(sizeof(*item), KM_MAYFAIL);
+ 	if (!item)
 -- 
 2.35.1
 
