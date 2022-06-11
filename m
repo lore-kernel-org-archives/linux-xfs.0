@@ -2,354 +2,418 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A045C43334
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jun 2022 23:05:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3CC8C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 01:27:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343938AbiFJXFZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jun 2022 19:05:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60268 "EHLO
+        id S1346465AbiFKB1K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jun 2022 21:27:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348656AbiFJXFX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 19:05:23 -0400
-Received: from mail-qv1-xf29.google.com (mail-qv1-xf29.google.com [IPv6:2607:f8b0:4864:20::f29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0EF811463
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 16:05:20 -0700 (PDT)
-Received: by mail-qv1-xf29.google.com with SMTP id l1so607255qvh.1
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 16:05:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=1l6/STObwpusTSDxzxobq9F4ZjYYB8ZnJGWCA+TeZE4=;
-        b=JV+63/gWo3/SSEKci3gDbj2tuoMj11RoKziRK6Iq7CnCEiDaHHeUpLXyU/VfJhR/vR
-         D5StuIuQsguawvxIZyJ/keWrO7+n4QbknKKX0eRO70TJx6GwpSUry7K9solm/pZ5G55g
-         aveSWcFOQSVXi/PmrWQ0Kp07jnXbGEpA9HKcMBpqiwVivq8ePTj5VQKp4L2piVAttIFA
-         b0rpKsRA7HEqj7cAoquESMh6u5lR/86NcdVvRVYyCu/4kZjtJuEsgYxwdF2qvDwfv1DG
-         A8aSZnH2LKIBs/zUcs5+DlFMtnMQNJHJQqL8i55f8+bNmOxt65V+QNyi2uqtCLNanCPT
-         j0fw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=1l6/STObwpusTSDxzxobq9F4ZjYYB8ZnJGWCA+TeZE4=;
-        b=1vuGrZYjTi3P20okqH5P8Qgtxr18oOuewsyZZIXN0fGQ+JREHnP5b3nmmPwt4dj03h
-         nGByQNWCaYzmVgU147Sl1NSd52wHF7bJy7VBGz1ltEYnqDzhRuny+oLkIPlLBfgCNGzc
-         VjE9oJ/w7ZDQCV/pswwO11rsCHAq+og/PY980uk4H3UGOmHA13ui7vE5fNzQ5sVYYg85
-         75e+5QkVctSkXfNPgjYHT2ODY8wuMAFExqCLdRkv9hc+2BZj3gay0vjkrOvTWhCWRmov
-         1kcu060aP84W+x5+NlSO+ne27b12vtQZO4Tw0xua+vQGyKriF5IC3MGz+XDiktYgQcMs
-         UoaQ==
-X-Gm-Message-State: AOAM533GaPK4VewzIe6V2xiYmf71SEpvpl1UPmadqZJ1ZFN+2e6xZ/FG
-        hwL7/LMjvs1SwNLThUOYti0=
-X-Google-Smtp-Source: ABdhPJyj4E4HDT+39vsVxIvX2YXBf+20GXt8mlVraA/HGNfvaSlwbGnmshYm27k1phTgOJ2LBjHO6Q==
-X-Received: by 2002:a05:6214:1d25:b0:464:55a9:48df with SMTP id f5-20020a0562141d2500b0046455a948dfmr47202902qvd.113.1654902319815;
-        Fri, 10 Jun 2022 16:05:19 -0700 (PDT)
-Received: from ?IPV6:2601:18f:801:dd40:c38c:a019:12ef:edc9? ([2601:18f:801:dd40:c38c:a019:12ef:edc9])
-        by smtp.gmail.com with ESMTPSA id c20-20020ac84e14000000b00304bbcc1b8asm278573qtw.28.2022.06.10.16.05.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 10 Jun 2022 16:05:19 -0700 (PDT)
-Message-ID: <aed54ce4-e1bf-39f7-cf91-a67e29f59d52@gmail.com>
-Date:   Fri, 10 Jun 2022 19:05:16 -0400
+        with ESMTP id S1346654AbiFKB1J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 21:27:09 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 130023A4813
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 18:27:05 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 44D6F5EC7E4
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 11:27:03 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nzpu3-005AOn-EY
+        for linux-xfs@vger.kernel.org; Sat, 11 Jun 2022 11:27:03 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.95)
+        (envelope-from <david@fromorbit.com>)
+        id 1nzpu3-00ELLl-DP
+        for linux-xfs@vger.kernel.org;
+        Sat, 11 Jun 2022 11:27:03 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 15/50] xfs: active perag reference counting
+Date:   Sat, 11 Jun 2022 11:26:24 +1000
+Message-Id: <20220611012659.3418072-16-david@fromorbit.com>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220611012659.3418072-1-david@fromorbit.com>
+References: <20220611012659.3418072-1-david@fromorbit.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Subject: Re: [RFC PATCH v2] xfsrestore: fix rootdir due to xfsdump bulkstat
- misuse
-Content-Language: en-US
-To:     Gao Xiang <hsiangkao@redhat.com>, linux-xfs@vger.kernel.org
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        Donald Douwsma <ddouwsma@redhat.com>
-References: <20201113125127.966243-1-hsiangkao@redhat.com>
- <20201116080723.1486270-1-hsiangkao@redhat.com>
-From:   Hironori Shiina <shiina.hironori@gmail.com>
-In-Reply-To: <20201116080723.1486270-1-hsiangkao@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62a3ef68
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=PRkkLlb27XPojcOo628A:9
+        a=nzbRRBgF3B2C-GGZ:21
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Dave Chinner <dchinner@redhat.com>
 
+We need to be able to dynamically remove instantiated AGs from
+memory safely, either for shrinking the filesystem or paging AG
+state in and out of memory (e.g. supporting millions of AGs). This
+means we need to be able to safely exclude operations from accessing
+perags while dynamic removal is in progress.
 
-On 11/16/20 03:07, Gao Xiang wrote:
-> If rootino is wrong and misspecified to a subdir inode #,
-> the following assertion could be triggered:
->   assert(ino != persp->p_rootino || hardh == persp->p_rooth);
-> 
-> This patch adds a '-x' option (another awkward thing is that
-> the codebase doesn't support long options) to address
-> problamatic images by searching for the real dir, the reason
-> that I don't enable it by default is that I'm not very confident
-> with the xfsrestore codebase and xfsdump bulkstat issue will
-> also be fixed immediately as well, so this function might be
-> optional and only useful for pre-exist corrupted dumps.
+To do this, introduce the concept of active and passive references.
+Active references are required for high level operations that make
+use of an AG for a given operation (e.g. allocation) and pin the
+perag in memory for the duration of the operation that is operating
+on the perag (e.g. transaction scope). This means we can fail to get
+an active reference to an AG, hence callers of the new active
+reference API must be able to handle lookup failure gracefully.
 
-I agree that this function is optional for another reason. This fix
-cannot be the default behavior because of a workaround for a case where
-a fake root's gen is zero. This workaround prevents a correct dump
-without a fake root from being restored.
+Passive references are used in low level code, where we might need
+to access the perag structure for the purposes of completing high
+level operations. For example, buffers need to use passive
+references because:
+- we need to be able to do metadata IO during operations like grow
+  and shrink transactions where high level active references to the
+  AG have already been blocked
+- buffers need to pin the perag until they are reclaimed from
+  memory, something that high level code has no direct control over.
+- unused cached buffers should not prevent a shrink from being
+  started.
 
-> 
-> In details, my understanding of the original logic is
->  1) xfsrestore will create a rootdir node_t (p_rooth);
->  2) it will build the tree hierarchy from inomap and adopt
->     the parent if needed (so inodes whose parent ino hasn't
->     detected will be in the orphan dir, p_orphh);
->  3) during this period, if ino == rootino and
->     hardh != persp->p_rooth (IOWs, another node_t with
->     the same ino # is created), that'd be definitely wrong.
-> 
-> So the proposal fix is that
->  - considering the xfsdump root ino # is a subdir inode, it'll
->    trigger ino == rootino && hardh != persp->p_rooth condition;
->  - so we log this node_t as persp->p_rooth rather than the
->    initial rootdir node_t created in 1);
->  - we also know that this node is actually a subdir, and after
->    the whole inomap is scanned (IOWs, the tree is built),
->    the real root dir will have the orphan dir parent p_orphh;
->  - therefore, we walk up by the parent until some node_t has
->    the p_orphh, so that's it.
-> 
-> Cc: Donald Douwsma <ddouwsma@redhat.com>
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> ---
-> changes since RFC v1:
->  - fix non-dir fake rootino cases since tree_begindir()
->    won't be triggered for these non-dir, and we could do
->    that in tree_addent() instead (fault injection verified);
-> 
->  - fix fake rootino case with gen = 0 as well, for more
->    details, see the inlined comment in link_hardh()
->    (fault injection verified as well).
-> 
-> Anyway, all of this behaves like a workaround and I have
-> no idea how to deal it more gracefully.
-> 
->  restore/content.c |  7 +++++
->  restore/getopt.h  |  4 +--
->  restore/tree.c    | 70 ++++++++++++++++++++++++++++++++++++++++++++---
->  restore/tree.h    |  2 ++
->  4 files changed, 77 insertions(+), 6 deletions(-)
-> 
-> diff --git a/restore/content.c b/restore/content.c
-> index 6b22965..e807a83 100644
-> --- a/restore/content.c
-> +++ b/restore/content.c
-> @@ -865,6 +865,7 @@ static int quotafilecheck(char *type, char *dstdir, char *quotafile);
->  
->  bool_t content_media_change_needed;
->  bool_t restore_rootdir_permissions;
-> +bool_t need_fixrootdir;
->  char *media_change_alert_program = NULL;
->  size_t perssz;
->  
-> @@ -964,6 +965,7 @@ content_init(int argc, char *argv[], size64_t vmsz)
->  	stsz = 0;
->  	interpr = BOOL_FALSE;
->  	restore_rootdir_permissions = BOOL_FALSE;
-> +	need_fixrootdir = BOOL_FALSE;
->  	optind = 1;
->  	opterr = 0;
->  	while ((c = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
-> @@ -1189,6 +1191,9 @@ content_init(int argc, char *argv[], size64_t vmsz)
->  		case GETOPT_FMT2COMPAT:
->  			tranp->t_truncategenpr = BOOL_TRUE;
->  			break;
-> +		case GETOPT_FIXROOTDIR:
-> +			need_fixrootdir = BOOL_TRUE;
-> +			break;
->  		}
->  	}
->  
-> @@ -3140,6 +3145,8 @@ applydirdump(drive_t *drivep,
->  			return rv;
->  		}
->  
-> +		if (need_fixrootdir)
-> +			tree_fixroot();
->  		persp->s.dirdonepr = BOOL_TRUE;
->  	}
->  
-> diff --git a/restore/getopt.h b/restore/getopt.h
-> index b5bc004..b0c0c7d 100644
-> --- a/restore/getopt.h
-> +++ b/restore/getopt.h
-> @@ -26,7 +26,7 @@
->   * purpose is to contain that command string.
->   */
->  
-> -#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JKL:M:NO:PQRS:TUVWX:Y:"
-> +#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wxABCDEFG:H:I:JKL:M:NO:PQRS:TUVWX:Y:"
->  
->  #define GETOPT_WORKSPACE	'a'	/* workspace dir (content.c) */
->  #define GETOPT_BLOCKSIZE        'b'     /* blocksize for rmt */
-> @@ -51,7 +51,7 @@
->  /*				'u' */
->  #define	GETOPT_VERBOSITY	'v'	/* verbosity level (0 to 4) */
->  #define	GETOPT_SMALLWINDOW	'w'	/* use a small window for dir entries */
-> -/*				'x' */
-> +#define GETOPT_FIXROOTDIR	'x'	/* try to fix rootdir due to bulkstat misuse */
->  /*				'y' */
->  /*				'z' */
->  #define	GETOPT_NOEXTATTR	'A'	/* do not restore ext. file attr. */
-> diff --git a/restore/tree.c b/restore/tree.c
-> index 0670318..918fa01 100644
-> --- a/restore/tree.c
-> +++ b/restore/tree.c
-> @@ -15,7 +15,6 @@
->   * along with this program; if not, write the Free Software Foundation,
->   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->   */
-> -
->  #include <stdio.h>
->  #include <unistd.h>
->  #include <stdlib.h>
-> @@ -265,6 +264,7 @@ extern void usage(void);
->  extern size_t pgsz;
->  extern size_t pgmask;
->  extern bool_t restore_rootdir_permissions;
-> +extern bool_t need_fixrootdir;
->  
->  /* forward declarations of locally defined static functions ******************/
->  
-> @@ -331,10 +331,45 @@ static tran_t *tranp = 0;
->  static char *persname = PERS_NAME;
->  static char *orphname = ORPH_NAME;
->  static xfs_ino_t orphino = ORPH_INO;
-> +static nh_t orig_rooth = NH_NULL;
->  
->  
->  /* definition of locally defined global functions ****************************/
->  
-> +void
-> +tree_fixroot(void)
-> +{
-> +	nh_t		rooth = persp->p_rooth;
-> +	xfs_ino_t 	rootino;
-> +
-> +	while (1) {
-> +		nh_t	parh;
-> +		node_t *rootp = Node_map(rooth);
-> +
-> +		rootino = rootp->n_ino;
-> +		parh = rootp->n_parh;
-> +		Node_unmap(rooth, &rootp);
-> +
-> +		if (parh == rooth ||
-> +		/*
-> +		 * since all new node (including non-parent)
-> +		 * would be adopted into orphh
-> +		 */
-> +		    parh == persp->p_orphh ||
-> +		    parh == NH_NULL)
-> +			break;
-> +		rooth = parh;
-> +	}
-> +
-> +	if (rooth != persp->p_rooth) {
-> +		persp->p_rooth = rooth;
-> +		persp->p_rootino = rootino;
-> +
+Hence we have active references that will form exclusion barriers
+for operations to be performed on an AG, and passive references that
+will prevent reclaim of the perag until all objects with passive
+references have been reclaimed themselves.
 
-As far as I see intialization for a root in tree_init(), isn't it
-necessary to adopt the orphanage node(persp->p_orphh) to the new root?
+This patch introduce xfs_perag_grab()/xfs_perag_rele() as the API
+for active AG reference functionality. We also need to convert the
+for_each_perag*() iterators to use active references, which will
+start the process of converting high level code over to using active
+references. Conversion of non-iterator based code to active
+references will be done in followup patches.
 
-> +		mlog(MLOG_NORMAL, _("fix root # to %llu (bind mount?)\n"),
-> +		     rootino);
-> +	}
-> +}
-> +
->  /* ARGSUSED */
->  bool_t
->  tree_init(char *hkdir,
-> @@ -754,7 +789,8 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
->  	/* lookup head of hardlink list
->  	 */
->  	hardh = link_hardh(ino, gen);
-> -	assert(ino != persp->p_rootino || hardh == persp->p_rooth);
-> +	if (need_fixrootdir == BOOL_FALSE)
-> +		assert(ino != persp->p_rootino || hardh == persp->p_rooth);
->  
->  	/* already present
->  	 */
-> @@ -823,7 +859,6 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
->  		adopt(persp->p_orphh, hardh, NRH_NULL);
->  		*dahp = dah;
->  	}
-> -
->  	return hardh;
->  }
->  
-> @@ -968,6 +1003,7 @@ tree_addent(nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen)
->  				}
->  			} else {
->  				assert(hardp->n_nrh != NRH_NULL);
-> +
->  				namebuflen
->  				=
->  				namreg_get(hardp->n_nrh,
-> @@ -1118,6 +1154,13 @@ tree_addent(nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen)
->  		      ino,
->  		      gen);
->  	}
-> +	/* found the fake rootino from subdir, need fix p_rooth. */
-> +	if (need_fixrootdir == BOOL_TRUE &&
-> +	    persp->p_rootino == ino && hardh != persp->p_rooth) {
-> +		mlog(MLOG_NORMAL,
-> +		     _("found fake rootino #%llu, will fix.\n"), ino);
-> +		persp->p_rooth = hardh;
-> +	}
->  	return RV_OK;
->  }
->  
-> @@ -3841,7 +3884,26 @@ selsubtree_recurse_down(nh_t nh, bool_t sensepr)
->  static nh_t
->  link_hardh(xfs_ino_t ino, gen_t gen)
->  {
-> -	return hash_find(ino, gen);
-> +	nh_t tmp = hash_find(ino, gen);
-> +
-> +	/*
-> +	 * XXX (another workaround): the simply way is that don't reuse node_t
-> +	 * with gen = 0 created in tree_init(). Otherwise, it could cause
-> +	 * xfsrestore: tree.c:1003: tree_addent: Assertion
-> +	 * `hardp->n_nrh != NRH_NULL' failed.
-> +	 * and that node_t is a dir node but the fake rootino could be a non-dir
-> +	 * plus reusing it could cause potential loop in tree hierarchy.
-> +	 */
-> +	if (need_fixrootdir == BOOL_TRUE &&
-> +	    ino == persp->p_rootino && gen == 0 &&
-> +	    orig_rooth == NH_NULL) {
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ag.c    | 74 +++++++++++++++++++++++++++++++++++++--
+ fs/xfs/libxfs/xfs_ag.h    | 31 +++++++++++-----
+ fs/xfs/scrub/bmap.c       |  2 +-
+ fs/xfs/scrub/fscounters.c |  4 +--
+ fs/xfs/xfs_fsmap.c        |  4 +--
+ fs/xfs/xfs_icache.c       |  2 +-
+ fs/xfs/xfs_iwalk.c        |  6 ++--
+ fs/xfs/xfs_reflink.c      |  2 +-
+ fs/xfs/xfs_trace.h        |  3 ++
+ 9 files changed, 107 insertions(+), 21 deletions(-)
 
-As I mentioned above, this workaround makes this correction optional.
-This workaround assumes the initially created root is fake. If a dump is
-created correctly without a fake root, this function returns NH_NULL for
-the correct root.
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 49e1ef2f0b9a..ae5b91d7fa5f 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -94,6 +94,68 @@ xfs_perag_put(
+ 	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
+ }
+ 
++/*
++ * Active references for perag structures. This is for short term access to the
++ * per ag structures for walking trees or accessing state. If an AG is being
++ * shrunk or is offline, then this will fail to find that AG and return NULL
++ * instead.
++ */
++struct xfs_perag *
++xfs_perag_grab(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	struct xfs_perag	*pag;
++
++	rcu_read_lock();
++	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
++	if (pag) {
++		trace_xfs_perag_grab(mp, pag->pag_agno,
++				atomic_read(&pag->pag_active_ref), _RET_IP_);
++		if (!atomic_inc_not_zero(&pag->pag_active_ref))
++			pag = NULL;
++	}
++	rcu_read_unlock();
++	return pag;
++}
++
++/*
++ * search from @first to find the next perag with the given tag set.
++ */
++struct xfs_perag *
++xfs_perag_grab_tag(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		first,
++	int			tag)
++{
++	struct xfs_perag	*pag;
++	int			found;
++
++	rcu_read_lock();
++	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
++					(void **)&pag, first, 1, tag);
++	if (found <= 0) {
++		rcu_read_unlock();
++		return NULL;
++	}
++	trace_xfs_perag_grab_tag(mp, pag->pag_agno,
++			atomic_read(&pag->pag_active_ref), _RET_IP_);
++	if (!atomic_inc_not_zero(&pag->pag_active_ref))
++		pag = NULL;
++	rcu_read_unlock();
++	return pag;
++}
++
++void
++xfs_perag_rele(
++	struct xfs_perag	*pag)
++{
++	trace_xfs_perag_rele(pag->pag_mount, pag->pag_agno,
++			atomic_read(&pag->pag_active_ref), _RET_IP_);
++	if (atomic_dec_and_test(&pag->pag_active_ref))
++		wake_up(&pag->pag_active_wq);
++}
++
+ /*
+  * xfs_initialize_perag_data
+  *
+@@ -191,12 +253,15 @@ xfs_free_perag(
+ 		pag = radix_tree_delete(&mp->m_perag_tree, agno);
+ 		spin_unlock(&mp->m_perag_lock);
+ 		ASSERT(pag);
+-		XFS_IS_CORRUPT(pag->pag_mount, atomic_read(&pag->pag_ref) != 0);
++		XFS_IS_CORRUPT(mp, atomic_read(&pag->pag_ref) != 0);
+ 
+ 		cancel_delayed_work_sync(&pag->pag_blockgc_work);
+ 		xfs_iunlink_destroy(pag);
+ 		xfs_buf_hash_destroy(pag);
+ 
++		/* drop the mount's active reference */
++		xfs_perag_rele(pag);
++		XFS_IS_CORRUPT(mp, atomic_read(&pag->pag_active_ref) != 0);
+ 		call_rcu(&pag->rcu_head, __xfs_free_perag);
+ 	}
+ }
+@@ -315,6 +380,7 @@ xfs_initialize_perag(
+ 		INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
+ 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+ 		init_waitqueue_head(&pag->pagb_wait);
++		init_waitqueue_head(&pag->pag_active_wq);
+ 		pag->pagb_count = 0;
+ 		pag->pagb_tree = RB_ROOT;
+ #endif /* __KERNEL__ */
+@@ -327,6 +393,9 @@ xfs_initialize_perag(
+ 		if (error)
+ 			goto out_hash_destroy;
+ 
++		/* Active ref owned by mount indicates AG is online. */
++		atomic_set(&pag->pag_active_ref, 1);
++
+ 		/* first new pag is fully initialized */
+ 		if (first_initialised == NULLAGNUMBER)
+ 			first_initialised = index;
+@@ -363,7 +432,8 @@ xfs_initialize_perag(
+ 			break;
+ 		xfs_buf_hash_destroy(pag);
+ 		xfs_iunlink_destroy(pag);
+-		kmem_free(pag);
++		xfs_perag_rele(pag);
++		__xfs_free_perag(&pag->rcu_head);
+ 	}
+ 	return error;
+ }
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 75f7c10c110a..b36d5725c91c 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -32,7 +32,9 @@ struct xfs_ag_resv {
+ struct xfs_perag {
+ 	struct xfs_mount *pag_mount;	/* owner filesystem */
+ 	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
+-	atomic_t	pag_ref;	/* perag reference count */
++	atomic_t	pag_ref;	/* passive reference count */
++	atomic_t	pag_active_ref;	/* active reference count */
++	wait_queue_head_t pag_active_wq;/* woken active_ref falls to zero */
+ 	char		pagf_init;	/* this agf's entry is initialized */
+ 	char		pagi_init;	/* this agi's entry is initialized */
+ 	char		pagf_metadata;	/* the agf is preferred to be metadata */
+@@ -117,11 +119,18 @@ int xfs_initialize_perag(struct xfs_mount *mp, xfs_agnumber_t agcount,
+ int xfs_initialize_perag_data(struct xfs_mount *mp, xfs_agnumber_t agno);
+ void xfs_free_perag(struct xfs_mount *mp);
+ 
++/* Passive AG references */
+ struct xfs_perag *xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno);
+ struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 		unsigned int tag);
+ void xfs_perag_put(struct xfs_perag *pag);
+ 
++/* Active AG references */
++struct xfs_perag *xfs_perag_grab(struct xfs_mount *, xfs_agnumber_t);
++struct xfs_perag *xfs_perag_grab_tag(struct xfs_mount *, xfs_agnumber_t,
++				   int tag);
++void xfs_perag_rele(struct xfs_perag *pag);
++
+ /*
+  * Per-ag geometry infomation and validation
+  */
+@@ -184,14 +193,18 @@ xfs_perag_next(
+ 	struct xfs_mount	*mp = pag->pag_mount;
+ 
+ 	*agno = pag->pag_agno + 1;
+-	xfs_perag_put(pag);
+-	if (*agno > end_agno)
+-		return NULL;
+-	return xfs_perag_get(mp, *agno);
++	xfs_perag_rele(pag);
++	while (*agno <= end_agno) {
++		pag = xfs_perag_grab(mp, *agno);
++		if (pag)
++			return pag;
++		(*agno)++;
++	}
++	return NULL;
+ }
+ 
+ #define for_each_perag_range(mp, agno, end_agno, pag) \
+-	for ((pag) = xfs_perag_get((mp), (agno)); \
++	for ((pag) = xfs_perag_grab((mp), (agno)); \
+ 		(pag) != NULL; \
+ 		(pag) = xfs_perag_next((pag), &(agno), (end_agno)))
+ 
+@@ -204,11 +217,11 @@ xfs_perag_next(
+ 	for_each_perag_from((mp), (agno), (pag))
+ 
+ #define for_each_perag_tag(mp, agno, pag, tag) \
+-	for ((agno) = 0, (pag) = xfs_perag_get_tag((mp), 0, (tag)); \
++	for ((agno) = 0, (pag) = xfs_perag_grab_tag((mp), 0, (tag)); \
+ 		(pag) != NULL; \
+ 		(agno) = (pag)->pag_agno + 1, \
+-		xfs_perag_put(pag), \
+-		(pag) = xfs_perag_get_tag((mp), (agno), (tag)))
++		xfs_perag_rele(pag), \
++		(pag) = xfs_perag_grab_tag((mp), (agno), (tag)))
+ 
+ struct aghdr_init_data {
+ 	/* per ag data */
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 9353fd060525..81245c66590f 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -605,7 +605,7 @@ xchk_bmap_check_rmaps(
+ 			break;
+ 	}
+ 	if (pag)
+-		xfs_perag_put(pag);
++		xfs_perag_rele(pag);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index 6a6f8fe7f87c..3706296c61b6 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -105,7 +105,7 @@ xchk_fscount_warmup(
+ 	if (agi_bp)
+ 		xfs_buf_relse(agi_bp);
+ 	if (pag)
+-		xfs_perag_put(pag);
++		xfs_perag_rele(pag);
+ 	return error;
+ }
+ 
+@@ -224,7 +224,7 @@ xchk_fscount_aggregate_agcounts(
+ 
+ 	}
+ 	if (pag)
+-		xfs_perag_put(pag);
++		xfs_perag_rele(pag);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index d8337274c74d..ca80ad703e06 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -688,11 +688,11 @@ __xfs_getfsmap_datadev(
+ 		info->agf_bp = NULL;
+ 	}
+ 	if (info->pag) {
+-		xfs_perag_put(info->pag);
++		xfs_perag_rele(info->pag);
+ 		info->pag = NULL;
+ 	} else if (pag) {
+ 		/* loop termination case */
+-		xfs_perag_put(pag);
++		xfs_perag_rele(pag);
+ 	}
+ 
+ 	return error;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 5269354b1b69..f2b0ca0453d6 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1759,7 +1759,7 @@ xfs_icwalk(
+ 		if (error) {
+ 			last_error = error;
+ 			if (error == -EFSCORRUPTED) {
+-				xfs_perag_put(pag);
++				xfs_perag_rele(pag);
+ 				break;
+ 			}
+ 		}
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index 7558486f4937..c31857d903a4 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -591,7 +591,7 @@ xfs_iwalk(
+ 	}
+ 
+ 	if (iwag.pag)
+-		xfs_perag_put(pag);
++		xfs_perag_rele(pag);
+ 	xfs_iwalk_free(&iwag);
+ 	return error;
+ }
+@@ -683,7 +683,7 @@ xfs_iwalk_threaded(
+ 			break;
+ 	}
+ 	if (pag)
+-		xfs_perag_put(pag);
++		xfs_perag_rele(pag);
+ 	if (polled)
+ 		xfs_pwork_poll(&pctl);
+ 	return xfs_pwork_destroy(&pctl);
+@@ -776,7 +776,7 @@ xfs_inobt_walk(
+ 	}
+ 
+ 	if (iwag.pag)
+-		xfs_perag_put(pag);
++		xfs_perag_rele(pag);
+ 	xfs_iwalk_free(&iwag);
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index d2328cc26ddf..1243f0ea8dd8 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -799,7 +799,7 @@ xfs_reflink_recover_cow(
+ 	for_each_perag(mp, agno, pag) {
+ 		error = xfs_refcount_recover_cow_leftovers(mp, pag);
+ 		if (error) {
+-			xfs_perag_put(pag);
++			xfs_perag_rele(pag);
+ 			break;
+ 		}
+ 	}
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index d32026585c1b..32efed970b73 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -189,6 +189,9 @@ DEFINE_EVENT(xfs_perag_class, name,	\
+ DEFINE_PERAG_REF_EVENT(xfs_perag_get);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_get_tag);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_put);
++DEFINE_PERAG_REF_EVENT(xfs_perag_grab);
++DEFINE_PERAG_REF_EVENT(xfs_perag_grab_tag);
++DEFINE_PERAG_REF_EVENT(xfs_perag_rele);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_set_inode_tag);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_clear_inode_tag);
+ 
+-- 
+2.35.1
 
-
-Thanks,
-Hironori
-
-> +		mlog(MLOG_NORMAL,
-> +_("link out fake rootino %llu with gen=0 created in tree_init()\n"), ino);
-> +		link_out(tmp);
-> +		orig_rooth = tmp;
-> +		return NH_NULL;
-> +	}
-> +	return tmp;
->  }
->  
->  /* returns following node in hard link list
-> diff --git a/restore/tree.h b/restore/tree.h
-> index 4f9ffe8..5d0c346 100644
-> --- a/restore/tree.h
-> +++ b/restore/tree.h
-> @@ -18,6 +18,8 @@
->  #ifndef TREE_H
->  #define TREE_H
->  
-> +void tree_fixroot(void);
-> +
->  /* tree_init - creates a new tree abstraction.
->   */
->  extern bool_t tree_init(char *hkdir,
