@@ -2,291 +2,232 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D37ACCA47A
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 11:11:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58834C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 12:05:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233016AbiFKLLY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Jun 2022 07:11:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36732 "EHLO
+        id S229702AbiFKMFS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Jun 2022 08:05:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230298AbiFKLLW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Jun 2022 07:11:22 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BB5925E0;
-        Sat, 11 Jun 2022 04:11:22 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25B1hoUU021293;
-        Sat, 11 Jun 2022 11:11:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=/edaxxTxfVmDvup0m7uiLWYG4r6SWz3OjcGSz2WwaLg=;
- b=V+5NxQaJfHWJjxJqbGUojmb7nwxh5Kk7tlqwMQfQNGIP9y/gps8jQjnmVLfxXeUshRN5
- t/fYIaBaEmbDosIzl9nfNIplVkugtb7JX3bNA68wgbNSNMCeyQhF6rcFBvXaygBvOyNq
- cPe0gmyBzKAJMmVmV4qMthfA3FhmhjKVLjko/ZpQp8eDDMnZqNnfMYudaVT9gcEB3cmt
- xC3TqU6c3u998QXiDzvzV+KoTgDQnn25v3Usah3zaiQbkj0Nhlr2xydPzZ4Yeb9JZ2+Y
- ErHHEG4C0skavaHlqQJda7VR+if/xeQQRaeQj4TFGpStwHUgKbJXszOcZq6TYWrFG71E gg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gmhn08e73-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 11 Jun 2022 11:11:16 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 25BBAinM012617;
-        Sat, 11 Jun 2022 11:11:15 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2106.outbound.protection.outlook.com [104.47.58.106])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gmhg0q4n8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 11 Jun 2022 11:11:15 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ItC/iColtK7nCMLhs3NS83troOGKG9bf9h9W8sTgcg2hzTJoUu7a663cX/kXBws2X3FF+jNt1BNDYulqaJP/izEpZ3bOyJdvLJqcpuDCBYXoqzBHGqOfTANDB5PhBEh7AgBPxk0++yLJkypO56gMARf42JiLBtbxTNfb6jYR4b/LmK9k7NWj9eWa7DVy2BMM5gw7uPmzm5LFV6ntulNlI6nZYzg0doO5yaq1KD6qnWXZeg1LfGoaQvTIee87ZMpI8GTQn0j/JGQVoc0FImbPEWDqteHAqwffDxWMAzY17PbmIeqFhEhUsK7sRKiYFu3+3NYSweuyY8Q/AoskYEcLbg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/edaxxTxfVmDvup0m7uiLWYG4r6SWz3OjcGSz2WwaLg=;
- b=Ies7QqnO0fDsUs7Pldz8z+oTg2DQw/UApcudelTVsfsOReGXziL6CmHjzoRHYVdcqV0ZfSvZp3J3J35Eja8RaVwi0bMhbIbTLY1dVTmg1/7CoU6dWqLNoAB+C+x0RAyDjeOcS5t6ehOIRHOBA/hu6epmgCTsr/BvdGBZgmMwTSnv5rfhBi7sJF0svFZreMh1sYZoUt3vQ4mNsYOS+quMNzgPnIlpJ33LZZgdx+H6KxPfjGwLL3pIhAt397iRyndZvI3QUIm9HL30eb+btEfSPJOyHxyu033zxnBR7lTlQ77jAT1DReaZW842CLRLoKNQqDpkjoYms8e5TZM0lE/TxA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/edaxxTxfVmDvup0m7uiLWYG4r6SWz3OjcGSz2WwaLg=;
- b=nzo65ut6jA8tvr56sFDn0ABDCBHDqpNh9KUvjjXD1TDbyZO2cOqOFvI9yKRqVUntL4CAisXeO81ReqwkR7MrCYUdvrjf6sjaq4qd1uQgtUDLjnmf2TOgaO7B+jDgj/ZH1tpAzhoR9uCs9xQwCUsKlA0s6VFpwfuSQoj4w/WzJ60=
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by BN8PR10MB3313.namprd10.prod.outlook.com (2603:10b6:408:c1::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.17; Sat, 11 Jun
- 2022 11:11:13 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::ec25:bdae:c65c:b24a]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::ec25:bdae:c65c:b24a%7]) with mapi id 15.20.5332.016; Sat, 11 Jun 2022
- 11:11:13 +0000
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     fstests@vger.kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, zlang@kernel.org,
-        david@fromorbit.com, djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH V3 4/4] xfs: Verify correctness of upgrading an fs to support large extent counters
-Date:   Sat, 11 Jun 2022 16:40:37 +0530
-Message-Id: <20220611111037.433134-5-chandan.babu@oracle.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220611111037.433134-1-chandan.babu@oracle.com>
-References: <20220611111037.433134-1-chandan.babu@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TYBP286CA0014.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:404:ce::26) To SA2PR10MB4587.namprd10.prod.outlook.com
- (2603:10b6:806:114::12)
+        with ESMTP id S229666AbiFKMFQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Jun 2022 08:05:16 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C09DA5F8DC
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 05:05:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654949114; x=1686485114;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=c8jpIECE/4M3UyY7k6eH/d+HR7cbnurf/n6xr6qEuKQ=;
+  b=ew5vF8dS+D/sdPWOuLKzk0c1Yp5qY7f9PVh/eEyU8GWbu4fsHnNKot1S
+   YdvN4sFPJnEjmkxWzf55ajQPBuiJihxjNAdkwP/OMiau0NGPrQ0EwayJT
+   PwufY7MtlhLFHGf9s1ybCJZh4FaEnLN6d5tLskkZIpIIJgnvKMKso8w7L
+   uJmF1sEEXlAqm7GUyPxYczGGi3Q3pke9qmeIglHlnbBhIggPfXaz4MUs0
+   ohdGdwkTLRgzSYksy6ZzJnkAtyCgs708pjZGiYM4fIToIotjwoOGGa+8b
+   i/4yApNB3cdCmM42l8ARvqeI9p2rkuZXfU2dyAcJ4q2KMzSKlxnG8S1fb
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10374"; a="364204275"
+X-IronPort-AV: E=Sophos;i="5.91,293,1647327600"; 
+   d="scan'208";a="364204275"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2022 05:05:14 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,293,1647327600"; 
+   d="scan'208";a="638681999"
+Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
+  by fmsmga008.fm.intel.com with ESMTP; 11 Jun 2022 05:05:12 -0700
+Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nzzrc-000IrR-8B;
+        Sat, 11 Jun 2022 12:05:12 +0000
+Date:   Sat, 11 Jun 2022 20:04:41 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org
+Subject: Re: [PATCH 05/50] xfs: pass perag to xfs_alloc_read_agf()
+Message-ID: <202206111958.cftnGbOr-lkp@intel.com>
+References: <20220611012659.3418072-6-david@fromorbit.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 53e1fb49-f0f7-4609-d2d7-08da4b9b18cd
-X-MS-TrafficTypeDiagnostic: BN8PR10MB3313:EE_
-X-Microsoft-Antispam-PRVS: <BN8PR10MB3313EF109B11104F973E28EDF6A99@BN8PR10MB3313.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 6Txos/KHWS5zwJ0IgfGbPD59r6ec8+HLFIVuFuCymsLLqZRFOi6D/iAh1ES7xfre8qIjqEiSe0kSPIufN6vg/ml0ooBKGh04cZziqE5FNdmWLyugfhrM4tLl7uZUkn7o7H65MHUYYC+g587h3UkIfJdepQ5CbR4hGLcZSAoxaQE6rZjv7aLcM2XKLdV7dv58eYzewSZNIlrKVG0qC3nINgZmUheTawfp90uR0zqQqMzn0ioDTyPqrgSeaTQMPMXkzuLMUuUssYnhZn+Q9IRAA6UQLlI2P9zjncifM1HLrJ/m39SmcTBUiO0ICpIACKVhF52WlfoloPLNRvoqUdmYW7VQEWI23qJuhW73jUQdLm3+DisDkGfJ2u7XH3u71Q7LWLwT97/YZjTo2BqYGjTjOCg7KV1xVl1VreNwrzA7EVnAZ1lUwHJ6VstrJVqJ3O2+JTudD6QPnbeqt7GKXrMKJ81pr0Cm7b4kgYPs6oHbifn9co0aSkBrBeKPgiiG2mMcSqzJllx5jazjUsa7XNxhkiZ+mlAB7V/ohu1u4jd1KZWZkcIWjA7hlX9623LBgjop2NtbiK4T09o1LzsNMty2QuBq7xg4k6styverxOJ4v4RddkWDvZWRJ+dI/bYSfqlHCnSjy1XRcYO1uuhnUm26dE3htf7FRz8YpXA7nENGIo7a3/9l+oOvKGMM/woxvud2x8Vlh7oS3Qn1TR8xp7jqiA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(366004)(316002)(186003)(2906002)(1076003)(83380400001)(6916009)(15650500001)(2616005)(36756003)(26005)(66556008)(8936002)(6666004)(508600001)(8676002)(4326008)(66946007)(66476007)(6512007)(5660300002)(6506007)(52116002)(6486002)(38100700002)(86362001)(38350700002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Kf8ZUvZ7iND8S6SPizNmjAPonb4xaIomwenp2Y+xxi6ykbXTiCRIjsBJYOhR?=
- =?us-ascii?Q?HygyPbK+0F7Oef4wok0ir10Qfl5v6QliyEd01MjCzFjyKVMEdXByq+VDbrf9?=
- =?us-ascii?Q?IREE1uUwXeVLQYC0LRPTDOFzGtOfpiWdWsI78i3AhgyQgP2Xawc7wpBgMWHx?=
- =?us-ascii?Q?fGxwjMTyMg+0+6oyiR2Bq445wUL6v5gvlzl1iHpo0mTp0/DH5UboKRjQPEF/?=
- =?us-ascii?Q?NxP2IdZzerKWWdveVmCy1L++H5u/h8q3zCVMOOiG4DFUT3qCxYViRIEBxDQu?=
- =?us-ascii?Q?0fo6+1Fgdl8PBpDv70OfSbfBzaVKSPk6Le+mhrhi5IAkqKhqUPZLxvyZzPgp?=
- =?us-ascii?Q?VLK1l63Lwsv0MoIxqX00JFIhv16LIxyCX5FrVE8Hgqilq6nRS93wxO3lFwCF?=
- =?us-ascii?Q?y+NE78+vjiasl/9/ZdtQA+HwpylIpAHvGR6ot8XI9hrHL4c9U2sVlA7JJJSf?=
- =?us-ascii?Q?UlEZKrl0+mJ2eYcikRrLnPMgwnLcuk+Z4BFmIW94VtMmVF8MBou9ipGWc6Ju?=
- =?us-ascii?Q?2HqQT9F7q4nEB5j3SJ3vKI/IntYfK+GSOF0FdOx9e6jJCDrahUinv4IdEr/Z?=
- =?us-ascii?Q?wns3iWqxbbSRROgAH/29sKdkmPjEc5M1JGcPOquoSv/t49a5LynI3U7bf19a?=
- =?us-ascii?Q?slj5rHu9a2NAYgdtWPEY8vat4qSkfLTEFJ1EkS+dTrZ5Mk0H7kBbH8qbp98X?=
- =?us-ascii?Q?8zfTX+g9LWmmWMBTeKeJFAV4KLQYHQ1t02jLSPyEwVqUZXL0ZzZL/ZDtZX+p?=
- =?us-ascii?Q?+4tJ+BLgSD9WHYqeRAwnlSi04PL2JeETbu+ymoVjNhvloFkoOz1PWoQoVQC7?=
- =?us-ascii?Q?kUCzOrpazgzvGo/VwfLXViILrE/bW0S5raFqmvyE5L3aC0mc5S0M1rqyEoWd?=
- =?us-ascii?Q?zd+WkJIuVtmHMgHo5dg4LqjJsuGzr0GzylvGbDK+KmP8B4RfkO2BTqWDFy4Y?=
- =?us-ascii?Q?dSNf9c8AiBcEf/K3sSz4KzkeWhZnc0AJQkJQuLWlqFBRXYImMUH8EtfdJ9DW?=
- =?us-ascii?Q?BxyjL7Y1Xij3lZDXV1+oJ2IdgDaO7eOq6y4+EkAEqoBuEY//kEpBL7vfubLN?=
- =?us-ascii?Q?CJ3+F3jxkilZnc9S/IXzytvRRYJVhdKDnZmltPB/pbOpF8TZulafwDBtCpkR?=
- =?us-ascii?Q?jeCxDvwNqdb9p9JAxIw6X4K8P2IVEZNvFTfe+hLBvt35MANQh2HEtjga+fSx?=
- =?us-ascii?Q?pamw2bRYSHmK44yvuvFMXLtms57OQAOLOR44igTcp4f1zi8pAk4UZBmbVqsC?=
- =?us-ascii?Q?xu3JiETFXtSchWtOmsiS72mwUr0I6uXfUT8qLGHPcVQDfwk74WaEQGZ3mnwR?=
- =?us-ascii?Q?AUN4rFGV5Ck2O1xg+CY+ZPnSf0/EtE7uhI5gicJgtUZ3ZR91/gjmd994Uky5?=
- =?us-ascii?Q?iwVJN/ckPUnnQrggNh20SbOFypDAaAzK2UC8oAGgxxybhoTGTmxn8uLLG2lt?=
- =?us-ascii?Q?coo25HJcC5Hle1zU+eYEKYPYE/WPym+TdOzv7cUrGSNohVqt+rB3m82jvAkG?=
- =?us-ascii?Q?8bI5DISFUwYVosac2D8cH9IUEyR3c31X1O4k9SVaKlEZMPUxFc0y+oOhTVZW?=
- =?us-ascii?Q?Cc87c2SAnw4UCD15UJpX2HrwTmPIoeo7/ECeseJH3VocMjjWkNjbih8c3nad?=
- =?us-ascii?Q?YjaFPwinVcQccmAbiMiYhR2dTNUOkSURULNrAOymvaAqP48GylK5LlBL1Fhz?=
- =?us-ascii?Q?rzW+3k7uRQblSzhOmXekBgTKaZevduVS5AMEJkxGBPlBvHu5J+7EUsvqCFEB?=
- =?us-ascii?Q?v4edA7zHbBUc2utQwwiRLkpKK6a/CCQ=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 53e1fb49-f0f7-4609-d2d7-08da4b9b18cd
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jun 2022 11:11:13.6533
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ABPAEoGR5fYTx3oH5i0W5YrOHd2OF8E9Nxr64Sd5VY7Re2EbIan+8pZGALWj61/2BBzDXI0XJvvb/l3ssbQgfQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR10MB3313
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.874
- definitions=2022-06-11_05:2022-06-09,2022-06-11 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 spamscore=0
- bulkscore=0 malwarescore=0 phishscore=0 adultscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2204290000
- definitions=main-2206110046
-X-Proofpoint-GUID: 8YOzFalHcchffX8B5UuDCS1TecLsU08g
-X-Proofpoint-ORIG-GUID: 8YOzFalHcchffX8B5UuDCS1TecLsU08g
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220611012659.3418072-6-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit adds a test to verify upgrade of an existing V5 filesystem to
-support large extent counters.
+Hi Dave,
 
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
----
- tests/xfs/548     | 112 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/548.out |  12 +++++
- 2 files changed, 124 insertions(+)
- create mode 100755 tests/xfs/548
- create mode 100644 tests/xfs/548.out
+Thank you for the patch! Perhaps something to improve:
 
-diff --git a/tests/xfs/548 b/tests/xfs/548
-new file mode 100755
-index 00000000..560c90fd
---- /dev/null
-+++ b/tests/xfs/548
-@@ -0,0 +1,112 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 548
-+#
-+# Test to verify upgrade of an existing V5 filesystem to support large extent
-+# counters.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick metadata
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/attr
-+. ./common/inject
-+. ./common/populate
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_scratch
-+_require_xfs_nrext64
-+_require_attrs
-+_require_xfs_debug
-+_require_xfs_db_command path
-+_require_test_program "punch-alternating"
-+_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-+
-+_scratch_mkfs -d size=$((512 * 1024 * 1024)) >> $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+bsize=$(_get_file_block_size $SCRATCH_MNT)
-+
-+testfile=$SCRATCH_MNT/testfile
-+
-+nr_blks=20
-+
-+echo "Add blocks to file's data fork"
-+$XFS_IO_PROG -f -c "pwrite 0 $((nr_blks * bsize))" $testfile \
-+	     >> $seqres.full
-+$here/src/punch-alternating $testfile
-+
-+echo "Consume free space"
-+fillerdir=$SCRATCH_MNT/fillerdir
-+nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
-+nr_free_blks=$((nr_free_blks * 90 / 100))
-+
-+_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 \
-+	 >> $seqres.full 2>&1
-+
-+echo "Create fragmented filesystem"
-+for dentry in $(ls -1 $fillerdir/); do
-+	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
-+done
-+
-+echo "Inject bmap_alloc_minlen_extent error tag"
-+_scratch_inject_error bmap_alloc_minlen_extent 1
-+
-+echo "Add blocks to file's attr fork"
-+nr_blks=10
-+attr_len=255
-+nr_attrs=$((nr_blks * bsize / attr_len))
-+for i in $(seq 1 $nr_attrs); do
-+	attr="$(printf "trusted.%0247d" $i)"
-+	$SETFATTR_PROG -n "$attr" $testfile >> $seqres.full 2>&1
-+	[[ $? != 0 ]] && break
-+done
-+
-+echo "Unmount filesystem"
-+_scratch_unmount >> $seqres.full
-+
-+orig_dcnt=$(_scratch_xfs_get_metadata_field core.nextents \
-+					    "path /$(basename $testfile)")
-+orig_acnt=$(_scratch_xfs_get_metadata_field core.naextents \
-+					    "path /$(basename $testfile)")
-+
-+echo "Upgrade filesystem to support large extent counters"
-+_scratch_xfs_admin -O nrext64=1 >> $seqres.full 2>&1
-+if [[ $? != 0 ]]; then
-+	_notrun "Filesystem geometry is not suitable for upgrading"
-+fi
-+
-+
-+echo "Mount filesystem"
-+_scratch_mount >> $seqres.full
-+
-+echo "Modify inode core"
-+touch $testfile
-+
-+echo "Unmount filesystem"
-+_scratch_unmount >> $seqres.full
-+
-+dcnt=$(_scratch_xfs_get_metadata_field core.nextents \
-+				       "path /$(basename $testfile)")
-+acnt=$(_scratch_xfs_get_metadata_field core.naextents \
-+				       "path /$(basename $testfile)")
-+
-+echo "Verify inode extent counter values after fs upgrade"
-+
-+if [[ $orig_dcnt != $dcnt ]]; then
-+	echo "Corrupt data extent counter"
-+	exit 1
-+fi
-+
-+if [[ $orig_acnt != $acnt ]]; then
-+	echo "Corrupt attr extent counter"
-+	exit 1
-+fi
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/548.out b/tests/xfs/548.out
-new file mode 100644
-index 00000000..19a7f907
---- /dev/null
-+++ b/tests/xfs/548.out
-@@ -0,0 +1,12 @@
-+QA output created by 548
-+Add blocks to file's data fork
-+Consume free space
-+Create fragmented filesystem
-+Inject bmap_alloc_minlen_extent error tag
-+Add blocks to file's attr fork
-+Unmount filesystem
-+Upgrade filesystem to support large extent counters
-+Mount filesystem
-+Modify inode core
-+Unmount filesystem
-+Verify inode extent counter values after fs upgrade
+[auto build test WARNING on v5.19-rc1]
+[also build test WARNING on next-20220610]
+[cannot apply to xfs-linux/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/xfs-per-ag-centric-allocation-alogrithms/20220611-093037
+base:    f2906aa863381afb0015a9eb7fefad885d4e5a56
+config: hexagon-randconfig-r012-20220611 (https://download.01.org/0day-ci/archive/20220611/202206111958.cftnGbOr-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project ff4abe755279a3a47cc416ef80dbc900d9a98a19)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/87045504fb13d6263ddf1d7780eef5eda1cee6ad
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Dave-Chinner/xfs-per-ag-centric-allocation-alogrithms/20220611-093037
+        git checkout 87045504fb13d6263ddf1d7780eef5eda1cee6ad
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=hexagon SHELL=/bin/bash fs/xfs/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+>> fs/xfs/xfs_reflink.c:129:1: warning: no previous prototype for function 'xfs_reflink_find_shared' [-Wmissing-prototypes]
+   xfs_reflink_find_shared(
+   ^
+   fs/xfs/xfs_reflink.c:128:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   int
+   ^
+   static 
+   fs/xfs/xfs_reflink.c:1029:12: warning: variable 'qdelta' set but not used [-Wunused-but-set-variable]
+           int64_t                 qdelta = 0;
+                                   ^
+   2 warnings generated.
+
+
+vim +/xfs_reflink_find_shared +129 fs/xfs/xfs_reflink.c
+
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   32  
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   33  /*
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   34   * Copy on Write of Shared Blocks
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   35   *
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   36   * XFS must preserve "the usual" file semantics even when two files share
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   37   * the same physical blocks.  This means that a write to one file must not
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   38   * alter the blocks in a different file; the way that we'll do that is
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   39   * through the use of a copy-on-write mechanism.  At a high level, that
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   40   * means that when we want to write to a shared block, we allocate a new
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   41   * block, write the data to the new block, and if that succeeds we map the
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   42   * new block into the file.
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   43   *
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   44   * XFS provides a "delayed allocation" mechanism that defers the allocation
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   45   * of disk blocks to dirty-but-not-yet-mapped file blocks as long as
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   46   * possible.  This reduces fragmentation by enabling the filesystem to ask
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   47   * for bigger chunks less often, which is exactly what we want for CoW.
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   48   *
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   49   * The delalloc mechanism begins when the kernel wants to make a block
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   50   * writable (write_begin or page_mkwrite).  If the offset is not mapped, we
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   51   * create a delalloc mapping, which is a regular in-core extent, but without
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   52   * a real startblock.  (For delalloc mappings, the startblock encodes both
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   53   * a flag that this is a delalloc mapping, and a worst-case estimate of how
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   54   * many blocks might be required to put the mapping into the BMBT.)  delalloc
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   55   * mappings are a reservation against the free space in the filesystem;
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   56   * adjacent mappings can also be combined into fewer larger mappings.
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   57   *
+5eda43000064a6 Darrick J. Wong 2017-02-02   58   * As an optimization, the CoW extent size hint (cowextsz) creates
+5eda43000064a6 Darrick J. Wong 2017-02-02   59   * outsized aligned delalloc reservations in the hope of landing out of
+5eda43000064a6 Darrick J. Wong 2017-02-02   60   * order nearby CoW writes in a single extent on disk, thereby reducing
+5eda43000064a6 Darrick J. Wong 2017-02-02   61   * fragmentation and improving future performance.
+5eda43000064a6 Darrick J. Wong 2017-02-02   62   *
+5eda43000064a6 Darrick J. Wong 2017-02-02   63   * D: --RRRRRRSSSRRRRRRRR--- (data fork)
+5eda43000064a6 Darrick J. Wong 2017-02-02   64   * C: ------DDDDDDD--------- (CoW fork)
+5eda43000064a6 Darrick J. Wong 2017-02-02   65   *
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   66   * When dirty pages are being written out (typically in writepage), the
+5eda43000064a6 Darrick J. Wong 2017-02-02   67   * delalloc reservations are converted into unwritten mappings by
+5eda43000064a6 Darrick J. Wong 2017-02-02   68   * allocating blocks and replacing the delalloc mapping with real ones.
+5eda43000064a6 Darrick J. Wong 2017-02-02   69   * A delalloc mapping can be replaced by several unwritten ones if the
+5eda43000064a6 Darrick J. Wong 2017-02-02   70   * free space is fragmented.
+5eda43000064a6 Darrick J. Wong 2017-02-02   71   *
+5eda43000064a6 Darrick J. Wong 2017-02-02   72   * D: --RRRRRRSSSRRRRRRRR---
+5eda43000064a6 Darrick J. Wong 2017-02-02   73   * C: ------UUUUUUU---------
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   74   *
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   75   * We want to adapt the delalloc mechanism for copy-on-write, since the
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   76   * write paths are similar.  The first two steps (creating the reservation
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   77   * and allocating the blocks) are exactly the same as delalloc except that
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   78   * the mappings must be stored in a separate CoW fork because we do not want
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   79   * to disturb the mapping in the data fork until we're sure that the write
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   80   * succeeded.  IO completion in this case is the process of removing the old
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   81   * mapping from the data fork and moving the new mapping from the CoW fork to
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   82   * the data fork.  This will be discussed shortly.
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   83   *
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   84   * For now, unaligned directio writes will be bounced back to the page cache.
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   85   * Block-aligned directio writes will use the same mechanism as buffered
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   86   * writes.
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   87   *
+5eda43000064a6 Darrick J. Wong 2017-02-02   88   * Just prior to submitting the actual disk write requests, we convert
+5eda43000064a6 Darrick J. Wong 2017-02-02   89   * the extents representing the range of the file actually being written
+5eda43000064a6 Darrick J. Wong 2017-02-02   90   * (as opposed to extra pieces created for the cowextsize hint) to real
+5eda43000064a6 Darrick J. Wong 2017-02-02   91   * extents.  This will become important in the next step:
+5eda43000064a6 Darrick J. Wong 2017-02-02   92   *
+5eda43000064a6 Darrick J. Wong 2017-02-02   93   * D: --RRRRRRSSSRRRRRRRR---
+5eda43000064a6 Darrick J. Wong 2017-02-02   94   * C: ------UUrrUUU---------
+5eda43000064a6 Darrick J. Wong 2017-02-02   95   *
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   96   * CoW remapping must be done after the data block write completes,
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   97   * because we don't want to destroy the old data fork map until we're sure
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   98   * the new block has been written.  Since the new mappings are kept in a
+3993baeb3c52f4 Darrick J. Wong 2016-10-03   99   * separate fork, we can simply iterate these mappings to find the ones
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  100   * that cover the file blocks that we just CoW'd.  For each extent, simply
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  101   * unmap the corresponding range in the data fork, map the new range into
+5eda43000064a6 Darrick J. Wong 2017-02-02  102   * the data fork, and remove the extent from the CoW fork.  Because of
+5eda43000064a6 Darrick J. Wong 2017-02-02  103   * the presence of the cowextsize hint, however, we must be careful
+5eda43000064a6 Darrick J. Wong 2017-02-02  104   * only to remap the blocks that we've actually written out --  we must
+5eda43000064a6 Darrick J. Wong 2017-02-02  105   * never remap delalloc reservations nor CoW staging blocks that have
+5eda43000064a6 Darrick J. Wong 2017-02-02  106   * yet to be written.  This corresponds exactly to the real extents in
+5eda43000064a6 Darrick J. Wong 2017-02-02  107   * the CoW fork:
+5eda43000064a6 Darrick J. Wong 2017-02-02  108   *
+5eda43000064a6 Darrick J. Wong 2017-02-02  109   * D: --RRRRRRrrSRRRRRRRR---
+5eda43000064a6 Darrick J. Wong 2017-02-02  110   * C: ------UU--UUU---------
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  111   *
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  112   * Since the remapping operation can be applied to an arbitrary file
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  113   * range, we record the need for the remap step as a flag in the ioend
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  114   * instead of declaring a new IO type.  This is required for direct io
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  115   * because we only have ioend for the whole dio, and we have to be able to
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  116   * remember the presence of unwritten blocks and CoW blocks with a single
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  117   * ioend structure.  Better yet, the more ground we can cover with one
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  118   * ioend, the better.
+3993baeb3c52f4 Darrick J. Wong 2016-10-03  119   */
+2a06705cd59540 Darrick J. Wong 2016-10-03  120  
+2a06705cd59540 Darrick J. Wong 2016-10-03  121  /*
+2a06705cd59540 Darrick J. Wong 2016-10-03  122   * Given an AG extent, find the lowest-numbered run of shared blocks
+2a06705cd59540 Darrick J. Wong 2016-10-03  123   * within that range and return the range in fbno/flen.  If
+2a06705cd59540 Darrick J. Wong 2016-10-03  124   * find_end_of_shared is true, return the longest contiguous extent of
+2a06705cd59540 Darrick J. Wong 2016-10-03  125   * shared blocks.  If there are no shared extents, fbno and flen will
+2a06705cd59540 Darrick J. Wong 2016-10-03  126   * be set to NULLAGBLOCK and 0, respectively.
+2a06705cd59540 Darrick J. Wong 2016-10-03  127   */
+2a06705cd59540 Darrick J. Wong 2016-10-03  128  int
+2a06705cd59540 Darrick J. Wong 2016-10-03 @129  xfs_reflink_find_shared(
+87045504fb13d6 Dave Chinner    2022-06-11  130  	struct xfs_perag	*pag,
+92ff7285f1df55 Darrick J. Wong 2017-06-16  131  	struct xfs_trans	*tp,
+2a06705cd59540 Darrick J. Wong 2016-10-03  132  	xfs_agblock_t		agbno,
+2a06705cd59540 Darrick J. Wong 2016-10-03  133  	xfs_extlen_t		aglen,
+2a06705cd59540 Darrick J. Wong 2016-10-03  134  	xfs_agblock_t		*fbno,
+2a06705cd59540 Darrick J. Wong 2016-10-03  135  	xfs_extlen_t		*flen,
+2a06705cd59540 Darrick J. Wong 2016-10-03  136  	bool			find_end_of_shared)
+2a06705cd59540 Darrick J. Wong 2016-10-03  137  {
+2a06705cd59540 Darrick J. Wong 2016-10-03  138  	struct xfs_buf		*agbp;
+2a06705cd59540 Darrick J. Wong 2016-10-03  139  	struct xfs_btree_cur	*cur;
+2a06705cd59540 Darrick J. Wong 2016-10-03  140  	int			error;
+2a06705cd59540 Darrick J. Wong 2016-10-03  141  
+87045504fb13d6 Dave Chinner    2022-06-11  142  	error = xfs_alloc_read_agf(pag, tp, 0, &agbp);
+2a06705cd59540 Darrick J. Wong 2016-10-03  143  	if (error)
+2a06705cd59540 Darrick J. Wong 2016-10-03  144  		return error;
+2a06705cd59540 Darrick J. Wong 2016-10-03  145  
+87045504fb13d6 Dave Chinner    2022-06-11  146  	cur = xfs_refcountbt_init_cursor(pag->pag_mount, tp, agbp, pag);
+2a06705cd59540 Darrick J. Wong 2016-10-03  147  
+2a06705cd59540 Darrick J. Wong 2016-10-03  148  	error = xfs_refcount_find_shared(cur, agbno, aglen, fbno, flen,
+2a06705cd59540 Darrick J. Wong 2016-10-03  149  			find_end_of_shared);
+2a06705cd59540 Darrick J. Wong 2016-10-03  150  
+0b04b6b875b32f Darrick J. Wong 2018-07-19  151  	xfs_btree_del_cursor(cur, error);
+2a06705cd59540 Darrick J. Wong 2016-10-03  152  
+92ff7285f1df55 Darrick J. Wong 2017-06-16  153  	xfs_trans_brelse(tp, agbp);
+2a06705cd59540 Darrick J. Wong 2016-10-03  154  	return error;
+2a06705cd59540 Darrick J. Wong 2016-10-03  155  }
+2a06705cd59540 Darrick J. Wong 2016-10-03  156  
+
 -- 
-2.35.1
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
