@@ -2,241 +2,356 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11775CCA47B
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 01:27:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAE4EC433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 01:27:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346860AbiFKB1K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jun 2022 21:27:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60534 "EHLO
+        id S1348069AbiFKB1N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jun 2022 21:27:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346537AbiFKB1J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 21:27:09 -0400
+        with ESMTP id S229693AbiFKB1M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 21:27:12 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 07C343A480E
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 18:27:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3C1903A4813
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 18:27:10 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 39B005EC7DD
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 39AE15EC7D6
         for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 11:27:04 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu3-005AOD-2c
+        id 1nzpu3-005AP8-Ma
         for linux-xfs@vger.kernel.org; Sat, 11 Jun 2022 11:27:03 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu3-00ELKt-1Y
+        id 1nzpu3-00ELML-LR
         for linux-xfs@vger.kernel.org;
         Sat, 11 Jun 2022 11:27:03 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 04/50] xfs: kill xfs_alloc_pagf_init()
-Date:   Sat, 11 Jun 2022 11:26:13 +1000
-Message-Id: <20220611012659.3418072-5-david@fromorbit.com>
+Subject: [PATCH 22/50] xfs: introduce xfs_for_each_perag_wrap()
+Date:   Sat, 11 Jun 2022 11:26:31 +1000
+Message-Id: <20220611012659.3418072-23-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220611012659.3418072-1-david@fromorbit.com>
 References: <20220611012659.3418072-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62a3ef68
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62a3ef68
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=bQPFrWnIYC81Y4yJAFYA:9
+        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=MV_ybV5dVvQxcgh8FT0A:9
+        a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Trivial wrapper around xfs_alloc_read_agf(), can be easily replaced
-by passing a NULL agfbp to xfs_alloc_read_agf().
+In several places we iterate every AG from a specific start agno and
+wrap back to the first AG when we reach the end of the filesystem to
+continue searching. We don't have a primitive for this iteration
+yet, so add one for conversion of these algorithms to per-ag based
+iteration.
+
+The filestream AG select code is a mess, and this initially makes it
+worse. The per-ag selection needs to be driven completely into the
+filesystem code to clean this up and it will be done in a future
+patch that makes the filestream allocator use active per-ag
+references correctly.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ag.c      |  2 +-
- fs/xfs/libxfs/xfs_ag_resv.c |  2 +-
- fs/xfs/libxfs/xfs_alloc.c   | 37 ++++++++++++-------------------------
- fs/xfs/libxfs/xfs_alloc.h   | 10 ----------
- fs/xfs/libxfs/xfs_bmap.c    |  3 ++-
- fs/xfs/libxfs/xfs_ialloc.c  |  2 +-
- fs/xfs/xfs_filestream.c     |  4 ++--
- 7 files changed, 19 insertions(+), 41 deletions(-)
+ fs/xfs/libxfs/xfs_ag.h     | 45 +++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_bmap.c   | 76 ++++++++++++++++++++++----------------
+ fs/xfs/libxfs/xfs_ialloc.c | 32 ++++++++--------
+ 3 files changed, 104 insertions(+), 49 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 74862823311a..734ef170936e 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -124,7 +124,7 @@ xfs_initialize_perag_data(
- 		 * all the information we need and populates the
- 		 * per-ag structures for us.
- 		 */
--		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
-+		error = xfs_alloc_read_agf(mp, NULL, index, 0, NULL);
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 3b5e9c5f737b..23040a1094b9 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -228,7 +228,6 @@ xfs_perag_next(
+ #define for_each_perag_from(mp, agno, pag) \
+ 	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
+ 
+-
+ #define for_each_perag(mp, agno, pag) \
+ 	(agno) = 0; \
+ 	for_each_perag_from((mp), (agno), (pag))
+@@ -240,6 +239,50 @@ xfs_perag_next(
+ 		xfs_perag_rele(pag), \
+ 		(pag) = xfs_perag_grab_tag((mp), (agno), (tag)))
+ 
++static inline struct xfs_perag *
++xfs_perag_next_wrap(
++	struct xfs_perag	*pag,
++	xfs_agnumber_t		*agno,
++	xfs_agnumber_t		stop_agno,
++	xfs_agnumber_t		wrap_agno)
++{
++	struct xfs_mount	*mp = pag->pag_mount;
++
++	*agno = pag->pag_agno + 1;
++	xfs_perag_rele(pag);
++	while (*agno != stop_agno) {
++		if (*agno >= wrap_agno)
++			*agno = 0;
++		if (*agno == stop_agno)
++			break;
++
++		pag = xfs_perag_grab(mp, *agno);
++		if (pag)
++			return pag;
++		(*agno)++;
++	}
++	return NULL;
++}
++
++/*
++ * Iterate all AGs from start_agno through wrap_agno, then 0 through
++ * (start_agno - 1).
++ */
++#define for_each_perag_wrap_at(mp, start_agno, wrap_agno, agno, pag) \
++	for ((agno) = (start_agno), (pag) = xfs_perag_grab((mp), (agno)); \
++		(pag) != NULL; \
++		(pag) = xfs_perag_next_wrap((pag), &(agno), (start_agno), \
++				(wrap_agno)))
++
++/*
++ * Iterate all AGs from start_agno through to the end of the filesystem, then 0
++ * through (start_agno - 1).
++ */
++#define for_each_perag_wrap(mp, start_agno, agno, pag) \
++	for_each_perag_wrap_at((mp), (start_agno), (mp)->m_sb.sb_agcount, \
++				(agno), (pag))
++
++
+ struct aghdr_init_data {
+ 	/* per ag data */
+ 	xfs_agblock_t		agno;		/* ag to init */
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 65a6a0d2fdbd..9524f606b183 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3173,17 +3173,14 @@ xfs_bmap_adjacent(
+ 
+ static int
+ xfs_bmap_longest_free_extent(
++	struct xfs_perag	*pag,
+ 	struct xfs_trans	*tp,
+-	xfs_agnumber_t		ag,
+ 	xfs_extlen_t		*blen,
+ 	int			*notinit)
+ {
+-	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_perag	*pag;
+ 	xfs_extlen_t		longest;
+ 	int			error = 0;
+ 
+-	pag = xfs_perag_get(mp, ag);
+ 	if (!xfs_perag_initialised_agf(pag)) {
+ 		error = xfs_alloc_read_agf(pag, tp, XFS_ALLOC_FLAG_TRYLOCK,
+ 				NULL);
+@@ -3193,19 +3190,17 @@ xfs_bmap_longest_free_extent(
+ 				*notinit = 1;
+ 				error = 0;
+ 			}
+-			goto out;
++			return error;
+ 		}
+ 	}
+ 
+ 	longest = xfs_alloc_longest_free_extent(pag,
+-				xfs_alloc_min_freelist(mp, pag),
++				xfs_alloc_min_freelist(pag->pag_mount, pag),
+ 				xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE));
+ 	if (*blen < longest)
+ 		*blen = longest;
+ 
+-out:
+-	xfs_perag_put(pag);
+-	return error;
++	return 0;
+ }
+ 
+ static void
+@@ -3243,28 +3238,29 @@ xfs_bmap_btalloc_nullfb(
+ 	xfs_extlen_t		*blen)
+ {
+ 	struct xfs_mount	*mp = ap->ip->i_mount;
+-	xfs_agnumber_t		ag, startag;
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno, startag;
+ 	int			notinit = 0;
+-	int			error;
++	int			error = 0;
+ 
+ 	args->type = XFS_ALLOCTYPE_START_BNO;
+ 	args->total = ap->total;
+ 
+-	startag = ag = XFS_FSB_TO_AGNO(mp, args->fsbno);
++	startag = XFS_FSB_TO_AGNO(mp, args->fsbno);
+ 	if (startag == NULLAGNUMBER)
+-		startag = ag = 0;
++		startag = 0;
+ 
+-	while (*blen < args->maxlen) {
+-		error = xfs_bmap_longest_free_extent(args->tp, ag, blen,
++	*blen = 0;
++	for_each_perag_wrap(mp, startag, agno, pag) {
++		error = xfs_bmap_longest_free_extent(pag, args->tp, blen,
+ 						     &notinit);
+ 		if (error)
+-			return error;
+-
+-		if (++ag == mp->m_sb.sb_agcount)
+-			ag = 0;
+-		if (ag == startag)
++			break;
++		if (*blen >= args->maxlen)
+ 			break;
+ 	}
++	if (pag)
++		xfs_perag_rele(pag);
+ 
+ 	xfs_bmap_select_minlen(ap, args, blen, notinit);
+ 	return 0;
+@@ -3277,40 +3273,58 @@ xfs_bmap_btalloc_filestreams(
+ 	xfs_extlen_t		*blen)
+ {
+ 	struct xfs_mount	*mp = ap->ip->i_mount;
+-	xfs_agnumber_t		ag;
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		start_agno;
+ 	int			notinit = 0;
+ 	int			error;
+ 
+ 	args->type = XFS_ALLOCTYPE_NEAR_BNO;
+ 	args->total = ap->total;
+ 
+-	ag = XFS_FSB_TO_AGNO(mp, args->fsbno);
+-	if (ag == NULLAGNUMBER)
+-		ag = 0;
++	start_agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
++	if (start_agno == NULLAGNUMBER)
++		start_agno = 0;
+ 
+-	error = xfs_bmap_longest_free_extent(args->tp, ag, blen, &notinit);
+-	if (error)
+-		return error;
++	pag = xfs_perag_grab(mp, start_agno);
++	if (pag) {
++		error = xfs_bmap_longest_free_extent(pag, args->tp, blen,
++				&notinit);
++		xfs_perag_rele(pag);
++		if (error)
++			return error;
++	}
+ 
+ 	if (*blen < args->maxlen) {
+-		error = xfs_filestream_new_ag(ap, &ag);
++		xfs_agnumber_t	agno = start_agno;
++
++		error = xfs_filestream_new_ag(ap, &agno);
+ 		if (error)
+ 			return error;
++		if (agno == NULLAGNUMBER)
++			goto out_select;
+ 
+-		error = xfs_bmap_longest_free_extent(args->tp, ag, blen,
+-						     &notinit);
++		pag = xfs_perag_grab(mp, agno);
++		if (!pag)
++			goto out_select;
++
++		error = xfs_bmap_longest_free_extent(pag, args->tp,
++				blen, &notinit);
++		xfs_perag_rele(pag);
  		if (error)
  			return error;
  
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index fe94058d4e9e..ce28bf8f72dc 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -322,7 +322,7 @@ xfs_ag_resv_init(
- 	 * address.
- 	 */
- 	if (has_resv) {
--		error2 = xfs_alloc_pagf_init(mp, tp, pag->pag_agno, 0);
-+		error2 = xfs_alloc_read_agf(mp, tp, pag->pag_agno, 0, NULL);
- 		if (error2)
- 			return error2;
- 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index d3f2886fdc08..f7853ab7b962 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2867,25 +2867,6 @@ xfs_alloc_log_agf(
- 	xfs_trans_log_buf(tp, bp, (uint)first, (uint)last);
- }
- 
--/*
-- * Interface for inode allocation to force the pag data to be initialized.
-- */
--int					/* error */
--xfs_alloc_pagf_init(
--	xfs_mount_t		*mp,	/* file system mount structure */
--	xfs_trans_t		*tp,	/* transaction pointer */
--	xfs_agnumber_t		agno,	/* allocation group number */
--	int			flags)	/* XFS_ALLOC_FLAGS_... */
--{
--	struct xfs_buf		*bp;
--	int			error;
--
--	error = xfs_alloc_read_agf(mp, tp, agno, flags, &bp);
--	if (!error)
--		xfs_trans_brelse(tp, bp);
--	return error;
--}
--
- /*
-  * Put the block on the freelist for the allocation group.
-  */
-@@ -3095,7 +3076,9 @@ xfs_read_agf(
- }
- 
- /*
-- * Read in the allocation group header (free/alloc section).
-+ * Read in the allocation group header (free/alloc section) and initialise the
-+ * perag structure if necessary. If the caller provides @agfbpp, then return the
-+ * locked buffer to the caller, otherwise free it.
-  */
- int					/* error */
- xfs_alloc_read_agf(
-@@ -3103,8 +3086,9 @@ xfs_alloc_read_agf(
- 	struct xfs_trans	*tp,	/* transaction pointer */
- 	xfs_agnumber_t		agno,	/* allocation group number */
- 	int			flags,	/* XFS_ALLOC_FLAG_... */
--	struct xfs_buf		**bpp)	/* buffer for the ag freelist header */
-+	struct xfs_buf		**agfbpp)
- {
-+	struct xfs_buf		*agfbp;
- 	struct xfs_agf		*agf;		/* ag freelist header */
- 	struct xfs_perag	*pag;		/* per allocation group data */
- 	int			error;
-@@ -3118,13 +3102,12 @@ xfs_alloc_read_agf(
- 	ASSERT(agno != NULLAGNUMBER);
- 	error = xfs_read_agf(mp, tp, agno,
- 			(flags & XFS_ALLOC_FLAG_TRYLOCK) ? XBF_TRYLOCK : 0,
--			bpp);
-+			&agfbp);
- 	if (error)
- 		return error;
--	ASSERT(!(*bpp)->b_error);
- 
--	agf = (*bpp)->b_addr;
--	pag = (*bpp)->b_pag;
-+	agf = agfbp->b_addr;
-+	pag = agfbp->b_pag;
- 	if (!pag->pagf_init) {
- 		pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
- 		pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
-@@ -3165,6 +3148,10 @@ xfs_alloc_read_agf(
- 		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
++		start_agno = agno;
++
  	}
- #endif
-+	if (agfbpp)
-+		*agfbpp = agfbp;
-+	else
-+		xfs_trans_brelse(tp, agfbp);
+ 
++out_select:
+ 	xfs_bmap_select_minlen(ap, args, blen, notinit);
+ 
+ 	/*
+ 	 * Set the failure fallback case to look in the selected AG as stream
+ 	 * may have moved.
+ 	 */
+-	ap->blkno = args->fsbno = XFS_AGB_TO_FSB(mp, ag, 0);
++	ap->blkno = args->fsbno = XFS_AGB_TO_FSB(mp, start_agno, 0);
  	return 0;
  }
  
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 84ca09b2223f..96d5301a5c8b 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -123,16 +123,6 @@ xfs_alloc_log_agf(
- 	struct xfs_buf	*bp,	/* buffer for a.g. freelist header */
- 	uint32_t	fields);/* mask of fields to be logged (XFS_AGF_...) */
- 
--/*
-- * Interface for inode allocation to force the pag data to be initialized.
-- */
--int				/* error */
--xfs_alloc_pagf_init(
--	struct xfs_mount *mp,	/* file system mount structure */
--	struct xfs_trans *tp,	/* transaction pointer */
--	xfs_agnumber_t	agno,	/* allocation group number */
--	int		flags);	/* XFS_ALLOC_FLAGS_... */
--
- /*
-  * Put the block on the freelist for the allocation group.
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6833110d1bd4..a76d5894641b 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3185,7 +3185,8 @@ xfs_bmap_longest_free_extent(
- 
- 	pag = xfs_perag_get(mp, ag);
- 	if (!pag->pagf_init) {
--		error = xfs_alloc_pagf_init(mp, tp, ag, XFS_ALLOC_FLAG_TRYLOCK);
-+		error = xfs_alloc_read_agf(mp, tp, ag, XFS_ALLOC_FLAG_TRYLOCK,
-+				NULL);
- 		if (error) {
- 			/* Couldn't lock the AGF, so skip this AG. */
- 			if (error == -EAGAIN) {
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index a7259404377d..8e252207b131 100644
+index ff098c1c2471..d4b1d82910ad 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1621,7 +1621,7 @@ xfs_dialloc_good_ag(
- 		return false;
+@@ -1724,7 +1724,7 @@ xfs_dialloc(
+ 	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+ 	bool			ok_alloc = true;
+ 	int			flags;
+-	xfs_ino_t		ino;
++	xfs_ino_t		ino = NULLFSINO;
  
- 	if (!pag->pagf_init) {
--		error = xfs_alloc_pagf_init(mp, tp, pag->pag_agno, flags);
-+		error = xfs_alloc_read_agf(mp, tp, pag->pag_agno, flags, NULL);
- 		if (error)
- 			return false;
+ 	/*
+ 	 * Directories, symlinks, and regular files frequently allocate at least
+@@ -1758,37 +1758,35 @@ xfs_dialloc(
+ 	 * or in which we can allocate some inodes.  Iterate through the
+ 	 * allocation groups upward, wrapping at the end.
+ 	 */
+-	agno = start_agno;
+ 	flags = XFS_ALLOC_FLAG_TRYLOCK;
+-	for (;;) {
+-		pag = xfs_perag_grab(mp, agno);
++retry:
++	for_each_perag_wrap_at(mp, start_agno, mp->m_maxagi, agno, pag) {
+ 		if (xfs_dialloc_good_ag(pag, *tpp, mode, flags, ok_alloc)) {
+ 			error = xfs_dialloc_try_ag(pag, tpp, parent,
+ 					&ino, ok_alloc);
+ 			if (error != -EAGAIN)
+ 				break;
++			error = 0;
+ 		}
+ 
+ 		if (xfs_is_shutdown(mp)) {
+ 			error = -EFSCORRUPTED;
+ 			break;
+ 		}
+-		if (++agno == mp->m_maxagi)
+-			agno = 0;
+-		if (agno == start_agno) {
+-			if (!flags) {
+-				error = -ENOSPC;
+-				break;
+-			}
++	}
++	if (pag)
++		xfs_perag_rele(pag);
++	if (error)
++		return error;
++	if (ino == NULLFSINO) {
++		if (flags) {
+ 			flags = 0;
++			goto retry;
+ 		}
+-		xfs_perag_rele(pag);
++		return -ENOSPC;
  	}
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index be9bcf8a1f99..6b09a30f8d06 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -126,7 +126,7 @@ xfs_filestream_pick_ag(
- 		pag = xfs_perag_get(mp, ag);
+-
+-	if (!error)
+-		*new_ino = ino;
+-	xfs_perag_rele(pag);
+-	return error;
++	*new_ino = ino;
++	return 0;
+ }
  
- 		if (!pag->pagf_init) {
--			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
-+			err = xfs_alloc_read_agf(mp, NULL, ag, trylock, NULL);
- 			if (err) {
- 				if (err != -EAGAIN) {
- 					xfs_perag_put(pag);
-@@ -181,7 +181,7 @@ xfs_filestream_pick_ag(
- 		if (ag != startag)
- 			continue;
- 
--		/* Allow sleeping in xfs_alloc_pagf_init() on the 2nd pass. */
-+		/* Allow sleeping in xfs_alloc_read_agf() on the 2nd pass. */
- 		if (trylock != 0) {
- 			trylock = 0;
- 			continue;
+ /*
 -- 
 2.35.1
 
