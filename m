@@ -2,238 +2,239 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E91A2C433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 01:27:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77CA4C43334
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 01:27:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348881AbiFKB1o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1348466AbiFKB1o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 10 Jun 2022 21:27:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33264 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349153AbiFKB1X (ORCPT
+        with ESMTP id S242840AbiFKB1X (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jun 2022 21:27:23 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CED2F3FB11B
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 18:27:19 -0700 (PDT)
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3230D3FB128
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Jun 2022 18:27:20 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DC60A5EC7EA
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 11:27:10 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0831610E721F
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 11:27:05 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu4-005AQ3-AT
+        id 1nzpu4-005AQK-IM
         for linux-xfs@vger.kernel.org; Sat, 11 Jun 2022 11:27:04 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nzpu4-00ELNr-8o
+        id 1nzpu4-00ELOL-Gs
         for linux-xfs@vger.kernel.org;
         Sat, 11 Jun 2022 11:27:04 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 41/50] xfs: merge filestream AG lookup into xfs_filestream_select_ag()
-Date:   Sat, 11 Jun 2022 11:26:50 +1000
-Message-Id: <20220611012659.3418072-42-david@fromorbit.com>
+Subject: [PATCH 47/50] xfs: pass perag to filestreams tracing
+Date:   Sat, 11 Jun 2022 11:26:56 +1000
+Message-Id: <20220611012659.3418072-48-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220611012659.3418072-1-david@fromorbit.com>
 References: <20220611012659.3418072-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62a3ef6e
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62a3ef6a
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=j8ySbwcqsO3cM9aUnH8A:9
+        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=9QBWbjWuI8rPk8iwX7gA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-It currently either returns the cached filestream AG or it looks up
-a new one. It has to be verified on return, which means the
-returning code then might have to look up a new AG anyway.
-Merge the initial lookup functionality so that we only need to do a
-single pick loop on lookup or verification failure.
-
-This does make xfs_filestream_select_ag() messier and I've ignored
-the long lines, because it's got to get worse before it can get
-better...
+Pass perags instead of raw ag numbers, avoiding the need for the
+special peek function for the tracing code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_filestream.c | 140 +++++++++++++++++-----------------------
- 1 file changed, 59 insertions(+), 81 deletions(-)
+ fs/xfs/xfs_filestream.c | 29 +++++------------------------
+ fs/xfs/xfs_filestream.h |  1 -
+ fs/xfs/xfs_trace.h      | 37 ++++++++++++++++++++-----------------
+ 3 files changed, 25 insertions(+), 42 deletions(-)
 
 diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index 458df92fd9a6..996191273ea0 100644
+index 7b540898062e..6212e8adb7a9 100644
 --- a/fs/xfs/xfs_filestream.c
 +++ b/fs/xfs/xfs_filestream.c
-@@ -258,55 +258,6 @@ xfs_filestream_get_parent(
- 	return dir ? XFS_I(dir) : NULL;
- }
+@@ -31,25 +31,6 @@ enum xfs_fstrm_alloc {
+ 	XFS_PICK_LOWSPACE = 2,
+ };
  
 -/*
-- * Find the right allocation group for a file, either by finding an
-- * existing file stream or creating a new one.
-- *
-- * Returns NULLAGNUMBER in case of an error.
+- * Allocation group filestream associations are tracked with per-ag atomic
+- * counters.  These counters allow xfs_filestream_pick_ag() to tell whether a
+- * particular AG already has active filestreams associated with it.
 - */
--static xfs_agnumber_t
--xfs_filestream_lookup_ag(
--	struct xfs_inode	*ip)
+-int
+-xfs_filestream_peek_ag(
+-	xfs_mount_t	*mp,
+-	xfs_agnumber_t	agno)
 -{
--	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_inode	*pip = NULL;
--	xfs_agnumber_t		startag, ag = NULLAGNUMBER;
--	struct xfs_mru_cache_elem *mru;
+-	struct xfs_perag *pag;
+-	int		ret;
 -
--	ASSERT(S_ISREG(VFS_I(ip)->i_mode));
--
--	pip = xfs_filestream_get_parent(ip);
--	if (!pip)
--		return NULLAGNUMBER;
--
--	mru = xfs_mru_cache_lookup(mp->m_filestream, pip->i_ino);
--	if (mru) {
--		ag = container_of(mru, struct xfs_fstrm_item, mru)->ag;
--		xfs_mru_cache_done(mp->m_filestream);
--
--		trace_xfs_filestream_lookup(mp, ip->i_ino, ag);
--		goto out;
--	}
--
--	/*
--	 * Set the starting AG using the rotor for inode32, otherwise
--	 * use the directory inode's AG.
--	 */
--	if (xfs_is_inode32(mp)) {
--		xfs_agnumber_t	 rotorstep = xfs_rotorstep;
--		startag = (mp->m_agfrotor / rotorstep) % mp->m_sb.sb_agcount;
--		mp->m_agfrotor = (mp->m_agfrotor + 1) %
--		                 (mp->m_sb.sb_agcount * rotorstep);
--	} else
--		startag = XFS_INO_TO_AGNO(mp, pip->i_ino);
--
--	if (xfs_filestream_pick_ag(pip, startag, &ag, 0, 0))
--		ag = NULLAGNUMBER;
--out:
--	xfs_irele(pip);
--	return ag;
+-	pag = xfs_perag_get(mp, agno);
+-	ret = atomic_read(&pag->pagf_fstrms);
+-	xfs_perag_put(pag);
+-	return ret;
 -}
 -
- /*
-  * Pick a new allocation group for the current file and its file stream.
-  *
-@@ -372,52 +323,79 @@ xfs_filestream_select_ag(
- {
- 	struct xfs_mount	*mp = ap->ip->i_mount;
- 	struct xfs_perag	*pag;
--	xfs_agnumber_t		start_agno = xfs_filestream_lookup_ag(ap->ip);
-+	struct xfs_inode	*pip = NULL;
-+	xfs_agnumber_t		agno = NULLAGNUMBER;
-+	struct xfs_mru_cache_elem *mru;
- 	int			error;
+ static void
+ xfs_fstrm_free_func(
+ 	void			*data,
+@@ -59,7 +40,7 @@ xfs_fstrm_free_func(
+ 		container_of(mru, struct xfs_fstrm_item, mru);
+ 	struct xfs_perag	*pag = item->pag;
  
--	/* Determine the initial block number we will target for allocation. */
--	if (start_agno == NULLAGNUMBER)
--		start_agno = 0;
--	ap->blkno = XFS_AGB_TO_FSB(args->mp, start_agno, 0);
--	xfs_bmap_adjacent(ap);
- 	args->total = ap->total;
-+	*blen = 0;
+-	trace_xfs_filestream_free(pag->pag_mount, mru->key, pag->pag_agno);
++	trace_xfs_filestream_free(pag, mru->key);
+ 	atomic_dec(&pag->pagf_fstrms);
+ 	xfs_perag_rele(pag);
  
--	pag = xfs_perag_grab(mp, start_agno);
--	if (pag) {
--		error = xfs_bmap_longest_free_extent(pag, args->tp, blen);
--		xfs_perag_rele(pag);
--		if (error) {
--			if (error != -EAGAIN)
--				return error;
--			*blen = 0;
--		}
-+	pip = xfs_filestream_get_parent(ap->ip);
-+	if (!pip) {
-+		agno = 0;
-+		goto new_ag;
+@@ -99,7 +80,7 @@ xfs_filestream_pick_ag(
+ 
+ restart:
+ 	for_each_perag_wrap(mp, start_agno, agno, pag) {
+-		trace_xfs_filestream_scan(mp, ip->i_ino, agno);
++		trace_xfs_filestream_scan(pag, ip->i_ino);
+ 		*longest = 0;
+ 		err = xfs_bmap_longest_free_extent(pag, NULL, longest);
+ 		if (err) {
+@@ -169,7 +150,7 @@ xfs_filestream_pick_ag(
+ 		 */
+ 		if (!max_pag) {
+ 			*agp = NULLAGNUMBER;
+-			trace_xfs_filestream_pick(ip, *agp, free, 0);
++			trace_xfs_filestream_pick(ip, NULL, free);
+ 			return 0;
+ 		}
+ 		pag = max_pag;
+@@ -179,7 +160,7 @@ xfs_filestream_pick_ag(
+ 		xfs_perag_rele(max_pag);
  	}
  
--	if (*blen < args->maxlen) {
--		xfs_agnumber_t	agno = start_agno;
-+	mru = xfs_mru_cache_lookup(mp->m_filestream, pip->i_ino);
-+	if (mru) {
-+		agno = container_of(mru, struct xfs_fstrm_item, mru)->ag;
-+		xfs_mru_cache_done(mp->m_filestream);
+-	trace_xfs_filestream_pick(ip, pag->pag_agno, free, 0);
++	trace_xfs_filestream_pick(ip, pag, free);
  
--		error = xfs_filestream_new_ag(ap, &agno);
--		if (error)
--			return error;
--		if (agno == NULLAGNUMBER)
--			goto out_select;
-+		trace_xfs_filestream_lookup(mp, ap->ip->i_ino, start_agno);
-+		xfs_irele(pip);
-+
-+		ap->blkno = XFS_AGB_TO_FSB(args->mp, start_agno, 0);
-+		xfs_bmap_adjacent(ap);
+ 	err = -ENOMEM;
+ 	item = kmem_alloc(sizeof(*item), KM_MAYFAIL);
+@@ -259,7 +240,7 @@ xfs_filestream_select_ag_mru(
+ 	pag = container_of(mru, struct xfs_fstrm_item, mru)->pag;
+ 	xfs_mru_cache_done(mp->m_filestream);
  
- 		pag = xfs_perag_grab(mp, agno);
--		if (!pag)
+-	trace_xfs_filestream_lookup(mp, ap->ip->i_ino, pag->pag_agno);
++	trace_xfs_filestream_lookup(pag, ap->ip->i_ino);
+ 
+ 	ap->blkno = XFS_AGB_TO_FSB(args->mp, pag->pag_agno, 0);
+ 	xfs_bmap_adjacent(ap);
+diff --git a/fs/xfs/xfs_filestream.h b/fs/xfs/xfs_filestream.h
+index df9f7553e106..84149ed0e340 100644
+--- a/fs/xfs/xfs_filestream.h
++++ b/fs/xfs/xfs_filestream.h
+@@ -14,7 +14,6 @@ struct xfs_alloc_arg;
+ int xfs_filestream_mount(struct xfs_mount *mp);
+ void xfs_filestream_unmount(struct xfs_mount *mp);
+ void xfs_filestream_deassociate(struct xfs_inode *ip);
+-int xfs_filestream_peek_ag(struct xfs_mount *mp, xfs_agnumber_t agno);
+ int xfs_filestream_select_ag(struct xfs_bmalloca *ap,
+ 		struct xfs_alloc_arg *args, xfs_extlen_t *blen);
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 686d6078e936..95d5bc7d9030 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -74,6 +74,7 @@ struct xfs_inobt_rec_incore;
+ union xfs_btree_ptr;
+ struct xfs_dqtrx;
+ struct xfs_icwalk;
++struct xfs_perag;
+ 
+ #define XFS_ATTR_FILTER_FLAGS \
+ 	{ XFS_ATTR_ROOT,	"ROOT" }, \
+@@ -637,8 +638,8 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_bhold_release);
+ DEFINE_BUF_ITEM_EVENT(xfs_trans_binval);
+ 
+ DECLARE_EVENT_CLASS(xfs_filestream_class,
+-	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno),
+-	TP_ARGS(mp, ino, agno),
++	TP_PROTO(struct xfs_perag *pag, xfs_ino_t ino),
++	TP_ARGS(pag, ino),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+@@ -646,10 +647,10 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
+ 		__field(int, streams)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = mp->m_super->s_dev;
++		__entry->dev = pag->pag_mount->m_super->s_dev;
+ 		__entry->ino = ino;
+-		__entry->agno = agno;
+-		__entry->streams = xfs_filestream_peek_ag(mp, agno);
++		__entry->agno = pag->pag_agno;
++		__entry->streams = atomic_read(&pag->pagf_fstrms);
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx agno 0x%x streams %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -659,39 +660,41 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
+ )
+ #define DEFINE_FILESTREAM_EVENT(name) \
+ DEFINE_EVENT(xfs_filestream_class, name, \
+-	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno), \
+-	TP_ARGS(mp, ino, agno))
++	TP_PROTO(struct xfs_perag *pag, xfs_ino_t ino), \
++	TP_ARGS(pag, ino))
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_free);
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_lookup);
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_scan);
+ 
+ TRACE_EVENT(xfs_filestream_pick,
+-	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno,
+-		 xfs_extlen_t free, int nscan),
+-	TP_ARGS(ip, agno, free, nscan),
++	TP_PROTO(struct xfs_inode *ip, struct xfs_perag *pag,
++		 xfs_extlen_t free),
++	TP_ARGS(ip, pag, free),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(int, streams)
+ 		__field(xfs_extlen_t, free)
+-		__field(int, nscan)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+ 		__entry->ino = ip->i_ino;
+-		__entry->agno = agno;
+-		__entry->streams = xfs_filestream_peek_ag(ip->i_mount, agno);
 +		if (pag) {
-+			error = xfs_bmap_longest_free_extent(pag, args->tp, blen);
-+			xfs_perag_rele(pag);
-+			if (error) {
-+				if (error != -EAGAIN)
-+					return error;
-+				*blen = 0;
-+			}
++			__entry->agno = pag->pag_agno;
++			__entry->streams = atomic_read(&pag->pagf_fstrms);
++		} else {
++			__entry->agno = NULLAGNUMBER;
++			__entry->streams = 0;
 +		}
-+		if (*blen >= args->maxlen)
- 			goto out_select;
-+	} else if (xfs_is_inode32(mp)) {
-+		xfs_agnumber_t	 rotorstep = xfs_rotorstep;
-+		agno = (mp->m_agfrotor / rotorstep) %
-+				mp->m_sb.sb_agcount;
-+		mp->m_agfrotor = (mp->m_agfrotor + 1) %
-+				 (mp->m_sb.sb_agcount * rotorstep);
-+		xfs_irele(pip);
-+	} else {
-+		agno = XFS_INO_TO_AGNO(mp, pip->i_ino);
-+		xfs_irele(pip);
-+	}
+ 		__entry->free = free;
+-		__entry->nscan = nscan;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx agno 0x%x streams %d free %d nscan %d",
++	TP_printk("dev %d:%d ino 0x%llx agno 0x%x streams %d free %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->agno,
+ 		  __entry->streams,
+-		  __entry->free,
+-		  __entry->nscan)
++		  __entry->free)
+ );
  
--		error = xfs_bmap_longest_free_extent(pag, args->tp, blen);
--		xfs_perag_rele(pag);
--		if (error) {
--			if (error != -EAGAIN)
--				return error;
--			*blen = 0;
--		}
--		start_agno = agno;
-+new_ag:
-+	ap->blkno = XFS_AGB_TO_FSB(args->mp, agno, 0);
-+	xfs_bmap_adjacent(ap);
-+
-+	error = xfs_filestream_new_ag(ap, &agno);
-+	if (error)
-+		return error;
-+	if (agno == NULLAGNUMBER)
-+		goto out_select;
-+
-+	pag = xfs_perag_grab(mp, agno);
-+	if (!pag)
-+		goto out_select;
-+
-+	error = xfs_bmap_longest_free_extent(pag, args->tp, blen);
-+	xfs_perag_rele(pag);
-+	if (error) {
-+		if (error != -EAGAIN)
-+			return error;
-+		*blen = 0;
- 	}
- 
- out_select:
--	ap->blkno = XFS_AGB_TO_FSB(mp, start_agno, 0);
-+	ap->blkno = XFS_AGB_TO_FSB(mp, agno, 0);
- 	return 0;
- }
- 
+ DECLARE_EVENT_CLASS(xfs_lock_class,
 -- 
 2.35.1
 
