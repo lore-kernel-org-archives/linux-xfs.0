@@ -2,58 +2,58 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77A71C43334
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 12:55:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9308CC43334
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 12:55:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233328AbiFKMzM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Jun 2022 08:55:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44082 "EHLO
+        id S233385AbiFKMzO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Jun 2022 08:55:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233379AbiFKMzM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Jun 2022 08:55:12 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28B1C4C7A4
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 05:55:10 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id f8so1400681plo.9
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 05:55:10 -0700 (PDT)
+        with ESMTP id S233379AbiFKMzN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Jun 2022 08:55:13 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 817374C7A5
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 05:55:11 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id z17so1761493pff.7
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 05:55:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=oZUVKPQ86t/gFfVcMQ3TDx3Atx5r3g3Tl8rhISPA5Us=;
-        b=EGBug1YF+ZWUJnmWqA6DWAVQChJkhQve1vl/eH5Jl/9mQDlYdEBYnlV82z2VcIUzBD
-         W6+w6UvCKV6/YN4p60CZ8yG/1QHFvRvBrNZBvzLprg426qwdVZWCpoRU51vJ3+Vta68w
-         B/5xATn6pWkD4WUqPBq/Ey7zdIhN674wZUj3C26LVyV3M1HGXyFNW1xCEbuhuOjK6iGj
-         esrtnZC9SNf21SjzH3QAS3KkU5twgYgQiqe458Cp+knE9CWZNtHP92n2XBzPyuyrtkzA
-         5z1N8Yv2wVBVBB7hAZDLeE+AvngKn/dejtotIblLNZo/djVELLPc3U3ogmn2dvFkBwow
-         DKGg==
+        bh=fU3F4bcwZp70hCMjLKr900gPyRngGvpL8JmfItxitXw=;
+        b=ZuU9udweLnEcBFMkHL6l+d09zrwBSQ8bp7Ux85KMsFyWYMiwp4pmJeVwcW7HX0eeh2
+         imKSjmcGrDRTYph+y2QKmImF86u0xkXpSuZl/M6YZmw+aZs38EIFhxaD5aRDdgrJSjPP
+         wbQUP8IrW/z9geDFaWZssd35YJTYNz1HNvOVM7kay+Qefeir4VskE55JbljhoiaQomGu
+         JUPV01JtaMjeNi0BskwD5l4xMwkB+vnn3DcbvIkFTyR7TINAUwMH9ghXs8oOAE21jjC8
+         32Wq+dchcIu6EfUEW2V890DGb4rTvg9NKAnNmzKzmUK1LGIC0VsrzdKZZxgZvaM37YUY
+         qe3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=oZUVKPQ86t/gFfVcMQ3TDx3Atx5r3g3Tl8rhISPA5Us=;
-        b=PNnfFWvlLhos+AtXlQZOYKVuhEzU//rWYP/5ztEOZgho4NBNfFW+M+A8bQQku3hh3F
-         iV3mZA475ZlSp+/dmxroKyeavnFf/ks+H8xiAsZY6aDKmtHCt6ExDpgHzi601tsZtUvC
-         fQGQnnfxPm4IsEZmjxBOS2S5ozUvUPCeDiPfXWewZnaz18kOWyooITTfRA1meGzWbuQR
-         BidOG9HEo0g8C7mKKRjmobDal1ZEbH1052Gd0mwj9R8Zvw7ItXiY/sfedxNC4PsXrEy7
-         tsFd1+syQSOdoNz73I85QfJ4fB2b91WLPz3aQzXUq1pn2qm2tjg5w0LwCjKXAZcGbQlx
-         iuHw==
-X-Gm-Message-State: AOAM533R1p/ZCqDgytMyxPiusudlqq78aSIVGQullNvPCZfwkX11Lhzn
-        W1ZuXr9eH7onX/gzch4M0rmL0GtlVQ==
-X-Google-Smtp-Source: ABdhPJyPTzqwlaJmjAMy989rb4FDnUYANqJXZX6EmyL1Q/zs/9e1+0zpMusyhL/iNzygsKuO/yMgKg==
-X-Received: by 2002:a17:902:ea93:b0:168:bc83:9ae3 with SMTP id x19-20020a170902ea9300b00168bc839ae3mr7539721plb.123.1654952109538;
-        Sat, 11 Jun 2022 05:55:09 -0700 (PDT)
+        bh=fU3F4bcwZp70hCMjLKr900gPyRngGvpL8JmfItxitXw=;
+        b=jFyMwoqSf1svY61nL6c51FUp9HldFmlt0Il+kTMeLbAV+dfHO1fzsbUYFr5Brsi4lt
+         3+HQoMsJBvOPk/Jq8CnwuglUpA6MHX/nWA1T8CGmk7pXKGTxOuJiiBdeWeW1/cRvJYl8
+         orMTZeUmwoVlfNVFj+mqMqU7CK6BOTBwUSzzy8z0MGTKoM7tjjBnRUTZyWVymXygwPNm
+         VMvssRpRYYOSDBoaVDG8mTkGrXW0E7Ejjw2KBvrxDEyGNGEFEarj/Pn6VIT2EBfD7z6T
+         Mdy4GUky0OYju62a52YyyhRlxq72TtIM0Qbluc6Kjx4vGNB63wSWs3+jDGnm/SbwMOe4
+         NdGA==
+X-Gm-Message-State: AOAM530m0ts0/NS+e6cUWCuPN1g67eTEULSMtfRy2IfobozjQzwiwZ+9
+        mU+vEjibYDjsWfcLgGLNFQHUXwQnCg==
+X-Google-Smtp-Source: ABdhPJy82TgKG97EFytIw4Z2eZ3H4ZGXgCIS+e2M1csj4r3yM86mR6UtcW2PtjPq51YumxSsUnLRWw==
+X-Received: by 2002:a63:6946:0:b0:405:f5:e914 with SMTP id e67-20020a636946000000b0040500f5e914mr5754201pgc.324.1654952110917;
+        Sat, 11 Jun 2022 05:55:10 -0700 (PDT)
 Received: from localhost.localdomain ([43.132.141.9])
-        by smtp.gmail.com with ESMTPSA id b10-20020a170902bd4a00b00168b7d639acsm1440115plx.170.2022.06.11.05.55.08
+        by smtp.gmail.com with ESMTPSA id b10-20020a170902bd4a00b00168b7d639acsm1440115plx.170.2022.06.11.05.55.09
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 11 Jun 2022 05:55:09 -0700 (PDT)
+        Sat, 11 Jun 2022 05:55:10 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     djwong@kernel.org, david@fromorbit.com,
         Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH 1/2] xfs: factor out the common lock flags assert
-Date:   Sat, 11 Jun 2022 20:54:44 +0800
-Message-Id: <1654952085-13035-2-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH 2/2] xfs: use invalidate_lock to check the state of mmap_lock
+Date:   Sat, 11 Jun 2022 20:54:45 +0800
+Message-Id: <1654952085-13035-3-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1654952085-13035-1-git-send-email-kaixuxia@tencent.com>
 References: <1654952085-13035-1-git-send-email-kaixuxia@tencent.com>
@@ -63,106 +63,30 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-There are similar lock flags assert in xfs_ilock(), xfs_ilock_nowait(),
-xfs_iunlock(), thus we can factor it out into a helper that is clear.
+We should use invalidate_lock and XFS_MMAPLOCK_SHARED to check the state
+of mmap_lock rw_semaphore in xfs_isilocked(), rather than i_rwsem and
+XFS_IOLOCK_SHARED.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 ---
- fs/xfs/xfs_inode.c | 60 ++++++++++++++++++----------------------------
- 1 file changed, 23 insertions(+), 37 deletions(-)
+ fs/xfs/xfs_inode.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 52d6f2c7d58b..8b8bac7eba8c 100644
+index 8b8bac7eba8c..3e1c62ffa4f7 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -131,6 +131,26 @@ xfs_ilock_attr_map_shared(
- 	return lock_mode;
- }
+@@ -365,8 +365,8 @@ xfs_isilocked(
+ 	}
  
-+/*
-+ * You can't set both SHARED and EXCL for the same lock,
-+ * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_MMAPLOCK_SHARED,
-+ * XFS_MMAPLOCK_EXCL, XFS_ILOCK_SHARED, XFS_ILOCK_EXCL are valid values
-+ * to set in lock_flags.
-+ */
-+static inline void
-+xfs_lock_flags_assert(
-+	uint		lock_flags)
-+{
-+	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
-+		(XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
-+	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
-+		(XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
-+	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
-+		(XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
-+	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
-+	ASSERT(lock_flags != 0);
-+}
-+
- /*
-  * In addition to i_rwsem in the VFS inode, the xfs inode contains 2
-  * multi-reader locks: invalidate_lock and the i_lock.  This routine allows
-@@ -168,18 +188,7 @@ xfs_ilock(
- {
- 	trace_xfs_ilock(ip, lock_flags, _RET_IP_);
+ 	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
+-		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
+-				(lock_flags & XFS_IOLOCK_SHARED));
++		return __xfs_rwsem_islocked(&VFS_I(ip)->i_mapping->invalidate_lock,
++				(lock_flags & XFS_MMAPLOCK_SHARED));
+ 	}
  
--	/*
--	 * You can't set both SHARED and EXCL for the same lock,
--	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
--	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
--	 */
--	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
--	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
--	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
--	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
--	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
--	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
--	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
-+	xfs_lock_flags_assert(lock_flags);
- 
- 	if (lock_flags & XFS_IOLOCK_EXCL) {
- 		down_write_nested(&VFS_I(ip)->i_rwsem,
-@@ -222,18 +231,7 @@ xfs_ilock_nowait(
- {
- 	trace_xfs_ilock_nowait(ip, lock_flags, _RET_IP_);
- 
--	/*
--	 * You can't set both SHARED and EXCL for the same lock,
--	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
--	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
--	 */
--	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
--	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
--	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
--	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
--	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
--	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
--	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
-+	xfs_lock_flags_assert(lock_flags);
- 
- 	if (lock_flags & XFS_IOLOCK_EXCL) {
- 		if (!down_write_trylock(&VFS_I(ip)->i_rwsem))
-@@ -291,19 +289,7 @@ xfs_iunlock(
- 	xfs_inode_t		*ip,
- 	uint			lock_flags)
- {
--	/*
--	 * You can't set both SHARED and EXCL for the same lock,
--	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
--	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
--	 */
--	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
--	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
--	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
--	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
--	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
--	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
--	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
--	ASSERT(lock_flags != 0);
-+	xfs_lock_flags_assert(lock_flags);
- 
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		up_write(&VFS_I(ip)->i_rwsem);
+ 	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
 -- 
 2.27.0
 
