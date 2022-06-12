@@ -2,164 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03488C43334
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Jun 2022 23:34:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C07ABC433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 12 Jun 2022 04:42:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232445AbiFKXeX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Jun 2022 19:34:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50622 "EHLO
+        id S234234AbiFLEmn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 12 Jun 2022 00:42:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232453AbiFKXeT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Jun 2022 19:34:19 -0400
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00B8C55369;
-        Sat, 11 Jun 2022 16:34:15 -0700 (PDT)
-Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25BLltlh010725;
-        Sat, 11 Jun 2022 16:34:07 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
- subject : from : to : cc : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=jUdKWo4huJShRkXY45YuYh7ct7qm7v/bA8CWcYOslRk=;
- b=U4uChqBaTi5qJcWEho8FM4/kjm8ihwmqk9RrjhVpmAbrwhW53o3RTo3glgs8uFeAosKN
- AlcrMHAT482sWWD72mIhWWPXUuNAdb3GYmtlzBPmRPoz1SZOa0MfvmG3anU9Q8HFLs9N
- otFFkJGCV5hLEUWEPTXwfxGs0J/Xt7CGvKw= 
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2106.outbound.protection.outlook.com [104.47.55.106])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3gmrrn2355-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 11 Jun 2022 16:34:06 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hw09aPJG86OBeXc5oI3Rsos54zJyF8alATX7HDdGKkHVRW7N9HOYz5Ao5gN1VfrFN7Fb6SswWDqG4RY8pFEdq53Ln8GsDcz3IsFFgbasAliJNr9cCjhi6TO8h9TEfuizK1zsCfZe6gIr5lXpJLKRH3zU60gXQ2WBzL0MgbqsABPjJzQygsU3h94AM6AqyLuFHJvnE5U7ppcu273ZdHM9M0YBJk30/efhCKtsGb+PISItF2/J+8rE9bFAfzszX4Uj8GowpvDjmD9RjF38NEcrZvabf+Lh/AtotkhdzCGBYqjXhE2kTRjPftcwb1F33OvEb6kDXCe4E6gb/vz6Wxxt5A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jUdKWo4huJShRkXY45YuYh7ct7qm7v/bA8CWcYOslRk=;
- b=dG/jHM0db63ItfVCEUaSL6lJZJyS1Hi7hRzsLgdPMbF8rkbpOEXx9Zxll0OqJFQ2eL/+CB9A0JgjVhGErQkZ91+17vmlnRQUwU8ee5auWe9zC/mO/rzGHY8Yd5mJ+pVkzt/92nCE4iHCaE34tlECyyg2A2ayDNVXMqIgse+gBk5YeeoyRaMbOycePN3bx+J3SI4xXfgHftHfNE06vna8EsbtI+PDnoBr0gjFfQD+jjIyrf/2FJAaymXn2trUmDQiw59oXiIWbuS72o5e2TLNzpoVUdAJ36JwdYfcGtPH1X1qaTwrrAl9BiM45H2o0LISmb/gAyWn1x9fXINQje3UAg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-Received: from MN2PR15MB4287.namprd15.prod.outlook.com (2603:10b6:208:1b6::13)
- by PH0PR15MB4784.namprd15.prod.outlook.com (2603:10b6:510:9b::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5332.17; Sat, 11 Jun
- 2022 23:34:04 +0000
-Received: from MN2PR15MB4287.namprd15.prod.outlook.com
- ([fe80::548f:cce1:5c99:3995]) by MN2PR15MB4287.namprd15.prod.outlook.com
- ([fe80::548f:cce1:5c99:3995%7]) with mapi id 15.20.5332.017; Sat, 11 Jun 2022
- 23:34:03 +0000
-Message-ID: <fb72ebb9-df11-7689-0113-5d98783039fd@fb.com>
-Date:   Sat, 11 Jun 2022 19:34:01 -0400
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.10.0
-Subject: Re: [PATCH v2] iomap: skip pages past eof in iomap_do_writepage()
-Content-Language: en-US
-From:   Chris Mason <clm@fb.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     djwong@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org
-References: <20220608004228.3658429-1-clm@fb.com>
- <20220609005313.GX227878@dread.disaster.area>
- <8f4177bd-80ad-5e22-293e-5d1e944e1921@fb.com>
-In-Reply-To: <8f4177bd-80ad-5e22-293e-5d1e944e1921@fb.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: BL0PR03CA0026.namprd03.prod.outlook.com
- (2603:10b6:208:2d::39) To MN2PR15MB4287.namprd15.prod.outlook.com
- (2603:10b6:208:1b6::13)
+        with ESMTP id S231546AbiFLEmm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Jun 2022 00:42:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C009F3D1E4
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 21:42:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1655008960;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Mkqs8SZ0Vb6wG0emoaa9UTseTZcjoq4uFmLS2KUX5pE=;
+        b=Daw7/8iUCANpFOl2Thv0H8PsFgSmnUs7mNmeyHHTcW1vQUevtzy4xwGKNajwarc+pZui/o
+        92y6bkjEiME9GSVUdxjoeWxpDFXysu6JQxyz/dq7/fKwv5G8NdXarRMCTCdTVKjAS+JweX
+        H3Q62zyo9J4B649/wWbvFfTUKyHSwhQ=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-216-TIQNFZBINR6UxK5iZlxgaw-1; Sun, 12 Jun 2022 00:42:38 -0400
+X-MC-Unique: TIQNFZBINR6UxK5iZlxgaw-1
+Received: by mail-qk1-f198.google.com with SMTP id t15-20020a05620a450f00b006a75bf35680so2549594qkp.1
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Jun 2022 21:42:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Mkqs8SZ0Vb6wG0emoaa9UTseTZcjoq4uFmLS2KUX5pE=;
+        b=zrHvUKpO7QBSv9i+AGJQ7tTgLhcsZcN02OwYqzqpf7i/GQK0LUFSl7CutxgIiOw4ae
+         IM6okQcpqdrolUfuGiLF/n2tllcbNu2EI+CweexlIw/1jMD24gnU28OdDlZLMxJJACpP
+         7IiIEa64gdFHXJxRDTom/QHAWmOpeXf6ajp/Tf2WvBppgePkEEBvXSBvNJ1cpO+E115g
+         6MsSOl1D8/04TyD6ixZuTBVRuBQxe/QEIGU8RlWv/33yd7dDuI+E1mLko7ImeOVKysaS
+         SbZpfEZSRP39UxOWzxSPhKDI3N+Ueawcu+y9Jxd6TX9ZbWvbXgTTsHNouVdMfeVTGieO
+         Nmyw==
+X-Gm-Message-State: AOAM5311769OdlgaoXWU1WqtkltVMb4LEYqxh+AhZzjK/VQWICeuqYWA
+        MRTZxRoZJDmNvN8dBLKs1OwJ6uo8LItcdfKqrzTLTWdmQEm3kima9RNkSdjWJLrwK7KAR752gqE
+        rd44uTGDscJHoDUdvE2Tz
+X-Received: by 2002:a05:6214:c82:b0:46a:b677:e284 with SMTP id r2-20020a0562140c8200b0046ab677e284mr30031086qvr.28.1655008957905;
+        Sat, 11 Jun 2022 21:42:37 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwYIrLhDVFEhY0Xrec2mnOl/nhy061UwHVxjdWSQjQ8KSfjGUgaiGtB3J+KYd85V3cL9rTyyQ==
+X-Received: by 2002:a05:6214:c82:b0:46a:b677:e284 with SMTP id r2-20020a0562140c8200b0046ab677e284mr30031077qvr.28.1655008957646;
+        Sat, 11 Jun 2022 21:42:37 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id y6-20020a05622a004600b002f9399ccefasm2499410qtw.34.2022.06.11.21.42.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 11 Jun 2022 21:42:37 -0700 (PDT)
+Date:   Sun, 12 Jun 2022 12:42:30 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Alexander Gordeev <agordeev@linux.ibm.com>
+Cc:     bugzilla-daemon@kernel.org, linux-s390@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org
+Subject: Re: [Bug 216073] New: [s390x] kernel BUG at mm/usercopy.c:101!
+ usercopy: Kernel memory exposure attempt detected from vmalloc 'n  o area'
+ (offset 0, size 1)!
+Message-ID: <20220612044230.murerhsa765akogj@zlang-mailbox>
+References: <bug-216073-27@https.bugzilla.kernel.org/>
+ <20220606151312.6a9d098c85ed060d36519600@linux-foundation.org>
+ <Yp9pHV14OqvH0n02@li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com>
+ <20220608021922.n2izu7n4yoadknkx@zlang-mailbox>
+ <YqD0yAELzHxdRBU6@li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 48b93799-535b-4fbf-5bce-08da4c02de45
-X-MS-TrafficTypeDiagnostic: PH0PR15MB4784:EE_
-X-Microsoft-Antispam-PRVS: <PH0PR15MB4784DB3A6CAEA306565F8B12D3A99@PH0PR15MB4784.namprd15.prod.outlook.com>
-X-FB-Source: Internal
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fRYhb7KpTtfRUlRFMYUTYJdYZteVyAhwOlJesPni1NGZbfGqHWX5+lSMsXSe1zB/x90l7ATeaZpd8AKqDsCD0i+1LdlvNUzOqnHqK3KKDycS5WQgBupVlGFT85TMtDWse0bF7RygpTJMv4hktWuGf0jrMbTCLqOWRh3lKCpjsCgdQQLqsUdLo4OKARyjTRYF9KwBtKcBnvtFOZuzKAzah0pJQT23h650auQi5sagCaPZ2HhHbby9kKCkwZTPUFFQwzDGUN9OeinnaZfJI5G/2qiTm6Xg+w1eX/iwJpPUPyaF9lT/gSvPHfrir0weXjIxMA2bE9dRxxDQr92E8c2neXjqdBmX1++FDg8kpyMAbXXBeTyDd+UtwJ4QR1tlxpjE9doROIsONcx1MfI5mjW+V+y+k727vATCK6GDysxVkp1jKYrBJOyVvtu46kTePUN5mZQneSRE+36MNXN+AfYoWFg9VbcmDY15TGcVIjEISibvRclVZYo+jC0A+mL8O9Drq//H/w8mVlwzTDmd0qGAzIsPCnBuoBhaWQGcCZk5daf9Jqw0OIJkUJunjGrLnuMwGEa8ww76anMuboG4lC/5QnMjIU5hSIUdWbZ9EQJlxpELXfcIUkGwTBaegJ5Ms70JDwBL7hBmLtldonWIz5eu81SVpyPNhG7EFE0n0Oza0FGBmv65+/mU9xt249nE4rMszVtF7ICRxV+4t9Z9Eva49QKCodQMD0STuAA3dm2Y9XI=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR15MB4287.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(366004)(66476007)(66556008)(86362001)(4326008)(8676002)(31696002)(6916009)(66946007)(508600001)(316002)(6486002)(186003)(83380400001)(6512007)(6506007)(53546011)(2616005)(38100700002)(8936002)(36756003)(31686004)(2906002)(5660300002)(45980500001)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?eXUxd2syTDB3QmtpVEgwdHo1VWszazB2QUovcTdMeU56ZjByblM5eVhOWGlL?=
- =?utf-8?B?a2FudXUyOU5QRHVUMmdqeEcwNEtLZSt6UzdWUlFlUkhzdUl5UFozU3VpeDJn?=
- =?utf-8?B?djFuM0hwMnRQN2J0amV6Q3VQeFZSdjBzUXQrRDlNTjZlMWZIbXZveEgxMWkv?=
- =?utf-8?B?ZGU0b2U5RWUrenQxd2NhZnkyMXQyeTRQT08xcnZUaVlhaGQxRnN5Tk1VbVNH?=
- =?utf-8?B?SWJUeFc5b2k2dkUrZHdRMXlsTVFaaUVQcTU2VlBwa2RQMWJvZzJUT2gySTJQ?=
- =?utf-8?B?bzRJUXZUQVJGRFVkaVZUQ3lQTEJoUWhHQTl0U2UyUXNWaThXalNtNHFFeFBL?=
- =?utf-8?B?ZUpEb2RIdUJXOFFwRXhuMjJEWlFmdnFJUzIzbjByS01GclNYN3Q1QUlPSWYv?=
- =?utf-8?B?UVZ4blVRUDZZWnhmN2syanpsOHBxOHEzRER4dnIxcURUbmFXUE94ZjNLRGJW?=
- =?utf-8?B?WEVzNjM2dFdFNzlFUDVWYXNSWkQyMEkrZ1N5eTVlYUFuN3RsUXhXaW50Nkg4?=
- =?utf-8?B?cWhrbDliT1M0cVM1djVPMVplQkNrMVEyQUpQcmJ4cTUwTG5GSmR5NWI1YWlR?=
- =?utf-8?B?OTAxTVNDMVAybzBiTllKQWxRQnIzUDRuWU5yY1pkVkl1dGhsT1dMOElkVmZU?=
- =?utf-8?B?eTVsMGJUeDk0b0hYSmowbXAxTGpYbElxVnRraHB3b1F4THpnc1RMcTFneGJv?=
- =?utf-8?B?YVZpcm1mQXV1MUNXYkwzclQweEJuKzVZM3BmZER1T2NjRDlMMTlRTngxSTRZ?=
- =?utf-8?B?RTdyTDdsSUlvdW5vMjd2cnRJT3lZSEhGODlQVkY5U0pYVTBDc2dTdVR2cEhH?=
- =?utf-8?B?L1dXL1UycGh4TFB0MFdEZVBxZDdoN0pnRTF5NmpuQVd1R2E3VnY4TSt2MmY4?=
- =?utf-8?B?Uko1T2xwYi9ycmVLQmh0WW9HTzZDbWRnYUdHZ0tINmFuTVR0RjhjUHpidHpJ?=
- =?utf-8?B?bHphZExzOExGdldkd0RPYmxsUThQSnNNMlVWK0s2Rnp2S0lKbkdzN1BMQzhr?=
- =?utf-8?B?OGtlUWFmTSt2NnJvdXgrK3d4UXEyb3RWOG03TUJiZTVvOWRMY05aYnM2RjBX?=
- =?utf-8?B?MGRhZzh5T1pJb0lmaTRIcXRSb1dCTktUdkI3NWlpSFFLbWtCbmx4WVNSdDJN?=
- =?utf-8?B?aTlzL2lBdERIa04ram5tQWMrTVFlcGttVGdFeHJSa3Z6L1RvMjRFWHlOL1N6?=
- =?utf-8?B?bksvcGx6Z1hDaHJuVGxiYmNPaE83WXRZUlNwMjcvOW9oZDhvS3RzbVhQUVdo?=
- =?utf-8?B?dk5sMzViZUdOTkRreVhBM3ZQNmFJaWk1b2JLRGFaTTVpcGt5WjQzS3lrYzVk?=
- =?utf-8?B?UXRrd01Ocjd5Y0gzdkRHck5mUDg4b2hrNVJpZzdpaFlLRzVEVERFd3FBZExQ?=
- =?utf-8?B?TjRFeVhBMzdOWXZWQllITW5ldmk1RmorQnJ0azBRekpMbGdabGo5VGgrSDV0?=
- =?utf-8?B?a01wL3ZGclNlNmlacFdZbEw1Yjlxb1JlbGYzeFA4TEszRytoZzNydjhCUzRC?=
- =?utf-8?B?MWVDNHYxaDM2VlJacExmV1M2QmpZL3NGMkthQ24wRlhXVXROWE9xNWZCaHhC?=
- =?utf-8?B?bWYxM1o1T1I4SVU4blZRZjdRZmwvVEtrdk4ySDhxczNNZmhjcGIzdXNYSDBM?=
- =?utf-8?B?N1YrdUl2S3ZEVE9nSWJoWitoR2VYeDdtZWZmbmpLRzRVeUFuL3J1WmhRMnN2?=
- =?utf-8?B?MFRsUU5TL0ROakRxbjhDWjV6cnVCc1p4cDZ1RUtNcEU5akxTNUFnTmVEVnlU?=
- =?utf-8?B?b29SMTllNVdUeGwxMkRoa2pZd1FBVzhaMnljeWh3M25jaGFNUXdlU1lJdU43?=
- =?utf-8?B?SHI0UkM4SWJsU1dsdkZrV2pRMEdLS0d0K0pMRW1VMFRBdEZmblE2ckw3QTdH?=
- =?utf-8?B?eHhTQWpGNGw4QUJDZytrcDJGckU0RTZaR2UrN3dLaDl6QVdmbEtxTExrem1h?=
- =?utf-8?B?K0grRHI5ZFpQaVRKMDZ3eWt3akpOK0dPZE9kbk1aWHpjYmFLL1MwekhDT3JC?=
- =?utf-8?B?cUFUSE41aTZtVXdyc0NmOFlYVTBzeXRlZ1o1WjExRGxRUmtSYjNqQ3JiTXFO?=
- =?utf-8?B?Z1M3OTB0Sm96cnY5NmIxN09KdU9hZitVUnRTQWZjNUc1MGZJbmJWTjVNZElK?=
- =?utf-8?B?bUJuWEtzd3JlSG9YQTVDbGFwZW51ZlRBZlk0bFNVRW9CaUFjQkN5RHVoZ0kv?=
- =?utf-8?B?UkZPak5TQUFOT3NmaU04RzFERTJBc0NrNkZsRkxaYTFYWnRYdzRjTmJzZllF?=
- =?utf-8?B?TkVzemtuNVZBMy8xcFY3RVRlR3RnRzhGTS9mUkt5dVJSUFR0VFY2c1ZaM2JT?=
- =?utf-8?B?eXhyc2RBVS9Qa1NMTUw2UGRYYXNLNmhvM0xpaTRzdk1WeDgzd281bTREKzhy?=
- =?utf-8?Q?cW3dMQUKtaEKYiU8=3D?=
-X-OriginatorOrg: fb.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 48b93799-535b-4fbf-5bce-08da4c02de45
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR15MB4287.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jun 2022 23:34:03.0173
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: l5MuejKKSAt0bwGtTBiAGanBN/sPeJsTzZ7dKA7eXRDEkiy3H+jt3wnsC+NksOUi
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR15MB4784
-X-Proofpoint-GUID: qUx7FzMHf99k5U6yRiKC4V6BrA7S4ZNa
-X-Proofpoint-ORIG-GUID: qUx7FzMHf99k5U6yRiKC4V6BrA7S4ZNa
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
- definitions=2022-06-11_09,2022-06-09_02,2022-02-23_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YqD0yAELzHxdRBU6@li-4a3a4a4c-28e5-11b2-a85c-a8d192c6f089.ibm.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/9/22 5:15 PM, Chris Mason wrote:
-> On 6/8/22 8:53 PM, Dave Chinner wrote:
-
->> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+On Wed, Jun 08, 2022 at 09:13:12PM +0200, Alexander Gordeev wrote:
+> On Wed, Jun 08, 2022 at 10:19:22AM +0800, Zorro Lang wrote:
+> > One of the test environment details as [1]. The xfstests config as [2].
+> > It's easier to reproduce on 64k directory size xfs by running xfstests
+> > auto group.
 > 
-> Thanks!  Johannes and I are both going on vacation, but I'll get an 
-> experiment rolled to enough hosts to see if the long tails get shorter. 
->   We're unlikely to come back with results before July.
+> 
+> Thanks for the details, Zorro!
+> 
+> Do you create test and scratch device with xfs_io, as README suggests?
+> If yes, what are sizes of the files?
+> Also, do you run always xfs/auto or xfs/294 hits for you reliably?
+
+Looks likt it's not a s390x specific bug, I just hit this issue once (not 100%
+reproducible) on aarch64 with linux v5.19.0-rc1+ [1]. So back to cc linux-mm
+to get more review.
+
+Thanks,
+Zorro
+
+[1]
+[  980.200947] usercopy: Kernel memory exposure attempt detected from vmalloc 'no area' (offset 0, size 1)! 
+[  980.200968] ------------[ cut here ]------------ 
+[  980.200969] kernel BUG at mm/usercopy.c:101! 
+[  980.201081] Internal error: Oops - BUG: 0 [#1] SMP 
+[  980.224192] Modules linked in: rfkill arm_spe_pmu mlx5_ib ast drm_vram_helper drm_ttm_helper ttm ib_uverbs acpi_ipmi drm_kms_helper ipmi_ssif fb_sys_fops syscopyarea sysfillrect ib_core sysimgblt arm_cmn arm_dmc620_pmu arm_dsu_pmu cppc_cpufreq sunrpc vfat fat drm fuse xfs libcrc32c mlx5_core crct10dif_ce ghash_ce sha2_ce sha256_arm64 sha1_ce sbsa_gwdt nvme igb mlxfw nvme_core tls i2c_algo_bit psample pci_hyperv_intf i2c_designware_platform i2c_designware_core xgene_hwmon ipmi_devintf ipmi_msghandler 
+[  980.268449] CPU: 42 PID: 121940 Comm: rm Kdump: loaded Not tainted 5.19.0-rc1+ #1 
+[  980.275921] Hardware name: GIGABYTE R272-P30-JG/MP32-AR0-JG, BIOS F16f (SCP: 1.06.20210615) 07/01/2021 
+[  980.285214] pstate: 60400009 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--) 
+[  980.292165] pc : usercopy_abort+0x78/0x7c 
+[  980.296167] lr : usercopy_abort+0x78/0x7c 
+[  980.300166] sp : ffff80002b007730 
+[  980.303469] x29: ffff80002b007740 x28: ffff80002b007cc0 x27: ffffdc5683ecc880 
+[  980.310595] x26: 1ffff00005600f9b x25: ffffdc5681c90000 x24: ffff80002b007cdc 
+[  980.317722] x23: ffff800041a0004a x22: 0000000000000001 x21: 0000000000000001 
+[  980.324848] x20: 0000000000000000 x19: ffff800041a00049 x18: 0000000000000000 
+[  980.331974] x17: 2720636f6c6c616d x16: 76206d6f72662064 x15: 6574636574656420 
+[  980.339101] x14: 74706d6574746120 x13: 21293120657a6973 x12: ffff6106cbc4c03f 
+[  980.346227] x11: 1fffe106cbc4c03e x10: ffff6106cbc4c03e x9 : ffffdc5681f36e30 
+[  980.353353] x8 : ffff08365e2601f7 x7 : 0000000000000001 x6 : ffff6106cbc4c03e 
+[  980.360480] x5 : ffff08365e2601f0 x4 : 1fffe10044b11801 x3 : 0000000000000000 
+[  980.367606] x2 : 0000000000000000 x1 : ffff08022588c000 x0 : 000000000000005c 
+[  980.374733] Call trace: 
+[  980.377167]  usercopy_abort+0x78/0x7c 
+[  980.380819]  check_heap_object+0x3dc/0x3e0 
+[  980.384907]  __check_object_size.part.0+0x6c/0x1f0 
+[  980.389688]  __check_object_size+0x24/0x30 
+[  980.393774]  filldir64+0x548/0x84c 
+[  980.397165]  xfs_dir2_block_getdents+0x404/0x960 [xfs] 
+[  980.402437]  xfs_readdir+0x3c4/0x4b0 [xfs] 
+[  980.406652]  xfs_file_readdir+0x6c/0xa0 [xfs] 
+[  980.411127]  iterate_dir+0x3a4/0x500 
+[  980.414691]  __do_sys_getdents64+0xb0/0x230 
+[  980.418863]  __arm64_sys_getdents64+0x70/0xa0 
+[  980.423209]  invoke_syscall.constprop.0+0xd8/0x1d0 
+[  980.427991]  el0_svc_common.constprop.0+0x224/0x2bc 
+[  980.432858]  do_el0_svc+0x4c/0x90 
+[  980.436163]  el0_svc+0x5c/0x140 
+[  980.439294]  el0t_64_sync_handler+0xb4/0x130 
+[  980.443553]  el0t_64_sync+0x174/0x178 
+[  980.447206] Code: f90003e3 aa0003e3 91098100 97ffe24b (d4210000)  
+[  980.453292] SMP: stopping secondary CPUs 
+[  980.458162] Starting crashdump kernel... 
+[  980.462073] Bye!
+
+> 
+> Thanks!
 > 
 
-Of course, the easiest way to test my theory is live patching against 
-v5.6, but there's a wrinkle because v5.6 still has xfs_vm_writepage()
-
-Looks like the iomap conversion deleted the warning that Jan was 
-originally fixing, and I went through some hoops to trigger skipping the 
-pages from inside writepage().  As you noted in the commit to delete 
-writepage, this is pretty hard to trigger but it does happen once I get 
-down to a few hundred MB free.  It doesn't seem to impact fsx runs or 
-other load, and we unmount/xfs_repair cleanly.
-
-I don't like to ask people to think about ancient kernels, but am I 
-missing any huge problems?  I've got this patch backported on v5.6, and 
-writepage is still in place.
-
--chris
