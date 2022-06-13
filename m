@@ -2,139 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 308F0C43334
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jun 2022 09:57:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A80AACCA47F
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jun 2022 10:00:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241195AbiFMJ50 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jun 2022 05:57:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60180 "EHLO
+        id S235180AbiFMKAn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jun 2022 06:00:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235051AbiFMJ5Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jun 2022 05:57:24 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AA3F266D;
-        Mon, 13 Jun 2022 02:57:21 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id w20so7948944lfa.11;
-        Mon, 13 Jun 2022 02:57:21 -0700 (PDT)
+        with ESMTP id S235355AbiFMKAl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jun 2022 06:00:41 -0400
+Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B73841CFF1;
+        Mon, 13 Jun 2022 03:00:39 -0700 (PDT)
+Received: by mail-lj1-x230.google.com with SMTP id y15so5643524ljc.0;
+        Mon, 13 Jun 2022 03:00:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:date:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=q+gaNQ62f+5Zk+/bU3CIzZRxCFTAFsgwJBwC38Db6U4=;
-        b=mSAZ9WOe1p7jT4Z/fY3/R9T218OEVoN+q06jWIucO1UkpM5u4Q3l4NY5dlKTGfHl6/
-         BoOJODpLdWtwSGU/UPdeZyaG/VFhZc2XIRIbrLfhoANfhFNBFCOS2KQmXpWpYEmC3MLJ
-         Pe88nyWkmsCnqzvJCJJ9MKixzV1TKWqNYXgNTrTO0kLh+KXnxQatnRIBVdbQKMQCdXvb
-         67iWJfyEe2hZnKbAA6yKiCRNvuwMnWsPgNH8XFl4yNPDiW5yiHuLECOxgVxXSBIxSo7D
-         zi3Y+Lt7QJggJITtMz9CKQGhGHm0MDn1D6Ecga4cVLno0d+C2REyyUero9wC1GBd3LnO
-         UTzg==
+        bh=n3cgN2CZeUATuDX6tGeZqbEe4qx2pH+uniVRgLnOiSY=;
+        b=P5QwT1m2oOSDkfS4z7jk4qILTPWqpBqCxOLSXm8VM22ATVKCcgtpjpI1CXiAfuBV1G
+         AlbNG614FbjXH53G6+QPu3P5o6AtLUv2na+plKkl+tm4i8zzYeJbhfevorVTKmdcNg/S
+         JJzCdOax1zNaWUAsvddV70dd5CVkC2N0y0W4wvTZ4vuKsFVRYxl5QD6ldzp+WO5TYuAZ
+         d+HaUOifBkE6SweFqRVxRFIMtwInHe0Aqv78Qzr1d8BgVpbHOAZLVJmwM8P9jsOd6BI4
+         9cKeJffCZUMN+kK5biVnvBlDAynClJqxMXvPfHqKFtbuJNL3mzpq+32VI8I/DH7bEWaS
+         7BIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:date:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=q+gaNQ62f+5Zk+/bU3CIzZRxCFTAFsgwJBwC38Db6U4=;
-        b=muOpQQTqYyzHQE2Z0vmktsLVaGQ9VIFX9gymRVvhNlyGU8JN5XTUhmlMf0+ZW9uKDW
-         RXtbssFvZIb/cQgwrfW1cOnnyoLjgVWccDnol6z4vcv/pjQ1Ok0nieXdhTUu8YtDFgXx
-         1SB34b9lfU7xw+HgTqXdOBw5VIGOOwBeWWNhGf+ZFbwZigmqBMrAy93sF0vz4fuWdtq2
-         aghcWIAjaCnlXx0WXPPHkD2iAsbcdy1i0Wk1XZD0mJ4c2tLG2x8/aXXupi2NAMsJ9SQ8
-         8ReljAgD/1v9aKCM8RGtwoKQ8ffpXyQiZmm55+zOqVe0ak6hJMq3iUDPwtOgyuOQ+0C5
-         B2GA==
-X-Gm-Message-State: AOAM531MWOblasilxDthkK90ECD6Oi8PGpA4MfzYuLoaGjVo+sLkxncC
-        jyDJQnKhyc880AA3ozIyDz/54LXyzbGILnYP
-X-Google-Smtp-Source: ABdhPJwiPyXYGkbG5yWQZmKoYLx6qVZ0NzgcU/IZWirirDdItL1Qradxnwan4CPihRqmw1VIw1veSg==
-X-Received: by 2002:a05:6512:3085:b0:479:3986:1d23 with SMTP id z5-20020a056512308500b0047939861d23mr25370189lfd.373.1655114239853;
-        Mon, 13 Jun 2022 02:57:19 -0700 (PDT)
+        bh=n3cgN2CZeUATuDX6tGeZqbEe4qx2pH+uniVRgLnOiSY=;
+        b=FCq/wBgDcRoPPQQ+2athS6hLCWr1CcjXx9HfqKfWmjOWmyNggAnv7t7G+exS7cPmCb
+         665PEBh1y/Or+l9GAv7MmC1K3rFHW4Qv9Sug2cfO2O2I0qI2PgirbF/V80W7V0M3nKlP
+         BVbLWVhm2aqLaLeGYbvCG1FT/Lcg/zz/hTtjNs9xR0KYaR9JPQHYLzmBqy59+/mBwhj2
+         vjKqNEspb/8Ik+D8i9w4MCt193MDu1ea6zOZYzOrWcMls+biIdz6/09TpOylBHM1QnWg
+         +Tz7CSy2UDQfCOzIDtHnvOruh1g4mmRxSnMKB2j0p0pwn9ZPSe86XkK/436CboFEZALs
+         g3Qg==
+X-Gm-Message-State: AOAM532cPpIeSqfkD6//B/7TpDZIS5Dbv4QlG0ORJ05Xi3Xgq7v6AFMa
+        YIp5x7bEYv1TtAZaNNFrBRI=
+X-Google-Smtp-Source: ABdhPJwUifOWExCNu4th+FzG3q0cyioLwDRfT3eb/rRC1EWeAkgo2bbuWuoKAHBS8/KswS3KEQDRNA==
+X-Received: by 2002:a2e:9283:0:b0:253:e175:dd84 with SMTP id d3-20020a2e9283000000b00253e175dd84mr61977086ljh.221.1655114438114;
+        Mon, 13 Jun 2022 03:00:38 -0700 (PDT)
 Received: from pc638.lan ([155.137.26.201])
-        by smtp.gmail.com with ESMTPSA id 1-20020a2eb941000000b00258df665017sm954882ljs.3.2022.06.13.02.57.18
+        by smtp.gmail.com with ESMTPSA id o20-20020ac24e94000000b0047255d210e7sm929510lfr.22.2022.06.13.03.00.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jun 2022 02:57:19 -0700 (PDT)
+        Mon, 13 Jun 2022 03:00:37 -0700 (PDT)
 From:   Uladzislau Rezki <urezki@gmail.com>
 X-Google-Original-From: Uladzislau Rezki <urezki@pc638.lan>
-Date:   Mon, 13 Jun 2022 11:57:17 +0200
+Date:   Mon, 13 Jun 2022 12:00:35 +0200
 To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
 Cc:     Kees Cook <keescook@chromium.org>, linux-mm@kvack.org,
         Uladzislau Rezki <urezki@gmail.com>,
         Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
         linux-hardening@vger.kernel.org
-Subject: Re: [PATCH 3/3] usercopy: Make usercopy resilient against
- ridiculously large copies
-Message-ID: <YqcJ/cGI2Tv/FRip@pc638.lan>
+Subject: Re: [PATCH 1/3] usercopy: Handle vm_map_ram() areas
+Message-ID: <YqcKw4AxxvEWtLmS@pc638.lan>
 References: <20220612213227.3881769-1-willy@infradead.org>
- <20220612213227.3881769-4-willy@infradead.org>
+ <20220612213227.3881769-2-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220612213227.3881769-4-willy@infradead.org>
+In-Reply-To: <20220612213227.3881769-2-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> If 'n' is so large that it's negative, we might wrap around and mistakenly
-> think that the copy is OK when it's not.  Such a copy would probably
-> crash, but just doing the arithmetic in a more simple way lets us detect
-> and refuse this case.
+> vmalloc does not allocate a vm_struct for vm_map_ram() areas.  That causes
+> us to deny usercopies from those areas.  This affects XFS which uses
+> vm_map_ram() for its directories.
 > 
+> Fix this by calling find_vmap_area() instead of find_vm_area().
+> 
+> Fixes: 0aef499f3172 ("mm/usercopy: Detect vmalloc overruns")
 > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 > ---
->  mm/usercopy.c | 19 +++++++++----------
->  1 file changed, 9 insertions(+), 10 deletions(-)
+>  include/linux/vmalloc.h | 1 +
+>  mm/usercopy.c           | 8 +++++---
+>  mm/vmalloc.c            | 2 +-
+>  3 files changed, 7 insertions(+), 4 deletions(-)
 > 
-> diff --git a/mm/usercopy.c b/mm/usercopy.c
-> index 31deee7dd2f5..ff16083cf1c8 100644
-> --- a/mm/usercopy.c
-> +++ b/mm/usercopy.c
-> @@ -162,20 +162,18 @@ static inline void check_heap_object(const void *ptr, unsigned long n,
->  				     bool to_user)
->  {
->  	uintptr_t addr = (uintptr_t)ptr;
-> +	unsigned long offset;
->  	struct folio *folio;
->  
->  	if (is_kmap_addr(ptr)) {
-> -		unsigned long page_end = addr | (PAGE_SIZE - 1);
-> -
-> -		if (addr + n - 1 > page_end)
-> -			usercopy_abort("kmap", NULL, to_user,
-> -					offset_in_page(ptr), n);
-> +		offset = offset_in_page(ptr);
-> +		if (n > PAGE_SIZE - offset)
-> +			usercopy_abort("kmap", NULL, to_user, offset, n);
->  		return;
->  	}
->  
->  	if (is_vmalloc_addr(ptr)) {
->  		struct vmap_area *area = find_vmap_area(addr);
-> -		unsigned long offset;
->  
->  		if (!area) {
->  			usercopy_abort("vmalloc", "no area", to_user, 0, n);
-> @@ -184,9 +182,10 @@ static inline void check_heap_object(const void *ptr, unsigned long n,
->  
->  		/* XXX: We should also abort for free vmap_areas */
->  
-> -		offset = addr - area->va_start;
-> -		if (addr + n > area->va_end)
-> +		if (n > area->va_end - addr) {
-> +			offset = addr - area->va_start;
->  			usercopy_abort("vmalloc", NULL, to_user, offset, n);
-> +		}
->  		return;
->  	}
->  
-> @@ -199,8 +198,8 @@ static inline void check_heap_object(const void *ptr, unsigned long n,
->  		/* Check slab allocator for flags and size. */
->  		__check_heap_object(ptr, n, folio_slab(folio), to_user);
->  	} else if (folio_test_large(folio)) {
-> -		unsigned long offset = ptr - folio_address(folio);
-> -		if (offset + n > folio_size(folio))
-> +		offset = ptr - folio_address(folio);
-> +		if (n > folio_size(folio) - offset)
->  			usercopy_abort("page alloc", NULL, to_user, offset, n);
->  	}
->  }
-> -- 
-> 2.35.1
-> 
-Looks good to me: Reviewed-by: Uladzislau Rezki (Sony) <urezki@gmail.com>
+> diff --git a/include/linux/vmalloc.h b/include/linux/vmalloc.h
+> index b159c2789961..096d48aa3437 100644
+> --- a/include/linux/vmalloc.h
+> +++ b/include/linux/vmalloc.h
+> @@ -215,6 +215,7 @@ extern struct vm_struct *__get_vm_area_caller(unsigned long size,
+>  void free_vm_area(struct vm_struct *area);
+>  extern struct vm_struct *remove_vm_area(const void *addr);
+>  extern struct vm_struct *find_vm_area(const void *addr);
+> +struct vmap_area *find_vmap_area(unsigned long addr);
+Make it "extern" since it becomes globally visible?
 
 --
 Uladzislau Rezki
