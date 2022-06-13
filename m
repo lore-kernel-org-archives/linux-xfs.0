@@ -2,113 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA308CCA47D
-	for <linux-xfs@archiver.kernel.org>; Sun, 12 Jun 2022 21:32:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47EFBCCA47F
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jun 2022 08:05:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234215AbiFLVcs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 12 Jun 2022 17:32:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50162 "EHLO
+        id S238062AbiFMIFG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jun 2022 04:05:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236111AbiFLVco (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Jun 2022 17:32:44 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 751A3116E;
-        Sun, 12 Jun 2022 14:32:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=tvuIUvh4KMt/W3Ck0YL8jqhN/KST+B/kPdeyBtOnYMI=; b=jOcEWP6MokPpHUTnlAkh/E65mL
-        4W8V4vdlxVz2zQtkO9qZYuNZFn6zxe5LZMB+22Jesq35WG5x3Nw2E3mICgwIDFOWEmlaEzeLzTZif
-        F1GoRcMUDGfoYNRj1nVAjB22aXZ/MwOO1EqMsv4gwAqSiELfP/UKhYIiEePON6kF+HKG7nHdQzv2v
-        lQDev+2c7TK3GFkWkjZwQ1dgj9RG1XcUcrKpO8SY1zyRMfgip7xKLuuYv2IEupKC4R2Dp5F8os/YI
-        opoHyaafYUTwT8RK0IuVDaP//qQIWKe5VGQMnGY6LVMulBYnbpkT5IkqyQj0zN0ywgWy3VDWwcTGT
-        66BdCNUQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o0VC9-00GHpw-CG; Sun, 12 Jun 2022 21:32:29 +0000
-From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-mm@kvack.org, Uladzislau Rezki <urezki@gmail.com>,
-        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
+        with ESMTP id S239467AbiFMIEj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jun 2022 04:04:39 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F2F561DA74
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Jun 2022 01:04:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1655107475;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yG4TXPIUpzu5JrpFoncCij2pFS/fRyC7T4T0EvjrJIw=;
+        b=FBY8P+y2zacfzLh+A0ffweZltK9c+iavDmIR09s+lMtS2ihcbuKcGfg+avVgJAiXbdarCW
+        6DMvDJGjZancOgLvNDZfrtkLjJObthCWCW/u/FYf9DDrbIzh2mgYsuNRrYGk3Li3dr4Lnb
+        sq/5VstFOhv4MhD37RaUojlx6z99zm0=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-632-MaddmyjrP7O2xkvcx3CWDw-1; Mon, 13 Jun 2022 04:04:31 -0400
+X-MC-Unique: MaddmyjrP7O2xkvcx3CWDw-1
+Received: by mail-qk1-f200.google.com with SMTP id h16-20020a05620a401000b006a6b8ac9c64so4459780qko.8
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Jun 2022 01:04:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=yG4TXPIUpzu5JrpFoncCij2pFS/fRyC7T4T0EvjrJIw=;
+        b=F/yli9IIeOZHs2oSmETetwOZ4vno73gamScLvVHpWxWMxS7pmKLEikuRgVpB2QGYTK
+         jZKutWLfrADUmZhNnIgfJGtC6dmp4ovO97FQ4LaDD+Alyuujbz5JYn+6iP6kKb+0sopU
+         G2QMRzfcapaYpG++zrAHgdL7qWwVqCD+aPHHV1+GPS9dP1A6J2ipv+3mhTe7UDQNzwBS
+         uMTXv/Q445RoufhhSoDeHbw950Eo+6G8ERsNtGKnN4gyI8nZhMv30g0Dn+q/q+DW7PhS
+         lY39Wavs7f63dXpFLdr0PbB+8GOTKReKkZxGXT7RkVpSDl8r4Zmqj7JoWDpUhoG7XVIM
+         QT5Q==
+X-Gm-Message-State: AOAM530AoiXactvHIV37b4UoJTc6ZAhDfF/ZR2yRjhhwMVjIzapi9iTV
+        grvotReDTHEZmRghoSJWc+sLWcNv8vWk4NFKmWnRZcMhIg4/Pra9tvWZYeRVN7bqwOluu3VWles
+        XJu86VduCetHA4exCQoXG
+X-Received: by 2002:ac8:75c5:0:b0:304:ffea:c434 with SMTP id z5-20020ac875c5000000b00304ffeac434mr21835014qtq.170.1655107471479;
+        Mon, 13 Jun 2022 01:04:31 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxyK9pDfdt2ahRKvrZUBXZLqk04TKP9jpVIYJWgt4s4IShRDLBAZDAcAbWT6DSNOcl4fM1ceg==
+X-Received: by 2002:ac8:75c5:0:b0:304:ffea:c434 with SMTP id z5-20020ac875c5000000b00304ffeac434mr21834999qtq.170.1655107471225;
+        Mon, 13 Jun 2022 01:04:31 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id x14-20020a05620a448e00b006a711bb74b6sm6631173qkp.87.2022.06.13.01.04.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Jun 2022 01:04:30 -0700 (PDT)
+Date:   Mon, 13 Jun 2022 16:04:24 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc:     Kees Cook <keescook@chromium.org>, linux-mm@kvack.org,
+        Uladzislau Rezki <urezki@gmail.com>, linux-xfs@vger.kernel.org,
         linux-hardening@vger.kernel.org
-Subject: [PATCH 1/3] usercopy: Handle vm_map_ram() areas
-Date:   Sun, 12 Jun 2022 22:32:25 +0100
-Message-Id: <20220612213227.3881769-2-willy@infradead.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20220612213227.3881769-1-willy@infradead.org>
+Subject: Re: [PATCH 0/3] Fixes for usercopy
+Message-ID: <20220613080424.gkfn3v3crjjbgxyb@zlang-mailbox>
 References: <20220612213227.3881769-1-willy@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220612213227.3881769-1-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-vmalloc does not allocate a vm_struct for vm_map_ram() areas.  That causes
-us to deny usercopies from those areas.  This affects XFS which uses
-vm_map_ram() for its directories.
+On Sun, Jun 12, 2022 at 10:32:24PM +0100, Matthew Wilcox (Oracle) wrote:
+> Kees, I'm hoping you'll take these through your tree.  I think they're
+> all reasonable fixes to go into 5.19.  The first one is essential;
+> it fixes two different bugs that people have hit.
+> 
+> Matthew Wilcox (Oracle) (3):
+>   usercopy: Handle vm_map_ram() areas
+>   usercopy: Cast pointer to an integer once
+>   usercopy: Make usercopy resilient against ridiculously large copies
 
-Fix this by calling find_vmap_area() instead of find_vm_area().
+Hi Matthew,
 
-Fixes: 0aef499f3172 ("mm/usercopy: Detect vmalloc overruns")
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- include/linux/vmalloc.h | 1 +
- mm/usercopy.c           | 8 +++++---
- mm/vmalloc.c            | 2 +-
- 3 files changed, 7 insertions(+), 4 deletions(-)
+[Quick response] ...
+After merging this patchset onto linux v5.19-rc2, I can't reproduce bug [1]
+anymore. I'd like to keep the test running, if it find other issues I'll
+feedback.
 
-diff --git a/include/linux/vmalloc.h b/include/linux/vmalloc.h
-index b159c2789961..096d48aa3437 100644
---- a/include/linux/vmalloc.h
-+++ b/include/linux/vmalloc.h
-@@ -215,6 +215,7 @@ extern struct vm_struct *__get_vm_area_caller(unsigned long size,
- void free_vm_area(struct vm_struct *area);
- extern struct vm_struct *remove_vm_area(const void *addr);
- extern struct vm_struct *find_vm_area(const void *addr);
-+struct vmap_area *find_vmap_area(unsigned long addr);
- 
- static inline bool is_vm_area_hugepages(const void *addr)
- {
-diff --git a/mm/usercopy.c b/mm/usercopy.c
-index baeacc735b83..fdd1bed3b90a 100644
---- a/mm/usercopy.c
-+++ b/mm/usercopy.c
-@@ -173,7 +173,7 @@ static inline void check_heap_object(const void *ptr, unsigned long n,
- 	}
- 
- 	if (is_vmalloc_addr(ptr)) {
--		struct vm_struct *area = find_vm_area(ptr);
-+		struct vmap_area *area = find_vmap_area((unsigned long)ptr);
- 		unsigned long offset;
- 
- 		if (!area) {
-@@ -181,8 +181,10 @@ static inline void check_heap_object(const void *ptr, unsigned long n,
- 			return;
- 		}
- 
--		offset = ptr - area->addr;
--		if (offset + n > get_vm_area_size(area))
-+		/* XXX: We should also abort for free vmap_areas */
-+
-+		offset = (unsigned long)ptr - area->va_start;
-+		if ((unsigned long)ptr + n > area->va_end)
- 			usercopy_abort("vmalloc", NULL, to_user, offset, n);
- 		return;
- 	}
-diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index 07db42455dd4..effd1ff6a4b4 100644
---- a/mm/vmalloc.c
-+++ b/mm/vmalloc.c
-@@ -1798,7 +1798,7 @@ static void free_unmap_vmap_area(struct vmap_area *va)
- 	free_vmap_area_noflush(va);
- }
- 
--static struct vmap_area *find_vmap_area(unsigned long addr)
-+struct vmap_area *find_vmap_area(unsigned long addr)
- {
- 	struct vmap_area *va;
- 
--- 
-2.35.1
+Thanks,
+Zorro
+
+[1]
+https://bugzilla.kernel.org/show_bug.cgi?id=216073
+
+> 
+>  include/linux/vmalloc.h |  1 +
+>  mm/usercopy.c           | 24 +++++++++++++-----------
+>  mm/vmalloc.c            |  2 +-
+>  3 files changed, 15 insertions(+), 12 deletions(-)
+> 
+> -- 
+> 2.35.1
+> 
 
