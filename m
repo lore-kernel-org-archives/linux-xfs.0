@@ -2,83 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09E40C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jun 2022 22:05:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 904E4CCA47F
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jun 2022 05:25:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229808AbiFMWE6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jun 2022 18:04:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43698 "EHLO
+        id S237874AbiFNFZX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jun 2022 01:25:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229671AbiFMWE6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jun 2022 18:04:58 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F36132B276;
-        Mon, 13 Jun 2022 15:04:53 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CED685ECC56;
-        Tue, 14 Jun 2022 08:04:50 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1o0sAy-006IFI-TQ; Tue, 14 Jun 2022 08:04:48 +1000
-Date:   Tue, 14 Jun 2022 08:04:48 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chris Mason <clm@fb.com>
-Cc:     djwong@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org
-Subject: Re: [PATCH v2] iomap: skip pages past eof in iomap_do_writepage()
-Message-ID: <20220613220448.GY227878@dread.disaster.area>
-References: <20220608004228.3658429-1-clm@fb.com>
- <20220609005313.GX227878@dread.disaster.area>
- <8f4177bd-80ad-5e22-293e-5d1e944e1921@fb.com>
- <fb72ebb9-df11-7689-0113-5d98783039fd@fb.com>
+        with ESMTP id S232427AbiFNFZW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jun 2022 01:25:22 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFDDB26AC4;
+        Mon, 13 Jun 2022 22:25:18 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 15EF6CE181B;
+        Tue, 14 Jun 2022 05:25:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9603C3411B;
+        Tue, 14 Jun 2022 05:25:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655184315;
+        bh=yVv5NBSoS8jRKy5ozRnvXgCu1M0fCe/nJRys6szNJx8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=V3vMc4a/nCEXDbFNP/4wKJ/IRtOdNoppRm3KT6glab4LkOZA75EmhzGbtaA1xJ+t3
+         zvkLdo81p05dnXKT+qKQuo6DrZwA4lYN2s4XqyUV53L250GdKda6QGguEubwN+2Tiu
+         d4A9dR7WcBIqi94WqvepH+Mo3dRm4pzTy62UhK2d0tWAEz0EaNQA/qG3VSjqGh/ZGP
+         BfUQkMRf8IKtoMh07F+Bm4ksrN2SWxyqmzziAxnkoynG7uOflh+qdDkUkyMvYFq2EJ
+         VUGOVK9SwNY9c0UT3JGvInxETeshxNeq+5qJGUa9Q4x+rKmPDCLKDNxg8c1GJk61r1
+         KqP5kl72VRMGw==
+Date:   Mon, 13 Jun 2022 22:25:12 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>
+Subject: Re: [RFC PATCH v2 1/7] statx: add I/O alignment information
+Message-ID: <YqgbuDbdH2OLcbC7@sol.localdomain>
+References: <20220518235011.153058-1-ebiggers@kernel.org>
+ <20220518235011.153058-2-ebiggers@kernel.org>
+ <YobNXbYnhBiqniTH@magnolia>
+ <20220520032739.GB1098723@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <fb72ebb9-df11-7689-0113-5d98783039fd@fb.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62a7b484
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=8nJEP1OIZ-IA:10 a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=dvwgNvh2vzOY59J3_fYA:9 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220520032739.GB1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 11, 2022 at 07:34:01PM -0400, Chris Mason wrote:
-> On 6/9/22 5:15 PM, Chris Mason wrote:
-> > On 6/8/22 8:53 PM, Dave Chinner wrote:
-> 
-> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+On Fri, May 20, 2022 at 01:27:39PM +1000, Dave Chinner wrote:
+> > > * stx_offset_align_optimal: the alignment (in bytes) suggested for file
+> > >   offsets and I/O segment lengths to get optimal performance.  This
+> > >   applies to both DIO and buffered I/O.  It differs from stx_blocksize
+> > >   in that stx_offset_align_optimal will contain the real optimum I/O
+> > >   size, which may be a large value.  In contrast, for compatibility
+> > >   reasons stx_blocksize is the minimum size needed to avoid page cache
+> > >   read/write/modify cycles, which may be much smaller than the optimum
+> > >   I/O size.  For more details about the motivation for this field, see
+> > >   https://lore.kernel.org/r/20220210040304.GM59729@dread.disaster.area
 > > 
-> > Thanks!  Johannes and I are both going on vacation, but I'll get an
-> > experiment rolled to enough hosts to see if the long tails get shorter.
-> >  We're unlikely to come back with results before July.
+> > Hmm.  So I guess this is supposed to be the filesystem's best guess at
+> > the IO size that will minimize RMW cycles in the entire stack?  i.e. if
+> > the user does not want RMW of pagecache pages, of file allocation units
+> > (if COW is enabled), of RAID stripes, or in the storage itself, then it
+> > should ensure that all IOs are aligned to this value?
 > > 
+> > I guess that means for XFS it's effectively max(pagesize, i_blocksize,
+> > bdev io_opt, sb_width, and (pretend XFS can reflink the realtime volume)
+> > the rt extent size)?  I didn't see a manpage update for statx(2) but
+> > that's mostly what I'm interested in. :)
 > 
-> Of course, the easiest way to test my theory is live patching against v5.6,
-> but there's a wrinkle because v5.6 still has xfs_vm_writepage()
-> 
-> Looks like the iomap conversion deleted the warning that Jan was originally
-> fixing, and I went through some hoops to trigger skipping the pages from
-> inside writepage().  As you noted in the commit to delete writepage, this is
-> pretty hard to trigger but it does happen once I get down to a few hundred
-> MB free.  It doesn't seem to impact fsx runs or other load, and we
-> unmount/xfs_repair cleanly.
->
-> I don't like to ask people to think about ancient kernels, but am I missing
-> any huge problems?  I've got this patch backported on v5.6, and writepage is
-> still in place.
+> Yup, xfs_stat_blksize() should give a good idea of what we should
+> do. It will end up being pretty much that, except without the need
+> to a mount option to turn on the sunit/swidth return, and always
+> taking into consideration extent size hints rather than just doing
+> that for RT inodes...
 
-Just backport the patch to remove ->writepage as well? I've run test
-kernels since ~2017 with the writepage delete in it and never seen
-any problems as a result of it. That would seem to me to be the
-simplest way of avoiding unexpected issues with reclaim writeback
-and truncate races...
+While working on the man-pages update, I'm having second thoughts about the
+stx_offset_align_optimal field.  Does any filesystem other than XFS actually
+want stx_offset_align_optimal, when st[x]_blksize already exists?  Many network
+filesystems, as well as tmpfs when hugepages are enabled, already report large
+(megabytes) sizes in st[x]_blksize.  And all documentation I looked at (man
+pages for Linux, POSIX, FreeBSD, NetBSD, macOS) documents st_blksize as
+something like "the preferred blocksize for efficient I/O".  It's never
+documented as being limited to PAGE_SIZE, which makes sense because it's not.
 
-Cheers,
+So stx_offset_align_optimal seems redundant, and it is going to confuse
+application developers who will have to decide when to use st[x]_blksize and
+when to use stx_offset_align_optimal.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Also, applications that don't work well with huge reported optimal I/O sizes
+would still continue to exist, as it will remain possible for applications to
+only be tested on filesystems that report a small optimal I/O size.
+
+Perhaps for now we should just add STATX_DIOALIGN instead of STATX_IOALIGN,
+leaving out the stx_offset_align_optimal field?  What do people think?
+
+- Eric
