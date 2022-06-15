@@ -2,182 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B004EC43334
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA5F8CCA473
 	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jun 2022 22:04:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242770AbiFOWEY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jun 2022 18:04:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56444 "EHLO
+        id S1346327AbiFOWEZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jun 2022 18:04:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346327AbiFOWEX (ORCPT
+        with ESMTP id S1346329AbiFOWEX (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jun 2022 18:04:23 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CDCDE562F2
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Jun 2022 15:04:20 -0700 (PDT)
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BD7125639D
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Jun 2022 15:04:22 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E07DB5ECAA0
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 08:04:19 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4FAC510E7692
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 08:04:20 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1o1b7a-00768R-9d
+        id 1o1b7a-00768P-6v
         for linux-xfs@vger.kernel.org; Thu, 16 Jun 2022 08:04:18 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1o1b7a-00FS1P-84
+        id 1o1b7a-00FS1I-5D
         for linux-xfs@vger.kernel.org;
         Thu, 16 Jun 2022 08:04:18 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: introduce xfs_inodegc_push()
-Date:   Thu, 16 Jun 2022 08:04:16 +1000
-Message-Id: <20220615220416.3681870-3-david@fromorbit.com>
+Subject: [PATCH 0/2 V2] xfs: xfs: non-blocking inodegc pushes
+Date:   Thu, 16 Jun 2022 08:04:14 +1000
+Message-Id: <20220615220416.3681870-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220615220416.3681870-1-david@fromorbit.com>
-References: <20220615220416.3681870-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62aa5764
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62aa5765
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=N8xf_ed3AAAA:8
-        a=NnqXlVpJ2G-Su3j_ZPkA:9 a=sE4t997d3Q9FUvws1cBB:22
+        a=JPEYwPQDsx4A:10 a=80JqfrdUrcx2x15jGyEA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-The current blocking mechanism for pushing the inodegc queue out to
-disk can result in systems becoming unusable when there is a long
-running inodegc operation. This is because the statfs()
-implementation currently issues a blocking flush of the inodegc
-queue and a significant number of common system utilities will call
-statfs() to discover something about the underlying filesystem.
+These patches introduce non-blocking inodegc pushes to fix long
+hold-offs in statfs() operations when inodegc is performing long
+running inode inactivation operations.
 
-This can result in userspace operations getting stuck on inodegc
-progress, and when trying to remove a heavily reflinked file on slow
-storage with a full journal, this can result in delays measuring in
-hours.
+The first patch introduces the bound maximum work start time for the
+inodegc queues - it's short, only 1 jiffie (10ms) - but we don't
+want to delay inodegc for an arbitrarily long period of time.
+However, it means that work always starts quickly and so that
+reduces the need for statfs() to have to wait for background inodegc
+to start and complete to catch space "freed" by recent unlinks.
 
-Avoid this problem by adding "push" function that expedites the
-flushing of the inodegc queue, but doesn't wait for it to complete.
+The second patch converts statfs to use a "push" rather than a
+"flush". The push simply schedules any pending work that hasn't yet
+timed out to run immediately and returns. It does not wait for the
+inodegc work to complete - that's what a flush does, and that's what
+caused all the problems for statfs(). Hence statfs() is converted to
+push semantics at the same time, thereby removing the blocking
+behaviour it currently has.
 
-Convert xfs_fs_statfs() and xfs_qm_scall_getquota() to use this
-mechanism so they don't block but still ensure that queued
-operations are expedited.
+This should prevent a large amount of the issues that have been
+seeing with lots of processes stuck in statfs() - that will no long
+happen. The only time user processes should get stuck now is when
+the inodegc throttle kicks in (unlinks only at this point) or if we
+are waiting for a lock a long running inodegc operation holds to be
+released. We had those specific problems before background inodegc -
+they manifested as unkillable unlink operations that had every
+backed up on them instead of background inodegc that has everything
+backed up on them.
 
-Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
-Reported-by: Chris Dunlop <chris@onthe.net.au>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_icache.c      | 20 +++++++++++++++-----
- fs/xfs/xfs_icache.h      |  1 +
- fs/xfs/xfs_qm_syscalls.c |  7 +++++--
- fs/xfs/xfs_super.c       |  7 +++++--
- fs/xfs/xfs_trace.h       |  1 +
- 5 files changed, 27 insertions(+), 9 deletions(-)
+This patch has been running in my test environment for nearly a
+month now without regressions occurring. While there are likely
+still going to be inodegc flush related hold-offs in certain
+circumstances, nothing appears to be impacting the correctness of
+fstests tests or creating new issues. The 0-day kernel testing bot
+also indicates that certain benchmarks (such as aim7 and
+stress-ng.rename) run significantly faster with bound maximum delays
+and non-blocking statfs operations.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 46b30ecf498c..aef4097ffd3e 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1865,19 +1865,29 @@ xfs_inodegc_worker(
- }
- 
- /*
-- * Force all currently queued inode inactivation work to run immediately and
-- * wait for the work to finish.
-+ * Expedite all pending inodegc work to run immediately. This does not wait for
-+ * completion of the work.
-  */
- void
--xfs_inodegc_flush(
-+xfs_inodegc_push(
- 	struct xfs_mount	*mp)
- {
- 	if (!xfs_is_inodegc_enabled(mp))
- 		return;
-+	trace_xfs_inodegc_push(mp, __return_address);
-+	xfs_inodegc_queue_all(mp);
-+}
- 
-+/*
-+ * Force all currently queued inode inactivation work to run immediately and
-+ * wait for the work to finish.
-+ */
-+void
-+xfs_inodegc_flush(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_inodegc_push(mp);
- 	trace_xfs_inodegc_flush(mp, __return_address);
--
--	xfs_inodegc_queue_all(mp);
- 	flush_workqueue(mp->m_inodegc_wq);
- }
- 
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 2e4cfddf8b8e..6cd180721659 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -76,6 +76,7 @@ void xfs_blockgc_stop(struct xfs_mount *mp);
- void xfs_blockgc_start(struct xfs_mount *mp);
- 
- void xfs_inodegc_worker(struct work_struct *work);
-+void xfs_inodegc_push(struct xfs_mount *mp);
- void xfs_inodegc_flush(struct xfs_mount *mp);
- void xfs_inodegc_stop(struct xfs_mount *mp);
- void xfs_inodegc_start(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 74ac9ca9e119..a30f4d067746 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -454,9 +454,12 @@ xfs_qm_scall_getquota(
- 	struct xfs_dquot	*dqp;
- 	int			error;
- 
--	/* Flush inodegc work at the start of a quota reporting scan. */
-+	/*
-+	 * Expedite pending inodegc work at the start of a quota reporting
-+	 * scan but don't block waiting for it to complete.
-+	 */
- 	if (id == 0)
--		xfs_inodegc_flush(mp);
-+		xfs_inodegc_push(mp);
- 
- 	/*
- 	 * Try to get the dquot. We don't want it allocated on disk, so don't
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 651ae75a7e23..4edee1d3784a 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -798,8 +798,11 @@ xfs_fs_statfs(
- 	xfs_extlen_t		lsize;
- 	int64_t			ffree;
- 
--	/* Wait for whatever inactivations are in progress. */
--	xfs_inodegc_flush(mp);
-+	/*
-+	 * Expedite background inodegc but don't wait. We do not want to block
-+	 * here waiting hours for a billion extent file to be truncated.
-+	 */
-+	xfs_inodegc_push(mp);
- 
- 	statp->f_type = XFS_SUPER_MAGIC;
- 	statp->f_namelen = MAXNAMELEN - 1;
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d32026585c1b..0fa1b7a2918c 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -240,6 +240,7 @@ DEFINE_EVENT(xfs_fs_class, name,					\
- 	TP_PROTO(struct xfs_mount *mp, void *caller_ip), \
- 	TP_ARGS(mp, caller_ip))
- DEFINE_FS_EVENT(xfs_inodegc_flush);
-+DEFINE_FS_EVENT(xfs_inodegc_push);
- DEFINE_FS_EVENT(xfs_inodegc_start);
- DEFINE_FS_EVENT(xfs_inodegc_stop);
- DEFINE_FS_EVENT(xfs_inodegc_queue);
--- 
-2.35.1
+Comments, thoughts and testing appreciated.
+
+-Dave.
+
+Version 2:
+- Also convert quota reportting inodegc flushes to a push.
+
 
