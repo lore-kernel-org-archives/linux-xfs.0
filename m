@@ -2,58 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 423F4C43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 14:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 403ABC43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 14:43:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233439AbiFPOiN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 10:38:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48394 "EHLO
+        id S1377102AbiFPOnz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 10:43:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377637AbiFPOiM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 10:38:12 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBEDE44A03;
-        Thu, 16 Jun 2022 07:38:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=WRQ7IP4husqBZexrV10wcSx741ile1sfqnxtlMk8LfI=; b=A87rmSe6QbsZno/A5ZYtyjjhnj
-        Ko8DHShg3DcPEPNdwiW0zc3tR8hJRcDLSHpYY+IgmZ4VibI+YoOYVUnjNxeLdwVvfcQa9KEUaK4Ti
-        XlmgxiyEsjcNcu+o7+alJ+j+qkwQ4RJhQqJ0aqE3248Kh9sDhbGB8OUNd5kWOkIVSQGlFUtl5Dp9S
-        wvcKS8ub7+BRs1hocxGghx1+FgCNHsPexKhyob+ioZm8fuJVd8nDMoFCesS2PvHuaeTcgZ0NstoGr
-        /AWiudfYtZu3/59CEMzYjxglzGNZde1mE05tF9SHEE7X/nWEWD4xySG7qjSbH65ZUjNE2ugrDKQA1
-        KMqtP93A==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o1qdG-00210p-DG; Thu, 16 Jun 2022 14:38:02 +0000
-Date:   Thu, 16 Jun 2022 15:38:02 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc:     linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Uladzislau Rezki <urezki@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] usercopy: use unsigned long instead of uintptr_t
-Message-ID: <YqtAShjjo1zC6EgO@casper.infradead.org>
-References: <20220616143617.449094-1-Jason@zx2c4.com>
+        with ESMTP id S1377323AbiFPOnw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 10:43:52 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 628E941993
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 07:43:45 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B4CDE61DC6
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 14:43:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AE1FC34114
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 14:43:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655390624;
+        bh=OUe4vv8tdwptTVExiIV4UJqVb8yg45vVjQu8AnisbGs=;
+        h=Date:From:To:Subject:From;
+        b=F5bBoiZnGSgC1SPJgsh00sP5iFb8DZTVzw2d2Vd96nFODjbZC9AWD7J/FBw0QTDi/
+         zOb0w0W6pgPSQ0ulLJpgdAJpXD71NH1klfF2zHt9IGC9ndPPLBfrfpBuJefXSeJBzT
+         K6z2rZx1R1M7KX7NGQq9CfmSQFP6As86GrFDKv2+RMYP6vEFAuPKwZpAIwIjsjJIzR
+         /qLOAn/NHPIpxX7GvSM58I9wc4Z8RT5uFo0ySNsGwD8yrp1Euvt7SQabbcLnsjEwuU
+         vIy8Z7er7z3cFpH+eGlF449Y5wRqlz1eEUb3UI430E1qnEPDexWHzOoz0aazo4N1DB
+         1OXDoO8zofy6w==
+Date:   Thu, 16 Jun 2022 07:43:43 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to e89ab76d7e25
+Message-ID: <YqtBnxX4PmtvLI9v@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220616143617.449094-1-Jason@zx2c4.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 16, 2022 at 04:36:17PM +0200, Jason A. Donenfeld wrote:
-> A recent commit factored out a series of annoying (unsigned long) casts
-> into a single variable declaration, but made the pointer type a
-> `uintptr_t` rather than the usual `unsigned long`. This patch changes it
-> to be the integer type more typically used by the kernel to represent
-> addresses.
+Hi folks,
 
-No.  I did this on purpose.  uintptr_t is the correct type to represent
-a pointer that's being used as an integer.  This dinosaur approach of
-using unsigned long has to stop.
+The for-next branch of the xfs-linux repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+(I'm still on vacation, but queued these fixes anyway...)
+
+The new head of the for-next branch is commit:
+
+e89ab76d7e25 xfs: preserve DIFLAG2_NREXT64 when setting other inode attributes
+
+3 new commits:
+
+Darrick J. Wong (3):
+      [f4288f01820e] xfs: fix TOCTOU race involving the new logged xattrs control knob
+      [10930b254d5b] xfs: fix variable state usage
+      [e89ab76d7e25] xfs: preserve DIFLAG2_NREXT64 when setting other inode attributes
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_attr.c      |  9 +++++----
+ fs/xfs/libxfs/xfs_attr.h      | 12 +-----------
+ fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
+ fs/xfs/libxfs/xfs_da_btree.h  |  4 +++-
+ fs/xfs/xfs_attr_item.c        | 15 +++++++++------
+ fs/xfs/xfs_ioctl.c            |  3 ++-
+ fs/xfs/xfs_xattr.c            | 17 ++++++++++++++++-
+ 7 files changed, 37 insertions(+), 25 deletions(-)
