@@ -2,88 +2,58 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D80B6C04E85
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 14:36:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 423F4C43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 14:38:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378000AbiFPOgj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 10:36:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45318 "EHLO
+        id S233439AbiFPOiN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 10:38:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377978AbiFPOgc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 10:36:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5D4240925;
-        Thu, 16 Jun 2022 07:36:30 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 713EE61DDC;
-        Thu, 16 Jun 2022 14:36:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE632C385A2;
-        Thu, 16 Jun 2022 14:36:28 +0000 (UTC)
-Authentication-Results: smtp.kernel.org;
-        dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="DaikPer8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
-        t=1655390186;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=HPAtaIeUzFGETtepNlx7oLoJv5QwPzhpAP3HikjfJM0=;
-        b=DaikPer8ueIhZk7aIyzyf4bBdHkIGHkDbS3F2CMbp3CIOT/Y0wncEunWvGF9PHmAdP33A8
-        Wqe2Q441lhxPeQfjd1rTGZn//lhaslF6PN3tH+PDw6TpGE3JsxljsAK46KV7qWlp1/RDt9
-        T+4KQ1Y8Uu/3HsYuXYgY6xnjS8IfrMw=
-Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 8198e951 (TLSv1.3:AEAD-AES256-GCM-SHA384:256:NO);
-        Thu, 16 Jun 2022 14:36:26 +0000 (UTC)
-From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
-To:     linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Matthew Wilcox <willy@infradead.org>,
+        with ESMTP id S1377637AbiFPOiM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 10:38:12 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBEDE44A03;
+        Thu, 16 Jun 2022 07:38:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=WRQ7IP4husqBZexrV10wcSx741ile1sfqnxtlMk8LfI=; b=A87rmSe6QbsZno/A5ZYtyjjhnj
+        Ko8DHShg3DcPEPNdwiW0zc3tR8hJRcDLSHpYY+IgmZ4VibI+YoOYVUnjNxeLdwVvfcQa9KEUaK4Ti
+        XlmgxiyEsjcNcu+o7+alJ+j+qkwQ4RJhQqJ0aqE3248Kh9sDhbGB8OUNd5kWOkIVSQGlFUtl5Dp9S
+        wvcKS8ub7+BRs1hocxGghx1+FgCNHsPexKhyob+ioZm8fuJVd8nDMoFCesS2PvHuaeTcgZ0NstoGr
+        /AWiudfYtZu3/59CEMzYjxglzGNZde1mE05tF9SHEE7X/nWEWD4xySG7qjSbH65ZUjNE2ugrDKQA1
+        KMqtP93A==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o1qdG-00210p-DG; Thu, 16 Jun 2022 14:38:02 +0000
+Date:   Thu, 16 Jun 2022 15:38:02 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
+Cc:     linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
         Uladzislau Rezki <urezki@gmail.com>,
         Kees Cook <keescook@chromium.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         Joe Perches <joe@perches.com>
-Subject: [PATCH] usercopy: use unsigned long instead of uintptr_t
-Date:   Thu, 16 Jun 2022 16:36:17 +0200
-Message-Id: <20220616143617.449094-1-Jason@zx2c4.com>
+Subject: Re: [PATCH] usercopy: use unsigned long instead of uintptr_t
+Message-ID: <YqtAShjjo1zC6EgO@casper.infradead.org>
+References: <20220616143617.449094-1-Jason@zx2c4.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220616143617.449094-1-Jason@zx2c4.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A recent commit factored out a series of annoying (unsigned long) casts
-into a single variable declaration, but made the pointer type a
-`uintptr_t` rather than the usual `unsigned long`. This patch changes it
-to be the integer type more typically used by the kernel to represent
-addresses.
+On Thu, Jun 16, 2022 at 04:36:17PM +0200, Jason A. Donenfeld wrote:
+> A recent commit factored out a series of annoying (unsigned long) casts
+> into a single variable declaration, but made the pointer type a
+> `uintptr_t` rather than the usual `unsigned long`. This patch changes it
+> to be the integer type more typically used by the kernel to represent
+> addresses.
 
-Fixes: 35fb9ae4aa2e ("usercopy: Cast pointer to an integer once")
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Uladzislau Rezki <urezki@gmail.com>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Joe Perches <joe@perches.com>
-Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
----
- mm/usercopy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/mm/usercopy.c b/mm/usercopy.c
-index 4e1da708699b..c1ee15a98633 100644
---- a/mm/usercopy.c
-+++ b/mm/usercopy.c
-@@ -161,7 +161,7 @@ static inline void check_bogus_address(const unsigned long ptr, unsigned long n,
- static inline void check_heap_object(const void *ptr, unsigned long n,
- 				     bool to_user)
- {
--	uintptr_t addr = (uintptr_t)ptr;
-+	unsigned long addr = (unsigned long)ptr;
- 	unsigned long offset;
- 	struct folio *folio;
- 
--- 
-2.35.1
-
+No.  I did this on purpose.  uintptr_t is the correct type to represent
+a pointer that's being used as an integer.  This dinosaur approach of
+using unsigned long has to stop.
