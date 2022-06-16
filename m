@@ -2,180 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EB8BCCA482
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 20:22:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0B48C43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 21:54:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378485AbiFPUWg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 16:22:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36848 "EHLO
+        id S230174AbiFPVyn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 17:54:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378460AbiFPUWd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 16:22:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93D7BC51;
-        Thu, 16 Jun 2022 13:22:30 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7C48361D28;
-        Thu, 16 Jun 2022 20:22:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A0B0C3411B;
-        Thu, 16 Jun 2022 20:22:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655410949;
-        bh=M3h58AGOHHTXWiuwNhC9HEL2EAhvwozEXVfdsCNjbvM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=MjJzjusn6ewv72iXR7k0V9x/KXqlia2Fj9JbaIi0pnWWHSBCRL/nBqC84wAMXdJCF
-         uUWcNCHMHFrddP4MYyXNp+Oy0fybAkSIH95xeQ6Fk9zuPmQC3WPQjcduLzixxM7o8G
-         38TPZXSveYCnsy3jrG82hgamJWRowDxP5Jnu4mwmXh5fHMijOx1AFSFhvqbdv/EdVG
-         TaI45Xjwf/GQa0Js+dwSyIt3oQHXLHaIK3t4Ci6uJA/1OMEXWvqW6rq9nnmGc9+5jr
-         JTCmydNG7ltO+qEaQ/uPUkbQlP0pBkiGsWa4Up7jj7oH5TIV2ObhSOLE3aFhumB652
-         gWnXZB3m31aSw==
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     linux-fsdevel@vger.kernel.org
-Cc:     linux-man@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>
-Subject: [man-pages RFC PATCH] statx.2, open.2: document STATX_DIOALIGN
-Date:   Thu, 16 Jun 2022 13:21:41 -0700
-Message-Id: <20220616202141.125079-1-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.36.1
+        with ESMTP id S1378570AbiFPVym (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 17:54:42 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A96CC5D64F
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 14:54:40 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5A89710E75D0;
+        Fri, 17 Jun 2022 07:54:38 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1o1xRl-007UNv-E6; Fri, 17 Jun 2022 07:54:37 +1000
+Date:   Fri, 17 Jun 2022 07:54:37 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v1 16/17] xfs: Increase  XFS_DEFER_OPS_NR_INODES to 4
+Message-ID: <20220616215437.GF227878@dread.disaster.area>
+References: <20220611094200.129502-1-allison.henderson@oracle.com>
+ <20220611094200.129502-17-allison.henderson@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220611094200.129502-17-allison.henderson@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62aba69f
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
+        a=aCTOmMBIufKB2SpVV7AA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+On Sat, Jun 11, 2022 at 02:41:59AM -0700, Allison Henderson wrote:
+> Renames that generate parent pointer updates will need to 2 extra defer
+> operations. One for the rmap update and another for the parent pointer
+> update
 
-Document the proposed STATX_DIOALIGN support for statx()
-(https://lore.kernel.org/linux-fsdevel/20220616201506.124209-1-ebiggers@kernel.org).
+Not sure I follow this - defer operation counts are something
+tracked in the transaction reservations, whilst this is changing the
+number of inodes that are joined and held across defer operations.
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- man2/open.2  | 43 ++++++++++++++++++++++++++++++++-----------
- man2/statx.2 | 32 +++++++++++++++++++++++++++++++-
- 2 files changed, 63 insertions(+), 12 deletions(-)
+These rmap updates already occur on the directory inodes in a rename
+(when the dir update changes the dir shape), so I'm guessing that
+you are now talking about changing parent attrs for the child inodes
+may require attr fork shape changes (hence rmap updates) due to the
+deferred parent pointer xattr update?
 
-diff --git a/man2/open.2 b/man2/open.2
-index d1485999f..ef29847c3 100644
---- a/man2/open.2
-+++ b/man2/open.2
-@@ -1732,21 +1732,42 @@ of user-space buffers and the file offset of I/Os.
- In Linux alignment
- restrictions vary by filesystem and kernel version and might be
- absent entirely.
--However there is currently no filesystem\-independent
--interface for an application to discover these restrictions for a given
--file or filesystem.
--Some filesystems provide their own interfaces
--for doing so, for example the
-+The handling of misaligned
-+.B O_DIRECT
-+I/Os also varies; they can either fail with
-+.B EINVAL
-+or fall back to buffered I/O.
-+.PP
-+Since Linux 5.20,
-+.B O_DIRECT
-+support and alignment restrictions for a file can be queried using
-+.BR statx (2),
-+using the
-+.B STATX_DIOALIGN
-+flag.
-+Support for
-+.B STATX_DIOALIGN
-+varies by filesystem; see
-+.BR statx (2).
-+.PP
-+Some filesystems provide their own interfaces for querying
-+.B O_DIRECT
-+alignment restrictions, for example the
- .B XFS_IOC_DIOINFO
- operation in
- .BR xfsctl (3).
-+.B STATX_DIOALIGN
-+should be used instead when it is available.
- .PP
--Under Linux 2.4, transfer sizes, the alignment of the user buffer,
--and the file offset must all be multiples of the logical block size
--of the filesystem.
--Since Linux 2.6.0, alignment to the logical block size of the
--underlying storage (typically 512 bytes) suffices.
--The logical block size can be determined using the
-+If none of the above is available, then direct I/O support and alignment
-+restrictions can only be assumed from known characteristics of the filesystem,
-+the individual file, the underlying storage device(s), and the kernel version.
-+In Linux 2.4, most block device based filesystems require that the file offset
-+and the length and memory address of all I/O segments be multiples of the
-+filesystem block size (typically 4096 bytes).
-+In Linux 2.6.0, this was relaxed to the logical block size of the block device
-+(typically 512 bytes).
-+A block device's logical block size can be determined using the
- .BR ioctl (2)
- .B BLKSSZGET
- operation or from the shell using the command:
-diff --git a/man2/statx.2 b/man2/statx.2
-index a8620be6f..fff0a63ec 100644
---- a/man2/statx.2
-+++ b/man2/statx.2
-@@ -61,7 +61,12 @@ struct statx {
-        containing the filesystem where the file resides */
-     __u32 stx_dev_major;   /* Major ID */
-     __u32 stx_dev_minor;   /* Minor ID */
-+
-     __u64 stx_mnt_id;      /* Mount ID */
-+
-+    /* Direct I/O alignment restrictions */
-+    __u32 stx_dio_mem_align;
-+    __u32 stx_dio_offset_align;
- };
- .EE
- .in
-@@ -244,8 +249,11 @@ STATX_SIZE	Want stx_size
- STATX_BLOCKS	Want stx_blocks
- STATX_BASIC_STATS	[All of the above]
- STATX_BTIME	Want stx_btime
-+STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
-+         	This is deprecated and should not be used.
- STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
--STATX_ALL	[All currently available fields]
-+STATX_DIOALIGN	Want stx_dio_mem_align and stx_dio_offset_align
-+              	(since Linux 5.20; support varies by filesystem)
- .TE
- .in
- .PP
-@@ -406,6 +414,28 @@ This is the same number reported by
- .BR name_to_handle_at (2)
- and corresponds to the number in the first field in one of the records in
- .IR /proc/self/mountinfo .
-+.TP
-+.I stx_dio_mem_align
-+The alignment (in bytes) required for user memory buffers for direct I/O
-+.BR "" ( O_DIRECT )
-+on this file. or 0 if direct I/O is not supported on this file.
-+.IP
-+.B STATX_DIOALIGN
-+.IR "" ( stx_dio_mem_align
-+and
-+.IR stx_dio_offset_align )
-+is supported on block devices since Linux 5.20.
-+The support on regular files varies by filesystem; it is supported by ext4 and
-+f2fs since Linux 5.20.
-+.TP
-+.I stx_dio_offset_align
-+The alignment (in bytes) required for file offsets and I/O segment lengths for
-+direct I/O
-+.BR "" ( O_DIRECT )
-+on this file, or 0 if direct I/O is not supported on this file.
-+This will only be nonzero if
-+.I stx_dio_mem_align
-+is nonzero, and vice versa.
- .PP
- For further information on the above fields, see
- .BR inode (7).
+If so, this should be placed in the series before the modifications
+to the rename operation is modified to join 4 ops to it, preferably
+at the start of the series....
+
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_defer.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index 114a3a4930a3..0c2a6e537016 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -70,7 +70,7 @@ extern const struct xfs_defer_op_type xfs_attr_defer_type;
+>  /*
+>   * Deferred operation item relogging limits.
+>   */
+> -#define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
+> +#define XFS_DEFER_OPS_NR_INODES	4	/* join up to four inodes */
+
+The comment is not useful  - it should desvribe what operation
+requires 4 inodes to be joined. e.g.
+
+/*
+ * Rename w/ parent pointers requires 4 indoes with defered ops to
+ * be joined to the transaction.
+ */
+
+Then, if we are changing the maximum number of inodes that are
+joined to a deferred operation, then we need to also update the
+locking code such as in xfs_defer_ops_continue() that has to order
+locking of multiple inodes correctly.
+
+Also, rename can lock and modify 5 inodes, not 4, so the 4 inodes
+that get joined here need to be clearly documented somewhere. Also,
+xfs_sort_for_rename() that orders all the inodes in rename into
+correct locking order in an array, and xfs_lock_inodes() that does
+the locking of the inodes in the array.
+
+Cheers,
+
+Dave.
 -- 
-2.36.1
-
+Dave Chinner
+david@fromorbit.com
