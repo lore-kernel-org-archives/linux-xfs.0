@@ -2,50 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E1BFCCA47A
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 13:55:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D80B6C04E85
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 14:36:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377337AbiFPNz4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 09:55:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60934 "EHLO
+        id S1378000AbiFPOgj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 10:36:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377328AbiFPNzz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 09:55:55 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6345039B99;
-        Thu, 16 Jun 2022 06:55:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=LGr90G6faJQ2p5SA3n28l6GxCe
-        Lr7RXihwQqLKq7KeKFdVz/8bOqfJbfirSkd2K91IupEcNvj2Wqv98Uw/OWiugXgP7mA/gi1060VV3
-        XyR7a02Rir0P2ZYzMB/pTWxEjtjktee0TVwOyTZdPctAlCfMwgfGZDVYtx2J2TVhS2zM9afoYLMcz
-        Z6sThmNsGL1hDMYorbBTmF0I/BLwnRz5Aj+eQ/jN+io0uyEYHtOQN7d+76KUAhdKsRgq/fmIHmDWU
-        9gkDKP9dUiZnWcfZYbcc6Mt/K5TexAKvzzEEpTApGZWH83cKhBqZHzzJ3TE8crAngelbG2KtdJSMK
-        LIlWaSAw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o1pyK-002dS0-Uk; Thu, 16 Jun 2022 13:55:44 +0000
-Date:   Thu, 16 Jun 2022 06:55:44 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     xiakaixu1987@gmail.com
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        hch@infradead.org, djwong@kernel.org, dan.j.williams@intel.com,
-        Kaixu Xia <kaixuxia@tencent.com>
-Subject: Re: [PATCH v2 2/2] dax: set did_zero to true when zeroing
- successfully
-Message-ID: <Yqs2YOAd/8s51p3D@infradead.org>
-References: <1655387680-28058-1-git-send-email-kaixuxia@tencent.com>
- <1655387680-28058-3-git-send-email-kaixuxia@tencent.com>
+        with ESMTP id S1377978AbiFPOgc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 10:36:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5D4240925;
+        Thu, 16 Jun 2022 07:36:30 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 713EE61DDC;
+        Thu, 16 Jun 2022 14:36:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE632C385A2;
+        Thu, 16 Jun 2022 14:36:28 +0000 (UTC)
+Authentication-Results: smtp.kernel.org;
+        dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="DaikPer8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
+        t=1655390186;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=HPAtaIeUzFGETtepNlx7oLoJv5QwPzhpAP3HikjfJM0=;
+        b=DaikPer8ueIhZk7aIyzyf4bBdHkIGHkDbS3F2CMbp3CIOT/Y0wncEunWvGF9PHmAdP33A8
+        Wqe2Q441lhxPeQfjd1rTGZn//lhaslF6PN3tH+PDw6TpGE3JsxljsAK46KV7qWlp1/RDt9
+        T+4KQ1Y8Uu/3HsYuXYgY6xnjS8IfrMw=
+Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 8198e951 (TLSv1.3:AEAD-AES256-GCM-SHA384:256:NO);
+        Thu, 16 Jun 2022 14:36:26 +0000 (UTC)
+From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
+To:     linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Uladzislau Rezki <urezki@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Joe Perches <joe@perches.com>
+Subject: [PATCH] usercopy: use unsigned long instead of uintptr_t
+Date:   Thu, 16 Jun 2022 16:36:17 +0200
+Message-Id: <20220616143617.449094-1-Jason@zx2c4.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1655387680-28058-3-git-send-email-kaixuxia@tencent.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good:
+A recent commit factored out a series of annoying (unsigned long) casts
+into a single variable declaration, but made the pointer type a
+`uintptr_t` rather than the usual `unsigned long`. This patch changes it
+to be the integer type more typically used by the kernel to represent
+addresses.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: 35fb9ae4aa2e ("usercopy: Cast pointer to an integer once")
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Uladzislau Rezki <urezki@gmail.com>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Joe Perches <joe@perches.com>
+Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+---
+ mm/usercopy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mm/usercopy.c b/mm/usercopy.c
+index 4e1da708699b..c1ee15a98633 100644
+--- a/mm/usercopy.c
++++ b/mm/usercopy.c
+@@ -161,7 +161,7 @@ static inline void check_bogus_address(const unsigned long ptr, unsigned long n,
+ static inline void check_heap_object(const void *ptr, unsigned long n,
+ 				     bool to_user)
+ {
+-	uintptr_t addr = (uintptr_t)ptr;
++	unsigned long addr = (unsigned long)ptr;
+ 	unsigned long offset;
+ 	struct folio *folio;
+ 
+-- 
+2.35.1
+
