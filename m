@@ -2,59 +2,61 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA81C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 18:28:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38088CCA47E
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 18:28:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229898AbiFPS2k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 14:28:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59132 "EHLO
+        id S229990AbiFPS2l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 14:28:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377936AbiFPS2c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 14:28:32 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9136147570
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 11:28:31 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id k5-20020a17090a404500b001e8875e6242so2203715pjg.5
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 11:28:31 -0700 (PDT)
+        with ESMTP id S1377954AbiFPS2e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 14:28:34 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8590D50060
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 11:28:33 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id g8so1914366plt.8
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 11:28:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=8IkNWBZtIlvBTg7AV3Ow8vQxUjzrB55q05mM0WhA0Y4=;
-        b=GW12qxuuzNbGPnjfsq9a/DeHygPC7nB4hcWQ7NhFlXBw8V3hsRiX2H4cAfgzuMOCAO
-         uhxa1IeTWKsWEfU9QcFJPmx2A3dceN4JrtpGsej0kz4jcCrXrmdhS7D0YiUu+eSVo5Ea
-         rvG5Di5z/dV421bj36XfgVYqWTa8/1wiYS83VD35IuJgeaPkOlLXygV4KxbyW82aLWpl
-         IUKiS/ogIsLrYuqS3TnHY03sOiZ3gJKagAZqU64SsvIOIgkVeSJIeCXdcwpFJ04na89v
-         q+ElVFJDfO3b6jkw2p0hL0bbOuqK+b/INg2NxGP+lCwALHgN7dxzVd61WB9fC/y5be/x
-         Q7VQ==
+        bh=zlh3bSHgcXLmTXRzmupsjo6rxJg9WFeMtgLwa8hX99k=;
+        b=XzNHKziwWeYbIp8lDfVKUh9E5+I/RDTiAyP7V1+SHcCtsa19BFi2CTCkw1zJybCxPi
+         UI7tZzce020yWV7i6AkLcbfegceRvuxV32Jmc3XZ/yyU8X02NoumU9AoEzKXfaUltMld
+         6b49/EUvpZ77C9uG8n0Pp+VO8A7XWhkt7TachTbNrhJgl956UTdMKEsIe9nrTEG6LHt7
+         3PyC6FmQ33p4IpooNSyb8kzTs3pwB9gXr+Ol4NhwgNsTamYhJBhyvEPjBuW+o0YeAbGw
+         o0G36P3fjuQGP1O4DkdVI2jjLyw1SS30HtxbkofJyzF0NV8zHCbBdC7UwJZFE1rsr2Pb
+         koKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8IkNWBZtIlvBTg7AV3Ow8vQxUjzrB55q05mM0WhA0Y4=;
-        b=P0/sTEv7J3muLSNzBYanr58IWDIv1paZ22q7G4t6wL469dgT15EP4nxflL9FQGbCKH
-         VOXDbH1bn9J9ioGufz+p2m/EJfsPyVbAmPXlAOWnetAvqGSXeiAo7KGafR/fWa2bDveQ
-         hmM46Kuns84guI4PLxh2oLrmJjk/cMjg9YSoyXEtNGYvrpAg3L/zI5/2uIqRRDICwlpK
-         TFitUFuRuLkgtirHX+TpGymXw+jGO1zooUHZ97ok7JebJQic2MiF+9JVHP9trIa6+9g5
-         2PBm9MqI8pjIi1PiXSlhLeM7NY5JxE+SiDFP8Gr28uSZIbQcWeViE1ECQK2eZuHK2CsB
-         cCiQ==
-X-Gm-Message-State: AJIora9fI42/Hv8OJvr5d471urMBbOk5QLMNp6Ug5AAilpqR31JVx3F8
-        5aNZc5LpzghVub/nQB0XxJtldHzXTICNlg==
-X-Google-Smtp-Source: AGRyM1vm8a88NAI5832y0GHIqMlRz+rRUzRusZ5lq0mS1JmISpDeIvqz7UjSwMRYKvt5sfmswjrPUA==
-X-Received: by 2002:a17:90a:ba96:b0:1ea:f1ea:7e79 with SMTP id t22-20020a17090aba9600b001eaf1ea7e79mr4189494pjr.219.1655404110777;
-        Thu, 16 Jun 2022 11:28:30 -0700 (PDT)
+        bh=zlh3bSHgcXLmTXRzmupsjo6rxJg9WFeMtgLwa8hX99k=;
+        b=uu0YDsfuoXGoJ0ee9y3GkZTtSErpaRHeD7hTCroQJK+QvcGGoDJa6QCa610tdNECf1
+         UEevsNGBwhupirV4418Z56zyoj4aMmLk09p3iXyVOHSz6xWmmdi7sw4Rp0MAYKE8pUr1
+         tc908IQrjcUX2NRrGaBr9gob4E1kkdMyrDTuN+0UsKH1ulIs+/eCZ5JZvqrujSF27xA5
+         V1H+PfPrombSjz9izsdl+POqNZa0b/G5sEv/m8LSfF1Jamf37FixlUYPIDZ+FqAt2hKg
+         i9EO/5Uh1u60Th1zar2e3wO1/01YnIYb/c1ULUkdwXD1piZKjV/r5orPpBegAEwuzwGt
+         M1Xg==
+X-Gm-Message-State: AJIora8LpxQtI4HT3Fcp3hMTM380fpYt/wv6HaTExW4Edo4gHc+lmemV
+        /czkCdM+nhBcQb+Dqk1ecwlImRQyV0/t1g==
+X-Google-Smtp-Source: AGRyM1sT0Y15u6hjSu1/0Yxv3xQ29QJ60nL8Xh6XbcBqU7ZaS+FPmtvtB/E2+MlNLV8yr3cC3D3UGQ==
+X-Received: by 2002:a17:902:d702:b0:168:cfec:de55 with SMTP id w2-20020a170902d70200b00168cfecde55mr5569184ply.63.1655404112788;
+        Thu, 16 Jun 2022 11:28:32 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2cd:202:fd57:7edc:385a:c1be])
-        by smtp.gmail.com with ESMTPSA id fs20-20020a17090af29400b001ea75a02805sm4131511pjb.52.2022.06.16.11.28.29
+        by smtp.gmail.com with ESMTPSA id fs20-20020a17090af29400b001ea75a02805sm4131511pjb.52.2022.06.16.11.28.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Jun 2022 11:28:30 -0700 (PDT)
+        Thu, 16 Jun 2022 11:28:32 -0700 (PDT)
 From:   Leah Rumancik <leah.rumancik@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     mcgrof@kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
         Dave Chinner <dchinner@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Christian Brauner <brauner@kernel.org>,
         Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 CANDIDATE v2 6/8] xfs: prevent UAF in xfs_log_item_in_current_chkpt
-Date:   Thu, 16 Jun 2022 11:27:47 -0700
-Message-Id: <20220616182749.1200971-7-leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 CANDIDATE v2 8/8] xfs: use setattr_copy to set vfs inode attributes
+Date:   Thu, 16 Jun 2022 11:27:49 -0700
+Message-Id: <20220616182749.1200971-9-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.36.1.476.g0c4daa206d-goog
 In-Reply-To: <20220616182749.1200971-1-leah.rumancik@gmail.com>
 References: <20220616182749.1200971-1-leah.rumancik@gmail.com>
@@ -66,151 +68,154 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit f8d92a66e810acbef6ddbc0bd0cbd9b117ce8acd ]
+[ Upstream commit e014f37db1a2d109afa750042ac4d69cf3e3d88e ]
 
-While I was running with KASAN and lockdep enabled, I stumbled upon an
-KASAN report about a UAF to a freed CIL checkpoint.  Looking at the
-comment for xfs_log_item_in_current_chkpt, it seems pretty obvious to me
-that the original patch to xfs_defer_finish_noroll should have done
-something to lock the CIL to prevent it from switching the CIL contexts
-while the predicate runs.
+Filipe Manana pointed out that XFS' behavior w.r.t. setuid/setgid
+revocation isn't consistent with btrfs[1] or ext4.  Those two
+filesystems use the VFS function setattr_copy to convey certain
+attributes from struct iattr into the VFS inode structure.
 
-For upper level code that needs to know if a given log item is new
-enough not to need relogging, add a new wrapper that takes the CIL
-context lock long enough to sample the current CIL context.  This is
-kind of racy in that the CIL can switch the contexts immediately after
-sampling, but that's ok because the consequence is that the defer ops
-code is a little slow to relog items.
+Andrey Zhadchenko reported[2] that XFS uses the wrong user namespace to
+decide if it should clear setgid and setuid on a file attribute update.
+This is a second symptom of the problem that Filipe noticed.
 
- ==================================================================
- BUG: KASAN: use-after-free in xfs_log_item_in_current_chkpt+0x139/0x160 [xfs]
- Read of size 8 at addr ffff88804ea5f608 by task fsstress/527999
+XFS, on the other hand, open-codes setattr_copy in xfs_setattr_mode,
+xfs_setattr_nonsize, and xfs_setattr_time.  Regrettably, setattr_copy is
+/not/ a simple copy function; it contains additional logic to clear the
+setgid bit when setting the mode, and XFS' version no longer matches.
 
- CPU: 1 PID: 527999 Comm: fsstress Tainted: G      D      5.16.0-rc4-xfsx #rc4
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x45/0x59
-  print_address_description.constprop.0+0x1f/0x140
-  kasan_report.cold+0x83/0xdf
-  xfs_log_item_in_current_chkpt+0x139/0x160
-  xfs_defer_finish_noroll+0x3bb/0x1e30
-  __xfs_trans_commit+0x6c8/0xcf0
-  xfs_reflink_remap_extent+0x66f/0x10e0
-  xfs_reflink_remap_blocks+0x2dd/0xa90
-  xfs_file_remap_range+0x27b/0xc30
-  vfs_dedupe_file_range_one+0x368/0x420
-  vfs_dedupe_file_range+0x37c/0x5d0
-  do_vfs_ioctl+0x308/0x1260
-  __x64_sys_ioctl+0xa1/0x170
-  do_syscall_64+0x35/0x80
-  entry_SYSCALL_64_after_hwframe+0x44/0xae
- RIP: 0033:0x7f2c71a2950b
- Code: 0f 1e fa 48 8b 05 85 39 0d 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff
-ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01
-f0 ff ff 73 01 c3 48 8b 0d 55 39 0d 00 f7 d8 64 89 01 48
- RSP: 002b:00007ffe8c0e03c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
- RAX: ffffffffffffffda RBX: 00005600862a8740 RCX: 00007f2c71a2950b
- RDX: 00005600862a7be0 RSI: 00000000c0189436 RDI: 0000000000000004
- RBP: 000000000000000b R08: 0000000000000027 R09: 0000000000000003
- R10: 0000000000000000 R11: 0000000000000246 R12: 000000000000005a
- R13: 00005600862804a8 R14: 0000000000016000 R15: 00005600862a8a20
-  </TASK>
+The VFS implements its own setuid/setgid stripping logic, which
+establishes consistent behavior.  It's a tad unfortunate that it's
+scattered across notify_change, should_remove_suid, and setattr_copy but
+XFS should really follow the Linux VFS.  Adapt XFS to use the VFS
+functions and get rid of the old functions.
 
- Allocated by task 464064:
-  kasan_save_stack+0x1e/0x50
-  __kasan_kmalloc+0x81/0xa0
-  kmem_alloc+0xcd/0x2c0 [xfs]
-  xlog_cil_ctx_alloc+0x17/0x1e0 [xfs]
-  xlog_cil_push_work+0x141/0x13d0 [xfs]
-  process_one_work+0x7f6/0x1380
-  worker_thread+0x59d/0x1040
-  kthread+0x3b0/0x490
-  ret_from_fork+0x1f/0x30
+[1] https://lore.kernel.org/fstests/CAL3q7H47iNQ=Wmk83WcGB-KBJVOEtR9+qGczzCeXJ9Y2KCV25Q@mail.gmail.com/
+[2] https://lore.kernel.org/linux-xfs/20220221182218.748084-1-andrey.zhadchenko@virtuozzo.com/
 
- Freed by task 51:
-  kasan_save_stack+0x1e/0x50
-  kasan_set_track+0x21/0x30
-  kasan_set_free_info+0x20/0x30
-  __kasan_slab_free+0xed/0x130
-  slab_free_freelist_hook+0x7f/0x160
-  kfree+0xde/0x340
-  xlog_cil_committed+0xbfd/0xfe0 [xfs]
-  xlog_cil_process_committed+0x103/0x1c0 [xfs]
-  xlog_state_do_callback+0x45d/0xbd0 [xfs]
-  xlog_ioend_work+0x116/0x1c0 [xfs]
-  process_one_work+0x7f6/0x1380
-  worker_thread+0x59d/0x1040
-  kthread+0x3b0/0x490
-  ret_from_fork+0x1f/0x30
-
- Last potentially related work creation:
-  kasan_save_stack+0x1e/0x50
-  __kasan_record_aux_stack+0xb7/0xc0
-  insert_work+0x48/0x2e0
-  __queue_work+0x4e7/0xda0
-  queue_work_on+0x69/0x80
-  xlog_cil_push_now.isra.0+0x16b/0x210 [xfs]
-  xlog_cil_force_seq+0x1b7/0x850 [xfs]
-  xfs_log_force_seq+0x1c7/0x670 [xfs]
-  xfs_file_fsync+0x7c1/0xa60 [xfs]
-  __x64_sys_fsync+0x52/0x80
-  do_syscall_64+0x35/0x80
-  entry_SYSCALL_64_after_hwframe+0x44/0xae
-
- The buggy address belongs to the object at ffff88804ea5f600
-  which belongs to the cache kmalloc-256 of size 256
- The buggy address is located 8 bytes inside of
-  256-byte region [ffff88804ea5f600, ffff88804ea5f700)
- The buggy address belongs to the page:
- page:ffffea00013a9780 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff88804ea5ea00 pfn:0x4ea5e
- head:ffffea00013a9780 order:1 compound_mapcount:0
- flags: 0x4fff80000010200(slab|head|node=1|zone=1|lastcpupid=0xfff)
- raw: 04fff80000010200 ffffea0001245908 ffffea00011bd388 ffff888004c42b40
- raw: ffff88804ea5ea00 0000000000100009 00000001ffffffff 0000000000000000
- page dumped because: kasan: bad access detected
-
- Memory state around the buggy address:
-  ffff88804ea5f500: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-  ffff88804ea5f580: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
- >ffff88804ea5f600: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                       ^
-  ffff88804ea5f680: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-  ffff88804ea5f700: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
- ==================================================================
-
-Fixes: 4e919af7827a ("xfs: periodically relog deferred intent items")
+Fixes: 7fa294c8991c ("userns: Allow chown and setgid preservation")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_log_cil.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_iops.c | 56 +++--------------------------------------------
+ fs/xfs/xfs_pnfs.c |  3 ++-
+ 2 files changed, 5 insertions(+), 54 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 6c93c8ada6f3..b59cc9c0961c 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -1442,9 +1442,9 @@ xlog_cil_force_seq(
-  */
- bool
- xfs_log_item_in_current_chkpt(
--	struct xfs_log_item *lip)
-+	struct xfs_log_item	*lip)
- {
--	struct xfs_cil_ctx *ctx = lip->li_mountp->m_log->l_cilp->xc_ctx;
-+	struct xfs_cil		*cil = lip->li_mountp->m_log->l_cilp;
- 
- 	if (list_empty(&lip->li_cil))
- 		return false;
-@@ -1454,7 +1454,7 @@ xfs_log_item_in_current_chkpt(
- 	 * first checkpoint it is written to. Hence if it is different to the
- 	 * current sequence, we're in a new checkpoint.
- 	 */
--	return lip->li_seq == ctx->sequence;
-+	return lip->li_seq == READ_ONCE(cil->xc_current_sequence);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index a607d6aca5c4..1eb71275e5b0 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -634,37 +634,6 @@ xfs_vn_getattr(
+ 	return 0;
  }
  
- /*
+-static void
+-xfs_setattr_mode(
+-	struct xfs_inode	*ip,
+-	struct iattr		*iattr)
+-{
+-	struct inode		*inode = VFS_I(ip);
+-	umode_t			mode = iattr->ia_mode;
+-
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-
+-	inode->i_mode &= S_IFMT;
+-	inode->i_mode |= mode & ~S_IFMT;
+-}
+-
+-void
+-xfs_setattr_time(
+-	struct xfs_inode	*ip,
+-	struct iattr		*iattr)
+-{
+-	struct inode		*inode = VFS_I(ip);
+-
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-
+-	if (iattr->ia_valid & ATTR_ATIME)
+-		inode->i_atime = iattr->ia_atime;
+-	if (iattr->ia_valid & ATTR_CTIME)
+-		inode->i_ctime = iattr->ia_ctime;
+-	if (iattr->ia_valid & ATTR_MTIME)
+-		inode->i_mtime = iattr->ia_mtime;
+-}
+-
+ static int
+ xfs_vn_change_ok(
+ 	struct user_namespace	*mnt_userns,
+@@ -763,16 +732,6 @@ xfs_setattr_nonsize(
+ 		gid = (mask & ATTR_GID) ? iattr->ia_gid : igid;
+ 		uid = (mask & ATTR_UID) ? iattr->ia_uid : iuid;
+ 
+-		/*
+-		 * CAP_FSETID overrides the following restrictions:
+-		 *
+-		 * The set-user-ID and set-group-ID bits of a file will be
+-		 * cleared upon successful return from chown()
+-		 */
+-		if ((inode->i_mode & (S_ISUID|S_ISGID)) &&
+-		    !capable(CAP_FSETID))
+-			inode->i_mode &= ~(S_ISUID|S_ISGID);
+-
+ 		/*
+ 		 * Change the ownerships and register quota modifications
+ 		 * in the transaction.
+@@ -784,7 +743,6 @@ xfs_setattr_nonsize(
+ 				olddquot1 = xfs_qm_vop_chown(tp, ip,
+ 							&ip->i_udquot, udqp);
+ 			}
+-			inode->i_uid = uid;
+ 		}
+ 		if (!gid_eq(igid, gid)) {
+ 			if (XFS_IS_GQUOTA_ON(mp)) {
+@@ -795,15 +753,10 @@ xfs_setattr_nonsize(
+ 				olddquot2 = xfs_qm_vop_chown(tp, ip,
+ 							&ip->i_gdquot, gdqp);
+ 			}
+-			inode->i_gid = gid;
+ 		}
+ 	}
+ 
+-	if (mask & ATTR_MODE)
+-		xfs_setattr_mode(ip, iattr);
+-	if (mask & (ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
+-		xfs_setattr_time(ip, iattr);
+-
++	setattr_copy(mnt_userns, inode, iattr);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+ 	XFS_STATS_INC(mp, xs_ig_attrchg);
+@@ -1028,11 +981,8 @@ xfs_setattr_size(
+ 		xfs_inode_clear_eofblocks_tag(ip);
+ 	}
+ 
+-	if (iattr->ia_valid & ATTR_MODE)
+-		xfs_setattr_mode(ip, iattr);
+-	if (iattr->ia_valid & (ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
+-		xfs_setattr_time(ip, iattr);
+-
++	ASSERT(!(iattr->ia_valid & (ATTR_UID | ATTR_GID)));
++	setattr_copy(mnt_userns, inode, iattr);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+ 	XFS_STATS_INC(mp, xs_ig_attrchg);
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 5e1d29d8b2e7..8865f7d4404a 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -283,7 +283,8 @@ xfs_fs_commit_blocks(
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+-	xfs_setattr_time(ip, iattr);
++	ASSERT(!(iattr->ia_valid & (ATTR_UID | ATTR_GID)));
++	setattr_copy(&init_user_ns, inode, iattr);
+ 	if (update_isize) {
+ 		i_size_write(inode, iattr->ia_size);
+ 		ip->i_disk_size = iattr->ia_size;
 -- 
 2.36.1.476.g0c4daa206d-goog
 
