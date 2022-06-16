@@ -2,107 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32062CCA47A
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 20:18:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A271C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 20:18:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378397AbiFPUSU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 16:18:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59794 "EHLO
+        id S1378299AbiFPUSS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 16:18:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378308AbiFPUSS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 16:18:18 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B678B34BBD;
+        with ESMTP id S1378388AbiFPUSR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 16:18:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1650135257;
         Thu, 16 Jun 2022 13:18:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 70E69B8241A;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A8CE561DB9;
         Thu, 16 Jun 2022 20:18:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3B59C34114;
-        Thu, 16 Jun 2022 20:18:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3B2AC3411F;
+        Thu, 16 Jun 2022 20:18:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655410695;
-        bh=uHvrE+2KCGPR9N5AeXBgCBnYJvNxKl74BJyMaayUJlE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=FE409cquZhNFTvUkhTz7aypxXcp8WVokxBhnOgrLH7rlE98ZDV8l1GdGcslnY0oFx
-         ByeEMsNBaXb9VYG8LFVjl1S+79f5i0YjMkfvsUE9Wj3myE3PSK8zfRz0/EtowyYHBO
-         iOw2iLltOMlau7xeqpRv3LdCm6DGDeTZUolKc2IzonnbO9+6YbZOwCNo8qGlEkRTWs
-         hqpSWrzTz01/8v2Q3ZThHothFD/mn5Nhs+a+vL4u/yf4s+PM80d04AO9bKkU0tNZug
-         OemXtvGjdbXjqfvdtyPIPCgcGjA799xlqEljsmrYSlYgC4GqLRYODBx4O/scdI2HT6
-         b92/3YjwKg2Ow==
+        s=k20201202; t=1655410696;
+        bh=iOxOv0QdDiqnoNfajHWkadykNw8yw6SMHWPSQ+/Z1Cs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=XCySuz3YzYlgIHp8UL9jy8oSMx9yC+Hk6wTrq88c+IqE3hXqu0MY+j4K/xAAKTOAB
+         sAbep1qh9fUb8cPkmzPaQXFgxh+7nOMstYpxFHqIhVpafDfYexM9uSN3fhdwzTOemJ
+         vVKthy2fIB4Jh7ii0yur32iWQbzJuBIUYh4gNt3v2cHdnfB4jmyxfEh79bOgfZG9iS
+         MwwX6yNWttTI2eKEHpQxjcfMtWiL98SiARcc+j/jzMKfzRbnNY05boFEMDVUk5YG+S
+         rtMLJEhH/UUTKqs7mFfPlqVdeaqbFX2S7jZCkEZDBN+SJH0Yk7KT3G3/QA0AbK9qR/
+         ASb2CbGMlBDdA==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         linux-xfs@vger.kernel.org, linux-api@vger.kernel.org,
         linux-fscrypt@vger.kernel.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, Keith Busch <kbusch@kernel.org>
-Subject: [PATCH v3 0/8] make statx() return DIO alignment information
-Date:   Thu, 16 Jun 2022 13:14:58 -0700
-Message-Id: <20220616201506.124209-1-ebiggers@kernel.org>
+Subject: [PATCH v3 2/8] vfs: support STATX_DIOALIGN on block devices
+Date:   Thu, 16 Jun 2022 13:15:00 -0700
+Message-Id: <20220616201506.124209-3-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220616201506.124209-1-ebiggers@kernel.org>
+References: <20220616201506.124209-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patchset makes the statx() system call return direct I/O (DIO)
-alignment information.  This allows userspace to easily determine
-whether a file supports DIO, and if so with what alignment restrictions.
+From: Eric Biggers <ebiggers@google.com>
 
-Patch 1 adds the basic VFS support for STATX_DIOALIGN.  Patch 2 wires it
-up for all block device files.  The remaining patches wire it up for
-regular files on ext4 and f2fs.  Support for regular files on other
-filesystems can be added later.
+Add support for STATX_DIOALIGN to block devices, so that direct I/O
+alignment restrictions are exposed to userspace in a generic way.
 
-I've also written a man-pages patch, which I'm sending separately.
+Note that this breaks the tradition of stat operating only on the block
+device node, not the block device itself.  However, it was felt that
+doing this is preferable, in order to make the interface useful and
+avoid needing separate interfaces for regular files and block devices.
 
-Note, f2fs has one corner case where DIO reads are allowed but not DIO
-writes.  The proposed statx fields can't represent this.  My proposal
-(patch 6) is to just eliminate this case, as it seems much too weird.
-But I'd appreciate any feedback on that part.
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/stat.c | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
-This patchset applies to v5.19-rc2.
-
-Changed v2 => v3:
-   - Dropped the stx_offset_align_optimal field, since its purpose
-     wasn't clearly distinguished from the existing stx_blksize.
-
-   - Renamed STATX_IOALIGN to STATX_DIOALIGN, to reflect the new focus
-     on DIO only.
-
-   - Similarly, renamed stx_{mem,offset}_align_dio to
-     stx_dio_{mem,offset}_align, to reflect the new focus on DIO only.
-
-   - Wired up STATX_DIOALIGN on block device files.
-
-Changed v1 => v2:
-   - No changes.
-
-Eric Biggers (8):
-  statx: add direct I/O alignment information
-  vfs: support STATX_DIOALIGN on block devices
-  fscrypt: change fscrypt_dio_supported() to prepare for STATX_DIOALIGN
-  ext4: support STATX_DIOALIGN
-  f2fs: move f2fs_force_buffered_io() into file.c
-  f2fs: don't allow DIO reads but not DIO writes
-  f2fs: simplify f2fs_force_buffered_io()
-  f2fs: support STATX_DIOALIGN
-
- fs/crypto/inline_crypt.c  | 48 ++++++++++++++++++++-------------------
- fs/ext4/ext4.h            |  1 +
- fs/ext4/file.c            | 10 ++++----
- fs/ext4/inode.c           | 29 +++++++++++++++++++++++
- fs/f2fs/f2fs.h            | 45 ------------------------------------
- fs/f2fs/file.c            | 45 +++++++++++++++++++++++++++++++++++-
- fs/stat.c                 | 37 ++++++++++++++++++++++++++++++
- include/linux/fscrypt.h   |  7 ++----
- include/linux/stat.h      |  2 ++
- include/uapi/linux/stat.h |  4 +++-
- 10 files changed, 147 insertions(+), 81 deletions(-)
-
+diff --git a/fs/stat.c b/fs/stat.c
+index a7930d7444830..c1ce447c1a383 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -5,6 +5,7 @@
+  *  Copyright (C) 1991, 1992  Linus Torvalds
+  */
+ 
++#include <linux/blkdev.h>
+ #include <linux/export.h>
+ #include <linux/mm.h>
+ #include <linux/errno.h>
+@@ -198,6 +199,35 @@ int getname_statx_lookup_flags(int flags)
+ 	return lookup_flags;
+ }
+ 
++/* Handle STATX_DIOALIGN for block devices. */
++static inline void handle_bdev_dioalign(struct path *path, u32 request_mask,
++					struct kstat *stat)
++{
++#ifdef CONFIG_BLOCK
++	struct inode *inode;
++	struct block_device *bdev;
++	unsigned int lbs;
++
++	if (likely(!(request_mask & STATX_DIOALIGN)))
++		return;
++
++	inode = d_backing_inode(path->dentry);
++	if (!S_ISBLK(inode->i_mode))
++		return;
++
++	bdev = blkdev_get_no_open(inode->i_rdev);
++	if (!bdev)
++		return;
++
++	lbs = bdev_logical_block_size(bdev);
++	stat->dio_mem_align = lbs;
++	stat->dio_offset_align = lbs;
++	stat->result_mask |= STATX_DIOALIGN;
++
++	blkdev_put_no_open(bdev);
++#endif /* CONFIG_BLOCK */
++}
++
+ /**
+  * vfs_statx - Get basic and extra attributes by filename
+  * @dfd: A file descriptor representing the base dir for a relative filename
+@@ -230,11 +260,16 @@ static int vfs_statx(int dfd, struct filename *filename, int flags,
+ 		goto out;
+ 
+ 	error = vfs_getattr(&path, stat, request_mask, flags);
++
+ 	stat->mnt_id = real_mount(path.mnt)->mnt_id;
+ 	stat->result_mask |= STATX_MNT_ID;
++
+ 	if (path.mnt->mnt_root == path.dentry)
+ 		stat->attributes |= STATX_ATTR_MOUNT_ROOT;
+ 	stat->attributes_mask |= STATX_ATTR_MOUNT_ROOT;
++
++	handle_bdev_dioalign(&path, request_mask, stat);
++
+ 	path_put(&path);
+ 	if (retry_estale(error, lookup_flags)) {
+ 		lookup_flags |= LOOKUP_REVAL;
 -- 
 2.36.1
 
-base-commit: b13baccc3850ca8b8cccbf8ed9912dbaa0fdf7f3
