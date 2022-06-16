@@ -2,76 +2,53 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C395DCCA47F
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 06:29:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74572C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 07:28:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359185AbiFPG3x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 02:29:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50040 "EHLO
+        id S230022AbiFPH2j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 03:28:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358783AbiFPG3r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 02:29:47 -0400
+        with ESMTP id S229714AbiFPH2i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 03:28:38 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0BC756B19;
-        Wed, 15 Jun 2022 23:29:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96E214F47F;
+        Thu, 16 Jun 2022 00:28:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=COuN5Zz+YBR/xeVdeWv1MuY4NtQSVs4UMHwcz0WDnnQ=; b=26COe9EvreWGEeNT1/sD1d3kfz
-        6eiHSoJj3HJNczxIgN6ZNyHhGyF8lkqwkIOL2rgXq98uxDdUx8uC3Lu2IAjIfP6R/f0aliM5EVC6O
-        1IhASH35qFwNzseZJ4XUFc3+jdZJ4c7Xluvv7sbbyUQTCbN3yrpBR/WmIvNi7io2ncbPNVRlOnIDy
-        hqQ2OPazzRsUwaxn27aCXA9ZVEcHgflQQLkk46TasGiAi8tRAQZfnChJgkw8OGb0eXj325Mwkt6LL
-        e0wbU4YbmLMbwRPuPBtRocrTHAynRb7PqFxnUF7o6IDlLRxUJhNefflB5q17jn1tsA4Npc8hfXRTy
-        ddSAS+0w==;
+        bh=qyudK9RHzHd0FIczh0aVX4a/5A3C+DJ8JynCKqV8fww=; b=11ryEfpGZsM2WSo4FIu09RIUfh
+        iFdyiaA5LbnWO1SMdODF8+EI4N+WTm4MhDL+l6ovDkAsCKdLf3CayceRpZo6D161YBAy2/BUyxhVW
+        0vdmwAoJ4VHRmsqSofX008uOoCFvuoB5TWMoWd6Z6ULNAD6XL8MSQhzhWnc+yTX/ND1iAT2IF1DwB
+        OADPBraaAPB5xGosAdPXJR0wOPRZwsVZhijLPjt11JfOWG2/h3Y6q0VaFAGscTLizTiiZ/8mlEWoX
+        ORgTJ/5D9t9KJuHxfoJuxccK7GEYiX9b8JhpQWkOtrdCm2yoJ7NhEe4WKOGS4NDP/SyiL6zlF95Ze
+        7RlWxbJA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o1j0i-000jIM-EX; Thu, 16 Jun 2022 06:29:44 +0000
-Date:   Wed, 15 Jun 2022 23:29:44 -0700
+        id 1o1jvW-0012yz-PZ; Thu, 16 Jun 2022 07:28:26 +0000
+Date:   Thu, 16 Jun 2022 00:28:26 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: [RFC PATCH v2 1/7] statx: add I/O alignment information
-Message-ID: <YqrN2J6r4Z+BIN+o@infradead.org>
-References: <20220518235011.153058-1-ebiggers@kernel.org>
- <20220518235011.153058-2-ebiggers@kernel.org>
- <YobNXbYnhBiqniTH@magnolia>
- <20220520032739.GB1098723@dread.disaster.area>
- <YqgbuDbdH2OLcbC7@sol.localdomain>
- <YqnapOLvHDmX/3py@infradead.org>
- <YqpzqZQgu0Zz+vW1@sol.localdomain>
- <YqrIlVtI85zF9qyO@infradead.org>
- <YqrLdORPM5qm9PC0@sol.localdomain>
+To:     xiakaixu1987@gmail.com
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        djwong@kernel.org, hch@infradead.org,
+        Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [PATCH] iomap: set did_zero to true when zeroing successfully
+Message-ID: <YqrbmiZ4HMiuvl17@infradead.org>
+References: <1655198062-13288-1-git-send-email-kaixuxia@tencent.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YqrLdORPM5qm9PC0@sol.localdomain>
+In-Reply-To: <1655198062-13288-1-git-send-email-kaixuxia@tencent.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 15, 2022 at 11:19:32PM -0700, Eric Biggers wrote:
-> Yes I know that.  The issue is that the inode that statx() is operating on is
-> the device node, so *all* the other statx fields come from that inode.  Size,
-> nlink, uid, gid, mode, timestamps (including btime if the filesystem supports
-> it), inode number, device number of the containing filesystem, mount ID, etc.
-> If we were to randomly grab one field from the underlying block device instead,
-> that would be inconsistent with everything else.
+On Tue, Jun 14, 2022 at 05:14:22PM +0800, xiakaixu1987@gmail.com wrote:
+> From: Kaixu Xia <kaixuxia@tencent.com>
+> 
+> It is unnecessary to check and set did_zero value in while() loop,
+> we can set did_zero to true only when zeroing successfully at last.
 
-At least on XFS we have a magic hardcoded st_blksize for block devices,
-but it seems like the generic doesn't do that.
-
-But I'm really much more worried about an inconsistency where we get
-usefull information or some special files rather than where we acquire
-this information from.  So I think going to the block device inode, and
-also going to it for stx_blksize is the right thing as it actually
-makes the interface useful.  We just need a good helper that all
-getattr implementations can use to be consistent and/or override these
-fields after the call to ->getattr.
+Looks good, but this really should be separate patches for dax and
+iomap.
