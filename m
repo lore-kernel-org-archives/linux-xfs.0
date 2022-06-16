@@ -2,136 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1983AC43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 16:56:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA58C43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 18:28:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236960AbiFPQ4r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 12:56:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60612 "EHLO
+        id S236866AbiFPS2L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 14:28:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235685AbiFPQ4o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 12:56:44 -0400
-Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A32C5369F4
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 09:56:41 -0700 (PDT)
-Received: by mail-ed1-x52c.google.com with SMTP id g7so3046307eda.3
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 09:56:41 -0700 (PDT)
+        with ESMTP id S233682AbiFPS2L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 14:28:11 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51F2F3584F
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 11:28:10 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id f8so1909552plo.9
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 11:28:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=uTCaV5JT6qTWfBercMWlEblUINgIroVSHoW1wsfqACA=;
-        b=W/pKji3dzXG2dNNpq916uSWl5jFc93ncSgWCT1FLBNPdcdyU37WPots+mUlg8QFXpW
-         x1HOB4tio+3irqKgHluIkU8EUtDH1JvErcIqEdlhfdLrDXbaMLfRZOty85GeVeZq3KSe
-         eDrpQOdjX0+ps7jM6+FMhcEQ5Wk/D9zZWJ9KU=
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=MGgIY9tznXuZlSeI6c1RqtFsTV24uEnewlmgyFVMAjk=;
+        b=p1oW4ijgLGs97vwNan0tuuXsz12lUULCqRLCeU1uWrOEsAH65VIBkNkgjMJdM+sKEI
+         ye9Mw014DOssGAaak1ToRWtMy34fMb6LZvW+b9CL610qdAP+Josm+RVeyBlT0CMAQMuQ
+         UNNds2UJgcJDsfXQAF94enhJcfoUp1BG3+JvKUXeye5nx8v9Bxs+pJ79Hp21uQQqKlVd
+         yCpm17ekZq6vw+IQ46Zt6gBVBJ/8Cb9aGKCgrvU/ziifpS8AfbUL4SCKKjl712Hb832n
+         7bPYZBVSh25PmjSV4/oEBSnG5A1XVFYxDt7da7v++IKHyf6rLGgzvFbwSmInkxWiBx0c
+         QgTw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=uTCaV5JT6qTWfBercMWlEblUINgIroVSHoW1wsfqACA=;
-        b=xYZsurM6wqrS6ScwMk6UaUO86Eba/XsnehtlvncaJGQF6HQ06QT3qIsTRfxJGWwfUc
-         INum+oD4np6l7TNEey3D7T2OuscHmORSWXYHQ5WShAFkvE8UZc9DMvbf4eAl6sJZrvYw
-         FoyXrIjScmJgzGFFqMkPInwtfiigdbaGe+jUGkNT8mSNKmCDjhTAE09fSMLT1RQ0Qk/G
-         Pm0TtzipniHWySeaHED2P/KrHKCvt7n3F455Gx4cMEV+LaX/QDJNtBaXpdQkjuojxy8n
-         Kj4Fvn2CnAivnYreJI2+EvsruSLyZjG8zi47sPNKw/6aTiD1QZro6oRy/72t1CaGSpmA
-         pKWA==
-X-Gm-Message-State: AJIora9fFiGdbRsCHiaj5iD4dGfRyBaFaeVHPf8aURvh/j3BCszDUEKL
-        2GSxOMciKMnCWjOZGomzrzJlc+2BlLDpGUIAuZo=
-X-Google-Smtp-Source: AGRyM1s4MUj2mhPT0Tymo6VE5VcM23KdhFxhDL85et36d0tsMYiJ+9qg6icDf57opGn4iYc5RELKuA==
-X-Received: by 2002:a05:6402:34c2:b0:42f:79c0:334b with SMTP id w2-20020a05640234c200b0042f79c0334bmr7726733edc.88.1655398599935;
-        Thu, 16 Jun 2022 09:56:39 -0700 (PDT)
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com. [209.85.221.48])
-        by smtp.gmail.com with ESMTPSA id i21-20020a05640242d500b0042dddaa8af3sm2136713edc.37.2022.06.16.09.56.38
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Jun 2022 09:56:38 -0700 (PDT)
-Received: by mail-wr1-f48.google.com with SMTP id m24so2635459wrb.10
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 09:56:38 -0700 (PDT)
-X-Received: by 2002:a5d:48c1:0:b0:21a:3574:e70c with SMTP id
- p1-20020a5d48c1000000b0021a3574e70cmr3516296wrs.97.1655398597730; Thu, 16 Jun
- 2022 09:56:37 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=MGgIY9tznXuZlSeI6c1RqtFsTV24uEnewlmgyFVMAjk=;
+        b=42dnBStLGVOt4WBME7J/VMAXhLOTf4suDfm63PYkmpARxUvYBpB/e5hTGELQnUYkDO
+         Z4YCA5SbaMolSQy1Ttn2abDhP1kPPzD8oboYpMq31g2F1AmrN88nDM4zvt1R87KlDYs7
+         a8kX52Y6nZHIw52cOVVvQnhWGbSA8jF+exWlXVEnmCdqLp5f4MAbnfQ1a9A2pVlbSWck
+         PTrBNsYFSvKSNsE/prUSq1gR4DMHoofvD6RGIvMFSeWD/pfEI2DgVh42M+hWmQ3oMfsW
+         qu5xBBjltokIffNTTjPCL0ky5xb8+V6oG9qlq8HATh9qIRRm8VY1MYtBK9xfT1NkI1LT
+         F1/g==
+X-Gm-Message-State: AJIora9v3E6uszpeAwqbojB0IaF+AJ753E2iXM34rX02znG7Djjx/nDK
+        FwYK/1WURxm/rXY2DnEqmnD6vX4EdWc=
+X-Google-Smtp-Source: AGRyM1vBH3GX2x3/0h/FWM+W+pljHn7Fxs58N283ePw4/eTfqJntqmk70apQyAuPHPehE/tEDctzEw==
+X-Received: by 2002:a17:903:283:b0:163:be9d:483a with SMTP id j3-20020a170903028300b00163be9d483amr5752137plr.166.1655404089563;
+        Thu, 16 Jun 2022 11:28:09 -0700 (PDT)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2cd:202:fd57:7edc:385a:c1be])
+        by smtp.gmail.com with ESMTPSA id fs20-20020a17090af29400b001ea75a02805sm4131511pjb.52.2022.06.16.11.28.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Jun 2022 11:28:09 -0700 (PDT)
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     mcgrof@kernel.org, Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 CANDIDATE v2 0/8] xfs stable candidate patches for 5.15.y (part 1)
+Date:   Thu, 16 Jun 2022 11:27:41 -0700
+Message-Id: <20220616182749.1200971-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.36.1.476.g0c4daa206d-goog
 MIME-Version: 1.0
-References: <20220616143617.449094-1-Jason@zx2c4.com> <YqtAShjjo1zC6EgO@casper.infradead.org>
- <YqtDXPWdFQ/fqgDo@zx2c4.com> <YqtKjAZRPBVjlE8S@casper.infradead.org>
- <CAHk-=wj2OHy-5e+srG1fy+ZU00TmZ1NFp6kFLbVLMXHe7A1d-g@mail.gmail.com> <Yqtd6hTS52mbb9+q@casper.infradead.org>
-In-Reply-To: <Yqtd6hTS52mbb9+q@casper.infradead.org>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Thu, 16 Jun 2022 09:56:21 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wj_K2MnhC6N_LyY6ezmQyWzqBnfobXC354HJuKdqMePzA@mail.gmail.com>
-Message-ID: <CAHk-=wj_K2MnhC6N_LyY6ezmQyWzqBnfobXC354HJuKdqMePzA@mail.gmail.com>
-Subject: Re: [PATCH] usercopy: use unsigned long instead of uintptr_t
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Linux-MM <linux-mm@kvack.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-hardening@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Uladzislau Rezki <urezki@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Joe Perches <joe@perches.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 16, 2022 at 9:44 AM Matthew Wilcox <willy@infradead.org> wrote:
->
-> I don't want to support an address space larger than word size.  I can't
-> imagine any CPU vendor saying "So we have these larger registers that
-> you can only use for pointers and then these smaller registers that you
-> can use for data".  We haven't had A/D register splits since the m68k.
-> Perhaps I haven't talked to enough crazy CPU people.  But if anyone does
-> propose something that bad, we should laugh at them.
+The patch testing has been increased to 100 runs per test on each 
+config. A baseline without the patches was established with 100 runs 
+to help detect hard failures / tests with a high fail rate. Any 
+failures seen in the backports branch but not in the baseline branch 
+were then run 1000+ times on both the baseline and backport branches 
+and the failure rates compared. The failures seen on the 5.15 
+baseline are listed at 
+https://gist.github.com/lrumancik/5a9d85d2637f878220224578e173fc23. 
+No regressions were seen with these patches.
 
-Yeah, the thing is, right now we have 'unsigned long' as the "wordsize".
+To make the review process easier, I have been coordinating with Amir 
+who has been testing this same set of patches on 5.10. He will be 
+sending out the corresponding 5.10 series shortly.
 
-And I want to point out that that is not about "pointers" at all, it's
-about pretty much everything.
+Change log from v1 
+(https://lore.kernel.org/all/20220603184701.3117780-1-leah.rumancik@gmail.com/):
+- Increased testing
+- Reduced patch set to overlap with 5.10 patches
 
-It shows up in some very core places like system call interface etc,
-where "long" is in very real ways the expected register size.
+Thanks,
+Leah
 
-So the 128-bit problem is actually much larger than just "uintptr_t",
-and we have that "sizeof(long)" thing absolutely everywhere.
+Brian Foster (1):
+  xfs: punch out data fork delalloc blocks on COW writeback failure
 
-In fact, you can see it very much in things like this:
+Darrick J. Wong (4):
+  xfs: remove all COW fork extents when remounting readonly
+  xfs: prevent UAF in xfs_log_item_in_current_chkpt
+  xfs: only bother with sync_filesystem during readonly remount
+  xfs: use setattr_copy to set vfs inode attributes
 
-   #if BITS_PER_LONG == 64
+Dave Chinner (1):
+  xfs: check sb_meta_uuid for dabuf buffer recovery
 
-which you'll find all over as the "is this a 64-bit architecture".
+Rustam Kovhaev (1):
+  xfs: use kmem_cache_free() for kmem_cache objects
 
-Out bitmaps and bit fields are also all about "long" - again, entirely
-unrelated to pointers.
+Yang Xu (1):
+  xfs: Fix the free logic of state in xfs_attr_node_hasname
 
-So I agree 100% that "we will have a problem with 128-bit words".
+ fs/xfs/libxfs/xfs_attr.c      | 17 +++++------
+ fs/xfs/xfs_aops.c             | 15 ++++++++--
+ fs/xfs/xfs_buf_item_recover.c |  2 +-
+ fs/xfs/xfs_extfree_item.c     |  6 ++--
+ fs/xfs/xfs_iops.c             | 56 ++---------------------------------
+ fs/xfs/xfs_log_cil.c          |  6 ++--
+ fs/xfs/xfs_pnfs.c             |  3 +-
+ fs/xfs/xfs_super.c            | 21 +++++++++----
+ 8 files changed, 47 insertions(+), 79 deletions(-)
 
-> So how do you think we should solve the 128-bit-word-size problem?
-> Leave int at 32-bit, promote long to 128-bit and get the compiler to
-> add __int64 to give us a 64-bit type?
+-- 
+2.36.1.476.g0c4daa206d-goog
 
-That would likely be the least painful approach, but I'm not sure it's
-necessarily the right one.
-
-Maybe we might have to introduce a "word size" type.
-
-> The only reason I like size_t is that it's good _documentation_.
-> It says "This integer is a byte count of something that's in memory".
-> As opposed to being a count of sectors, blocks, pages, pointers or
-> turtles.
-
-Yes.
-
-And yes:
-
-> extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
->                            unsigned int, unsigned int);
-
-We should use a lot more explicit types for flags in particular.
-Partly for documentation, partly for "we could type-check these".
-
-And in declarations it might be good to encourage use of (helpful)
-argument names, in case it really is just an offset or other integer
-where a type makes no sense.
-
-             Linus
