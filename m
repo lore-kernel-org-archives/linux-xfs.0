@@ -2,74 +2,54 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0406DC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 11:14:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C966C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 12:01:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229919AbiFPLOg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 07:14:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60094 "EHLO
+        id S1359848AbiFPMBn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 08:01:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229566AbiFPLOf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 07:14:35 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6C665BE70;
-        Thu, 16 Jun 2022 04:14:34 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id r1so1009627plo.10;
-        Thu, 16 Jun 2022 04:14:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=aY+rbvTncYwIQUsfu1kfNRqIKlHQfqdkAsaQGSStGAc=;
-        b=T1nyQf+o+quWJWjHgREea65Lu4Mwv9/vEkhHIn5ouzUN4xbbRmkbks6WcAe6EO03XX
-         oUeq6768kVgvWYBVYkZ549DhKwbJpKEVDNIoeW1rt9JgEVF/isu5nDY9iKXewFEq/AVV
-         SUkt37VFzTt82n8W9Fjdg2Zpz5NWHbljWwsCCf3pZsPmsxALDtUiK/qj2N5rtISdrpu3
-         P+jQqReFuz9h//86mZp68hZ7LPyPxkfWoET989/fjOQLFj3Dj+jQWQnqageLe27e172T
-         QsSGz20a826PdEXyvhQV/izlKVVN2B7R0vCMS/6+RDsgRCVlSKirYOU0R412LfwOQniP
-         FA4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=aY+rbvTncYwIQUsfu1kfNRqIKlHQfqdkAsaQGSStGAc=;
-        b=O32QDGgot7jd33ij2E2am4xriP0Xc+x1c5jJhcH14/QCPSKeET3LvcKXeraQzfGtQT
-         K4SevairZTkb7/uhSWzAEwnDV1KiBlU/cjTps8ziXpwOyd/6Zq2OnTd6MkpEvjDzPuaP
-         Krom1rfXNdVpwGzQjvbmshlsQAgPYWucbILO0JkBC9A01xuegVWDbiwj2K0E/an9p7o9
-         5wdF6bldzFeTOjpfkaukpqrKTsHH/y17p4T2FINOmlRk+Lq3N2ev6Z2bMD44m0mta2vw
-         lNKIDh3UUxt5yhBLMeBLAh6O9YAtmBOQ7L2ixCg1bkOPNOB/oyxt6uVr7CDaq9xCfo23
-         6XWw==
-X-Gm-Message-State: AJIora+NPaRJj8Hm5vYfiaTt8FAz5DL1QMULHmCvnuQ443b0+jhScWvx
-        TQgh0ArWzB3MqTIgXPJU9RQDxEhtIvAIWOfwag==
-X-Google-Smtp-Source: AGRyM1uP5evC9BLzvpMcKxMLrva/0mNlFe3Li55ooomvmqNgreTCCewyVOQcsfYFGScxDnGG1w5w4iOYQVUXvMWjWTo=
-X-Received: by 2002:a17:90a:1588:b0:1e0:a45c:5c1 with SMTP id
- m8-20020a17090a158800b001e0a45c05c1mr4607943pja.65.1655378074447; Thu, 16 Jun
- 2022 04:14:34 -0700 (PDT)
+        with ESMTP id S230280AbiFPMBm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 08:01:42 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4BD65EDC4
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 05:01:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=rKW7WRCGuyB1K2VUy63pf+lbzpQbFiXtIcTkDurcHJo=; b=1xGZfTA7L5tafnWjrJk3lnlrHc
+        9RCHG73QDZKjQ1UrlzrAuYfKBNAlrvcjJhtjqEf3pgaAXIX/SQUQxUDV+M9vfPInOVBSmjGXBXhxY
+        YN3vC9YJvKJFKRRCVR//KYi9WhzzHDllZo38o8ONlJgMhTOcP6juYC17+J0WclRQyg893VqU2C+M+
+        0bvmvh0LSuVyreFSxw06tnOPAGel0EpL8dvVcb/ex4TuJJPb3u/7P/dLI07JwnXcZDFNtfAMeDPa3
+        28y038syBNCuM+sa9LYDKHdF9WjVR+O4CKLgtgvPNlhp14N4d2XkYHk1NnNXxwEw/d0SFnR0MsNPf
+        VurrXCWQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o1oBw-002DIu-B4; Thu, 16 Jun 2022 12:01:40 +0000
+Date:   Thu, 16 Jun 2022 05:01:40 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [RFC] [PATCH 00/50] xfs: per-ag centric allocation alogrithms
+Message-ID: <YqsbpL9BZes7qDbv@infradead.org>
+References: <20220611012659.3418072-1-david@fromorbit.com>
 MIME-Version: 1.0
-References: <1655198062-13288-1-git-send-email-kaixuxia@tencent.com> <YqrbmiZ4HMiuvl17@infradead.org>
-In-Reply-To: <YqrbmiZ4HMiuvl17@infradead.org>
-From:   Kaixu Xia <xiakaixu1987@gmail.com>
-Date:   Thu, 16 Jun 2022 19:14:23 +0800
-Message-ID: <CAGjdHu=aZtV38SHqUbWQv2OD9PXpy3+ohEqL5F4G+_83AE0sBg@mail.gmail.com>
-Subject: Re: [PATCH] iomap: set did_zero to true when zeroing successfully
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        djwong@kernel.org, Kaixu Xia <kaixuxia@tencent.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220611012659.3418072-1-david@fromorbit.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Christoph Hellwig <hch@infradead.org> =E4=BA=8E2022=E5=B9=B46=E6=9C=8816=E6=
-=97=A5=E5=91=A8=E5=9B=9B 15:28=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Tue, Jun 14, 2022 at 05:14:22PM +0800, xiakaixu1987@gmail.com wrote:
-> > From: Kaixu Xia <kaixuxia@tencent.com>
-> >
-> > It is unnecessary to check and set did_zero value in while() loop,
-> > we can set did_zero to true only when zeroing successfully at last.
->
-> Looks good, but this really should be separate patches for dax and
-> iomap.
+On Sat, Jun 11, 2022 at 11:26:09AM +1000, Dave Chinner wrote:
+> 
+> This series starts by driving the perag down into the AGI, AGF and
+> AGFL access routines and unifies the perag structure initialisation
+> with the high level AG header read functions. This largely replaces
+> the xfs_mount/agno pair that is passed to all these functions with a
+> perag, and in most places we already have a perag ready to pass in.
 
-Thanks for your suggestion, will separate it in V2.
+Btw, one neat thing would be versions of helpers like XFS_AG_DADDR
+and XFS_AGB_TO_FSB that take the pag structure instead of the mp/agno
+pair.
