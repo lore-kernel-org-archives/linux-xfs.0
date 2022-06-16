@@ -2,83 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98304C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 16:36:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DCA6C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jun 2022 16:45:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233111AbiFPQgm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 12:36:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38298 "EHLO
+        id S1378315AbiFPQpp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 12:45:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230319AbiFPQgm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 12:36:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E75D12018A;
-        Thu, 16 Jun 2022 09:36:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7C24061321;
-        Thu, 16 Jun 2022 16:36:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88016C34114;
-        Thu, 16 Jun 2022 16:36:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655397399;
-        bh=4bBttLeEIwKrz4DRXfq17+e2lCYP8BZEDmlEuYZcq0Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=O2cYv2qd6jc/9qBcilbSyxtV8W6f7oCo9I6lSpr+pLzQ3KFS+8iiXWqTv821K4rL/
-         vCRtyGk1eDVTFS6uVeTpFX7z1kLn8VlQPdZE29cHwL/xYsW+S8v4k4RiPIyO4UJtEh
-         28ui/h46YBebZtro+Jv8J51z1n7Zpk3WqfS/1nrOEmx7a1+yrgc87pSnG5HS81PfXY
-         3mtCpeMJ2f2K3X3DmNLhzwHQBhBiG2zJ21eZVH4V52nko91bnfMAAbr5vBKRKHPdw7
-         naNsvhlgIYH61BPUurUEE0jYgadZxHyqec+sLwsNC9LJCfFwVH3a0yvMuam3K+5Lo9
-         T1XTIV7qTh+9Q==
-Date:   Thu, 16 Jun 2022 17:36:34 +0100
-From:   Mark Brown <broonie@kernel.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        linux-hardening@vger.kernel.org, Jason@zx2c4.com,
-        linux-xfs@vger.kernel.org, urezki@gmail.com, joe@perches.com,
-        gregkh@linuxfoundation.org, torvalds@linux-foundation.org,
-        willy@infradead.org
+        with ESMTP id S1378230AbiFPQpS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 12:45:18 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18D8A403F8;
+        Thu, 16 Jun 2022 09:44:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=rdCg6im4FTYRC+krLkTNcrz9yXNDSAEOLtpVfWokJzk=; b=lIYqkylRNsFWHYC10t48L3rTzz
+        yBq8yCuNVVYqjoqPFXIS46lBCHD2NlAezsgABwyHdfMw66+kZP182Ua/ep6vVGNTs4F4CopCrFbEw
+        BWwqJURZ+2cthMYSs2sTja5FH6wt9G7AD7XNbVJa6piDo9PI9RUuHDlswpJ0uDp36s2PxE+EBlFod
+        Ea/aw52v+C5EArkPseYDvvLUiGIaKYuhrvSLyidul12C5DII7ZZBPjIYY8bncKLacdtXhZJCZgYw4
+        YkddyDxUs+Bv8mvNdNch9eNcVV46iAs17/v9EfjT1Whiyq+JdK1E62ph6AEv4FwDeksedEJK6XfI+
+        e6jnqHCg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o1sba-0025gl-SZ; Thu, 16 Jun 2022 16:44:26 +0000
+Date:   Thu, 16 Jun 2022 17:44:26 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Linux-MM <linux-mm@kvack.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-hardening@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Uladzislau Rezki <urezki@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Joe Perches <joe@perches.com>
 Subject: Re: [PATCH] usercopy: use unsigned long instead of uintptr_t
-Message-ID: <YqtcEnD3f8KrGfIZ@sirena.org.uk>
+Message-ID: <Yqtd6hTS52mbb9+q@casper.infradead.org>
 References: <20220616143617.449094-1-Jason@zx2c4.com>
- <165539694985.1107767.16603574353239972239.b4-ty@chromium.org>
+ <YqtAShjjo1zC6EgO@casper.infradead.org>
+ <YqtDXPWdFQ/fqgDo@zx2c4.com>
+ <YqtKjAZRPBVjlE8S@casper.infradead.org>
+ <CAHk-=wj2OHy-5e+srG1fy+ZU00TmZ1NFp6kFLbVLMXHe7A1d-g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="Tb/+ssbSziytONKl"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <165539694985.1107767.16603574353239972239.b4-ty@chromium.org>
-X-Cookie: Pass with care.
+In-Reply-To: <CAHk-=wj2OHy-5e+srG1fy+ZU00TmZ1NFp6kFLbVLMXHe7A1d-g@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Thu, Jun 16, 2022 at 08:59:51AM -0700, Linus Torvalds wrote:
+> On Thu, Jun 16, 2022 at 8:21 AM Matthew Wilcox <willy@infradead.org> wrote:
+> >
+> > I don't know why people call uintptr_t a "userspace type".  It's a type
+> > invented by C99 that is an integer type large enough to hold a pointer.
+> > Which is exactly what we want here.
+> 
+> On the other hand, "unsigned long" has existed since the first version
+> of C, and is an integer type large enough to hold a pointer.
+> 
+> Which is exactly what we want here, and what we use everywhere else too.
+> 
+> The whole "uintptr_t handles the historical odd cases with pointers
+> that are smaller than a 'long'" is entirely irrelevant, since those
+> odd cases are just not a factor.
 
---Tb/+ssbSziytONKl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I don't care about the odd historical cases either.
 
-On Thu, Jun 16, 2022 at 09:29:12AM -0700, Kees Cook wrote:
+> And the "pointers are _larger_ than a 'long'" case is similarly
+> irrelevant, since we very much want to use arithmetic on these things,
+> and they are 'long' later. They aren't used as pointers, they are used
+> as integer indexes into the virtual address space that we do odd
+> operations on.
+> 
+> Honestly, even if you believe in the 128-bit pointer thing, changing
+> one cast in one random place to be different from everything else is
+> *not* productive. We're never going to do some "let's slowly migrate
+> from one to the other".
+> 
+> And honestly, we're never going to do that using "uintptr_t" anyway,
+> since it would be based on a kernel config variable and be a very
+> specific type, and would need to be type-safe for any sane conversion.
+> 
+> IOW, in a hypothetical word where the address size is larger than the
+> word-size, it would have to be something like out "pte_t", which is
+> basically wrapped in a struct so that C implicit type conversion
+> doesn't bite you in the arse.
 
-> Given Linus's confirmation: applied to for-next/hardening, thanks! I
-> do note, however, that we have almost 1700 uses of uintptr_t in the
-> kernel. Perhaps we need to add a section to the CodingStyle doc?
+I don't want to support an address space larger than word size.  I can't
+imagine any CPU vendor saying "So we have these larger registers that
+you can only use for pointers and then these smaller registers that you
+can use for data".  We haven't had A/D register splits since the m68k.
+Perhaps I haven't talked to enough crazy CPU people.  But if anyone does
+propose something that bad, we should laugh at them.
 
-checkpatch too.
+So how do you think we should solve the 128-bit-word-size problem?
+Leave int at 32-bit, promote long to 128-bit and get the compiler to
+add __int64 to give us a 64-bit type?
 
---Tb/+ssbSziytONKl
-Content-Type: application/pgp-signature; name="signature.asc"
+> We use the user-space types in a few places, and they have caused
+> problems, but at least they are really traditional and the compiler
+> actually enforces them for some really standard functions. I'm looking
+> at 'size_t' in particular, which caused problems exactly because it's
+> a type that is strictly speaking not under our control.
+> 
+> 'size_t' is actually a great example of why 'uintptr_t' is a horrid
+> thing. It's effectively a integer type that is large enough to hold a
+> pointer difference. On unsegmented architectures, that ends up being a
+> type large enough to hold a pointer.
 
------BEGIN PGP SIGNATURE-----
+The only reason I like size_t is that it's good _documentation_.
+It says "This integer is a byte count of something that's in memory".
+As opposed to being a count of sectors, blocks, pages, pointers or
+turtles.
 
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmKrXBEACgkQJNaLcl1U
-h9DsGQf/agnYcZJzmyyvrdJhNgIHMLJGc23uAFrdPZmjZSTg6Os0hMz791GpS37j
-MERQ+fyUISX3EiwrP/6O1lwNeGjmy0OmS5uiv4naFkbCLhb43Ezg0Rh7VtnwWeON
-zIBbdK8C1HGQLpBZ85Egn45aVAE8KptFPhEuNoXrTwzaJ6UOpXBsTjn3kit0ISlH
-Hmi+RCovff+W2FVgaVLOjn2NVQBmyEi0e7E55mjf+aWd0N2ZJGyb1nKtWB5GVFW6
-JXSTAJbi2ZaiSll80jw9vM2drADebwxWjHcRQyukLTUgG9vGhg+1W3A2rZtYM1ZD
-rcElvH8xc/LtO6pzC/1eeQCbSOlrDw==
-=XYsA
------END PGP SIGNATURE-----
+As an example:
+extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+                           unsigned int, unsigned int);
 
---Tb/+ssbSziytONKl--
+What the hell are those two ints?  Based on experience, they're probably
+offset & length, but who even knows what order they're in.
+
+> And does it sound familiar how on some architectures it's "unsigned
+> int", and on others it is "unsigned long"? It's very annoying, and
+> it's been annoying over the years. The latest annoyance was literally
+> less than a week ago in 1c27f1fc1549 ("iov_iter: fix build issue due
+> to possible type mis-match").
+
+Yes, ARM is just crazy here.  We should get the compiler people to give
+us an option to make size_t unsigned long.  Like we have -mcmodel=kernel
+on x86.
+
