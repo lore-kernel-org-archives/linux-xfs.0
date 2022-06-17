@@ -2,160 +2,169 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13747CCA479
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 09:51:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9723C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 10:07:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380594AbiFQJvl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jun 2022 05:51:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38436 "EHLO
+        id S1381677AbiFQKH1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jun 2022 06:07:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234921AbiFQJvk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 05:51:40 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 93BEF6929A
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Jun 2022 02:51:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1655459498;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=W2XL8pkjreEj3h2zo18bB3t5OqDKTr/JgGg6/1/Ir4Q=;
-        b=NRVq/kabZ2ufeDdk+qoqt4OUnx8BsBjVDpXb7M0cTyD4jjp3+aZLD3wqTekpuigHR6Drtp
-        DxBDtdPcv9QWYcZrSfSiC2wZuflCUZTDetUxEsAe/g6lfBWOCzhXeRfgNTHFqRkVsKmgXS
-        Au3wkieXa+838s5F3XR3DrlB9oTgjus=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-526-FhKUrYAnMHOEFJ0qjNATkg-1; Fri, 17 Jun 2022 05:51:37 -0400
-X-MC-Unique: FhKUrYAnMHOEFJ0qjNATkg-1
-Received: by mail-wr1-f71.google.com with SMTP id bv8-20020a0560001f0800b002183c5d5c26so836203wrb.20
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Jun 2022 02:51:37 -0700 (PDT)
+        with ESMTP id S1381620AbiFQKHR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 06:07:17 -0400
+Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DF406A408;
+        Fri, 17 Jun 2022 03:06:48 -0700 (PDT)
+Received: by mail-wr1-x42a.google.com with SMTP id g4so5090550wrh.11;
+        Fri, 17 Jun 2022 03:06:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Lm9N1K0ErOqhgBIL+mM7oT0VHmXD9vMxUQ+f4k7wYOY=;
+        b=HqwZBaiKSrAImMdKVXfTjpe6OJPZGGUSOYNAIqiVqgdC5GhWngXRVWydaZ2GBwsEiF
+         +Po9ZMq+Iq2Q6xodIpenWuExXN0N//0OpEje60dBgh173EB7kCSQ7OVjcqgubk+fOu8i
+         H6hqaGf0wikH3YmA6PD8zsPXWRCoobDMWM6fZvJUeUgnywaE/IoKxp/OB61I9Pr6rSQa
+         flMSWSa7vcA2lLqnQoE+ll0Wf7hNkkGcOg3rHk4nB4G2ddNMM1Xess6a4mtp+MsAfpkY
+         r9rJGjo/uhsuNv0JwDLjPggrdsddU3LqdSGqv8nxx2U8w3cooX8KBNoAsa6aztVi0wr+
+         ciDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:cc:references:from:organization:subject
-         :in-reply-to:content-transfer-encoding;
-        bh=W2XL8pkjreEj3h2zo18bB3t5OqDKTr/JgGg6/1/Ir4Q=;
-        b=zezdQQfOXIDoi32uJcUwxEc1gpVoCuKA91gXAPZlq9XJek4IziRlj7oEMo15Cq/SOe
-         hDmY2RPGtze4N9jwARSAf8b4yw6odIm9A+OnR3zijzq4HgDre71NIm3fz+zxpCe+0o9U
-         yRqmJSuUFb87MGdWpyIMh3yRAR7oqefgf7UYdyTbYUf/EY+xI56JkinWmtm/TwpOOC09
-         aWpEnJl2DLtgMrkpLak9FG6g/9ZNdBIs0PmLNwAgpDIQRPbob8jd/u4+syeiKEsakUAU
-         NQm6LQX9uWyecqP5xOEgpaTJWKJvEjeIbMvdWvuodD1ZL/l08tGrJpv4fYB7InskzcAL
-         Zn7g==
-X-Gm-Message-State: AJIora9FA6G2VHbaKD0wSxi7XQd8uBmNrBnsKUwUd7X/z3AevKwjuIxb
-        JOgK6S/paKr0Hi9G6CBR/S2KurEkub4erXSIyZ0pN/XlAaqNVi4U2oYecE04JNwWzBV2QaizhcP
-        dF6g2aapoHEn7x65L/f02
-X-Received: by 2002:a5d:4108:0:b0:213:b585:66c7 with SMTP id l8-20020a5d4108000000b00213b58566c7mr8407251wrp.335.1655459495983;
-        Fri, 17 Jun 2022 02:51:35 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1vPq26W2EV6yn5ge0JaefggrEXKWcvxXJQoWeAk7go6hHo/0LCo2WNzDgeOAFhBKPGgtatufQ==
-X-Received: by 2002:a5d:4108:0:b0:213:b585:66c7 with SMTP id l8-20020a5d4108000000b00213b58566c7mr8407226wrp.335.1655459495720;
-        Fri, 17 Jun 2022 02:51:35 -0700 (PDT)
-Received: from ?IPV6:2003:cb:c70a:7e00:bb5b:b526:5b76:5824? (p200300cbc70a7e00bb5bb5265b765824.dip0.t-ipconnect.de. [2003:cb:c70a:7e00:bb5b:b526:5b76:5824])
-        by smtp.gmail.com with ESMTPSA id i188-20020a1c3bc5000000b0039ee52c1345sm2080057wma.4.2022.06.17.02.51.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 17 Jun 2022 02:51:35 -0700 (PDT)
-Message-ID: <ae6c6566-4c9b-0547-c2e4-3df7cb2bed33@redhat.com>
-Date:   Fri, 17 Jun 2022 11:51:34 +0200
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Lm9N1K0ErOqhgBIL+mM7oT0VHmXD9vMxUQ+f4k7wYOY=;
+        b=ccvUSJ25w8NSgigivkJ25O/QzyDo3r25Mt14hGQPp8rIXDCugn9nn2Y0Puds3dfdj9
+         IOpbEYt4TkQldQVMZYOeJS/HHFvc2Mfs40jV/UDnAs5IkoWky7g7d/CNfWEmPSxHBXot
+         KWNY4lCOyUzXsTsNe/PwdS6eh9qvCz4ecjX07qQZptOvMu8GVVX7Xd0Chv5eoby42TTh
+         S3SC4Bmlo/EWsG1tnHtWddaGhOemafdmjUTCYLVQFUC4zE5uqSGKuJDjhf0KEipffFJl
+         3pbYA6jxOukEb36SdbJv0X0vyE41+70lI2K9CHpGyJtQBFv+zqLu29ByHqswFWAd2IEl
+         31QQ==
+X-Gm-Message-State: AJIora/e6lbIbvyo/iECNM5M4gt6/iA/1nd4VMzJ/Iy6wGX6KmuHkq9Q
+        fQwYyiK3Ji9yFqszqUa0SyTasxbKctFCTw==
+X-Google-Smtp-Source: AGRyM1vHFKW3wLeL/sPoeN2eqNfSkWZMfMbTJ/LdPEWelNdZ7gC8HS2dLjVzUub/bFebD0K38Da6wg==
+X-Received: by 2002:a5d:4ed1:0:b0:219:ea8d:c07e with SMTP id s17-20020a5d4ed1000000b00219ea8dc07emr8521271wrv.174.1655460406406;
+        Fri, 17 Jun 2022 03:06:46 -0700 (PDT)
+Received: from localhost.localdomain ([77.137.66.49])
+        by smtp.gmail.com with ESMTPSA id m42-20020a05600c3b2a00b003973435c517sm5265534wms.0.2022.06.17.03.06.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jun 2022 03:06:45 -0700 (PDT)
+From:   Amir Goldstein <amir73il@gmail.com>
+To:     "Darrick J . Wong" <djwong@kernel.org>
+Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: [PATCH 5.10 CANDIDATE 00/11] xfs stable candidate patches for 5.10.y (v5.15+)
+Date:   Fri, 17 Jun 2022 13:06:30 +0300
+Message-Id: <20220617100641.1653164-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Content-Language: en-US
-To:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
-Cc:     Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org, akpm@linux-foundation.org
-References: <20220531200041.24904-1-alex.sierra@amd.com>
- <20220531200041.24904-3-alex.sierra@amd.com>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat
-Subject: Re: [PATCH v5 02/13] mm: handling Non-LRU pages returned by
- vm_normal_pages
-In-Reply-To: <20220531200041.24904-3-alex.sierra@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 31.05.22 22:00, Alex Sierra wrote:
-> With DEVICE_COHERENT, we'll soon have vm_normal_pages() return
-> device-managed anonymous pages that are not LRU pages. Although they
-> behave like normal pages for purposes of mapping in CPU page, and for
-> COW. They do not support LRU lists, NUMA migration or THP.
-> 
-> We also introduced a FOLL_LRU flag that adds the same behaviour to
-> follow_page and related APIs, to allow callers to specify that they
-> expect to put pages on an LRU list.
-> 
-> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
-> ---
->  fs/proc/task_mmu.c | 2 +-
->  include/linux/mm.h | 3 ++-
->  mm/gup.c           | 6 +++++-
->  mm/huge_memory.c   | 2 +-
->  mm/khugepaged.c    | 9 ++++++---
->  mm/ksm.c           | 6 +++---
->  mm/madvise.c       | 4 ++--
->  mm/memory.c        | 9 ++++++++-
->  mm/mempolicy.c     | 2 +-
->  mm/migrate.c       | 4 ++--
->  mm/mlock.c         | 2 +-
->  mm/mprotect.c      | 2 +-
->  12 files changed, 33 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-> index 2d04e3470d4c..2dd8c8a66924 100644
-> --- a/fs/proc/task_mmu.c
-> +++ b/fs/proc/task_mmu.c
-> @@ -1792,7 +1792,7 @@ static struct page *can_gather_numa_stats(pte_t pte, struct vm_area_struct *vma,
->  		return NULL;
->  
->  	page = vm_normal_page(vma, addr, pte);
-> -	if (!page)
-> +	if (!page || is_zone_device_page(page))
->  		return NULL;
->  
->  	if (PageReserved(page))
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index bc8f326be0ce..d3f43908ff8d 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -601,7 +601,7 @@ struct vm_operations_struct {
->  #endif
->  	/*
->  	 * Called by vm_normal_page() for special PTEs to find the
-> -	 * page for @addr.  This is useful if the default behavior
-> +	 * page for @addr. This is useful if the default behavior
->  	 * (using pte_page()) would not find the correct page.
->  	 */
->  	struct page *(*find_special_page)(struct vm_area_struct *vma,
-> @@ -2934,6 +2934,7 @@ struct page *follow_page(struct vm_area_struct *vma, unsigned long address,
->  #define FOLL_NUMA	0x200	/* force NUMA hinting page fault */
->  #define FOLL_MIGRATION	0x400	/* wait for page to replace migration entry */
->  #define FOLL_TRIED	0x800	/* a retry, previous pass started an IO */
-> +#define FOLL_LRU        0x1000  /* return only LRU (anon or page cache) */
+Hi all,
 
-Does that statement hold for special pages like the shared zeropage?
+Previously posted candidates for 5.10.y followed chronological release
+order.
 
-Also, this flag is only valid for in-kernel follow_page() but not for
-the ordinary GUP interfaces. What are the semantics there? Is it fenced?
+Parts 1 and 2 of fixes from v5.10..v5.12 have already been applied to
+v5.10.121.
 
+Part 3 (from 5.13) has already been posted for review [3] on June 6,
+but following feedback from Dave, I changed my focus to get the same
+set of patches tested and reviewed for 5.10.y/5.15.y.
 
-I really wonder if you should simply similarly teach the handful of
-users of follow_page() to just special case these pages ... sounds
-cleaner to me then adding flags with unclear semantics. Alternatively,
-properly document what that flag is actually doing and where it applies.
+I do want to ask you guys to also find time to review part 3, because
+we have a lot of catching up to do for 5.10.y, so we need to chew at
+this debt at a reasonable rate.
 
+This post has the matching set of patches for 5.10.y that goes with
+Leah's first set of candidates for 5.15.y [1].
 
-I know, there was discussion on ... sorry for jumping in now, but this
-doesn't look clean to me yet.
+Most of the fixes are from v5.15..v5.17 except for patch 11 (v5.18-rc1).
+All fix patches have been tagged with Fixes: by the author.
+
+The patches have been soaking in kdepops since Sunday. They passed more
+than 30 auto group runs with several different versions of xfsprogs.
+
+The differences from Leah's 5.15.y:
+- It is 11 patches and not 8 because of dependencies
+- Patches 6,7 are non-fixes backported as dependency to patch 8 -
+  they have "backported .* for dependency" in their commit message
+- Patches 3,4,11 needed changes to apply to 5.10.y - they have a
+  "backport" related comment in their commit message to explain what
+  changes were needed
+- Patch 10 is a fix from v5.12 that is re-posted as a dependency for
+  patch 11
+
+Darrick,
+
+As the author patches 4,11 and sole reviewer of patch 3 (a.k.a
+the non-cleanly applied patches), please take a closer look at those.
+
+Patch 10 has been dropped from my part 2 candidates following concerns
+raised by Dave and is now being re-posted following feedback from
+Christian and Christoph [2].
+
+If there are still concerns about patches 10 or 11, please raise a flag.
+I can drop either of these patches before posting to stable if anyone
+feels that they need more time to soak in master.
+
+Thanks,
+Amir.
+
+[1] https://lore.kernel.org/linux-xfs/20220616182749.1200971-1-leah.rumancik@gmail.com/
+[2] https://lore.kernel.org/linux-xfs/CAOQ4uxg4=m9zEFbDAKXx7CP7HYiMwtsYSJvq076oKpy-OhK1uw@mail.gmail.com/
+[3] https://lore.kernel.org/linux-xfs/20220606160537.689915-1-amir73il@gmail.com/
+
+Brian Foster (1):
+  xfs: punch out data fork delalloc blocks on COW writeback failure
+
+Christoph Hellwig (2):
+  xfs: refactor xfs_file_fsync
+  xfs: fix up non-directory creation in SGID directories
+
+Darrick J. Wong (4):
+  xfs: remove all COW fork extents when remounting readonly
+  xfs: prevent UAF in xfs_log_item_in_current_chkpt
+  xfs: only bother with sync_filesystem during readonly remount
+  xfs: use setattr_copy to set vfs inode attributes
+
+Dave Chinner (2):
+  xfs: check sb_meta_uuid for dabuf buffer recovery
+  xfs: xfs_log_force_lsn isn't passed a LSN
+
+Rustam Kovhaev (1):
+  xfs: use kmem_cache_free() for kmem_cache objects
+
+Yang Xu (1):
+  xfs: Fix the free logic of state in xfs_attr_node_hasname
+
+ fs/xfs/libxfs/xfs_attr.c      | 13 +++---
+ fs/xfs/libxfs/xfs_types.h     |  1 +
+ fs/xfs/xfs_aops.c             | 15 +++++--
+ fs/xfs/xfs_buf_item.c         |  2 +-
+ fs/xfs/xfs_buf_item_recover.c |  2 +-
+ fs/xfs/xfs_dquot_item.c       |  2 +-
+ fs/xfs/xfs_extfree_item.c     |  6 +--
+ fs/xfs/xfs_file.c             | 81 +++++++++++++++++++++--------------
+ fs/xfs/xfs_inode.c            | 24 +++++------
+ fs/xfs/xfs_inode_item.c       |  4 +-
+ fs/xfs/xfs_inode_item.h       |  2 +-
+ fs/xfs/xfs_iops.c             | 56 ++----------------------
+ fs/xfs/xfs_log.c              | 27 ++++++------
+ fs/xfs/xfs_log.h              |  4 +-
+ fs/xfs/xfs_log_cil.c          | 32 ++++++--------
+ fs/xfs/xfs_log_priv.h         | 15 +++----
+ fs/xfs/xfs_pnfs.c             |  3 +-
+ fs/xfs/xfs_super.c            | 21 ++++++---
+ fs/xfs/xfs_trans.c            |  6 +--
+ fs/xfs/xfs_trans.h            |  4 +-
+ 20 files changed, 149 insertions(+), 171 deletions(-)
 
 -- 
-Thanks,
-
-David / dhildenb
+2.25.1
 
