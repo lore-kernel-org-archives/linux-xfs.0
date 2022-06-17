@@ -2,58 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1306DCCA47E
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 02:19:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E133C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 02:31:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233338AbiFQCTb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jun 2022 22:19:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36932 "EHLO
+        id S229781AbiFQCbE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jun 2022 22:31:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232651AbiFQCTa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 22:19:30 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE88F606E1;
-        Thu, 16 Jun 2022 19:19:29 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7A09261C50;
-        Fri, 17 Jun 2022 02:19:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55B77C3411A;
-        Fri, 17 Jun 2022 02:19:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1655432368;
-        bh=Yki0vBzHWKtp6dJbGwH7gUmRk173I5HAJLFYlBbmLtI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=U9nPBXKmGgZZ77OA8gwHRrq5HaWuWMnXvA4xx6OL7Qe5Q6WWAkLhRNj5c2JUuTOqP
-         fC5Sfz1KP6igFDmHzTkyDdxVCfXz+BEUxESyFl0RvL9jo3cHVy1jIy83e+BVWZ/Bg5
-         Ri0ktWlcrRmiQmPMePGTfamFHNmIEHqZQXsclOsA=
-Date:   Thu, 16 Jun 2022 19:19:27 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Alex Sierra <alex.sierra@amd.com>
-Cc:     <jgg@nvidia.com>, <david@redhat.com>, <Felix.Kuehling@amd.com>,
-        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
-        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
-        <hch@lst.de>, <jglisse@redhat.com>, <apopple@nvidia.com>,
-        <willy@infradead.org>
-Subject: Re: [PATCH v5 00/13] Add MEMORY_DEVICE_COHERENT for coherent device
- memory mapping
-Message-Id: <20220616191927.b4500e2f73500b9241009788@linux-foundation.org>
-In-Reply-To: <20220531200041.24904-1-alex.sierra@amd.com>
-References: <20220531200041.24904-1-alex.sierra@amd.com>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229454AbiFQCbD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jun 2022 22:31:03 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B70764D36
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 19:31:03 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id hv24-20020a17090ae41800b001e33eebdb5dso6600501pjb.0
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jun 2022 19:31:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=ydQAd/KUL2HxHcZ6WmBYJjq1p3MkSEob3eJfHRJ1mls=;
+        b=pIlnY2MZys3SuUbWqsUHCe6R5Xv4utaX8Ef1/yiqJVx4c9UdvE5KtgxpmuvrGsEkh7
+         xcFRUXMRyapOAntJADJ6t1QLI9tX2Y/SZ2Pu89Xr09S5Ap/+kxmsoEE29hNMSUkx9+wa
+         du/I42iERJHPkGwDaqcx2sAP3m+A8mcW8SBu6r4HTtChnCqlJFobBBRpy2RjWmhvgBWH
+         QPAfwQatsG5WZe44zEuxcJbz1avwZ3KOb4I0uJzw29PHF2nkcCOYCqpOuJTgQ3i3M93o
+         UXvCD9VbnRr6K2h6Ov1aPJ2jO1tygBYvIAr66wXlh8vLpSiIpqBkyR4vHbb2rxIW2oY9
+         DzJA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ydQAd/KUL2HxHcZ6WmBYJjq1p3MkSEob3eJfHRJ1mls=;
+        b=iq8nq0M1OJhO8wpshL79ErhTOfH6oUKFeUsHNfM7Jgr82djzCSNhML4ObdT8fVlpsJ
+         G+Gb7ig5dmhsRWG8joIY/HCfc6ltCB5roHonzofGW0ogpR0pk+WY0m4qKGwMyVFtL95Y
+         qOz9bhHuGuzUOHqMs2YByuLfHXJN7r/PoizszJz85ISn57pv1Zu6yRbpq0+AqYC664QN
+         liAZL3VJHy9xy3kA3Y3k1S6g0w/RgtAit1+/tkUsEESYfTvTznFOrwyxQXBviiiXTRBJ
+         jZzV1JacK/x8E/2g6LM2dMOnCOSG4znEeq2rI3lt+P5U3LC3zf7u4UNEbZPgAHc6W/dH
+         BqRA==
+X-Gm-Message-State: AJIora+W+02UEbPnobagEVs35cMzxyJKXooeXmBe1DAIlj/T0fL/vyx5
+        0i5tNnnndWBngjPX/eDXXXEM4sDv/w==
+X-Google-Smtp-Source: AGRyM1vOLh6T5dF4pZwnfBJN9cn+TUhunDLtJ0dMW7muoxhJcmnGccl62suiGOJqQ/NduwypsXobmg==
+X-Received: by 2002:a17:90b:188:b0:1e3:1feb:edb2 with SMTP id t8-20020a17090b018800b001e31febedb2mr8278097pjs.195.1655433062392;
+        Thu, 16 Jun 2022 19:31:02 -0700 (PDT)
+Received: from localhost.localdomain ([43.132.141.8])
+        by smtp.gmail.com with ESMTPSA id u1-20020a170903124100b0016892555955sm2282654plh.179.2022.06.16.19.31.00
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 16 Jun 2022 19:31:02 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     linux-xfs@vger.kernel.org
+Cc:     djwong@kernel.org, david@fromorbit.com, hch@infradead.org,
+        Kaixu Xia <kaixuxia@tencent.com>
+Subject: [RESEND PATCH 0/2] xfs: random fixes for lock flags
+Date:   Fri, 17 Jun 2022 10:30:32 +0800
+Message-Id: <1655433034-17934-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 31 May 2022 15:00:28 -0500 Alex Sierra <alex.sierra@amd.com> wrote:
+From: Kaixu Xia <kaixuxia@tencent.com>
 
-> This is our MEMORY_DEVICE_COHERENT patch series rebased and updated
-> for current 5.18.0
+Hi,
 
-I plan to move this series into the non-rebasing mm-stable branch in a
-few days.  Unless sternly told not to do so!
+This patchset include some patches to factor out lock flags
+and fix the mmap_lock state check.
+
+Kaixu Xia (2):
+  xfs: factor out the common lock flags assert
+  xfs: use invalidate_lock to check the state of mmap_lock
+
+ fs/xfs/xfs_inode.c | 64 ++++++++++++++++++----------------------------
+ 1 file changed, 25 insertions(+), 39 deletions(-)
+
+-- 
+2.27.0
+
