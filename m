@@ -2,177 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA79C43334
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 10:07:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37B9CC43334
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 11:05:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381581AbiFQKHs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jun 2022 06:07:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52084 "EHLO
+        id S1380369AbiFQLFi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jun 2022 07:05:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381638AbiFQKHT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 06:07:19 -0400
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FA7669CF9;
-        Fri, 17 Jun 2022 03:06:53 -0700 (PDT)
-Received: by mail-wm1-x335.google.com with SMTP id p6-20020a05600c1d8600b0039c630b8d96so4215941wms.1;
-        Fri, 17 Jun 2022 03:06:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=CYHDL8iVH4k/h/u1jXtZX43fHxv3dP+zew3PELKoGzk=;
-        b=ioBDdt23uQpSGJQwc3jXQrulPuAMXcKKDMfK7nC728S1KHXxtchsYf7y5dsVG3iaWa
-         AWkwIgUzGlt073oriq9xtCnvbVEt7WMJ4XZjughCWrG+xmm+xED4jidvsM7WCE5WSKm1
-         BfT3LAo+B2V5L8H1aYz4fVOtUEegPYheWHWTT85DrdRnxrsZX97TcAfObOX1+OgnesYG
-         zgRW7cXKyWol0iH1YRuRzV4RztOuA+UHsxZbLc069qU8kVYITyc0CjcGgn2yexx4iUqO
-         gg9e9VL2iywga71iaRDqO/f+ML5xGUEpiptekucNV+hLLEWLWs3Ds0tZy2DPHL0+vd34
-         5itg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=CYHDL8iVH4k/h/u1jXtZX43fHxv3dP+zew3PELKoGzk=;
-        b=xqlQ/F6aOrOr6j1NqwZV+EzEXq1U76E8Hng5nImwCBxU5KMpdMKQzxuyYq6sYJlnX8
-         Qrr/23lowj7rMHTpja31Cgm9TX/V2cq+3xx2Z7LhehhzEg1MbelU0igGOmo3fz5Jn5kD
-         dMrvvzIK7jq7pmX8pCEzQnn3nxy2HrAxkTmHEfZKH+tYc4l+/4ItybnY+FioGdS/tAyB
-         FZeXtmnT3KciGnJWjSRbE7ek/p3NcGgm44P2zAK7K0Noivms+ErfZ8UPeoGpqAcLxPB6
-         cUohqQ2/8vRWGniKNqTluL2YIBOZ1tRrXVdeyQXyLFgpP5IanvwS5QBI8fDrjbVq6EeG
-         tvhQ==
-X-Gm-Message-State: AOAM532AuRuDYwrj9cx/5vyKlaevcD79CgVaRGUOCHqLVTm0aOADUuH3
-        GY4M7pvjq+MEQkPe6oz6QTE=
-X-Google-Smtp-Source: ABdhPJy1Ge4VXnDs9/BWX3PjBGKOVRNi9H78DxT9xt1r5sjvRm/T4yAxbTqZqhjH1mWW5rXUWmCuVw==
-X-Received: by 2002:a1c:7317:0:b0:399:e654:3c92 with SMTP id d23-20020a1c7317000000b00399e6543c92mr20270880wmb.49.1655460411385;
-        Fri, 17 Jun 2022 03:06:51 -0700 (PDT)
-Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id m42-20020a05600c3b2a00b003973435c517sm5265534wms.0.2022.06.17.03.06.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jun 2022 03:06:50 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     "Darrick J . Wong" <djwong@kernel.org>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Yang Xu <xuyang2018.jy@fujitsu.com>
-Subject: [PATCH 5.10 CANDIDATE 03/11] xfs: Fix the free logic of state in xfs_attr_node_hasname
-Date:   Fri, 17 Jun 2022 13:06:33 +0300
-Message-Id: <20220617100641.1653164-4-amir73il@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220617100641.1653164-1-amir73il@gmail.com>
-References: <20220617100641.1653164-1-amir73il@gmail.com>
+        with ESMTP id S1380066AbiFQLFh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 07:05:37 -0400
+Received: from FRA01-PR2-obe.outbound.protection.outlook.com (mail-eopbgr120051.outbound.protection.outlook.com [40.107.12.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AFE16C540;
+        Fri, 17 Jun 2022 04:05:35 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=SS2iJsShMAFfAvTfIRDTZa1WUlZqbAnVe/wu/sMpVTfIS/8IZbidYPeTuBI0+ctTvMaae2AvNc7XTJK2gIOz0jZKXJsg3sgSo3OCbkf8D/wo6kmM4aUKLsfDFBNexJAX4y9Pm4ZTP2yb6aQP5ioh582W3IaazB/513MVkFJ2mTcPtIpzp9y0/RRYoUQOi8vO6se7nY/j2BjSnsLwwyPdCpz6dlakj3Sc+5bQX9lKgZC+R/9LJaOqPdsyBytmAs3XNux9m9SZ3kmZw7mopQ538gX4xXtN8ubNnIerPEBCdt1ospc9innDgdUZAFSVh4vx4JNzI5ntgDypo+b4csCLHA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=H/SkJ599AQEHvQlLJG9YzlrxxoS0f84POSSZW8Lzoo0=;
+ b=oDZKbtdmO8XkMVMHTjzPnkD+LJmMBMbe6FHBdG3xa/MuElUnSJYA5kPJJvJ6yYMOQJzlEz4FcUAiK2EXhaG+2JmbIfSAatA6gj8yow05R2s2sGq/jp4GhjETp8CVGCzQQEeB5Wm7m7U+/ARTx/mkoA+QAnFz399wLCRNSkkXoAvC+z/BgCnZdR4z/Q5pJJKBepJL4IiDawdRVEADq82zj4Vel1GmHH6/gLsM/hbqXZVXQhEEjuC2Yh/a8b/tLaDdaZpZaG+UHLH+CJ40nUf72FqQ+LXfB0refrDeP3EF/CFNxv2imh9UlUgJf+/y3pnRn8KwwMCH4ju09hsGbqovzA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=csgroup.eu; dmarc=pass action=none header.from=csgroup.eu;
+ dkim=pass header.d=csgroup.eu; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=csgroup.eu;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=H/SkJ599AQEHvQlLJG9YzlrxxoS0f84POSSZW8Lzoo0=;
+ b=0zPOGWoNqCLweLcAAzSJe6ZgeGQayDfn/rigMIJvG/Vt2WZRRDroRbudnPPOa5BBhA1Dpp3bogNFxto6zLBN2UkyQeOk/cFzCOdL9V5Dk2orSTD1FRQqgjrxJhSF+zfpdiL8xiSkQu4SuTxrfmd5wZ2Yscw/EG7oThLtHJ0yDQxzGrNe2Xhmn3LJPgC+HQUxsRnr4L0fCGcWMi6gwOws3ziyP2LwhnGXX2Z16+VnuDHHGQ5s6CHO/ReF+vpWXZ6zHUNBLkifApHY1ip1WTGfpJi/5tCL+Xdu8ihcSu5hhgLd5gdS7guLkKbwV9wOZNB8+OOB19VJaJd/mo0wqVSl8Q==
+Received: from MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM (2603:10a6:501:31::15)
+ by PR0P264MB3786.FRAP264.PROD.OUTLOOK.COM (2603:10a6:102:149::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5353.15; Fri, 17 Jun
+ 2022 11:05:33 +0000
+Received: from MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM
+ ([fe80::b15e:862f:adf7:5356]) by MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM
+ ([fe80::b15e:862f:adf7:5356%5]) with mapi id 15.20.5353.016; Fri, 17 Jun 2022
+ 11:05:32 +0000
+From:   Christophe Leroy <christophe.leroy@csgroup.eu>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+CC:     Matthew Wilcox <willy@infradead.org>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Linux-MM <linux-mm@kvack.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        "linux-hardening@vger.kernel.org" <linux-hardening@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Uladzislau Rezki <urezki@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] usercopy: use unsigned long instead of uintptr_t
+Thread-Topic: [PATCH] usercopy: use unsigned long instead of uintptr_t
+Thread-Index: AQHYgY56XB5uBmp1zEOymlHEC/X3ka1SGkAAgAADqACAAAiSAIAACqGAgAAMdQCAAANVgIAAJpIAgADVkYCAADQtAA==
+Date:   Fri, 17 Jun 2022 11:05:32 +0000
+Message-ID: <ec7f0c59-f67e-1d7e-c0b3-b0a409623e98@csgroup.eu>
+References: <20220616143617.449094-1-Jason@zx2c4.com>
+ <YqtAShjjo1zC6EgO@casper.infradead.org> <YqtDXPWdFQ/fqgDo@zx2c4.com>
+ <YqtKjAZRPBVjlE8S@casper.infradead.org>
+ <CAHk-=wj2OHy-5e+srG1fy+ZU00TmZ1NFp6kFLbVLMXHe7A1d-g@mail.gmail.com>
+ <Yqtd6hTS52mbb9+q@casper.infradead.org>
+ <CAHk-=wj_K2MnhC6N_LyY6ezmQyWzqBnfobXC354HJuKdqMePzA@mail.gmail.com>
+ <CAHk-=whS3xhJ=quD5bzDb6JsAhKd0vem4K-U=DhUGf-tDJUMHg@mail.gmail.com>
+ <CAMuHMdXxAwbCQPn4jg8X=_p5cYkpvNE4bXfQHWk2vz2Y6hL2-w@mail.gmail.com>
+In-Reply-To: <CAMuHMdXxAwbCQPn4jg8X=_p5cYkpvNE4bXfQHWk2vz2Y6hL2-w@mail.gmail.com>
+Accept-Language: fr-FR, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=csgroup.eu;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 5c48a4ef-9203-424f-8c70-08da50514c56
+x-ms-traffictypediagnostic: PR0P264MB3786:EE_
+x-microsoft-antispam-prvs: <PR0P264MB37865C6CA62EB43593A8FF6DEDAF9@PR0P264MB3786.FRAP264.PROD.OUTLOOK.COM>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: U4/hHpoHO3siG/HfuXZEey2TtOtK/hyJ14OgEl01nfX7Ujy+aR7+kzc3RW92qeOKouesa94n7/Q80qoeBGdgZryhnNdNiFmWjYJ9whfJWBeld/G54DCbzK9XLOE2ucYmukEyFqmNRVzcGIlzSBQDfQNZ/a5P9U9ymnwZ8KoUx2M8Cv8tMePbcN7IDakG/O5kmqZAY86t+KYBqCpQ/3cqjOwH0yA114aEDNsBnj07raPThwVArQ7ydl7LyN4PVtq1JF9iQd6Ps4wxXI5Fa+J31ereN9kQHYqOwm1OhJFpNSssv7oTUDe7nJN7uRGK570CamcBayJBoxBqwLd18ASBr0mmwXhgwyj40NY0BpHa6ngJaCXn+Nx6m5q0Zj5mpzP9GSwTUh9gLTPJ2kF4V7rKSSiY5n2rzwBjlRUJQwYo62lLAaR+g2px7tnv7MHsUYiUF++Z53bwIk1sjhKi+IqfrxuGBYTZRVlEXTHlse2DJ9HTMH0nkfplgksy7l7ikhZ8FhzxT7q3EQveeFUMdt+ve30duvoyHMjNEzCcJTHh6C0LZxg6Q25gLB95lKhgDgG0nc1PozR/5QMqqx1T+Jg4Id52PI9gkXRT1fzuKWFjBdrf2Jki3aoQReeloib/74jEzz2yGShCPlnKqqopezIh4iz7/Q9SmO8+RPBok1bODYHRgtp499IPquqWrwibySlHeJ/68NE8tzNA5g04DOlEIacM1EiwCqS4jwwJLHMKvI7iUSeCfz4U2QhpbHwwITlwgCw7UR8SXUNt5PMwHIdrug==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230016)(4636009)(366004)(122000001)(110136005)(54906003)(31696002)(6506007)(26005)(66556008)(86362001)(66946007)(6512007)(2616005)(38070700005)(6486002)(66476007)(5660300002)(38100700002)(186003)(4744005)(7416002)(316002)(498600001)(36756003)(8936002)(76116006)(91956017)(2906002)(64756008)(66446008)(44832011)(8676002)(4326008)(31686004)(71200400001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?akZ5NFFUdjVORkhwQzlnNHVlZzJvRGhkRWlSbDhFTDhBNWlpeFQ2WHk2UnpF?=
+ =?utf-8?B?a3hrTXdMZ3pjS2Z6ZnRNbXFyWm1TZDAwZkJ6MmRQdGhFOWx2MDBVVHVuVEk5?=
+ =?utf-8?B?NWhuVDcvZGNzSXpWbE5UYkVncDEzVXZ1MVE2L1pmeEVCbS91cG5leVcrS1Vn?=
+ =?utf-8?B?SlpQMGR4Z1NLbUY2a05Va1lhZzgzWG5WV0x1UExCcmV2aXNzQWYwUVZWa3lD?=
+ =?utf-8?B?VDkyTHBsYVdnQjVhaWwwSHh5QzBDNGl2UUQvQlhkazAwZHJnWEo5VFduMEZs?=
+ =?utf-8?B?YlNpSGlxY3Jqbk9ISzYvZ21MU1NwNGRrb1RkeEFWNXZoNlJlWXZCTEhrMUNa?=
+ =?utf-8?B?TEpEV0d2NXhsZUV5OTlVZG9IdVR1UmJndGo3b0F1c1lMaU1HV2RET2xFUCtR?=
+ =?utf-8?B?U1h5NXBBNmVlRHEyVFVTamdGVUptK2RlbVI3RzUwQ1JwRjc2K2FkMVlUbEdW?=
+ =?utf-8?B?OTh2bFFta0xsNFBJTUp3Nm1ZQmNVNzAxaVFmOTJsTERDajRjSk1TYWRvOTlh?=
+ =?utf-8?B?bVc0dzM2Zi9zS2V1dmhCekdtdjc2dnZEK2tiVWsweG1IYk02NHNpblRpb2lY?=
+ =?utf-8?B?dE4yN002TVU5U2YvazljN1pJRUhyVzg1U3B0SlZsR01rTnYxZFUzTUk1ZjVh?=
+ =?utf-8?B?bkxtRnNZWHpvQXVxRER0NWRXeFlCNnpiMkV3UE1VR2kyNTBiNldDVXdjMldQ?=
+ =?utf-8?B?UU5QWXhBRmwzVmpSOXlaT2VEWUNLbjlzTEdhTWxuZk8rS0VubnRCRUlDY0xD?=
+ =?utf-8?B?aXI4ZkVZbzNXVCtldEs4YjFQM0FZNS8wNk1LTFRnbHV6aEppQjdCWGNVTUtn?=
+ =?utf-8?B?aWttM3pLUzBkSHVqcFNCQVdiTDh1SCt4U0ZZMk81MHhEMXhZYkIzMXNTOFc3?=
+ =?utf-8?B?OW5ubXBUZXdVT0ZoRVgrWHpKTGY4M0JFT3ZwMUxlOTVPU2J2SFh3VEg0YlVO?=
+ =?utf-8?B?U1ZpVDZkSU5UMFdMY0c2UEdzWEREa2RidnlmU1NtcTJ0bTdFMUpPOEZ4ZnVP?=
+ =?utf-8?B?eG02T2orS1kwaDFvOUxGYWxMQmNvbUgyc2o3WGh3VzBpcXZxTUJQNFhTQmYr?=
+ =?utf-8?B?UytCdkZOWVQzbGxtQWdQdUE3TmpnQzBEOGpTYjVNenc1Qko5aE50SGRRQmhm?=
+ =?utf-8?B?N041MlZNWml3SVZHMHVFQVlteUFnY21hdGhhSnJRSUY1NjNXUGZ5bmhzQlBB?=
+ =?utf-8?B?R25YaVBxQ2dndVEyNldHZU0vMmFmemxXNWJhZzlXU29USWh3RDNkWTE4T0FL?=
+ =?utf-8?B?UkxNK3c5blBtWHgycC91Z0dTQ3pGZzBWWWx0aGNURlg0SFI3cmZRaW01UGRB?=
+ =?utf-8?B?SUNhV3YxQnFmdnMyOThrZG1uUUZDT0VUZTZNRW56SjB2bDJzV0RLa0Jjd3Az?=
+ =?utf-8?B?bkJxd2VpZXBTQS9BS3ZzWXBld2NRSm41M3pqaWJjcWFBSlZZZUpra25IL3Bw?=
+ =?utf-8?B?d2JsZnlodmtoSVdZeFFmdDNnSFd6WlVDUkVnUVdpck12RDFoRDIySU1tS05w?=
+ =?utf-8?B?Z3RVcE5FZThzc1hNUC9TMWpQbkdUQk9ZMC9IME9ZNlZqTkVLMWVBU0hoUStJ?=
+ =?utf-8?B?TFpsMUEvZEpyMXJva0o0cmM0a1NyUmlXU1FHYmtyM3NoRVhONk16Wld3dlZt?=
+ =?utf-8?B?ZkVPN1FXSnhyYXZoZi9pUUJMUXl5N1ZqSElrNG45UThDZnpaNW91T0xHMVFJ?=
+ =?utf-8?B?NTQ2ZkVkck05UTEzNHNwbnFtVjdlbzN6ZWNaWmQxRTRwN3ljbmI4blVzSXlw?=
+ =?utf-8?B?NWtuUU9hZFVENWZzQS9FSjhIRmcrMFk5Q3I1U3E3WVdoUjZsblM2ZGZmdGJv?=
+ =?utf-8?B?cHllNXFXR2tWVmxRSjloTldSUjBGektVSjBSTVlVZmJza2dMb3hEaG5xSnBw?=
+ =?utf-8?B?YmRZdldHNnZjR09JMWlxK0p3Y1JMUDRkYk1Ja0ZXWWpiWTdaMDBEbjZ6QXlS?=
+ =?utf-8?B?Mk01aE1YV1ZXN0JYRUxjWjhFRkNxV2NET1hZUEV2aXg2QUZQZmNuRXd6UHdM?=
+ =?utf-8?B?TVpzdElaT2k0Y211dWRFRHV2N2JrNUNCRFlEZURBcGo1RW51WWcvN1VzSXg4?=
+ =?utf-8?B?UkZnendodmljczJaSktmbGlRc012bUVscGJaUytDRnFFYldHSlNxYzYwejFa?=
+ =?utf-8?B?SHdJZWUrdFlqSDdWTzJGdXIzUitCZ3lxcEw4NVBrczFuMHFBZEwwVDBkN3I5?=
+ =?utf-8?B?TytVa05Nb2xhVmJVZG40RVRudmxxalkyanNzVjVJcjRVOUhUTllPK3hxSWtm?=
+ =?utf-8?B?V3hzdVQyaEFjLzBEZDN4UkIzak9nS2RXYzdXZkpTU3h3Nk1ldlJYdzJnSmpG?=
+ =?utf-8?B?QWpCeEtjamJ3Vnljdi82YnFmMlkwV0M4dlhvMlVseUFqaXJjT2pmN0RGdklB?=
+ =?utf-8?Q?h/2/Atd5dy2ylmoBlHZoxYC2tm6VuvhsRB7Fp?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <A4B5B5E775053B46B136A46F7D38608B@FRAP264.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: csgroup.eu
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5c48a4ef-9203-424f-8c70-08da50514c56
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jun 2022 11:05:32.9503
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 9914def7-b676-4fda-8815-5d49fb3b45c8
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: jJudpVy3aRNZ8ePh9XymzMbNM3qm8ILn0kKb8Ta9xNS+fcOegxIGo5o+vqvn/AWUXD3/LA+6CbEvgxYDY7JYVOML6GO8qH/56L8xmKYStLQ=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PR0P264MB3786
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Yang Xu <xuyang2018.jy@fujitsu.com>
-
-commit a1de97fe296c52eafc6590a3506f4bbd44ecb19a upstream.
-
-When testing xfstests xfs/126 on lastest upstream kernel, it will hang on some machine.
-Adding a getxattr operation after xattr corrupted, I can reproduce it 100%.
-
-The deadlock as below:
-[983.923403] task:setfattr        state:D stack:    0 pid:17639 ppid: 14687 flags:0x00000080
-[  983.923405] Call Trace:
-[  983.923410]  __schedule+0x2c4/0x700
-[  983.923412]  schedule+0x37/0xa0
-[  983.923414]  schedule_timeout+0x274/0x300
-[  983.923416]  __down+0x9b/0xf0
-[  983.923451]  ? xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-[  983.923453]  down+0x3b/0x50
-[  983.923471]  xfs_buf_lock+0x33/0xf0 [xfs]
-[  983.923490]  xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-[  983.923508]  xfs_buf_get_map+0x4c/0x320 [xfs]
-[  983.923525]  xfs_buf_read_map+0x53/0x310 [xfs]
-[  983.923541]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-[  983.923560]  xfs_trans_read_buf_map+0x1cf/0x360 [xfs]
-[  983.923575]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-[  983.923590]  xfs_da_read_buf+0xcf/0x120 [xfs]
-[  983.923606]  xfs_da3_node_read+0x1f/0x40 [xfs]
-[  983.923621]  xfs_da3_node_lookup_int+0x69/0x4a0 [xfs]
-[  983.923624]  ? kmem_cache_alloc+0x12e/0x270
-[  983.923637]  xfs_attr_node_hasname+0x6e/0xa0 [xfs]
-[  983.923651]  xfs_has_attr+0x6e/0xd0 [xfs]
-[  983.923664]  xfs_attr_set+0x273/0x320 [xfs]
-[  983.923683]  xfs_xattr_set+0x87/0xd0 [xfs]
-[  983.923686]  __vfs_removexattr+0x4d/0x60
-[  983.923688]  __vfs_removexattr_locked+0xac/0x130
-[  983.923689]  vfs_removexattr+0x4e/0xf0
-[  983.923690]  removexattr+0x4d/0x80
-[  983.923693]  ? __check_object_size+0xa8/0x16b
-[  983.923695]  ? strncpy_from_user+0x47/0x1a0
-[  983.923696]  ? getname_flags+0x6a/0x1e0
-[  983.923697]  ? _cond_resched+0x15/0x30
-[  983.923699]  ? __sb_start_write+0x1e/0x70
-[  983.923700]  ? mnt_want_write+0x28/0x50
-[  983.923701]  path_removexattr+0x9b/0xb0
-[  983.923702]  __x64_sys_removexattr+0x17/0x20
-[  983.923704]  do_syscall_64+0x5b/0x1a0
-[  983.923705]  entry_SYSCALL_64_after_hwframe+0x65/0xca
-[  983.923707] RIP: 0033:0x7f080f10ee1b
-
-When getxattr calls xfs_attr_node_get function, xfs_da3_node_lookup_int fails with EFSCORRUPTED in
-xfs_attr_node_hasname because we have use blocktrash to random it in xfs/126. So it
-free state in internal and xfs_attr_node_get doesn't do xfs_buf_trans release job.
-
-Then subsequent removexattr will hang because of it.
-
-This bug was introduced by kernel commit 07120f1abdff ("xfs: Add xfs_has_attr and subroutines").
-It adds xfs_attr_node_hasname helper and said caller will be responsible for freeing the state
-in this case. But xfs_attr_node_hasname will free state itself instead of caller if
-xfs_da3_node_lookup_int fails.
-
-Fix this bug by moving the step of free state into caller.
-
-[amir: this text from original commit is not relevant for 5.10 backport:
-Also, use "goto error/out" instead of returning error directly in xfs_attr_node_addname_find_attr and
-xfs_attr_node_removename_setup function because we should free state ourselves.
-]
-
-Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/xfs/libxfs/xfs_attr.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 96ac7e562b87..fcca36bbd997 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -876,21 +876,18 @@ xfs_attr_node_hasname(
- 
- 	state = xfs_da_state_alloc(args);
- 	if (statep != NULL)
--		*statep = NULL;
-+		*statep = state;
- 
- 	/*
- 	 * Search to see if name exists, and get back a pointer to it.
- 	 */
- 	error = xfs_da3_node_lookup_int(state, &retval);
--	if (error) {
--		xfs_da_state_free(state);
--		return error;
--	}
-+	if (error)
-+		retval = error;
- 
--	if (statep != NULL)
--		*statep = state;
--	else
-+	if (!statep)
- 		xfs_da_state_free(state);
-+
- 	return retval;
- }
- 
--- 
-2.25.1
-
+DQoNCkxlIDE3LzA2LzIwMjIgw6AgMDk6NTgsIEdlZXJ0IFV5dHRlcmhvZXZlbiBhIMOpY3JpdMKg
+Og0KPj4gQnV0IGl0IHRoZW4gY2F1c2VzIHBvaW50bGVzcyBwcm9ibGVtcyB3aGVuIHBlb3BsZSBj
+YW4ndCByZWFsbHkgcmVseSBvbg0KPj4gbW9yZSB0aGFuIDMyIGJpdHMgZm9yIGF0b21pYyBiaXQg
+b3BlcmF0aW9ucywgYW5kIG9uIDY0LWJpdA0KPj4gYXJjaGl0ZWN0dXJlcyB3ZSB1bm5lY2Vzc2Fy
+aWx5IHVzZSAibG9uZyIgYW5kIHdhc3RlIHRoZSB1cHBlciBiaXRzLg0KPiANCj4gV2VsbCwgYXRv
+bWljIHdvcmtzIHVwIHRvIG5hdGl2ZSB3b3JkIHNpemUsIGkuZS4gbG9uZy4NCj4gDQoNCnBvd2Vy
+cGM2NCBoYXMgYSBwYWlyIG9mIGluc3RydWN0aW9ucyB0byBwZXJmb3JtIDEyOGJpdHMgYXRvbWlj
+IA0Kb3BlcmF0aW9ucyA6IGxxYXJ4IC8gc3RxY3gu
