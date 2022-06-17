@@ -2,125 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A175CCA479
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 07:59:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 671DDCCA479
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 09:19:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380331AbiFQH7E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jun 2022 03:59:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39434 "EHLO
+        id S1380317AbiFQJT0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jun 2022 05:19:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234442AbiFQH7D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 03:59:03 -0400
-Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FA3D5A2D8;
-        Fri, 17 Jun 2022 00:59:03 -0700 (PDT)
-Received: by mail-qv1-f50.google.com with SMTP id u8so5436144qvj.2;
-        Fri, 17 Jun 2022 00:59:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=0TaGn1ZE7rwA4T26FHJ9s8LxCIwOl88lHCKLCSlYvUQ=;
-        b=LXNjfJJqllaVjor/YDeK0bKRyIYZbHUiFT1eJOspk2Zws6fSY7GslXxlOdWO0bDj8J
-         80dvIgPu0qA756buaLA7l+WumsyCn+dikoM04/CcpBgaeh4xPU4dGfprxS6jTrFAL3/b
-         R4JCG4zPUQJ0jT/2IThWnlUIvbqaZkoQttfgMQNMQBzMwAKH64iIIUD9PKm9iROKGzEL
-         6Cppky50uNcJ4B51NnngRLq2Bgd7Fp2k6O9KS+PQHjmtWbqFixuZmHY4NJTxx6NDTKty
-         If6fHuBBN/fV/2fxdOAgGMqF95qLe7gWIT/viv3vrCgE+QzTt2BprX4pEXqtKEugHO0C
-         I5Ww==
-X-Gm-Message-State: AJIora/Ijmc+oxvSquhoGw14NgfDW5m4zMkndw5hcVvE9I5Zd8K9ghxc
-        UNHl57PiTSazLJOkAOXV+pLT/cgzweNdyg==
-X-Google-Smtp-Source: AGRyM1tLSX+9CkS1untlE5eTNKYGYbpS9PZlpsmeN2DhTwYu8QbmRva6vobW+Nm1VadNrgNR107BHg==
-X-Received: by 2002:ac8:570c:0:b0:304:e52c:3c2f with SMTP id 12-20020ac8570c000000b00304e52c3c2fmr7368168qtw.8.1655452742007;
-        Fri, 17 Jun 2022 00:59:02 -0700 (PDT)
-Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com. [209.85.219.169])
-        by smtp.gmail.com with ESMTPSA id h15-20020a05620a400f00b006a6d365e9b1sm4133399qko.57.2022.06.17.00.58.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 17 Jun 2022 00:58:59 -0700 (PDT)
-Received: by mail-yb1-f169.google.com with SMTP id r3so6033566ybr.6;
-        Fri, 17 Jun 2022 00:58:58 -0700 (PDT)
-X-Received: by 2002:a25:818c:0:b0:664:a584:fafd with SMTP id
- p12-20020a25818c000000b00664a584fafdmr9236239ybk.543.1655452738571; Fri, 17
- Jun 2022 00:58:58 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220616143617.449094-1-Jason@zx2c4.com> <YqtAShjjo1zC6EgO@casper.infradead.org>
- <YqtDXPWdFQ/fqgDo@zx2c4.com> <YqtKjAZRPBVjlE8S@casper.infradead.org>
- <CAHk-=wj2OHy-5e+srG1fy+ZU00TmZ1NFp6kFLbVLMXHe7A1d-g@mail.gmail.com>
- <Yqtd6hTS52mbb9+q@casper.infradead.org> <CAHk-=wj_K2MnhC6N_LyY6ezmQyWzqBnfobXC354HJuKdqMePzA@mail.gmail.com>
- <CAHk-=whS3xhJ=quD5bzDb6JsAhKd0vem4K-U=DhUGf-tDJUMHg@mail.gmail.com>
-In-Reply-To: <CAHk-=whS3xhJ=quD5bzDb6JsAhKd0vem4K-U=DhUGf-tDJUMHg@mail.gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Fri, 17 Jun 2022 09:58:47 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdXxAwbCQPn4jg8X=_p5cYkpvNE4bXfQHWk2vz2Y6hL2-w@mail.gmail.com>
-Message-ID: <CAMuHMdXxAwbCQPn4jg8X=_p5cYkpvNE4bXfQHWk2vz2Y6hL2-w@mail.gmail.com>
-Subject: Re: [PATCH] usercopy: use unsigned long instead of uintptr_t
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        with ESMTP id S235549AbiFQJTZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 05:19:25 -0400
+Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.85.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B46C45A5AF
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Jun 2022 02:19:23 -0700 (PDT)
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ uk-mta-220-s7RJKPWvOuOU30OW3UVyvA-1; Fri, 17 Jun 2022 10:19:20 +0100
+X-MC-Unique: s7RJKPWvOuOU30OW3UVyvA-1
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
+ Server (TLS) id 15.0.1497.36; Fri, 17 Jun 2022 10:19:17 +0100
+Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
+ AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
+ 15.00.1497.036; Fri, 17 Jun 2022 10:19:17 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Linus Torvalds' <torvalds@linux-foundation.org>,
+        Matthew Wilcox <willy@infradead.org>
+CC:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
         Linux-MM <linux-mm@kvack.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-hardening@vger.kernel.org,
+        "linux-hardening@vger.kernel.org" <linux-hardening@vger.kernel.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Uladzislau Rezki <urezki@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
+        "Kees Cook" <keescook@chromium.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Joe Perches <joe@perches.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: RE: [PATCH] usercopy: use unsigned long instead of uintptr_t
+Thread-Topic: [PATCH] usercopy: use unsigned long instead of uintptr_t
+Thread-Index: AQHYgbX7+B40USEpAkCPXvMJQcFna61TTqwg
+Date:   Fri, 17 Jun 2022 09:19:17 +0000
+Message-ID: <169e9522f5494a47bd99c6febf90d931@AcuMS.aculab.com>
+References: <20220616143617.449094-1-Jason@zx2c4.com>
+ <YqtAShjjo1zC6EgO@casper.infradead.org> <YqtDXPWdFQ/fqgDo@zx2c4.com>
+ <YqtKjAZRPBVjlE8S@casper.infradead.org>
+ <CAHk-=wj2OHy-5e+srG1fy+ZU00TmZ1NFp6kFLbVLMXHe7A1d-g@mail.gmail.com>
+ <Yqtd6hTS52mbb9+q@casper.infradead.org>
+ <CAHk-=wj_K2MnhC6N_LyY6ezmQyWzqBnfobXC354HJuKdqMePzA@mail.gmail.com>
+ <CAHk-=whS3xhJ=quD5bzDb6JsAhKd0vem4K-U=DhUGf-tDJUMHg@mail.gmail.com>
+ <CAHk-=wi28vwsG-JNJEz_kc=qwPkYtYfh_14eHOUZsaGESDBDBA@mail.gmail.com>
+In-Reply-To: <CAHk-=wi28vwsG-JNJEz_kc=qwPkYtYfh_14eHOUZsaGESDBDBA@mail.gmail.com>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
+MIME-Version: 1.0
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+RnJvbTogTGludXMgVG9ydmFsZHMNCj4gU2VudDogMTYgSnVuZSAyMDIyIDIwOjE5DQo+IA0KPiBP
+biBUaHUsIEp1biAxNiwgMjAyMiBhdCAxMjoxNCBQTSBMaW51cyBUb3J2YWxkcw0KPiA8dG9ydmFs
+ZHNAbGludXgtZm91bmRhdGlvbi5vcmc+IHdyb3RlOg0KPiA+DQo+ID4gSW4gdGhhdCBzaXR1YXRp
+b24sIHdlJ2QgcHJvYmFibHkganVzdCBzZWUgImxvbmcgbG9uZyIgYmVpbmcgMTI4LWJpdA0KPiA+
+ICgiSTMyTFA2NExMMTI4IikuDQo+IA0KPiBMb29raW5nIGFyb3VuZCwgaXQgbG9va3MgbGlrZSBw
+ZW9wbGUgcHJlZmVyICJsb25nIGxvbmcgbG9uZyIgKG9yIGluDQo+IHRoZSBrZXJuZWwsIGp1c3Qg
+InUxMjgiKSBmb3IgdGhpcywgYmVjYXVzZSBzbyBtYW55IGhhdmUgYWxyZWFkeSBnb3R0ZW4NCj4g
+dXNlZCB0byAibG9uZyBsb25nIiBiZWluZyA2NC1iaXQsIGFuZCAzMi1iaXQgYXJjaGl0ZWN0dXJl
+cyAod2hlcmUNCj4gImxvbmciIGlzIDMyLWJpdCBhbmQgImxvbmcgbG9uZyIgaXMgNjQtYml0KSBh
+cmUgc3RpbGwgcmVsZXZhbnQgZW5vdWdoDQo+IHRoYXQgcGVvcGxlIHdhbnQgdG8ga2VlcCB0aGF0
+Lg0KDQpDaGFuZ2luZyAnbG9uZyBsb25nJyB0byAxMjggYml0cyB3aWxsIGJyZWFrIHRoaW5ncy4N
+Ck11Y2ggbGlrZSBhIGNlcnRhaW4gT1MgdGhhdCBpcyBJTDMyUDY0TEw2NCBiZWNhdXNlIHRvbyBt
+dWNoDQpjb2RlIHVzZWQgJ2xvbmcnIHRvIG1lYW4gMzJiaXRzIHdoZW4gaW50IHdhcyAxNiBiaXRz
+LiANCg0KZ2NjIGFscmVhZHkgaGFzIHN1cHBvcnQgZm9yIDEyOGJpdCBpbnRlZ2VycyAob24gNjRi
+aXQgc3lzdGVtcykNCmVtdWxhdGVkIHVzaW5nIHR3byA2NGJpdCByZWdpc3RlcnMgKF9fdTEyOCA/
+PykNCg0KQW55dGhpbmcgd2FudGluZyB0aGVtIHByb2JhYmx5IHdhbnRzIHRoZW0gZXhwbGljaXRs
+eSBhbmQgZXZlbiBkZWNpZGluZw0KdGhhdCB1aW50bWF4X3QgaXMgc3VkZGVubHkgMTI4IGJpdCB3
+aWxsIHByb2JhYmx5IGJyZWFrIHRoaW5ncyENCg0KVGhlIG9ubHkgcGxhY2UgSSBjYW4gaW1hZ2lu
+ZSAnbG9uZyBsb25nIGxvbmcnIGJlaW5nIHVzZWQNCmlzIGFzICIlbGxsZCIgaW4gcHJpbnRmIGZv
+cm1hdHMuDQoNClNpbmNlICdzaG9ydCcgYW5kICdsb25nJyBhcmUgYm90aCB0eXBlcyBhbmQgcXVh
+bGlmaWVycw0KeW91IGNhbiBoYXZlICdsb25nIGNoYXIsICdsb25nIHNob3J0JyBhbmQgJ3Nob3J0
+IGxvbmcnLg0KVGhlc2UgY291bGQgYmUgaW50ZXJlc3Rpbmcgb24gYW4gSTY0TDI1NiBzeXN0ZW0g
+Oi0pDQoNCglEYXZpZA0KDQotDQpSZWdpc3RlcmVkIEFkZHJlc3MgTGFrZXNpZGUsIEJyYW1sZXkg
+Um9hZCwgTW91bnQgRmFybSwgTWlsdG9uIEtleW5lcywgTUsxIDFQVCwgVUsNClJlZ2lzdHJhdGlv
+biBObzogMTM5NzM4NiAoV2FsZXMpDQo=
 
-On Thu, Jun 16, 2022 at 9:15 PM Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Thu, Jun 16, 2022 at 9:56 AM Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
-> > Out bitmaps and bit fields are also all about "long" - again, entirely
-> > unrelated to pointers.
->
-> That, btw, has probably been a mistake. It's entirely historical. We
-> would have been better off had our bitmap types been defined in terms
-> of 32-bit chunks, because now we have the odd situation that 32-bit
-> and 64-bit architectures get very different sizes for some flag
-> fields.
->
-> It does have a technical reason: it's often better to traverse bitmaps
-> in maximally sized chunks (ie scanning for bits set or clear), and in
-> that sense defining bitmaps to always act as arrays of "long" has been
-> a good thing.
-
-Indeed, as long is the native word size, it's assumed to be the best,
-performance-wise.  For bitmaps, the actual underlying unit doesn't
-matter that much to the user, as bitmaps can span multiple words.
-For bit fields, you're indeed stuck with the 32-vs-64 bit difference.
-
-> But it then causes pointless problems when people can't really rely on
-> more than 32 bits for atomic bit operations, and on 64-bit
-> architectures we unnecessarily use "long" and waste the upper bits.
-
-Well, atomic works up to native word size, i.e. long.
-
-> It's not entirely unlikely that we'll end up with a situation where we
-> do have access to 128-bit operations (because ALU and register width
-> is relatively "cheap", and it helps some loads - extended precision
-> arithmetic, crypto, integer vectors), but the address space will be
-> 64-bit (because big pointers are bad for memory and cache use).
->
-> In that situation, we'd probably just see "long long" being 128-bit
-> ("I32LP64LL128").
-
-Regardless of the address space decision (we do have size_t and the
-dreaded uintptr_t to cater for that), keeping long at 64-bit would
-break the "long is the native word size" assumption (as used in lots
-of places, e.g. for syscalls).
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
