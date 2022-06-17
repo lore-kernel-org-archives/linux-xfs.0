@@ -2,96 +2,172 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 458C7CCA479
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 12:51:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2336C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 14:48:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236124AbiFQMvX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jun 2022 08:51:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40416 "EHLO
+        id S1382833AbiFQOsY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jun 2022 10:48:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235960AbiFQMvV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 08:51:21 -0400
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4904A37BF9
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Jun 2022 05:51:20 -0700 (PDT)
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-155-h3wWc7x7P72brAvjq1zRbg-1; Fri, 17 Jun 2022 13:51:17 +0100
-X-MC-Unique: h3wWc7x7P72brAvjq1zRbg-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
- Server (TLS) id 15.0.1497.36; Fri, 17 Jun 2022 13:51:15 +0100
-Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
- AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
- 15.00.1497.036; Fri, 17 Jun 2022 13:51:15 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Christophe Leroy' <christophe.leroy@csgroup.eu>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-CC:     Matthew Wilcox <willy@infradead.org>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Linux-MM <linux-mm@kvack.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "linux-hardening@vger.kernel.org" <linux-hardening@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Uladzislau Rezki <urezki@gmail.com>,
-        "Kees Cook" <keescook@chromium.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Joe Perches <joe@perches.com>
-Subject: RE: [PATCH] usercopy: use unsigned long instead of uintptr_t
-Thread-Topic: [PATCH] usercopy: use unsigned long instead of uintptr_t
-Thread-Index: AQHYgY56+B40USEpAkCPXvMJQcFna61SGkAAgAADqACAAAiSAIAACqGAgAAMdQCAAANVgIAAJpIAgADVkYCAADQtAIAAGqDA
-Date:   Fri, 17 Jun 2022 12:51:15 +0000
-Message-ID: <2b4f67aed7c64abe83eb868c351656dc@AcuMS.aculab.com>
-References: <20220616143617.449094-1-Jason@zx2c4.com>
- <YqtAShjjo1zC6EgO@casper.infradead.org> <YqtDXPWdFQ/fqgDo@zx2c4.com>
- <YqtKjAZRPBVjlE8S@casper.infradead.org>
- <CAHk-=wj2OHy-5e+srG1fy+ZU00TmZ1NFp6kFLbVLMXHe7A1d-g@mail.gmail.com>
- <Yqtd6hTS52mbb9+q@casper.infradead.org>
- <CAHk-=wj_K2MnhC6N_LyY6ezmQyWzqBnfobXC354HJuKdqMePzA@mail.gmail.com>
- <CAHk-=whS3xhJ=quD5bzDb6JsAhKd0vem4K-U=DhUGf-tDJUMHg@mail.gmail.com>
- <CAMuHMdXxAwbCQPn4jg8X=_p5cYkpvNE4bXfQHWk2vz2Y6hL2-w@mail.gmail.com>
- <ec7f0c59-f67e-1d7e-c0b3-b0a409623e98@csgroup.eu>
-In-Reply-To: <ec7f0c59-f67e-1d7e-c0b3-b0a409623e98@csgroup.eu>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        with ESMTP id S1382984AbiFQOsV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 10:48:21 -0400
+Received: from mail-ua1-x933.google.com (mail-ua1-x933.google.com [IPv6:2607:f8b0:4864:20::933])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE0315639E;
+        Fri, 17 Jun 2022 07:48:20 -0700 (PDT)
+Received: by mail-ua1-x933.google.com with SMTP id r15so1611152uaf.13;
+        Fri, 17 Jun 2022 07:48:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=TcIHYHY7u1Wr/GV3aoIoPqYOsQGjAK4OcNkD/GU5M1M=;
+        b=Jr2Rvzf2R+Qs10pfSCH3B8xV3k51eSIl1oRD/qlzgUF2B6Lqd1wzm0Qv7YmklySnfo
+         pvgZFkH1pxaB0m7tTsV7h5COnS98IUw0oH6sBYhHswlxRx9IAP1IB2n3xAjWChFhcFZo
+         10Vc8BMMA2QDUpz5PLEetN7sMcHshYY/bez8W8R1Q/Ytff9pSdpy5E58TFvwQDV9+p0G
+         YHxVrn+y/sb+PCZ5CAjbiJdn/mSooNBm6GpXsEIqOZsAgtHrYJ988TJFfgFmwwk0Edpx
+         lWpiT2MZbpsQU5JSqVG6QBzjn7bp27nxg69J1jHoJqEClHlgcAocv8HQlQeThxXd8gJX
+         YjMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=TcIHYHY7u1Wr/GV3aoIoPqYOsQGjAK4OcNkD/GU5M1M=;
+        b=2lACKIK3RFZTJfDY2feY2zrfze1brS/1BTj62MXnsjJGiBmWPRNkJzOJblFfmfTexF
+         Qi6PHlVbb7ZAUtsLuD6WViBHuvuglyLSteX+Pxx+C9GC0KxS4JusHmEHqeaIlfxmxHnv
+         SEUxvpWHMytwuN3m+Bd1M8qYp6lwrFhDmaQcab/iFPYDonWm9gCOPnzeNgK1balGuvu2
+         2s7uZDzeq+PO2q/RT2SHGOlNACwrnC+LSYOrq36/TkLxEfH9Zud0j8HHZJ5bZcYFH851
+         o0g2kCYf6zWDoUqoXwGtRj+Sc13ixxP4C/8JtQTy94k6zxD08vQpG31uRoqXSkQLg9k4
+         +Csw==
+X-Gm-Message-State: AJIora989BKR4S9JCsR1A8bQQdPZkjB7gskqQdDpbfzTXq08MLSAW8w3
+        th5cuzEccx3iRt22o6hG4UK2pXdS+jmntlNHwRw=
+X-Google-Smtp-Source: AGRyM1vU628PZCHEasd5i6Kd/bfeF+tHIigArJiScOV/UHBidep3tKwiX3+yAzz0NhvMYJ/DqI8RbukFBG0ny0S6UFA=
+X-Received: by 2002:a05:6130:21a:b0:37a:8e07:d495 with SMTP id
+ s26-20020a056130021a00b0037a8e07d495mr4616073uac.80.1655477300037; Fri, 17
+ Jun 2022 07:48:20 -0700 (PDT)
 MIME-Version: 1.0
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+References: <20190404165737.30889-1-amir73il@gmail.com> <20190404211730.GD26298@dastard>
+ <CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com>
+ <20190407232728.GF26298@dastard> <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
+ <20190408141114.GC15023@quack2.suse.cz> <CAOQ4uxhxgYASST1k-UaqfbLL9ERquHaKL2jtydB2+iF9aT8SRQ@mail.gmail.com>
+ <20190409082605.GA8107@quack2.suse.cz>
+In-Reply-To: <20190409082605.GA8107@quack2.suse.cz>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Fri, 17 Jun 2022 17:48:08 +0300
+Message-ID: <CAOQ4uxgu4uKJp5t+RoumMneR6bw_k0CRhGhU-SLAky4VHSg9MQ@mail.gmail.com>
+Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw workload
+To:     Jan Kara <jack@suse.cz>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Ext4 <linux-ext4@vger.kernel.org>,
+        Lukas Czerner <lczerner@redhat.com>,
+        Theodore Tso <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-RnJvbTogQ2hyaXN0b3BoZSBMZXJveQ0KPiBTZW50OiAxNyBKdW5lIDIwMjIgMTI6MDYNCj4gDQo+
-IExlIDE3LzA2LzIwMjIgw6AgMDk6NTgsIEdlZXJ0IFV5dHRlcmhvZXZlbiBhIMOpY3JpdMKgOg0K
-PiA+PiBCdXQgaXQgdGhlbiBjYXVzZXMgcG9pbnRsZXNzIHByb2JsZW1zIHdoZW4gcGVvcGxlIGNh
-bid0IHJlYWxseSByZWx5IG9uDQo+ID4+IG1vcmUgdGhhbiAzMiBiaXRzIGZvciBhdG9taWMgYml0
-IG9wZXJhdGlvbnMsIGFuZCBvbiA2NC1iaXQNCj4gPj4gYXJjaGl0ZWN0dXJlcyB3ZSB1bm5lY2Vz
-c2FyaWx5IHVzZSAibG9uZyIgYW5kIHdhc3RlIHRoZSB1cHBlciBiaXRzLg0KPiA+DQo+ID4gV2Vs
-bCwgYXRvbWljIHdvcmtzIHVwIHRvIG5hdGl2ZSB3b3JkIHNpemUsIGkuZS4gbG9uZy4NCj4gPg0K
-PiANCj4gcG93ZXJwYzY0IGhhcyBhIHBhaXIgb2YgaW5zdHJ1Y3Rpb25zIHRvIHBlcmZvcm0gMTI4
-Yml0cyBhdG9taWMNCj4gb3BlcmF0aW9ucyA6IGxxYXJ4IC8gc3RxY3guDQoNCkFzIGRvZXMgeDg2
-LTY0IChhbmQgMzJiaXQgaGFzIGEgNjRiaXQgYXRvbWljIGNvbXBhcmUrZXhjaGFuZ2UpLg0KDQpB
-bm5veWluZ2x5IHRoZSB4ODYtNjQgZG9lc24ndCBoYXZlIDEyOGJpdCByZWFkL3dyaXRlIHJlZ2lz
-dGVyDQpwYWlyIGluc3RydWN0aW9ucyB0aGF0IHdvdWxkIGdlbmVyYXRlIGEgMTI4Yml0IFBDSWUg
-VExQLg0KWW91IGNhbiB1c2UgQVZYIGluc3RydWN0aW9ucyB0byBnZW5lcmF0ZSBsYXJnZSBUTFAg
-LSBidXQgbm90DQppbiB0aGUgbGludXgga2VybmVsIC0geW91IHdhbnQgMSBiaWcgcmVnaXN0ZXIu
-DQoNCkV2ZW4gdGhlIGh1bWJsZSA2ODAyMCBoYXMgYSBjYXMyIGluc3RydWN0aW9uIHRoYXQgd2ls
-bCBkbyBhDQo2NGJpdCBhdG9taWMgb3BlcmF0aW9uLg0KSSBkaWQgbWFuYWdlIHRvIHVzZSBpdCBv
-bmNlLCBidXQgaXQgaXMgZWFzaWVyIHRvIGRpc2FibGUgaW50ZXJydXB0cy4NCkknbSBub3Qgc3Vy
-ZSBob3cgbWFueSBTTVAgNjgwMjAgc3lzdGVtcyB3ZXJlIGV2ZXIgYnVpbHQuDQpZb3UnZCBuZWVk
-IGEgbWF0Y2hlZCBwYWlyIG9mIGNwdSAob3IgZXh0cmVtZSBjYXJlKSBzaW5jZSBpdA0KdGVuZHMg
-dG8gc3RhY2sgbWljcm9jb2RlIGRhdGEgb24gbWlkLWluc3RydWN0aW9uIGZhdWx0cy4NCg0KCURh
-dmlkDQoNCi0NClJlZ2lzdGVyZWQgQWRkcmVzcyBMYWtlc2lkZSwgQnJhbWxleSBSb2FkLCBNb3Vu
-dCBGYXJtLCBNaWx0b24gS2V5bmVzLCBNSzEgMVBULCBVSw0KUmVnaXN0cmF0aW9uIE5vOiAxMzk3
-Mzg2IChXYWxlcykNCg==
+On Tue, Apr 9, 2019 at 11:26 AM Jan Kara <jack@suse.cz> wrote:
+>
+> On Mon 08-04-19 20:41:09, Amir Goldstein wrote:
+> > On Mon, Apr 8, 2019 at 5:11 PM Jan Kara <jack@suse.cz> wrote:
+> > >
+> > > On Mon 08-04-19 12:02:34, Amir Goldstein wrote:
+> > > > On Mon, Apr 8, 2019 at 2:27 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > > >
+> > > > > On Fri, Apr 05, 2019 at 05:02:33PM +0300, Amir Goldstein wrote:
+> > > > > > On Fri, Apr 5, 2019 at 12:17 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > > > > >
+> > > > > > > On Thu, Apr 04, 2019 at 07:57:37PM +0300, Amir Goldstein wrote:
+> > > > > > > > This patch improves performance of mixed random rw workload
+> > > > > > > > on xfs without relaxing the atomic buffered read/write guaranty
+> > > > > > > > that xfs has always provided.
+> > > > > > > >
+> > > > > > > > We achieve that by calling generic_file_read_iter() twice.
+> > > > > > > > Once with a discard iterator to warm up page cache before taking
+> > > > > > > > the shared ilock and once again under shared ilock.
+> > > > > > >
+> > > > > > > This will race with thing like truncate, hole punching, etc that
+> > > > > > > serialise IO and invalidate the page cache for data integrity
+> > > > > > > reasons under the IOLOCK. These rely on there being no IO to the
+> > > > > > > inode in progress at all to work correctly, which this patch
+> > > > > > > violates. IOWs, while this is fast, it is not safe and so not a
+> > > > > > > viable approach to solving the problem.
+> > > > > > >
+> > > > > >
+> > > > > > This statement leaves me wondering, if ext4 does not takes
+> > > > > > i_rwsem on generic_file_read_iter(), how does ext4 (or any other
+> > > > > > fs for that matter) guaranty buffered read synchronization with
+> > > > > > truncate, hole punching etc?
+> > > > > > The answer in ext4 case is i_mmap_sem, which is read locked
+> > > > > > in the page fault handler.
+> > > > >
+> > > > > Nope, the  i_mmap_sem is for serialisation of /page faults/ against
+> > > > > truncate, holepunching, etc. Completely irrelevant to the read()
+> > > > > path.
+> > > > >
+> > > >
+> > > > I'm at lost here. Why are page faults completely irrelevant to read()
+> > > > path? Aren't full pages supposed to be faulted in on read() after
+> > > > truncate_pagecache_range()?
+> > >
+> > > During read(2), pages are not "faulted in". Just look at
+> > > what generic_file_buffered_read() does. It uses completely separate code to
+> > > add page to page cache, trigger readahead, and possibly call ->readpage() to
+> > > fill the page with data. "fault" path (handled by filemap_fault()) applies
+> > > only to accesses from userspace to mmaps.
+> > >
+> >
+> > Oh! thanks for fixing my blind spot.
+> > So if you agree with Dave that ext4, and who knows what other fs,
+> > are vulnerable to populating page cache with stale "uptodate" data,
+>
+> Not that many filesystems support punching holes but you're right.
+>
+> > then it seems to me that also xfs is vulnerable via readahead(2) and
+> > posix_fadvise().
+>
+> Yes, this is correct AFAICT.
+>
+> > Mind you, I recently added an fadvise f_op, so it could be used by
+> > xfs to synchronize with IOLOCK.
+>
+> And yes, this should work.
+>
+> > Perhaps a better solution would be for truncate_pagecache_range()
+> > to leave zeroed or Unwritten (i.e. lazy zeroed by read) pages in page
+> > cache. When we have shared pages for files, these pages could be
+> > deduped.
+>
+> No, I wouldn't really mess with sharing pages due to this. It would be hard
+> to make that scale resonably and would be rather complex. We really need a
+> proper and reasonably simple synchronization mechanism between operations
+> removing blocks from inode and operations filling in page cache of the
+> inode. Page lock was supposed to provide this but doesn't quite work
+> because hole punching first remove pagecache pages and then go removing all
+> blocks.
+>
+> So I agree with Dave that going for range lock is really the cleanest way
+> forward here without causing big regressions for mixed rw workloads. I'm
+> just thinking how to best do that without introducing lot of boilerplate
+> code into each filesystem.
 
+Hi Jan, Dave,
+
+Trying to circle back to this after 3 years!
+Seeing that there is no progress with range locks and
+that the mixed rw workloads performance issue still very much exists.
+
+Is the situation now different than 3 years ago with invalidate_lock?
+Would my approach of pre-warm page cache before taking IOLOCK
+be safe if page cache is pre-warmed with invalidate_lock held?
+
+For the pNFS leases issue, as I wrote back in pre-COVID era,
+I intend to opt-out of this optimization with
+#ifndef CONFIG_EXPORTFS_BLOCK_OPS
+
+Thanks,
+Amir.
