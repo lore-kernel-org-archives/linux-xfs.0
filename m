@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DD8DCCA47C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90DB0CCA480
 	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 10:07:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381627AbiFQKHm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jun 2022 06:07:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52096 "EHLO
+        id S1381743AbiFQKHo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jun 2022 06:07:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381641AbiFQKHU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 06:07:20 -0400
-Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A5A669B6B;
-        Fri, 17 Jun 2022 03:06:55 -0700 (PDT)
-Received: by mail-wr1-x431.google.com with SMTP id w17so5096881wrg.7;
-        Fri, 17 Jun 2022 03:06:55 -0700 (PDT)
+        with ESMTP id S1381669AbiFQKHY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 06:07:24 -0400
+Received: from mail-wm1-x329.google.com (mail-wm1-x329.google.com [IPv6:2a00:1450:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE8B46A43D;
+        Fri, 17 Jun 2022 03:07:06 -0700 (PDT)
+Received: by mail-wm1-x329.google.com with SMTP id m32-20020a05600c3b2000b0039756bb41f2so2138305wms.3;
+        Fri, 17 Jun 2022 03:07:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=m11EV4fTYjQr+CF4ItvJAnTX7XtYwLnaXp2qOkxkWzo=;
-        b=h9cmdzTF46gHaG9ANVIwEyBi0nsK7WcVU4jjz/jyFa8UKRs1vhi8NvNlme6rM+dfkB
-         jKuoSF3krJmqCuShZLggGEcobVaCaarF40f1flhARO+nv5nMmA5d66RfyZmpWLnp/5qs
-         bfYULMN65DzIjo9CqhLH7FptX74OEsosOIfMZP3MNIwm/PiGbjJLLYzUY5iV/4jfm3Mh
-         cJZCjJxqWf5FhDvrEq5EmwBm7UPtENO+W/yxxm5iRwYrtmrFrsgZdUlRGjyxo/WpfXoy
-         OWcK/rdge4T8eP0XXoMLrOkR+q9y1RkNSo9STWwpzcMufgzAAx3jktXF8VAb6tuP8Wpq
-         oHlg==
+        bh=+F6aTIXlSin5tx3PF0RUSLMxKLKa7f7bpvoyxuqglDY=;
+        b=Y+Zd61v6ktTBXhWUVgV12t8pNlvHlYfwGz9eH2kZS7s66YkpVym6RrEISo/3SfJCG6
+         XIjlSs4CQx21GfhrRhAJR6YMHSi6nyuyRucOc60xyD242QdoOuvJmPiiij9BBVPloHds
+         iY0Z9A+a1n0DitsF9tusC8gjVHvIzELsLA70gZsOQCYFMhUSD6v9DTyzOtuX8Seyg4GA
+         zk3DgJ1CyYGWBn37qFbma0BdIxP6Y7lraoROjxNl/mDt1s06IUfE6F92GYUG7oED6JxP
+         1oJ210g5cS4L0uKSpVP6fXH5XZpyxZudBwEkBXcAPUy/bxIgkt7cgdDMX6q3gSMFJikR
+         djFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=m11EV4fTYjQr+CF4ItvJAnTX7XtYwLnaXp2qOkxkWzo=;
-        b=VY0gFrkEc8fTx0lh5zYN0VGYpYVSusQJQmlNt2I+rckBjk+B1lCd+PLZ6jhuh5/yWi
-         nu1bcMG4hMpKyn9VhB5+0KGxBlpW89g3cuqScukMw6wA22F/vZlkfct8av8WD82yJKBC
-         BUCVg7pwSTDc2DdD9fkUeY1PGGzD1KJnZwFAF8rTjno6tQ0y1sQKFa4FnnDuDhgSbP29
-         1KXofTy4L+s4Xn972JIcrC8htjFXIY5SWi6qAusyFcP0tZw7G6wtqm5LBw2wTTK8zh7R
-         QpIW/8flV89+4vyhhCzw30s1b3OaRrye9GYVz0gDOGyKVbU35HxuLb8eu1jBoyeKM6X2
-         Fy+A==
-X-Gm-Message-State: AJIora/ijN4BgQwZGVzwS6Afm2+P98v2D9+f9PoWslq58/VYFHCTamoA
-        J8+XLl+K2ML0nnXIJZ/qK5I=
-X-Google-Smtp-Source: AGRyM1v6cRBnhrJNK4NC/q0Lx0MgNcl4vveBlH1xqVrddaUIrQ21amVx9/iioJGJQ94d3jY9BWU9pQ==
-X-Received: by 2002:adf:b644:0:b0:210:1fde:a513 with SMTP id i4-20020adfb644000000b002101fdea513mr9123878wre.604.1655460413730;
-        Fri, 17 Jun 2022 03:06:53 -0700 (PDT)
+        bh=+F6aTIXlSin5tx3PF0RUSLMxKLKa7f7bpvoyxuqglDY=;
+        b=w/RfiICczQrailgO21KyQoAtCusg7rHVUzQNi7Lm4MQg3nvYvOTOAM1pOpFOOuEdYY
+         4xXoRgZWsFCjlo6qfEzyGO08T6innhZlh6dbuKJZuzB0qH0nVF1mVshNg93ANQkrfFxS
+         MsW8gKv3E+bZLUHZNtzg4Awj3T09jYqXGASAsUwyVxFbeEBYXzMVqV28CIHh/PzQPEyR
+         5KS3MOkuY+CYCSUEyHP27irpUdkE/zemvq3XCgW5XQBjlpfrOJPog3YQbO6v+qy/aIKL
+         rS1+79OHjmxoDpuYS2ScJjcOjHwAU14/uQgPITFZDUXbaNs8m8ttdKdo9gno3yU+hk5l
+         hRhg==
+X-Gm-Message-State: AOAM531S7mNHjRWHhhyyaFhk0BdT5+cBIqo3RkpKxoo+4t+twFEP20VQ
+        oUBkNnHFJ+JRCsMtq2KCwUg=
+X-Google-Smtp-Source: ABdhPJyCJKuxVWiduVnPGF4s7hzJEkNISVOvHq0ip+JFdNiwuQSNXJ0Ejm0J/7D8gaeOt+8IvkGWxg==
+X-Received: by 2002:a7b:c1c1:0:b0:39c:58c4:c701 with SMTP id a1-20020a7bc1c1000000b0039c58c4c701mr20609265wmj.117.1655460425390;
+        Fri, 17 Jun 2022 03:07:05 -0700 (PDT)
 Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id m42-20020a05600c3b2a00b003973435c517sm5265534wms.0.2022.06.17.03.06.51
+        by smtp.gmail.com with ESMTPSA id m42-20020a05600c3b2a00b003973435c517sm5265534wms.0.2022.06.17.03.07.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jun 2022 03:06:53 -0700 (PDT)
+        Fri, 17 Jun 2022 03:07:05 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
@@ -56,10 +56,10 @@ Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
         Christian Brauner <christian.brauner@ubuntu.com>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
         Dave Chinner <dchinner@redhat.com>,
-        Chandan Babu R <chandan.babu@oracle.com>
-Subject: [PATCH 5.10 CANDIDATE 04/11] xfs: remove all COW fork extents when remounting readonly
-Date:   Fri, 17 Jun 2022 13:06:34 +0300
-Message-Id: <20220617100641.1653164-5-amir73il@gmail.com>
+        Christian Brauner <brauner@kernel.org>
+Subject: [PATCH 5.10 CANDIDATE 11/11] xfs: use setattr_copy to set vfs inode attributes
+Date:   Fri, 17 Jun 2022 13:06:41 +0300
+Message-Id: <20220617100641.1653164-12-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220617100641.1653164-1-amir73il@gmail.com>
 References: <20220617100641.1653164-1-amir73il@gmail.com>
@@ -71,87 +71,156 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit 089558bc7ba785c03815a49c89e28ad9b8de51f9 upstream.
+commit e014f37db1a2d109afa750042ac4d69cf3e3d88e upstream.
 
-[backport xfs_icwalk -> xfs_eofblocks for 5.10.y]
+[remove userns argument of setattr_copy() for backport]
 
-As part of multiple customer escalations due to file data corruption
-after copy on write operations, I wrote some fstests that use fsstress
-to hammer on COW to shake things loose.  Regrettably, I caught some
-filesystem shutdowns due to incorrect rmap operations with the following
-loop:
+Filipe Manana pointed out that XFS' behavior w.r.t. setuid/setgid
+revocation isn't consistent with btrfs[1] or ext4.  Those two
+filesystems use the VFS function setattr_copy to convey certain
+attributes from struct iattr into the VFS inode structure.
 
-mount <filesystem>				# (0)
-fsstress <run only readonly ops> &		# (1)
-while true; do
-	fsstress <run all ops>
-	mount -o remount,ro			# (2)
-	fsstress <run only readonly ops>
-	mount -o remount,rw			# (3)
-done
+Andrey Zhadchenko reported[2] that XFS uses the wrong user namespace to
+decide if it should clear setgid and setuid on a file attribute update.
+This is a second symptom of the problem that Filipe noticed.
 
-When (2) happens, notice that (1) is still running.  xfs_remount_ro will
-call xfs_blockgc_stop to walk the inode cache to free all the COW
-extents, but the blockgc mechanism races with (1)'s reader threads to
-take IOLOCKs and loses, which means that it doesn't clean them all out.
-Call such a file (A).
+XFS, on the other hand, open-codes setattr_copy in xfs_setattr_mode,
+xfs_setattr_nonsize, and xfs_setattr_time.  Regrettably, setattr_copy is
+/not/ a simple copy function; it contains additional logic to clear the
+setgid bit when setting the mode, and XFS' version no longer matches.
 
-When (3) happens, xfs_remount_rw calls xfs_reflink_recover_cow, which
-walks the ondisk refcount btree and frees any COW extent that it finds.
-This function does not check the inode cache, which means that incore
-COW forks of inode (A) is now inconsistent with the ondisk metadata.  If
-one of those former COW extents are allocated and mapped into another
-file (B) and someone triggers a COW to the stale reservation in (A), A's
-dirty data will be written into (B) and once that's done, those blocks
-will be transferred to (A)'s data fork without bumping the refcount.
+The VFS implements its own setuid/setgid stripping logic, which
+establishes consistent behavior.  It's a tad unfortunate that it's
+scattered across notify_change, should_remove_suid, and setattr_copy but
+XFS should really follow the Linux VFS.  Adapt XFS to use the VFS
+functions and get rid of the old functions.
 
-The results are catastrophic -- file (B) and the refcount btree are now
-corrupt.  Solve this race by forcing the xfs_blockgc_free_space to run
-synchronously, which causes xfs_icwalk to return to inodes that were
-skipped because the blockgc code couldn't take the IOLOCK.  This is safe
-to do here because the VFS has already prohibited new writer threads.
+[1] https://lore.kernel.org/fstests/CAL3q7H47iNQ=Wmk83WcGB-KBJVOEtR9+qGczzCeXJ9Y2KCV25Q@mail.gmail.com/
+[2] https://lore.kernel.org/linux-xfs/20220221182218.748084-1-andrey.zhadchenko@virtuozzo.com/
 
-Fixes: 10ddf64e420f ("xfs: remove leftover CoW reservations when remounting ro")
+Fixes: 7fa294c8991c ("userns: Allow chown and setgid preservation")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/xfs_super.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_iops.c | 56 +++--------------------------------------------
+ fs/xfs/xfs_pnfs.c |  3 ++-
+ 2 files changed, 5 insertions(+), 54 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d220a63d7883..6323974d6b3e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1711,7 +1711,10 @@ static int
- xfs_remount_ro(
- 	struct xfs_mount	*mp)
- {
--	int error;
-+	struct xfs_eofblocks	eofb = {
-+		.eof_flags	= XFS_EOF_FLAGS_SYNC,
-+	};
-+	int			error;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index b7f7b31a77d5..5711c8c12625 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -595,37 +595,6 @@ xfs_vn_getattr(
+ 	return 0;
+ }
  
- 	/*
- 	 * Cancel background eofb scanning so it cannot race with the final
-@@ -1719,8 +1722,13 @@ xfs_remount_ro(
- 	 */
- 	xfs_stop_block_reaping(mp);
+-static void
+-xfs_setattr_mode(
+-	struct xfs_inode	*ip,
+-	struct iattr		*iattr)
+-{
+-	struct inode		*inode = VFS_I(ip);
+-	umode_t			mode = iattr->ia_mode;
+-
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-
+-	inode->i_mode &= S_IFMT;
+-	inode->i_mode |= mode & ~S_IFMT;
+-}
+-
+-void
+-xfs_setattr_time(
+-	struct xfs_inode	*ip,
+-	struct iattr		*iattr)
+-{
+-	struct inode		*inode = VFS_I(ip);
+-
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-
+-	if (iattr->ia_valid & ATTR_ATIME)
+-		inode->i_atime = iattr->ia_atime;
+-	if (iattr->ia_valid & ATTR_CTIME)
+-		inode->i_ctime = iattr->ia_ctime;
+-	if (iattr->ia_valid & ATTR_MTIME)
+-		inode->i_mtime = iattr->ia_mtime;
+-}
+-
+ static int
+ xfs_vn_change_ok(
+ 	struct dentry	*dentry,
+@@ -740,16 +709,6 @@ xfs_setattr_nonsize(
+ 				goto out_cancel;
+ 		}
  
--	/* Get rid of any leftover CoW reservations... */
--	error = xfs_icache_free_cowblocks(mp, NULL);
-+	/*
-+	 * Clear out all remaining COW staging extents and speculative post-EOF
-+	 * preallocations so that we don't leave inodes requiring inactivation
-+	 * cleanups during reclaim on a read-only mount.  We must process every
-+	 * cached inode, so this requires a synchronous cache scan.
-+	 */
-+	error = xfs_icache_free_cowblocks(mp, &eofb);
- 	if (error) {
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 		return error;
+-		/*
+-		 * CAP_FSETID overrides the following restrictions:
+-		 *
+-		 * The set-user-ID and set-group-ID bits of a file will be
+-		 * cleared upon successful return from chown()
+-		 */
+-		if ((inode->i_mode & (S_ISUID|S_ISGID)) &&
+-		    !capable(CAP_FSETID))
+-			inode->i_mode &= ~(S_ISUID|S_ISGID);
+-
+ 		/*
+ 		 * Change the ownerships and register quota modifications
+ 		 * in the transaction.
+@@ -761,7 +720,6 @@ xfs_setattr_nonsize(
+ 				olddquot1 = xfs_qm_vop_chown(tp, ip,
+ 							&ip->i_udquot, udqp);
+ 			}
+-			inode->i_uid = uid;
+ 		}
+ 		if (!gid_eq(igid, gid)) {
+ 			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_GQUOTA_ON(mp)) {
+@@ -772,15 +730,10 @@ xfs_setattr_nonsize(
+ 				olddquot2 = xfs_qm_vop_chown(tp, ip,
+ 							&ip->i_gdquot, gdqp);
+ 			}
+-			inode->i_gid = gid;
+ 		}
+ 	}
+ 
+-	if (mask & ATTR_MODE)
+-		xfs_setattr_mode(ip, iattr);
+-	if (mask & (ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
+-		xfs_setattr_time(ip, iattr);
+-
++	setattr_copy(inode, iattr);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+ 	XFS_STATS_INC(mp, xs_ig_attrchg);
+@@ -1025,11 +978,8 @@ xfs_setattr_size(
+ 		xfs_inode_clear_eofblocks_tag(ip);
+ 	}
+ 
+-	if (iattr->ia_valid & ATTR_MODE)
+-		xfs_setattr_mode(ip, iattr);
+-	if (iattr->ia_valid & (ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
+-		xfs_setattr_time(ip, iattr);
+-
++	ASSERT(!(iattr->ia_valid & (ATTR_UID | ATTR_GID)));
++	setattr_copy(inode, iattr);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+ 	XFS_STATS_INC(mp, xs_ig_attrchg);
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index f3082a957d5e..ae61094bc9d1 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -283,7 +283,8 @@ xfs_fs_commit_blocks(
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+-	xfs_setattr_time(ip, iattr);
++	ASSERT(!(iattr->ia_valid & (ATTR_UID | ATTR_GID)));
++	setattr_copy(inode, iattr);
+ 	if (update_isize) {
+ 		i_size_write(inode, iattr->ia_size);
+ 		ip->i_d.di_size = iattr->ia_size;
 -- 
 2.25.1
 
