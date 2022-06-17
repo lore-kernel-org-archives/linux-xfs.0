@@ -2,182 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E043C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 15:11:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36DA2C43334
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 16:34:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1383054AbiFQPLq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jun 2022 11:11:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42768 "EHLO
+        id S1347292AbiFQQeq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jun 2022 12:34:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1383048AbiFQPLp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 11:11:45 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14E7D40A33;
-        Fri, 17 Jun 2022 08:11:44 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id C79DA219B5;
-        Fri, 17 Jun 2022 15:11:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1655478702; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S237132AbiFQQep (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 12:34:45 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 812A045AE3
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Jun 2022 09:34:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1655483683;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=isGHlZjzBCS8A0ziLERiN6uU3hp//39N9INjROOZ4Pk=;
-        b=29BY2Gsq7RS4PQujaqYg8igo7ncgTQxpgcKj2s8O7+ltIo0STzilq1HanbNbyZjvweqj5/
-        WVOgYueUnvwU6xVjKHhQiNBSv8sqZQjnsGMJ8vWSjua1gVci6N/RzHHPjarzoRrvh22w2E
-        RrnNnR8+55+SE7GeKML1tLO/J2dRIho=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1655478702;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=isGHlZjzBCS8A0ziLERiN6uU3hp//39N9INjROOZ4Pk=;
-        b=RApSRdJ0+bq3YiqbLhOBUHXLYCTMrx3WltsZSs4Q37iZa0+lbuJEcQjxZMQb/L52xvQry+
-        /xqh8lNgwvDPmQBw==
-Received: from quack3.suse.cz (unknown [10.100.224.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 2098D2C141;
-        Fri, 17 Jun 2022 15:11:41 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 428CFA0634; Fri, 17 Jun 2022 17:11:35 +0200 (CEST)
-Date:   Fri, 17 Jun 2022 17:11:35 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Ext4 <linux-ext4@vger.kernel.org>,
-        Lukas Czerner <lczerner@redhat.com>,
-        Theodore Tso <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
- workload
-Message-ID: <20220617151135.yc6vytge6hjabsuz@quack3>
-References: <20190404165737.30889-1-amir73il@gmail.com>
- <20190404211730.GD26298@dastard>
- <CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com>
- <20190407232728.GF26298@dastard>
- <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
- <20190408141114.GC15023@quack2.suse.cz>
- <CAOQ4uxhxgYASST1k-UaqfbLL9ERquHaKL2jtydB2+iF9aT8SRQ@mail.gmail.com>
- <20190409082605.GA8107@quack2.suse.cz>
- <CAOQ4uxgu4uKJp5t+RoumMneR6bw_k0CRhGhU-SLAky4VHSg9MQ@mail.gmail.com>
+        bh=Ll69PF4v9COT4N56kCAQrmJvs/9lXz/xjsH5G9n8V/4=;
+        b=LYsWMHkUTQNTrEQCb5oLBYhxYodAnz6oaAV5fXGamJZbCR5/m87t5TDCN1KrEVFzpYA5te
+        t2qXGHcXxNJII7jUy795o6Z16ec3j4s3GCeyhVTsYbgu3VHpYvm5D+CRCW+Os8+Yy4749T
+        8Ait1r7XiRNYQ4ugqGgnyk4OCo83fic=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-206-n3TRb5HfMmyJR_dj6Q1cCQ-1; Fri, 17 Jun 2022 12:34:42 -0400
+X-MC-Unique: n3TRb5HfMmyJR_dj6Q1cCQ-1
+Received: by mail-qv1-f70.google.com with SMTP id c4-20020a0cca04000000b0046e6864aca4so5290114qvk.18
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Jun 2022 09:34:42 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Ll69PF4v9COT4N56kCAQrmJvs/9lXz/xjsH5G9n8V/4=;
+        b=YysnbGpD0iTAgpVBDchX+N8IEXa7sYDud9yWHTDVK0I+cSavW9KLIeFoR8xFah1/FU
+         0jzci8sCLDe4ljckws57CJuih0dKDye0jATXIUgJse2bXcP2Fxo9skpTPSkb2KK1V56t
+         PWkGgS98FZmC63Z5zaJS1wxEx3m4b1NTuVlXHScClokuPKNbIY90BO7tQuvk+4A+VYmT
+         L5MZ+BdNEJ1WKI0/slL5hbPuAkUFZFe04nW9x4Rp1mHadGqCTl2kXIFBFmtDoTA4ej8u
+         iYTkeZcxElwXiXuRbFTy0k0yD6SQG5JeYzHTZoYIWvd+IadMWGfir4ANQKtFibyuiLO6
+         YJKg==
+X-Gm-Message-State: AJIora9wG+mpjuxPmBU6NkA4BgroXnZ9mjvpTvWYfhMFgDJ4rVn4Qmrv
+        6fAokUrVvSTlPMCkOURIRXeVqV4SriZLg2mLERbXnCTIlz+vDkW3oyuPqlP14rhW0OCyqClKAVh
+        JTbgCk3ymq2yTjRgl45/z
+X-Received: by 2002:a05:620a:2996:b0:6a7:39ca:d8de with SMTP id r22-20020a05620a299600b006a739cad8demr7723881qkp.718.1655483681387;
+        Fri, 17 Jun 2022 09:34:41 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1sfSOEiXFOv/msb8fnHXBzVS8fh9jKR2xMPCkxSH7wE4Rg8pPBUZ7E3SgZowK6ynAnrFCRpJA==
+X-Received: by 2002:a05:620a:2996:b0:6a7:39ca:d8de with SMTP id r22-20020a05620a299600b006a739cad8demr7723850qkp.718.1655483681002;
+        Fri, 17 Jun 2022 09:34:41 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id e7-20020a05620a014700b006a66f3d3708sm4379012qkn.129.2022.06.17.09.34.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jun 2022 09:34:40 -0700 (PDT)
+Date:   Fri, 17 Jun 2022 12:34:38 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
+Message-ID: <YqytHuc/sJprFn0K@bfoster>
+References: <20220615220416.3681870-1-david@fromorbit.com>
+ <20220615220416.3681870-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgu4uKJp5t+RoumMneR6bw_k0CRhGhU-SLAky4VHSg9MQ@mail.gmail.com>
+In-Reply-To: <20220615220416.3681870-2-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 17-06-22 17:48:08, Amir Goldstein wrote:
-> On Tue, Apr 9, 2019 at 11:26 AM Jan Kara <jack@suse.cz> wrote:
-> >
-> > On Mon 08-04-19 20:41:09, Amir Goldstein wrote:
-> > > On Mon, Apr 8, 2019 at 5:11 PM Jan Kara <jack@suse.cz> wrote:
-> > > >
-> > > > On Mon 08-04-19 12:02:34, Amir Goldstein wrote:
-> > > > > On Mon, Apr 8, 2019 at 2:27 AM Dave Chinner <david@fromorbit.com> wrote:
-> > > > > >
-> > > > > > On Fri, Apr 05, 2019 at 05:02:33PM +0300, Amir Goldstein wrote:
-> > > > > > > On Fri, Apr 5, 2019 at 12:17 AM Dave Chinner <david@fromorbit.com> wrote:
-> > > > > > > >
-> > > > > > > > On Thu, Apr 04, 2019 at 07:57:37PM +0300, Amir Goldstein wrote:
-> > > > > > > > > This patch improves performance of mixed random rw workload
-> > > > > > > > > on xfs without relaxing the atomic buffered read/write guaranty
-> > > > > > > > > that xfs has always provided.
-> > > > > > > > >
-> > > > > > > > > We achieve that by calling generic_file_read_iter() twice.
-> > > > > > > > > Once with a discard iterator to warm up page cache before taking
-> > > > > > > > > the shared ilock and once again under shared ilock.
-> > > > > > > >
-> > > > > > > > This will race with thing like truncate, hole punching, etc that
-> > > > > > > > serialise IO and invalidate the page cache for data integrity
-> > > > > > > > reasons under the IOLOCK. These rely on there being no IO to the
-> > > > > > > > inode in progress at all to work correctly, which this patch
-> > > > > > > > violates. IOWs, while this is fast, it is not safe and so not a
-> > > > > > > > viable approach to solving the problem.
-> > > > > > > >
-> > > > > > >
-> > > > > > > This statement leaves me wondering, if ext4 does not takes
-> > > > > > > i_rwsem on generic_file_read_iter(), how does ext4 (or any other
-> > > > > > > fs for that matter) guaranty buffered read synchronization with
-> > > > > > > truncate, hole punching etc?
-> > > > > > > The answer in ext4 case is i_mmap_sem, which is read locked
-> > > > > > > in the page fault handler.
-> > > > > >
-> > > > > > Nope, the  i_mmap_sem is for serialisation of /page faults/ against
-> > > > > > truncate, holepunching, etc. Completely irrelevant to the read()
-> > > > > > path.
-> > > > > >
-> > > > >
-> > > > > I'm at lost here. Why are page faults completely irrelevant to read()
-> > > > > path? Aren't full pages supposed to be faulted in on read() after
-> > > > > truncate_pagecache_range()?
-> > > >
-> > > > During read(2), pages are not "faulted in". Just look at
-> > > > what generic_file_buffered_read() does. It uses completely separate code to
-> > > > add page to page cache, trigger readahead, and possibly call ->readpage() to
-> > > > fill the page with data. "fault" path (handled by filemap_fault()) applies
-> > > > only to accesses from userspace to mmaps.
-> > > >
-> > >
-> > > Oh! thanks for fixing my blind spot.
-> > > So if you agree with Dave that ext4, and who knows what other fs,
-> > > are vulnerable to populating page cache with stale "uptodate" data,
-> >
-> > Not that many filesystems support punching holes but you're right.
-> >
-> > > then it seems to me that also xfs is vulnerable via readahead(2) and
-> > > posix_fadvise().
-> >
-> > Yes, this is correct AFAICT.
-> >
-> > > Mind you, I recently added an fadvise f_op, so it could be used by
-> > > xfs to synchronize with IOLOCK.
-> >
-> > And yes, this should work.
-> >
-> > > Perhaps a better solution would be for truncate_pagecache_range()
-> > > to leave zeroed or Unwritten (i.e. lazy zeroed by read) pages in page
-> > > cache. When we have shared pages for files, these pages could be
-> > > deduped.
-> >
-> > No, I wouldn't really mess with sharing pages due to this. It would be hard
-> > to make that scale resonably and would be rather complex. We really need a
-> > proper and reasonably simple synchronization mechanism between operations
-> > removing blocks from inode and operations filling in page cache of the
-> > inode. Page lock was supposed to provide this but doesn't quite work
-> > because hole punching first remove pagecache pages and then go removing all
-> > blocks.
-> >
-> > So I agree with Dave that going for range lock is really the cleanest way
-> > forward here without causing big regressions for mixed rw workloads. I'm
-> > just thinking how to best do that without introducing lot of boilerplate
-> > code into each filesystem.
+On Thu, Jun 16, 2022 at 08:04:15AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Hi Jan, Dave,
+> Currently inodegc work can sit queued on the per-cpu queue until
+> the workqueue is either flushed of the queue reaches a depth that
+> triggers work queuing (and later throttling). This means that we
+> could queue work that waits for a long time for some other event to
+> trigger flushing.
 > 
-> Trying to circle back to this after 3 years!
-> Seeing that there is no progress with range locks and
-> that the mixed rw workloads performance issue still very much exists.
+> Hence instead of just queueing work at a specific depth, use a
+> delayed work that queues the work at a bound time. We can still
+> schedule the work immediately at a given depth, but we no long need
+> to worry about leaving a number of items on the list that won't get
+> processed until external events prevail.
 > 
-> Is the situation now different than 3 years ago with invalidate_lock?
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
+>  fs/xfs/xfs_mount.h  |  2 +-
+>  fs/xfs/xfs_super.c  |  2 +-
+>  3 files changed, 24 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 374b3bafaeb0..46b30ecf498c 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+...
+> @@ -2176,7 +2184,7 @@ xfs_inodegc_shrinker_scan(
+>  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
+>  
+>  			WRITE_ONCE(gc->shrinker_hits, h + 1);
+> -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
+> +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
+>  			no_items = false;
+>  		}
 
-Yes, I've implemented invalidate_lock exactly to fix the issues you've
-pointed out without regressing the mixed rw workloads (because
-invalidate_lock is taken in shared mode only for reads and usually not at
-all for writes).
+This all seems reasonable to me, but is there much practical benefit to
+shrinker infra/feedback just to expedite a delayed work item by one
+jiffy? Maybe there's a use case to continue to trigger throttling..? If
+so, it looks like decent enough overhead to cycle through every cpu in
+both callbacks that it might be worth spelling out more clearly in the
+top-level comment.
 
-> Would my approach of pre-warm page cache before taking IOLOCK
-> be safe if page cache is pre-warmed with invalidate_lock held?
+Brian
 
-Why would it be needed? But yes, with invalidate_lock you could presumably
-make that idea safe...
+>  	}
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index ba5d42abf66e..d2eaebd85abf 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -61,7 +61,7 @@ struct xfs_error_cfg {
+>   */
+>  struct xfs_inodegc {
+>  	struct llist_head	list;
+> -	struct work_struct	work;
+> +	struct delayed_work	work;
+>  
+>  	/* approximate count of inodes in the list */
+>  	unsigned int		items;
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 48a7239ed1b2..651ae75a7e23 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1075,7 +1075,7 @@ xfs_inodegc_init_percpu(
+>  		gc = per_cpu_ptr(mp->m_inodegc, cpu);
+>  		init_llist_head(&gc->list);
+>  		gc->items = 0;
+> -		INIT_WORK(&gc->work, xfs_inodegc_worker);
+> +		INIT_DELAYED_WORK(&gc->work, xfs_inodegc_worker);
+>  	}
+>  	return 0;
+>  }
+> -- 
+> 2.35.1
+> 
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
