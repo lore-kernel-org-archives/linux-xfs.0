@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4925FC43334
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 10:07:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F07F9C43334
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 10:07:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381608AbiFQKHf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jun 2022 06:07:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51522 "EHLO
+        id S1381599AbiFQKHg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jun 2022 06:07:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381574AbiFQKHU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 06:07:20 -0400
-Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADE1F6A011;
-        Fri, 17 Jun 2022 03:06:58 -0700 (PDT)
-Received: by mail-wr1-x42f.google.com with SMTP id a15so5118721wrh.2;
-        Fri, 17 Jun 2022 03:06:58 -0700 (PDT)
+        with ESMTP id S1381605AbiFQKHW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 06:07:22 -0400
+Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99CE96A42C;
+        Fri, 17 Jun 2022 03:07:03 -0700 (PDT)
+Received: by mail-wm1-x332.google.com with SMTP id l2-20020a05600c4f0200b0039c55c50482so4117094wmq.0;
+        Fri, 17 Jun 2022 03:07:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=loriEoiVPoDrwPGkS8Q5XLOnTWcA/2w8hcb95i2ZPaE=;
-        b=oqjAWdy8E9mBMlxIqQuip+44uzZRTrJPoz8xDEN/HE8QmYhSr73zFDJMjB/TVexTy7
-         5x1vpIELIHSsHuGZN+6VojK4fd/JLAELaVchUpzzvvWmm1P2gLR4DQkpjgr8PTcZfgVK
-         A6b2uT9KT6Vj0Fb2C0FsNpw+cNFK0Qn/QigS3kn8lDvxmL9r3JHTTZev75yyTIzs+EzM
-         u5u/wDHR8qLFnPf+UVpx603JjyBaDdioThvGPchLVkrjovWS3nk9XUpwLWQK2CIyecy4
-         /KsePWtJspWveevJOj+QHv9E5LbvwHKefKLPBCsvdPgLSpW6JeJDldtcAxJB+QBS423w
-         0UEA==
+        bh=4KLwIj5Vu7AZlMJL3ChxFNmM9rxj5CAzgdTye3eR8PQ=;
+        b=WTrBLahFEki5jxOMZWYPRoyceiXgV9iw1qPlrUbx/Mkaxnp8p2f0vzfygdGGwhF4fd
+         GIPcRHiYlWWPrHrQwRdkRD28EtNIf6fTO3fz1jyES+edEpaj0gZ5ycUbWBqALzBcp21Y
+         hl1m1KIqOVgqo9IIltisvb1S6sq9/ieMkYWbe+pz7FazBOSaQY9975rAENmg0qJcNh7p
+         pshYupgu366+jJAsJOzhiq1HcqwofB51JgyoE8JORbZKUBL1aFFClbbKpiKVoo2RrsUg
+         y/6KK8AVnuiIEtxIepRmDYSJxDbgygeo4TdeBtIny2342ILwyyvxDC8jnYXIufCbc9Tv
+         Tv2Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=loriEoiVPoDrwPGkS8Q5XLOnTWcA/2w8hcb95i2ZPaE=;
-        b=dK+CCzl66+FupfJp70vysql4exV5I7kK0WXkGrpK+Lgm9TjWkeCAUqsgGgz9dEJw1e
-         TOah5u3FKqmUEeaunCBd+Sk0rPlXK/leFoq4jiWZ1Ypp+fJehWOANVq4bgNGsfjp6MsR
-         j7AUVf2WCQBjTy4c1qXsjhZT0Lu6Z5XyYdiMk7iGFxizsX5Wl/2cjDqxao8GTtBTwolF
-         +n9wm8/W37+43r3nqjLKPSxjPL5rFAg/aWu9n1yW7i7hK/YDIH6JXECFW8O33Og1b6KM
-         E41boyj4FYZ9libLr536AstJ5+roBQxM6TUa4ac4+eUUGv8GtTbOc+TQ8+4vmKzWMobp
-         AUWg==
-X-Gm-Message-State: AJIora8ttp3ysjvizmWCeJYjUhNfecKGyCXdPgMG5/85r0QkGt5QjbhZ
-        OQtuuaoYKPw6WOqnw6kfIo4=
-X-Google-Smtp-Source: AGRyM1ubRH7Q0YRz2AFsOMHjK2er0Q4X1+tqKqDrw1fcjgRMwfTKB6D3iVTKi44Vel9uTJ5hDj+5jg==
-X-Received: by 2002:a5d:6a0e:0:b0:213:1f7f:e1cc with SMTP id m14-20020a5d6a0e000000b002131f7fe1ccmr8661795wru.31.1655460417077;
-        Fri, 17 Jun 2022 03:06:57 -0700 (PDT)
+        bh=4KLwIj5Vu7AZlMJL3ChxFNmM9rxj5CAzgdTye3eR8PQ=;
+        b=qjVBD1dufAOOq7g+H437RRn84O/QiSvtmNZUIwE//3R4jNbuCgpqpbmLvTpHQcFYeN
+         u9lJoIc9rwNYUUj3HEMjbtrPZ8/gvQ7T30XBFtyzZzlaf4Ot2G/h/ejrkOs7Yhiqi5ET
+         jIqvy2DrtzqYUUw4HwNy3qdK25Do5WABglr1ydIVPZflOBneQlDY+1P3V9gcQXI+ZLab
+         gf6W1WrQqmlcxZ9rH6R83rMI59mQYcIZ21fTg90VSrzLMmSIt11T7QiZ4+SSwo5rFURz
+         Aiv/v8eL2+jDxl63M+yVMBUR9W5wJ7k4sa6lpN9TA945Iev6Tf/6oGw3DMxBv351YIUz
+         ynpA==
+X-Gm-Message-State: AOAM5324sxmCBf7ucw0GSEJQiAcnprlWnqPnvtRRCIIiXT8nd7qATbNm
+        ULkld2UpmFmfbdhc5uRevVsknsoHdqcO/A==
+X-Google-Smtp-Source: ABdhPJwrIaptM1v8O+UzyLACJ6TPhS00hzw3rvxFC9pDVzrS8iaoiFH3JVDsH2jk+cwZtT5FwsPSRA==
+X-Received: by 2002:a7b:cc13:0:b0:38e:67e3:db47 with SMTP id f19-20020a7bcc13000000b0038e67e3db47mr20197606wmh.133.1655460422202;
+        Fri, 17 Jun 2022 03:07:02 -0700 (PDT)
 Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id m42-20020a05600c3b2a00b003973435c517sm5265534wms.0.2022.06.17.03.06.55
+        by smtp.gmail.com with ESMTPSA id m42-20020a05600c3b2a00b003973435c517sm5265534wms.0.2022.06.17.03.07.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jun 2022 03:06:56 -0700 (PDT)
+        Fri, 17 Jun 2022 03:07:01 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
@@ -55,11 +55,10 @@ Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
         Christoph Hellwig <hch@lst.de>,
         Christian Brauner <christian.brauner@ubuntu.com>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Brian Foster <bfoster@redhat.com>,
         Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 5.10 CANDIDATE 06/11] xfs: refactor xfs_file_fsync
-Date:   Fri, 17 Jun 2022 13:06:36 +0300
-Message-Id: <20220617100641.1653164-7-amir73il@gmail.com>
+Subject: [PATCH 5.10 CANDIDATE 09/11] xfs: only bother with sync_filesystem during readonly remount
+Date:   Fri, 17 Jun 2022 13:06:39 +0300
+Message-Id: <20220617100641.1653164-10-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220617100641.1653164-1-amir73il@gmail.com>
 References: <20220617100641.1653164-1-amir73il@gmail.com>
@@ -69,134 +68,51 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit f22c7f87777361f94aa17f746fbadfa499248dc8 upstream.
+commit b97cca3ba9098522e5a1c3388764ead42640c1a5 upstream.
 
-[backported for dependency]
+In commit 02b9984d6408, we pushed a sync_filesystem() call from the VFS
+into xfs_fs_remount.  The only time that we ever need to push dirty file
+data or metadata to disk for a remount is if we're remounting the
+filesystem read only, so this really could be moved to xfs_remount_ro.
 
-Factor out the log syncing logic into two helpers to make the code easier
-to read and more maintainable.
+Once we've moved the call site, actually check the return value from
+sync_filesystem.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Fixes: 02b9984d6408 ("fs: push sync_filesystem() down to the file system's remount_fs()")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/xfs_file.c | 81 +++++++++++++++++++++++++++++------------------
- 1 file changed, 50 insertions(+), 31 deletions(-)
+ fs/xfs/xfs_super.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5b0f93f73837..414d856e2e75 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -118,6 +118,54 @@ xfs_dir_fsync(
- 	return xfs_log_force_inode(ip);
- }
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 6323974d6b3e..dd0439ae6732 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1716,6 +1716,11 @@ xfs_remount_ro(
+ 	};
+ 	int			error;
  
-+static xfs_lsn_t
-+xfs_fsync_lsn(
-+	struct xfs_inode	*ip,
-+	bool			datasync)
-+{
-+	if (!xfs_ipincount(ip))
-+		return 0;
-+	if (datasync && !(ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-+		return 0;
-+	return ip->i_itemp->ili_last_lsn;
-+}
++	/* Flush all the dirty data to disk. */
++	error = sync_filesystem(mp->m_super);
++	if (error)
++		return error;
 +
-+/*
-+ * All metadata updates are logged, which means that we just have to flush the
-+ * log up to the latest LSN that touched the inode.
-+ *
-+ * If we have concurrent fsync/fdatasync() calls, we need them to all block on
-+ * the log force before we clear the ili_fsync_fields field. This ensures that
-+ * we don't get a racing sync operation that does not wait for the metadata to
-+ * hit the journal before returning.  If we race with clearing ili_fsync_fields,
-+ * then all that will happen is the log force will do nothing as the lsn will
-+ * already be on disk.  We can't race with setting ili_fsync_fields because that
-+ * is done under XFS_ILOCK_EXCL, and that can't happen because we hold the lock
-+ * shared until after the ili_fsync_fields is cleared.
-+ */
-+static  int
-+xfs_fsync_flush_log(
-+	struct xfs_inode	*ip,
-+	bool			datasync,
-+	int			*log_flushed)
-+{
-+	int			error = 0;
-+	xfs_lsn_t		lsn;
-+
-+	xfs_ilock(ip, XFS_ILOCK_SHARED);
-+	lsn = xfs_fsync_lsn(ip, datasync);
-+	if (lsn) {
-+		error = xfs_log_force_lsn(ip->i_mount, lsn, XFS_LOG_SYNC,
-+					  log_flushed);
-+
-+		spin_lock(&ip->i_itemp->ili_lock);
-+		ip->i_itemp->ili_fsync_fields = 0;
-+		spin_unlock(&ip->i_itemp->ili_lock);
-+	}
-+	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+	return error;
-+}
-+
- STATIC int
- xfs_file_fsync(
- 	struct file		*file,
-@@ -125,13 +173,10 @@ xfs_file_fsync(
- 	loff_t			end,
- 	int			datasync)
- {
--	struct inode		*inode = file->f_mapping->host;
--	struct xfs_inode	*ip = XFS_I(inode);
--	struct xfs_inode_log_item *iip = ip->i_itemp;
-+	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	int			error = 0;
- 	int			log_flushed = 0;
--	xfs_lsn_t		lsn = 0;
- 
- 	trace_xfs_file_fsync(ip);
- 
-@@ -155,33 +200,7 @@ xfs_file_fsync(
- 	else if (mp->m_logdev_targp != mp->m_ddev_targp)
- 		xfs_blkdev_issue_flush(mp->m_ddev_targp);
- 
--	/*
--	 * All metadata updates are logged, which means that we just have to
--	 * flush the log up to the latest LSN that touched the inode. If we have
--	 * concurrent fsync/fdatasync() calls, we need them to all block on the
--	 * log force before we clear the ili_fsync_fields field. This ensures
--	 * that we don't get a racing sync operation that does not wait for the
--	 * metadata to hit the journal before returning. If we race with
--	 * clearing the ili_fsync_fields, then all that will happen is the log
--	 * force will do nothing as the lsn will already be on disk. We can't
--	 * race with setting ili_fsync_fields because that is done under
--	 * XFS_ILOCK_EXCL, and that can't happen because we hold the lock shared
--	 * until after the ili_fsync_fields is cleared.
--	 */
--	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	if (xfs_ipincount(ip)) {
--		if (!datasync ||
--		    (iip->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
--			lsn = iip->ili_last_lsn;
--	}
--
--	if (lsn) {
--		error = xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, &log_flushed);
--		spin_lock(&iip->ili_lock);
--		iip->ili_fsync_fields = 0;
--		spin_unlock(&iip->ili_lock);
--	}
--	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+	error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
- 
  	/*
- 	 * If we only have a single device, and the log force about was
+ 	 * Cancel background eofb scanning so it cannot race with the final
+ 	 * log force+buftarg wait and deadlock the remount.
+@@ -1786,8 +1791,6 @@ xfs_fc_reconfigure(
+ 	if (error)
+ 		return error;
+ 
+-	sync_filesystem(mp->m_super);
+-
+ 	/* inode32 -> inode64 */
+ 	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
+ 	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
 -- 
 2.25.1
 
