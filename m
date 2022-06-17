@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E62BCCA47C
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 10:07:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4925FC43334
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jun 2022 10:07:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381568AbiFQKHf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1381608AbiFQKHf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 17 Jun 2022 06:07:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51470 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381643AbiFQKHU (ORCPT
+        with ESMTP id S1381574AbiFQKHU (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jun 2022 06:07:20 -0400
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B860269CEC;
-        Fri, 17 Jun 2022 03:06:56 -0700 (PDT)
-Received: by mail-wr1-x436.google.com with SMTP id x17so5098505wrg.6;
-        Fri, 17 Jun 2022 03:06:56 -0700 (PDT)
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADE1F6A011;
+        Fri, 17 Jun 2022 03:06:58 -0700 (PDT)
+Received: by mail-wr1-x42f.google.com with SMTP id a15so5118721wrh.2;
+        Fri, 17 Jun 2022 03:06:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=47jpAIOuXq9C8yduL/rogZSE3IT97eVSEXgeU3hQDGc=;
-        b=E8LEjur6pUGNeqET9KBTyDi2DDGKJwsVxRgcjPe+MV7DLr6TRNnDUKQjhYI4jlrSw2
-         4FNvYDWWiZWuNE5sliJEhKO3uQmyekI4foZh+7G2zJ4r6i0keI2utSFvMwClQXnBIRv/
-         XkRedZDDa8r9xbyYzpjd10+U+5BAwQE9FY9UOrmedNIEijJjhCoNPij/WiFY8bHLLzGA
-         G4TP5dNCd84d+YLNfMqyIFWpfEeoSbqvQCI+UG5Kh3Z00kisfVh0Mogj7qH7t8TpGBkM
-         aKyN8SXzj8UEW8lQI3G8ubHMWBlBqlCr4BAs7qOT3EG73HGRiVmyTISR3AIPflkc+28w
-         gS/g==
+        bh=loriEoiVPoDrwPGkS8Q5XLOnTWcA/2w8hcb95i2ZPaE=;
+        b=oqjAWdy8E9mBMlxIqQuip+44uzZRTrJPoz8xDEN/HE8QmYhSr73zFDJMjB/TVexTy7
+         5x1vpIELIHSsHuGZN+6VojK4fd/JLAELaVchUpzzvvWmm1P2gLR4DQkpjgr8PTcZfgVK
+         A6b2uT9KT6Vj0Fb2C0FsNpw+cNFK0Qn/QigS3kn8lDvxmL9r3JHTTZev75yyTIzs+EzM
+         u5u/wDHR8qLFnPf+UVpx603JjyBaDdioThvGPchLVkrjovWS3nk9XUpwLWQK2CIyecy4
+         /KsePWtJspWveevJOj+QHv9E5LbvwHKefKLPBCsvdPgLSpW6JeJDldtcAxJB+QBS423w
+         0UEA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=47jpAIOuXq9C8yduL/rogZSE3IT97eVSEXgeU3hQDGc=;
-        b=gLUmCQLlgABUlV7zkVmHMp0JKteTwf5gQ3hYioxer74xCqd2S6/FKMMeVMSHmwgGan
-         Ql+5k9nMpoCwfVBzfE50QG6tZy8Fnbqd56oE+wN9aKkvq57/1gUR0ulI/lLApxRexvYe
-         WL23SACgD1OuazVSO+Hq1hTuQa6k04CQO5dFaogVaZCF/PGQL0s5XzXNWWM0Bye1q8Jb
-         hP/5Nl6A35hLpiNBGaCsWJ0KXRodU1Uc0CLgbXA25y0pB4hDJuNZSeAInM0fjgyijgUb
-         V63k3Am5TBKtFrqsk5Fdpdn/aY/QIwzJ69l3r3iB6yTxLhVfJw7zPYeEtEKIRp0Nd/2W
-         uuLw==
-X-Gm-Message-State: AJIora+K0yjwoI3Ls1mcMDrfS6J/Mt/J/NG3/XOLZCTMHe0mHJEpAU39
-        ZLzK+8vlxJNjfH+LuMHpjWs=
-X-Google-Smtp-Source: AGRyM1upm3iDDnzGgTzFpwshxYvWBSHaWUDPJPc2blLKHU1q/2yuBwIf7bfTm8BA+PwflkL1RxRgRw==
-X-Received: by 2002:adf:eb4d:0:b0:218:45b6:8fdb with SMTP id u13-20020adfeb4d000000b0021845b68fdbmr8959402wrn.77.1655460415283;
-        Fri, 17 Jun 2022 03:06:55 -0700 (PDT)
+        bh=loriEoiVPoDrwPGkS8Q5XLOnTWcA/2w8hcb95i2ZPaE=;
+        b=dK+CCzl66+FupfJp70vysql4exV5I7kK0WXkGrpK+Lgm9TjWkeCAUqsgGgz9dEJw1e
+         TOah5u3FKqmUEeaunCBd+Sk0rPlXK/leFoq4jiWZ1Ypp+fJehWOANVq4bgNGsfjp6MsR
+         j7AUVf2WCQBjTy4c1qXsjhZT0Lu6Z5XyYdiMk7iGFxizsX5Wl/2cjDqxao8GTtBTwolF
+         +n9wm8/W37+43r3nqjLKPSxjPL5rFAg/aWu9n1yW7i7hK/YDIH6JXECFW8O33Og1b6KM
+         E41boyj4FYZ9libLr536AstJ5+roBQxM6TUa4ac4+eUUGv8GtTbOc+TQ8+4vmKzWMobp
+         AUWg==
+X-Gm-Message-State: AJIora8ttp3ysjvizmWCeJYjUhNfecKGyCXdPgMG5/85r0QkGt5QjbhZ
+        OQtuuaoYKPw6WOqnw6kfIo4=
+X-Google-Smtp-Source: AGRyM1ubRH7Q0YRz2AFsOMHjK2er0Q4X1+tqKqDrw1fcjgRMwfTKB6D3iVTKi44Vel9uTJ5hDj+5jg==
+X-Received: by 2002:a5d:6a0e:0:b0:213:1f7f:e1cc with SMTP id m14-20020a5d6a0e000000b002131f7fe1ccmr8661795wru.31.1655460417077;
+        Fri, 17 Jun 2022 03:06:57 -0700 (PDT)
 Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id m42-20020a05600c3b2a00b003973435c517sm5265534wms.0.2022.06.17.03.06.53
+        by smtp.gmail.com with ESMTPSA id m42-20020a05600c3b2a00b003973435c517sm5265534wms.0.2022.06.17.03.06.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jun 2022 03:06:54 -0700 (PDT)
+        Fri, 17 Jun 2022 03:06:56 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
@@ -55,10 +55,11 @@ Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
         Christoph Hellwig <hch@lst.de>,
         Christian Brauner <christian.brauner@ubuntu.com>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        Brian Foster <bfoster@redhat.com>,
         Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 5.10 CANDIDATE 05/11] xfs: check sb_meta_uuid for dabuf buffer recovery
-Date:   Fri, 17 Jun 2022 13:06:35 +0300
-Message-Id: <20220617100641.1653164-6-amir73il@gmail.com>
+Subject: [PATCH 5.10 CANDIDATE 06/11] xfs: refactor xfs_file_fsync
+Date:   Fri, 17 Jun 2022 13:06:36 +0300
+Message-Id: <20220617100641.1653164-7-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220617100641.1653164-1-amir73il@gmail.com>
 References: <20220617100641.1653164-1-amir73il@gmail.com>
@@ -68,83 +69,134 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Christoph Hellwig <hch@lst.de>
 
-commit 09654ed8a18cfd45027a67d6cbca45c9ea54feab upstream.
+commit f22c7f87777361f94aa17f746fbadfa499248dc8 upstream.
 
-Got a report that a repeated crash test of a container host would
-eventually fail with a log recovery error preventing the system from
-mounting the root filesystem. It manifested as a directory leaf node
-corruption on writeback like so:
+[backported for dependency]
 
- XFS (loop0): Mounting V5 Filesystem
- XFS (loop0): Starting recovery (logdev: internal)
- XFS (loop0): Metadata corruption detected at xfs_dir3_leaf_check_int+0x99/0xf0, xfs_dir3_leaf1 block 0x12faa158
- XFS (loop0): Unmount and run xfs_repair
- XFS (loop0): First 128 bytes of corrupted metadata buffer:
- 00000000: 00 00 00 00 00 00 00 00 3d f1 00 00 e1 9e d5 8b  ........=.......
- 00000010: 00 00 00 00 12 fa a1 58 00 00 00 29 00 00 1b cc  .......X...)....
- 00000020: 91 06 78 ff f7 7e 4a 7d 8d 53 86 f2 ac 47 a8 23  ..x..~J}.S...G.#
- 00000030: 00 00 00 00 17 e0 00 80 00 43 00 00 00 00 00 00  .........C......
- 00000040: 00 00 00 2e 00 00 00 08 00 00 17 2e 00 00 00 0a  ................
- 00000050: 02 35 79 83 00 00 00 30 04 d3 b4 80 00 00 01 50  .5y....0.......P
- 00000060: 08 40 95 7f 00 00 02 98 08 41 fe b7 00 00 02 d4  .@.......A......
- 00000070: 0d 62 ef a7 00 00 01 f2 14 50 21 41 00 00 00 0c  .b.......P!A....
- XFS (loop0): Corruption of in-memory data (0x8) detected at xfs_do_force_shutdown+0x1a/0x20 (fs/xfs/xfs_buf.c:1514).  Shutting down.
- XFS (loop0): Please unmount the filesystem and rectify the problem(s)
- XFS (loop0): log mount/recovery failed: error -117
- XFS (loop0): log mount failed
+Factor out the log syncing logic into two helpers to make the code easier
+to read and more maintainable.
 
-Tracing indicated that we were recovering changes from a transaction
-at LSN 0x29/0x1c16 into a buffer that had an LSN of 0x29/0x1d57.
-That is, log recovery was overwriting a buffer with newer changes on
-disk than was in the transaction. Tracing indicated that we were
-hitting the "recovery immediately" case in
-xfs_buf_log_recovery_lsn(), and hence it was ignoring the LSN in the
-buffer.
-
-The code was extracting the LSN correctly, then ignoring it because
-the UUID in the buffer did not match the superblock UUID. The
-problem arises because the UUID check uses the wrong UUID - it
-should be checking the sb_meta_uuid, not sb_uuid. This filesystem
-has sb_uuid != sb_meta_uuid (which is fine), and the buffer has the
-correct matching sb_meta_uuid in it, it's just the code checked it
-against the wrong superblock uuid.
-
-The is no corruption in the filesystem, and failing to recover the
-buffer due to a write verifier failure means the recovery bug did
-not propagate the corruption to disk. Hence there is no corruption
-before or after this bug has manifested, the impact is limited
-simply to an unmountable filesystem....
-
-This was missed back in 2015 during an audit of incorrect sb_uuid
-usage that resulted in commit fcfbe2c4ef42 ("xfs: log recovery needs
-to validate against sb_meta_uuid") that fixed the magic32 buffers to
-validate against sb_meta_uuid instead of sb_uuid. It missed the
-magicda buffers....
-
-Fixes: ce748eaa65f2 ("xfs: create new metadata UUID field and incompat flag")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/xfs_buf_item_recover.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_file.c | 81 +++++++++++++++++++++++++++++------------------
+ 1 file changed, 50 insertions(+), 31 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index d44e8b4a3391..1d649462d731 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -805,7 +805,7 @@ xlog_recover_get_buf_lsn(
- 	}
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5b0f93f73837..414d856e2e75 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -118,6 +118,54 @@ xfs_dir_fsync(
+ 	return xfs_log_force_inode(ip);
+ }
  
- 	if (lsn != (xfs_lsn_t)-1) {
--		if (!uuid_equal(&mp->m_sb.sb_uuid, uuid))
-+		if (!uuid_equal(&mp->m_sb.sb_meta_uuid, uuid))
- 			goto recover_immediately;
- 		return lsn;
- 	}
++static xfs_lsn_t
++xfs_fsync_lsn(
++	struct xfs_inode	*ip,
++	bool			datasync)
++{
++	if (!xfs_ipincount(ip))
++		return 0;
++	if (datasync && !(ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
++		return 0;
++	return ip->i_itemp->ili_last_lsn;
++}
++
++/*
++ * All metadata updates are logged, which means that we just have to flush the
++ * log up to the latest LSN that touched the inode.
++ *
++ * If we have concurrent fsync/fdatasync() calls, we need them to all block on
++ * the log force before we clear the ili_fsync_fields field. This ensures that
++ * we don't get a racing sync operation that does not wait for the metadata to
++ * hit the journal before returning.  If we race with clearing ili_fsync_fields,
++ * then all that will happen is the log force will do nothing as the lsn will
++ * already be on disk.  We can't race with setting ili_fsync_fields because that
++ * is done under XFS_ILOCK_EXCL, and that can't happen because we hold the lock
++ * shared until after the ili_fsync_fields is cleared.
++ */
++static  int
++xfs_fsync_flush_log(
++	struct xfs_inode	*ip,
++	bool			datasync,
++	int			*log_flushed)
++{
++	int			error = 0;
++	xfs_lsn_t		lsn;
++
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	lsn = xfs_fsync_lsn(ip, datasync);
++	if (lsn) {
++		error = xfs_log_force_lsn(ip->i_mount, lsn, XFS_LOG_SYNC,
++					  log_flushed);
++
++		spin_lock(&ip->i_itemp->ili_lock);
++		ip->i_itemp->ili_fsync_fields = 0;
++		spin_unlock(&ip->i_itemp->ili_lock);
++	}
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	return error;
++}
++
+ STATIC int
+ xfs_file_fsync(
+ 	struct file		*file,
+@@ -125,13 +173,10 @@ xfs_file_fsync(
+ 	loff_t			end,
+ 	int			datasync)
+ {
+-	struct inode		*inode = file->f_mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_inode_log_item *iip = ip->i_itemp;
++	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	int			error = 0;
+ 	int			log_flushed = 0;
+-	xfs_lsn_t		lsn = 0;
+ 
+ 	trace_xfs_file_fsync(ip);
+ 
+@@ -155,33 +200,7 @@ xfs_file_fsync(
+ 	else if (mp->m_logdev_targp != mp->m_ddev_targp)
+ 		xfs_blkdev_issue_flush(mp->m_ddev_targp);
+ 
+-	/*
+-	 * All metadata updates are logged, which means that we just have to
+-	 * flush the log up to the latest LSN that touched the inode. If we have
+-	 * concurrent fsync/fdatasync() calls, we need them to all block on the
+-	 * log force before we clear the ili_fsync_fields field. This ensures
+-	 * that we don't get a racing sync operation that does not wait for the
+-	 * metadata to hit the journal before returning. If we race with
+-	 * clearing the ili_fsync_fields, then all that will happen is the log
+-	 * force will do nothing as the lsn will already be on disk. We can't
+-	 * race with setting ili_fsync_fields because that is done under
+-	 * XFS_ILOCK_EXCL, and that can't happen because we hold the lock shared
+-	 * until after the ili_fsync_fields is cleared.
+-	 */
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	if (xfs_ipincount(ip)) {
+-		if (!datasync ||
+-		    (iip->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
+-			lsn = iip->ili_last_lsn;
+-	}
+-
+-	if (lsn) {
+-		error = xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, &log_flushed);
+-		spin_lock(&iip->ili_lock);
+-		iip->ili_fsync_fields = 0;
+-		spin_unlock(&iip->ili_lock);
+-	}
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+ 
+ 	/*
+ 	 * If we only have a single device, and the log force about was
 -- 
 2.25.1
 
