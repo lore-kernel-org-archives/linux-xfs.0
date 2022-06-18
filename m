@@ -2,217 +2,164 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E90CCA473
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jun 2022 08:38:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A525CCA480
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jun 2022 09:33:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231787AbiFRIip (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Jun 2022 04:38:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60134 "EHLO
+        id S231441AbiFRJdM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Jun 2022 05:33:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbiFRIio (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Jun 2022 04:38:44 -0400
-Received: from mail-vk1-xa36.google.com (mail-vk1-xa36.google.com [IPv6:2607:f8b0:4864:20::a36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ADEB2251B;
-        Sat, 18 Jun 2022 01:38:43 -0700 (PDT)
-Received: by mail-vk1-xa36.google.com with SMTP id m30so2957395vkf.11;
-        Sat, 18 Jun 2022 01:38:43 -0700 (PDT)
+        with ESMTP id S229996AbiFRJdL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Jun 2022 05:33:11 -0400
+Received: from mail-yw1-x112a.google.com (mail-yw1-x112a.google.com [IPv6:2607:f8b0:4864:20::112a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67835BE15;
+        Sat, 18 Jun 2022 02:33:10 -0700 (PDT)
+Received: by mail-yw1-x112a.google.com with SMTP id 00721157ae682-317741c86fdso59693597b3.2;
+        Sat, 18 Jun 2022 02:33:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=uY0TpH6fhXPpvM9WbmSUlK+90F2lBqCcQkVTKLAuqF8=;
-        b=DAoztmmFdBXZFL3yc0Hmfj7YDQBMJqpxMbcvvG+7J4Vsu3f7oCtkK2H/8QqoK91r5p
-         ZYIVPPC8JWQvBZZKtW0JCJiXKop5psLuykTOyOzWhJxVglKBienlXdMqnLYuTBV8QezG
-         lcUlT88q3BL4JtD3JWXECZUBsYa+e6ToLfD2TfosIqGduaw064bZz6CTCOwGaHCooZc8
-         MJZUZ/w7yzlRyaTrZG5eVWGOkxbOBdtzQlfD3te1CfcqH6hV14W8cQbA4VEcgdTO+I5u
-         Yg40EQCWEKI+wwJWVROZK5Cp/6Z+fIf+gfK+EdLCsrgxOOwY0OSHLmcoYW3GujSABViN
-         igaA==
+        bh=Z0T2DhVRfdza3u7Hv/gMF8uaCaWYLQxsRMrZYAVQe+E=;
+        b=hhOwVI2grUzcFZ0ZVRIzkXvpwrmX74i616R9TXr/QGGLafVdd6PqZPYq8cCpnbAguu
+         eobuXZNnjB/K9lF43LKAw5hwh39dVDNxoRIQslaCf2rNMQrrZZpirfugII2o4q9yOtZl
+         qmhJeIOfC58MR4YJg10Ph1hBVP9XOCirm4VEGWG+Bf4A/p7flbedOymFWXD8O7Gordti
+         c+XD/cLUBMrsaadj8++He3td3LVG+hgJ0zQ/LSEo8aYftTQPolWNol3hNhe7db6lAMpA
+         JDd8nfrVBcZ8VElsTPoFEclc4ta4nwZq4jL8bnfaUa4nuktELN+GCS6+9UA8RuMQ63dy
+         Sa3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=uY0TpH6fhXPpvM9WbmSUlK+90F2lBqCcQkVTKLAuqF8=;
-        b=SaFnzRpmLGSzcF59ichYiK5TcS4Nxjz2cEO+19Ms3AePefOZ24m0ZMSqteFJbuCCVS
-         YYV9+c1ZtjvEIFccIG4K/DUVwEUFnv0tDJF0iDI7xP6pQUP7JcKEuEDI/wXpur+i2745
-         fcOvXA4iEZW6hjldGW+SYJd1sQ3VXrRXGqxafI9Lxe/qTIJaTwRQGt09rJrY5XHyhTSR
-         FF7pLjELuRa2MuPTvQHdU9aRWcCvqwz7zfiIYvDkgz8IRlGtKHuoFXHMGkp5fmRfFWYj
-         oHoXesFl984nEZJWjeEeIROJGyd5QOU3u0Vg9FkWIODXwqknbGrlOfFBrCgd54A8fk/z
-         88cg==
-X-Gm-Message-State: AJIora/5dxjwaLexoONt3sCYHmXsMlanmpTScp6xfmb47yVptGtRHEjQ
-        M8YFLi6tPODnOB1umCuRoS7RmUk+z2Qz0sNczl0=
-X-Google-Smtp-Source: AGRyM1sWnR2nroXroTyTRQrujcDU4cOBvdAnbB8/E0FI42lW7c5wI8sG7+bWTg8Nkarc6LdYBeUgBVilbnv++SDezM0=
-X-Received: by 2002:a1f:e044:0:b0:36b:e8e4:176f with SMTP id
- x65-20020a1fe044000000b0036be8e4176fmr824111vkg.11.1655541521607; Sat, 18 Jun
- 2022 01:38:41 -0700 (PDT)
+        bh=Z0T2DhVRfdza3u7Hv/gMF8uaCaWYLQxsRMrZYAVQe+E=;
+        b=zvgmzM7aI+ehhNVfeoKUsDqlXiLFynynYn1SQzIgtw03nRsq13ZV1Dn6VUNJTIVtBc
+         EnurPNiSYU8bRzNL6qYieyPr3uXVCBQKznQjrwhzj7nikErgUEBJqBGVQjrqcIsJEDMB
+         zYUacG8wg6KGJtYNUxqPKhGuK+bY5uh2D6pbbQ/JOCHku6gyV3bxtCpdWkEDuqcC5aGM
+         exeVKNnqSwtro1LgypY34zZE4xikYEWhIShz00ZEl7rOXDjnTKwRur2HpEwWYQHFvf/l
+         5N6nFiP5+EXU9tTxr9FYr2/3RRAzJHJfPm+EeqX4NuJT0rxMxTLVXMSmGB85I42boD/V
+         S5uA==
+X-Gm-Message-State: AJIora/40xjNpfSfL55NSpML5jflJEL5OUXPNN4L+OcjWq+S3Z8qh4NT
+        xlRaECBCMPe9ww8KYqQcxkYtKQLuDFnXep+pDSY=
+X-Google-Smtp-Source: AGRyM1vn2cH6zGfArfaosFc+y9vfluuDeE8YyIEY6QF6n7KxHF4JLzJuPADGF0ikBubxdlhb5eiyviROp85UPabBXiQ=
+X-Received: by 2002:a81:7c42:0:b0:317:7789:85aa with SMTP id
+ x63-20020a817c42000000b00317778985aamr12095755ywc.93.1655544789470; Sat, 18
+ Jun 2022 02:33:09 -0700 (PDT)
 MIME-Version: 1.0
-References: <20190404165737.30889-1-amir73il@gmail.com> <20190404211730.GD26298@dastard>
- <CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com>
- <20190407232728.GF26298@dastard> <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
- <20190408141114.GC15023@quack2.suse.cz> <CAOQ4uxhxgYASST1k-UaqfbLL9ERquHaKL2jtydB2+iF9aT8SRQ@mail.gmail.com>
- <20190409082605.GA8107@quack2.suse.cz> <CAOQ4uxgu4uKJp5t+RoumMneR6bw_k0CRhGhU-SLAky4VHSg9MQ@mail.gmail.com>
- <20220617151135.yc6vytge6hjabsuz@quack3>
-In-Reply-To: <20220617151135.yc6vytge6hjabsuz@quack3>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sat, 18 Jun 2022 11:38:30 +0300
-Message-ID: <CAOQ4uxjvx33KRSm-HX2AjL=aB5yO=FeWokZ1usDKW7+R4Ednhg@mail.gmail.com>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw workload
-To:     Jan Kara <jack@suse.cz>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+References: <20220531200041.24904-1-alex.sierra@amd.com> <20220531200041.24904-2-alex.sierra@amd.com>
+ <3ac89358-2ce0-7d0d-8b9c-8b0e5cc48945@redhat.com> <02ed2cb7-3ad3-8ffc-6032-04ae1853e234@amd.com>
+In-Reply-To: <02ed2cb7-3ad3-8ffc-6032-04ae1853e234@amd.com>
+From:   Oded Gabbay <oded.gabbay@gmail.com>
+Date:   Sat, 18 Jun 2022 12:32:42 +0300
+Message-ID: <CAFCwf11z5Q+2FPS1yPi6EwQuRqoJg_dLB-rYgtVwP-zQEdqjQQ@mail.gmail.com>
+Subject: Re: [PATCH v5 01/13] mm: add zone device coherent type memory support
+To:     "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
+Cc:     David Hildenbrand <david@redhat.com>,
+        Jason Gunthorpe <jgg@nvidia.com>, rcampbell@nvidia.com,
         Matthew Wilcox <willy@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>, apopple@nvidia.com,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        linux-xfs@vger.kernel.org, linux-mm <linux-mm@kvack.org>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Maling list - DRI developers 
+        <dri-devel@lists.freedesktop.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 17, 2022 at 6:11 PM Jan Kara <jack@suse.cz> wrote:
+On Fri, Jun 17, 2022 at 8:20 PM Sierra Guiza, Alejandro (Alex)
+<alex.sierra@amd.com> wrote:
 >
-> On Fri 17-06-22 17:48:08, Amir Goldstein wrote:
-> > On Tue, Apr 9, 2019 at 11:26 AM Jan Kara <jack@suse.cz> wrote:
-> > >
-> > > On Mon 08-04-19 20:41:09, Amir Goldstein wrote:
-> > > > On Mon, Apr 8, 2019 at 5:11 PM Jan Kara <jack@suse.cz> wrote:
-> > > > >
-> > > > > On Mon 08-04-19 12:02:34, Amir Goldstein wrote:
-> > > > > > On Mon, Apr 8, 2019 at 2:27 AM Dave Chinner <david@fromorbit.com> wrote:
-> > > > > > >
-> > > > > > > On Fri, Apr 05, 2019 at 05:02:33PM +0300, Amir Goldstein wrote:
-> > > > > > > > On Fri, Apr 5, 2019 at 12:17 AM Dave Chinner <david@fromorbit.com> wrote:
-> > > > > > > > >
-> > > > > > > > > On Thu, Apr 04, 2019 at 07:57:37PM +0300, Amir Goldstein wrote:
-> > > > > > > > > > This patch improves performance of mixed random rw workload
-> > > > > > > > > > on xfs without relaxing the atomic buffered read/write guaranty
-> > > > > > > > > > that xfs has always provided.
-> > > > > > > > > >
-> > > > > > > > > > We achieve that by calling generic_file_read_iter() twice.
-> > > > > > > > > > Once with a discard iterator to warm up page cache before taking
-> > > > > > > > > > the shared ilock and once again under shared ilock.
-> > > > > > > > >
-> > > > > > > > > This will race with thing like truncate, hole punching, etc that
-> > > > > > > > > serialise IO and invalidate the page cache for data integrity
-> > > > > > > > > reasons under the IOLOCK. These rely on there being no IO to the
-> > > > > > > > > inode in progress at all to work correctly, which this patch
-> > > > > > > > > violates. IOWs, while this is fast, it is not safe and so not a
-> > > > > > > > > viable approach to solving the problem.
-> > > > > > > > >
-> > > > > > > >
-> > > > > > > > This statement leaves me wondering, if ext4 does not takes
-> > > > > > > > i_rwsem on generic_file_read_iter(), how does ext4 (or any other
-> > > > > > > > fs for that matter) guaranty buffered read synchronization with
-> > > > > > > > truncate, hole punching etc?
-> > > > > > > > The answer in ext4 case is i_mmap_sem, which is read locked
-> > > > > > > > in the page fault handler.
-> > > > > > >
-> > > > > > > Nope, the  i_mmap_sem is for serialisation of /page faults/ against
-> > > > > > > truncate, holepunching, etc. Completely irrelevant to the read()
-> > > > > > > path.
-> > > > > > >
-> > > > > >
-> > > > > > I'm at lost here. Why are page faults completely irrelevant to read()
-> > > > > > path? Aren't full pages supposed to be faulted in on read() after
-> > > > > > truncate_pagecache_range()?
-> > > > >
-> > > > > During read(2), pages are not "faulted in". Just look at
-> > > > > what generic_file_buffered_read() does. It uses completely separate code to
-> > > > > add page to page cache, trigger readahead, and possibly call ->readpage() to
-> > > > > fill the page with data. "fault" path (handled by filemap_fault()) applies
-> > > > > only to accesses from userspace to mmaps.
-> > > > >
-> > > >
-> > > > Oh! thanks for fixing my blind spot.
-> > > > So if you agree with Dave that ext4, and who knows what other fs,
-> > > > are vulnerable to populating page cache with stale "uptodate" data,
-> > >
-> > > Not that many filesystems support punching holes but you're right.
-> > >
-> > > > then it seems to me that also xfs is vulnerable via readahead(2) and
-> > > > posix_fadvise().
-> > >
-> > > Yes, this is correct AFAICT.
-> > >
-> > > > Mind you, I recently added an fadvise f_op, so it could be used by
-> > > > xfs to synchronize with IOLOCK.
-> > >
-> > > And yes, this should work.
-> > >
-> > > > Perhaps a better solution would be for truncate_pagecache_range()
-> > > > to leave zeroed or Unwritten (i.e. lazy zeroed by read) pages in page
-> > > > cache. When we have shared pages for files, these pages could be
-> > > > deduped.
-> > >
-> > > No, I wouldn't really mess with sharing pages due to this. It would be hard
-> > > to make that scale resonably and would be rather complex. We really need a
-> > > proper and reasonably simple synchronization mechanism between operations
-> > > removing blocks from inode and operations filling in page cache of the
-> > > inode. Page lock was supposed to provide this but doesn't quite work
-> > > because hole punching first remove pagecache pages and then go removing all
-> > > blocks.
-> > >
-> > > So I agree with Dave that going for range lock is really the cleanest way
-> > > forward here without causing big regressions for mixed rw workloads. I'm
-> > > just thinking how to best do that without introducing lot of boilerplate
-> > > code into each filesystem.
+>
+> On 6/17/2022 4:40 AM, David Hildenbrand wrote:
+> > On 31.05.22 22:00, Alex Sierra wrote:
+> >> Device memory that is cache coherent from device and CPU point of view.
+> >> This is used on platforms that have an advanced system bus (like CAPI
+> >> or CXL). Any page of a process can be migrated to such memory. However,
+> >> no one should be allowed to pin such memory so that it can always be
+> >> evicted.
+> >>
+> >> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+> >> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
+> >> Reviewed-by: Alistair Popple <apopple@nvidia.com>
+> >> [hch: rebased ontop of the refcount changes,
+> >>        removed is_dev_private_or_coherent_page]
+> >> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> >> ---
+> >>   include/linux/memremap.h | 19 +++++++++++++++++++
+> >>   mm/memcontrol.c          |  7 ++++---
+> >>   mm/memory-failure.c      |  8 ++++++--
+> >>   mm/memremap.c            | 10 ++++++++++
+> >>   mm/migrate_device.c      | 16 +++++++---------
+> >>   mm/rmap.c                |  5 +++--
+> >>   6 files changed, 49 insertions(+), 16 deletions(-)
+> >>
+> >> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+> >> index 8af304f6b504..9f752ebed613 100644
+> >> --- a/include/linux/memremap.h
+> >> +++ b/include/linux/memremap.h
+> >> @@ -41,6 +41,13 @@ struct vmem_altmap {
+> >>    * A more complete discussion of unaddressable memory may be found in
+> >>    * include/linux/hmm.h and Documentation/vm/hmm.rst.
+> >>    *
+> >> + * MEMORY_DEVICE_COHERENT:
+> >> + * Device memory that is cache coherent from device and CPU point of view. This
+> >> + * is used on platforms that have an advanced system bus (like CAPI or CXL). A
+> >> + * driver can hotplug the device memory using ZONE_DEVICE and with that memory
+> >> + * type. Any page of a process can be migrated to such memory. However no one
+> > Any page might not be right, I'm pretty sure. ... just thinking about special pages
+> > like vdso, shared zeropage, ... pinned pages ...
+>
+> Hi David,
+>
+> Yes, I think you're right. This type does not cover all special pages.
+> I need to correct that on the cover letter.
+> Pinned pages are allowed as long as they're not long term pinned.
+>
+> Regards,
+> Alex Sierra
+
+What if I want to hotplug this device's coherent memory, but I do
+*not* want the OS
+to migrate any page to it ?
+I want to fully-control what resides on this memory, as I can consider
+this memory
+"expensive". i.e. I don't have a lot of it, I want to use it for
+specific purposes and
+I don't want the OS to start using it when there is some memory pressure in
+the system.
+
+Oded
+
+>
 > >
-> > Hi Jan, Dave,
+> >> + * should be allowed to pin such memory so that it can always be evicted.
+> >> + *
+> >>    * MEMORY_DEVICE_FS_DAX:
+> >>    * Host memory that has similar access semantics as System RAM i.e. DMA
+> >>    * coherent and supports page pinning. In support of coordinating page
+> >> @@ -61,6 +68,7 @@ struct vmem_altmap {
+> >>   enum memory_type {
+> >>      /* 0 is reserved to catch uninitialized type fields */
+> >>      MEMORY_DEVICE_PRIVATE = 1,
+> >> +    MEMORY_DEVICE_COHERENT,
+> >>      MEMORY_DEVICE_FS_DAX,
+> >>      MEMORY_DEVICE_GENERIC,
+> >>      MEMORY_DEVICE_PCI_P2PDMA,
+> >> @@ -143,6 +151,17 @@ static inline bool folio_is_device_private(const struct folio *folio)
+> > In general, this LGTM, and it should be correct with PageAnonExclusive I think.
 > >
-> > Trying to circle back to this after 3 years!
-> > Seeing that there is no progress with range locks and
-> > that the mixed rw workloads performance issue still very much exists.
 > >
-> > Is the situation now different than 3 years ago with invalidate_lock?
+> > However, where exactly is pinning forbidden?
 >
-> Yes, I've implemented invalidate_lock exactly to fix the issues you've
-> pointed out without regressing the mixed rw workloads (because
-> invalidate_lock is taken in shared mode only for reads and usually not at
-> all for writes).
+> Long-term pinning is forbidden since it would interfere with the device
+> memory manager owning the
+> device-coherent pages (e.g. evictions in TTM). However, normal pinning
+> is allowed on this device type.
 >
-> > Would my approach of pre-warm page cache before taking IOLOCK
-> > be safe if page cache is pre-warmed with invalidate_lock held?
+> Regards,
+> Alex Sierra
 >
-> Why would it be needed? But yes, with invalidate_lock you could presumably
-> make that idea safe...
-
-To remind you, the context in which I pointed you to the punch hole race issue
-in "other file systems" was a discussion about trying to relax the
-"atomic write"
-POSIX semantics [1] of xfs.
-
-There was a lot of discussions around range locks and changing the fairness
-of rwsem readers and writer, but none of this changes the fact that as long as
-the lock is file wide (and it does not look like that is going to
-change in the near
-future), it is better for lock contention to perform the serialization
-on page cache
-read/write and not on disk read/write.
-
-Therefore, *if* it is acceptable to pre-warn page cache for buffered read
-under invalidate_lock, that is a simple way to bring the xfs performance with
-random rw mix workload on par with ext4 performance without losing the
-atomic write POSIX semantics. So everyone can be happy?
-
-In addition to Dave's concerns about stale page cache races with hole punch,
-I found in the original discussion these concern from Darrick:
-
-> Reads and writes are not the only thing xfs uses i_rwsem to synchronise.
-> Reflink remap uses it to make sure everything's flushed to disk and that
-> page cache contents remain clean while the remap is ongoing. I'm pretty
-> sure pnfs uses it for similar reasons when granting and committing write
-> leases.
-
-To reiterate, pNFS leases are not the common case. To address this issue,
-I intend to opt-out of pre-warm optimization when pNFS leases are present,
-either globally, or per file, whatever xfs developers tell me to do.
-
-From my understanding of the code, xfs_reflink_remap_prep() takes care
-of taking invalidate_lock(s), so populating page cache under invalidate_lock
-should be safe also w.r.t reflink/dedupe.
-
-Darrick, am I missing anything?
-
-Thanks,
-Amir.
-
-[1] https://lore.kernel.org/all/CAOQ4uxgSc7hK1=GuUajzG1Z+ks6gzFFX+EtuBMULOk0s85zi3A@mail.gmail.com/
-[2] https://lore.kernel.org/linux-xfs/20190325154731.GT1183@magnolia/
+> >
