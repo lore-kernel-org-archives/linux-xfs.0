@@ -2,164 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A525CCA480
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jun 2022 09:33:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C62BC43334
+	for <linux-xfs@archiver.kernel.org>; Sun, 19 Jun 2022 04:14:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231441AbiFRJdM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Jun 2022 05:33:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37456 "EHLO
+        id S233150AbiFSEO2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 19 Jun 2022 00:14:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229996AbiFRJdL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Jun 2022 05:33:11 -0400
-Received: from mail-yw1-x112a.google.com (mail-yw1-x112a.google.com [IPv6:2607:f8b0:4864:20::112a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67835BE15;
-        Sat, 18 Jun 2022 02:33:10 -0700 (PDT)
-Received: by mail-yw1-x112a.google.com with SMTP id 00721157ae682-317741c86fdso59693597b3.2;
-        Sat, 18 Jun 2022 02:33:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Z0T2DhVRfdza3u7Hv/gMF8uaCaWYLQxsRMrZYAVQe+E=;
-        b=hhOwVI2grUzcFZ0ZVRIzkXvpwrmX74i616R9TXr/QGGLafVdd6PqZPYq8cCpnbAguu
-         eobuXZNnjB/K9lF43LKAw5hwh39dVDNxoRIQslaCf2rNMQrrZZpirfugII2o4q9yOtZl
-         qmhJeIOfC58MR4YJg10Ph1hBVP9XOCirm4VEGWG+Bf4A/p7flbedOymFWXD8O7Gordti
-         c+XD/cLUBMrsaadj8++He3td3LVG+hgJ0zQ/LSEo8aYftTQPolWNol3hNhe7db6lAMpA
-         JDd8nfrVBcZ8VElsTPoFEclc4ta4nwZq4jL8bnfaUa4nuktELN+GCS6+9UA8RuMQ63dy
-         Sa3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Z0T2DhVRfdza3u7Hv/gMF8uaCaWYLQxsRMrZYAVQe+E=;
-        b=zvgmzM7aI+ehhNVfeoKUsDqlXiLFynynYn1SQzIgtw03nRsq13ZV1Dn6VUNJTIVtBc
-         EnurPNiSYU8bRzNL6qYieyPr3uXVCBQKznQjrwhzj7nikErgUEBJqBGVQjrqcIsJEDMB
-         zYUacG8wg6KGJtYNUxqPKhGuK+bY5uh2D6pbbQ/JOCHku6gyV3bxtCpdWkEDuqcC5aGM
-         exeVKNnqSwtro1LgypY34zZE4xikYEWhIShz00ZEl7rOXDjnTKwRur2HpEwWYQHFvf/l
-         5N6nFiP5+EXU9tTxr9FYr2/3RRAzJHJfPm+EeqX4NuJT0rxMxTLVXMSmGB85I42boD/V
-         S5uA==
-X-Gm-Message-State: AJIora/40xjNpfSfL55NSpML5jflJEL5OUXPNN4L+OcjWq+S3Z8qh4NT
-        xlRaECBCMPe9ww8KYqQcxkYtKQLuDFnXep+pDSY=
-X-Google-Smtp-Source: AGRyM1vn2cH6zGfArfaosFc+y9vfluuDeE8YyIEY6QF6n7KxHF4JLzJuPADGF0ikBubxdlhb5eiyviROp85UPabBXiQ=
-X-Received: by 2002:a81:7c42:0:b0:317:7789:85aa with SMTP id
- x63-20020a817c42000000b00317778985aamr12095755ywc.93.1655544789470; Sat, 18
- Jun 2022 02:33:09 -0700 (PDT)
+        with ESMTP id S229639AbiFSEOZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 19 Jun 2022 00:14:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 136D064EE;
+        Sat, 18 Jun 2022 21:14:25 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 786EB60F54;
+        Sun, 19 Jun 2022 04:14:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBE5FC34114;
+        Sun, 19 Jun 2022 04:14:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655612061;
+        bh=8swXHtNtUIz24MU/iY0uao3YyLZF/bZ9wAlFbPV4RuM=;
+        h=Date:From:To:Cc:Subject:From;
+        b=m4+JP5b57zGUQMLnlvBtWuCVqRlR32plZm9J5zxFcEJizx2m/Lk7UyruibZ71bVqR
+         hhez7SE55eiUt8vpqfnh92gw81Zfb31HjY9FiuuSeS21lyhNz6JRR1t10h1MwGUMJC
+         cr3J+1IklelyDm3fxXj6r7vWPDul292Lq82JSumvi0G8VolF4Dl6l8f+kkaEKnpEK4
+         S8L6/pHzdayligFG1NcfZXz9NxNqRCe+VTmnag3zXm8MlR6IaWYcNdG7SKRa/4ycap
+         coBO6v/Ml1dDCzm3xHBeH3X84W2zanc+gqTXnbHPNzb2LBuV4ai3AcBOeILwJ5QMh0
+         aOdSmnj6K9A9w==
+Date:   Sat, 18 Jun 2022 21:14:21 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de, fstests <fstests@vger.kernel.org>
+Subject: [GIT PULL] xfs: bug fixes for 5.19-rc3
+Message-ID: <Yq6inbC6Y6YT0uGJ@magnolia>
 MIME-Version: 1.0
-References: <20220531200041.24904-1-alex.sierra@amd.com> <20220531200041.24904-2-alex.sierra@amd.com>
- <3ac89358-2ce0-7d0d-8b9c-8b0e5cc48945@redhat.com> <02ed2cb7-3ad3-8ffc-6032-04ae1853e234@amd.com>
-In-Reply-To: <02ed2cb7-3ad3-8ffc-6032-04ae1853e234@amd.com>
-From:   Oded Gabbay <oded.gabbay@gmail.com>
-Date:   Sat, 18 Jun 2022 12:32:42 +0300
-Message-ID: <CAFCwf11z5Q+2FPS1yPi6EwQuRqoJg_dLB-rYgtVwP-zQEdqjQQ@mail.gmail.com>
-Subject: Re: [PATCH v5 01/13] mm: add zone device coherent type memory support
-To:     "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
-Cc:     David Hildenbrand <david@redhat.com>,
-        Jason Gunthorpe <jgg@nvidia.com>, rcampbell@nvidia.com,
-        Matthew Wilcox <willy@infradead.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>, apopple@nvidia.com,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        linux-xfs@vger.kernel.org, linux-mm <linux-mm@kvack.org>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Maling list - DRI developers 
-        <dri-devel@lists.freedesktop.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 17, 2022 at 8:20 PM Sierra Guiza, Alejandro (Alex)
-<alex.sierra@amd.com> wrote:
->
->
-> On 6/17/2022 4:40 AM, David Hildenbrand wrote:
-> > On 31.05.22 22:00, Alex Sierra wrote:
-> >> Device memory that is cache coherent from device and CPU point of view.
-> >> This is used on platforms that have an advanced system bus (like CAPI
-> >> or CXL). Any page of a process can be migrated to such memory. However,
-> >> no one should be allowed to pin such memory so that it can always be
-> >> evicted.
-> >>
-> >> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-> >> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
-> >> Reviewed-by: Alistair Popple <apopple@nvidia.com>
-> >> [hch: rebased ontop of the refcount changes,
-> >>        removed is_dev_private_or_coherent_page]
-> >> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> >> ---
-> >>   include/linux/memremap.h | 19 +++++++++++++++++++
-> >>   mm/memcontrol.c          |  7 ++++---
-> >>   mm/memory-failure.c      |  8 ++++++--
-> >>   mm/memremap.c            | 10 ++++++++++
-> >>   mm/migrate_device.c      | 16 +++++++---------
-> >>   mm/rmap.c                |  5 +++--
-> >>   6 files changed, 49 insertions(+), 16 deletions(-)
-> >>
-> >> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-> >> index 8af304f6b504..9f752ebed613 100644
-> >> --- a/include/linux/memremap.h
-> >> +++ b/include/linux/memremap.h
-> >> @@ -41,6 +41,13 @@ struct vmem_altmap {
-> >>    * A more complete discussion of unaddressable memory may be found in
-> >>    * include/linux/hmm.h and Documentation/vm/hmm.rst.
-> >>    *
-> >> + * MEMORY_DEVICE_COHERENT:
-> >> + * Device memory that is cache coherent from device and CPU point of view. This
-> >> + * is used on platforms that have an advanced system bus (like CAPI or CXL). A
-> >> + * driver can hotplug the device memory using ZONE_DEVICE and with that memory
-> >> + * type. Any page of a process can be migrated to such memory. However no one
-> > Any page might not be right, I'm pretty sure. ... just thinking about special pages
-> > like vdso, shared zeropage, ... pinned pages ...
->
-> Hi David,
->
-> Yes, I think you're right. This type does not cover all special pages.
-> I need to correct that on the cover letter.
-> Pinned pages are allowed as long as they're not long term pinned.
->
-> Regards,
-> Alex Sierra
+Hi Linus,
 
-What if I want to hotplug this device's coherent memory, but I do
-*not* want the OS
-to migrate any page to it ?
-I want to fully-control what resides on this memory, as I can consider
-this memory
-"expensive". i.e. I don't have a lot of it, I want to use it for
-specific purposes and
-I don't want the OS to start using it when there is some memory pressure in
-the system.
+Please pull this branch containing bug fixes for XFS for 5.19-rc3.
+There's not a whole lot this time around (I'm still on vacation) but
+here are some important fixes for new features merged in -rc1.
 
-Oded
+As usual, I did a test-merge with upstream master as of a few minutes
+ago, and it completed flawlessly.  Please let me know if you encounter
+any problems.
 
->
-> >
-> >> + * should be allowed to pin such memory so that it can always be evicted.
-> >> + *
-> >>    * MEMORY_DEVICE_FS_DAX:
-> >>    * Host memory that has similar access semantics as System RAM i.e. DMA
-> >>    * coherent and supports page pinning. In support of coordinating page
-> >> @@ -61,6 +68,7 @@ struct vmem_altmap {
-> >>   enum memory_type {
-> >>      /* 0 is reserved to catch uninitialized type fields */
-> >>      MEMORY_DEVICE_PRIVATE = 1,
-> >> +    MEMORY_DEVICE_COHERENT,
-> >>      MEMORY_DEVICE_FS_DAX,
-> >>      MEMORY_DEVICE_GENERIC,
-> >>      MEMORY_DEVICE_PCI_P2PDMA,
-> >> @@ -143,6 +151,17 @@ static inline bool folio_is_device_private(const struct folio *folio)
-> > In general, this LGTM, and it should be correct with PageAnonExclusive I think.
-> >
-> >
-> > However, where exactly is pinning forbidden?
->
-> Long-term pinning is forbidden since it would interfere with the device
-> memory manager owning the
-> device-coherent pages (e.g. evictions in TTM). However, normal pinning
-> is allowed on this device type.
->
-> Regards,
-> Alex Sierra
->
-> >
+--D
+
+The following changes since commit b13baccc3850ca8b8cccbf8ed9912dbaa0fdf7f3:
+
+  Linux 5.19-rc2 (2022-06-12 16:11:37 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.19-fixes-1
+
+for you to fetch changes up to e89ab76d7e2564c65986add3d634cc5cf5bacf14:
+
+  xfs: preserve DIFLAG2_NREXT64 when setting other inode attributes (2022-06-15 23:13:33 -0700)
+
+----------------------------------------------------------------
+Fixes for 5.19-rc3:
+ - Fix a bug where inode flag changes would accidentally drop nrext64.
+ - Fix a race condition when toggling LARP mode.
+
+----------------------------------------------------------------
+Darrick J. Wong (3):
+      xfs: fix TOCTOU race involving the new logged xattrs control knob
+      xfs: fix variable state usage
+      xfs: preserve DIFLAG2_NREXT64 when setting other inode attributes
+
+ fs/xfs/libxfs/xfs_attr.c      |  9 +++++----
+ fs/xfs/libxfs/xfs_attr.h      | 12 +-----------
+ fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
+ fs/xfs/libxfs/xfs_da_btree.h  |  4 +++-
+ fs/xfs/xfs_attr_item.c        | 15 +++++++++------
+ fs/xfs/xfs_ioctl.c            |  3 ++-
+ fs/xfs/xfs_xattr.c            | 17 ++++++++++++++++-
+ 7 files changed, 37 insertions(+), 25 deletions(-)
