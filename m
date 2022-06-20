@@ -2,284 +2,212 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AA30CCA479
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jun 2022 08:50:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7509BC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jun 2022 09:11:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238691AbiFTIuJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Jun 2022 04:50:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33020 "EHLO
+        id S239624AbiFTJLk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Jun 2022 05:11:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240012AbiFTIuI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jun 2022 04:50:08 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2043.outbound.protection.outlook.com [40.107.237.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7971912D17;
-        Mon, 20 Jun 2022 01:50:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dNltK0/Tnde4A9wCe56AJXe+nUj7VeFlgKc0agysGYvc5s4rU6zJ1Drncx2QgutaONX4LEKD4Qh/470fBdXn6pSUDhrcSeDAT5k39w7kgHngz9pakQcbaCGwMv5RtXOtih2JruUeimpBX7+d/Xbg18xsI+CepR0PvVjkZ6thS1mvCl3TOVE0zknfQJmUlDTSeBu4gLYOOuAFXBGGUNVQfP5RZVLmeT27qcc0vPSdFOuYExqA2p8dJZKkuqApdOgxG9HgdzTqxW9or3HyFKjjv5LZWxg6KRJrv45NpLa50uI3y0CL9xPdn8kUk8yxwW+0KIjOXitbNl4Ew0ecpcEBrg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=81WqArI7pQXTZHPxWHpQ8Boejp6LJGYiQEHbQajNcdA=;
- b=Q6ykvYRGvyhut/2JpLsPZEbsDL3zDaSOlC7IlRJyXZK2+el10uHhEHDqTcL8HHzaSEkeV3Icgi7z8h4c5AR3vpcbmAy0wt1+QLovEMMN9jBwXjKLZfaIoVmrHnqw1Nh1p31Vq/cHiPYHCxPdNdkOK32WRh9vGCkDaCwLWCQmpz0Kmq82jf3J1yBCTa5II8gp4DZwBEbK7uOeBw77pLnhSrAGsWDul9JBQhOwTgDw/A6hFxqzQgUcefmcfWuQ3YvKfmbOM7OSeSiQq4olWcX5A+9GOu95EXFarPVdWI6VI5lBTq0PelOXDnyXuR79b6tNcIEnLiLwM50b+ckeKSXA7g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=81WqArI7pQXTZHPxWHpQ8Boejp6LJGYiQEHbQajNcdA=;
- b=PCd6iDcHBp4m+IPBxc1FLcQrY323AHPOwwQqT6YUBMX1wIYKNYGY0+yp9RIiaNyeGMRnHDLwJ6A22rmU+CELOd02/DGqG35PqCPLVH1tC2hGmTU+CE9ni1tkxedMcR1Q7A1eCpsWpb8LBNDqioJXcvDylbkXi7WR2wnPKPKo9Wk1Ltdj3GQjiMQTQoI9DbJ6D+qLUCYjoRI0QZ/rreE/c4f36lNhE42GfCul8bhEXONBUiKs9tAzX8ZS5bLWPrwcNr5ni44L5XdIqg3vj7YW+OpoWFxnV5SnC2VghNe9+FBNgekIGJK5fCT6YtzxKLB0GAR5O5qYJXPDOO3JGQuJEA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
- by DM6PR12MB2922.namprd12.prod.outlook.com (2603:10b6:5:18d::25) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5353.16; Mon, 20 Jun
- 2022 08:50:04 +0000
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::59cf:d090:5d26:6e7b]) by BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::59cf:d090:5d26:6e7b%5]) with mapi id 15.20.5353.022; Mon, 20 Jun 2022
- 08:50:03 +0000
-References: <20220531200041.24904-1-alex.sierra@amd.com>
- <20220531200041.24904-2-alex.sierra@amd.com>
- <3ac89358-2ce0-7d0d-8b9c-8b0e5cc48945@redhat.com>
- <02ed2cb7-3ad3-8ffc-6032-04ae1853e234@amd.com>
- <CAFCwf11z5Q+2FPS1yPi6EwQuRqoJg_dLB-rYgtVwP-zQEdqjQQ@mail.gmail.com>
- <87bkuo898d.fsf@nvdebian.thelocal>
- <CAFCwf11Lru4rHJ93gkCTMqfsWZ8Hcug4z=_t7B=G07bo7zsaFw@mail.gmail.com>
-User-agent: mu4e 1.6.9; emacs 27.1
-From:   Alistair Popple <apopple@nvidia.com>
-To:     Oded Gabbay <oded.gabbay@gmail.com>
-Cc:     "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>,
-        David Hildenbrand <david@redhat.com>,
-        Jason Gunthorpe <jgg@nvidia.com>, rcampbell@nvidia.com,
+        with ESMTP id S239136AbiFTJLj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jun 2022 05:11:39 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4624AA184;
+        Mon, 20 Jun 2022 02:11:38 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 02C6521B14;
+        Mon, 20 Jun 2022 09:11:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1655716297; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/Y9UgQIl99q9YK+2dT9Hm+SOlfH60jeFZMfuMSJxfGo=;
+        b=JzfFMU60BubfiuXbIA1ecj8A5GpVSS4ylBNdXrZCXt5GHgTdoqrV65qSJsKBv9bhRXHB2R
+        rQx8X2s4kCvywd0yU05I/mRmoPgS20R/oonOZ/NkyPtn4wD9P9tCc4X9eSKy82bLQ1jMuX
+        kCaRL0DcwGpq4j1bCK93EEBhVtvgODk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1655716297;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/Y9UgQIl99q9YK+2dT9Hm+SOlfH60jeFZMfuMSJxfGo=;
+        b=PSvvKxlz3O1JNlerRKieVMdOr2QCNJweQkGbn/QDN6j4Qgle95fx2JBnJL4erfMsnwuSOh
+        YXBXsCKV3rJ2CUCA==
+Received: from quack3.suse.cz (unknown [10.100.224.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id CEF632C141;
+        Mon, 20 Jun 2022 09:11:36 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 19DB8A0636; Mon, 20 Jun 2022 11:11:36 +0200 (CEST)
+Date:   Mon, 20 Jun 2022 11:11:36 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Jan Kara <jack@suse.cz>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
         Matthew Wilcox <willy@infradead.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        linux-xfs@vger.kernel.org, linux-mm <linux-mm@kvack.org>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Maling list - DRI developers 
-        <dri-devel@lists.freedesktop.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 01/13] mm: add zone device coherent type memory support
-Date:   Mon, 20 Jun 2022 18:13:26 +1000
-In-reply-to: <CAFCwf11Lru4rHJ93gkCTMqfsWZ8Hcug4z=_t7B=G07bo7zsaFw@mail.gmail.com>
-Message-ID: <877d5b90sp.fsf@nvdebian.thelocal>
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR05CA0069.namprd05.prod.outlook.com
- (2603:10b6:a03:332::14) To BYAPR12MB3176.namprd12.prod.outlook.com
- (2603:10b6:a03:134::26)
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
+ workload
+Message-ID: <20220620091136.4uosazpwkmt65a5d@quack3.lan>
+References: <20190404211730.GD26298@dastard>
+ <CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com>
+ <20190407232728.GF26298@dastard>
+ <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
+ <20190408141114.GC15023@quack2.suse.cz>
+ <CAOQ4uxhxgYASST1k-UaqfbLL9ERquHaKL2jtydB2+iF9aT8SRQ@mail.gmail.com>
+ <20190409082605.GA8107@quack2.suse.cz>
+ <CAOQ4uxgu4uKJp5t+RoumMneR6bw_k0CRhGhU-SLAky4VHSg9MQ@mail.gmail.com>
+ <20220617151135.yc6vytge6hjabsuz@quack3>
+ <CAOQ4uxjvx33KRSm-HX2AjL=aB5yO=FeWokZ1usDKW7+R4Ednhg@mail.gmail.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 495e4bae-adc6-411d-9eed-08da5299dd72
-X-MS-TrafficTypeDiagnostic: DM6PR12MB2922:EE_
-X-Microsoft-Antispam-PRVS: <DM6PR12MB29229351C73AE39B87069350DFB09@DM6PR12MB2922.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: T0HOSoJtTEAGxabA3PEDIjRNSf8hJ57KoWrG6y+biqBAqjjqGYZ5FfJSJz05U+UHovSDQ2yt0vJENXmHwgH1naqX14qXTlq2Iv00i+nCNwkcfxZ7Jf15vS7udcmDYelF0umsO+Q2xt6yOArBumhMXCgeo/vK3fEUVDdT3KSdD+TC+WZxCrxBJJsDmI2MLttnhiAl6d8B/6joc5W1/e83aGlp2ufJnRgl3sNlJutLaEj3bPDP+dcV9XpdJP/F02vEUoNEHM/IEIKmOjSzqrtIA7yYqxTHJuj/fwrk3BpZAKdAKKw+nE7CwLmMblA4lJQKg3cj/+5ZnSS2JyU/5J98RwI5HkkwM9Y3zyTCPjd9ql5wcKABSVzoqX+HuL7dfJIM+X3HkEvt7ln0zW6jD/nWxvwEKKKlzE8Iz6INHfieMr2DWRa4DFgJHIrIobcR404pNInnyZGGh+BXHp4MFa3Ss+YjmeHe3tt7rWEcpy7D6fwWP9FmSdupXVF6DTKLZLV4+OrS9qoWA1VFbpC5zm5TgZb7i87icTBZ8bqVxmOf+wK5Vnb6CGuWw6GamfKTh8JMdoemPSd+qjU5+/8NzHrtHKJ/vDY4WtO4qaW665xMdssVVpAxgKaT+sXW5O7SBAFmNWOkmMmXNqtqWBvVSi5Kcg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(136003)(366004)(396003)(376002)(346002)(4326008)(8676002)(53546011)(54906003)(6916009)(6506007)(6486002)(86362001)(9686003)(6512007)(66556008)(2906002)(66946007)(66476007)(26005)(7416002)(8936002)(38100700002)(316002)(5660300002)(6666004)(478600001)(186003)(83380400001)(41300700001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?D6dXmtb7TadNzjVUolEARMiaECV9jhh7BJqw5RnGAeZsgKMlrdo1pnQoE/7Y?=
- =?us-ascii?Q?13ahSpgMBea+RsURi+0LHtqiPQqNMVEQeYaghUsuwh45UkwrlZPZz6Ag0QxB?=
- =?us-ascii?Q?U3STOHuD7EF7Fs+i/A7L0B2Y9zqlJ786i0O3rakFijA9lVJqxxiPM0bYPN0s?=
- =?us-ascii?Q?CP1IqrydPMGdfMo+D4H1dcBpbC8VsoFWuBgi8ss8NLZhgXvOZdyK6feeOmSC?=
- =?us-ascii?Q?BKKhQWvRlEHEFdk2hL6O6+9QO2r+rqb72ac1CzJ04Vuy0gUAJDY7SMowJMcd?=
- =?us-ascii?Q?Hvhn5r081vhTRxz3aHSBvvmn1WVVevuZ0/ns2kQ1vA/aA36UNgMlDyq5vBzm?=
- =?us-ascii?Q?u2/ouw4GXBB7Rq2MCBi8M7CAlCVCWWQiyDJWPAXd/cHGJA/d7iu2xY+zYLpm?=
- =?us-ascii?Q?BDmvuAEyewmA9G39lQmrFzqAkHji02LVYJoJbFPCpCBBtb5Z1oDGynTBZeZk?=
- =?us-ascii?Q?2n0uByPQ2j0DwyLbW3QQoOML/otttZwBzr0ixsuhzck8i7xorxbyzvLO17gx?=
- =?us-ascii?Q?X1hOWkdJ83AaQzUnoLKySXjoDK+0B93oD1BV7tka7kXMI1d/B/tWvHR9ZlQQ?=
- =?us-ascii?Q?9iEoE21BcDb8l2o+035VpRvpGepIeAjSVg6j2KZGknSaGY9EPk9vz6OtTNPZ?=
- =?us-ascii?Q?T+iOVTysqKanmEQXybi79MTwhOYFUA81WFQXWAxtuFSG2gfTi0gyLV5YI6BJ?=
- =?us-ascii?Q?Wk7LDvTtSinZdVdz3fxbN3CgyICc9QUIq5UmuuY6qFLe+S2eq3ur50BujmB+?=
- =?us-ascii?Q?M8b7ncSKPxkX9bcEXhHtHgMXTkOhl/v5BpOCdjbTuMM7jWa8k23euLc4xJlq?=
- =?us-ascii?Q?zRRVfmQKYPZn8LdIWwjs1okWphLkj1qIThn1ROZAwy1Dn7oq2bpRfUfev0PA?=
- =?us-ascii?Q?ln9TKfMy4G6OvYml97f7IFtR9pdeEP+oCKjAzb0bWP6J5tjNlDbttdEMe3R0?=
- =?us-ascii?Q?SxFXtxfvw2qsYYB3+hnB/zuAJ3c0SsY2uraxSihKp/TnW3G3hyris562h+V/?=
- =?us-ascii?Q?7VjZWzcOf/w5HHBJoqWdPMoyl26w73p8Ksc7cxhOZZrx1MZrafy0Uonr2bGY?=
- =?us-ascii?Q?B3gp3VR6xEa2PgwMolzZnzRekKStN6qBDJkF5i7ut0Sz108mMMLP8efgELDG?=
- =?us-ascii?Q?EdosVIfIqd/20kgCjiH8UWQy/7yqWZVQt6HhYnbW/2HvT5Ph21Bfq8xJs31Q?=
- =?us-ascii?Q?n8LHdXLrTEFkpCu4RPDAPAlvzJYvHp00ktV1gTmtlp7D34+C6GEFPnNpQpxM?=
- =?us-ascii?Q?gQVEKrFTzVmwDvgiL74GjGKMk/10YLrL66IkyTs7e4oU8mQOMo7fuKJYhDnV?=
- =?us-ascii?Q?GsNoZKzba2FgBEwgniNW047IS9ooAqUiLAk9uDFmg9/Mkh9SXn66lHDcBX/n?=
- =?us-ascii?Q?tuzf29/7F3YNEnh5oZwhO3Gnl2IBw23Eq16E0aNrXW8zQWM5SH9i3RnlqE5y?=
- =?us-ascii?Q?VEK4ZU2h6piNfczbD/OKufCR62tt7nT9/Af1a5mMrKZXRRaryNtoZDYFMAtf?=
- =?us-ascii?Q?wcj+mkSI4knEkGnIE5ehR2zAcuvvRKnxmztBAm8PEAOEwZh4u9SP03zr6HB3?=
- =?us-ascii?Q?wbw0noyQ0BgI1h9N6ElD5h+W2DgZeewjHA+fZNrBl5zp84jrO0380zDsgCYi?=
- =?us-ascii?Q?iwWtZ3CmLZDEqP+N4qzvrA3TDYP4LW/ZN1m1GlAMmlHsMg4Mj0kC4TrOW3V5?=
- =?us-ascii?Q?+gXQ/rI7/dgj6Qy+q/aPHzfbnWruZVGUdkw+iQ4HbUcewXNlt0LjZa6imyni?=
- =?us-ascii?Q?P900kOKgkw=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 495e4bae-adc6-411d-9eed-08da5299dd72
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jun 2022 08:50:02.9627
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: SIcRcrpMimSQkfFN7tBNMwZyoDm4XIPp6cgK3dVh/471zuQ08IdFoj8g9VqgdWb77yVvmq/k+xhyj61/WbVejA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB2922
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjvx33KRSm-HX2AjL=aB5yO=FeWokZ1usDKW7+R4Ednhg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Sat 18-06-22 11:38:30, Amir Goldstein wrote:
+> On Fri, Jun 17, 2022 at 6:11 PM Jan Kara <jack@suse.cz> wrote:
+> >
+> > On Fri 17-06-22 17:48:08, Amir Goldstein wrote:
+> > > On Tue, Apr 9, 2019 at 11:26 AM Jan Kara <jack@suse.cz> wrote:
+> > > >
+> > > > On Mon 08-04-19 20:41:09, Amir Goldstein wrote:
+> > > > > On Mon, Apr 8, 2019 at 5:11 PM Jan Kara <jack@suse.cz> wrote:
+> > > > > >
+> > > > > > On Mon 08-04-19 12:02:34, Amir Goldstein wrote:
+> > > > > > > On Mon, Apr 8, 2019 at 2:27 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > > > > > >
+> > > > > > > > On Fri, Apr 05, 2019 at 05:02:33PM +0300, Amir Goldstein wrote:
+> > > > > > > > > On Fri, Apr 5, 2019 at 12:17 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > > > > > > > >
+> > > > > > > > > > On Thu, Apr 04, 2019 at 07:57:37PM +0300, Amir Goldstein wrote:
+> > > > > > > > > > > This patch improves performance of mixed random rw workload
+> > > > > > > > > > > on xfs without relaxing the atomic buffered read/write guaranty
+> > > > > > > > > > > that xfs has always provided.
+> > > > > > > > > > >
+> > > > > > > > > > > We achieve that by calling generic_file_read_iter() twice.
+> > > > > > > > > > > Once with a discard iterator to warm up page cache before taking
+> > > > > > > > > > > the shared ilock and once again under shared ilock.
+> > > > > > > > > >
+> > > > > > > > > > This will race with thing like truncate, hole punching, etc that
+> > > > > > > > > > serialise IO and invalidate the page cache for data integrity
+> > > > > > > > > > reasons under the IOLOCK. These rely on there being no IO to the
+> > > > > > > > > > inode in progress at all to work correctly, which this patch
+> > > > > > > > > > violates. IOWs, while this is fast, it is not safe and so not a
+> > > > > > > > > > viable approach to solving the problem.
+> > > > > > > > > >
+> > > > > > > > >
+> > > > > > > > > This statement leaves me wondering, if ext4 does not takes
+> > > > > > > > > i_rwsem on generic_file_read_iter(), how does ext4 (or any other
+> > > > > > > > > fs for that matter) guaranty buffered read synchronization with
+> > > > > > > > > truncate, hole punching etc?
+> > > > > > > > > The answer in ext4 case is i_mmap_sem, which is read locked
+> > > > > > > > > in the page fault handler.
+> > > > > > > >
+> > > > > > > > Nope, the  i_mmap_sem is for serialisation of /page faults/ against
+> > > > > > > > truncate, holepunching, etc. Completely irrelevant to the read()
+> > > > > > > > path.
+> > > > > > > >
+> > > > > > >
+> > > > > > > I'm at lost here. Why are page faults completely irrelevant to read()
+> > > > > > > path? Aren't full pages supposed to be faulted in on read() after
+> > > > > > > truncate_pagecache_range()?
+> > > > > >
+> > > > > > During read(2), pages are not "faulted in". Just look at
+> > > > > > what generic_file_buffered_read() does. It uses completely separate code to
+> > > > > > add page to page cache, trigger readahead, and possibly call ->readpage() to
+> > > > > > fill the page with data. "fault" path (handled by filemap_fault()) applies
+> > > > > > only to accesses from userspace to mmaps.
+> > > > > >
+> > > > >
+> > > > > Oh! thanks for fixing my blind spot.
+> > > > > So if you agree with Dave that ext4, and who knows what other fs,
+> > > > > are vulnerable to populating page cache with stale "uptodate" data,
+> > > >
+> > > > Not that many filesystems support punching holes but you're right.
+> > > >
+> > > > > then it seems to me that also xfs is vulnerable via readahead(2) and
+> > > > > posix_fadvise().
+> > > >
+> > > > Yes, this is correct AFAICT.
+> > > >
+> > > > > Mind you, I recently added an fadvise f_op, so it could be used by
+> > > > > xfs to synchronize with IOLOCK.
+> > > >
+> > > > And yes, this should work.
+> > > >
+> > > > > Perhaps a better solution would be for truncate_pagecache_range()
+> > > > > to leave zeroed or Unwritten (i.e. lazy zeroed by read) pages in page
+> > > > > cache. When we have shared pages for files, these pages could be
+> > > > > deduped.
+> > > >
+> > > > No, I wouldn't really mess with sharing pages due to this. It would be hard
+> > > > to make that scale resonably and would be rather complex. We really need a
+> > > > proper and reasonably simple synchronization mechanism between operations
+> > > > removing blocks from inode and operations filling in page cache of the
+> > > > inode. Page lock was supposed to provide this but doesn't quite work
+> > > > because hole punching first remove pagecache pages and then go removing all
+> > > > blocks.
+> > > >
+> > > > So I agree with Dave that going for range lock is really the cleanest way
+> > > > forward here without causing big regressions for mixed rw workloads. I'm
+> > > > just thinking how to best do that without introducing lot of boilerplate
+> > > > code into each filesystem.
+> > >
+> > > Hi Jan, Dave,
+> > >
+> > > Trying to circle back to this after 3 years!
+> > > Seeing that there is no progress with range locks and
+> > > that the mixed rw workloads performance issue still very much exists.
+> > >
+> > > Is the situation now different than 3 years ago with invalidate_lock?
+> >
+> > Yes, I've implemented invalidate_lock exactly to fix the issues you've
+> > pointed out without regressing the mixed rw workloads (because
+> > invalidate_lock is taken in shared mode only for reads and usually not at
+> > all for writes).
+> >
+> > > Would my approach of pre-warm page cache before taking IOLOCK
+> > > be safe if page cache is pre-warmed with invalidate_lock held?
+> >
+> > Why would it be needed? But yes, with invalidate_lock you could presumably
+> > make that idea safe...
+> 
+> To remind you, the context in which I pointed you to the punch hole race
+> issue in "other file systems" was a discussion about trying to relax the
+> "atomic write" POSIX semantics [1] of xfs.
 
-Oded Gabbay <oded.gabbay@gmail.com> writes:
+Ah, I see. Sorry, I already forgot :-|
 
-> On Mon, Jun 20, 2022 at 3:33 AM Alistair Popple <apopple@nvidia.com> wrote:
->>
->>
->> Oded Gabbay <oded.gabbay@gmail.com> writes:
->>
->> > On Fri, Jun 17, 2022 at 8:20 PM Sierra Guiza, Alejandro (Alex)
->> > <alex.sierra@amd.com> wrote:
->> >>
->> >>
->> >> On 6/17/2022 4:40 AM, David Hildenbrand wrote:
->> >> > On 31.05.22 22:00, Alex Sierra wrote:
->> >> >> Device memory that is cache coherent from device and CPU point of view.
->> >> >> This is used on platforms that have an advanced system bus (like CAPI
->> >> >> or CXL). Any page of a process can be migrated to such memory. However,
->> >> >> no one should be allowed to pin such memory so that it can always be
->> >> >> evicted.
->> >> >>
->> >> >> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
->> >> >> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
->> >> >> Reviewed-by: Alistair Popple <apopple@nvidia.com>
->> >> >> [hch: rebased ontop of the refcount changes,
->> >> >>        removed is_dev_private_or_coherent_page]
->> >> >> Signed-off-by: Christoph Hellwig <hch@lst.de>
->> >> >> ---
->> >> >>   include/linux/memremap.h | 19 +++++++++++++++++++
->> >> >>   mm/memcontrol.c          |  7 ++++---
->> >> >>   mm/memory-failure.c      |  8 ++++++--
->> >> >>   mm/memremap.c            | 10 ++++++++++
->> >> >>   mm/migrate_device.c      | 16 +++++++---------
->> >> >>   mm/rmap.c                |  5 +++--
->> >> >>   6 files changed, 49 insertions(+), 16 deletions(-)
->> >> >>
->> >> >> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
->> >> >> index 8af304f6b504..9f752ebed613 100644
->> >> >> --- a/include/linux/memremap.h
->> >> >> +++ b/include/linux/memremap.h
->> >> >> @@ -41,6 +41,13 @@ struct vmem_altmap {
->> >> >>    * A more complete discussion of unaddressable memory may be found in
->> >> >>    * include/linux/hmm.h and Documentation/vm/hmm.rst.
->> >> >>    *
->> >> >> + * MEMORY_DEVICE_COHERENT:
->> >> >> + * Device memory that is cache coherent from device and CPU point of view. This
->> >> >> + * is used on platforms that have an advanced system bus (like CAPI or CXL). A
->> >> >> + * driver can hotplug the device memory using ZONE_DEVICE and with that memory
->> >> >> + * type. Any page of a process can be migrated to such memory. However no one
->> >> > Any page might not be right, I'm pretty sure. ... just thinking about special pages
->> >> > like vdso, shared zeropage, ... pinned pages ...
->> >>
->> >> Hi David,
->> >>
->> >> Yes, I think you're right. This type does not cover all special pages.
->> >> I need to correct that on the cover letter.
->> >> Pinned pages are allowed as long as they're not long term pinned.
->> >>
->> >> Regards,
->> >> Alex Sierra
->> >
->> > What if I want to hotplug this device's coherent memory, but I do
->> > *not* want the OS
->> > to migrate any page to it ?
->> > I want to fully-control what resides on this memory, as I can consider
->> > this memory
->> > "expensive". i.e. I don't have a lot of it, I want to use it for
->> > specific purposes and
->> > I don't want the OS to start using it when there is some memory pressure in
->> > the system.
->>
->> This is exactly what MEMORY_DEVICE_COHERENT is for. Device coherent
->> pages are only allocated by a device driver and exposed to user-space by
->> a driver migrating pages to them with migrate_vma. The OS can't just
->> start using them due to memory pressure for example.
->>
->>  - Alistair
-> Thanks for the explanation.
->
-> I guess the commit message confused me a bit, especially these two sentences:
->
-> "Any page of a process can be migrated to such memory. However no one should be
-> allowed to pin such memory so that it can always be evicted."
->
-> I read them as if the OS is free to choose which pages are migrated to
-> this memory,
-> and anything is eligible for migration to that memory (and that's why
-> we also don't
-> allow it to pin memory there).
->
-> If we are not allowed to pin anything there, can the device driver
-> decide to disable
-> any option for oversubscription of this memory area ?
+> There was a lot of discussions around range locks and changing the
+> fairness of rwsem readers and writer, but none of this changes the fact
+> that as long as the lock is file wide (and it does not look like that is
+> going to change in the near future), it is better for lock contention to
+> perform the serialization on page cache read/write and not on disk
+> read/write.
+> 
+> Therefore, *if* it is acceptable to pre-warn page cache for buffered read
+> under invalidate_lock, that is a simple way to bring the xfs performance with
+> random rw mix workload on par with ext4 performance without losing the
+> atomic write POSIX semantics. So everyone can be happy?
 
-I'm not sure I follow your thinking on how oversubscription would work
-here, however all allocations are controlled by the driver. So if a
-device's coherent memory is full a driver would be unable to migrate
-pages to that device until pages are freed by the OS due to being
-unmapped or the driver evicts pages by migrating them back to normal CPU
-memory.
+So to spell out your proposal so that we are on the same page: you want to
+use invalidate_lock + page locks to achieve "writes are atomic wrt reads"
+property XFS currently has without holding i_rwsem in shared mode during
+reads. Am I getting it correct?
 
-Pinning of pages is allowed, and could prevent such migrations. However
-this patch series prevents device coherent pages from being pinned
-longterm (ie. with FOLL_LONGTERM), so it should always be able to evict
-pages eventually.
+How exactly do you imagine the synchronization of buffered read against
+buffered write would work? Lock all pages for the read range in the page
+cache? You'd need to be careful to not bring the machine OOM when someone
+asks to read a huge range...
 
-> Let's assume the user uses this memory area for doing p2p with other
-> CXL devices.
-> In that case, I wouldn't want the driver/OS to migrate pages in and
-> out of that memory...
-
-The OS will not migrate pages in or out (although it may free them if no
-longer required), but a driver might choose to. So at the moment it's
-really up to the driver to implement what you want in this regards.
-
-> So either I should let the user pin those pages, or prevent him from
-> doing (accidently or not)
-> oversubscription in this memory area.
-
-As noted above pages can be pinned, but not long-term.
-
- - Alistair
-
-> wdyt ?
->
->>
->> > Oded
->> >
->> >>
->> >> >
->> >> >> + * should be allowed to pin such memory so that it can always be evicted.
->> >> >> + *
->> >> >>    * MEMORY_DEVICE_FS_DAX:
->> >> >>    * Host memory that has similar access semantics as System RAM i.e. DMA
->> >> >>    * coherent and supports page pinning. In support of coordinating page
->> >> >> @@ -61,6 +68,7 @@ struct vmem_altmap {
->> >> >>   enum memory_type {
->> >> >>      /* 0 is reserved to catch uninitialized type fields */
->> >> >>      MEMORY_DEVICE_PRIVATE = 1,
->> >> >> +    MEMORY_DEVICE_COHERENT,
->> >> >>      MEMORY_DEVICE_FS_DAX,
->> >> >>      MEMORY_DEVICE_GENERIC,
->> >> >>      MEMORY_DEVICE_PCI_P2PDMA,
->> >> >> @@ -143,6 +151,17 @@ static inline bool folio_is_device_private(const struct folio *folio)
->> >> > In general, this LGTM, and it should be correct with PageAnonExclusive I think.
->> >> >
->> >> >
->> >> > However, where exactly is pinning forbidden?
->> >>
->> >> Long-term pinning is forbidden since it would interfere with the device
->> >> memory manager owning the
->> >> device-coherent pages (e.g. evictions in TTM). However, normal pinning
->> >> is allowed on this device type.
->> >>
->> >> Regards,
->> >> Alex Sierra
->> >>
->> >> >
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
