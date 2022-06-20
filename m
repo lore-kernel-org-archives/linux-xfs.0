@@ -2,111 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90AA3CCA480
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jun 2022 23:01:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2C6ACCA47C
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jun 2022 23:08:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243292AbiFTXBS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Jun 2022 19:01:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60080 "EHLO
+        id S1346259AbiFTXIR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Jun 2022 19:08:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345707AbiFTW6W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jun 2022 18:58:22 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E2C232558E
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Jun 2022 15:56:19 -0700 (PDT)
-Received: by sandeen.net (Postfix, from userid 500)
-        id 4D54B4CDD42; Mon, 20 Jun 2022 17:55:31 -0500 (CDT)
+        with ESMTP id S1345673AbiFTXH4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jun 2022 19:07:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D1A7E240A5
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Jun 2022 16:06:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1655766410;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=d+rj3Zp2EbIXr3D0vy6DiaKID1mPHZ0AQJFkTlV285A=;
+        b=bnOO7+JhNl9SZ0UE7h84MhxVHiGpsXgvlZKYnMxfUHXwflLRQVuAESXGJQze6Zz9WjOBxI
+        DknpY6KcjbbZqS9nz1CcsDCBYvllJlnYtPmWrHXZbyV/9RowkeiScRZjoDQPyEF5xkfXfl
+        RDXHt6165uqYPsEWGIePiH3E3N17YKE=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-636-CrtsHOBQOq61p_u39pg1iQ-1; Mon, 20 Jun 2022 19:06:49 -0400
+X-MC-Unique: CrtsHOBQOq61p_u39pg1iQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id AC9D4299E760
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Jun 2022 23:06:48 +0000 (UTC)
+Received: from [127.0.0.1] (b1-int-ext.bast-001.prod.rdu2.dc.redhat.com [10.23.176.77])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8EDF1C28115
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Jun 2022 23:06:48 +0000 (UTC)
+Message-ID: <9b86c15d-042e-26ed-095c-67910d90ddc6@redhat.com>
+Date:   Mon, 20 Jun 2022 18:06:48 -0500
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.10.0
+Subject: Re: [PATCH] xfs: add selinux labels to whiteout inodes
+Content-Language: en-US
 From:   Eric Sandeen <sandeen@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: add selinux labels to whiteout inodes
-Date:   Mon, 20 Jun 2022 17:55:31 -0500
-Message-Id: <1655765731-21078-1-git-send-email-sandeen@redhat.com>
-X-Mailer: git-send-email 1.8.3.1
+References: <1655765731-21078-1-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1655765731-21078-1-git-send-email-sandeen@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We got a report that "renameat2() with flags=RENAME_WHITEOUT doesn't
-apply an SELinux label on xfs" as it does on other filesystems
-(for example, ext4 and tmpfs.)  While I'm not quite sure how labels
-may interact w/ whiteout files, leaving them as unlabeled seems
-inconsistent at best.
+I had mentioned this problem in passing to dchinner, and came away with
+a vague sense that I might be Doing It Wrong. So I should have labeled
+the patch RFC, I suppose.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/xfs_inode.c | 14 +++++++++++++-
- fs/xfs/xfs_iops.c  |  2 +-
- fs/xfs/xfs_iops.h  |  3 +++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+An easy way to demonstrate the selinux label result is with this test
+program, as provided by the bug reporter.  ls -lZ will then show you
+the resulting labels on each file.
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 52d6f2c..9a43060 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3046,10 +3046,12 @@ struct xfs_iunlink {
- static int
- xfs_rename_alloc_whiteout(
- 	struct user_namespace	*mnt_userns,
-+	struct xfs_name		*src_name,
- 	struct xfs_inode	*dp,
- 	struct xfs_inode	**wip)
- {
- 	struct xfs_inode	*tmpfile;
-+	struct qstr		name;
- 	int			error;
- 
- 	error = xfs_create_tmpfile(mnt_userns, dp, S_IFCHR | WHITEOUT_MODE,
-@@ -3057,6 +3059,15 @@ struct xfs_iunlink {
- 	if (error)
- 		return error;
- 
-+	name.name = src_name->name;
-+	name.len = src_name->len;
-+	error = xfs_init_security(VFS_I(tmpfile), VFS_I(dp), &name);
-+	if (error) {
-+		xfs_finish_inode_setup(tmpfile);
-+		xfs_irele(tmpfile);
-+		return error;
-+	}
-+
- 	/*
- 	 * Prepare the tmpfile inode as if it were created through the VFS.
- 	 * Complete the inode setup and flag it as linkable.  nlink is already
-@@ -3107,7 +3118,8 @@ struct xfs_iunlink {
- 	 * appropriately.
- 	 */
- 	if (flags & RENAME_WHITEOUT) {
--		error = xfs_rename_alloc_whiteout(mnt_userns, target_dp, &wip);
-+		error = xfs_rename_alloc_whiteout(mnt_userns, src_name,
-+						  target_dp, &wip);
- 		if (error)
- 			return error;
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 29f5b8b8..c7775b7 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -76,7 +76,7 @@
-  * inode, of course, such that log replay can't cause these to be lost).
-  */
- 
--STATIC int
-+int
- xfs_init_security(
- 	struct inode	*inode,
- 	struct inode	*dir,
-diff --git a/fs/xfs/xfs_iops.h b/fs/xfs/xfs_iops.h
-index 2789490..fd92c82 100644
---- a/fs/xfs/xfs_iops.h
-+++ b/fs/xfs/xfs_iops.h
-@@ -17,4 +17,7 @@
- int xfs_vn_setattr_size(struct user_namespace *mnt_userns,
- 		struct dentry *dentry, struct iattr *vap);
- 
-+int xfs_init_security(struct inode *inode, struct inode *dir,
-+		const struct qstr *qstr);
-+
- #endif /* __XFS_IOPS_H__ */
--- 
-1.8.3.1
+#define _GNU_SOURCE
+#include <sys/mount.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sched.h>
+#include <stdio.h>
+#include <unistd.h>
+int main(int argc, char **argv) {
+	int rc, fd, dirfd;
+	rc = mkdir("upper", 0700);
+	if ((rc != 0) && (errno != EEXIST)) {
+		perror("mkdir");
+		return rc;
+	}
+	rc = unlink("upper/0");
+	if ((rc != 0) && (errno != ENOENT)) {
+		perror("unlink");
+		return rc;
+	}
+	rc = unlink("upper/empty");
+	if ((rc != 0) && (errno != ENOENT)) {
+		perror("unlink");
+		return rc;
+	}
+	dirfd = open("upper", O_PATH);
+	if (dirfd == -1) {
+		perror("open");
+		return dirfd;
+	}
+	fd = creat("upper/empty", 0600);
+	if (fd == -1) {
+		perror("creat");
+		return fd;
+	}
+	close(fd);
+	rc = renameat2(dirfd, "empty", dirfd, "0", RENAME_WHITEOUT);
+	if (rc == -1) {
+		perror("renameat2");
+		return rc;
+	}
+	close(dirfd);
+	return 0;
+}
 
