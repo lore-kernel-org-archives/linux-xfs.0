@@ -2,229 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACD00C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jun 2022 00:33:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B5F5CCA47A
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jun 2022 00:57:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236971AbiFTAdm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 19 Jun 2022 20:33:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38096 "EHLO
+        id S237739AbiFTAyY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 19 Jun 2022 20:54:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235758AbiFTAdl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 19 Jun 2022 20:33:41 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2049.outbound.protection.outlook.com [40.107.94.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F99B64D8;
-        Sun, 19 Jun 2022 17:33:40 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HXAq6XSLPUMK2fneGDIoVBVZv1FCms6kSj4rIsDYR5kEKvyxW/GQQTJlmTY0zG0w2iBKhJcSxD5D6InqNM1kJ1RcqcspQ0imWb7nNRWrsTrwDFazc0m2vivk3DkAmO5ySCyDrpr2mBcF5tbLTPYkGxsyFzxCrugesE38zb0nTzygQzQBspsNfgOzMyXDdcG8FoCp/J7pQtR+8bmdjmQUwYRNgpJTicQPIoGrYeRuv1eMkEsZCBGp+62i+Z+F0IObZlqRpcipfQOAeAMVIJdEKOqhPbIN8MECJWio7uzllv7EfeDy0VI0RR/99rIXvFD5jrpJkHseA3u8E0SaglfHLA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BHpkPMa5JjQJ7GmU4UFhafBmklyY6GKLl1HtSmmP9Ho=;
- b=cLqLsCoHNhOvhhe2CGA4ZKH+T33IVHSrtmGS3EWsLyRvixnfguHsyMhDlcEuGTHCvwZOLAMOOC37CWT/XSs3vZOJxGzd4gfh14a450+L2fMXdfGrxtxgdB6kE0YbAeOo1cSfDoO7frxbEHpNcbFjDZO+35agPyA1vzhV3OWspcS8wk3lg/iODLaqumVxetM0SQ1qPmfqpUEVFdy16tBoGW2aUTpeFtkociCr8HsXPODpoQuGkF9shUFRdxfjcjWGKD3BX/7dDfv/1P6OgbZqc59SfH+tMbb5FFesiG5yCdbKT5h2zrkRGPFu76SOqhQ8GhcKeZKC6GAyMqqVPIaspw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BHpkPMa5JjQJ7GmU4UFhafBmklyY6GKLl1HtSmmP9Ho=;
- b=nC2tfDGqj2sI3DNsHpgq3nxRJJk6FpaX/8hjdI45nWhr0q2QwolngLQ9AvQHFL30dO+KgGPdWfx8vDuYasIT2krsYQSEPwlfX82LHPnaRUeftg8vKFPIIkK274q8+bHJr4G4MHrZhN20yMXDyn/RJdYkSPyIhKMZo5aicM52S6TI8VM9xLNBRrCRT1mKSQ8mZ5TsBQ31mgLB33gOhHE32LpgM2dYevi93+r/2J+x5K4Q/+TEGEGGz4LUJHgQlVuBsrYWjdrsri9tDJOq0XI/dBl0NS8AXbdV7mSVlNJxSk7MGAjgfIekjiayQ+cumujln8wJKCiWtpfnfnN4Jr69lQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
- by BN6PR1201MB0259.namprd12.prod.outlook.com (2603:10b6:405:58::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5353.14; Mon, 20 Jun
- 2022 00:33:13 +0000
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::59cf:d090:5d26:6e7b]) by BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::59cf:d090:5d26:6e7b%5]) with mapi id 15.20.5353.021; Mon, 20 Jun 2022
- 00:33:12 +0000
-References: <20220531200041.24904-1-alex.sierra@amd.com>
- <20220531200041.24904-2-alex.sierra@amd.com>
- <3ac89358-2ce0-7d0d-8b9c-8b0e5cc48945@redhat.com>
- <02ed2cb7-3ad3-8ffc-6032-04ae1853e234@amd.com>
- <CAFCwf11z5Q+2FPS1yPi6EwQuRqoJg_dLB-rYgtVwP-zQEdqjQQ@mail.gmail.com>
-User-agent: mu4e 1.6.9; emacs 27.1
-From:   Alistair Popple <apopple@nvidia.com>
-To:     Oded Gabbay <oded.gabbay@gmail.com>
-Cc:     "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>,
-        David Hildenbrand <david@redhat.com>,
-        Jason Gunthorpe <jgg@nvidia.com>, rcampbell@nvidia.com,
-        Matthew Wilcox <willy@infradead.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        linux-xfs@vger.kernel.org, linux-mm <linux-mm@kvack.org>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Maling list - DRI developers 
-        <dri-devel@lists.freedesktop.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 01/13] mm: add zone device coherent type memory support
-Date:   Mon, 20 Jun 2022 10:17:00 +1000
-In-reply-to: <CAFCwf11z5Q+2FPS1yPi6EwQuRqoJg_dLB-rYgtVwP-zQEdqjQQ@mail.gmail.com>
-Message-ID: <87bkuo898d.fsf@nvdebian.thelocal>
-Content-Type: text/plain
-X-ClientProxiedBy: SY6PR01CA0006.ausprd01.prod.outlook.com
- (2603:10c6:10:e8::11) To BYAPR12MB3176.namprd12.prod.outlook.com
- (2603:10b6:a03:134::26)
+        with ESMTP id S238037AbiFTAyX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 19 Jun 2022 20:54:23 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7795E6563;
+        Sun, 19 Jun 2022 17:54:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1655686459; x=1687222459;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=wBwCFUA6Q64fHaprgGzpO55tKWN6E6OjOh5MnrN96K8=;
+  b=nQHQEvacjc8Wbz7/mrAmFFH9U0T1fmWgNgDyBrtuK0qOHZIihGeVYx8S
+   5RxjIAb4GNRUkOxY5W2SPnnwvdQvHnNKMNIhjxBJsCGI3Ed++tMrwa288
+   bMNkRrHYpXBBfFAC2vZmi6FILg5XSURwTstjFMMRdIM0z3qWN8iRNcDR+
+   nrRz+SgJzZAHFH5p4ICxVojRy59Kqkwjk7haaUOdlUweqsVSnxs8/yC2U
+   FtevTcQ0G+qQ62wSYJm7+WwsgrxYpVb8B93VbQLvhtoy8MHZlDPjnwWuA
+   VEWzIGMeGw37QTFRylYgZD8obHeCVgqsShu4SSAVS5I8HCSSzu2IoXL+3
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10380"; a="262810907"
+X-IronPort-AV: E=Sophos;i="5.92,306,1650956400"; 
+   d="scan'208";a="262810907"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jun 2022 17:54:19 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,306,1650956400"; 
+   d="scan'208";a="832871961"
+Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 19 Jun 2022 17:54:16 -0700
+Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1o35gF-000Riq-FN;
+        Mon, 20 Jun 2022 00:54:15 +0000
+Date:   Mon, 20 Jun 2022 08:53:15 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
+        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Cc:     kbuild-all@lists.01.org, shr@fb.com, david@fromorbit.com,
+        jack@suse.cz, hch@infradead.org, axboe@kernel.dk,
+        willy@infradead.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v9 03/14] mm: Add balance_dirty_pages_ratelimited_flags()
+ function
+Message-ID: <202206200844.loRI4cvL-lkp@intel.com>
+References: <20220616212221.2024518-4-shr@fb.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c76a73f5-dd3e-4385-e417-08da5254752d
-X-MS-TrafficTypeDiagnostic: BN6PR1201MB0259:EE_
-X-Microsoft-Antispam-PRVS: <BN6PR1201MB0259CAB927BBC3222F122F98DFB09@BN6PR1201MB0259.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: AQL843VOj4b1w/uulf9BUVH3zn3Ku7siaPQ6nFuXLm/sEgBU215jYFqVXML0xj/z9bwPfmpdDHBB6tLYfEFfeYMFxE0X7B77yStYvXNZ6WtJ7etrcGyCm9vfqnJIPO0baGFBQ5HlDS9SUYBatX22OVfP8F0rBgAeKecebmvrFYv0MOY7ULNyWSqNPQR9I3J55IsVzWtmkjMj1K1nHtKd+ipsuttWP8Sil20Ouob0YynhfGnSs0oHCRs9pRhcnvEFk0e9EQXByIyh6nc63j1MSb4LVGv6KNmvzpv+MmUbQC6jacA3OmXUcIFG0hFS9IgWvSUzdP0PVt9WS5VY+RDlLdHD/tfbGB1DnYpNgWMTY4iJ7Et/QPFeaLD6kApq9Opvo3KzSP0JS3AfEzW53teKs+YDTp1gp5m7LUn+d/KRvW2k9M70FwrwGNV8AXh6mngl1D9cgR9A4OOeHK9wpzoHscaYeFyqSyGJhyCBPXGlTvBgqhlVLJkuy4bGYRlbmEaz5gnfPb3/NWdMSXt2jAFuYq54QRnGAIBSoB5mcnU5jvdX80p3gZHRSvUMfrUC0iQ5B2tq3Qrt4Cfma3NuWkcQB2ylQA0RI/ptmlJWKYId0btnmtm0XurUy/xl1iQ+IpbJ589P63Y8k+xrAlDtwKEFKA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(366004)(9686003)(6666004)(6512007)(26005)(38100700002)(54906003)(6916009)(53546011)(5660300002)(2906002)(6506007)(7416002)(8936002)(66476007)(6486002)(66946007)(8676002)(498600001)(4326008)(83380400001)(86362001)(66556008)(186003)(316002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?O0E/VqIwE9SaClmZ7Z/jchgjECyS5Jc446TG3RLKn6Dx292IDQn/zexQX2Zw?=
- =?us-ascii?Q?oJtcbKx1IEtLyzpDwA1Brkn3k/oO/fi0aElK+N/K7yGejKm4WnqKeN45b22v?=
- =?us-ascii?Q?+vSco7FTVEmZirHW49R1IYXKJ9UffUFi4VnyBa27VbRs93QKziWn6kh2/98x?=
- =?us-ascii?Q?aczseOy433NoCxJDo9YC1XEkr6AxDLQwF/KHEftMT+1UkOCro4/9+yD/0iQP?=
- =?us-ascii?Q?zgnkXQU1d1h3JOC9JarkgG9g972zSeU0W5zJguDO3f0loOYqwCYWqG7qTvyN?=
- =?us-ascii?Q?OHd5Rodpyfzdl/bY7IyXWReeGYpTUAVM0e4epMIiTCH0cxaf8/9kw33byisp?=
- =?us-ascii?Q?PCmwSXRzqoPVXkSCWGZGBcZyCkXvJUEcVHemvkJvNV9/1SY/AmTIRovpxJNC?=
- =?us-ascii?Q?FvRe1qsCI4hQ3pi5KzJc6toQh0pR9rZsCT1CPZIreevmZBW+5VmAm/JpYlzf?=
- =?us-ascii?Q?5+ZI6nwWNIIj8bZYGwmJY1aiLnrHAbzVkjMSd6CdZDMebNpvRyY2n3Yq6SnT?=
- =?us-ascii?Q?HQxVSkNO3JzxYjn0sohIKeTIYMTZfzExKnDYKSRYyffZ+xfZyWj7Z4cvVSLy?=
- =?us-ascii?Q?y1SXOvZUwGx3g9M/nf+lEvpKVBDzCgeR8nbiIRN/w+CwcQPQaicr1G0TsOW9?=
- =?us-ascii?Q?JV0UEENMnvS7LPiL98zzT5sCASdb2wpiDz1WS6mYXAU/w+mSST+Era896v+T?=
- =?us-ascii?Q?dA6hnqmdLG4zP7iZbUGHJhjXp0n5lD1/TxfpiHF7nua/XeuBQkTuTy9LCinR?=
- =?us-ascii?Q?mCYQkSqS9NbSXxEoombBQAZCYJ5GUoFDfGokDUhuBVSga2jk2QnMSZsyApG9?=
- =?us-ascii?Q?p10uA3UY4AEKmznnbO130lOvP5igwYZI7yaE/2AtzMJcxG92eSDl25Fxm2wI?=
- =?us-ascii?Q?JR2kuR9PdSqtM9R5b2Em2b8TidHRXJ1KqUvusjpuZaB9zrisyb5Qommunbm9?=
- =?us-ascii?Q?Kb80hImBInV47DpUcTgwJnN9f0oQA7JumSYFDPZQnHfvuIRPDDj7K5gcgAl3?=
- =?us-ascii?Q?qFWomRI9ZhQ6FgqOL0lDHJT6x3BC9XoXQmFcyhEH03EtFMkCE0orNxr1ki2o?=
- =?us-ascii?Q?CmioU+nPCKHWDkWZQc9X9iC8IRElrdaRboMwwBqKIBc9WZ+T6stxNd86GGbc?=
- =?us-ascii?Q?nnT3p4TDLOfOhfJ6/3GUyfB610aCCoYtK3yDuKj/F4ytngnP9J6P0MIRlnCA?=
- =?us-ascii?Q?sPYqTwnpNMjnUs6dpmb2Hiheru8fn9CO4EgTK6JFH/E4TrAOiAD/8MYP/EQW?=
- =?us-ascii?Q?FkgU58+lQ+tfneWoqHODr2Kz1zvLH2b91InrYa0dDZyQWQlIAk1xFSlRFIad?=
- =?us-ascii?Q?wxz2zhY8XheKO4qbkRBJ2hw4D/ej6/McrBX0KfMwLHus3/iHesxUAfx4ljt9?=
- =?us-ascii?Q?WLC09iddcYEbn7QESP4Jno93gRm3dcj7MZTUEmFCRfQjPQwhg0MVAnvj+IiQ?=
- =?us-ascii?Q?kzF3XzHB2H1fXVcBO1/Ljjc1xWD6vQ6eAjvE1fRIgGPvM6UQc9z2bI3Hisq8?=
- =?us-ascii?Q?HDriKsGTYR5LRXw79xXsNny5eWAWhxIkXSW13TnnB2FVg0Ie7ckZ8W5O9yL2?=
- =?us-ascii?Q?sftsvl+nxkJlcdZXJsYHouk58QFNZo0IJklHVybIZT8eXymqoQ39ZQZWV9q6?=
- =?us-ascii?Q?A/WyKEfP3pQWlLawOM+szXzFVdtDxkgysAfKhi4ar/buzLqVkyo1uOVVNnRI?=
- =?us-ascii?Q?Z0cSZsJGZ4TnHBOZit81E41of4cade4kRPV6pqzj20mhoS0uvvgDzd6rN/7H?=
- =?us-ascii?Q?R4wY7ZsOkw=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c76a73f5-dd3e-4385-e417-08da5254752d
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jun 2022 00:33:12.4737
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: p9n1lb3LdTQPX0qyZasNcwLiAzFtgSgBO+vBd/kT3pgwIfPDPK/p4oaJBtGZKGvh7IDyLvKeYs2kN2esd+Anug==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR1201MB0259
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220616212221.2024518-4-shr@fb.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi Stefan,
 
-Oded Gabbay <oded.gabbay@gmail.com> writes:
+I love your patch! Perhaps something to improve:
 
-> On Fri, Jun 17, 2022 at 8:20 PM Sierra Guiza, Alejandro (Alex)
-> <alex.sierra@amd.com> wrote:
->>
->>
->> On 6/17/2022 4:40 AM, David Hildenbrand wrote:
->> > On 31.05.22 22:00, Alex Sierra wrote:
->> >> Device memory that is cache coherent from device and CPU point of view.
->> >> This is used on platforms that have an advanced system bus (like CAPI
->> >> or CXL). Any page of a process can be migrated to such memory. However,
->> >> no one should be allowed to pin such memory so that it can always be
->> >> evicted.
->> >>
->> >> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
->> >> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
->> >> Reviewed-by: Alistair Popple <apopple@nvidia.com>
->> >> [hch: rebased ontop of the refcount changes,
->> >>        removed is_dev_private_or_coherent_page]
->> >> Signed-off-by: Christoph Hellwig <hch@lst.de>
->> >> ---
->> >>   include/linux/memremap.h | 19 +++++++++++++++++++
->> >>   mm/memcontrol.c          |  7 ++++---
->> >>   mm/memory-failure.c      |  8 ++++++--
->> >>   mm/memremap.c            | 10 ++++++++++
->> >>   mm/migrate_device.c      | 16 +++++++---------
->> >>   mm/rmap.c                |  5 +++--
->> >>   6 files changed, 49 insertions(+), 16 deletions(-)
->> >>
->> >> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
->> >> index 8af304f6b504..9f752ebed613 100644
->> >> --- a/include/linux/memremap.h
->> >> +++ b/include/linux/memremap.h
->> >> @@ -41,6 +41,13 @@ struct vmem_altmap {
->> >>    * A more complete discussion of unaddressable memory may be found in
->> >>    * include/linux/hmm.h and Documentation/vm/hmm.rst.
->> >>    *
->> >> + * MEMORY_DEVICE_COHERENT:
->> >> + * Device memory that is cache coherent from device and CPU point of view. This
->> >> + * is used on platforms that have an advanced system bus (like CAPI or CXL). A
->> >> + * driver can hotplug the device memory using ZONE_DEVICE and with that memory
->> >> + * type. Any page of a process can be migrated to such memory. However no one
->> > Any page might not be right, I'm pretty sure. ... just thinking about special pages
->> > like vdso, shared zeropage, ... pinned pages ...
->>
->> Hi David,
->>
->> Yes, I think you're right. This type does not cover all special pages.
->> I need to correct that on the cover letter.
->> Pinned pages are allowed as long as they're not long term pinned.
->>
->> Regards,
->> Alex Sierra
->
-> What if I want to hotplug this device's coherent memory, but I do
-> *not* want the OS
-> to migrate any page to it ?
-> I want to fully-control what resides on this memory, as I can consider
-> this memory
-> "expensive". i.e. I don't have a lot of it, I want to use it for
-> specific purposes and
-> I don't want the OS to start using it when there is some memory pressure in
-> the system.
+[auto build test WARNING on b13baccc3850ca8b8cccbf8ed9912dbaa0fdf7f3]
 
-This is exactly what MEMORY_DEVICE_COHERENT is for. Device coherent
-pages are only allocated by a device driver and exposed to user-space by
-a driver migrating pages to them with migrate_vma. The OS can't just
-start using them due to memory pressure for example.
+url:    https://github.com/intel-lab-lkp/linux/commits/Stefan-Roesch/io-uring-xfs-support-async-buffered-writes/20220617-060910
+base:   b13baccc3850ca8b8cccbf8ed9912dbaa0fdf7f3
+config: i386-randconfig-c021 (https://download.01.org/0day-ci/archive/20220620/202206200844.loRI4cvL-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-3) 11.3.0
 
- - Alistair
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
-> Oded
->
->>
->> >
->> >> + * should be allowed to pin such memory so that it can always be evicted.
->> >> + *
->> >>    * MEMORY_DEVICE_FS_DAX:
->> >>    * Host memory that has similar access semantics as System RAM i.e. DMA
->> >>    * coherent and supports page pinning. In support of coordinating page
->> >> @@ -61,6 +68,7 @@ struct vmem_altmap {
->> >>   enum memory_type {
->> >>      /* 0 is reserved to catch uninitialized type fields */
->> >>      MEMORY_DEVICE_PRIVATE = 1,
->> >> +    MEMORY_DEVICE_COHERENT,
->> >>      MEMORY_DEVICE_FS_DAX,
->> >>      MEMORY_DEVICE_GENERIC,
->> >>      MEMORY_DEVICE_PCI_P2PDMA,
->> >> @@ -143,6 +151,17 @@ static inline bool folio_is_device_private(const struct folio *folio)
->> > In general, this LGTM, and it should be correct with PageAnonExclusive I think.
->> >
->> >
->> > However, where exactly is pinning forbidden?
->>
->> Long-term pinning is forbidden since it would interfere with the device
->> memory manager owning the
->> device-coherent pages (e.g. evictions in TTM). However, normal pinning
->> is allowed on this device type.
->>
->> Regards,
->> Alex Sierra
->>
->> >
+
+cocci warnings: (new ones prefixed by >>)
+>> mm/page-writeback.c:1887:5-8: Unneeded variable: "ret". Return "0" on line 1891
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
