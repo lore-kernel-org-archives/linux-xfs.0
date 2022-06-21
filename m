@@ -2,111 +2,87 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0042C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jun 2022 07:02:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A898BC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jun 2022 07:05:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346528AbiFUHCk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Jun 2022 03:02:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39006 "EHLO
+        id S1344413AbiFUHFB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Jun 2022 03:05:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346302AbiFUHCk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jun 2022 03:02:40 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E50771F625;
-        Tue, 21 Jun 2022 00:02:39 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id k7so11723466plg.7;
-        Tue, 21 Jun 2022 00:02:39 -0700 (PDT)
+        with ESMTP id S1346495AbiFUHE6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jun 2022 03:04:58 -0400
+Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2063921812;
+        Tue, 21 Jun 2022 00:04:58 -0700 (PDT)
+Received: by mail-ed1-x531.google.com with SMTP id es26so16342368edb.4;
+        Tue, 21 Jun 2022 00:04:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=wP9kY1WLbTW1UUbmBJofW8GbuL6xle8PjzjvugZSxOg=;
-        b=SLV71dKUg3TQYNZ8Ov1PzCQj/KlKFftSY4Elu8YMPPFvpS43VsZa3GnP7e+gmuBo4/
-         diOHtXnjRDfe/yMonBX4hc2qURDLdQikcTvxwpH5DUsufrgoI+k5oanXVjLM/16+R10L
-         vu6dP0U7M/27ARt8/vf81kvSe8cj9iUMMMUyJDo873tNPzQGra//6xwXO4nDD0a2XkbM
-         aeOKwmsPyo1mKSBCwj3yLzPM7MKlEZLfB3TGx2cSvD9JBVKoS1Xe7dI4geKr5h+gMLVx
-         ZwRtXx83cQo0R120KKbewu2Cl3dZumo8xmJJAQcAJf4V9dVJCCfL/gKjsWBs3h059vkP
-         EX9Q==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=0B3xaLPQDTY5CWdU4uuAJuk+lCuTNpKsZkpyLv+wZNk=;
+        b=FkU5Z/5OwQTqLKI9hQ1umabBxiIBi+vrW8tWIvuS7GOONQH1byKgQ2/KWlgrn76E54
+         Sp7mr57ca9YY6F1RW/r1olrbyiceopLmFgAMW2GZz6ff5nTxJwpYmw1AGjjs6UEeX0tA
+         A3vG5vM/qNWiitU82KORJ/xTaRgtofVmpm+PM10gQcLUn1931APC9OnHMpj9lAnkEgww
+         oLVRMdh1NiStyET0pLeLwz830sKJNcL5stopZdfBeF5OYwrR+rLNBYANY/xs11uJtZoM
+         2GO9bmyZiakyjIxade2/Z1mUoIuwbfIVcq8mpbl1qpCg0WK2vTRx/ACuPC/ZteOlHkYZ
+         4cqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=wP9kY1WLbTW1UUbmBJofW8GbuL6xle8PjzjvugZSxOg=;
-        b=fhEI8NO8wa0mG5irEwFjTHBrnIJTQgsd0HmKTA5NyhYFE6b89UUAFG/AD2f5Ujku0B
-         dUCqhxm9Xb/ODtiB60RktDY6hfESBXvhqjS6PKxWa7OLX7vCD5P2jN5eh3g0xm3d2OAU
-         E/ODVj6bwlpAIs3xz6bXI/yogK1dxh+ukzggXGpkla/g6cbXFou7YPF/55B10f+kju2d
-         myBx91LHIxLDzxkir2HeIYZNRQ0GUDCbuKAqEUqCUoaHPcvYPZ3s+guF6F72dYmRj0GB
-         2rgOXxtySl6vQgxeci9Mnh2ahzACti+3pSTe5K7JGUwbOF1GmmnV6tfbVDd+NhOjNpM0
-         biTA==
-X-Gm-Message-State: AJIora/ubKQVPAt32QBrwuO0jWvx1xjKDjh1WEOE3ii4s1MHVg0UbvRr
-        HujlQQe6uGh2wZe8By5mfhA=
-X-Google-Smtp-Source: AGRyM1t3BNK6v69eKX4WKcobj7IS/1nTrq976lTNyPKRkLdkjl7F/QjYJKOnACZGunK544a3XGG5ng==
-X-Received: by 2002:a17:90b:682:b0:1e3:142:a562 with SMTP id m2-20020a17090b068200b001e30142a562mr41217624pjz.91.1655794959392;
-        Tue, 21 Jun 2022 00:02:39 -0700 (PDT)
-Received: from localhost.localdomain ([178.173.230.211])
-        by smtp.gmail.com with ESMTPSA id p9-20020a63ab09000000b00408a9264b36sm10454082pgf.3.2022.06.21.00.02.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jun 2022 00:02:38 -0700 (PDT)
-From:   Shida Zhang <starzhangzsd@gmail.com>
-X-Google-Original-From: Shida Zhang <zhangshida@kylinos.cn>
-To:     djwong@kernel.org, dchinner@redhat.com
-Cc:     zhangshida@kylinos.cn, starzhangzsd@gmail.com,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH v2] xfs: add check before calling xfs_mod_fdblocks
-Date:   Tue, 21 Jun 2022 15:02:24 +0800
-Message-Id: <20220621070224.1231039-1-zhangshida@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=0B3xaLPQDTY5CWdU4uuAJuk+lCuTNpKsZkpyLv+wZNk=;
+        b=AMJVbJfJZz3o4WeJvq1I/uKiO1yWZxInM7mNT+g+tvnClqxZHJzLmHdNix7xgYCGEk
+         qyOTbYi7I/G/sIYe0u2mzfjsDONul3jNBU3zM0p6mf8muZ+GTVrgtsFI961Q4KAwRoEt
+         aK6oUVbdKKX6X/UazKxztV3w6rXLgMiPhaydYegjR0zyELYE67W4H8XCRb2EKEhIP3zd
+         l1fWoFWDF/n2G0IOtucrBt2woYBJ2lQqaEaHCRuTk3NXNoReJA0uIlagnpSFGupabLp6
+         /AwHQ2gVv67lp+QEAayTbWago/Lm/fm9UzbXKS6urAT2cSQPtlj0A7deHtPKTi/ENjIH
+         AFrg==
+X-Gm-Message-State: AJIora/IM/amx4YES1as4i00XvS/pgmoKyq59Y8ThIJ0f84uiVvd54nZ
+        JgFibansYwI73uW1Om/+GMUyJb6nl893/wgxkCo=
+X-Google-Smtp-Source: AGRyM1vk/fsk1xLwAiSdWUdI76LBwT9uqXC401BJldWVyTDbv2mVv+Ljf8Qlj9VQINAmNiUmrcUKC3/DfFSHrVtQ1KU=
+X-Received: by 2002:a05:6402:5212:b0:42e:2fa:41a7 with SMTP id
+ s18-20020a056402521200b0042e02fa41a7mr33591154edd.22.1655795096619; Tue, 21
+ Jun 2022 00:04:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220621031113.1222877-1-zhangshida@kylinos.cn> <20220621043550.GP227878@dread.disaster.area>
+In-Reply-To: <20220621043550.GP227878@dread.disaster.area>
+From:   Stephen Zhang <starzhangzsd@gmail.com>
+Date:   Tue, 21 Jun 2022 15:04:20 +0800
+Message-ID: <CANubcdUO55kSFc7USg-EsgE5uvQR08s8wcxrf4=vHk8VOiisjw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: return when delta equals 0 in xfs_mod_freecounter
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     djwong@kernel.org, zhangshida <zhangshida@kylinos.cn>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Checks are missing when delta equals 0 in __xfs_ag_resv_free() and
-__xfs_ag_resv_init().
+Dave Chinner <david@fromorbit.com> =E4=BA=8E2022=E5=B9=B46=E6=9C=8821=E6=97=
+=A5=E5=91=A8=E4=BA=8C 12:35=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Tue, Jun 21, 2022 at 11:11:13AM +0800, Shida Zhang wrote:
+> > There are cases that xfs_mod_freecounter() will get called when delta
+> > equals 0 while it's unnecessary.
+>
+> AFAICT all of the call paths are guarded by checks to ensure the
+> delta is, in fact, not zero. i.e. if the delta is zero, we shouldn't
+> be calling xfs_mod_fdblocks() or xfs_mod_frextents() at all.
+>
+> Can you explain in more detail what code path leads to delta =3D 0
+> here?
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
-Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
----
- Changes from v1:
- -Add checks before calling xfs_mod_fdblocks instead.
+Yeah. I will give it in another v2 version patch.
 
- fs/xfs/libxfs/xfs_ag_resv.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+Cheers,
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index fe94058d4e9e..c8fa032e4b00 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -149,7 +149,12 @@ __xfs_ag_resv_free(
- 		oldresv = resv->ar_orig_reserved;
- 	else
- 		oldresv = resv->ar_reserved;
--	error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
-+
-+	if (oldresv)
-+		error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
-+	else
-+		error = 0;
-+
- 	resv->ar_reserved = 0;
- 	resv->ar_asked = 0;
- 	resv->ar_orig_reserved = 0;
-@@ -215,8 +220,13 @@ __xfs_ag_resv_init(
- 
- 	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
- 		error = -ENOSPC;
--	else
--		error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
-+	else {
-+		error = 0;
-+		if (hidden_space)
-+			error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space,
-+						true);
-+	}
-+
- 	if (error) {
- 		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
- 				error, _RET_IP_);
--- 
-2.25.1
-
+Stephen.
