@@ -2,72 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43560C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jun 2022 02:08:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8287C43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jun 2022 03:11:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243751AbiFUCIT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Jun 2022 22:08:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37828 "EHLO
+        id S1344779AbiFUDL0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Jun 2022 23:11:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235637AbiFUCIT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jun 2022 22:08:19 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6B38338B7
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Jun 2022 19:08:18 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1A12E10E99FF;
-        Tue, 21 Jun 2022 12:08:15 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1o3TJN-0098Wv-Mf; Tue, 21 Jun 2022 12:08:13 +1000
-Date:   Tue, 21 Jun 2022 12:08:13 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [RFC] [PATCH 00/50] xfs: per-ag centric allocation alogrithms
-Message-ID: <20220621020813.GO227878@dread.disaster.area>
-References: <20220611012659.3418072-1-david@fromorbit.com>
- <YqsbpL9BZes7qDbv@infradead.org>
+        with ESMTP id S1344803AbiFUDL0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jun 2022 23:11:26 -0400
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A47631FCC9;
+        Mon, 20 Jun 2022 20:11:23 -0700 (PDT)
+Received: by mail-pj1-x1032.google.com with SMTP id 73-20020a17090a0fcf00b001eaee69f600so12011028pjz.1;
+        Mon, 20 Jun 2022 20:11:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=tec/+3ICzBjemtamjAZhwJmmbovsB9vXjrr7CbXvID8=;
+        b=MSfF43jlB5pC5ITVnWcT+6zEqF5p9hWljG5e/Su18a5n4rusiODM9L0KAEQynU0AZm
+         +qCs8DM2sJVG2Z4+W9Dq3lxDPfececHXhTdfLLO3Qu4HGJ/qDdJRG+7ImD7Oy+KhKx9J
+         Z8v5DTcFFzVBCKfk4qLvqoHYeZpdP2Wzh2QA+dj3qhTUQGmKKTrI4GijctdmzCCz5M58
+         b5Sx7QmItomCE5qIh7b6VogQx/jltsGP66yCjnHQQbqHxF4pMA5tmVYQLY8GV/ROl9D4
+         0XL289A9s4Btcng91EhPXimSOOsylc9yBPuVLoovthL572buV3RD9Wna/o4GlvFuxSfT
+         9t7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=tec/+3ICzBjemtamjAZhwJmmbovsB9vXjrr7CbXvID8=;
+        b=nKDGmbeNy8J8BTiPED25aE7Cdp3QDsqW1P9+kqCMrG47JAEsLszCYJBM6LvaCC3nQO
+         1n9MWwpukjZ77+UOOjKisGNkCiClXT5JWDWjEGormrlHIugOnCH3tzg7v3niVuE8KxVR
+         YPRuNXxGWfnKRnvseW/OptVIARyCGTcMyrJ23FQsX4ZXr4kzu6nBa3/14KxqbOGXJRt8
+         o8diQvqFSkx4H5hovZMPXXwJlhhSlb5eOcsA8DYqsNp0EQLdaJSGOAqnqhr/WBEeAbP8
+         R9IA/bWWon+82yGU/6JHN9nfbVtLqfGJ631DgxhRlolWjjfB8+aten5DDgTBbuczdo31
+         wgyw==
+X-Gm-Message-State: AJIora9zXKE+HrnRfRY8ZHcQqkHLbiJXeqCNEnjgeagfxKpT5zUaE9ld
+        5zwNSm3EDbRZsz96OK79p8A=
+X-Google-Smtp-Source: AGRyM1v5RUBw/72/m5bgdvic9ut/hQUE8DuiyD09+3a6dKfvWxBlcOh5zSBw6qb69X3/cYCjhMeD6w==
+X-Received: by 2002:a17:90b:1e42:b0:1e8:7669:8a1c with SMTP id pi2-20020a17090b1e4200b001e876698a1cmr30387495pjb.206.1655781082935;
+        Mon, 20 Jun 2022 20:11:22 -0700 (PDT)
+Received: from localhost.localdomain ([178.173.230.211])
+        by smtp.gmail.com with ESMTPSA id jh20-20020a170903329400b00168b113f222sm4027844plb.173.2022.06.20.20.11.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Jun 2022 20:11:22 -0700 (PDT)
+From:   Shida Zhang <starzhangzsd@gmail.com>
+X-Google-Original-From: Shida Zhang <zhangshida@kylinos.cn>
+To:     djwong@kernel.org
+Cc:     zhangshida@kylinos.cn, starzhangzsd@gmail.com,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: return when delta equals 0 in xfs_mod_freecounter
+Date:   Tue, 21 Jun 2022 11:11:13 +0800
+Message-Id: <20220621031113.1222877-1-zhangshida@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YqsbpL9BZes7qDbv@infradead.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62b12810
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=7-415B0cAAAA:8
-        a=Q8UwoF1wFSFngZMcHv8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 16, 2022 at 05:01:40AM -0700, Christoph Hellwig wrote:
-> On Sat, Jun 11, 2022 at 11:26:09AM +1000, Dave Chinner wrote:
-> > 
-> > This series starts by driving the perag down into the AGI, AGF and
-> > AGFL access routines and unifies the perag structure initialisation
-> > with the high level AG header read functions. This largely replaces
-> > the xfs_mount/agno pair that is passed to all these functions with a
-> > perag, and in most places we already have a perag ready to pass in.
-> 
-> Btw, one neat thing would be versions of helpers like XFS_AG_DADDR
-> and XFS_AGB_TO_FSB that take the pag structure instead of the mp/agno
-> pair.
+There are cases that xfs_mod_freecounter() will get called when delta
+equals 0 while it's unnecessary.
 
-*nod*
+Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
+---
+ fs/xfs/xfs_mount.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Yeah, that's something I'm trying to work towards by driving more
-geometry information into the perag. I haven't tried to do the
-bigger conversions yet because the perag isn't widely used enough
-yet, and it's likely that there will be additional complexities with
-the userspace code I haven't realised yet. Getting the allocation
-code to pass around referenced perags is a big part of getting
-there, but there's still plenty more to do before I think I'll be
-able to tackle cleaning up the many unit conversion macros we have.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index daa8d29c46b4..a3db932fd1fc 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1129,6 +1129,9 @@ xfs_mod_freecounter(
+ 	if (rsvd)
+ 		ASSERT(has_resv_pool);
+ 
++	if (delta == 0)
++		return 0;
++
+ 	if (delta > 0) {
+ 		/*
+ 		 * If the reserve pool is depleted, put blocks back into it
 -- 
-Dave Chinner
-david@fromorbit.com
+2.25.1
+
