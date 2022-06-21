@@ -2,164 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 034EEC43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jun 2022 08:42:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EC98C43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jun 2022 09:00:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344495AbiFUImt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Jun 2022 04:42:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57990 "EHLO
+        id S231544AbiFUJAC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Jun 2022 05:00:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231418AbiFUImt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jun 2022 04:42:49 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B566526128;
-        Tue, 21 Jun 2022 01:42:48 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id g16-20020a17090a7d1000b001ea9f820449so12994282pjl.5;
-        Tue, 21 Jun 2022 01:42:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=BXsLSrPEBOdi1z9Ti6DCxwcO5PjEZPzcVOSiTfdD/4Y=;
-        b=c9Q7RdRfYibGX0zXagNXxxUcf3zgcJuKk+tTK6EHNafaMjJ4OghPXN8tK5dVm9fx1p
-         VazlTYGHPVnFg7D2zo0bhIyWcx3BlCaYLB1J/yY8wcTz01s96SB1b8hfeXouMCZRUH9v
-         /qPNj8aXK7eK7mxVI7KDZgLHB/mhoX/eqkHev6P7VjnKL4FuXFdnn3jhOWzO24kGjLuu
-         2FLu1HhJIMuXdRBIri5xqXRLOLxk/mlXjCjABvUQAeVVlguPMdODohOd6tr6Ll7cyfBJ
-         KcZHLBiJs4GN3Bweq356hPAPzSW+Zm/8c/uOiQgwzOeMa8pzdQDS3B5W8QJMQzdEf+vw
-         pMaw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=BXsLSrPEBOdi1z9Ti6DCxwcO5PjEZPzcVOSiTfdD/4Y=;
-        b=yH+pCvs8Gd0ts5iTcMvBr3Vteqdv1pL3dHmZmHOuQEq4AwQxiQmtivD+ZcpQ6hVJiR
-         6rDAXX6j4LS8vor9uwWygQd0WVpeLosHNnO5ctssTnVo071hB3lr+homcRggCP1g9HyD
-         vwOsB14p6uz3Xm6yNregdfPSWBXFg2y60grbItSHC3eBPlEXcxsgZNtxXNKL8j4SLztU
-         j0+RKpe4FF7I1CEV9ncJAO0eAIrIH+3lzta553/SsDp9bfTBoP1axopcRbb3fRPqq3TM
-         DdzYGddAB+vWQEKQZX1JdOELFx5at997L0xUBpY7P43D7KAAPmz56VP68DUyqL6KenDF
-         v1gA==
-X-Gm-Message-State: AJIora+L1c0NiYh4j6jaKkmd7UNzxZS+/M1BpmNAaenmZEhoRCnY3Lgp
-        2AWj2QRvmspCd76wtCp/VcI=
-X-Google-Smtp-Source: AGRyM1vN3ljCDQ8WMbISJSPrI9LgB/bE64nxkJtqABPk2gUGrZJRvKUggQYqlxfBp6/JMzIoAhGYtg==
-X-Received: by 2002:a17:90b:180b:b0:1e3:2871:6be3 with SMTP id lw11-20020a17090b180b00b001e328716be3mr31188459pjb.85.1655800968203;
-        Tue, 21 Jun 2022 01:42:48 -0700 (PDT)
-Received: from localhost.localdomain ([178.173.230.211])
-        by smtp.gmail.com with ESMTPSA id y18-20020a62b512000000b0051e7b6e8b12sm4509082pfe.11.2022.06.21.01.42.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jun 2022 01:42:47 -0700 (PDT)
-From:   Shida Zhang <starzhangzsd@gmail.com>
-X-Google-Original-From: Shida Zhang <zhangshida@kylinos.cn>
-To:     djwong@kernel.org, dchinner@redhat.com
-Cc:     zhangshida@kylinos.cn, starzhangzsd@gmail.com,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH v3] xfs: add check before calling xfs_mod_fdblocks
-Date:   Tue, 21 Jun 2022 16:42:38 +0800
-Message-Id: <20220621084238.1235880-1-zhangshida@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229535AbiFUJAA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jun 2022 05:00:00 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE1F362F6;
+        Tue, 21 Jun 2022 01:59:58 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 6E59621EFE;
+        Tue, 21 Jun 2022 08:59:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1655801997; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=eUEOchQkf9x5e/yDFu3Cw69RvWgl2OREI1612saaUJc=;
+        b=hhB3bGID15ObSnv+vpj4tfA3asH5XkoQyw1JwyYueuxBwfItcIepMAsHjsVSyVQHFTtoMo
+        dLDoaMHYTcgWzmxCn1w4/HNJ5nc/HrxtXvWP3lCtyyK2bEi5MalqE93seFoBsZtruh+dlg
+        RFssgRFtP8MqEzYiltByvy/fLi4Pb7k=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1655801997;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=eUEOchQkf9x5e/yDFu3Cw69RvWgl2OREI1612saaUJc=;
+        b=66wSKJj2EmFckhAw3sknT4WwhCws68vrJiDXAfC64IjSHgJZ7KdIcsASPJf3c6Hpb+ozqr
+        j4hi66SXh5PqgUCg==
+Received: from quack3.suse.cz (unknown [10.100.224.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 5806B2C141;
+        Tue, 21 Jun 2022 08:59:57 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id ED477A062B; Tue, 21 Jun 2022 10:59:56 +0200 (CEST)
+Date:   Tue, 21 Jun 2022 10:59:56 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Jan Kara <jack@suse.cz>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
+ workload
+Message-ID: <20220621085956.y5wyopfgzmqkaeiw@quack3.lan>
+References: <20190407232728.GF26298@dastard>
+ <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
+ <20190408141114.GC15023@quack2.suse.cz>
+ <CAOQ4uxhxgYASST1k-UaqfbLL9ERquHaKL2jtydB2+iF9aT8SRQ@mail.gmail.com>
+ <20190409082605.GA8107@quack2.suse.cz>
+ <CAOQ4uxgu4uKJp5t+RoumMneR6bw_k0CRhGhU-SLAky4VHSg9MQ@mail.gmail.com>
+ <20220617151135.yc6vytge6hjabsuz@quack3>
+ <CAOQ4uxjvx33KRSm-HX2AjL=aB5yO=FeWokZ1usDKW7+R4Ednhg@mail.gmail.com>
+ <20220620091136.4uosazpwkmt65a5d@quack3.lan>
+ <CAOQ4uxg+uY5PdcU1=RyDWCxbP4gJB3jH1zkAj=RpfndH9czXbg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxg+uY5PdcU1=RyDWCxbP4gJB3jH1zkAj=RpfndH9czXbg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Checks are missing when delta equals 0 in __xfs_ag_resv_free() and
-__xfs_ag_resv_init().
+On Tue 21-06-22 10:49:48, Amir Goldstein wrote:
+> > How exactly do you imagine the synchronization of buffered read against
+> > buffered write would work? Lock all pages for the read range in the page
+> > cache? You'd need to be careful to not bring the machine OOM when someone
+> > asks to read a huge range...
+> 
+> I imagine that the atomic r/w synchronisation will remain *exactly* as it is
+> today by taking XFS_IOLOCK_SHARED around generic_file_read_iter(),
+> when reading data into user buffer, but before that, I would like to issue
+> and wait for read of the pages in the range to reduce the probability
+> of doing the read I/O under XFS_IOLOCK_SHARED.
+> 
+> The pre-warm of page cache does not need to abide to the atomic read
+> semantics and it is also tolerable if some pages are evicted in between
+> pre-warn and read to user buffer - in the worst case this will result in
+> I/O amplification, but for the common case, it will be a big win for the
+> mixed random r/w performance on xfs.
+> 
+> To reduce risk of page cache thrashing we can limit this optimization
+> to a maximum number of page cache pre-warm.
+> 
+> The questions are:
+> 1. Does this plan sound reasonable?
 
-the case that the delta equals 0 is reachable with the command
-sequence below:
+Ah, I see now. So essentially the idea is to pull the readahead (which is
+currently happening from filemap_read() -> filemap_get_pages()) out from under
+the i_rwsem. It looks like a fine idea to me.
 
- # mkfs.xfs -f /dev/sdb5
- # mount /dev/sdb5 /mnt/scratch/
+> 2. Is there a ready helper (force_page_cache_readahead?) that
+>     I can use which takes the required page/invalidate locks?
 
-where /dev/sdb5 is my disk for test. And if the patch below is
-applied:
+page_cache_sync_readahead() should be the function you need. It does take
+care to lock invalidate_lock internally when creating & reading pages. I
+just cannot comment on whether calling this without i_rwsem does not break
+some internal XFS expectations for stuff like reflink etc.
 
-====
-xfs_mod_freecounter(
-        if (rsvd)
-                ASSERT(has_resv_pool);
-
-+       if (delta == 0)
-+               dump_stack();
-+
-        if (delta > 0) {
-                /*
-                 * If the reserve pool is depleted, put blocks back into it
-====
-
-the following stack will be shown in the message:
-
-=>  xfs_mod_freecounter+0x84/0x2b8
-=>  __xfs_ag_resv_free+0xc4/0x188
-=>  xfs_ag_resv_free+0x24/0x50
-=>  xfs_fs_unreserve_ag_blocks+0x40/0x160
-=>  xfs_mountfs+0x500/0x900
-=>  xfs_fs_fill_super+0x3d8/0x810
-=>  get_tree_bdev+0x164/0x258
-=>  xfs_fs_get_tree+0x20/0x30
-=>  vfs_get_tree+0x30/0xf8
-=>  path_mount+0x3c4/0xa58
-=>  do_mount+0x74/0x98
-
-=>  xfs_mod_freecounter+0x84/0x2b8
-=>  __xfs_ag_resv_init+0x64/0x1d0
-=>  xfs_ag_resv_init+0x108/0x1c8
-=>  xfs_fs_reserve_ag_blocks+0x4c/0x110
-=>  xfs_mountfs+0x57c/0x900
-=>  xfs_fs_fill_super+0x3d8/0x810
-=>  get_tree_bdev+0x164/0x258
-=>  xfs_fs_get_tree+0x20/0x30
-=>  vfs_get_tree+0x30/0xf8
-=>  path_mount+0x3c4/0xa58
-=>  do_mount+0x74/0x98
-
-After applying this patch, we can avoid to call xfs_mod_fdblocks when
-delta equals 0.
-
-Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
----
- Changes from v1:
- -Add checks before calling xfs_mod_fdblocks instead.
- Changes from v2:
- -Rephrase the commit description.
-
- fs/xfs/libxfs/xfs_ag_resv.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index fe94058d4e9e..c8fa032e4b00 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -149,7 +149,12 @@ __xfs_ag_resv_free(
- 		oldresv = resv->ar_orig_reserved;
- 	else
- 		oldresv = resv->ar_reserved;
--	error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
-+
-+	if (oldresv)
-+		error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
-+	else
-+		error = 0;
-+
- 	resv->ar_reserved = 0;
- 	resv->ar_asked = 0;
- 	resv->ar_orig_reserved = 0;
-@@ -215,8 +220,13 @@ __xfs_ag_resv_init(
- 
- 	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
- 		error = -ENOSPC;
--	else
--		error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
-+	else {
-+		error = 0;
-+		if (hidden_space)
-+			error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space,
-+						true);
-+	}
-+
- 	if (error) {
- 		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
- 				error, _RET_IP_);
+								Honza
 -- 
-2.25.1
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
