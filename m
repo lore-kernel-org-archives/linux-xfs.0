@@ -2,87 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A898BC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jun 2022 07:05:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B451C43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jun 2022 07:13:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344413AbiFUHFB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Jun 2022 03:05:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41258 "EHLO
+        id S229895AbiFUHNr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Jun 2022 03:13:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346495AbiFUHE6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jun 2022 03:04:58 -0400
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2063921812;
-        Tue, 21 Jun 2022 00:04:58 -0700 (PDT)
-Received: by mail-ed1-x531.google.com with SMTP id es26so16342368edb.4;
-        Tue, 21 Jun 2022 00:04:58 -0700 (PDT)
+        with ESMTP id S1346890AbiFUHNi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jun 2022 03:13:38 -0400
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5374011A08;
+        Tue, 21 Jun 2022 00:13:35 -0700 (PDT)
+Received: by mail-ej1-x62b.google.com with SMTP id pk21so2375978ejb.2;
+        Tue, 21 Jun 2022 00:13:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc:content-transfer-encoding;
-        bh=0B3xaLPQDTY5CWdU4uuAJuk+lCuTNpKsZkpyLv+wZNk=;
-        b=FkU5Z/5OwQTqLKI9hQ1umabBxiIBi+vrW8tWIvuS7GOONQH1byKgQ2/KWlgrn76E54
-         Sp7mr57ca9YY6F1RW/r1olrbyiceopLmFgAMW2GZz6ff5nTxJwpYmw1AGjjs6UEeX0tA
-         A3vG5vM/qNWiitU82KORJ/xTaRgtofVmpm+PM10gQcLUn1931APC9OnHMpj9lAnkEgww
-         oLVRMdh1NiStyET0pLeLwz830sKJNcL5stopZdfBeF5OYwrR+rLNBYANY/xs11uJtZoM
-         2GO9bmyZiakyjIxade2/Z1mUoIuwbfIVcq8mpbl1qpCg0WK2vTRx/ACuPC/ZteOlHkYZ
-         4cqA==
+        bh=aIA+1YSKl9xwh+U2jOA5P7gKHxbZ6zMzzGEJxc9zUpQ=;
+        b=gw44OF7Rv5WwcyW2uRl5S9mv3PN3asE1qfIL+6ip5FO7uqHz9PcKBZFFX0aoetq713
+         brFkBPLS6h1/RqUUac8/Vk8JJfrJuwO5mfQEEKS3nrf8LExZuGqjOxBU6Iu85Cr0r578
+         u3Ts2oWxO1y/UFm8E1QgPMiYHu6il/JC4htTWmrPvOeKvMUxZMxBkgBJCFa183DNfy4O
+         EwREmPnaIWjOaqSJqMtdzrwNg3BqZqK5VZDvdkIyVLLo8ZtCod+MAi0RDmJB5Hp5BOqW
+         U7GfgZTna8g8jLS8Kak28/9/zp2S04T39Vv2qwIWsc5p/ycxcMlY2AI7cC2o3QkkUnBg
+         rQQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc:content-transfer-encoding;
-        bh=0B3xaLPQDTY5CWdU4uuAJuk+lCuTNpKsZkpyLv+wZNk=;
-        b=AMJVbJfJZz3o4WeJvq1I/uKiO1yWZxInM7mNT+g+tvnClqxZHJzLmHdNix7xgYCGEk
-         qyOTbYi7I/G/sIYe0u2mzfjsDONul3jNBU3zM0p6mf8muZ+GTVrgtsFI961Q4KAwRoEt
-         aK6oUVbdKKX6X/UazKxztV3w6rXLgMiPhaydYegjR0zyELYE67W4H8XCRb2EKEhIP3zd
-         l1fWoFWDF/n2G0IOtucrBt2woYBJ2lQqaEaHCRuTk3NXNoReJA0uIlagnpSFGupabLp6
-         /AwHQ2gVv67lp+QEAayTbWago/Lm/fm9UzbXKS6urAT2cSQPtlj0A7deHtPKTi/ENjIH
-         AFrg==
-X-Gm-Message-State: AJIora/IM/amx4YES1as4i00XvS/pgmoKyq59Y8ThIJ0f84uiVvd54nZ
-        JgFibansYwI73uW1Om/+GMUyJb6nl893/wgxkCo=
-X-Google-Smtp-Source: AGRyM1vk/fsk1xLwAiSdWUdI76LBwT9uqXC401BJldWVyTDbv2mVv+Ljf8Qlj9VQINAmNiUmrcUKC3/DfFSHrVtQ1KU=
-X-Received: by 2002:a05:6402:5212:b0:42e:2fa:41a7 with SMTP id
- s18-20020a056402521200b0042e02fa41a7mr33591154edd.22.1655795096619; Tue, 21
- Jun 2022 00:04:56 -0700 (PDT)
+        bh=aIA+1YSKl9xwh+U2jOA5P7gKHxbZ6zMzzGEJxc9zUpQ=;
+        b=vofpxo/C/MYXJRfW4bZxHZOEedB9/rojNZmxYPWTbtKOXF/m+weuC8s+B8nu0y0lRs
+         /OFBg34cq89UV6aAE6yeo9z+QA5NNiLTVEITDdx+EjURiZuHpxCUXoxiaqS3Ta4Zbb1u
+         QvGJqivBUljD1xBcGZ65T2sv6kUPRUNOkNbNd1H9/3bGeTUR6whzr/AJ1yZVHRagXi6h
+         71wBMwTAmOxLVms4HmOTw4yjnGuDy4+Jg4u0Cy140B8ySSU6s+bGlgH0KSQ3quW0Phto
+         j/u+zjtoy/VOZm30APZCkaLPw9Ct8zahRMle3gsn4q9t7F3AXvbdqeJi2B/btDHjrBny
+         1Lww==
+X-Gm-Message-State: AJIora/BQ/jMFsPyHxhGZ2i/OTKrFnX7NX62NFZqIzI1o7pQCKqWVIS+
+        NdKoZTNc4Q18SQpBIbRRStrJLJN2kmcBaL+T7kVUndeTgOgfiXYB
+X-Google-Smtp-Source: AGRyM1vVwEZRj74D/u4+iIayf3lq1ZmASOLg9o3Kp/fWePh/ZCc4vGcwKsevzboSlgJ+oyGILaPtM2tJUAaeSKpk0bI=
+X-Received: by 2002:a17:907:3f88:b0:711:d5a6:105 with SMTP id
+ hr8-20020a1709073f8800b00711d5a60105mr24734412ejc.727.1655795613765; Tue, 21
+ Jun 2022 00:13:33 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220621031113.1222877-1-zhangshida@kylinos.cn> <20220621043550.GP227878@dread.disaster.area>
-In-Reply-To: <20220621043550.GP227878@dread.disaster.area>
+References: <20220621070224.1231039-1-zhangshida@kylinos.cn>
+In-Reply-To: <20220621070224.1231039-1-zhangshida@kylinos.cn>
 From:   Stephen Zhang <starzhangzsd@gmail.com>
-Date:   Tue, 21 Jun 2022 15:04:20 +0800
-Message-ID: <CANubcdUO55kSFc7USg-EsgE5uvQR08s8wcxrf4=vHk8VOiisjw@mail.gmail.com>
-Subject: Re: [PATCH] xfs: return when delta equals 0 in xfs_mod_freecounter
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     djwong@kernel.org, zhangshida <zhangshida@kylinos.cn>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Date:   Tue, 21 Jun 2022 15:12:57 +0800
+Message-ID: <CANubcdVceGMyjKbBLyrWZ9jStjWOLgk8AT7_1UDkx8eEb9VgLw@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs: add check before calling xfs_mod_fdblocks
+To:     djwong@kernel.org, dchinner@redhat.com
+Cc:     zhangshida <zhangshida@kylinos.cn>, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dave Chinner <david@fromorbit.com> =E4=BA=8E2022=E5=B9=B46=E6=9C=8821=E6=97=
-=A5=E5=91=A8=E4=BA=8C 12:35=E5=86=99=E9=81=93=EF=BC=9A
+Shida Zhang <starzhangzsd@gmail.com> =E4=BA=8E2022=E5=B9=B46=E6=9C=8821=E6=
+=97=A5=E5=91=A8=E4=BA=8C 15:02=E5=86=99=E9=81=93=EF=BC=9A
 >
-> On Tue, Jun 21, 2022 at 11:11:13AM +0800, Shida Zhang wrote:
-> > There are cases that xfs_mod_freecounter() will get called when delta
-> > equals 0 while it's unnecessary.
+> Checks are missing when delta equals 0 in __xfs_ag_resv_free() and
+> __xfs_ag_resv_init().
 >
-> AFAICT all of the call paths are guarded by checks to ensure the
-> delta is, in fact, not zero. i.e. if the delta is zero, we shouldn't
-> be calling xfs_mod_fdblocks() or xfs_mod_frextents() at all.
+> Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
+> ---
+>  Changes from v1:
+>  -Add checks before calling xfs_mod_fdblocks instead.
 >
-> Can you explain in more detail what code path leads to delta =3D 0
-> here?
+>  fs/xfs/libxfs/xfs_ag_resv.c | 16 +++++++++++++---
+>  1 file changed, 13 insertions(+), 3 deletions(-)
 >
-> Cheers,
+> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> index fe94058d4e9e..c8fa032e4b00 100644
+> --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> @@ -149,7 +149,12 @@ __xfs_ag_resv_free(
+>                 oldresv =3D resv->ar_orig_reserved;
+>         else
+>                 oldresv =3D resv->ar_reserved;
+> -       error =3D xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
+> +
+> +       if (oldresv)
+> +               error =3D xfs_mod_fdblocks(pag->pag_mount, oldresv, true)=
+;
+> +       else
+> +               error =3D 0;
+> +
+>         resv->ar_reserved =3D 0;
+>         resv->ar_asked =3D 0;
+>         resv->ar_orig_reserved =3D 0;
+> @@ -215,8 +220,13 @@ __xfs_ag_resv_init(
 >
-> Dave.
+>         if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
+>                 error =3D -ENOSPC;
+> -       else
+> -               error =3D xfs_mod_fdblocks(mp, -(int64_t)hidden_space, tr=
+ue);
+> +       else {
+> +               error =3D 0;
+> +               if (hidden_space)
+> +                       error =3D xfs_mod_fdblocks(mp, -(int64_t)hidden_s=
+pace,
+> +                                               true);
+> +       }
+> +
+>         if (error) {
+>                 trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agn=
+o,
+>                                 error, _RET_IP_);
 > --
-> Dave Chinner
-> david@fromorbit.com
+> 2.25.1
+>
 
-Yeah. I will give it in another v2 version patch.
+And the code path that lead delta =3D 0 is shown below:
 
-Cheers,
+=3D> xfs_mod_freecounter+0x84/0x2b8
+=3D> __xfs_ag_resv_free+0xc4/0x188
+=3D> xfs_ag_resv_free+0x24/0x50
+=3D> xfs_fs_unreserve_ag_blocks+0x40/0x160
+=3D> xfs_mountfs+0x500/0x900
+=3D> xfs_fs_fill_super+0x3d8/0x810
+=3D> get_tree_bdev+0x164/0x258
+=3D> xfs_fs_get_tree+0x20/0x30
+=3D> vfs_get_tree+0x30/0xf8
+=3D> path_mount+0x3c4/0xa58
+=3D> do_mount+0x74/0x98
 
-Stephen.
+=3D> xfs_mod_freecounter+0x84/0x2b8
+=3D> __xfs_ag_resv_init+0x64/0x1d0
+=3D> xfs_ag_resv_init+0x108/0x1c8
+=3D> xfs_fs_reserve_ag_blocks+0x4c/0x110
+=3D> xfs_mountfs+0x57c/0x900
+=3D> xfs_fs_fill_super+0x3d8/0x810
+=3D> get_tree_bdev+0x164/0x258
+=3D> xfs_fs_get_tree+0x20/0x30
+=3D> vfs_get_tree+0x30/0xf8
+=3D> path_mount+0x3c4/0xa58
+=3D> do_mount+0x74/0x98
