@@ -2,153 +2,307 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2856ACCA47D
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 17:10:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA3BC43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 17:41:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347022AbiFVRKT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 13:10:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43054 "EHLO
+        id S1376355AbiFVRlT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 13:41:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377178AbiFVRKG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 13:10:06 -0400
-Received: from mail-vk1-xa33.google.com (mail-vk1-xa33.google.com [IPv6:2607:f8b0:4864:20::a33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 253DE3FDA3;
-        Wed, 22 Jun 2022 10:09:32 -0700 (PDT)
-Received: by mail-vk1-xa33.google.com with SMTP id 15so4983512vko.13;
-        Wed, 22 Jun 2022 10:09:32 -0700 (PDT)
+        with ESMTP id S1359087AbiFVRlS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 13:41:18 -0400
+Received: from mail-il1-x12b.google.com (mail-il1-x12b.google.com [IPv6:2607:f8b0:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E9712DA95
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 10:41:16 -0700 (PDT)
+Received: by mail-il1-x12b.google.com with SMTP id k7so4849623ils.8
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 10:41:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=5+MlBiSJnRmQo3qNED63eGdMk3fiiwXt1uzWfNTV6k4=;
-        b=JyumZg9sWEcqQDwaKpMUYnsthohVzKstGhofsBIpVBjrLrz0VUyMVd6oiP7a0XWwyb
-         /6Pw815Q7FyvzVMcNGfWQEKLqHfLsC1mhwQQp34AA9s9QAbpUV9UpQ2DY1BHB9Afpi2I
-         mxlW0hmDnCEFKq1nu7BhpgBiLpi5bfBRgFF7QZkwpWo+3KePbXQjStu+6yxRMzQNSYik
-         3kujJnQMrW2HhOLqHlSf5xWkqPUADNRokilHDPS2oJvOu7SPWxanKQJSJ1wMHHzwUpfI
-         uruzWvQlzylt2Pqcw/i8QuXHORR6w8dOu6O/VK3bCDnlUko0YEQFuYUP56PuQOefF70B
-         k+Bw==
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=5znWOUPlu9UL/a0rEqm3e4EB3AgyFZscCjBXSzqE2gE=;
+        b=OWmOUoN7UrHDonVxXgIKFwzrqvqFhi48ZKWTCOXJKPC7Aejxf8UrEsQ/LEXJAH1BOm
+         ACpM6Clll5DS6TWV41EpBCclTDwy6bnBzLZbPQLnxCJ/J8fbchjPgOV2hql5G5K8qu2y
+         6hi5BCmSArH1u8lp4EXVdZ/d9FipFemHpeFaUZ09ZA2X9LSOTqYtphz+YtXk2MNwVZz2
+         uekp/rqUrqc4l4OAKnPxIMvqsSPucks+Meo5wJrQpQVsi4h9iguXzLhzheXITTApMJRH
+         voziAx56k/K8TtPO0gNHchLh7hE7rTb5ku42t8RRcq3vvpdm4tacRYe35PxSMTY05gcb
+         17pA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=5+MlBiSJnRmQo3qNED63eGdMk3fiiwXt1uzWfNTV6k4=;
-        b=LCvRKMJuA7pYqfMMKcjtjErVZsZkpATvR7W93sVS6UaRHAwBJIA/1R+xPm9cJiIN9L
-         bgSdhwvtWIFbg89okY1X6K2JfmMJfr7J8aRwq9RzYxhmqvZEMNysGMnXgF78AesAobTP
-         izdmfUeSFwjwYRm6BQOK27V+miWI/VyhWRM2nbQRkWqprOKKDkDRjNWTqTcn5uJXMqlz
-         gd+yKfVCCHFxMW4o/rcIzmwM+IKsJ2Bqz207I0vZntTxUfa2rtFs9jHCxaHJ71AnkneM
-         iUS0RssIy+rbRCN0QVWC5Zn9wzgDUd3aZhSrGOp/MuuBAprnFJ+wDRDrsi8s/29wKCY7
-         8KZA==
-X-Gm-Message-State: AJIora+pyOyBAvVXrpYymBFAFTbS28Fp/ebJQVEYDRl6vZdZtnpr3OVX
-        XgotpoWcHQlyORvkCyOpx2de9VMsjtHHJOb+bEY=
-X-Google-Smtp-Source: AGRyM1vGzbJb6BAnsHu/myrKdHBfelQ4om1p0ZtgmvFHpBrFfoTIeNcrZ6lwKqvqB+DnNqVrRdG2Hs9npTYng1xdTYs=
-X-Received: by 2002:a05:6122:2205:b0:321:230a:53e1 with SMTP id
- bb5-20020a056122220500b00321230a53e1mr15047689vkb.25.1655917771169; Wed, 22
- Jun 2022 10:09:31 -0700 (PDT)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=5znWOUPlu9UL/a0rEqm3e4EB3AgyFZscCjBXSzqE2gE=;
+        b=FLRCMoNzJ3IbkaZz35pVEiWCpKKjpwZFijdH/RMa6wuj6FbO7w/r0mFMDTqsN0LWpk
+         qkawUkX9CkWCAMlkj6lXMU4jnAo2+5OTKTXAXlzQxbzktv5M9vAEIRry54dzMx+oixLq
+         E5xLBY3JClWgWPR2GB8Zqozf39tSJrAq1GQoSIHPE6rcTCnI01NtTEUyM1WmjqmpV0El
+         zM5PaDTFMc6/goUUZ5INo2RZBCcX+5Uc31+FAiCE5oR0hkYNP6vvY3uzVKT+eI6JBpDq
+         dzrRkrSArmDvZdrCn3SYf42tGbN+27GvS+4Mlw3gjdC5/rdZl2gdwpn3jN+419sHJKew
+         UAug==
+X-Gm-Message-State: AJIora8cyyn62NLPPkys8lIU2BGbFudwuFaelInuxuUhhVIL8zT4rfj9
+        d5DX/dt+oH/UMVQwSY3wXrVHGw==
+X-Google-Smtp-Source: AGRyM1tCkEMAKgwapkI8iu5ZVaK90uJ5BvWZgHxJr/HgNKnaMvf99gngOAfvoW/KKRcVwjVPNwxm2Q==
+X-Received: by 2002:a92:d80a:0:b0:2d8:b37e:2c9c with SMTP id y10-20020a92d80a000000b002d8b37e2c9cmr2601613ilm.265.1655919675820;
+        Wed, 22 Jun 2022 10:41:15 -0700 (PDT)
+Received: from [192.168.1.172] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id f20-20020a02a814000000b0032e7bd2287asm8782815jaj.94.2022.06.22.10.41.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Jun 2022 10:41:15 -0700 (PDT)
+Message-ID: <d18ffe14-7dd2-92a7-abd0-673b7da62adb@kernel.dk>
+Date:   Wed, 22 Jun 2022 11:41:14 -0600
 MIME-Version: 1.0
-References: <20220617100641.1653164-1-amir73il@gmail.com> <20220617100641.1653164-8-amir73il@gmail.com>
- <YrNHQ9IAIceAx/wU@magnolia>
-In-Reply-To: <YrNHQ9IAIceAx/wU@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Wed, 22 Jun 2022 20:09:19 +0300
-Message-ID: <CAOQ4uxjj=12X7tZr6tgtaWVVtw9T7h7m6POXFg51J3s89b=42g@mail.gmail.com>
-Subject: Re: [PATCH 5.10 CANDIDATE 07/11] xfs: xfs_log_force_lsn isn't passed
- a LSN
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Allison Henderson <allison.henderson@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v9 00/14] io-uring/xfs: support async buffered writes
+Content-Language: en-US
+To:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
+        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Cc:     david@fromorbit.com, jack@suse.cz, hch@infradead.org,
+        willy@infradead.org
+References: <20220616212221.2024518-1-shr@fb.com>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20220616212221.2024518-1-shr@fb.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 22, 2022 at 7:45 PM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> On Fri, Jun 17, 2022 at 01:06:37PM +0300, Amir Goldstein wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > commit 5f9b4b0de8dc2fb8eb655463b438001c111570fe upstream.
-> >
-> > [backported from CIL scalability series for dependency]
-> >
-> > In doing an investigation into AIL push stalls, I was looking at the
-> > log force code to see if an async CIL push could be done instead.
-> > This lead me to xfs_log_force_lsn() and looking at how it works.
-> >
-> > xfs_log_force_lsn() is only called from inode synchronisation
-> > contexts such as fsync(), and it takes the ip->i_itemp->ili_last_lsn
-> > value as the LSN to sync the log to. This gets passed to
-> > xlog_cil_force_lsn() via xfs_log_force_lsn() to flush the CIL to the
-> > journal, and then used by xfs_log_force_lsn() to flush the iclogs to
-> > the journal.
-> >
-> > The problem is that ip->i_itemp->ili_last_lsn does not store a
-> > log sequence number. What it stores is passed to it from the
-> > ->iop_committing method, which is called by xfs_log_commit_cil().
-> > The value this passes to the iop_committing method is the CIL
-> > context sequence number that the item was committed to.
-> >
-> > As it turns out, xlog_cil_force_lsn() converts the sequence to an
-> > actual commit LSN for the related context and returns that to
-> > xfs_log_force_lsn(). xfs_log_force_lsn() overwrites it's "lsn"
-> > variable that contained a sequence with an actual LSN and then uses
-> > that to sync the iclogs.
-> >
-> > This caused me some confusion for a while, even though I originally
-> > wrote all this code a decade ago. ->iop_committing is only used by
-> > a couple of log item types, and only inode items use the sequence
-> > number it is passed.
-> >
-> > Let's clean up the API, CIL structures and inode log item to call it
-> > a sequence number, and make it clear that the high level code is
-> > using CIL sequence numbers and not on-disk LSNs for integrity
-> > synchronisation purposes.
-> >
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->
-> This /looks/ right, but given the invasiveness of this patch, I'm
-> curious how much you had to change from upstream to get here?
+Top posting - are people fine with queueing this up at this point? Will
+need a bit of massaging for io_uring as certain things moved to another
+file, but it's really minor. I'd do a separate topic branch for this.
 
-IIRC, it wasn't so bad, there may have been a lot of conflicts, but
-most of them were resolved by doing search&replace on the 5.10
-code and it was also pretty clean and the compiler will catch errors
-if something that needed to be replaced wasn't in a conflicting hunk.
 
->
-> Also, did you look at the other log fixes in 5.14 and decide none of
-> them were needed/worth the risk, or is that merely pending for the next
-> round?
+On 6/16/22 3:22 PM, Stefan Roesch wrote:
+> This patch series adds support for async buffered writes when using both
+> xfs and io-uring. Currently io-uring only supports buffered writes in the
+> slow path, by processing them in the io workers. With this patch series it is
+> now possible to support buffered writes in the fast path. To be able to use
+> the fast path the required pages must be in the page cache, the required locks
+> in xfs can be granted immediately and no additional blocks need to be read
+> form disk.
+> 
+> Updating the inode can take time. An optimization has been implemented for
+> the time update. Time updates will be processed in the slow path. While there
+> is already a time update in process, other write requests for the same file,
+> can skip the update of the modification time.
+>   
+> 
+> Performance results:
+>   For fio the following results have been obtained with a queue depth of
+>   1 and 4k block size (runtime 600 secs):
+> 
+>                  sequential writes:
+>                  without patch           with patch      libaio     psync
+>   iops:              77k                    209k          195K       233K
+>   bw:               314MB/s                 854MB/s       790MB/s    953MB/s
+>   clat:            9600ns                   120ns         540ns     3000ns
+> 
+> 
+> For an io depth of 1, the new patch improves throughput by over three times
+> (compared to the exiting behavior, where buffered writes are processed by an
+> io-worker process) and also the latency is considerably reduced. To achieve the
+> same or better performance with the exisiting code an io depth of 4 is required.
+> Increasing the iodepth further does not lead to improvements.
+> 
+> In addition the latency of buffered write operations is reduced considerably.
+> 
+> 
+> 
+> Support for async buffered writes:
+> 
+>   To support async buffered writes the flag FMODE_BUF_WASYNC is introduced. In
+>   addition the check in generic_write_checks is modified to allow for async
+>   buffered writes that have this flag set.
+> 
+>   Changes to the iomap page create function to allow the caller to specify
+>   the gfp flags. Sets the IOMAP_NOWAIT flag in iomap if IOCB_NOWAIT has been set
+>   and specifies the requested gfp flags.
+> 
+>   Adds the iomap async buffered write support to the xfs iomap layer.
+>   Adds async buffered write support to the xfs iomap layer.
+> 
+> Support for async buffered write support and inode time modification
+> 
+>   Splits the functions for checking if the file privileges need to be removed in
+>   two functions: check function and a function for the removal of file privileges.
+>   The same split is also done for the function to update the file modification time.
+> 
+>   Implement an optimization that while a file modification time is pending other
+>   requests for the same file don't need to wait for the file modification update. 
+>   This avoids that a considerable number of buffered async write requests get
+>   punted.
+> 
+>   Take the ilock in nowait mode if async buffered writes are enabled and enable
+>   the async buffered writes optimization in io_uring.
+> 
+> Support for write throttling of async buffered writes:
+> 
+>   Add a no_wait parameter to the exisiting balance_dirty_pages() function. The
+>   function will return -EAGAIN if the parameter is true and write throttling is
+>   required.
+> 
+>   Add a new function called balance_dirty_pages_ratelimited_async() that will be
+>   invoked from iomap_write_iter() if an async buffered write is requested.
+>   
+> Enable async buffered write support in xfs
+>    This enables async buffered writes for xfs.
+> 
+> 
+> Testing:
+>   This patch has been tested with xfstests, fsx, fio and individual test programs.
+> 
+> 
+> Changes:
+>   V9:
+>   - Added comment for function balance_dirty_pages_ratelimited_flags()
+>   - checking return code for iop allocation in iomap_page_create()
+>   
+>   V8:
+>   - Reverted back changes to iomap_write_iter and used Mathew Wilcox code review
+>     recommendation with an additional change to revert the iterator.
+>   - Removed patch "fs: Optimization for concurrent file time updates" 
+>   - Setting flag value in file_modified_flags()
+>   - Removed additional spaces in comment in file_update_time()
+>   - Run fsx with 1 billion ops against the changes (Run passed)
+> 
+>   V7:
+>   - Change definition and if clause in " iomap: Add flags parameter to
+>     iomap_page_create()"
+>   - Added patch "iomap: Return error code from iomap_write_iter()" to address
+>     the problem Dave Chinner brought up: retrying memory allocation a second
+>     time when we are under memory pressure. 
+>   - Removed patch "xfs: Change function signature of xfs_ilock_iocb()"
+>   - Merged patch "xfs: Enable async buffered write support" with previous
+>     patch
+> 
+>   V6:
+>   - Pass in iter->flags to calls in iomap_page_create()
+>   
+>   V5:
+>   - Refreshed to 5.19-rc1
+>   - Merged patch 3 and patch 4
+>     "mm: Prepare balance_dirty_pages() for async buffered writes" and
+>     "mm: Add balance_dirty_pages_ratelimited_flags() function"
+>   - Reformatting long file in iomap_page_create()
+>   - Replacing gfp parameter with flags parameter in iomap_page_create()
+>     This makes sure that the gfp setting is done in one location.
+>   - Moved variable definition outside of loop in iomap_write_iter()
+>   - Merged patch 7 with patch 6.
+>   - Introduced __file_remove_privs() that get the iocb_flags passed in
+>     as an additional parameter
+>   - Removed file_needs_remove_privs() function
+>   - Renamed file_needs_update_time() inode_needs_update_time()
+>   - inode_needs_update_time() no longer passes the file pointer
+>   - Renamed file_modified_async() to file_modified_flags()
+>   - Made file_modified_flags() an internal function
+>   - Removed extern keyword in file_modified_async definition
+>   - Added kiocb_modified function.
+>   - Separate patch for changes to xfs_ilock_for_iomap()
+>   - Separate patch for changes to xfs_ilock_inode()
+>   - Renamed xfs_ilock_xfs_inode()n back to xfs_ilock_iocb()
+>   - Renamed flags parameter to iocb_flags in function xfs_ilock_iocb()
+>   - Used inode_set_flags() to manipulate inode flags in the function
+>     file_modified_flags()
+> 
+>   V4:
+>   - Reformat new code in generic_write_checks_count().
+>   - Removed patch that introduced new function iomap_page_create_gfp().
+>   - Add gfp parameter to iomap_page_create() and change all callers
+>     All users will enforce the number of blocks check
+>   - Removed confusing statement in iomap async buffer support patch
+>   - Replace no_wait variable in __iomap_write_begin with check of
+>     IOMAP_NOWAIT for easier readability.
+>   - Moved else if clause in __iomap_write_begin into else clause for
+>     easier readability
+>   - Removed the balance_dirty_pages_ratelimited_async() function and
+>     reverted back to the earlier version that used the function
+>     balance_dirty_pages_ratelimited_flags()
+>   - Introduced the flag BDP_ASYNC.
+>   - Renamed variable in iomap_write_iter from i_mapping to mapping.
+>   - Directly call balance_dirty_pages_ratelimited_flags() in the function
+>     iomap_write_iter().
+>   - Re-ordered the patches.
+>   
+>   V3:
+>   - Reformat new code in generic_write_checks_count() to line lengthof 80.
+>   - Remove if condition in __iomap_write_begin to maintain current behavior.
+>   - use GFP_NOWAIT flag in __iomap_write_begin
+>   - rename need_file_remove_privs() function to file_needs_remove_privs()
+>   - rename do_file_remove_privs to __file_remove_privs()
+>   - add kernel documentation to file_remove_privs() function
+>   - rework else if branch in file_remove_privs() function
+>   - add kernel documentation to file_modified() function
+>   - add kernel documentation to file_modified_async() function
+>   - rename err variable in file_update_time to ret
+>   - rename function need_file_update_time() to file_needs_update_time()
+>   - rename function do_file_update_time() to __file_update_time()
+>   - don't move check for FMODE_NOCMTIME in generic helper
+>   - reformat __file_update_time for easier reading
+>   - add kernel documentation to file_update_time() function
+>   - fix if in file_update_time from < to <=
+>   - move modification of inode flags from do_file_update_time to file_modified()
+>     When this function is called, the caller must hold the inode lock.
+>   - 3 new patches from Jan to add new no_wait flag to balance_dirty_pages(),
+>     remove patch 12 from previous series
+>   - Make balance_dirty_pages_ratelimited_flags() a static function
+>   - Add new balance_dirty_pages_ratelimited_async() function
+>   
+>   V2:
+>   - Remove atomic allocation
+>   - Use direct write in xfs_buffered_write_iomap_begin()
+>   - Use xfs_ilock_for_iomap() in xfs_buffered_write_iomap_begin()
+>   - Remove no_wait check at the end of xfs_buffered_write_iomap_begin() for
+>     the COW path.
+>   - Pass xfs_inode pointer to xfs_ilock_iocb and rename function to
+>     xfs_lock_xfs_inode
+>   - Replace existing uses of xfs_ilock_iocb with xfs_ilock_xfs_inode
+>   - Use xfs_ilock_xfs_inode in xfs_file_buffered_write()
+>   - Callers of xfs_ilock_for_iomap need to initialize lock mode. This is
+>     required so writes use an exclusive lock
+>   - Split of _balance_dirty_pages() from balance_dirty_pages() and return
+>     sleep time
+>   - Call _balance_dirty_pages() in balance_dirty_pages_ratelimited_flags()
+>   - Move call to balance_dirty_pages_ratelimited_flags() in iomap_write_iter()
+>     to the beginning of the loop
+> 
+> 
+> 
+> Jan Kara (3):
+>   mm: Move starting of background writeback into the main balancing loop
+>   mm: Move updates of dirty_exceeded into one place
+>   mm: Add balance_dirty_pages_ratelimited_flags() function
+> 
+> Stefan Roesch (11):
+>   iomap: Add flags parameter to iomap_page_create()
+>   iomap: Add async buffered write support
+>   iomap: Return -EAGAIN from iomap_write_iter()
+>   fs: Add check for async buffered writes to generic_write_checks
+>   fs: add __remove_file_privs() with flags parameter
+>   fs: Split off inode_needs_update_time and __file_update_time
+>   fs: Add async write file modification handling.
+>   io_uring: Add support for async buffered writes
+>   io_uring: Add tracepoint for short writes
+>   xfs: Specify lockmode when calling xfs_ilock_for_iomap()
+>   xfs: Add async buffered write support
+> 
+>  fs/inode.c                      | 168 +++++++++++++++++++++++---------
+>  fs/io_uring.c                   |  32 +++++-
+>  fs/iomap/buffered-io.c          |  71 +++++++++++---
+>  fs/read_write.c                 |   4 +-
+>  fs/xfs/xfs_file.c               |  11 +--
+>  fs/xfs/xfs_iomap.c              |  11 ++-
+>  include/linux/fs.h              |   4 +
+>  include/linux/writeback.h       |   7 ++
+>  include/trace/events/io_uring.h |  25 +++++
+>  mm/page-writeback.c             |  89 +++++++++++------
+>  10 files changed, 314 insertions(+), 108 deletions(-)
+> 
+> 
+> base-commit: b13baccc3850ca8b8cccbf8ed9912dbaa0fdf7f3
 
-There are other log fixes pending, which look like they fix scary bugs.
-I just promoted this one to accommodate the joint 5.10/5.15 series.
-Here are the fixes pending in xfs-5.10.y-4:
 
-* 6e0d4f5c1a0f - (xfs-5.10.y-4) xfs: Enforce attr3 buffer recovery order
-* 610edc215903 - xfs: logging the on disk inode LSN can make it go backwards
-* da28279083ee - xfs: reset child dir '..' entry when unlinking child
-* 35efb2d1e3a7 - xfs: remove dead stale buf unpin handling code
-* fa7ae3691e6f - xfs: hold buffer across unpin and potential shutdown processing
-* 0f6d6b3e8da3 - xfs: force the log offline when log intent item recovery fails
-* 1883c074e795 - xfs: fix log intent recovery ENOSPC shutdowns when
-inactivating inodes
+-- 
+Jens Axboe
 
-I would be happy to get to post these.
-If you have time to ACK the 5.13 selection [1], I will start testing
-xfs-5.10.y-4.
-
-Thanks!
-Amir.
-
-[1] https://lore.kernel.org/linux-xfs/20220606160537.689915-1-amir73il@gmail.com/
