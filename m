@@ -2,53 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A81A9C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 19:35:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C49F8C43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 19:37:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230171AbiFVTfr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 15:35:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45504 "EHLO
+        id S1357515AbiFVThh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 15:37:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230224AbiFVTfr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 15:35:47 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F78FF32;
-        Wed, 22 Jun 2022 12:35:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=11ZK0h9dNKq+tn7saPYTFwpIx/UcfWFs81TAdiQjTFg=; b=nWj4948F9YU/anh3+BcfKcXNcA
-        BQY+KIzRASbQxyi7n1yn+hvd96ilXmbYal//kHeHYObd35mjQGgocxFOpeI+6MFbS7CqwRbT1nNjS
-        gFzLTiV3noAgcsw+znTMsqEsXMEzolz99g3PuEvxcFYm1p0JpNj8HOKaaU6nSywjiV+/GlEH/lTrI
-        XUb/odC7SVEu+3YU4tFm4eIptfWCC5hsjMr5nP0I8Ex2tTMUPacG6rcC9qz0zDqSP+Km2cWo0IbJ/
-        9WPmwczKEjXeSi4EDpMaQgFDyTUKy3Wvi4LOjXJkqoF3mVMexkgNqeCsIj7LyTbXjBwKAybDSNwnO
-        abkV4gSw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o468W-007GLI-Po; Wed, 22 Jun 2022 19:35:36 +0000
-Date:   Wed, 22 Jun 2022 20:35:36 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Jens Axboe <axboe@kernel.dk>
+        with ESMTP id S1356964AbiFVThg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 15:37:36 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0E6A3C731
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 12:37:34 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id t21so10724614pfq.1
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 12:37:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=vLSA30lDdLkkDZbTdMy4zEFSQCe7LQsCuNdhdhUVnyc=;
+        b=fQW3sLitv3yqKwsN0CNXkWDviWem6C1hxi+U9qy+SOHKKXJGHBat0NNdlUvxXvbAvq
+         9IUjlFZMndOYMzqbhmcUuR0IXdM7XQ5XLtI0iFqD+XK1HoLX2fuSJPy5d/gYpFyO7fY6
+         xZq/IWr8kBiAsAk5ulZDp1dn9Vnkux8oZ0Jsonc7JWyR3MbnXfc88UiLZMPEKzfAZ+7A
+         Y6/ebrzPu2QqLLEUccMSfE638uTvx1g8TcJFpg5IoCv9HfYJHUJjrjaPP/7yn0BxiiWB
+         LAZri9n4DdmvQGCZhHS5pcEkuz4hVfix9vEKvcJY3uc8gplytTDUJ6aLsH3ZL7IF2ziD
+         4Dnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=vLSA30lDdLkkDZbTdMy4zEFSQCe7LQsCuNdhdhUVnyc=;
+        b=N8GpXCuL1rn2QwXWEpVi0cRU9CTF/p3eEFh2iHeyhGeL8tspniXl4rAdDxk8+qBJbV
+         8Odhols2647vAA2L1QmK3+f5SX9N/t9IzzsUpwnXdnHrENT9XfxAx58JHJQZ2t3MySZU
+         GYF5gPvI558W+ZlgVSYz8NYLzOjpTGbU5Gu3TAWoVpMi46pxbRYY2GR4Vfu8fIhCMZHr
+         Ku6Nwq795WvnjZgBrB1XEjbEAWW/pghn4wmsnJ+wzOPxIHN4LILTnrosMy5OeebtqRXB
+         xM/6Bl7NEWsbsSECr68opy/kN9zOdJrTDZo1Vb3IzdZZku/RpZfRdbsTvgNzZwsuP4+5
+         1vPw==
+X-Gm-Message-State: AJIora/APDWYmPpRBW0vqMfrmmI/Ilz3BOds+/Ib4HElHvUByXg8E8Wa
+        1SVLBuSB8lnCeAnObShpBBJ17g==
+X-Google-Smtp-Source: AGRyM1u6MpW/YCDLzqSgNzS2v8MbvkZDkPP/YeigD8Li9EZ7Wn53yh1D2KPX9MW9S3XrJQpMreg+JQ==
+X-Received: by 2002:a63:9c4:0:b0:401:a7b6:ad18 with SMTP id 187-20020a6309c4000000b00401a7b6ad18mr4295807pgj.523.1655926654185;
+        Wed, 22 Jun 2022 12:37:34 -0700 (PDT)
+Received: from [192.168.1.100] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id y21-20020a056a00191500b005252867671esm4596595pfi.66.2022.06.22.12.37.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Jun 2022 12:37:33 -0700 (PDT)
+Message-ID: <18355997-11e3-b511-f0cd-59c806fef6f1@kernel.dk>
+Date:   Wed, 22 Jun 2022 13:37:32 -0600
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v9 00/14] io-uring/xfs: support async buffered writes
+Content-Language: en-US
+To:     Matthew Wilcox <willy@infradead.org>
 Cc:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
         kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, david@fromorbit.com, jack@suse.cz,
         hch@infradead.org
-Subject: Re: [PATCH v9 00/14] io-uring/xfs: support async buffered writes
-Message-ID: <YrNvCGmBcqS80kNG@casper.infradead.org>
 References: <20220616212221.2024518-1-shr@fb.com>
  <d18ffe14-7dd2-92a7-abd0-673b7da62adb@kernel.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d18ffe14-7dd2-92a7-abd0-673b7da62adb@kernel.dk>
+ <YrNvCGmBcqS80kNG@casper.infradead.org>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <YrNvCGmBcqS80kNG@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 22, 2022 at 11:41:14AM -0600, Jens Axboe wrote:
-> Top posting - are people fine with queueing this up at this point? Will
-> need a bit of massaging for io_uring as certain things moved to another
-> file, but it's really minor. I'd do a separate topic branch for this.
+On 6/22/22 1:35 PM, Matthew Wilcox wrote:
+> On Wed, Jun 22, 2022 at 11:41:14AM -0600, Jens Axboe wrote:
+>> Top posting - are people fine with queueing this up at this point? Will
+>> need a bit of massaging for io_uring as certain things moved to another
+>> file, but it's really minor. I'd do a separate topic branch for this.
+> 
+> I haven't had time to review this version, and I'm not likely to have
+> time before July 4th.
 
-I haven't had time to review this version, and I'm not likely to have
-time before July 4th.
+I think Stefan addressed your previous concerns. But it's not like the
+merge window is around the corner, but would be nice to get some -next
+coverage in the mean time. So I don't think you being away should hold
+up that part, and there will still be time to take a look once you're
+back.
+
+-- 
+Jens Axboe
+
