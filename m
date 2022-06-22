@@ -2,161 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E6C9CCA47A
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 04:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66136C43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 05:20:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356131AbiFVElO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 00:41:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35242 "EHLO
+        id S234254AbiFVFUv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 01:20:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229644AbiFVElO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 00:41:14 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B278535848;
-        Tue, 21 Jun 2022 21:41:12 -0700 (PDT)
+        with ESMTP id S233946AbiFVFUu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 01:20:50 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 521AD3616F
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Jun 2022 22:20:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 63904B81B08;
-        Wed, 22 Jun 2022 04:41:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0657BC3411B;
-        Wed, 22 Jun 2022 04:41:09 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 11475B81A94
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 05:20:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6AFDC34114;
+        Wed, 22 Jun 2022 05:20:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655872870;
-        bh=eEq1/2iPDzNz1B5Oou72nRfVOsUdg1B5WvvRswLKrBM=;
+        s=k20201202; t=1655875246;
+        bh=Br6Bi292GZpzqiFDeGCteqNs1GbQDVlUBbIB1wy+85U=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=b+QXBEoaieKF6aDG6vUNkd0kuxYfFerKo7EkAuTsOIK4VUAmqA9o6W1sMonggZy14
-         H4TVLn+gmLIIPFknf5xspz2pSX2gTsuSvmH/PFUVt/jkcRXnkxW15x11IbAwJm/wV4
-         2wenMK2FnO94kUXkHZrITh7Pvng3C9mjBe770eZgba2/qavFem6QLFZUVdWtq+LeHG
-         UO9J/lIJFDVBO3h0LTJwB+buoGcBJ1ZYTV7rFmRoSdgzCdktyFHWfreVsbn4mU/1Yb
-         PFhlUFdhJxYo4l3iFGiVmf48eJhV6rJl51Qa9qJIddgZlNa0Pta5llu7jyldip7AQJ
-         8sWYu8NS1Q9Aw==
-Date:   Tue, 21 Jun 2022 21:41:09 -0700
+        b=SsQAD65o/neJKqERrAqmG5YIe39/PpoEOV67D/DcrTLiS6MsOAAX5a8BKd+lSDBva
+         qWcNXZalpxQN71oxHLfi8ZEg2AfoZei3rwXxIzWT1L62wbLoL3n3D39J24r8+aZBoA
+         N6b/h7TyC3F0s9jODKC6qWrnEEzDnC9Pxy4VtSmlklHbqS9Fwk2vW2vQY7M1Jn+ant
+         w3uRzVVMOhKou2vJU8rJs8k6BLLGb4AejsLCsJibBRtUsm/xvTqI2l47pKTtCYSmF2
+         hq5aLqM0MYEel1q+H3Cpil2p5bpMa9sO0NeKF0WYSJ15VSdInwxh2RWkTe4QSZ+1FE
+         rCLVGZKQzVRXg==
+Date:   Tue, 21 Jun 2022 22:20:46 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shida Zhang <starzhangzsd@gmail.com>
-Cc:     dchinner@redhat.com, zhangshida@kylinos.cn,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3] xfs: add check before calling xfs_mod_fdblocks
-Message-ID: <YrKdZc0fBBDWGjld@magnolia>
-References: <20220621084238.1235880-1-zhangshida@kylinos.cn>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
+Message-ID: <YrKmrgJh9+SzT0Gz@magnolia>
+References: <20220615220416.3681870-1-david@fromorbit.com>
+ <20220615220416.3681870-2-david@fromorbit.com>
+ <YqytHuc/sJprFn0K@bfoster>
+ <20220617215245.GH227878@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220621084238.1235880-1-zhangshida@kylinos.cn>
+In-Reply-To: <20220617215245.GH227878@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 21, 2022 at 04:42:38PM +0800, Shida Zhang wrote:
-> Checks are missing when delta equals 0 in __xfs_ag_resv_free() and
-> __xfs_ag_resv_init().
+On Sat, Jun 18, 2022 at 07:52:45AM +1000, Dave Chinner wrote:
+> On Fri, Jun 17, 2022 at 12:34:38PM -0400, Brian Foster wrote:
+> > On Thu, Jun 16, 2022 at 08:04:15AM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Currently inodegc work can sit queued on the per-cpu queue until
+> > > the workqueue is either flushed of the queue reaches a depth that
+> > > triggers work queuing (and later throttling). This means that we
+> > > could queue work that waits for a long time for some other event to
+> > > trigger flushing.
+> > > 
+> > > Hence instead of just queueing work at a specific depth, use a
+> > > delayed work that queues the work at a bound time. We can still
+> > > schedule the work immediately at a given depth, but we no long need
+> > > to worry about leaving a number of items on the list that won't get
+> > > processed until external events prevail.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
+> > >  fs/xfs/xfs_mount.h  |  2 +-
+> > >  fs/xfs/xfs_super.c  |  2 +-
+> > >  3 files changed, 24 insertions(+), 16 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index 374b3bafaeb0..46b30ecf498c 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > ...
+> > > @@ -2176,7 +2184,7 @@ xfs_inodegc_shrinker_scan(
+> > >  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
+> > >  
+> > >  			WRITE_ONCE(gc->shrinker_hits, h + 1);
+> > > -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
+> > > +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
+> > >  			no_items = false;
+> > >  		}
+> > 
+> > This all seems reasonable to me, but is there much practical benefit to
+> > shrinker infra/feedback just to expedite a delayed work item by one
+> > jiffy? Maybe there's a use case to continue to trigger throttling..?
 > 
-> the case that the delta equals 0 is reachable with the command
-> sequence below:
+> I haven't really considered doing anything other than fixing the
+> reported bug. That just requires an API conversion for the existing
+> "queue immediately" semantics and is the safest minimum change
+> to fix the issue at hand.
 > 
->  # mkfs.xfs -f /dev/sdb5
->  # mount /dev/sdb5 /mnt/scratch/
-> 
-> where /dev/sdb5 is my disk for test. And if the patch below is
-> applied:
-> 
-> ====
-> xfs_mod_freecounter(
->         if (rsvd)
->                 ASSERT(has_resv_pool);
-> 
-> +       if (delta == 0)
-> +               dump_stack();
-> +
->         if (delta > 0) {
->                 /*
->                  * If the reserve pool is depleted, put blocks back into it
-> ====
-> 
-> the following stack will be shown in the message:
-> 
-> =>  xfs_mod_freecounter+0x84/0x2b8
-> =>  __xfs_ag_resv_free+0xc4/0x188
-> =>  xfs_ag_resv_free+0x24/0x50
-> =>  xfs_fs_unreserve_ag_blocks+0x40/0x160
-> =>  xfs_mountfs+0x500/0x900
-> =>  xfs_fs_fill_super+0x3d8/0x810
-> =>  get_tree_bdev+0x164/0x258
-> =>  xfs_fs_get_tree+0x20/0x30
-> =>  vfs_get_tree+0x30/0xf8
-> =>  path_mount+0x3c4/0xa58
-> =>  do_mount+0x74/0x98
-> 
-> =>  xfs_mod_freecounter+0x84/0x2b8
-> =>  __xfs_ag_resv_init+0x64/0x1d0
-> =>  xfs_ag_resv_init+0x108/0x1c8
-> =>  xfs_fs_reserve_ag_blocks+0x4c/0x110
-> =>  xfs_mountfs+0x57c/0x900
-> =>  xfs_fs_fill_super+0x3d8/0x810
-> =>  get_tree_bdev+0x164/0x258
-> =>  xfs_fs_get_tree+0x20/0x30
-> =>  vfs_get_tree+0x30/0xf8
-> =>  path_mount+0x3c4/0xa58
-> =>  do_mount+0x74/0x98
-> 
-> After applying this patch, we can avoid to call xfs_mod_fdblocks when
-> delta equals 0.
-> 
-> Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
-> ---
->  Changes from v1:
->  -Add checks before calling xfs_mod_fdblocks instead.
->  Changes from v2:
->  -Rephrase the commit description.
-> 
->  fs/xfs/libxfs/xfs_ag_resv.c | 16 +++++++++++++---
->  1 file changed, 13 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> index fe94058d4e9e..c8fa032e4b00 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> @@ -149,7 +149,12 @@ __xfs_ag_resv_free(
->  		oldresv = resv->ar_orig_reserved;
->  	else
->  		oldresv = resv->ar_reserved;
-> -	error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
-> +
-> +	if (oldresv)
-> +		error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
-> +	else
-> +		error = 0;
-> +
->  	resv->ar_reserved = 0;
->  	resv->ar_asked = 0;
->  	resv->ar_orig_reserved = 0;
-> @@ -215,8 +220,13 @@ __xfs_ag_resv_init(
->  
->  	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
->  		error = -ENOSPC;
-> -	else
-> -		error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
-> +	else {
-> +		error = 0;
-> +		if (hidden_space)
-> +			error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space,
-> +						true);
+> So, yes, the shrinker code may (or may not) be superfluous now, but
+> I haven't looked at it and done analysis of the behaviour without
+> the shrinkers enabled. I'll do that in a completely separate
+> patchset if it turns out that it is not needed now.
 
-I understand that calling __xfs_ag_resv_init on an AG with a maximally
-sized data structure can result in @hidden_space being zero here, but
-why does that matter enough to change the code?  Are you experiencing
-problems when this happens?  Unnecessary slowdowns at mount time?
-Something else?
+I think the shrinker part is still necessary -- bulkstat and xfs_scrub
+on a very low memory machine (~560M RAM) opening and closing tens of
+millions of files can still OOM the machine if one doesn't have a means
+to slow down ->destroy_inode (and hence the next open()) when reclaim
+really starts to dig in.  Without the shrinker bits, it's even easier to
+trigger OOM storms when xfs has timer-delayed inactivation... which is
+something that Brian pointed out a year ago when we were reviewing the
+initial inodegc patchset.
 
-This is v3 of a patch and I still can't tell why I should care ...?
+> > If
+> > so, it looks like decent enough overhead to cycle through every cpu in
+> > both callbacks that it might be worth spelling out more clearly in the
+> > top-level comment.
+> 
+> I'm not sure what you are asking here - mod_delayed_work_on() has
+> pretty much the same overhead and behaviour as queue_work() in this
+> case, so... ?
+
+<shrug> Looks ok to me, since djwong-dev has had some variant of timer
+delayed inactivation in it longer than it hasn't:
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +	}
-> +
->  	if (error) {
->  		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
->  				error, _RET_IP_);
-> -- 
-> 2.25.1
+> Cheers,
 > 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
