@@ -2,185 +2,147 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB402CCA479
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 21:50:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A29F7C43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 21:52:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234545AbiFVVub (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 17:50:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37576 "EHLO
+        id S233434AbiFVVwW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 17:52:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233252AbiFVVua (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 17:50:30 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDAA43F305;
-        Wed, 22 Jun 2022 14:50:28 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6C85A61903;
-        Wed, 22 Jun 2022 21:50:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C62EAC34114;
-        Wed, 22 Jun 2022 21:50:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655934627;
-        bh=v5ouVA3TVodNnMyYWceJVWy6eIuGVe4evjJipz0qnS0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=iFVtKZRqatBnUA+5HlpU4SEJ/sjgII2krWkz/Qos1PT8XzVXny3JMSPIwPZhKC2Wj
-         IMrdrK/tKij5VagMK8kRdenhqBWnVx7rO7RznB6r6B6xl9qOScHO68SrLKaGA0crQX
-         5V4DgHZ9gYuxZAU0DBRGu4POfGDjtmAcK2Hsb4oE6ZqVTlMljXoR/uF1eIC32Og9C9
-         Cu5OdHixT/16dJ0j3fRcaAv3nuB1llkQgxkkN7lR5YU03aFrd5oiMq2uZXxDqoR3Tk
-         bftl/E4Pievz9eVb96vdMFDpdu+HXqhQYX61bujwyRPkuRQdEPGh1BhCq3L6BbbGpQ
-         2SnfPY+e7qucw==
-Date:   Wed, 22 Jun 2022 14:50:27 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>,
-        Yang Xu <xuyang2018.jy@fujitsu.com>
-Subject: Re: [PATCH 5.10 CANDIDATE 03/11] xfs: Fix the free logic of state in
- xfs_attr_node_hasname
-Message-ID: <YrOOowVgqmCgMT/4@magnolia>
-References: <20220617100641.1653164-1-amir73il@gmail.com>
- <20220617100641.1653164-4-amir73il@gmail.com>
- <YrNECU28ujN2cabX@magnolia>
- <CAOQ4uxjaErkbU2=Gmf5GPaiErKU0UVOmfX7gw4Dzhq3-c0aedQ@mail.gmail.com>
+        with ESMTP id S241606AbiFVVwW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 17:52:22 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CE553F885;
+        Wed, 22 Jun 2022 14:52:21 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id f65so17295661pgc.7;
+        Wed, 22 Jun 2022 14:52:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ff+wSWRYawbYfja79/+Q0GxbRwkAY28J1KvnmTXQcGQ=;
+        b=iWxFDNSkzu7gFgbVNuHDVIsKXZtpFHWIuQ+o3+ZZiC6moXjThRf6oAql8TUWrnvp2+
+         PRjCZeT+bbMs1SMzESye1avCIJhEESWo4kYaJIPsMrSKXaFpQM1AVh30q25VmUv6B+R7
+         RV5s/kGPJi8q750G0NEHG7ATHrG4b2sTzZd5o0EumEIBp4b+L6R5Yzk67xm+YDDzONfF
+         YcvxbVOogtUTzOXZLvDqwQ09S5DMLRneeDbMyifKs1vw52qbPL16n6wr7NU4JFbJc9nG
+         /DxNzXkM5AhCjOjdQl/y8sPBA9QU0zHcPghPxcNetX1lnf2eccUIlaj8Yg7D/xuhoSIS
+         c0+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=ff+wSWRYawbYfja79/+Q0GxbRwkAY28J1KvnmTXQcGQ=;
+        b=RqgiQu/8DhRvyBa4GTq3OShhZVFwqgZCRVBggoLuiLGi26WZzQ4TnDJjD6IqRQVsrr
+         ZgVmIHpAxGowJ/ZNv0vzRasMWXX0v+nfmSAGQ7MAuoXXoi+hIqLwKIW7TdfyuTikmcoV
+         XYx6W3JpNsS8RFutMD2aDjwtSDwbuYFAgDplH7W3BHrMU7vFu7atpOK7tBpnNoE6DGaW
+         Ess1XPLvUeFweQSj5MK59rLCImMQtsp4Dm5c0TXZFxIRHx7mm6A7AG4BUg7nA9aQ9yZZ
+         bVY+tJ8jKjBbKBhbhBeN6X8wwnc1xtzcQtC7cBVDecc8LpJ38q9ymY2MP6eQQKK4H40g
+         pV9w==
+X-Gm-Message-State: AJIora/7slWBnkNYtM4QRjdcs8IjWOJug2rrfkoMN56R35H5fTAB3NJS
+        3GsekrX/BK8RCAgn7wdvOt4=
+X-Google-Smtp-Source: AGRyM1vmA9dX0M+nQ7wLacmp7GzLzdAeLMP8qytUaPVHKQNaCvsm7K8dG20FKReh6MWIkt3E7JlVMw==
+X-Received: by 2002:aa7:81c1:0:b0:522:81c0:a646 with SMTP id c1-20020aa781c1000000b0052281c0a646mr37243211pfn.33.1655934740941;
+        Wed, 22 Jun 2022 14:52:20 -0700 (PDT)
+Received: from google.com ([2620:0:1001:7810:1c61:ca22:3ef4:fce9])
+        by smtp.gmail.com with ESMTPSA id o10-20020a17090ac08a00b001ec79f0da37sm267923pjs.14.2022.06.22.14.52.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jun 2022 14:52:20 -0700 (PDT)
+Date:   Wed, 22 Jun 2022 14:52:18 -0700
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Chuck Lever <chuck.lever@oracle.com>, chandanrmail@gmail.com,
+        Sweet Tea Dorminy <sweettea-kernel@dorminy.me>,
+        Pankaj Raghav <pankydev8@gmail.com>, linux-xfs@vger.kernel.org,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [PATCH 5.15 CANDIDATE v2 0/8] xfs stable candidate patches for
+ 5.15.y (part 1)
+Message-ID: <YrOPEnO8hufMiRMi@google.com>
+References: <20220616182749.1200971-1-leah.rumancik@gmail.com>
+ <YrJdLhHBsolF83Rq@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjaErkbU2=Gmf5GPaiErKU0UVOmfX7gw4Dzhq3-c0aedQ@mail.gmail.com>
+In-Reply-To: <YrJdLhHBsolF83Rq@bombadil.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 22, 2022 at 09:46:29PM +0300, Amir Goldstein wrote:
-> On Wed, Jun 22, 2022 at 7:32 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Fri, Jun 17, 2022 at 01:06:33PM +0300, Amir Goldstein wrote:
-> > > From: Yang Xu <xuyang2018.jy@fujitsu.com>
-> > >
-> > > commit a1de97fe296c52eafc6590a3506f4bbd44ecb19a upstream.
-> > >
-> > > When testing xfstests xfs/126 on lastest upstream kernel, it will hang on some machine.
-> > > Adding a getxattr operation after xattr corrupted, I can reproduce it 100%.
-> > >
-> > > The deadlock as below:
-> > > [983.923403] task:setfattr        state:D stack:    0 pid:17639 ppid: 14687 flags:0x00000080
-> > > [  983.923405] Call Trace:
-> > > [  983.923410]  __schedule+0x2c4/0x700
-> > > [  983.923412]  schedule+0x37/0xa0
-> > > [  983.923414]  schedule_timeout+0x274/0x300
-> > > [  983.923416]  __down+0x9b/0xf0
-> > > [  983.923451]  ? xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-> > > [  983.923453]  down+0x3b/0x50
-> > > [  983.923471]  xfs_buf_lock+0x33/0xf0 [xfs]
-> > > [  983.923490]  xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-> > > [  983.923508]  xfs_buf_get_map+0x4c/0x320 [xfs]
-> > > [  983.923525]  xfs_buf_read_map+0x53/0x310 [xfs]
-> > > [  983.923541]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-> > > [  983.923560]  xfs_trans_read_buf_map+0x1cf/0x360 [xfs]
-> > > [  983.923575]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-> > > [  983.923590]  xfs_da_read_buf+0xcf/0x120 [xfs]
-> > > [  983.923606]  xfs_da3_node_read+0x1f/0x40 [xfs]
-> > > [  983.923621]  xfs_da3_node_lookup_int+0x69/0x4a0 [xfs]
-> > > [  983.923624]  ? kmem_cache_alloc+0x12e/0x270
-> > > [  983.923637]  xfs_attr_node_hasname+0x6e/0xa0 [xfs]
-> > > [  983.923651]  xfs_has_attr+0x6e/0xd0 [xfs]
-> > > [  983.923664]  xfs_attr_set+0x273/0x320 [xfs]
-> > > [  983.923683]  xfs_xattr_set+0x87/0xd0 [xfs]
-> > > [  983.923686]  __vfs_removexattr+0x4d/0x60
-> > > [  983.923688]  __vfs_removexattr_locked+0xac/0x130
-> > > [  983.923689]  vfs_removexattr+0x4e/0xf0
-> > > [  983.923690]  removexattr+0x4d/0x80
-> > > [  983.923693]  ? __check_object_size+0xa8/0x16b
-> > > [  983.923695]  ? strncpy_from_user+0x47/0x1a0
-> > > [  983.923696]  ? getname_flags+0x6a/0x1e0
-> > > [  983.923697]  ? _cond_resched+0x15/0x30
-> > > [  983.923699]  ? __sb_start_write+0x1e/0x70
-> > > [  983.923700]  ? mnt_want_write+0x28/0x50
-> > > [  983.923701]  path_removexattr+0x9b/0xb0
-> > > [  983.923702]  __x64_sys_removexattr+0x17/0x20
-> > > [  983.923704]  do_syscall_64+0x5b/0x1a0
-> > > [  983.923705]  entry_SYSCALL_64_after_hwframe+0x65/0xca
-> > > [  983.923707] RIP: 0033:0x7f080f10ee1b
-> > >
-> > > When getxattr calls xfs_attr_node_get function, xfs_da3_node_lookup_int fails with EFSCORRUPTED in
-> > > xfs_attr_node_hasname because we have use blocktrash to random it in xfs/126. So it
-> > > free state in internal and xfs_attr_node_get doesn't do xfs_buf_trans release job.
-> > >
-> > > Then subsequent removexattr will hang because of it.
-> > >
-> > > This bug was introduced by kernel commit 07120f1abdff ("xfs: Add xfs_has_attr and subroutines").
-> > > It adds xfs_attr_node_hasname helper and said caller will be responsible for freeing the state
-> > > in this case. But xfs_attr_node_hasname will free state itself instead of caller if
-> > > xfs_da3_node_lookup_int fails.
-> > >
-> > > Fix this bug by moving the step of free state into caller.
-> > >
-> > > [amir: this text from original commit is not relevant for 5.10 backport:
-> > > Also, use "goto error/out" instead of returning error directly in xfs_attr_node_addname_find_attr and
-> > > xfs_attr_node_removename_setup function because we should free state ourselves.
-> > > ]
-> > >
-> > > Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-> > > Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
-> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_attr.c | 13 +++++--------
-> > >  1 file changed, 5 insertions(+), 8 deletions(-)
-> > >
-> > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > > index 96ac7e562b87..fcca36bbd997 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr.c
-> > > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > > @@ -876,21 +876,18 @@ xfs_attr_node_hasname(
-> > >
-> > >       state = xfs_da_state_alloc(args);
-> > >       if (statep != NULL)
-> > > -             *statep = NULL;
-> > > +             *statep = state;
-> > >
-> > >       /*
-> > >        * Search to see if name exists, and get back a pointer to it.
-> > >        */
-> > >       error = xfs_da3_node_lookup_int(state, &retval);
-> > > -     if (error) {
-> > > -             xfs_da_state_free(state);
-> > > -             return error;
-> > > -     }
-> > > +     if (error)
-> > > +             retval = error;
-> > >
-> > > -     if (statep != NULL)
-> > > -             *statep = state;
-> > > -     else
-> > > +     if (!statep)
-> > >               xfs_da_state_free(state);
-> > > +
-> > >       return retval;
-> > >  }
-> > >
-> > > --
-> >
-> > Curious -- the conversion of the _node_hasname callers isn't in this
-> > patch.  Looking at 5.10.124, I see that most of the callers already
-> > clean up the passed-out statep, but do the callers of xfs_has_attr free
-> > it too?
+On Tue, Jun 21, 2022 at 05:07:10PM -0700, Luis Chamberlain wrote:
+> On Thu, Jun 16, 2022 at 11:27:41AM -0700, Leah Rumancik wrote:
+> > https://gist.github.com/lrumancik/5a9d85d2637f878220224578e173fc23. 
 > 
-> Is that a trick question or am I misunderstanding it :)
+> The coverage for XFS is using profiles which seem to come inspired
+> by ext4's different mkfs configurations.
+The configs I am using for the backports testing were developed with
+Darrick's help. If you guys agree on a different set of configs, I'd be
+happy to update my configs moving forward. As there has been testing of
+these patches on both 5.10 with those configs as well as on 5.15 with
+my configs, I don't think this should be blocking for this set of
+patches.
+
+- Leah
 > 
-> xfs_has_attr() passes NULL as xfs_attr_node_hasname()
-> statep argument... they don't get the state back.
-
-Nope, just misreading the code.  I guess this looks fine.
-
---D
-
-> Thanks,
-> Amir.
+> Long ago (2019) I had asked we strive to address popular configurations
+> for XFS so that what would be back then oscheck (now kdevops) can cover
+> them for stable XFS patch candidate test consideration. That was so long
+> ago no one should be surprised you didn't get the memo:
+> 
+> https://lkml.kernel.org/r/20190208194829.GJ11489@garbanzo.do-not-panic.com
+> 
+> This has grown to cover more now:
+> 
+> https://github.com/linux-kdevops/kdevops/blob/master/playbooks/roles/fstests/templates/xfs/xfs.config
+> 
+> For instance xfs_bigblock and xfs_reflink_normapbt.
+> 
+> My litmus test back then *and* today is to ensure we have no regressions
+> on the test sections supported by kdevops for XFS as reflected above.
+> Without that confidence I'd be really reluctant to support stable
+> efforts.
+> 
+> If you use kdevops, it should be easy to set up even if you are not
+> using local virtualization technologies. For instance I just fired
+> up an AWS cloud m5ad.4xlarge image which has 2 nvme drives, which
+> mimics the reqs for the methodology of using loopback files:
+> 
+> https://github.com/linux-kdevops/kdevops/blob/master/docs/seeing-more-issues.md
+> 
+> GCE is supported as well, so is Azure and OpenStack, and even custom
+> openstack solutions...
+> 
+> Also, I see on the above URL you posted there is a TODO in the gist which
+> says, "find a better route for publishing these". If you were to use
+> kdevops for this it would have the immediate gain in that kdevops users
+> could reproduce your findings and help augment it.
+> 
+> However if using kdevops as a landing home for this is too large for you,
+> we could use a new git tree which just tracks expunges and then kdevops can
+> use it as a git subtree as I had suggested at LSFMM. The benefit of using a
+> git subtree is then any runner can make use of it. And note that we
+> track both fstests and blktests.
+> 
+> The downside is for kdevops to use a new git subtree is just that kdevops
+> developers would have to use two trees to work on, one for code changes just
+> for kdevops and one for the git subtree for expunges. That workflow would be
+> new. I don't suspect it would be a really big issue other than addressing the
+> initial growing pains to adapt. I have used git subtrees before extensively
+> and the best rule of thumb is just to ensure you keep the code for the git
+> subtree in its own directory. You can either immediately upstream your
+> delta or carry the delta until you are ready to try to push those
+> changes. Right now kdevops uses the directory workflows/fstests/expunges/
+> for expunges. Your runner could use whatever it wishes.
+> 
+> We should discuss if we just also want to add the respective found
+> *.bad, *.dmesg *.all files for results for expunged entries, or if
+> we should be pushing these out to a new shared storage area. Right now
+> kdevops keeps track of results in the directory workflows/fstests/results/
+> but this is a path on .gitignore. If we *do* want to use github and a
+> shared git subtree perhaps a workflows/fstests/artifacts/kdevops/ would
+> make sense for the kdevops runner ? Then that namespace allows other
+> runners to also add files, but we all share expunges / tribal knowledge.
+> 
+> Thoughts?
+> 
+>   Luis
