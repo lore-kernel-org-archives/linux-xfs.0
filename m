@@ -2,79 +2,53 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA9AC43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 18:59:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A81A9C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 19:35:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376686AbiFVS7C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 14:59:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46000 "EHLO
+        id S230171AbiFVTfr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 15:35:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377349AbiFVS6S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 14:58:18 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 835B7BDD
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 11:57:54 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 037AA5196E4;
-        Wed, 22 Jun 2022 13:57:02 -0500 (CDT)
-Message-ID: <66855f31-32a0-7ccf-4cc2-ab56e39fe4f2@sandeen.net>
-Date:   Wed, 22 Jun 2022 13:57:52 -0500
+        with ESMTP id S230224AbiFVTfr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 15:35:47 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F78FF32;
+        Wed, 22 Jun 2022 12:35:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=11ZK0h9dNKq+tn7saPYTFwpIx/UcfWFs81TAdiQjTFg=; b=nWj4948F9YU/anh3+BcfKcXNcA
+        BQY+KIzRASbQxyi7n1yn+hvd96ilXmbYal//kHeHYObd35mjQGgocxFOpeI+6MFbS7CqwRbT1nNjS
+        gFzLTiV3noAgcsw+znTMsqEsXMEzolz99g3PuEvxcFYm1p0JpNj8HOKaaU6nSywjiV+/GlEH/lTrI
+        XUb/odC7SVEu+3YU4tFm4eIptfWCC5hsjMr5nP0I8Ex2tTMUPacG6rcC9qz0zDqSP+Km2cWo0IbJ/
+        9WPmwczKEjXeSi4EDpMaQgFDyTUKy3Wvi4LOjXJkqoF3mVMexkgNqeCsIj7LyTbXjBwKAybDSNwnO
+        abkV4gSw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o468W-007GLI-Po; Wed, 22 Jun 2022 19:35:36 +0000
+Date:   Wed, 22 Jun 2022 20:35:36 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
+        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com, jack@suse.cz,
+        hch@infradead.org
+Subject: Re: [PATCH v9 00/14] io-uring/xfs: support async buffered writes
+Message-ID: <YrNvCGmBcqS80kNG@casper.infradead.org>
+References: <20220616212221.2024518-1-shr@fb.com>
+ <d18ffe14-7dd2-92a7-abd0-673b7da62adb@kernel.dk>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.10.0
-Content-Language: en-US
-To:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, david@fromorbit.com
-References: <20220525053630.734938-1-chandan.babu@oracle.com>
- <20220525053630.734938-2-chandan.babu@oracle.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 1/5] xfs_repair: check filesystem geometry before allowing
- upgrades
-In-Reply-To: <20220525053630.734938-2-chandan.babu@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d18ffe14-7dd2-92a7-abd0-673b7da62adb@kernel.dk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/25/22 12:36 AM, Chandan Babu R wrote:
-> From: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> Currently, the two V5 feature upgrades permitted by xfs_repair do not
-> affect filesystem space usage, so we haven't needed to verify the
-> geometry.
-> 
-> However, this will change once we start to allow the sysadmin to add new
-> metadata indexes to existing filesystems.  Add all the infrastructure we
-> need to ensure that the log will still be large enough, that there's
-> enough space for metadata space reservations, and the root inode will
-> still be where we expect it to be after the upgrade.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> [Recompute transaction reservation values; Exit with error if upgrade fails]
+On Wed, Jun 22, 2022 at 11:41:14AM -0600, Jens Axboe wrote:
+> Top posting - are people fine with queueing this up at this point? Will
+> need a bit of massaging for io_uring as certain things moved to another
+> file, but it's really minor. I'd do a separate topic branch for this.
 
-This is a lot to digest; I'd like to go ahead and merge 3 patches out of
-this 5 patch series and leave this + the upgrade patch until I get a chance
-to digest it a bit more.
-
-One thing at least, though:
-
-
-> +	/*
-> +	 * Would we have at least 10% free space in the data device after all
-> +	 * the upgrades?
-> +	 */
-> +	if (mp->m_sb.sb_fdblocks < mp->m_sb.sb_dblocks / 10)
-> +		printf(_("Filesystem will be low on space after upgrade.\n"));
-> +
-
-This should be removed, IMHO; what is the point? The user can't do anything about
-it, it proceeds anyway, and for all we know they started with less than 10% free.
-So why bother printing something that might generate questions and support
-calls? I don't think it's useful or actionable information.
-
-Thanks,
--Eric
+I haven't had time to review this version, and I'm not likely to have
+time before July 4th.
