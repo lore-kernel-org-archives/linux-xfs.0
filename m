@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE96AC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 23:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C81D1C43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 23:45:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232842AbiFVXme (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 19:42:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51380 "EHLO
+        id S233670AbiFVXpd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 19:45:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbiFVXmd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 19:42:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD37D427E5;
-        Wed, 22 Jun 2022 16:42:32 -0700 (PDT)
+        with ESMTP id S233155AbiFVXpd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 19:45:33 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDEA842A1F;
+        Wed, 22 Jun 2022 16:45:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5003061BBA;
-        Wed, 22 Jun 2022 23:42:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D8AEC341C5;
-        Wed, 22 Jun 2022 23:42:31 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AA5BAB8204E;
+        Wed, 22 Jun 2022 23:45:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EB35C34114;
+        Wed, 22 Jun 2022 23:45:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655941351;
-        bh=Q27lkrJvEz/mI+pvfPY/VN13BCriVcz3Js9zn2eyutI=;
+        s=k20201202; t=1655941529;
+        bh=knWbFWKPVCf/JcdUUqeVuszXkkpvZ1XDzUuX0zVGWZQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RCPQaeTL57XAd9GGBEI55l7fuiYVQUkvXShlSvh5xQ79PXZNDkRMDY/Gg7gjG/A0S
-         RRNC+WYJT0hdePU03hZwlwmw2H8BGL5YKahxxX06nNMC/yZ10vLHDd6n3gqv1lNdbc
-         lsDWZ6DcZHu+14gilFNR+UrsjlljBd2nBqUp9IPP/g1ckpXLiprLsC/7F1mqgtalAo
-         g3Ybrphl9OEK8i4q++iom6QdgE9lOG1i0JS90zKGbhCE8JyJ2sockTtvsuE0XYnzVV
-         RivmYgPjCG0cIH3yisps73fn/6y0616wHXtK+4Uo7wyd3HZsur4Luq1DIfJjJCQt56
-         psrm5veJd6g9w==
-Date:   Wed, 22 Jun 2022 16:42:31 -0700
+        b=H90Aw81HbXUmmlyFgs7k3jw+jd44ERxcPT2u+pLgBeonV7l/V3+4Ru0VYuYOWN1mV
+         xbNUAHQCeorgQJuq63aXjmNmsXhYL4pM2ahRHuYocCtRWX/BO3Efv+/g3Fo19cE+5K
+         ciwJxN+tl3FsF+xD0yA08RhRL/7KCmT/znxgnVepRuXKVsZgYgA6gEZ8zUlsV0PB2W
+         UQHCHsoVCcTgaL+8ReRnF6+tp8G/4mlT6Lcj6zGsthQqJa2Tk8ZhaMJ5wQh6csA3a1
+         CIlfsfn1L61VfVEoeVcbKND6QvsNG48uQIwoKSgWh8P12Y8hA3/R4KiTY8pvwy3noV
+         6ztzQYnKGFeVQ==
+Date:   Wed, 22 Jun 2022 16:45:28 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Amir Goldstein <amir73il@gmail.com>
 Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
@@ -39,117 +39,135 @@ Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
         Christian Brauner <christian.brauner@ubuntu.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 5.10 CANDIDATE 09/11] xfs: only bother with
- sync_filesystem during readonly remount
-Message-ID: <YrOo5wW6CtkK6p8C@magnolia>
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 5.10 CANDIDATE 00/11] xfs stable candidate patches for
+ 5.10.y (v5.15+)
+Message-ID: <YrOpmMzn9ArsR9Dy@magnolia>
 References: <20220617100641.1653164-1-amir73il@gmail.com>
- <20220617100641.1653164-10-amir73il@gmail.com>
- <YrNFb9999OY/8JDZ@magnolia>
- <CAOQ4uxi1th2XJ7Ss8avKjrR=k1wMw524+2+ahyafBhSAUsS7dQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi1th2XJ7Ss8avKjrR=k1wMw524+2+ahyafBhSAUsS7dQ@mail.gmail.com>
+In-Reply-To: <20220617100641.1653164-1-amir73il@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 22, 2022 at 07:54:33PM +0300, Amir Goldstein wrote:
-> On Wed, Jun 22, 2022 at 7:38 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Fri, Jun 17, 2022 at 01:06:39PM +0300, Amir Goldstein wrote:
-> > > From: "Darrick J. Wong" <djwong@kernel.org>
-> > >
-> > > commit b97cca3ba9098522e5a1c3388764ead42640c1a5 upstream.
-> > >
-> > > In commit 02b9984d6408, we pushed a sync_filesystem() call from the VFS
-> > > into xfs_fs_remount.  The only time that we ever need to push dirty file
-> > > data or metadata to disk for a remount is if we're remounting the
-> > > filesystem read only, so this really could be moved to xfs_remount_ro.
-> > >
-> > > Once we've moved the call site, actually check the return value from
-> > > sync_filesystem.
+On Fri, Jun 17, 2022 at 01:06:30PM +0300, Amir Goldstein wrote:
+> Hi all,
 > 
-> This part is not really relevant for this backport, do you want me to
-> emphasise that?
-
-Not relevant?  Making sync_fs return error codes to callers was the
-entire reason for creating this series...
-
-> > >
-> > > Fixes: 02b9984d6408 ("fs: push sync_filesystem() down to the file system's remount_fs()")
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > ---
-> > >  fs/xfs/xfs_super.c | 7 +++++--
-> > >  1 file changed, 5 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > index 6323974d6b3e..dd0439ae6732 100644
-> > > --- a/fs/xfs/xfs_super.c
-> > > +++ b/fs/xfs/xfs_super.c
-> > > @@ -1716,6 +1716,11 @@ xfs_remount_ro(
-> > >       };
-> > >       int                     error;
-> > >
-> > > +     /* Flush all the dirty data to disk. */
-> > > +     error = sync_filesystem(mp->m_super);
-> >
-> > Looking at 5.10.124's fsync.c and xfs_super.c:
-> >
-> > https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/sync.c?h=v5.10.124#n31
-> > https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/xfs/xfs_super.c?h=v5.10.124#n755
-> >
-> > I think this kernel needs the patch(es) that make __sync_filesystem return
-> > the errors passed back by ->sync_fs, and I think also the patch that
-> > makes xfs_fs_sync_fs return errors encountered by xfs_log_force, right?
+> Previously posted candidates for 5.10.y followed chronological release
+> order.
 > 
-> It wasn't my intention to fix syncfs() does not return errors in 5.10.
-> It has always been that way and IIRC, the relevant patches did not
-> apply cleanly.
+> Parts 1 and 2 of fixes from v5.10..v5.12 have already been applied to
+> v5.10.121.
+> 
+> Part 3 (from 5.13) has already been posted for review [3] on June 6,
+> but following feedback from Dave, I changed my focus to get the same
+> set of patches tested and reviewed for 5.10.y/5.15.y.
+> 
+> I do want to ask you guys to also find time to review part 3, because
+> we have a lot of catching up to do for 5.10.y, so we need to chew at
+> this debt at a reasonable rate.
+> 
+> This post has the matching set of patches for 5.10.y that goes with
+> Leah's first set of candidates for 5.15.y [1].
+> 
+> Most of the fixes are from v5.15..v5.17 except for patch 11 (v5.18-rc1).
+> All fix patches have been tagged with Fixes: by the author.
+> 
+> The patches have been soaking in kdepops since Sunday. They passed more
+> than 30 auto group runs with several different versions of xfsprogs.
+> 
+> The differences from Leah's 5.15.y:
+> - It is 11 patches and not 8 because of dependencies
+> - Patches 6,7 are non-fixes backported as dependency to patch 8 -
+>   they have "backported .* for dependency" in their commit message
+> - Patches 3,4,11 needed changes to apply to 5.10.y - they have a
+>   "backport" related comment in their commit message to explain what
+>   changes were needed
+> - Patch 10 is a fix from v5.12 that is re-posted as a dependency for
+>   patch 11
+> 
+> Darrick,
+> 
+> As the author patches 4,11 and sole reviewer of patch 3 (a.k.a
+> the non-cleanly applied patches), please take a closer look at those.
+> 
+> Patch 10 has been dropped from my part 2 candidates following concerns
+> raised by Dave and is now being re-posted following feedback from
+> Christian and Christoph [2].
+> 
+> If there are still concerns about patches 10 or 11, please raise a flag.
+> I can drop either of these patches before posting to stable if anyone
+> feels that they need more time to soak in master.
 
-...because right now userspace can call syncfs() on a filesystem that
-dies in the process, and the VFS eats the EIO and returns 0 to
-userspace.  Yes, that's the historical behavior fo 5.10, but that's a
-serious problem that needs addressing.  Eliding the sync_filesystem call
-during a rw remount is not itself all that exciting.
+At the current moment (keep in mind that I have 2,978 more emails to get
+through before I'm caught up), I think it's safe to say that for patches
+1-5:
 
-> THIS patch however, fixes something else, not only the return of the error
-> to its caller, so I thought it was worth backporting.
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
-Assuming "something else" means "moving the sync_filesystem callsite" --
-that was a secondary piece that I did to get the requisite RVB tag under
-time pressure after 5.17-rc6 dropped.
+(patch 9 also, but see the reply I just sent for that one about grabbing
+the sync_fs fixes too)
 
-> If you think otherwise, I'll drop it.
-
-On the contrary, I think the ->sync_fs fixes *also* need backporting.
-It should be as simple as patching __sync_filesystem:
-
-static int __sync_filesystem(struct super_block *sb, int wait)
-{
-	if (wait)
-		sync_inodes_sb(sb);
-	else
-		writeback_inodes_sb(sb, WB_REASON_SYNC);
-
-	if (sb->s_op->sync_fs) {
-		int ret = sb->s_op->sync_fs(sb, wait);
-		if (ret)
-			return ret;
-	}
-	return __sync_blockdev(sb->s_bdev, wait);
-}
-
-Granted, that can be a part of the next batch.  If you plan to pick up
-the vfs sync_fs changes then I guess this one's ok for inclusion now.
+The log changes are going to take more time to go through, since that
+stuff is always tricky and /not/ something for me to be messing with at
+4:45pm.
 
 --D
 
-> 
 > Thanks,
 > Amir.
+> 
+> [1] https://lore.kernel.org/linux-xfs/20220616182749.1200971-1-leah.rumancik@gmail.com/
+> [2] https://lore.kernel.org/linux-xfs/CAOQ4uxg4=m9zEFbDAKXx7CP7HYiMwtsYSJvq076oKpy-OhK1uw@mail.gmail.com/
+> [3] https://lore.kernel.org/linux-xfs/20220606160537.689915-1-amir73il@gmail.com/
+> 
+> Brian Foster (1):
+>   xfs: punch out data fork delalloc blocks on COW writeback failure
+> 
+> Christoph Hellwig (2):
+>   xfs: refactor xfs_file_fsync
+>   xfs: fix up non-directory creation in SGID directories
+> 
+> Darrick J. Wong (4):
+>   xfs: remove all COW fork extents when remounting readonly
+>   xfs: prevent UAF in xfs_log_item_in_current_chkpt
+>   xfs: only bother with sync_filesystem during readonly remount
+>   xfs: use setattr_copy to set vfs inode attributes
+> 
+> Dave Chinner (2):
+>   xfs: check sb_meta_uuid for dabuf buffer recovery
+>   xfs: xfs_log_force_lsn isn't passed a LSN
+> 
+> Rustam Kovhaev (1):
+>   xfs: use kmem_cache_free() for kmem_cache objects
+> 
+> Yang Xu (1):
+>   xfs: Fix the free logic of state in xfs_attr_node_hasname
+> 
+>  fs/xfs/libxfs/xfs_attr.c      | 13 +++---
+>  fs/xfs/libxfs/xfs_types.h     |  1 +
+>  fs/xfs/xfs_aops.c             | 15 +++++--
+>  fs/xfs/xfs_buf_item.c         |  2 +-
+>  fs/xfs/xfs_buf_item_recover.c |  2 +-
+>  fs/xfs/xfs_dquot_item.c       |  2 +-
+>  fs/xfs/xfs_extfree_item.c     |  6 +--
+>  fs/xfs/xfs_file.c             | 81 +++++++++++++++++++++--------------
+>  fs/xfs/xfs_inode.c            | 24 +++++------
+>  fs/xfs/xfs_inode_item.c       |  4 +-
+>  fs/xfs/xfs_inode_item.h       |  2 +-
+>  fs/xfs/xfs_iops.c             | 56 ++----------------------
+>  fs/xfs/xfs_log.c              | 27 ++++++------
+>  fs/xfs/xfs_log.h              |  4 +-
+>  fs/xfs/xfs_log_cil.c          | 32 ++++++--------
+>  fs/xfs/xfs_log_priv.h         | 15 +++----
+>  fs/xfs/xfs_pnfs.c             |  3 +-
+>  fs/xfs/xfs_super.c            | 21 ++++++---
+>  fs/xfs/xfs_trans.c            |  6 +--
+>  fs/xfs/xfs_trans.h            |  4 +-
+>  20 files changed, 149 insertions(+), 171 deletions(-)
+> 
+> -- 
+> 2.25.1
+> 
