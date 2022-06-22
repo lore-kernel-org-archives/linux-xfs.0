@@ -2,172 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0959CC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 16:32:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00FF5C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 16:35:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359434AbiFVQcN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 12:32:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38888 "EHLO
+        id S1355550AbiFVQfY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 12:35:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237555AbiFVQcM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 12:32:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44DC93150E;
-        Wed, 22 Jun 2022 09:32:11 -0700 (PDT)
+        with ESMTP id S229823AbiFVQfY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 12:35:24 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 611F021269
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 09:35:23 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D239461AA0;
-        Wed, 22 Jun 2022 16:32:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 372D0C34114;
-        Wed, 22 Jun 2022 16:32:10 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 10078B82049
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 16:35:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76365C34114;
+        Wed, 22 Jun 2022 16:35:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655915530;
-        bh=oZ/HMwEEpMmlxsE2fXgdNXqxu7e4J0wswI5GmTqQnI8=;
+        s=k20201202; t=1655915720;
+        bh=5INwBH1eT3uuUhDUHLcWKU5dC/YhqfvElmYfQRuSFNI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XKpEegHqdgwIxpcMmHEvWml4KlhLr/+RSQARZDOeTI1GkrTWYNQlsYxV+aTPQCG1M
-         wviDrGXyfCLFNuYpYf8BHiXuIyvdbSJqGyqu6SKQGwbx5BNL6noorAzfufT2EdkSkk
-         Rfx6tx0MRKPPLp7uohze9F4JPYm0+OHphfD0K0mcBxOBUoNzLVB9BwUmPxNB/CX7VE
-         eHHYTMISEywEAXU4es6NWQa6AjlPvIZ3Knn2rJdt9x5AdI7aUm0fKCNcOQkH3mun62
-         tUjUXrI+jteEGBAH4Th7wvlPJdJ2rHhacDKJ7JZVsuRFPRsMFh+RZSWxPcbUVAKniR
-         RfQ7hRloBP4/g==
-Date:   Wed, 22 Jun 2022 09:32:09 -0700
+        b=EPZxwNqwPvdzUTGzmV9LyGBiP6uaLgBGRxEWYmFm577sXw0VF8+Z0CP36hafhE0no
+         5uhCxU7r4fBv36xMvz8mazuJgpM+gLV2rszP8+ppreYbw8gpw+fqtYSvAil6K42z5p
+         uNTeYIX5rxBf64nGxS0as97YnOFiP2nSwyKe1e1EQqhX8Hc+TcgUxFG45Pd4yUrK6S
+         qhAFsY1zJBBcSHzmSFZiq/Ri3lPN3hQHTsPArjC9PqpUb1Z6O38Xfsna4BRdhdRKDH
+         CxP9RRd1sR0zBT4+6pl163/SxLv/4mOo27As7ff+1HtRAhW5LWdqMCB7p0hNiXUO2w
+         /uXgvHXq6ZWVQ==
+Date:   Wed, 22 Jun 2022 09:35:19 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Yang Xu <xuyang2018.jy@fujitsu.com>
-Subject: Re: [PATCH 5.10 CANDIDATE 03/11] xfs: Fix the free logic of state in
- xfs_attr_node_hasname
-Message-ID: <YrNECU28ujN2cabX@magnolia>
-References: <20220617100641.1653164-1-amir73il@gmail.com>
- <20220617100641.1653164-4-amir73il@gmail.com>
+To:     Leah Rumancik <leah.rumancik@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, mcgrof@kernel.org
+Subject: Re: [PATCH 5.15 CANDIDATE v2 0/8] xfs stable candidate patches for
+ 5.15.y (part 1)
+Message-ID: <YrNExw1XTTD1dJET@magnolia>
+References: <20220616182749.1200971-1-leah.rumancik@gmail.com>
+ <YrNB65ISwFDgLT4O@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220617100641.1653164-4-amir73il@gmail.com>
+In-Reply-To: <YrNB65ISwFDgLT4O@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 17, 2022 at 01:06:33PM +0300, Amir Goldstein wrote:
-> From: Yang Xu <xuyang2018.jy@fujitsu.com>
+On Wed, Jun 22, 2022 at 09:23:07AM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 16, 2022 at 11:27:41AM -0700, Leah Rumancik wrote:
+> > The patch testing has been increased to 100 runs per test on each 
+> > config. A baseline without the patches was established with 100 runs 
+> > to help detect hard failures / tests with a high fail rate. Any 
+> > failures seen in the backports branch but not in the baseline branch 
+> > were then run 1000+ times on both the baseline and backport branches 
+> > and the failure rates compared. The failures seen on the 5.15 
+> > baseline are listed at 
+> > https://gist.github.com/lrumancik/5a9d85d2637f878220224578e173fc23. 
+> > No regressions were seen with these patches.
+> > 
+> > To make the review process easier, I have been coordinating with Amir 
+> > who has been testing this same set of patches on 5.10. He will be 
+> > sending out the corresponding 5.10 series shortly.
+> > 
+> > Change log from v1 
+> > (https://lore.kernel.org/all/20220603184701.3117780-1-leah.rumancik@gmail.com/):
+> > - Increased testing
+> > - Reduced patch set to overlap with 5.10 patches
+> > 
+> > Thanks,
+> > Leah
+> > 
+> > Brian Foster (1):
+> >   xfs: punch out data fork delalloc blocks on COW writeback failure
+> > 
+> > Darrick J. Wong (4):
+> >   xfs: remove all COW fork extents when remounting readonly
+> >   xfs: prevent UAF in xfs_log_item_in_current_chkpt
+> >   xfs: only bother with sync_filesystem during readonly remount
 > 
-> commit a1de97fe296c52eafc6590a3506f4bbd44ecb19a upstream.
+> 5.15 already has the vfs fixes to make sync_fs/sync_filesystem actually
+> return error codes, right?
 > 
-> When testing xfstests xfs/126 on lastest upstream kernel, it will hang on some machine.
-> Adding a getxattr operation after xattr corrupted, I can reproduce it 100%.
+> >   xfs: use setattr_copy to set vfs inode attributes
+> > 
+> > Dave Chinner (1):
+> >   xfs: check sb_meta_uuid for dabuf buffer recovery
+> > 
+> > Rustam Kovhaev (1):
+> >   xfs: use kmem_cache_free() for kmem_cache objects
+> > 
+> > Yang Xu (1):
+> >   xfs: Fix the free logic of state in xfs_attr_node_hasname
 > 
-> The deadlock as below:
-> [983.923403] task:setfattr        state:D stack:    0 pid:17639 ppid: 14687 flags:0x00000080
-> [  983.923405] Call Trace:
-> [  983.923410]  __schedule+0x2c4/0x700
-> [  983.923412]  schedule+0x37/0xa0
-> [  983.923414]  schedule_timeout+0x274/0x300
-> [  983.923416]  __down+0x9b/0xf0
-> [  983.923451]  ? xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-> [  983.923453]  down+0x3b/0x50
-> [  983.923471]  xfs_buf_lock+0x33/0xf0 [xfs]
-> [  983.923490]  xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-> [  983.923508]  xfs_buf_get_map+0x4c/0x320 [xfs]
-> [  983.923525]  xfs_buf_read_map+0x53/0x310 [xfs]
-> [  983.923541]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-> [  983.923560]  xfs_trans_read_buf_map+0x1cf/0x360 [xfs]
-> [  983.923575]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-> [  983.923590]  xfs_da_read_buf+0xcf/0x120 [xfs]
-> [  983.923606]  xfs_da3_node_read+0x1f/0x40 [xfs]
-> [  983.923621]  xfs_da3_node_lookup_int+0x69/0x4a0 [xfs]
-> [  983.923624]  ? kmem_cache_alloc+0x12e/0x270
-> [  983.923637]  xfs_attr_node_hasname+0x6e/0xa0 [xfs]
-> [  983.923651]  xfs_has_attr+0x6e/0xd0 [xfs]
-> [  983.923664]  xfs_attr_set+0x273/0x320 [xfs]
-> [  983.923683]  xfs_xattr_set+0x87/0xd0 [xfs]
-> [  983.923686]  __vfs_removexattr+0x4d/0x60
-> [  983.923688]  __vfs_removexattr_locked+0xac/0x130
-> [  983.923689]  vfs_removexattr+0x4e/0xf0
-> [  983.923690]  removexattr+0x4d/0x80
-> [  983.923693]  ? __check_object_size+0xa8/0x16b
-> [  983.923695]  ? strncpy_from_user+0x47/0x1a0
-> [  983.923696]  ? getname_flags+0x6a/0x1e0
-> [  983.923697]  ? _cond_resched+0x15/0x30
-> [  983.923699]  ? __sb_start_write+0x1e/0x70
-> [  983.923700]  ? mnt_want_write+0x28/0x50
-> [  983.923701]  path_removexattr+0x9b/0xb0
-> [  983.923702]  __x64_sys_removexattr+0x17/0x20
-> [  983.923704]  do_syscall_64+0x5b/0x1a0
-> [  983.923705]  entry_SYSCALL_64_after_hwframe+0x65/0xca
-> [  983.923707] RIP: 0033:0x7f080f10ee1b
+> This one trips me up every time I look at it, but this looks correct.
 > 
-> When getxattr calls xfs_attr_node_get function, xfs_da3_node_lookup_int fails with EFSCORRUPTED in
-> xfs_attr_node_hasname because we have use blocktrash to random it in xfs/126. So it
-> free state in internal and xfs_attr_node_get doesn't do xfs_buf_trans release job.
-> 
-> Then subsequent removexattr will hang because of it.
-> 
-> This bug was introduced by kernel commit 07120f1abdff ("xfs: Add xfs_has_attr and subroutines").
-> It adds xfs_attr_node_hasname helper and said caller will be responsible for freeing the state
-> in this case. But xfs_attr_node_hasname will free state itself instead of caller if
-> xfs_da3_node_lookup_int fails.
-> 
-> Fix this bug by moving the step of free state into caller.
-> 
-> [amir: this text from original commit is not relevant for 5.10 backport:
-> Also, use "goto error/out" instead of returning error directly in xfs_attr_node_addname_find_attr and
-> xfs_attr_node_removename_setup function because we should free state ourselves.
-> ]
-> 
-> Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-> Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 13 +++++--------
->  1 file changed, 5 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 96ac7e562b87..fcca36bbd997 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -876,21 +876,18 @@ xfs_attr_node_hasname(
->  
->  	state = xfs_da_state_alloc(args);
->  	if (statep != NULL)
-> -		*statep = NULL;
-> +		*statep = state;
->  
->  	/*
->  	 * Search to see if name exists, and get back a pointer to it.
->  	 */
->  	error = xfs_da3_node_lookup_int(state, &retval);
-> -	if (error) {
-> -		xfs_da_state_free(state);
-> -		return error;
-> -	}
-> +	if (error)
-> +		retval = error;
->  
-> -	if (statep != NULL)
-> -		*statep = state;
-> -	else
-> +	if (!statep)
->  		xfs_da_state_free(state);
-> +
->  	return retval;
->  }
->  
-> -- 
+> If the answer to the above question is yes, then:
+> Acked-by: Darrick J. Wong <djwong@kernel.org>
 
-Curious -- the conversion of the _node_hasname callers isn't in this
-patch.  Looking at 5.10.124, I see that most of the callers already
-clean up the passed-out statep, but do the callers of xfs_has_attr free
-it too?
+I should've mentioned that this is acked-by for patches 1-7, since Amir
+posted a question about patch 8 that seems not to have been answered(?)
+
+(Do all the new setgid inheritance tests actually pass with patch 8
+applied?  The VFS fixes were thorny enough that I'm not as confident
+that they've all been applied to 5.15.y...)
 
 --D
 
-> 2.25.1
+> --D
 > 
+> > 
+> >  fs/xfs/libxfs/xfs_attr.c      | 17 +++++------
+> >  fs/xfs/xfs_aops.c             | 15 ++++++++--
+> >  fs/xfs/xfs_buf_item_recover.c |  2 +-
+> >  fs/xfs/xfs_extfree_item.c     |  6 ++--
+> >  fs/xfs/xfs_iops.c             | 56 ++---------------------------------
+> >  fs/xfs/xfs_log_cil.c          |  6 ++--
+> >  fs/xfs/xfs_pnfs.c             |  3 +-
+> >  fs/xfs/xfs_super.c            | 21 +++++++++----
+> >  8 files changed, 47 insertions(+), 79 deletions(-)
+> > 
+> > -- 
+> > 2.36.1.476.g0c4daa206d-goog
+> > 
