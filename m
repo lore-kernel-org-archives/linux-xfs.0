@@ -2,327 +2,222 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A288CCA479
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 23:06:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E70CC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 23:08:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236688AbiFVXGU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 19:06:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56118 "EHLO
+        id S244606AbiFVXIn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 19:08:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233622AbiFVXGT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 19:06:19 -0400
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2086.outbound.protection.outlook.com [40.107.244.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05ABA3F8A7;
-        Wed, 22 Jun 2022 16:06:18 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XF4iIxa0cv/pOo9EPEclopHihq7DO7eepny9io47gWSEJY2CBdZTGwJ5XsgdFOLQiBtFhAxHKC23UO+Zuh4MdiRpR5KPO9e57GuyryW0QI+kinDRp95GI3cWMzbBsl9FzCTQ93RPfKKN9UctGqpy6lvULELlEidAeVMCGrYXwuFp5AqJLV9og0RL3Cf75tNydDY1GXiGiXwbRfuaFyB3wsTTw/Wj5UxpQvFaU88uIJNrBpE2xtjQmXxNN2bnsgPLHOBByQNO/sXoUWCKgV6ENj/3CJUrylNkJlzJB56d1L7jiSlsCIshddDYcno/CkqNhhSxgfb0ayyiJDP0W1UxVA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GAai6S6dseGWGlLSzYIQJ/7Vi/LOmOi5K6YTdG4Digs=;
- b=aUyU3A2foW9dU1FCslj5/l/JHkoWa69TWzaDHdn29sx8mzU6MbJuZjYk8eqo7/QtMlm2RtP7um1JAtd7eLQaSxlOwseYYB2yaPUZU1ymxS0dLVMceq4g9hKMcI0FEBFwmzZzHV7L6c+Wb6oClqDITarm5Y50i2MmH1uNpceI4IVM2MSZtel+Vu/Eqo5cpdBDQLfyNThXOrdTMj9UBsYUR8iU7GNYOCjoHEd/9rEfNC4RFk2osadmeeevHUDBk0FqDOZu30JGBilFAo1hH9K6sRmfzKxZHzF6SzW9y3SyZHyyCrjr3nipPovow4Dz4bRCns6gOsjIYmQis6hSIArqaQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GAai6S6dseGWGlLSzYIQJ/7Vi/LOmOi5K6YTdG4Digs=;
- b=Mvvv4UiT8stZRJpDIadFjAyEcHAL31YKGmAlXaLj4p7SR4y6WpPXCvD980a93mWVp05LxCcZQ9MwbHTKq5Nltfbf/n2U8i662wK3Mg8lCZH5FZ2eQT07ofs0MuGDRgbuFQdYJvLbUazgFSTGeKHvVO3v/QTVWK5nwJFENsSIC0k=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SN6PR12MB2717.namprd12.prod.outlook.com (2603:10b6:805:68::29)
- by MN2PR12MB3328.namprd12.prod.outlook.com (2603:10b6:208:c2::33) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5353.15; Wed, 22 Jun
- 2022 23:06:15 +0000
-Received: from SN6PR12MB2717.namprd12.prod.outlook.com
- ([fe80::b9a8:66b3:9ed6:2db]) by SN6PR12MB2717.namprd12.prod.outlook.com
- ([fe80::b9a8:66b3:9ed6:2db%5]) with mapi id 15.20.5353.022; Wed, 22 Jun 2022
- 23:06:15 +0000
-Message-ID: <db23875c-750e-d81d-5184-3d53814eebd4@amd.com>
-Date:   Wed, 22 Jun 2022 18:06:10 -0500
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH v5 01/13] mm: add zone device coherent type memory support
-Content-Language: en-US
-To:     Alistair Popple <apopple@nvidia.com>,
-        David Hildenbrand <david@redhat.com>
-Cc:     Felix Kuehling <felix.kuehling@amd.com>, jgg@nvidia.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, willy@infradead.org,
-        akpm@linux-foundation.org
-References: <20220531200041.24904-1-alex.sierra@amd.com>
- <20220531200041.24904-2-alex.sierra@amd.com>
- <3ac89358-2ce0-7d0d-8b9c-8b0e5cc48945@redhat.com>
- <02ed2cb7-3ad3-8ffc-6032-04ae1853e234@amd.com>
- <7605beee-0a76-4ee9-e950-17419630f2cf@redhat.com>
- <ddcebcc1-fb0a-e565-f14d-77c9d48f2928@amd.com>
- <6aef4b7f-0ced-08cd-1f0c-50c22996aa41@redhat.com>
- <65987ab8-426d-e533-0295-069312b4f751@amd.com>
- <34e94bdb-675a-5d5c-6137-8aa1ee658d49@redhat.com>
- <87letq6wb5.fsf@nvdebian.thelocal>
- <643c44e7-48be-375b-c7ab-6a30b5ee2937@redhat.com>
- <f5b9f777-85a2-9c38-17f3-0c9be1eeb867@amd.com>
- <01cf9f24-d7fc-61e9-1c28-85dc5aabe645@redhat.com>
- <87h74d7dde.fsf@nvdebian.thelocal>
-From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
-In-Reply-To: <87h74d7dde.fsf@nvdebian.thelocal>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MN2PR20CA0012.namprd20.prod.outlook.com
- (2603:10b6:208:e8::25) To SN6PR12MB2717.namprd12.prod.outlook.com
- (2603:10b6:805:68::29)
+        with ESMTP id S1345283AbiFVXIm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 19:08:42 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 337614163D
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 16:08:41 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C30BD61B40
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 23:08:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E6E2C34114;
+        Wed, 22 Jun 2022 23:08:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655939320;
+        bh=0LY22Bam8lyL2kBY4pjivLwNPzBn7Ols6XuYIdP+/D4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fqDdIcoghpKRGJFQlCNbdXIlS1bgSLIOazc0YmnbwY4putpyHhUjIrwLPYyLQ2XX3
+         K35hRvQu3AgQ036luZzq57fPu9mCNDO2pK7dUfUeqVFIWa63ZPQRRlwFSm9xgscKyK
+         jApEvf2FBjNftiG8xZIorS3eZ2ZG4r1rUs4JiHzZ2dupwHUash0kEZSUDnnnnrUu6I
+         PLQob3VpDwNDMNcSFGf/s5FJh0aJgFUIOUGdlAsPi6bKHVV4sFjHMGl+1QakJl1g1i
+         nzSqxV/aN9RkjGXWvYTamclPi5YcXYfJ2021X2K3jsT/HmgW2lQgDQpq18y9sI17E4
+         XaA6tdOoeC19w==
+Date:   Wed, 22 Jun 2022 16:08:39 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     bugzilla-daemon@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 216110] New: rmdir sub directory cause i_nlink of parent
+ directory down from 0 to 0xffffffff
+Message-ID: <YrOg9xnvAZu85q0/@magnolia>
+References: <bug-216110-201763@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 06e59371-5028-4a85-4ddb-08da54a3ce88
-X-MS-TrafficTypeDiagnostic: MN2PR12MB3328:EE_
-X-Microsoft-Antispam-PRVS: <MN2PR12MB33288831E84A6E581ACA4199FDB29@MN2PR12MB3328.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: VCHxOi4DwE5ZAqddbSJAsZuC9bId5aFL5jnrWYnMNV7Bk4R58VgpjSlOjBFELfM2iUzGGJsq6rUfv/eZ1UDaW7tG95RCf/5gzqq/M8Bwvhw7Dg2+SRoZWaGHU8Z/JKSN69l1mOj3hNr1L3jpS9ArNpFe4IFnoT96v9xF5NqAxgC003b2KbZL0ck+E/U/S7LIZEhMcLqHKbw0l1sSxd/xAw0Z3AFYRk8OUtsi29Y+sn64H8pEp7o+9qwXnw87ZB2P2o1d2lHDSOkLBZcljVSvBrVioZosTZTCXh1bAFF3YPXB2fkG/n0tej3Y/6sKVBG0/A16eDUWESKp4fSKkOZQhJl2DupypHtIDpLXpqAdSz5mLMltSWde1YqdxJv7b7g9yYGQx8r08f93yIEPQu6eI0k3A6TsAQdO6NcRC6XXPW+xvBbfBoUUrHz8CbWVOUXZ0bmfXjUmqt2EK8JY2koPUhIdb0l7qTYVazhdlg5QZ+/5R+8Jo/h23VUWGSk0ygE8KDg2vDcP20OhvgiMX8FPh1W/sjGmjiH1k2Gz5YiouiNdV3oFYi8EBrTlkCSM/x5qoqNMqm4T3pEk+Rg6OGn+xvwSyr5CCPyD1J/Qy/PL1Eb0PquCbhjIzwvt56jlTEF5xlf4VCwhrB3j1rwL6YmAKNk6ZgQiN4tIxfKdKFBNc/swUm+LGAyGGGDQGCVWDFaThVzGUMZgBk9urIiraH1xU5NWD46YZMu+Qqwm3qzY+eCbdVjOFyh2z1pPVDGAHdg3C0uYZhGhG7KkhH7ISWZcDzgqMLWKvUkBEbYWiYiCtqI=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB2717.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(396003)(366004)(136003)(376002)(346002)(39860400002)(2906002)(41300700001)(6666004)(66946007)(31686004)(6512007)(5660300002)(6486002)(7416002)(26005)(6506007)(8936002)(186003)(66556008)(478600001)(4326008)(110136005)(66476007)(2616005)(8676002)(316002)(83380400001)(31696002)(86362001)(38100700002)(53546011)(36756003)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?R1RNcXJBazVGdGIvQ0lBb0IrWmhxcjdQaVA4cFU1cHpobGdSajRDa1J3T1M1?=
- =?utf-8?B?TmVqeGtNZGM5eXBXNjBuVStVTUtsOHlQZ0hwNE9ZTXhSTzd1dkFMRDhvMity?=
- =?utf-8?B?RnBheldUNzZFQjl4bXBIVTBDSFFJVjJEdzVkTm1VcStzdGV5Nkw4RFdka3Ft?=
- =?utf-8?B?Sm9vZmtGMFdWYVBJSHZUY2daR0VzSVpUOVI0MkVVaDhLeFBhaS9VWk8xRWdP?=
- =?utf-8?B?b0hCQkR1TCtOMUE4M2NlZUo0TTk0R1FpQUlUaDFFbll2aUhhL2x6UW5hU1V3?=
- =?utf-8?B?Mk1QNHE0cCt5aEQvSG9LcmJlZ0tyb0RKMHQ4bWwvcnJyY1B3ZGtDSS82bjc5?=
- =?utf-8?B?Z0d2QUhBQ3E2L0hzeTIzL0VsaDE5NEI3NkF5aTNRd2dRenVHU1hTSEM5OFI4?=
- =?utf-8?B?Q01XR2VHem5zbEtGMitaOHJPc0gvMzI2UmRaczk2Z3NqVnMra2pWd3RUNm5w?=
- =?utf-8?B?VGx6QmREOG1SSzYrOTM3OHpWb0lid3U2OEhuTWZ6MG5nTFc3N1FGdmt0MURZ?=
- =?utf-8?B?bU40ZEZmWEE0RExaOUtzdVBHVURMazFKdzI3TGxSZTFjVnRJQjVJb0FHaHhn?=
- =?utf-8?B?SDJNZUNDUFRzbko5WWszZ1dqL1JPRHpwTXlHUHVTc1UvdnFzRFZ0Z0FISVhQ?=
- =?utf-8?B?OFpIeWEzakhDL0FxOWJIZEhiRlQxcEdtTFZVTTBWUngyUUxjK29YV2FYN1po?=
- =?utf-8?B?RTNybEdhZjNhMmdBa2JGa2twYzMySkNFYW9MdGxqMjkxWm94UjhkUTBkaDZW?=
- =?utf-8?B?ZXd2QXRyeHVqN3RYRTVwV0RUL1JROE1naGU5QmlpbXFqRzExZ3lhd2t1TmF0?=
- =?utf-8?B?YXhvcGV1UWgyVDRsQUV3MEJRZlFROVRyK1phTTlVQ0FjUHg1VFlnaUphbjZn?=
- =?utf-8?B?WnY2RjFHL0wxelJUZkw4Z3llRFpkQThIMFo3RC94RGtrMzE5OVJZdmtHaHU0?=
- =?utf-8?B?MEdVb1NCKzJ4OUNMK2liaDJ1ckR4M3Q2a1lwZE91VXUreEZXYjVrcHJBZHA5?=
- =?utf-8?B?aVhrMXhLVWFOR2g4ZVM4cmllRlQ5bjRYY05FaXNvKzUxblFTTGZpT0xhTXV6?=
- =?utf-8?B?QlFkVy9Nc09mQ1FlOVJLSXhtSnVHRE9wekVCOFA4SmlZdm44MVJMblVJOW9K?=
- =?utf-8?B?cmxvUFV0YmNxaEgwQ2dwSzVqNWZZbnFNNXFiRUFvN0NVUmxKYit4cWNjUFl2?=
- =?utf-8?B?bmIxdHRNMi9qL1Bwazc2QWZRWHdiejhMMGxnN2E2K3lWRFNHejhadHcwQ1A2?=
- =?utf-8?B?ek8rWjA1VUVpVGJORkxSb2JMd2RKOHdLY0xhV0tMM1daKytCaDhLQy9MUnlI?=
- =?utf-8?B?dmFMY1FOZWF6VkVtTEl4THhUeWJuRFRpTmtjYm5PZUpPU2ZGelpCQzBKQnpN?=
- =?utf-8?B?VW1zNUZXRy9ZejRSWHdoK0tIZDcvZ0o4eVNYcXl1c2k3TWd3enZOb2w4NjJG?=
- =?utf-8?B?TjVrN0pCUkhuRW1vN0VWTVJlcFA4YVZsQkZCM1JDWUIwUk5VWmhsTVR3bVNU?=
- =?utf-8?B?OHczSWRKNkpvZEtMMWE2Q3FHOUlHQVBJMzhvYVBFWHVJN212V3NkcEQvbEVo?=
- =?utf-8?B?K2diSXpQSndwYVM0cWg5NGRnK2prWHFMT1lPQVNBMDRQNGVwaXpHOW8rcG9I?=
- =?utf-8?B?OU0va1F5MVFmZlJUWjVwRkJpYWlKQkthMzVFaEpad0FxRHhmNWlnN0xMNmhF?=
- =?utf-8?B?L3lERkJ2VGd0cGpueTVlZ1lNa3VJNzcxaUNEUk5FMWt6Lzc4d05SbVFyRVd1?=
- =?utf-8?B?em9DUnk3SksvaHFkU3hLQzMyVWNnVUR3Y01OVzliRm54dStqVnFHT3hVSjRR?=
- =?utf-8?B?YXBXN3BadHhBcHEyQnVVczFST3Z3ZDRvUlhnTjc0cFpVVEhLa3IwOWFTd1Zy?=
- =?utf-8?B?Z2p6VTB2K2g0Q3ZrR2hDQXFkOG5uaTdDYUlyQ0RRdGVsT0MzSHE1V0Q5VThQ?=
- =?utf-8?B?UzdpMURjZmN0VlhYTW81VDZlV2R0WjRJQk5DbXNja1k2OW9wUmw1VjBkL3Fp?=
- =?utf-8?B?YTV3ZzcxbTBIb1QzYStLTGEwZjk2bnYvWjVkY1hDdzVMc3pkNVNObTcxQkZv?=
- =?utf-8?B?am90bHlrSXk3anIyMU5VOWo2M3JsMXJlL0VvQStJemNXcGhmSVJVRFhndits?=
- =?utf-8?B?VjF2b2MrWWd0UVFodU81Vlo0aFRxS2E2Y1o0TW9JVzRMVTI0VmRNekxrTndt?=
- =?utf-8?B?dlJSdnBPRlRILzM0UlMweE1CZUhpUDNBMS80R0wxeVhZZnYxNDJjbVdqOHpV?=
- =?utf-8?B?NW1zOVZhRkUxNko3b2FaTFZJZ2tCYysraitZMkJYdWV2QnUyZkdQY3Qwb1Za?=
- =?utf-8?B?UFBVQ1ozU3lsczRTVzQ5ZjRkMkQydHdzeGFvaDNCdzZpMUhzU1VhQT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 06e59371-5028-4a85-4ddb-08da54a3ce88
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR12MB2717.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jun 2022 23:06:14.9819
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CXyPYlrriKJZMig1L+GaVCKBpQ6VDLAJfzmfweLMBxu64T7yaJlT7TGNcttmIpZWymZnx9G9kmI4t+JYcc/8LA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB3328
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-216110-201763@https.bugzilla.kernel.org/>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, Jun 10, 2022 at 08:27:38AM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=216110
+> 
+>             Bug ID: 216110
+>            Summary: rmdir sub directory cause i_nlink of parent directory
+>                     down from 0 to 0xffffffff
+>            Product: File System
+>            Version: 2.5
+>     Kernel Version: linux-3.10.0-957.el7
 
-On 6/21/2022 7:16 PM, Alistair Popple wrote:
-> David Hildenbrand <david@redhat.com> writes:
->
->> On 21.06.22 18:08, Sierra Guiza, Alejandro (Alex) wrote:
->>> On 6/21/2022 7:25 AM, David Hildenbrand wrote:
->>>> On 21.06.22 13:55, Alistair Popple wrote:
->>>>> David Hildenbrand<david@redhat.com>  writes:
->>>>>
->>>>>> On 21.06.22 13:25, Felix Kuehling wrote:
->>>>>>> Am 6/17/22 um 23:19 schrieb David Hildenbrand:
->>>>>>>> On 17.06.22 21:27, Sierra Guiza, Alejandro (Alex) wrote:
->>>>>>>>> On 6/17/2022 12:33 PM, David Hildenbrand wrote:
->>>>>>>>>> On 17.06.22 19:20, Sierra Guiza, Alejandro (Alex) wrote:
->>>>>>>>>>> On 6/17/2022 4:40 AM, David Hildenbrand wrote:
->>>>>>>>>>>> On 31.05.22 22:00, Alex Sierra wrote:
->>>>>>>>>>>>> Device memory that is cache coherent from device and CPU point of view.
->>>>>>>>>>>>> This is used on platforms that have an advanced system bus (like CAPI
->>>>>>>>>>>>> or CXL). Any page of a process can be migrated to such memory. However,
->>>>>>>>>>>>> no one should be allowed to pin such memory so that it can always be
->>>>>>>>>>>>> evicted.
->>>>>>>>>>>>>
->>>>>>>>>>>>> Signed-off-by: Alex Sierra<alex.sierra@amd.com>
->>>>>>>>>>>>> Acked-by: Felix Kuehling<Felix.Kuehling@amd.com>
->>>>>>>>>>>>> Reviewed-by: Alistair Popple<apopple@nvidia.com>
->>>>>>>>>>>>> [hch: rebased ontop of the refcount changes,
->>>>>>>>>>>>>            removed is_dev_private_or_coherent_page]
->>>>>>>>>>>>> Signed-off-by: Christoph Hellwig<hch@lst.de>
->>>>>>>>>>>>> ---
->>>>>>>>>>>>>       include/linux/memremap.h | 19 +++++++++++++++++++
->>>>>>>>>>>>>       mm/memcontrol.c          |  7 ++++---
->>>>>>>>>>>>>       mm/memory-failure.c      |  8 ++++++--
->>>>>>>>>>>>>       mm/memremap.c            | 10 ++++++++++
->>>>>>>>>>>>>       mm/migrate_device.c      | 16 +++++++---------
->>>>>>>>>>>>>       mm/rmap.c                |  5 +++--
->>>>>>>>>>>>>       6 files changed, 49 insertions(+), 16 deletions(-)
->>>>>>>>>>>>>
->>>>>>>>>>>>> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
->>>>>>>>>>>>> index 8af304f6b504..9f752ebed613 100644
->>>>>>>>>>>>> --- a/include/linux/memremap.h
->>>>>>>>>>>>> +++ b/include/linux/memremap.h
->>>>>>>>>>>>> @@ -41,6 +41,13 @@ struct vmem_altmap {
->>>>>>>>>>>>>        * A more complete discussion of unaddressable memory may be found in
->>>>>>>>>>>>>        * include/linux/hmm.h and Documentation/vm/hmm.rst.
->>>>>>>>>>>>>        *
->>>>>>>>>>>>> + * MEMORY_DEVICE_COHERENT:
->>>>>>>>>>>>> + * Device memory that is cache coherent from device and CPU point of view. This
->>>>>>>>>>>>> + * is used on platforms that have an advanced system bus (like CAPI or CXL). A
->>>>>>>>>>>>> + * driver can hotplug the device memory using ZONE_DEVICE and with that memory
->>>>>>>>>>>>> + * type. Any page of a process can be migrated to such memory. However no one
->>>>>>>>>>>> Any page might not be right, I'm pretty sure. ... just thinking about special pages
->>>>>>>>>>>> like vdso, shared zeropage, ... pinned pages ...
->>>>>>>>>> Well, you cannot migrate long term pages, that's what I meant :)
->>>>>>>>>>
->>>>>>>>>>>>> + * should be allowed to pin such memory so that it can always be evicted.
->>>>>>>>>>>>> + *
->>>>>>>>>>>>>        * MEMORY_DEVICE_FS_DAX:
->>>>>>>>>>>>>        * Host memory that has similar access semantics as System RAM i.e. DMA
->>>>>>>>>>>>>        * coherent and supports page pinning. In support of coordinating page
->>>>>>>>>>>>> @@ -61,6 +68,7 @@ struct vmem_altmap {
->>>>>>>>>>>>>       enum memory_type {
->>>>>>>>>>>>>       	/* 0 is reserved to catch uninitialized type fields */
->>>>>>>>>>>>>       	MEMORY_DEVICE_PRIVATE = 1,
->>>>>>>>>>>>> +	MEMORY_DEVICE_COHERENT,
->>>>>>>>>>>>>       	MEMORY_DEVICE_FS_DAX,
->>>>>>>>>>>>>       	MEMORY_DEVICE_GENERIC,
->>>>>>>>>>>>>       	MEMORY_DEVICE_PCI_P2PDMA,
->>>>>>>>>>>>> @@ -143,6 +151,17 @@ static inline bool folio_is_device_private(const struct folio *folio)
->>>>>>>>>>>> In general, this LGTM, and it should be correct with PageAnonExclusive I think.
->>>>>>>>>>>>
->>>>>>>>>>>>
->>>>>>>>>>>> However, where exactly is pinning forbidden?
->>>>>>>>>>> Long-term pinning is forbidden since it would interfere with the device
->>>>>>>>>>> memory manager owning the
->>>>>>>>>>> device-coherent pages (e.g. evictions in TTM). However, normal pinning
->>>>>>>>>>> is allowed on this device type.
->>>>>>>>>> I don't see updates to folio_is_pinnable() in this patch.
->>>>>>>>> Device coherent type pages should return true here, as they are pinnable
->>>>>>>>> pages.
->>>>>>>> That function is only called for long-term pinnings in try_grab_folio().
->>>>>>>>
->>>>>>>>>> So wouldn't try_grab_folio() simply pin these pages? What am I missing?
->>>>>>>>> As far as I understand this return NULL for long term pin pages.
->>>>>>>>> Otherwise they get refcount incremented.
->>>>>>>> I don't follow.
->>>>>>>>
->>>>>>>> You're saying
->>>>>>>>
->>>>>>>> a) folio_is_pinnable() returns true for device coherent pages
->>>>>>>>
->>>>>>>> and that
->>>>>>>>
->>>>>>>> b) device coherent pages don't get long-term pinned
->>>>>>>>
->>>>>>>>
->>>>>>>> Yet, the code says
->>>>>>>>
->>>>>>>> struct folio *try_grab_folio(struct page *page, int refs, unsigned int flags)
->>>>>>>> {
->>>>>>>> 	if (flags & FOLL_GET)
->>>>>>>> 		return try_get_folio(page, refs);
->>>>>>>> 	else if (flags & FOLL_PIN) {
->>>>>>>> 		struct folio *folio;
->>>>>>>>
->>>>>>>> 		/*
->>>>>>>> 		 * Can't do FOLL_LONGTERM + FOLL_PIN gup fast path if not in a
->>>>>>>> 		 * right zone, so fail and let the caller fall back to the slow
->>>>>>>> 		 * path.
->>>>>>>> 		 */
->>>>>>>> 		if (unlikely((flags & FOLL_LONGTERM) &&
->>>>>>>> 			     !is_pinnable_page(page)))
->>>>>>>> 			return NULL;
->>>>>>>> 		...
->>>>>>>> 		return folio;
->>>>>>>> 	}
->>>>>>>> }
->>>>>>>>
->>>>>>>>
->>>>>>>> What prevents these pages from getting long-term pinned as stated in this patch?
->>>>>>> Long-term pinning is handled by __gup_longterm_locked, which migrates
->>>>>>> pages returned by __get_user_pages_locked that cannot be long-term
->>>>>>> pinned. try_grab_folio is OK to grab the pages. Anything that can't be
->>>>>>> long-term pinned will be migrated afterwards, and
->>>>>>> __get_user_pages_locked will be retried. The migration of
->>>>>>> DEVICE_COHERENT pages was implemented by Alistair in patch 5/13
->>>>>>> ("mm/gup: migrate device coherent pages when pinning instead of failing").
->>>>>> Thanks.
->>>>>>
->>>>>> __gup_longterm_locked()->check_and_migrate_movable_pages()
->>>>>>
->>>>>> Which checks folio_is_pinnable() and doesn't do anything if set.
->>>>>>
->>>>>> Sorry to be dense here, but I don't see how what's stated in this patch
->>>>>> works without adjusting folio_is_pinnable().
->>>>> Ugh, I think you might be right about try_grab_folio().
->>>>>
->>>>> We didn't update folio_is_pinnable() to include device coherent pages
->>>>> because device coherent pages are pinnable. It is really just
->>>>> FOLL_LONGTERM that we want to prevent here.
->>>>>
->>>>> For normal PUP that is done by my change in
->>>>> check_and_migrate_movable_pages() which migrates pages being pinned with
->>>>> FOLL_LONGTERM. But I think I incorrectly assumed we would take the
->>>>> pte_devmap() path in gup_pte_range(), which we don't for coherent pages.
->>>>> So I think the check in try_grab_folio() needs to be:
->>>> I think I said it already (and I might be wrong without reading the
->>>> code), but folio_is_pinnable() is *only* called for long-term pinnings.
->>>>
->>>> It should actually be called folio_is_longterm_pinnable().
->>>>
->>>> That's where that check should go, no?
->>> David, I think you're right. We didn't catch this since the LONGTERM gup
->>> test we added to hmm-test only calls to pin_user_pages. Apparently
->>> try_grab_folio is called only from fast callers (ex.
->>> pin_user_pages_fast/get_user_pages_fast). I have added a conditional
->>> similar to what Alistair has proposed to return null on LONGTERM &&
->>> (coherent_pages || folio_is_pinnable) at try_grab_folio. Also a new gup
->>> test was added with LONGTERM set that calls pin_user_pages_fast.
->>> Returning null under this condition it does causes the migration from
->>> dev to system memory.
->>>
->> Why can't coherent memory simply put its checks into
->> folio_is_pinnable()? I don't get it why we have to do things differently
->> here.
-> I'd made the reasonable assumption that
-> folio_is_pinnable()/is_pinnable_page() were used to check if the
-> folio/page is pinnable or not regardless of FOLL_LONGTERM. Looking at
-> the code more closely though I see both are actually only used on paths
-> checking for FOLL_LONGTERM pinning.
->
-> So I agree - we should rename these
-> folio_is_longterm_pinnable()/is_longterm_pinnable_page() and add the
-> check for coherent pages there. Thanks for pointing that out.
->
->   - Alistair
+Please contact your RHEL7   ^^^^^^^^^^^^^^ account representative for
+assistance in triaging this bug.
 
-Will do in the next patch series.
+--D
 
-Regards,
-Alex Sierra
-
->>> Actually, Im having different problems with a call to PageAnonExclusive
->>> from try_to_migrate_one during page fault from a HMM test that first
->>> migrate pages to device private and forks to mark as COW these pages.
->>> Apparently is catching the first BUG VM_BUG_ON_PGFLAGS(!PageAnon(page),
->>> page)
->> With or without this series? A backtrace would be great.
+>           Hardware: Other
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: high
+>           Priority: P1
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: hexiaole1994@126.com
+>         Regression: No
+> 
+> 1. synptom
+> when user executed mkdir command under parent directory, mkdir command prompted
+> "Too many links".
+> 
+> 
+> 2. basic analysis
+> (1)use "getconf LINK_MAX ." under parent directory, the max i_nlink of the
+> xfs(the filesystem that parent directory belongs) is 2147483647, but the
+> i_nlink of the parent directory now is 4294967109, because the mkdir command
+> will check if the i_nlink of the parent directory is lower than the LINK_MAX,
+> in our environment this check failed, so mkdir command prompt "Too many links".
+> (2)we "cd" into the parent directory, and execute "ls|wc" to accounting the
+> total files of the parent directory, the result is 308875
+> (3)the i_nlink by definition is "the number of links to the inode from
+> directories", a newly created directory has i_nlink of 2, and the i_nlink of
+> this newly created directory will plus 1 once there has a sub directory created
+> under it(the sub directory's ".." points to parent directory cause the i_nlink
+> of the parent directory plus 1), so the i_nlink of the parent directory can
+> also reflect the number of the sub directories(the number of sub directory =
+> i_nlink of the parent - 2). the i_nlink of the parent directory now is
+> 4294967109, if this i_nlink is valid, the number of the sub directoryes might
+> be 4294967109, but like the (2) shows, the total files(include directories)
+> under the parent directory is 308875. so we can assert the i_nlink metadata of
+> the parent direcotry was corrupted.
+> (4)in the dmesg file of the sos_report, we saw an call trace that related to
+> this corrupted i_nlink of parent directory:
+> ...
+> [26038585.616782] ------------[ cut here ]------------
+> [26038585.616794] WARNING: CPU: 22 PID: 21088 at fs/inode.c:284
+> drop_nlink+0x3e/0x50
+> [26038585.616796] Modules linked in: binfmt_misc tcp_diag inet_diag 8021q garp
+> mrp stp llc bonding vfat fat ipmi_ssif amd64_edac_mod edac_mce_amd kvm joydev
+> irqbypass ses enclosure pcspkr scsi_transport_sas sg ipmi_si ipmi_devintf
+> ipmi_msghandler i2c_piix4 acpi_cpufreq ip_tables xfs libcrc32c sd_mod
+> crc_t10dif crct10dif_generic crct10dif_common ast crc32c_intel drm_kms_helper
+> syscopyarea sysfillrect igb ixgbe sysimgblt fb_sys_fops ttm i2c_algo_bit mdio
+> ptp drm pps_core megaraid_sas dca drm_panel_orientation_quirks ahci libahci
+> libata nfit libnvdimm dm_mirror dm_region_hash dm_log dm_mod
+> [26038585.616850] CPU: 22 PID: 21088 Comm: gbased Not tainted
+> 3.10.0-957.el7.hg.3.x86_64 #1
+> [26038585.616851] Hardware name: Sugon H620-G30/65N32-US, BIOS 0QL1001207
+> 03/03/2021
+> [26038585.616853] Call Trace:
+> [26038585.616861]  [<ffffffff86161de9>] dump_stack+0x19/0x1b
+> [26038585.616866]  [<ffffffff85a976c8>] __warn+0xd8/0x100
+> [26038585.616868]  [<ffffffff85a9780d>] warn_slowpath_null+0x1d/0x20
+> [26038585.616870]  [<ffffffff85c5df5e>] drop_nlink+0x3e/0x50
+> [26038585.616904]  [<ffffffffc03f5d08>] xfs_droplink+0x28/0x60 [xfs]
+> [26038585.616927]  [<ffffffffc03f922f>] xfs_remove+0x29f/0x310 [xfs]
+> [26038585.616930]  [<ffffffff85c595a0>] ? take_dentry_name_snapshot+0xf0/0xf0
+> [26038585.616951]  [<ffffffffc03f3bb7>] xfs_vn_unlink+0x57/0xa0 [xfs]
+> [26038585.616953]  [<ffffffff85c4dcac>] vfs_rmdir+0xdc/0x150
+> [26038585.616956]  [<ffffffff85c53151>] do_rmdir+0x1f1/0x220
+> [26038585.616959]  [<ffffffff85c436be>] ? ____fput+0xe/0x10
+> [26038585.616964]  [<ffffffff85abe820>] ? task_work_run+0xc0/0xe0
+> [26038585.616966]  [<ffffffff85c54386>] SyS_rmdir+0x16/0x20
+> [26038585.616970]  [<ffffffff86174ddb>] system_call_fastpath+0x22/0x27
+> [26038585.616972] ---[ end trace 23639deaf902c67e ]---
+> ...
+> (5)the call trace is from the "WARN_ON" function below:
+> void drop_nlink(struct inode *inode)
+> {
+>         WARN_ON(inode->i_nlink == 0);
+>         inode->__i_nlink--;
+>         if (!inode->i_nlink)
+>                 atomic_long_inc(&inode->i_sb->s_remove_count);
+> }
+> (6)the call trace above shows at some time earlier, the i_nlink of the parent
+> direcotry substracted from 0 by 1, because the i_nlink is 32-bit unsigned int,
+> it became 0xffffffff, and from then, the parent direcory can only decreasing
+> the i_nlink rather than increasing due to the LINK_MAX.
+> 
+> 
+> 3. the root cause of corrupted i_nlink of parent directory
+> (1)we saw another call trace in dmesg file of the same process that cause the
+> call trace of "SyS_rmdir" above:
+> ...
+> [18317578.683304] gbased invoked oom-killer: gfp_mask=0x200da, order=0,
+> oom_score_adj=0
+> [18317578.683311] gbased cpuset=/ mems_allowed=0-7
+> [18317578.683315] CPU: 11 PID: 17701 Comm: gbased Not tainted
+> 3.10.0-957.el7.hg.3.x86_64 #1
+> [18317578.683318] Hardware name: Sugon H620-G30/65N32-US, BIOS 0QL1001207
+> 03/03/2021
+> [18317578.683320] Call Trace:
+> [18317578.683330]  [<ffffffff86161de9>] dump_stack+0x19/0x1b
+> [18317578.683334]  [<ffffffff8615c812>] dump_header+0x90/0x229
+> [18317578.683339]  [<ffffffff85bba2f4>] oom_kill_process+0x254/0x3d0
+> [18317578.683342]  [<ffffffff85bb9d63>] ? oom_unkillable_task+0x93/0x120
+> [18317578.683345]  [<ffffffff85bb9e46>] ? find_lock_task_mm+0x56/0xc0
+> [18317578.683347]  [<ffffffff85bbab36>] out_of_memory+0x4b6/0x4f0
+> [18317578.683350]  [<ffffffff8615d316>] __alloc_pages_slowpath+0x5d6/0x724
+> [18317578.683353]  [<ffffffff85bc0f15>] __alloc_pages_nodemask+0x405/0x420
+> [18317578.683357]  [<ffffffff85c11185>] alloc_pages_vma+0xb5/0x200
+> [18317578.683361]  [<ffffffff85bce3d0>] shmem_alloc_page+0x70/0xc0
+> [18317578.683366]  [<ffffffff85ac2dab>] ? autoremove_wake_function+0x2b/0x40
+> [18317578.683369]  [<ffffffff85acbb1b>] ? __wake_up_common+0x5b/0x90
+> [18317578.683374]  [<ffffffff85d7c6c4>] ? __radix_tree_lookup+0x84/0xf0
+> [18317578.683377]  [<ffffffff85da00ea>] ? __percpu_counter_compare+0x2a/0x90
+> [18317578.683379]  [<ffffffff85bd12e1>] shmem_getpage_gfp+0x451/0x840
+> [18317578.683382]  [<ffffffff85bd19a4>] shmem_write_begin+0x54/0x80
+> [18317578.683384]  [<ffffffff85bb5d94>] generic_file_buffered_write+0x124/0x2c0
+> [18317578.683386]  [<ffffffff85bb86d2>] __generic_file_aio_write+0x1e2/0x400
+> [18317578.683389]  [<ffffffff85bb8949>] generic_file_aio_write+0x59/0xa0
+> [18317578.683392]  [<ffffffff85c40633>] do_sync_write+0x93/0xe0
+> [18317578.683395]  [<ffffffff85c41120>] vfs_write+0xc0/0x1f0
+> [18317578.683397]  [<ffffffff85c41f3f>] SyS_write+0x7f/0xf0
+> [18317578.683401]  [<ffffffff86174ddb>] system_call_fastpath+0x22/0x27
+> [18317578.683402] Mem-Info:
+> [18317578.683486] active_anon:59939847 inactive_anon:3882578 isolated_anon:0
+> ...
+> (2)the call trace shows this process was killed due to the "oom", we suspect if
+> at the time this process being kill, its other threads(other than the
+> "SyS_write" thread that the call trace shows) was doing concurrent rmdir or
+> mkdir under the parent direcotry, the kill will cause the corrupted i_nlink of
+> the parent directory, and we simulate this "oom" situation where multithread do
+> concurrent mkdir and rmdir under parent directory, but the problem can not
+> reproduce at all.
+> (3)the dmesg file also shows an error related to "power saving mode":
+> ...
+> [23647870.874579] Uhhuh. NMI received for unknown reason 3d on CPU 56.
+> [23647870.874624] Do you have a strange power saving mode enabled?
+> [23647870.874650] Dazed and confused, but trying to continue
+> ...
+> (4)we are simulating this "power saving mode" error to determine if this can
+> cause the corrupted i_nlink problem, this is in progressing.
+> (5)the problematic environment now repaired by hand throught the xfs_db tool,
+> we manually modify the corrupted i_nlink of the parent directory to the correct
+> value.
+> (6)in short, by now we still confusing why the corrupted i_nlink of the parent
+> can happen.
+> 
+> 
+> 4. attachment descriptions
+> (1)the screenshot of the problematic environment that shows the corrupted
+> i_nlink of the parent directory.
+> (2)the dmesg file.
+> 
+> 
+> 5. other informations
+> (1)the similar problem that caused on ext4 filesystem:
+> https://lkml.kernel.org/lkml/4febf11b-31ea-82a1-bf08-b6bebe08bc75@huawei.com/T/
+> 
+> -- 
+> You may reply to this email to add a comment.
+> 
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
