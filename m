@@ -2,126 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D512C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 06:28:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE602CCA47F
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 06:29:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229696AbiFWG2s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jun 2022 02:28:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59226 "EHLO
+        id S229476AbiFWG33 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jun 2022 02:29:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229673AbiFWG2r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 02:28:47 -0400
-Received: from mail-vs1-xe31.google.com (mail-vs1-xe31.google.com [IPv6:2607:f8b0:4864:20::e31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 020243632B
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 23:28:47 -0700 (PDT)
-Received: by mail-vs1-xe31.google.com with SMTP id 184so4214241vsz.2
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 23:28:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=2rdmvrzvmj+KFUxKSCH6J3bamrs7uYhMroOl56MRpEI=;
-        b=qI8sF92uQSQh90DCAT0VpJmNDpCBm9dC0g+FvH2Z5kaWiIZSiSdINhWUPxQWm+2HN2
-         HT3XhXBFVhUZCtak7IAwFZ9Yjb3SY57sdv32w2RC28RWZ4UrNq/+1iZA4VwvwC82RLaf
-         nYd/ONUmAWP1966TZT98QEBO65grUvRbVvS/Kw7hOjrXwXU5+JOzKAgy9iqVyvpC4lyY
-         un4kxChQciHTxKIfyNQXimqsh5P3TgaQsNwhVq8IQJWjZXxYNSRGnhEtTAX6q/oxa8u8
-         RcbJMuF+WXwWSzwsvGdBLQ7IlgylEQlyuEeRqMaIlZ437G3w2+xGHcIan5ebNpUu5gyx
-         52Zg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=2rdmvrzvmj+KFUxKSCH6J3bamrs7uYhMroOl56MRpEI=;
-        b=jtDIGBmZ4mk/3y9A9Uk2zbvvIseBsjlLsggExRADB+QDYVZOt9JAzhtxTeU3iQPleH
-         pwBNO25h7HIEVUabpTyHn05CbAwR9IjwNCbjjiHB4qAAKLXPryvafkIBTozB4X7qXL7s
-         +CCiOVj5IrWoPcYNCWUgDY2vYBqD7gqxiPAgfC1tZKLdlBB0DOfV4+28ujpImgdndULg
-         EyfDxgTCBpnJ9tf17SOWkAchLy/zw/RJDP9IJUn4pvuh6MpRTv5bYRa42SKi//aBuaBn
-         1s3S0wf+6vEs6/FBDojWYMAmBo+fDOiaGOLvWheCumh5OQjislHSCuwn+8zeVSFrZJgt
-         IBgg==
-X-Gm-Message-State: AJIora/no7q3XuBp9z+2k8jiXwXI7UhQewAS8lXRC3/c06RtPrxaQd/e
-        TliabdLkPyQpLWFaYdfgwEYcTod68/gAL4sP6AL+daps+eu9Mg==
-X-Google-Smtp-Source: AGRyM1tCZ4NUyzovmDl2kTTNqhH+sKYaLnrlUlb+kvlXj1gbEGkv2rwAkoQnneR6631cgjzedUAk0nrpRIdcb1Dy5Ok=
-X-Received: by 2002:a67:fa01:0:b0:354:3136:c62e with SMTP id
- i1-20020a67fa01000000b003543136c62emr9578492vsq.2.1655965726029; Wed, 22 Jun
- 2022 23:28:46 -0700 (PDT)
+        with ESMTP id S229686AbiFWG32 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 02:29:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 004333981C;
+        Wed, 22 Jun 2022 23:29:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 93BB7613F7;
+        Thu, 23 Jun 2022 06:29:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F25C7C3411B;
+        Thu, 23 Jun 2022 06:29:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655965767;
+        bh=wUTnbr3HED4pym62QuGzaVUisvnMcXKLi/pNUb52Gv8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=W19bTbAcd2JoJg59z4uvCaexzpHQkxpK0jUUmL45pXVGCH8XYBN9mOu/B6eSNjdJk
+         dSSpgkBYYZBIBxVCntKorhLWuGy9SL6MWAsr/sTSuLNkLW0vN2FUzmIO7OGFEdelmF
+         HvjvW9T2Fh8zNwm+GToMrOqwK5hRxBfqUK04ZqCleALbQ2jvOVjC4JUbsHCtCNiQvP
+         5Kjv3yvDmADqr2/JQqUEBdEPhVb3BZTUrIisVl8ln6dzGUwaN2nIjGLmHkK+B09eHV
+         ZJZ5jygiFgF2twUVdSSG77jMxEBXD7XwfoFtIdh6Ms84LF+RLnUaaIlVuoxRQh+T2Q
+         InPAwOozukU3Q==
+Date:   Wed, 22 Jun 2022 23:29:26 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-mm@kvack.org, kernel-team@fb.com, linux-xfs@vger.kernel.org,
+        io-uring@vger.kernel.org, shr@fb.com,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com,
+        hch@infradead.org, jack@suse.cz, willy@infradead.org
+Subject: Re: [PATCH v9 00/14] io-uring/xfs: support async buffered writes
+Message-ID: <YrQIRpO6kSFdfXZO@magnolia>
+References: <20220616212221.2024518-1-shr@fb.com>
+ <165593682792.161026.12974983413174964699.b4-ty@kernel.dk>
+ <YrO0AP4y3OGUjnXE@magnolia>
+ <30b0adb6-a5f2-b295-50d2-e182f9dc9ef0@kernel.dk>
 MIME-Version: 1.0
-References: <20220616182749.1200971-1-leah.rumancik@gmail.com>
- <YrNB65ISwFDgLT4O@magnolia> <YrNExw1XTTD1dJET@magnolia> <YrOJu6I5Ui0CGcYr@google.com>
- <CAOQ4uxh=mzrLxn_xRfApJzFD7kZ8evxnxwyFMzRYDgg5Y3_Oqg@mail.gmail.com>
-In-Reply-To: <CAOQ4uxh=mzrLxn_xRfApJzFD7kZ8evxnxwyFMzRYDgg5Y3_Oqg@mail.gmail.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 23 Jun 2022 09:28:34 +0300
-Message-ID: <CAOQ4uxgteXDU-KF3dEwTi3wrkpDB_if68k+HJM6jtc_kYO6pEQ@mail.gmail.com>
-Subject: Re: [PATCH 5.15 CANDIDATE v2 0/8] xfs stable candidate patches for
- 5.15.y (part 1)
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <30b0adb6-a5f2-b295-50d2-e182f9dc9ef0@kernel.dk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 23, 2022 at 7:53 AM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> On Thu, Jun 23, 2022 at 12:38 AM Leah Rumancik <leah.rumancik@gmail.com> wrote:
-> >
-> > On Wed, Jun 22, 2022 at 09:35:19AM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jun 22, 2022 at 09:23:07AM -0700, Darrick J. Wong wrote:
-> > > > On Thu, Jun 16, 2022 at 11:27:41AM -0700, Leah Rumancik wrote:
-> > > > > The patch testing has been increased to 100 runs per test on each
-> > > > > config. A baseline without the patches was established with 100 runs
-> > > > > to help detect hard failures / tests with a high fail rate. Any
-> > > > > failures seen in the backports branch but not in the baseline branch
-> > > > > were then run 1000+ times on both the baseline and backport branches
-> > > > > and the failure rates compared. The failures seen on the 5.15
-> > > > > baseline are listed at
-> > > > > https://gist.github.com/lrumancik/5a9d85d2637f878220224578e173fc23.
-> > > > > No regressions were seen with these patches.
-> > > > >
-> > > > > To make the review process easier, I have been coordinating with Amir
-> > > > > who has been testing this same set of patches on 5.10. He will be
-> > > > > sending out the corresponding 5.10 series shortly.
-> > > > >
-> > > > > Change log from v1
-> > > > > (https://lore.kernel.org/all/20220603184701.3117780-1-leah.rumancik@gmail.com/):
-> > > > > - Increased testing
-> > > > > - Reduced patch set to overlap with 5.10 patches
-> > > > >
-> > > > > Thanks,
-> > > > > Leah
-> > > > >
-> > > > > Brian Foster (1):
-> > > > >   xfs: punch out data fork delalloc blocks on COW writeback failure
-> > > > >
-> > > > > Darrick J. Wong (4):
-> > > > >   xfs: remove all COW fork extents when remounting readonly
-> > > > >   xfs: prevent UAF in xfs_log_item_in_current_chkpt
-> > > > >   xfs: only bother with sync_filesystem during readonly remount
-> > > >
-> > > > 5.15 already has the vfs fixes to make sync_fs/sync_filesystem actually
-> > > > return error codes, right?
-> > Confirmed "vfs: make sync_filesystem return errors from ->sync_fs" made
-> > it into 5.15.y (935745abcf4c695a18b9af3fbe295e322547a114).
->
-> Confirmed that it made it into 5.10.y and that
-> 2719c7160dcf ("vfs: make freeze_super abort when sync_filesystem returns error")
-> also made it to both 5.10.y and 5.15.y
+On Wed, Jun 22, 2022 at 06:50:29PM -0600, Jens Axboe wrote:
+> On 6/22/22 6:29 PM, Darrick J. Wong wrote:
+> > On Wed, Jun 22, 2022 at 04:27:07PM -0600, Jens Axboe wrote:
+> >> On Thu, 16 Jun 2022 14:22:07 -0700, Stefan Roesch wrote:
+> >>> This patch series adds support for async buffered writes when using both
+> >>> xfs and io-uring. Currently io-uring only supports buffered writes in the
+> >>> slow path, by processing them in the io workers. With this patch series it is
+> >>> now possible to support buffered writes in the fast path. To be able to use
+> >>> the fast path the required pages must be in the page cache, the required locks
+> >>> in xfs can be granted immediately and no additional blocks need to be read
+> >>> form disk.
+> >>>
+> >>> [...]
+> >>
+> >> Applied, thanks!
+> >>
+> >> [01/14] mm: Move starting of background writeback into the main balancing loop
+> >>         commit: 29c36351d61fd08a2ed50a8028a7f752401dc88a
+> >> [02/14] mm: Move updates of dirty_exceeded into one place
+> >>         commit: a3fa4409eec3c094ad632ac1029094e061daf152
+> >> [03/14] mm: Add balance_dirty_pages_ratelimited_flags() function
+> >>         commit: 407619d2cef3b4d74565999a255a17cf5d559fa4
+> >> [04/14] iomap: Add flags parameter to iomap_page_create()
+> >>         commit: 49b5cd0830c1e9aa0f9a3717ac11a74ef23b9d4e
+> >> [05/14] iomap: Add async buffered write support
+> >>         commit: ccb885b4392143cea1bdbd8a0f35f0e6d909b114
+> >> [06/14] iomap: Return -EAGAIN from iomap_write_iter()
+> >>         commit: f0f9828d64393ea2ce87bd97f033051c8d7a337f
+> > 
+> > I'm not sure /what/ happened here, but I never received the full V9
+> > series, and neither did lore:
+> > 
+> > https://lore.kernel.org/linux-fsdevel/165593682792.161026.12974983413174964699.b4-ty@kernel.dk/T/#t
+> 
+> Huh yes, didn't even notice that it's missing a few.
+> 
+> > As it is, I already have my hands full trying to figure out why
+> > generic/522 reports file corruption after 20 minutes of running on
+> > vanilla 5.19-rc3, so I don't think I'm going to get to this for a while
+> > either.
+> > 
+> > The v8 series looked all right to me, but ********* I hate how our
+> > development process relies on such unreliable **** tooling.  I don't
+> 
+> Me too, and the fact that email is getting worse and worse is not making
+> things any better...
+> 
+> > think it's a /great/ idea to be pushing new code into -next when both
+> > the xfs and pagecache maintainers are too busy to read the whole thing
+> > through... but did hch actually RVB the whole thing prior to v9?
+> 
+> Yes, hch did review the whole thing prior to v9. v9 has been pretty
+> quiet, but even v8 didn't have a whole lot. Which is to be expected for
+> a v9, this thing has been going for months.
 
-Correcting myself:
-All of these vfs fixes are in 5.15.y:
+<nod>
 
-* 2d86293c7075 - (xfs/vfs-5.17-fixes) xfs: return errors in xfs_fs_sync_fs
-* dd5532a4994b - quota: make dquot_quota_sync return errors from ->sync_fs
-* 5679897eb104 - vfs: make sync_filesystem return errors from ->sync_fs
-* 2719c7160dcf - vfs: make freeze_super abort when sync_filesystem returns error
+> We're only at -rc3 right now, so I think it's fine getting it some -next
+> exposure. It's not like it's getting pushed tomorrow, and if actual
+> concerns arise, let's just deal with them if that's the case. I'll check
+> in with folks before anything gets pushed certainly, I just don't think
+> it's fair to keep stalling when there are no real objections. Nothing
+> gets pushed unless the vested parties agree, obviously.
 
-5.10.y has only 2719c7160dcf and dd5532a4994b which applied cleanly
-and are outside of the fs/xfs/* AUTOSEL ban.
+Ok.  Would you or Stefan mind sending the whole v9 series again, so I
+can have one more look?  Hopefully vger won't just eat the series a
+third time... :(
 
-I have backported the two other patches to 5.10, but I may defer them
-and the readonly remount patch to the next submission.
+Huh.  Ok.  LWN seems to have gotten the whole thing:
+https://lwn.net/ml/linux-mm/20220616212221.2024518-1-shr@fb.com/
 
-Thanks,
-Amir.
+I'll go read that in the meantime.  $DEITY I hate email.
+
+--D
+
+> -- 
+> Jens Axboe
+> 
