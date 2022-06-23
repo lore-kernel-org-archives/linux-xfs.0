@@ -2,103 +2,130 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DA3FCCA47C
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 22:06:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B7EC43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 22:13:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230083AbiFWWGs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jun 2022 18:06:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44390 "EHLO
+        id S229473AbiFWWNQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jun 2022 18:13:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230071AbiFWWGr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 18:06:47 -0400
-Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B3715DF2B
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 15:06:45 -0700 (PDT)
-Received: by mail-pg1-x52d.google.com with SMTP id e63so684104pgc.5
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 15:06:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=UaUehcOEJlieX7AdhP4I9Jsvj6qc9iCnwLhOMGIL2t4=;
-        b=AAD1zvllcD75BocFjPCJUqeTneVE7WIl2b1W8J0n+BlJPOemn9V25qBLIYFGwQA6zs
-         4D3tjIaVIxcRF6Hfu547JBxmMiYZ0Nn9u8BOdxjl4KxPJfEGNCbE5kt/b/8YhNe35f6s
-         DAgZYiorNdWRJEllT48vccNIw/UL/rxLTX4/O5/riC+ri0ZR/I5mwP+3DhOEYytIkXxS
-         f9wKfEosHHXh9+KEllttfDvYH4we5tzD9WVKbByRDmLdBmW76Hq13h2Z7eLlCGVMdUEM
-         zeb0ZphNfmf6+EwaBhkALPNdCccpHgWfusDR5BlPx7z3dJrxRBNwIBNaGsaifEZkcSyS
-         dgBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=UaUehcOEJlieX7AdhP4I9Jsvj6qc9iCnwLhOMGIL2t4=;
-        b=Q6kTAsol1JGuajFEx+SHEIIl9WfLVOPLUKCuCmqwDv2+9u65Jk7wU+EAz5BaAhldpK
-         JbMrDxDu/Px3EzGobc6APlvFfgA7wG84gkfZJ4ap7+3rXgA8qwFeYOpE/R+moGkthnH6
-         GY6UA8Fp2XZZzpt0iYsZ279Q5q0ONOoos23txgr1jGZfH3mwmLrvnYAxyt7hWjx0O/2H
-         vW2ltoXQ8Nol3v48jLBpa5rLsY9fLYa6q1f1Zp3H7c9KmdAo/+QZ7Q85jhQ0sI4SPN1d
-         QgPXfNS5QniaKM8o/f/BxqDnvEZEatfc386dJEoVTTq8qT3h80AGo4tYZDn3HBuYuZm1
-         S5/A==
-X-Gm-Message-State: AJIora9An/gIMlLHyjt2nCMVVafqSvfGgBzRPC2zzVDYjh0Lgh4sWN9W
-        RnTD9LdGhzt/EM1eo4axOdmnXQ==
-X-Google-Smtp-Source: AGRyM1uokjQTXRa12oJij4piLPo65ZKMu3Yjr8zsrNU49agTg/vR0L0cLUBgMVAK7LRXwIvUs1sXRw==
-X-Received: by 2002:a62:ee07:0:b0:525:1a3e:bebb with SMTP id e7-20020a62ee07000000b005251a3ebebbmr27036034pfi.77.1656022004538;
-        Thu, 23 Jun 2022 15:06:44 -0700 (PDT)
-Received: from ?IPV6:2600:380:766e:a8be:8c24:9e35:f20a:acfb? ([2600:380:766e:a8be:8c24:9e35:f20a:acfb])
-        by smtp.gmail.com with ESMTPSA id s42-20020a056a0017aa00b0052553215444sm134272pfg.101.2022.06.23.15.06.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Jun 2022 15:06:44 -0700 (PDT)
-Message-ID: <c829173f-ceff-b29b-e491-1e04332cdf94@kernel.dk>
-Date:   Thu, 23 Jun 2022 16:06:41 -0600
+        with ESMTP id S229464AbiFWWNP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 18:13:15 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A03BF1182B
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 15:13:12 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 442255ECD9D;
+        Fri, 24 Jun 2022 08:13:11 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1o4V4X-00AG7a-MU; Fri, 24 Jun 2022 08:13:09 +1000
+Date:   Fri, 24 Jun 2022 08:13:09 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Clay Gerrard <clay.gerrard@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: ENODATA on list/stat directory
+Message-ID: <20220623221309.GU227878@dread.disaster.area>
+References: <CA+_JKzo7V5PZkWGFPB5hP0pAtWrOsi0TomxHaO5W+ViEF8ctwQ@mail.gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [RESEND PATCH v9 00/14] io-uring/xfs: support async buffered
- writes
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>, Stefan Roesch <shr@fb.com>
-Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, jack@suse.cz, hch@infradead.org,
-        willy@infradead.org
-References: <20220623175157.1715274-1-shr@fb.com> <YrTNku0AC80eheSP@magnolia>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <YrTNku0AC80eheSP@magnolia>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+_JKzo7V5PZkWGFPB5hP0pAtWrOsi0TomxHaO5W+ViEF8ctwQ@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62b4e577
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=sVK2kaBsAAAA:8 a=7-415B0cAAAA:8
+        a=Jue3FdvqcnXuxoIEujIA:9 a=CjuIK1q_8ugA:10 a=bM7yYgFJnCk8bKsWy3o2:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/23/22 2:31 PM, Darrick J. Wong wrote:
->> Testing:
->>   This patch has been tested with xfstests, fsx, fio and individual test programs.
+On Thu, Jun 23, 2022 at 02:52:22PM -0500, Clay Gerrard wrote:
+> I work on an object storage system, OpenStack Swift, that has always
+> used xfs on the storage nodes.  Our system has encountered many
+> various disk failures and occasionally apparent file system corruption
+> over the years, but we've been noticing something lately that might be
+> "new" and I'm considering how to approach the problem.  I'm interested
+> to solicit critique on my current thinking/process - particularly from
+> xfs experts.
 > 
-> Good to hear.  Will there be some new fstest coming/already merged?
+> [root@s8k-sjc3-d01-obj-9 ~]# xfs_bmap
+> /srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53
+> /srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53:
+> No data available
+> [root@s8k-sjc3-d01-obj-9 ~]# xfs_db
+> /srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53
+> /srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53:
+> No data available
 
-It should not really require any new tests, as anything buffered +
-io_uring on xfs will now use this code. But Stefan has run a bunch of
-things on the side too, some of those synthetic (like ensure that
-various parts of a buffered write range isn't cached, etc) and some more
-generic (fsx). There might be some that could be turned into xfstests,
-I'll let him answer that one.
+ENODATA implies that it's trying to access an xattr that doesn't
+exist.
 
-> Hmm, well, vger and lore are still having stomach problems, so even the
-> resend didn't result in #5 ending up in my mailbox. :(
-> 
-> For the patches I haven't received, I'll just attach my replies as
-> comments /after/ each patch subject line.  What a way to review code!
+> fatal error -- couldn't initialize XFS library
+> [root@s8k-sjc3-d01-obj-9 ~]# ls -alhF /srv/node/d21865/quarantined/objects-1/e53
+> ls: cannot access
+> /srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53:
+> No data available
+> total 4.0K
+> drwxr-xr-x  9 swift swift  318 Jun  7 00:57 ./
+> drwxr-xr-x 33 swift swift 4.0K Jun 23 16:10 ../
+> d?????????  ? ?     ?        ?            ? f0418758de4baaa402eb301c5bae3e53/
 
-Really not sure what's going on with email these days, it's quite a
-pain... Thanks for taking a look so quickly!
+That's the typical ls output when it couldn't stat() an inode. This
+typically occurs when the inode has been corrupted. On XFS, at
+least, this should result in a corruption warning in the kernel log.
 
-I've added your reviewed-bys and also made that ternary change you
-suggested. Only other change is addressing a kernelbot noticing that one
-ret in the mm side was being set to zero only, so we could kill it. End
-result:
+Did you check dmesg for errors?
 
-https://git.kernel.dk/cgit/linux-block/log/?h=for-5.20/io_uring-buffered-writes
+> drwxr-xr-x  2 swift swift   47 May 27 00:43 f04193c31edc9593007471ee5a189e53/
+> drwxr-xr-x  2 swift swift   47 May 27 00:43 f0419c711a5a5d01dac6154970525e53/
+> drwxr-xr-x  2 swift swift   47 May 27 00:43 f041a2548b9255493d16ba21c19b6e53/
+> drwxr-xr-x  2 swift swift   47 Jun  7 00:57 f041aa09d40566d6915a706a22886e53/
+> drwxr-xr-x  2 swift swift   39 May 27 00:43 f041ac88bf13e5458a049d827e761e53/
+> drwxr-xr-x  2 swift swift   47 May 27 00:43 f041bfd1c234d44b591c025d459a7e53/
+> [root@s8k-sjc3-d01-obj-9 ~]# python
+> Python 2.7.5 (default, Nov 16 2020, 22:23:17)
+> [GCC 4.8.5 20150623 (Red Hat 4.8.5-44)] on linux2
+> Type "help", "copyright", "credits" or "license" for more information.
+> >>> import os
+> >>> os.stat('/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53')
+> Traceback (most recent call last):
+>   File "<stdin>", line 1, in <module>
+> OSError: [Errno 61] No data available:
+> '/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53'
+> >>> os.listdir('/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53')
+> Traceback (most recent call last):
+>   File "<stdin>", line 1, in <module>
+> OSError: [Errno 61] No data available:
+> '/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53'
+> >>>
 
+Use strace, not the python debugger, to find what syscall returned
+the error.
+
+> [root@s8k-sjc3-d01-obj-9 ~]# uname -a
+> Linux s8k-sjc3-d01-obj-9.nsv.sjc3.nvmetal.net
+> 3.10.0-1160.62.1.el7.x86_64 #1 SMP Tue Apr 5 16:57:59 UTC 2022 x86_64
+> x86_64 x86_64 GNU/Linux
+
+That's a RHEL7 kernel. Upstream developers really can't help you
+diagnose random weird problems with these kernels - they are
+completely custom kernels and so only the vendor can really help you
+with diagnosing to root cause of problems such as this. You should
+talk to your RH support contact.
+
+> I'd also like to be able to "simulate" this kind of corruption on a
+> healthy filesystem so we can test our "quarantine/auditor" code that's
+> trying to move these filesystem problems out of the way for the
+> consistency engine.  Does anyone have any guess how I could MAKE an
+> xfs filesystem produce this kind of behavior on purpose?
+
+Use xfs_db to corrupt a directory inode, then try to read it.
+
+Cheers,
+
+Dave.
 -- 
-Jens Axboe
-
+Dave Chinner
+david@fromorbit.com
