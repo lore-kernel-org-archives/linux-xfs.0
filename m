@@ -2,172 +2,191 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C81D1C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jun 2022 23:45:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6979C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 00:25:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233670AbiFVXpd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 19:45:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53594 "EHLO
+        id S1351013AbiFWAZm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 20:25:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233155AbiFVXpd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 19:45:33 -0400
+        with ESMTP id S1357243AbiFWAZk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 20:25:40 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDEA842A1F;
-        Wed, 22 Jun 2022 16:45:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E1AA6580
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 17:25:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AA5BAB8204E;
-        Wed, 22 Jun 2022 23:45:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EB35C34114;
-        Wed, 22 Jun 2022 23:45:29 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0533DB8216E
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 00:25:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF097C34114;
+        Thu, 23 Jun 2022 00:25:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655941529;
-        bh=knWbFWKPVCf/JcdUUqeVuszXkkpvZ1XDzUuX0zVGWZQ=;
+        s=k20201202; t=1655943936;
+        bh=vYUUU2u9vHUjQspr3vazq6sPuWVT6tjYrSZO4kG6A8M=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=H90Aw81HbXUmmlyFgs7k3jw+jd44ERxcPT2u+pLgBeonV7l/V3+4Ru0VYuYOWN1mV
-         xbNUAHQCeorgQJuq63aXjmNmsXhYL4pM2ahRHuYocCtRWX/BO3Efv+/g3Fo19cE+5K
-         ciwJxN+tl3FsF+xD0yA08RhRL/7KCmT/znxgnVepRuXKVsZgYgA6gEZ8zUlsV0PB2W
-         UQHCHsoVCcTgaL+8ReRnF6+tp8G/4mlT6Lcj6zGsthQqJa2Tk8ZhaMJ5wQh6csA3a1
-         CIlfsfn1L61VfVEoeVcbKND6QvsNG48uQIwoKSgWh8P12Y8hA3/R4KiTY8pvwy3noV
-         6ztzQYnKGFeVQ==
-Date:   Wed, 22 Jun 2022 16:45:28 -0700
+        b=qqAIbta1NEG11fzg0HQ9vxD0PcdXH78dOrxnvWb1uf4HQkIKe+65ROQ30xKwdkQbh
+         TQpWBfH6Rcw63WMQ4KlNkfLxKxuBMpVpnxTSaTjQcbTtFOIWv+J7KeFpsASYogS2w/
+         H+dz1ZXGxsbeuf3pzovrURcnEZVq72LfGt0rxoFnjVjqCn+fOg3xxwun4ai563jU5Q
+         1f+kQyWRFbIDyJ7lLbeWm3qw8zt5pNJqQj6KqM2Dn8TAFquQxnK0c2dw4X4rdGPbhO
+         km2EVBlvZQcuScyYFHjGRbFPRt2izMUjIVIiABeadaIUJ1ZC0zgMDR02ra/oiCjewL
+         L/nmlHmKTWtCg==
+Date:   Wed, 22 Jun 2022 17:25:36 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 5.10 CANDIDATE 00/11] xfs stable candidate patches for
- 5.10.y (v5.15+)
-Message-ID: <YrOpmMzn9ArsR9Dy@magnolia>
-References: <20220617100641.1653164-1-amir73il@gmail.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
+Message-ID: <YrOzAPXCcDY9DnCj@magnolia>
+References: <20220615220416.3681870-1-david@fromorbit.com>
+ <20220615220416.3681870-2-david@fromorbit.com>
+ <YqytHuc/sJprFn0K@bfoster>
+ <20220617215245.GH227878@dread.disaster.area>
+ <YrKmrgJh9+SzT0Gz@magnolia>
+ <YrM/woFhObNYQx3b@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220617100641.1653164-1-amir73il@gmail.com>
+In-Reply-To: <YrM/woFhObNYQx3b@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 17, 2022 at 01:06:30PM +0300, Amir Goldstein wrote:
-> Hi all,
+On Wed, Jun 22, 2022 at 12:13:54PM -0400, Brian Foster wrote:
+> On Tue, Jun 21, 2022 at 10:20:46PM -0700, Darrick J. Wong wrote:
+> > On Sat, Jun 18, 2022 at 07:52:45AM +1000, Dave Chinner wrote:
+> > > On Fri, Jun 17, 2022 at 12:34:38PM -0400, Brian Foster wrote:
+> > > > On Thu, Jun 16, 2022 at 08:04:15AM +1000, Dave Chinner wrote:
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > 
+> > > > > Currently inodegc work can sit queued on the per-cpu queue until
+> > > > > the workqueue is either flushed of the queue reaches a depth that
+> > > > > triggers work queuing (and later throttling). This means that we
+> > > > > could queue work that waits for a long time for some other event to
+> > > > > trigger flushing.
+> > > > > 
+> > > > > Hence instead of just queueing work at a specific depth, use a
+> > > > > delayed work that queues the work at a bound time. We can still
+> > > > > schedule the work immediately at a given depth, but we no long need
+> > > > > to worry about leaving a number of items on the list that won't get
+> > > > > processed until external events prevail.
+> > > > > 
+> > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > > ---
+> > > > >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
+> > > > >  fs/xfs/xfs_mount.h  |  2 +-
+> > > > >  fs/xfs/xfs_super.c  |  2 +-
+> > > > >  3 files changed, 24 insertions(+), 16 deletions(-)
+> > > > > 
+> > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > > > index 374b3bafaeb0..46b30ecf498c 100644
+> > > > > --- a/fs/xfs/xfs_icache.c
+> > > > > +++ b/fs/xfs/xfs_icache.c
+> > > > ...
+> > > > > @@ -2176,7 +2184,7 @@ xfs_inodegc_shrinker_scan(
+> > > > >  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
+> > > > >  
+> > > > >  			WRITE_ONCE(gc->shrinker_hits, h + 1);
+> > > > > -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
+> > > > > +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
+> > > > >  			no_items = false;
+> > > > >  		}
+> > > > 
+> > > > This all seems reasonable to me, but is there much practical benefit to
+> > > > shrinker infra/feedback just to expedite a delayed work item by one
+> > > > jiffy? Maybe there's a use case to continue to trigger throttling..?
+> > > 
+> > > I haven't really considered doing anything other than fixing the
+> > > reported bug. That just requires an API conversion for the existing
+> > > "queue immediately" semantics and is the safest minimum change
+> > > to fix the issue at hand.
+> > > 
+> > > So, yes, the shrinker code may (or may not) be superfluous now, but
+> > > I haven't looked at it and done analysis of the behaviour without
+> > > the shrinkers enabled. I'll do that in a completely separate
+> > > patchset if it turns out that it is not needed now.
+> > 
+> > I think the shrinker part is still necessary -- bulkstat and xfs_scrub
+> > on a very low memory machine (~560M RAM) opening and closing tens of
+> > millions of files can still OOM the machine if one doesn't have a means
+> > to slow down ->destroy_inode (and hence the next open()) when reclaim
+> > really starts to dig in.  Without the shrinker bits, it's even easier to
+> > trigger OOM storms when xfs has timer-delayed inactivation... which is
+> > something that Brian pointed out a year ago when we were reviewing the
+> > initial inodegc patchset.
+> > 
 > 
-> Previously posted candidates for 5.10.y followed chronological release
-> order.
-> 
-> Parts 1 and 2 of fixes from v5.10..v5.12 have already been applied to
-> v5.10.121.
-> 
-> Part 3 (from 5.13) has already been posted for review [3] on June 6,
-> but following feedback from Dave, I changed my focus to get the same
-> set of patches tested and reviewed for 5.10.y/5.15.y.
-> 
-> I do want to ask you guys to also find time to review part 3, because
-> we have a lot of catching up to do for 5.10.y, so we need to chew at
-> this debt at a reasonable rate.
-> 
-> This post has the matching set of patches for 5.10.y that goes with
-> Leah's first set of candidates for 5.15.y [1].
-> 
-> Most of the fixes are from v5.15..v5.17 except for patch 11 (v5.18-rc1).
-> All fix patches have been tagged with Fixes: by the author.
-> 
-> The patches have been soaking in kdepops since Sunday. They passed more
-> than 30 auto group runs with several different versions of xfsprogs.
-> 
-> The differences from Leah's 5.15.y:
-> - It is 11 patches and not 8 because of dependencies
-> - Patches 6,7 are non-fixes backported as dependency to patch 8 -
->   they have "backported .* for dependency" in their commit message
-> - Patches 3,4,11 needed changes to apply to 5.10.y - they have a
->   "backport" related comment in their commit message to explain what
->   changes were needed
-> - Patch 10 is a fix from v5.12 that is re-posted as a dependency for
->   patch 11
-> 
-> Darrick,
-> 
-> As the author patches 4,11 and sole reviewer of patch 3 (a.k.a
-> the non-cleanly applied patches), please take a closer look at those.
-> 
-> Patch 10 has been dropped from my part 2 candidates following concerns
-> raised by Dave and is now being re-posted following feedback from
-> Christian and Christoph [2].
-> 
-> If there are still concerns about patches 10 or 11, please raise a flag.
-> I can drop either of these patches before posting to stable if anyone
-> feels that they need more time to soak in master.
+> It wouldn't surprise me if the infrastructure is still necessary for the
+> throttling use case. In that case, I'm more curious about things like
+> whether it's still as effective as intended with such a small scheduling
+> delay, or whether it still might be worth simplifying in various ways
+> (i.e., does the scheduling delay actually make a difference? do we still
+> need a per cpu granular throttle? etc.).
 
-At the current moment (keep in mind that I have 2,978 more emails to get
-through before I'm caught up), I think it's safe to say that for patches
-1-5:
+It can still be useful for certain g*dawful scenarios --
 
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Let's say you have a horribly misconfigured cloudy system with a tiny
+log, hundreds of CPUs, a memory hogging process, another process with
+many hundreds of threads that are performing small appending synchronous
+writes to a large number of files, and some other process repeatedly
+opens and closes files.  Background writeback completion will create
+enough workers to tie up the log such that writeback and inodegc contend
+for log grant space and make slow progress.  If memory is also tight,
+we want to slow down the file scanning process so that it doesn't shove
+/more/ inodes into the cache and push the system towards OOM behavior.
 
-(patch 9 also, but see the reply I just sent for that one about grabbing
-the sync_fs fixes too)
+Back in the old days when inodegc was a radix tree tag it was fairly
+easy to get OOMs when the delay interval was long (5 seconds).  The
+OOM probability went down pretty sharply as the interval approached
+zero, but even at 1 jiffy I could still occasionally trip it, whereas
+the pre-deferred-inactivation kernels would never OOM.
 
-The log changes are going to take more time to go through, since that
-stuff is always tricky and /not/ something for me to be messing with at
-4:45pm.
+I haven't tested it all that rigorously with Dave's fancy new per-cpu
+list design, but I did throw on my silly test setup (see below) and
+still got it to OOM once in 3 runs with the shrinker bits turned off.
+
+> > > > If
+> > > > so, it looks like decent enough overhead to cycle through every cpu in
+> > > > both callbacks that it might be worth spelling out more clearly in the
+> > > > top-level comment.
+> > > 
+> > > I'm not sure what you are asking here - mod_delayed_work_on() has
+> > > pretty much the same overhead and behaviour as queue_work() in this
+> > > case, so... ?
+> > 
+> 
+> I'm just pointing out that the comment around the shrinker
+> infrastructure isn't very informative if the shrinker turns out to still
+> be necessary for reasons other than making the workers run sooner.
+
+<nod> That comment /does/ need to be updated to note the subtlety that a
+lot of shrinker activity can slow down close()ing a file by making user
+tasks wait for the inodegc workers to clear the backlog.
+
+> > <shrug> Looks ok to me, since djwong-dev has had some variant of timer
+> > delayed inactivation in it longer than it hasn't:
+> > 
+> 
+> Was that with a correspondingly small delay or something larger (on the
+> order of seconds or so)? Either way, it sounds like you have a
+> predictable enough workload that can actually test this continues to
+> work as expected..?
+
+Yeah.  I snapshot /home (which has ~20 million inodes) then race
+fsstress and xfs_scrub -n in a VM with 560MB of RAM.
 
 --D
 
-> Thanks,
-> Amir.
+> Brian
 > 
-> [1] https://lore.kernel.org/linux-xfs/20220616182749.1200971-1-leah.rumancik@gmail.com/
-> [2] https://lore.kernel.org/linux-xfs/CAOQ4uxg4=m9zEFbDAKXx7CP7HYiMwtsYSJvq076oKpy-OhK1uw@mail.gmail.com/
-> [3] https://lore.kernel.org/linux-xfs/20220606160537.689915-1-amir73il@gmail.com/
-> 
-> Brian Foster (1):
->   xfs: punch out data fork delalloc blocks on COW writeback failure
-> 
-> Christoph Hellwig (2):
->   xfs: refactor xfs_file_fsync
->   xfs: fix up non-directory creation in SGID directories
-> 
-> Darrick J. Wong (4):
->   xfs: remove all COW fork extents when remounting readonly
->   xfs: prevent UAF in xfs_log_item_in_current_chkpt
->   xfs: only bother with sync_filesystem during readonly remount
->   xfs: use setattr_copy to set vfs inode attributes
-> 
-> Dave Chinner (2):
->   xfs: check sb_meta_uuid for dabuf buffer recovery
->   xfs: xfs_log_force_lsn isn't passed a LSN
-> 
-> Rustam Kovhaev (1):
->   xfs: use kmem_cache_free() for kmem_cache objects
-> 
-> Yang Xu (1):
->   xfs: Fix the free logic of state in xfs_attr_node_hasname
-> 
->  fs/xfs/libxfs/xfs_attr.c      | 13 +++---
->  fs/xfs/libxfs/xfs_types.h     |  1 +
->  fs/xfs/xfs_aops.c             | 15 +++++--
->  fs/xfs/xfs_buf_item.c         |  2 +-
->  fs/xfs/xfs_buf_item_recover.c |  2 +-
->  fs/xfs/xfs_dquot_item.c       |  2 +-
->  fs/xfs/xfs_extfree_item.c     |  6 +--
->  fs/xfs/xfs_file.c             | 81 +++++++++++++++++++++--------------
->  fs/xfs/xfs_inode.c            | 24 +++++------
->  fs/xfs/xfs_inode_item.c       |  4 +-
->  fs/xfs/xfs_inode_item.h       |  2 +-
->  fs/xfs/xfs_iops.c             | 56 ++----------------------
->  fs/xfs/xfs_log.c              | 27 ++++++------
->  fs/xfs/xfs_log.h              |  4 +-
->  fs/xfs/xfs_log_cil.c          | 32 ++++++--------
->  fs/xfs/xfs_log_priv.h         | 15 +++----
->  fs/xfs/xfs_pnfs.c             |  3 +-
->  fs/xfs/xfs_super.c            | 21 ++++++---
->  fs/xfs/xfs_trans.c            |  6 +--
->  fs/xfs/xfs_trans.h            |  4 +-
->  20 files changed, 149 insertions(+), 171 deletions(-)
-> 
-> -- 
-> 2.25.1
+> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > --D
+> > 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
+> > 
 > 
