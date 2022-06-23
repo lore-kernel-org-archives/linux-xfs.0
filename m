@@ -2,142 +2,311 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16104C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 19:52:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30A64C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 19:56:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229789AbiFWTwk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jun 2022 15:52:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53548 "EHLO
+        id S229642AbiFWT4u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jun 2022 15:56:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231868AbiFWTwf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 15:52:35 -0400
-Received: from mail-yw1-x1132.google.com (mail-yw1-x1132.google.com [IPv6:2607:f8b0:4864:20::1132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32B35103E
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 12:52:34 -0700 (PDT)
-Received: by mail-yw1-x1132.google.com with SMTP id 00721157ae682-3176b6ed923so4553077b3.11
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 12:52:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=/IkXaysTmJNQF9kPEgsE0B35gANiP/zFe5svht2XAxw=;
-        b=pRhFdinexvUSgiW9376rfEuNwpr1Ea8icrCdEv8NICx+LHhf1Ss8NN3YunYNh9nA2D
-         64Jvrwjpf6DGvkf/RhOLVDLi1dhMlgAcqKlgWO3KO9Ezg6ZzvuyQS/feWw2T1aluVGJg
-         CxuvPQ2m77h8yklezBImYV7u2TVCb10Or7CE7b5laqnI7glAI1Kbc/79qvQHga1ZE/o6
-         woMnRx5ylgVaGl2LZVQYtIuodR6nYW0vfVmnJpH/9eTjRc9obxLtV3qAg++v1o4Q03Nv
-         hv2XD3ORq3D9RrEVuWupyiuofDntWGj8OUr8b+gWHiKDUl36SmbQt9z4Hadv3l3qWhAN
-         evKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=/IkXaysTmJNQF9kPEgsE0B35gANiP/zFe5svht2XAxw=;
-        b=IzeWcHcVyFQdlIluKVmPjbbBzvk+bjAL7EWcRNFr6IaizwnPJElip1+jLI+OAtjSGI
-         d83g4MYQSDZMlH3AfhrhIui5hra5EbH2fFnYtSAjocNMcWtoMt0c8MJ/hJCGp+edxFr+
-         /lJjhF5VD+cFMISioKV1oWhoZwWQ7f+uQSEq8nLykrla7dI73EQ4oOXG32J37DwjmrlX
-         ATYx9C61kK+jB5I0fgpK9RwrN+5Vfr57GQ6a/f9vwUohBaBMyogUhRntB9xU1fbZEi1Q
-         BUzC28bu64KcJZ9hAH6FUzIYa1OHdrosIEPVCi/yNKQe+vhEHO3WYv+c7EbGCET+0EAX
-         zksg==
-X-Gm-Message-State: AJIora+h6eMZ1T4qtsPKdza5ObbMI91eMZecDKM+0cRbA9tAu4v5bZhl
-        siklZ+kwgkd6LnT674wUuCQlb2nYl+ZpCByO6oAYCWkBY5MDNQ==
-X-Google-Smtp-Source: AGRyM1tAzCZ1EReuFLsk1b+woUffHTzoAcxkEf6VWrjOfYW2ldGgHha5rmuKESiorgfQjI4uGpxdxj1RkAwy/ciTWlk=
-X-Received: by 2002:a81:7c04:0:b0:317:587d:b5d5 with SMTP id
- x4-20020a817c04000000b00317587db5d5mr12301676ywc.115.1656013953114; Thu, 23
- Jun 2022 12:52:33 -0700 (PDT)
+        with ESMTP id S229505AbiFWT4q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 15:56:46 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F1472F661
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 12:56:44 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id B3B26CE260A
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 19:56:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5FC7C341C6;
+        Thu, 23 Jun 2022 19:56:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656014200;
+        bh=pHnYMDbvLzL/h3iYV08KtApIrmyhaNGqsyGGjoQMxB4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=FARVozm3g7zc0uK32/KvHXwWpY1QUTyPQFxORv9wJkgvMsIzErUmh+q48tkYg0+gD
+         zEounVChQ/TxOmkaB/tQ3esSwdRN8SBmthx0y6f8+lEmxCQYXKnFuAs9YTZB8rz7b3
+         drKNSGq0oY/EzdeGB34L1Qg3SalgLuYAanNs5UFTsylVYS8yedA2QH7uNSa9NsBPAB
+         dZd6BF3u5GL07GzHgs5rRBLd5BBPap3LxAirsEOMP8kzPGfyYz7OSkbfCQYFnn7lCJ
+         OJN/cYLc+epj2hPCC4lZLrKxgUHbgsiHtWHyIQMlu8zwrd34yEVrHRFWHxDJLkzx4y
+         XINXjQVMj30yQ==
+Date:   Thu, 23 Jun 2022 12:56:40 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
+Message-ID: <YrTFePWaarPl8eNP@magnolia>
+References: <20220615220416.3681870-1-david@fromorbit.com>
+ <20220615220416.3681870-2-david@fromorbit.com>
+ <YqytHuc/sJprFn0K@bfoster>
+ <20220617215245.GH227878@dread.disaster.area>
+ <YrKmrgJh9+SzT0Gz@magnolia>
+ <YrM/woFhObNYQx3b@bfoster>
+ <YrOzAPXCcDY9DnCj@magnolia>
+ <YrRTWoEZys3DfPW8@bfoster>
 MIME-Version: 1.0
-From:   Clay Gerrard <clay.gerrard@gmail.com>
-Date:   Thu, 23 Jun 2022 14:52:22 -0500
-Message-ID: <CA+_JKzo7V5PZkWGFPB5hP0pAtWrOsi0TomxHaO5W+ViEF8ctwQ@mail.gmail.com>
-Subject: ENODATA on list/stat directory
-To:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YrRTWoEZys3DfPW8@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I work on an object storage system, OpenStack Swift, that has always
-used xfs on the storage nodes.  Our system has encountered many
-various disk failures and occasionally apparent file system corruption
-over the years, but we've been noticing something lately that might be
-"new" and I'm considering how to approach the problem.  I'm interested
-to solicit critique on my current thinking/process - particularly from
-xfs experts.
+On Thu, Jun 23, 2022 at 07:49:46AM -0400, Brian Foster wrote:
+> On Wed, Jun 22, 2022 at 05:25:36PM -0700, Darrick J. Wong wrote:
+> > On Wed, Jun 22, 2022 at 12:13:54PM -0400, Brian Foster wrote:
+> > > On Tue, Jun 21, 2022 at 10:20:46PM -0700, Darrick J. Wong wrote:
+> > > > On Sat, Jun 18, 2022 at 07:52:45AM +1000, Dave Chinner wrote:
+> > > > > On Fri, Jun 17, 2022 at 12:34:38PM -0400, Brian Foster wrote:
+> > > > > > On Thu, Jun 16, 2022 at 08:04:15AM +1000, Dave Chinner wrote:
+> > > > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > > > 
+> > > > > > > Currently inodegc work can sit queued on the per-cpu queue until
+> > > > > > > the workqueue is either flushed of the queue reaches a depth that
+> > > > > > > triggers work queuing (and later throttling). This means that we
+> > > > > > > could queue work that waits for a long time for some other event to
+> > > > > > > trigger flushing.
+> > > > > > > 
+> > > > > > > Hence instead of just queueing work at a specific depth, use a
+> > > > > > > delayed work that queues the work at a bound time. We can still
+> > > > > > > schedule the work immediately at a given depth, but we no long need
+> > > > > > > to worry about leaving a number of items on the list that won't get
+> > > > > > > processed until external events prevail.
+> > > > > > > 
+> > > > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > > > > ---
+> > > > > > >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
+> > > > > > >  fs/xfs/xfs_mount.h  |  2 +-
+> > > > > > >  fs/xfs/xfs_super.c  |  2 +-
+> > > > > > >  3 files changed, 24 insertions(+), 16 deletions(-)
+> > > > > > > 
+> > > > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > > > > > index 374b3bafaeb0..46b30ecf498c 100644
+> > > > > > > --- a/fs/xfs/xfs_icache.c
+> > > > > > > +++ b/fs/xfs/xfs_icache.c
+> > > > > > ...
+> > > > > > > @@ -2176,7 +2184,7 @@ xfs_inodegc_shrinker_scan(
+> > > > > > >  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
+> > > > > > >  
+> > > > > > >  			WRITE_ONCE(gc->shrinker_hits, h + 1);
+> > > > > > > -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
+> > > > > > > +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
+> > > > > > >  			no_items = false;
+> > > > > > >  		}
+> > > > > > 
+> > > > > > This all seems reasonable to me, but is there much practical benefit to
+> > > > > > shrinker infra/feedback just to expedite a delayed work item by one
+> > > > > > jiffy? Maybe there's a use case to continue to trigger throttling..?
+> > > > > 
+> > > > > I haven't really considered doing anything other than fixing the
+> > > > > reported bug. That just requires an API conversion for the existing
+> > > > > "queue immediately" semantics and is the safest minimum change
+> > > > > to fix the issue at hand.
+> > > > > 
+> > > > > So, yes, the shrinker code may (or may not) be superfluous now, but
+> > > > > I haven't looked at it and done analysis of the behaviour without
+> > > > > the shrinkers enabled. I'll do that in a completely separate
+> > > > > patchset if it turns out that it is not needed now.
+> > > > 
+> > > > I think the shrinker part is still necessary -- bulkstat and xfs_scrub
+> > > > on a very low memory machine (~560M RAM) opening and closing tens of
+> > > > millions of files can still OOM the machine if one doesn't have a means
+> > > > to slow down ->destroy_inode (and hence the next open()) when reclaim
+> > > > really starts to dig in.  Without the shrinker bits, it's even easier to
+> > > > trigger OOM storms when xfs has timer-delayed inactivation... which is
+> > > > something that Brian pointed out a year ago when we were reviewing the
+> > > > initial inodegc patchset.
+> > > > 
+> > > 
+> > > It wouldn't surprise me if the infrastructure is still necessary for the
+> > > throttling use case. In that case, I'm more curious about things like
+> > > whether it's still as effective as intended with such a small scheduling
+> > > delay, or whether it still might be worth simplifying in various ways
+> > > (i.e., does the scheduling delay actually make a difference? do we still
+> > > need a per cpu granular throttle? etc.).
+> > 
+> > It can still be useful for certain g*dawful scenarios --
+> > 
+> > Let's say you have a horribly misconfigured cloudy system with a tiny
+> > log, hundreds of CPUs, a memory hogging process, another process with
+> > many hundreds of threads that are performing small appending synchronous
+> > writes to a large number of files, and some other process repeatedly
+> > opens and closes files.  Background writeback completion will create
+> > enough workers to tie up the log such that writeback and inodegc contend
+> > for log grant space and make slow progress.  If memory is also tight,
+> > we want to slow down the file scanning process so that it doesn't shove
+> > /more/ inodes into the cache and push the system towards OOM behavior.
+> > 
+> 
+> Yeah, I get the general idea/purpose of the throttling. What I'm probing
+> at here is whether a case like this is still handled effectively with
+> such a short scheduling delay.
 
-[root@s8k-sjc3-d01-obj-9 ~]# xfs_bmap
-/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53
-/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53:
-No data available
-[root@s8k-sjc3-d01-obj-9 ~]# xfs_db
-/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53
-/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53:
-No data available
+Given the trace_xfs_inodegc_shrinker_* data I've collected on my
+simulator, I think the 1 jiffy delay is handling this well enough that
+we only trip that tracepoint about a half dozen times in 2h of trying to
+exercising the inode caches.  That said, I haven't really had time to
+try this on (say) a 20CPU machine with ridiculously small memory to see
+if I get different results.
 
-fatal error -- couldn't initialize XFS library
-[root@s8k-sjc3-d01-obj-9 ~]# ls -alhF /srv/node/d21865/quarantined/objects-1/e53
-ls: cannot access
-/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53:
-No data available
-total 4.0K
-drwxr-xr-x  9 swift swift  318 Jun  7 00:57 ./
-drwxr-xr-x 33 swift swift 4.0K Jun 23 16:10 ../
-d?????????  ? ?     ?        ?            ? f0418758de4baaa402eb301c5bae3e53/
-drwxr-xr-x  2 swift swift   47 May 27 00:43 f04193c31edc9593007471ee5a189e53/
-drwxr-xr-x  2 swift swift   47 May 27 00:43 f0419c711a5a5d01dac6154970525e53/
-drwxr-xr-x  2 swift swift   47 May 27 00:43 f041a2548b9255493d16ba21c19b6e53/
-drwxr-xr-x  2 swift swift   47 Jun  7 00:57 f041aa09d40566d6915a706a22886e53/
-drwxr-xr-x  2 swift swift   39 May 27 00:43 f041ac88bf13e5458a049d827e761e53/
-drwxr-xr-x  2 swift swift   47 May 27 00:43 f041bfd1c234d44b591c025d459a7e53/
-[root@s8k-sjc3-d01-obj-9 ~]# python
-Python 2.7.5 (default, Nov 16 2020, 22:23:17)
-[GCC 4.8.5 20150623 (Red Hat 4.8.5-44)] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
->>> import os
->>> os.stat('/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53')
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-OSError: [Errno 61] No data available:
-'/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53'
->>> os.listdir('/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53')
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-OSError: [Errno 61] No data available:
-'/srv/node/d21865/quarantined/objects-1/e53/f0418758de4baaa402eb301c5bae3e53'
->>>
+(Note: I'm still trying to figure out why generic/522 reports
+corruption, and hoping that willy's folios pull today just fixes it
+magically...)
 
-[root@s8k-sjc3-d01-obj-9 ~]# uname -a
-Linux s8k-sjc3-d01-obj-9.nsv.sjc3.nvmetal.net
-3.10.0-1160.62.1.el7.x86_64 #1 SMP Tue Apr 5 16:57:59 UTC 2022 x86_64
-x86_64 x86_64 GNU/Linux
-[root@s8k-sjc3-d01-obj-9 ~]# mount | grep /srv/node/d21865
-/dev/sdd on /srv/node/d21865 type xfs
-(rw,noatime,nodiratime,attr2,inode64,logbufs=8,noquota)
-[root@s8k-sjc3-d01-obj-9 ~]# xfs_db -r /dev/sdd
-xfs_db> version
-versionnum [0xbcb5+0x18a] =
-V5,NLINK,DIRV2,ATTR,ALIGN,LOGV2,EXTFLG,SECTOR,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT,CRC,FTYPE
-xfs_db>
+> Presumably there is some window before
+> list size based throttling triggers for which the shrinker is expected
+> to cover, so that implies the shrinker historically is able to detect
+> and push populated queues and trigger throttling from the point it is
+> invoked (whether directly via repeated shrinker invocations or
+> indirectly via causing larger queue sizes is not clear to me).
 
-We can't "do" anything with the directory once it starts giving us
-ENODATA.  We don't typically like to unmount the whole filesystem
-(there's a LOT of *uncorrupt* data on the device) - so I'm not 100%
-sure if xfs_repair fixes these directories.  Swift itself is a
-replicated/erasure-coded store - we can almost always "throw away"
-corrupt data on a single node and the rest can bring the cluster state
-back to full durability.
+Back when I merged the inodegc series, it was fairly easy to get the
+shrinker to trip dozens of times during a stress run, even when the only
+throttling criteria was the queue size.  I think the reflink/rmap
+transaction reservation optimizations have made the log grant
+bottlenecks much less severe, since I now see a lot less contention on
+the grant heads.
 
-This particular failure is worrisome for two reasons:
+> The thing that stands out to me as a question wrt to this change is that
+> the trigger for shrinker induced throttling is the list size at the time
+> of the callback(s), and that goes from having a lifecycle associated
+> with the size-oriented scheduling algorithm to a time-based scheduling
+> lifecycle of one jiffy (also noting that the inodegc worker resets
+> shrinker_hits before it begins to process inodes). So with that in mind,
+> how reliable is this lowmem signal based on the list size back to the
+> tasks creating more work and memory pressure? Once a shrinker invocation
+> occurs, what are the odds that the callback is able to detect a
+> populated list and act accordingly?
 
-1) we can't "just" delete the affected directory - because we can't
-stat/move it - so we have to throw away the whole *parent* directory
-(HUGE blast radius in some cases)
-2) for 10 years running Swift i've never seen this exactly, and now it
-seems to be happening more and more often - but we don't know if it's
-a new software version, or new hardware revision, or new access
-pattern
+Hrmmm.  Decent, I think?  If the list is populated but the inactivation
+worker is not running, then we queue the worker and clear the list; if
+the worker is already running when the shrinker gets called, we might
+end up requeuing it unnecessarily, in which case it'll just clear more.
 
-I'd also like to be able to "simulate" this kind of corruption on a
-healthy filesystem so we can test our "quarantine/auditor" code that's
-trying to move these filesystem problems out of the way for the
-consistency engine.  Does anyone have any guess how I could MAKE an
-xfs filesystem produce this kind of behavior on purpose?
+> These questions are somewhat rhetorical because this all seems rather
+> unpredictable when we consider varying resource availability.
 
---
-Clay Gerrard
+Not to mention the shrinker itself undergoing various behavioral changes
+over the years... :(
+
+> The
+> relevant question for this patch is probably just that somebody has
+> tested and confirmed that the shrinker hasn't been subtly or indirectly
+> broken in cases like the one you describe above (where perhaps we might
+> not have many shrinker callback opportunities to act on before OOM).
+
+FWIW, the only time I /ever/ saw OOMs (either now with 5.19 or ages ago
+with 5.9) was with extreme lowmem testing.  On VMs with more than a
+gigabyte or so of memory, I notice that we usually hit the time/length
+thresholds without shrinkers getting involved.  Granted, I did try to
+pick the shrinker values so that we only get called on the *second*
+level of shrinking, which is after we've freed some but not enough
+memory.
+
+If my responses seem a bit like handwaving, they are, because (at the
+moment) this is well off in the weeds.
+
+> > Back in the old days when inodegc was a radix tree tag it was fairly
+> > easy to get OOMs when the delay interval was long (5 seconds).  The
+> > OOM probability went down pretty sharply as the interval approached
+> > zero, but even at 1 jiffy I could still occasionally trip it, whereas
+> > the pre-deferred-inactivation kernels would never OOM.
+> > 
+> > I haven't tested it all that rigorously with Dave's fancy new per-cpu
+> > list design, but I did throw on my silly test setup (see below) and
+> > still got it to OOM once in 3 runs with the shrinker bits turned off.
+> > 
+> 
+> Ok.. so that implies we still need throttling, but I'm not sure what
+> "fancy percpu list design" refers to. If you have a good test case, I
+
+You might recall that the original versions of deferred inode
+inactivation would set radix tree tags, and a per-AG workqueue function
+would scan that AG's radix tree for tagged inodes and inactivate them.
+Dave observed that letting the cpu caches grow cold led to performance
+problems, and replaced the tagging mechanism with per-cpu lists, which
+is what we have now.
+
+> think the interesting immediate question is: are those OOMs avoided with
+> this patch but the shrinker infrastructure still in place?
+
+That's the $64000 question that I don't know definitively yet.
+
+> If not, then I wonder if something is going wonky there. If so, I'm
+> still a bit curious what the behavior looks like and whether it can be
+> simplified in light of this change, but that's certainly beyond the
+> scope of this patch.
+
+<nod> For now I'd like to get this going for 5.19 to fix the original
+complaint about statfs blocking in D state while waiting for inodegc
+after deleting a ~100m file extents[1], and defer the decision of
+whether or not we /really/ need the shrinker to a later time (like
+5.20).
+
+[1] https://lore.kernel.org/linux-xfs/20220509024659.GA62606@onthe.net.au/
+
+> 
+> > > > > > If
+> > > > > > so, it looks like decent enough overhead to cycle through every cpu in
+> > > > > > both callbacks that it might be worth spelling out more clearly in the
+> > > > > > top-level comment.
+> > > > > 
+> > > > > I'm not sure what you are asking here - mod_delayed_work_on() has
+> > > > > pretty much the same overhead and behaviour as queue_work() in this
+> > > > > case, so... ?
+> > > > 
+> > > 
+> > > I'm just pointing out that the comment around the shrinker
+> > > infrastructure isn't very informative if the shrinker turns out to still
+> > > be necessary for reasons other than making the workers run sooner.
+> > 
+> > <nod> That comment /does/ need to be updated to note the subtlety that a
+> > lot of shrinker activity can slow down close()ing a file by making user
+> > tasks wait for the inodegc workers to clear the backlog.
+> > 
+> > > > <shrug> Looks ok to me, since djwong-dev has had some variant of timer
+> > > > delayed inactivation in it longer than it hasn't:
+> > > > 
+> > > 
+> > > Was that with a correspondingly small delay or something larger (on the
+> > > order of seconds or so)? Either way, it sounds like you have a
+> > > predictable enough workload that can actually test this continues to
+> > > work as expected..?
+> > 
+> > Yeah.  I snapshot /home (which has ~20 million inodes) then race
+> > fsstress and xfs_scrub -n in a VM with 560MB of RAM.
+> > 
+> 
+> Yeah small delay or yeah large delay?
+
+Both -- with large inactivation delays and no shrinker, OOMs happen
+fairly frequently; with a short delay and no shrinker, they're harder
+(but still not impossible) to trigger.
+
+Granted ... even the overall frequency of OOMs with large inactivation
+delays seems to have gone down a bit from when I was more actively
+testing in the 5.9 era.
+
+--D
+
+> Brian
+> 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > --D
+> > > > 
+> > > > > Cheers,
+> > > > > 
+> > > > > Dave.
+> > > > > -- 
+> > > > > Dave Chinner
+> > > > > david@fromorbit.com
+> > > > 
+> > > 
+> > 
+> 
