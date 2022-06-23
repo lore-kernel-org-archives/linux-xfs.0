@@ -2,191 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6979C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 00:25:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 791FBCCA479
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 00:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351013AbiFWAZm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jun 2022 20:25:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43970 "EHLO
+        id S1359064AbiFWA3y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jun 2022 20:29:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357243AbiFWAZk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 20:25:40 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E1AA6580
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jun 2022 17:25:39 -0700 (PDT)
+        with ESMTP id S233608AbiFWA3y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jun 2022 20:29:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B7F04162C;
+        Wed, 22 Jun 2022 17:29:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0533DB8216E
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 00:25:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF097C34114;
-        Thu, 23 Jun 2022 00:25:36 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 27B7161BBB;
+        Thu, 23 Jun 2022 00:29:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FDC5C34114;
+        Thu, 23 Jun 2022 00:29:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655943936;
-        bh=vYUUU2u9vHUjQspr3vazq6sPuWVT6tjYrSZO4kG6A8M=;
+        s=k20201202; t=1655944192;
+        bh=aAoFgHtWas++I53ocsvZ6Q17Zzsw1Rs+N4ahYVrgBOU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qqAIbta1NEG11fzg0HQ9vxD0PcdXH78dOrxnvWb1uf4HQkIKe+65ROQ30xKwdkQbh
-         TQpWBfH6Rcw63WMQ4KlNkfLxKxuBMpVpnxTSaTjQcbTtFOIWv+J7KeFpsASYogS2w/
-         H+dz1ZXGxsbeuf3pzovrURcnEZVq72LfGt0rxoFnjVjqCn+fOg3xxwun4ai563jU5Q
-         1f+kQyWRFbIDyJ7lLbeWm3qw8zt5pNJqQj6KqM2Dn8TAFquQxnK0c2dw4X4rdGPbhO
-         km2EVBlvZQcuScyYFHjGRbFPRt2izMUjIVIiABeadaIUJ1ZC0zgMDR02ra/oiCjewL
-         L/nmlHmKTWtCg==
-Date:   Wed, 22 Jun 2022 17:25:36 -0700
+        b=a8sEpVbYfYOXuyt0gsYxvuJoq7iiX7/sksHGJ38xs+6WfBhE86MzVoKM7PFB/Ip0q
+         OvvD66ubSx5e+JUYg9sUzWZUhnifs/KufGdnHmRnxPQqCFRS+DQea5ngdHULEsc7yP
+         WsV2p1GZipw5yMsgOE9Xm9oDpIFySdw+yDWMVr83W6kHvhP8IDdlb+yNNOeTms5/wy
+         Fcae6Ej2WgdZq8I3VA3YMREVMcpLlSHXN6u0pETkTl6Pur2vQOADfqER8M7uowT0dj
+         sJgnEQFTc+D5AexJ8nnHvxhDYPIZI+e7tlfWgJ+F5prD9DvpYoEvHg/Ng41tZ/0grP
+         U0iigj3pFrygg==
+Date:   Wed, 22 Jun 2022 17:29:52 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
-Message-ID: <YrOzAPXCcDY9DnCj@magnolia>
-References: <20220615220416.3681870-1-david@fromorbit.com>
- <20220615220416.3681870-2-david@fromorbit.com>
- <YqytHuc/sJprFn0K@bfoster>
- <20220617215245.GH227878@dread.disaster.area>
- <YrKmrgJh9+SzT0Gz@magnolia>
- <YrM/woFhObNYQx3b@bfoster>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-mm@kvack.org, kernel-team@fb.com, linux-xfs@vger.kernel.org,
+        io-uring@vger.kernel.org, shr@fb.com,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com,
+        hch@infradead.org, jack@suse.cz, willy@infradead.org
+Subject: Re: [PATCH v9 00/14] io-uring/xfs: support async buffered writes
+Message-ID: <YrO0AP4y3OGUjnXE@magnolia>
+References: <20220616212221.2024518-1-shr@fb.com>
+ <165593682792.161026.12974983413174964699.b4-ty@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YrM/woFhObNYQx3b@bfoster>
+In-Reply-To: <165593682792.161026.12974983413174964699.b4-ty@kernel.dk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 22, 2022 at 12:13:54PM -0400, Brian Foster wrote:
-> On Tue, Jun 21, 2022 at 10:20:46PM -0700, Darrick J. Wong wrote:
-> > On Sat, Jun 18, 2022 at 07:52:45AM +1000, Dave Chinner wrote:
-> > > On Fri, Jun 17, 2022 at 12:34:38PM -0400, Brian Foster wrote:
-> > > > On Thu, Jun 16, 2022 at 08:04:15AM +1000, Dave Chinner wrote:
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > 
-> > > > > Currently inodegc work can sit queued on the per-cpu queue until
-> > > > > the workqueue is either flushed of the queue reaches a depth that
-> > > > > triggers work queuing (and later throttling). This means that we
-> > > > > could queue work that waits for a long time for some other event to
-> > > > > trigger flushing.
-> > > > > 
-> > > > > Hence instead of just queueing work at a specific depth, use a
-> > > > > delayed work that queues the work at a bound time. We can still
-> > > > > schedule the work immediately at a given depth, but we no long need
-> > > > > to worry about leaving a number of items on the list that won't get
-> > > > > processed until external events prevail.
-> > > > > 
-> > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > > ---
-> > > > >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
-> > > > >  fs/xfs/xfs_mount.h  |  2 +-
-> > > > >  fs/xfs/xfs_super.c  |  2 +-
-> > > > >  3 files changed, 24 insertions(+), 16 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > > > index 374b3bafaeb0..46b30ecf498c 100644
-> > > > > --- a/fs/xfs/xfs_icache.c
-> > > > > +++ b/fs/xfs/xfs_icache.c
-> > > > ...
-> > > > > @@ -2176,7 +2184,7 @@ xfs_inodegc_shrinker_scan(
-> > > > >  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
-> > > > >  
-> > > > >  			WRITE_ONCE(gc->shrinker_hits, h + 1);
-> > > > > -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
-> > > > > +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
-> > > > >  			no_items = false;
-> > > > >  		}
-> > > > 
-> > > > This all seems reasonable to me, but is there much practical benefit to
-> > > > shrinker infra/feedback just to expedite a delayed work item by one
-> > > > jiffy? Maybe there's a use case to continue to trigger throttling..?
-> > > 
-> > > I haven't really considered doing anything other than fixing the
-> > > reported bug. That just requires an API conversion for the existing
-> > > "queue immediately" semantics and is the safest minimum change
-> > > to fix the issue at hand.
-> > > 
-> > > So, yes, the shrinker code may (or may not) be superfluous now, but
-> > > I haven't looked at it and done analysis of the behaviour without
-> > > the shrinkers enabled. I'll do that in a completely separate
-> > > patchset if it turns out that it is not needed now.
+On Wed, Jun 22, 2022 at 04:27:07PM -0600, Jens Axboe wrote:
+> On Thu, 16 Jun 2022 14:22:07 -0700, Stefan Roesch wrote:
+> > This patch series adds support for async buffered writes when using both
+> > xfs and io-uring. Currently io-uring only supports buffered writes in the
+> > slow path, by processing them in the io workers. With this patch series it is
+> > now possible to support buffered writes in the fast path. To be able to use
+> > the fast path the required pages must be in the page cache, the required locks
+> > in xfs can be granted immediately and no additional blocks need to be read
+> > form disk.
 > > 
-> > I think the shrinker part is still necessary -- bulkstat and xfs_scrub
-> > on a very low memory machine (~560M RAM) opening and closing tens of
-> > millions of files can still OOM the machine if one doesn't have a means
-> > to slow down ->destroy_inode (and hence the next open()) when reclaim
-> > really starts to dig in.  Without the shrinker bits, it's even easier to
-> > trigger OOM storms when xfs has timer-delayed inactivation... which is
-> > something that Brian pointed out a year ago when we were reviewing the
-> > initial inodegc patchset.
-> > 
+> > [...]
 > 
-> It wouldn't surprise me if the infrastructure is still necessary for the
-> throttling use case. In that case, I'm more curious about things like
-> whether it's still as effective as intended with such a small scheduling
-> delay, or whether it still might be worth simplifying in various ways
-> (i.e., does the scheduling delay actually make a difference? do we still
-> need a per cpu granular throttle? etc.).
-
-It can still be useful for certain g*dawful scenarios --
-
-Let's say you have a horribly misconfigured cloudy system with a tiny
-log, hundreds of CPUs, a memory hogging process, another process with
-many hundreds of threads that are performing small appending synchronous
-writes to a large number of files, and some other process repeatedly
-opens and closes files.  Background writeback completion will create
-enough workers to tie up the log such that writeback and inodegc contend
-for log grant space and make slow progress.  If memory is also tight,
-we want to slow down the file scanning process so that it doesn't shove
-/more/ inodes into the cache and push the system towards OOM behavior.
-
-Back in the old days when inodegc was a radix tree tag it was fairly
-easy to get OOMs when the delay interval was long (5 seconds).  The
-OOM probability went down pretty sharply as the interval approached
-zero, but even at 1 jiffy I could still occasionally trip it, whereas
-the pre-deferred-inactivation kernels would never OOM.
-
-I haven't tested it all that rigorously with Dave's fancy new per-cpu
-list design, but I did throw on my silly test setup (see below) and
-still got it to OOM once in 3 runs with the shrinker bits turned off.
-
-> > > > If
-> > > > so, it looks like decent enough overhead to cycle through every cpu in
-> > > > both callbacks that it might be worth spelling out more clearly in the
-> > > > top-level comment.
-> > > 
-> > > I'm not sure what you are asking here - mod_delayed_work_on() has
-> > > pretty much the same overhead and behaviour as queue_work() in this
-> > > case, so... ?
-> > 
+> Applied, thanks!
 > 
-> I'm just pointing out that the comment around the shrinker
-> infrastructure isn't very informative if the shrinker turns out to still
-> be necessary for reasons other than making the workers run sooner.
+> [01/14] mm: Move starting of background writeback into the main balancing loop
+>         commit: 29c36351d61fd08a2ed50a8028a7f752401dc88a
+> [02/14] mm: Move updates of dirty_exceeded into one place
+>         commit: a3fa4409eec3c094ad632ac1029094e061daf152
+> [03/14] mm: Add balance_dirty_pages_ratelimited_flags() function
+>         commit: 407619d2cef3b4d74565999a255a17cf5d559fa4
+> [04/14] iomap: Add flags parameter to iomap_page_create()
+>         commit: 49b5cd0830c1e9aa0f9a3717ac11a74ef23b9d4e
+> [05/14] iomap: Add async buffered write support
+>         commit: ccb885b4392143cea1bdbd8a0f35f0e6d909b114
+> [06/14] iomap: Return -EAGAIN from iomap_write_iter()
+>         commit: f0f9828d64393ea2ce87bd97f033051c8d7a337f
 
-<nod> That comment /does/ need to be updated to note the subtlety that a
-lot of shrinker activity can slow down close()ing a file by making user
-tasks wait for the inodegc workers to clear the backlog.
+I'm not sure /what/ happened here, but I never received the full V9
+series, and neither did lore:
 
-> > <shrug> Looks ok to me, since djwong-dev has had some variant of timer
-> > delayed inactivation in it longer than it hasn't:
-> > 
-> 
-> Was that with a correspondingly small delay or something larger (on the
-> order of seconds or so)? Either way, it sounds like you have a
-> predictable enough workload that can actually test this continues to
-> work as expected..?
+https://lore.kernel.org/linux-fsdevel/165593682792.161026.12974983413174964699.b4-ty@kernel.dk/T/#t
 
-Yeah.  I snapshot /home (which has ~20 million inodes) then race
-fsstress and xfs_scrub -n in a VM with 560MB of RAM.
+As it is, I already have my hands full trying to figure out why
+generic/522 reports file corruption after 20 minutes of running on
+vanilla 5.19-rc3, so I don't think I'm going to get to this for a while
+either.
+
+The v8 series looked all right to me, but ********* I hate how our
+development process relies on such unreliable **** tooling.  I don't
+think it's a /great/ idea to be pushing new code into -next when both
+the xfs and pagecache maintainers are too busy to read the whole thing
+through... but did hch actually RVB the whole thing prior to v9?
 
 --D
 
-> Brian
+> [07/14] fs: Add check for async buffered writes to generic_write_checks
+>         commit: cba06e23bc664ef419d389f1ed4cee523f468f8f
+> [08/14] fs: add __remove_file_privs() with flags parameter
+>         commit: 79d8ac83d6305fd8e996f720f955191e0d8c63b9
+> [09/14] fs: Split off inode_needs_update_time and __file_update_time
+>         commit: 1899b196859bac61ad71c3b3916e06de4b65246c
+> [10/14] fs: Add async write file modification handling.
+>         commit: 4705f225a56f216a59e09f7c2df16daabb7b4f76
+> [11/14] io_uring: Add support for async buffered writes
+>         commit: 6c8bbd82a43a0c7937e3e8e38cf46fcd90e15e68
+> [12/14] io_uring: Add tracepoint for short writes
+>         commit: 6c33dae4526ad079af6432aaf76827d0a27a9690
+> [13/14] xfs: Specify lockmode when calling xfs_ilock_for_iomap()
+>         commit: ddda2d473df70607bb456c515d984d05bf689790
+> [14/14] xfs: Add async buffered write support
+>         commit: e9cfc64a27f7a581b8c5d14da4efccfeae9c63bd
 > 
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > --D
-> > 
-> > > Cheers,
-> > > 
-> > > Dave.
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > 
+> Best regards,
+> -- 
+> Jens Axboe
+> 
 > 
