@@ -2,311 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30A64C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 19:56:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF971C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 20:03:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229642AbiFWT4u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jun 2022 15:56:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56268 "EHLO
+        id S229484AbiFWUDf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jun 2022 16:03:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbiFWT4q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 15:56:46 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F1472F661
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 12:56:44 -0700 (PDT)
+        with ESMTP id S231422AbiFWUDW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 16:03:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B34FE2D1E5
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 13:03:00 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id B3B26CE260A
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 19:56:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5FC7C341C6;
-        Thu, 23 Jun 2022 19:56:40 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D2B8361D59
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 20:02:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DB0AC341C7;
+        Thu, 23 Jun 2022 20:02:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656014200;
-        bh=pHnYMDbvLzL/h3iYV08KtApIrmyhaNGqsyGGjoQMxB4=;
+        s=k20201202; t=1656014579;
+        bh=Aq7uHmK13BygEEQNIJPGDztkSJbDW1ugGmhwLzpuDwk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FARVozm3g7zc0uK32/KvHXwWpY1QUTyPQFxORv9wJkgvMsIzErUmh+q48tkYg0+gD
-         zEounVChQ/TxOmkaB/tQ3esSwdRN8SBmthx0y6f8+lEmxCQYXKnFuAs9YTZB8rz7b3
-         drKNSGq0oY/EzdeGB34L1Qg3SalgLuYAanNs5UFTsylVYS8yedA2QH7uNSa9NsBPAB
-         dZd6BF3u5GL07GzHgs5rRBLd5BBPap3LxAirsEOMP8kzPGfyYz7OSkbfCQYFnn7lCJ
-         OJN/cYLc+epj2hPCC4lZLrKxgUHbgsiHtWHyIQMlu8zwrd34yEVrHRFWHxDJLkzx4y
-         XINXjQVMj30yQ==
-Date:   Thu, 23 Jun 2022 12:56:40 -0700
+        b=gJZbb1MEiRiogijRnjgd/Os0odUe6+PsBWIfRdNk+iCdd0vlNCODfMkjjg3n6wMTs
+         Jhm+6jBil4Ug2hxOqTgvhzhTceRLRt0N0Pid5xRsvrwdC5ep0u4QSoDv98KNmAD/e7
+         sg4pMjbNCh1pOqEWkzHzFh6ibAFGZ/Q+rsKqbG3WEDUo924KLEsfVicFyfLMl/QbAQ
+         fzb+uzs/K0lAjuQw0FPrf0F/wTvHYe9JdtUgRidCmS6aqn7ZFucJa+Fw/eY8dZZ+jC
+         CN8aBLvkBEIJwwsTzc7KlX5kjqmSaua5qPCveyLzezi7mUW+PHUsVKCd3gXO7q/d2l
+         M0aaTFfM1zM9g==
+Date:   Thu, 23 Jun 2022 13:02:58 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
-Message-ID: <YrTFePWaarPl8eNP@magnolia>
-References: <20220615220416.3681870-1-david@fromorbit.com>
- <20220615220416.3681870-2-david@fromorbit.com>
- <YqytHuc/sJprFn0K@bfoster>
- <20220617215245.GH227878@dread.disaster.area>
- <YrKmrgJh9+SzT0Gz@magnolia>
- <YrM/woFhObNYQx3b@bfoster>
- <YrOzAPXCcDY9DnCj@magnolia>
- <YrRTWoEZys3DfPW8@bfoster>
+To:     GDD Media <ggdmedia1@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [xfs] rmap.c:696: mark_inode_rl: Assertion failed
+Message-ID: <YrTG8qC24oJa3KFP@magnolia>
+References: <CAAd6o_a1YF-5NWBc-kGLR9uAz2tQL_zoSi-ORi2S4Ttx6Jv6ZA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YrRTWoEZys3DfPW8@bfoster>
+In-Reply-To: <CAAd6o_a1YF-5NWBc-kGLR9uAz2tQL_zoSi-ORi2S4Ttx6Jv6ZA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 23, 2022 at 07:49:46AM -0400, Brian Foster wrote:
-> On Wed, Jun 22, 2022 at 05:25:36PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jun 22, 2022 at 12:13:54PM -0400, Brian Foster wrote:
-> > > On Tue, Jun 21, 2022 at 10:20:46PM -0700, Darrick J. Wong wrote:
-> > > > On Sat, Jun 18, 2022 at 07:52:45AM +1000, Dave Chinner wrote:
-> > > > > On Fri, Jun 17, 2022 at 12:34:38PM -0400, Brian Foster wrote:
-> > > > > > On Thu, Jun 16, 2022 at 08:04:15AM +1000, Dave Chinner wrote:
-> > > > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > > > 
-> > > > > > > Currently inodegc work can sit queued on the per-cpu queue until
-> > > > > > > the workqueue is either flushed of the queue reaches a depth that
-> > > > > > > triggers work queuing (and later throttling). This means that we
-> > > > > > > could queue work that waits for a long time for some other event to
-> > > > > > > trigger flushing.
-> > > > > > > 
-> > > > > > > Hence instead of just queueing work at a specific depth, use a
-> > > > > > > delayed work that queues the work at a bound time. We can still
-> > > > > > > schedule the work immediately at a given depth, but we no long need
-> > > > > > > to worry about leaving a number of items on the list that won't get
-> > > > > > > processed until external events prevail.
-> > > > > > > 
-> > > > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > > > > ---
-> > > > > > >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
-> > > > > > >  fs/xfs/xfs_mount.h  |  2 +-
-> > > > > > >  fs/xfs/xfs_super.c  |  2 +-
-> > > > > > >  3 files changed, 24 insertions(+), 16 deletions(-)
-> > > > > > > 
-> > > > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > > > > > index 374b3bafaeb0..46b30ecf498c 100644
-> > > > > > > --- a/fs/xfs/xfs_icache.c
-> > > > > > > +++ b/fs/xfs/xfs_icache.c
-> > > > > > ...
-> > > > > > > @@ -2176,7 +2184,7 @@ xfs_inodegc_shrinker_scan(
-> > > > > > >  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
-> > > > > > >  
-> > > > > > >  			WRITE_ONCE(gc->shrinker_hits, h + 1);
-> > > > > > > -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
-> > > > > > > +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
-> > > > > > >  			no_items = false;
-> > > > > > >  		}
-> > > > > > 
-> > > > > > This all seems reasonable to me, but is there much practical benefit to
-> > > > > > shrinker infra/feedback just to expedite a delayed work item by one
-> > > > > > jiffy? Maybe there's a use case to continue to trigger throttling..?
-> > > > > 
-> > > > > I haven't really considered doing anything other than fixing the
-> > > > > reported bug. That just requires an API conversion for the existing
-> > > > > "queue immediately" semantics and is the safest minimum change
-> > > > > to fix the issue at hand.
-> > > > > 
-> > > > > So, yes, the shrinker code may (or may not) be superfluous now, but
-> > > > > I haven't looked at it and done analysis of the behaviour without
-> > > > > the shrinkers enabled. I'll do that in a completely separate
-> > > > > patchset if it turns out that it is not needed now.
-> > > > 
-> > > > I think the shrinker part is still necessary -- bulkstat and xfs_scrub
-> > > > on a very low memory machine (~560M RAM) opening and closing tens of
-> > > > millions of files can still OOM the machine if one doesn't have a means
-> > > > to slow down ->destroy_inode (and hence the next open()) when reclaim
-> > > > really starts to dig in.  Without the shrinker bits, it's even easier to
-> > > > trigger OOM storms when xfs has timer-delayed inactivation... which is
-> > > > something that Brian pointed out a year ago when we were reviewing the
-> > > > initial inodegc patchset.
-> > > > 
-> > > 
-> > > It wouldn't surprise me if the infrastructure is still necessary for the
-> > > throttling use case. In that case, I'm more curious about things like
-> > > whether it's still as effective as intended with such a small scheduling
-> > > delay, or whether it still might be worth simplifying in various ways
-> > > (i.e., does the scheduling delay actually make a difference? do we still
-> > > need a per cpu granular throttle? etc.).
-> > 
-> > It can still be useful for certain g*dawful scenarios --
-> > 
-> > Let's say you have a horribly misconfigured cloudy system with a tiny
-> > log, hundreds of CPUs, a memory hogging process, another process with
-> > many hundreds of threads that are performing small appending synchronous
-> > writes to a large number of files, and some other process repeatedly
-> > opens and closes files.  Background writeback completion will create
-> > enough workers to tie up the log such that writeback and inodegc contend
-> > for log grant space and make slow progress.  If memory is also tight,
-> > we want to slow down the file scanning process so that it doesn't shove
-> > /more/ inodes into the cache and push the system towards OOM behavior.
-> > 
+On Sat, Jun 11, 2022 at 01:09:30PM +0200, GDD Media wrote:
+> Hi
 > 
-> Yeah, I get the general idea/purpose of the throttling. What I'm probing
-> at here is whether a case like this is still handled effectively with
-> such a short scheduling delay.
-
-Given the trace_xfs_inodegc_shrinker_* data I've collected on my
-simulator, I think the 1 jiffy delay is handling this well enough that
-we only trip that tracepoint about a half dozen times in 2h of trying to
-exercising the inode caches.  That said, I haven't really had time to
-try this on (say) a 20CPU machine with ridiculously small memory to see
-if I get different results.
-
-(Note: I'm still trying to figure out why generic/522 reports
-corruption, and hoping that willy's folios pull today just fixes it
-magically...)
-
-> Presumably there is some window before
-> list size based throttling triggers for which the shrinker is expected
-> to cover, so that implies the shrinker historically is able to detect
-> and push populated queues and trigger throttling from the point it is
-> invoked (whether directly via repeated shrinker invocations or
-> indirectly via causing larger queue sizes is not clear to me).
-
-Back when I merged the inodegc series, it was fairly easy to get the
-shrinker to trip dozens of times during a stress run, even when the only
-throttling criteria was the queue size.  I think the reflink/rmap
-transaction reservation optimizations have made the log grant
-bottlenecks much less severe, since I now see a lot less contention on
-the grant heads.
-
-> The thing that stands out to me as a question wrt to this change is that
-> the trigger for shrinker induced throttling is the list size at the time
-> of the callback(s), and that goes from having a lifecycle associated
-> with the size-oriented scheduling algorithm to a time-based scheduling
-> lifecycle of one jiffy (also noting that the inodegc worker resets
-> shrinker_hits before it begins to process inodes). So with that in mind,
-> how reliable is this lowmem signal based on the list size back to the
-> tasks creating more work and memory pressure? Once a shrinker invocation
-> occurs, what are the odds that the callback is able to detect a
-> populated list and act accordingly?
-
-Hrmmm.  Decent, I think?  If the list is populated but the inactivation
-worker is not running, then we queue the worker and clear the list; if
-the worker is already running when the shrinker gets called, we might
-end up requeuing it unnecessarily, in which case it'll just clear more.
-
-> These questions are somewhat rhetorical because this all seems rather
-> unpredictable when we consider varying resource availability.
-
-Not to mention the shrinker itself undergoing various behavioral changes
-over the years... :(
-
-> The
-> relevant question for this patch is probably just that somebody has
-> tested and confirmed that the shrinker hasn't been subtly or indirectly
-> broken in cases like the one you describe above (where perhaps we might
-> not have many shrinker callback opportunities to act on before OOM).
-
-FWIW, the only time I /ever/ saw OOMs (either now with 5.19 or ages ago
-with 5.9) was with extreme lowmem testing.  On VMs with more than a
-gigabyte or so of memory, I notice that we usually hit the time/length
-thresholds without shrinkers getting involved.  Granted, I did try to
-pick the shrinker values so that we only get called on the *second*
-level of shrinking, which is after we've freed some but not enough
-memory.
-
-If my responses seem a bit like handwaving, they are, because (at the
-moment) this is well off in the weeds.
-
-> > Back in the old days when inodegc was a radix tree tag it was fairly
-> > easy to get OOMs when the delay interval was long (5 seconds).  The
-> > OOM probability went down pretty sharply as the interval approached
-> > zero, but even at 1 jiffy I could still occasionally trip it, whereas
-> > the pre-deferred-inactivation kernels would never OOM.
-> > 
-> > I haven't tested it all that rigorously with Dave's fancy new per-cpu
-> > list design, but I did throw on my silly test setup (see below) and
-> > still got it to OOM once in 3 runs with the shrinker bits turned off.
-> > 
+> I'm running unRAID server and last night fs on one of my drives got
+> corrupted. I tried running xfs_repair (which usually worked) but this
+> time I got this error:
 > 
-> Ok.. so that implies we still need throttling, but I'm not sure what
-> "fancy percpu list design" refers to. If you have a good test case, I
-
-You might recall that the original versions of deferred inode
-inactivation would set radix tree tags, and a per-AG workqueue function
-would scan that AG's radix tree for tagged inodes and inactivate them.
-Dave observed that letting the cpu caches grow cold led to performance
-problems, and replaced the tagging mechanism with per-cpu lists, which
-is what we have now.
-
-> think the interesting immediate question is: are those OOMs avoided with
-> this patch but the shrinker infrastructure still in place?
-
-That's the $64000 question that I don't know definitively yet.
-
-> If not, then I wonder if something is going wonky there. If so, I'm
-> still a bit curious what the behavior looks like and whether it can be
-> simplified in light of this change, but that's certainly beyond the
-> scope of this patch.
-
-<nod> For now I'd like to get this going for 5.19 to fix the original
-complaint about statfs blocking in D state while waiting for inodegc
-after deleting a ~100m file extents[1], and defer the decision of
-whether or not we /really/ need the shrinker to a later time (like
-5.20).
-
-[1] https://lore.kernel.org/linux-xfs/20220509024659.GA62606@onthe.net.au/
-
+> xfs_repair: rmap.c:696: mark_inode_rl: Assertion
+> `!(!!((rmap->rm_owner) & (1ULL << 63)))' failed.
+> Aborted
 > 
-> > > > > > If
-> > > > > > so, it looks like decent enough overhead to cycle through every cpu in
-> > > > > > both callbacks that it might be worth spelling out more clearly in the
-> > > > > > top-level comment.
-> > > > > 
-> > > > > I'm not sure what you are asking here - mod_delayed_work_on() has
-> > > > > pretty much the same overhead and behaviour as queue_work() in this
-> > > > > case, so... ?
-> > > > 
-> > > 
-> > > I'm just pointing out that the comment around the shrinker
-> > > infrastructure isn't very informative if the shrinker turns out to still
-> > > be necessary for reasons other than making the workers run sooner.
-> > 
-> > <nod> That comment /does/ need to be updated to note the subtlety that a
-> > lot of shrinker activity can slow down close()ing a file by making user
-> > tasks wait for the inodegc workers to clear the backlog.
-> > 
-> > > > <shrug> Looks ok to me, since djwong-dev has had some variant of timer
-> > > > delayed inactivation in it longer than it hasn't:
-> > > > 
-> > > 
-> > > Was that with a correspondingly small delay or something larger (on the
-> > > order of seconds or so)? Either way, it sounds like you have a
-> > > predictable enough workload that can actually test this continues to
-> > > work as expected..?
-> > 
-> > Yeah.  I snapshot /home (which has ~20 million inodes) then race
-> > fsstress and xfs_scrub -n in a VM with 560MB of RAM.
-> > 
+> I'm using xfs_repair version 5.13.0
 > 
-> Yeah small delay or yeah large delay?
+> What can I do to fix this? I don't know much about Linux, I mostly use
+> web gui to manage my server and I can't find anything related to that
+> error on the internet so any help will be appreciated.
+> 
+> Also, here's the almost full log with some repeating lines deleted:
+> 
+> Phase 1 - find and verify superblock...
+>         - block cache size set to 305128 entries
+> Phase 2 - using internal log
+>         - zero log...
+> zero_log: head block 1124625 tail block 1124610
+> ALERT: The filesystem has valuable metadata changes in a log which is being
+> ignored because the -n option was used.  Expect spurious inconsistencies
+> which may be resolved by first mounting the filesystem to replay the log.
 
-Both -- with large inactivation delays and no shrinker, OOMs happen
-fairly frequently; with a short delay and no shrinker, they're harder
-(but still not impossible) to trigger.
-
-Granted ... even the overall frequency of OOMs with large inactivation
-delays seems to have gone down a bit from when I was more actively
-testing in the 5.9 era.
+The fs is dirty and needs to have the log recovered.  Did mounting the
+fs (which recovers the log) fail?
 
 --D
 
-> Brian
-> 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > --D
-> > > > 
-> > > > > Cheers,
-> > > > > 
-> > > > > Dave.
-> > > > > -- 
-> > > > > Dave Chinner
-> > > > > david@fromorbit.com
-> > > > 
-> > > 
-> > 
-> 
+>         - scan filesystem freespace and inode maps...
+> agf_freeblks 5759502, counted 5759493 in ag 0
+> agi_freecount 62, counted 61 in ag 0
+> agi_freecount 62, counted 61 in ag 0 finobt
+> sb_fdblocks 27013023, counted 40637666
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan (but don't clear) agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+> 1524704c7700: Badness in key lookup (length)
+> bp=(bno 0x2217a80, len 16384 bytes) key=(bno 0x2217a80, len 4096 bytes)
+> imap claims in-use inode 35748416 is free, correcting imap
+> data fork in ino 35748420 claims free block 4468551
+> imap claims in-use inode 35748420 is free, correcting imap
+> data fork in ino 35748426 claims free block 4468550
+> imap claims in-use inode 35748426 is free, correcting imap
+> data fork in ino 35748433 claims free block 4468549
+> imap claims in-use inode 35748433 is free, correcting imap
+> data fork in inode 35748440 claims metadata block 4468560
+> correcting nextents for inode 35748440
+> bad data fork in inode 35748440
+> would have cleared inode 35748440
+>         - agno = 1
+> data fork in ino 2147483777 claims free block 268435458
+> imap claims in-use inode 2147483777 is free, correcting imap
+> [...]
+>         - agno = 2
+> data fork in ino 4327071235 claims free block 540883903
+> imap claims in-use inode 4327071235 is free, correcting imap
+> [...]
+>         - agno = 3
+> data fork in ino 6453720963 claims free block 806715119
+> imap claims in-use inode 6453720963 is free, correcting imap
+> [...]
+>         - agno = 4
+> data fork in ino 8609098822 claims free block 1076137360
+> imap claims in-use inode 8609098822 is free, correcting imap
+> imap claims in-use inode 8609098829 is free, correcting imap
+> [...]
+>         - agno = 5
+> data fork in inode 10773946882 claims metadata block 1346743359
+> correcting nextents for inode 10773946882
+> bad data fork in inode 10773946882
+> would have cleared inode 10773946882
+> [...]
+>         - agno = 6
+> imap claims in-use inode 13657483776 is free, correcting imap
+> data fork in ino 13657483780 claims free block 1707185480
+> [...]
+>         - agno = 7
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+> free space (0,4468567-4468567) only seen by one free space btree
+> free space (0,4468576-4468577) only seen by one free space btree
+> free space (0,4486063-4486063) only seen by one free space btree
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 2
+>         - agno = 1
+>         - agno = 0
+> entry ".." at block 0 offset 80 in directory inode 2147483777
+> references free inode 13658521470
+>         - agno = 3
+> entry ".." at block 0 offset 80 in directory inode 2147483794
+> references free inode 13658521470
+> [...]
+> Metadata CRC error detected at 0x459c09, xfs_dir3_block block 0x2217a80/0x1000
+> bad directory block magic # 0x494e41ff in block 0 for directory inode 35748440
+> corrupt block 0 in directory inode 35748440
+>         would junk block
+> no . entry for directory 35748440
+> no .. entry for directory 35748440
+> problem with directory contents in inode 35748440
+> would have cleared inode 35748440
+> [...]
+>         - agno = 4
+>         - agno = 5
+> data fork in inode 10773946882 claims metadata block 1346743359
+> correcting nextents for inode 10773946882
+> bad data fork in inode 10773946882
+> would have cleared inode 10773946882
+> [...]
+>         - agno = 6
+> entry ".." at block 0 offset 80 in directory inode 13657483780
+> references free inode 13658521470
+> [...]
+>         - agno = 7
+> entry ".." at block 0 offset 80 in directory inode 13657483816
+> references free inode 13658521470
+> [...]
+> xfs_repair: rmap.c:696: mark_inode_rl: Assertion
+> `!(!!((rmap->rm_owner) & (1ULL << 63)))' failed.
+> Aborted
