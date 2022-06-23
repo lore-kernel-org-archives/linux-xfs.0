@@ -2,69 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E18C43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 21:40:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DA3FCCA47C
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 22:06:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229545AbiFWVkd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jun 2022 17:40:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55876 "EHLO
+        id S230083AbiFWWGs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jun 2022 18:06:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbiFWVkc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 17:40:32 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D27253A69;
-        Thu, 23 Jun 2022 14:40:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=cp1xyTMzLUHADTviQnt3oX0Sma33cYvTDD/dTuC+dO8=; b=dl77+AzjYjwwjw9kI28TqUvuPr
-        0Cr+wYgw3qUsRP+6AZbi4DWGbc0q1uQxCIwAkQ+tIDP6fYf1MPVxEzrfidJYofGWMXPFtIQlgO3xH
-        /D2iJhHnym/ita4D3zOlLqBKQYhNqg3dxrxUcERh/mKOvLBRt6ZATxGDgc64FajiZBly7Pv5LGnND
-        VU/loElAPD+3kmDxcFN62gY5oabIxkgaV+nSfrxB1CNJ/sW6NAcbBivAgLAlYtcb23TZFQIZRNU9g
-        kzYhWGzONELPJpaVXmksRr2zqQNhGkP/+TW+YwbHaSxS33eC+/J0QSSVsSwwqPwhY717fK7Xql/rP
-        aPAdlpIA==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o4UYv-00GsfV-Ph; Thu, 23 Jun 2022 21:40:29 +0000
-Date:   Thu, 23 Jun 2022 14:40:29 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Chuck Lever <chuck.lever@oracle.com>, chandanrmail@gmail.com,
-        Sweet Tea Dorminy <sweettea-kernel@dorminy.me>,
-        Pankaj Raghav <pankydev8@gmail.com>, linux-xfs@vger.kernel.org,
-        fstests <fstests@vger.kernel.org>
-Subject: Re: [PATCH 5.15 CANDIDATE v2 0/8] xfs stable candidate patches for
- 5.15.y (part 1)
-Message-ID: <YrTdzSkubXtQDFjj@bombadil.infradead.org>
-References: <20220616182749.1200971-1-leah.rumancik@gmail.com>
- <YrJdLhHBsolF83Rq@bombadil.infradead.org>
- <YrOPEnO8hufMiRMi@google.com>
+        with ESMTP id S230071AbiFWWGr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 18:06:47 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B3715DF2B
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 15:06:45 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id e63so684104pgc.5
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 15:06:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=UaUehcOEJlieX7AdhP4I9Jsvj6qc9iCnwLhOMGIL2t4=;
+        b=AAD1zvllcD75BocFjPCJUqeTneVE7WIl2b1W8J0n+BlJPOemn9V25qBLIYFGwQA6zs
+         4D3tjIaVIxcRF6Hfu547JBxmMiYZ0Nn9u8BOdxjl4KxPJfEGNCbE5kt/b/8YhNe35f6s
+         DAgZYiorNdWRJEllT48vccNIw/UL/rxLTX4/O5/riC+ri0ZR/I5mwP+3DhOEYytIkXxS
+         f9wKfEosHHXh9+KEllttfDvYH4we5tzD9WVKbByRDmLdBmW76Hq13h2Z7eLlCGVMdUEM
+         zeb0ZphNfmf6+EwaBhkALPNdCccpHgWfusDR5BlPx7z3dJrxRBNwIBNaGsaifEZkcSyS
+         dgBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=UaUehcOEJlieX7AdhP4I9Jsvj6qc9iCnwLhOMGIL2t4=;
+        b=Q6kTAsol1JGuajFEx+SHEIIl9WfLVOPLUKCuCmqwDv2+9u65Jk7wU+EAz5BaAhldpK
+         JbMrDxDu/Px3EzGobc6APlvFfgA7wG84gkfZJ4ap7+3rXgA8qwFeYOpE/R+moGkthnH6
+         GY6UA8Fp2XZZzpt0iYsZ279Q5q0ONOoos23txgr1jGZfH3mwmLrvnYAxyt7hWjx0O/2H
+         vW2ltoXQ8Nol3v48jLBpa5rLsY9fLYa6q1f1Zp3H7c9KmdAo/+QZ7Q85jhQ0sI4SPN1d
+         QgPXfNS5QniaKM8o/f/BxqDnvEZEatfc386dJEoVTTq8qT3h80AGo4tYZDn3HBuYuZm1
+         S5/A==
+X-Gm-Message-State: AJIora9An/gIMlLHyjt2nCMVVafqSvfGgBzRPC2zzVDYjh0Lgh4sWN9W
+        RnTD9LdGhzt/EM1eo4axOdmnXQ==
+X-Google-Smtp-Source: AGRyM1uokjQTXRa12oJij4piLPo65ZKMu3Yjr8zsrNU49agTg/vR0L0cLUBgMVAK7LRXwIvUs1sXRw==
+X-Received: by 2002:a62:ee07:0:b0:525:1a3e:bebb with SMTP id e7-20020a62ee07000000b005251a3ebebbmr27036034pfi.77.1656022004538;
+        Thu, 23 Jun 2022 15:06:44 -0700 (PDT)
+Received: from ?IPV6:2600:380:766e:a8be:8c24:9e35:f20a:acfb? ([2600:380:766e:a8be:8c24:9e35:f20a:acfb])
+        by smtp.gmail.com with ESMTPSA id s42-20020a056a0017aa00b0052553215444sm134272pfg.101.2022.06.23.15.06.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Jun 2022 15:06:44 -0700 (PDT)
+Message-ID: <c829173f-ceff-b29b-e491-1e04332cdf94@kernel.dk>
+Date:   Thu, 23 Jun 2022 16:06:41 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YrOPEnO8hufMiRMi@google.com>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [RESEND PATCH v9 00/14] io-uring/xfs: support async buffered
+ writes
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>, Stefan Roesch <shr@fb.com>
+Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com, jack@suse.cz, hch@infradead.org,
+        willy@infradead.org
+References: <20220623175157.1715274-1-shr@fb.com> <YrTNku0AC80eheSP@magnolia>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <YrTNku0AC80eheSP@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 22, 2022 at 02:52:18PM -0700, Leah Rumancik wrote:
-> On Tue, Jun 21, 2022 at 05:07:10PM -0700, Luis Chamberlain wrote:
-> > On Thu, Jun 16, 2022 at 11:27:41AM -0700, Leah Rumancik wrote:
-> > > https://gist.github.com/lrumancik/5a9d85d2637f878220224578e173fc23. 
-> > 
-> > The coverage for XFS is using profiles which seem to come inspired
-> > by ext4's different mkfs configurations.
-> The configs I am using for the backports testing were developed with
-> Darrick's help.
+On 6/23/22 2:31 PM, Darrick J. Wong wrote:
+>> Testing:
+>>   This patch has been tested with xfstests, fsx, fio and individual test programs.
+> 
+> Good to hear.  Will there be some new fstest coming/already merged?
 
-Sorry for the noise then.
+It should not really require any new tests, as anything buffered +
+io_uring on xfs will now use this code. But Stefan has run a bunch of
+things on the side too, some of those synthetic (like ensure that
+various parts of a buffered write range isn't cached, etc) and some more
+generic (fsx). There might be some that could be turned into xfstests,
+I'll let him answer that one.
 
-> If you guys agree on a different set of configs, I'd be
-> happy to update my configs moving forward.
+> Hmm, well, vger and lore are still having stomach problems, so even the
+> resend didn't result in #5 ending up in my mailbox. :(
+> 
+> For the patches I haven't received, I'll just attach my replies as
+> comments /after/ each patch subject line.  What a way to review code!
 
-Indeed it would be great to unify on target test configs at the very least.
+Really not sure what's going on with email these days, it's quite a
+pain... Thanks for taking a look so quickly!
 
-  Luis
+I've added your reviewed-bys and also made that ternary change you
+suggested. Only other change is addressing a kernelbot noticing that one
+ret in the mm side was being set to zero only, so we could kill it. End
+result:
+
+https://git.kernel.dk/cgit/linux-block/log/?h=for-5.20/io_uring-buffered-writes
+
+-- 
+Jens Axboe
+
