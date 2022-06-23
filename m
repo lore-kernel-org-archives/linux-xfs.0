@@ -2,431 +2,261 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DEB0CCA47F
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 07:57:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A62C43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 11:50:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230456AbiFWH5T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jun 2022 03:57:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42184 "EHLO
+        id S231550AbiFWLuI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jun 2022 07:50:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230449AbiFWH5R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 03:57:17 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F14D44707C
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 00:57:15 -0700 (PDT)
+        with ESMTP id S231559AbiFWLt5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 07:49:57 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E9EAF4D25C
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 04:49:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1655971035;
+        s=mimecast20190719; t=1655984992;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=WRxmubYj/zvQx9FAer+eiq5WWKcFW5jnO5Ita3wHCwA=;
-        b=KRT9/5xJELb16oiWY+dUyPSxCGY4CCi4yRZuXx6sILIcZmU7NY3nTOU7nw2Y7sFJMJBbQD
-        xTFlRxfc5flbjyajtc3sw4ryLKciNpo7md73KOvzdvh1fsp7CKaFqOoVL0bfDE7DPEHyUu
-        GdwEijL+GYB/or3K8yM/4HgiBjGJ7i4=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=L0wnIASTmDyRBcEcx/ictQYdjHYO7TPcMfV9Uw42DMY=;
+        b=D2wz6+CmkaKXLnKq1ongmSqDysD239E/DsIbebKi4nog36cXbADhiSb3/diA8eYHwkH0rZ
+        58H/vURVN+7R/97vTxpTb7JvMthFL3nj3mc1P9pbrtAqBxXuirKPZHSMyQNUT9BoEH6boO
+        DeRujOZ5lttkyiTmJrtRkAcfm+qXJMc=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-6-WjvVs4Y7PhalVq0ZCM1gXA-1; Thu, 23 Jun 2022 03:57:13 -0400
-X-MC-Unique: WjvVs4Y7PhalVq0ZCM1gXA-1
-Received: by mail-wm1-f70.google.com with SMTP id k5-20020a05600c0b4500b003941ca130f9so6620164wmr.0
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 00:57:13 -0700 (PDT)
+ us-mta-557-QtHz4NWwNSOGA0uyZPmmKA-1; Thu, 23 Jun 2022 07:49:50 -0400
+X-MC-Unique: QtHz4NWwNSOGA0uyZPmmKA-1
+Received: by mail-qk1-f197.google.com with SMTP id i16-20020a05620a249000b006aedb25493cso5316406qkn.15
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 04:49:50 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:cc:references:from:organization:subject
-         :in-reply-to:content-transfer-encoding;
-        bh=WRxmubYj/zvQx9FAer+eiq5WWKcFW5jnO5Ita3wHCwA=;
-        b=ggE/WSubttLEEsKuDtdweqVSffYZRrfryBxpNHdA3SN/NlxcWq3gBYtpCvkHlhDw/I
-         uCC8GGWnG4RfLQHGBvgdg+P7mYeN5IA6v/9CHvf1odD1LItrcmPBTs32PhsNPGogeJUF
-         hRsrr1fbqBNmxj/yRvjPIdLn2h3tNJWH0iWy+3HbQFVkSaaFDDxfA2mhBD99WwbRfSp9
-         wN92ttT5L9MHlqI4DBX5WQF7hGsYDyGVg0X3/gr1xFNIQeiWAigdt9jzECBY088aXYh5
-         4PpkEfUouJvuaSbI2ZVEHEymm6Cz/j0QlUIFjK4rC53QufJzcnlHQgALSxzO5dnx3KAk
-         L4ZA==
-X-Gm-Message-State: AJIora9L786rZ4W6IjQOAX1lG4baQralGABTGIeCNwM+UrEwP3Rkfk5l
-        sySbSfxqaGWcHhVxfEWt1M0wlpsExQliCi3rX8zgUaPKJF2PWINhh7PbmMqD8WByhmZ91yKQ/Rk
-        8fQ3wyo2nPFbCz/LS7kpW
-X-Received: by 2002:a05:6000:15c1:b0:21b:ad5e:2798 with SMTP id y1-20020a05600015c100b0021bad5e2798mr60439wry.237.1655971032243;
-        Thu, 23 Jun 2022 00:57:12 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1tAWugolGpzgHOkBwbVZGJMITotRNGXISo3pRIWSqUMevICnP2uuhQ9eDf0QwZwMuJTe/4erg==
-X-Received: by 2002:a05:6000:15c1:b0:21b:ad5e:2798 with SMTP id y1-20020a05600015c100b0021bad5e2798mr60416wry.237.1655971031851;
-        Thu, 23 Jun 2022 00:57:11 -0700 (PDT)
-Received: from ?IPV6:2003:cb:c704:b100:7694:f34e:d0dd:95e7? (p200300cbc704b1007694f34ed0dd95e7.dip0.t-ipconnect.de. [2003:cb:c704:b100:7694:f34e:d0dd:95e7])
-        by smtp.gmail.com with ESMTPSA id r10-20020a05600c284a00b0039c41686421sm2066722wmb.17.2022.06.23.00.57.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Jun 2022 00:57:11 -0700 (PDT)
-Message-ID: <9af76814-ee3a-0af4-7300-d432050b13a3@redhat.com>
-Date:   Thu, 23 Jun 2022 09:57:10 +0200
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=L0wnIASTmDyRBcEcx/ictQYdjHYO7TPcMfV9Uw42DMY=;
+        b=Xf4EGvCsXtmrItknaCicidIBQBLrGc5/SSg0MZabs2bpMxaoqiL+dOrEHudV/R/D6d
+         qM5FO2DjQkhc4JRKd7/HdJ/mu+BKxI+Tm11g6fTlDE3IyLyQcmOAE54LKpmz4VymnD6E
+         WzqrKn+LHVc4Ey23zzr29bfzTFg2XrzIuhsd7MdEmApJ8uEIbt3qiQtkQALePsxdcAFN
+         OEBUND0QbisTPDj4JUHLZNmNCQIhYZoxMlCFyM/UpMa9N0Gve8x9vehpdtR3R8NCYEfK
+         AB5nr4YtjgCNecIelsEgRm1ulMsp1wZ0DKw5WOVvSgFlJfCfWOh51847Twj7d6S3uUuq
+         hhSQ==
+X-Gm-Message-State: AJIora/zIpnYvyRNKkeBs4ur6Yfmw1d3wDB5s8HVlZX231raCLL+GAKC
+        mg1vHkXDa9+HT0RBujfMpf60NtldC3UbMpW8wmjvb3o7W15dFa/3+HnpEnVLa0ZQHRWuCl6NbVG
+        BJDrU5EHxzT9S7mnRkbYP
+X-Received: by 2002:a05:622a:1389:b0:304:f2f9:8202 with SMTP id o9-20020a05622a138900b00304f2f98202mr7355751qtk.42.1655984990008;
+        Thu, 23 Jun 2022 04:49:50 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1tZm1YYQOJA5tONdhBD+rhGoXpSSBQ4QNXb7+vE5J6VV74YW6WGKvkNtrBbAOyQ3A0YLOp6Cg==
+X-Received: by 2002:a05:622a:1389:b0:304:f2f9:8202 with SMTP id o9-20020a05622a138900b00304f2f98202mr7355729qtk.42.1655984989661;
+        Thu, 23 Jun 2022 04:49:49 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id h8-20020ac85148000000b003117ee89a51sm6086387qtn.70.2022.06.23.04.49.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Jun 2022 04:49:49 -0700 (PDT)
+Date:   Thu, 23 Jun 2022 07:49:46 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
+Message-ID: <YrRTWoEZys3DfPW8@bfoster>
+References: <20220615220416.3681870-1-david@fromorbit.com>
+ <20220615220416.3681870-2-david@fromorbit.com>
+ <YqytHuc/sJprFn0K@bfoster>
+ <20220617215245.GH227878@dread.disaster.area>
+ <YrKmrgJh9+SzT0Gz@magnolia>
+ <YrM/woFhObNYQx3b@bfoster>
+ <YrOzAPXCcDY9DnCj@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Content-Language: en-US
-To:     "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>,
-        Alistair Popple <apopple@nvidia.com>, akpm@linux-foundation.org
-Cc:     Felix Kuehling <felix.kuehling@amd.com>, jgg@nvidia.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, willy@infradead.org
-References: <20220531200041.24904-1-alex.sierra@amd.com>
- <20220531200041.24904-2-alex.sierra@amd.com>
- <3ac89358-2ce0-7d0d-8b9c-8b0e5cc48945@redhat.com>
- <02ed2cb7-3ad3-8ffc-6032-04ae1853e234@amd.com>
- <7605beee-0a76-4ee9-e950-17419630f2cf@redhat.com>
- <ddcebcc1-fb0a-e565-f14d-77c9d48f2928@amd.com>
- <6aef4b7f-0ced-08cd-1f0c-50c22996aa41@redhat.com>
- <65987ab8-426d-e533-0295-069312b4f751@amd.com>
- <34e94bdb-675a-5d5c-6137-8aa1ee658d49@redhat.com>
- <87letq6wb5.fsf@nvdebian.thelocal>
- <643c44e7-48be-375b-c7ab-6a30b5ee2937@redhat.com>
- <f5b9f777-85a2-9c38-17f3-0c9be1eeb867@amd.com>
- <01cf9f24-d7fc-61e9-1c28-85dc5aabe645@redhat.com>
- <01cad0cf-9937-8699-6df3-7d5dfa681922@amd.com>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat
-Subject: Re: [PATCH v5 01/13] mm: add zone device coherent type memory support
-In-Reply-To: <01cad0cf-9937-8699-6df3-7d5dfa681922@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YrOzAPXCcDY9DnCj@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 23.06.22 01:16, Sierra Guiza, Alejandro (Alex) wrote:
+On Wed, Jun 22, 2022 at 05:25:36PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 22, 2022 at 12:13:54PM -0400, Brian Foster wrote:
+> > On Tue, Jun 21, 2022 at 10:20:46PM -0700, Darrick J. Wong wrote:
+> > > On Sat, Jun 18, 2022 at 07:52:45AM +1000, Dave Chinner wrote:
+> > > > On Fri, Jun 17, 2022 at 12:34:38PM -0400, Brian Foster wrote:
+> > > > > On Thu, Jun 16, 2022 at 08:04:15AM +1000, Dave Chinner wrote:
+> > > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > > 
+> > > > > > Currently inodegc work can sit queued on the per-cpu queue until
+> > > > > > the workqueue is either flushed of the queue reaches a depth that
+> > > > > > triggers work queuing (and later throttling). This means that we
+> > > > > > could queue work that waits for a long time for some other event to
+> > > > > > trigger flushing.
+> > > > > > 
+> > > > > > Hence instead of just queueing work at a specific depth, use a
+> > > > > > delayed work that queues the work at a bound time. We can still
+> > > > > > schedule the work immediately at a given depth, but we no long need
+> > > > > > to worry about leaving a number of items on the list that won't get
+> > > > > > processed until external events prevail.
+> > > > > > 
+> > > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > > > ---
+> > > > > >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
+> > > > > >  fs/xfs/xfs_mount.h  |  2 +-
+> > > > > >  fs/xfs/xfs_super.c  |  2 +-
+> > > > > >  3 files changed, 24 insertions(+), 16 deletions(-)
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > > > > index 374b3bafaeb0..46b30ecf498c 100644
+> > > > > > --- a/fs/xfs/xfs_icache.c
+> > > > > > +++ b/fs/xfs/xfs_icache.c
+> > > > > ...
+> > > > > > @@ -2176,7 +2184,7 @@ xfs_inodegc_shrinker_scan(
+> > > > > >  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
+> > > > > >  
+> > > > > >  			WRITE_ONCE(gc->shrinker_hits, h + 1);
+> > > > > > -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
+> > > > > > +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
+> > > > > >  			no_items = false;
+> > > > > >  		}
+> > > > > 
+> > > > > This all seems reasonable to me, but is there much practical benefit to
+> > > > > shrinker infra/feedback just to expedite a delayed work item by one
+> > > > > jiffy? Maybe there's a use case to continue to trigger throttling..?
+> > > > 
+> > > > I haven't really considered doing anything other than fixing the
+> > > > reported bug. That just requires an API conversion for the existing
+> > > > "queue immediately" semantics and is the safest minimum change
+> > > > to fix the issue at hand.
+> > > > 
+> > > > So, yes, the shrinker code may (or may not) be superfluous now, but
+> > > > I haven't looked at it and done analysis of the behaviour without
+> > > > the shrinkers enabled. I'll do that in a completely separate
+> > > > patchset if it turns out that it is not needed now.
+> > > 
+> > > I think the shrinker part is still necessary -- bulkstat and xfs_scrub
+> > > on a very low memory machine (~560M RAM) opening and closing tens of
+> > > millions of files can still OOM the machine if one doesn't have a means
+> > > to slow down ->destroy_inode (and hence the next open()) when reclaim
+> > > really starts to dig in.  Without the shrinker bits, it's even easier to
+> > > trigger OOM storms when xfs has timer-delayed inactivation... which is
+> > > something that Brian pointed out a year ago when we were reviewing the
+> > > initial inodegc patchset.
+> > > 
+> > 
+> > It wouldn't surprise me if the infrastructure is still necessary for the
+> > throttling use case. In that case, I'm more curious about things like
+> > whether it's still as effective as intended with such a small scheduling
+> > delay, or whether it still might be worth simplifying in various ways
+> > (i.e., does the scheduling delay actually make a difference? do we still
+> > need a per cpu granular throttle? etc.).
 > 
-> On 6/21/2022 11:16 AM, David Hildenbrand wrote:
->> On 21.06.22 18:08, Sierra Guiza, Alejandro (Alex) wrote:
->>> On 6/21/2022 7:25 AM, David Hildenbrand wrote:
->>>> On 21.06.22 13:55, Alistair Popple wrote:
->>>>> David Hildenbrand<david@redhat.com>  writes:
->>>>>
->>>>>> On 21.06.22 13:25, Felix Kuehling wrote:
->>>>>>> Am 6/17/22 um 23:19 schrieb David Hildenbrand:
->>>>>>>> On 17.06.22 21:27, Sierra Guiza, Alejandro (Alex) wrote:
->>>>>>>>> On 6/17/2022 12:33 PM, David Hildenbrand wrote:
->>>>>>>>>> On 17.06.22 19:20, Sierra Guiza, Alejandro (Alex) wrote:
->>>>>>>>>>> On 6/17/2022 4:40 AM, David Hildenbrand wrote:
->>>>>>>>>>>> On 31.05.22 22:00, Alex Sierra wrote:
->>>>>>>>>>>>> Device memory that is cache coherent from device and CPU point of view.
->>>>>>>>>>>>> This is used on platforms that have an advanced system bus (like CAPI
->>>>>>>>>>>>> or CXL). Any page of a process can be migrated to such memory. However,
->>>>>>>>>>>>> no one should be allowed to pin such memory so that it can always be
->>>>>>>>>>>>> evicted.
->>>>>>>>>>>>>
->>>>>>>>>>>>> Signed-off-by: Alex Sierra<alex.sierra@amd.com>
->>>>>>>>>>>>> Acked-by: Felix Kuehling<Felix.Kuehling@amd.com>
->>>>>>>>>>>>> Reviewed-by: Alistair Popple<apopple@nvidia.com>
->>>>>>>>>>>>> [hch: rebased ontop of the refcount changes,
->>>>>>>>>>>>>            removed is_dev_private_or_coherent_page]
->>>>>>>>>>>>> Signed-off-by: Christoph Hellwig<hch@lst.de>
->>>>>>>>>>>>> ---
->>>>>>>>>>>>>       include/linux/memremap.h | 19 +++++++++++++++++++
->>>>>>>>>>>>>       mm/memcontrol.c          |  7 ++++---
->>>>>>>>>>>>>       mm/memory-failure.c      |  8 ++++++--
->>>>>>>>>>>>>       mm/memremap.c            | 10 ++++++++++
->>>>>>>>>>>>>       mm/migrate_device.c      | 16 +++++++---------
->>>>>>>>>>>>>       mm/rmap.c                |  5 +++--
->>>>>>>>>>>>>       6 files changed, 49 insertions(+), 16 deletions(-)
->>>>>>>>>>>>>
->>>>>>>>>>>>> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
->>>>>>>>>>>>> index 8af304f6b504..9f752ebed613 100644
->>>>>>>>>>>>> --- a/include/linux/memremap.h
->>>>>>>>>>>>> +++ b/include/linux/memremap.h
->>>>>>>>>>>>> @@ -41,6 +41,13 @@ struct vmem_altmap {
->>>>>>>>>>>>>        * A more complete discussion of unaddressable memory may be found in
->>>>>>>>>>>>>        * include/linux/hmm.h and Documentation/vm/hmm.rst.
->>>>>>>>>>>>>        *
->>>>>>>>>>>>> + * MEMORY_DEVICE_COHERENT:
->>>>>>>>>>>>> + * Device memory that is cache coherent from device and CPU point of view. This
->>>>>>>>>>>>> + * is used on platforms that have an advanced system bus (like CAPI or CXL). A
->>>>>>>>>>>>> + * driver can hotplug the device memory using ZONE_DEVICE and with that memory
->>>>>>>>>>>>> + * type. Any page of a process can be migrated to such memory. However no one
->>>>>>>>>>>> Any page might not be right, I'm pretty sure. ... just thinking about special pages
->>>>>>>>>>>> like vdso, shared zeropage, ... pinned pages ...
->>>>>>>>>> Well, you cannot migrate long term pages, that's what I meant :)
->>>>>>>>>>
->>>>>>>>>>>>> + * should be allowed to pin such memory so that it can always be evicted.
->>>>>>>>>>>>> + *
->>>>>>>>>>>>>        * MEMORY_DEVICE_FS_DAX:
->>>>>>>>>>>>>        * Host memory that has similar access semantics as System RAM i.e. DMA
->>>>>>>>>>>>>        * coherent and supports page pinning. In support of coordinating page
->>>>>>>>>>>>> @@ -61,6 +68,7 @@ struct vmem_altmap {
->>>>>>>>>>>>>       enum memory_type {
->>>>>>>>>>>>>       	/* 0 is reserved to catch uninitialized type fields */
->>>>>>>>>>>>>       	MEMORY_DEVICE_PRIVATE = 1,
->>>>>>>>>>>>> +	MEMORY_DEVICE_COHERENT,
->>>>>>>>>>>>>       	MEMORY_DEVICE_FS_DAX,
->>>>>>>>>>>>>       	MEMORY_DEVICE_GENERIC,
->>>>>>>>>>>>>       	MEMORY_DEVICE_PCI_P2PDMA,
->>>>>>>>>>>>> @@ -143,6 +151,17 @@ static inline bool folio_is_device_private(const struct folio *folio)
->>>>>>>>>>>> In general, this LGTM, and it should be correct with PageAnonExclusive I think.
->>>>>>>>>>>>
->>>>>>>>>>>>
->>>>>>>>>>>> However, where exactly is pinning forbidden?
->>>>>>>>>>> Long-term pinning is forbidden since it would interfere with the device
->>>>>>>>>>> memory manager owning the
->>>>>>>>>>> device-coherent pages (e.g. evictions in TTM). However, normal pinning
->>>>>>>>>>> is allowed on this device type.
->>>>>>>>>> I don't see updates to folio_is_pinnable() in this patch.
->>>>>>>>> Device coherent type pages should return true here, as they are pinnable
->>>>>>>>> pages.
->>>>>>>> That function is only called for long-term pinnings in try_grab_folio().
->>>>>>>>
->>>>>>>>>> So wouldn't try_grab_folio() simply pin these pages? What am I missing?
->>>>>>>>> As far as I understand this return NULL for long term pin pages.
->>>>>>>>> Otherwise they get refcount incremented.
->>>>>>>> I don't follow.
->>>>>>>>
->>>>>>>> You're saying
->>>>>>>>
->>>>>>>> a) folio_is_pinnable() returns true for device coherent pages
->>>>>>>>
->>>>>>>> and that
->>>>>>>>
->>>>>>>> b) device coherent pages don't get long-term pinned
->>>>>>>>
->>>>>>>>
->>>>>>>> Yet, the code says
->>>>>>>>
->>>>>>>> struct folio *try_grab_folio(struct page *page, int refs, unsigned int flags)
->>>>>>>> {
->>>>>>>> 	if (flags & FOLL_GET)
->>>>>>>> 		return try_get_folio(page, refs);
->>>>>>>> 	else if (flags & FOLL_PIN) {
->>>>>>>> 		struct folio *folio;
->>>>>>>>
->>>>>>>> 		/*
->>>>>>>> 		 * Can't do FOLL_LONGTERM + FOLL_PIN gup fast path if not in a
->>>>>>>> 		 * right zone, so fail and let the caller fall back to the slow
->>>>>>>> 		 * path.
->>>>>>>> 		 */
->>>>>>>> 		if (unlikely((flags & FOLL_LONGTERM) &&
->>>>>>>> 			     !is_pinnable_page(page)))
->>>>>>>> 			return NULL;
->>>>>>>> 		...
->>>>>>>> 		return folio;
->>>>>>>> 	}
->>>>>>>> }
->>>>>>>>
->>>>>>>>
->>>>>>>> What prevents these pages from getting long-term pinned as stated in this patch?
->>>>>>> Long-term pinning is handled by __gup_longterm_locked, which migrates
->>>>>>> pages returned by __get_user_pages_locked that cannot be long-term
->>>>>>> pinned. try_grab_folio is OK to grab the pages. Anything that can't be
->>>>>>> long-term pinned will be migrated afterwards, and
->>>>>>> __get_user_pages_locked will be retried. The migration of
->>>>>>> DEVICE_COHERENT pages was implemented by Alistair in patch 5/13
->>>>>>> ("mm/gup: migrate device coherent pages when pinning instead of failing").
->>>>>> Thanks.
->>>>>>
->>>>>> __gup_longterm_locked()->check_and_migrate_movable_pages()
->>>>>>
->>>>>> Which checks folio_is_pinnable() and doesn't do anything if set.
->>>>>>
->>>>>> Sorry to be dense here, but I don't see how what's stated in this patch
->>>>>> works without adjusting folio_is_pinnable().
->>>>> Ugh, I think you might be right about try_grab_folio().
->>>>>
->>>>> We didn't update folio_is_pinnable() to include device coherent pages
->>>>> because device coherent pages are pinnable. It is really just
->>>>> FOLL_LONGTERM that we want to prevent here.
->>>>>
->>>>> For normal PUP that is done by my change in
->>>>> check_and_migrate_movable_pages() which migrates pages being pinned with
->>>>> FOLL_LONGTERM. But I think I incorrectly assumed we would take the
->>>>> pte_devmap() path in gup_pte_range(), which we don't for coherent pages.
->>>>> So I think the check in try_grab_folio() needs to be:
->>>> I think I said it already (and I might be wrong without reading the
->>>> code), but folio_is_pinnable() is *only* called for long-term pinnings.
->>>>
->>>> It should actually be called folio_is_longterm_pinnable().
->>>>
->>>> That's where that check should go, no?
->>> David, I think you're right. We didn't catch this since the LONGTERM gup
->>> test we added to hmm-test only calls to pin_user_pages. Apparently
->>> try_grab_folio is called only from fast callers (ex.
->>> pin_user_pages_fast/get_user_pages_fast). I have added a conditional
->>> similar to what Alistair has proposed to return null on LONGTERM &&
->>> (coherent_pages || folio_is_pinnable) at try_grab_folio. Also a new gup
->>> test was added with LONGTERM set that calls pin_user_pages_fast.
->>> Returning null under this condition it does causes the migration from
->>> dev to system memory.
->>>
->> Why can't coherent memory simply put its checks into
->> folio_is_pinnable()? I don't get it why we have to do things differently
->> here.
->>
->>> Actually, Im having different problems with a call to PageAnonExclusive
->>> from try_to_migrate_one during page fault from a HMM test that first
->>> migrate pages to device private and forks to mark as COW these pages.
->>> Apparently is catching the first BUG VM_BUG_ON_PGFLAGS(!PageAnon(page),
->>> page)
->> With or without this series? A backtrace would be great.
+> It can still be useful for certain g*dawful scenarios --
 > 
-> Here's the back trace. This happens in a hmm-test added in this patch 
-> series. However, I have tried to isolate this BUG by just adding the COW 
-> test with private device memory only. This is only present as follows. 
-> Allocate anonymous mem->Migrate to private device memory->fork->try to 
-> access to parent's anonymous memory (which will suppose to trigger a 
-> page fault and migration to system mem). Just for the record, if the 
-> child is terminated before the parent's memory is accessed, this problem 
-> is not present.
+> Let's say you have a horribly misconfigured cloudy system with a tiny
+> log, hundreds of CPUs, a memory hogging process, another process with
+> many hundreds of threads that are performing small appending synchronous
+> writes to a large number of files, and some other process repeatedly
+> opens and closes files.  Background writeback completion will create
+> enough workers to tie up the log such that writeback and inodegc contend
+> for log grant space and make slow progress.  If memory is also tight,
+> we want to slow down the file scanning process so that it doesn't shove
+> /more/ inodes into the cache and push the system towards OOM behavior.
+> 
 
+Yeah, I get the general idea/purpose of the throttling. What I'm probing
+at here is whether a case like this is still handled effectively with
+such a short scheduling delay. Presumably there is some window before
+list size based throttling triggers for which the shrinker is expected
+to cover, so that implies the shrinker historically is able to detect
+and push populated queues and trigger throttling from the point it is
+invoked (whether directly via repeated shrinker invocations or
+indirectly via causing larger queue sizes is not clear to me).
 
-The only usage of PageAnonExclusive() in try_to_migrate_one() is:
+The thing that stands out to me as a question wrt to this change is that
+the trigger for shrinker induced throttling is the list size at the time
+of the callback(s), and that goes from having a lifecycle associated
+with the size-oriented scheduling algorithm to a time-based scheduling
+lifecycle of one jiffy (also noting that the inodegc worker resets
+shrinker_hits before it begins to process inodes). So with that in mind,
+how reliable is this lowmem signal based on the list size back to the
+tasks creating more work and memory pressure? Once a shrinker invocation
+occurs, what are the odds that the callback is able to detect a
+populated list and act accordingly?
 
-anon_exclusive = folio_test_anon(folio) &&
-		 PageAnonExclusive(subpage);
+These questions are somewhat rhetorical because this all seems rather
+unpredictable when we consider varying resource availability. The
+relevant question for this patch is probably just that somebody has
+tested and confirmed that the shrinker hasn't been subtly or indirectly
+broken in cases like the one you describe above (where perhaps we might
+not have many shrinker callback opportunities to act on before OOM).
 
-Which can only possibly fail if subpage is not actually part of the folio.
+> Back in the old days when inodegc was a radix tree tag it was fairly
+> easy to get OOMs when the delay interval was long (5 seconds).  The
+> OOM probability went down pretty sharply as the interval approached
+> zero, but even at 1 jiffy I could still occasionally trip it, whereas
+> the pre-deferred-inactivation kernels would never OOM.
+> 
+> I haven't tested it all that rigorously with Dave's fancy new per-cpu
+> list design, but I did throw on my silly test setup (see below) and
+> still got it to OOM once in 3 runs with the shrinker bits turned off.
+> 
 
+Ok.. so that implies we still need throttling, but I'm not sure what
+"fancy percpu list design" refers to. If you have a good test case, I
+think the interesting immediate question is: are those OOMs avoided with
+this patch but the shrinker infrastructure still in place?
 
-I see some controversial code in the the if (folio_is_zone_device(folio)) case later:
+If not, then I wonder if something is going wonky there. If so, I'm
+still a bit curious what the behavior looks like and whether it can be
+simplified in light of this change, but that's certainly beyond the
+scope of this patch.
 
-			 * The assignment to subpage above was computed from a
-			 * swap PTE which results in an invalid pointer.
-			 * Since only PAGE_SIZE pages can currently be
-			 * migrated, just set it to page. This will need to be
-			 * changed when hugepage migrations to device private
-			 * memory are supported.
-			 */
-			subpage = &folio->page;
+> > > > > If
+> > > > > so, it looks like decent enough overhead to cycle through every cpu in
+> > > > > both callbacks that it might be worth spelling out more clearly in the
+> > > > > top-level comment.
+> > > > 
+> > > > I'm not sure what you are asking here - mod_delayed_work_on() has
+> > > > pretty much the same overhead and behaviour as queue_work() in this
+> > > > case, so... ?
+> > > 
+> > 
+> > I'm just pointing out that the comment around the shrinker
+> > infrastructure isn't very informative if the shrinker turns out to still
+> > be necessary for reasons other than making the workers run sooner.
+> 
+> <nod> That comment /does/ need to be updated to note the subtlety that a
+> lot of shrinker activity can slow down close()ing a file by making user
+> tasks wait for the inodegc workers to clear the backlog.
+> 
+> > > <shrug> Looks ok to me, since djwong-dev has had some variant of timer
+> > > delayed inactivation in it longer than it hasn't:
+> > > 
+> > 
+> > Was that with a correspondingly small delay or something larger (on the
+> > order of seconds or so)? Either way, it sounds like you have a
+> > predictable enough workload that can actually test this continues to
+> > work as expected..?
+> 
+> Yeah.  I snapshot /home (which has ~20 million inodes) then race
+> fsstress and xfs_scrub -n in a VM with 560MB of RAM.
+> 
 
-There we have our invalid pointer hint.
+Yeah small delay or yeah large delay?
 
-I don't see how it could have worked if the child quit, though? Maybe
-just pure luck?
+Brian
 
-
-Does the following fix your issue:
-
-
-
-From 09750c714739ef3ca317b4aec82bf20283c8fd2d Mon Sep 17 00:00:00 2001
-From: David Hildenbrand <david@redhat.com>
-Date: Thu, 23 Jun 2022 09:38:45 +0200
-Subject: [PATCH] mm/rmap: fix dereferencing invalid subpage pointer in
- try_to_migrate_one()
-
-The subpage we calculate is an invalid pointer for device private pages,
-because device private pages are mapped via non-present device private
-entries, not ordinary present PTEs.
-
-Let's just not compute broken pointers and fixup later. Move the proper
-assignment of the correct subpage to the beginning of the function and
-assert that we really only have a single page in our folio.
-
-This currently results in a BUG when tying to compute anon_exclusive,
-because:
-
-[  528.727237] BUG: unable to handle page fault for address: ffffea1fffffffc0
-[  528.739585] #PF: supervisor read access in kernel mode
-[  528.745324] #PF: error_code(0x0000) - not-present page
-[  528.751062] PGD 44eaf2067 P4D 44eaf2067 PUD 0
-[  528.756026] Oops: 0000 [#1] PREEMPT SMP NOPTI
-[  528.760890] CPU: 120 PID: 18275 Comm: hmm-tests Not tainted 5.19.0-rc3-kfd-alex #257
-[  528.769542] Hardware name: AMD Corporation BardPeak/BardPeak, BIOS RTY1002BDS 09/17/2021
-[  528.778579] RIP: 0010:try_to_migrate_one+0x21a/0x1000
-[  528.784225] Code: f6 48 89 c8 48 2b 05 45 d1 6a 01 48 c1 f8 06 48 29
-c3 48 8b 45 a8 48 c1 e3 06 48 01 cb f6 41 18 01 48 89 85 50 ff ff ff 74
-0b <4c> 8b 33 49 c1 ee 11 41 83 e6 01 48 8b bd 48 ff ff ff e8 3f 99 02
-[  528.805194] RSP: 0000:ffffc90003cdfaa0 EFLAGS: 00010202
-[  528.811027] RAX: 00007ffff7ff4000 RBX: ffffea1fffffffc0 RCX: ffffeaffffffffc0
-[  528.818995] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffc90003cdfaf8
-[  528.826962] RBP: ffffc90003cdfb70 R08: 0000000000000000 R09: 0000000000000000
-[  528.834930] R10: ffffc90003cdf910 R11: 0000000000000002 R12: ffff888194450540
-[  528.842899] R13: ffff888160d057c0 R14: 0000000000000000 R15: 03ffffffffffffff
-[  528.850865] FS:  00007ffff7fdb740(0000) GS:ffff8883b0600000(0000) knlGS:0000000000000000
-[  528.859891] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  528.866308] CR2: ffffea1fffffffc0 CR3: 00000001562b4003 CR4: 0000000000770ee0
-[  528.874275] PKRU: 55555554
-[  528.877286] Call Trace:
-[  528.880016]  <TASK>
-[  528.882356]  ? lock_is_held_type+0xdf/0x130
-[  528.887033]  rmap_walk_anon+0x167/0x410
-[  528.891316]  try_to_migrate+0x90/0xd0
-[  528.895405]  ? try_to_unmap_one+0xe10/0xe10
-[  528.900074]  ? anon_vma_ctor+0x50/0x50
-[  528.904260]  ? put_anon_vma+0x10/0x10
-[  528.908347]  ? invalid_mkclean_vma+0x20/0x20
-[  528.913114]  migrate_vma_setup+0x5f4/0x750
-[  528.917691]  dmirror_devmem_fault+0x8c/0x250 [test_hmm]
-[  528.923532]  do_swap_page+0xac0/0xe50
-[  528.927623]  ? __lock_acquire+0x4b2/0x1ac0
-[  528.932199]  __handle_mm_fault+0x949/0x1440
-[  528.936876]  handle_mm_fault+0x13f/0x3e0
-[  528.941256]  do_user_addr_fault+0x215/0x740
-[  528.945928]  exc_page_fault+0x75/0x280
-[  528.950115]  asm_exc_page_fault+0x27/0x30
-[  528.954593] RIP: 0033:0x40366b
-...
-
-Fixes: 6c287605fd56 ("mm: remember exclusively mapped anonymous pages with PG_anon_exclusive")
-Reported-by: Sierra Guiza, Alejandro (Alex) <alex.sierra@amd.com>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Signed-off-by: David Hildenbrand <david@redhat.com>
----
- mm/rmap.c | 27 +++++++++++++++++----------
- 1 file changed, 17 insertions(+), 10 deletions(-)
-
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 5bcb334cd6f2..746c05acad27 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1899,8 +1899,23 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
- 		/* Unexpected PMD-mapped THP? */
- 		VM_BUG_ON_FOLIO(!pvmw.pte, folio);
- 
--		subpage = folio_page(folio,
--				pte_pfn(*pvmw.pte) - folio_pfn(folio));
-+		if (folio_is_zone_device(folio)) {
-+			/*
-+			 * Our PTE is a non-present device exclusive entry and
-+			 * calculating the subpage as for the common case would
-+			 * result in an invalid pointer.
-+			 *
-+			 * Since only PAGE_SIZE pages can currently be
-+			 * migrated, just set it to page. This will need to be
-+			 * changed when hugepage migrations to device private
-+			 * memory are supported.
-+			 */
-+			VM_BUG_ON_FOLIO(folio_nr_pages(folio) > 1, folio);
-+			subpage = &folio->page;
-+		} else {
-+			subpage = folio_page(folio,
-+					pte_pfn(*pvmw.pte) - folio_pfn(folio));
-+		}
- 		address = pvmw.address;
- 		anon_exclusive = folio_test_anon(folio) &&
- 				 PageAnonExclusive(subpage);
-@@ -1993,15 +2008,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
- 			/*
- 			 * No need to invalidate here it will synchronize on
- 			 * against the special swap migration pte.
--			 *
--			 * The assignment to subpage above was computed from a
--			 * swap PTE which results in an invalid pointer.
--			 * Since only PAGE_SIZE pages can currently be
--			 * migrated, just set it to page. This will need to be
--			 * changed when hugepage migrations to device private
--			 * memory are supported.
- 			 */
--			subpage = &folio->page;
- 		} else if (PageHWPoison(subpage)) {
- 			pteval = swp_entry_to_pte(make_hwpoison_entry(subpage));
- 			if (folio_test_hugetlb(folio)) {
--- 
-2.35.3
-
-
-
-
-
-
--- 
-Thanks,
-
-David / dhildenb
+> --D
+> 
+> > Brian
+> > 
+> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > --D
+> > > 
+> > > > Cheers,
+> > > > 
+> > > > Dave.
+> > > > -- 
+> > > > Dave Chinner
+> > > > david@fromorbit.com
+> > > 
+> > 
+> 
 
