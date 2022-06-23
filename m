@@ -2,59 +2,59 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AC60CCA47F
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 20:37:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C7B0C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jun 2022 20:37:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230032AbiFWUhP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jun 2022 16:37:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35622 "EHLO
+        id S230041AbiFWUhR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jun 2022 16:37:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229995AbiFWUhO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 16:37:14 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 244F660F1B
+        with ESMTP id S229774AbiFWUhP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jun 2022 16:37:15 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E984F60F17
         for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 13:37:14 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id p14so666169pfh.6
+Received: by mail-pj1-x1035.google.com with SMTP id go6so786261pjb.0
         for <linux-xfs@vger.kernel.org>; Thu, 23 Jun 2022 13:37:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Tve9D8iQuxh5AgLBP6EM+21dbBb6xwy+MqCcMe7KYYM=;
-        b=QtC9vHHy/4dtnGzk+Px0xr4KIq0bt2BOZqDepg+6soUZMfdh52UanGJIy3JI43PNHy
-         pUndr4xumM73QR8iumLsXLhXVC74UevKL4xemsO4qf9hPu45YRbD8jwfS9gldYXYzbks
-         P/NFl9w+xFp2mGgPlsnrLsadmnnR8j/r/xai/sGiyCi7iywBXswq1YGtDhi8Uv2LhNV4
-         xDWikwelh8GONLSZYECIKQ4tL7ku8nxUmBTfRHr9q29spimJjKd0EgPGslWDgRX0o5bE
-         LXqBnBk0w71ww1yQr0lhgZy0GG7M8aKkPEmO+q4ZEsKA8CBd1RECIFbzfBvC/RGPfJHG
-         wyoQ==
+        bh=8UzHd7SOUkwB46SmrihkqIRiew3lnIwXrcUWf/w/0Zc=;
+        b=A2q/O8PpK7l7p3yuZCqksBaEUjjCQT19Xkp44X/+5WfXilM5IXUp6gHP4cnuiOujnq
+         dKCScjT3rAQLQdpq1dXSCIP1OsaLxEWgsWSGyQcP+MQeosU9CmjH+E+tHp9Wr8p1fl/w
+         A6UVmpZaVGj8GH8z70ThkVRmQesLc8IGRgc1j8hB5kYpAWckiY4E06IwOFAvedN1jq+R
+         Ig8RKdYD8RqXS1s7wT54vDdeqmwP9yigGBLHg6mkr18HG9GKYWr9WfqFBTfXzVb0qhJI
+         IBtVqakYVaHsLesp/Nyk3jK/hv/lBpBnnLxwJy6GzTUF3y6FkvUNYsiq0Kx+3QzyD1j7
+         Yl6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Tve9D8iQuxh5AgLBP6EM+21dbBb6xwy+MqCcMe7KYYM=;
-        b=EDF6wLdyaB1p2WdNWlvHxn5nIYPl/ROR9HJuRQzhKXJlPH7n7wr+cHx/3jOGOPLBWP
-         7dSHmWcZ8kI5PcqyYtrgWtAYJpGPqdpiHojmQTOQZjdiWh8mzfWK0CjrnkjgGpRX+q/E
-         bCkRlJRyQ0/UuXXMWeKEN3uQev0fwZ8y4SIzM1R3tBEL6JZ+mTjLR0ziXlUxRy2pyeoo
-         X3TpIk9zj1ZeiFO2AOO7Oixf+0OEl1hw7xp7fc13XBnPtGV2wU32LdoaOdLrQk/oORMU
-         3fUN//BNEv4WPSUMgzDLjlK61uaA0IeA3GS0XSeSKSO3n9Bs1Xjm0e/4znMaEebVEIxw
-         L3KQ==
-X-Gm-Message-State: AJIora+uP0lnW3X9xBFbp+Q5f+YywptUXlREqnsu4BxldEIMuLBtdWNM
-        LS2frUvj/zJqihnYSv3Ano0CYjQnvqo5+w==
-X-Google-Smtp-Source: AGRyM1sFmzLdHbC5fmWxPJoCzrwCUyjZTrF4XYkzrj6O1s8EJpOcPng1zYWgovZu9kL3MT2iEesZAQ==
-X-Received: by 2002:a63:f10c:0:b0:40d:4029:b250 with SMTP id f12-20020a63f10c000000b0040d4029b250mr6482360pgi.328.1656016633404;
-        Thu, 23 Jun 2022 13:37:13 -0700 (PDT)
+        bh=8UzHd7SOUkwB46SmrihkqIRiew3lnIwXrcUWf/w/0Zc=;
+        b=RjZrA/d5T4Wil2Ubw6HBjFA1GD923gyopStrUTpx9XWhHNtUe46i3WxX7y0AOd9hDS
+         MCtHaJTrKlcrVYrqie1An90XAL+EgiFaETKf0e9QAXOFJitTaplTlmHTAckDpQF+bOn/
+         Zljvr8INQ1AQj25ewRt1DLnWYJxMVypghAbr2c1Vsd55N2CQJBF+QM34D4VjjriHG4n+
+         AjR/CXkhQWP4HZzdJwxL8nMTY7uforE9IoyPPvCFe+RgboCiruVUspXlNb0OZEoz6yhB
+         7GxRSc3CFRJs1tkxKlpt6sWIB9WaDiaH69YqRVXynB02HHpZfZ6KsETn1K7q8pZ7NSVv
+         DjXA==
+X-Gm-Message-State: AJIora+bRbIpUX7hgfYWju+vE+GJS//2SpVKO3P3grWwa9zUpq3j5TWx
+        kZJ33LeQqWYqdQpYa6j1Pzg3WMEJEovs/Q==
+X-Google-Smtp-Source: AGRyM1uhcRxlELXbCxzvk2WPvAdVaBeqx9b5vZpvBcvOgkgkFQEdBo4z0KYs3bUDjxmAtRnUW4sdAg==
+X-Received: by 2002:a17:90b:4b8f:b0:1ec:e852:22c7 with SMTP id lr15-20020a17090b4b8f00b001ece85222c7mr5816773pjb.38.1656016634164;
+        Thu, 23 Jun 2022 13:37:14 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2cd:202:a654:18fe:feac:cac1])
-        by smtp.gmail.com with ESMTPSA id m12-20020a170902768c00b0016a17da4ad4sm228386pll.39.2022.06.23.13.37.12
+        by smtp.gmail.com with ESMTPSA id m12-20020a170902768c00b0016a17da4ad4sm228386pll.39.2022.06.23.13.37.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Thu, 23 Jun 2022 13:37:13 -0700 (PDT)
 From:   Leah Rumancik <leah.rumancik@gmail.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
         Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 CANDIDATE v3 5/7] xfs: check sb_meta_uuid for dabuf buffer recovery
-Date:   Thu, 23 Jun 2022 13:36:39 -0700
-Message-Id: <20220623203641.1710377-6-leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 CANDIDATE v3 6/7] xfs: prevent UAF in xfs_log_item_in_current_chkpt
+Date:   Thu, 23 Jun 2022 13:36:40 -0700
+Message-Id: <20220623203641.1710377-7-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.37.0.rc0.161.g10f37bed90-goog
 In-Reply-To: <20220623203641.1710377-1-leah.rumancik@gmail.com>
 References: <20220623203641.1710377-1-leah.rumancik@gmail.com>
@@ -64,84 +64,154 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit 09654ed8a18cfd45027a67d6cbca45c9ea54feab ]
+[ Upstream commit f8d92a66e810acbef6ddbc0bd0cbd9b117ce8acd ]
 
-Got a report that a repeated crash test of a container host would
-eventually fail with a log recovery error preventing the system from
-mounting the root filesystem. It manifested as a directory leaf node
-corruption on writeback like so:
+While I was running with KASAN and lockdep enabled, I stumbled upon an
+KASAN report about a UAF to a freed CIL checkpoint.  Looking at the
+comment for xfs_log_item_in_current_chkpt, it seems pretty obvious to me
+that the original patch to xfs_defer_finish_noroll should have done
+something to lock the CIL to prevent it from switching the CIL contexts
+while the predicate runs.
 
- XFS (loop0): Mounting V5 Filesystem
- XFS (loop0): Starting recovery (logdev: internal)
- XFS (loop0): Metadata corruption detected at xfs_dir3_leaf_check_int+0x99/0xf0, xfs_dir3_leaf1 block 0x12faa158
- XFS (loop0): Unmount and run xfs_repair
- XFS (loop0): First 128 bytes of corrupted metadata buffer:
- 00000000: 00 00 00 00 00 00 00 00 3d f1 00 00 e1 9e d5 8b  ........=.......
- 00000010: 00 00 00 00 12 fa a1 58 00 00 00 29 00 00 1b cc  .......X...)....
- 00000020: 91 06 78 ff f7 7e 4a 7d 8d 53 86 f2 ac 47 a8 23  ..x..~J}.S...G.#
- 00000030: 00 00 00 00 17 e0 00 80 00 43 00 00 00 00 00 00  .........C......
- 00000040: 00 00 00 2e 00 00 00 08 00 00 17 2e 00 00 00 0a  ................
- 00000050: 02 35 79 83 00 00 00 30 04 d3 b4 80 00 00 01 50  .5y....0.......P
- 00000060: 08 40 95 7f 00 00 02 98 08 41 fe b7 00 00 02 d4  .@.......A......
- 00000070: 0d 62 ef a7 00 00 01 f2 14 50 21 41 00 00 00 0c  .b.......P!A....
- XFS (loop0): Corruption of in-memory data (0x8) detected at xfs_do_force_shutdown+0x1a/0x20 (fs/xfs/xfs_buf.c:1514).  Shutting down.
- XFS (loop0): Please unmount the filesystem and rectify the problem(s)
- XFS (loop0): log mount/recovery failed: error -117
- XFS (loop0): log mount failed
+For upper level code that needs to know if a given log item is new
+enough not to need relogging, add a new wrapper that takes the CIL
+context lock long enough to sample the current CIL context.  This is
+kind of racy in that the CIL can switch the contexts immediately after
+sampling, but that's ok because the consequence is that the defer ops
+code is a little slow to relog items.
 
-Tracing indicated that we were recovering changes from a transaction
-at LSN 0x29/0x1c16 into a buffer that had an LSN of 0x29/0x1d57.
-That is, log recovery was overwriting a buffer with newer changes on
-disk than was in the transaction. Tracing indicated that we were
-hitting the "recovery immediately" case in
-xfs_buf_log_recovery_lsn(), and hence it was ignoring the LSN in the
-buffer.
+ ==================================================================
+ BUG: KASAN: use-after-free in xfs_log_item_in_current_chkpt+0x139/0x160 [xfs]
+ Read of size 8 at addr ffff88804ea5f608 by task fsstress/527999
 
-The code was extracting the LSN correctly, then ignoring it because
-the UUID in the buffer did not match the superblock UUID. The
-problem arises because the UUID check uses the wrong UUID - it
-should be checking the sb_meta_uuid, not sb_uuid. This filesystem
-has sb_uuid != sb_meta_uuid (which is fine), and the buffer has the
-correct matching sb_meta_uuid in it, it's just the code checked it
-against the wrong superblock uuid.
+ CPU: 1 PID: 527999 Comm: fsstress Tainted: G      D      5.16.0-rc4-xfsx #rc4
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x45/0x59
+  print_address_description.constprop.0+0x1f/0x140
+  kasan_report.cold+0x83/0xdf
+  xfs_log_item_in_current_chkpt+0x139/0x160
+  xfs_defer_finish_noroll+0x3bb/0x1e30
+  __xfs_trans_commit+0x6c8/0xcf0
+  xfs_reflink_remap_extent+0x66f/0x10e0
+  xfs_reflink_remap_blocks+0x2dd/0xa90
+  xfs_file_remap_range+0x27b/0xc30
+  vfs_dedupe_file_range_one+0x368/0x420
+  vfs_dedupe_file_range+0x37c/0x5d0
+  do_vfs_ioctl+0x308/0x1260
+  __x64_sys_ioctl+0xa1/0x170
+  do_syscall_64+0x35/0x80
+  entry_SYSCALL_64_after_hwframe+0x44/0xae
+ RIP: 0033:0x7f2c71a2950b
+ Code: 0f 1e fa 48 8b 05 85 39 0d 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff
+ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01
+f0 ff ff 73 01 c3 48 8b 0d 55 39 0d 00 f7 d8 64 89 01 48
+ RSP: 002b:00007ffe8c0e03c8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+ RAX: ffffffffffffffda RBX: 00005600862a8740 RCX: 00007f2c71a2950b
+ RDX: 00005600862a7be0 RSI: 00000000c0189436 RDI: 0000000000000004
+ RBP: 000000000000000b R08: 0000000000000027 R09: 0000000000000003
+ R10: 0000000000000000 R11: 0000000000000246 R12: 000000000000005a
+ R13: 00005600862804a8 R14: 0000000000016000 R15: 00005600862a8a20
+  </TASK>
 
-The is no corruption in the filesystem, and failing to recover the
-buffer due to a write verifier failure means the recovery bug did
-not propagate the corruption to disk. Hence there is no corruption
-before or after this bug has manifested, the impact is limited
-simply to an unmountable filesystem....
+ Allocated by task 464064:
+  kasan_save_stack+0x1e/0x50
+  __kasan_kmalloc+0x81/0xa0
+  kmem_alloc+0xcd/0x2c0 [xfs]
+  xlog_cil_ctx_alloc+0x17/0x1e0 [xfs]
+  xlog_cil_push_work+0x141/0x13d0 [xfs]
+  process_one_work+0x7f6/0x1380
+  worker_thread+0x59d/0x1040
+  kthread+0x3b0/0x490
+  ret_from_fork+0x1f/0x30
 
-This was missed back in 2015 during an audit of incorrect sb_uuid
-usage that resulted in commit fcfbe2c4ef42 ("xfs: log recovery needs
-to validate against sb_meta_uuid") that fixed the magic32 buffers to
-validate against sb_meta_uuid instead of sb_uuid. It missed the
-magicda buffers....
+ Freed by task 51:
+  kasan_save_stack+0x1e/0x50
+  kasan_set_track+0x21/0x30
+  kasan_set_free_info+0x20/0x30
+  __kasan_slab_free+0xed/0x130
+  slab_free_freelist_hook+0x7f/0x160
+  kfree+0xde/0x340
+  xlog_cil_committed+0xbfd/0xfe0 [xfs]
+  xlog_cil_process_committed+0x103/0x1c0 [xfs]
+  xlog_state_do_callback+0x45d/0xbd0 [xfs]
+  xlog_ioend_work+0x116/0x1c0 [xfs]
+  process_one_work+0x7f6/0x1380
+  worker_thread+0x59d/0x1040
+  kthread+0x3b0/0x490
+  ret_from_fork+0x1f/0x30
 
-Fixes: ce748eaa65f2 ("xfs: create new metadata UUID field and incompat flag")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+ Last potentially related work creation:
+  kasan_save_stack+0x1e/0x50
+  __kasan_record_aux_stack+0xb7/0xc0
+  insert_work+0x48/0x2e0
+  __queue_work+0x4e7/0xda0
+  queue_work_on+0x69/0x80
+  xlog_cil_push_now.isra.0+0x16b/0x210 [xfs]
+  xlog_cil_force_seq+0x1b7/0x850 [xfs]
+  xfs_log_force_seq+0x1c7/0x670 [xfs]
+  xfs_file_fsync+0x7c1/0xa60 [xfs]
+  __x64_sys_fsync+0x52/0x80
+  do_syscall_64+0x35/0x80
+  entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+ The buggy address belongs to the object at ffff88804ea5f600
+  which belongs to the cache kmalloc-256 of size 256
+ The buggy address is located 8 bytes inside of
+  256-byte region [ffff88804ea5f600, ffff88804ea5f700)
+ The buggy address belongs to the page:
+ page:ffffea00013a9780 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff88804ea5ea00 pfn:0x4ea5e
+ head:ffffea00013a9780 order:1 compound_mapcount:0
+ flags: 0x4fff80000010200(slab|head|node=1|zone=1|lastcpupid=0xfff)
+ raw: 04fff80000010200 ffffea0001245908 ffffea00011bd388 ffff888004c42b40
+ raw: ffff88804ea5ea00 0000000000100009 00000001ffffffff 0000000000000000
+ page dumped because: kasan: bad access detected
+
+ Memory state around the buggy address:
+  ffff88804ea5f500: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+  ffff88804ea5f580: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ >ffff88804ea5f600: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                       ^
+  ffff88804ea5f680: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+  ffff88804ea5f700: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ==================================================================
+
+Fixes: 4e919af7827a ("xfs: periodically relog deferred intent items")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_buf_item_recover.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_log_cil.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index a476c7ef5d53..991fbf1eb564 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -816,7 +816,7 @@ xlog_recover_get_buf_lsn(
- 	}
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 6c93c8ada6f3..b59cc9c0961c 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -1442,9 +1442,9 @@ xlog_cil_force_seq(
+  */
+ bool
+ xfs_log_item_in_current_chkpt(
+-	struct xfs_log_item *lip)
++	struct xfs_log_item	*lip)
+ {
+-	struct xfs_cil_ctx *ctx = lip->li_mountp->m_log->l_cilp->xc_ctx;
++	struct xfs_cil		*cil = lip->li_mountp->m_log->l_cilp;
  
- 	if (lsn != (xfs_lsn_t)-1) {
--		if (!uuid_equal(&mp->m_sb.sb_uuid, uuid))
-+		if (!uuid_equal(&mp->m_sb.sb_meta_uuid, uuid))
- 			goto recover_immediately;
- 		return lsn;
- 	}
+ 	if (list_empty(&lip->li_cil))
+ 		return false;
+@@ -1454,7 +1454,7 @@ xfs_log_item_in_current_chkpt(
+ 	 * first checkpoint it is written to. Hence if it is different to the
+ 	 * current sequence, we're in a new checkpoint.
+ 	 */
+-	return lip->li_seq == ctx->sequence;
++	return lip->li_seq == READ_ONCE(cil->xc_current_sequence);
+ }
+ 
+ /*
 -- 
 2.37.0.rc0.161.g10f37bed90-goog
 
