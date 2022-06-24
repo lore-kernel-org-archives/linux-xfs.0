@@ -2,374 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2FE1C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jun 2022 12:39:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0707C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jun 2022 14:53:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231366AbiFXMjl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jun 2022 08:39:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53834 "EHLO
+        id S233530AbiFXOxW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jun 2022 10:53:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230513AbiFXMjk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jun 2022 08:39:40 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8D7F74EA25
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Jun 2022 05:39:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1656074377;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=brkjxmQwtnxHMXO3nfWRCQoRVIFVftcuZe/LPfCh2lE=;
-        b=VQyS7jeSL6QvB7O9sth34tSWrNrX6DT9OmpEvrwl69odacPXx54Mm38YeNYOtUb+ivddfQ
-        GnY5WpP0E5Idft7rbXg+2F7J8/TfMt9quraktcauSKnItSeMYItQ/Xvvo2QBjbqIMFrxKP
-        pC+W3vsD2AzTSsdApf+0KP8bSPooftY=
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
- [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-643-IrK48F4mN42m7_75SPlqXg-1; Fri, 24 Jun 2022 08:39:36 -0400
-X-MC-Unique: IrK48F4mN42m7_75SPlqXg-1
-Received: by mail-qk1-f199.google.com with SMTP id y8-20020a05620a44c800b006a6f8cd53cbso2511704qkp.5
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Jun 2022 05:39:36 -0700 (PDT)
+        with ESMTP id S233349AbiFXOwy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jun 2022 10:52:54 -0400
+Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBD847FD22
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jun 2022 07:48:54 -0700 (PDT)
+Received: by mail-il1-x12f.google.com with SMTP id k6so1648443ilq.2
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jun 2022 07:48:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=DWcyz906WJfvMFL2VVjgjsdhhZt0R2JBG5BvPCvlnPE=;
+        b=kAZfa4Gvw0mMhZjLyDIabymc1EmZA6j/Ij9km3tKCr2BFPbswn26/J6hUzgzxK1udT
+         LXghN15N0v7AXCHZjA2DZSNUqDb8GKoz3EPZn168zMo/kyOYC8fhdWqF/to68Cm5uxLi
+         KUmvke0fE3Nb+xs/xxNlvH/wfLHfkCsapDQ8szgjNP6dRJ5TGPFoxdXQ3s+3EWsusHWR
+         9J/fh9bzOC3ORimLqxSc/OtThU3lq68I5z0UVi8MeqqhfTtGrGxDnG19KA2TV9dSV3bW
+         BgGazgp0V8riFQG6oC8SqJWq18ANKzv8SntphwIcsljLarq5zbbOYF/a54oGxURUkgY4
+         Aq7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=brkjxmQwtnxHMXO3nfWRCQoRVIFVftcuZe/LPfCh2lE=;
-        b=hPXTMww70VRNUHe212+isE4Bj9vcmHgX2rnGMlzEU0fvmUy9fH4U8HHwPGHdnZb5bu
-         Nbd19jd5A9VHDOith9anBGutOT3Anc1NmlBP6wAvYahIKBMKu/f3dJdMQ7Pkqj6lw5lg
-         /EswGfeppk2a35gY/EYfRyFQXUz4UtMP3S3LtelHJYzOSeur91hBNVyQ5CT2an/MOpqh
-         317bBqv/lknu+WTyqcpzeCETjIYLdTnpa3b15upEgo5Y+aKxtogQq1yCAvMjdBGvwgXm
-         A05jgYW1qaMc7pjBEd5+0GKJ0oauKsc/lUrgMS20T0Tj9hKFGgxPR/wogF81zCVkm+M2
-         nHfg==
-X-Gm-Message-State: AJIora8dU312n2fTE0HcnsnqoDmx1AwPHki3iESA8S3r4w6F1DPbBi9H
-        D7JB1xVdQa3O2HDqqGOP2jb+vGMCcYnSiZh+ceTfRHiUECdPFPz7WVc3QISmJMQHbdsg2x9Wdio
-        zjc54+FmLOMtZQhiF0eWO
-X-Received: by 2002:a05:622a:5d3:b0:305:27d8:cb15 with SMTP id d19-20020a05622a05d300b0030527d8cb15mr12389832qtb.298.1656074375538;
-        Fri, 24 Jun 2022 05:39:35 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1vs0Rf3Yfc6xl73HWV48otLXoH0E9l/u4wH5jK+7EyCD9S8RKY1E6un7yrcYcO0By8N3vzNSw==
-X-Received: by 2002:a05:622a:5d3:b0:305:27d8:cb15 with SMTP id d19-20020a05622a05d300b0030527d8cb15mr12389798qtb.298.1656074375076;
-        Fri, 24 Jun 2022 05:39:35 -0700 (PDT)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id i18-20020a05620a249200b0069fc13ce23dsm1775433qkn.110.2022.06.24.05.39.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Jun 2022 05:39:34 -0700 (PDT)
-Date:   Fri, 24 Jun 2022 08:39:32 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
-Message-ID: <YrWwhGMlXMj6DqsI@bfoster>
-References: <20220615220416.3681870-1-david@fromorbit.com>
- <20220615220416.3681870-2-david@fromorbit.com>
- <YqytHuc/sJprFn0K@bfoster>
- <20220617215245.GH227878@dread.disaster.area>
- <YrKmrgJh9+SzT0Gz@magnolia>
- <YrM/woFhObNYQx3b@bfoster>
- <YrOzAPXCcDY9DnCj@magnolia>
- <YrRTWoEZys3DfPW8@bfoster>
- <YrTFePWaarPl8eNP@magnolia>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=DWcyz906WJfvMFL2VVjgjsdhhZt0R2JBG5BvPCvlnPE=;
+        b=rk+bEL4QujKa3sUpSKZCB2e+vlXPoxAlRGkwB/gheacVUxa+grFvZviNhbfP59kLwg
+         auMKqaSJL2sh+ti8odS8Ddb6pgzmFgsvXKZ4TgozzrJrVlCndj9eIQJF6as967nPN5gZ
+         0VHOtlhK+jX+VrMgl57pi4PgCNGJ1nos0SMtKR0DzvEgN2GnA/ME4N42CbBZRe9U1Ey2
+         4jcptsuFMHF7MsO/LQro2JiemWAxUshrCIpUPK91w036q/ImxwSbNU/5ls4pFl6s7Ww7
+         sczyZZ+LuFM+sTZq45l6TrTju6/pPhYwkdrbLo06Ih9YfksC/jB6cvlG84DPc4n4RJYC
+         Jpxw==
+X-Gm-Message-State: AJIora/vR8R747egr1TJEm6mgWpCrz4/f8sfaEfG0KT1jwS3eO45q7Oc
+        zD4dy47WUFkFUANdZI1wKeTnOw==
+X-Google-Smtp-Source: AGRyM1vtQ5lI0ui69eAPGDOvVUnSBy1LS9YB7l1nUJUBdVR6AuykMTvdZaQ+wwkP8ETAWatGVBndKg==
+X-Received: by 2002:a05:6e02:1ba3:b0:2d8:d74b:8ff6 with SMTP id n3-20020a056e021ba300b002d8d74b8ff6mr8714104ili.264.1656082134104;
+        Fri, 24 Jun 2022 07:48:54 -0700 (PDT)
+Received: from [192.168.1.172] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id e25-20020a0566380cd900b00339ee768069sm1137354jak.74.2022.06.24.07.48.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 24 Jun 2022 07:48:53 -0700 (PDT)
+Message-ID: <293e593d-2f2a-623e-bf2f-786fce623327@kernel.dk>
+Date:   Fri, 24 Jun 2022 08:48:51 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YrTFePWaarPl8eNP@magnolia>
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [RESEND PATCH v9 07/14] fs: Add check for async buffered writes
+ to generic_write_checks
+Content-Language: en-US
+To:     Christoph Hellwig <hch@infradead.org>, Stefan Roesch <shr@fb.com>
+Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com, jack@suse.cz, willy@infradead.org,
+        Christoph Hellwig <hch@lst.de>,
+        Christian Brauner <brauner@kernel.org>
+References: <20220623175157.1715274-1-shr@fb.com>
+ <20220623175157.1715274-8-shr@fb.com> <YrVJvA+kOvjYJHqw@infradead.org>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <YrVJvA+kOvjYJHqw@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 23, 2022 at 12:56:40PM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 23, 2022 at 07:49:46AM -0400, Brian Foster wrote:
-> > On Wed, Jun 22, 2022 at 05:25:36PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jun 22, 2022 at 12:13:54PM -0400, Brian Foster wrote:
-> > > > On Tue, Jun 21, 2022 at 10:20:46PM -0700, Darrick J. Wong wrote:
-> > > > > On Sat, Jun 18, 2022 at 07:52:45AM +1000, Dave Chinner wrote:
-> > > > > > On Fri, Jun 17, 2022 at 12:34:38PM -0400, Brian Foster wrote:
-> > > > > > > On Thu, Jun 16, 2022 at 08:04:15AM +1000, Dave Chinner wrote:
-> > > > > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > > > > 
-> > > > > > > > Currently inodegc work can sit queued on the per-cpu queue until
-> > > > > > > > the workqueue is either flushed of the queue reaches a depth that
-> > > > > > > > triggers work queuing (and later throttling). This means that we
-> > > > > > > > could queue work that waits for a long time for some other event to
-> > > > > > > > trigger flushing.
-> > > > > > > > 
-> > > > > > > > Hence instead of just queueing work at a specific depth, use a
-> > > > > > > > delayed work that queues the work at a bound time. We can still
-> > > > > > > > schedule the work immediately at a given depth, but we no long need
-> > > > > > > > to worry about leaving a number of items on the list that won't get
-> > > > > > > > processed until external events prevail.
-> > > > > > > > 
-> > > > > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > > > > > ---
-> > > > > > > >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
-> > > > > > > >  fs/xfs/xfs_mount.h  |  2 +-
-> > > > > > > >  fs/xfs/xfs_super.c  |  2 +-
-> > > > > > > >  3 files changed, 24 insertions(+), 16 deletions(-)
-> > > > > > > > 
-> > > > > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > > > > > > index 374b3bafaeb0..46b30ecf498c 100644
-> > > > > > > > --- a/fs/xfs/xfs_icache.c
-> > > > > > > > +++ b/fs/xfs/xfs_icache.c
-> > > > > > > ...
-> > > > > > > > @@ -2176,7 +2184,7 @@ xfs_inodegc_shrinker_scan(
-> > > > > > > >  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
-> > > > > > > >  
-> > > > > > > >  			WRITE_ONCE(gc->shrinker_hits, h + 1);
-> > > > > > > > -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
-> > > > > > > > +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
-> > > > > > > >  			no_items = false;
-> > > > > > > >  		}
-> > > > > > > 
-> > > > > > > This all seems reasonable to me, but is there much practical benefit to
-> > > > > > > shrinker infra/feedback just to expedite a delayed work item by one
-> > > > > > > jiffy? Maybe there's a use case to continue to trigger throttling..?
-> > > > > > 
-> > > > > > I haven't really considered doing anything other than fixing the
-> > > > > > reported bug. That just requires an API conversion for the existing
-> > > > > > "queue immediately" semantics and is the safest minimum change
-> > > > > > to fix the issue at hand.
-> > > > > > 
-> > > > > > So, yes, the shrinker code may (or may not) be superfluous now, but
-> > > > > > I haven't looked at it and done analysis of the behaviour without
-> > > > > > the shrinkers enabled. I'll do that in a completely separate
-> > > > > > patchset if it turns out that it is not needed now.
-> > > > > 
-> > > > > I think the shrinker part is still necessary -- bulkstat and xfs_scrub
-> > > > > on a very low memory machine (~560M RAM) opening and closing tens of
-> > > > > millions of files can still OOM the machine if one doesn't have a means
-> > > > > to slow down ->destroy_inode (and hence the next open()) when reclaim
-> > > > > really starts to dig in.  Without the shrinker bits, it's even easier to
-> > > > > trigger OOM storms when xfs has timer-delayed inactivation... which is
-> > > > > something that Brian pointed out a year ago when we were reviewing the
-> > > > > initial inodegc patchset.
-> > > > > 
-> > > > 
-> > > > It wouldn't surprise me if the infrastructure is still necessary for the
-> > > > throttling use case. In that case, I'm more curious about things like
-> > > > whether it's still as effective as intended with such a small scheduling
-> > > > delay, or whether it still might be worth simplifying in various ways
-> > > > (i.e., does the scheduling delay actually make a difference? do we still
-> > > > need a per cpu granular throttle? etc.).
-> > > 
-> > > It can still be useful for certain g*dawful scenarios --
-> > > 
-> > > Let's say you have a horribly misconfigured cloudy system with a tiny
-> > > log, hundreds of CPUs, a memory hogging process, another process with
-> > > many hundreds of threads that are performing small appending synchronous
-> > > writes to a large number of files, and some other process repeatedly
-> > > opens and closes files.  Background writeback completion will create
-> > > enough workers to tie up the log such that writeback and inodegc contend
-> > > for log grant space and make slow progress.  If memory is also tight,
-> > > we want to slow down the file scanning process so that it doesn't shove
-> > > /more/ inodes into the cache and push the system towards OOM behavior.
-> > > 
-> > 
-> > Yeah, I get the general idea/purpose of the throttling. What I'm probing
-> > at here is whether a case like this is still handled effectively with
-> > such a short scheduling delay.
+On 6/23/22 11:21 PM, Christoph Hellwig wrote:
+> FYI, I think a subject like
 > 
-> Given the trace_xfs_inodegc_shrinker_* data I've collected on my
-> simulator, I think the 1 jiffy delay is handling this well enough that
-> we only trip that tracepoint about a half dozen times in 2h of trying to
-> exercising the inode caches.  That said, I haven't really had time to
-> try this on (say) a 20CPU machine with ridiculously small memory to see
-> if I get different results.
+> "fs: add a FMODE_BUF_WASYNC flags for f_mode"
 > 
-> (Note: I'm still trying to figure out why generic/522 reports
-> corruption, and hoping that willy's folios pull today just fixes it
-> magically...)
-> 
-> > Presumably there is some window before
-> > list size based throttling triggers for which the shrinker is expected
-> > to cover, so that implies the shrinker historically is able to detect
-> > and push populated queues and trigger throttling from the point it is
-> > invoked (whether directly via repeated shrinker invocations or
-> > indirectly via causing larger queue sizes is not clear to me).
-> 
-> Back when I merged the inodegc series, it was fairly easy to get the
-> shrinker to trip dozens of times during a stress run, even when the only
-> throttling criteria was the queue size.  I think the reflink/rmap
-> transaction reservation optimizations have made the log grant
-> bottlenecks much less severe, since I now see a lot less contention on
-> the grant heads.
-> 
-> > The thing that stands out to me as a question wrt to this change is that
-> > the trigger for shrinker induced throttling is the list size at the time
-> > of the callback(s), and that goes from having a lifecycle associated
-> > with the size-oriented scheduling algorithm to a time-based scheduling
-> > lifecycle of one jiffy (also noting that the inodegc worker resets
-> > shrinker_hits before it begins to process inodes). So with that in mind,
-> > how reliable is this lowmem signal based on the list size back to the
-> > tasks creating more work and memory pressure? Once a shrinker invocation
-> > occurs, what are the odds that the callback is able to detect a
-> > populated list and act accordingly?
-> 
-> Hrmmm.  Decent, I think?  If the list is populated but the inactivation
-> worker is not running, then we queue the worker and clear the list; if
-> the worker is already running when the shrinker gets called, we might
-> end up requeuing it unnecessarily, in which case it'll just clear more.
-> 
+> might be a more descriptive.  As the new flag here really is the
+> interesting part, not that we check it.
 
-Sure, that sounds harmless, but I was thinking more about the likelihood
-of missing throttles than spurious work cycles and such..
+Agree on that - if others do too, I can just make that edit.
 
-Generally with this change, the worker is pretty much always scheduled
-once an inode is queued. It executes once a tick passes where another
-destroy hasn't otherwise come along to kick it out by another tick. So
-if I run a sustained removal, I see similar batching/scheduling as since
-before this change. If I run something with a mix of removes and
-$something_else, then it doesn't seem to take much to skip batching and
-run a worker cycle per inode.
-
-So what happens if the shrinker scan sees one or more workers that
-happen to execute before the scan callback is able to actually trigger
-throttling? Is that critical, or is this enough of a fallback mechanism
-that it's unlikely to be important? Similarly if one is running a
-workload that results in behavior as described above, is this sort of
-"oneshot shrinker to worker throttle" actually still going to slow down
-the worker tasks? Is shrinker callback frequency high enough to actually
-make an impact? Etc.
-
-These are questions I don't really have enough context to answer atm,
-nor can say whether or not may result in problems...
-
-> > These questions are somewhat rhetorical because this all seems rather
-> > unpredictable when we consider varying resource availability.
-> 
-> Not to mention the shrinker itself undergoing various behavioral changes
-> over the years... :(
-> 
-> > The
-> > relevant question for this patch is probably just that somebody has
-> > tested and confirmed that the shrinker hasn't been subtly or indirectly
-> > broken in cases like the one you describe above (where perhaps we might
-> > not have many shrinker callback opportunities to act on before OOM).
-> 
-> FWIW, the only time I /ever/ saw OOMs (either now with 5.19 or ages ago
-> with 5.9) was with extreme lowmem testing.  On VMs with more than a
-> gigabyte or so of memory, I notice that we usually hit the time/length
-> thresholds without shrinkers getting involved.  Granted, I did try to
-> pick the shrinker values so that we only get called on the *second*
-> level of shrinking, which is after we've freed some but not enough
-> memory.
-> 
-> If my responses seem a bit like handwaving, they are, because (at the
-> moment) this is well off in the weeds.
-> 
-> > > Back in the old days when inodegc was a radix tree tag it was fairly
-> > > easy to get OOMs when the delay interval was long (5 seconds).  The
-> > > OOM probability went down pretty sharply as the interval approached
-> > > zero, but even at 1 jiffy I could still occasionally trip it, whereas
-> > > the pre-deferred-inactivation kernels would never OOM.
-> > > 
-> > > I haven't tested it all that rigorously with Dave's fancy new per-cpu
-> > > list design, but I did throw on my silly test setup (see below) and
-> > > still got it to OOM once in 3 runs with the shrinker bits turned off.
-> > > 
-> > 
-> > Ok.. so that implies we still need throttling, but I'm not sure what
-> > "fancy percpu list design" refers to. If you have a good test case, I
-> 
-> You might recall that the original versions of deferred inode
-> inactivation would set radix tree tags, and a per-AG workqueue function
-> would scan that AG's radix tree for tagged inodes and inactivate them.
-> Dave observed that letting the cpu caches grow cold led to performance
-> problems, and replaced the tagging mechanism with per-cpu lists, which
-> is what we have now.
-> 
-> > think the interesting immediate question is: are those OOMs avoided with
-> > this patch but the shrinker infrastructure still in place?
-> 
-> That's the $64000 question that I don't know definitively yet.
-> 
-
-Ok. If the answer to the above questions is "don't really know, it might
-be broken, but historical testing shows the shrinker is much less
-important with smaller queuing delays such that it's unlikely to cause
-any new problems on anything but the most pathological workloads," then
-that sounds reasonable to me.
-
-I don't mean to harp on it. I just want to make sure the
-question/concern gets across clearly enough that somebody who knows this
-system better than I can grok it and make a more intelligent assessment.
-
-Brian
-
-> > If not, then I wonder if something is going wonky there. If so, I'm
-> > still a bit curious what the behavior looks like and whether it can be
-> > simplified in light of this change, but that's certainly beyond the
-> > scope of this patch.
-> 
-> <nod> For now I'd like to get this going for 5.19 to fix the original
-> complaint about statfs blocking in D state while waiting for inodegc
-> after deleting a ~100m file extents[1], and defer the decision of
-> whether or not we /really/ need the shrinker to a later time (like
-> 5.20).
-> 
-> [1] https://lore.kernel.org/linux-xfs/20220509024659.GA62606@onthe.net.au/
-> 
-> > 
-> > > > > > > If
-> > > > > > > so, it looks like decent enough overhead to cycle through every cpu in
-> > > > > > > both callbacks that it might be worth spelling out more clearly in the
-> > > > > > > top-level comment.
-> > > > > > 
-> > > > > > I'm not sure what you are asking here - mod_delayed_work_on() has
-> > > > > > pretty much the same overhead and behaviour as queue_work() in this
-> > > > > > case, so... ?
-> > > > > 
-> > > > 
-> > > > I'm just pointing out that the comment around the shrinker
-> > > > infrastructure isn't very informative if the shrinker turns out to still
-> > > > be necessary for reasons other than making the workers run sooner.
-> > > 
-> > > <nod> That comment /does/ need to be updated to note the subtlety that a
-> > > lot of shrinker activity can slow down close()ing a file by making user
-> > > tasks wait for the inodegc workers to clear the backlog.
-> > > 
-> > > > > <shrug> Looks ok to me, since djwong-dev has had some variant of timer
-> > > > > delayed inactivation in it longer than it hasn't:
-> > > > > 
-> > > > 
-> > > > Was that with a correspondingly small delay or something larger (on the
-> > > > order of seconds or so)? Either way, it sounds like you have a
-> > > > predictable enough workload that can actually test this continues to
-> > > > work as expected..?
-> > > 
-> > > Yeah.  I snapshot /home (which has ~20 million inodes) then race
-> > > fsstress and xfs_scrub -n in a VM with 560MB of RAM.
-> > > 
-> > 
-> > Yeah small delay or yeah large delay?
-> 
-> Both -- with large inactivation delays and no shrinker, OOMs happen
-> fairly frequently; with a short delay and no shrinker, they're harder
-> (but still not impossible) to trigger.
-> 
-> Granted ... even the overall frequency of OOMs with large inactivation
-> delays seems to have gone down a bit from when I was more actively
-> testing in the 5.9 era.
-> 
-> --D
-> 
-> > Brian
-> > 
-> > > --D
-> > > 
-> > > > Brian
-> > > > 
-> > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > 
-> > > > > --D
-> > > > > 
-> > > > > > Cheers,
-> > > > > > 
-> > > > > > Dave.
-> > > > > > -- 
-> > > > > > Dave Chinner
-> > > > > > david@fromorbit.com
-> > > > > 
-> > > > 
-> > > 
-> > 
-> 
+-- 
+Jens Axboe
 
