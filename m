@@ -2,89 +2,169 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3275BC43334
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jun 2022 12:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DADABC43334
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jun 2022 18:50:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232934AbiFYMtA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 25 Jun 2022 08:49:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41952 "EHLO
+        id S233336AbiFYSuH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 25 Jun 2022 14:50:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232438AbiFYMs7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Jun 2022 08:48:59 -0400
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4180517A88
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Jun 2022 05:48:59 -0700 (PDT)
-Received: by mail-pg1-x535.google.com with SMTP id x8so240975pgj.13
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Jun 2022 05:48:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:in-reply-to:references:subject:message-id:date
-         :mime-version:content-transfer-encoding;
-        bh=4xBYgBhSuEsq9ZZe/IswQWwloxjZZr9dDqsNSPWfFj8=;
-        b=Z9greU1+mePPI1ki1Bg4bcqglJBPo7v/+F5xNbg3SuzLFcbzNGbDhGANzi6KfDNSDc
-         hxmP/TqxlHtj7Q+rEWSWwiCH8+eQ24bEaL2nQBQVWE3nCp5FiUWVJJue7q7XHDPbBS2H
-         aiLOUXg4z7NaO9hQbXTP60FgG5p0oU0r1awJUzzR1KJJF9QovHKRbDv6576c35guxdyn
-         M2VcjfF9+6U/XqPPS9rvs7QPH7ow2pSPp4LXQLPSlffmdAT375zx+W+p0e7vPk4B+gFL
-         Kb7YxTHzEyj1aOS3Q7VBHbi1W2ANcEw3RSWWwInKkfUOozvEB6TtkF8z68JiWrntydB0
-         dc1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
-         :message-id:date:mime-version:content-transfer-encoding;
-        bh=4xBYgBhSuEsq9ZZe/IswQWwloxjZZr9dDqsNSPWfFj8=;
-        b=ih1AH0VfgUhnaewdLOD/W0xvVk7/Tb7dETPal26vjDOBQhsY+a73rYZMJosqrzN5bb
-         NnbzPVPAzlfbJabC8gebJp5hH6xo0nJ8shodIQQCN5QTGfOawW/zrNjDxYHw8PRCQc6d
-         F+iWxFhTn8HggUNhK3ouRKL/g4Ta0ECUly2B1W3FPK6GPRAxt2oPSagjKpAHpWgBM2XF
-         9St/d5H0Jvu5AKhA+Ti960l60MsaVOmJkiVExrXUxSCwL5LhE9cebhlv6u8dNZB1EBKy
-         yZB0asNH9IglBPFOE7AAsNRkXvPyOEK2/qIsaHVkKxFavzfZ7mvdWu1t7M8Jjze/LxV8
-         e7OQ==
-X-Gm-Message-State: AJIora/Cc7zshP5/rnRTnL7llBfAFqQip1nn5iHTwAN1iF42J4yAcdCb
-        7qdGGyeEkNVl2dXqI/rohQ6fLg==
-X-Google-Smtp-Source: AGRyM1t6yZgvSz7PHkkloiTL8IY85na6KGvKbM4AMqMN7D97HK1lmys+JJAmfWkix+o+R4Tkr2tdlw==
-X-Received: by 2002:a62:1687:0:b0:50d:3364:46d4 with SMTP id 129-20020a621687000000b0050d336446d4mr4418880pfw.74.1656161338645;
-        Sat, 25 Jun 2022 05:48:58 -0700 (PDT)
-Received: from [127.0.1.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id c8-20020aa79528000000b00525135bd555sm3580418pfp.162.2022.06.25.05.48.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 25 Jun 2022 05:48:58 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com,
-        shr@fb.com
-Cc:     david@fromorbit.com, jack@suse.cz, willy@infradead.org,
-        hch@infradead.org
-In-Reply-To: <20220623175157.1715274-1-shr@fb.com>
-References: <20220623175157.1715274-1-shr@fb.com>
-Subject: Re: (subset) [RESEND PATCH v9 00/14] io-uring/xfs: support async buffered writes
-Message-Id: <165616133761.54036.18358524155859182075.b4-ty@kernel.dk>
-Date:   Sat, 25 Jun 2022 06:48:57 -0600
+        with ESMTP id S233151AbiFYSuG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Jun 2022 14:50:06 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AEF0FD3B;
+        Sat, 25 Jun 2022 11:50:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=dxiSuEDqNQpQfdu0h+/s1zt9hZCxMuSdfyQntiOukqc=; b=QI7ySEnrUl1qZdgscIxUUw5elG
+        5ljNtwLs2zuslYId3bQHrdJagxYT+jWW0pYFgnE/cIShkecb47b3I7Jlvdfod5ASuUAtXeqsnEE5+
+        xt8X/iwsAGETAgr/0bRD5tj1up5UNWHQ844x5fnfgrrP2woUaFF6/Kqz8n/T6ucKqqaezz9S09isy
+        AS8yGklsqX+9NrA8haCSsR/Gqjha+2PqaVMhQ9XKIhNWDEOiMva5BQRWJzi+w9asfT0EXkNTcR84R
+        5kkTNc4EVpFKveMUCu9rIes2XQefxydUgZf+JM5t0txUoYgZHgewdzkcVH6byCQsQp2vlTdrbjuBB
+        3kA5SIRQ==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o5Aqw-007HSk-PF; Sat, 25 Jun 2022 18:49:54 +0000
+Date:   Sat, 25 Jun 2022 11:49:54 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Theodore Ts'o <tytso@mit.edu>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Chuck Lever <chuck.lever@oracle.com>, chandanrmail@gmail.com,
+        Sweet Tea Dorminy <sweettea-kernel@dorminy.me>,
+        Pankaj Raghav <pankydev8@gmail.com>,
+        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [PATCH 5.15 CANDIDATE v2 0/8] xfs stable candidate patches for
+ 5.15.y (part 1)
+Message-ID: <YrdY0h3z0Rcw36AJ@bombadil.infradead.org>
+References: <20220616182749.1200971-1-leah.rumancik@gmail.com>
+ <YrJdLhHBsolF83Rq@bombadil.infradead.org>
+ <YrONPrBgopZQ2EUj@mit.edu>
+ <YrTboFa4usTuCqUb@bombadil.infradead.org>
+ <YrVMZ7/rJn11HH92@mit.edu>
+ <YrZAtOqQERpYbBXg@bombadil.infradead.org>
+ <YrZxPlTQ9f/BvnkJ@mit.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YrZxPlTQ9f/BvnkJ@mit.edu>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 23 Jun 2022 10:51:43 -0700, Stefan Roesch wrote:
-> This patch series adds support for async buffered writes when using both
-> xfs and io-uring. Currently io-uring only supports buffered writes in the
-> slow path, by processing them in the io workers. With this patch series it is
-> now possible to support buffered writes in the fast path. To be able to use
-> the fast path the required pages must be in the page cache, the required locks
-> in xfs can be granted immediately and no additional blocks need to be read
-> form disk.
+On Fri, Jun 24, 2022 at 10:21:50PM -0400, Theodore Ts'o wrote:
+> On Fri, Jun 24, 2022 at 03:54:44PM -0700, Luis Chamberlain wrote:
+> > 
+> > Perhaps I am not understanding what you are suggesting with a VM native
+> > solution. What do you mean by that? A full KVM VM inside the cloud?
 > 
-> [...]
+> "Cloud native" is the better way to put things.  Cloud VM's
+> are designed to be ephemeral, so the concept of "node bringup" really
+> doesn't enter into the picture.
+> 
+> When I run the "build-appliance" command, this creates a test
+> appliance image.  Which is to say, we create a root file system image,
+> and then "freeze" it into a VM image.
 
-Applied, thanks!
+So this seems to build an image from a base distro image. Is that right?
+And it would seem your goal is to store that image then after so it can
+be re-used.
 
-[13/14] xfs: Specify lockmode when calling xfs_ilock_for_iomap()
-        (no commit info)
-[14/14] xfs: Add async buffered write support
-        (no commit info)
+> For kvm-xfstests this is a qcow image which is run in snapshot mode,
+> which means that if any changes is made to the root file system, those
+> changes disappear when the VM exits.
 
-Best regards,
--- 
-Jens Axboe
+Sure, so you use one built image once, makes sense.
 
+You are optimizing usage for GCE. That makes sense. The goal behind
+kdevops was to use technology which can *enable* any optimizations in
+a cloud agnostic way. What APIs become public is up to the cloud
+provider, and one cloud agnostic way to manage cloud solutions using
+open source tools is with terraform and so that is used today. If an API
+is not yet avilable through terraform kdevops could simply use whatever
+cloud tool for additional hooks. But having the ability to ramp up
+regardless of cloud provider was extremely important to me from the
+beginning.
 
+Optimizing is certainly possible, always :)
+
+Likewise, if you using local virtualized, we can save vagrant images
+in the vagrant cloud, if we wanted, which would allow pre-built setups
+saved:
+
+https://app.vagrantup.com/boxes/search
+
+That could reduce speed for when doing bringup for local KVM /
+Virtualbox guests.
+
+In fact since vagrant images are also just tarballs with qcow2 files,
+I do wonder if they can be also leveraged for cloud deployments. Or if
+the inverse is true, if your qcow2 images can be used for vagrant
+purposes as well. If you're curious:
+
+https://github.com/linux-kdevops/kdevops/blob/master/docs/custom-vagrant-boxes.md
+
+What approach you use is up to you. From a Linux distribution perspective
+being able to do reproducible builds was important too, and so that is
+why a lot of effort was put to ensure how you cook up a final state from
+an initial distro release was supported.
+
+> I can very quickly have over 100 test VM's running in parallel, and as
+> the tests complete, they are automatically shutdown and destroyed ----
+> which means that we don't store state in the VM.  Instead the state is
+> stored in a Google Cloud Storage (Amazon S3) bucket, with e-mail sent
+> with a summary of results.
+
+Using cloud object storage is certainly nice if you can afford it. I
+think it is valuable, but likewise should be optional. And so with
+kdevops support is welcomed should someone want to do that. And so
+what you describe is not impossible with kdevops it is just not done
+today, but could be enabled.
+
+> VM's can get started much more quickly than "make bringup", since
+> we're not running puppet or ansible to configure each node.
+
+You can easily just use pre-built images as well instead of doing
+the build from a base distro release, just as you could use custom
+vagrant images for local KVM guests.
+
+The usage of ansible to *build* fstests and install can be done once
+too and that image saved, exported, etc, and then re-used. The kernel
+config I maintain on kdevops has been tested to work on local KVM
+virtualization setups, but also all supported cloud providers as well.
+
+So I think there is certainly value in learning from the ways you 
+optimizing cloud usage for GCE and generalizing that for *any* cloud
+provider.
+
+The steps to get to *build* an image from a base distro release is
+glanced over but that alone takes effort and is made pretty well
+distro agnostic within kdevops too.
+
+> In contrast, I can just run "gce-xfstests ls-results" to see all of
+> the results that has been saved to GCS, and I can fetch a particular
+> test result to my laptop via a single command: "gce-xfstests
+> get-results tytso-20220624210238".  No need to ssh to a host node, and
+> then ssh to the kdevops test node, yadda, yadda, yadda --- and if you
+> run "make destroy" you lose all of the test result history on that node,
+> right?
+
+Actually all the *.bad, *.dmesg as well as final xunit results for all
+nodes for failed tests is copied over locally to the host which is
+running kdevops. Xunit files are also merged to represent a final full set
+of results too. So no not destroyed. If you wanted to keep all files even
+for non-failed stuff we can add that as a new Kconfig bool.
+
+Support for stashing results into object storage sure would be nice, agreed.
+
+> See the difference?
+
+Yes you have optimized usage of GCE. Good stuff, lots to learn from that effort!
+Thanks for sharing the details!
+
+  Luis
