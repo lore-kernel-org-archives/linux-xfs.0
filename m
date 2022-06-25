@@ -2,201 +2,153 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8E2DC433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jun 2022 21:14:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3520EC43334
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jun 2022 21:50:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233310AbiFYVOm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 25 Jun 2022 17:14:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47180 "EHLO
+        id S230246AbiFYVuy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 25 Jun 2022 17:50:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230116AbiFYVOm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Jun 2022 17:14:42 -0400
+        with ESMTP id S230116AbiFYVux (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Jun 2022 17:50:53 -0400
 Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C737013DFB;
-        Sat, 25 Jun 2022 14:14:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 269C713E15;
+        Sat, 25 Jun 2022 14:50:52 -0700 (PDT)
 Received: from letrec.thunk.org (c-24-1-67-28.hsd1.il.comcast.net [24.1.67.28])
         (authenticated bits=0)
         (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 25PLEH4X009312
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 25PLoRcJ023513
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 25 Jun 2022 17:14:18 -0400
+        Sat, 25 Jun 2022 17:50:28 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1656191661; bh=LRIkBUv889bL15Zq2DCYsX/cJde6yqFPpsya1BF+JU0=;
+        t=1656193830; bh=Otfw0i6A+bDyTiPbkZ9vPs4xbMQYL8LtwZ1kUohF33Y=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=Xo2925hem9NbHuMKvUNLJ8nsRZwcBDaM7YZ8Mz0Ai00GJXbs0+hsH+XS1QPeW3ESv
-         3EZn7qca5KhsL3Cs31tj2xYjhI3KP/sqpFl22ZX4TS+L6YrQ5mOGQDbF4yEj3uaxP0
-         wWDrt1P7XnGgloqt8FgRfxOwN9AxnFdJfCKfOAiLf8dU2PaYQTF9TpS/myagzI1rWQ
-         ODX3u/teKiAuFTcTAvy6+hR3bnaOr/3H0w9+GVsWyhcg7fnJ9hBaGtv8/YbPkY/ISx
-         +Jz+V5usE1HPBKrJmmZQKN/iKtqtz9XmIKu27OMDcKA7qObfYw0Yrn4usVCHa3HMOO
-         1IitMZqvTNE1A==
+        b=Lz3Y/yVTX42/+cvT+MFD+cbbkYqDpyzITc5tkb3N4rO8NJ0xAnvS5JzURuz2xGJx/
+         dXHB5VAVrJX8QEPT5+KF8ggSZJN5u0vSK5oU8soPhXvICen8v/2tzTd5UaiUrwYNHW
+         Gc1alXTL4LyXxZY861hPDNvKVYmY+RaIuVctNBxNy9YzTJW+qZw+hHIJrfhApDA2i4
+         b6m+TOSctZVnMkkNNuoyBapmnQvp8nKcS4oxKL9wTIUF+tUaie96ylbjzpl/3UFP1n
+         AxNmS/eEWBKflyVjkWAR167WpTrEoqyM5kziD7WogrdRyC17VOYvfJUA7IU0QR/Ak8
+         MWcWO0qjCfGCQ==
 Received: by letrec.thunk.org (Postfix, from userid 15806)
-        id 507E08C3689; Sat, 25 Jun 2022 17:14:17 -0400 (EDT)
-Date:   Sat, 25 Jun 2022 17:14:17 -0400
+        id F39CE8C3689; Sat, 25 Jun 2022 17:50:26 -0400 (EDT)
+Date:   Sat, 25 Jun 2022 17:50:26 -0400
 From:   "Theodore Ts'o" <tytso@mit.edu>
 To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
         Leah Rumancik <leah.rumancik@gmail.com>,
-        Amir Goldstein <amir73il@gmail.com>,
         Josef Bacik <josef@toxicpanda.com>,
         Chuck Lever <chuck.lever@oracle.com>, chandanrmail@gmail.com,
         Sweet Tea Dorminy <sweettea-kernel@dorminy.me>,
         Pankaj Raghav <pankydev8@gmail.com>,
-        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
+        Zorro Lang <zlang@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
         fstests <fstests@vger.kernel.org>
-Subject: Re: [PATCH 5.15 CANDIDATE v2 0/8] xfs stable candidate patches for
- 5.15.y (part 1)
-Message-ID: <Yrd6qTZ4cJuakD6s@mit.edu>
+Subject: Re: sharing fstests results (Was: [PATCH 5.15 CANDIDATE v2 0/8] xfs
+ stable candidate patches for 5.15.y (part 1))
+Message-ID: <YreDIk2FMMPQDpLL@mit.edu>
 References: <20220616182749.1200971-1-leah.rumancik@gmail.com>
  <YrJdLhHBsolF83Rq@bombadil.infradead.org>
  <YrONPrBgopZQ2EUj@mit.edu>
  <YrTboFa4usTuCqUb@bombadil.infradead.org>
  <YrVMZ7/rJn11HH92@mit.edu>
  <YrZAtOqQERpYbBXg@bombadil.infradead.org>
- <YrZxPlTQ9f/BvnkJ@mit.edu>
- <YrdY0h3z0Rcw36AJ@bombadil.infradead.org>
+ <CAOQ4uxi-KVMWb4nvNCriPdjMcZkPut7x6LA6aHJz_hVMeBxvOA@mail.gmail.com>
+ <YrdjluHoj9xAz3Op@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YrdY0h3z0Rcw36AJ@bombadil.infradead.org>
+In-Reply-To: <YrdjluHoj9xAz3Op@bombadil.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 25, 2022 at 11:49:54AM -0700, Luis Chamberlain wrote:
-> You are optimizing usage for GCE. That makes sense.
+On Sat, Jun 25, 2022 at 12:35:50PM -0700, Luis Chamberlain wrote:
+> 
+> The way the expunge list is process could simply be modified in kdevops
+> so that non-deterministic tests are not expunged but also not treated as
+> fatal at the end. But think about it, the exception is if the non-deterministic
+> failure does not lead to a crash, no?
 
-This particular usage model is not unique to GCE.  A very similar
-thing can be done using Microsoft Azure, Amazon Web Services and
-Oracle Cloud Services.  And I've talked to some folks who might be
-interested in taking the Test Appliance that is currently built for
-use with KVM, Android, and GCE, and extending it to support other
-Cloud infrastructures.  So the concept of these optimizations are not
-unique to GCE, which is why I've been calling this approach "cloud
-native".
+That's what I'm doing today, but once we have a better test analysis
+system, what I think the only thing which should be excluded is:
 
-Perhaps one other difference is that I make the test appliance images
-available, so people don't *have* to build them from scratch.  They
-can just download the qcow2 image from:
+   a)   bugs which cause the kernel to crash
+   b)   test bugs
+   c)   tests which take ***forever*** for a particular configuration
+   	    (and for which  we probably get enough coverage through
+	    other configs)
 
-    https://www.kernel.org/pub/linux/kernel/people/tytso/kvm-xfstests
+If we have a non-deterministic failure, which is due to a kernel bug,
+I don't see any reason why we should skip the test.  We just need to
+have a fully-featured enough test results analyzer so that we can
+distinguish between known failures, known flaky failures, and new test
+regressions.
 
-And for GCE, there is the public image project, xfstests-cloud, just
-like there are public images for debian in the debian-cloud project,
-for Fedora in the fedora-cloud project, etc.  Of course, for full GPL
-compliance, how to build these images from source is fully available,
-which is why the images are carefully tagged so all of the git commit
-versions and the automated scripts used to build the image are fully
-available for anyone who wants to replicate the build.  *BUT*, they
-don't have to build the test environment if they are just getting
-started.
+So for example, the new tests generic/681, generic/682, and
+generic/692 are causing determinsitic failures for the ext4/encrypt
+config.  Right now, this is being tracked manually in a flat text
+file:
 
-One of the things which I am trying to do is to make the "out of box"
-experience as simple as possible, which means I don't want to force
-users to build the test appliance or run "make bringup" if they don't
-have to.   
+generic/68[12]  encrypt   Failure percentage: 100%
+    The directory does grow, but blocks aren't charged to either root or
+    the non-privileged users' quota.  So this appears to be a real bug.
+    Testing shows this goes all the way back to at least 4.14.
 
-Of course, someone who is doing xfstests development will need to
-learn how to build their own test appliance.  But for someone who is
-just getting started, the goal is to make the learning curve as flat
-as possible.
+It's currently not tagged by kernel version, because I mostly only
+care about upstream.  So once it's fixed upstream, I stop caring about
+it.  In the ideal world, we'd track the kernel commit which fixed the
+test failure, and when the fix propagated to the various stable
+kernels, etc.
 
-One of the other things that was important design principles for me
-was I didn't want to require that the VM's have networking access, nor
-did I want to require users to be able to have to run random scripts
-via sudo or as root.  (Some of this was because of corporate security
-requirements at the time.)  This also had the benefit that I'm not
-asing the user to set up ssh keys if they are using kvm-xfstests, but
-instead rely on the serial console.
+I've also resisted putting it in an expunge file, since if it did, I
+would ignore it forever.  If it stays in my face, I'm more likely to
+fix it, even if it's on my personal time.
 
-> The goal behind kdevops was to use technology which can *enable* any
-> optimizations in a cloud agnostic way.
+> Here's the thing though. Not all developers have incentives to share.
 
-Fair enough.  My goal for kvm-xfstests and gce-xfstests was to make
-developer velocity the primary goal.  Portability to different cloud
-systems took a back seat.  I don't apologize for this, since over the
-many years that I've been personally using {kvm,gce}-xfstests, the
-fact that I can use my native kernel development environment, and have
-the test environment pluck the kernel straight out of my build tree,
-has paid for itself many times over.
+Part of this is the amount of *time* that it takes to share this
+information.  Right now, a lot of sharing takes place on the weekly
+ext4 conference call.  It doesn't take Eric Whitney a lot of time to
+mention that he's seeing a particular test failure, and I can quickly
+search my test summary Unix mbox file and say, "yep, I've seen this
+fail a couple of times before, starting in February 2020 --- but it's
+super rare."
 
-If I had to push test/debug kernel code to a public git tree just so
-the test VM can pull donwn the code and build it in the test VM a
-second time --- I'd say, "no thank you, absolutely not."  Having to do
-this would slow me down, and as I said, developer velocity is king.  I
-want to be able to save a patch from my mail user agent, apply the
-patch, and then give the code a test, *without* having to interact
-with a public git tree.
+And since Darrick attends the weekly ext4 video chats, once or twice
+we've asked him about some test failures on some esoteric xfs config,
+such as realtime with an external logdev, and he might say, "oh yeah,
+that's a known test bug.  pull this branch from my public xfstests
+tree, I just haven't had time to push those fixes upstream yet."
 
-Maybe you can do that with kdevops --- but it's not at all obvious
-how.  With kvm-xfstests, I have a quickstart doc which gives
-instructions, and then it's just a matter of running the command
-"kvm-xfstests smoke" or "kvm-xfstests shell" from the developer's
-kernel tree.  No muss, no fuss, no dirty dishes....
+(And I don't blame him for that; I just recently pushed some ext4 test
+bug fixes, some of which I had initially sent to the list in late
+April --- but on code review, changes were requested, and I just
+didn't have *time* to clean up fixes in response to the code reviews.
+So the fix which was good enough to suppress the failures sat in my
+tree, but didn't go upstream since it was deemed not ready for
+upstream.  I'm all for decreasing tech debt in xfstests; but do
+understand that sometimes this means fixes to known test bugs will
+stay in developers' git trees, since we're all overloaded.)
 
-> In fact since vagrant images are also just tarballs with qcow2 files,
-> I do wonder if they can be also leveraged for cloud deployments. Or if
-> the inverse is true, if your qcow2 images can be used for vagrant
-> purposes as well. 
+It's a similar problem with test failures.  Simply reporting a test
+failure isn't *that* hard.  But the analysis, even if it's something
+like:
 
-Well, my qcow2 images don't come with ssh keys, since they are
-optimized to be launched from the kvm-xfstests script, where the tests
-to be run are passed in via the boot command line:
+generic/68[12]  encrypt   Failure percentage: 100%
+    The directory does grow, but blocks aren't charged to either root or
+    the non-privileged users' quota.....
+    
+... is the critical bit that people *really* want, and it takes real
+developer time to come up with that kind of information.  In the ideal
+world, I'd have an army of trained minions to run down this kind of
+stuff.  In the real world, sometimes this stuff happens after
+midnight, local time, on a Friday night.
 
-% kvm-xfstests smoke --no-action
-Detected kbuild config; using /build/ext4-4.14 for kernel
-Using kernel /build/ext4-4.14/arch/x86/boot/bzImage
-Networking disabled.
-Would execute:
-         ionice -n 5 /usr/bin/kvm -boot order=c -net none -machine type=pc,accel=kvm:tcg \
-	 -cpu host -drive file=/usr/projects/xfstests-bld/build-64/test-appliance/root_fs.img,if=virtio,snapshot=on \
-	 ....
-	-gdb tcp:localhost:7499 --kernel /build/ext4-4.14/arch/x86/boot/bzImage \
-	--append "quiet loglevel=0 root=/dev/vda console=ttyS0,115200 nokaslr fstestcfg=4k fstestset=-g,quick fstestopt=aex fstesttz=America/New_York fstesttyp=ext4 fstestapi=1.5 orig_cmdline=c21va2UgLS1uby1hY3Rpb24="
+(Note that Android and Chrome OS, both of which are big users of
+fscrypt, don't use quota.  So If I were to open a bug tracker entry on
+it, the bug would get prioritized to P2 or P3, and never be heard from
+again, since there's no business reason to prioritize fixing it.
+Which is why some of this happens on personal time.)
 
-The boot command line options "fstestcfg=4k", "fstestset=-g,quick",
-"fstesttyp=ext4", etc. is how the test appliance knows which tests to
-run.  So that means *all* the developer needs to do is to type command
-"kvm-xfstests smoke".
-
-(By the way, it's a simple config option in ~/.config/kvm-xfstests if
-you are a btrfs or xfs developer, and you want the default file system
-type to be btrfs or xfs.  Of course you can explicitly specify a test
-config if you are an ext4 developer and,, you want to test how a test
-runs on xfs: "kvm-xfstests -c xfs/4k generic/223".)
-
-There's no need to set up ssh keys, push the kernel to a public git
-tree, ssh into the test VM, yadda, yadda, yadda.  Just one single
-command line and you're *done*.
-
-This is what I meant by the fact that kvm-xfstests is optimized for a
-file system developer's workflow, which I claim is very different from
-what a QA department might want.  I added that capability to
-gce-xfstests later, but it's very separate from the very simple
-command lines for a file system developer.  If I want the lightweight
-test manager to watch a git tree, and to kick off a build whenever a
-branch changes, and then run a set of tests, I can do that, but that's
-a *very* different command and a very different use case, and I've
-optimized for that separately:
-
-    gce-xfstests ltm -c ext4/all -g auto --repo ext4.dev --watch dev
-
-This is what I call the QA department's workflow.  Which is also
-totally valid.  But I believe in optimizing for each workflow
-separately, and being somewhat opinionated in my choices.
-
-For example, the test appliance uses Debian.  Period.  And that's
-because I didn't see the point of investing time in making that be
-flexible.  My test infrastructure is optimized for a ***kernel***
-developer, and from that perspective, the distro for the test
-environment is totally irrelevant.
-
-I understand that if you are working for SuSE, then maybe you would
-want to insist on a test environment based on OpenSuSE, or if you're
-working for Red Hat, you'd want to use Fedora.  If so, then
-kvm-xfstests is not for you.  I'd much rather optimize for a *kernel*
-developer, not a Linux distribution's QA department.  They can use
-kdevops if they want, for that use case.  :-)
-
-Cheers,
-
-							- Ted
+      	      	    	      	    	       - Ted
