@@ -2,386 +2,407 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 211A6C43334
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jun 2022 22:54:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B7A8C43334
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jun 2022 01:04:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230355AbiFXWy6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jun 2022 18:54:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33188 "EHLO
+        id S229912AbiFYBEC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jun 2022 21:04:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229988AbiFXWy5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jun 2022 18:54:57 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EBEB457AB;
-        Fri, 24 Jun 2022 15:54:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=jEdDDZc0ENpCVOv0wcwtsTkb8sZL0vFROAXT6s2ZCME=; b=o01vfCjH+mrIa1/jh8oEGdbFsC
-        S7AMyT68olrXWiAUzGX4/qf/fg98NQerf8jfYvTfhFzb+if7PmYJy7P44rdpzk5wSHlZOkExHyYAo
-        LdhrQo1t6MdDHINLivjFZSi5bt4E7d2hV9m95wi5kufhtdKrBWKTkNQm3BMKybiDNCse8ZmB/jhzv
-        k1JrDCXZgz53Y/Lomu/fn4bamTfnzjHA5jX9gnsQRf1Gd4Cw3M+caVBfUH0AANRTVyYdC8yyXMDuQ
-        GgIELT8QI0o2VSnGMoJI4Eprri454SngoFVLkcP7x7rbS7wzp5Aq2MoOWgrz8MUT5MOEYFuRpLxvf
-        0Yu/MEEw==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o4sCK-0043Rx-JW; Fri, 24 Jun 2022 22:54:44 +0000
-Date:   Fri, 24 Jun 2022 15:54:44 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Chuck Lever <chuck.lever@oracle.com>, chandanrmail@gmail.com,
-        Sweet Tea Dorminy <sweettea-kernel@dorminy.me>,
-        Pankaj Raghav <pankydev8@gmail.com>,
-        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-        fstests <fstests@vger.kernel.org>
-Subject: Re: [PATCH 5.15 CANDIDATE v2 0/8] xfs stable candidate patches for
- 5.15.y (part 1)
-Message-ID: <YrZAtOqQERpYbBXg@bombadil.infradead.org>
-References: <20220616182749.1200971-1-leah.rumancik@gmail.com>
- <YrJdLhHBsolF83Rq@bombadil.infradead.org>
- <YrONPrBgopZQ2EUj@mit.edu>
- <YrTboFa4usTuCqUb@bombadil.infradead.org>
- <YrVMZ7/rJn11HH92@mit.edu>
+        with ESMTP id S229757AbiFYBEB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jun 2022 21:04:01 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 433572725
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jun 2022 18:03:59 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D0A78B82C96
+        for <linux-xfs@vger.kernel.org>; Sat, 25 Jun 2022 01:03:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FFEFC34114;
+        Sat, 25 Jun 2022 01:03:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656119036;
+        bh=mNlcZvq5ANvGAJ5yqpaulpPux7zj+DlwBskp/3/Mr9g=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tlu9Co7S8zbqMRptRi+K/ER0EJBxu3OGXQxFFm8xBaq03UN1eChzFmOrj2tMAxKU/
+         ssDXZJmmBujJl2MUB3QHXv82HnI+aea48QtL+lqUZm6JPaMzz9UzgxyfSE8plB5Mca
+         zP9MRnThAXXxwf9ECwTiwh4YETH/NnpLm0JWjEE3oNJIM32b3iJXdZGwvP3kC+8KeR
+         7tOxloXSn7Jbx3gwMCiuJIYCIISHFf41gFfZHSxBYdlG2BeuBQsrBBv4IfJd4vnSyZ
+         rXk4L4muVJarOjDkcxpWdBxzUjW2tJITO2w80V96DDNn7GTZDE0K2g1aNSse4JOVau
+         tEF9Xghr7qkfA==
+Date:   Fri, 24 Jun 2022 18:03:55 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: bound maximum wait time for inodegc work
+Message-ID: <YrZe+54PN5exLOLZ@magnolia>
+References: <20220615220416.3681870-1-david@fromorbit.com>
+ <20220615220416.3681870-2-david@fromorbit.com>
+ <YqytHuc/sJprFn0K@bfoster>
+ <20220617215245.GH227878@dread.disaster.area>
+ <YrKmrgJh9+SzT0Gz@magnolia>
+ <YrM/woFhObNYQx3b@bfoster>
+ <YrOzAPXCcDY9DnCj@magnolia>
+ <YrRTWoEZys3DfPW8@bfoster>
+ <YrTFePWaarPl8eNP@magnolia>
+ <YrWwhGMlXMj6DqsI@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YrVMZ7/rJn11HH92@mit.edu>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <YrWwhGMlXMj6DqsI@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 24, 2022 at 01:32:23AM -0400, Theodore Ts'o wrote:
-> On Thu, Jun 23, 2022 at 02:31:12PM -0700, Luis Chamberlain wrote:
+On Fri, Jun 24, 2022 at 08:39:32AM -0400, Brian Foster wrote:
+> On Thu, Jun 23, 2022 at 12:56:40PM -0700, Darrick J. Wong wrote:
+> > On Thu, Jun 23, 2022 at 07:49:46AM -0400, Brian Foster wrote:
+> > > On Wed, Jun 22, 2022 at 05:25:36PM -0700, Darrick J. Wong wrote:
+> > > > On Wed, Jun 22, 2022 at 12:13:54PM -0400, Brian Foster wrote:
+> > > > > On Tue, Jun 21, 2022 at 10:20:46PM -0700, Darrick J. Wong wrote:
+> > > > > > On Sat, Jun 18, 2022 at 07:52:45AM +1000, Dave Chinner wrote:
+> > > > > > > On Fri, Jun 17, 2022 at 12:34:38PM -0400, Brian Foster wrote:
+> > > > > > > > On Thu, Jun 16, 2022 at 08:04:15AM +1000, Dave Chinner wrote:
+> > > > > > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > > > > > 
+> > > > > > > > > Currently inodegc work can sit queued on the per-cpu queue until
+> > > > > > > > > the workqueue is either flushed of the queue reaches a depth that
+> > > > > > > > > triggers work queuing (and later throttling). This means that we
+> > > > > > > > > could queue work that waits for a long time for some other event to
+> > > > > > > > > trigger flushing.
+> > > > > > > > > 
+> > > > > > > > > Hence instead of just queueing work at a specific depth, use a
+> > > > > > > > > delayed work that queues the work at a bound time. We can still
+> > > > > > > > > schedule the work immediately at a given depth, but we no long need
+> > > > > > > > > to worry about leaving a number of items on the list that won't get
+> > > > > > > > > processed until external events prevail.
+> > > > > > > > > 
+> > > > > > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > > > > > > ---
+> > > > > > > > >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
+> > > > > > > > >  fs/xfs/xfs_mount.h  |  2 +-
+> > > > > > > > >  fs/xfs/xfs_super.c  |  2 +-
+> > > > > > > > >  3 files changed, 24 insertions(+), 16 deletions(-)
+> > > > > > > > > 
+> > > > > > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > > > > > > > index 374b3bafaeb0..46b30ecf498c 100644
+> > > > > > > > > --- a/fs/xfs/xfs_icache.c
+> > > > > > > > > +++ b/fs/xfs/xfs_icache.c
+> > > > > > > > ...
+> > > > > > > > > @@ -2176,7 +2184,7 @@ xfs_inodegc_shrinker_scan(
+> > > > > > > > >  			unsigned int	h = READ_ONCE(gc->shrinker_hits);
+> > > > > > > > >  
+> > > > > > > > >  			WRITE_ONCE(gc->shrinker_hits, h + 1);
+> > > > > > > > > -			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
+> > > > > > > > > +			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
+> > > > > > > > >  			no_items = false;
+> > > > > > > > >  		}
+> > > > > > > > 
+> > > > > > > > This all seems reasonable to me, but is there much practical benefit to
+> > > > > > > > shrinker infra/feedback just to expedite a delayed work item by one
+> > > > > > > > jiffy? Maybe there's a use case to continue to trigger throttling..?
+> > > > > > > 
+> > > > > > > I haven't really considered doing anything other than fixing the
+> > > > > > > reported bug. That just requires an API conversion for the existing
+> > > > > > > "queue immediately" semantics and is the safest minimum change
+> > > > > > > to fix the issue at hand.
+> > > > > > > 
+> > > > > > > So, yes, the shrinker code may (or may not) be superfluous now, but
+> > > > > > > I haven't looked at it and done analysis of the behaviour without
+> > > > > > > the shrinkers enabled. I'll do that in a completely separate
+> > > > > > > patchset if it turns out that it is not needed now.
+> > > > > > 
+> > > > > > I think the shrinker part is still necessary -- bulkstat and xfs_scrub
+> > > > > > on a very low memory machine (~560M RAM) opening and closing tens of
+> > > > > > millions of files can still OOM the machine if one doesn't have a means
+> > > > > > to slow down ->destroy_inode (and hence the next open()) when reclaim
+> > > > > > really starts to dig in.  Without the shrinker bits, it's even easier to
+> > > > > > trigger OOM storms when xfs has timer-delayed inactivation... which is
+> > > > > > something that Brian pointed out a year ago when we were reviewing the
+> > > > > > initial inodegc patchset.
+> > > > > > 
+> > > > > 
+> > > > > It wouldn't surprise me if the infrastructure is still necessary for the
+> > > > > throttling use case. In that case, I'm more curious about things like
+> > > > > whether it's still as effective as intended with such a small scheduling
+> > > > > delay, or whether it still might be worth simplifying in various ways
+> > > > > (i.e., does the scheduling delay actually make a difference? do we still
+> > > > > need a per cpu granular throttle? etc.).
+> > > > 
+> > > > It can still be useful for certain g*dawful scenarios --
+> > > > 
+> > > > Let's say you have a horribly misconfigured cloudy system with a tiny
+> > > > log, hundreds of CPUs, a memory hogging process, another process with
+> > > > many hundreds of threads that are performing small appending synchronous
+> > > > writes to a large number of files, and some other process repeatedly
+> > > > opens and closes files.  Background writeback completion will create
+> > > > enough workers to tie up the log such that writeback and inodegc contend
+> > > > for log grant space and make slow progress.  If memory is also tight,
+> > > > we want to slow down the file scanning process so that it doesn't shove
+> > > > /more/ inodes into the cache and push the system towards OOM behavior.
+> > > > 
+> > > 
+> > > Yeah, I get the general idea/purpose of the throttling. What I'm probing
+> > > at here is whether a case like this is still handled effectively with
+> > > such a short scheduling delay.
 > > 
-> > To be clear, you seem to suggest gce-xfstests is a VM native solution.
-> > I'd also like to clarify that kdevops supports native VMs, cloud and
-> > baremetal. With kdevops you pick your bringup method.
+> > Given the trace_xfs_inodegc_shrinker_* data I've collected on my
+> > simulator, I think the 1 jiffy delay is handling this well enough that
+> > we only trip that tracepoint about a half dozen times in 2h of trying to
+> > exercising the inode caches.  That said, I haven't really had time to
+> > try this on (say) a 20CPU machine with ridiculously small memory to see
+> > if I get different results.
+> > 
+> > (Note: I'm still trying to figure out why generic/522 reports
+> > corruption, and hoping that willy's folios pull today just fixes it
+> > magically...)
+> > 
+> > > Presumably there is some window before
+> > > list size based throttling triggers for which the shrinker is expected
+> > > to cover, so that implies the shrinker historically is able to detect
+> > > and push populated queues and trigger throttling from the point it is
+> > > invoked (whether directly via repeated shrinker invocations or
+> > > indirectly via causing larger queue sizes is not clear to me).
+> > 
+> > Back when I merged the inodegc series, it was fairly easy to get the
+> > shrinker to trip dozens of times during a stress run, even when the only
+> > throttling criteria was the queue size.  I think the reflink/rmap
+> > transaction reservation optimizations have made the log grant
+> > bottlenecks much less severe, since I now see a lot less contention on
+> > the grant heads.
+> > 
+> > > The thing that stands out to me as a question wrt to this change is that
+> > > the trigger for shrinker induced throttling is the list size at the time
+> > > of the callback(s), and that goes from having a lifecycle associated
+> > > with the size-oriented scheduling algorithm to a time-based scheduling
+> > > lifecycle of one jiffy (also noting that the inodegc worker resets
+> > > shrinker_hits before it begins to process inodes). So with that in mind,
+> > > how reliable is this lowmem signal based on the list size back to the
+> > > tasks creating more work and memory pressure? Once a shrinker invocation
+> > > occurs, what are the odds that the callback is able to detect a
+> > > populated list and act accordingly?
+> > 
+> > Hrmmm.  Decent, I think?  If the list is populated but the inactivation
+> > worker is not running, then we queue the worker and clear the list; if
+> > the worker is already running when the shrinker gets called, we might
+> > end up requeuing it unnecessarily, in which case it'll just clear more.
+> > 
 > 
-> Yes, that was my point.  Because gce-xfstests is a VM native solution,
-> it has some advantages, such as the ability to take advantage of the
-> fact that it's trivially easy to start up multiple cloud VM's which
-> can run in parallel --- and then the VM's shut themselves down once
-> they are done running the test, which saves cost and is more
-> efficient.
-
-Perhaps I am not understanding what you are suggesting with a VM native
-solution. What do you mean by that? A full KVM VM inside the cloud?
-
-Anyway, kdevops has support to bring up whatever type of node you want
-in the clouds providers: GCE, AWS, Azure, and OpenStack and even custom
-OpenStack solutions. That could be a VM or a high end bare metal node.
-It does this by using terraform and providing the variability through
-kconfig.
-
-The initial 'make bringup' brings nodes up, and then all work runs on
-each in parallel for fstests as you run 'make fstests-baseline'. At the
-end you just run 'make destroy'.
-
-> It is *because* that we are a VM-native solution that we can optimize
-> in certain ways because we don't have to also support a bare metal
-> setup.  So yes, the fact that kdevops also supports bare metal is
-> certainly granted.  That that kind of flexibility is an advantage for
-> kdevops, certainly; but being able to fully take advantage of the
-> unqiue attributes of cloud VM's can also be a good thing.
-
-Yes, agreed. That is why I focused on technology that would support
-all cloud providers, not just one.
-
-I had not touched code for AWS code for example in 2 years, I just
-went and tried a bringup and it worked in 10 minutes, most of the time
-was getting my .aws/credentials file set up with information from the
-website.
-
-> > kdevops started as an effort for kernel development and filesystems
-> > testing. It is why the initial guest configuration was to use 8 GiB
-> > of RAM and 4 vcpus, that suffices to do local builds / development.
-> > I always did kernel development on guests back in the day still do
-> > to this day.
+> Sure, that sounds harmless, but I was thinking more about the likelihood
+> of missing throttles than spurious work cycles and such..
 > 
-> For kvm-xfstests, the default RAM size for the VM is 2GB.  One of the
-> reasons why I was interested in low-memory configurations is because
-> ext4 is often used in smaller devices (such as embedded systesm and
-> mobile handsets) --- and running in memory constrained environments
-> can turn up bugs that otherwise are much harder to reproduce on a
-> system with more memory.
-
-Yes, I agree. We started with 8 GiB. Long ago while at SUSE I tried 2GiB
-and ran into the xfs/074 issue of requiring more due to xfs_scratch.
-Then later Amir ran into snags with xfs/084 and generic/627 due to the
-OOMs. So in terms of XFS to avoid OOMs with just the tests we need 3GiB.
-
-> Separating the kernel build system from the test VM's means that the
-> build can take place on a really powerful machine (either my desktop
-> with 48 cores and gobs and gobs of memory, or a build VM if you are
-> using the Lightweight Test Manager's Kernel Compilation Service) so
-> builds go much faster.  And then, of course, we can then launch a
-> dozen VM's, one for each test config.  If you force the build to be
-> done on the test VM, then you either give up parallelism, or you waste
-> time by building the kernel N times on N test VM's.
-
-The build is done once but I agree this can be optimized for kdevops.
-
-Right now in kdevops the git clone and build of the kernel does take
-place on each guest, and that requires at least 3 GiB of RAM. Shallow
-git clone support was added as option to help here but the ideal thing
-will be to just build locally or perhaps as you suggest dedicated build
-VM.
-
-> And in the case of the android-xfstests, which communicates with a
-> phone or tablet over a debugging serial cable and Android's fastboot
-> protocol, of *course* it would be insane to want to build the kernel
-> on the system under test!
+> Generally with this change, the worker is pretty much always scheduled
+> once an inode is queued. It executes once a tick passes where another
+> destroy hasn't otherwise come along to kick it out by another tick. So
+> if I run a sustained removal, I see similar batching/scheduling as since
+> before this change. If I run something with a mix of removes and
+> $something_else, then it doesn't seem to take much to skip batching and
+> run a worker cycle per inode.
 > 
-> So I've ***always*** done the kernel build on a machine or VM separate
-> from the System Under Test.  At least for my use cases, it just makes
-> a heck of a lot more sense.
+> So what happens if the shrinker scan sees one or more workers that
 
-Support for this will be added to kdevops.
+Er... by "shrinker scan", do you mean xfs_inodegc_shrinker_count?
+And by "scan callback", do you mean xfs_inodegc_shrinker_scan?
 
-> And that's fine.  I'm *not* trying to convince everyone that my test
-> infrastructure everyone should standardize on.  Which quite frankly, I
-> sometimes think you have been evangelizing.  I believe very strongly
-> that the choice of test infrastructures is a personal choice, which is
-> heavily dependent on each developer's workflow, and trying to get
-> everyone to standardize on a single test infrastructure is likely
-> going to work as well as trying to get everyone to standardize on a
-> single text editor.
+> happen to execute before the scan callback is able to actually trigger
+> throttling? Is that critical, or is this enough of a fallback mechanism
+> that it's unlikely to be important?
 
-What I think we *should* standardize on is at least configurations
-for testing. And now the dialog of how / if we track / share failures
-is also important.
+I /think/ it's possible to miss throttling opportunities, but I also
+suspect it's relatively unimportant because of the low maximum queue
+size.
 
-What runner you use is up to you.
+Let's say _count runs, discovers non-empty lists, and triggers the
+callback.  If the workers run after _count returns but before _scan gets
+a chance to run, then they'll have processed the queued inodes and _scan
+won't set shrinker_hits anywhere.  Yes, a _destroy_inode won't get
+throttled, but the system is at least making some forward progress
+clearing the backlog and (hopefully) freeing memory.
 
-> (Although obviously emacs is the one true editor.  :-)
+If there are a /lot/ of destroy_inode calls, they'll eventually hit the
+queue size limit (32) and throttle on the workers.  If there aren't any
+further destroy_inode calls, there's nothing to throttle.  If however
+there's some destroy_inode calls but not enough to hit the queue limit,
+then I suppose we're reliant on the shrinker to get called again.  This
+is of course trivially satisfied if there are other processes that also
+enter the shrinker code and trigger more scans.
+
+However, I suppose there /is/ a small hole here -- if there was only
+that one process in the shrinker and _scan doesn't find anything, the
+shrinker will not call us back.  In that case, the only way we trigger
+throttling is if there's enough destroy_inode activity to hit a queue
+limit.
+
+Dave and I have talked about closing this hole by queuing the worker
+immediately if the inode being destroyed has more than a certain number
+of extents or something that acts as a proxy for memory consumption, but
+so far as we can tell, shrinker invocations are rare and missed
+throttling hasn't shown up in a noticeable way.
+
+> Similarly if one is running a
+> workload that results in behavior as described above, is this sort of
+> "oneshot shrinker to worker throttle" actually still going to slow down
+> the worker tasks? Is shrinker callback frequency high enough to actually
+> make an impact? Etc.
+
+It seems to, but with a smallish sample size on a normal system, which
+means I've only seen the shrinker throttle show up in the trace output
+if I use the insane lowmem scenario or artificially crank up the delay
+to 30 seconds.  The good news is that in those scenarios, it /does/ slow
+things down enough that we mostly don't OOM.
+
+(Though at this point it's really hard to go back for an apples-apples
+comparison with the pre-inodegc code.)
+
+> These are questions I don't really have enough context to answer atm,
+> nor can say whether or not may result in problems...
 > 
-> > Sure, the TODO item on the URL seemed to indicate there was a desire to
-> > find a better place to put failures.
+> > > These questions are somewhat rhetorical because this all seems rather
+> > > unpredictable when we consider varying resource availability.
+> > 
+> > Not to mention the shrinker itself undergoing various behavioral changes
+> > over the years... :(
+> > 
+> > > The
+> > > relevant question for this patch is probably just that somebody has
+> > > tested and confirmed that the shrinker hasn't been subtly or indirectly
+> > > broken in cases like the one you describe above (where perhaps we might
+> > > not have many shrinker callback opportunities to act on before OOM).
+> > 
+> > FWIW, the only time I /ever/ saw OOMs (either now with 5.19 or ages ago
+> > with 5.9) was with extreme lowmem testing.  On VMs with more than a
+> > gigabyte or so of memory, I notice that we usually hit the time/length
+> > thresholds without shrinkers getting involved.  Granted, I did try to
+> > pick the shrinker values so that we only get called on the *second*
+> > level of shrinking, which is after we've freed some but not enough
+> > memory.
+> > 
+> > If my responses seem a bit like handwaving, they are, because (at the
+> > moment) this is well off in the weeds.
+> > 
+> > > > Back in the old days when inodegc was a radix tree tag it was fairly
+> > > > easy to get OOMs when the delay interval was long (5 seconds).  The
+> > > > OOM probability went down pretty sharply as the interval approached
+> > > > zero, but even at 1 jiffy I could still occasionally trip it, whereas
+> > > > the pre-deferred-inactivation kernels would never OOM.
+> > > > 
+> > > > I haven't tested it all that rigorously with Dave's fancy new per-cpu
+> > > > list design, but I did throw on my silly test setup (see below) and
+> > > > still got it to OOM once in 3 runs with the shrinker bits turned off.
+> > > > 
+> > > 
+> > > Ok.. so that implies we still need throttling, but I'm not sure what
+> > > "fancy percpu list design" refers to. If you have a good test case, I
+> > 
+> > You might recall that the original versions of deferred inode
+> > inactivation would set radix tree tags, and a per-AG workqueue function
+> > would scan that AG's radix tree for tagged inodes and inactivate them.
+> > Dave observed that letting the cpu caches grow cold led to performance
+> > problems, and replaced the tagging mechanism with per-cpu lists, which
+> > is what we have now.
+> > 
+> > > think the interesting immediate question is: are those OOMs avoided with
+> > > this patch but the shrinker infrastructure still in place?
+> > 
+> > That's the $64000 question that I don't know definitively yet.
+> > 
 > 
-> I'm not convinced the "better place" is expunge files.  I suspect it
-> may need to be some kind of database.  Darrick tells me that he stores
-> his test results in a postgres database.  (Which is way better than
-> what I'm doing which is an mbox file and using mail search tools.)
+> Ok. If the answer to the above questions is "don't really know, it might
+> be broken, but historical testing shows the shrinker is much less
+> important with smaller queuing delays such that it's unlikely to cause
+> any new problems on anything but the most pathological workloads," then
+> that sounds reasonable to me.
+
+Yep, pretty much. :/
+
+> I don't mean to harp on it. I just want to make sure the
+> question/concern gets across clearly enough that somebody who knows this
+> system better than I can grok it and make a more intelligent assessment.
+
+Oh, I'm glad you're harping on it -- anything involving shrinkers and
+deferred work ought to get a closer look.
+
+--D
+
+> Brian
 > 
-> Currently, Leah is using flat text files for the XFS 5.15 stable
-> backports effort, plus some tools that parse and analyze those text
-> files.
-
-Where does not matter yet, what I'd like to refocus on is *if* sharing
-is desirable by folks. We can discuss *how* and *where* if we do think
-it is worth to share.
-
-If folks would like to evaluate this I'd encourage to do so perhaps
-after a specific distro release moving forward, and to not backtrack.
-
-But for stable kernels I'd imagine it may be easier to see value in
-sharing.
-
-> I'll also note that the number of baseline kernel versions is much
-> smaller if you are primarily testing an enterprise Linux distribution,
-> such as SLES.
-
-Much smaller than what? Android? If so then perhaps. Just recall that
-Enterprise supports kernels for at least 10 years.
-
-> And if you are working with stable kernels, you can
-> probably get away with having updating the baseline for each LTS
-> kernel every so often.  But for upstream kernels development the
-> number of kernel versions for which a developer might want to track
-> flaky percentages and far greater, and will need to be updated at
-> least once every kernel development cycle, and possibly more
-> frequently than that.  Which is why I'm not entirely sure a flat text
-> file, such as an expunge file, is really the right answer.  I can
-> completely understand why Darrick is using a Postgres database.
+> > > If not, then I wonder if something is going wonky there. If so, I'm
+> > > still a bit curious what the behavior looks like and whether it can be
+> > > simplified in light of this change, but that's certainly beyond the
+> > > scope of this patch.
+> > 
+> > <nod> For now I'd like to get this going for 5.19 to fix the original
+> > complaint about statfs blocking in D state while waiting for inodegc
+> > after deleting a ~100m file extents[1], and defer the decision of
+> > whether or not we /really/ need the shrinker to a later time (like
+> > 5.20).
+> > 
+> > [1] https://lore.kernel.org/linux-xfs/20220509024659.GA62606@onthe.net.au/
+> > 
+> > > 
+> > > > > > > > If
+> > > > > > > > so, it looks like decent enough overhead to cycle through every cpu in
+> > > > > > > > both callbacks that it might be worth spelling out more clearly in the
+> > > > > > > > top-level comment.
+> > > > > > > 
+> > > > > > > I'm not sure what you are asking here - mod_delayed_work_on() has
+> > > > > > > pretty much the same overhead and behaviour as queue_work() in this
+> > > > > > > case, so... ?
+> > > > > > 
+> > > > > 
+> > > > > I'm just pointing out that the comment around the shrinker
+> > > > > infrastructure isn't very informative if the shrinker turns out to still
+> > > > > be necessary for reasons other than making the workers run sooner.
+> > > > 
+> > > > <nod> That comment /does/ need to be updated to note the subtlety that a
+> > > > lot of shrinker activity can slow down close()ing a file by making user
+> > > > tasks wait for the inodegc workers to clear the backlog.
+> > > > 
+> > > > > > <shrug> Looks ok to me, since djwong-dev has had some variant of timer
+> > > > > > delayed inactivation in it longer than it hasn't:
+> > > > > > 
+> > > > > 
+> > > > > Was that with a correspondingly small delay or something larger (on the
+> > > > > order of seconds or so)? Either way, it sounds like you have a
+> > > > > predictable enough workload that can actually test this continues to
+> > > > > work as expected..?
+> > > > 
+> > > > Yeah.  I snapshot /home (which has ~20 million inodes) then race
+> > > > fsstress and xfs_scrub -n in a VM with 560MB of RAM.
+> > > > 
+> > > 
+> > > Yeah small delay or yeah large delay?
+> > 
+> > Both -- with large inactivation delays and no shrinker, OOMs happen
+> > fairly frequently; with a short delay and no shrinker, they're harder
+> > (but still not impossible) to trigger.
+> > 
+> > Granted ... even the overall frequency of OOMs with large inactivation
+> > delays seems to have gone down a bit from when I was more actively
+> > testing in the 5.9 era.
+> > 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > --D
+> > > > 
+> > > > > Brian
+> > > > > 
+> > > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > > 
+> > > > > > --D
+> > > > > > 
+> > > > > > > Cheers,
+> > > > > > > 
+> > > > > > > Dave.
+> > > > > > > -- 
+> > > > > > > Dave Chinner
+> > > > > > > david@fromorbit.com
+> > > > > > 
+> > > > > 
+> > > > 
+> > > 
+> > 
 > 
-> So there is clearly more thought and design required here, in my
-> opinion.
-
-Sure, let's talk about it, *if* we do find it valuable to share.
-kdevops already has stuff in a format which is consistent, that
-can change or be ported. We first just need to decide if we want
-to as a community share.
-
-The flakyness annotations are important too, and we have a thread
-about that, which I have to go and get back to at some point.
-
-> > That is not a goal, the goal is allow variability! And share results
-> > in the most efficient way.
-> 
-> Sure, but are expunge files the most efficient way to "share results"?
-
-There are three things we want to do if we are going to talk about
-sharing results:
-
-a) Consuming expunges so check.sh for the Node Under Test (NUT) can expand
-   on the expunges given a criteria (flakyness, crash requirements)
-
-b) Sharing updates to expunges per kernel / distro / runner / node-config
-   and making patches to this easy.
-
-c) Making updates for failures easy to read for a developer / community.
-   These would be in the form of an email or results file for a test
-   run through some sort of kernel-ci.
-
-Let's start with a):
-
-We can adopt runners to use anything. My gut tells me postgres is
-a bit large unless we need socket communication. I can think of two
-ways to go here then. Perhaps others have some other ideas?
-
-1) We go lightweight on the db, maybe sqlite3 ? And embrace the same
-   postgres db schema as used by Darrick if he sees value in sharing
-   this. If we do this I think it does't make sense to *require*
-   sqlite3 on the NUT (nodes), for many reasons, so parsing the db
-   on the host to a flat file to be used by the node does seem
-   ideal.
-
-2) Keep postgres and provide a REST api for queries from the host to
-   this server so it can then construct a flat file / directory
-   interpreation of expunges for the nodes under test (NUT).
-
-Given the minimum requirements desirable on the NUTs I think in the end
-a flat file hierarchy is nice so to not incur some new dependency on
-them.
-
-Determinism is important for tests though so snapshotting a reflection
-interpretion of expunges at a specific point in time is also important.
-So the database would need to be versioned per updates, so a test is
-checkpointed against a specific version of the expunge db.
-
-If we come to some sort of consensus then this code for parsing an
-expunge set can be used from directly on fstests's check script, so the
-interpreation and use can be done in one place for all test runners.
-We also have additional criteria which we may want for the expunges.
-For instance, if we had flakyness percentage annotated somehow then
-fstests's check could be passed an argument to only include expunges
-given a certain flakyness level of some sort, or for example only
-include expunges for tests which are known to crash.
-
-Generating the files from a db is nice. But what gains do we have
-with using a db then?
-
-Now let's move on to b) sharing the expunges and sending patches for
-updates. I think sending a patch against a flat file reads a lot easier
-except for the comments / flakyness levels / crash consideration / and
-artifacts. For kdevop's purposes this reads well today as we don't
-upload artifacts anywhere and just refer to them on github gists as best
-effort / optional. There is no convention yet on expression of flakyness
-but some tests do mention "failure rate" in one way or another.
-
-So we want to evaluate if we want to share not only expunges but other
-meta data associated to why a new test can be expunged or removed:
-
- * flakyness percentage
- * cause a kernel crash?
- * bogus test?
- * expunged due to a slew of a tons of other reasons, some of them maybe
-   categorized and shared, some of them not
-
-And do we want to share artifacts? If so how? Perhaps an optional URL,
-with another component describing what it is, gist, or a tarball, etc.
-
-Then for the last part c) making failures easy to read to a developer
-let's review what could be done. I gather gce-xfstests explains the
-xunit results summary. Right now kdevop's kernel-ci stuff just sends
-an email with the same but also a diff to the expunge file hierarchy
-augmented for the target kernel directory being tested. The developer
-would just go and edit the line with meta data as a comment, but that
-is just because we lack a structure for it. If we strive to share
-an expunge list I think it would be wise to consider structure for
-this metadata.
-
-Perhaps:
-
-<test> # <crashes>|<flayness-percent-as-fraction>|<fs-skip-reason>|<artifact-type>|<artifact-dir-url>|<comments>
-
-Where:
-
-test:                         xfs/123 or btrfs/234
-crashes:                      can be either Y or N
-flayness-percent-as-percentage: 80%
-fs-skip-reason:               can be an enum to represent a series of 
-                              fs specific reasons why a test may not be
-			      applicable or should be skipped
-artifact-type:                optional, if present the type of artifact,
-                              can be enum to represent a gist test
-			      description, or a tarball
-artifact-dir-url:             optional, path to the artifact
-comments:                     additional comments
-
-All the above considered, a) b) and c), yes I think a flat file
-model works well as an option. I'd love to hear other's feedback.
-
-> If we have a huge amount of variability, such that we have a large
-> number of directories with different test configs and different
-> hardware configs, each with different expunge files, I'm not sure how
-> useful that actually is.
-
-*If* you want to share I think it would be useful.
-
-At least kdevops uses a flat file model with no artifacts, just the
-expunges and comments, and over time it has been very useful, even to be
-able to review historic issues on older kernels by simply using
-something like 'git grep xfs/123' gives me a quick sense of history of
-issues of a test.
-
-> Are we expecting users to do a "git clone",
-> and then start browsing all of these different expunge files by hand?
-
-If we want to extend fstests check script to look for this, it could
-be an optional directory and an arugment could be pased to check so
-to enable its hunt for it, so that if passed it would look for the
-runner / kernel / host-type. For instance today we already have
-a function on initialization for the check script which looks for
-the fstests' config file as follows:
-
-known_hosts()
-{
-	[ "$HOST_CONFIG_DIR" ] || HOST_CONFIG_DIR=`pwd`/configs
-
-	[ -f /etc/xfsqa.config ] && export HOST_OPTIONS=/etc/xfsqa.config
-	[ -f $HOST_CONFIG_DIR/$HOST ] && export HOST_OPTIONS=$HOST_CONFIG_DIR/$HOST
-	[ -f $HOST_CONFIG_DIR/$HOST.config ] && export HOST_OPTIONS=$HOST_CONFIG_DIR/$HOST.config
-}
-
-We could have something similar look for an expugne directory of say
-say --expunge-auto-look and that could be something like:
-
-process_expunge_dir()
-{
-	[ "$HOST_EXPUNGE_DIR" ] || HOST_EXPUNGE_DIR=`pwd`/expunges
-
-	[ -d /etc/fstests/expunges/$HOST ] && export HOST_EXPUNGES=/etc/fstests/expunges/$HOST
-	[ -d $HOST_EXPUNGE_DIR/$HOST ] && export HOST_EXPUNGES=$HOST_EXPUNGE_DIR/$HOST
-}
-
-The runner could be specified, and the host-type
-
-./check --runner <gce-xfstests|kdevops|whatever> --host-type <kvm-8vcpus-2gb>
-
-And so we can have it look for these directory and if any of these are used
-processed (commulative):
-
-  * HOST_EXPUNGES/any/$fstype/                       - regardless of kernel, host type and runner
-  * HOST_EXPUNGES/$kernel/$fstype/any                - common between runners for any host type
-  * HOST_EXPUNGES/$kernel/$fstype/$hostype           - common between runners for a host type
-  * HOST_EXPUNGES/$kernel/$fstype/$hostype/$runner   - only present for the runner
-
-The aggregate set of expugnes are used.
-
-Additional criteria could be passed to check so to ensure that only
-certain expunges that meet the criteria are used to skip tests for the
-run, provided we can agree on some metatdata for that.
-
-> It might perhaps be useful to get a bit more clarity about how we
-> expect the shared results would be used, because that might drive some
-> of the design decisions about the best way to store these "results".
-
-Sure.
-
-  Luis
