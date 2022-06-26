@@ -2,83 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C8D1C43334
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jun 2022 22:04:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32970C43334
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jun 2022 22:06:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231814AbiFZWEI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Jun 2022 18:04:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49330 "EHLO
+        id S231834AbiFZWGA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 26 Jun 2022 18:06:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229986AbiFZWEH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jun 2022 18:04:07 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D8F02DC6
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Jun 2022 15:04:05 -0700 (PDT)
+        with ESMTP id S229986AbiFZWF7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jun 2022 18:05:59 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A10F92DC6
+        for <linux-xfs@vger.kernel.org>; Sun, 26 Jun 2022 15:05:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2EA6660FE4
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Jun 2022 22:04:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F576C3411D;
-        Sun, 26 Jun 2022 22:04:04 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5C3EDB80DFB
+        for <linux-xfs@vger.kernel.org>; Sun, 26 Jun 2022 22:05:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25477C34114;
+        Sun, 26 Jun 2022 22:05:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656281044;
-        bh=qbpW8fOWnJLJvicQPmtuPflMJdwJSLnDgVwB01zm3dw=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=XNqfRV2qUDiVoYV5/CeQicsmNi9fwEtaBDKg3XpSdpYovT5TadMHGt8m+08q16wW3
-         61TKuAk5oOE/bJdpHfS699NQrLhlf7yHf8CeHpuc+typ/En/RGuSPhIlDIsJO9DZ/K
-         KpPx0gQ8IXRfGGPRnEZf0yPTkLtmv9HfLBco+YOeXk2q4sSe+yyEg/X7/UQRAC6O0/
-         yV7/4I1FIgaHlipxywERIY/wRkgwmKMYuMmkPJp5rtlyA3UToFhmb6eMmVJgrolcce
-         AVOssOZtv72vkN+FUZfvd8KmsFF+URtH9gfxCJD00/lMn7UqNtUg0YGcr/WqiSbLHh
-         HczWthc1jHyHA==
-Subject: [PATCH 3/3] xfs: dont treat rt extents beyond EOF as eofblocks to be
- cleared
+        s=k20201202; t=1656281156;
+        bh=Lh6ppA6e/Y9V9E/qssJFfgoD/oIRcThmU9kTDK30ZzQ=;
+        h=Date:From:To:Subject:From;
+        b=CNIXdMOZUzA9Pw70lI41xYTtST6wNL+sh4I6GccmDSKX9ZD2y7B/AdC+bMpIKlZaw
+         A5L73ilWqwlVN6Tm6Pvu2OSt0/t4cJ+cHhEz1OdPXjb8BWbukXNIFyIuwJySeuyZ6C
+         YEUw63hPMhRkezR7L/qFA9j5Skvtr605kTwKEi1JbXfo15DPTmsSe++kVpoyQffQNH
+         HfPGdSN8BCIoM/eKH3hBC6b5FllBuaLkJc/xn8WVJflojYTeJtAOnfGTTV82zYUotu
+         G+im0Kh/NIefgdCviEFMjuLR1dQnSLtEbGZGnnjyMifFb6DJfTfHkecptsmMtDi/DW
+         lEyLvIK3DCOKw==
+Date:   Sun, 26 Jun 2022 15:05:55 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+To:     linux-xfs@vger.kernel.org, david@fromorbit.com,
         allison.henderson@oracle.com
-Date:   Sun, 26 Jun 2022 15:04:04 -0700
-Message-ID: <165628104422.4040423.6482533913763183686.stgit@magnolia>
-In-Reply-To: <165628102728.4040423.16023948770805941408.stgit@magnolia>
-References: <165628102728.4040423.16023948770805941408.stgit@magnolia>
-User-Agent: StGit/0.19
+Subject: [PATCH] xfs_repair: ignore empty xattr leaf blocks
+Message-ID: <YrjYQ/+DYJIwf7MG@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-On a system with a realtime volume and a 28k realtime extent,
-generic/491 fails because the test opens a file on a frozen filesystem
-and closing it causes xfs_release -> xfs_can_free_eofblocks to
-mistakenly think that the the blocks of the realtime extent beyond EOF
-are posteof blocks to be freed.  Realtime extents cannot be partially
-unmapped, so this is pointless.  Worse yet, this triggers posteof
-cleanup, which stalls on a transaction allocation, which is why the test
-fails.
-
-Teach the predicate to account for realtime extents properly.
+As detailed in the previous commit, empty xattr leaf blocks can be the
+benign byproduct of the system going down during the multi-step process
+of adding a large xattr to a file that has no xattrs.  If we find one at
+attr fork offset 0, we should clear it, but this isn't a corruption.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c |    2 ++
- 1 file changed, 2 insertions(+)
+ repair/attr_repair.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 52be58372c63..85e1a26c92e8 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -686,6 +686,8 @@ xfs_can_free_eofblocks(
- 	 * forever.
- 	 */
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-+	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
-+		end_fsb = roundup_64(end_fsb, mp->m_sb.sb_rextsize);
- 	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
- 	if (last_fsb <= end_fsb)
- 		return false;
-
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 2055d96e..c3a6d502 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -579,6 +579,26 @@ process_leaf_attr_block(
+ 	firstb = mp->m_sb.sb_blocksize;
+ 	stop = xfs_attr3_leaf_hdr_size(leaf);
+ 
++	/*
++	 * Empty leaf blocks at offset zero can occur as a race between
++	 * setxattr and the system going down, so we only take action if we're
++	 * running in modify mode.  See xfs_attr3_leaf_verify for details of
++	 * how we've screwed this up many times.
++	 */
++	if (!leafhdr.count && da_bno == 0) {
++		if (no_modify) {
++			do_log(
++	_("would clear empty leaf attr block 0, inode %" PRIu64 "\n"),
++					ino);
++			return 0;
++		}
++
++		do_warn(
++	_("will clear empty leaf attr block 0, inode %" PRIu64 "\n"),
++				ino);
++		return 1;
++	}
++
+ 	/* does the count look sorta valid? */
+ 	if (!leafhdr.count ||
+ 	    leafhdr.count * sizeof(xfs_attr_leaf_entry_t) + stop >
