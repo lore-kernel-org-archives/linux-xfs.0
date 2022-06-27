@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A98F2C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 06:47:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E638CCA47E
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 06:52:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230174AbiF0GrU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jun 2022 02:47:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39250 "EHLO
+        id S232535AbiF0GwE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jun 2022 02:52:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230329AbiF0GrT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 02:47:19 -0400
-Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB7AE559E;
-        Sun, 26 Jun 2022 23:47:17 -0700 (PDT)
-Received: by mail-wr1-x42b.google.com with SMTP id o16so11564188wra.4;
-        Sun, 26 Jun 2022 23:47:17 -0700 (PDT)
+        with ESMTP id S232531AbiF0GwB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 02:52:01 -0400
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59C4126C5;
+        Sun, 26 Jun 2022 23:52:00 -0700 (PDT)
+Received: by mail-wr1-x42c.google.com with SMTP id v14so11562427wra.5;
+        Sun, 26 Jun 2022 23:52:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7rlLJigxsmTZtJ4R8DtANGAf44bp6QS5yoCTt0RR5Z8=;
-        b=azQBxq+JRPZzhixrRay/sYX7W15FYm3yE32ZGqtcODe3saCGAUwtHhvEpAOw8eBDbe
-         qF3rs8w5NA1QEHCHFC0hPMADCkVtpz8mT0BtbaWYqQv82IvZhWUQmmizFDKvEMa3wfhM
-         AvrTVXibefxwg4jOrCMdJGYjjDbqt7HjtzvzSrpyOXnAMYcOSVekVxgPlz+v8TVgItjy
-         veC9uK93EtUEAmkzTuMi3Bc7ztp033LHgdPTJtdIW8opb0nykP7X8Dw/A1G9TREa+FDe
-         Ku2r1+DCRa1qw78vwUtusSha5YHNjVV5Uy+FYlLG9CU8/VuznQ4bRDkDr9c52ItdmOD8
-         dXyA==
+        bh=X6hunTx6t84e1RH7TuIwMAVJt14IU7tMQ/ZDFHTvWjE=;
+        b=PKS5QLP9Pxtzk0i5U0iZqlq6FVXVMm7J2tqdxtgxpHjjRbPEvFzQ48hcVt4BcUxu5w
+         4biDkN8bDHnFVkJHGakO+dN/je6ZH7uwogeK33mZiMvXOPe4k4vl6humhdN9oEA/2Vnp
+         UkeeXGBe5CXXZHnNnKWkWcPJhba9jze3trzMN9ePag61qb6Lq0jkV67kOnWE6yqmge/H
+         PxUSfaxiFoZB860dwWMDaJ5qkicrSSb2AG0UoJ0RRQ60ZWRSwhIkm3kHmoNX+iXzeZAa
+         lPwZGHfo0xrr6nIn/+XuNXXN1qY4LPLmNBKusljJ73IO4/eVzDP4L7W61CaLblkXbN99
+         6LSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7rlLJigxsmTZtJ4R8DtANGAf44bp6QS5yoCTt0RR5Z8=;
-        b=zPaQqnNrExnnl+t3cOSW5Tb/0LwMtOMn1Z4o0P1RRCLctsrWpk1ZDfPSHAjeTHdtlb
-         mfXOnzeAfgdF7fNIj3r7TmJrSfoRFJOBpacc3cxmIKQTRBUxk3bRX3SQkt0Orny5KLIY
-         y5TUibjFRVS5j9ibSnW6JyaXSe/e4Z3iAdviEAwDrnY1PYAsNpawELYvo/5keL7Eb0OU
-         RSjt4aE5zO3TJZIboD/Wv4whf/dH0Llue/rhN3fB6LBt34Oo//ygLYXMTEKVdDT2LLMw
-         2kRs4H+K0mc+b3ovVhG8mqlQTQTzmTOZi/QotkG934T8RzWNslMQuMpaFWOg7SkMhAEZ
-         QS9A==
-X-Gm-Message-State: AJIora9R4ph/Mqp//HL98rmDjWCLkfY7/rjc/Ep2qMXxI7j3IfIzcWJW
-        YcL1yLwCeU7xz6XYKZK9ZCxLXKSvUpCEig==
-X-Google-Smtp-Source: AGRyM1sHBr2FsJlg+WcCol6dfdleKKW0y13uswvIN7A+/s9lpGS9j+yVyAwnYIKiMVCYX3DTLQWlaA==
-X-Received: by 2002:a5d:6711:0:b0:21b:9e35:fc91 with SMTP id o17-20020a5d6711000000b0021b9e35fc91mr10695568wru.19.1656312436444;
-        Sun, 26 Jun 2022 23:47:16 -0700 (PDT)
+        bh=X6hunTx6t84e1RH7TuIwMAVJt14IU7tMQ/ZDFHTvWjE=;
+        b=TRMLZB/yk06u8K6OZiBIACnzMEY3Gqrh/xsLKmx2f6Ct2FumZWcN7wHzRczCgk/gC0
+         fq9vkTLok9QYvbeFsqe5BVEsWhhFLXi+TfqFC0C/kTir3EdoGm/oFG55g3vPIhLktVWM
+         IVKXs7H04eNIugvI0driGbkMTIxE+EbDykRjloLr7gE9t9GKn3Fd+DlO6bcsi64FBuv6
+         nxrVPkLu835i3iyufo9EPitM2kRugwC2woSyoejyYL1zkGipQMcdaFbK1xdwuNHVtaL8
+         2p3YCqb7eLe5WbqT+7jQWVbqec8dwWjXEQZpMn3rDqomOxOw5rTslgrLfAvVrNRWCTxg
+         Spmg==
+X-Gm-Message-State: AJIora8cirFIZu1w/iQiYNNxltpmJXLB5Ew4Ue3UrtP1I05l298QbcXI
+        xdgVj2RrQ1HfdZ6TrQflIXg=
+X-Google-Smtp-Source: AGRyM1t/jn8Kjvt+p/Bi9YPgXfG+NJdJuj6QJR3OvU+gzS+3kTjCXS1fRHxHJP7F5MPjlLs7R9PqHw==
+X-Received: by 2002:a05:6000:1888:b0:21d:151c:92a0 with SMTP id a8-20020a056000188800b0021d151c92a0mr605463wri.609.1656312718949;
+        Sun, 26 Jun 2022 23:51:58 -0700 (PDT)
 Received: from amir-ThinkPad-T480.lan ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id r21-20020a05600c35d500b003a02f957245sm16460839wmq.26.2022.06.26.23.47.15
+        by smtp.gmail.com with ESMTPSA id e10-20020adffd0a000000b0021a3dd1c5d5sm9415076wrr.96.2022.06.26.23.51.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Jun 2022 23:47:15 -0700 (PDT)
+        Sun, 26 Jun 2022 23:51:58 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Sasha Levin <sashal@kernel.org>,
@@ -56,97 +56,77 @@ Cc:     Sasha Levin <sashal@kernel.org>,
         Luis Chamberlain <mcgrof@kernel.org>,
         Adam Manzanares <a.manzanares@samsung.com>,
         linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH v3 5/5] xfs: check sb_meta_uuid for dabuf buffer recovery
-Date:   Mon, 27 Jun 2022 09:47:03 +0300
-Message-Id: <20220627064703.2798133-6-amir73il@gmail.com>
+        Rustam Kovhaev <rkovhaev@gmail.com>
+Subject: [PATCH 5.10 v4 1/5] xfs: use kmem_cache_free() for kmem_cache objects
+Date:   Mon, 27 Jun 2022 09:51:36 +0300
+Message-Id: <20220627065140.2798412-2-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220627064703.2798133-1-amir73il@gmail.com>
-References: <20220627064703.2798133-1-amir73il@gmail.com>
+In-Reply-To: <20220627065140.2798412-1-amir73il@gmail.com>
+References: <20220627065140.2798412-1-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Rustam Kovhaev <rkovhaev@gmail.com>
 
-commit 09654ed8a18cfd45027a67d6cbca45c9ea54feab upstream.
+commit c30a0cbd07ecc0eec7b3cd568f7b1c7bb7913f93 upstream.
 
-Got a report that a repeated crash test of a container host would
-eventually fail with a log recovery error preventing the system from
-mounting the root filesystem. It manifested as a directory leaf node
-corruption on writeback like so:
+For kmalloc() allocations SLOB prepends the blocks with a 4-byte header,
+and it puts the size of the allocated blocks in that header.
+Blocks allocated with kmem_cache_alloc() allocations do not have that
+header.
 
- XFS (loop0): Mounting V5 Filesystem
- XFS (loop0): Starting recovery (logdev: internal)
- XFS (loop0): Metadata corruption detected at xfs_dir3_leaf_check_int+0x99/0xf0, xfs_dir3_leaf1 block 0x12faa158
- XFS (loop0): Unmount and run xfs_repair
- XFS (loop0): First 128 bytes of corrupted metadata buffer:
- 00000000: 00 00 00 00 00 00 00 00 3d f1 00 00 e1 9e d5 8b  ........=.......
- 00000010: 00 00 00 00 12 fa a1 58 00 00 00 29 00 00 1b cc  .......X...)....
- 00000020: 91 06 78 ff f7 7e 4a 7d 8d 53 86 f2 ac 47 a8 23  ..x..~J}.S...G.#
- 00000030: 00 00 00 00 17 e0 00 80 00 43 00 00 00 00 00 00  .........C......
- 00000040: 00 00 00 2e 00 00 00 08 00 00 17 2e 00 00 00 0a  ................
- 00000050: 02 35 79 83 00 00 00 30 04 d3 b4 80 00 00 01 50  .5y....0.......P
- 00000060: 08 40 95 7f 00 00 02 98 08 41 fe b7 00 00 02 d4  .@.......A......
- 00000070: 0d 62 ef a7 00 00 01 f2 14 50 21 41 00 00 00 0c  .b.......P!A....
- XFS (loop0): Corruption of in-memory data (0x8) detected at xfs_do_force_shutdown+0x1a/0x20 (fs/xfs/xfs_buf.c:1514).  Shutting down.
- XFS (loop0): Please unmount the filesystem and rectify the problem(s)
- XFS (loop0): log mount/recovery failed: error -117
- XFS (loop0): log mount failed
+SLOB explodes when you allocate memory with kmem_cache_alloc() and then
+try to free it with kfree() instead of kmem_cache_free().
+SLOB will assume that there is a header when there is none, read some
+garbage to size variable and corrupt the adjacent objects, which
+eventually leads to hang or panic.
 
-Tracing indicated that we were recovering changes from a transaction
-at LSN 0x29/0x1c16 into a buffer that had an LSN of 0x29/0x1d57.
-That is, log recovery was overwriting a buffer with newer changes on
-disk than was in the transaction. Tracing indicated that we were
-hitting the "recovery immediately" case in
-xfs_buf_log_recovery_lsn(), and hence it was ignoring the LSN in the
-buffer.
+Let's make XFS work with SLOB by using proper free function.
 
-The code was extracting the LSN correctly, then ignoring it because
-the UUID in the buffer did not match the superblock UUID. The
-problem arises because the UUID check uses the wrong UUID - it
-should be checking the sb_meta_uuid, not sb_uuid. This filesystem
-has sb_uuid != sb_meta_uuid (which is fine), and the buffer has the
-correct matching sb_meta_uuid in it, it's just the code checked it
-against the wrong superblock uuid.
-
-The is no corruption in the filesystem, and failing to recover the
-buffer due to a write verifier failure means the recovery bug did
-not propagate the corruption to disk. Hence there is no corruption
-before or after this bug has manifested, the impact is limited
-simply to an unmountable filesystem....
-
-This was missed back in 2015 during an audit of incorrect sb_uuid
-usage that resulted in commit fcfbe2c4ef42 ("xfs: log recovery needs
-to validate against sb_meta_uuid") that fixed the magic32 buffers to
-validate against sb_meta_uuid instead of sb_uuid. It missed the
-magicda buffers....
-
-Fixes: ce748eaa65f2 ("xfs: create new metadata UUID field and incompat flag")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Fixes: 9749fee83f38 ("xfs: enable the xfs_defer mechanism to process extents to free")
+Signed-off-by: Rustam Kovhaev <rkovhaev@gmail.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_buf_item_recover.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_extfree_item.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index d44e8b4a3391..1d649462d731 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -805,7 +805,7 @@ xlog_recover_get_buf_lsn(
- 	}
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 5c0395256bd1..11474770d630 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -482,7 +482,7 @@ xfs_extent_free_finish_item(
+ 			free->xefi_startblock,
+ 			free->xefi_blockcount,
+ 			&free->xefi_oinfo, free->xefi_skip_discard);
+-	kmem_free(free);
++	kmem_cache_free(xfs_bmap_free_item_zone, free);
+ 	return error;
+ }
  
- 	if (lsn != (xfs_lsn_t)-1) {
--		if (!uuid_equal(&mp->m_sb.sb_uuid, uuid))
-+		if (!uuid_equal(&mp->m_sb.sb_meta_uuid, uuid))
- 			goto recover_immediately;
- 		return lsn;
- 	}
+@@ -502,7 +502,7 @@ xfs_extent_free_cancel_item(
+ 	struct xfs_extent_free_item	*free;
+ 
+ 	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+-	kmem_free(free);
++	kmem_cache_free(xfs_bmap_free_item_zone, free);
+ }
+ 
+ const struct xfs_defer_op_type xfs_extent_free_defer_type = {
+@@ -564,7 +564,7 @@ xfs_agfl_free_finish_item(
+ 	extp->ext_len = free->xefi_blockcount;
+ 	efdp->efd_next_extent++;
+ 
+-	kmem_free(free);
++	kmem_cache_free(xfs_bmap_free_item_zone, free);
+ 	return error;
+ }
+ 
 -- 
 2.25.1
 
