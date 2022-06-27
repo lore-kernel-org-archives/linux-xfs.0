@@ -2,214 +2,653 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF90ACCA483
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 00:43:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FAE1CCA47C
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 00:43:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229486AbiF0Anq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S230027AbiF0Anq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sun, 26 Jun 2022 20:43:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43570 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230027AbiF0Anp (ORCPT
+        with ESMTP id S230231AbiF0Anp (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jun 2022 20:43:45 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D79842DE3
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CA68F2BE5
         for <linux-xfs@vger.kernel.org>; Sun, 26 Jun 2022 17:43:42 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B46C15ECCF2
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B4B1F10E775B
         for <linux-xfs@vger.kernel.org>; Mon, 27 Jun 2022 10:43:39 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1o5cqo-00BTze-Ar
+        id 1o5cqo-00BTzt-GN
         for linux-xfs@vger.kernel.org; Mon, 27 Jun 2022 10:43:38 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1o5cqo-000ua5-8f
+        id 1o5cqo-000uaO-ER
         for linux-xfs@vger.kernel.org;
         Mon, 27 Jun 2022 10:43:38 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/9 v3] xfs: in-memory iunlink items
-Date:   Mon, 27 Jun 2022 10:43:27 +1000
-Message-Id: <20220627004336.217366-1-david@fromorbit.com>
+Subject: [PATCH 5/9] xfs: double link the unlinked inode list
+Date:   Mon, 27 Jun 2022 10:43:32 +1000
+Message-Id: <20220627004336.217366-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220627004336.217366-1-david@fromorbit.com>
+References: <20220627004336.217366-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62b8fd3b
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62b8fd3c
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=JPEYwPQDsx4A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=Pse36N-4FazcfQfACL4A:9 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=RTwSvmzXio7UWOK0YXIA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-Time to revist a patchset that has been sitting in my queue for
-a couple of years now - inode cluster buffer lock ordering. The
-description that follows is from the original RFC - nothing has
-really changed in the past couple of years - this is still relevant
-to fixing some of the AIL list scalability issues we have.
+Now we have forwards traversal via the incore inode in place, we now
+need to add back pointers to the incore inode to entirely replace
+the back reference cache. We use the same lookup semantics and
+constraints as for the forwards pointer lookups during unlinks, and
+so we can look up any inode in the unlinked list directly and update
+the list pointers, forwards or backwards, at any time.
 
-This all works, passes fstests in many configurations, doesn't cause
-performance regressions in unlink perf scalability tests, etc, so I
-think it's largely ready for review and merge.
+The only wrinkle in converting the unlinked list manipulations to
+use in-core previous pointers is that log recovery doesn't have the
+incore inode state built up so it can't just read in an inode and
+release it to finish off the unlink. Hence we need to modify the
+traversal in recovery to read one inode ahead before we
+release the inode at the head of the list. This populates the
+next->prev relationship sufficient to be able to replay the unlinked
+list and hence greatly simplify the runtime code.
 
--Dave.
+This recovery algorithm also requires that we actually remove inodes
+from the unlinked list one at a time as background inode
+inactivation will result in unlinked list removal racing with the
+building of the in-memory unlinked list state. We could serialise
+this by holding the AGI buffer lock when constructing the in memory
+state, but all that does is lockstep background processing with list
+building. It is much simpler to flush the inodegc immediately after
+releasing the inode so that it is unlinked immediately and there is
+no races present at all.
 
-----
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ag.c   |   8 -
+ fs/xfs/libxfs/xfs_ag.h   |   6 -
+ fs/xfs/xfs_icache.c      |   2 +
+ fs/xfs/xfs_inode.c       | 348 +++++++--------------------------------
+ fs/xfs/xfs_inode.h       |   4 +-
+ fs/xfs/xfs_log_recover.c |  34 +++-
+ 6 files changed, 90 insertions(+), 312 deletions(-)
 
-Inode cluster buffer pinning by dirty inodes could allow us to
-improve dirty inode tracking efficiency in the AIL by using the
-inode cluster buffer item rather than individual inode items.
-However, this brings with it some new issues, namely the order in
-which we lock inode cluster buffers. While the dirty buffer pinning
-doesn't currently result in nested cluster buffer locking in
-xfs_trans_log_inode() and so there are no current problems, future
-changes will need to nest cluster buffer locking in this context.
-
-That is, transactions that dirty and commit multiple inodes in a
-transaction will now need to locking multiple inode cluster buffers
-in each transaction (e.g. create, rename, etc). This introduces new
-lock ordering constraints in these operations. It also introduces
-lock ordering constraints between the AGI and inode cluster buffers
-as a result of allocation/freeing being serialised by the AGI
-buffer lock. And then there is unlinked inode list logging, which
-currently has no fixed order of inode cluster buffer locking.
-
-It's all a bit Wild West right now.
-
-Locking pure inode modifications in order is relatively easy. We
-don't actually need to attach and log the buffer to the transaction
-until the last moment. We have all the inodes locked, so nothing
-other than unlinked inode list modification can race with the
-transaction modifying inodes. Hence we can safely move the
-attachment of the inodes to the cluster buffer from when we first
-dirty them in xfs_trans_log_inode to just before we commit the
-transaction.
-
-At this point, all the inodes that have been dirtied in the
-transaction have already been locked, modified, logged and attached
-to the transaction. Hence if we add a hook into xfs_trans_commit()
-to run a "precommit" operation on these log items, we can use this
-operation to attach the inodes to the cluster buffer at commit time
-instead of in xfs_trans_log_inode().
-
-This, by itself, doesn't solve the lock ordering problem. What it
-does do, however, is give us a place where we can -order- all the
-dirty items in the transaction list. Hence before we call the
-precommit operation on each log item, we sort them. This allows us
-to sort all the inode items so that the pre-commit functions that
-locks and logs the cluster buffers are run in a deterministic order.
-This solves the lock order problem for pure inode modifications.
-
-The unlinked inode list buffer locking is more complex. The unlinked
-list is unordered - we add to the tail, remove from where-ever the
-inode is in the list. Hence we might need to lock two inode buffers
-here (previous inode in list and the one being removed). While we
-can order the locking of these buffers correctly within the confines
-of the unlinked list, there may be other inodes that need buffer
-locking in the same transaction. e.g. O_TMPFILE being linked into a
-directory also modifies the directory inode.
-
-Hence we need a mechanism for defering unlinked inode list updates
-to the pre-commit operation where it can be sorted into the correct
-order. We can do this by first observing that we serialise unlinked
-list modifications by holding the AGI buffer lock. IOWs, the AGI is
-going to be locked until the transaction commits any time we modify
-the unlinked list. Hence it doesn't matter when in the unlink
-transactions that we actually load, lock and modify the inode
-cluster buffer.
-
-IOWs, what we need is an unlinked inode log item to defer the inode
-cluster buffer update to transaction commit time where it can be
-ordered with all the other inode cluster operations. Essentially all
-we need to do is record the inodes that need to have their unlinked
-list pointer updated in a new log item that we attached to the
-transaction.
-
-This log item exists purely for the purpose of delaying the update
-of the unlinked list pointer until the inode cluster buffer can be
-locked in the correct order around the other inode cluster buffers.
-It plays no part in the actual commit, and there's no change to
-anything that is written to the log. i.e. the inode cluster buffers
-still have to be fully logged here (not just ordered) as log
-recovery depedends on this to replay mods to the unlinked inode
-list.
-
-To make this unlinked inode list processing simpler and easier to
-implement as a log item, we need to change the way we track the
-unlinked list in memory. Starting from the observation that an inode
-on the unlinked list is pinned in memory by the VFS, we can use the
-xfs_inode itself to track the unlinked list. To do this efficiently,
-we want the unlinked list to be a double linked list. The problem
-here is that we need a list per AGI unlinked list, and there are 64
-of these per AGI. The approach taken in this patchset is to shadow
-the AGI unlinked list heads in the perag, and link inodes by agino,
-hence requiring only 8 extra bytes per inode to track this state.
-
-We can then use the agino pointers for lockless inode cache lookups
-to retreive the inode. The aginos in the inode are modified only
-under the AGI lock, just like the cluster buffer pointers, so we
-don't need any extra locking here.  The i_next_unlinked field tracks
-the on-disk value of the unlinked list, and the i_prev_unlinked is a
-purely in-memory pointer that enables us to efficiently remove
-inodes from the middle of the list.
-
-This results in moving a lot of the unlink modification work into
-the precommit operations on the unlink log item. tracking all the
-unlinked inodes in the inodes themselves also gets rid of the
-unlinked list reference hash table that is used to track this back
-pointer relationship. This greatly simplifies the the unlinked list
-modification code, and removes memory allocations in this hot path
-to track back pointers. This, overall, slightly reduces the CPU
-overhead of the unlink path.
-
-The result of this log item means that we move all the actual
-manipulation of objects to be logged out of the iunlink path and
-into the iunlink item. This allows for future optimisation of this
-mechanism without needing changes to high level unlink path, as
-well as making the unlink lock ordering predictable and synchronised
-with other operations that may require inode cluster locking.
-
-Changelog:
-
-Version 3:
-- rebase on 5.19-rc2
-- fixed log recovery bugs that arose from interactions with
-  background inode inactivation being added since the original RFC
-  patches.
-- Note: has significant, non-trivial merge conflicts with
-  xfs-perag-conv-5.20.  Should probably be rebased on that branch to
-  avoid these. Need to know what order these branches are going to
-  get merged first.
-
-Version 2:
-- unpublished
-- rebase on 5.15-rc2 + xlog-intent-whiteouts
-- reverts changes made in V1 that moved to a list_head based double
-  linked list.  This requires on-disk format changes to allow the
-  AGI to use just a single bucket and so is not generically
-  applicable to all XFS filesystem formats. This version goes back
-  to using prev/next agino values and radix tree lookups as the
-  original RFC used.
-
-Version 1:
-- https://lore.kernel.org/linux-xfs/20200812092556.2567285-1-david@fromorbit.com/
-- split up into many smaller patches
-- includes Xiang's single unlinked list bucket modification
-- uses a list_head for the in memory double unlinked inode list
-  rather than aginos and lockless inode lookups
-- much simpler as it doesn't need to look up inodes from agino
-  values
-- iunlink log item changed to take an xfs_inode pointer rather than
-  an imap and agino values
-- a handful of small cleanups that breaking up into small patches
-  allowed.
-
-[RFC]
-- https://lore.kernel.org/linux-xfs/20200623095015.1934171-1-david@fromorbit.com/
-
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 3e920cf1b454..2de67389fe60 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -194,7 +194,6 @@ xfs_free_perag(
+ 		XFS_IS_CORRUPT(pag->pag_mount, atomic_read(&pag->pag_ref) != 0);
+ 
+ 		cancel_delayed_work_sync(&pag->pag_blockgc_work);
+-		xfs_iunlink_destroy(pag);
+ 		xfs_buf_hash_destroy(pag);
+ 
+ 		call_rcu(&pag->rcu_head, __xfs_free_perag);
+@@ -263,10 +262,6 @@ xfs_initialize_perag(
+ 		if (error)
+ 			goto out_remove_pag;
+ 
+-		error = xfs_iunlink_init(pag);
+-		if (error)
+-			goto out_hash_destroy;
+-
+ 		/* first new pag is fully initialized */
+ 		if (first_initialised == NULLAGNUMBER)
+ 			first_initialised = index;
+@@ -280,8 +275,6 @@ xfs_initialize_perag(
+ 	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+ 	return 0;
+ 
+-out_hash_destroy:
+-	xfs_buf_hash_destroy(pag);
+ out_remove_pag:
+ 	radix_tree_delete(&mp->m_perag_tree, index);
+ out_free_pag:
+@@ -293,7 +286,6 @@ xfs_initialize_perag(
+ 		if (!pag)
+ 			break;
+ 		xfs_buf_hash_destroy(pag);
+-		xfs_iunlink_destroy(pag);
+ 		kmem_free(pag);
+ 	}
+ 	return error;
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index e411d51c2589..bd5f715d116d 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -97,12 +97,6 @@ struct xfs_perag {
+ 	/* background prealloc block trimming */
+ 	struct delayed_work	pag_blockgc_work;
+ 
+-	/*
+-	 * Unlinked inode information.  This incore information reflects
+-	 * data stored in the AGI, so callers must hold the AGI buffer lock
+-	 * or have some other means to control concurrency.
+-	 */
+-	struct rhashtable	pagi_unlinked_hash;
+ #endif /* __KERNEL__ */
+ };
+ 
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 5269354b1b69..9fc324a29535 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -111,6 +111,8 @@ xfs_inode_alloc(
+ 	INIT_WORK(&ip->i_ioend_work, xfs_end_io);
+ 	INIT_LIST_HEAD(&ip->i_ioend_list);
+ 	spin_lock_init(&ip->i_ioend_lock);
++	ip->i_next_unlinked = NULLAGINO;
++	ip->i_prev_unlinked = NULLAGINO;
+ 
+ 	return ip;
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e6ac13174062..f390a91243bf 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1815,196 +1815,21 @@ xfs_inactive(
+  * because we must walk that list to find the inode that points to the inode
+  * being removed from the unlinked hash bucket list.
+  *
+- * What if we modelled the unlinked list as a collection of records capturing
+- * "X.next_unlinked = Y" relations?  If we indexed those records on Y, we'd
+- * have a fast way to look up unlinked list predecessors, which avoids the
+- * slow list walk.  That's exactly what we do here (in-core) with a per-AG
+- * rhashtable.
++ * Hence we keep an in-memory double linked list to link each inode on an
++ * unlinked list. Because there are 64 unlinked lists per AGI, keeping pointer
++ * based lists qould require having 64 list heads in the perag, one for each
++ * list. This is expensive in terms of memory (think millions of AGs) and cache
++ * misses on lookups. Instead, use the fact that inodes on the unlinked list
++ * must be referenced at the VFS level to keep them on the list and hence we
++ * have an existence guarantee for inodes on the unlinked list.
+  *
+- * Because this is a backref cache, we ignore operational failures since the
+- * iunlink code can fall back to the slow bucket walk.  The only errors that
+- * should bubble out are for obviously incorrect situations.
+- *
+- * All users of the backref cache MUST hold the AGI buffer lock to serialize
+- * access or have otherwise provided for concurrency control.
+- */
+-
+-/* Capture a "X.next_unlinked = Y" relationship. */
+-struct xfs_iunlink {
+-	struct rhash_head	iu_rhash_head;
+-	xfs_agino_t		iu_agino;		/* X */
+-	xfs_agino_t		iu_next_unlinked;	/* Y */
+-};
+-
+-/* Unlinked list predecessor lookup hashtable construction */
+-static int
+-xfs_iunlink_obj_cmpfn(
+-	struct rhashtable_compare_arg	*arg,
+-	const void			*obj)
+-{
+-	const xfs_agino_t		*key = arg->key;
+-	const struct xfs_iunlink	*iu = obj;
+-
+-	if (iu->iu_next_unlinked != *key)
+-		return 1;
+-	return 0;
+-}
+-
+-static const struct rhashtable_params xfs_iunlink_hash_params = {
+-	.min_size		= XFS_AGI_UNLINKED_BUCKETS,
+-	.key_len		= sizeof(xfs_agino_t),
+-	.key_offset		= offsetof(struct xfs_iunlink,
+-					   iu_next_unlinked),
+-	.head_offset		= offsetof(struct xfs_iunlink, iu_rhash_head),
+-	.automatic_shrinking	= true,
+-	.obj_cmpfn		= xfs_iunlink_obj_cmpfn,
+-};
+-
+-/*
+- * Return X, where X.next_unlinked == @agino.  Returns NULLAGINO if no such
+- * relation is found.
+- */
+-static xfs_agino_t
+-xfs_iunlink_lookup_backref(
+-	struct xfs_perag	*pag,
+-	xfs_agino_t		agino)
+-{
+-	struct xfs_iunlink	*iu;
+-
+-	iu = rhashtable_lookup_fast(&pag->pagi_unlinked_hash, &agino,
+-			xfs_iunlink_hash_params);
+-	return iu ? iu->iu_agino : NULLAGINO;
+-}
+-
+-/*
+- * Take ownership of an iunlink cache entry and insert it into the hash table.
+- * If successful, the entry will be owned by the cache; if not, it is freed.
+- * Either way, the caller does not own @iu after this call.
+- */
+-static int
+-xfs_iunlink_insert_backref(
+-	struct xfs_perag	*pag,
+-	struct xfs_iunlink	*iu)
+-{
+-	int			error;
+-
+-	error = rhashtable_insert_fast(&pag->pagi_unlinked_hash,
+-			&iu->iu_rhash_head, xfs_iunlink_hash_params);
+-	/*
+-	 * Fail loudly if there already was an entry because that's a sign of
+-	 * corruption of in-memory data.  Also fail loudly if we see an error
+-	 * code we didn't anticipate from the rhashtable code.  Currently we
+-	 * only anticipate ENOMEM.
+-	 */
+-	if (error) {
+-		WARN(error != -ENOMEM, "iunlink cache insert error %d", error);
+-		kmem_free(iu);
+-	}
+-	/*
+-	 * Absorb any runtime errors that aren't a result of corruption because
+-	 * this is a cache and we can always fall back to bucket list scanning.
+-	 */
+-	if (error != 0 && error != -EEXIST)
+-		error = 0;
+-	return error;
+-}
+-
+-/* Remember that @prev_agino.next_unlinked = @this_agino. */
+-static int
+-xfs_iunlink_add_backref(
+-	struct xfs_perag	*pag,
+-	xfs_agino_t		prev_agino,
+-	xfs_agino_t		this_agino)
+-{
+-	struct xfs_iunlink	*iu;
+-
+-	if (XFS_TEST_ERROR(false, pag->pag_mount, XFS_ERRTAG_IUNLINK_FALLBACK))
+-		return 0;
+-
+-	iu = kmem_zalloc(sizeof(*iu), KM_NOFS);
+-	iu->iu_agino = prev_agino;
+-	iu->iu_next_unlinked = this_agino;
+-
+-	return xfs_iunlink_insert_backref(pag, iu);
+-}
+-
+-/*
+- * Replace X.next_unlinked = @agino with X.next_unlinked = @next_unlinked.
+- * If @next_unlinked is NULLAGINO, we drop the backref and exit.  If there
+- * wasn't any such entry then we don't bother.
++ * Given we have an existence guarantee, we can use lockless inode cache lookups
++ * to resolve aginos to xfs inodes. This means we only need 8 bytes per inode
++ * for the double linked unlinked list, and we don't need any extra locking to
++ * keep the list safe as all manipulations are done under the AGI buffer lock.
++ * Keeping the list up to date does not require memory allocation, just finding
++ * the XFS inode and updating the next/prev unlinked list aginos.
+  */
+-static int
+-xfs_iunlink_change_backref(
+-	struct xfs_perag	*pag,
+-	xfs_agino_t		agino,
+-	xfs_agino_t		next_unlinked)
+-{
+-	struct xfs_iunlink	*iu;
+-	int			error;
+-
+-	/* Look up the old entry; if there wasn't one then exit. */
+-	iu = rhashtable_lookup_fast(&pag->pagi_unlinked_hash, &agino,
+-			xfs_iunlink_hash_params);
+-	if (!iu)
+-		return 0;
+-
+-	/*
+-	 * Remove the entry.  This shouldn't ever return an error, but if we
+-	 * couldn't remove the old entry we don't want to add it again to the
+-	 * hash table, and if the entry disappeared on us then someone's
+-	 * violated the locking rules and we need to fail loudly.  Either way
+-	 * we cannot remove the inode because internal state is or would have
+-	 * been corrupt.
+-	 */
+-	error = rhashtable_remove_fast(&pag->pagi_unlinked_hash,
+-			&iu->iu_rhash_head, xfs_iunlink_hash_params);
+-	if (error)
+-		return error;
+-
+-	/* If there is no new next entry just free our item and return. */
+-	if (next_unlinked == NULLAGINO) {
+-		kmem_free(iu);
+-		return 0;
+-	}
+-
+-	/* Update the entry and re-add it to the hash table. */
+-	iu->iu_next_unlinked = next_unlinked;
+-	return xfs_iunlink_insert_backref(pag, iu);
+-}
+-
+-/* Set up the in-core predecessor structures. */
+-int
+-xfs_iunlink_init(
+-	struct xfs_perag	*pag)
+-{
+-	return rhashtable_init(&pag->pagi_unlinked_hash,
+-			&xfs_iunlink_hash_params);
+-}
+-
+-/* Free the in-core predecessor structures. */
+-static void
+-xfs_iunlink_free_item(
+-	void			*ptr,
+-	void			*arg)
+-{
+-	struct xfs_iunlink	*iu = ptr;
+-	bool			*freed_anything = arg;
+-
+-	*freed_anything = true;
+-	kmem_free(iu);
+-}
+-
+-void
+-xfs_iunlink_destroy(
+-	struct xfs_perag	*pag)
+-{
+-	bool			freed_anything = false;
+-
+-	rhashtable_free_and_destroy(&pag->pagi_unlinked_hash,
+-			xfs_iunlink_free_item, &freed_anything);
+-
+-	ASSERT(freed_anything == false || xfs_is_shutdown(pag->pag_mount));
+-}
+ 
+ /*
+  * Find an inode on the unlinked list. This does not take references to the
+@@ -2039,6 +1864,26 @@ xfs_iunlink_lookup(
+ 	return ip;
+ }
+ 
++/* Update the prev pointer of the next agino. */
++static int
++xfs_iunlink_update_backref(
++	struct xfs_perag	*pag,
++	xfs_agino_t		prev_agino,
++	xfs_agino_t		next_agino)
++{
++	struct xfs_inode	*ip;
++
++	/* No update necessary if we are at the end of the list. */
++	if (next_agino == NULLAGINO)
++		return 0;
++
++	ip = xfs_iunlink_lookup(pag, next_agino);
++	if (!ip)
++		return -EFSCORRUPTED;
++	ip->i_prev_unlinked = prev_agino;
++	return 0;
++}
++
+ /*
+  * Point the AGI unlinked bucket at an inode and log the results.  The caller
+  * is responsible for validating the old value.
+@@ -2170,7 +2015,7 @@ xfs_iunlink_insert_inode(
+ 	struct xfs_perag	*pag,
+ 	struct xfs_buf		*agibp,
+ 	struct xfs_inode	*ip)
+- {
++{
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	struct xfs_agi		*agi = agibp->b_addr;
+ 	xfs_agino_t		next_agino;
+@@ -2190,6 +2035,14 @@ xfs_iunlink_insert_inode(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
++	/*
++	 * Update the prev pointer in the next inode to point back to this
++	 * inode.
++	 */
++	error = xfs_iunlink_update_backref(pag, agino, next_agino);
++	if (error)
++		return error;
++
+ 	if (next_agino != NULLAGINO) {
+ 		xfs_agino_t		old_agino;
+ 
+@@ -2203,14 +2056,6 @@ xfs_iunlink_insert_inode(
+ 			return error;
+ 		ASSERT(old_agino == NULLAGINO);
+ 		ip->i_next_unlinked = next_agino;
+-
+-		/*
+-		 * agino has been unlinked, add a backref from the next inode
+-		 * back to agino.
+-		 */
+-		error = xfs_iunlink_add_backref(pag, agino, next_agino);
+-		if (error)
+-			return error;
+ 	}
+ 
+ 	/* Point the head of the list to point to this inode. */
+@@ -2251,63 +2096,6 @@ xfs_iunlink(
+ 	return error;
+ }
+ 
+-/*
+- * Walk the unlinked chain from @head_agino until we find the inode that
+- * points to @target_agino.  Return the inode number, map, dinode pointer,
+- * and inode cluster buffer of that inode as @agino, @imap, @dipp, and @bpp.
+- *
+- * @tp, @pag, @head_agino, and @target_agino are input parameters.
+- * @agino, @imap, @dipp, and @bpp are all output parameters.
+- *
+- * Do not call this function if @target_agino is the head of the list.
+- */
+-static int
+-xfs_iunlink_lookup_prev(
+-	struct xfs_perag	*pag,
+-	xfs_agino_t		head_agino,
+-	xfs_agino_t		target_agino,
+-	struct xfs_inode	**ipp)
+-{
+-	struct xfs_mount	*mp = pag->pag_mount;
+-	struct xfs_inode	*ip;
+-	xfs_agino_t		next_agino;
+-
+-	*ipp = NULL;
+-
+-	/* See if our backref cache can find it faster. */
+-	next_agino = xfs_iunlink_lookup_backref(pag, target_agino);
+-	if (next_agino != NULLAGINO) {
+-		ip = xfs_iunlink_lookup(pag, next_agino);
+-		if (ip && ip->i_next_unlinked == target_agino) {
+-			*ipp = ip;
+-			return 0;
+-		}
+-	}
+-
+-	/* Otherwise, walk the entire bucket until we find it. */
+-	next_agino = head_agino;
+-	while (next_agino != NULLAGINO) {
+-		ip = xfs_iunlink_lookup(pag, next_agino);
+-		if (!ip)
+-			return -EFSCORRUPTED;
+-
+-		/*
+-		 * Make sure this pointer is valid and isn't an obvious
+-		 * infinite loop.
+-		 */
+-		if (!xfs_verify_agino(mp, pag->pag_agno, ip->i_next_unlinked) ||
+-		    next_agino == ip->i_next_unlinked)
+-			return -EFSCORRUPTED;
+-
+-		if (ip->i_next_unlinked == target_agino) {
+-			*ipp = ip;
+-			return 0;
+-		}
+-		next_agino = ip->i_next_unlinked;
+-	}
+-	return -EFSCORRUPTED;
+-}
+-
+ static int
+ xfs_iunlink_remove_inode(
+ 	struct xfs_trans	*tp,
+@@ -2344,51 +2132,33 @@ xfs_iunlink_remove_inode(
+ 		return error;
+ 
+ 	/*
+-	 * If there was a backref pointing from the next inode back to this
+-	 * one, remove it because we've removed this inode from the list.
+-	 *
+-	 * Later, if this inode was in the middle of the list we'll update
+-	 * this inode's backref to point from the next inode.
++	 * Update the prev pointer in the next inode to point back to previous
++	 * inode in the chain.
+ 	 */
+-	if (next_agino != NULLAGINO) {
+-		error = xfs_iunlink_change_backref(pag, next_agino, NULLAGINO);
+-		if (error)
+-			return error;
+-	}
++	error = xfs_iunlink_update_backref(pag, ip->i_prev_unlinked,
++			ip->i_next_unlinked);
++	if (error)
++		return error;
+ 
+ 	if (head_agino != agino) {
+ 		struct xfs_inode	*prev_ip;
+ 
+-		error = xfs_iunlink_lookup_prev(pag, head_agino, agino,
+-				&prev_ip);
+-		if (error)
+-			return error;
+-
+-		/* Point the previous inode on the list to the next inode. */
+-		error = xfs_iunlink_update_inode(tp, prev_ip, pag, next_agino,
+-				NULL);
+-		if (error)
+-			return error;
++		prev_ip = xfs_iunlink_lookup(pag, ip->i_prev_unlinked);
++		if (!prev_ip)
++			return -EFSCORRUPTED;
+ 
++		error = xfs_iunlink_update_inode(tp, prev_ip, pag,
++				ip->i_next_unlinked, NULL);
+ 		prev_ip->i_next_unlinked = ip->i_next_unlinked;
+-		ip->i_next_unlinked = NULLAGINO;
+-
+-		/*
+-		 * Now we deal with the backref for this inode.  If this inode
+-		 * pointed at a real inode, change the backref that pointed to
+-		 * us to point to our old next.  If this inode was the end of
+-		 * the list, delete the backref that pointed to us.  Note that
+-		 * change_backref takes care of deleting the backref if
+-		 * next_agino is NULLAGINO.
+-		 */
+-		return xfs_iunlink_change_backref(agibp->b_pag, agino,
+-				next_agino);
++	} else {
++		/* Point the head of the list to the next unlinked inode. */
++		error = xfs_iunlink_update_bucket(tp, pag, agibp, bucket_index,
++				ip->i_next_unlinked);
+ 	}
+ 
+-	/* Point the head of the list to the next unlinked inode. */
+ 	ip->i_next_unlinked = NULLAGINO;
+-	return xfs_iunlink_update_bucket(tp, pag, agibp, bucket_index,
+-			next_agino);
++	ip->i_prev_unlinked = NULLAGINO;
++	return error;
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 8e2a33c6cbe2..8d8cce61e5ba 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -70,6 +70,7 @@ typedef struct xfs_inode {
+ 
+ 	/* unlinked list pointers */
+ 	xfs_agino_t		i_next_unlinked;
++	xfs_agino_t		i_prev_unlinked;
+ 
+ 	/* VFS inode */
+ 	struct inode		i_vnode;	/* embedded VFS inode */
+@@ -508,9 +509,6 @@ extern struct kmem_cache	*xfs_inode_cache;
+ 
+ bool xfs_inode_needs_inactive(struct xfs_inode *ip);
+ 
+-int xfs_iunlink_init(struct xfs_perag *pag);
+-void xfs_iunlink_destroy(struct xfs_perag *pag);
+-
+ void xfs_end_io(struct work_struct *work);
+ 
+ int xfs_ilock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 7d0f530d7e3c..8e97f4240b93 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2674,28 +2674,50 @@ xlog_recover_iunlink_bucket(
+ 	struct xfs_agi		*agi,
+ 	int			bucket)
+ {
++	struct xfs_inode	*prev_ip = NULL;
+ 	struct xfs_inode	*ip;
+-	xfs_agino_t		agino;
++	xfs_agino_t		prev_agino, agino;
++	int			error = 0;
+ 
+ 	agino = be32_to_cpu(agi->agi_unlinked[bucket]);
+ 	while (agino != NULLAGINO) {
+-		int	error;
+ 
+ 		error = xfs_iget(mp, NULL,
+ 				XFS_AGINO_TO_INO(mp, pag->pag_agno, agino),
+ 				0, 0, &ip);
+ 		if (error)
+-			return error;;
++			break;
+ 
+ 		ASSERT(VFS_I(ip)->i_nlink == 0);
+ 		ASSERT(VFS_I(ip)->i_mode != 0);
+ 		xfs_iflags_clear(ip, XFS_IRECOVERY);
+ 		agino = ip->i_next_unlinked;
+ 
+-		xfs_irele(ip);
+-		cond_resched();
++		if (prev_ip) {
++			ip->i_prev_unlinked = prev_agino;
++			xfs_irele(prev_ip);
++
++			/*
++			 * Ensure the inode is removed from the unlinked list
++			 * before we continue so that it race with building the
++			 * in-memory list here. THis could be serialised with
++			 * the agibp lock, but that just serialises via
++			 * lockstepping and it's much simpler just to flush the
++			 * inodegc queue and wait for it to complete.
++			 */
++			xfs_inodegc_flush(mp);
++		}
++
++		prev_agino = agino;
++		prev_ip = ip;
+ 	}
+-	return 0;
++
++	if (prev_ip) {
++		ip->i_prev_unlinked = prev_agino;
++		xfs_irele(prev_ip);
++	}
++	xfs_inodegc_flush(mp);
++	return error;
+ }
+ 
+ /*
+-- 
+2.36.1
 
