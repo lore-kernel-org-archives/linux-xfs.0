@@ -2,147 +2,257 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15FCEC43334
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 22:27:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A74DC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 23:35:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242579AbiF0W10 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jun 2022 18:27:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59604 "EHLO
+        id S241313AbiF0XfU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jun 2022 19:35:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240399AbiF0W1X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 18:27:23 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8ED7518357
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Jun 2022 15:27:22 -0700 (PDT)
+        with ESMTP id S236667AbiF0XfT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 19:35:19 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 07DFADF8B;
+        Mon, 27 Jun 2022 16:35:18 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7FAC010EA992;
-        Tue, 28 Jun 2022 08:27:21 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 3767D5ED512;
+        Tue, 28 Jun 2022 09:35:17 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1o5xCS-00BqDO-68; Tue, 28 Jun 2022 08:27:20 +1000
-Date:   Tue, 28 Jun 2022 08:27:20 +1000
+        id 1o5yGB-00BrO7-Sf; Tue, 28 Jun 2022 09:35:15 +1000
+Date:   Tue, 28 Jun 2022 09:35:15 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
-Subject: Re: [PATCH 3/3] xfs: dont treat rt extents beyond EOF as eofblocks
- to be cleared
-Message-ID: <20220627222720.GF227878@dread.disaster.area>
-References: <165628102728.4040423.16023948770805941408.stgit@magnolia>
- <165628104422.4040423.6482533913763183686.stgit@magnolia>
- <20220627013731.GB227878@dread.disaster.area>
- <Yrkqpbq0qEtixtdX@magnolia>
- <20220627051649.GD227878@dread.disaster.area>
- <YroaNHm9nQz39dyR@magnolia>
+Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 25/25] xfs: Support large folios
+Message-ID: <20220627233515.GG227878@dread.disaster.area>
+References: <20211216210715.3801857-1-willy@infradead.org>
+ <20211216210715.3801857-26-willy@infradead.org>
+ <YrO243DkbckLTfP7@magnolia>
+ <Yrku31ws6OCxRGSQ@magnolia>
+ <Yrm6YM2uS+qOoPcn@casper.infradead.org>
+ <YrosM1+yvMYliw2l@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YroaNHm9nQz39dyR@magnolia>
+In-Reply-To: <YrosM1+yvMYliw2l@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62ba2ec9
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62ba3eb5
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=t6_JvATAxVzgssUnmgcA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=JfrnYn6hAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=Tx_KuMWrBpQ_Xf1fj60A:9 a=CjuIK1q_8ugA:10
+        a=1CNFftbPRP8L7MoqJWF3:22 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 27, 2022 at 01:59:32PM -0700, Darrick J. Wong wrote:
-> On Mon, Jun 27, 2022 at 03:16:49PM +1000, Dave Chinner wrote:
-> > On Sun, Jun 26, 2022 at 08:57:25PM -0700, Darrick J. Wong wrote:
-> > > On Mon, Jun 27, 2022 at 11:37:31AM +1000, Dave Chinner wrote:
-> > > > On Sun, Jun 26, 2022 at 03:04:04PM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jun 27, 2022 at 03:16:19PM -0700, Darrick J. Wong wrote:
+> On Mon, Jun 27, 2022 at 03:10:40PM +0100, Matthew Wilcox wrote:
+> > On Sun, Jun 26, 2022 at 09:15:27PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Jun 22, 2022 at 05:42:11PM -0700, Darrick J. Wong wrote:
+> > > > [resend with shorter 522.out file to keep us under the 300k maximum]
+> > > > 
+> > > > On Thu, Dec 16, 2021 at 09:07:15PM +0000, Matthew Wilcox (Oracle) wrote:
+> > > > > Now that iomap has been converted, XFS is large folio safe.
+> > > > > Indicate to the VFS that it can now create large folios for XFS.
 > > > > > 
-> > > > > On a system with a realtime volume and a 28k realtime extent,
-> > > > > generic/491 fails because the test opens a file on a frozen filesystem
-> > > > > and closing it causes xfs_release -> xfs_can_free_eofblocks to
-> > > > > mistakenly think that the the blocks of the realtime extent beyond EOF
-> > > > > are posteof blocks to be freed.  Realtime extents cannot be partially
-> > > > > unmapped, so this is pointless.  Worse yet, this triggers posteof
-> > > > > cleanup, which stalls on a transaction allocation, which is why the test
-> > > > > fails.
-> > > > > 
-> > > > > Teach the predicate to account for realtime extents properly.
-> > > > > 
-> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > > > > > ---
-> > > > >  fs/xfs/xfs_bmap_util.c |    2 ++
+> > > > >  fs/xfs/xfs_icache.c | 2 ++
 > > > > >  1 file changed, 2 insertions(+)
 > > > > > 
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > > > > index 52be58372c63..85e1a26c92e8 100644
-> > > > > --- a/fs/xfs/xfs_bmap_util.c
-> > > > > +++ b/fs/xfs/xfs_bmap_util.c
-> > > > > @@ -686,6 +686,8 @@ xfs_can_free_eofblocks(
-> > > > >  	 * forever.
-> > > > >  	 */
-> > > > >  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-> > > > > +	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
-> > > > > +		end_fsb = roundup_64(end_fsb, mp->m_sb.sb_rextsize);
-> > > > >  	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
-> > > > >  	if (last_fsb <= end_fsb)
-> > > > >  		return false;
+> > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > > > index da4af2142a2b..cdc39f576ca1 100644
+> > > > > --- a/fs/xfs/xfs_icache.c
+> > > > > +++ b/fs/xfs/xfs_icache.c
+> > > > > @@ -87,6 +87,7 @@ xfs_inode_alloc(
+> > > > >  	/* VFS doesn't initialise i_mode or i_state! */
+> > > > >  	VFS_I(ip)->i_mode = 0;
+> > > > >  	VFS_I(ip)->i_state = 0;
+> > > > > +	mapping_set_large_folios(VFS_I(ip)->i_mapping);
+> > > > >  
+> > > > >  	XFS_STATS_INC(mp, vn_active);
+> > > > >  	ASSERT(atomic_read(&ip->i_pincount) == 0);
+> > > > > @@ -320,6 +321,7 @@ xfs_reinit_inode(
+> > > > >  	inode->i_rdev = dev;
+> > > > >  	inode->i_uid = uid;
+> > > > >  	inode->i_gid = gid;
+> > > > > +	mapping_set_large_folios(inode->i_mapping);
 > > > > 
-> > > > Ok, that works.
-> > 
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > 
+> > > > Hmm.  Ever since 5.19-rc1, I've noticed that fsx in generic/522 now
+> > > > reports file corruption after 20 minutes of runtime.  The corruption is
+> > > > surprisingly reproducible (522.out.bad attached below) in that I ran it
+> > > > three times and always got the same bad offset (0x6e000) and always the
+> > > > same opcode (6213798(166 mod 256) MAPREAD).
 > > > > 
-> > > > However, I was looking at xfs_can_free_eofblocks() w.r.t. freeze a
-> > > > couple of days ago and wondering why there isn't a freeze/RO state
-> > > > check in xfs_can_free_eofblocks(). Shouldn't we have one here so
-> > > > that we never try to run xfs_free_eofblocks() on RO/frozen
-> > > > filesystems regardless of unexpected state/alignment issues?
+> > > > I turned off multipage folios and now 522 has run for over an hour
+> > > > without problems, so before I go do more debugging, does this ring a
+> > > > bell to anyone?
 > > > 
-> > > I asked myself that question too.  I found three callers of this
-> > > predicate:
+> > > I tried bisecting, but that didn't yield anything productive and
+> > > 5.19-rc4 still fails after 25 minutes; however, it seems that g/522 will
+> > > run without problems for at least 3-4 days after reverting this patch
+> > > from -rc3.
 > > > 
-> > > 1. fallocate, which should have obtained freeze protection
+> > > So I guess I have a blunt force fix if we can't figure this one out
+> > > before 5.19 final, but I'd really rather not.  Will keep trying this
+> > > week.
 > > 
-> > *nod*
+> > I'm on holiday for the next week, so I'm not going to be able to spend
+> > any time on this until then.  I have a suspicion that this may be the
+> > same bug Zorro is seeing here:
 > > 
-> > > 2. inodegc, which should never be running when we get to the innermost
-> > > freeze protection level
+> > https://lore.kernel.org/linux-mm/20220613010850.6kmpenitmuct2osb@zlang-mailbox/
 > > 
-> > So inodegc could still do IO here on a read-only fs?
+> > At least I hope it is, and finding a folio that has been freed would
+> > explain (apparent) file corruption.
 > 
-> Correct.
+> Hm.  I suppose it /could/ be a lost folio getting into the works
+> somewhere.
 > 
-> > > 3. xfs_release, which doesn't take freeze protection at all.  Either it
-> > > needs to take freeze protection so that xfs_free_eofblocks can't get
-> > > stuck in xfs_trans_alloc, or we'd need to modify xfs_trans_alloc to
-> > > sb_start_intwrite_trylock
-> > 
-> > That looks to me like it is simply a case of replacing the
-> > !xfs_is_readonly() check in xfs_release() with a
-> > !xfs_fs_writeable(mp, SB_FREEZE_WRITE) check and we shouldn't have
-> > to touch anythign else, right?
+> Today I remembered fsx -X, which makes this reproduce a bit faster (~3-8
+> minutes instead of 20-25).  That has helped me to narrow things down a
+> little more:
 > 
-> I think there would still be a race if we did that -- I don't see
-> anything in __fput that prohibits another thread from initiating a
-> freeze after the release process calls _can_free_eofblocks but before
-> the actual call to _free_eofblocks.
+> - Turning off INSERT/COLLAPSE_RANGE doesn't make the problem go away,
+>   but it does make reading the fsx log much easier.
+> 
+> - Turning off clone/dedupe (either via -J -B or formatting with -m
+>   reflink=0) makes the problem go away completely.  If you define
+>   letting fsx run for 90 minutes as "completely".
+> 
+> - Neutering vfs_dedupe_file_range_compare by replacing it with an -EBADE
+>   return doesn't affect the reproducibility, so it's not the comparison
+>   function misbehaving.
+> - I modified fsx.c so that when there's file corruption, it'll report
+>   both the first 16 bytes of corruption as well as every corruption that
+>   happens on a page boundary.
+> 
+> - I also modified run_fsx() to diff the good and junk files, and
+>   complain about any corruption happening on a page boundary.  Now I see
+>   things like this:
+> 
+> 2153984(  0 mod 256): SKIPPED (no operation)
+> 2153985(  1 mod 256): DEDUPE 0xf000 thru 0x23fff        (0x15000 bytes) to 0x2a000 thru 0x3efff ******BBBB
+> 2153986(  2 mod 256): COPY 0xe794 thru 0x2ae41  (0x1c6ae bytes) to 0x60ac4 thru 0x7d171
+> 2153987(  3 mod 256): TRUNCATE DOWN     from 0x7d172 to 0x535da
+> 2153988(  4 mod 256): SKIPPED (no operation)
+> 2153989(  5 mod 256): MAPREAD  0x40b93 thru 0x535d9     (0x12a47 bytes)
+> 2153990(  6 mod 256): COPY 0x5edd thru 0x20282  (0x1a3a6 bytes) to 0x3a9aa thru 0x54d4f
+> 2153991(  7 mod 256): SKIPPED (no operation)
+> 2153992(  8 mod 256): SKIPPED (no operation)
+> 2153993(  9 mod 256): ZERO     0x542d3 thru 0x67006     (0x12d34 bytes)
+> 2153994( 10 mod 256): COPY 0x42cf6 thru 0x538a7 (0x10bb2 bytes) to 0x23fe7 thru 0x34b98 ******EEEE
+> 2153995( 11 mod 256): MAPWRITE 0x5a1fc thru 0x6b067     (0x10e6c bytes)
+> 2153996( 12 mod 256): SKIPPED (no operation)
+> 2153997( 13 mod 256): CLONE 0x38000 thru 0x38fff        (0x1000 bytes) to 0x77000 thru 0x77fff
+> 2153998( 14 mod 256): FALLOC   0x49bdd thru 0x62a55     (0x18e78 bytes) INTERIOR
+> 2153999( 15 mod 256): CLONE 0xf000 thru 0x1bfff (0xd000 bytes) to 0x2c000 thru 0x38fff  ******JJJJ
+> Log of operations saved to "/mnt/junk.fsxops"; replay with --replay-ops
+> Correct content saved for comparison
+> (maybe hexdump "/mnt/junk" vs "/mnt/junk.fsxgood")
+> junk file 177
+> -02e000  ec  20  ec  5a  ec  78  ec  b2  ec  e6  ec  1e  ec  43  ec  0f
+> -02f000  ec  30  ec  32  ec  4c  ec  ac  ec  5c  ec  d2  ec  62  ec  d3
+> -030000  ec  73  ec  ce  ec  8c  ec  cb  ec  94  ec  59  ec  81  ec  34
+> +02e000  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d  db  de  db
+> +02f000  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b  d8  83  d8
+> +030000  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e  d8  61  d8
+> 
+> When I remount the test filesystem, I see further corruption:
+> 
+> $ diff -Naurp <(od -tx1 -Ax -c $TEST_DIR/junk.fsxgood) <(od -tx1 -Ax -c $TEST_DIR/junk) | grep '^[+-]0..000'
+> -011000  ec  20  ec  5a  ec  78  ec  b2  ec  e6  ec  1e  ec  43  ec  0f
+> -012000  ec  30  ec  32  ec  4c  ec  ac  ec  5c  ec  d2  ec  62  ec  d3
+> -013000  ec  73  ec  ce  ec  8c  ec  cb  ec  94  ec  59  ec  81  ec  34
+> +011000  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d  db  de  db
+> +012000  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b  d8  83  d8
+> +013000  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e  d8  61  d8
+> -02e000  ec  20  ec  5a  ec  78  ec  b2  ec  e6  ec  1e  ec  43  ec  0f
+> -02f000  ec  30  ec  32  ec  4c  ec  ac  ec  5c  ec  d2  ec  62  ec  d3
+> -030000  ec  73  ec  ce  ec  8c  ec  cb  ec  94  ec  59  ec  81  ec  34
+> +02e000  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d  db  de  db
+> +02f000  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b  d8  83  d8
+> +030000  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e  d8  61  d8
+> 
+> This is really quite strange!  The same corruption patterns we saw at
+> pages 0x2e - 0x30 now appear at 0x11-0x13 after the remount!
 
-Yup, the probability of that happening is pretty small, and there's
-every chance it could have got stuck on something else racing with
-the freeze.
+Hmmmm - look at what the last operation before failure
+does - it clones 0xf000-0x1bfff to 0x2c000-0x38fff. IOWs, those
+ranges *should* be identical and the the corruption is actually
+occuring at 0x11000-0x13fff. It's not until that range gets cloned
+to 0x2e000-0x30fff that the corruption is detected.
 
-In reality, I don't think that blocking in ->release on freeze is
-inherently bad - it will just wait until the filesystem is thawed
-and then continue on. i.e. just because the test hangs on closing a
-fd on a frozen fs doesn't mean that the freeze mechanism is broken
-in any way....
+So we're looking in the wrong spot for the page cache corruption -
+we need to be looking at operations over the range 0x11000-0x13fff
+for misbehaviour, not where fsx detected the corrupt data.
 
-> Hm.  How often would we have a readonly fd pointing to a file that has
-> posteof blocks?  I suppose this could happen if the system was extending
-> a file, crashed, and then someone remounted, opened a ro fd, and then
-> closed and froze the fs at the same time...?
+> By comparison, the junk.fsxgood file only contains this 77/db/f1
+> sequence at:
+> 
+> $ od -tx1 -Ax -c $TEST_DIR/junk.fsxgood | grep '77  db  f1'
+> 008530  db  34  db  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d
+> 03d000  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d  db  de  db
+> 
+> Curiously, the same byte trios at 0x2f000 and 0x30000 have similar
+> repetitions at similar looking offsets:
+> 
+> $ od -tx1 -Ax -c $TEST_DIR/junk.fsxgood | grep 'b3  d8  35'
+> 009530  d8  bb  d8  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b
+> 03e000  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b  d8  83  d8
+> $ od -tx1 -Ax -c $TEST_DIR/junk.fsxgood | grep '23  d8  c8'
+> 00a530  d8  f5  d8  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e
+> 03f000  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e  d8  61  d8
+> 
+> Though the only pattern that happens consistently is that garbage bytes
+> end up at the reflink dest, and later at the reflink source.  I never
+> see any VM_BUG_ON_FOLIO asserts, nor does KASAN report anything.
 
-Snapshots. Open files at freeze time will result in post-eof blocks
-existing in the snapshot. Mount the snapshot read-only ..... and
-that's what the read-only check in xfs_release() catches......
+Smells like the page cache over the clone source is not getting
+marked dirty and/or flushed to disk correctly before the clone is
+run. It then shares the extent with stale data to the new location
+(the destination) which then fails the contents validation.
+
+Do we have a case where we are only writing back the head page of
+the multipage folio?
+
+> I also added a debug function to dump the folios it finds in the
+> pagecache for the fsx junk file, but nothing looks odd:
+> 
+>      522-5099  [001]   491.954659: console:              [U] FSX FAILURE
+>   xfs_io-5125  [002]   491.961232: console:              XFS (sda): EXPERIMENTAL online scrub feature in use. Use at your own risk!
+>   xfs_io-5125  [002]   491.961238: bprint:               filemap_dump: ino 0xb1 pos 0x0 pfn 0x515cc order 0
+>   xfs_io-5125  [002]   491.961238: bprint:               filemap_dump: ino 0xb1 pos 0x1000 pfn 0x515cd order 0
+>   xfs_io-5125  [002]   491.961239: bprint:               filemap_dump: ino 0xb1 pos 0x2000 pfn 0x515ce order 0
+>   xfs_io-5125  [002]   491.961239: bprint:               filemap_dump: ino 0xb1 pos 0x3000 pfn 0x515cf order 0
+>   xfs_io-5125  [002]   491.961239: bprint:               filemap_dump: ino 0xb1 pos 0x4000 pfn 0x50c48 order 0
+>   xfs_io-5125  [002]   491.961240: bprint:               filemap_dump: ino 0xb1 pos 0x5000 pfn 0x50c49 order 0
+>   xfs_io-5125  [002]   491.961240: bprint:               filemap_dump: ino 0xb1 pos 0x6000 pfn 0x50c4a order 0
+>   xfs_io-5125  [002]   491.961241: bprint:               filemap_dump: ino 0xb1 pos 0x7000 pfn 0xc8a8 order 0
+>   xfs_io-5125  [002]   491.961241: bprint:               filemap_dump: ino 0xb1 pos 0x8000 pfn 0x50988 order 2
+>   xfs_io-5125  [002]   491.961241: bprint:               filemap_dump: ino 0xb1 pos 0xc000 pfn 0x509e0 order 2
+>   xfs_io-5125  [002]   491.961242: bprint:               filemap_dump: ino 0xb1 pos 0x10000 pfn 0x4db64 order 2
+
+So this is the folio that likely has the problem (the source)...
+
+>   xfs_io-5125  [002]   491.961242: bprint:               filemap_dump: ino 0xb1 pos 0x14000 pfn 0x50c4c order 0
+>   xfs_io-5125  [002]   491.961243: bprint:               filemap_dump: ino 0xb1 pos 0x15000 pfn 0x12485 order 0
+>   xfs_io-5125  [002]   491.961243: bprint:               filemap_dump: ino 0xb1 pos 0x16000 pfn 0x50c4d order 0
+>   xfs_io-5125  [002]   491.961243: bprint:               filemap_dump: ino 0xb1 pos 0x17000 pfn 0x50c4e order 0
+>   xfs_io-5125  [002]   491.961244: bprint:               filemap_dump: ino 0xb1 pos 0x18000 pfn 0x4eef8 order 2
+>   xfs_io-5125  [002]   491.961244: bprint:               filemap_dump: ino 0xb1 pos 0x1c000 pfn 0x4eefc order 2
+>   xfs_io-5125  [002]   491.961245: bprint:               filemap_dump: ino 0xb1 pos 0x20000 pfn 0x4eef0 order 2
+>   xfs_io-5125  [002]   491.961245: bprint:               filemap_dump: ino 0xb1 pos 0x24000 pfn 0x50f2c order 2
+>   xfs_io-5125  [002]   491.961245: bprint:               filemap_dump: ino 0xb1 pos 0x28000 pfn 0x50f28 order 2
+>   xfs_io-5125  [002]   491.961246: bprint:               filemap_dump: ino 0xb1 pos 0x2c000 pfn 0x50f24 order 2
+
+... not the one at the destination here.
 
 Cheers,
 
