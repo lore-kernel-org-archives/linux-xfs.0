@@ -2,123 +2,179 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1BB0C43334
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 03:57:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C7BBC43334
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 03:59:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230296AbiF0D5b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Jun 2022 23:57:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42830 "EHLO
+        id S229746AbiF0D7N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 26 Jun 2022 23:59:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230013AbiF0D5a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jun 2022 23:57:30 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23E743896
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Jun 2022 20:57:28 -0700 (PDT)
+        with ESMTP id S229538AbiF0D7M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jun 2022 23:59:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E39242AF2
+        for <linux-xfs@vger.kernel.org>; Sun, 26 Jun 2022 20:59:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AE32FB80EA2
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Jun 2022 03:57:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55D48C341C8;
-        Mon, 27 Jun 2022 03:57:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 858A461006
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Jun 2022 03:59:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6C27C341C8;
+        Mon, 27 Jun 2022 03:59:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656302246;
-        bh=qke30VYJVgRdqiKXWNdln0gj6B+pRsoQmAjJzlP3qDE=;
+        s=k20201202; t=1656302351;
+        bh=95rxev1f6HnRXPqHHE3piIkgKJiRZS61haOHYrcSvdM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=P28Sc5IlBTgqMAzBMUGcCtZxeQWVWS67zd9+JtGUrw1FgL9ETFw5ZJYcPBJjJ7fZ1
-         nY6wpY4ApYxQ4lmHL1VMOr3ucU9Mme83XtgLbDcesZChykxnncCicGXMv8tYk9XHHn
-         5xOdAKHet+hLsnkBhLKpgFuStSdu5BuyfIdXM4k3DsgKcGgE2UzDLoyifjcMh0UaNY
-         ASgFVTv5n7wYtPh9lBUV7FqjJXpmkcRh29OB00ZvcxlT9082QeCu3380RjRctBbpJB
-         tQJtMHKSSpr7IZS0gzM/4yrZdgX8+EMMMm0Twl03Jv5gTlrVrkmcDePTgEqXJ2zAJ/
-         tZc6ZUTKIktsg==
-Date:   Sun, 26 Jun 2022 20:57:25 -0700
+        b=EfEZGr/uqYVB7xwM3KO3l0pLSJ4psQpao+eGTnQ2sLVy9yx+hq5zRGdVt2269INrp
+         W1UN8X5UVWjQvv9+797uFWZqAnLPUSzqu8HhSpq5P/mpw79T+pp5NSrNolBFpkIvu1
+         PizturI95MHQsTiTsXrY+3++6i0zEXUcZLOrEr1EtUcl4ss+t8l6a4hY5AbXfgCUXV
+         KviSHp/4cqdnFOSbkmxPN+o3CXWUcXcE8APhpeRRyFzRGCEQFnoix2ibZuaIxJIKjQ
+         wdqU8ikLIn7fKz/8T6vvSP4xA/UDNDNd6G9tPh7gvhm26ATxP23IwDQvTUSaYfT+FV
+         TPVI8HZBkkoHw==
+Date:   Sun, 26 Jun 2022 20:59:10 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
-Subject: Re: [PATCH 3/3] xfs: dont treat rt extents beyond EOF as eofblocks
- to be cleared
-Message-ID: <Yrkqpbq0qEtixtdX@magnolia>
+Subject: Re: [PATCH 1/3] xfs: empty xattr leaf header blocks are not
+ corruption
+Message-ID: <YrkrDtr5qQlxDoE/@magnolia>
 References: <165628102728.4040423.16023948770805941408.stgit@magnolia>
- <165628104422.4040423.6482533913763183686.stgit@magnolia>
- <20220627013731.GB227878@dread.disaster.area>
+ <165628103299.4040423.12298502732701682950.stgit@magnolia>
+ <20220627011654.GZ227878@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220627013731.GB227878@dread.disaster.area>
+In-Reply-To: <20220627011654.GZ227878@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 27, 2022 at 11:37:31AM +1000, Dave Chinner wrote:
-> On Sun, Jun 26, 2022 at 03:04:04PM -0700, Darrick J. Wong wrote:
+On Mon, Jun 27, 2022 at 11:16:54AM +1000, Dave Chinner wrote:
+> On Sun, Jun 26, 2022 at 03:03:53PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > On a system with a realtime volume and a 28k realtime extent,
-> > generic/491 fails because the test opens a file on a frozen filesystem
-> > and closing it causes xfs_release -> xfs_can_free_eofblocks to
-> > mistakenly think that the the blocks of the realtime extent beyond EOF
-> > are posteof blocks to be freed.  Realtime extents cannot be partially
-> > unmapped, so this is pointless.  Worse yet, this triggers posteof
-> > cleanup, which stalls on a transaction allocation, which is why the test
-> > fails.
+> > Every now and then we get a corruption report from the kernel or
+> > xfs_repair about empty leaf blocks in the extended attribute structure.
+> > We've long thought that these shouldn't be possible, but prior to 5.18
+> > one would shake loose in the recoveryloop fstests about once a month.
 > > 
-> > Teach the predicate to account for realtime extents properly.
-> > 
+> > A new addition to the xattr leaf block verifier in 5.19-rc1 makes this
+> > happen every 7 minutes on my testing cloud.
+> 
+> Ok, so this is all just a long way of saying:
+> 
+> Revert commit 51e6104fdb95 ("xfs: detect empty attr leaf blocks in
+> xfs_attr3_leaf_verify") because it was wrong.
+> 
+> Yes?
+
+Yep.
+
+> > Original-bug: 517c22207b04 ("xfs: add CRCs to attr leaf blocks")
+> > Still-not-fixed: 2e1d23370e75 ("xfs: ignore leaf attr ichdr.count in verifier during log replay")
+> > Removed-in: f28cef9e4dac ("xfs: don't fail verifier on empty attr3 leaf block")
+> > Fixes: 51e6104fdb95 ("xfs: detect empty attr leaf blocks in xfs_attr3_leaf_verify")
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  fs/xfs/xfs_bmap_util.c |    2 ++
-> >  1 file changed, 2 insertions(+)
+> >  fs/xfs/libxfs/xfs_attr_leaf.c |   48 ++++++++++++++++++++++++++++++++++++-----
+> >  1 file changed, 42 insertions(+), 6 deletions(-)
 > > 
 > > 
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index 52be58372c63..85e1a26c92e8 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -686,6 +686,8 @@ xfs_can_free_eofblocks(
-> >  	 * forever.
+> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > index 37e7c33f6283..be7c216ec8f2 100644
+> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > @@ -311,13 +311,49 @@ xfs_attr3_leaf_verify(
+> >  		return fa;
+> >  
+> >  	/*
+> > -	 * Empty leaf blocks should never occur;  they imply the existence of a
+> > -	 * software bug that needs fixing. xfs_repair also flags them as a
+> > -	 * corruption that needs fixing, so we should never let these go to
+> > -	 * disk.
+> > +	 * Empty leaf blocks can occur under the following circumstances:
+> > +	 *
+> > +	 * 1. setxattr adds a new extended attribute to a file;
+> > +	 * 2. The file has zero existing attributes;
+> > +	 * 3. The attribute is too large to fit in the attribute fork;
+> > +	 * 4. The attribute is small enough to fit in a leaf block;
+> > +	 * 5. A log flush occurs after committing the transaction that creates
+> > +	 *    the (empty) leaf block; and
+> > +	 * 6. The filesystem goes down after the log flush but before the new
+> > +	 *    attribute can be committed to the leaf block.
+> > +	 *
+> > +	 * xfs_repair used to flag these empty leaf blocks as corruption, but
+> > +	 * aside from wasting space, they are benign.  The rest of the xattr
+> > +	 * code will happily add attributes to empty leaf blocks.  Hence this
+> > +	 * comment serves as a tombstone to incorrect verifier code.
+> > +	 *
+> > +	 * Unfortunately, this check has been added and removed multiple times
+> > +	 * throughout history.  It first appeared in[1] kernel 3.10 as part of
+> > +	 * the early V5 format patches.  The check was later discovered to
+> > +	 * break log recovery and hence disabled[2] during log recovery in
+> > +	 * kernel 4.10.  Simultaneously, the check was added[3] to xfs_repair
+> > +	 * 4.9.0 to try to weed out the empty leaf blocks.  This was still not
+> > +	 * correct because log recovery would recover an empty attr leaf block
+> > +	 * successfully only for regular xattr operations to trip over the
+> > +	 * empty block during of the block during regular operation.
+> > +	 * Therefore, the check was removed entirely[4] in kernel 5.7 but
+> > +	 * removal of the xfs_repair check was forgotten.  The continued
+> > +	 * complaints from xfs_repair lead to us mistakenly re-adding[5] the
+> > +	 * verifier check for kernel 5.19, and has been removed once again.
+> > +	 *
+> > +	 * [1] 517c22207b04 ("xfs: add CRCs to attr leaf blocks")
+> > +	 * [2] 2e1d23370e75 ("xfs: ignore leaf attr ichdr.count in verifier
+> > +	 *                    during log replay")
+> > +	 * [3] f7140161 ("xfs_repair: junk leaf attribute if count == 0")
+> > +	 * [4] f28cef9e4dac ("xfs: don't fail verifier on empty attr3 leaf
+> > +	 *                    block")
+> > +	 * [5] 51e6104fdb95 ("xfs: detect empty attr leaf blocks in
+> > +	 *                    xfs_attr3_leaf_verify")
+> > +	 *
+> > +	 * Normally this would go in the commit message, but as we've a history
+> > +	 * of getting this wrong, this now goes in the code base as a gigantic
+> > +	 * comment.
 > >  	 */
-> >  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-> > +	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
-> > +		end_fsb = roundup_64(end_fsb, mp->m_sb.sb_rextsize);
-> >  	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
-> >  	if (last_fsb <= end_fsb)
-> >  		return false;
 > 
-> Ok, that works.
+> I still think it should be in the commit history, not here in the
+> code. The reason I missed this is that the existing comment about
+> empty leaf attrs is above a section that is verifying entries
+> *after* various fields in the header had been validated. Hence I
+> thought it was a case that the header field had not been validated
+> and so I added it. Simple mistake.
+
+<nod> ...and I wanted redundant breadcrumbs in the commit history and
+the code itself because you and I keep making the same mistakes. :/
+
+> This needs to be a comment at the head of the function, not
+> associated with validity checking the entries. i.e.
 > 
-> However, I was looking at xfs_can_free_eofblocks() w.r.t. freeze a
-> couple of days ago and wondering why there isn't a freeze/RO state
-> check in xfs_can_free_eofblocks(). Shouldn't we have one here so
-> that we never try to run xfs_free_eofblocks() on RO/frozen
-> filesystems regardless of unexpected state/alignment issues?
+> /*
+>  * Validate the attribute leaf.
+>  *
+>  * A leaf block can be empty as a result of transient state whilst
+>  * creating a new leaf form attribute:
+>  *
+>  * 1. setxattr adds a new extended attribute to a file;
+>  * 2. The file has zero existing attributes;
+>  * 3. The attribute is too large to fit in the attribute fork;
+>  * 4. The attribute is small enough to fit in a leaf block;
+>  * 5. A log flush occurs after committing the transaction that creates
+>  *    the (empty) leaf block; and
+>  * 6. The filesystem goes down after the log flush but before the new
+>  *    attribute can be committed to the leaf block.
+>  *
+>  * Hence we need to ensure that we don't fail the validation purely
+>  * because the leaf is empty.
+>  */
 
-I asked myself that question too.  I found three callers of this
-predicate:
-
-1. fallocate, which should have obtained freeze protection
-
-2. inodegc, which should never be running when we get to the innermost
-freeze protection level
-
-3. xfs_release, which doesn't take freeze protection at all.  Either it
-needs to take freeze protection so that xfs_free_eofblocks can't get
-stuck in xfs_trans_alloc, or we'd need to modify xfs_trans_alloc to
-sb_start_intwrite_trylock
-
-I don't really want to try to add (3) as part of a fix for 5.19, but I
-would like to get these fixes merged so I can concentrate on finding and
-fixing the file corruption problems that are still present in -rc4.  If
-we want to engineer a freeze/ro state check later, we can do that too.
-
-So, can we move ahead with this fix?
+Ok done.
 
 --D
 
 > Cheers,
 > 
 > Dave.
-> 
-> 
 > -- 
 > Dave Chinner
 > david@fromorbit.com
