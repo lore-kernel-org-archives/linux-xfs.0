@@ -2,102 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02B4FCCA47E
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 07:33:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 588DFC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 14:10:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232934AbiF0Hda (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jun 2022 03:33:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44030 "EHLO
+        id S236784AbiF0OKp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jun 2022 10:10:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232929AbiF0Hd3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 03:33:29 -0400
-Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 115EF5F7B;
-        Mon, 27 Jun 2022 00:33:28 -0700 (PDT)
-Received: by mail-wr1-x42c.google.com with SMTP id v14so11698288wra.5;
-        Mon, 27 Jun 2022 00:33:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=BztR3xl1wXSqEmt618SWPDGdztRQPzdI6eVz/ObVHhI=;
-        b=CvjX0rm3EoE8khbsBpmBE9BcbieFleylvaRKbdxtOkTzj+SbayW9UF0BBNBXYqMkvT
-         cftKVq0oHpbSfg/c0e8FX+Fpto1YAnDYw/dZ5p5hWOkM11OMauDd2AL1JvW7N7kB3H9y
-         /HQ54m2qUpQIM/MVNaLt8dHNEb5T5tb6wfM4uXCIFDgHsSuplCsH7BmJL3ed8/askgAR
-         /3NnqvrCsfdD/41lOhoPdlfZDVivzEa4F32Bfxp8GTJOSqyl5osgM3Y+I75Uva3imMHI
-         3wAitz3MniFjqW4D5hbGr4/kkWbw9rApViT2x1Wg5uzIRmmEU353GvJYROqHyP4JDoUL
-         CLhQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=BztR3xl1wXSqEmt618SWPDGdztRQPzdI6eVz/ObVHhI=;
-        b=SWAdEH9/9KBjZZ/mv03yXm8Pp61kjk7SxxCi5lO3he4XVzOdov1VljWcoDEp+gr6Rh
-         tSH55kMPLbaQYuQqu1310aNyyQVYX/summKtru/Tj/0qICqQqY5an0oYghFq7CTBlArk
-         D8TS+JMvV0th0Hq+mCiegAXYP1C1s8YxflOkJXTlY/2AhfLYuxEaGhOuf6re0xwdUnXe
-         0eRZxu4QG3TiEQzZwl9dFxzE6GNmC+q5dXwFdR3vS2Z+oGQ6FFiSab7zqi0wscmfIF4u
-         i/S9/BEbyp2+cEWH7FSgzS4nZ+dLQ601fbsEfs1U0+CWQTSlHhrcsL4bPfcIz6ozgEEN
-         Frnw==
-X-Gm-Message-State: AJIora/SCMdes1qacSWDT9jb9uUeu9gCqUsNJjef8fkmQnwKLZOMuuXV
-        g4tsR7EWNQHhg0mGo0Mq8sY=
-X-Google-Smtp-Source: AGRyM1vuI/aNm+g7BWDoprDddUlIrM6zLYlPhBendmGhbSF0w2LJP0cOpEJu7/kvbPOcpWOpRkNJnw==
-X-Received: by 2002:a5d:4d10:0:b0:21b:93fc:67a9 with SMTP id z16-20020a5d4d10000000b0021b93fc67a9mr10434361wrt.505.1656315207670;
-        Mon, 27 Jun 2022 00:33:27 -0700 (PDT)
-Received: from amir-ThinkPad-T480.lan ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id j20-20020a05600c2b9400b00397623ff335sm12070070wmc.10.2022.06.27.00.33.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jun 2022 00:33:27 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     "Darrick J . Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 5.10 CANDIDATE v2 7/7] xfs: fix xfs_reflink_unshare usage of filemap_write_and_wait_range
-Date:   Mon, 27 Jun 2022 10:33:11 +0300
-Message-Id: <20220627073311.2800330-8-amir73il@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220627073311.2800330-1-amir73il@gmail.com>
-References: <20220627073311.2800330-1-amir73il@gmail.com>
+        with ESMTP id S236782AbiF0OKo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 10:10:44 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7C6D13E15;
+        Mon, 27 Jun 2022 07:10:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=LzAnuHwwUJ6LdcbOlmZ//SGplp0xj1L9V6mRYE0195Q=; b=nqb88zVq/RA6sKlL8JH9plcQD8
+        ocDWm8M2RNyZRk783mEuQcIt1qqvjDAdnlrsnZHAJiwJwcvAvGIoRS1tF6TOXUEMI4beDEtAjTQ60
+        bV8iUHmwq+YPuwoXGFW+9wjZBk8QxwncrlmeiHQqxwEkuy3EdlwU8Wuni51Td3Vyo0K6UepEO5dRr
+        wtm9u1jMF8DCS9/XgQ9B1q+60S4yc9IiGJu6OGzbBGjJsEdqk9uTVpgA8I5i1BDq+DYrgEAivY/48
+        MdNLjiDiB6cir4SQeVor8b+zKpY2LkNH/a/g3wHnJIO+L+g9svP+NrN3Nc/mscTZRXZynQqX3yw58
+        NayyVyfQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o5pRo-00BQ2y-Vw; Mon, 27 Jun 2022 14:10:41 +0000
+Date:   Mon, 27 Jun 2022 15:10:40 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 25/25] xfs: Support large folios
+Message-ID: <Yrm6YM2uS+qOoPcn@casper.infradead.org>
+References: <20211216210715.3801857-1-willy@infradead.org>
+ <20211216210715.3801857-26-willy@infradead.org>
+ <YrO243DkbckLTfP7@magnolia>
+ <Yrku31ws6OCxRGSQ@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yrku31ws6OCxRGSQ@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+On Sun, Jun 26, 2022 at 09:15:27PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 22, 2022 at 05:42:11PM -0700, Darrick J. Wong wrote:
+> > [resend with shorter 522.out file to keep us under the 300k maximum]
+> > 
+> > On Thu, Dec 16, 2021 at 09:07:15PM +0000, Matthew Wilcox (Oracle) wrote:
+> > > Now that iomap has been converted, XFS is large folio safe.
+> > > Indicate to the VFS that it can now create large folios for XFS.
+> > > 
+> > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  fs/xfs/xfs_icache.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index da4af2142a2b..cdc39f576ca1 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -87,6 +87,7 @@ xfs_inode_alloc(
+> > >  	/* VFS doesn't initialise i_mode or i_state! */
+> > >  	VFS_I(ip)->i_mode = 0;
+> > >  	VFS_I(ip)->i_state = 0;
+> > > +	mapping_set_large_folios(VFS_I(ip)->i_mapping);
+> > >  
+> > >  	XFS_STATS_INC(mp, vn_active);
+> > >  	ASSERT(atomic_read(&ip->i_pincount) == 0);
+> > > @@ -320,6 +321,7 @@ xfs_reinit_inode(
+> > >  	inode->i_rdev = dev;
+> > >  	inode->i_uid = uid;
+> > >  	inode->i_gid = gid;
+> > > +	mapping_set_large_folios(inode->i_mapping);
+> > 
+> > Hmm.  Ever since 5.19-rc1, I've noticed that fsx in generic/522 now
+> > reports file corruption after 20 minutes of runtime.  The corruption is
+> > surprisingly reproducible (522.out.bad attached below) in that I ran it
+> > three times and always got the same bad offset (0x6e000) and always the
+> > same opcode (6213798(166 mod 256) MAPREAD).
+> > 
+> > I turned off multipage folios and now 522 has run for over an hour
+> > without problems, so before I go do more debugging, does this ring a
+> > bell to anyone?
+> 
+> I tried bisecting, but that didn't yield anything productive and
+> 5.19-rc4 still fails after 25 minutes; however, it seems that g/522 will
+> run without problems for at least 3-4 days after reverting this patch
+> from -rc3.
+> 
+> So I guess I have a blunt force fix if we can't figure this one out
+> before 5.19 final, but I'd really rather not.  Will keep trying this
+> week.
 
-commit d4f74e162d238ce00a640af5f0611c3f51dad70e upstream.
+I'm on holiday for the next week, so I'm not going to be able to spend
+any time on this until then.  I have a suspicion that this may be the
+same bug Zorro is seeing here:
 
-The final parameter of filemap_write_and_wait_range is the end of the
-range to flush, not the length of the range to flush.
+https://lore.kernel.org/linux-mm/20220613010850.6kmpenitmuct2osb@zlang-mailbox/
 
-Fixes: 46afb0628b86 ("xfs: only flush the unshared range in xfs_reflink_unshare")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/xfs/xfs_reflink.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 6fa05fb78189..aa46b75d75af 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1503,7 +1503,8 @@ xfs_reflink_unshare(
- 	if (error)
- 		goto out;
- 
--	error = filemap_write_and_wait_range(inode->i_mapping, offset, len);
-+	error = filemap_write_and_wait_range(inode->i_mapping, offset,
-+			offset + len - 1);
- 	if (error)
- 		goto out;
- 
--- 
-2.25.1
-
+At least I hope it is, and finding a folio that has been freed would
+explain (apparent) file corruption.
