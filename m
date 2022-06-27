@@ -2,84 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DADEC43334
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 21:35:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9378FC43334
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 22:08:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239990AbiF0Vfm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jun 2022 17:35:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40526 "EHLO
+        id S241955AbiF0WI1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jun 2022 18:08:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239964AbiF0Vfl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 17:35:41 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4246A10FF
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Jun 2022 14:35:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id F14F3B8106E
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Jun 2022 21:35:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE4E2C34115;
-        Mon, 27 Jun 2022 21:35:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656365738;
-        bh=LmMlJJ941WQSm6rz9w2S5GPZlw6gI1TRQjWjKC0v1os=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=SKbcgHI6wH5g9/J4Jl0CMOhOa1mQcJVKL3ZyVl9757CjGdt4c8tIC00mE+Hv1MWHK
-         VTEbCizq7d4LYs/lttckAxr2zZBoxQEIIEojjN2sRJsIlXH/lCJsziQLB6X150qMgB
-         g+WfArKYoAXFJSDIeOduyMou4akLTYO50Ai/xXILIhurwGkmUs781zCVJ/dzYeFYqD
-         FH9tFr+F7tqKMmITHfOEoKaAFRb0po/2rIMyUgwQFH+uRu0TC1jUeV5vJHFZn3kg/1
-         0Av5KEDPWIjP40O3ZZMQnG8689uEP+wjcdIp5sCxPiUiwld9aOGHEPfeRaPsPspmAF
-         QHhbs+VOpz70g==
-Subject: [PATCH 3/3] xfs: dont treat rt extents beyond EOF as eofblocks to be
- cleared
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, allison.henderson@oracle.com
-Date:   Mon, 27 Jun 2022 14:35:38 -0700
-Message-ID: <165636573821.355536.976591440534807402.stgit@magnolia>
-In-Reply-To: <165636572124.355536.216420713221853575.stgit@magnolia>
-References: <165636572124.355536.216420713221853575.stgit@magnolia>
-User-Agent: StGit/0.19
+        with ESMTP id S242707AbiF0WH6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 18:07:58 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0E8EB1EAF7;
+        Mon, 27 Jun 2022 15:07:12 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id ACE1C10E8AAB;
+        Tue, 28 Jun 2022 08:07:08 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1o5wss-00BprG-R5; Tue, 28 Jun 2022 08:07:06 +1000
+Date:   Tue, 28 Jun 2022 08:07:06 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 25/25] xfs: Support large folios
+Message-ID: <20220627220706.GE227878@dread.disaster.area>
+References: <20211216210715.3801857-1-willy@infradead.org>
+ <20211216210715.3801857-26-willy@infradead.org>
+ <YrO243DkbckLTfP7@magnolia>
+ <Yrku31ws6OCxRGSQ@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yrku31ws6OCxRGSQ@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62ba2a0f
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=JfrnYn6hAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=zWDtqcPLiWjt79Nc-aUA:9 a=CjuIK1q_8ugA:10
+        a=1CNFftbPRP8L7MoqJWF3:22 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Sun, Jun 26, 2022 at 09:15:27PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 22, 2022 at 05:42:11PM -0700, Darrick J. Wong wrote:
+> > [resend with shorter 522.out file to keep us under the 300k maximum]
+> > 
+> > On Thu, Dec 16, 2021 at 09:07:15PM +0000, Matthew Wilcox (Oracle) wrote:
+> > > Now that iomap has been converted, XFS is large folio safe.
+> > > Indicate to the VFS that it can now create large folios for XFS.
+> > > 
+> > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  fs/xfs/xfs_icache.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index da4af2142a2b..cdc39f576ca1 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -87,6 +87,7 @@ xfs_inode_alloc(
+> > >  	/* VFS doesn't initialise i_mode or i_state! */
+> > >  	VFS_I(ip)->i_mode = 0;
+> > >  	VFS_I(ip)->i_state = 0;
+> > > +	mapping_set_large_folios(VFS_I(ip)->i_mapping);
+> > >  
+> > >  	XFS_STATS_INC(mp, vn_active);
+> > >  	ASSERT(atomic_read(&ip->i_pincount) == 0);
+> > > @@ -320,6 +321,7 @@ xfs_reinit_inode(
+> > >  	inode->i_rdev = dev;
+> > >  	inode->i_uid = uid;
+> > >  	inode->i_gid = gid;
+> > > +	mapping_set_large_folios(inode->i_mapping);
+> > 
+> > Hmm.  Ever since 5.19-rc1, I've noticed that fsx in generic/522 now
+> > reports file corruption after 20 minutes of runtime.  The corruption is
+> > surprisingly reproducible (522.out.bad attached below) in that I ran it
+> > three times and always got the same bad offset (0x6e000) and always the
+> > same opcode (6213798(166 mod 256) MAPREAD).
+> > 
+> > I turned off multipage folios and now 522 has run for over an hour
+> > without problems, so before I go do more debugging, does this ring a
+> > bell to anyone?
+> 
+> I tried bisecting, but that didn't yield anything productive and
+> 5.19-rc4 still fails after 25 minutes; however, it seems that g/522 will
+> run without problems for at least 3-4 days after reverting this patch
+> from -rc3.
 
-On a system with a realtime volume and a 28k realtime extent,
-generic/491 fails because the test opens a file on a frozen filesystem
-and closing it causes xfs_release -> xfs_can_free_eofblocks to
-mistakenly think that the the blocks of the realtime extent beyond EOF
-are posteof blocks to be freed.  Realtime extents cannot be partially
-unmapped, so this is pointless.  Worse yet, this triggers posteof
-cleanup, which stalls on a transaction allocation, which is why the test
-fails.
+Took 63 million ops and just over 3 hours before it failed here with
+a similar 16 byte map read corruption on the first 16 bytes of a
+page. Given the number of fallocate operations that lead up to the
+failure - 14 of last 23, plus 3 clone, 2 copy, 2 map read, 1 skip
+and the map write that it suggests the stale data came from - this
+smells of an invalidation issue...
 
-Teach the predicate to account for realtime extents properly.
+Cheers,
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_bmap_util.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 52be58372c63..85e1a26c92e8 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -686,6 +686,8 @@ xfs_can_free_eofblocks(
- 	 * forever.
- 	 */
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-+	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
-+		end_fsb = roundup_64(end_fsb, mp->m_sb.sb_rextsize);
- 	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
- 	if (last_fsb <= end_fsb)
- 		return false;
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
