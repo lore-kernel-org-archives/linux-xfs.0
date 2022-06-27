@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B486CCA482
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 06:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAA9BCCA473
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 06:52:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232546AbiF0GwN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jun 2022 02:52:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43964 "EHLO
+        id S232129AbiF0GwM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jun 2022 02:52:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232547AbiF0GwH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 02:52:07 -0400
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE40826C9;
-        Sun, 26 Jun 2022 23:52:06 -0700 (PDT)
-Received: by mail-wm1-x335.google.com with SMTP id n185so4745932wmn.4;
-        Sun, 26 Jun 2022 23:52:06 -0700 (PDT)
+        with ESMTP id S232531AbiF0GwF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 02:52:05 -0400
+Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F9A026C3;
+        Sun, 26 Jun 2022 23:52:03 -0700 (PDT)
+Received: by mail-wm1-x32a.google.com with SMTP id k129so3360997wme.0;
+        Sun, 26 Jun 2022 23:52:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7rlLJigxsmTZtJ4R8DtANGAf44bp6QS5yoCTt0RR5Z8=;
-        b=qHmli1vKf8f8kHPRy846SzeWpLxeG8vj3kJzNw0TlxpCVGG5YabA1puMa0lsV+im8v
-         V6lNaHu7kbNIYhnBoioraCuRW4rlVJYzJlHvHlfkgry0gnIhlYMdb7XCWn+lN3QBYHTA
-         gVgbDq2BpTpuBzH3ddIqUwuU6+7BTutReTE6+it/aj0YcQUPzLcuylfLAFlvX+uq+8T1
-         8/gzJpHiVcaI29BQy9LF6pFGOHpQuWcesmNKYAm4Ch7E9rCYDWOnZc3KWPDHSmq1Asnk
-         DR+ty88r4n4d1V6sTT+Xu9EPxhjkq8MK0KXyrL71/J1mtpcoxT/gAfytWkItck63FQWM
-         kgww==
+        bh=cXA+/dAUwgRQc5EpwS/X0n2pUieK6tax4HxbsNJh6Rw=;
+        b=HBG2JgJWn1H2765iGqIVvafKAWajPv7fVVqfxilqZ75yu5ajAgaqSUXwMRT5+gCL0B
+         Qhv2xsPsmtriHPUV4z4TZP1rr0eoCd+dXxCcpjAl52UKuZXYLqqOuaE4Eje8ERD8R7R+
+         2HsLAhkyo3evqn/e3JsWypeO86IzxerGN509bPdsEqwXZL0DeaCwabzJRrM/87lBjTx9
+         1aL582AlH8Qhe+vo45jZoEEq8XOn591OygSGnvv9tHgrfsI+AvcVU7jO2S/1e1ZNQYd3
+         wqah/AcpKF1BJN0kmLWP4YY0Qe4hSSF+Q27S0YGuUjwWl33X0bHApSME7Al8B4K4gkSD
+         nLDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7rlLJigxsmTZtJ4R8DtANGAf44bp6QS5yoCTt0RR5Z8=;
-        b=f2WMTMK28fUcJA9lWPck+8kkyrwda2v++oGz5IN340HC2aBg2krnPzXnBwdH1s5gyE
-         JRJvo29x8RLBahI4WAtRGhcVecbrU5lrenEzYVok1I6sj+06yKF8TlHrDIiG6gI4StNu
-         4iA3xCw4Cij0P7DCm5VjRVELduHcNCoN2DNw2LCf+CLKWc2cvawWMxXkP2nGMC3Xm0r4
-         el9NoaPZIvlWc3f92f86LyPMzx4BMHcy7WzeqcayJ1L6bBG38uco2/mt+twiM3cxHqgv
-         /GtD9xsi8RIHtfm0onOQmVwCTlZOrlMqxHiN0TGOXfeP26Hvl3IvdDBadQBHRUxPoCUd
-         0tOQ==
-X-Gm-Message-State: AJIora9P7veJYo59mpfT8tjlcV8mk85t2WEgCBCDXnoQxMahgubW00Zt
-        YmH0OgpzBe1nWEza35y9q3Tj8/Cux1VSKw==
-X-Google-Smtp-Source: AGRyM1u7kOsRaGlEQEQfsMm6Cj6AXMVN2bO1xhHEgcteFogCE4FjgVQwo+QnGOkMjje2JxgcTG7EAw==
-X-Received: by 2002:a05:600c:1589:b0:3a0:2da9:bac0 with SMTP id r9-20020a05600c158900b003a02da9bac0mr18236911wmf.178.1656312725307;
-        Sun, 26 Jun 2022 23:52:05 -0700 (PDT)
+        bh=cXA+/dAUwgRQc5EpwS/X0n2pUieK6tax4HxbsNJh6Rw=;
+        b=LfVJSgZs4SnxeFBeUf6sbovLC5D5MhuJ5CtkyOTw9F1yPbk9KhF12Ly4ut9Yp6BJeu
+         7QwMPAI9z0bXDjpYGj2pD/SxBg/XkRn4KS8c4v2KVaJsxkTrtXrOJ5QKWuwtfgWzywuX
+         OwU1SjF0/Z2MmESpXzee1+NJMnuEeEfzxT9L/GacYIzWj/O5MgQzyCihbZ5m1CDmkiG8
+         /quDa42GAhQh/WKt/Aob4pBVtYdRmofYT3e7UllpsJqGat9nRzcEtyFAVHPhAF2Eydvh
+         X1zj8UbK4l1Yd0e3nYMJj8/grLQprJ1GD8bxV2NrqFBzE3WGhpKVdg2ZQh10/Hel06x7
+         VIUg==
+X-Gm-Message-State: AJIora/6HOQ1nBZUL/kKxCHoRPbVLQdj7e0W9R2+t0NwAOKvXg5yCYyG
+        EItXTwTLdDDJkpHPeP773NY=
+X-Google-Smtp-Source: AGRyM1uukK3LlvNhgRdLlMtRwbh5h/ZVkpAEq6NeKdvFNBZjMGsdniUJdCdp1O1WP6KS1MKSfwM3vQ==
+X-Received: by 2002:a05:600c:1553:b0:39c:87fc:579e with SMTP id f19-20020a05600c155300b0039c87fc579emr13005339wmg.102.1656312722036;
+        Sun, 26 Jun 2022 23:52:02 -0700 (PDT)
 Received: from amir-ThinkPad-T480.lan ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id e10-20020adffd0a000000b0021a3dd1c5d5sm9415076wrr.96.2022.06.26.23.52.03
+        by smtp.gmail.com with ESMTPSA id e10-20020adffd0a000000b0021a3dd1c5d5sm9415076wrr.96.2022.06.26.23.52.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Jun 2022 23:52:04 -0700 (PDT)
+        Sun, 26 Jun 2022 23:52:01 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Sasha Levin <sashal@kernel.org>,
@@ -56,10 +56,10 @@ Cc:     Sasha Levin <sashal@kernel.org>,
         Luis Chamberlain <mcgrof@kernel.org>,
         Adam Manzanares <a.manzanares@samsung.com>,
         linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 5.10 v4 5/5] xfs: check sb_meta_uuid for dabuf buffer recovery
-Date:   Mon, 27 Jun 2022 09:51:40 +0300
-Message-Id: <20220627065140.2798412-6-amir73il@gmail.com>
+        Yang Xu <xuyang2018.jy@fujitsu.com>
+Subject: [PATCH 5.10 v4 3/5] xfs: Fix the free logic of state in xfs_attr_node_hasname
+Date:   Mon, 27 Jun 2022 09:51:38 +0300
+Message-Id: <20220627065140.2798412-4-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220627065140.2798412-1-amir73il@gmail.com>
 References: <20220627065140.2798412-1-amir73il@gmail.com>
@@ -69,84 +69,112 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Yang Xu <xuyang2018.jy@fujitsu.com>
 
-commit 09654ed8a18cfd45027a67d6cbca45c9ea54feab upstream.
+commit a1de97fe296c52eafc6590a3506f4bbd44ecb19a upstream.
 
-Got a report that a repeated crash test of a container host would
-eventually fail with a log recovery error preventing the system from
-mounting the root filesystem. It manifested as a directory leaf node
-corruption on writeback like so:
+When testing xfstests xfs/126 on lastest upstream kernel, it will hang on some machine.
+Adding a getxattr operation after xattr corrupted, I can reproduce it 100%.
 
- XFS (loop0): Mounting V5 Filesystem
- XFS (loop0): Starting recovery (logdev: internal)
- XFS (loop0): Metadata corruption detected at xfs_dir3_leaf_check_int+0x99/0xf0, xfs_dir3_leaf1 block 0x12faa158
- XFS (loop0): Unmount and run xfs_repair
- XFS (loop0): First 128 bytes of corrupted metadata buffer:
- 00000000: 00 00 00 00 00 00 00 00 3d f1 00 00 e1 9e d5 8b  ........=.......
- 00000010: 00 00 00 00 12 fa a1 58 00 00 00 29 00 00 1b cc  .......X...)....
- 00000020: 91 06 78 ff f7 7e 4a 7d 8d 53 86 f2 ac 47 a8 23  ..x..~J}.S...G.#
- 00000030: 00 00 00 00 17 e0 00 80 00 43 00 00 00 00 00 00  .........C......
- 00000040: 00 00 00 2e 00 00 00 08 00 00 17 2e 00 00 00 0a  ................
- 00000050: 02 35 79 83 00 00 00 30 04 d3 b4 80 00 00 01 50  .5y....0.......P
- 00000060: 08 40 95 7f 00 00 02 98 08 41 fe b7 00 00 02 d4  .@.......A......
- 00000070: 0d 62 ef a7 00 00 01 f2 14 50 21 41 00 00 00 0c  .b.......P!A....
- XFS (loop0): Corruption of in-memory data (0x8) detected at xfs_do_force_shutdown+0x1a/0x20 (fs/xfs/xfs_buf.c:1514).  Shutting down.
- XFS (loop0): Please unmount the filesystem and rectify the problem(s)
- XFS (loop0): log mount/recovery failed: error -117
- XFS (loop0): log mount failed
+The deadlock as below:
+[983.923403] task:setfattr        state:D stack:    0 pid:17639 ppid: 14687 flags:0x00000080
+[  983.923405] Call Trace:
+[  983.923410]  __schedule+0x2c4/0x700
+[  983.923412]  schedule+0x37/0xa0
+[  983.923414]  schedule_timeout+0x274/0x300
+[  983.923416]  __down+0x9b/0xf0
+[  983.923451]  ? xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
+[  983.923453]  down+0x3b/0x50
+[  983.923471]  xfs_buf_lock+0x33/0xf0 [xfs]
+[  983.923490]  xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
+[  983.923508]  xfs_buf_get_map+0x4c/0x320 [xfs]
+[  983.923525]  xfs_buf_read_map+0x53/0x310 [xfs]
+[  983.923541]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
+[  983.923560]  xfs_trans_read_buf_map+0x1cf/0x360 [xfs]
+[  983.923575]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
+[  983.923590]  xfs_da_read_buf+0xcf/0x120 [xfs]
+[  983.923606]  xfs_da3_node_read+0x1f/0x40 [xfs]
+[  983.923621]  xfs_da3_node_lookup_int+0x69/0x4a0 [xfs]
+[  983.923624]  ? kmem_cache_alloc+0x12e/0x270
+[  983.923637]  xfs_attr_node_hasname+0x6e/0xa0 [xfs]
+[  983.923651]  xfs_has_attr+0x6e/0xd0 [xfs]
+[  983.923664]  xfs_attr_set+0x273/0x320 [xfs]
+[  983.923683]  xfs_xattr_set+0x87/0xd0 [xfs]
+[  983.923686]  __vfs_removexattr+0x4d/0x60
+[  983.923688]  __vfs_removexattr_locked+0xac/0x130
+[  983.923689]  vfs_removexattr+0x4e/0xf0
+[  983.923690]  removexattr+0x4d/0x80
+[  983.923693]  ? __check_object_size+0xa8/0x16b
+[  983.923695]  ? strncpy_from_user+0x47/0x1a0
+[  983.923696]  ? getname_flags+0x6a/0x1e0
+[  983.923697]  ? _cond_resched+0x15/0x30
+[  983.923699]  ? __sb_start_write+0x1e/0x70
+[  983.923700]  ? mnt_want_write+0x28/0x50
+[  983.923701]  path_removexattr+0x9b/0xb0
+[  983.923702]  __x64_sys_removexattr+0x17/0x20
+[  983.923704]  do_syscall_64+0x5b/0x1a0
+[  983.923705]  entry_SYSCALL_64_after_hwframe+0x65/0xca
+[  983.923707] RIP: 0033:0x7f080f10ee1b
 
-Tracing indicated that we were recovering changes from a transaction
-at LSN 0x29/0x1c16 into a buffer that had an LSN of 0x29/0x1d57.
-That is, log recovery was overwriting a buffer with newer changes on
-disk than was in the transaction. Tracing indicated that we were
-hitting the "recovery immediately" case in
-xfs_buf_log_recovery_lsn(), and hence it was ignoring the LSN in the
-buffer.
+When getxattr calls xfs_attr_node_get function, xfs_da3_node_lookup_int fails with EFSCORRUPTED in
+xfs_attr_node_hasname because we have use blocktrash to random it in xfs/126. So it
+free state in internal and xfs_attr_node_get doesn't do xfs_buf_trans release job.
 
-The code was extracting the LSN correctly, then ignoring it because
-the UUID in the buffer did not match the superblock UUID. The
-problem arises because the UUID check uses the wrong UUID - it
-should be checking the sb_meta_uuid, not sb_uuid. This filesystem
-has sb_uuid != sb_meta_uuid (which is fine), and the buffer has the
-correct matching sb_meta_uuid in it, it's just the code checked it
-against the wrong superblock uuid.
+Then subsequent removexattr will hang because of it.
 
-The is no corruption in the filesystem, and failing to recover the
-buffer due to a write verifier failure means the recovery bug did
-not propagate the corruption to disk. Hence there is no corruption
-before or after this bug has manifested, the impact is limited
-simply to an unmountable filesystem....
+This bug was introduced by kernel commit 07120f1abdff ("xfs: Add xfs_has_attr and subroutines").
+It adds xfs_attr_node_hasname helper and said caller will be responsible for freeing the state
+in this case. But xfs_attr_node_hasname will free state itself instead of caller if
+xfs_da3_node_lookup_int fails.
 
-This was missed back in 2015 during an audit of incorrect sb_uuid
-usage that resulted in commit fcfbe2c4ef42 ("xfs: log recovery needs
-to validate against sb_meta_uuid") that fixed the magic32 buffers to
-validate against sb_meta_uuid instead of sb_uuid. It missed the
-magicda buffers....
+Fix this bug by moving the step of free state into caller.
 
-Fixes: ce748eaa65f2 ("xfs: create new metadata UUID field and incompat flag")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[amir: this text from original commit is not relevant for 5.10 backport:
+Also, use "goto error/out" instead of returning error directly in xfs_attr_node_addname_find_attr and
+xfs_attr_node_removename_setup function because we should free state ourselves.
+]
+
+Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
+Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_buf_item_recover.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_attr.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index d44e8b4a3391..1d649462d731 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -805,7 +805,7 @@ xlog_recover_get_buf_lsn(
- 	}
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 96ac7e562b87..fcca36bbd997 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -876,21 +876,18 @@ xfs_attr_node_hasname(
  
- 	if (lsn != (xfs_lsn_t)-1) {
--		if (!uuid_equal(&mp->m_sb.sb_uuid, uuid))
-+		if (!uuid_equal(&mp->m_sb.sb_meta_uuid, uuid))
- 			goto recover_immediately;
- 		return lsn;
- 	}
+ 	state = xfs_da_state_alloc(args);
+ 	if (statep != NULL)
+-		*statep = NULL;
++		*statep = state;
+ 
+ 	/*
+ 	 * Search to see if name exists, and get back a pointer to it.
+ 	 */
+ 	error = xfs_da3_node_lookup_int(state, &retval);
+-	if (error) {
+-		xfs_da_state_free(state);
+-		return error;
+-	}
++	if (error)
++		retval = error;
+ 
+-	if (statep != NULL)
+-		*statep = state;
+-	else
++	if (!statep)
+ 		xfs_da_state_free(state);
++
+ 	return retval;
+ }
+ 
 -- 
 2.25.1
 
