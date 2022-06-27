@@ -2,157 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C08FCCCA483
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 06:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57E1EC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 07:33:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232552AbiF0GwN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jun 2022 02:52:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43936 "EHLO
+        id S232915AbiF0HdS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jun 2022 03:33:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232542AbiF0GwF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 02:52:05 -0400
-Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1883926C0;
-        Sun, 26 Jun 2022 23:52:04 -0700 (PDT)
-Received: by mail-wr1-x42c.google.com with SMTP id v14so11562427wra.5;
-        Sun, 26 Jun 2022 23:52:04 -0700 (PDT)
+        with ESMTP id S232235AbiF0HdR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 03:33:17 -0400
+Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11D945FA5;
+        Mon, 27 Jun 2022 00:33:16 -0700 (PDT)
+Received: by mail-wr1-x42a.google.com with SMTP id r20so11735447wra.1;
+        Mon, 27 Jun 2022 00:33:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=XaAYZ6qH2eW6SbCvz+SG+Z2d1NX2G9RI3Gz0+O4UvMc=;
-        b=V49ZB44pbSFux/V3mahSf7H2FHvqBYCrmeMfS2XRZ51SEcR/Rngt/NsscTEx9O4WCW
-         E3JMEESRGbbs6vqoI0zyw1+EOiBVppAEN+70BsPaYWAmXjCgqFBeQfsnOrllCxNQl+zZ
-         E9Z/u/q7invUrC73fzwHMo068MbZTyqqRqDPD/yGAmdV/wu3eri+vZPOjIXQhtHDqwS0
-         /l61Ec60O+bQQ77HjEEMWhNbKP0cXhNhOerSA8PrLyti3toRQE8A9HUsCcdfK9sgay0l
-         UDu7P0dRCgGMuz0qsRbcdnWg/rUCQ7Gz7mUfP2aTv+GhHD8spVUsXg7JaV/9O9w6Jkje
-         Antw==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=IjCAYcZiyzmXKNidCoE+ZXPBYYITRg7RBpp+SdwMpOU=;
+        b=GSiHmMA9vbyGudgEWh9Y1AFUwYBXPmugBbu/9bK401UeuUYnBmF/OA585uARG6izBd
+         XxVh5qAT5ckqUpRwpiNNM5vTGDPZjHxi3JhZn+Wa97t0l4FdyzHQydJTdR+XNvol6666
+         Y2eTkEeIjJev/6qMBkLYVhdPxuio0HS67m8Ca1onueI5GIUrlEOQlwTn9B3Tz7r6LloX
+         stk1RLwl6pOy9+jZoo6jXhg7JxMtcMQMyPD7xU5fGMjKchOHr/J/N+t7nhfcIIShjpVC
+         bpdrunh+j5OW8BiVI1c/9FHt3rImU+uer3XBbIjFJzhSCkLchLumtHcX8NsAJiD7EAgV
+         ERhw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=XaAYZ6qH2eW6SbCvz+SG+Z2d1NX2G9RI3Gz0+O4UvMc=;
-        b=qaq/MzldsoT8N4XclCCQj7ZLF0NZx/kEK/nnZi1xCsrVc69JrzUQu+lSpQayncpXul
-         VAxHasBs2XacDDVwDGEp6PiUrZLlcynYXYPkpQVvA2PmKM87N4yBuOSyxC5utrknfKtD
-         DpvzAK3M5qcSIVjr5hI0QS8FxJQYvNwACEjR0iuXhHIuaQlgTFdyHEz1h9wy5fw4Z76i
-         VmO1eAN23sKovgkpeXsICYwhQEiP/ynGwlMtozFAskpjmvUZyABDc+nfLcL5iU59ywkX
-         UlH/Vv0HiKgonO+UXsl9LxFeEL++RAYuwqUzTT0rklvBoQQDqMYTrRKG3ErjJYnritu8
-         7O/g==
-X-Gm-Message-State: AJIora81Xb8L1jSbA5G5BVaTrk8Vod7jtrIMLdMZsFH1z3lNHUOKNAaj
-        h3O4J/+t18Rui/Vczv3qC0Q=
-X-Google-Smtp-Source: AGRyM1ukdaj5bqDaGITC15WW6nsCOUcK5p0kkAjecA2Prvpj2yrB3UXTlxAxq6WsEWxr+cGtZhtPFw==
-X-Received: by 2002:a05:6000:71e:b0:21b:adf2:c9ab with SMTP id bs30-20020a056000071e00b0021badf2c9abmr10969114wrb.153.1656312723666;
-        Sun, 26 Jun 2022 23:52:03 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=IjCAYcZiyzmXKNidCoE+ZXPBYYITRg7RBpp+SdwMpOU=;
+        b=xLyupm8Cm68t9FNSnZ0vs6AXiqNHr1dwGoOzz+qS1iEj/0wkFQXXVMXOFkoKy6FJt1
+         qnc+HB6o9lsKmwAvJDx1W8dEfc32Vw/UYqsuA1m2/aS6O+OQWN+EgI7vKir9OGm+7ash
+         l2S+T6t1KeVY6YxmeCt5QK5KvkgF5ia9visGqvp4zWwFJwjuBrufpvZsLZvOLHQlh792
+         3d0a2paDFG3rHXgaivWPryZw/FASjDYMbeylO7Pa9wXcup9p0l3lefRgQTqDzleutl5u
+         Z0hkh4IsvpMTY9/+ydNzDgDOZ7CHv3yYIF73L9sUn5ksXMG22Mu0U1JrLCed+nbYtaAM
+         QMqg==
+X-Gm-Message-State: AJIora+50jOBCaJtabQor73U9aCCHPSp/SXn+JcK3KJ0VKSFNivmZpg3
+        12wLERVIO9tnXCLKB5OOcy8=
+X-Google-Smtp-Source: AGRyM1tg7erOZgdACKLItuDRGcnUIRnFvY/H8ul5M1uy00pES3EfD0Ry7w2NUsiQp8TxCeGxKYmECQ==
+X-Received: by 2002:a05:6000:1885:b0:21b:ad25:8ae6 with SMTP id a5-20020a056000188500b0021bad258ae6mr10663203wri.183.1656315195496;
+        Mon, 27 Jun 2022 00:33:15 -0700 (PDT)
 Received: from amir-ThinkPad-T480.lan ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id e10-20020adffd0a000000b0021a3dd1c5d5sm9415076wrr.96.2022.06.26.23.52.02
+        by smtp.gmail.com with ESMTPSA id j20-20020a05600c2b9400b00397623ff335sm12070070wmc.10.2022.06.27.00.33.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Jun 2022 23:52:03 -0700 (PDT)
+        Mon, 27 Jun 2022 00:33:14 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
+To:     "Darrick J . Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
         Leah Rumancik <leah.rumancik@gmail.com>,
         Chandan Babu R <chandan.babu@oracle.com>,
         Luis Chamberlain <mcgrof@kernel.org>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 5.10 v4 4/5] xfs: remove all COW fork extents when remounting readonly
-Date:   Mon, 27 Jun 2022 09:51:39 +0300
-Message-Id: <20220627065140.2798412-5-amir73il@gmail.com>
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: [PATCH 5.10 CANDIDATE v2 0/7] xfs stable candidate patches for 5.10.y (from v5.13)
+Date:   Mon, 27 Jun 2022 10:33:04 +0300
+Message-Id: <20220627073311.2800330-1-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220627065140.2798412-1-amir73il@gmail.com>
-References: <20220627065140.2798412-1-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+Hi all,
 
-commit 089558bc7ba785c03815a49c89e28ad9b8de51f9 upstream.
+This is a resend of the series that was posted 3 weeks ago [v1].
+The backports in this series are from circa v5.12..v5.13.
+The remaining queue of tested 5.10 backports [1] contains 25 more patches
+from v5.13..v5.19-rc1.
 
-[backport xfs_icwalk -> xfs_eofblocks for 5.10.y]
+There have been no comments on the first post except for Dave's request
+to collaborate the backports review process with Leah who had earlier
+sent out another series of backports for 5.15.y.
 
-As part of multiple customer escalations due to file data corruption
-after copy on write operations, I wrote some fstests that use fsstress
-to hammer on COW to shake things loose.  Regrettably, I caught some
-filesystem shutdowns due to incorrect rmap operations with the following
-loop:
+Following Dave's request, I had put this series a side to collaborate
+the shared review of 5.15/5.10 series with Leah and now that the shared
+series has been posted to stable, I am re-posting to request ACKs on this
+5.10.y specific series.
 
-mount <filesystem>				# (0)
-fsstress <run only readonly ops> &		# (1)
-while true; do
-	fsstress <run all ops>
-	mount -o remount,ro			# (2)
-	fsstress <run only readonly ops>
-	mount -o remount,rw			# (3)
-done
+There are four user visible fixes in this series, one patch for dependency
+("rename variable mp") and two patches to improve testability of LTS.
 
-When (2) happens, notice that (1) is still running.  xfs_remount_ro will
-call xfs_blockgc_stop to walk the inode cache to free all the COW
-extents, but the blockgc mechanism races with (1)'s reader threads to
-take IOLOCKs and loses, which means that it doesn't clean them all out.
-Call such a file (A).
+Specifically, I selected the fix ("use current->journal_info for
+detecting transaction recursion") after I got a false positive assert
+while testing LTS kernel with XFS_DEBUG and at another incident, it
+helped me triage a regression that would have been harder to trace
+back to the offending code otherwise.
 
-When (3) happens, xfs_remount_rw calls xfs_reflink_recover_cow, which
-walks the ondisk refcount btree and frees any COW extent that it finds.
-This function does not check the inode cache, which means that incore
-COW forks of inode (A) is now inconsistent with the ondisk metadata.  If
-one of those former COW extents are allocated and mapped into another
-file (B) and someone triggers a COW to the stale reservation in (A), A's
-dirty data will be written into (B) and once that's done, those blocks
-will be transferred to (A)'s data fork without bumping the refcount.
+This series has been looping in kdevops for a long while, with and
+without the shared 5.15 backport with no regressions observed.
 
-The results are catastrophic -- file (B) and the refcount btree are now
-corrupt.  Solve this race by forcing the xfs_blockgc_free_space to run
-synchronously, which causes xfs_icwalk to return to inodes that were
-skipped because the blockgc code couldn't take the IOLOCK.  This is safe
-to do here because the VFS has already prohibited new writer threads.
+Thanks,
+Amir.
 
-Fixes: 10ddf64e420f ("xfs: remove leftover CoW reservations when remounting ro")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_super.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+Changes since [v1]:
+- Rebased and tested on top of the v5.15+ ACKed backports [2]
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 5ebd6cdc44a7..05cea7788d49 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1695,7 +1695,10 @@ static int
- xfs_remount_ro(
- 	struct xfs_mount	*mp)
- {
--	int error;
-+	struct xfs_eofblocks	eofb = {
-+		.eof_flags	= XFS_EOF_FLAGS_SYNC,
-+	};
-+	int			error;
- 
- 	/*
- 	 * Cancel background eofb scanning so it cannot race with the final
-@@ -1703,8 +1706,13 @@ xfs_remount_ro(
- 	 */
- 	xfs_stop_block_reaping(mp);
- 
--	/* Get rid of any leftover CoW reservations... */
--	error = xfs_icache_free_cowblocks(mp, NULL);
-+	/*
-+	 * Clear out all remaining COW staging extents and speculative post-EOF
-+	 * preallocations so that we don't leave inodes requiring inactivation
-+	 * cleanups during reclaim on a read-only mount.  We must process every
-+	 * cached inode, so this requires a synchronous cache scan.
-+	 */
-+	error = xfs_icache_free_cowblocks(mp, &eofb);
- 	if (error) {
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 		return error;
+[1] https://github.com/amir73il/linux/commits/xfs-5.10.y
+[2] https://lore.kernel.org/linux-xfs/20220624063702.2380990-1-amir73il@gmail.com/
+[v1] https://lore.kernel.org/linux-xfs/20220606160537.689915-1-amir73il@gmail.com/
+
+Anthony Iliopoulos (1):
+  xfs: fix xfs_trans slab cache name
+
+Darrick J. Wong (1):
+  xfs: fix xfs_reflink_unshare usage of filemap_write_and_wait_range
+
+Dave Chinner (2):
+  xfs: use current->journal_info for detecting transaction recursion
+  xfs: update superblock counters correctly for !lazysbcount
+
+Gao Xiang (1):
+  xfs: ensure xfs_errortag_random_default matches XFS_ERRTAG_MAX
+
+Pavel Reichl (2):
+  xfs: rename variable mp to parsing_mp
+  xfs: Skip repetitive warnings about mount options
+
+ fs/iomap/buffered-io.c    |   7 ---
+ fs/xfs/libxfs/xfs_btree.c |  12 +++-
+ fs/xfs/libxfs/xfs_sb.c    |  16 ++++-
+ fs/xfs/xfs_aops.c         |  17 +++++-
+ fs/xfs/xfs_error.c        |   2 +
+ fs/xfs/xfs_reflink.c      |   3 +-
+ fs/xfs/xfs_super.c        | 120 +++++++++++++++++++++-----------------
+ fs/xfs/xfs_trans.c        |  23 +++-----
+ fs/xfs/xfs_trans.h        |  30 ++++++++++
+ 9 files changed, 148 insertions(+), 82 deletions(-)
+
 -- 
 2.25.1
 
