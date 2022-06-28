@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C915C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 20:49:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D644C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 20:49:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231138AbiF1Uta (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jun 2022 16:49:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37564 "EHLO
+        id S231190AbiF1Ute (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jun 2022 16:49:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231190AbiF1Ut3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 16:49:29 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4A1B2CDF4
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 13:49:28 -0700 (PDT)
+        with ESMTP id S230062AbiF1Utd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 16:49:33 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFA562DD49
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 13:49:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6415CB81E06
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 20:49:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25F37C341C8;
-        Tue, 28 Jun 2022 20:49:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 502E86182E
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 20:49:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A88F8C341C8;
+        Tue, 28 Jun 2022 20:49:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656449366;
-        bh=AsL0IbpD2QaTM/8TX79QVg1uWB16DQMxlCc9QgURotM=;
+        s=k20201202; t=1656449371;
+        bh=dCD7lyDrmHv9tQE7sbPU/duYdjv6u5D2DvDpYVzcRks=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=VaNjiPOPANoZigjdzHR83xTdJf9uyLkia2Z+B5JTu0UQ13MBz/Z6D/5wjfaJe1ocV
-         cKiuRhhbwu+xuujJYWxnLkyT3nF1QuCQQGOnSkQfoInHIKtqrKe+6YeWD0UABH8VRp
-         L3KhwtlaVPumz6blfeKgx/fBSCAB1AdOIV4Akpbi31weQGTCuFiQQdTiPEaNWQ6EUF
-         319fvB7AJmQyBWw3VXHZi9otIuSNeS6mbaIIENjZR10tetSzl3+zWg8eNfMaMyclSO
-         4d1Vm0t9sGonEXNSpTi/tjBSM/LxiyCkNwkOqg+rdC01Ju/qyf3fb0++XQMt0zdbrm
-         e+JoGrxC2qONg==
-Subject: [PATCH 2/6] xfs_repair: clear DIFLAG2_NREXT64 when filesystem doesn't
- support nrext64
+        b=qgmKfWC7lb6XGIede4Rcwow+Jjjc0SjYoXFaj6c6NVfJpR6+E3+A91n52WRxUyTxm
+         S5r45bNMHnOhSd7coHUeaPWEZ7OoUvBDtCLJQc7x5uZy/LZS5SE/GO7GyqjEX1+LGA
+         Ya0SVfAzFX/inCtKgN1VmI9e96dTSIhc8KO1mJp8E7OHrBnuZNDmZKZ/GCwsKnEUKn
+         nfDqa6iNICSl0KzjseyMJbi/m3b22Q6Mv7PEz454QNVZrWXbA7OwCeFg3FWVbCJ61k
+         HSZQxqKXv+p/zVdFedjBwGGO7EXLjwVORVPZ/F0ug5VagUieEos17X0HSTp/0e+bol
+         sdsWcevmomp2w==
+Subject: [PATCH 3/6] xfs_repair: detect and fix padding fields that changed
+ with nrext64
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 28 Jun 2022 13:49:25 -0700
-Message-ID: <165644936573.1089996.11135224585697421312.stgit@magnolia>
+Date:   Tue, 28 Jun 2022 13:49:31 -0700
+Message-ID: <165644937131.1089996.4905575997482466323.stgit@magnolia>
 In-Reply-To: <165644935451.1089996.13716062701488693755.stgit@magnolia>
 References: <165644935451.1089996.13716062701488693755.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,39 +50,43 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Clear the nrext64 inode flag if the filesystem doesn't have the nrext64
-feature enabled in the superblock.
+Detect incorrectly set padding fields when large extent counts are
+enabled or disabled on v3 inodes.
+
+Found by fuzzing v3.flags2 = zeroes with xfs/374 and an nrext64=1
+filesystem.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/dinode.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ repair/dinode.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
 
 diff --git a/repair/dinode.c b/repair/dinode.c
-index 00de31fb..547c5833 100644
+index 547c5833..1c92bfbd 100644
 --- a/repair/dinode.c
 +++ b/repair/dinode.c
-@@ -2690,6 +2690,25 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+@@ -2709,6 +2709,26 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
  			}
  		}
  
-+		if (xfs_dinode_has_large_extent_counts(dino) &&
-+		    !xfs_has_large_extent_counts(mp)) {
-+			if (!uncertain) {
-+				do_warn(
-+	_("inode %" PRIu64 " is marked large extent counts but file system does not support large extent counts\n"),
-+					lino);
++		if (xfs_dinode_has_large_extent_counts(dino)) {
++			if (dino->di_nrext64_pad) {
++				if (!no_modify) {
++					do_warn(_("fixing bad nrext64_pad.\n"));
++					dino->di_nrext64_pad = 0;
++					*dirty = 1;
++				} else
++					do_warn(_("would fix bad nrext64_pad.\n"));
 +			}
-+			flags2 &= ~XFS_DIFLAG2_NREXT64;
-+
-+			if (no_modify) {
-+				do_warn(_("would zero extent counts.\n"));
-+			} else {
-+				do_warn(_("zeroing extent counts.\n"));
-+				dino->di_nextents = 0;
-+				dino->di_anextents = 0;
-+				*dirty = 1;
++		} else if (dino->di_version >= 3) {
++			if (dino->di_v3_pad) {
++				if (!no_modify) {
++					do_warn(_("fixing bad v3_pad.\n"));
++					dino->di_v3_pad = 0;
++					*dirty = 1;
++				} else
++					do_warn(_("would fix bad v3_pad.\n"));
 +			}
 +		}
 +
