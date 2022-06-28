@@ -2,114 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96CF6C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 22:50:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EB41C43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 22:55:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229877AbiF1Wu3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jun 2022 18:50:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49814 "EHLO
+        id S229483AbiF1WzG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jun 2022 18:55:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230396AbiF1Wu2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 18:50:28 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 954DF39833;
-        Tue, 28 Jun 2022 15:50:27 -0700 (PDT)
+        with ESMTP id S229473AbiF1WzF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 18:55:05 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CB84519C05
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 15:55:04 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 092A910E7862;
-        Wed, 29 Jun 2022 08:17:58 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EC7165ECE1F;
+        Wed, 29 Jun 2022 08:55:02 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1o6JWv-00CEcF-Ry; Wed, 29 Jun 2022 08:17:57 +1000
-Date:   Wed, 29 Jun 2022 08:17:57 +1000
+        id 1o6K6n-00CFGk-Ob; Wed, 29 Jun 2022 08:55:01 +1000
+Date:   Wed, 29 Jun 2022 08:55:01 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, linux-mm@kvack.org
-Subject: Re: Multi-page folio issues in 5.19-rc4 (was [PATCH v3 25/25] xfs:
- Support large folios)
-Message-ID: <20220628221757.GJ227878@dread.disaster.area>
-References: <20211216210715.3801857-1-willy@infradead.org>
- <20211216210715.3801857-26-willy@infradead.org>
- <YrO243DkbckLTfP7@magnolia>
- <Yrku31ws6OCxRGSQ@magnolia>
- <Yrm6YM2uS+qOoPcn@casper.infradead.org>
- <YrosM1+yvMYliw2l@magnolia>
- <20220628073120.GI227878@dread.disaster.area>
- <YrrlrMK/7pyZwZj2@casper.infradead.org>
- <Yrrmq4hmJPkf5V7s@casper.infradead.org>
- <Yrr/oBlf1Eig8uKS@casper.infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCHSET 0/8] xfsprogs: sync libxfs with 5.19
+Message-ID: <20220628225501.GM227878@dread.disaster.area>
+References: <165644930619.1089724.12201433387040577983.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yrr/oBlf1Eig8uKS@casper.infradead.org>
+In-Reply-To: <165644930619.1089724.12201433387040577983.stgit@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62bb7e19
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62bb86c8
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=I0e5OopBZKVaJ7lt07gA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=wyDEJGck7kJVUeCukb4A:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 28, 2022 at 02:18:24PM +0100, Matthew Wilcox wrote:
-> On Tue, Jun 28, 2022 at 12:31:55PM +0100, Matthew Wilcox wrote:
-> > On Tue, Jun 28, 2022 at 12:27:40PM +0100, Matthew Wilcox wrote:
-> > > On Tue, Jun 28, 2022 at 05:31:20PM +1000, Dave Chinner wrote:
-> > > > So using this technique, I've discovered that there's a dirty page
-> > > > accounting leak that eventually results in fsx hanging in
-> > > > balance_dirty_pages().
-> > > 
-> > > Alas, I think this is only an accounting error, and not related to
-> > > the problem(s) that Darrick & Zorro are seeing.  I think what you're
-> > > seeing is dirty pages being dropped at truncation without the
-> > > appropriate accounting.  ie this should be the fix:
-> > 
-> > Argh, try one that actually compiles.
+On Tue, Jun 28, 2022 at 01:48:26PM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> ... that one's going to underflow the accounting.  Maybe I shouldn't
-> be writing code at 6am?
+> This series corrects any build errors in libxfs and backports libxfs
+> changes from the kernel.
 > 
-> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> index f7248002dad9..4eec6ee83e44 100644
-> --- a/mm/huge_memory.c
-> +++ b/mm/huge_memory.c
-> @@ -18,6 +18,7 @@
->  #include <linux/shrinker.h>
->  #include <linux/mm_inline.h>
->  #include <linux/swapops.h>
-> +#include <linux/backing-dev.h>
->  #include <linux/dax.h>
->  #include <linux/khugepaged.h>
->  #include <linux/freezer.h>
-> @@ -2439,11 +2440,15 @@ static void __split_huge_page(struct page *page, struct list_head *list,
->  		__split_huge_page_tail(head, i, lruvec, list);
->  		/* Some pages can be beyond EOF: drop them from page cache */
->  		if (head[i].index >= end) {
-> -			ClearPageDirty(head + i);
-> -			__delete_from_page_cache(head + i, NULL);
-> +			struct folio *tail = page_folio(head + i);
-> +
->  			if (shmem_mapping(head->mapping))
->  				shmem_uncharge(head->mapping->host, 1);
-> -			put_page(head + i);
-> +			else if (folio_test_clear_dirty(tail))
-> +				folio_account_cleaned(tail,
-> +					inode_to_wb(folio->mapping->host));
-> +			__filemap_remove_folio(tail, NULL);
-> +			folio_put(tail);
->  		} else if (!PageAnon(page)) {
->  			__xa_store(&head->mapping->i_pages, head[i].index,
->  					head + i, 0);
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
 > 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
+> 
+> xfsprogs git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-5.19-sync
+> ---
+>  db/check.c               |   10 +++++++---
+>  db/metadump.c            |   11 +++++++----
+>  include/xfs_mount.h      |    7 -------
+>  libxfs/util.c            |    6 ------
+>  libxfs/xfs_attr.c        |   47 ++++++++++++++--------------------------------
+>  libxfs/xfs_attr.h        |   17 +----------------
+>  libxfs/xfs_attr_leaf.c   |   37 ++++++++++++++++++++----------------
+>  libxfs/xfs_attr_leaf.h   |    3 +--
+>  libxfs/xfs_da_btree.h    |    4 +++-
+>  logprint/log_print_all.c |    2 +-
+>  repair/attr_repair.c     |   20 ++++++++++++++++++++
+>  repair/dinode.c          |   14 ++++++++++----
+>  12 files changed, 84 insertions(+), 94 deletions(-)
 
-Yup, that fixes the leak.
+Whole series looks good.
 
-Tested-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
