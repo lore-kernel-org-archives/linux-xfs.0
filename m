@@ -2,101 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBEA1C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 13:20:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26512C43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 14:46:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346268AbiF1NUc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jun 2022 09:20:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41830 "EHLO
+        id S1346107AbiF1OqF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jun 2022 10:46:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346392AbiF1NUQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 09:20:16 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 733E4344F8;
-        Tue, 28 Jun 2022 06:18:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=YT77W1AlVsAd+5fjjhsWneZG4oSBwEAMjMvkdlzQ5Xk=; b=Nnj2Ccgc6EeKn3kAO/0bxru+gf
-        Z2RPO+a8J2GyLnljKGhXPnUyjyaAr6q+7arbNdCjiNMQEvPmx5r06Sf4e9BaEQtUkHD1Na9onas9Y
-        Opw64Jcl1XgbLTZ5YUtLUpyYyUPnBbl2cu2tEr+rISNhSu1Dhjbqj4frau7IAioH3jKW6wIXyYM9z
-        8137jSyn4QOFwJwGnm9OGjkia7aBtuvSDbqOPvq03ay6+D1t7TmgraNga7YBRDVCod1x5c6I0eZLT
-        GMnw7oLsfweYOSS4c24KK9jysr9ylJbJf8pyHWIEEWH5qRhVbCQxZDQYsL5GVo33DXGewm0sBiAJp
-        JwI4O08g==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o6B6m-00CJb0-Oa; Tue, 28 Jun 2022 13:18:24 +0000
-Date:   Tue, 28 Jun 2022 14:18:24 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, linux-mm@kvack.org
-Subject: Re: Multi-page folio issues in 5.19-rc4 (was [PATCH v3 25/25] xfs:
- Support large folios)
-Message-ID: <Yrr/oBlf1Eig8uKS@casper.infradead.org>
-References: <20211216210715.3801857-1-willy@infradead.org>
- <20211216210715.3801857-26-willy@infradead.org>
- <YrO243DkbckLTfP7@magnolia>
- <Yrku31ws6OCxRGSQ@magnolia>
- <Yrm6YM2uS+qOoPcn@casper.infradead.org>
- <YrosM1+yvMYliw2l@magnolia>
- <20220628073120.GI227878@dread.disaster.area>
- <YrrlrMK/7pyZwZj2@casper.infradead.org>
- <Yrrmq4hmJPkf5V7s@casper.infradead.org>
+        with ESMTP id S240816AbiF1OqF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 10:46:05 -0400
+Received: from m15111.mail.126.com (m15111.mail.126.com [220.181.15.111])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1B2AF2C101
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 07:46:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=floop
+        MHyPc5b/HVchmwHR6E8y/dzqJo4FKeYJ0fkwU0=; b=mQ2iW692ibvNnFKFKsuty
+        5Hb+Fu3cNdy+tZUpeapgACFUYR8TFZiA8E6Y1D2i7tbuHOWNfPqmjMHpw65XMjJM
+        +P7MnDySAAt4Pel7zAxRp6ceT6yBJYgbSu70m5SL9c/khZNvxiEVpcRXPwg5phk1
+        1xilU0+8ziS2dKhaoo4Mh0=
+Received: from localhost.localdomain (unknown [111.32.104.14])
+        by smtp1 (Coremail) with SMTP id C8mowAB3VN0oFLtiALI1Fg--.63814S2;
+        Tue, 28 Jun 2022 22:46:00 +0800 (CST)
+From:   hexiaole <hexiaole1994@126.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     hexiaole <hexiaole@kylinos.cn>
+Subject: [PATCH v1] xfs: correct nlink printf specifier from hd to PRIu32
+Date:   Tue, 28 Jun 2022 22:45:42 +0800
+Message-Id: <20220628144542.33704-1-hexiaole1994@126.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yrrmq4hmJPkf5V7s@casper.infradead.org>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: C8mowAB3VN0oFLtiALI1Fg--.63814S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJF18Gr4rXrW8Ar4fJF1fJFb_yoW8Ar1Dpa
+        1fJa45Gan5Zay3uFsrtrWqvw1agay5Jr43ZFnI9w15ArZxJr1qqrn2kw1Svw4UCw48XF1Y
+        vFyqy3WfGr48u3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jYdgAUUUUU=
+X-Originating-IP: [111.32.104.14]
+X-CM-SenderInfo: 5kh0xt5rohimizu6ij2wof0z/1tbimwkuBlx5hJZeXgAAsN
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 28, 2022 at 12:31:55PM +0100, Matthew Wilcox wrote:
-> On Tue, Jun 28, 2022 at 12:27:40PM +0100, Matthew Wilcox wrote:
-> > On Tue, Jun 28, 2022 at 05:31:20PM +1000, Dave Chinner wrote:
-> > > So using this technique, I've discovered that there's a dirty page
-> > > accounting leak that eventually results in fsx hanging in
-> > > balance_dirty_pages().
-> > 
-> > Alas, I think this is only an accounting error, and not related to
-> > the problem(s) that Darrick & Zorro are seeing.  I think what you're
-> > seeing is dirty pages being dropped at truncation without the
-> > appropriate accounting.  ie this should be the fix:
-> 
-> Argh, try one that actually compiles.
+From: hexiaole <hexiaole@kylinos.cn>
 
-... that one's going to underflow the accounting.  Maybe I shouldn't
-be writing code at 6am?
+1. Description
+libxfs/xfs_log_format.h declare 'di_nlink' as unsigned 32-bit integer:
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index f7248002dad9..4eec6ee83e44 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -18,6 +18,7 @@
- #include <linux/shrinker.h>
- #include <linux/mm_inline.h>
- #include <linux/swapops.h>
-+#include <linux/backing-dev.h>
- #include <linux/dax.h>
- #include <linux/khugepaged.h>
- #include <linux/freezer.h>
-@@ -2439,11 +2440,15 @@ static void __split_huge_page(struct page *page, struct list_head *list,
- 		__split_huge_page_tail(head, i, lruvec, list);
- 		/* Some pages can be beyond EOF: drop them from page cache */
- 		if (head[i].index >= end) {
--			ClearPageDirty(head + i);
--			__delete_from_page_cache(head + i, NULL);
-+			struct folio *tail = page_folio(head + i);
-+
- 			if (shmem_mapping(head->mapping))
- 				shmem_uncharge(head->mapping->host, 1);
--			put_page(head + i);
-+			else if (folio_test_clear_dirty(tail))
-+				folio_account_cleaned(tail,
-+					inode_to_wb(folio->mapping->host));
-+			__filemap_remove_folio(tail, NULL);
-+			folio_put(tail);
- 		} else if (!PageAnon(page)) {
- 			__xa_store(&head->mapping->i_pages, head[i].index,
- 					head + i, 0);
+typedef struct xfs_icdinode {
+        ...
+        __uint32_t      di_nlink;       /* number of links to file */
+        ...
+} xfs_icdinode_t;
+
+But logprint/log_misc.c use '%hd' to print 'di_nlink':
+
+void
+xlog_print_trans_inode_core(xfs_icdinode_t *ip)
+{
+    ...
+    printf(_("nlink %hd uid %d gid %d\n"),
+           ip->di_nlink, ip->di_uid, ip->di_gid);
+    ...
+}
+
+'%hd' can be 16-bit on many architectures, on these architectures, the 'printf' only print the low 16-bit of 'di_nlink'.
+
+2. Reproducer
+2.1. Commands
+[root@localhost ~]# cd
+[root@localhost ~]# xfs_mkfile 128m 128m.xfs
+[root@localhost ~]# mkfs.xfs 128m.xfs
+[root@localhost ~]# mount 128m.xfs /mnt/
+[root@localhost ~]# cd /mnt/
+[root@localhost mnt]# seq 1 65534|xargs mkdir -p
+[root@localhost mnt]# cd
+[root@localhost ~]# umount /mnt/
+[root@localhost ~]# xfs_logprint 128m.xfs|grep nlink|tail -1
+
+2.2. Expect result
+nlink 65536
+
+2.3. Actual result
+nlink 0
+---
+ logprint/log_misc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 35e926a3..6add28ed 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -444,7 +444,7 @@ xlog_print_trans_inode_core(
+     printf(_("magic 0x%hx mode 0%ho version %d format %d\n"),
+ 	   ip->di_magic, ip->di_mode, (int)ip->di_version,
+ 	   (int)ip->di_format);
+-    printf(_("nlink %hd uid %d gid %d\n"),
++    printf(_("nlink %" PRIu32 " uid %d gid %d\n"),
+ 	   ip->di_nlink, ip->di_uid, ip->di_gid);
+     printf(_("atime 0x%llx mtime 0x%llx ctime 0x%llx\n"),
+ 		xlog_extract_dinode_ts(ip->di_atime),
+-- 
+2.27.0
+
