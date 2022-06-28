@@ -2,261 +2,299 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A74DC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jun 2022 23:35:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5229FC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 00:15:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241313AbiF0XfU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jun 2022 19:35:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48326 "EHLO
+        id S241223AbiF1AP1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jun 2022 20:15:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236667AbiF0XfT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 19:35:19 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 07DFADF8B;
-        Mon, 27 Jun 2022 16:35:18 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 3767D5ED512;
-        Tue, 28 Jun 2022 09:35:17 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1o5yGB-00BrO7-Sf; Tue, 28 Jun 2022 09:35:15 +1000
-Date:   Tue, 28 Jun 2022 09:35:15 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3 25/25] xfs: Support large folios
-Message-ID: <20220627233515.GG227878@dread.disaster.area>
-References: <20211216210715.3801857-1-willy@infradead.org>
- <20211216210715.3801857-26-willy@infradead.org>
- <YrO243DkbckLTfP7@magnolia>
- <Yrku31ws6OCxRGSQ@magnolia>
- <Yrm6YM2uS+qOoPcn@casper.infradead.org>
- <YrosM1+yvMYliw2l@magnolia>
+        with ESMTP id S229512AbiF1AP0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jun 2022 20:15:26 -0400
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2050.outbound.protection.outlook.com [40.107.95.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66A4F636F;
+        Mon, 27 Jun 2022 17:15:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=oE6fZ8I0jMr6WZrifI9JShD67W/ewuqHSC8Oyp9NQfKizgfoq8X88Iil+k7Gq/z0meROiiEvo0bzRYMZy2GU6bfirjahzSlbZclMuw2pO6/AU1HoUEo3QW5Uagjfmky/stsSfvk1M3tZcxogQh23xW9HhtlOGJxboQeps6mh2M3QAtXR+jNf6loJSAn/H0UzqJkS73DegQNDvLwCOkobuQM3Oo+m+0RLoW6U+46Eurp58Qy0I+GrmAg37ifh8ddcz+tGcA+Hf/mPJiKZzHFxTmCXipzcB44ij4tmq4Oe564OJH4aUb7qKd5Sht89ecpQ400AWBTc6iHQaClXs7hzTw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NN0fSNUfIviFYWrAMIMXsV6Hsd+z0eNwwBrjR/TyjQM=;
+ b=LwWe0Plt8oHjzwUyliTcVhYSni4phhqLrw1AcH3wjUSnmizbeqrHcWpo4buuV3lYWn2k9r0EZ12Umkc63ypfiz4x5LQ45XgD8+kXa5gsiItpti3c/xnBzqdGfoWfpTc/ZKHxsypimVPjWxBFqoHMpYgkE/7HDoJBxGNuxOyLM7Hhujt7PKhjVAhDdtjmy/ozT9FUTG4xO6PHnxdJij5fjl0rA2QJ2N0w/XB4Xzjf6GM/XsVn9ggDZbpzTfntcOeOxusT6SuVEeEphZUOnoFbhp75O43vU2Y9pDhAwtsZYtTLnmlsztiLYg4cZtHK2oeL/7h+Frv2eaP55dM1THjl4w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NN0fSNUfIviFYWrAMIMXsV6Hsd+z0eNwwBrjR/TyjQM=;
+ b=LGRGIb/Dqrq45ICJ3ltbqgNYYCsxnCJjqmM09w2B0HmmvnsySU0E/m51EfeoWeWt0Vayf17g1979lVoEF1ev3wJ/Fo26e1iYtA3E1+WLEpjcFD8SjJF8ygM1nKimLjKPu5G7j0XObt/LRbw085ADRXXNiBPQDBK2rjhuQZXSK2M=
+Received: from MWHPR15CA0071.namprd15.prod.outlook.com (2603:10b6:301:4c::33)
+ by DM5PR1201MB0156.namprd12.prod.outlook.com (2603:10b6:4:59::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5373.18; Tue, 28 Jun
+ 2022 00:15:21 +0000
+Received: from CO1NAM11FT009.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:301:4c:cafe::fe) by MWHPR15CA0071.outlook.office365.com
+ (2603:10b6:301:4c::33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5373.21 via Frontend
+ Transport; Tue, 28 Jun 2022 00:15:21 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CO1NAM11FT009.mail.protection.outlook.com (10.13.175.61) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5373.15 via Frontend Transport; Tue, 28 Jun 2022 00:15:21 +0000
+Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Mon, 27 Jun
+ 2022 19:15:19 -0500
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     <jgg@nvidia.com>
+CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
+        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
+        <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
+        <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
+        <akpm@linux-foundation.org>
+Subject: [PATCH v6 01/14] mm: add zone device coherent type memory support
+Date:   Mon, 27 Jun 2022 19:14:41 -0500
+Message-ID: <20220628001454.3503-2-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220628001454.3503-1-alex.sierra@amd.com>
+References: <20220628001454.3503-1-alex.sierra@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YrosM1+yvMYliw2l@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62ba3eb5
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=JfrnYn6hAAAA:8 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=Tx_KuMWrBpQ_Xf1fj60A:9 a=CjuIK1q_8ugA:10
-        a=1CNFftbPRP8L7MoqJWF3:22 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 409e7f1a-17dc-4c6d-5fbd-08da589b4a45
+X-MS-TrafficTypeDiagnostic: DM5PR1201MB0156:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: u1DjzDxF3dMAGFSp97zu9ayedEP7+drZsuobDdeFUHq9JRD8QHSbv9s7E1illC2Vc8XzEM3Ai9ZBr6Ypb6aNLi6FE2t2ScOp5gB7S6U3ljTb15yfviPxu1Y9wnIP6N39JUEFFSl0ttAvTbQihPSoGaYq4PiVjF3yVf/Y7WZKoKvCm/LEEuZSg+Q1N+SU0RlYSHDZQmimy+iVHaj8V+lMFOnEk/qgXbqmFYsf6TRgDsbLYFshnsk6sR9TMzmCdOJmqX6GeFnXxqr6d4T52JNydUEpWrYdEIiIa440kPm6Jt2JNJoLPQyQPj+VMJIP5HSwxW7uhNZmwVc2FseIiL/yZeGx0EyyCzOCXSV1fOTp23cBACGxH8dHSPTUue55xwUpLdRqw3flO02iRXNzSfhkLkVa290A42Fxu/ys5HF4a5OcFqhJR4FXZl/ObgxEDdz71JLJ5yP5MqmAe7pTRsBZXLknuGT87Qlysb33vJwZrGX8na3O4p2t7Vp5+bOoE/1dk/EJrfsxhSBh1mocxlQ54PqKs1zer73DgAUNmNEQysn78BLx0DJW8GeH+OUYRgYwzwtH/zO4b9a1s4aQ1SAOrO/ZKTWpVUz+OAoxzsQoqHIW3+0FPTKI7pEjQob6rYeqmCSnnssu8e9o6QUAw9oG4S3p5/wr44lncKlQuWuUUiPTNsjrbvd0b/qXOqevZN0D57Bv6T+2XLxaa0g1AEHC8D49DooTx4mDQuLVlH6eCMbjaXsd1QAixznrwPt1i7dFg+MctN+MN68Ij39LeMBrgUg/ZejpWmRC9anRaC+QLturfvpCBcS0iraSI9mq2RemXDVsmDDHpZZDATJ+nmEsQQ==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(136003)(396003)(346002)(376002)(46966006)(40470700004)(36840700001)(4326008)(70586007)(8676002)(36860700001)(70206006)(83380400001)(81166007)(8936002)(44832011)(426003)(7696005)(47076005)(40460700003)(356005)(478600001)(40480700001)(26005)(82740400003)(16526019)(336012)(186003)(7416002)(5660300002)(36756003)(82310400005)(1076003)(2906002)(6916009)(316002)(6666004)(54906003)(2616005)(41300700001)(86362001)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jun 2022 00:15:21.3707
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 409e7f1a-17dc-4c6d-5fbd-08da589b4a45
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT009.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR1201MB0156
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 27, 2022 at 03:16:19PM -0700, Darrick J. Wong wrote:
-> On Mon, Jun 27, 2022 at 03:10:40PM +0100, Matthew Wilcox wrote:
-> > On Sun, Jun 26, 2022 at 09:15:27PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jun 22, 2022 at 05:42:11PM -0700, Darrick J. Wong wrote:
-> > > > [resend with shorter 522.out file to keep us under the 300k maximum]
-> > > > 
-> > > > On Thu, Dec 16, 2021 at 09:07:15PM +0000, Matthew Wilcox (Oracle) wrote:
-> > > > > Now that iomap has been converted, XFS is large folio safe.
-> > > > > Indicate to the VFS that it can now create large folios for XFS.
-> > > > > 
-> > > > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > ---
-> > > > >  fs/xfs/xfs_icache.c | 2 ++
-> > > > >  1 file changed, 2 insertions(+)
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > > > index da4af2142a2b..cdc39f576ca1 100644
-> > > > > --- a/fs/xfs/xfs_icache.c
-> > > > > +++ b/fs/xfs/xfs_icache.c
-> > > > > @@ -87,6 +87,7 @@ xfs_inode_alloc(
-> > > > >  	/* VFS doesn't initialise i_mode or i_state! */
-> > > > >  	VFS_I(ip)->i_mode = 0;
-> > > > >  	VFS_I(ip)->i_state = 0;
-> > > > > +	mapping_set_large_folios(VFS_I(ip)->i_mapping);
-> > > > >  
-> > > > >  	XFS_STATS_INC(mp, vn_active);
-> > > > >  	ASSERT(atomic_read(&ip->i_pincount) == 0);
-> > > > > @@ -320,6 +321,7 @@ xfs_reinit_inode(
-> > > > >  	inode->i_rdev = dev;
-> > > > >  	inode->i_uid = uid;
-> > > > >  	inode->i_gid = gid;
-> > > > > +	mapping_set_large_folios(inode->i_mapping);
-> > > > 
-> > > > Hmm.  Ever since 5.19-rc1, I've noticed that fsx in generic/522 now
-> > > > reports file corruption after 20 minutes of runtime.  The corruption is
-> > > > surprisingly reproducible (522.out.bad attached below) in that I ran it
-> > > > three times and always got the same bad offset (0x6e000) and always the
-> > > > same opcode (6213798(166 mod 256) MAPREAD).
-> > > > 
-> > > > I turned off multipage folios and now 522 has run for over an hour
-> > > > without problems, so before I go do more debugging, does this ring a
-> > > > bell to anyone?
-> > > 
-> > > I tried bisecting, but that didn't yield anything productive and
-> > > 5.19-rc4 still fails after 25 minutes; however, it seems that g/522 will
-> > > run without problems for at least 3-4 days after reverting this patch
-> > > from -rc3.
-> > > 
-> > > So I guess I have a blunt force fix if we can't figure this one out
-> > > before 5.19 final, but I'd really rather not.  Will keep trying this
-> > > week.
-> > 
-> > I'm on holiday for the next week, so I'm not going to be able to spend
-> > any time on this until then.  I have a suspicion that this may be the
-> > same bug Zorro is seeing here:
-> > 
-> > https://lore.kernel.org/linux-mm/20220613010850.6kmpenitmuct2osb@zlang-mailbox/
-> > 
-> > At least I hope it is, and finding a folio that has been freed would
-> > explain (apparent) file corruption.
-> 
-> Hm.  I suppose it /could/ be a lost folio getting into the works
-> somewhere.
-> 
-> Today I remembered fsx -X, which makes this reproduce a bit faster (~3-8
-> minutes instead of 20-25).  That has helped me to narrow things down a
-> little more:
-> 
-> - Turning off INSERT/COLLAPSE_RANGE doesn't make the problem go away,
->   but it does make reading the fsx log much easier.
-> 
-> - Turning off clone/dedupe (either via -J -B or formatting with -m
->   reflink=0) makes the problem go away completely.  If you define
->   letting fsx run for 90 minutes as "completely".
-> 
-> - Neutering vfs_dedupe_file_range_compare by replacing it with an -EBADE
->   return doesn't affect the reproducibility, so it's not the comparison
->   function misbehaving.
-> - I modified fsx.c so that when there's file corruption, it'll report
->   both the first 16 bytes of corruption as well as every corruption that
->   happens on a page boundary.
-> 
-> - I also modified run_fsx() to diff the good and junk files, and
->   complain about any corruption happening on a page boundary.  Now I see
->   things like this:
-> 
-> 2153984(  0 mod 256): SKIPPED (no operation)
-> 2153985(  1 mod 256): DEDUPE 0xf000 thru 0x23fff        (0x15000 bytes) to 0x2a000 thru 0x3efff ******BBBB
-> 2153986(  2 mod 256): COPY 0xe794 thru 0x2ae41  (0x1c6ae bytes) to 0x60ac4 thru 0x7d171
-> 2153987(  3 mod 256): TRUNCATE DOWN     from 0x7d172 to 0x535da
-> 2153988(  4 mod 256): SKIPPED (no operation)
-> 2153989(  5 mod 256): MAPREAD  0x40b93 thru 0x535d9     (0x12a47 bytes)
-> 2153990(  6 mod 256): COPY 0x5edd thru 0x20282  (0x1a3a6 bytes) to 0x3a9aa thru 0x54d4f
-> 2153991(  7 mod 256): SKIPPED (no operation)
-> 2153992(  8 mod 256): SKIPPED (no operation)
-> 2153993(  9 mod 256): ZERO     0x542d3 thru 0x67006     (0x12d34 bytes)
-> 2153994( 10 mod 256): COPY 0x42cf6 thru 0x538a7 (0x10bb2 bytes) to 0x23fe7 thru 0x34b98 ******EEEE
-> 2153995( 11 mod 256): MAPWRITE 0x5a1fc thru 0x6b067     (0x10e6c bytes)
-> 2153996( 12 mod 256): SKIPPED (no operation)
-> 2153997( 13 mod 256): CLONE 0x38000 thru 0x38fff        (0x1000 bytes) to 0x77000 thru 0x77fff
-> 2153998( 14 mod 256): FALLOC   0x49bdd thru 0x62a55     (0x18e78 bytes) INTERIOR
-> 2153999( 15 mod 256): CLONE 0xf000 thru 0x1bfff (0xd000 bytes) to 0x2c000 thru 0x38fff  ******JJJJ
-> Log of operations saved to "/mnt/junk.fsxops"; replay with --replay-ops
-> Correct content saved for comparison
-> (maybe hexdump "/mnt/junk" vs "/mnt/junk.fsxgood")
-> junk file 177
-> -02e000  ec  20  ec  5a  ec  78  ec  b2  ec  e6  ec  1e  ec  43  ec  0f
-> -02f000  ec  30  ec  32  ec  4c  ec  ac  ec  5c  ec  d2  ec  62  ec  d3
-> -030000  ec  73  ec  ce  ec  8c  ec  cb  ec  94  ec  59  ec  81  ec  34
-> +02e000  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d  db  de  db
-> +02f000  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b  d8  83  d8
-> +030000  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e  d8  61  d8
-> 
-> When I remount the test filesystem, I see further corruption:
-> 
-> $ diff -Naurp <(od -tx1 -Ax -c $TEST_DIR/junk.fsxgood) <(od -tx1 -Ax -c $TEST_DIR/junk) | grep '^[+-]0..000'
-> -011000  ec  20  ec  5a  ec  78  ec  b2  ec  e6  ec  1e  ec  43  ec  0f
-> -012000  ec  30  ec  32  ec  4c  ec  ac  ec  5c  ec  d2  ec  62  ec  d3
-> -013000  ec  73  ec  ce  ec  8c  ec  cb  ec  94  ec  59  ec  81  ec  34
-> +011000  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d  db  de  db
-> +012000  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b  d8  83  d8
-> +013000  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e  d8  61  d8
-> -02e000  ec  20  ec  5a  ec  78  ec  b2  ec  e6  ec  1e  ec  43  ec  0f
-> -02f000  ec  30  ec  32  ec  4c  ec  ac  ec  5c  ec  d2  ec  62  ec  d3
-> -030000  ec  73  ec  ce  ec  8c  ec  cb  ec  94  ec  59  ec  81  ec  34
-> +02e000  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d  db  de  db
-> +02f000  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b  d8  83  d8
-> +030000  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e  d8  61  d8
-> 
-> This is really quite strange!  The same corruption patterns we saw at
-> pages 0x2e - 0x30 now appear at 0x11-0x13 after the remount!
+Device memory that is cache coherent from device and CPU point of view.
+This is used on platforms that have an advanced system bus (like CAPI
+or CXL). Any page of a process can be migrated to such memory. However,
+no one should be allowed to pin such memory so that it can always be
+evicted.
 
-Hmmmm - look at what the last operation before failure
-does - it clones 0xf000-0x1bfff to 0x2c000-0x38fff. IOWs, those
-ranges *should* be identical and the the corruption is actually
-occuring at 0x11000-0x13fff. It's not until that range gets cloned
-to 0x2e000-0x30fff that the corruption is detected.
+Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
+Reviewed-by: Alistair Popple <apopple@nvidia.com>
+[hch: rebased ontop of the refcount changes,
+      removed is_dev_private_or_coherent_page]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/linux/memremap.h | 19 +++++++++++++++++++
+ mm/memcontrol.c          |  7 ++++---
+ mm/memory-failure.c      |  8 ++++++--
+ mm/memremap.c            | 10 ++++++++++
+ mm/migrate_device.c      | 16 +++++++---------
+ mm/rmap.c                |  5 +++--
+ 6 files changed, 49 insertions(+), 16 deletions(-)
 
-So we're looking in the wrong spot for the page cache corruption -
-we need to be looking at operations over the range 0x11000-0x13fff
-for misbehaviour, not where fsx detected the corrupt data.
-
-> By comparison, the junk.fsxgood file only contains this 77/db/f1
-> sequence at:
-> 
-> $ od -tx1 -Ax -c $TEST_DIR/junk.fsxgood | grep '77  db  f1'
-> 008530  db  34  db  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d
-> 03d000  77  db  f1  db  ba  db  01  db  d5  db  9c  db  4d  db  de  db
-> 
-> Curiously, the same byte trios at 0x2f000 and 0x30000 have similar
-> repetitions at similar looking offsets:
-> 
-> $ od -tx1 -Ax -c $TEST_DIR/junk.fsxgood | grep 'b3  d8  35'
-> 009530  d8  bb  d8  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b
-> 03e000  b3  d8  35  d8  e2  d8  bb  d8  a4  d8  c8  d8  5b  d8  83  d8
-> $ od -tx1 -Ax -c $TEST_DIR/junk.fsxgood | grep '23  d8  c8'
-> 00a530  d8  f5  d8  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e
-> 03f000  23  d8  c8  d8  22  d8  da  d8  97  d8  e0  d8  7e  d8  61  d8
-> 
-> Though the only pattern that happens consistently is that garbage bytes
-> end up at the reflink dest, and later at the reflink source.  I never
-> see any VM_BUG_ON_FOLIO asserts, nor does KASAN report anything.
-
-Smells like the page cache over the clone source is not getting
-marked dirty and/or flushed to disk correctly before the clone is
-run. It then shares the extent with stale data to the new location
-(the destination) which then fails the contents validation.
-
-Do we have a case where we are only writing back the head page of
-the multipage folio?
-
-> I also added a debug function to dump the folios it finds in the
-> pagecache for the fsx junk file, but nothing looks odd:
-> 
->      522-5099  [001]   491.954659: console:              [U] FSX FAILURE
->   xfs_io-5125  [002]   491.961232: console:              XFS (sda): EXPERIMENTAL online scrub feature in use. Use at your own risk!
->   xfs_io-5125  [002]   491.961238: bprint:               filemap_dump: ino 0xb1 pos 0x0 pfn 0x515cc order 0
->   xfs_io-5125  [002]   491.961238: bprint:               filemap_dump: ino 0xb1 pos 0x1000 pfn 0x515cd order 0
->   xfs_io-5125  [002]   491.961239: bprint:               filemap_dump: ino 0xb1 pos 0x2000 pfn 0x515ce order 0
->   xfs_io-5125  [002]   491.961239: bprint:               filemap_dump: ino 0xb1 pos 0x3000 pfn 0x515cf order 0
->   xfs_io-5125  [002]   491.961239: bprint:               filemap_dump: ino 0xb1 pos 0x4000 pfn 0x50c48 order 0
->   xfs_io-5125  [002]   491.961240: bprint:               filemap_dump: ino 0xb1 pos 0x5000 pfn 0x50c49 order 0
->   xfs_io-5125  [002]   491.961240: bprint:               filemap_dump: ino 0xb1 pos 0x6000 pfn 0x50c4a order 0
->   xfs_io-5125  [002]   491.961241: bprint:               filemap_dump: ino 0xb1 pos 0x7000 pfn 0xc8a8 order 0
->   xfs_io-5125  [002]   491.961241: bprint:               filemap_dump: ino 0xb1 pos 0x8000 pfn 0x50988 order 2
->   xfs_io-5125  [002]   491.961241: bprint:               filemap_dump: ino 0xb1 pos 0xc000 pfn 0x509e0 order 2
->   xfs_io-5125  [002]   491.961242: bprint:               filemap_dump: ino 0xb1 pos 0x10000 pfn 0x4db64 order 2
-
-So this is the folio that likely has the problem (the source)...
-
->   xfs_io-5125  [002]   491.961242: bprint:               filemap_dump: ino 0xb1 pos 0x14000 pfn 0x50c4c order 0
->   xfs_io-5125  [002]   491.961243: bprint:               filemap_dump: ino 0xb1 pos 0x15000 pfn 0x12485 order 0
->   xfs_io-5125  [002]   491.961243: bprint:               filemap_dump: ino 0xb1 pos 0x16000 pfn 0x50c4d order 0
->   xfs_io-5125  [002]   491.961243: bprint:               filemap_dump: ino 0xb1 pos 0x17000 pfn 0x50c4e order 0
->   xfs_io-5125  [002]   491.961244: bprint:               filemap_dump: ino 0xb1 pos 0x18000 pfn 0x4eef8 order 2
->   xfs_io-5125  [002]   491.961244: bprint:               filemap_dump: ino 0xb1 pos 0x1c000 pfn 0x4eefc order 2
->   xfs_io-5125  [002]   491.961245: bprint:               filemap_dump: ino 0xb1 pos 0x20000 pfn 0x4eef0 order 2
->   xfs_io-5125  [002]   491.961245: bprint:               filemap_dump: ino 0xb1 pos 0x24000 pfn 0x50f2c order 2
->   xfs_io-5125  [002]   491.961245: bprint:               filemap_dump: ino 0xb1 pos 0x28000 pfn 0x50f28 order 2
->   xfs_io-5125  [002]   491.961246: bprint:               filemap_dump: ino 0xb1 pos 0x2c000 pfn 0x50f24 order 2
-
-... not the one at the destination here.
-
-Cheers,
-
-Dave.
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 8af304f6b504..9f752ebed613 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -41,6 +41,13 @@ struct vmem_altmap {
+  * A more complete discussion of unaddressable memory may be found in
+  * include/linux/hmm.h and Documentation/vm/hmm.rst.
+  *
++ * MEMORY_DEVICE_COHERENT:
++ * Device memory that is cache coherent from device and CPU point of view. This
++ * is used on platforms that have an advanced system bus (like CAPI or CXL). A
++ * driver can hotplug the device memory using ZONE_DEVICE and with that memory
++ * type. Any page of a process can be migrated to such memory. However no one
++ * should be allowed to pin such memory so that it can always be evicted.
++ *
+  * MEMORY_DEVICE_FS_DAX:
+  * Host memory that has similar access semantics as System RAM i.e. DMA
+  * coherent and supports page pinning. In support of coordinating page
+@@ -61,6 +68,7 @@ struct vmem_altmap {
+ enum memory_type {
+ 	/* 0 is reserved to catch uninitialized type fields */
+ 	MEMORY_DEVICE_PRIVATE = 1,
++	MEMORY_DEVICE_COHERENT,
+ 	MEMORY_DEVICE_FS_DAX,
+ 	MEMORY_DEVICE_GENERIC,
+ 	MEMORY_DEVICE_PCI_P2PDMA,
+@@ -143,6 +151,17 @@ static inline bool folio_is_device_private(const struct folio *folio)
+ 	return is_device_private_page(&folio->page);
+ }
+ 
++static inline bool is_device_coherent_page(const struct page *page)
++{
++	return is_zone_device_page(page) &&
++		page->pgmap->type == MEMORY_DEVICE_COHERENT;
++}
++
++static inline bool folio_is_device_coherent(const struct folio *folio)
++{
++	return is_device_coherent_page(&folio->page);
++}
++
+ static inline bool is_pci_p2pdma_page(const struct page *page)
+ {
+ 	return IS_ENABLED(CONFIG_PCI_P2PDMA) &&
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 618c366a2f07..5d37a85c67da 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5665,8 +5665,8 @@ static int mem_cgroup_move_account(struct page *page,
+  *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
+  *     target for charge migration. if @target is not NULL, the entry is stored
+  *     in target->ent.
+- *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_PRIVATE
+- *     (so ZONE_DEVICE page and thus not on the lru).
++ *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is device memory and
++ *   thus not on the lru.
+  *     For now we such page is charge like a regular page would be as for all
+  *     intent and purposes it is just special memory taking the place of a
+  *     regular page.
+@@ -5704,7 +5704,8 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
+ 		 */
+ 		if (page_memcg(page) == mc.from) {
+ 			ret = MC_TARGET_PAGE;
+-			if (is_device_private_page(page))
++			if (is_device_private_page(page) ||
++			    is_device_coherent_page(page))
+ 				ret = MC_TARGET_DEVICE;
+ 			if (target)
+ 				target->page = page;
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index da39ec8afca8..79f175eeb190 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -1685,12 +1685,16 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+ 		goto unlock;
+ 	}
+ 
+-	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
++	switch (pgmap->type) {
++	case MEMORY_DEVICE_PRIVATE:
++	case MEMORY_DEVICE_COHERENT:
+ 		/*
+-		 * TODO: Handle HMM pages which may need coordination
++		 * TODO: Handle device pages which may need coordination
+ 		 * with device-side memory.
+ 		 */
+ 		goto unlock;
++	default:
++		break;
+ 	}
+ 
+ 	/*
+diff --git a/mm/memremap.c b/mm/memremap.c
+index b870a659eee6..0f8f08f8a991 100644
+--- a/mm/memremap.c
++++ b/mm/memremap.c
+@@ -315,6 +315,16 @@ void *memremap_pages(struct dev_pagemap *pgmap, int nid)
+ 			return ERR_PTR(-EINVAL);
+ 		}
+ 		break;
++	case MEMORY_DEVICE_COHERENT:
++		if (!pgmap->ops->page_free) {
++			WARN(1, "Missing page_free method\n");
++			return ERR_PTR(-EINVAL);
++		}
++		if (!pgmap->owner) {
++			WARN(1, "Missing owner\n");
++			return ERR_PTR(-EINVAL);
++		}
++		break;
+ 	case MEMORY_DEVICE_FS_DAX:
+ 		if (IS_ENABLED(CONFIG_FS_DAX_LIMITED)) {
+ 			WARN(1, "File system DAX not supported\n");
+diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+index 5052093d0262..a4847ad65da3 100644
+--- a/mm/migrate_device.c
++++ b/mm/migrate_device.c
+@@ -518,7 +518,7 @@ EXPORT_SYMBOL(migrate_vma_setup);
+  *     handle_pte_fault()
+  *       do_anonymous_page()
+  * to map in an anonymous zero page but the struct page will be a ZONE_DEVICE
+- * private page.
++ * private or coherent page.
+  */
+ static void migrate_vma_insert_page(struct migrate_vma *migrate,
+ 				    unsigned long addr,
+@@ -594,11 +594,8 @@ static void migrate_vma_insert_page(struct migrate_vma *migrate,
+ 						page_to_pfn(page));
+ 		entry = swp_entry_to_pte(swp_entry);
+ 	} else {
+-		/*
+-		 * For now we only support migrating to un-addressable device
+-		 * memory.
+-		 */
+-		if (is_zone_device_page(page)) {
++		if (is_zone_device_page(page) &&
++		    !is_device_coherent_page(page)) {
+ 			pr_warn_once("Unsupported ZONE_DEVICE page type.\n");
+ 			goto abort;
+ 		}
+@@ -701,10 +698,11 @@ void migrate_vma_pages(struct migrate_vma *migrate)
+ 
+ 		mapping = page_mapping(page);
+ 
+-		if (is_device_private_page(newpage)) {
++		if (is_device_private_page(newpage) ||
++		    is_device_coherent_page(newpage)) {
+ 			/*
+-			 * For now only support private anonymous when migrating
+-			 * to un-addressable device memory.
++			 * For now only support anonymous memory migrating to
++			 * device private or coherent memory.
+ 			 */
+ 			if (mapping) {
+ 				migrate->src[i] &= ~MIGRATE_PFN_MIGRATE;
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 5bcb334cd6f2..04fac1af870b 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1957,7 +1957,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
+ 		/* Update high watermark before we lower rss */
+ 		update_hiwater_rss(mm);
+ 
+-		if (folio_is_zone_device(folio)) {
++		if (folio_is_device_private(folio)) {
+ 			unsigned long pfn = folio_pfn(folio);
+ 			swp_entry_t entry;
+ 			pte_t swp_pte;
+@@ -2131,7 +2131,8 @@ void try_to_migrate(struct folio *folio, enum ttu_flags flags)
+ 					TTU_SYNC)))
+ 		return;
+ 
+-	if (folio_is_zone_device(folio) && !folio_is_device_private(folio))
++	if (folio_is_zone_device(folio) &&
++	    (!folio_is_device_private(folio) && !folio_is_device_coherent(folio)))
+ 		return;
+ 
+ 	/*
 -- 
-Dave Chinner
-david@fromorbit.com
+2.32.0
+
