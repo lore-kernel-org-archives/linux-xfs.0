@@ -2,181 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F694C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 22:58:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81862C43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 22:59:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232035AbiF1W6j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jun 2022 18:58:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55680 "EHLO
+        id S230295AbiF1W7C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jun 2022 18:59:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232036AbiF1W6i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 18:58:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB3E01B797
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 15:58:36 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7BE6561AE3
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 22:58:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2450C341C8;
-        Tue, 28 Jun 2022 22:58:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656457115;
-        bh=5xUEwSM6umaJzP4/Sgvupu4ayOswq7oJ3F8wGi+vLTs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=J1rIL+abqD5SQ4IT1DJIv4WjAcPePuVvQaKa84DD58LEJDfYdhj48Jhn2z8JI6STI
-         VAi/zKrtMbo5WeygVef9fUJlOLAOFd8PmMZHRDSEb/qOy4SChA4vPFcZ9vjmrK5JdH
-         lfjH9HyiK2UGChrgdejsCj0osXEUPXORIuT6tlFhGI4FibUiEfYMagACq0H9JTeZfG
-         7QgJWReeIYmCsGIbAIsjFGdMkYyVAkrvFSKHlMFwgZzQ0oJyI3MHd212W6duyWB/aP
-         N1fcm+PUX/wKaTKvrq5KyaEGuKSjxeU+RTrFThp/GJlXfWDF3TF6mzQg2NhHshR2gD
-         DT5hhla1tHZnw==
-Date:   Tue, 28 Jun 2022 15:58:35 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>,
-        Anthony Iliopoulos <ailiop@suse.com>
-Subject: Re: [PATCH] xfs_restore: remove DMAPI support
-Message-ID: <YruHmxNhAwX/p7H5@magnolia>
-References: <20220203174540.GT8313@magnolia>
- <8eafb32b-10ab-b5eb-d80a-571bf803c832@sandeen.net>
+        with ESMTP id S231265AbiF1W7B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 18:59:01 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E500432EF1
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 15:58:59 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 02A0C10E787E;
+        Wed, 29 Jun 2022 08:58:58 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1o6KAb-00CFSH-Vd; Wed, 29 Jun 2022 08:58:57 +1000
+Date:   Wed, 29 Jun 2022 08:58:57 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/6] xfs_repair: clear DIFLAG2_NREXT64 when filesystem
+ doesn't support nrext64
+Message-ID: <20220628225857.GO227878@dread.disaster.area>
+References: <165644935451.1089996.13716062701488693755.stgit@magnolia>
+ <165644936573.1089996.11135224585697421312.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8eafb32b-10ab-b5eb-d80a-571bf803c832@sandeen.net>
+In-Reply-To: <165644936573.1089996.11135224585697421312.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62bb87b3
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=qT1kxbrivFsqesuqiNQA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 10, 2022 at 04:46:13PM -0600, Eric Sandeen wrote:
-> On 2/3/22 11:45 AM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > The last of the DMAPI stubs were removed from Linux 5.17, so drop this
-> > functionality altogether.
+On Tue, Jun 28, 2022 at 01:49:25PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Why is this better than letting it EINVAL/ENOTTY/ENOWHATEVER when the
-> ioctl gets called?
-
-5.17 removed the ioctl definitions, so xfsdump won't build anymore.
-
-> Though I don't really care, so I will go ahead and
-> review it. :)
+> Clear the nrext64 inode flag if the filesystem doesn't have the nrext64
+> feature enabled in the superblock.
 > 
-> At this point I suppose finally pulling in Anthony's
-> 	xfsdump: remove BMV_IF_NO_DMAPI_READ flag
-> would make sense as well.
-
-Yes.
-
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  repair/dinode.c |   19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
 > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  doc/xfsdump.html  |    1 -
-> >  po/de.po          |    5 ---
-> >  po/pl.po          |    5 ---
-> >  restore/content.c |   99 +++--------------------------------------------------
-> >  restore/tree.c    |   33 ------------------
-> >  restore/tree.h    |    1 -
-> >  6 files changed, 6 insertions(+), 138 deletions(-)
-> > 
 > 
-> ...
-> 
-> > diff --git a/restore/content.c b/restore/content.c
-> > index 6b22965..e9b0a07 100644
-> > --- a/restore/content.c
-> > +++ b/restore/content.c
-> > @@ -477,9 +477,6 @@ struct pers {
-> >  			/* how many pages following the header page are reserved
-> >  			 * for the subtree descriptors
-> >  			 */
-> > -		bool_t restoredmpr;
-> > -			/* restore DMAPI event settings
-> > -			 */
-> >  		bool_t restoreextattrpr;
-> >  			/* restore extended attributes
-> >  			 */
-> > @@ -858,7 +855,6 @@ static void partial_reg(ix_t d_index, xfs_ino_t ino, off64_t fsize,
-> >                          off64_t offset, off64_t sz);
-> >  static bool_t partial_check (xfs_ino_t ino, off64_t fsize);
-> >  static bool_t partial_check2 (partial_rest_t *isptr, off64_t fsize);
-> > -static int do_fssetdm_by_handle(char *path, fsdmidata_t *fdmp);
-> 
-> with fsdmidata_t completely gone I think its typedef can go too?
-MProbably.
-
-
-> ...
-> 
-> > @@ -8796,19 +8748,6 @@ restore_extattr(drive_t *drivep,
-> >  			}
-> >  		} else if (isfilerestored && path[0] != '\0') {
-> >  			setextattr(path, ahdrp);
-> 
-> Pretty sure there's a hunk in setextattr that could go too, right?
-> 
-> @@ -8840,20 +8779,16 @@ restore_dir_extattr_cb_cb(extattrhdr_t *ahdrp, void *ctxp)
->  static void
->  setextattr(char *path, extattrhdr_t *ahdrp)
->  {
-> -       static  char dmiattr[] = "SGI_DMI_";
->         bool_t isrootpr = ahdrp->ah_flags & EXTATTRHDR_FLAGS_ROOT;
->         bool_t issecurepr = ahdrp->ah_flags & EXTATTRHDR_FLAGS_SECURE;
-> -       bool_t isdmpr;
->         int attr_namespace;
->         int rval;
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 00de31fb..547c5833 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2690,6 +2690,25 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+>  			}
+>  		}
 >  
-> -       isdmpr = (isrootpr &&
-> -                  !strncmp((char *)(&ahdrp[1]), dmiattr, sizeof(dmiattr)-1));
->  
->         /* If restoreextattrpr not set, then we are here because -D was
->          * specified. So return unless it looks like a root DMAPI attribute.
->          */
-> -       if (!persp->a.restoreextattrpr && !isdmpr)
-> +       if (!persp->a.restoreextattrpr)
->                 return;
+> +		if (xfs_dinode_has_large_extent_counts(dino) &&
+> +		    !xfs_has_large_extent_counts(mp)) {
+> +			if (!uncertain) {
+> +				do_warn(
+> +	_("inode %" PRIu64 " is marked large extent counts but file system does not support large extent counts\n"),
+> +					lino);
+> +			}
+> +			flags2 &= ~XFS_DIFLAG2_NREXT64;
+> +
+> +			if (no_modify) {
+> +				do_warn(_("would zero extent counts.\n"));
+> +			} else {
+> +				do_warn(_("zeroing extent counts.\n"));
+> +				dino->di_nextents = 0;
+> +				dino->di_anextents = 0;
+> +				*dirty = 1;
 
-Er... yes?  Looks right, but xfsdump is enough of a mess... :/
+Is that necessary? If the existing extent counts are within the
+bounds of the old extent fields, then shouldn't we just rewrite the
+current values into the old format rather than trashing all the
+data/xattrs on the inode?
 
-> 
-> > -
-> > -			if (persp->a.dstdirisxfspr && persp->a.restoredmpr) {
-> > -				int flag = 0;
-> > -				char *attrname = (char *)&ahdrp[1];
-> > -				if (ahdrp->ah_flags & EXTATTRHDR_FLAGS_ROOT)
-> > -					flag = ATTR_ROOT;
-> > -				else if (ahdrp->ah_flags & EXTATTRHDR_FLAGS_SECURE)
-> > -					flag = ATTR_SECURE;
-> > -
-> > -				HsmRestoreAttribute(flag,
-> > -						     attrname,
-> > -						     &strctxp->sc_hsmflags);
-> 
-> And with the only user of strctxp gone it's now an unused local var, I think.
+Cheers,
 
-I don't do words that lack  ^^^^^^^ vowels.
-
-> Anyway....
-> 
-> I wonder if there's still more that could be ripped out:
-> 
->         uint32_t        bs_dmevmask;    /* DMI event mask        4    6c */
->         uint16_t        bs_dmstate;     /* DMI state info        2    6e */
-> 
-> Those can't go, I guess, because they are part of the header in the on-disk format.
-> 
-> But why are we still fiddling with them? For that matter, why does hsmapi.c still
-> exist at all?
-
-It probably can go too.
-
-> I have the sense that if we really want to remove all dmapi support there's further
-> to go, but as with all things xfsdump, it scares me a bit ...
-
-<nod>
-
---D
-
-> -Eric
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
