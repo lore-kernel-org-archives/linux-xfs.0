@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D644C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 20:49:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4E8C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 20:49:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231190AbiF1Ute (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jun 2022 16:49:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37608 "EHLO
+        id S230062AbiF1Uto (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jun 2022 16:49:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230062AbiF1Utd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 16:49:33 -0400
+        with ESMTP id S231207AbiF1Utm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 16:49:42 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFA562DD49
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 13:49:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D0F330F77
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 13:49:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 502E86182E
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 20:49:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A88F8C341C8;
-        Tue, 28 Jun 2022 20:49:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CD3D56184B
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 20:49:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36086C341C8;
+        Tue, 28 Jun 2022 20:49:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656449371;
-        bh=dCD7lyDrmHv9tQE7sbPU/duYdjv6u5D2DvDpYVzcRks=;
+        s=k20201202; t=1656449377;
+        bh=KNWN1gkWuWl8xPOhKtZlDwn5X3hBhe0Wlj54LjuH+MA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=qgmKfWC7lb6XGIede4Rcwow+Jjjc0SjYoXFaj6c6NVfJpR6+E3+A91n52WRxUyTxm
-         S5r45bNMHnOhSd7coHUeaPWEZ7OoUvBDtCLJQc7x5uZy/LZS5SE/GO7GyqjEX1+LGA
-         Ya0SVfAzFX/inCtKgN1VmI9e96dTSIhc8KO1mJp8E7OHrBnuZNDmZKZ/GCwsKnEUKn
-         nfDqa6iNICSl0KzjseyMJbi/m3b22Q6Mv7PEz454QNVZrWXbA7OwCeFg3FWVbCJ61k
-         HSZQxqKXv+p/zVdFedjBwGGO7EXLjwVORVPZ/F0ug5VagUieEos17X0HSTp/0e+bol
-         sdsWcevmomp2w==
-Subject: [PATCH 3/6] xfs_repair: detect and fix padding fields that changed
- with nrext64
+        b=Fyz31IxBcBkE2SbD4jAgewT6hI32ZDOa7tsRhIVgoUmpDmR9DYEnrscmCe5KcmtaA
+         BuE9BVeWqF3kmD/+zaNH+H8CgmQNHR3Spk/sZzwgremftFNNVBjVTw4kwNsoKJHLfv
+         UK0NKd1bIdNPeN1MRGWD0768SOHBQBzRiVL61TNMJtddHCx+JwUk6/AtuMUMfYdr7w
+         0v15kFbd2GWsdnaGROujqgaiCc0XeeFRQwlP2dZYodwh+w0aLZMyBQhx+pG3Lr+91d
+         TOmyqnnfFN/MHUIjsGCmmA/XtuqC5Wmb1y1jKOqIkL40WQarTDEYcOD6sfi8GIplak
+         +MQPoT/TCovFA==
+Subject: [PATCH 4/6] mkfs: preserve DIFLAG2_NREXT64 when setting other inode
+ attributes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 28 Jun 2022 13:49:31 -0700
-Message-ID: <165644937131.1089996.4905575997482466323.stgit@magnolia>
+Date:   Tue, 28 Jun 2022 13:49:36 -0700
+Message-ID: <165644937684.1089996.8013011825931751515.stgit@magnolia>
 In-Reply-To: <165644935451.1089996.13716062701488693755.stgit@magnolia>
 References: <165644935451.1089996.13716062701488693755.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,47 +50,28 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Detect incorrectly set padding fields when large extent counts are
-enabled or disabled on v3 inodes.
-
-Found by fuzzing v3.flags2 = zeroes with xfs/374 and an nrext64=1
-filesystem.
+Preserve the state of the NREXT64 inode flag when we're changing the
+other flags2 fields.  This is only vital for the kernel version of this
+function, but we should keep these in sync.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/dinode.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ libxfs/util.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 547c5833..1c92bfbd 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2709,6 +2709,26 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 			}
- 		}
+diff --git a/libxfs/util.c b/libxfs/util.c
+index ef01fcf8..d2389198 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -198,7 +198,8 @@ xfs_flags2diflags2(
+ {
+ 	uint64_t		di_flags2 =
+ 		(ip->i_diflags2 & (XFS_DIFLAG2_REFLINK |
+-				   XFS_DIFLAG2_BIGTIME));
++				   XFS_DIFLAG2_BIGTIME |
++				   XFS_DIFLAG2_NREXT64));
  
-+		if (xfs_dinode_has_large_extent_counts(dino)) {
-+			if (dino->di_nrext64_pad) {
-+				if (!no_modify) {
-+					do_warn(_("fixing bad nrext64_pad.\n"));
-+					dino->di_nrext64_pad = 0;
-+					*dirty = 1;
-+				} else
-+					do_warn(_("would fix bad nrext64_pad.\n"));
-+			}
-+		} else if (dino->di_version >= 3) {
-+			if (dino->di_v3_pad) {
-+				if (!no_modify) {
-+					do_warn(_("fixing bad v3_pad.\n"));
-+					dino->di_v3_pad = 0;
-+					*dirty = 1;
-+				} else
-+					do_warn(_("would fix bad v3_pad.\n"));
-+			}
-+		}
-+
- 		if (!verify_mode && flags2 != be64_to_cpu(dino->di_flags2)) {
- 			if (!no_modify) {
- 				do_warn(_("fixing bad flags2.\n"));
+ 	if (xflags & FS_XFLAG_DAX)
+ 		di_flags2 |= XFS_DIFLAG2_DAX;
 
