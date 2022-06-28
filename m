@@ -2,105 +2,181 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5124AC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 22:56:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F694C43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 22:58:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231805AbiF1W4d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jun 2022 18:56:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54218 "EHLO
+        id S232035AbiF1W6j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jun 2022 18:58:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229877AbiF1W4c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 18:56:32 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F3D1D35DEB
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 15:56:31 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 42A7610E789F;
-        Wed, 29 Jun 2022 08:56:31 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1o6K8D-00CFOM-JU; Wed, 29 Jun 2022 08:56:29 +1000
-Date:   Wed, 29 Jun 2022 08:56:29 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs_copy: don't use cached buffer reads until after
- libxfs_mount
-Message-ID: <20220628225629.GN227878@dread.disaster.area>
-References: <165644935451.1089996.13716062701488693755.stgit@magnolia>
- <165644936019.1089996.1994101193208059510.stgit@magnolia>
+        with ESMTP id S232036AbiF1W6i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 18:58:38 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB3E01B797
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 15:58:36 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7BE6561AE3
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 22:58:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2450C341C8;
+        Tue, 28 Jun 2022 22:58:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656457115;
+        bh=5xUEwSM6umaJzP4/Sgvupu4ayOswq7oJ3F8wGi+vLTs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=J1rIL+abqD5SQ4IT1DJIv4WjAcPePuVvQaKa84DD58LEJDfYdhj48Jhn2z8JI6STI
+         VAi/zKrtMbo5WeygVef9fUJlOLAOFd8PmMZHRDSEb/qOy4SChA4vPFcZ9vjmrK5JdH
+         lfjH9HyiK2UGChrgdejsCj0osXEUPXORIuT6tlFhGI4FibUiEfYMagACq0H9JTeZfG
+         7QgJWReeIYmCsGIbAIsjFGdMkYyVAkrvFSKHlMFwgZzQ0oJyI3MHd212W6duyWB/aP
+         N1fcm+PUX/wKaTKvrq5KyaEGuKSjxeU+RTrFThp/GJlXfWDF3TF6mzQg2NhHshR2gD
+         DT5hhla1tHZnw==
+Date:   Tue, 28 Jun 2022 15:58:35 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>,
+        Anthony Iliopoulos <ailiop@suse.com>
+Subject: Re: [PATCH] xfs_restore: remove DMAPI support
+Message-ID: <YruHmxNhAwX/p7H5@magnolia>
+References: <20220203174540.GT8313@magnolia>
+ <8eafb32b-10ab-b5eb-d80a-571bf803c832@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <165644936019.1089996.1994101193208059510.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62bb871f
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=scLV1pnGC2gpEJ-Rwm8A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <8eafb32b-10ab-b5eb-d80a-571bf803c832@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 28, 2022 at 01:49:20PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Feb 10, 2022 at 04:46:13PM -0600, Eric Sandeen wrote:
+> On 2/3/22 11:45 AM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > The last of the DMAPI stubs were removed from Linux 5.17, so drop this
+> > functionality altogether.
 > 
-> I accidentally tried to xfs_copy an ext4 filesystem, but instead of
-> rejecting the filesystem, the program instead crashed.  I figured out
-> that zeroing the superblock was enough to trigger this:
+> Why is this better than letting it EINVAL/ENOTTY/ENOWHATEVER when the
+> ioctl gets called?
+
+5.17 removed the ioctl definitions, so xfsdump won't build anymore.
+
+> Though I don't really care, so I will go ahead and
+> review it. :)
 > 
-> # dd if=/dev/zero of=/dev/sda bs=1024k count=1
-> # xfs_copy  /dev/sda /dev/sdb
-> Floating point exception
+> At this point I suppose finally pulling in Anthony's
+> 	xfsdump: remove BMV_IF_NO_DMAPI_READ flag
+> would make sense as well.
+
+Yes.
+
 > 
-> The exact crash happens in this line from libxfs_getbuf_flags, which is
-> called from the main() routine of xfs_copy:
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  doc/xfsdump.html  |    1 -
+> >  po/de.po          |    5 ---
+> >  po/pl.po          |    5 ---
+> >  restore/content.c |   99 +++--------------------------------------------------
+> >  restore/tree.c    |   33 ------------------
+> >  restore/tree.h    |    1 -
+> >  6 files changed, 6 insertions(+), 138 deletions(-)
+> > 
 > 
-> 	if (btp == btp->bt_mount->m_ddev_targp) {
-> 		(*bpp)->b_pag = xfs_perag_get(btp->bt_mount,
-> 				xfs_daddr_to_agno(btp->bt_mount, blkno));
+> ...
 > 
-> The problem here is that the uncached read filled the incore superblock
-> with zeroes, which means mbuf.sb_agblocks is zero.  This causes a
-> division by zero in xfs_daddr_to_agno, thereby crashing the program.
+> > diff --git a/restore/content.c b/restore/content.c
+> > index 6b22965..e9b0a07 100644
+> > --- a/restore/content.c
+> > +++ b/restore/content.c
+> > @@ -477,9 +477,6 @@ struct pers {
+> >  			/* how many pages following the header page are reserved
+> >  			 * for the subtree descriptors
+> >  			 */
+> > -		bool_t restoredmpr;
+> > -			/* restore DMAPI event settings
+> > -			 */
+> >  		bool_t restoreextattrpr;
+> >  			/* restore extended attributes
+> >  			 */
+> > @@ -858,7 +855,6 @@ static void partial_reg(ix_t d_index, xfs_ino_t ino, off64_t fsize,
+> >                          off64_t offset, off64_t sz);
+> >  static bool_t partial_check (xfs_ino_t ino, off64_t fsize);
+> >  static bool_t partial_check2 (partial_rest_t *isptr, off64_t fsize);
+> > -static int do_fssetdm_by_handle(char *path, fsdmidata_t *fdmp);
 > 
-> In commit f8b581d6, we made it so that xfs_buf structures contain a
-> passive reference to the associated perag structure.  That commit
-> assumes that no program would try a cached buffer read until the buffer
-> cache is fully set up, which is true throughout xfsprogs... except for
-> the beginning of xfs_copy.  For whatever reason, it attempts an uncached
-> read of the superblock to figure out the real superblock size, then
-> performs a *cached* read with the proper buffer length and verifier.
-> The cached read crashes the program.
+> with fsdmidata_t completely gone I think its typedef can go too?
+MProbably.
+
+
+> ...
 > 
-> Fix the problem by changing the (second) cached read into an uncached read.
+> > @@ -8796,19 +8748,6 @@ restore_extattr(drive_t *drivep,
+> >  			}
+> >  		} else if (isfilerestored && path[0] != '\0') {
+> >  			setextattr(path, ahdrp);
 > 
-> Fixes: f8b581d6 ("libxfs: actually make buffers track the per-ag structures")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  copy/xfs_copy.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Pretty sure there's a hunk in setextattr that could go too, right?
 > 
-> 
-> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> index 41f594bd..79f65946 100644
-> --- a/copy/xfs_copy.c
-> +++ b/copy/xfs_copy.c
-> @@ -748,7 +748,7 @@ main(int argc, char **argv)
->  	/* Do it again, now with proper length and verifier */
->  	libxfs_buf_relse(sbp);
+> @@ -8840,20 +8779,16 @@ restore_dir_extattr_cb_cb(extattrhdr_t *ahdrp, void *ctxp)
+>  static void
+>  setextattr(char *path, extattrhdr_t *ahdrp)
+>  {
+> -       static  char dmiattr[] = "SGI_DMI_";
+>         bool_t isrootpr = ahdrp->ah_flags & EXTATTRHDR_FLAGS_ROOT;
+>         bool_t issecurepr = ahdrp->ah_flags & EXTATTRHDR_FLAGS_SECURE;
+> -       bool_t isdmpr;
+>         int attr_namespace;
+>         int rval;
 >  
-> -	error = -libxfs_buf_read(mbuf.m_ddev_targp, XFS_SB_DADDR,
-> +	error = -libxfs_buf_read_uncached(mbuf.m_ddev_targp, XFS_SB_DADDR,
->  			1 << (sb->sb_sectlog - BBSHIFT), 0, &sbp,
->  			&xfs_sb_buf_ops);
->  	if (error) {
+> -       isdmpr = (isrootpr &&
+> -                  !strncmp((char *)(&ahdrp[1]), dmiattr, sizeof(dmiattr)-1));
+>  
+>         /* If restoreextattrpr not set, then we are here because -D was
+>          * specified. So return unless it looks like a root DMAPI attribute.
+>          */
+> -       if (!persp->a.restoreextattrpr && !isdmpr)
+> +       if (!persp->a.restoreextattrpr)
+>                 return;
 
-Looks good.
+Er... yes?  Looks right, but xfsdump is enough of a mess... :/
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
+> > -
+> > -			if (persp->a.dstdirisxfspr && persp->a.restoredmpr) {
+> > -				int flag = 0;
+> > -				char *attrname = (char *)&ahdrp[1];
+> > -				if (ahdrp->ah_flags & EXTATTRHDR_FLAGS_ROOT)
+> > -					flag = ATTR_ROOT;
+> > -				else if (ahdrp->ah_flags & EXTATTRHDR_FLAGS_SECURE)
+> > -					flag = ATTR_SECURE;
+> > -
+> > -				HsmRestoreAttribute(flag,
+> > -						     attrname,
+> > -						     &strctxp->sc_hsmflags);
+> 
+> And with the only user of strctxp gone it's now an unused local var, I think.
 
--- 
-Dave Chinner
-david@fromorbit.com
+I don't do words that lack  ^^^^^^^ vowels.
+
+> Anyway....
+> 
+> I wonder if there's still more that could be ripped out:
+> 
+>         uint32_t        bs_dmevmask;    /* DMI event mask        4    6c */
+>         uint16_t        bs_dmstate;     /* DMI state info        2    6e */
+> 
+> Those can't go, I guess, because they are part of the header in the on-disk format.
+> 
+> But why are we still fiddling with them? For that matter, why does hsmapi.c still
+> exist at all?
+
+It probably can go too.
+
+> I have the sense that if we really want to remove all dmapi support there's further
+> to go, but as with all things xfsdump, it scares me a bit ...
+
+<nod>
+
+--D
+
+> -Eric
+> 
