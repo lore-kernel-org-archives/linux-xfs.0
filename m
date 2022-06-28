@@ -2,129 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17025CCA479
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 23:22:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B73CC43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 23:22:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229494AbiF1XWA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jun 2022 19:22:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41692 "EHLO
+        id S230073AbiF1XWr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jun 2022 19:22:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229772AbiF1XV6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 19:21:58 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AF6931232;
-        Tue, 28 Jun 2022 16:21:57 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B793D61B48;
-        Tue, 28 Jun 2022 23:21:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BB57C341C8;
-        Tue, 28 Jun 2022 23:21:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656458516;
-        bh=mvd108VoYWDpztrLlNxd/Ocw8JptaMrNIfozkzNfEyI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pm5TaYlbrZy4ar+PW/ZRulRugpktmXUTZggQFy5cFGcWRiZCHgd/ZVhusgmkiqwbp
-         rvp/NWy3soV23NmZzKhhtBV6wEuDl4O9at1/7oROEgWyovUduFB5Wp47gjBc8tyHTz
-         JH7XBKheqgh+dp2DipEHKADDxDIaBYa8UDIF5HyMZMqtVlnLJF/AkviXVVG6nYiS9i
-         4TAu+NcV+zjVyTWo+ohlW8zzCYNm7iJb+/oxDCUIpVzU+K/DfXocoLFagDVaydCFC+
-         RKLyaQeG5qnTvh9dpE9+hg4IArGHoJwzMG0VLrQGqAlpvCYeGaHNmplkaQwqfriTW/
-         H0tmEYzsPzE4w==
-Date:   Tue, 28 Jun 2022 16:21:55 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, linux-mm@kvack.org
-Subject: Re: Multi-page folio issues in 5.19-rc4 (was [PATCH v3 25/25] xfs:
- Support large folios)
-Message-ID: <YruNE72sW4Aizq8U@magnolia>
-References: <20211216210715.3801857-26-willy@infradead.org>
- <YrO243DkbckLTfP7@magnolia>
- <Yrku31ws6OCxRGSQ@magnolia>
- <Yrm6YM2uS+qOoPcn@casper.infradead.org>
- <YrosM1+yvMYliw2l@magnolia>
- <20220628073120.GI227878@dread.disaster.area>
- <YrrlrMK/7pyZwZj2@casper.infradead.org>
- <Yrrmq4hmJPkf5V7s@casper.infradead.org>
- <Yrr/oBlf1Eig8uKS@casper.infradead.org>
- <20220628221757.GJ227878@dread.disaster.area>
+        with ESMTP id S230052AbiF1XWq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 19:22:46 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F41A931232
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jun 2022 16:22:45 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B0EE010E783D;
+        Wed, 29 Jun 2022 09:22:44 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1o6KXb-00CFie-8i; Wed, 29 Jun 2022 09:22:43 +1000
+Date:   Wed, 29 Jun 2022 09:22:43 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs_db: identify the minlogsize transaction
+ reservation
+Message-ID: <20220628232243.GV227878@dread.disaster.area>
+References: <165644945449.1091822.7139201675279236986.stgit@magnolia>
+ <165644946000.1091822.9533075738203869891.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220628221757.GJ227878@dread.disaster.area>
+In-Reply-To: <165644946000.1091822.9533075738203869891.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62bb8d45
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=hHg9lrZoeinHXbFZ8-QA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 29, 2022 at 08:17:57AM +1000, Dave Chinner wrote:
-> On Tue, Jun 28, 2022 at 02:18:24PM +0100, Matthew Wilcox wrote:
-> > On Tue, Jun 28, 2022 at 12:31:55PM +0100, Matthew Wilcox wrote:
-> > > On Tue, Jun 28, 2022 at 12:27:40PM +0100, Matthew Wilcox wrote:
-> > > > On Tue, Jun 28, 2022 at 05:31:20PM +1000, Dave Chinner wrote:
-> > > > > So using this technique, I've discovered that there's a dirty page
-> > > > > accounting leak that eventually results in fsx hanging in
-> > > > > balance_dirty_pages().
-> > > > 
-> > > > Alas, I think this is only an accounting error, and not related to
-> > > > the problem(s) that Darrick & Zorro are seeing.  I think what you're
-> > > > seeing is dirty pages being dropped at truncation without the
-> > > > appropriate accounting.  ie this should be the fix:
-> > > 
-> > > Argh, try one that actually compiles.
-> > 
-> > ... that one's going to underflow the accounting.  Maybe I shouldn't
-> > be writing code at 6am?
-> > 
-> > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> > index f7248002dad9..4eec6ee83e44 100644
-> > --- a/mm/huge_memory.c
-> > +++ b/mm/huge_memory.c
-> > @@ -18,6 +18,7 @@
-> >  #include <linux/shrinker.h>
-> >  #include <linux/mm_inline.h>
-> >  #include <linux/swapops.h>
-> > +#include <linux/backing-dev.h>
-> >  #include <linux/dax.h>
-> >  #include <linux/khugepaged.h>
-> >  #include <linux/freezer.h>
-> > @@ -2439,11 +2440,15 @@ static void __split_huge_page(struct page *page, struct list_head *list,
-> >  		__split_huge_page_tail(head, i, lruvec, list);
-> >  		/* Some pages can be beyond EOF: drop them from page cache */
-> >  		if (head[i].index >= end) {
-> > -			ClearPageDirty(head + i);
-> > -			__delete_from_page_cache(head + i, NULL);
-> > +			struct folio *tail = page_folio(head + i);
-> > +
-> >  			if (shmem_mapping(head->mapping))
-> >  				shmem_uncharge(head->mapping->host, 1);
-> > -			put_page(head + i);
-> > +			else if (folio_test_clear_dirty(tail))
-> > +				folio_account_cleaned(tail,
-> > +					inode_to_wb(folio->mapping->host));
-> > +			__filemap_remove_folio(tail, NULL);
-> > +			folio_put(tail);
-> >  		} else if (!PageAnon(page)) {
-> >  			__xa_store(&head->mapping->i_pages, head[i].index,
-> >  					head + i, 0);
-> > 
+On Tue, Jun 28, 2022 at 01:51:00PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Yup, that fixes the leak.
+> Right now, we don't make it easy to spot the transaction reservation
+> used to compute the minimum log size in userspace:
 > 
-> Tested-by: Dave Chinner <dchinner@redhat.com>
-
-Four hours of generic/522 running is long enough to conclude that this
-is likely the fix for my problem and migrate long soak testing to my
-main g/522 rig and:
-
-Tested-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> Cheers,
+> # xfs_db -c logres /dev/sda
+> type 0 logres 168184 logcount 5 flags 0x4
+> ...
+> type 25 logres 760 logcount 0 flags 0x0
+> type -1 logres 547200 logcount 8 flags 0x4
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Type "-1" doesn't communicate the purpose at all, it just looks like a
+> math error.  Help out the user a bit by printing more information:
+> 
+> minlogsize logres 547200 logcount 8
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  db/logformat.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/db/logformat.c b/db/logformat.c
+> index 38b0af11..5edaa549 100644
+> --- a/db/logformat.c
+> +++ b/db/logformat.c
+> @@ -160,8 +160,10 @@ logres_f(
+>  	end_res = (struct xfs_trans_res *)(M_RES(mp) + 1);
+>  	for (i = 0; res < end_res; i++, res++)
+>  		print_logres(i, res);
+> +
+>  	libxfs_log_get_max_trans_res(mp, &resv);
+> -	print_logres(-1, &resv);
+> +	dbprintf(_("minlogsize logres %u logcount %d\n"),
+> +			resv.tr_logres, resv.tr_logcount);
+
+Looks good.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
