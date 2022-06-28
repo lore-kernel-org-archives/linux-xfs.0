@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1547CC43334
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75D93CCA47F
 	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jun 2022 20:25:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230118AbiF1UY7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jun 2022 16:24:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34812 "EHLO
+        id S232203AbiF1UZA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jun 2022 16:25:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229866AbiF1UYU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 16:24:20 -0400
+        with ESMTP id S233297AbiF1UYS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jun 2022 16:24:18 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CA3A140EE;
-        Tue, 28 Jun 2022 13:21:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 307D81C4;
+        Tue, 28 Jun 2022 13:21:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8275FB8203F;
-        Tue, 28 Jun 2022 20:21:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 284DFC3411D;
-        Tue, 28 Jun 2022 20:21:46 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C579BB81BED;
+        Tue, 28 Jun 2022 20:21:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CB87C3411D;
+        Tue, 28 Jun 2022 20:21:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656447706;
-        bh=XYlAphFMdsvmnzakkhya87ROjW4zWZT4k+Q/98btdiM=;
+        s=k20201202; t=1656447700;
+        bh=tiPDfwHrOYk4kde7l9WtFOYFYC8Zo9Mdy1epE/sOEUc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ae6GU5qv7wBWgIvFP8u7UBUSO0nBVK7Sf5yY8DRayFbSL6Scj72RBcmnnwuWiv/wF
-         YR0rnqNEJlPoHvV+/wHDVZSuXIsuS2BAh72+UgCpi/94EifuCjUWN/FkB7qElPCGLV
-         ztFwi7m8IzQfsNWvWDYppg+a7nNpRJkxfMD1tA2azjXy8+R0UXFIaYlKLfRTy+h/Vk
-         EdZriT3hv8S6oEcy1do7txmDtHZy9j2EM9RZ+YN0VIlt9L0TAvN7EoeVPEaoof0EQ4
-         7XSxO2XKcNGoESS95Nejz0EhBod9pHLVjbSwSQs4sNhEV8W4/2LuRV5E2z2r1m3zTp
-         mtjZjvk9wYaEA==
-Subject: [PATCH 5/9] check: document mkfs.xfs reliance on fstests exports
+        b=e1/8FCUUD7371eYpDKovKZmSUIe0jfriyt9AaUqgul0xefictsYVyTu2PLgJbwUXw
+         ZwkPf8FMksSq3SjBHiag70Jj570yOuNO81qesmZTbLX+ZzgREj6y3YKWh+w7afPbx4
+         UkQgTDo7No+mRxDjYaiDIxkEhAmoxbFrtpWCD3DzFrrBD7TWcvtQ6blbFMAY/RfS5N
+         43tHm3Iaq1XuvGtrTfiGcpUkMaPEKcEH/bhvfDRbstYrBjmp9AZj0W+vI8qhh/AFve
+         e9QJoymp4c2BD+Biu90QOyTY7sZb/XSVKXe6P/tEuE9bQGWS7Kfu+tIvgjQ2oyKpOi
+         FuI9jpY2EeSIQ==
+Subject: [PATCH 4/9] xfs: test xfs_copy doesn't do cached read before
+ libxfs_mount
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 28 Jun 2022 13:21:45 -0700
-Message-ID: <165644770574.1045534.3646229611370914936.stgit@magnolia>
+Date:   Tue, 28 Jun 2022 13:21:40 -0700
+Message-ID: <165644770013.1045534.5572366430392518217.stgit@magnolia>
 In-Reply-To: <165644767753.1045534.18231838177395571946.stgit@magnolia>
 References: <165644767753.1045534.18231838177395571946.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,32 +50,66 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-There are a number of fstests that employ special (and now unsupported)
-XFS filesystem configurations to perform testing in a controlled
-environment.  The presence of the QA_CHECK_FS and MSGVERB variables are
-used by mkfs.xfs to detect that it's running inside fstests, which
-enables the unsupported configurations.  Nobody else should be using
-filesystems with tiny logs, non-redundant superblocks, or smaller than
-the (new) minimum supported size.
+This is a regression test for an xfs_copy fix that ensures that it
+doesn't perform a cached read of an XFS filesystem prior to initializing
+libxfs, since the xfs_mount (and hence the buffer cache) isn't set up
+yet.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- check |    3 +++
- 1 file changed, 3 insertions(+)
+ tests/xfs/844     |   33 +++++++++++++++++++++++++++++++++
+ tests/xfs/844.out |    3 +++
+ 2 files changed, 36 insertions(+)
+ create mode 100755 tests/xfs/844
+ create mode 100644 tests/xfs/844.out
 
 
-diff --git a/check b/check
-index 2ea2920f..4b0ebad6 100755
---- a/check
-+++ b/check
-@@ -33,6 +33,9 @@ _err_msg=""
- # start the initialisation work now
- iam=check
- 
-+# mkfs.xfs uses the presence of both of these variables to enable formerly
-+# supported tiny filesystem configurations that fstests use for fuzz testing
-+# in a controlled environment
- export MSGVERB="text:action"
- export QA_CHECK_FS=${QA_CHECK_FS:=true}
- 
+diff --git a/tests/xfs/844 b/tests/xfs/844
+new file mode 100755
+index 00000000..688abe33
+--- /dev/null
++++ b/tests/xfs/844
+@@ -0,0 +1,33 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle.  All Rights Reserved.
++#
++# FS QA Test 844
++#
++# Regression test for xfsprogs commit:
++#
++# XXXXXXXX ("xfs_copy: don't use cached buffer reads until after libxfs_mount")
++#
++. ./common/preamble
++_begin_fstest auto copy
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_require_xfs_copy
++_require_test
++
++rm -f $TEST_DIR/$seq.*
++$XFS_IO_PROG -f -c 'truncate 100m' $TEST_DIR/$seq.a
++$XFS_IO_PROG -f -c 'truncate 100m' $TEST_DIR/$seq.b
++
++filter_copy() {
++	sed -e 's/Superblock has bad magic number.*/bad magic number/'
++}
++
++$XFS_COPY_PROG $TEST_DIR/$seq.a $TEST_DIR/$seq.b 2>&1 | filter_copy
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/844.out b/tests/xfs/844.out
+new file mode 100644
+index 00000000..dbefde1c
+--- /dev/null
++++ b/tests/xfs/844.out
+@@ -0,0 +1,3 @@
++QA output created by 844
++bad magic number
++xfs_copy: couldn't read superblock, error=22
 
