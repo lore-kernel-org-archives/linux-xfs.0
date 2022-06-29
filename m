@@ -2,78 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64500C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 21:37:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 322DFC43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 21:38:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229945AbiF2Vhi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 17:37:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44264 "EHLO
+        id S229843AbiF2ViU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 17:38:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231287AbiF2Vh0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 17:37:26 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E1643A187
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 14:37:25 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id AFF8110E817A;
-        Thu, 30 Jun 2022 07:37:24 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1o6fND-00CcfV-Oi; Thu, 30 Jun 2022 07:37:23 +1000
-Date:   Thu, 30 Jun 2022 07:37:23 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 9/9] xfs: add in-memory iunlink log item
-Message-ID: <20220629213723.GY227878@dread.disaster.area>
-References: <20220627004336.217366-1-david@fromorbit.com>
- <20220627004336.217366-10-david@fromorbit.com>
- <Yrv+gfvrtIFOwami@infradead.org>
+        with ESMTP id S229575AbiF2ViU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 17:38:20 -0400
+Received: from mail-vs1-xe35.google.com (mail-vs1-xe35.google.com [IPv6:2607:f8b0:4864:20::e35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B5CB12634;
+        Wed, 29 Jun 2022 14:38:19 -0700 (PDT)
+Received: by mail-vs1-xe35.google.com with SMTP id d187so8652032vsd.10;
+        Wed, 29 Jun 2022 14:38:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=glH6MA9OZFvYeXEMnrl0V5ZxmY5tpQoEsBxDvBnCdPs=;
+        b=HB8Q/mm5ZYuZsVXLdVvsfVMQ6nFHNXGc01NWUWfZ+Qgg0QM6VZGKvQG5pGeWbAE5F1
+         D6GrBDfMKfQzULotKMzZ0SEpMNjdGrJJs53hHKCN4ASFZqgnfP8HJCHgeKlBVP//VYK9
+         g8rAG7RHmR6ok76Y9MqoiNF/HvL9aBghGBtpnq/UwU9/LvXTKLQ9jZG5Tma/FYy0ltvR
+         JMOZ4W62b5aMarJitnaBMTXYRSQbbWpGuZzhHHPVdLG94q86HHVhDWr49fS1NpYLXC12
+         1TjPr+4qIzAio6fDu7RDj1d4U5kz/C77maUEsqajOItOYHX1yK+EfTYMFYf5ftdzyYQ7
+         Nc1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=glH6MA9OZFvYeXEMnrl0V5ZxmY5tpQoEsBxDvBnCdPs=;
+        b=u3mmWlTvRMIu/kCb//FdCoT6bpPJ4OhPYu2Xioeuoiok7ygd15DiNirf6Vk9nIz9lp
+         XpQrNW83j0OOoC2HgcYTY8rpoJw3808mx+3SvYgbrbLzcHdn66ohmEkUgjWv3cItxWN1
+         ny+H80mFkbtOY0fW9pCAOS5TaThGybQOBat2nmFYNN8lGleT8xzRTlIy8TLpsqRTrfoe
+         COgJmD7QSZSNy1golmoKsQaTW5hAcPezeCWrXtzVznQ3DOWPJXFyRgjwyrzZ3iamEEXn
+         MVsLD1CeA4nLK8rlXMs/5I77v/FYNgHUcSqGxjaNmTslp7zAoR3VSO69YUOEVoWyMeAY
+         KX6g==
+X-Gm-Message-State: AJIora/KRe4ychHgDW/NyEJrXHQZHlhhflelZMmgMkuoH3ywJeGyiwtB
+        R0NOtXp0aYMagTZyH0dM/v6Ve3DR/GPG/g9kCTsGZuVB
+X-Google-Smtp-Source: AGRyM1vP8KsahKVGBoQ9ovaxmB8aTyZiPDc7KSkKjLHJfJfdgqHWtUvTPZE2vOPTXnokszlTyoh+TJWDD5JoqqQ1b/M=
+X-Received: by 2002:a05:6102:38c7:b0:356:4e2f:ae5b with SMTP id
+ k7-20020a05610238c700b003564e2fae5bmr6295294vst.71.1656538698388; Wed, 29 Jun
+ 2022 14:38:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yrv+gfvrtIFOwami@infradead.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62bcc614
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=JPEYwPQDsx4A:10 a=7-415B0cAAAA:8
-        a=gRk84RL1sJYXP8R2vxUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <20220627073311.2800330-1-amir73il@gmail.com> <Yrx71vp2SFsjVdzg@magnolia>
+In-Reply-To: <Yrx71vp2SFsjVdzg@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 30 Jun 2022 00:38:07 +0300
+Message-ID: <CAOQ4uxik4B5jP8rKq4oxT4x7edULPx4X9GKbMGRL5ny4r_t8DQ@mail.gmail.com>
+Subject: Re: [PATCH 5.10 CANDIDATE v2 0/7] xfs stable candidate patches for
+ 5.10.y (from v5.13)
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 29, 2022 at 12:25:53AM -0700, Christoph Hellwig wrote:
-> On Mon, Jun 27, 2022 at 10:43:36AM +1000, Dave Chinner wrote:
-> > TO do this, we introduce a new in-memory log item to track the
-> 
-> s/To/To/
-> 
-> > This allows us to pass the xfs_inode to the transaction commit code
-> > along with the modification to be made, and then order the logged
-> > modifications via the ->iop_sort and ->iop_precommit operations
-> > for the new log item type. As this is an in-memory log item, it
-> > doesn't have formatting, CIL or AIL operational hooks - it exists
-> > purely to run the inode unlink modifications and is then removed
-> > from the transaction item list and freed once the precommit
-> > operation has run.
-> 
-> Do we need to document the fact that we now have purely in-memory log
-> items better somewhere?  I see how this works, but it its a little
-> non-obvious.
+On Wed, Jun 29, 2022 at 7:20 PM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> On Mon, Jun 27, 2022 at 10:33:04AM +0300, Amir Goldstein wrote:
+> > Hi all,
+> >
+> > This is a resend of the series that was posted 3 weeks ago [v1].
+> > The backports in this series are from circa v5.12..v5.13.
+> > The remaining queue of tested 5.10 backports [1] contains 25 more patches
+> > from v5.13..v5.19-rc1.
+> >
+> > There have been no comments on the first post except for Dave's request
+> > to collaborate the backports review process with Leah who had earlier
+> > sent out another series of backports for 5.15.y.
+> >
+> > Following Dave's request, I had put this series a side to collaborate
+> > the shared review of 5.15/5.10 series with Leah and now that the shared
+> > series has been posted to stable, I am re-posting to request ACKs on this
+> > 5.10.y specific series.
+> >
+> > There are four user visible fixes in this series, one patch for dependency
+> > ("rename variable mp") and two patches to improve testability of LTS.
+>
+> Aha, I had wondered why the journal_info thing was in this branch, and
+> if that would even fit under the usual stable rules...
+>
+> > Specifically, I selected the fix ("use current->journal_info for
+> > detecting transaction recursion") after I got a false positive assert
+> > while testing LTS kernel with XFS_DEBUG and at another incident, it
+> > helped me triage a regression that would have been harder to trace
+> > back to the offending code otherwise.
+>
+> ...but clearly maintainers have been hitting this, so that's ok by /me/ to
+> have it.  If nothing else, XFS doesn't support nested transactions, so any
+> weird stuff that falls out was already a dangerous bug.
 
-We already have in-memory log items, just not explicitly named. That
-is, the transaction delta structures for the superblock and dquot
-modifications.
+Exactly.
 
-I eventually want to move them to in-memory log items to get all the
-special case code for them out of the transaction commit path, and
-then add in-memory log items for AGF and AGI header modifications so
-that we can move away from AG header buffer locking to serialise AG
-specific operations...
+>
+> Acked-by: Darrick J. Wong <djwong@kernel.org>
+>
 
-Cheers,
+I am not going to post this to xfs list again with Acked-by
+before posting to stable, because this is the second posting
+already with no changes since v1.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I am going to wait until Greg picks up the already posted series
+for 5.10 and 5.15 - it looks like he is also on vacation...
+
+Thanks!
+Amir.
