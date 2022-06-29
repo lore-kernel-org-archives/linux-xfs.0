@@ -2,246 +2,204 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAAEFC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 18:29:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62345C43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 18:30:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230139AbiF2S3b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 14:29:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42878 "EHLO
+        id S229567AbiF2SaU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 14:30:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231158AbiF2S3a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 14:29:30 -0400
+        with ESMTP id S231429AbiF2SaU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 14:30:20 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 306E027B16
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 11:29:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37F102A94D
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 11:30:19 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AFC0461B40
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 18:29:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12A6BC341C8;
-        Wed, 29 Jun 2022 18:29:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C90B661B40
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 18:30:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CCBAC34114;
+        Wed, 29 Jun 2022 18:30:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656527368;
-        bh=7auMeBAuKYiMe2EyBDkXOqxglQOP/T1GK8KiSLeHF7o=;
+        s=k20201202; t=1656527418;
+        bh=l7rcdEU/N50EYpieAARVAhc4XhI7ozCJd8+S3MgzKW4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NlTQPXvhMhhB8MrqEk/J+pmS8Iqx9kqp9X5CBA/S3+GkWjRMNRhJqAL8f3yXwZjGq
-         ya1bB9eWiXyFGfwiGKYnDRoCqFjNfBMXP3NV0g7x+d2Z/xa5JdvH6pmYldUYL5Drei
-         JTIvhjWVR5/cCKrFVcvOPcm1RpWAs8pa3m1alD265X3EzlC3rXAqhcawxzwaj4IpMI
-         uPz1pDpBAS4pLdjTc+ljVsNelBakmdQF190H4jvi80BVLjEOWKQaZjoRicu/AJSuuY
-         WftrA+ia7/239rDaPB3wNaExkdDeTcOrOhcHS5wIVsSo1wXmqYd/x4ONkyA88GPcRZ
-         OEEo7dlcyhCYw==
-Date:   Wed, 29 Jun 2022 11:29:27 -0700
+        b=krAoV1kg+16QYsn9+CtjHzKkgmxcY5+moTt8Mo5ZhqE2v2MAGJSc3QVUENz192pMJ
+         DTOj5ujbEJ/9UWSOu3Lln8W3fqM+j/HFc0VOdI3MKtyZCMbzdxpl1h0TGFxw7UAGGz
+         wsnHrYfz56rYpPtLrO1aR7T78+TwcK5qhgL9AF36ZZdDGkpKlemHAz3sn5U7VLsPTk
+         HZN/VzVDu4eGDvXe6YTSsP+8o/mSuysGseMJJCqt2lRD0zIgYNGk2MJjA78dAXpBJo
+         Vu9CEqt212w0Pw58npOAG84aODIJouwf8u5F0Aa/N2BNQKbJ6GrBRUTa+wAUD8s8E0
+         3q11JUsJUD6Jw==
+Date:   Wed, 29 Jun 2022 11:30:17 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 03/17] xfs: get directory offset when adding directory
- name
-Message-ID: <YryaB1tjerPFmzKz@magnolia>
+Subject: Re: [PATCH v1 04/17] xfs: get directory offset when removing
+ directory name
+Message-ID: <YryaOVNvaUpEw9zO@magnolia>
 References: <20220611094200.129502-1-allison.henderson@oracle.com>
- <20220611094200.129502-4-allison.henderson@oracle.com>
+ <20220611094200.129502-5-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220611094200.129502-4-allison.henderson@oracle.com>
+In-Reply-To: <20220611094200.129502-5-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 11, 2022 at 02:41:46AM -0700, Allison Henderson wrote:
-> Return the directory offset information when adding an entry to the
+On Sat, Jun 11, 2022 at 02:41:47AM -0700, Allison Henderson wrote:
+> Return the directory offset information when removing an entry to the
 > directory.
 > 
-> This offset will be used as the parent pointer offset in xfs_create,
-> xfs_symlink, xfs_link and xfs_rename.
+> This offset will be used as the parent pointer offset in xfs_remove.
 > 
 > [dchinner: forward ported and cleaned up]
-> [dchinner: no s-o-b from Mark]
-> [bfoster: rebased, use args->geo in dir code]
-> [achender: rebased, chaged __uint32_t to xfs_dir2_dataptr_t]
+> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+>            Changed typedefs to raw struct types]
 > 
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Pretty straightforward...
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_da_btree.h   | 1 +
->  fs/xfs/libxfs/xfs_dir2.c       | 9 +++++++--
->  fs/xfs/libxfs/xfs_dir2.h       | 2 +-
->  fs/xfs/libxfs/xfs_dir2_block.c | 1 +
->  fs/xfs/libxfs/xfs_dir2_leaf.c  | 2 ++
->  fs/xfs/libxfs/xfs_dir2_node.c  | 2 ++
+>  fs/xfs/libxfs/xfs_dir2.c       | 6 +++++-
+>  fs/xfs/libxfs/xfs_dir2.h       | 3 ++-
+>  fs/xfs/libxfs/xfs_dir2_block.c | 4 ++--
+>  fs/xfs/libxfs/xfs_dir2_leaf.c  | 5 +++--
+>  fs/xfs/libxfs/xfs_dir2_node.c  | 5 +++--
 >  fs/xfs/libxfs/xfs_dir2_sf.c    | 2 ++
->  fs/xfs/xfs_inode.c             | 6 +++---
->  fs/xfs/xfs_symlink.c           | 3 ++-
->  9 files changed, 21 insertions(+), 7 deletions(-)
+>  fs/xfs/xfs_inode.c             | 4 ++--
+>  7 files changed, 19 insertions(+), 10 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-> index d33b7686a0b3..e07eeecbe8a9 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.h
-> +++ b/fs/xfs/libxfs/xfs_da_btree.h
-> @@ -79,6 +79,7 @@ typedef struct xfs_da_args {
->  	int		rmtvaluelen2;	/* remote attr value length in bytes */
->  	uint32_t	op_flags;	/* operation flags */
->  	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
-> +	xfs_dir2_dataptr_t offset;	/* OUT: offset in directory */
->  } xfs_da_args_t;
->  
->  /*
 > diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index 3cd51fa3837b..f7f7fa79593f 100644
+> index f7f7fa79593f..c3fa1bd1c370 100644
 > --- a/fs/xfs/libxfs/xfs_dir2.c
 > +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -257,7 +257,8 @@ xfs_dir_createname(
+> @@ -436,7 +436,8 @@ xfs_dir_removename(
 >  	struct xfs_inode	*dp,
->  	const struct xfs_name	*name,
->  	xfs_ino_t		inum,		/* new entry inode number */
+>  	struct xfs_name		*name,
+>  	xfs_ino_t		ino,
 > -	xfs_extlen_t		total)		/* bmap's total block count */
 > +	xfs_extlen_t		total,		/* bmap's total block count */
-> +	xfs_dir2_dataptr_t	*offset)	/* OUT entry's dir offset */
+> +	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
 >  {
 >  	struct xfs_da_args	*args;
 >  	int			rval;
-> @@ -312,6 +313,10 @@ xfs_dir_createname(
->  		rval = xfs_dir2_node_addname(args);
->  
+> @@ -481,6 +482,9 @@ xfs_dir_removename(
+>  	else
+>  		rval = xfs_dir2_node_removename(args);
 >  out_free:
-> +	/* return the location that this entry was place in the parent inode */
 > +	if (offset)
 > +		*offset = args->offset;
 > +
 >  	kmem_free(args);
 >  	return rval;
 >  }
-> @@ -550,7 +555,7 @@ xfs_dir_canenter(
->  	xfs_inode_t	*dp,
->  	struct xfs_name	*name)		/* name of entry to add */
->  {
-> -	return xfs_dir_createname(tp, dp, name, 0, 0);
-> +	return xfs_dir_createname(tp, dp, name, 0, 0, NULL);
->  }
->  
->  /*
 > diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-> index b6df3c34b26a..4d1c2570b833 100644
+> index 4d1c2570b833..c581d3b19bc6 100644
 > --- a/fs/xfs/libxfs/xfs_dir2.h
 > +++ b/fs/xfs/libxfs/xfs_dir2.h
-> @@ -40,7 +40,7 @@ extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_inode *pdp);
->  extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
->  				const struct xfs_name *name, xfs_ino_t inum,
-> -				xfs_extlen_t tot);
-> +				xfs_extlen_t tot, xfs_dir2_dataptr_t *offset);
->  extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
->  				const struct xfs_name *name, xfs_ino_t *inum,
+> @@ -46,7 +46,8 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
 >  				struct xfs_name *ci_name);
+>  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t ino,
+> -				xfs_extlen_t tot);
+> +				xfs_extlen_t tot,
+> +				xfs_dir2_dataptr_t *offset);
+>  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				const struct xfs_name *name, xfs_ino_t inum,
+>  				xfs_extlen_t tot);
 > diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-> index df0869bba275..85869f604960 100644
+> index 85869f604960..4579e9be5d1a 100644
 > --- a/fs/xfs/libxfs/xfs_dir2_block.c
 > +++ b/fs/xfs/libxfs/xfs_dir2_block.c
-> @@ -573,6 +573,7 @@ xfs_dir2_block_addname(
->  	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
->  	tagp = xfs_dir2_data_entry_tag_p(dp->i_mount, dep);
->  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-> +	args->offset = xfs_dir2_byte_to_dataptr((char *)dep - (char *)hdr);
+> @@ -810,9 +810,9 @@ xfs_dir2_block_removename(
 >  	/*
->  	 * Clean up the bestfree array and log the header, tail, and entry.
+>  	 * Point to the data entry using the leaf entry.
+>  	 */
+> +	args->offset = be32_to_cpu(blp[ent].address);
+>  	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+> -			xfs_dir2_dataptr_to_off(args->geo,
+> -						be32_to_cpu(blp[ent].address)));
+> +			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+>  	/*
+>  	 * Mark the data entry's space free.
 >  	 */
 > diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index d9b66306a9a7..bd0c2f963545 100644
+> index bd0c2f963545..c13763c16095 100644
 > --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
 > +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -865,6 +865,8 @@ xfs_dir2_leaf_addname(
->  	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
->  	tagp = xfs_dir2_data_entry_tag_p(dp->i_mount, dep);
->  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-> +	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, use_block,
-> +						(char *)dep - (char *)hdr);
->  	/*
->  	 * Need to scan fix up the bestfree table.
+> @@ -1381,9 +1381,10 @@ xfs_dir2_leaf_removename(
+>  	 * Point to the leaf entry, use that to point to the data entry.
 >  	 */
+>  	lep = &leafhdr.ents[index];
+> -	db = xfs_dir2_dataptr_to_db(geo, be32_to_cpu(lep->address));
+> +	args->offset = be32_to_cpu(lep->address);
+> +	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+>  	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+> -		xfs_dir2_dataptr_to_off(geo, be32_to_cpu(lep->address)));
+> +		xfs_dir2_dataptr_to_off(args->geo, args->offset));
+>  	needscan = needlog = 0;
+>  	oldbest = be16_to_cpu(bf[0].length);
+>  	ltp = xfs_dir2_leaf_tail_p(geo, leaf);
 > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index 7a03aeb9f4c9..5a9513c036b8 100644
+> index 5a9513c036b8..39cbdeafa0f6 100644
 > --- a/fs/xfs/libxfs/xfs_dir2_node.c
 > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -1974,6 +1974,8 @@ xfs_dir2_node_addname_int(
->  	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
->  	tagp = xfs_dir2_data_entry_tag_p(dp->i_mount, dep);
->  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-> +	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, dbno,
-> +						  (char *)dep - (char *)hdr);
->  	xfs_dir2_data_log_entry(args, dbp, dep);
+> @@ -1296,9 +1296,10 @@ xfs_dir2_leafn_remove(
+>  	/*
+>  	 * Extract the data block and offset from the entry.
+>  	 */
+> -	db = xfs_dir2_dataptr_to_db(geo, be32_to_cpu(lep->address));
+> +	args->offset = be32_to_cpu(lep->address);
+> +	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+>  	ASSERT(dblk->blkno == db);
+> -	off = xfs_dir2_dataptr_to_off(geo, be32_to_cpu(lep->address));
+> +	off = xfs_dir2_dataptr_to_off(args->geo, args->offset);
+>  	ASSERT(dblk->index == off);
 >  
->  	/* Rescan the freespace and log the data block if needed. */
+>  	/*
 > diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-> index 5a97a87eaa20..c6c06e8ab54b 100644
+> index c6c06e8ab54b..51d42faabb18 100644
 > --- a/fs/xfs/libxfs/xfs_dir2_sf.c
 > +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> @@ -485,6 +485,7 @@ xfs_dir2_sf_addname_easy(
->  	memcpy(sfep->name, args->name, sfep->namelen);
->  	xfs_dir2_sf_put_ino(mp, sfp, sfep, args->inumber);
->  	xfs_dir2_sf_put_ftype(mp, sfep, args->filetype);
-> +	args->offset = xfs_dir2_byte_to_dataptr(offset);
->  
->  	/*
->  	 * Update the header and inode.
-> @@ -575,6 +576,7 @@ xfs_dir2_sf_addname_hard(
->  	memcpy(sfep->name, args->name, sfep->namelen);
->  	xfs_dir2_sf_put_ino(mp, sfp, sfep, args->inumber);
->  	xfs_dir2_sf_put_ftype(mp, sfep, args->filetype);
-> +	args->offset = xfs_dir2_byte_to_dataptr(offset);
->  	sfp->count++;
->  	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
->  		sfp->i8count++;
+> @@ -971,6 +971,8 @@ xfs_dir2_sf_removename(
+>  								XFS_CMP_EXACT) {
+>  			ASSERT(xfs_dir2_sf_get_ino(mp, sfp, sfep) ==
+>  			       args->inumber);
+> +			args->offset = xfs_dir2_byte_to_dataptr(
+> +						xfs_dir2_sf_get_offset(sfep));
+>  			break;
+>  		}
+>  	}
 > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 23b93403a330..05be02f6f62b 100644
+> index 05be02f6f62b..0c0c82e5dc59 100644
 > --- a/fs/xfs/xfs_inode.c
 > +++ b/fs/xfs/xfs_inode.c
-> @@ -1052,7 +1052,7 @@ xfs_create(
->  	unlock_dp_on_error = false;
+> @@ -2836,7 +2836,7 @@ xfs_remove(
+>  	if (error)
+>  		goto out_trans_cancel;
 >  
->  	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
-> -					resblks - XFS_IALLOC_SPACE_RES(mp));
-> +				   resblks - XFS_IALLOC_SPACE_RES(mp), NULL);
+> -	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks);
+> +	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks, NULL);
 >  	if (error) {
->  		ASSERT(error != -ENOSPC);
+>  		ASSERT(error != -ENOENT);
 >  		goto out_trans_cancel;
-> @@ -1275,7 +1275,7 @@ xfs_link(
->  	}
+> @@ -3391,7 +3391,7 @@ xfs_rename(
+>  					spaceres);
+>  	else
+>  		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+> -					   spaceres);
+> +					   spaceres, NULL);
 >  
->  	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
-> -				   resblks);
-> +				   resblks, NULL);
->  	if (error)
->  		goto error_return;
->  	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> @@ -3294,7 +3294,7 @@ xfs_rename(
->  		 * to account for the ".." reference from the new entry.
->  		 */
->  		error = xfs_dir_createname(tp, target_dp, target_name,
-> -					   src_ip->i_ino, spaceres);
-> +					   src_ip->i_ino, spaceres, NULL);
->  		if (error)
->  			goto out_trans_cancel;
->  
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 18f71fc90dd0..c8b252fa98ff 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -314,7 +314,8 @@ xfs_symlink(
->  	/*
->  	 * Create the directory entry for the symlink.
->  	 */
-> -	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino, resblks);
-> +	error = xfs_dir_createname(tp, dp, link_name,
-> +			ip->i_ino, resblks, NULL);
 >  	if (error)
 >  		goto out_trans_cancel;
->  	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
 > -- 
 > 2.25.1
 > 
