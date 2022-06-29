@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D626CCA47C
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 07:21:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E533CC43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 07:21:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230449AbiF2HVM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 03:21:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37388 "EHLO
+        id S230200AbiF2HV5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 03:21:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229967AbiF2HVL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 03:21:11 -0400
+        with ESMTP id S230003AbiF2HV4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 03:21:56 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43DA21D0FF
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 00:21:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21E3E1A3AA
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 00:21:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=KukQfUTctUv1/YwJvRLYkKmjzv
-        llb1lMoIACamV2XtCixl79OPoJFzu8ldhV+OpIvhFiM+WW+so9e6LfGuLzOdN2vOBYrIqhKDGrbST
-        Hr+M5yTSjuCwp5Ksjv/h4kWGGtuhDpgAnr+SSoyjdUnczaB4Ty8c1fZm7kXByVK9OYo07YyLYehGl
-        MEdw5TvBJG7B5YOyXY7w5L+DH7bz3uYlVXR5zQw7vhLDf9M7o9B361I32N7D6CbG/8OhnFl16puLd
-        LIRWsRWyAHoPKBPTqV34zD58f8vSOF+Tyy9ttNN5pqlahpH9mFD7wDjQqQV1K3yo1ugt3yspM72x2
-        piLknXOQ==;
+        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=4reSJhlOaa4UFXFX4LNCY/XdTo
+        kN2KXDsvMup/mAJcwc/l6dB5lHprAjlpKujWoixDLKo3pj90HhTYlgYrn8d31OXCC8bXeUEY3wVMy
+        lI7a5PjLB5Ef5FUWyVe2QvL3bk1UMax7vURUj6VENHh7EBS3fvQPzEWe8/a681S0P9FVHLbQbKX4Z
+        gH/riJbg1GLERjWNEtym3dyzRBIOrvvnwzSTDepG2Puta9NMUSY4XCJttXRZiCsokXP2BaBsv6ZOb
+        PBGGGzq+l8+DjjXLEFqn30RZ8IhvYmW0w8P6OyYCWndST6Khyz3pfc777hTBjTKHBhref4CTc38bf
+        zfOqfzSQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o6S0c-00A4FD-TO; Wed, 29 Jun 2022 07:21:10 +0000
-Date:   Wed, 29 Jun 2022 00:21:10 -0700
+        id 1o6S1L-00A4MH-PL; Wed, 29 Jun 2022 07:21:55 +0000
+Date:   Wed, 29 Jun 2022 00:21:55 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/9] xfs: clean up xfs_iunlink_update_inode()
-Message-ID: <Yrv9ZkRt/VokhCCo@infradead.org>
+Subject: Re: [PATCH 7/9] xfs: combine iunlink inode update functions
+Message-ID: <Yrv9kw+5XsN7TlIM@infradead.org>
 References: <20220627004336.217366-1-david@fromorbit.com>
- <20220627004336.217366-7-david@fromorbit.com>
+ <20220627004336.217366-8-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220627004336.217366-7-david@fromorbit.com>
+In-Reply-To: <20220627004336.217366-8-david@fromorbit.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
