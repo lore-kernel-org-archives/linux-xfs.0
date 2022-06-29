@@ -2,235 +2,246 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E68BDC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 18:35:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8F65C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 18:37:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229733AbiF2SfI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 14:35:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48822 "EHLO
+        id S231201AbiF2She (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 14:37:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229605AbiF2SfH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 14:35:07 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD835393C9
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 11:35:03 -0700 (PDT)
+        with ESMTP id S230408AbiF2ShZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 14:37:25 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 670B73B299
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 11:37:24 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4A8B061F5B
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 18:35:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0811C34114;
-        Wed, 29 Jun 2022 18:35:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 27565B82475
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 18:37:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8CF6C34114;
+        Wed, 29 Jun 2022 18:37:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656527702;
-        bh=l1WEbvG/tlOeFKXTElIv57lC7vAGWQE80En+KV/31ws=;
+        s=k20201202; t=1656527841;
+        bh=kiV/P9Bw+8P+gQscPN3bXV6FpXxnkoFf46x9USr6q3Y=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=O3yy7WylBZ7nZmwPX4SX80b2hHgeS3C7iTkKtOf2xPMh0czJAEr0l+TzsC4Z5yRv6
-         AA3L4MghOpnHciuk0l3WWyez69FMY8SQIJuBLowJRDFEw4a7B+qHefz8PUomDhmkhW
-         aRHNP3lTfUIxeWF4oFWafPeAHTTpSQXCrOOr38vydY2lQc7UeUWHdEaw0xQhIex+La
-         7BQx/gwFRS+zK3hHp4Jkid/rLUBeKNmRKazHkAVH23IRI5uIw5Dg+9IOQkoB6ZvBNt
-         +BzbdMeCeaEsIXS3qRsYgmHj+Tbvs/U0hCCJRYaOfLEQUi8Hq81e7CWd3Lks0AdLOs
-         h8TA8DpBAqKhw==
-Date:   Wed, 29 Jun 2022 11:35:02 -0700
+        b=U8v/2n1NAvZXeI2G2c5I0gqqePYFPU2kPQJuTMMSZ8vo6x+MgPQUFo5QFCMkXjQd8
+         RQc6xfBPLeliJN7107rqYlUk7qChF1waz7iZy+PsukCkYsVBHqHE8oyy40KfxHZrCP
+         EbwJJCfk+rt4aW1FL/tPjgMYoJUY1cliWypBMa32MTU3ktXK7nqBsLBSgj1VgZjr1T
+         mhznZBvTes1vEIGcVduQDNxvZIoDNTo5+EVpqjnuvtop2L+uARTO/FtdrM4YPPJAWz
+         pSbFlaSFmt1BxIicvMa6hET5MIyKHl2bL4WMoejID0UCXwpFinYsB/rkdsnW7djKid
+         HNGKAyx6PD/rg==
+Date:   Wed, 29 Jun 2022 11:37:21 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 08/17] xfs: Add xfs_verify_pptr
-Message-ID: <YrybVkIAaBBtNR4w@magnolia>
+Subject: Re: [PATCH v1 09/17] xfs: extent transaction reservations for parent
+ attributes
+Message-ID: <Yryb4TYRKm+g0iBv@magnolia>
 References: <20220611094200.129502-1-allison.henderson@oracle.com>
- <20220611094200.129502-9-allison.henderson@oracle.com>
+ <20220611094200.129502-10-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220611094200.129502-9-allison.henderson@oracle.com>
+In-Reply-To: <20220611094200.129502-10-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 11, 2022 at 02:41:51AM -0700, Allison Henderson wrote:
-> Attribute names of parent pointers are not strings.  So we need to modify
-> attr_namecheck to verify parent pointer records when the XFS_ATTR_PARENT flag is
-> set.
-> 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Subject: xfs: extent transaction reservations for parent attributeso
 
-Looks good,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+s/extent/extend/?
+
+
+On Sat, Jun 11, 2022 at 02:41:52AM -0700, Allison Henderson wrote:
+> We need to add, remove or modify parent pointer attributes during
+> create/link/unlink/rename operations atomically with the dirents in the
+> parent directories being modified. This means they need to be modified
+> in the same transaction as the parent directories, and so we need to add
+> the required space for the attribute modifications to the transaction
+> reservations.
+> 
+> [achender: rebased, added xfs_sb_version_hasparent stub]
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h     |   5 ++
+>  fs/xfs/libxfs/xfs_trans_resv.c | 103 +++++++++++++++++++++++++++------
+>  fs/xfs/libxfs/xfs_trans_resv.h |   1 +
+>  3 files changed, 90 insertions(+), 19 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index afdfc8108c5f..96976497306c 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -390,6 +390,11 @@ xfs_sb_has_incompat_feature(
+>  	return (sbp->sb_features_incompat & feature) != 0;
+>  }
+>  
+> +static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+> +{
+> +	return false; /* We'll enable this at the end of the set */
+> +}
+> +
+>  #define XFS_SB_FEAT_INCOMPAT_LOG_XATTRS   (1 << 0)	/* Delayed Attributes */
+>  #define XFS_SB_FEAT_INCOMPAT_LOG_ALL \
+>  	(XFS_SB_FEAT_INCOMPAT_LOG_XATTRS)
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index e9913c2c5a24..fbe46fd3b722 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -909,24 +909,30 @@ xfs_calc_sb_reservation(
+>  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+>  }
+>  
+> -void
+> -xfs_trans_resv_calc(
+> +/*
+> + * Namespace reservations.
+> + *
+> + * These get tricky when parent pointers are enabled as we have attribute
+> + * modifications occurring from within these transactions. Rather than confuse
+> + * each of these reservation calculations with the conditional attribute
+> + * reservations, add them here in a clear and concise manner. This assumes that
+> + * the attribute reservations have already been calculated.
+> + *
+> + * Note that we only include the static attribute reservation here; the runtime
+> + * reservation will have to be modified by the size of the attributes being
+> + * added/removed/modified. See the comments on the attribute reservation
+> + * calculations for more details.
+> + *
+> + * Note for rename: rename will vastly overestimate requirements. This will be
+> + * addressed later when modifications are made to ensure parent attribute
+> + * modifications can be done atomically with the rename operation.
+> + */
+> +STATIC void
+> +xfs_calc_namespace_reservations(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_trans_resv	*resp)
+>  {
+> -	int			logcount_adj = 0;
+> -
+> -	/*
+> -	 * The following transactions are logged in physical format and
+> -	 * require a permanent reservation on space.
+> -	 */
+> -	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp, false);
+> -	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> -	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> -
+> -	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp, false);
+> -	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> -	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+>  
+>  	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+>  	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+> @@ -948,15 +954,72 @@ xfs_trans_resv_calc(
+>  	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+>  	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> +	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> +	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> +	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +
+> +	xfs_calc_parent_ptr_reservations(mp);
+> +}
+> +
+> +void xfs_calc_parent_ptr_reservations(struct xfs_mount     *mp)
+
+Indenting, etc.
+
+Also vaguely wondering if this should be static inline?  Or does
+something else call this?
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 43 +++++++++++++++++++++++++++++++++++++---
->  fs/xfs/libxfs/xfs_attr.h |  3 ++-
->  fs/xfs/scrub/attr.c      |  2 +-
->  fs/xfs/xfs_attr_item.c   |  6 ++++--
->  fs/xfs/xfs_attr_list.c   | 17 +++++++++++-----
->  5 files changed, 59 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index ee5dfebcf163..30c8d9e9c2f1 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -1606,9 +1606,29 @@ xfs_attr_node_get(
->  	return error;
->  }
->  
-> -/* Returns true if the attribute entry name is valid. */
-> -bool
-> -xfs_attr_namecheck(
-> +/*
-> + * Verify parent pointer attribute is valid.
-> + * Return true on success or false on failure
-> + */
-> +STATIC bool
-> +xfs_verify_pptr(struct xfs_mount *mp, struct xfs_parent_name_rec *rec)
 > +{
-> +	xfs_ino_t p_ino = (xfs_ino_t)be64_to_cpu(rec->p_ino);
-> +	xfs_dir2_dataptr_t p_diroffset =
-> +		(xfs_dir2_dataptr_t)be32_to_cpu(rec->p_diroffset);
+> +	struct xfs_trans_resv   *resp = M_RES(mp);
 > +
-> +	if (!xfs_verify_ino(mp, p_ino))
-> +		return false;
+> +	/* Calculate extra space needed for parent pointer attributes */
+> +	if (!xfs_sb_version_hasparent(&mp->m_sb))
+> +		return;
 > +
-> +	if (p_diroffset > XFS_DIR2_MAX_DATAPTR)
-> +		return false;
+> +	/* rename can add/remove/modify 4 parent attributes */
+> +	resp->tr_rename.tr_logres += 4 * max(resp->tr_attrsetm.tr_logres,
+> +					 resp->tr_attrrm.tr_logres);
+> +	resp->tr_rename.tr_logcount += 4 * max(resp->tr_attrsetm.tr_logcount,
+> +					   resp->tr_attrrm.tr_logcount);
 > +
-> +	return true;
+> +	/* create will add 1 parent attribute */
+> +	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* mkdir will add 1 parent attribute */
+> +	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* link will add 1 parent attribute */
+> +	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* symlink will add 1 parent attribute */
+> +	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* remove will remove 1 parent attribute */
+> +	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
+> +	resp->tr_remove.tr_logcount += resp->tr_attrrm.tr_logcount;
 > +}
 > +
-> +/* Returns true if the string attribute entry name is valid. */
-> +static bool
-> +xfs_str_attr_namecheck(
->  	const void	*name,
->  	size_t		length)
->  {
-> @@ -1623,6 +1643,23 @@ xfs_attr_namecheck(
->  	return !memchr(name, 0, length);
->  }
->  
-> +/* Returns true if the attribute entry name is valid. */
-> +bool
-> +xfs_attr_namecheck(
+> +void
+> +xfs_trans_resv_calc(
 > +	struct xfs_mount	*mp,
-> +	const void		*name,
-> +	size_t			length,
-> +	int			flags)
+> +	struct xfs_trans_resv	*resp)
 > +{
-> +	if (flags & XFS_ATTR_PARENT) {
-> +		if (length != sizeof(struct xfs_parent_name_rec))
-> +			return false;
-> +		return xfs_verify_pptr(mp, (struct xfs_parent_name_rec *)name);
-> +	}
+> +	int			logcount_adj = 0;
 > +
-> +	return xfs_str_attr_namecheck(name, length);
-> +}
+> +	/*
+> +	 * The following transactions are logged in physical format and
+> +	 * require a permanent reservation on space.
+> +	 */
+> +	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp, false);
+> +	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> +	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 > +
->  int __init
->  xfs_attr_intent_init_cache(void)
->  {
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 7600eac74db7..a87bc503976b 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -562,7 +562,8 @@ int xfs_attr_get(struct xfs_da_args *args);
->  int xfs_attr_set(struct xfs_da_args *args);
->  int xfs_attr_set_iter(struct xfs_attr_intent *attr);
->  int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
-> -bool xfs_attr_namecheck(const void *name, size_t length);
-> +bool xfs_attr_namecheck(struct xfs_mount *mp, const void *name, size_t length,
-> +			int flags);
->  int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
->  void xfs_init_attr_trans(struct xfs_da_args *args, struct xfs_trans_res *tres,
->  			 unsigned int *total);
-> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-> index b6f0c9f3f124..d3e75c077fab 100644
-> --- a/fs/xfs/scrub/attr.c
-> +++ b/fs/xfs/scrub/attr.c
-> @@ -128,7 +128,7 @@ xchk_xattr_listent(
->  	}
+> +	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp, false);
+> +	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> +	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +
+>  	resp->tr_create_tmpfile.tr_logres =
+>  			xfs_calc_create_tmpfile_reservation(mp);
+>  	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+>  	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 >  
->  	/* Does this name make sense? */
-> -	if (!xfs_attr_namecheck(name, namelen)) {
-> +	if (!xfs_attr_namecheck(sx->sc->mp, name, namelen, flags)) {
->  		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
->  		return;
->  	}
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index f524dbbb42d3..60fee5814655 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -587,7 +587,8 @@ xfs_attri_item_recover(
->  	 */
->  	attrp = &attrip->attri_format;
->  	if (!xfs_attri_validate(mp, attrp) ||
-> -	    !xfs_attr_namecheck(nv->name.i_addr, nv->name.i_len))
-> +	    !xfs_attr_namecheck(mp, nv->name.i_addr, nv->name.i_len,
-> +				attrp->alfi_attr_filter))
->  		return -EFSCORRUPTED;
+> -	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> -	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> -	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> -
+>  	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+>  	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+>  	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> @@ -986,6 +1049,8 @@ xfs_trans_resv_calc(
+>  	resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+>  	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 >  
->  	error = xlog_recover_iget(mp,  attrp->alfi_ino, &ip);
-> @@ -742,7 +743,8 @@ xlog_recover_attri_commit_pass2(
->  		return -EFSCORRUPTED;
->  	}
+> +	xfs_calc_namespace_reservations(mp, resp);
+> +
+>  	/*
+>  	 * The following transactions are logged in logical format with
+>  	 * a default log count.
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+> index 0554b9d775d2..cab8084a84d6 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.h
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.h
+> @@ -101,5 +101,6 @@ uint xfs_allocfree_block_count(struct xfs_mount *mp, uint num_ops);
+>  unsigned int xfs_calc_itruncate_reservation_minlogsize(struct xfs_mount *mp);
+>  unsigned int xfs_calc_write_reservation_minlogsize(struct xfs_mount *mp);
+>  unsigned int xfs_calc_qm_dqalloc_reservation_minlogsize(struct xfs_mount *mp);
+> +void xfs_calc_parent_ptr_reservations(struct xfs_mount *mp);
 >  
-> -	if (!xfs_attr_namecheck(attr_name, attri_formatp->alfi_name_len)) {
-> +	if (!xfs_attr_namecheck(mp, attr_name, attri_formatp->alfi_name_len,
-> +				attri_formatp->alfi_attr_filter)) {
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
->  		return -EFSCORRUPTED;
->  	}
-> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> index 90a14e85e76d..3bac0647a927 100644
-> --- a/fs/xfs/xfs_attr_list.c
-> +++ b/fs/xfs/xfs_attr_list.c
-> @@ -58,9 +58,13 @@ xfs_attr_shortform_list(
->  	struct xfs_attr_sf_sort		*sbuf, *sbp;
->  	struct xfs_attr_shortform	*sf;
->  	struct xfs_attr_sf_entry	*sfe;
-> +	struct xfs_mount		*mp;
->  	int				sbsize, nsbuf, count, i;
->  	int				error = 0;
->  
-> +	ASSERT(context != NULL);
-> +	ASSERT(dp != NULL);
-> +	mp = dp->i_mount;
->  	ASSERT(dp->i_afp != NULL);
->  	sf = (struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
->  	ASSERT(sf != NULL);
-> @@ -83,8 +87,9 @@ xfs_attr_shortform_list(
->  	     (dp->i_afp->if_bytes + sf->hdr.count * 16) < context->bufsize)) {
->  		for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
->  			if (XFS_IS_CORRUPT(context->dp->i_mount,
-> -					   !xfs_attr_namecheck(sfe->nameval,
-> -							       sfe->namelen)))
-> +					   !xfs_attr_namecheck(mp, sfe->nameval,
-> +							       sfe->namelen,
-> +							       sfe->flags)))
->  				return -EFSCORRUPTED;
->  			context->put_listent(context,
->  					     sfe->flags,
-> @@ -175,8 +180,9 @@ xfs_attr_shortform_list(
->  			cursor->offset = 0;
->  		}
->  		if (XFS_IS_CORRUPT(context->dp->i_mount,
-> -				   !xfs_attr_namecheck(sbp->name,
-> -						       sbp->namelen))) {
-> +				   !xfs_attr_namecheck(mp, sbp->name,
-> +						       sbp->namelen,
-> +						       sbp->flags))) {
->  			error = -EFSCORRUPTED;
->  			goto out;
->  		}
-> @@ -466,7 +472,8 @@ xfs_attr3_leaf_list_int(
->  		}
->  
->  		if (XFS_IS_CORRUPT(context->dp->i_mount,
-> -				   !xfs_attr_namecheck(name, namelen)))
-> +				   !xfs_attr_namecheck(mp, name, namelen,
-> +						       entry->flags)))
->  			return -EFSCORRUPTED;
->  		context->put_listent(context, entry->flags,
->  					      name, namelen, valuelen);
+>  #endif	/* __XFS_TRANS_RESV_H__ */
 > -- 
 > 2.25.1
 > 
