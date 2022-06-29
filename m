@@ -2,133 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7077C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 16:20:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F250DC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 16:23:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229798AbiF2QUn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 12:20:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34712 "EHLO
+        id S229747AbiF2QXq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 12:23:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229699AbiF2QUm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 12:20:42 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BA26344C7;
-        Wed, 29 Jun 2022 09:20:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5174AB82573;
-        Wed, 29 Jun 2022 16:20:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DC6DC34114;
-        Wed, 29 Jun 2022 16:20:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656519639;
-        bh=jUEvfkzTsecPy2ArOdW6RgMus29RLcrXT85mz+60n3A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MH+t8R+d0DWRiUwAzIkCTnagGELNtNcy5YzGi440s1Me+G9pZYmeAWFeC/4VH32aP
-         SUQ+UhRBzhHuvG+FTOrd3qCWSqkiD5l2S0Hpc3RHcbuDlm8q3t7V5z2p6xFJ6IH70w
-         SM1wKkC8rEjR4SOzYYMtgq2kgqge5aixRDlzyTa3O0J/zlaxb/YuiFIVcQ3c2wOVC7
-         gyezjl7ooyC3hcZkJY2GXf9u6oNxJzASMk9zg1DeygVQ4ENz8MxNiZAdZ3L+GjUlTH
-         PX4SM6TqTFbLSEe5ZKqzcvJCEwRI4atWBsR78pf0+7CinRXH76vWd/rk3/Ij/+OWxG
-         1jJD7Ew9hWioQ==
-Date:   Wed, 29 Jun 2022 09:20:38 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 5.10 CANDIDATE v2 0/7] xfs stable candidate patches for
- 5.10.y (from v5.13)
-Message-ID: <Yrx71vp2SFsjVdzg@magnolia>
-References: <20220627073311.2800330-1-amir73il@gmail.com>
+        with ESMTP id S229699AbiF2QXo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 12:23:44 -0400
+Received: from ip27.imatronix.com (ip27.imatronix.com [200.63.97.108])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A1773057B
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 09:23:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=superfactura.cl; s=default; h=Content-Transfer-Encoding:Content-Type:To:
+        Subject:From:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=VE1tHBCuqOIXnR6RGO4x/WK5Yhial2SWrfcLR602KBA=; b=ev3VYyZkqKrmp9OVJvF4oOtht0
+        U8JT1Z3wRYtDX/QCA/LyX3MwmMxBMACBfEL3hpfAfjI/cT5vw/TW8/IXKJN+dDAfjMSwfXzilbVca
+        5QFww0xK2feGibznJGEyM6jKcM08ctbIEPs2IgGF4Qv61bmhy8eRa9BmrR1MvxX6Y920BwiYsccRs
+        7+BIVGRcRTPklFDpHHM6mMdBPp9LjEQmuJKjHqlyoIrFPkCYXF8IwyPT0/KCSYzp04CYKId+Wd/Uh
+        M3nKElV1puzdM7o4Gf5jiyf1vL/KSAjWKayuo3kXsfF8XJJ6ZKjuE5iFqDvWrHQHfZpL5PUepFrA0
+        DpI3EyAg==;
+Received:    from [200.73.112.45]
+           by cpanel.imatronix.com    with esmtpsa    (TLS1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+           (Exim 4.95)
+           (envelope-from <kripper@imatronix.cl>)
+           id 1o6aTe-0002EM-RS   
+        for linux-xfs@vger.kernel.org;
+        Wed, 29 Jun 2022 12:23:41 -0400
+Message-ID: <ca9d19d4-01f8-6435-f536-d87371dcbbde@imatronix.cl>
+Date:   Wed, 29 Jun 2022 12:23:36 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220627073311.2800330-1-amir73il@gmail.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+From:   Christopher Pereira <kripper@imatronix.cl>
+Subject: XFS fs corruption - XFS_WANT_CORRUPTED_RETURN
+To:     linux-xfs@vger.kernel.org
+Content-Language: en-US
+Organization: IMATRONIX S.A.
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - cpanel.imatronix.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - imatronix.cl
+X-Get-Message-Sender-Via: cpanel.imatronix.com: authenticated_id: soporte@superfactura.cl
+X-Authenticated-Sender: cpanel.imatronix.com: soporte@superfactura.cl
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 27, 2022 at 10:33:04AM +0300, Amir Goldstein wrote:
-> Hi all,
-> 
-> This is a resend of the series that was posted 3 weeks ago [v1].
-> The backports in this series are from circa v5.12..v5.13.
-> The remaining queue of tested 5.10 backports [1] contains 25 more patches
-> from v5.13..v5.19-rc1.
-> 
-> There have been no comments on the first post except for Dave's request
-> to collaborate the backports review process with Leah who had earlier
-> sent out another series of backports for 5.15.y.
-> 
-> Following Dave's request, I had put this series a side to collaborate
-> the shared review of 5.15/5.10 series with Leah and now that the shared
-> series has been posted to stable, I am re-posting to request ACKs on this
-> 5.10.y specific series.
-> 
-> There are four user visible fixes in this series, one patch for dependency
-> ("rename variable mp") and two patches to improve testability of LTS.
+Hi,
 
-Aha, I had wondered why the journal_info thing was in this branch, and
-if that would even fit under the usual stable rules...
+I've been using XFS for many years on many qemu-kvm VMs without problems.
+I do daily qcow2 snapshots and today I noticed that a snaphot I took on 
+Jun  1 2022 has a corrupted XFS root partition and doesn't boot any more 
+(on another VM instance).
+The snapshot I took the day before is clean.
+The VM is still running since May 11 2022, has not been rebooted and 
+didn't crash which is the reason I'm reporting this issue.
+This is a production VM with sensible data.
 
-> Specifically, I selected the fix ("use current->journal_info for
-> detecting transaction recursion") after I got a false positive assert
-> while testing LTS kernel with XFS_DEBUG and at another incident, it
-> helped me triage a regression that would have been harder to trace
-> back to the offending code otherwise.
+The kernel logged this error multiple times between 00:00:21 and 
+00:03:31 on Jun 1:
 
-...but clearly maintainers have been hitting this, so that's ok by /me/ to
-have it.  If nothing else, XFS doesn't support nested transactions, so any
-weird stuff that falls out was already a dangerous bug.
+Jun  1 00:00:21 *** kernel: XFS (dm-0): Internal error 
+XFS_WANT_CORRUPTED_RETURN at line 337 of file 
+fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_alloc_ag_vextent_near+0x658/0xa60 
+[xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0230e5b>] 
+xfs_error_report+0x3b/0x40 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] ? 
+xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01ee684>] 
+xfs_alloc_fixup_trees+0x2c4/0x370 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] 
+xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01f120d>] 
+xfs_alloc_ag_vextent+0xcd/0x110 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01f1f89>] 
+xfs_alloc_vextent+0x429/0x5e0 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa020237f>] 
+xfs_bmap_btalloc+0x3af/0x710 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa02026ee>] xfs_bmap_alloc+0xe/0x10 
+[xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0203148>] 
+xfs_bmapi_write+0x4d8/0xa90 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa023bd1b>] 
+xfs_iomap_write_allocate+0x14b/0x350 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0226dc6>] 
+xfs_map_blocks+0x1c6/0x230 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0227fe3>] 
+xfs_vm_writepage+0x193/0x5d0 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0227993>] 
+xfs_vm_writepages+0x43/0x50 [xfs]
+Jun  1 00:00:22 *** kernel: XFS (dm-0): page discard on page 
+ffffea000cf60200, inode 0xc52bf7f, offset 0.
 
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+I'm running this (outdated) software:
 
---D
+- uname -a:
+     Linux *** 3.10.0-327.22.2.el7.x86_64 #1 SMP Thu Jun 23 17:05:11 UTC 
+2016 x86_64 x86_64 x86_64 GNU/Linux
 
-> This series has been looping in kdevops for a long while, with and
-> without the shared 5.15 backport with no regressions observed.
-> 
-> Thanks,
-> Amir.
-> 
-> Changes since [v1]:
-> - Rebased and tested on top of the v5.15+ ACKed backports [2]
-> 
-> [1] https://github.com/amir73il/linux/commits/xfs-5.10.y
-> [2] https://lore.kernel.org/linux-xfs/20220624063702.2380990-1-amir73il@gmail.com/
-> [v1] https://lore.kernel.org/linux-xfs/20220606160537.689915-1-amir73il@gmail.com/
-> 
-> Anthony Iliopoulos (1):
->   xfs: fix xfs_trans slab cache name
-> 
-> Darrick J. Wong (1):
->   xfs: fix xfs_reflink_unshare usage of filemap_write_and_wait_range
-> 
-> Dave Chinner (2):
->   xfs: use current->journal_info for detecting transaction recursion
->   xfs: update superblock counters correctly for !lazysbcount
-> 
-> Gao Xiang (1):
->   xfs: ensure xfs_errortag_random_default matches XFS_ERRTAG_MAX
-> 
-> Pavel Reichl (2):
->   xfs: rename variable mp to parsing_mp
->   xfs: Skip repetitive warnings about mount options
-> 
->  fs/iomap/buffered-io.c    |   7 ---
->  fs/xfs/libxfs/xfs_btree.c |  12 +++-
->  fs/xfs/libxfs/xfs_sb.c    |  16 ++++-
->  fs/xfs/xfs_aops.c         |  17 +++++-
->  fs/xfs/xfs_error.c        |   2 +
->  fs/xfs/xfs_reflink.c      |   3 +-
->  fs/xfs/xfs_super.c        | 120 +++++++++++++++++++++-----------------
->  fs/xfs/xfs_trans.c        |  23 +++-----
->  fs/xfs/xfs_trans.h        |  30 ++++++++++
->  9 files changed, 148 insertions(+), 82 deletions(-)
-> 
-> -- 
-> 2.25.1
-> 
+- modinfo xfs
+     filename: /lib/modules/3.10.0-327.22.2.el7.x86_64/kernel/fs/xfs/xfs.ko
+     license:        GPL
+     description:    SGI XFS with ACLs, security attributes, no debug 
+enabled
+     author:         Silicon Graphics, Inc.
+     alias:          fs-xfs
+     rhelversion:    7.2
+     srcversion:     5F736B32E75482D75F98583
+     depends:        libcrc32c
+     intree:         Y
+     vermagic:       3.10.0-327.22.2.el7.x86_64 SMP mod_unload modversions
+     signer:         CentOS Linux kernel signing key
+     sig_key: A9:80:1A:61:B3:68:60:1C:40:EB:DB:D5:DF:D1:F3:A7:70:07:BF:A4
+     sig_hashalgo:   sha256
+
+1) Is there any known issue with this xfs version?
+
+2) How may I help you to trace this bug.
+I could provide my WhatsApp number privately for direct communication.
+
+Should I try a xfs_repair and post the logs here or via pastebin?
+
+BTW: I'm a experienced developer and sysadmin, but have no experience 
+regarding the XFS  driver.
+
