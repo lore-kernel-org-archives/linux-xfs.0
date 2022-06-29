@@ -2,525 +2,255 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 743E9C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 18:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37475C43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 18:58:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231334AbiF2Swp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 14:52:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38724 "EHLO
+        id S229476AbiF2S6m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 14:58:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232011AbiF2Swj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 14:52:39 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA38C1C939
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 11:52:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 642BF6201C
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 18:52:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2F6CC34114;
-        Wed, 29 Jun 2022 18:52:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656528756;
-        bh=5GI38V/3xHFb4ou2fi45GlQB1d5dQ8nuIlBlR4wJ3xY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ggSZPP4seW81beeCbLyYiyjsX1nnE8Ln+6j0qY5RtDHYGMlnN1WJw7+pmuPw46565
-         Z7ppJIyQbQWEVbkfZxKAZoNV2vfMDwJT3/TX2TNPMOc3g45HZ24mTDGhQdxRH6jNx9
-         6QSEr2XhR4suQYZbtDNB0Qhtm+rFWsx7fkGr5X9xpirFaWykoBxUZo0L/6U+sC3Mi4
-         +GzINB5kS95GYSzWKBLReWpaCRhLiIe+qZmzxfFbcEDgE/6IMPlGdCmddSZNnVNJKy
-         Ois5s8tPScfzUamsHEC7TIE21kPw8DKN0m/W9RTuRpO+4Pp0qljXvx+BO6MHtMVIsN
-         +ZOv9y+r8uL3A==
-Date:   Wed, 29 Jun 2022 11:52:36 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
+        with ESMTP id S229460AbiF2S6l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 14:58:41 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAD7E193D0
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 11:58:40 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25TISo0P017909;
+        Wed, 29 Jun 2022 18:58:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : subject
+ : from : to : cc : date : in-reply-to : references : content-type :
+ content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=mg957XWL4yJtz0ZCqfeepYcsTaZ20v2B3Z3zL2w/O+s=;
+ b=RPcgeX28SHlBEHCw8vnQHG1VKwmBbaKZNExFk/ox7kkokmVynrdck1JEp5/kvA/wI+7Q
+ KIWNdL0KGVpPCnqhNfA7G8/jGWhm1H2JReHrLyHejmwSErxjJZ+7Do9E8KOfP8TZg6LH
+ z3q/1MEFpKTIflcxTb/s155ERQWAiwihIJ5Dy+kgPsQI/RCuB1VohgBP2ga18NIIjiMr
+ IIyNjxZqrWip0DfB1IbudKpngv0TMmvkynykJrw3iZsGgI1E+QKkLUo2st0Axksujx94
+ 4ubysVmArG0gVqrj6T1MzmEz4agJF1qOycuN/8nsF/MnixRd72asRcPzr/ino3jr7Lh+ Ew== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gwtwua6qn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 29 Jun 2022 18:58:37 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 25TIuOGF026573;
+        Wed, 29 Jun 2022 18:58:35 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2177.outbound.protection.outlook.com [104.47.57.177])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gwrt3cwsv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 29 Jun 2022 18:58:35 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=a4AIGfeGPdrlMb/lRt/vrBt2l/ucJBEvyfbeFIGGWk3JpRndFddn3gQsfR/fpFNGWEPL7aIpiyMedVF3DuqrQhRm3mdPqSGCk4llRoGRSzRgm9a0TTszdOvzb/b3AlXbR0OsYf/A5I96IynsFBUINowZ09l3ii7x7Mrq4zkUrjAjpbmVBnMAz36Sp6gnvZEccnaL4Ps8FezlYc8M5mgR+1B7Qki4usdnWlozFwBK0oFgSCobPJOD9piGKS6svFRbwYxHAHN4F+Jl7hUJtZxzDLndxg4GQljnaAk2wyv+gMEZiDDAuqbOrqCKU+lKPs9i0t5Jwmfw9O9B52s4YZ7YQQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=mg957XWL4yJtz0ZCqfeepYcsTaZ20v2B3Z3zL2w/O+s=;
+ b=Hj6aYbudOF6WONunCXe71+w2MCWBFpMVAjx2be0R9Fy0c2hAJmweAeXuY9gKLyGVwf0zoqXMDg8yZKjS9mjB5eFsUbJXNYFL30b/k3Ulw/biVolLJ5kaq5+657hbGQ/CPyq2OwbhkkidKKP3TTX/nQINfY7PocSta0B0iBJGs/Y0qp3qe3hzbQn0WR6YwmjtlDbi6Ls3lTADYdkJXjilcLx9fMn0gOzEoTdsT1Fm+YAi2BHsVhZieCW4oqzlca8UPkHuNG8hxfR7Jd+RwChcEb5264vnmMgFFRBrqwSWWgUB7A4wUXxZO/8ETaRfZEqHB9uELpE5S03+LI9XjSpG/w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mg957XWL4yJtz0ZCqfeepYcsTaZ20v2B3Z3zL2w/O+s=;
+ b=W1tzFqyT6JFYMWPISuxUS1MT1YqrLujB7DIOQJX3Kt/ptTVrCutKc1p4Rmx2djkEYrKUFXaEil6EiUPZ6QIrVbSknRbgG/IBTx3ehdMQ3LDm2zanV0TRRiIlAEEraPsrAzxQ4veZNpQu1MRlgiZAT1Ev4Mcyag+LsdypXJRpZVg=
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by SJ0PR10MB4416.namprd10.prod.outlook.com (2603:10b6:a03:2ae::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.14; Wed, 29 Jun
+ 2022 18:58:34 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::30d4:9679:6a11:6f94]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::30d4:9679:6a11:6f94%8]) with mapi id 15.20.5395.014; Wed, 29 Jun 2022
+ 18:58:34 +0000
+Message-ID: <8b5e7dfa30d544719a3bb964c1d518e15bf72f10.camel@oracle.com>
+Subject: Re: [PATCH v1 06/17] xfs: add parent pointer support to attribute
+ code
+From:   Alli <allison.henderson@oracle.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 17/17] xfs: Add parent pointer ioctl
-Message-ID: <YryfdCrBUyH6jOij@magnolia>
+Date:   Wed, 29 Jun 2022 11:58:32 -0700
+In-Reply-To: <Yrya4nPix+tL803D@magnolia>
 References: <20220611094200.129502-1-allison.henderson@oracle.com>
- <20220611094200.129502-18-allison.henderson@oracle.com>
+         <20220611094200.129502-7-allison.henderson@oracle.com>
+         <Yrya4nPix+tL803D@magnolia>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR05CA0104.namprd05.prod.outlook.com
+ (2603:10b6:a03:334::19) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220611094200.129502-18-allison.henderson@oracle.com>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: e17b2c33-891c-4a5a-4fab-08da5a015dce
+X-MS-TrafficTypeDiagnostic: SJ0PR10MB4416:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: txt/pQBl/uyQ3VwbyQOQ3MPFWvQUdWu/i99dmGGDEWOUqdrKqcuVp693NlBcjJgHCNMYlqmm7vLMHpH32NRnbsOIqpFkovmrvnz+iSQ5inTrolduWOg75IcP5+eAK0/BdrzC3HQN6UrHxFzvMRnuJLtvXRBoTJQgxkdiIV6ZMAluEWV4Hqhbn16tDQunM8SJgj3IrnyI0rabLB2c6P1NsS3xk0gsZLDj3mcuRpVDxs9eUyIXGDE9rVRPWOkaRMsV9Kh3P+mKtGa9+4TefkmTs6HeADtoJhoRxGX3ad65apX7aqRdPeYL0WNsQ5/UmZY53GvnhvqKyps4Id9goTI6hP3wfq9o4yUBodZLgvDIXfScmjuQGyPe4nEiVurKweC1Tpiqg81xOJCCj6zAXwRzQnhAKG9cyADHJYGrUDyVgUgx0l0D1XXpJCM27/Dnnk1deIVLgUN3YVswrXv4v6vm/sqbU6wxZbK9UVy7hJCnHS/ZhgLVWTpUVuIcDevieTJ5o0Ne7OSxhCQ1g/jG0XPtIAsetFVXdSvIicFgxtCiDoZDcnptzhikxjxnRU5U1LrJ+2BWqtsTzG0PV5VqGktYv7dHJ1Gy2Pp19WwRuiYyfOf7znqUAlzOK3sVhDp3iSk3XbDxMULHN5G+eNU2LmSG2oBuuQSWj/CmL4h0zSq/RDTSmTZD4ee+UmrkuoFiGJWX+Wxi4L8hoKjN0NnCmIfdnjVob9tJLdb3QNeJ438wSpmFWpWyyoHC4+qU2EndcIgI4zpjE6lsp8+QFAw0/E9WjWH3lbNcohdTRRvRXSwzXTw=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(396003)(346002)(136003)(366004)(376002)(39860400002)(6506007)(41300700001)(52116002)(5660300002)(26005)(6512007)(6486002)(2616005)(186003)(6916009)(8936002)(316002)(66476007)(66556008)(66946007)(4326008)(8676002)(2906002)(83380400001)(38350700002)(38100700002)(36756003)(478600001)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dkJNblBadnk4MWVmUTZNNTBuNE9zZnpKa013bU51d29JS054SzFCVko2aGVj?=
+ =?utf-8?B?ZlhTNFZEcGdzcEFxdzA3Yi8rUUhlK2JMNDd2QjRncmdybm9kdk4yT2JSS2Zr?=
+ =?utf-8?B?cDdLdzgxQUV1cU8zNlhXRytIT0RMclM5UXJCN3B2VDc5L0FqekE4d1BVa29l?=
+ =?utf-8?B?YUl1NFB3Skdrd3lyclBLemFBbnF0VGlUd2hONXJCd3hNQkdteDVMYzJMVTFy?=
+ =?utf-8?B?ZTRtdUExTjkzaUZRTEgveURUTHdpKzhHWC9wVGhpUkdsQVUvMzFoMjEzWlA4?=
+ =?utf-8?B?MmQ0NFlsampRRWhHYjBqNDhBWXBpbE9yS2N1MmVxMG40bm1xL0RQMlc1UHF3?=
+ =?utf-8?B?cElPam8rcE5BZHIra1pDckdFVWNEaWt3eU8xYTNWUVFKTXp2NWMrY1JmUWtk?=
+ =?utf-8?B?VHUxWDdFRVUvNEU0WDAyNzdLSTljZElSQ0dZQU1zQUIzNy9wZUJaRFZoNjJO?=
+ =?utf-8?B?ZUYzQVZlSFRWVkIrZjVsaGc0czBFR0ZBN1g2a09aQnhiekhIeExtcHV4Y1JB?=
+ =?utf-8?B?UHhjSXdGdFZCUXdiZStUOVp0c1dwUzl1SDcyZVRyUGVIb0w5eFUwTjlNc0Ix?=
+ =?utf-8?B?YXJqVXVkNVRWbmNmZjVGYlVWTGVEV3FkZnlZSzI0V0ZSbnZYUlUycWNIMGFZ?=
+ =?utf-8?B?cTFSU1N5U0lxTjRIS0g2VkdwaHhzcm9wVDlMTFlOd0tYU1krS2lLTHU5eCtL?=
+ =?utf-8?B?TVRUUFdEY1FaUFhIejRJeVcyREZlemhJN3YvY0JtdFZpTklvWWJlbUF3eE13?=
+ =?utf-8?B?T2lPb053eS9qaG0vK1RQYzdhV0J2WWV2Y082RHJ5TzFsbGxxNG11ZC9BK2ZX?=
+ =?utf-8?B?SjF6QXZCdGZvc2NScWIvSmRWRjFNTzVNOG1ZYUhkck9lTWRpRmR6bEgrQS9N?=
+ =?utf-8?B?eExGTC9Da3Ewa25hV0FvTWZwei9oQWJ4c3QzU0FVOWFUWnd1bUFrSFB4SXpM?=
+ =?utf-8?B?U2p4NDlndnlmYkVpdEVMWEp4cS85NUJhV2dOb2F3VG9MOEVaNjVrNUJKSjRM?=
+ =?utf-8?B?TEt2c3duSFBJWTVnWXNnMm5HbUxvaU16YUorSjhNR1ZvZ01yZlFoaE4zdmZi?=
+ =?utf-8?B?R0dzUG5LNFpwZE5qdmJHTGxIbnBmRHRFTVlNTndSS2Y0SG83RkxwalVWOCs4?=
+ =?utf-8?B?cmFEcUpxYmxMaWY5ZmF1MVRPaTJzSFJ4Q1NuZlpTSUJCOXRrOU5sS0daMW1K?=
+ =?utf-8?B?WTA0NGdZWGdPSGV2cjZWbkJId0s3K2xLUUlzOTlURzdndXRWeEtlNllzQWRO?=
+ =?utf-8?B?NFU1eDlEQ0JmcFZHVXFOTFo3SjAwTWlzRHZZRkxCMklESElzL0hGSHpjSXFI?=
+ =?utf-8?B?cWxrc05NeEM0cXVVWlFxVmhvYWt3ZDhmK2lFK1c1cXJlbGw0ZDRVaWJqL0FD?=
+ =?utf-8?B?eVU3VW5hQXNZTFdDdjFhL0NxVTZTSURYUWVUbU0zVks4UnhBemJPcWVTQmE3?=
+ =?utf-8?B?MjExdmpwVzZGRnJJckRxcEpMNytuMFliaFBlaTBaL3Vkc1c1VDBOdkFYZkwx?=
+ =?utf-8?B?ZCtVWGVXVkRiczhZTzlvQ2ZKVWdlYW5KbzFHS0tZRnc4N0k3dWJ2Y2d5aFF1?=
+ =?utf-8?B?SS95QjFFNER6SVN3N0Q3R1U4SFNXV3RvM0JZcHJxUDJPcDFKLzBKTzZzRVlU?=
+ =?utf-8?B?eHFvUmxIdW8wUVpRdjFTUTIzZ0trYWRnZ0UzYUdidCtLN29oRTRraFNxN3M0?=
+ =?utf-8?B?MnV6Vm1JandMQ3E2ejFrbDZyQURDcmpRSHltelRod1ZjU2Z1bHVSU3V5eVVq?=
+ =?utf-8?B?VXpWTFo1NCtjUWRpeHozNmxxNnY5OXFoalRVOEh5UFByaTR1YmE5UmVKSkQ2?=
+ =?utf-8?B?V1hpUWpVZ3hoYzZLa1JUQnJ3dVNIeTc2STFHa2F6NU94STR1cE5oaS9OUHpY?=
+ =?utf-8?B?Z3A4b1N2bURCNnUvbEEvVFVsZHBwUCtYWjhSMXl1c2IzdGNGL2JpVTBxS0Vh?=
+ =?utf-8?B?Mk8rTWNYR0NKOUpML2NVdjdMUkE0NVQ2VDIyQ1lkNzR1aVFMYmhOZnlubHFO?=
+ =?utf-8?B?a1JBQm1jSENHeDFvczhMajkrZTZjaUNjd0dZQWhWN2ExMFJqU2E0RjlyVjY4?=
+ =?utf-8?B?S0QzTG01c0o4LzJuRWw4MGFqdFFabnFSK3FNNE1KMlYxNnNKZVVIMGEvWEZm?=
+ =?utf-8?B?NWEycFdtVi9YNmtyOTUyV3l1enduVGsrSEJKSzVRUzU2VHNQL0tUWCtOakUv?=
+ =?utf-8?B?QUE9PQ==?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e17b2c33-891c-4a5a-4fab-08da5a015dce
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jun 2022 18:58:34.3177
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yTGuUX/NT8UwP6X/DUHKZ3ewJhW01kW7s1Sijhrc5r413wZrtL2IoT5JBUTdWDWD0XFH3W+hI4IMRor0Wgh7sODmfwZ/9++fzfmasrSJ4Mc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB4416
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.883
+ definitions=2022-06-29_20:2022-06-28,2022-06-29 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 phishscore=0
+ malwarescore=0 mlxlogscore=999 spamscore=0 adultscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2204290000
+ definitions=main-2206290067
+X-Proofpoint-ORIG-GUID: D0wOBEp0UjCwRdshuHgsy44I-zgP_zNY
+X-Proofpoint-GUID: D0wOBEp0UjCwRdshuHgsy44I-zgP_zNY
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 11, 2022 at 02:42:00AM -0700, Allison Henderson wrote:
-> This patch adds a new file ioctl to retrieve the parent pointer of a
-> given inode
+On Wed, 2022-06-29 at 11:33 -0700, Darrick J. Wong wrote:
+> On Sat, Jun 11, 2022 at 02:41:49AM -0700, Allison Henderson wrote:
+> > Add the new parent attribute type. XFS_ATTR_PARENT is used only for
+> > parent pointer
+> > entries; it uses reserved blocks like XFS_ATTR_ROOT.
+> > 
+> > [dchinner: forward ported and cleaned up]
+> > [achender: rebased]
+> > 
+> > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_attr.c       | 4 +++-
+> >  fs/xfs/libxfs/xfs_da_format.h  | 5 ++++-
+> >  fs/xfs/libxfs/xfs_log_format.h | 1 +
+> >  3 files changed, 8 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > index a94850d9b8b1..ee5dfebcf163 100644
+> > --- a/fs/xfs/libxfs/xfs_attr.c
+> > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > @@ -996,11 +996,13 @@ xfs_attr_set(
+> >  	struct xfs_inode	*dp = args->dp;
+> >  	struct xfs_mount	*mp = dp->i_mount;
+> >  	struct xfs_trans_res	tres;
+> > -	bool			rsvd = (args->attr_filter &
+> > XFS_ATTR_ROOT);
+> > +	bool			rsvd;
+> >  	int			error, local;
+> >  	int			rmt_blks = 0;
+> >  	unsigned int		total;
+> >  
+> > +	rsvd = (args->attr_filter & (XFS_ATTR_ROOT | XFS_ATTR_PARENT))
+> > != 0;
+> > +
+> >  	if (xfs_is_shutdown(dp->i_mount))
+> >  		return -EIO;
+> >  
+> > diff --git a/fs/xfs/libxfs/xfs_da_format.h
+> > b/fs/xfs/libxfs/xfs_da_format.h
+> > index 25e2841084e1..2d771e6429f2 100644
+> > --- a/fs/xfs/libxfs/xfs_da_format.h
+> > +++ b/fs/xfs/libxfs/xfs_da_format.h
+> > @@ -688,12 +688,15 @@ struct xfs_attr3_leafblock {
+> >  #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally
+> > */
+> >  #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted
+> > attrs */
+> >  #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure
+> > attrs */
+> > +#define 	XFS_ATTR_PARENT_BIT	3	/* parent pointer secure
+> > attrs */
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
->  fs/xfs/Makefile            |   1 +
->  fs/xfs/libxfs/xfs_fs.h     |  46 +++++++++++++
->  fs/xfs/libxfs/xfs_parent.c |  10 +++
->  fs/xfs/libxfs/xfs_parent.h |   2 +
->  fs/xfs/xfs_ioctl.c         |  90 ++++++++++++++++++++++++-
->  fs/xfs/xfs_ondisk.h        |   4 ++
->  fs/xfs/xfs_parent_utils.c  | 133 +++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_parent_utils.h  |  22 ++++++
->  8 files changed, 306 insertions(+), 2 deletions(-)
+>           ^ whitespace
 > 
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index fc717dc3470c..da86f6231f2e 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -86,6 +86,7 @@ xfs-y				+= xfs_aops.o \
->  				   xfs_mount.o \
->  				   xfs_mru_cache.o \
->  				   xfs_pwork.o \
-> +				   xfs_parent_utils.o \
->  				   xfs_reflink.o \
->  				   xfs_stats.o \
->  				   xfs_super.o \
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index b0b4d7a3aa15..e6c8873cd234 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -574,6 +574,7 @@ typedef struct xfs_fsop_handlereq {
->  #define XFS_IOC_ATTR_SECURE	0x0008	/* use attrs in security namespace */
->  #define XFS_IOC_ATTR_CREATE	0x0010	/* fail if attr already exists */
->  #define XFS_IOC_ATTR_REPLACE	0x0020	/* fail if attr does not exist */
-> +#define XFS_IOC_ATTR_PARENT	0x0040  /* use attrs in parent namespace */
->  
->  typedef struct xfs_attrlist_cursor {
->  	__u32		opaque[4];
-> @@ -752,6 +753,50 @@ struct xfs_scrub_metadata {
->  				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
->  #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
->  
-> +#define XFS_PPTR_MAXNAMELEN				256
-> +
-> +/* return parents of the handle, not the open fd */
-> +#define XFS_PPTR_IFLAG_HANDLE  (1U << 0)
-> +
-> +/* target was the root directory */
-> +#define XFS_PPTR_OFLAG_ROOT    (1U << 1)
-> +
-> +/* Cursor is done iterating pptrs */
-> +#define XFS_PPTR_OFLAG_DONE    (1U << 2)
-> +
-> +/* Get an inode parent pointer through ioctl */
-> +struct xfs_parent_ptr {
-> +	__u64		xpp_ino;			/* Inode */
-> +	__u32		xpp_gen;			/* Inode generation */
-> +	__u32		xpp_diroffset;			/* Directory offset */
-> +	__u32		xpp_namelen;			/* File name length */
-> +	__u32		xpp_pad;
-> +	__u8		xpp_name[XFS_PPTR_MAXNAMELEN];	/* File name */
-> +};
-> +
-> +/* Iterate through an inodes parent pointers */
-> +struct xfs_pptr_info {
-> +	struct xfs_handle		pi_handle;
-> +	struct xfs_attrlist_cursor	pi_cursor;
-> +	__u32				pi_flags;
-> +	__u32				pi_reserved;
-> +	__u32				pi_ptrs_size;
-> +	__u32				pi_ptrs_used;
-> +	__u64				pi_reserved2[6];
-> +
-> +	/*
-> +	 * An array of struct xfs_parent_ptr follows the header
-> +	 * information. Use XFS_PPINFO_TO_PP() to access the
-> +	 * parent pointer array entries.
-> +	 */
+> What is 'secure' about parent pointers? 
+Nothing, it's a typo :-)
 
-	struct xfs_parent_ptr		pi_parents[];
-
-Unless you want to conserve space in the userspace buffer by making the
-size of xfs_parent_ptr itself variable?  Userspace would have to walk
-the entire buffer by hand like it does for listxattr, but it saves a
-fair amount of space.
-
-> +};
-> +
-> +#define XFS_PPTR_INFO_SIZEOF(nr_ptrs) sizeof (struct xfs_pptr_info) + \
-> +				      nr_ptrs * sizeof(struct xfs_parent_ptr)
-> +
-> +#define XFS_PPINFO_TO_PP(info, idx)    \
-> +	(&(((struct xfs_parent_ptr *)((char *)(info) + sizeof(*(info))))[(idx)]))
-
-Turn these into static inline functions so that client programs get some
-proper typechecking by the C compiler.
-
-> +
->  /*
->   * ioctl limits
->   */
-> @@ -797,6 +842,7 @@ struct xfs_scrub_metadata {
->  /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
->  #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
->  #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
-> +#define XFS_IOC_GETPPOINTER	_IOR ('X', 62, struct xfs_parent_ptr)
->  
->  /*
->   * ioctl commands that replace IRIX syssgi()'s
-> diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-> index cb546652bde9..a5b99f30bc63 100644
-> --- a/fs/xfs/libxfs/xfs_parent.c
-> +++ b/fs/xfs/libxfs/xfs_parent.c
-> @@ -33,6 +33,16 @@
->  #include "xfs_attr_sf.h"
->  #include "xfs_bmap.h"
->  
-> +/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
-> +void
-> +xfs_init_parent_ptr(struct xfs_parent_ptr		*xpp,
-> +		     struct xfs_parent_name_rec	*rec)
-
-Indenting...
-
-> +{
-> +	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
-> +	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
-> +	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
-> +}
-> +
->  /*
->   * Parent pointer attribute handling.
->   *
-> diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
-> index 10dc576ce693..fa50ada0d6a9 100644
-> --- a/fs/xfs/libxfs/xfs_parent.h
-> +++ b/fs/xfs/libxfs/xfs_parent.h
-> @@ -28,4 +28,6 @@ void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
->  			      uint32_t p_diroffset);
->  void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
->  			       struct xfs_parent_name_rec *rec);
-> +void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
-> +			 struct xfs_parent_name_rec *rec);
->  #endif	/* __XFS_PARENT_H__ */
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index e1612e99e0c5..4cd1de3e9d0b 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -37,6 +37,7 @@
->  #include "xfs_health.h"
->  #include "xfs_reflink.h"
->  #include "xfs_ioctl.h"
-> +#include "xfs_parent_utils.h"
->  #include "xfs_xattr.h"
->  
->  #include <linux/mount.h>
-> @@ -355,6 +356,8 @@ xfs_attr_filter(
->  		return XFS_ATTR_ROOT;
->  	if (ioc_flags & XFS_IOC_ATTR_SECURE)
->  		return XFS_ATTR_SECURE;
-> +	if (ioc_flags & XFS_IOC_ATTR_PARENT)
-> +		return XFS_ATTR_PARENT;
->  	return 0;
->  }
->  
-> @@ -422,7 +425,8 @@ xfs_ioc_attr_list(
->  	/*
->  	 * Reject flags, only allow namespaces.
->  	 */
-> -	if (flags & ~(XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
-> +	if (flags & ~(XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE |
-> +		      XFS_IOC_ATTR_PARENT))
->  		return -EINVAL;
->  	if (flags == (XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
->  		return -EINVAL;
-> @@ -1672,6 +1676,87 @@ xfs_ioc_scrub_metadata(
->  	return 0;
->  }
->  
-> +/*
-> + * IOCTL routine to get the parent pointers of an inode and return it to user
-> + * space.  Caller must pass a buffer space containing a struct xfs_pptr_info,
-> + * followed by a region large enough to contain an array of struct
-> + * xfs_parent_ptr of a size specified in pi_ptrs_size.  If the inode contains
-> + * more parent pointers than can fit in the buffer space, caller may re-call
-> + * the function using the returned pi_cursor to resume iteration.  The
-> + * number of xfs_parent_ptr returned will be stored in pi_ptrs_used.
-> + *
-> + * Returns 0 on success or non-zero on failure
-> + */
-> +STATIC int
-> +xfs_ioc_get_parent_pointer(
-> +	struct file			*filp,
-> +	void				__user *arg)
-> +{
-> +	struct xfs_pptr_info		*ppi = NULL;
-> +	int				error = 0;
-> +	struct xfs_inode		*ip = XFS_I(file_inode(filp));
-> +	struct xfs_mount		*mp = ip->i_mount;
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EPERM;
-> +
-> +	/* Allocate an xfs_pptr_info to put the user data */
-> +	ppi = kmem_alloc(sizeof(struct xfs_pptr_info), 0);
-> +	if (!ppi)
-> +		return -ENOMEM;
-> +
-> +	/* Copy the data from the user */
-> +	error = copy_from_user(ppi, arg, sizeof(struct xfs_pptr_info));
-> +	if (error)
-> +		goto out;
-> +
-> +	/* Check size of buffer requested by user */
-> +	if (XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size) > XFS_XATTR_LIST_MAX) {
-> +		error = -ENOMEM;
-> +		goto out;
-> +	}
-> +
-> +	/*
-> +	 * Now that we know how big the trailing buffer is, expand
-> +	 * our kernel xfs_pptr_info to be the same size
-> +	 */
-> +	ppi = krealloc(ppi, XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size),
-> +		       GFP_NOFS | __GFP_NOFAIL);
-> +	if (!ppi)
-> +		return -ENOMEM;
-> +
-> +	if (ppi->pi_flags != 0 && ppi->pi_flags != XFS_PPTR_IFLAG_HANDLE) {
-
-Flags validation should come before the big memory allocation.
-
-> +		error = -EINVAL;
-> +		goto out;
-> +	}
-> +
-> +	if (ppi->pi_flags == XFS_PPTR_IFLAG_HANDLE) {
-> +		error = xfs_iget(mp, NULL, ppi->pi_handle.ha_fid.fid_ino,
-> +				0, 0, &ip);
-> +		if (error)
-> +			goto out;
-
-This ought to be checking the generation number in the file handle.
-
-> +	}
-> +
-> +	if (ip->i_ino == mp->m_sb.sb_rootino)
-> +		ppi->pi_flags |= XFS_PPTR_OFLAG_ROOT;
-> +
-> +	/* Get the parent pointers */
-> +	error = xfs_attr_get_parent_pointer(ip, ppi);
-> +
-> +	if (error)
-> +		goto out;
-> +
-> +	/* Copy the parent pointers back to the user */
-> +	error = copy_to_user(arg, ppi,
-> +			XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size));
-> +	if (error)
-> +		goto out;
-> +
-> +out:
-> +	kmem_free(ppi);
-> +	return error;
-> +}
-> +
->  int
->  xfs_ioc_swapext(
->  	xfs_swapext_t	*sxp)
-> @@ -1961,7 +2046,8 @@ xfs_file_ioctl(
->  
->  	case XFS_IOC_FSGETXATTRA:
->  		return xfs_ioc_fsgetxattra(ip, arg);
-> -
-> +	case XFS_IOC_GETPPOINTER:
-> +		return xfs_ioc_get_parent_pointer(filp, arg);
->  	case XFS_IOC_GETBMAP:
->  	case XFS_IOC_GETBMAPA:
->  	case XFS_IOC_GETBMAPX:
-> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> index 758702b9495f..765eb514a917 100644
-> --- a/fs/xfs/xfs_ondisk.h
-> +++ b/fs/xfs/xfs_ondisk.h
-> @@ -135,6 +135,10 @@ xfs_check_ondisk_structs(void)
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_attri_log_format,	40);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_attrd_log_format,	16);
->  
-> +	/* parent pointer ioctls */
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_parent_ptr,            280);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_pptr_info,             104);
-> +
->  	/*
->  	 * The v5 superblock format extended several v4 header structures with
->  	 * additional data. While new fields are only accessible on v5
-> diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
-> new file mode 100644
-> index 000000000000..9880718395c6
-> --- /dev/null
-> +++ b/fs/xfs/xfs_parent_utils.c
-> @@ -0,0 +1,133 @@
-> +/*
-> + * Copyright (c) 2015 Red Hat, Inc.
-> + * All rights reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation
-> + */
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_format.h"
-> +#include "xfs_log_format.h"
-> +#include "xfs_shared.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
-> +#include "xfs_bmap_btree.h"
-> +#include "xfs_inode.h"
-> +#include "xfs_error.h"
-> +#include "xfs_trace.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
-> +#include "xfs_attr.h"
-> +#include "xfs_ioctl.h"
-> +#include "xfs_parent.h"
-> +#include "xfs_da_btree.h"
-> +
-> +/*
-> + * Get the parent pointers for a given inode
-> + *
-> + * Returns 0 on success and non zero on error
-> + */
-> +int
-> +xfs_attr_get_parent_pointer(struct xfs_inode		*ip,
-> +			    struct xfs_pptr_info	*ppi)
-> +
-
-Indenting.  Also, should this go in xfs_parent.c ?
-
-> +{
-> +
-> +	struct xfs_attrlist		*alist;
-> +	struct xfs_attrlist_ent		*aent;
-> +	struct xfs_parent_ptr		*xpp;
-> +	struct xfs_parent_name_rec	*xpnr;
-> +	char				*namebuf;
-> +	unsigned int			namebuf_size;
-> +	int				name_len;
-> +	int				error = 0;
-> +	unsigned int			ioc_flags = XFS_IOC_ATTR_PARENT;
-> +	unsigned int			flags = XFS_ATTR_PARENT;
-> +	int				i;
-> +	struct xfs_attr_list_context	context;
-> +	struct xfs_da_args		args;
-> +
-> +	/* Allocate a buffer to store the attribute names */
-> +	namebuf_size = sizeof(struct xfs_attrlist) +
-> +		       (ppi->pi_ptrs_size) * sizeof(struct xfs_attrlist_ent);
-> +	namebuf = kvzalloc(namebuf_size, GFP_KERNEL);
-> +	if (!namebuf)
-> +		return -ENOMEM;
-> +
-> +	memset(&context, 0, sizeof(struct xfs_attr_list_context));
-> +	error = xfs_ioc_attr_list_context_init(ip, namebuf, namebuf_size,
-> +			ioc_flags, &context);
-> +
-> +	/* Copy the cursor provided by caller */
-> +	memcpy(&context.cursor, &ppi->pi_cursor,
-> +	       sizeof(struct xfs_attrlist_cursor));
-> +
-> +	if (error)
-> +		goto out_kfree;
-> +
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +
-> +	error = xfs_attr_list_ilocked(&context);
-> +	if (error)
-> +		goto out_kfree;
-> +
-> +	alist = (struct xfs_attrlist *)namebuf;
-> +	for (i = 0; i < alist->al_count; i++) {
-> +		xpp = XFS_PPINFO_TO_PP(ppi, i);
-> +		memset(xpp, 0, sizeof(struct xfs_parent_ptr));
-> +		aent = (struct xfs_attrlist_ent *)
-> +			&namebuf[alist->al_offset[i]];
-> +		xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
-> +
-> +		if (aent->a_valuelen > XFS_PPTR_MAXNAMELEN) {
-> +			error = -ERANGE;
-> +			goto out_kfree;
-> +		}
-> +		name_len = aent->a_valuelen;
-> +
-> +		memset(&args, 0, sizeof(args));
-> +		args.geo = ip->i_mount->m_attr_geo;
-> +		args.whichfork = XFS_ATTR_FORK;
-> +		args.dp = ip;
-> +		args.name = (char *)xpnr;
-> +		args.namelen = sizeof(struct xfs_parent_name_rec);
-> +		args.attr_filter = flags;
-> +		args.hashval = xfs_da_hashname(args.name, args.namelen);
-> +		args.value = (unsigned char *)(xpp->xpp_name);
-> +		args.valuelen = name_len;
-> +		args.op_flags = XFS_DA_OP_OKNOENT;
-
-You might want to convert this to a C99 named initialization inside the
-loop body.
-
-Otherwise looks ok.
-
---D
-
-> +
-> +		error = xfs_attr_get_ilocked(&args);
-> +		error = (error == -EEXIST ? 0 : error);
-> +		if (error)
-> +			goto out_kfree;
-> +
-> +		xpp->xpp_namelen = name_len;
-> +		xfs_init_parent_ptr(xpp, xpnr);
-> +	}
-> +	ppi->pi_ptrs_used = alist->al_count;
-> +	if (!alist->al_more)
-> +		ppi->pi_flags |= XFS_PPTR_OFLAG_DONE;
-> +
-> +	/* Update the caller with the current cursor position */
-> +	memcpy(&ppi->pi_cursor, &context.cursor,
-> +		sizeof(struct xfs_attrlist_cursor));
-> +
-> +out_kfree:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	kmem_free(namebuf);
-> +
-> +	return error;
-> +}
-> +
-> diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
-> new file mode 100644
-> index 000000000000..0e952b2ebd4a
-> --- /dev/null
-> +++ b/fs/xfs/xfs_parent_utils.h
-> @@ -0,0 +1,22 @@
-> +/*
-> + * Copyright (c) 2017 Oracle, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation Inc.
-> + */
-> +#ifndef	__XFS_PARENT_UTILS_H__
-> +#define	__XFS_PARENT_UTILS_H__
-> +
-> +int xfs_attr_get_parent_pointer(struct xfs_inode *ip,
-> +				struct xfs_pptr_info *ppi);
-> +#endif	/* __XFS_PARENT_UTILS_H__ */
-> -- 
-> 2.25.1
+>  Could the comment simply read:
 > 
+> 	/* parent pointer attrs */
+> 
+> ?
+> 
+Yes, will fix.  Thx for the catch
+
+Allison
+
+> (The rest looks fine...)
+> 
+> --D
+> 
+> >  #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle
+> > of create/delete */
+> >  #define XFS_ATTR_LOCAL		(1u << XFS_ATTR_LOCAL_BIT)
+> >  #define XFS_ATTR_ROOT		(1u << XFS_ATTR_ROOT_BIT)
+> >  #define XFS_ATTR_SECURE		(1u << XFS_ATTR_SECURE_BIT)
+> > +#define XFS_ATTR_PARENT		(1u << XFS_ATTR_PARENT_BIT)
+> >  #define XFS_ATTR_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
+> > -#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT |
+> > XFS_ATTR_SECURE)
+> > +#define XFS_ATTR_NSP_ONDISK_MASK \
+> > +			(XFS_ATTR_ROOT | XFS_ATTR_SECURE |
+> > XFS_ATTR_PARENT)
+> >  
+> >  /*
+> >   * Alignment for namelist and valuelist entries (since they are
+> > mixed
+> > diff --git a/fs/xfs/libxfs/xfs_log_format.h
+> > b/fs/xfs/libxfs/xfs_log_format.h
+> > index b351b9dc6561..eea53874fde8 100644
+> > --- a/fs/xfs/libxfs/xfs_log_format.h
+> > +++ b/fs/xfs/libxfs/xfs_log_format.h
+> > @@ -917,6 +917,7 @@ struct xfs_icreate_log {
+> >   */
+> >  #define XFS_ATTRI_FILTER_MASK		(XFS_ATTR_ROOT | \
+> >  					 XFS_ATTR_SECURE | \
+> > +					 XFS_ATTR_PARENT | \
+> >  					 XFS_ATTR_INCOMPLETE)
+> >  
+> >  /*
+> > -- 
+> > 2.25.1
+> > 
+
