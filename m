@@ -2,120 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85AE4C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 23:31:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D146DC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 23:56:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230099AbiF2Xbd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 19:31:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38456 "EHLO
+        id S230482AbiF2X4C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 19:56:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229821AbiF2Xbc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 19:31:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C873625C;
-        Wed, 29 Jun 2022 16:31:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6BD11614D9;
-        Wed, 29 Jun 2022 23:31:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AD79C34114;
-        Wed, 29 Jun 2022 23:31:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1656545490;
-        bh=EUtoD6mxDI6S48VU4JnwbI++d7sfQ0Ba+nGXTEVn3jI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Ko/bDBvXxEcl48eumHeFgpRmNjd7wuaH7G0qP1t6sIobV5qNgwt9GvaQkmQ+8dLZe
-         hKn2EQAupvKSihpNA1xULMkEVgDQpKd2GPIe2XSS8++/sO3ZQjzDOdGljxu/viVmyv
-         Z6MSvOI4xrcShSRXxM7iYVplJ7VEnCGXQnVIYp5g=
-Date:   Wed, 29 Jun 2022 16:31:28 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     David Hildenbrand <david@redhat.com>
-Cc:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com,
-        Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org
-Subject: Re: [PATCH v7 03/14] mm: handling Non-LRU pages returned by
- vm_normal_pages
-Message-Id: <20220629163128.7002f81b6346b2ed34d4d02a@linux-foundation.org>
-In-Reply-To: <269e4c6e-d6ee-bace-9fab-a9dcb4268d5a@redhat.com>
-References: <20220629035426.20013-1-alex.sierra@amd.com>
-        <20220629035426.20013-4-alex.sierra@amd.com>
-        <269e4c6e-d6ee-bace-9fab-a9dcb4268d5a@redhat.com>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S231469AbiF2X4C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 19:56:02 -0400
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BBE126AC3
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 16:56:01 -0700 (PDT)
+Received: by mail-pg1-x535.google.com with SMTP id h192so16845263pgc.4
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 16:56:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=IAj4NdWFknlo+kxec3gjgChbQ7ClhCosfaATaGmqsIs=;
+        b=NC2U1IOgt3Y7Q+v3Ly2Nkn5NpnoZFdRqmMyGmMuuAIzkLwq3zc4QVbyL3DxoWdnd9C
+         ldq+1mR/RZo2qGJf7e7tE/f6A4+Xc9M9ZmI9poFuHdl5oPzAffdfPEr21ZeapM/XvGvB
+         mjXBBUWj9Tml5PwVzuV09zuRGifojNA0WWoOpX6r5+ZNFJlmcErEOs6+KjLV+p0ZDqP+
+         CP2Dv5WO9els7OC6hTYVNaeeIJlEykW8V08UgCTHbSER5m1D+YOdDpK0xoKSkrcvEJM6
+         hZeHmhk07dc9anV0SrIEtra6lOqbKSv8q4SsUH4ClOueK4mu7Bk0k7EgIdgY3tsd7RSa
+         N9rg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=IAj4NdWFknlo+kxec3gjgChbQ7ClhCosfaATaGmqsIs=;
+        b=OHlWnG3SVRKNuIBE1RGtP8Vox5uxCtfUAgTd6NKBL3XpXcxj1hBV45+TJXOyiXmYT8
+         7QQx7As0N/V3V7DyDtDdIesfuQ9a+xaqO89cleE95HSVtClBpI8TYstrxCvWE+TLuqaF
+         lG7ma5HOABNfcaz/IFyKfpfzSK54AYiVJHTLF1vC0x9LHwDbGJEycPpohxZRozTzizlj
+         U1BO2t3Xbse9nJGbckAJCG3iieVuukdj5zMhfj/B9N9BGQJkN8+Q1WVOsLE0D6E6sgym
+         PBTC3YKJSAnLMS1PhGxPa+rrUD3rO05WwtTOIZ+ByPoOo8a9wdfEOL73kpRVVgMpxTTc
+         82NQ==
+X-Gm-Message-State: AJIora/Fcv7/BFKX3m6s/jxjGtHlncwxUT5Rq85otxi/iIlGYxRhPOZS
+        dI08+1SBp8k3O7MUDDWqm0CSa4oAeLs=
+X-Google-Smtp-Source: AGRyM1sUdoAGE3mW0/PDahRYnMTNdkaXfn0bjo5mXs/UZPXHMS0G1+AJK3hEhrwJzxc93Ne0+Myqgw==
+X-Received: by 2002:a63:9d41:0:b0:40c:67af:1fed with SMTP id i62-20020a639d41000000b0040c67af1fedmr4890244pgd.185.1656546960818;
+        Wed, 29 Jun 2022 16:56:00 -0700 (PDT)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2cd:202:cf91:455:e9ca:1ec9])
+        by smtp.gmail.com with ESMTPSA id md4-20020a17090b23c400b001ecb5602944sm263562pjb.28.2022.06.29.16.56.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Jun 2022 16:56:00 -0700 (PDT)
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     djwong@kernel.org, Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [5.15] MAINTAINERS: add Leah as xfs maintainer for 5.15.y
+Date:   Wed, 29 Jun 2022 16:55:46 -0700
+Message-Id: <20220629235546.3843096-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.37.0.rc0.161.g10f37bed90-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 29 Jun 2022 11:59:26 +0200 David Hildenbrand <david@redhat.com> wrote:
+Update MAINTAINERS for xfs in an effort to help direct bots/questions
+about xfs in 5.15.y.
 
-> On 29.06.22 05:54, Alex Sierra wrote:
-> > With DEVICE_COHERENT, we'll soon have vm_normal_pages() return
-> > device-managed anonymous pages that are not LRU pages. Although they
-> > behave like normal pages for purposes of mapping in CPU page, and for
-> > COW. They do not support LRU lists, NUMA migration or THP.
-> > 
-> > Callers to follow_page that expect LRU pages, are also checked for
-> > device zone pages due to DEVICE_COHERENT type.
-> 
-> Can we rephrase that to (because zeropage)
-> 
-> "Callers to follow_page() currently don't expect ZONE_DEVICE pages,
-> however, with DEVICE_COHERENT we might now return ZONE_DEVICE. Check for
-> ZONE_DEVICE pages in applicable users of follow_page() as well."
+Note: 5.10.y [1] and 5.4.y will have different updates to their
+respective MAINTAINERS files for this effort.
 
-I made that change to my copy.
+Suggested-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 
-> > --- a/mm/memory.c
-> > +++ b/mm/memory.c
-> > @@ -624,6 +624,13 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
-> >  		if (is_zero_pfn(pfn))
-> >  			return NULL;
-> >  		if (pte_devmap(pte))
-> > +/*
-> > + * NOTE: New uers of ZONE_DEVICE will not set pte_devmap() and will have
-> 
-> s/uers/users/
-> 
-> > + * refcounts incremented on their struct pages when they are inserted into
-> > + * PTEs, thus they are safe to return here. Legacy ZONE_DEVICE pages that set
-> > + * pte_devmap() do not have refcounts. Example of legacy ZONE_DEVICE is
-> > + * MEMORY_DEVICE_FS_DAX type in pmem or virtio_fs drivers.
-> > + */
+[1] https://lore.kernel.org/linux-xfs/20220629213236.495647-1-amir73il@gmail.com/
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
-And let's regularize that comment placement?
-
---- a/mm/memory.c~mm-handling-non-lru-pages-returned-by-vm_normal_pages-fix
-+++ a/mm/memory.c
-@@ -632,16 +632,16 @@ struct page *vm_normal_page(struct vm_ar
- 			return NULL;
- 		if (is_zero_pfn(pfn))
- 			return NULL;
-+		/*
-+		 * NOTE: New users of ZONE_DEVICE will not set pte_devmap()
-+		 * and will have refcounts incremented on their struct pages
-+		 * when they are inserted into PTEs, thus they are safe to
-+		 * return here. Legacy ZONE_DEVICE pages that set pte_devmap()
-+		 * do not have refcounts. Example of legacy ZONE_DEVICE is
-+		 * MEMORY_DEVICE_FS_DAX type in pmem or virtio_fs drivers.
-+		 */
- 		if (pte_devmap(pte))
--/*
-- * NOTE: New uers of ZONE_DEVICE will not set pte_devmap() and will have
-- * refcounts incremented on their struct pages when they are inserted into
-- * PTEs, thus they are safe to return here. Legacy ZONE_DEVICE pages that set
-- * pte_devmap() do not have refcounts. Example of legacy ZONE_DEVICE is
-- * MEMORY_DEVICE_FS_DAX type in pmem or virtio_fs drivers.
-- */
- 			return NULL;
--
- 		print_bad_pte(vma, addr, pte, NULL);
- 		return NULL;
- 	}
-_
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 393706e85ba2..a60d7e0466af 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20579,6 +20579,7 @@ F:	drivers/xen/*swiotlb*
+ 
+ XFS FILESYSTEM
+ C:	irc://irc.oftc.net/xfs
++M:	Leah Rumancik <leah.rumancik@gmail.com>
+ M:	Darrick J. Wong <djwong@kernel.org>
+ M:	linux-xfs@vger.kernel.org
+ L:	linux-xfs@vger.kernel.org
+-- 
+2.37.0.rc0.161.g10f37bed90-goog
 
