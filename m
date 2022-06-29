@@ -2,149 +2,176 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EAA2C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 09:59:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A3DC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 12:57:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230311AbiF2J7e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 05:59:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45352 "EHLO
+        id S233429AbiF2M5j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 08:57:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233027AbiF2J7d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 05:59:33 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0AD553CA62
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 02:59:32 -0700 (PDT)
+        with ESMTP id S232889AbiF2M5i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 08:57:38 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7C29D37A3C
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 05:57:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1656496772;
+        s=mimecast20190719; t=1656507455;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=UzceN8npiU1PHAzECBm7qOnZjHThBc7uhuHl4hlHZrs=;
-        b=XK2lTjra8JdO2gyGFCO4NCiFZmiQgqdzG9QQmfBKTM8LQgCv1VUs5EyYD6A3vQVCDyCIkc
-        vAutlbbfQWb6oCeW5nmlCAezVFZhTZcWA+QCwDzNZVGmUjXb+LDINjG4hutzvE/jeccxXc
-        9BMVp6TO/FmWM380IPfL8YzwMs3k4cU=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=NI8li6i4Fa8od6Xwnv5YISnQaEXRgLZN/bKwtyutLW8=;
+        b=Yoj2NUeph1kTm5+PZq5W3JV0xCVLm9u5+qnaYkfN4qtju+bjHvyLExbeE7acNdpxY/cNEW
+        CRGlgpdSNCTDpjIIQntDmXI2ujJO42GYTMu7Km/2v8qLpvXmMFajYMxPK4EtX3kLnuSq0c
+        dZ4vkQ/raAeNxOaUun1fUSqoTSSt5jg=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-248-Q37zpwdAPQuFh4tTmotF0g-1; Wed, 29 Jun 2022 05:59:29 -0400
-X-MC-Unique: Q37zpwdAPQuFh4tTmotF0g-1
-Received: by mail-wr1-f69.google.com with SMTP id s1-20020a5d69c1000000b0021b9f3abfebso2262001wrw.2
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 02:59:29 -0700 (PDT)
+ us-mta-629-dQV36m-mPomUF3ud6xANQw-1; Wed, 29 Jun 2022 08:57:34 -0400
+X-MC-Unique: dQV36m-mPomUF3ud6xANQw-1
+Received: by mail-qv1-f69.google.com with SMTP id kj4-20020a056214528400b0044399a9bb4cso15260239qvb.15
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 05:57:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:cc:references:from:organization:subject
-         :in-reply-to:content-transfer-encoding;
-        bh=UzceN8npiU1PHAzECBm7qOnZjHThBc7uhuHl4hlHZrs=;
-        b=3IGB/7Jeqr3606ui6z28dTSfJS/2dsBLOEfxLKGudSPk53cdtmgNcGZJZKhdYzssbJ
-         MOVLwlUXQECs3Ws4Zu3+7lpORbyez1tB/P+IEJpQXeBI7jlpEZmbPQh7rC6lVjH2sCDb
-         yHUYPYRpMweqjhlXv2wM/QRLY3RxJmOGipLjWkzCwhKHq3Va0+J+nb2r5XtPVcJauERi
-         SYC9i2vvPfcFGFwssK1oFlpWjPhc+oDUxKwKpqUI8SQ6MRbaKRgx03mzv8JqJG2RdFVs
-         Efe1th/cpXw4DjSNeAvwVEWFVku9NdgLzj1Gq2ddlettPIIWxaiQGUOJ5UN/rKuNf89O
-         nudQ==
-X-Gm-Message-State: AJIora/w2f0ulS6LGhPovqTz/NEojYbnzFSmFVL3N9wWDaN+7e+sdxdo
-        dvGXky7jPH4lzAc56hPiX6S1sco155Yoowr0+Qcjp53Xg6HMFdNWonhyh08hKKv96+aJmT+J5w8
-        lKYpUiOTQm0zEyFS9mrNZ
-X-Received: by 2002:a7b:c5d0:0:b0:3a0:3dc8:73a1 with SMTP id n16-20020a7bc5d0000000b003a03dc873a1mr2664068wmk.98.1656496768474;
-        Wed, 29 Jun 2022 02:59:28 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1uzk/B6PTZXrzHxht/mKCZa7GoCf9iThGNKGutixbwHJDxt/oLs1rYeiHv7jfh4fv2kOpV6+w==
-X-Received: by 2002:a7b:c5d0:0:b0:3a0:3dc8:73a1 with SMTP id n16-20020a7bc5d0000000b003a03dc873a1mr2664041wmk.98.1656496768236;
-        Wed, 29 Jun 2022 02:59:28 -0700 (PDT)
-Received: from ?IPV6:2003:cb:c708:e600:d4fa:af4b:d7b6:20df? (p200300cbc708e600d4faaf4bd7b620df.dip0.t-ipconnect.de. [2003:cb:c708:e600:d4fa:af4b:d7b6:20df])
-        by smtp.gmail.com with ESMTPSA id y6-20020a05600c20c600b003a0426fae52sm2555196wmm.24.2022.06.29.02.59.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Jun 2022 02:59:27 -0700 (PDT)
-Message-ID: <269e4c6e-d6ee-bace-9fab-a9dcb4268d5a@redhat.com>
-Date:   Wed, 29 Jun 2022 11:59:26 +0200
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=NI8li6i4Fa8od6Xwnv5YISnQaEXRgLZN/bKwtyutLW8=;
+        b=F9BHFmiGV9qWN288lrm7Yq9hjh8hCrkua5qlvLrV/faTUYsLmrS0slY1C9+y53VwL2
+         s2WBXhelTcBHiZccp292/vVXMcbCEW+pZOwOAoA2jZL7HZ5/lm6KtcbEH1U/rXwEN7KS
+         nNlKUbXfzZ36ZSWkvJbxsqjwvfPbd5gF7Uu2bZtGsOxO2/iLBYCBJWNI/F55l9WIFafZ
+         nKqc/swKGzPiPDmQ8lslUX34JbCFXKoJnLEPoiz1v1jlyqXN5aMi/UI4wxpCTlUK1rm3
+         j3ocfiyiE2wPvWG1+A3pgsthcsTLg8R0lTQNIcEbPy/ojkRF9rmUpQBu02ewCI/RHv2s
+         OmiQ==
+X-Gm-Message-State: AJIora/qU0kiDZBTDNrQ7E+f46Ylb5VSvm8Njnd9VCqz05bzpidouhYl
+        Z19zVN+VLoTTypbFLPtCuBfio90z4HmNNKagYMKDTM/Z0Lp8oeBZfJLMHzX9ahy857oj61Xy3lw
+        9L4sO/RqghU8tSnNUEOiL
+X-Received: by 2002:a05:6214:ac1:b0:472:a974:59b9 with SMTP id g1-20020a0562140ac100b00472a97459b9mr966713qvi.130.1656507453507;
+        Wed, 29 Jun 2022 05:57:33 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1spkVv4gEXBYIpaGadRuLqknIV0kmMSAfF1s4zAypEPVpP875350aVTH3LbG8XV2+b0HyB/hw==
+X-Received: by 2002:a05:6214:ac1:b0:472:a974:59b9 with SMTP id g1-20020a0562140ac100b00472a97459b9mr966685qvi.130.1656507453162;
+        Wed, 29 Jun 2022 05:57:33 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id b12-20020ac86bcc000000b00304ef50af9fsm10484612qtt.2.2022.06.29.05.57.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Jun 2022 05:57:32 -0700 (PDT)
+Date:   Wed, 29 Jun 2022 08:57:30 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        linux-mm@kvack.org
+Subject: Re: Multi-page folio issues in 5.19-rc4 (was [PATCH v3 25/25] xfs:
+ Support large folios)
+Message-ID: <YrxMOgIvKVe6u/uR@bfoster>
+References: <YrO243DkbckLTfP7@magnolia>
+ <Yrku31ws6OCxRGSQ@magnolia>
+ <Yrm6YM2uS+qOoPcn@casper.infradead.org>
+ <YrosM1+yvMYliw2l@magnolia>
+ <20220628073120.GI227878@dread.disaster.area>
+ <YrrlrMK/7pyZwZj2@casper.infradead.org>
+ <Yrrmq4hmJPkf5V7s@casper.infradead.org>
+ <Yrr/oBlf1Eig8uKS@casper.infradead.org>
+ <20220628221757.GJ227878@dread.disaster.area>
+ <YruNE72sW4Aizq8U@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Content-Language: en-US
-To:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
-Cc:     Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org, akpm@linux-foundation.org
-References: <20220629035426.20013-1-alex.sierra@amd.com>
- <20220629035426.20013-4-alex.sierra@amd.com>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat
-Subject: Re: [PATCH v7 03/14] mm: handling Non-LRU pages returned by
- vm_normal_pages
-In-Reply-To: <20220629035426.20013-4-alex.sierra@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YruNE72sW4Aizq8U@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 29.06.22 05:54, Alex Sierra wrote:
-> With DEVICE_COHERENT, we'll soon have vm_normal_pages() return
-> device-managed anonymous pages that are not LRU pages. Although they
-> behave like normal pages for purposes of mapping in CPU page, and for
-> COW. They do not support LRU lists, NUMA migration or THP.
+On Tue, Jun 28, 2022 at 04:21:55PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 29, 2022 at 08:17:57AM +1000, Dave Chinner wrote:
+> > On Tue, Jun 28, 2022 at 02:18:24PM +0100, Matthew Wilcox wrote:
+> > > On Tue, Jun 28, 2022 at 12:31:55PM +0100, Matthew Wilcox wrote:
+> > > > On Tue, Jun 28, 2022 at 12:27:40PM +0100, Matthew Wilcox wrote:
+> > > > > On Tue, Jun 28, 2022 at 05:31:20PM +1000, Dave Chinner wrote:
+> > > > > > So using this technique, I've discovered that there's a dirty page
+> > > > > > accounting leak that eventually results in fsx hanging in
+> > > > > > balance_dirty_pages().
+> > > > > 
+> > > > > Alas, I think this is only an accounting error, and not related to
+> > > > > the problem(s) that Darrick & Zorro are seeing.  I think what you're
+> > > > > seeing is dirty pages being dropped at truncation without the
+> > > > > appropriate accounting.  ie this should be the fix:
+> > > > 
+> > > > Argh, try one that actually compiles.
+> > > 
+> > > ... that one's going to underflow the accounting.  Maybe I shouldn't
+> > > be writing code at 6am?
+> > > 
+> > > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> > > index f7248002dad9..4eec6ee83e44 100644
+> > > --- a/mm/huge_memory.c
+> > > +++ b/mm/huge_memory.c
+> > > @@ -18,6 +18,7 @@
+> > >  #include <linux/shrinker.h>
+> > >  #include <linux/mm_inline.h>
+> > >  #include <linux/swapops.h>
+> > > +#include <linux/backing-dev.h>
+> > >  #include <linux/dax.h>
+> > >  #include <linux/khugepaged.h>
+> > >  #include <linux/freezer.h>
+> > > @@ -2439,11 +2440,15 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+> > >  		__split_huge_page_tail(head, i, lruvec, list);
+> > >  		/* Some pages can be beyond EOF: drop them from page cache */
+> > >  		if (head[i].index >= end) {
+> > > -			ClearPageDirty(head + i);
+> > > -			__delete_from_page_cache(head + i, NULL);
+> > > +			struct folio *tail = page_folio(head + i);
+> > > +
+> > >  			if (shmem_mapping(head->mapping))
+> > >  				shmem_uncharge(head->mapping->host, 1);
+> > > -			put_page(head + i);
+> > > +			else if (folio_test_clear_dirty(tail))
+> > > +				folio_account_cleaned(tail,
+> > > +					inode_to_wb(folio->mapping->host));
+> > > +			__filemap_remove_folio(tail, NULL);
+> > > +			folio_put(tail);
+> > >  		} else if (!PageAnon(page)) {
+> > >  			__xa_store(&head->mapping->i_pages, head[i].index,
+> > >  					head + i, 0);
+> > > 
+> > 
+> > Yup, that fixes the leak.
+> > 
+> > Tested-by: Dave Chinner <dchinner@redhat.com>
 > 
-> Callers to follow_page that expect LRU pages, are also checked for
-> device zone pages due to DEVICE_COHERENT type.
+> Four hours of generic/522 running is long enough to conclude that this
+> is likely the fix for my problem and migrate long soak testing to my
+> main g/522 rig and:
+> 
+> Tested-by: Darrick J. Wong <djwong@kernel.org>
+> 
 
-Can we rephrase that to (because zeropage)
+Just based on Willy's earlier comment.. what I would probably be a
+little careful/curious about here is whether the accounting fix leads to
+an indirect behavior change that does impact reproducibility of the
+corruption problem. For example, does artificially escalated dirty page
+tracking lead to increased reclaim/writeback activity than might
+otherwise occur, and thus contend with the fs workload? Clearly it has
+some impact based on Dave's balance_dirty_pages() problem reproducer,
+but I don't know if it extends beyond that off the top of my head. That
+might make some sense if the workload is fsx, since that doesn't
+typically stress cache/memory usage the way a large fsstress workload or
+something might.
 
-"Callers to follow_page() currently don't expect ZONE_DEVICE pages,
-however, with DEVICE_COHERENT we might now return ZONE_DEVICE. Check for
-ZONE_DEVICE pages in applicable users of follow_page() as well."
+So for example, interesting questions might be... Do your corruption
+events happen to correspond with dirty page accounting crossing some
+threshold based on available memory in your test environment? Does
+reducing available memory affect reproducibility? Etc.
 
+Brian
 
-
-[...]
-
->  		/*
-> diff --git a/mm/memory.c b/mm/memory.c
-> index 7a089145cad4..e18555af9024 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -624,6 +624,13 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
->  		if (is_zero_pfn(pfn))
->  			return NULL;
->  		if (pte_devmap(pte))
-> +/*
-> + * NOTE: New uers of ZONE_DEVICE will not set pte_devmap() and will have
-
-s/uers/users/
-
-> + * refcounts incremented on their struct pages when they are inserted into
-> + * PTEs, thus they are safe to return here. Legacy ZONE_DEVICE pages that set
-> + * pte_devmap() do not have refcounts. Example of legacy ZONE_DEVICE is
-> + * MEMORY_DEVICE_FS_DAX type in pmem or virtio_fs drivers.
-> + */
-
-[...]
-
-> diff --git a/mm/mprotect.c b/mm/mprotect.c
-> index ba5592655ee3..e034aae2a98b 100644
-> --- a/mm/mprotect.c
-> +++ b/mm/mprotect.c
-> @@ -95,7 +95,7 @@ static unsigned long change_pte_range(struct mmu_gather *tlb,
->  					continue;
->  
->  				page = vm_normal_page(vma, addr, oldpte);
-> -				if (!page || PageKsm(page))
-> +				if (!page || is_zone_device_page(page) || PageKsm(page))
->  					continue;
->  
->  				/* Also skip shared copy-on-write pages */
-
-In -next/-mm there is now an additional can_change_pte_writable() that
-calls vm_normal_page() --  added by me. I assume that that is indeed
-fine because we can simply map device coherent pages writable.
-
-Besides the nits, LGTM
-
-Acked-by: David Hildenbrand <david@redhat.com>
-
--- 
-Thanks,
-
-David / dhildenb
+> --D
+> 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> 
 
