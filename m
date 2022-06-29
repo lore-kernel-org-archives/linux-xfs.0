@@ -2,139 +2,226 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F250DC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 16:23:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D46CBC43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 17:35:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229747AbiF2QXq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 12:23:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37196 "EHLO
+        id S231431AbiF2Rf4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 13:35:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229699AbiF2QXo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 12:23:44 -0400
-Received: from ip27.imatronix.com (ip27.imatronix.com [200.63.97.108])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A1773057B
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 09:23:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=superfactura.cl; s=default; h=Content-Transfer-Encoding:Content-Type:To:
-        Subject:From:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=VE1tHBCuqOIXnR6RGO4x/WK5Yhial2SWrfcLR602KBA=; b=ev3VYyZkqKrmp9OVJvF4oOtht0
-        U8JT1Z3wRYtDX/QCA/LyX3MwmMxBMACBfEL3hpfAfjI/cT5vw/TW8/IXKJN+dDAfjMSwfXzilbVca
-        5QFww0xK2feGibznJGEyM6jKcM08ctbIEPs2IgGF4Qv61bmhy8eRa9BmrR1MvxX6Y920BwiYsccRs
-        7+BIVGRcRTPklFDpHHM6mMdBPp9LjEQmuJKjHqlyoIrFPkCYXF8IwyPT0/KCSYzp04CYKId+Wd/Uh
-        M3nKElV1puzdM7o4Gf5jiyf1vL/KSAjWKayuo3kXsfF8XJJ6ZKjuE5iFqDvWrHQHfZpL5PUepFrA0
-        DpI3EyAg==;
-Received:    from [200.73.112.45]
-           by cpanel.imatronix.com    with esmtpsa    (TLS1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-           (Exim 4.95)
-           (envelope-from <kripper@imatronix.cl>)
-           id 1o6aTe-0002EM-RS   
-        for linux-xfs@vger.kernel.org;
-        Wed, 29 Jun 2022 12:23:41 -0400
-Message-ID: <ca9d19d4-01f8-6435-f536-d87371dcbbde@imatronix.cl>
-Date:   Wed, 29 Jun 2022 12:23:36 -0400
+        with ESMTP id S231553AbiF2Rfs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 13:35:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CADF3150C
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 10:35:47 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AB13661E4F
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 17:35:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0792CC34114;
+        Wed, 29 Jun 2022 17:35:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656524146;
+        bh=ziL+9LpzM/V+T+iAEE1EUu3EpGwybBJTqcySo3eEa4Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ns8kjslAoLpAkhl42tMv+lUvNAwyH5+BX9Ny314fTd3es/wAMVC2z6jGOhLhNl+6F
+         3FpzR2ebxBknNAaCVwpCbgLICIcy/s8N1W+jlPCvHb5B1O5Fdj99KpYdqSTavYgoIi
+         HN41ZUOm72bqhBf38nwmj6p2+tdJ2xXhtdMNQyVEsZwZrnDrfQPGvpMCZgiJtL03OS
+         iOJjnbPd2e8vYgCC01KpaYiroSDhNZaj1cLNkMR5gvnS8dtl1+DitpOks4G6MyfE/t
+         Goxk5hS40qlg9Wh8jx+mtY1okWBC8AssuEVZlpaGwYIbZJZ/MnA/GcRAq3/vRBigsk
+         eezk1dvcBEmFg==
+Date:   Wed, 29 Jun 2022 10:35:45 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v1 12/17] xfs: remove parent pointers in unlink
+Message-ID: <YryNcV4uiLNHPzyp@magnolia>
+References: <20220611094200.129502-1-allison.henderson@oracle.com>
+ <20220611094200.129502-13-allison.henderson@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-From:   Christopher Pereira <kripper@imatronix.cl>
-Subject: XFS fs corruption - XFS_WANT_CORRUPTED_RETURN
-To:     linux-xfs@vger.kernel.org
-Content-Language: en-US
-Organization: IMATRONIX S.A.
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - cpanel.imatronix.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - imatronix.cl
-X-Get-Message-Sender-Via: cpanel.imatronix.com: authenticated_id: soporte@superfactura.cl
-X-Authenticated-Sender: cpanel.imatronix.com: soporte@superfactura.cl
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220611094200.129502-13-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Sat, Jun 11, 2022 at 02:41:55AM -0700, Allison Henderson wrote:
+> This patch removes the parent pointer attribute during unlink
+> 
+> [bfoster: rebase, use VFS inode generation]
+> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
+>            implemented xfs_attr_remove_parent]
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c |  2 +-
+>  fs/xfs/libxfs/xfs_attr.h |  1 +
+>  fs/xfs/xfs_inode.c       | 63 +++++++++++++++++++++++++++++++---------
+>  3 files changed, 51 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index f814a9177237..b86188b63897 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -966,7 +966,7 @@ xfs_attr_defer_replace(
+>  }
+>  
+>  /* Removes an attribute for an inode as a deferred operation */
+> -static int
+> +int
+>  xfs_attr_defer_remove(
+>  	struct xfs_da_args	*args)
+>  {
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 576062e37d11..386dfc8d6053 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -560,6 +560,7 @@ bool xfs_attr_is_leaf(struct xfs_inode *ip);
+>  int xfs_attr_get_ilocked(struct xfs_da_args *args);
+>  int xfs_attr_get(struct xfs_da_args *args);
+>  int xfs_attr_defer_add(struct xfs_da_args *args);
+> +int xfs_attr_defer_remove(struct xfs_da_args *args);
+>  int xfs_attr_set(struct xfs_da_args *args);
+>  int xfs_attr_set_iter(struct xfs_attr_intent *attr);
+>  int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 41c58df8e568..160f57df6d58 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2828,16 +2828,27 @@ xfs_iunpin_wait(
+>   */
+>  int
+>  xfs_remove(
+> -	xfs_inode_t             *dp,
+> -	struct xfs_name		*name,
+> -	xfs_inode_t		*ip)
+> -{
+> -	xfs_mount_t		*mp = dp->i_mount;
+> -	xfs_trans_t             *tp = NULL;
+> -	int			is_dir = S_ISDIR(VFS_I(ip)->i_mode);
+> -	int			dontcare;
+> -	int                     error = 0;
+> -	uint			resblks;
+> +	xfs_inode_t             	*dp,
 
-I've been using XFS for many years on many qemu-kvm VMs without problems.
-I do daily qcow2 snapshots and today I noticed that a snaphot I took on 
-Jun  1 2022 has a corrupted XFS root partition and doesn't boot any more 
-(on another VM instance).
-The snapshot I took the day before is clean.
-The VM is still running since May 11 2022, has not been rebooted and 
-didn't crash which is the reason I'm reporting this issue.
-This is a production VM with sensible data.
+Please convert these to 'struct xfs_inode	*dp' and fix the
+whitespace between the type name and the variable.
 
-The kernel logged this error multiple times between 00:00:21 and 
-00:03:31 on Jun 1:
+> +	struct xfs_name			*name,
+> +	xfs_inode_t			*ip)
+> +{
+> +	xfs_mount_t			*mp = dp->i_mount;
+> +	xfs_trans_t             	*tp = NULL;
+> +	int				is_dir = S_ISDIR(VFS_I(ip)->i_mode);
+> +	int				dontcare;
+> +	int                     	error = 0;
+> +	uint				resblks;
+> +	xfs_dir2_dataptr_t		dir_offset;
+> +	struct xfs_parent_name_rec	rec;
+> +	struct xfs_da_args		args = {
+> +		.dp		= ip,
+> +		.geo		= mp->m_attr_geo,
+> +		.whichfork	= XFS_ATTR_FORK,
+> +		.attr_filter	= XFS_ATTR_PARENT,
+> +		.op_flags	= XFS_DA_OP_OKNOENT,
+> +		.name		= (const uint8_t *)&rec,
+> +		.namelen	= sizeof(rec),
+> +	};
+>  
+>  	trace_xfs_remove(dp, name);
+>  
+> @@ -2852,6 +2863,12 @@ xfs_remove(
+>  	if (error)
+>  		goto std_return;
+>  
+> +	if (xfs_has_larp(mp)) {
+> +		error = xfs_attr_grab_log_assist(mp);
+> +		if (error)
+> +			goto std_return;
+> +	}
+> +
+>  	/*
+>  	 * We try to get the real space reservation first, allowing for
+>  	 * directory btree deletion(s) implying possible bmap insert(s).  If we
+> @@ -2865,10 +2882,10 @@ xfs_remove(
+>  	 */
+>  	resblks = XFS_REMOVE_SPACE_RES(mp);
+>  	error = xfs_trans_alloc_dir(dp, &M_RES(mp)->tr_remove, ip, &resblks,
+> -			&tp, &dontcare, XFS_ILOCK_EXCL);
+> +			&tp, &dontcare, 0);
+>  	if (error) {
+>  		ASSERT(error != -ENOSPC);
+> -		goto std_return;
+> +		goto drop_incompat;
+>  	}
+>  
+>  	/*
+> @@ -2922,12 +2939,22 @@ xfs_remove(
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> -	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks, NULL);
+> +	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks, &dir_offset);
+>  	if (error) {
+>  		ASSERT(error != -ENOENT);
+>  		goto out_trans_cancel;
+>  	}
+>  
+> +	if (xfs_sb_version_hasparent(&mp->m_sb)) {
+> +		xfs_init_parent_name_rec(&rec, dp, dir_offset);
+> +		args.hashval = xfs_da_hashname(args.name, args.namelen);
+> +		args.trans = tp;
+> +
+> +		error = xfs_attr_defer_remove(&args);
+> +		if (error)
+> +			goto out_trans_cancel;
 
-Jun  1 00:00:21 *** kernel: XFS (dm-0): Internal error 
-XFS_WANT_CORRUPTED_RETURN at line 337 of file 
-fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_alloc_ag_vextent_near+0x658/0xa60 
-[xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa0230e5b>] 
-xfs_error_report+0x3b/0x40 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] ? 
-xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa01ee684>] 
-xfs_alloc_fixup_trees+0x2c4/0x370 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] 
-xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa01f120d>] 
-xfs_alloc_ag_vextent+0xcd/0x110 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa01f1f89>] 
-xfs_alloc_vextent+0x429/0x5e0 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa020237f>] 
-xfs_bmap_btalloc+0x3af/0x710 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa02026ee>] xfs_bmap_alloc+0xe/0x10 
-[xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa0203148>] 
-xfs_bmapi_write+0x4d8/0xa90 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa023bd1b>] 
-xfs_iomap_write_allocate+0x14b/0x350 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa0226dc6>] 
-xfs_map_blocks+0x1c6/0x230 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa0227fe3>] 
-xfs_vm_writepage+0x193/0x5d0 [xfs]
-Jun  1 00:00:22 *** kernel: [<ffffffffa0227993>] 
-xfs_vm_writepages+0x43/0x50 [xfs]
-Jun  1 00:00:22 *** kernel: XFS (dm-0): page discard on page 
-ffffea000cf60200, inode 0xc52bf7f, offset 0.
+Why not queue the pptr removal inside xfs_dir_removename?  Is there ever
+going to be a case where we want to remove a dirent but not update the
+parent pointers?
 
-I'm running this (outdated) software:
+OH.  Right.  Online repair makes this messy, since it builds all the new
+directory structures in an O_TMPFILE directory, without bumping the link
+counts of any of the children or changing dotdot entries of child dirs.
+Then the contents are swapext'd.
 
-- uname -a:
-     Linux *** 3.10.0-327.22.2.el7.x86_64 #1 SMP Thu Jun 23 17:05:11 UTC 
-2016 x86_64 x86_64 x86_64 GNU/Linux
+So yes, it's perhaps best to keep those separate....?
 
-- modinfo xfs
-     filename: /lib/modules/3.10.0-327.22.2.el7.x86_64/kernel/fs/xfs/xfs.ko
-     license:        GPL
-     description:    SGI XFS with ACLs, security attributes, no debug 
-enabled
-     author:         Silicon Graphics, Inc.
-     alias:          fs-xfs
-     rhelversion:    7.2
-     srcversion:     5F736B32E75482D75F98583
-     depends:        libcrc32c
-     intree:         Y
-     vermagic:       3.10.0-327.22.2.el7.x86_64 SMP mod_unload modversions
-     signer:         CentOS Linux kernel signing key
-     sig_key: A9:80:1A:61:B3:68:60:1C:40:EB:DB:D5:DF:D1:F3:A7:70:07:BF:A4
-     sig_hashalgo:   sha256
+--D
 
-1) Is there any known issue with this xfs version?
-
-2) How may I help you to trace this bug.
-I could provide my WhatsApp number privately for direct communication.
-
-Should I try a xfs_repair and post the logs here or via pastebin?
-
-BTW: I'm a experienced developer and sysadmin, but have no experience 
-regarding the XFS  driver.
-
+> +	}
+> +
+>  	/*
+>  	 * If this is a synchronous mount, make sure that the
+>  	 * remove transaction goes to disk before returning to
+> @@ -2938,15 +2965,23 @@ xfs_remove(
+>  
+>  	error = xfs_trans_commit(tp);
+>  	if (error)
+> -		goto std_return;
+> +		goto out_unlock;
+>  
+>  	if (is_dir && xfs_inode_is_filestream(ip))
+>  		xfs_filestream_deassociate(ip);
+>  
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+>  	return 0;
+>  
+>   out_trans_cancel:
+>  	xfs_trans_cancel(tp);
+> + out_unlock:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> + drop_incompat:
+> +	if (xfs_has_larp(mp))
+> +		xlog_drop_incompat_feat(mp->m_log);
+>   std_return:
+>  	return error;
+>  }
+> -- 
+> 2.25.1
+> 
