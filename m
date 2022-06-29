@@ -2,188 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3886C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 20:22:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3595C43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 20:26:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229552AbiF2UWM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 16:22:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49414 "EHLO
+        id S229654AbiF2U0i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 16:26:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229948AbiF2UWK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 16:22:10 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 777232F39D;
-        Wed, 29 Jun 2022 13:22:09 -0700 (PDT)
+        with ESMTP id S229582AbiF2U0h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 16:26:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8F2A39BAF
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 13:26:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3CE74B82701;
-        Wed, 29 Jun 2022 20:22:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04BDEC34114;
-        Wed, 29 Jun 2022 20:22:06 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 81970616B2
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 20:26:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D860CC341C8;
+        Wed, 29 Jun 2022 20:26:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656534127;
-        bh=fvM7ZMw2Riiyy+rC8yD5Hs0887tFPszfGYW0/LXaWfA=;
+        s=k20201202; t=1656534395;
+        bh=k/WumRjeWkuppyxnKZBbZg+7PdqyLiE7IG2hUEB/ilk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=F5xyov45v0ccCJ1IxlXGAtOz0PLoK/zebDjvrlZx9wn+a2UJEu8uwQ1j2Lr0kmqxN
-         Tnw9Np6W699I9p5LTM5u6FD1UMEpV1gRiDRSn2T/CyhnDy9vBruEH6y7E3i8M0xP6t
-         C5t3O6eWH7ETdiiSIbiO5OrCLtbGq6IBsUskxEPzZN8NyZnJ1A6pPH++fBkS2uAn8F
-         0rpdHSluLb+ddTvJk4blbbN25jH7s9JekC00yHjBPs1NkhBJByQRbiIgE+Uu3wFHQb
-         GQsxdAmCDxXn5FI8ZOQreulWGtoPBroIArSqS2EEq4x17z6xZA8p9onh/VKK+v5whL
-         iL1StzTNq7nOA==
-Date:   Wed, 29 Jun 2022 13:22:06 -0700
+        b=MpA1BskJn5s4MBiNWUFY/HwcYEoIEtpVWUEyGqj3GtptwRaxfnMm73QKsU7AQfIWg
+         GQEdtquxEOtJAc0M+M9e9hUYKehA6Bj5QfTdyC4XXMw6zT8lbO9c8fcnqoVPf24aYg
+         pxVIPeEaaT46k0HfH6VbFvd4ffUsYyaL9F6xUbTybmEZ2akyq6HdUVKl4UPuAWG0Dv
+         5jAUw9Ul1vDhOw4fySgAlqoHKj1/7KfcF2Rq1AwlDAOruH8r13vtBFLxQ7D/dQvDnh
+         1NCxMXpXiybTRucx00d9KZ4RrFSJ9WOrmqfhItbWpUDs5sjl/bK56KPbeETuNedhvP
+         7yOTAMO/wtfUA==
+Date:   Wed, 29 Jun 2022 13:26:35 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        linux-mm@kvack.org
-Subject: Re: Multi-page folio issues in 5.19-rc4 (was [PATCH v3 25/25] xfs:
- Support large folios)
-Message-ID: <Yry0bkQRN4sGgTbf@magnolia>
-References: <Yrku31ws6OCxRGSQ@magnolia>
- <Yrm6YM2uS+qOoPcn@casper.infradead.org>
- <YrosM1+yvMYliw2l@magnolia>
- <20220628073120.GI227878@dread.disaster.area>
- <YrrlrMK/7pyZwZj2@casper.infradead.org>
- <Yrrmq4hmJPkf5V7s@casper.infradead.org>
- <Yrr/oBlf1Eig8uKS@casper.infradead.org>
- <20220628221757.GJ227878@dread.disaster.area>
- <YruNE72sW4Aizq8U@magnolia>
- <YrxMOgIvKVe6u/uR@bfoster>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 00/14] xfs: perag conversions for 5.20
+Message-ID: <Yry1ez1e4a11l3Yk@magnolia>
+References: <20220627001832.215779-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YrxMOgIvKVe6u/uR@bfoster>
+In-Reply-To: <20220627001832.215779-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 29, 2022 at 08:57:30AM -0400, Brian Foster wrote:
-> On Tue, Jun 28, 2022 at 04:21:55PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jun 29, 2022 at 08:17:57AM +1000, Dave Chinner wrote:
-> > > On Tue, Jun 28, 2022 at 02:18:24PM +0100, Matthew Wilcox wrote:
-> > > > On Tue, Jun 28, 2022 at 12:31:55PM +0100, Matthew Wilcox wrote:
-> > > > > On Tue, Jun 28, 2022 at 12:27:40PM +0100, Matthew Wilcox wrote:
-> > > > > > On Tue, Jun 28, 2022 at 05:31:20PM +1000, Dave Chinner wrote:
-> > > > > > > So using this technique, I've discovered that there's a dirty page
-> > > > > > > accounting leak that eventually results in fsx hanging in
-> > > > > > > balance_dirty_pages().
-> > > > > > 
-> > > > > > Alas, I think this is only an accounting error, and not related to
-> > > > > > the problem(s) that Darrick & Zorro are seeing.  I think what you're
-> > > > > > seeing is dirty pages being dropped at truncation without the
-> > > > > > appropriate accounting.  ie this should be the fix:
-> > > > > 
-> > > > > Argh, try one that actually compiles.
-> > > > 
-> > > > ... that one's going to underflow the accounting.  Maybe I shouldn't
-> > > > be writing code at 6am?
-> > > > 
-> > > > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> > > > index f7248002dad9..4eec6ee83e44 100644
-> > > > --- a/mm/huge_memory.c
-> > > > +++ b/mm/huge_memory.c
-> > > > @@ -18,6 +18,7 @@
-> > > >  #include <linux/shrinker.h>
-> > > >  #include <linux/mm_inline.h>
-> > > >  #include <linux/swapops.h>
-> > > > +#include <linux/backing-dev.h>
-> > > >  #include <linux/dax.h>
-> > > >  #include <linux/khugepaged.h>
-> > > >  #include <linux/freezer.h>
-> > > > @@ -2439,11 +2440,15 @@ static void __split_huge_page(struct page *page, struct list_head *list,
-> > > >  		__split_huge_page_tail(head, i, lruvec, list);
-> > > >  		/* Some pages can be beyond EOF: drop them from page cache */
-> > > >  		if (head[i].index >= end) {
-> > > > -			ClearPageDirty(head + i);
-> > > > -			__delete_from_page_cache(head + i, NULL);
-> > > > +			struct folio *tail = page_folio(head + i);
-> > > > +
-> > > >  			if (shmem_mapping(head->mapping))
-> > > >  				shmem_uncharge(head->mapping->host, 1);
-> > > > -			put_page(head + i);
-> > > > +			else if (folio_test_clear_dirty(tail))
-> > > > +				folio_account_cleaned(tail,
-> > > > +					inode_to_wb(folio->mapping->host));
-> > > > +			__filemap_remove_folio(tail, NULL);
-> > > > +			folio_put(tail);
-> > > >  		} else if (!PageAnon(page)) {
-> > > >  			__xa_store(&head->mapping->i_pages, head[i].index,
-> > > >  					head + i, 0);
-> > > > 
-> > > 
-> > > Yup, that fixes the leak.
-> > > 
-> > > Tested-by: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Four hours of generic/522 running is long enough to conclude that this
-> > is likely the fix for my problem and migrate long soak testing to my
-> > main g/522 rig and:
-> > 
-> > Tested-by: Darrick J. Wong <djwong@kernel.org>
-> > 
+On Mon, Jun 27, 2022 at 10:18:18AM +1000, Dave Chinner wrote:
+> Hi folks,
 > 
-> Just based on Willy's earlier comment.. what I would probably be a
-> little careful/curious about here is whether the accounting fix leads to
-> an indirect behavior change that does impact reproducibility of the
-> corruption problem. For example, does artificially escalated dirty page
-> tracking lead to increased reclaim/writeback activity than might
-> otherwise occur, and thus contend with the fs workload? Clearly it has
-> some impact based on Dave's balance_dirty_pages() problem reproducer,
-> but I don't know if it extends beyond that off the top of my head. That
-> might make some sense if the workload is fsx, since that doesn't
-> typically stress cache/memory usage the way a large fsstress workload or
-> something might.
+> This is the set of per-ag conversions that I'm proposing for the
+> 5.20 cycle. It is the initial subset of changes that were listed in
+> the larger "upcoming perag changes for shrink" patchset here:
 > 
-> So for example, interesting questions might be... Do your corruption
-> events happen to correspond with dirty page accounting crossing some
-> threshold based on available memory in your test environment? Does
-> reducing available memory affect reproducibility? Etc.
+> https://lore.kernel.org/linux-xfs/20220611012659.3418072-1-david@fromorbit.com/
+> 
+> This series drives the perag down into the AGI, AGF and AGFL access
+> routines and unifies the perag structure initialisation with the
+> high level AG header read functions. This largely replaces the
+> xfs_mount/agno pair that is passed to all these functions with a
+> perag, and in most places we already have a perag ready to pass in.
+> There are a few places where perags need to be grabbed before
+> reading the AG header buffers - some of these will need to be driven
+> to higher layers to ensure we can run operations on AGs without
+> getting stuck part way through waiting on a perag reference.
+> 
+> The latter section of this patchset moves some of the AG geometry
+> information from the xfs_mount to the xfs_perag, and starts
+> converting code that requires geometry validation to use a perag
+> instead of a mount and having to extract the AGNO from the object
+> location. This also allows us to store the AG size in the perag and
+> then we can stop having to compare the agno against sb_agcount to
+> determine if the AG is the last AG and so has a runt size.  This
+> greatly simplifies some of the type validity checking we do and
+> substantially reduces the CPU overhead of type validity checking. It
+> also cuts over 1.2kB out of the binary size.
+> 
+> This runs through fstests cleanly - I don't expect there to be
+> hidden surprises in it so I think these patches are good to go
+> for the 5.20 cycle.
+> 
+> Comments and thoughts welcome....
 
-Yeah, I wonder that too now.  I managed to trace generic/522 a couple of
-times before willy's patch dropped.  From what I could tell, a large
-folio X would get page P assigned to the fsx file's page cache to cover
-range R, dirtied, and written to disk.  At some point later, we'd
-reflink into part of the file range adjacent to P, but not P itself.
-I /think/ that should have caused the whole folio to get invalidated?
-
-Then some more things happened (none of which dirtied R, according to
-fsx) and then suddenly writeback would trigger on some page (don't know
-which) that would write to the disk blocks backing R.  I'm fairly sure
-that's where the incorrect disk contents came from.
-
-Next, we'd reflink part of the file range including R into a different
-part of the file (call it R2).  fsx would read R2, bringing a new page
-into cache, and it wouldn't match the fsxgood buffer, leading to fsx
-aborting.
-
-After a umount/mount cycle, reading R and R2 would both reveal the
-incorrect contents that had caused fsx to abort.
-
-Unfortunately the second ftrace attempt ate some trace data, so I was
-unable to figure out if the same thing happened again.
-
-At this point I really need to get on reviewing patches for 5.20, so
-I'll try to keep poking at this (examining the trace data requires a lot
-of concentration which isn't really possible while sawzall construction
-is going on at home) but at worst I can ask Linus to merge a patch for
-5.19 final that makes setting mapping_set_large_folio a
-Kconfig/CONFIG_XFS_DEBUG option.
+The entire series LGTM
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > 
-> Brian
+> -Dave.
 > 
-> > --D
-> > 
-> > > Cheers,
-> > > 
-> > > Dave.
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > 
 > 
