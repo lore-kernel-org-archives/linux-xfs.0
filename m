@@ -2,137 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0F65C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 08:59:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53A5FC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 09:13:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232439AbiF2I7Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 04:59:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41450 "EHLO
+        id S231424AbiF2JNB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 05:13:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232615AbiF2I7Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 04:59:24 -0400
-Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52750248F9
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 01:59:22 -0700 (PDT)
-Received: by mail-lf1-x12e.google.com with SMTP id f39so26865798lfv.3
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 01:59:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=lioexKbmzOh37YP8S89Uz5PZpE+ilcfMdalfPcxu7r0=;
-        b=lLboIzRv56XOpfY9AQPIhgrCIpMiIz4SzNnDFOBAgqbfZ6OV22aEZ9r8/xeejU6d6H
-         9Qx9xKrQ001fc5zcvH4VDk0Wb/iWUDS9SO1NAodJu7zs9W3l0JeNKjdS8wh8ZFIRjVcc
-         r+mV0mglNcuF0MN+Kr/FtGsLEhjBYdNCGOlPFPz8hc8dQFhUcO5MKiGSeYObInkCCU7X
-         BH0QGQi0BR+HvOpjtf4INxz9aXWENqAhSgXrPjD9Zq5MMElXoZ5bAstLY9i9wozDshPc
-         2kCyQYEJ4a3uSw432fiD+CFCdEDQw0MwyT5gPPsCg3ZZS4O3mzGzUkin4IziebbYu2ea
-         Binw==
+        with ESMTP id S232583AbiF2JNA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 05:13:00 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 301A41D0FD
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 02:13:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1656493979;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PHkzl/CtxfMEiDrBCMjqTBVk/1t45A9zbY4QPN+Lk68=;
+        b=CDikhBlJMh8mT6WkNefiLZIHlSVyJW4eQORz/kjzG1rablvNu1FhtBvpB6GmkOEOEXJYkJ
+        e6/PnHwMsrtoyErBkQae6tH2etYsXyK8fZ/YU0W/+o0QtbFv4HNRy8gIfrzAYhnPunA13y
+        WpgoJKdhnH5TFaVi2MDDLStRyOWv2UU=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-38-6MxigpJmO3mnA2oOwJ9Gfg-1; Wed, 29 Jun 2022 05:12:57 -0400
+X-MC-Unique: 6MxigpJmO3mnA2oOwJ9Gfg-1
+Received: by mail-qv1-f69.google.com with SMTP id v13-20020ad4528d000000b004707f3f4683so14827252qvr.14
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 02:12:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=lioexKbmzOh37YP8S89Uz5PZpE+ilcfMdalfPcxu7r0=;
-        b=KilfEvp7Vgm2cba9wZ6efR0musGpR0/GutMrBD+nCKjBFbmBOwQhuACtlbiBY81n0p
-         e1BZaiwhhmdnIwvmI69X8LXmnp2Ayiu/mVDgmhcSiQEuqtt4R2AW+yefTZqGrxjlMeuL
-         9OV1o7ITeHSBUy5YIEN2o7NCBuhT0+j/oExDhHsAq5M+get8Po/u3V0tAPRwMdB+bLic
-         e3jo4vUSTtykCxxEtWc86/NjAo32cl8DVR/CYPxMZJsW7X1zByP+hlsLKF1y7OP1fWXp
-         dlxXZBFr48chyN90A/hIFgFHihiKY1/L3En4ujeTY7swx5FcXBlvV7Aa0ve4+/ts+90Y
-         TcBA==
-X-Gm-Message-State: AJIora8N3wdJEafXnwWVrPY3z++Z+oBuU11OG7jR6PGE+C/HlJ9obylM
-        8yKuiDqrL0dGb/ODT4jumxE=
-X-Google-Smtp-Source: AGRyM1tReBndEaI7jx+/Uj3qH0sHG8fXTiQ81KKD1hDfwG3bARar01h4Pywq1ewBtLNXuxc2qqG9TA==
-X-Received: by 2002:a05:6512:6d4:b0:47f:74b4:4ec4 with SMTP id u20-20020a05651206d400b0047f74b44ec4mr1268552lff.654.1656493160485;
-        Wed, 29 Jun 2022 01:59:20 -0700 (PDT)
-Received: from [192.168.68.32] (cpc77339-stav19-2-0-cust1016.17-3.cable.virginm.net. [82.40.31.249])
-        by smtp.gmail.com with ESMTPSA id g1-20020a2ea4a1000000b002555dd9c20fsm2094816ljm.20.2022.06.29.01.59.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Jun 2022 01:59:20 -0700 (PDT)
-Message-ID: <41917a84-2d95-aa83-4a06-00547842c246@gmail.com>
-Date:   Wed, 29 Jun 2022 09:59:18 +0100
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=PHkzl/CtxfMEiDrBCMjqTBVk/1t45A9zbY4QPN+Lk68=;
+        b=MM0VOg93+3/tyEWlAnlHjjLEzoT9p7J/9FixwCKHi+ZRxhSCsd0QtQ9ok+wOe5oMSq
+         YnWY/pBt1Dd0LBDuDP46ZqkaHMYqn29DnDDKpWO4Gk9Ay/bQQAbtfx3Sklp/4KFpTO3C
+         +D8Nt2A4odYerGgEeUnfg3bs4kDfKQAq+G5rSiZY4SyUZ1mFwozlmmAY16oa3KLfQ0AT
+         t3Kc21+J2RY5L7qftlq1N4D6fJL+2QigI7ysK2cbaHslWeqa+zh9lZZDJySNTJOK55wE
+         yssozimLIWkSrnH1Ja8+aDnDiQfY3kPXDAdeCYKaQaBePGiht1JvZ8nd061ITqhJCNlm
+         QbqQ==
+X-Gm-Message-State: AJIora84kjWehUDOZXm0RdrmzwONeOzaLs1HZUhv9cT3EnUYkaiMyy8J
+        bUAmcX9Kp0r5R5vaQSv/KO43HRP3MRrJtyUWXv/FYrlwp3k4+XkLuT78tcwa5PWV1k4t+2nztXj
+        L9h89Sb7TUDnBaJuY35aU
+X-Received: by 2002:ac8:584b:0:b0:31b:efad:e020 with SMTP id h11-20020ac8584b000000b0031befade020mr1461177qth.425.1656493976170;
+        Wed, 29 Jun 2022 02:12:56 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1vxPr2jKgDwkUQSZ+OnlrTusU8D4te8AP8eevk1tsKEwY1lBipsJ+RbHgcqLIL8sr82M3GFYw==
+X-Received: by 2002:ac8:584b:0:b0:31b:efad:e020 with SMTP id h11-20020ac8584b000000b0031befade020mr1461165qth.425.1656493975905;
+        Wed, 29 Jun 2022 02:12:55 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id r4-20020ac84244000000b00317ca023e33sm10056891qtm.80.2022.06.29.02.12.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Jun 2022 02:12:55 -0700 (PDT)
+Date:   Wed, 29 Jun 2022 17:12:48 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 2/9] xfs/070: filter new superblock verifier messages
+Message-ID: <20220629091248.vtqtlk2wvqkmtxkm@zlang-mailbox>
+References: <165644767753.1045534.18231838177395571946.stgit@magnolia>
+ <165644768886.1045534.3177166462110135738.stgit@magnolia>
+ <20220629041547.GO1098723@dread.disaster.area>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [bug report] xfsdump fails to build against xfsprogs 5.18.0
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-References: <089bacd9-6213-d73f-f188-d4a31d91f447@gmail.com>
- <YruH1JKxgybem3jw@magnolia>
-From:   Corin Hoad <corinhoad@gmail.com>
-In-Reply-To: <YruH1JKxgybem3jw@magnolia>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220629041547.GO1098723@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Yes, xfsdump builds with that patch applied, and I don't see any 
-immediate issue with basic functionality.
+On Wed, Jun 29, 2022 at 02:15:47PM +1000, Dave Chinner wrote:
+> On Tue, Jun 28, 2022 at 01:21:28PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > In Linux 5.19, the superblock verifier logging changed to elaborate on
+> > what was wrong.  Fix the xfs_repair filtering function to accomodate
+> > this development.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  common/repair |    1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > 
+> > diff --git a/common/repair b/common/repair
+> > index 463ef9db..398e9904 100644
+> > --- a/common/repair
+> > +++ b/common/repair
+> > @@ -29,6 +29,7 @@ _filter_repair()
+> >  # for sb
+> >  /- agno = / && next;	# remove each AG line (variable number)
+> >  s/(pointer to) (\d+)/\1 INO/;
+> > +s/Superblock has bad magic number.*/bad magic number/;
+> >  # Changed inode output in 5.5.0
+> >  s/sb root inode value /sb root inode /;
+> >  s/realtime bitmap inode value /realtime bitmap inode /;
+> 
+> Didn't I already fix that in commit 4c76d0ba ("xfs/070: filter the
+> bad sb magic number error")?
 
-Thanks,
-Corin Hoad
+Yes, you've added a line as below:
+  s/^Superblock has (bad magic number) 0x.*/\1/;
+which is equal to:
+  s/Superblock has bad magic number.*/bad magic number/;
+So we need to fix it again.
 
-On 28/06/2022 23:59, Darrick J. Wong wrote:
-> On Tue, Jun 28, 2022 at 11:32:48PM +0100, corinhoad@gmail.com wrote:
->> Hello,
->>
->> I package xfsdump for NixOS, and I have found that a recent upgrade from
->> xfsprogs 5.16.0 to 5.18.0 has caused a build failure for xfsprogs. See [1]
->> for an excerpt from the build logs. My novice investigation of the issue and
->> disccusion IRC indicates that the removal of DMAPI support is behind this.
 > 
-> Oops, we dropped the ball on this.  Does this patch[1] fix the problem?
+> Cheers,
 > 
-> --D
+> Dave.
 > 
-> [1] https://lore.kernel.org/linux-xfs/20220203174540.GT8313@magnolia/
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
->>
->> Best,
->> Corin Hoad
->>
->> [1]
->> content.c: In function 'restore_complete_reg':
->> content.c:7727:29: error: storage size of 'fssetdm' isn't known
->>   7727 |                 fsdmidata_t fssetdm;
->>        |                             ^~~~~~~
->> content.c:7734:34: error: 'XFS_IOC_FSSETDM' undeclared (first use in this
->> function); did you mean 'XFS_IOC_FSSETXATTR'?
->>   7734 |                 rval = ioctl(fd, XFS_IOC_FSSETDM, (void *)&fssetdm);
->>        |                                  ^~~~~~~~~~~~~~~
->>        |                                  XFS_IOC_FSSETXATTR
->> content.c:7734:34: note: each undeclared identifier is reported only once
->> for each function it appears in
->> content.c:7727:29: warning: unused variable 'fssetdm' [-Wunused-variable]
->>   7727 |                 fsdmidata_t fssetdm;
->>        |                             ^~~~~~~
->> content.c: In function 'restore_symlink':
->> content.c:8061:29: error: storage size of 'fssetdm' isn't known
->>   8061 |                 fsdmidata_t fssetdm;
->>        |                             ^~~~~~~
->> content.c:8061:29: warning: unused variable 'fssetdm' [-Wunused-variable]
->> content.c: In function 'setextattr':
->> content.c:8867:9: warning: 'attr_set' is deprecated: Use setxattr or
->> lsetxattr instead [-Wdeprecated-declarations]
->>   8867 |         rval = attr_set(path,
->>        |         ^~~~
->> In file included from content.c:27:
->> /nix/store/7b84p7877fl9p8aqx392drggj0jkqd0j-attr-2.5.1-dev/include/attr/attributes.h:139:12:
->> note: declared here
->>    139 | extern int attr_set (const char *__path, const char *__attrname,
->>        |            ^~~~~~~~
->> content.c: In function 'Media_mfile_next':
->> content.c:4797:33: warning: ignoring return value of 'system' declared with
->> attribute 'warn_unused_result' [-Wunused-result]
->>   4797 |                                 system(media_change_alert_program);
->>        |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> content.c: In function 'restore_extent':
->> content.c:8625:49: warning: ignoring return value of 'ftruncate' declared
->> with attribute 'warn_unused_result' [-Wunused-result]
->>   8625 |                                                 ftruncate(fd,
->> bstatp->bs_size);
->>        | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> make[2]: *** [../include/buildrules:47: content.o] Error 1
->> make[1]: *** [include/buildrules:23: restore] Error 2
->> make: *** [Makefile:53: default] Error 2
+
