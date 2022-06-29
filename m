@@ -2,66 +2,188 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C130C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 20:02:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3886C43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jun 2022 20:22:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231431AbiF2UCX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 16:02:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37868 "EHLO
+        id S229552AbiF2UWM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jun 2022 16:22:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230022AbiF2UCU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 16:02:20 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 789FC3ED08
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 13:02:19 -0700 (PDT)
+        with ESMTP id S229948AbiF2UWK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 16:22:10 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 777232F39D;
+        Wed, 29 Jun 2022 13:22:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id CC920CE28E9
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 20:02:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC9EDC34114;
-        Wed, 29 Jun 2022 20:02:15 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3CE74B82701;
+        Wed, 29 Jun 2022 20:22:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04BDEC34114;
+        Wed, 29 Jun 2022 20:22:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656532935;
-        bh=F2T1h+n29TfanYYikrz6KMF8SEgLXps9aLZMAVCHfjc=;
+        s=k20201202; t=1656534127;
+        bh=fvM7ZMw2Riiyy+rC8yD5Hs0887tFPszfGYW0/LXaWfA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kgqbfSRHG2j+O4TLLEzGeg+tkLRLHPpnLUMhr3GuKzFC+04rMRh9B4vpbOwgmpV3j
-         5dDkN+FTz1E7R6NXhMT81NTAIy8546rZEmxc8AXG89UfREf7cQkVk4ioP4OnwYDwqb
-         gTec5+b7Mlje8QJd0l4qy1AJIqBErmFN/GwmK8pI9dxNGXV2ZTajv3sOxPq7DpHb1u
-         YpBCkKi5C7qkZm+spujF9TvAV/3Yk+J2xaJ28XIhjrWi1C1FbV2+iKLPWdjKaNrs/F
-         uTr8S3ZzfzQQXhajsBdvylOM2BClaI9GgIOV/fPe3cLRAJwr9o6T6ECQbQf2oottmy
-         hJXxzR3PDF3Ow==
-Date:   Wed, 29 Jun 2022 13:02:15 -0700
+        b=F5xyov45v0ccCJ1IxlXGAtOz0PLoK/zebDjvrlZx9wn+a2UJEu8uwQ1j2Lr0kmqxN
+         Tnw9Np6W699I9p5LTM5u6FD1UMEpV1gRiDRSn2T/CyhnDy9vBruEH6y7E3i8M0xP6t
+         C5t3O6eWH7ETdiiSIbiO5OrCLtbGq6IBsUskxEPzZN8NyZnJ1A6pPH++fBkS2uAn8F
+         0rpdHSluLb+ddTvJk4blbbN25jH7s9JekC00yHjBPs1NkhBJByQRbiIgE+Uu3wFHQb
+         GQsxdAmCDxXn5FI8ZOQreulWGtoPBroIArSqS2EEq4x17z6xZA8p9onh/VKK+v5whL
+         iL1StzTNq7nOA==
+Date:   Wed, 29 Jun 2022 13:22:06 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/9] xfs: double link the unlinked inode list
-Message-ID: <Yryvx5v4G8xXqEPy@magnolia>
-References: <20220627004336.217366-1-david@fromorbit.com>
- <20220627004336.217366-6-david@fromorbit.com>
- <Yrv9VVaHT8WnHts3@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        linux-mm@kvack.org
+Subject: Re: Multi-page folio issues in 5.19-rc4 (was [PATCH v3 25/25] xfs:
+ Support large folios)
+Message-ID: <Yry0bkQRN4sGgTbf@magnolia>
+References: <Yrku31ws6OCxRGSQ@magnolia>
+ <Yrm6YM2uS+qOoPcn@casper.infradead.org>
+ <YrosM1+yvMYliw2l@magnolia>
+ <20220628073120.GI227878@dread.disaster.area>
+ <YrrlrMK/7pyZwZj2@casper.infradead.org>
+ <Yrrmq4hmJPkf5V7s@casper.infradead.org>
+ <Yrr/oBlf1Eig8uKS@casper.infradead.org>
+ <20220628221757.GJ227878@dread.disaster.area>
+ <YruNE72sW4Aizq8U@magnolia>
+ <YrxMOgIvKVe6u/uR@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yrv9VVaHT8WnHts3@infradead.org>
+In-Reply-To: <YrxMOgIvKVe6u/uR@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 29, 2022 at 12:20:53AM -0700, Christoph Hellwig wrote:
-> > --- a/fs/xfs/xfs_inode.h
-> > +++ b/fs/xfs/xfs_inode.h
-> > @@ -70,6 +70,7 @@ typedef struct xfs_inode {
-> >  
-> >  	/* unlinked list pointers */
-> >  	xfs_agino_t		i_next_unlinked;
-> > +	xfs_agino_t		i_prev_unlinked;
+On Wed, Jun 29, 2022 at 08:57:30AM -0400, Brian Foster wrote:
+> On Tue, Jun 28, 2022 at 04:21:55PM -0700, Darrick J. Wong wrote:
+> > On Wed, Jun 29, 2022 at 08:17:57AM +1000, Dave Chinner wrote:
+> > > On Tue, Jun 28, 2022 at 02:18:24PM +0100, Matthew Wilcox wrote:
+> > > > On Tue, Jun 28, 2022 at 12:31:55PM +0100, Matthew Wilcox wrote:
+> > > > > On Tue, Jun 28, 2022 at 12:27:40PM +0100, Matthew Wilcox wrote:
+> > > > > > On Tue, Jun 28, 2022 at 05:31:20PM +1000, Dave Chinner wrote:
+> > > > > > > So using this technique, I've discovered that there's a dirty page
+> > > > > > > accounting leak that eventually results in fsx hanging in
+> > > > > > > balance_dirty_pages().
+> > > > > > 
+> > > > > > Alas, I think this is only an accounting error, and not related to
+> > > > > > the problem(s) that Darrick & Zorro are seeing.  I think what you're
+> > > > > > seeing is dirty pages being dropped at truncation without the
+> > > > > > appropriate accounting.  ie this should be the fix:
+> > > > > 
+> > > > > Argh, try one that actually compiles.
+> > > > 
+> > > > ... that one's going to underflow the accounting.  Maybe I shouldn't
+> > > > be writing code at 6am?
+> > > > 
+> > > > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> > > > index f7248002dad9..4eec6ee83e44 100644
+> > > > --- a/mm/huge_memory.c
+> > > > +++ b/mm/huge_memory.c
+> > > > @@ -18,6 +18,7 @@
+> > > >  #include <linux/shrinker.h>
+> > > >  #include <linux/mm_inline.h>
+> > > >  #include <linux/swapops.h>
+> > > > +#include <linux/backing-dev.h>
+> > > >  #include <linux/dax.h>
+> > > >  #include <linux/khugepaged.h>
+> > > >  #include <linux/freezer.h>
+> > > > @@ -2439,11 +2440,15 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+> > > >  		__split_huge_page_tail(head, i, lruvec, list);
+> > > >  		/* Some pages can be beyond EOF: drop them from page cache */
+> > > >  		if (head[i].index >= end) {
+> > > > -			ClearPageDirty(head + i);
+> > > > -			__delete_from_page_cache(head + i, NULL);
+> > > > +			struct folio *tail = page_folio(head + i);
+> > > > +
+> > > >  			if (shmem_mapping(head->mapping))
+> > > >  				shmem_uncharge(head->mapping->host, 1);
+> > > > -			put_page(head + i);
+> > > > +			else if (folio_test_clear_dirty(tail))
+> > > > +				folio_account_cleaned(tail,
+> > > > +					inode_to_wb(folio->mapping->host));
+> > > > +			__filemap_remove_folio(tail, NULL);
+> > > > +			folio_put(tail);
+> > > >  		} else if (!PageAnon(page)) {
+> > > >  			__xa_store(&head->mapping->i_pages, head[i].index,
+> > > >  					head + i, 0);
+> > > > 
+> > > 
+> > > Yup, that fixes the leak.
+> > > 
+> > > Tested-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Four hours of generic/522 running is long enough to conclude that this
+> > is likely the fix for my problem and migrate long soak testing to my
+> > main g/522 rig and:
+> > 
+> > Tested-by: Darrick J. Wong <djwong@kernel.org>
+> > 
 > 
-> Ok, this somewhat invalidates my previous comment, unless we find
-> another hole in the xfs_inode layout.
+> Just based on Willy's earlier comment.. what I would probably be a
+> little careful/curious about here is whether the accounting fix leads to
+> an indirect behavior change that does impact reproducibility of the
+> corruption problem. For example, does artificially escalated dirty page
+> tracking lead to increased reclaim/writeback activity than might
+> otherwise occur, and thus contend with the fs workload? Clearly it has
+> some impact based on Dave's balance_dirty_pages() problem reproducer,
+> but I don't know if it extends beyond that off the top of my head. That
+> might make some sense if the workload is fsx, since that doesn't
+> typically stress cache/memory usage the way a large fsstress workload or
+> something might.
+> 
+> So for example, interesting questions might be... Do your corruption
+> events happen to correspond with dirty page accounting crossing some
+> threshold based on available memory in your test environment? Does
+> reducing available memory affect reproducibility? Etc.
 
-I think there's a 4-byte hole after i_df, and there's about to be
-another one after i_af once I send my series to make the attr ifork a
-permanent part of the inode.
+Yeah, I wonder that too now.  I managed to trace generic/522 a couple of
+times before willy's patch dropped.  From what I could tell, a large
+folio X would get page P assigned to the fsx file's page cache to cover
+range R, dirtied, and written to disk.  At some point later, we'd
+reflink into part of the file range adjacent to P, but not P itself.
+I /think/ that should have caused the whole folio to get invalidated?
+
+Then some more things happened (none of which dirtied R, according to
+fsx) and then suddenly writeback would trigger on some page (don't know
+which) that would write to the disk blocks backing R.  I'm fairly sure
+that's where the incorrect disk contents came from.
+
+Next, we'd reflink part of the file range including R into a different
+part of the file (call it R2).  fsx would read R2, bringing a new page
+into cache, and it wouldn't match the fsxgood buffer, leading to fsx
+aborting.
+
+After a umount/mount cycle, reading R and R2 would both reveal the
+incorrect contents that had caused fsx to abort.
+
+Unfortunately the second ftrace attempt ate some trace data, so I was
+unable to figure out if the same thing happened again.
+
+At this point I really need to get on reviewing patches for 5.20, so
+I'll try to keep poking at this (examining the trace data requires a lot
+of concentration which isn't really possible while sawzall construction
+is going on at home) but at worst I can ask Linus to merge a patch for
+5.19 final that makes setting mapping_set_large_folio a
+Kconfig/CONFIG_XFS_DEBUG option.
 
 --D
+
+> 
+> Brian
+> 
+> > --D
+> > 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
+> > 
+> 
