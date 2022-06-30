@@ -2,121 +2,167 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0C50C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jun 2022 05:43:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7491C43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jun 2022 06:37:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231751AbiF3Fne (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jun 2022 01:43:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60468 "EHLO
+        id S232105AbiF3Gh1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jun 2022 02:37:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231699AbiF3Fnd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jun 2022 01:43:33 -0400
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1784B1EC7F;
-        Wed, 29 Jun 2022 22:43:32 -0700 (PDT)
-Received: by mail-wr1-x436.google.com with SMTP id k22so25542723wrd.6;
-        Wed, 29 Jun 2022 22:43:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=sNsoruavgGCDOa6zIwfGVQ3gPIe8zWts0Tb325UtKCk=;
-        b=c3H0RsrznPc7KcMTQsdNCnaKd8aXg8jczjApI0Th4Z7BB1CDDd46AjQwynVhn4cOow
-         B8uGLTaTYW35RT1INpDNKuhpTtirQ/05AhAwKzGGwcf9mOf/2RBn/ZqVu2xKev4VbyM0
-         voXX9M++jSLTRFladEjYiTNoQlT7TtAzaj1T0vBnxlIUky2LjklLPjZ7K7nSpNH8WgUX
-         hc+F3rwGN0BiKu7TrE5VP0xY0/IFKUl/hL94CYpWfllsoRtkImdzY5tO5D8gjqEdLrNR
-         kKRdM2Iy2BZfQr06I5C3gqCWRa5aZnPMYtxK0YG3ZKbYHwk26ERyOonFbl2lr7hPHIXo
-         2EcQ==
+        with ESMTP id S231936AbiF3Gh0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jun 2022 02:37:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B6D882E68C
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 23:37:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1656571043;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=LMdraqJ988nUyorA+H9lwzJVixuJXHhhTOJ8MUyHYVI=;
+        b=aJoXlH82cKM3TDgFzwSE6CiCGvTM7jPoDfTWImyDYK7uWT8hJOpwtiVKDwoq/yusQ2+4zB
+        whemD1qgY5v6N9WJa+oCGKA5x0oTJAZSh8W4Jwx7Mp2DBi0XgGU/epRmb1kwkZlOC2dkOp
+        iBSl3WeY1sokSREWnBbma6ZCU4lcVY0=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-59-K3WZl6MXOwi3JU4VYeYrzQ-1; Thu, 30 Jun 2022 02:37:22 -0400
+X-MC-Unique: K3WZl6MXOwi3JU4VYeYrzQ-1
+Received: by mail-qv1-f69.google.com with SMTP id 10-20020a0562140cca00b004702e8ce21bso17682296qvx.22
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 23:37:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=sNsoruavgGCDOa6zIwfGVQ3gPIe8zWts0Tb325UtKCk=;
-        b=ap3nsqRIbVglIX5uOs5j/QqXFfEsLuOVHino0sBun5QUkoZvjg49kJP/HC+mihkMM2
-         UV8wymLXGYVEm0t32SGI6OvoZ/oJMXTEpCbd1aswRR0reS2SVruqanodxqy517R0xf8Y
-         yMqtrNF8sq8WZZ52KwxgUE3bhyZ/wUiIt06SsoGjuBWenj2evpmTPyNC9PgSZShyX5Ua
-         TT2rLL/R2KXDTlB60xZonsP0TjS8GKlwd7X90ObbEmqi01y1Fm1ml36t43ZglZBQReQm
-         bObD04KuLj+63t6m7m1Qx9R9MDDI/2IainJq4M/YVVu0hXj7HnEmRq/Q3O76C+kcLaPH
-         N61g==
-X-Gm-Message-State: AJIora8+XCUwsdmEp7NFO0hyIwRfsEno1EXfniwMFPuG1CGfEf+p2ZMT
-        wPbrsADsovwJ7QQfZ+XYmGI=
-X-Google-Smtp-Source: AGRyM1s8o6YScWcQySEP8fO7dhzrUhfQOVU58ewGqYEdklRoB1MFHp44EBzIi8sSICmPaTlpZ+jMYw==
-X-Received: by 2002:a05:6000:1f9a:b0:21b:9a99:ee5f with SMTP id bw26-20020a0560001f9a00b0021b9a99ee5fmr6237719wrb.600.1656567810560;
-        Wed, 29 Jun 2022 22:43:30 -0700 (PDT)
-Received: from amir-ThinkPad-T480.lan ([5.29.8.191])
-        by smtp.gmail.com with ESMTPSA id m20-20020a7bcf34000000b003a04d54b2f3sm1365612wmg.24.2022.06.29.22.43.28
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=LMdraqJ988nUyorA+H9lwzJVixuJXHhhTOJ8MUyHYVI=;
+        b=IFSzEeqOspA3cmOnTxivDUFanUmsBfkt0grmM60tgkuM3YHfHJX7vl+2lR6EWRszAE
+         PFPL3DHbo6KKVx8KoFc71iYwDfc12YOlzrfAvEFYYYiBTyQQSI6WmDITv3vyzK4bufyh
+         u7ONPKrCYumse9SmfqB35SIZH3mWvA6h/+iAbNshu10Ko5mQkCWn9P77GGR/b9vqQsOK
+         601ZF/dftv6CiIHrtVx9uhFXzq1wNSsylkq3i3rsomjNBQyIlbOowMSY0ZCVEzorsHBm
+         SkVK55DsvjiSgKbeHDxN61cc4Cku8xRHmY5ReaCh3FsGTV98C+DCKvP2hkV+sFdT0OS4
+         h3Yg==
+X-Gm-Message-State: AJIora/XUqMAaeh3Jr/IrR9gytx4DwiH6yVNZ9n8WibjFPb0V6Ms8+8m
+        xQK/3vgvlkiXQQV71YJh8zotSf4fxD7dqJAZ+9VTpQ6VtobGWU623k9HG0hD2OpmVdQNPvZgBGz
+        5CsnjelD6SAdwmCNR1kLR
+X-Received: by 2002:a05:622a:19a9:b0:31b:eb4e:5cd with SMTP id u41-20020a05622a19a900b0031beb4e05cdmr6199082qtc.467.1656571041860;
+        Wed, 29 Jun 2022 23:37:21 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1tkpnMc2dN7rykGGbT3nmvPDBrjDgjKOt17YDWp1kgTJtjvpML6ISHOVbzmT6Vm6KC3Qms03A==
+X-Received: by 2002:a05:622a:19a9:b0:31b:eb4e:5cd with SMTP id u41-20020a05622a19a900b0031beb4e05cdmr6199069qtc.467.1656571041568;
+        Wed, 29 Jun 2022 23:37:21 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id g84-20020a379d57000000b0069c72b41b59sm14665914qke.2.2022.06.29.23.37.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jun 2022 22:43:29 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH] MAINTAINERS: add Amir as xfs maintainer for 5.10.y
-Date:   Thu, 30 Jun 2022 08:43:21 +0300
-Message-Id: <20220630054321.3008933-1-amir73il@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        Wed, 29 Jun 2022 23:37:21 -0700 (PDT)
+Date:   Thu, 30 Jun 2022 14:37:14 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 3/9] xfs: test mkfs.xfs sizing of internal logs that
+Message-ID: <20220630063714.vrvyip5b2fari3up@zlang-mailbox>
+References: <165644767753.1045534.18231838177395571946.stgit@magnolia>
+ <165644769450.1045534.8663346508633304230.stgit@magnolia>
+ <20220629041807.GP1098723@dread.disaster.area>
+ <YrzVmF1ixmr/3QhY@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YrzVmF1ixmr/3QhY@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an attempt to direct the bots and human that are testing
-LTS 5.10.y towards the maintainer of xfs in the 5.10.y tree.
+On Wed, Jun 29, 2022 at 03:43:36PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 29, 2022 at 02:18:07PM +1000, Dave Chinner wrote:
+> > On Tue, Jun 28, 2022 at 01:21:34PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > This is a regression test that exercises the mkfs.xfs code that creates
+> > > log sizes that are very close to the AG size when stripe units are in
+> > > play and/or when the log is forced to be in AG 0.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  tests/xfs/843     |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/843.out |    2 ++
+> > >  2 files changed, 53 insertions(+)
+> > >  create mode 100755 tests/xfs/843
+> > >  create mode 100644 tests/xfs/843.out
+> > > 
+> > > 
+> > > diff --git a/tests/xfs/843 b/tests/xfs/843
+> > > new file mode 100755
+> > > index 00000000..5bb4bfb4
+> > > --- /dev/null
+> > > +++ b/tests/xfs/843
+> > > @@ -0,0 +1,51 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test 843
+> > > +#
+> > > +# Now that we've increased the default log size calculation, test mkfs with
+> > > +# various stripe units and filesystem sizes to see if we can provoke mkfs into
+> > > +# breaking.
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest auto mkfs
+> > > +
+> > > +# real QA test starts here
+> > > +
+> > > +# Modify as appropriate.
+> > > +_supported_fs xfs
+> > > +_require_test
+> > > +echo Silence is golden
+> > > +
+> > > +testfile=$TEST_DIR/a
+> > > +rm -f $testfile
+> > > +
+> > > +test_format() {
+> > > +	local tag="$1"
+> > > +	shift
+> > > +
+> > > +	echo "$tag" >> $seqres.full
+> > > +	$MKFS_XFS_PROG $@ -d file,name=$testfile &>> $seqres.full
+> > > +	local res=$?
+> > > +	test $res -eq 0 || echo "$tag FAIL $res" | tee -a $seqres.full
+> > > +}
+> > > +
+> > > +# First we try various small filesystems and stripe sizes.
+> > > +for M in `seq 298 302` `seq 490 520`; do
+> > > +	for S in `seq 32 4 64`; do
+> > > +		test_format "M=$M S=$S" -dsu=${S}k,sw=1,size=${M}m -N
+> > > +	done
+> > > +done
+> > > +
+> > > +# Log so large it pushes the root dir into AG 1.  We can't use -N for the mkfs
+> > > +# because this check only occurs after the root directory has been allocated,
+> > > +# which mkfs -N doesn't do.
+> > > +test_format "log pushes rootdir into AG 1" -d agcount=3200,size=6366g -lagnum=0 -N
+> > 
+> > Why are you passing "-N" to the test if it can't be used to test
+> > this?
+> 
+> I guess I went a little overboard after you asked for more -N and less
+> test runtime last time.
 
-This is not an upstream MAINTAINERS entry and 5.15.y and 5.4.y will
-have their own LTS xfs maintainer entries.
-
-Update Darrick's email address from upstream and add Amir as xfs
-maintaier for the 5.10.y tree.
-
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Link: https://lore.kernel.org/linux-xfs/Yrx6%2F0UmYyuBPjEr@magnolia/
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
-
-Greg,
-
-We decided to try and fork MAINTAINERS.
-
-I don't know if this was attempted before and I don't know if you
-think that is a good idea, but the rationale is that at least some
-of the scripts that report bugs on LTS, will be running get_maintainer.pl
-on the LTS branch they are testing.
-
-The scripts that run get_maintainer.pl on master can be tought to
-do the right thing for LTS reporting.
-This seems easier and more practical then teaching the scripts to
-parse LTS specific entries in upstream MAINTAINERS.
-
-You have another patch like that coming fro Leah for 5.15.y.
+Is there anything different coverage if mkfs.xfs with or without "-N" (except
+really writing on disk) ? If no difference, I'm fine with that, or I think
+without "-N" might be good, especially this case only makes fs with small size,
+it's fast enough.
 
 Thanks,
-Amir.
+Zorro
 
- MAINTAINERS | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7c118b507912..4d10e79030a9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -19246,7 +19246,8 @@ F:	arch/x86/xen/*swiotlb*
- F:	drivers/xen/*swiotlb*
- 
- XFS FILESYSTEM
--M:	Darrick J. Wong <darrick.wong@oracle.com>
-+M:	Amir Goldstein <amir73il@gmail.com>
-+M:	Darrick J. Wong <djwong@kernel.org>
- M:	linux-xfs@vger.kernel.org
- L:	linux-xfs@vger.kernel.org
- S:	Supported
--- 
-2.25.1
+> 
+> --D
+> 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> 
 
