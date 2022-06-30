@@ -2,134 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33192C43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jun 2022 02:18:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16C39C43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jun 2022 05:31:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230089AbiF3CSV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jun 2022 22:18:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41076 "EHLO
+        id S231650AbiF3FbS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jun 2022 01:31:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229838AbiF3CSU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jun 2022 22:18:20 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6B76A13D59
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 19:18:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1656555494;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XP9k9gWAtgCMmPR+ae3+YtUkU01MhoolYxQwFMRA9PA=;
-        b=ZztHG/9KstGV6WlLYGSI4vl8dhKg26X/XvlElrW/6OYXlRp/EnAsWRCK8hpBH6nnZ3MoiF
-        IOM3Au/CyFrafHhSfFRJNJMNdoW67hdBTnSK0NpzLzk4YrBZBioAPxKupkELJp/1iqHaEF
-        5bus9TKDy2Suyke1LUs4xKCEnXFpq2A=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-86-xad5vje5OWetTH7af_VGew-1; Wed, 29 Jun 2022 22:18:13 -0400
-X-MC-Unique: xad5vje5OWetTH7af_VGew-1
-Received: by mail-qk1-f197.google.com with SMTP id g194-20020a379dcb000000b006aef700d954so18016645qke.1
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 19:18:13 -0700 (PDT)
+        with ESMTP id S229479AbiF3FbR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jun 2022 01:31:17 -0400
+Received: from mail-vs1-xe29.google.com (mail-vs1-xe29.google.com [IPv6:2607:f8b0:4864:20::e29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEC56D13E
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 22:31:15 -0700 (PDT)
+Received: by mail-vs1-xe29.google.com with SMTP id o13so17220822vsn.4
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jun 2022 22:31:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=bSnVICLFvoENe6aQA8wk2B3YE0y1LsZnu/gRj1tsXfQ=;
+        b=HBozIRSas1EsmD1WqJ9nZa63ljz2DQHkIysYupsEkq9WZm6OTuXS8ahW83l6v5133h
+         4K/SGUAMDwUCGzkcGovvj0yv1oW+JUTHCGOOCk2qe4++z6oP2CRdQU/qhlefP5XD3aFq
+         7QYaA4fCktORSSAAs1PVQEyZl9KeDoYupRMNWSRDxTrdhSgMyjTrY3anMQTRu4EusUT1
+         kfvN2W31I6VGQZflfwhP27dd1QZkmIrvtqBFjtrpKPQQG6UqZr/frOb03/HhvMYLQAJ2
+         I1Xxvy/VA3A/BMkUC9it3aINKPmBRjwcx9rWEDUKe4wPS++9icxueDsuIYFVM70tHBPf
+         tybw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=XP9k9gWAtgCMmPR+ae3+YtUkU01MhoolYxQwFMRA9PA=;
-        b=u7ZNPxrHuiVJxXugI3ERfRGuPJWOF878UnV8zDdh8x/znDntTFDYSPXbZiZ4cw9oaK
-         74LEzh3Cyxb6RveGEVeA6UQ8cyl9NdcRZiIKXhY5fqrl23jjsO9B7Kr3x4fbhBVs1CJ0
-         +OrgBCHCKT2l0aflCNucbgqyNXRwFwbFrUHQ50nKuAEfj2Z2jRMPhtvBwoy1f8H1M7as
-         uVwpCpJsycx4aLllwQTnpS+IL3qLrCJDx6UFq1RzyseO1mLQ6Yok4Eii+PUpjJA9aZii
-         1jCVF9BpX/Ce8DkWEetXWfYrTt3Y7+pC6Eie5lZs/l8o7Lfv7fQdvFToBCo1r9XtA3xb
-         lDsg==
-X-Gm-Message-State: AJIora/b9lbphrhO0AkgLEeyq6UnPpcqCzuA3vlaOR8VNlQEHJNNcj0P
-        eI3pKl8hkCrxAPlefS1YXKIE8UN9wE6fgLHovzvx/gS9yGlByevl7duxNAwRGyw4PfXlVl9Vbjy
-        rR7eUAFkwFWPwdO4mRR5V
-X-Received: by 2002:a05:620a:1031:b0:6ae:eaf2:928e with SMTP id a17-20020a05620a103100b006aeeaf2928emr4661247qkk.575.1656555492770;
-        Wed, 29 Jun 2022 19:18:12 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1sJLSKk9yUTATs5US32SwV9Vy3CVEllYYVaiciXq/5J64df3MYupnYe12M6Z9/XmR/bNur5yg==
-X-Received: by 2002:a05:620a:1031:b0:6ae:eaf2:928e with SMTP id a17-20020a05620a103100b006aeeaf2928emr4661240qkk.575.1656555492463;
-        Wed, 29 Jun 2022 19:18:12 -0700 (PDT)
-Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id c24-20020ac853d8000000b003171a5dc474sm11730983qtq.23.2022.06.29.19.18.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jun 2022 19:18:11 -0700 (PDT)
-Date:   Thu, 30 Jun 2022 10:18:06 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 2/9] xfs/070: filter new superblock verifier messages
-Message-ID: <20220630021806.vosxxjoqdzabgzid@zlang-mailbox>
-References: <165644767753.1045534.18231838177395571946.stgit@magnolia>
- <165644768886.1045534.3177166462110135738.stgit@magnolia>
- <20220629041547.GO1098723@dread.disaster.area>
- <20220629091248.vtqtlk2wvqkmtxkm@zlang-mailbox>
- <YrzVBs9h0lzYFvCo@magnolia>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=bSnVICLFvoENe6aQA8wk2B3YE0y1LsZnu/gRj1tsXfQ=;
+        b=IrkbgFTId//JyRzJLQ0uzHWnwG6zYaR3s4HmCj2LB4i9S75vFqFoqZeA3LxRG+vUkC
+         AUiSkRmxDuYEWJH9kkdyDf6/F8EODgUPuT2OmI+sqdLcR09Z0uBYX5Mxo7j/Q31MTL9I
+         J7q23gR4Rh+RrMDIK8mloyd7jM7gxYNhtlSzKbCb8hoUMSoxJAG1WY+qSwRrvGEEqk2V
+         IdN3Mvu0NjoteTP5vl7H7FQu5jsXZSthBbuz3+NomxrPTej1CQ5EJtBGKVJyZBBgpTmP
+         oteq5BDvgY/G4bKO4ap+vWJDXmCU7kWpmclGQ8p/tH5fo5YWNEQr2fHKtbzXrCamFPW2
+         uocg==
+X-Gm-Message-State: AJIora/l1Lq+8II5E7upF16R35JOPXyk3oQtsrH3VaqlhtMtjqNlmMX7
+        3j+HhnlWh+HGaGfhkRh/XoCHV2ey4FzzSmUaNUw=
+X-Google-Smtp-Source: AGRyM1vQHfA9lD/pkQ47QpG3669DOpnaFGO0bmoAg5qEI6uy3u5UbkWG+guD4bg3WwLFEeSUgmVZmC3KloAgI9YRuJo=
+X-Received: by 2002:a05:6102:38c7:b0:356:4e2f:ae5b with SMTP id
+ k7-20020a05610238c700b003564e2fae5bmr6848753vst.71.1656567075036; Wed, 29 Jun
+ 2022 22:31:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YrzVBs9h0lzYFvCo@magnolia>
+References: <20220629235546.3843096-1-leah.rumancik@gmail.com>
+In-Reply-To: <20220629235546.3843096-1-leah.rumancik@gmail.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 30 Jun 2022 08:31:03 +0300
+Message-ID: <CAOQ4uxh-2c0Sp=nUN-brB3ySb_rhYPLPa-VxJW9WOzSXOLUCww@mail.gmail.com>
+Subject: Re: [5.15] MAINTAINERS: add Leah as xfs maintainer for 5.15.y
+To:     Leah Rumancik <leah.rumancik@gmail.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 29, 2022 at 03:41:10PM -0700, Darrick J. Wong wrote:
-> On Wed, Jun 29, 2022 at 05:12:48PM +0800, Zorro Lang wrote:
-> > On Wed, Jun 29, 2022 at 02:15:47PM +1000, Dave Chinner wrote:
-> > > On Tue, Jun 28, 2022 at 01:21:28PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > In Linux 5.19, the superblock verifier logging changed to elaborate on
-> > > > what was wrong.  Fix the xfs_repair filtering function to accomodate
-> > > > this development.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  common/repair |    1 +
-> > > >  1 file changed, 1 insertion(+)
-> > > > 
-> > > > 
-> > > > diff --git a/common/repair b/common/repair
-> > > > index 463ef9db..398e9904 100644
-> > > > --- a/common/repair
-> > > > +++ b/common/repair
-> > > > @@ -29,6 +29,7 @@ _filter_repair()
-> > > >  # for sb
-> > > >  /- agno = / && next;	# remove each AG line (variable number)
-> > > >  s/(pointer to) (\d+)/\1 INO/;
-> > > > +s/Superblock has bad magic number.*/bad magic number/;
-> > > >  # Changed inode output in 5.5.0
-> > > >  s/sb root inode value /sb root inode /;
-> > > >  s/realtime bitmap inode value /realtime bitmap inode /;
-> > > 
-> > > Didn't I already fix that in commit 4c76d0ba ("xfs/070: filter the
-> > > bad sb magic number error")?
-> 
-> Ah whoops I guess we can drop this one then.
-> 
-> > Yes, you've added a line as below:
-> >   s/^Superblock has (bad magic number) 0x.*/\1/;
-> > which is equal to:
-> >   s/Superblock has bad magic number.*/bad magic number/;
-> > So we need to fix it again.
-> 
-> We .... do?
+On Thu, Jun 30, 2022 at 3:11 AM Leah Rumancik <leah.rumancik@gmail.com> wrote:
+>
+> Update MAINTAINERS for xfs in an effort to help direct bots/questions
+> about xfs in 5.15.y.
+>
+> Note: 5.10.y [1] and 5.4.y will have different updates to their
+> respective MAINTAINERS files for this effort.
+>
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
+>
+> [1] https://lore.kernel.org/linux-xfs/20220629213236.495647-1-amir73il@gmail.com/
 
-Sorry, "don't" missed :-P
+It is not good practice to put stuff after the commit message trailer.
+Greg's signature is going to be after that line.
+In this case, I think you could simply drop the [1] reference
+it's not important in git historic perspective.
 
-> 
-> --D
-> 
-> > 
-> > > 
-> > > Cheers,
-> > > 
-> > > Dave.
-> > > 
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > > 
-> > 
-> 
+You could add the references after --- if you like.
 
+Thanks,
+Amir.
+
+> ---
+>  MAINTAINERS | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 393706e85ba2..a60d7e0466af 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -20579,6 +20579,7 @@ F:      drivers/xen/*swiotlb*
+>
+>  XFS FILESYSTEM
+>  C:     irc://irc.oftc.net/xfs
+> +M:     Leah Rumancik <leah.rumancik@gmail.com>
+>  M:     Darrick J. Wong <djwong@kernel.org>
+>  M:     linux-xfs@vger.kernel.org
+>  L:     linux-xfs@vger.kernel.org
+> --
+> 2.37.0.rc0.161.g10f37bed90-goog
+>
