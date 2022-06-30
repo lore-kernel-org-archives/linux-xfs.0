@@ -2,159 +2,188 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C228DCCA473
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jun 2022 19:32:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C304C43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jun 2022 20:18:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236491AbiF3TcR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jun 2022 15:32:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34282 "EHLO
+        id S237235AbiF3USP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jun 2022 16:18:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236786AbiF3TcO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jun 2022 15:32:14 -0400
+        with ESMTP id S237234AbiF3USO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jun 2022 16:18:14 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08EEA43AD3;
-        Thu, 30 Jun 2022 12:32:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EFA32B5
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Jun 2022 13:18:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A08BCB82CF7;
-        Thu, 30 Jun 2022 19:32:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56E11C34115;
-        Thu, 30 Jun 2022 19:32:10 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E6E1FB82B5B
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Jun 2022 20:18:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D61BC341D0
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Jun 2022 20:18:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656617530;
-        bh=DMTA8Bz0BCQwoa9GNAKN/yJXk5fM9/qvJHnqz4K+fC0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=glCF99gDE/IRpaBtJFspxhjReol3MNurcv08ua9JSmN+F1lt31sIOdgEOVe0iku8X
-         pVhgNKwbG7lBg+389pmeBeFsmHt3QDv5tO4a2qqmq2osYMY/DHNAC4MzUJaPfJKVKN
-         R9rDHTPHx/8FVBc1IpxEP43LaCC6F3ViTjuFM3GI4T+d+3OvsgxjwObMhnMcNaCtTz
-         d5KwK/G5/+oRizjBB94+AGFj04yNB+ghIZuhWLWE8YZHQ5FFUWML2H8Of4rAaYFMWk
-         Y9Fodb2Ab3mL+WB1ENiyyf9gbK/MBNTdudk0O3CJT9ryLBOE92ZbxCKI/J5rULDiyP
-         k/vZgLkLDkqCg==
-Date:   Thu, 30 Jun 2022 12:32:09 -0700
+        s=k20201202; t=1656620290;
+        bh=qL4BAMvQnscJx2HVyJSCbyQnp/5G4JIBClzgUwH7/JM=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=ukdtY8rNKWzsELAgB4CZitwGtIDOAv1GXF/O4lqoeUTpI/OE/gGL2KDyiafzCgG4Z
+         r6IDA4ekLg4XwA4RXc+XEjSCGahmQDpsi/pHdvwDd0MUdXWBTxHVe4D5W0ivALFyG0
+         RsiipaK/f5f7oygNoapxqRYI59dx4V1EAJJmFccsXP0RnjYsW0pZj5zEsVTk8pQSMZ
+         SjrMm992zsm/WdngeyTa5MXXJ3gA9VQzXfaKQVSMqc2hR7C+JilL1wJKpNQeGbO63t
+         f205fzyUyIS3U7eroQHhofY3OhTKZ/MhnLqAhrB6Uot6OT8fUutNKl7ICa4Zs7C/UG
+         VbDNL79kW1nwg==
+Date:   Thu, 30 Jun 2022 13:18:10 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 3/9] xfs: test mkfs.xfs sizing of internal logs that
-Message-ID: <Yr36ObMe5agymA+F@magnolia>
-References: <165644767753.1045534.18231838177395571946.stgit@magnolia>
- <165644769450.1045534.8663346508633304230.stgit@magnolia>
- <20220629041807.GP1098723@dread.disaster.area>
- <YrzVmF1ixmr/3QhY@magnolia>
- <20220630063714.vrvyip5b2fari3up@zlang-mailbox>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: KASAN report while running generic/475?
+Message-ID: <Yr4FAt6oJfrdsMBQ@magnolia>
+References: <YrzyfMZg4UcIACC8@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220630063714.vrvyip5b2fari3up@zlang-mailbox>
+In-Reply-To: <YrzyfMZg4UcIACC8@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 30, 2022 at 02:37:14PM +0800, Zorro Lang wrote:
-> On Wed, Jun 29, 2022 at 03:43:36PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jun 29, 2022 at 02:18:07PM +1000, Dave Chinner wrote:
-> > > On Tue, Jun 28, 2022 at 01:21:34PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > This is a regression test that exercises the mkfs.xfs code that creates
-> > > > log sizes that are very close to the AG size when stripe units are in
-> > > > play and/or when the log is forced to be in AG 0.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  tests/xfs/843     |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  tests/xfs/843.out |    2 ++
-> > > >  2 files changed, 53 insertions(+)
-> > > >  create mode 100755 tests/xfs/843
-> > > >  create mode 100644 tests/xfs/843.out
-> > > > 
-> > > > 
-> > > > diff --git a/tests/xfs/843 b/tests/xfs/843
-> > > > new file mode 100755
-> > > > index 00000000..5bb4bfb4
-> > > > --- /dev/null
-> > > > +++ b/tests/xfs/843
-> > > > @@ -0,0 +1,51 @@
-> > > > +#! /bin/bash
-> > > > +# SPDX-License-Identifier: GPL-2.0
-> > > > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> > > > +#
-> > > > +# FS QA Test 843
-> > > > +#
-> > > > +# Now that we've increased the default log size calculation, test mkfs with
-> > > > +# various stripe units and filesystem sizes to see if we can provoke mkfs into
-> > > > +# breaking.
-> > > > +#
-> > > > +. ./common/preamble
-> > > > +_begin_fstest auto mkfs
-> > > > +
-> > > > +# real QA test starts here
-> > > > +
-> > > > +# Modify as appropriate.
-> > > > +_supported_fs xfs
-> > > > +_require_test
-> > > > +echo Silence is golden
-> > > > +
-> > > > +testfile=$TEST_DIR/a
-> > > > +rm -f $testfile
-> > > > +
-> > > > +test_format() {
-> > > > +	local tag="$1"
-> > > > +	shift
-> > > > +
-> > > > +	echo "$tag" >> $seqres.full
-> > > > +	$MKFS_XFS_PROG $@ -d file,name=$testfile &>> $seqres.full
-> > > > +	local res=$?
-> > > > +	test $res -eq 0 || echo "$tag FAIL $res" | tee -a $seqres.full
-> > > > +}
-> > > > +
-> > > > +# First we try various small filesystems and stripe sizes.
-> > > > +for M in `seq 298 302` `seq 490 520`; do
-> > > > +	for S in `seq 32 4 64`; do
-> > > > +		test_format "M=$M S=$S" -dsu=${S}k,sw=1,size=${M}m -N
-> > > > +	done
-> > > > +done
-> > > > +
-> > > > +# Log so large it pushes the root dir into AG 1.  We can't use -N for the mkfs
-> > > > +# because this check only occurs after the root directory has been allocated,
-> > > > +# which mkfs -N doesn't do.
-> > > > +test_format "log pushes rootdir into AG 1" -d agcount=3200,size=6366g -lagnum=0 -N
-> > > 
-> > > Why are you passing "-N" to the test if it can't be used to test
-> > > this?
-> > 
-> > I guess I went a little overboard after you asked for more -N and less
-> > test runtime last time.
+On Wed, Jun 29, 2022 at 05:46:52PM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Is there anything different coverage if mkfs.xfs with or without "-N" (except
-> really writing on disk) ? If no difference, I'm fine with that, or I think
-> without "-N" might be good, especially this case only makes fs with small size,
-> it's fast enough.
+> I turned on KASAN and my test rig tripped over generic/475.  I've not
+> added Dave's log scalability patchset to my test systems yet, so I know
+> that's /not/ to blame.  I'll take a further look in the morning, but if
+> this looks familiar to anyone, let me know?
+> 
+> (Yes, this is djwong-dev, but I don't have any log changes in my
+> development tree right now...)
 
-Yes -- with that one exception, the mkfs geometry validation examined by
-this test are all performed before mkfs writes anything to disk.  The
-root inode location check is performed /after/ allocating it, which
-means that we actually have to let it write the new filesystem to disk.
-
-That's why *most* of the tests can use -N to reduce runtime.
-
-Come to think of it, this really ought to have a _require_fs_space call
-to make sure that fallocating the log space succeeds.
+Aha, I think there's a race between the ioend worker shutting down the
+log, and log unmount freeing the CIL.  Patches soon.
 
 --D
 
-> Thanks,
-> Zorro
+> --D
 > 
-> > 
-> > --D
-> > 
-> > > Cheers,
-> > > 
-> > > Dave.
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > 
-> 
+>  XFS (dm-0): Mounting V5 Filesystem
+>  XFS (dm-0): Starting recovery (logdev: internal)
+>  XFS (dm-0): Ending recovery (logdev: internal)
+>  Buffer I/O error on dev dm-0, logical block 20639616, async page read
+>  Buffer I/O error on dev dm-0, logical block 20639617, async page read
+>  XFS (dm-0): log I/O error -5
+>  XFS (dm-0): Filesystem has been shut down due to log error (0x2).
+>  XFS (dm-0): Unmounting Filesystem
+>  XFS (dm-0): Please unmount the filesystem and rectify the problem(s).
+>  ==================================================================
+>  BUG: KASAN: use-after-free in do_raw_spin_lock+0x246/0x270
+>  Read of size 4 at addr ffff888109dd84c4 by task 3:1H/136
+>  
+>  CPU: 3 PID: 136 Comm: 3:1H Not tainted 5.19.0-rc4-xfsx #rc4 8e53ab5ad0fddeb31cee5e7063ff9c361915a9c4
+>  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
+>  Workqueue: xfs-log/dm-0 xlog_ioend_work [xfs]
+>  Call Trace:
+>   <TASK>
+>   dump_stack_lvl+0x34/0x44
+>   print_report.cold+0x2b8/0x661
+>   ? do_raw_spin_lock+0x246/0x270
+>   kasan_report+0xab/0x120
+>   ? do_raw_spin_lock+0x246/0x270
+>   do_raw_spin_lock+0x246/0x270
+>   ? rwlock_bug.part.0+0x90/0x90
+>   xlog_force_shutdown+0xf6/0x370 [xfs 4ad76ae0d6add7e8183a553e624c31e9ed567318]
+>   xlog_ioend_work+0x100/0x190 [xfs 4ad76ae0d6add7e8183a553e624c31e9ed567318]
+>   process_one_work+0x672/0x1040
+>   worker_thread+0x59b/0xec0
+>   ? __kthread_parkme+0xc6/0x1f0
+>   ? process_one_work+0x1040/0x1040
+>   ? process_one_work+0x1040/0x1040
+>   kthread+0x29e/0x340
+>   ? kthread_complete_and_exit+0x20/0x20
+>   ret_from_fork+0x1f/0x30
+>   </TASK>
+>  
+>  Allocated by task 154099:
+>   kasan_save_stack+0x1e/0x40
+>   __kasan_kmalloc+0x81/0xa0
+>   kmem_alloc+0x8d/0x2e0 [xfs]
+>   xlog_cil_init+0x1f/0x540 [xfs]
+>   xlog_alloc_log+0xd1e/0x1260 [xfs]
+>   xfs_log_mount+0xba/0x640 [xfs]
+>   xfs_mountfs+0xf2b/0x1d00 [xfs]
+>   xfs_fs_fill_super+0x10af/0x1910 [xfs]
+>   get_tree_bdev+0x383/0x670
+>   vfs_get_tree+0x7d/0x240
+>   path_mount+0xdb7/0x1890
+>   __x64_sys_mount+0x1fa/0x270
+>   do_syscall_64+0x2b/0x80
+>   entry_SYSCALL_64_after_hwframe+0x46/0xb0
+>  
+>  Freed by task 154151:
+>   kasan_save_stack+0x1e/0x40
+>   kasan_set_track+0x21/0x30
+>   kasan_set_free_info+0x20/0x30
+>   ____kasan_slab_free+0x110/0x190
+>   slab_free_freelist_hook+0xab/0x180
+>   kfree+0xbc/0x310
+>   xlog_dealloc_log+0x1b/0x2b0 [xfs]
+>   xfs_unmountfs+0x119/0x200 [xfs]
+>   xfs_fs_put_super+0x6e/0x2e0 [xfs]
+>   generic_shutdown_super+0x12b/0x3a0
+>   kill_block_super+0x95/0xd0
+>   deactivate_locked_super+0x80/0x130
+>   cleanup_mnt+0x329/0x4d0
+>   task_work_run+0xc5/0x160
+>   exit_to_user_mode_prepare+0xd4/0xe0
+>   syscall_exit_to_user_mode+0x1d/0x40
+>   entry_SYSCALL_64_after_hwframe+0x46/0xb0
+>  
+>  Last potentially related work creation:
+>   kasan_save_stack+0x1e/0x40
+>   __kasan_record_aux_stack+0x9f/0xb0
+>   call_rcu+0x6f/0x700
+>   xfs_destroy_mount_workqueues+0x37/0x150 [xfs]
+>   xfs_fs_put_super+0x201/0x2e0 [xfs]
+>   generic_shutdown_super+0x12b/0x3a0
+>   kill_block_super+0x95/0xd0
+>   deactivate_locked_super+0x80/0x130
+>   cleanup_mnt+0x329/0x4d0
+>   task_work_run+0xc5/0x160
+>   exit_to_user_mode_prepare+0xd4/0xe0
+>   syscall_exit_to_user_mode+0x1d/0x40
+>   entry_SYSCALL_64_after_hwframe+0x46/0xb0
+>  
+>  Second to last potentially related work creation:
+>   kasan_save_stack+0x1e/0x40
+>   __kasan_record_aux_stack+0x9f/0xb0
+>   call_rcu+0x6f/0x700
+>   xfs_destroy_mount_workqueues+0x93/0x150 [xfs]
+>   xfs_fs_put_super+0x201/0x2e0 [xfs]
+>   generic_shutdown_super+0x12b/0x3a0
+>   kill_block_super+0x95/0xd0
+>   deactivate_locked_super+0x80/0x130
+>   cleanup_mnt+0x329/0x4d0
+>   task_work_run+0xc5/0x160
+>   exit_to_user_mode_prepare+0xd4/0xe0
+>   syscall_exit_to_user_mode+0x1d/0x40
+>   entry_SYSCALL_64_after_hwframe+0x46/0xb0
+>  
+>  The buggy address belongs to the object at ffff888109dd8400
+>   which belongs to the cache kmalloc-512 of size 512
+>  The buggy address is located 196 bytes inside of
+>   512-byte region [ffff888109dd8400, ffff888109dd8600)
+>  
+>  The buggy address belongs to the physical page:
+>  page:ffffea0004277600 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x109dd8
+>  head:ffffea0004277600 order:2 compound_mapcount:0 compound_pincount:0
+>  flags: 0x17ff80000010200(slab|head|node=0|zone=2|lastcpupid=0xfff)
+>  raw: 017ff80000010200 ffffea00043cba00 dead000000000002 ffff888100042c80
+>  raw: 0000000000000000 0000000000100010 00000001ffffffff 0000000000000000
+>  page dumped because: kasan: bad access detected
+>  
+>  Memory state around the buggy address:
+>   ffff888109dd8380: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>   ffff888109dd8400: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>  >ffff888109dd8480: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>                                             ^
+>   ffff888109dd8500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>   ffff888109dd8580: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>  ==================================================================
+>  Disabling lock debugging due to kernel taint
