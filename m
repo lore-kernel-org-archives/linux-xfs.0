@@ -2,115 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C512C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jul 2022 14:40:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BF91C43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jul 2022 15:19:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233521AbiGAOkT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Jul 2022 10:40:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57300 "EHLO
+        id S231881AbiGAPTG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Jul 2022 11:19:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232990AbiGAOjw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jul 2022 10:39:52 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEE422AD5
-        for <linux-xfs@vger.kernel.org>; Fri,  1 Jul 2022 07:38:09 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id v126so2552202pgv.11
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Jul 2022 07:38:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language
-         :from:to:cc:references:in-reply-to:content-transfer-encoding;
-        bh=MdECX6StsDwY/HOE9bho1oyH3Lfj+A8SEWgA6oandRs=;
-        b=htdxb/HDwmi/YzdWahzjJffQctuG5MXckMstF41KpYf6EQeucbVu3nJ4/7EryMibbV
-         wWbbBXbRCpOTSu6TfW7aoqt24q476dJkFySQfDt7heRE4Yi94n6kD1B/wyXMx27Smmqz
-         sosV/osYAKjwPBDQVLUjNsAw7Pnfrr7qFtcFYnw9e66FR4FHLShiMtxtLzMMcQWZlZvJ
-         GGhxg0yyH+ri+aBzmB9HjxGtfBvoFZ2GT4Pyw1JZ1Nacu7v9u1f7rY+s0hdYyNMyx/U9
-         3gGsgxwxGq8NegeQwK2OXIjmsff+BhgXe/L/JtbLjzv1eQLwV5tmI0jxqU8S1XEnkLxj
-         PVnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:from:to:cc:references:in-reply-to
-         :content-transfer-encoding;
-        bh=MdECX6StsDwY/HOE9bho1oyH3Lfj+A8SEWgA6oandRs=;
-        b=Rm8RjXE0F2mO4S48huwuw+KkJFOejcOR1YXnUpdcjxA/EOGsKOhBTlOTji6uuMggcF
-         W2YbUgByoEFgXTNF7uQogM118+0U8pKCughJCVRpFIjfrsO5xaYr3vlKi+io8YxCRB8d
-         ypnlh+dXih99TohpBM7RQVf3WnqI2tgE9HU3Y5Sj+Oqh4hn8YjQSYLyrfGeODt7eC6b6
-         SWGzZVxTpR3mCLA6j8wJMqeGuLQDwdJwjualfpRMfRpuqXuQ1ZT41M9iDsqg04OYJ4My
-         cpp2qCjKVb/Ohz0rGLHicrYFzhCZnJ72/Z5swiYI756CBqVGOm1keH9Cxcjf+w9BqgML
-         pRJA==
-X-Gm-Message-State: AJIora9Yh4tpFnjHgZiFKxAei93HUA60+cvLw7t8gvIokaynKIle2gzV
-        McPCmtCF6gVcMdC+C2yOBk9/NA==
-X-Google-Smtp-Source: AGRyM1uKjjuh5y8C2QNR3OdYLOlPJOMb+cW/niCsCpR/8SBDaK+3GNxlX6i8j75gLGEQQIlxC825vA==
-X-Received: by 2002:a63:3c03:0:b0:40c:f773:1e07 with SMTP id j3-20020a633c03000000b0040cf7731e07mr12498382pga.443.1656686289055;
-        Fri, 01 Jul 2022 07:38:09 -0700 (PDT)
-Received: from [192.168.1.100] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id x20-20020a17090300d400b0016a1252976fsm15494539plc.107.2022.07.01.07.38.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Jul 2022 07:38:08 -0700 (PDT)
-Message-ID: <ca60a7dc-b16d-d8ce-f56c-547b449da8c9@kernel.dk>
-Date:   Fri, 1 Jul 2022 08:38:07 -0600
+        with ESMTP id S231781AbiGAPTG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jul 2022 11:19:06 -0400
+X-Greylist: delayed 498 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 01 Jul 2022 08:19:05 PDT
+Received: from mail.bestbizbuymarket.com (mail.bestbizbuymarket.com [80.211.19.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9336E344DC
+        for <linux-xfs@vger.kernel.org>; Fri,  1 Jul 2022 08:19:05 -0700 (PDT)
+Received: by mail.bestbizbuymarket.com (Postfix, from userid 1001)
+        id C26BF825AB; Fri,  1 Jul 2022 16:10:23 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=bestbizbuymarket.com;
+        s=mail; t=1656688245;
+        bh=dlfk7lCa/GDYfTFbmYBX7RAQEcH5w6Wlv3j1EE5DTzg=;
+        h=Date:From:To:Subject:From;
+        b=tHFxF9rEnzW9kWh/B5ES1jwT0nltYec5LnRsLhCO0YgwStpJ1rEnnBesbEXPqHQx6
+         M5sQbotoKA6zAPn0iYP/hhh8HRC0Au4U6hutOe3oUOQpRB1Bp/SDcN4a3Md5lcp/4s
+         +GesFjhCrxCIalj5dLoZxB1KdSbBqZszYgUGBJxBEAEuQd+1ZOanN8I8osTbDR0BuS
+         U2FFCpGYYdGXmXKL8m4JYQT9uNbtpQJae5oKu9p/VcFxM6PU4KisrTsCiduSzOsCT4
+         hDExHp9zfZEsRD9ekbPGJEWfkulJJYaIDxP0tW8QLK3DHo3JIwUs0PWxHTdwTC/sM6
+         7ZvDr579pPazg==
+Received: by mail.bestbizbuymarket.com for <linux-xfs@vger.kernel.org>; Fri,  1 Jul 2022 15:10:04 GMT
+Message-ID: <20220701144500-0.1.6.6j0.0.pjhfx00qkk@bestbizbuymarket.com>
+Date:   Fri,  1 Jul 2022 15:10:04 GMT
+From:   "Walker Cooney" <walker.cooney@bestbizbuymarket.com>
+To:     <linux-xfs@vger.kernel.org>
+Subject: SEO analysis 
+X-Mailer: mail.bestbizbuymarket.com
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v7 15/15] xfs: Add async buffered write support
-Content-Language: en-US
-From:   Jens Axboe <axboe@kernel.dk>
-To:     Al Viro <viro@zeniv.linux.org.uk>, Stefan Roesch <shr@fb.com>
-Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, jack@suse.cz, hch@infradead.org,
-        Christoph Hellwig <hch@lst.de>
-References: <20220601210141.3773402-1-shr@fb.com>
- <20220601210141.3773402-16-shr@fb.com> <Yr56ci/IZmN0S9J6@ZenIV>
- <0a75a0c4-e2e5-b403-27bc-e43872fecdc1@kernel.dk>
- <ef7c1154-b5ba-4017-f9fd-dea936a837fc@kernel.dk>
-In-Reply-To: <ef7c1154-b5ba-4017-f9fd-dea936a837fc@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/1/22 8:30 AM, Jens Axboe wrote:
-> On 7/1/22 8:19 AM, Jens Axboe wrote:
->> On 6/30/22 10:39 PM, Al Viro wrote:
->>> On Wed, Jun 01, 2022 at 02:01:41PM -0700, Stefan Roesch wrote:
->>>> This adds the async buffered write support to XFS. For async buffered
->>>> write requests, the request will return -EAGAIN if the ilock cannot be
->>>> obtained immediately.
->>>
->>> breaks generic/471...
->>
->> That test case is odd, because it makes some weird assumptions about
->> what RWF_NOWAIT means. Most notably that it makes it mean if we should
->> instantiate blocks or not. Where did those assumed semantics come from?
->> On the read side, we have clearly documented that it should "not wait
->> for data which is not immediately available".
->>
->> Now it is possible that we're returning a spurious -EAGAIN here when we
->> should not be. And that would be a bug imho. I'll dig in and see what's
->> going on.
-> 
-> This is the timestamp update that needs doing which will now return
-> -EAGAIN if IOCB_NOWAIT is set as it may block.
-> 
-> I do wonder if we should just allow inode time updates with IOCB_NOWAIT,
-> even on the io_uring side. Either that, or passed in RWF_NOWAIT
-> semantics don't map completely to internal IOCB_NOWAIT semantics. At
-> least in terms of what generic/471 is doing, but I'm not sure who came
-> up with that and if it's established semantics or just some made up ones
-> from whomever wrote that test. I don't think they make any sense, to be
-> honest.
+Hello,
 
-Further support that generic/471 is just randomly made up semantics,
-it needs to special case btrfs with nocow or you'd get -EAGAIN anyway
-for that test.
+would you like to reach more clients?
 
-And it's relying on some random timing to see if this works. I really
-think that test case is just hot garbage, and doesn't test anything
-meaningful.
+As one of the first SEO agencies in Europe, we=E2=80=99ve introduced SEO =
+360 service (SEO, UX, and SEM), which assures a multidimensional approach=
+ to optimising company=E2=80=99s visibility online and increasing website=
+ traffic.
 
--- 
-Jens Axboe
+We provide a free consultation with our specialist, during which we will =
+conduct a detailed analysis of your website or e-shop, positioning indica=
+tors and check the actions and results achieved by your competitors.
 
+Our clients gain notable results by using a dedicated strategy, extensive=
+ website analytics, technical optimisation, adding new subpages and link =
+building.
+
+With 14 years of experience and the skills of over 350 specialists workin=
+g on 3 continents, you can increase your sales and become an industry lea=
+der.
+
+Please let us know if you want to learn more about our methods and possib=
+le results.
+
+Yours sincerely,
+Walker Cooney
