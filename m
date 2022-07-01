@@ -2,54 +2,54 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79AD2CCA479
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jul 2022 14:35:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C512C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jul 2022 14:40:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232738AbiGAOfm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Jul 2022 10:35:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55098 "EHLO
+        id S233521AbiGAOkT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Jul 2022 10:40:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232741AbiGAOf2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jul 2022 10:35:28 -0400
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E05F3FBC7
-        for <linux-xfs@vger.kernel.org>; Fri,  1 Jul 2022 07:30:54 -0700 (PDT)
-Received: by mail-pg1-x533.google.com with SMTP id r66so2574482pgr.2
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Jul 2022 07:30:54 -0700 (PDT)
+        with ESMTP id S232990AbiGAOjw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jul 2022 10:39:52 -0400
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEE422AD5
+        for <linux-xfs@vger.kernel.org>; Fri,  1 Jul 2022 07:38:09 -0700 (PDT)
+Received: by mail-pg1-x52c.google.com with SMTP id v126so2552202pgv.11
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Jul 2022 07:38:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:subject:content-language
          :from:to:cc:references:in-reply-to:content-transfer-encoding;
-        bh=lcUts9IRbHMoYKbUwXCQXdwgQkjG8wAgntfc6a84Bzk=;
-        b=i6JialmZiw+wHNeAvHcpKTIFr0MYcZSBWHyK9ku4aQu3UocWa79NsyyNmyZAjZxLXF
-         PMHTN+aMRiS9m/Lc5x3K/0diosTPQEjG9P4lx2GzEHd3O3fCe5ICdFvFa6XC1rDYWjgF
-         fB5sKKdLorSL3/BvShteEZ3YsoJ48nKfHxDDemnRRPRIh6srncHNrCp41yl9zFfzTa3e
-         gZGArV8NlySbiki+wKdD4rOi91oUEacsZ+akcux088FMB07dPkgxgtN0Lz3RIoRSwKlD
-         Fhr18qgexDLlJy9/2meoYDpr0YQSga9XJllO/448ogR2uD5X8Am0GB3TJw6ZNKjTJWxS
-         LWdg==
+        bh=MdECX6StsDwY/HOE9bho1oyH3Lfj+A8SEWgA6oandRs=;
+        b=htdxb/HDwmi/YzdWahzjJffQctuG5MXckMstF41KpYf6EQeucbVu3nJ4/7EryMibbV
+         wWbbBXbRCpOTSu6TfW7aoqt24q476dJkFySQfDt7heRE4Yi94n6kD1B/wyXMx27Smmqz
+         sosV/osYAKjwPBDQVLUjNsAw7Pnfrr7qFtcFYnw9e66FR4FHLShiMtxtLzMMcQWZlZvJ
+         GGhxg0yyH+ri+aBzmB9HjxGtfBvoFZ2GT4Pyw1JZ1Nacu7v9u1f7rY+s0hdYyNMyx/U9
+         3gGsgxwxGq8NegeQwK2OXIjmsff+BhgXe/L/JtbLjzv1eQLwV5tmI0jxqU8S1XEnkLxj
+         PVnQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:from:to:cc:references:in-reply-to
          :content-transfer-encoding;
-        bh=lcUts9IRbHMoYKbUwXCQXdwgQkjG8wAgntfc6a84Bzk=;
-        b=JiNWy3uvvNk+xMIzRVXQU0qObBRmHNipi3b+dzD+BLlo1FlaXXjHVeNokRXRrbivcm
-         KU331au0728lIZ8xIrhBOgGKLDgifZihQNcAKnbxhcgRG7GexYqfJPat8u/95j9840Yt
-         TWhhrJlIDshiQlS+SkR7SKHSolwhSkboJ6IXdIIBxFPJ4kkI1Jo/3R1ym+xEXe9zrpCj
-         qi+os455vn/ayLCucAvcHhCtWGezt0FVR5U11HKp5f3VIseLRa3KlY5rE3SZlwRz8Zib
-         Js98UCao0UHOt9xAqovmenSz+0HqbHJH2H/vySwe0iIIxAbPzQf3oGnijdcr6rHtgNAd
-         DMcQ==
-X-Gm-Message-State: AJIora+8Z8xB8Vhfx6bffRQe/wsAcR17mzkvifCITzo9/ulxRE14XrmO
-        mizqB8qpNBZFxqLUPepvoi3gnQ==
-X-Google-Smtp-Source: AGRyM1uh4FYNuZr5eq7SjLg0KSqYaKNNix56AAXCr8IAjyfrw3Y704ctiVNZiyUFZK8dp7vB5+ohjQ==
-X-Received: by 2002:a63:1047:0:b0:40d:7553:d897 with SMTP id 7-20020a631047000000b0040d7553d897mr12334549pgq.485.1656685854229;
-        Fri, 01 Jul 2022 07:30:54 -0700 (PDT)
+        bh=MdECX6StsDwY/HOE9bho1oyH3Lfj+A8SEWgA6oandRs=;
+        b=Rm8RjXE0F2mO4S48huwuw+KkJFOejcOR1YXnUpdcjxA/EOGsKOhBTlOTji6uuMggcF
+         W2YbUgByoEFgXTNF7uQogM118+0U8pKCughJCVRpFIjfrsO5xaYr3vlKi+io8YxCRB8d
+         ypnlh+dXih99TohpBM7RQVf3WnqI2tgE9HU3Y5Sj+Oqh4hn8YjQSYLyrfGeODt7eC6b6
+         SWGzZVxTpR3mCLA6j8wJMqeGuLQDwdJwjualfpRMfRpuqXuQ1ZT41M9iDsqg04OYJ4My
+         cpp2qCjKVb/Ohz0rGLHicrYFzhCZnJ72/Z5swiYI756CBqVGOm1keH9Cxcjf+w9BqgML
+         pRJA==
+X-Gm-Message-State: AJIora9Yh4tpFnjHgZiFKxAei93HUA60+cvLw7t8gvIokaynKIle2gzV
+        McPCmtCF6gVcMdC+C2yOBk9/NA==
+X-Google-Smtp-Source: AGRyM1uKjjuh5y8C2QNR3OdYLOlPJOMb+cW/niCsCpR/8SBDaK+3GNxlX6i8j75gLGEQQIlxC825vA==
+X-Received: by 2002:a63:3c03:0:b0:40c:f773:1e07 with SMTP id j3-20020a633c03000000b0040cf7731e07mr12498382pga.443.1656686289055;
+        Fri, 01 Jul 2022 07:38:09 -0700 (PDT)
 Received: from [192.168.1.100] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id u3-20020a170903108300b0016a613012a0sm15494212pld.210.2022.07.01.07.30.53
+        by smtp.gmail.com with ESMTPSA id x20-20020a17090300d400b0016a1252976fsm15494539plc.107.2022.07.01.07.38.07
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Jul 2022 07:30:53 -0700 (PDT)
-Message-ID: <ef7c1154-b5ba-4017-f9fd-dea936a837fc@kernel.dk>
-Date:   Fri, 1 Jul 2022 08:30:52 -0600
+        Fri, 01 Jul 2022 07:38:08 -0700 (PDT)
+Message-ID: <ca60a7dc-b16d-d8ce-f56c-547b449da8c9@kernel.dk>
+Date:   Fri, 1 Jul 2022 08:38:07 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
@@ -64,42 +64,52 @@ Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
 References: <20220601210141.3773402-1-shr@fb.com>
  <20220601210141.3773402-16-shr@fb.com> <Yr56ci/IZmN0S9J6@ZenIV>
  <0a75a0c4-e2e5-b403-27bc-e43872fecdc1@kernel.dk>
-In-Reply-To: <0a75a0c4-e2e5-b403-27bc-e43872fecdc1@kernel.dk>
+ <ef7c1154-b5ba-4017-f9fd-dea936a837fc@kernel.dk>
+In-Reply-To: <ef7c1154-b5ba-4017-f9fd-dea936a837fc@kernel.dk>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/1/22 8:19 AM, Jens Axboe wrote:
-> On 6/30/22 10:39 PM, Al Viro wrote:
->> On Wed, Jun 01, 2022 at 02:01:41PM -0700, Stefan Roesch wrote:
->>> This adds the async buffered write support to XFS. For async buffered
->>> write requests, the request will return -EAGAIN if the ilock cannot be
->>> obtained immediately.
+On 7/1/22 8:30 AM, Jens Axboe wrote:
+> On 7/1/22 8:19 AM, Jens Axboe wrote:
+>> On 6/30/22 10:39 PM, Al Viro wrote:
+>>> On Wed, Jun 01, 2022 at 02:01:41PM -0700, Stefan Roesch wrote:
+>>>> This adds the async buffered write support to XFS. For async buffered
+>>>> write requests, the request will return -EAGAIN if the ilock cannot be
+>>>> obtained immediately.
+>>>
+>>> breaks generic/471...
 >>
->> breaks generic/471...
+>> That test case is odd, because it makes some weird assumptions about
+>> what RWF_NOWAIT means. Most notably that it makes it mean if we should
+>> instantiate blocks or not. Where did those assumed semantics come from?
+>> On the read side, we have clearly documented that it should "not wait
+>> for data which is not immediately available".
+>>
+>> Now it is possible that we're returning a spurious -EAGAIN here when we
+>> should not be. And that would be a bug imho. I'll dig in and see what's
+>> going on.
 > 
-> That test case is odd, because it makes some weird assumptions about
-> what RWF_NOWAIT means. Most notably that it makes it mean if we should
-> instantiate blocks or not. Where did those assumed semantics come from?
-> On the read side, we have clearly documented that it should "not wait
-> for data which is not immediately available".
+> This is the timestamp update that needs doing which will now return
+> -EAGAIN if IOCB_NOWAIT is set as it may block.
 > 
-> Now it is possible that we're returning a spurious -EAGAIN here when we
-> should not be. And that would be a bug imho. I'll dig in and see what's
-> going on.
+> I do wonder if we should just allow inode time updates with IOCB_NOWAIT,
+> even on the io_uring side. Either that, or passed in RWF_NOWAIT
+> semantics don't map completely to internal IOCB_NOWAIT semantics. At
+> least in terms of what generic/471 is doing, but I'm not sure who came
+> up with that and if it's established semantics or just some made up ones
+> from whomever wrote that test. I don't think they make any sense, to be
+> honest.
 
-This is the timestamp update that needs doing which will now return
--EAGAIN if IOCB_NOWAIT is set as it may block.
+Further support that generic/471 is just randomly made up semantics,
+it needs to special case btrfs with nocow or you'd get -EAGAIN anyway
+for that test.
 
-I do wonder if we should just allow inode time updates with IOCB_NOWAIT,
-even on the io_uring side. Either that, or passed in RWF_NOWAIT
-semantics don't map completely to internal IOCB_NOWAIT semantics. At
-least in terms of what generic/471 is doing, but I'm not sure who came
-up with that and if it's established semantics or just some made up ones
-from whomever wrote that test. I don't think they make any sense, to be
-honest.
+And it's relying on some random timing to see if this works. I really
+think that test case is just hot garbage, and doesn't test anything
+meaningful.
 
 -- 
 Jens Axboe
