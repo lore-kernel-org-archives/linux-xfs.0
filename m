@@ -2,127 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4734C43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jul 2022 05:14:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A7A2C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jul 2022 14:19:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231143AbiGAFO4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Jul 2022 01:14:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34036 "EHLO
+        id S231880AbiGAOTL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Jul 2022 10:19:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229650AbiGAFOz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jul 2022 01:14:55 -0400
-Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C2BD6677EE;
-        Thu, 30 Jun 2022 22:14:53 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3AJLjYGq6B6cmXTrRbn3QZXwxRtJbFchMFZxGqfqr?=
- =?us-ascii?q?LsXjdYENS12RVy2McX2/UPKnYZzPxKohxPorjpBkF7JCGx4cwT1A5pCpnJ55og?=
- =?us-ascii?q?ZCbXIzGdC8cHM8zwvXrFRsht4NHAjX5BJhcokT0+1H9YtANkVEmjfvSHuCkUba?=
- =?us-ascii?q?dUsxMbVQMpBkJ2EsLd9ER0tYAbeiRW2thiPuqyyHtEAbNNw1cbgr435m+RCZH5?=
- =?us-ascii?q?5wejt+3UmsWPpintHeG/5Uc4Ql2yauZdxMUSaEMdgK2qnqq8V23wo/Z109F5tK?=
- =?us-ascii?q?NmbC9fFAIQ6LJIE6FjX8+t6qK20AE/3JtlP1gcqd0hUR/0l1lm/hr1dxLro32R?=
- =?us-ascii?q?wEyIoXCheYcTwJFVSp5OMWq/Zeeeyfn4JLPlB2un3zEhq8G4FsNFYER5Od7KW9?=
- =?us-ascii?q?U8vkfMjoMclaIgOfe6LKwSsFtgMo5JcXmNY9ZvWtvpRnVD+khR5/rQKjQ49Jcm?=
- =?us-ascii?q?jAqiahmG+jSZs8cQT5udwjbJRlOPEoHTp4zgo+Agnj5bi0dpkmZqLQ650DNwwF?=
- =?us-ascii?q?rlrvgKtzYfpqNX8o9tkKZoH/Wumf0GBcXMPSBxjeftHGhnOnCmWX8Qo16PLm58?=
- =?us-ascii?q?ON6xU2d3UQNBxAME1i2u/+0jgi5Qd03FqC+0kLCtoBrrAryEIa7BEb+/Ra5Utc?=
- =?us-ascii?q?nc4I4O4UHBMulk8I4OzqkO1U=3D?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AKuVcIKPFYuaVXMBcTiWjsMiBIKoaSvp037Eq?=
- =?us-ascii?q?v3oBKyC9Ffbo7vxG/c5rsyMc5wx/ZJhNo6HlBEDEewK6yXcX2+cs1NWZMDUO0V?=
- =?us-ascii?q?HAROoJgLcKgQeQfhEWndQ86U4PSdkcNDS9NzlHZNjBkXSFOudl0N+a67qpmOub?=
- =?us-ascii?q?639sSDthY6Zm4xwRMHfhLmRGABlBGYEiFIeRou5Opz+bc3wRacihQlYfWeyrna?=
- =?us-ascii?q?ywqLvWJQ4BGwU86BSDyReh6LvBGRCe2RsEFxNjqI1SiVT4rw=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="127096438"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 01 Jul 2022 13:14:52 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id B88394D1719A;
-        Fri,  1 Jul 2022 13:14:51 +0800 (CST)
-Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 1 Jul 2022 13:14:50 +0800
-Received: from [192.168.22.78] (10.167.225.141) by
- G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 1 Jul 2022 13:14:53 +0800
-Message-ID: <07805923-6455-e046-8c0a-60ed99d1fb38@fujitsu.com>
-Date:   Fri, 1 Jul 2022 13:14:51 +0800
+        with ESMTP id S231642AbiGAOTK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jul 2022 10:19:10 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12D952F000
+        for <linux-xfs@vger.kernel.org>; Fri,  1 Jul 2022 07:19:09 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id m14-20020a17090a668e00b001ee6ece8368so6558593pjj.3
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Jul 2022 07:19:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=rzOZ/i9oSJaRcIRoI1iWhltC/vefgetj7tSZBTo878o=;
+        b=5HQrr8bsUEE61UmPmshuXLouerN7bDpQGL6uPBj0Z6oD+Z+BzfeXdXxfm+HPdIICP6
+         /xCJl1spZE4rJ97OF6puWsMJeHT9fvWxiRJbInko4k9KIJa9H4KxjwB5wo6cnUvHyRFj
+         3sa5jGx+4i/PgAp+XuwaejZ9X4yU18bWxPPbSJ0UKI9Z/6uHpbhVEcuSij4DdWW05JlZ
+         rCM4EpDrWg0Cx81bPnObzhqxBdnMW586nX+S86OWrQyBaK4GXuBJJfPgVpsJaUqMJBNT
+         j26E0dFwkFVt/aYyW3ZaB1RbYsySGLK4uO5JiaNKqgQcAS22gmYw9jOHmKP7CkOyB0aw
+         FYNA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=rzOZ/i9oSJaRcIRoI1iWhltC/vefgetj7tSZBTo878o=;
+        b=KEU9fWe1rEWtqqRdlxlT+9TM11bAEWXF71WkPFL8dFPJYWIxdJ1oh59BuCakzANEbj
+         xgfwTraET1rWqdnaPTUjk5Utdm0htygw5tAkC000FWm35mCjZ6tp/jwuq31vuHMJjjpS
+         kdBWqNOtQrZ80s3pDzBmVsSp4UHmeusdovRll2aNxOAuLJCpOO7MnlIPtjmBVcyAOmgT
+         LltFn7/UoRTOK3nkYoS0Gd2RfPlsX4Y6lONg3aQKXdJogjI0ooRE9xIo2gr5THkwmqeh
+         KkQAOM+zFsg5o5ZMLVytavJJ2Cj098eIuWI9j1jEJ9eFNpMhfCj0XNEO6WgNqeDd39mu
+         RHVQ==
+X-Gm-Message-State: AJIora9lbkAxWc5Kl0CfbHbThf+EPdRyTEZMX2I7rcnRutPi+3sKpoP8
+        BNXaVLL/6kl+iw3KlcUf+6WxOg==
+X-Google-Smtp-Source: AGRyM1v0RzZrxH3XgsAPTjbzNfvNy9O3MwTKLMrckgh2iet5mvp0kq7mJYZDwHlDICGwRoI1VcItsw==
+X-Received: by 2002:a17:90b:17c3:b0:1ed:157:b9f1 with SMTP id me3-20020a17090b17c300b001ed0157b9f1mr17066106pjb.205.1656685148583;
+        Fri, 01 Jul 2022 07:19:08 -0700 (PDT)
+Received: from [192.168.1.100] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id g8-20020a62e308000000b005251ff30dccsm15615879pfh.160.2022.07.01.07.19.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 01 Jul 2022 07:19:07 -0700 (PDT)
+Message-ID: <0a75a0c4-e2e5-b403-27bc-e43872fecdc1@kernel.dk>
+Date:   Fri, 1 Jul 2022 08:19:06 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-fsdevel@vger.kernel.org>,
-        <david@fromorbit.com>, <hch@infradead.org>
-References: <20220609143435.393724-1-ruansy.fnst@fujitsu.com>
- <Yr5AV5HaleJXMmUm@magnolia>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <Yr5AV5HaleJXMmUm@magnolia>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-yoursite-MailScanner-ID: B88394D1719A.AFAA7
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Subject: Re: [PATCH v7 15/15] xfs: Add async buffered write support
+Content-Language: en-US
+To:     Al Viro <viro@zeniv.linux.org.uk>, Stefan Roesch <shr@fb.com>
+Cc:     io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com, jack@suse.cz, hch@infradead.org,
+        Christoph Hellwig <hch@lst.de>
+References: <20220601210141.3773402-1-shr@fb.com>
+ <20220601210141.3773402-16-shr@fb.com> <Yr56ci/IZmN0S9J6@ZenIV>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <Yr56ci/IZmN0S9J6@ZenIV>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-在 2022/7/1 8:31, Darrick J. Wong 写道:
-> On Thu, Jun 09, 2022 at 10:34:35PM +0800, Shiyang Ruan wrote:
->> Failure notification is not supported on partitions.  So, when we mount
->> a reflink enabled xfs on a partition with dax option, let it fail with
->> -EINVAL code.
->>
->> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+On 6/30/22 10:39 PM, Al Viro wrote:
+> On Wed, Jun 01, 2022 at 02:01:41PM -0700, Stefan Roesch wrote:
+>> This adds the async buffered write support to XFS. For async buffered
+>> write requests, the request will return -EAGAIN if the ilock cannot be
+>> obtained immediately.
 > 
-> Looks good to me, though I think this patch applies to ... wherever all
-> those rmap+reflink+dax patches went.  I think that's akpm's tree, right?
+> breaks generic/471...
 
-Yes, they are in his tree, still in mm-unstable now.
+That test case is odd, because it makes some weird assumptions about
+what RWF_NOWAIT means. Most notably that it makes it mean if we should
+instantiate blocks or not. Where did those assumed semantics come from?
+On the read side, we have clearly documented that it should "not wait
+for data which is not immediately available".
 
-> 
-> Ideally this would go in through there to keep the pieces together, but
-> I don't mind tossing this in at the end of the 5.20 merge window if akpm
-> is unwilling.
+Now it is possible that we're returning a spurious -EAGAIN here when we
+should not be. And that would be a bug imho. I'll dig in and see what's
+going on.
 
-Both are fine to me.  Thanks!
-
-
---
-Ruan.
-
-> 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> --D
-> 
->> ---
->>   fs/xfs/xfs_super.c | 6 ++++--
->>   1 file changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->> index 8495ef076ffc..a3c221841fa6 100644
->> --- a/fs/xfs/xfs_super.c
->> +++ b/fs/xfs/xfs_super.c
->> @@ -348,8 +348,10 @@ xfs_setup_dax_always(
->>   		goto disable_dax;
->>   	}
->>   
->> -	if (xfs_has_reflink(mp)) {
->> -		xfs_alert(mp, "DAX and reflink cannot be used together!");
->> +	if (xfs_has_reflink(mp) &&
->> +	    bdev_is_partition(mp->m_ddev_targp->bt_bdev)) {
->> +		xfs_alert(mp,
->> +			"DAX and reflink cannot work with multi-partitions!");
->>   		return -EINVAL;
->>   	}
->>   
->> -- 
->> 2.36.1
->>
->>
->>
-
+-- 
+Jens Axboe
 
