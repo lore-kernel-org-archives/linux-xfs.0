@@ -2,68 +2,241 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BF91C43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jul 2022 15:19:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B64C43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jul 2022 16:03:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231881AbiGAPTG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Jul 2022 11:19:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49816 "EHLO
+        id S231361AbiGAQDb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Jul 2022 12:03:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231781AbiGAPTG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jul 2022 11:19:06 -0400
-X-Greylist: delayed 498 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 01 Jul 2022 08:19:05 PDT
-Received: from mail.bestbizbuymarket.com (mail.bestbizbuymarket.com [80.211.19.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9336E344DC
-        for <linux-xfs@vger.kernel.org>; Fri,  1 Jul 2022 08:19:05 -0700 (PDT)
-Received: by mail.bestbizbuymarket.com (Postfix, from userid 1001)
-        id C26BF825AB; Fri,  1 Jul 2022 16:10:23 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=bestbizbuymarket.com;
-        s=mail; t=1656688245;
-        bh=dlfk7lCa/GDYfTFbmYBX7RAQEcH5w6Wlv3j1EE5DTzg=;
-        h=Date:From:To:Subject:From;
-        b=tHFxF9rEnzW9kWh/B5ES1jwT0nltYec5LnRsLhCO0YgwStpJ1rEnnBesbEXPqHQx6
-         M5sQbotoKA6zAPn0iYP/hhh8HRC0Au4U6hutOe3oUOQpRB1Bp/SDcN4a3Md5lcp/4s
-         +GesFjhCrxCIalj5dLoZxB1KdSbBqZszYgUGBJxBEAEuQd+1ZOanN8I8osTbDR0BuS
-         U2FFCpGYYdGXmXKL8m4JYQT9uNbtpQJae5oKu9p/VcFxM6PU4KisrTsCiduSzOsCT4
-         hDExHp9zfZEsRD9ekbPGJEWfkulJJYaIDxP0tW8QLK3DHo3JIwUs0PWxHTdwTC/sM6
-         7ZvDr579pPazg==
-Received: by mail.bestbizbuymarket.com for <linux-xfs@vger.kernel.org>; Fri,  1 Jul 2022 15:10:04 GMT
-Message-ID: <20220701144500-0.1.6.6j0.0.pjhfx00qkk@bestbizbuymarket.com>
-Date:   Fri,  1 Jul 2022 15:10:04 GMT
-From:   "Walker Cooney" <walker.cooney@bestbizbuymarket.com>
-To:     <linux-xfs@vger.kernel.org>
-Subject: SEO analysis 
-X-Mailer: mail.bestbizbuymarket.com
+        with ESMTP id S231259AbiGAQDa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jul 2022 12:03:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9D8E41EAC5
+        for <linux-xfs@vger.kernel.org>; Fri,  1 Jul 2022 09:03:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1656691408;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=gscZC+lbayJaYo1pkT+jEcXOiGusMCk35lYaddpSCrQ=;
+        b=VgZsLFuweQvIqfbhOznac5xuI9L5bzzAYjpGmIedzDKjCQjV41TVJ7IjHwrxOVfp80omE0
+        b+Ms4+6DuF3tdrPLqB7gO4zqJgwKMhXMonpI9GUFZ+jgnBjQ1BMH5Fd1cW8/xS4lWZa06Z
+        xVkhEJb3bTcEPXL7M2Xz51u1+q7OqyM=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-606-d23o8bT8MFmwblDW2C93RQ-1; Fri, 01 Jul 2022 12:03:27 -0400
+X-MC-Unique: d23o8bT8MFmwblDW2C93RQ-1
+Received: by mail-qt1-f197.google.com with SMTP id w17-20020ac87e91000000b00304bc431155so652500qtj.21
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Jul 2022 09:03:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=gscZC+lbayJaYo1pkT+jEcXOiGusMCk35lYaddpSCrQ=;
+        b=0HtFvHEijQpPD00PbUYiMdK11ScHXF9bnmywwn3W5ZQQPEU0swOYmrNaWL38fJNCvw
+         4EPPLMkJb45EFxWmqSWHl2+hTPoPM2Dszfrsv/rhzYpFTC1tCxX+baRXgZA7KmB6O1an
+         7dtvg4Uwd4QyP7oFIXKlV0TSG4bt6LLlkjWbt7EVIW2If8tlA1Nq4DPNM95DvkA/YBeK
+         gXnsTLW4SMpODGr0I96aGcTDb42Qq1x7HdvRnwhIMMnTBL+N3gid96OXoQw99dDGdZcb
+         9s5iqFnbvQ9PtLeoraK4pZ6bMt6H9E9jgERSZBJnbiCBNJpMzUmCqCzu5FTGA77vr3tD
+         kSRg==
+X-Gm-Message-State: AJIora9LZfs4KASvaKGhMJx52cbNSt7bAjcNC3RvaBplC3Bm3l3K6EvG
+        6Lqv4pbauEFBEkIMpNI71rNGhizRY+bUhMqaSRdXNGKdBJpJBkaRBQ8O6dImFixHngEE0nkWkwN
+        YTBdUEqJa/wBL7DPXz0y0
+X-Received: by 2002:a37:a7d3:0:b0:6ae:fdb9:e8e4 with SMTP id q202-20020a37a7d3000000b006aefdb9e8e4mr10821095qke.325.1656691406979;
+        Fri, 01 Jul 2022 09:03:26 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1t1iYX6rjVasonclgqOkCg3XboPMmcC14x0LLHDXq1Sopq++ualMy1pa8Lq3L2tngGTGEAphw==
+X-Received: by 2002:a37:a7d3:0:b0:6ae:fdb9:e8e4 with SMTP id q202-20020a37a7d3000000b006aefdb9e8e4mr10821008qke.325.1656691406093;
+        Fri, 01 Jul 2022 09:03:26 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id s12-20020a05620a16ac00b006a70f581243sm16748615qkj.93.2022.07.01.09.03.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 01 Jul 2022 09:03:25 -0700 (PDT)
+Date:   Fri, 1 Jul 2022 12:03:23 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        linux-mm@kvack.org
+Subject: Re: Multi-page folio issues in 5.19-rc4 (was [PATCH v3 25/25] xfs:
+ Support large folios)
+Message-ID: <Yr8ay3FJiL+7q0bW@bfoster>
+References: <Yrm6YM2uS+qOoPcn@casper.infradead.org>
+ <YrosM1+yvMYliw2l@magnolia>
+ <20220628073120.GI227878@dread.disaster.area>
+ <YrrlrMK/7pyZwZj2@casper.infradead.org>
+ <Yrrmq4hmJPkf5V7s@casper.infradead.org>
+ <Yrr/oBlf1Eig8uKS@casper.infradead.org>
+ <20220628221757.GJ227878@dread.disaster.area>
+ <YruNE72sW4Aizq8U@magnolia>
+ <YrxMOgIvKVe6u/uR@bfoster>
+ <Yry0bkQRN4sGgTbf@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yry0bkQRN4sGgTbf@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+On Wed, Jun 29, 2022 at 01:22:06PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 29, 2022 at 08:57:30AM -0400, Brian Foster wrote:
+> > On Tue, Jun 28, 2022 at 04:21:55PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Jun 29, 2022 at 08:17:57AM +1000, Dave Chinner wrote:
+> > > > On Tue, Jun 28, 2022 at 02:18:24PM +0100, Matthew Wilcox wrote:
+> > > > > On Tue, Jun 28, 2022 at 12:31:55PM +0100, Matthew Wilcox wrote:
+> > > > > > On Tue, Jun 28, 2022 at 12:27:40PM +0100, Matthew Wilcox wrote:
+> > > > > > > On Tue, Jun 28, 2022 at 05:31:20PM +1000, Dave Chinner wrote:
+> > > > > > > > So using this technique, I've discovered that there's a dirty page
+> > > > > > > > accounting leak that eventually results in fsx hanging in
+> > > > > > > > balance_dirty_pages().
+> > > > > > > 
+> > > > > > > Alas, I think this is only an accounting error, and not related to
+> > > > > > > the problem(s) that Darrick & Zorro are seeing.  I think what you're
+> > > > > > > seeing is dirty pages being dropped at truncation without the
+> > > > > > > appropriate accounting.  ie this should be the fix:
+> > > > > > 
+> > > > > > Argh, try one that actually compiles.
+> > > > > 
+> > > > > ... that one's going to underflow the accounting.  Maybe I shouldn't
+> > > > > be writing code at 6am?
+> > > > > 
+> > > > > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> > > > > index f7248002dad9..4eec6ee83e44 100644
+> > > > > --- a/mm/huge_memory.c
+> > > > > +++ b/mm/huge_memory.c
+> > > > > @@ -18,6 +18,7 @@
+> > > > >  #include <linux/shrinker.h>
+> > > > >  #include <linux/mm_inline.h>
+> > > > >  #include <linux/swapops.h>
+> > > > > +#include <linux/backing-dev.h>
+> > > > >  #include <linux/dax.h>
+> > > > >  #include <linux/khugepaged.h>
+> > > > >  #include <linux/freezer.h>
+> > > > > @@ -2439,11 +2440,15 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+> > > > >  		__split_huge_page_tail(head, i, lruvec, list);
+> > > > >  		/* Some pages can be beyond EOF: drop them from page cache */
+> > > > >  		if (head[i].index >= end) {
+> > > > > -			ClearPageDirty(head + i);
+> > > > > -			__delete_from_page_cache(head + i, NULL);
+> > > > > +			struct folio *tail = page_folio(head + i);
+> > > > > +
+> > > > >  			if (shmem_mapping(head->mapping))
+> > > > >  				shmem_uncharge(head->mapping->host, 1);
+> > > > > -			put_page(head + i);
+> > > > > +			else if (folio_test_clear_dirty(tail))
+> > > > > +				folio_account_cleaned(tail,
+> > > > > +					inode_to_wb(folio->mapping->host));
+> > > > > +			__filemap_remove_folio(tail, NULL);
+> > > > > +			folio_put(tail);
+> > > > >  		} else if (!PageAnon(page)) {
+> > > > >  			__xa_store(&head->mapping->i_pages, head[i].index,
+> > > > >  					head + i, 0);
+> > > > > 
+> > > > 
+> > > > Yup, that fixes the leak.
+> > > > 
+> > > > Tested-by: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Four hours of generic/522 running is long enough to conclude that this
+> > > is likely the fix for my problem and migrate long soak testing to my
+> > > main g/522 rig and:
+> > > 
+> > > Tested-by: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > 
+> > Just based on Willy's earlier comment.. what I would probably be a
+> > little careful/curious about here is whether the accounting fix leads to
+> > an indirect behavior change that does impact reproducibility of the
+> > corruption problem. For example, does artificially escalated dirty page
+> > tracking lead to increased reclaim/writeback activity than might
+> > otherwise occur, and thus contend with the fs workload? Clearly it has
+> > some impact based on Dave's balance_dirty_pages() problem reproducer,
+> > but I don't know if it extends beyond that off the top of my head. That
+> > might make some sense if the workload is fsx, since that doesn't
+> > typically stress cache/memory usage the way a large fsstress workload or
+> > something might.
+> > 
+> > So for example, interesting questions might be... Do your corruption
+> > events happen to correspond with dirty page accounting crossing some
+> > threshold based on available memory in your test environment? Does
+> > reducing available memory affect reproducibility? Etc.
+> 
+> Yeah, I wonder that too now.  I managed to trace generic/522 a couple of
+> times before willy's patch dropped.  From what I could tell, a large
+> folio X would get page P assigned to the fsx file's page cache to cover
+> range R, dirtied, and written to disk.  At some point later, we'd
+> reflink into part of the file range adjacent to P, but not P itself.
+> I /think/ that should have caused the whole folio to get invalidated?
+> 
+> Then some more things happened (none of which dirtied R, according to
+> fsx) and then suddenly writeback would trigger on some page (don't know
+> which) that would write to the disk blocks backing R.  I'm fairly sure
+> that's where the incorrect disk contents came from.
+> 
+> Next, we'd reflink part of the file range including R into a different
+> part of the file (call it R2).  fsx would read R2, bringing a new page
+> into cache, and it wouldn't match the fsxgood buffer, leading to fsx
+> aborting.
+> 
+> After a umount/mount cycle, reading R and R2 would both reveal the
+> incorrect contents that had caused fsx to abort.
+> 
 
-would you like to reach more clients?
+FWIW, I hadn't been able to reproduce this in my default environment to
+this point. With the memory leak issue in the light, I was eventually
+able to by reducing dirty_bytes to something the system would be more
+likely to hit sooner (i.e. 16-32MB), but I also see stalling behavior
+and whatnot due to the leak that requires backing off from the specified
+dirty limit every so often.
 
-As one of the first SEO agencies in Europe, we=E2=80=99ve introduced SEO =
-360 service (SEO, UX, and SEM), which assures a multidimensional approach=
- to optimising company=E2=80=99s visibility online and increasing website=
- traffic.
+If I apply the accounting patch to avoid the leak and set
+dirty_background_bytes to something notably aggressive (1kB), the test
+survived 100 iterations or so before I stopped it. If I then set
+dirty_bytes to something similarly aggressive (1MB), I hit the failure
+on the next iteration (assuming it's the same problem). It's spinning
+again at ~25 or so iterations without a failure so far, so I'd have to
+wait and see how reliable the reproducer really is. Though if it doesn't
+reoccur soonish, perhaps I'll try reducing dirty_bytes a bit more...
 
-We provide a free consultation with our specialist, during which we will =
-conduct a detailed analysis of your website or e-shop, positioning indica=
-tors and check the actions and results achieved by your competitors.
+My suspicion based on these characteristics would be that the blocking
+limit triggers more aggressive reclaim/invalidation, and thus helps
+detect the problem sooner. If reflink is involved purely as a cache
+invalidation step (i.e. so a subsequent read will hit the disk and
+detect a cache inconsistency), then it might be interesting to see if it
+can still be reproduced without reflink operations enabled but instead
+with some combination of the -f/-X fsx flags to perform more flush
+invals and on-disk data checks..
 
-Our clients gain notable results by using a dedicated strategy, extensive=
- website analytics, technical optimisation, adding new subpages and link =
-building.
+Brian
 
-With 14 years of experience and the skills of over 350 specialists workin=
-g on 3 continents, you can increase your sales and become an industry lea=
-der.
+> Unfortunately the second ftrace attempt ate some trace data, so I was
+> unable to figure out if the same thing happened again.
+> 
+> At this point I really need to get on reviewing patches for 5.20, so
+> I'll try to keep poking at this (examining the trace data requires a lot
+> of concentration which isn't really possible while sawzall construction
+> is going on at home) but at worst I can ask Linus to merge a patch for
+> 5.19 final that makes setting mapping_set_large_folio a
+> Kconfig/CONFIG_XFS_DEBUG option.
+> 
+> --D
+> 
+> > 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > > Cheers,
+> > > > 
+> > > > Dave.
+> > > > -- 
+> > > > Dave Chinner
+> > > > david@fromorbit.com
+> > > 
+> > 
+> 
 
-Please let us know if you want to learn more about our methods and possib=
-le results.
-
-Yours sincerely,
-Walker Cooney
