@@ -2,117 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D662ECCA473
-	for <linux-xfs@archiver.kernel.org>; Sun,  3 Jul 2022 15:05:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50655CCA47F
+	for <linux-xfs@archiver.kernel.org>; Sun,  3 Jul 2022 16:51:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232404AbiGCPFh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 3 Jul 2022 11:05:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56946 "EHLO
+        id S232783AbiGCQvx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 3 Jul 2022 12:51:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231145AbiGCPFh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jul 2022 11:05:37 -0400
+        with ESMTP id S232726AbiGCQvw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jul 2022 12:51:52 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D88A5F5E;
-        Sun,  3 Jul 2022 08:05:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 397356313;
+        Sun,  3 Jul 2022 09:51:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EC49E60FD2;
-        Sun,  3 Jul 2022 15:05:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41BAAC341C6;
-        Sun,  3 Jul 2022 15:05:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C35B96103E;
+        Sun,  3 Jul 2022 16:51:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 89B78C341CB;
+        Sun,  3 Jul 2022 16:51:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656860735;
-        bh=ml13+lJ64hkDt+1Ct13RJqBJF6v3V7P/yEHeyrAHOeA=;
-        h=Date:From:To:Cc:Subject:From;
-        b=bBtjHQaGEfthY5DMayH45IyAqUTbp/YmwR9fik/6KJvWbrI8oBBFjPmRa4hk617mH
-         ffqsPlr2mXvUW4oDLJF+aRXkj72qizkIdk5fms5cCvic8z1YeV7PAIfLhCd3NCFzq5
-         kRSKZTl/iZ++8ql5m3Jr1Uxi9uBam33GEzDTHVAR1jDbBHo8dgRVQS+5czb0m8OFiR
-         qKQgoj2yTdiAlvyBOruncG0lNl4k47nX3BMHSU84Cbd4Csepcr8+VrECqn1S9eKu6+
-         9HPCSpV5dcq+sgGSsO265cwgw31yeEzqQyLmRFnaShm4LGmXR8X7iGYs3m3soGH0yb
-         hCLFZx6xJB3Xw==
-Date:   Sun, 3 Jul 2022 08:05:34 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        s=k20201202; t=1656867110;
+        bh=4y5p1F6d3LBQE85AO6rVtJeIalOdN8QNI2RXPd1PZrk=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=MfoCOFclb3Tsz4v+2zk/fa2pTDQX055WHZKVjhna1eJcffMlfPWoBAfe0Cu6ZecLC
+         D1K3pa0q1c/3e/jdWUQT24YLcKi+9GdT+eUMMEcd3TbGfatn2In/DqPQoElT61BMaA
+         SmUkAp65+dH91LFiNfzI1me7F7rvzhPul23JvuYQYURd5zp2T9WOwl6t2pw7WguJ79
+         gys9v3fEaguWNlghG1gJqrT5ZsY2sXzuudrrrJattFJBwEHBL5ChtD9BdID9IwiG/n
+         d/TZ78UA98GKj0jMeR/kumvcNI9j9H4sHjn6UPipkPdgNGNlww7tFvRGTVx1lRhtRh
+         Nt79m3FfBjXsA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 7591DE49BB8;
+        Sun,  3 Jul 2022 16:51:50 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: bug fixes for 5.19-rc5
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <YsGwPqUYSW/IwgkN@magnolia>
+References: <YsGwPqUYSW/IwgkN@magnolia>
+X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <YsGwPqUYSW/IwgkN@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.19-fixes-4
+X-PR-Tracked-Commit-Id: 7561cea5dbb97fecb952548a0fb74fb105bf4664
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 20855e4cb361adeabce3665f5174b09b4a6ebfe6
+Message-Id: <165686711046.30745.15607778543141737550.pr-tracker-bot@kernel.org>
+Date:   Sun, 03 Jul 2022 16:51:50 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         david@fromorbit.com, linux-kernel@vger.kernel.org,
         sandeen@sandeen.net, hch@lst.de, fstests <fstests@vger.kernel.org>
-Subject: [GIT PULL] xfs: bug fixes for 5.19-rc5
-Message-ID: <YsGwPqUYSW/IwgkN@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+The pull request you sent on Sun, 3 Jul 2022 08:05:34 -0700:
 
-Please pull this branch containing bug fixes for XFS for 5.19-rc5.  The
-patches in this branch fix some stalling problems and correct the last
-of the problems (I hope) observed during testing of the new atomic xattr
-update feature.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.19-fixes-4
 
-As usual, I did a test-merge with upstream master as of a few minutes
-ago, and it completed flawlessly.  Please let me know if you encounter
-any problems.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/20855e4cb361adeabce3665f5174b09b4a6ebfe6
 
---D
+Thank you!
 
-The following changes since commit e89ab76d7e2564c65986add3d634cc5cf5bacf14:
-
-  xfs: preserve DIFLAG2_NREXT64 when setting other inode attributes (2022-06-15 23:13:33 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.19-fixes-4
-
-for you to fetch changes up to 7561cea5dbb97fecb952548a0fb74fb105bf4664:
-
-  xfs: prevent a UAF when log IO errors race with unmount (2022-07-01 09:09:52 -0700)
-
-----------------------------------------------------------------
-Fixes for 5.19-rc5:
- - Fix statfs blocking on background inode gc workers
- - Fix some broken inode lock assertion code
- - Fix xattr leaf buffer leaks when cancelling a deferred xattr update
-   operation
- - Clean up xattr recovery to make it easier to understand.
- - Fix xattr leaf block verifiers tripping over empty blocks.
- - Remove complicated and error prone xattr leaf block bholding mess.
- - Fix a bug where an rt extent crossing EOF was treated as "posteof"
-   blocks and cleaned unnecessarily.
- - Fix a UAF when log shutdown races with unmount.
-
-----------------------------------------------------------------
-Darrick J. Wong (6):
-      xfs: always free xattri_leaf_bp when cancelling a deferred op
-      xfs: clean up the end of xfs_attri_item_recover
-      xfs: empty xattr leaf header blocks are not corruption
-      xfs: don't hold xattr leaf buffers across transaction rolls
-      xfs: dont treat rt extents beyond EOF as eofblocks to be cleared
-      xfs: prevent a UAF when log IO errors race with unmount
-
-Dave Chinner (2):
-      xfs: bound maximum wait time for inodegc work
-      xfs: introduce xfs_inodegc_push()
-
-Kaixu Xia (2):
-      xfs: factor out the common lock flags assert
-      xfs: use invalidate_lock to check the state of mmap_lock
-
- fs/xfs/libxfs/xfs_attr.c      | 38 ++++++-------------------
- fs/xfs/libxfs/xfs_attr.h      |  5 ----
- fs/xfs/libxfs/xfs_attr_leaf.c | 35 ++++++++++++-----------
- fs/xfs/libxfs/xfs_attr_leaf.h |  3 +-
- fs/xfs/xfs_attr_item.c        | 27 ++++++++++--------
- fs/xfs/xfs_bmap_util.c        |  2 ++
- fs/xfs/xfs_icache.c           | 56 ++++++++++++++++++++++++-------------
- fs/xfs/xfs_icache.h           |  1 +
- fs/xfs/xfs_inode.c            | 64 +++++++++++++++++--------------------------
- fs/xfs/xfs_log.c              |  9 ++++--
- fs/xfs/xfs_mount.h            |  2 +-
- fs/xfs/xfs_qm_syscalls.c      |  9 ++++--
- fs/xfs/xfs_super.c            |  9 ++++--
- fs/xfs/xfs_trace.h            |  1 +
- 14 files changed, 130 insertions(+), 131 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
