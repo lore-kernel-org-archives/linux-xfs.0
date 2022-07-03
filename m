@@ -2,123 +2,203 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CCC7C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun,  3 Jul 2022 05:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B38CCA473
+	for <linux-xfs@archiver.kernel.org>; Sun,  3 Jul 2022 13:09:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231352AbiGCFIB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 3 Jul 2022 01:08:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44408 "EHLO
+        id S230446AbiGCNJI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 3 Jul 2022 09:09:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231319AbiGCFIA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jul 2022 01:08:00 -0400
-Received: from mail-ua1-x936.google.com (mail-ua1-x936.google.com [IPv6:2607:f8b0:4864:20::936])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F2B7AE7D;
-        Sat,  2 Jul 2022 22:07:59 -0700 (PDT)
-Received: by mail-ua1-x936.google.com with SMTP id s4so2314293uad.0;
-        Sat, 02 Jul 2022 22:07:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bWMQeQCfVrU36HijvQCkWTCeD2Xa/KiB3aRnlOcQeD8=;
-        b=HA1OIvwEitFccUZz+MDvmDWo0sRx6jt49wi7Onnkd/4ahBaIMqrxMhSE/tTf9IsmPo
-         zWP4Ta00lj2986PUN1omQabJFP7lIbjD4u8/FwMlmJTLTmyuZfu2CuLR3wRLIDsXJf8M
-         0GunXLTZLvmMmOtBtp3t7lxaJbH5/U1vYSmBVfxTxgVpkZauw9txsIMXXNGag6FWRBFk
-         i+usSiUBFy3uDdEZNuWwDOe7+daLVNbkkjAZsPnFlQ966PIt2Xjo/loS7lvtoOKRPsfx
-         VElEvtSvlUYjDTD+Z5aNGp3xS3U50By6B6rSPEjjLeuYUFNcWnsVuqUBQzM1neMlvWTo
-         JaWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bWMQeQCfVrU36HijvQCkWTCeD2Xa/KiB3aRnlOcQeD8=;
-        b=BEhFYidxlTny1Zg1fuRakWgutK++l0kEnc/45Wzeg1LMCTPTJA070zg4hAR8gNsSrS
-         Qm5CqvOtu8Cp2C2BK0PpuktkVnovUwV1/NUCTgYE2NuhULUJOOOiMvwFU806bfN0c4Q8
-         g/D7XHeraFcimZcXVnMAXUKB6jAd1qJfasFTzjR9lFemQUHfgruyTG2GLc0GmnEe6Xom
-         lKbVl/f1yazThqFOLpArehoU7oyzXjD0VC7FQvrVjjVCqV0allkq3hBEO93FO/ZSyf1O
-         MXJFyzwr6XeJS1XgRwlYYo0BCNsSwzuD5YAxGsPREYpxacmBLR7zlXpbe4joFK7lzbuc
-         dFdQ==
-X-Gm-Message-State: AJIora9+Cw6PVKD74jWY1LR42PaMLu7V5as+0C09TBo4HnSbyoWvuXIK
-        PDiAJcXjDqnJd/dZio2jVIc4JSlPWR7pdEKsu6XST4cu
-X-Google-Smtp-Source: AGRyM1tKBycstcRabMvUEAVRrHv3+dsoEENZdYsHR7GxQznzOZPHMeF/CNEWefjKsojNF2r4k2xLsoBHmITpGhfSAIw=
-X-Received: by 2002:a05:6130:21a:b0:37f:2ab2:879a with SMTP id
- s26-20020a056130021a00b0037f2ab2879amr11712887uac.9.1656824878400; Sat, 02
- Jul 2022 22:07:58 -0700 (PDT)
+        with ESMTP id S229550AbiGCNJH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jul 2022 09:09:07 -0400
+Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E8EE636D;
+        Sun,  3 Jul 2022 06:09:05 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3AmaVkHKo8O9LH6a1gAYYd/Wu6t1deBmJzZBIvgKr?=
+ =?us-ascii?q?LsJaIsI5as4F+vmIYUGmBPvbfajOgfowkaIq/pkMB7JHWzIRkS1dsry88QiMRo?=
+ =?us-ascii?q?6IpJ/zDcB6oYHn6wu4v7a5fx5xHLIGGdajYd1eEzvuWGuWn/SkUOZ2gHOKmUra?=
+ =?us-ascii?q?eYnkpHGeIdQ964f5ds79g6mJXqYjha++9kYuaT/z3YDdJ6RYtWo4nw/7rRCdUg?=
+ =?us-ascii?q?RjHkGhwUmrSyhx8lAS2e3E9VPrzLEwqRpfyatE88uWSH44vwFwll1418SvBCvv?=
+ =?us-ascii?q?9+lr6WkYMBLDPPwmSkWcQUK+n6vRAjnVqlP9la7xHMgEK49mKt4kZJNFlr4G5T?=
+ =?us-ascii?q?xw4eKPKg/g1XQRaEj1lIOtN/7qvzX2X6JbMlhCfLCqzqxlpJARsVWECwc57CH9?=
+ =?us-ascii?q?P+dQWMjcIaQqJhv7wy7W+IsFsjcQLLc/lJooTt3hsizbDAp4OTZnFBaeM+t5c2?=
+ =?us-ascii?q?DY5g9tmHPDCas5fYj1qBDzMYQJIPFg/C58kmuqswH7lfFVwrFOTuLpy5m37zxJ?=
+ =?us-ascii?q?427urN8DaEvSMW8lUm0OwomPd43+/BhAcKczZxTebmlquj+nC2yj7RaoVDrSz8?=
+ =?us-ascii?q?vMsi1qWrkQXCRsLRR61uvW0lEO6c8xQJlZS+Sc0q6U2skuxQbHVWxy+vW7BvRM?=
+ =?us-ascii?q?GXddUO/M15RvLyafO5QudQG8eQVZpbN0gqd9zVTIx/kGGksmvBjF1trCRD3WH+?=
+ =?us-ascii?q?d+pQZmaUcQOBTZaI3ZaEk1euJ++yLzfRynnFr5LeJNZRPWscd0o/w23kQ=3D?=
+ =?us-ascii?q?=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AceH1dqvHtUYqKBlaYcSrjJbQ7skDStV00zEX?=
+ =?us-ascii?q?/kB9WHVpm62j5qSTdZEguCMc5wx+ZJheo7q90cW7IE80lqQFhLX5X43SPzUO0V?=
+ =?us-ascii?q?HARO5fBODZsl/d8kPFltJ15ONJdqhSLJnKB0FmsMCS2mKFOudl7N6Z0K3Av4vj?=
+ =?us-ascii?q?80s=3D?=
+X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
+   d="scan'208";a="127151797"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 03 Jul 2022 21:09:04 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 6F4B74D17179;
+        Sun,  3 Jul 2022 21:09:01 +0800 (CST)
+Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Sun, 3 Jul 2022 21:09:03 +0800
+Received: from irides.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Sun, 3 Jul 2022 21:08:42 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>
+Subject: [RFC PATCH v4] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+Date:   Sun, 3 Jul 2022 21:08:38 +0800
+Message-ID: <20220703130838.3518127-1-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220410171623.3788004-1-ruansy.fnst@fujitsu.com>
+References: <20220410171623.3788004-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-References: <20220703050456.3222610-1-amir73il@gmail.com>
-In-Reply-To: <20220703050456.3222610-1-amir73il@gmail.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sun, 3 Jul 2022 08:07:46 +0300
-Message-ID: <CAOQ4uxgcejZHq0MQ6xCjahZLVjUs5unw3oqEm5A1Kkux70kqgg@mail.gmail.com>
-Subject: Re: [PATCH 5.10 v3 0/7] xfs stable patches for 5.10.y (from v5.13)
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 6F4B74D17179.A0B46
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jul 3, 2022 at 8:05 AM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> Hi Greg,
->
-> Following the 5.10.y/5.15.y common series, this is another small
-> "5.10.y only" update.
->
-> I have two more of these (from v5.14 and v5.15) and after that,
-> 5.10.y should be mostly following 5.15.y.
->
-> The backports from v5.14 are a little more involved, so the next
-> "5.10.y only" update is going to take a while longer.
->
+This patch is inspired by Dan's "mm, dax, pmem: Introduce
+dev_pagemap_failure()"[1].  With the help of dax_holder and
+->notify_failure() mechanism, the pmem driver is able to ask filesystem
+(or mapped device) on it to unmap all files in use and notify processes
+who are using those files.
 
-Forgot to say:
+Call trace:
+trigger unbind
+ -> unbind_store()
+  -> ... (skip)
+   -> devres_release_all()   # was pmem driver ->remove() in v1
+    -> kill_dax()
+     -> dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_REMOVE)
+      -> xfs_dax_notify_failure()
 
-Changes from v2:
-- Acked-by Darrick
-- CC stable
+Introduce MF_MEM_REMOVE to let filesystem know this is a remove event.
+So do not shutdown filesystem directly if something not supported, or if
+failure range includes metadata area.  Make sure all files and processes
+are handled correctly.
 
-Changes from v1:
-- None
+==
+Changes since v3:
+  1. Flush dirty files and logs when pmem is about to be removed.
+  2. Rebased on next-20220701
 
-> Thanks,
-> Amir.
->
-> Anthony Iliopoulos (1):
->   xfs: fix xfs_trans slab cache name
->
-> Darrick J. Wong (1):
->   xfs: fix xfs_reflink_unshare usage of filemap_write_and_wait_range
->
-> Dave Chinner (2):
->   xfs: use current->journal_info for detecting transaction recursion
->   xfs: update superblock counters correctly for !lazysbcount
->
-> Gao Xiang (1):
->   xfs: ensure xfs_errortag_random_default matches XFS_ERRTAG_MAX
->
-> Pavel Reichl (2):
->   xfs: rename variable mp to parsing_mp
->   xfs: Skip repetitive warnings about mount options
->
->  fs/iomap/buffered-io.c    |   7 ---
->  fs/xfs/libxfs/xfs_btree.c |  12 +++-
->  fs/xfs/libxfs/xfs_sb.c    |  16 ++++-
->  fs/xfs/xfs_aops.c         |  17 +++++-
->  fs/xfs/xfs_error.c        |   2 +
->  fs/xfs/xfs_reflink.c      |   3 +-
->  fs/xfs/xfs_super.c        | 120 +++++++++++++++++++++-----------------
->  fs/xfs/xfs_trans.c        |  23 +++-----
->  fs/xfs/xfs_trans.h        |  30 ++++++++++
->  9 files changed, 148 insertions(+), 82 deletions(-)
->
-> --
-> 2.25.1
->
+Changes since v2:
+  1. Rebased on next-20220615
+
+Changes since v1:
+  1. Drop the needless change of moving {kill,put}_dax()
+  2. Rebased on '[PATCHSETS] v14 fsdax-rmap + v11 fsdax-reflink'[2]
+
+[1]: https://lore.kernel.org/linux-mm/161604050314.1463742.14151665140035795571.stgit@dwillia2-desk3.amr.corp.intel.com/
+[2]: https://lore.kernel.org/linux-xfs/20220508143620.1775214-1-ruansy.fnst@fujitsu.com/
+
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+---
+ drivers/dax/super.c         |  2 +-
+ fs/xfs/xfs_notify_failure.c | 23 ++++++++++++++++++++++-
+ include/linux/mm.h          |  1 +
+ 3 files changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 9b5e2a5eb0ae..d4bc83159d46 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -323,7 +323,7 @@ void kill_dax(struct dax_device *dax_dev)
+ 		return;
+
+ 	if (dax_dev->holder_data != NULL)
+-		dax_holder_notify_failure(dax_dev, 0, U64_MAX, 0);
++		dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_REMOVE);
+
+ 	clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
+ 	synchronize_srcu(&dax_srcu);
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index aa8dc27c599c..269e21b3341c 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -18,6 +18,7 @@
+ #include "xfs_rmap_btree.h"
+ #include "xfs_rtalloc.h"
+ #include "xfs_trans.h"
++#include "xfs_log.h"
+
+ #include <linux/mm.h>
+ #include <linux/dax.h>
+@@ -75,6 +76,10 @@ xfs_dax_failure_fn(
+
+ 	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
+ 	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
++		/* Do not shutdown so early when device is to be removed */
++		if (notify->mf_flags & MF_MEM_REMOVE) {
++			return 0;
++		}
+ 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -168,6 +173,7 @@ xfs_dax_notify_failure(
+ 	struct xfs_mount	*mp = dax_holder(dax_dev);
+ 	u64			ddev_start;
+ 	u64			ddev_end;
++	int			error;
+
+ 	if (!(mp->m_sb.sb_flags & SB_BORN)) {
+ 		xfs_warn(mp, "filesystem is not ready for notify_failure()!");
+@@ -182,6 +188,13 @@ xfs_dax_notify_failure(
+
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
+ 	    mp->m_logdev_targp != mp->m_ddev_targp) {
++		if (mf_flags & MF_MEM_REMOVE) {
++			/* Flush the log since device is about to be removed. */
++			error = xfs_log_force(mp, XFS_LOG_SYNC);
++			if (error)
++				return error;
++			return -EOPNOTSUPP;
++		}
+ 		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
+ 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+ 		return -EFSCORRUPTED;
+@@ -211,8 +224,16 @@ xfs_dax_notify_failure(
+ 	if (offset + len > ddev_end)
+ 		len -= ddev_end - offset;
+
+-	return xfs_dax_notify_ddev_failure(mp, BTOBB(offset), BTOBB(len),
++	error = xfs_dax_notify_ddev_failure(mp, BTOBB(offset), BTOBB(len),
+ 			mf_flags);
++	if (error)
++		return error;
++
++	if (mf_flags & MF_MEM_REMOVE) {
++		xfs_flush_inodes(mp);
++		error = xfs_log_force(mp, XFS_LOG_SYNC);
++	}
++	return error;
+ }
+
+ const struct dax_holder_operations xfs_dax_holder_operations = {
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index a2270e35a676..e66d23188323 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -3236,6 +3236,7 @@ enum mf_flags {
+ 	MF_SOFT_OFFLINE = 1 << 3,
+ 	MF_UNPOISON = 1 << 4,
+ 	MF_SW_SIMULATED = 1 << 5,
++	MF_MEM_REMOVE = 1 << 6,
+ };
+ int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
+ 		      unsigned long count, int mf_flags);
+--
+2.36.1
+
+
+
