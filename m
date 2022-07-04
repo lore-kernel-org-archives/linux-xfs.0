@@ -2,65 +2,77 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94FA0CCA479
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jul 2022 14:42:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B3A8C43334
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jul 2022 16:21:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229892AbiGDOmw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jul 2022 10:42:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42916 "EHLO
+        id S232511AbiGDQV5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jul 2022 12:21:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbiGDOmw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jul 2022 10:42:52 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F0F5CE4;
-        Mon,  4 Jul 2022 07:42:51 -0700 (PDT)
+        with ESMTP id S230338AbiGDQV4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jul 2022 12:21:56 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A190BD0
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Jul 2022 09:21:55 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0D1A7B8107D;
-        Mon,  4 Jul 2022 14:42:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60112C3411E;
-        Mon,  4 Jul 2022 14:42:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1656945768;
-        bh=tBhEgEpb/llK8t3VU9HDVFpw2usy/rSjHgRh8oQF1gI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NJ5MzfNlX0H0+s3vK5e6rTt1gky3hCjSBvlnwPgj9+IfjTNF0l9B5yVb8R+8Ih0ZT
-         Pel+c/X7TDdCvTA4ifA7/yhsq4JM645cA2ZS4mw0spV1o7hjLCru4SGv+swywdTl8r
-         /t5IVroIGW9HUgzpVu0N6w5dJdarplhkmkZEQfgs=
-Date:   Mon, 4 Jul 2022 16:42:46 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH 5.10 v3 0/7] xfs stable patches for 5.10.y (from v5.13)
-Message-ID: <YsL8Zom5K3GjzMz+@kroah.com>
-References: <20220703050456.3222610-1-amir73il@gmail.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3F0DE61440
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Jul 2022 16:21:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A0887C341D3
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Jul 2022 16:21:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656951714;
+        bh=AA6NtL0p/+BkVWnKILo0qiYMncuUxFc1uQmaZejUMmw=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=BLeo/8z4JBIYCw7fhZqS3pezMeABD54B0DsL6L/0A33CTK3Txg/Xn7dLzD2ZNXj7h
+         P/Ybrzr9LrGZarxLSYYnjXZuq3HX6//+UUL/Yd2i3wsrBmrUabKe33R5m3g0Vq6rY1
+         301+yteuahqypNiJcXUAhfWhOEZwcZSZobpdSvhGQkvmPmp12H7v/YtHpyr/MVftyr
+         3x3AzZv8IU0HHIYKtWZnBRK3ELjsoYZlFWxQ4IAqK5jqNZpHsHpWLTW6hrMXggZZSc
+         xVmNWhiC5mCoRvMI+EzY6M1K4lTFtPKvOVi1VC3uaXCfLew5gakusuG9J7Mxvb3VFK
+         dPLPOt7s6WioA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 8E2B6CC13B0; Mon,  4 Jul 2022 16:21:54 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216151] kernel panic after BUG: KASAN: use-after-free in
+ _copy_to_iter+0x830/0x1030
+Date:   Mon, 04 Jul 2022 16:21:54 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: chuck.lever@oracle.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216151-201763-cMaHQpy6a0@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216151-201763@https.bugzilla.kernel.org/>
+References: <bug-216151-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220703050456.3222610-1-amir73il@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jul 03, 2022 at 08:04:49AM +0300, Amir Goldstein wrote:
-> Hi Greg,
-> 
-> Following the 5.10.y/5.15.y common series, this is another small
-> "5.10.y only" update.
-> 
-> I have two more of these (from v5.14 and v5.15) and after that,
-> 5.10.y should be mostly following 5.15.y.
-> 
-> The backports from v5.14 are a little more involved, so the next
-> "5.10.y only" update is going to take a while longer.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216151
 
-All now queued up, thanks.
+--- Comment #5 from Chuck Lever (chuck.lever@oracle.com) ---
+Commit a23dd544debc ("SUNRPC: Fix READ_PLUS crasher"), which addresses this
+issue, appears in v5.19-rc5.
 
-greg k-h
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
