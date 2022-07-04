@@ -2,69 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50655CCA47F
-	for <linux-xfs@archiver.kernel.org>; Sun,  3 Jul 2022 16:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94FA0CCA479
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jul 2022 14:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232783AbiGCQvx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 3 Jul 2022 12:51:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40710 "EHLO
+        id S229892AbiGDOmw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jul 2022 10:42:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232726AbiGCQvw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jul 2022 12:51:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 397356313;
-        Sun,  3 Jul 2022 09:51:51 -0700 (PDT)
+        with ESMTP id S229473AbiGDOmw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jul 2022 10:42:52 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F0F5CE4;
+        Mon,  4 Jul 2022 07:42:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C35B96103E;
-        Sun,  3 Jul 2022 16:51:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 89B78C341CB;
-        Sun,  3 Jul 2022 16:51:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656867110;
-        bh=4y5p1F6d3LBQE85AO6rVtJeIalOdN8QNI2RXPd1PZrk=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=MfoCOFclb3Tsz4v+2zk/fa2pTDQX055WHZKVjhna1eJcffMlfPWoBAfe0Cu6ZecLC
-         D1K3pa0q1c/3e/jdWUQT24YLcKi+9GdT+eUMMEcd3TbGfatn2In/DqPQoElT61BMaA
-         SmUkAp65+dH91LFiNfzI1me7F7rvzhPul23JvuYQYURd5zp2T9WOwl6t2pw7WguJ79
-         gys9v3fEaguWNlghG1gJqrT5ZsY2sXzuudrrrJattFJBwEHBL5ChtD9BdID9IwiG/n
-         d/TZ78UA98GKj0jMeR/kumvcNI9j9H4sHjn6UPipkPdgNGNlww7tFvRGTVx1lRhtRh
-         Nt79m3FfBjXsA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 7591DE49BB8;
-        Sun,  3 Jul 2022 16:51:50 +0000 (UTC)
-Subject: Re: [GIT PULL] xfs: bug fixes for 5.19-rc5
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <YsGwPqUYSW/IwgkN@magnolia>
-References: <YsGwPqUYSW/IwgkN@magnolia>
-X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <YsGwPqUYSW/IwgkN@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.19-fixes-4
-X-PR-Tracked-Commit-Id: 7561cea5dbb97fecb952548a0fb74fb105bf4664
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 20855e4cb361adeabce3665f5174b09b4a6ebfe6
-Message-Id: <165686711046.30745.15607778543141737550.pr-tracker-bot@kernel.org>
-Date:   Sun, 03 Jul 2022 16:51:50 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de, fstests <fstests@vger.kernel.org>
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0D1A7B8107D;
+        Mon,  4 Jul 2022 14:42:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60112C3411E;
+        Mon,  4 Jul 2022 14:42:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1656945768;
+        bh=tBhEgEpb/llK8t3VU9HDVFpw2usy/rSjHgRh8oQF1gI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NJ5MzfNlX0H0+s3vK5e6rTt1gky3hCjSBvlnwPgj9+IfjTNF0l9B5yVb8R+8Ih0ZT
+         Pel+c/X7TDdCvTA4ifA7/yhsq4JM645cA2ZS4mw0spV1o7hjLCru4SGv+swywdTl8r
+         /t5IVroIGW9HUgzpVu0N6w5dJdarplhkmkZEQfgs=
+Date:   Mon, 4 Jul 2022 16:42:46 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Sasha Levin <sashal@kernel.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH 5.10 v3 0/7] xfs stable patches for 5.10.y (from v5.13)
+Message-ID: <YsL8Zom5K3GjzMz+@kroah.com>
+References: <20220703050456.3222610-1-amir73il@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220703050456.3222610-1-amir73il@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Sun, 3 Jul 2022 08:05:34 -0700:
+On Sun, Jul 03, 2022 at 08:04:49AM +0300, Amir Goldstein wrote:
+> Hi Greg,
+> 
+> Following the 5.10.y/5.15.y common series, this is another small
+> "5.10.y only" update.
+> 
+> I have two more of these (from v5.14 and v5.15) and after that,
+> 5.10.y should be mostly following 5.15.y.
+> 
+> The backports from v5.14 are a little more involved, so the next
+> "5.10.y only" update is going to take a while longer.
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.19-fixes-4
+All now queued up, thanks.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/20855e4cb361adeabce3665f5174b09b4a6ebfe6
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+greg k-h
