@@ -2,43 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62683C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 22:02:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED9CFCCA47F
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 22:02:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231979AbiGEWCW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jul 2022 18:02:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48282 "EHLO
+        id S231782AbiGEWCi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jul 2022 18:02:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230251AbiGEWCV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 18:02:21 -0400
+        with ESMTP id S232617AbiGEWCZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 18:02:25 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E5F819286;
-        Tue,  5 Jul 2022 15:02:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99BD519284;
+        Tue,  5 Jul 2022 15:02:24 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C230E61D18;
-        Tue,  5 Jul 2022 22:02:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B92BC341C7;
-        Tue,  5 Jul 2022 22:02:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 36A3761CFF;
+        Tue,  5 Jul 2022 22:02:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90DDCC341C7;
+        Tue,  5 Jul 2022 22:02:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657058540;
-        bh=F+r3GkLBuLofHc4DvTbyjiDKmp/Zv65CClZbMwTM4KQ=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=HiqFzWcN7s4pT2Z6IaAtFmDlGjCPt99Z+2zMdrSovh8JwcoVz3hL2u0dEn2QmSimw
-         JQcFLSmmBv6ZORzedz4c7m9WSgrXldxrbqDuToPEu9G+mIZU5iwOw8dNFqOe9dbYE/
-         ROikW2YhYTIFI8FA32Pd/Dful3LsyyHikSScaFnjz2KDKHkIGdsfmsbIqAV4XE3NT9
-         d6cGlo/D19dV71Qezsmz/IrutKpOJ4BYv4479bboisQXVDHKcQdgIZDzv8hVmomKlP
-         kA2up44IrcdCV/rrb0eQ6lngoK27GWrIMTFJm4x8ep6ce6JTfchn9xTGJyeaKN87RN
-         XexykbY0M/bSA==
-Subject: [PATCH 3/3] xfs/547: fix problems with realtime
+        s=k20201202; t=1657058543;
+        bh=z9/MHsPY/hI1vctgc1WDznCy6cdahL1WqClTB0YpeaI=;
+        h=Subject:From:To:Cc:Date:From;
+        b=gCeBBoUjlV5ydy2sj60c8p28Sxd3yZ+5GuYxE5VdY/fYp8CI7xsR9vGDlN6/h0QhV
+         leauRaQO7piqObkp73bRfguLeC4chuny02Xp/TCvBHan8x98JFpJ233hdyYBtzlMea
+         Qv0/xwYZh6UhXynckDwFSqqQym7j+0v/XJGoY8AbRMt1lPeJuaLC7qhkyCR/M8YpuL
+         L7YKba2EHRD0nrsSzGBR6BLObS6Uzr6rR2IDyR+mBATkD7bUQZgX9kVWlILd5Dvb8M
+         lPXZb331oaN9bnpk5AAtB16DvU8SmYLuWYbx1PgfmWJxp9nOHZRdKtZ814T+9/qhid
+         gl46qiccyXT5w==
+Subject: [PATCHSET 0/2] fstests: new tests for kernel 5.19
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 05 Jul 2022 15:02:19 -0700
-Message-ID: <165705853976.2820493.11634341636419465537.stgit@magnolia>
-In-Reply-To: <165705852280.2820493.17559217951744359102.stgit@magnolia>
-References: <165705852280.2820493.17559217951744359102.stgit@magnolia>
+Date:   Tue, 05 Jul 2022 15:02:23 -0700
+Message-ID: <165705854325.2821854.10317059026052442189.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,57 +45,29 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-This test needs to fragment the free space on the data device so that
-each block added to the attr fork gets its own mapping.  If the test
-configuration sets up a rt device and rtinherit=1 on the root dir, the
-test will erroneously fragment space on the *realtime* volume.  When
-this happens, attr fork allocations are contiguous and get merged into
-fewer than 10 extents and the test fails.
+Add new tests for xattr bugfixes merged during 5.19.  Specifically, we
+add a new test to encode the desired behavior of the metadata verifiers,
+the xattr code, and the fsck tools when the xattr leaf block header
+count being zero; and fix a problem in an existing xattr test.
 
-Fix this test to force all allocations to be on the data device, and fix
-incorrect variable usage in the error messages.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-merge-5.19
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=xfs-merge-5.19
 ---
- tests/xfs/547 |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
-
-
-diff --git a/tests/xfs/547 b/tests/xfs/547
-index 9d4216ca..60121eb9 100755
---- a/tests/xfs/547
-+++ b/tests/xfs/547
-@@ -33,6 +33,10 @@ for nrext64 in 0 1; do
- 		      >> $seqres.full
- 	_scratch_mount >> $seqres.full
- 
-+	# Force data device extents so that we can fragment the free space
-+	# and force attr fork allocations to be non-contiguous
-+	_xfs_force_bdev data $SCRATCH_MNT
-+
- 	bsize=$(_get_file_block_size $SCRATCH_MNT)
- 
- 	testfile=$SCRATCH_MNT/testfile
-@@ -76,13 +80,15 @@ for nrext64 in 0 1; do
- 	acnt=$(_scratch_xfs_get_metadata_field core.naextents \
- 					       "path /$(basename $testfile)")
- 
--	if (( $dcnt != 10 )); then
--		echo "Invalid data fork extent count: $dextcnt"
-+	echo "nrext64: $nrext64 dcnt: $dcnt acnt: $acnt" >> $seqres.full
-+
-+	if [ -z "$dcnt" ] || (( $dcnt != 10 )); then
-+		echo "Invalid data fork extent count: $dcnt"
- 		exit 1
- 	fi
- 
--	if (( $acnt < 10 )); then
--		echo "Invalid attr fork extent count: $aextcnt"
-+	if [ -z "$acnt" ] || (( $acnt < 10 )); then
-+		echo "Invalid attr fork extent count: $acnt"
- 		exit 1
- 	fi
- done
+ tests/xfs/288 |   32 ++++++--------
+ tests/xfs/845 |  131 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 144 insertions(+), 19 deletions(-)
+ create mode 100755 tests/xfs/845
 
