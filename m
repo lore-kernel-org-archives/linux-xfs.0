@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFA6DC43334
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 22:02:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62683C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 22:02:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232327AbiGEWCT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jul 2022 18:02:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48200 "EHLO
+        id S231979AbiGEWCW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jul 2022 18:02:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231854AbiGEWCS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 18:02:18 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50A4E192BD;
-        Tue,  5 Jul 2022 15:02:17 -0700 (PDT)
+        with ESMTP id S230251AbiGEWCV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 18:02:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E5F819286;
+        Tue,  5 Jul 2022 15:02:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E6FD7B819AA;
-        Tue,  5 Jul 2022 22:02:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91F89C341C7;
-        Tue,  5 Jul 2022 22:02:14 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C230E61D18;
+        Tue,  5 Jul 2022 22:02:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B92BC341C7;
+        Tue,  5 Jul 2022 22:02:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657058534;
-        bh=ySxfF9fscDH6cZg0RsDEP20WDx0C5u0nTxp0IEZHLQw=;
+        s=k20201202; t=1657058540;
+        bh=F+r3GkLBuLofHc4DvTbyjiDKmp/Zv65CClZbMwTM4KQ=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=olJ1qPacJOLmRH5QYdM9FCzebXLoEKHl+tZG2Brhc6Um20jrUnEgVLQABifJxH+JS
-         ex2VJyoYlpYuEJd4Sx35muYOw1WHIkdpC3mpWPl6WjOOGDM5aGO35guXvvFlx4M/IB
-         1Bq/eJX6CjtoPbVWuG2lb8t8IjkuVuo/gipg66bQWferKkxai9X0baf6NUD63D1bE4
-         mgARsSgwTT4Xl7TH3lmiD4QhtYGvTtYpQiAqLJyyth4BwhXdl/Zutg2GiaPeJCcGUw
-         hds2NrnlpSLVw6b3stYa2KFj/3q9smji1vDZCr4cSXtFR+ldBMNfAp4Asz1d6uf4so
-         4bLiJnEZ47K1A==
-Subject: [PATCH 2/3] xfs/018: fix LARP testing for small block sizes
+        b=HiqFzWcN7s4pT2Z6IaAtFmDlGjCPt99Z+2zMdrSovh8JwcoVz3hL2u0dEn2QmSimw
+         JQcFLSmmBv6ZORzedz4c7m9WSgrXldxrbqDuToPEu9G+mIZU5iwOw8dNFqOe9dbYE/
+         ROikW2YhYTIFI8FA32Pd/Dful3LsyyHikSScaFnjz2KDKHkIGdsfmsbIqAV4XE3NT9
+         d6cGlo/D19dV71Qezsmz/IrutKpOJ4BYv4479bboisQXVDHKcQdgIZDzv8hVmomKlP
+         kA2up44IrcdCV/rrb0eQ6lngoK27GWrIMTFJm4x8ep6ce6JTfchn9xTGJyeaKN87RN
+         XexykbY0M/bSA==
+Subject: [PATCH 3/3] xfs/547: fix problems with realtime
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 05 Jul 2022 15:02:14 -0700
-Message-ID: <165705853409.2820493.9590517059305128125.stgit@magnolia>
+Date:   Tue, 05 Jul 2022 15:02:19 -0700
+Message-ID: <165705853976.2820493.11634341636419465537.stgit@magnolia>
 In-Reply-To: <165705852280.2820493.17559217951744359102.stgit@magnolia>
 References: <165705852280.2820493.17559217951744359102.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,124 +49,55 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix this test to work properly when the filesystem block size is less
-than 4k.  Tripping the error injection points on shape changes in the
-xattr structure must be done dynamically.
+This test needs to fragment the free space on the data device so that
+each block added to the attr fork gets its own mapping.  If the test
+configuration sets up a rt device and rtinherit=1 on the root dir, the
+test will erroneously fragment space on the *realtime* volume.  When
+this happens, attr fork allocations are contiguous and get merged into
+fewer than 10 extents and the test fails.
+
+Fix this test to force all allocations to be on the data device, and fix
+incorrect variable usage in the error messages.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/018     |   52 +++++++++++++++++++++++++++++++++++++++++++++++-----
- tests/xfs/018.out |   16 ++++------------
- 2 files changed, 51 insertions(+), 17 deletions(-)
+ tests/xfs/547 |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
 
-diff --git a/tests/xfs/018 b/tests/xfs/018
-index 041a3b24..14a6f716 100755
---- a/tests/xfs/018
-+++ b/tests/xfs/018
-@@ -54,6 +54,45 @@ test_attr_replay()
- 	echo ""
- }
+diff --git a/tests/xfs/547 b/tests/xfs/547
+index 9d4216ca..60121eb9 100755
+--- a/tests/xfs/547
++++ b/tests/xfs/547
+@@ -33,6 +33,10 @@ for nrext64 in 0 1; do
+ 		      >> $seqres.full
+ 	_scratch_mount >> $seqres.full
  
-+test_attr_replay_loop()
-+{
-+	testfile=$testdir/$1
-+	attr_name=$2
-+	attr_value=$3
-+	flag=$4
-+	error_tag=$5
++	# Force data device extents so that we can fragment the free space
++	# and force attr fork allocations to be non-contiguous
++	_xfs_force_bdev data $SCRATCH_MNT
 +
-+	# Inject error
-+	_scratch_inject_error $error_tag
-+
-+	# Set attribute; hopefully 1000 of them is enough to cause whatever
-+	# attr structure shape change that the caller wants to test.
-+	for ((i = 0; i < 1024; i++)); do
-+		echo "$attr_value" | \
-+			${ATTR_PROG} -$flag "$attr_name$i" $testfile > $tmp.out 2> $tmp.err
-+		cat $tmp.out $tmp.err >> $seqres.full
-+		cat $tmp.err | _filter_scratch | sed -e 's/attr_name[0-9]*/attr_nameXXXX/g'
-+		touch $testfile &>/dev/null || break
-+	done
-+
-+	# FS should be shut down, touch will fail
-+	touch $testfile 2>&1 | _filter_scratch
-+
-+	# Remount to replay log
-+	_scratch_remount_dump_log >> $seqres.full
-+
-+	# FS should be online, touch should succeed
-+	touch $testfile
-+
-+	# Verify attr recovery
-+	$ATTR_PROG -l $testfile >> $seqres.full
-+	echo "Checking contents of $attr_name$i" >> $seqres.full
-+	echo -n "${attr_name}XXXX: "
-+	$ATTR_PROG -q -g $attr_name$i $testfile 2> /dev/null | md5sum;
-+
-+	echo ""
-+}
-+
- create_test_file()
- {
- 	filename=$testdir/$1
-@@ -88,6 +127,7 @@ echo 1 > /sys/fs/xfs/debug/larp
- attr16="0123456789ABCDEF"
- attr64="$attr16$attr16$attr16$attr16"
- attr256="$attr64$attr64$attr64$attr64"
-+attr512="$attr256$attr256"
- attr1k="$attr256$attr256$attr256$attr256"
- attr4k="$attr1k$attr1k$attr1k$attr1k"
- attr8k="$attr4k$attr4k"
-@@ -140,12 +180,14 @@ test_attr_replay extent_file1 "attr_name2" $attr1k "s" "larp"
- test_attr_replay extent_file1 "attr_name2" $attr1k "r" "larp"
+ 	bsize=$(_get_file_block_size $SCRATCH_MNT)
  
- # extent, inject error on split
--create_test_file extent_file2 3 $attr1k
--test_attr_replay extent_file2 "attr_name4" $attr1k "s" "da_leaf_split"
-+create_test_file extent_file2 0 $attr1k
-+test_attr_replay_loop extent_file2 "attr_name" $attr1k "s" "da_leaf_split"
+ 	testfile=$SCRATCH_MNT/testfile
+@@ -76,13 +80,15 @@ for nrext64 in 0 1; do
+ 	acnt=$(_scratch_xfs_get_metadata_field core.naextents \
+ 					       "path /$(basename $testfile)")
  
--# extent, inject error on fork transition
--create_test_file extent_file3 3 $attr1k
--test_attr_replay extent_file3 "attr_name4" $attr1k "s" "attr_leaf_to_node"
-+# extent, inject error on fork transition.  The attr value must be less than
-+# a full filesystem block so that the attrs don't use remote xattr values,
-+# which means we miss the leaf to node transition.
-+create_test_file extent_file3 0 $attr1k
-+test_attr_replay_loop extent_file3 "attr_name" $attr512 "s" "attr_leaf_to_node"
+-	if (( $dcnt != 10 )); then
+-		echo "Invalid data fork extent count: $dextcnt"
++	echo "nrext64: $nrext64 dcnt: $dcnt acnt: $acnt" >> $seqres.full
++
++	if [ -z "$dcnt" ] || (( $dcnt != 10 )); then
++		echo "Invalid data fork extent count: $dcnt"
+ 		exit 1
+ 	fi
  
- # extent, remote
- create_test_file extent_file4 1 $attr1k
-diff --git a/tests/xfs/018.out b/tests/xfs/018.out
-index 022b0ca3..c3021ee3 100644
---- a/tests/xfs/018.out
-+++ b/tests/xfs/018.out
-@@ -87,22 +87,14 @@ Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file
- attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
- 
- attr_set: Input/output error
--Could not set "attr_name4" for SCRATCH_MNT/testdir/extent_file2
-+Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file2
- touch: cannot touch 'SCRATCH_MNT/testdir/extent_file2': Input/output error
--Attribute "attr_name4" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file2
--Attribute "attr_name2" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
--Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
--Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
--attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
-+attr_nameXXXX: 9fd415c49d67afc4b78fad4055a3a376  -
- 
- attr_set: Input/output error
--Could not set "attr_name4" for SCRATCH_MNT/testdir/extent_file3
-+Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file3
- touch: cannot touch 'SCRATCH_MNT/testdir/extent_file3': Input/output error
--Attribute "attr_name4" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file3
--Attribute "attr_name2" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
--Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
--Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
--attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
-+attr_nameXXXX: a597dc41e4574873516420a7e4e5a3e0  -
- 
- attr_set: Input/output error
- Could not set "attr_name2" for SCRATCH_MNT/testdir/extent_file4
+-	if (( $acnt < 10 )); then
+-		echo "Invalid attr fork extent count: $aextcnt"
++	if [ -z "$acnt" ] || (( $acnt < 10 )); then
++		echo "Invalid attr fork extent count: $acnt"
+ 		exit 1
+ 	fi
+ done
 
