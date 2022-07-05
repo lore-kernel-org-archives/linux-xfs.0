@@ -2,231 +2,281 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0F5EC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 18:13:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 261FDC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 18:38:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231825AbiGESNE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jul 2022 14:13:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54084 "EHLO
+        id S229590AbiGESh7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jul 2022 14:37:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229591AbiGESNE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 14:13:04 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 456BF140FF
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Jul 2022 11:13:03 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 265HEW4O003074;
-        Tue, 5 Jul 2022 18:12:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=6dw1Z5i8N9JKqvhMnpnJsa9cxgQaV9zdK7ZeggjNluQ=;
- b=PKnGxipqGTm0zYf0e72QW6pOBMi2nj5A01mmKbNLxZe+Xs7K/ugqXMnrFPx1F0Qw0q2D
- uPeF7kP32BnE/vs0QVzi0YfTssVwe3jLVtCKQrtNMMfzLzgWBHJ03+AuYGPnVZi+U6WE
- IJ/sTqGryUOEYR57SbXwWVWL3WJkdXKGLpVs6zmtlZ8Q4qX9bGFZ7QBenPFW/oZMMh75
- 0+oibo0fuovglOYci6LZNNVaCf5w8BCx5yqJruDwjSbSIbORgswgpbL2YzrcPpQMccf3
- 0q3HhEApKI9rRTxj+dc5ytxPbD85xFVnd+PSMjHBWaEUNdmRXz3GMH6l3FBAxYEHn0Ga xA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3h2eju6xyx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Jul 2022 18:12:59 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 265IBQIe005051;
-        Tue, 5 Jul 2022 18:12:58 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2174.outbound.protection.outlook.com [104.47.55.174])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3h2cf2keyd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Jul 2022 18:12:58 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kCzKTFKF/Z8+Idz+5aJVPqQCdb2Tkd4lOU9kQT6foYguB2Evhs1RLGpYarM6b1YwtZ892dKl2I6EJ0H/JcETOEBxngSw+LFSzVWEAaV1W2QxVuSGTDqncTTU14teIQIlW6Z1oLRaYJcdi1XuAnmz5be3HgM2YKdJEjMtU49ckn4KKpqXkoq/LPlXxRNZhoyGo7u5fmmu9e1q/YimG/VTsGyG3XKN0y5WK9LMVjo4sWIBlR2N6ZIC7cEJm6cMQjFhoMws3v8ZZe4gYNj+5rHFSYvW5n3utEsnk7uLC6zPxaOKrev0DhvmlJU1SO11fZuoiL6XdvdIqMgu/oPvECfY9w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=6dw1Z5i8N9JKqvhMnpnJsa9cxgQaV9zdK7ZeggjNluQ=;
- b=NlpIjYJAcJ8yMNZ3AakyLwg/f1CrHa9+Si7/f/p838e7njGDgEasBGipEKqs7nOEbCxPePmJVZyhAPbFGrfpxcyCMRKAzf3dowSY1sSmLrar2D0j1sNmnEu+jPiB82+Ae6K9ChZor9pKMH+vU7dM9JKYU5rEZr8tosfDi8R8vLdmAWa4PaDAKJGQHPrIT5MrSUzsFTra9SrYzCGvvBOvLKbtdv219t+scgO6wNXtCDuQjr9pNS1E/h2yiZrrrE8fpnCrqHaGYio5kWdhJuoSmuhd5nqIaddElkDWhOHcBfYVMf3e3YChTM4/g24F70BPxHeeZOE5cob8kxy8aBYiog==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6dw1Z5i8N9JKqvhMnpnJsa9cxgQaV9zdK7ZeggjNluQ=;
- b=JC5CT/gmQgGjS/qA1jcK3Aay9OtevLzLabAR13MtZBxzBhluE6qSWBiH34ZDEoamaLCwRYKMO5vywkjHXJ18bFiBHlxugsyStW44jYj2u8KTwYOTYnrQCl+A8F1NwoxylTZX8f7O9xn7iLuyoxfhgAW601mBBzm+FgHB2Ck5v24=
-Received: from CY4PR10MB1479.namprd10.prod.outlook.com (2603:10b6:903:27::17)
- by BN6PR1001MB2163.namprd10.prod.outlook.com (2603:10b6:405:2e::30) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.14; Tue, 5 Jul
- 2022 18:12:56 +0000
-Received: from CY4PR10MB1479.namprd10.prod.outlook.com
- ([fe80::dc1b:7b1:9995:79c8]) by CY4PR10MB1479.namprd10.prod.outlook.com
- ([fe80::dc1b:7b1:9995:79c8%4]) with mapi id 15.20.5395.021; Tue, 5 Jul 2022
- 18:12:56 +0000
-From:   Srikanth C S <srikanth.c.s@oracle.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>
-CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Rajesh Sivaramasubramaniom 
-        <rajesh.sivaramasubramaniom@oracle.com>,
-        Junxiao Bi <junxiao.bi@oracle.com>
-Subject: RE: [PATCH] mkfs: custom agcount that renders AG size <
- XFS_AG_MIN_BYTES gives "Assertion failed. Aborted"
-Thread-Topic: [PATCH] mkfs: custom agcount that renders AG size <
- XFS_AG_MIN_BYTES gives "Assertion failed. Aborted"
-Thread-Index: AQHYkB4qKyq4byR96USf2dHkA+db5a1vJe0AgADZl4CAABQKwA==
-Date:   Tue, 5 Jul 2022 18:12:56 +0000
-Message-ID: <CY4PR10MB1479FDB883A03A8E5870FDD8A3819@CY4PR10MB1479.namprd10.prod.outlook.com>
-References: <20220705031958.407-1-srikanth.c.s@oracle.com>
- <20220705035536.GE227878@dread.disaster.area> <YsRsv/KrtkDWoFVO@magnolia>
-In-Reply-To: <YsRsv/KrtkDWoFVO@magnolia>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 48f87128-c6ac-4486-0ec3-08da5eb1fc7a
-x-ms-traffictypediagnostic: BN6PR1001MB2163:EE_
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 9K9unewxzdWlGXxzU1rJjMVpEFEoD3dFUrTENYNDqzn13+kJAFQEibX+oCo17tfuQGE+rSks9IyjYqlVahDknEoRKaHLBVvNfRWJ66zf52LEjJumTQx9XWkZoWmyXo0odjYILlJBVEoONM56LK4FbAxMWkJ21Fkmmit8SIuQNCkHeoWKZY0QLFbhDpGdMrjNbS+LyCbY3IQTrOAE7FcBUNDI71SHPr9nzu4ZGRHmFUmjc0BLhkiEhid2KSyU6+R/WN4USd8vkib3MSffv1MJsDHXt2tMUmlViLQRpGuyV0bik0Sug7KlJVRr3ZEquAg49s797NdnMpjStNel9PxEijjNepRCOxmOT4P/1vvoKCqG+ilS9+Hmmd8nuoAThyNueASE+lNlgMtx+Tr0182DIXYpV3d8r7XMWkYlRG8m7pWAdfVh0/2opIouiGk7xfzZethZws2mfikNjAM3+lJxKQFOIFVw3O5CK1HhaQUze/NqR29BLv0Z0FLfJZPQREofAdUfJBufWa17/G3WpcirDxe4jeoLZVHkTarmVanFg9fr9iEuAm1ubzSURssPp/5DqiF+0jYTzJmLiaCVMhQfUQXnifWlu4tVCZ38AkNetZRNmVwen9thnszDcCEwXzvzNlzF0I3iASf1h+fChDUBP5RnjPJsBtFWHWEQWJdD3WS1HtegHly4NP1fBnGnHgqUKrYaQ1G1G761LtWQpyyribXLe2ljPcDpW+eaUB0pMKLcNE2ETb5dVJ6tzlVuzmeblIeCiQT+t6VPxiqlcKA4yjwv9hlXzuUWZKsDIeoTt9tq859IJVoKTqe07u3i3ZC7AGpOrnMIbhscqClr8lokUw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR10MB1479.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(396003)(39860400002)(366004)(376002)(136003)(346002)(110136005)(316002)(8676002)(5660300002)(54906003)(478600001)(4326008)(71200400001)(76116006)(66446008)(52536014)(64756008)(66556008)(66946007)(66476007)(41300700001)(107886003)(9686003)(2906002)(26005)(38100700002)(38070700005)(7696005)(33656002)(55016003)(122000001)(83380400001)(6506007)(186003)(8936002)(86362001)(21314003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Bh7MtfNQtYIfMNWJrYjb8VDG6gbVt6yf6neQZwgJEOD1NxAgZdqFHNes6fpl?=
- =?us-ascii?Q?3ocOjKv3FfRx9j7WfLrVkJtPHJG5VUoIXeHVcSnsGhVwIq/93qw0ZqJMUQtR?=
- =?us-ascii?Q?co8WLw2iPGWsRtjqtDXbY8kNc/iwHzzbdvMQhXpQ5y6hnvT2qaduvUDMwJ6X?=
- =?us-ascii?Q?hHodUvW5ZZJZREMzBDJiCkYAVKU5HEoig+gXLo+DrdZCdPghGvx2VTDbA4js?=
- =?us-ascii?Q?YX3sBwvhI6fQyxHahwcvqRAmg6gQp2UC4WpK268NPr5s1RApmnfnca3Z+CrA?=
- =?us-ascii?Q?PVWu8l65edPyIa8RLQY/RVXEIY2wwUxEOSWILEivlUGuYT/C5unfH9DOUIaI?=
- =?us-ascii?Q?+W1kLXDwxUFwWNYWhEXLSPfpUFfjXyTzu6TAsLVwIFMxLAS0n3Fibjq4EucN?=
- =?us-ascii?Q?56ElMgjEDSSpRdr3uMIqC1FRzBPd/mxJQoJZSy37UhdU9HUJGKr23y/fcv4w?=
- =?us-ascii?Q?aAuKvVZXg7LC+bhY4M0OcnhWH6OSe9muWhJCgDkcqxVpxYGZA0Kg62wch2Vt?=
- =?us-ascii?Q?vEx3G/nk7JmgrGBWbZBzHrPgw9eHkdiHiB0r/YKi2fEje1YvZCedvpYyt8gQ?=
- =?us-ascii?Q?KX39swFveoWYwZeD08v1VQqqemMz8riWEl/9iCv7IE01m6+J3fYDf0+D11wH?=
- =?us-ascii?Q?U516BtWI0l0Dy2kgoHujxBRb0jtywg9OHwlEePiHj/Lj2/40gk7+YfUiO/+s?=
- =?us-ascii?Q?UpBk3p1y9UUrD5YyL2SeE6q1wKiuKO6Q36xTM8qGZo7xBSzgs6cQUBvm/8JL?=
- =?us-ascii?Q?zO5hVUGSqMxDLV7Kkci2bQxK3Nznoj1lBvL3nEYkwrYhS/pGV8quEXV3hhEA?=
- =?us-ascii?Q?v1RSydG88IiTYsL99POF20Ov4OrhIIoyZuiDp30m/N3QO3OSOCHp933q1Ptk?=
- =?us-ascii?Q?bIPsmvvog72ksfw1b6bZyiy7j/x3vc5t0IB025r4ydmXFvRMNUAAcL/ibv7/?=
- =?us-ascii?Q?XoeSYoyJWQ8Hx943/OQCZZNVm0rp9vPY1MjVV1TWxPgMUzAxRgF7j0UnPwfb?=
- =?us-ascii?Q?Pe0eQy6H+U3pXO6YZVKo123v9qt94u+9HjwGkcup8NuKOZjZ8PVqKwZ0Qucw?=
- =?us-ascii?Q?vkCzk8uzWFQ9Wio077YX6H7jJviJ486gDQDZdbiIGY3oC9YvLQSyF8AqggO9?=
- =?us-ascii?Q?/0LaypAFRzuTRsPd5aIF3Aesh0uMiSSwHc0aCYUSLN0dqf2G6/MkWGxo7+JC?=
- =?us-ascii?Q?ywdztSqzGJOcbZWopzGpM7+/HjWanOP2mcAWH+9aMc+T9so2+rV/7XheDVcL?=
- =?us-ascii?Q?PKOzGCNkesM8eUiG6500iuYBpHHh+9z3WjcvzjTVDIPN9H/5ezBRJWy4C4jM?=
- =?us-ascii?Q?AZEA1nrDZ8UX1s0mB6jxUT6CiR4WEhby6PtMShJN8aOpOtnWPiY9bTAoyxgj?=
- =?us-ascii?Q?ynUi0uzs0EJhnoq+bzKO01gVcg+EIVwZifjmyaO2m5R6/s2I1QMQY6qf5v/d?=
- =?us-ascii?Q?tRYNVIuzQaoVP22XknmqhBJOcBbU5sdtADFCU2B7aDfHsGLQwADIM6YiM+tL?=
- =?us-ascii?Q?qSbqWOcXayM5jXAdCAYWJTNHeibz5ZOImGBTnGKk3tJV5lU4QSNA4L+kOb0r?=
- =?us-ascii?Q?QtiDq3X8o8kC9hp3m0AXO7mu9Gf7qT+mmLf8nX4E?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S229579AbiGESh6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 14:37:58 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97EC51D0D0
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Jul 2022 11:37:57 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 22D73B818EE
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Jul 2022 18:37:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BACE0C341C7;
+        Tue,  5 Jul 2022 18:37:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1657046274;
+        bh=blHK3NDtFdxf6rMCgoKNnQY5HuEaSAROGoC+CksRFK8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=spDtHXmGx6BOtVap6Jjj8Vzy0tBybAztGqRUmhnaW9mQmwB4dlh0gaPL6B8Ua+i0I
+         T8PuSeyuM2qjsLruvMp5PlfNMGkAVX8NfYrbsFRzpIc0iVuXlORZu+UcrywpHmUpvh
+         6vm+1daFgt5FYE9f2gTy0GRd5wyr2ErvXCaEmnvoWQTgSn7M/TKqomMMOObkwsq353
+         g1SOTerBKteiLOhCdTt+IfkmshEqTFi9X24gd9H2Z9is+6DewNn6mkj7fUcYr/8MEd
+         ccIqb5t/Uv03vAEm8MbQ7ojySKwODmEBll0UImrLELKCmeuooB1P2kFiuCdbwicMeD
+         AaI0rEdvDlQIA==
+Date:   Tue, 5 Jul 2022 11:37:54 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Wengang Wang <wen.gang.wang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH V2] xfs: make src file readable during reflink
+Message-ID: <YsSFAmc70npnoCbM@magnolia>
+References: <20220629060755.25537-1-wen.gang.wang@oracle.com>
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CY4PR10MB1479.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 48f87128-c6ac-4486-0ec3-08da5eb1fc7a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Jul 2022 18:12:56.3886
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ox4mPfsqwXHOnPvivdKM0MXKWqOxB1q2+EiIatrGFBzEM71SK/D+Xheii7M2TX0tllatVGG/lQFGPqrYO3AvTA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR1001MB2163
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.883
- definitions=2022-07-05_15:2022-06-28,2022-07-05 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 adultscore=0
- mlxlogscore=999 bulkscore=0 malwarescore=0 mlxscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2204290000
- definitions=main-2207050079
-X-Proofpoint-GUID: g2fGUS8ShEtrGoovYvTzbF9U_kz12gmo
-X-Proofpoint-ORIG-GUID: g2fGUS8ShEtrGoovYvTzbF9U_kz12gmo
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220629060755.25537-1-wen.gang.wang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, Jun 28, 2022 at 11:07:55PM -0700, Wengang Wang wrote:
+> During a reflink operation, the IOLOCK and MMAPLOCK of the source file
+> are held in exclusive mode for the duration. This prevents reads on the
+> source file, which could be a very long time if the source file has
+> millions of extents.
+> 
+> As the source of copy, besides some necessary modification (say dirty page
+> flushing), it plays readonly role. Locking source file exclusively through
+> out the full reflink copy is unreasonable.
+> 
+> This patch downgrades exclusive locks on source file to shared modes after
+> page cache flushing and before cloning the extents. To avoid source file
+> change after lock downgradation, direct write paths take IOLOCK_EXCL on
+> seeing reflink copy happening to the files.
 
+This is going to complicate the synchronization logic between reflink
+and everything else quite a bit -- right now we generally allow multiple
+concurrent direct writers (IOLOCK) and write faults (MMAPLOCK) per file,
+so space mapping operations (fallocate/reflink) can lock out those
+writers in a simple manner.
 
-> On Tue, Jul 05, 2022 at 01:55:36PM +1000, Dave Chinner wrote:
-> > On Tue, Jul 05, 2022 at 08:49:58AM +0530, Srikanth C S wrote:
-> > > For a 2GB FS we have
-> > > $ mkfs.xfs -f -d agcount=3D129 test.img
-> > > mkfs.xfs: xfs_mkfs.c:3021: align_ag_geometry: Assertion
-> `!cli_opt_set(&dopts, D_AGCOUNT)' failed.
-> > > Aborted
-> >
-> > Ok, that's because the size of the last AG is too small when trying to
-> > align the AG size to stripe geometry. It fails an assert that says "we
-> > should not get here if the agcount was specified on the CLI".
-> >
-> > >
-> > > With this change we have
-> > > $ mkfs.xfs -f -d agcount=3D129 test.img Invalid value 129 for -d
-> > > agcount option. Value is too large.
->=20
-> What version of mkfs is this?
->=20
-> $ truncate -s 2g /tmp/a
-> $ mkfs.xfs -V
-> mkfs.xfs version 5.18.0
-> $ mkfs.xfs -f -d agcount=3D129 /tmp/a
-> agsize (4065 blocks) too small, need at least 4096 blocks
->=20
+> Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
+> ---
+> V2 changes:
+>  Commit message
+>  Make direct write paths take IOLOCK_EXCL when reflink copy is happening
+>  Tiny changes
+> ---
+>  fs/xfs/xfs_file.c  | 33 ++++++++++++++++++++++++++++++---
+>  fs/xfs/xfs_inode.c | 31 +++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_inode.h | 11 +++++++++++
+>  3 files changed, 72 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 5a171c0b244b..6ca7118ee274 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -514,8 +514,10 @@ xfs_file_dio_write_aligned(
+>  	struct iov_iter		*from)
+>  {
+>  	unsigned int		iolock = XFS_IOLOCK_SHARED;
+> +	int			remapping;
 
-For the same version I get Assertion failed
-$ truncate -s 2g /tmp/a
-$ mkfs.xfs -V
-mkfs.xfs version 5.18.0
-$ mkfs.xfs -f -d agcount=3D129 /tmp/a
-mkfs.xfs: xfs_mkfs.c:3033: align_ag_geometry: Assertion `!cli_opt_set(&dopt=
-s, D_AGCOUNT)' failed.
-Aborted (core dumped)
+bool?
 
-> > OK, but....
-> >
-> > >
-> > > Signed-off-by: Srikanth C S <srikanth.c.s@oracle.com>
-> > > ---
-> > >  mkfs/xfs_mkfs.c | 7 +++++++
-> > >  1 file changed, 7 insertions(+)
-> > >
-> > > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c index
-> > > 057b3b09..32dcbfff 100644
-> > > --- a/mkfs/xfs_mkfs.c
-> > > +++ b/mkfs/xfs_mkfs.c
-> > > @@ -2897,6 +2897,13 @@ _("agsize (%s) not a multiple of fs blk size
-> (%d)\n"),
-> > >  		cfg->agcount =3D cli->agcount;
-> > >  		cfg->agsize =3D cfg->dblocks / cfg->agcount +
-> > >  				(cfg->dblocks % cfg->agcount !=3D 0);
-> > > +		if (cfg->agsize < XFS_AG_MIN_BYTES >> cfg->blocklog)
-> > > +		{
-> > > +			fprintf(stderr,
-> > > +_("Invalid value %lld for -d agcount option. Value is too large.\n")=
-,
-> > > +				(long long)cli->agcount);
-> > > +			usage();
-> > > +		}
-> >
-> > .... that's not where we validate the calculated ag size. That happens
-> > via align_ag_geometry() -> validate_ag_geometry(). i.e. we can't
-> > reject an AG specification until after we've applied all the necessary
-> > modifiers to it first (such as stripe alignment requirements).
-> >
-> > IOWs, we do actually check for valid AG sizes, it's just that this
-> > specific case hit an ASSERT() check before we got to validating the AG
-> > size. I'm pretty sure just removing the ASSERT - which assumes that
-> > "-d agcount=3Dxxx" is not so large that it produces undersized AGs -
-> > will fix the problem and result in the correct error message being
-> > returned.
->=20
-> (Agreed.)
->=20
-> --D
->=20
-> > Cheers,
-> >
-> > Dave.
-> >
-> > --
-> > Dave Chinner
-> > david@fromorbit.com
+>  	ssize_t			ret;
+>  
+> +relock:
+>  	ret = xfs_ilock_iocb(iocb, iolock);
+>  	if (ret)
+>  		return ret;
+> @@ -523,14 +525,25 @@ xfs_file_dio_write_aligned(
+>  	if (ret)
+>  		goto out_unlock;
+>  
+> +	remapping = xfs_iflags_test(ip, XFS_IREMAPPING);
+
+remapping = xfs_has_reflink(mp) && xfs_iflags_test(ip, XFS_IREMAPPING);
+
+so that you can skip the locked test on filesystems where remapping
+isn't possible.
+
+> +
+>  	/*
+>  	 * We don't need to hold the IOLOCK exclusively across the IO, so demote
+>  	 * the iolock back to shared if we had to take the exclusive lock in
+>  	 * xfs_file_write_checks() for other reasons.
+> +	 * But take IOLOCK_EXCL when reflink copy is going on
+>  	 */
+>  	if (iolock == XFS_IOLOCK_EXCL) {
+> -		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+> -		iolock = XFS_IOLOCK_SHARED;
+> +		if (!remapping) {
+> +			xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+> +			iolock = XFS_IOLOCK_SHARED;
+> +		}
+
+Hm.  So the logic in the IOLOCK_EXCL case is that if a directio write
+takes IOLOCK_EXCL, there can't possibly be a remap operation running.
+Remap operations themselves always start by taking IOLOCK_EXCL before
+setting IREMAPPING, so a remap operation cannot set IREMAPPING until
+after this directio completes.
+
+In the IOLOCK_SHARED case below, the directio upgrades to IOLOCK_EXCL if
+a remap operation is detected.  We're protected against IREMAPPING
+getting set while we hold IOLOCK_SHARED (because remap operations start
+by taking IOLOCK_EXCL), though in theory we could race with the end of a
+remapping operation, which at worst will result in an unnecessary
+IOLOCK_EXCL acquisition, right?
+
+There can only be one remapping operation in progress at a time because
+they will take IOLOCK_EXCL initially and demote to _SHARED, so there
+shouldn't be any races to setting and clearing IREMAPPING.
+
+So I /think/ this works, but concurrency is hard to think about. :/
+
+> +	} else { /* iolock == XFS_ILOCK_SHARED */
+
+IOLOCK_SHARED, not ILOCK_SHARED?
+
+> +		if (remapping) {
+> +			xfs_iunlock(ip, iolock);
+> +			iolock = XFS_IOLOCK_EXCL;
+> +			goto relock;
+> +		}
+>  	}
+>  	trace_xfs_file_direct_write(iocb, from);
+>  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
+> @@ -1125,6 +1138,19 @@ xfs_file_remap_range(
+
+Aren't changes necessary for xfs_file_dio_write_unaligned too?
+
+>  	if (ret || len == 0)
+>  		return ret;
+>  
+> +	/*
+> +	 * Set XFS_IREMAPPING flag to source file before we downgrade
+> +	 * the locks, so that all direct writes know they have to take
+> +	 * IOLOCK_EXCL.
+> +	 */
+> +	xfs_iflags_set(src, XFS_IREMAPPING);
+> +
+> +	/*
+> +	 * From now on, we read only from src, so downgrade locks to allow
+> +	 * read operations go.
+> +	 */
+> +	xfs_ilock_io_mmap_downgrade_src(src, dest);
+> +
+>  	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
+>  
+>  	ret = xfs_reflink_remap_blocks(src, pos_in, dest, pos_out, len,
+> @@ -1152,7 +1178,8 @@ xfs_file_remap_range(
+>  	if (xfs_file_sync_writes(file_in) || xfs_file_sync_writes(file_out))
+>  		xfs_log_force_inode(dest);
+>  out_unlock:
+> -	xfs_iunlock2_io_mmap(src, dest);
+> +	xfs_iflags_clear(src, XFS_IREMAPPING);
+> +	xfs_iunlock2_io_mmap_src_shared(src, dest);
+>  	if (ret)
+>  		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
+>  	return remapped > 0 ? remapped : ret;
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 52d6f2c7d58b..1cbd4a594f28 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3786,6 +3786,16 @@ xfs_ilock2_io_mmap(
+>  	return 0;
+>  }
+>  
+> +/* Downgrade the locks on src file if src and dest are not the same one. */
+> +void
+> +xfs_ilock_io_mmap_downgrade_src(
+> +	struct xfs_inode	*src,
+> +	struct xfs_inode	*dest)
+> +{
+> +	if (src != dest)
+> +		xfs_ilock_demote(src, XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL);
+
+Oh, you're downgrading MMAPLOCK_EXCL (aka invalidate_lock) too?
+
+That's going to be tricky to figure out -- write page faults (and
+apparently all DAX faults) take MMAPLOCK_SHARED (invalidate_lock_shared)
+so I think you'd have to add similar "upgrade/downgrade lock" logic to
+__xfs_filemap_fault?
+
+I'm not 100% sure I'm correct about that statement, my head is starting
+to spin and I'm not sure it's worth the complexity.
+
+I /do/ wonder if range locking would be a better solution here, since we
+can safely unlock file ranges that we've already remapped?
+
+--D
+
+> +}
+> +
+>  /* Unlock both inodes to allow IO and mmap activity. */
+>  void
+>  xfs_iunlock2_io_mmap(
+> @@ -3798,3 +3808,24 @@ xfs_iunlock2_io_mmap(
+>  	if (ip1 != ip2)
+>  		inode_unlock(VFS_I(ip1));
+>  }
+> +
+> +/*
+> + * Unlock the exclusive locks on dest file.
+> + * Also unlock the shared locks on src if src and dest are not the same one
+> + */
+> +void
+> +xfs_iunlock2_io_mmap_src_shared(
+> +	struct xfs_inode	*src,
+> +	struct xfs_inode	*dest)
+> +{
+> +	struct inode	*src_inode = VFS_I(src);
+> +	struct inode	*dest_inode = VFS_I(dest);
+> +
+> +	inode_unlock(dest_inode);
+> +	filemap_invalidate_unlock(dest_inode->i_mapping);
+> +	if (src == dest)
+> +		return;
+> +
+> +	inode_unlock_shared(src_inode);
+> +	filemap_invalidate_unlock_shared(src_inode->i_mapping);
+> +}
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 7be6f8e705ab..c07d4b42cf9d 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -262,6 +262,13 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
+>   */
+>  #define XFS_INACTIVATING	(1 << 13)
+>  
+> +/*
+> + * A flag indicating reflink copy / remapping is happening to the file as
+> + * source. When set, all direct IOs should take IOLOCK_EXCL to avoid
+> + * interphering the remapping.
+> + */
+> +#define XFS_IREMAPPING		(1 << 14)
+> +
+>  /* All inode state flags related to inode reclaim. */
+>  #define XFS_ALL_IRECLAIM_FLAGS	(XFS_IRECLAIMABLE | \
+>  				 XFS_IRECLAIM | \
+> @@ -512,5 +519,9 @@ void xfs_end_io(struct work_struct *work);
+>  
+>  int xfs_ilock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+>  void xfs_iunlock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+> +void xfs_ilock_io_mmap_downgrade_src(struct xfs_inode *src,
+> +					struct xfs_inode *dest);
+> +void xfs_iunlock2_io_mmap_src_shared(struct xfs_inode *src,
+> +					struct xfs_inode *dest);
+>  
+>  #endif	/* __XFS_INODE_H__ */
+> -- 
+> 2.21.0 (Apple Git-122.2)
+> 
