@@ -2,108 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D32A1C43334
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 22:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7016FC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 22:09:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229550AbiGEWES (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jul 2022 18:04:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49540 "EHLO
+        id S230438AbiGEWJg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jul 2022 18:09:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbiGEWER (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 18:04:17 -0400
+        with ESMTP id S229505AbiGEWJg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 18:09:36 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B948B13FBA;
-        Tue,  5 Jul 2022 15:04:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B42A6193C5
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Jul 2022 15:09:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4EC666189F;
-        Tue,  5 Jul 2022 22:04:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5313C341C7;
-        Tue,  5 Jul 2022 22:04:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5030C61C19
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Jul 2022 22:09:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9BCCC341C8;
+        Tue,  5 Jul 2022 22:09:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657058655;
-        bh=T7i588ZsyHJD4g+O/eQ4nO+FLpQgn4LP5zOw1vFogT8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hysc5fU/ubTjc5ifaCe7l53XKUAV9rVYDzsc/oKfAtERocHBRIZm94zILNL4r3zYh
-         V9kdx2eDTaTaIZvKdkZZzMT1GS3NkE32/OoH6uPqbFHABPAkJ+/CmHX9QBIROHGq0h
-         3AjrH+y3n03QtqBD+LCGdt1DvE4i6CmCgH9Aybo4DZ3X9whWMngBW+DZhBC4cF9ldf
-         PY6Md8+HXOyPDb6/KZ/tJOLEGYyIrHac0rCRy8qQcaA5Uy5sr8hWnweCA0bckRWl9n
-         aQiyjWdA6R9dxqax9xHvmo1lcLk3z3YRKigz5STBpkH3uN1TyCqlh318L5AjYZQOvH
-         B+HQVXVnKMCIg==
-Date:   Tue, 5 Jul 2022 15:04:15 -0700
+        s=k20201202; t=1657058974;
+        bh=ct3yZZBzMtMZBEb2nhBtmYhmOYFn0DWyVZZR2GQE2Gg=;
+        h=Subject:From:To:Cc:Date:From;
+        b=XHVUbcVtEoYuj420T9QNJlF9Sy1bsH3cIv0NEhrMlzDP57DT5wutC9S6B4DEIR44d
+         srLQ/l2w/w3JUw4YxL+n1Ms7vXWVZCUp+66cUQbEnGKp/8C9kWxsCdvyOawqXLIB48
+         v8LHews3HHbYUC0BYxL+dUG7OwEke6tgU4m0DZebZx9dfykb5VApoyFl5iTLwJ7b3z
+         mwFxHHOQ0a0WxkSIC4F26qDcJz5YfHAc234JNgXxskclJFORLSACoQVs31JgcopwgT
+         Zd3jcquKS6R8TQC501YcrbAgHh5mZOBcxPfiRyw4vYNB70vBXb9XGwSyLSOHBlWyYa
+         eSOvT/S5e6F0g==
+Subject: [PATCHSET 0/3] xfs: make attr forks permanent
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCHSET 0/9] fstests: random fixes
-Message-ID: <YsS1X5Q4kDmIexhY@magnolia>
-References: <165644767753.1045534.18231838177395571946.stgit@magnolia>
- <20220705142840.gycwt264xrda3bkr@zlang-mailbox>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        allison.henderson@oracle.com
+Date:   Tue, 05 Jul 2022 15:09:34 -0700
+Message-ID: <165705897408.2826746.14673631830829415034.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220705142840.gycwt264xrda3bkr@zlang-mailbox>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 05, 2022 at 10:28:40PM +0800, Zorro Lang wrote:
-> On Tue, Jun 28, 2022 at 01:21:17PM -0700, Darrick J. Wong wrote:
-> > Hi all,
-> > 
-> > Here's the usual batch of odd fixes for fstests.
-> > 
-> > If you're going to start using this mess, you probably ought to just
-> > pull from my git trees, which are linked below.
-> > 
-> > This is an extraordinary way to destroy everything.  Enjoy!
-> > Comments and questions are, as always, welcome.
-> > 
-> > --D
-> 
-> Hi Darrick,
-> 
-> JFYI, to push the proceeding of your patch merging, I've merged/pushed this
-> patchset, except patch 7/9 and 9/9 due to they haven't gotten any review.
-> I can review them, but patch 7/9 changes the case which Dave might care about,
-> so I'd like to wait more response.
-> 
-> Feel free to send these 2 patches with more your new patches, if you'd like to
-> do that :)
+Hi all,
 
-Done.  Thanks for taking last week's bundle, btw.
+This series fixes a use-after-free bug that syzbot uncovered.  The UAF
+itself is a result of a race condition between getxattr and removexattr
+because callers to getxattr do not necessarily take any sort of locks
+before calling into the filesystem.
+
+Although the race condition itself can be fixed through clever use of a
+memory barrier, further consideration of the use cases of extended
+attributes shows that most files always have at least one attribute, so
+we might as well make them permanent.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> Thanks,
-> Zorro
-> 
-> > 
-> > kernel git tree:
-> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
-> > 
-> > xfsprogs git tree:
-> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
-> > 
-> > fstests git tree:
-> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
-> > ---
-> >  check                  |    3 +++
-> >  common/repair          |    1 +
-> >  src/seek_sanity_test.c |   12 ++++++++++-
-> >  tests/xfs/018          |   52 +++++++++++++++++++++++++++++++++++++++++++-----
-> >  tests/xfs/018.out      |   16 ++++-----------
-> >  tests/xfs/109          |    2 +-
-> >  tests/xfs/166          |   19 ++++++++++++++----
-> >  tests/xfs/547          |   14 +++++++++----
-> >  tests/xfs/843          |   51 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/843.out      |    2 ++
-> >  tests/xfs/844          |   33 ++++++++++++++++++++++++++++++
-> >  tests/xfs/844.out      |    3 +++
-> >  12 files changed, 181 insertions(+), 27 deletions(-)
-> >  create mode 100755 tests/xfs/843
-> >  create mode 100644 tests/xfs/843.out
-> >  create mode 100755 tests/xfs/844
-> >  create mode 100644 tests/xfs/844.out
-> > 
-> 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=make-attr-fork-permanent-5.20
+---
+ fs/xfs/libxfs/xfs_attr.c           |   16 ++++----
+ fs/xfs/libxfs/xfs_attr.h           |   10 +++--
+ fs/xfs/libxfs/xfs_attr_leaf.c      |   27 +++++++-------
+ fs/xfs/libxfs/xfs_bmap.c           |   71 ++++++++++++++++++------------------
+ fs/xfs/libxfs/xfs_bmap_btree.c     |    8 ++--
+ fs/xfs/libxfs/xfs_btree.c          |    4 +-
+ fs/xfs/libxfs/xfs_dir2_block.c     |    2 +
+ fs/xfs/libxfs/xfs_dir2_sf.c        |    2 +
+ fs/xfs/libxfs/xfs_inode_buf.c      |    7 ++--
+ fs/xfs/libxfs/xfs_inode_fork.c     |   55 ++++++++++++++++------------
+ fs/xfs/libxfs/xfs_inode_fork.h     |   11 ++----
+ fs/xfs/libxfs/xfs_symlink_remote.c |    2 +
+ fs/xfs/scrub/bmap.c                |   14 ++++---
+ fs/xfs/scrub/dabtree.c             |    2 +
+ fs/xfs/scrub/dir.c                 |    2 +
+ fs/xfs/scrub/quota.c               |    2 +
+ fs/xfs/scrub/symlink.c             |    2 +
+ fs/xfs/xfs_attr_inactive.c         |   12 ++----
+ fs/xfs/xfs_attr_list.c             |    9 ++---
+ fs/xfs/xfs_bmap_util.c             |   12 +++---
+ fs/xfs/xfs_dir2_readdir.c          |    2 +
+ fs/xfs/xfs_icache.c                |   12 +++---
+ fs/xfs/xfs_inode.c                 |   18 +++++----
+ fs/xfs/xfs_inode.h                 |   22 +++++++++++
+ fs/xfs/xfs_inode_item.c            |   50 +++++++++++++------------
+ fs/xfs/xfs_ioctl.c                 |    2 +
+ fs/xfs/xfs_iomap.c                 |    8 ++--
+ fs/xfs/xfs_itable.c                |    2 +
+ fs/xfs/xfs_qm.c                    |    2 +
+ fs/xfs/xfs_reflink.c               |    6 ++-
+ 30 files changed, 203 insertions(+), 191 deletions(-)
+
