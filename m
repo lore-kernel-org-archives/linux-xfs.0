@@ -2,219 +2,364 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CF45C43334
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 23:13:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFC0FC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 23:18:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232781AbiGEXNS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jul 2022 19:13:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33840 "EHLO
+        id S229610AbiGEXSU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jul 2022 19:18:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232840AbiGEXNQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 19:13:16 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A30861BEA1
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Jul 2022 16:13:13 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 265Kx1U2028599
-        for <linux-xfs@vger.kernel.org>; Tue, 5 Jul 2022 23:13:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2021-07-09;
- bh=zyReXrNbO1+syHgtDcM5GFuAma/kL1yM6mKmtOcqkEY=;
- b=ldFu1rOQVhfBQqoltM4E6wOrekwlAJy0/wIYHuYr9CgDxUbqSTTuquD3shK0cyxf7R/7
- cFsUGucYU7B5YLDDWi3IYIAHOuG4DhJ3EgmHWzPWPpA7M/UOFBsl3JSqHvIihJDEG0ZL
- t701J3IQG87U+WUQWiUndmYkrd6ffpFVwagiBUpdPqIcIqCLHZ+ceQgwCXQKbIv0JqhF
- NETTeZxazVTVco+9WQb74ggG9oW9B/ZRXAt2RfvEoIrY4ABjIPPKpazeMhO4PDqawM6m
- Xhw5XkYLHzRhNotxasu6R7LqSuWsN/t/Y9/d9dUEqAXmEEkl5t5jpF2zrDFplBV/2Tki Uw== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3h4ubygemn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Jul 2022 23:13:13 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 265MvHuN027118
-        for <linux-xfs@vger.kernel.org>; Tue, 5 Jul 2022 23:13:11 GMT
-Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1anam02lp2046.outbound.protection.outlook.com [104.47.57.46])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3h4ud5bw4m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Jul 2022 23:13:11 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=n/6gpgkklaOmCcGmKjTPhb5EQNrSsxQRIwcNfFEGuFa1Uaq64c0mkwypgWyq4+/5RLXet6DdoO4Gvwyd0f+9kbMzsHM0j/79qr759Jvu+vKkUSN23IZxKx0VNy05IFTWIC+D9Ubjn1yiQIyMbu/JkmTdXSjd5s7yEDhJEtFzg5X5/zryHAKMkIZXSozDJBsaHucncOc41ssgOUpM/JoGui6xcKx2/YfCpQ1FCkbDDZxmOaEbLyUKbrribLJakO1JLUANhEW/1fwvF+4Fn6h4iRxi7u3x4gFUyD8/dZlnvSTkqLG1Yt7RqgIN1mt8fXWdHy2xrSSYIWp0u+3J/fOBNA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zyReXrNbO1+syHgtDcM5GFuAma/kL1yM6mKmtOcqkEY=;
- b=O1oE4fZTnjy9n5H5yjUJddYHHex3ORgBBI0My6oH10aoFLLGoFxiU9BD0RPHKepgmt5nSKbbb2yDw2qpwoCJTz4Hskq7c/aQoA1XCSqQcY7TkxY0GZgXNuIy2SbsFa7Llkhx8/4svGqSwGWkeg5b7waf697IQWj1qdTE00gYrr4ht2zj/o6LdBDxTS8OJxn5lOa8ITXC8z3zH5Hvbd5rE8q/wXHd6nX6OKRdVrf2kVidK3xYTDqEmELx9FqmwCKAvtT1/9l88u4N0ikK5Xwk2YLGgKd1w9TSSNLNy6fyzYGC0hyu0tTvYLNsfd4aarIsAs+4ysu+8lBdnn4LU1JaQg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zyReXrNbO1+syHgtDcM5GFuAma/kL1yM6mKmtOcqkEY=;
- b=Iw2/qf9wDmt4+XkeLIQ5X4U85V+vKb8c8dzdk9RFd1KGdlIaQnubP0FzPIxbXgVsw9RlQwX1Kxdtz0OKgdrjQsYZQlcHitWAbvf/v3WM+goS8LY0xtOEtYU4wrMCEa9eSi02p5dK9uXM6sux3r+PEsyx8WObaO8JPXSGc41Ir6c=
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by BL0PR10MB2977.namprd10.prod.outlook.com (2603:10b6:208:31::27) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.17; Tue, 5 Jul
- 2022 23:13:07 +0000
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::30d4:9679:6a11:6f94]) by BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::30d4:9679:6a11:6f94%8]) with mapi id 15.20.5395.022; Tue, 5 Jul 2022
- 23:13:07 +0000
-From:   Allison Henderson <allison.henderson@oracle.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [RFC PATCH 1/1] xfs: Fix multi-transaction larp replay
-Date:   Tue,  5 Jul 2022 16:13:01 -0700
-Message-Id: <20220705231301.165785-1-allison.henderson@oracle.com>
-X-Mailer: git-send-email 2.25.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BYAPR03CA0013.namprd03.prod.outlook.com
- (2603:10b6:a02:a8::26) To BY5PR10MB4306.namprd10.prod.outlook.com
- (2603:10b6:a03:211::7)
+        with ESMTP id S229493AbiGEXST (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 19:18:19 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFD35BE1A
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Jul 2022 16:18:17 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5F7FCB81A38
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Jul 2022 23:18:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 163C2C341C7;
+        Tue,  5 Jul 2022 23:18:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1657063095;
+        bh=kXc1DF9UHyvuoWDHrFAIJ+xpzvyknfiRmmyLzN68w28=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=BMdKGHsqUwzxKINGu79NrDmfqVdoNcx6r9D/C+2Daqa3nKM1/Zmcsfb5g2MfWORbJ
+         urP/PBVEQ50gJK3iL0CeVe6F+dhym7Wk20W8ykb8NbiI50+kKb/gSF/ZvFfUttU/ZL
+         MZFjW9PDn87sRoo/NI+fz1ODVJvlw5pINW05fYjJ27CWwAt9pxDZ8DZC0q9IiHio9k
+         getI3OSVVMzI29W5Jr7d8SBmA4K1A7hixXXMByAQNrSmYy9YYog6mGcoz/bRVbNvj8
+         GoHbeJjCUDb5E1tLv7FhNh3bMBPySRGCSqqFrFMpl/n/Eyt055Gji9DHNfOC0muYYU
+         tgHSYuCzOasBQ==
+Date:   Tue, 5 Jul 2022 16:18:14 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        allison.henderson@oracle.com
+Subject: [PATCH 4/3] xfs: replace XFS_IFORK_Q with a proper predicate function
+Message-ID: <YsTGtvcWszfGuyle@magnolia>
+References: <165705897408.2826746.14673631830829415034.stgit@magnolia>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: f42eca90-e80b-4ad0-8c2f-08da5edbebc4
-X-MS-TrafficTypeDiagnostic: BL0PR10MB2977:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: FCYujPG0k06cdbNF2Cb8tF+7NELpB3rBVmBYfYRXMA/D5E7HWrnYmNDHpvcLWSPvx6xePKtQCySnkRiJwDCglR6cHTPmtofq41VcRTfWDq4Jhr/bxWcGRFPVal45j0iNiWry8uRnLDUHgX6etin/viZZ73b6tOp6+Rds3Fnc6XSwWrJDt4oPjqBMskAljKzxj04XbKMo7SNdThyrHTRlGfLSSelPolPnxK7NpebWPUs/BnXBqGwWv6O7kztLsDySwzZipZ/W5F/cUaWT4SGocW29lhwPHlXIW1TdfqWPA0bUdjgW1IIKhC0Nza54XJ6eDd5usFH1wKvrz9k4U5qELj91b6VaYb+Wgn8DyLMv0gbhDHkaxT4S7qa70XoeRcujJbJtS9PaqUBGZbjCSDDRuF0qXSXqt1z3rOPGceVjZfpTs2uBMT3JC6FfjFInat0S8/I4jKd/Y8aGJvys5cRvTmtJziUZpp0ayRJkxQjl3zQKOPzD4W/Z32qcN+Y3B5C0UJe2BdT2G2pgej8p0xtD/2ik5ihpCQkVNZUoQq4Uw4EqhQHGW/GV49VZmeFp5O7evBkPMf78RW3KwTyVtayCtQFjIjett1Wu8+urgxGPj863hGHwf/7bjI8jL+XIiQUqAYl8EQvIr1Iwirphg1zWTdft80Nxk+sRAHBTlrz8fIGqZkna2ROOkGfZCXEYKHbMUrlWBQaf4ZPOQGZseXjMLczeXAFwkRFmnSqfHV5/ZeIScNiwUx5CAEUUkChpe4DHJq+vQUcjKr3ChKQLhKqgXzm7SwdUqObMMoakPCzqyyqOQBlvBqmc9swmylQnVzeX
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(366004)(136003)(346002)(39860400002)(396003)(376002)(38350700002)(38100700002)(66946007)(66476007)(5660300002)(8676002)(66556008)(316002)(86362001)(6916009)(26005)(1076003)(2906002)(2616005)(36756003)(6486002)(41300700001)(6666004)(478600001)(8936002)(6506007)(186003)(44832011)(52116002)(83380400001)(6512007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YMui7tTwPdHq8L94XCMEfUsndwbruz4SAz77dlilqsqrSl4NiX7BPHL4D4mJ?=
- =?us-ascii?Q?UECUHnraIoBVQIya+9+hqiReOWG+TJJCrlGONsUuhNKcABh2UH+a5oiK0rMb?=
- =?us-ascii?Q?PGlvv/LMGkE/GSy0vNBcd33OX/h0eBd93vV64uzsaIl5TfGbldmOMi2TNNFz?=
- =?us-ascii?Q?5DfmuUNyivVA7SqBs6gm64/ahXKUqCw8kVJBnaQU1lTi/chlN32CRfciJdL4?=
- =?us-ascii?Q?7CrRWSXsJMZUCjCxP4TXum+/V4v7vFOnyc262JVvCV4xylxYL81qdgjYEd8R?=
- =?us-ascii?Q?e7PvPjWrhRoajKP6KJJr7SYXBP8XTeI19MPdpi/j1G+Z6pOoIg69bSK9s1rD?=
- =?us-ascii?Q?nPMw9cUk4AJT1NqT7VJ9pwvCzoAPE2JmHgcdtE46wGwPrX9kHmLw3qKOwvL+?=
- =?us-ascii?Q?2Nkuc/aZLS951TVBKpms0N7ZtXlsV6hlWv0FhRa0hdTqeaVJeR6GWEkVPPGJ?=
- =?us-ascii?Q?Lrw3QLYd6f7E58AIu/iRvBWCxXjfTist7eb4ID0KczS6jR8QRYGGBxvcdJ+H?=
- =?us-ascii?Q?0qbOjmhvE8A/TpotksDI1Np+52/f5EJfVKre5uTyxj1NqxAk13ihwmiSAwVg?=
- =?us-ascii?Q?z211/ihPcbN+b45d69ftI/Ld4XpMqdyQTKNhT7Qm48pns3jWk+jMzBkcJ0lZ?=
- =?us-ascii?Q?Bs7kMa6KMeIrOnUY4OqyYtGrf7Rmo//zwQUPF3x4i2aWUXUN2xOrSfO6cFp1?=
- =?us-ascii?Q?btEO4lncGiwaHKdXRVdzuvxGxAs2lWPX2c7TThehfp0FSHdW1jZauOAOPd6v?=
- =?us-ascii?Q?Zn7zTZCDt8sRDDYe+cvAquZik7/gDddezQyA+hVUC9tsh58kV80TPPb3kW+M?=
- =?us-ascii?Q?Zc3F36WH8g6512TyNFmxIhqIRxEY3GfGpTCLr1J39FYRYyz7B9Ir3MbNYz6k?=
- =?us-ascii?Q?h0MMXNIgx7bhGuJL69bAwQoPJgQAnCYtFDKfBv7TFtGGfSYsLLWCW8xnuHIY?=
- =?us-ascii?Q?y4LNHQoW2PGjF0Xy310Ubm8dIDcp+tG+e6Ncx3HhrMVVirv3WJDmrTHInROr?=
- =?us-ascii?Q?44/umDBvdRlgwhbzEGIuRYU2UXcKlUJMjVQys41+7MBqPE0frUaOOm6PTt8R?=
- =?us-ascii?Q?cEdnjpqvtR+7dkC6gJQa/ycfNkOnQWkq5s9r+Nz9BXRK0KD/ik9W7FZpz5wI?=
- =?us-ascii?Q?hjxC7oiyhxWxTiJdDzipt5N9xbiDT/zQ7ErsyIdxU0+Saq4JjEqs7C+uD066?=
- =?us-ascii?Q?3pxu6mx64IH8CHPSl1mSs0DeR/UfnEGioXeekOsa4B2xmnqD4co2qReXaxzF?=
- =?us-ascii?Q?I2FXU9UHREA73PpRpEjaswQe5ShjDy9F0oy0vT3jen/ZWVkhNNCVSuVyYYIX?=
- =?us-ascii?Q?v5AXw7tBRtoJxS6ing3i5RjAH0+DljGZ0IxIIk4oVADz1AR0c3ZUCtkW/4wY?=
- =?us-ascii?Q?ArIYshlym8raQH9O3SUKJb40wPMBoYxZg22XpOnIDtfiKtpCL6rO4CvvO0xD?=
- =?us-ascii?Q?xzB17Sf70OpoeIjgOnLUOZjf9z5pm6PaBqX4D/3Vq5z8zL0WTrgeGWylA2nK?=
- =?us-ascii?Q?X+0C6uE85IFxj+au/nzC79XYs/qt+dvO5whYCSMwhiAuLAy3nooOshQrEY7X?=
- =?us-ascii?Q?tInAUBUH5E+p9656nN3wYW98zFhKKUM/92+sO5q2CZK6u8BM01/7zle4Jpy3?=
- =?us-ascii?Q?bA=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f42eca90-e80b-4ad0-8c2f-08da5edbebc4
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jul 2022 23:13:07.4140
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: jtGW6jP5z15pjtnFWPJYJj6/Zb4g1achCKJ0rl5eLVCJoTiAp8422eI5gEuoGcAKarME2YWUBE2gZiObmpEj3Ipipli9lLvsK+Iwd6xaias=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR10MB2977
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.883
- definitions=2022-07-05_18:2022-06-28,2022-07-05 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0 phishscore=0
- mlxlogscore=999 spamscore=0 adultscore=0 malwarescore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
- definitions=main-2207050099
-X-Proofpoint-GUID: 9Q3huTJ2DecryvIEr25hdBhbAPBVKEWR
-X-Proofpoint-ORIG-GUID: 9Q3huTJ2DecryvIEr25hdBhbAPBVKEWR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <165705897408.2826746.14673631830829415034.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Recent parent pointer testing has exposed a bug in the underlying
-attr replay.  A multi transaction replay currently performs a
-single step of the replay, then deferrs the rest if there is more
-to do.  This causes race conditions with other attr replays that
-might be recovered before the remaining deferred work has had a
-chance to finish.  This can lead to interleaved set and remove
-operations that may clobber the attribute fork.  Fix this by
-deferring all work for any attribute operation.
+From: Darrick J. Wong <djwong@kernel.org>
 
-This patch is meant to be a POC for one possible solution to this
-bug
+Replace this shouty macro with a real C function that has a more
+descriptive name.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_attr_item.c | 35 ++++++++---------------------------
- 1 file changed, 8 insertions(+), 27 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c       |    4 ++--
+ fs/xfs/libxfs/xfs_attr.h       |    2 +-
+ fs/xfs/libxfs/xfs_bmap.c       |    4 ++--
+ fs/xfs/libxfs/xfs_inode_fork.c |    2 +-
+ fs/xfs/libxfs/xfs_inode_fork.h |    5 ++---
+ fs/xfs/scrub/btree.c           |    2 +-
+ fs/xfs/xfs_attr_inactive.c     |    4 ++--
+ fs/xfs/xfs_bmap_util.c         |   10 +++++-----
+ fs/xfs/xfs_inode.c             |   10 +++++-----
+ fs/xfs/xfs_inode.h             |    7 ++++++-
+ fs/xfs/xfs_inode_item.c        |    4 ++--
+ fs/xfs/xfs_iomap.c             |    2 +-
+ fs/xfs/xfs_iops.c              |    2 +-
+ 13 files changed, 31 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 5077a7ad5646..c13d724a3e13 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -635,52 +635,33 @@ xfs_attri_item_recover(
- 		break;
- 	case XFS_ATTRI_OP_FLAGS_REMOVE:
- 		if (!xfs_inode_hasattr(args->dp))
--			goto out;
-+			return 0;
- 		attr->xattri_dela_state = xfs_attr_init_remove_state(args);
- 		break;
- 	default:
- 		ASSERT(0);
--		error = -EFSCORRUPTED;
--		goto out;
-+		return -EFSCORRUPTED;
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 002d7dea2190..58715c7ec672 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -67,7 +67,7 @@ int
+ xfs_inode_hasattr(
+ 	struct xfs_inode	*ip)
+ {
+-	if (!XFS_IFORK_Q(ip))
++	if (!xfs_inode_has_attr_fork(ip))
+ 		return 0;
+ 	if (ip->i_af.if_format == XFS_DINODE_FMT_EXTENTS &&
+ 	    ip->i_af.if_nextents == 0)
+@@ -999,7 +999,7 @@ xfs_attr_set(
+ 		 * If the inode doesn't have an attribute fork, add one.
+ 		 * (inode must not be locked when we call this routine)
+ 		 */
+-		if (XFS_IFORK_Q(dp) == 0) {
++		if (xfs_inode_has_attr_fork(dp) == 0) {
+ 			int sf_size = sizeof(struct xfs_attr_sf_hdr) +
+ 				xfs_attr_sf_entsize_byname(args->namelen,
+ 						args->valuelen);
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 36371c3b9069..81be9b3e4004 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -576,7 +576,7 @@ xfs_attr_init_add_state(struct xfs_da_args *args)
+ 	 * context, i_af is guaranteed to exist. Hence if the attr fork is
+ 	 * null, we were called from a pure remove operation and so we are done.
+ 	 */
+-	if (!XFS_IFORK_Q(args->dp))
++	if (!xfs_inode_has_attr_fork(args->dp))
+ 		return XFS_DAS_DONE;
+ 
+ 	args->op_flags |= XFS_DA_OP_ADDNAME;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 1ef72443025a..e5108df54f5a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1023,7 +1023,7 @@ xfs_bmap_add_attrfork(
+ 	int			logflags;	/* logging flags */
+ 	int			error;		/* error return value */
+ 
+-	ASSERT(XFS_IFORK_Q(ip) == 0);
++	ASSERT(xfs_inode_has_attr_fork(ip) == 0);
+ 
+ 	mp = ip->i_mount;
+ 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+@@ -1034,7 +1034,7 @@ xfs_bmap_add_attrfork(
+ 			rsvd, &tp);
+ 	if (error)
+ 		return error;
+-	if (XFS_IFORK_Q(ip))
++	if (xfs_inode_has_attr_fork(ip))
+ 		goto trans_cancel;
+ 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index b0370b837166..b3ba97242e71 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -717,7 +717,7 @@ xfs_ifork_verify_local_attr(
+ 	struct xfs_ifork	*ifp = &ip->i_af;
+ 	xfs_failaddr_t		fa;
+ 
+-	if (!XFS_IFORK_Q(ip))
++	if (!xfs_inode_has_attr_fork(ip))
+ 		fa = __this_address;
+ 	else
+ 		fa = xfs_attr_shortform_verify(ip);
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 0b912bbe4f4b..efee11956540 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -78,13 +78,12 @@ struct xfs_ifork {
+  * Fork handling.
+  */
+ 
+-#define XFS_IFORK_Q(ip)			((ip)->i_forkoff != 0)
+ #define XFS_IFORK_BOFF(ip)		((int)((ip)->i_forkoff << 3))
+ 
+ #define XFS_IFORK_DSIZE(ip) \
+-	(XFS_IFORK_Q(ip) ? XFS_IFORK_BOFF(ip) : XFS_LITINO((ip)->i_mount))
++	(xfs_inode_has_attr_fork(ip) ? XFS_IFORK_BOFF(ip) : XFS_LITINO((ip)->i_mount))
+ #define XFS_IFORK_ASIZE(ip) \
+-	(XFS_IFORK_Q(ip) ? XFS_LITINO((ip)->i_mount) - XFS_IFORK_BOFF(ip) : 0)
++	(xfs_inode_has_attr_fork(ip) ? XFS_LITINO((ip)->i_mount) - XFS_IFORK_BOFF(ip) : 0)
+ #define XFS_IFORK_SIZE(ip,w) \
+ 	((w) == XFS_DATA_FORK ? \
+ 		XFS_IFORK_DSIZE(ip) : \
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 39dd46f038fe..2f4519590dc1 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -462,7 +462,7 @@ xchk_btree_check_iroot_minrecs(
+ 	 */
+ 	if (bs->cur->bc_btnum == XFS_BTNUM_BMAP &&
+ 	    bs->cur->bc_ino.whichfork == XFS_DATA_FORK &&
+-	    XFS_IFORK_Q(bs->sc->ip))
++	    xfs_inode_has_attr_fork(bs->sc->ip))
+ 		return false;
+ 
+ 	return true;
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index ec20ad7a9001..0e83cab9cdde 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -338,7 +338,7 @@ xfs_attr_inactive(
+ 	ASSERT(! XFS_NOT_DQATTACHED(mp, dp));
+ 
+ 	xfs_ilock(dp, lock_mode);
+-	if (!XFS_IFORK_Q(dp))
++	if (!xfs_inode_has_attr_fork(dp))
+ 		goto out_destroy_fork;
+ 	xfs_iunlock(dp, lock_mode);
+ 
+@@ -351,7 +351,7 @@ xfs_attr_inactive(
+ 	lock_mode = XFS_ILOCK_EXCL;
+ 	xfs_ilock(dp, lock_mode);
+ 
+-	if (!XFS_IFORK_Q(dp))
++	if (!xfs_inode_has_attr_fork(dp))
+ 		goto out_cancel;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index f317586d2f63..8111319cbb46 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -444,7 +444,7 @@ xfs_getbmap(
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+ 	switch (whichfork) {
+ 	case XFS_ATTR_FORK:
+-		if (!XFS_IFORK_Q(ip))
++		if (!xfs_inode_has_attr_fork(ip))
+ 			goto out_unlock_iolock;
+ 
+ 		max_len = 1LL << 32;
+@@ -1320,7 +1320,7 @@ xfs_swap_extents_check_format(
+ 	 * extent format...
+ 	 */
+ 	if (tifp->if_format == XFS_DINODE_FMT_BTREE) {
+-		if (XFS_IFORK_Q(ip) &&
++		if (xfs_inode_has_attr_fork(ip) &&
+ 		    XFS_BMAP_BMDR_SPACE(tifp->if_broot) > XFS_IFORK_BOFF(ip))
+ 			return -EINVAL;
+ 		if (tifp->if_nextents <= XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+@@ -1329,7 +1329,7 @@ xfs_swap_extents_check_format(
+ 
+ 	/* Reciprocal target->temp btree format checks */
+ 	if (ifp->if_format == XFS_DINODE_FMT_BTREE) {
+-		if (XFS_IFORK_Q(tip) &&
++		if (xfs_inode_has_attr_fork(tip) &&
+ 		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
+ 			return -EINVAL;
+ 		if (ifp->if_nextents <= XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
+@@ -1506,14 +1506,14 @@ xfs_swap_extent_forks(
+ 	/*
+ 	 * Count the number of extended attribute blocks
+ 	 */
+-	if (XFS_IFORK_Q(ip) && ip->i_af.if_nextents > 0 &&
++	if (xfs_inode_has_attr_fork(ip) && ip->i_af.if_nextents > 0 &&
+ 	    ip->i_af.if_format != XFS_DINODE_FMT_LOCAL) {
+ 		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &junk,
+ 				&aforkblks);
+ 		if (error)
+ 			return error;
+ 	}
+-	if (XFS_IFORK_Q(tip) && tip->i_af.if_nextents > 0 &&
++	if (xfs_inode_has_attr_fork(tip) && tip->i_af.if_nextents > 0 &&
+ 	    tip->i_af.if_format != XFS_DINODE_FMT_LOCAL) {
+ 		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK, &junk,
+ 				&taforkblks);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 699c44f57707..33cf0b82a0c0 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -125,7 +125,7 @@ xfs_ilock_attr_map_shared(
+ {
+ 	uint			lock_mode = XFS_ILOCK_SHARED;
+ 
+-	if (XFS_IFORK_Q(ip) && xfs_need_iread_extents(&ip->i_af))
++	if (xfs_inode_has_attr_fork(ip) && xfs_need_iread_extents(&ip->i_af))
+ 		lock_mode = XFS_ILOCK_EXCL;
+ 	xfs_ilock(ip, lock_mode);
+ 	return lock_mode;
+@@ -635,7 +635,7 @@ xfs_ip2xflags(
+ 			flags |= FS_XFLAG_COWEXTSIZE;
  	}
  
- 	xfs_init_attr_trans(args, &tres, &total);
- 	error = xfs_trans_alloc(mp, &tres, total, 0, XFS_TRANS_RESERVE, &tp);
- 	if (error)
--		goto out;
-+		return error;
+-	if (XFS_IFORK_Q(ip))
++	if (xfs_inode_has_attr_fork(ip))
+ 		flags |= FS_XFLAG_HASATTR;
+ 	return flags;
+ }
+@@ -1762,7 +1762,7 @@ xfs_inactive(
+ 	 * now.  The code calls a routine that recursively deconstructs the
+ 	 * attribute fork. If also blows away the in-core attribute fork.
+ 	 */
+-	if (XFS_IFORK_Q(ip)) {
++	if (xfs_inode_has_attr_fork(ip)) {
+ 		error = xfs_attr_inactive(ip);
+ 		if (error)
+ 			goto out;
+@@ -3501,7 +3501,7 @@ xfs_iflush(
+ 	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL &&
+ 	    xfs_ifork_verify_local_data(ip))
+ 		goto flush_out;
+-	if (XFS_IFORK_Q(ip) &&
++	if (xfs_inode_has_attr_fork(ip) &&
+ 	    ip->i_af.if_format == XFS_DINODE_FMT_LOCAL &&
+ 	    xfs_ifork_verify_local_attr(ip))
+ 		goto flush_out;
+@@ -3520,7 +3520,7 @@ xfs_iflush(
+ 	}
  
- 	args->trans = tp;
- 	done_item = xfs_trans_get_attrd(tp, attrip);
-+	args->trans->t_flags |= XFS_TRANS_HAS_INTENT_DONE;
-+	set_bit(XFS_LI_DIRTY, &done_item->attrd_item.li_flags);
+ 	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+-	if (XFS_IFORK_Q(ip))
++	if (xfs_inode_has_attr_fork(ip))
+ 		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
  
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
+ 	/*
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 9bda01311c2f..2badbf9bb80d 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -77,6 +77,11 @@ typedef struct xfs_inode {
+ 	struct list_head	i_ioend_list;
+ } xfs_inode_t;
  
--	error = xfs_xattri_finish_update(attr, done_item);
--	if (error == -EAGAIN) {
--		/*
--		 * There's more work to do, so add the intent item to this
--		 * transaction so that we can continue it later.
--		 */
--		xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &attr->xattri_list);
--		error = xfs_defer_ops_capture_and_commit(tp, capture_list);
--		if (error)
--			goto out_unlock;
--
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		xfs_irele(ip);
--		return 0;
--	}
--	if (error) {
--		xfs_trans_cancel(tp);
--		goto out_unlock;
--	}
--
-+	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &attr->xattri_list);
- 	error = xfs_defer_ops_capture_and_commit(tp, capture_list);
--out_unlock:
++static inline bool xfs_inode_has_attr_fork(struct xfs_inode *ip)
++{
++	return ip->i_forkoff > 0;
++}
 +
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	xfs_irele(ip);
--out:
--	xfs_attr_free_item(attr);
-+
- 	return error;
+ static inline struct xfs_ifork *
+ xfs_ifork_ptr(
+ 	struct xfs_inode	*ip,
+@@ -86,7 +91,7 @@ xfs_ifork_ptr(
+ 	case XFS_DATA_FORK:
+ 		return &ip->i_df;
+ 	case XFS_ATTR_FORK:
+-		if (!XFS_IFORK_Q(ip))
++		if (!xfs_inode_has_attr_fork(ip))
+ 			return NULL;
+ 		return &ip->i_af;
+ 	case XFS_COW_FORK:
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 77519e6f0b34..a78a0b9dd1d0 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -143,7 +143,7 @@ xfs_inode_item_size(
+ 		   xfs_log_dinode_size(ip->i_mount);
+ 
+ 	xfs_inode_item_data_fork_size(iip, nvecs, nbytes);
+-	if (XFS_IFORK_Q(ip))
++	if (xfs_inode_has_attr_fork(ip))
+ 		xfs_inode_item_attr_fork_size(iip, nvecs, nbytes);
  }
  
--- 
-2.25.1
-
+@@ -480,7 +480,7 @@ xfs_inode_item_format(
+ 
+ 	xfs_inode_item_format_core(ip, lv, &vecp);
+ 	xfs_inode_item_format_data_fork(iip, ilf, lv, &vecp);
+-	if (XFS_IFORK_Q(ip)) {
++	if (xfs_inode_has_attr_fork(ip)) {
+ 		xfs_inode_item_format_attr_fork(iip, ilf, lv, &vecp);
+ 	} else {
+ 		iip->ili_fields &=
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index eb54fd259d15..edbfd6abcc15 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1307,7 +1307,7 @@ xfs_xattr_iomap_begin(
+ 	lockmode = xfs_ilock_attr_map_shared(ip);
+ 
+ 	/* if there are no attribute fork or extents, return ENOENT */
+-	if (!XFS_IFORK_Q(ip) || !ip->i_af.if_nextents) {
++	if (!xfs_inode_has_attr_fork(ip) || !ip->i_af.if_nextents) {
+ 		error = -ENOENT;
+ 		goto out_unlock;
+ 	}
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 6720b60f88cf..14efa0fc1c19 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1279,7 +1279,7 @@ xfs_setup_inode(
+ 	 * If there is no attribute fork no ACL can exist on this inode,
+ 	 * and it can't have any file capabilities attached to it either.
+ 	 */
+-	if (!XFS_IFORK_Q(ip)) {
++	if (!xfs_inode_has_attr_fork(ip)) {
+ 		inode_has_no_xattr(inode);
+ 		cache_no_acl(inode);
+ 	}
