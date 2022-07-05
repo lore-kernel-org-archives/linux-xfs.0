@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96138C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 22:02:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFA6DC43334
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 22:02:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232314AbiGEWCN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jul 2022 18:02:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47924 "EHLO
+        id S232327AbiGEWCT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jul 2022 18:02:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232394AbiGEWCL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 18:02:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33735192BD;
-        Tue,  5 Jul 2022 15:02:10 -0700 (PDT)
+        with ESMTP id S231854AbiGEWCS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 18:02:18 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50A4E192BD;
+        Tue,  5 Jul 2022 15:02:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8307F61CF4;
-        Tue,  5 Jul 2022 22:02:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC637C341C7;
-        Tue,  5 Jul 2022 22:02:08 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E6FD7B819AA;
+        Tue,  5 Jul 2022 22:02:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91F89C341C7;
+        Tue,  5 Jul 2022 22:02:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657058528;
-        bh=GOYMgz7XSCWP9DdDMpNAnUvAnivgHsXFREbZ4MCVg8s=;
+        s=k20201202; t=1657058534;
+        bh=ySxfF9fscDH6cZg0RsDEP20WDx0C5u0nTxp0IEZHLQw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=mHoZwmKwbAEpjzNtEsak548Z6W4bbYj59t1AoULu10PC2phvhpItO//06tPaHfaaG
-         ebryUTNEvFTUFhrYHCydiTLEqe17qinJm6XoThZVk/cCWw3Sd99pf33U5e2/ViIgkD
-         9CX/qwNhqTGpTi1xPiME5DYIYii8jRCDXknFpzGjxSF2M43rFhhVsiVBwg3lCo50m2
-         OHEaN7e2r4Age7kbep+1++PeGf3Z1alC+/NWzHDGxQy8hvjhNTvT6x2Xn/GsmfPejM
-         Fgp9oELn8kwUYmlxlMN/xmKcw5GiaRWsVkjfeJaO34pnwHis4qi2gT/j6K0DdjnjZZ
-         J8qkUxWNae/KQ==
-Subject: [PATCH 1/3] xfs: fix test mkfs.xfs sizing of internal logs that
- overflow the AG
+        b=olJ1qPacJOLmRH5QYdM9FCzebXLoEKHl+tZG2Brhc6Um20jrUnEgVLQABifJxH+JS
+         ex2VJyoYlpYuEJd4Sx35muYOw1WHIkdpC3mpWPl6WjOOGDM5aGO35guXvvFlx4M/IB
+         1Bq/eJX6CjtoPbVWuG2lb8t8IjkuVuo/gipg66bQWferKkxai9X0baf6NUD63D1bE4
+         mgARsSgwTT4Xl7TH3lmiD4QhtYGvTtYpQiAqLJyyth4BwhXdl/Zutg2GiaPeJCcGUw
+         hds2NrnlpSLVw6b3stYa2KFj/3q9smji1vDZCr4cSXtFR+ldBMNfAp4Asz1d6uf4so
+         4bLiJnEZ47K1A==
+Subject: [PATCH 2/3] xfs/018: fix LARP testing for small block sizes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 05 Jul 2022 15:02:08 -0700
-Message-ID: <165705852849.2820493.14066599391475531621.stgit@magnolia>
+Date:   Tue, 05 Jul 2022 15:02:14 -0700
+Message-ID: <165705853409.2820493.9590517059305128125.stgit@magnolia>
 In-Reply-To: <165705852280.2820493.17559217951744359102.stgit@magnolia>
 References: <165705852280.2820493.17559217951744359102.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,56 +49,124 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix a few problems with this test -- one of the things we test require
-mkfs to run in -N mode, so we need to have a certain amount of free
-space, and fix that test not to use -N mode.
+Fix this test to work properly when the filesystem block size is less
+than 4k.  Tripping the error injection points on shape changes in the
+xattr structure must be done dynamically.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/144 |   14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ tests/xfs/018     |   52 +++++++++++++++++++++++++++++++++++++++++++++++-----
+ tests/xfs/018.out |   16 ++++------------
+ 2 files changed, 51 insertions(+), 17 deletions(-)
 
 
-diff --git a/tests/xfs/144 b/tests/xfs/144
-index 2910eec9..706aff61 100755
---- a/tests/xfs/144
-+++ b/tests/xfs/144
-@@ -16,6 +16,10 @@ _begin_fstest auto mkfs
- # Modify as appropriate.
- _supported_fs xfs
- _require_test
-+
-+# The last testcase creates a (sparse) fs image with a 2GB log, so we need
-+# 3GB to avoid failing the mkfs due to ENOSPC.
-+_require_fs_space $TEST_DIR $((3 * 1048576))
- echo Silence is golden
- 
- testfile=$TEST_DIR/a
-@@ -26,7 +30,7 @@ test_format() {
- 	shift
- 
- 	echo "$tag" >> $seqres.full
--	$MKFS_XFS_PROG $@ -d file,name=$testfile &>> $seqres.full
-+	$MKFS_XFS_PROG -f $@ -d file,name=$testfile &>> $seqres.full
- 	local res=$?
- 	test $res -eq 0 || echo "$tag FAIL $res" | tee -a $seqres.full
+diff --git a/tests/xfs/018 b/tests/xfs/018
+index 041a3b24..14a6f716 100755
+--- a/tests/xfs/018
++++ b/tests/xfs/018
+@@ -54,6 +54,45 @@ test_attr_replay()
+ 	echo ""
  }
-@@ -38,13 +42,13 @@ for M in `seq 298 302` `seq 490 520`; do
- 	done
- done
  
-+# log end rounded beyond EOAG due to stripe unit
-+test_format "log end beyond eoag" -d agcount=3200,size=6366g -d su=256k,sw=4 -N
++test_attr_replay_loop()
++{
++	testfile=$testdir/$1
++	attr_name=$2
++	attr_value=$3
++	flag=$4
++	error_tag=$5
 +
- # Log so large it pushes the root dir into AG 1.  We can't use -N for the mkfs
- # because this check only occurs after the root directory has been allocated,
- # which mkfs -N doesn't do.
--test_format "log pushes rootdir into AG 1" -d agcount=3200,size=6366g -lagnum=0 -N
--
--# log end rounded beyond EOAG due to stripe unit
--test_format "log end beyond eoag" -d agcount=3200,size=6366g -d su=256k,sw=4 -N
-+test_format "log pushes rootdir into AG 1" -d agcount=3200,size=6366g -lagnum=0
++	# Inject error
++	_scratch_inject_error $error_tag
++
++	# Set attribute; hopefully 1000 of them is enough to cause whatever
++	# attr structure shape change that the caller wants to test.
++	for ((i = 0; i < 1024; i++)); do
++		echo "$attr_value" | \
++			${ATTR_PROG} -$flag "$attr_name$i" $testfile > $tmp.out 2> $tmp.err
++		cat $tmp.out $tmp.err >> $seqres.full
++		cat $tmp.err | _filter_scratch | sed -e 's/attr_name[0-9]*/attr_nameXXXX/g'
++		touch $testfile &>/dev/null || break
++	done
++
++	# FS should be shut down, touch will fail
++	touch $testfile 2>&1 | _filter_scratch
++
++	# Remount to replay log
++	_scratch_remount_dump_log >> $seqres.full
++
++	# FS should be online, touch should succeed
++	touch $testfile
++
++	# Verify attr recovery
++	$ATTR_PROG -l $testfile >> $seqres.full
++	echo "Checking contents of $attr_name$i" >> $seqres.full
++	echo -n "${attr_name}XXXX: "
++	$ATTR_PROG -q -g $attr_name$i $testfile 2> /dev/null | md5sum;
++
++	echo ""
++}
++
+ create_test_file()
+ {
+ 	filename=$testdir/$1
+@@ -88,6 +127,7 @@ echo 1 > /sys/fs/xfs/debug/larp
+ attr16="0123456789ABCDEF"
+ attr64="$attr16$attr16$attr16$attr16"
+ attr256="$attr64$attr64$attr64$attr64"
++attr512="$attr256$attr256"
+ attr1k="$attr256$attr256$attr256$attr256"
+ attr4k="$attr1k$attr1k$attr1k$attr1k"
+ attr8k="$attr4k$attr4k"
+@@ -140,12 +180,14 @@ test_attr_replay extent_file1 "attr_name2" $attr1k "s" "larp"
+ test_attr_replay extent_file1 "attr_name2" $attr1k "r" "larp"
  
- # success, all done
- status=0
+ # extent, inject error on split
+-create_test_file extent_file2 3 $attr1k
+-test_attr_replay extent_file2 "attr_name4" $attr1k "s" "da_leaf_split"
++create_test_file extent_file2 0 $attr1k
++test_attr_replay_loop extent_file2 "attr_name" $attr1k "s" "da_leaf_split"
+ 
+-# extent, inject error on fork transition
+-create_test_file extent_file3 3 $attr1k
+-test_attr_replay extent_file3 "attr_name4" $attr1k "s" "attr_leaf_to_node"
++# extent, inject error on fork transition.  The attr value must be less than
++# a full filesystem block so that the attrs don't use remote xattr values,
++# which means we miss the leaf to node transition.
++create_test_file extent_file3 0 $attr1k
++test_attr_replay_loop extent_file3 "attr_name" $attr512 "s" "attr_leaf_to_node"
+ 
+ # extent, remote
+ create_test_file extent_file4 1 $attr1k
+diff --git a/tests/xfs/018.out b/tests/xfs/018.out
+index 022b0ca3..c3021ee3 100644
+--- a/tests/xfs/018.out
++++ b/tests/xfs/018.out
+@@ -87,22 +87,14 @@ Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file
+ attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+ 
+ attr_set: Input/output error
+-Could not set "attr_name4" for SCRATCH_MNT/testdir/extent_file2
++Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file2
+ touch: cannot touch 'SCRATCH_MNT/testdir/extent_file2': Input/output error
+-Attribute "attr_name4" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file2
+-Attribute "attr_name2" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
+-Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
+-Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
+-attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
++attr_nameXXXX: 9fd415c49d67afc4b78fad4055a3a376  -
+ 
+ attr_set: Input/output error
+-Could not set "attr_name4" for SCRATCH_MNT/testdir/extent_file3
++Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file3
+ touch: cannot touch 'SCRATCH_MNT/testdir/extent_file3': Input/output error
+-Attribute "attr_name4" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file3
+-Attribute "attr_name2" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
+-Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
+-Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
+-attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
++attr_nameXXXX: a597dc41e4574873516420a7e4e5a3e0  -
+ 
+ attr_set: Input/output error
+ Could not set "attr_name2" for SCRATCH_MNT/testdir/extent_file4
 
