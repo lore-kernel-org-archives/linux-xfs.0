@@ -2,158 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D51E0C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 14:23:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF327CCA47B
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jul 2022 14:28:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233155AbiGEOXv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jul 2022 10:23:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49372 "EHLO
+        id S233254AbiGEO25 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jul 2022 10:28:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233067AbiGEOXm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 10:23:42 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 718D7C58;
-        Tue,  5 Jul 2022 07:23:41 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 1A887229AA;
-        Tue,  5 Jul 2022 14:23:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1657031020; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S233029AbiGEO2z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jul 2022 10:28:55 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 13EAA25C0
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Jul 2022 07:28:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1657031330;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=jcuDAT42MRN08+ai7zVZVZ2mWppuivEezCE/Bu5mhtU=;
-        b=owi3RO93Ow5n5L73HHdTiQn2hfqPSvdUleh8KgUxZseP/ZBphU+H2KIcgWp0yOuyd/tPNX
-        tA91jLVfbnO4kHORFIEqLMH2ak5lnHc1iKigU1DIvSOghhPNyDORiB3mSrrCg0C5fUSqJp
-        ynPIt+3GTWOOn7TKZHxuFbmAfJ6ma0w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1657031020;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=jcuDAT42MRN08+ai7zVZVZ2mWppuivEezCE/Bu5mhtU=;
-        b=T6AyjA5QRILuUAb7gk4isa/t+rjA2Qg9uB5wx/oL5bTShCnXOn0HwI9w9azt/RA5Dsn0N5
-        jvH/ojhAEBRt/8Aw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 095FC1339A;
-        Tue,  5 Jul 2022 14:23:37 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id MHsBCWlJxGI7fQAAMHmgww
-        (envelope-from <rgoldwyn@suse.de>); Tue, 05 Jul 2022 14:23:37 +0000
-Date:   Tue, 5 Jul 2022 09:23:34 -0500
-From:   Goldwyn Rodrigues <rgoldwyn@suse.de>
-To:     Josef Bacik <josef@toxicpanda.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>, Stefan Roesch <shr@fb.com>,
-        io-uring@vger.kernel.org, kernel-team@fb.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, jack@suse.cz, hch@infradead.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v7 15/15] xfs: Add async buffered write support
-Message-ID: <20220705142243.hlevsj4pfpahjcdv@fiona>
-References: <20220601210141.3773402-1-shr@fb.com>
- <20220601210141.3773402-16-shr@fb.com>
- <Yr56ci/IZmN0S9J6@ZenIV>
- <0a75a0c4-e2e5-b403-27bc-e43872fecdc1@kernel.dk>
- <ef7c1154-b5ba-4017-f9fd-dea936a837fc@kernel.dk>
- <ca60a7dc-b16d-d8ce-f56c-547b449da8c9@kernel.dk>
- <Yr83aD0yuEwvJ7tL@magnolia>
- <47dd9e6a-4e08-e562-12ff-5450fc42da77@kernel.dk>
- <YsRA7TGWA7ovZjrF@localhost.localdomain>
+        bh=ZCvkKDJOgRfLIl7bd3bpIzsajWcpXauVFm37vGIc+PY=;
+        b=CKw8DktShyNtfp6eWyP2jjuuuZiOk7FPeZBi19YNWlpIpYRI8qTFSp8QRRhz55S4wrhlX3
+        2x5l293QEnhumMXJwbZ/9E2iQqlJRThocjOAIbvn1od5MFxeAu41XcWZuzGiUbgtCkBmJF
+        4q/ZcNfkisjYeit7N2D/YHwX+QWre2g=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-516-jsEqVKS7OqqHfz4F8EsbWw-1; Tue, 05 Jul 2022 10:28:47 -0400
+X-MC-Unique: jsEqVKS7OqqHfz4F8EsbWw-1
+Received: by mail-qt1-f199.google.com with SMTP id fw9-20020a05622a4a8900b0031e7a2ed350so4166598qtb.0
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Jul 2022 07:28:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=ZCvkKDJOgRfLIl7bd3bpIzsajWcpXauVFm37vGIc+PY=;
+        b=sDCTk+NuoTqhdnV2AhkZRixI1mE6mLsgMRBHPPZ0LYY1vqojlStbDuTn5EMwKrrmlm
+         a0wK2YmUcqGrwtlaGviTtN7oMh87z/P7yJY9HxCRUzoVX70vu7VRPMr1Gh1F4tTXWeom
+         mEAfjys2XOKBXbAnfRZ+AB8jvoIdM3ClTX5xog4OfBKPNTGmdx7+tkVLwW+9SV/6uxbD
+         GGxnduwKxRti/hyw5SIWyE0ObQZy71L1zGccgchso7Gz16ll/EDyx1nQSuA+JgS76/mb
+         b+YzOe7tGu20zyinIp4N3Qu2JdY3m4cPmo8R8rHbDBhGfJn1HHP9/AZxNz2/A4ja3RL/
+         LnTA==
+X-Gm-Message-State: AJIora8AdEaqKKDgeqOmhHa8UeZx+lrNxjN6H2ny3RVpipHeaTgXGLnQ
+        Ku0KfODrU4E8BF0IcnVEbx40VyMrANLF/9uBci10poGmKpb4Wcc718t9LaU8k1eKPC31HJO5DhP
+        OR+2Z1fEOEAKaLtNUXsYI
+X-Received: by 2002:a05:620a:459f:b0:6b1:f5c1:6e61 with SMTP id bp31-20020a05620a459f00b006b1f5c16e61mr20666847qkb.436.1657031327507;
+        Tue, 05 Jul 2022 07:28:47 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1sEfJR17IrV9JLR3EjeCvAXCsIQGw4I9dqG2ZDovK1prOtub+0eMHlK4y+0/G8w/F+cbKnFPA==
+X-Received: by 2002:a05:620a:459f:b0:6b1:f5c1:6e61 with SMTP id bp31-20020a05620a459f00b006b1f5c16e61mr20666822qkb.436.1657031327196;
+        Tue, 05 Jul 2022 07:28:47 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id x4-20020ac87a84000000b00307cac53129sm22056880qtr.42.2022.07.05.07.28.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Jul 2022 07:28:46 -0700 (PDT)
+Date:   Tue, 5 Jul 2022 22:28:40 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCHSET 0/9] fstests: random fixes
+Message-ID: <20220705142840.gycwt264xrda3bkr@zlang-mailbox>
+References: <165644767753.1045534.18231838177395571946.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YsRA7TGWA7ovZjrF@localhost.localdomain>
+In-Reply-To: <165644767753.1045534.18231838177395571946.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On  9:47 05/07, Josef Bacik wrote:
-> On Fri, Jul 01, 2022 at 12:14:41PM -0600, Jens Axboe wrote:
-> > On 7/1/22 12:05 PM, Darrick J. Wong wrote:
-> > > On Fri, Jul 01, 2022 at 08:38:07AM -0600, Jens Axboe wrote:
-> > >> On 7/1/22 8:30 AM, Jens Axboe wrote:
-> > >>> On 7/1/22 8:19 AM, Jens Axboe wrote:
-> > >>>> On 6/30/22 10:39 PM, Al Viro wrote:
-> > >>>>> On Wed, Jun 01, 2022 at 02:01:41PM -0700, Stefan Roesch wrote:
-> > >>>>>> This adds the async buffered write support to XFS. For async buffered
-> > >>>>>> write requests, the request will return -EAGAIN if the ilock cannot be
-> > >>>>>> obtained immediately.
-> > >>>>>
-> > >>>>> breaks generic/471...
-> > >>>>
-> > >>>> That test case is odd, because it makes some weird assumptions about
-> > >>>> what RWF_NOWAIT means. Most notably that it makes it mean if we should
-> > >>>> instantiate blocks or not. Where did those assumed semantics come from?
-> > >>>> On the read side, we have clearly documented that it should "not wait
-> > >>>> for data which is not immediately available".
-> > >>>>
-> > >>>> Now it is possible that we're returning a spurious -EAGAIN here when we
-> > >>>> should not be. And that would be a bug imho. I'll dig in and see what's
-> > >>>> going on.
-> > >>>
-> > >>> This is the timestamp update that needs doing which will now return
-> > >>> -EAGAIN if IOCB_NOWAIT is set as it may block.
-> > >>>
-> > >>> I do wonder if we should just allow inode time updates with IOCB_NOWAIT,
-> > >>> even on the io_uring side. Either that, or passed in RWF_NOWAIT
-> > >>> semantics don't map completely to internal IOCB_NOWAIT semantics. At
-> > >>> least in terms of what generic/471 is doing, but I'm not sure who came
-> > >>> up with that and if it's established semantics or just some made up ones
-> > >>> from whomever wrote that test. I don't think they make any sense, to be
-> > >>> honest.
-> > >>
-> > >> Further support that generic/471 is just randomly made up semantics,
-> > >> it needs to special case btrfs with nocow or you'd get -EAGAIN anyway
-> > >> for that test.
-> > >>
-> > >> And it's relying on some random timing to see if this works. I really
-> > >> think that test case is just hot garbage, and doesn't test anything
-> > >> meaningful.
-> > > 
-> > > <shrug> I had thought that NOWAIT means "don't wait for *any*thing",
-> > > which would include timestamp updates... but then I've never been all
-> > > that clear on what specifically NOWAIT will and won't wait for. :/
-> > 
-> > Agree, at least the read semantics (kind of) make sense, but the ones
-> > seemingly made up by generic/471 don't seem to make any sense at all.
-> >
+On Tue, Jun 28, 2022 at 01:21:17PM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Added Goldwyn to the CC list for this.
+> Here's the usual batch of odd fixes for fstests.
 > 
-> This appears to be just a confusion about what we think NOWAIT should mean.
-> Looking at the btrfs code it seems like Goldwyn took it as literally as possible
-> so we wouldn't do any NOWAIT IO's unless it was into a NOCOW area, meaning we
-> literally wouldn't do anything other than wrap the bio up and fire it off.
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+> 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
 
-When I introduced NOWAIT, it was only meant for writes and for those
-which would block on block allocations or locking. Over time it was
-included for buffered reads as well.
+Hi Darrick,
+
+JFYI, to push the proceeding of your patch merging, I've merged/pushed this
+patchset, except patch 7/9 and 9/9 due to they haven't gotten any review.
+I can review them, but patch 7/9 changes the case which Dave might care about,
+so I'd like to wait more response.
+
+Feel free to send these 2 patches with more your new patches, if you'd like to
+do that :)
+
+Thanks,
+Zorro
 
 > 
-> The general consensus seems to be that NOWAIT isn't that strict, and that
-> BTRFS's definition was too strict.  I wrote initial patches to give to Stefan to
-> clean up the Btrfs side to allow us to use NOWAIT under a lot more
-> circumstances.
-
-BTRFS COW path would allocate blocks and the reason it returns -EAGAIN.
-
+> kernel git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
 > 
-> Goldwyn, this test seems to be a little specific to our case, and can be flakey
-> if the timing isn't just right.  I think we should just remove it?  Especially
-> since how we define NOWAIT isn't quite right.  Does that sound reasonable to
-> you?
+> xfsprogs git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+> ---
+>  check                  |    3 +++
+>  common/repair          |    1 +
+>  src/seek_sanity_test.c |   12 ++++++++++-
+>  tests/xfs/018          |   52 +++++++++++++++++++++++++++++++++++++++++++-----
+>  tests/xfs/018.out      |   16 ++++-----------
+>  tests/xfs/109          |    2 +-
+>  tests/xfs/166          |   19 ++++++++++++++----
+>  tests/xfs/547          |   14 +++++++++----
+>  tests/xfs/843          |   51 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/843.out      |    2 ++
+>  tests/xfs/844          |   33 ++++++++++++++++++++++++++++++
+>  tests/xfs/844.out      |    3 +++
+>  12 files changed, 181 insertions(+), 27 deletions(-)
+>  create mode 100755 tests/xfs/843
+>  create mode 100644 tests/xfs/843.out
+>  create mode 100755 tests/xfs/844
+>  create mode 100644 tests/xfs/844.out
+> 
 
-Yes, I agree. It was based on the initial definition and now can be
-removed.
-
-
--- 
-Goldwyn
