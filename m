@@ -2,47 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA988C43334
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Jul 2022 17:24:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 738B3C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Jul 2022 22:21:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233629AbiGFRYr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Jul 2022 13:24:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46412 "EHLO
+        id S232712AbiGFWVH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Jul 2022 18:21:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233851AbiGFRYr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jul 2022 13:24:47 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69012C12;
-        Wed,  6 Jul 2022 10:24:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0E794B81E67;
-        Wed,  6 Jul 2022 17:24:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7E03C3411C;
-        Wed,  6 Jul 2022 17:24:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657128283;
-        bh=6Sk0xJ/PruRoP1qaorVhBxfYBDuwBIhPQI+yDcyDC3c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BcrW4/oEZY42Rwe+0NFnXd0OrVChxxYsIXIbUIaobGN6cN6pHdNMbQMXe1m1tcmaS
-         WR9PkAXn0msjm6Upoz06gxjxfuXBUEYM+Qejv895yDQD9d9U1McsgPzVjMJXqHXW9X
-         Mk5eMho5H0+bUK2/5BzT9MTa7EtCV9IrgxJPokcevVj+iAatLJ3wZI/+yyH0h9UjlT
-         GM4zOy9M1fBrLNhsPkt3XBT+53dNrpcIfccQb53p9yfmeRuC85yZb86axm9kP+rqLx
-         BJWa9TJ6CFhWcUKuTpiQbWMYHpOyrHg7y3iIO1JgXCbL4ILqmpGt1Cw9p7aBzixgKy
-         CKtLCzkeX2fcQ==
-Date:   Wed, 6 Jul 2022 10:24:43 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
+        with ESMTP id S230320AbiGFWVG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jul 2022 18:21:06 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8875619003;
+        Wed,  6 Jul 2022 15:21:03 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BA20310C7E67;
+        Thu,  7 Jul 2022 08:21:01 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1o9DOF-00FOOw-VZ; Thu, 07 Jul 2022 08:21:00 +1000
+Date:   Thu, 7 Jul 2022 08:20:59 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     Jianglei Nie <niejianglei2021@163.com>
-Cc:     dchinner@redhat.com, chandan.babu@oracle.com,
+Cc:     djwong@kernel.org, dchinner@redhat.com, chandan.babu@oracle.com,
         linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH] xfs: fix potential memory leak in xfs_bmap_add_attrfork()
-Message-ID: <YsXFWwNIMrrurD6w@magnolia>
+Message-ID: <20220706222059.GL227878@dread.disaster.area>
 References: <20220706082237.2255887-1-niejianglei2021@163.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20220706082237.2255887-1-niejianglei2021@163.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62c60ace
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=Byx-y9mGAAAA:8 a=7-415B0cAAAA:8
+        a=xmMFYpAlcJMcLWuR8zQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -51,7 +45,9 @@ On Wed, Jul 06, 2022 at 04:22:37PM +0800, Jianglei Nie wrote:
 > xfs_bmap_add_attrfork() allocates a memory chunk for ip->i_afp with
 > xfs_ifork_alloc(). When some error occurs, the function goto trans_cancel;
 > without releasing the ip->i_afp, which will lead to a memory leak.
-> 
+
+Where does it leak? Do you ahve a KASAN report?
+
 > We should release the ip->i_afp with kmem_cache_free() and set "ip->i_afp
 > = NULL" if ip->i_afp is not NULL pointer.
 > 
@@ -71,27 +67,14 @@ On Wed, Jul 06, 2022 at 04:22:37PM +0800, Jianglei Nie wrote:
 > +	if (ip->i_afp) {
 > +		kmem_cache_free(xfs_ifork_cache, ip->i_afp);
 > +		ip->a_afp = NULL;
-> +	}
+                    ^^^^^
 
-I don't think this is correct.  If xfs_bmap_add_attrfork_* fail without
-dirtying the transaction, this function cancels the transaction without
-shutting down the filesystem, and return the error code to the caller.
-However, i_forkoff is not reset to zero, which means that the inode
-still has an attr fork, so i_afp must not be freed.
+Please compile and test your changes before proposing them for
+inclusion.
 
-Freeing the memory and nulling out the pointer without resetting
-i_forkoff results in inconsistent incore state, which will probably lead
-to a crash somewhere.  In the end, inode reclaim will free i_afp.
+Cheers,
 
-I think this is mooted by[1], right?
-
---D
-
-[1] https://lore.kernel.org/linux-xfs/165705898555.2826746.14913566803667615290.stgit@magnolia/T/#u
-
->  	return error;
->  }
->  
-> -- 
-> 2.25.1
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
