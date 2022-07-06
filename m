@@ -2,75 +2,94 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E982BC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Jul 2022 08:23:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61920CCA473
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Jul 2022 13:36:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231669AbiGFIXb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Jul 2022 04:23:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60176 "EHLO
+        id S231794AbiGFNgv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Jul 2022 09:36:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231720AbiGFIXQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jul 2022 04:23:16 -0400
-Received: from mail-m971.mail.163.com (mail-m971.mail.163.com [123.126.97.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EA32723BE5;
-        Wed,  6 Jul 2022 01:23:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=YIlwG
-        mkCnNWwg9yDvnJieOw98BJOCEUEMOaSjA7XI40=; b=Z1lhBI/zQD1R3iTkNHoC/
-        Eqe8yJBWFF+Z/ri7WpOgWyVBuM0XJNFabwfR5Q6pq1nh3SE4UywVGPxoftPfaJeR
-        28K5HR+BdGdt4SGIi4cLtz72kT4jTx4HHJXyj4jAl4uvALjnQvH8H7PkvWFhvBlK
-        svE2jHYrzByiIOK2c++DZw=
-Received: from localhost.localdomain (unknown [123.112.69.106])
-        by smtp1 (Coremail) with SMTP id GdxpCgDX3tZPRsViE6pDMw--.58602S4;
-        Wed, 06 Jul 2022 16:22:48 +0800 (CST)
-From:   Jianglei Nie <niejianglei2021@163.com>
-To:     djwong@kernel.org, dchinner@redhat.com, chandan.babu@oracle.com
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jianglei Nie <niejianglei2021@163.com>
-Subject: [PATCH] xfs: fix potential memory leak in xfs_bmap_add_attrfork()
-Date:   Wed,  6 Jul 2022 16:22:37 +0800
-Message-Id: <20220706082237.2255887-1-niejianglei2021@163.com>
+        with ESMTP id S232239AbiGFNgu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jul 2022 09:36:50 -0400
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED44B5F66;
+        Wed,  6 Jul 2022 06:36:48 -0700 (PDT)
+Received: from andrey-lpc.intra.ispras.ru (unknown [83.149.199.65])
+        by mail.ispras.ru (Postfix) with ESMTPS id D6A4740737B9;
+        Wed,  6 Jul 2022 13:36:44 +0000 (UTC)
+From:   Andrey Strachuk <strochuk@ispras.ru>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Andrey Strachuk <strochuk@ispras.ru>,
+        Dave Chinner <dchinner@redhat.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ldv-project@linuxtesting.org
+Subject: [PATCH] xfs: removed useless condition in function xfs_attr_node_get
+Date:   Wed,  6 Jul 2022 16:36:27 +0300
+Message-Id: <20220706133627.11198-1-strochuk@ispras.ru>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: GdxpCgDX3tZPRsViE6pDMw--.58602S4
-X-Coremail-Antispam: 1Uf129KBjvdXoW7Jr13uFy3tryDXr4Uur48JFb_yoWfCrb_Ja
-        n7KF1xC3y5Ja9rJw1jyFZ0gr4jqFW8AFs3Za17KFy3Kr15JFZ8Xr97Xryvyr1xGrW5WFs5
-        CFn7Kr1Fkrya9jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRibAwPUUUUU==
-X-Originating-IP: [123.112.69.106]
-X-CM-SenderInfo: xqlhyxxdqjzvrlsqjii6rwjhhfrp/xtbBORg2jF-POXTu9AAAsc
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_bmap_add_attrfork() allocates a memory chunk for ip->i_afp with
-xfs_ifork_alloc(). When some error occurs, the function goto trans_cancel;
-without releasing the ip->i_afp, which will lead to a memory leak.
+At line 1561, variable "state" is being compared
+with NULL every loop iteration.
 
-We should release the ip->i_afp with kmem_cache_free() and set "ip->i_afp
-= NULL" if ip->i_afp is not NULL pointer.
+-------------------------------------------------------------------
+1561	for (i = 0; state != NULL && i < state->path.active; i++) {
+1562		xfs_trans_brelse(args->trans, state->path.blk[i].bp);
+1563		state->path.blk[i].bp = NULL;
+1564	}
+-------------------------------------------------------------------
 
-Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
+However, it cannot be NULL.
+
+----------------------------------------
+1546	state = xfs_da_state_alloc(args);
+----------------------------------------
+
+xfs_da_state_alloc calls kmem_cache_zalloc. kmem_cache_zalloc is
+called with __GFP_NOFAIL flag and, therefore, it cannot return NULL.
+
+--------------------------------------------------------------------------
+	struct xfs_da_state *
+	xfs_da_state_alloc(
+	struct xfs_da_args	*args)
+	{
+		struct xfs_da_state	*state;
+
+		state = kmem_cache_zalloc(xfs_da_state_cache, GFP_NOFS | __GFP_NOFAIL);
+		state->args = args;
+		state->mp = args->dp->i_mount;
+		return state;
+	}
+--------------------------------------------------------------------------
+
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Signed-off-by: Andrey Strachuk <strochuk@ispras.ru>
+
+Fixes: 4d0cdd2bb8f0 ("xfs: clean up xfs_attr_node_hasname")
 ---
- fs/xfs/libxfs/xfs_bmap.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ fs/xfs/libxfs/xfs_attr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6833110d1bd4..0c99726c0968 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1088,6 +1088,10 @@ xfs_bmap_add_attrfork(
- trans_cancel:
- 	xfs_trans_cancel(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	if (ip->i_afp) {
-+		kmem_cache_free(xfs_ifork_cache, ip->i_afp);
-+		ip->a_afp = NULL;
-+	}
- 	return error;
- }
- 
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 224649a76cbb..6b8857e53add 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1558,7 +1558,7 @@ xfs_attr_node_get(
+ 	 * If not in a transaction, we have to release all the buffers.
+ 	 */
+ out_release:
+-	for (i = 0; state != NULL && i < state->path.active; i++) {
++	for (i = 0; i < state->path.active; i++) {
+ 		xfs_trans_brelse(args->trans, state->path.blk[i].bp);
+ 		state->path.blk[i].bp = NULL;
+ 	}
 -- 
 2.25.1
 
