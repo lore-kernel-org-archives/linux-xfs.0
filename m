@@ -2,168 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B93CC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 17:07:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1E28C43334
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 17:55:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235267AbiGGRHr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jul 2022 13:07:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47664 "EHLO
+        id S235743AbiGGRzr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jul 2022 13:55:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236550AbiGGRHb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 13:07:31 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D172E08E
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 10:07:30 -0700 (PDT)
+        with ESMTP id S235960AbiGGRzq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 13:55:46 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9309B33E1E
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 10:55:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id F1559CE25D4
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 17:07:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 455C0C3411E
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 17:07:27 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3080F620A1
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 17:55:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88693C341C8;
+        Thu,  7 Jul 2022 17:55:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657213647;
-        bh=vZRz1BfPeKousmkvJMUyVRwoeTExsZCEhzCfTz+w654=;
-        h=Date:From:To:Subject:From;
-        b=UMf5WO7OLivCqp5B94C1cVm+FBZDBRpkxuqyLAIBqeNn9fe9dxBbRXSc+mF8XEPr/
-         Z9BvXANSSSi9Ku4Avxu5Qv3FyagCLD8cmYH865OXB5lNz+VfsoD6n+SQc9UbMElLX0
-         p7qJEJUNyQ69qnvh1BPmsiZ+8TrRP8naqr58mcqUj76Fj0kIzZGt7a4iYUzCFcKEII
-         DWLyIW0n7WmtraLc58e9iuL9sdNWcU/p3JCqUCW8DYqBPIiuqMExSJveq3LCmM9wmK
-         fi/hGThdHUmeT2u2TXQx/ubmRNNCtwdMV5CoDC6Bb2vZvmLfl/HmHpk3tG+Ykie2MG
-         Vcs8vQn0xJeWw==
-Date:   Thu, 7 Jul 2022 10:07:26 -0700
+        s=k20201202; t=1657216544;
+        bh=GOFwR3X9dGKgpgUk+PElQdGEG41zywhwq2lsiEpXWhg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Mj3achxxTC7GUWbiFc2XPaWfsDUsavLco6QEoPD6PI27p91G08+HV++eT9At6CbJ5
+         mA+IXyYaKL5W/CpDnaskpWA0Lfa8BZ2OLzcOOkXDnQh4QBQTv+NmRqkMP5tKUSNLI7
+         3LDYII2GnC5r6spAiRytZ0G1ICn0IduTPd5afgn2nvaBpq9+hkj/TYiutAngz5jkrM
+         Q90ueZUHmkIM6ZIteIkkbIoQrNhtPfkHWEuxGdpfUB4TfWM15ZBURB3QnmWWm/LxxO
+         /cprXBmMfDeS/XgOSV3PdvbVOEkI5BFS3nqKrnplBuFThw1BoSXgzROO31ePLJkDWv
+         iJ5rdfQon2BnA==
+Date:   Thu, 7 Jul 2022 10:55:44 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 278271b9f442
-Message-ID: <YscSzg0ZToIoRhp/@magnolia>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/6] xfs: lockless buffer lookup
+Message-ID: <YsceIFL3iFwtHWx0@magnolia>
+References: <20220627060841.244226-1-david@fromorbit.com>
+ <20220627060841.244226-7-david@fromorbit.com>
+ <YrzMeZ/mW+yN94Oo@magnolia>
+ <20220707123633.GM227878@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20220707123633.GM227878@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Thu, Jul 07, 2022 at 10:36:33PM +1000, Dave Chinner wrote:
+> On Wed, Jun 29, 2022 at 03:04:41PM -0700, Darrick J. Wong wrote:
+> > On Mon, Jun 27, 2022 at 04:08:41PM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Now that we have a standalone fast path for buffer lookup, we can
+> > > easily convert it to use rcu lookups. When we continually hammer the
+> > > buffer cache with trylock lookups, we end up with a huge amount of
+> > > lock contention on the per-ag buffer hash locks:
+> > > 
+> > > -   92.71%     0.05%  [kernel]                  [k] xfs_inodegc_worker
+> > >    - 92.67% xfs_inodegc_worker
+> > >       - 92.13% xfs_inode_unlink
+> > >          - 91.52% xfs_inactive_ifree
+> > >             - 85.63% xfs_read_agi
+> > >                - 85.61% xfs_trans_read_buf_map
+> > >                   - 85.59% xfs_buf_read_map
+> > >                      - xfs_buf_get_map
+> > >                         - 85.55% xfs_buf_find
+> > >                            - 72.87% _raw_spin_lock
+> > >                               - do_raw_spin_lock
+> > >                                    71.86% __pv_queued_spin_lock_slowpath
+> > >                            - 8.74% xfs_buf_rele
+> > >                               - 7.88% _raw_spin_lock
+> > >                                  - 7.88% do_raw_spin_lock
+> > >                                       7.63% __pv_queued_spin_lock_slowpath
+> > >                            - 1.70% xfs_buf_trylock
+> > >                               - 1.68% down_trylock
+> > >                                  - 1.41% _raw_spin_lock_irqsave
+> > >                                     - 1.39% do_raw_spin_lock
+> > >                                          __pv_queued_spin_lock_slowpath
+> > >                            - 0.76% _raw_spin_unlock
+> > >                                 0.75% do_raw_spin_unlock
+> > > 
+> > > This is basically hammering the pag->pag_buf_lock from lots of CPUs
+> > > doing trylocks at the same time. Most of the buffer trylock
+> > > operations ultimately fail after we've done the lookup, so we're
+> > > really hammering the buf hash lock whilst making no progress.
+> > > 
+> > > We can also see significant spinlock traffic on the same lock just
+> > > under normal operation when lots of tasks are accessing metadata
+> > > from the same AG, so let's avoid all this by converting the lookup
+> > > fast path to leverages the rhashtable's ability to do rcu protected
+> > > lookups.
+> > > 
+> > > We avoid races with the buffer release path by using
+> > > atomic_inc_not_zero() on the buffer hold count. Any buffer that is
+> > > in the LRU will have a non-zero count, thereby allowing the lockless
+> > > fast path to be taken in most cache hit situations. If the buffer
+> > > hold count is zero, then it is likely going through the release path
+> > > so in that case we fall back to the existing lookup miss slow path.
+> > > 
+> > > The slow path will then do an atomic lookup and insert under the
+> > > buffer hash lock and hence serialise correctly against buffer
+> > > release freeing the buffer.
+> > > 
+> > > The use of rcu protected lookups means that buffer handles now need
+> > > to be freed by RCU callbacks (same as inodes). We still free the
+> > > buffer pages before the RCU callback - we won't be trying to access
+> > > them at all on a buffer that has zero references - but we need the
+> > > buffer handle itself to be present for the entire rcu protected read
+> > > side to detect a zero hold count correctly.
+> > 
+> > Hmm, so what still uses pag_buf_lock?  Are we still using it to
+> > serialize xfs_buf_rele calls?
+> 
+> slow path lookup/insert and xfs_buf_rele calls.
+> 
+> The only thing we are allowing lockless lookups on are buffers with
+> at least one reference. With the LRU holding a reference, that means
+> it the buffer is still actively cached or referenced by something
+> else so won't disappear from under us. If the ref count is zero,
+> then it means the buffer is being removed from the cache, so we
+> need to go the slow way and take the pag_buf_lock to serialise the
+> lookup against the release of the unreferenced buffer we found in
+> the cache.
 
-The for-next branch of the xfs-linux repository at:
+Ah, right, got it.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+--D
 
-has just been updated.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This branch contains Dave's CIL scalability
-improvements and perag refactoring.
-
-I'm still tracking three patchsets for 5.20: the permanent attr fork[1]
-series, the lockless buffer lookups[2] series, and the in-memory iunlink
-items[3] series.  The first patchset fixes a use-after-free bug caused
-by a race condition in the VFS xattr code, so I would very much like to
-finish review on that.  I think the lockless buffer lookups changes
-might be simple enough to land in 5.20; and the iunlinks thing might
-simply be too late for this merge window.
-
-[1] https://lore.kernel.org/linux-xfs/165705897408.2826746.14673631830829415034.stgit@magnolia/T/#t
-[2] https://lore.kernel.org/linux-xfs/YsZHh2ZkopJFmaKx@magnolia/T/#t
-[3] https://lore.kernel.org/linux-xfs/20220627004336.217366-1-david@fromorbit.com/T/#t
-
-The new head of the for-next branch is commit:
-
-278271b9f442 xfs: removed useless condition in function xfs_attr_node_get
-
-30 new commits:
-
-Andrey Strachuk (1):
-      [278271b9f442] xfs: removed useless condition in function xfs_attr_node_get
-
-Dave Chinner (28):
-      [f0ea0c88a09c] xfs: use the CIL space used counter for emptiness checks
-      [7b3e269175bf] xfs: lift init CIL reservation out of xc_cil_lock
-      [b16aca408234] xfs: rework per-iclog header CIL reservation
-      [314a52ad7876] xfs: introduce per-cpu CIL tracking structure
-      [d1acf511536a] xfs: implement percpu cil space used calculation
-      [1f3181cff6bb] xfs: track CIL ticket reservation in percpu structure
-      [7e1fdcdc8b60] xfs: convert CIL busy extents to per-cpu
-      [4927947025e7] xfs: Add order IDs to log items in CIL
-      [8c2fcb2dc169] xfs: convert CIL to unordered per cpu lists
-      [3e427d9f4ef5] xfs: convert log vector chain to use list heads
-      [192e263f58d8] xfs: move CIL ordering to the logvec chain
-      [d32417f8df90] xfs: avoid cil push lock if possible
-      [3a25f844058e] xfs: xlog_sync() manually adjusts grant head space
-      [3a7dda0fc7a7] xfs: expanding delayed logging design with background material
-      [baf2ea50bcca] xfs: make last AG grow/shrink perag centric
-      [cfa9751557ab] xfs: kill xfs_ialloc_pagi_init()
-      [e8b86e659018] xfs: pass perag to xfs_ialloc_read_agi()
-      [710c94e79f4d] xfs: kill xfs_alloc_pagf_init()
-      [c4829aba9c8d] xfs: pass perag to xfs_alloc_read_agf()
-      [3b6eed27d448] xfs: pass perag to xfs_read_agi
-      [5d95ff050d1f] xfs: pass perag to xfs_read_agf
-      [fa5fd855ceb2] xfs: pass perag to xfs_alloc_get_freelist
-      [3f853d7cf40e] xfs: pass perag to xfs_alloc_put_freelist
-      [f5560f11cca6] xfs: pass perag to xfs_alloc_read_agfl
-      [f90bf684e344] xfs: Pre-calculate per-AG agbno geometry
-      [eb0db6beb708] xfs: Pre-calculate per-AG agino geometry
-      [7d8843ef24b4] xfs: replace xfs_ag_block_count() with perag accesses
-      [1ed63729c865] xfs: make is_log_ag() a first class helper
-
-Eric Sandeen (1):
-      [ffea91261882] xfs: add selinux labels to whiteout inodes
-
-Code Diffstat:
-
- .../filesystems/xfs-delayed-logging-design.rst     | 361 ++++++++++++++--
- fs/xfs/libxfs/xfs_ag.c                             | 165 ++++---
- fs/xfs/libxfs/xfs_ag.h                             |  69 ++-
- fs/xfs/libxfs/xfs_ag_resv.c                        |   2 +-
- fs/xfs/libxfs/xfs_alloc.c                          | 143 +++----
- fs/xfs/libxfs/xfs_alloc.h                          |  58 +--
- fs/xfs/libxfs/xfs_alloc_btree.c                    |   9 +-
- fs/xfs/libxfs/xfs_attr.c                           |   2 +-
- fs/xfs/libxfs/xfs_bmap.c                           |   3 +-
- fs/xfs/libxfs/xfs_btree.c                          |  25 +-
- fs/xfs/libxfs/xfs_ialloc.c                         |  86 ++--
- fs/xfs/libxfs/xfs_ialloc.h                         |  25 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c                   |  20 +-
- fs/xfs/libxfs/xfs_inode_buf.c                      |   5 +-
- fs/xfs/libxfs/xfs_refcount.c                       |  19 +-
- fs/xfs/libxfs/xfs_refcount_btree.c                 |   5 +-
- fs/xfs/libxfs/xfs_rmap.c                           |   8 +-
- fs/xfs/libxfs/xfs_rmap_btree.c                     |   9 +-
- fs/xfs/libxfs/xfs_sb.c                             |   9 +
- fs/xfs/libxfs/xfs_types.c                          |  73 +---
- fs/xfs/libxfs/xfs_types.h                          |   9 -
- fs/xfs/scrub/agheader.c                            |  25 +-
- fs/xfs/scrub/agheader_repair.c                     |  21 +-
- fs/xfs/scrub/alloc.c                               |   7 +-
- fs/xfs/scrub/bmap.c                                |   2 +-
- fs/xfs/scrub/common.c                              |   6 +-
- fs/xfs/scrub/fscounters.c                          |   4 +-
- fs/xfs/scrub/health.c                              |   2 +
- fs/xfs/scrub/ialloc.c                              |  12 +-
- fs/xfs/scrub/refcount.c                            |   9 +-
- fs/xfs/scrub/repair.c                              |  32 +-
- fs/xfs/scrub/rmap.c                                |   6 +-
- fs/xfs/xfs_discard.c                               |   2 +-
- fs/xfs/xfs_extfree_item.c                          |   6 +-
- fs/xfs/xfs_filestream.c                            |   4 +-
- fs/xfs/xfs_fsmap.c                                 |   3 +-
- fs/xfs/xfs_fsops.c                                 |  13 +-
- fs/xfs/xfs_inode.c                                 |  42 +-
- fs/xfs/xfs_ioctl.c                                 |   8 +-
- fs/xfs/xfs_iops.c                                  |  11 +-
- fs/xfs/xfs_iops.h                                  |   3 +
- fs/xfs/xfs_log.c                                   |  55 ++-
- fs/xfs/xfs_log.h                                   |   3 +-
- fs/xfs/xfs_log_cil.c                               | 474 ++++++++++++++++-----
- fs/xfs/xfs_log_priv.h                              |  58 ++-
- fs/xfs/xfs_log_recover.c                           |  41 +-
- fs/xfs/xfs_mount.c                                 |   3 +-
- fs/xfs/xfs_reflink.c                               |  40 +-
- fs/xfs/xfs_reflink.h                               |   3 -
- fs/xfs/xfs_super.c                                 |   1 +
- fs/xfs/xfs_trans.c                                 |   4 +-
- fs/xfs/xfs_trans.h                                 |   1 +
- fs/xfs/xfs_trans_priv.h                            |   3 +-
- 53 files changed, 1287 insertions(+), 722 deletions(-)
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
