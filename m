@@ -2,174 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA6A8C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 22:21:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49D3AC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 22:38:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236566AbiGGWV3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jul 2022 18:21:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49884 "EHLO
+        id S236777AbiGGWii (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jul 2022 18:38:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236940AbiGGWV2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 18:21:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CC6B606BA
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 15:21:27 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D312062521
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 22:21:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32F7BC3411E;
-        Thu,  7 Jul 2022 22:21:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657232486;
-        bh=Un6/5iPvyolDNAYxDAnRjgcDD5V2pn1/HdiAc8kueXI=;
-        h=Date:From:To:Cc:Subject:From;
-        b=SSrEvcRnHc4NH4mf1EGJHONhPG2DOKENAt/M+0RT+5NrF/ySVvi9NB8KLUBiS12TF
-         5daTqGLYjwXlvLBjm7QW+SPaADza2WbdXQkuVNT6RHE2IrBAAi3lggc3ZDiq9Pyxt7
-         jzfHRabl6g4Hoc3oagDQ25m6fxQdM3tdKOsYSfkL7ySd0v70wcgoAVAth4aNf/u5U2
-         RrSVVh14+agKyl5UJOpvzrseJUDaBt7wzkY29FYujR0NUG6Tvz2Mzz8SSyOp48RZ47
-         GWehia5g4mNI7WRU0cIfCi/2gV1OXCTb+Wl/X/+sQEgqTMIfnzeDdbuZSrHvVdDiN+
-         VWLov/SrspxjA==
-Date:   Thu, 7 Jul 2022 15:21:25 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     hch@lst.de, oliver.sang@intel.com
-Subject: [PATCH] xfs: fix use-after-free in xattr node block inactivation
-Message-ID: <YsdcZY8KtyFmPdmS@magnolia>
+        with ESMTP id S236631AbiGGWih (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 18:38:37 -0400
+Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C015175B7
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 15:38:37 -0700 (PDT)
+Received: by mail-pg1-x536.google.com with SMTP id 73so5447083pgb.10
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Jul 2022 15:38:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=x7Y6mKdV5Bb6UGg+YNI/f4dhnbjYh+Ja5cTyIy71eTE=;
+        b=bpVE2AYQ4G1jVdDAIE7n3dAYD+vMIYmoPfUrQ3O67HA62xJQNh06qepFcIr2+Jg/em
+         30/0KGX1CoTUHuweqwTQoGQC2+QUJggwoDF2AZUxTgaR0nRZaGHjVpLw+Z4ThUE0BPGc
+         3Nyy+u3dB3AkEaP9RqxK4DBCIyvf7cbDGxSGTPDFmZAj7WRZ3RDx/UZWsSU8At/KcbPB
+         FiHKmq1vwXFAO4mvnQEVLVQ+NoK+183FyeFsddGPx5SIQ10ymvHxSJeA5RYGUHDaI/99
+         r3q+mQhmIvoVUsEg4bFrC2wlzHQKbBjzpgrkte/R1ZneFq95UBzUB2rjJ7dfpiolNn/g
+         96uQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=x7Y6mKdV5Bb6UGg+YNI/f4dhnbjYh+Ja5cTyIy71eTE=;
+        b=k5OTqDSLV/93wObYsU6dMl30IBiORhYzMUmJo05U+Di3yoW5fWdQdnfRGqe8Po+zxA
+         atDL/geRTEa3e2/HC6wOna3zNpvgd/04gTI11NgS0dZuUgJo+5BuZ0C1nK7bX8THZz8e
+         cfj07BIpyB1Y2mE/sETe0/e/DNOKRnliq5N4sXBlfaBr4dHc2jfpW+UxhuygmVB8wCf+
+         zWQZl+7Nz2oaxiENeOBHVck+yFgczjOBRYuvgnLnGQwyazHgYxlSsy1RW8ZsZWOiCuUE
+         gn4vxVZvCNRvDlwrUFIcGT7opQnIRjRHKZL3IoOHl1U0ThpwT5YImNQQUyor0vO/n+A7
+         9G/A==
+X-Gm-Message-State: AJIora9ok8cIfDTCC9B7f/DNY+5roRbTR6Z3EPy44Lk07lTxb0BUy+3C
+        NcAZe0PZgRXJglA17nYL61JIfVtUim8=
+X-Google-Smtp-Source: AGRyM1uY1ZGxrgBlu8lsHofz8YnFxevBCfeycOxTLPtXYXe8ZHACrNnq2qzbr+ty8LmPF03hc6QZ0A==
+X-Received: by 2002:a63:8148:0:b0:415:6fba:af3f with SMTP id t69-20020a638148000000b004156fbaaf3fmr340590pgd.277.1657233516520;
+        Thu, 07 Jul 2022 15:38:36 -0700 (PDT)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:26db:8a38:cdca:57b5])
+        by smtp.gmail.com with ESMTPSA id j15-20020a056a00234f00b0052542cbff9dsm28776889pfj.99.2022.07.07.15.38.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Jul 2022 15:38:36 -0700 (PDT)
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 CANDIDATE 0/4] xfs stable candidates for 5.15.y (part 2)
+Date:   Thu,  7 Jul 2022 15:38:24 -0700
+Message-Id: <20220707223828.599185-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.37.0.rc0.161.g10f37bed90-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hello again,
 
-The kernel build robot reported a UAF error while running xfs/433
-(edited somewhat for brevity):
+These are a subset of the patches from the v1 5.15 part 1 which are
+not applicable to 5.10.y. These patches were rebased and applied on top
+of the accepted part 1 patches. 100 runs of each test on mulitple configs
+were completed and no regressions found.
 
- BUG: KASAN: use-after-free in xfs_attr3_node_inactive (fs/xfs/xfs_attr_inactive.c:214) xfs
- Read of size 4 at addr ffff88820ac2bd44 by task kworker/0:2/139
+Additional testing:
+c8c568259772 "xfs: don't include bnobt blocks when reserving free block pool"
+    Observed the hang before the patches but not after
 
- CPU: 0 PID: 139 Comm: kworker/0:2 Tainted: G S                5.19.0-rc2-00004-g7cf2b0f9611b #1
- Hardware name: Hewlett-Packard p6-1451cx/2ADA, BIOS 8.15 02/05/2013
- Workqueue: xfs-inodegc/sdb4 xfs_inodegc_worker [xfs]
- Call Trace:
-  <TASK>
- dump_stack_lvl (lib/dump_stack.c:107 (discriminator 1))
- print_address_description+0x1f/0x200
- print_report.cold (mm/kasan/report.c:430)
- kasan_report (mm/kasan/report.c:162 mm/kasan/report.c:493)
- xfs_attr3_node_inactive (fs/xfs/xfs_attr_inactive.c:214) xfs
- xfs_attr3_root_inactive (fs/xfs/xfs_attr_inactive.c:296) xfs
- xfs_attr_inactive (fs/xfs/xfs_attr_inactive.c:371) xfs
- xfs_inactive (fs/xfs/xfs_inode.c:1781) xfs
- xfs_inodegc_worker (fs/xfs/xfs_icache.c:1837 fs/xfs/xfs_icache.c:1860) xfs
- process_one_work
- worker_thread
- kthread
- ret_from_fork
-  </TASK>
+919edbadebe1 "xfs: drop async cache flushes from CIL commits."
+    Ran dbench as in the commit and confirmed performance improved
 
- Allocated by task 139:
- kasan_save_stack (mm/kasan/common.c:39)
- __kasan_slab_alloc (mm/kasan/common.c:45 mm/kasan/common.c:436 mm/kasan/common.c:469)
- kmem_cache_alloc (mm/slab.h:750 mm/slub.c:3214 mm/slub.c:3222 mm/slub.c:3229 mm/slub.c:3239)
- _xfs_buf_alloc (include/linux/instrumented.h:86 include/linux/atomic/atomic-instrumented.h:41 fs/xfs/xfs_buf.c:232) xfs
- xfs_buf_get_map (fs/xfs/xfs_buf.c:660) xfs
- xfs_buf_read_map (fs/xfs/xfs_buf.c:777) xfs
- xfs_trans_read_buf_map (fs/xfs/xfs_trans_buf.c:289) xfs
- xfs_da_read_buf (fs/xfs/libxfs/xfs_da_btree.c:2652) xfs
- xfs_da3_node_read (fs/xfs/libxfs/xfs_da_btree.c:392) xfs
- xfs_attr3_root_inactive (fs/xfs/xfs_attr_inactive.c:272) xfs
- xfs_attr_inactive (fs/xfs/xfs_attr_inactive.c:371) xfs
- xfs_inactive (fs/xfs/xfs_inode.c:1781) xfs
- xfs_inodegc_worker (fs/xfs/xfs_icache.c:1837 fs/xfs/xfs_icache.c:1860) xfs
- process_one_work
- worker_thread
- kthread
- ret_from_fork
+clients   before      after
+1         220.493     260.359
+8         732.807     1068.64
+16        749.677     1293.06
+32        737.9       1247.17
+128       680.674     1077.0
+512       602.674     884.48
 
- Freed by task 139:
- kasan_save_stack (mm/kasan/common.c:39)
- kasan_set_track (mm/kasan/common.c:45)
- kasan_set_free_info (mm/kasan/generic.c:372)
- __kasan_slab_free (mm/kasan/common.c:368 mm/kasan/common.c:328 mm/kasan/common.c:374)
- kmem_cache_free (mm/slub.c:1753 mm/slub.c:3507 mm/slub.c:3524)
- xfs_buf_rele (fs/xfs/xfs_buf.c:1040) xfs
- xfs_attr3_node_inactive (fs/xfs/xfs_attr_inactive.c:210) xfs
- xfs_attr3_root_inactive (fs/xfs/xfs_attr_inactive.c:296) xfs
- xfs_attr_inactive (fs/xfs/xfs_attr_inactive.c:371) xfs
- xfs_inactive (fs/xfs/xfs_inode.c:1781) xfs
- xfs_inodegc_worker (fs/xfs/xfs_icache.c:1837 fs/xfs/xfs_icache.c:1860) xfs
- process_one_work
- worker_thread
- kthread
- ret_from_fork
+Thanks,
+Leah
 
-I reproduced this for my own satisfaction, and got the same report,
-along with an extra morsel:
 
- The buggy address belongs to the object at ffff88802103a800
-  which belongs to the cache xfs_buf of size 432
- The buggy address is located 396 bytes inside of
-  432-byte region [ffff88802103a800, ffff88802103a9b0)
+Darrick J. Wong (2):
+  xfs: only run COW extent recovery when there are no live extents
+  xfs: don't include bnobt blocks when reserving free block pool
 
-I tracked this code down to:
+Dave Chinner (2):
+  xfs: run callbacks before waking waiters in
+    xlog_state_shutdown_callbacks
+  xfs: drop async cache flushes from CIL commits.
 
-	error = xfs_trans_get_buf(*trans, mp->m_ddev_targp,
-			child_blkno,
-			XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0,
-			&child_bp);
-	if (error)
-		return error;
-	error = bp->b_error;
+ fs/xfs/xfs_bio_io.c      | 35 ------------------------
+ fs/xfs/xfs_fsops.c       |  2 +-
+ fs/xfs/xfs_linux.h       |  2 --
+ fs/xfs/xfs_log.c         | 58 +++++++++++++++++-----------------------
+ fs/xfs/xfs_log_cil.c     | 42 +++++++++--------------------
+ fs/xfs/xfs_log_priv.h    |  3 +--
+ fs/xfs/xfs_log_recover.c | 24 ++++++++++++++++-
+ fs/xfs/xfs_mount.c       | 12 +--------
+ fs/xfs/xfs_mount.h       | 15 +++++++++++
+ fs/xfs/xfs_reflink.c     |  5 +++-
+ fs/xfs/xfs_super.c       |  9 -------
+ 11 files changed, 82 insertions(+), 125 deletions(-)
 
-That doesn't look right -- I think this should be dereferencing
-child_bp, not bp.  Looking through the codebase history, I think this
-was added by commit 2911edb653b9 ("xfs: remove the mappedbno argument to
-xfs_da_get_buf"), which replaced a call to xfs_da_get_buf with the
-current call to xfs_trans_get_buf.  Not sure why we trans_brelse'd @bp
-earlier in the function, but I'm guessing it's to avoid pinning too many
-buffers in memory while we inactivate the bottom of the attr tree.
-Hence we now have to get the buffer back.
+-- 
+2.37.0.rc0.161.g10f37bed90-goog
 
-I /think/ this was supposed to check child_bp->b_error and fail the rest
-of the invalidation if child_bp had experienced any kind of IO or
-corruption error.  I bet the xfs_da3_node_read earlier in the loop will
-catch most cases of incoming on-disk corruption which makes this check
-mostly moot unless someone corrupts the buffer and the AIL or someone
-happens to try to push it out to disk while the buffer's unlocked.
-
-However, this is clearly a UAF bug, so fix this.
-
-Cc: hch@lst.de
-Reported-by: kernel test robot <oliver.sang@intel.com>
-Fixes: 2911edb653b9 ("xfs: remove the mappedbno argument to xfs_da_get_buf")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_attr_inactive.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 0e83cab9cdde..e892040eb86b 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -158,6 +158,7 @@ xfs_attr3_node_inactive(
- 	}
- 	child_fsb = be32_to_cpu(ichdr.btree[0].before);
- 	xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
-+	bp = NULL;
- 
- 	/*
- 	 * If this is the node level just above the leaves, simply loop
-@@ -211,7 +212,7 @@ xfs_attr3_node_inactive(
- 				&child_bp);
- 		if (error)
- 			return error;
--		error = bp->b_error;
-+		error = child_bp->b_error;
- 		if (error) {
- 			xfs_trans_brelse(*trans, child_bp);
- 			return error;
