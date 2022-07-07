@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 334DECCA481
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 19:04:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95342C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 19:04:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236552AbiGGTEN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jul 2022 15:04:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56564 "EHLO
+        id S236239AbiGGTER (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jul 2022 15:04:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235968AbiGGTEM (ORCPT
+        with ESMTP id S230212AbiGGTEM (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 15:04:12 -0400
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2043.outbound.protection.outlook.com [40.107.243.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CEFA1EAE0;
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2045.outbound.protection.outlook.com [40.107.94.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BDDF1EADB;
         Thu,  7 Jul 2022 12:04:11 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=B8ulfenlJbMFZEvTDzle5XmsC6gyXhFzEyM3c/U4dy862ha5HXUEgBVNMzw7IwshnFZGzXF9He80O985XEO6e4gjl6xn7FNQNtaf/Or0ix/4z4MLb3f7UJJ8fZxgcodGyUmwbVukM3npOY9H++MWWfJbv6FTaTMAvrrEXx8Yf2tkzjwEFOysiHB0+bVEYBHbVz6cacJ/yTFs59HoRhJgYNlbnH91CbnV9RfS1B3tIGh+J+ay2NfA6AZGcFNgXOfX3JPmKTLVnykq0vUz1Mf3DEE2v9AbRMZL4dyf+kin7JqYFUyZGkPjopAUlHTc7OtlEAbBxH8mya/VwEpXcrLx1g==
+ b=AaLpmqCPkDn2XnRnctesqe+Z9CvlJv9wxqJcsuS0RMwJ138aLuFb1oXvlMozzPzx4TdWgXhYxg4nAg7WtkHFDKoU6hLfo+vAECSa1jcs5mJIi4UGca20ORZs5CPpzGGEsPhn7w8kT94dl7pSfQbVeb0iYyEyyPdeZqT5JjIrrTSe3OJGz6w0khqyNm8Xq6Hn+ov8gjajA9Y3m+p/7lplCUU4bJ3+8Tuv5PAPjQvrZvltaDWl44EYzAXxxzvofuw1RKmXivsgZ9d/WFA0W8lQPh74LhFYaN6AudJwaLLh3U+iklXUwrddd1WIr9XHQjGgY/I9vqXsQcVNkS4SjZZESQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4Nl8W8/hNIUVU9uA2Slz/69DCRgdCr/w6q/fROE0rxU=;
- b=kMUj7iqV1dT+lVURTG0iMra3HnAVamTpyNHsTBoQMO560OCi1/mPIxH60QCqhVn+Cxej2hFWimhfWSRRyPpSfVLjUr8G7l44iitdRMegv2dMzvA5fGBnS+3wG72qDLPkbhgKJ18a6iPzVaZ7mMPYTrZTx70vxFpX5UOUvJo9IJVh0lRCCM1tT9mw1T+Eg3wTLmuClkjCzaQm/yZbSnTXRNNXQEtd569FIuBYvM/TttRJ/96IPJQzO1FbOczhoK9mCbsdZaSVwqvyi3Yq4ca3Vo+LT2uyzNDpM9sutzO1Asysi9XzYi0tP9VxDJ6dUQaAnPRbWyCDgthXAFnp7aj3Kg==
+ bh=KRkrS+X2EaEAzTCH5tf9k0CunO9yff/KGmrysaKV354=;
+ b=U7wRuaLcMjT4TqmdCxuR/MZcoOKIXeaE5ag+zPrN84Vfz1fIuHFtkiMCshusIEV1kVXxf2dDDF4YI5o4+NXExjBCxTVXs7Yea7MQeD/NcDVIMUiGjkhgKjX5jfK7BfEj32PqcqzJfUFVydNQsh/iX2ONRc9eZTxCq3gS0LsxIDCRuf3Go6RnDG2O9BN2/G+kUeXCJfRyqQrU/QSd84awF8cw6g0E9/xrDlDUoO1QTiHvMnDR6+iZENhPZ00CSEsTryW+HPK20rx2k5J9zB7kfmhQ/hHMJ0X67g1cWZ3LX65rufFBmpLYJBVqf0+dAS8qXDjdnnfEBxfAUSs84ZnKaQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4Nl8W8/hNIUVU9uA2Slz/69DCRgdCr/w6q/fROE0rxU=;
- b=bFMy5D9aF5Kg4BJTErj6huZJv6cTxCr3gvuu9bg2rc0tb9bNLDxFiQxfSTFTa0i5N6UXKJZA/Tvv1T4lXhMRp6ilOj4DJh5zytwit3mPgiV40kf+6ZTeu2PEosLhHf3eJCxGg7BpoHOtfPxUqx3rw1VccJfk5Em4TcA6J7D0p8Y=
-Received: from BN9P222CA0007.NAMP222.PROD.OUTLOOK.COM (2603:10b6:408:10c::12)
- by SN6PR12MB5696.namprd12.prod.outlook.com (2603:10b6:805:e9::28) with
+ bh=KRkrS+X2EaEAzTCH5tf9k0CunO9yff/KGmrysaKV354=;
+ b=PSYfbEQ8QUu/CKSjQpi/CiV6Oh1CigqRkHhN6S06QbOgUbM+WxVZ/suAr7yLz05aEGh5Npuh1BEAGsEADNHI5oEBZxzOCdfl+r+D2RuIoPczSp2mWy4bNs2s5GrCIvX66RTP2oqjMlCK5unJKrGguf+SiHD4pmjIyb3U7ecI2u4=
+Received: from BN9P222CA0016.NAMP222.PROD.OUTLOOK.COM (2603:10b6:408:10c::21)
+ by DM5PR12MB1722.namprd12.prod.outlook.com (2603:10b6:3:107::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.19; Thu, 7 Jul
- 2022 19:04:08 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.15; Thu, 7 Jul
+ 2022 19:04:09 +0000
 Received: from BN8NAM11FT067.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:10c:cafe::f5) by BN9P222CA0007.outlook.office365.com
- (2603:10b6:408:10c::12) with Microsoft SMTP Server (version=TLS1_2,
+ (2603:10b6:408:10c:cafe::1f) by BN9P222CA0016.outlook.office365.com
+ (2603:10b6:408:10c::21) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.15 via Frontend
  Transport; Thu, 7 Jul 2022 19:04:08 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  BN8NAM11FT067.mail.protection.outlook.com (10.13.177.159) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5417.15 via Frontend Transport; Thu, 7 Jul 2022 19:04:07 +0000
+ 15.20.5417.15 via Frontend Transport; Thu, 7 Jul 2022 19:04:08 +0000
 Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Thu, 7 Jul
- 2022 14:04:04 -0500
+ 2022 14:04:06 -0500
 From:   Alex Sierra <alex.sierra@amd.com>
 To:     <jgg@nvidia.com>
 CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
@@ -61,9 +61,9 @@ CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
         <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
         <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
         <akpm@linux-foundation.org>
-Subject: [PATCH v8 01/15] mm: rename is_pinnable_pages to is_longterm_pinnable_pages
-Date:   Thu, 7 Jul 2022 14:03:35 -0500
-Message-ID: <20220707190349.9778-2-alex.sierra@amd.com>
+Subject: [PATCH v8 03/15] mm: add zone device coherent type memory support
+Date:   Thu, 7 Jul 2022 14:03:37 -0500
+Message-ID: <20220707190349.9778-4-alex.sierra@amd.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220707190349.9778-1-alex.sierra@amd.com>
 References: <20220707190349.9778-1-alex.sierra@amd.com>
@@ -75,120 +75,241 @@ X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c6dd8ba8-9e27-4646-e795-08da604b7811
-X-MS-TrafficTypeDiagnostic: SN6PR12MB5696:EE_
+X-MS-Office365-Filtering-Correlation-Id: e5ea18c8-9a74-469a-18be-08da604b78a8
+X-MS-TrafficTypeDiagnostic: DM5PR12MB1722:EE_
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: joZcpAhDtFO0qOId6GBVWFIWfxbhrxHfpn0nA6mNJxsCrX1ajF809ZjmOCnyaYAbq00wo/WoK8R8AN+mjxpYxcD/DAO21K0R+NGi66++rkFNFJXRw7DgLz1dYhe00C6q57Dwf0UNuqlAWEKU1ElH++LPFv97nLU5E08du7bNPwn4Hwukxy84PKNxa5UsiTkqP0UMQeVQAzS7KLr5xuCXq2GhjkgL+usinYGrYq/iZdOhgvNGlCLm/K2EC0GAa1ezKpTeGym/aobUqfvg7qqrbxqv+U0569qZLo8LN/sibfXCRmnanrij46EG0v28J565qWxLTonOk31LD9IyMptbkattAiBopzUV7My2kA5HgKDxy/hSBQnEGfF+c8/imWXotNf1CYTMm0cQCZPGfs08TiAnnrRSsIbFXssZPf2/6bbNiSo3uxfZoSOJ/RYhDb98bNsUVMbhRM/492+1SNIVqwIlfflx9pAeSq8ljicCWkFzHclPs8BaUDTb0A7RiPNTKdddxHfNEbxwPsksve/fVSPtV0Vz056OluRD3biVNz7o8qgrMbdZKhSbLKNadf6IsXbeRZbxLkE+nkJiY9gnlqn0DBnJYp4WHzG0Qj9P4D+iNAQpn4ZMWfdYh4pYGh/QBX6GsVbtmXYBk9BvEhwH7eb1LMpwn+tzstm6EIVAPrUdSky1ERPK/Bqem2RAbg5ZbPUGqbMVb9KYol/uPLcl7itSRGoQCUcHOgGvcHZU3CRv6THTxoV774qOwYamRLHK6fHs557h3eCLLt/VO+hi0j6tMkQiUT0VFITnNQYvBwlsY253A5xIcWluxLweTut/gieaqp4Daq93mTiTzPksq87eNsuMXGOBhCFD6eIm5aM/XHkeMgeMAhCeRXctMl7t
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230016)(4636009)(136003)(376002)(39860400002)(396003)(346002)(40470700004)(46966006)(36840700001)(40460700003)(2616005)(7696005)(7416002)(54906003)(4326008)(40480700001)(44832011)(356005)(5660300002)(26005)(86362001)(70206006)(8936002)(82740400003)(70586007)(316002)(81166007)(478600001)(82310400005)(36756003)(6666004)(6916009)(34020700004)(83380400001)(186003)(16526019)(8676002)(1076003)(47076005)(41300700001)(2906002)(36860700001)(336012)(426003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: WLr/dvtf6lxBIrF4m+OlhaPZtKhFcA+7pDuK+1KWbO7MztgkOvB6rj/LeUsNs/P9bM0BH15e2M7d7FuTAM7V2iccP/wV33BfqSjgIgjTsiU3Di7+2XBStCl4RO9oQI1FWTyHSX037MMJI/R+zZeIhMpHjfWZlA8JTe83riVlbSZWdZq8t1alqLI7fbrOjMQT/Lx0YtQZyrdQYdulOfI1fAr6+0Z46Q8Vy+XoF21hJBW/Tjyubp0XSva+d434CbWiFlhQyfG+AMcvKe7JwAWZWL21FOq4dVFHPufoSFPT3T6VqrV5aWe4jd61zaKnAxBjZoBttOAVQGz9emF2igQOfiyswDympON/ORHGQ1Pt1miQ4/sFLjNX6WlaNBGZ9Zi0hBUjisbUQBW1Ca4HKH0n+Zda0EaABKXPZnuHiRCLEcjJJ2+0a4Tqbucaueez4FCWDqyf6aJ0b8o+9wqJq1cK9Kz08XvMVE/WD2TjAl3vfUEasFyPu3Hswjgtb4hnTPvLIOjeqowjAHvrdzRg4uNBm7aoOqG+If2RMpXXuxR08KsiU6vpQcPdcB17wO0WHueuIMaF8AU8mHK5CGHQxkbob+NznGmqWhwjul3H6SWCgsQRG/pey+hcCXM1jpu1p0OnVBf9tkDCIvn4P5VK0+zDiVnRzoFps+hmsR9BxIPT12MJw8fdUoXMOjzQD64dqRLLMCqD5V+0a/LvnLQhGWvEw3RA8XO7glTxXMhoS+8GZjRNxNKWQ9SvaiypGY9296Lbl1t/YT9MXG2CJY8vFtM3ruQQsJI+rYvbblBSauX0lLZctgu8ky2pm+41+rqGWfXvPIYoR8cEhu2lW6uadvoXBsXVEgZuijo1TCUfdjxN0IOxRWlAy2vViut0MgEG5i1m
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(376002)(396003)(346002)(136003)(40470700004)(36840700001)(46966006)(8936002)(5660300002)(4326008)(7416002)(40480700001)(70206006)(8676002)(44832011)(70586007)(2906002)(82310400005)(34020700004)(40460700003)(36860700001)(36756003)(82740400003)(83380400001)(186003)(1076003)(81166007)(86362001)(316002)(6666004)(478600001)(356005)(54906003)(7696005)(336012)(6916009)(426003)(26005)(2616005)(16526019)(41300700001)(47076005)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jul 2022 19:04:07.4912
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jul 2022 19:04:08.8505
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c6dd8ba8-9e27-4646-e795-08da604b7811
+X-MS-Exchange-CrossTenant-Network-Message-Id: e5ea18c8-9a74-469a-18be-08da604b78a8
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT067.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR12MB5696
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1722
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-is_pinnable_page() and folio_is_pinnable() were renamed to
-is_longterm_pinnable_page() and folio_is_longterm_pinnable()
-respectively. These functions are used in the FOLL_LONGTERM flag
-context.
+Device memory that is cache coherent from device and CPU point of view.
+This is used on platforms that have an advanced system bus (like CAPI
+or CXL). Any page of a process can be migrated to such memory. However,
+no one should be allowed to pin such memory so that it can always be
+evicted.
 
 Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
+Reviewed-by: Alistair Popple <apopple@nvidia.com>
+[hch: rebased ontop of the refcount changes,
+      removed is_dev_private_or_coherent_page]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: David Hildenbrand <david@redhat.com>
 ---
- include/linux/mm.h | 8 ++++----
- mm/gup.c           | 4 ++--
- mm/gup_test.c      | 2 +-
- mm/hugetlb.c       | 2 +-
- 4 files changed, 8 insertions(+), 8 deletions(-)
+ include/linux/mm.h        |  4 +++-
+ include/linux/page_zone.h | 19 +++++++++++++++++++
+ mm/memcontrol.c           |  7 ++++---
+ mm/memory-failure.c       |  8 ++++++--
+ mm/memremap.c             | 10 ++++++++++
+ mm/migrate_device.c       | 16 +++++++---------
+ mm/rmap.c                 |  5 +++--
+ 7 files changed, 52 insertions(+), 17 deletions(-)
 
 diff --git a/include/linux/mm.h b/include/linux/mm.h
-index cf3d0d673f6b..3b31b33bd5be 100644
+index e551616cd208..83902102ffe6 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
-@@ -1592,7 +1592,7 @@ static inline bool page_needs_cow_for_dma(struct vm_area_struct *vma,
- 
- /* MIGRATE_CMA and ZONE_MOVABLE do not allow pin pages */
- #ifdef CONFIG_MIGRATION
--static inline bool is_pinnable_page(struct page *page)
-+static inline bool is_longterm_pinnable_page(struct page *page)
- {
- #ifdef CONFIG_CMA
- 	int mt = get_pageblock_migratetype(page);
-@@ -1603,15 +1603,15 @@ static inline bool is_pinnable_page(struct page *page)
- 	return !is_zone_movable_page(page) || is_zero_pfn(page_to_pfn(page));
+@@ -1523,7 +1523,9 @@ static inline bool is_longterm_pinnable_page(struct page *page)
+ 	if (mt == MIGRATE_CMA || mt == MIGRATE_ISOLATE)
+ 		return false;
+ #endif
+-	return !is_zone_movable_page(page) || is_zero_pfn(page_to_pfn(page));
++	return !(is_device_coherent_page(page) ||
++		 is_zone_movable_page(page) ||
++		 is_zero_pfn(page_to_pfn(page)));
  }
  #else
--static inline bool is_pinnable_page(struct page *page)
-+static inline bool is_longterm_pinnable_page(struct page *page)
- {
- 	return true;
+ static inline bool is_longterm_pinnable_page(struct page *page)
+diff --git a/include/linux/page_zone.h b/include/linux/page_zone.h
+index 2a7a347173ee..a5d90ef13394 100644
+--- a/include/linux/page_zone.h
++++ b/include/linux/page_zone.h
+@@ -59,6 +59,13 @@
+  * A more complete discussion of unaddressable memory may be found in
+  * include/linux/hmm.h and Documentation/vm/hmm.rst.
+  *
++ * MEMORY_DEVICE_COHERENT:
++ * Device memory that is cache coherent from device and CPU point of view. This
++ * is used on platforms that have an advanced system bus (like CAPI or CXL). A
++ * driver can hotplug the device memory using ZONE_DEVICE and with that memory
++ * type. Any page of a process can be migrated to such memory. However no one
++ * should be allowed to pin such memory so that it can always be evicted.
++ *
+  * MEMORY_DEVICE_FS_DAX:
+  * Host memory that has similar access semantics as System RAM i.e. DMA
+  * coherent and supports page pinning. In support of coordinating page
+@@ -79,6 +86,7 @@
+ enum memory_type {
+ 	/* 0 is reserved to catch uninitialized type fields */
+ 	MEMORY_DEVICE_PRIVATE = 1,
++	MEMORY_DEVICE_COHERENT,
+ 	MEMORY_DEVICE_FS_DAX,
+ 	MEMORY_DEVICE_GENERIC,
+ 	MEMORY_DEVICE_PCI_P2PDMA,
+@@ -191,4 +199,15 @@ static inline bool is_pci_p2pdma_page(const struct page *page)
+ 		page->pgmap->type == MEMORY_DEVICE_PCI_P2PDMA;
  }
- #endif
  
--static inline bool folio_is_pinnable(struct folio *folio)
-+static inline bool folio_is_longterm_pinnable(struct folio *folio)
- {
--	return is_pinnable_page(&folio->page);
-+	return is_longterm_pinnable_page(&folio->page);
- }
- 
- static inline void set_page_zone(struct page *page, enum zone_type zone)
-diff --git a/mm/gup.c b/mm/gup.c
-index 551264407624..b65fe8bf5af4 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -133,7 +133,7 @@ struct folio *try_grab_folio(struct page *page, int refs, unsigned int flags)
- 		 * path.
++static inline bool is_device_coherent_page(const struct page *page)
++{
++	return is_zone_device_page(page) &&
++		page->pgmap->type == MEMORY_DEVICE_COHERENT;
++}
++
++static inline bool folio_is_device_coherent(const struct folio *folio)
++{
++	return is_device_coherent_page(&folio->page);
++}
++
+ #endif /* _PAGE_ZONE_H_ */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a2df2f193f06..a9853f2b0d9b 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5664,8 +5664,8 @@ static int mem_cgroup_move_account(struct page *page,
+  *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
+  *     target for charge migration. if @target is not NULL, the entry is stored
+  *     in target->ent.
+- *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_PRIVATE
+- *     (so ZONE_DEVICE page and thus not on the lru).
++ *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is device memory and
++ *   thus not on the lru.
+  *     For now we such page is charge like a regular page would be as for all
+  *     intent and purposes it is just special memory taking the place of a
+  *     regular page.
+@@ -5703,7 +5703,8 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
  		 */
- 		if (unlikely((flags & FOLL_LONGTERM) &&
--			     !is_pinnable_page(page)))
-+			     !is_longterm_pinnable_page(page)))
- 			return NULL;
+ 		if (page_memcg(page) == mc.from) {
+ 			ret = MC_TARGET_PAGE;
+-			if (is_device_private_page(page))
++			if (is_device_private_page(page) ||
++			    is_device_coherent_page(page))
+ 				ret = MC_TARGET_DEVICE;
+ 			if (target)
+ 				target->page = page;
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index da39ec8afca8..79f175eeb190 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -1685,12 +1685,16 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+ 		goto unlock;
+ 	}
  
+-	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
++	switch (pgmap->type) {
++	case MEMORY_DEVICE_PRIVATE:
++	case MEMORY_DEVICE_COHERENT:
  		/*
-@@ -1891,7 +1891,7 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
- 			continue;
- 		prev_folio = folio;
+-		 * TODO: Handle HMM pages which may need coordination
++		 * TODO: Handle device pages which may need coordination
+ 		 * with device-side memory.
+ 		 */
+ 		goto unlock;
++	default:
++		break;
+ 	}
  
--		if (folio_is_pinnable(folio))
-+		if (folio_is_longterm_pinnable(folio))
- 			continue;
+ 	/*
+diff --git a/mm/memremap.c b/mm/memremap.c
+index b870a659eee6..0f8f08f8a991 100644
+--- a/mm/memremap.c
++++ b/mm/memremap.c
+@@ -315,6 +315,16 @@ void *memremap_pages(struct dev_pagemap *pgmap, int nid)
+ 			return ERR_PTR(-EINVAL);
+ 		}
+ 		break;
++	case MEMORY_DEVICE_COHERENT:
++		if (!pgmap->ops->page_free) {
++			WARN(1, "Missing page_free method\n");
++			return ERR_PTR(-EINVAL);
++		}
++		if (!pgmap->owner) {
++			WARN(1, "Missing owner\n");
++			return ERR_PTR(-EINVAL);
++		}
++		break;
+ 	case MEMORY_DEVICE_FS_DAX:
+ 		if (IS_ENABLED(CONFIG_FS_DAX_LIMITED)) {
+ 			WARN(1, "File system DAX not supported\n");
+diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+index 5052093d0262..a4847ad65da3 100644
+--- a/mm/migrate_device.c
++++ b/mm/migrate_device.c
+@@ -518,7 +518,7 @@ EXPORT_SYMBOL(migrate_vma_setup);
+  *     handle_pte_fault()
+  *       do_anonymous_page()
+  * to map in an anonymous zero page but the struct page will be a ZONE_DEVICE
+- * private page.
++ * private or coherent page.
+  */
+ static void migrate_vma_insert_page(struct migrate_vma *migrate,
+ 				    unsigned long addr,
+@@ -594,11 +594,8 @@ static void migrate_vma_insert_page(struct migrate_vma *migrate,
+ 						page_to_pfn(page));
+ 		entry = swp_entry_to_pte(swp_entry);
+ 	} else {
+-		/*
+-		 * For now we only support migrating to un-addressable device
+-		 * memory.
+-		 */
+-		if (is_zone_device_page(page)) {
++		if (is_zone_device_page(page) &&
++		    !is_device_coherent_page(page)) {
+ 			pr_warn_once("Unsupported ZONE_DEVICE page type.\n");
+ 			goto abort;
+ 		}
+@@ -701,10 +698,11 @@ void migrate_vma_pages(struct migrate_vma *migrate)
  
- 		/*
-diff --git a/mm/gup_test.c b/mm/gup_test.c
-index d974dec19e1c..12b0a91767d3 100644
---- a/mm/gup_test.c
-+++ b/mm/gup_test.c
-@@ -53,7 +53,7 @@ static void verify_dma_pinned(unsigned int cmd, struct page **pages,
- 				dump_page(page, "gup_test failure");
- 				break;
- 			} else if (cmd == PIN_LONGTERM_BENCHMARK &&
--				WARN(!is_pinnable_page(page),
-+				WARN(!is_longterm_pinnable_page(page),
- 				     "pages[%lu] is NOT pinnable but pinned\n",
- 				     i)) {
- 				dump_page(page, "gup_test failure");
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index a57e1be41401..368fd33787b0 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -1135,7 +1135,7 @@ static struct page *dequeue_huge_page_node_exact(struct hstate *h, int nid)
+ 		mapping = page_mapping(page);
  
- 	lockdep_assert_held(&hugetlb_lock);
- 	list_for_each_entry(page, &h->hugepage_freelists[nid], lru) {
--		if (pin && !is_pinnable_page(page))
-+		if (pin && !is_longterm_pinnable_page(page))
- 			continue;
+-		if (is_device_private_page(newpage)) {
++		if (is_device_private_page(newpage) ||
++		    is_device_coherent_page(newpage)) {
+ 			/*
+-			 * For now only support private anonymous when migrating
+-			 * to un-addressable device memory.
++			 * For now only support anonymous memory migrating to
++			 * device private or coherent memory.
+ 			 */
+ 			if (mapping) {
+ 				migrate->src[i] &= ~MIGRATE_PFN_MIGRATE;
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 5bcb334cd6f2..04fac1af870b 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1957,7 +1957,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
+ 		/* Update high watermark before we lower rss */
+ 		update_hiwater_rss(mm);
  
- 		if (PageHWPoison(page))
+-		if (folio_is_zone_device(folio)) {
++		if (folio_is_device_private(folio)) {
+ 			unsigned long pfn = folio_pfn(folio);
+ 			swp_entry_t entry;
+ 			pte_t swp_pte;
+@@ -2131,7 +2131,8 @@ void try_to_migrate(struct folio *folio, enum ttu_flags flags)
+ 					TTU_SYNC)))
+ 		return;
+ 
+-	if (folio_is_zone_device(folio) && !folio_is_device_private(folio))
++	if (folio_is_zone_device(folio) &&
++	    (!folio_is_device_private(folio) && !folio_is_device_coherent(folio)))
+ 		return;
+ 
+ 	/*
 -- 
 2.32.0
 
