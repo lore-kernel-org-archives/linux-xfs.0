@@ -2,259 +2,246 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99F7AC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 18:22:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 695A5CCA483
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 19:04:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235803AbiGGSWR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jul 2022 14:22:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47756 "EHLO
+        id S236322AbiGGTEL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jul 2022 15:04:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235666AbiGGSWR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 14:22:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56941564F3;
-        Thu,  7 Jul 2022 11:22:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E7BB2621C3;
-        Thu,  7 Jul 2022 18:22:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51007C3411E;
-        Thu,  7 Jul 2022 18:22:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657218135;
-        bh=E9ulP8AEVSazaD914gKMcs4HYYzIrNXsKh5tRugvTJQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ndSPaf09Dhs+NBcHll78r/E/Ndf4BbIyHduO6990EK9uFUfoo2OAcpKIn4FscA3ea
-         1bq7fSqop7Ats9vfArmhGLEWg0UG6DoOBTFYuVASQ3tSVXydI8WQMI1wcll2VMrDNH
-         lF6PX54zlpVM5sllqsC/WB6jfzreKNN8hUaBaikHSOP+BV0Fdq0tBWTEgdbg61NPDb
-         F6Yln9xK1yTecQe2/qHSsQGEgM+W5TNuLQkPT/9skIR8fMYGriBh6QkYHvnvxFhtdt
-         UuptKGzuch3eeWEeQab+9FaI/H4p67Yiv1vYKjmMbMF2ETfLgfcOeZlLk/pxyAImgN
-         WNvWcqOL6+Zyw==
-Date:   Thu, 7 Jul 2022 11:22:14 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: make sure that we handle empty xattr leaf
- blocks ok
-Message-ID: <YsckVj+Yw4h1xeVp@magnolia>
-References: <165705854325.2821854.10317059026052442189.stgit@magnolia>
- <165705854877.2821854.7070105861462675249.stgit@magnolia>
- <20220707120639.qoqsfcwtmdyl5duv@zlang-mailbox>
+        with ESMTP id S235968AbiGGTEK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 15:04:10 -0400
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2062.outbound.protection.outlook.com [40.107.223.62])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3D771EAE0;
+        Thu,  7 Jul 2022 12:04:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Z+hyZ0MCUZmWQe8TVaK8ATqHfChQ1X25UyB/iK9wfNQ1tZP2FPr2kPcHopipwy9tKM1i+l8NOOMCGdcWOy0EVgpakEdbwaxBRcJND3j106Yxvt6NKrMVFlyE/iJvXlZyy6TObS1BVtZcAP54wzu+Cj9yIti4VpXtqr2SygQRs0AeujXZU1FCWAxsBv9QC9zDp412xBCucb8MNhynn93uy0SpuapWP0tIZLSTzwZ9LHB9wvW+xY6AsmnHiTjavTJY2b9zUotIoTjGu2bnD90yxwjohWY8WafIdeziD8l3ujbhJ0o/uE+4MyLbJHrE2UTCc5e+0w0bWGTFupJltGirPA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Ghk7E9DiDFsrW2I5mzvdkliAMGs6tcHHCgwi4WtyC7Y=;
+ b=UjBR4/bWtGsyKbdZ+jE50IGWuH3KF6KvXlkbbkQLWVYEAQs9MVmU7EimWuuCcFbegGcS0t81FScpT64x6lbi4fqIUhs9W22Eu0gVFyfNJr0j17fqjDhBCrneqfMe7L2lSQjRhd+iCDHu6NjkWlCxhmX2+ONnq1rWuZ02S0ElsYNDkFTS+9gOvcdqUkV0sM+5qLkXjziuHzAfXa8ser/OQZvUvjMZSkgpmFBHu3YJzLJsWQoGcR5odZKrKCuIUWGv6rF1TPXUDqiK2vWm1V5WLv7C12ppEZ5uDAVFTl7dq2um+kYe3RcAUhtCIcQRKKZ9dOBztv8SEHd9ah1OToVduQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Ghk7E9DiDFsrW2I5mzvdkliAMGs6tcHHCgwi4WtyC7Y=;
+ b=sCf9uY/2TJqVsyBeYF/rhByijbI8+xx3rb8Rua0yULDsqpOF68dPLA/u7vYo5GasZLDCJHdc1N9qrH1+2gZ9QE27QKQY6yo51pCfEG181hL+53CBQc4PoEKVxDzCFY0Dla5IEk+QOJjJxySxkn8KyDTAnZgLjV8u/Y0eOOH0gzA=
+Received: from BN9P222CA0010.NAMP222.PROD.OUTLOOK.COM (2603:10b6:408:10c::15)
+ by DM5PR12MB1497.namprd12.prod.outlook.com (2603:10b6:4:d::22) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5395.15; Thu, 7 Jul 2022 19:04:06 +0000
+Received: from BN8NAM11FT067.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:10c:cafe::3c) by BN9P222CA0010.outlook.office365.com
+ (2603:10b6:408:10c::15) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.16 via Frontend
+ Transport; Thu, 7 Jul 2022 19:04:04 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ BN8NAM11FT067.mail.protection.outlook.com (10.13.177.159) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5417.15 via Frontend Transport; Thu, 7 Jul 2022 19:04:04 +0000
+Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Thu, 7 Jul
+ 2022 14:04:02 -0500
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     <jgg@nvidia.com>
+CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
+        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
+        <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
+        <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
+        <akpm@linux-foundation.org>
+Subject: [PATCH v8 00/15] Add MEMORY_DEVICE_COHERENT for coherent device memory mapping
+Date:   Thu, 7 Jul 2022 14:03:34 -0500
+Message-ID: <20220707190349.9778-1-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220707120639.qoqsfcwtmdyl5duv@zlang-mailbox>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 8170b5a7-3738-4304-bcc1-08da604b75f4
+X-MS-TrafficTypeDiagnostic: DM5PR12MB1497:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: TEMebna/hRfTW+q/TUjyXF69vTuI/joBVsPzAzvsiNJRnPOp42Z4JKb6LFfAG3aLpTksTvRW3Psc5pAfMMRdqzkdEguUq4ymEAAZBAwQhXmWOO4mvFH7RX4db/z5qX2zlmVKv17HFvkQJeL63TwkK1ADwNuj1iINTqbap7L84cTKajb0QZ0Db51EDBzmurcIn3a+CNVXXarBVVeiSzZHRR/7o9DDwjYqPXzMCLp1+pp9zBEOo3/9Hfc3z3qw5GoqtzGOiVpURiTsIlC3jnkUz2ghdXXP323510GIjL6WVxSILmloAs5782VwSP6cdJqDy7VG14OMzfK0KcQAeV0nG6fqmadQx8SX271RuledJtYJn/+Ox6R7gRJUuLnvfNk/eHziU9aI4QVRKsaZmWJF58ORp0S7b2O1e33GtDQd0/TcnvRyZRorEhPgCCHc0XRm0D/NvocNXbPJO5tcc4yvUdTjICVMUKLy5qzWF0YDcxbh++IbDBuhSmeXUex+5sCAJuSYAbvuX2nRgY7z32z+G0eF9SRfc+rrz/KPh8fknLCQwx0onvrp5gXbSTDh96oRIFB1RLsPs3o8E2QiRyvnS/YVvVPYKGh2qO3vq3NCgu21wkCXmpMBFRvzXjEWyARyINAk4PjQ3Rkk5dl59BD+M3k/HaNw0Pyf3jlKqkuVzebBucQUcUh8qkx/0eODQ0uabksYZHDIKmH8iwurj8S8lbgeUjk0p4s32VwEkEh9kPkEYrDB7wDAKBwW7BIMrLw158+Prq0T9UhSD1N+w2FR+IdwzvJ0gvoDGPCTKhqgBLj4EToSLrNGz6F21499P/jtutHauuByedZkBPbOR4xI4VXroZJz4rj1rctlYeJdiGVCdXvcVgNy0uCl4/0bz0hw
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230016)(4636009)(376002)(39860400002)(136003)(346002)(396003)(46966006)(36840700001)(40470700004)(426003)(82740400003)(356005)(82310400005)(47076005)(336012)(316002)(81166007)(6916009)(7416002)(54906003)(8936002)(5660300002)(70206006)(36860700001)(83380400001)(4326008)(40460700003)(86362001)(26005)(44832011)(70586007)(8676002)(16526019)(40480700001)(34020700004)(1076003)(478600001)(186003)(2906002)(6666004)(41300700001)(36756003)(7696005)(2616005)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jul 2022 19:04:04.3508
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8170b5a7-3738-4304-bcc1-08da604b75f4
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT067.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1497
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 07, 2022 at 08:06:39PM +0800, Zorro Lang wrote:
-> On Tue, Jul 05, 2022 at 03:02:28PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Make sure that the kernel can handle empty xattr leaf blocks properly,
-> > since we've screwed this up enough times.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/xfs/845 |  131 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 131 insertions(+)
-> >  create mode 100755 tests/xfs/845
-> > 
-> > 
-> > diff --git a/tests/xfs/845 b/tests/xfs/845
-> > new file mode 100755
-> > index 00000000..4a846e57
-> > --- /dev/null
-> > +++ b/tests/xfs/845
-> > @@ -0,0 +1,131 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 845
-> > +#
-> > +# Make sure that XFS can handle empty leaf xattr blocks correctly.  These
-> > +# blocks can appear in files as a result of system crashes in the middle of
-> > +# xattr operations, which means that we /must/ handle them gracefully.
-> > +# Check that read and write verifiers won't trip, that the get/list/setxattr
-> > +# operations don't stumble over them, and that xfs_repair will offer to remove
-> > +# the entire xattr fork if the root xattr leaf block is empty.
-> > +#
-> > +# Regression test for kernel commit:
-> > +#
-> > +# af866926d865 ("xfs: empty xattr leaf header blocks are not corruption")
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto quick attr
-> > +
-> > +# Override the default cleanup function.
-> > +# _cleanup()
-> > +# {
-> > +# 	cd /
-> > +# 	rm -r -f $tmp.*
-> > +# }
-> 
-> Remove this part directly?
+This is our MEMORY_DEVICE_COHERENT patch series rebased and updated
+for current 5.19.0-rc5
 
-Ok.
+Changes since the last version:
+- Fixed problems with migration during long-term pinning in
+get_user_pages
+- Open coded vm_normal_lru_pages as suggested in previous code review
+- Update hmm_gup_test with more get_user_pages calls, include
+hmm_cow_in_device in hmm-test.
 
-> > +
-> > +# Import common functions.
-> > +. ./common/filter
-> > +. ./common/attr
-> > +
-> > +# real QA test starts here
-> > +
-> > +# Modify as appropriate.
->       ^^
->       This comment is useless
+This patch series introduces MEMORY_DEVICE_COHERENT, a type of memory
+owned by a device that can be mapped into CPU page tables like
+MEMORY_DEVICE_GENERIC and can also be migrated like
+MEMORY_DEVICE_PRIVATE.
 
-Oops, will delete.
+This patch series is mostly self-contained except for a few places where
+it needs to update other subsystems to handle the new memory type.
 
-> > +_supported_fs xfs
-> > +_require_scratch
-> > +_fixed_by_kernel_commit af866926d865 "xfs: empty xattr leaf header blocks are not corruption"
-> > +
-> > +_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-> > +cat $tmp.mkfs >> $seqres.full
-> > +source $tmp.mkfs
-> > +_scratch_mount
-> > +
-> > +$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 64k' $SCRATCH_MNT/largefile >> $seqres.full
-> > +$XFS_IO_PROG -f -c "pwrite -S 0x58 0 $isize" $SCRATCH_MNT/smallfile >> $seqres.full
-> > +
-> > +smallfile_md5=$(md5sum < $SCRATCH_MNT/smallfile)
-> > +largefile_md5=$(md5sum < $SCRATCH_MNT/largefile)
-> 
-> Hmm... is the tail '-' (printed by md5sum) as you wish? How about use the
-> _md5_checksum() in common/rc ? (Same as below small_md5 and large_md5 part)
+System stability and performance are not affected according to our
+ongoing testing, including xfstests.
 
-Ooh, nice suggestion.  I"ll convert the test.
+How it works: The system BIOS advertises the GPU device memory
+(aka VRAM) as SPM (special purpose memory) in the UEFI system address
+map.
 
-> > +
-> > +# Try to force the creation of a single leaf block in each of three files.
-> > +# The first one gets a local attr, the second a remote attr, and the third
-> > +# is left for scrub and repair to find.
-> > +touch $SCRATCH_MNT/e0
-> > +touch $SCRATCH_MNT/e1
-> > +touch $SCRATCH_MNT/e2
-> > +
-> > +$ATTR_PROG -s x $SCRATCH_MNT/e0 < $SCRATCH_MNT/smallfile >> $seqres.full
-> > +$ATTR_PROG -s x $SCRATCH_MNT/e1 < $SCRATCH_MNT/smallfile >> $seqres.full
-> > +$ATTR_PROG -s x $SCRATCH_MNT/e2 < $SCRATCH_MNT/smallfile >> $seqres.full
-> > +
-> > +e0_ino=$(stat -c '%i' $SCRATCH_MNT/e0)
-> > +e1_ino=$(stat -c '%i' $SCRATCH_MNT/e1)
-> > +e2_ino=$(stat -c '%i' $SCRATCH_MNT/e2)
-> > +
-> > +_scratch_unmount
-> > +
-> > +# We used to think that it wasn't possible for empty xattr leaf blocks to
-> > +# exist, but it turns out that setting a large xattr on a file that has no
-> > +# xattrs can race with a log flush and crash, which results in an empty
-> > +# leaf block being logged and recovered.  This is rather hard to trip, so we
-> > +# use xfs_db to turn a regular leaf block into an empty one.
-> > +make_empty_leaf() {
-> > +	local inum="$1"
-> > +
-> > +	echo "editing inode $inum" >> $seqres.full
-> > +
-> > +	magic=$(_scratch_xfs_get_metadata_field hdr.info.magic "inode $inum" "ablock 0")
-> > +	if [ "$magic" = "0xfbee" ]; then
-> > +		_notrun "V4 filesystems deprecated"
-> 
-> Can _require_scratch_xfs_crc (at beginning) help that? Or is there a way to
-> get a v4 leaf block when crc isn't enabled?
+The amdgpu driver registers the memory with devmap as
+MEMORY_DEVICE_COHERENT using devm_memremap_pages. The initial user for
+this hardware page migration capability is the Frontier supercomputer
+project. This functionality is not AMD-specific. We expect other GPU
+vendors to find this functionality useful, and possibly other hardware
+types in the future.
 
-Nope, that was an oversight on my part.  I'll add
-_require_scratch_xfs_crc to the start of the test.
+Our test nodes in the lab are similar to the Frontier configuration,
+with .5 TB of system memory plus 256 GB of device memory split across
+4 GPUs, all in a single coherent address space. Page migration is
+expected to improve application efficiency significantly. We will
+report empirical results as they become available.
 
-> > +		return 1
-> 
-> I think _notrun will exit directly, this "return 1" never be run.
+Coherent device type pages at gup are now migrated back to system
+memory if they are being pinned long-term (FOLL_LONGTERM). The reason
+is, that long-term pinning would interfere with the device memory
+manager owning the device-coherent pages (e.g. evictions in TTM).
+These series incorporate Alistair Popple patches to do this
+migration from pin_user_pages() calls. hmm_gup_test has been added to
+hmm-test to test different get user pages calls.
 
-Yep.
+This series includes handling of device-managed anonymous pages
+returned by vm_normal_pages. Although they behave like normal pages
+for purposes of mapping in CPU page tables and for COW, they do not
+support LRU lists, NUMA migration or THP.
 
-> > +	fi
-> > +
-> > +	magic=$(_scratch_xfs_get_metadata_field hdr.info.hdr.magic "inode $inum" "ablock 0")
-> > +	if [ "$magic" != "0x3bee" ]; then
-> > +		echo "inode $inum ablock 0 is not a leaf block?"
-> > +		_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" -c print >> $seqres.full
-> > +		return 1
-> > +	fi
-> > +
-> > +	base=$(_scratch_xfs_get_metadata_field "hdr.freemap[0].base" "inode $inum" "ablock 0")
-> > +
-> > +	_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" \
-> > +		-c "write -d hdr.count 0" \
-> > +		-c "write -d hdr.usedbytes 0" \
-> > +		-c "write -d hdr.firstused $dbsize" \
-> > +		-c "write -d hdr.freemap[0].size $((dbsize - base))" \
-> 
-> Nice trick:) Do we expect there's not corruption (can be found by xfs_repair)
-> at here?
+We also introduced a FOLL_LRU flag that adds the same behaviour to
+follow_page and related APIs, to allow callers to specify that they
+expect to put pages on an LRU list.
 
-Right.  We're setting up the empty leaf block 0 to check that the kernel
-and fsck tools do /not/ flag this as corruption.
+v2:
+- Rebase to latest 5.18-rc7.
+- Drop patch "mm: add device coherent checker to remove migration pte"
+and modify try_to_migrate_one, to let DEVICE_COHERENT pages fall
+through to normal page path. Based on Alistair Popple's comment.
+- Fix comment formatting.
+- Reword comment in vm_normal_page about pte_devmap().
+- Merge "drm/amdkfd: coherent type as sys mem on migration to ram" to
+"drm/amdkfd: add SPM support for SVM".
 
-> Or xfs_repair should blame the empty leaf block?
+v3:
+- Rebase to latest 5.18.0.
+- Patch "mm: handling Non-LRU pages returned by vm_normal_pages"
+reordered.
+- Add WARN_ON_ONCE for thp device coherent case.
 
-...though repair run in not-dryrun mode will free the empty leaf block 0
-if it finds one.
+v4:
+- Rebase to latest 5.18.0
+- Fix consitency between pages with FOLL_LRU flag set and pte_devmap
+at follow_page_pte.
 
-> > +		-c print >> $seqres.full
-> > +}
-> > +
-> > +make_empty_leaf $e0_ino || exit
-> 
-> How about call _fail() directly in make_empty_leaf, if [ "$magic" != "0x3bee" ]
+v5:
+- Remove unused zone_device_type from lib/test_hmm and
+selftest/vm/hmm-test.c.
 
-_require_scratch_xfs_crc should take care of that.
+v6:
+- Rebase to 5.19.0-rc4
+- Rename is_pinnable_page to is_longterm_pinnable_page and add a
+coherent device checker.
+- Add a new gup test to hmm-test to cover fast pinnable case with
+FOLL_LONGTERM.
 
-> > +make_empty_leaf $e1_ino
-> > +make_empty_leaf $e2_ino
-> > +
-> > +_scratch_mount
-> > +
-> > +# Check that listxattr/getxattr/removexattr do nothing.
-> > +$ATTR_PROG -l $SCRATCH_MNT/e0 2>&1 | _filter_scratch
-> > +$ATTR_PROG -g x $SCRATCH_MNT/e0 2>&1 | _filter_scratch
-> > +$ATTR_PROG -r x $SCRATCH_MNT/e0 2>&1 | _filter_scratch
-> > +
-> > +# Add a small attr to e0
-> > +$ATTR_PROG -s x $SCRATCH_MNT/e0 < $SCRATCH_MNT/smallfile > /dev/null
-> > +$ATTR_PROG -l $SCRATCH_MNT/e0 2>&1 | sed -e 's/\([0-9]*\) byte/XXX byte/g' | _filter_scratch
-> > +small_md5="$($GETFATTR_PROG -n user.x --absolute-names --only-values $SCRATCH_MNT/e0 | md5sum)"
-> > +test "$small_md5" = "$smallfile_md5" || \
-> > +	echo "smallfile $smallfile_md5 does not match small attr $small_md5"
-> > +
-> > +# Add a large attr to e1
-> > +$ATTR_PROG -s x $SCRATCH_MNT/e1 < $SCRATCH_MNT/largefile > /dev/null
-> > +$ATTR_PROG -l $SCRATCH_MNT/e1 2>&1 | _filter_scratch
-> > +large_md5="$($GETFATTR_PROG -n user.x --absolute-names --only-values $SCRATCH_MNT/e1 | md5sum)"
-> > +test "$large_md5" = "$largefile_md5" || \
-> > +	echo "largefile $largefile_md5 does not match large attr $large_md5"
-> > +
-> > +
-> > +# Leave e2 to try to trip the repair tools, since xfs_repair used to flag
-> > +# empty leaf blocks incorrectly too.
-> 
-> So we expect there's not corruption at here, and the empty leaf block can
-> be used properly?
+v7:
+- Reorder patch series.
+- Remove FOLL_LRU and check on each caller for LRU pages handling
+instead.
 
-Correct.
+v8:
+- Add "mm: move page zone helpers into new header-specific file"
+patch. The intention is to centralize all page zone helpers and keep
+them independent from mm.h and memremap.h.
 
---D
+Alex Sierra (13):
+  mm: rename is_pinnable_pages to is_longterm_pinnable_pages
+  mm: move page zone helpers into new header-specific file
+  mm: add zone device coherent type memory support
+  mm: handling Non-LRU pages returned by vm_normal_pages
+  mm: add device coherent vma selection for memory migration
+  drm/amdkfd: add SPM support for SVM
+  lib: test_hmm add ioctl to get zone device type
+  lib: test_hmm add module param for zone device type
+  lib: add support for device coherent type in test_hmm
+  tools: update hmm-test to support device coherent type
+  tools: update test_hmm script to support SP config
+  tools: add hmm gup tests for device coherent type
+  tools: add selftests to hmm for COW in device memory
 
-> Thanks,
-> Zorro
-> 
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > 
-> 
+Alistair Popple (2):
+  mm: remove the vma check in migrate_vma_setup()
+  mm/gup: migrate device coherent pages when pinning instead of failing
+
+ drivers/gpu/drm/amd/amdkfd/kfd_migrate.c |  34 ++-
+ drivers/infiniband/core/rw.c             |   1 -
+ drivers/nvme/target/io-cmd-bdev.c        |   1 -
+ fs/proc/task_mmu.c                       |   2 +-
+ include/linux/memremap.h                 | 113 +-------
+ include/linux/migrate.h                  |   1 +
+ include/linux/mm.h                       |  91 +-----
+ include/linux/page_zone.h                | 213 ++++++++++++++
+ lib/test_hmm.c                           | 337 +++++++++++++++++------
+ lib/test_hmm_uapi.h                      |  19 +-
+ mm/gup.c                                 |  49 +++-
+ mm/gup_test.c                            |   2 +-
+ mm/huge_memory.c                         |   2 +-
+ mm/hugetlb.c                             |   2 +-
+ mm/internal.h                            |   1 +
+ mm/khugepaged.c                          |   9 +-
+ mm/ksm.c                                 |   6 +-
+ mm/madvise.c                             |   4 +-
+ mm/memcontrol.c                          |   8 +-
+ mm/memory-failure.c                      |   8 +-
+ mm/memory.c                              |  10 +-
+ mm/mempolicy.c                           |   2 +-
+ mm/memremap.c                            |  10 +
+ mm/migrate.c                             |   4 +-
+ mm/migrate_device.c                      | 115 ++++++--
+ mm/mlock.c                               |   2 +-
+ mm/mprotect.c                            |   2 +-
+ mm/rmap.c                                |   5 +-
+ tools/testing/selftests/vm/hmm-tests.c   | 311 +++++++++++++++++++--
+ tools/testing/selftests/vm/test_hmm.sh   |  24 +-
+ 30 files changed, 1005 insertions(+), 383 deletions(-)
+ create mode 100644 include/linux/page_zone.h
+
+-- 
+2.32.0
+
