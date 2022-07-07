@@ -2,178 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 415D1CCA480
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 23:53:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBDCEC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 23:59:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232257AbiGGXxI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jul 2022 19:53:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49784 "EHLO
+        id S236573AbiGGX7i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jul 2022 19:59:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236912AbiGGXxG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 19:53:06 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 708C36D55F
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 16:53:05 -0700 (PDT)
+        with ESMTP id S236152AbiGGX7h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 19:59:37 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A89131AD8A
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 16:59:36 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id BDAF462C578
-        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 09:53:03 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C861010E7BBC
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 09:59:35 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1o9bIs-00FoXn-4A
-        for linux-xfs@vger.kernel.org; Fri, 08 Jul 2022 09:53:02 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.95)
-        (envelope-from <david@fromorbit.com>)
-        id 1o9bIs-004bXD-31
-        for linux-xfs@vger.kernel.org;
-        Fri, 08 Jul 2022 09:53:02 +1000
+        id 1o9bPD-00FooR-7K
+        for linux-xfs@vger.kernel.org; Fri, 08 Jul 2022 09:59:35 +1000
+Date:   Fri, 8 Jul 2022 09:59:35 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/6] xfs: lockless buffer lookup
-Date:   Fri,  8 Jul 2022 09:52:59 +1000
-Message-Id: <20220707235259.1097443-7-david@fromorbit.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220707235259.1097443-1-david@fromorbit.com>
-References: <20220707235259.1097443-1-david@fromorbit.com>
+Subject: [GIT PULL] xfs: per-ag conversions for 5.20
+Message-ID: <20220707235935.GA3600936@dread.disaster.area>
+References: <20220707233717.GP227878@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220707233717.GP227878@dread.disaster.area>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62c771df
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62c77368
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=RgO8CyIxsXoA:10 a=20KFwNOVAAAA:8 a=2c3CLYOzIkqHg1TAEHkA:9
+        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=guj_5oDO9UgXj0Wye-sA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi Darrick,
 
-Now that we have a standalone fast path for buffer lookup, we can
-easily convert it to use rcu lookups. When we continually hammer the
-buffer cache with trylock lookups, we end up with a huge amount of
-lock contention on the per-ag buffer hash locks:
+Can you please pull the perag conversion changes from the tag listed
+below? This branchis based on the linux-xfs/for-next tree as of two
+days ago, so should merge cleanly with this. It also merges cleanly
+with the xfs-cil-scalability-5.20 branch that I just posted a pull
+request for, so you should be able to merge them in either order.
 
--   92.71%     0.05%  [kernel]                  [k] xfs_inodegc_worker
-   - 92.67% xfs_inodegc_worker
-      - 92.13% xfs_inode_unlink
-         - 91.52% xfs_inactive_ifree
-            - 85.63% xfs_read_agi
-               - 85.61% xfs_trans_read_buf_map
-                  - 85.59% xfs_buf_read_map
-                     - xfs_buf_get_map
-                        - 85.55% xfs_buf_find
-                           - 72.87% _raw_spin_lock
-                              - do_raw_spin_lock
-                                   71.86% __pv_queued_spin_lock_slowpath
-                           - 8.74% xfs_buf_rele
-                              - 7.88% _raw_spin_lock
-                                 - 7.88% do_raw_spin_lock
-                                      7.63% __pv_queued_spin_lock_slowpath
-                           - 1.70% xfs_buf_trylock
-                              - 1.68% down_trylock
-                                 - 1.41% _raw_spin_lock_irqsave
-                                    - 1.39% do_raw_spin_lock
-                                         __pv_queued_spin_lock_slowpath
-                           - 0.76% _raw_spin_unlock
-                                0.75% do_raw_spin_unlock
+Cheers,
 
-This is basically hammering the pag->pag_buf_lock from lots of CPUs
-doing trylocks at the same time. Most of the buffer trylock
-operations ultimately fail after we've done the lookup, so we're
-really hammering the buf hash lock whilst making no progress.
+Dave.
 
-We can also see significant spinlock traffic on the same lock just
-under normal operation when lots of tasks are accessing metadata
-from the same AG, so let's avoid all this by converting the lookup
-fast path to leverages the rhashtable's ability to do rcu protected
-lookups.
+The following changes since commit 7561cea5dbb97fecb952548a0fb74fb105bf4664:
 
-We avoid races with the buffer release path by using
-atomic_inc_not_zero() on the buffer hold count. Any buffer that is
-in the LRU will have a non-zero count, thereby allowing the lockless
-fast path to be taken in most cache hit situations. If the buffer
-hold count is zero, then it is likely going through the release path
-so in that case we fall back to the existing lookup miss slow path.
+  xfs: prevent a UAF when log IO errors race with unmount (2022-07-01 09:09:52 -0700)
 
-The slow path will then do an atomic lookup and insert under the
-buffer hash lock and hence serialise correctly against buffer
-release freeing the buffer.
+are available in the Git repository at:
 
-The use of rcu protected lookups means that buffer handles now need
-to be freed by RCU callbacks (same as inodes). We still free the
-buffer pages before the RCU callback - we won't be trying to access
-them at all on a buffer that has zero references - but we need the
-buffer handle itself to be present for the entire rcu protected read
-side to detect a zero hold count correctly.
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs tags/xfs-perag-conv-5.20
+
+for you to fetch changes up to 36029dee382a20cf515494376ce9f0d5949944eb:
+
+  xfs: make is_log_ag() a first class helper (2022-07-07 19:13:21 +1000)
+
+----------------------------------------------------------------
+xfs: per-ag conversions for 5.20
+
+This series drives the perag down into the AGI, AGF and AGFL access
+routines and unifies the perag structure initialisation with the
+high level AG header read functions. This largely replaces the
+xfs_mount/agno pair that is passed to all these functions with a
+perag, and in most places we already have a perag ready to pass in.
+There are a few places where perags need to be grabbed before
+reading the AG header buffers - some of these will need to be driven
+to higher layers to ensure we can run operations on AGs without
+getting stuck part way through waiting on a perag reference.
+
+The latter section of this patchset moves some of the AG geometry
+information from the xfs_mount to the xfs_perag, and starts
+converting code that requires geometry validation to use a perag
+instead of a mount and having to extract the AGNO from the object
+location. This also allows us to store the AG size in the perag and
+then we can stop having to compare the agno against sb_agcount to
+determine if the AG is the last AG and so has a runt size.  This
+greatly simplifies some of the type validity checking we do and
+substantially reduces the CPU overhead of type validity checking. It
+also cuts over 1.2kB out of the binary size.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf.c | 22 +++++++++++++++-------
- fs/xfs/xfs_buf.h |  1 +
- 2 files changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 1a6542e01bec..6dac5583977f 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -294,6 +294,16 @@ xfs_buf_free_pages(
- 	bp->b_flags &= ~_XBF_PAGES;
- }
- 
-+static void
-+xfs_buf_free_callback(
-+	struct callback_head	*cb)
-+{
-+	struct xfs_buf		*bp = container_of(cb, struct xfs_buf, b_rcu);
-+
-+	xfs_buf_free_maps(bp);
-+	kmem_cache_free(xfs_buf_cache, bp);
-+}
-+
- static void
- xfs_buf_free(
- 	struct xfs_buf		*bp)
-@@ -307,8 +317,7 @@ xfs_buf_free(
- 	else if (bp->b_flags & _XBF_KMEM)
- 		kmem_free(bp->b_addr);
- 
--	xfs_buf_free_maps(bp);
--	kmem_cache_free(xfs_buf_cache, bp);
-+	call_rcu(&bp->b_rcu, xfs_buf_free_callback);
- }
- 
- static int
-@@ -567,14 +576,13 @@ xfs_buf_lookup(
- 	struct xfs_buf          *bp;
- 	int			error;
- 
--	spin_lock(&pag->pag_buf_lock);
-+	rcu_read_lock();
- 	bp = rhashtable_lookup(&pag->pag_buf_hash, map, xfs_buf_hash_params);
--	if (!bp) {
--		spin_unlock(&pag->pag_buf_lock);
-+	if (!bp || !atomic_inc_not_zero(&bp->b_hold)) {
-+		rcu_read_unlock();
- 		return -ENOENT;
- 	}
--	atomic_inc(&bp->b_hold);
--	spin_unlock(&pag->pag_buf_lock);
-+	rcu_read_unlock();
- 
- 	error = xfs_buf_find_lock(bp, flags);
- 	if (error) {
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 58e9034d51bd..02b3c1635ec3 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -196,6 +196,7 @@ struct xfs_buf {
- 	int			b_last_error;
- 
- 	const struct xfs_buf_ops	*b_ops;
-+	struct rcu_head		b_rcu;
- };
- 
- /* Finding and Reading Buffers */
+----------------------------------------------------------------
+Dave Chinner (14):
+      xfs: make last AG grow/shrink perag centric
+      xfs: kill xfs_ialloc_pagi_init()
+      xfs: pass perag to xfs_ialloc_read_agi()
+      xfs: kill xfs_alloc_pagf_init()
+      xfs: pass perag to xfs_alloc_read_agf()
+      xfs: pass perag to xfs_read_agi
+      xfs: pass perag to xfs_read_agf
+      xfs: pass perag to xfs_alloc_get_freelist
+      xfs: pass perag to xfs_alloc_put_freelist
+      xfs: pass perag to xfs_alloc_read_agfl
+      xfs: Pre-calculate per-AG agbno geometry
+      xfs: Pre-calculate per-AG agino geometry
+      xfs: replace xfs_ag_block_count() with perag accesses
+      xfs: make is_log_ag() a first class helper
+
+ fs/xfs/libxfs/xfs_ag.c             | 163 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----------------------------
+ fs/xfs/libxfs/xfs_ag.h             |  69 +++++++++++++++++++++++++++++++++++----
+ fs/xfs/libxfs/xfs_ag_resv.c        |   2 +-
+ fs/xfs/libxfs/xfs_alloc.c          | 143 ++++++++++++++++++++++++++++++++++++--------------------------------------------
+ fs/xfs/libxfs/xfs_alloc.h          |  58 +++++++--------------------------
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   9 +++---
+ fs/xfs/libxfs/xfs_bmap.c           |   3 +-
+ fs/xfs/libxfs/xfs_btree.c          |  25 ++++++--------
+ fs/xfs/libxfs/xfs_ialloc.c         |  86 ++++++++++++++++++++-----------------------------
+ fs/xfs/libxfs/xfs_ialloc.h         |  25 +++-----------
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |  20 ++++++------
+ fs/xfs/libxfs/xfs_inode_buf.c      |   5 ++-
+ fs/xfs/libxfs/xfs_refcount.c       |  19 ++++++-----
+ fs/xfs/libxfs/xfs_refcount_btree.c |   5 ++-
+ fs/xfs/libxfs/xfs_rmap.c           |   8 ++---
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   9 +++---
+ fs/xfs/libxfs/xfs_types.c          |  73 +++++------------------------------------
+ fs/xfs/libxfs/xfs_types.h          |   9 ------
+ fs/xfs/scrub/agheader.c            |  25 +++++++-------
+ fs/xfs/scrub/agheader_repair.c     |  21 ++++--------
+ fs/xfs/scrub/alloc.c               |   7 ++--
+ fs/xfs/scrub/bmap.c                |   2 +-
+ fs/xfs/scrub/common.c              |   6 ++--
+ fs/xfs/scrub/fscounters.c          |   4 +--
+ fs/xfs/scrub/health.c              |   2 ++
+ fs/xfs/scrub/ialloc.c              |  12 +++----
+ fs/xfs/scrub/refcount.c            |   9 +++---
+ fs/xfs/scrub/repair.c              |  32 +++++++++---------
+ fs/xfs/scrub/rmap.c                |   6 ++--
+ fs/xfs/xfs_discard.c               |   2 +-
+ fs/xfs/xfs_extfree_item.c          |   6 +++-
+ fs/xfs/xfs_filestream.c            |   4 +--
+ fs/xfs/xfs_fsmap.c                 |   3 +-
+ fs/xfs/xfs_fsops.c                 |  13 +++++---
+ fs/xfs/xfs_inode.c                 |  28 ++++++++--------
+ fs/xfs/xfs_ioctl.c                 |   8 ++++-
+ fs/xfs/xfs_log_recover.c           |  41 +++++++++++------------
+ fs/xfs/xfs_mount.c                 |   3 +-
+ fs/xfs/xfs_reflink.c               |  40 ++++++++++++-----------
+ fs/xfs/xfs_reflink.h               |   3 --
+ 40 files changed, 486 insertions(+), 522 deletions(-)
+
 -- 
-2.36.1
-
+Dave Chinner
+david@fromorbit.com
