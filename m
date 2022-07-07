@@ -2,153 +2,128 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DB5EC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 02:34:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32860C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 02:40:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234677AbiGGCeY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Jul 2022 22:34:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42018 "EHLO
+        id S229570AbiGGCkL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Jul 2022 22:40:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234937AbiGGCeU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jul 2022 22:34:20 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ABE61C93C
-        for <linux-xfs@vger.kernel.org>; Wed,  6 Jul 2022 19:34:19 -0700 (PDT)
+        with ESMTP id S234207AbiGGCkK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jul 2022 22:40:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE8472F3A7
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Jul 2022 19:40:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 56DC06209E
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 02:34:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7608C341CA;
-        Thu,  7 Jul 2022 02:34:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4A866620CE
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 02:40:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D06DC3411C;
+        Thu,  7 Jul 2022 02:40:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657161257;
-        bh=meQy1QQfHmrX9KDSM12dOh4ACGoeodWl+VmGnw/eOQ4=;
+        s=k20201202; t=1657161607;
+        bh=4Lu63VFCCkXzxl8Uqa5sfz2UHrse6FkT+X6hO8OqSxQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gBpvSA80q5VNOpOReUCRapUDLX7OWoeY9ClxiN4sIqAZFnWbKoZ+tKPQ4YsJQQh19
-         +4m4jdVeqjhTsp7LPy2cOM24g8TGuLIhNHOKelpXiGxk4elF8U6ijtp0wSXmnGmGp7
-         c437MUvkDxwuY0EO80fwMWnS2YWLBgDWUQkVOCDUYUY/H3k8af04cazg2nSpKxOv/4
-         yyZtK7wPcObYahFe5EBveCWY1dRyfUAfxWE02RnmTjXOUG/IloMTpLHj4qM9+cubP7
-         oT4BZoIVVuMESJBy5cijhWpSjEVSqex6oVRmMl84fqPa48JR2WB7Bjb+DIPcLkorDB
-         E1iTi1bVvWscw==
-Date:   Wed, 6 Jul 2022 19:34:17 -0700
+        b=SAYSfH06ztjw31U3j9IhXSdjxct11lV8W+A1q0E+Z/Rr42Hc3+3pxAa1QbkcGRghy
+         5MTv1WM3wHqSIK21ZfZ1o+5y+Uojw6sK8588aSIATCWDnKC9qQsQ4/UoMdTUtSsGCv
+         Cig5wlJFnVSdmcJRObZNUyJi4/Mhd23HPrHJ0gqSDCsFrAt2hguPpKGvFhD9zdNbXZ
+         CV8Ki0e8DqHuNtUhDH3LOWqSCpPE4kQ7Qi3nh/S+Bu9ka8IdBziGU8fFJmpEEmT3x7
+         G68rJwv1A0hE674NE3Fgw+kf9TLYsczC43akEHcnH+rhaa3XvNtRaWGIEWkHoiyv04
+         +bKhvGY7VWgNg==
+Date:   Wed, 6 Jul 2022 19:40:07 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] xfs: add log item precommit operation
-Message-ID: <YsZGKWM6KuNH2Z+v@magnolia>
-References: <20220627004336.217366-1-david@fromorbit.com>
- <20220627004336.217366-9-david@fromorbit.com>
- <YrzBEwKCEwa+aFie@magnolia>
- <20220629213437.GX227878@dread.disaster.area>
- <YrzHU53bLN/4komZ@magnolia>
- <20220629214821.GA227878@dread.disaster.area>
+Subject: Re: [PATCH 0/6 v2] xfs: lockless buffer lookups
+Message-ID: <YsZHh2ZkopJFmaKx@magnolia>
+References: <20220627060841.244226-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220629214821.GA227878@dread.disaster.area>
+In-Reply-To: <20220627060841.244226-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 30, 2022 at 07:48:21AM +1000, Dave Chinner wrote:
-> On Wed, Jun 29, 2022 at 02:42:43PM -0700, Darrick J. Wong wrote:
-> > On Thu, Jun 30, 2022 at 07:34:37AM +1000, Dave Chinner wrote:
-> > > On Wed, Jun 29, 2022 at 02:16:03PM -0700, Darrick J. Wong wrote:
-> > > > On Mon, Jun 27, 2022 at 10:43:35AM +1000, Dave Chinner wrote:
-> > > > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > > > > index 82cf0189c0db..0acb31093d9f 100644
-> > > > > --- a/fs/xfs/xfs_trans.c
-> > > > > +++ b/fs/xfs/xfs_trans.c
-> > > > > @@ -844,6 +844,90 @@ xfs_trans_committed_bulk(
-> > > > >  	spin_unlock(&ailp->ail_lock);
-> > > > >  }
-> > > > >  
-> > > > > +/*
-> > > > > + * Sort transaction items prior to running precommit operations. This will
-> > > > > + * attempt to order the items such that they will always be locked in the same
-> > > > > + * order. Items that have no sort function are moved to the end of the list
-> > > > > + * and so are locked last (XXX: need to check the logic matches the comment).
-> > > > > + *
-> > > > > + * This may need refinement as different types of objects add sort functions.
-> > > > > + *
-> > > > > + * Function is more complex than it needs to be because we are comparing 64 bit
-> > > > > + * values and the function only returns 32 bit values.
-> > > > > + */
-> > > > > +static int
-> > > > > +xfs_trans_precommit_sort(
-> > > > > +	void			*unused_arg,
-> > > > > +	const struct list_head	*a,
-> > > > > +	const struct list_head	*b)
-> > > > > +{
-> > > > > +	struct xfs_log_item	*lia = container_of(a,
-> > > > > +					struct xfs_log_item, li_trans);
-> > > > > +	struct xfs_log_item	*lib = container_of(b,
-> > > > > +					struct xfs_log_item, li_trans);
-> > > > > +	int64_t			diff;
-> > > > > +
-> > > > > +	/*
-> > > > > +	 * If both items are non-sortable, leave them alone. If only one is
-> > > > > +	 * sortable, move the non-sortable item towards the end of the list.
-> > > > > +	 */
-> > > > > +	if (!lia->li_ops->iop_sort && !lib->li_ops->iop_sort)
-> > > > > +		return 0;
-> > > > > +	if (!lia->li_ops->iop_sort)
-> > > > > +		return 1;
-> > > > > +	if (!lib->li_ops->iop_sort)
-> > > > > +		return -1;
-> > > > > +
-> > > > > +	diff = lia->li_ops->iop_sort(lia) - lib->li_ops->iop_sort(lib);
-> > > > 
-> > > > I'm kinda surprised the iop_sort method doesn't take both log item
-> > > > pointers, like most sorting-comparator functions?  But I'll see, maybe
-> > > > you're doing something clever wrt ordering of log items of differing
-> > > > types, and hence the ->iop_sort implementations are required to return
-> > > > some absolute priority or something.
-> > > 
-> > > Nope, we have to order item locking based on an unchanging
-> > > characteristic of the object. log items can come and go, we want to
-> > > lock items in consistent ascending order, so it has to be based on
-> > > some kind of physical characteristic, like inode number, block
-> > > address, etc.
-> > > 
-> > > e.g. If all objects are ordered by the physical location, we naturally
-> > > get a lock order that can be applied sanely across differing object
-> > > types e.g. AG headers will naturally sort and lock before buffers
-> > > in the AG itself. e.g. inode cluster buffers for unlinked list
-> > > manipulations will always get locked after the AGI....
-> > 
-> > <nod> So if (say) we were going to add dquots to this scheme, we'd
-> > probably want to shift all the iop_sort functions to return (say) the
-> > xfs_daddr_t of the associated item?
+On Mon, Jun 27, 2022 at 04:08:35PM +1000, Dave Chinner wrote:
+> Hi folks,
 > 
-> No, I don't want to tie it specifically to physical address.
-> ip->i_ino is not a daddr, but it would order just fine against one.
+> Current work to merge the XFS inode life cycle with the VFS indoe
+> life cycle is finding some interesting issues. If we have a path
+> that hits buffer trylocks fairly hard (e.g. a non-blocking
+> background inode freeing function), we end up hitting massive
+> contention on the buffer cache hash locks:
 > 
-> > (Practically speaking, I don't know that I'd want to tie things down to
-> > the disk address quite this soon, and since it's all incore code anyway
-> > I don't think the precise type of the return values matter.)
+> -   92.71%     0.05%  [kernel]                  [k] xfs_inodegc_worker
+>    - 92.67% xfs_inodegc_worker
+>       - 92.13% xfs_inode_unlink
+>          - 91.52% xfs_inactive_ifree
+>             - 85.63% xfs_read_agi
+>                - 85.61% xfs_trans_read_buf_map
+>                   - 85.59% xfs_buf_read_map
+>                      - xfs_buf_get_map
+>                         - 85.55% xfs_buf_find
+>                            - 72.87% _raw_spin_lock
+>                               - do_raw_spin_lock
+>                                    71.86% __pv_queued_spin_lock_slowpath
+>                            - 8.74% xfs_buf_rele
+>                               - 7.88% _raw_spin_lock
+>                                  - 7.88% do_raw_spin_lock
+>                                       7.63% __pv_queued_spin_lock_slowpath
+>                            - 1.70% xfs_buf_trylock
+>                               - 1.68% down_trylock
+>                                  - 1.41% _raw_spin_lock_irqsave
+>                                     - 1.39% do_raw_spin_lock
+>                                          __pv_queued_spin_lock_slowpath
+>                            - 0.76% _raw_spin_unlock
+>                                 0.75% do_raw_spin_unlock
 > 
-> Indeed, I don't even want to tie this specifically to a 64 bit
-> value; it's intended that objects will return a sort key, and as
-> we add more object types we'll have to think harder about the
-> specific key values we use.
+> This is basically hammering the pag->pag_buf_lock from lots of CPUs
+> doing trylocks at the same time. Most of the buffer trylock
+> operations ultimately fail after we've done the lookup, so we're
+> really hammering the buf hash lock whilst making no progress.
+> 
+> We can also see significant spinlock traffic on the same lock just
+> under normal operation when lots of tasks are accessing metadata
+> from the same AG, so let's avoid all this by creating a lookup fast
+> path which leverages the rhashtable's ability to do rcu protected
+> lookups.
+> 
+> This is a rework of the initial lockless buffer lookup patch I sent
+> here:
+> 
+> https://lore.kernel.org/linux-xfs/20220328213810.1174688-1-david@fromorbit.com/
+> 
+> And the alternative cleanup sent by Christoph here:
+> 
+> https://lore.kernel.org/linux-xfs/20220403120119.235457-1-hch@lst.de/
+> 
+> This version isn't quite a short as Christophs, but it does roughly
+> the same thing in killing the two-phase _xfs_buf_find() call
+> mechanism. It separates the fast and slow paths a little more
+> cleanly and doesn't have context dependent buffer return state from
+> the slow path that the caller needs to handle. It also picks up the
+> rhashtable insert optimisation that Christoph added.
+> 
+> This series passes fstests under several different configs and does
+> not cause any obvious regressions in scalability testing that has
+> been performed. Hence I'm proposing this as potential 5.20 cycle
+> material.
+> 
+> Thoughts, comments?
 
-Ok.  As there currently are no other ->iop_sort implementations and the
-return values aren't encoded on disk, I'll go along with this:
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
-That just leaves the hch's comments scattered throughout, and my own
-comments about patch 3 and 4.  Any chance this series will get a new rev
-in time for 5.20?
+Any chance there'll be a v3 (or just responses to the replies sent so
+far) in time for 5.20?
 
 --D
 
-> Cheers,
+> Version 2:
+> - based on 5.19-rc2
+> - high speed collision of original proposals.
 > 
-> Dave.
+> Initial versions:
+> - https://lore.kernel.org/linux-xfs/20220403120119.235457-1-hch@lst.de/
+> - https://lore.kernel.org/linux-xfs/20220328213810.1174688-1-david@fromorbit.com/
 > 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> 
