@@ -2,330 +2,436 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 099F6CCA482
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 23:43:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 298B8CCA483
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 23:43:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236766AbiGGXn4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jul 2022 19:43:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46280 "EHLO
+        id S236966AbiGGXn5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jul 2022 19:43:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236965AbiGGXnx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 19:43:53 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id ADB0A6B250
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 16:43:52 -0700 (PDT)
+        with ESMTP id S236972AbiGGXnz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 19:43:55 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0CE696B27F
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 16:43:54 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 794CA62C901
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1A56310E7CF0
         for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 09:43:49 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1o9b9w-00FoQN-HE
+        id 1o9b9w-00FoQd-Mg
         for linux-xfs@vger.kernel.org; Fri, 08 Jul 2022 09:43:48 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1o9b9w-004bQI-GB
+        id 1o9b9w-004bQg-LT
         for linux-xfs@vger.kernel.org;
         Fri, 08 Jul 2022 09:43:48 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 4/9] xfs: introduce xfs_iunlink_lookup
-Date:   Fri,  8 Jul 2022 09:43:40 +1000
-Message-Id: <20220707234345.1097095-5-david@fromorbit.com>
+Subject: [PATCH 9/9] xfs: add in-memory iunlink log item
+Date:   Fri,  8 Jul 2022 09:43:45 +1000
+Message-Id: <20220707234345.1097095-10-david@fromorbit.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220707234345.1097095-1-david@fromorbit.com>
 References: <20220707234345.1097095-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62c76fb5
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62c76fb6
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=RgO8CyIxsXoA:10 a=20KFwNOVAAAA:8 a=-iDJaXCwHzwlg7T1OYgA:9
+        a=RgO8CyIxsXoA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=lL1Wyzui6lGyY7qqYfQA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When an inode is on an unlinked list during normal operation, it is
-guaranteed to be pinned in memory as it is either referenced by the
-current unlink operation or it has a open file descriptor that
-references it and has it pinned in memory. Hence to look up an inode
-on the unlinked list, we can do a direct inode cache lookup and
-always expect the lookup to succeed.
+Now that we have a clean operation to update the di_next_unlinked
+field of inode cluster buffers, we can easily defer this operation
+to transaction commit time so we can order the inode cluster buffer
+locking consistently.
 
-Add a function to do this lookup based on the agino that we use to
-link the chain of unlinked inodes together so we can begin the
-conversion the unlinked list manipulations to use in-memory inodes
-rather than inode cluster buffers and remove the backref cache.
+To do this, we introduce a new in-memory log item to track the
+unlinked list item modification that we are going to make. This
+follows the same observations as the in-memory double linked list
+used to track unlinked inodes in that the inodes on the list are
+pinned in memory and cannot go away, and hence we can simply
+reference them for the duration of the transaction without needing
+to take active references or pin them or look them up.
 
-Use this lookup function to replace the on-disk inode buffer walk
-when removing inodes from the unlinked list with an in-core inode
-unlinked list walk.
+This allows us to pass the xfs_inode to the transaction commit code
+along with the modification to be made, and then order the logged
+modifications via the ->iop_sort and ->iop_precommit operations
+for the new log item type. As this is an in-memory log item, it
+doesn't have formatting, CIL or AIL operational hooks - it exists
+purely to run the inode unlink modifications and is then removed
+from the transaction item list and freed once the precommit
+operation has run.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c | 161 +++++++++++++++++++--------------------------
- fs/xfs/xfs_trace.h |   1 -
- 2 files changed, 66 insertions(+), 96 deletions(-)
+ fs/xfs/Makefile           |   1 +
+ fs/xfs/xfs_inode.c        |  64 +-------------
+ fs/xfs/xfs_iunlink_item.c | 180 ++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_iunlink_item.h |  27 ++++++
+ fs/xfs/xfs_super.c        |  10 +++
+ 5 files changed, 219 insertions(+), 63 deletions(-)
+ create mode 100644 fs/xfs/xfs_iunlink_item.c
+ create mode 100644 fs/xfs/xfs_iunlink_item.h
 
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index b056cfc6398e..1131dd01e4fe 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -106,6 +106,7 @@ xfs-y				+= xfs_log.o \
+ 				   xfs_icreate_item.o \
+ 				   xfs_inode_item.o \
+ 				   xfs_inode_item_recover.o \
++				   xfs_iunlink_item.o \
+ 				   xfs_refcount_item.o \
+ 				   xfs_rmap_item.o \
+ 				   xfs_log_recover.o \
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4055fb4aa968..7153e3cc2627 100644
+index 8a8266f1c32b..5ccfede128f3 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1992,6 +1992,35 @@ xfs_iunlink_destroy(
- 	ASSERT(freed_anything == false || xfs_is_shutdown(pag->pag_mount));
+@@ -20,6 +20,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_inode_item.h"
++#include "xfs_iunlink_item.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_util.h"
+@@ -1905,69 +1906,6 @@ xfs_iunlink_update_bucket(
+ 	return 0;
  }
  
-+/*
-+ * Find an inode on the unlinked list. This does not take references to the
-+ * inode as we have existence guarantees by holding the AGI buffer lock and that
-+ * only unlinked, referenced inodes can be on the unlinked inode list.  If we
-+ * don't find the inode in cache, then let the caller handle the situation.
-+ */
-+static struct xfs_inode *
-+xfs_iunlink_lookup(
-+	struct xfs_perag	*pag,
-+	xfs_agino_t		agino)
-+{
-+	struct xfs_inode	*ip;
-+
-+	rcu_read_lock();
-+	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
-+
-+	/*
-+	 * Inode not in memory or in RCU freeing limbo should not happen.
-+	 * Warn about this and let the caller handle the failure.
-+	 */
-+	if (WARN_ON_ONCE(!ip || !ip->i_ino)) {
-+		rcu_read_unlock();
-+		return NULL;
-+	}
-+	ASSERT(!xfs_iflags_test(ip, XFS_IRECLAIMABLE | XFS_IRECLAIM));
-+	rcu_read_unlock();
-+	return ip;
-+}
-+
- /*
-  * Point the AGI unlinked bucket at an inode and log the results.  The caller
-  * is responsible for validating the old value.
-@@ -2097,7 +2126,8 @@ xfs_iunlink_update_inode(
- 	 * current pointer is the same as the new value, unless we're
- 	 * terminating the list.
- 	 */
--	*old_next_agino = old_value;
-+	if (old_next_agino)
-+		*old_next_agino = old_value;
- 	if (old_value == next_agino) {
- 		if (next_agino != NULLAGINO) {
- 			xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
-@@ -2203,38 +2233,6 @@ xfs_iunlink(
- 	return error;
- }
- 
--/* Return the imap, dinode pointer, and buffer for an inode. */
--STATIC int
--xfs_iunlink_map_ino(
+-/* Set an in-core inode's unlinked pointer and return the old value. */
+-static int
+-xfs_iunlink_log_inode(
 -	struct xfs_trans	*tp,
--	xfs_agnumber_t		agno,
--	xfs_agino_t		agino,
--	struct xfs_imap		*imap,
--	struct xfs_dinode	**dipp,
--	struct xfs_buf		**bpp)
+-	struct xfs_inode	*ip,
+-	struct xfs_perag	*pag,
+-	xfs_agino_t		next_agino)
 -{
 -	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_dinode	*dip;
+-	struct xfs_buf		*ibp;
+-	xfs_agino_t		old_value;
+-	int			offset;
 -	int			error;
 -
--	imap->im_blkno = 0;
--	error = xfs_imap(mp, tp, XFS_AGINO_TO_INO(mp, agno, agino), imap, 0);
--	if (error) {
--		xfs_warn(mp, "%s: xfs_imap returned error %d.",
--				__func__, error);
+-	ASSERT(xfs_verify_agino_or_null(pag, next_agino));
+-
+-	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &ibp);
+-	if (error)
 -		return error;
+-	dip = xfs_buf_offset(ibp, ip->i_imap.im_boffset);
+-
+-	/* Make sure the old pointer isn't garbage. */
+-	old_value = be32_to_cpu(dip->di_next_unlinked);
+-	if (old_value != ip->i_next_unlinked ||
+-	    !xfs_verify_agino_or_null(pag, old_value)) {
+-		xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, dip,
+-				sizeof(*dip), __this_address);
+-		error = -EFSCORRUPTED;
+-		goto out;
 -	}
 -
--	error = xfs_imap_to_bp(mp, tp, imap, bpp);
--	if (error) {
--		xfs_warn(mp, "%s: xfs_imap_to_bp returned error %d.",
--				__func__, error);
--		return error;
+-	/*
+-	 * Since we're updating a linked list, we should never find that the
+-	 * current pointer is the same as the new value, unless we're
+-	 * terminating the list.
+-	 */
+-	if (old_value == next_agino) {
+-		if (next_agino != NULLAGINO) {
+-			xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
+-					dip, sizeof(*dip), __this_address);
+-			error = -EFSCORRUPTED;
+-		}
+-		goto out;
 -	}
 -
--	*dipp = xfs_buf_offset(*bpp, imap->im_boffset);
+-	trace_xfs_iunlink_update_dinode(mp, pag->pag_agno,
+-			XFS_INO_TO_AGINO(mp, ip->i_ino),
+-			be32_to_cpu(dip->di_next_unlinked), next_agino);
+-
+-	dip->di_next_unlinked = cpu_to_be32(next_agino);
+-	offset = ip->i_imap.im_boffset +
+-			offsetof(struct xfs_dinode, di_next_unlinked);
+-
+-	xfs_dinode_calc_crc(mp, dip);
+-	xfs_trans_inode_buf(tp, ibp);
+-	xfs_trans_log_buf(tp, ibp, offset, offset + sizeof(xfs_agino_t) - 1);
 -	return 0;
+-out:
+-	xfs_trans_brelse(tp, ibp);
+-	return error;
 -}
 -
- /*
-  * Walk the unlinked chain from @head_agino until we find the inode that
-  * points to @target_agino.  Return the inode number, map, dinode pointer,
-@@ -2245,77 +2243,49 @@ xfs_iunlink_map_ino(
-  *
-  * Do not call this function if @target_agino is the head of the list.
-  */
--STATIC int
--xfs_iunlink_map_prev(
--	struct xfs_trans	*tp,
-+static int
-+xfs_iunlink_lookup_prev(
- 	struct xfs_perag	*pag,
- 	xfs_agino_t		head_agino,
- 	xfs_agino_t		target_agino,
--	xfs_agino_t		*agino,
--	struct xfs_imap		*imap,
--	struct xfs_dinode	**dipp,
--	struct xfs_buf		**bpp)
-+	struct xfs_inode	**ipp)
- {
--	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_inode	*ip;
- 	xfs_agino_t		next_agino;
--	int			error;
--
--	ASSERT(head_agino != target_agino);
--	*bpp = NULL;
- 
--	/* See if our backref cache can find it faster. */
--	*agino = xfs_iunlink_lookup_backref(pag, target_agino);
--	if (*agino != NULLAGINO) {
--		error = xfs_iunlink_map_ino(tp, pag->pag_agno, *agino, imap,
--				dipp, bpp);
--		if (error)
--			return error;
-+	*ipp = NULL;
- 
--		if (be32_to_cpu((*dipp)->di_next_unlinked) == target_agino)
-+	next_agino = xfs_iunlink_lookup_backref(pag, target_agino);
-+	if (next_agino != NULLAGINO) {
-+		ip = xfs_iunlink_lookup(pag, next_agino);
-+		if (ip && ip->i_next_unlinked == target_agino) {
-+			*ipp = ip;
- 			return 0;
--
--		/*
--		 * If we get here the cache contents were corrupt, so drop the
--		 * buffer and fall back to walking the bucket list.
--		 */
--		xfs_trans_brelse(tp, *bpp);
--		*bpp = NULL;
--		WARN_ON_ONCE(1);
-+		}
- 	}
- 
--	trace_xfs_iunlink_map_prev_fallback(mp, pag->pag_agno);
--
- 	/* Otherwise, walk the entire bucket until we find it. */
- 	next_agino = head_agino;
--	while (next_agino != target_agino) {
--		xfs_agino_t	unlinked_agino;
--
--		if (*bpp)
--			xfs_trans_brelse(tp, *bpp);
-+	while (next_agino != NULLAGINO) {
-+		ip = xfs_iunlink_lookup(pag, next_agino);
-+		if (!ip)
-+			return -EFSCORRUPTED;
- 
--		*agino = next_agino;
--		error = xfs_iunlink_map_ino(tp, pag->pag_agno, next_agino, imap,
--				dipp, bpp);
--		if (error)
--			return error;
--
--		unlinked_agino = be32_to_cpu((*dipp)->di_next_unlinked);
- 		/*
- 		 * Make sure this pointer is valid and isn't an obvious
- 		 * infinite loop.
- 		 */
--		if (!xfs_verify_agino(pag, unlinked_agino) ||
--		    next_agino == unlinked_agino) {
--			XFS_CORRUPTION_ERROR(__func__,
--					XFS_ERRLEVEL_LOW, mp,
--					*dipp, sizeof(**dipp));
--			error = -EFSCORRUPTED;
--			return error;
-+		if (!xfs_verify_agino(pag, ip->i_next_unlinked) ||
-+		    next_agino == ip->i_next_unlinked)
-+			return -EFSCORRUPTED;
-+
-+		if (ip->i_next_unlinked == target_agino) {
-+			*ipp = ip;
-+			return 0;
- 		}
--		next_agino = unlinked_agino;
-+		next_agino = ip->i_next_unlinked;
- 	}
--
--	return 0;
-+	return -EFSCORRUPTED;
- }
- 
  static int
-@@ -2327,8 +2297,6 @@ xfs_iunlink_remove_inode(
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	struct xfs_agi		*agi = agibp->b_addr;
--	struct xfs_buf		*last_ibp;
--	struct xfs_dinode	*last_dip = NULL;
- 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
- 	xfs_agino_t		next_agino;
- 	xfs_agino_t		head_agino;
-@@ -2356,7 +2324,6 @@ xfs_iunlink_remove_inode(
- 	error = xfs_iunlink_update_inode(tp, ip, pag, NULLAGINO, &next_agino);
- 	if (error)
- 		return error;
--	ip->i_next_unlinked = NULLAGINO;
- 
- 	/*
- 	 * If there was a backref pointing from the next inode back to this
-@@ -2372,18 +2339,21 @@ xfs_iunlink_remove_inode(
- 	}
- 
- 	if (head_agino != agino) {
--		struct xfs_imap	imap;
--		xfs_agino_t	prev_agino;
-+		struct xfs_inode	*prev_ip;
- 
--		/* We need to search the list for the inode being freed. */
--		error = xfs_iunlink_map_prev(tp, pag, head_agino, agino,
--				&prev_agino, &imap, &last_dip, &last_ibp);
-+		error = xfs_iunlink_lookup_prev(pag, head_agino, agino,
-+				&prev_ip);
- 		if (error)
- 			return error;
- 
- 		/* Point the previous inode on the list to the next inode. */
--		xfs_iunlink_update_dinode(tp, pag, prev_agino, last_ibp,
--				last_dip, &imap, next_agino);
-+		error = xfs_iunlink_update_inode(tp, prev_ip, pag, next_agino,
-+				NULL);
-+		if (error)
-+			return error;
+ xfs_iunlink_insert_inode(
+ 	struct xfs_trans	*tp,
+diff --git a/fs/xfs/xfs_iunlink_item.c b/fs/xfs/xfs_iunlink_item.c
+new file mode 100644
+index 000000000000..43005ce8bd48
+--- /dev/null
++++ b/fs/xfs/xfs_iunlink_item.c
+@@ -0,0 +1,180 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2020-2022, Red Hat, Inc.
++ * All Rights Reserved.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_inode.h"
++#include "xfs_trans.h"
++#include "xfs_trans_priv.h"
++#include "xfs_ag.h"
++#include "xfs_iunlink_item.h"
++#include "xfs_trace.h"
++#include "xfs_error.h"
 +
-+		prev_ip->i_next_unlinked = ip->i_next_unlinked;
-+		ip->i_next_unlinked = NULLAGINO;
++struct kmem_cache	*xfs_iunlink_cache;
++
++static inline struct xfs_iunlink_item *IUL_ITEM(struct xfs_log_item *lip)
++{
++	return container_of(lip, struct xfs_iunlink_item, item);
++}
++
++static void
++xfs_iunlink_item_release(
++	struct xfs_log_item	*lip)
++{
++	struct xfs_iunlink_item	*iup = IUL_ITEM(lip);
++
++	xfs_perag_put(iup->pag);
++	kmem_cache_free(xfs_iunlink_cache, IUL_ITEM(lip));
++}
++
++
++static uint64_t
++xfs_iunlink_item_sort(
++	struct xfs_log_item	*lip)
++{
++	return IUL_ITEM(lip)->ip->i_ino;
++}
++
++/*
++ * Look up the inode cluster buffer and log the on-disk unlinked inode change
++ * we need to make.
++ */
++static int
++xfs_iunlink_log_dinode(
++	struct xfs_trans	*tp,
++	struct xfs_iunlink_item	*iup)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_inode	*ip = iup->ip;
++	struct xfs_dinode	*dip;
++	struct xfs_buf		*ibp;
++	int			offset;
++	int			error;
++
++	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &ibp);
++	if (error)
++		return error;
++	/*
++	 * Don't log the unlinked field on stale buffers as this may be the
++	 * transaction that frees the inode cluster and relogging the buffer
++	 * here will incorrectly remove the stale state.
++	 */
++	if (ibp->b_flags & XBF_STALE)
++		goto out;
++
++	dip = xfs_buf_offset(ibp, ip->i_imap.im_boffset);
++
++	/* Make sure the old pointer isn't garbage. */
++	if (be32_to_cpu(dip->di_next_unlinked) != iup->old_agino) {
++		xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, dip,
++				sizeof(*dip), __this_address);
++		error = -EFSCORRUPTED;
++		goto out;
++	}
++
++	trace_xfs_iunlink_update_dinode(mp, iup->pag->pag_agno,
++			XFS_INO_TO_AGINO(mp, ip->i_ino),
++			be32_to_cpu(dip->di_next_unlinked), iup->next_agino);
++
++	dip->di_next_unlinked = cpu_to_be32(iup->next_agino);
++	offset = ip->i_imap.im_boffset +
++			offsetof(struct xfs_dinode, di_next_unlinked);
++
++	xfs_dinode_calc_crc(mp, dip);
++	xfs_trans_inode_buf(tp, ibp);
++	xfs_trans_log_buf(tp, ibp, offset, offset + sizeof(xfs_agino_t) - 1);
++	return 0;
++out:
++	xfs_trans_brelse(tp, ibp);
++	return error;
++}
++
++/*
++ * On precommit, we grab the inode cluster buffer for the inode number we were
++ * passed, then update the next unlinked field for that inode in the buffer and
++ * log the buffer. This ensures that the inode cluster buffer was logged in the
++ * correct order w.r.t. other inode cluster buffers. We can then remove the
++ * iunlink item from the transaction and release it as it is has now served it's
++ * purpose.
++ */
++static int
++xfs_iunlink_item_precommit(
++	struct xfs_trans	*tp,
++	struct xfs_log_item	*lip)
++{
++	struct xfs_iunlink_item	*iup = IUL_ITEM(lip);
++	int			error;
++
++	error = xfs_iunlink_log_dinode(tp, iup);
++	list_del(&lip->li_trans);
++	xfs_iunlink_item_release(lip);
++	return error;
++}
++
++static const struct xfs_item_ops xfs_iunlink_item_ops = {
++	.iop_release	= xfs_iunlink_item_release,
++	.iop_sort	= xfs_iunlink_item_sort,
++	.iop_precommit	= xfs_iunlink_item_precommit,
++};
++
++
++/*
++ * Initialize the inode log item for a newly allocated (in-core) inode.
++ *
++ * Inode extents can only reside within an AG. Hence specify the starting
++ * block for the inode chunk by offset within an AG as well as the
++ * length of the allocated extent.
++ *
++ * This joins the item to the transaction and marks it dirty so
++ * that we don't need a separate call to do this, nor does the
++ * caller need to know anything about the iunlink item.
++ */
++int
++xfs_iunlink_log_inode(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	struct xfs_perag	*pag,
++	xfs_agino_t		next_agino)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_iunlink_item	*iup;
++
++	ASSERT(xfs_verify_agino_or_null(pag, next_agino));
++	ASSERT(xfs_verify_agino_or_null(pag, ip->i_next_unlinked));
++
++	/*
++	 * Since we're updating a linked list, we should never find that the
++	 * current pointer is the same as the new value, unless we're
++	 * terminating the list.
++	 */
++	if (ip->i_next_unlinked == next_agino) {
++		if (next_agino != NULLAGINO)
++			return -EFSCORRUPTED;
++		return 0;
++	}
++
++	iup = kmem_cache_zalloc(xfs_iunlink_cache, GFP_KERNEL | __GFP_NOFAIL);
++	xfs_log_item_init(mp, &iup->item, XFS_LI_IUNLINK,
++			  &xfs_iunlink_item_ops);
++
++	iup->ip = ip;
++	iup->next_agino = next_agino;
++	iup->old_agino = ip->i_next_unlinked;
++
++	atomic_inc(&pag->pag_ref);
++	iup->pag = pag;
++
++	xfs_trans_add_item(tp, &iup->item);
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	set_bit(XFS_LI_DIRTY, &iup->item.li_flags);
++	return 0;
++}
++
+diff --git a/fs/xfs/xfs_iunlink_item.h b/fs/xfs/xfs_iunlink_item.h
+new file mode 100644
+index 000000000000..c793cdcaccde
+--- /dev/null
++++ b/fs/xfs/xfs_iunlink_item.h
+@@ -0,0 +1,27 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2020-2022, Red Hat, Inc.
++ * All Rights Reserved.
++ */
++#ifndef XFS_IUNLINK_ITEM_H
++#define XFS_IUNLINK_ITEM_H	1
++
++struct xfs_trans;
++struct xfs_inode;
++struct xfs_perag;
++
++/* in memory log item structure */
++struct xfs_iunlink_item {
++	struct xfs_log_item	item;
++	struct xfs_inode	*ip;
++	struct xfs_perag	*pag;
++	xfs_agino_t		next_agino;
++	xfs_agino_t		old_agino;
++};
++
++extern struct kmem_cache *xfs_iunlink_cache;
++
++int xfs_iunlink_log_inode(struct xfs_trans *tp, struct xfs_inode *ip,
++			struct xfs_perag *pag, xfs_agino_t next_agino);
++
++#endif	/* XFS_IUNLINK_ITEM_H */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index aa977c7ea370..315cca5f9322 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -40,6 +40,7 @@
+ #include "xfs_defer.h"
+ #include "xfs_attr_item.h"
+ #include "xfs_xattr.h"
++#include "xfs_iunlink_item.h"
  
- 		/*
- 		 * Now we deal with the backref for this inode.  If this inode
-@@ -2398,6 +2368,7 @@ xfs_iunlink_remove_inode(
- 	}
+ #include <linux/magic.h>
+ #include <linux/fs_context.h>
+@@ -2096,8 +2097,16 @@ xfs_init_caches(void)
+ 	if (!xfs_attri_cache)
+ 		goto out_destroy_attrd_cache;
  
- 	/* Point the head of the list to the next unlinked inode. */
-+	ip->i_next_unlinked = NULLAGINO;
- 	return xfs_iunlink_update_bucket(tp, pag, agibp, bucket_index,
- 			next_agino);
- }
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 0fa1b7a2918c..926543f01335 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3672,7 +3672,6 @@ DEFINE_EVENT(xfs_ag_inode_class, name, \
- 	TP_ARGS(ip))
- DEFINE_AGINODE_EVENT(xfs_iunlink);
- DEFINE_AGINODE_EVENT(xfs_iunlink_remove);
--DEFINE_AG_EVENT(xfs_iunlink_map_prev_fallback);
++	xfs_iunlink_cache = kmem_cache_create("xfs_iul_item",
++					     sizeof(struct xfs_iunlink_item),
++					     0, 0, NULL);
++	if (!xfs_iunlink_cache)
++		goto out_destroy_attri_cache;
++
+ 	return 0;
  
- DECLARE_EVENT_CLASS(xfs_fs_corrupt_class,
- 	TP_PROTO(struct xfs_mount *mp, unsigned int flags),
++ out_destroy_attri_cache:
++	kmem_cache_destroy(xfs_attri_cache);
+  out_destroy_attrd_cache:
+ 	kmem_cache_destroy(xfs_attrd_cache);
+  out_destroy_bui_cache:
+@@ -2148,6 +2157,7 @@ xfs_destroy_caches(void)
+ 	 * destroy caches.
+ 	 */
+ 	rcu_barrier();
++	kmem_cache_destroy(xfs_iunlink_cache);
+ 	kmem_cache_destroy(xfs_attri_cache);
+ 	kmem_cache_destroy(xfs_attrd_cache);
+ 	kmem_cache_destroy(xfs_bui_cache);
 -- 
 2.36.1
 
