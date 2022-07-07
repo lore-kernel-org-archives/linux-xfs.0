@@ -2,429 +2,407 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C0FC43334
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 22:38:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE89C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jul 2022 22:58:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236484AbiGGWiq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jul 2022 18:38:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38382 "EHLO
+        id S236039AbiGGW6S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jul 2022 18:58:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236881AbiGGWip (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 18:38:45 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7342618E1A
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 15:38:43 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id g16-20020a17090a7d1000b001ea9f820449so180650pjl.5
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Jul 2022 15:38:43 -0700 (PDT)
+        with ESMTP id S229638AbiGGW6R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 18:58:17 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63B5D61D60;
+        Thu,  7 Jul 2022 15:58:16 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 267KCQM0003643;
+        Thu, 7 Jul 2022 22:58:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : subject
+ : from : to : cc : date : in-reply-to : references : content-type :
+ content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=vHb+Wiqq907ji1MmaS68c6YE+2BIbqZDmsfRkVLebiI=;
+ b=X9h6uOS9XwZeVi3kI6p7BKOQaiIxuhZkoPj/Np1xxLOObCgpGVCaAxmGKsE5b/4guuT1
+ 28egKSKWVAIKSOcdQ7TpKRTEwWmDZWDdOQykLEVJrkDUfoSjXAxiEt0nY97qP78sA7Hn
+ j/HIBCz/A8SYCsOON7x4CPG65IGaDhhAgDOSKxDQ0cRrkFkmv8YWPsOZG4l9uXVoEZLK
+ zUvEAJmEl7hbKZI0T2mXsad66Rjbehxo4zZ/9dRjsuWhmgKEvxEcsGhAOtVO13ggW+9X
+ f2efZVUmRlloe3ZPo0AmolE/2gWTM7XLbbe1rqh63EmN/BMtDAee5+h3lK37Vhy7gpcm Tw== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3h4ubyea4x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 07 Jul 2022 22:58:05 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 267Mjg8n020914;
+        Thu, 7 Jul 2022 22:58:04 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2177.outbound.protection.outlook.com [104.47.56.177])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3h4ud680b7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 07 Jul 2022 22:58:04 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OUjXip68c2TCJh0WQSkMsZL7gc5QgxrQXoQbaRTXN9XljxpAw1/A+YIG76ZOnLH6l9rm5/6BGSAAfRdUYqqf5C88PbyCs8FvioUe/kiXv4N4NiCyL1IwNJz9HSofiiWt30jrWn5F2eRO/cUqwPPWZdJ7b+O3YSAZFuynETFtgM/IxFgf3Z2fXz0rXNAJz5dtPOUi2GwmEiSYk5Uz8RJxA0Ns7OhqtzM5nNWBYQlrTOUdW96ZYFicZPmI+W4FIuVPZY15rRWrML7X6/te3x2mhz6cT0TJyzZJhhTJyrWqsatS4D4vcgVxhpiwY+siPfM5LkEXH508Bg1iYwd/QT/eJA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=vHb+Wiqq907ji1MmaS68c6YE+2BIbqZDmsfRkVLebiI=;
+ b=fR++Js2p3+jGh2wyV+KzDF1CC7GWBwr/hqqOXNC7iid3lOWk23yWLJ3p0G5pRz4RzmH5D+e4xdfFAUsgumjdO2En711VtvkYk1XYPf4D0XwFrQoT4/YRrc0amk/xrGWsTv8KUyuFfovxEo6msQXPhuVyQWH7armluY34XfL4Bc3HFm3wK/d196Nevfkg/WV64DF+kos4/mrQtUveA6U+zHVFZjqRlD76lSZ2tVptOCpKHWp+N+ELGDjcSOHd3kcg/oXYjtm+l9tY7QuhRgxCkDONDWsqsYihfxvrTkWjfM2MIAyQqrMh86swzsBPLBE7jFQmBvHiyj3zs6pGBvo5qg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=MP+XD/3V+yOEkxWviVkJaUFjA7B5jTZxgr5AG6WO1Xw=;
-        b=LmDVKNi3DV4YXKTdjIxq3mS4UOcTvbvN4cumtZ2NrzLUKRBkuF02rYTf/mgeyYtVGv
-         lcgC27RSRIds6sPOSgoU3reJv4JdrUGji3PLDjWcmDvJZma5lmtDkw9xerfkT7cv4fhG
-         GRAq2BtUIcmfRbWHPJRDaKoaUwAfr4wZ41cGCueXwaQtE+W5fDDBc/mrOdigiJupvWAj
-         gQtXTIFpKeOd+Ia3F+y6C/xcJFnrXnRHvohMbD9rgushvTUE0Zu9fcXpNOIycHqQrW+l
-         iuWs79Wst83hghHmi6Er+uYWV786av734C6n0UaSPfyY3cdCuNckkJXxArSu7vqV+Mf9
-         ZiSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=MP+XD/3V+yOEkxWviVkJaUFjA7B5jTZxgr5AG6WO1Xw=;
-        b=p2jIuaPYehYGv/D0wH2urHL2p+Md7GOf/1j38E86Bh5bi3BHo8t/trxceAhrbHMGnp
-         343Iizs5l1RNvOMhCUDFpF2wOtbQ56QhTKsOaCHwL4MvA3KsDPUx8AbiEFQVWSOeo8pO
-         whlu1DC7c6UEoLfeNPV4a5BdZbXYX4Jtw2naBE8eBXbmhryv0M26Va85+zmmPVma3DQF
-         Obl1TbFUURX6Q3bV9CpaodvmRfornLRWWzK3c2tWHwqlNL2v1+0+WbXlBO5GabDDKxmJ
-         C5my3Tk359XuTi7lzfC0xVcXVU3w83yy8WqYOazjL1+eRHw4B3kVaN7HP70a5ZSzqjkW
-         7rtA==
-X-Gm-Message-State: AJIora9h0S1tkcj0hEV59juVWbVngEZ+snTkov0vS9ZjB2G8uRDUYCAi
-        77WmJP2QxAi67cRtEAs5NNGrHCnm9yxMNQ==
-X-Google-Smtp-Source: AGRyM1vDJmsESSLlInF6s1qcsmt+BHPB0XqKiS1734HeiN22VKZ443xgiDbzdUjkMoWODuwgqdtekw==
-X-Received: by 2002:a17:90a:c7cc:b0:1ef:775e:8df1 with SMTP id gf12-20020a17090ac7cc00b001ef775e8df1mr7685800pjb.28.1657233522635;
-        Thu, 07 Jul 2022 15:38:42 -0700 (PDT)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:26db:8a38:cdca:57b5])
-        by smtp.gmail.com with ESMTPSA id j15-20020a056a00234f00b0052542cbff9dsm28776889pfj.99.2022.07.07.15.38.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Jul 2022 15:38:42 -0700 (PDT)
-From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <lrumancik@google.com>
-Subject: [PATCH 5.15 CANDIDATE 4/4] xfs: drop async cache flushes from CIL commits.
-Date:   Thu,  7 Jul 2022 15:38:28 -0700
-Message-Id: <20220707223828.599185-5-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.37.0.rc0.161.g10f37bed90-goog
-In-Reply-To: <20220707223828.599185-1-leah.rumancik@gmail.com>
-References: <20220707223828.599185-1-leah.rumancik@gmail.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=vHb+Wiqq907ji1MmaS68c6YE+2BIbqZDmsfRkVLebiI=;
+ b=btkLGyxuTheFk6ynOjvSAaGiTD0Ab9QrlwOUrxk87o5mIcR4okfG/wD5gJh7U1YKLbtAnsb6muUIfbvg7FvLiV32z6KFzOztNluuo/3E3YSs/OJOjE5/Zv3aD/AuFpBQYzfW92BEXmIY3mrH/jrZDVONdWh3gyaYXCWKJC9XdM8=
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by MWHPR10MB1455.namprd10.prod.outlook.com (2603:10b6:300:20::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.16; Thu, 7 Jul
+ 2022 22:58:02 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::65a4:3dc0:32a1:7519]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::65a4:3dc0:32a1:7519%4]) with mapi id 15.20.5417.019; Thu, 7 Jul 2022
+ 22:58:01 +0000
+Message-ID: <6d94b670ebca8271017b1c002e9d177da8d25eeb.camel@oracle.com>
+Subject: Re: [PATCH 2/3] xfs/018: fix LARP testing for small block sizes
+From:   Alli <allison.henderson@oracle.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, zlang@redhat.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me,
+        Catherine Hoang <catherine.hoang@oracle.com>
+Date:   Thu, 07 Jul 2022 15:57:59 -0700
+In-Reply-To: <YsdZv6AF7tyalkZz@magnolia>
+References: <165705852280.2820493.17559217951744359102.stgit@magnolia>
+         <165705853409.2820493.9590517059305128125.stgit@magnolia>
+         <YscglleRpAIkrHiA@magnolia>
+         <89d1e21b688d880b200f9dd32891023b55726735.camel@oracle.com>
+         <YsdZv6AF7tyalkZz@magnolia>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR13CA0107.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c5::22) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: af3388c9-ec43-4adc-dfca-08da606c2448
+X-MS-TrafficTypeDiagnostic: MWHPR10MB1455:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: IVk4SzdsFuiUBFnOShwAfiktoMLLfKOc07TWGDPNal8GFx6dZTRlUBOWA793vLyrynW7HBf3tciTL2EKQP6cJmjXGH4kVvU+uXbQvuQJ5DLvXcbVBw9Ugqd1YlnGo3TKU1DVI9dMjWqwAdf8kJZvY1C3edSp1WKynow+YYE1w+6mv5USh2zI8THJpurG+H7+PoL5cBUb/Wchs2EorGaXgZB8yqzyIZzLTD0h1MztDpoGbAzZFQFdFZ0bgi8G60PNNQx5aBdJvN7SSBUXHLalH2XjOTRdZ0Mc5EFVY50mkyPCk4SpCa4IPrWlHpFVOjiyD3cjh+2Vm5wntTEODxRpjIJAvR8soCwyopvJ1yyspUk6XbHrBbDd8vayUan930aY7CeUSbROfLM2RF0/eve2Qsd72B0RighuGbpEd3RbDBQQIWyQ0QsTvEYt5k5Eh2iaWAvSfyCh3w4JNcvaiYjBlG70nRezauarXJySRXrcEi3xX9vZ3guAz0E9UaHxSVU3sf2kD3/18aK74TFE08lBgL97oXhY1nOvVHg2ab7nv8Lt5JOjaNgcqHgG3mx3CxIo9XfMJvfV+9N/GsazZ1sl/h8fzRdd1wF8uFkqIcRqg6H5VphV0HFozTU/SaktNCGYSMDIftJiDCMMO4hUAkbUj/m8e7OXpv9ebnH2YnM+3NK6416Gd8B6CntETSWHAMRMJxwHrlg4MCjPscxFPXdf3YfdldOe223mhH7FxdWlz+BoGgR4sRfHk9/CPVBCPQwVsi75uLdMMTTpk8NfmlJKjdHhAI5u5ic4/Q0GJYjWzrRkBTDQDewZwp8+BPIOlO1LG0V6YGIfnWBcseEhjBYRFA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(136003)(346002)(366004)(39860400002)(396003)(376002)(2906002)(41300700001)(38350700002)(6486002)(478600001)(38100700002)(86362001)(66946007)(66476007)(83380400001)(2616005)(107886003)(4326008)(6506007)(8676002)(66556008)(26005)(52116002)(8936002)(6916009)(6512007)(36756003)(316002)(5660300002)(186003)(357404004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?emRDNWEvbldPMnlaeEx3amRZUG50YlJHL3ZYMEhBUG1JNHFSVFQ5ZEU2V0ZC?=
+ =?utf-8?B?WHlaRENEMDM5MVJIcnRLd0ZWcm1TaFdzRjFWQjdxT2wyQjdBNGhjVTZJSDM3?=
+ =?utf-8?B?SzlENEQyZUw1NFdWMHQwY0NjSlppU1k1Mi9zSTl4SkE3LzRma1F1S2JFekpm?=
+ =?utf-8?B?WTZSRCt1c0ZzbWpYZ3c5ZjI2NGEwUXh0dFNwbVAvRFFobDh6TzZDRkJMakxK?=
+ =?utf-8?B?OXpydCtUVnFQUUt4YUVkbEtJcmhiV2ZRODlUSFNBYlJYczVEYkhVOVQ3MnNN?=
+ =?utf-8?B?dnAxeUpidkduaU0ySEZaN0hQWGVOLzNONEFZUEl0MHV6c3lCeVY2TGVXTnBh?=
+ =?utf-8?B?S3I3Zm53NXhoaFpvT1Qwb1l5NlIwclBnSCtvYkxhUVdMelJaV0I4MzFqczVJ?=
+ =?utf-8?B?Q0Mvb1BqUzVEVm1xYXRlclN1bm9KZjBwUUF3cGlVT1MrMFNHNHNPN3BNWGxt?=
+ =?utf-8?B?cFh0ekJOVDYzTWhHMUg5bVhYa2xmQnJ4N3ZhelE4ejd4dnYzQWNROUwxUGZw?=
+ =?utf-8?B?V2NjeGthVlBNbXZ2eTl0c2F1dEVxb0J5WVhJVGNZL2lmUEFyYTkwTHZ4MDJG?=
+ =?utf-8?B?QXJieVA1eklQWWdBMmdOQWpFYlBnTnp5UENlRndxcmdJYTFxZExPTDU5NWk1?=
+ =?utf-8?B?STc1Sy8wMVJ0R0R3QUtoZmhtZUtXWHJTK0VqMjJjZ0lNOE5tb0cyZHdKVFo1?=
+ =?utf-8?B?N0JxZWJrUXNadmRYbzZ1cEhiSmFXNjFNSExYNDNqbDRyc0NHZzVIYm1jU0kr?=
+ =?utf-8?B?cUF1eVBpNlZic1JyL2VyZnF6L0MxRzMzV3Y2RURROUdzZ0JGL1ZINUtFcVRI?=
+ =?utf-8?B?T1BPbDk2dmQ2YkRnc1ZYNUJEV05ON2pWSVBGcGdWQTcrWXovWFBYNXZFcDM5?=
+ =?utf-8?B?YXFVZm5mR01SVE5ZUUEreWVieGpQYkMvRTZqdjJyYVJNSHV0SkorZ1lhaldF?=
+ =?utf-8?B?cWszUERvM2o1aEpCSHBpTFYyS0NROHVQZE10SkdWbjZnZEd6VCtOckJsNEpS?=
+ =?utf-8?B?SXQ1bFJqTzRVOHh0THc1dVZsdmNQM1dPYnVCYXo4a3lTVnZPM0RWWUNiMUQ1?=
+ =?utf-8?B?YlhtSXRUZEpLWldIcUlOdDR3MURucjYrQVZYSTlibkJ2ZythTzVxb0E2eGRZ?=
+ =?utf-8?B?aDh3VUZSUEhrRVFSWE5lclkzUW9lR1Bzd0ZURmQrK0oyRkNJcVZaZWxMUlY3?=
+ =?utf-8?B?U0tDdEtOY3VZTDYyU2p0dkltZzMzK21OR0NyMzFPZEZQaVYvdmNUUkxZelRq?=
+ =?utf-8?B?TXBhWGJDUXU5MitCajBHcGhlOWp6ZXl4VEhHMTcwZG04TzZ4Z2xNZWFTaFky?=
+ =?utf-8?B?M01IaEdLa1dLdEJMZEU4aW9tN1VaRnBKSzdSRXJGdFRXRkE0bURBOGdIUzhN?=
+ =?utf-8?B?RDVOUTVtd3RYMkFUMGhVcHBSV21sWGd5c1VqRTBVSUxHYkZkZURjTmtTZDBy?=
+ =?utf-8?B?dXcyUE16WEFxWnJUeDh0cjNDVndvN0VyelpwKzVtanpqU2Q2REFqOWRyVWxQ?=
+ =?utf-8?B?UmtZY291WXVVajA3V1E3UVlTZU5CVnNTcWtCeGhhV2xvNmo2ekVOSzJpaWVI?=
+ =?utf-8?B?cVBOcjFVb0pUWjhtKytvMTMxekd1V3hZNlBrYmZJMi9hSEYvUER5Qkt2bi9U?=
+ =?utf-8?B?MGRNdTFUaWxnK2M2ZDAzTnVWRko1a1JWV0lEdVpnemZYNjNZbFJqSjBSek5Z?=
+ =?utf-8?B?NXdZdXVyYll3TWpzRk5RZExwM3p4QktPSUNLTjVMYW5VNVo4SHNSdjVhR1B6?=
+ =?utf-8?B?aE1vOHpIWGN5M3NVL054Q2V3M0R2QUZ0bUhNdUhEVXJGQ3NHWk1CanJEMlZS?=
+ =?utf-8?B?SXFoMTdoNzVUU0p1OTdGV0VhWFlqSnBHWGV0cituK3BPbUpXZFRuZTZKYzM0?=
+ =?utf-8?B?emw3Z0ppL1grblF0REpOOGE5WGE5Yy96eDArSGFmYTNHUlF1bGtTSVdlbmE2?=
+ =?utf-8?B?LzBRN012a2srOHB5TVNEQ0FJYjgrdGw2c1d2NmczaCsybGJydk5RKythelZX?=
+ =?utf-8?B?eEswOXViUE9BeFhLMk1hU3RDQkc3MDI3Ym5ONnBGeEhIamxqSEM0RjhwMk1u?=
+ =?utf-8?B?TXN5ZTFiTmJZeGlpOE9EVkJSekJ0NDJtb3dVOTNIZi8yMjhqTDRJY1BrV0NX?=
+ =?utf-8?B?QVVTaGxBMmw2ZzcyblB2TmNHMnViYm8yQ3RBNVBuOWdqWldwV2lPaE5nMm14?=
+ =?utf-8?B?OVE9PQ==?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: af3388c9-ec43-4adc-dfca-08da606c2448
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jul 2022 22:58:01.0802
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ZH1Fb/NCXJFOCacnaByhUptatBDqWCNIVVKFCdVNtSFdQf6quoapf0AWAfFvWulqDBsFTwSOWaEHL6fSfhQqEKSf75JZx1sa/JBWClhXrqA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR10MB1455
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.883
+ definitions=2022-07-07_17:2022-06-28,2022-07-07 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0 spamscore=0
+ mlxlogscore=999 phishscore=0 malwarescore=0 mlxscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
+ definitions=main-2207070089
+X-Proofpoint-GUID: PkjyVbLX6ZNvIcAUbjRITkgxa6U5LB3S
+X-Proofpoint-ORIG-GUID: PkjyVbLX6ZNvIcAUbjRITkgxa6U5LB3S
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, 2022-07-07 at 15:10 -0700, Darrick J. Wong wrote:
+> On Thu, Jul 07, 2022 at 02:55:07PM -0700, Alli wrote:
+> > On Thu, 2022-07-07 at 11:06 -0700, Darrick J. Wong wrote:
+> > > I guess I should've cc'd Allison and Catherine on this one.
+> > > 
+> > > Could either of you review these test changes, please?
+> > > 
+> > > --D
+> > > 
+> > > On Tue, Jul 05, 2022 at 03:02:14PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Fix this test to work properly when the filesystem block size
+> > > > is
+> > > > less
+> > > > than 4k.  Tripping the error injection points on shape changes
+> > > > in
+> > > > the
+> > > > xattr structure must be done dynamically.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  tests/xfs/018     |   52
+> > > > +++++++++++++++++++++++++++++++++++++++++++++++-----
+> > > >  tests/xfs/018.out |   16 ++++------------
+> > > >  2 files changed, 51 insertions(+), 17 deletions(-)
+> > > > 
+> > > > 
+> > > > diff --git a/tests/xfs/018 b/tests/xfs/018
+> > > > index 041a3b24..14a6f716 100755
+> > > > --- a/tests/xfs/018
+> > > > +++ b/tests/xfs/018
+> > > > @@ -54,6 +54,45 @@ test_attr_replay()
+> > > >  	echo ""
+> > > >  }
+> > > >  
+> > > > +test_attr_replay_loop()
+> > > > +{
+> > > > +	testfile=$testdir/$1
+> > > > +	attr_name=$2
+> > > > +	attr_value=$3
+> > > > +	flag=$4
+> > > > +	error_tag=$5
+> > > > +
+> > > > +	# Inject error
+> > > > +	_scratch_inject_error $error_tag
+> > > > +
+> > > > +	# Set attribute; hopefully 1000 of them is enough to
+> > > > cause
+> > > > whatever
+> > > > +	# attr structure shape change that the caller wants to
+> > > > test.
+> > > > +	for ((i = 0; i < 1024; i++)); do
+> > > > +		echo "$attr_value" | \
+> > > > +			${ATTR_PROG} -$flag "$attr_name$i"
+> > > > $testfile >
+> > > > $tmp.out 2> $tmp.err
+> > > > +		cat $tmp.out $tmp.err >> $seqres.full
+> > > > +		cat $tmp.err | _filter_scratch | sed -e
+> > > > 's/attr_name[0-
+> > > > 9]*/attr_nameXXXX/g'
+> > > > +		touch $testfile &>/dev/null || break
+> > > > +	done
+> > > > +
+> > > > +	# FS should be shut down, touch will fail
+> > > > +	touch $testfile 2>&1 | _filter_scratch
+> > > > +
+> > > > +	# Remount to replay log
+> > > > +	_scratch_remount_dump_log >> $seqres.full
+> > > > +
+> > > > +	# FS should be online, touch should succeed
+> > > > +	touch $testfile
+> > > > +
+> > > > +	# Verify attr recovery
+> > > > +	$ATTR_PROG -l $testfile >> $seqres.full
+> > > > +	echo "Checking contents of $attr_name$i" >>
+> > > > $seqres.full
+> > > > +	echo -n "${attr_name}XXXX: "
+> > > > +	$ATTR_PROG -q -g $attr_name$i $testfile 2> /dev/null |
+> > > > md5sum;
+> > > > +
+> > > > +	echo ""
+> > > > +}
+> > > > +
+> > 
+> > Ok, I think I see what you are trying to do, but I think we can do
+> > it
+> > with less duplicated code and looping functions.  What about
+> > something
+> > like this:
+> > 
+> > diff --git a/tests/xfs/018 b/tests/xfs/018
+> > index 041a3b24..dc1324b1 100755
+> > --- a/tests/xfs/018
+> > +++ b/tests/xfs/018
+> > @@ -95,6 +95,9 @@ attr16k="$attr8k$attr8k"
+> >  attr32k="$attr16k$attr16k"
+> >  attr64k="$attr32k$attr32k"
+> >  
+> > +blk_sz=$(_scratch_xfs_get_sb_field blocksize)
+> > +multiplier=$(( $blk_sz / 256 ))
+> 
+> The scratch fs hasn't been formatted yet, but if you use
+> _get_block_size
+> after it's mounted, then, yes, I'm with you so far.
+> 
+> > +
+> >  echo "*** mkfs"
+> >  _scratch_mkfs >/dev/null
+> >  
+> > @@ -140,7 +143,7 @@ test_attr_replay extent_file1 "attr_name2"
+> > $attr1k
+> > "s" "larp"
+> >  test_attr_replay extent_file1 "attr_name2" $attr1k "r" "larp"
+> >  
+> >  # extent, inject error on split
+> > -create_test_file extent_file2 3 $attr1k
+> > +create_test_file extent_file2 $(( $multiplier - 1 )) $attr256
+> 
+> Hm.  The calculations seem slightly off here -- name is ~8 bytes
+> long,
+> the value is 256 bytes, which means there's at least 264 bytes per
+> attr.
+> I guess you do only create multiplier-1 attrs, though, so that
+> probably
+> works for all the blocksizes I can think of...
+> 
+> >  test_attr_replay extent_file2 "attr_name4" $attr1k "s"
+> > "da_leaf_split"
+> 
+> If we keep the 1k attr value here, do we still trip the leaf split
+> even
+> if that 1k value ends up in a remote block?
+I think so.  If I'm following the code correctly, it moves through the
+states in order.  As long as we run across the node state in the state
+machine, da_leaf_split should trip.
 
-[ Upstream commit 919edbadebe17a67193533f531c2920c03e40fa4 ]
+> 
+> >  # extent, inject error on fork transition
+> > 
+> > 
+> > 
+> > Same idea right?  We bring the attr fork right up and to the edge
+> > of
+> > the block boundary and then pop it?  And then of course we apply
+> > the
+> > same pattern to the rest of the tests.  I think that sort of reads
+> > cleaner too.
+> 
+> Right, I think that would work in principle.  Does the same sort of
+> fix
+> apply to the "extent, inject error on fork transition" case too?
+> 
+I think it should.  These two tests have the same set up really, the
+only difference is where the error tag is set.  So as long as the next
+attr is enough to catapult us through node, we should hit that state in
+the state machine.
 
-Jan Kara reported a performance regression in dbench that he
-bisected down to commit bad77c375e8d ("xfs: CIL checkpoint
-flushes caches unconditionally").
+Allison
 
-Whilst developing the journal flush/fua optimisations this cache was
-part of, it appeared to made a significant difference to
-performance. However, now that this patchset has settled and all the
-correctness issues fixed, there does not appear to be any
-significant performance benefit to asynchronous cache flushes.
-
-In fact, the opposite is true on some storage types and workloads,
-where additional cache flushes that can occur from fsync heavy
-workloads have measurable and significant impact on overall
-throughput.
-
-Local dbench testing shows little difference on dbench runs with
-sync vs async cache flushes on either fast or slow SSD storage, and
-no difference in streaming concurrent async transaction workloads
-like fs-mark.
-
-Fast NVME storage.
-
-From `dbench -t 30`, CIL scale:
-
-clients		async			sync
-		BW	Latency		BW	Latency
-1		 935.18   0.855		 915.64   0.903
-8		2404.51   6.873		2341.77   6.511
-16		3003.42   6.460		2931.57   6.529
-32		3697.23   7.939		3596.28   7.894
-128		7237.43  15.495		7217.74  11.588
-512		5079.24  90.587		5167.08  95.822
-
-fsmark, 32 threads, create w/ 64 byte xattr w/32k logbsize
-
-	create		chown		unlink
-async   1m41s		1m16s		2m03s
-sync	1m40s		1m19s		1m54s
-
-Slower SATA SSD storage:
-
-From `dbench -t 30`, CIL scale:
-
-clients		async			sync
-		BW	Latency		BW	Latency
-1		  78.59  15.792		  83.78  10.729
-8		 367.88  92.067		 404.63  59.943
-16		 564.51  72.524		 602.71  76.089
-32		 831.66 105.984		 870.26 110.482
-128		1659.76 102.969		1624.73  91.356
-512		2135.91 223.054		2603.07 161.160
-
-fsmark, 16 threads, create w/32k logbsize
-
-	create		unlink
-async   5m06s		4m15s
-sync	5m00s		4m22s
-
-And on Jan's test machine:
-
-                   5.18-rc8-vanilla       5.18-rc8-patched
-Amean     1        71.22 (   0.00%)       64.94 *   8.81%*
-Amean     2        93.03 (   0.00%)       84.80 *   8.85%*
-Amean     4       150.54 (   0.00%)      137.51 *   8.66%*
-Amean     8       252.53 (   0.00%)      242.24 *   4.08%*
-Amean     16      454.13 (   0.00%)      439.08 *   3.31%*
-Amean     32      835.24 (   0.00%)      829.74 *   0.66%*
-Amean     64     1740.59 (   0.00%)     1686.73 *   3.09%*
-
-Performance and cache flush behaviour is restored to pre-regression
-levels.
-
-As such, we can now consider the async cache flush mechanism an
-unnecessary exercise in premature optimisation and hence we can
-now remove it and the infrastructure it requires completely.
-
-Fixes: bad77c375e8d ("xfs: CIL checkpoint flushes caches unconditionally")
-Reported-and-tested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Leah Rumancik <lrumancik@google.com>
----
- fs/xfs/xfs_bio_io.c   | 35 -----------------------------------
- fs/xfs/xfs_linux.h    |  2 --
- fs/xfs/xfs_log.c      | 36 +++++++++++-------------------------
- fs/xfs/xfs_log_cil.c  | 42 +++++++++++++-----------------------------
- fs/xfs/xfs_log_priv.h |  3 +--
- 5 files changed, 25 insertions(+), 93 deletions(-)
-
-diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
-index 667e297f59b1..17f36db2f792 100644
---- a/fs/xfs/xfs_bio_io.c
-+++ b/fs/xfs/xfs_bio_io.c
-@@ -9,41 +9,6 @@ static inline unsigned int bio_max_vecs(unsigned int count)
- 	return bio_max_segs(howmany(count, PAGE_SIZE));
- }
- 
--static void
--xfs_flush_bdev_async_endio(
--	struct bio	*bio)
--{
--	complete(bio->bi_private);
--}
--
--/*
-- * Submit a request for an async cache flush to run. If the request queue does
-- * not require flush operations, just skip it altogether. If the caller needs
-- * to wait for the flush completion at a later point in time, they must supply a
-- * valid completion. This will be signalled when the flush completes.  The
-- * caller never sees the bio that is issued here.
-- */
--void
--xfs_flush_bdev_async(
--	struct bio		*bio,
--	struct block_device	*bdev,
--	struct completion	*done)
--{
--	struct request_queue	*q = bdev->bd_disk->queue;
--
--	if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
--		complete(done);
--		return;
--	}
--
--	bio_init(bio, NULL, 0);
--	bio_set_dev(bio, bdev);
--	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
--	bio->bi_private = done;
--	bio->bi_end_io = xfs_flush_bdev_async_endio;
--
--	submit_bio(bio);
--}
- int
- xfs_rw_bdev(
- 	struct block_device	*bdev,
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index c174262a074e..7688663b9773 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -196,8 +196,6 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
- 
- int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
- 		char *data, unsigned int op);
--void xfs_flush_bdev_async(struct bio *bio, struct block_device *bdev,
--		struct completion *done);
- 
- #define ASSERT_ALWAYS(expr)	\
- 	(likely(expr) ? (void)0 : assfail(NULL, #expr, __FILE__, __LINE__))
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 9ac4fc177d93..0fb7d05ca308 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -527,12 +527,6 @@ xlog_state_shutdown_callbacks(
-  * Flush iclog to disk if this is the last reference to the given iclog and the
-  * it is in the WANT_SYNC state.
-  *
-- * If the caller passes in a non-zero @old_tail_lsn and the current log tail
-- * does not match, there may be metadata on disk that must be persisted before
-- * this iclog is written.  To satisfy that requirement, set the
-- * XLOG_ICL_NEED_FLUSH flag as a condition for writing this iclog with the new
-- * log tail value.
-- *
-  * If XLOG_ICL_NEED_FUA is already set on the iclog, we need to ensure that the
-  * log tail is updated correctly. NEED_FUA indicates that the iclog will be
-  * written to stable storage, and implies that a commit record is contained
-@@ -549,12 +543,10 @@ xlog_state_shutdown_callbacks(
-  * always capture the tail lsn on the iclog on the first NEED_FUA release
-  * regardless of the number of active reference counts on this iclog.
-  */
--
- int
- xlog_state_release_iclog(
- 	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	xfs_lsn_t		old_tail_lsn)
-+	struct xlog_in_core	*iclog)
- {
- 	xfs_lsn_t		tail_lsn;
- 	bool			last_ref;
-@@ -565,18 +557,14 @@ xlog_state_release_iclog(
- 	/*
- 	 * Grabbing the current log tail needs to be atomic w.r.t. the writing
- 	 * of the tail LSN into the iclog so we guarantee that the log tail does
--	 * not move between deciding if a cache flush is required and writing
--	 * the LSN into the iclog below.
-+	 * not move between the first time we know that the iclog needs to be
-+	 * made stable and when we eventually submit it.
- 	 */
--	if (old_tail_lsn || iclog->ic_state == XLOG_STATE_WANT_SYNC) {
-+	if ((iclog->ic_state == XLOG_STATE_WANT_SYNC ||
-+	     (iclog->ic_flags & XLOG_ICL_NEED_FUA)) &&
-+	    !iclog->ic_header.h_tail_lsn) {
- 		tail_lsn = xlog_assign_tail_lsn(log->l_mp);
--
--		if (old_tail_lsn && tail_lsn != old_tail_lsn)
--			iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
--
--		if ((iclog->ic_flags & XLOG_ICL_NEED_FUA) &&
--		    !iclog->ic_header.h_tail_lsn)
--			iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
-+		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
- 	}
- 
- 	last_ref = atomic_dec_and_test(&iclog->ic_refcnt);
-@@ -601,8 +589,6 @@ xlog_state_release_iclog(
- 	}
- 
- 	iclog->ic_state = XLOG_STATE_SYNCING;
--	if (!iclog->ic_header.h_tail_lsn)
--		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
- 	xlog_verify_tail_lsn(log, iclog);
- 	trace_xlog_iclog_syncing(iclog, _RET_IP_);
- 
-@@ -875,7 +861,7 @@ xlog_force_iclog(
- 	iclog->ic_flags |= XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA;
- 	if (iclog->ic_state == XLOG_STATE_ACTIVE)
- 		xlog_state_switch_iclogs(iclog->ic_log, iclog, 0);
--	return xlog_state_release_iclog(iclog->ic_log, iclog, 0);
-+	return xlog_state_release_iclog(iclog->ic_log, iclog);
- }
- 
- /*
-@@ -2413,7 +2399,7 @@ xlog_write_copy_finish(
- 		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
- 			xlog_is_shutdown(log));
- release_iclog:
--	error = xlog_state_release_iclog(log, iclog, 0);
-+	error = xlog_state_release_iclog(log, iclog);
- 	spin_unlock(&log->l_icloglock);
- 	return error;
- }
-@@ -2630,7 +2616,7 @@ xlog_write(
- 
- 	spin_lock(&log->l_icloglock);
- 	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
--	error = xlog_state_release_iclog(log, iclog, 0);
-+	error = xlog_state_release_iclog(log, iclog);
- 	spin_unlock(&log->l_icloglock);
- 
- 	return error;
-@@ -3054,7 +3040,7 @@ xlog_state_get_iclog_space(
- 		 * reference to the iclog.
- 		 */
- 		if (!atomic_add_unless(&iclog->ic_refcnt, -1, 1))
--			error = xlog_state_release_iclog(log, iclog, 0);
-+			error = xlog_state_release_iclog(log, iclog);
- 		spin_unlock(&log->l_icloglock);
- 		if (error)
- 			return error;
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b59cc9c0961c..eafe30843ff0 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -681,11 +681,21 @@ xlog_cil_set_ctx_write_state(
- 		 * The LSN we need to pass to the log items on transaction
- 		 * commit is the LSN reported by the first log vector write, not
- 		 * the commit lsn. If we use the commit record lsn then we can
--		 * move the tail beyond the grant write head.
-+		 * move the grant write head beyond the tail LSN and overwrite
-+		 * it.
- 		 */
- 		ctx->start_lsn = lsn;
- 		wake_up_all(&cil->xc_start_wait);
- 		spin_unlock(&cil->xc_push_lock);
-+
-+		/*
-+		 * Make sure the metadata we are about to overwrite in the log
-+		 * has been flushed to stable storage before this iclog is
-+		 * issued.
-+		 */
-+		spin_lock(&cil->xc_log->l_icloglock);
-+		iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
-+		spin_unlock(&cil->xc_log->l_icloglock);
- 		return;
- 	}
- 
-@@ -864,10 +874,7 @@ xlog_cil_push_work(
- 	struct xfs_trans_header thdr;
- 	struct xfs_log_iovec	lhdr;
- 	struct xfs_log_vec	lvhdr = { NULL };
--	xfs_lsn_t		preflush_tail_lsn;
- 	xfs_csn_t		push_seq;
--	struct bio		bio;
--	DECLARE_COMPLETION_ONSTACK(bdev_flush);
- 	bool			push_commit_stable;
- 
- 	new_ctx = xlog_cil_ctx_alloc();
-@@ -937,23 +944,6 @@ xlog_cil_push_work(
- 	list_add(&ctx->committing, &cil->xc_committing);
- 	spin_unlock(&cil->xc_push_lock);
- 
--	/*
--	 * The CIL is stable at this point - nothing new will be added to it
--	 * because we hold the flush lock exclusively. Hence we can now issue
--	 * a cache flush to ensure all the completed metadata in the journal we
--	 * are about to overwrite is on stable storage.
--	 *
--	 * Because we are issuing this cache flush before we've written the
--	 * tail lsn to the iclog, we can have metadata IO completions move the
--	 * tail forwards between the completion of this flush and the iclog
--	 * being written. In this case, we need to re-issue the cache flush
--	 * before the iclog write. To detect whether the log tail moves, sample
--	 * the tail LSN *before* we issue the flush.
--	 */
--	preflush_tail_lsn = atomic64_read(&log->l_tail_lsn);
--	xfs_flush_bdev_async(&bio, log->l_mp->m_ddev_targp->bt_bdev,
--				&bdev_flush);
--
- 	/*
- 	 * Pull all the log vectors off the items in the CIL, and remove the
- 	 * items from the CIL. We don't need the CIL lock here because it's only
-@@ -1030,12 +1020,6 @@ xlog_cil_push_work(
- 	lvhdr.lv_iovecp = &lhdr;
- 	lvhdr.lv_next = ctx->lv_chain;
- 
--	/*
--	 * Before we format and submit the first iclog, we have to ensure that
--	 * the metadata writeback ordering cache flush is complete.
--	 */
--	wait_for_completion(&bdev_flush);
--
- 	error = xlog_cil_write_chain(ctx, &lvhdr);
- 	if (error)
- 		goto out_abort_free_ticket;
-@@ -1094,7 +1078,7 @@ xlog_cil_push_work(
- 	if (push_commit_stable &&
- 	    ctx->commit_iclog->ic_state == XLOG_STATE_ACTIVE)
- 		xlog_state_switch_iclogs(log, ctx->commit_iclog, 0);
--	xlog_state_release_iclog(log, ctx->commit_iclog, preflush_tail_lsn);
-+	xlog_state_release_iclog(log, ctx->commit_iclog);
- 
- 	/* Not safe to reference ctx now! */
- 
-@@ -1115,7 +1099,7 @@ xlog_cil_push_work(
- 		return;
- 	}
- 	spin_lock(&log->l_icloglock);
--	xlog_state_release_iclog(log, ctx->commit_iclog, 0);
-+	xlog_state_release_iclog(log, ctx->commit_iclog);
- 	/* Not safe to reference ctx now! */
- 	spin_unlock(&log->l_icloglock);
- }
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 844fbeec3545..f3d68ca39f45 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -524,8 +524,7 @@ void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
- 
- void xlog_state_switch_iclogs(struct xlog *log, struct xlog_in_core *iclog,
- 		int eventual_size);
--int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog,
--		xfs_lsn_t log_tail_lsn);
-+int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog);
- 
- /*
-  * When we crack an atomic LSN, we sample it first so that the value will not
--- 
-2.37.0.rc0.161.g10f37bed90-goog
+> --D
+> 
+> > Allison
+> > 
+> > > >  create_test_file()
+> > > >  {
+> > > >  	filename=$testdir/$1
+> > > > @@ -88,6 +127,7 @@ echo 1 > /sys/fs/xfs/debug/larp
+> > > >  attr16="0123456789ABCDEF"
+> > > >  attr64="$attr16$attr16$attr16$attr16"
+> > > >  attr256="$attr64$attr64$attr64$attr64"
+> > > > +attr512="$attr256$attr256"
+> > > >  attr1k="$attr256$attr256$attr256$attr256"
+> > > >  attr4k="$attr1k$attr1k$attr1k$attr1k"
+> > > >  attr8k="$attr4k$attr4k"
+> > > > @@ -140,12 +180,14 @@ test_attr_replay extent_file1
+> > > > "attr_name2"
+> > > > $attr1k "s" "larp"
+> > > >  test_attr_replay extent_file1 "attr_name2" $attr1k "r" "larp"
+> > > >  
+> > > >  # extent, inject error on split
+> > > > -create_test_file extent_file2 3 $attr1k
+> > > > -test_attr_replay extent_file2 "attr_name4" $attr1k "s"
+> > > > "da_leaf_split"
+> > > > +create_test_file extent_file2 0 $attr1k
+> > > > +test_attr_replay_loop extent_file2 "attr_name" $attr1k "s"
+> > > > "da_leaf_split"
+> > > >  
+> > > > -# extent, inject error on fork transition
+> > > > -create_test_file extent_file3 3 $attr1k
+> > > > -test_attr_replay extent_file3 "attr_name4" $attr1k "s"
+> > > > "attr_leaf_to_node"
+> > > > +# extent, inject error on fork transition.  The attr value
+> > > > must be
+> > > > less than
+> > > > +# a full filesystem block so that the attrs don't use remote
+> > > > xattr
+> > > > values,
+> > > > +# which means we miss the leaf to node transition.
+> > > > +create_test_file extent_file3 0 $attr1k
+> > > > +test_attr_replay_loop extent_file3 "attr_name" $attr512 "s"
+> > > > "attr_leaf_to_node"
+> > > >  
+> > > >  # extent, remote
+> > > >  create_test_file extent_file4 1 $attr1k
+> > > > diff --git a/tests/xfs/018.out b/tests/xfs/018.out
+> > > > index 022b0ca3..c3021ee3 100644
+> > > > --- a/tests/xfs/018.out
+> > > > +++ b/tests/xfs/018.out
+> > > > @@ -87,22 +87,14 @@ Attribute "attr_name1" has a 1024 byte
+> > > > value
+> > > > for SCRATCH_MNT/testdir/extent_file
+> > > >  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+> > > >  
+> > > >  attr_set: Input/output error
+> > > > -Could not set "attr_name4" for
+> > > > SCRATCH_MNT/testdir/extent_file2
+> > > > +Could not set "attr_nameXXXX" for
+> > > > SCRATCH_MNT/testdir/extent_file2
+> > > >  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file2':
+> > > > Input/output error
+> > > > -Attribute "attr_name4" has a 1025 byte value for
+> > > > SCRATCH_MNT/testdir/extent_file2
+> > > > -Attribute "attr_name2" has a 1024 byte value for
+> > > > SCRATCH_MNT/testdir/extent_file2
+> > > > -Attribute "attr_name3" has a 1024 byte value for
+> > > > SCRATCH_MNT/testdir/extent_file2
+> > > > -Attribute "attr_name1" has a 1024 byte value for
+> > > > SCRATCH_MNT/testdir/extent_file2
+> > > > -attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
+> > > > +attr_nameXXXX: 9fd415c49d67afc4b78fad4055a3a376  -
+> > > >  
+> > > >  attr_set: Input/output error
+> > > > -Could not set "attr_name4" for
+> > > > SCRATCH_MNT/testdir/extent_file3
+> > > > +Could not set "attr_nameXXXX" for
+> > > > SCRATCH_MNT/testdir/extent_file3
+> > > >  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file3':
+> > > > Input/output error
+> > > > -Attribute "attr_name4" has a 1025 byte value for
+> > > > SCRATCH_MNT/testdir/extent_file3
+> > > > -Attribute "attr_name2" has a 1024 byte value for
+> > > > SCRATCH_MNT/testdir/extent_file3
+> > > > -Attribute "attr_name3" has a 1024 byte value for
+> > > > SCRATCH_MNT/testdir/extent_file3
+> > > > -Attribute "attr_name1" has a 1024 byte value for
+> > > > SCRATCH_MNT/testdir/extent_file3
+> > > > -attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
+> > > > +attr_nameXXXX: a597dc41e4574873516420a7e4e5a3e0  -
+> > > >  
+> > > >  attr_set: Input/output error
+> > > >  Could not set "attr_name2" for
+> > > > SCRATCH_MNT/testdir/extent_file4
+> > > > 
 
