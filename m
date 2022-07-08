@@ -2,156 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ED6FC43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 09:44:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0CCCCCA480
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 11:26:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237471AbiGHJoq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 05:44:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34138 "EHLO
+        id S237755AbiGHL00 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jul 2022 07:26:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237469AbiGHJop (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 05:44:45 -0400
-Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AD6B796A6;
-        Fri,  8 Jul 2022 02:44:43 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4LfSzq2YbFz4xj2;
-        Fri,  8 Jul 2022 19:44:39 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-        s=201702; t=1657273479;
-        bh=dOThPvRv/B3YXUF/B31FdS2qXJrB/bxfQd3x43Yqbn4=;
-        h=Date:From:To:Cc:Subject:From;
-        b=QSwRgpgWE+eUCNkdJj7jeQlhUvSvqke8YhNF8hL6BfA+4Kqu1HN6DClvAbbLblMcN
-         HL0nZM5o/jzKZ0LCyO7EGsSI+ZYwmOsdB7l0lPWbkV4mA5P0R6ZGGD+2vSVc7nnp/u
-         //IBYr2aYEqLN6W7jpztkeshhFlaAInOJrDuTHkO36MX/Mvbeobe3+rkCM0KIFl3c3
-         I3PxHQ8p39pl6R4VzzkjTYuCXuh1nVXML8ZMv2t/QZKr2oF8boMNXgUPqEryhdTVmp
-         yGtc2fEJ0g8q6SzlyH2K2Ui46QB+XI+HbfsHfK3st0ZOD+9cHVHP2KeRyK2eQnsBC6
-         HCNjvGAdD7ypA==
-Date:   Fri, 8 Jul 2022 19:44:37 +1000
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        David Chinner <david@fromorbit.com>
-Cc:     <linux-xfs@vger.kernel.org>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: linux-next: build failure after merge of the mm tree
-Message-ID: <20220708194437.7eafe774@canb.auug.org.au>
+        with ESMTP id S237336AbiGHL00 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 07:26:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6BAA6904DB
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 04:26:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1657279584;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=gysJ5OLsHMu4TIG7j1vcOsFr+CV/gmdUfz5sTZsCQeI=;
+        b=SE5srH5aj5YTVoQGeAmURpbj+6vo07Y5XXzaEOa+2+1dOfC/4cBy+oIZTtnNySoqlLte/t
+        KFvFgaVhYwK1Gt6PR3UcxDuJhMqdiDoybF02tv7OA5blWWJd6n8s2GHkNTPsOTuevAdSrc
+        4pzR0x1rR8ZSdjN6jgbNIifF88Y331s=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-395-OBRlCI5eOK6IosZyVwgQNA-1; Fri, 08 Jul 2022 07:26:23 -0400
+X-MC-Unique: OBRlCI5eOK6IosZyVwgQNA-1
+Received: by mail-wr1-f72.google.com with SMTP id t13-20020adfe10d000000b0021bae3def1eso3731518wrz.3
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Jul 2022 04:26:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:organization:in-reply-to
+         :content-transfer-encoding;
+        bh=gysJ5OLsHMu4TIG7j1vcOsFr+CV/gmdUfz5sTZsCQeI=;
+        b=BK2JNZ5m49FZSKcmbH13sM5rLavJEaxhcPbKrDBlEyVeyr0V4g9wpsfpt2KpFJGD09
+         hk2r8c5UcC57OFlgdT/W93H/WEnYVfVyJO1NzfJK/zcSrwJr6fnBXkpWEkQ7YuGenEoj
+         h5EL7ai33RrqTUWNdC7S9/Oi9wLevVFTO009cj+m4e7WtcyJTwX+weo18+8lTthsx2+b
+         q6BUCAR64L1d/PhLgph5lIByGELLR/UmaqbR5+aTqRwYV38nTkQg8P2bg9PCy+HTv0CL
+         pViBU0XtxSWzjP+85wCVzYtEAMJ3RMzIJg6IhQhaMnw8QTFcXsjgM9KT9o1SryIuVUGx
+         lQiw==
+X-Gm-Message-State: AJIora+TTdK+NTgCCzHxE4iDvHoLOrcfZXKlLJO2UH1N4NFQFUw7/wY8
+        uZqZPLeV7t+JiHuit0MV6bj81oQGUZhIBgtcXtzXV7UzqVUYatoQnX/sbGO8XRAcDfva+y3NFZe
+        fgJ985DsGaXQLBaazbNmq
+X-Received: by 2002:a5d:6288:0:b0:21d:6c75:82 with SMTP id k8-20020a5d6288000000b0021d6c750082mr2870473wru.218.1657279582259;
+        Fri, 08 Jul 2022 04:26:22 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1tMgQ+oLwIiDj4/5npv648AeUcMBCTGWDC+qeOo4nVAZAd5xF+qI9gwsPYGbFe8dDYrww+5UA==
+X-Received: by 2002:a5d:6288:0:b0:21d:6c75:82 with SMTP id k8-20020a5d6288000000b0021d6c750082mr2870444wru.218.1657279582045;
+        Fri, 08 Jul 2022 04:26:22 -0700 (PDT)
+Received: from ?IPV6:2003:cb:c702:6300:c44f:789a:59b5:91e9? (p200300cbc7026300c44f789a59b591e9.dip0.t-ipconnect.de. [2003:cb:c702:6300:c44f:789a:59b5:91e9])
+        by smtp.gmail.com with ESMTPSA id b18-20020a05600c4e1200b003a2d47d3051sm2145967wmq.41.2022.07.08.04.26.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 08 Jul 2022 04:26:21 -0700 (PDT)
+Message-ID: <eddef4be-9c7b-78ae-7cb4-6dda7e20195c@redhat.com>
+Date:   Fri, 8 Jul 2022 13:26:20 +0200
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/2aJEc2Hu6P5l7_NRF=TJvZr";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v8 01/15] mm: rename is_pinnable_pages to
+ is_longterm_pinnable_pages
+Content-Language: en-US
+To:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
+Cc:     Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
+        willy@infradead.org, akpm@linux-foundation.org
+References: <20220707190349.9778-1-alex.sierra@amd.com>
+ <20220707190349.9778-2-alex.sierra@amd.com>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+In-Reply-To: <20220707190349.9778-2-alex.sierra@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/2aJEc2Hu6P5l7_NRF=TJvZr
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 07.07.22 21:03, Alex Sierra wrote:
+> is_pinnable_page() and folio_is_pinnable() were renamed to
+> is_longterm_pinnable_page() and folio_is_longterm_pinnable()
+> respectively. These functions are used in the FOLL_LONGTERM flag
+> context.
+> 
+> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+> ---
+>  include/linux/mm.h | 8 ++++----
+>  mm/gup.c           | 4 ++--
+>  mm/gup_test.c      | 2 +-
+>  mm/hugetlb.c       | 2 +-
+>  4 files changed, 8 insertions(+), 8 deletions(-)
+> 
 
-Hi all,
+Reviewed-by: David Hildenbrand <david@redhat.com>
 
-After merging the mm tree, today's linux-next build (x86_64 allmodconfig)
-failed like this:
 
-fs/xfs/xfs_notify_failure.c: In function 'xfs_dax_notify_ddev_failure':
-fs/xfs/xfs_notify_failure.c:126:44: error: passing argument 1 of 'xfs_alloc=
-_read_agf' from incompatible pointer type [-Werror=3Dincompatible-pointer-t=
-ypes]
-  126 |                 error =3D xfs_alloc_read_agf(mp, tp, agno, 0, &agf_=
-bp);
-      |                                            ^~
-      |                                            |
-      |                                            struct xfs_mount *
-In file included from fs/xfs/xfs_notify_failure.c:12:
-fs/xfs/libxfs/xfs_alloc.h:173:42: note: expected 'struct xfs_perag *' but a=
-rgument is of type 'struct xfs_mount *'
-  173 | int xfs_alloc_read_agf(struct xfs_perag *pag, struct xfs_trans *tp,=
- int flags,
-      |                        ~~~~~~~~~~~~~~~~~~^~~
-fs/xfs/xfs_notify_failure.c:126:25: error: too many arguments to function '=
-xfs_alloc_read_agf'
-  126 |                 error =3D xfs_alloc_read_agf(mp, tp, agno, 0, &agf_=
-bp);
-      |                         ^~~~~~~~~~~~~~~~~~
-In file included from fs/xfs/xfs_notify_failure.c:12:
-fs/xfs/libxfs/xfs_alloc.h:173:5: note: declared here
-  173 | int xfs_alloc_read_agf(struct xfs_perag *pag, struct xfs_trans *tp,=
- int flags,
-      |     ^~~~~~~~~~~~~~~~~~
-cc1: all warnings being treated as errors
+-- 
+Thanks,
 
-Caused by commit
+David / dhildenb
 
-  469a9c74c119 ("xfs: implement ->notify_failure() for XFS")
-
-interacting with commit
-
-  c4829aba9c8d ("xfs: pass perag to xfs_alloc_read_agf()")
-
-from the xfs tree.
-
-I have applied the following merge fix patch.
-
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Fri, 8 Jul 2022 19:11:56 +1000
-Subject: [PATCH] fix up for "xfs: pass perag to xfs_alloc_read_agf()"
-
-interacting with "xfs: implement ->notify_failure() for XFS"
-
-Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
----
- fs/xfs/xfs_notify_failure.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-index aa8dc27c599c..f3c62c19475e 100644
---- a/fs/xfs/xfs_notify_failure.c
-+++ b/fs/xfs/xfs_notify_failure.c
-@@ -18,6 +18,7 @@
- #include "xfs_rmap_btree.h"
- #include "xfs_rtalloc.h"
- #include "xfs_trans.h"
-+#include "xfs_ag.h"
-=20
- #include <linux/mm.h>
- #include <linux/dax.h>
-@@ -122,8 +123,10 @@ xfs_dax_notify_ddev_failure(
- 		struct failure_info	notify;
- 		struct xfs_agf		*agf;
- 		xfs_agblock_t		agend;
-+		struct xfs_perag	*pag;
-=20
--		error =3D xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-+		pag =3D xfs_perag_get(mp, agno);
-+		error =3D xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
- 		if (error)
- 			break;
-=20
---=20
-2.35.1
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/2aJEc2Hu6P5l7_NRF=TJvZr
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmLH/IUACgkQAVBC80lX
-0GzAwQf/QDQ41wvuFrkD+Cj1zDeDdse7zWLF1H+rIWgpT0Z6KK1f44T7Vv2tBkhW
-l0ewa1BASdBZCz68xI6etd74uXQFNCqbs1lx4byHM+ek7wY3S7EtxPLkz58M2RYC
-jfn9eUpDZ8mrBgJg09svExezX+0vMsDSYB76ayUuot6r6gSlHEVrdDzZXaz/kSZs
-d0WqaCfJ5YqGjWryKQCisIo+Ju9vGylymP01jgu/8/NnhS26VhECc9RF8luENsLI
-3xwbPjFGl52qLsfNe1W1SViiYNatcv2nD6pTTl/KpaiQqup6DrzugGD0yFTufFy9
-1VgSfxY10mzAPv4l4us0prF1FZuS+A==
-=iafo
------END PGP SIGNATURE-----
-
---Sig_/2aJEc2Hu6P5l7_NRF=TJvZr--
