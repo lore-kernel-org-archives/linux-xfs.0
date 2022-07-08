@@ -2,256 +2,242 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A0B8C43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 04:27:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA156C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 04:31:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236790AbiGHE07 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 00:26:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60110 "EHLO
+        id S232993AbiGHEbD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jul 2022 00:31:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236655AbiGHE07 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 00:26:59 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0A37D27B37
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 21:26:58 -0700 (PDT)
+        with ESMTP id S229957AbiGHEbC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 00:31:02 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 395EC21258
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 21:31:01 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 9F2EF10E7C3A;
-        Fri,  8 Jul 2022 14:26:55 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 3EF4462C3BD;
+        Fri,  8 Jul 2022 14:31:00 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1o9fZt-00FtJW-CV; Fri, 08 Jul 2022 14:26:53 +1000
-Date:   Fri, 8 Jul 2022 14:26:53 +1000
+        id 1o9fdq-00FtPs-UN; Fri, 08 Jul 2022 14:30:58 +1000
+Date:   Fri, 8 Jul 2022 14:30:58 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>, hch@lst.de, oliver.sang@intel.com
-Subject: Re: [PATCH] xfs: fix use-after-free in xattr node block inactivation
-Message-ID: <20220708042653.GQ227878@dread.disaster.area>
-References: <YsdcZY8KtyFmPdmS@magnolia>
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+Subject: Re: [PATCH 2/3] xfs: make inode attribute forks a permanent part of
+ struct xfs_inode
+Message-ID: <20220708043058.GR227878@dread.disaster.area>
+References: <165705897408.2826746.14673631830829415034.stgit@magnolia>
+ <165705898555.2826746.14913566803667615290.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YsdcZY8KtyFmPdmS@magnolia>
+In-Reply-To: <165705898555.2826746.14913566803667615290.stgit@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62c7b211
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62c7b304
         a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=QyXUC8HyAAAA:8
-        a=7-415B0cAAAA:8 a=MLm4_iqMXJw3LN40TLEA:9 a=CjuIK1q_8ugA:10
+        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=z5bq4YqQdTx5g9xxtc0A:9 a=CjuIK1q_8ugA:10
         a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 07, 2022 at 03:21:25PM -0700, Darrick J. Wong wrote:
+On Tue, Jul 05, 2022 at 03:09:45PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> The kernel build robot reported a UAF error while running xfs/433
-> (edited somewhat for brevity):
+> Syzkaller reported a UAF bug a while back:
 > 
->  BUG: KASAN: use-after-free in xfs_attr3_node_inactive (fs/xfs/xfs_attr_inactive.c:214) xfs
->  Read of size 4 at addr ffff88820ac2bd44 by task kworker/0:2/139
+> ==================================================================
+> BUG: KASAN: use-after-free in xfs_ilock_attr_map_shared+0xe3/0xf6 fs/xfs/xfs_inode.c:127
+> Read of size 4 at addr ffff88802cec919c by task syz-executor262/2958
 > 
->  CPU: 0 PID: 139 Comm: kworker/0:2 Tainted: G S                5.19.0-rc2-00004-g7cf2b0f9611b #1
->  Hardware name: Hewlett-Packard p6-1451cx/2ADA, BIOS 8.15 02/05/2013
->  Workqueue: xfs-inodegc/sdb4 xfs_inodegc_worker [xfs]
->  Call Trace:
->   <TASK>
->  dump_stack_lvl (lib/dump_stack.c:107 (discriminator 1))
->  print_address_description+0x1f/0x200
->  print_report.cold (mm/kasan/report.c:430)
->  kasan_report (mm/kasan/report.c:162 mm/kasan/report.c:493)
->  xfs_attr3_node_inactive (fs/xfs/xfs_attr_inactive.c:214) xfs
->  xfs_attr3_root_inactive (fs/xfs/xfs_attr_inactive.c:296) xfs
->  xfs_attr_inactive (fs/xfs/xfs_attr_inactive.c:371) xfs
->  xfs_inactive (fs/xfs/xfs_inode.c:1781) xfs
->  xfs_inodegc_worker (fs/xfs/xfs_icache.c:1837 fs/xfs/xfs_icache.c:1860) xfs
->  process_one_work
->  worker_thread
->  kthread
->  ret_from_fork
->   </TASK>
+> CPU: 2 PID: 2958 Comm: syz-executor262 Not tainted
+> 5.15.0-0.30.3-20220406_1406 #3
+> Hardware name: Red Hat KVM, BIOS 1.13.0-2.module+el8.3.0+7860+a7792d29
+> 04/01/2014
+> Call Trace:
+>  <TASK>
+>  __dump_stack lib/dump_stack.c:88 [inline]
+>  dump_stack_lvl+0x82/0xa9 lib/dump_stack.c:106
+>  print_address_description.constprop.9+0x21/0x2d5 mm/kasan/report.c:256
+>  __kasan_report mm/kasan/report.c:442 [inline]
+>  kasan_report.cold.14+0x7f/0x11b mm/kasan/report.c:459
+>  xfs_ilock_attr_map_shared+0xe3/0xf6 fs/xfs/xfs_inode.c:127
+>  xfs_attr_get+0x378/0x4c2 fs/xfs/libxfs/xfs_attr.c:159
+>  xfs_xattr_get+0xe3/0x150 fs/xfs/xfs_xattr.c:36
+>  __vfs_getxattr+0xdf/0x13d fs/xattr.c:399
+>  cap_inode_need_killpriv+0x41/0x5d security/commoncap.c:300
+>  security_inode_need_killpriv+0x4c/0x97 security/security.c:1408
+>  dentry_needs_remove_privs.part.28+0x21/0x63 fs/inode.c:1912
+>  dentry_needs_remove_privs+0x80/0x9e fs/inode.c:1908
+>  do_truncate+0xc3/0x1e0 fs/open.c:56
+>  handle_truncate fs/namei.c:3084 [inline]
+>  do_open fs/namei.c:3432 [inline]
+>  path_openat+0x30ab/0x396d fs/namei.c:3561
+>  do_filp_open+0x1c4/0x290 fs/namei.c:3588
+>  do_sys_openat2+0x60d/0x98c fs/open.c:1212
+>  do_sys_open+0xcf/0x13c fs/open.c:1228
+>  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+>  do_syscall_64+0x3a/0x7e arch/x86/entry/common.c:80
+>  entry_SYSCALL_64_after_hwframe+0x44/0x0
+> RIP: 0033:0x7f7ef4bb753d
+> Code: 00 c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48 89 f8 48 89 f7 48
+> 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73
+> 01 c3 48 8b 0d 1b 79 2c 00 f7 d8 64 89 01 48
+> RSP: 002b:00007f7ef52c2ed8 EFLAGS: 00000246 ORIG_RAX: 0000000000000055
+> RAX: ffffffffffffffda RBX: 0000000000404148 RCX: 00007f7ef4bb753d
+> RDX: 00007f7ef4bb753d RSI: 0000000000000000 RDI: 0000000020004fc0
+> RBP: 0000000000404140 R08: 0000000000000000 R09: 0000000000000000
+> R10: 0000000000000000 R11: 0000000000000246 R12: 0030656c69662f2e
+> R13: 00007ffd794db37f R14: 00007ffd794db470 R15: 00007f7ef52c2fc0
+>  </TASK>
 > 
->  Allocated by task 139:
->  kasan_save_stack (mm/kasan/common.c:39)
->  __kasan_slab_alloc (mm/kasan/common.c:45 mm/kasan/common.c:436 mm/kasan/common.c:469)
->  kmem_cache_alloc (mm/slab.h:750 mm/slub.c:3214 mm/slub.c:3222 mm/slub.c:3229 mm/slub.c:3239)
->  _xfs_buf_alloc (include/linux/instrumented.h:86 include/linux/atomic/atomic-instrumented.h:41 fs/xfs/xfs_buf.c:232) xfs
->  xfs_buf_get_map (fs/xfs/xfs_buf.c:660) xfs
->  xfs_buf_read_map (fs/xfs/xfs_buf.c:777) xfs
->  xfs_trans_read_buf_map (fs/xfs/xfs_trans_buf.c:289) xfs
->  xfs_da_read_buf (fs/xfs/libxfs/xfs_da_btree.c:2652) xfs
->  xfs_da3_node_read (fs/xfs/libxfs/xfs_da_btree.c:392) xfs
->  xfs_attr3_root_inactive (fs/xfs/xfs_attr_inactive.c:272) xfs
->  xfs_attr_inactive (fs/xfs/xfs_attr_inactive.c:371) xfs
->  xfs_inactive (fs/xfs/xfs_inode.c:1781) xfs
->  xfs_inodegc_worker (fs/xfs/xfs_icache.c:1837 fs/xfs/xfs_icache.c:1860) xfs
->  process_one_work
->  worker_thread
->  kthread
->  ret_from_fork
+> Allocated by task 2953:
+>  kasan_save_stack+0x19/0x38 mm/kasan/common.c:38
+>  kasan_set_track mm/kasan/common.c:46 [inline]
+>  set_alloc_info mm/kasan/common.c:434 [inline]
+>  __kasan_slab_alloc+0x68/0x7c mm/kasan/common.c:467
+>  kasan_slab_alloc include/linux/kasan.h:254 [inline]
+>  slab_post_alloc_hook mm/slab.h:519 [inline]
+>  slab_alloc_node mm/slub.c:3213 [inline]
+>  slab_alloc mm/slub.c:3221 [inline]
+>  kmem_cache_alloc+0x11b/0x3eb mm/slub.c:3226
+>  kmem_cache_zalloc include/linux/slab.h:711 [inline]
+>  xfs_ifork_alloc+0x25/0xa2 fs/xfs/libxfs/xfs_inode_fork.c:287
+>  xfs_bmap_add_attrfork+0x3f2/0x9b1 fs/xfs/libxfs/xfs_bmap.c:1098
+>  xfs_attr_set+0xe38/0x12a7 fs/xfs/libxfs/xfs_attr.c:746
+>  xfs_xattr_set+0xeb/0x1a9 fs/xfs/xfs_xattr.c:59
+>  __vfs_setxattr+0x11b/0x177 fs/xattr.c:180
+>  __vfs_setxattr_noperm+0x128/0x5e0 fs/xattr.c:214
+>  __vfs_setxattr_locked+0x1d4/0x258 fs/xattr.c:275
+>  vfs_setxattr+0x154/0x33d fs/xattr.c:301
+>  setxattr+0x216/0x29f fs/xattr.c:575
+>  __do_sys_fsetxattr fs/xattr.c:632 [inline]
+>  __se_sys_fsetxattr fs/xattr.c:621 [inline]
+>  __x64_sys_fsetxattr+0x243/0x2fe fs/xattr.c:621
+>  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+>  do_syscall_64+0x3a/0x7e arch/x86/entry/common.c:80
+>  entry_SYSCALL_64_after_hwframe+0x44/0x0
 > 
->  Freed by task 139:
->  kasan_save_stack (mm/kasan/common.c:39)
->  kasan_set_track (mm/kasan/common.c:45)
->  kasan_set_free_info (mm/kasan/generic.c:372)
->  __kasan_slab_free (mm/kasan/common.c:368 mm/kasan/common.c:328 mm/kasan/common.c:374)
->  kmem_cache_free (mm/slub.c:1753 mm/slub.c:3507 mm/slub.c:3524)
->  xfs_buf_rele (fs/xfs/xfs_buf.c:1040) xfs
->  xfs_attr3_node_inactive (fs/xfs/xfs_attr_inactive.c:210) xfs
->  xfs_attr3_root_inactive (fs/xfs/xfs_attr_inactive.c:296) xfs
->  xfs_attr_inactive (fs/xfs/xfs_attr_inactive.c:371) xfs
->  xfs_inactive (fs/xfs/xfs_inode.c:1781) xfs
->  xfs_inodegc_worker (fs/xfs/xfs_icache.c:1837 fs/xfs/xfs_icache.c:1860) xfs
->  process_one_work
->  worker_thread
->  kthread
->  ret_from_fork
+> Freed by task 2949:
+>  kasan_save_stack+0x19/0x38 mm/kasan/common.c:38
+>  kasan_set_track+0x1c/0x21 mm/kasan/common.c:46
+>  kasan_set_free_info+0x20/0x30 mm/kasan/generic.c:360
+>  ____kasan_slab_free mm/kasan/common.c:366 [inline]
+>  ____kasan_slab_free mm/kasan/common.c:328 [inline]
+>  __kasan_slab_free+0xe2/0x10e mm/kasan/common.c:374
+>  kasan_slab_free include/linux/kasan.h:230 [inline]
+>  slab_free_hook mm/slub.c:1700 [inline]
+>  slab_free_freelist_hook mm/slub.c:1726 [inline]
+>  slab_free mm/slub.c:3492 [inline]
+>  kmem_cache_free+0xdc/0x3ce mm/slub.c:3508
+>  xfs_attr_fork_remove+0x8d/0x132 fs/xfs/libxfs/xfs_attr_leaf.c:773
+>  xfs_attr_sf_removename+0x5dd/0x6cb fs/xfs/libxfs/xfs_attr_leaf.c:822
+>  xfs_attr_remove_iter+0x68c/0x805 fs/xfs/libxfs/xfs_attr.c:1413
+>  xfs_attr_remove_args+0xb1/0x10d fs/xfs/libxfs/xfs_attr.c:684
+>  xfs_attr_set+0xf1e/0x12a7 fs/xfs/libxfs/xfs_attr.c:802
+>  xfs_xattr_set+0xeb/0x1a9 fs/xfs/xfs_xattr.c:59
+>  __vfs_removexattr+0x106/0x16a fs/xattr.c:468
+>  cap_inode_killpriv+0x24/0x47 security/commoncap.c:324
+>  security_inode_killpriv+0x54/0xa1 security/security.c:1414
+>  setattr_prepare+0x1a6/0x897 fs/attr.c:146
+>  xfs_vn_change_ok+0x111/0x15e fs/xfs/xfs_iops.c:682
+>  xfs_vn_setattr_size+0x5f/0x15a fs/xfs/xfs_iops.c:1065
+>  xfs_vn_setattr+0x125/0x2ad fs/xfs/xfs_iops.c:1093
+>  notify_change+0xae5/0x10a1 fs/attr.c:410
+>  do_truncate+0x134/0x1e0 fs/open.c:64
+>  handle_truncate fs/namei.c:3084 [inline]
+>  do_open fs/namei.c:3432 [inline]
+>  path_openat+0x30ab/0x396d fs/namei.c:3561
+>  do_filp_open+0x1c4/0x290 fs/namei.c:3588
+>  do_sys_openat2+0x60d/0x98c fs/open.c:1212
+>  do_sys_open+0xcf/0x13c fs/open.c:1228
+>  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+>  do_syscall_64+0x3a/0x7e arch/x86/entry/common.c:80
+>  entry_SYSCALL_64_after_hwframe+0x44/0x0
 > 
-> I reproduced this for my own satisfaction, and got the same report,
-> along with an extra morsel:
+> The buggy address belongs to the object at ffff88802cec9188
+>  which belongs to the cache xfs_ifork of size 40
+> The buggy address is located 20 bytes inside of
+>  40-byte region [ffff88802cec9188, ffff88802cec91b0)
+> The buggy address belongs to the page:
+> page:00000000c3af36a1 refcount:1 mapcount:0 mapping:0000000000000000
+> index:0x0 pfn:0x2cec9
+> flags: 0xfffffc0000200(slab|node=0|zone=1|lastcpupid=0x1fffff)
+> raw: 000fffffc0000200 ffffea00009d2580 0000000600000006 ffff88801a9ffc80
+> raw: 0000000000000000 0000000080490049 00000001ffffffff 0000000000000000
+> page dumped because: kasan: bad access detected
 > 
->  The buggy address belongs to the object at ffff88802103a800
->   which belongs to the cache xfs_buf of size 432
->  The buggy address is located 396 bytes inside of
->   432-byte region [ffff88802103a800, ffff88802103a9b0)
+> Memory state around the buggy address:
+>  ffff88802cec9080: fb fb fb fc fc fa fb fb fb fb fc fc fb fb fb fb
+>  ffff88802cec9100: fb fc fc fb fb fb fb fb fc fc fb fb fb fb fb fc
+> >ffff88802cec9180: fc fa fb fb fb fb fc fc fa fb fb fb fb fc fc fb
+>                             ^
+>  ffff88802cec9200: fb fb fb fb fc fc fb fb fb fb fb fc fc fb fb fb
+>  ffff88802cec9280: fb fb fc fc fa fb fb fb fb fc fc fa fb fb fb fb
+> ==================================================================
 > 
-> I tracked this code down to:
+> The root cause of this bug is the unlocked access to xfs_inode.i_afp
+> from the getxattr code paths while trying to determine which ILOCK mode
+> to use to stabilize the xattr data.  Unfortunately, the VFS does not
+> acquire i_rwsem when vfs_getxattr (or listxattr) call into the
+> filesystem, which means that getxattr can race with a removexattr that's
+> tearing down the attr fork and crash:
 > 
-> 	error = xfs_trans_get_buf(*trans, mp->m_ddev_targp,
-> 			child_blkno,
-> 			XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0,
-> 			&child_bp);
-> 	if (error)
-> 		return error;
-> 	error = bp->b_error;
+> xfs_attr_set:                          xfs_attr_get:
+> xfs_attr_fork_remove:                  xfs_ilock_attr_map_shared:
 > 
-> That doesn't look right -- I think this should be dereferencing
-> child_bp, not bp.
-
-It shouldn't even be there. If xfs_trans_get_buf() returns a buffer,
-it should not have a pending error on it at all. i.e. it's supposed
-to return either an error or a buffer handle that is ready for use.
-
-> Looking through the codebase history, I think this
-> was added by commit 2911edb653b9 ("xfs: remove the mappedbno argument to
-> xfs_da_get_buf"), which replaced a call to xfs_da_get_buf with the
-> current call to xfs_trans_get_buf.  Not sure why we trans_brelse'd @bp
-> earlier in the function, but I'm guessing it's to avoid pinning too many
-> buffers in memory while we inactivate the bottom of the attr tree.
-> Hence we now have to get the buffer back.
-
-That whole loop just looks wrong.
-
-WE do:
-
-xfs_attr3_node_inactive(bp)
-{
-
-	parent_blkno = xfs_buf_daddr(bp);
-	....
-	child_fsb = be32_to_cpu(ichdr.btree[0].before);
-	xfs_trans_brelse(*trans, bp);   /* no locks for later trans */
-
-	for (0 < i < ichdr.count) {
-		xfs_da3_node_read_mapped(child_fsb, &child_bp)
-
-		child_blkno = xfs_buf_daddr(child_bp);
-
-		if (child is node) {
-			/* recurse! */
-			xfs_attr3_node_inactive(child_bp);
-			/* released child_bp */
-		}
-		....
-
-		/* re-get child_bp */
-		xfs_trans_get_buf(child_blkno, &child_bp);
-
-		/* whacky bp reference here */
-
-		xfs_trans_binval(child_bp)
-
-		/* read next child_bp */
-		xfs_da3_node_read_mapped(parent_blkno, &bp)
-		child_fsb = be32_to_cpu(phdr.btree[i + 1].before);
-		xfs_trans_brelse(*trans, bp);
-	}
-
-So, this is dropping parent buffers so they aren't held over
-the recursion down the sub tree. I can't see why this would be done for
-lock ordering reasons - parent->child is the only ordering that
-happens in this recursion, and only the direct ancestors of any
-given child node are locked at any point in time, which is the same
-a happens with a path walk....
-
-Oh, right.
-
-It's the fact that it can only invalidate a single child buffer
-at a time and it will only do one per transaction. Hence it needs to
-do a re-read of the parent buffer rather than
-xfs_trans_bhold() it because the code is depth-first recursive and
-so it has no idea of how deep the child will need to go (or, for
-that matter, how deep we already are).
-
-Whoever wrote this didn't, for some reason, use the da btree path
-tracking (i.e. a struct xfs_da_state) to keep track of all the
-parent buffers of the current child being invalidated. That would
-make this code a whole lot simpler and neater....
-
-Ugh. Nasty, nasty code.
-
-> I /think/ this was supposed to check child_bp->b_error and fail the rest
-> of the invalidation if child_bp had experienced any kind of IO or
-> corruption error.  I bet the xfs_da3_node_read earlier in the loop will
-> catch most cases of incoming on-disk corruption which makes this check
-> mostly moot unless someone corrupts the buffer and the AIL or someone
-> happens to try to push it out to disk while the buffer's unlocked.
-
-In which case, I think we probably already should have shut down and
-errored out.
-
-> However, this is clearly a UAF bug, so fix this.
+> xfs_idestroy_fork(ip->i_afp);
+> kmem_cache_free(xfs_ifork_cache, ip->i_afp);
 > 
-> Cc: hch@lst.de
-> Reported-by: kernel test robot <oliver.sang@intel.com>
-> Fixes: 2911edb653b9 ("xfs: remove the mappedbno argument to xfs_da_get_buf")
+>                                        if (ip->i_afp &&
+> 
+> ip->i_afp = NULL;
+> 
+>                                            xfs_need_iread_extents(ip->i_afp))
+>                                        <KABOOM>
+> 
+> ip->i_forkoff = 0;
+> 
+> Regrettably, the VFS is much more lax about i_rwsem and getxattr than
+> is immediately obvious -- not only does it not guarantee that we hold
+> i_rwsem, it actually doesn't guarantee that we *don't* hold it either.
+> The getxattr system call won't acquire the lock before calling XFS, but
+> the file capabilities code calls getxattr with and without i_rwsem held
+> to determine if the "security.capabilities" xattr is set on the file.
+> 
+> Fixing the VFS locking requires a treewide investigation into every code
+> path that could touch an xattr and what i_rwsem state it expects or sets
+> up.  That could take years or even prove impossible; fortunately, we
+> can fix this UAF problem inside XFS.
+> 
+> An earlier version of this patch used smp_wmb in xfs_attr_fork_remove to
+> ensure that i_forkoff is always zeroed before i_afp is set to null and
+> changed the read paths to use smp_rmb before accessing i_forkoff and
+> i_afp, which avoided these UAF problems.  However, the patch author was
+> too busy dealing with other problems in the meantime, and by the time he
+> came back to this issue, the situation had changed a bit.
+> 
+> On a modern system with selinux, each inode will always have at least
+> one xattr for the selinux label, so it doesn't make much sense to keep
+> incurring the extra pointer dereference.  Furthermore, Allison's
+> upcoming parent pointer patchset will also cause nearly every inode in
+> the filesystem to have extended attributes.  Therefore, make the inode
+> attribute fork structure part of struct xfs_inode, at a cost of 40 more
+> bytes.
+> 
+> This patch adds a clunky if_present field where necessary to maintain
+> the existing logic of xattr fork null pointer testing in the existing
+> codebase.  The next patch switches the logic over to XFS_IFORK_Q and it
+> all goes away.
+> 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_attr_inactive.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-> index 0e83cab9cdde..e892040eb86b 100644
-> --- a/fs/xfs/xfs_attr_inactive.c
-> +++ b/fs/xfs/xfs_attr_inactive.c
-> @@ -158,6 +158,7 @@ xfs_attr3_node_inactive(
->  	}
->  	child_fsb = be32_to_cpu(ichdr.btree[0].before);
->  	xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
-> +	bp = NULL;
->  
->  	/*
->  	 * If this is the node level just above the leaves, simply loop
-> @@ -211,7 +212,7 @@ xfs_attr3_node_inactive(
->  				&child_bp);
->  		if (error)
->  			return error;
-> -		error = bp->b_error;
-> +		error = child_bp->b_error;
->  		if (error) {
->  			xfs_trans_brelse(*trans, child_bp);
->  			return error;
 
-I'd just remove the child_bp error checking altogether - if there
-was an IOi or corruption error on it, that shouldn't keep us from
-invalidating it to free the underlying space. We're trashing the
-contents, so who cares if the contents is already trashed?
+After thinking about this for a little while, the little nits and
+cleanups I was wondering about aren't worth holding this up.
 
-Also, you probably need to set bp = NULL after the
-xfs_trans_brelse() call at the bottom of the loop....
-
-Cheers,
-
-Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
