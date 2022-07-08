@@ -2,188 +2,120 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C302CCCA47B
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 17:02:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2C24C43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 17:05:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238641AbiGHRCL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 13:02:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45560 "EHLO
+        id S237944AbiGHRFR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jul 2022 13:05:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238738AbiGHRCJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 13:02:09 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4D8220F50;
-        Fri,  8 Jul 2022 10:02:07 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A0F50B828CD;
-        Fri,  8 Jul 2022 17:02:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59846C341C0;
-        Fri,  8 Jul 2022 17:02:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657299725;
-        bh=ilzu6VjLz15UickfqEihDFte/iyPuzgTZ3rjpYQ1C04=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JMaqz419JxgDMHw0/OPK0TuA8sgRmtA5+U/mYCWS6yi+PgloUpEbTKpXnVxsHoNn6
-         gV+kVHC/ERndEV5sE388tiY+zInbvMwQx6h/SiKwxY5RSE1Np00KYWpAiy0bp2IadH
-         VYbGyaf+Vi4K2QOH6OIBlQtG7oY/nfoC25ZWkcqVk+xowqZur6sSOGZLbGynqaDvMY
-         QLwRin+w8gSh9mtyph/yfBGh8fxtHqDzKmrQCfP+V44lrSute1agralIsWMP2g85SE
-         dEamsyM8C5YYpjj1m1oHfrxwD/PDxZafcxJenzZAYWsFwigrfSpLiAcBdSorJjV1oo
-         Mn8MQy4byexXw==
-Date:   Fri, 8 Jul 2022 10:02:04 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     guaneryu@gmail.com, zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/2] xfs: make sure that we handle empty xattr leaf
- blocks ok
-Message-ID: <YshjDMa4kXfrqY/Y@magnolia>
-References: <165705854325.2821854.10317059026052442189.stgit@magnolia>
- <165705854877.2821854.7070105861462675249.stgit@magnolia>
+        with ESMTP id S237691AbiGHRFQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 13:05:16 -0400
+Received: from smtp-fw-80007.amazon.com (smtp-fw-80007.amazon.com [99.78.197.218])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE3706050E;
+        Fri,  8 Jul 2022 10:05:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
+  t=1657299912; x=1688835912;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=ocLp2g7HvWeV/+zNIJuX9Ttd/BemGYzF52YFR+8iCz0=;
+  b=Retikdnw2ykVBIdBOM4g6nhOUchM8Xwc9zifdc2mJUQVyu4EP+o40PWk
+   MQigecLpFR8jsPFmiuEdJBa5QvMCsaj9BBv7zOl2EW4Yvi7qslvjoqSvS
+   Q+D8p467T1shWkxYmPC3ZnvLqT8LAhcYXZQwVoWdIoqMMAMMq480aeuT2
+   k=;
+X-IronPort-AV: E=Sophos;i="5.92,256,1650931200"; 
+   d="scan'208";a="106314054"
+Received: from pdx4-co-svc-p1-lb2-vlan3.amazon.com (HELO email-inbound-relay-iad-1a-828bd003.us-east-1.amazon.com) ([10.25.36.214])
+  by smtp-border-fw-80007.pdx80.corp.amazon.com with ESMTP; 08 Jul 2022 17:04:55 +0000
+Received: from EX13MTAUWB001.ant.amazon.com (iad12-ws-svc-p26-lb9-vlan2.iad.amazon.com [10.40.163.34])
+        by email-inbound-relay-iad-1a-828bd003.us-east-1.amazon.com (Postfix) with ESMTPS id 9A42C8100F;
+        Fri,  8 Jul 2022 17:04:52 +0000 (UTC)
+Received: from EX19D004ANA001.ant.amazon.com (10.37.240.138) by
+ EX13MTAUWB001.ant.amazon.com (10.43.161.207) with Microsoft SMTP Server (TLS)
+ id 15.0.1497.36; Fri, 8 Jul 2022 17:04:51 +0000
+Received: from 88665a182662.ant.amazon.com (10.43.162.55) by
+ EX19D004ANA001.ant.amazon.com (10.37.240.138) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.1118.9;
+ Fri, 8 Jul 2022 17:04:48 +0000
+From:   Kuniyuki Iwashima <kuniyu@amazon.com>
+To:     <djwong@kernel.org>
+CC:     <amir73il@gmail.com>, <ayudutta@amazon.com>, <kkexu@amazon.com>,
+        <kuniyu@amazon.com>, <linux-xfs@vger.kernel.org>,
+        <lrumancik@google.com>, <pbonzini@redhat.com>,
+        <sandeen@redhat.com>, <stable@vger.kernel.org>
+Subject: Re: [PATCH stable 5.15] xfs: remove incorrect ASSERT in xfs_rename
+Date:   Fri, 8 Jul 2022 10:04:40 -0700
+Message-ID: <20220708170440.67583-1-kuniyu@amazon.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <YshgrEyqzF+rbi0c@magnolia>
+References: <YshgrEyqzF+rbi0c@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <165705854877.2821854.7070105861462675249.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.43.162.55]
+X-ClientProxiedBy: EX13D23UWA004.ant.amazon.com (10.43.160.72) To
+ EX19D004ANA001.ant.amazon.com (10.37.240.138)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+From:   "Darrick J. Wong" <djwong@kernel.org>
+Date:   Fri, 8 Jul 2022 09:51:56 -0700
+> On Fri, Jul 08, 2022 at 09:36:32AM -0700, Kuniyuki Iwashima wrote:
+> > From:   "Darrick J. Wong" <djwong@kernel.org>
+> > Date:   Fri, 8 Jul 2022 08:55:57 -0700
+> > > On Fri, Jul 08, 2022 at 08:54:13AM -0700, Darrick J. Wong wrote:
+> > > > On Thu, Jul 07, 2022 at 03:58:35PM -0700, Kuniyuki Iwashima wrote:
+> > > > > From: Eric Sandeen <sandeen@redhat.com>
+> > > > > 
+> > > > > commit e445976537ad139162980bee015b7364e5b64fff upstream.
+> > > > > 
+> > > > > Ayushman Dutta reported our 5.10 kernel hit the warning.  It was because
+> > > > > the original commit misses a Fixes tag and was not backported to the stable
+> > > > > tree.  The fix is merged in 5.16, so please backport it to 5.15 first.
+> > > > > 
+> > > > > This ASSERT in xfs_rename is a) incorrect, because
+> > > > > (RENAME_WHITEOUT|RENAME_NOREPLACE) is a valid combination, and
+> > > > > b) unnecessary, because actual invalid flag combinations are already
+> > > > > handled at the vfs level in do_renameat2() before we get called.
+> > > > > So, remove it.
+> > > > > 
+> > > > > Reported-by: Paolo Bonzini <pbonzini@redhat.com>
+> > > > > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > Fixes: 7dcf5c3e4527 ("xfs: add RENAME_WHITEOUT support")
+> > > > > Reported-by: Ayushman Dutta <ayudutta@amazon.com>
+> > > > > Signed-off-by: Kuniyuki Iwashima <kuniyu@amazon.com>
+> > > > 
+> > > > Looks good to me, but you really ought to send 5.10 patches to the 5.10
+> > > > XFS maintainer (Amir, now cc'd).  (Yes, this is a recent change.) ;)
+> > > 
+> > > ...and of course the first thing that happens is that I mix up the 5.10
+> > > and 5.15 patches.
+> > > 
+> > > Amir is the 5.10 maintainer, Leah is the 5.15 maintainer.  Sorry about
+> > > the mixup.  /me pours himself a third(!) cup of coffee.
+> > 
+> > Thank you for taking a look!
+> > 
+> > And sorry that I'm not familiar with xfs workflow and didn't know each
+> > version has dedicated maintainers.
+> 
+> It's a recent change, because I wasn't keeping up with tending to six
+> LTS trees /and/ upstream /and/ feature development.
 
-Make sure that the kernel can handle empty xattr leaf blocks properly,
-since we've screwed this up enough times.
+It must have been really hard, that makes sense.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
-v1.1: adopt maintainer's refactoring suggestions, skip v4 filesystems
-from the start, and check that we really get an attr leaf block.
 
-v1.2: eliminate dead code
----
- tests/xfs/845 |  117 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 117 insertions(+)
- create mode 100755 tests/xfs/845
+> > Is there a doc like Documentation/process/maintainer-netdev.rst as both of
+> > Amir and Leah seem not listed in the xfs entry of MAINTAINERS...?
+> 
+> They're listed in MAINTAINERS in the 5.10 and 5.15 trees, respectively.
+> That's also a very recent change (within the last week, I think).
 
-diff --git a/tests/xfs/845 b/tests/xfs/845
-new file mode 100755
-index 00000000..c142fba1
---- /dev/null
-+++ b/tests/xfs/845
-@@ -0,0 +1,117 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 845
-+#
-+# Make sure that XFS can handle empty leaf xattr blocks correctly.  These
-+# blocks can appear in files as a result of system crashes in the middle of
-+# xattr operations, which means that we /must/ handle them gracefully.
-+# Check that read and write verifiers won't trip, that the get/list/setxattr
-+# operations don't stumble over them, and that xfs_repair will offer to remove
-+# the entire xattr fork if the root xattr leaf block is empty.
-+#
-+# Regression test for kernel commit:
-+#
-+# af866926d865 ("xfs: empty xattr leaf header blocks are not corruption")
-+#
-+. ./common/preamble
-+_begin_fstest auto quick attr
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/attr
-+
-+# real QA test starts here
-+
-+_supported_fs xfs
-+_require_scratch
-+_require_scratch_xfs_crc # V4 is deprecated
-+_fixed_by_kernel_commit af866926d865 "xfs: empty xattr leaf header blocks are not corruption"
-+
-+_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-+cat $tmp.mkfs >> $seqres.full
-+source $tmp.mkfs
-+_scratch_mount
-+
-+$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 64k' $SCRATCH_MNT/largefile >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x58 0 $isize" $SCRATCH_MNT/smallfile >> $seqres.full
-+
-+smallfile_md5=$(_md5_checksum $SCRATCH_MNT/smallfile)
-+largefile_md5=$(_md5_checksum $SCRATCH_MNT/largefile)
-+
-+# Try to force the creation of a single leaf block in each of three files.
-+# The first one gets a local attr, the second a remote attr, and the third
-+# is left for scrub and repair to find.
-+touch $SCRATCH_MNT/e0
-+touch $SCRATCH_MNT/e1
-+touch $SCRATCH_MNT/e2
-+
-+$ATTR_PROG -s x $SCRATCH_MNT/e0 < $SCRATCH_MNT/smallfile >> $seqres.full
-+$ATTR_PROG -s x $SCRATCH_MNT/e1 < $SCRATCH_MNT/smallfile >> $seqres.full
-+$ATTR_PROG -s x $SCRATCH_MNT/e2 < $SCRATCH_MNT/smallfile >> $seqres.full
-+
-+e0_ino=$(stat -c '%i' $SCRATCH_MNT/e0)
-+e1_ino=$(stat -c '%i' $SCRATCH_MNT/e1)
-+e2_ino=$(stat -c '%i' $SCRATCH_MNT/e2)
-+
-+_scratch_unmount
-+
-+# We used to think that it wasn't possible for empty xattr leaf blocks to
-+# exist, but it turns out that setting a large xattr on a file that has no
-+# xattrs can race with a log flush and crash, which results in an empty
-+# leaf block being logged and recovered.  This is rather hard to trip, so we
-+# use xfs_db to turn a regular leaf block into an empty one.
-+make_empty_leaf() {
-+	local inum="$1"
-+
-+	echo "editing inode $inum" >> $seqres.full
-+
-+	magic=$(_scratch_xfs_get_metadata_field hdr.info.hdr.magic "inode $inum" "ablock 0")
-+	if [ "$magic" != "0x3bee" ]; then
-+		_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" -c print >> $seqres.full
-+		_fail "inode $inum ablock 0 is not a leaf block?"
-+	fi
-+
-+	base=$(_scratch_xfs_get_metadata_field "hdr.freemap[0].base" "inode $inum" "ablock 0")
-+
-+	_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" \
-+		-c "write -d hdr.count 0" \
-+		-c "write -d hdr.usedbytes 0" \
-+		-c "write -d hdr.firstused $dbsize" \
-+		-c "write -d hdr.freemap[0].size $((dbsize - base))" \
-+		-c print >> $seqres.full
-+}
-+
-+make_empty_leaf $e0_ino
-+make_empty_leaf $e1_ino
-+make_empty_leaf $e2_ino
-+
-+_scratch_mount
-+
-+# Check that listxattr/getxattr/removexattr do nothing.
-+$ATTR_PROG -l $SCRATCH_MNT/e0 2>&1 | _filter_scratch
-+$ATTR_PROG -g x $SCRATCH_MNT/e0 2>&1 | _filter_scratch
-+$ATTR_PROG -r x $SCRATCH_MNT/e0 2>&1 | _filter_scratch
-+
-+# Add a small attr to e0
-+$ATTR_PROG -s x $SCRATCH_MNT/e0 < $SCRATCH_MNT/smallfile > /dev/null
-+$ATTR_PROG -l $SCRATCH_MNT/e0 2>&1 | sed -e 's/\([0-9]*\) byte/XXX byte/g' | _filter_scratch
-+small_md5="$($GETFATTR_PROG -n user.x --absolute-names --only-values $SCRATCH_MNT/e0 | _md5_checksum)"
-+test "$small_md5" = "$smallfile_md5" || \
-+	echo "smallfile $smallfile_md5 does not match small attr $small_md5"
-+
-+# Add a large attr to e1
-+$ATTR_PROG -s x $SCRATCH_MNT/e1 < $SCRATCH_MNT/largefile > /dev/null
-+$ATTR_PROG -l $SCRATCH_MNT/e1 2>&1 | _filter_scratch
-+large_md5="$($GETFATTR_PROG -n user.x --absolute-names --only-values $SCRATCH_MNT/e1 | _md5_checksum)"
-+test "$large_md5" = "$largefile_md5" || \
-+	echo "largefile $largefile_md5 does not match large attr $large_md5"
-+
-+
-+# Leave e2 to try to trip the repair tools, since xfs_repair used to flag
-+# empty leaf blocks incorrectly too.
-+
-+# success, all done
-+status=0
-+exit
+Ah, I got it.  I'm sorry it was because I used the latest get_maintainer.pl
+only.  I'll check each branch's MAINTAINERS next time.
+
+Thank you!
