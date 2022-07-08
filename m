@@ -2,167 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DE77C43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 15:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F8C4C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 15:51:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238478AbiGHPrv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 11:47:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33198 "EHLO
+        id S238657AbiGHPvC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jul 2022 11:51:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238266AbiGHPru (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 11:47:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A7F792AE1F
-        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 08:47:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1657295268;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1x7w4B8KkRbbLPOBK5w5COBwCSETd53dAVljfr2ix5E=;
-        b=AGt5+DrXCRa2fH7/+QQKVHSDiUMbO6oBAvYgPXa/zBTpXlBFB+GfMqFT8otRf5eqvrvS4I
-        vQGmsZfZI70rN3CZxu5EKewVV7O+ZhFYe2NXNkMnVMQ7rDaM1PQGknVHwDzzIkY+AjuEY2
-        ou/w+psMNPWE1tJipN+40+L7RXJGWkQ=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-281-SzwTsDHNO1yW8tgxXjgabA-1; Fri, 08 Jul 2022 11:47:47 -0400
-X-MC-Unique: SzwTsDHNO1yW8tgxXjgabA-1
-Received: by mail-qk1-f197.google.com with SMTP id q184-20020a378ec1000000b006b14460be35so21515961qkd.22
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Jul 2022 08:47:47 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=1x7w4B8KkRbbLPOBK5w5COBwCSETd53dAVljfr2ix5E=;
-        b=gKwav4CLjdVTf5ulP2MpiVJvWGdev7EjY6/oZesp7WNuQGtd8huTgSwzln8i0bLLJt
-         I8AfNWXOXtEWPu3LFYir5UnRHAilYfln37NQDoL76CkUDQqQkBXBY1HJZx0Znx+3Gxud
-         EdreWNC50xuOmd0Y9CT+C9knsH7K5g9Yvt0mMaHtz6Zvz0IzqwJpg1cNyfPhaQRGKIIS
-         K9NvnnhqTzmDWETXTMfUQeb0zmSjYVB9UTUEUVQYsZ6HiLYNvICRVtDFCV0Y0DSoG04f
-         SVnoWDYp7C2C+zS+3798vDFf6gF/6nYi3E9mWZQax4CUBQnAyIgEd1Z7kV/lIjOn5sLb
-         mSwA==
-X-Gm-Message-State: AJIora/ytNK/bdbxlUI3UzpHF7eLBQlEypVeBLBNdho5KsxPPOLPjfWa
-        kRkNS9LZTV7CtxYrFX0hJhzp8m7dw6221uvrE6EQu273expLKnAKaN4VYf7uugADf0k6kVVnH5q
-        hFyoHpfpYhdVYkDtRDetf
-X-Received: by 2002:a05:620a:d54:b0:6b2:5a9b:ef2e with SMTP id o20-20020a05620a0d5400b006b25a9bef2emr2786424qkl.715.1657295267243;
-        Fri, 08 Jul 2022 08:47:47 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1vPSt5KNlOnkU/SYB+AC3XD5ZpJVVYDDOVQRKvwSOqEDp/UTr/LW6Cmrp/TMB0a4D22GJBoiQ==
-X-Received: by 2002:a05:620a:d54:b0:6b2:5a9b:ef2e with SMTP id o20-20020a05620a0d5400b006b25a9bef2emr2786410qkl.715.1657295266963;
-        Fri, 08 Jul 2022 08:47:46 -0700 (PDT)
-Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id y21-20020ac87095000000b0031b18d29864sm21940875qto.64.2022.07.08.08.47.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Jul 2022 08:47:46 -0700 (PDT)
-Date:   Fri, 8 Jul 2022 23:47:41 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs/288: skip repair -n when checking empty root
- leaf block behavior
-Message-ID: <20220708154741.elvskagzrsynbw4o@zlang-mailbox>
-References: <165705854325.2821854.10317059026052442189.stgit@magnolia>
- <165705855433.2821854.6003804324518144422.stgit@magnolia>
- <20220707122525.so6alaa63hdz3bbx@zlang-mailbox>
- <YschFMW4rVuQz9Mi@magnolia>
+        with ESMTP id S230335AbiGHPvB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 11:51:01 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F85967593
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 08:51:01 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EFDBC613E9
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 15:51:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49039C341C0;
+        Fri,  8 Jul 2022 15:51:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1657295460;
+        bh=8wc6aXFAg1cJIJUmlKMe4sNO6k1jvQleJDwswrN44P4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WlSxQf6/nhh6bomScduTekh9FAdHdccvJMW32NsH3eIK1d3QIuIjdJtrWviTjn/TK
+         9vG+iR41ttAygXjQBgFTh/E1opOog0GrAkUZcZX+w+9aBIP4phGKlwFCaaxf2zP0e7
+         uqjGxvcnoerGNaTsPlyZySf0hzi0uGCms8Ul75+gSNTmTegghMykusrcknbSiIoGsD
+         fJPZs/C61XNLXg77mxPIDV3HM71V4dXGAiMf7GDBlNZ+/IdzAQ5skmsIQqaBNO5h9I
+         pz2hI+wNQU5ACNBcwc287RzHbvOfSwUk3nOJr3b9c6i8eHVxRH8KRUJBfQX20jXk6z
+         Bc350OSOlW9fw==
+Date:   Fri, 8 Jul 2022 08:50:59 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Leah Rumancik <leah.rumancik@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5.15 CANDIDATE 0/4] xfs stable candidates for 5.15.y
+ (part 2)
+Message-ID: <YshSY9sXGg9Ox1cM@magnolia>
+References: <20220707223828.599185-1-leah.rumancik@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YschFMW4rVuQz9Mi@magnolia>
+In-Reply-To: <20220707223828.599185-1-leah.rumancik@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 07, 2022 at 11:08:20AM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 07, 2022 at 08:25:25PM +0800, Zorro Lang wrote:
-> > On Tue, Jul 05, 2022 at 03:02:34PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Update this test to reflect the (once again) corrected behavior of the
-> > > xattr leaf block verifiers.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  tests/xfs/288 |   32 +++++++++++++-------------------
-> > >  1 file changed, 13 insertions(+), 19 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/tests/xfs/288 b/tests/xfs/288
-> > > index e3d230e9..aa664a26 100755
-> > > --- a/tests/xfs/288
-> > > +++ b/tests/xfs/288
-> > > @@ -8,7 +8,7 @@
-> > >  # that leaf directly (as xfsprogs commit f714016).
-> > >  #
-> > >  . ./common/preamble
-> > > -_begin_fstest auto quick repair fuzzers
-> > > +_begin_fstest auto quick repair fuzzers attr
-> > >  
-> > >  # Import common functions.
-> > >  . ./common/filter
-> > > @@ -50,25 +50,19 @@ if [ "$count" != "0" ]; then
-> > >  	_notrun "xfs_db can't set attr hdr.count to 0"
-> > >  fi
-> > >  
-> > > -# make sure xfs_repair can find above corruption. If it can't, that
-> > > -# means we need to fix this bug on current xfs_repair
-> > > -_scratch_xfs_repair -n >> $seqres.full 2>&1
-> > 
-> > So we drop the `xfs_repair -n` test.
+On Thu, Jul 07, 2022 at 03:38:24PM -0700, Leah Rumancik wrote:
+> Hello again,
 > 
-> Yep.
+> These are a subset of the patches from the v1 5.15 part 1 which are
+> not applicable to 5.10.y. These patches were rebased and applied on top
+> of the accepted part 1 patches. 100 runs of each test on mulitple configs
+> were completed and no regressions found.
 > 
-> > Will the latest xfs_repair fail or pass on that? I'm wondering what's the expect
-> > result of `xfs_repair -n` on a xfs with empty leaf? Should it report errors,
-> > or nothing wrong?
-> 
-> xfs_repair -n no longer fails on attr block 0 being an empty leaf block
-> since those are part of the ondisk format and are not a corruption.
-> 
-> xfs_repair (without the -n) will clear the attr fork since there aren't
-> any xattrs if attr block 0 is empty.
+> Additional testing:
+> c8c568259772 "xfs: don't include bnobt blocks when reserving free block pool"
+>     Observed the hang before the patches but not after
 
-Thanks for the explain.
+Yep, that's the correct outcome.
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+> 919edbadebe1 "xfs: drop async cache flushes from CIL commits."
+>     Ran dbench as in the commit and confirmed performance improved
+> 
+> clients   before      after
+> 1         220.493     260.359
+> 8         732.807     1068.64
+> 16        749.677     1293.06
+> 32        737.9       1247.17
+> 128       680.674     1077.0
+> 512       602.674     884.48
 
-> 
-> --D
-> 
-> > Thanks,
-> > Zorro
-> > 
-> > > -if [ $? -eq 0 ];then
-> > > -	_fail "xfs_repair can't find the corruption"
-> > > -else
-> > > -	# If xfs_repair can find this corruption, then this repair
-> > > -	# should junk above leaf attribute and fix this XFS.
-> > > -	_scratch_xfs_repair >> $seqres.full 2>&1
-> > > +# Check that xfs_repair discards the attr fork if block 0 is an empty leaf
-> > > +# block.  Empty leaf blocks at the start of the xattr data can be a byproduct
-> > > +# of a shutdown race, and hence are not a corruption.
-> > > +_scratch_xfs_repair >> $seqres.full 2>&1
-> > >  
-> > > -	# Old xfs_repair maybe find and fix this corruption by
-> > > -	# reset the first used heap value and the usedbytes cnt
-> > > -	# in ablock 0. That's not what we want. So check if
-> > > -	# xfs_repair has junked the whole ablock 0 by xfs_db.
-> > > -	_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" | \
-> > > -		grep -q "no attribute data"
-> > > -	if [ $? -ne 0 ]; then
-> > > -		_fail "xfs_repair didn't junk the empty attr leaf"
-> > > -	fi
-> > > +# Old xfs_repair maybe find and fix this corruption by
-> > > +# reset the first used heap value and the usedbytes cnt
-> > > +# in ablock 0. That's not what we want. So check if
-> > > +# xfs_repair has junked the whole ablock 0 by xfs_db.
-> > > +_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" | \
-> > > +	grep -q "no attribute data"
-> > > +if [ $? -ne 0 ]; then
-> > > +	_fail "xfs_repair didn't junk the empty attr leaf"
-> > >  fi
-> > >  
-> > >  echo "Silence is golden"
-> > > 
-> > 
-> 
+Daaaaang. :)
 
+Acked-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+
+> Thanks,
+> Leah
+> 
+> 
+> Darrick J. Wong (2):
+>   xfs: only run COW extent recovery when there are no live extents
+>   xfs: don't include bnobt blocks when reserving free block pool
+> 
+> Dave Chinner (2):
+>   xfs: run callbacks before waking waiters in
+>     xlog_state_shutdown_callbacks
+>   xfs: drop async cache flushes from CIL commits.
+> 
+>  fs/xfs/xfs_bio_io.c      | 35 ------------------------
+>  fs/xfs/xfs_fsops.c       |  2 +-
+>  fs/xfs/xfs_linux.h       |  2 --
+>  fs/xfs/xfs_log.c         | 58 +++++++++++++++++-----------------------
+>  fs/xfs/xfs_log_cil.c     | 42 +++++++++--------------------
+>  fs/xfs/xfs_log_priv.h    |  3 +--
+>  fs/xfs/xfs_log_recover.c | 24 ++++++++++++++++-
+>  fs/xfs/xfs_mount.c       | 12 +--------
+>  fs/xfs/xfs_mount.h       | 15 +++++++++++
+>  fs/xfs/xfs_reflink.c     |  5 +++-
+>  fs/xfs/xfs_super.c       |  9 -------
+>  11 files changed, 82 insertions(+), 125 deletions(-)
+> 
+> -- 
+> 2.37.0.rc0.161.g10f37bed90-goog
+> 
