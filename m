@@ -2,128 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A992C43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 18:38:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29144CCA47B
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 21:25:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237977AbiGHSiH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 14:38:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59858 "EHLO
+        id S238585AbiGHVZR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jul 2022 17:25:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236808AbiGHSiG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 14:38:06 -0400
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7E2C1A384;
-        Fri,  8 Jul 2022 11:38:05 -0700 (PDT)
-Received: by mail-pf1-x42b.google.com with SMTP id y141so24173040pfb.7;
-        Fri, 08 Jul 2022 11:38:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=CIgYJJQkA/J/rKPGntZ74Ui+SaGHF5L8lzs2R9RO6kg=;
-        b=LgKdgMggkrqFxZ/xapJS5oqPKMLExiphWbrLLlup8g5PxhGgp9FMUAogAKKkUUe0MO
-         3yR9AF5261xUmG47wu1pDf96sLouo0jEFmNeI1+xum94agFR2AbD5SJ4sBRGn51qf2Ni
-         WTNaKchMFJ7p9IpJVEKkbvPgXpIx6n59HRS56AeA4/gRRIXuHzFzLPnPEE2pyXgcL2vR
-         RE0eHLvCtduQP9h6fsB6lf2rXoPVo+wHoCj1X3gNOtftlxQuNFeOg5TBPyqdNf1fYSYX
-         avZKTf7UJPiboW06vX2xhLsHe6BaxgFLLR+BQmLPgTO2YjwQpdaEdEh3E+k8hLzbcw0n
-         n+kw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=CIgYJJQkA/J/rKPGntZ74Ui+SaGHF5L8lzs2R9RO6kg=;
-        b=VXtpB3TwndA2KTQ3E0z4A9/AUscDQkaejFk0gKeUncUNyqX/tv1pbsrZkj3pW5qoY/
-         f5U6JRwrghgujiznmwKeFrSMs6hk3HYYULSpEbwdi4LVV6VyTKVRBvMQmYn0nV4AIzsQ
-         OKeSD9kPH4nv8/ahdCJJZyH5zMVpZrmkBxPUFCmQACOhgZUORV/iMNVUdclKMHgptOyh
-         aUx0FcX76FDeF11tE8OgNXQ/hJq8P5Dg5BrRJtVSlyjY1iBMGGOhGtwHyyCVJNavkDiP
-         MTQ32F4KxMmbGLATGx5UEczQBGuT76KRJrXTyLEcooWR4htE012H8dRfOBWApINitZEc
-         aDDg==
-X-Gm-Message-State: AJIora9crvObCbDbY/TN9L/f3nBAyVv9GcVV1WeV5uBULVjQLu6CKgs2
-        uqari9BVRidPD7P7oSb/eQE=
-X-Google-Smtp-Source: AGRyM1sm4ylT7N1qtCBlDXPhNvohT7v7jQBSVGh2ia8cJwaYgBIghnHkroQ1yJPNKFY2YntjOiX4Bg==
-X-Received: by 2002:a63:ee0a:0:b0:40d:2773:16d2 with SMTP id e10-20020a63ee0a000000b0040d277316d2mr4507448pgi.95.1657305485016;
-        Fri, 08 Jul 2022 11:38:05 -0700 (PDT)
-Received: from google.com ([2601:647:4701:18d0:5af3:d449:ddaf:9156])
-        by smtp.gmail.com with ESMTPSA id t17-20020a170902e85100b00162529828aesm30669103plg.109.2022.07.08.11.38.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Jul 2022 11:38:04 -0700 (PDT)
-Date:   Fri, 8 Jul 2022 11:38:02 -0700
-From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Kuniyuki Iwashima <kuniyu@amazon.com>, stable@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Ke Xu <kkexu@amazon.com>,
-        Ayushman Dutta <ayudutta@amazon.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Amir Goldstein <amir73il@gmail.com>
-Subject: Re: [PATCH stable 5.15] xfs: remove incorrect ASSERT in xfs_rename
-Message-ID: <Ysh5inAXa/ox9nO0@google.com>
-References: <20220707225835.32094-1-kuniyu@amazon.com>
- <YshTJZVNkXpbGKsv@magnolia>
+        with ESMTP id S238368AbiGHVZQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 17:25:16 -0400
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2043.outbound.protection.outlook.com [40.107.93.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93A3A23BF9;
+        Fri,  8 Jul 2022 14:25:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=FhpsLRDbQPWXyP+H0kch0DGJtfehxLcXo9ibwei+8FV5jHN8BG8ojJjH5TeF14mqaAojrMJZ4jWRe8RV/73XVUksSLfz6Iek7E/YTlTCgsP0x+35T8vkVppGhF2Q4SjgKB10VSrz+MPv3QouXCcOJV7hRGk1AZukE4iqvSorT4Frlh6Exr+NWUZ6z42UC8sXBATJU8+ILx22xsiikB+zaPrdrogQDYBdWvtr3j24jOYPNE7Y6lIm5BWeGSkLOphogAnN//IbwgkatQVQbp63waQzq4t3SzOyluKJmphduANq7aH3LmSHjmXhKDlp7Qu4mAJse7/XQ57R2P/Hvp/M1w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=emaEfPZWEmiqAoUqnwHX3Stg0y213FrxPHVhw/7QHDE=;
+ b=akeegfF+zwkpUoqXZ1yt5NIKNtRSb/YLogphmnWBjk1HR1mpZXZk9/uVX6u9gjXbkVNc1/RzhDWSWzGtk/FQSZ6vIJYZzbdv8Fk/ta9sZaWLLktnFXIR6/FOQOEG7UcTvYzuATNBUD3gCJHqtEoW64c7kE+B1ac4OdaxRdlUTT8EkUZq+jPp3WsYXNtCnuSwaRg3eddvahSDXGNBMuzlllu4173tu5Maq4OY7NNbeIELAsMGb/CbLg0ntdkgdYqv/adF7sN58ck8cejyQ+uY8x6rSNtNKg3LSLu1HyyEuv5oQ6Fkm/Tee7SUquFVp9GUw2Qsp+t26p/jarJEOdvGQQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=emaEfPZWEmiqAoUqnwHX3Stg0y213FrxPHVhw/7QHDE=;
+ b=e2sdSFiTuNA2WRshK/LWvdegjRnr/fXhzVo7ONusZV7dtqXpsSK/eOtOZk9xcz6xPcdd/+U/sMKkVRAP/trAbyIPqvUyIsrcx1Rt/hoPdYBNlVtBqfXbAcV803Ga2eYF0/NrW5b5OtBMeguLwzU0PZ+uesFgJwqRR94MNs9/SSs=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from BN9PR12MB5115.namprd12.prod.outlook.com (2603:10b6:408:118::14)
+ by DS7PR12MB6118.namprd12.prod.outlook.com (2603:10b6:8:9a::5) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5395.20; Fri, 8 Jul 2022 21:25:13 +0000
+Received: from BN9PR12MB5115.namprd12.prod.outlook.com
+ ([fe80::b096:31c:bfb7:fa0a]) by BN9PR12MB5115.namprd12.prod.outlook.com
+ ([fe80::b096:31c:bfb7:fa0a%3]) with mapi id 15.20.5417.020; Fri, 8 Jul 2022
+ 21:25:13 +0000
+Message-ID: <715fc1ae-7bd3-5b96-175c-e1cc74920739@amd.com>
+Date:   Fri, 8 Jul 2022 17:25:12 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [PATCH v8 02/15] mm: move page zone helpers into new
+ header-specific file
+Content-Language: en-US
+To:     David Hildenbrand <david@redhat.com>,
+        Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
+Cc:     linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
+        willy@infradead.org, akpm@linux-foundation.org
+References: <20220707190349.9778-1-alex.sierra@amd.com>
+ <20220707190349.9778-3-alex.sierra@amd.com>
+ <97816c26-d2dd-1102-4a13-fafb0b1a4bc3@redhat.com>
+From:   Felix Kuehling <felix.kuehling@amd.com>
+Organization: AMD Inc.
+In-Reply-To: <97816c26-d2dd-1102-4a13-fafb0b1a4bc3@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: BL1PR13CA0167.namprd13.prod.outlook.com
+ (2603:10b6:208:2bd::22) To BN9PR12MB5115.namprd12.prod.outlook.com
+ (2603:10b6:408:118::14)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YshTJZVNkXpbGKsv@magnolia>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: dc5d75ea-947c-4fc0-454f-08da61285857
+X-MS-TrafficTypeDiagnostic: DS7PR12MB6118:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: xZP3SWWNFjivGXf09UPv3DY32x7u31JQFhfVPJLlyoG6amCUSzPQ8SZ42/3+MVwacoTeYk+7fhs+Jd3KuuVFD2SV3y0xWn01d4d8o6iAYwL+tBUnm2vtje7kY4sbaCBQSCcHvwL9yeiouhc8SJEGSZ51cRD9E5ECMTi8PY8dQq856TAIi9rP3ZrGCe8tJMhieRCI3R1TcYYGSW7DCj5iNiDR++Q8FXyakLesSD228VPB1fDyYU4iGDgSEZChrp/x+TWYPbM2sjY05QpzzZawEe56NkF4HOnwIRFV1gcRzMMBluMfB4DkjTDGglIeKluC2gVdLI1rPoq1TzeA/i8H9YQn9JGxbpfRxvp/q5bx2KNasq14IJawxLNkZjjU8NfCzNS1ScUpAAXZA7qK0Tz5u9ZSJKcdaBRqCQnX85WyIDPvLFIhEoSrvSfovUp2mDS6dyO58wOvB7piJXG6mfJElYU75rjScVRYOc039D4+C8V/embQ72s+YJXhxYjlvrO0VVblmMkc/iiD+ZP8hKkHx33Nb0bjWaSO5FfITV6kHbkCU3JbyD5OL7q8P918bXmULciDyP+KpV1rUoaNWvdWCMpLkTun8Fbv0TECdOrwjfzvuc89aP9QDvcPJPNKkEMiYial3yaPGJ4RclI/9ArK3QC8U1mSLqFvwu9xFVp7N84C0LtKSZ7ltt/uVDEJEAj2szRHJ28+K7GmKm95T8CxN8Fcn87X4AHeNDz/tfNg7WQdNYkAAIL/n0k5CCzZcnnAI2DrhS+Z1WxjZIw619ivXyBI3Mhs1vBMQK4gl6OQmZnoWw//300XeVAVVAIP7JjX1Dy4cAxUErnONu7oYSGyT3dkJa/Q5QCg2TOPA5Uc4Ro=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR12MB5115.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(366004)(39860400002)(136003)(346002)(376002)(396003)(36916002)(8936002)(4326008)(2906002)(44832011)(316002)(110136005)(6506007)(4744005)(478600001)(66946007)(2616005)(66476007)(6486002)(26005)(5660300002)(86362001)(31696002)(7416002)(8676002)(53546011)(36756003)(6512007)(66556008)(38100700002)(41300700001)(31686004)(186003)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?c0VVeHZBRzRjTFh1TGxGZ0pENkl5WWp2ZSsvVndEd3VRbTRnNVRqNVZDenkv?=
+ =?utf-8?B?dTM5WVJCM3VUYWlxVy83aU9UWW5sZGpBaE9qZGRnTVc3Q1pyWk5Fc2wydlRV?=
+ =?utf-8?B?ZGoralZ3bmt4Znk3bjZIRk9BUmtRRHQvSWdDZ0s1Z3cvOGhOWlBmTU1JeG9G?=
+ =?utf-8?B?Tm9ocmFGcVN1MXBqbHVyMlBLMTVBVlduQ3l1N2hUazBJWXhTVjFrWEpTejJV?=
+ =?utf-8?B?V0xtWHlRTVlCMldFRWtEUDJEcm9zRXVBSDVrTlpsTTQrSUxMM0UxckZKZHhr?=
+ =?utf-8?B?dTRBL2pjRkF2MStKNDBkODJsWUdjQ0tMVU9jem55NVZDbGk0NHBUL1hob243?=
+ =?utf-8?B?T0QxenNQcWlnMXhoL1B4YkdYTmhOaU1wOXlWZjMvajdTdXh1Y05OOHFaSU5q?=
+ =?utf-8?B?MWRKWnNlK3RBdXFpcWI2UU5PRmVZZ2pIdkduditSMW5CaWlhUkhoSkMwNEVK?=
+ =?utf-8?B?SDhlRWhlSmRDbEoxQ2xxN0lvY3FtekdMN1ByWjdLUEJZQ25TRENZRm14dDNI?=
+ =?utf-8?B?SllGSmZKWUlCWWZYYUpxTG5neEE2ajEwaUFTdmpyb3Bpc3pXR1U0WWIvVmVx?=
+ =?utf-8?B?MmVkWlNvSVVHYk81by9FTDJOc0lMWnFlUjByTWZTc0hKSzRpM1U1ejJFTHNv?=
+ =?utf-8?B?VzB0OHQ4Z0UreWN6NXdwNnpyaFlZTzRqT1B2OXFnQnUvNHBNVzBBT0llWkNJ?=
+ =?utf-8?B?cHZITDJqenJCVldhOWE1aXh1bmtGa053UEpBVHhBNTVaMDR0T2ZtcUdJYnJY?=
+ =?utf-8?B?Tm0zcmZTS1JGY3lCdDUxTzRiYTFyS0YxUEZESndra0NuS0M2bnRab3ZzdDVM?=
+ =?utf-8?B?WTNmS2U0a0hpc04wdytRbzFBc3JTbGpyS2d3aUpTa3lSd0paMDVERFJtZFJn?=
+ =?utf-8?B?dFdmNm52WDRyT3dVcGhoQUs1MG9HaGdZZXdkN2tvWi9iaktBSndOTHM0VjNX?=
+ =?utf-8?B?ejJSekVQL0kxRitHdEROVWRjckJPOTdwd2pyZ3lNRlc5anV1eEJRMllVS2Jn?=
+ =?utf-8?B?NlluRTQzdC9Pd1hzWFJaSGZZM3Ewai9SRm1CU3prSE0rU3A0aVI5NW8rcmxP?=
+ =?utf-8?B?MkFRSXozdzFVd2p6dWVOWnkyQnNiQkROWktSWXFDOTU3eGdNMXlzZTd5VUZM?=
+ =?utf-8?B?U01OTStVYW9SREJrUlI1N2VVZEV4aS9zSHhBSytOZXExWHVLZEU4VDc5NnBR?=
+ =?utf-8?B?MUlMLzEybjJoNFN5bUVOdXpUblFaalVESHRsZGxtRzdpZkxhMUttaXFBbzN4?=
+ =?utf-8?B?VEhqcjBhNHRTNHRLRGYweUx6QUR4aWlxT2c3aEdRZUlaRDN5RTR0R3dQQUpo?=
+ =?utf-8?B?cm93a21tTktiRlBjemFpTWd1Qk9nZnNWQ3JTOENBeUoycWFjQjJWS3ZJK3VP?=
+ =?utf-8?B?ajV0a3AxbXdqVnlWLzErR1orUW1UZkd2aFpUQzVQMWgxSk5Jc1lTTjFqUDRX?=
+ =?utf-8?B?M2VWcC9kSFZSazZMdGM2ZWJnT3BUOXd4MFJONU5kU3huWTVoOUZXYzZwSHdZ?=
+ =?utf-8?B?Y1dvNVJhQW9UTWFjWVNUejNQbVRwRnZKN09sRmkzTXBsb2l6MEtNc1NHdWFF?=
+ =?utf-8?B?TFV2UDdja0tuZS9xcm5ldTlya2x2MVFzbDZCMVExRjlDMWlXTHBpTHltTHdX?=
+ =?utf-8?B?eDJWd0IxSmsxS1duM2Y3TFJsZkc3eFRQWVRWL0FIclNXSEhsREsvaFp4eGhU?=
+ =?utf-8?B?QVpOeFdqY2xBd2dFb21uWTNHY0JLdHRXNDdlL3o4RUdCdlFOZHhycDFWZk4x?=
+ =?utf-8?B?TjNKUkd6N09KM1ZzaEJDOVpYaHpuUFVtZzVwUjZzYTd1WDVEcDZqQmNnNHQ1?=
+ =?utf-8?B?eXpUQmRkOGZKeWVOUW54WFV1TkQzR0IyYXBVR3poSDR6SlNhdks1Q2ExNjlD?=
+ =?utf-8?B?VXhGVm13SFZEL2sreEFGcWZ0a21NRDRBWDAzSEZkL0wvRFMzaHkzcStIdGVK?=
+ =?utf-8?B?TCtadzcwa1JveldWQUxjVXloM21oZzBYalJ1WHpBZDNXMmgxZ3pjc2lHZDRC?=
+ =?utf-8?B?RzBqTHp0c2llUXBrUkQzbEFNbTduL3JhNFNDYmxHeEdLSWNxSzVCR2pWTnZo?=
+ =?utf-8?B?b3dzQzVLOXVScExOcldhb3FDYzBGSEFCNWpyMGJ3NkZLR2Y1bWswNURJd1A5?=
+ =?utf-8?Q?yOsusd6KOY8rQm5HmrgAZTsay?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dc5d75ea-947c-4fc0-454f-08da61285857
+X-MS-Exchange-CrossTenant-AuthSource: BN9PR12MB5115.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2022 21:25:13.6296
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: kDKeUmnOdAj8+dQNYFsjmiarX0dVNBS3gHRe4eD1ReGjibc5l8A9Ea4YroggawfOxqjl5z7P9MAAWdJd0Gi//w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6118
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 08, 2022 at 08:54:13AM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 07, 2022 at 03:58:35PM -0700, Kuniyuki Iwashima wrote:
-> > From: Eric Sandeen <sandeen@redhat.com>
-> > 
-> > commit e445976537ad139162980bee015b7364e5b64fff upstream.
-> > 
-> > Ayushman Dutta reported our 5.10 kernel hit the warning.  It was because
-> > the original commit misses a Fixes tag and was not backported to the stable
-> > tree.  The fix is merged in 5.16, so please backport it to 5.15 first.
-> > 
-> > This ASSERT in xfs_rename is a) incorrect, because
-> > (RENAME_WHITEOUT|RENAME_NOREPLACE) is a valid combination, and
-> > b) unnecessary, because actual invalid flag combinations are already
-> > handled at the vfs level in do_renameat2() before we get called.
-> > So, remove it.
-> > 
-> > Reported-by: Paolo Bonzini <pbonzini@redhat.com>
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Fixes: 7dcf5c3e4527 ("xfs: add RENAME_WHITEOUT support")
-> > Reported-by: Ayushman Dutta <ayudutta@amazon.com>
-> > Signed-off-by: Kuniyuki Iwashima <kuniyu@amazon.com>
-> 
-> Looks good to me, but you really ought to send 5.10 patches to the 5.10
-> XFS maintainer (Amir, now cc'd).  (Yes, this is a recent change.) ;)
-> 
-> Acked-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> --D
+On 2022-07-08 07:28, David Hildenbrand wrote:
+> On 07.07.22 21:03, Alex Sierra wrote:
+>> [WHY]
+>> Have a cleaner way to expose all page zone helpers in one header
+> What exactly is a "page zone"? Do you mean a buddy zone as in
+> include/linux/mmzone.h ?
+>
+Zone as in ZONE_DEVICE. Maybe we could extend mmzone.h instead of 
+creating page_zone.h? That should work as long as it's OK to include 
+mmzone.h in memremap.h.
 
-This patch is actually part of the next set of 10 patches being testing
-for the 5.15 branch :) It would have been going out in the next week or
-two, but since this is such a minor change, we can just go ahead with it.
+Regards,
+   Felix
 
-- Leah
-> 
-> > ---
-> > I will send another patch for 4.9 - 5.4 because of a conflict with idmapped
-> > mount changes.
-> > ---
-> >  fs/xfs/xfs_inode.c | 1 -
-> >  1 file changed, 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 2477e301fa82..c19f3ca605af 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -3128,7 +3128,6 @@ xfs_rename(
-> >  	 * appropriately.
-> >  	 */
-> >  	if (flags & RENAME_WHITEOUT) {
-> > -		ASSERT(!(flags & (RENAME_NOREPLACE | RENAME_EXCHANGE)));
-> >  		error = xfs_rename_alloc_whiteout(mnt_userns, target_dp, &wip);
-> >  		if (error)
-> >  			return error;
-> > -- 
-> > 2.30.2
-> > 
+
