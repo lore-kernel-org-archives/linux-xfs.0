@@ -2,136 +2,157 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7A9DC43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 14:17:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C547C43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 14:56:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235326AbiGHOR4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 10:17:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43558 "EHLO
+        id S238590AbiGHO4b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jul 2022 10:56:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236808AbiGHORz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 10:17:55 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E992D2FFFF
-        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 07:17:53 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4D6C078EC;
-        Fri,  8 Jul 2022 09:17:41 -0500 (CDT)
-Message-ID: <7a609923-4174-de01-d097-edb4b983d939@sandeen.net>
-Date:   Fri, 8 Jul 2022 09:17:52 -0500
+        with ESMTP id S238381AbiGHO4a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 10:56:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5F78F2E6A6
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 07:56:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1657292188;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=lADh6PzdBC167z9QTFgK04ZSS0jq0bgWIs1Uzt+2zkA=;
+        b=QalUyAxG28jJWtZTR+T8fGzwUzQOECDLNYZkgxwRIizx8wULF0uDoK+cd8kY/gmK+es0Uf
+        bi7+gVHrJ3agGK8rOowLnP6eqap304kQ6cGODK8sO15nmLe3XWAsW1ZkN4agL6nqNZOPi5
+        MIw3cIu1EHaRu3Rj4lLECcRp668k/yA=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-447-AaAZr8idPLa2Bdvxou90Gg-1; Fri, 08 Jul 2022 10:56:26 -0400
+X-MC-Unique: AaAZr8idPLa2Bdvxou90Gg-1
+Received: by mail-qk1-f197.google.com with SMTP id a7-20020a37b107000000b006af3bc02282so21425344qkf.21
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Jul 2022 07:56:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=lADh6PzdBC167z9QTFgK04ZSS0jq0bgWIs1Uzt+2zkA=;
+        b=ImHK3tSa8eOjhe2jnG9Z/YCrT6CgqlJynBxWSRuLNIgWYmoOEubAbu61kMT5i8Fc8s
+         v7m37/3NEw9nCsjnBfWl+aUIkHxnYr5phOhwvzbIk4O1EoUWWtgS4GdHMgcVpUYspc3X
+         cFcCNWnU8m+dDfqULl43dOFIUptmcfrV8zTnEuEru6sm/DHKVvRcic2NEePfFbftaEiR
+         lhKEGnvJhJIyBNRykXBgnXJmF1aWfw/jsABVusskNy035Nw4wkyrlUEbIUqFOSVsGs3k
+         Orl+HWSrSCj/3HTzf7wF0YqJeXVdRN2K5Yjg1guXq80Yq5gJE00yGrAgzdWROzaUdoFW
+         NmMw==
+X-Gm-Message-State: AJIora9lh/k/EplQSl6dcTPH9kLfGzRxb2j4ZC0MBzJ5ySTcT+ZGUvSw
+        oNbhd0tb7i61fo6sV67KFXE+TQmHi9x2aS5mFboCJGYFMgVAitSwdUz1N/UzM0B2WaffC5QgUI0
+        lRIrd546ZR3TSkzGXLXj5
+X-Received: by 2002:a05:622a:188b:b0:31a:f57e:75c3 with SMTP id v11-20020a05622a188b00b0031af57e75c3mr3277876qtc.619.1657292185354;
+        Fri, 08 Jul 2022 07:56:25 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1s7z0EfziPI48HUZwQgiO5SOG5C7Bf0cDoKWGmkrMAbSTXPJjcPATpexwB4nQCOX26gFB68zA==
+X-Received: by 2002:a05:622a:188b:b0:31a:f57e:75c3 with SMTP id v11-20020a05622a188b00b0031af57e75c3mr3277854qtc.619.1657292185058;
+        Fri, 08 Jul 2022 07:56:25 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id fw3-20020a05622a4a8300b0031e7b06edbasm9420974qtb.67.2022.07.08.07.56.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 Jul 2022 07:56:24 -0700 (PDT)
+Date:   Fri, 8 Jul 2022 22:56:19 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs/547: fix problems with realtime
+Message-ID: <20220708145619.tlkwzme3xf3opyg5@zlang-mailbox>
+References: <165705852280.2820493.17559217951744359102.stgit@magnolia>
+ <165705853976.2820493.11634341636419465537.stgit@magnolia>
+ <20220707131527.g73ablzdf7p7pmsu@zlang-mailbox>
+ <YscgZQsgDjkgEkQM@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.11.0
-Content-Language: en-US
-To:     Christopher Pereira <kripper@imatronix.cl>,
-        linux-xfs@vger.kernel.org
-References: <09b4cbd7-c258-e39c-1f04-1edcc8ccf899@imatronix.cl>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [bug report] xfs corruption - XFS_WANT_CORRUPTED_RETURN
-In-Reply-To: <09b4cbd7-c258-e39c-1f04-1edcc8ccf899@imatronix.cl>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YscgZQsgDjkgEkQM@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/8/22 2:45 AM, Christopher Pereira wrote:
-> Hi,
+On Thu, Jul 07, 2022 at 11:05:25AM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 07, 2022 at 09:15:27PM +0800, Zorro Lang wrote:
+> > On Tue, Jul 05, 2022 at 03:02:19PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > This test needs to fragment the free space on the data device so that
+> > > each block added to the attr fork gets its own mapping.  If the test
+> > > configuration sets up a rt device and rtinherit=1 on the root dir, the
+> > > test will erroneously fragment space on the *realtime* volume.  When
+> > > this happens, attr fork allocations are contiguous and get merged into
+> > > fewer than 10 extents and the test fails.
+> > > 
+> > > Fix this test to force all allocations to be on the data device, and fix
+> > > incorrect variable usage in the error messages.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  tests/xfs/547 |   14 ++++++++++----
+> > >  1 file changed, 10 insertions(+), 4 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/tests/xfs/547 b/tests/xfs/547
+> > > index 9d4216ca..60121eb9 100755
+> > > --- a/tests/xfs/547
+> > > +++ b/tests/xfs/547
+> > > @@ -33,6 +33,10 @@ for nrext64 in 0 1; do
+> > >  		      >> $seqres.full
+> > >  	_scratch_mount >> $seqres.full
+> > >  
+> > > +	# Force data device extents so that we can fragment the free space
+> > > +	# and force attr fork allocations to be non-contiguous
+> > > +	_xfs_force_bdev data $SCRATCH_MNT
+> > > +
+> > >  	bsize=$(_get_file_block_size $SCRATCH_MNT)
+> > >  
+> > >  	testfile=$SCRATCH_MNT/testfile
+> > > @@ -76,13 +80,15 @@ for nrext64 in 0 1; do
+> > >  	acnt=$(_scratch_xfs_get_metadata_field core.naextents \
+> > >  					       "path /$(basename $testfile)")
+> > >  
+> > > -	if (( $dcnt != 10 )); then
+> > > -		echo "Invalid data fork extent count: $dextcnt"
+> > > +	echo "nrext64: $nrext64 dcnt: $dcnt acnt: $acnt" >> $seqres.full
+> > > +
+> > > +	if [ -z "$dcnt" ] || (( $dcnt != 10 )); then
+> > 
+> > I'm wondering why we need to use bash ((...)) operator at here, is $dcnt
+> > an expression? Can [ "$dcnt" != "10" ] help that?
 > 
-> I've been using XFS for many years on many qemu-kvm VMs without problems.
-> I do daily qcow2 snapshots and today I noticed that a snaphot I took on Jun  1 2022 has a corrupted XFS root partition and doesn't boot any more (on another VM instance).
-> The snapshot I took the day before is clean.
-> The VM is still running since May 11 2022, has not been rebooted and didn't crash which is the reason I'm reporting this issue.
-> This is a production VM with sensible data.
+> dcnt should be a decimal number, or the empty string if the xfs_db
+> totally failed.  The fancy comparison protects against xfs_db someday
+> returning results in hexadecimal or a non-number string, but I don't
+
+Oh, it might be hexadecimal. OK, I'd like to respect the history reason.
+So this looks good to me.
+
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+> think it'll ever do that.  I think your suggestion would work for this
+> case.
 > 
-> The kernel logged this error multiple times between 00:00:21 and 00:03:31 on Jun 1:
+> I don't think it works so well for the second case, since the fancy
+> comparison "(( $acnt < 10 ))" apparently returns false even if acnt is
+> non-numeric, whereas "[ $acnt -lt 10 ]" would error out.
 > 
-> Jun  1 00:00:21 *** kernel: XFS (dm-0): Internal error XFS_WANT_CORRUPTED_RETURN at line 337 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa0230e5b>] xfs_error_report+0x3b/0x40 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] ? xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa01ee684>] xfs_alloc_fixup_trees+0x2c4/0x370 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa01f120d>] xfs_alloc_ag_vextent+0xcd/0x110 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa01f1f89>] xfs_alloc_vextent+0x429/0x5e0 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa020237f>] xfs_bmap_btalloc+0x3af/0x710 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa02026ee>] xfs_bmap_alloc+0xe/0x10 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa0203148>] xfs_bmapi_write+0x4d8/0xa90 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa023bd1b>] xfs_iomap_write_allocate+0x14b/0x350 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa0226dc6>] xfs_map_blocks+0x1c6/0x230 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa0227fe3>] xfs_vm_writepage+0x193/0x5d0 [xfs]
-> Jun  1 00:00:22 *** kernel: [<ffffffffa0227993>] xfs_vm_writepages+0x43/0x50 [xfs]
-> Jun  1 00:00:22 *** kernel: XFS (dm-0): page discard on page ffffea000cf60200, inode 0xc52bf7f, offset 0.
+> --D
 > 
-> I'm running this (outdated) software:
+> > Thanks,
+> > Zorro
+> > 
+> > > +		echo "Invalid data fork extent count: $dcnt"
+> > >  		exit 1
+> > >  	fi
+> > >  
+> > > -	if (( $acnt < 10 )); then
+> > > -		echo "Invalid attr fork extent count: $aextcnt"
+> > > +	if [ -z "$acnt" ] || (( $acnt < 10 )); then
+> > > +		echo "Invalid attr fork extent count: $acnt"
+> > >  		exit 1
+> > >  	fi
+> > >  done
+> > > 
+> > 
 > 
-> - uname -a:
->     Linux *** 3.10.0-327.22.2.el7.x86_64 #1 SMP Thu Jun 23 17:05:11 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
 
-Hi Christopherr -
-
-So that's a RHEL7.2 kernel, first released in 2016 or so - so quite old as
-you say, and also a vendor kernel you'll really need to talk to the vendor
-about, vs. upstream, for any detailed debugging or support.
-
-That said ...
-
-        /*
-         * Look up the record in the by-size tree if necessary.
-         */
-        if (flags & XFSA_FIXUP_CNT_OK) {
-#ifdef DEBUG
-                if ((error = xfs_alloc_get_rec(cnt_cur, &nfbno1, &nflen1, &i)))
-                        return error;
-                XFS_WANT_CORRUPTED_RETURN(mp,
-                        i == 1 && nfbno1 == fbno && nflen1 == flen);
-#endif
-        } else {
-                if ((error = xfs_alloc_lookup_eq(cnt_cur, fbno, flen, &i)))
-                        return error;
-                XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
-        }
-
-so I think that means this is a corrupted btree. I'm not remembering any bugs
-related to this but again, it's pretty old code.
-
-> 
-> - modinfo xfs
->     filename: /lib/modules/3.10.0-327.22.2.el7.x86_64/kernel/fs/xfs/xfs.ko
->     license:        GPL
->     description:    SGI XFS with ACLs, security attributes, no debug enabled
->     author:         Silicon Graphics, Inc.
->     alias:          fs-xfs
->     rhelversion:    7.2
->     srcversion:     5F736B32E75482D75F98583
->     depends:        libcrc32c
->     intree:         Y
->     vermagic:       3.10.0-327.22.2.el7.x86_64 SMP mod_unload modversions
->     signer:         CentOS Linux kernel signing key
-
-Ok, so CentOS not RHEL, but still not something the upstream developer community
-can do a whole lot with.
-
->     sig_key: A9:80:1A:61:B3:68:60:1C:40:EB:DB:D5:DF:D1:F3:A7:70:07:BF:A4
->     sig_hashalgo:   sha256
-> 
-> 1) Is there any known issue with this xfs version?
-> 
-> 2) How may I help you to trace this bug.
-> I could provide my WhatsApp number privately for direct communication.
-> 
-> Should I try a xfs_repair and post the logs here or via pastebin?
-
-Since you have a snapshot, that's perfectly safe; I would make another snapshot,
-and run repair on it and see how that goes. Hopefully it will resolve your issue,
-which seems to be a one-off in your case.
-
-It might be a good idea to use a more recent xfs_repair than the one in
-RHEL7.2 for this.
-
--Eric
-
-> BTW: I'm a experienced developer and sysadmin, but have no experience regarding the XFS  driver.
-> 
-> 
