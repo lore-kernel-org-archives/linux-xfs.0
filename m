@@ -2,114 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73A3FC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 15:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A1A2C43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 15:56:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238856AbiGHP4B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 11:56:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40148 "EHLO
+        id S238873AbiGHP4x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jul 2022 11:56:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238231AbiGHP4A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 11:56:00 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42E2270E71;
-        Fri,  8 Jul 2022 08:56:00 -0700 (PDT)
+        with ESMTP id S238536AbiGHP4w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 11:56:52 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 788F070E56;
+        Fri,  8 Jul 2022 08:56:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id F24BEB80522;
-        Fri,  8 Jul 2022 15:55:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0F47C341C0;
-        Fri,  8 Jul 2022 15:55:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 140C761709;
+        Fri,  8 Jul 2022 15:56:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D3E2C341C0;
+        Fri,  8 Jul 2022 15:56:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657295757;
-        bh=6LeBPWdiXy/BPonoBicUXWGb43e/5efAsBpoQS94gjQ=;
+        s=k20201202; t=1657295810;
+        bh=4HZbIthseZRLHViKy0j4K4UGYUeoRLsqPSpxVKmk1ME=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mSgXUIo1yIJaqQMtcKBNuuFF2SnmwWZdASwi9HpKiW2w1g3mkug9V/EHxX7+plCQl
-         BsUU/glMpDyUZx+QGLyOCYxRtP+8K9Fr0Kt85/KDThSNcTK37OkeN3nG2KXfHzbC5P
-         eFQ0uIFnE4DQtkhlnNDoABbgSPvZ0JRULHrS0CrU6l23OOQxBMihtlj1Lxtth9E/px
-         vCOOjP96xjEZgSgn1wXmQoxnIvP8jAlIK21EIcnQQcIMBefuRoXFv4HAAN/gxX93BF
-         QD+KptkGpv/5U6V1QRYPakrROxDlwBDTYnQ8iu2oDPDWZ+Zkwte3YW+D6B9qD/ci+7
-         lRpqqlaE46H7w==
-Date:   Fri, 8 Jul 2022 08:55:57 -0700
+        b=Qxb+hSl5FdoHPAKvqrcscf9/LdIX+DBqZBZbPMHLAcQ40LM7bwwpCRPdfjm7EIB+U
+         EHi4PyFejNYzHklZyHiCAhtHhlFkcYumFb/nbCQSok0cmS+YSNv6L5SDytkPx+clpO
+         wV9/1u88z9cwFMk28bw8LqgMcszV9OY9dioKKCYw4165mxNZDkSG/bhfXmeOyYp7FX
+         XzJygugg4tbkDIJdptahckaEFXFte2cMU5xpvgyitGywd9Q6ntvpM5WI0KfZVHOb4Y
+         MG17PZTGcoPlxeF4mrsFGZqoI5Tj2Go6/Ckz5zjViRrRJseRPmlPGNtVrZJYxv+tRC
+         KPu4k8JFzrmCw==
+Date:   Fri, 8 Jul 2022 08:56:49 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Kuniyuki Iwashima <kuniyu@amazon.com>
 Cc:     stable@vger.kernel.org, linux-xfs@vger.kernel.org,
         Ke Xu <kkexu@amazon.com>, Ayushman Dutta <ayudutta@amazon.com>,
         Eric Sandeen <sandeen@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Leah Rumancik <lrumancik@google.com>
-Subject: Re: [PATCH stable 5.15] xfs: remove incorrect ASSERT in xfs_rename
-Message-ID: <YshTjclKanmcBsUW@magnolia>
-References: <20220707225835.32094-1-kuniyu@amazon.com>
- <YshTJZVNkXpbGKsv@magnolia>
+        Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH stable 4.9, 4.14, 4.19, 5.4, 5.10] xfs: remove incorrect
+ ASSERT in xfs_rename
+Message-ID: <YshTwayP+hM5IVHd@magnolia>
+References: <20220707230753.32743-1-kuniyu@amazon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YshTJZVNkXpbGKsv@magnolia>
+In-Reply-To: <20220707230753.32743-1-kuniyu@amazon.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 08, 2022 at 08:54:13AM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 07, 2022 at 03:58:35PM -0700, Kuniyuki Iwashima wrote:
-> > From: Eric Sandeen <sandeen@redhat.com>
-> > 
-> > commit e445976537ad139162980bee015b7364e5b64fff upstream.
-> > 
-> > Ayushman Dutta reported our 5.10 kernel hit the warning.  It was because
-> > the original commit misses a Fixes tag and was not backported to the stable
-> > tree.  The fix is merged in 5.16, so please backport it to 5.15 first.
-> > 
-> > This ASSERT in xfs_rename is a) incorrect, because
-> > (RENAME_WHITEOUT|RENAME_NOREPLACE) is a valid combination, and
-> > b) unnecessary, because actual invalid flag combinations are already
-> > handled at the vfs level in do_renameat2() before we get called.
-> > So, remove it.
-> > 
-> > Reported-by: Paolo Bonzini <pbonzini@redhat.com>
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Fixes: 7dcf5c3e4527 ("xfs: add RENAME_WHITEOUT support")
-> > Reported-by: Ayushman Dutta <ayudutta@amazon.com>
-> > Signed-off-by: Kuniyuki Iwashima <kuniyu@amazon.com>
+On Thu, Jul 07, 2022 at 04:07:53PM -0700, Kuniyuki Iwashima wrote:
+> From: Eric Sandeen <sandeen@redhat.com>
 > 
-> Looks good to me, but you really ought to send 5.10 patches to the 5.10
-> XFS maintainer (Amir, now cc'd).  (Yes, this is a recent change.) ;)
+> commit e445976537ad139162980bee015b7364e5b64fff upstream.
+> 
+> Ayushman Dutta reported our 5.10 kernel hit the warning.  It was because
+> the original commit misses a Fixes tag and was not backported to the stable
+> tree.  The fix is merged in 5.16, but it conflicts in 4.9 - 5.10 because
+> of the idmapped mount changes:
+> 
+>   ++<<<<<<< HEAD
+>    +      ASSERT(!(flags & (RENAME_NOREPLACE | RENAME_EXCHANGE)));
+>    +      error = xfs_rename_alloc_whiteout(target_dp, &wip);
+>   ++=======
+>   +       error = xfs_rename_alloc_whiteout(mnt_userns, target_dp, &wip);
+>   ++>>>>>>> e445976537ad (xfs: remove incorrect ASSERT in xfs_rename)
+> 
+> We can resolve this by removing mnt_userns from the argument.
+> 
+> This ASSERT in xfs_rename is a) incorrect, because
+> (RENAME_WHITEOUT|RENAME_NOREPLACE) is a valid combination, and
+> b) unnecessary, because actual invalid flag combinations are already
+> handled at the vfs level in do_renameat2() before we get called.
+> So, remove it.
+> 
+> Reported-by: Paolo Bonzini <pbonzini@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Fixes: 7dcf5c3e4527 ("xfs: add RENAME_WHITEOUT support")
+> Signed-off-by: Kuniyuki Iwashima <kuniyu@amazon.com>
+> ---
+> I confirmed this can be applied cleanly on the latest 4.9 - 5.10 stable
+> branch, but if there is any problem, please let me know.
 
-...and of course the first thing that happens is that I mix up the 5.10
-and 5.15 patches.
-
-Amir is the 5.10 maintainer, Leah is the 5.15 maintainer.  Sorry about
-the mixup.  /me pours himself a third(!) cup of coffee.
+LGTM
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> Acked-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_inode.c | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> --D
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index e958b1c74561..03497741aef7 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3170,7 +3170,6 @@ xfs_rename(
+>  	 * appropriately.
+>  	 */
+>  	if (flags & RENAME_WHITEOUT) {
+> -		ASSERT(!(flags & (RENAME_NOREPLACE | RENAME_EXCHANGE)));
+>  		error = xfs_rename_alloc_whiteout(target_dp, &wip);
+>  		if (error)
+>  			return error;
+> -- 
+> 2.30.2
 > 
-> > ---
-> > I will send another patch for 4.9 - 5.4 because of a conflict with idmapped
-> > mount changes.
-> > ---
-> >  fs/xfs/xfs_inode.c | 1 -
-> >  1 file changed, 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 2477e301fa82..c19f3ca605af 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -3128,7 +3128,6 @@ xfs_rename(
-> >  	 * appropriately.
-> >  	 */
-> >  	if (flags & RENAME_WHITEOUT) {
-> > -		ASSERT(!(flags & (RENAME_NOREPLACE | RENAME_EXCHANGE)));
-> >  		error = xfs_rename_alloc_whiteout(mnt_userns, target_dp, &wip);
-> >  		if (error)
-> >  			return error;
-> > -- 
-> > 2.30.2
-> > 
