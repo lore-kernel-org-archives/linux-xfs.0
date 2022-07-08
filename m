@@ -2,304 +2,176 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46CF2C43334
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 00:49:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E50C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 01:56:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230314AbiGHAt2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jul 2022 20:49:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52220 "EHLO
+        id S236151AbiGHB4F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jul 2022 21:56:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbiGHAt1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 20:49:27 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 785925C942
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 17:49:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1657241365;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uIrAzPk2aRvQo1adOcWasOkdM2HGS+w4GmNv8c5WOJI=;
-        b=fdXFp/NQuK/BJb09Nz17Eua3eMoVe9HyKJkps6pSvVCnw98MEMOZuL5z1HFoYWeQSRci6E
-        8AEKX3tnN1IOCkmAFeoIZ2kbrLIYg22tHhtj69Mk64mGvcR99LVdRryMtNx6No3XtM2YfV
-        TzdHXtw4D6giYmP5Jq+jCNhfrYmsVkg=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-59-X_DHarBbOK2A-GEz8kulDw-1; Thu, 07 Jul 2022 20:49:23 -0400
-X-MC-Unique: X_DHarBbOK2A-GEz8kulDw-1
-Received: by mail-qk1-f198.google.com with SMTP id k190-20020a37bac7000000b006af6d953751so19564243qkf.13
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Jul 2022 17:49:23 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=uIrAzPk2aRvQo1adOcWasOkdM2HGS+w4GmNv8c5WOJI=;
-        b=JcxE/Bvh1aOtY/LNPg8SyTq+CkngXGbUMiJpiv8jCxzM/yvEpQqXrzefffQ0tKIFNM
-         aQzPeVEYqkpjzSbAooB8tsT35YQTW8RJSGR7TLI6QfJBtJ+eb+Br+f77TmvxqE9d7cDu
-         6l85oKjnYHN3VRlxUXy35QEFaMC0co3+qtBS7jYuRmwY5gVpuNl4URHhESnbo4obM3+L
-         qlRKniBysxhf+H6N0cFYkTth8u9a3PnFywWtP9eMU4Wdiocn4ob7a10icylpcKIYELiG
-         gt9/SKATfEn2sipajiAJQHt2uY0/79gLDu3Ml4FexWJGgZz2KidA7EVKOFnKupyaIHEa
-         dT7A==
-X-Gm-Message-State: AJIora8bigXkm58N5pzY52ld8B/6/0+xlxXvrl7mFeU3iFmBF6aT6y8U
-        oPuNsyQcMEpV3AsFooOFOWkFXjYh5HkqoZmhgI/2A0ruaT+t4BCPsmi5bk0IDMM0+W7PDZy0Gp8
-        GfG0uKtyZIhsrBQmO40Zh
-X-Received: by 2002:ac8:5813:0:b0:31b:1:4741 with SMTP id g19-20020ac85813000000b0031b00014741mr846005qtg.16.1657241363387;
-        Thu, 07 Jul 2022 17:49:23 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1sSsjZ5fJG6aSTAyTmZGCKCvx9hNN6ihka+hG6ncwI7xhY7ApseMJea0IFlHLhQbwQln3HeuA==
-X-Received: by 2002:ac8:5813:0:b0:31b:1:4741 with SMTP id g19-20020ac85813000000b0031b00014741mr845991qtg.16.1657241363015;
-        Thu, 07 Jul 2022 17:49:23 -0700 (PDT)
-Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id w18-20020a05620a445200b0069c72b41b59sm2149744qkp.2.2022.07.07.17.49.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Jul 2022 17:49:22 -0700 (PDT)
-Date:   Fri, 8 Jul 2022 08:49:16 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: make sure that we handle empty xattr leaf
- blocks ok
-Message-ID: <20220708004916.tiidmzowad2wi3g4@zlang-mailbox>
-References: <165705854325.2821854.10317059026052442189.stgit@magnolia>
- <165705854877.2821854.7070105861462675249.stgit@magnolia>
- <20220707120639.qoqsfcwtmdyl5duv@zlang-mailbox>
- <YsckVj+Yw4h1xeVp@magnolia>
+        with ESMTP id S229620AbiGHB4E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jul 2022 21:56:04 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7918A735A9
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Jul 2022 18:56:03 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9C80B62C48C
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 11:56:02 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1o9dDs-00FqlV-HH
+        for linux-xfs@vger.kernel.org; Fri, 08 Jul 2022 11:56:00 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.95)
+        (envelope-from <david@fromorbit.com>)
+        id 1o9dDs-004lDq-GW
+        for linux-xfs@vger.kernel.org;
+        Fri, 08 Jul 2022 11:56:00 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 5/8] xfs: track log space pinned by the AIL
+Date:   Fri,  8 Jul 2022 11:55:55 +1000
+Message-Id: <20220708015558.1134330-6-david@fromorbit.com>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220708015558.1134330-1-david@fromorbit.com>
+References: <20220708015558.1134330-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YsckVj+Yw4h1xeVp@magnolia>
+Content-Transfer-Encoding: 8bit
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62c78eb2
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=RgO8CyIxsXoA:10 a=20KFwNOVAAAA:8 a=_hL5OsT9ypi7W2MD6eUA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 07, 2022 at 11:22:14AM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 07, 2022 at 08:06:39PM +0800, Zorro Lang wrote:
-> > On Tue, Jul 05, 2022 at 03:02:28PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Make sure that the kernel can handle empty xattr leaf blocks properly,
-> > > since we've screwed this up enough times.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  tests/xfs/845 |  131 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  1 file changed, 131 insertions(+)
-> > >  create mode 100755 tests/xfs/845
-> > > 
-> > > 
-> > > diff --git a/tests/xfs/845 b/tests/xfs/845
-> > > new file mode 100755
-> > > index 00000000..4a846e57
-> > > --- /dev/null
-> > > +++ b/tests/xfs/845
-> > > @@ -0,0 +1,131 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 845
-> > > +#
-> > > +# Make sure that XFS can handle empty leaf xattr blocks correctly.  These
-> > > +# blocks can appear in files as a result of system crashes in the middle of
-> > > +# xattr operations, which means that we /must/ handle them gracefully.
-> > > +# Check that read and write verifiers won't trip, that the get/list/setxattr
-> > > +# operations don't stumble over them, and that xfs_repair will offer to remove
-> > > +# the entire xattr fork if the root xattr leaf block is empty.
-> > > +#
-> > > +# Regression test for kernel commit:
-> > > +#
-> > > +# af866926d865 ("xfs: empty xattr leaf header blocks are not corruption")
-> > > +#
-> > > +. ./common/preamble
-> > > +_begin_fstest auto quick attr
-> > > +
-> > > +# Override the default cleanup function.
-> > > +# _cleanup()
-> > > +# {
-> > > +# 	cd /
-> > > +# 	rm -r -f $tmp.*
-> > > +# }
-> > 
-> > Remove this part directly?
-> 
-> Ok.
-> 
-> > > +
-> > > +# Import common functions.
-> > > +. ./common/filter
-> > > +. ./common/attr
-> > > +
-> > > +# real QA test starts here
-> > > +
-> > > +# Modify as appropriate.
-> >       ^^
-> >       This comment is useless
-> 
-> Oops, will delete.
-> 
-> > > +_supported_fs xfs
-> > > +_require_scratch
-> > > +_fixed_by_kernel_commit af866926d865 "xfs: empty xattr leaf header blocks are not corruption"
-> > > +
-> > > +_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-> > > +cat $tmp.mkfs >> $seqres.full
-> > > +source $tmp.mkfs
-> > > +_scratch_mount
-> > > +
-> > > +$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 64k' $SCRATCH_MNT/largefile >> $seqres.full
-> > > +$XFS_IO_PROG -f -c "pwrite -S 0x58 0 $isize" $SCRATCH_MNT/smallfile >> $seqres.full
-> > > +
-> > > +smallfile_md5=$(md5sum < $SCRATCH_MNT/smallfile)
-> > > +largefile_md5=$(md5sum < $SCRATCH_MNT/largefile)
-> > 
-> > Hmm... is the tail '-' (printed by md5sum) as you wish? How about use the
-> > _md5_checksum() in common/rc ? (Same as below small_md5 and large_md5 part)
-> 
-> Ooh, nice suggestion.  I"ll convert the test.
-> 
-> > > +
-> > > +# Try to force the creation of a single leaf block in each of three files.
-> > > +# The first one gets a local attr, the second a remote attr, and the third
-> > > +# is left for scrub and repair to find.
-> > > +touch $SCRATCH_MNT/e0
-> > > +touch $SCRATCH_MNT/e1
-> > > +touch $SCRATCH_MNT/e2
-> > > +
-> > > +$ATTR_PROG -s x $SCRATCH_MNT/e0 < $SCRATCH_MNT/smallfile >> $seqres.full
-> > > +$ATTR_PROG -s x $SCRATCH_MNT/e1 < $SCRATCH_MNT/smallfile >> $seqres.full
-> > > +$ATTR_PROG -s x $SCRATCH_MNT/e2 < $SCRATCH_MNT/smallfile >> $seqres.full
-> > > +
-> > > +e0_ino=$(stat -c '%i' $SCRATCH_MNT/e0)
-> > > +e1_ino=$(stat -c '%i' $SCRATCH_MNT/e1)
-> > > +e2_ino=$(stat -c '%i' $SCRATCH_MNT/e2)
-> > > +
-> > > +_scratch_unmount
-> > > +
-> > > +# We used to think that it wasn't possible for empty xattr leaf blocks to
-> > > +# exist, but it turns out that setting a large xattr on a file that has no
-> > > +# xattrs can race with a log flush and crash, which results in an empty
-> > > +# leaf block being logged and recovered.  This is rather hard to trip, so we
-> > > +# use xfs_db to turn a regular leaf block into an empty one.
-> > > +make_empty_leaf() {
-> > > +	local inum="$1"
-> > > +
-> > > +	echo "editing inode $inum" >> $seqres.full
-> > > +
-> > > +	magic=$(_scratch_xfs_get_metadata_field hdr.info.magic "inode $inum" "ablock 0")
-> > > +	if [ "$magic" = "0xfbee" ]; then
-> > > +		_notrun "V4 filesystems deprecated"
-> > 
-> > Can _require_scratch_xfs_crc (at beginning) help that? Or is there a way to
-> > get a v4 leaf block when crc isn't enabled?
-> 
-> Nope, that was an oversight on my part.  I'll add
-> _require_scratch_xfs_crc to the start of the test.
-> 
-> > > +		return 1
-> > 
-> > I think _notrun will exit directly, this "return 1" never be run.
-> 
-> Yep.
-> 
-> > > +	fi
-> > > +
-> > > +	magic=$(_scratch_xfs_get_metadata_field hdr.info.hdr.magic "inode $inum" "ablock 0")
-> > > +	if [ "$magic" != "0x3bee" ]; then
-> > > +		echo "inode $inum ablock 0 is not a leaf block?"
-> > > +		_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" -c print >> $seqres.full
-> > > +		return 1
-> > > +	fi
-> > > +
-> > > +	base=$(_scratch_xfs_get_metadata_field "hdr.freemap[0].base" "inode $inum" "ablock 0")
-> > > +
-> > > +	_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" \
-> > > +		-c "write -d hdr.count 0" \
-> > > +		-c "write -d hdr.usedbytes 0" \
-> > > +		-c "write -d hdr.firstused $dbsize" \
-> > > +		-c "write -d hdr.freemap[0].size $((dbsize - base))" \
-> > 
-> > Nice trick:) Do we expect there's not corruption (can be found by xfs_repair)
-> > at here?
-> 
-> Right.  We're setting up the empty leaf block 0 to check that the kernel
-> and fsck tools do /not/ flag this as corruption.
-> 
-> > Or xfs_repair should blame the empty leaf block?
-> 
-> ...though repair run in not-dryrun mode will free the empty leaf block 0
-> if it finds one.
-> 
-> > > +		-c print >> $seqres.full
-> > > +}
-> > > +
-> > > +make_empty_leaf $e0_ino || exit
-> > 
-> > How about call _fail() directly in make_empty_leaf, if [ "$magic" != "0x3bee" ]
-> 
-> _require_scratch_xfs_crc should take care of that.
+From: Dave Chinner <dchinner@redhat.com>
 
-Hmm... I think _require_scratch_xfs_crc will help this:
+Currently we track space used in the log by grant heads.
+These store the reserved space as a physical log location and
+combine both space reserved for future use with space already used in
+the log in a single variable. The amount of space consumed in the
+log is then calculated as the  distance between the log tail and
+the grant head.
 
-  magic=$(_scratch_xfs_get_metadata_field hdr.info.magic "inode $inum" "ablock 0")
-  if [ "$magic" = "0xfbee" ]; then
+The problem with tracking the grant head as a physical location
+comes from the fact that it tracks both log cycle count and offset
+into the log in bytes in a single 64 bit variable. because the cycle
+count on disk is a 32 bit number, this also limits the offset into
+the log to 32 bits. ANd because that is in bytes, we are limited to
+being able to track only 2GB of log space in the grant head.
 
-but can't help this part:
+Hence to support larger physical logs, we need to track used space
+differently in the grant head. We no longer use the grant head for
+guiding AIL pushing, so the only thing it is now used for is
+determining if we've run out of reservation space via the
+calculation in xlog_space_left().
 
- magic=$(_scratch_xfs_get_metadata_field hdr.info.hdr.magic "inode $inum" "ablock 0")
- if [ "$magic" != "0x3bee" ]; then
+What we really need to do is move the grant heads away from tracking
+physical space in the log. The issue here is that space consumed in
+the log is not directly tracked by the current mechanism - the
+space consumed in the log by grant head reservations gets returned
+to the free pool by the tail of the log moving forward. i.e. the
+space isn't directly tracked or calculated, but the used grant space
+gets "freed" as the physical limits of the log are updated without
+actually needing to update the grant heads.
 
-due to ablock 0 might be 0x3ebe (XFS_DA3_NODE_MAGIC) besides 0x3bee, although
-it looks nearly not impossible in this test, as you only create one attr equal
-to inode size :) So if we make sure it never be a node block, it's fine to
-remove this judgement, or you can keep it for sure.
+Hence to move away from implicit, zero-update log space tracking we
+need to explicitly track the amount of physical space the log
+actually consumes separately to the in-memory reservations for
+operations that will be committed to the journal. Luckily, we
+already track the information we need to calculate this in the AIL
+itself.
 
-Thanks,
-Zorro
+That is, the space currently consumed by the journal is the maximum
+LSN that the AIL has seen minus the current log tail. As we update
+both of these items dynamically as the head and tail of the log
+moves, we always know exactly how much space the journal consumes.
 
-> 
-> > > +make_empty_leaf $e1_ino
-> > > +make_empty_leaf $e2_ino
-> > > +
-> > > +_scratch_mount
-> > > +
-> > > +# Check that listxattr/getxattr/removexattr do nothing.
-> > > +$ATTR_PROG -l $SCRATCH_MNT/e0 2>&1 | _filter_scratch
-> > > +$ATTR_PROG -g x $SCRATCH_MNT/e0 2>&1 | _filter_scratch
-> > > +$ATTR_PROG -r x $SCRATCH_MNT/e0 2>&1 | _filter_scratch
-> > > +
-> > > +# Add a small attr to e0
-> > > +$ATTR_PROG -s x $SCRATCH_MNT/e0 < $SCRATCH_MNT/smallfile > /dev/null
-> > > +$ATTR_PROG -l $SCRATCH_MNT/e0 2>&1 | sed -e 's/\([0-9]*\) byte/XXX byte/g' | _filter_scratch
-> > > +small_md5="$($GETFATTR_PROG -n user.x --absolute-names --only-values $SCRATCH_MNT/e0 | md5sum)"
-> > > +test "$small_md5" = "$smallfile_md5" || \
-> > > +	echo "smallfile $smallfile_md5 does not match small attr $small_md5"
-> > > +
-> > > +# Add a large attr to e1
-> > > +$ATTR_PROG -s x $SCRATCH_MNT/e1 < $SCRATCH_MNT/largefile > /dev/null
-> > > +$ATTR_PROG -l $SCRATCH_MNT/e1 2>&1 | _filter_scratch
-> > > +large_md5="$($GETFATTR_PROG -n user.x --absolute-names --only-values $SCRATCH_MNT/e1 | md5sum)"
-> > > +test "$large_md5" = "$largefile_md5" || \
-> > > +	echo "largefile $largefile_md5 does not match large attr $large_md5"
-> > > +
-> > > +
-> > > +# Leave e2 to try to trip the repair tools, since xfs_repair used to flag
-> > > +# empty leaf blocks incorrectly too.
-> > 
-> > So we expect there's not corruption at here, and the empty leaf block can
-> > be used properly?
-> 
-> Correct.
-> 
-> --D
-> 
-> > Thanks,
-> > Zorro
-> > 
-> > > +
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > 
-> > 
-> 
+This means that we also know exactly how much space the currently
+active reservations require, and exactly how much free space we have
+remaining for new reservations to be made. Most importantly, we know
+what these spaces are indepedently of the physical locations of
+the head and tail of the log.
+
+Hence by separating out the physical space consumed by the journal,
+we can now track reservations in the grant heads purely as a byte
+count, and the log can be considered full when the tail space +
+reservation space exceeds the size of the log. This means we can use
+the full 64 bits of grant head space for reservation space,
+completely removing the 32 bit byte count limitation on log size
+that they impose.
+
+Hence the first step in this conversion is to track and update the
+"log tail space" every time the AIL tail or maximum seen LSN
+changes.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_priv.h    | 1 +
+ fs/xfs/xfs_log_recover.c | 2 ++
+ fs/xfs/xfs_trans_ail.c   | 8 ++++++--
+ 3 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 5f4358f18224..8a005cb08a02 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -435,6 +435,7 @@ struct xlog {
+ 
+ 	struct xlog_grant_head	l_reserve_head;
+ 	struct xlog_grant_head	l_write_head;
++	uint64_t		l_tail_space;
+ 
+ 	struct xfs_kobj		l_kobj;
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index b8e25da876d8..ba2d591a1437 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1213,6 +1213,8 @@ xlog_set_state(
+ 		log->l_curr_cycle++;
+ 	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
+ 	log->l_ailp->ail_max_seen_lsn = be64_to_cpu(rhead->h_lsn);
++	WRITE_ONCE(log->l_tail_space, atomic64_read(&log->l_tail_lsn) -
++						log->l_ailp->ail_max_seen_lsn);
+ 	xlog_assign_grant_head(&log->l_reserve_head.grant, log->l_curr_cycle,
+ 					BBTOB(log->l_curr_block));
+ 	xlog_assign_grant_head(&log->l_write_head.grant, log->l_curr_cycle,
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index f0741c42130a..fd4aa9c4e914 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -728,6 +728,8 @@ xfs_ail_update_tail_lsn(
+ 	if (!tail_lsn)
+ 		tail_lsn = ailp->ail_max_seen_lsn;
+ 
++	WRITE_ONCE(log->l_tail_space,
++			xlog_lsn_sub(log, ailp->ail_max_seen_lsn, tail_lsn));
+ 	trace_xfs_log_assign_tail_lsn(log, tail_lsn);
+ 	atomic64_set(&log->l_tail_lsn, tail_lsn);
+ }
+@@ -735,7 +737,7 @@ xfs_ail_update_tail_lsn(
+ /*
+  * Callers should pass the the original tail lsn so that we can detect if the
+  * tail has moved as a result of the operation that was performed. If the caller
+- * needs to force a tail LSN update, it should pass NULLCOMMITLSN to bypass the
++ * needs to force a tail space update, it should pass NULLCOMMITLSN to bypass the
+  * "did the tail LSN change?" checks.
+  */
+ void
+@@ -822,8 +824,10 @@ xfs_trans_ail_update_bulk(
+ 	 * If this is the highest LSN we've seen in the AIL, update the tracking
+ 	 * so that we know what to set the tail to when the AIL is next emptied.
+ 	 */
+-	if (XFS_LSN_CMP(lsn, ailp->ail_max_seen_lsn) > 0)
++	if (XFS_LSN_CMP(lsn, ailp->ail_max_seen_lsn) > 0) {
+ 		ailp->ail_max_seen_lsn = lsn;
++		tail_lsn = NULLCOMMITLSN;
++	}
+ 
+ 	/*
+ 	 * If this is the first insert, wake up the push daemon so it can
+-- 
+2.36.1
 
