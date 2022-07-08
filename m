@@ -2,124 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 707A0C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 07:23:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2062DC43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 07:45:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236997AbiGHHXl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 03:23:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35900 "EHLO
+        id S236803AbiGHHpO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jul 2022 03:45:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237115AbiGHHXg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 03:23:36 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 626D91837B
-        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 00:23:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657265014; x=1688801014;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=93552WMfSILiNc+ueisBsK0QgKK6xXlsEK2VXJR2mj0=;
-  b=UEUbKB7L9piXxAo+LdbOeytAEHwn0qaZNNyCIPg8aWXGaFsh6xVyuGz3
-   Wa4ilGDIiqLo9Km/wtoVoRVFeLZHDVteLxKWbLyJX8Mu/mZBpE2DySL+k
-   YuiewtMKHO7bkjsQ1mwdVC7hePrHFdrmNyNF9mkKOZJFVKfSkV1kdAO+l
-   8n4dAOfkatJJb6jtnrEmALM3qgrJQf9Fj7c9xFnEya8pcZXj5YYR6+1jI
-   MtrDZVdfgtIPeFAn+n21d6CY7WSLkLJmWIC2AQ8Xvtc0qEbMRKCXxyerY
-   sCivSCZLgLdfPzi9njFzMrhYKq2gMaVa/TyCh1e7V7o8mfEE7I4jMXIDY
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10401"; a="264629821"
-X-IronPort-AV: E=Sophos;i="5.92,254,1650956400"; 
-   d="scan'208";a="264629821"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jul 2022 00:23:34 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,254,1650956400"; 
-   d="scan'208";a="651464820"
-Received: from lkp-server01.sh.intel.com (HELO 68b931ab7ac1) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 08 Jul 2022 00:23:32 -0700
-Received: from kbuild by 68b931ab7ac1 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1o9iKp-000N5u-B8;
-        Fri, 08 Jul 2022 07:23:31 +0000
-Date:   Fri, 8 Jul 2022 15:23:15 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     kbuild-all@lists.01.org
-Subject: Re: [PATCH 1/8] xfs: AIL doesn't need manual pushing
-Message-ID: <202207081512.ZDQWNpvY-lkp@intel.com>
-References: <20220708015558.1134330-2-david@fromorbit.com>
+        with ESMTP id S236471AbiGHHpN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 03:45:13 -0400
+Received: from ip27.imatronix.com (ip27.imatronix.com [200.63.97.108])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B20537D1D9
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 00:45:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=superfactura.cl; s=default; h=Content-Transfer-Encoding:Content-Type:To:
+        Subject:From:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=VE1tHBCuqOIXnR6RGO4x/WK5Yhial2SWrfcLR602KBA=; b=EbBhZNGr0PA0Mp96d+0eEWT0fC
+        iZqVXyRSmpHAXcxRt3gbiJC1hW06lzDDyywn1l8jiWIkomHgJomQxDnvE8w/mvIyl4RUC2MUXl256
+        oRgasBVlEmwz9aTHDLQOeCwb/3PfYRQikW+gWTGNuZaSk7L9fO6tamR9bEwdD2cIwV7NSU9P836a3
+        riTcB6NNTmvotS5KnsqP3pkmB5s/E07ouMTjqysTz6+HSa4wXaF57AGaQDTVhkG3BBHH8iruWZ1/w
+        wiAZtVTZ5jRCsKZEGOM+HrSs50H10Rkt9oXKnHhrycEc9xc0lnxNqGrUl/vb63kddnN795HkiosNj
+        noUWjJxA==;
+Received:    from [200.73.112.45]
+           by cpanel.imatronix.com    with esmtpsa    (TLS1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+           (Exim 4.95)
+           (envelope-from <kripper@imatronix.cl>)
+           id 1o9ifi-0007fY-Js   
+        for linux-xfs@vger.kernel.org;
+        Fri, 08 Jul 2022 03:45:05 -0400
+Message-ID: <09b4cbd7-c258-e39c-1f04-1edcc8ccf899@imatronix.cl>
+Date:   Fri, 8 Jul 2022 03:45:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220708015558.1134330-2-david@fromorbit.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+From:   Christopher Pereira <kripper@imatronix.cl>
+Subject: [bug report] xfs corruption - XFS_WANT_CORRUPTED_RETURN
+To:     linux-xfs@vger.kernel.org
+Content-Language: en-US
+Organization: IMATRONIX S.A.
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - cpanel.imatronix.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - imatronix.cl
+X-Get-Message-Sender-Via: cpanel.imatronix.com: authenticated_id: soporte@superfactura.cl
+X-Authenticated-Sender: cpanel.imatronix.com: soporte@superfactura.cl
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+Hi,
 
-Thank you for the patch! Perhaps something to improve:
+I've been using XFS for many years on many qemu-kvm VMs without problems.
+I do daily qcow2 snapshots and today I noticed that a snaphot I took on 
+Jun  1 2022 has a corrupted XFS root partition and doesn't boot any more 
+(on another VM instance).
+The snapshot I took the day before is clean.
+The VM is still running since May 11 2022, has not been rebooted and 
+didn't crash which is the reason I'm reporting this issue.
+This is a production VM with sensible data.
 
-[auto build test WARNING on xfs-linux/for-next]
-[also build test WARNING on linus/master v5.19-rc5 next-20220707]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+The kernel logged this error multiple times between 00:00:21 and 
+00:03:31 on Jun 1:
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/xfs-byte-base-grant-head-reservation-tracking/20220708-095642
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-config: parisc-randconfig-r014-20220707 (https://download.01.org/0day-ci/archive/20220708/202207081512.ZDQWNpvY-lkp@intel.com/config)
-compiler: hppa-linux-gcc (GCC) 11.3.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/287b7d8ee5bd281f989fd89c40bd40d43244a3d7
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Dave-Chinner/xfs-byte-base-grant-head-reservation-tracking/20220708-095642
-        git checkout 287b7d8ee5bd281f989fd89c40bd40d43244a3d7
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=parisc SHELL=/bin/bash drivers/i2c/busses/ fs/xfs/
+Jun  1 00:00:21 *** kernel: XFS (dm-0): Internal error 
+XFS_WANT_CORRUPTED_RETURN at line 337 of file 
+fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_alloc_ag_vextent_near+0x658/0xa60 
+[xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0230e5b>] 
+xfs_error_report+0x3b/0x40 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] ? 
+xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01ee684>] 
+xfs_alloc_fixup_trees+0x2c4/0x370 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] 
+xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01f120d>] 
+xfs_alloc_ag_vextent+0xcd/0x110 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa01f1f89>] 
+xfs_alloc_vextent+0x429/0x5e0 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa020237f>] 
+xfs_bmap_btalloc+0x3af/0x710 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa02026ee>] xfs_bmap_alloc+0xe/0x10 
+[xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0203148>] 
+xfs_bmapi_write+0x4d8/0xa90 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa023bd1b>] 
+xfs_iomap_write_allocate+0x14b/0x350 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0226dc6>] 
+xfs_map_blocks+0x1c6/0x230 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0227fe3>] 
+xfs_vm_writepage+0x193/0x5d0 [xfs]
+Jun  1 00:00:22 *** kernel: [<ffffffffa0227993>] 
+xfs_vm_writepages+0x43/0x50 [xfs]
+Jun  1 00:00:22 *** kernel: XFS (dm-0): page discard on page 
+ffffea000cf60200, inode 0xc52bf7f, offset 0.
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
+I'm running this (outdated) software:
 
-All warnings (new ones prefixed by >>):
+- uname -a:
+     Linux *** 3.10.0-327.22.2.el7.x86_64 #1 SMP Thu Jun 23 17:05:11 UTC 
+2016 x86_64 x86_64 x86_64 GNU/Linux
 
-   fs/xfs/xfs_log.c: In function 'xlog_grant_head_wake':
->> fs/xfs/xfs_log.c:237:33: warning: variable 'woken_task' set but not used [-Wunused-but-set-variable]
-     237 |         bool                    woken_task = false;
-         |                                 ^~~~~~~~~~
+- modinfo xfs
+     filename: /lib/modules/3.10.0-327.22.2.el7.x86_64/kernel/fs/xfs/xfs.ko
+     license:        GPL
+     description:    SGI XFS with ACLs, security attributes, no debug 
+enabled
+     author:         Silicon Graphics, Inc.
+     alias:          fs-xfs
+     rhelversion:    7.2
+     srcversion:     5F736B32E75482D75F98583
+     depends:        libcrc32c
+     intree:         Y
+     vermagic:       3.10.0-327.22.2.el7.x86_64 SMP mod_unload modversions
+     signer:         CentOS Linux kernel signing key
+     sig_key: A9:80:1A:61:B3:68:60:1C:40:EB:DB:D5:DF:D1:F3:A7:70:07:BF:A4
+     sig_hashalgo:   sha256
+
+1) Is there any known issue with this xfs version?
+
+2) How may I help you to trace this bug.
+I could provide my WhatsApp number privately for direct communication.
+
+Should I try a xfs_repair and post the logs here or via pastebin?
+
+BTW: I'm a experienced developer and sysadmin, but have no experience 
+regarding the XFS  driver.
 
 
-vim +/woken_task +237 fs/xfs/xfs_log.c
-
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  228  
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  229  STATIC bool
-e179840d74606ab Christoph Hellwig 2012-02-20  230  xlog_grant_head_wake(
-ad223e6030be017 Mark Tinguely     2012-06-14  231  	struct xlog		*log,
-e179840d74606ab Christoph Hellwig 2012-02-20  232  	struct xlog_grant_head	*head,
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  233  	int			*free_bytes)
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  234  {
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  235  	struct xlog_ticket	*tic;
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  236  	int			need_bytes;
-7c107afb871a031 Dave Chinner      2019-09-05 @237  	bool			woken_task = false;
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  238  
-e179840d74606ab Christoph Hellwig 2012-02-20  239  	list_for_each_entry(tic, &head->waiters, t_queue) {
-e179840d74606ab Christoph Hellwig 2012-02-20  240  		need_bytes = xlog_ticket_reservation(log, head, tic);
-287b7d8ee5bd281 Dave Chinner      2022-07-08  241  		if (*free_bytes < need_bytes)
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  242  			return false;
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  243  
-e179840d74606ab Christoph Hellwig 2012-02-20  244  		*free_bytes -= need_bytes;
-e179840d74606ab Christoph Hellwig 2012-02-20  245  		trace_xfs_log_grant_wake_up(log, tic);
-14a7235fba4302a Christoph Hellwig 2012-02-20  246  		wake_up_process(tic->t_task);
-7c107afb871a031 Dave Chinner      2019-09-05  247  		woken_task = true;
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  248  	}
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  249  
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  250  	return true;
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  251  }
-9f9c19ec1a59422 Christoph Hellwig 2011-11-28  252  
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
