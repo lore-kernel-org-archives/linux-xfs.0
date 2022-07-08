@@ -2,94 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 579D2C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 11:28:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7A9DC43334
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 14:17:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237928AbiGHL2h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 07:28:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55066 "EHLO
+        id S235326AbiGHOR4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jul 2022 10:17:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237957AbiGHL2g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 07:28:36 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 32627FD1E
-        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 04:28:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1657279713;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Wv13NujG3+dVwkih/Xqwv3AU9lfrcuYQf1ebjgUaVVk=;
-        b=Iczp9EkZHsxaQVzWfufbTPb/vdDcV1rfzBnQaBl/XJ9xiBrl9eCEmY+3w3aMuH9JrTeGCL
-        YyN3K14yB/yzRCBYpxOri9WMn9V7DhE/vismxDRqh6rAo/18u8es4gmwdtmZNLq27Qt06U
-        f3pA8u3z1AQpsDU3gT0SZqZXSl7sUds=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-325-Y7k7QmzaOuyT6ZJFD_OIwA-1; Fri, 08 Jul 2022 07:28:32 -0400
-X-MC-Unique: Y7k7QmzaOuyT6ZJFD_OIwA-1
-Received: by mail-wm1-f71.google.com with SMTP id a6-20020a05600c348600b003a2d72b7a15so858205wmq.9
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Jul 2022 04:28:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:organization:in-reply-to
-         :content-transfer-encoding;
-        bh=Wv13NujG3+dVwkih/Xqwv3AU9lfrcuYQf1ebjgUaVVk=;
-        b=TBeVrOBqZWmX80A3Fy82ua96OSTtfAMLfoBIaxsc3yEWWtKi5Tvr1PLzbVolifUoHP
-         5So57HxeF+TfpZwmK4oBLRC2Cw6/Zj7vDsmlCkl16RQqE7T5ELlqQ9bWUaKPGkpEYOr/
-         /rZyUHnMMuAIQWklIqTuHvG41eMltAJsIskuY6X1UMOgWYrCqmwnFH4a5HEjaI0rqu+T
-         lg0BrfBhuRBxgBsABadSMEXEARohHL4upmmNvRbfDRt1vG2Q7k9x56RO1iQBuui/+3yl
-         YB5z9qo1UomnF3WhjFf3WgbGenN8SZcC6O5hEQicUDj07el9KI/J3N3JACwAbaYQcbFZ
-         K52Q==
-X-Gm-Message-State: AJIora9K03Annzs0HbV2ia9nKxxP6l9arKAYvDG9x4A6Emx4sPlP3500
-        E7SD8u6TEJg6L1z21NwNQkFuhZYeg4uWQy7JMOY8vID1RecEfFe1hAhlvBp94zfFVjbobxYLLXb
-        1hYBEg+ghdvs2eDiE9nB9
-X-Received: by 2002:a05:600c:2d45:b0:3a0:46e9:7bde with SMTP id a5-20020a05600c2d4500b003a046e97bdemr9948562wmg.49.1657279711577;
-        Fri, 08 Jul 2022 04:28:31 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1vwGt5CrdxA6TaalbRjXWp7cv9FLQs1vbEX6yKshjXEbNsz1xjWIT4O4gDvAQM4X6U54AxsXw==
-X-Received: by 2002:a05:600c:2d45:b0:3a0:46e9:7bde with SMTP id a5-20020a05600c2d4500b003a046e97bdemr9948543wmg.49.1657279711385;
-        Fri, 08 Jul 2022 04:28:31 -0700 (PDT)
-Received: from ?IPV6:2003:cb:c702:6300:c44f:789a:59b5:91e9? (p200300cbc7026300c44f789a59b591e9.dip0.t-ipconnect.de. [2003:cb:c702:6300:c44f:789a:59b5:91e9])
-        by smtp.gmail.com with ESMTPSA id y5-20020a056000108500b002167efdd549sm12911271wrw.38.2022.07.08.04.28.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 08 Jul 2022 04:28:30 -0700 (PDT)
-Message-ID: <97816c26-d2dd-1102-4a13-fafb0b1a4bc3@redhat.com>
-Date:   Fri, 8 Jul 2022 13:28:30 +0200
+        with ESMTP id S236808AbiGHORz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 10:17:55 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E992D2FFFF
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Jul 2022 07:17:53 -0700 (PDT)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 4D6C078EC;
+        Fri,  8 Jul 2022 09:17:41 -0500 (CDT)
+Message-ID: <7a609923-4174-de01-d097-edb4b983d939@sandeen.net>
+Date:   Fri, 8 Jul 2022 09:17:52 -0500
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v8 02/15] mm: move page zone helpers into new
- header-specific file
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.11.0
 Content-Language: en-US
-To:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
-Cc:     Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org, akpm@linux-foundation.org
-References: <20220707190349.9778-1-alex.sierra@amd.com>
- <20220707190349.9778-3-alex.sierra@amd.com>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat
-In-Reply-To: <20220707190349.9778-3-alex.sierra@amd.com>
+To:     Christopher Pereira <kripper@imatronix.cl>,
+        linux-xfs@vger.kernel.org
+References: <09b4cbd7-c258-e39c-1f04-1edcc8ccf899@imatronix.cl>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [bug report] xfs corruption - XFS_WANT_CORRUPTED_RETURN
+In-Reply-To: <09b4cbd7-c258-e39c-1f04-1edcc8ccf899@imatronix.cl>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 07.07.22 21:03, Alex Sierra wrote:
-> [WHY]
-> Have a cleaner way to expose all page zone helpers in one header
+On 7/8/22 2:45 AM, Christopher Pereira wrote:
+> Hi,
+> 
+> I've been using XFS for many years on many qemu-kvm VMs without problems.
+> I do daily qcow2 snapshots and today I noticed that a snaphot I took on Jun  1 2022 has a corrupted XFS root partition and doesn't boot any more (on another VM instance).
+> The snapshot I took the day before is clean.
+> The VM is still running since May 11 2022, has not been rebooted and didn't crash which is the reason I'm reporting this issue.
+> This is a production VM with sensible data.
+> 
+> The kernel logged this error multiple times between 00:00:21 and 00:03:31 on Jun 1:
+> 
+> Jun  1 00:00:21 *** kernel: XFS (dm-0): Internal error XFS_WANT_CORRUPTED_RETURN at line 337 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0230e5b>] xfs_error_report+0x3b/0x40 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] ? xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01ee684>] xfs_alloc_fixup_trees+0x2c4/0x370 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01f120d>] xfs_alloc_ag_vextent+0xcd/0x110 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01f1f89>] xfs_alloc_vextent+0x429/0x5e0 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa020237f>] xfs_bmap_btalloc+0x3af/0x710 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa02026ee>] xfs_bmap_alloc+0xe/0x10 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0203148>] xfs_bmapi_write+0x4d8/0xa90 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa023bd1b>] xfs_iomap_write_allocate+0x14b/0x350 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0226dc6>] xfs_map_blocks+0x1c6/0x230 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0227fe3>] xfs_vm_writepage+0x193/0x5d0 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0227993>] xfs_vm_writepages+0x43/0x50 [xfs]
+> Jun  1 00:00:22 *** kernel: XFS (dm-0): page discard on page ffffea000cf60200, inode 0xc52bf7f, offset 0.
+> 
+> I'm running this (outdated) software:
+> 
+> - uname -a:
+>     Linux *** 3.10.0-327.22.2.el7.x86_64 #1 SMP Thu Jun 23 17:05:11 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
 
-What exactly is a "page zone"? Do you mean a buddy zone as in
-include/linux/mmzone.h ?
+Hi Christopherr -
 
+So that's a RHEL7.2 kernel, first released in 2016 or so - so quite old as
+you say, and also a vendor kernel you'll really need to talk to the vendor
+about, vs. upstream, for any detailed debugging or support.
 
--- 
-Thanks,
+That said ...
 
-David / dhildenb
+        /*
+         * Look up the record in the by-size tree if necessary.
+         */
+        if (flags & XFSA_FIXUP_CNT_OK) {
+#ifdef DEBUG
+                if ((error = xfs_alloc_get_rec(cnt_cur, &nfbno1, &nflen1, &i)))
+                        return error;
+                XFS_WANT_CORRUPTED_RETURN(mp,
+                        i == 1 && nfbno1 == fbno && nflen1 == flen);
+#endif
+        } else {
+                if ((error = xfs_alloc_lookup_eq(cnt_cur, fbno, flen, &i)))
+                        return error;
+                XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+        }
 
+so I think that means this is a corrupted btree. I'm not remembering any bugs
+related to this but again, it's pretty old code.
+
+> 
+> - modinfo xfs
+>     filename: /lib/modules/3.10.0-327.22.2.el7.x86_64/kernel/fs/xfs/xfs.ko
+>     license:        GPL
+>     description:    SGI XFS with ACLs, security attributes, no debug enabled
+>     author:         Silicon Graphics, Inc.
+>     alias:          fs-xfs
+>     rhelversion:    7.2
+>     srcversion:     5F736B32E75482D75F98583
+>     depends:        libcrc32c
+>     intree:         Y
+>     vermagic:       3.10.0-327.22.2.el7.x86_64 SMP mod_unload modversions
+>     signer:         CentOS Linux kernel signing key
+
+Ok, so CentOS not RHEL, but still not something the upstream developer community
+can do a whole lot with.
+
+>     sig_key: A9:80:1A:61:B3:68:60:1C:40:EB:DB:D5:DF:D1:F3:A7:70:07:BF:A4
+>     sig_hashalgo:   sha256
+> 
+> 1) Is there any known issue with this xfs version?
+> 
+> 2) How may I help you to trace this bug.
+> I could provide my WhatsApp number privately for direct communication.
+> 
+> Should I try a xfs_repair and post the logs here or via pastebin?
+
+Since you have a snapshot, that's perfectly safe; I would make another snapshot,
+and run repair on it and see how that goes. Hopefully it will resolve your issue,
+which seems to be a one-off in your case.
+
+It might be a good idea to use a more recent xfs_repair than the one in
+RHEL7.2 for this.
+
+-Eric
+
+> BTW: I'm a experienced developer and sysadmin, but have no experience regarding the XFS  driver.
+> 
+> 
