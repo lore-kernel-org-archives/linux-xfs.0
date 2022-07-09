@@ -2,140 +2,163 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29144CCA47B
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jul 2022 21:25:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C9CC433EF
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jul 2022 22:42:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238585AbiGHVZR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jul 2022 17:25:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42594 "EHLO
+        id S229535AbiGIWmb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jul 2022 18:42:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238368AbiGHVZQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jul 2022 17:25:16 -0400
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2043.outbound.protection.outlook.com [40.107.93.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93A3A23BF9;
-        Fri,  8 Jul 2022 14:25:15 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FhpsLRDbQPWXyP+H0kch0DGJtfehxLcXo9ibwei+8FV5jHN8BG8ojJjH5TeF14mqaAojrMJZ4jWRe8RV/73XVUksSLfz6Iek7E/YTlTCgsP0x+35T8vkVppGhF2Q4SjgKB10VSrz+MPv3QouXCcOJV7hRGk1AZukE4iqvSorT4Frlh6Exr+NWUZ6z42UC8sXBATJU8+ILx22xsiikB+zaPrdrogQDYBdWvtr3j24jOYPNE7Y6lIm5BWeGSkLOphogAnN//IbwgkatQVQbp63waQzq4t3SzOyluKJmphduANq7aH3LmSHjmXhKDlp7Qu4mAJse7/XQ57R2P/Hvp/M1w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=emaEfPZWEmiqAoUqnwHX3Stg0y213FrxPHVhw/7QHDE=;
- b=akeegfF+zwkpUoqXZ1yt5NIKNtRSb/YLogphmnWBjk1HR1mpZXZk9/uVX6u9gjXbkVNc1/RzhDWSWzGtk/FQSZ6vIJYZzbdv8Fk/ta9sZaWLLktnFXIR6/FOQOEG7UcTvYzuATNBUD3gCJHqtEoW64c7kE+B1ac4OdaxRdlUTT8EkUZq+jPp3WsYXNtCnuSwaRg3eddvahSDXGNBMuzlllu4173tu5Maq4OY7NNbeIELAsMGb/CbLg0ntdkgdYqv/adF7sN58ck8cejyQ+uY8x6rSNtNKg3LSLu1HyyEuv5oQ6Fkm/Tee7SUquFVp9GUw2Qsp+t26p/jarJEOdvGQQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=emaEfPZWEmiqAoUqnwHX3Stg0y213FrxPHVhw/7QHDE=;
- b=e2sdSFiTuNA2WRshK/LWvdegjRnr/fXhzVo7ONusZV7dtqXpsSK/eOtOZk9xcz6xPcdd/+U/sMKkVRAP/trAbyIPqvUyIsrcx1Rt/hoPdYBNlVtBqfXbAcV803Ga2eYF0/NrW5b5OtBMeguLwzU0PZ+uesFgJwqRR94MNs9/SSs=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from BN9PR12MB5115.namprd12.prod.outlook.com (2603:10b6:408:118::14)
- by DS7PR12MB6118.namprd12.prod.outlook.com (2603:10b6:8:9a::5) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5395.20; Fri, 8 Jul 2022 21:25:13 +0000
-Received: from BN9PR12MB5115.namprd12.prod.outlook.com
- ([fe80::b096:31c:bfb7:fa0a]) by BN9PR12MB5115.namprd12.prod.outlook.com
- ([fe80::b096:31c:bfb7:fa0a%3]) with mapi id 15.20.5417.020; Fri, 8 Jul 2022
- 21:25:13 +0000
-Message-ID: <715fc1ae-7bd3-5b96-175c-e1cc74920739@amd.com>
-Date:   Fri, 8 Jul 2022 17:25:12 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH v8 02/15] mm: move page zone helpers into new
- header-specific file
-Content-Language: en-US
-To:     David Hildenbrand <david@redhat.com>,
-        Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
-Cc:     linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org, akpm@linux-foundation.org
-References: <20220707190349.9778-1-alex.sierra@amd.com>
- <20220707190349.9778-3-alex.sierra@amd.com>
- <97816c26-d2dd-1102-4a13-fafb0b1a4bc3@redhat.com>
-From:   Felix Kuehling <felix.kuehling@amd.com>
-Organization: AMD Inc.
-In-Reply-To: <97816c26-d2dd-1102-4a13-fafb0b1a4bc3@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: BL1PR13CA0167.namprd13.prod.outlook.com
- (2603:10b6:208:2bd::22) To BN9PR12MB5115.namprd12.prod.outlook.com
- (2603:10b6:408:118::14)
+        with ESMTP id S229522AbiGIWma (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Jul 2022 18:42:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D096611C37
+        for <linux-xfs@vger.kernel.org>; Sat,  9 Jul 2022 15:42:29 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6D10A60FEE
+        for <linux-xfs@vger.kernel.org>; Sat,  9 Jul 2022 22:42:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFFA0C3411C
+        for <linux-xfs@vger.kernel.org>; Sat,  9 Jul 2022 22:42:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1657406548;
+        bh=UsW4wIGcK1pCQOAeXavyKcm+UyDDyjujrWXC3A+IVII=;
+        h=Date:From:To:Subject:From;
+        b=LVUyknIS79lZ39CCNtwLjZ+21Vw5CqIA2LqV0CmmBPk+a33fO7cflgpjjVLYdhyHR
+         5a2hrA7fWSQr9fqSqI2b8jlpKfMxpQeUJwqOnB1tF4Sohg7bpiMkGne38xV2Pg1+kt
+         /cZT0On/8CIdwG+eEHWUtuwbW5SNSJX3LpJoVHiBb7KRT3Qu6BJL/t9vUWgdtE8JtY
+         ABRr7kUfPb1cXb/1GEGuqBAR4esakC65L9sdkLq8U7elIPCrxtZkBSoR1+FWrqQFFA
+         2yuR6eEJCq9Y6J5OZ0vC1nDq05z0mX+BS3cYeubMUfkQOYD0b8Bjftt+1TPav2qipu
+         KR5kOP1L7fq8g==
+Date:   Sat, 9 Jul 2022 15:42:28 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next **rebased** to 0f38063d7a38
+Message-ID: <YsoEVAFinB9Q6IKk@magnolia>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: dc5d75ea-947c-4fc0-454f-08da61285857
-X-MS-TrafficTypeDiagnostic: DS7PR12MB6118:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: xZP3SWWNFjivGXf09UPv3DY32x7u31JQFhfVPJLlyoG6amCUSzPQ8SZ42/3+MVwacoTeYk+7fhs+Jd3KuuVFD2SV3y0xWn01d4d8o6iAYwL+tBUnm2vtje7kY4sbaCBQSCcHvwL9yeiouhc8SJEGSZ51cRD9E5ECMTi8PY8dQq856TAIi9rP3ZrGCe8tJMhieRCI3R1TcYYGSW7DCj5iNiDR++Q8FXyakLesSD228VPB1fDyYU4iGDgSEZChrp/x+TWYPbM2sjY05QpzzZawEe56NkF4HOnwIRFV1gcRzMMBluMfB4DkjTDGglIeKluC2gVdLI1rPoq1TzeA/i8H9YQn9JGxbpfRxvp/q5bx2KNasq14IJawxLNkZjjU8NfCzNS1ScUpAAXZA7qK0Tz5u9ZSJKcdaBRqCQnX85WyIDPvLFIhEoSrvSfovUp2mDS6dyO58wOvB7piJXG6mfJElYU75rjScVRYOc039D4+C8V/embQ72s+YJXhxYjlvrO0VVblmMkc/iiD+ZP8hKkHx33Nb0bjWaSO5FfITV6kHbkCU3JbyD5OL7q8P918bXmULciDyP+KpV1rUoaNWvdWCMpLkTun8Fbv0TECdOrwjfzvuc89aP9QDvcPJPNKkEMiYial3yaPGJ4RclI/9ArK3QC8U1mSLqFvwu9xFVp7N84C0LtKSZ7ltt/uVDEJEAj2szRHJ28+K7GmKm95T8CxN8Fcn87X4AHeNDz/tfNg7WQdNYkAAIL/n0k5CCzZcnnAI2DrhS+Z1WxjZIw619ivXyBI3Mhs1vBMQK4gl6OQmZnoWw//300XeVAVVAIP7JjX1Dy4cAxUErnONu7oYSGyT3dkJa/Q5QCg2TOPA5Uc4Ro=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR12MB5115.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(366004)(39860400002)(136003)(346002)(376002)(396003)(36916002)(8936002)(4326008)(2906002)(44832011)(316002)(110136005)(6506007)(4744005)(478600001)(66946007)(2616005)(66476007)(6486002)(26005)(5660300002)(86362001)(31696002)(7416002)(8676002)(53546011)(36756003)(6512007)(66556008)(38100700002)(41300700001)(31686004)(186003)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?c0VVeHZBRzRjTFh1TGxGZ0pENkl5WWp2ZSsvVndEd3VRbTRnNVRqNVZDenkv?=
- =?utf-8?B?dTM5WVJCM3VUYWlxVy83aU9UWW5sZGpBaE9qZGRnTVc3Q1pyWk5Fc2wydlRV?=
- =?utf-8?B?ZGoralZ3bmt4Znk3bjZIRk9BUmtRRHQvSWdDZ0s1Z3cvOGhOWlBmTU1JeG9G?=
- =?utf-8?B?Tm9ocmFGcVN1MXBqbHVyMlBLMTVBVlduQ3l1N2hUazBJWXhTVjFrWEpTejJV?=
- =?utf-8?B?V0xtWHlRTVlCMldFRWtEUDJEcm9zRXVBSDVrTlpsTTQrSUxMM0UxckZKZHhr?=
- =?utf-8?B?dTRBL2pjRkF2MStKNDBkODJsWUdjQ0tMVU9jem55NVZDbGk0NHBUL1hob243?=
- =?utf-8?B?T0QxenNQcWlnMXhoL1B4YkdYTmhOaU1wOXlWZjMvajdTdXh1Y05OOHFaSU5q?=
- =?utf-8?B?MWRKWnNlK3RBdXFpcWI2UU5PRmVZZ2pIdkduditSMW5CaWlhUkhoSkMwNEVK?=
- =?utf-8?B?SDhlRWhlSmRDbEoxQ2xxN0lvY3FtekdMN1ByWjdLUEJZQ25TRENZRm14dDNI?=
- =?utf-8?B?SllGSmZKWUlCWWZYYUpxTG5neEE2ajEwaUFTdmpyb3Bpc3pXR1U0WWIvVmVx?=
- =?utf-8?B?MmVkWlNvSVVHYk81by9FTDJOc0lMWnFlUjByTWZTc0hKSzRpM1U1ejJFTHNv?=
- =?utf-8?B?VzB0OHQ4Z0UreWN6NXdwNnpyaFlZTzRqT1B2OXFnQnUvNHBNVzBBT0llWkNJ?=
- =?utf-8?B?cHZITDJqenJCVldhOWE1aXh1bmtGa053UEpBVHhBNTVaMDR0T2ZtcUdJYnJY?=
- =?utf-8?B?Tm0zcmZTS1JGY3lCdDUxTzRiYTFyS0YxUEZESndra0NuS0M2bnRab3ZzdDVM?=
- =?utf-8?B?WTNmS2U0a0hpc04wdytRbzFBc3JTbGpyS2d3aUpTa3lSd0paMDVERFJtZFJn?=
- =?utf-8?B?dFdmNm52WDRyT3dVcGhoQUs1MG9HaGdZZXdkN2tvWi9iaktBSndOTHM0VjNX?=
- =?utf-8?B?ejJSekVQL0kxRitHdEROVWRjckJPOTdwd2pyZ3lNRlc5anV1eEJRMllVS2Jn?=
- =?utf-8?B?NlluRTQzdC9Pd1hzWFJaSGZZM3Ewai9SRm1CU3prSE0rU3A0aVI5NW8rcmxP?=
- =?utf-8?B?MkFRSXozdzFVd2p6dWVOWnkyQnNiQkROWktSWXFDOTU3eGdNMXlzZTd5VUZM?=
- =?utf-8?B?U01OTStVYW9SREJrUlI1N2VVZEV4aS9zSHhBSytOZXExWHVLZEU4VDc5NnBR?=
- =?utf-8?B?MUlMLzEybjJoNFN5bUVOdXpUblFaalVESHRsZGxtRzdpZkxhMUttaXFBbzN4?=
- =?utf-8?B?VEhqcjBhNHRTNHRLRGYweUx6QUR4aWlxT2c3aEdRZUlaRDN5RTR0R3dQQUpo?=
- =?utf-8?B?cm93a21tTktiRlBjemFpTWd1Qk9nZnNWQ3JTOENBeUoycWFjQjJWS3ZJK3VP?=
- =?utf-8?B?ajV0a3AxbXdqVnlWLzErR1orUW1UZkd2aFpUQzVQMWgxSk5Jc1lTTjFqUDRX?=
- =?utf-8?B?M2VWcC9kSFZSazZMdGM2ZWJnT3BUOXd4MFJONU5kU3huWTVoOUZXYzZwSHdZ?=
- =?utf-8?B?Y1dvNVJhQW9UTWFjWVNUejNQbVRwRnZKN09sRmkzTXBsb2l6MEtNc1NHdWFF?=
- =?utf-8?B?TFV2UDdja0tuZS9xcm5ldTlya2x2MVFzbDZCMVExRjlDMWlXTHBpTHltTHdX?=
- =?utf-8?B?eDJWd0IxSmsxS1duM2Y3TFJsZkc3eFRQWVRWL0FIclNXSEhsREsvaFp4eGhU?=
- =?utf-8?B?QVpOeFdqY2xBd2dFb21uWTNHY0JLdHRXNDdlL3o4RUdCdlFOZHhycDFWZk4x?=
- =?utf-8?B?TjNKUkd6N09KM1ZzaEJDOVpYaHpuUFVtZzVwUjZzYTd1WDVEcDZqQmNnNHQ1?=
- =?utf-8?B?eXpUQmRkOGZKeWVOUW54WFV1TkQzR0IyYXBVR3poSDR6SlNhdks1Q2ExNjlD?=
- =?utf-8?B?VXhGVm13SFZEL2sreEFGcWZ0a21NRDRBWDAzSEZkL0wvRFMzaHkzcStIdGVK?=
- =?utf-8?B?TCtadzcwa1JveldWQUxjVXloM21oZzBYalJ1WHpBZDNXMmgxZ3pjc2lHZDRC?=
- =?utf-8?B?RzBqTHp0c2llUXBrUkQzbEFNbTduL3JhNFNDYmxHeEdLSWNxSzVCR2pWTnZo?=
- =?utf-8?B?b3dzQzVLOXVScExOcldhb3FDYzBGSEFCNWpyMGJ3NkZLR2Y1bWswNURJd1A5?=
- =?utf-8?Q?yOsusd6KOY8rQm5HmrgAZTsay?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dc5d75ea-947c-4fc0-454f-08da61285857
-X-MS-Exchange-CrossTenant-AuthSource: BN9PR12MB5115.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2022 21:25:13.6296
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kDKeUmnOdAj8+dQNYFsjmiarX0dVNBS3gHRe4eD1ReGjibc5l8A9Ea4YroggawfOxqjl5z7P9MAAWdJd0Gi//w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6118
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2022-07-08 07:28, David Hildenbrand wrote:
-> On 07.07.22 21:03, Alex Sierra wrote:
->> [WHY]
->> Have a cleaner way to expose all page zone helpers in one header
-> What exactly is a "page zone"? Do you mean a buddy zone as in
-> include/linux/mmzone.h ?
->
-Zone as in ZONE_DEVICE. Maybe we could extend mmzone.h instead of 
-creating page_zone.h? That should work as long as it's OK to include 
-mmzone.h in memremap.h.
+Hi folks,
 
-Regards,
-   Felix
+The for-next branch of the xfs-linux repository at:
 
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been **REBASED**.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+This is a rebase of the for-next push from earlier in the week to
+use Dave's pull requests to incorporate signed tags into the merge
+branch.  This preserves the commit messages from those patchsets.
+There should be no other changes.
+
+The new head of the for-next branch is commit:
+
+0f38063d7a38 xfs: removed useless condition in function xfs_attr_node_get
+
+32 new commits:
+
+Andrey Strachuk (1):
+      [0f38063d7a38] xfs: removed useless condition in function xfs_attr_node_get
+
+Darrick J. Wong (2):
+      [dd81dc05598c] Merge tag 'xfs-cil-scale-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeA
+      [fddb564f62aa] Merge tag 'xfs-perag-conv-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeA
+
+Dave Chinner (28):
+      [88591e7f06a4] xfs: use the CIL space used counter for emptiness checks
+      [12380d237b81] xfs: lift init CIL reservation out of xc_cil_lock
+      [31151cc342dd] xfs: rework per-iclog header CIL reservation
+      [af1c2146a50b] xfs: introduce per-cpu CIL tracking structure
+      [7c8ade212120] xfs: implement percpu cil space used calculation
+      [1dd2a2c18e31] xfs: track CIL ticket reservation in percpu structure
+      [df7a4a2134b0] xfs: convert CIL busy extents to per-cpu
+      [016a23388cdc] xfs: Add order IDs to log items in CIL
+      [c0fb4765c508] xfs: convert CIL to unordered per cpu lists
+      [169248536a2b] xfs: convert log vector chain to use list heads
+      [4eb56069cb28] xfs: move CIL ordering to the logvec chain
+      [1ccb0745a97f] xfs: avoid cil push lock if possible
+      [d9f68777b251] xfs: xlog_sync() manually adjusts grant head space
+      [51a117edff13] xfs: expanding delayed logging design with background material
+      [c6aee2481419] xfs: make last AG grow/shrink perag centric
+      [a95fee40e3d4] xfs: kill xfs_ialloc_pagi_init()
+      [99b13c7f0bd3] xfs: pass perag to xfs_ialloc_read_agi()
+      [76b47e528e3a] xfs: kill xfs_alloc_pagf_init()
+      [08d3e84feeb8] xfs: pass perag to xfs_alloc_read_agf()
+      [61021deb1faa] xfs: pass perag to xfs_read_agi
+      [fa044ae70c64] xfs: pass perag to xfs_read_agf
+      [49f0d84ec1db] xfs: pass perag to xfs_alloc_get_freelist
+      [8c392eb27f7a] xfs: pass perag to xfs_alloc_put_freelist
+      [cec7bb7d58fa] xfs: pass perag to xfs_alloc_read_agfl
+      [0800169e3e2c] xfs: Pre-calculate per-AG agbno geometry
+      [2d6ca8321c35] xfs: Pre-calculate per-AG agino geometry
+      [3829c9a10fc7] xfs: replace xfs_ag_block_count() with perag accesses
+      [36029dee382a] xfs: make is_log_ag() a first class helper
+
+Eric Sandeen (1):
+      [70b589a37e1a] xfs: add selinux labels to whiteout inodes
+
+Code Diffstat:
+
+ .../filesystems/xfs-delayed-logging-design.rst     | 361 ++++++++++++++--
+ fs/xfs/libxfs/xfs_ag.c                             | 165 ++++---
+ fs/xfs/libxfs/xfs_ag.h                             |  69 ++-
+ fs/xfs/libxfs/xfs_ag_resv.c                        |   2 +-
+ fs/xfs/libxfs/xfs_alloc.c                          | 143 +++----
+ fs/xfs/libxfs/xfs_alloc.h                          |  58 +--
+ fs/xfs/libxfs/xfs_alloc_btree.c                    |   9 +-
+ fs/xfs/libxfs/xfs_attr.c                           |   2 +-
+ fs/xfs/libxfs/xfs_bmap.c                           |   3 +-
+ fs/xfs/libxfs/xfs_btree.c                          |  25 +-
+ fs/xfs/libxfs/xfs_ialloc.c                         |  86 ++--
+ fs/xfs/libxfs/xfs_ialloc.h                         |  25 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c                   |  20 +-
+ fs/xfs/libxfs/xfs_inode_buf.c                      |   5 +-
+ fs/xfs/libxfs/xfs_refcount.c                       |  19 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c                 |   5 +-
+ fs/xfs/libxfs/xfs_rmap.c                           |   8 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c                     |   9 +-
+ fs/xfs/libxfs/xfs_types.c                          |  73 +---
+ fs/xfs/libxfs/xfs_types.h                          |   9 -
+ fs/xfs/scrub/agheader.c                            |  25 +-
+ fs/xfs/scrub/agheader_repair.c                     |  21 +-
+ fs/xfs/scrub/alloc.c                               |   7 +-
+ fs/xfs/scrub/bmap.c                                |   2 +-
+ fs/xfs/scrub/common.c                              |   6 +-
+ fs/xfs/scrub/fscounters.c                          |   4 +-
+ fs/xfs/scrub/health.c                              |   2 +
+ fs/xfs/scrub/ialloc.c                              |  12 +-
+ fs/xfs/scrub/refcount.c                            |   9 +-
+ fs/xfs/scrub/repair.c                              |  32 +-
+ fs/xfs/scrub/rmap.c                                |   6 +-
+ fs/xfs/xfs_discard.c                               |   2 +-
+ fs/xfs/xfs_extfree_item.c                          |   6 +-
+ fs/xfs/xfs_filestream.c                            |   4 +-
+ fs/xfs/xfs_fsmap.c                                 |   3 +-
+ fs/xfs/xfs_fsops.c                                 |  13 +-
+ fs/xfs/xfs_inode.c                                 |  42 +-
+ fs/xfs/xfs_ioctl.c                                 |   8 +-
+ fs/xfs/xfs_iops.c                                  |  11 +-
+ fs/xfs/xfs_iops.h                                  |   3 +
+ fs/xfs/xfs_log.c                                   |  55 ++-
+ fs/xfs/xfs_log.h                                   |   3 +-
+ fs/xfs/xfs_log_cil.c                               | 474 ++++++++++++++++-----
+ fs/xfs/xfs_log_priv.h                              |  58 ++-
+ fs/xfs/xfs_log_recover.c                           |  41 +-
+ fs/xfs/xfs_mount.c                                 |   3 +-
+ fs/xfs/xfs_reflink.c                               |  40 +-
+ fs/xfs/xfs_reflink.h                               |   3 -
+ fs/xfs/xfs_super.c                                 |   1 +
+ fs/xfs/xfs_trans.c                                 |   4 +-
+ fs/xfs/xfs_trans.h                                 |   1 +
+ fs/xfs/xfs_trans_priv.h                            |   3 +-
+ 52 files changed, 1278 insertions(+), 722 deletions(-)
