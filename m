@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8A02CCA47B
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jul 2022 04:15:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CAB3C43334
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jul 2022 04:15:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229589AbiGKEPV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jul 2022 00:15:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56338 "EHLO
+        id S229572AbiGKEPT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jul 2022 00:15:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbiGKEPU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jul 2022 00:15:20 -0400
+        with ESMTP id S229469AbiGKEPR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jul 2022 00:15:17 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73C8E18B30;
-        Sun, 10 Jul 2022 21:15:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7810D18B3A;
+        Sun, 10 Jul 2022 21:15:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=coXs7fZqtjdeX2Tzle8EdrF+O0+NaGLuimvWE8sIgts=; b=Tt6n//qoWHWsmWJA3vCeCXOqRg
-        xzyPNEaoIqC67drpSr97P02ADJ9JuDeK40PKwOnc8R9i9F22UjtnxyMTdSP2Nw2xh+wSqfDNJtSDq
-        RKItZpUL4YsBk4XYQdwq5mQNJ6QL92iY6CA2UNr+4mvW0VZAW8Sc48srasnlpQzllaw2mkX64eCDD
-        4VgIdVi6qe8YvEP0JByfBqzoUUOtCtUUDxyluN4lNdIeFKuR1ha6uOVctCoYO9D3tRaS6sEQmdo4E
-        zJ0Tzo9RnYWIPcFJUk6N5W8j7AyYxcERNseBQO+93/yqMEhaiYxTEXqwoWc15ilSg8HJUBc2JDVeP
-        qk63xVvg==;
+        bh=+ahx8IwBj1lognBvyanyVPYvmkYJvj3o2T/XC6JDw+Y=; b=RkPmSbJOThdixWcmqh5WqcV+DM
+        QZ937ZTJUiABfxThKQ5DgNZx047yLrbncE8Tj4ngUJHQnM3CSu/shmQrgCPy+7Hj5G5dBUuo2qRRW
+        N8GMaaPnqecJZsF+zPBO4ETbzp8VcVwU0Pi+GT0VmD9UwCBVgfu4IYFEDgVyGSdvW1bC/apckAOnP
+        NTBFEnwN29eBh1nKizbCqCx2+q9k/zKm/lKpf4QCLRPqXnG65gaJNoj5N2ZCx59h7NM2S/TET3aQ1
+        SgkyVz61fGRuTPP6bwHx/Jfhf5BtpgoRH+oWjJNHFtpjLtteE215iohAjzGOTwTQ31D1li9N2bYtW
+        8Wys0kFg==;
 Received: from 089144197153.atnat0006.highway.a1.net ([89.144.197.153] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oAkpF-00Fpxf-Jo; Mon, 11 Jul 2022 04:15:14 +0000
+        id 1oAkpA-00Fpwn-1T; Mon, 11 Jul 2022 04:15:08 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Bob Peterson <rpeterso@redhat.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
@@ -35,9 +35,9 @@ To:     Bob Peterson <rpeterso@redhat.com>,
         Naohiro Aota <naohiro.aota@wdc.com>
 Cc:     Johannes Thumshirn <jth@kernel.org>, cluster-devel@redhat.com,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 4/4] iomap: remove iomap_writepage
-Date:   Mon, 11 Jul 2022 06:14:59 +0200
-Message-Id: <20220711041459.1062583-5-hch@lst.de>
+Subject: [PATCH 2/4] gfs2: remove ->writepage
+Date:   Mon, 11 Jul 2022 06:14:57 +0200
+Message-Id: <20220711041459.1062583-3-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220711041459.1062583-1-hch@lst.de>
 References: <20220711041459.1062583-1-hch@lst.de>
@@ -48,54 +48,59 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Unused now.
+->writepage is only used for single page writeback from memory reclaim,
+and not called at all for cgroup writeback.  Follow the lead of XFS
+and remove ->writepage and rely entirely on ->writepages.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 15 ---------------
- include/linux/iomap.h  |  3 ---
- 2 files changed, 18 deletions(-)
+ fs/gfs2/aops.c | 26 --------------------------
+ 1 file changed, 26 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index d2a9f699e17ed..1bac8bda40d0c 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1518,21 +1518,6 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
+diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
+index 106e90a365838..0240a1a717f56 100644
+--- a/fs/gfs2/aops.c
++++ b/fs/gfs2/aops.c
+@@ -81,31 +81,6 @@ static int gfs2_get_block_noalloc(struct inode *inode, sector_t lblock,
  	return 0;
  }
  
--int
--iomap_writepage(struct page *page, struct writeback_control *wbc,
--		struct iomap_writepage_ctx *wpc,
--		const struct iomap_writeback_ops *ops)
+-/**
+- * gfs2_writepage - Write page for writeback mappings
+- * @page: The page
+- * @wbc: The writeback control
+- */
+-static int gfs2_writepage(struct page *page, struct writeback_control *wbc)
 -{
--	int ret;
+-	struct inode *inode = page->mapping->host;
+-	struct gfs2_inode *ip = GFS2_I(inode);
+-	struct gfs2_sbd *sdp = GFS2_SB(inode);
+-	struct iomap_writepage_ctx wpc = { };
 -
--	wpc->ops = ops;
--	ret = iomap_do_writepage(page, wbc, wpc);
--	if (!wpc->ioend)
--		return ret;
--	return iomap_submit_ioend(wpc, wpc->ioend, ret);
+-	if (gfs2_assert_withdraw(sdp, gfs2_glock_is_held_excl(ip->i_gl)))
+-		goto out;
+-	if (current->journal_info)
+-		goto redirty;
+-	return iomap_writepage(page, wbc, &wpc, &gfs2_writeback_ops);
+-
+-redirty:
+-	redirty_page_for_writepage(wbc, page);
+-out:
+-	unlock_page(page);
+-	return 0;
 -}
--EXPORT_SYMBOL_GPL(iomap_writepage);
 -
- int
- iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
- 		struct iomap_writepage_ctx *wpc,
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index e552097c67e0b..911888560d3eb 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -303,9 +303,6 @@ void iomap_finish_ioends(struct iomap_ioend *ioend, int error);
- void iomap_ioend_try_merge(struct iomap_ioend *ioend,
- 		struct list_head *more_ioends);
- void iomap_sort_ioends(struct list_head *ioend_list);
--int iomap_writepage(struct page *page, struct writeback_control *wbc,
--		struct iomap_writepage_ctx *wpc,
--		const struct iomap_writeback_ops *ops);
- int iomap_writepages(struct address_space *mapping,
- 		struct writeback_control *wbc, struct iomap_writepage_ctx *wpc,
- 		const struct iomap_writeback_ops *ops);
+ /**
+  * gfs2_write_jdata_page - gfs2 jdata-specific version of block_write_full_page
+  * @page: The page to write
+@@ -765,7 +740,6 @@ bool gfs2_release_folio(struct folio *folio, gfp_t gfp_mask)
+ }
+ 
+ static const struct address_space_operations gfs2_aops = {
+-	.writepage = gfs2_writepage,
+ 	.writepages = gfs2_writepages,
+ 	.read_folio = gfs2_read_folio,
+ 	.readahead = gfs2_readahead,
 -- 
 2.30.2
 
