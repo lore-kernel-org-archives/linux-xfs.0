@@ -2,95 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C79BC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jul 2022 22:06:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD9A1C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jul 2022 23:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229745AbiGKWGr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jul 2022 18:06:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45000 "EHLO
+        id S229702AbiGKXXC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jul 2022 19:23:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229718AbiGKWGr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jul 2022 18:06:47 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7EEF052DE2
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Jul 2022 15:06:45 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 613D362C589;
-        Tue, 12 Jul 2022 08:06:43 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oB1YA-00HMVU-EC; Tue, 12 Jul 2022 08:06:42 +1000
-Date:   Tue, 12 Jul 2022 08:06:42 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Zhang Yi <yi.zhang@huawei.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org, yukuai3@huawei.com
-Subject: Re: [PATCH] xfs: flush inode gc workqueue before clearing agi bucket
-Message-ID: <20220711220642.GC3861211@dread.disaster.area>
-References: <20220711144134.3103197-1-yi.zhang@huawei.com>
+        with ESMTP id S230217AbiGKXXB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jul 2022 19:23:01 -0400
+Received: from mail-qv1-xf31.google.com (mail-qv1-xf31.google.com [IPv6:2607:f8b0:4864:20::f31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E9D06556D;
+        Mon, 11 Jul 2022 16:23:01 -0700 (PDT)
+Received: by mail-qv1-xf31.google.com with SMTP id d17so1473697qvs.0;
+        Mon, 11 Jul 2022 16:23:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=/q/fM8pNGaA4sNIIE9f0bEPPvZJEcYT1Nv2gU2H7qnM=;
+        b=DH43PfgvO2Vp+AMP8vJHbck+6Pqy5UUqdD2H7+aU6J5AN2wicO1fb62Dp/OMmajpkc
+         qVR3zhS7nNB6x6IJb9YS1ObTcLpOi8q91xYx6WBr4w/ThaFcU3gzz2KCX/c5n5nMD2L5
+         qechc78Kkf4V9nx6m5muaMr/qxyQdy03fUPZSz9FKKIxNUHLpDDEyWNnAcv5TS0R8r2Z
+         UFCmEY0MlMWnPSKaMg3Nel8n+IRSeTiAcMv3C1VwR/exv27JOTliXSeQ58p20QWTvDen
+         DQf9/goZZJTMRUmYeX/An+sLTn4m+V5G8YjR9U+1q/HmJo0NyCFYpfgJqB/0up7sk0Ag
+         QLiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=/q/fM8pNGaA4sNIIE9f0bEPPvZJEcYT1Nv2gU2H7qnM=;
+        b=Eq7+zdEuo+AN+QCPsABJqqBj4cgSmqP8E+Cg9N6AgiErMlLPYHz8v2xISdzUdIld3X
+         W9HyYU4verln7XoyqVPC3lF31pXhpLjVn1G+MmedawjJ8AOoOFw5IzI+7CxWT7jyBEch
+         sFinh5KsBZXS/NOVrvEmN8hsLjsqG0AIx3RiZOmSmZ8r3i4Z9gext0V9sFuSmDa2gMnL
+         TDA/TKz300QagqyB3AYWuPsWqhZVKmIM6qfg+UmfmVDIhmethunXW4auXfMIfdLXJk+O
+         AobVUldVDvTfMq+8vEPxJvqDVM5Ny6Vp/oL5dtctGPy7xreTx8yUHmao5/QGEOqZmMZT
+         GE5g==
+X-Gm-Message-State: AJIora+QGZS09+MC5sRYmwT2qzSdrviPQDE7UWwUec044+P7cUqONuDA
+        pJtkw15TyhY4yuXzpxPRDWV8qjl9uK2t+OvahnU=
+X-Google-Smtp-Source: AGRyM1vnrYQM46zGtkGWwykcZ+hv0MaP+4jT834HK0M6B1yxWQKb5po7+H4f8Z/wUifUniMK2NXdhZPHi3yjNM0gaJw=
+X-Received: by 2002:a05:6214:76d:b0:473:2a39:45fb with SMTP id
+ f13-20020a056214076d00b004732a3945fbmr15539693qvz.129.1657581780221; Mon, 11
+ Jul 2022 16:23:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220711144134.3103197-1-yi.zhang@huawei.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62cc9ef4
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=i0EeH86SAAAA:8 a=20KFwNOVAAAA:8
-        a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=ZNIgRAvqz_NJNaqDNRgA:9
-        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <20220711041459.1062583-1-hch@lst.de> <20220711041459.1062583-3-hch@lst.de>
+In-Reply-To: <20220711041459.1062583-3-hch@lst.de>
+From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date:   Tue, 12 Jul 2022 01:22:48 +0200
+Message-ID: <CAHpGcMLFwN4toB2KD0EvPAgx3zchpGNfzUWfsJ-8dxmnOieCsQ@mail.gmail.com>
+Subject: Re: [PATCH 2/4] gfs2: remove ->writepage
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Thumshirn <jth@kernel.org>,
+        cluster-devel <cluster-devel@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 11, 2022 at 10:41:34PM +0800, Zhang Yi wrote:
-> In the procedure of recover AGI unlinked lists, if something bad
-> happenes on one of the unlinked inode in the bucket list, we would call
-> xlog_recover_clear_agi_bucket() to clear the whole unlinked bucket list,
-> not the unlinked inodes after the bad one. If we have already added some
-> inodes to the gc workqueue before the bad inode in the list, we could
-> get below error when freeing those inodes, and finaly fail to complete
-> the log recover procedure.
-> 
->  XFS (ram0): Internal error xfs_iunlink_remove at line 2456 of file
->  fs/xfs/xfs_inode.c.  Caller xfs_ifree+0xb0/0x360 [xfs]
-> 
-> The problem is xlog_recover_clear_agi_bucket() clear the bucket list, so
-> the gc worker fail to check the agino in xfs_verify_agino(). Fix this by
-> flush workqueue before clearing the bucket.
-> 
-> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+Am Mo., 11. Juli 2022 um 06:16 Uhr schrieb Christoph Hellwig <hch@lst.de>:
+> ->writepage is only used for single page writeback from memory reclaim,
+> and not called at all for cgroup writeback.  Follow the lead of XFS
+> and remove ->writepage and rely entirely on ->writepages.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_log_recover.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 5f7e4e6e33ce..2f655ef4364e 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2714,6 +2714,7 @@ xlog_recover_process_one_iunlink(
->  	 * Call xlog_recover_clear_agi_bucket() to perform a transaction to
->  	 * clear the inode pointer in the bucket.
->  	 */
-> +	xfs_inodegc_flush(mp);
->  	xlog_recover_clear_agi_bucket(mp, agno, bucket);
->  	return NULLAGINO;
+>  fs/gfs2/aops.c | 26 --------------------------
+>  1 file changed, 26 deletions(-)
+>
+> diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
+> index 106e90a365838..0240a1a717f56 100644
+> --- a/fs/gfs2/aops.c
+> +++ b/fs/gfs2/aops.c
+> @@ -81,31 +81,6 @@ static int gfs2_get_block_noalloc(struct inode *inode, sector_t lblock,
+>         return 0;
 >  }
+>
+> -/**
+> - * gfs2_writepage - Write page for writeback mappings
+> - * @page: The page
+> - * @wbc: The writeback control
+> - */
+> -static int gfs2_writepage(struct page *page, struct writeback_control *wbc)
+> -{
+> -       struct inode *inode = page->mapping->host;
+> -       struct gfs2_inode *ip = GFS2_I(inode);
+> -       struct gfs2_sbd *sdp = GFS2_SB(inode);
+> -       struct iomap_writepage_ctx wpc = { };
+> -
+> -       if (gfs2_assert_withdraw(sdp, gfs2_glock_is_held_excl(ip->i_gl)))
+> -               goto out;
+> -       if (current->journal_info)
+> -               goto redirty;
+> -       return iomap_writepage(page, wbc, &wpc, &gfs2_writeback_ops);
+> -
+> -redirty:
+> -       redirty_page_for_writepage(wbc, page);
+> -out:
+> -       unlock_page(page);
+> -       return 0;
+> -}
+> -
+>  /**
+>   * gfs2_write_jdata_page - gfs2 jdata-specific version of block_write_full_page
+>   * @page: The page to write
+> @@ -765,7 +740,6 @@ bool gfs2_release_folio(struct folio *folio, gfp_t gfp_mask)
+>  }
+>
+>  static const struct address_space_operations gfs2_aops = {
+> -       .writepage = gfs2_writepage,
+>         .writepages = gfs2_writepages,
+>         .read_folio = gfs2_read_folio,
+>         .readahead = gfs2_readahead,
+> --
+> 2.30.2
+>
 
-Looks good.
+This is looking fine, and it has survived a moderate amount of testing already.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Tested-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
 
-Darrick, FYI, I actually tripped over this and fixed it in the inode
-iunlink series as part of double linking the unlinked inode list in
-this patch:
+It should be possible to remove the .writepage operation in
+gfs2_jdata_aops as well, but I must be overlooking something because
+that actually breaks things.
 
-https://lore.kernel.org/linux-xfs/20220707234345.1097095-6-david@fromorbit.com/
-
-I didn't realise at the time I was forward porting this code that it
-was a pre-existing bug.....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Andreas
