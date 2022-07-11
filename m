@@ -2,115 +2,77 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1403BC43334
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jul 2022 22:28:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA62DC43334
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jul 2022 01:29:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229549AbiGJW2Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 Jul 2022 18:28:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48134 "EHLO
+        id S229563AbiGKB3c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 Jul 2022 21:29:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbiGJW2P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jul 2022 18:28:15 -0400
-Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90FBA13EBC;
-        Sun, 10 Jul 2022 15:28:13 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Lh1qq71Bzz4xhn;
-        Mon, 11 Jul 2022 08:28:07 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-        s=201702; t=1657492088;
-        bh=t2x2etyRIE9UyBEZxb6gCj5pB9F+yYo2kF1BwbNXc80=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=M11jrNWPw7pyiQvQhFU7d4enjLEA8FLuj6KPKofCJFSmYWXdVhJSNCIqm/jbDWZfS
-         6QlmKRmkXdsNG9pYExPQEI10FePRb4GdkDLuBEmWbM2E4lkR0CPwZ7x9cL9ct8MKHQ
-         yYoHry4Gd5Yqpx0hMeIL9NusFmpvNE8jEkHeUFlptmmHQmb9+hDb73mt/SnS5l0Y12
-         8qmYZpRc3rvVgbdVPOXGpYsZKCiujIUZ/9kSFn+7FoGWEnfpBgYY5b/XxQ3dwVogRz
-         NNa3G0yMDg4kkAsE65nDnfZ6JoxppeFQ74aKOlHe4qiBf3WpoUIa8sWZMRwaoc5OXa
-         7HxSN9ksaSwWA==
-Date:   Mon, 11 Jul 2022 08:28:07 +1000
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
+        with ESMTP id S229661AbiGKB3a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jul 2022 21:29:30 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 17EBF6468
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jul 2022 18:29:29 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BA43710E7D89;
+        Mon, 11 Jul 2022 11:29:27 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oAiEm-00H1Y9-JN; Mon, 11 Jul 2022 11:29:24 +1000
+Date:   Mon, 11 Jul 2022 11:29:24 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the mm tree
-Message-ID: <20220711082807.745ee22d@canb.auug.org.au>
-In-Reply-To: <YshKnxb4VwXycPO8@magnolia>
-References: <20220708194437.7eafe774@canb.auug.org.au>
-        <YshKnxb4VwXycPO8@magnolia>
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+Subject: Re: [PATCH 3/5] xfs: use XFS_IFORK_Q to determine the presence of an
+ xattr fork
+Message-ID: <20220711012924.GA3861211@dread.disaster.area>
+References: <165740691606.73293.12753862498202082021.stgit@magnolia>
+ <165740693336.73293.17695549419343140476.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/7D3RKxNX24FwTFPfEbTajvY";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <165740693336.73293.17695549419343140476.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62cb7cf7
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=I6emTIGmVwxcu5m8Oa8A:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/7D3RKxNX24FwTFPfEbTajvY
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sat, Jul 09, 2022 at 03:48:53PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Modify xfs_ifork_ptr to return a NULL pointer if the caller asks for the
+> attribute fork but i_forkoff is zero.  This eliminates the ambiguity
+> between i_forkoff and i_af.if_present, which should make it easier to
+> understand the lifetime of attr forks.
+> 
+> While we're at it, remove the if_present checks around calls to
+> xfs_idestroy_fork and xfs_ifork_zap_attr since they can both handle attr
+> forks that have already been torn down.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c       |    2 --
+>  fs/xfs/libxfs/xfs_attr.h       |    2 +-
+>  fs/xfs/libxfs/xfs_bmap.c       |    1 -
+>  fs/xfs/libxfs/xfs_inode_buf.c  |    1 -
+>  fs/xfs/libxfs/xfs_inode_fork.c |    7 +------
+>  fs/xfs/libxfs/xfs_inode_fork.h |    1 -
+>  fs/xfs/xfs_attr_inactive.c     |   11 ++++-------
+>  fs/xfs/xfs_attr_list.c         |    1 -
+>  fs/xfs/xfs_icache.c            |    8 +++-----
+>  fs/xfs/xfs_inode.c             |    5 ++---
+>  fs/xfs/xfs_inode.h             |    2 +-
+>  11 files changed, 12 insertions(+), 29 deletions(-)
 
-Hi Darrick,
+Looks good.
 
-On Fri, 8 Jul 2022 08:17:51 -0700 "Darrick J. Wong" <djwong@kernel.org> wro=
-te:
->
-> This isn't quite correct -- references to xfs_perag objects must be
-> released once they are acquired.  The following patch against today's
-> tree fixes this problem:
->=20
-> diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-> index f3c62c19475e..69d9c83ea4b2 100644
-> --- a/fs/xfs/xfs_notify_failure.c
-> +++ b/fs/xfs/xfs_notify_failure.c
-> @@ -127,10 +127,12 @@ xfs_dax_notify_ddev_failure(
-> =20
->  		pag =3D xfs_perag_get(mp, agno);
->  		error =3D xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
-> -		if (error)
-> +		if (error) {
-> +			xfs_perag_put(pag);
->  			break;
-> +		}
-> =20
-> -		cur =3D xfs_rmapbt_init_cursor(mp, tp, agf_bp, agf_bp->b_pag);
-> +		cur =3D xfs_rmapbt_init_cursor(mp, tp, agf_bp, pag);
-> =20
->  		/*
->  		 * Set the rmap range from ri_low to ri_high, which represents
-> @@ -151,6 +153,7 @@ xfs_dax_notify_ddev_failure(
->  				xfs_dax_failure_fn, &notify);
->  		xfs_btree_del_cursor(cur, error);
->  		xfs_trans_brelse(tp, agf_bp);
-> +		xfs_perag_put(pag);
->  		if (error)
->  			break;
-> =20
-
-Thanks, I will add that to the resolution from today.
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/7D3RKxNX24FwTFPfEbTajvY
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmLLUncACgkQAVBC80lX
-0GwlqAf/WeUw62MEgfmaLpCUh5mt5gqu50WTo4hdDHEOXVoMxDFqz1EY/LbzAcUu
-twtMKf60dMR1IS3zbgekFKLVuAjGu4Nwrjvj+nha6EOjxyf/4o4a3IZyL69NN8HY
-/hJsw3hQ7Fj1N7PfdF/gbj90+IU5Tpejdx4gDTqdMfoLuzjsatQVc4zM3IKneB3h
-gqDYttyBbQA33VwvCxPmkh3kSfk5ZnGN+bWTcAUyqk0WMDma3XTENZgMpIGP5308
-3OMHayMLhsJQL/TXfcLLKNm1qbQuJV2JvB4ayp1X1D7zQ9bO5yeorZAGVy/r3qyJ
-DYQVDxlSJxWcnvkpmsCopzdIy0aoYQ==
-=RLOP
------END PGP SIGNATURE-----
-
---Sig_/7D3RKxNX24FwTFPfEbTajvY--
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
