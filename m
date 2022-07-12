@@ -2,155 +2,97 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3337AC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jul 2022 18:34:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D80EFC43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jul 2022 21:47:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229954AbiGLSev (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jul 2022 14:34:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56802 "EHLO
+        id S230050AbiGLVry (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jul 2022 17:47:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229800AbiGLSeu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jul 2022 14:34:50 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D2828BDBB4
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jul 2022 11:34:49 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 26EBC4435
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jul 2022 13:34:30 -0500 (CDT)
-Message-ID: <3fb4449d-7e6e-fdb0-96b0-3e9c34f22398@sandeen.net>
-Date:   Tue, 12 Jul 2022 13:34:47 -0500
+        with ESMTP id S229918AbiGLVrw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jul 2022 17:47:52 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AFC65B0FB8;
+        Tue, 12 Jul 2022 14:47:51 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E17C262C671;
+        Wed, 13 Jul 2022 07:47:47 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oBNjN-0009ZB-QR; Wed, 13 Jul 2022 07:47:45 +1000
+Date:   Wed, 13 Jul 2022 07:47:45 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     kernel test robot <oliver.sang@intel.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
+        lkp@lists.01.org, lkp@intel.com
+Subject: Re: [xfs]  47a6df7cd3: Assertion_failed
+Message-ID: <20220712214745.GL3861211@dread.disaster.area>
+References: <Ys0gqOUcLr+2dle5@xsang-OptiPlex-9020>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.11.0
-Content-Language: en-US
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to c1c71781
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------O3nkOiBtytOopkYtRNTu3xQ0"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Ys0gqOUcLr+2dle5@xsang-OptiPlex-9020>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62cdec06
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=QyXUC8HyAAAA:8
+        a=7-415B0cAAAA:8 a=YwEIx2iJiV63Uv_QZbwA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------O3nkOiBtytOopkYtRNTu3xQ0
-Content-Type: multipart/mixed; boundary="------------9C6hS2JOheQMrJ4oIR7RrRQl";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <3fb4449d-7e6e-fdb0-96b0-3e9c34f22398@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to c1c71781
+On Tue, Jul 12, 2022 at 03:20:08PM +0800, kernel test robot wrote:
+> 
+> 
+> Greeting,
+> 
+> FYI, we noticed the following commit (built with gcc-11):
+> 
+> commit: 47a6df7cd3174b91c6c862eae0b8d4e13591df52 ("xfs: shut down filesystem if we xfs_trans_cancel with deferred work items")
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
+> 
+> in testcase: xfstests
+> version: xfstests-x86_64-c1144bf-1_20220704
+> with following parameters:
+> 
+> 	disk: 4HDD
+> 	fs: xfs
+> 	test: xfs-group-07
+> 	ucode: 0x21
+> 
+> test-description: xfstests is a regression test suite for xfs and other files ystems.
+> test-url: git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+> 
+> 
+> on test machine: 4 threads 1 sockets Intel(R) Core(TM) i3-3220 CPU @ 3.30GHz with 8G memory
+> 
+> caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
+> 
+> 
+> 
+> If you fix the issue, kindly add following tag
+> Reported-by: kernel test robot <oliver.sang@intel.com>
+> 
+> 
+> [   94.271323][ T9089] XFS (sda5): Mounting V5 Filesystem
+> [   94.369992][ T9089] XFS (sda5): Ending clean mount
+> [   94.376046][ T9089] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
+> [  112.154792][  T311] xfs/076       IPMI BMC is not supported on this machine, skip bmc-watchdog setup!
+> [  112.154805][  T311]
+> [  161.426026][T29384] XFS: Assertion failed: xfs_is_shutdown(mp) || list_empty(&tp->t_dfops), file: fs/xfs/xfs_trans.c, line: 951
+> [  161.437713][T29384] ------------[ cut here ]------------
+> [  161.443155][T29384] kernel BUG at fs/xfs/xfs_message.c:110!
+> [  161.448854][T29384] invalid opcode: 0000 [#1] SMP KASAN PTI
+> [  161.454536][T29384] CPU: 1 PID: 29384 Comm: touch Not tainted 5.16.0-rc5-00001-g47a6df7cd317 #1
 
---------------9C6hS2JOheQMrJ4oIR7RrRQl
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+5.16-rc5? Seems like a really old kernel to be testing....
 
-Hi folks,
+Does this reproduce on a current 5.19-rc6 kernel?
 
-The for-next branch of the xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-I jumped the gun on 5.19.0-rc0, and a couple more libxfs patches got
-added to the kkernel, so I added a new "release" and tag of
-5.19.0-rc.0.1 after the last libxfs patches were merged.
-
-After that I picked up most of Darrick's patches that had been reviewed,
-as well as Zhang Boyang's mkfs man page update.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-c1c71781 mkfs: update manpage of bigtime and inobtcount
-
-New Commits:
-
-Darrick J. Wong (16):
-      [41cbb27c] xfs: fix TOCTOU race involving the new logged xattrs con=
-trol knob
-      [53cbe278] xfs: fix variable state usage
-      [5e572d1a] xfs: empty xattr leaf header blocks are not corruption
-      [c21a5691] xfs: don't hold xattr leaf buffers across transaction ro=
-lls
-      [95e3fc7f] misc: fix unsigned integer comparison complaints
-      [053fcbc7] xfs_logprint: fix formatting specifiers
-      [d6bfc06d] libxfs: remove xfs_globals.larp
-      [fa0f9232] xfs_repair: always rewrite secondary supers when needsre=
-pair is set
-      [84c5f08f] xfs_repair: don't flag log_incompat inconsistencies as c=
-orruptions
-      [766bfbd7] xfs_db: identify the minlogsize transaction reservation
-      [baf8a5df] xfs_copy: don't use cached buffer reads until after libx=
-fs_mount
-      [b83b2ec0] xfs_repair: clear DIFLAG2_NREXT64 when filesystem doesn'=
-t support nrext64
-      [0ec4cd64] xfs_repair: detect and fix padding fields that changed w=
-ith nrext64
-      [b6fd1034] mkfs: preserve DIFLAG2_NREXT64 when setting other inode =
-attributes
-      [42efbb99] mkfs: document the large extent count switch in the --he=
-lp screen
-      [ad8a3d7c] mkfs: always use new_diflags2 to initialize new inodes
-
-Eric Sandeen (1):
-      [e298041e] xfsprogs: Release v5.19.0-rc0.1
-
-Zhang Boyang (1):
-      [c1c71781] mkfs: update manpage of bigtime and inobtcount
-
-
-Code Diffstat:
-
- copy/xfs_copy.c          |  2 +-
- db/check.c               | 10 +++++++---
- db/logformat.c           |  4 +++-
- db/metadump.c            | 11 +++++++----
- include/xfs_mount.h      |  7 -------
- libxfs/util.c            | 15 ++++++---------
- libxfs/xfs_attr.c        | 47 ++++++++++++++----------------------------=
------
- libxfs/xfs_attr.h        | 17 +----------------
- libxfs/xfs_attr_leaf.c   | 37 ++++++++++++++++++++-----------------
- libxfs/xfs_attr_leaf.h   |  3 +--
- libxfs/xfs_da_btree.h    |  4 +++-
- logprint/log_print_all.c |  2 +-
- man/man8/mkfs.xfs.8.in   |  4 ++--
- mkfs/xfs_mkfs.c          |  2 +-
- repair/agheader.c        | 23 ++++++++++++++++++++---
- repair/dinode.c          | 47 ++++++++++++++++++++++++++++++++++++++++++=
-+----
- 16 files changed, 130 insertions(+), 105 deletions(-)
-
---------------9C6hS2JOheQMrJ4oIR7RrRQl--
-
---------------O3nkOiBtytOopkYtRNTu3xQ0
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmLNvscFAwAAAAAACgkQIK4WkuE93uDf
-qQ//TPWvzGS6IN49oJYaKniPShUROND0Fb1v4gZB86USsdyMTnERJ6PyCQ4RIlBR4ARl0/PZ/duM
-5+bW6/cKflnVKUGtXOCqLnJlIFfya+IBtbN6meSUIHLkfo1hHUj4EGmLHnkxYusPNxbof9Qao1gt
-8clnNYpoKWLmoCBjrIz/RTOhmS2DnhSJJtj6uLNCOYym6aIxULvY7R3joU4EcZENX/W2ni4OoK12
-Zj4qTAF4Um1g8/0U6zjWdYQqtuBVusSWrb7Py66GB/QK8jtqEMPBuwZDFBjHI9yuiSTrJMXKVDAG
-1Hwwado8ZbESSyV/aVM+osy0WcjtlWV4qnibKJy+gLGKFhT0474D3O0xpKCNvzw7+eM5A4O9arKg
-U+rI7eWNQu1/6G+CgSVcap0+yP9l/iR6W4VoQTkcxL3QCCsHfauhtg79wVI5KDS2bs1s6OSTAzZC
-+bJmYqhZ9U3EDb8vR5VgpGusC9n0nzbwTSiFf14UcsvBapA/upxL/EXN0J54JQ9gkh4U0PFoD30H
-6M/jdh36f9GwK25jUqkTDZnDElgCmtWnpac0NMaQ9knX/2oAbvHjxU9tbzZIpedXppqgC4RCDTAR
-po/Vuiklz4gcSfPJxXFDniDQADOvR7a8YzEWNYk0DfQuRB9WzE+W7YycQDWos9SRqwVt8dcg+vcX
-1j8=
-=DSEV
------END PGP SIGNATURE-----
-
---------------O3nkOiBtytOopkYtRNTu3xQ0--
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
