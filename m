@@ -2,72 +2,87 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08A52C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jul 2022 01:20:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DF4FC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jul 2022 01:53:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229903AbiGLBUn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jul 2022 21:20:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45150 "EHLO
+        id S230493AbiGLBxz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jul 2022 21:53:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229702AbiGLBUn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jul 2022 21:20:43 -0400
+        with ESMTP id S229605AbiGLBxy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jul 2022 21:53:54 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7517B5A459
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Jul 2022 18:20:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C517611179
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jul 2022 18:53:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0CF016164B
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jul 2022 01:20:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 605FCC34115;
-        Tue, 12 Jul 2022 01:20:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4876A61653
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Jul 2022 01:53:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CF26C34115;
+        Tue, 12 Jul 2022 01:53:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657588841;
-        bh=ikd7QzlofJZiBxlo2sOcIg5vaMpYvJuWJzF2Tr+LPGk=;
+        s=k20201202; t=1657590832;
+        bh=Aa5j6iPT+Kfg+OmmpwQplM6FL9NxFVmkvcFJ/rOABTw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CaQhKP/NCBV6wDbirm2tM3ZSJ7t0CUy4S6k5wzkpCv3/j/xfBnmk9kalj3PRzNOI7
-         i+Oby2Rg2VckVhbprwbqEAtQwxzQbcJtBhqPSBJ5FGxUXNrQKShIl6FMDC7OWWs1ox
-         MceDh5S3EfPCbIV5pLE9w1AJpH3uNaOBIcYL0UyYs1roo6simdcEcz+XfCycc/wMAm
-         jBiWRgAKath00HDD+He+WTLrnyFtYv6DTk29gk+DVZa61AGqTVVLARObzHp9ayLEE5
-         kTn2fX/oj/RJri3Bvx2xUTwregGJv7/tuX7YPWpseo30hFXiXep127obdHuuhkmYDV
-         7qdjK8WsXphTA==
-Date:   Mon, 11 Jul 2022 18:20:40 -0700
+        b=eF9JUvFd9edYL6gsx9c5jAct3s67L9VzU0Kd7T34PcunLWF94g5a23lC67y5z+Zc3
+         V9vRzGypWM4TDPqsWs7l1wwI4vRZssfmPZLrk5qwFkXT8FJEa2uS6Gbhnc6ykQfaUy
+         O4UrKzlr2U9/VCoLlSAZaV4Yr9+VE3GcZOaDmY9WVDtNPee0oIkJ2yh6ZDyx5iM119
+         U7abEV/NZOidAU8z4o+00+o+mk7cFW+RSDj1F4urz+rkuoOMoguG83977Ejpa23CVN
+         dO8TAu+aKiZif/HnJ3j3HWrY3aXI1MF0gws0oBkaQLlm0Ma8sCsNwH3lFa/UlEswoL
+         VHDCPhsxuZ7qw==
+Date:   Mon, 11 Jul 2022 18:53:52 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
         david@fromorbit.com, allison.henderson@oracle.com
-Subject: Re: [PATCH 1/5] xfs: convert XFS_IFORK_PTR to a static inline helper
-Message-ID: <YszMaH4fLe0S6Jp7@magnolia>
+Subject: Re: [PATCHSET v2 0/5] xfs: make attr forks permanent
+Message-ID: <YszUMHbqe+vCAdYx@magnolia>
 References: <165740691606.73293.12753862498202082021.stgit@magnolia>
- <165740692193.73293.17607871779448850064.stgit@magnolia>
- <Ysu0iYgkaGdg6oVJ@infradead.org>
+ <Ysu0V1mQovrXQiEo@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Ysu0iYgkaGdg6oVJ@infradead.org>
+In-Reply-To: <Ysu0V1mQovrXQiEo@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jul 10, 2022 at 10:26:33PM -0700, Christoph Hellwig wrote:
-> On Sat, Jul 09, 2022 at 03:48:42PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > We're about to make this logic do a bit more, so convert the macro to a
-> > static inline function for better typechecking and fewer shouty macros.
-> > No functional changes here.
+On Sun, Jul 10, 2022 at 10:25:43PM -0700, Christoph Hellwig wrote:
+> On Sat, Jul 09, 2022 at 03:48:36PM -0700, Darrick J. Wong wrote:
+> > Although the race condition itself can be fixed through clever use of a
+> > memory barrier, further consideration of the use cases of extended
+> > attributes shows that most files always have at least one attribute, so
+> > we might as well make them permanent.
 > 
-> No arguments about the inline which is always a good idea.  But is
-> there much of a point in changing the naming?  The old one nicely
-> sticks out just like XFS_I and VFS_I have been inline functions for
-> a long time.
+> I kinda hat increase the size of the inode even more, but there is no
+> arguing about keeping nasty rarely used code simple vs micro-optimizing
+> it.  Do you have numbers on hand on how many inodes we can cache in
+> an order 0 or 1 cache before and after this?
 
-I personally am not that bothered by shouty function names, but Dave
-has asked for shout-reduction in the past, so every time I convert
-something I also change the case.
+Hm.  On my laptop running 5.18, xfs_inode before the change was 928 bytes,
+and here's what it looks like:
 
-AFAIK it /is/ sort of a C custom that macros get loud names and
-functions do not so that you ALWAYS KNOW, erm, when you're dealing with
-a macro that could rain bad coding conventions down on your head.
+			928 bytes
+Order	Pagebytes	Slack	Objs	Slack/Objs
+0	4096		384	4	96
+1	8192		768	8	96
+2	16384		608	17	36
+3	32768		288	35	9
+4	65536		576	70	9
+
+So I guess that's why it picks order-3 slabs.
+
+On a freshly built djwong-dev kernel, it's now 976 bytes:
+
+			976 bytes
+Order	Pagebytes	Slack	Objs	Slack/Objs
+0	4096		192	4	48
+1	8192		384	8	48
+2	16384		768	16	48
+3	32768		560	33	17
+4	65536		144	67	2
+
+Here it seems to pick order-2 slabs, which admittedly isn't great.
 
 --D
