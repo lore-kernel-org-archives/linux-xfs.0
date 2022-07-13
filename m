@@ -2,344 +2,498 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71674C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jul 2022 07:22:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5608CC43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jul 2022 07:31:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234706AbiGMHWp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jul 2022 03:22:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48710 "EHLO
+        id S233763AbiGMHbb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jul 2022 03:31:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234440AbiGMHWc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jul 2022 03:22:32 -0400
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2056.outbound.protection.outlook.com [40.107.223.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2B42E2A19;
-        Wed, 13 Jul 2022 00:22:30 -0700 (PDT)
+        with ESMTP id S233370AbiGMHba (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jul 2022 03:31:30 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E146AE4756
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jul 2022 00:31:28 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26D6mVVd009489
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jul 2022 07:31:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=wLANzv99iGf/JXjCkGa+RfbdTXoaQ+GGE1PYxXzyqn8=;
+ b=F17iB+Jg+D9A1vv6pZeFwfWAtnZfkfTMx8RP829kAD3Q2ZQASB4sMDndAt07OF/1yUsc
+ /TBeKPtHV7aN/JR4UUPwRu+m069+Iqc+GVP/BemCPBnWPCVemdlAnKm8vUEvGowLzyGH
+ JX8YqPRA9wW0+Hhvfgbe+lzCdqoY9nP+7pF5ILxLCFwh4Bw3R7VSf33ZM2w3srH5X746
+ ThXf09yg4Qs4VbcbXVJFTMoWgoCbpJSPuTmPrF3Jjq9iVP2jR89wmx67ZeuzN1jUIClF
+ 7z7pXcgwGII7fRo3zS4m6Qk9xOGM0CKsfwIXN7rFTtckhbWCZLz2h7wffKC4+VadIXx2 QA== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3h71sc9fhs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jul 2022 07:31:27 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 26D7AcxQ001664
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jul 2022 07:31:27 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2173.outbound.protection.outlook.com [104.47.59.173])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3h7043x3eg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jul 2022 07:31:27 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=N8QHpme/PzxGqTqwsDTW/Y7Bvik8kphIV7peU2jC4015A2lr6fbs5RgsVW+yQ6ZuzloqMjKXgmJFhsA8gslAf3o1d+tmIR1xjKo90dOVEr8Ons5lz2QLvZolF2NMxLIJiLIjaKoBiVNPO39vZ2VL8q4wWXfaGpjk6Pyhdq+AOP2wbdzeQFyw7rJhLCfQ07wmOT/JMNt/qE5m/WAj8eBJ5ABN4DtdLsxz+m5g0Nt3ieMqSs6tRZuowzFS336jVBYm2vQErVqmPlo9XqM9AoRGSPpbU4NqyNxu4ScknNJCietTZSn2VxqA1N/nvgwmTgnTYfqep7ySN05mTPYxunvESQ==
+ b=K0PPjUY0gyA8lAcGL2R2dLywSVPzpJH1G980586DAft021MrMRm54SutmldqY8SOlyAq4TgWLmCpwOYasxnLc8Zpzf3TBUKaH1AeeJ+E4boPFCbWc39IAkZ67Hcf8+Vz7+HMpTkIdocBrHK09xB2Z3wDM+wuuDZNgE8vRhOLdqySjYY4UNWpCFlo1yNoLWhutvrPqSYFl+wt2fUECzrxCDHhtEVpxgXKh5/6+fxiJjjz30k5HpsCTA7Ln6dc/b5S9ytejrNwWK+42CgpybxrMXw2bjZN2qFzWQSHRuPhOuUib9IQaIAv/Me5PpT2NKtU4pa0ubPWeDoYE9UEZhXPog==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GdM5KiJTOKaOqKlARvS1nTvEPZ1AO+iGJBYnQlmew5o=;
- b=ZwjHFOPT4tRcrnMszQwNiX8uakHYFO/9Riiu1v1+dhtFCdX9gQMPWlBWFdfMkzVvMwR9H/aL8XTKnbCY7Zt4OsJ8o9KmGIBfSIMzdj3xF9lbQ5FkzGJQU/3hTHKfXlZQ6Q+BvCYrsYK75VwCGTvqIYcTReahDXx0pYGcLOHguFGtXGLETPyIlBigvfWn+UfIgatjJ/fdhBb31vaPJBYMge6j+noRtl/6UlUarwSIuFdB2KbVjokLJ4zTIyGsaWRejaLF6F+tAUYuJEZaf5gMF8u+NP6932VXUQeYt2jhBBRMq5r9luqMrmKSPaEpQ4MQ3C0fKKtmQsAfSHpAdXQ2yQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.236) smtp.rcpttodomain=kernel.dk smtp.mailfrom=nvidia.com; dmarc=pass
- (p=reject sp=reject pct=100) action=none header.from=nvidia.com; dkim=none
- (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ bh=wLANzv99iGf/JXjCkGa+RfbdTXoaQ+GGE1PYxXzyqn8=;
+ b=BPDxOuWMfag+81IUpw7y+ecAlTzZcnsMSJkEZy9/bhKWA6NajcOc0p/3mag0YkWfwQjmXmiEcIo3ZZCPxEKz2QdX3t9QygHQjDa3Rwm1T1OBlbYqAug1pLYLs7VfGtcIm347LAN6oac/sZpEMLlVsUXhnzpWthRtY1gOiXJKYjshky4gWT7gD5kIn+jnj+DMtks7cEesqp7U5srDI6J/Q17t/SjEyIp7j5Vm3PEMSlg5Fqc6zAg74AsE5vtVNQrMZOlrqY11yLJFas+Ly0Tr6HqUr2wf9PqypmeBGhbqVhWAZnm6v93he1w8CBmKKqvZ0BAz/lNo0uuJM7LOqp+yVw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GdM5KiJTOKaOqKlARvS1nTvEPZ1AO+iGJBYnQlmew5o=;
- b=eM5DvZjrIenCoHVJ+euS5MBIx6O4PSQ9lzt01p3lx7CMwlCUBlbQh9Rh+X9oxPjS6K020ntBqG8S4dTBr9lLYEYUg1OK8DoUsztdjkbps+Y4u8KqzvQIH+3QAIhyVdqxBt3CIdsVfzamFoOQ4PdQnttkc2w2pPfdYF/YoFudWf1nNPIQSNr03tQW4pv3kZWW6ZlxRqAk4r1DYb4TKLkG+gI9Fl+Cu1DWLV44l6wiRDhSZ1tBmf4/OeZVyws0TGeUttPntNhQdraC5rZYwGk6zviT10JlcKnUmBUwZI/2czmj4TyCvTpEq7k0c6GG6hDmp6khvhPv8OcDXxkYi/xjow==
-Received: from MW4PR03CA0279.namprd03.prod.outlook.com (2603:10b6:303:b5::14)
- by DM5PR12MB1627.namprd12.prod.outlook.com (2603:10b6:4:10::21) with
+ bh=wLANzv99iGf/JXjCkGa+RfbdTXoaQ+GGE1PYxXzyqn8=;
+ b=NeO6piKCrcYgHq4Tg6I40o3cttt5iunfRMXEBF6HGWgfhTcsRX0AzF76NJnLMowA3RyaTWJcOPeUyrSKsduj9EGhUL0sXS9UWq6Nc199xFHwxka+ZUnuriq0TE9dbAw7dse3owmadNT5pW6zmIacMVvi0xQg4x3ssXUK2NZegg0=
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+ by DS7PR10MB5216.namprd10.prod.outlook.com (2603:10b6:5:38e::23) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.16; Wed, 13 Jul
- 2022 07:22:29 +0000
-Received: from CO1NAM11FT047.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:b5:cafe::f2) by MW4PR03CA0279.outlook.office365.com
- (2603:10b6:303:b5::14) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.19 via Frontend
- Transport; Wed, 13 Jul 2022 07:22:28 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.236)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.236 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.236; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (12.22.5.236) by
- CO1NAM11FT047.mail.protection.outlook.com (10.13.174.132) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.5438.12 via Frontend Transport; Wed, 13 Jul 2022 07:22:28 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL109.nvidia.com
- (10.27.9.19) with Microsoft SMTP Server (TLS) id 15.0.1497.32; Wed, 13 Jul
- 2022 07:22:27 +0000
-Received: from dev.nvidia.com (10.126.230.35) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Wed, 13 Jul
- 2022 00:22:25 -0700
-From:   Chaitanya Kulkarni <kch@nvidia.com>
-To:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-nvme@lists.infradead.org>, <linux-xfs@vger.kernel.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <axboe@kernel.dk>, <agk@redhat.com>, <song@kernel.org>,
-        <djwong@kernel.org>, <kbusch@kernel.org>, <hch@lst.de>,
-        <sagi@grimberg.me>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <viro@zeniv.linux.org.uk>,
-        <javier@javigon.com>, <johannes.thumshirn@wdc.com>,
-        <bvanassche@acm.org>, <dongli.zhang@oracle.com>,
-        <ming.lei@redhat.com>, <willy@infradead.org>,
-        <jefflexu@linux.alibaba.com>, <josef@toxicpanda.com>, <clm@fb.com>,
-        <dsterba@suse.com>, <jack@suse.com>, <tytso@mit.edu>,
-        <adilger.kernel@dilger.ca>, <jlayton@kernel.org>,
-        <idryomov@gmail.com>, <danil.kipnis@cloud.ionos.com>,
-        <ebiggers@google.com>, <jinpu.wang@cloud.ionos.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>
-Subject: [PATCH V2 6/6] scsi: sd: add support for REQ_OP_VERIFY
-Date:   Wed, 13 Jul 2022 00:20:19 -0700
-Message-ID: <20220713072019.5885-7-kch@nvidia.com>
-X-Mailer: git-send-email 2.29.0
-In-Reply-To: <20220713072019.5885-1-kch@nvidia.com>
-References: <20220713072019.5885-1-kch@nvidia.com>
-MIME-Version: 1.0
+ 2022 07:31:25 +0000
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::51b6:5d48:a46b:16f9]) by SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::51b6:5d48:a46b:16f9%5]) with mapi id 15.20.5417.026; Wed, 13 Jul 2022
+ 07:31:25 +0000
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Chandan Babu R <chandan.babu@oracle.com>,
+        Wengang Wang <wen.gang.wang@oracle.com>
+Subject: [PATCH] xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
+Date:   Wed, 13 Jul 2022 13:00:57 +0530
+Message-Id: <20220713073057.1098781-1-chandan.babu@oracle.com>
+X-Mailer: git-send-email 2.35.1
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Originating-IP: [10.126.230.35]
-X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
+X-ClientProxiedBy: TYWP286CA0029.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:262::17) To SA2PR10MB4587.namprd10.prod.outlook.com
+ (2603:10b6:806:114::12)
+MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7aac256d-1c1c-46f6-92c7-08da64a0716d
-X-MS-TrafficTypeDiagnostic: DM5PR12MB1627:EE_
+X-MS-Office365-Filtering-Correlation-Id: 350a854f-db43-4e1a-76d3-08da64a1b107
+X-MS-TrafficTypeDiagnostic: DS7PR10MB5216:EE_
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 8ec26Jg94V2AJOlwQEfKM80zlZ2+tD/Qp9BeD0p4m4/E6E7OpP7bmq6GWhIX3WwFRohvKg/30D4Uh7HftZ+O6mbC/6z2Ztjb/m8l0HmZ/mig7GRoSBBouPnMj6KQBTpi8Zlnhg0ueMs2wCUu0AhXNqw847C9YkdWCKZ+3U0SPGXockGBjsdVo8eqT6SKmphJdsX9KazbOgZFKGYRnADCoFhkzIcrm5/ZyElizH/GKKB5nZLjuZKIkegCJhAj/vGq/XltEnlCpY5v+dvyHUDfSpl4cvJktD2ytBnUDo7gUsvPGICqXq1zQJxGCnMxIeaYArsrPxyjOdPboRJdRA6HlAAeywrpcpcGiKnOOQF/yznajYCbC7qmxnNfLTs+3D6E6WJ/rDEGnGk/VOdKzilEyyngmZ9uSgQJ7cEHtBaGa/vM1b5960BqDLApmhbHc629c4WFOczWJNLoFt/L3vyZCalB9qENgcEyICH7p+hGCNQFOXj8F9ajm++JvrG5DxH82JLPawy1P40XBUpvRMRuNG7Sw35A1pKgZEc55sJQOS2+dvZhxxceTKftDqP7QqMBCvOyNIsu0DbflqqJP/wXwE+ndONqYEJiRfnQJn275b+iCThLXw1GFMXDeqW0pbOgOrWLbv2+DWtZvLQypU3ghNe3OYKn5a9djt6cMWSRgHZRH5invKZW3sz60+gTKOJcHtDAmXrsztWlu+p+KJbp5rMDQZBMsHRdC5Ttto5ZhInkGEe2bka3Cyu7KCzj92dP4FJR8A1PdbuxYg87aPrLFxv30GOZnDuDmzk1Jg0uTjJbkw8s6oIZdauuRrI23trWEhTcLKnVaNlQCwzsXfX9IOtZwVyAxbKswX7YFbIOxvPI+9L8FZMgxLroLdi2b0wD
-X-Forefront-Antispam-Report: CIP:12.22.5.236;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(396003)(136003)(39860400002)(346002)(376002)(46966006)(40470700004)(36840700001)(110136005)(4326008)(36860700001)(186003)(70586007)(478600001)(316002)(5660300002)(41300700001)(8676002)(70206006)(107886003)(8936002)(6666004)(1076003)(26005)(7416002)(81166007)(16526019)(54906003)(356005)(2616005)(82740400003)(7406005)(47076005)(426003)(336012)(2906002)(83380400001)(36756003)(40480700001)(40460700003)(82310400005)(7696005)(2101003)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2022 07:22:28.5804
+X-Microsoft-Antispam-Message-Info: 0cjTyeDt5w6o2wvwfGKtM23wISvW92B7I+rTr8CdgMV1lZ/5OWkZNp3ZS9WIPiP6BYMvTuanf4KZ2hDAAaxzjba/0C7regMe+2B8IYHMcfL3DewmP0eUzhbjrS++ZmOvlm4Wu/0TSD0MMNvyFEVpzrp0joMRWJJjJfYcjZje7i0n62iyW/fMZqJjSWsHYIz4d2AuGbJnqe2yYJbY8ERPuO8KDTQkGSi3//0aM7DKNzY6VyK34Lm1vvwe4kgLYEhVht0qNi63PstMfZ+mZmLgI1OfpP/cP4OPIntTV4yLauaTQ5omZ6bF2psB5//gIXCPTMZMnaRtWR5Vrgpb+RGOTVzs8jDqx9lSXyy4I57IWjVXTa8eWN5mdLrCZY26+CUa3eR5YRVwyUEJMO8609Df21BlHOhbMvK2a79QzE/OyT61xyEIQoSbZchUZdSiepUvzZe6pw9CWn+CuXaeCRWMSen1yjGqirdhNHlN5KF8DNtmiIXc34fXXj3+UGkAPAoZCN5sFOjDp7z1F2KNlg1f7O+97cN4hUI17TCeI+VcOsqq35EAno5B33Fe0j/NXk7Kz1fma5iRI8jutwdsKAbc4bJlQ1QjZlj550WItJW8l+Sa8+X7yaqORgyyvXFqqBBaEm96aeuOAxUsUpgNoTA43KNXHosK6yuYT/fWUy8jgukAOTJY0E5VB1+Tr6ViNas7MHD9jBcug6Kokk6cvXno5Wy5wdFXx6v98QFs21vJQy6ZurAMntUf7ZUMHqSvzvsPbTEmGuLKLPeDPrRDK3h5ZH4ODh1ykAZ57dhi5mzxNiQdlDJ54/bB6HwPFp7I3ix0
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(39860400002)(346002)(396003)(366004)(136003)(376002)(6486002)(66476007)(66946007)(1076003)(66556008)(4326008)(8676002)(186003)(107886003)(54906003)(6916009)(478600001)(2616005)(316002)(83380400001)(6666004)(41300700001)(6512007)(38350700002)(38100700002)(2906002)(8936002)(86362001)(36756003)(5660300002)(6506007)(26005)(52116002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?8+Jrx0FCsOHXQ6ARtfhpRpwsS4uorWDFUDhPOeAtbQ3wtRcp7CFU4+sd7Cbf?=
+ =?us-ascii?Q?kOhSCK9EIM5p2P7ml7+LydSaLN1Su1Tve4BJVUr67cHWGPrjLk7yTtBsM2Jb?=
+ =?us-ascii?Q?NIHESCeuZvgIkIROBPAPlCWFP3ycpzLAkIm3U7zotVT03Z+Hqp8MkepoLZdS?=
+ =?us-ascii?Q?O6in621AB0QOVLN1SZu9hYcCcxSqxj4rGNu+WpKnNcX06UvKKtQl5eYkDMtF?=
+ =?us-ascii?Q?EgSoumwXEZhOMX/SCa7njH7T8wnqzBW7o4n1Uyyy8sVn+PZZe15r1USQxcbA?=
+ =?us-ascii?Q?w6ctPJx+J1DFsaYHrHg0yN8sZjkv/Kjdvw3ED17tJJOsdf/Wvz5mF7+hjOeQ?=
+ =?us-ascii?Q?eNtOjDXx1UXeS0VyH3SKtjrcCF7C7oxCqrHBodBeZ3m91wZfoIM/TP5UNYjZ?=
+ =?us-ascii?Q?HqFr0KDiNNKR0/GJ3GrD9eYgHBUxXkpoJnxRuBuRRfdj6zTC6QeA8WBQ0zNV?=
+ =?us-ascii?Q?9m6KE5XbqUVwVYMxPr7Oc+NHrvyhl1NVjvFsCSyKTm55/WR1fjYulyqQBy2O?=
+ =?us-ascii?Q?5DiyNQpg8xlmdxIjp6+uBGDhSyzja1huUhzHhTclQMlKvaihGMp5o6TpIQ5N?=
+ =?us-ascii?Q?h8uzKUSEaZNrFl3ir0DS5BZI+ymwuACDsD62KQfmvHKguonYp0v6D74HWyr6?=
+ =?us-ascii?Q?9m7cyuFU5Nu8u2Q7sP2Wz3eI9CHgwDDcrlhLZEEIS+X2YsDgntm2pso652Jb?=
+ =?us-ascii?Q?wCFjvmvvd8bJBRMfidES2ytwLWoaPQvq7raWD7UWYDqMVumdq3nu4jrVZIW6?=
+ =?us-ascii?Q?uIWn0uf6MIQ4xIwB/0IZaBg4TEwPV+OOqGHcvIg8tif2Tq3upXO8zBpZLkv1?=
+ =?us-ascii?Q?C/5spazJjaBlMp2fSqGP5gkVhB3w0Hovh144gK0DPj/4yZcBumLLMEnqAvzg?=
+ =?us-ascii?Q?btMhVxMSWqmlSlLQdTVgucwGx2nHPuJYKzPlWCWJrEuU398qiKXxKmdWbV51?=
+ =?us-ascii?Q?i3CkSSt7vTRVhaKVPtkToZTgpRePtKmuEQNnUn2qnq0ioffaJoBlSYxY3ypX?=
+ =?us-ascii?Q?wBdVee4ryiWNZ8pWvmoe5ofoaT2lGeJ68hi0ctw6dbO17w6vmrC1ljQPzqUk?=
+ =?us-ascii?Q?/heroIeRh3ZeI2HAdHFB65gpnNJy8ZiYMgXFrfa/rHCl+cbqXwlqY20v3/Vt?=
+ =?us-ascii?Q?cg34n5U+4sO/lko932OieyvJAcxurdK/HgRmacc8Sc6vYjmXCVUznD7ZRfEm?=
+ =?us-ascii?Q?pgEvzxlhziDPGQ51sQeVm1Dn89Bg0JLYi4IAH9cvyRAU0ylBv9LSVmciCcgN?=
+ =?us-ascii?Q?CXpi9gaZxbibAOOqgP5rlZ0iQfogssZI7wEr2IddSm7RU2Lruv4/HChGr70+?=
+ =?us-ascii?Q?B8Ibypv1HQ2c2qFsDhFUnmEjD9mEuc6a/+1lay3AhnpWfVM1lybr+67dk7w0?=
+ =?us-ascii?Q?APojVFTq0auYGxJWesa4LRtsNiEsiCekPPeR3cBJdvAsX9Fbu0pWQe8L6QQz?=
+ =?us-ascii?Q?aP+20mb62LSIgXIBU1w74SyC8uhX2dhno2U4sVVIk8R6t+9/PJAp1pr1DI1e?=
+ =?us-ascii?Q?8O55x46MyJwu04RMXBQ5L09mhfPR0akDJehuE23YVSuO3wpk/CCiDZZUVvVp?=
+ =?us-ascii?Q?XsJF6gw2XsZxGVBUYenThwCdUnluK8idxoqScJ09?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 350a854f-db43-4e1a-76d3-08da64a1b107
+X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2022 07:31:25.1882
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7aac256d-1c1c-46f6-92c7-08da64a0716d
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.236];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT047.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1627
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: u6ibKQStWN7aZYwLSCkJ1l5XumxJhjEtoGqwXh4frv+IjGiLFt8oG7nDxXuHGMpNR1Kf0OMLE2otXkGG7KIIwQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5216
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.883
+ definitions=2022-07-13_01:2022-07-13,2022-07-12 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 suspectscore=0 adultscore=0 mlxscore=0 spamscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2206140000 definitions=main-2207130030
+X-Proofpoint-GUID: CXDF2ZIWvrz8bP3F50rL9n4Sbhod6Ext
+X-Proofpoint-ORIG-GUID: CXDF2ZIWvrz8bP3F50rL9n4Sbhod6Ext
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add support to handle REQ_OP_VERIFY req_op and map it on VERIFY (16)
-or VERIFY (10) in the sd driver. In case SCSI command VERIFY (16) is not
-supported use SCSI command VERIFY (10). Tested with scsi_debug.
+On a higly fragmented filesystem a Direct IO write can fail with -ENOSPC error
+even though the filesystem has sufficient number of free blocks.
 
-Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
+This occurs if the file offset range on which the write operation is being
+performed has a delalloc extent in the cow fork and this delalloc extent
+begins much before the Direct IO range.
+
+In such a scenario, xfs_reflink_allocate_cow() invokes xfs_bmapi_write() to
+allocate the blocks mapped by the delalloc extent. The extent thus allocated
+may not cover the beginning of file offset range on which the Direct IO write
+was issued. Hence xfs_reflink_allocate_cow() ends up returning -ENOSPC.
+
+The following script reliably recreates the bug described above.
+
+  #!/usr/bin/bash
+
+  device=/dev/loop0
+  shortdev=$(basename $device)
+
+  mntpnt=/mnt/
+  file1=${mntpnt}/file1
+  file2=${mntpnt}/file2
+  fragmentedfile=${mntpnt}/fragmentedfile
+  punchprog=/root/repos/xfstests-dev/src/punch-alternating
+
+  errortag=/sys/fs/xfs/${shortdev}/errortag/bmap_alloc_minlen_extent
+
+  umount $device > /dev/null 2>&1
+
+  echo "Create FS"
+  mkfs.xfs -f -m reflink=1 $device > /dev/null 2>&1
+  if [[ $? != 0 ]]; then
+  	echo "mkfs failed."
+  	exit 1
+  fi
+
+  echo "Mount FS"
+  mount $device $mntpnt > /dev/null 2>&1
+  if [[ $? != 0 ]]; then
+  	echo "mount failed."
+  	exit 1
+  fi
+
+  echo "Create source file"
+  xfs_io -f -c "pwrite 0 32M" $file1 > /dev/null 2>&1
+
+  sync
+
+  echo "Create Reflinked file"
+  xfs_io -f -c "reflink $file1" $file2 &>/dev/null
+
+  echo "Set cowextsize"
+  xfs_io -c "cowextsize 16M" $file1 > /dev/null 2>&1
+
+  echo "Fragment FS"
+  xfs_io -f -c "pwrite 0 64M" $fragmentedfile > /dev/null 2>&1
+  sync
+  $punchprog $fragmentedfile
+
+  echo "Allocate block sized extent from now onwards"
+  echo -n 1 > $errortag
+
+  echo "Create 16MiB delalloc extent in CoW fork"
+  xfs_io -c "pwrite 0 4k" $file1 > /dev/null 2>&1
+
+  sync
+
+  echo "Direct I/O write at offset 12k"
+  xfs_io -d -c "pwrite 12k 8k" $file1
+
+This commit fixes the bug by invoking xfs_bmapi_write() in a loop until disk
+blocks are allocated for atleast the starting file offset of the Direct IO
+write range.
+
+Root-caused-by: Wengang Wang <wen.gang.wang@oracle.com>
+Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- drivers/scsi/sd.c | 124 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sd.h |   5 ++
- 2 files changed, 129 insertions(+)
+ fs/xfs/xfs_reflink.c | 225 +++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 187 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index eb02d939dd44..8ba8bdd78ebd 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -101,6 +101,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
- 
- static void sd_config_discard(struct scsi_disk *, unsigned int);
- static void sd_config_write_same(struct scsi_disk *);
-+static void sd_config_verify(struct scsi_disk *sdkp);
- static int  sd_revalidate_disk(struct gendisk *);
- static void sd_unlock_native_capacity(struct gendisk *disk);
- static int  sd_probe(struct device *);
-@@ -519,6 +520,43 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RW(max_write_same_blocks);
- 
-+static ssize_t
-+max_verify_blocks_show(struct device *dev, struct device_attribute *attr,
-+		       char *buf)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(dev);
-+
-+	return sprintf(buf, "%u\n", sdkp->max_verify_blocks);
-+}
-+
-+static ssize_t
-+max_verify_blocks_store(struct device *dev, struct device_attribute *attr,
-+			const char *buf, size_t count)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(dev);
-+	struct scsi_device *sdp = sdkp->device;
-+	unsigned long max;
-+	int err;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
-+		return -EINVAL;
-+
-+	err = kstrtoul(buf, 10, &max);
-+
-+	if (err)
-+		return err;
-+
-+	sdkp->max_verify_blocks = max;
-+
-+	sd_config_verify(sdkp);
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(max_verify_blocks);
-+
- static ssize_t
- zoned_cap_show(struct device *dev, struct device_attribute *attr, char *buf)
- {
-@@ -579,6 +617,7 @@ static struct attribute *sd_disk_attrs[] = {
- 	&dev_attr_provisioning_mode.attr,
- 	&dev_attr_zeroing_mode.attr,
- 	&dev_attr_max_write_same_blocks.attr,
-+	&dev_attr_max_verify_blocks.attr,
- 	&dev_attr_max_medium_access_timeouts.attr,
- 	&dev_attr_zoned_cap.attr,
- 	&dev_attr_max_retries.attr,
-@@ -1018,6 +1057,68 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
- 					 (logical_block_size >> 9));
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index e7a7c00d93be..ab7a39244920 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -340,9 +340,41 @@ xfs_find_trim_cow_extent(
+ 	return 0;
  }
  
-+static blk_status_t sd_setup_verify16_cmnd(struct scsi_cmnd *cmd, u64 lba,
-+					   u32 nr_blocks)
+-/* Allocate all CoW reservations covering a range of blocks in a file. */
+-int
+-xfs_reflink_allocate_cow(
++static int
++xfs_reflink_convert_unwritten(
++	struct xfs_inode	*ip,
++	struct xfs_bmbt_irec	*imap,
++	struct xfs_bmbt_irec	*cmap,
++	bool			convert_now)
 +{
-+	cmd->cmd_len = 16;
-+	cmd->cmnd[0] = VERIFY_16;
-+	put_unaligned_be64(lba, &cmd->cmnd[2]);
-+	put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
-+	cmd->cmnd[14] = 0;
-+	cmd->cmnd[15] = 0;
++	xfs_fileoff_t		offset_fsb = imap->br_startoff;
++	xfs_filblks_t		count_fsb = imap->br_blockcount;
++	int			error;
 +
-+	return BLK_STS_OK;
++	/*
++	 * cmap might larger than imap due to cowextsize hint.
++	 */
++	xfs_trim_extent(cmap, offset_fsb, count_fsb);
++
++	/*
++	 * COW fork extents are supposed to remain unwritten until we're ready
++	 * to initiate a disk write.  For direct I/O we are going to write the
++	 * data and need the conversion, but for buffered writes we're done.
++	 */
++	if (!convert_now || cmap->br_state == XFS_EXT_NORM)
++		return 0;
++
++	trace_xfs_reflink_convert_cow(ip, cmap);
++
++	error = xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
++	if (!error)
++		cmap->br_state = XFS_EXT_NORM;
++
++	return error;
 +}
 +
-+static blk_status_t sd_setup_verify10_cmnd(struct scsi_cmnd *cmd, u64 lba,
-+					   u32 nr_blocks)
-+{
-+	if (lba > 0xffffffff && nr_blocks > 0xffff)
-+		return BLK_STS_NOTSUPP;
-+
-+	cmd->cmd_len = 10;
-+	cmd->cmnd[0] = VERIFY;
-+	put_unaligned_be32((u32)lba, &cmd->cmnd[2]);
-+	put_unaligned_be16((u16)nr_blocks, &cmd->cmnd[6]);
-+	cmd->cmnd[9] = 0;
-+
-+	return BLK_STS_OK;
-+}
-+
-+static blk_status_t sd_setup_verify_cmnd(struct scsi_cmnd *cmd)
-+{
-+	struct request *rq = scsi_cmd_to_rq(cmd);
-+	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
-+	struct scsi_device *sdp = cmd->device;
-+	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
-+	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
-+
-+	if (!sdkp->verify16 && !sdkp->verify10)
-+		goto out;
-+
-+	cmd->allowed = SD_MAX_RETRIES;
-+	cmd->sc_data_direction = DMA_NONE;
-+	cmd->transfersize = 0;
-+	/* skip veprotect / dpo / bytchk */
-+	cmd->cmnd[1] = 0;
-+
-+	if (sdkp->verify16)
-+		return sd_setup_verify16_cmnd(cmd, lba, nr_blocks);
-+	if (sdkp->verify10)
-+		return sd_setup_verify10_cmnd(cmd, lba, nr_blocks);
-+out:
-+	return BLK_STS_TARGET;
-+}
-+
-+static void sd_config_verify(struct scsi_disk *sdkp)
-+{
-+	unsigned int max_verify_sectors = sdkp->max_verify_blocks;
-+	unsigned int logical_bs = sdkp->device->sector_size;
-+	struct request_queue *q = sdkp->disk->queue;
-+
-+	blk_queue_max_verify_sectors(q, max_verify_sectors * (logical_bs >> 9));
-+}
-+
- static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
++static int
++xfs_reflink_alloc_cow_unwritten(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_bmbt_irec	*imap,
+ 	struct xfs_bmbt_irec	*cmap,
+@@ -351,33 +383,17 @@ xfs_reflink_allocate_cow(
+ 	bool			convert_now)
  {
- 	struct request *rq = scsi_cmd_to_rq(cmd);
-@@ -1244,6 +1345,8 @@ static blk_status_t sd_init_command(struct scsi_cmnd *cmd)
- 		}
- 	case REQ_OP_WRITE_ZEROES:
- 		return sd_setup_write_zeroes_cmnd(cmd);
-+	case REQ_OP_VERIFY:
-+		return sd_setup_verify_cmnd(cmd);
- 	case REQ_OP_FLUSH:
- 		return sd_setup_flush_cmnd(cmd);
- 	case REQ_OP_READ:
-@@ -1935,6 +2038,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	switch (req_op(req)) {
- 	case REQ_OP_DISCARD:
- 	case REQ_OP_WRITE_ZEROES:
-+	case REQ_OP_VERIFY:
- 	case REQ_OP_ZONE_RESET:
- 	case REQ_OP_ZONE_RESET_ALL:
- 	case REQ_OP_ZONE_OPEN:
-@@ -3021,6 +3125,24 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
- 		sdkp->ws10 = 1;
- }
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+-	xfs_filblks_t		count_fsb = imap->br_blockcount;
+ 	struct xfs_trans	*tp;
+-	int			nimaps, error = 0;
+-	bool			found;
+ 	xfs_filblks_t		resaligned;
+-	xfs_extlen_t		resblks = 0;
+-
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	if (!ip->i_cowfp) {
+-		ASSERT(!xfs_is_reflink_inode(ip));
+-		xfs_ifork_init_cow(ip);
+-	}
+-
+-	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
+-	if (error || !*shared)
+-		return error;
+-	if (found)
+-		goto convert;
++	xfs_extlen_t		resblks;
++	int			nimaps;
++	int			error;
++	bool			found;
  
-+static void sd_read_verify(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+	struct scsi_device *sdev = sdkp->device;
+ 	resaligned = xfs_aligned_fsb_count(imap->br_startoff,
+ 		imap->br_blockcount, xfs_get_cowextsz_hint(ip));
+ 	resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
+ 
+-	xfs_iunlock(ip, *lockmode);
+-	*lockmode = 0;
+-
+ 	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, resblks, 0,
+ 			false, &tp);
+ 	if (error)
+@@ -385,17 +401,17 @@ xfs_reflink_allocate_cow(
+ 
+ 	*lockmode = XFS_ILOCK_EXCL;
+ 
+-	/*
+-	 * Check for an overlapping extent again now that we dropped the ilock.
+-	 */
+ 	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
+ 	if (error || !*shared)
+ 		goto out_trans_cancel;
 +
-+	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, VERIFY_16)) {
-+		sd_printk(KERN_DEBUG, sdkp, "VERIFY16 supported\n");
-+		sdkp->verify16 = 1;
-+		sdkp->max_verify_blocks = SD_MAX_VERIFY16_BLOCKS;
-+		return;
-+	}
-+
-+	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, VERIFY)) {
-+		sd_printk(KERN_DEBUG, sdkp, "VERIFY10 supported\n");
-+		sdkp->verify10 = 1;
-+		sdkp->max_verify_blocks = SD_MAX_VERIFY10_BLOCKS;
-+	}
-+}
-+
- static void sd_read_security(struct scsi_disk *sdkp, unsigned char *buffer)
- {
- 	struct scsi_device *sdev = sdkp->device;
-@@ -3264,6 +3386,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		sd_read_cache_type(sdkp, buffer);
- 		sd_read_app_tag_own(sdkp, buffer);
- 		sd_read_write_same(sdkp, buffer);
-+		sd_read_verify(sdkp, buffer);
- 		sd_read_security(sdkp, buffer);
- 		sd_config_protection(sdkp);
+ 	if (found) {
+ 		xfs_trans_cancel(tp);
+ 		goto convert;
  	}
-@@ -3312,6 +3435,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
  
- 	set_capacity_and_notify(disk, logical_to_sectors(sdp, sdkp->capacity));
- 	sd_config_write_same(sdkp);
-+	sd_config_verify(sdkp);
- 	kfree(buffer);
++	ASSERT(cmap->br_startoff > imap->br_startoff);
++
+ 	/* Allocate the entire reservation as unwritten blocks. */
+ 	nimaps = 1;
+ 	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
+@@ -415,19 +431,9 @@ xfs_reflink_allocate_cow(
+ 	 */
+ 	if (nimaps == 0)
+ 		return -ENOSPC;
++
+ convert:
+-	xfs_trim_extent(cmap, offset_fsb, count_fsb);
+-	/*
+-	 * COW fork extents are supposed to remain unwritten until we're ready
+-	 * to initiate a disk write.  For direct I/O we are going to write the
+-	 * data and need the conversion, but for buffered writes we're done.
+-	 */
+-	if (!convert_now || cmap->br_state == XFS_EXT_NORM)
+-		return 0;
+-	trace_xfs_reflink_convert_cow(ip, cmap);
+-	error = xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
+-	if (!error)
+-		cmap->br_state = XFS_EXT_NORM;
++	error = xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now);
+ 	return error;
  
- 	/*
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 5eea762f84d1..249100e2ea1f 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -49,6 +49,8 @@ enum {
- 	SD_MAX_XFER_BLOCKS = 0xffffffff,
- 	SD_MAX_WS10_BLOCKS = 0xffff,
- 	SD_MAX_WS16_BLOCKS = 0x7fffff,
-+	SD_MAX_VERIFY10_BLOCKS = 0xffff,
-+	SD_MAX_VERIFY16_BLOCKS = 0xffffff,
- };
+ out_trans_cancel:
+@@ -435,6 +441,149 @@ xfs_reflink_allocate_cow(
+ 	return error;
+ }
  
- enum {
-@@ -118,6 +120,7 @@ struct scsi_disk {
- 	u32		max_xfer_blocks;
- 	u32		opt_xfer_blocks;
- 	u32		max_ws_blocks;
-+	u32		max_verify_blocks;
- 	u32		max_unmap_blocks;
- 	u32		unmap_granularity;
- 	u32		unmap_alignment;
-@@ -145,6 +148,8 @@ struct scsi_disk {
- 	unsigned	lbpvpd : 1;
- 	unsigned	ws10 : 1;
- 	unsigned	ws16 : 1;
-+	unsigned        verify10 : 1;
-+	unsigned        verify16 : 1;
- 	unsigned	rc_basis: 2;
- 	unsigned	zoned: 2;
- 	unsigned	urswrz : 1;
++static int
++xfs_replace_delalloc_cow_extent(
++	struct xfs_inode	*ip,
++	struct xfs_bmbt_irec	*imap,
++	struct xfs_bmbt_irec	*cmap,
++	bool			*shared,
++	uint			*lockmode,
++	bool			convert_now)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	int			nimaps;
++	int			error;
++	bool			found;
++
++	while (1) {
++		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, 0, 0,
++				false, &tp);
++		if (error)
++			return error;
++
++		*lockmode = XFS_ILOCK_EXCL;
++
++		error = xfs_find_trim_cow_extent(ip, imap, cmap, shared,
++						&found);
++		if (error || !*shared)
++			goto out_trans_cancel;
++
++		if (found) {
++			xfs_trans_cancel(tp);
++			goto convert;
++		}
++
++		ASSERT(isnullstartblock(cmap->br_startblock) ||
++			cmap->br_startblock == DELAYSTARTBLOCK);
++
++		/*
++		 * Replace delalloc reservation with an unwritten extent.
++		 */
++		nimaps = 1;
++		error = xfs_bmapi_write(tp, ip, cmap->br_startoff,
++			cmap->br_blockcount,
++			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, 0, cmap,
++			&nimaps);
++		if (error)
++			goto out_trans_cancel;
++
++		xfs_inode_set_cowblocks_tag(ip);
++		error = xfs_trans_commit(tp);
++		if (error)
++			return error;
++
++		/*
++		 * Allocation succeeded but the requested range was not even partially
++		 * satisfied?  Bail out!
++		 */
++		if (nimaps == 0)
++			return -ENOSPC;
++
++		if (cmap->br_startoff + cmap->br_blockcount > imap->br_startoff)
++			break;
++
++		xfs_iunlock(ip, *lockmode);
++		*lockmode = 0;
++	}
++
++convert:
++	error = xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now);
++	return error;
++
++out_trans_cancel:
++	xfs_trans_cancel(tp);
++	return error;
++}
++
++
++/* Allocate all CoW reservations covering a range of blocks in a file. */
++int
++xfs_reflink_allocate_cow(
++	struct xfs_inode	*ip,
++	struct xfs_bmbt_irec	*imap,
++	struct xfs_bmbt_irec	*cmap,
++	bool			*shared,
++	uint			*lockmode,
++	bool			convert_now)
++{
++	int			error;
++	bool			found;
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	if (!ip->i_cowfp) {
++		ASSERT(!xfs_is_reflink_inode(ip));
++		xfs_ifork_init_cow(ip);
++	}
++
++	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
++	if (error || !*shared)
++		return error;
++
++	/*
++	 * We have to deal with one of the following 2 cases,
++	 * 1. No extent in CoW fork and shared extent in Data fork.
++	 * 2. CoW fork has one of the following:
++	 *    - Unwritten/written extent in CoW fork.
++	 *    - Delalloc extent in CoW fork; An extent may or may not be present
++	 *      in the Data fork.
++	 */
++
++	if (found) {
++		/*
++		 * CoW fork has a real extent; Convert it to written if is an
++		 * unwritten extent.
++		 */
++		error = xfs_reflink_convert_unwritten(ip, imap, cmap,
++				convert_now);
++		return error;
++	}
++
++	xfs_iunlock(ip, *lockmode);
++	*lockmode = 0;
++
++	if (cmap->br_startoff > imap->br_startoff) {
++		/*
++		 * CoW fork does not have an extent. Hence, allocate a real
++		 * extent in the CoW fork.
++		 */
++		error = xfs_reflink_alloc_cow_unwritten(ip, imap, cmap, shared,
++				lockmode, convert_now);
++	} else if (isnullstartblock(cmap->br_startblock) ||
++		cmap->br_startblock == DELAYSTARTBLOCK) {
++		/*
++		 * CoW fork has a delalloc extent. Replace it with a real
++		 * extent.
++		 */
++		error = xfs_replace_delalloc_cow_extent(ip, imap, cmap, shared,
++				lockmode, convert_now);
++	} else {
++		ASSERT(0);
++	}
++
++	return error;
++}
++
+ /*
+  * Cancel CoW reservations for some block range of an inode.
+  *
 -- 
-2.29.0
+2.35.1
 
