@@ -2,150 +2,304 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FCBEC43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 14:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2E03C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 16:15:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232328AbiGNO4i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Jul 2022 10:56:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34222 "EHLO
+        id S237297AbiGNQPa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jul 2022 12:15:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231989AbiGNO4i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jul 2022 10:56:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3A5B5A44D;
-        Thu, 14 Jul 2022 07:56:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 40C9261A07;
-        Thu, 14 Jul 2022 14:56:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78C72C34115;
-        Thu, 14 Jul 2022 14:56:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657810596;
-        bh=cXu6RrmM6SOIDB9bE5H1LrBbEbluE8g3lUi77zviQ0M=;
-        h=From:To:Cc:Subject:Date:From;
-        b=kQ+AZ5Qj6kUTH84K4ddCRcTn2YnwHZNLXhpc/I8ShyyIBd+oIxqkri7+/UX7naU/Z
-         WBUtAAHDuBbViiY2+w+rl6hA+UEICOiurQoWnI/BDjKRcvW44QPwCRNacik1+H4A2d
-         WKVzOJMN9b3fncr7BUCWjze0DtOGVkrfexcmDICZRUkmJbt2iVlzi22gLjdTsXj43f
-         m+rDg5BlJhMDZrxNFCCsG6qYU17UOGhWwgANDlBaB4K+CT0gIax0Row1hfzZUhQz56
-         fJEl25IQyWZzS43IFYHLajXE7xueLknQiTfppZLAl6TxIitX3Q9gGdYFyB3AYWURUB
-         Mn5PKq9B1W9rA==
-From:   Zorro Lang <zlang@kernel.org>
-To:     fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, sandeen@redhat.com
-Subject: [PATCH] generic: new test to verify selinux label of whiteout inode
-Date:   Thu, 14 Jul 2022 22:56:32 +0800
-Message-Id: <20220714145632.998355-1-zlang@kernel.org>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S232196AbiGNQP3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jul 2022 12:15:29 -0400
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2065.outbound.protection.outlook.com [40.107.223.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 125096170C;
+        Thu, 14 Jul 2022 09:15:28 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=CovdJ7uZ7Dj5pOF9u/Y09OVGpxV0+YkxkI6Sl0jmXS4Rum+7OJjMVaCWnV0fO+PcUsrLGyMGIomjpT+8LIdP3AkGbsrDJxl3xQIk9Tj6XgaR/RFjL4upW2/jaAWBlRtoAEQvAEpuDzNAwJ5UXI8MnS1jMkzQa8Tq78d/MUuoI6K66ppkDS4cJapTBKZURaVJxQcBpiZUuZACK6/tA3oT/FxRocOWjOyrgjbxBLxzDCztXUpWxQs0KLl5IyE+PrtxActGR5jy03/vFar405qJy6DXysdXOFbzrZVeNFupT4wq2+O+vCQ9sGcCWzFU35FVFTgXiRY8UgeDun1wWbYGzw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=mBW4h10J7XAhyaHtTT9wydlVynoCzg0kQPS8qrn77OY=;
+ b=E9AFdvpIHiCakbRHeXs/zFChKoyEZsb/N5TCgG01MkcvpOekWPZcS/rizToW4N3HxnFw36FmHaJVGwsUK/B2Hdodix1S/ZEfjL9Pe7h9BCIw/3wu2IeNPrCHY6aaIb17IUhUzhRkLizBKuKgcR9bQiNIe4IPkfYGv89l36Buj04h90TOTjrHvTtOT9wZgF3YxHTmtjhNcneCV8LeoFT+/bMHVmcjlInKNBQy8S6nTH0WZdZcqu2Qv113pF03Ss6epoIJnFWxI7Djb6raylSPWAalmxIOmHgfSzvDF5dQHobSvud5/lFlnW8wBEYfGpxJp80mv7sYU1Zrt17tjanxAQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mBW4h10J7XAhyaHtTT9wydlVynoCzg0kQPS8qrn77OY=;
+ b=UR7I4fciUr13WZTPdogePnJvmE21pXwuR5A6D4Duh76WYBGky6dt378HKtn7C5n7eLMZbWB/93Atm3fgCr8SPaXrPD1N8XjWKK7VJuI6tO+VAEoRUx6PlpOgKaWiZrcQ4RzTT+UhfyKLwV7VbABzqcZSKmrNuYG2qSmdeRO5SR8=
+Received: from BN9PR03CA0152.namprd03.prod.outlook.com (2603:10b6:408:f4::7)
+ by IA1PR12MB6258.namprd12.prod.outlook.com (2603:10b6:208:3e6::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5438.14; Thu, 14 Jul
+ 2022 16:15:26 +0000
+Received: from BN8NAM11FT051.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:f4:cafe::a0) by BN9PR03CA0152.outlook.office365.com
+ (2603:10b6:408:f4::7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.22 via Frontend
+ Transport; Thu, 14 Jul 2022 16:15:26 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ BN8NAM11FT051.mail.protection.outlook.com (10.13.177.66) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5438.12 via Frontend Transport; Thu, 14 Jul 2022 16:15:26 +0000
+Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Thu, 14 Jul
+ 2022 11:15:25 -0500
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     <jgg@nvidia.com>
+CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
+        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
+        <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
+        <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
+        <akpm@linux-foundation.org>
+Subject: [PATCH] mm: move page zone helpers from mm.h to mmzone.h
+Date:   Thu, 14 Jul 2022 11:15:15 -0500
+Message-ID: <20220714161515.17107-1-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <715fc1ae-7bd3-5b96-175c-e1cc74920739@amd.com>
+References: <715fc1ae-7bd3-5b96-175c-e1cc74920739@amd.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1fff5c00-939f-40c7-d969-08da65b40ffb
+X-MS-TrafficTypeDiagnostic: IA1PR12MB6258:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: LOt8OaMcxbvk/8bRPeWzsR5xD09xpNKObGHaO4UDM71RlO/RCFQlISmp+C6iv+U2Yj97I/fluhNQIkkKqWO75ecziVxqW87R8j9MpCfmcuJA/aucy7AEvKMGUMCI0KnQvyJE/EKQRa1CW62fgESnZtsdZdTiynJfZMNNgAqjwB0O8ppvu3a4YhWZnzCt020TifLfYHxBZ2O6F2EkT4+9zVbmhLVEM8FBohQYno6NcLhqCHVrR0j3l7iAwjBMm1pUlHfNrolWQ0NOfJkpyaTJB6cBr7WI4PLo6w3S0m6zR9bN54Iwj09iGFjvPQvMl6tzggvmVg4aqbxr2sT1DEtYtQGYCAGysYOYRmfguhQ9wHEwiWj4XJ+56uHXDM1vCvIBaIRbwuF3C1C5q6J5BIVnyNrDjLvrXZLEabPpbkvFCK5Nr6ieNErkzPzN8vZmKzwHtwRWNrC7saa4FK0h4+l4qsMze59lgpcqJodsF6qV/EGwTAHCvtV6SlT1LaBLmDZpgHU15kkIgNWv/BSigO8NLgHi2x//ZHjgTksT3LhBpj+sBViqanaT3U5LVjm+xIzRPxrDH0KdcxmctFQ52GNc1tSmW8HHsJudCoSGqCDpvLzfPDBfyGoktbwXXtIQRmNeyKAuiNyPagC9fJ5C0HfnRTlOFWKwadHDZjWGsr3gYY+w6UrSR7wMskwzh/BWI/e2/jRUoWKUJ/UKtEqjaRHtDpmBOpZl0WXarcVbOnQmyu24EIsksflPo+Y/PF53i91M+NhOv6r6mn3MKlrNnt+83Bv56r+BfWD5NMLw0uoUMjHVzS9cFNV3Xg8IpvawkpXQRPss3U4MngGrrbwn7nGgM3Si8SMhd1sWPz+Olwg29uQ=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230016)(4636009)(396003)(136003)(39860400002)(376002)(346002)(40470700004)(46966006)(36840700001)(336012)(44832011)(5660300002)(26005)(81166007)(8936002)(7696005)(7416002)(16526019)(36860700001)(186003)(40460700003)(40480700001)(36756003)(8676002)(316002)(86362001)(1076003)(4326008)(70586007)(70206006)(426003)(82310400005)(54906003)(478600001)(2616005)(82740400003)(83380400001)(356005)(2906002)(47076005)(41300700001)(6916009)(6666004)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jul 2022 16:15:26.2247
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1fff5c00-939f-40c7-d969-08da65b40ffb
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT051.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6258
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A but on XFS cause renameat2() with flags=RENAME_WHITEOUT doesn't
-apply an selinux label. That's quite different with other fs (e.g.
-ext4, tmpfs).
+[WHY]
+It makes more sense to have these helpers in zone specific header
+file, rather than the generic mm.h
 
-Signed-off-by: Zorro Lang <zlang@kernel.org>
+Signed-off-by: Alex Sierra <alex.sierra@amd.com>
 ---
+ include/linux/memremap.h |  2 +-
+ include/linux/mm.h       | 78 ---------------------------------------
+ include/linux/mmzone.h   | 80 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 81 insertions(+), 79 deletions(-)
 
-Hi,
-
-A test case for:
-https://lore.kernel.org/linux-xfs/1655775516-8936-1-git-send-email-sandeen@redhat.com/
-
-The patch has been reviewed, but not merged, so there's not commit ID, just send
-this patch out to get review at first.
-
-Thanks,
-Zorro
-
- tests/generic/692     | 64 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/692.out |  2 ++
- 2 files changed, 66 insertions(+)
- create mode 100755 tests/generic/692
- create mode 100644 tests/generic/692.out
-
-diff --git a/tests/generic/692 b/tests/generic/692
-new file mode 100755
-index 00000000..ccf2213d
---- /dev/null
-+++ b/tests/generic/692
-@@ -0,0 +1,64 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Red Hat, Copyright.  All Rights Reserved.
-+#
-+# FS QA Test 692
-+#
-+# Verify selinux label can be kept after RENAME_WHITEOUT. This is
-+# a regression test for:
-+#   XXXXXXXXXXXX ("xfs: add selinux labels to whiteout inodes")
-+#
-+. ./common/preamble
-+_begin_fstest auto quick rename attr
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 8af304f6b504..77229165c914 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -2,7 +2,7 @@
+ #ifndef _LINUX_MEMREMAP_H_
+ #define _LINUX_MEMREMAP_H_
+ 
+-#include <linux/mm.h>
++#include <linux/mmzone.h>
+ #include <linux/range.h>
+ #include <linux/ioport.h>
+ #include <linux/percpu-refcount.h>
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 3b31b33bd5be..2df8c2b98d36 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1049,84 +1049,6 @@ vm_fault_t finish_mkwrite_fault(struct vm_fault *vmf);
+  *   back into memory.
+  */
+ 
+-/*
+- * The zone field is never updated after free_area_init_core()
+- * sets it, so none of the operations on it need to be atomic.
+- */
+-
+-/* Page flags: | [SECTION] | [NODE] | ZONE | [LAST_CPUPID] | ... | FLAGS | */
+-#define SECTIONS_PGOFF		((sizeof(unsigned long)*8) - SECTIONS_WIDTH)
+-#define NODES_PGOFF		(SECTIONS_PGOFF - NODES_WIDTH)
+-#define ZONES_PGOFF		(NODES_PGOFF - ZONES_WIDTH)
+-#define LAST_CPUPID_PGOFF	(ZONES_PGOFF - LAST_CPUPID_WIDTH)
+-#define KASAN_TAG_PGOFF		(LAST_CPUPID_PGOFF - KASAN_TAG_WIDTH)
+-
+-/*
+- * Define the bit shifts to access each section.  For non-existent
+- * sections we define the shift as 0; that plus a 0 mask ensures
+- * the compiler will optimise away reference to them.
+- */
+-#define SECTIONS_PGSHIFT	(SECTIONS_PGOFF * (SECTIONS_WIDTH != 0))
+-#define NODES_PGSHIFT		(NODES_PGOFF * (NODES_WIDTH != 0))
+-#define ZONES_PGSHIFT		(ZONES_PGOFF * (ZONES_WIDTH != 0))
+-#define LAST_CPUPID_PGSHIFT	(LAST_CPUPID_PGOFF * (LAST_CPUPID_WIDTH != 0))
+-#define KASAN_TAG_PGSHIFT	(KASAN_TAG_PGOFF * (KASAN_TAG_WIDTH != 0))
+-
+-/* NODE:ZONE or SECTION:ZONE is used to ID a zone for the buddy allocator */
+-#ifdef NODE_NOT_IN_PAGE_FLAGS
+-#define ZONEID_SHIFT		(SECTIONS_SHIFT + ZONES_SHIFT)
+-#define ZONEID_PGOFF		((SECTIONS_PGOFF < ZONES_PGOFF)? \
+-						SECTIONS_PGOFF : ZONES_PGOFF)
+-#else
+-#define ZONEID_SHIFT		(NODES_SHIFT + ZONES_SHIFT)
+-#define ZONEID_PGOFF		((NODES_PGOFF < ZONES_PGOFF)? \
+-						NODES_PGOFF : ZONES_PGOFF)
+-#endif
+-
+-#define ZONEID_PGSHIFT		(ZONEID_PGOFF * (ZONEID_SHIFT != 0))
+-
+-#define ZONES_MASK		((1UL << ZONES_WIDTH) - 1)
+-#define NODES_MASK		((1UL << NODES_WIDTH) - 1)
+-#define SECTIONS_MASK		((1UL << SECTIONS_WIDTH) - 1)
+-#define LAST_CPUPID_MASK	((1UL << LAST_CPUPID_SHIFT) - 1)
+-#define KASAN_TAG_MASK		((1UL << KASAN_TAG_WIDTH) - 1)
+-#define ZONEID_MASK		((1UL << ZONEID_SHIFT) - 1)
+-
+-static inline enum zone_type page_zonenum(const struct page *page)
+-{
+-	ASSERT_EXCLUSIVE_BITS(page->flags, ZONES_MASK << ZONES_PGSHIFT);
+-	return (page->flags >> ZONES_PGSHIFT) & ZONES_MASK;
+-}
+-
+-static inline enum zone_type folio_zonenum(const struct folio *folio)
+-{
+-	return page_zonenum(&folio->page);
+-}
+-
+-#ifdef CONFIG_ZONE_DEVICE
+-static inline bool is_zone_device_page(const struct page *page)
+-{
+-	return page_zonenum(page) == ZONE_DEVICE;
+-}
+-extern void memmap_init_zone_device(struct zone *, unsigned long,
+-				    unsigned long, struct dev_pagemap *);
+-#else
+-static inline bool is_zone_device_page(const struct page *page)
+-{
+-	return false;
+-}
+-#endif
+-
+-static inline bool folio_is_zone_device(const struct folio *folio)
+-{
+-	return is_zone_device_page(&folio->page);
+-}
+-
+-static inline bool is_zone_movable_page(const struct page *page)
+-{
+-	return page_zonenum(page) == ZONE_MOVABLE;
+-}
+-
+ #if defined(CONFIG_ZONE_DEVICE) && defined(CONFIG_FS_DAX)
+ DECLARE_STATIC_KEY_FALSE(devmap_managed_key);
+ 
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index aab70355d64f..47fc41f43c48 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -730,6 +730,86 @@ static inline bool zone_is_empty(struct zone *zone)
+ 	return zone->spanned_pages == 0;
+ }
+ 
++#ifndef BUILD_VDSO32_64
++/*
++ * The zone field is never updated after free_area_init_core()
++ * sets it, so none of the operations on it need to be atomic.
++ */
 +
-+# Import common functions.
-+. ./common/attr
-+. ./common/renameat2
++/* Page flags: | [SECTION] | [NODE] | ZONE | [LAST_CPUPID] | ... | FLAGS | */
++#define SECTIONS_PGOFF		((sizeof(unsigned long)*8) - SECTIONS_WIDTH)
++#define NODES_PGOFF		(SECTIONS_PGOFF - NODES_WIDTH)
++#define ZONES_PGOFF		(NODES_PGOFF - ZONES_WIDTH)
++#define LAST_CPUPID_PGOFF	(ZONES_PGOFF - LAST_CPUPID_WIDTH)
++#define KASAN_TAG_PGOFF		(LAST_CPUPID_PGOFF - KASAN_TAG_WIDTH)
 +
-+# real QA test starts here
-+_supported_fs generic
-+_require_scratch
-+_require_attrs
-+_require_renameat2 whiteout
++/*
++ * Define the bit shifts to access each section.  For non-existent
++ * sections we define the shift as 0; that plus a 0 mask ensures
++ * the compiler will optimise away reference to them.
++ */
++#define SECTIONS_PGSHIFT	(SECTIONS_PGOFF * (SECTIONS_WIDTH != 0))
++#define NODES_PGSHIFT		(NODES_PGOFF * (NODES_WIDTH != 0))
++#define ZONES_PGSHIFT		(ZONES_PGOFF * (ZONES_WIDTH != 0))
++#define LAST_CPUPID_PGSHIFT	(LAST_CPUPID_PGOFF * (LAST_CPUPID_WIDTH != 0))
++#define KASAN_TAG_PGSHIFT	(KASAN_TAG_PGOFF * (KASAN_TAG_WIDTH != 0))
 +
-+_fixed_by_kernel_commit XXXXXXXXXXXX \
-+	xfs: add selinux labels to whiteout inodes
++/* NODE:ZONE or SECTION:ZONE is used to ID a zone for the buddy allocator */
++#ifdef NODE_NOT_IN_PAGE_FLAGS
++#define ZONEID_SHIFT		(SECTIONS_SHIFT + ZONES_SHIFT)
++#define ZONEID_PGOFF		((SECTIONS_PGOFF < ZONES_PGOFF) ? \
++						SECTIONS_PGOFF : ZONES_PGOFF)
++#else
++#define ZONEID_SHIFT		(NODES_SHIFT + ZONES_SHIFT)
++#define ZONEID_PGOFF		((NODES_PGOFF < ZONES_PGOFF) ? \
++						NODES_PGOFF : ZONES_PGOFF)
++#endif
 +
-+get_selinux_label()
++#define ZONEID_PGSHIFT		(ZONEID_PGOFF * (ZONEID_SHIFT != 0))
++
++#define ZONES_MASK		((1UL << ZONES_WIDTH) - 1)
++#define NODES_MASK		((1UL << NODES_WIDTH) - 1)
++#define SECTIONS_MASK		((1UL << SECTIONS_WIDTH) - 1)
++#define LAST_CPUPID_MASK	((1UL << LAST_CPUPID_SHIFT) - 1)
++#define KASAN_TAG_MASK		((1UL << KASAN_TAG_WIDTH) - 1)
++#define ZONEID_MASK		((1UL << ZONEID_SHIFT) - 1)
++
++static inline enum zone_type page_zonenum(const struct page *page)
 +{
-+	local label
-+
-+	label=`_getfattr --absolute-names -n security.selinux $@ | sed -n 's/security.selinux=\"\(.*\)\"/\1/p'`
-+	if [ ${PIPESTATUS[0]} -ne 0 -o -z "$label" ];then
-+		_fail "Fail to get selinux label: $label"
-+	fi
-+	echo $label
++	ASSERT_EXCLUSIVE_BITS(page->flags, ZONES_MASK << ZONES_PGSHIFT);
++	return (page->flags >> ZONES_PGSHIFT) & ZONES_MASK;
 +}
 +
-+_scratch_mkfs >> $seqres.full 2>&1
-+# SELINUX_MOUNT_OPTIONS will be set in common/config if selinux is enabled
-+if [ -z "$SELINUX_MOUNT_OPTIONS" ]; then
-+	_notrun "Require selinux to be enabled"
-+fi
-+# This test need to verify selinux labels in objects, so unset this selinux
-+# mount option
-+export SELINUX_MOUNT_OPTIONS=""
-+_scratch_mount
++static inline enum zone_type folio_zonenum(const struct folio *folio)
++{
++	return page_zonenum(&folio->page);
++}
 +
-+touch $SCRATCH_MNT/f1
-+echo "Before RENAME_WHITEOUT" >> $seqres.full
-+ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
-+# Expect f1 and f2 have same label after RENAME_WHITEOUT
-+$here/src/renameat2 -w $SCRATCH_MNT/f1 $SCRATCH_MNT/f2
-+echo "After RENAME_WHITEOUT" >> $seqres.full
-+ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
-+label1=`get_selinux_label $SCRATCH_MNT/f1`
-+label2=`get_selinux_label $SCRATCH_MNT/f2`
-+if [ "$label1" != "$label2" ];then
-+	echo "$label1 != $label2"
-+fi
++#ifdef CONFIG_ZONE_DEVICE
++static inline bool is_zone_device_page(const struct page *page)
++{
++	return page_zonenum(page) == ZONE_DEVICE;
++}
++extern void memmap_init_zone_device(struct zone *, unsigned long,
++				    unsigned long, struct dev_pagemap *);
++#else
++static inline bool is_zone_device_page(const struct page *page)
++{
++	return false;
++}
++#endif
 +
-+echo "Silence is golden"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/692.out b/tests/generic/692.out
-new file mode 100644
-index 00000000..d7521a9f
---- /dev/null
-+++ b/tests/generic/692.out
-@@ -0,0 +1,2 @@
-+QA output created by 692
-+Silence is golden
++static inline bool folio_is_zone_device(const struct folio *folio)
++{
++	return is_zone_device_page(&folio->page);
++}
++
++static inline bool is_zone_movable_page(const struct page *page)
++{
++	return page_zonenum(page) == ZONE_MOVABLE;
++}
++#endif
++
+ /*
+  * Return true if [start_pfn, start_pfn + nr_pages) range has a non-empty
+  * intersection with the given zone
 -- 
-2.31.1
+2.32.0
 
