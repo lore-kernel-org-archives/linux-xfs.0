@@ -2,219 +2,177 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03AB5C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 17:14:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74BEDC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 17:54:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232608AbiGNROY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Jul 2022 13:14:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43522 "EHLO
+        id S237945AbiGNRyT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jul 2022 13:54:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240090AbiGNROX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jul 2022 13:14:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C606101FF
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Jul 2022 10:14:22 -0700 (PDT)
+        with ESMTP id S230514AbiGNRyT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jul 2022 13:54:19 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2132F27177;
+        Thu, 14 Jul 2022 10:54:18 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 89129620C9
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Jul 2022 17:14:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB0F5C34114
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Jul 2022 17:14:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CBDCAB82779;
+        Thu, 14 Jul 2022 17:54:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AEAAC34114;
+        Thu, 14 Jul 2022 17:54:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657818860;
-        bh=OJRQxV2jrVHOZmA8aNPuW01/qu0fXgrnWFUaKWcuqKw=;
-        h=Date:From:To:Subject:From;
-        b=YlzYkTooVAflJgNm/mOSAQqyF/5mVDNFlq0ZimdL+riM/vJ5rAvN2oZ5qOp4VlT1M
-         WZZrmR/n2Dt03izPNYm915JdbU/gOe7+0DIvKggsp/sNLTG4EjewzFt441BMZTBtEb
-         bFiIBVSX4Zx8RNn+sFl3BqGU4xoi980vIMK9oX7oH3PLf+5ga0xf1ySHRktbR/zfke
-         hXTW0GpqdeYAe/zLdvxdVhC5i/NuPwFEelL0RTduCO4HDE5aTZ7YM4HSLM0VgN2+ZH
-         wnNP7AacQfixt7YFXd1FuPEuyr/IbgX4eTgsYpQk7duw1z0E699kW9OLVCe33ASKhI
-         OOACxQnvtr+nQ==
-Date:   Thu, 14 Jul 2022 10:14:20 -0700
+        s=k20201202; t=1657821255;
+        bh=LgU+sYC6IUyCyX2o7fwrVIJ7cvKYLuT2/55WRReuVuk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=miK77TVEWJzTCgxOunLKwtg+bA4M2rbSH6kRxi8PeaYxE7T8a2fQkRJDBoyTOQjZ+
+         P39e07+GfiM2KD0lvYiJd7QQNy6dpTtGIa9KUi8/E/0iSLcQ7JkUECWw1g4A6N71OO
+         vv6++OCRidDQp0ekvihKIjwcgtB2DJ0URyILgMWdcpEwdnMZEGlwhkInw+RBelqDba
+         soOqdmPgEN1XHEVM28Oln3izsHpXswM711d3W9X6m5wyEtnESil+ozOdJKGo27IykI
+         nMU+ORrvI3wjsw+mC5KORWbTjzq7Au2FR7PlORe/B75JNMKd39FfyoIPGpzEX6SY7T
+         lIHJXqNKwc21w==
+Date:   Thu, 14 Jul 2022 10:54:14 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 95ff0363f3f6
-Message-ID: <YtBO7MeRIzhyfe8t@magnolia>
+To:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "jane.chu@oracle.com" <jane.chu@oracle.com>
+Subject: Re: [RFC PATCH v6] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+Message-ID: <YtBYRrkSkuF4VU5e@magnolia>
+References: <20220410171623.3788004-1-ruansy.fnst@fujitsu.com>
+ <20220714103421.1988696-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20220714103421.1988696-1-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Thu, Jul 14, 2022 at 10:34:29AM +0000, ruansy.fnst@fujitsu.com wrote:
+> This patch is inspired by Dan's "mm, dax, pmem: Introduce
+> dev_pagemap_failure()"[1].  With the help of dax_holder and
+> ->notify_failure() mechanism, the pmem driver is able to ask filesystem
+> (or mapped device) on it to unmap all files in use and notify processes
+> who are using those files.
+> 
+> Call trace:
+> trigger unbind
+>  -> unbind_store()
+>   -> ... (skip)
+>    -> devres_release_all()   # was pmem driver ->remove() in v1
+>     -> kill_dax()
+>      -> dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_PRE_REMOVE)
+>       -> xfs_dax_notify_failure()
+> 
+> Introduce MF_MEM_PRE_REMOVE to let filesystem know this is a remove
+> event.  So do not shutdown filesystem directly if something not
+> supported, or if failure range includes metadata area.  Make sure all
+> files and processes are handled correctly.
+> 
+> ==
+> Changes since v5:
+>   1. Renamed MF_MEM_REMOVE to MF_MEM_PRE_REMOVE
+>   2. hold s_umount before sync_filesystem()
+>   3. move sync_filesystem() after SB_BORN check
+>   4. Rebased on next-20220714
+> 
+> Changes since v4:
+>   1. sync_filesystem() at the beginning when MF_MEM_REMOVE
+>   2. Rebased on next-20220706
+> 
+> [1]: https://lore.kernel.org/linux-mm/161604050314.1463742.14151665140035795571.stgit@dwillia2-desk3.amr.corp.intel.com/
+> 
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
 
-The for-next branch of the xfs-linux repository at:
+Looks reasonable to me now,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+--D
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This is it for 5.20/6.0.
-
-The new head of the for-next branch is commit:
-
-95ff0363f3f6 xfs: fix use-after-free in xattr node block inactivation
-
-57 new commits:
-
-Andrey Strachuk (1):
-      [0f38063d7a38] xfs: removed useless condition in function xfs_attr_node_get
-
-Darrick J. Wong (11):
-      [dd81dc05598c] Merge tag 'xfs-cil-scale-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeA
-      [fddb564f62aa] Merge tag 'xfs-perag-conv-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeA
-      [732436ef916b] xfs: convert XFS_IFORK_PTR to a static inline helper
-      [2ed5b09b3e8f] xfs: make inode attribute forks a permanent part of struct xfs_inode
-      [e45d7cb2356e] xfs: use XFS_IFORK_Q to determine the presence of an xattr fork
-      [932b42c66cb5] xfs: replace XFS_IFORK_Q with a proper predicate function
-      [c01147d92989] xfs: replace inode fork size macros with functions
-      [4613b17cc478] Merge tag 'xfs-iunlink-item-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeB
-      [35c5a09f5346] Merge tag 'xfs-buf-lockless-lookup-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeB
-      [6d200bdc017a] Merge tag 'make-attr-fork-permanent-5.20_2022-07-14' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.20-mergeB
-      [95ff0363f3f6] xfs: fix use-after-free in xattr node block inactivation
-
-Dave Chinner (43):
-      [88591e7f06a4] xfs: use the CIL space used counter for emptiness checks
-      [12380d237b81] xfs: lift init CIL reservation out of xc_cil_lock
-      [31151cc342dd] xfs: rework per-iclog header CIL reservation
-      [af1c2146a50b] xfs: introduce per-cpu CIL tracking structure
-      [7c8ade212120] xfs: implement percpu cil space used calculation
-      [1dd2a2c18e31] xfs: track CIL ticket reservation in percpu structure
-      [df7a4a2134b0] xfs: convert CIL busy extents to per-cpu
-      [016a23388cdc] xfs: Add order IDs to log items in CIL
-      [c0fb4765c508] xfs: convert CIL to unordered per cpu lists
-      [169248536a2b] xfs: convert log vector chain to use list heads
-      [4eb56069cb28] xfs: move CIL ordering to the logvec chain
-      [1ccb0745a97f] xfs: avoid cil push lock if possible
-      [d9f68777b251] xfs: xlog_sync() manually adjusts grant head space
-      [51a117edff13] xfs: expanding delayed logging design with background material
-      [c6aee2481419] xfs: make last AG grow/shrink perag centric
-      [a95fee40e3d4] xfs: kill xfs_ialloc_pagi_init()
-      [99b13c7f0bd3] xfs: pass perag to xfs_ialloc_read_agi()
-      [76b47e528e3a] xfs: kill xfs_alloc_pagf_init()
-      [08d3e84feeb8] xfs: pass perag to xfs_alloc_read_agf()
-      [61021deb1faa] xfs: pass perag to xfs_read_agi
-      [fa044ae70c64] xfs: pass perag to xfs_read_agf
-      [49f0d84ec1db] xfs: pass perag to xfs_alloc_get_freelist
-      [8c392eb27f7a] xfs: pass perag to xfs_alloc_put_freelist
-      [cec7bb7d58fa] xfs: pass perag to xfs_alloc_read_agfl
-      [0800169e3e2c] xfs: Pre-calculate per-AG agbno geometry
-      [2d6ca8321c35] xfs: Pre-calculate per-AG agino geometry
-      [3829c9a10fc7] xfs: replace xfs_ag_block_count() with perag accesses
-      [36029dee382a] xfs: make is_log_ag() a first class helper
-      [85c73bf726e4] xfs: rework xfs_buf_incore() API
-      [a4454cd69c66] xfs: factor the xfs_iunlink functions
-      [4fcc94d65327] xfs: track the iunlink list pointer in the xfs_inode
-      [04755d2e5821] xfs: refactor xlog_recover_process_iunlinks()
-      [a83d5a8b1d94] xfs: introduce xfs_iunlink_lookup
-      [2fd26cc07e9f] xfs: double link the unlinked inode list
-      [5301f8701314] xfs: clean up xfs_iunlink_update_inode()
-      [062efdb0803a] xfs: combine iunlink inode update functions
-      [fad743d7cd8b] xfs: add log item precommit operation
-      [784eb7d8dd41] xfs: add in-memory iunlink log item
-      [de67dc575434] xfs: break up xfs_buf_find() into individual pieces
-      [348000804a0f] xfs: merge xfs_buf_find() and xfs_buf_get_map()
-      [d8d9bbb0ee6c] xfs: reduce the number of atomic when locking a buffer after lookup
-      [32dd4f9c506b] xfs: remove a superflous hash lookup when inserting new buffers
-      [298f34224506] xfs: lockless buffer lookup
-
-Eric Sandeen (1):
-      [70b589a37e1a] xfs: add selinux labels to whiteout inodes
-
-Zhang Yi (1):
-      [04a98a036cf8] xfs: flush inode gc workqueue before clearing agi bucket
-
-Code Diffstat:
-
- .../filesystems/xfs-delayed-logging-design.rst     | 361 ++++++++++--
- fs/xfs/Makefile                                    |   1 +
- fs/xfs/libxfs/xfs_ag.c                             | 173 ++++--
- fs/xfs/libxfs/xfs_ag.h                             |  75 ++-
- fs/xfs/libxfs/xfs_ag_resv.c                        |   2 +-
- fs/xfs/libxfs/xfs_alloc.c                          | 143 ++---
- fs/xfs/libxfs/xfs_alloc.h                          |  58 +-
- fs/xfs/libxfs/xfs_alloc_btree.c                    |   9 +-
- fs/xfs/libxfs/xfs_attr.c                           |  22 +-
- fs/xfs/libxfs/xfs_attr.h                           |  10 +-
- fs/xfs/libxfs/xfs_attr_leaf.c                      |  29 +-
- fs/xfs/libxfs/xfs_attr_remote.c                    |  15 +-
- fs/xfs/libxfs/xfs_bmap.c                           |  84 +--
- fs/xfs/libxfs/xfs_bmap_btree.c                     |  10 +-
- fs/xfs/libxfs/xfs_btree.c                          |  29 +-
- fs/xfs/libxfs/xfs_dir2.c                           |   2 +-
- fs/xfs/libxfs/xfs_dir2_block.c                     |   6 +-
- fs/xfs/libxfs/xfs_dir2_sf.c                        |   8 +-
- fs/xfs/libxfs/xfs_ialloc.c                         |  86 ++-
- fs/xfs/libxfs/xfs_ialloc.h                         |  25 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c                   |  20 +-
- fs/xfs/libxfs/xfs_inode_buf.c                      |  15 +-
- fs/xfs/libxfs/xfs_inode_fork.c                     |  65 ++-
- fs/xfs/libxfs/xfs_inode_fork.h                     |  27 +-
- fs/xfs/libxfs/xfs_refcount.c                       |  19 +-
- fs/xfs/libxfs/xfs_refcount_btree.c                 |   5 +-
- fs/xfs/libxfs/xfs_rmap.c                           |   8 +-
- fs/xfs/libxfs/xfs_rmap_btree.c                     |   9 +-
- fs/xfs/libxfs/xfs_symlink_remote.c                 |   2 +-
- fs/xfs/libxfs/xfs_types.c                          |  73 +--
- fs/xfs/libxfs/xfs_types.h                          |   9 -
- fs/xfs/scrub/agheader.c                            |  25 +-
- fs/xfs/scrub/agheader_repair.c                     |  21 +-
- fs/xfs/scrub/alloc.c                               |   7 +-
- fs/xfs/scrub/bmap.c                                |  16 +-
- fs/xfs/scrub/btree.c                               |   2 +-
- fs/xfs/scrub/common.c                              |   6 +-
- fs/xfs/scrub/dabtree.c                             |   2 +-
- fs/xfs/scrub/dir.c                                 |   2 +-
- fs/xfs/scrub/fscounters.c                          |   4 +-
- fs/xfs/scrub/health.c                              |   2 +
- fs/xfs/scrub/ialloc.c                              |  12 +-
- fs/xfs/scrub/quota.c                               |   2 +-
- fs/xfs/scrub/refcount.c                            |   9 +-
- fs/xfs/scrub/repair.c                              |  47 +-
- fs/xfs/scrub/rmap.c                                |   6 +-
- fs/xfs/scrub/symlink.c                             |   6 +-
- fs/xfs/xfs_attr_inactive.c                         |  24 +-
- fs/xfs/xfs_attr_list.c                             |   9 +-
- fs/xfs/xfs_bmap_util.c                             |  22 +-
- fs/xfs/xfs_buf.c                                   | 269 +++++----
- fs/xfs/xfs_buf.h                                   |  21 +-
- fs/xfs/xfs_dir2_readdir.c                          |   2 +-
- fs/xfs/xfs_discard.c                               |   2 +-
- fs/xfs/xfs_extfree_item.c                          |   6 +-
- fs/xfs/xfs_filestream.c                            |   4 +-
- fs/xfs/xfs_fsmap.c                                 |   3 +-
- fs/xfs/xfs_fsops.c                                 |  13 +-
- fs/xfs/xfs_icache.c                                |  15 +-
- fs/xfs/xfs_inode.c                                 | 648 ++++++---------------
- fs/xfs/xfs_inode.h                                 |  69 ++-
- fs/xfs/xfs_inode_item.c                            |  58 +-
- fs/xfs/xfs_ioctl.c                                 |  10 +-
- fs/xfs/xfs_iomap.c                                 |   8 +-
- fs/xfs/xfs_iops.c                                  |  13 +-
- fs/xfs/xfs_iops.h                                  |   3 +
- fs/xfs/xfs_itable.c                                |   4 +-
- fs/xfs/xfs_iunlink_item.c                          | 180 ++++++
- fs/xfs/xfs_iunlink_item.h                          |  27 +
- fs/xfs/xfs_log.c                                   |  55 +-
- fs/xfs/xfs_log.h                                   |   3 +-
- fs/xfs/xfs_log_cil.c                               | 474 +++++++++++----
- fs/xfs/xfs_log_priv.h                              |  58 +-
- fs/xfs/xfs_log_recover.c                           | 204 ++++---
- fs/xfs/xfs_mount.c                                 |   3 +-
- fs/xfs/xfs_qm.c                                    |  11 +-
- fs/xfs/xfs_reflink.c                               |  46 +-
- fs/xfs/xfs_reflink.h                               |   3 -
- fs/xfs/xfs_super.c                                 |  11 +
- fs/xfs/xfs_symlink.c                               |   2 +-
- fs/xfs/xfs_trace.h                                 |   3 +-
- fs/xfs/xfs_trans.c                                 |  95 ++-
- fs/xfs/xfs_trans.h                                 |   7 +-
- fs/xfs/xfs_trans_priv.h                            |   3 +-
- 84 files changed, 2298 insertions(+), 1659 deletions(-)
- create mode 100644 fs/xfs/xfs_iunlink_item.c
- create mode 100644 fs/xfs/xfs_iunlink_item.h
+> ---
+>  drivers/dax/super.c         |  3 ++-
+>  fs/xfs/xfs_notify_failure.c | 15 +++++++++++++++
+>  include/linux/mm.h          |  1 +
+>  3 files changed, 18 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index 9b5e2a5eb0ae..cf9a64563fbe 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -323,7 +323,8 @@ void kill_dax(struct dax_device *dax_dev)
+>  		return;
+>  
+>  	if (dax_dev->holder_data != NULL)
+> -		dax_holder_notify_failure(dax_dev, 0, U64_MAX, 0);
+> +		dax_holder_notify_failure(dax_dev, 0, U64_MAX,
+> +				MF_MEM_PRE_REMOVE);
+>  
+>  	clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
+>  	synchronize_srcu(&dax_srcu);
+> diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+> index 69d9c83ea4b2..6da6747435eb 100644
+> --- a/fs/xfs/xfs_notify_failure.c
+> +++ b/fs/xfs/xfs_notify_failure.c
+> @@ -76,6 +76,9 @@ xfs_dax_failure_fn(
+>  
+>  	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
+>  	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
+> +		/* Do not shutdown so early when device is to be removed */
+> +		if (notify->mf_flags & MF_MEM_PRE_REMOVE)
+> +			return 0;
+>  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+>  		return -EFSCORRUPTED;
+>  	}
+> @@ -174,12 +177,22 @@ xfs_dax_notify_failure(
+>  	struct xfs_mount	*mp = dax_holder(dax_dev);
+>  	u64			ddev_start;
+>  	u64			ddev_end;
+> +	int			error;
+>  
+>  	if (!(mp->m_sb.sb_flags & SB_BORN)) {
+>  		xfs_warn(mp, "filesystem is not ready for notify_failure()!");
+>  		return -EIO;
+>  	}
+>  
+> +	if (mf_flags & MF_MEM_PRE_REMOVE) {
+> +		xfs_info(mp, "device is about to be removed!");
+> +		down_write(&mp->m_super->s_umount);
+> +		error = sync_filesystem(mp->m_super);
+> +		up_write(&mp->m_super->s_umount);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+>  	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_daxdev == dax_dev) {
+>  		xfs_warn(mp,
+>  			 "notify_failure() not supported on realtime device!");
+> @@ -188,6 +201,8 @@ xfs_dax_notify_failure(
+>  
+>  	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
+>  	    mp->m_logdev_targp != mp->m_ddev_targp) {
+> +		if (mf_flags & MF_MEM_PRE_REMOVE)
+> +			return 0;
+>  		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
+>  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+>  		return -EFSCORRUPTED;
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index 4287bec50c28..2ddfb76c8a83 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -3188,6 +3188,7 @@ enum mf_flags {
+>  	MF_SOFT_OFFLINE = 1 << 3,
+>  	MF_UNPOISON = 1 << 4,
+>  	MF_SW_SIMULATED = 1 << 5,
+> +	MF_MEM_PRE_REMOVE = 1 << 6,
+>  };
+>  int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
+>  		      unsigned long count, int mf_flags);
+> -- 
+> 2.37.0
