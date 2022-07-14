@@ -2,168 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE254C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 02:34:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48443CCA482
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 05:38:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229804AbiGNCd6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jul 2022 22:33:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42232 "EHLO
+        id S234724AbiGNFis (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jul 2022 01:38:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbiGNCd5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jul 2022 22:33:57 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E67D13F6D;
-        Wed, 13 Jul 2022 19:33:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657766036; x=1689302036;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=I5hjFOSDtYbEsmlYEojMoJNQjvq4evioSAOLKrCe7hw=;
-  b=i2GdmA7lH/bIAOxczeu8QxULCqj8dndMeV6Acw2ltGhjcEPFy/I2Awit
-   7HH5iuoFDMxIvhTZ++8o6ByITszcV/9y8p7IuQtPuL+EHFwVeNeyCzUcf
-   QRIQa0lC57Q5kYf9GN0D81zSdRkx4lJzZg9T+vtIdHZReSfgCvI8Kx/Jf
-   3JaL4QKp4BW3USNj6m8aV3B2q4A9HYFz1BBUSjI1OGhiiF9lbIlaemZW/
-   PXX8fUKMF2Vf05HBUZ+jVkTG2oZ5vDKlfbWYzVvzm0h9CeZ2u4MHKfWjr
-   GVE9cJCPSi1YcqzTMIa8hqrIuMRYD1aT7qjv8P+F76hhKKkndd1GMnyeh
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10407"; a="284151378"
-X-IronPort-AV: E=Sophos;i="5.92,269,1650956400"; 
-   d="scan'208";a="284151378"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2022 19:33:56 -0700
-X-IronPort-AV: E=Sophos;i="5.92,269,1650956400"; 
-   d="scan'208";a="653670813"
-Received: from xsang-optiplex-9020.sh.intel.com (HELO xsang-OptiPlex-9020) ([10.239.159.143])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2022 19:33:54 -0700
-Date:   Thu, 14 Jul 2022 10:33:46 +0800
-From:   Oliver Sang <oliver.sang@intel.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
-        lkp@lists.01.org, lkp@intel.com
-Subject: Re: [xfs]  47a6df7cd3: Assertion_failed
-Message-ID: <Ys+AiruchaUl697w@xsang-OptiPlex-9020>
-References: <Ys0gqOUcLr+2dle5@xsang-OptiPlex-9020>
- <20220712214745.GL3861211@dread.disaster.area>
- <Ys5lVZF3V53LQ+Ty@xsang-OptiPlex-9020>
- <20220714012421.GO3861211@dread.disaster.area>
+        with ESMTP id S230024AbiGNFir (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jul 2022 01:38:47 -0400
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2041.outbound.protection.outlook.com [40.107.236.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 670FC20BF5;
+        Wed, 13 Jul 2022 22:38:46 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hCnJWXnEQ4cc/DBLGB3IZteTV+NqCU5UpZxg16BJHyQDHHiO5m51VNj2XNtruPHhIkvQTaHmP/yF4eVsXS+rjq1r/9SxesDLxcoo8NCIzhdhBJEbY5IK/3jCd35b0MEl9ssB5dqy5GJPY03akXdnpMeYiwr9AvchxOSWtbNosaXiatL4Sg6mNGCRUbhipJ+laiSx9/mfS61XxTw8uJe3/C8xFs1gK/uFoJRZNl1z6xU/5mYDzgfIPPxuFYuJriOOKiC7ZAhKofRP5fdhcwwQcMjL68OxyfetEDuTb5e+f/aipQPcoWQKRbfeAdYtZ0U6bB8iW6BuxYYqxNSwAqGxhw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1ec5/Ogb2I/KRT6Jv0dLuFteAMn2pcAG9ZHXIx4QFrE=;
+ b=a5rutk3J4sHCc8fnnH3KoD6x2Q1S0gPzCNlSf8WUZSnOrDE2bMRWtm71KzJ6E/t9iWgYTRgzxLfzLchB10tKMTpn+mBchXNTorgC+IvTHB/eaC/w0G6K1580BOTeOdPdWD6/imttjLVCnL+tODVEWjBTKathhmR394+1orUbmtNsYCyxlPEJK4JcmlxHfucFY/uO/8HApxSM3aQqNP85fpDzttwuLKojSs/M1oXH+0sinXEzM7xqPRi70itbHcOdTBnySubwybYjoXkPOHiVXlzSOtWdvMTu7tAjHIvGnEt8V95zjmb5/X/pHTT+acm1ACLCHUUdrfi2+c5pGQy1KQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1ec5/Ogb2I/KRT6Jv0dLuFteAMn2pcAG9ZHXIx4QFrE=;
+ b=CdWvNXMasfoQTCohO8uOq6LIiXkeNxl86A4YntbwPWDYPgnnoQcL7i2EdgXqkXq5JGzKBkElzhKOh93nQt4wi+v4neJC8fCzw1apdHf0xSkrkhcZIE3Mrd98F9Q07rMMb/IgNKwEWt5cRdCqDtDuNZ8RZLl0QGqj3xTvTKtIUw/sMVSa8D1hnW8SQFzWrRxZoN/rtoGbMq5dSAthqw6KFkDfTM0Wx2lTmj/kJk6vkdy75DkA/zlyG6pjkYWnPcbMU2JckbpDuBvQqgCTNUvduJEqcAHh0EcIBbH8/+9z7P2b3LArrnoQYoGWEvRqlIpB4pPQvU0VOgF3PyramHrqWg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
+ by DM4PR12MB5796.namprd12.prod.outlook.com (2603:10b6:8:63::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.20; Thu, 14 Jul
+ 2022 05:38:44 +0000
+Received: from BYAPR12MB3176.namprd12.prod.outlook.com
+ ([fe80::eca6:a4a7:e2b2:27e7]) by BYAPR12MB3176.namprd12.prod.outlook.com
+ ([fe80::eca6:a4a7:e2b2:27e7%5]) with mapi id 15.20.5417.020; Thu, 14 Jul 2022
+ 05:38:44 +0000
+References: <20220707190349.9778-1-alex.sierra@amd.com>
+ <20220707190349.9778-7-alex.sierra@amd.com>
+ <7a772ca0-0c82-2251-dd54-8ad466774e99@redhat.com>
+User-agent: mu4e 1.6.9; emacs 27.1
+From:   Alistair Popple <apopple@nvidia.com>
+To:     David Hildenbrand <david@redhat.com>
+Cc:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com,
+        Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, willy@infradead.org,
+        akpm@linux-foundation.org
+Subject: Re: [PATCH v8 06/15] mm: remove the vma check in migrate_vma_setup()
+Date:   Thu, 14 Jul 2022 15:31:32 +1000
+In-reply-to: <7a772ca0-0c82-2251-dd54-8ad466774e99@redhat.com>
+Message-ID: <87wncgckym.fsf@nvdebian.thelocal>
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR03CA0197.namprd03.prod.outlook.com
+ (2603:10b6:a03:2ef::22) To BYAPR12MB3176.namprd12.prod.outlook.com
+ (2603:10b6:a03:134::26)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220714012421.GO3861211@dread.disaster.area>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 64580125-9d39-41de-9fd1-08da655b1dad
+X-MS-TrafficTypeDiagnostic: DM4PR12MB5796:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 0VXzYQh3OSBOm87f7t6Fw9yweXKSZsbpBIeqRM3KTW9/pAui1VmwhCUKuEm5/tJMXh5Ppf64ZOByOlYF5UrkWs2nI3fUDJVIYIFtu5Vb8KdLkqocZU2Tc9ZhXhnGKoBLhHonPPg2K171lVdmNhIUK8frKY2hRPUY7yuFgOdpC5Tg4eIqwOTc8GJ35MgB5ZmAiSICvEGDuIL/RTI55xf6iHnp6ivKFvEDU7A7GOdvJ2eljlt6OuIo8xUyzYDh5P3EQG2bv7hoGWua4QfcencaQrDb/ST6vd8qDxvQeLdVMH4tZQ6EwBVOSybdgo4b2yqiZtLsCICfFjpf/sGuVkApKbRymN28zHqbCngyUZjIRyV7vbl8NiBxxo1ViZ7O0anwHCiF6vxz6BE0tPYAkuadnfqfRajKxD0oU5mKrg0Q59tPBWYgM2J6QTHKmIflxCFHVS3Ihogncjq4URl6FSoHPhbjCg0HId7LplvDSOFqoo8rxEQj3LcoBmua4TGCK8fAr8uzLt9tAzg5Zq6P/8ZBzaBYPQajY8xU7urcQvoeDV09keCceZ9pBdHrFgVO82yRJNY8rz/ThFAVXkWkJncPvA1qrzK3WW9yY00yZjSB+P/439Y3dg942PRqsvdRxT6ii5CUIbxIJ2QmvEnPbTMFwTfvLlqFuKwZIcDYYhPnd4siZ6Z19A2wtbBdgDO7n3qNK+7+MhEYxaeb+iSuiehs+Bm0iBXs3OwrvBXNsr07XBjG1CBx8UuvQnoegIW422ys
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(346002)(376002)(136003)(396003)(366004)(39860400002)(26005)(316002)(478600001)(66556008)(66946007)(6512007)(6486002)(186003)(4326008)(8936002)(83380400001)(8676002)(7416002)(9686003)(5660300002)(66476007)(41300700001)(38100700002)(6506007)(6666004)(53546011)(2906002)(6916009)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?N4nPbdohYLsaESKqeXjU5HuQYobdQeB7rWRSUoE75eK+K50jXd9aYDwPcWPT?=
+ =?us-ascii?Q?w/d9sSRBIwGcRTafSgKQxknmNIJjTCRsLJbl3sXiK0cF8SYZJW+NLPHKCt54?=
+ =?us-ascii?Q?C9DAf2BaPBA+AGaNVo0qRYy4OCcQinRIC31KD+1Zph58AoId17eleprXdO15?=
+ =?us-ascii?Q?z8cSSDNLfZt+Bf74XK5yd8ulzbBHMa+SV74c0vJcw5tUkG3OuRlyx4M4QJ9n?=
+ =?us-ascii?Q?l+5ZGihaXzKj1RVUFgkI79H+jtWyyZfpoq/qcLifIghCUJv3I6oGYFNHBfPp?=
+ =?us-ascii?Q?kbgyCeV5KQaIEC9YjP7+v+6zyuwd6XJ13jhs1bPSS76FvLpqeCqeG2oXA8yQ?=
+ =?us-ascii?Q?A9ljAvcTYv46cHXmE0WbS/jOHnz0Skhmrh6ITxtAszmPhJieMdC3h1Me2PJS?=
+ =?us-ascii?Q?RA51CJb2YMCJxr4SmIDdPcpOQkIMRU5J7mjzodeWM0IOdvRE4Yda0eG3V52C?=
+ =?us-ascii?Q?Z6PXnVXj9jxgRLT8C+Q31simd3V7Fo9Oz7yI7Q6zbOIsfM1whmMfbkfZOkI8?=
+ =?us-ascii?Q?o/9+kVR6wkM0oi7HPqpvY2S5ScyaRj6FLqXC2vlZjLD373xWzoJ8C23EoxvK?=
+ =?us-ascii?Q?I2EN5ahab4NLucGqWK8fMaFQnba2geTgX3F+FrOJzpOECw8UKfIIXu1ctZ04?=
+ =?us-ascii?Q?xlJjqT2pc07qCuRsVPypjaGrU+AKFPTyXHWln7/BLaWVLkAjSxu+NFoQMd88?=
+ =?us-ascii?Q?l3JLHxc0CRjuw7mklupx/9ebjtGgjuIifsLUs7poGkcYRIQAYhh/M6KCtSk+?=
+ =?us-ascii?Q?FWxHZAd4ZfLbTfZkis8oPol+fKiLShj/Y8HaKTGIWogVh+Kx3LwpA2bQfLGI?=
+ =?us-ascii?Q?wCUy+pxg9l2jXQhCxfoTMv17o8cKqVc90wLVm2cKvpk+bPMpUYeT25uuyuVM?=
+ =?us-ascii?Q?TjrXYjqCKnr9C7qyVJZb9APEN/lr6JEr6nPbourwsxSRkj9n9UUx0+/t/JH2?=
+ =?us-ascii?Q?oBWoqpKvXS7aSkK4bGIqoAjPd1Zi4NXjN8jd3Qx2tOgL01xdZ7p7enB73uU4?=
+ =?us-ascii?Q?P0zqYexbccKOejGFKUiO2lx9qCeusDqEI4uXPbH5Fdqw2AeXQC7Z3WAmN2wm?=
+ =?us-ascii?Q?xtz2zR4zU9bflMaY4VOOx6AP9f6Tgcl/HsQH5DfJKyBXde/sDseCCm0HUegp?=
+ =?us-ascii?Q?aql+HGG3GYB2hzuZW7hot83W778V7LcBPuvrO1NADnsncHZiRv43I+q0MwuA?=
+ =?us-ascii?Q?Qqa9UKAjuaJpE1QUrXYzo3RqMdstvbSC4Hx/dF0ilPdCMHHGhPZCYEiY5Ckb?=
+ =?us-ascii?Q?RRfjaeEOnbKtFQZI+Yh11CkXPqwaaYcFW7IYMc15DIP+ySlLKpsxynDLbv4H?=
+ =?us-ascii?Q?cWLOjwfG239f5TQR3r/7BHEZlW1/k1U+l2Dt4WciHnPdYs167ZhEWmBzpnL+?=
+ =?us-ascii?Q?1n1RRPrca42+Ys9VKYuMQMs68Q7SvUYaIJ8NchBV7kyJ3vXAvnELy9iNu170?=
+ =?us-ascii?Q?DC2dxg/yGvTAHFLncjxvgmrbfPba5rs7F74aVYx6XiUPxDkVwcPg26VvS5Xg?=
+ =?us-ascii?Q?IwbXFH/Rb7bWHmoWBtobl5tJdI5nQ8djEHTTQI+CyhqZAJKh3Jd3SV1+tAqS?=
+ =?us-ascii?Q?mIeGx85e7lywFhV1NGdOKZWjzGH+piijjWB6Zjv5?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 64580125-9d39-41de-9fd1-08da655b1dad
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jul 2022 05:38:44.4287
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6/41Zbg7ptvL+3LpLX59Qh/52PacdqDss0LIiCwgS0LkUOstRV7R1mDDvk2++z87IEXFlA1rXEz7ZmfMjKhxuw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5796
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi, Dave,
 
-On Thu, Jul 14, 2022 at 11:24:21AM +1000, Dave Chinner wrote:
-> On Wed, Jul 13, 2022 at 02:25:25PM +0800, Oliver Sang wrote:
-> > hi Dave,
-> > 
-> > On Wed, Jul 13, 2022 at 07:47:45AM +1000, Dave Chinner wrote:
-> > > > 
-> > > > If you fix the issue, kindly add following tag
-> > > > Reported-by: kernel test robot <oliver.sang@intel.com>
-> > > > 
-> > > > 
-> > > > [   94.271323][ T9089] XFS (sda5): Mounting V5 Filesystem
-> > > > [   94.369992][ T9089] XFS (sda5): Ending clean mount
-> > > > [   94.376046][ T9089] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
-> > > > [  112.154792][  T311] xfs/076       IPMI BMC is not supported on this machine, skip bmc-watchdog setup!
-> > > > [  112.154805][  T311]
-> > > > [  161.426026][T29384] XFS: Assertion failed: xfs_is_shutdown(mp) || list_empty(&tp->t_dfops), file: fs/xfs/xfs_trans.c, line: 951
-> > > > [  161.437713][T29384] ------------[ cut here ]------------
-> > > > [  161.443155][T29384] kernel BUG at fs/xfs/xfs_message.c:110!
-> > > > [  161.448854][T29384] invalid opcode: 0000 [#1] SMP KASAN PTI
-> > > > [  161.454536][T29384] CPU: 1 PID: 29384 Comm: touch Not tainted 5.16.0-rc5-00001-g47a6df7cd317 #1
-> > > 
-> > > 5.16-rc5? Seems like a really old kernel to be testing....
-> > > 
-> > > Does this reproduce on a current 5.19-rc6 kernel?
-> > 
-> > yes, it's still reproducible. however, it's actually random on both 47a6df7cd3
-> > and 5.19-rc6, as below.
-> > it's clean on 40 runs of v5.16-rc5,
-> > on 47a6df7cd3, it's reproduced 9 times out of 40 runs,
-> 
-> Of course, 47a6df7cd3 introduced the ASSERT that is firing. You'll
-> never see the failure on kernels before this, even if the issue is
-> occurring. It also points out this isn't a new issue, it's been
-> around since before we added detection of it.
+David Hildenbrand <david@redhat.com> writes:
 
-understood. for such kind of ASSERT (or WARNING, etc.) we normally reported
-on the commit we could bisected out (like this 47a6df7cd3 :) ) just for
-information since it could help people in the area to notice there is maybe
-something wrong around.
+> On 07.07.22 21:03, Alex Sierra wrote:
+>> From: Alistair Popple <apopple@nvidia.com>
+>>
+>> migrate_vma_setup() checks that a valid vma is passed so that the page
+>> tables can be walked to find the pfns associated with a given address
+>> range. However in some cases the pfns are already known, such as when
+>> migrating device coherent pages during pin_user_pages() meaning a valid
+>> vma isn't required.
+>
+> As raised in my other reply, without a VMA ... it feels odd to use a
+> "migrate_vma" API. For an internal (mm/migrate_device.c) use case it is
+> ok I guess, but it certainly adds a bit of confusion. For example,
+> because migrate_vma_setup() will undo ref+lock not obtained by it.
+>
+> I guess the interesting point is that
+>
+> a) Besides migrate_vma_pages() and migrate_vma_setup(), the ->vma is unused.
+>
+> b) migrate_vma_setup() does collect+unmap+cleanup if unmap failed.
+>
+> c) With our source page in our hands, we cannot be processing a hole in
+> a VMA.
+>
+>
+>
+> Not sure if it's better. but I would
+>
+> a) Enforce in migrate_vma_setup() that there is a VMA. Code outside of
+> mm/migrate_device.c shouldn't be doing some hacks like this.
+>
+> b) Don't call migrate_vma_setup() from migrate_device_page(), but
+> directly migrate_vma_unmap() and add a comment.
+>
+>
+> That will leave a single change to this patch (migrate_vma_pages()). But
+> is that even required? Because ....
+>
+>> @@ -685,7 +685,7 @@ void migrate_vma_pages(struct migrate_vma *migrate)
+>>  			continue;
+>>  		}
+>>
+>> -		if (!page) {
+>> +		if (!page && migrate->vma) {
+>
+> How could we ever have !page in case of migrate_device_page()?
 
-it's kind of hard for us to backport the commit to old commits then each step
-of bisection to figure out when the issue really starts to happen,  (but hope
-we can do this one day :) )
+Oh good point. This patch was originally part of a larger series I was
+working on at the time but you're right - for migrate_device_page() we
+should never hit this case. I will respin the next patch (number 7 in
+this series) to include this.
 
-> 
-> > on v5.19-rc6, it's reprodced 7 times out of 20 runs.
-> 
-> Hmmm. I've just run 50 iterations here on my 5.19-rc6 based VMs
-> and I haven't seen a single failure. So it's not failing regularly
-> here which means it is influenced by environmental factors.
-> 
-> How big are the disks you are testing with?
-
-for this xfstests/4HDD-xfs-xfs-group-07 test, we used 4 HDD, each with the size
-of 300G.
-
-but I noticed the ASSERT always happen after xfs/076, which seems only use two
-of them (below sda2, sda5)
-
-[   92.590707][ T1440] run fstests xfs/076 at 2022-07-13 01:44:34
-[   93.231849][ T8987] XFS (sda2): Mounting V5 Filesystem
-[   93.267497][ T8987] XFS (sda2): Ending clean mount
-[   93.274183][ T8987] xfs filesystem being mounted at /fs/sda2 supports timestamps until 2038 (0x7fffffff)
-[   95.221223][ T9080] XFS (sda5): Mounting V5 Filesystem
-[   95.384072][ T9080] XFS (sda5): Ending clean mount
-[   95.409130][ T9080] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
-[   95.425082][ T9089] XFS (sda5): Unmounting Filesystem
-[   95.752530][ T9111] XFS (sda5): Mounting V5 Filesystem
-[   95.827062][ T9111] XFS (sda5): Ending clean mount
-[   95.833635][ T9111] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
-[  113.521272][  T306] xfs/076       IPMI BMC is not supported on this machine, skip bmc-watchdog setup!
-[  113.521286][  T306]
-[  162.318194][T29029] XFS: Assertion failed: xfs_is_shutdown(mp) || list_empty(&tp->t_dfops), file: fs/xfs/xfs_trans.c, line: 993
-[  162.330026][T29029] ------------[ cut here ]------------
-...
-
-root@lkp-ivb-d04 ~# lsblk
-NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
-sda      8:0    0   1.8T  0 disk
-|-sda1   8:1    0   400G  0 part
-|-sda2   8:2    0   300G  0 part     <----------
-|-sda3   8:3    0   300G  0 part
-|-sda4   8:4    0   300G  0 part
-`-sda5   8:5    0   300G  0 part     <----------
-sdb      8:16   0 223.6G  0 disk
-`-sdb1   8:17   0 223.6G  0 part
-
-
-root@lkp-ivb-d04 ~# lsblk -f
-NAME   FSTYPE FSVER LABEL      UUID                                 FSAVAIL FSUSE% MOUNTPOINT
-sda
-|-sda1 btrfs                   1c70720c-3bc1-4cda-b623-7eeebdf0eace
-|-sda2 xfs                     f03ce528-b832-4844-8a14-65977d07ecf2      <--------
-|-sda3
-|-sda4
-`-sda5 xfs                     e95d9e0e-46a3-4fe6-8b4c-19bc1e2b2dfe      <--------
-sdb
-`-sdb1 ocfs2  0.90  single_run a218e812-7152-4a71-a666-2379ff94dd40
-
-
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Instead, I think a VM_BUG_ON(migrate->vma); should hold and you can just
+> simplify.
+>
+>>  			if (!(migrate->src[i] & MIGRATE_PFN_MIGRATE))
+>>  				continue;
+>>  			if (!notified) {
