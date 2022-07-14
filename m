@@ -2,141 +2,221 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C2DEC43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jul 2022 21:44:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3EFEC43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 01:09:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231898AbiGMVol (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jul 2022 17:44:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60678 "EHLO
+        id S231218AbiGNBJ2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jul 2022 21:09:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231860AbiGMVok (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jul 2022 17:44:40 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C33E83AB3D
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Jul 2022 14:44:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229492AbiGNBJ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jul 2022 21:09:27 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 806761FCD1
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jul 2022 18:09:26 -0700 (PDT)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7A110B82164
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Jul 2022 21:44:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14EAFC34114;
-        Wed, 13 Jul 2022 21:44:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657748677;
-        bh=U9KBi5JXqS02PZ60vxcVwIRbV9dbGrBx/URlWTArqqg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BROlA9PzxNjhIIXy0lTVmxww08iu4P6t4jSioRqRQf7HZ82aL5Kowq8M+uOpwa+DF
-         l7M+IDYz5rGYxOGkMOYytL5hHZUZ5Q6IGkmuhkOAjX+lAe5PP7if2CtbaqVh221Lsb
-         glgcB+McyYSXvaB1w+c/KOMe70gxKkrnO+/Qr3Q9cyao1xC2TQRZFJKFJLVaAako0h
-         HmZz9Lbbgu/mA9zgLqS6tJ/uJlqu07kFtzQ6hHPpJgyj8jKnWh+vkxNiw61fbfXZSb
-         tvokvOJU1/cb9D3JfCbJnxE8tTwbgzsP3iPRrMPwqERKku1QEhsPRKL7T4Sga4FnVp
-         3M9Z8eLV+fJjA==
-Date:   Wed, 13 Jul 2022 14:44:36 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [ANNOUNCE] xfsprogs for-next updated to c1c71781
-Message-ID: <Ys88xOp16XkeUYp3@magnolia>
-References: <3fb4449d-7e6e-fdb0-96b0-3e9c34f22398@sandeen.net>
- <Ys4B/TKxe7WJuvzP@magnolia>
+        by sandeen.net (Postfix) with ESMTPSA id 59EB74435;
+        Wed, 13 Jul 2022 20:09:04 -0500 (CDT)
+Message-ID: <bbb444a9-1628-b98c-a5fb-947873272b15@sandeen.net>
+Date:   Wed, 13 Jul 2022 20:09:24 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Ys4B/TKxe7WJuvzP@magnolia>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.11.0
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <165644942559.1091646.1065506297333895934.stgit@magnolia>
+ <165644943121.1091646.10171089108168615883.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 1/1] mkfs: stop allowing tiny filesystems
+In-Reply-To: <165644943121.1091646.10171089108168615883.stgit@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 12, 2022 at 04:21:33PM -0700, Darrick J. Wong wrote:
-> On Tue, Jul 12, 2022 at 01:34:47PM -0500, Eric Sandeen wrote:
-> > Hi folks,
-> > 
-> > The for-next branch of the xfsprogs repository at:
-> > 
-> > 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-> > 
-> > has just been updated.
-> > 
-> > I jumped the gun on 5.19.0-rc0, and a couple more libxfs patches got
-> > added to the kkernel, so I added a new "release" and tag of
-> > 5.19.0-rc.0.1 after the last libxfs patches were merged.
+On 6/28/22 3:50 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Are you planning to pick up the following patchsets for 5.19?
+> Refuse to format a filesystem that are "too small", because these
+> configurations are known to have performance and redundancy problems
+> that are not present on the volume sizes that XFS is best at handling.
 > 
-> xfs_repair: check rt bitmap and summary [reviewed]
-> https://lore.kernel.org/linux-xfs/165644940561.1091513.10430076522811115702.stgit@magnolia/
+> Specifically, this means that we won't allow logs smaller than 64MB, we
+> won't allow single-AG filesystems, and we won't allow volumes smaller
+> than 300MB.  There are two exceptions: the first is an undocumented CLI
+> option that can be used for crafting debug filesystems.
 > 
-> mkfs: stop allowing tiny filesystems
-> https://lore.kernel.org/linux-xfs/165644942559.1091646.1065506297333895934.stgit@magnolia/
-> 
-> I'll resend the nrext64 upgrade and the random fixes rollups shortly,
-> since they've changed since 28 June.
+> The second exception is that if fstests is detected, because there are a
+> lot of fstests that use tiny filesystems to perform targeted regression
+> and functional testing in a controlled environment.  Fixing the ~40 or
+> so tests to run more slowly with larger filesystems isn't worth the risk
+> of breaking the tests.
 
-...and I guess also:
-https://lore.kernel.org/linux-xfs/20220628144542.33704-1-hexiaole1994@126.com/
+This bugs me, because we're now explicitly testing filesystems that nobody
+will be allowed to use in real life. Just seems odd. But so be it, I guess.
+I understand why, it's just bleah.  If I care enough, I could try to whittle
+away at those tests and remove this hack some day.
 
---D
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  mkfs/xfs_mkfs.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 81 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index db322b3a..728a001a 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -847,6 +847,7 @@ struct cli_params {
+>  	int64_t	logagno;
+>  	int	loginternal;
+>  	int	lsunit;
+> +	int	has_warranty;
+>  
+>  	/* parameters where 0 is not a valid value */
+>  	int64_t	agcount;
+> @@ -2484,6 +2485,68 @@ _("illegal CoW extent size hint %lld, must be less than %u.\n"),
+>  	}
+>  }
+>  
+> +/* Complain if this filesystem is not a supported configuration. */
+> +static void
+> +validate_warranty(
+> +	struct xfs_mount	*mp,
+> +	struct cli_params	*cli)
+> +{
+> +	/* Undocumented option to enable unsupported tiny filesystems. */
+> +	if (!cli->has_warranty) {
+> +		printf(
+> + _("Filesystems formatted with --yes-i-know-what-i-am-doing are not supported!!\n"));
 
-> --D
-> 
-> > After that I picked up most of Darrick's patches that had been reviewed,
-> > as well as Zhang Boyang's mkfs man page update.
-> > 
-> > Patches often get missed, so please check if your outstanding
-> > patches were in this update. If they have not been in this update,
-> > please resubmit them to linux-xfs@vger.kernel.org so they can be
-> > picked up in the next update.
-> > 
-> > The new head of the for-next branch is commit:
-> > 
-> > c1c71781 mkfs: update manpage of bigtime and inobtcount
-> > 
-> > New Commits:
-> > 
-> > Darrick J. Wong (16):
-> >       [41cbb27c] xfs: fix TOCTOU race involving the new logged xattrs control knob
-> >       [53cbe278] xfs: fix variable state usage
-> >       [5e572d1a] xfs: empty xattr leaf header blocks are not corruption
-> >       [c21a5691] xfs: don't hold xattr leaf buffers across transaction rolls
-> >       [95e3fc7f] misc: fix unsigned integer comparison complaints
-> >       [053fcbc7] xfs_logprint: fix formatting specifiers
-> >       [d6bfc06d] libxfs: remove xfs_globals.larp
-> >       [fa0f9232] xfs_repair: always rewrite secondary supers when needsrepair is set
-> >       [84c5f08f] xfs_repair: don't flag log_incompat inconsistencies as corruptions
-> >       [766bfbd7] xfs_db: identify the minlogsize transaction reservation
-> >       [baf8a5df] xfs_copy: don't use cached buffer reads until after libxfs_mount
-> >       [b83b2ec0] xfs_repair: clear DIFLAG2_NREXT64 when filesystem doesn't support nrext64
-> >       [0ec4cd64] xfs_repair: detect and fix padding fields that changed with nrext64
-> >       [b6fd1034] mkfs: preserve DIFLAG2_NREXT64 when setting other inode attributes
-> >       [42efbb99] mkfs: document the large extent count switch in the --help screen
-> >       [ad8a3d7c] mkfs: always use new_diflags2 to initialize new inodes
-> > 
-> > Eric Sandeen (1):
-> >       [e298041e] xfsprogs: Release v5.19.0-rc0.1
-> > 
-> > Zhang Boyang (1):
-> >       [c1c71781] mkfs: update manpage of bigtime and inobtcount
-> > 
-> > 
-> > Code Diffstat:
-> > 
-> >  copy/xfs_copy.c          |  2 +-
-> >  db/check.c               | 10 +++++++---
-> >  db/logformat.c           |  4 +++-
-> >  db/metadump.c            | 11 +++++++----
-> >  include/xfs_mount.h      |  7 -------
-> >  libxfs/util.c            | 15 ++++++---------
-> >  libxfs/xfs_attr.c        | 47 ++++++++++++++---------------------------------
-> >  libxfs/xfs_attr.h        | 17 +----------------
-> >  libxfs/xfs_attr_leaf.c   | 37 ++++++++++++++++++++-----------------
-> >  libxfs/xfs_attr_leaf.h   |  3 +--
-> >  libxfs/xfs_da_btree.h    |  4 +++-
-> >  logprint/log_print_all.c |  2 +-
-> >  man/man8/mkfs.xfs.8.in   |  4 ++--
-> >  mkfs/xfs_mkfs.c          |  2 +-
-> >  repair/agheader.c        | 23 ++++++++++++++++++++---
-> >  repair/dinode.c          | 47 +++++++++++++++++++++++++++++++++++++++++++----
-> >  16 files changed, 130 insertions(+), 105 deletions(-)
-> 
-> 
+maybe we can just make this "--unsupported" to be concise and self-documenting.
+
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * fstests has a large number of tests that create tiny filesystems to
+> +	 * perform specific regression and resource depletion tests in a
+> +	 * controlled environment.  Avoid breaking fstests by allowing
+> +	 * unsupported configurations if TEST_DIR, TEST_DEV, and QA_CHECK_FS
+> +	 * are all set.
+> +	 */
+> +	if (getenv("TEST_DIR") && getenv("TEST_DEV") && getenv("QA_CHECK_FS"))
+> +		return;
+> +
+> +	/*
+> +	 * We don't support filesystems smaller than 300MB anymore.  Tiny
+> +	 * filesystems have never been XFS' design target.  This limit has been
+> +	 * carefully calculated to prevent formatting with a log smaller than
+> +	 * the "realistic" size.
+> +	 *
+> +	 * If the realistic log size is 64MB, there are four AGs, and the log
+> +	 * AG should be at least 1/8 free after formatting, this gives us:
+> +	 *
+> +	 * 64MB * (8 / 7) * 4 = 293MB
+> +	 */
+> +	if (mp->m_sb.sb_dblocks < MEGABYTES(300, mp->m_sb.sb_blocklog)) {
+> +		fprintf(stderr,
+> + _("Filesystem must be larger than 300MB.\n"));
+> +		usage();
+> +	}
+> +	/*
+> +	 * For best performance, we don't allow unrealistically small logs.
+> +	 * See the comment for XFS_MIN_REALISTIC_LOG_BLOCKS.
+> +	 */
+> +	if (mp->m_sb.sb_logblocks <
+> +			XFS_MIN_REALISTIC_LOG_BLOCKS(mp->m_sb.sb_blocklog)) {
+> +		fprintf(stderr,
+> + _("Log size must be at least 64MB.\n"));
+> +		usage();
+> +	}
+
+So in practice, on striped storage this will require the filesystem to be a
+bit over 500M to satisfy this constraint.  I worry about this constraint a
+little.
+
+# mkfs.xfs -dfile,name=fsfile,size=510m,su=32k,sw=4
+Log size must be at least 64MB.
+
+<hapless user reads manpage, adjusts log size>
+
+# mkfs.xfs -dfile,name=fsfile,size=510m,su=32k,sw=4 -l size=64m
+internal log size 16384 too large, must be less than 16301
+
+So the log must be both "at least 64MB" and also "less than 64MB"
+
+In reality, the problem is the filesystem size on this type of storage,
+not the log size.
+
+Let me think more about this. I understand and agree with the goal, I want
+to do it in a way that doesn't cause user confusion...
+
+> +	/*
+> +	 * Filesystems should not have fewer than two AGs, because we need to
+> +	 * have redundant superblocks.
+> +	 */
+> +	if (mp->m_sb.sb_agcount < 2) {
+> +		fprintf(stderr,
+> + _("Filesystem must have redundant superblocks!\n"));
+
+I think we should say "at least 2 AGs" because that's what can be directly
+specified by the user. They won't know what it means to have redundant
+supers.
+
+> +		usage();	
+> +	}
+> +}
+> +
+>  /*
+>   * Validate the configured stripe geometry, or is none is specified, pull
+>   * the configuration from the underlying device.
+> @@ -3933,9 +3996,21 @@ main(
+>  	struct cli_params	cli = {
+>  		.xi = &xi,
+>  		.loginternal = 1,
+> +		.has_warranty	= 1,
+>  	};
+>  	struct mkfs_params	cfg = {};
+>  
+> +	struct option		long_options[] = {
+> +	{
+> +		.name		= "yes-i-know-what-i-am-doing",
+> +		.has_arg	= no_argument,
+> +		.flag		= &cli.has_warranty,
+> +		.val		= 0,
+> +	},
+> +	{NULL, 0, NULL, 0 },
+> +	};
+> +	int			option_index = 0;
+> +
+>  	/* build time defaults */
+>  	struct mkfs_default_params	dft = {
+>  		.source = _("package build definitions"),
+> @@ -3995,8 +4070,11 @@ main(
+>  	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
+>  	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
+>  
+> -	while ((c = getopt(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
+> +	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
+> +					long_options, &option_index)) != EOF) {
+>  		switch (c) {
+> +		case 0:
+> +			break;
+>  		case 'C':
+>  		case 'f':
+>  			force_overwrite = 1;
+> @@ -4134,6 +4212,8 @@ main(
+>  	validate_extsize_hint(mp, &cli);
+>  	validate_cowextsize_hint(mp, &cli);
+>  
+> +	validate_warranty(mp, &cli);
+> +
+>  	/* Print the intended geometry of the fs. */
+>  	if (!quiet || dry_run) {
+>  		struct xfs_fsop_geom	geo;
 > 
