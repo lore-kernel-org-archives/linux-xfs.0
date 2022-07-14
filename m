@@ -2,77 +2,94 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8841C43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 01:17:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F4A5C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 01:24:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230434AbiGNBR0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jul 2022 21:17:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54630 "EHLO
+        id S230283AbiGNBY0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jul 2022 21:24:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58442 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229532AbiGNBRY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jul 2022 21:17:24 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B347420F62
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Jul 2022 18:17:23 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0BCB54435;
-        Wed, 13 Jul 2022 20:17:02 -0500 (CDT)
-Message-ID: <ce55b1b4-53a2-a620-a2f8-d601fd48bfa9@sandeen.net>
-Date:   Wed, 13 Jul 2022 20:17:22 -0500
+        with ESMTP id S229844AbiGNBYZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jul 2022 21:24:25 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BFA28205D6;
+        Wed, 13 Jul 2022 18:24:24 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 8827310E976F;
+        Thu, 14 Jul 2022 11:24:23 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oBnaX-000bgE-9j; Thu, 14 Jul 2022 11:24:21 +1000
+Date:   Thu, 14 Jul 2022 11:24:21 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Oliver Sang <oliver.sang@intel.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
+        lkp@lists.01.org, lkp@intel.com
+Subject: Re: [xfs]  47a6df7cd3: Assertion_failed
+Message-ID: <20220714012421.GO3861211@dread.disaster.area>
+References: <Ys0gqOUcLr+2dle5@xsang-OptiPlex-9020>
+ <20220712214745.GL3861211@dread.disaster.area>
+ <Ys5lVZF3V53LQ+Ty@xsang-OptiPlex-9020>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.11.0
-Subject: Re: [PATCH 3/4] mkfs: complain about impossible log size constraints
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-References: <165767457703.891854.2108521135190969641.stgit@magnolia>
- <165767459394.891854.2338822152912053034.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <165767459394.891854.2338822152912053034.stgit@magnolia>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Ys5lVZF3V53LQ+Ty@xsang-OptiPlex-9020>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62cf7048
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8
+        a=Nusv4dcQFhBjhKgVRc0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/12/22 8:09 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Jul 13, 2022 at 02:25:25PM +0800, Oliver Sang wrote:
+> hi Dave,
 > 
-> xfs/042 trips over an impossible fs geometry when nrext64 is enabled.
-> The minimum log size calculation comes out to 4287 blocks, but the mkfs
-> parameters specify an AG size of 4096 blocks.  This eventually causes
-> mkfs to complain that the autoselected log size doesn't meet the minimum
-> size, but we could be a little more explicit in pointing out that the
-> two size constraints make for an impossible geometry.
+> On Wed, Jul 13, 2022 at 07:47:45AM +1000, Dave Chinner wrote:
+> > > 
+> > > If you fix the issue, kindly add following tag
+> > > Reported-by: kernel test robot <oliver.sang@intel.com>
+> > > 
+> > > 
+> > > [   94.271323][ T9089] XFS (sda5): Mounting V5 Filesystem
+> > > [   94.369992][ T9089] XFS (sda5): Ending clean mount
+> > > [   94.376046][ T9089] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
+> > > [  112.154792][  T311] xfs/076       IPMI BMC is not supported on this machine, skip bmc-watchdog setup!
+> > > [  112.154805][  T311]
+> > > [  161.426026][T29384] XFS: Assertion failed: xfs_is_shutdown(mp) || list_empty(&tp->t_dfops), file: fs/xfs/xfs_trans.c, line: 951
+> > > [  161.437713][T29384] ------------[ cut here ]------------
+> > > [  161.443155][T29384] kernel BUG at fs/xfs/xfs_message.c:110!
+> > > [  161.448854][T29384] invalid opcode: 0000 [#1] SMP KASAN PTI
+> > > [  161.454536][T29384] CPU: 1 PID: 29384 Comm: touch Not tainted 5.16.0-rc5-00001-g47a6df7cd317 #1
+> > 
+> > 5.16-rc5? Seems like a really old kernel to be testing....
+> > 
+> > Does this reproduce on a current 5.19-rc6 kernel?
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  mkfs/xfs_mkfs.c |    7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index db322b3a..61ac1a4a 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3401,6 +3401,13 @@ _("external log device size %lld blocks too small, must be at least %lld blocks\
->  	 * an AG.
->  	 */
->  	max_logblocks = libxfs_alloc_ag_max_usable(mp) - 1;
-> +	if (max_logblocks < min_logblocks) {
-> +		fprintf(stderr,
-> +_("max log size %d smaller than min log size %d\n"),
+> yes, it's still reproducible. however, it's actually random on both 47a6df7cd3
+> and 5.19-rc6, as below.
+> it's clean on 40 runs of v5.16-rc5,
+> on 47a6df7cd3, it's reproduced 9 times out of 40 runs,
 
-And when the user sees this, they will know that they should ___________ ?
+Of course, 47a6df7cd3 introduced the ASSERT that is firing. You'll
+never see the failure on kernels before this, even if the issue is
+occurring. It also points out this isn't a new issue, it's been
+around since before we added detection of it.
 
-> +				max_logblocks,
-> +				min_logblocks);
-> +		usage();
-> +	}
->  
->  	/* internal log - if no size specified, calculate automatically */
->  	if (!cfg->logblocks) {
-> 
+> on v5.19-rc6, it's reprodced 7 times out of 20 runs.
+
+Hmmm. I've just run 50 iterations here on my 5.19-rc6 based VMs
+and I haven't seen a single failure. So it's not failing regularly
+here which means it is influenced by environmental factors.
+
+How big are the disks you are testing with?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
