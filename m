@@ -2,430 +2,308 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECD25CCA47C
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jul 2022 22:24:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D174ECCA482
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jul 2022 02:11:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232280AbiGNWYN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Jul 2022 18:24:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41968 "EHLO
+        id S232537AbiGOCLY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jul 2022 22:11:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240129AbiGNWYL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jul 2022 18:24:11 -0400
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48A7C6D56F;
-        Thu, 14 Jul 2022 15:24:10 -0700 (PDT)
-Received: by mail-pf1-x42b.google.com with SMTP id l124so3077338pfl.8;
-        Thu, 14 Jul 2022 15:24:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=UdJg1HoXFUFmWzNC0FP+opyEgrcEVDg8kejEkArYmKw=;
-        b=DW9uns/9p9048msuiS8jylaDSB90e3ivffZDlA35QtbyS/5NWy/IuN+Xl9wp7/SuCS
-         NlIKQtclLdSU9qVx1Idq32/z0qrmpKjjUYEN46KZccuzc+WfQm0nBfLsVJ4DkHiqt/zh
-         33YhRHiIgonMbjw54hDeVKciig5FMTK7g4oV4CuMYEzFkNxQJ51ok56N9bf3l8Xz0tUg
-         qxRSFqOv7iQd9FVb2Lhdl7duGWhRwZUaFmPiwTLLrSFsb+5clU5FxGhkY+favx/Ll1I7
-         zvjNbPakEopabVzBbXansr/zyJ+KYARZODhuSdOX2MFm7npWTiknGCbws//sYKwZilVh
-         Cu2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=UdJg1HoXFUFmWzNC0FP+opyEgrcEVDg8kejEkArYmKw=;
-        b=qRavAylRM8T+46b6rFb4sG52W4eGt4jnGkBjD0ueerkBHol6aTsgK9U6mfdHO2fhYi
-         fXxAphS4a65o7rV9yJEE5K5dV+hk/8Z9v6kaLJv9m8PIZk0ri4dAScS1jrvSdd7O3dNm
-         o3vXf2z0Lx7R+lRJEs/lGeQTcHLnm7ftKZAH+XCNOMTNrO0q8a72h6wKyDQTBo1F6FEq
-         opbvXSIZJ//5S9nFIvQXNiiDUaJR+o39CBHYrUxiWer+IwPHPzCujj+e8YtoatB8m1ak
-         bWcxvxICoIrpLClkDElJVZ7ff1+NhnVzp8F/UZKuOv7wpFZGvcaGGRCXGYGyjHxwWtrH
-         SC3w==
-X-Gm-Message-State: AJIora+nz8GJabbGlRWRqyBeHxuSZf59CLB3iCHH1tsCDcyBmioQPF2o
-        hSar4NJNk6zjUdDU7zDY4znRXdMXyjEm9Q==
-X-Google-Smtp-Source: AGRyM1vxRExm6l6ZRnWb0jfsU90BYd8yMKlw/nLgq7PlCSLKe16TyToPitqEcGgMm6iUCrszkettFQ==
-X-Received: by 2002:a65:4645:0:b0:419:9286:4c63 with SMTP id k5-20020a654645000000b0041992864c63mr8636198pgr.582.1657837449160;
-        Thu, 14 Jul 2022 15:24:09 -0700 (PDT)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:4f72:1916:7fb3:18])
-        by smtp.gmail.com with ESMTPSA id q25-20020a635059000000b0040c644e82efsm1884464pgl.43.2022.07.14.15.24.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Jul 2022 15:24:08 -0700 (PDT)
-From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 v2 4/4] xfs: drop async cache flushes from CIL commits.
-Date:   Thu, 14 Jul 2022 15:23:42 -0700
-Message-Id: <20220714222342.4013916-5-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.37.0.170.g444d1eabd0-goog
-In-Reply-To: <20220714222342.4013916-1-leah.rumancik@gmail.com>
-References: <20220714222342.4013916-1-leah.rumancik@gmail.com>
-MIME-Version: 1.0
+        with ESMTP id S229541AbiGOCLW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jul 2022 22:11:22 -0400
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2050.outbound.protection.outlook.com [40.107.223.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1074CEA;
+        Thu, 14 Jul 2022 19:11:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ALOWZ6E9MZecGGTl6DkVfNENGX8aLQ0FsrvTvs2zOgmVgCh2/fwtt9xMzw6X/tugb+zcfN5UslgOnXMW0PnEh5/R4h8VK4Ls2xw2qU8kLdqTxPclW3Hp34Ie2xXOR/vgmfkNmRbQDZhp61lm89kjjsKN37cC/dttA3QsZoPjKtD/Rh9SlWRxYH/PllV9LGTSJgZ8eplLjiUjhvsEg7IWspm4sziooS1NrJsNp/oPjx1rs4MzvE52Hn8MCvXSEYeBnkX2L5YAZgYmlL7ZxgBT2psuicRNbGyv9XlqBSQOA0wue8d6bPLoUZW/TLO+KQ1LZeRjUHtf11IKFUC0LFxUuA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NHVDkFGU/1iCEavcNoOsyIBjDg/tjdhLr3cQyUbdW9g=;
+ b=mlQy+8FxkyPMwDT8L0o8MFqat5+juX2yT79hJnz/dy3AEv4JvpnhDKO4wUhcgUy5ioHt+fa7VemK44A+LLYoGW3XvBwHsi2JfBquxz8X9XzCg6m7gSqmIUoctnlNdAvXcV0a2rW3VAir4JiZO+cQdH2XGYgNyvYR8PiINdGifyWXt4z8RGYvoVIHSVcvsJVzrFhReqX0udcwRDiJWsKMTKixjOSKmG9RL1/YOfisuurrm047AJiYsZPjjKszFlZzShoPnGLIFzkXlA1SgzNICqhf3mmksiHspcc+cow3geXZPeRE/ULzXKeDX+IZWrae8nUPQ/Rxlb0eSFUYOXgYAQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NHVDkFGU/1iCEavcNoOsyIBjDg/tjdhLr3cQyUbdW9g=;
+ b=mWTfC1JQlSDtZnVaLc/SjdxqP0IItHA+NR3G4OjY3MG2f2543Tdgpc7DSzqLWSrC4kdlupmXsDYDIOYaJuVsQALG6tSfws362QsCBTHtfzM4FXqwHMglukUMp8juIeF8/uSICEkXvaKZkgc8ySL/7m4OdNPcaTMPgUg7hVZUaFWOw5whS/BNHjz5BvtPPceFJd9bUPCvNFJVidfsMkR+TWQ/iTL9AufnNPdqzvUSumAihjDRTU49Jk5BXUj5Lnhvp5/IC7eq482/tW4eAKhnC+CeEKtH0/NVuo7+oKo2OuZwY1AJgehKPLZJsXE61MET6bjv9VXkYFn3o9Ncp0OqSA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
+ by SN7PR12MB6713.namprd12.prod.outlook.com (2603:10b6:806:273::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.25; Fri, 15 Jul
+ 2022 02:11:19 +0000
+Received: from BYAPR12MB3176.namprd12.prod.outlook.com
+ ([fe80::eca6:a4a7:e2b2:27e7]) by BYAPR12MB3176.namprd12.prod.outlook.com
+ ([fe80::eca6:a4a7:e2b2:27e7%5]) with mapi id 15.20.5417.020; Fri, 15 Jul 2022
+ 02:11:19 +0000
+From:   Alistair Popple <apopple@nvidia.com>
+To:     Alex Sierra <alex.sierra@amd.com>
+Cc:     Matthew Wilcox <willy@infradead.org>, jgg@nvidia.com,
+        Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, akpm@linux-foundation.org,
+        Alistair Popple <apopple@nvidia.com>
+Subject: [PATCH] mm/gup: migrate device coherent pages when pinning instead of failing
+Date:   Fri, 15 Jul 2022 12:11:09 +1000
+Message-Id: <20220715021109.2225886-1-apopple@nvidia.com>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <4b2f9a61-ca67-6a34-41c9-c191cac756b3@redhat.com>
+References: <4b2f9a61-ca67-6a34-41c9-c191cac756b3@redhat.com>
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR07CA0101.namprd07.prod.outlook.com
+ (2603:10b6:a03:12b::42) To BYAPR12MB3176.namprd12.prod.outlook.com
+ (2603:10b6:a03:134::26)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 502c5fc0-8641-4698-9ed3-08da66074e5e
+X-MS-TrafficTypeDiagnostic: SN7PR12MB6713:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: swSXb2xi6beWEb1/7R071vtcQ75Sqp8C98IFL1fIJi1oadZjpPE+jbA2SBYK3xPhtiKAWnOSOthPpuO2MwdtgApN5wAfP5OWERUGFmYu9vl9BOTjWT1AFms9dOAaETnIvbgXNkKmT0Ee5GfmU2LxUziBHdmFWT9rORXQZ1on5L/NrucO/wLy7jB0EkxEbfZ0feZyJiPyExrnlwQYRGfgCt0qw/heHHHUEUtDLbO02SPaKuGxeSzvmtZMyabW+PqVYNT4Y7KA1Cfq9z/aSr/csuWqStrZeuE5tdy8/OPG+2TtqobJsQXTsFO4VzI7t56SFRdtvo7VM2Ye31oWu/fJjWn7D+SimwGMAz+v8m5h+AFrXej0esxHtQzdailEJU3/dMNzwHONNXaOo1i4W7qXGPHUUJkej0M79AoGaBQBhaAE72w67GhI58WelDYhpV8SfgkzjMXFGjexfUAKX3Xh69qw/LqtJXenyB6ePrOp/jWQdnG9xKIVAG21dmfpvTl44C4Tuo3ObINJI8luYaZSwDwYa7IuqXJ9iyk+41+A9qgGCJm8q+JpeFSX6re7HkpjsArEc9ZCyFlmfuBArdD7Q+fvDP8csKKh0YjvPeWeAb5loIuWA0Ppz6CjWa2gh/rWgNU+BQY4ToT3OZO1M7G00uMA46ZhDCAe9HVJN66EnU5LRrz2o7f+L3u5LO2md27kWx3ViTrgWiwz/1DTY1F+kzFRAgFEg6PJyHQMlwYq3fZF0omjTuNePiXTjGUS/D26
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(136003)(396003)(366004)(376002)(346002)(2616005)(186003)(86362001)(478600001)(1076003)(107886003)(41300700001)(6486002)(6506007)(26005)(6666004)(7416002)(2906002)(8936002)(6512007)(36756003)(38100700002)(5660300002)(6916009)(54906003)(316002)(83380400001)(66556008)(4326008)(66476007)(8676002)(66946007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?iBhQqZsOOjiTrewLReeC6gLXWIdLbuLaqimZoyZLJd+HsSaFoRkSV3p7SvRP?=
+ =?us-ascii?Q?cd0NkeTmPdUZsryp9AqUt1589jstVylek7bDwq3l7KM/IV3je3iQkqdIPtik?=
+ =?us-ascii?Q?HkJbgSHc5R/bAbLI5IEW37vGhp27RwxbDQu1L/DUb3HgUtg/bFzJuDa6TIQh?=
+ =?us-ascii?Q?tvxWY6YOvtIksprpc+Usnk9iC04U3Bq7PwOeSloXinh203rOwUR0EerZ/cKx?=
+ =?us-ascii?Q?We2QECXybZmEtR5xAt72wUcNW+gVGn6WGlLsBLDydlYcF4LRCR52k25ORPfu?=
+ =?us-ascii?Q?JNslK7PsTXI4VbbHgYwHEky3I4MaPRAcNkxpkaNdJSFAjh563rOL7ZvSo8Ft?=
+ =?us-ascii?Q?tyZYKE9Kewq1Ge+9cK62DLQHz+wRyPIJ72/ZMTJ0n6P2DqCSM9Q/HUgAZb0S?=
+ =?us-ascii?Q?ehmS9CigD/ZX8zztX8W2/gJsjQ+woMPJG1yr2UPQ1ARU9G7HurE+M7EMaYUO?=
+ =?us-ascii?Q?pCSrhPz3XK6bTf7krPhozgoLU/CJQcRcxHyuUl3INguX7I9cnCxhS9++V5Ne?=
+ =?us-ascii?Q?fVQ9GB1/II/ZSZz52yNlU6Ap3EMThQZpl6a8W6Rhl1KQe3dusVsCpxkqtyTh?=
+ =?us-ascii?Q?WC5oCUeFlk4F1A4pt/E8qT0Rqsep4EffZbYOjKLhMYj7DIPrwwdJ+3LU+iMq?=
+ =?us-ascii?Q?PwvxRngR0M0K/VrpQym8/ik5jhwxpQXqFS9egXPTCIQSY/UMCI7Km2DAsOD9?=
+ =?us-ascii?Q?PTAraTb6J2ZRYCAln0xnq5zFJcs71zNPHtcT1J4u77wsMyDs8p7IZcOZQDT7?=
+ =?us-ascii?Q?DhSvYMsQ5xnWbvpdx1erhv4TBshfA9OmZYD6njbY7xC12AqGL/jZ4TvRAMct?=
+ =?us-ascii?Q?S2XO9012sqT/fe0LCCbnqThIuFpZLP/krTvJEFCFYP1uL8CiCWY/YK/KECVB?=
+ =?us-ascii?Q?gCu5nt1A8neW8icGqw72NF64BUMBU8xdvodPW9+kYgP2SqymrwdgQWH6+6ud?=
+ =?us-ascii?Q?+jdHdtoadZRDFQTgZW/R0P6CCjVeMlYvVOseWbqTcDu8eoBgFwOPo2k8LCuC?=
+ =?us-ascii?Q?zH7O1v6/o3xcV5vA88gZDRCmPgNkSzPzlk2juxDBGzwRzGQGQft7Vftgx/iD?=
+ =?us-ascii?Q?v+2XxPVKXfYJYRn2kOY1f6f7bgRQ98aq+rKoZ5JDMzFADsi7LbhbpFDSk/Df?=
+ =?us-ascii?Q?AJNc5hYWZpy9LrymjsXjVDYySEp0/O2RG4t9dV7cIwe2AZusxBlwRSDqTu6P?=
+ =?us-ascii?Q?xl36tHFF8zZvQ3FULOcA55QWiE5ZvNTHbzVtzj3cp+GXw6gqQQDWB4lOSwdg?=
+ =?us-ascii?Q?DTMpRy6UZcITLexgrhhvwGcfJM2iCp9wEa2JkEXimUBFJoO/84WYbM7wdZwp?=
+ =?us-ascii?Q?GfoWWP5Jd75Ef4tB4PewA/Ap6qsn1Zb/9FCj9SsH40C7natpHEnNqxToOgfu?=
+ =?us-ascii?Q?56Z/aEMbi5W9ABwLHc+r0LxOd8rInjUUH4aF3llLobvpd5gursYBK0t7nwfA?=
+ =?us-ascii?Q?Ws448UwSUEhgibhI3KOjwPhzVc1Q/reNQhETBLLhYsJb2McvCJqjErV8aOMJ?=
+ =?us-ascii?Q?cDmaCo/N7E4us9tV5/q4Q+DxsZW0xgt+yHge3AcLrUdAR6GYEII/Za91l3NR?=
+ =?us-ascii?Q?pin0/ui7/SAH3sZA4JJdU5jK7SWUuqNmy5vkgnuH?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 502c5fc0-8641-4698-9ed3-08da66074e5e
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jul 2022 02:11:19.3380
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: S0NQT8/Qj7uT4XEhklgm2elFJ9pE05n0Dxfx2qiwXmbHvUxHdexZ5jEIIS6ue5EOQX1hW84B7nvpb8x9bp5KaA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB6713
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Currently any attempts to pin a device coherent page will fail. This is
+because device coherent pages need to be managed by a device driver, and
+pinning them would prevent a driver from migrating them off the device.
 
-[ Upstream commit 919edbadebe17a67193533f531c2920c03e40fa4 ]
+However this is no reason to fail pinning of these pages. These are
+coherent and accessible from the CPU so can be migrated just like
+pinning ZONE_MOVABLE pages. So instead of failing all attempts to pin
+them first try migrating them out of ZONE_DEVICE.
 
-Jan Kara reported a performance regression in dbench that he
-bisected down to commit bad77c375e8d ("xfs: CIL checkpoint
-flushes caches unconditionally").
+[hch: rebased to the split device memory checks,
+      moved migrate_device_page to migrate_device.c]
 
-Whilst developing the journal flush/fua optimisations this cache was
-part of, it appeared to made a significant difference to
-performance. However, now that this patchset has settled and all the
-correctness issues fixed, there does not appear to be any
-significant performance benefit to asynchronous cache flushes.
-
-In fact, the opposite is true on some storage types and workloads,
-where additional cache flushes that can occur from fsync heavy
-workloads have measurable and significant impact on overall
-throughput.
-
-Local dbench testing shows little difference on dbench runs with
-sync vs async cache flushes on either fast or slow SSD storage, and
-no difference in streaming concurrent async transaction workloads
-like fs-mark.
-
-Fast NVME storage.
-
-From `dbench -t 30`, CIL scale:
-
-clients		async			sync
-		BW	Latency		BW	Latency
-1		 935.18   0.855		 915.64   0.903
-8		2404.51   6.873		2341.77   6.511
-16		3003.42   6.460		2931.57   6.529
-32		3697.23   7.939		3596.28   7.894
-128		7237.43  15.495		7217.74  11.588
-512		5079.24  90.587		5167.08  95.822
-
-fsmark, 32 threads, create w/ 64 byte xattr w/32k logbsize
-
-	create		chown		unlink
-async   1m41s		1m16s		2m03s
-sync	1m40s		1m19s		1m54s
-
-Slower SATA SSD storage:
-
-From `dbench -t 30`, CIL scale:
-
-clients		async			sync
-		BW	Latency		BW	Latency
-1		  78.59  15.792		  83.78  10.729
-8		 367.88  92.067		 404.63  59.943
-16		 564.51  72.524		 602.71  76.089
-32		 831.66 105.984		 870.26 110.482
-128		1659.76 102.969		1624.73  91.356
-512		2135.91 223.054		2603.07 161.160
-
-fsmark, 16 threads, create w/32k logbsize
-
-	create		unlink
-async   5m06s		4m15s
-sync	5m00s		4m22s
-
-And on Jan's test machine:
-
-                   5.18-rc8-vanilla       5.18-rc8-patched
-Amean     1        71.22 (   0.00%)       64.94 *   8.81%*
-Amean     2        93.03 (   0.00%)       84.80 *   8.85%*
-Amean     4       150.54 (   0.00%)      137.51 *   8.66%*
-Amean     8       252.53 (   0.00%)      242.24 *   4.08%*
-Amean     16      454.13 (   0.00%)      439.08 *   3.31%*
-Amean     32      835.24 (   0.00%)      829.74 *   0.66%*
-Amean     64     1740.59 (   0.00%)     1686.73 *   3.09%*
-
-Performance and cache flush behaviour is restored to pre-regression
-levels.
-
-As such, we can now consider the async cache flush mechanism an
-unnecessary exercise in premature optimisation and hence we can
-now remove it and the infrastructure it requires completely.
-
-Fixes: bad77c375e8d ("xfs: CIL checkpoint flushes caches unconditionally")
-Reported-and-tested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Alistair Popple <apopple@nvidia.com>
+Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_bio_io.c   | 35 -----------------------------------
- fs/xfs/xfs_linux.h    |  2 --
- fs/xfs/xfs_log.c      | 36 +++++++++++-------------------------
- fs/xfs/xfs_log_cil.c  | 42 +++++++++++++-----------------------------
- fs/xfs/xfs_log_priv.h |  3 +--
- 5 files changed, 25 insertions(+), 93 deletions(-)
 
-diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
-index 667e297f59b1..17f36db2f792 100644
---- a/fs/xfs/xfs_bio_io.c
-+++ b/fs/xfs/xfs_bio_io.c
-@@ -9,41 +9,6 @@ static inline unsigned int bio_max_vecs(unsigned int count)
- 	return bio_max_segs(howmany(count, PAGE_SIZE));
- }
+This patch hopefully addresses all of David's comments. It replaces both my "mm:
+remove the vma check in migrate_vma_setup()" and "mm/gup: migrate device
+coherent pages when pinning instead of failing" patches. I'm not sure what the
+best way of including this is, perhaps Alex can respin the series with this
+patch instead?
+
+ - Alistair
+
+ mm/gup.c            | 50 +++++++++++++++++++++++++++++++++++++------
+ mm/internal.h       |  1 +
+ mm/migrate_device.c | 52 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 96 insertions(+), 7 deletions(-)
+
+diff --git a/mm/gup.c b/mm/gup.c
+index b65fe8bf5af4..22b97ab61cd9 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -1881,7 +1881,7 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+ 	unsigned long isolation_error_count = 0, i;
+ 	struct folio *prev_folio = NULL;
+ 	LIST_HEAD(movable_page_list);
+-	bool drain_allow = true;
++	bool drain_allow = true, coherent_pages = false;
+ 	int ret = 0;
  
--static void
--xfs_flush_bdev_async_endio(
--	struct bio	*bio)
--{
--	complete(bio->bi_private);
--}
--
--/*
-- * Submit a request for an async cache flush to run. If the request queue does
-- * not require flush operations, just skip it altogether. If the caller needs
-- * to wait for the flush completion at a later point in time, they must supply a
-- * valid completion. This will be signalled when the flush completes.  The
-- * caller never sees the bio that is issued here.
-- */
--void
--xfs_flush_bdev_async(
--	struct bio		*bio,
--	struct block_device	*bdev,
--	struct completion	*done)
--{
--	struct request_queue	*q = bdev->bd_disk->queue;
--
--	if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
--		complete(done);
--		return;
--	}
--
--	bio_init(bio, NULL, 0);
--	bio_set_dev(bio, bdev);
--	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
--	bio->bi_private = done;
--	bio->bi_end_io = xfs_flush_bdev_async_endio;
--
--	submit_bio(bio);
--}
- int
- xfs_rw_bdev(
- 	struct block_device	*bdev,
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index c174262a074e..7688663b9773 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -196,8 +196,6 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
+ 	for (i = 0; i < nr_pages; i++) {
+@@ -1891,9 +1891,38 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+ 			continue;
+ 		prev_folio = folio;
  
- int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
- 		char *data, unsigned int op);
--void xfs_flush_bdev_async(struct bio *bio, struct block_device *bdev,
--		struct completion *done);
- 
- #define ASSERT_ALWAYS(expr)	\
- 	(likely(expr) ? (void)0 : assfail(NULL, #expr, __FILE__, __LINE__))
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 9ac4fc177d93..0fb7d05ca308 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -527,12 +527,6 @@ xlog_state_shutdown_callbacks(
-  * Flush iclog to disk if this is the last reference to the given iclog and the
-  * it is in the WANT_SYNC state.
-  *
-- * If the caller passes in a non-zero @old_tail_lsn and the current log tail
-- * does not match, there may be metadata on disk that must be persisted before
-- * this iclog is written.  To satisfy that requirement, set the
-- * XLOG_ICL_NEED_FLUSH flag as a condition for writing this iclog with the new
-- * log tail value.
-- *
-  * If XLOG_ICL_NEED_FUA is already set on the iclog, we need to ensure that the
-  * log tail is updated correctly. NEED_FUA indicates that the iclog will be
-  * written to stable storage, and implies that a commit record is contained
-@@ -549,12 +543,10 @@ xlog_state_shutdown_callbacks(
-  * always capture the tail lsn on the iclog on the first NEED_FUA release
-  * regardless of the number of active reference counts on this iclog.
-  */
--
- int
- xlog_state_release_iclog(
- 	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	xfs_lsn_t		old_tail_lsn)
-+	struct xlog_in_core	*iclog)
- {
- 	xfs_lsn_t		tail_lsn;
- 	bool			last_ref;
-@@ -565,18 +557,14 @@ xlog_state_release_iclog(
- 	/*
- 	 * Grabbing the current log tail needs to be atomic w.r.t. the writing
- 	 * of the tail LSN into the iclog so we guarantee that the log tail does
--	 * not move between deciding if a cache flush is required and writing
--	 * the LSN into the iclog below.
-+	 * not move between the first time we know that the iclog needs to be
-+	 * made stable and when we eventually submit it.
- 	 */
--	if (old_tail_lsn || iclog->ic_state == XLOG_STATE_WANT_SYNC) {
-+	if ((iclog->ic_state == XLOG_STATE_WANT_SYNC ||
-+	     (iclog->ic_flags & XLOG_ICL_NEED_FUA)) &&
-+	    !iclog->ic_header.h_tail_lsn) {
- 		tail_lsn = xlog_assign_tail_lsn(log->l_mp);
--
--		if (old_tail_lsn && tail_lsn != old_tail_lsn)
--			iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
--
--		if ((iclog->ic_flags & XLOG_ICL_NEED_FUA) &&
--		    !iclog->ic_header.h_tail_lsn)
--			iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
-+		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
- 	}
- 
- 	last_ref = atomic_dec_and_test(&iclog->ic_refcnt);
-@@ -601,8 +589,6 @@ xlog_state_release_iclog(
- 	}
- 
- 	iclog->ic_state = XLOG_STATE_SYNCING;
--	if (!iclog->ic_header.h_tail_lsn)
--		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
- 	xlog_verify_tail_lsn(log, iclog);
- 	trace_xlog_iclog_syncing(iclog, _RET_IP_);
- 
-@@ -875,7 +861,7 @@ xlog_force_iclog(
- 	iclog->ic_flags |= XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA;
- 	if (iclog->ic_state == XLOG_STATE_ACTIVE)
- 		xlog_state_switch_iclogs(iclog->ic_log, iclog, 0);
--	return xlog_state_release_iclog(iclog->ic_log, iclog, 0);
-+	return xlog_state_release_iclog(iclog->ic_log, iclog);
- }
- 
- /*
-@@ -2413,7 +2399,7 @@ xlog_write_copy_finish(
- 		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
- 			xlog_is_shutdown(log));
- release_iclog:
--	error = xlog_state_release_iclog(log, iclog, 0);
-+	error = xlog_state_release_iclog(log, iclog);
- 	spin_unlock(&log->l_icloglock);
- 	return error;
- }
-@@ -2630,7 +2616,7 @@ xlog_write(
- 
- 	spin_lock(&log->l_icloglock);
- 	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
--	error = xlog_state_release_iclog(log, iclog, 0);
-+	error = xlog_state_release_iclog(log, iclog);
- 	spin_unlock(&log->l_icloglock);
- 
- 	return error;
-@@ -3054,7 +3040,7 @@ xlog_state_get_iclog_space(
- 		 * reference to the iclog.
- 		 */
- 		if (!atomic_add_unless(&iclog->ic_refcnt, -1, 1))
--			error = xlog_state_release_iclog(log, iclog, 0);
-+			error = xlog_state_release_iclog(log, iclog);
- 		spin_unlock(&log->l_icloglock);
- 		if (error)
- 			return error;
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b59cc9c0961c..eafe30843ff0 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -681,11 +681,21 @@ xlog_cil_set_ctx_write_state(
- 		 * The LSN we need to pass to the log items on transaction
- 		 * commit is the LSN reported by the first log vector write, not
- 		 * the commit lsn. If we use the commit record lsn then we can
--		 * move the tail beyond the grant write head.
-+		 * move the grant write head beyond the tail LSN and overwrite
-+		 * it.
- 		 */
- 		ctx->start_lsn = lsn;
- 		wake_up_all(&cil->xc_start_wait);
- 		spin_unlock(&cil->xc_push_lock);
-+
+-		if (folio_is_longterm_pinnable(folio))
 +		/*
-+		 * Make sure the metadata we are about to overwrite in the log
-+		 * has been flushed to stable storage before this iclog is
-+		 * issued.
++		 * Device coherent pages are managed by a driver and should not
++		 * be pinned indefinitely as it prevents the driver moving the
++		 * page. So when trying to pin with FOLL_LONGTERM instead try
++		 * to migrate the page out of device memory.
 +		 */
-+		spin_lock(&cil->xc_log->l_icloglock);
-+		iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
-+		spin_unlock(&cil->xc_log->l_icloglock);
- 		return;
++		if (folio_is_device_coherent(folio)) {
++			/*
++			 * We always want a new GUP lookup with device coherent
++			 * pages.
++			 */
++			pages[i] = 0;
++			coherent_pages = true;
++
++			/*
++			 * Migration will fail if the page is pinned, so convert
++			 * the pin on the source page to a normal reference.
++			 */
++			if (gup_flags & FOLL_PIN) {
++				get_page(&folio->page);
++				unpin_user_page(&folio->page);
++			}
++
++			ret = migrate_device_coherent_page(&folio->page);
++			if (ret)
++				goto unpin_pages;
++
+ 			continue;
++		}
+ 
++		if (folio_is_longterm_pinnable(folio))
++			continue;
+ 		/*
+ 		 * Try to move out any movable page before pinning the range.
+ 		 */
+@@ -1919,7 +1948,8 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+ 				    folio_nr_pages(folio));
  	}
  
-@@ -864,10 +874,7 @@ xlog_cil_push_work(
- 	struct xfs_trans_header thdr;
- 	struct xfs_log_iovec	lhdr;
- 	struct xfs_log_vec	lvhdr = { NULL };
--	xfs_lsn_t		preflush_tail_lsn;
- 	xfs_csn_t		push_seq;
--	struct bio		bio;
--	DECLARE_COMPLETION_ONSTACK(bdev_flush);
- 	bool			push_commit_stable;
+-	if (!list_empty(&movable_page_list) || isolation_error_count)
++	if (!list_empty(&movable_page_list) || isolation_error_count
++		|| coherent_pages)
+ 		goto unpin_pages;
  
- 	new_ctx = xlog_cil_ctx_alloc();
-@@ -937,23 +944,6 @@ xlog_cil_push_work(
- 	list_add(&ctx->committing, &cil->xc_committing);
- 	spin_unlock(&cil->xc_push_lock);
- 
--	/*
--	 * The CIL is stable at this point - nothing new will be added to it
--	 * because we hold the flush lock exclusively. Hence we can now issue
--	 * a cache flush to ensure all the completed metadata in the journal we
--	 * are about to overwrite is on stable storage.
--	 *
--	 * Because we are issuing this cache flush before we've written the
--	 * tail lsn to the iclog, we can have metadata IO completions move the
--	 * tail forwards between the completion of this flush and the iclog
--	 * being written. In this case, we need to re-issue the cache flush
--	 * before the iclog write. To detect whether the log tail moves, sample
--	 * the tail LSN *before* we issue the flush.
--	 */
--	preflush_tail_lsn = atomic64_read(&log->l_tail_lsn);
--	xfs_flush_bdev_async(&bio, log->l_mp->m_ddev_targp->bt_bdev,
--				&bdev_flush);
--
  	/*
- 	 * Pull all the log vectors off the items in the CIL, and remove the
- 	 * items from the CIL. We don't need the CIL lock here because it's only
-@@ -1030,12 +1020,6 @@ xlog_cil_push_work(
- 	lvhdr.lv_iovecp = &lhdr;
- 	lvhdr.lv_next = ctx->lv_chain;
+@@ -1929,10 +1959,16 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+ 	return nr_pages;
  
--	/*
--	 * Before we format and submit the first iclog, we have to ensure that
--	 * the metadata writeback ordering cache flush is complete.
--	 */
--	wait_for_completion(&bdev_flush);
--
- 	error = xlog_cil_write_chain(ctx, &lvhdr);
- 	if (error)
- 		goto out_abort_free_ticket;
-@@ -1094,7 +1078,7 @@ xlog_cil_push_work(
- 	if (push_commit_stable &&
- 	    ctx->commit_iclog->ic_state == XLOG_STATE_ACTIVE)
- 		xlog_state_switch_iclogs(log, ctx->commit_iclog, 0);
--	xlog_state_release_iclog(log, ctx->commit_iclog, preflush_tail_lsn);
-+	xlog_state_release_iclog(log, ctx->commit_iclog);
- 
- 	/* Not safe to reference ctx now! */
- 
-@@ -1115,7 +1099,7 @@ xlog_cil_push_work(
- 		return;
+ unpin_pages:
+-	if (gup_flags & FOLL_PIN) {
+-		unpin_user_pages(pages, nr_pages);
+-	} else {
+-		for (i = 0; i < nr_pages; i++)
++	/*
++	 * pages[i] might be NULL if any device coherent pages were found.
++	 */
++	for (i = 0; i < nr_pages; i++) {
++		if (!pages[i])
++			continue;
++
++		if (gup_flags & FOLL_PIN)
++			unpin_user_page(pages[i]);
++		else
+ 			put_page(pages[i]);
  	}
- 	spin_lock(&log->l_icloglock);
--	xlog_state_release_iclog(log, ctx->commit_iclog, 0);
-+	xlog_state_release_iclog(log, ctx->commit_iclog);
- 	/* Not safe to reference ctx now! */
- 	spin_unlock(&log->l_icloglock);
- }
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 844fbeec3545..f3d68ca39f45 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -524,8 +524,7 @@ void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
  
- void xlog_state_switch_iclogs(struct xlog *log, struct xlog_in_core *iclog,
- 		int eventual_size);
--int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog,
--		xfs_lsn_t log_tail_lsn);
-+int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog);
+diff --git a/mm/internal.h b/mm/internal.h
+index c0f8fbe0445b..899dab512c5a 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -853,6 +853,7 @@ int numa_migrate_prep(struct page *page, struct vm_area_struct *vma,
+ 		      unsigned long addr, int page_nid, int *flags);
+ 
+ void free_zone_device_page(struct page *page);
++int migrate_device_coherent_page(struct page *page);
  
  /*
-  * When we crack an atomic LSN, we sample it first so that the value will not
+  * mm/gup.c
+diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+index 18bc6483f63a..7feeb447e3b9 100644
+--- a/mm/migrate_device.c
++++ b/mm/migrate_device.c
+@@ -686,6 +686,12 @@ void migrate_vma_pages(struct migrate_vma *migrate)
+ 		}
+ 
+ 		if (!page) {
++			/*
++			 * The only time there is no vma is when called from
++			 * migrate_device_coherent_page(). However this isn't
++			 * called if the page could not be unmapped.
++			 */
++			VM_BUG_ON(!migrate->vma);
+ 			if (!(migrate->src[i] & MIGRATE_PFN_MIGRATE))
+ 				continue;
+ 			if (!notified) {
+@@ -794,3 +800,49 @@ void migrate_vma_finalize(struct migrate_vma *migrate)
+ 	}
+ }
+ EXPORT_SYMBOL(migrate_vma_finalize);
++
++/*
++ * Migrate a device coherent page back to normal memory. The caller should have
++ * a reference on page which will be copied to the new page if migration is
++ * successful or dropped on failure.
++ */
++int migrate_device_coherent_page(struct page *page)
++{
++	unsigned long src_pfn, dst_pfn = 0;
++	struct migrate_vma args;
++	struct page *dpage;
++
++	WARN_ON_ONCE(PageCompound(page));
++
++	lock_page(page);
++	src_pfn = migrate_pfn(page_to_pfn(page)) | MIGRATE_PFN_MIGRATE;
++	args.src = &src_pfn;
++	args.dst = &dst_pfn;
++	args.cpages = 1;
++	args.npages = 1;
++	args.vma = NULL;
++
++	/*
++	 * We don't have a VMA and don't need to walk the page tables to find
++	 * the source page. So call migrate_vma_unmap() directly to unmap the
++	 * page as migrate_vma_setup() will fail if args.vma == NULL.
++	 */
++	migrate_vma_unmap(&args);
++	if (!(src_pfn & MIGRATE_PFN_MIGRATE))
++		return -EBUSY;
++
++	dpage = alloc_page(GFP_USER | __GFP_NOWARN);
++	if (dpage) {
++		lock_page(dpage);
++		dst_pfn = migrate_pfn(page_to_pfn(dpage));
++	}
++
++	migrate_vma_pages(&args);
++	if (src_pfn & MIGRATE_PFN_MIGRATE)
++		copy_highpage(dpage, page);
++	migrate_vma_finalize(&args);
++
++	if (src_pfn & MIGRATE_PFN_MIGRATE)
++		return 0;
++	return -EBUSY;
++}
 -- 
-2.37.0.170.g444d1eabd0-goog
+2.35.1
 
