@@ -2,147 +2,121 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92552C43334
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jul 2022 15:39:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F6E7C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jul 2022 16:21:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229902AbiGOPju (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Jul 2022 11:39:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43716 "EHLO
+        id S229563AbiGOQVD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Jul 2022 12:21:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229525AbiGOPjt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jul 2022 11:39:49 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8CB22E9EB
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Jul 2022 08:39:48 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229525AbiGOQVC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jul 2022 12:21:02 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C1B9866ADF
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Jul 2022 09:21:01 -0700 (PDT)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7A7DCB82D12
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Jul 2022 15:39:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 322BEC34115;
-        Fri, 15 Jul 2022 15:39:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657899586;
-        bh=Llg9wnF4r7cUG5PLv33LrDVTdnBw2tLO8fGQf4g7KtM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VhaKV8P2WBEXWimFabXvUSBbVrC3XOm8cP3O0Imh5FpNmExX+xZ/ki5wdZZswKyUi
-         96aTU+nnbNyrAGMxYz63tGzUdevEWAMcOy3D7Iz7lDjvIG16hb2KLvGZEjTAx1C/vB
-         LTBlOGRkoY1FJzHDKFj28272YlkyRot2yjpqEOMwI6Kz0K2xqItHVrdB/LhGrlWcIT
-         sOVFu659dAp6eDABSgdi1JPbaWA42BDFhq9E6geKtGqdLP/vgWyDNLPkXN3aXUF8+4
-         3CYk8zasviddSaSLJr8FQ/dj6kFLlGgYs/+3vsiZ62z+Ld/EDUiz9H859Y40RI3NC3
-         HVe8GZmQ2oxmA==
-Date:   Fri, 15 Jul 2022 08:39:45 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     hexiaole <hexiaole1994@126.com>
-Cc:     linux-xfs@vger.kernel.org, hexiaole@kylinos.cn
-Subject: Re: [PATCH v1 1/2] xfsdocs: fix inode timestamps lower limit value
-Message-ID: <YtGKQaqJ8fnQzIYf@magnolia>
-References: <1657882427-96-1-git-send-email-hexiaole1994@126.com>
+        by sandeen.net (Postfix) with ESMTPSA id 262B622DB
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Jul 2022 11:20:36 -0500 (CDT)
+Message-ID: <4a80233f-765d-836f-7c1a-0e0839aab4d2@sandeen.net>
+Date:   Fri, 15 Jul 2022 11:20:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1657882427-96-1-git-send-email-hexiaole1994@126.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.11.0
+Content-Language: en-US
+To:     xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 50dba818
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------kGweamnMYi3ARjSQL6yiDf5Y"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[Ugh, reflowed this to 72 columns]
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------kGweamnMYi3ARjSQL6yiDf5Y
+Content-Type: multipart/mixed; boundary="------------MCd04X0blmdDRMWNrcrepk0j";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Message-ID: <4a80233f-765d-836f-7c1a-0e0839aab4d2@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 50dba818
 
-On Fri, Jul 15, 2022 at 06:53:46PM +0800, hexiaole wrote:
-> From: hexiaole <hexiaole@kylinos.cn>
-> 
-> 1. Fix description
-> In kernel source tree 'fs/xfs/libxfs/xfs_format.h', there defined
-> inode timestamps as 'xfs_legacy_timestamp' if the 'bigtime' feature
-> disabled, and also defined the min and max time constants
-> 'XFS_LEGACY_TIME_MIN' and 'XFS_LEGACY_TIME_MAX':
-> 
-> /* fs/xfs/libxfs/xfs_format.h begin */
-> struct xfs_legacy_timestamp {
->         __be32          t_sec;          /* timestamp seconds */
->         __be32          t_nsec;         /* timestamp nanoseconds */
-> };
-> /* fs/xfs/libxfs/xfs_format.h end */
-> /* include/linux/limits.h begin */
-> /* include/linux/limits.h end */
-> 
-> When the 't_sec' and 't_nsec' are 0, the time value it represents is
-> 1970-01-01 00:00:00 UTC, the 'XFS_LEGACY_TIME_MIN', that is -(2^31),
-> represents the min second offset relative to the 1970-01-01 00:00:00
-> UTC, it can be converted to human-friendly time value by 'date'
-> command:
-> 
-> /* command begin */
-> [root@DESKTOP-G0RBR07 sources]# date --utc -d "@`echo '-(2^31)'|bc`" +'%Y-%m-%d %H:%M:%S'
-> 1901-12-13 20:45:52
-> [root@DESKTOP-G0RBR07 sources]#
-> /* command end */
-> 
-> That is, the min time value is 1901-12-13 20:45:52 UTC, but the
-> 'design/XFS_Filesystem_Structure/timestamps.asciidoc' write the min
-> time value as 'The smalle st date this format can represent is
-> 20:45:52 UTC on December 31st', there should be a typo, and this patch
-> correct 2 places of wrong min time value, from '3 1st' to '13st'.
+--------------MCd04X0blmdDRMWNrcrepk0j
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Yep, that's a typo, can you send a patch to fix the xfs_format.h
-comments, please?
+Hi folks,
 
-> 2. Question
-> In the section 'Quota Timers' of
-> 'design/XFS_Filesystem_Structure/timestamps.asciidoc':
-> 
-> /* timestamps.asciidoc begin */
-> With the introduction of the bigtime feature, the ondisk field now
-> encodes the upper 32 bits of an unsigned 34-bit seconds counter.  ...
->
-> The smallest quota expiration date is now 00:00:04 UTC on January 1st, 1970;
-> and the largest is 20:20:24 UTC on July 2nd, 2486.
-> /* timestamps.asciidoc end */
-> 
-> It seems hard to understand the the relationship among the '32 bits of
-> an unsigned 34-bit seconds counter', '00:00:04 UTC on January 1st,
-> 1970', and 00:00:04 UTC on January 1st, 1970', is it there a typo for
-> '34-bit' and the expected one is '64-bit'?
+The for-next branch of the xfsprogs repository at:
 
-The incore timer field is the usual 64-bit time_t, like you'd expect.
-However, its usage is clamped such that we only use the lower 34 bits of
-the field, because the ondisk timer field is still 32 bits wide.  At the
-time of review for bigtime, we decided that losing the lower 2 bits of
-precision was a better sacrifice than redesigning the ondisk dquot
-format.  This results in a resolution of 4 seconds (instead of 1)
-because the conversion is:
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-ondisk_timer = incore_timer >> 2;
+has just been updated.
 
-Hence the ondisk field encodes the upper 32 bits of a (logically) 34-bit
-counter.
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
---D
+The new head of the for-next branch is commit:
 
-> ---
->  design/XFS_Filesystem_Structure/timestamps.asciidoc | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/design/XFS_Filesystem_Structure/timestamps.asciidoc b/design/XFS_Filesystem_Structure/timestamps.asciidoc
-> index 08baa1e..56d4dc9 100644
-> --- a/design/XFS_Filesystem_Structure/timestamps.asciidoc
-> +++ b/design/XFS_Filesystem_Structure/timestamps.asciidoc
-> @@ -26,13 +26,13 @@ struct xfs_legacy_timestamp {
->  };
->  ----
->  
-> -The smallest date this format can represent is 20:45:52 UTC on December 31st,
-> +The smallest date this format can represent is 20:45:52 UTC on December 13st,
->  1901, and the largest date supported is 03:14:07 UTC on January 19, 2038.
->  
->  With the introduction of the bigtime feature, the format is changed to
->  interpret the timestamp as a 64-bit count of nanoseconds since the smallest
->  date supported by the old encoding.  This means that the smallest date
-> -supported is still 20:45:52 UTC on December 31st, 1901; but now the largest
-> +supported is still 20:45:52 UTC on December 13st, 1901; but now the largest
->  date supported is 20:20:24 UTC on July 2nd, 2486.
->  
->  [[Quota_Timers]]
-> -- 
-> 2.27.0
-> 
+50dba818 mkfs: terminate getsubopt arrays properly
+
+New Commits:
+
+Chandan Babu R (1):
+      [91c1d083] xfs_repair: Search for conflicts in inode_tree_ptrs[] wh=
+en processing uncertain inodes
+
+Darrick J. Wong (5):
+      [f2e38861] xfs_repair: check free rt extent count
+      [9d454cca] xfs_repair: check the rt bitmap against observations
+      [daebb4ce] xfs_repair: check the rt summary against observations
+      [f50d3462] xfs_repair: ignore empty xattr leaf blocks
+      [50dba818] mkfs: terminate getsubopt arrays properly
+
+hexiaole (1):
+      [03bc6539] xfs: correct nlink printf specifier from hd to PRIu32
+
+
+Code Diffstat:
+
+ logprint/log_misc.c  |   2 +-
+ mkfs/xfs_mkfs.c      |  16 +++-
+ repair/attr_repair.c |  20 +++++
+ repair/dino_chunks.c |   3 +-
+ repair/phase5.c      |  13 +++-
+ repair/protos.h      |   1 +
+ repair/rt.c          | 212 ++++++++++++++++++---------------------------=
+-----
+ repair/rt.h          |  18 ++---
+ repair/xfs_repair.c  |   7 +-
+ 9 files changed, 132 insertions(+), 160 deletions(-)
+
+--------------MCd04X0blmdDRMWNrcrepk0j--
+
+--------------kGweamnMYi3ARjSQL6yiDf5Y
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmLRk+sFAwAAAAAACgkQIK4WkuE93uBA
+qxAAjsAZwnGwlc9chCFctQo+56KuL134Ee6geEzItDOhx20caxIQVRT3ZF80PPg9wYojM0+seG+r
+RpzViGd5xNjnf4nFNpVPaGr1inYaYfKBL9CEijNF1h1IQGtnPLz9V2mZSt8SgZGAYpac20859x5C
+ExKlMQH6TRnG5NwdsGTheVmzksQEEk9EH8+coOAY/k6keJYCOPw4KLC4sgqjw9FKgXvmbc7xscYJ
+xGR6q78uPciZhXUePoDL61VMNg1m6Ch7WT/ZTGtx0oeCEoJtKNQQqsFxryEi6rz3mRaFNn9HsCfW
+mecGBOqeVXQ5JuDNPf5vjzMXny4IJ4agVe/00j4V1jvivheqF1cFZFIDgnItq87dQ4UmsDE63Nio
+eubqRLUNf2v4MWRuaZLKsUvwmWWeqL+rbVJGVEA0GHH+2jfLZbvVp/BqDobXLhSPAwj5xKhFuncb
+wD0SO95oesXR5XOkQ/uQ/dRwzlC58fxbI0HnVrXOj4Gaws33XOuE77iFUBPDRTeXIClLt5oTndFG
+l/1H6yGldtbWuEviQ61AtwyUGLj+osOquxSXXZkncR/a9vDBShGArDHo+ce9olz79CBFFNxv4vxc
+kVKrco9fa8+FcLN1uxOe0H1QleriCAfDEJoXfjOstAXuhGTcTASYhSl99bLPOs/XBSgqs3bo3+4s
+e+I=
+=aZGZ
+-----END PGP SIGNATURE-----
+
+--------------kGweamnMYi3ARjSQL6yiDf5Y--
