@@ -2,101 +2,143 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AEE2C43334
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jul 2022 12:40:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBEB0C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jul 2022 17:14:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234868AbiGRMko (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jul 2022 08:40:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59676 "EHLO
+        id S234314AbiGRROU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jul 2022 13:14:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233786AbiGRMkn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jul 2022 08:40:43 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AF5823B;
-        Mon, 18 Jul 2022 05:40:42 -0700 (PDT)
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26ICax3G012712;
-        Mon, 18 Jul 2022 12:40:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to; s=pp1;
- bh=JaG6Jg1iP6JRc4hKh1yNH9brztMAziIq7oii+Ehcmso=;
- b=Iv+zlpU9nKnXtVAlosoF3tmHH3RXqF1vWchRY5RK8JIsKv3LrMxZWCYarhe99tD8QGzc
- HySx33eDaeUsYZLOLEnPOiSSWDsh0BpuSMiMx/P1w/2443tJy9mA5xUv76C9GvCoaDtW
- iyUB2u9srF8Q7lYj+l2i1IWeA6y8VevxrXiRwZAVc+pUkFGyXr9sj8CGsffkjZ+VaRzz
- KGYpxaphtLhnrd+ZkZU/H8slXH0fdkZCVeNa3yR6R3jgm9qa5YHuZWtH69asNjFTZ+zv
- JozqQV1yJee9TC1amETHh6cb2W3ehNKsTTcG8hLK3ZiQ1Axhwa26F+zRAC49djC72exL Bw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3hd7e9g8wy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 Jul 2022 12:40:38 +0000
-Received: from m0098399.ppops.net (m0098399.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 26ICbAjw014622;
-        Mon, 18 Jul 2022 12:40:38 GMT
-Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3hd7e9g8vy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 Jul 2022 12:40:38 +0000
-Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
-        by ppma01fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 26ICag54005548;
-        Mon, 18 Jul 2022 12:40:35 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma01fra.de.ibm.com with ESMTP id 3hbmy8tnq1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 Jul 2022 12:40:35 +0000
-Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 26ICeXI424314162
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 18 Jul 2022 12:40:33 GMT
-Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2EDD35204E;
-        Mon, 18 Jul 2022 12:40:33 +0000 (GMT)
-Received: from smtpclient.apple (unknown [9.43.36.77])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id B6B7852054;
-        Mon, 18 Jul 2022 12:40:31 +0000 (GMT)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
-Subject: Re: BUG xfs_buf while running tests/xfs/435 (next-20220715)
-From:   Sachin Sant <sachinp@linux.ibm.com>
-In-Reply-To: <20220718080112.GS3861211@dread.disaster.area>
-Date:   Mon, 18 Jul 2022 18:10:30 +0530
-Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-next@vger.kernel.org,
-        riteshh@linux.ibm.com
-Content-Transfer-Encoding: 7bit
-Message-Id: <E1661B4B-D2BF-465F-8C65-935909A2E527@linux.ibm.com>
-References: <C6CAF8E3-0447-465D-9C83-F55910739BE2@linux.ibm.com>
- <20220718080112.GS3861211@dread.disaster.area>
-To:     Dave Chinner <david@fromorbit.com>
-X-Mailer: Apple Mail (2.3696.100.31)
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: eCQpeuJwX6uModo8laEmqGSYPLva-8U0
-X-Proofpoint-GUID: -CNcpwPBoqeeOP1paBfubOvzUqzKa_1v
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-18_11,2022-07-18_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
- mlxlogscore=999 clxscore=1011 priorityscore=1501 phishscore=0
- impostorscore=0 mlxscore=0 spamscore=0 lowpriorityscore=0 malwarescore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2206140000 definitions=main-2207180054
+        with ESMTP id S235841AbiGRROO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jul 2022 13:14:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E1F528A
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Jul 2022 10:14:13 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A42BC6156E
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Jul 2022 17:14:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B05E4C341C0;
+        Mon, 18 Jul 2022 17:14:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1658164451;
+        bh=ddPtve5qoQnxDHI4NEQDWqjcufQV8MNuph8NCdHNNs8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tvAA4bZUxlWdc6GWGDfHLCE6Op/cbaZpzhulllQ1CWe+20anPTL3qjl98HyHeORVd
+         ojKtj8pWjGPQvhIZOmNJNDq4V/p6gnBMoJ/BxpSsKWaFeiIihBfKzf+7EhLqjcDERm
+         RSBgF7tlLn7haULJBrXQxJu0HawjQJ2o68uRntyJReWsqX4htlfAx0z3z5yWcDot26
+         mol3koc9z2aqbHFvqYpq3406TLFgbOE+YGBTx1uiF9M+9JA8G+0u0Rg6orUY2Beqx/
+         a+ASIl7UzdM2OtceD+ney7bQtkrzwormdIpvkXCMt4Rl3iWAxEBskkk0DlDcJLtzOD
+         3csoE0BXiJlNA==
+Date:   Mon, 18 Jul 2022 10:14:11 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Xiaole He <hexiaole1994@126.com>
+Cc:     linux-xfs@vger.kernel.org, dchinner@redhat.com,
+        chandan.babu@oracle.com, allison.henderson@oracle.com,
+        hexiaole@kylinos.cn
+Subject: Re: [PATCH v1] xfs: fix comment for start time value of inode with
+ bigtime enabled
+Message-ID: <YtWU43q7hgGUOyUv@magnolia>
+References: <1658052271-522-1-git-send-email-hexiaole1994@126.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1658052271-522-1-git-send-email-hexiaole1994@126.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-> Fix it by removing the xfs_buf_init/terminate wrappers that just
-> allocate and destroy the xfs_buf slab, and move them to the same
-> place that all the other slab caches are set up and destroyed.
+On Sun, Jul 17, 2022 at 06:04:31PM +0800, Xiaole He wrote:
+> The 'ctime', 'mtime', and 'atime' for inode is the type of
+> 'xfs_timestamp_t', which is a 64-bit type:
 > 
-> Reported-by: Sachin Sant <sachinp@linux.ibm.com>
-> Fixes: 298f34224506 ("xfs: lockless buffer lookup")
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> /* fs/xfs/libxfs/xfs_format.h begin */
+> typedef __be64 xfs_timestamp_t;
+> /* fs/xfs/libxfs/xfs_format.h end */
+> 
+> When the 'bigtime' feature is disabled, this 64-bit type is splitted
+> into two parts of 32-bit, one part is encoded for seconds since
+> 1970-01-01 00:00:00 UTC, the other part is encoded for nanoseconds
+> above the seconds, this two parts are the type of
+> 'xfs_legacy_timestamp' and the min and max time value of this type are
+> defined as macros 'XFS_LEGACY_TIME_MIN' and 'XFS_LEGACY_TIME_MAX':
+> 
+> /* fs/xfs/libxfs/xfs_format.h begin */
+> struct xfs_legacy_timestamp {
+>         __be32          t_sec;          /* timestamp seconds */
+>         __be32          t_nsec;         /* timestamp nanoseconds */
+> };
+>  #define XFS_LEGACY_TIME_MIN     ((int64_t)S32_MIN)
+>  #define XFS_LEGACY_TIME_MAX     ((int64_t)S32_MAX)
+> /* fs/xfs/libxfs/xfs_format.h end */
+> /* include/linux/limits.h begin */
+>  #define U32_MAX         ((u32)~0U)
+>  #define S32_MAX         ((s32)(U32_MAX >> 1))
+>  #define S32_MIN         ((s32)(-S32_MAX - 1))
+> /* include/linux/limits.h end */
+> 
+> 'XFS_LEGACY_TIME_MIN' is the min time value of the
+> 'xfs_legacy_timestamp', that is -(2^31) seconds relative to the
+> 1970-01-01 00:00:00 UTC, it can be converted to human-friendly time
+> value by 'date' command:
+> 
+> /* command begin */
+> [root@~]# date --utc -d '@0' +'%Y-%m-%d %H:%M:%S'
+> 1970-01-01 00:00:00
+> [root@~]# date --utc -d "@`echo '-(2^31)'|bc`" +'%Y-%m-%d %H:%M:%S'
+> 1901-12-13 20:45:52
+> [root@~]#
+> /* command end */
+> 
+> When 'bigtime' feature is enabled, this 64-bit type becomes a 64-bit
+> nanoseconds counter, with the start time value is the min time value of
+> 'xfs_legacy_timestamp'(start time means the value of 64-bit nanoseconds
+> counter is 0). We have already caculated the min time value of
+> 'xfs_legacy_timestamp', that is 1901-12-13 20:45:52 UTC, but the comment
+> for the start time value of inode with 'bigtime' feature enabled writes
+> the value is 1901-12-31 20:45:52 UTC:
+> 
+> /* fs/xfs/libxfs/xfs_format.h begin */
+> /*
+>  * XFS Timestamps
+>  * ==============
+>  * When the bigtime feature is enabled, ondisk inode timestamps become an
+>  * unsigned 64-bit nanoseconds counter.  This means that the bigtime inode
+>  * timestamp epoch is the start of the classic timestamp range, which is
+>  * Dec 31 20:45:52 UTC 1901. ...
+>  ...
+>  */
+> /* fs/xfs/libxfs/xfs_format.h end */
+> 
+> That is a typo, and this patch corrects the typo, from 'Dec 31' to
+> 'Dec 13'.
+> 
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Xiaole He <hexiaole@kylinos.cn>
+
+Heh, thanks for fixing the typo.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
 > ---
-
-Thanks. The patch fixes the reported problem for me.
-
-Tested-by: Sachin Sant <sachinp@linux.ibm.com>
-
-- Sachin
+>  fs/xfs/libxfs/xfs_format.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index afdfc81..b55bdfa 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -704,7 +704,7 @@ struct xfs_agfl {
+>   * When the bigtime feature is enabled, ondisk inode timestamps become an
+>   * unsigned 64-bit nanoseconds counter.  This means that the bigtime inode
+>   * timestamp epoch is the start of the classic timestamp range, which is
+> - * Dec 31 20:45:52 UTC 1901.  Because the epochs are not the same, callers
+> + * Dec 13 20:45:52 UTC 1901.  Because the epochs are not the same, callers
+>   * /must/ use the bigtime conversion functions when encoding and decoding raw
+>   * timestamps.
+>   */
+> -- 
+> 1.8.3.1
+> 
