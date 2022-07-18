@@ -2,143 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBEB0C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jul 2022 17:14:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1C4DC43334
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jul 2022 17:16:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234314AbiGRROU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jul 2022 13:14:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36452 "EHLO
+        id S233240AbiGRRQn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jul 2022 13:16:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235841AbiGRROO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jul 2022 13:14:14 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E1F528A
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Jul 2022 10:14:13 -0700 (PDT)
+        with ESMTP id S233100AbiGRRQm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jul 2022 13:16:42 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13F942C12D;
+        Mon, 18 Jul 2022 10:16:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A42BC6156E
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Jul 2022 17:14:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B05E4C341C0;
-        Mon, 18 Jul 2022 17:14:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9501E61582;
+        Mon, 18 Jul 2022 17:16:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C28F3C341C0;
+        Mon, 18 Jul 2022 17:16:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658164451;
-        bh=ddPtve5qoQnxDHI4NEQDWqjcufQV8MNuph8NCdHNNs8=;
+        s=k20201202; t=1658164600;
+        bh=d6KscDVDrA9I+4PRxjkUn0b5XrvScwDW2osOQpnQ+Bo=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tvAA4bZUxlWdc6GWGDfHLCE6Op/cbaZpzhulllQ1CWe+20anPTL3qjl98HyHeORVd
-         ojKtj8pWjGPQvhIZOmNJNDq4V/p6gnBMoJ/BxpSsKWaFeiIihBfKzf+7EhLqjcDERm
-         RSBgF7tlLn7haULJBrXQxJu0HawjQJ2o68uRntyJReWsqX4htlfAx0z3z5yWcDot26
-         mol3koc9z2aqbHFvqYpq3406TLFgbOE+YGBTx1uiF9M+9JA8G+0u0Rg6orUY2Beqx/
-         a+ASIl7UzdM2OtceD+ney7bQtkrzwormdIpvkXCMt4Rl3iWAxEBskkk0DlDcJLtzOD
-         3csoE0BXiJlNA==
-Date:   Mon, 18 Jul 2022 10:14:11 -0700
+        b=MyhWEdauYWHUif85Fr9+YI50paUINVAGUmbWkG/jkMAAuMNX7OTsCK7EKr8xwTsg5
+         sCW/PsdcWfsBKxP5XsIZ0ldDLyJUjN5cf1uxBY7PclGgySBbMYA0Pnadw45TFTEYoP
+         jgyVNL7oed9ykgEgZEDRK5m6rPENqOJDZyl56cqfJABXQUONYC6ar2Dt/ehGI7Vn6E
+         9sZvTrq3KZCvDqmzuWNeLEe+wMys8M2KSvs/bwqe4DkdNxqwcaqE1yhEgKC6STJgiJ
+         6OZz5eftGZs4JnqNRdhwxocO0E58Ex9gfEk5+m7ZMrbPLMcALIG13EsBYsN18jMKJ9
+         F9VGhWmlfxjDA==
+Date:   Mon, 18 Jul 2022 10:16:40 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Xiaole He <hexiaole1994@126.com>
-Cc:     linux-xfs@vger.kernel.org, dchinner@redhat.com,
-        chandan.babu@oracle.com, allison.henderson@oracle.com,
-        hexiaole@kylinos.cn
-Subject: Re: [PATCH v1] xfs: fix comment for start time value of inode with
- bigtime enabled
-Message-ID: <YtWU43q7hgGUOyUv@magnolia>
-References: <1658052271-522-1-git-send-email-hexiaole1994@126.com>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Dave Chinner <dchinner@redhat.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] xfs: delete unnecessary NULL checks
+Message-ID: <YtWVeOjhL5R+CEJQ@magnolia>
+References: <YtVCOtQ7PCRfjXY6@kili>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1658052271-522-1-git-send-email-hexiaole1994@126.com>
+In-Reply-To: <YtVCOtQ7PCRfjXY6@kili>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jul 17, 2022 at 06:04:31PM +0800, Xiaole He wrote:
-> The 'ctime', 'mtime', and 'atime' for inode is the type of
-> 'xfs_timestamp_t', which is a 64-bit type:
+On Mon, Jul 18, 2022 at 02:21:30PM +0300, Dan Carpenter wrote:
+> These NULL check are no long needed after commit 2ed5b09b3e8f ("xfs:
+> make inode attribute forks a permanent part of struct xfs_inode").
 > 
-> /* fs/xfs/libxfs/xfs_format.h begin */
-> typedef __be64 xfs_timestamp_t;
-> /* fs/xfs/libxfs/xfs_format.h end */
-> 
-> When the 'bigtime' feature is disabled, this 64-bit type is splitted
-> into two parts of 32-bit, one part is encoded for seconds since
-> 1970-01-01 00:00:00 UTC, the other part is encoded for nanoseconds
-> above the seconds, this two parts are the type of
-> 'xfs_legacy_timestamp' and the min and max time value of this type are
-> defined as macros 'XFS_LEGACY_TIME_MIN' and 'XFS_LEGACY_TIME_MAX':
-> 
-> /* fs/xfs/libxfs/xfs_format.h begin */
-> struct xfs_legacy_timestamp {
->         __be32          t_sec;          /* timestamp seconds */
->         __be32          t_nsec;         /* timestamp nanoseconds */
-> };
->  #define XFS_LEGACY_TIME_MIN     ((int64_t)S32_MIN)
->  #define XFS_LEGACY_TIME_MAX     ((int64_t)S32_MAX)
-> /* fs/xfs/libxfs/xfs_format.h end */
-> /* include/linux/limits.h begin */
->  #define U32_MAX         ((u32)~0U)
->  #define S32_MAX         ((s32)(U32_MAX >> 1))
->  #define S32_MIN         ((s32)(-S32_MAX - 1))
-> /* include/linux/limits.h end */
-> 
-> 'XFS_LEGACY_TIME_MIN' is the min time value of the
-> 'xfs_legacy_timestamp', that is -(2^31) seconds relative to the
-> 1970-01-01 00:00:00 UTC, it can be converted to human-friendly time
-> value by 'date' command:
-> 
-> /* command begin */
-> [root@~]# date --utc -d '@0' +'%Y-%m-%d %H:%M:%S'
-> 1970-01-01 00:00:00
-> [root@~]# date --utc -d "@`echo '-(2^31)'|bc`" +'%Y-%m-%d %H:%M:%S'
-> 1901-12-13 20:45:52
-> [root@~]#
-> /* command end */
-> 
-> When 'bigtime' feature is enabled, this 64-bit type becomes a 64-bit
-> nanoseconds counter, with the start time value is the min time value of
-> 'xfs_legacy_timestamp'(start time means the value of 64-bit nanoseconds
-> counter is 0). We have already caculated the min time value of
-> 'xfs_legacy_timestamp', that is 1901-12-13 20:45:52 UTC, but the comment
-> for the start time value of inode with 'bigtime' feature enabled writes
-> the value is 1901-12-31 20:45:52 UTC:
-> 
-> /* fs/xfs/libxfs/xfs_format.h begin */
-> /*
->  * XFS Timestamps
->  * ==============
->  * When the bigtime feature is enabled, ondisk inode timestamps become an
->  * unsigned 64-bit nanoseconds counter.  This means that the bigtime inode
->  * timestamp epoch is the start of the classic timestamp range, which is
->  * Dec 31 20:45:52 UTC 1901. ...
->  ...
->  */
-> /* fs/xfs/libxfs/xfs_format.h end */
-> 
-> That is a typo, and this patch corrects the typo, from 'Dec 31' to
-> 'Dec 13'.
-> 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Xiaole He <hexiaole@kylinos.cn>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Heh, thanks for fixing the typo.
+Looks correct,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_format.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/xfs/libxfs/xfs_inode_fork.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index afdfc81..b55bdfa 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -704,7 +704,7 @@ struct xfs_agfl {
->   * When the bigtime feature is enabled, ondisk inode timestamps become an
->   * unsigned 64-bit nanoseconds counter.  This means that the bigtime inode
->   * timestamp epoch is the start of the classic timestamp range, which is
-> - * Dec 31 20:45:52 UTC 1901.  Because the epochs are not the same, callers
-> + * Dec 13 20:45:52 UTC 1901.  Because the epochs are not the same, callers
->   * /must/ use the bigtime conversion functions when encoding and decoding raw
->   * timestamps.
->   */
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 7c34184448e6..fa699f3792bf 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -724,8 +724,7 @@ xfs_ifork_verify_local_attr(
+>  
+>  	if (fa) {
+>  		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "attr fork",
+> -				ifp ? ifp->if_u1.if_data : NULL,
+> -				ifp ? ifp->if_bytes : 0, fa);
+> +				ifp->if_u1.if_data, ifp->if_bytes, fa);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
 > -- 
-> 1.8.3.1
+> 2.35.1
 > 
