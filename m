@@ -2,114 +2,333 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80E16C43334
-	for <linux-xfs@archiver.kernel.org>; Sun, 17 Jul 2022 10:08:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4179BC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jul 2022 06:32:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229739AbiGQKIE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 17 Jul 2022 06:08:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59224 "EHLO
+        id S233527AbiGRGcI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jul 2022 02:32:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbiGQKIE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Jul 2022 06:08:04 -0400
-Received: from m15111.mail.126.com (m15111.mail.126.com [220.181.15.111])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9173413E89
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Jul 2022 03:08:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=FG7tcR7jBpiA+XaruR
-        yyfNjIPg0ef1Rv14/2qenuc2o=; b=Wkq/LVvXRAwBH2iTgCkPVGN005DpY/AKXH
-        auNdC/cBfJNzQCBP7EnXAwD6MeucZMbtLXdVCYfbwHXRzQRF5NxicH8OGJSQg53T
-        5Navlwh2mhvC6eE2N7ydZXWXKonPL4VgWClvjIBxwzRnAkmQn7kVTFw3pduuKO5N
-        KQu69YFI4=
-Received: from DESKTOP-AP0PFB7.localdomain (unknown [111.30.213.137])
-        by smtp1 (Coremail) with SMTP id C8mowACXmydp39Ni3z6qGw--.44659S2;
-        Sun, 17 Jul 2022 18:07:38 +0800 (CST)
-From:   Xiaole He <hexiaole1994@126.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     djwong@kernel.org, sandeen@redhat.com,
-        Xiaole He <hexiaole1994@126.com>,
-        Xiaole He <hexiaole@kylinos.cn>
-Subject: [PATCH v2 1/2] xfsdocs: fix inode timestamps lower limit value
-Date:   Sun, 17 Jul 2022 18:07:28 +0800
-Message-Id: <1658052449-567-1-git-send-email-hexiaole1994@126.com>
-X-Mailer: git-send-email 1.8.3.1
-X-CM-TRANSID: C8mowACXmydp39Ni3z6qGw--.44659S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxCr1rXw4kur4fuw1DCFy7Awb_yoW5ArWDp3
-        929F109rZ8JF4xAwsrAF4DWrW3Kr1qyrnrKFy8u342vw1DGa1jvr1Skr4ak343WrZ3CFyU
-        ZFsYqr4UuayUZ3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRHmhwUUUUU=
-X-Originating-IP: [111.30.213.137]
-X-CM-SenderInfo: 5kh0xt5rohimizu6ij2wof0z/1tbijhNBBlpEGVl6wgABs9
+        with ESMTP id S230009AbiGRGcI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jul 2022 02:32:08 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEF0615FFE;
+        Sun, 17 Jul 2022 23:32:06 -0700 (PDT)
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26I6Acia000589;
+        Mon, 18 Jul 2022 06:32:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : content-type :
+ content-transfer-encoding : mime-version : subject : message-id : date :
+ cc : to; s=pp1; bh=oEt6P7kgZU3gS6ineuvwDWbZqtMJLDA/qb4+m+JsWMw=;
+ b=H+RJJ1gcGxscIali4HXiPlP5AqZBbVJ00c/JxnoyMUuj4I17esRQaTlTZ6Auy7pX7Y73
+ HGxBVtHEmxfIeI70kNkckQgAcL7FQjsWPRRuvTrk8avUMnXfZAWFQbAiBgLNzrxE7tno
+ eNCQROG4XR27XPZSN9tW4fMz/KlYgsgE3IYEtXDN9KPomlLWRqCbdO7NVtjy9ajkTgC1
+ XY6lhL5svlgS6MhUDLKZCSM5ZRsyQ8GVLErnpCF/JsU5k1DYYz0JDhZx8cZzXyfj3/AG
+ PKdHsrV2HisZQNJMvm7EToKA38YWUEh17ZUZ7Xu2NQibq2HyIf2PHJ4UH92GXzDDJxHd Fg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3hd1ae157g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 18 Jul 2022 06:32:01 +0000
+Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 26I6I2Ua028282;
+        Mon, 18 Jul 2022 06:32:00 GMT
+Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3hd1ae156y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 18 Jul 2022 06:32:00 +0000
+Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
+        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 26I6KR3M002926;
+        Mon, 18 Jul 2022 06:31:58 GMT
+Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
+        by ppma04ams.nl.ibm.com with ESMTP id 3hbmy8t527-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 18 Jul 2022 06:31:58 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 26I6UFR520578590
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 18 Jul 2022 06:30:15 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 531D7A4051;
+        Mon, 18 Jul 2022 06:31:56 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id EDFAAA404D;
+        Mon, 18 Jul 2022 06:31:54 +0000 (GMT)
+Received: from smtpclient.apple (unknown [9.43.52.91])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Mon, 18 Jul 2022 06:31:54 +0000 (GMT)
+From:   Sachin Sant <sachinp@linux.ibm.com>
+Content-Type: text/plain;
+        charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
+Subject: BUG xfs_buf while running tests/xfs/435 (next-20220715)
+Message-Id: <C6CAF8E3-0447-465D-9C83-F55910739BE2@linux.ibm.com>
+Date:   Mon, 18 Jul 2022 12:01:53 +0530
+Cc:     linuxppc-dev@lists.ozlabs.org, linux-next@vger.kernel.org,
+        riteshh@linux.ibm.com
+To:     dchinner@redhat.com, linux-xfs@vger.kernel.org
+X-Mailer: Apple Mail (2.3696.100.31)
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: kTRFIFK9mbw76vaz6_qKH7LasvuqzKbY
+X-Proofpoint-ORIG-GUID: zrty2KdiOCGIEtVteZUV0bQkEy3A2r50
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-07-18_04,2022-07-15_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
+ phishscore=0 adultscore=0 suspectscore=0 lowpriorityscore=0 malwarescore=0
+ clxscore=1011 mlxlogscore=999 spamscore=0 priorityscore=1501 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
+ definitions=main-2207180025
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In kernel source tree 'fs/xfs/libxfs/xfs_format.h', there defined inode
-timestamps as 'xfs_legacy_timestamp' if the 'bigtime' feature disabled,
-and also defined the min and max time constants 'XFS_LEGACY_TIME_MIN'
-and 'XFS_LEGACY_TIME_MAX' as below:
+While running xfstests (specifically xfs/435) on a IBM Power server =
+booted with
+5.19.0-rc6-next-20220715 following warnings are seen:
 
-/* fs/xfs/libxfs/xfs_format.h begin */
-struct xfs_legacy_timestamp {
-        __be32          t_sec;          /* timestamp seconds */
-        __be32          t_nsec;         /* timestamp nanoseconds */
-};
- #define XFS_LEGACY_TIME_MIN     ((int64_t)S32_MIN)
- #define XFS_LEGACY_TIME_MAX     ((int64_t)S32_MAX)
-/* fs/xfs/libxfs/xfs_format.h end */
-/* include/linux/limits.h begin */
- #define U32_MAX         ((u32)~0U)
- #define S32_MAX         ((s32)(U32_MAX >> 1))
- #define S32_MIN         ((s32)(-S32_MAX - 1))
-/* include/linux/limits.h end */
 
-When the 't_sec' and 't_nsec' are 0, the time value it represents is
-1970-01-01 00:00:00 UTC, the 'XFS_LEGACY_TIME_MIN', that is -(2^31),
-represents the min second offset relative to the
-1970-01-01 00:00:00 UTC, it can be converted to human-friendly time
-value by 'date' command:
-
-/* command begin */
-[root@~]# date --utc -d '@0' +'%Y-%m-%d %H:%M:%S'
-1970-01-01 00:00:00
-[root@~]# date --utc -d "@`echo '-(2^31)'|bc`" +'%Y-%m-%d %H:%M:%S'
-1901-12-13 20:45:52
-[root@~]#
-/* command end */
-
-That is, the min time value is 1901-12-13 20:45:52 UTC, but the
-'design/XFS_Filesystem_Structure/timestamps.asciidoc' write the min
-time value as 'The smalle st date this format can represent is
-20:45:52 UTC on December 31st', there should be a typo, and this patch
-correct 2 places of wrong min time value, from '31st' to '13st'.
-
-Signed-off-by: Xiaole He <hexiaole@kylinos.cn>
+[  110.954136] XFS (sdb2): Unmounting Filesystem
+[  110.968860] XFS (sdb1): Unmounting Filesystem
+[  111.115807] =
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+[  111.115817] BUG xfs_buf (Tainted: G            E     ): Objects =
+remaining in xfs_buf on __kmem_cache_shutdown()
+[  111.115824] =
+--------------------------------------------------------------------------=
 ---
-V1 -> V2: Wrap line at 72 column, add Signed-off-by, add one more 
-'date' command for explanation, remove the question section.
+[  111.115824]=20
+[  111.115828] Slab 0x0000000074cdc09a objects=3D170 used=3D1 =
+fp=3D0x000000005f24a5e1 =
+flags=3D0x13ffff800000200(slab|node=3D1|zone=3D0|lastcpupid=3D0x7ffff)
+[  111.115840] CPU: 26 PID: 4704 Comm: modprobe Tainted: G            E  =
+    5.19.0-rc6-next-20220715 #3
+[  111.115849] Call Trace:
+[  111.115852] [c00000002985b9a0] [c000000000830bec] =
+dump_stack_lvl+0x70/0xa4 (unreliable)
+[  111.115867] [c00000002985b9e0] [c0000000004ef6f8] slab_err+0xd8/0xf0
+[  111.115877] [c00000002985bad0] [c0000000004f6cbc] =
+__kmem_cache_shutdown+0x1fc/0x560
+[  111.115884] [c00000002985bbf0] [c0000000004534c8] =
+kmem_cache_destroy+0xa8/0x1f0
+[  111.115893] [c00000002985bc80] [c00800000ccf30e4] =
+xfs_buf_terminate+0x2c/0x48 [xfs]
+[  111.115977] [c00000002985bca0] [c00800000cd6f55c] =
+exit_xfs_fs+0x90/0x20b34 [xfs]
+[  111.116045] [c00000002985bcd0] [c00000000023b7e0] =
+sys_delete_module+0x1e0/0x3c0
+[  111.116053] [c00000002985bdb0] [c00000000003302c] =
+system_call_exception+0x17c/0x350
+[  111.116062] [c00000002985be10] [c00000000000c53c] =
+system_call_common+0xec/0x270
+[  111.116070] --- interrupt: c00 at 0x7fff8c158b88
+[  111.116075] NIP:  00007fff8c158b88 LR: 000000013adb0398 CTR: =
+0000000000000000
+[  111.116080] REGS: c00000002985be80 TRAP: 0c00   Tainted: G            =
+E       (5.19.0-rc6-next-20220715)
+[  111.116086] MSR:  800000000280f033 =
+<SF,VEC,VSX,EE,PR,FP,ME,IR,DR,RI,LE>  CR: 24008282  XER: 00000000
+[  111.116103] IRQMASK: 0=20
+[  111.116103] GPR00: 0000000000000081 00007ffffe17dff0 00007fff8c227300 =
+000001003f2f0c18=20
+[  111.116103] GPR04: 0000000000000800 000000000000000a 1999999999999999 =
+0000000000000000=20
+[  111.116103] GPR08: 00007fff8c1b7830 0000000000000000 0000000000000000 =
+0000000000000000=20
+[  111.116103] GPR12: 0000000000000000 00007fff8c72ca50 000000013adba650 =
+000000013adba648=20
+[  111.116103] GPR16: 0000000000000000 0000000000000001 0000000000000000 =
+000000013adba428=20
+[  111.116103] GPR20: 000000013ade0068 0000000000000000 00007ffffe17f948 =
+000001003f2f02a0=20
+[  111.116103] GPR24: 0000000000000000 00007ffffe17f948 000001003f2f0c18 =
+0000000000000000=20
+[  111.116103] GPR28: 0000000000000000 000001003f2f0bb0 000001003f2f0c18 =
+000001003f2f0bb0=20
+[  111.116162] NIP [00007fff8c158b88] 0x7fff8c158b88
+[  111.116166] LR [000000013adb0398] 0x13adb0398
+[  111.116170] --- interrupt: c00
+[  111.116173] Disabling lock debugging due to kernel taint
+[  111.116184] Object 0x000000007e079655 @offset=3D18816
+[  111.116189] =
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+[  111.116193] BUG xfs_buf (Tainted: G    B       E     ): Objects =
+remaining in xfs_buf on __kmem_cache_shutdown()
+[  111.116198] =
+--------------------------------------------------------------------------=
+---
+[  111.116198]=20
+[  111.116202] Slab 0x000000008186f78a objects=3D170 used=3D12 =
+fp=3D0x000000008233ac7d =
+flags=3D0x13ffff800000200(slab|node=3D1|zone=3D0|lastcpupid=3D0x7ffff)
+[  111.116210] CPU: 26 PID: 4704 Comm: modprobe Tainted: G    B       E  =
+    5.19.0-rc6-next-20220715 #3
+[  111.116216] Call Trace:
+[  111.116218] [c00000002985b9a0] [c000000000830bec] =
+dump_stack_lvl+0x70/0xa4 (unreliable)
+[  111.116227] [c00000002985b9e0] [c0000000004ef6f8] slab_err+0xd8/0xf0
+[  111.116234] [c00000002985bad0] [c0000000004f6cbc] =
+__kmem_cache_shutdown+0x1fc/0x560
+[  111.116241] [c00000002985bbf0] [c0000000004534c8] =
+kmem_cache_destroy+0xa8/0x1f0
+[  111.116248] [c00000002985bc80] [c00800000ccf30e4] =
+xfs_buf_terminate+0x2c/0x48 [xfs]
+[  111.116312] [c00000002985bca0] [c00800000cd6f55c] =
+exit_xfs_fs+0x90/0x20b34 [xfs]
+[  111.116379] [c00000002985bcd0] [c00000000023b7e0] =
+sys_delete_module+0x1e0/0x3c0
+[  111.116386] [c00000002985bdb0] [c00000000003302c] =
+system_call_exception+0x17c/0x350
+[  111.116392] [c00000002985be10] [c00000000000c53c] =
+system_call_common+0xec/0x270
+[  111.116400] --- interrupt: c00 at 0x7fff8c158b88
+[  111.116404] NIP:  00007fff8c158b88 LR: 000000013adb0398 CTR: =
+0000000000000000
+[  111.116409] REGS: c00000002985be80 TRAP: 0c00   Tainted: G    B       =
+E       (5.19.0-rc6-next-20220715)
+[  111.116414] MSR:  800000000280f033 =
+<SF,VEC,VSX,EE,PR,FP,ME,IR,DR,RI,LE>  CR: 24008282  XER: 00000000
+[  111.116430] IRQMASK: 0=20
+[  111.116430] GPR00: 0000000000000081 00007ffffe17dff0 00007fff8c227300 =
+000001003f2f0c18=20
+[  111.116430] GPR04: 0000000000000800 000000000000000a 1999999999999999 =
+0000000000000000=20
+[  111.116430] GPR08: 00007fff8c1b7830 0000000000000000 0000000000000000 =
+0000000000000000=20
+[  111.116430] GPR12: 0000000000000000 00007fff8c72ca50 000000013adba650 =
+000000013adba648=20
+[  111.116430] GPR16: 0000000000000000 0000000000000001 0000000000000000 =
+000000013adba428=20
+[  111.116430] GPR20: 000000013ade0068 0000000000000000 00007ffffe17f948 =
+000001003f2f02a0=20
+[  111.116430] GPR24: 0000000000000000 00007ffffe17f948 000001003f2f0c18 =
+0000000000000000=20
+[  111.116430] GPR28: 0000000000000000 000001003f2f0bb0 000001003f2f0c18 =
+000001003f2f0bb0=20
+[  111.116488] NIP [00007fff8c158b88] 0x7fff8c158b88
+[  111.116492] LR [000000013adb0398] 0x13adb0398
+[  111.116496] --- interrupt: c00
+[  111.116504] Object 0x000000002b93c535 @offset=3D5376
+[  111.116508] Object 0x000000009be4058b @offset=3D16896
+[  111.116511] Object 0x00000000c1d5c895 @offset=3D24960
+[  111.116515] Object 0x0000000097fb6f84 @offset=3D30336
+[  111.116518] Object 0x00000000213fb535 @offset=3D43008
+[  111.116521] Object 0x0000000045473fa3 @offset=3D43392
+[  111.116525] Object 0x000000006462ef89 @offset=3D44160
+[  111.116528] Object 0x000000000c85ce0b @offset=3D44544
+[  111.116531] Object 0x0000000059166af4 @offset=3D45312
+[  111.116535] Object 0x00000000e7b40b45 @offset=3D46848
+[  111.116538] Object 0x00000000bc6ce716 @offset=3D54528
+[  111.116541] Object 0x000000005f7be1fa @offset=3D64512
+[  111.116546] ------------[ cut here ]------------
+[  111.116549] kmem_cache_destroy xfs_buf: Slab cache still has objects =
+when called from xfs_buf_terminate+0x2c/0x48 [xfs]
+[  111.116622] WARNING: CPU: 26 PID: 4704 at mm/slab_common.c:507 =
+kmem_cache_destroy+0x1d8/0x1f0
+[  111.116634] Modules linked in: xfs(E-) dm_mod(E) nft_fib_inet(E) =
+nft_fib_ipv4(E) nft_fib_ipv6(E) nft_fib(E) nft_reject_inet(E) =
+nf_reject_ipv4(E) nf_reject_ipv6(E) nft_reject(E) nft_ct(E) =
+nft_chain_nat(E) nf_nat(E) nf_conntrack(E) nf_defrag_ipv6(E) =
+nf_defrag_ipv4(E) ip_set(E) bonding(E) tls(E) nf_tables(E) rfkill(E) =
+libcrc32c(E) nfnetlink(E) sunrpc(E) pseries_rng(E) vmx_crypto(E) ext4(E) =
+mbcache(E) jbd2(E) sr_mod(E) sd_mod(E) cdrom(E) sg(E) lpfc(E) =
+nvmet_fc(E) nvmet(E) ibmvscsi(E) ibmveth(E) scsi_transport_srp(E) =
+nvme_fc(E) nvme(E) nvme_fabrics(E) nvme_core(E) t10_pi(E) =
+scsi_transport_fc(E) crc64_rocksoft(E) crc64(E) tg3(E) ipmi_devintf(E) =
+ipmi_msghandler(E) fuse(E) [last unloaded: xfs(E)]
+[  111.116705] CPU: 26 PID: 4704 Comm: modprobe Tainted: G    B       E  =
+    5.19.0-rc6-next-20220715 #3
+[  111.116711] NIP:  c0000000004535f8 LR: c0000000004535f4 CTR: =
+00000000ffffffde
+[  111.116716] REGS: c00000002985b950 TRAP: 0700   Tainted: G    B       =
+E       (5.19.0-rc6-next-20220715)
+[  111.116722] MSR:  800000000282b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE>  =
+CR: 48008824  XER: 20040005
+[  111.116736] CFAR: c000000000154534 IRQMASK: 0=20
+[  111.116736] GPR00: c0000000004535f4 c00000002985bbf0 c000000002a8f600 =
+000000000000006b=20
+[  111.116736] GPR04: 00000000ffff7fff c00000002985b9b0 c00000002985b9a8 =
+0000000000000027=20
+[  111.116736] GPR08: c000000db9a07f98 0000000000000001 0000000000000027 =
+c000000002947148=20
+[  111.116736] GPR12: 0000000000008000 c00000001ec20700 000000013adba650 =
+000000013adba648=20
+[  111.116736] GPR16: 0000000000000000 0000000000000001 0000000000000000 =
+000000013adba428=20
+[  111.116736] GPR20: 000000013ade0068 0000000000000000 00007ffffe17f948 =
+000001003f2f02a0=20
+[  111.116736] GPR24: 00007fff8c1b7830 0000000000000000 1999999999999999 =
+000000000000000a=20
+[  111.116736] GPR28: c000000002980228 c000000002980230 c00800000ccf30e4 =
+c000000006f9f600=20
+[  111.116796] NIP [c0000000004535f8] kmem_cache_destroy+0x1d8/0x1f0
+[  111.116802] LR [c0000000004535f4] kmem_cache_destroy+0x1d4/0x1f0
+[  111.116808] Call Trace:
+[  111.116810] [c00000002985bbf0] [c0000000004535f4] =
+kmem_cache_destroy+0x1d4/0x1f0 (unreliable)
+[  111.116818] [c00000002985bc80] [c00800000ccf30e4] =
+xfs_buf_terminate+0x2c/0x48 [xfs]
+[  111.116882] [c00000002985bca0] [c00800000cd6f55c] =
+exit_xfs_fs+0x90/0x20b34 [xfs]
+[  111.116949] [c00000002985bcd0] [c00000000023b7e0] =
+sys_delete_module+0x1e0/0x3c0
+[  111.116955] [c00000002985bdb0] [c00000000003302c] =
+system_call_exception+0x17c/0x350
+[  111.116962] [c00000002985be10] [c00000000000c53c] =
+system_call_common+0xec/0x270
+[  111.116970] --- interrupt: c00 at 0x7fff8c158b88
+[  111.116974] NIP:  00007fff8c158b88 LR: 000000013adb0398 CTR: =
+0000000000000000
+[  111.116979] REGS: c00000002985be80 TRAP: 0c00   Tainted: G    B       =
+E       (5.19.0-rc6-next-20220715)
+[  111.116984] MSR:  800000000280f033 =
+<SF,VEC,VSX,EE,PR,FP,ME,IR,DR,RI,LE>  CR: 24008282  XER: 00000000
+[  111.116999] IRQMASK: 0=20
+[  111.116999] GPR00: 0000000000000081 00007ffffe17dff0 00007fff8c227300 =
+000001003f2f0c18=20
+[  111.116999] GPR04: 0000000000000800 000000000000000a 1999999999999999 =
+0000000000000000=20
+[  111.116999] GPR08: 00007fff8c1b7830 0000000000000000 0000000000000000 =
+0000000000000000=20
+[  111.116999] GPR12: 0000000000000000 00007fff8c72ca50 000000013adba650 =
+000000013adba648=20
+[  111.116999] GPR16: 0000000000000000 0000000000000001 0000000000000000 =
+000000013adba428=20
+[  111.116999] GPR20: 000000013ade0068 0000000000000000 00007ffffe17f948 =
+000001003f2f02a0=20
+[  111.116999] GPR24: 0000000000000000 00007ffffe17f948 000001003f2f0c18 =
+0000000000000000=20
+[  111.116999] GPR28: 0000000000000000 000001003f2f0bb0 000001003f2f0c18 =
+000001003f2f0bb0=20
+[  111.117057] NIP [00007fff8c158b88] 0x7fff8c158b88
+[  111.117061] LR [000000013adb0398] 0x13adb0398
+[  111.117065] --- interrupt: c00
+[  111.117068] Instruction dump:
+[  111.117071] 7fe3fb78 480a463d 60000000 4bfffeb8 3c82fe49 3c62fe76 =
+e8bf0060 7fc6f378=20
+[  111.117082] 38849110 38630410 4bd00edd 60000000 <0fe00000> fb410060 =
+fb610068 60000000=20
+[  111.117093] ---[ end trace 0000000000000000 ]---
+[  111.974215] SGI XFS with ACLs, security attributes, scrub, quota, no =
+debug enabled
+[  111.983722] XFS (sdb1): Mounting V5 Filesystem
+[  112.008668] XFS (sdb1): Ending clean mount
+[  112.010988] xfs filesystem being mounted at /mnt/test supports =
+timestamps until 2038 (0x7fffffff)
 
- design/XFS_Filesystem_Structure/timestamps.asciidoc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Git bisect leads me to following patch:
 
-diff --git a/design/XFS_Filesystem_Structure/timestamps.asciidoc b/design/XFS_Filesystem_Structure/timestamps.asciidoc
-index 08baa1e..56d4dc9 100644
---- a/design/XFS_Filesystem_Structure/timestamps.asciidoc
-+++ b/design/XFS_Filesystem_Structure/timestamps.asciidoc
-@@ -26,13 +26,13 @@ struct xfs_legacy_timestamp {
- };
- ----
- 
--The smallest date this format can represent is 20:45:52 UTC on December 31st,
-+The smallest date this format can represent is 20:45:52 UTC on December 13st,
- 1901, and the largest date supported is 03:14:07 UTC on January 19, 2038.
- 
- With the introduction of the bigtime feature, the format is changed to
- interpret the timestamp as a 64-bit count of nanoseconds since the smallest
- date supported by the old encoding.  This means that the smallest date
--supported is still 20:45:52 UTC on December 31st, 1901; but now the largest
-+supported is still 20:45:52 UTC on December 13st, 1901; but now the largest
- date supported is 20:20:24 UTC on July 2nd, 2486.
- 
- [[Quota_Timers]]
--- 
-1.8.3.1
+commit 298f34224506
+      xfs: lockless buffer lookup
+
+Reverting the patch allows the test to run correctly without any =
+warning.
+
+- Sachin
 
