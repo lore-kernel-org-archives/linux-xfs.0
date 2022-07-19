@@ -2,42 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A36E8C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 21:37:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CFD7C43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 21:37:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240108AbiGSVhs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jul 2022 17:37:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46100 "EHLO
+        id S240101AbiGSVh4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jul 2022 17:37:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240101AbiGSVhs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jul 2022 17:37:48 -0400
+        with ESMTP id S240172AbiGSVhy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jul 2022 17:37:54 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8907060508;
-        Tue, 19 Jul 2022 14:37:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E13F61B2C;
+        Tue, 19 Jul 2022 14:37:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 47CDEB81D77;
-        Tue, 19 Jul 2022 21:37:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E590C341C6;
-        Tue, 19 Jul 2022 21:37:45 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DE6F4B81D5C;
+        Tue, 19 Jul 2022 21:37:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4966C341C6;
+        Tue, 19 Jul 2022 21:37:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658266665;
-        bh=1Y1qpQbsvKLBcodXYYAlDUvKexMSvTqacgBkQr9XCfs=;
+        s=k20201202; t=1658266670;
+        bh=DhDzu3R5b7PV2zXBmAD4WAU+4bhreJW/EAR403IDRiY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=fw8V5gbrcU/mi8lkit1T2GQ0rCoLRt1Jh4nre3NIbHo0tE/WPhSqBDCDthEmM1XhQ
-         FUgy7FLKpmXep2US15B1Bzl31glyK4RmNBaHMhiO+xm/squdE9L7pHnkuaBuuHwNYW
-         SSbfITxAjg0bTV1u9wpOxsad9A0Ypit5ME258pM7IQQdZUNgR0IWj3tdVRbaxTIkEo
-         iel4p/lDQdCJvvAk3kXl6K5+G83SgxFqi8iytqGYkO1N8+MgGr3iumez098rSo70oW
-         IJO2Tkb8eMECT30SCJdEL7esQW72auRuroFzDEM3a3JD2NeA5ApOW3H32+iyMpb/tM
-         FbNBP3ZTbie6A==
-Subject: [PATCH 5/8] punch: use allocation unit to test punching holes
+        b=Z7ECV7x9Jsp4Aq+XcMO9H0C5jizVXkwYHassh2RqlkJcWhDO2uNGAbCXQa5evKBMr
+         rbSaKtOsKlCUosdWda2GAdUIuT9fzMiy0KFgikeezsXoeYNmB65DdK2AsQeWfQf5Qg
+         W9XDi/Tty90mcICPFmcrhwu0/1Ay5b5eMbFuNfe+Le4YneGbPQKGQIWI3y9plLN7sg
+         l8NxhjC/QmE2lObKZQ6Wdec69ZVMSrxdehai+dTn+JthSL+WESz4xWpY1rabHgkIx6
+         pgZFu/OOLkFmOrzaOv1oen4EwCBeMbcFyFwbcF3h5h9SC4GTgbn/N7yEiWU+cZi5Ds
+         PvRt282I/avyA==
+Subject: [PATCH 6/8] punch: skip fpunch tests when op length not congruent
+ with file allocation unit
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
         tytso@mit.edu, leah.rumancik@gmail.com
-Date:   Tue, 19 Jul 2022 14:37:44 -0700
-Message-ID: <165826666462.3249494.17223784022585974750.stgit@magnolia>
+Date:   Tue, 19 Jul 2022 14:37:50 -0700
+Message-ID: <165826667021.3249494.7465600803977165173.stgit@magnolia>
 In-Reply-To: <165826663647.3249494.13640199673218669145.stgit@magnolia>
 References: <165826663647.3249494.13640199673218669145.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,65 +51,36 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In step 17 of _test_generic_punch, we want to test that we can write
-a file with a single block, use one of unresvsp, fpunch, or fzero to
-modify the file, and then check that the file has one written block
-followed by a hole.
+Skip the generic fpunch tests on a file when the file's allocation unit
+size is not congruent with the proposed testing operations.
 
-Unfortunately, the test helper uses _get_block_size to determine how
-much data to write to the test file.  For filesystems with an allocation
-unit size that is not the fs block size (e.g. XFS realtime with a rt
-extent size), this produces unwritten extents in the fiemap output,
-which causes test failures.
+This can be the case when we're testing reflink and fallocate on the XFS
+realtime device.  For those configurations, the file allocation unit is
+a realtime extent, which can be any integer multiple of the block size.
+If the request length isn't an exact multiple of the allocation unit
+size, reflink and fallocate will fail due to alignment issues, so
+there's no point in running these tests.
 
-Fix step 17 to obtain the file allocation unit size with
-_get_file_block_size.
+Assuming this edgecase configuration of an edgecase feature is
+vanishingly rare, let's just _notrun the tests instead of rewriting a
+ton of tests to do their integrity checking by hand.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/punch      |    2 +-
- tests/generic/153 |    2 +-
- tests/generic/404 |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ common/punch |    1 +
+ 1 file changed, 1 insertion(+)
 
 
 diff --git a/common/punch b/common/punch
-index b6b8a0b9..4d16b898 100644
+index 4d16b898..47a29c92 100644
 --- a/common/punch
 +++ b/common/punch
-@@ -480,7 +480,7 @@ _test_generic_punch()
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
- 	fi
--	block_size=`_get_block_size $TEST_DIR`
-+	block_size=`_get_file_block_size $TEST_DIR`
- 	$XFS_IO_PROG -f -c "truncate $block_size" \
- 		-c "pwrite 0 $block_size" $sync_cmd \
- 		-c "$zero_cmd 128 128" \
-diff --git a/tests/generic/153 b/tests/generic/153
-index 40877266..342959fd 100755
---- a/tests/generic/153
-+++ b/tests/generic/153
-@@ -37,7 +37,7 @@ rm -rf $testdir
- mkdir $testdir
+@@ -250,6 +250,7 @@ _test_generic_punch()
+ 	_8k="$((multiple * 8))k"
+ 	_12k="$((multiple * 12))k"
+ 	_20k="$((multiple * 20))k"
++	_require_congruent_file_oplen "$(dirname "$testfile")" $((multiple * 4096))
  
- echo "Create the original file blocks"
--blksz="$(_get_block_size $testdir)"
-+blksz="$(_get_file_block_size $testdir)"
- blks=2000
- margin='15%'
- sz=$((blksz * blks))
-diff --git a/tests/generic/404 b/tests/generic/404
-index 939692eb..30fce85d 100755
---- a/tests/generic/404
-+++ b/tests/generic/404
-@@ -69,7 +69,7 @@ _require_test
- _require_xfs_io_command "falloc"
- _require_xfs_io_command "finsert"
- 
--blksize=`_get_block_size $TEST_DIR`
-+blksize=`_get_file_block_size $TEST_DIR`
- 
- # Generate a block with a repeating number represented as 4 bytes decimal.
- # The test generates unique pattern for each block in order to observe a
+ 	# initial test state must be defined, otherwise the first test can fail
+ 	# due ot stale file state left from previous tests.
 
