@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FA8C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 21:37:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCBADCCA482
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 21:37:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240041AbiGSVhV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jul 2022 17:37:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45544 "EHLO
+        id S234972AbiGSVhW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jul 2022 17:37:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240016AbiGSVhU (ORCPT
+        with ESMTP id S240028AbiGSVhU (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jul 2022 17:37:20 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33AAD5F101;
-        Tue, 19 Jul 2022 14:37:18 -0700 (PDT)
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44EB35F986;
+        Tue, 19 Jul 2022 14:37:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B8D1061A59;
-        Tue, 19 Jul 2022 21:37:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0585C341C6;
-        Tue, 19 Jul 2022 21:37:16 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 02F01B81D7B;
+        Tue, 19 Jul 2022 21:37:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5352C341C6;
+        Tue, 19 Jul 2022 21:37:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658266637;
-        bh=bInOQkbH8WQvMjashGytC/toBSLQY1SZvnUTKrrRUfI=;
-        h=Subject:From:To:Cc:Date:From;
-        b=PSVJ04QBh05k0XJFqegCF/aeptZzm3fvF8mDREARtU2AeqSSK1g9Su9+Y8jQEAUEh
-         lDQfqtqT3yXs9atydd6taDd/IQZu02vC4GWq2YydL/LsCTZ6X8r5ijT5icG91ljNr7
-         2MB/6YotSSl+cwXjtgivZnARQqvar7+ta3CU6crErSN+T7i1aWaB67s4gTyv/SRvWR
-         9HC/GDWc6nRFet+7ll/71Zk4ea4O94GWlpeLeUDYOxApPyT0ZriiO8EqOBsL5T66Nz
-         Y4fv29Q+OGzCmHmckYEfDR6EVSL5SuVcpGq/hh25yiC6ndFXepOK916Y9Fytb9Ub8p
-         EccWDbRTB5sGA==
-Subject: [PATCHSET v2 0/8] fstests: check file block congruency of file range
- operations
+        s=k20201202; t=1658266633;
+        bh=4yvBEPcFDLZMUQSB8xy5TKBWdqY1raiUkM64FryhW/Q=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=lIcK+rnk8sowLCkAFy2OfCsNGvn/HQbxJdjcD1QEmF1SiXn902t+NxZl0d6mMCsYV
+         saeKOlltTYdZflXIdgApFin/jPHLnLRJzDfLsj/liSydIpU8y4kwvJ6Ru11oIggfEG
+         VPF67vDzNLtbsVV34g23mAxfHd+6oNzSm/t3A705ZWA2Bgmo+Un6qlqmwKqQbbxd0u
+         g/OaDq+lpjqvOOXtm13pBybCsgK2yrVsjsTfgpUgXK/jB4i9vJR6tRYxjwWps1Z8RT
+         RAs821rAyenJ5PMquPo935bgXK4ZXd2fz3QxgIyn06yL29cVyAfrzf36sUra8mnBGy
+         0fN6OpX84lQOA==
+Subject: [PATCH 1/1] generic/275: fix premature enospc errors when fs block
+ size is large
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        tytso@mit.edu, leah.rumancik@gmail.com
-Date:   Tue, 19 Jul 2022 14:37:16 -0700
-Message-ID: <165826663647.3249494.13640199673218669145.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Tue, 19 Jul 2022 14:37:13 -0700
+Message-ID: <165826663321.3249425.14767713688923502274.stgit@magnolia>
+In-Reply-To: <165826662758.3249425.5439317033584646383.stgit@magnolia>
+References: <165826662758.3249425.5439317033584646383.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,166 +48,81 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-I started running fstests with XFS filesystems that don't have the usual
-file geometry characteristics -- block sizes larger than 4k, realtime
-filesystems with extent sizes that aren't a power of two, etc.  What I
-found is that many file operation tests (fallocate, reflink, etc.) that
-operate on disk blocks assume that aligning the arguments to 64k is
-sufficient to avoid EINVAL.  Unfortunately, this just means that these
-tests fail left and right on realtime filesystems where the file
-allocation unit is large (~2MB, anyone?) or a weird number (28K).
+When running this test on an XFS filesystem with a 64k block size, I
+see this error:
 
-Add a predicate to all of these tests so that we can _notrun them if
-they make assumptions about file size /and/ encode something (usually
-file hashes) in the golden output that mean we can't easily accomodate
-these corner cases without redesigning each test.
+generic/275       - output mismatch (see /var/tmp/fstests/generic/275.out.bad)
+    --- tests/generic/275.out   2021-05-13 11:47:55.694860280 -0700
+    +++ /var/tmp/fstests/generic/275.out.bad    2022-07-19 10:38:41.840000000 -0700
+    @@ -2,4 +2,7 @@
+     ------------------------------
+     write until ENOSPC test
+     ------------------------------
+    +du: cannot access '/opt/tmp1': No such file or directory
+    +stat: cannot statx '/opt/tmp1': No such file or directory
+    +/tmp/fstests/tests/generic/275: line 74: [: -lt: unary operator expected
+     done
+    ...
+    (Run 'diff -u /tmp/fstests/tests/generic/275.out /var/tmp/fstests/generic/275.out.bad'  to see the entire diff)
 
-v2: skip congruency tests for network filesystems, be more consistent about
-    TEST_DIR in the arguments, fix a bug in a helper's callsite reported by
-    Zorro.
+The 275.full file indicates that the test was unable to recreate the
+$SCRATCH_MNT/tmp1 file after we freed all but the last 256K of free
+space in the filesystem.  I mounted the scratch fs, and df reported
+exactly 256K of free space available, which means there are 4 blocks
+left in the filesystem for user programs to use.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+Unfortunately for this test, xfs_create requires sufficient free blocks
+in the filesystem to handle full inode btree splits and the maximal
+directory expansion for a new dirent.  In other words, there must be
+enough free space to handle the worst case space consumption.  That
+quantity is 26 blocks, hence the last dd in the test fails with ENOSPC,
+which makes the test fail.
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+Fix all this by creating the file that we use to test the low-space file
+write *before* we drain the free space down to 256K.
 
---D
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=check-blocksize-congruency
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/filter     |    4 ++--
- common/punch      |    3 ++-
- common/rc         |   28 +++++++++++++++++++++++++++-
- tests/generic/017 |    2 +-
- tests/generic/031 |    1 +
- tests/generic/064 |    2 +-
- tests/generic/116 |    1 +
- tests/generic/118 |    1 +
- tests/generic/119 |    1 +
- tests/generic/121 |    1 +
- tests/generic/122 |    1 +
- tests/generic/134 |    1 +
- tests/generic/136 |    1 +
- tests/generic/137 |    1 +
- tests/generic/144 |    1 +
- tests/generic/149 |    1 +
- tests/generic/153 |    2 +-
- tests/generic/158 |    2 +-
- tests/generic/162 |    1 +
- tests/generic/163 |    1 +
- tests/generic/164 |    1 +
- tests/generic/165 |    1 +
- tests/generic/168 |    1 +
- tests/generic/170 |    1 +
- tests/generic/181 |    1 +
- tests/generic/183 |    1 +
- tests/generic/185 |    1 +
- tests/generic/186 |    1 +
- tests/generic/187 |    1 +
- tests/generic/188 |    1 +
- tests/generic/189 |    1 +
- tests/generic/190 |    1 +
- tests/generic/191 |    1 +
- tests/generic/194 |    1 +
- tests/generic/195 |    1 +
- tests/generic/196 |    1 +
- tests/generic/197 |    1 +
- tests/generic/199 |    1 +
- tests/generic/200 |    1 +
- tests/generic/201 |    1 +
- tests/generic/284 |    1 +
- tests/generic/287 |    1 +
- tests/generic/289 |    1 +
- tests/generic/290 |    1 +
- tests/generic/291 |    1 +
- tests/generic/292 |    1 +
- tests/generic/293 |    1 +
- tests/generic/295 |    1 +
- tests/generic/352 |    1 +
- tests/generic/358 |    1 +
- tests/generic/359 |    1 +
- tests/generic/372 |    1 +
- tests/generic/404 |    2 +-
- tests/generic/414 |    1 +
- tests/generic/483 |    4 ++++
- tests/generic/495 |    4 ++++
- tests/generic/501 |    1 +
- tests/generic/503 |    4 ++++
- tests/generic/515 |    1 +
- tests/generic/516 |    1 +
- tests/generic/540 |    1 +
- tests/generic/541 |    1 +
- tests/generic/542 |    1 +
- tests/generic/543 |    1 +
- tests/generic/544 |    1 +
- tests/generic/546 |    1 +
- tests/generic/578 |    1 +
- tests/generic/588 |    2 ++
- tests/generic/673 |    1 +
- tests/generic/674 |    1 +
- tests/generic/675 |    1 +
- tests/generic/677 |    4 ++++
- tests/generic/683 |    1 +
- tests/generic/684 |    1 +
- tests/generic/685 |    1 +
- tests/generic/686 |    1 +
- tests/generic/687 |    1 +
- tests/generic/688 |    1 +
- tests/xfs/069     |    1 +
- tests/xfs/114     |    2 ++
- tests/xfs/166     |    4 ++++
- tests/xfs/180     |    1 +
- tests/xfs/182     |    1 +
- tests/xfs/184     |    1 +
- tests/xfs/192     |    1 +
- tests/xfs/193     |    1 +
- tests/xfs/198     |    1 +
- tests/xfs/200     |    1 +
- tests/xfs/203     |    4 ++++
- tests/xfs/204     |    1 +
- tests/xfs/208     |    1 +
- tests/xfs/209     |    1 +
- tests/xfs/210     |    1 +
- tests/xfs/211     |    1 +
- tests/xfs/212     |    1 +
- tests/xfs/215     |    1 +
- tests/xfs/218     |    1 +
- tests/xfs/219     |    1 +
- tests/xfs/221     |    1 +
- tests/xfs/223     |    1 +
- tests/xfs/224     |    1 +
- tests/xfs/225     |    1 +
- tests/xfs/226     |    1 +
- tests/xfs/228     |    1 +
- tests/xfs/230     |    1 +
- tests/xfs/231     |    1 +
- tests/xfs/232     |    1 +
- tests/xfs/237     |    1 +
- tests/xfs/239     |    1 +
- tests/xfs/240     |    1 +
- tests/xfs/241     |    1 +
- tests/xfs/248     |    1 +
- tests/xfs/249     |    1 +
- tests/xfs/251     |    1 +
- tests/xfs/254     |    1 +
- tests/xfs/255     |    1 +
- tests/xfs/256     |    1 +
- tests/xfs/257     |    1 +
- tests/xfs/258     |    1 +
- tests/xfs/280     |    1 +
- tests/xfs/312     |    1 +
- tests/xfs/315     |    1 +
- tests/xfs/322     |    1 +
- tests/xfs/326     |    1 +
- tests/xfs/329     |    1 +
- tests/xfs/346     |    1 +
- tests/xfs/347     |    1 +
- tests/xfs/436     |    1 +
- tests/xfs/507     |    3 +++
- tests/xfs/537     |    2 +-
- 130 files changed, 180 insertions(+), 10 deletions(-)
+ tests/generic/275 |   15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+
+diff --git a/tests/generic/275 b/tests/generic/275
+index 6189edca..f3b05409 100755
+--- a/tests/generic/275
++++ b/tests/generic/275
+@@ -37,6 +37,15 @@ _scratch_unmount 2>/dev/null
+ _scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seqres.full 2>&1
+ _scratch_mount
+ 
++# Certain filesystems such as XFS require sufficient free blocks to handle the
++# worst-case directory expansion as a result of a creat() call.  If the fs
++# block size is very large (e.g. 64k) then the number of blocks required for
++# the creat() call can represent far more free space than the 256K left at the
++# end of this test.  Therefore, create the file that the last dd will write to
++# now when we know there's enough free blocks.
++later_file=$SCRATCH_MNT/later
++touch $later_file
++
+ # this file will get removed to create 256k of free space after ENOSPC
+ # conditions are created.
+ dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=256K count=1 >>$seqres.full 2>&1
+@@ -63,12 +72,12 @@ _freespace=`$DF_PROG -k $SCRATCH_MNT | tail -n 1 | awk '{print $5}'`
+ 
+ # Try to write more than available space in chunks that will allow at least one
+ # full write to succeed.
+-dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=128k count=8 >>$seqres.full 2>&1
++dd if=/dev/zero of=$later_file bs=128k count=8 >>$seqres.full 2>&1
+ echo "Bytes written until ENOSPC:" >>$seqres.full
+-du $SCRATCH_MNT/tmp1 >>$seqres.full
++du $later_file >>$seqres.full
+ 
+ # And at least some of it should succeed.
+-_filesize=`_get_filesize $SCRATCH_MNT/tmp1`
++_filesize=`_get_filesize $later_file`
+ [ $_filesize -lt $((128 * 1024)) ] && \
+ 	_fail "Partial write until enospc failed; wrote $_filesize bytes."
+ 
 
