@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4186DC43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 21:45:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D4DEC43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 21:45:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235209AbiGSVpH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jul 2022 17:45:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50426 "EHLO
+        id S240108AbiGSVpR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jul 2022 17:45:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231751AbiGSVpG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jul 2022 17:45:06 -0400
+        with ESMTP id S238048AbiGSVpP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jul 2022 17:45:15 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 210E0C0C
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jul 2022 14:45:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D3CD2BC4
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Jul 2022 14:45:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9B9F861A77
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jul 2022 21:45:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04D83C341CA;
-        Tue, 19 Jul 2022 21:45:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3736061A77
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Jul 2022 21:45:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9227EC341C6;
+        Tue, 19 Jul 2022 21:45:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658267104;
-        bh=zrHuUrkVXhXyEQlglbjIkxyxkOkLBmcyO0Oc4CY8v0A=;
+        s=k20201202; t=1658267109;
+        bh=XIpLahx9QzJHIIgpsI3Zbtijnzgpyueu5lZV79eCIjU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=pN+hkYwLj4uUDQ1g+0nGmrv1gGbZfIZ9VW/fTv4VgV3dZtNvgXRqsVnaq+UCbpFAE
-         QYnBeZBmSTPl4On2MfpeQjYRTXYyOiy4dGB1kvc0oOwyDfwN0XjtJeAQIe+JRrjGEr
-         f/e/XxLH9TLECvKp2lk3ETEgCugK9Z9lHgXCTB+6iF3MnrARo+D+vvvLVp2UvPthNB
-         sJ39YfxI+KJoY73NGrDC3+U0LBs+gYM2Qwb+HCqG5EighkOKgqxmLpTLu0LUSjT/C5
-         uII5NoWK3A6x7nbhAk+dE/zBpj59VZmb/vsuP95laj63GDtHF6nvgLdYIO7A6Wq22G
-         5n/z5wi2UwpHw==
-Subject: [PATCH 1/2] mkfs: ignore data blockdev stripe geometry for small
- filesystems
+        b=nDO/fcc2llZUKjJBYO2Kcxy8hnD5crLTnp9RPLR+Xc9NWEH1/iSuMZSS8cBx7eDW+
+         nE7eaXv7szOMjXvrwEMXSgZjlN+3z3l7c4deLk0ST7TG69szsi49Kq1qoCDlbwiQZT
+         rsg7NKfpLG7rEcOKXG1RfnHnjCSYjqJAZuGS2ZUk4uIiVQ7wtJnJc9slp4ynntK8um
+         37nbqMmQCpuAUDNt7WBWbxzQq5YwjvZjE3fV62yMyUitcJJC12wSo4HetxLmaZ3+Nn
+         QiNWaGi6OJoSSRStSLcgdZoSTR+eJMm2irIZ0pU4KzWAZUOvvCogZ76cVUkNHDwLTz
+         lww6xStgPR8Xg==
+Subject: [PATCH 2/2] mkfs: stop allowing tiny filesystems
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 19 Jul 2022 14:45:03 -0700
-Message-ID: <165826710360.3268874.3266999101684853751.stgit@magnolia>
+Date:   Tue, 19 Jul 2022 14:45:09 -0700
+Message-ID: <165826710918.3268874.7904878185632986856.stgit@magnolia>
 In-Reply-To: <165826709801.3268874.7256134380224140720.stgit@magnolia>
 References: <165826709801.3268874.7256134380224140720.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,72 +49,150 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-As part of the process of removing support for tiny filesystems (defined
-in the next patch to be anything under 300MB or 64M log size), we are
-trying to eliminate all the edge case regressions for small filesystems
-that the maintainer can find.
+Refuse to format a filesystem that are "too small", because these
+configurations are known to have performance and redundancy problems
+that are not present on the volume sizes that XFS is best at handling.
 
-Eric pointed out that the use case of formatting a 510M on a RAID device
-regresses once we start enforcing the 64M log size limit:
+Specifically, this means that we won't allow logs smaller than 64MB, we
+won't allow single-AG filesystems, and we won't allow volumes smaller
+than 300MB.  There are two exceptions: the first is an undocumented CLI
+option that can be used for crafting debug filesystems.
 
-# modprobe scsi_debug opt_blks=256 opt_xferlen_exp=6 dev_size_mb=510
-# mkfs.xfs /dev/sdg
-Log size must be at least 64MB.
-
-<hapless user reads manpage, adjusts log size>
-
-# mkfs.xfs -l size=64m /dev/sdg
-internal log size 16384 too large, must be less than 16301
-
-Because the device reports a stripe geometry, mkfs tries to create 8 AGs
-(instead of the usual 4) which are then very nearly 64M in size.  The
-log itself cannot consume the entire AG, so its size is decreased, so
-its size is rounded down to allow the creation of AG headers and btrees,
-and then the log size is rounded down again to match the stripe unit.
-This results in a log that is less than 64MB in size, causing the format
-to fail.
-
-There's not much point in formatting tiny AGs on a small filesystem,
-even if it is on a RAID.  Doubling the AG count from 4 to 8 doubles the
-metadata overhead, conflicts with our attempts to boost the log size,
-and on 2022-era storage hardware gains us very little extra performance
-since we're not limited by storage access times.
-
-Therefore, disable automatic detection of stripe unit and width if the
-data device is less than 1GB.  We would like to format with 128M AGs to
-avoid constraining the size of the internal log, and since RAIDs smaller
-than 8GB are formatted with 8 AGs by default, 128*8=1G was chosen as the
-cutoff.
+The second exception is that if fstests is detected, because there are a
+lot of fstests that use tiny filesystems to perform targeted regression
+and functional testing in a controlled environment.  Fixing the ~40 or
+so tests to run more slowly with larger filesystems isn't worth the risk
+of breaking the tests.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- mkfs/xfs_mkfs.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ mkfs/xfs_mkfs.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 81 insertions(+), 1 deletion(-)
 
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index a5e2df76..68d6bd18 100644
+index 68d6bd18..9dd0e79c 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -2583,6 +2583,20 @@ _("%s: Volume reports invalid stripe unit (%d) and stripe width (%d), ignoring.\
- 				progname, BBTOB(ft->dsunit), BBTOB(ft->dswidth));
- 			ft->dsunit = 0;
- 			ft->dswidth = 0;
-+		} else if (cfg->dblocks < GIGABYTES(1, cfg->blocklog)) {
-+			/*
-+			 * Don't use automatic stripe detection if the device
-+			 * size is less than 1GB because the performance gains
-+			 * on such a small system are not worth the risk that
-+			 * we'll end up with an undersized log.
-+			 */
-+			if (ft->dsunit || ft->dswidth)
-+				fprintf(stderr,
-+_("%s: small data volume, ignoring data volume stripe unit %d and stripe width %d\n"),
-+						progname, ft->dsunit,
-+						ft->dswidth);
-+			ft->dsunit = 0;
-+			ft->dswidth = 0;
- 		} else {
- 			dsunit = ft->dsunit;
- 			dswidth = ft->dswidth;
+@@ -859,6 +859,7 @@ struct cli_params {
+ 	int64_t	logagno;
+ 	int	loginternal;
+ 	int	lsunit;
++	int	is_supported;
+ 
+ 	/* parameters where 0 is not a valid value */
+ 	int64_t	agcount;
+@@ -2496,6 +2497,68 @@ _("illegal CoW extent size hint %lld, must be less than %u.\n"),
+ 	}
+ }
+ 
++/* Complain if this filesystem is not a supported configuration. */
++static void
++validate_supported(
++	struct xfs_mount	*mp,
++	struct cli_params	*cli)
++{
++	/* Undocumented option to enable unsupported tiny filesystems. */
++	if (!cli->is_supported) {
++		printf(
++ _("Filesystems formatted with --unsupported are not supported!!\n"));
++		return;
++	}
++
++	/*
++	 * fstests has a large number of tests that create tiny filesystems to
++	 * perform specific regression and resource depletion tests in a
++	 * controlled environment.  Avoid breaking fstests by allowing
++	 * unsupported configurations if TEST_DIR, TEST_DEV, and QA_CHECK_FS
++	 * are all set.
++	 */
++	if (getenv("TEST_DIR") && getenv("TEST_DEV") && getenv("QA_CHECK_FS"))
++		return;
++
++	/*
++	 * We don't support filesystems smaller than 300MB anymore.  Tiny
++	 * filesystems have never been XFS' design target.  This limit has been
++	 * carefully calculated to prevent formatting with a log smaller than
++	 * the "realistic" size.
++	 *
++	 * If the realistic log size is 64MB, there are four AGs, and the log
++	 * AG should be at least 1/8 free after formatting, this gives us:
++	 *
++	 * 64MB * (8 / 7) * 4 = 293MB
++	 */
++	if (mp->m_sb.sb_dblocks < MEGABYTES(300, mp->m_sb.sb_blocklog)) {
++		fprintf(stderr,
++ _("Filesystem must be larger than 300MB.\n"));
++		usage();
++	}
++
++	/*
++	 * For best performance, we don't allow unrealistically small logs.
++	 * See the comment for XFS_MIN_REALISTIC_LOG_BLOCKS.
++	 */
++	if (mp->m_sb.sb_logblocks <
++			XFS_MIN_REALISTIC_LOG_BLOCKS(mp->m_sb.sb_blocklog)) {
++		fprintf(stderr,
++ _("Log size must be at least 64MB.\n"));
++		usage();
++	}
++
++	/*
++	 * Filesystems should not have fewer than two AGs, because we need to
++	 * have redundant superblocks.
++	 */
++	if (mp->m_sb.sb_agcount < 2) {
++		fprintf(stderr,
++ _("Filesystem must have at least 2 superblocks for redundancy!\n"));
++		usage();
++	}
++}
++
+ /*
+  * Validate the configured stripe geometry, or is none is specified, pull
+  * the configuration from the underlying device.
+@@ -3966,9 +4029,21 @@ main(
+ 	struct cli_params	cli = {
+ 		.xi = &xi,
+ 		.loginternal = 1,
++		.is_supported	= 1,
+ 	};
+ 	struct mkfs_params	cfg = {};
+ 
++	struct option		long_options[] = {
++	{
++		.name		= "unsupported",
++		.has_arg	= no_argument,
++		.flag		= &cli.is_supported,
++		.val		= 0,
++	},
++	{NULL, 0, NULL, 0 },
++	};
++	int			option_index = 0;
++
+ 	/* build time defaults */
+ 	struct mkfs_default_params	dft = {
+ 		.source = _("package build definitions"),
+@@ -4028,8 +4103,11 @@ main(
+ 	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
+ 	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
+ 
+-	while ((c = getopt(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
++	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
++					long_options, &option_index)) != EOF) {
+ 		switch (c) {
++		case 0:
++			break;
+ 		case 'C':
+ 		case 'f':
+ 			force_overwrite = 1;
+@@ -4167,6 +4245,8 @@ main(
+ 	validate_extsize_hint(mp, &cli);
+ 	validate_cowextsize_hint(mp, &cli);
+ 
++	validate_supported(mp, &cli);
++
+ 	/* Print the intended geometry of the fs. */
+ 	if (!quiet || dry_run) {
+ 		struct xfs_fsop_geom	geo;
 
