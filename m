@@ -2,135 +2,130 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BEC5C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 06:57:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9665BC43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 08:41:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233150AbiGSG5B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jul 2022 02:57:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33214 "EHLO
+        id S234182AbiGSIlS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jul 2022 04:41:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229969AbiGSG5A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jul 2022 02:57:00 -0400
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2070.outbound.protection.outlook.com [40.107.244.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB2B326AF4;
-        Mon, 18 Jul 2022 23:56:57 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FSK892+wqISFcqqyAsimna9BVrrOyxffuh1GgR6+odu/qwLvFZlxD16wNeumyTxab6C5BI1cYnyTscJhrI4KnQn4g5aWQSV4I/YYqck8aukUYwGWXBD0cmEItDZI/WP4EAZdYASow62zy0Ef3t0DN8wLPki2XN2aoWBFsK8KnI0L9BvjVL9ZNUqq8tANcsy0yJqWTAjtnafT23uGDovdKHNTroclX7JjjDxqvP8Q4bAC/37erAv+zXVAs2QaOiaqoHsXPqPZDyATWXzj8iTa3CKU3RrnH3KxyZyt12y2tyCY4sj5g9nFX8KzHc+yNJLys+4nvslpgFyWNZxsoSAEng==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=i1Rm4IonEpjSZ8xNtsayYuTBonwhV2tsouZUqA+NyNo=;
- b=JyDIkmr3go8MdoUM4qwm8pxoyojD8ugZYpfc/wsXnCwFoqUQ/yjzQSrXP+UNL4XlQ6OZ4vjXSkhgg/u6MjSBXp2cYak+JFLSYOqk8bOPilkmC7Yi3MD7qV8jfVHNuzZaCaLFDi58bhTcnh2KHeoHxb60pfp6dMOVep0NE75fg3lbHQ6uH+sor8e2G9mrCD6dukk0iXKbQsE2e9hbakhdriX/RRo6nOOc+dHONhu4ga74hzqtuUswAFSUsOP4hKsLgsNYMKL1h/TJhIDayhCuneUKmbB6FfPZwGzi3PbiPuj38mL9yvbVdtnFn1+IDIYrcax0BDXYDz+RC0/c3x0Dlg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=i1Rm4IonEpjSZ8xNtsayYuTBonwhV2tsouZUqA+NyNo=;
- b=d2P21jrbBAl7j9P2g1ehIpzAZf/LXAVmvd2qK5jXEYWBLKT4Hh6y3wDZiDT/bWYqyifgBNhpPiWkzj53Qn86xjwCxbpKeXRWyvEqbrlaFSOJR1ZGVxhXWdWWMXqC4T3zl3s/TtM6LCZi8CKYfX5v68ZjKXrSeXt3Z50nuLlHVF6RWFqk/luI7T65UXBFXwgFUN02/aCc2hWY7fp2CddaNOxeZFIXgWmub6qGjJVRvlr2lqVt9EmKWpQdfHDU/GgA4q8NDDMNTRzO4S0PfrKgixo9kpSryBsiNz2QNw0bSIkZwZCreNGykzahrUSAgsc7XkHD4AJ/mYn/BXtI+Lyobw==
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
- by BN9PR12MB5307.namprd12.prod.outlook.com (2603:10b6:408:104::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5438.17; Tue, 19 Jul
- 2022 06:56:56 +0000
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::d01a:8f50:460:512]) by MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::d01a:8f50:460:512%5]) with mapi id 15.20.5438.023; Tue, 19 Jul 2022
- 06:56:56 +0000
-From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
-To:     Christoph Hellwig <hch@lst.de>, Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Naohiro Aota <naohiro.aota@wdc.com>
-CC:     Johannes Thumshirn <jth@kernel.org>,
-        "cluster-devel@redhat.com" <cluster-devel@redhat.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH 4/4] iomap: remove iomap_writepage
-Thread-Topic: [PATCH 4/4] iomap: remove iomap_writepage
-Thread-Index: AQHYmyXxhK1od9xNkkO4RvdYwEAA662FQysA
-Date:   Tue, 19 Jul 2022 06:56:56 +0000
-Message-ID: <14beaab1-ac95-cef4-3f37-005c00e9b87d@nvidia.com>
-References: <20220719041311.709250-1-hch@lst.de>
- <20220719041311.709250-5-hch@lst.de>
-In-Reply-To: <20220719041311.709250-5-hch@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 10cf3d76-7454-4a95-42ab-08da6953de90
-x-ms-traffictypediagnostic: BN9PR12MB5307:EE_
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 3E6eincLJYswC4AhwiDBXSwskRImBC9+NYQtqmFmFdlVORMtw7O1DSIPLb6Q2f1001p956rRqu4N7B34NMax+zz3SrqBhEdArSThJPbpVeTZq0CmFw28dQgr/El24fw6PDwcikfZbJ8BHaZHjyfowisjWRt1AsVbBWaw/n+wNZ02z5EBbOKUzlhPCCQfUReQgKzpfL7VAPLJ9OmN3pN+DI4uzZAMBc5ggGjY20W6tH70/RSyY5bRnWIRZOPDW55vanSkwimj6NEa2JNNUWt1VCC9XFUK9GJpWxY13r+3uYh3S0mfiGu7fXeSSSa1sRKANlyJFcDsXt38D48ey4te/bUcEs1QviH062f5ZwDUT4mA++RTfFAHPhXkFq4IAvHzoyH74Fhdt1aGsORvNf6J11nMKiemZUcDqBk2x9Hw3HHUblvvo3BvsWWlevRyMpBvLlLXbNq0DVFzYw/etz5ktcjd5/4Y3qdnOSWEn0IH8lbf/aEA0qlxiQ8CG0PMVAJ3bXbLV6G56XM06B1Ev48s+5rGIR35HLe8t6/Pq7xSmwtlzTv2l+zh7+pzPtsHJRD+8O+/wHCsKBZrUQMKtxurpqsqk6WPePRDoPk1BIlBr/sgjygYLDyt+nG7mgjj2o2srFIDs3HBZmRv0WfG+okBavrs86So8/fWJI/3kGncxsU+FFZqPL8h1CYX6RQ7d9wpdimFkiL+hX+2OwZgD5CMBTgevXiw8FFWytDpddiZboPW8ergIxWKeC+e52zZkN2OH60fkUSltMDr/13NGmK2dshpuXRGp/A6XsyL2j2qWpl6tW3/NLRy2q/3dXPuiTWxHeCyBvBzxAPITnXnm/rTNu3ds15f8nNPWpwbKrJUiKmFTvwTcDPTmE0t+nEARmi8
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(366004)(376002)(346002)(39860400002)(396003)(136003)(54906003)(64756008)(53546011)(91956017)(41300700001)(6506007)(6486002)(71200400001)(2906002)(6512007)(110136005)(8676002)(66476007)(66556008)(7416002)(66946007)(316002)(66446008)(478600001)(5660300002)(4326008)(8936002)(38100700002)(31686004)(122000001)(2616005)(36756003)(38070700005)(86362001)(76116006)(558084003)(186003)(31696002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?QmtSdWt1WE1YNllqbXpXaDkwaC9MZ0Q0VjAyQ3l6d3FOYWR6YkVNU00vSDRB?=
- =?utf-8?B?YWYvWFdoT1lzRDdxZVFwclZDQmVZa2wvQWpGMGZTZ21ta00yZ01NVU9rd0py?=
- =?utf-8?B?YTFJYmJIT2xIMHVudEZuR3pxbS9SZFVzNjkwYkkvN0tUZ2VnTkhrNEZFUGsy?=
- =?utf-8?B?dG9PbC92VEpQcGpnMHVuK3pvVXZZUVlSYUd5TloxdmRJaE5MeWkzR2xUNlNO?=
- =?utf-8?B?Wit0SHIxT3laTmI0Z2k4Z0d1bjBkN0hmYVNyOG8raWxnUjd5aVdURktURkxo?=
- =?utf-8?B?bHgvbnRpdm95UlhEZERzbUMzWlVoWitjRUpqSzBSMmNKN2pnL1pmTFBxdjBI?=
- =?utf-8?B?eUM4U096cW5qKzhFNG92SmxFd2YrcjhZOHkrQ0FaOURORStBVFE5a1RSZFU2?=
- =?utf-8?B?bmFCU1BQcWxiMm5QWEZnczNZaUpmakZCVjh6QVJtdDdsUS9oVXlOa0FzUkQ3?=
- =?utf-8?B?R005WWZJNitMLys0YWRMUDdhWk4ybHpVQ2lYaHhsa1NXL1J3RWt1VTNhRXpU?=
- =?utf-8?B?U0w1UW9EYitHUko5THZqUGNFSEhuTGxiZThZRUU3ekFGTzFtRXd2K3hxOTF2?=
- =?utf-8?B?V21YVzhPMlJuVHFObEFUc3UrZkR5LzVWaDVBMGNXUnNYU0JmUHYvdXdReFMx?=
- =?utf-8?B?Qis3MkZ1dFpjRk56bXBPYm5SYkdhWURRTUxwU2RGZkY4LzlSc3Q1eHpTRGd1?=
- =?utf-8?B?RzBFeXMyMUU5NEE5dWNqSUxSQmQyQ0JGZUJlMk5aTW9yai9GNWVxZzR5Q0pE?=
- =?utf-8?B?VUlhOGhuRTZPWGV1RVM0d3lCdkd0cDlONzdVeHg3eE5SU1p3bEJKaE1hUFg0?=
- =?utf-8?B?bUEyekw1QUFpb3Z6Ty9ybGJzZ0VWbG1aZTZEejZnZVdUbXE5TTBwWE5xaS84?=
- =?utf-8?B?NmZ6ajZsM0FZQWNRMndqMXFweDBlemhPTzBCbDBUS1ZHeVM0YmNPclIzSGNJ?=
- =?utf-8?B?aW9nNUNZeFRoWG9mSmpMOWRKN3ZaWXg5YXpxNVpVTnZwYWtJWGNtcTBGeHJ4?=
- =?utf-8?B?SVlLbHBiZ0t2MGlvNW5aZ00zSXRyZVlYU21PSkVqTlNQN09LUkloWkYyV3Fi?=
- =?utf-8?B?dFpPYStqa3l5cVg5VVBFbGwwcHp1YnZRZjNRdC9Bd2QvSGpxUWhzOGVOME9u?=
- =?utf-8?B?VndRM3pMQzJadHYzTHlWR1ZFcmxOSGJtRER6OUUyR0t6Z1EybThXMUtpenRJ?=
- =?utf-8?B?YU5ETGw2bmhSMFpJWVBJTVRTNit3RjBJTFptL0d5aXlCSThkeElmQ0RVdlkw?=
- =?utf-8?B?c21KZS8xYlkzSXdtaWU5QlRUZlo5bVJUVENla3VNOSt5ZHhGTDBuODJvaVFO?=
- =?utf-8?B?a2czWmNvYlVsN3hIY2NBZTVLN290U0lLWWV2ZDk5SXUwMWluV0MrM250Y3RV?=
- =?utf-8?B?Vk1EcEdwSTE1bUJWb1NTMU1iamFtMDVDRnQrRGY4SU4zZjRyeFYwWXRGeEYx?=
- =?utf-8?B?d1YrcEl0MDlMRkRaakZaY2FDS1orMk1ha3VlRm1WaXpTSGx2dEloK1F4dE52?=
- =?utf-8?B?L21zcG05OVZhRkNlc29oRDMweGlOQjBLUXhJbnNLbmdqQjJteTBGMkowNFcw?=
- =?utf-8?B?bnRnd1VSdHN0ZGpneDNlRGplNStmdFZqd1BzRUc1bW5tRlMzZXc4RE1kYWM4?=
- =?utf-8?B?SVJRR1B2RWJRMm5ZQWpDbzk0Q0d4VWx5SWhKWVJOVWZGRTl6a2NRM3l2SVhC?=
- =?utf-8?B?TFVlV2pNbUFjS0JxbjFkU0JhSHlYNjBFTUFzb2FXYU9hK2tyQnJsYytMd0d1?=
- =?utf-8?B?a25SWHpDZDFNUExERHlUd2xCQ0NqK3h4RWFMSXJBTmxTaSt4NzVzSnFkcFdI?=
- =?utf-8?B?V3B1anY5RldySVJLa0VpWENuakVZbkFzSDJZbmtoV1g5d3d3cEJSY0pSTnY5?=
- =?utf-8?B?YkV1UVUyWUgyTGZ5ekJacUp5amZYV1ptTnE0cG4rbG04TnFkSVBvZDQ5aEZV?=
- =?utf-8?B?di9hMVA1bVhzRmVoSUpkQjVibU1Tc1Zaa1ZMMmF3cFB2VDhDMGs5WmxXeG5Y?=
- =?utf-8?B?STVSMXVMRVcxRWtTUXE5Mm5yODNVSVBDY0RINFpmczVjeHRRNDh0NGN2QVpG?=
- =?utf-8?B?b3V1ZDE1aHAzM3kvOTlGR0FaT1BMRXEyU2Z4UEZQeDRyMDM2MlVxb0N2ZzNL?=
- =?utf-8?B?TzBrN3lsY1ptVmZxK2xvVWFza29pVnhPQmtCYlE4NHNqTkI5VldtYW5KYk5H?=
- =?utf-8?Q?01A2msTHSN5a2Yjf/v5rAijTdcLCUXaddacfWYsG9jp5?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <5870620A071C454E980852670C1410C1@namprd12.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S233598AbiGSIlE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jul 2022 04:41:04 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 952FABF6E
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Jul 2022 01:41:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1658220062;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aCQLJQOHcJOJ8JmCqZRzHzMUpESxVjd3NNjhzKxLWQs=;
+        b=Sk9pVL3nLTNm+GI2UzYgk45qGkMGxqaDTToP1XCcg5rG21ST6Mc/cGy56bbRxVk4oH3FW2
+        dCBpyqFP/rK+T0gbeyQuDiE/eFoU0ZTDGHLm+5DoQiDa/VMbgCfw4LpFTpzACdZDk+V7nM
+        nFLLkX4+j6eVLz3hIfH52RN/PZk9qgY=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-581-957D7njBO6S2Ez8g741VSw-1; Tue, 19 Jul 2022 04:40:58 -0400
+X-MC-Unique: 957D7njBO6S2Ez8g741VSw-1
+Received: by mail-wr1-f70.google.com with SMTP id e14-20020adfa74e000000b0021e18a1c29fso837472wrd.22
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Jul 2022 01:40:58 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:organization:in-reply-to
+         :content-transfer-encoding;
+        bh=aCQLJQOHcJOJ8JmCqZRzHzMUpESxVjd3NNjhzKxLWQs=;
+        b=o5HQwGjuEyQb5osyJtmGtwRdGqW/c3qhX0LZAdkme/nJchTfawxZVMPZ0QknU/NCJ9
+         IoeE3p6BD6RkUxuaTijefob79JMBb+RR+mPsINDm7VDuS3gtY8xWBBU6gshtutYJKk2T
+         MkbpzyFoKDWUOyFFm2w9vAtwR9/TJ+bqnM+H6FHuW9AIbfNfpwHyxMuXXi6K3FX0Xwvc
+         0Xswsn4F1xZNHhv3LNWob7RrvIYBzOFStZ75CPOA0uz6xDCST6MRO1hI1htJbgC9mEjO
+         glE4zyjC1pL300nrt4q3xDtCBGXXgWbpaTpmqEDGW91IGlViKixqbJk081o7/qpeg4aZ
+         kihw==
+X-Gm-Message-State: AJIora90VVWPfpHuRpYlN8pigp0NajsElmTc3hUtdZRyJSSdRHSAma50
+        8A84YGQnC3FAkw/kDajlBtoltJuWGROdKuNpp2JSNI2v8qTnD79EzS5d6XsD7brtB8rjIRgpXtJ
+        nrDDFDePnM7pN73u3Ss/z
+X-Received: by 2002:a7b:c381:0:b0:3a2:aef9:8df4 with SMTP id s1-20020a7bc381000000b003a2aef98df4mr37053745wmj.7.1658220057356;
+        Tue, 19 Jul 2022 01:40:57 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1toW+ZoFXTJPEFs8reXmrBMtF0NaGli8q7vJKFZ+PCo4DXMfNrAYpetGiTuQdFEWq6RXg/h9w==
+X-Received: by 2002:a7b:c381:0:b0:3a2:aef9:8df4 with SMTP id s1-20020a7bc381000000b003a2aef98df4mr37053722wmj.7.1658220057065;
+        Tue, 19 Jul 2022 01:40:57 -0700 (PDT)
+Received: from ?IPV6:2003:cb:c709:600:7807:c947:bc5a:1aea? (p200300cbc70906007807c947bc5a1aea.dip0.t-ipconnect.de. [2003:cb:c709:600:7807:c947:bc5a:1aea])
+        by smtp.gmail.com with ESMTPSA id j23-20020a05600c1c1700b003a32251c3f9sm1833646wms.5.2022.07.19.01.40.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Jul 2022 01:40:56 -0700 (PDT)
+Message-ID: <d0e631e1-c7ef-4e03-6c34-189042b84005@redhat.com>
+Date:   Tue, 19 Jul 2022 10:40:55 +0200
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 10cf3d76-7454-4a95-42ab-08da6953de90
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Jul 2022 06:56:56.3388
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 1T2s7OCGjmV8iK+PzRJuXOGujT0q2UHp3Ni46RwzZTbRHLFk2i02OBxrHQIXdUnxc7keHHd8mqpU/C0/vzCgaQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR12MB5307
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v9 06/14] mm/gup: migrate device coherent pages when
+ pinning instead of failing
+Content-Language: en-US
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com,
+        Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
+        willy@infradead.org
+References: <20220715150521.18165-1-alex.sierra@amd.com>
+ <20220715150521.18165-7-alex.sierra@amd.com>
+ <225554c2-9174-555e-ddc0-df95c39211bc@redhat.com>
+ <20220718133235.4fdbd6ec303219e5a3ba49cf@linux-foundation.org>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+In-Reply-To: <20220718133235.4fdbd6ec303219e5a3ba49cf@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gNy8xOC8yMiAyMToxMywgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6DQo+IFVudXNlZCBub3cu
-DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4NCj4g
-UmV2aWV3ZWQtYnk6IERhbWllbiBMZSBNb2FsIDxkYW1pZW4ubGVtb2FsQG9wZW5zb3VyY2Uud2Rj
-LmNvbT4NCj4gLS0tDQoNCg0KTG9va3MgZ29vZC4NCg0KUmV2aWV3ZWQtYnk6IENoYWl0YW55YSBL
-dWxrYXJuaSA8a2NoQG52aWRpYS5jb20+DQoNCi1jaw0KDQoNCg==
+On 18.07.22 22:32, Andrew Morton wrote:
+> On Mon, 18 Jul 2022 12:56:29 +0200 David Hildenbrand <david@redhat.com> wrote:
+> 
+>>>  		/*
+>>>  		 * Try to move out any movable page before pinning the range.
+>>>  		 */
+>>> @@ -1919,7 +1948,8 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+>>>  				    folio_nr_pages(folio));
+>>>  	}
+>>>  
+>>> -	if (!list_empty(&movable_page_list) || isolation_error_count)
+>>> +	if (!list_empty(&movable_page_list) || isolation_error_count
+>>> +		|| coherent_pages)
+>>
+>> The common style is to
+>>
+>> a) add the || to the end of the previous line
+>> b) indent such the we have a nice-to-read alignment
+>>
+>> if (!list_empty(&movable_page_list) || isolation_error_count ||
+>>     coherent_pages)
+>>
+> 
+> I missed that.  This series is now in mm-stable so any fix will need to
+> be a standalone followup patch, please.
+> 
+>> Apart from that lgtm.
+>>
+>> Reviewed-by: David Hildenbrand <david@redhat.com>
+> 
+> And your reviewed-by's will be lost.  Stupid git.
+
+I know, I already raised my concerns regarding the new workflow, so I
+won't repeat that. I can understand (too some degree) that we don't want
+code to change just before the new merge window opens.
+
+But I do wonder if we really don't even want to do subject+description
+updates. Sure, the commit IDs will change. Who cares?
+
+Anyhow, it is what it is.
+
+-- 
+Thanks,
+
+David / dhildenb
+
