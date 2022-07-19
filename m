@@ -2,47 +2,62 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7131C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 03:56:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFD62C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jul 2022 04:13:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234591AbiGSD4V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jul 2022 23:56:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48574 "EHLO
+        id S236654AbiGSEN2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jul 2022 00:13:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229916AbiGSD4U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jul 2022 23:56:20 -0400
+        with ESMTP id S234366AbiGSEN1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jul 2022 00:13:27 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E40622505
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Jul 2022 20:56:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E524B3AB08;
+        Mon, 18 Jul 2022 21:13:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=mbhmPyn9S5bo0WP4juzU9aEQMd
-        y3RlVZlSzyE9GhtvzgbqCBlfHuzDRPgsqr9ajVabpG2ZWYMJ4UM/KbOiKaZKRIrp23sgZatGLr4+W
-        oX8sJUV1K9rI3eZ6VW9SK4R7aAzRiZvez/k6TeJhEBOjT7IJkiEmfxI3Jut6Nzj0uup/I7/GgT/0N
-        qYC4sZbUWkljwr7OrGfpVDpQrp2AgnwJOQmFn1714eskbm1tDZKD3bJGW1F+Bg+UF8GHgLMxqhOqv
-        6OfeZlvkOtcS+f6l6xANAED1E+KAH+H5SMIF52xXVu0PLz19CIrabtw2k2kcNHZXSpNga5tuydzHM
-        olfer1hQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oDeLL-004aQv-8B; Tue, 19 Jul 2022 03:56:19 +0000
-Date:   Mon, 18 Jul 2022 20:56:19 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: xfs_buf cache destroy isn't RCU safe
-Message-ID: <YtYrY8+hKxQaDSO1@infradead.org>
-References: <20220718235851.1940837-1-david@fromorbit.com>
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=NAYRW9cmU0Gy9t9nmn9DB0kww6qAExdpRdtfRCJHOto=; b=gK4x7Tfdr+V63eRT0KCyoBr6lU
+        u6RKBoqqiIeNirZJeJ1urKU+EozDj575HkK5j1G7aa6RFUQjNmZAllQbj5LkuqyW6V/rCCy1rxM9Y
+        mUPOUAl5RAGJO1diArR0waUd2xnKpgj+fRJfEOJJ5e7a309LHbeSEUaUm9iRwF3RxIccoYB3RTeLS
+        nBiYaKPvkLR+x9UtKH3MibnEeWIaea5uCXTzB3pObZLkPuL3z/v99Z7lIoAWmjYtbBBSWWIQsOkyu
+        HoaA1uq/F0k62K4IKm2qQFb97nva+wXZqnF9xCIqpJ9az/z2hLxar6W4ueyuilB+7n50aEN9u8PQR
+        g47l/NsQ==;
+Received: from 089144198117.atnat0007.highway.a1.net ([89.144.198.117] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oDebh-004jS8-PN; Tue, 19 Jul 2022 04:13:14 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>
+Cc:     Johannes Thumshirn <jth@kernel.org>, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: remove iomap_writepage v2
+Date:   Tue, 19 Jul 2022 06:13:07 +0200
+Message-Id: <20220719041311.709250-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220718235851.1940837-1-david@fromorbit.com>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good:
+Hi all,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+this series removes iomap_writepage and it's callers, following what xfs
+has been doing for a long time.
 
+Changes since v1:
+ - clean up a printk in gfs2
+
+Diffstat:
+ fs/gfs2/aops.c         |   26 --------------------------
+ fs/gfs2/log.c          |    5 ++---
+ fs/iomap/buffered-io.c |   15 ---------------
+ fs/zonefs/super.c      |    8 --------
+ include/linux/iomap.h  |    3 ---
+ 5 files changed, 2 insertions(+), 55 deletions(-)
