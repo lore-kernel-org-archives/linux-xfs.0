@@ -2,238 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6A9C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 23:28:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50399C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 23:35:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230112AbiGTX2E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jul 2022 19:28:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43966 "EHLO
+        id S229628AbiGTXfj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jul 2022 19:35:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229951AbiGTX2D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 19:28:03 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81B8A2D1FA
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 16:28:01 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 29BA761DF7
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 23:28:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D0E9C3411E;
-        Wed, 20 Jul 2022 23:28:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658359680;
-        bh=RSE4wLGXzzyDMt+QS0zrwGfQEybg3lA6YkxIYpr3LiU=;
-        h=Date:From:To:Cc:Subject:From;
-        b=MRWOEoCgqjOa3uei4nB4Huzm7bp8zvvu1YApEUWbivlMDjNX9q+truWed0MPEZGm4
-         vaHtm3KHWpHNdjzA2agDiEB8X8xmRi+S8j10Zq1VDu78bx3a6QYocmLQKVZa+dWCEr
-         /omWNsAnvNE+yj8p84zjY0eFGFF4bOGYhkq/5+VK1ElQkcEvJf3t5jym2A+292U2FB
-         dPRlZUeDscDMCFUdpE3KzSv16ZGE+l19+a6h81VEi3HixcNxQygOvTTQCdx3csNhOm
-         2wifgxOKWs8clSm+fxnwkjJ0u6SQisPizpjbmkpKnkM6RDsm/xSAaRjZ6vqzHkIikn
-         tkhMdGqr8BwVw==
-Date:   Wed, 20 Jul 2022 16:28:00 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     info@mobile-stream.com,
-        Fabrice Fontaine <fontaine.fabrice@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>
-Subject: [RFC PATCH] libxfs: stop overriding MAP_SYNC in publicly exported
- header files
-Message-ID: <YtiPgDT3imEyU2aF@magnolia>
+        with ESMTP id S229532AbiGTXfi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 19:35:38 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 03A653F319
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 16:35:36 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4AD7010E815E;
+        Thu, 21 Jul 2022 09:35:34 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oEJE4-003LFm-Ac; Thu, 21 Jul 2022 09:35:32 +1000
+Date:   Thu, 21 Jul 2022 09:35:32 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: don't leak memory when attr fork loading fails
+Message-ID: <20220720233532.GU3861211@dread.disaster.area>
+References: <Ytbj3C3GF6aQJjo4@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <Ytbj3C3GF6aQJjo4@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62d89147
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=i9jRsUFt4n7ITWsusM0A:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Can one of you please apply this patch and see if it'll build in musl on
-mips, please?  Sorry it's taken so long to address this. :/
+On Tue, Jul 19, 2022 at 10:03:24AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> I observed the following evidence of a memory leak while running xfs/399
+> from the xfs fsck test suite (edited for brevity):
+> 
+> XFS (sde): Metadata corruption detected at xfs_attr_shortform_verify_struct.part.0+0x7b/0xb0 [xfs], inode 0x1172 attr fork
+> XFS: Assertion failed: ip->i_af.if_u1.if_data == NULL, file: fs/xfs/libxfs/xfs_inode_fork.c, line: 315
+> ------------[ cut here ]------------
+> WARNING: CPU: 2 PID: 91635 at fs/xfs/xfs_message.c:104 assfail+0x46/0x4a [xfs]
+> CPU: 2 PID: 91635 Comm: xfs_scrub Tainted: G        W         5.19.0-rc7-xfsx #rc7 6e6475eb29fd9dda3181f81b7ca7ff961d277a40
+> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
+> RIP: 0010:assfail+0x46/0x4a [xfs]
+> Call Trace:
+>  <TASK>
+>  xfs_ifork_zap_attr+0x7c/0xb0
+>  xfs_iformat_attr_fork+0x86/0x110
+>  xfs_inode_from_disk+0x41d/0x480
+>  xfs_iget+0x389/0xd70
+>  xfs_bulkstat_one_int+0x5b/0x540
+>  xfs_bulkstat_iwalk+0x1e/0x30
+>  xfs_iwalk_ag_recs+0xd1/0x160
+>  xfs_iwalk_run_callbacks+0xb9/0x180
+>  xfs_iwalk_ag+0x1d8/0x2e0
+>  xfs_iwalk+0x141/0x220
+>  xfs_bulkstat+0x105/0x180
+>  xfs_ioc_bulkstat.constprop.0.isra.0+0xc5/0x130
+>  xfs_file_ioctl+0xa5f/0xef0
+>  __x64_sys_ioctl+0x82/0xa0
+>  do_syscall_64+0x2b/0x80
+>  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+> 
+> This newly-added assertion checks that there aren't any incore data
+> structures hanging off the incore fork when we're trying to reset its
+> contents.  From the call trace, it is evident that iget was trying to
+> construct an incore inode from the ondisk inode, but the attr fork
+> verifier failed and we were trying to undo all the memory allocations
+> that we had done earlier.
+> 
+> The three assertions in xfs_ifork_zap_attr check that the caller has
+> already called xfs_idestroy_fork, which clearly has not been done here.
+> As the zap function then zeroes the pointers, we've effectively leaked
+> the memory.
+> 
+> The shortest change would have been to insert an extra call to
+> xfs_idestroy_fork, but it makes more sense to bundle the _idestroy_fork
+> call into _zap_attr, since all other callsites call _idestroy_fork
+> immediately prior to calling _zap_attr.  IOWs, it eliminates one way to
+> fail.
+> 
+> Note: This change only applies cleanly to 2ed5b09b3e8f, since we just
+> reworked the attr fork lifetime.  However, I think this memory leak has
+> existed since 0f45a1b20cd8, since the chain xfs_iformat_attr_fork ->
+> xfs_iformat_local -> xfs_init_local_fork will allocate
+> ifp->if_u1.if_data, but if xfs_ifork_verify_local_attr fails,
+> xfs_iformat_attr_fork will free i_afp without freeing any of the stuff
+> hanging off i_afp.  The solution for older kernels I think is to add the
+> missing call to xfs_idestroy_fork just prior to calling kmem_cache_free.
+> 
+> Found by fuzzing a.sfattr.hdr.totsize = lastbit in xfs/399.
+> 
+> Fixes: 2ed5b09b3e8f ("xfs: make inode attribute forks a permanent part of struct xfs_inode")
+> Probably-Fixes: 0f45a1b20cd8 ("xfs: improve local fork verification")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
---D
+Looks good.
 
----
-From: Darrick J. Wong <djwong@kernel.org>
-
-Florian Fainelli most recently reported that xfsprogs doesn't build with
-musl on mips:
-
-"MIPS platforms building with recent kernel headers and the musl-libc
-toolchain will expose the following build failure:
-
-mmap.c: In function 'mmap_f':
-mmap.c:196:12: error: 'MAP_SYNC' undeclared (first use in this function); did you mean 'MS_SYNC'?
-  196 |    flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-      |            ^~~~~~~~
-      |            MS_SYNC
-mmap.c:196:12: note: each undeclared identifier is reported only once for each function it appears in
-make[4]: *** [../include/buildrules:81: mmap.o] Error 1"
-
-At first glance, the build failure here is caused by the fact that:
-
-1. The configure script doesn't detect MAP_SYNC support
-2. The build system doesn't set HAVE_MAP_SYNC
-2. io/mmap.c includes input.h -> projects.h -> xfs.h and later sys/mman.h
-3. include/linux.h #define's MAP_SYNC to 0 if HAVE_MAP_SYNC is not set
-4. musl's sys/mman.h #undef MAP_SYNC on platforms that don't support it
-5. io/mmap.c tries to use MAP_SYNC, not realizing that libc undefined it
-
-Normally, xfs_io only exports functionality that is defined by the libc
-and/or kernel headers on the build system.  We often make exceptions for
-new functionality so that we have a way to test them before the header
-file packages catch up, hence this '#ifndef HAVE_FOO #define FOO'
-paradigm.
-
-MAP_SYNC is a gross and horribly broken example of this.  These support
-crutches are supposed to be *private* to xfsprogs for benefit of early
-testing, but they were instead added to include/linux.h, which we
-provide to user programs in the xfslibs-dev package.  IOWs, we've been
-#defining MAP_SYNC to zero for unsuspecting programs.
-
-Worst yet, gcc 11.3 doesn't even warn about overriding a #define to 0:
-
-#include <stdio.h>
-#include <sys/mman.h>
-#ifdef STUPID
-# include <xfs/xfs.h>
-#endif
-
-int main(int argc, char *argv[]) {
-	printf("MAP_SYNC 0x%x\n", MAP_SYNC);
-}
-
-$ gcc -o a a.c -Wall
-$ ./a
-MAP_SYNC 0x80000
-$ gcc -DSTUPID -o a a.c -Wall
-$ ./a
-MAP_SYNC 0x0
-
-Four years have gone by since the introduction of MAP_SYNC, so let's get
-rid of the override code entirely -- any platform that supports MAP_SYNC
-has had plenty of chances to ensure their header files have the right
-bits.  While we're at it, fix AC_HAVE_MAP_SYNC to look for MAP_SYNC in
-the same header file that the one user (io/mmap.c) uses -- sys/mman.h.
-
-Annoyingly, I had to test this by hand because the sole fstest that
-exercises MAP_SYNC (generic/470) requires dm-logwrites and dm-thinp,
-neither of which support fsdax on current kernels.
-
-Reported-by: info@mobile-stream.com
-Reported-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
-Reported-by: Florian Fainelli <f.fainelli@gmail.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- include/linux.h       |    8 --------
- io/io.h               |    2 +-
- io/mmap.c             |   25 +++++++++++++------------
- m4/package_libcdev.m4 |    3 +--
- 4 files changed, 15 insertions(+), 23 deletions(-)
-
-diff --git a/include/linux.h b/include/linux.h
-index 3d9f4e3d..eddc4ad9 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -251,14 +251,6 @@ struct fsxattr {
- #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
- #endif
- 
--#ifndef HAVE_MAP_SYNC
--#define MAP_SYNC 0
--#define MAP_SHARED_VALIDATE 0
--#else
--#include <asm-generic/mman.h>
--#include <asm-generic/mman-common.h>
--#endif /* HAVE_MAP_SYNC */
--
- /*
-  * Reminder: anything added to this file will be compiled into downstream
-  * userspace projects!
-diff --git a/io/io.h b/io/io.h
-index ada0a149..de4ef607 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -58,7 +58,7 @@ typedef struct mmap_region {
- 	size_t		length;		/* length of mapping */
- 	off64_t		offset;		/* start offset into backing file */
- 	int		prot;		/* protection mode of the mapping */
--	bool		map_sync;	/* is this a MAP_SYNC mapping? */
-+	int		flags;		/* MAP_* flags passed to mmap() */
- 	char		*name;		/* name of backing file */
- } mmap_region_t;
- 
-diff --git a/io/mmap.c b/io/mmap.c
-index 8c048a0a..425957d4 100644
---- a/io/mmap.c
-+++ b/io/mmap.c
-@@ -46,8 +46,11 @@ print_mapping(
- 	for (i = 0, p = pflags; p->prot != PROT_NONE; i++, p++)
- 		buffer[i] = (map->prot & p->prot) ? p->mode : '-';
- 
--	if (map->map_sync)
-+#ifdef HAVE_MAP_SYNC
-+	if ((map->flags & (MAP_SYNC | MAP_SHARED_VALIDATE)) ==
-+			  (MAP_SYNC | MAP_SHARED_VALIDATE))
- 		sprintf(&buffer[i], " S");
-+#endif
- 
- 	printf("%c%03d%c 0x%lx - 0x%lx %s  %14s (%lld : %ld)\n",
- 		braces? '[' : ' ', index, braces? ']' : ' ',
-@@ -139,7 +142,9 @@ mmap_help(void)
- " -r -- map with PROT_READ protection\n"
- " -w -- map with PROT_WRITE protection\n"
- " -x -- map with PROT_EXEC protection\n"
-+#ifdef HAVE_MAP_SYNC
- " -S -- map with MAP_SYNC and MAP_SHARED_VALIDATE flags\n"
-+#endif
- " -s <size> -- first do mmap(size)/munmap(size), try to reserve some free space\n"
- " If no protection mode is specified, all are used by default.\n"
- "\n"));
-@@ -193,18 +198,14 @@ mmap_f(
- 			prot |= PROT_EXEC;
- 			break;
- 		case 'S':
-+#ifdef HAVE_MAP_SYNC
- 			flags = MAP_SYNC | MAP_SHARED_VALIDATE;
--
--			/*
--			 * If MAP_SYNC and MAP_SHARED_VALIDATE aren't defined
--			 * in the system headers we will have defined them
--			 * both as 0.
--			 */
--			if (!flags) {
--				printf("MAP_SYNC not supported\n");
--				return 0;
--			}
- 			break;
-+#else
-+			printf("MAP_SYNC not supported\n");
-+			exitcode = 1;
-+			return command_usage(&mmap_cmd);
-+#endif
- 		case 's':
- 			length2 = cvtnum(blocksize, sectsize, optarg);
- 			break;
-@@ -281,7 +282,7 @@ mmap_f(
- 	mapping->offset = offset;
- 	mapping->name = filename;
- 	mapping->prot = prot;
--	mapping->map_sync = (flags == (MAP_SYNC | MAP_SHARED_VALIDATE));
-+	mapping->flags = flags;
- 	return 0;
- }
- 
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index df44174d..5293dd1a 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -387,8 +387,7 @@ AC_DEFUN([AC_HAVE_MAP_SYNC],
-   [ AC_MSG_CHECKING([for MAP_SYNC])
-     AC_COMPILE_IFELSE(
-     [	AC_LANG_PROGRAM([[
--#include <asm-generic/mman.h>
--#include <asm-generic/mman-common.h>
-+#include <sys/mman.h>
- 	]], [[
- int flags = MAP_SYNC | MAP_SHARED_VALIDATE;
- 	]])
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
