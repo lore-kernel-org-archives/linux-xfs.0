@@ -2,156 +2,302 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0CABC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 09:58:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82C28C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 17:25:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231546AbiGTJ6O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jul 2022 05:58:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53988 "EHLO
+        id S235461AbiGTRZN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jul 2022 13:25:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbiGTJ6N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 05:58:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 70FAA12A84
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 02:58:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1658311091;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=EQvxpPOoUaUU0AxHsyLj0LNLlrGA3fuwwOyk72E2lmo=;
-        b=D/cVcFp2u6ZfnAzpIp5GeWXkKAQXg3KLmCJICp5LiiznCLqANoPkJHtVPDyCZl6OfM1duW
-        e/Kc1iZIcUinhemIcEzIA+cHJUa+XTeiG2TwA5Bw9ql+fQFvK8K+LtReObgHEEjrFyqvv/
-        XKFaYhLyrckiiT+E0o4ZscDaN3fCrvM=
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
- [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-621-7XaCFGqbM5Wq7gH65SvOrQ-1; Wed, 20 Jul 2022 05:58:10 -0400
-X-MC-Unique: 7XaCFGqbM5Wq7gH65SvOrQ-1
-Received: by mail-qt1-f199.google.com with SMTP id cf20-20020a05622a401400b0031efad5abb9so3055322qtb.10
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 02:58:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=EQvxpPOoUaUU0AxHsyLj0LNLlrGA3fuwwOyk72E2lmo=;
-        b=jFY5bEoQ4+PQDuhN5NWokvTpapV2ECX4wDb3aF+6SS4rXS90NjRwKLEbhmXnSAV8nw
-         4/SZgwCydkB7uhnmPulqUbc6AWl9u6Su6hRYLYz6e8n4GqTEUh2xnVK7KXtVtP4mFF4l
-         kSrDwCUp0W3PvwzV/9r3dPzgkusxjGZBXdvZ5f3TUJZMP7zZ0rHZ/oMV8VQ2X9iXjVlV
-         iHX9YRpwIiXOfrZK3BbdbRYrFLW9zqoT4+8v9xKKxRKegDW0uTFxKs+pW0Eka31sqEEU
-         l3NfLI2ahfX+Sg4gocHWdGR3CQq0NU9Gt+D4ngvwddKwoHMH6p49Dtu93/KyUzgQh5rn
-         ZtFA==
-X-Gm-Message-State: AJIora8lrEuAH4sgOknIPm8X71J4X6B0+TGyIBarf/5+f0U7qeU1H3W5
-        NrLdahlExzibAXN9bSm7nfgp5o6qBevhwxLuu8itENxrocQ+BFTK79vUPxq7VeOmsUFMPkueprW
-        tFZRQ3l6YBQJlkqb0a4G1
-X-Received: by 2002:a05:622a:216:b0:31e:df05:8154 with SMTP id b22-20020a05622a021600b0031edf058154mr17829076qtx.669.1658311089741;
-        Wed, 20 Jul 2022 02:58:09 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1uWNoUUoBfNNv4TqX7ws1LzIz274q/JnThxzEi7FeYez8BQCm03CXA+fp1adqbn35qtaFyrgA==
-X-Received: by 2002:a05:622a:216:b0:31e:df05:8154 with SMTP id b22-20020a05622a021600b0031edf058154mr17829067qtx.669.1658311089477;
-        Wed, 20 Jul 2022 02:58:09 -0700 (PDT)
-Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id x20-20020a05620a0b5400b006a6ab259261sm15954153qkg.29.2022.07.20.02.58.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Jul 2022 02:58:08 -0700 (PDT)
-Date:   Wed, 20 Jul 2022 17:58:03 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        with ESMTP id S231818AbiGTRZK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 13:25:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3917AE49;
+        Wed, 20 Jul 2022 10:25:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BDCF660EEA;
+        Wed, 20 Jul 2022 17:25:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23511C3411E;
+        Wed, 20 Jul 2022 17:25:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1658337907;
+        bh=G2Dk7sk0xMW5hMyPpySlA6A9md2orp1RWIKepH2fQ6s=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KSq/ozv/ScrYyjqtysCnM6uoYS5/Pn3axz4kZpjhuMCwE+02WvUMe+XgO498MVPtz
+         PHb+51n1a/2yxhkP1qsSXapLVwY27pWcVKrNi7876TQE8TYMXJf+2urFBLy4LidsRa
+         rr7vn2pVUyvg3pwPYJ7FPhJPPNy7BRRQeh9KAQxuAW9BLbVVQWnra/w5+CHxpgb2ux
+         6iSR8V/lTW7fRk0/VIfbmJb3HKTUNbOInres55CV0nxmJ3TitS0GmRoKefODeQYGCy
+         ftCAE5paEGZ+vPCCzitG2QJbj0VhlNqBXMAxeSyRyNjJOgH+6YMU7zMoCw2QWBZDeJ
+         FcJfPkfQNyQQg==
+Date:   Wed, 20 Jul 2022 10:25:06 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] generic/275: fix premature enospc errors when fs
- block size is large
-Message-ID: <20220720095803.bnvp6rqpbfwa3g2r@zlang-mailbox>
-References: <165826662758.3249425.5439317033584646383.stgit@magnolia>
- <165826663321.3249425.14767713688923502274.stgit@magnolia>
+Subject: Re: [PATCH v2] xfs/018: fix LARP testing for small block sizes
+Message-ID: <Ytg6cpoaeegvTWXN@magnolia>
+References: <20220719222520.15550-1-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <165826663321.3249425.14767713688923502274.stgit@magnolia>
+In-Reply-To: <20220719222520.15550-1-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 19, 2022 at 02:37:13PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jul 19, 2022 at 03:25:20PM -0700, Catherine Hoang wrote:
+> From: "Darrick J. Wong" <djwong@kernel.org>
 > 
-> When running this test on an XFS filesystem with a 64k block size, I
-> see this error:
-> 
-> generic/275       - output mismatch (see /var/tmp/fstests/generic/275.out.bad)
->     --- tests/generic/275.out   2021-05-13 11:47:55.694860280 -0700
->     +++ /var/tmp/fstests/generic/275.out.bad    2022-07-19 10:38:41.840000000 -0700
->     @@ -2,4 +2,7 @@
->      ------------------------------
->      write until ENOSPC test
->      ------------------------------
->     +du: cannot access '/opt/tmp1': No such file or directory
->     +stat: cannot statx '/opt/tmp1': No such file or directory
->     +/tmp/fstests/tests/generic/275: line 74: [: -lt: unary operator expected
->      done
->     ...
->     (Run 'diff -u /tmp/fstests/tests/generic/275.out /var/tmp/fstests/generic/275.out.bad'  to see the entire diff)
-> 
-> The 275.full file indicates that the test was unable to recreate the
-> $SCRATCH_MNT/tmp1 file after we freed all but the last 256K of free
-> space in the filesystem.  I mounted the scratch fs, and df reported
-> exactly 256K of free space available, which means there are 4 blocks
-> left in the filesystem for user programs to use.
-> 
-> Unfortunately for this test, xfs_create requires sufficient free blocks
-> in the filesystem to handle full inode btree splits and the maximal
-> directory expansion for a new dirent.  In other words, there must be
-> enough free space to handle the worst case space consumption.  That
-> quantity is 26 blocks, hence the last dd in the test fails with ENOSPC,
-> which makes the test fail.
-> 
-> Fix all this by creating the file that we use to test the low-space file
-> write *before* we drain the free space down to 256K.
+> Fix this test to work properly when the filesystem block size is less
+> than 4k.  Tripping the error injection points on shape changes in the
+> xattr structure must be done dynamically.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+
+Hrmm.  I tried this on an 8k-blocksize filesystem overnight (arm64, 64k
+pages), and got this:
+
+--- xfs/018.out
++++ xfs/018.out.bad
+@@ -71,14 +71,14 @@
+ touch: cannot touch 'SCRATCH_MNT/testdir/extent_file1': Input/output error
+ attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+ 
+-attr_set: Input/output error
+-Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file2
+-touch: cannot touch 'SCRATCH_MNT/testdir/extent_file2': Input/output error
++Attribute "attr_nameXXXX" set to a 257 byte value for SCRATCH_MNT/testdir/extent_file2:
++0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
++
+ attr_nameXXXX: f4ea5799d72a0a9bf2d56a685c9cba7a  -
+ 
+-attr_set: Input/output error
+-Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file3
+-touch: cannot touch 'SCRATCH_MNT/testdir/extent_file3': Input/output error
++Attribute "attr_nameXXXX" set to a 257 byte value for SCRATCH_MNT/testdir/extent_file3:
++0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
++
+ attr_nameXXXX: f4ea5799d72a0a9bf2d56a685c9cba7a  -
+ 
+ attr_set: Input/output error
+
+Not sure what that's all about, but could you please take a look?
+
+--D
+
 > ---
->  tests/generic/275 |   15 ++++++++++++---
->  1 file changed, 12 insertions(+), 3 deletions(-)
+>  tests/xfs/018     | 14 +++++++++-----
+>  tests/xfs/018.out | 47 ++++-------------------------------------------
+>  2 files changed, 13 insertions(+), 48 deletions(-)
 > 
-> 
-> diff --git a/tests/generic/275 b/tests/generic/275
-> index 6189edca..f3b05409 100755
-> --- a/tests/generic/275
-> +++ b/tests/generic/275
-> @@ -37,6 +37,15 @@ _scratch_unmount 2>/dev/null
->  _scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seqres.full 2>&1
+> diff --git a/tests/xfs/018 b/tests/xfs/018
+> index 041a3b24..323279b5 100755
+> --- a/tests/xfs/018
+> +++ b/tests/xfs/018
+> @@ -47,7 +47,8 @@ test_attr_replay()
+>  	touch $testfile
+>  
+>  	# Verify attr recovery
+> -	$ATTR_PROG -l $testfile | _filter_scratch
+> +	$ATTR_PROG -l $testfile >> $seqres.full
+> +	echo "Checking contents of $attr_name" >> $seqres.full
+>  	echo -n "$attr_name: "
+>  	$ATTR_PROG -q -g $attr_name $testfile 2> /dev/null | md5sum;
+>  
+> @@ -98,6 +99,9 @@ attr64k="$attr32k$attr32k"
+>  echo "*** mkfs"
+>  _scratch_mkfs >/dev/null
+>  
+> +blk_sz=$(_scratch_xfs_get_sb_field blocksize)
+> +multiplier=$(( $blk_sz / 276 )) # 256 + 20 to account for attr name
+> +
+>  echo "*** mount FS"
 >  _scratch_mount
 >  
-> +# Certain filesystems such as XFS require sufficient free blocks to handle the
-> +# worst-case directory expansion as a result of a creat() call.  If the fs
-> +# block size is very large (e.g. 64k) then the number of blocks required for
-> +# the creat() call can represent far more free space than the 256K left at the
-> +# end of this test.  Therefore, create the file that the last dd will write to
-> +# now when we know there's enough free blocks.
-> +later_file=$SCRATCH_MNT/later
-> +touch $later_file
-
-Make sense to me,
-
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
-> +
->  # this file will get removed to create 256k of free space after ENOSPC
->  # conditions are created.
->  dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=256K count=1 >>$seqres.full 2>&1
-> @@ -63,12 +72,12 @@ _freespace=`$DF_PROG -k $SCRATCH_MNT | tail -n 1 | awk '{print $5}'`
+> @@ -140,12 +144,12 @@ test_attr_replay extent_file1 "attr_name2" $attr1k "s" "larp"
+>  test_attr_replay extent_file1 "attr_name2" $attr1k "r" "larp"
 >  
->  # Try to write more than available space in chunks that will allow at least one
->  # full write to succeed.
-> -dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=128k count=8 >>$seqres.full 2>&1
-> +dd if=/dev/zero of=$later_file bs=128k count=8 >>$seqres.full 2>&1
->  echo "Bytes written until ENOSPC:" >>$seqres.full
-> -du $SCRATCH_MNT/tmp1 >>$seqres.full
-> +du $later_file >>$seqres.full
+>  # extent, inject error on split
+> -create_test_file extent_file2 3 $attr1k
+> -test_attr_replay extent_file2 "attr_name4" $attr1k "s" "da_leaf_split"
+> +create_test_file extent_file2 $multiplier $attr256
+> +test_attr_replay extent_file2 "attr_nameXXXX" $attr256 "s" "da_leaf_split"
 >  
->  # And at least some of it should succeed.
-> -_filesize=`_get_filesize $SCRATCH_MNT/tmp1`
-> +_filesize=`_get_filesize $later_file`
->  [ $_filesize -lt $((128 * 1024)) ] && \
->  	_fail "Partial write until enospc failed; wrote $_filesize bytes."
+>  # extent, inject error on fork transition
+> -create_test_file extent_file3 3 $attr1k
+> -test_attr_replay extent_file3 "attr_name4" $attr1k "s" "attr_leaf_to_node"
+> +create_test_file extent_file3 $multiplier $attr256
+> +test_attr_replay extent_file3 "attr_nameXXXX" $attr256 "s" "attr_leaf_to_node"
 >  
+>  # extent, remote
+>  create_test_file extent_file4 1 $attr1k
+> diff --git a/tests/xfs/018.out b/tests/xfs/018.out
+> index 022b0ca3..57dc448a 100644
+> --- a/tests/xfs/018.out
+> +++ b/tests/xfs/018.out
+> @@ -4,7 +4,6 @@ QA output created by 018
+>  attr_set: Input/output error
+>  Could not set "attr_name" for SCRATCH_MNT/testdir/empty_file1
+>  touch: cannot touch 'SCRATCH_MNT/testdir/empty_file1': Input/output error
+> -Attribute "attr_name" has a 65 byte value for SCRATCH_MNT/testdir/empty_file1
+>  attr_name: cfbe2a33be4601d2b655d099a18378fc  -
+>  
+>  attr_remove: Input/output error
+> @@ -15,7 +14,6 @@ attr_name: d41d8cd98f00b204e9800998ecf8427e  -
+>  attr_set: Input/output error
+>  Could not set "attr_name" for SCRATCH_MNT/testdir/empty_file2
+>  touch: cannot touch 'SCRATCH_MNT/testdir/empty_file2': Input/output error
+> -Attribute "attr_name" has a 1025 byte value for SCRATCH_MNT/testdir/empty_file2
+>  attr_name: 9fd415c49d67afc4b78fad4055a3a376  -
+>  
+>  attr_remove: Input/output error
+> @@ -26,7 +24,6 @@ attr_name: d41d8cd98f00b204e9800998ecf8427e  -
+>  attr_set: Input/output error
+>  Could not set "attr_name" for SCRATCH_MNT/testdir/empty_file3
+>  touch: cannot touch 'SCRATCH_MNT/testdir/empty_file3': Input/output error
+> -Attribute "attr_name" has a 65536 byte value for SCRATCH_MNT/testdir/empty_file3
+>  attr_name: 7f6fd1b6d872108bd44bd143cbcdfa19  -
+>  
+>  attr_remove: Input/output error
+> @@ -37,132 +34,96 @@ attr_name: d41d8cd98f00b204e9800998ecf8427e  -
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/inline_file1
+>  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file1': Input/output error
+> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file1
+> -Attribute "attr_name2" has a 65 byte value for SCRATCH_MNT/testdir/inline_file1
+>  attr_name2: cfbe2a33be4601d2b655d099a18378fc  -
+>  
+>  attr_remove: Input/output error
+>  Could not remove "attr_name2" for SCRATCH_MNT/testdir/inline_file1
+>  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file1': Input/output error
+> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file1
+>  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+>  
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/inline_file2
+>  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file2': Input/output error
+> -Attribute "attr_name2" has a 1025 byte value for SCRATCH_MNT/testdir/inline_file2
+> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file2
+>  attr_name2: 9fd415c49d67afc4b78fad4055a3a376  -
+>  
+>  attr_remove: Input/output error
+>  Could not remove "attr_name2" for SCRATCH_MNT/testdir/inline_file2
+>  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file2': Input/output error
+> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file2
+>  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+>  
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/inline_file3
+>  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file3': Input/output error
+> -Attribute "attr_name2" has a 65536 byte value for SCRATCH_MNT/testdir/inline_file3
+> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file3
+>  attr_name2: 7f6fd1b6d872108bd44bd143cbcdfa19  -
+>  
+>  attr_remove: Input/output error
+>  Could not remove "attr_name2" for SCRATCH_MNT/testdir/inline_file3
+>  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file3': Input/output error
+> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file3
+>  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+>  
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/extent_file1
+>  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file1': Input/output error
+> -Attribute "attr_name2" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file1
+> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file1
+>  attr_name2: 9fd415c49d67afc4b78fad4055a3a376  -
+>  
+>  attr_remove: Input/output error
+>  Could not remove "attr_name2" for SCRATCH_MNT/testdir/extent_file1
+>  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file1': Input/output error
+> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file1
+>  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+>  
+>  attr_set: Input/output error
+> -Could not set "attr_name4" for SCRATCH_MNT/testdir/extent_file2
+> +Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file2
+>  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file2': Input/output error
+> -Attribute "attr_name4" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file2
+> -Attribute "attr_name2" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
+> -Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
+> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
+> -attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
+> +attr_nameXXXX: f4ea5799d72a0a9bf2d56a685c9cba7a  -
+>  
+>  attr_set: Input/output error
+> -Could not set "attr_name4" for SCRATCH_MNT/testdir/extent_file3
+> +Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file3
+>  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file3': Input/output error
+> -Attribute "attr_name4" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file3
+> -Attribute "attr_name2" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
+> -Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
+> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
+> -attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
+> +attr_nameXXXX: f4ea5799d72a0a9bf2d56a685c9cba7a  -
+>  
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/extent_file4
+>  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file4': Input/output error
+> -Attribute "attr_name2" has a 65536 byte value for SCRATCH_MNT/testdir/extent_file4
+> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file4
+>  attr_name2: 7f6fd1b6d872108bd44bd143cbcdfa19  -
+>  
+>  attr_remove: Input/output error
+>  Could not remove "attr_name2" for SCRATCH_MNT/testdir/extent_file4
+>  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file4': Input/output error
+> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file4
+>  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+>  
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/remote_file1
+>  touch: cannot touch 'SCRATCH_MNT/testdir/remote_file1': Input/output error
+> -Attribute "attr_name2" has a 1025 byte value for SCRATCH_MNT/testdir/remote_file1
+> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file1
+>  attr_name2: 9fd415c49d67afc4b78fad4055a3a376  -
+>  
+>  attr_remove: Input/output error
+>  Could not remove "attr_name2" for SCRATCH_MNT/testdir/remote_file1
+>  touch: cannot touch 'SCRATCH_MNT/testdir/remote_file1': Input/output error
+> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file1
+>  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+>  
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/remote_file2
+>  touch: cannot touch 'SCRATCH_MNT/testdir/remote_file2': Input/output error
+> -Attribute "attr_name2" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file2
+> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file2
+>  attr_name2: 7f6fd1b6d872108bd44bd143cbcdfa19  -
+>  
+>  attr_remove: Input/output error
+>  Could not remove "attr_name2" for SCRATCH_MNT/testdir/remote_file2
+>  touch: cannot touch 'SCRATCH_MNT/testdir/remote_file2': Input/output error
+> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file2
+>  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
+>  
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/sf_file
+>  touch: cannot touch 'SCRATCH_MNT/testdir/sf_file': Input/output error
+> -Attribute "attr_name1" has a 64 byte value for SCRATCH_MNT/testdir/sf_file
+> -Attribute "attr_name2" has a 17 byte value for SCRATCH_MNT/testdir/sf_file
+>  attr_name2: 9a6eb1bc9da3c66a9b495dfe2fe8a756  -
+>  
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/leaf_file
+>  touch: cannot touch 'SCRATCH_MNT/testdir/leaf_file': Input/output error
+> -Attribute "attr_name2" has a 257 byte value for SCRATCH_MNT/testdir/leaf_file
+> -Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/leaf_file
+> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/leaf_file
+>  attr_name2: f4ea5799d72a0a9bf2d56a685c9cba7a  -
+>  
+>  attr_set: Input/output error
+>  Could not set "attr_name2" for SCRATCH_MNT/testdir/node_file
+>  touch: cannot touch 'SCRATCH_MNT/testdir/node_file': Input/output error
+> -Attribute "attr_name2" has a 257 byte value for SCRATCH_MNT/testdir/node_file
+> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/node_file
+>  attr_name2: f4ea5799d72a0a9bf2d56a685c9cba7a  -
+>  
+>  *** done
+> -- 
+> 2.25.1
 > 
-
