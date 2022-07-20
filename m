@@ -2,129 +2,121 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD371C43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 21:26:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 590A1C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 21:32:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229549AbiGTV0s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jul 2022 17:26:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52772 "EHLO
+        id S229504AbiGTVcr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jul 2022 17:32:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230342AbiGTV0r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 17:26:47 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AD515A891
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 14:26:46 -0700 (PDT)
+        with ESMTP id S230473AbiGTVcr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 17:32:47 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 385A35D0F5
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 14:32:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 03790B82213
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 21:26:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 905CCC3411E;
-        Wed, 20 Jul 2022 21:26:43 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E4EBAB82214
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 21:32:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E374C3411E;
+        Wed, 20 Jul 2022 21:32:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658352403;
-        bh=GF/YRWN7NyQ5ULJL8IJjxNSZCrMwpGAKJKRO0LoGATs=;
+        s=k20201202; t=1658352763;
+        bh=kCz4TbX0FfhHFFTYB2vxItmT0aKNQmuOQg8zg8+V56w=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aIBZA77yG1Xkl+n/CCtMZNsXUowPbmnOmdpwVGteofRjmzF0RGwHBlBIKvxW8pi4R
-         xZpp2Lfe7GDidHb4cHnhEmeAM1dy1VZ6oM1W42ffXgMCVwsnzmhXveVdxTPxR7jCC7
-         y5edKgufro7n/GmjJRRhTJLyUr0ckPuVkUx7AMvl2voCGVwpUZ0fjx9o+YAYHS09yN
-         3EFNCnWox2NKX32VcymlnRIPeWOJ7MecjtZNmHg9Al1gI4ZneJuUBLx9XNfqysVcRf
-         yoPiZw8VcV4tFrHs6Ln5Flg8F6LTXVe2l0e8Y7routiEmTz4YdvRh6Sl1xNen6k3Qa
-         loDdcl94YZ9Sg==
-Date:   Wed, 20 Jul 2022 14:26:43 -0700
+        b=ja+EhdWhKtbyDnVj6zwbPgdK0YDkhCG14KkUnE2hGos5Pbxx2YvK+PM8wR93sqFBx
+         ZuRb2qcJkx2k1k27yHmSwWd33JDRY5w3M7ScO8XNP0chBedK8Er1wkU+6u++FA+XZs
+         2/5dzs+vIppEaAi5mymLSTWmraxWiSnIWkx1UMTtjrk1jxYrgPeFGvagTlA3guNi6C
+         Y5W+X/3jswi2OPSNiJa4exb9WzZ6STz0D09Q8RntrH+/uJB8MPkqemeC5Mek3VeooY
+         Nrrbqd1c8US/gKsJ80lU6XPj4iIUf2BaJ5xTDGXufO8IY2MUs2ufRs9/nQRIXIoGJ+
+         f5OXbtokJaFXA==
+Date:   Wed, 20 Jul 2022 14:32:42 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 5.15 CANDIDATE 0/9] xfs stable candidate patches for
- 5.15.y (part 3)
-Message-ID: <YthzE8UDK8yY4OUA@magnolia>
-References: <20220718202959.1611129-1-leah.rumancik@gmail.com>
- <YtXXhQuOioUeSltH@magnolia>
- <CAOQ4uxh13NPtWP98E-R7Sxfy=dkgCHxk7tysEykJ2rg3yhJ__A@mail.gmail.com>
- <YtbDSQjWaVvweLRC@magnolia>
- <YthFT0bJlbEdhPTY@google.com>
+To:     Florian Fainelli <f.fainelli@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com,
+        david@fromorbit.com, darrick.wong@oracle.com, sandeen@sandeen.net
+Subject: Re: [PATCH] xfs_io: Make HAVE_MAP_SYNC more robust
+Message-ID: <Yth0es3DkTQRAxJl@magnolia>
+References: <20220720205307.2345230-1-f.fainelli@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YthFT0bJlbEdhPTY@google.com>
+In-Reply-To: <20220720205307.2345230-1-f.fainelli@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 20, 2022 at 11:11:27AM -0700, Leah Rumancik wrote:
-> On Tue, Jul 19, 2022 at 07:44:25AM -0700, Darrick J. Wong wrote:
-> > On Tue, Jul 19, 2022 at 10:44:29AM +0200, Amir Goldstein wrote:
-> > > On Tue, Jul 19, 2022 at 12:05 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> > > >
-> > > > On Mon, Jul 18, 2022 at 01:29:50PM -0700, Leah Rumancik wrote:
-> > > > > Hi again,
-> > > > >
-> > > > > This set contains fixes from 5.16 to 5.17. The normal testing was run
-> > > > > for this set with no regressions found.
-> > > > >
-> > > > > I included some fixes for online scrub. I am not sure if this
-> > > > > is in use for 5.15 though so please let me know if these should be
-> > > > > dropped.
-> > > > >
-> > > > > Some refactoring patches were included in this set as dependencies:
-> > > > >
-> > > > > bf2307b19513 xfs: fold perag loop iteration logic into helper function
-> > > > >     dependency for f1788b5e5ee25bedf00bb4d25f82b93820d61189
-> > > > > f1788b5e5ee2 xfs: rename the next_agno perag iteration variable
-> > > > >     dependency for 8ed004eb9d07a5d6114db3e97a166707c186262d
-> > > > >
-> > > > > Thanks,
-> > > > > Leah
-> > > > >
-> > > > >
-> > > > > Brian Foster (4):
-> > > > >   xfs: fold perag loop iteration logic into helper function
-> > > > >   xfs: rename the next_agno perag iteration variable
-> > > > >   xfs: terminate perag iteration reliably on agcount
-> > > > >   xfs: fix perag reference leak on iteration race with growfs
-> > > > >
-> > > > > Dan Carpenter (1):
-> > > > >   xfs: prevent a WARN_ONCE() in xfs_ioc_attr_list()
-> > > > >
-> > > > > Darrick J. Wong (4):
-> > > > >   xfs: fix maxlevels comparisons in the btree staging code
-> > > >
-> > > > Up to this point,
-> > > > Acked-by: Darrick J. Wong <djwong@kernel.org>
-> > > >
-> > > > >   xfs: fix incorrect decoding in xchk_btree_cur_fsbno
-> > > > >   xfs: fix quotaoff mutex usage now that we don't support disabling it
-> > > > >   xfs: fix a bug in the online fsck directory leaf1 bestcount check
-> > > >
-> > > > No objections to these last three, since they're legitimate fixes for
-> > > > bugs in 5.15, but I would advise y'all not to worry too much about fixes
-> > > > for EXPERIMENTAL features.
-> > 
-> > Also, to clarify -- if you /do/ want to pick up the scrub fixes, then
-> > yes, the Acked-by above does apply to the entire set.  I don't know if
-> > you have people running (experimental) scrub, but I don't know that you
-> > **don't**. :)
+On Wed, Jul 20, 2022 at 01:53:07PM -0700, Florian Fainelli wrote:
+> MIPS platforms building with recent kernel headers and the musl-libc toolchain
+> will expose the following build failure:
 > 
-> These fixes aren't a priority over here so I'll postpone scrub fixes in
-> the future since it doesn't seem like people care. For this set, is
-> there coverage in xfstests for them? If so, I'll go ahead and keep them,
-> but if not, I'll just drop them.
+> mmap.c: In function 'mmap_f':
+> mmap.c:196:12: error: 'MAP_SYNC' undeclared (first use in this function); did you mean 'MS_SYNC'?
+>   196 |    flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+>       |            ^~~~~~~~
+>       |            MS_SYNC
+> mmap.c:196:12: note: each undeclared identifier is reported only once for each function it appears in
+> make[4]: *** [../include/buildrules:81: mmap.o] Error 1
 
-Nothing other than the general fuzzing tests.  You might as well ignore
-them.
+Didn't we already fix this?
+https://lore.kernel.org/linux-xfs/20220508193029.1277260-1-fontaine.fabrice@gmail.com/
+
+Didn't we already fix this?
+https://lore.kernel.org/linux-xfs/20181116162346.456255382F@mx7.valuehost.ru/
+
+Oh, I guess the maintainer didn't apply either of these patches, so this
+has been broken for years.
+
+Well... MAP_SYNC has been with us for a while now, perhaps it makes more
+sense to remove all the override cruft and make xfs_io not export -S if
+if neither kernel headers nor libc define it?
 
 --D
 
-> - Leah
 > 
-> > 
-> > > FWIW, from the set above, I only picked Dan Carpenter's fix for 5.10.
-> > > I'll include it in one of the following updates.
-> > 
-> > <nod>
-> > 
-> > --D
-> > 
-> > > Thanks,
-> > > Amir.
+> The reason for that is that the linux.h header file which intends to provide a fallback definition for MAP_SYNC and MAP_SHARED_VALIDATE is included too early through:
+> 
+> input.h -> libfrog/projects.h -> xfs.h -> linux.h and this happens
+> *before* sys/mman.h is included.
+> 
+> sys/mman.h -> bits/mman.h which has a:
+>   #undef MAP_SYNC
+> 
+> see: https://git.musl-libc.org/cgit/musl/tree/arch/mips/bits/mman.h#n21
+> 
+> The end result is that sys/mman.h being included for the first time
+> ends-up overriding the HAVE_MAP_SYNC fallbacks.
+> 
+> To remedy that, make sure that linux.h is updated to include sys/mman.h
+> such that its fallbacks are independent of the inclusion order. As a
+> consequence this forces us to ensure that we do not re-define
+> accidentally MAP_SYNC or MAP_SHARED_VALIDATE so we protect against that.
+> 
+> Fixes: dad796834cb9 ("xfs_io: add MAP_SYNC support to mmap()")
+> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+> ---
+>  include/linux.h | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/include/linux.h b/include/linux.h
+> index 3d9f4e3dca80..c3cc8e30c677 100644
+> --- a/include/linux.h
+> +++ b/include/linux.h
+> @@ -252,8 +252,13 @@ struct fsxattr {
+>  #endif
+>  
+>  #ifndef HAVE_MAP_SYNC
+> +#include <sys/mman.h>
+> +#ifndef MAP_SYNC
+>  #define MAP_SYNC 0
+> +#endif
+> +#ifndef MAP_SHARED_VALIDATE
+>  #define MAP_SHARED_VALIDATE 0
+> +#endif
+>  #else
+>  #include <asm-generic/mman.h>
+>  #include <asm-generic/mman-common.h>
+> -- 
+> 2.25.1
+> 
