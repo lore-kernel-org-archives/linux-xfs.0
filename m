@@ -2,114 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50399C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 23:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0BFC43334
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 23:39:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229628AbiGTXfj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jul 2022 19:35:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48786 "EHLO
+        id S229504AbiGTXjY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jul 2022 19:39:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229532AbiGTXfi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 19:35:38 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 03A653F319
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 16:35:36 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4AD7010E815E;
-        Thu, 21 Jul 2022 09:35:34 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oEJE4-003LFm-Ac; Thu, 21 Jul 2022 09:35:32 +1000
-Date:   Thu, 21 Jul 2022 09:35:32 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: don't leak memory when attr fork loading fails
-Message-ID: <20220720233532.GU3861211@dread.disaster.area>
-References: <Ytbj3C3GF6aQJjo4@magnolia>
+        with ESMTP id S230234AbiGTXjY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 19:39:24 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7944949B42
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 16:39:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1590361DEE
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 23:39:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69F91C3411E
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 23:39:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1658360362;
+        bh=nzmjyrqyFME9TqoLVLo3VDpv0Vrj4V3YH0MPWCarQHQ=;
+        h=Date:From:To:Subject:From;
+        b=Se6knHV8iTUqJt4KMuahCLpoFeA/tKfJ5aDprdfI3M/ITuHajvLJFfM6m5jNJfUlq
+         oyS0MaQfF7EXduUnjF205wyTPkJM8DkAcW9qyVCs7mYuNNg5jkDIp0UPv9IIf2Na/Z
+         kKA/H6yC3BUx4GO9kPM9PUPcJnfb6u6F1UMDhuJ0xlbBtv84wS/JBphUK7VdjjE3Pa
+         O1VxX8+NgUowDgqollgrw21KBQrVB54vSk3cVOPdT7IsRwwxiIvpEHOjlc69cX81QW
+         2pSWdo8tDndXn4tiCmtNWfhQcvZ6FfSS+ZBM6uh0IGFgXzA1/ZjxmSFDZmNRoK6waC
+         TeJzHljo9Oszg==
+Date:   Wed, 20 Jul 2022 16:39:21 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [RFC[RAP] PATCH] xfs: fix unit conversion error in
+ xfs_log_calc_max_attrsetm_res
+Message-ID: <YtiSKY1OcPAg+p52@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Ytbj3C3GF6aQJjo4@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62d89147
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=i9jRsUFt4n7ITWsusM0A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 19, 2022 at 10:03:24AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> I observed the following evidence of a memory leak while running xfs/399
-> from the xfs fsck test suite (edited for brevity):
-> 
-> XFS (sde): Metadata corruption detected at xfs_attr_shortform_verify_struct.part.0+0x7b/0xb0 [xfs], inode 0x1172 attr fork
-> XFS: Assertion failed: ip->i_af.if_u1.if_data == NULL, file: fs/xfs/libxfs/xfs_inode_fork.c, line: 315
-> ------------[ cut here ]------------
-> WARNING: CPU: 2 PID: 91635 at fs/xfs/xfs_message.c:104 assfail+0x46/0x4a [xfs]
-> CPU: 2 PID: 91635 Comm: xfs_scrub Tainted: G        W         5.19.0-rc7-xfsx #rc7 6e6475eb29fd9dda3181f81b7ca7ff961d277a40
-> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
-> RIP: 0010:assfail+0x46/0x4a [xfs]
-> Call Trace:
->  <TASK>
->  xfs_ifork_zap_attr+0x7c/0xb0
->  xfs_iformat_attr_fork+0x86/0x110
->  xfs_inode_from_disk+0x41d/0x480
->  xfs_iget+0x389/0xd70
->  xfs_bulkstat_one_int+0x5b/0x540
->  xfs_bulkstat_iwalk+0x1e/0x30
->  xfs_iwalk_ag_recs+0xd1/0x160
->  xfs_iwalk_run_callbacks+0xb9/0x180
->  xfs_iwalk_ag+0x1d8/0x2e0
->  xfs_iwalk+0x141/0x220
->  xfs_bulkstat+0x105/0x180
->  xfs_ioc_bulkstat.constprop.0.isra.0+0xc5/0x130
->  xfs_file_ioctl+0xa5f/0xef0
->  __x64_sys_ioctl+0x82/0xa0
->  do_syscall_64+0x2b/0x80
->  entry_SYSCALL_64_after_hwframe+0x46/0xb0
-> 
-> This newly-added assertion checks that there aren't any incore data
-> structures hanging off the incore fork when we're trying to reset its
-> contents.  From the call trace, it is evident that iget was trying to
-> construct an incore inode from the ondisk inode, but the attr fork
-> verifier failed and we were trying to undo all the memory allocations
-> that we had done earlier.
-> 
-> The three assertions in xfs_ifork_zap_attr check that the caller has
-> already called xfs_idestroy_fork, which clearly has not been done here.
-> As the zap function then zeroes the pointers, we've effectively leaked
-> the memory.
-> 
-> The shortest change would have been to insert an extra call to
-> xfs_idestroy_fork, but it makes more sense to bundle the _idestroy_fork
-> call into _zap_attr, since all other callsites call _idestroy_fork
-> immediately prior to calling _zap_attr.  IOWs, it eliminates one way to
-> fail.
-> 
-> Note: This change only applies cleanly to 2ed5b09b3e8f, since we just
-> reworked the attr fork lifetime.  However, I think this memory leak has
-> existed since 0f45a1b20cd8, since the chain xfs_iformat_attr_fork ->
-> xfs_iformat_local -> xfs_init_local_fork will allocate
-> ifp->if_u1.if_data, but if xfs_ifork_verify_local_attr fails,
-> xfs_iformat_attr_fork will free i_afp without freeing any of the stuff
-> hanging off i_afp.  The solution for older kernels I think is to add the
-> missing call to xfs_idestroy_fork just prior to calling kmem_cache_free.
-> 
-> Found by fuzzing a.sfattr.hdr.totsize = lastbit in xfs/399.
-> 
-> Fixes: 2ed5b09b3e8f ("xfs: make inode attribute forks a permanent part of struct xfs_inode")
-> Probably-Fixes: 0f45a1b20cd8 ("xfs: improve local fork verification")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Looks good.
+Dave and I were discussing some recent test regressions as a result of
+me turning on nrext64=1 on realtime filesystems, when we noticed that
+the minimum log size of a 32M filesystem jumped from 954 blocks to 4287
+blocks.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+Digging through xfs_log_calc_max_attrsetm_res, Dave noticed that @size
+contains the maximum estimated amount of space needed for a local format
+xattr, in bytes, but we feed this quantity to XFS_NEXTENTADD_SPACE_RES,
+which requires units of blocks.  This has resulted in an overestimation
+of the minimum log size over the years.
+
+We should nominally correct this, but there's a backwards compatibility
+problem -- if we enable it now, the minimum log size will decrease.  If
+a corrected mkfs formats a filesystem with this new smaller log size, a
+user will encounter mount failures on an old uncorrected kernel due to
+the larger minimum log size computations there.
+
+However, the large extent counters feature is still EXPERIMENTAL, so we
+can gate the correction on that feature (or any features that get added
+after that) being enabled.  Any filesystem with nrext64 or any of the
+as-yet-undefined feature bits turned on will be rejected by old
+uncorrected kernels, so this should be safe even in the upgrade case.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/libxfs/xfs_log_rlimit.c |   42 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
+index 9975b93a7412..8fcfd8dd7935 100644
+--- a/fs/xfs/libxfs/xfs_log_rlimit.c
++++ b/fs/xfs/libxfs/xfs_log_rlimit.c
+@@ -16,6 +16,38 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_trace.h"
+ 
++/*
++ * Decide if the filesystem has the large extent count feature or any feature
++ * added after that.
++ */
++static inline bool
++xfs_is_after_nrext64_epoch(
++	struct xfs_mount	*mp)
++{
++	if (!xfs_sb_is_v5(&mp->m_sb))
++		return false;
++
++	if (xfs_sb_has_compat_feature(&mp->m_sb, ~0))
++		return true;
++
++	if (xfs_sb_has_ro_compat_feature(&mp->m_sb,
++				~(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
++				  XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
++				  XFS_SB_FEAT_RO_COMPAT_REFLINK | \
++				  XFS_SB_FEAT_RO_COMPAT_INOBTCNT)))
++		return true;
++
++	if (xfs_sb_has_incompat_feature(&mp->m_sb,
++				~(XFS_SB_FEAT_INCOMPAT_FTYPE |
++				  XFS_SB_FEAT_INCOMPAT_SPINODES |
++				  XFS_SB_FEAT_INCOMPAT_META_UUID |
++				  XFS_SB_FEAT_INCOMPAT_BIGTIME |
++				  XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR)))
++		return true;
++
++	return false;
++}
++
+ /*
+  * Calculate the maximum length in bytes that would be required for a local
+  * attribute value as large attributes out of line are not logged.
+@@ -31,6 +63,16 @@ xfs_log_calc_max_attrsetm_res(
+ 	       MAXNAMELEN - 1;
+ 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
+ 	nblks += XFS_B_TO_FSB(mp, size);
++
++	/*
++	 * Starting with the large extent count feature, every new fs feature
++	 * corrects a unit conversion error in the xattr transaction
++	 * reservation code that resulted in oversized minimum log size
++	 * computations.
++	 */
++	if (xfs_is_after_nrext64_epoch(mp))
++		size = XFS_B_TO_FSB(mp, size);
++
+ 	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
+ 
+ 	return  M_RES(mp)->tr_attrsetm.tr_logres +
