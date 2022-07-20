@@ -2,302 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82C28C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 17:25:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C07C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 18:11:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235461AbiGTRZN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jul 2022 13:25:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50948 "EHLO
+        id S233401AbiGTSLc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jul 2022 14:11:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231818AbiGTRZK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 13:25:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3917AE49;
-        Wed, 20 Jul 2022 10:25:08 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BDCF660EEA;
-        Wed, 20 Jul 2022 17:25:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23511C3411E;
-        Wed, 20 Jul 2022 17:25:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658337907;
-        bh=G2Dk7sk0xMW5hMyPpySlA6A9md2orp1RWIKepH2fQ6s=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KSq/ozv/ScrYyjqtysCnM6uoYS5/Pn3axz4kZpjhuMCwE+02WvUMe+XgO498MVPtz
-         PHb+51n1a/2yxhkP1qsSXapLVwY27pWcVKrNi7876TQE8TYMXJf+2urFBLy4LidsRa
-         rr7vn2pVUyvg3pwPYJ7FPhJPPNy7BRRQeh9KAQxuAW9BLbVVQWnra/w5+CHxpgb2ux
-         6iSR8V/lTW7fRk0/VIfbmJb3HKTUNbOInres55CV0nxmJ3TitS0GmRoKefODeQYGCy
-         ftCAE5paEGZ+vPCCzitG2QJbj0VhlNqBXMAxeSyRyNjJOgH+6YMU7zMoCw2QWBZDeJ
-         FcJfPkfQNyQQg==
-Date:   Wed, 20 Jul 2022 10:25:06 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Catherine Hoang <catherine.hoang@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v2] xfs/018: fix LARP testing for small block sizes
-Message-ID: <Ytg6cpoaeegvTWXN@magnolia>
-References: <20220719222520.15550-1-catherine.hoang@oracle.com>
+        with ESMTP id S233758AbiGTSLb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 14:11:31 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DECE73B955
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 11:11:30 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id f11so15695085plr.4
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 11:11:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=/FmOdNJUVcNQc46kPy6TXLU2vsnWz7FBU6vLXoDGNIM=;
+        b=BTfAnqG+u7ganFo7XbjTyHaCoMm7frdFBC73EeMJmPQJU/7+S5sr7mw9EpnLLMkX5Z
+         qBGkTnoGaW74wYsUt6FdT125GT6a4PCcPN7hSFr2zOF81aObCts1PdRucjBNPiAw9ziC
+         UXKlH+sKVD9vD6KAa0R3Zk5jsEkrk+cwhVKJadMeTUmcxNcFB14ISGpAX973lRNHVU+C
+         h/XWpwAt0Xe4trMM5mZ7xN/oCzrQaiaF1W0Cj/T3yxdX9R1ovba/6OSE9MafWjCscjsG
+         F4AE0KY1adrxSJMmmrjBkBatet2ckqaS57X6AC9gd26nsUfZ8yFpcq/vnpwcBWQcWzeI
+         0EnQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=/FmOdNJUVcNQc46kPy6TXLU2vsnWz7FBU6vLXoDGNIM=;
+        b=cYWGmW2WRdkU353od/E9nAy3DDETd1hlYvAMIqxamNYAU2BSRUMpg4sdNB//AKji2D
+         PXJqut+F6KiaTFxrYHvSx0oKPYbzMuQh9MWLlanHdrpe8m8hSX+1WX8QG5p4H8xsEHu6
+         9pfuJqVZHbYRsuzXhw7ATTw4oSm5AehV1rCDlVL5725nQyB+ALzSvn7Hssm6CUflwK09
+         G5sko+wfthZ5B+td72opBX/t37QdwPn1VymzddAcXGWziAqGq8Y4yeqhpGaOICAILL/5
+         JFb4JNtNaX5chmBHa4FhOaREmgqqaNp25KQDoPqS1FeWyyY4tYppag+mQ+MGHdla1iMa
+         Lqag==
+X-Gm-Message-State: AJIora9oACMnX5AEnh7Sg0qA7P7GmBFALrmkOd3cLSdOSP3LlLmKTl6A
+        HM5Qgj3NTKdUOm/g7JmAKso=
+X-Google-Smtp-Source: AGRyM1vomvny7AixhghRQvjTRJXKeQOYf2WaLckkinXzGYSKvLUiuUkOw8g+V2J8U5WzT9b4hcp32g==
+X-Received: by 2002:a17:902:f253:b0:16d:1901:38fd with SMTP id j19-20020a170902f25300b0016d190138fdmr7487806plc.94.1658340690210;
+        Wed, 20 Jul 2022 11:11:30 -0700 (PDT)
+Received: from google.com ([2620:15c:2c1:200:bd01:d614:c22:9f6d])
+        by smtp.gmail.com with ESMTPSA id h14-20020a63e14e000000b004161b3c3388sm12156648pgk.26.2022.07.20.11.11.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Jul 2022 11:11:29 -0700 (PDT)
+Date:   Wed, 20 Jul 2022 11:11:27 -0700
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 5.15 CANDIDATE 0/9] xfs stable candidate patches for
+ 5.15.y (part 3)
+Message-ID: <YthFT0bJlbEdhPTY@google.com>
+References: <20220718202959.1611129-1-leah.rumancik@gmail.com>
+ <YtXXhQuOioUeSltH@magnolia>
+ <CAOQ4uxh13NPtWP98E-R7Sxfy=dkgCHxk7tysEykJ2rg3yhJ__A@mail.gmail.com>
+ <YtbDSQjWaVvweLRC@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220719222520.15550-1-catherine.hoang@oracle.com>
+In-Reply-To: <YtbDSQjWaVvweLRC@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 19, 2022 at 03:25:20PM -0700, Catherine Hoang wrote:
-> From: "Darrick J. Wong" <djwong@kernel.org>
+On Tue, Jul 19, 2022 at 07:44:25AM -0700, Darrick J. Wong wrote:
+> On Tue, Jul 19, 2022 at 10:44:29AM +0200, Amir Goldstein wrote:
+> > On Tue, Jul 19, 2022 at 12:05 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> > >
+> > > On Mon, Jul 18, 2022 at 01:29:50PM -0700, Leah Rumancik wrote:
+> > > > Hi again,
+> > > >
+> > > > This set contains fixes from 5.16 to 5.17. The normal testing was run
+> > > > for this set with no regressions found.
+> > > >
+> > > > I included some fixes for online scrub. I am not sure if this
+> > > > is in use for 5.15 though so please let me know if these should be
+> > > > dropped.
+> > > >
+> > > > Some refactoring patches were included in this set as dependencies:
+> > > >
+> > > > bf2307b19513 xfs: fold perag loop iteration logic into helper function
+> > > >     dependency for f1788b5e5ee25bedf00bb4d25f82b93820d61189
+> > > > f1788b5e5ee2 xfs: rename the next_agno perag iteration variable
+> > > >     dependency for 8ed004eb9d07a5d6114db3e97a166707c186262d
+> > > >
+> > > > Thanks,
+> > > > Leah
+> > > >
+> > > >
+> > > > Brian Foster (4):
+> > > >   xfs: fold perag loop iteration logic into helper function
+> > > >   xfs: rename the next_agno perag iteration variable
+> > > >   xfs: terminate perag iteration reliably on agcount
+> > > >   xfs: fix perag reference leak on iteration race with growfs
+> > > >
+> > > > Dan Carpenter (1):
+> > > >   xfs: prevent a WARN_ONCE() in xfs_ioc_attr_list()
+> > > >
+> > > > Darrick J. Wong (4):
+> > > >   xfs: fix maxlevels comparisons in the btree staging code
+> > >
+> > > Up to this point,
+> > > Acked-by: Darrick J. Wong <djwong@kernel.org>
+> > >
+> > > >   xfs: fix incorrect decoding in xchk_btree_cur_fsbno
+> > > >   xfs: fix quotaoff mutex usage now that we don't support disabling it
+> > > >   xfs: fix a bug in the online fsck directory leaf1 bestcount check
+> > >
+> > > No objections to these last three, since they're legitimate fixes for
+> > > bugs in 5.15, but I would advise y'all not to worry too much about fixes
+> > > for EXPERIMENTAL features.
 > 
-> Fix this test to work properly when the filesystem block size is less
-> than 4k.  Tripping the error injection points on shape changes in the
-> xattr structure must be done dynamically.
+> Also, to clarify -- if you /do/ want to pick up the scrub fixes, then
+> yes, the Acked-by above does apply to the entire set.  I don't know if
+> you have people running (experimental) scrub, but I don't know that you
+> **don't**. :)
+
+These fixes aren't a priority over here so I'll postpone scrub fixes in
+the future since it doesn't seem like people care. For this set, is
+there coverage in xfstests for them? If so, I'll go ahead and keep them,
+but if not, I'll just drop them.
+
+- Leah
+
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-
-Hrmm.  I tried this on an 8k-blocksize filesystem overnight (arm64, 64k
-pages), and got this:
-
---- xfs/018.out
-+++ xfs/018.out.bad
-@@ -71,14 +71,14 @@
- touch: cannot touch 'SCRATCH_MNT/testdir/extent_file1': Input/output error
- attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
- 
--attr_set: Input/output error
--Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file2
--touch: cannot touch 'SCRATCH_MNT/testdir/extent_file2': Input/output error
-+Attribute "attr_nameXXXX" set to a 257 byte value for SCRATCH_MNT/testdir/extent_file2:
-+0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
-+
- attr_nameXXXX: f4ea5799d72a0a9bf2d56a685c9cba7a  -
- 
--attr_set: Input/output error
--Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file3
--touch: cannot touch 'SCRATCH_MNT/testdir/extent_file3': Input/output error
-+Attribute "attr_nameXXXX" set to a 257 byte value for SCRATCH_MNT/testdir/extent_file3:
-+0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
-+
- attr_nameXXXX: f4ea5799d72a0a9bf2d56a685c9cba7a  -
- 
- attr_set: Input/output error
-
-Not sure what that's all about, but could you please take a look?
-
---D
-
-> ---
->  tests/xfs/018     | 14 +++++++++-----
->  tests/xfs/018.out | 47 ++++-------------------------------------------
->  2 files changed, 13 insertions(+), 48 deletions(-)
+> > FWIW, from the set above, I only picked Dan Carpenter's fix for 5.10.
+> > I'll include it in one of the following updates.
 > 
-> diff --git a/tests/xfs/018 b/tests/xfs/018
-> index 041a3b24..323279b5 100755
-> --- a/tests/xfs/018
-> +++ b/tests/xfs/018
-> @@ -47,7 +47,8 @@ test_attr_replay()
->  	touch $testfile
->  
->  	# Verify attr recovery
-> -	$ATTR_PROG -l $testfile | _filter_scratch
-> +	$ATTR_PROG -l $testfile >> $seqres.full
-> +	echo "Checking contents of $attr_name" >> $seqres.full
->  	echo -n "$attr_name: "
->  	$ATTR_PROG -q -g $attr_name $testfile 2> /dev/null | md5sum;
->  
-> @@ -98,6 +99,9 @@ attr64k="$attr32k$attr32k"
->  echo "*** mkfs"
->  _scratch_mkfs >/dev/null
->  
-> +blk_sz=$(_scratch_xfs_get_sb_field blocksize)
-> +multiplier=$(( $blk_sz / 276 )) # 256 + 20 to account for attr name
-> +
->  echo "*** mount FS"
->  _scratch_mount
->  
-> @@ -140,12 +144,12 @@ test_attr_replay extent_file1 "attr_name2" $attr1k "s" "larp"
->  test_attr_replay extent_file1 "attr_name2" $attr1k "r" "larp"
->  
->  # extent, inject error on split
-> -create_test_file extent_file2 3 $attr1k
-> -test_attr_replay extent_file2 "attr_name4" $attr1k "s" "da_leaf_split"
-> +create_test_file extent_file2 $multiplier $attr256
-> +test_attr_replay extent_file2 "attr_nameXXXX" $attr256 "s" "da_leaf_split"
->  
->  # extent, inject error on fork transition
-> -create_test_file extent_file3 3 $attr1k
-> -test_attr_replay extent_file3 "attr_name4" $attr1k "s" "attr_leaf_to_node"
-> +create_test_file extent_file3 $multiplier $attr256
-> +test_attr_replay extent_file3 "attr_nameXXXX" $attr256 "s" "attr_leaf_to_node"
->  
->  # extent, remote
->  create_test_file extent_file4 1 $attr1k
-> diff --git a/tests/xfs/018.out b/tests/xfs/018.out
-> index 022b0ca3..57dc448a 100644
-> --- a/tests/xfs/018.out
-> +++ b/tests/xfs/018.out
-> @@ -4,7 +4,6 @@ QA output created by 018
->  attr_set: Input/output error
->  Could not set "attr_name" for SCRATCH_MNT/testdir/empty_file1
->  touch: cannot touch 'SCRATCH_MNT/testdir/empty_file1': Input/output error
-> -Attribute "attr_name" has a 65 byte value for SCRATCH_MNT/testdir/empty_file1
->  attr_name: cfbe2a33be4601d2b655d099a18378fc  -
->  
->  attr_remove: Input/output error
-> @@ -15,7 +14,6 @@ attr_name: d41d8cd98f00b204e9800998ecf8427e  -
->  attr_set: Input/output error
->  Could not set "attr_name" for SCRATCH_MNT/testdir/empty_file2
->  touch: cannot touch 'SCRATCH_MNT/testdir/empty_file2': Input/output error
-> -Attribute "attr_name" has a 1025 byte value for SCRATCH_MNT/testdir/empty_file2
->  attr_name: 9fd415c49d67afc4b78fad4055a3a376  -
->  
->  attr_remove: Input/output error
-> @@ -26,7 +24,6 @@ attr_name: d41d8cd98f00b204e9800998ecf8427e  -
->  attr_set: Input/output error
->  Could not set "attr_name" for SCRATCH_MNT/testdir/empty_file3
->  touch: cannot touch 'SCRATCH_MNT/testdir/empty_file3': Input/output error
-> -Attribute "attr_name" has a 65536 byte value for SCRATCH_MNT/testdir/empty_file3
->  attr_name: 7f6fd1b6d872108bd44bd143cbcdfa19  -
->  
->  attr_remove: Input/output error
-> @@ -37,132 +34,96 @@ attr_name: d41d8cd98f00b204e9800998ecf8427e  -
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/inline_file1
->  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file1': Input/output error
-> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file1
-> -Attribute "attr_name2" has a 65 byte value for SCRATCH_MNT/testdir/inline_file1
->  attr_name2: cfbe2a33be4601d2b655d099a18378fc  -
->  
->  attr_remove: Input/output error
->  Could not remove "attr_name2" for SCRATCH_MNT/testdir/inline_file1
->  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file1': Input/output error
-> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file1
->  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
->  
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/inline_file2
->  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file2': Input/output error
-> -Attribute "attr_name2" has a 1025 byte value for SCRATCH_MNT/testdir/inline_file2
-> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file2
->  attr_name2: 9fd415c49d67afc4b78fad4055a3a376  -
->  
->  attr_remove: Input/output error
->  Could not remove "attr_name2" for SCRATCH_MNT/testdir/inline_file2
->  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file2': Input/output error
-> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file2
->  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
->  
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/inline_file3
->  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file3': Input/output error
-> -Attribute "attr_name2" has a 65536 byte value for SCRATCH_MNT/testdir/inline_file3
-> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file3
->  attr_name2: 7f6fd1b6d872108bd44bd143cbcdfa19  -
->  
->  attr_remove: Input/output error
->  Could not remove "attr_name2" for SCRATCH_MNT/testdir/inline_file3
->  touch: cannot touch 'SCRATCH_MNT/testdir/inline_file3': Input/output error
-> -Attribute "attr_name1" has a 16 byte value for SCRATCH_MNT/testdir/inline_file3
->  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
->  
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/extent_file1
->  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file1': Input/output error
-> -Attribute "attr_name2" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file1
-> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file1
->  attr_name2: 9fd415c49d67afc4b78fad4055a3a376  -
->  
->  attr_remove: Input/output error
->  Could not remove "attr_name2" for SCRATCH_MNT/testdir/extent_file1
->  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file1': Input/output error
-> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file1
->  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
->  
->  attr_set: Input/output error
-> -Could not set "attr_name4" for SCRATCH_MNT/testdir/extent_file2
-> +Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file2
->  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file2': Input/output error
-> -Attribute "attr_name4" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file2
-> -Attribute "attr_name2" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
-> -Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
-> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file2
-> -attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
-> +attr_nameXXXX: f4ea5799d72a0a9bf2d56a685c9cba7a  -
->  
->  attr_set: Input/output error
-> -Could not set "attr_name4" for SCRATCH_MNT/testdir/extent_file3
-> +Could not set "attr_nameXXXX" for SCRATCH_MNT/testdir/extent_file3
->  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file3': Input/output error
-> -Attribute "attr_name4" has a 1025 byte value for SCRATCH_MNT/testdir/extent_file3
-> -Attribute "attr_name2" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
-> -Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
-> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file3
-> -attr_name4: 9fd415c49d67afc4b78fad4055a3a376  -
-> +attr_nameXXXX: f4ea5799d72a0a9bf2d56a685c9cba7a  -
->  
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/extent_file4
->  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file4': Input/output error
-> -Attribute "attr_name2" has a 65536 byte value for SCRATCH_MNT/testdir/extent_file4
-> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file4
->  attr_name2: 7f6fd1b6d872108bd44bd143cbcdfa19  -
->  
->  attr_remove: Input/output error
->  Could not remove "attr_name2" for SCRATCH_MNT/testdir/extent_file4
->  touch: cannot touch 'SCRATCH_MNT/testdir/extent_file4': Input/output error
-> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/extent_file4
->  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
->  
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/remote_file1
->  touch: cannot touch 'SCRATCH_MNT/testdir/remote_file1': Input/output error
-> -Attribute "attr_name2" has a 1025 byte value for SCRATCH_MNT/testdir/remote_file1
-> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file1
->  attr_name2: 9fd415c49d67afc4b78fad4055a3a376  -
->  
->  attr_remove: Input/output error
->  Could not remove "attr_name2" for SCRATCH_MNT/testdir/remote_file1
->  touch: cannot touch 'SCRATCH_MNT/testdir/remote_file1': Input/output error
-> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file1
->  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
->  
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/remote_file2
->  touch: cannot touch 'SCRATCH_MNT/testdir/remote_file2': Input/output error
-> -Attribute "attr_name2" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file2
-> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file2
->  attr_name2: 7f6fd1b6d872108bd44bd143cbcdfa19  -
->  
->  attr_remove: Input/output error
->  Could not remove "attr_name2" for SCRATCH_MNT/testdir/remote_file2
->  touch: cannot touch 'SCRATCH_MNT/testdir/remote_file2': Input/output error
-> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/remote_file2
->  attr_name2: d41d8cd98f00b204e9800998ecf8427e  -
->  
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/sf_file
->  touch: cannot touch 'SCRATCH_MNT/testdir/sf_file': Input/output error
-> -Attribute "attr_name1" has a 64 byte value for SCRATCH_MNT/testdir/sf_file
-> -Attribute "attr_name2" has a 17 byte value for SCRATCH_MNT/testdir/sf_file
->  attr_name2: 9a6eb1bc9da3c66a9b495dfe2fe8a756  -
->  
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/leaf_file
->  touch: cannot touch 'SCRATCH_MNT/testdir/leaf_file': Input/output error
-> -Attribute "attr_name2" has a 257 byte value for SCRATCH_MNT/testdir/leaf_file
-> -Attribute "attr_name3" has a 1024 byte value for SCRATCH_MNT/testdir/leaf_file
-> -Attribute "attr_name1" has a 1024 byte value for SCRATCH_MNT/testdir/leaf_file
->  attr_name2: f4ea5799d72a0a9bf2d56a685c9cba7a  -
->  
->  attr_set: Input/output error
->  Could not set "attr_name2" for SCRATCH_MNT/testdir/node_file
->  touch: cannot touch 'SCRATCH_MNT/testdir/node_file': Input/output error
-> -Attribute "attr_name2" has a 257 byte value for SCRATCH_MNT/testdir/node_file
-> -Attribute "attr_name1" has a 65536 byte value for SCRATCH_MNT/testdir/node_file
->  attr_name2: f4ea5799d72a0a9bf2d56a685c9cba7a  -
->  
->  *** done
-> -- 
-> 2.25.1
+> <nod>
 > 
+> --D
+> 
+> > Thanks,
+> > Amir.
