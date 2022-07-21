@@ -2,75 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69887C43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jul 2022 21:33:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0D1CC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jul 2022 21:36:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbiGUVds (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jul 2022 17:33:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50312 "EHLO
+        id S233702AbiGUVgr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jul 2022 17:36:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbiGUVdr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 17:33:47 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2A1289284C;
-        Thu, 21 Jul 2022 14:33:42 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D783710E83FF;
-        Fri, 22 Jul 2022 07:33:39 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oEdnd-003hfO-FV; Fri, 22 Jul 2022 07:33:37 +1000
-Date:   Fri, 22 Jul 2022 07:33:37 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     kernel test robot <oliver.sang@intel.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, lkp@lists.01.org, lkp@intel.com,
-        ying.huang@intel.com, feng.tang@intel.com,
-        zhengjun.xing@linux.intel.com, fengwei.yin@intel.com
-Subject: Re: [xfs]  345a4666a7:  vm-scalability.throughput -91.7% regression
-Message-ID: <20220721213337.GV3861211@dread.disaster.area>
-References: <Ytlr9vZbF4SOfA2n@xsang-OptiPlex-9020>
+        with ESMTP id S233613AbiGUVgp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 17:36:45 -0400
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FE6B93612;
+        Thu, 21 Jul 2022 14:36:45 -0700 (PDT)
+Received: by mail-pj1-x102e.google.com with SMTP id f3-20020a17090ac28300b001f22d62bfbcso2227575pjt.0;
+        Thu, 21 Jul 2022 14:36:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=lkr9K8E3g4XVaOmkXtXzuO8KCTnAYiCo1B0JCZ9vFdY=;
+        b=Cgnxavb3ik4Z74PuL7hMCtWtVE7LeCmvNqltCKCdwxfW4yzcny8BYhUSnclL0R/wud
+         K1uxPuKUh94aoFDCcgofD5J2e1Bz685zyuCbJCn6iWLv9/oAenmk055ls7Ty54m3FUhF
+         JBK+Fexl9Hk0Q73Lw8vc5X9WoQkodgrr12ysK0MzqxuOEJUmMbY0DvT13R4d/kB2YBxB
+         ksJM0DD6HaSQpEr5zoyBfUWNIsC9PjrebCU0232v0C+KhDDwRmVlU0CLm9rx81EljAId
+         LQ2EQG5paIkPm+zK/lPWZt0mP2OIB0wukv9oL6fpz0K7fGMImXN/VidvDU9nndshc1ri
+         gTeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=lkr9K8E3g4XVaOmkXtXzuO8KCTnAYiCo1B0JCZ9vFdY=;
+        b=MNK5dPeQ5KpPCulY6T2izQsCaH9X6YzDJJc+absUY9uV5jLFGKm/j3GQ2FigoKiLUv
+         wFeS7TOAGV4MF+/45brq1xFhcIktBN8SZvE6sWTGDe7JRxvT1HbwV+F12OzRdi1UmDsa
+         PH/AICxnpASC2hopZO8oDhrBnkRFyF9MNGhPNNOxOAGLsRUjr2dtJ8yIZVfI8uUrwWTV
+         xQer6XxZxLntNj61+uVnjCQ032ECebY65zRJohSaD0pzEb04+zgjR0FtjxaIf3mzZpy8
+         3A5EDadsIowEnm/ZPb1isRN4bvZxUM9/HWEZgULdtdkDeaWYN/9iUblT3YNJjXoTdv7j
+         2a1Q==
+X-Gm-Message-State: AJIora+teft+GaapyGh+Hyitos67RWtqDlqxRCctU3oyNVQ+BO7kqn3l
+        VJR6XCLZRlriZl/E7U+5T3qHYe4I9LM=
+X-Google-Smtp-Source: AGRyM1sHcLjbBLG1NOdDRj64/OwvItdwDQ2pdgyvqVmRA0ginigXrrDql9rHXP0ujSInQqyAGYpWFw==
+X-Received: by 2002:a17:902:8645:b0:16d:2b60:bc80 with SMTP id y5-20020a170902864500b0016d2b60bc80mr459457plt.126.1658439404281;
+        Thu, 21 Jul 2022 14:36:44 -0700 (PDT)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:ea45:e7f2:4e46:fc7a])
+        by smtp.gmail.com with ESMTPSA id c26-20020a634e1a000000b004114cc062f0sm1919502pgb.65.2022.07.21.14.36.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Jul 2022 14:36:25 -0700 (PDT)
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     amir73il@gmail.com, Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 v2 0/6] xfs stable candidate patches for 5.15.y (part 3)
+Date:   Thu, 21 Jul 2022 14:36:04 -0700
+Message-Id: <20220721213610.2794134-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.37.1.359.gd136c6c3e2-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Ytlr9vZbF4SOfA2n@xsang-OptiPlex-9020>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62d9c634
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=W6j0_YgMumW3DOhRCFIA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 21, 2022 at 11:08:38PM +0800, kernel test robot wrote:
-> 
-> (just FYI for the possible performance impact of disabling large folios,
-> our config, as attached, set default N to XFS_LARGE_FOLIOS)
-> 
-> 
-> Greeting,
-> 
-> FYI, we noticed a -91.7% regression of vm-scalability.throughput due to commit:
-> 
-> 
-> commit: 345a4666a721a81c343186768cdd95817767195f ("xfs: disable large folios except for developers")
+Hi again,
 
-Say what? I've never seen that change go past on a public list...
+This set contains fixes from 5.16 to 5.17. The normal testing was run
+for this set with no regressions found.
 
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git xfs-5.20-merge
+Some refactoring patches were included in this set as dependencies:
 
-Oh, it's in a developer's working tree, not something that has been
-proposed for review let alone been merged.
+bf2307b19513 xfs: fold perag loop iteration logic into helper function
+    dependency for f1788b5e5ee25bedf00bb4d25f82b93820d61189
+f1788b5e5ee2 xfs: rename the next_agno perag iteration variable
+    dependency for 8ed004eb9d07a5d6114db3e97a166707c186262d
 
-So why is this report being sent to lkml, linux-xfs, etc as if it
-was a change merged into an upstream tree rather than just the
-developer who owns the tree the commit is in?
+Thanks,
+Leah
 
--Dave.
+v1->v2:
+- Dropped 3 patches of scrub fixes
+- Added Ack's
+
+v1: https://lore.kernel.org/linux-xfs/20220718202959.1611129-1-leah.rumancik@gmail.com/
+
+Brian Foster (4):
+  xfs: fold perag loop iteration logic into helper function
+  xfs: rename the next_agno perag iteration variable
+  xfs: terminate perag iteration reliably on agcount
+  xfs: fix perag reference leak on iteration race with growfs
+
+Dan Carpenter (1):
+  xfs: prevent a WARN_ONCE() in xfs_ioc_attr_list()
+
+Darrick J. Wong (1):
+  xfs: fix maxlevels comparisons in the btree staging code
+
+ fs/xfs/libxfs/xfs_ag.h            | 36 ++++++++++++++++++-------------
+ fs/xfs/libxfs/xfs_btree_staging.c |  4 ++--
+ fs/xfs/xfs_ioctl.c                |  2 +-
+ fs/xfs/xfs_ioctl.h                |  5 +++--
+ 4 files changed, 27 insertions(+), 20 deletions(-)
+
 -- 
-Dave Chinner
-david@fromorbit.com
+2.37.1.359.gd136c6c3e2-goog
+
