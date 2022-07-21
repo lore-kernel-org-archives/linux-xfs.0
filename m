@@ -2,135 +2,155 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0BFC43334
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jul 2022 23:39:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3944C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jul 2022 03:29:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229504AbiGTXjY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jul 2022 19:39:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51168 "EHLO
+        id S230153AbiGUD3w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jul 2022 23:29:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230234AbiGTXjY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 19:39:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7944949B42
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 16:39:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1590361DEE
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 23:39:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69F91C3411E
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 23:39:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658360362;
-        bh=nzmjyrqyFME9TqoLVLo3VDpv0Vrj4V3YH0MPWCarQHQ=;
-        h=Date:From:To:Subject:From;
-        b=Se6knHV8iTUqJt4KMuahCLpoFeA/tKfJ5aDprdfI3M/ITuHajvLJFfM6m5jNJfUlq
-         oyS0MaQfF7EXduUnjF205wyTPkJM8DkAcW9qyVCs7mYuNNg5jkDIp0UPv9IIf2Na/Z
-         kKA/H6yC3BUx4GO9kPM9PUPcJnfb6u6F1UMDhuJ0xlbBtv84wS/JBphUK7VdjjE3Pa
-         O1VxX8+NgUowDgqollgrw21KBQrVB54vSk3cVOPdT7IsRwwxiIvpEHOjlc69cX81QW
-         2pSWdo8tDndXn4tiCmtNWfhQcvZ6FfSS+ZBM6uh0IGFgXzA1/ZjxmSFDZmNRoK6waC
-         TeJzHljo9Oszg==
-Date:   Wed, 20 Jul 2022 16:39:21 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [RFC[RAP] PATCH] xfs: fix unit conversion error in
- xfs_log_calc_max_attrsetm_res
-Message-ID: <YtiSKY1OcPAg+p52@magnolia>
+        with ESMTP id S229461AbiGUD3v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jul 2022 23:29:51 -0400
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 953D561D97
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 20:29:50 -0700 (PDT)
+Received: by mail-pg1-x52e.google.com with SMTP id bf13so443095pgb.11
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jul 2022 20:29:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=d7G8IAlW0jT//sna30rwsZ7OL53uO+4+vHfrmyAXBeg=;
+        b=XGc9PCaKL+DnU++PAsO2+HnILnuf4dMs7XeOnXMpH73b+BnDbrrM7OOj03L+6SVKFq
+         UbID2nlaCmaHQktgkdQ+ngO06vuxXciJd+a9SZHeihJt1Zw5z98P5DlXZGLOx9Ux7oiv
+         7aSPLZE5XIULe4ZvIyGyN4T0vajEZJP/PI0CH3UA7byNGs6eQ1URqSfLFURUTCh7v7en
+         VbOiTnPj3uOmQfJL91rEiHmKYIbHJFMJFK+Uk4aFC83SPHNRllhPoYZyGl/XYBf63QzJ
+         2pFRSTEO6adzZ5mjhJTR6nS1yCEzKSL0/rFjyHnkyofIx5KGLXqRqwsgAS6iFoVBmpec
+         MZ8Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=d7G8IAlW0jT//sna30rwsZ7OL53uO+4+vHfrmyAXBeg=;
+        b=kyIxxQEcARR9vhVBgHffTVqVf179b/HTCyG3doIQ5HFlDHLADKwdHqnSlOmTMwSAa2
+         y8wU9sb0V98BAf+yUxdCQGAzCBB50/6R8efn3d9robjtkS9ouuIX1y8+UEXDj8thUi2p
+         yWKKOi4Ad/L03ceb6rmzFArpRDMLZfo+Gqxh/sKEqpoQmjLlDh+s22o5Vf7ThCEizlCe
+         I2RR/Db2zLZX1AoveEH3eZB5kpQF37mz/dgUeRxhYgChAbJyxLJJvUiaSrpzl5hwa2w+
+         DpfbCvDcC6McArKW/gc65+Y88+BAyCCxU96CaRl15VF368DOGuj4aKGF/toxVDkZ0Pi6
+         Fg1w==
+X-Gm-Message-State: AJIora9ug1XgLnMRqPsu1ARYfKokirSMWy7EQylDxLSBVQHI3xuDO5pr
+        m1whFMv5zo3Z2TUZ3KBkgJE=
+X-Google-Smtp-Source: AGRyM1v1WL6FzTlCkBHNJYYzL4hcBG36SeXioIRr1lVPKa5F29HWVT6vCZFReLPGT5n9tMP2pO8oew==
+X-Received: by 2002:a65:6b8a:0:b0:3fc:4c06:8a8d with SMTP id d10-20020a656b8a000000b003fc4c068a8dmr35996187pgw.83.1658374190030;
+        Wed, 20 Jul 2022 20:29:50 -0700 (PDT)
+Received: from [192.168.1.3] (ip72-194-116-95.oc.oc.cox.net. [72.194.116.95])
+        by smtp.gmail.com with ESMTPSA id h2-20020a17090a054200b001f0ade18babsm2411527pjf.55.2022.07.20.20.29.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 Jul 2022 20:29:49 -0700 (PDT)
+Message-ID: <dae3e881-ae1b-8140-783f-a3a04317199e@gmail.com>
+Date:   Wed, 20 Jul 2022 20:29:48 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.0.3
+Subject: Re: [RFC PATCH] libxfs: stop overriding MAP_SYNC in publicly exported
+ header files
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Cc:     info@mobile-stream.com,
+        Fabrice Fontaine <fontaine.fabrice@gmail.com>
+References: <YtiPgDT3imEyU2aF@magnolia>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+In-Reply-To: <YtiPgDT3imEyU2aF@magnolia>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
 
-Dave and I were discussing some recent test regressions as a result of
-me turning on nrext64=1 on realtime filesystems, when we noticed that
-the minimum log size of a 32M filesystem jumped from 954 blocks to 4287
-blocks.
 
-Digging through xfs_log_calc_max_attrsetm_res, Dave noticed that @size
-contains the maximum estimated amount of space needed for a local format
-xattr, in bytes, but we feed this quantity to XFS_NEXTENTADD_SPACE_RES,
-which requires units of blocks.  This has resulted in an overestimation
-of the minimum log size over the years.
+On 7/20/2022 4:28 PM, Darrick J. Wong wrote:
+> Can one of you please apply this patch and see if it'll build in musl on
+> mips, please?  Sorry it's taken so long to address this. :/
+> 
+> --D
+> 
+> ---
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Florian Fainelli most recently reported that xfsprogs doesn't build with
+> musl on mips:
+> 
+> "MIPS platforms building with recent kernel headers and the musl-libc
+> toolchain will expose the following build failure:
+> 
+> mmap.c: In function 'mmap_f':
+> mmap.c:196:12: error: 'MAP_SYNC' undeclared (first use in this function); did you mean 'MS_SYNC'?
+>    196 |    flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+>        |            ^~~~~~~~
+>        |            MS_SYNC
+> mmap.c:196:12: note: each undeclared identifier is reported only once for each function it appears in
+> make[4]: *** [../include/buildrules:81: mmap.o] Error 1"
+> 
+> At first glance, the build failure here is caused by the fact that:
+> 
+> 1. The configure script doesn't detect MAP_SYNC support
+> 2. The build system doesn't set HAVE_MAP_SYNC
+> 2. io/mmap.c includes input.h -> projects.h -> xfs.h and later sys/mman.h
+> 3. include/linux.h #define's MAP_SYNC to 0 if HAVE_MAP_SYNC is not set
+> 4. musl's sys/mman.h #undef MAP_SYNC on platforms that don't support it
+> 5. io/mmap.c tries to use MAP_SYNC, not realizing that libc undefined it
+> 
+> Normally, xfs_io only exports functionality that is defined by the libc
+> and/or kernel headers on the build system.  We often make exceptions for
+> new functionality so that we have a way to test them before the header
+> file packages catch up, hence this '#ifndef HAVE_FOO #define FOO'
+> paradigm.
+> 
+> MAP_SYNC is a gross and horribly broken example of this.  These support
+> crutches are supposed to be *private* to xfsprogs for benefit of early
+> testing, but they were instead added to include/linux.h, which we
+> provide to user programs in the xfslibs-dev package.  IOWs, we've been
+> #defining MAP_SYNC to zero for unsuspecting programs.
+> 
+> Worst yet, gcc 11.3 doesn't even warn about overriding a #define to 0:
+> 
+> #include <stdio.h>
+> #include <sys/mman.h>
+> #ifdef STUPID
+> # include <xfs/xfs.h>
+> #endif
+> 
+> int main(int argc, char *argv[]) {
+> 	printf("MAP_SYNC 0x%x\n", MAP_SYNC);
+> }
+> 
+> $ gcc -o a a.c -Wall
+> $ ./a
+> MAP_SYNC 0x80000
+> $ gcc -DSTUPID -o a a.c -Wall
+> $ ./a
+> MAP_SYNC 0x0
+> 
+> Four years have gone by since the introduction of MAP_SYNC, so let's get
+> rid of the override code entirely -- any platform that supports MAP_SYNC
+> has had plenty of chances to ensure their header files have the right
+> bits.  While we're at it, fix AC_HAVE_MAP_SYNC to look for MAP_SYNC in
+> the same header file that the one user (io/mmap.c) uses -- sys/mman.h.
+> 
+> Annoyingly, I had to test this by hand because the sole fstest that
+> exercises MAP_SYNC (generic/470) requires dm-logwrites and dm-thinp,
+> neither of which support fsdax on current kernels.
+> 
+> Reported-by: info@mobile-stream.com
+> Reported-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+> Reported-by: Florian Fainelli <f.fainelli@gmail.com>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-We should nominally correct this, but there's a backwards compatibility
-problem -- if we enable it now, the minimum log size will decrease.  If
-a corrected mkfs formats a filesystem with this new smaller log size, a
-user will encounter mount failures on an old uncorrected kernel due to
-the larger minimum log size computations there.
+Tested-by: Florian Fainelli <f.fainelli@gmail.com>
 
-However, the large extent counters feature is still EXPERIMENTAL, so we
-can gate the correction on that feature (or any features that get added
-after that) being enabled.  Any filesystem with nrext64 or any of the
-as-yet-undefined feature bits turned on will be rejected by old
-uncorrected kernels, so this should be safe even in the upgrade case.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_log_rlimit.c |   42 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
-
-diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
-index 9975b93a7412..8fcfd8dd7935 100644
---- a/fs/xfs/libxfs/xfs_log_rlimit.c
-+++ b/fs/xfs/libxfs/xfs_log_rlimit.c
-@@ -16,6 +16,38 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_trace.h"
- 
-+/*
-+ * Decide if the filesystem has the large extent count feature or any feature
-+ * added after that.
-+ */
-+static inline bool
-+xfs_is_after_nrext64_epoch(
-+	struct xfs_mount	*mp)
-+{
-+	if (!xfs_sb_is_v5(&mp->m_sb))
-+		return false;
-+
-+	if (xfs_sb_has_compat_feature(&mp->m_sb, ~0))
-+		return true;
-+
-+	if (xfs_sb_has_ro_compat_feature(&mp->m_sb,
-+				~(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
-+				  XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-+				  XFS_SB_FEAT_RO_COMPAT_REFLINK | \
-+				  XFS_SB_FEAT_RO_COMPAT_INOBTCNT)))
-+		return true;
-+
-+	if (xfs_sb_has_incompat_feature(&mp->m_sb,
-+				~(XFS_SB_FEAT_INCOMPAT_FTYPE |
-+				  XFS_SB_FEAT_INCOMPAT_SPINODES |
-+				  XFS_SB_FEAT_INCOMPAT_META_UUID |
-+				  XFS_SB_FEAT_INCOMPAT_BIGTIME |
-+				  XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR)))
-+		return true;
-+
-+	return false;
-+}
-+
- /*
-  * Calculate the maximum length in bytes that would be required for a local
-  * attribute value as large attributes out of line are not logged.
-@@ -31,6 +63,16 @@ xfs_log_calc_max_attrsetm_res(
- 	       MAXNAMELEN - 1;
- 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
- 	nblks += XFS_B_TO_FSB(mp, size);
-+
-+	/*
-+	 * Starting with the large extent count feature, every new fs feature
-+	 * corrects a unit conversion error in the xattr transaction
-+	 * reservation code that resulted in oversized minimum log size
-+	 * computations.
-+	 */
-+	if (xfs_is_after_nrext64_epoch(mp))
-+		size = XFS_B_TO_FSB(mp, size);
-+
- 	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
- 
- 	return  M_RES(mp)->tr_attrsetm.tr_logres +
+Thanks!
+-- 
+Florian
