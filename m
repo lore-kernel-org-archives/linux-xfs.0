@@ -2,90 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91188C43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jul 2022 21:38:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5DEEC43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jul 2022 22:01:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229539AbiGUVi4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jul 2022 17:38:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54914 "EHLO
+        id S234010AbiGUWBt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jul 2022 18:01:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbiGUViz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 17:38:55 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEA5A9363A;
-        Thu, 21 Jul 2022 14:38:54 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4E1CAB82694;
-        Thu, 21 Jul 2022 21:38:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA8F4C3411E;
-        Thu, 21 Jul 2022 21:38:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658439532;
-        bh=Mt09URF0i4HDUXQYs2ZJjNJO5v2gBmKKj3dP82wOvLE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AXtVTp1V12QLvDDLVppJpqLvBbRswptQjSkt8L4X23EtCItQ5vNS3xjGAFH8k1h5d
-         e95yA5GnVRZrkYkZ798TLmtYB88PedrjPVTfF1R65LGKRuJN8rdPIUep8/3ZoR3WCs
-         TIWBroRWpsHt99ZB/sCKHZhabrbRWGbZUWf9A/fk/o+0O8Vw6x+2paTqokfMD0ZryW
-         O7whNe5PvvwilIv6iyWFnjPjYgwkanSYmfeHdr2sDtj3xRVhfw6EZJJi6BbAoli6Bb
-         8DdktXRQwmS1A/5ojraCEo9qZlQTCrKL0yS88cYwhbCBcNJdcEeJiStSOF/hEe2dX4
-         PIV7ksiyx0o1w==
-Date:   Thu, 21 Jul 2022 14:38:51 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     kernel test robot <oliver.sang@intel.com>,
+        with ESMTP id S233456AbiGUWBt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 18:01:49 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0376393C36;
+        Thu, 21 Jul 2022 15:01:47 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 88F5962CA1B;
+        Fri, 22 Jul 2022 08:01:44 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oEeEo-003i9f-Da; Fri, 22 Jul 2022 08:01:42 +1000
+Date:   Fri, 22 Jul 2022 08:01:42 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     kernel test robot <oliver.sang@intel.com>
+Cc:     Dave Chinner <dchinner@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
         LKML <linux-kernel@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Linux Memory Management List <linux-mm@kvack.org>,
         linux-xfs@vger.kernel.org, lkp@lists.01.org, lkp@intel.com,
         ying.huang@intel.com, feng.tang@intel.com,
         zhengjun.xing@linux.intel.com, fengwei.yin@intel.com
-Subject: Re: [xfs]  345a4666a7:  vm-scalability.throughput -91.7% regression
-Message-ID: <YtnHa/IbHyD1QPh0@magnolia>
-References: <Ytlr9vZbF4SOfA2n@xsang-OptiPlex-9020>
- <20220721213337.GV3861211@dread.disaster.area>
+Subject: Re: [xfs]  016a23388c:  stress-ng.xattr.ops_per_sec 58.4% improvement
+Message-ID: <20220721220142.GW3861211@dread.disaster.area>
+References: <Yti6PccitrglBtIj@xsang-OptiPlex-9020>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20220721213337.GV3861211@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <Yti6PccitrglBtIj@xsang-OptiPlex-9020>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62d9ccc9
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=8nJEP1OIZ-IA:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=NEAV23lmAAAA:8
+        a=7-415B0cAAAA:8 a=Cv6hED_WFzwE_hcpyKwA:9 a=wPNLvfGTeEIA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 22, 2022 at 07:33:37AM +1000, Dave Chinner wrote:
-> On Thu, Jul 21, 2022 at 11:08:38PM +0800, kernel test robot wrote:
-> > 
-> > (just FYI for the possible performance impact of disabling large folios,
-> > our config, as attached, set default N to XFS_LARGE_FOLIOS)
-> > 
-> > 
-> > Greeting,
-> > 
-> > FYI, we noticed a -91.7% regression of vm-scalability.throughput due to commit:
-> > 
-> > 
-> > commit: 345a4666a721a81c343186768cdd95817767195f ("xfs: disable large folios except for developers")
+On Thu, Jul 21, 2022 at 10:30:21AM +0800, kernel test robot wrote:
 > 
-> Say what? I've never seen that change go past on a public list...
 > 
-> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git xfs-5.20-merge
+> Greeting,
 > 
-> Oh, it's in a developer's working tree, not something that has been
-> proposed for review let alone been merged.
+> FYI, we noticed a 58.4% improvement of stress-ng.xattr.ops_per_sec due to commit:
+> 
+> 
+> commit: 016a23388cdcb2740deb1379dc408f21c84efb11 ("xfs: Add order IDs to log items in CIL")
+> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
+> 
+> in testcase: stress-ng
+> on test machine: 96 threads 2 sockets Ice Lake with 256G memory
+> with following parameters:
+> 
+> 	nr_threads: 10%
+> 	disk: 1HDD
+> 	testtime: 60s
+> 	fs: xfs
+> 	class: filesystem
+> 	test: xattr
+> 	cpufreq_governor: performance
+> 	ucode: 0xb000280
+> 
+> 
+> 
+> 
+> 
+> 
+> Details are as below:
+> -------------------------------------------------------------------------------------------------->
+> 
+> 
+> To reproduce:
+> 
+>         git clone https://github.com/intel/lkp-tests.git
+>         cd lkp-tests
+>         sudo bin/lkp install job.yaml           # job file is attached in this email
+>         bin/lkp split-job --compatible job.yaml # generate the yaml file for lkp run
+>         sudo bin/lkp run generated-yaml-file
+> 
+>         # if come across any failure that blocks the test,
+>         # please remove ~/.lkp and /lkp dir to run from a clean state.
+> 
+> =========================================================================================
+> class/compiler/cpufreq_governor/disk/fs/kconfig/nr_threads/rootfs/tbox_group/test/testcase/testtime/ucode:
+>   filesystem/gcc-11/performance/1HDD/xfs/x86_64-rhel-8.3/10%/debian-11.1-x86_64-20220510.cgz/lkp-icl-2sp1/xattr/stress-ng/60s/0xb000280
+> 
+> commit: 
+>   df7a4a2134 ("xfs: convert CIL busy extents to per-cpu")
+>   016a23388c ("xfs: Add order IDs to log items in CIL")
 
-Correct, djwong-dev has a patch so that I can disable multipage folios
-so that I could get other QA work done while willy and I try to sort out
-the generic/522 corruption problems.
+This bisect looks like it's identified the wrong commit. The reason
+things went faster was:
 
-> So why is this report being sent to lkml, linux-xfs, etc as if it
-> was a change merged into an upstream tree rather than just the
-> developer who owns the tree the commit is in?
+> df7a4a2134b0a201 016a23388cdcb2740deb1379dc4 
+> ---------------- --------------------------- 
+>          %stddev     %change         %stddev
+>              \          |                \  
+.....
+>      25.64 ±  8%     -25.6        0.00        perf-profile.calltrace.cycles-pp.native_queued_spin_lock_slowpath._raw_spin_lock.xlog_cil_insert_items.xlog_cil_commit.__xfs_trans_commit
 
-I was wondering that myself.
+A huge amount of spinlock contention in the xlog_commit_cil() path
+went away. The commit identified doesn't remove/change any
+spinlocks, it actually adds more overhead to the critical section of
+the above spinlock in preparation for removing said spinlocks.
 
---D
+That removal happens in the next commit in that series - c0fb4765c508 ("xfs:
+convert CIL to unordered per cpu lists") - so I'd be expecting a
+bisect to demonstrate that the spinlock contention goes away with
+the commit that removed the spinlocks (as it does in all the testing
+of this I've done over the past 2 years), not the commit this bisect
+identified. Hence I think the bisect went wrong somewhere...
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
