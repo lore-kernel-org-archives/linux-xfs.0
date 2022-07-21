@@ -2,234 +2,231 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B654C43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jul 2022 16:42:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD756C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jul 2022 16:48:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229750AbiGUQmB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jul 2022 12:42:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46546 "EHLO
+        id S229680AbiGUQsy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jul 2022 12:48:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbiGUQmA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 12:42:00 -0400
+        with ESMTP id S232226AbiGUQsx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 12:48:53 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D04848C83
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jul 2022 09:41:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBB0F8965F
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jul 2022 09:48:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id F13D0B825C1
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jul 2022 16:41:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 789B5C341C0;
-        Thu, 21 Jul 2022 16:41:56 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 782A8B8258F
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jul 2022 16:48:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CA23C3411E
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jul 2022 16:48:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658421716;
-        bh=e/OpQrDB5+Pb6dOUE8BulKs0I6XjAQpnEuWAluxGR90=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bkoWMWmdW8va43fV+7xTXIiuLAEqnafqjohRHhIjwpFRqZiyOoRdqQJOU8W1cAoFr
-         pYFlQtRM8jqbCOFer9hWKTIDnNhT+iPu2AoicVO3Q7erR+vEYwiHh/TSZeQRy+cW6/
-         j5OvK8829bMZR+JcqrIwZ0lBdMVar8K1d/XT2j/I0OFp1ygg2qT8NrJlwsf11GG15Z
-         mmS/7imBOjiz4roCQX6Ax/+MMT4dl4m+QnJ2Kd+QQ6NYACoVTJ/i8c8mtetJ2LV7JN
-         O8u7bXb1jywg0IqYLMv+e4Suc60ojgXnZy8rSTIvljtWcn66UpFWKdyWzjiNvE9FIn
-         TKF7MrgZPlYlw==
-Date:   Thu, 21 Jul 2022 09:41:55 -0700
+        s=k20201202; t=1658422129;
+        bh=A1k0KeNkLkJfgnTUrDn1Hm8ssA1/LGkgNfWvysnOyR0=;
+        h=Date:From:To:Subject:From;
+        b=izRUaW3EBJPwmuTr7CzCqe8ADl4sRJ+XSW9u88OYnuOq6WkbcPWcyQj7U5jSCrr1u
+         YR2APkBoMUElVESbmn4DEewDfo2yKVf/vJqQbW0My86K/6Mb0nFYkpPOi1jjQby0xu
+         BOzG4klk6FxVopzflfAlsiWnALahfJmLWH+NJF2dYNS85lINUFUsMDncF5l/br4JJ4
+         LsQdgzME2WFU4ntNNsWt/kpCngP/17sSXzccF1ZY3VOQYT8yJC4DHQ/fdG8JTnKNoF
+         kS9ersfoTcDNz0bAriE1kI1EWTohQr1ojCpaFqvQJXFFSEwdKsLIHYCQox5yr/JJ7E
+         77nArke96rESQ==
+Date:   Thu, 21 Jul 2022 09:48:48 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/1] libxfs: stop overriding MAP_SYNC in publicly exported
- header files
-Message-ID: <YtmB005kkkErb5uw@magnolia>
-References: <165826708900.3268805.5228849676662461141.stgit@magnolia>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to c78c2d090318
+Message-ID: <YtmDcGpJAzqPcuTJ@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <165826708900.3268805.5228849676662461141.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi folks,
 
-Florian Fainelli most recently reported that xfsprogs doesn't build with
-musl on mips:
+The for-next branch of the xfs-linux repository at:
 
-"MIPS platforms building with recent kernel headers and the musl-libc
-toolchain will expose the following build failure:
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-mmap.c: In function 'mmap_f':
-mmap.c:196:12: error: 'MAP_SYNC' undeclared (first use in this function); did you mean 'MS_SYNC'?
-  196 |    flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-      |            ^~~~~~~~
-      |            MS_SYNC
-mmap.c:196:12: note: each undeclared identifier is reported only once for each function it appears in
-make[4]: *** [../include/buildrules:81: mmap.o] Error 1"
+has just been updated.
 
-At first glance, the build failure here is caused by the fact that:
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  This is it for 5.20!
 
-1. The configure script doesn't detect MAP_SYNC support
-2. The build system doesn't set HAVE_MAP_SYNC
-2. io/mmap.c includes input.h -> projects.h -> xfs.h and later sys/mman.h
-3. include/linux.h #define's MAP_SYNC to 0 if HAVE_MAP_SYNC is not set
-4. musl's sys/mman.h #undef MAP_SYNC on platforms that don't support it
-5. io/mmap.c tries to use MAP_SYNC, not realizing that libc undefined it
+The new head of the for-next branch is commit:
 
-Normally, xfs_io only exports functionality that is defined by the libc
-and/or kernel headers on the build system.  We often make exceptions for
-new functionality so that we have a way to test them before the header
-file packages catch up, hence this '#ifndef HAVE_FOO #define FOO'
-paradigm.
+c78c2d090318 xfs: don't leak memory when attr fork loading fails
 
-MAP_SYNC is a gross and horribly broken example of this.  These support
-crutches are supposed to be *private* to xfsprogs for benefit of early
-testing, but they were instead added to include/linux.h, which we
-provide to user programs in the xfslibs-dev package.  IOWs, we've been
-#defining MAP_SYNC to zero for unsuspecting programs.
+62 new commits:
 
-Worst yet, gcc 11.3 doesn't even warn about overriding a #define to 0:
+Andrey Strachuk (1):
+      [0f38063d7a38] xfs: removed useless condition in function xfs_attr_node_get
 
-#include <stdio.h>
-#include <sys/mman.h>
-#ifdef STUPID
-# include <xfs/xfs.h>
-#endif
+Dan Carpenter (1):
+      [3f52e016af60] xfs: delete unnecessary NULL checks
 
-int main(int argc, char *argv[]) {
-	printf("MAP_SYNC 0x%x\n", MAP_SYNC);
-}
+Darrick J. Wong (12):
+      [dd81dc05598c] Merge tag 'xfs-cil-scale-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeA
+      [fddb564f62aa] Merge tag 'xfs-perag-conv-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeA
+      [732436ef916b] xfs: convert XFS_IFORK_PTR to a static inline helper
+      [2ed5b09b3e8f] xfs: make inode attribute forks a permanent part of struct xfs_inode
+      [e45d7cb2356e] xfs: use XFS_IFORK_Q to determine the presence of an xattr fork
+      [932b42c66cb5] xfs: replace XFS_IFORK_Q with a proper predicate function
+      [c01147d92989] xfs: replace inode fork size macros with functions
+      [4613b17cc478] Merge tag 'xfs-iunlink-item-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeB
+      [35c5a09f5346] Merge tag 'xfs-buf-lockless-lookup-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeB
+      [6d200bdc017a] Merge tag 'make-attr-fork-permanent-5.20_2022-07-14' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.20-mergeB
+      [95ff0363f3f6] xfs: fix use-after-free in xattr node block inactivation
+      [c78c2d090318] xfs: don't leak memory when attr fork loading fails
 
-$ gcc -o a a.c -Wall
-$ ./a
-MAP_SYNC 0x80000
-$ gcc -DSTUPID -o a a.c -Wall
-$ ./a
-MAP_SYNC 0x0
+Dave Chinner (44):
+      [88591e7f06a4] xfs: use the CIL space used counter for emptiness checks
+      [12380d237b81] xfs: lift init CIL reservation out of xc_cil_lock
+      [31151cc342dd] xfs: rework per-iclog header CIL reservation
+      [af1c2146a50b] xfs: introduce per-cpu CIL tracking structure
+      [7c8ade212120] xfs: implement percpu cil space used calculation
+      [1dd2a2c18e31] xfs: track CIL ticket reservation in percpu structure
+      [df7a4a2134b0] xfs: convert CIL busy extents to per-cpu
+      [016a23388cdc] xfs: Add order IDs to log items in CIL
+      [c0fb4765c508] xfs: convert CIL to unordered per cpu lists
+      [169248536a2b] xfs: convert log vector chain to use list heads
+      [4eb56069cb28] xfs: move CIL ordering to the logvec chain
+      [1ccb0745a97f] xfs: avoid cil push lock if possible
+      [d9f68777b251] xfs: xlog_sync() manually adjusts grant head space
+      [51a117edff13] xfs: expanding delayed logging design with background material
+      [c6aee2481419] xfs: make last AG grow/shrink perag centric
+      [a95fee40e3d4] xfs: kill xfs_ialloc_pagi_init()
+      [99b13c7f0bd3] xfs: pass perag to xfs_ialloc_read_agi()
+      [76b47e528e3a] xfs: kill xfs_alloc_pagf_init()
+      [08d3e84feeb8] xfs: pass perag to xfs_alloc_read_agf()
+      [61021deb1faa] xfs: pass perag to xfs_read_agi
+      [fa044ae70c64] xfs: pass perag to xfs_read_agf
+      [49f0d84ec1db] xfs: pass perag to xfs_alloc_get_freelist
+      [8c392eb27f7a] xfs: pass perag to xfs_alloc_put_freelist
+      [cec7bb7d58fa] xfs: pass perag to xfs_alloc_read_agfl
+      [0800169e3e2c] xfs: Pre-calculate per-AG agbno geometry
+      [2d6ca8321c35] xfs: Pre-calculate per-AG agino geometry
+      [3829c9a10fc7] xfs: replace xfs_ag_block_count() with perag accesses
+      [36029dee382a] xfs: make is_log_ag() a first class helper
+      [85c73bf726e4] xfs: rework xfs_buf_incore() API
+      [a4454cd69c66] xfs: factor the xfs_iunlink functions
+      [4fcc94d65327] xfs: track the iunlink list pointer in the xfs_inode
+      [04755d2e5821] xfs: refactor xlog_recover_process_iunlinks()
+      [a83d5a8b1d94] xfs: introduce xfs_iunlink_lookup
+      [2fd26cc07e9f] xfs: double link the unlinked inode list
+      [5301f8701314] xfs: clean up xfs_iunlink_update_inode()
+      [062efdb0803a] xfs: combine iunlink inode update functions
+      [fad743d7cd8b] xfs: add log item precommit operation
+      [784eb7d8dd41] xfs: add in-memory iunlink log item
+      [de67dc575434] xfs: break up xfs_buf_find() into individual pieces
+      [348000804a0f] xfs: merge xfs_buf_find() and xfs_buf_get_map()
+      [d8d9bbb0ee6c] xfs: reduce the number of atomic when locking a buffer after lookup
+      [32dd4f9c506b] xfs: remove a superflous hash lookup when inserting new buffers
+      [298f34224506] xfs: lockless buffer lookup
+      [231f91ab504e] xfs: xfs_buf cache destroy isn't RCU safe
 
-Four years have gone by since the introduction of MAP_SYNC, so let's get
-rid of the override code entirely -- any platform that supports MAP_SYNC
-has had plenty of chances to ensure their header files have the right
-bits.  While we're at it, fix AC_HAVE_MAP_SYNC to look for MAP_SYNC in
-the same header file that the one user (io/mmap.c) uses -- sys/mman.h.
+Eric Sandeen (1):
+      [70b589a37e1a] xfs: add selinux labels to whiteout inodes
 
-Annoyingly, I had to test this by hand because the sole fstest that
-exercises MAP_SYNC (generic/470) requires dm-logwrites and dm-thinp,
-neither of which support fsdax on current kernels.
+Xiaole He (1):
+      [fdbae121b436] xfs: fix comment for start time value of inode with bigtime enabled
 
-Reported-by: info@mobile-stream.com
-Reported-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
-Reported-by: Florian Fainelli <f.fainelli@gmail.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Tested-by: Florian Fainelli <f.fainelli@gmail.com>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- include/linux.h       |    8 --------
- io/io.h               |    2 +-
- io/mmap.c             |   25 +++++++++++++------------
- m4/package_libcdev.m4 |    3 +--
- 4 files changed, 15 insertions(+), 23 deletions(-)
+Zhang Yi (1):
+      [04a98a036cf8] xfs: flush inode gc workqueue before clearing agi bucket
 
-diff --git a/include/linux.h b/include/linux.h
-index 3d9f4e3d..eddc4ad9 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -251,14 +251,6 @@ struct fsxattr {
- #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
- #endif
- 
--#ifndef HAVE_MAP_SYNC
--#define MAP_SYNC 0
--#define MAP_SHARED_VALIDATE 0
--#else
--#include <asm-generic/mman.h>
--#include <asm-generic/mman-common.h>
--#endif /* HAVE_MAP_SYNC */
--
- /*
-  * Reminder: anything added to this file will be compiled into downstream
-  * userspace projects!
-diff --git a/io/io.h b/io/io.h
-index ada0a149..de4ef607 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -58,7 +58,7 @@ typedef struct mmap_region {
- 	size_t		length;		/* length of mapping */
- 	off64_t		offset;		/* start offset into backing file */
- 	int		prot;		/* protection mode of the mapping */
--	bool		map_sync;	/* is this a MAP_SYNC mapping? */
-+	int		flags;		/* MAP_* flags passed to mmap() */
- 	char		*name;		/* name of backing file */
- } mmap_region_t;
- 
-diff --git a/io/mmap.c b/io/mmap.c
-index 8c048a0a..425957d4 100644
---- a/io/mmap.c
-+++ b/io/mmap.c
-@@ -46,8 +46,11 @@ print_mapping(
- 	for (i = 0, p = pflags; p->prot != PROT_NONE; i++, p++)
- 		buffer[i] = (map->prot & p->prot) ? p->mode : '-';
- 
--	if (map->map_sync)
-+#ifdef HAVE_MAP_SYNC
-+	if ((map->flags & (MAP_SYNC | MAP_SHARED_VALIDATE)) ==
-+			  (MAP_SYNC | MAP_SHARED_VALIDATE))
- 		sprintf(&buffer[i], " S");
-+#endif
- 
- 	printf("%c%03d%c 0x%lx - 0x%lx %s  %14s (%lld : %ld)\n",
- 		braces? '[' : ' ', index, braces? ']' : ' ',
-@@ -139,7 +142,9 @@ mmap_help(void)
- " -r -- map with PROT_READ protection\n"
- " -w -- map with PROT_WRITE protection\n"
- " -x -- map with PROT_EXEC protection\n"
-+#ifdef HAVE_MAP_SYNC
- " -S -- map with MAP_SYNC and MAP_SHARED_VALIDATE flags\n"
-+#endif
- " -s <size> -- first do mmap(size)/munmap(size), try to reserve some free space\n"
- " If no protection mode is specified, all are used by default.\n"
- "\n"));
-@@ -193,18 +198,14 @@ mmap_f(
- 			prot |= PROT_EXEC;
- 			break;
- 		case 'S':
-+#ifdef HAVE_MAP_SYNC
- 			flags = MAP_SYNC | MAP_SHARED_VALIDATE;
--
--			/*
--			 * If MAP_SYNC and MAP_SHARED_VALIDATE aren't defined
--			 * in the system headers we will have defined them
--			 * both as 0.
--			 */
--			if (!flags) {
--				printf("MAP_SYNC not supported\n");
--				return 0;
--			}
- 			break;
-+#else
-+			printf("MAP_SYNC not supported\n");
-+			exitcode = 1;
-+			return command_usage(&mmap_cmd);
-+#endif
- 		case 's':
- 			length2 = cvtnum(blocksize, sectsize, optarg);
- 			break;
-@@ -281,7 +282,7 @@ mmap_f(
- 	mapping->offset = offset;
- 	mapping->name = filename;
- 	mapping->prot = prot;
--	mapping->map_sync = (flags == (MAP_SYNC | MAP_SHARED_VALIDATE));
-+	mapping->flags = flags;
- 	return 0;
- }
- 
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index df44174d..5293dd1a 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -387,8 +387,7 @@ AC_DEFUN([AC_HAVE_MAP_SYNC],
-   [ AC_MSG_CHECKING([for MAP_SYNC])
-     AC_COMPILE_IFELSE(
-     [	AC_LANG_PROGRAM([[
--#include <asm-generic/mman.h>
--#include <asm-generic/mman-common.h>
-+#include <sys/mman.h>
- 	]], [[
- int flags = MAP_SYNC | MAP_SHARED_VALIDATE;
- 	]])
+sunliming (1):
+      [1a53d3d42641] xfs: fix for variable set but not used warning
+
+Code Diffstat:
+
+ .../filesystems/xfs-delayed-logging-design.rst     | 361 ++++++++++--
+ fs/xfs/Makefile                                    |   1 +
+ fs/xfs/libxfs/xfs_ag.c                             | 173 ++++--
+ fs/xfs/libxfs/xfs_ag.h                             |  75 ++-
+ fs/xfs/libxfs/xfs_ag_resv.c                        |   2 +-
+ fs/xfs/libxfs/xfs_alloc.c                          | 143 ++---
+ fs/xfs/libxfs/xfs_alloc.h                          |  58 +-
+ fs/xfs/libxfs/xfs_alloc_btree.c                    |   9 +-
+ fs/xfs/libxfs/xfs_attr.c                           |  22 +-
+ fs/xfs/libxfs/xfs_attr.h                           |  10 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c                      |  28 +-
+ fs/xfs/libxfs/xfs_attr_remote.c                    |  15 +-
+ fs/xfs/libxfs/xfs_bmap.c                           |  84 +--
+ fs/xfs/libxfs/xfs_bmap_btree.c                     |  10 +-
+ fs/xfs/libxfs/xfs_btree.c                          |  29 +-
+ fs/xfs/libxfs/xfs_dir2.c                           |   2 +-
+ fs/xfs/libxfs/xfs_dir2_block.c                     |   6 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c                        |   8 +-
+ fs/xfs/libxfs/xfs_format.h                         |   2 +-
+ fs/xfs/libxfs/xfs_ialloc.c                         |  86 ++-
+ fs/xfs/libxfs/xfs_ialloc.h                         |  25 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c                   |  20 +-
+ fs/xfs/libxfs/xfs_inode_buf.c                      |  15 +-
+ fs/xfs/libxfs/xfs_inode_fork.c                     |  65 ++-
+ fs/xfs/libxfs/xfs_inode_fork.h                     |  27 +-
+ fs/xfs/libxfs/xfs_refcount.c                       |  19 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c                 |   5 +-
+ fs/xfs/libxfs/xfs_rmap.c                           |   8 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c                     |   9 +-
+ fs/xfs/libxfs/xfs_symlink_remote.c                 |   2 +-
+ fs/xfs/libxfs/xfs_types.c                          |  73 +--
+ fs/xfs/libxfs/xfs_types.h                          |   9 -
+ fs/xfs/scrub/agheader.c                            |  25 +-
+ fs/xfs/scrub/agheader_repair.c                     |  21 +-
+ fs/xfs/scrub/alloc.c                               |   7 +-
+ fs/xfs/scrub/bmap.c                                |  16 +-
+ fs/xfs/scrub/btree.c                               |   2 +-
+ fs/xfs/scrub/common.c                              |   6 +-
+ fs/xfs/scrub/dabtree.c                             |   2 +-
+ fs/xfs/scrub/dir.c                                 |   2 +-
+ fs/xfs/scrub/fscounters.c                          |   4 +-
+ fs/xfs/scrub/health.c                              |   2 +
+ fs/xfs/scrub/ialloc.c                              |  12 +-
+ fs/xfs/scrub/quota.c                               |   2 +-
+ fs/xfs/scrub/refcount.c                            |   9 +-
+ fs/xfs/scrub/repair.c                              |  49 +-
+ fs/xfs/scrub/rmap.c                                |   6 +-
+ fs/xfs/scrub/symlink.c                             |   6 +-
+ fs/xfs/xfs_attr_inactive.c                         |  23 +-
+ fs/xfs/xfs_attr_list.c                             |   9 +-
+ fs/xfs/xfs_bmap_util.c                             |  22 +-
+ fs/xfs/xfs_buf.c                                   | 294 +++++-----
+ fs/xfs/xfs_buf.h                                   |  27 +-
+ fs/xfs/xfs_dir2_readdir.c                          |   2 +-
+ fs/xfs/xfs_discard.c                               |   2 +-
+ fs/xfs/xfs_extfree_item.c                          |   6 +-
+ fs/xfs/xfs_filestream.c                            |   4 +-
+ fs/xfs/xfs_fsmap.c                                 |   3 +-
+ fs/xfs/xfs_fsops.c                                 |  13 +-
+ fs/xfs/xfs_icache.c                                |  14 +-
+ fs/xfs/xfs_inode.c                                 | 648 ++++++---------------
+ fs/xfs/xfs_inode.h                                 |  69 ++-
+ fs/xfs/xfs_inode_item.c                            |  58 +-
+ fs/xfs/xfs_ioctl.c                                 |  10 +-
+ fs/xfs/xfs_iomap.c                                 |   8 +-
+ fs/xfs/xfs_iops.c                                  |  13 +-
+ fs/xfs/xfs_iops.h                                  |   3 +
+ fs/xfs/xfs_itable.c                                |   4 +-
+ fs/xfs/xfs_iunlink_item.c                          | 180 ++++++
+ fs/xfs/xfs_iunlink_item.h                          |  27 +
+ fs/xfs/xfs_log.c                                   |  55 +-
+ fs/xfs/xfs_log.h                                   |   3 +-
+ fs/xfs/xfs_log_cil.c                               | 474 +++++++++++----
+ fs/xfs/xfs_log_priv.h                              |  58 +-
+ fs/xfs/xfs_log_recover.c                           | 204 ++++---
+ fs/xfs/xfs_mount.c                                 |   3 +-
+ fs/xfs/xfs_qm.c                                    |  11 +-
+ fs/xfs/xfs_reflink.c                               |  46 +-
+ fs/xfs/xfs_reflink.h                               |   3 -
+ fs/xfs/xfs_super.c                                 |  33 +-
+ fs/xfs/xfs_symlink.c                               |   2 +-
+ fs/xfs/xfs_trace.h                                 |   3 +-
+ fs/xfs/xfs_trans.c                                 |  95 ++-
+ fs/xfs/xfs_trans.h                                 |   7 +-
+ fs/xfs/xfs_trans_priv.h                            |   3 +-
+ 85 files changed, 2310 insertions(+), 1701 deletions(-)
+ create mode 100644 fs/xfs/xfs_iunlink_item.c
+ create mode 100644 fs/xfs/xfs_iunlink_item.h
