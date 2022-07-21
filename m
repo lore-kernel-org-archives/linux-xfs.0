@@ -2,77 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ADF3C43334
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jul 2022 17:01:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69887C43334
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jul 2022 21:33:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229505AbiGURBC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jul 2022 13:01:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35872 "EHLO
+        id S229498AbiGUVds (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jul 2022 17:33:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbiGURBB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 13:01:01 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 254E43A493
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jul 2022 10:01:01 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BBD9661E92
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jul 2022 17:01:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F613C3411E
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jul 2022 17:01:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658422860;
-        bh=Z5loci/t1HvMKVq0CpTExGCfU5dhXlvOANHnYEmO4JI=;
-        h=Date:From:To:Subject:From;
-        b=QEEBGa8jI0DUOTlyKSbjTxm2fqfQaqwB3uVnaso3dDcuAHScAgW/O4sikqfJX3fCX
-         korFB9z/95shjkjh/7dODT1sjpnNhnEQ1Re1kiTANeuAP1UfsasL7oCE3u0er4R+Dd
-         4CrDrAzVs8kitON6tqK0jge33inTPQzU2XWOawKX17wjGHC3O1LpQ2NUEGp8B2y74E
-         WL7qHS7t6UMKHZdwMq4Y1jEy8/WW+93JjrqbMZpg+it2eciRRFytQ8c1yf94jbhAnS
-         0RTs0Da9qZXQP7wYhCuuoh8g017VUwnhuRLdrTWuR2W+o4hkc2iFloIw2PzV1cCrzp
-         dsOGNxsmcNelw==
-Date:   Thu, 21 Jul 2022 10:00:59 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-documentation: for-next updated to b91f114
-Message-ID: <YtmGS76FtWgiVEz9@magnolia>
+        with ESMTP id S229533AbiGUVdr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 17:33:47 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2A1289284C;
+        Thu, 21 Jul 2022 14:33:42 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D783710E83FF;
+        Fri, 22 Jul 2022 07:33:39 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oEdnd-003hfO-FV; Fri, 22 Jul 2022 07:33:37 +1000
+Date:   Fri, 22 Jul 2022 07:33:37 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     kernel test robot <oliver.sang@intel.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, lkp@lists.01.org, lkp@intel.com,
+        ying.huang@intel.com, feng.tang@intel.com,
+        zhengjun.xing@linux.intel.com, fengwei.yin@intel.com
+Subject: Re: [xfs]  345a4666a7:  vm-scalability.throughput -91.7% regression
+Message-ID: <20220721213337.GV3861211@dread.disaster.area>
+References: <Ytlr9vZbF4SOfA2n@xsang-OptiPlex-9020>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <Ytlr9vZbF4SOfA2n@xsang-OptiPlex-9020>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62d9c634
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=W6j0_YgMumW3DOhRCFIA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Thu, Jul 21, 2022 at 11:08:38PM +0800, kernel test robot wrote:
+> 
+> (just FYI for the possible performance impact of disabling large folios,
+> our config, as attached, set default N to XFS_LARGE_FOLIOS)
+> 
+> 
+> Greeting,
+> 
+> FYI, we noticed a -91.7% regression of vm-scalability.throughput due to commit:
+> 
+> 
+> commit: 345a4666a721a81c343186768cdd95817767195f ("xfs: disable large folios except for developers")
 
-Hi folks,
+Say what? I've never seen that change go past on a public list...
 
-The for-next branch of the xfs-documentation repository at:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git xfs-5.20-merge
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
+Oh, it's in a developer's working tree, not something that has been
+proposed for review let alone been merged.
 
-has just been updated.
+So why is this report being sent to lkml, linux-xfs, etc as if it
+was a change merged into an upstream tree rather than just the
+developer who owns the tree the commit is in?
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-b91f114 xfsdocs: fix a minor levelling problem
-
-2 new commits:
-
-Darrick J. Wong (1):
-      [b91f114] xfsdocs: fix a minor levelling problem
-
-Xiaole He (1):
-      [9d491d4] xfsdocs: fix extent record format image
-
-Code Diffstat:
-
- .../XFS_Filesystem_Structure/allocation_groups.asciidoc |   4 ++--
- design/XFS_Filesystem_Structure/data_extents.asciidoc   |  14 +++++++++++++-
- design/XFS_Filesystem_Structure/images/31.png           | Bin 10652 -> 0 bytes
- 3 files changed, 15 insertions(+), 3 deletions(-)
- delete mode 100644 design/XFS_Filesystem_Structure/images/31.png
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
