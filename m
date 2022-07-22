@@ -2,108 +2,66 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28D82C43334
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jul 2022 02:21:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD68EC43334
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jul 2022 02:27:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231182AbiGVCVm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jul 2022 22:21:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34576 "EHLO
+        id S230312AbiGVC1A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jul 2022 22:27:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230248AbiGVCVm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 22:21:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54108165A5;
-        Thu, 21 Jul 2022 19:21:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EE94A61FE3;
-        Fri, 22 Jul 2022 02:21:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53F8EC341C0;
-        Fri, 22 Jul 2022 02:21:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658456500;
-        bh=ncGLMjzdPPmGwsftGxVVHrTSznyG4+8eYOtav3O3ENM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RZXmgh5CAKIBO0uWGZ6PYfe3yyzPWU2LLCnBILXDwAjY9xbwFR2UKlnxpeYSwAYUp
-         mn0N5qYf8hrCA/G45tw+5HXpREdu835ZKnbkzKeunmfxS9dHqQePqiz7BmJ7dtIoKO
-         NuKbSspV2XLxLcGl18XIR3QOIbB9lfD1PVSBuAQcAhcWwwZ228k1kId44mvjI5+Io9
-         2x0odLgDayRVk/AIPJc3REu801gpkaYYQRlEfIIxaUCcPkL0nj2l0cwvSbDdPL0ACw
-         xftrtTG0gHX8OxbQDASeCKxT+jUt12VVlRcwRCB7sF7LXUOH6ySW1zUOPvpasX2B8b
-         EL8oJsgexxeTQ==
-Date:   Thu, 21 Jul 2022 19:21:39 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Oliver Sang <oliver.sang@intel.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, lkp@lists.01.org, lkp@intel.com,
-        ying.huang@intel.com, feng.tang@intel.com,
-        zhengjun.xing@linux.intel.com, fengwei.yin@intel.com
-Subject: Re: [xfs]  345a4666a7:  vm-scalability.throughput -91.7% regression
-Message-ID: <YtoJs8mv7vle8Mhh@magnolia>
-References: <Ytlr9vZbF4SOfA2n@xsang-OptiPlex-9020>
- <20220721213337.GV3861211@dread.disaster.area>
- <YtnHa/IbHyD1QPh0@magnolia>
- <YtoG+kcaC8yfMEZW@xsang-OptiPlex-9020>
+        with ESMTP id S229540AbiGVC07 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jul 2022 22:26:59 -0400
+Received: from smtpbg.qq.com (unknown [43.155.67.158])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A9C7BEB;
+        Thu, 21 Jul 2022 19:26:54 -0700 (PDT)
+X-QQ-mid: bizesmtp79t1658456796typr1bmr
+Received: from harry-jrlc.. ( [125.70.163.183])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Fri, 22 Jul 2022 10:26:28 +0800 (CST)
+X-QQ-SSF: 0100000000000030C000000A0000020
+X-QQ-FEAT: fs34Pe/+C2Qz/O+Hf3pkbgMYytZZrxcnUQuiYqbKNuM/YfWCyb6znbn0eKP4A
+        tg9KECp98l71ESDFLWUa/Ulvxv0GmzX2U5501W3JWnD9Og8VoPr8yWi7/odg7edKsFyRvMa
+        i8JrdIHaiWd15DolXpXPSI4uExjQvTg+PCkwrdOtYBC9CeXrDf/JZJJFkfD+rKRqAiI3UF8
+        oVupPlzIjt/F9a3vYtCBdiUdGyO+MLk3bk1t4MxUQ5goSVJsYrIKYgw8px2dcQIncnKYxqJ
+        ld0v4Iw8Ta7PoPjRKhkAeDfsU2jEvb6ytICLRmHm3MGbGPZvvXx1oB5hTVFO7YOLRIBxp5K
+        IoHe6eTsELYSdN11wH1CqicLlDbB1WiXV9vAFYu3mHkelMHYZrUEQCeIQKgnA==
+X-QQ-GoodBg: 0
+From:   Xin Gao <gaoxin@cdjrlc.com>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Xin Gao <gaoxin@cdjrlc.com>
+Subject: [PATCH] xfs: Fix comment typo
+Date:   Fri, 22 Jul 2022 10:26:26 +0800
+Message-Id: <20220722022626.16082-1-gaoxin@cdjrlc.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YtoG+kcaC8yfMEZW@xsang-OptiPlex-9020>
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr6
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 22, 2022 at 10:10:02AM +0800, Oliver Sang wrote:
-> Hi Darrick, Hi Dave, and all,
-> 
-> sorry for this report is annoying according to Darrick and Dave's comments
-> below.
-> we will investigate this case and refine our report process.
+The double `the' is duplicated in line 552, remove one.
 
-FWIW, you can still send /me/ reports about the xfs development patches
-I post to djwong/xfs-linux.git, but it's not necessary to cc linux-xfs
-with that, since most of those patches are still under development
-and/or working their way through patch review.
+Signed-off-by: Xin Gao <gaoxin@cdjrlc.com>
+---
+ fs/xfs/xfs_dquot.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---D
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 5a6c3c3c4de2..8fb90da89787 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -549,7 +549,7 @@ xfs_dquot_check_type(
+ 	 * at the same time.  The non-user quota file can be switched between
+ 	 * group and project quota uses depending on the mount options, which
+ 	 * means that we can encounter the other type when we try to load quota
+-	 * defaults.  Quotacheck will soon reset the the entire quota file
++	 * defaults.  Quotacheck will soon reset the entire quota file
+ 	 * (including the root dquot) anyway, but don't log scary corruption
+ 	 * reports to dmesg.
+ 	 */
+-- 
+2.30.2
 
-> 
-> On Thu, Jul 21, 2022 at 02:38:51PM -0700, Darrick J. Wong wrote:
-> > On Fri, Jul 22, 2022 at 07:33:37AM +1000, Dave Chinner wrote:
-> > > On Thu, Jul 21, 2022 at 11:08:38PM +0800, kernel test robot wrote:
-> > > > 
-> > > > (just FYI for the possible performance impact of disabling large folios,
-> > > > our config, as attached, set default N to XFS_LARGE_FOLIOS)
-> > > > 
-> > > > 
-> > > > Greeting,
-> > > > 
-> > > > FYI, we noticed a -91.7% regression of vm-scalability.throughput due to commit:
-> > > > 
-> > > > 
-> > > > commit: 345a4666a721a81c343186768cdd95817767195f ("xfs: disable large folios except for developers")
-> > > 
-> > > Say what? I've never seen that change go past on a public list...
-> > > 
-> > > > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git xfs-5.20-merge
-> > > 
-> > > Oh, it's in a developer's working tree, not something that has been
-> > > proposed for review let alone been merged.
-> > 
-> > Correct, djwong-dev has a patch so that I can disable multipage folios
-> > so that I could get other QA work done while willy and I try to sort out
-> > the generic/522 corruption problems.
-> > 
-> > > So why is this report being sent to lkml, linux-xfs, etc as if it
-> > > was a change merged into an upstream tree rather than just the
-> > > developer who owns the tree the commit is in?
-> > 
-> > I was wondering that myself.
-> > 
-> > --D
-> > 
-> > > -Dave.
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
