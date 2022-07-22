@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E220BCCA47F
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jul 2022 07:14:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 902E9CCA493
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jul 2022 07:14:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234531AbiGVHO0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Jul 2022 03:14:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37274 "EHLO
+        id S234318AbiGVHO1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Jul 2022 03:14:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234301AbiGVHOG (ORCPT
+        with ESMTP id S234258AbiGVHOG (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jul 2022 03:14:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81EA9936BA;
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7160D93C39;
         Fri, 22 Jul 2022 00:14:04 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1696162190;
-        Fri, 22 Jul 2022 07:14:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A486C341CA;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9FEE062198;
         Fri, 22 Jul 2022 07:14:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2D34C385A5;
+        Fri, 22 Jul 2022 07:14:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1658474043;
-        bh=4idVgRAKusE9xByup3Qe2uILHisarAzGtiVXG+Gs9Ns=;
+        bh=rxppfGAWTvoazShXWqiRQAPwYvWCuKApheXmuFc/BQY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CrlqaAxITMZDfNJEKkfbbQ++wx2VrrRP24INBAKyh1uGtofDHzmHR8qQJ4mEGhh9v
-         2A5iTBrix2O+9LDiFMjVOjiBVCWyfJu2YBk9G/uZp3/1vG7W1zjRUiriUJi9YbEIdW
-         M6nGQfauy+4eUThbhYvt2g0Z3Rj3GIGtTzdnZ4bHGijhiu8AobyAhbNPspV74U93Rn
-         hJuLAwiteMlnHBFFZtBJP2qOtoi8HK3Z5VbXYcEe548sAXDLpvK8Op3K72DqMSS6Jl
-         VvIrnQz7wfM1OinaUYhZs2SF5LKHGVBFuKrM3CjZMW5E7pHO+BZfVtTQ/ug+cyfiW4
-         2/6i92y43Z5wQ==
+        b=d8Cr8JecsbZeIRQ5t/ggsqjOh0c2t2g7QqlNyJmjUUDIPAUtozy6cOgFB7SV0zcUp
+         /T8YLw5znD4KGJcOsBBB+flZcvly70mwKQ41iSnh0z92m9Jmud61wnc1bDwKWuQUJI
+         Rn5yqXLjsVmKwG22H580yBSImGur4cgc3K419yEFlPziedpRBGdmkr5eyqREj/S52z
+         HgTwDj6ixSn33wQw+fOeGINjGF+jSadcLM31+806a4u9E9MpsBAFiqA1lE3se9pjyi
+         gBJMlDD6R3sahaq1iDLwrQyRu2+9b4G5peXYUU8azaH0T6Bj3JrUFlo8CPrg6ZitMi
+         utD1hbXc1INFg==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         linux-xfs@vger.kernel.org, linux-api@vger.kernel.org,
         linux-fscrypt@vger.kernel.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, Keith Busch <kbusch@kernel.org>
-Subject: [PATCH v4 4/9] ext4: support STATX_DIOALIGN
-Date:   Fri, 22 Jul 2022 00:12:23 -0700
-Message-Id: <20220722071228.146690-5-ebiggers@kernel.org>
+Subject: [PATCH v4 2/9] vfs: support STATX_DIOALIGN on block devices
+Date:   Fri, 22 Jul 2022 00:12:21 -0700
+Message-Id: <20220722071228.146690-3-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.37.0
 In-Reply-To: <20220722071228.146690-1-ebiggers@kernel.org>
 References: <20220722071228.146690-1-ebiggers@kernel.org>
@@ -51,153 +51,118 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-Add support for STATX_DIOALIGN to ext4, so that direct I/O alignment
-restrictions are exposed to userspace in a generic way.
+Add support for STATX_DIOALIGN to block devices, so that direct I/O
+alignment restrictions are exposed to userspace in a generic way.
+
+Note that this breaks the tradition of stat operating only on the block
+device node, not the block device itself.  However, it was felt that
+doing this is preferable, in order to make the interface useful and
+avoid needing separate interfaces for regular files and block devices.
 
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- fs/ext4/ext4.h  |  1 +
- fs/ext4/file.c  | 42 ++++++++++++++++++++++++++----------------
- fs/ext4/inode.c | 36 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 63 insertions(+), 16 deletions(-)
+ block/bdev.c           | 25 +++++++++++++++++++++++++
+ fs/stat.c              | 12 ++++++++++++
+ include/linux/blkdev.h |  4 ++++
+ 3 files changed, 41 insertions(+)
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 75b8d81b24692c..68e964394e9173 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -2968,6 +2968,7 @@ extern struct inode *__ext4_iget(struct super_block *sb, unsigned long ino,
- extern int  ext4_write_inode(struct inode *, struct writeback_control *);
- extern int  ext4_setattr(struct user_namespace *, struct dentry *,
- 			 struct iattr *);
-+extern u32  ext4_dio_alignment(struct inode *inode);
- extern int  ext4_getattr(struct user_namespace *, const struct path *,
- 			 struct kstat *, u32, unsigned int);
- extern void ext4_evict_inode(struct inode *);
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 26d7426208970d..8bb1c35fd6dd5a 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -36,24 +36,34 @@
- #include "acl.h"
- #include "truncate.h"
+diff --git a/block/bdev.c b/block/bdev.c
+index 5fe06c1f2def41..cee0951e27a82a 100644
+--- a/block/bdev.c
++++ b/block/bdev.c
+@@ -26,6 +26,7 @@
+ #include <linux/namei.h>
+ #include <linux/part_stat.h>
+ #include <linux/uaccess.h>
++#include <linux/stat.h>
+ #include "../fs/internal.h"
+ #include "blk.h"
  
--static bool ext4_dio_supported(struct kiocb *iocb, struct iov_iter *iter)
+@@ -1071,3 +1072,27 @@ void sync_bdevs(bool wait)
+ 	spin_unlock(&blockdev_superblock->s_inode_list_lock);
+ 	iput(old_inode);
+ }
++
 +/*
-+ * Returns %true if the given DIO request should be attempted with DIO, or
-+ * %false if it should fall back to buffered I/O.
++ * Handle STATX_DIOALIGN for block devices.
 + *
-+ * DIO isn't well specified; when it's unsupported (either due to the request
-+ * being misaligned, or due to the file not supporting DIO at all), filesystems
-+ * either fall back to buffered I/O or return EINVAL.  For files that don't use
-+ * any special features like encryption or verity, ext4 has traditionally
-+ * returned EINVAL for misaligned DIO.  iomap_dio_rw() uses this convention too.
-+ * In this case, we should attempt the DIO, *not* fall back to buffered I/O.
-+ *
-+ * In contrast, in cases where DIO is unsupported due to ext4 features, ext4
-+ * traditionally falls back to buffered I/O.
-+ *
-+ * This function implements the traditional ext4 behavior in all these cases.
++ * Note that the inode passed to this is the inode of a block device node file,
++ * not the block device's internal inode.  Therefore it is *not* valid to use
++ * I_BDEV() here; the block device has to be looked up by i_rdev instead.
 + */
-+static bool ext4_should_use_dio(struct kiocb *iocb, struct iov_iter *iter)
- {
- 	struct inode *inode = file_inode(iocb->ki_filp);
-+	u32 dio_align = ext4_dio_alignment(inode);
- 
--	if (IS_ENCRYPTED(inode)) {
--		if (!fscrypt_dio_supported(inode))
--			return false;
--		if (!IS_ALIGNED(iocb->ki_pos | iov_iter_alignment(iter),
--				i_blocksize(inode)))
--			return false;
--	}
--	if (fsverity_active(inode))
-+	if (dio_align == 0)
- 		return false;
--	if (ext4_should_journal_data(inode))
--		return false;
--	if (ext4_has_inline_data(inode))
--		return false;
--	return true;
-+
-+	if (dio_align == 1)
-+		return true;
-+
-+	return IS_ALIGNED(iocb->ki_pos | iov_iter_alignment(iter), dio_align);
- }
- 
- static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
-@@ -68,7 +78,7 @@ static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 		inode_lock_shared(inode);
- 	}
- 
--	if (!ext4_dio_supported(iocb, to)) {
-+	if (!ext4_should_use_dio(iocb, to)) {
- 		inode_unlock_shared(inode);
- 		/*
- 		 * Fallback to buffered I/O if the operation being performed on
-@@ -516,7 +526,7 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	}
- 
- 	/* Fallback to buffered I/O if the inode does not support direct I/O. */
--	if (!ext4_dio_supported(iocb, from)) {
-+	if (!ext4_should_use_dio(iocb, from)) {
- 		if (ilock_shared)
- 			inode_unlock_shared(inode);
- 		else
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 84c0eb55071d65..75dd332e9da57b 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -5536,6 +5536,22 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 	return error;
- }
- 
-+u32 ext4_dio_alignment(struct inode *inode)
++void bdev_statx_dioalign(struct inode *inode, struct kstat *stat)
 +{
-+	if (fsverity_active(inode))
-+		return 0;
-+	if (ext4_should_journal_data(inode))
-+		return 0;
-+	if (ext4_has_inline_data(inode))
-+		return 0;
-+	if (IS_ENCRYPTED(inode)) {
-+		if (!fscrypt_dio_supported(inode))
-+			return 0;
-+		return i_blocksize(inode);
-+	}
-+	return 1; /* use the iomap defaults */
++	struct block_device *bdev;
++	unsigned int lbs;
++
++	bdev = blkdev_get_no_open(inode->i_rdev);
++	if (!bdev)
++		return;
++
++	lbs = bdev_logical_block_size(bdev);
++	stat->dio_mem_align = lbs;
++	stat->dio_offset_align = lbs;
++	stat->result_mask |= STATX_DIOALIGN;
++
++	blkdev_put_no_open(bdev);
 +}
-+
- int ext4_getattr(struct user_namespace *mnt_userns, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int query_flags)
- {
-@@ -5551,6 +5567,26 @@ int ext4_getattr(struct user_namespace *mnt_userns, const struct path *path,
- 		stat->btime.tv_nsec = ei->i_crtime.tv_nsec;
- 	}
+diff --git a/fs/stat.c b/fs/stat.c
+index a7930d74448304..ef50573c72a269 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -5,6 +5,7 @@
+  *  Copyright (C) 1991, 1992  Linus Torvalds
+  */
  
-+	/*
-+	 * Return the DIO alignment restrictions if requested.  We only return
-+	 * this information when requested, since on encrypted files it might
-+	 * take a fair bit of work to get if the file wasn't opened recently.
-+	 */
-+	if ((request_mask & STATX_DIOALIGN) && S_ISREG(inode->i_mode)) {
-+		u32 dio_align = ext4_dio_alignment(inode);
-+		unsigned int lbs = bdev_logical_block_size(inode->i_sb->s_bdev);
++#include <linux/blkdev.h>
+ #include <linux/export.h>
+ #include <linux/mm.h>
+ #include <linux/errno.h>
+@@ -230,11 +231,22 @@ static int vfs_statx(int dfd, struct filename *filename, int flags,
+ 		goto out;
+ 
+ 	error = vfs_getattr(&path, stat, request_mask, flags);
 +
-+		stat->result_mask |= STATX_DIOALIGN;
-+		if (dio_align == 1) {
-+			/* iomap defaults */
-+			stat->dio_mem_align = lbs;
-+			stat->dio_offset_align = lbs;
-+		} else {
-+			stat->dio_mem_align = dio_align;
-+			stat->dio_offset_align = dio_align;
-+		}
+ 	stat->mnt_id = real_mount(path.mnt)->mnt_id;
+ 	stat->result_mask |= STATX_MNT_ID;
++
+ 	if (path.mnt->mnt_root == path.dentry)
+ 		stat->attributes |= STATX_ATTR_MOUNT_ROOT;
+ 	stat->attributes_mask |= STATX_ATTR_MOUNT_ROOT;
++
++	/* Handle STATX_DIOALIGN for block devices. */
++	if (request_mask & STATX_DIOALIGN) {
++		struct inode *inode = d_backing_inode(path.dentry);
++
++		if (S_ISBLK(inode->i_mode))
++			bdev_statx_dioalign(inode, stat);
 +	}
 +
- 	flags = ei->i_flags & EXT4_FL_USER_VISIBLE;
- 	if (flags & EXT4_APPEND_FL)
- 		stat->attributes |= STATX_ATTR_APPEND;
+ 	path_put(&path);
+ 	if (retry_estale(error, lookup_flags)) {
+ 		lookup_flags |= LOOKUP_REVAL;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 2f7b43444c5f8d..d75151bd43b541 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1538,6 +1538,7 @@ int sync_blockdev(struct block_device *bdev);
+ int sync_blockdev_range(struct block_device *bdev, loff_t lstart, loff_t lend);
+ int sync_blockdev_nowait(struct block_device *bdev);
+ void sync_bdevs(bool wait);
++void bdev_statx_dioalign(struct inode *inode, struct kstat *stat);
+ void printk_all_partitions(void);
+ #else
+ static inline void invalidate_bdev(struct block_device *bdev)
+@@ -1554,6 +1555,9 @@ static inline int sync_blockdev_nowait(struct block_device *bdev)
+ static inline void sync_bdevs(bool wait)
+ {
+ }
++static inline void bdev_statx_dioalign(struct inode *inode, struct kstat *stat)
++{
++}
+ static inline void printk_all_partitions(void)
+ {
+ }
 -- 
 2.37.0
 
