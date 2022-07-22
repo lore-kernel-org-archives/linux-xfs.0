@@ -2,82 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FABCC43334
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jul 2022 10:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F91AC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jul 2022 16:24:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229980AbiGVKHL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Jul 2022 06:07:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43808 "EHLO
+        id S234812AbiGVQYn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Jul 2022 12:24:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229597AbiGVKHL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jul 2022 06:07:11 -0400
-Received: from mail-m972.mail.163.com (mail-m972.mail.163.com [123.126.97.2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 93C8C6F7D3;
-        Fri, 22 Jul 2022 03:07:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=UL7zA
-        C14RlOv/0MPaH26FFgCncWrwy6gp+B6w4ruLOY=; b=po9aQwRaYtVvF4pNdd8+E
-        rwF9avqwCA+udjvTzhI7BkH75oD4Vvu5zP1RhjhoDZS4dmttM/TkHcZRhh3bhcvq
-        rtPY+h/EnDYld8iJrtWGhxCp0B89lpOaYLdBt3AvEc5WxSacKDikc0c7R2IdHaxc
-        AiKP9n/EhBn6aQ1ADCcETU=
-Received: from localhost.localdomain (unknown [112.97.59.29])
-        by smtp2 (Coremail) with SMTP id GtxpCgA3Sre_dtpiAM9oQg--.5395S2;
-        Fri, 22 Jul 2022 18:06:57 +0800 (CST)
-From:   Slark Xiao <slark_xiao@163.com>
-To:     djwong@kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Slark Xiao <slark_xiao@163.com>
-Subject: [PATCH] xfs: Fix typo 'the the' in comment
-Date:   Fri, 22 Jul 2022 18:06:54 +0800
-Message-Id: <20220722100654.80002-1-slark_xiao@163.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229593AbiGVQYm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jul 2022 12:24:42 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A1F58AB31;
+        Fri, 22 Jul 2022 09:24:41 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 245A2621BD;
+        Fri, 22 Jul 2022 16:24:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 801EFC341C6;
+        Fri, 22 Jul 2022 16:24:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1658507080;
+        bh=ERD6L0tGWO0x9Vzt+94y6IPYs2il1yz7+hLCIIQ9VMQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=M7syBNh7Q+slzlSg95Ty+U3caUx3OkvdZKYgFaT6zO7YKN9OsdTxAXKpzM/fQ8EUj
+         8laTCMg9BidYfI43AVNQjAskrSgTEIhdawoWcCWFN1EAKRyOqivbfv7qK9N59+Vvnq
+         ixHzlI/3Lkn2UIyRqLOaAICt3NyJKQeAO9La4LBsM3B/cUM9f6Cxa2XXZSNWSWP4n7
+         eKglhO2cux23pKTuvR31k1jROOcx4Jvj6L34W3fwmJ0EjPxsmlZpViqsKNhWnWhV8U
+         qZwtGZ8Kg87h7OJAYIWHEdlyKK+giZJRMb/S/JIukT8Eyn8v4Et7jPN0R8WTIdRmRv
+         SETEtPcVhPZPQ==
+Date:   Fri, 22 Jul 2022 09:24:39 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH v4 9/9] xfs: support STATX_DIOALIGN
+Message-ID: <YtrPRysafr5KK3NQ@magnolia>
+References: <20220722071228.146690-1-ebiggers@kernel.org>
+ <20220722071228.146690-10-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: GtxpCgA3Sre_dtpiAM9oQg--.5395S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WF18Kr1UXF45WrWxtFW5Jrb_yoW8Wry7pr
-        Zak3W5CF4kWF18Zr47Jw1vvw1rC393uF1jvr1vq3yavr15JF4SvrW2yr1xXw1UXFs3XFs0
-        qF98tr47ZFW3WaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pi0zu9UUUUU=
-X-Originating-IP: [112.97.59.29]
-X-CM-SenderInfo: xvod2y5b0lt0i6rwjhhfrp/xtbCdQpGZGBbEb2utwAAsT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220722071228.146690-10-ebiggers@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Replace 'the the' with 'the' in the comment.
+On Fri, Jul 22, 2022 at 12:12:28AM -0700, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
+> 
+> Add support for STATX_DIOALIGN to xfs, so that direct I/O alignment
+> restrictions are exposed to userspace in a generic way.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
 
-Signed-off-by: Slark Xiao <slark_xiao@163.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 2 +-
- fs/xfs/xfs_dquot.c        | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+LGTM
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 41557c430cb6..e2bdf089c0a3 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -84,7 +84,7 @@ xfs_prealloc_blocks(
- /*
-  * The number of blocks per AG that we withhold from xfs_mod_fdblocks to
-  * guarantee that we can refill the AGFL prior to allocating space in a nearly
-- * full AG.  Although the the space described by the free space btrees, the
-+ * full AG.  Although the space described by the free space btrees, the
-  * blocks used by the freesp btrees themselves, and the blocks owned by the
-  * AGFL are counted in the ondisk fdblocks, it's a mistake to let the ondisk
-  * free space in the AG drop so low that the free space btrees cannot refill an
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 5a6c3c3c4de2..8fb90da89787 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -549,7 +549,7 @@ xfs_dquot_check_type(
- 	 * at the same time.  The non-user quota file can be switched between
- 	 * group and project quota uses depending on the mount options, which
- 	 * means that we can encounter the other type when we try to load quota
--	 * defaults.  Quotacheck will soon reset the the entire quota file
-+	 * defaults.  Quotacheck will soon reset the entire quota file
- 	 * (including the root dquot) anyway, but don't log scary corruption
- 	 * reports to dmesg.
- 	 */
--- 
-2.25.1
+--D
 
+> ---
+>  fs/xfs/xfs_iops.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 29f5b8b8aca69a..bac3f56141801e 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -605,6 +605,15 @@ xfs_vn_getattr(
+>  		stat->blksize = BLKDEV_IOSIZE;
+>  		stat->rdev = inode->i_rdev;
+>  		break;
+> +	case S_IFREG:
+> +		if (request_mask & STATX_DIOALIGN) {
+> +			struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+> +
+> +			stat->result_mask |= STATX_DIOALIGN;
+> +			stat->dio_mem_align = target->bt_logical_sectorsize;
+> +			stat->dio_offset_align = target->bt_logical_sectorsize;
+> +		}
+> +		fallthrough;
+>  	default:
+>  		stat->blksize = xfs_stat_blksize(ip);
+>  		stat->rdev = 0;
+> -- 
+> 2.37.0
+> 
