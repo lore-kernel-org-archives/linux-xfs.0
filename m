@@ -2,44 +2,45 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BEDFCCA49A
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jul 2022 07:14:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B8AECCA48D
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jul 2022 07:43:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234448AbiGVHOa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Jul 2022 03:14:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37228 "EHLO
+        id S234508AbiGVHnB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Jul 2022 03:43:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232572AbiGVHOE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jul 2022 03:14:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D0D293C1E;
-        Fri, 22 Jul 2022 00:14:03 -0700 (PDT)
+        with ESMTP id S229538AbiGVHnA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jul 2022 03:43:00 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD23217061;
+        Fri, 22 Jul 2022 00:42:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BCD1862188;
-        Fri, 22 Jul 2022 07:14:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8F25C341C6;
-        Fri, 22 Jul 2022 07:14:01 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 86C4AB8273C;
+        Fri, 22 Jul 2022 07:42:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1A33C341C6;
+        Fri, 22 Jul 2022 07:42:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658474042;
-        bh=9mq8X3BGsuBzR6Ln4xciUKT8RQwcULSFGtUPi9jeosE=;
+        s=k20201202; t=1658475776;
+        bh=ogA0HhpspCjS+a1icpgHI4aSwotqmHJVFm71Wnc0cl4=;
         h=From:To:Cc:Subject:Date:From;
-        b=FLVRrpieLDHN39FkoGOUIAkHKLGpScI1ahdV3AgjGwfrcluvepuBzBT6F2984u3pe
-         YxdD4BK8sy57CBvIm0XSdTFHQJcTcxNfBuwIZ22bE+QsqIcWOa3jZVywdVcsgMnYMl
-         P8eZPra5KWYWA4zPs0rDJwnuri0qsYj5L/yrWJbb40slzWXWuRwOl/sdNhOL0RjjiZ
-         t3hdZX2Thct6y6Piv8vzHp2E9U66v9l12USihLfnS30azOvbROyOeiNtaOmUZhk+ya
-         QY9fg85OhHr4fbM1wBBORT+kBwT4kVrxB6luu3IFOzwg+6fTek78HFSblPNzVzfX+z
-         MqEM0tbLisn/Q==
+        b=OaVFj+XFyb+191Fiq3g3CejvUN/c9Pun4nlCjR8G1LUMKqhw8U7wlq43z+9xnj87f
+         Oi+A/SF7qArpUCv2diYRaj6o++MCSzNe0v2dpPKcwdD1S1Ss/IJVGsC0dnLkamPcg5
+         keJsBDJCk20l3G2V9E/8+2vGhRV9q3xu/dKiDIaA3zRBCkA7nERfwivYWB2V2dtTRp
+         oTyvW2z4AY0X+nehR57g3EQBfcPSEuPol0SIherrMMCfp6h4X6WHURyEz3RkiLiGDW
+         u3Geg2MtVq/oNiuENZPPsSLfh1QZz6crIsO3sLk+RtWcwEiMSugY8JjaD0PsS6Ktn8
+         /DshXvSmjr9iw==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
-Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Keith Busch <kbusch@kernel.org>
-Subject: [PATCH v4 0/9] make statx() return DIO alignment information
-Date:   Fri, 22 Jul 2022 00:12:19 -0700
-Message-Id: <20220722071228.146690-1-ebiggers@kernel.org>
+Cc:     linux-man@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>
+Subject: [man-pages RFC PATCH v2] statx.2, open.2: document STATX_DIOALIGN
+Date:   Fri, 22 Jul 2022 00:42:28 -0700
+Message-Id: <20220722074229.148925-1-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.37.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -47,78 +48,136 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patchset makes the statx() system call return direct I/O (DIO)
-alignment information.  This allows userspace to easily determine
-whether a file supports DIO, and if so with what alignment restrictions.
+From: Eric Biggers <ebiggers@google.com>
 
-Patch 1 adds the basic VFS support for STATX_DIOALIGN.  Patch 2 wires it
-up for all block device files.  The remaining patches wire it up for
-regular files on ext4, f2fs, and xfs.  Support for regular files on
-other filesystems can be added later.
+Document the proposed STATX_DIOALIGN support for statx()
+(https://lore.kernel.org/linux-fsdevel/20220722071228.146690-1-ebiggers@kernel.org/T/#u).
 
-I've also written a man-pages patch, which I'm sending separately.
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
 
-Note, f2fs has one corner case where DIO reads are allowed but not DIO
-writes.  The proposed statx fields can't represent this.  My proposal
-(patch 6) is to just eliminate this case, as it seems much too weird.
-But I'd appreciate any feedback on that part.
+v2: rebased onto man-pages master branch, mentioned xfs, and updated
+    link to patchset
 
-This patchset applies to v5.19-rc7.
+ man2/open.2  | 43 ++++++++++++++++++++++++++++++++-----------
+ man2/statx.2 | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 61 insertions(+), 11 deletions(-)
 
-Changed v3 => v4:
-   - Added xfs support.
+diff --git a/man2/open.2 b/man2/open.2
+index d1485999f..ef29847c3 100644
+--- a/man2/open.2
++++ b/man2/open.2
+@@ -1732,21 +1732,42 @@ of user-space buffers and the file offset of I/Os.
+ In Linux alignment
+ restrictions vary by filesystem and kernel version and might be
+ absent entirely.
+-However there is currently no filesystem\-independent
+-interface for an application to discover these restrictions for a given
+-file or filesystem.
+-Some filesystems provide their own interfaces
+-for doing so, for example the
++The handling of misaligned
++.B O_DIRECT
++I/Os also varies; they can either fail with
++.B EINVAL
++or fall back to buffered I/O.
++.PP
++Since Linux 5.20,
++.B O_DIRECT
++support and alignment restrictions for a file can be queried using
++.BR statx (2),
++using the
++.B STATX_DIOALIGN
++flag.
++Support for
++.B STATX_DIOALIGN
++varies by filesystem; see
++.BR statx (2).
++.PP
++Some filesystems provide their own interfaces for querying
++.B O_DIRECT
++alignment restrictions, for example the
+ .B XFS_IOC_DIOINFO
+ operation in
+ .BR xfsctl (3).
++.B STATX_DIOALIGN
++should be used instead when it is available.
+ .PP
+-Under Linux 2.4, transfer sizes, the alignment of the user buffer,
+-and the file offset must all be multiples of the logical block size
+-of the filesystem.
+-Since Linux 2.6.0, alignment to the logical block size of the
+-underlying storage (typically 512 bytes) suffices.
+-The logical block size can be determined using the
++If none of the above is available, then direct I/O support and alignment
++restrictions can only be assumed from known characteristics of the filesystem,
++the individual file, the underlying storage device(s), and the kernel version.
++In Linux 2.4, most block device based filesystems require that the file offset
++and the length and memory address of all I/O segments be multiples of the
++filesystem block size (typically 4096 bytes).
++In Linux 2.6.0, this was relaxed to the logical block size of the block device
++(typically 512 bytes).
++A block device's logical block size can be determined using the
+ .BR ioctl (2)
+ .B BLKSSZGET
+ operation or from the shell using the command:
+diff --git a/man2/statx.2 b/man2/statx.2
+index 0326e9af0..ea38ec829 100644
+--- a/man2/statx.2
++++ b/man2/statx.2
+@@ -61,7 +61,12 @@ struct statx {
+        containing the filesystem where the file resides */
+     __u32 stx_dev_major;   /* Major ID */
+     __u32 stx_dev_minor;   /* Minor ID */
++
+     __u64 stx_mnt_id;      /* Mount ID */
++
++    /* Direct I/O alignment restrictions */
++    __u32 stx_dio_mem_align;
++    __u32 stx_dio_offset_align;
+ };
+ .EE
+ .in
+@@ -247,6 +252,8 @@ STATX_BTIME	Want stx_btime
+ STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
+ 	It is deprecated and should not be used.
+ STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
++STATX_DIOALIGN	Want stx_dio_mem_align and stx_dio_offset_align
++	(since Linux 5.20; support varies by filesystem)
+ .TE
+ .in
+ .PP
+@@ -407,6 +414,28 @@ This is the same number reported by
+ .BR name_to_handle_at (2)
+ and corresponds to the number in the first field in one of the records in
+ .IR /proc/self/mountinfo .
++.TP
++.I stx_dio_mem_align
++The alignment (in bytes) required for user memory buffers for direct I/O
++.BR "" ( O_DIRECT )
++on this file. or 0 if direct I/O is not supported on this file.
++.IP
++.B STATX_DIOALIGN
++.IR "" ( stx_dio_mem_align
++and
++.IR stx_dio_offset_align )
++is supported on block devices since Linux 5.20.
++The support on regular files varies by filesystem; it is supported by ext4,
++f2fs, and xfs since Linux 5.20.
++.TP
++.I stx_dio_offset_align
++The alignment (in bytes) required for file offsets and I/O segment lengths for
++direct I/O
++.BR "" ( O_DIRECT )
++on this file, or 0 if direct I/O is not supported on this file.
++This will only be nonzero if
++.I stx_dio_mem_align
++is nonzero, and vice versa.
+ .PP
+ For further information on the above fields, see
+ .BR inode (7).
 
-   - Moved the helper function for block devices into block/bdev.c.
-   
-   - Adjusted the ext4 patch to not introduce a bug where misaligned DIO
-     starts being allowed on encrypted files when it gets combined with
-     the patch "iomap: add support for dma aligned direct-io" that is
-     queued in the block tree for 5.20.
-
-   - Made a simplification in fscrypt_dio_supported().
-
-Changed v2 => v3:
-   - Dropped the stx_offset_align_optimal field, since its purpose
-     wasn't clearly distinguished from the existing stx_blksize.
-
-   - Renamed STATX_IOALIGN to STATX_DIOALIGN, to reflect the new focus
-     on DIO only.
-
-   - Similarly, renamed stx_{mem,offset}_align_dio to
-     stx_dio_{mem,offset}_align, to reflect the new focus on DIO only.
-
-   - Wired up STATX_DIOALIGN on block device files.
-
-Changed v1 => v2:
-   - No changes.
-
-Eric Biggers (9):
-  statx: add direct I/O alignment information
-  vfs: support STATX_DIOALIGN on block devices
-  fscrypt: change fscrypt_dio_supported() to prepare for STATX_DIOALIGN
-  ext4: support STATX_DIOALIGN
-  f2fs: move f2fs_force_buffered_io() into file.c
-  f2fs: don't allow DIO reads but not DIO writes
-  f2fs: simplify f2fs_force_buffered_io()
-  f2fs: support STATX_DIOALIGN
-  xfs: support STATX_DIOALIGN
-
- block/bdev.c              | 25 ++++++++++++++++++++
- fs/crypto/inline_crypt.c  | 49 +++++++++++++++++++--------------------
- fs/ext4/ext4.h            |  1 +
- fs/ext4/file.c            | 37 ++++++++++++++++++++---------
- fs/ext4/inode.c           | 36 ++++++++++++++++++++++++++++
- fs/f2fs/f2fs.h            | 45 -----------------------------------
- fs/f2fs/file.c            | 45 ++++++++++++++++++++++++++++++++++-
- fs/stat.c                 | 14 +++++++++++
- fs/xfs/xfs_iops.c         |  9 +++++++
- include/linux/blkdev.h    |  4 ++++
- include/linux/fscrypt.h   |  7 ++----
- include/linux/stat.h      |  2 ++
- include/uapi/linux/stat.h |  4 +++-
- 13 files changed, 190 insertions(+), 88 deletions(-)
-
-base-commit: ff6992735ade75aae3e35d16b17da1008d753d28
+base-commit: f9f25914e4ed393ac284ab921876e8a78722c504
 -- 
 2.37.0
 
