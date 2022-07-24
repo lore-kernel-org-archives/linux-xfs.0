@@ -2,206 +2,243 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E6D7C43334
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Jul 2022 12:14:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC3EC433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Jul 2022 14:01:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229462AbiGXMOS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 24 Jul 2022 08:14:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36128 "EHLO
+        id S230318AbiGXOBj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 24 Jul 2022 10:01:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbiGXMOS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jul 2022 08:14:18 -0400
-Received: from mail-ot1-x329.google.com (mail-ot1-x329.google.com [IPv6:2607:f8b0:4864:20::329])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FE7865AF
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jul 2022 05:14:17 -0700 (PDT)
-Received: by mail-ot1-x329.google.com with SMTP id k25-20020a056830169900b0061c6f68f451so6684394otr.9
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jul 2022 05:14:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zadara.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=1NufmrS5kIAYqYZGXtNTdeY1J+c6UeCWVjfbEiwljyc=;
-        b=X1k8mbjnOssw/GbJ+nyekvTiBtbKHlmSRWogiFXYhNZzv9vb7oUD5mc0mvP9C+hGwz
-         Q3cMcV2+mopUaZVlA9ybn1Qr93ZGKztlJjj4rgVupdrH/owA/XAMy4OSy1uBT2rAV3zX
-         U2UKp1N0CiiloWF0WA4GuDdITjKuEO50KB62iJgkPPviGn0fy9N7arKvqOEYEOlOQYkd
-         Jcm/ck6UNi+BdNzCZpZ6nFuouGcRwlAXyOAwCrXiZR97UZ+HUtdsnE95wZj/JAMlbizC
-         lYZAFqGPO+aU1QwJf034Q/hmJQsxQd85juUdf6+naKAu8s8lPkz30CHBTNsOI7lMefa8
-         zMRA==
+        with ESMTP id S229494AbiGXOBi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jul 2022 10:01:38 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F191E1208C
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jul 2022 07:01:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1658671296;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wzjWFBWWzS3vs3FN1IPanHJriLLGg6ks/nHjRtM9sk4=;
+        b=AwHbDveBkK2jWrGYFLxI7zrYRryHXUQs3PMguf6I1lPeWOLSvSk/H5GTpCnT2TVYdMsH9q
+        bie8HrkPMQGv3gsZkM9dPSN8ap67cZVoZs3DuI3qMSCEFUPBV064hV7uUQ5tQhA/caVmBA
+        oj5r5UwKake5eV7z9RHeQSCTmcffRKY=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-28-teEG7i6dOW2GUYIDIdCAfw-1; Sun, 24 Jul 2022 10:01:34 -0400
+X-MC-Unique: teEG7i6dOW2GUYIDIdCAfw-1
+Received: by mail-qk1-f199.google.com with SMTP id j16-20020a05620a411000b006b5fb8e5d95so7782395qko.19
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jul 2022 07:01:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=1NufmrS5kIAYqYZGXtNTdeY1J+c6UeCWVjfbEiwljyc=;
-        b=d3c4cyA1O5JfWv6q17979Vj2HFLix3I96wIhJlQHUb28L8odJX9XZkAj/ZqHYSmb3b
-         +5BpI0aivZhJzGA7kDkpEg17cJOBsGhMKmbs0B9t3EeGrAShLJV9bp36rZzeoOU9MaQR
-         VSqOzrafQ2jqAxuyAK7o7kUayeJjRarmPYQMvEJWad9kPOlqgULuditUUNicO2rRhoNN
-         tl3d7Ogu7Z6JkapjwkUpc9cJwPiWkslK+Rt0ZyYV0W76IgPMucHl2Iqvmb+TLBRO7kPr
-         gVRFIYbmFGrVXrtygj/uelJudRKHM2ePrwQbKjBGj614LyZGfBSjW90/Ek1kUj5rrb1g
-         xdNA==
-X-Gm-Message-State: AJIora/iR39KCnJQORnNO0blGL4d72r0E07wgPL2s9WzumhJG0diKtk4
-        nbm99XRNIuyo1oB778ozc/Io59cg3VH16Wo2/sEpl2GGJPCFEW8N
-X-Google-Smtp-Source: AGRyM1uf818MIt3GMNLRBOsvxfP0XUfU9OdpMFPswyR1o0J8GpO6r6GXir5nxYlWOKnrW5LtD0s7uSE6HRscPmqK698=
-X-Received: by 2002:a9d:686:0:b0:61c:8be0:a26a with SMTP id
- 6-20020a9d0686000000b0061c8be0a26amr3104780otx.127.1658664856420; Sun, 24 Jul
- 2022 05:14:16 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=wzjWFBWWzS3vs3FN1IPanHJriLLGg6ks/nHjRtM9sk4=;
+        b=Hwe917oUASEtL/REhS8oN3rwVnU5GaOkyPl2Zpifm414auezGayw+SVwAg3pBEkREu
+         9KCckRkEfYRzGxOusQX+K+M056x5DbCABuUEoEbqY5rTgzzzJCAxHENrwFnBzWAMQBpj
+         rAmw0eM9OoBYAl2Vv4wO6IZ589wGlE31/5Cr1Pxb7p6V8GVZO/s9S+KPnwOGLorfIufd
+         hHfGV43inxvwVcVUfghb1FwBot3YL8ndjbgMH7rbatm2IzrD0nS+jVc4kikZF6nc9wme
+         RNZgNWqFXtj3s1BhbniUwYZPRyfT2/edFODHBAmj1LkHS0bSD0XxkRit8gq9+799BldY
+         5y2A==
+X-Gm-Message-State: AJIora/6rqSG+4l/UuXTWNmI49TZ3ft8nQokYRfHk7m2ehwclOmsS/OL
+        c5q1+Pb/f0PQfkIiyakDtUhv0CfmmNiV3XqmSyUdIQbocI4J79um28nDSTwMumuWTCsJAsEDM9R
+        DS78ymkWu8uGkDKtxV6JP
+X-Received: by 2002:a05:620a:440b:b0:6b6:2e97:e4c with SMTP id v11-20020a05620a440b00b006b62e970e4cmr5863143qkp.649.1658671294213;
+        Sun, 24 Jul 2022 07:01:34 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1sXjyC2lhd0m4Unr0J9jztJkm6o9Gsai/nnsdBeMnp3H5ecGWasJL9RJPsbpIxbnJsp5aJkvw==
+X-Received: by 2002:a05:620a:440b:b0:6b6:2e97:e4c with SMTP id v11-20020a05620a440b00b006b62e970e4cmr5863123qkp.649.1658671293882;
+        Sun, 24 Jul 2022 07:01:33 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id x29-20020a05620a0b5d00b006a6a4b43c01sm7164773qkg.38.2022.07.24.07.01.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 24 Jul 2022 07:01:33 -0700 (PDT)
+Date:   Sun, 24 Jul 2022 22:01:27 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCHSET v2 0/8] fstests: check file block congruency of file
+ range operations
+Message-ID: <20220724140127.dm5lf6ibrkzvkcis@zlang-mailbox>
+References: <165826663647.3249494.13640199673218669145.stgit@magnolia>
 MIME-Version: 1.0
-References: <20200510072404.986627-1-hch@lst.de> <20200510072404.986627-4-hch@lst.de>
- <20200516180736.GE6714@magnolia>
-In-Reply-To: <20200516180736.GE6714@magnolia>
-From:   Alex Lyakas <alex.lyakas@zadara.com>
-Date:   Sun, 24 Jul 2022 15:14:04 +0300
-Message-ID: <CAOcd+r2cPb3BYKpiSObX5o5hRGvZ=qqWa8jRjh_=z+dY7CLq5Q@mail.gmail.com>
-Subject: Re: [PATCH 3/6] xfs: remove xfs_ifree_local_data
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <165826663647.3249494.13640199673218669145.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Christoph,
-
-On Sat, May 16, 2020 at 9:07 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Sun, May 10, 2020 at 09:24:01AM +0200, Christoph Hellwig wrote:
-> > xfs_ifree only need to free inline data in the data fork, as we've
-> > already taken care of the attr fork before (and in fact freed the
-> > fork structure).  Just open code the freeing of the inline data.
-> >
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
->
-> Looks ok,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->
+On Tue, Jul 19, 2022 at 02:37:16PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> I started running fstests with XFS filesystems that don't have the usual
+> file geometry characteristics -- block sizes larger than 4k, realtime
+> filesystems with extent sizes that aren't a power of two, etc.  What I
+> found is that many file operation tests (fallocate, reflink, etc.) that
+> operate on disk blocks assume that aligning the arguments to 64k is
+> sufficient to avoid EINVAL.  Unfortunately, this just means that these
+> tests fail left and right on realtime filesystems where the file
+> allocation unit is large (~2MB, anyone?) or a weird number (28K).
+> 
+> Add a predicate to all of these tests so that we can _notrun them if
+> they make assumptions about file size /and/ encode something (usually
+> file hashes) in the golden output that mean we can't easily accomodate
+> these corner cases without redesigning each test.
+> 
+> v2: skip congruency tests for network filesystems, be more consistent about
+>     TEST_DIR in the arguments, fix a bug in a helper's callsite reported by
+>     Zorro.
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+> 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
 > --D
->
-> > ---
-> >  fs/xfs/xfs_inode.c | 30 ++++++++++--------------------
-> >  1 file changed, 10 insertions(+), 20 deletions(-)
-> >
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 549ff468b7b60..7d3144dc99b72 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -2711,24 +2711,6 @@ xfs_ifree_cluster(
-> >       return 0;
-> >  }
-> >
-> > -/*
-> > - * Free any local-format buffers sitting around before we reset to
-> > - * extents format.
-> > - */
-> > -static inline void
-> > -xfs_ifree_local_data(
-> > -     struct xfs_inode        *ip,
-> > -     int                     whichfork)
-> > -{
-> > -     struct xfs_ifork        *ifp;
-> > -
-> > -     if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
-> > -             return;
-> > -
-> > -     ifp = XFS_IFORK_PTR(ip, whichfork);
-> > -     xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
-> > -}
-> > -
-> >  /*
-> >   * This is called to return an inode to the inode free list.
-> >   * The inode should already be truncated to 0 length and have
-> > @@ -2765,8 +2747,16 @@ xfs_ifree(
-> >       if (error)
-> >               return error;
-> >
-> > -     xfs_ifree_local_data(ip, XFS_DATA_FORK);
-> > -     xfs_ifree_local_data(ip, XFS_ATTR_FORK);
-> > +     /*
-> > +      * Free any local-format data sitting around before we reset the
-> > +      * data fork to extents format.  Note that the attr fork data has
-> > +      * already been freed by xfs_attr_inactive.
-> > +      */
-> > +     if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-> > +             kmem_free(ip->i_df.if_u1.if_data);
-> > +             ip->i_df.if_u1.if_data = NULL;
-> > +             ip->i_df.if_bytes = 0;
-> > +     }
-> >
-> >       VFS_I(ip)->i_mode = 0;          /* mark incore inode as free */
-> >       ip->i_d.di_flags = 0;
-> > --
-> > 2.26.2
-> >
 
+I'd like to merge this patchset after my personal review and testing. As I
+didn't find any regression from this patchset, and there's not any objection
+from anyone after two weeks passed. So I'm going to merge it, to help Darrick
+shift to his next patchset he's working on.
 
-I stumbled upon this patch, by analyzing a kernel panic we had [1].
-Looking at the call trace, the panic happened in
-xfs_ifree_local_data() being called with XFS_ATTR_FORK.
-It looks like
-ifp = XFS_IFORK_PTR(ip, whichfork);
-returned NULL.
+Reviewed-by: Zorro Lang <zlang@redhat.com>
 
-Based on your patch, do I understand correctly that it fixes the panic?
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=check-blocksize-congruency
+> ---
+>  common/filter     |    4 ++--
+>  common/punch      |    3 ++-
+>  common/rc         |   28 +++++++++++++++++++++++++++-
+>  tests/generic/017 |    2 +-
+>  tests/generic/031 |    1 +
+>  tests/generic/064 |    2 +-
+>  tests/generic/116 |    1 +
+>  tests/generic/118 |    1 +
+>  tests/generic/119 |    1 +
+>  tests/generic/121 |    1 +
+>  tests/generic/122 |    1 +
+>  tests/generic/134 |    1 +
+>  tests/generic/136 |    1 +
+>  tests/generic/137 |    1 +
+>  tests/generic/144 |    1 +
+>  tests/generic/149 |    1 +
+>  tests/generic/153 |    2 +-
+>  tests/generic/158 |    2 +-
+>  tests/generic/162 |    1 +
+>  tests/generic/163 |    1 +
+>  tests/generic/164 |    1 +
+>  tests/generic/165 |    1 +
+>  tests/generic/168 |    1 +
+>  tests/generic/170 |    1 +
+>  tests/generic/181 |    1 +
+>  tests/generic/183 |    1 +
+>  tests/generic/185 |    1 +
+>  tests/generic/186 |    1 +
+>  tests/generic/187 |    1 +
+>  tests/generic/188 |    1 +
+>  tests/generic/189 |    1 +
+>  tests/generic/190 |    1 +
+>  tests/generic/191 |    1 +
+>  tests/generic/194 |    1 +
+>  tests/generic/195 |    1 +
+>  tests/generic/196 |    1 +
+>  tests/generic/197 |    1 +
+>  tests/generic/199 |    1 +
+>  tests/generic/200 |    1 +
+>  tests/generic/201 |    1 +
+>  tests/generic/284 |    1 +
+>  tests/generic/287 |    1 +
+>  tests/generic/289 |    1 +
+>  tests/generic/290 |    1 +
+>  tests/generic/291 |    1 +
+>  tests/generic/292 |    1 +
+>  tests/generic/293 |    1 +
+>  tests/generic/295 |    1 +
+>  tests/generic/352 |    1 +
+>  tests/generic/358 |    1 +
+>  tests/generic/359 |    1 +
+>  tests/generic/372 |    1 +
+>  tests/generic/404 |    2 +-
+>  tests/generic/414 |    1 +
+>  tests/generic/483 |    4 ++++
+>  tests/generic/495 |    4 ++++
+>  tests/generic/501 |    1 +
+>  tests/generic/503 |    4 ++++
+>  tests/generic/515 |    1 +
+>  tests/generic/516 |    1 +
+>  tests/generic/540 |    1 +
+>  tests/generic/541 |    1 +
+>  tests/generic/542 |    1 +
+>  tests/generic/543 |    1 +
+>  tests/generic/544 |    1 +
+>  tests/generic/546 |    1 +
+>  tests/generic/578 |    1 +
+>  tests/generic/588 |    2 ++
+>  tests/generic/673 |    1 +
+>  tests/generic/674 |    1 +
+>  tests/generic/675 |    1 +
+>  tests/generic/677 |    4 ++++
+>  tests/generic/683 |    1 +
+>  tests/generic/684 |    1 +
+>  tests/generic/685 |    1 +
+>  tests/generic/686 |    1 +
+>  tests/generic/687 |    1 +
+>  tests/generic/688 |    1 +
+>  tests/xfs/069     |    1 +
+>  tests/xfs/114     |    2 ++
+>  tests/xfs/166     |    4 ++++
+>  tests/xfs/180     |    1 +
+>  tests/xfs/182     |    1 +
+>  tests/xfs/184     |    1 +
+>  tests/xfs/192     |    1 +
+>  tests/xfs/193     |    1 +
+>  tests/xfs/198     |    1 +
+>  tests/xfs/200     |    1 +
+>  tests/xfs/203     |    4 ++++
+>  tests/xfs/204     |    1 +
+>  tests/xfs/208     |    1 +
+>  tests/xfs/209     |    1 +
+>  tests/xfs/210     |    1 +
+>  tests/xfs/211     |    1 +
+>  tests/xfs/212     |    1 +
+>  tests/xfs/215     |    1 +
+>  tests/xfs/218     |    1 +
+>  tests/xfs/219     |    1 +
+>  tests/xfs/221     |    1 +
+>  tests/xfs/223     |    1 +
+>  tests/xfs/224     |    1 +
+>  tests/xfs/225     |    1 +
+>  tests/xfs/226     |    1 +
+>  tests/xfs/228     |    1 +
+>  tests/xfs/230     |    1 +
+>  tests/xfs/231     |    1 +
+>  tests/xfs/232     |    1 +
+>  tests/xfs/237     |    1 +
+>  tests/xfs/239     |    1 +
+>  tests/xfs/240     |    1 +
+>  tests/xfs/241     |    1 +
+>  tests/xfs/248     |    1 +
+>  tests/xfs/249     |    1 +
+>  tests/xfs/251     |    1 +
+>  tests/xfs/254     |    1 +
+>  tests/xfs/255     |    1 +
+>  tests/xfs/256     |    1 +
+>  tests/xfs/257     |    1 +
+>  tests/xfs/258     |    1 +
+>  tests/xfs/280     |    1 +
+>  tests/xfs/312     |    1 +
+>  tests/xfs/315     |    1 +
+>  tests/xfs/322     |    1 +
+>  tests/xfs/326     |    1 +
+>  tests/xfs/329     |    1 +
+>  tests/xfs/346     |    1 +
+>  tests/xfs/347     |    1 +
+>  tests/xfs/436     |    1 +
+>  tests/xfs/507     |    3 +++
+>  tests/xfs/537     |    2 +-
+>  130 files changed, 180 insertions(+), 10 deletions(-)
+> 
 
-What happened seems to be that inode had an attribute fork and
-xfs_attr_fork_remove() was called on it. This function set:
-ip->i_afp = NULL
-ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS.
-
-As a result, xfs_ifree_local_data() [2] checked XFS_IFORK_FORMAT() and
-got XFS_DINODE_FMT_EXTENTS. So it performed:
-    ifp = XFS_IFORK_PTR(ip, whichfork);
-    xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
-which caused NULL pointer exception.
-
-Is this analysis correct, that any time we have an inode with an
-attribute fork, we will crash deleting it?
-
-Thanks,
-Alex.
-
-
-
-[1]
-BUG: unable to handle kernel NULL pointer dereference at           (null)
-IP: xfs_ifree+0x12c/0x150 [xfs]
-PGD 800000066eea0067 P4D 800000066eea0067 PUD 3066ce067 PMD 0
-Oops: 0000 [#1] PREEMPT SMP PTI
-Modules linked in: binfmt_misc xt_nat xfs(OE) sd_mod sg bonding xt_CHECKSUM i
- libiscsi_tcp(OE) sunrpc libiscsi(OE) scsi_transport_iscsi(OE) i6300esb ip_ta
-CPU: 3 PID: 19176 Comm: swift-object-re Tainted: G        W  OE   4.14.99-zad
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 0
-task: ffffa009b0d45640 task.stack: ffffb0a85dddc000
-RIP: 0010:xfs_ifree+0x12c/0x150 [xfs]
-RSP: 0018:ffffb0a85dddfdb8 EFLAGS: 00010246
-RAX: 0000000000000000 RBX: ffffa00999610f00 RCX: 000000168215a803
-RDX: 0000000000000000 RSI: ffffd0a83f9b3ed0 RDI: ffffa00999610f00
-RBP: ffffa00edbe1af30 R08: 00003091b4833ed0 R09: ffffffffc0a39de4
-R10: 0000000000000000 R11: 0000000000000040 R12: ffffb0a85dddfe10
-R13: ffffb0a85dddfe08 R14: ffffa00d7f147780 R15: 0000000000000000
-FS:  00007f012ffff700(0000) GS:ffffa0168b180000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000000 CR3: 0000000749f26006 CR4: 00000000003606e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- xfs_inactive_ifree+0xbb/0x220 [xfs]
- xfs_inactive+0x74/0x100 [xfs]
- xfs_fs_destroy_inode+0xb4/0x240 [xfs]
- do_unlinkat+0x1b3/0x310
- do_syscall_64+0x6e/0x120
- entry_SYSCALL_64_after_hwframe+0x3d/0xa2
-
-
-[2]
-static inline void
-xfs_ifree_local_data(
-    struct xfs_inode    *ip,
-    int            whichfork)
-{
-    struct xfs_ifork    *ifp;
-
-    if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
-        return;
-
-    ifp = XFS_IFORK_PTR(ip, whichfork);
-    xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
-}
