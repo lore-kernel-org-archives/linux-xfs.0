@@ -2,83 +2,128 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29873C43334
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jul 2022 07:59:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CE55C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jul 2022 08:31:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232758AbiGYH7v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jul 2022 03:59:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48906 "EHLO
+        id S234056AbiGYIbK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Jul 2022 04:31:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232654AbiGYH7s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jul 2022 03:59:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14FAD13D3F
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Jul 2022 00:59:48 -0700 (PDT)
+        with ESMTP id S234185AbiGYIa4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jul 2022 04:30:56 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC01D13FB4
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jul 2022 01:30:40 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 87A816119A
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Jul 2022 07:59:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4528C341CE;
-        Mon, 25 Jul 2022 07:59:45 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 80C1FB80DFE
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jul 2022 08:30:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60D6CC341C7;
+        Mon, 25 Jul 2022 08:30:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658735986;
-        bh=BMHyrdiWt4HfJKXhDfcUp1HGIR9kkqu9QeZ5qyVri1c=;
+        s=k20201202; t=1658737838;
+        bh=p/Yjb34fajtEQX2U/Nde4F+rB5zzd8Np95mf9xRGj/4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MzMjj8dFlUyngPXFRIwku/AHkWJ2V46abwkd6Y+eNbhrkErnC/NEm7DXxvQSOIjcr
-         lA2V3m9wTzCooVJOlLCkElS62dnpwY5eyhaTsJL98vFCieCmvRGnIHOexsMYvE/DXQ
-         2897pXxKfSTV+oHpfS9RVxBVvHU8NTwct6EN9BJi8nLu3unN9/HgLyVPPmBgZZkfWk
-         EOrZKt4Zp2jy1lM/pLlEzuFDDvGtUxeFqe7kLDk40cOB7lWPnlEBY97UTZPpswEJIC
-         hyCOWFPauFcPFjj9l/WnuOoqjolBBRNKwfStddtLTPH0nliTmfFTk28JBAKTF7vkcV
-         GytSDYg6IEyvA==
-Date:   Mon, 25 Jul 2022 09:59:42 +0200
+        b=oaA1uBxGayMGQfBeFsgrklkn7ZnueUp8GJlnyHsY8nEYrRNFXm6MS+Glns5pH6L9W
+         LfAeKSBzHzKlwq40dTpVxQQjCLt7YZbJFbKjKZXzlApE/GCo+rmlza+HvvcW5/pF9M
+         8EtQdU50lIdTKAGyHbo+re4kHC9DtwNWLBu3aApU701NDjiyy9D2MgYnp8PxafIi8W
+         6qWuje/C/Z5YKQOoND0cTHIlmQgZ0NnjH029BXgLIklLJmLecixYjOs1x0xhQa+PYK
+         Ogeq6ANxo4mCSwG3gUNOo25csSS2gIdjnNxVBGXFu2DXNJBVSs1Z+0nKLQ4YKhwd6P
+         hsLZ8tiy00wmA==
+Date:   Mon, 25 Jul 2022 10:30:33 +0200
 From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCHSET v3 0/2] mkfs: stop allowing tiny filesystems
-Message-ID: <20220725075942.erejjxcyjkyhopa3@orion>
-References: <jClQwnsHFSREVSitFnWiO2spgHLt1kaTBHjtDn1V9WeXRB1qq0BOBhwGw25IoTL-aMmeeElWwy2pVsHv9ywuMA==@protonmail.internalid>
- <165826709801.3268874.7256134380224140720.stgit@magnolia>
+To:     Christopher Pereira <kripper@imatronix.cl>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: XFS fs corruption - XFS_WANT_CORRUPTED_RETURN
+Message-ID: <20220725083033.ijgleo372w3qhvi4@orion>
+References: <425nj-mu3U3DyFC8vGfBiXjlAIM7BhKEu15RjL6pDHUa0NVM3CWjfjnT3HQ7U24NpNOzPxzbozYHf87W6tg8gw==@protonmail.internalid>
+ <ca9d19d4-01f8-6435-f536-d87371dcbbde@imatronix.cl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <165826709801.3268874.7256134380224140720.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ca9d19d4-01f8-6435-f536-d87371dcbbde@imatronix.cl>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 19, 2022 at 02:44:58PM -0700, Darrick J. Wong wrote:
-> Hi all,
+On Wed, Jun 30, 2022 at 12:23:36PM -0400, Christopher Pereira wrote:
+> Hi,
 > 
-> The maintainers have been besieged by a /lot/ of complaints recently
-> from people who format tiny filesystems and growfs them into huge ones,
-> and others who format small filesystems.  We don't really want people to
-> have filesystems with no backup superblocks, and there are myriad
-> performance problems on modern-day filesystems when the log gets too
-> small.
+> I've been using XFS for many years on many qemu-kvm VMs without problems.
+> I do daily qcow2 snapshots and today I noticed that a snaphot I took on
+> Jun  1 2022 has a corrupted XFS root partition and doesn't boot any more
+> (on another VM instance).
+> The snapshot I took the day before is clean.
+> The VM is still running since May 11 2022, has not been rebooted and
+> didn't crash which is the reason I'm reporting this issue.
+> This is a production VM with sensible data.
 > 
-> Empirical evidence shows that increasing the minimum log size to 64MB
-> eliminates most of the stalling problems and other unwanted behaviors,
-> so this series makes that change and then disables creation of small
-> filesystems, which are defined as single-AGs fses, fses with a log size
-> smaller than 64MB, and fses smaller than 300MB.
+> The kernel logged this error multiple times between 00:00:21 and
+> 00:03:31 on Jun 1:
 > 
-> v2: rebase to 5.19
-> v3: disable automatic detection of raid stripes when the device is less
->     than 1G to avoid formatting failures
+> Jun  1 00:00:21 *** kernel: XFS (dm-0): Internal error
+> XFS_WANT_CORRUPTED_RETURN at line 337 of file
+> fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_alloc_ag_vextent_near+0x658/0xa60
+> [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0230e5b>]
+> xfs_error_report+0x3b/0x40 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>] ?
+> xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01ee684>]
+> xfs_alloc_fixup_trees+0x2c4/0x370 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01f0588>]
+> xfs_alloc_ag_vextent_near+0x658/0xa60 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01f120d>]
+> xfs_alloc_ag_vextent+0xcd/0x110 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa01f1f89>]
+> xfs_alloc_vextent+0x429/0x5e0 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa020237f>]
+> xfs_bmap_btalloc+0x3af/0x710 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa02026ee>] xfs_bmap_alloc+0xe/0x10
+> [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0203148>]
+> xfs_bmapi_write+0x4d8/0xa90 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa023bd1b>]
+> xfs_iomap_write_allocate+0x14b/0x350 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0226dc6>]
+> xfs_map_blocks+0x1c6/0x230 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0227fe3>]
+> xfs_vm_writepage+0x193/0x5d0 [xfs]
+> Jun  1 00:00:22 *** kernel: [<ffffffffa0227993>]
+> xfs_vm_writepages+0x43/0x50 [xfs]
+> Jun  1 00:00:22 *** kernel: XFS (dm-0): page discard on page
+> ffffea000cf60200, inode 0xc52bf7f, offset 0.
 > 
-> If you're going to start using this mess, you probably ought to just
-> pull from my git trees, which are linked below.
+> I'm running this (outdated) software:
 > 
-> This is an extraordinary way to destroy everything.  Enjoy!
-> Comments and questions are, as always, welcome.
-> 
+> - uname -a:
+>      Linux *** 3.10.0-327.22.2.el7.x86_64 #1 SMP Thu Jun 23 17:05:11 UTC
+> 2016 x86_64 x86_64 x86_64 GNU/Linux
 
-Both changes looks good to me, but IMHO we really require it to be documented in
-manpages otherwise we'll get (even more) questions about "why can't I create
-small FS'es anymore?".
-But anyway, I can help with the manpages once these patches hit for-next if you
-are ok with it.
+> 1) Is there any known issue with this xfs version?
+> 
+> 2) How may I help you to trace this bug.
+> I could provide my WhatsApp number privately for direct communication.
+> 
+> Should I try a xfs_repair and post the logs here or via pastebin?
+> 
+> BTW: I'm a experienced developer and sysadmin, but have no experience
+> regarding the XFS  driver.
+
+It seems like you are stepping into a corrupted btree, maybe try to xfs_repair
+it and see if it fixes the problem. I can't tell you anything about known bugs,
+you're using a (very) outdated kernel, so it's hard to say anything about bugs
+here, you need to check this with the distribution directly. Maybe it will lit
+a lamp on somebody's else mind, but it's unlikely you'll get much from here with
+your current environment. If you repair the fs, and run into it again using
+upstream code, it's another story, but by now, your best shot is run xfs_repair
+on it and fix the corrupted tree.
+
+You can use a more recent xfs_repair too without updating the kernel.
+
+Cheers.
 
 -- 
 Carlos Maiolino
