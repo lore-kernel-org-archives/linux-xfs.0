@@ -2,164 +2,170 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7799BC43334
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jul 2022 22:07:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 910ABC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jul 2022 23:58:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236756AbiGYWHE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jul 2022 18:07:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50040 "EHLO
+        id S231534AbiGYX6j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Jul 2022 19:58:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236113AbiGYWHD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jul 2022 18:07:03 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0FB3BBC9F;
-        Mon, 25 Jul 2022 15:07:01 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-20-138.pa.nsw.optusnet.com.au [49.195.20.138])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DBE7B10E852B;
-        Tue, 26 Jul 2022 08:07:00 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oG6E7-005HqF-PV; Tue, 26 Jul 2022 08:06:59 +1000
-Date:   Tue, 26 Jul 2022 08:06:59 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Bruce Fields <bfields@fieldses.org>
-Cc:     Chuck Lever III <chuck.lever@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: all cel/for-rc (1197eb59 lockd: fix nlm_close_files) results
-Message-ID: <20220725220659.GY3861211@dread.disaster.area>
-References: <20220724125848.GA14741@fieldses.org>
- <FFC9022A-B2AB-4455-870B-6801B327C5B7@oracle.com>
- <20220724163401.GA17655@fieldses.org>
- <20220724163702.GB17655@fieldses.org>
- <0CFBAAC2-1ECF-48E1-A687-75176C2F1A17@oracle.com>
- <20220725021029.GA789@fieldses.org>
- <20220725121600.GA17056@fieldses.org>
- <608CA2C9-464C-464E-B4AD-CF1B8C494A5A@oracle.com>
- <20220725132252.GB17056@fieldses.org>
- <20220725220320.GX3861211@dread.disaster.area>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220725220320.GX3861211@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62df1405
-        a=cxZHBGNDieHvTKNp/pucQQ==:117 a=cxZHBGNDieHvTKNp/pucQQ==:17
-        a=kj9zAlcOel0A:10 a=RgO8CyIxsXoA:10 a=mJjC6ScEAAAA:8 a=7-415B0cAAAA:8
-        a=Bv7k5VncGYj4gtTxLFYA:9 a=CjuIK1q_8ugA:10 a=ijnPKfduoCotzip5AuI1:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        with ESMTP id S229764AbiGYX6i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jul 2022 19:58:38 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5AD527FCA
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jul 2022 16:58:36 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id 72so11778103pge.0
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jul 2022 16:58:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dilger-ca.20210112.gappssmtp.com; s=20210112;
+        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
+         :references;
+        bh=Ojaa/UU8B50WRImEMgYvPwV6uUe5mTD3KQg4CpEBv6U=;
+        b=PkQ/Af+T+bA+/HBQemEG7rZ7dPDvjPWBs3HhdBpZabOE+c1rBlVlPIz1r+rHpdv09X
+         hB/EyFoWNzuccoVADcy4Vdl0PLaNW6AiPxDyeJbUvnDe/d0KvCIQjhAOcQQ6b24XQJYg
+         8/PAIEY6L4XYgwJFXkpYL6jJ6xqV0QHoFCBKZuCOOlwPSQ9LL/4PuyVrqBEmhxUVKhgq
+         +5HJCiX+CYP8vccNJNvOCHb5WsnAQn5aouKG55wjmwwCi36yEZd/bT00fkiGHByJF0de
+         LcwGyirkTcqrv4ntzC3qtmLHmekGwpixqOSlqyQo5wyaYQWrvN7MIDDe1tW66CN4d0X1
+         CgSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:message-id:mime-version:subject:date
+         :in-reply-to:cc:to:references;
+        bh=Ojaa/UU8B50WRImEMgYvPwV6uUe5mTD3KQg4CpEBv6U=;
+        b=uuura6fTHtCGLDPFETZs9tYwHooQZXqpkm27ouSI5d8je7aqxWzW+gQ4NXLyjQgHzS
+         vP4VXOui2bxqthEvwCGrQWthiW9+RBvJREu3+9p5bP6KYZxXjZYLf7GFfzr8S/05tjr6
+         ncor1j+xpOqOITT4UrT77ZfaWM5rd3df+o7G2Bic/SbAfPIQCTkLMUstAbYmbhsEwtfS
+         6r0W/Xi7bf/acNjDUeISEt35a48QR8gg5ZLqQLVF3pqrJSWBNCr+s6COnZ3XbmT8aQDE
+         pj/uMJy3w3AKzN1KPCn2wXG/F3rDAcP/1vv5bq4Uf9H9sIsbhuwodUfOhWw+MwtME6zO
+         e8AA==
+X-Gm-Message-State: AJIora/EAwTRB6ambwaULdf/rR3kLVpiq8+IGTQGENy8rYJJuyc9EZXQ
+        FYnnA3GMaL598fbkqr8HoAPCR4pBQR6iLQ==
+X-Google-Smtp-Source: AGRyM1syH3Cbkf+bRQQU5ivPuhB3TZd0qaZdIG1SBv9zyCS0k235ZiPGksi9iuxNjB1O939AUiI02Q==
+X-Received: by 2002:a65:57c2:0:b0:41a:ff04:694c with SMTP id q2-20020a6557c2000000b0041aff04694cmr5997273pgr.573.1658793516160;
+        Mon, 25 Jul 2022 16:58:36 -0700 (PDT)
+Received: from cabot.adilger.int (S01061cabc081bf83.cg.shawcable.net. [70.77.221.9])
+        by smtp.gmail.com with ESMTPSA id p2-20020a170902780200b00168dadc7354sm9859676pll.78.2022.07.25.16.58.34
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 25 Jul 2022 16:58:35 -0700 (PDT)
+From:   Andreas Dilger <adilger@dilger.ca>
+Message-Id: <EC8AF6A7-9A90-4C21-8A1F-4AE936776876@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_DB83B9B8-69A7-4FD9-B14D-F8B77FC7C0F2";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH v4 6/9] f2fs: don't allow DIO reads but not DIO writes
+Date:   Mon, 25 Jul 2022 17:58:31 -0600
+In-Reply-To: <Yt7dCcG0ns85QqJe@sol.localdomain>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Keith Busch <kbusch@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+References: <20220722071228.146690-1-ebiggers@kernel.org>
+ <20220722071228.146690-7-ebiggers@kernel.org> <YtyoF89iOg8gs7hj@google.com>
+ <Yt7dCcG0ns85QqJe@sol.localdomain>
+X-Mailer: Apple Mail (2.3273)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 26, 2022 at 08:03:20AM +1000, Dave Chinner wrote:
-> On Mon, Jul 25, 2022 at 09:22:52AM -0400, Bruce Fields wrote:
-> > Adding linux-xfs in case anyone has an idea....  I'm seeing this on an
-> > NFS server.  I believe the client was in generic/187 or generic/460.
-> > 
-> > On Mon, Jul 25, 2022 at 01:14:27PM +0000, Chuck Lever III wrote:
-> > > 
-> > > 
-> > > > On Jul 25, 2022, at 8:16 AM, Bruce Fields <bfields@fieldses.org> wrote:
-> > > > 
-> > > > And again:
-> > > > 
-> > > > [ 3987.996455] INFO: task kworker/u8:2:40 blocked for more than 120
-> > > > seconds.
-> > > > [ 3987.998415]       Not tainted 5.19.0-rc6-00014-g51fd2eb52c0c #3560
-> > > > [ 3988.000005] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> > > > disables this message.
-> > > > [ 3988.002131] task:kworker/u8:2    state:D stack:24784 pid:   40 ppid:
-> > > > 2 flags:0x00004000
-> > > > [ 3988.004628] Workqueue: xfs-cil/vdf xlog_cil_push_work
-> > > > [ 3988.005841] Call Trace:
-> > > > [ 3988.005968]  <TASK>
-> > > > [ 3988.006052]  __schedule+0xb73/0x2260
-> > > > [ 3988.006251]  ? io_schedule_timeout+0x150/0x150
-> > > > [ 3988.006511]  schedule+0xe0/0x200
-> > > > [ 3988.006676]  xlog_wait_on_iclog+0x435/0x600
-> > > > [ 3988.006914]  ? xfs_log_mount+0x550/0x550
-> > > > [ 3988.007119]  ? mark_held_locks+0x9e/0xe0
-> > > > [ 3988.007311]  ? wake_up_q+0xf0/0xf0
-> > > > [ 3988.007470]  ? rwlock_bug.part.0+0x90/0x90
-> > > > [ 3988.007704]  ? kmem_cache_free.part.0+0x99/0x1a0
-> > > > [ 3988.007977]  xlog_cil_push_work+0xcf4/0x14f0
-> > > > [ 3988.008206]  ? xlog_cil_write_commit_record+0x310/0x310
-> > > > [ 3988.008565]  ? lock_downgrade+0x6a0/0x6a0
-> > > > [ 3988.008796]  ? lock_is_held_type+0xd8/0x130
-> > > > [ 3988.009030]  process_one_work+0x7ee/0x12d0
-> > > > [ 3988.009238]  ? lock_downgrade+0x6a0/0x6a0
-> > > > [ 3988.009432]  ? pwq_dec_nr_in_flight+0x230/0x230
-> > > > [ 3988.009667]  ? rwlock_bug.part.0+0x90/0x90
-> > > > [ 3988.009896]  worker_thread+0xfc/0x1270
-> > > > [ 3988.010259]  ? process_one_work+0x12d0/0x12d0
-> > > > [ 3988.010591]  kthread+0x298/0x340
-> > > > [ 3988.010754]  ? kthread_complete_and_exit+0x20/0x20
-> > > > [ 3988.011018]  ret_from_fork+0x22/0x30
-> > > > [ 3988.011201]  </TASK>
-> > > > [ 3988.011298] INFO: task nfsd:23110 blocked for more than 120 seconds.
-> > > > [ 3988.011746]       Not tainted 5.19.0-rc6-00014-g51fd2eb52c0c #3560
-> > > > [ 3988.012232] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> > > > disables this message.
-> > > > [ 3988.012828] task:nfsd            state:D stack:24400 pid:23110 ppid:
-> > > > 2 flags:0x00004000
-> > > > [ 3988.013426] Call Trace:
-> > > > [ 3988.013521]  <TASK>
-> > > > [ 3988.013636]  __schedule+0xb73/0x2260
-> > > > [ 3988.013850]  ? io_schedule_timeout+0x150/0x150
-> > > > [ 3988.014160]  ? reacquire_held_locks+0x4e0/0x4e0
-> > > > [ 3988.014409]  ? do_raw_spin_lock+0x11e/0x240
-> > > > [ 3988.014732]  schedule+0xe0/0x200
-> > > > [ 3988.014905]  io_schedule+0xbf/0x130
-> > > > [ 3988.015152]  folio_wait_bit_common+0x305/0x610
-> > > > [ 3988.015387]  ? replace_page_cache_page+0xd30/0xd30
-> > > > [ 3988.015754]  ? folio_unlock+0x70/0x70
-> > > > [ 3988.016016]  ? lock_is_held_type+0xd8/0x130
-> > > > [ 3988.016385]  folio_wait_writeback+0x40/0x230
-> > > > [ 3988.016604]  __filemap_fdatawait_range+0x10a/0x290
-> > > > [ 3988.017149]  ? file_check_and_advance_wb_err+0x270/0x270
-> > > > [ 3988.017448]  ? lock_release+0x380/0x750
-> > > > [ 3988.017708]  file_write_and_wait_range+0xb4/0xf0
-> > > > [ 3988.018028]  xfs_file_fsync+0x146/0x830
-> > > > [ 3988.018279]  ? xfs_file_read_iter+0x450/0x450
-> > > > [ 3988.018569]  ? lock_is_held_type+0xd8/0x130
-> > > > [ 3988.018841]  nfsd_commit+0x304/0x550 [nfsd]
-> > > > [ 3988.019161]  ? nfsd_write+0x4f0/0x4f0 [nfsd]
-> > > > [ 3988.019394]  ? percpu_counter_add_batch+0x77/0x130
-> > > > [ 3988.019736]  nfsd4_proc_compound+0xcbd/0x2070 [nfsd]
-> > > > [ 3988.020121]  nfsd_dispatch+0x4b9/0xb90 [nfsd]
-> > > > [ 3988.020409]  svc_process_common+0xb23/0x1ac0 [sunrpc]
-> > > > [ 3988.020781]  ? svc_create_pooled+0x4d0/0x4d0 [sunrpc]
-> > > > [ 3988.021165]  ? nfsd_svc+0xc60/0xc60 [nfsd]
-> > > > [ 3988.021381]  ? svc_sock_secure_port+0x2a/0x40 [sunrpc]
-> > > > [ 3988.021746]  ? svc_recv+0x119f/0x2890 [sunrpc]
-> > > > [ 3988.022015]  svc_process+0x32d/0x4a0 [sunrpc]
-> > > > [ 3988.022336]  nfsd+0x2d6/0x570 [nfsd]
-> > > > [ 3988.022564]  ? nfsd_shutdown_threads+0x290/0x290 [nfsd]
-> > > > [ 3988.022874]  kthread+0x298/0x340
-> > > > [ 3988.023018]  ? kthread_complete_and_exit+0x20/0x20
-> > > > [ 3988.023332]  ret_from_fork+0x22/0x30
-> > > > [ 3988.023513]  </TASK>
-> > > > ...
-> > > 
-> > > All three call traces you've sent me show an NFSv4 COMMIT
-> > > waiting in folio_wait_bit_common(). Should you report this
-> > > to the XFS folks? Or maybe a little bisecting might help.
-> > 
-> > Reproducing is a little slow and not 100% reliable.  I'm not sure I'll
-> > get to it.
-> 
-> Both tasks are waiting on IO completion, and they are waiting on
-> independent IOs which means it's likely not a filesystem layer
-> problem being tripped over. i.e. it's likely an issue lower in the
-> storage stack (or hardware) that is causing this.
 
-Hit send too soon - sysrq-w output when it's all jammed up will tell
-us everything that is actually blocked, and likely point more
-closely at where things have gone wrong...
+--Apple-Mail=_DB83B9B8-69A7-4FD9-B14D-F8B77FC7C0F2
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-Cheers,
+On Jul 25, 2022, at 12:12 PM, Eric Biggers <ebiggers@kernel.org> wrote:
+>=20
+> On Sat, Jul 23, 2022 at 07:01:59PM -0700, Jaegeuk Kim wrote:
+>> On 07/22, Eric Biggers wrote:
+>>> From: Eric Biggers <ebiggers@google.com>
+>>>=20
+>>> Currently, if an f2fs filesystem is mounted with the mode=3Dlfs and
+>>> io_bits mount options, DIO reads are allowed but DIO writes are not.
+>>> Allowing DIO reads but not DIO writes is an unusual restriction, =
+which
+>>> is likely to be surprising to applications, namely any application =
+that
+>>> both reads and writes from a file (using O_DIRECT).  This behavior =
+is
+>>> also incompatible with the proposed STATX_DIOALIGN extension to =
+statx.
+>>> Given this, let's drop the support for DIO reads in this =
+configuration.
+>>=20
+>> IIRC, we allowed DIO reads since applications complained a lower =
+performance.
+>> So, I'm afraid this change will make another confusion to users. =
+Could
+>> you please apply the new bahavior only for STATX_DIOALIGN?
+>>=20
+>=20
+> Well, the issue is that the proposed STATX_DIOALIGN fields cannot =
+represent this
+> weird case where DIO reads are allowed but not DIO writes.  So the =
+question is
+> whether this case actually matters, in which case we should make =
+STATX_DIOALIGN
+> distinguish between DIO reads and DIO writes, or whether it's some odd =
+edge case
+> that doesn't really matter, in which case we could just fix it or make
+> STATX_DIOALIGN report that DIO is unsupported.  I was hoping that you =
+had some
+> insight here.  What sort of applications want DIO reads but not DIO =
+writes?
+> Is this common at all?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I don't think this is f2fs related, but some backup applications I'm =
+aware
+of are using DIO reads to avoid polluting the page cache when reading =
+large
+numbers of files. They don't care about DIO writes, since that is =
+usually
+slower than async writes due to the sync before returning from the =
+syscall.
+
+Also, IMHO it doesn't make sense to remove useful functionality because =
+the
+new STATX_DIOALIGN fields don't handle this.  At worst the application =
+will
+still get an error when trying a DIO write, but in most cases they will
+not use the brand new STATX call in the first place, and if this is =
+documented
+then any application that starts to use it should be able to handle it.
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_DB83B9B8-69A7-4FD9-B14D-F8B77FC7C0F2
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAmLfLigACgkQcqXauRfM
+H+DIjBAAuhcCUrRZxLbIIbGQiYg9WA8Kq1A3wSBPDzMet5t78gjiKUo6y+RE2w0X
+O2Be8DY9X8x4OIpbD4jiFAe7TiVDAHAYjjrzKFMykU63wB4nJELcIZrqELT/O1qg
+9Zi1+hqoXK+WcCcC8IEh52+ypABRczFIb9OF6RPR450wAxc+0x7lXfyZ/TzBcRyl
++NeWbyLAQfW+VRViN/re9tlticLobDklbfgNC0rNuhp1CawlnMVsqWSxx/F9WT3s
+RjdsJ8hzDqLEpPv6Sgd30T9U4UaoLEpRe36CMuT4/SYx6h6SR2Kv61+Z3IihAp41
+utLypsHnpswfLjF3KmxusOMLZGmCG1EFazn/gMi6WuccfBaI+m7OXeUvvlLGnzn4
+9RJWpVHy3TVTWdikFE/LVP9L7D8rj2jos9UVpFE8QUO2Gu1NNf6C5lIg3iXlvcvn
+uxuqCpYcPCCwYosLSNcpi9tNW/p3aS0WNNfGlqWfB8Au4S/91sMJsGKkON+jwsMs
+cMiUECc+eFc7HuCrP80IW+N8asiaGrTWGrrg+EpxFtl12OzKyn4OnoY5NxWuLXLF
+3lSS1IZWudfgO1TD/5sUmvsHtUS4Rd3akslKsAQyavGxszDWvxIGvU0kABSb8k1P
+q3CXMHx8oG9FooyoP3FnfUzDrZXf40Sk28cCsqOa09926JUbhqY=
+=zitC
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_DB83B9B8-69A7-4FD9-B14D-F8B77FC7C0F2--
