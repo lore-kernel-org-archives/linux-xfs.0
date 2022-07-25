@@ -2,145 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6819BCCA473
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jul 2022 13:22:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2D38CCA48E
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jul 2022 18:12:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234459AbiGYNWz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jul 2022 09:22:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47278 "EHLO
+        id S235522AbiGYSMb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Jul 2022 14:12:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232494AbiGYNWy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jul 2022 09:22:54 -0400
-Received: from fieldses.org (fieldses.org [IPv6:2600:3c00:e000:2f7::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6518B7F9;
-        Mon, 25 Jul 2022 06:22:53 -0700 (PDT)
-Received: by fieldses.org (Postfix, from userid 2815)
-        id BE2E05FF7; Mon, 25 Jul 2022 09:22:52 -0400 (EDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org BE2E05FF7
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
-        s=default; t=1658755372;
-        bh=yDJEX2/cvBXlCfMVF9jGES/FxWBs1Wvkl/6iyGpxSBM=;
+        with ESMTP id S229470AbiGYSMa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jul 2022 14:12:30 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1154BF77;
+        Mon, 25 Jul 2022 11:12:29 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9DE0FB80E4E;
+        Mon, 25 Jul 2022 18:12:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7248C341C6;
+        Mon, 25 Jul 2022 18:12:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1658772747;
+        bh=qdWMQQKR8B6EADa6U6NBfxlIzi/aeUuQEIWc4wTtIJ4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VrAug+UyPCOv8AvVFNrO0TgTcHqMURKlVNDKDnHHdPDAlE+sLtvqS5fS/lvRAjHb5
-         Z1ROgtp7YhD/StNSxHtuQweWr5cv6Whi3H5l3zrAppqATqHzgHfZqST679FNOm/ryR
-         WeZuObt/W6AfEO16M9YLXoPBymdaYrKYCj/tqGEw=
-Date:   Mon, 25 Jul 2022 09:22:52 -0400
-From:   Bruce Fields <bfields@fieldses.org>
-To:     Chuck Lever III <chuck.lever@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: all cel/for-rc (1197eb59 lockd: fix nlm_close_files) results
-Message-ID: <20220725132252.GB17056@fieldses.org>
-References: <20220724125542.89A6FA0482@home.fieldses.org>
- <20220724125848.GA14741@fieldses.org>
- <FFC9022A-B2AB-4455-870B-6801B327C5B7@oracle.com>
- <20220724163401.GA17655@fieldses.org>
- <20220724163702.GB17655@fieldses.org>
- <0CFBAAC2-1ECF-48E1-A687-75176C2F1A17@oracle.com>
- <20220725021029.GA789@fieldses.org>
- <20220725121600.GA17056@fieldses.org>
- <608CA2C9-464C-464E-B4AD-CF1B8C494A5A@oracle.com>
+        b=XWhXckPekmLTNg1ZhroIC3wMS4JVLPCYsXHe5Fd86LEkStVLlwKwuRERjnfWICZBs
+         KwdMl4Ubwhhxz/SNyupEpf5ZQdsMAQipiMg8H4g3GRNnXlc6S8etHe+wcJ0+4ymVG7
+         ro6EoyxIDImJMuJQ98IuU3u3IslYx4Q3X1JEQSRvvWlmdxM/olx+9jEVK83Sgxk3S9
+         yrYLuIoHLs+3h9t2gNY/JPYpZ5OmfpnUkgYBFfvl+qFCxil+mzDEHaZVnrgR1UGvMP
+         HB/lbSEc1W8W/iVFQNNW3Ql/QUIkQRPG2kXFJXQBnfnZD5V0YIrLvKPLE06jEgA/hW
+         D6q+HLHyj18Tg==
+Date:   Mon, 25 Jul 2022 11:12:25 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Jaegeuk Kim <jaegeuk@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH v4 6/9] f2fs: don't allow DIO reads but not DIO writes
+Message-ID: <Yt7dCcG0ns85QqJe@sol.localdomain>
+References: <20220722071228.146690-1-ebiggers@kernel.org>
+ <20220722071228.146690-7-ebiggers@kernel.org>
+ <YtyoF89iOg8gs7hj@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <608CA2C9-464C-464E-B4AD-CF1B8C494A5A@oracle.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <YtyoF89iOg8gs7hj@google.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Adding linux-xfs in case anyone has an idea....  I'm seeing this on an
-NFS server.  I believe the client was in generic/187 or generic/460.
-
-On Mon, Jul 25, 2022 at 01:14:27PM +0000, Chuck Lever III wrote:
-> 
-> 
-> > On Jul 25, 2022, at 8:16 AM, Bruce Fields <bfields@fieldses.org> wrote:
+On Sat, Jul 23, 2022 at 07:01:59PM -0700, Jaegeuk Kim wrote:
+> On 07/22, Eric Biggers wrote:
+> > From: Eric Biggers <ebiggers@google.com>
 > > 
-> > And again:
-> > 
-> > [ 3987.996455] INFO: task kworker/u8:2:40 blocked for more than 120
-> > seconds.
-> > [ 3987.998415]       Not tainted 5.19.0-rc6-00014-g51fd2eb52c0c #3560
-> > [ 3988.000005] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> > disables this message.
-> > [ 3988.002131] task:kworker/u8:2    state:D stack:24784 pid:   40 ppid:
-> > 2 flags:0x00004000
-> > [ 3988.004628] Workqueue: xfs-cil/vdf xlog_cil_push_work
-> > [ 3988.005841] Call Trace:
-> > [ 3988.005968]  <TASK>
-> > [ 3988.006052]  __schedule+0xb73/0x2260
-> > [ 3988.006251]  ? io_schedule_timeout+0x150/0x150
-> > [ 3988.006511]  schedule+0xe0/0x200
-> > [ 3988.006676]  xlog_wait_on_iclog+0x435/0x600
-> > [ 3988.006914]  ? xfs_log_mount+0x550/0x550
-> > [ 3988.007119]  ? mark_held_locks+0x9e/0xe0
-> > [ 3988.007311]  ? wake_up_q+0xf0/0xf0
-> > [ 3988.007470]  ? rwlock_bug.part.0+0x90/0x90
-> > [ 3988.007704]  ? kmem_cache_free.part.0+0x99/0x1a0
-> > [ 3988.007977]  xlog_cil_push_work+0xcf4/0x14f0
-> > [ 3988.008206]  ? xlog_cil_write_commit_record+0x310/0x310
-> > [ 3988.008565]  ? lock_downgrade+0x6a0/0x6a0
-> > [ 3988.008796]  ? lock_is_held_type+0xd8/0x130
-> > [ 3988.009030]  process_one_work+0x7ee/0x12d0
-> > [ 3988.009238]  ? lock_downgrade+0x6a0/0x6a0
-> > [ 3988.009432]  ? pwq_dec_nr_in_flight+0x230/0x230
-> > [ 3988.009667]  ? rwlock_bug.part.0+0x90/0x90
-> > [ 3988.009896]  worker_thread+0xfc/0x1270
-> > [ 3988.010259]  ? process_one_work+0x12d0/0x12d0
-> > [ 3988.010591]  kthread+0x298/0x340
-> > [ 3988.010754]  ? kthread_complete_and_exit+0x20/0x20
-> > [ 3988.011018]  ret_from_fork+0x22/0x30
-> > [ 3988.011201]  </TASK>
-> > [ 3988.011298] INFO: task nfsd:23110 blocked for more than 120 seconds.
-> > [ 3988.011746]       Not tainted 5.19.0-rc6-00014-g51fd2eb52c0c #3560
-> > [ 3988.012232] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> > disables this message.
-> > [ 3988.012828] task:nfsd            state:D stack:24400 pid:23110 ppid:
-> > 2 flags:0x00004000
-> > [ 3988.013426] Call Trace:
-> > [ 3988.013521]  <TASK>
-> > [ 3988.013636]  __schedule+0xb73/0x2260
-> > [ 3988.013850]  ? io_schedule_timeout+0x150/0x150
-> > [ 3988.014160]  ? reacquire_held_locks+0x4e0/0x4e0
-> > [ 3988.014409]  ? do_raw_spin_lock+0x11e/0x240
-> > [ 3988.014732]  schedule+0xe0/0x200
-> > [ 3988.014905]  io_schedule+0xbf/0x130
-> > [ 3988.015152]  folio_wait_bit_common+0x305/0x610
-> > [ 3988.015387]  ? replace_page_cache_page+0xd30/0xd30
-> > [ 3988.015754]  ? folio_unlock+0x70/0x70
-> > [ 3988.016016]  ? lock_is_held_type+0xd8/0x130
-> > [ 3988.016385]  folio_wait_writeback+0x40/0x230
-> > [ 3988.016604]  __filemap_fdatawait_range+0x10a/0x290
-> > [ 3988.017149]  ? file_check_and_advance_wb_err+0x270/0x270
-> > [ 3988.017448]  ? lock_release+0x380/0x750
-> > [ 3988.017708]  file_write_and_wait_range+0xb4/0xf0
-> > [ 3988.018028]  xfs_file_fsync+0x146/0x830
-> > [ 3988.018279]  ? xfs_file_read_iter+0x450/0x450
-> > [ 3988.018569]  ? lock_is_held_type+0xd8/0x130
-> > [ 3988.018841]  nfsd_commit+0x304/0x550 [nfsd]
-> > [ 3988.019161]  ? nfsd_write+0x4f0/0x4f0 [nfsd]
-> > [ 3988.019394]  ? percpu_counter_add_batch+0x77/0x130
-> > [ 3988.019736]  nfsd4_proc_compound+0xcbd/0x2070 [nfsd]
-> > [ 3988.020121]  nfsd_dispatch+0x4b9/0xb90 [nfsd]
-> > [ 3988.020409]  svc_process_common+0xb23/0x1ac0 [sunrpc]
-> > [ 3988.020781]  ? svc_create_pooled+0x4d0/0x4d0 [sunrpc]
-> > [ 3988.021165]  ? nfsd_svc+0xc60/0xc60 [nfsd]
-> > [ 3988.021381]  ? svc_sock_secure_port+0x2a/0x40 [sunrpc]
-> > [ 3988.021746]  ? svc_recv+0x119f/0x2890 [sunrpc]
-> > [ 3988.022015]  svc_process+0x32d/0x4a0 [sunrpc]
-> > [ 3988.022336]  nfsd+0x2d6/0x570 [nfsd]
-> > [ 3988.022564]  ? nfsd_shutdown_threads+0x290/0x290 [nfsd]
-> > [ 3988.022874]  kthread+0x298/0x340
-> > [ 3988.023018]  ? kthread_complete_and_exit+0x20/0x20
-> > [ 3988.023332]  ret_from_fork+0x22/0x30
-> > [ 3988.023513]  </TASK>
-> > ...
+> > Currently, if an f2fs filesystem is mounted with the mode=lfs and
+> > io_bits mount options, DIO reads are allowed but DIO writes are not.
+> > Allowing DIO reads but not DIO writes is an unusual restriction, which
+> > is likely to be surprising to applications, namely any application that
+> > both reads and writes from a file (using O_DIRECT).  This behavior is
+> > also incompatible with the proposed STATX_DIOALIGN extension to statx.
+> > Given this, let's drop the support for DIO reads in this configuration.
 > 
-> All three call traces you've sent me show an NFSv4 COMMIT
-> waiting in folio_wait_bit_common(). Should you report this
-> to the XFS folks? Or maybe a little bisecting might help.
+> IIRC, we allowed DIO reads since applications complained a lower performance.
+> So, I'm afraid this change will make another confusion to users. Could
+> you please apply the new bahavior only for STATX_DIOALIGN?
+> 
 
-Reproducing is a little slow and not 100% reliable.  I'm not sure I'll
-get to it.
+Well, the issue is that the proposed STATX_DIOALIGN fields cannot represent this
+weird case where DIO reads are allowed but not DIO writes.  So the question is
+whether this case actually matters, in which case we should make STATX_DIOALIGN
+distinguish between DIO reads and DIO writes, or whether it's some odd edge case
+that doesn't really matter, in which case we could just fix it or make
+STATX_DIOALIGN report that DIO is unsupported.  I was hoping that you had some
+insight here.  What sort of applications want DIO reads but not DIO writes?
+Is this common at all?
 
---b.
+- Eric
