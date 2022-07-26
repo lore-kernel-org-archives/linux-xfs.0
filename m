@@ -2,140 +2,199 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBE32C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jul 2022 09:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33C03CCA48C
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jul 2022 09:21:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232710AbiGZJVd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jul 2022 05:21:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57824 "EHLO
+        id S232563AbiGZJVf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jul 2022 05:21:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232563AbiGZJVc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jul 2022 05:21:32 -0400
-Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D6DF2B62F;
-        Tue, 26 Jul 2022 02:21:31 -0700 (PDT)
-Received: by mail-ej1-x636.google.com with SMTP id tk8so25022615ejc.7;
-        Tue, 26 Jul 2022 02:21:31 -0700 (PDT)
+        with ESMTP id S237906AbiGZJVd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jul 2022 05:21:33 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 670D612D36;
+        Tue, 26 Jul 2022 02:21:32 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id mf4so25104335ejc.3;
+        Tue, 26 Jul 2022 02:21:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=KUc7K2/MUs2SgPKS71HgrrbL4+FBYqvSCQg21Jxaskw=;
-        b=WZKMOsbp4J+Lcb6qwQRNYH7DIbk1Qtg3Qu44NI/Zmstff7+cJ6Aa0R40PBXJ9i72zE
-         0DYk0Vp/1Cg2njud6uemHGJ3GPqp8mh9JhJwE87NmTENadgnQ6L4AwpZ6CkaBOkS38Wp
-         BU3TgclI/DEhaQxZEYyJZurFZ7AKF8iz/qV/9qgzZ7+WddDpiTEOnaEZMVrcnp03tNyo
-         JcS1FvJeOOOSUn/hgHCvEHKlcLMWdsfZx0TY45aJWcmJwTtA63wrkdSsLLgr0QcfWBzi
-         WzQKBT7xHl3rv7oCoieYe4+g+ZWHxFtCVpNg0dLrf9XkLe+G+M07L12eQ+Lkl5qNblj6
-         90aA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=loriEoiVPoDrwPGkS8Q5XLOnTWcA/2w8hcb95i2ZPaE=;
+        b=LfufXSiYxZ++zkxPxdLhDfKVyCh3Aal6tFIzZq9nL7x6JD73IdGqZTmPhHJVBJDyij
+         PaL20gCZdchiU2EingQ1OPoBxz0IdUJpad48OkGD1h48pZ/u2p8unlYRHxE6f/NJLlYn
+         sXE4TOqvU2A9H8wZNom/8KYlU4sn5+wcP+DbPGQ/doIR6Pdbos+jkY6pNCq/PaRFPggG
+         ZDBIgNWWlqzEJyFqFOr037YZK2GFbdJ40w1zwhPlAxroFfxW8m09hYqlDY75EFoUphXr
+         mYW96UZLGx7LmGPkj3j9Z/zM3ocAv+kDibhbA/s+peT0UyMwUhmq1kkTcmzf/2vFdH42
+         NNWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=KUc7K2/MUs2SgPKS71HgrrbL4+FBYqvSCQg21Jxaskw=;
-        b=HXiAW4Z3WIFUNQz/eF2SAcq67FM5wnLj37bdoFnVoOzG3ZPAC+bNmVyblqfCMIcS7h
-         XEGE2h/YvYBLgqhDPcqWd7/9PXQKh8SKwhnej7j9O1JlMsocVHh05bQ84za2HNC8UYGO
-         gKsFtWqvUwTUYTj+C03N/Omo4E2JVJoMgTipLl4M+mESAuk396oEgt4KJ+VSCfvYRLOQ
-         cEQr4iR2+wnRYMNCHYSA7nGyIefM153GWIa9ejRL1LoqWeZ6MRkD3wNeuHufnJhN9cM7
-         hYO4MV2//bsuv2VA7mmYuPYZp00dAJCdMe2iatoUlKuTHg9eUCayf140WpkLuOK1p2vG
-         3ZFw==
-X-Gm-Message-State: AJIora+dWOhicCs6lEZzKDVi8GjHCFpbERA7fTU4zkQUmgS3S8StD3Wx
-        aeWGWd3Or0ywheRXDkwbfIZWDyYuGhb+CQ==
-X-Google-Smtp-Source: AGRyM1v7BUsUnzFmS+TAzf3f0h8THFlQZW8uqj+IViCNzv2pAav/0rIH4rAB3yLqOZ3hzK+c/XKYNw==
-X-Received: by 2002:a17:907:1c01:b0:6f4:2692:e23 with SMTP id nc1-20020a1709071c0100b006f426920e23mr13292207ejc.243.1658827289808;
-        Tue, 26 Jul 2022 02:21:29 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=loriEoiVPoDrwPGkS8Q5XLOnTWcA/2w8hcb95i2ZPaE=;
+        b=B4pIcPOpWwm3QCnqF42MlYRzemG0nLjozdTffewcjU3QMVnUhamggORUxmcPq/4pcU
+         Wq4ZlGF6PkJFjkoAznjnpukxnl1dcnXiJD4+yvJB/CleBtV0eNVuO/Q2kFyaVYZkpHm1
+         Ndcl/dp5OA/pg37NZzDh/GltKh+2vJGRCCo6Cy010EIkXDFaSifEH7WteAMoGrkYNYbE
+         hEvF5S5PYFALAplSsqBvCxsKasESC568rJUTynQWQEtWdLW43je19s/QuFSaZw1+SWN+
+         iLEE1/hObw+sebFjnHcL+qEgM19DhdC6MPTcGJ+ALrukU8WqEWT9IXfj/calzf4sxmg3
+         GWOw==
+X-Gm-Message-State: AJIora98Am9be6PslN1BicHOVwffjR/RquNrZR4vwglH7yXHLmvIOik1
+        adHvmSoHjnTiYo9vapaM3vA=
+X-Google-Smtp-Source: AGRyM1vxJZIuvD0iqJuDUTYiw5EwNEILPf2cLvkIfyb3Tz/+QHnjO7Pg7gfZpOtufNIsVk4radzH6Q==
+X-Received: by 2002:a17:907:6890:b0:72e:dc8f:ad42 with SMTP id qy16-20020a170907689000b0072edc8fad42mr12782265ejc.683.1658827290838;
+        Tue, 26 Jul 2022 02:21:30 -0700 (PDT)
 Received: from amir-ThinkPad-T480.kpn (2a02-a45a-4ae9-1-7aa-6650-a0dd-61a2.fixed6.kpn.net. [2a02:a45a:4ae9:1:7aa:6650:a0dd:61a2])
-        by smtp.gmail.com with ESMTPSA id w17-20020a056402071100b0043aa17dc199sm8161528edx.90.2022.07.26.02.21.28
+        by smtp.gmail.com with ESMTPSA id w17-20020a056402071100b0043aa17dc199sm8161528edx.90.2022.07.26.02.21.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Jul 2022 02:21:28 -0700 (PDT)
+        Tue, 26 Jul 2022 02:21:30 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
         Chandan Babu R <chandan.babu@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: [PATCH 5.10 CANDIDATE 0/9] xfs stable candidate patches for 5.10.y (from v5.13+)
-Date:   Tue, 26 Jul 2022 11:21:16 +0200
-Message-Id: <20220726092125.3899077-1-amir73il@gmail.com>
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH 5.10 CANDIDATE 1/9] xfs: refactor xfs_file_fsync
+Date:   Tue, 26 Jul 2022 11:21:17 +0200
+Message-Id: <20220726092125.3899077-2-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220726092125.3899077-1-amir73il@gmail.com>
+References: <20220726092125.3899077-1-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Darrick,
+From: Christoph Hellwig <hch@lst.de>
 
-This backport series contains mostly fixes from v5.14 release along
-with three deferred patches from the joint 5.10/5.15 series [1].
+commit f22c7f87777361f94aa17f746fbadfa499248dc8 upstream.
 
-I ran the auto group 10 times on baseline (v5.10.131) and this series
-with no observed regressions.
+[backported for dependency]
 
-I ran the recoveryloop group 100 times with no observed regressions.
-The soak group run is in progress (10+) with no observed regressions
-so far.
+Factor out the log syncing logic into two helpers to make the code easier
+to read and more maintainable.
 
-I am somewhat disappointed from not seeing any improvement in the
-results of the recoveryloop tests comapred to baseline.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/xfs/xfs_file.c | 81 +++++++++++++++++++++++++++++------------------
+ 1 file changed, 50 insertions(+), 31 deletions(-)
 
-This is the summary of the recoveryloop test results on both baseline
-and backport branch:
-
-generic,455, generic/457, generic/646: pass
-generic/019, generic/475, generic/648: failing often in all config
-generic/388: failing often with reflink_1024
-generic/388: failing at ~1/50 rate for any config
-generic/482: failing often on V4 configs
-generic/482: failing at ~1/100 rate for V5 configs
-xfs/057: failing at ~1/200 rate for any config
-
-I observed no failures in soak group so far neither on baseline nor
-on backport branch. I will update when I have more results.
-
-Please let me know if there is anything else that you would like me
-to test.
-
-Thanks,
-Amir.
-
-[1] https://lore.kernel.org/linux-xfs/20220617100641.1653164-1-amir73il@gmail.com/
-
-Brian Foster (2):
-  xfs: hold buffer across unpin and potential shutdown processing
-  xfs: remove dead stale buf unpin handling code
-
-Christoph Hellwig (1):
-  xfs: refactor xfs_file_fsync
-
-Darrick J. Wong (3):
-  xfs: prevent UAF in xfs_log_item_in_current_chkpt
-  xfs: fix log intent recovery ENOSPC shutdowns when inactivating inodes
-  xfs: force the log offline when log intent item recovery fails
-
-Dave Chinner (3):
-  xfs: xfs_log_force_lsn isn't passed a LSN
-  xfs: logging the on disk inode LSN can make it go backwards
-  xfs: Enforce attr3 buffer recovery order
-
- fs/xfs/libxfs/xfs_log_format.h  | 11 ++++-
- fs/xfs/libxfs/xfs_types.h       |  1 +
- fs/xfs/xfs_buf_item.c           | 60 ++++++++++--------------
- fs/xfs/xfs_buf_item_recover.c   |  1 +
- fs/xfs/xfs_dquot_item.c         |  2 +-
- fs/xfs/xfs_file.c               | 81 ++++++++++++++++++++-------------
- fs/xfs/xfs_inode.c              | 10 ++--
- fs/xfs/xfs_inode_item.c         |  4 +-
- fs/xfs/xfs_inode_item.h         |  2 +-
- fs/xfs/xfs_inode_item_recover.c | 39 ++++++++++++----
- fs/xfs/xfs_log.c                | 30 ++++++------
- fs/xfs/xfs_log.h                |  4 +-
- fs/xfs/xfs_log_cil.c            | 32 +++++--------
- fs/xfs/xfs_log_priv.h           | 15 +++---
- fs/xfs/xfs_log_recover.c        |  5 +-
- fs/xfs/xfs_mount.c              | 10 +++-
- fs/xfs/xfs_trans.c              |  6 +--
- fs/xfs/xfs_trans.h              |  4 +-
- 18 files changed, 179 insertions(+), 138 deletions(-)
-
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5b0f93f73837..414d856e2e75 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -118,6 +118,54 @@ xfs_dir_fsync(
+ 	return xfs_log_force_inode(ip);
+ }
+ 
++static xfs_lsn_t
++xfs_fsync_lsn(
++	struct xfs_inode	*ip,
++	bool			datasync)
++{
++	if (!xfs_ipincount(ip))
++		return 0;
++	if (datasync && !(ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
++		return 0;
++	return ip->i_itemp->ili_last_lsn;
++}
++
++/*
++ * All metadata updates are logged, which means that we just have to flush the
++ * log up to the latest LSN that touched the inode.
++ *
++ * If we have concurrent fsync/fdatasync() calls, we need them to all block on
++ * the log force before we clear the ili_fsync_fields field. This ensures that
++ * we don't get a racing sync operation that does not wait for the metadata to
++ * hit the journal before returning.  If we race with clearing ili_fsync_fields,
++ * then all that will happen is the log force will do nothing as the lsn will
++ * already be on disk.  We can't race with setting ili_fsync_fields because that
++ * is done under XFS_ILOCK_EXCL, and that can't happen because we hold the lock
++ * shared until after the ili_fsync_fields is cleared.
++ */
++static  int
++xfs_fsync_flush_log(
++	struct xfs_inode	*ip,
++	bool			datasync,
++	int			*log_flushed)
++{
++	int			error = 0;
++	xfs_lsn_t		lsn;
++
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	lsn = xfs_fsync_lsn(ip, datasync);
++	if (lsn) {
++		error = xfs_log_force_lsn(ip->i_mount, lsn, XFS_LOG_SYNC,
++					  log_flushed);
++
++		spin_lock(&ip->i_itemp->ili_lock);
++		ip->i_itemp->ili_fsync_fields = 0;
++		spin_unlock(&ip->i_itemp->ili_lock);
++	}
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	return error;
++}
++
+ STATIC int
+ xfs_file_fsync(
+ 	struct file		*file,
+@@ -125,13 +173,10 @@ xfs_file_fsync(
+ 	loff_t			end,
+ 	int			datasync)
+ {
+-	struct inode		*inode = file->f_mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_inode_log_item *iip = ip->i_itemp;
++	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	int			error = 0;
+ 	int			log_flushed = 0;
+-	xfs_lsn_t		lsn = 0;
+ 
+ 	trace_xfs_file_fsync(ip);
+ 
+@@ -155,33 +200,7 @@ xfs_file_fsync(
+ 	else if (mp->m_logdev_targp != mp->m_ddev_targp)
+ 		xfs_blkdev_issue_flush(mp->m_ddev_targp);
+ 
+-	/*
+-	 * All metadata updates are logged, which means that we just have to
+-	 * flush the log up to the latest LSN that touched the inode. If we have
+-	 * concurrent fsync/fdatasync() calls, we need them to all block on the
+-	 * log force before we clear the ili_fsync_fields field. This ensures
+-	 * that we don't get a racing sync operation that does not wait for the
+-	 * metadata to hit the journal before returning. If we race with
+-	 * clearing the ili_fsync_fields, then all that will happen is the log
+-	 * force will do nothing as the lsn will already be on disk. We can't
+-	 * race with setting ili_fsync_fields because that is done under
+-	 * XFS_ILOCK_EXCL, and that can't happen because we hold the lock shared
+-	 * until after the ili_fsync_fields is cleared.
+-	 */
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	if (xfs_ipincount(ip)) {
+-		if (!datasync ||
+-		    (iip->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
+-			lsn = iip->ili_last_lsn;
+-	}
+-
+-	if (lsn) {
+-		error = xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, &log_flushed);
+-		spin_lock(&iip->ili_lock);
+-		iip->ili_fsync_fields = 0;
+-		spin_unlock(&iip->ili_lock);
+-	}
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+ 
+ 	/*
+ 	 * If we only have a single device, and the log force about was
 -- 
 2.25.1
 
