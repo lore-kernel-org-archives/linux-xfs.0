@@ -2,61 +2,60 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A44CCA48E
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jul 2022 09:21:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFEECCCA490
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jul 2022 09:21:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231708AbiGZJVn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jul 2022 05:21:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58020 "EHLO
+        id S238037AbiGZJVp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jul 2022 05:21:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231765AbiGZJVm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jul 2022 05:21:42 -0400
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76A9F313A1;
-        Tue, 26 Jul 2022 02:21:41 -0700 (PDT)
-Received: by mail-ej1-x62a.google.com with SMTP id l23so25077096ejr.5;
-        Tue, 26 Jul 2022 02:21:41 -0700 (PDT)
+        with ESMTP id S231765AbiGZJVo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jul 2022 05:21:44 -0400
+Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6C70313AF;
+        Tue, 26 Jul 2022 02:21:42 -0700 (PDT)
+Received: by mail-ed1-x52e.google.com with SMTP id x91so17012880ede.1;
+        Tue, 26 Jul 2022 02:21:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=VH4E2xWf2GMBb40Hbv+ADlezT14bYPB4k7B1UzgSDjc=;
-        b=I3iJyiGhOGUtYzieSYSL3YEnxaTiHg5pp73Dj0Tp0u7d84QdMy1/FPE8XooYfeLLRg
-         pPdWTihasVMMJ6PPn7gqlvHFLcienTeklLv1r45Zw/WSNLCZqbJKqfVwCM14d2NLBGt6
-         1bnzz5Qd6C4GzktzsYe2ToBDAltD3GW/Qel9Sj4jzCj85jKsebmuXwL3oPQqM9E6a/RU
-         qeOlGjqX5RKRXM8RbSVOpF/TiGkjmsqczuNYM1+fIhT+icXlOCa0up7a6z74aIMYTWZu
-         3wRnfwh6xLtCXjKujeSbuWXaoEnbBUsyfkdw770xgqzIC665JLObFeJIEYieY7UD8riq
-         K71w==
+        bh=CCffWIrprOFDupXIPfG9sGLjBjjQFE32u5DFhNY/LA4=;
+        b=TqwdFOaZbPLCw1guFk4YIbl4/jE7ZsAKli10zahfs5mdu1oHAO5pITBZqPCSfAyxHo
+         T5FaUZyUSPn8O03WfbghGao5QQbxcQdOI6tnNNfiKIXlW9h90nK/8wykVqZCCJEOrN1C
+         sc1f4enXLPafSyh/72A0XsjGUZ2VO2/9NLf/xP9P1UYXandeLT7DC/xm+3AWV3UERhxy
+         2fZ9Gq0t8tv3bQGuDaXPmYwhXPzXRw7ndCbvcGH2UIfxFjTsWvfnF0KBPC7EWJ7HLGfb
+         uH7D9T1gNd4TCZypublS522psm5KRmreE5oCZppPgJPwojZ72MdK8QhFyDOtLZgxQ49B
+         3OkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=VH4E2xWf2GMBb40Hbv+ADlezT14bYPB4k7B1UzgSDjc=;
-        b=Sz4ZoTD5GN4BXl9rrJpmFu4T59pujH05BifOL/Z6I95qbMYD3gtfCjUlQAbtnx60Bo
-         x1/l3mFUjawT3zQJwKtGQlPrFrt9Zq84DWrUCfw3JLRdrIA6Xo9fBeQ5VB4zqga3depK
-         PZsWIkSAwAhZFLCTB/LXLYqNaao87wY6FX47v8aDzKOP+4+/pe18YkgQtDfj3uFFFg0/
-         YxzjHjeJGV7lGiAqv8xzHfiqUy8Rbm/mTJTlRFmeo/cjIJGfOGlS49OMXuVP4P9p9yCs
-         2ryNB0rm11CHiUC2jXlX+aWHmAM4FmruAAzBI2apiLO/C1tceWfyQgyQfacDZIQle6Q3
-         4Eug==
-X-Gm-Message-State: AJIora+MyEWbVR5nQorqlJLOAuN6p5S/SIXeefpP7kq1swEHsOoYeSq7
-        HrmJOJ2TZV4PhobZIlvkW5gMKTx/3GPWDQ==
-X-Google-Smtp-Source: AGRyM1t7YRZGk7YHBtiKa/Vy4VmzGjSIzkjfqw/6fXeriZjIsJuhaEsYwrKntsqQmrlDb/9x+egLqQ==
-X-Received: by 2002:a17:906:844d:b0:72b:307d:fb52 with SMTP id e13-20020a170906844d00b0072b307dfb52mr13842983ejy.182.1658827299941;
-        Tue, 26 Jul 2022 02:21:39 -0700 (PDT)
+        bh=CCffWIrprOFDupXIPfG9sGLjBjjQFE32u5DFhNY/LA4=;
+        b=cIYRau1M9mLUJ8xEPUyY639OhRwVA3pOOGuUoz8JNBqZIoOlxI9Z84QgbV9v0pryLo
+         gEi2CksUfVfgQ/biczWRObU9Zk1yY11bdTzkhThKrqzEBbAVShJxAs2FYMiXprFCFQsO
+         MyUo0/qT9seLAfr3dzlU48HbgOAgI15teTkImKuQHWfcEOOdaHCdTong5rhBYEZJb257
+         jBHKnRrlRTm49J0OWduVKa5R4UkRxMg2iG06I4v4nxtUCINZj4lx6No7YiyUM9zVsd3G
+         LhoDqbkJkZVk9uOGuIkxggKtXc07zFU70R9CXMjYEORdkdgMf6lxeX09/f3UbeZLgMtd
+         XQDQ==
+X-Gm-Message-State: AJIora+Hu8oPgOPJEtl/3dux3CpZTly1FKsvnd9+339lTRiPRYf1xFWt
+        I1K5pXRB5KfAaM0Gafth/qA=
+X-Google-Smtp-Source: AGRyM1uioseJyqirfLD78wJ3seu/8b02z/xd1d4Elklb/31HwBEz/Q+jOShPQj0D6fnpLZETjZGc9A==
+X-Received: by 2002:a05:6402:1d54:b0:43b:e20b:4ff1 with SMTP id dz20-20020a0564021d5400b0043be20b4ff1mr14574724edb.385.1658827296551;
+        Tue, 26 Jul 2022 02:21:36 -0700 (PDT)
 Received: from amir-ThinkPad-T480.kpn (2a02-a45a-4ae9-1-7aa-6650-a0dd-61a2.fixed6.kpn.net. [2a02:a45a:4ae9:1:7aa:6650:a0dd:61a2])
-        by smtp.gmail.com with ESMTPSA id w17-20020a056402071100b0043aa17dc199sm8161528edx.90.2022.07.26.02.21.39
+        by smtp.gmail.com with ESMTPSA id w17-20020a056402071100b0043aa17dc199sm8161528edx.90.2022.07.26.02.21.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Jul 2022 02:21:39 -0700 (PDT)
+        Tue, 26 Jul 2022 02:21:35 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
         Chandan Babu R <chandan.babu@oracle.com>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5.10 CANDIDATE 9/9] xfs: Enforce attr3 buffer recovery order
-Date:   Tue, 26 Jul 2022 11:21:25 +0200
-Message-Id: <20220726092125.3899077-10-amir73il@gmail.com>
+        Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 5.10 CANDIDATE 6/9] xfs: hold buffer across unpin and potential shutdown processing
+Date:   Tue, 26 Jul 2022 11:21:22 +0200
+Message-Id: <20220726092125.3899077-7-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220726092125.3899077-1-amir73il@gmail.com>
 References: <20220726092125.3899077-1-amir73il@gmail.com>
@@ -66,100 +65,121 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit d8f4c2d0398fa1d92cacf854daf80d21a46bfefc upstream.
+commit 84d8949e770745b16a7e8a68dcb1d0f3687bdee9 upstream.
 
-From the department of "WTAF? How did we miss that!?"...
+The special processing used to simulate a buffer I/O failure on fs
+shutdown has a difficult to reproduce race that can result in a use
+after free of the associated buffer. Consider a buffer that has been
+committed to the on-disk log and thus is AIL resident. The buffer
+lands on the writeback delwri queue, but is subsequently locked,
+committed and pinned by another transaction before submitted for
+I/O. At this point, the buffer is stuck on the delwri queue as it
+cannot be submitted for I/O until it is unpinned. A log checkpoint
+I/O failure occurs sometime later, which aborts the bli. The unpin
+handler is called with the aborted log item, drops the bli reference
+count, the pin count, and falls into the I/O failure simulation
+path.
 
-When we are recovering a buffer, the first thing we do is check the
-buffer magic number and extract the LSN from the buffer. If the LSN
-is older than the current LSN, we replay the modification to it. If
-the metadata on disk is newer than the transaction in the log, we
-skip it. This is a fundamental v5 filesystem metadata recovery
-behaviour.
+The potential problem here is that once the pin count falls to zero
+in ->iop_unpin(), xfsaild is free to retry delwri submission of the
+buffer at any time, before the unpin handler even completes. If
+delwri queue submission wins the race to the buffer lock, it
+observes the shutdown state and simulates the I/O failure itself.
+This releases both the bli and delwri queue holds and frees the
+buffer while xfs_buf_item_unpin() sits on xfs_buf_lock() waiting to
+run through the same failure sequence. This problem is rare and
+requires many iterations of fstest generic/019 (which simulates disk
+I/O failures) to reproduce.
 
-generic/482 failed with an attribute writeback failure during log
-recovery. The write verifier caught the corruption before it got
-written to disk, and the attr buffer dump looked like:
+To avoid this problem, grab a hold on the buffer before the log item
+is unpinned if the associated item has been aborted and will require
+a simulated I/O failure. The hold is already required for the
+simulated I/O failure, so the ordering simply guarantees the unpin
+handler access to the buffer before it is unpinned and thus
+processed by the AIL. This particular ordering is required so long
+as the AIL does not acquire a reference on the bli, which is the
+long term solution to this problem.
 
-XFS (dm-3): Metadata corruption detected at xfs_attr3_leaf_verify+0x275/0x2e0, xfs_attr3_leaf block 0x19be8
-XFS (dm-3): Unmount and run xfs_repair
-XFS (dm-3): First 128 bytes of corrupted metadata buffer:
-00000000: 00 00 00 00 00 00 00 00 3b ee 00 00 4d 2a 01 e1  ........;...M*..
-00000010: 00 00 00 00 00 01 9b e8 00 00 00 01 00 00 05 38  ...............8
-                                  ^^^^^^^^^^^^^^^^^^^^^^^
-00000020: df 39 5e 51 58 ac 44 b6 8d c5 e7 10 44 09 bc 17  .9^QX.D.....D...
-00000030: 00 00 00 00 00 02 00 83 00 03 00 cc 0f 24 01 00  .............$..
-00000040: 00 68 0e bc 0f c8 00 10 00 00 00 00 00 00 00 00  .h..............
-00000050: 00 00 3c 31 0f 24 01 00 00 00 3c 32 0f 88 01 00  ..<1.$....<2....
-00000060: 00 00 3c 33 0f d8 01 00 00 00 00 00 00 00 00 00  ..<3............
-00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-.....
-
-The highlighted bytes are the LSN that was replayed into the
-buffer: 0x100000538. This is cycle 1, block 0x538. Prior to replay,
-that block on disk looks like this:
-
-$ sudo xfs_db -c "fsb 0x417d" -c "type attr3" -c p /dev/mapper/thin-vol
-hdr.info.hdr.forw = 0
-hdr.info.hdr.back = 0
-hdr.info.hdr.magic = 0x3bee
-hdr.info.crc = 0xb5af0bc6 (correct)
-hdr.info.bno = 105448
-hdr.info.lsn = 0x100000900
-               ^^^^^^^^^^^
-hdr.info.uuid = df395e51-58ac-44b6-8dc5-e7104409bc17
-hdr.info.owner = 131203
-hdr.count = 2
-hdr.usedbytes = 120
-hdr.firstused = 3796
-hdr.holes = 1
-hdr.freemap[0-2] = [base,size]
-
-Note the LSN stamped into the buffer on disk: 1/0x900. The version
-on disk is much newer than the log transaction that was being
-replayed. That's a bug, and should -never- happen.
-
-So I immediately went to look at xlog_recover_get_buf_lsn() to check
-that we handled the LSN correctly. I was wondering if there was a
-similar "two commits with the same start LSN skips the second
-replay" problem with buffers. I didn't get that far, because I found
-a much more basic, rudimentary bug: xlog_recover_get_buf_lsn()
-doesn't recognise buffers with XFS_ATTR3_LEAF_MAGIC set in them!!!
-
-IOWs, attr3 leaf buffers fall through the magic number checks
-unrecognised, so trigger the "recover immediately" behaviour instead
-of undergoing an LSN check. IOWs, we incorrectly replay ATTR3 leaf
-buffers and that causes silent on disk corruption of inode attribute
-forks and potentially other things....
-
-Git history shows this is *another* zero day bug, this time
-introduced in commit 50d5c8d8e938 ("xfs: check LSN ordering for v5
-superblocks during recovery") which failed to handle the attr3 leaf
-buffers in recovery. And we've failed to handle them ever since...
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/xfs_buf_item_recover.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/xfs_buf_item.c | 37 +++++++++++++++++++++----------------
+ 1 file changed, 21 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 1d649462d731..b374c9cee117 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -796,6 +796,7 @@ xlog_recover_get_buf_lsn(
- 	switch (magicda) {
- 	case XFS_DIR3_LEAF1_MAGIC:
- 	case XFS_DIR3_LEAFN_MAGIC:
-+	case XFS_ATTR3_LEAF_MAGIC:
- 	case XFS_DA3_NODE_MAGIC:
- 		lsn = be64_to_cpu(((struct xfs_da3_blkinfo *)blk)->lsn);
- 		uuid = &((struct xfs_da3_blkinfo *)blk)->uuid;
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 5d6535370f87..452af57731ed 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -393,17 +393,8 @@ xfs_buf_item_pin(
+ }
+ 
+ /*
+- * This is called to unpin the buffer associated with the buf log
+- * item which was previously pinned with a call to xfs_buf_item_pin().
+- *
+- * Also drop the reference to the buf item for the current transaction.
+- * If the XFS_BLI_STALE flag is set and we are the last reference,
+- * then free up the buf log item and unlock the buffer.
+- *
+- * If the remove flag is set we are called from uncommit in the
+- * forced-shutdown path.  If that is true and the reference count on
+- * the log item is going to drop to zero we need to free the item's
+- * descriptor in the transaction.
++ * This is called to unpin the buffer associated with the buf log item which
++ * was previously pinned with a call to xfs_buf_item_pin().
+  */
+ STATIC void
+ xfs_buf_item_unpin(
+@@ -420,12 +411,26 @@ xfs_buf_item_unpin(
+ 
+ 	trace_xfs_buf_item_unpin(bip);
+ 
++	/*
++	 * Drop the bli ref associated with the pin and grab the hold required
++	 * for the I/O simulation failure in the abort case. We have to do this
++	 * before the pin count drops because the AIL doesn't acquire a bli
++	 * reference. Therefore if the refcount drops to zero, the bli could
++	 * still be AIL resident and the buffer submitted for I/O (and freed on
++	 * completion) at any point before we return. This can be removed once
++	 * the AIL properly holds a reference on the bli.
++	 */
+ 	freed = atomic_dec_and_test(&bip->bli_refcount);
+-
++	if (freed && !stale && remove)
++		xfs_buf_hold(bp);
+ 	if (atomic_dec_and_test(&bp->b_pin_count))
+ 		wake_up_all(&bp->b_waiters);
+ 
+-	if (freed && stale) {
++	 /* nothing to do but drop the pin count if the bli is active */
++	if (!freed)
++		return;
++
++	if (stale) {
+ 		ASSERT(bip->bli_flags & XFS_BLI_STALE);
+ 		ASSERT(xfs_buf_islocked(bp));
+ 		ASSERT(bp->b_flags & XBF_STALE);
+@@ -468,13 +473,13 @@ xfs_buf_item_unpin(
+ 			ASSERT(bp->b_log_item == NULL);
+ 		}
+ 		xfs_buf_relse(bp);
+-	} else if (freed && remove) {
++	} else if (remove) {
+ 		/*
+ 		 * The buffer must be locked and held by the caller to simulate
+-		 * an async I/O failure.
++		 * an async I/O failure. We acquired the hold for this case
++		 * before the buffer was unpinned.
+ 		 */
+ 		xfs_buf_lock(bp);
+-		xfs_buf_hold(bp);
+ 		bp->b_flags |= XBF_ASYNC;
+ 		xfs_buf_ioend_fail(bp);
+ 	}
 -- 
 2.25.1
 
