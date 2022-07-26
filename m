@@ -2,167 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B34C7C43334
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jul 2022 02:10:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0197C43334
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jul 2022 02:22:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231340AbiGZCKP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jul 2022 22:10:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52446 "EHLO
+        id S230404AbiGZCWP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Jul 2022 22:22:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231347AbiGZCKO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jul 2022 22:10:14 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 514BC6541;
-        Mon, 25 Jul 2022 19:10:13 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D6E5EB8117B;
-        Tue, 26 Jul 2022 02:10:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A104C341C6;
-        Tue, 26 Jul 2022 02:10:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658801410;
-        bh=DGxOyu7XcB2H4H/7Fr9clUI2L6FcH4nBdxoxbaUCJFo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZXeAcFHiBZvS6AUd/TzJicJqF/C6+lPU1+PCoW4HQqSvIB8G8VUjlRwUitLnvmS+k
-         Inge9azQ5LJROnH25R6Yzb0YMZJTeCQp/ZpV6zTwLf3mYdziuwnKQWPTcuF8eMlo7w
-         rM+hiG15ksPPOO2yS6bDWgRaI6NcMSG23ZKpiasRmWIdeHO5a7xZ9udCLPncMtEjj4
-         Oox7vBPQPvd/s5fwR1bsohlc7n7fkJ2LtHPr2iE4MjcXIOt/y0whLPuVd92huVbzx6
-         I2XzDIDBjRfCBV5LfQhhXm/L8ngOwn/cbdGYRMmWqASjBSBl6p5QBaZwJmb6tNTt1P
-         Md16eQML8wmiQ==
-Date:   Mon, 25 Jul 2022 19:10:09 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
-Subject: Re: [PATCH 5.10 CANDIDATE 00/11] xfs stable candidate patches for
- 5.10.y (v5.15+)
-Message-ID: <Yt9NAQrBxlVUIKou@magnolia>
-References: <20220617100641.1653164-1-amir73il@gmail.com>
- <YrOpmMzn9ArsR9Dy@magnolia>
- <CAOQ4uxhOAaYkWeKXz6M8681ZjFiOSOJQqmewoq+-P1O2oXhsOg@mail.gmail.com>
- <YrSPNFZ+Hium1rhE@magnolia>
- <CAOQ4uxj2vk4ZPXu20PM0hHCawTVdaY+z5=0WuN__UxwNRDK5+g@mail.gmail.com>
+        with ESMTP id S229853AbiGZCWO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jul 2022 22:22:14 -0400
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2053.outbound.protection.outlook.com [40.107.237.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39F1C19C33;
+        Mon, 25 Jul 2022 19:22:13 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=H32LRkpEg6/QD59rCZ+DOUPbUicpVvWmLt8qMl8h73+PJM1Xi8/Ci4L3ltamb8P0GBDxZS1S9/BfCnKWvN8teaOH37qbUrfE/yqNXMujA6OTN9pCA7it0BAniyigd8b+QVY6qNdJV7R0VAmpDskFjBzAtHOx5KZ2JwSkUe/wa5lUb/Ngt9OusZx3U+CJ9nnkOg38Uwcm11IsZMNeye0o8ZWDirDmvOEAJmYc1dRxNrjCUHzBt8dHfRUyVHtoh9qevX7Lk7JWlnvJAdFn6x6X2anJ1EEqoOl5zzDsQUmdduwjz+GPKCck6rHT7qk4qq6rEfl0nVZ9rNHTBC7/wbpCgA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sWTrl5XdgAkDwB+tlZjsMXdlzOfjma8RzYG+M2UJxK4=;
+ b=BN1tWRrcDFQf//4Hkfz47DOYbd1ZRlfVMBVTbXxBEyE3VijrcrL0UdNuqseEl4FbthaLhVwwlq+49E1j+sKH8dcdhZplXaUJ/OISJjcxuGRdyDAQ+eUvpgtFKPYbpysNKqakpqz04rClYxnfUZUTXmapuUxmruKcKpNr/Mzz/CqWtUjE1uqtYQTgHU3I/kLyOHa5kxSxmXReh1E7GNDLZ0CaQSy7Ei/Ri5Lu1vb2DKsisecLv+2Uwql2paJ35dL68L1moeLckGvqZclxz9uxpc5WEfnBfYtMve96RYn0MRNT7CP64j64insk+XD3J1R5U3aamJsk22BoUgyEUckegA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sWTrl5XdgAkDwB+tlZjsMXdlzOfjma8RzYG+M2UJxK4=;
+ b=4+nF6H9+Q5hd1k8n5lRbnAfQjwGaoPuXMw42k//2fl0phW04ciZ35S1MTMBBjNEu3KDkkkBHb4qyJJZ4HPXYmz+ccTBjEo/afAml/HwJpYvmeFMF7mpLj3sDlf9/q5XSBHrrgH4NSpdxXPrg5jctmcU4I03EAYEonDfF0Me0+Vc=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from SN6PR12MB2717.namprd12.prod.outlook.com (2603:10b6:805:68::29)
+ by DM5PR12MB1481.namprd12.prod.outlook.com (2603:10b6:4:e::13) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5458.19; Tue, 26 Jul 2022 02:22:10 +0000
+Received: from SN6PR12MB2717.namprd12.prod.outlook.com
+ ([fe80::406d:a54b:5cd4:9b4]) by SN6PR12MB2717.namprd12.prod.outlook.com
+ ([fe80::406d:a54b:5cd4:9b4%2]) with mapi id 15.20.5458.025; Tue, 26 Jul 2022
+ 02:22:10 +0000
+Message-ID: <adb2031b-774d-e645-2aec-f9de433b0a7c@amd.com>
+Date:   Mon, 25 Jul 2022 21:22:06 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [PATCH v9 06/14] mm/gup: migrate device coherent pages when
+ pinning instead of failing
+Content-Language: en-US
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        David Hildenbrand <david@redhat.com>
+Cc:     jgg@nvidia.com, Felix.Kuehling@amd.com, linux-mm@kvack.org,
+        rcampbell@nvidia.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, hch@lst.de, jglisse@redhat.com,
+        apopple@nvidia.com, willy@infradead.org
+References: <20220715150521.18165-1-alex.sierra@amd.com>
+ <20220715150521.18165-7-alex.sierra@amd.com>
+ <225554c2-9174-555e-ddc0-df95c39211bc@redhat.com>
+ <20220718133235.4fdbd6ec303219e5a3ba49cf@linux-foundation.org>
+From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
+In-Reply-To: <20220718133235.4fdbd6ec303219e5a3ba49cf@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CH0P220CA0028.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:610:ef::7) To SN6PR12MB2717.namprd12.prod.outlook.com
+ (2603:10b6:805:68::29)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxj2vk4ZPXu20PM0hHCawTVdaY+z5=0WuN__UxwNRDK5+g@mail.gmail.com>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 5c425227-7bb6-41e7-168d-08da6eada50b
+X-MS-TrafficTypeDiagnostic: DM5PR12MB1481:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: APl4tsUnoZe88ja/1+UZGwDLpDIyFZ8tNjaxf4Pl2SJ1XbeM5htVABBuwjG14DAfcluHKMZSE2oPigbPQ7vsLztT8MZYy+53n/VeTgxzsODQj9P3xRH4xhyI1V2f93/OhUSV7Ym/kUyZi/nYkusWTpQH59TCmZSTw8Y5HKC0kNMBAow0O9s9Guj+d2i34hy+vcDF+bz+Bsjvsar6EuXKd+cmGbnnNXjVeGkcTSExQkup4LuiPqtoSS0dEQs0O3SR2luswQQYEInNh7J1Pw0rvESrdtqGKcjOGn8rxfzgJ2cPA+kVBQTrnSUSp719uMxBB6w1cHFuWEI7jhI220aqM/fjAG6JpKLLvipwwR5cjeMihvZJHUkY9F/wqFx2tUSQpyqcnv8jE2XXg1kTAeBU+k4znkGFZ4HJnwMRCbEPL4DErR2+if1RjdfJPQg2MEiT/3cdLm5YtIR4U48kUcv6h+mpvAdy5Rk+DEcw570sfwWBdaG6wmqKRt3p5AVKJlJ7v6fHCrBvcXBqvTVyaFv+GZtLPXkIU85jeGsC8fBtqx/s7ScwqN1n/utu3kwacNuS5OfT3XHUk7cEMStL+9HwuY6Upps7oKf+AgQnLEpsYor0r6QWh1dv545QJ2Hgb428Ott3jzbP+GMjOBTgtw1H7bRcxESbFedmcsHEFpuVUXQuzmR3yiF2KjCAcQu5ZWBV3rHCKkV/nh4UhxQr6/twJheIAvVfbpNdw/I4Pdx0NQcT4/yFccOWfSMCP386Xn5o04HYKAS1y/LM4uSdLNpueH6wMp5t9n8om+YFsBB7QHoQNUe7S0+6AAwNpErKPhUdhwePwZfE/yLiDZFT0u2azw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB2717.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(366004)(346002)(376002)(396003)(136003)(86362001)(7416002)(5660300002)(66946007)(8936002)(4326008)(8676002)(110136005)(66556008)(31696002)(66476007)(36756003)(6666004)(38100700002)(2906002)(31686004)(26005)(6486002)(478600001)(316002)(41300700001)(6512007)(6506007)(186003)(53546011)(2616005)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?TDJmTnUwL0ZNTk11czEwREg4QzhUY01wNDUvYkNFOHRIajVKdkUrN2pOWmc2?=
+ =?utf-8?B?QnRTV2R2aXRxYXNBd09wZE5pbDgyc1BXZ0srRGtTZlN4cGxwQ0xOeFQ3V3I0?=
+ =?utf-8?B?QU1VWlF2KzQ3TGJsRnVwK0JOVlNTamk0cURqRW5Qbys0WnF0WmttUVpjQWsr?=
+ =?utf-8?B?MWI1SkxRcXBRNjkzSTd5TWt6VFIrbGZmNy9oYUxZZDkyTXNKYUJrbFhadkY0?=
+ =?utf-8?B?Mk1qMGI1OFBPaWtYM1IveEFjb2VFR042eDZmdEg1UU1oVzJaTEdObFJxUGZU?=
+ =?utf-8?B?K2h4TkRmTTkvOGNBL0R2WGppWHZwZ0xycUR0ZWszNE5FSDFGWEZDZ29KcEpN?=
+ =?utf-8?B?Z2pyR01sQ1AwTG16N0NhdkVPSnpHMmpHay9QdEJ3YUR2TzQ3TmpxWHZjaXdw?=
+ =?utf-8?B?akpud0VWVHhKcU9hV1loaHVKWnB5VFNDbStxK3BOeGFwTzJGNjFOMGgwY0Vv?=
+ =?utf-8?B?VDFCdTdYcVM4RXpaeU5EckVscTJZUkQwU0Y3c3Mwamc4NHA4YkhVK1N2OE1i?=
+ =?utf-8?B?RTJaMEtrSldpTmFnbm9JS1B1OGlRQmt5ckd2RWVsbndiL0p2bjAwaVRjKzBW?=
+ =?utf-8?B?bVRObFdPL2NtNjhHVHRvNk4rWmxSWXRBaTNob3hjalZTNjFkWU96UEE2cmov?=
+ =?utf-8?B?V242UStpUDVxaFRwVCs3SktxMWppbnhhVlJGM0Uzd3hOYldsL2tkSXFTNW5R?=
+ =?utf-8?B?aGdiZHMzVHNXU0IvanoxNWUxYmxpeGx6b2ZVTE9UK2ovS0ZvOUhFbC9hYkxp?=
+ =?utf-8?B?c0ZEMEU2aDZOTS9GZmdSQkhYeUF4dTc2bHNKME5oS1hCNTNMSmlnWG8vOG5C?=
+ =?utf-8?B?ZTBRamFBNDByMWpOcFJiU1A3SEpTSGhQOXFBQ3lubUZvODRmNFc4MTRVcCtp?=
+ =?utf-8?B?RjhMUnZWTHV4eUVMRXhFclpPOGM1NjVSdE40V2xZbzFHTGd1RXpPRXM1ZGpn?=
+ =?utf-8?B?M0FjMHB4QWR0TnlKMEpMYWpvcTJXdnBDTVllWGNYU1FsV2RLSDYvWkNYbER1?=
+ =?utf-8?B?VXJSVjViU3Npd2dlUXFPZzgvazdvb1lreTNQbVdSNGo2V2p2a3NTeCtDMENJ?=
+ =?utf-8?B?MjRDM0FwclRWZzVCN1gxakloek5VQ3VtZ2QvbjBEMXIyOVBpeDRQRWhtU1NP?=
+ =?utf-8?B?dDZGV2JxQjBUOFR4UVc4dTQ3TGlacXdtYzBRUTN6U3BscU1reDVWbnhpejUw?=
+ =?utf-8?B?L0xaTFg3eTNRMDVkZkpKRHhOZTEzcGUrSVpNejQ5WCtMWlR5aC9yUHpFOHNM?=
+ =?utf-8?B?bXNwZENTSUpEdkxxcCthTDRqYXZyOUFXK3VWMXQ4dDg4OS9obUthS2ZUdHl3?=
+ =?utf-8?B?aFhrbjNxcWR2eE5ZQzNRWDRYbWwrVzlObnVaWWdSTktqMEJySDJ5UjA2MTdq?=
+ =?utf-8?B?amUwMGNYUkhOMDNTUENoSDZyemRBYVdsa0FNMjJOVFNXaERsekNBY1ZHYnVj?=
+ =?utf-8?B?bXo1bnBDSGJQVFhFcHVHNW5qM1p5QlVxalBxdFNDcUNEMHRUSlVUS0drMHJE?=
+ =?utf-8?B?NDRkRkpJbmRIYUFYVGNjcm1HajBvaTJ1NnIrbm4xQzlJYm5DbE12REE2ZDNz?=
+ =?utf-8?B?QjJqajZHQnVZUmxxRFgxOEFXVlBDV0JrU0tVYzBIZkNYdWU0OWdWYjg1SkRQ?=
+ =?utf-8?B?bFREKy9FTFUrS0tSVFZUYVkvU01RR0xPaUQ2U3RtMExZODFybGR2dzhzUWZT?=
+ =?utf-8?B?Y2I4bWQxMlFQZVVQUndhb0huaGlhY0VqamVSVkFWZWpuT1NOU2p0dGg5SVZ3?=
+ =?utf-8?B?bzBSN0Y2R3ZHWEpjRWRJWW5Ma3hOLzlVYzQ4Wm83eU1BTzRaN0JyKy9hRThZ?=
+ =?utf-8?B?WXhvamFFSUJieHBzOTZTR3JRMDBHR3hMTXpNbGpSdnptN2tvMW9sam96cDJn?=
+ =?utf-8?B?L2JkaFU4dFl0RzJPMEI5SzBrN0d1NEI3MFBhb0NERW5FMGhFbHR1cXpGdzhN?=
+ =?utf-8?B?TkRaRTZuT2kvRXd1M2tsdEFKRS9NZVJwcHdMd3l3T2tPeFcxeHRXcWpkdDN4?=
+ =?utf-8?B?ZGpTeDlFL0tHVkNlNlRYdGJpbjM2NUVabFN1bGtHNnp2dEx5WThYaW1GNUVL?=
+ =?utf-8?B?eWdjVEsyWCsvT2pvQzRoWE0wMGVCYlBOMU1UWjlNLzRocFFqRE5ob1A2U0Qv?=
+ =?utf-8?Q?KcZ5DeuorR9JUR+u3KrogDN1D?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5c425227-7bb6-41e7-168d-08da6eada50b
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR12MB2717.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jul 2022 02:22:10.6367
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: x5/1s3anPTCfAjzWLDj2205eYAz9oolwUU4OZ1a/TvSoazCEtQ8l1eoqYYKLU3J0j58jAPw8mYfItr2lz/eroA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1481
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jul 24, 2022 at 10:36:15AM +0200, Amir Goldstein wrote:
-> On Thu, Jun 23, 2022 at 6:05 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Thu, Jun 23, 2022 at 10:33:47AM +0300, Amir Goldstein wrote:
-> > > On Thu, Jun 23, 2022 at 2:45 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> > > >
-> > > > On Fri, Jun 17, 2022 at 01:06:30PM +0300, Amir Goldstein wrote:
-> > > > > Hi all,
-> > > > >
-> > > > > Previously posted candidates for 5.10.y followed chronological release
-> > > > > order.
-> > > > >
-> > > > > Parts 1 and 2 of fixes from v5.10..v5.12 have already been applied to
-> > > > > v5.10.121.
-> > > > >
-> > > > > Part 3 (from 5.13) has already been posted for review [3] on June 6,
-> > > > > but following feedback from Dave, I changed my focus to get the same
-> > > > > set of patches tested and reviewed for 5.10.y/5.15.y.
-> > > > >
-> > > > > I do want to ask you guys to also find time to review part 3, because
-> > > > > we have a lot of catching up to do for 5.10.y, so we need to chew at
-> > > > > this debt at a reasonable rate.
-> > > > >
-> > > > > This post has the matching set of patches for 5.10.y that goes with
-> > > > > Leah's first set of candidates for 5.15.y [1].
-> > > > >
-> > > > > Most of the fixes are from v5.15..v5.17 except for patch 11 (v5.18-rc1).
-> > > > > All fix patches have been tagged with Fixes: by the author.
-> > > > >
-> > > > > The patches have been soaking in kdepops since Sunday. They passed more
-> > > > > than 30 auto group runs with several different versions of xfsprogs.
-> > > > >
-> > > > > The differences from Leah's 5.15.y:
-> > > > > - It is 11 patches and not 8 because of dependencies
-> > > > > - Patches 6,7 are non-fixes backported as dependency to patch 8 -
-> > > > >   they have "backported .* for dependency" in their commit message
-> > > > > - Patches 3,4,11 needed changes to apply to 5.10.y - they have a
-> > > > >   "backport" related comment in their commit message to explain what
-> > > > >   changes were needed
-> > > > > - Patch 10 is a fix from v5.12 that is re-posted as a dependency for
-> > > > >   patch 11
-> > > > >
-> > > > > Darrick,
-> > > > >
-> > > > > As the author patches 4,11 and sole reviewer of patch 3 (a.k.a
-> > > > > the non-cleanly applied patches), please take a closer look at those.
-> > > > >
-> > > > > Patch 10 has been dropped from my part 2 candidates following concerns
-> > > > > raised by Dave and is now being re-posted following feedback from
-> > > > > Christian and Christoph [2].
-> > > > >
-> > > > > If there are still concerns about patches 10 or 11, please raise a flag.
-> > > > > I can drop either of these patches before posting to stable if anyone
-> > > > > feels that they need more time to soak in master.
-> > > >
-> > > > At the current moment (keep in mind that I have 2,978 more emails to get
-> > >
-> > > Oh boy! Thank you for getting to my series so soon.
-> > >
-> > > > through before I'm caught up), I think it's safe to say that for patches
-> > > > 1-5:
-> > > >
-> > > > Acked-by: Darrick J. Wong <djwong@kernel.org>
-> > > >
-> > > > (patch 9 also, but see the reply I just sent for that one about grabbing
-> > > > the sync_fs fixes too)
-> > > >
-> > > > The log changes are going to take more time to go through, since that
-> > > > stuff is always tricky and /not/ something for me to be messing with at
-> > > > 4:45pm.
-> > >
-> > > Let's make it easier for you then.
-> > > I already decided to defer patches 9-11.
-> > >
-> > > Since you already started looking at patches 6-8, if you want to finish
-> > > that review let me know and I will wait, but if you prefer, I can also defer
-> > > the log changes 6-8 and post them along with the other log fixes from 5.14.
-> 
-> Hi Darrick,
-> 
-> FYI, I started testing the log fixes backports from v5.14 along with
-> the deferred
-> patches 6-8 [1] with extra focus on recoveryloop tests.
-> 
-> I know that Leah is also testing another batch of 5.15-only patches, so she
-> may yet post another 5.15-only series before my 5.10-only series.
-> 
-> In the meanwhile, if you have some spare time due to rc8, please try to
-> look at the already posted patches 6-8 [2] that were deferred from the original
-> stable submission per your request.
 
-This is pretty difficult request -- while I /think/ the LSN->CSN
-conversion for the upper layers in patch 7 is correct, I'm not as
-familiar with where 5.10 is right now as I was when that series was
-being proposed for upstream.
+On 7/18/2022 3:32 PM, Andrew Morton wrote:
+> On Mon, 18 Jul 2022 12:56:29 +0200 David Hildenbrand <david@redhat.com> wrote:
+>
+>>>   		/*
+>>>   		 * Try to move out any movable page before pinning the range.
+>>>   		 */
+>>> @@ -1919,7 +1948,8 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+>>>   				    folio_nr_pages(folio));
+>>>   	}
+>>>   
+>>> -	if (!list_empty(&movable_page_list) || isolation_error_count)
+>>> +	if (!list_empty(&movable_page_list) || isolation_error_count
+>>> +		|| coherent_pages)
+>> The common style is to
+>>
+>> a) add the || to the end of the previous line
+>> b) indent such the we have a nice-to-read alignment
+>>
+>> if (!list_empty(&movable_page_list) || isolation_error_count ||
+>>      coherent_pages)
+>>
+> I missed that.  This series is now in mm-stable so any fix will need to
+> be a standalone followup patch, please.
+Hi Andrew,
+Just wanted to make sure nothing is missing from our side to merge this 
+patch series.
 
-It /looks/ ok, but were I maintaining the 5.10 tree I'd be a lot more
-comfortable if I had in hand all the results from running the long-soak
-log recovery tests for a week.
-
-(Which itself might be fairly difficult for 5.10...)
-
---D
-
-> Thanks,
-> Amir.
-> 
-> [1] https://github.com/amir73il/linux/commits/xfs-5.10.y-for-review
-> [2] https://lore.kernel.org/linux-xfs/20220617100641.1653164-1-amir73il@gmail.com/
+Regards,
+Alex Sierra
+>
+>> Apart from that lgtm.
+>>
+>> Reviewed-by: David Hildenbrand <david@redhat.com>
+> And your reviewed-by's will be lost.  Stupid git.
