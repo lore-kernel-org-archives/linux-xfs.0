@@ -2,70 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DC8BC3F6B0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jul 2022 19:05:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62F78C3F6B0
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jul 2022 19:48:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239732AbiGZTFL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jul 2022 15:05:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41368 "EHLO
+        id S233082AbiGZTsf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jul 2022 15:48:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239738AbiGZTFK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jul 2022 15:05:10 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0046FC4B;
-        Tue, 26 Jul 2022 12:05:08 -0700 (PDT)
+        with ESMTP id S229659AbiGZTsd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jul 2022 15:48:33 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26E2524BE8;
+        Tue, 26 Jul 2022 12:48:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AA4C3B819C5;
-        Tue, 26 Jul 2022 19:05:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7469C433C1;
-        Tue, 26 Jul 2022 19:05:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1658862306;
-        bh=8HO1+0RNEW20BOdzYYpK3e0czzp1ctqmJl8m1mL5930=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=jtWtbCvK3nAkuqT2HuiCQ7VGsG6UUqOPsV6eZjfDx6mo6ENgUYGB52rsb2vBlQWwz
-         w2cz8xupjrK9I0ISykF/uaB+onTvwra4lMAK6ilCsMeHDnXFebfJemPcSOKKQIAeVv
-         eDoEcuJScyoa0uvCKR+qZSe8ejnDGj1gw5J79dF0=
-Date:   Tue, 26 Jul 2022 12:05:04 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
-Cc:     David Hildenbrand <david@redhat.com>, jgg@nvidia.com,
-        Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org
-Subject: Re: [PATCH v9 06/14] mm/gup: migrate device coherent pages when
- pinning instead of failing
-Message-Id: <20220726120504.39498eff3843baf1d8fd5168@linux-foundation.org>
-In-Reply-To: <adb2031b-774d-e645-2aec-f9de433b0a7c@amd.com>
-References: <20220715150521.18165-1-alex.sierra@amd.com>
-        <20220715150521.18165-7-alex.sierra@amd.com>
-        <225554c2-9174-555e-ddc0-df95c39211bc@redhat.com>
-        <20220718133235.4fdbd6ec303219e5a3ba49cf@linux-foundation.org>
-        <adb2031b-774d-e645-2aec-f9de433b0a7c@amd.com>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5BD6B60682;
+        Tue, 26 Jul 2022 19:48:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B88FFC433D6;
+        Tue, 26 Jul 2022 19:48:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1658864911;
+        bh=0xESo7dCETL1ZcrR1vjLMW/BwuPCcQ+S65QRkCi9QFQ=;
+        h=Subject:From:To:Cc:Date:From;
+        b=HpSJLlEstGDT77PFSgS9E3qPHbi/O4HpivakgMEyMjWX251cd4UQnugK00GlaQyqJ
+         0UnDawBsEU9MbXf0su5sBvF75GZcapynmSh+Wkl8534ea+SP8cdwtb5zdRFbUdLTai
+         q11m3NVbBetJ220gNQYFtZI8ShoZ/tY2B3OxQbnH+NA/YAMajsCDo/KUCcL8XTD+sv
+         g/yivBvvluJ4U4UheEaDVL9fCWjhkukH+QlxJNTt9J/oxJmPq8V22mWm0Ji3fHmog6
+         1QP2d2C3IMxDyVduRA35hvNZd1tCYrE36kiDllyT5v1BB+yAHh1H0wcPGpUCCHYqkN
+         u320F+tY227XA==
+Subject: [PATCHSET 0/2] dmerror: support external log and rt devices
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
+        tytso@mit.edu, leah.rumancik@gmail.com
+Date:   Tue, 26 Jul 2022 12:48:31 -0700
+Message-ID: <165886491119.1585061.14285332087646848837.stgit@magnolia>
+User-Agent: StGit/0.19
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 25 Jul 2022 21:22:06 -0500 "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com> wrote:
+Hi all,
 
-> >> a) add the || to the end of the previous line
-> >> b) indent such the we have a nice-to-read alignment
-> >>
-> >> if (!list_empty(&movable_page_list) || isolation_error_count ||
-> >>      coherent_pages)
-> >>
-> > I missed that.  This series is now in mm-stable so any fix will need to
-> > be a standalone followup patch, please.
-> Hi Andrew,
-> Just wanted to make sure nothing is missing from our side to merge this 
-> patch series.
+There are a growing number of fstests that examine what happens to a
+filesystem when the block device underneath it goes offline.  Many of
+them do this to simulate system crashes, and none of them (outside of
+btrfs) can handle filesystems with multiple devices.  XFS is one of
+those beasts that does, so enhance the dm-error helpers to take the log
+and rt devices offline when they're testing the data device.
 
-It's queued in mm-stable and all looks good for a 5.20-rc1 merge.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=dmerror-on-rt-devices
+---
+ common/dmerror    |  159 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+ common/rc         |    5 ++
+ tests/generic/441 |    2 -
+ tests/generic/487 |    2 -
+ 4 files changed, 161 insertions(+), 7 deletions(-)
+
