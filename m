@@ -2,150 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22460C04A68
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jul 2022 18:23:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6297BC19F29
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jul 2022 19:21:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234843AbiG0SXA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Jul 2022 14:23:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37398 "EHLO
+        id S237054AbiG0TV4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Jul 2022 15:21:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234608AbiG0SWj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jul 2022 14:22:39 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CDBD9F2865
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Jul 2022 10:21:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1658942505;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UGUGZhW4k8nRJSg75dcQueiLpxgVMIuD/ExUJNKKcwI=;
-        b=ZB6Jm1jcUbkZ3O+dFpRAqdl143ZC4KjthIcnqRyj3oL1eeG3doYWlodAc71l4k9kzTrjoS
-        ZBSFXOyk0zwTYgFUcE7m+GzEFJMV4WFnLceNMXO5gHtgeS/826AESYDxAeQiK7PANyptZw
-        7SAqC7A4kJQbtxohH9sP0W67SSkx0X4=
-Received: from mail-ot1-f69.google.com (mail-ot1-f69.google.com
- [209.85.210.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-653-5H-asLYbPzGO_BSPxRgkIg-1; Wed, 27 Jul 2022 13:21:44 -0400
-X-MC-Unique: 5H-asLYbPzGO_BSPxRgkIg-1
-Received: by mail-ot1-f69.google.com with SMTP id d25-20020a0568301b7900b0061cc02d2736so8970428ote.17
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Jul 2022 10:21:44 -0700 (PDT)
+        with ESMTP id S237035AbiG0TVe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jul 2022 15:21:34 -0400
+Received: from mail-vs1-xe2f.google.com (mail-vs1-xe2f.google.com [IPv6:2607:f8b0:4864:20::e2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 861C4F7;
+        Wed, 27 Jul 2022 12:17:59 -0700 (PDT)
+Received: by mail-vs1-xe2f.google.com with SMTP id 125so17479058vsd.5;
+        Wed, 27 Jul 2022 12:17:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=wh3tGYCUekH92S+gVrqkqJs8hyPO/UIvaPBUvUI5Dtk=;
+        b=Ln57ga72dnSFYrjOHWn/8qdf1LYRnI1BCF/xRgAuuQyWPwx+LMAktpekR9dR/c+jIL
+         aG2IwpwuoQS2uTyHbAfRd4tPk8/MMJNeG9tm+/dwg4zKxYs5VXDqCCGuTKuSRmbQmFEP
+         CMLfqiJyuasTWKY1p/ufwipMbcEHf+yTWkrAjUDmfDXkI9qQ3APjUjaqYAzsI7xxbh8O
+         2mDTfhK7WIkLR+eyYp86FV3fZoMt1AF1iWc+9Y40rMLXz6UfTCwYOhuzoKvQZESwC/vH
+         TzVyeAHJ9EiizvPeuePxiH+PZVrvaRPpzIfjnfnMD8xnjwjSAKmdi96EvTTc04KaeOCc
+         UlSA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=UGUGZhW4k8nRJSg75dcQueiLpxgVMIuD/ExUJNKKcwI=;
-        b=ANyTIzrr8NdNsprX++IgE/Xpnaff9XoeoU/TG3yo+fbLpL71KEzhRLSxlMSjACH4d2
-         dEi3yFTIdj7SINGbZR0WdIMRqTwBP7PRsu1Bp+zw4VmDsIfWkPxS+C6oPgIwR2Fmqe0B
-         M8FoxXE05GlYvRHqIbhDuMxg81VgosIO0vVX0uO9l8ACjX6DTB8xpASL5ENTxATQ6FdK
-         elC0bi33gH82n78OI3bLEgwcD8aurY3lekS9IBNkVMfujyUX7rmTGweRQRLtt5PHM5oj
-         LOVLx3wxCLGq2zQUdNaDfiAgxEdeKntFpJSiXS4razgoygxyldj0PzvdpR/uW+QENRy5
-         MPHA==
-X-Gm-Message-State: AJIora/ip5oaxG++9qxPglxorfq/o1kgKVLyeZoCjfIm5l+vhBmz3Igk
-        7j1Ji9Usjtn0TunDUA0OVAZ2aBtleXnYwN1eQapz0EQXccOEvkgehEV9mkeqGbJ8+GnqInajayw
-        TBoTlS2SSQJfA950cvIS9
-X-Received: by 2002:a05:6808:170b:b0:333:53cf:8022 with SMTP id bc11-20020a056808170b00b0033353cf8022mr2464781oib.28.1658942503676;
-        Wed, 27 Jul 2022 10:21:43 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1snR5Bo9C94vgrTDzr1mvGHFkQscYsBxW2LRZi9Nlyyta8pmBqh29KxO/ZLRN3enMzNl3vagg==
-X-Received: by 2002:a05:6808:170b:b0:333:53cf:8022 with SMTP id bc11-20020a056808170b00b0033353cf8022mr2464774oib.28.1658942503320;
-        Wed, 27 Jul 2022 10:21:43 -0700 (PDT)
-Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id f2-20020a4ae602000000b004288e69cac2sm7519361oot.23.2022.07.27.10.21.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Jul 2022 10:21:42 -0700 (PDT)
-Date:   Thu, 28 Jul 2022 01:21:37 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH] xfs/432: fix this test when external devices are in use
-Message-ID: <20220727172137.7vsspxca764ma5xj@zlang-mailbox>
-References: <YuBFw4dheeSRHVQd@magnolia>
- <20220727122142.ktp5loclqazchncw@zlang-mailbox>
- <YuFS6/9iMXzjv/YX@magnolia>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=wh3tGYCUekH92S+gVrqkqJs8hyPO/UIvaPBUvUI5Dtk=;
+        b=OEcEQ26sgUEuwfmA8I+ls/Sl5VPxZYqF7rSXJQFOrlVteb6XNQN8D7ExlFHK6DKbP5
+         7XFb3SDXg7IsuwASL2YXt48MVm+LC757XyiS+cOxsFs7xGayipwwrWz9zB0w1mrsDEDc
+         Mi9Nhp+BxzpA7nLnARC+ChpvilOonnnBVMj0b7L/CMvROmMv4fb2XlYWVxX6mmgFb98Y
+         qaaoMb73o2rE/bjeTxbe5QjhpyXDCnbQ6i1YV8wuu4b5ej2wEkhhNkx9Y+6gyxcJzXED
+         2a3ZJK7KPbFWCAQwrOOhQfiP6eSAmh9OT9HmeB+8gznURcR/N/8+DCuUiEIMiBXe2IFX
+         ls5g==
+X-Gm-Message-State: AJIora8pU/R8pW3amG6mFnD8kURPY5zqbUclpVB0ZCsiOQsV4yF64dl/
+        4YMo5R0FXlRQa0o2e4YMzpse3BCW2rjKP4y3UwI=
+X-Google-Smtp-Source: AGRyM1saPHMqHXsc9NyJjnZtSvf9Esn1PLKdJMFZPFC1THlgoWUhWRtoGiMlDpgF+pPxp/RxyOfC4mNv+h3mMpDk9go=
+X-Received: by 2002:a67:c107:0:b0:358:7511:4e5b with SMTP id
+ d7-20020a67c107000000b0035875114e5bmr3482533vsj.3.1658949478556; Wed, 27 Jul
+ 2022 12:17:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YuFS6/9iMXzjv/YX@magnolia>
+References: <20220726092125.3899077-1-amir73il@gmail.com>
+In-Reply-To: <20220726092125.3899077-1-amir73il@gmail.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Wed, 27 Jul 2022 21:17:47 +0200
+Message-ID: <CAOQ4uxi=VYa+86A7G3wqCX84n2Aezx2mYqfYrFTAVtSpYmeq_Q@mail.gmail.com>
+Subject: Re: [PATCH 5.10 CANDIDATE 0/9] xfs stable candidate patches for
+ 5.10.y (from v5.13+)
+To:     "Darrick J . Wong" <djwong@kernel.org>
+Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 27, 2022 at 07:59:55AM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 27, 2022 at 08:21:42PM +0800, Zorro Lang wrote:
-> > On Tue, Jul 26, 2022 at 12:51:31PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > This program exercises metadump and mdrestore being run against the
-> > > scratch device.  Therefore, the test must pass external log / rt device
-> > > arguments to xfs_repair -n to check the "restored" filesystem.  Fix the
-> > > incorrect usage, and report repair failures, since this test has been
-> > > silently failing for a while now.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  tests/xfs/432 |   11 ++++++++++-
-> > >  1 file changed, 10 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/tests/xfs/432 b/tests/xfs/432
-> > > index 86012f0b..5c6744ce 100755
-> > > --- a/tests/xfs/432
-> > > +++ b/tests/xfs/432
-> > > @@ -89,7 +89,16 @@ _scratch_xfs_metadump $metadump_file -w
-> > >  xfs_mdrestore $metadump_file $metadump_img
-> > >  
-> > >  echo "Check restored metadump image"
-> > > -$XFS_REPAIR_PROG -n $metadump_img >> $seqres.full 2>&1
-> > > +repair_args=('-n')
-> > > +[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
-> > > +	repair_args+=('-l' "$SCRATCH_LOGDEV")
-> > > +
-> > > +[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
-> > > +	repair_args+=('-r' "$SCRATCH_RTDEV")
-> > > +
-> > > +$XFS_REPAIR_PROG "${repair_args[@]}" $metadump_img >> $seqres.full 2>&1
-> > > +res=$?
-> > > +test $res -ne 0 && echo "xfs_repair on restored fs returned $res?"
-> > 
-> > Make sense to me, I don't have better idea. One question, is xfs_metadump
-> > and xfs_mdrestore support rtdev? Due to I didn't find xfs_metadump have
-> > a "-r" option, although it has "-l logdev" :)
-> 
-> Oops, no it doesn't, so I'll remove that.
+On Tue, Jul 26, 2022 at 11:21 AM Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> Darrick,
+>
+> This backport series contains mostly fixes from v5.14 release along
+> with three deferred patches from the joint 5.10/5.15 series [1].
+>
+> I ran the auto group 10 times on baseline (v5.10.131) and this series
+> with no observed regressions.
+>
+> I ran the recoveryloop group 100 times with no observed regressions.
+> The soak group run is in progress (10+) with no observed regressions
+> so far.
+>
+> I am somewhat disappointed from not seeing any improvement in the
+> results of the recoveryloop tests comapred to baseline.
+>
+> This is the summary of the recoveryloop test results on both baseline
+> and backport branch:
+>
+> generic,455, generic/457, generic/646: pass
+> generic/019, generic/475, generic/648: failing often in all config
+> generic/388: failing often with reflink_1024
+> generic/388: failing at ~1/50 rate for any config
+> generic/482: failing often on V4 configs
+> generic/482: failing at ~1/100 rate for V5 configs
+> xfs/057: failing at ~1/200 rate for any config
+>
+> I observed no failures in soak group so far neither on baseline nor
+> on backport branch. I will update when I have more results.
+>
 
-Hmm... it doesn't for now or won't for future?
+Some more results after 1.5 days of spinning:
+1. soak group reached 100 runs (x5 configs) with no failures
+2. Ran all the tests also on debian/testing with xfsprogs 5.18 and
+    observed a very similar fail/pass pattern as with xfsprogs 5.10
+3. Started to run the 3 passing recoveryloop tests 1000 times and
+    an interesting pattern emerged -
 
-So all test cases about xfs_metadump can't run with SCRATCH_RTDEV? Do we need
-something likes _require_nortdev?
+generic/455 failed 3 times on baseline (out of 250 runs x 5 configs),
+but if has not failed on backport branch yet (700 runs x 5 configs).
 
-> 
-> > About the "$res", I don't know why we need this extra variable, as it's
-> > not used in other place.
-> 
-> If you don't pass the correct arguments to xfs_repair or the metadump
-> trashes the fs, it'll exit with a nonzero code.  All the output goes to
-> $seqres.full, which means the test runner has no idea anything went
-> wrong and marks the test passed even though repair failed.
+And it's not just failures, it's proper data corruptions, e.g.
+"testfile2.mark1 md5sum mismatched" (and not always on mark1)
 
-Oh, I mean why not use the "$?" directly? Or :
-$XFS_REPAIR_PROG "${repair_args[@]}" $metadump_img >> $seqres.full 2>&1 || \
-	echo "xfs_repair on restored fs returned $res?"
+I will keep this loop spinning, but I am cautiously optimistic about
+this being an actual proof of bug fix.
 
-Looks like we don't need to save this return status and use it on other place.
-The "$res" looks redundant, although it's not wrong :)
+If these results don't change, I would be happy to get an ACK for the
+series so I can post it after the long soaking.
 
 Thanks,
-Zorro
-
-> 
-> --D
-> 
-> > Thanks,
-> > Zorro
-> > 
-> > >  
-> > >  # success, all done
-> > >  status=0
-> > > 
-> > 
-> 
-
+Amir.
