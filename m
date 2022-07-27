@@ -2,136 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ECB9C04A68
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jul 2022 08:41:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C092CC19F29
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jul 2022 12:21:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229963AbiG0IlB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Jul 2022 04:41:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57604 "EHLO
+        id S232829AbiG0MVw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Jul 2022 08:21:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229953AbiG0Ik7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jul 2022 04:40:59 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F7F7459BB;
-        Wed, 27 Jul 2022 01:40:57 -0700 (PDT)
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Lt6cY6bDSzkYKB;
-        Wed, 27 Jul 2022 16:38:21 +0800 (CST)
-Received: from kwepemm600015.china.huawei.com (7.193.23.52) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 27 Jul 2022 16:40:49 +0800
-Received: from huawei.com (10.175.127.227) by kwepemm600015.china.huawei.com
- (7.193.23.52) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 27 Jul
- 2022 16:40:47 +0800
-From:   ChenXiaoSong <chenxiaosong2@huawei.com>
-To:     <djwong@kernel.org>
-CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <chenxiaosong2@huawei.com>, <guoxuenan@huawei.com>,
-        <liuyongqiang13@huawei.com>, <yi.zhang@huawei.com>,
-        <zhangxiaoxu5@huawei.com>
-Subject: [PATCH] xfs: fix NULL pointer dereference in xfs_getbmap()
-Date:   Wed, 27 Jul 2022 16:52:30 +0800
-Message-ID: <20220727085230.4073478-1-chenxiaosong2@huawei.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S232346AbiG0MVv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jul 2022 08:21:51 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CC8843E75E
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Jul 2022 05:21:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1658924510;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=OnEraViqlPc7pBrLeCU4ypHt6OIMM9xxzQMmVQ4Aw90=;
+        b=QOQFjgW/SLbantW2IiCQGfDmvp5usX2XjiKj7VhRqPBT/MIPhaSSR/eV9PWRAbsdgFrjZ8
+        tuY5l/IZ7O+TxLBC5bHLszq362/YcaJPnmHos9pztv6ebZBQE8Dfk/i9/aBMNoBH398Y3d
+        E1jiqComInRTmzjCe43z4EATAP0Cqvo=
+Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com
+ [209.85.161.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-606-twHjVQFmPiW7PpwnI5G4hA-1; Wed, 27 Jul 2022 08:21:48 -0400
+X-MC-Unique: twHjVQFmPiW7PpwnI5G4hA-1
+Received: by mail-oo1-f72.google.com with SMTP id n24-20020a4a3458000000b00435731c3a2cso1512001oof.0
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Jul 2022 05:21:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=OnEraViqlPc7pBrLeCU4ypHt6OIMM9xxzQMmVQ4Aw90=;
+        b=FfKivRCxAxQs44cmtIhLawMuL+D8xb3vXVe99uWch7WY4XdGvJJKFiRdwEx4CFabkM
+         EOkYUd+dM3StK+QNqSPZs4HmCPLkmRW1eXSjZAzda9QM1kGD3kMuZR4JR2wkiy4CZ8ps
+         MNi2vxiJ1eqyguqJcRFV8A4cuCtJ6z+cLBe/J84ohdFRV27DPxYfEkIDCi8n2vyPZ55x
+         zBpj2NQptRScI+I98iZKZ5qvkWXtHmXS6PiiSCvQ0jXbcPjf6K52CwRcM3zsstPIQF3i
+         t17cq+hDyyYqhDd8Yvx6EBY52SbPKDI7+WWoluVx8ZuR0zKJ1LTMTtnHxgnu8a0GXURp
+         DeMQ==
+X-Gm-Message-State: AJIora+4q2k+YnK6g97xqYczmumyDj/dSlcrgfI0qQRgR0hQXZSpi8et
+        yFuK2v6KU5Ri6ymfIzBD0XP8jROJbFlNkbruD0XKZNKvzgzT5B56ZNAHDlyXrA16CKBkH9lfqDp
+        uQq7BcPOc4JAZT35A+il9
+X-Received: by 2002:a05:6808:3ca:b0:33a:6eb4:5f76 with SMTP id o10-20020a05680803ca00b0033a6eb45f76mr1619904oie.249.1658924507910;
+        Wed, 27 Jul 2022 05:21:47 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1t/NlF1CCVRhqJ2/9CV/j/OK/1ArDVpHfCrh5U3kWfmPWVd3/oiHxYZ7amu+z6LHOChsNSnEg==
+X-Received: by 2002:a05:6808:3ca:b0:33a:6eb4:5f76 with SMTP id o10-20020a05680803ca00b0033a6eb45f76mr1619897oie.249.1658924507658;
+        Wed, 27 Jul 2022 05:21:47 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id s25-20020a4ac819000000b0042300765d39sm7066068ooq.46.2022.07.27.05.21.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Jul 2022 05:21:47 -0700 (PDT)
+Date:   Wed, 27 Jul 2022 20:21:42 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs/432: fix this test when external devices are in use
+Message-ID: <20220727122142.ktp5loclqazchncw@zlang-mailbox>
+References: <YuBFw4dheeSRHVQd@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- kwepemm600015.china.huawei.com (7.193.23.52)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YuBFw4dheeSRHVQd@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Reproducer:
- 1. fallocate -l 100M image
- 2. mkfs.xfs -f image
- 3. mount image /mnt
- 4. setxattr("/mnt", "trusted.overlay.upper", NULL, 0, XATTR_CREATE)
- 5. char arg[32] = "\x01\xff\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00"
-                   "\x00\x00\x00\x00\x00\x08\x00\x00\x00\xc6\x2a\xf7";
-    fd = open("/mnt", O_RDONLY|O_DIRECTORY);
-    ioctl(fd, _IOC(_IOC_READ|_IOC_WRITE, 0x58, 0x2c, 0x20), arg);
+On Tue, Jul 26, 2022 at 12:51:31PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> This program exercises metadump and mdrestore being run against the
+> scratch device.  Therefore, the test must pass external log / rt device
+> arguments to xfs_repair -n to check the "restored" filesystem.  Fix the
+> incorrect usage, and report repair failures, since this test has been
+> silently failing for a while now.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/xfs/432 |   11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/tests/xfs/432 b/tests/xfs/432
+> index 86012f0b..5c6744ce 100755
+> --- a/tests/xfs/432
+> +++ b/tests/xfs/432
+> @@ -89,7 +89,16 @@ _scratch_xfs_metadump $metadump_file -w
+>  xfs_mdrestore $metadump_file $metadump_img
+>  
+>  echo "Check restored metadump image"
+> -$XFS_REPAIR_PROG -n $metadump_img >> $seqres.full 2>&1
+> +repair_args=('-n')
+> +[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	repair_args+=('-l' "$SCRATCH_LOGDEV")
+> +
+> +[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> +	repair_args+=('-r' "$SCRATCH_RTDEV")
+> +
+> +$XFS_REPAIR_PROG "${repair_args[@]}" $metadump_img >> $seqres.full 2>&1
+> +res=$?
+> +test $res -ne 0 && echo "xfs_repair on restored fs returned $res?"
 
-NULL pointer dereference will occur when race happens between xfs_getbmap()
-and xfs_bmap_set_attrforkoff():
+Make sense to me, I don't have better idea. One question, is xfs_metadump
+and xfs_mdrestore support rtdev? Due to I didn't find xfs_metadump have
+a "-r" option, although it has "-l logdev" :)
 
-         ioctl               |       setxattr
- ----------------------------|---------------------------
- xfs_getbmap                 |
-   xfs_ifork_ptr             |
-     xfs_inode_has_attr_fork |
-       ip->i_forkoff == 0    |
-     return NULL             |
-   ifp == NULL               |
-                             | xfs_bmap_set_attrforkoff
-                             |   ip->i_forkoff > 0
-   xfs_inode_has_attr_fork   |
-     ip->i_forkoff > 0       |
-   ifp == NULL               |
-   ifp->if_format            |
+About the "$res", I don't know why we need this extra variable, as it's
+not used in other place.
 
-Fix this by locking i_lock before xfs_ifork_ptr().
+Thanks,
+Zorro
 
-Signed-off-by: ChenXiaoSong <chenxiaosong2@huawei.com>
-Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
----
- fs/xfs/xfs_bmap_util.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 74f96e1aa5cd..04d0c2bff67c 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -439,29 +439,28 @@ xfs_getbmap(
- 		whichfork = XFS_COW_FORK;
- 	else
- 		whichfork = XFS_DATA_FORK;
--	ifp = xfs_ifork_ptr(ip, whichfork);
- 
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	switch (whichfork) {
- 	case XFS_ATTR_FORK:
-+		lock = xfs_ilock_attr_map_shared(ip);
- 		if (!xfs_inode_has_attr_fork(ip))
--			goto out_unlock_iolock;
-+			goto out_unlock_ilock;
- 
- 		max_len = 1LL << 32;
--		lock = xfs_ilock_attr_map_shared(ip);
- 		break;
- 	case XFS_COW_FORK:
-+		lock = XFS_ILOCK_SHARED;
-+		xfs_ilock(ip, lock);
-+
- 		/* No CoW fork? Just return */
--		if (!ifp)
--			goto out_unlock_iolock;
-+		if (!xfs_ifork_ptr(ip, whichfork))
-+			goto out_unlock_ilock;
- 
- 		if (xfs_get_cowextsz_hint(ip))
- 			max_len = mp->m_super->s_maxbytes;
- 		else
- 			max_len = XFS_ISIZE(ip);
--
--		lock = XFS_ILOCK_SHARED;
--		xfs_ilock(ip, lock);
- 		break;
- 	case XFS_DATA_FORK:
- 		if (!(iflags & BMV_IF_DELALLOC) &&
-@@ -491,6 +490,8 @@ xfs_getbmap(
- 		break;
- 	}
- 
-+	ifp = xfs_ifork_ptr(ip, whichfork);
-+
- 	switch (ifp->if_format) {
- 	case XFS_DINODE_FMT_EXTENTS:
- 	case XFS_DINODE_FMT_BTREE:
--- 
-2.31.1
+>  
+>  # success, all done
+>  status=0
+> 
 
