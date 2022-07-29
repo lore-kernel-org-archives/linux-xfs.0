@@ -2,264 +2,163 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 011B5C00144
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jul 2022 15:49:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FA02C04A68
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jul 2022 16:15:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229548AbiG2PtD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Jul 2022 11:49:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51510 "EHLO
+        id S230163AbiG2QPw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Jul 2022 12:15:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234214AbiG2PtC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jul 2022 11:49:02 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 280508875F
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Jul 2022 08:49:01 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D89B3B8284B
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Jul 2022 15:48:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B0B0C433D6;
-        Fri, 29 Jul 2022 15:48:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659109738;
-        bh=TchS88iJ7ejnTfEJDx1ylXI3JFh4xlhWaRtaJTdiW8Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lC/Z11CD0DlGJRmPSknGaYivCxlB8AhcXKDH0/7unU7evabxhVPZX21zVpTtu5VQI
-         UQnz1q7X7q4NmRAKQzK/ayTcZh7YPtwK5KE2KbvGa7afCodPBRad/cv887YWjcMs+f
-         NFhhjTL8+NliaNurrhg6ye3WVoQRwPIxh2coK7PkthQTw1pNGO4T6x7ej37DfS2LQS
-         jiu0Z5UUdcBR41IyBsDRO9T1v47yMyKRFpCLSFGxlUQlAD1pErhtjnSjIuj/xSd1AM
-         WKdR3CIj29fjLQetMQJNM/LkUqtFV+4iNcCVMuLC+iSzg4YuBgbbLjbvJQsDM3VA++
-         Dc0D5ok3+CA1w==
-Date:   Fri, 29 Jul 2022 08:48:58 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Florian Fainelli <f.fainelli@gmail.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        Fabrice Fontaine <fontaine.fabrice@gmail.com>
-Subject: Re: [RFC PATCH] libxfs: stop overriding MAP_SYNC in publicly
- exported header files
-Message-ID: <YuQBarhgxff8Hih6@magnolia>
-References: <WVSe_1J22WBxe1bXs0u1-LcME14brH0fGDu5RCt5eBvqFJCSvxxAEPHIObGT4iqkEoCCZv4vpOzGZSrLjg8gcQ==@protonmail.internalid>
- <YtiPgDT3imEyU2aF@magnolia>
- <20220721121128.yyxnvkn4opjdgcln@orion>
- <e6ee2759-8b55-61a9-ff6c-6410d185d35e@gmail.com>
+        with ESMTP id S231976AbiG2QPv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jul 2022 12:15:51 -0400
+Received: from mail-vs1-xe30.google.com (mail-vs1-xe30.google.com [IPv6:2607:f8b0:4864:20::e30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B01F4FD29;
+        Fri, 29 Jul 2022 09:15:50 -0700 (PDT)
+Received: by mail-vs1-xe30.google.com with SMTP id 129so5022815vsq.8;
+        Fri, 29 Jul 2022 09:15:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=mzoPDf5bDlXx1BaYbqPpOiGhYYUfpkfcEpH1gSsIq0g=;
+        b=LG2i5/BHu/Y7osIg+JH3KAl+aG/uU6dDUbVb2Xmv2eYIJ+vK8KsqWRZAEaQ6xrQyEF
+         oe/zzVQP0C7pOvYlLIXHWNPN0s4rND02vN5iDWaUglwIMgaMqPPxH8Cvq7aisQl2WZBc
+         NsgW7ZsxavHW+03qzeSg7HCYgdqaZKPIqVktUzoD3NgbjCwgB1x0razFHGdnDEtF1Eb5
+         xRwEvn/5gInKBrg6pQueOx7Buzc8ifoiuvEriPWPDKC5pgTspwY0hOo9HVDl7qfZVTXT
+         blEE16rrH2ecy1v9Whs5N5yi6C+VxXQytIPKUKoWYmd5KoPFcQq5+m/Qk4gKlki5RQhe
+         w6/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=mzoPDf5bDlXx1BaYbqPpOiGhYYUfpkfcEpH1gSsIq0g=;
+        b=hjFbN54k7yX6Qu4kS0LUCRXbyk/vt3O0BBJidhDuuJ7gf1z95qfxNcl6/9y3XTcU/z
+         1GQCWunWqjJoddbUIWAygnaRpQoOeVz3Y0CTMGIcVMCPfT4Cf6eFTisDlnOWCsQKyuoO
+         61k9W0XefamDisndmNjpXM2iWmNtQ7IbfF8rIkZ2b+1s4wHFyjk4Q+oj01h9W16PdjyW
+         JWBECXfW2LH87kN1jKvyqUMlozo8b5CN1WzzZmfGmiFfVYgQ1o60ZNCDfb5iEZA9adEB
+         uJZPVXUZWDtigbUo5fYRx8g4zvXA3K+qHoWowScxPnqTpI2QWko3h4DVigmcSLOYCfW9
+         Mz+A==
+X-Gm-Message-State: AJIora++8S34+pwa5b+BTKnu4824aeBUWNSZPdx3qj1Ez8S6Oa774UHa
+        +6jcaAgle19Syca57kYoSftMWkNpnV+9eOCbcEdQd4iBKEA=
+X-Google-Smtp-Source: AGRyM1sznv/9jLAu/P6nK9T1fjifa+VwUMkIaEixgKPPQDU/XYabfVkUmLROWvfRrwM3Ue/9Kvx3idUrZbTYnWzJI4s=
+X-Received: by 2002:a67:eb98:0:b0:358:6274:71b3 with SMTP id
+ e24-20020a67eb98000000b00358627471b3mr1607451vso.72.1659111349554; Fri, 29
+ Jul 2022 09:15:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e6ee2759-8b55-61a9-ff6c-6410d185d35e@gmail.com>
+References: <20220726092125.3899077-1-amir73il@gmail.com> <CAOQ4uxi=VYa+86A7G3wqCX84n2Aezx2mYqfYrFTAVtSpYmeq_Q@mail.gmail.com>
+ <YuHt65YWtkqLxlpv@magnolia> <YuHve9LEkM7nmbUJ@magnolia> <CAOQ4uxiSKNYAT_oUXAwGADt4KQvVH8s12nFSrRUoKYi8DOzQig@mail.gmail.com>
+In-Reply-To: <CAOQ4uxiSKNYAT_oUXAwGADt4KQvVH8s12nFSrRUoKYi8DOzQig@mail.gmail.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Fri, 29 Jul 2022 18:15:38 +0200
+Message-ID: <CAOQ4uxgbWOEZTCX_S43DCT-0KihU6By3TtwvYjZA6DS=y20FHQ@mail.gmail.com>
+Subject: Re: [PATCH 5.10 CANDIDATE 0/9] xfs stable candidate patches for
+ 5.10.y (from v5.13+)
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 28, 2022 at 03:29:49PM -0700, Florian Fainelli wrote:
-> On 7/21/22 05:11, Carlos Maiolino wrote:
-> > On Wed, Jul 20, 2022 at 04:28:00PM -0700, Darrick J. Wong wrote:
-> >> Can one of you please apply this patch and see if it'll build in musl on
-> >> mips, please?  Sorry it's taken so long to address this. :/
-> >>
-> >> --D
-> >>
-> >> ---
-> >> From: Darrick J. Wong <djwong@kernel.org>
-> >>
-> >> Florian Fainelli most recently reported that xfsprogs doesn't build with
-> >> musl on mips:
-> >>
-> >> "MIPS platforms building with recent kernel headers and the musl-libc
-> >> toolchain will expose the following build failure:
-> >>
-> >> mmap.c: In function 'mmap_f':
-> >> mmap.c:196:12: error: 'MAP_SYNC' undeclared (first use in this function); did you mean 'MS_SYNC'?
-> >>   196 |    flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-> >>       |            ^~~~~~~~
-> >>       |            MS_SYNC
-> >> mmap.c:196:12: note: each undeclared identifier is reported only once for each function it appears in
-> >> make[4]: *** [../include/buildrules:81: mmap.o] Error 1"
-> >>
-> >> At first glance, the build failure here is caused by the fact that:
-> >>
-> >> 1. The configure script doesn't detect MAP_SYNC support
-> >> 2. The build system doesn't set HAVE_MAP_SYNC
-> >> 2. io/mmap.c includes input.h -> projects.h -> xfs.h and later sys/mman.h
-> >> 3. include/linux.h #define's MAP_SYNC to 0 if HAVE_MAP_SYNC is not set
-> >> 4. musl's sys/mman.h #undef MAP_SYNC on platforms that don't support it
-> >> 5. io/mmap.c tries to use MAP_SYNC, not realizing that libc undefined it
-> >>
-> >> Normally, xfs_io only exports functionality that is defined by the libc
-> >> and/or kernel headers on the build system.  We often make exceptions for
-> >> new functionality so that we have a way to test them before the header
-> >> file packages catch up, hence this '#ifndef HAVE_FOO #define FOO'
-> >> paradigm.
-> >>
-> >> MAP_SYNC is a gross and horribly broken example of this.  These support
-> >> crutches are supposed to be *private* to xfsprogs for benefit of early
-> >> testing, but they were instead added to include/linux.h, which we
-> >> provide to user programs in the xfslibs-dev package.  IOWs, we've been
-> >> #defining MAP_SYNC to zero for unsuspecting programs.
-> >>
-> >> Worst yet, gcc 11.3 doesn't even warn about overriding a #define to 0:
-> >>
-> >> #include <stdio.h>
-> >> #include <sys/mman.h>
-> >> #ifdef STUPID
-> >> # include <xfs/xfs.h>
-> >> #endif
-> >>
-> >> int main(int argc, char *argv[]) {
-> >> 	printf("MAP_SYNC 0x%x\n", MAP_SYNC);
-> >> }
-> >>
-> >> $ gcc -o a a.c -Wall
-> >> $ ./a
-> >> MAP_SYNC 0x80000
-> >> $ gcc -DSTUPID -o a a.c -Wall
-> >> $ ./a
-> >> MAP_SYNC 0x0
-> >>
-> >> Four years have gone by since the introduction of MAP_SYNC, so let's get
-> >> rid of the override code entirely -- any platform that supports MAP_SYNC
-> >> has had plenty of chances to ensure their header files have the right
-> >> bits.  While we're at it, fix AC_HAVE_MAP_SYNC to look for MAP_SYNC in
-> >> the same header file that the one user (io/mmap.c) uses -- sys/mman.h.
-> >>
-> >> Annoyingly, I had to test this by hand because the sole fstest that
-> >> exercises MAP_SYNC (generic/470) requires dm-logwrites and dm-thinp,
-> >> neither of which support fsdax on current kernels.
-> >>
-> >> Reported-by: info@mobile-stream.com
-> >> Reported-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
-> >> Reported-by: Florian Fainelli <f.fainelli@gmail.com>
-> >> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> >> ---
-> >>  include/linux.h       |    8 --------
-> >>  io/io.h               |    2 +-
-> >>  io/mmap.c             |   25 +++++++++++++------------
-> >>  m4/package_libcdev.m4 |    3 +--
-> >>  4 files changed, 15 insertions(+), 23 deletions(-)
-> >>
-> >> diff --git a/include/linux.h b/include/linux.h
-> >> index 3d9f4e3d..eddc4ad9 100644
-> >> --- a/include/linux.h
-> >> +++ b/include/linux.h
-> >> @@ -251,14 +251,6 @@ struct fsxattr {
-> >>  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
-> >>  #endif
-> >>
-> >> -#ifndef HAVE_MAP_SYNC
-> >> -#define MAP_SYNC 0
-> >> -#define MAP_SHARED_VALIDATE 0
-> >> -#else
-> >> -#include <asm-generic/mman.h>
-> >> -#include <asm-generic/mman-common.h>
-> >> -#endif /* HAVE_MAP_SYNC */
-> >> -
-> >>  /*
-> >>   * Reminder: anything added to this file will be compiled into downstream
-> >>   * userspace projects!
-> >> diff --git a/io/io.h b/io/io.h
-> >> index ada0a149..de4ef607 100644
-> >> --- a/io/io.h
-> >> +++ b/io/io.h
-> >> @@ -58,7 +58,7 @@ typedef struct mmap_region {
-> >>  	size_t		length;		/* length of mapping */
-> >>  	off64_t		offset;		/* start offset into backing file */
-> >>  	int		prot;		/* protection mode of the mapping */
-> >> -	bool		map_sync;	/* is this a MAP_SYNC mapping? */
-> >> +	int		flags;		/* MAP_* flags passed to mmap() */
-> >>  	char		*name;		/* name of backing file */
-> >>  } mmap_region_t;
-> >>
-> >> diff --git a/io/mmap.c b/io/mmap.c
-> >> index 8c048a0a..425957d4 100644
-> >> --- a/io/mmap.c
-> >> +++ b/io/mmap.c
-> >> @@ -46,8 +46,11 @@ print_mapping(
-> >>  	for (i = 0, p = pflags; p->prot != PROT_NONE; i++, p++)
-> >>  		buffer[i] = (map->prot & p->prot) ? p->mode : '-';
-> >>
-> >> -	if (map->map_sync)
-> >> +#ifdef HAVE_MAP_SYNC
-> >> +	if ((map->flags & (MAP_SYNC | MAP_SHARED_VALIDATE)) ==
-> >> +			  (MAP_SYNC | MAP_SHARED_VALIDATE))
-> >>  		sprintf(&buffer[i], " S");
-> >> +#endif
-> >>
-> >>  	printf("%c%03d%c 0x%lx - 0x%lx %s  %14s (%lld : %ld)\n",
-> >>  		braces? '[' : ' ', index, braces? ']' : ' ',
-> >> @@ -139,7 +142,9 @@ mmap_help(void)
-> >>  " -r -- map with PROT_READ protection\n"
-> >>  " -w -- map with PROT_WRITE protection\n"
-> >>  " -x -- map with PROT_EXEC protection\n"
-> >> +#ifdef HAVE_MAP_SYNC
-> >>  " -S -- map with MAP_SYNC and MAP_SHARED_VALIDATE flags\n"
-> >> +#endif
-> >>  " -s <size> -- first do mmap(size)/munmap(size), try to reserve some free space\n"
-> >>  " If no protection mode is specified, all are used by default.\n"
-> >>  "\n"));
-> >> @@ -193,18 +198,14 @@ mmap_f(
-> >>  			prot |= PROT_EXEC;
-> >>  			break;
-> >>  		case 'S':
-> >> +#ifdef HAVE_MAP_SYNC
-> >>  			flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-> >> -
-> >> -			/*
-> >> -			 * If MAP_SYNC and MAP_SHARED_VALIDATE aren't defined
-> >> -			 * in the system headers we will have defined them
-> >> -			 * both as 0.
-> >> -			 */
-> >> -			if (!flags) {
-> >> -				printf("MAP_SYNC not supported\n");
-> >> -				return 0;
-> >> -			}
-> >>  			break;
-> >> +#else
-> >> +			printf("MAP_SYNC not supported\n");
-> >> +			exitcode = 1;
-> >> +			return command_usage(&mmap_cmd);
-> >> +#endif
-> >>  		case 's':
-> >>  			length2 = cvtnum(blocksize, sectsize, optarg);
-> >>  			break;
-> >> @@ -281,7 +282,7 @@ mmap_f(
-> >>  	mapping->offset = offset;
-> >>  	mapping->name = filename;
-> >>  	mapping->prot = prot;
-> >> -	mapping->map_sync = (flags == (MAP_SYNC | MAP_SHARED_VALIDATE));
-> >> +	mapping->flags = flags;
-> >>  	return 0;
-> >>  }
-> >>
-> >> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> >> index df44174d..5293dd1a 100644
-> >> --- a/m4/package_libcdev.m4
-> >> +++ b/m4/package_libcdev.m4
-> >> @@ -387,8 +387,7 @@ AC_DEFUN([AC_HAVE_MAP_SYNC],
-> >>    [ AC_MSG_CHECKING([for MAP_SYNC])
-> >>      AC_COMPILE_IFELSE(
-> >>      [	AC_LANG_PROGRAM([[
-> >> -#include <asm-generic/mman.h>
-> >> -#include <asm-generic/mman-common.h>
-> >> +#include <sys/mman.h>
-> >>  	]], [[
-> >>  int flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-> >>  	]])
-> > 
-> > Patch looks good, if you plan to make it into a non-RFC patch, feel free to
-> > include:
-> > 
-> > Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > 
-> 
-> Darrick, do you need to re-post, or can the maintainers pick up the patch directly?
+On Thu, Jul 28, 2022 at 11:39 AM Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> On Thu, Jul 28, 2022 at 4:07 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > On Wed, Jul 27, 2022 at 07:01:15PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Jul 27, 2022 at 09:17:47PM +0200, Amir Goldstein wrote:
+> > > > On Tue, Jul 26, 2022 at 11:21 AM Amir Goldstein <amir73il@gmail.com> wrote:
+> > > > >
+> > > > > Darrick,
+> > > > >
+> > > > > This backport series contains mostly fixes from v5.14 release along
+> > > > > with three deferred patches from the joint 5.10/5.15 series [1].
+> > > > >
+> > > > > I ran the auto group 10 times on baseline (v5.10.131) and this series
+> > > > > with no observed regressions.
+> > > > >
+> > > > > I ran the recoveryloop group 100 times with no observed regressions.
+> > > > > The soak group run is in progress (10+) with no observed regressions
+> > > > > so far.
+> > > > >
+> > > > > I am somewhat disappointed from not seeing any improvement in the
+> > > > > results of the recoveryloop tests comapred to baseline.
+> > > > >
+> > > > > This is the summary of the recoveryloop test results on both baseline
+> > > > > and backport branch:
+> > > > >
+> > > > > generic,455, generic/457, generic/646: pass
+> > > > > generic/019, generic/475, generic/648: failing often in all config
+> > >
+> > > <nod> I posted a couple of patchsets to fstests@ yesterday that might
+> > > help with these recoveryloop tests failing.
+> > >
+> > > https://lore.kernel.org/fstests/165886493457.1585218.32410114728132213.stgit@magnolia/T/#t
+> > > https://lore.kernel.org/fstests/165886492580.1585149.760428651537119015.stgit@magnolia/T/#t
+> > > https://lore.kernel.org/fstests/165886491119.1585061.14285332087646848837.stgit@magnolia/T/#t
+> > >
+> > > > > generic/388: failing often with reflink_1024
+> > > > > generic/388: failing at ~1/50 rate for any config
+> > > > > generic/482: failing often on V4 configs
+> > > > > generic/482: failing at ~1/100 rate for V5 configs
+> > > > > xfs/057: failing at ~1/200 rate for any config
+> > > > >
+> > > > > I observed no failures in soak group so far neither on baseline nor
+> > > > > on backport branch. I will update when I have more results.
+> > > > >
+> > > >
+> > > > Some more results after 1.5 days of spinning:
+> > > > 1. soak group reached 100 runs (x5 configs) with no failures
+> > > > 2. Ran all the tests also on debian/testing with xfsprogs 5.18 and
+> > > >     observed a very similar fail/pass pattern as with xfsprogs 5.10
+> > > > 3. Started to run the 3 passing recoveryloop tests 1000 times and
+> > > >     an interesting pattern emerged -
+> > > >
+> > > > generic/455 failed 3 times on baseline (out of 250 runs x 5 configs),
+> > > > but if has not failed on backport branch yet (700 runs x 5 configs).
+> > > >
+> > > > And it's not just failures, it's proper data corruptions, e.g.
+> > > > "testfile2.mark1 md5sum mismatched" (and not always on mark1)
+> > >
+> > > Oh good!
+> > >
+> > >
+> > > >
+> > > > I will keep this loop spinning, but I am cautiously optimistic about
+> > > > this being an actual proof of bug fix.
+>
+> That was wishful thinking - after 1500 x 5 runs there are 2 failures also
+> on the backport branch.
+>
+> It is still better than 4 failures out of 800 x 5 runs on baseline, but I can
+> not call that a proof for bug fix - only no regression.
+>
+> > > >
+> > > > If these results don't change, I would be happy to get an ACK for the
+> > > > series so I can post it after the long soaking.
+> > >
+> > > Patches 4-9 are an easy
+> > > Acked-by: Darrick J. Wong <djwong@kernel.org>
+> >
+> > I hit send too fast.
+> >
+> > I think patches 1-3 look correct.  I still think it's sort of risky,
+> > but your testing shows that things at least get better and don't
+> > immediately explode or anything. :)
+> >
+> > By my recollection of the log changes between 5.10 and 5.17 I think the
+> > lsn/cil split didn't change all that much, so if you get to the end of
+> > the week with no further problems then I say Acked-by for them too.
+> >
+>
+> Great. I'll keep it spinning.
+>
 
-I already did:
-https://lore.kernel.org/linux-xfs/YtmB005kkkErb5uw@magnolia/
+Well, it's the end of my week now and loop has passed over 4,000
+runs x 5 configs on the backport branch with only 4 failures, so it's
+going to stable.
 
-(It's August, so I think the xfsprogs maintainer might be on vacation?
-Either way, I'll make sure he's aware of it before the next release.)
-
---D
-
-> -- 
-> Florian
+Thanks,
+Amir.
