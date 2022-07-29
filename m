@@ -2,97 +2,143 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFEE5C00144
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jul 2022 07:58:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B0D9C19F29
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jul 2022 09:22:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235134AbiG2H56 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Jul 2022 03:57:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39766 "EHLO
+        id S234515AbiG2JWZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Jul 2022 05:22:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235159AbiG2H54 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jul 2022 03:57:56 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FAC97E02A
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Jul 2022 00:57:55 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id pw15so3980177pjb.3
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Jul 2022 00:57:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc;
-        bh=HmX196I3swVrZZOun875sKtwHkx2lPTFSURhsv6oFIk=;
-        b=llR+P4oea4LoHfKkud0NaKUSr3gwndaZQDMltBB8hOX24e1STFNJyWsz2azCWx0HTA
-         Uga4BPN4zf4nN9y/cF3W5Kc0i/B1tkEgPG/RfakkYDTF+9fOTcxwQKxdTa997uesx+oV
-         t/6rKKbB+oxlSV7kbTlwbzhDLeJ0BIOQVHmfS/fGQuXAGOX0Bm76r+Cx2cDDfSfDq0EM
-         iltC8I+7zkX9b6EfFmBgV3TMN6LYY8SikQd/n5lIvBvyixrJcc6rEakt+lS76bSf8wcm
-         QUWO8X4GhVKoW0a/GcyxzMS2u4QP6dI4nky+HtWr1zmlBeVOxyPajbdMKnbtV1+Qn5GN
-         xncg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc;
-        bh=HmX196I3swVrZZOun875sKtwHkx2lPTFSURhsv6oFIk=;
-        b=GvTi16nNnoHb8fluhAi1flURifHOBxW/JxChe6WEF/OTnALNwNhEDSoLxCynT76Ygc
-         dGDAlsmvxvWLJ/prcaYYOWdaScrQT8WK/zATywnc8uKhO5EtQSHivjZbeJmKRleAi71p
-         0tnuwkZT1SHpszyh4/TnPl1FP+LYz3OHncVbzG3FFDjNGXpjreCyxpo1NEcUPZS2YR7m
-         LsekpOFAP9d8yf4lVJ1PWX15nyG4EZ0SMPH/K2HkATGMoWAhrHsBIzId5zjT0mZhG7bZ
-         Q1YzyRBxSSA5JmqUbjTzCaWMW8DVei14wOes4g/2WgoNcbmdfuw5YSHbqe7S/Q7HjnFa
-         GRfg==
-X-Gm-Message-State: ACgBeo30l/eV6kXoF49Sh5ZJF4Eiiy6GWREyUL1GnszBjDEuEJCr2U2w
-        Lgzr2/dLhGT0t68ippbEI+c=
-X-Google-Smtp-Source: AA6agR6sEyzHSmNSFUQgpHszWMqZ/eeUNXCWQxi14ODbEeEeFZf1QZkhp3saPUvTHv8GQEBNYyEN7Q==
-X-Received: by 2002:a17:90b:3c47:b0:1f2:feea:db9b with SMTP id pm7-20020a17090b3c4700b001f2feeadb9bmr2780673pjb.7.1659081474870;
-        Fri, 29 Jul 2022 00:57:54 -0700 (PDT)
-Received: from localhost.localdomain ([165.154.253.46])
-        by smtp.gmail.com with ESMTPSA id b15-20020a170902d88f00b0016a565f3f34sm2732124plz.168.2022.07.29.00.57.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 Jul 2022 00:57:54 -0700 (PDT)
-From:   Stephen Zhang <starzhangzsd@gmail.com>
-X-Google-Original-From: Stephen Zhang <zhangshida@kylinos.cn>
-To:     sandeen@redhat.com, djwong@kernel.org, hch@lst.de
-Cc:     zhangshida@kylinos.cn, starzhangzsd@gmail.com,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH] libfrog: fix the if condition in xfrog_bulk_req_v1_setup
-Date:   Fri, 29 Jul 2022 15:57:46 +0800
-Message-Id: <20220729075746.1918783-1-zhangshida@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229471AbiG2JWX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jul 2022 05:22:23 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73A1F64C5;
+        Fri, 29 Jul 2022 02:22:21 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id 0FF2F2023D;
+        Fri, 29 Jul 2022 09:22:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1659086540; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=OHzMII7PmKpSZu+Cs5j/9PDskHpu0BMOk43FfHJdKQk=;
+        b=S6GKQOAhWYnzbVu0TE5UB84iqB66BKVcTXefdopftRLJHl1YcsxVp1FFj/kmuoQRfHBhEA
+        09ENhhytmrZq8ess84vton5RnX1ahcB+fx8fT7XZPyFI2UR4ihGg/eMSXRu8C3xHQBakut
+        3rWGSApEPPeNgt2Nrs34FTf0f4bQ8ks=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1659086540;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=OHzMII7PmKpSZu+Cs5j/9PDskHpu0BMOk43FfHJdKQk=;
+        b=vN4nMwJbNlRYg1gyJSpj0/jFhJQeNO3vyHiQxpK0yF5FYgtBVTpgkVVlQyKtZY5id7TGUr
+        4bflt3z5Qw6djRDg==
+Received: from suse.de (unknown [10.163.43.106])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id E1FBA2C142;
+        Fri, 29 Jul 2022 09:22:17 +0000 (UTC)
+Date:   Fri, 29 Jul 2022 10:22:16 +0100
+From:   Mel Gorman <mgorman@suse.de>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Christoph Hellwig <hch@lst.de>, Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Johannes Thumshirn <jth@kernel.org>, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org
+Subject: Re: remove iomap_writepage v2
+Message-ID: <20220729092216.GE3493@suse.de>
+References: <20220719041311.709250-1-hch@lst.de>
+ <20220728111016.uwbaywprzkzne7ib@quack3>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=iso-8859-15
+Content-Disposition: inline
+In-Reply-To: <20220728111016.uwbaywprzkzne7ib@quack3>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-when scanning all inodes in each ag, hdr->ino serves as a iterator to
-specify the ino to start scanning with.
+On Thu, Jul 28, 2022 at 01:10:16PM +0200, Jan Kara wrote:
+> Hi Christoph!
+> 
+> On Tue 19-07-22 06:13:07, Christoph Hellwig wrote:
+> > this series removes iomap_writepage and it's callers, following what xfs
+> > has been doing for a long time.
+> 
+> So this effectively means "no writeback from page reclaim for these
+> filesystems" AFAICT (page migration of dirty pages seems to be handled by
+> iomap_migrate_page()) which is going to make life somewhat harder for
+> memory reclaim when memory pressure is high enough that dirty pages are
+> reaching end of the LRU list. I don't expect this to be a problem on big
+> machines but it could have some undesirable effects for small ones
+> (embedded, small VMs). I agree per-page writeback has been a bad idea for
+> efficiency reasons for at least last 10-15 years and most filesystems
+> stopped dealing with more complex situations (like block allocation) from
+> ->writepage() already quite a few years ago without any bug reports AFAIK.
+> So it all seems like a sensible idea from FS POV but are MM people on board
+> or at least aware of this movement in the fs land?
+> 
+> Added a few CC's for that.
+> 
 
-After hdr->ino-- , we can get the last ino returned from the previous
-iteration.
+There is some context missing because it's not clear what the full impact is
+but it is definitly the case that writepage is ignored in some contexts for
+common filesystems so lets assume that writepage from reclaim context always
+failed as a worst case scenario. Certainly this type of change is something
+linux-mm needs to be aware of because we've been blind-sided before.
 
-But there are cases that hdr->ino-- is pointless, that is,the case when
-starting to scan inodes in each ag.
+I don't think it would be incredibly damaging although there *might* be
+issues with small systems or cgroups. In many respects, vmscan has been
+moving in this direction for a long time e.g. f84f6e2b0868 ("mm: vmscan:
+do not writeback filesystem pages in kswapd except in high priority") and
+e2be15f6c3ee ("mm: vmscan: stall page reclaim and writeback pages based on
+dirty/writepage pages encountered"). This was roughly 10 years ago when
+it was clear that FS writeback from reclaim context was fragile (iirc it
+was partially due to concerns about stack depth and later concerns that a
+filesystem would simply ignore the writeback request). There also is less
+reliance on stalling reclaim by queueing and waiting on writeback but we now
+should explicitly throttle if no progress is being made e.g. 69392a403f49
+("mm/vmscan: throttle reclaim when no progress is being made") and some
+follow-up fixes.
 
-Hence the condition should be cvt_ino_to_agno(xfd, hdr->ino) ==0, which
-represents the start of scan in each ag,
-instead of hdr->ino ==0, which represents the start of scan in ag 0 only.
+There still is a reliance on swap and shmem pages will not ignore writepage
+but I assume that is still ok.
 
-Signed-off-by: Stephen Zhang <zhangshida@kylinos.cn>
----
- libfrog/bulkstat.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+One potential caveat is if wakeup_flusher_threads() is ignored because
+there is a reliance in reclaim that if all the pages at the tail of the
+LRU are dirty pages not queued for writeback then wakeup_flusher_threads()
+will do something so pages get marked for immediate reclaim when writeback
+completes. Of course there is no guarantee that flusher threads will start
+writeback on the old pages and the pages could be backed by a slow BDI
+but wakeup_flusher_threads() should not be ignored.
 
-diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
-index 195f6ea0..77a385bb 100644
---- a/libfrog/bulkstat.c
-+++ b/libfrog/bulkstat.c
-@@ -172,7 +172,7 @@ xfrog_bulk_req_v1_setup(
- 	if (!buf)
- 		return -errno;
- 
--	if (hdr->ino)
-+	if (cvt_ino_to_agno(xfd, hdr->ino))
- 		hdr->ino--;
- 	bulkreq->lastip = (__u64 *)&hdr->ino,
- 	bulkreq->icount = hdr->icount,
+Another caveat is that comments become misleading. Take for example the
+comment "Only kswapd can writeback filesystem folios to avoid risk of
+stack overflow." The wording should change to note that writepage may
+do nothing at all.  There also might need to be some adjustment on when
+pages get marked for immediate reclaim when they are dirty but not under
+writeback. pageout() might need a tracepoint for "mapping->a_ops->writepage
+== NULL" to help debug problems around a failure to queue pages for writback
+although that could be done as a test patch for a bug.
+
+There would need to be some changes made if writepage always or often failed
+and there might be some premature throttling based on "NOPROGRESS" on small
+systems due to dirty-not-writepage pages at the tail of the LRU but I don't
+think it would be an immediate disaster, Reclaim throttling is no longer
+based on the ability to queue for writeback or "congestion" state of BDIs
+and some care is taken to not prematurely stall on NOPROGRESS. However,
+if there was a bug related to premature stalls or excessive CPU usage
+from direct reclaimers or kswapd that bisected to a change in writepage
+then it should be fixed on the vmscan-side to put an emphasis on handling
+"reclaim is in trouble when the bulk of reclaimable pages are FS-only,
+dirty and not under writeback but ->writepage is a no-op".
+
 -- 
-2.25.1
-
+Mel Gorman
+SUSE Labs
