@@ -2,163 +2,145 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FA02C04A68
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jul 2022 16:15:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64057C3F6B0
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jul 2022 16:16:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230163AbiG2QPw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Jul 2022 12:15:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40876 "EHLO
+        id S236313AbiG2QQU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Jul 2022 12:16:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231976AbiG2QPv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jul 2022 12:15:51 -0400
-Received: from mail-vs1-xe30.google.com (mail-vs1-xe30.google.com [IPv6:2607:f8b0:4864:20::e30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B01F4FD29;
-        Fri, 29 Jul 2022 09:15:50 -0700 (PDT)
-Received: by mail-vs1-xe30.google.com with SMTP id 129so5022815vsq.8;
-        Fri, 29 Jul 2022 09:15:50 -0700 (PDT)
+        with ESMTP id S230034AbiG2QQT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jul 2022 12:16:19 -0400
+Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44281FD29;
+        Fri, 29 Jul 2022 09:16:18 -0700 (PDT)
+Received: by mail-ed1-x531.google.com with SMTP id a89so6413303edf.5;
+        Fri, 29 Jul 2022 09:16:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=mzoPDf5bDlXx1BaYbqPpOiGhYYUfpkfcEpH1gSsIq0g=;
-        b=LG2i5/BHu/Y7osIg+JH3KAl+aG/uU6dDUbVb2Xmv2eYIJ+vK8KsqWRZAEaQ6xrQyEF
-         oe/zzVQP0C7pOvYlLIXHWNPN0s4rND02vN5iDWaUglwIMgaMqPPxH8Cvq7aisQl2WZBc
-         NsgW7ZsxavHW+03qzeSg7HCYgdqaZKPIqVktUzoD3NgbjCwgB1x0razFHGdnDEtF1Eb5
-         xRwEvn/5gInKBrg6pQueOx7Buzc8ifoiuvEriPWPDKC5pgTspwY0hOo9HVDl7qfZVTXT
-         blEE16rrH2ecy1v9Whs5N5yi6C+VxXQytIPKUKoWYmd5KoPFcQq5+m/Qk4gKlki5RQhe
-         w6/Q==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=3wKLKhoKbB8eVcLHeT16iiMirEQtHQ1RcQkmpLJZhm0=;
+        b=aIG0SdkeTkz0q7Sd3Nv1KEaXwf2h967kTP6TB9MTMcot4JmXqBv723mQeTNDFxaNq9
+         mx96QqPO0t6PLRCEe2E0QiKS4Oa2YKOF5h75HLdgj0L5Y49fjUuUjwCcQHS9HlsoQris
+         7l83eYNkRgT5NUTnFfHbw1byQhTWR7hG5KpdPAqFGrFX2+WkPOd3XM1WjSNIc2cIF5wV
+         uOLKtzsXkSn9tdeaBi+qHpCYLVJ2/kbiUnqvbo8FDZX42dmYxavMLwsbrixgFIxduHWV
+         c7RTeKr27CB19u9dUbLqKQAxzJtN338ZEkUG9GN1aUJMBwXJcIvVeYW8Jgry+L7O5bTO
+         cqGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=mzoPDf5bDlXx1BaYbqPpOiGhYYUfpkfcEpH1gSsIq0g=;
-        b=hjFbN54k7yX6Qu4kS0LUCRXbyk/vt3O0BBJidhDuuJ7gf1z95qfxNcl6/9y3XTcU/z
-         1GQCWunWqjJoddbUIWAygnaRpQoOeVz3Y0CTMGIcVMCPfT4Cf6eFTisDlnOWCsQKyuoO
-         61k9W0XefamDisndmNjpXM2iWmNtQ7IbfF8rIkZ2b+1s4wHFyjk4Q+oj01h9W16PdjyW
-         JWBECXfW2LH87kN1jKvyqUMlozo8b5CN1WzzZmfGmiFfVYgQ1o60ZNCDfb5iEZA9adEB
-         uJZPVXUZWDtigbUo5fYRx8g4zvXA3K+qHoWowScxPnqTpI2QWko3h4DVigmcSLOYCfW9
-         Mz+A==
-X-Gm-Message-State: AJIora++8S34+pwa5b+BTKnu4824aeBUWNSZPdx3qj1Ez8S6Oa774UHa
-        +6jcaAgle19Syca57kYoSftMWkNpnV+9eOCbcEdQd4iBKEA=
-X-Google-Smtp-Source: AGRyM1sznv/9jLAu/P6nK9T1fjifa+VwUMkIaEixgKPPQDU/XYabfVkUmLROWvfRrwM3Ue/9Kvx3idUrZbTYnWzJI4s=
-X-Received: by 2002:a67:eb98:0:b0:358:6274:71b3 with SMTP id
- e24-20020a67eb98000000b00358627471b3mr1607451vso.72.1659111349554; Fri, 29
- Jul 2022 09:15:49 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220726092125.3899077-1-amir73il@gmail.com> <CAOQ4uxi=VYa+86A7G3wqCX84n2Aezx2mYqfYrFTAVtSpYmeq_Q@mail.gmail.com>
- <YuHt65YWtkqLxlpv@magnolia> <YuHve9LEkM7nmbUJ@magnolia> <CAOQ4uxiSKNYAT_oUXAwGADt4KQvVH8s12nFSrRUoKYi8DOzQig@mail.gmail.com>
-In-Reply-To: <CAOQ4uxiSKNYAT_oUXAwGADt4KQvVH8s12nFSrRUoKYi8DOzQig@mail.gmail.com>
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc;
+        bh=3wKLKhoKbB8eVcLHeT16iiMirEQtHQ1RcQkmpLJZhm0=;
+        b=Ita5sZ2eDZUOhft25QbY3GpdR0B/8OMf+CLIoweXg2aeKr5aEglw66a70sUO2kQ81C
+         uUDP7Hn4g0uEjwTQo4WV7P9DS5AOCEzueOlwt9JW0WiWezJ53Zgr1VUKjHf/sMdlmd2g
+         cdrNtgMJUJlQqqSZHNT2XVzk8T8m/WhRZhzcTfaB0aoziz5mQ8VqiNFSbMpKfthYC4fR
+         6mWrbiZKVbOfUWhqJ4MH8W/gityJnQSo7dDWbTNUEMElXv9InavhuBCF2uCVZyKHUE2/
+         4Z5DYxawQC2e1meyskp+A5Q1s0u+H7bY6y9lwoPAPhEzTh5FlyKCRrJGJi/UgvjTqiVx
+         AiFg==
+X-Gm-Message-State: AJIora9Af/7FjzcDJH0S51NnDyxAww0QOCA4wXAAhNfFy4FYbliGOBgn
+        Y2rdHByZ+G3GhtzC80Yh5dg=
+X-Google-Smtp-Source: AGRyM1sdM5RdQ/kTeqyWjqeYBlxjXn3KyibVHd/YyTvzYCWkb857F95WFNTOg1FIHcxjjVZhnwwtqw==
+X-Received: by 2002:a05:6402:1006:b0:43a:d397:68c3 with SMTP id c6-20020a056402100600b0043ad39768c3mr4306535edu.170.1659111376716;
+        Fri, 29 Jul 2022 09:16:16 -0700 (PDT)
+Received: from amir-ThinkPad-T480.lan (4.196.107.92.dynamic.wline.res.cust.swisscom.ch. [92.107.196.4])
+        by smtp.gmail.com with ESMTPSA id fm15-20020a1709072acf00b0072b14836087sm1870116ejc.103.2022.07.29.09.16.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 Jul 2022 09:16:16 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Fri, 29 Jul 2022 18:15:38 +0200
-Message-ID: <CAOQ4uxgbWOEZTCX_S43DCT-0KihU6By3TtwvYjZA6DS=y20FHQ@mail.gmail.com>
-Subject: Re: [PATCH 5.10 CANDIDATE 0/9] xfs stable candidate patches for
- 5.10.y (from v5.13+)
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Sasha Levin <sashal@kernel.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
         Chandan Babu R <chandan.babu@oracle.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH 5.10 v2 0/9] xfs stable patches for 5.10.y (from v5.13+)
+Date:   Fri, 29 Jul 2022 18:16:00 +0200
+Message-Id: <20220729161609.4071252-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 28, 2022 at 11:39 AM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> On Thu, Jul 28, 2022 at 4:07 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Wed, Jul 27, 2022 at 07:01:15PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jul 27, 2022 at 09:17:47PM +0200, Amir Goldstein wrote:
-> > > > On Tue, Jul 26, 2022 at 11:21 AM Amir Goldstein <amir73il@gmail.com> wrote:
-> > > > >
-> > > > > Darrick,
-> > > > >
-> > > > > This backport series contains mostly fixes from v5.14 release along
-> > > > > with three deferred patches from the joint 5.10/5.15 series [1].
-> > > > >
-> > > > > I ran the auto group 10 times on baseline (v5.10.131) and this series
-> > > > > with no observed regressions.
-> > > > >
-> > > > > I ran the recoveryloop group 100 times with no observed regressions.
-> > > > > The soak group run is in progress (10+) with no observed regressions
-> > > > > so far.
-> > > > >
-> > > > > I am somewhat disappointed from not seeing any improvement in the
-> > > > > results of the recoveryloop tests comapred to baseline.
-> > > > >
-> > > > > This is the summary of the recoveryloop test results on both baseline
-> > > > > and backport branch:
-> > > > >
-> > > > > generic,455, generic/457, generic/646: pass
-> > > > > generic/019, generic/475, generic/648: failing often in all config
-> > >
-> > > <nod> I posted a couple of patchsets to fstests@ yesterday that might
-> > > help with these recoveryloop tests failing.
-> > >
-> > > https://lore.kernel.org/fstests/165886493457.1585218.32410114728132213.stgit@magnolia/T/#t
-> > > https://lore.kernel.org/fstests/165886492580.1585149.760428651537119015.stgit@magnolia/T/#t
-> > > https://lore.kernel.org/fstests/165886491119.1585061.14285332087646848837.stgit@magnolia/T/#t
-> > >
-> > > > > generic/388: failing often with reflink_1024
-> > > > > generic/388: failing at ~1/50 rate for any config
-> > > > > generic/482: failing often on V4 configs
-> > > > > generic/482: failing at ~1/100 rate for V5 configs
-> > > > > xfs/057: failing at ~1/200 rate for any config
-> > > > >
-> > > > > I observed no failures in soak group so far neither on baseline nor
-> > > > > on backport branch. I will update when I have more results.
-> > > > >
-> > > >
-> > > > Some more results after 1.5 days of spinning:
-> > > > 1. soak group reached 100 runs (x5 configs) with no failures
-> > > > 2. Ran all the tests also on debian/testing with xfsprogs 5.18 and
-> > > >     observed a very similar fail/pass pattern as with xfsprogs 5.10
-> > > > 3. Started to run the 3 passing recoveryloop tests 1000 times and
-> > > >     an interesting pattern emerged -
-> > > >
-> > > > generic/455 failed 3 times on baseline (out of 250 runs x 5 configs),
-> > > > but if has not failed on backport branch yet (700 runs x 5 configs).
-> > > >
-> > > > And it's not just failures, it's proper data corruptions, e.g.
-> > > > "testfile2.mark1 md5sum mismatched" (and not always on mark1)
-> > >
-> > > Oh good!
-> > >
-> > >
-> > > >
-> > > > I will keep this loop spinning, but I am cautiously optimistic about
-> > > > this being an actual proof of bug fix.
->
-> That was wishful thinking - after 1500 x 5 runs there are 2 failures also
-> on the backport branch.
->
-> It is still better than 4 failures out of 800 x 5 runs on baseline, but I can
-> not call that a proof for bug fix - only no regression.
->
-> > > >
-> > > > If these results don't change, I would be happy to get an ACK for the
-> > > > series so I can post it after the long soaking.
-> > >
-> > > Patches 4-9 are an easy
-> > > Acked-by: Darrick J. Wong <djwong@kernel.org>
-> >
-> > I hit send too fast.
-> >
-> > I think patches 1-3 look correct.  I still think it's sort of risky,
-> > but your testing shows that things at least get better and don't
-> > immediately explode or anything. :)
-> >
-> > By my recollection of the log changes between 5.10 and 5.17 I think the
-> > lsn/cil split didn't change all that much, so if you get to the end of
-> > the week with no further problems then I say Acked-by for them too.
-> >
->
-> Great. I'll keep it spinning.
->
+Hi Greg,
 
-Well, it's the end of my week now and loop has passed over 4,000
-runs x 5 configs on the backport branch with only 4 failures, so it's
-going to stable.
+This backport series contains mostly fixes from v5.14 release along
+with one fix deferred from the first joint 5.10/5.15 series [1].
+
+The upstream commit f8d92a66e810 ("xfs: prevent UAF in
+xfs_log_item_in_current_chkpt") was already applied to 5.15.y, but its
+5.10.y backport was more involved (required two non trivial dependency
+patches), so it needed more time for review and testing.
+
+Per Darrick's recommendation, on top of the usual regression tests,
+I also ran the "recoveryloop" tests group for an extended period of
+time to test for rare regressions.
+
+Some recoveryloop tests were failing at rates less frequent than 1/100,
+but no change in failure rate was observed between baseline (v5.10.131)
+and the backport branch.
+
+There was one exceptional test, xfs/455, that was reporting data
+corruptions after crash at very low rate - less frequent than 1/1000
+on both baseline and backport branch.
+
+It is hard to draw solid conclusions with such rare failures, but the
+test was run >10,000 times on baseline and >20,000 times on backport
+branch, so as far as our test coverage can attest, these backports are
+not introducing any obvious xfs regressions to 5.10.y.
 
 Thanks,
 Amir.
+
+Changes from [v1]:
+- Survived a week of crash recovery loop
+- Added Acked-by Darrick
+- CC stable
+
+[1] https://lore.kernel.org/linux-xfs/20220623203641.1710377-1-leah.rumancik@gmail.com/
+[v1] https://lore.kernel.org/linux-xfs/20220726092125.3899077-1-amir73il@gmail.com/
+
+Brian Foster (2):
+  xfs: hold buffer across unpin and potential shutdown processing
+  xfs: remove dead stale buf unpin handling code
+
+Christoph Hellwig (1):
+  xfs: refactor xfs_file_fsync
+
+Darrick J. Wong (3):
+  xfs: prevent UAF in xfs_log_item_in_current_chkpt
+  xfs: fix log intent recovery ENOSPC shutdowns when inactivating inodes
+  xfs: force the log offline when log intent item recovery fails
+
+Dave Chinner (3):
+  xfs: xfs_log_force_lsn isn't passed a LSN
+  xfs: logging the on disk inode LSN can make it go backwards
+  xfs: Enforce attr3 buffer recovery order
+
+ fs/xfs/libxfs/xfs_log_format.h  | 11 ++++-
+ fs/xfs/libxfs/xfs_types.h       |  1 +
+ fs/xfs/xfs_buf_item.c           | 60 ++++++++++--------------
+ fs/xfs/xfs_buf_item_recover.c   |  1 +
+ fs/xfs/xfs_dquot_item.c         |  2 +-
+ fs/xfs/xfs_file.c               | 81 ++++++++++++++++++++-------------
+ fs/xfs/xfs_inode.c              | 10 ++--
+ fs/xfs/xfs_inode_item.c         |  4 +-
+ fs/xfs/xfs_inode_item.h         |  2 +-
+ fs/xfs/xfs_inode_item_recover.c | 39 ++++++++++++----
+ fs/xfs/xfs_log.c                | 30 ++++++------
+ fs/xfs/xfs_log.h                |  4 +-
+ fs/xfs/xfs_log_cil.c            | 32 +++++--------
+ fs/xfs/xfs_log_priv.h           | 15 +++---
+ fs/xfs/xfs_log_recover.c        |  5 +-
+ fs/xfs/xfs_mount.c              | 10 +++-
+ fs/xfs/xfs_trans.c              |  6 +--
+ fs/xfs/xfs_trans.h              |  4 +-
+ 18 files changed, 179 insertions(+), 138 deletions(-)
+
+-- 
+2.25.1
+
