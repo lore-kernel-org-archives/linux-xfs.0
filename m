@@ -2,127 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC801C00144
-	for <linux-xfs@archiver.kernel.org>; Sat, 30 Jul 2022 01:30:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53548C3F6B0
+	for <linux-xfs@archiver.kernel.org>; Sat, 30 Jul 2022 07:52:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232041AbiG3Bah (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Jul 2022 21:30:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49378 "EHLO
+        id S230051AbiG3HwU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 30 Jul 2022 03:52:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229599AbiG3Bah (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jul 2022 21:30:37 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F2F112A9B
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Jul 2022 18:30:35 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5C12CB82925
-        for <linux-xfs@vger.kernel.org>; Sat, 30 Jul 2022 01:30:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19713C433D6;
-        Sat, 30 Jul 2022 01:30:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659144633;
-        bh=CWr+jBhv9DDlFiUivJU422TBv2vJE9leZtsdEWJZPJU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GYXh1wDpcCAtG6L72PQrWskbbR45gCiRy9j1700EQsObj6v5zDT5WNIHFLIBBprAc
-         5AARWgXFJz5Unp4Wx/Lnqfqn9id+ql5t/qMvvdZRv+r7hNcSAamWCaQ3WDarC2RglH
-         bnL2j/3ReFvB9Xzfy/6S6KlLB9cTXnJ7y2SzyjfN94nrLIrMZ143fGRoPtYPOhaPeF
-         U7syeqV+92GHhEzFRZeKbeTFyZJaR5AmcOtQEEFyP4D0qDwSvIQhdjMCKXUTUP9rb6
-         2nrWHF2icaS7FGKfavTkyLzHQ2cxK1DDsnlU12dav259IGq4txH6E1o0xmmwtbQBoC
-         bkQIB83zSvdcA==
-Date:   Fri, 29 Jul 2022 18:30:32 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Stephen Zhang <starzhangzsd@gmail.com>
+        with ESMTP id S229571AbiG3HwT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Jul 2022 03:52:19 -0400
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4322C13DE7
+        for <linux-xfs@vger.kernel.org>; Sat, 30 Jul 2022 00:52:18 -0700 (PDT)
+Received: by mail-ej1-x62b.google.com with SMTP id sz17so11957068ejc.9
+        for <linux-xfs@vger.kernel.org>; Sat, 30 Jul 2022 00:52:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc;
+        bh=sW/SOkVQdGE4dXJwwLc+zTF9ESbscxQR2bBrDwzilPk=;
+        b=h5SOAGVU60C54fN7dZjdS9/tg4pVXorHfEpD/hpu6mH4Zg5apXIiNRhz+2u8KHbqn7
+         8SiRhmGikalttUCDmUpx5VBknoWGReDozXrvzSVKNl8FSOglUjtpycwIyCVHfX7aAvfp
+         KX1rJBe0Lj2neh3gzHVOfG+Vr3/XWybPGBSe3Lb4nO0b7KqKqKypJS6WVeYAn9gHP8n7
+         HC9afZa4f5xmbBD0jnnHrwvaoHec9v27negJEE1hpYVRxVifa0PHTLbaxbFvxE05TXos
+         GkxxVifkyqdWjhTYFiHmrCLSEoMsf0ZM28Wq+X1RnLlz+oPr3HztGSCSjv2Ubqzh3XsD
+         yHpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc;
+        bh=sW/SOkVQdGE4dXJwwLc+zTF9ESbscxQR2bBrDwzilPk=;
+        b=sbmn6VJDuXMaNCkM+nL0IDfVMnPKkFCAwTrGJgTJRIEKNzHxNS+FJJ0MxSMIdptzBQ
+         P0geusWtRZj1hLJeCNij6RU5wiBimPCA70JACkIQZOdh8yyA4YLlns9hPZKfFs/UeQlO
+         xm0gSQui7AqNtmuwOyLItjl5DUPF1sQkFqG1azZAqrkrD4V6uoe1QCaKvl+xpZAjSKgD
+         11FRpCE9F10ZeXCHrE21icsnZvFqETB/6yZyieqzN4TJroKw0DcEmyvNcPQ+CjQFY0iC
+         fglV/zz/u2gIqtRozPzBx4tksxo0NL+Cv3Aa7wwiNLwLloQlJMyuiMIMe9zFPyx3va13
+         nLYQ==
+X-Gm-Message-State: AJIora/tPQ0G/ZSKWhuAwVlWx5Z26KnpyfaLSjmmiT8Do0AKaKAnC3uc
+        pyDQhcEBWPTIGhG8dxXob8S9gqjrzRAF7VjG54s=
+X-Google-Smtp-Source: AGRyM1vkS1K36tQv2rlq8C5gR2AsAEjXq42zMb0AE7kpfdDHAv0siNXelkT+kp0mi+GU/JONzW+eRQe+fNKIsE7NmEE=
+X-Received: by 2002:a17:907:2bd3:b0:72b:44ed:6d6b with SMTP id
+ gv19-20020a1709072bd300b0072b44ed6d6bmr5595138ejc.632.1659167536552; Sat, 30
+ Jul 2022 00:52:16 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220729075746.1918783-1-zhangshida@kylinos.cn>
+ <YuQATS8/CujZV3lh@magnolia> <CANubcdVqkeyG5AP56AQ+x3QayRmLZ=zULShhxha-a4N16gPKYg@mail.gmail.com>
+ <YuSJuF55dZLsbO8Z@magnolia>
+In-Reply-To: <YuSJuF55dZLsbO8Z@magnolia>
+From:   Stephen Zhang <starzhangzsd@gmail.com>
+Date:   Sat, 30 Jul 2022 15:51:40 +0800
+Message-ID: <CANubcdW2LOgePOCLyE=Q2sbSJ0UGO+2Wt3YjsBd3eD9radOVVQ@mail.gmail.com>
+Subject: Re: [PATCH] libfrog: fix the if condition in xfrog_bulk_req_v1_setup
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     sandeen@redhat.com, hch@lst.de, zhangshida@kylinos.cn,
         linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] libfrog: fix the if condition in xfrog_bulk_req_v1_setup
-Message-ID: <YuSJuF55dZLsbO8Z@magnolia>
-References: <20220729075746.1918783-1-zhangshida@kylinos.cn>
- <YuQATS8/CujZV3lh@magnolia>
- <CANubcdVqkeyG5AP56AQ+x3QayRmLZ=zULShhxha-a4N16gPKYg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CANubcdVqkeyG5AP56AQ+x3QayRmLZ=zULShhxha-a4N16gPKYg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jul 30, 2022 at 09:25:25AM +0800, Stephen Zhang wrote:
-> Darrick J. Wong <djwong@kernel.org> 于2022年7月29日周五 23:44写道：
-> >
-> > On Fri, Jul 29, 2022 at 03:57:46PM +0800, Stephen Zhang wrote:
-> > > when scanning all inodes in each ag, hdr->ino serves as a iterator to
-> > > specify the ino to start scanning with.
-> > >
-> > > After hdr->ino-- , we can get the last ino returned from the previous
-> > > iteration.
-> > >
-> > > But there are cases that hdr->ino-- is pointless, that is,the case when
-> > > starting to scan inodes in each ag.
-> > >
-> > > Hence the condition should be cvt_ino_to_agno(xfd, hdr->ino) ==0, which
-> > > represents the start of scan in each ag,
-> >
-> > Er, cvt_ino_to_agno extracts the AG number from an inumber;
-> > cvt_ino_to_agino extracts the inumber within an AG.  Given your
-> > description of the problem (not wanting hdr->ino to go backwards in the
-> > inumber space when it's already at the start of an AG), I think you want
-> > the latter here?
-> >
-> > > instead of hdr->ino ==0, which represents the start of scan in ag 0 only.
-> > >
-> > > Signed-off-by: Stephen Zhang <zhangshida@kylinos.cn>
-> > > ---
-> > >  libfrog/bulkstat.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
-> > > index 195f6ea0..77a385bb 100644
-> > > --- a/libfrog/bulkstat.c
-> > > +++ b/libfrog/bulkstat.c
-> > > @@ -172,7 +172,7 @@ xfrog_bulk_req_v1_setup(
-> > >       if (!buf)
-> > >               return -errno;
-> > >
-> > > -     if (hdr->ino)
-> > > +     if (cvt_ino_to_agno(xfd, hdr->ino))
-> >
-> > ...because I think this change means that we go backwards for any inode
-> > in AG 0, and we do not go backwards for any other AG.
-> >
-> > --D
-> >
-> > >               hdr->ino--;
-> > >       bulkreq->lastip = (__u64 *)&hdr->ino,
-> > >       bulkreq->icount = hdr->icount,
-> > > --
-> > > 2.25.1
-> > >
-> 
-> Yeah, i mean the latter. Sorry for the mistake.
-> Hence the patch will be like:
-> =====
-> @@ -172,7 +172,7 @@ xfrog_bulk_req_v1_setup(
->         if (!buf)
->                 return -errno;
-> 
-> -       if (hdr->ino)
-> +       if (cvt_ino_to_agino(xfd, hdr->ino))
->                 hdr->ino--;
->         bulkreq->lastip = (__u64 *)&hdr->ino,
->         bulkreq->icount = hdr->icount,
-> ====
-> Should i resend the patch later, or do you have any other idea about
-> this change?
+Darrick J. Wong <djwong@kernel.org> =E4=BA=8E2022=E5=B9=B47=E6=9C=8830=E6=
+=97=A5=E5=91=A8=E5=85=AD 09:30=E5=86=99=E9=81=93=EF=BC=9A
+>
+> It's probably ok to resend with that change, but ... what were you doing
+> to trip over this error, anyway?
+>
+> --D
+>
 
-It's probably ok to resend with that change, but ... what were you doing
-to trip over this error, anyway?
+Well, I was running xfs/285, and ran into some other error, which was
+already fixed by the latest xfsprogs.
+But in the process of examining the code logic in xfs_scrub, i still find
+there may exist a flaw here, although it hasn't cause any problem so far.
+Maybe it's still neccessary to submit the fix.Or am I just understanding
+the code in a wrong way?
 
---D
+Thanks,
 
-> Thanks,
-> 
-> Stephen.
+Stephen.
