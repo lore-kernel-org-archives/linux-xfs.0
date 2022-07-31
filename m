@@ -2,114 +2,126 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F684C00140
-	for <linux-xfs@archiver.kernel.org>; Sun, 31 Jul 2022 16:23:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D3E8C00140
+	for <linux-xfs@archiver.kernel.org>; Sun, 31 Jul 2022 16:44:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237521AbiGaQXL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 31 Jul 2022 12:23:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34758 "EHLO
+        id S230244AbiGaQoy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 31 Jul 2022 12:44:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235943AbiGaQXK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 31 Jul 2022 12:23:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10899DEEF;
-        Sun, 31 Jul 2022 09:23:10 -0700 (PDT)
+        with ESMTP id S229558AbiGaQox (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 31 Jul 2022 12:44:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78497A19C
+        for <linux-xfs@vger.kernel.org>; Sun, 31 Jul 2022 09:44:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A105060F42;
-        Sun, 31 Jul 2022 16:23:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04D81C433D6;
-        Sun, 31 Jul 2022 16:23:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1974760F8C
+        for <linux-xfs@vger.kernel.org>; Sun, 31 Jul 2022 16:44:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72B0AC433D6;
+        Sun, 31 Jul 2022 16:44:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659284589;
-        bh=HsdsdEfTtmF6MTUSGc1t/9iW2TbWDia9Kl4W40DD3l8=;
+        s=k20201202; t=1659285891;
+        bh=cB+LZPbSeGgmAcSd+L6itd4dNW6Wx4qdKkf4c/8vEug=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=UVbeyHcLklV8VT4PWo5qXVkgPOxgm0PcGNBx0Ko/ViBqgVmgG313mAe8a9Kpr8Fy/
-         0UqGMDY3cuREIySw0jyXiG5nw61MkrQNYgjzhS0gstDc+2eoKw0po88WXQRFVenPR6
-         XvnaX1I7UtZzJaHPiP3LV+3TCspQNBbUNs6R05BJg9JvCBZfI6W6uUF+sPa4iXqJMi
-         j7g9Bk/CbiF3NZ+9dcrANT9r9JCj/KcyEGTKVvK8l9zM7w8WAMljoDcLbCdFSNUGZ7
-         s8n1LMtK2yd93RMILc4hKr1OOmm52G2Ni2tDBlwIhVsDQY4p/UbtEheFe5XwP40P/X
-         cnGz4vNfZGSzQ==
-Date:   Sun, 31 Jul 2022 09:23:08 -0700
+        b=sB3EkpqzucUTW454RJ6W47q/QcozVEMWp8gpLqRy0Hcqv4ndyIQZMq1IJBxsenVih
+         PzT9b+Iwl+MtOmAbuXWDK6DXRoTAj5LCqTCzcYaOLSIe6GSwogEuQBzRqE5/Zrl1Hu
+         1lGNOkZvuiUw2Hg0Xf2ZtGkPOf7AsM7I24x8CyE28MLT6YU5X/Y7xdFlTDTuDOmvv/
+         xOwihTUQzQorQSFsaVZ4jRfOKSdHBe2EgH6r2NaUK3drew7ttDQxZx1cZZEFFyd1uw
+         D2WX5byPDJLPlBlkXz5KBq7+EC2H8NIv7NNjjk0l82/fhxPStYear37hMC1V5hUZZ9
+         qDejR4JP20pVA==
+Date:   Sun, 31 Jul 2022 09:44:51 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     studentxswpy@163.com
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Hacash Robot <hacashRobot@santino.com>
-Subject: Re: [PATCH -next] xfs: delete extra space and tab in blank line
-Message-ID: <YuasbFHWfWiXPUJM@magnolia>
-References: <20220730092959.3103627-1-studentxswpy@163.com>
+To:     Stephen Zhang <starzhangzsd@gmail.com>
+Cc:     sandeen@redhat.com, hch@lst.de, zhangshida@kylinos.cn,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] libfrog: fix the if condition in xfrog_bulk_req_v1_setup
+Message-ID: <Yuaxg4Fn4B28AkuQ@magnolia>
+References: <20220729075746.1918783-1-zhangshida@kylinos.cn>
+ <YuQATS8/CujZV3lh@magnolia>
+ <CANubcdVqkeyG5AP56AQ+x3QayRmLZ=zULShhxha-a4N16gPKYg@mail.gmail.com>
+ <YuSJuF55dZLsbO8Z@magnolia>
+ <CANubcdW2LOgePOCLyE=Q2sbSJ0UGO+2Wt3YjsBd3eD9radOVVQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20220730092959.3103627-1-studentxswpy@163.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANubcdW2LOgePOCLyE=Q2sbSJ0UGO+2Wt3YjsBd3eD9radOVVQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jul 30, 2022 at 05:29:59PM +0800, studentxswpy@163.com wrote:
-> From: Xie Shaowen <studentxswpy@163.com>
+On Sat, Jul 30, 2022 at 03:51:40PM +0800, Stephen Zhang wrote:
+> Darrick J. Wong <djwong@kernel.org> 于2022年7月30日周六 09:30写道：
+> >
+> > It's probably ok to resend with that change, but ... what were you doing
+> > to trip over this error, anyway?
+> >
+> > --D
+> >
 > 
-> delete extra space and tab in blank line, there is no functional change.
-> 
-> Reported-by: Hacash Robot <hacashRobot@santino.com>
-> Signed-off-by: Xie Shaowen <studentxswpy@163.com>
+> Well, I was running xfs/285, and ran into some other error, which was
+> already fixed by the latest xfsprogs.
+> But in the process of examining the code logic in xfs_scrub, i still find
+> there may exist a flaw here, although it hasn't cause any problem so far.
+> Maybe it's still neccessary to submit the fix.Or am I just understanding
+> the code in a wrong way?
 
-The last hunk doesn't apply, but fmeh, whatever.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+FSBULKSTAT was always weird.  Look at the current kernel implementation,
+which translates the V1 FSBULKSTAT call into a V5 BULKSTAT call:
+
+	if (cmd == XFS_IOC_FSINUMBERS) {
+		breq.startino = lastino ? lastino + 1 : 0;
+		error = xfs_inumbers(&breq, xfs_fsinumbers_fmt);
+		lastino = breq.startino - 1;
+	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE) {
+		breq.startino = lastino;
+		breq.icount = 1;
+		error = xfs_bulkstat_one(&breq, xfs_fsbulkstat_one_fmt);
+	} else {	/* XFS_IOC_FSBULKSTAT */
+		breq.startino = lastino ? lastino + 1 : 0;
+		error = xfs_bulkstat(&breq, xfs_fsbulkstat_one_fmt);
+		lastino = breq.startino - 1;
+	}
+
+We always bump lastino by one, except in the case where it's 0, because
+0 is the magic signal to start at the first inode in the filesystem.
+This "only bump it if nonzero" behavior works solely because the fs
+layout prevents there ever from being an inode 0.
+
+Now, why does it behave like that?  Before the creation of v5 bulkstat,
+which made the cursor work like a standard cursor (i.e. breq->startino
+points to the inode that should be stat'd next), the old bulkstat-v1
+xfs_bulkstat_grab_chunk did this to mask off all inumbers before and
+including the passed in *lastinop:
+
+	idx = agino - irec->ir_startino + 1;
+	if (idx < XFS_INODES_PER_CHUNK &&
+	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
+		int	i;
+
+		/* We got a right chunk with some left inodes allocated at it.
+		 * Grab the chunk record.  Mark all the uninteresting inodes
+		 * free -- because they're before our start point.
+		 */
+		for (i = 0; i < idx; i++) {
+			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
+				irec->ir_freecount++;
+		}
+
+		irec->ir_free |= xfs_inobt_maskn(0, idx);
+		*icount = irec->ir_count - irec->ir_freecount;
+	}
+
+Notice the "idx = agino - irec->ir_startino + 1".  That means that to go
+from bulkstat v5 back to v1, we have to subtract 1 from the inode number
+except in the case of zero, which is what libfrog does.  So I don't
+think this patch is correct, though the reasons why are ... obscure and
+took me several days to remember.
 
 --D
 
-> ---
->  fs/xfs/xfs_extfree_item.c | 12 ++++++------
->  fs/xfs/xfs_log.c          |  4 ++--
->  2 files changed, 8 insertions(+), 8 deletions(-)
+> Thanks,
 > 
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 765be054dffe..08b0c8b553fc 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -187,12 +187,12 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf, xfs_efi_log_format_t *dst_efi_fmt)
->  {
->  	xfs_efi_log_format_t *src_efi_fmt = buf->i_addr;
->  	uint i;
-> -	uint len = sizeof(xfs_efi_log_format_t) + 
-> -		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_t);  
-> -	uint len32 = sizeof(xfs_efi_log_format_32_t) + 
-> -		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_32_t);  
-> -	uint len64 = sizeof(xfs_efi_log_format_64_t) + 
-> -		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_64_t);  
-> +	uint len = sizeof(xfs_efi_log_format_t) +
-> +		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_t);
-> +	uint len32 = sizeof(xfs_efi_log_format_32_t) +
-> +		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_32_t);
-> +	uint len64 = sizeof(xfs_efi_log_format_64_t) +
-> +		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_64_t);
->  
->  	if (buf->i_len == len) {
->  		memcpy((char *)dst_efi_fmt, (char*)src_efi_fmt, len);
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index ae904b21e9cc..6f661fadb755 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -2000,7 +2000,7 @@ xlog_calc_iclog_size(
->  }
->  
->  /*
-> - * Flush out the in-core log (iclog) to the on-disk log in an asynchronous 
-> + * Flush out the in-core log (iclog) to the on-disk log in an asynchronous
->   * fashion.  Previously, we should have moved the current iclog
->   * ptr in the log to point to the next available iclog.  This allows further
->   * write to continue while this code syncs out an iclog ready to go.
-> @@ -2042,7 +2042,7 @@ xlog_sync(
->  	xlog_grant_add_space(log, &log->l_write_head.grant, roundoff);
->  
->  	/* put cycle number in every block */
-> -	xlog_pack_data(log, iclog, roundoff); 
-> +	xlog_pack_data(log, iclog, roundoff);
->  
->  	/* real byte length */
->  	size = iclog->ic_offset;
-> -- 
-> 2.25.1
-> 
+> Stephen.
