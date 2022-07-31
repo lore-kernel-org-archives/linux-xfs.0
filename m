@@ -2,118 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E15C00140
-	for <linux-xfs@archiver.kernel.org>; Sun, 31 Jul 2022 16:22:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F684C00140
+	for <linux-xfs@archiver.kernel.org>; Sun, 31 Jul 2022 16:23:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231197AbiGaQWb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 31 Jul 2022 12:22:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34360 "EHLO
+        id S237521AbiGaQXL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 31 Jul 2022 12:23:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237518AbiGaQWb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 31 Jul 2022 12:22:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45E25FD1B
-        for <linux-xfs@vger.kernel.org>; Sun, 31 Jul 2022 09:22:30 -0700 (PDT)
+        with ESMTP id S235943AbiGaQXK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 31 Jul 2022 12:23:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10899DEEF;
+        Sun, 31 Jul 2022 09:23:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CF99C60F1B
-        for <linux-xfs@vger.kernel.org>; Sun, 31 Jul 2022 16:22:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32875C433C1
-        for <linux-xfs@vger.kernel.org>; Sun, 31 Jul 2022 16:22:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A105060F42;
+        Sun, 31 Jul 2022 16:23:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04D81C433D6;
+        Sun, 31 Jul 2022 16:23:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659284549;
-        bh=7lMMbaoOvk2Fesb8clB6s0Y4aK+n4526Rpv88Tsr3SA=;
-        h=Date:From:To:Subject:From;
-        b=FnyxaH1U4O5Cvb5wsB9v2TfrGORt7M8WZKt4KzguVsZtTaqi+ks9wOJHdTiAHGTAY
-         do9s+IB6hqScaFZOyM70qdRigDlZNU2cnZldqFSNxXa56jfvzMeg8OBwm1D088WQTO
-         TxGweQn8n+gErU57xuN306M6yB6w1Iui4RU/F9esD7mrQ2bSzVhixi9TGp9bMv406J
-         3mXjTD8rByyBttPrBkikoX8cDuddwZe0I40gNVOJQW7M17bXGqKsa34bklnZwXVw2k
-         0OM0VaGGxXQJym+aBCpt97yJGQRkTO0Svbp8dTyZDNgOJnhXzMvjpKPu8X+i4NYww/
-         kgp7qnZ2exwjA==
-Date:   Sun, 31 Jul 2022 09:22:28 -0700
+        s=k20201202; t=1659284589;
+        bh=HsdsdEfTtmF6MTUSGc1t/9iW2TbWDia9Kl4W40DD3l8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UVbeyHcLklV8VT4PWo5qXVkgPOxgm0PcGNBx0Ko/ViBqgVmgG313mAe8a9Kpr8Fy/
+         0UqGMDY3cuREIySw0jyXiG5nw61MkrQNYgjzhS0gstDc+2eoKw0po88WXQRFVenPR6
+         XvnaX1I7UtZzJaHPiP3LV+3TCspQNBbUNs6R05BJg9JvCBZfI6W6uUF+sPa4iXqJMi
+         j7g9Bk/CbiF3NZ+9dcrANT9r9JCj/KcyEGTKVvK8l9zM7w8WAMljoDcLbCdFSNUGZ7
+         s8n1LMtK2yd93RMILc4hKr1OOmm52G2Ni2tDBlwIhVsDQY4p/UbtEheFe5XwP40P/X
+         cnGz4vNfZGSzQ==
+Date:   Sun, 31 Jul 2022 09:23:08 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: check return codes when flushing block devices
-Message-ID: <YuasRCKeYsKlCgPM@magnolia>
+To:     studentxswpy@163.com
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Hacash Robot <hacashRobot@santino.com>
+Subject: Re: [PATCH -next] xfs: delete extra space and tab in blank line
+Message-ID: <YuasbFHWfWiXPUJM@magnolia>
+References: <20220730092959.3103627-1-studentxswpy@163.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20220730092959.3103627-1-studentxswpy@163.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Sat, Jul 30, 2022 at 05:29:59PM +0800, studentxswpy@163.com wrote:
+> From: Xie Shaowen <studentxswpy@163.com>
+> 
+> delete extra space and tab in blank line, there is no functional change.
+> 
+> Reported-by: Hacash Robot <hacashRobot@santino.com>
+> Signed-off-by: Xie Shaowen <studentxswpy@163.com>
 
-If a block device cache flush fails, fsync needs to report that to upper
-levels.  If the log can't flush the data device, we should shut it down
-immediately because we've just violated an invariant.  Hence, check the
-return value of blkdev_issue_flush.
+The last hunk doesn't apply, but fmeh, whatever.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_file.c |   15 ++++++++++-----
- fs/xfs/xfs_log.c  |    7 +++++--
- 2 files changed, 15 insertions(+), 7 deletions(-)
+--D
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5a171c0b244b..88450c33ab01 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -163,9 +163,11 @@ xfs_file_fsync(
- 	 * inode size in case of an extending write.
- 	 */
- 	if (XFS_IS_REALTIME_INODE(ip))
--		blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
-+		error = blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
- 	else if (mp->m_logdev_targp != mp->m_ddev_targp)
--		blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
-+		error = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
-+	if (error)
-+		return error;
- 
- 	/*
- 	 * Any inode that has dirty modifications in the log is pinned.  The
-@@ -173,8 +175,11 @@ xfs_file_fsync(
- 	 * that happen concurrently to the fsync call, but fsync semantics
- 	 * only require to sync previously completed I/O.
- 	 */
--	if (xfs_ipincount(ip))
-+	if (xfs_ipincount(ip)) {
- 		error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
-+		if (error)
-+			return error;
-+	}
- 
- 	/*
- 	 * If we only have a single device, and the log force about was
-@@ -185,9 +190,9 @@ xfs_file_fsync(
- 	 */
- 	if (!log_flushed && !XFS_IS_REALTIME_INODE(ip) &&
- 	    mp->m_logdev_targp == mp->m_ddev_targp)
--		blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
-+		return blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
- 
--	return error;
-+	return 0;
- }
- 
- static int
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 4b1c0a9c6368..8a767f4145f0 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1926,8 +1926,11 @@ xlog_write_iclog(
- 		 * by the LSN in this iclog is on stable storage. This is slow,
- 		 * but it *must* complete before we issue the external log IO.
- 		 */
--		if (log->l_targ != log->l_mp->m_ddev_targp)
--			blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev);
-+		if (log->l_targ != log->l_mp->m_ddev_targp &&
-+		    blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev)) {
-+			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
-+			return;
-+		}
- 	}
- 	if (iclog->ic_flags & XLOG_ICL_NEED_FUA)
- 		iclog->ic_bio.bi_opf |= REQ_FUA;
+> ---
+>  fs/xfs/xfs_extfree_item.c | 12 ++++++------
+>  fs/xfs/xfs_log.c          |  4 ++--
+>  2 files changed, 8 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> index 765be054dffe..08b0c8b553fc 100644
+> --- a/fs/xfs/xfs_extfree_item.c
+> +++ b/fs/xfs/xfs_extfree_item.c
+> @@ -187,12 +187,12 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf, xfs_efi_log_format_t *dst_efi_fmt)
+>  {
+>  	xfs_efi_log_format_t *src_efi_fmt = buf->i_addr;
+>  	uint i;
+> -	uint len = sizeof(xfs_efi_log_format_t) + 
+> -		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_t);  
+> -	uint len32 = sizeof(xfs_efi_log_format_32_t) + 
+> -		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_32_t);  
+> -	uint len64 = sizeof(xfs_efi_log_format_64_t) + 
+> -		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_64_t);  
+> +	uint len = sizeof(xfs_efi_log_format_t) +
+> +		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_t);
+> +	uint len32 = sizeof(xfs_efi_log_format_32_t) +
+> +		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_32_t);
+> +	uint len64 = sizeof(xfs_efi_log_format_64_t) +
+> +		(src_efi_fmt->efi_nextents - 1) * sizeof(xfs_extent_64_t);
+>  
+>  	if (buf->i_len == len) {
+>  		memcpy((char *)dst_efi_fmt, (char*)src_efi_fmt, len);
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index ae904b21e9cc..6f661fadb755 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -2000,7 +2000,7 @@ xlog_calc_iclog_size(
+>  }
+>  
+>  /*
+> - * Flush out the in-core log (iclog) to the on-disk log in an asynchronous 
+> + * Flush out the in-core log (iclog) to the on-disk log in an asynchronous
+>   * fashion.  Previously, we should have moved the current iclog
+>   * ptr in the log to point to the next available iclog.  This allows further
+>   * write to continue while this code syncs out an iclog ready to go.
+> @@ -2042,7 +2042,7 @@ xlog_sync(
+>  	xlog_grant_add_space(log, &log->l_write_head.grant, roundoff);
+>  
+>  	/* put cycle number in every block */
+> -	xlog_pack_data(log, iclog, roundoff); 
+> +	xlog_pack_data(log, iclog, roundoff);
+>  
+>  	/* real byte length */
+>  	size = iclog->ic_offset;
+> -- 
+> 2.25.1
+> 
