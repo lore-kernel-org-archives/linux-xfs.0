@@ -2,95 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 687B8C19F2C
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Aug 2022 19:05:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3282AC00144
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Aug 2022 20:49:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234000AbiHATFs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Aug 2022 15:05:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52286 "EHLO
+        id S231634AbiHAUtM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Aug 2022 16:49:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234530AbiHATE4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Aug 2022 15:04:56 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9DF441D17;
-        Mon,  1 Aug 2022 12:03:25 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 271HsHW9025312;
-        Mon, 1 Aug 2022 19:03:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2022-7-12; bh=BbFNxr6tjxw9VIW8unVKeDr44rwjxC/Z2yvXUqJcDCw=;
- b=ueQ0b6ffvGNY0WKaKAxOYt7xHvUnMs4Z4jovAwWFIKcaJJoeKF7jKVyTRzC6FgpXWTlk
- +hNLSa3leeiSHZDYo0ow2K3IIyYOan2TNg4f4VhO9b4eQ17/HQWZbDdbF3NR+2B7szCH
- Pb4hEJaMqw6sSJZbkFwJLsSQl1+D0JuKdgmYgOI/qAofPmaflhwHyvmu9lGl0IRCvXJk
- p8xcUYGciwjbXfsBoRL6uy7RIGOOOwzOoRsjqoNcMFTDxy2Y7XWOFzl1Zx7kGEEFbuve
- 08kZI5xUBCP9U/4mrNN/xsbM7yCwZvTJ+xUfLv6/NrJswP9f/3Rnj/X6soSL30RxiEeo 9Q== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hmw6tcmpa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 01 Aug 2022 19:03:13 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 271I3ag3001480;
-        Mon, 1 Aug 2022 19:03:12 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3hp57qg2c1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 01 Aug 2022 19:03:12 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 271J3CoW023542;
-        Mon, 1 Aug 2022 19:03:12 GMT
-Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.147.25.63])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3hp57qg2bh-1;
-        Mon, 01 Aug 2022 19:03:12 +0000
-From:   Sherry Yang <sherry.yang@oracle.com>
-To:     djwong@kernel.org, dchinner@redhat.com,
+        with ESMTP id S233896AbiHAUtI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Aug 2022 16:49:08 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B8D7A2A277;
+        Mon,  1 Aug 2022 13:49:07 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-20-138.pa.nsw.optusnet.com.au [49.195.20.138])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 3268362CD71;
+        Tue,  2 Aug 2022 06:49:04 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oIcLW-0081My-9Q; Tue, 02 Aug 2022 06:49:02 +1000
+Date:   Tue, 2 Aug 2022 06:49:02 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Sherry Yang <sherry.yang@oracle.com>
+Cc:     djwong@kernel.org, dchinner@redhat.com,
         allison.henderson@oracle.com, chandanrlinux@gmail.com,
-        bfoster@redhat.com
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sherry.yang@oracle.com
-Subject: [PATCH v1] xfs: initialize error in xfs_defer_finish_one
-Date:   Mon,  1 Aug 2022 12:03:11 -0700
-Message-Id: <20220801190311.65703-1-sherry.yang@oracle.com>
-X-Mailer: git-send-email 2.31.1
+        bfoster@redhat.com, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] xfs: initialize error in xfs_defer_finish_one
+Message-ID: <20220801204902.GA3600936@dread.disaster.area>
+References: <20220801190311.65703-1-sherry.yang@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-08-01_08,2022-08-01_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- adultscore=0 spamscore=0 bulkscore=0 suspectscore=0 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2206140000 definitions=main-2208010095
-X-Proofpoint-GUID: uNFatD76gB1qiLt5X6VLMjIai8QjcPJx
-X-Proofpoint-ORIG-GUID: uNFatD76gB1qiLt5X6VLMjIai8QjcPJx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220801190311.65703-1-sherry.yang@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62e83c41
+        a=cxZHBGNDieHvTKNp/pucQQ==:117 a=cxZHBGNDieHvTKNp/pucQQ==:17
+        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=7-415B0cAAAA:8
+        a=uhNI-8COEOrwEqbXutoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Path through non-void function 'xfs_defer_finish_one' may return error
-uninitialized if no iteration of 'list_for_each_safe' occurs. Fix this
-by initializing error.
+On Mon, Aug 01, 2022 at 12:03:11PM -0700, Sherry Yang wrote:
+> Path through non-void function 'xfs_defer_finish_one' may return error
+> uninitialized if no iteration of 'list_for_each_safe' occurs. Fix this
+> by initializing error.
 
-Fixes: bb47d79750f1 ("xfs: refactor xfs_defer_finish_noroll")
-Cc: stable@vger.kernel.org
-Signed-off-by: Sherry Yang <sherry.yang@oracle.com>
----
- fs/xfs/libxfs/xfs_defer.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I didn't think this situation was possible - how do we get deferred
+work queued with no work items on it?
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 5a321b783398..3188712ff34e 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -468,7 +468,7 @@ xfs_defer_finish_one(
- 	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
- 	struct xfs_btree_cur		*state = NULL;
- 	struct list_head		*li, *n;
--	int				error;
-+	int				error = 0;
- 
- 	trace_xfs_defer_pending_finish(tp->t_mountp, dfp);
- 
+If we can return an uninitialised error from xfs_defer_finish_one()
+because of an empty queued work, then something else has gone wrong
+earlier in the work deferral process. If this can actually happen,
+then we need to fix whatever is creating the empty work rather than
+paper over it by initialising the error being returned for empty
+works...
+
+Cheers,
+
+Dave.
 -- 
-2.31.1
-
+Dave Chinner
+david@fromorbit.com
