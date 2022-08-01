@@ -2,66 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 647AAC00144
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Aug 2022 17:43:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 687B8C19F2C
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Aug 2022 19:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233035AbiHARnQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Aug 2022 13:43:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52342 "EHLO
+        id S234000AbiHATFs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Aug 2022 15:05:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230298AbiHARnM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Aug 2022 13:43:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 511FE1AF01;
-        Mon,  1 Aug 2022 10:43:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E274461086;
-        Mon,  1 Aug 2022 17:43:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4270FC433C1;
-        Mon,  1 Aug 2022 17:43:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659375790;
-        bh=v6aSxWl0Cm6Ct3Ek7FJTvKUZgh2DkyjHOZEfxCUoP5w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BgvBDKS6vMNUCRyajb1xxjx7TH4ybmCKRy2MlvY1kYFyvYODCVBAmUwxiBsMossM7
-         Sewp9IIf9X1voqxz498vSoUchYNtmpXYPp9nNd2WPPeAkpl5fWQ8iocsCRdodynD4s
-         nOgOe7lyvDu9UXE8oSu/qQ3wJW9zilZiNABOTCuJXx3pEqGmHJK06BZDVYsiBbvat7
-         h+czJrcgp0zhZaIz7QugfSGBenBx27pknorkLUeKdVSiJreyXt/wi+igaRA1BqDdlh
-         49n6WUyzp09N119GdRTQ6CwNE526UWJAafnSPr4KM9rhlORjTaUhdLmhAe+/ucaKi7
-         eKIGun6I2GA2g==
-Date:   Mon, 1 Aug 2022 10:43:09 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs/432: fix this test when external devices are in
- use
-Message-ID: <YugQrTnxXHfxpWzE@magnolia>
-References: <165903222941.2338516.818684834175743726.stgit@magnolia>
- <165903223512.2338516.9583051314883581667.stgit@magnolia>
- <YuLunHKTHbw1wcvZ@infradead.org>
- <20220731052912.u3mcvvhl2dintaqq@zlang-mailbox>
- <Yua0vwCQFsayKH1x@magnolia>
- <YugJ41IWh4m5Tbgp@infradead.org>
+        with ESMTP id S234530AbiHATE4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Aug 2022 15:04:56 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9DF441D17;
+        Mon,  1 Aug 2022 12:03:25 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 271HsHW9025312;
+        Mon, 1 Aug 2022 19:03:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2022-7-12; bh=BbFNxr6tjxw9VIW8unVKeDr44rwjxC/Z2yvXUqJcDCw=;
+ b=ueQ0b6ffvGNY0WKaKAxOYt7xHvUnMs4Z4jovAwWFIKcaJJoeKF7jKVyTRzC6FgpXWTlk
+ +hNLSa3leeiSHZDYo0ow2K3IIyYOan2TNg4f4VhO9b4eQ17/HQWZbDdbF3NR+2B7szCH
+ Pb4hEJaMqw6sSJZbkFwJLsSQl1+D0JuKdgmYgOI/qAofPmaflhwHyvmu9lGl0IRCvXJk
+ p8xcUYGciwjbXfsBoRL6uy7RIGOOOwzOoRsjqoNcMFTDxy2Y7XWOFzl1Zx7kGEEFbuve
+ 08kZI5xUBCP9U/4mrNN/xsbM7yCwZvTJ+xUfLv6/NrJswP9f/3Rnj/X6soSL30RxiEeo 9Q== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hmw6tcmpa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 01 Aug 2022 19:03:13 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 271I3ag3001480;
+        Mon, 1 Aug 2022 19:03:12 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3hp57qg2c1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 01 Aug 2022 19:03:12 +0000
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 271J3CoW023542;
+        Mon, 1 Aug 2022 19:03:12 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.147.25.63])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3hp57qg2bh-1;
+        Mon, 01 Aug 2022 19:03:12 +0000
+From:   Sherry Yang <sherry.yang@oracle.com>
+To:     djwong@kernel.org, dchinner@redhat.com,
+        allison.henderson@oracle.com, chandanrlinux@gmail.com,
+        bfoster@redhat.com
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sherry.yang@oracle.com
+Subject: [PATCH v1] xfs: initialize error in xfs_defer_finish_one
+Date:   Mon,  1 Aug 2022 12:03:11 -0700
+Message-Id: <20220801190311.65703-1-sherry.yang@oracle.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YugJ41IWh4m5Tbgp@infradead.org>
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-01_08,2022-08-01_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ adultscore=0 spamscore=0 bulkscore=0 suspectscore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2206140000 definitions=main-2208010095
+X-Proofpoint-GUID: uNFatD76gB1qiLt5X6VLMjIai8QjcPJx
+X-Proofpoint-ORIG-GUID: uNFatD76gB1qiLt5X6VLMjIai8QjcPJx
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 01, 2022 at 10:14:11AM -0700, Christoph Hellwig wrote:
-> On Sun, Jul 31, 2022 at 09:58:39AM -0700, Darrick J. Wong wrote:
-> > *OR* we could just override the variable definition for the one line
-> > since (for once) bash makes this easy and the syntax communicates very
-> > loudly "HI USE THIS ALT SCRATCH_DEV PLZ".  And test authors already do
-> > this.
-> 
-> Ok, let's stick to that and I'll take my suggestion back.
+Path through non-void function 'xfs_defer_finish_one' may return error
+uninitialized if no iteration of 'list_for_each_safe' occurs. Fix this
+by initializing error.
 
-Ok, thank you! :)
+Fixes: bb47d79750f1 ("xfs: refactor xfs_defer_finish_noroll")
+Cc: stable@vger.kernel.org
+Signed-off-by: Sherry Yang <sherry.yang@oracle.com>
+---
+ fs/xfs/libxfs/xfs_defer.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---D
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 5a321b783398..3188712ff34e 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -468,7 +468,7 @@ xfs_defer_finish_one(
+ 	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
+ 	struct xfs_btree_cur		*state = NULL;
+ 	struct list_head		*li, *n;
+-	int				error;
++	int				error = 0;
+ 
+ 	trace_xfs_defer_pending_finish(tp->t_mountp, dfp);
+ 
+-- 
+2.31.1
+
