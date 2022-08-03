@@ -2,112 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 530F9C19F2B
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 21:59:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 944E6C19F2D
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 22:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238465AbiHCV7T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Aug 2022 17:59:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35882 "EHLO
+        id S238922AbiHCW3Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Aug 2022 18:29:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236555AbiHCV7O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 17:59:14 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 177C25C362
-        for <linux-xfs@vger.kernel.org>; Wed,  3 Aug 2022 14:59:13 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-20-138.pa.nsw.optusnet.com.au [49.195.20.138])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0408310C8BBE;
-        Thu,  4 Aug 2022 07:59:10 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oJMOT-008pd8-CL; Thu, 04 Aug 2022 07:59:09 +1000
-Date:   Thu, 4 Aug 2022 07:59:09 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Emmanouil Vamvakopoulos <emmanouil.vamvakopoulos@ijclab.in2p3.fr>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: s_bmap and  flags explanation
-Message-ID: <20220803215909.GC3600936@dread.disaster.area>
-References: <1586129076.70820212.1659538177737.JavaMail.zimbra@ijclab.in2p3.fr>
- <1106593372.70825641.1659538603200.JavaMail.zimbra@ijclab.in2p3.fr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1106593372.70825641.1659538603200.JavaMail.zimbra@ijclab.in2p3.fr>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62eaefb0
-        a=cxZHBGNDieHvTKNp/pucQQ==:117 a=cxZHBGNDieHvTKNp/pucQQ==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=7-415B0cAAAA:8
-        a=3GCWSBI63u-s0kUigocA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        with ESMTP id S238883AbiHCW3T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 18:29:19 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 087F75C94B;
+        Wed,  3 Aug 2022 15:29:19 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AECE9B82404;
+        Wed,  3 Aug 2022 22:29:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 54D71C433C1;
+        Wed,  3 Aug 2022 22:29:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1659565756;
+        bh=40j6OGIpymzlKOOTWxGEug6m13iD/+9fDMv61JhHBho=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=UP2xEKMe9dOFdW1+5+tWUYiu8Z1UDEz/rWLgWkh/PfvBaVHXhkA4DfBuOz6OAtDOG
+         Y4ApZcnWQXg0For7gVlRFh1MLxFIddK9sDdK4CeP90ZglhyhrNQHqyKXSFNWBTsyxM
+         zOBWqnNzetsaV9f1D31cPcKKZa0dDYuFegGuQgv1Q9fZTYsMSu71h9yCc4kVK9RAAL
+         xP3cy8z2rrLsoxNQ501a4CneSy/GnwKrZ+/i6qbv1nF1LzjzrqUXK2c9Y1SvzkexmK
+         FbIJZv3N931KfPOuhfSkc/R+kYoXRDOBtlydggBmhqrmfYh0R3AO0+/8b+S/2l+Xvl
+         yGEvX7dDe86Lw==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 4503CC43142;
+        Wed,  3 Aug 2022 22:29:16 +0000 (UTC)
+Subject: Re: [GIT PULL] iomap: new code for 5.20, part 1
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <YuqV6qB/p69HL3yR@magnolia>
+References: <YuqV6qB/p69HL3yR@magnolia>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <YuqV6qB/p69HL3yR@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.20-merge-1
+X-PR-Tracked-Commit-Id: f8189d5d5fbf082786fb91c549f5127f23daec09
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: f18d73096c0eca1275f586cb984e6e28330447a0
+Message-Id: <165956575627.24057.3467366999233352672.pr-tracker-bot@kernel.org>
+Date:   Wed, 03 Aug 2022 22:29:16 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 03, 2022 at 04:56:43PM +0200, Emmanouil Vamvakopoulos wrote:
-> 
-> 
-> Hello developers 
-> 
-> It is possible to explain the FLAGS field in xfs_bmap output of a file 
-> 
->  EXT: FILE-OFFSET           BLOCK-RANGE              AG AG-OFFSET                 TOTAL FLAGS
->    0: [0..7]:               49700520968..49700520975 30 (8..15)                       8 001111
->    1: [8..4175871]:         49708756480..49712932343 30 (8235520..12411383)     4175864 000111
->    2: [4175872..19976191]:  49715788288..49731588607 30 (15267328..31067647)   15800320 000011
->    3: [19976192..25153535]: 49731588608..49736765951 30 (31067648..36244991)    5177344 000011
->    4: [25153536..41930743]: 49767625216..49784402423 30 (67104256..83881463)   16777208 000111
->    5: [41930744..58707951]: 49784402424..49801179631 30 (83881464..100658671)  16777208 001111
->    6: [58707952..58959935]: 49801179632..49801431615 30 (100658672..100910655)   251984 001111
->    7: [58959936..75485159]: 49801431616..49817956839 30 (100910656..117435879) 16525224 001111
+The pull request you sent on Wed, 3 Aug 2022 08:36:10 -0700:
 
-$ man xfs_bmap
-.....
-       -v     Shows verbose information. When this flag is specified,
-	      additional AG specific information is appended to each
-	      line in the following form:
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.20-merge-1
 
-                   agno (startagoffset..endagoffset) nblocks flags
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/f18d73096c0eca1275f586cb984e6e28330447a0
 
-              A second -v option will print out the flags legend.
-.....
+Thank you!
 
-So:
-
-$ xfs_bmap -vvp foo
-foo:
- EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET        TOTAL FLAGS
-   0: [0..7]:          440138672..440138679  4 (687024..687031)     8 000000
- FLAG Values:
-    0100000 Shared extent
-    0010000 Unwritten preallocated extent
-    0001000 Doesn't begin on stripe unit
-    0000100 Doesn't end   on stripe unit
-    0000010 Doesn't begin on stripe width
-    0000001 Doesn't end   on stripe width
-
-And there's what the flags mean.
-
-> with 
-> 
-> [disk06]# du -sh ./00000869/014886f4
-> 36G	./00000869/014886f4
-> [disk06]# du -sh --apparent-size  ./00000869/014886f4
-> 29G	./00000869/014886f4
-> 
-> I try to understand if  this file contains unused externs 
-> and how those file are created like this (if we assume that the free space was not fragmented ) 
-> 
-> we are running CentOS Stream release 8 with 4.18.0-383.el8.x86_64 
-> 
-> if I defrag the file above the difference bewteen apparent size and size with du disappered !
-
-It will be a result of speculative preallocation beyond EOF as the
-file is grown to ensure it doesn't get fragmented badly. Files in
-the size range of tens of GB or larger will have preallocation
-extend out to 8GB beyond EOF. It will get removed when the inode is
-reclaimed from memory (i.e. no longer in active use).
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
