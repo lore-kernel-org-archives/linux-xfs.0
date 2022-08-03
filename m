@@ -2,43 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA2EBC19F28
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 04:22:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D78E5C19F2B
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 04:22:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233759AbiHCEWe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Aug 2022 00:22:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50930 "EHLO
+        id S233637AbiHCEWk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Aug 2022 00:22:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233637AbiHCEWd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 00:22:33 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A77B1564F7;
-        Tue,  2 Aug 2022 21:22:32 -0700 (PDT)
+        with ESMTP id S233846AbiHCEWj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 00:22:39 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52B33564F9;
+        Tue,  2 Aug 2022 21:22:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6191BB82189;
-        Wed,  3 Aug 2022 04:22:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 115C1C433C1;
-        Wed,  3 Aug 2022 04:22:30 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id EC54DB82188;
+        Wed,  3 Aug 2022 04:22:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0F35C43141;
+        Wed,  3 Aug 2022 04:22:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659500550;
-        bh=fwLneSQEvK1E2ZbQamoDrrp9wiNA/G3mQjzy/FdIltI=;
+        s=k20201202; t=1659500555;
+        bh=9Ia1tzWrIJWaiGRaYTGUJ7wayflakEj7QXEn8JdrNMU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=iif+VMjFguKvWoknLCrY0IHIDuo4E2QxksZ5RFC5BbGIb7dEUy0EFZcWUO5tpJ1TS
-         geslCbq0uIqFEwlSPOvSapApLYKBctN14C6n62tcsvlG/1h7Jd7o0e+mo1zcJbbgS6
-         05zIhFpJKQR+KrwkfHdn+wwANgdelUHjoJn1YdMa+qJ3i15wNuEmrgUWZofHllS1Ys
-         E7TVM1uhYIy+SspF/oYK/zVoIGiiZGtkGc2ChxcEXWmF5i2Buu4wI6foVEqk9kdxBT
-         vH4/DKD9Si1SjOKRePp2qu9WrQEBbMXnYd8xk/1MI5Qd8TKalOn3aBEo5KqGllMwyj
-         WS7UPI9ORCGqA==
-Subject: [PATCH 1/3] common/xfs: fix _reset_xfs_sysfs_error_handling reset to
- actual defaults
+        b=akk2zDFk0CPu2FfIGPI62bAMjYRXD0QXWyX4ap2CFxidAbJG4/jIwhP2fXEOZ4JR7
+         AWzYKWAxTweHImc30z3jVCSVBtmP/fjqEtEG6GiPu8/gKcu2d/4BtcYccUc0Ol/9cm
+         gpluD0Bhs981uIsddKOO0CgAeCSFWY0JY1b6pMACCVAWGLXFTcQldH7GelBswjFG4j
+         38sAITirnnRIEt+vdpbtlyhW/dq/y3vKgfYstso3u0u19+CNHtxkRmNy0Jsb7uJIG+
+         d26n98lD8vOjViGDJVyXdcBd0zc1uesXVl8aOScNPlqdnmhjqnyQCuqTmhiy6v6HOs
+         OO0LLNldMcVbw==
+Subject: [PATCH 2/3] common: disable infinite IO error retry for EIO shutdown
+ tests
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 02 Aug 2022 21:22:29 -0700
-Message-ID: <165950054961.199222.14288700692275773893.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Tue, 02 Aug 2022 21:22:35 -0700
+Message-ID: <165950055523.199222.9175019533516343488.stgit@magnolia>
 In-Reply-To: <165950054404.199222.5615656337332007333.stgit@magnolia>
 References: <165950054404.199222.5615656337332007333.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,77 +50,152 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-There's a slight mistake in _reset_xfs_sysfs_error_handling: it sets
-retry_timeout_seconds to 0, which is not the current default (-1) in
-upstream Linux.  Fix this.
+This patch fixes a rather hard to hit livelock in the tests that test
+how xfs handles shutdown behavior when the device suddenly dies and
+starts returing EIO all the time.  The livelock happens if the AIL is
+stuck retrying failed metadata updates forever, the log itself is not
+being written, and there is no more log grant space, which prevents the
+frontend from shutting down the log due to EIO errors during
+transactions.
+
+While most users probably want the default retry-forever behavior
+because EIO can be transient, the circumstances are different here.  The
+tests are designed to flip the device back to working status only after
+the unmount succeeds, so we know there's no point in the filesystem
+retrying writes until after the unmount.
+
+This fixes some of the periodic hangs in generic/019 and generic/475.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- common/xfs        |    2 +-
- tests/xfs/006.out |    6 +++---
- tests/xfs/264.out |   12 ++++++------
- 3 files changed, 10 insertions(+), 10 deletions(-)
+ common/dmerror           |    4 ++++
+ common/fail_make_request |    1 +
+ common/rc                |   31 +++++++++++++++++++++++++++----
+ common/xfs               |   29 +++++++++++++++++++++++++++++
+ 4 files changed, 61 insertions(+), 4 deletions(-)
 
 
+diff --git a/common/dmerror b/common/dmerror
+index 0934d220..54122b12 100644
+--- a/common/dmerror
++++ b/common/dmerror
+@@ -138,6 +138,10 @@ _dmerror_load_error_table()
+ 		suspend_opt="$*"
+ 	fi
+ 
++	# If the full environment is set up, configure ourselves for shutdown
++	type _prepare_for_eio_shutdown &>/dev/null && \
++		_prepare_for_eio_shutdown $DMERROR_DEV
++
+ 	# Suspend the scratch device before the log and realtime devices so
+ 	# that the kernel can freeze and flush the filesystem if the caller
+ 	# wanted a freeze.
+diff --git a/common/fail_make_request b/common/fail_make_request
+index 9f8ea500..b5370ba6 100644
+--- a/common/fail_make_request
++++ b/common/fail_make_request
+@@ -44,6 +44,7 @@ _start_fail_scratch_dev()
+ {
+     echo "Force SCRATCH_DEV device failure"
+ 
++    _prepare_for_eio_shutdown $SCRATCH_DEV
+     _bdev_fail_make_request $SCRATCH_DEV 1
+     [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+         _bdev_fail_make_request $SCRATCH_LOGDEV 1
+diff --git a/common/rc b/common/rc
+index 63bafb4b..119cc477 100644
+--- a/common/rc
++++ b/common/rc
+@@ -4205,6 +4205,20 @@ _check_dmesg()
+ 	fi
+ }
+ 
++# Make whatever configuration changes we need ahead of testing fs shutdowns due
++# to unexpected IO errors while updating metadata.  The sole parameter should
++# be the fs device, e.g.  $SCRATCH_DEV.
++_prepare_for_eio_shutdown()
++{
++	local dev="$1"
++
++	case "$FSTYP" in
++	"xfs")
++		_xfs_prepare_for_eio_shutdown "$dev"
++		;;
++	esac
++}
++
+ # capture the kmemleak report
+ _capture_kmemleak()
+ {
+@@ -4467,7 +4481,7 @@ run_fsx()
+ #
+ # Usage example:
+ #   _require_fs_sysfs error/fail_at_unmount
+-_require_fs_sysfs()
++_has_fs_sysfs()
+ {
+ 	local attr=$1
+ 	local dname
+@@ -4483,9 +4497,18 @@ _require_fs_sysfs()
+ 		_fail "Usage: _require_fs_sysfs <sysfs_attr_path>"
+ 	fi
+ 
+-	if [ ! -e /sys/fs/${FSTYP}/${dname}/${attr} ];then
+-		_notrun "This test requires /sys/fs/${FSTYP}/${dname}/${attr}"
+-	fi
++	test -e /sys/fs/${FSTYP}/${dname}/${attr}
++}
++
++# Require the existence of a sysfs entry at /sys/fs/$FSTYP/DEV/$ATTR
++_require_fs_sysfs()
++{
++	_has_fs_sysfs "$@" && return
++
++	local attr=$1
++	local dname=$(_short_dev $TEST_DEV)
++
++	_notrun "This test requires /sys/fs/${FSTYP}/${dname}/${attr}"
+ }
+ 
+ _require_statx()
 diff --git a/common/xfs b/common/xfs
-index f6f4cdd2..92c281c6 100644
+index 92c281c6..65234c8b 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -804,7 +804,7 @@ _reset_xfs_sysfs_error_handling()
- 		_get_fs_sysfs_attr $dev error/metadata/${e}/max_retries
+@@ -823,6 +823,35 @@ _scratch_xfs_unmount_dirty()
+ 	_scratch_unmount
+ }
  
- 		_set_fs_sysfs_attr $dev \
--				   error/metadata/${e}/retry_timeout_seconds 0
-+				   error/metadata/${e}/retry_timeout_seconds -1
- 		echo -n "error/metadata/${e}/retry_timeout_seconds="
- 		_get_fs_sysfs_attr $dev \
- 				   error/metadata/${e}/retry_timeout_seconds
-diff --git a/tests/xfs/006.out b/tests/xfs/006.out
-index 3260b3a2..433b0bc3 100644
---- a/tests/xfs/006.out
-+++ b/tests/xfs/006.out
-@@ -1,8 +1,8 @@
- QA output created by 006
- error/fail_at_unmount=1
- error/metadata/default/max_retries=-1
--error/metadata/default/retry_timeout_seconds=0
-+error/metadata/default/retry_timeout_seconds=-1
- error/metadata/EIO/max_retries=-1
--error/metadata/EIO/retry_timeout_seconds=0
-+error/metadata/EIO/retry_timeout_seconds=-1
- error/metadata/ENOSPC/max_retries=-1
--error/metadata/ENOSPC/retry_timeout_seconds=0
-+error/metadata/ENOSPC/retry_timeout_seconds=-1
-diff --git a/tests/xfs/264.out b/tests/xfs/264.out
-index 502e72d3..e45ac5a5 100644
---- a/tests/xfs/264.out
-+++ b/tests/xfs/264.out
-@@ -2,20 +2,20 @@ QA output created by 264
- === Test EIO/max_retries ===
- error/fail_at_unmount=1
- error/metadata/default/max_retries=-1
--error/metadata/default/retry_timeout_seconds=0
-+error/metadata/default/retry_timeout_seconds=-1
- error/metadata/EIO/max_retries=-1
--error/metadata/EIO/retry_timeout_seconds=0
-+error/metadata/EIO/retry_timeout_seconds=-1
- error/metadata/ENOSPC/max_retries=-1
--error/metadata/ENOSPC/retry_timeout_seconds=0
-+error/metadata/ENOSPC/retry_timeout_seconds=-1
- error/fail_at_unmount=0
- error/metadata/EIO/max_retries=1
- === Test EIO/retry_timeout_seconds ===
- error/fail_at_unmount=1
- error/metadata/default/max_retries=-1
--error/metadata/default/retry_timeout_seconds=0
-+error/metadata/default/retry_timeout_seconds=-1
- error/metadata/EIO/max_retries=-1
--error/metadata/EIO/retry_timeout_seconds=0
-+error/metadata/EIO/retry_timeout_seconds=-1
- error/metadata/ENOSPC/max_retries=-1
--error/metadata/ENOSPC/retry_timeout_seconds=0
-+error/metadata/ENOSPC/retry_timeout_seconds=-1
- error/fail_at_unmount=0
- error/metadata/EIO/retry_timeout_seconds=1
++# Prepare a mounted filesystem for an IO error shutdown test by disabling retry
++# for metadata writes.  This prevents a (rare) log livelock when:
++#
++# - The log has given out all available grant space, preventing any new
++#   writers from tripping over IO errors (and shutting down the fs/log),
++# - All log buffers were written to disk, and
++# - The log tail is pinned because the AIL keeps hitting EIO trying to write
++#   committed changes back into the filesystem.
++#
++# Real users might want the default behavior of the AIL retrying writes forever
++# but for testing purposes we don't want to wait.
++#
++# The sole parameter should be the filesystem data device, e.g. $SCRATCH_DEV.
++_xfs_prepare_for_eio_shutdown()
++{
++	local dev="$1"
++	local ctlfile="error/fail_at_unmount"
++
++	# Don't retry any writes during the (presumably) post-shutdown unmount
++	_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 1
++
++	# Disable retry of metadata writes that fail with EIO
++	for ctl in max_retries retry_timeout_seconds; do
++		ctlfile="error/metadata/EIO/$ctl"
++
++		_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 0
++	done
++}
++
+ # Skip if we are running an older binary without the stricter input checks.
+ # Make multiple checks to be sure that there is no regression on the one
+ # selected feature check, which would skew the result.
 
