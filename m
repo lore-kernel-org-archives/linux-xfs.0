@@ -2,44 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F185C19F2A
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 04:22:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98AA9C19F2B
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 04:22:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235503AbiHCEWC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Aug 2022 00:22:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50596 "EHLO
+        id S235515AbiHCEWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Aug 2022 00:22:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235444AbiHCEV7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 00:21:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2DA95466A;
-        Tue,  2 Aug 2022 21:21:58 -0700 (PDT)
+        with ESMTP id S232409AbiHCEWE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 00:22:04 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C343654CA5;
+        Tue,  2 Aug 2022 21:22:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7F97661248;
-        Wed,  3 Aug 2022 04:21:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D93A1C433C1;
-        Wed,  3 Aug 2022 04:21:57 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 65A8BB82188;
+        Wed,  3 Aug 2022 04:22:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17C5FC433C1;
+        Wed,  3 Aug 2022 04:22:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659500517;
-        bh=3uAwmeySBlqJ5bpC+m+eSKAg6CfcTUSV/7/H5638fxw=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=dmMVwjjCZibKyIF8mJ4hj3V53X6V1M1RTAT9PJaLZo9LUAeuQ5LeMrdM8NPrn67sv
-         TkLxCZNzuKElvzMehS/nQL+DhoI5/fftXi1PDeDDvi7D9CO6kGaLYsva3lY4RH0c04
-         Ck+jvJvZPlBuJ7qrBU/66SYDGnv1VgfVIwS0MRv5hoy8ZLOO98fektyDG6qZImEhqN
-         U6SN/KDIcKxV9u6Jg+k0LFXZduw+AT+OAXqRyBGJQEsAuu9e3b1NcsIA3lzPftVAVJ
-         iIiVX1mZ59sppwTukaxpzcvEqIaaKbEACAMI4ZZqqd1JHtwXpwvkqL1X96I2oJleXd
-         D04Ormtvwa2RQ==
-Subject: [PATCH 3/3] common/ext4: provide custom ext4 scratch fs options
+        s=k20201202; t=1659500521;
+        bh=kt0EP7fVJksON+yKfkV5gvtVXAaqvLUJkE7aheCQ6u0=;
+        h=Subject:From:To:Cc:Date:From;
+        b=sWevbM3XDJ+DoFofdPKP8/3McVz8Rx78xU8PtO4RwOmrKVIc+/3E3zfjBjxAmBT60
+         w4MPS6lzLeR3rzJAEzAM3ZhFNk0YvhIA0bXIRjJ3/cgzYX8ot/EzzX4Or++Gvp/rH1
+         hnvL9gkmE0p/skSYTM2dPnD7NyBrI5L1xE1ESV6eFXjTTI0NwV0Vpzu3tOGq/V1r4E
+         DF21yS7ttfbwQMBJAJpdirhkUMCK40hx6vrDRGCBEj2UpE03wZknc+XhH9ZNfVJdoE
+         6cu+zyXPpp8orrAL9TRpMDwQl4rpZ18142OmhkBTXh7aj93j1s2EZI2SpLen9jRat5
+         JXmcc/PYzBeuA==
+Subject: [PATCHSET v2 0/1] dmerror: support external log and rt devices
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        tytso@mit.edu, linux-ext4@vger.kernel.org
-Date:   Tue, 02 Aug 2022 21:21:57 -0700
-Message-ID: <165950051745.198922.6487109955066878945.stgit@magnolia>
-In-Reply-To: <165950050051.198922.13423077997881086438.stgit@magnolia>
-References: <165950050051.198922.13423077997881086438.stgit@magnolia>
+        tytso@mit.edu, leah.rumancik@gmail.com
+Date:   Tue, 02 Aug 2022 21:22:00 -0700
+Message-ID: <165950052067.199065.15026954987755102109.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -48,60 +46,30 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-Create a _scratch_options backend for ext* so that we can inject
-pathnames to external log devices into the scratch fs mount options.
-This enables common/dm* to install block device filters, e.g. dm-error
-for stress testing.
+There are a growing number of fstests that examine what happens to a
+filesystem when the block device underneath it goes offline.  Many of
+them do this to simulate system crashes, and none of them (outside of
+btrfs) can handle filesystems with multiple devices.  XFS is one of
+those beasts that does, so enhance the dm-error helpers to take the log
+and rt devices offline when they're testing the data device.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+v2: rebase atop ext4 fixes and v2022-07-31 release.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=dmerror-on-rt-devices
 ---
- common/ext4 |   20 ++++++++++++++++++++
- common/rc   |    3 +++
- 2 files changed, 23 insertions(+)
-
-
-diff --git a/common/ext4 b/common/ext4
-index 287705af..819f9786 100644
---- a/common/ext4
-+++ b/common/ext4
-@@ -154,3 +154,23 @@ _require_scratch_richacl_ext4()
- 		|| _notrun "kernel doesn't support richacl feature on $FSTYP"
- 	_scratch_unmount
- }
-+
-+_scratch_ext4_options()
-+{
-+    local type=$1
-+    local log_opt=""
-+
-+    case $type in
-+    mkfs)
-+        log_opt="-J device=$SCRATCH_LOGDEV"
-+	;;
-+    mount)
-+	# As of kernel 5.19, the kernel mount option path parser only accepts
-+	# direct paths to block devices--the final path component cannot be a
-+	# symlink.
-+        log_opt="-o journal_path=$(realpath $SCRATCH_LOGDEV)"
-+	;;
-+    esac
-+    [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
-+	SCRATCH_OPTIONS="$SCRATCH_OPTIONS ${log_opt}"
-+}
-diff --git a/common/rc b/common/rc
-index dc1d65c3..b82bb36b 100644
---- a/common/rc
-+++ b/common/rc
-@@ -178,6 +178,9 @@ _scratch_options()
-     "xfs")
- 	_scratch_xfs_options "$@"
- 	;;
-+    ext2|ext3|ext4|ext4dev)
-+	_scratch_ext4_options "$@"
-+	;;
-     esac
- }
- 
+ common/dmerror    |  159 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+ tests/generic/441 |    2 -
+ tests/generic/487 |    2 -
+ 3 files changed, 156 insertions(+), 7 deletions(-)
 
