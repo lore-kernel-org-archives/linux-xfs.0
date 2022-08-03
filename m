@@ -2,72 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA417C19F28
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 15:14:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35564C19F28
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 15:36:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235853AbiHCPO6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Aug 2022 11:14:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49740 "EHLO
+        id S235485AbiHCPgN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Aug 2022 11:36:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233652AbiHCPO5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 11:14:57 -0400
-X-Greylist: delayed 1085 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 03 Aug 2022 08:14:55 PDT
-Received: from cczrelay02.in2p3.fr (cczrelay02.in2p3.fr [134.158.66.142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7F223A492
-        for <linux-xfs@vger.kernel.org>; Wed,  3 Aug 2022 08:14:55 -0700 (PDT)
-Received: from cczmbox08.in2p3.fr (cczmbox08.in2p3.fr [134.158.66.138])
-        by cczrelay02.in2p3.fr (8.14.4/8.14.4) with ESMTP id 273Euh2b015741
-        for <linux-xfs@vger.kernel.org>; Wed, 3 Aug 2022 16:56:43 +0200
-Date:   Wed, 3 Aug 2022 16:56:43 +0200 (CEST)
-From:   Emmanouil Vamvakopoulos <emmanouil.vamvakopoulos@ijclab.in2p3.fr>
-Reply-To: Emmanouil Vamvakopoulos 
-          <emmanouil.vamvakopoulos@ijclab.in2p3.fr>
-To:     linux-xfs@vger.kernel.org
-Message-ID: <1106593372.70825641.1659538603200.JavaMail.zimbra@ijclab.in2p3.fr>
-In-Reply-To: <1586129076.70820212.1659538177737.JavaMail.zimbra@ijclab.in2p3.fr>
-References: <1586129076.70820212.1659538177737.JavaMail.zimbra@ijclab.in2p3.fr>
-Subject: s_bmap and  flags explanation
+        with ESMTP id S235646AbiHCPgM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 11:36:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8763C13F92;
+        Wed,  3 Aug 2022 08:36:11 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 24E4E6171D;
+        Wed,  3 Aug 2022 15:36:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 766A8C433C1;
+        Wed,  3 Aug 2022 15:36:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1659540970;
+        bh=wJv8MzMWPy/43LAR/Bf81dgt0Pb1oEPnrqlJGe2lp9k=;
+        h=Date:From:To:Cc:Subject:From;
+        b=YcHCSRXZrUTUq7tftRirD+Cp7OJOhB5kkU1MqxhDFHpWBwoyqSRfeeTvG93g3x8Yw
+         rNRca4iRetEkO1KvW93bNXrgkF2g3d8AYFoEuxMmTci8u4IxIy5HwuThJOBf1L19yB
+         Aaj2DERFzIaFxPWBPWPXkM3oZpJGaGyLju18VVMKGbwPFAKj6s+kVJMGuiQZaF1epW
+         TC+KNJpVF/o6O/nd8GLahQEElSv+u6DJhzNIm43QrgLHAjZIvHZgiL9HAbEzTa4bA7
+         fiez1Dvu7ireftrQipIBR8YWq5HPonl3vK0KxFIsrs4T5802UN9Yy6pdQlcH+Q7Ik4
+         HaDu/Zm2U4Pjw==
+Date:   Wed, 3 Aug 2022 08:36:10 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
+Subject: [GIT PULL] iomap: new code for 5.20, part 1
+Message-ID: <YuqV6qB/p69HL3yR@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [90.26.79.197]
-X-Mailer: Zimbra 8.7.11_GA_3865 (ZimbraWebClient - FF103 (Mac)/8.7.11_GA_3865)
-Thread-Topic: s_bmap and flags explanation
-Thread-Index: UqNvU8JZxZ04lq01qs/KAVsT9pnUa/yuahuv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi Linus,
 
+Please pull this first branch containing new code for iomap for
+5.20.  The most notable change in the first batch is that we no longer
+schedule pages beyond i_size for writeback, preferring instead to let
+truncate deal with those pages.
 
-Hello developers 
+Next week, there may be a second pull request to remove iomap_writepage
+from the other two filesystems (gfs2/zonefs) that use iomap for buffered
+IO.  This follows in the same vein as the recent removal of writepage
+from XFS, since it hasn't been triggered in a few years; it does nothing
+during direct reclaim; and as far as the people who examined the
+patchset can tell, it's moving the codebase in the right direction.
+However, as it was a late addition to for-next, I'm holding off on that
+section for another week of testing to see if anyone can come up with a
+solid reason for holding off in the meantime.
 
-It is possible to explain the FLAGS field in xfs_bmap output of a file 
+As usual, I did a test-merge with upstream master as of a few minutes
+ago, and didn't see any conflicts.  Please let me know if you encounter
+any problems.
 
- EXT: FILE-OFFSET           BLOCK-RANGE              AG AG-OFFSET                 TOTAL FLAGS
-   0: [0..7]:               49700520968..49700520975 30 (8..15)                       8 001111
-   1: [8..4175871]:         49708756480..49712932343 30 (8235520..12411383)     4175864 000111
-   2: [4175872..19976191]:  49715788288..49731588607 30 (15267328..31067647)   15800320 000011
-   3: [19976192..25153535]: 49731588608..49736765951 30 (31067648..36244991)    5177344 000011
-   4: [25153536..41930743]: 49767625216..49784402423 30 (67104256..83881463)   16777208 000111
-   5: [41930744..58707951]: 49784402424..49801179631 30 (83881464..100658671)  16777208 001111
-   6: [58707952..58959935]: 49801179632..49801431615 30 (100658672..100910655)   251984 001111
-   7: [58959936..75485159]: 49801431616..49817956839 30 (100910656..117435879) 16525224 001111
+--D
 
-with 
+The following changes since commit 03c765b0e3b4cb5063276b086c76f7a612856a9a:
 
-[disk06]# du -sh ./00000869/014886f4
-36G	./00000869/014886f4
-[disk06]# du -sh --apparent-size  ./00000869/014886f4
-29G	./00000869/014886f4
+  Linux 5.19-rc4 (2022-06-26 14:22:10 -0700)
 
-I try to understand if  this file contains unused externs 
-and how those file are created like this (if we assume that the free space was not fragmented ) 
+are available in the Git repository at:
 
-we are running CentOS Stream release 8 with 4.18.0-383.el8.x86_64 
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.20-merge-1
 
-if I defrag the file above the difference bewteen apparent size and size with du disappered !
+for you to fetch changes up to f8189d5d5fbf082786fb91c549f5127f23daec09:
 
-thank you in advance
-best
-e.v.
+  dax: set did_zero to true when zeroing successfully (2022-06-30 10:05:11 -0700)
+
+----------------------------------------------------------------
+New code for 5.20:
+ - Skip writeback for pages that are completely beyond EOF
+ - Minor code cleanups
+
+----------------------------------------------------------------
+Chris Mason (1):
+      iomap: skip pages past eof in iomap_do_writepage()
+
+Kaixu Xia (2):
+      iomap: set did_zero to true when zeroing successfully
+      dax: set did_zero to true when zeroing successfully
+
+ fs/dax.c               |  4 ++--
+ fs/iomap/buffered-io.c | 15 ++++++++-------
+ 2 files changed, 10 insertions(+), 9 deletions(-)
