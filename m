@@ -2,80 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAA86C19F28
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 04:31:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D67C19F28
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Aug 2022 04:33:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232708AbiHCEbg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Aug 2022 00:31:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56480 "EHLO
+        id S233841AbiHCEdL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Aug 2022 00:33:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiHCEbe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 00:31:34 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7001F4E873;
-        Tue,  2 Aug 2022 21:31:33 -0700 (PDT)
+        with ESMTP id S229457AbiHCEdL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 00:33:11 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69C3057203
+        for <linux-xfs@vger.kernel.org>; Tue,  2 Aug 2022 21:33:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 07DCD612E4;
-        Wed,  3 Aug 2022 04:31:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65352C433D6;
-        Wed,  3 Aug 2022 04:31:32 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 23513B82121
+        for <linux-xfs@vger.kernel.org>; Wed,  3 Aug 2022 04:33:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D51C2C433D6;
+        Wed,  3 Aug 2022 04:33:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659501092;
-        bh=RXun5C6qA7jQQI2I72/bNDDoxKPWHaRc4EfuqcLowAs=;
+        s=k20201202; t=1659501187;
+        bh=PE0V4gRFofnaC419A2sHi2m/eTmoFNajRAeOaVIGTcM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=WhzkYpLX1hzGXOO1Jw3AF1Pd/TW9ezk3A+J2l+fZELKdb9Ggsn8QOuXYs+IYDBs/m
-         9BhnFijXHyIgJtDIi43RA8Woe2/BfT9TAxeIPmpYKJY9M1ipagl3EvWgf43LU30jXt
-         tFRrdwTRmJLdvbTCNyT96kDoWmtkwfy7iApzzZrhMQQLCHbzqIF4TQH2FZ0XIRqi/+
-         m5GuY42JTY9YLc33tJdbZZFjSzu/7wyAKVSn/2Xqw5mxtkD8svBik/WPIBmNR8Uw7D
-         pHfpgeYJXUgSpwzWPZ/RBVkpJy6l08GdpUKWjgpVe8RfSpzuwCFHXOEIimRDKvHTtP
-         tFWwzWnKYI0zg==
-Date:   Tue, 2 Aug 2022 21:31:31 -0700
+        b=fjVEEe6o5YpvqI44N+fjptC2I89z1h/+1Qg8bmSshO8QSPCP5ENWHJgdaZ6YuWXDe
+         jyhCFkWvqupKmVRoaEfQwNGK5qP1AUL7bt56OgsRA3MpMatszO/uxX8uQ8EOcV71Ga
+         1R/cIQ0lDZODmpHgI6Q+ulHZRXJNH022TEOqBn5fxXfofZO493SmsXJYbrULdomiBQ
+         W2w5EYOSmVspqmxxY1QgTJaRv7FrjT4pQKBVG6qTDf3NCseav+4PJFMaCmXeUPy74j
+         tsrTpdRHsKydvoN2R2O+CVi7Xc4ZX1xACDBZLgKTJK91CdpA29kRa3u+nelGVdQrO7
+         DF1jBeLxTw03Q==
+Date:   Tue, 2 Aug 2022 21:33:07 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Sherry Yang <sherry.yang@oracle.com>, dchinner@redhat.com,
-        allison.henderson@oracle.com, chandanrlinux@gmail.com,
-        bfoster@redhat.com, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] xfs: initialize error in xfs_defer_finish_one
-Message-ID: <Yun6I/drpxG4L4RO@magnolia>
-References: <20220801190311.65703-1-sherry.yang@oracle.com>
- <20220801204902.GA3600936@dread.disaster.area>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: check return codes when flushing block devices
+Message-ID: <Yun6gwcI1hC1ARBH@magnolia>
+References: <YuasRCKeYsKlCgPM@magnolia>
+ <20220801000641.GZ3600936@dread.disaster.area>
+ <YugMS4G9p+JduBmq@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220801204902.GA3600936@dread.disaster.area>
+In-Reply-To: <YugMS4G9p+JduBmq@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 02, 2022 at 06:49:02AM +1000, Dave Chinner wrote:
-> On Mon, Aug 01, 2022 at 12:03:11PM -0700, Sherry Yang wrote:
-> > Path through non-void function 'xfs_defer_finish_one' may return error
-> > uninitialized if no iteration of 'list_for_each_safe' occurs. Fix this
-> > by initializing error.
+On Mon, Aug 01, 2022 at 10:24:27AM -0700, Christoph Hellwig wrote:
+> On Mon, Aug 01, 2022 at 10:06:41AM +1000, Dave Chinner wrote:
+> > > @@ -173,8 +175,11 @@ xfs_file_fsync(
+> > >  	 * that happen concurrently to the fsync call, but fsync semantics
+> > >  	 * only require to sync previously completed I/O.
+> > >  	 */
+> > > -	if (xfs_ipincount(ip))
+> > > +	if (xfs_ipincount(ip)) {
+> > >  		error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+> > > +		if (error)
+> > > +			return error;
+> > > +	}
+> > 
+> > Shouldn't we still try to flush the data device if necessary, even
+> > if the log flush failed?
 > 
-> I didn't think this situation was possible - how do we get deferred
-> work queued with no work items on it?
-> 
-> If we can return an uninitialised error from xfs_defer_finish_one()
-> because of an empty queued work, then something else has gone wrong
-> earlier in the work deferral process. If this can actually happen,
-> then we need to fix whatever is creating the empty work rather than
-> paper over it by initialising the error being returned for empty
-> works...
+> xfs_fsync_flush_log ails only if the log it shut down.  Does it really
+> make sense to flush the data cache for a pure overwrite of a data
+> block when the fs is toast?  I can't really see any benefit in that.
 
-/me bets this is a response to a static checker that doesn't know that
-list_empty(&dfp->dfp_work) == false in all circumstances.  It's not
-possible for tp->t_dfops to contain an xfs_defer_pending with no work
-items.
+/me guesses that once we hit the first error, the rest of the calls will
+probably crash and burn, and if they don't, the next fs call will, so it
+likely doesn't matter if we keep going or not.
+
+> > > +		if (log->l_targ != log->l_mp->m_ddev_targp &&
+> > > +		    blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev)) {
+> > > +			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+> > > +			return;
+> > > +		}
+> > 
+> > That seems pretty drastic, though I'm not sure what else apart from
+> > ignoring the data device flush error can be done here. Also, it's
+> > not actually a log IO error - it's a data device IO error so it's a
+> > really a metadata writeback problem. Hence the use of
+> > SHUTDOWN_LOG_IO_ERROR probably needs a comment to explain why it
+> > needs to be used here...
+> 
+> Yes, the comment would be useful.  But if a cache flush fails data
+> integrity of the device must at this point be considered as fucked
+> up beyond belief, so shutting down the log and thus the file system
+> is the right thing to do.
+> 
+> So modulo a comment here the patch looks good to me.
+
+Ok, will do.
 
 --D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
