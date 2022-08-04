@@ -2,252 +2,156 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A299C19F29
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Aug 2022 01:37:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74A2AC19F2D
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Aug 2022 01:53:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238367AbiHDBg7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Aug 2022 21:36:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52928 "EHLO
+        id S230117AbiHDBxk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Aug 2022 21:53:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238957AbiHDBg6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 21:36:58 -0400
-Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AEFA5D0DD;
-        Wed,  3 Aug 2022 18:36:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1659577013; i=@fujitsu.com;
-        bh=RzfBUxm2e+0u6f5z03qEi8YXRUiCis7xn6IbNdE5OmY=;
-        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=AGkrjHtXb0C2WhUMOk9QamCI3DGCctzewDri863e/yeYShl0KOyH9C4b1yzzCfIYW
-         FQDXiWTpJb3gurEXTcy+qygdbBGOkHPwtNkgcTUgRXnekJ722SWLY0I2sUZWLizIvX
-         1SYBD1dAq72IXb/7OC4B9ETDnW2VK6iWR1CEe0JBNOYdCEjXo8ti6+6oG8WyoyPG/I
-         63apvbrbLRlMm03pztZ3lQH/OFv8yPHE7tf1mb++xjcswipL7Fh+THTVD/uLhsSmw+
-         5bHPIePqczwuj4evGG8azBr0Zsdafr9L1w3OqXlSTCVgg9QcXlYRoDGwl0V1g3mSJU
-         xn76jYhAE7wbQ==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrCKsWRWlGSWpSXmKPExsViZ8ORpLta6XW
-  SwaQtjBZbjt1jtLj8hM/i9IRFTBZ79p5ksbi8aw6bxa4/O9gtVv74w+rA7nFqkYTH5hVaHptW
-  dbJ5vNg8k9Hj8ya5ANYo1sy8pPyKBNaM4weaGAveqVW8PPWMrYHxinwXIxeHkMBGRomF9/ewQ
-  zhLmCT6bz1lg3C2MUo8XXyMpYuRk4NXwE7i2cL/jCA2i4CKxOKFH9gh4oISJ2c+Aarh4BAVSJ
-  b4ttcIJCws4CuxdlMfM4gtIqApceTbNSaQmcwCJ5kkmk5sYoJYcJZJ4nbnFyaQKjYBHYkLC/6
-  ygticAhoSp7bPArOZBSwkFr85yA5hy0s0b53NDLJMQkBJYmZ3PEhYQqBCYtasNiYIW03i6rlN
-  zBMYhWYhOW8WkkmzkExawMi8itE6qSgzPaMkNzEzR9fQwEDX0NBU19gCSBnqJVbpJuqlluqWp
-  xaX6BrpJZYX66UWF+sVV+Ym56To5aWWbGIERlVKsVr+Dsa/K3/qHWKU5GBSEuWtPPUqSYgvKT
-  +lMiOxOCO+qDQntfgQowwHh5IEr6vi6yQhwaLU9NSKtMwcYITDpCU4eJREeHXkgNK8xQWJucW
-  Z6RCpU4zGHOd37t/LzLG24cBeZiGWvPy8VClx3kcKQKUCIKUZpXlwg2CJ5xKjrJQwLyMDA4MQ
-  T0FqUW5mCar8K0ZxDkYlYd6b8kBTeDLzSuD2vQI6hQnkFK4XIKeUJCKkpBqYZB6seHrO7ELU4
-  oXSx/6HGSRvnxBXWe+9QbVF+Ep7s11f84avU9KqbTV3/rtzfUeinsSWDbcS1OYFbLpf/UdXT8
-  fQortuUuerL32zc+0+RiXHWc28a2CwNbxHUbmy/e3EpAyz2abn/m9d+JlZ+aDeZIXshRJuXzw
-  KVnCvuD+law/Hugnds0SfTkhXMajynZBoonPgscws3mfz5qRuXyrzoGdizyFhpUkTY+JOn121
-  w0q4+r9Ec23IJv72acKT06tmWE99pd6m0S6au/DWBfWDWVM+LhauyQiTPuiy/sK0HKdS/cNHG
-  htyEp8Y6J7e5Hhx5my/HbU3UjYbBCoZnS4q67iue1Dg1ZdIt9Y6l81uSizFGYmGWsxFxYkAiK
-  hwsrcDAAA=
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-3.tower-565.messagelabs.com!1659577002!445523!1
-X-Originating-IP: [62.60.8.98]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.87.3; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 4843 invoked from network); 4 Aug 2022 01:36:43 -0000
-Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
-  by server-3.tower-565.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 4 Aug 2022 01:36:43 -0000
-Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id A912B1AD;
-        Thu,  4 Aug 2022 02:36:42 +0100 (BST)
-Received: from R01UKEXCASM126.r01.fujitsu.local (R01UKEXCASM126 [10.183.43.178])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id 9D75E1AC;
-        Thu,  4 Aug 2022 02:36:42 +0100 (BST)
-Received: from [192.168.22.78] (10.167.225.141) by
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
- (TLS) id 15.0.1497.32; Thu, 4 Aug 2022 02:36:39 +0100
-Message-ID: <ece5e040-35cd-3570-728e-b010fab52c70@fujitsu.com>
-Date:   Thu, 4 Aug 2022 09:36:29 +0800
+        with ESMTP id S229596AbiHDBxj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Aug 2022 21:53:39 -0400
+Received: from esa7.fujitsucc.c3s2.iphmx.com (esa7.fujitsucc.c3s2.iphmx.com [68.232.159.87])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD9FF4B0DD;
+        Wed,  3 Aug 2022 18:53:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
+  t=1659578019; x=1691114019;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=RxOe7mN9EHk825GS397cG1KQghzmEWw4l6lRGiy5Qho=;
+  b=XzUX/ffISv21j3vEtMenPeBt2Wq+DgBOiEtoAQyiZBoo01UkbcqLYq5D
+   L9PQbhK4FuvxiL8YI0JshOjXZOHuaxus1DzLQ4DleytUAF4b0AVz9N+AT
+   L+YxyGNRJDUNLra/neGnSxyYlN7VIN+UcH82vV7sdexPSpZu75GNd4bRT
+   F2bFXVzj+RCQ1mnS+Cmb1evElqnDm2M+L+lD7fUUGANqn2p9VOuVFdhD/
+   vyiVUk8X9fXeoTpGn1hviowOx6unNCFfVIGtQBrv3fhBeIAIaudSzNZlZ
+   gcWYGSn57nFdsj6DgRRBTFl6bDuxymwPG6BAcllH7NIF2LqeJ9p2INktB
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10428"; a="62102890"
+X-IronPort-AV: E=Sophos;i="5.93,214,1654527600"; 
+   d="scan'208";a="62102890"
+Received: from mail-os0jpn01lp2111.outbound.protection.outlook.com (HELO JPN01-OS0-obe.outbound.protection.outlook.com) ([104.47.23.111])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2022 10:53:35 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DDJhLEv5iOpCXyQqJ9l/RDL3MGctQG1e7ZqjWC6s/BZvtVSfho7S2Npdag/T1H40xvGEBNt/gchBrv/4n4twXhqV9rXc95hBKGKIhkU8xcmz0tUCHemG/c2/sRiC2c71uHO0NcSl4uVe/xLgg/c06lIwGegKE7WG2tvgeyPVZdKkhyhOfHcp8n+lw8JszNf+QXJyLhiFr6MoCpXu1TJgfpJ45hPkCNU7MrAaadim9B5JF6stZAz8V7Zb6/UgZLK5sC0uWDfIHSnmNwmarSz9CZqZR2mtD8a+PsPf2VQuzzAxeHTwK3CrFagZRy/mklUANb7kv4LZgBjV0kB91C8IdA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RxOe7mN9EHk825GS397cG1KQghzmEWw4l6lRGiy5Qho=;
+ b=MNfsbqDWKJ8riBWEoCcjLpYIwztADPKcL5nn402TUSQtCvLPs8d54/1t42dKopORKNaTAIxrudOkAinjPFryQ26ysj6MkjzqTio7386qqGlYqwPE1ejWP2BfsZgKkFfyAxIObbEIGiX2ftArc99Bg1ywF86fnfL3W++0V4qD3mxBP5U4t/Qy6R5Whj5pL9mOyVnkSebGrs34BnF8qPiaqtkRvXgdbtXxPygumaTMFdGuuCIaRzfWPRocxbncj7EIrLuyZsT+7UFN+3PDHrhJSUwvlGHe611y+89ZJOHN0gR288Xgn7l1Rgav6cs08SA7NHBICrCiBiuWHjqh91TqaQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
+Received: from TY2PR01MB4427.jpnprd01.prod.outlook.com (2603:1096:404:10d::20)
+ by TYWPR01MB9572.jpnprd01.prod.outlook.com (2603:1096:400:19a::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5504.14; Thu, 4 Aug
+ 2022 01:53:31 +0000
+Received: from TY2PR01MB4427.jpnprd01.prod.outlook.com
+ ([fe80::5092:a34:8a79:5e78]) by TY2PR01MB4427.jpnprd01.prod.outlook.com
+ ([fe80::5092:a34:8a79:5e78%5]) with mapi id 15.20.5482.016; Thu, 4 Aug 2022
+ 01:53:31 +0000
+From:   "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        "guaneryu@gmail.com" <guaneryu@gmail.com>,
+        "zlang@redhat.com" <zlang@redhat.com>
+CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        "guan@eryu.me" <guan@eryu.me>
+Subject: Re: [PATCH 3/3] xfs/533: fix golden output for this test
+Thread-Topic: [PATCH 3/3] xfs/533: fix golden output for this test
+Thread-Index: AQHYpvCQpvzlxY2Z+ky2Zn14ygvHra2eDRkA
+Date:   Thu, 4 Aug 2022 01:53:31 +0000
+Message-ID: <4094bf3b-9be0-c629-648a-b78999e3ec83@fujitsu.com>
+References: <165950048029.198815.11843926234080013062.stgit@magnolia>
+ <165950049724.198815.5496412458825635633.stgit@magnolia>
+In-Reply-To: <165950049724.198815.5496412458825635633.stgit@magnolia>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=fujitsu.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 3b34507f-ec3d-4b40-921d-08da75bc2240
+x-ms-traffictypediagnostic: TYWPR01MB9572:EE_
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: dHMaBcfW+aH4iSjce9psgIttqCLPbvDB1xKKR3EA9OUeW1kbksYX8EIFBV/A1t6bPDjkaaENafjvxFSVI3I7WD/G7t9wsbSmo86GDeinwEJgbIIhtr7WWOYCAQLF7E71RnpQ4gfs7v+a392RFkVvg+aQ7MZHFTu2OpYDD00Y9Qwr1CDg8duHP0F19+hUrkdCy95/SpFkCBCP+1Z809yrlZIbdBnobUkMVx0Fwyr0xKGT3nLgyzLIF/4b3q68rnVrGeRnXXl4kmDzOpgQG/2rWUAhJ2qVblPUSmVCit/FqDdzW5bvlEZSKzJsU1CPyORXx9y6VdQ562UhP4IMfGiNNCLLnRJ8lnf1eSRjGuAnjNfCA5k5aaew9iXrZU5gVyhAOtyqFKAPcB6T8U1uBNzcVGZFAo6/zu9MZRsXzp21EOvUuj2mbJArCTysy3nzuZyB5BXvRAOOt7PGmQuF//QUEQ9KCTeF63505ZzeR0Z9rtJonZPCT4zTo/C0A1oNANBGkqmVSBaWTfadNiaK/3h+22oHwmzJuUsIEEk7gDTjXMRUuLP8qphyjSm2N7VAq+0WX2dJvKmENenjkH8gHq+SNgen8X2mAQl1QFvPOANR30m6Nx93ncEYMg0ZZ+bGMVbyQpp1Sn64uURtS7J8pxQjlJSqnzZzovxCk+c+GDU4Vpueto5aJtaOMMCqVG4Tgf5/vEK+mQFwJVUVup+8ni3euroNckow0Bv8UdW1OQhquTcCBHtEuT7ODemOnfT7ChLZvQewKn+aXNo8PYeyX/deHsoJ1TStUemWC+e4WIwY5AnGJQVv6AgWPmAyU3WqY5Mb10jaAhkcIvTUFbJPULiEyg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY2PR01MB4427.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(376002)(366004)(346002)(136003)(396003)(39860400002)(122000001)(66446008)(31686004)(36756003)(110136005)(91956017)(4326008)(82960400001)(38070700005)(8676002)(316002)(85182001)(76116006)(38100700002)(66476007)(54906003)(71200400001)(66946007)(64756008)(66556008)(6506007)(86362001)(31696002)(2616005)(6486002)(478600001)(8936002)(5660300002)(26005)(186003)(2906002)(4744005)(6512007)(41300700001)(83380400001)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?K0d2OXlObW9ITng0dzdsZ0E1Z2hrVlhuV004ZWg0TkNLeDBxNEdyb3NWcWNl?=
+ =?utf-8?B?cC9lNDIwYUxiQkFZL3o5ZmpLMmxiUlZ4Z1dUQVA0dlBpRXNJWWdDVVRqVDJF?=
+ =?utf-8?B?cDI0KzBQOXpDdTl4czlzU3lkUzRSU3BIdXZGM1o3cjRRZnZTQk9Sb1pYR2R4?=
+ =?utf-8?B?TUZtbDlIdTRTZ3FvWVhGUVNFZXlmNGxDTnFWUHF4M29QYlViNi8yQ2NWd3Zt?=
+ =?utf-8?B?T3dpWDhpN29OWWlCSWs5dEtSWnlqLzZMenlUdDlUTyt1czRvRTVEUHZQR0VY?=
+ =?utf-8?B?SVlsaExZWC9ER2RUenhrRFpJcUZkb3FpdGpWU281Z1hYY3RKRDVFdlRxSG9x?=
+ =?utf-8?B?UDQ2SEJ2VjhkSW4zdTNWNVV6dVVqU0xTT1MraUdmY2x0TVZxVlRWSGNMUjlt?=
+ =?utf-8?B?dTRRWW5FbnY3MzRyK3kzUEtyanBWMEQwdFNMeVF0ekRWSUxsVmFjMTFRY2NN?=
+ =?utf-8?B?NGo5YkxDeVNNU242dDhEN3ZkdllSS2xlUEFuY1NlQ2VBMVdJbEM1Y0N1TVc1?=
+ =?utf-8?B?UHc2M0R0OGtTbkZPYXdXeVJBQnNuckdRVktzNWVudWwrakdnNFZidklqbVVr?=
+ =?utf-8?B?dXdrbHpQTTJOWkhOYmFRcTJBcnMyMVdlcHVYdFh3bnlDTC8zbkpGdjZYeGdp?=
+ =?utf-8?B?dkU5UHpHOGpQWWdNaUhCbmZVY3dNSStxZlpvdFJMSlQ0RDZiZldya3dENm9J?=
+ =?utf-8?B?eVNybXRDZmZ3VEdkMXh1M2FhbFpHK2tEeDVzbmdqR0N3SzZRa1Zwa3ZJcXQr?=
+ =?utf-8?B?SDN4Rk1jWW9rUDA4Y08zbVJRTnVwbTJCdGNtbFVVSkkzNGpaTjRBcS9GVmRS?=
+ =?utf-8?B?dHE1UFAxUENSSnFad3lMcXY5ZWllNVZEZ08rL0ovYWlQZWhTMGk4QWZuVElu?=
+ =?utf-8?B?c1BTY25sTU5VazBsQnRJM0VjbllzeFVxRnR2dVVMdU1GeU5OUWhwUFd5OExP?=
+ =?utf-8?B?V0NvTll3R2dHeEJhdWZjK3ZBdzIvMkhBL0R3RzVnOUhmR3Y0cVlTSnBnNUo3?=
+ =?utf-8?B?ZnV4Q1pzUU9Za0xSaHJmbTdqYStmbVZlN2pHL1RGS3pheEcvZys4K0ZUdms5?=
+ =?utf-8?B?ekwya1Y1QXlPZ2J1Z1dYTVVyWkI4d0R2RVdRSGRJa3R2eFg1clVvRjFreXpT?=
+ =?utf-8?B?Tkd1ZTlDK0lzOXZML2VmYWFNOWhvbXBnYmRaRTlNb1Z5VlBlWElFTDNZYUNz?=
+ =?utf-8?B?ZThUbDRsMERkNWdySEtmZ2dEZGJJSnAyVnZxN2NjOHpmQ1JnWHQwT3I3N2dx?=
+ =?utf-8?B?N21VcFBXUmpiK2pJVFM4UnpISEgySjRndW5RNHpaWXBGUnpkbFFwZzZoelVi?=
+ =?utf-8?B?QURvY2F4Vmg5SWp2UFJpT1lCRzRCdElMZHZHRVk3aXc4azlmMnFOQThXWis0?=
+ =?utf-8?B?S2tQYlpXciswVlpPZWFJVU80cUk2dlptZWpXMXEwM2NLZU1FZFNRZUsvc24z?=
+ =?utf-8?B?ZDd4NFlqeTNHM0JSTkhWelJtMEhFM3ZtaTRJaTM3THZpeC9TWWNxVmhMVGxL?=
+ =?utf-8?B?RzZhUWlIQ3pvU1RqOGFIZExoMVFNNlU0MmdNcG1CY0hTRjJMQVJuRG5nTUdp?=
+ =?utf-8?B?Mkp0R1pmNzJKMDhhWUVZMSszKzA4NFVZWElaT2h6ZFFaU0dqTUprL0JSMFIr?=
+ =?utf-8?B?SURmK0pvL2hONzd2aVVpMzhraEZETnRxNk5kMnJRKzg4cHFpeTJVcG41eTZ0?=
+ =?utf-8?B?cUtOYWJKM1pycVJ1UTd6RnhIdDVDa2NnSnpDekpUT201QzF4cjNUNFpwSi8v?=
+ =?utf-8?B?Q3dZS1BRcE5zK29nei9JcngzdGVtcGxLc3JBN2pvcGwrSzZKT0toVVk5U2xs?=
+ =?utf-8?B?dWVaWVNBc3Q5b010Ry9xdUVTOXJiMVFaek1sd3lVdFJ4Q3U0RXpXdm5uRXJt?=
+ =?utf-8?B?bVROUFo3MlNTUU5WUFVVR1dHNi9Sdi9CRWs2WExGZTU5U3g4Z0lsL1dEaVls?=
+ =?utf-8?B?dmltektMb2JYNE5MUDltQW9Db0xjVnBRTTFNU0JXZmMzL2RZS1hsUklNQUxk?=
+ =?utf-8?B?anZSMVFOUzBXSmVtREFXeFErcXd5K0hsSHBCdDlhSlRzZjZISjRHQ1plZmdx?=
+ =?utf-8?B?L3NrbEw1RHZOK1JqVjF1SnFrMG0wMit3L3FFSnlrcEM0bEdsSUlkLzk5L08v?=
+ =?utf-8?B?blgrRXoyY1MwSWZOYXVkOXVzRzUxVGNhQlorUTc1MDJZWHJmK1RqeXgxS0lR?=
+ =?utf-8?B?YUE9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <CC80F0EC69BD32478B06C98A53957BC7@jpnprd01.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.0
-Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@infradead.org" <hch@infradead.org>
-References: <20220609143435.393724-1-ruansy.fnst@fujitsu.com>
- <Yr5AV5HaleJXMmUm@magnolia>
- <74b0a034-8c77-5136-3fbd-4affb841edcb@fujitsu.com>
- <Ytl7yJJL1fdC006S@magnolia>
- <7fde89dc-2e8f-967b-d342-eb334e80255c@fujitsu.com>
- <YuNn9NkUFofmrXRG@magnolia>
- <0ea1cbe1-79d7-c22b-58bf-5860a961b680@fujitsu.com>
- <YusYDMXLYxzqMENY@magnolia>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <YusYDMXLYxzqMENY@magnolia>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
-X-Virus-Scanned: ClamAV using ClamSMTP
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: TY2PR01MB4427.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3b34507f-ec3d-4b40-921d-08da75bc2240
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Aug 2022 01:53:31.4992
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: H0S6iRnioaG/VmKVtvxAFf8vmcqWZ0PLcJgt71r2w74D4JPzWBraP9Uy9Pco+4y9OtkPNy4RCIWh8uKZpHril1Fndx67o3sc4oiJUY+xOms=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWPR01MB9572
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-在 2022/8/4 8:51, Darrick J. Wong 写道:
-> On Wed, Aug 03, 2022 at 06:47:24AM +0000, ruansy.fnst@fujitsu.com wrote:
->>
->>
->> 在 2022/7/29 12:54, Darrick J. Wong 写道:
->>> On Fri, Jul 29, 2022 at 03:55:24AM +0000, ruansy.fnst@fujitsu.com wrote:
->>>>
->>>>
->>>> 在 2022/7/22 0:16, Darrick J. Wong 写道:
->>>>> On Thu, Jul 21, 2022 at 02:06:10PM +0000, ruansy.fnst@fujitsu.com wrote:
->>>>>> 在 2022/7/1 8:31, Darrick J. Wong 写道:
->>>>>>> On Thu, Jun 09, 2022 at 10:34:35PM +0800, Shiyang Ruan wrote:
->>>>>>>> Failure notification is not supported on partitions.  So, when we mount
->>>>>>>> a reflink enabled xfs on a partition with dax option, let it fail with
->>>>>>>> -EINVAL code.
->>>>>>>>
->>>>>>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
->>>>>>>
->>>>>>> Looks good to me, though I think this patch applies to ... wherever all
->>>>>>> those rmap+reflink+dax patches went.  I think that's akpm's tree, right?
->>>>>>>
->>>>>>> Ideally this would go in through there to keep the pieces together, but
->>>>>>> I don't mind tossing this in at the end of the 5.20 merge window if akpm
->>>>>>> is unwilling.
->>>>>>
->>>>>> BTW, since these patches (dax&reflink&rmap + THIS + pmem-unbind) are
->>>>>> waiting to be merged, is it time to think about "removing the
->>>>>> experimental tag" again?  :)
->>>>>
->>>>> It's probably time to take up that question again.
->>>>>
->>>>> Yesterday I tried running generic/470 (aka the MAP_SYNC test) and it
->>>>> didn't succeed because it sets up dmlogwrites atop dmthinp atop pmem,
->>>>> and at least one of those dm layers no longer allows fsdax pass-through,
->>>>> so XFS silently turned mount -o dax into -o dax=never. :(
->>>>
->>>> Hi Darrick,
->>>>
->>>> I tried generic/470 but it didn't run:
->>>>      [not run] Cannot use thin-pool devices on DAX capable block devices.
->>>>
->>>> Did you modify the _require_dm_target() in common/rc?  I added thin-pool
->>>> to not to check dax capability:
->>>>
->>>>            case $target in
->>>>            stripe|linear|log-writes|thin-pool)  # add thin-pool here
->>>>                    ;;
->>>>
->>>> then the case finally ran and it silently turned off dax as you said.
->>>>
->>>> Are the steps for reproduction correct? If so, I will continue to
->>>> investigate this problem.
->>>
->>> Ah, yes, I did add thin-pool to that case statement.  Sorry I forgot to
->>> mention that.  I suspect that the removal of dm support for pmem is
->>> going to force us to completely redesign this test.  I can't really
->>> think of how, though, since there's no good way that I know of to gain a
->>> point-in-time snapshot of a pmem device.
->>
->> Hi Darrick,
->>
->>   > removal of dm support for pmem
->> I think here we are saying about xfstest who removed the support, not
->> kernel?
->>
->> I found some xfstests commits:
->> fc7b3903894a6213c765d64df91847f4460336a2  # common/rc: add the restriction.
->> fc5870da485aec0f9196a0f2bed32f73f6b2c664  # generic/470: use thin-pool
->>
->> So, this case was never able to run since the second commit?  (I didn't
->> notice the not run case.  I thought it was expected to be not run.)
->>
->> And according to the first commit, the restriction was added because
->> some of dm devices don't support dax.  So my understanding is: we should
->> redesign the case to make the it work, and firstly, we should add dax
->> support for dm devices in kernel.
-> 
-> dm devices used to have fsdax support; I think Christoph is actively
-> removing (or already has removed) all that support.
-> 
->> In addition, is there any other testcase has the same problem?  so that
->> we can deal with them together.
-> 
-> The last I checked, there aren't any that require MAP_SYNC or pmem aside
-> from g/470 and the three poison notification tests that you sent a few
-> days ago.
-
-Ok.  Got it.  Thank you!
-
-
---
-Ruan.
-
-> 
-> --D
-> 
->>
->> --
->> Thanks,
->> Ruan
->>
->>
->>>
->>> --D
->>>
->>>>
->>>> --
->>>> Thanks,
->>>> Ruan.
->>>>
->>>>
->>>>
->>>>>
->>>>> I'm not sure how to fix that...
->>>>>
->>>>> --D
->>>>>
->>>>>>
->>>>>> --
->>>>>> Thanks,
->>>>>> Ruan.
->>>>>>
->>>>>>>
->>>>>>> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
->>>>>>>
->>>>>>> --D
->>>>>>>
->>>>>>>> ---
->>>>>>>>      fs/xfs/xfs_super.c | 6 ++++--
->>>>>>>>      1 file changed, 4 insertions(+), 2 deletions(-)
->>>>>>>>
->>>>>>>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->>>>>>>> index 8495ef076ffc..a3c221841fa6 100644
->>>>>>>> --- a/fs/xfs/xfs_super.c
->>>>>>>> +++ b/fs/xfs/xfs_super.c
->>>>>>>> @@ -348,8 +348,10 @@ xfs_setup_dax_always(
->>>>>>>>      		goto disable_dax;
->>>>>>>>      	}
->>>>>>>>      
->>>>>>>> -	if (xfs_has_reflink(mp)) {
->>>>>>>> -		xfs_alert(mp, "DAX and reflink cannot be used together!");
->>>>>>>> +	if (xfs_has_reflink(mp) &&
->>>>>>>> +	    bdev_is_partition(mp->m_ddev_targp->bt_bdev)) {
->>>>>>>> +		xfs_alert(mp,
->>>>>>>> +			"DAX and reflink cannot work with multi-partitions!");
->>>>>>>>      		return -EINVAL;
->>>>>>>>      	}
->>>>>>>>      
->>>>>>>> -- 
->>>>>>>> 2.36.1
->>>>>>>>
->>>>>>>>
->>>>>>>>
+b24gMjAyMi8wOC8wMyAxMjoyMSwgRGFycmljayBKLiBXb25nIHdyb3RlOg0KPiBGcm9tOiBEYXJy
+aWNrIEouIFdvbmcgPGRqd29uZ0BrZXJuZWwub3JnPg0KPiANCj4gTm90IHN1cmUgd2hhdCdzIHVw
+IHdpdGggdGhpcyBuZXcgdGVzdCwgYnV0IHRoZSBnb2xkZW4gb3V0cHV0IGlzbid0IHJpZ2h0DQo+
+IGZvciB1cHN0cmVhbSB4ZnNwcm9ncyBmb3ItbmV4dC4gIENoYW5nZSBpdCB0byBwYXNzIHRoZXJl
+Li4uDQoNCkl0IGZhaWxlZCBiZWN1YXNlIGxpYnhmcyBjb2RlIHZhbGlkYXRlcyB2NSBmZWF0dXJl
+IGZpZWxkcy4NCg0KYjEyZDVhZTVkICgieGZzOiB2YWxpZGF0ZSB2NSBmZWF0dXJlIGZpZWxkcyIp
+DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBEYXJyaWNrIEouIFdvbmcgPGRqd29uZ0BrZXJuZWwub3Jn
+Pg0KPiAtLS0NCj4gICB0ZXN0cy94ZnMvNTMzLm91dCB8ICAgIDIgKy0NCj4gICAxIGZpbGUgY2hh
+bmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkNCj4gDQo+IA0KPiBkaWZmIC0tZ2l0
+IGEvdGVzdHMveGZzLzUzMy5vdXQgYi90ZXN0cy94ZnMvNTMzLm91dA0KPiBpbmRleCA3ZGViNzhh
+My4uNDM5ZmIxNmUgMTAwNjQ0DQo+IC0tLSBhL3Rlc3RzL3hmcy81MzMub3V0DQo+ICsrKyBiL3Rl
+c3RzL3hmcy81MzMub3V0DQo+IEBAIC0xLDUgKzEsNSBAQA0KPiAgIFFBIG91dHB1dCBjcmVhdGVk
+IGJ5IDUzMw0KPiAgIEFsbG93aW5nIHdyaXRlIG9mIGNvcnJ1cHRlZCBkYXRhIHdpdGggZ29vZCBD
+UkMNCj4gICBtYWdpY251bSA9IDANCj4gLWJhZCBtYWdpYyBudW1iZXINCj4gK1N1cGVyYmxvY2sg
+aGFzIGJhZCBtYWdpYyBudW1iZXIgMHgwLiBOb3QgYW4gWEZTIGZpbGVzeXN0ZW0/DQoNClNpbmNl
+IHRoaXMgY2FzZSBpcyBkZXNpZ25lZCB0byBkZXRlY3QgeGZzX2RiIGJ1Zywgc2hvdWxkIHdlIGZp
+bHRlciB0aGUgDQpvdXRwdXQ/DQoNCkJlc3QgUmVnYXJkcw0KWWFuZyBYdQ0KPiAgIDANCj4g
