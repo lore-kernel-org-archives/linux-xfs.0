@@ -2,96 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1826DC3F6B0
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Aug 2022 05:06:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4028C00144
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Aug 2022 05:07:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236938AbiHDFGU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Aug 2022 01:06:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54856 "EHLO
+        id S237693AbiHDFHi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Aug 2022 01:07:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231201AbiHDFGT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Aug 2022 01:06:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CDE71EACF;
-        Wed,  3 Aug 2022 22:06:18 -0700 (PDT)
+        with ESMTP id S237625AbiHDFHh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Aug 2022 01:07:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB14E2250C;
+        Wed,  3 Aug 2022 22:07:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id ED0D96185C;
-        Thu,  4 Aug 2022 05:06:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53B48C433D6;
-        Thu,  4 Aug 2022 05:06:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5C52961852;
+        Thu,  4 Aug 2022 05:07:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7FCFC433C1;
+        Thu,  4 Aug 2022 05:07:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659589577;
-        bh=mnQM8BKmF47yDnVzCCAHxXiMSohC8Tl4Poho0Wsi+ag=;
+        s=k20201202; t=1659589654;
+        bh=dntzueFUayg8EwtWI0uD8IPo2JnX77id+CydyT8ad2s=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=F3yF8ZJV+ttn+Ar5y6bq0qYbg0EnnFXVmuqx1xczz13DvY0FTyyJhPwyWFlbNNmV0
-         K7rWXkvhINfm0mgzxAYJv4RMTFwYm+riPDkhRiPKpB5uHfGzIGxOPTZerX65i6y/+9
-         8XkRO9PPGb2yRWjNaUyNPEAa5XYm7N+YZivfEfNFohgw4Eeq1wPr0shSxOXdY7uGHM
-         mMKUsnVvdoT2eFPOb/K38uVzQaPv1Ygr8+1P+RvdCsPGyoIoApEt1OuGVPJvPfzje2
-         cQDhGM6tlFFkGt+ffI0bAsvzpUiCcK+19p4Xn47005kN076d6tdb0utPHkwcaKRB76
-         JPeRbfdOD4aFg==
-Date:   Wed, 3 Aug 2022 22:06:16 -0700
+        b=afgqW7AmIsubIaZXxhWapTsgZQ8aMbjZDKgvMoR8wisyjeNYlL/zA/ydpJOh7BMCQ
+         BNq6f5toPXQQSab81c6m/cBha4GnfTKoYsC2FQD9A63nkdCSgd98Bx8d2qCH3nIzBM
+         6uNRq+8kRY7kL6pGHie22QuIpD7zabm+/GV/461nwgIf0XTgk2noxdBBRPHBZGZ8y+
+         6TFIkJNGHDFoJzwPFf8RNERe+NNdFljC5AECmF3dtle7lW1Zz36Zb8MiiCHH1TBML9
+         xQqcco3wVr/iLI304DtdXx93lfIw1FzEucxhmmAlP0tpusQ/ua/0oqKgPta91HdZf/
+         6h76lhzzZ3MlQ==
+Date:   Wed, 3 Aug 2022 22:07:34 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>
-Cc:     "guaneryu@gmail.com" <guaneryu@gmail.com>,
-        "zlang@redhat.com" <zlang@redhat.com>,
+To:     Sherry Yang <sherry.yang@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "dchinner@redhat.com" <dchinner@redhat.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        "chandanrlinux@gmail.com" <chandanrlinux@gmail.com>,
+        "bfoster@redhat.com" <bfoster@redhat.com>,
         "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-        "guan@eryu.me" <guan@eryu.me>
-Subject: Re: [PATCH 3/3] xfs/533: fix golden output for this test
-Message-ID: <YutTyPjPlKp3icSz@magnolia>
-References: <165950048029.198815.11843926234080013062.stgit@magnolia>
- <165950049724.198815.5496412458825635633.stgit@magnolia>
- <4094bf3b-9be0-c629-648a-b78999e3ec83@fujitsu.com>
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1] xfs: initialize error in xfs_defer_finish_one
+Message-ID: <YutUFo9nB1ubWtb6@magnolia>
+References: <20220801190311.65703-1-sherry.yang@oracle.com>
+ <20220801204902.GA3600936@dread.disaster.area>
+ <Yun6I/drpxG4L4RO@magnolia>
+ <DB9D3780-165D-4E49-823D-4D5253E64905@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <4094bf3b-9be0-c629-648a-b78999e3ec83@fujitsu.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <DB9D3780-165D-4E49-823D-4D5253E64905@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 04, 2022 at 01:53:31AM +0000, xuyang2018.jy@fujitsu.com wrote:
-> on 2022/08/03 12:21, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Not sure what's up with this new test, but the golden output isn't right
-> > for upstream xfsprogs for-next.  Change it to pass there...
+On Wed, Aug 03, 2022 at 11:42:21PM +0000, Sherry Yang wrote:
 > 
-> It failed becuase libxfs code validates v5 feature fields.
+> > On Aug 2, 2022, at 9:31 PM, Darrick J. Wong <djwong@kernel.org> wrote:
+> > 
+> > On Tue, Aug 02, 2022 at 06:49:02AM +1000, Dave Chinner wrote:
+> >> On Mon, Aug 01, 2022 at 12:03:11PM -0700, Sherry Yang wrote:
+> >>> Path through non-void function 'xfs_defer_finish_one' may return error
+> >>> uninitialized if no iteration of 'list_for_each_safe' occurs. Fix this
+> >>> by initializing error.
+> >> 
+> >> I didn't think this situation was possible - how do we get deferred
+> >> work queued with no work items on it?
+> >> 
+> >> If we can return an uninitialised error from xfs_defer_finish_one()
+> >> because of an empty queued work, then something else has gone wrong
+> >> earlier in the work deferral process. If this can actually happen,
+> >> then we need to fix whatever is creating the empty work rather than
+> >> paper over it by initialising the error being returned for empty
+> >> works...
+> > 
+> > /me bets this is a response to a static checker that doesn't know that
+> > list_empty(&dfp->dfp_work) == false in all circumstances.  It's not
+> > possible for tp->t_dfops to contain an xfs_defer_pending with no work
+> > items.
 > 
-> b12d5ae5d ("xfs: validate v5 feature fields")
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >   tests/xfs/533.out |    2 +-
-> >   1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/tests/xfs/533.out b/tests/xfs/533.out
-> > index 7deb78a3..439fb16e 100644
-> > --- a/tests/xfs/533.out
-> > +++ b/tests/xfs/533.out
-> > @@ -1,5 +1,5 @@
-> >   QA output created by 533
-> >   Allowing write of corrupted data with good CRC
-> >   magicnum = 0
-> > -bad magic number
-
-Ohhh, so this is a V4 output.
-
-> > +Superblock has bad magic number 0x0. Not an XFS filesystem?
+> Hi Darrick, 
 > 
-> Since this case is designed to detect xfs_db bug, should we filter the 
-> output?
+> You’re correct. This is a false positive bug detected by our static code 
+> analysis tool. Sorry for the noise.
 
-Yep.  I'll rework this patch to handle V4 and V5.  Well, thanks for
-keeping me on my toes! ;)
+Well, thank /you/ for running smatch/sparse/whatever on the XFS code
+base.  Let us know if you find any other oddities, since it does tend to
+find things every now and then. :)
 
 --D
 
-> Best Regards
-> Yang Xu
-> >   0
+> Sherry
 > > 
+> > --D
+> > 
+> >> Cheers,
+> >> 
+> >> Dave.
+> >> -- 
+> >> Dave Chinner
+> >> david@fromorbit.com
+> 
