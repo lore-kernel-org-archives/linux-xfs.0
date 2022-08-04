@@ -2,126 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72014C25B06
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Aug 2022 22:59:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B204FC25B06
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Aug 2022 23:04:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240252AbiHDW7G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Aug 2022 18:59:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52920 "EHLO
+        id S240106AbiHDXEn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Aug 2022 19:04:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240193AbiHDW6v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Aug 2022 18:58:51 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 047F372EDE
-        for <linux-xfs@vger.kernel.org>; Thu,  4 Aug 2022 15:55:58 -0700 (PDT)
+        with ESMTP id S234270AbiHDXEm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Aug 2022 19:04:42 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F11983F314
+        for <linux-xfs@vger.kernel.org>; Thu,  4 Aug 2022 16:04:40 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-193-158.pa.nsw.optusnet.com.au [49.181.193.158])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5FB4710C8CA0;
-        Fri,  5 Aug 2022 08:55:56 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B357962D04A;
+        Fri,  5 Aug 2022 09:04:39 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oJjkw-009F2h-5B; Fri, 05 Aug 2022 08:55:54 +1000
-Date:   Fri, 5 Aug 2022 08:55:54 +1000
+        id 1oJjtO-009FAy-4X; Fri, 05 Aug 2022 09:04:38 +1000
+Date:   Fri, 5 Aug 2022 09:04:38 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Emmanouil Vamvakopoulos <emmanouil.vamvakopoulos@ijclab.in2p3.fr>
-Cc:     "@pop.gmail.com>" <cem@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: s_bmap and  flags explanation
-Message-ID: <20220804225554.GD3600936@dread.disaster.area>
-References: <1586129076.70820212.1659538177737.JavaMail.zimbra@ijclab.in2p3.fr>
- <1106593372.70825641.1659538603200.JavaMail.zimbra@ijclab.in2p3.fr>
- <20220803215909.GC3600936@dread.disaster.area>
- <789765075.71120211.1659608731638.JavaMail.zimbra@ijclab.in2p3.fr>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: check return codes when flushing block devices
+Message-ID: <20220804230438.GE3600936@dread.disaster.area>
+References: <165963638241.1272632.9852314965190809423.stgit@magnolia>
+ <165963638822.1272632.5382210082462983546.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <789765075.71120211.1659608731638.JavaMail.zimbra@ijclab.in2p3.fr>
+In-Reply-To: <165963638822.1272632.5382210082462983546.stgit@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62ec4e7c
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62ec5088
         a=SeswVvpAPK2RnNNwqI8AaA==:117 a=SeswVvpAPK2RnNNwqI8AaA==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=7-415B0cAAAA:8
-        a=hwTY5FewZKcuYIiCvp4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=VwQbUJbxAAAA:8 a=P-IC7800AAAA:8
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=QSdvR6El54khIaCTkrMA:9
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=d3PnA9EDa4IxuAV0gXij:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 04, 2022 at 12:25:31PM +0200, Emmanouil Vamvakopoulos wrote:
-> hello Carlos and Dave 
+On Thu, Aug 04, 2022 at 11:06:28AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> thank you for the replies
+> If a blkdev_issue_flush fails, fsync needs to report that to upper
+> levels.  Modify xfs_file_fsync to capture the errors, while trying to
+> flush as much data and log updates to disk as possible.
 > 
-> a) for the mismatch in alignment bewteen xfs  and underlying raid volume I have to re-check 
-> but from preliminary tests , when I mount the partition with a static allocsize ( e.g. allocsize=256k)
-> we have large file with large number of externs ( up to 40) but the sizes from du was comparable.
-
-As expected - fixing the post-EOF specualtive preallocation to
-256kB means almost no consumed space beyond eof so they will always
-be close (but not identical) for a non-sparse, non-shared file.
-
-But that begs the question: why are you concerned about large files
-consuming slightly more space than expected for a short period of
-time?
-
-We've been doing this since commit 055388a3188f ("xfs: dynamic
-speculative EOF preallocation") which was committed in January 2011
-- over a decade ago - and it's been well known for a couple of
-decades before that that ls and du cannot be
-relied to match on any filesystem that supports sparse files.
-
-And these days with deduplication/reflink that share extents betwen
-files, it's even less useful because du can be correct for every
-individual file, but then still report that more blocks are being
-used than the filesystem has capacity to store because it reports
-shared blocks multiple times...
-
-So why do you care that du and ls are different?
-
-> b) for the speculative preallocation beyond EOF of my files as I understood have to run xfs_fsr to get the space back. 
-
-No, you don't need to do anything, and you *most definitely* do
-*not* want to run xfs_fsr to remove it. If you really must remove
-specualtive prealloc, then run:
-
-# xfs_spaceman -c "prealloc -m 0" <mntpt>
-
-And that will remove all specualtive preallocation that is current
-on all in-memory inodes via an immediate blockgc pass.
-
-If you just want to remove post-eof blocks on a single file, then
-find out the file size with stat and truncate it to the same size.
-The truncate won't change the file size, but it will remove all
-blocks beyond EOF.
-
-*However*
-
-You should not ever need to be doing this as there are several
-automated triggers to remove it, all when the filesytem detects
-there is no active modification of the file being performed. One
-trigger is the last close of a file descriptor, another is the
-periodic background blockgc worker, and another is memory reclaim
-removing the inode from memory.
-
-In all cases, these are triggers that indicate that the file is not
-currently being written to, and hence the speculative prealloc is
-not needed anymore and so can be removed.
-
-So you should never have to remove it manually.
-
-> but why the inodes of those files remains dirty  at least for 300 sec  after the  closing of the file and lost the automatic removal of the preallocation ?
-
-What do you mean by "dirty"? A file with post-eof preallocation is
-not dirty in any way once the data in the file has been written
-back (usually within 30s).
-
-> we are runing on CentOS Stream release 8 with 4.18.0-383.el8.x86_64 
+> If log writes cannot flush the data device, we need to shut down the log
+> immediately because we've violated a log invariant.  Modify this code to
+> check the return value of blkdev_issue_flush as well.
 > 
-> but we never see something simliar on CentOS Linux release 7.9.2009 (Core) with  3.10.0-1160.45.1.el7.x86_64 
-> (for similar pattern of file sizes, but truly with different distributed strorage application)
+> This behavior seems to go back to about 2.6.15 or so, which makes this
+> fixes tag a bit misleading.
+> 
+> Link: https://elixir.bootlin.com/linux/v2.6.15/source/fs/xfs/xfs_vnodeops.c#L1187
+> Fixes: b5071ada510a ("xfs: remove xfs_blkdev_issue_flush")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_file.c |   22 ++++++++++++++--------
+>  fs/xfs/xfs_log.c  |   11 +++++++++--
+>  2 files changed, 23 insertions(+), 10 deletions(-)
 
-RHEL 7/CentOS 7 had this same behaviour - it was introduced in
-2.6.38. All your observation means is that the application running
-on RHEL 7 was writing the files in a way that didn't trigger
-speculative prealloc beyond EOF, not that speculative prealloc
-beyond EOF didn't exist....
+Looks good, couple of minor nits you can take or leave.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 5a171c0b244b..a02000be931b 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -142,7 +142,7 @@ xfs_file_fsync(
+>  {
+>  	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	int			error = 0;
+> +	int			error, err2;
+>  	int			log_flushed = 0;
+>  
+>  	trace_xfs_file_fsync(ip);
+> @@ -163,18 +163,21 @@ xfs_file_fsync(
+>  	 * inode size in case of an extending write.
+>  	 */
+>  	if (XFS_IS_REALTIME_INODE(ip))
+> -		blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
+> +		error = blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
+>  	else if (mp->m_logdev_targp != mp->m_ddev_targp)
+> -		blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
+> +		error = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
+>  
+>  	/*
+>  	 * Any inode that has dirty modifications in the log is pinned.  The
+> -	 * racy check here for a pinned inode while not catch modifications
+> +	 * racy check here for a pinned inode will not catch modifications
+>  	 * that happen concurrently to the fsync call, but fsync semantics
+>  	 * only require to sync previously completed I/O.
+>  	 */
+> -	if (xfs_ipincount(ip))
+> -		error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+> +	if (xfs_ipincount(ip)) {
+> +		err2 = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+> +		if (!error && err2)
+> +			error = err2;
+
+This is better done as
+
+		if (err2 && !error)
+			.....
+
+Because we only care about the value of error if err2 is non zero.
+Hence for normal operation where there are no errors, checking err2
+first is less code to execute as error never needs to be checked...
+
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 4b1c0a9c6368..15d7cdc7a632 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1925,9 +1925,16 @@ xlog_write_iclog(
+>  		 * device cache first to ensure all metadata writeback covered
+>  		 * by the LSN in this iclog is on stable storage. This is slow,
+>  		 * but it *must* complete before we issue the external log IO.
+> +		 *
+> +		 * If the flush fails, we cannot conclude that past metadata
+> +		 * writeback from the log succeeded, which is effectively a
+
+		 * writeback from the log succeeded, and repeating
+		 * the flush from iclog IO is not possible. Hence we have to
+		 * shut down with log IO error to avoid shutdown
+		 * re-entering this path and erroring out here again.
+		 */
 
 Cheers,
 
