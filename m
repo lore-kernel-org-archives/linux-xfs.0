@@ -2,173 +2,183 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F02C2C3F6B0
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Aug 2022 17:09:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 581C9C25B08
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Aug 2022 17:18:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240575AbiHERJJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Aug 2022 13:09:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60726 "EHLO
+        id S241010AbiHERSm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Aug 2022 13:18:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237268AbiHERJJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Aug 2022 13:09:09 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0F93472EE0
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Aug 2022 10:09:07 -0700 (PDT)
+        with ESMTP id S231281AbiHERSk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Aug 2022 13:18:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5E4842C640
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Aug 2022 10:18:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1659719347;
+        s=mimecast20190719; t=1659719918;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=r5W15z17AzoYxP/ni8JAfiKh3GiNFy5l7z/vSQgPe6A=;
-        b=QOhY8tz00ADktMcY62N+8WQFS848EcR1fMsqT5lomrtZxf8KFG77xL9DvwdhTjzqM/reyg
-        lYufpZvueVcShVP6mSWoroqO8ugVuHg5SgsS80DTRmLFvFJJApL/AsNH/5G3bVZYS7LSdJ
-        w9b+bUqMb9QZomi9Wq6EWre8XEGSP70=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=g88lQaqy4wejbQ8juNcEgdcW3ntpZ265KFVAS+Qb7mY=;
+        b=LKel5vp2Fb4Rb6P6+ApA9IESqNW+X3a62xxjALlSZO7SAYcPBfVUnb/Q9ksi3wooGBW0DY
+        vBHUkcX1IYFBJRNlbU7M29JQtl0u71IpDmn+3zDrG/h988qn3CijLAl0kaBoKKoyUCD6IX
+        XYFa7FxUro+z7WKg9NjjR/pn+eLbHFs=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-232--fhnpuhkOSyQm-7MoKyo3A-1; Fri, 05 Aug 2022 13:09:06 -0400
-X-MC-Unique: -fhnpuhkOSyQm-7MoKyo3A-1
-Received: by mail-qk1-f198.google.com with SMTP id n15-20020a05620a294f00b006b5768a0ed0so2405249qkp.7
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Aug 2022 10:09:06 -0700 (PDT)
+ us-mta-389-S5QjV7ysOFa0ieX5hXVCoA-1; Fri, 05 Aug 2022 13:18:37 -0400
+X-MC-Unique: S5QjV7ysOFa0ieX5hXVCoA-1
+Received: by mail-qk1-f200.google.com with SMTP id bs41-20020a05620a472900b006b8e84d6cddso2417438qkb.19
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Aug 2022 10:18:37 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=r5W15z17AzoYxP/ni8JAfiKh3GiNFy5l7z/vSQgPe6A=;
-        b=lmW7a+DBjRsdBKXhSJuZVoGSZFy8aLPGUlvaIkvrHJkJqw5yhGijYLldY/S5thsFT4
-         mlK78mc538cZu5zQW5b8SjCVqJs7+Z18/ehHh2uz6fwXoUpT0LqtDB4YBu6p57iEkhgJ
-         M0CM/Qz9oRxYiPqKm6Tm9vB7I7TdNa069Sr7LRC0B/Wdi4Ac9H3I6409v9bZgPNyil3T
-         cxOi9Xxp8kgp9XnDo823fVeVSWY0oFVhUVbpqDxSliwt3uuDDhvYNn3f987QGKgr6i9j
-         pCOOjzTfemWsqhYdOjoC8TCyCMynG/dfuH/0A3NxOTLeH7ZToZl08wPVaRiWSf0qndjN
-         NW9Q==
-X-Gm-Message-State: ACgBeo3mST7tFQRZlEvQQG/hz4xV7d1WNwdyfNdStfXUMDZRfi36It2u
-        2UkH0kCBHFHHRF/4zghhRBL21ENA70iFSE4CA/tfchDJxD2c0IITOtO8hf5JA9FhUulqtp5vO1V
-        n3OUsOvA/oEItw/gwLa4m
-X-Received: by 2002:a0c:9d46:0:b0:476:ff07:3fe7 with SMTP id n6-20020a0c9d46000000b00476ff073fe7mr6613721qvf.15.1659719345487;
-        Fri, 05 Aug 2022 10:09:05 -0700 (PDT)
-X-Google-Smtp-Source: AA6agR7SGAsAp5S0tI0cjBQT5M9dteYX2aKog3Zhcsme6d1n+pmQikMyOMQ/NeozoNAYhuCGzwvx8w==
-X-Received: by 2002:a0c:9d46:0:b0:476:ff07:3fe7 with SMTP id n6-20020a0c9d46000000b00476ff073fe7mr6613688qvf.15.1659719344988;
-        Fri, 05 Aug 2022 10:09:04 -0700 (PDT)
+        bh=g88lQaqy4wejbQ8juNcEgdcW3ntpZ265KFVAS+Qb7mY=;
+        b=qzGx+OUrBA3eb/2pZTn8l+XBcrabEWKFZe4s/5UF1g5FOWtpCo8nFDREIJscDJexGN
+         nFC74H+uV9UeRp7Btdtx/e4Xcn/NQNDpVIE1PpfvKm+oE8NU78g0tXnII3IoJvK7O2HB
+         jNGf03VBjKT2Z1GqLsBYNTXBZ7y3Gh8Ij6YpT6iMSBWVOb8R/anHUC1cmO0bGEqH31mV
+         +mNedBZAMhWL6p/f+dLkWNicqV4X+B6pNhomeAspcr3FTziaLFcYk3lf4z2a/d6rHnx4
+         eCY9IfLImPYnWc+wXUwbRUqHCHDiFg0AOCgxpoobzBqsy0a8aN7a2kxpPq3x/0D7z+OQ
+         PuLQ==
+X-Gm-Message-State: ACgBeo3XDNPRV9eJCyEKBaYmCvq7nZe1IfdJ5UToyj8z9gZ8rN09qxKv
+        IkDI/RSqcjT7dKEdPkXzTHNZRCBh3pbomnTq8dyN8yygHISTuuPdt/1pG/dNbQMPeIzNkWU1QU0
+        WvzNKx2yqGExD1YNXqo0i
+X-Received: by 2002:a05:620a:440b:b0:6b6:2e97:e4c with SMTP id v11-20020a05620a440b00b006b62e970e4cmr5790557qkp.649.1659719916928;
+        Fri, 05 Aug 2022 10:18:36 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR6kqjtHICcj4eDxklFmB/oks0HJmu522PPq/3wsMgKT+PkbCxF+svnfDGgT8WpnBoMluRfLog==
+X-Received: by 2002:a05:620a:440b:b0:6b6:2e97:e4c with SMTP id v11-20020a05620a440b00b006b62e970e4cmr5790546qkp.649.1659719916688;
+        Fri, 05 Aug 2022 10:18:36 -0700 (PDT)
 Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id v19-20020a05620a441300b006b5f7d0d0b6sm3449126qkp.4.2022.08.05.10.09.02
+        by smtp.gmail.com with ESMTPSA id q55-20020a05620a2a7700b006b909ad6646sm3369843qkp.16.2022.08.05.10.18.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Aug 2022 10:09:04 -0700 (PDT)
-Date:   Sat, 6 Aug 2022 01:08:58 +0800
+        Fri, 05 Aug 2022 10:18:36 -0700 (PDT)
+Date:   Sat, 6 Aug 2022 01:18:30 +0800
 From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v1.3 3/3] common/ext4: provide custom ext4 scratch fs
- options
-Message-ID: <20220805170858.bxpnzplbgrrlouha@zlang-mailbox>
-References: <165950050051.198922.13423077997881086438.stgit@magnolia>
- <165950051745.198922.6487109955066878945.stgit@magnolia>
- <YuvzzdisuzXKVlJK@magnolia>
+To:     Zorro Lang <zlang@kernel.org>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] generic: new test to verify selinux label of whiteout
+ inode
+Message-ID: <20220805171830.bufxpsw36plxxbux@zlang-mailbox>
+References: <20220714145632.998355-1-zlang@kernel.org>
+ <20220725061327.266746-1-zlang@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YuvzzdisuzXKVlJK@magnolia>
+In-Reply-To: <20220725061327.266746-1-zlang@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 04, 2022 at 09:29:01AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jul 25, 2022 at 02:13:27PM +0800, Zorro Lang wrote:
+> A but on XFS cause renameat2() with flags=RENAME_WHITEOUT doesn't
+> apply an selinux label. That's quite different with other fs (e.g.
+> ext4, tmpfs).
 > 
-> Create a _scratch_options backend for ext* so that we can inject
-> pathnames to external log devices into the scratch fs mount options.
-> This enables common/dm* to install block device filters, e.g. dm-error
-> for stress testing.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> v1.1: bad at counting
-> v1.2: refactor _scratch_mkfs_ext4 to use _scratch_options too
-> v1.3: quiet down realpath usage when SCRATCH_LOGDEV is unset
+> Signed-off-by: Zorro Lang <zlang@kernel.org>
+> ---
 
-I think you'd like move these 3 change log lines after the "---" ?
-
-As usual, I'm going to give this patchset enough testing before merging
-it, due to it affect ext4 testing too much. And hope to get review from
-ext4 list, or "no objection" means all good by default :)
+Ping, any review poings for this patch? The bug fix has been merged into
+mainline kernel:
+  70b589a37e1a ("xfs: add selinux labels to whiteout inodes")
 
 Thanks,
 Zorro
 
-> ---
->  common/ext4 |   35 ++++++++++++++++++++++++++++++++---
->  common/rc   |    3 +++
->  2 files changed, 35 insertions(+), 3 deletions(-)
 > 
-> diff --git a/common/ext4 b/common/ext4
-> index 287705af..f2df888c 100644
-> --- a/common/ext4
-> +++ b/common/ext4
-> @@ -63,16 +63,24 @@ _setup_large_ext4_fs()
->  	return 0
->  }
->  
-> +_scratch_mkfs_ext4_opts()
+> Thanks the review points from Amir, this v2 did below changes:
+> 1) Add "whiteout" group
+> 2) Add commit ID from xfs-linux xfs-5.20-merge-2 (will change if need)
+> 3) Rebase to latest fstests for-next branch
+> 
+> Thanks,
+> Zorro
+> 
+>  tests/generic/693     | 64 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/693.out |  2 ++
+>  2 files changed, 66 insertions(+)
+>  create mode 100755 tests/generic/693
+>  create mode 100644 tests/generic/693.out
+> 
+> diff --git a/tests/generic/693 b/tests/generic/693
+> new file mode 100755
+> index 00000000..adf191c4
+> --- /dev/null
+> +++ b/tests/generic/693
+> @@ -0,0 +1,64 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022 Red Hat, Copyright.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 693
+> +#
+> +# Verify selinux label can be kept after RENAME_WHITEOUT. This is
+> +# a regression test for:
+> +#   70b589a37e1a ("xfs: add selinux labels to whiteout inodes")
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick rename attr whiteout
+> +
+> +# Import common functions.
+> +. ./common/attr
+> +. ./common/renameat2
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_require_scratch
+> +_require_attrs
+> +_require_renameat2 whiteout
+> +
+> +_fixed_by_kernel_commit 70b589a37e1a \
+> +	xfs: add selinux labels to whiteout inodes
+> +
+> +get_selinux_label()
 > +{
-> +	mkfs_opts=$*
+> +	local label
 > +
-> +	_scratch_options mkfs
-> +
-> +	echo "$MKFS_EXT4_PROG $SCRATCH_OPTIONS $mkfs_opts"
+> +	label=`_getfattr --absolute-names -n security.selinux $@ | sed -n 's/security.selinux=\"\(.*\)\"/\1/p'`
+> +	if [ ${PIPESTATUS[0]} -ne 0 -o -z "$label" ];then
+> +		_fail "Fail to get selinux label: $label"
+> +	fi
+> +	echo $label
 > +}
 > +
->  _scratch_mkfs_ext4()
->  {
-> -	local mkfs_cmd="$MKFS_EXT4_PROG -F"
-> +	local mkfs_cmd="`_scratch_mkfs_ext4_opts`"
->  	local mkfs_filter="grep -v -e ^Warning: -e \"^mke2fs \" | grep -v \"^$\""
->  	local tmp=`mktemp -u`
->  	local mkfs_status
->  
->  	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
-> -	    $mkfs_cmd -O journal_dev $MKFS_OPTIONS $SCRATCH_LOGDEV && \
-> -	    mkfs_cmd="$mkfs_cmd -J device=$SCRATCH_LOGDEV"
-> +	    $MKFS_EXT4_PROG -F -O journal_dev $MKFS_OPTIONS $SCRATCH_LOGDEV
->  
->  	_scratch_do_mkfs "$mkfs_cmd" "$mkfs_filter" $* 2>$tmp.mkfserr 1>$tmp.mkfsstd
->  	mkfs_status=$?
-> @@ -154,3 +162,24 @@ _require_scratch_richacl_ext4()
->  		|| _notrun "kernel doesn't support richacl feature on $FSTYP"
->  	_scratch_unmount
->  }
+> +_scratch_mkfs >> $seqres.full 2>&1
+> +# SELINUX_MOUNT_OPTIONS will be set in common/config if selinux is enabled
+> +if [ -z "$SELINUX_MOUNT_OPTIONS" ]; then
+> +	_notrun "Require selinux to be enabled"
+> +fi
+> +# This test need to verify selinux labels in objects, so unset this selinux
+> +# mount option
+> +export SELINUX_MOUNT_OPTIONS=""
+> +_scratch_mount
 > +
-> +_scratch_ext4_options()
-> +{
-> +	local type=$1
-> +	local log_opt=""
+> +touch $SCRATCH_MNT/f1
+> +echo "Before RENAME_WHITEOUT" >> $seqres.full
+> +ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
+> +# Expect f1 and f2 have same label after RENAME_WHITEOUT
+> +$here/src/renameat2 -w $SCRATCH_MNT/f1 $SCRATCH_MNT/f2
+> +echo "After RENAME_WHITEOUT" >> $seqres.full
+> +ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
+> +label1=`get_selinux_label $SCRATCH_MNT/f1`
+> +label2=`get_selinux_label $SCRATCH_MNT/f2`
+> +if [ "$label1" != "$label2" ];then
+> +	echo "$label1 != $label2"
+> +fi
 > +
-> +	case $type in
-> +	mkfs)
-> +		SCRATCH_OPTIONS="$SCRATCH_OPTIONS -F"
-> +		log_opt="-J device=$SCRATCH_LOGDEV"
-> +		;;
-> +	mount)
-> +		# As of kernel 5.19, the kernel mount option path parser only
-> +		# accepts direct paths to block devices--the final path
-> +		# component cannot be a symlink.
-> +		log_opt="-o journal_path=$(realpath -q "$SCRATCH_LOGDEV")"
-> +		;;
-> +	esac
-> +	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
-> +		SCRATCH_OPTIONS="$SCRATCH_OPTIONS ${log_opt}"
-> +}
-> diff --git a/common/rc b/common/rc
-> index dc1d65c3..b82bb36b 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -178,6 +178,9 @@ _scratch_options()
->      "xfs")
->  	_scratch_xfs_options "$@"
->  	;;
-> +    ext2|ext3|ext4|ext4dev)
-> +	_scratch_ext4_options "$@"
-> +	;;
->      esac
->  }
->  
+> +echo "Silence is golden"
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/693.out b/tests/generic/693.out
+> new file mode 100644
+> index 00000000..01884ea5
+> --- /dev/null
+> +++ b/tests/generic/693.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 693
+> +Silence is golden
+> -- 
+> 2.31.1
 > 
 
