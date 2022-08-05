@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D73D1C3F6B0
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Aug 2022 19:17:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B85C3C3F6B0
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Aug 2022 20:00:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241356AbiHETRL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Aug 2022 15:17:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36102 "EHLO
+        id S241416AbiHEUAQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Aug 2022 16:00:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241265AbiHETRJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Aug 2022 15:17:09 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C3CEC5C375
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Aug 2022 12:17:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1659727027;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=wz2EdOGG/D9qh1RXeFa2rAxeTVlLfTLZN3gXxDqUcbs=;
-        b=ithkWyMBhBwuoRxQLEyU+04+82yagREf5lcHka2fI5WB4ll0y6yrRGMgPNiVbC1CdHWDwM
-        kz9PIL9blM/JoCpQtuj5A8cZwQBsh+60ewYLEt7EExmBq1gM151wTXm+MnjQUqXiEfx/6H
-        ItAilQZKTtSR8SWwqlVY7PZhjSb+GD0=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-191-yQ23jwzwMSil63lyILamjQ-1; Fri, 05 Aug 2022 15:17:03 -0400
-X-MC-Unique: yQ23jwzwMSil63lyILamjQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S236891AbiHEUAO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Aug 2022 16:00:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D09DE5F;
+        Fri,  5 Aug 2022 13:00:13 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 075AF3C025CA;
-        Fri,  5 Aug 2022 19:17:03 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.33.36.10])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A2F322166B26;
-        Fri,  5 Aug 2022 19:17:01 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <20220805183543.274352-2-jlayton@kernel.org>
-References: <20220805183543.274352-2-jlayton@kernel.org> <20220805183543.274352-1-jlayton@kernel.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     dhowells@redhat.com, linux-fsdevel@vger.kernel.org,
-        lczerner@redhat.com, bxue@redhat.com, ceph-devel@vger.kernel.org,
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C7FCE61A02;
+        Fri,  5 Aug 2022 20:00:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CAC9C433D6;
+        Fri,  5 Aug 2022 20:00:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1659729612;
+        bh=i34KpvdFHHe7YrZHKr55abPcKB4K2b6UnHu2ZsN87YA=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=SGzW6bC231TCU7f9FLpE7fDEEGNPz0SnBktqMLmC7eI+P2EMq/0kPDWsUMJL/vxyn
+         x6u/qBTBeKCO/KUwWzloTxrbTr/gC4n4UlcFizASMUc2F67WzO5ksJX09jLz6yxcjK
+         anYRXB+I4Okwv9c8IvkTGTnYGzHM7xnKbX1iYfDHpVeypABOXMvJpy9TSs4BsGrhtq
+         AFzRfruO3y29wFtGX5i1BHHDDor3ToU4PbIHJG5GP01IOA94x0rFDFmIAfNadukrtT
+         SlShzPyTYogDGJITQjA1qEaBOM0/q4UebXP2z991PoNcttfOMYAJg2KmWWUcaktWlC
+         1EaX09SgBTXFg==
+Message-ID: <350a119fc754f99aeada313782f3cd5e67cf1740.camel@kernel.org>
+Subject: Re: [RFC PATCH 1/4] vfs: report change attribute in statx for
+ IS_I_VERSION inodes
+From:   Jeff Layton <jlayton@kernel.org>
+To:     David Howells <dhowells@redhat.com>
+Cc:     linux-fsdevel@vger.kernel.org, lczerner@redhat.com,
+        bxue@redhat.com, ceph-devel@vger.kernel.org,
         linux-nfs@vger.kernel.org, linux-afs@lists.infradead.org,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, Jeff Layton <jlayton@redhat.com>
-Subject: Re: [RFC PATCH 1/4] vfs: report change attribute in statx for IS_I_VERSION inodes
+        linux-btrfs@vger.kernel.org
+Date:   Fri, 05 Aug 2022 16:00:09 -0400
+In-Reply-To: <3731056.1659727021@warthog.procyon.org.uk>
+References: <20220805183543.274352-2-jlayton@kernel.org>
+         <20220805183543.274352-1-jlayton@kernel.org>
+         <3731056.1659727021@warthog.procyon.org.uk>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.3 (3.44.3-1.fc36) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <3731055.1659727021.1@warthog.procyon.org.uk>
-Date:   Fri, 05 Aug 2022 20:17:01 +0100
-Message-ID: <3731056.1659727021@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 2.78 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Jeff Layton <jlayton@kernel.org> wrote:
+On Fri, 2022-08-05 at 20:17 +0100, David Howells wrote:
+> Jeff Layton <jlayton@kernel.org> wrote:
+>=20
+> > +	__u64	stx_chgattr;	/* Inode change attribute */
+>=20
+> Why not call it stx_change_attr?
+>=20
+> David
+>=20
 
-> +	__u64	stx_chgattr;	/* Inode change attribute */
-
-Why not call it stx_change_attr?
-
-David
-
+Ok. I'm open to suggestions on the naming in general. It's a small
+patchset so it's not hard to change that.
+--=20
+Jeff Layton <jlayton@kernel.org>
