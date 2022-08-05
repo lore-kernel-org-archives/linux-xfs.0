@@ -2,136 +2,188 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 148D2C48BE4
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Aug 2022 22:06:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4C2AC00140
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Aug 2022 22:29:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241666AbiHEWGo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Aug 2022 18:06:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57118 "EHLO
+        id S240182AbiHEW3K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Aug 2022 18:29:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241592AbiHEWGn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Aug 2022 18:06:43 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D0FF711C22
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Aug 2022 15:06:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1659737199;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zlDrYXgDCUthUhiy73M1xjmezLFpu3vi4ADVmnqoFtM=;
-        b=IZZ179FP/9ItWRAObFFeQllCWkBijN1zarTlzOSekT8m1c3A8iTVUmVaq6T5F7iDd3PmTb
-        avuzWnfr3EWEru75w6hpPOONLYmtIZMJBYkkUKxndsoiko79gOZyrc2zPbaS+/0Crwpt9o
-        StmUl+KbQGTVG1O0yGhpdxAnAfcClWo=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-135-vcmABGUOOJaku1Ad4gyFXw-1; Fri, 05 Aug 2022 18:06:38 -0400
-X-MC-Unique: vcmABGUOOJaku1Ad4gyFXw-1
-Received: by mail-qv1-f69.google.com with SMTP id oo27-20020a056214451b00b00477249248e2so2122322qvb.4
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Aug 2022 15:06:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc;
-        bh=zlDrYXgDCUthUhiy73M1xjmezLFpu3vi4ADVmnqoFtM=;
-        b=LXFb+AhrSZFi3h9KIjaf7smQHOvk+Spl13iWPIJi4nqhzbn3+RETVWvva1v7i8uymE
-         wc6IlPJ4vNaZRZd6cl1SRJCt5+RNUUQdrJ9WBAF8tHVjwI7wuS5rjOpZj1YIYD8LZWpn
-         0LuNLkTRoWi+BdRboyE+2Y1NBPk34gGEws7cnRDgCcFR+oCg94laN4TBeWZFbkCtDMVu
-         VaWbEJO+xmfBHt93+4bdut5+hCT0Vu9A5jGdFMAf1vxpL25XNyB2VWreXmrR55HPz2uN
-         Dmjcor4jVNwpUIhfdID2HAoqDjHVZ2B3Cpab/Y6w2wmOS7C8I/w6qxK3+w87WNBDZBsJ
-         SeEw==
-X-Gm-Message-State: ACgBeo1xipA1uqUwc7BkDdW0CM60VmqsNaI3Zhu8IawCqJ+CctwtxkEa
-        iGjTefUIMy2Y9jyuKYeM41ZxZk6eOr87TBhEH3bvfqRdmbViA1Xezd4re4fM8IrAWM6FPZXeAtr
-        xQI7rREzzENx7HJZCFnEM
-X-Received: by 2002:a05:620a:170e:b0:6b8:fa02:6110 with SMTP id az14-20020a05620a170e00b006b8fa026110mr6704340qkb.184.1659737198075;
-        Fri, 05 Aug 2022 15:06:38 -0700 (PDT)
-X-Google-Smtp-Source: AA6agR7xEDaXjDnYGgwNPYVw0vUMBp/ecTy5raNl40Xwriy8H7D/VAv8N6Y/Htlz8LTyvWjvxbIRbw==
-X-Received: by 2002:a05:620a:170e:b0:6b8:fa02:6110 with SMTP id az14-20020a05620a170e00b006b8fa026110mr6704322qkb.184.1659737197860;
-        Fri, 05 Aug 2022 15:06:37 -0700 (PDT)
-Received: from [192.168.1.3] (68-20-15-154.lightspeed.rlghnc.sbcglobal.net. [68.20.15.154])
-        by smtp.gmail.com with ESMTPSA id g18-20020a05620a40d200b006b5f9b7ac87sm4514981qko.26.2022.08.05.15.06.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Aug 2022 15:06:37 -0700 (PDT)
-Message-ID: <c10e4aa381aea86bb51b005887533e28f9c7302b.camel@redhat.com>
-Subject: Re: [RFC PATCH 1/4] vfs: report change attribute in statx for
- IS_I_VERSION inodes
-From:   Jeff Layton <jlayton@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-fsdevel@vger.kernel.org, dhowells@redhat.com,
-        lczerner@redhat.com, bxue@redhat.com, ceph-devel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org
-Date:   Fri, 05 Aug 2022 18:06:36 -0400
-In-Reply-To: <20220805220136.GG3600936@dread.disaster.area>
-References: <20220805183543.274352-1-jlayton@kernel.org>
-         <20220805183543.274352-2-jlayton@kernel.org>
-         <20220805220136.GG3600936@dread.disaster.area>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.3 (3.44.3-1.fc36) 
+        with ESMTP id S237858AbiHEW3J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Aug 2022 18:29:09 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9499F1CFE4
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Aug 2022 15:29:03 -0700 (PDT)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 5F99D450A89
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Aug 2022 17:28:01 -0500 (CDT)
+Message-ID: <0ad6dde6-9c88-2978-3ba4-0dda8de82808@sandeen.net>
+Date:   Fri, 5 Aug 2022 17:29:01 -0500
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.12.0
+Content-Language: en-US
+To:     xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs 5.19.0-rc1 released
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------OVG490c0q7mgQB0AkbE0SUeL"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, 2022-08-06 at 08:01 +1000, Dave Chinner wrote:
-> On Fri, Aug 05, 2022 at 02:35:40PM -0400, Jeff Layton wrote:
-> > From: Jeff Layton <jlayton@redhat.com>
-> >=20
-> > Claim one of the spare fields in struct statx to hold a 64-bit change
-> > attribute. When statx requests this attribute, do an
-> > inode_query_iversion and fill the result in the field.
-> >=20
-> > Also update the test-statx.c program to fetch the change attribute as
-> > well.
-> >=20
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > ---
-> >  fs/stat.c                 | 7 +++++++
-> >  include/linux/stat.h      | 1 +
-> >  include/uapi/linux/stat.h | 3 ++-
-> >  samples/vfs/test-statx.c  | 4 +++-
-> >  4 files changed, 13 insertions(+), 2 deletions(-)
-> >=20
-> > diff --git a/fs/stat.c b/fs/stat.c
-> > index 9ced8860e0f3..976e0a59ab23 100644
-> > --- a/fs/stat.c
-> > +++ b/fs/stat.c
-> > @@ -17,6 +17,7 @@
-> >  #include <linux/syscalls.h>
-> >  #include <linux/pagemap.h>
-> >  #include <linux/compat.h>
-> > +#include <linux/iversion.h>
-> > =20
-> >  #include <linux/uaccess.h>
-> >  #include <asm/unistd.h>
-> > @@ -118,6 +119,11 @@ int vfs_getattr_nosec(const struct path *path, str=
-uct kstat *stat,
-> >  	stat->attributes_mask |=3D (STATX_ATTR_AUTOMOUNT |
-> >  				  STATX_ATTR_DAX);
-> > =20
-> > +	if ((request_mask & STATX_CHGATTR) && IS_I_VERSION(inode)) {
-> > +		stat->result_mask |=3D STATX_CHGATTR;
-> > +		stat->chgattr =3D inode_query_iversion(inode);
-> > +	}
->=20
-> If you're going to add generic support for it, shouldn't there be a
-> generic test in fstests that ensures that filesystems that advertise
-> STATX_CHGATTR support actually behave correctly? Including across
-> mounts, and most importantly, that it is made properly stable by
-> fsync?
->=20
-> i.e. what good is this if different filesystems have random quirks
-> that mean it can't be relied on by userspace to tell it changes have
-> occurred?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------OVG490c0q7mgQB0AkbE0SUeL
+Content-Type: multipart/mixed; boundary="------------mNWMujgBIUvcc3piwBu5Sph5";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Message-ID: <0ad6dde6-9c88-2978-3ba4-0dda8de82808@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs 5.19.0-rc1 released
 
-Absolutely. Being able to better test the i_version field for consistent
-behavior is a primary goal. I haven't yet written any yet, but we'd
-definitely want something in xfstests if we decide this is worthwhile.
---=20
-Jeff Layton <jlayton@redhat.com>
+--------------mNWMujgBIUvcc3piwBu5Sph5
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
+Hi folks,
+
+The xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated and tagged with v5.19.0-rc1
+
+If anything is missing for the final v5.19.0 release, speak now!
+
+The new head of the master branch is commit:
+
+cf06f3af (xfsprogs: Release v5.19.0-rc1
+
+New Commits:
+
+Chandan Babu R (2):
+      [91c1d083] xfs_repair: Search for conflicts in inode_tree_ptrs[] wh=
+en processing uncertain inodes
+      [1b3daa7d] xfs_repair: Add support for upgrading to large extent co=
+unters
+
+Darrick J. Wong (26):
+      [41cbb27c] xfs: fix TOCTOU race involving the new logged xattrs con=
+trol knob
+      [53cbe278] xfs: fix variable state usage
+      [5e572d1a] xfs: empty xattr leaf header blocks are not corruption
+      [c21a5691] xfs: don't hold xattr leaf buffers across transaction ro=
+lls
+      [95e3fc7f] misc: fix unsigned integer comparison complaints
+      [053fcbc7] xfs_logprint: fix formatting specifiers
+      [d6bfc06d] libxfs: remove xfs_globals.larp
+      [fa0f9232] xfs_repair: always rewrite secondary supers when needsre=
+pair is set
+      [84c5f08f] xfs_repair: don't flag log_incompat inconsistencies as c=
+orruptions
+      [766bfbd7] xfs_db: identify the minlogsize transaction reservation
+      [baf8a5df] xfs_copy: don't use cached buffer reads until after libx=
+fs_mount
+      [b83b2ec0] xfs_repair: clear DIFLAG2_NREXT64 when filesystem doesn'=
+t support nrext64
+      [0ec4cd64] xfs_repair: detect and fix padding fields that changed w=
+ith nrext64
+      [b6fd1034] mkfs: preserve DIFLAG2_NREXT64 when setting other inode =
+attributes
+      [42efbb99] mkfs: document the large extent count switch in the --he=
+lp screen
+      [ad8a3d7c] mkfs: always use new_diflags2 to initialize new inodes
+      [f2e38861] xfs_repair: check free rt extent count
+      [9d454cca] xfs_repair: check the rt bitmap against observations
+      [daebb4ce] xfs_repair: check the rt summary against observations
+      [f50d3462] xfs_repair: ignore empty xattr leaf blocks
+      [50dba818] mkfs: terminate getsubopt arrays properly
+      [28965957] libxfs: stop overriding MAP_SYNC in publicly exported he=
+ader files
+      [42371fb3] mkfs: ignore data blockdev stripe geometry for small fil=
+esystems
+      [6e0ed3d1] mkfs: stop allowing tiny filesystems
+      [db5b8665] mkfs: complain about impossible log size constraints
+      [7aeffc87] xfs_repair: check filesystem geometry before allowing up=
+grades
+
+Eric Sandeen (2):
+      [e298041e] xfsprogs: Release v5.19.0-rc0.1
+      [cf06f3af] xfsprogs: Release v5.19.0-rc1
+
+Zhang Boyang (1):
+      [c1c71781] mkfs: update manpage of bigtime and inobtcount
+
+hexiaole (1):
+      [03bc6539] xfs: correct nlink printf specifier from hd to PRIu32
+
+
+Code Diffstat:
+
+ VERSION                  |   2 +-
+ configure.ac             |   2 +-
+ copy/xfs_copy.c          |   2 +-
+ db/check.c               |  10 ++-
+ db/logformat.c           |   4 +-
+ db/metadump.c            |  11 ++-
+ doc/CHANGES              |  26 ++++++
+ include/linux.h          |   8 --
+ include/xfs_mount.h      |   8 +-
+ io/io.h                  |   2 +-
+ io/mmap.c                |  25 +++---
+ libxfs/init.c            |  24 ++++--
+ libxfs/libxfs_api_defs.h |   3 +
+ libxfs/util.c            |  15 ++--
+ libxfs/xfs_attr.c        |  47 ++++-------
+ libxfs/xfs_attr.h        |  17 +---
+ libxfs/xfs_attr_leaf.c   |  37 +++++----
+ libxfs/xfs_attr_leaf.h   |   3 +-
+ libxfs/xfs_da_btree.h    |   4 +-
+ logprint/log_misc.c      |   2 +-
+ logprint/log_print_all.c |   2 +-
+ m4/package_libcdev.m4    |   3 +-
+ man/man8/mkfs.xfs.8.in   |  23 +++--
+ man/man8/xfs_admin.8     |   7 ++
+ mkfs/xfs_mkfs.c          | 121 ++++++++++++++++++++++++++-
+ repair/agheader.c        |  23 ++++-
+ repair/attr_repair.c     |  20 +++++
+ repair/dino_chunks.c     |   3 +-
+ repair/dinode.c          |  47 ++++++++++-
+ repair/globals.c         |   1 +
+ repair/globals.h         |   1 +
+ repair/phase2.c          | 137 ++++++++++++++++++++++++++++--
+ repair/phase5.c          |  13 ++-
+ repair/protos.h          |   1 +
+ repair/rt.c              | 212 +++++++++++++++++------------------------=
+------
+ repair/rt.h              |  18 ++--
+ repair/xfs_repair.c      |  18 +++-
+ 37 files changed, 587 insertions(+), 315 deletions(-)
+
+--------------mNWMujgBIUvcc3piwBu5Sph5--
+
+--------------OVG490c0q7mgQB0AkbE0SUeL
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmLtma0FAwAAAAAACgkQIK4WkuE93uCY
+PhAAw+z3pZ2wDszVO4McmvRhrgkQYo3dzNMntW2f4QWkEoX8f3FVE/LQVVKNUB9Kl6LSI7JeJnm5
+KHWVwJz2An2mJyjR3KmN7qs6B9Q0ueZP1/lSPBofYcqyW9BguHz/VHhbkzVEy3+7BRhBc5PMBxkH
+CKkRFr3HnDDIQbOFxpCQzB5q6YCJVDNxDNTzEftITIHPawgbP38EEugs1TIYeHqhEjgjxGMcFa5d
+OWFsAlYNC0NYlo+AkCrDS55xStukzfTi1L2SyOJ+rBj9g/cpSwS1qTlsxA/fJvPcWyFmqK27H7lr
+w43jF00Y/Npp9h/DR7U3Nc2W4Ef/gPnR2dGViKLQu2hEGQHDFy1IS6Kucv0q3QzgSueng+ptJLoi
+0IYfuGNMVs50aG+sdIeIDAGjYaSbLdSg9NTsOSw0+W88c/RV60dp9ZdoWDWhAy8gxITsbi39kXMO
+xmA0nzR0Qh49VaqAvF1GHCp3L35Hv2cnXstNcwhPMuoyhAYZ6uAhd0DUJrLAXXdh5F5dD+ZXxwBe
+xz5HN0yI/l9d/sBFEUS40Ntb6FafaRbZxTCwlB1Pb0DOWJSagqIBUlfePdJfMU4V3zv232fLedSI
+j7MrBGcJPVyspmlsfKON25QLYN5Ci9SvJe3Gd6/1F7cQy/Gt8qiLWkEmyrWPTxsr/23wcbhtfxOB
+AP8=
+=Xt3J
+-----END PGP SIGNATURE-----
+
+--------------OVG490c0q7mgQB0AkbE0SUeL--
