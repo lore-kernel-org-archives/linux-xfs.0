@@ -2,188 +2,384 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4C2AC00140
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Aug 2022 22:29:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D83C00140
+	for <linux-xfs@archiver.kernel.org>; Sat,  6 Aug 2022 00:34:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240182AbiHEW3K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Aug 2022 18:29:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41274 "EHLO
+        id S233833AbiHFAej (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Aug 2022 20:34:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237858AbiHEW3J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Aug 2022 18:29:09 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9499F1CFE4
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Aug 2022 15:29:03 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        with ESMTP id S233588AbiHFAei (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Aug 2022 20:34:38 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E44692D1F2
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Aug 2022 17:34:36 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5F99D450A89
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Aug 2022 17:28:01 -0500 (CDT)
-Message-ID: <0ad6dde6-9c88-2978-3ba4-0dda8de82808@sandeen.net>
-Date:   Fri, 5 Aug 2022 17:29:01 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.12.0
-Content-Language: en-US
+        by ams.source.kernel.org (Postfix) with ESMTPS id 928C9B80CD7
+        for <linux-xfs@vger.kernel.org>; Sat,  6 Aug 2022 00:34:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AFC4C433D7;
+        Sat,  6 Aug 2022 00:34:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1659746074;
+        bh=WqkLQBvIlMKPsjMJavLeBh5eluKHTB/YZH3PqkHllvQ=;
+        h=Date:From:To:Cc:Subject:From;
+        b=QTP9ENYrVGNwltLIpvmzZmla3dCXn/le8PeVoQZpUl6MdNdgwgA3bF2qyd2i0Qvj4
+         iS956iceOeVTjPd/Bv4X84kTKKm1QYN8iMtm1Ro5tJx2SPepzLJJNMKy7kyxmcS2C/
+         wM45xTWdbjT+GyV342XNE/RPLEfFMFVPPbYy5HMbtPAdQlHHgJoVcOHRwUAVXzQzzJ
+         6GaKIVd3uxKvSpx37V/Es9M+qs4KG2th7hYglyVXHBa63L1A44QK03X0zaGg4NZqFX
+         nkromVlyLWCzX+sKx2ZyyvDozG+2+JXof8WqbetPlcdGglcnYkxeT6hK69UfugJ3l/
+         Q4wmcfSkk7zIA==
+Date:   Fri, 5 Aug 2022 17:34:33 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs 5.19.0-rc1 released
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------OVG490c0q7mgQB0AkbE0SUeL"
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>
+Subject: [PATCH v2] xfs: Fix false ENOSPC when performing direct write on a
+ delalloc extent in cow fork
+Message-ID: <Yu23GXwjnyJWOm1M@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------OVG490c0q7mgQB0AkbE0SUeL
-Content-Type: multipart/mixed; boundary="------------mNWMujgBIUvcc3piwBu5Sph5";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <0ad6dde6-9c88-2978-3ba4-0dda8de82808@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs 5.19.0-rc1 released
+From: Chandan Babu R <chandan.babu@oracle.com>
 
---------------mNWMujgBIUvcc3piwBu5Sph5
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On a higly fragmented filesystem a Direct IO write can fail with -ENOSPC error
+even though the filesystem has sufficient number of free blocks.
 
-Hi folks,
+This occurs if the file offset range on which the write operation is being
+performed has a delalloc extent in the cow fork and this delalloc extent
+begins much before the Direct IO range.
 
-The xfsprogs repository at:
+In such a scenario, xfs_reflink_allocate_cow() invokes xfs_bmapi_write() to
+allocate the blocks mapped by the delalloc extent. The extent thus allocated
+may not cover the beginning of file offset range on which the Direct IO write
+was issued. Hence xfs_reflink_allocate_cow() ends up returning -ENOSPC.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+The following script reliably recreates the bug described above.
 
-has just been updated and tagged with v5.19.0-rc1
+  #!/usr/bin/bash
 
-If anything is missing for the final v5.19.0 release, speak now!
+  device=/dev/loop0
+  shortdev=$(basename $device)
 
-The new head of the master branch is commit:
+  mntpnt=/mnt/
+  file1=${mntpnt}/file1
+  file2=${mntpnt}/file2
+  fragmentedfile=${mntpnt}/fragmentedfile
+  punchprog=/root/repos/xfstests-dev/src/punch-alternating
 
-cf06f3af (xfsprogs: Release v5.19.0-rc1
+  errortag=/sys/fs/xfs/${shortdev}/errortag/bmap_alloc_minlen_extent
 
-New Commits:
+  umount $device > /dev/null 2>&1
 
-Chandan Babu R (2):
-      [91c1d083] xfs_repair: Search for conflicts in inode_tree_ptrs[] wh=
-en processing uncertain inodes
-      [1b3daa7d] xfs_repair: Add support for upgrading to large extent co=
-unters
+  echo "Create FS"
+  mkfs.xfs -f -m reflink=1 $device > /dev/null 2>&1
+  if [[ $? != 0 ]]; then
+  	echo "mkfs failed."
+  	exit 1
+  fi
 
-Darrick J. Wong (26):
-      [41cbb27c] xfs: fix TOCTOU race involving the new logged xattrs con=
-trol knob
-      [53cbe278] xfs: fix variable state usage
-      [5e572d1a] xfs: empty xattr leaf header blocks are not corruption
-      [c21a5691] xfs: don't hold xattr leaf buffers across transaction ro=
-lls
-      [95e3fc7f] misc: fix unsigned integer comparison complaints
-      [053fcbc7] xfs_logprint: fix formatting specifiers
-      [d6bfc06d] libxfs: remove xfs_globals.larp
-      [fa0f9232] xfs_repair: always rewrite secondary supers when needsre=
-pair is set
-      [84c5f08f] xfs_repair: don't flag log_incompat inconsistencies as c=
-orruptions
-      [766bfbd7] xfs_db: identify the minlogsize transaction reservation
-      [baf8a5df] xfs_copy: don't use cached buffer reads until after libx=
-fs_mount
-      [b83b2ec0] xfs_repair: clear DIFLAG2_NREXT64 when filesystem doesn'=
-t support nrext64
-      [0ec4cd64] xfs_repair: detect and fix padding fields that changed w=
-ith nrext64
-      [b6fd1034] mkfs: preserve DIFLAG2_NREXT64 when setting other inode =
-attributes
-      [42efbb99] mkfs: document the large extent count switch in the --he=
-lp screen
-      [ad8a3d7c] mkfs: always use new_diflags2 to initialize new inodes
-      [f2e38861] xfs_repair: check free rt extent count
-      [9d454cca] xfs_repair: check the rt bitmap against observations
-      [daebb4ce] xfs_repair: check the rt summary against observations
-      [f50d3462] xfs_repair: ignore empty xattr leaf blocks
-      [50dba818] mkfs: terminate getsubopt arrays properly
-      [28965957] libxfs: stop overriding MAP_SYNC in publicly exported he=
-ader files
-      [42371fb3] mkfs: ignore data blockdev stripe geometry for small fil=
-esystems
-      [6e0ed3d1] mkfs: stop allowing tiny filesystems
-      [db5b8665] mkfs: complain about impossible log size constraints
-      [7aeffc87] xfs_repair: check filesystem geometry before allowing up=
-grades
+  echo "Mount FS"
+  mount $device $mntpnt > /dev/null 2>&1
+  if [[ $? != 0 ]]; then
+  	echo "mount failed."
+  	exit 1
+  fi
 
-Eric Sandeen (2):
-      [e298041e] xfsprogs: Release v5.19.0-rc0.1
-      [cf06f3af] xfsprogs: Release v5.19.0-rc1
+  echo "Create source file"
+  xfs_io -f -c "pwrite 0 32M" $file1 > /dev/null 2>&1
 
-Zhang Boyang (1):
-      [c1c71781] mkfs: update manpage of bigtime and inobtcount
+  sync
 
-hexiaole (1):
-      [03bc6539] xfs: correct nlink printf specifier from hd to PRIu32
+  echo "Create Reflinked file"
+  xfs_io -f -c "reflink $file1" $file2 &>/dev/null
 
+  echo "Set cowextsize"
+  xfs_io -c "cowextsize 16M" $file1 > /dev/null 2>&1
 
-Code Diffstat:
+  echo "Fragment FS"
+  xfs_io -f -c "pwrite 0 64M" $fragmentedfile > /dev/null 2>&1
+  sync
+  $punchprog $fragmentedfile
 
- VERSION                  |   2 +-
- configure.ac             |   2 +-
- copy/xfs_copy.c          |   2 +-
- db/check.c               |  10 ++-
- db/logformat.c           |   4 +-
- db/metadump.c            |  11 ++-
- doc/CHANGES              |  26 ++++++
- include/linux.h          |   8 --
- include/xfs_mount.h      |   8 +-
- io/io.h                  |   2 +-
- io/mmap.c                |  25 +++---
- libxfs/init.c            |  24 ++++--
- libxfs/libxfs_api_defs.h |   3 +
- libxfs/util.c            |  15 ++--
- libxfs/xfs_attr.c        |  47 ++++-------
- libxfs/xfs_attr.h        |  17 +---
- libxfs/xfs_attr_leaf.c   |  37 +++++----
- libxfs/xfs_attr_leaf.h   |   3 +-
- libxfs/xfs_da_btree.h    |   4 +-
- logprint/log_misc.c      |   2 +-
- logprint/log_print_all.c |   2 +-
- m4/package_libcdev.m4    |   3 +-
- man/man8/mkfs.xfs.8.in   |  23 +++--
- man/man8/xfs_admin.8     |   7 ++
- mkfs/xfs_mkfs.c          | 121 ++++++++++++++++++++++++++-
- repair/agheader.c        |  23 ++++-
- repair/attr_repair.c     |  20 +++++
- repair/dino_chunks.c     |   3 +-
- repair/dinode.c          |  47 ++++++++++-
- repair/globals.c         |   1 +
- repair/globals.h         |   1 +
- repair/phase2.c          | 137 ++++++++++++++++++++++++++++--
- repair/phase5.c          |  13 ++-
- repair/protos.h          |   1 +
- repair/rt.c              | 212 +++++++++++++++++------------------------=
-------
- repair/rt.h              |  18 ++--
- repair/xfs_repair.c      |  18 +++-
- 37 files changed, 587 insertions(+), 315 deletions(-)
+  echo "Allocate block sized extent from now onwards"
+  echo -n 1 > $errortag
 
---------------mNWMujgBIUvcc3piwBu5Sph5--
+  echo "Create 16MiB delalloc extent in CoW fork"
+  xfs_io -c "pwrite 0 4k" $file1 > /dev/null 2>&1
 
---------------OVG490c0q7mgQB0AkbE0SUeL
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
+  sync
 
------BEGIN PGP SIGNATURE-----
+  echo "Direct I/O write at offset 12k"
+  xfs_io -d -c "pwrite 12k 8k" $file1
 
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmLtma0FAwAAAAAACgkQIK4WkuE93uCY
-PhAAw+z3pZ2wDszVO4McmvRhrgkQYo3dzNMntW2f4QWkEoX8f3FVE/LQVVKNUB9Kl6LSI7JeJnm5
-KHWVwJz2An2mJyjR3KmN7qs6B9Q0ueZP1/lSPBofYcqyW9BguHz/VHhbkzVEy3+7BRhBc5PMBxkH
-CKkRFr3HnDDIQbOFxpCQzB5q6YCJVDNxDNTzEftITIHPawgbP38EEugs1TIYeHqhEjgjxGMcFa5d
-OWFsAlYNC0NYlo+AkCrDS55xStukzfTi1L2SyOJ+rBj9g/cpSwS1qTlsxA/fJvPcWyFmqK27H7lr
-w43jF00Y/Npp9h/DR7U3Nc2W4Ef/gPnR2dGViKLQu2hEGQHDFy1IS6Kucv0q3QzgSueng+ptJLoi
-0IYfuGNMVs50aG+sdIeIDAGjYaSbLdSg9NTsOSw0+W88c/RV60dp9ZdoWDWhAy8gxITsbi39kXMO
-xmA0nzR0Qh49VaqAvF1GHCp3L35Hv2cnXstNcwhPMuoyhAYZ6uAhd0DUJrLAXXdh5F5dD+ZXxwBe
-xz5HN0yI/l9d/sBFEUS40Ntb6FafaRbZxTCwlB1Pb0DOWJSagqIBUlfePdJfMU4V3zv232fLedSI
-j7MrBGcJPVyspmlsfKON25QLYN5Ci9SvJe3Gd6/1F7cQy/Gt8qiLWkEmyrWPTxsr/23wcbhtfxOB
-AP8=
-=Xt3J
------END PGP SIGNATURE-----
+This commit fixes the bug by invoking xfs_bmapi_write() in a loop until disk
+blocks are allocated for atleast the starting file offset of the Direct IO
+write range.
 
---------------OVG490c0q7mgQB0AkbE0SUeL--
+Fixes: 3c68d44a2b49 ("xfs: allocate direct I/O COW blocks in iomap_begin")
+Reported-and-Root-caused-by: Wengang Wang <wen.gang.wang@oracle.com>
+Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+[djwong: slight editing to make the locking less grody, and fix some style things]
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+v2: slight style editing by darrick; if nobody complains, I'll push this
+next week...
+---
+ fs/xfs/xfs_reflink.c |  198 +++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 163 insertions(+), 35 deletions(-)
+
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 724806c7ce3e..0a32b54456eb 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -341,9 +341,41 @@ xfs_find_trim_cow_extent(
+ 	return 0;
+ }
+ 
+-/* Allocate all CoW reservations covering a range of blocks in a file. */
+-int
+-xfs_reflink_allocate_cow(
++static int
++xfs_reflink_convert_unwritten(
++	struct xfs_inode	*ip,
++	struct xfs_bmbt_irec	*imap,
++	struct xfs_bmbt_irec	*cmap,
++	bool			convert_now)
++{
++	xfs_fileoff_t		offset_fsb = imap->br_startoff;
++	xfs_filblks_t		count_fsb = imap->br_blockcount;
++	int			error;
++
++	/*
++	 * cmap might larger than imap due to cowextsize hint.
++	 */
++	xfs_trim_extent(cmap, offset_fsb, count_fsb);
++
++	/*
++	 * COW fork extents are supposed to remain unwritten until we're ready
++	 * to initiate a disk write.  For direct I/O we are going to write the
++	 * data and need the conversion, but for buffered writes we're done.
++	 */
++	if (!convert_now || cmap->br_state == XFS_EXT_NORM)
++		return 0;
++
++	trace_xfs_reflink_convert_cow(ip, cmap);
++
++	error = xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
++	if (!error)
++		cmap->br_state = XFS_EXT_NORM;
++
++	return error;
++}
++
++static int
++xfs_reflink_fill_cow_hole(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_bmbt_irec	*imap,
+ 	struct xfs_bmbt_irec	*cmap,
+@@ -352,25 +384,12 @@ xfs_reflink_allocate_cow(
+ 	bool			convert_now)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+-	xfs_filblks_t		count_fsb = imap->br_blockcount;
+ 	struct xfs_trans	*tp;
+-	int			nimaps, error = 0;
+-	bool			found;
+ 	xfs_filblks_t		resaligned;
+-	xfs_extlen_t		resblks = 0;
+-
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	if (!ip->i_cowfp) {
+-		ASSERT(!xfs_is_reflink_inode(ip));
+-		xfs_ifork_init_cow(ip);
+-	}
+-
+-	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
+-	if (error || !*shared)
+-		return error;
+-	if (found)
+-		goto convert;
++	xfs_extlen_t		resblks;
++	int			nimaps;
++	int			error;
++	bool			found;
+ 
+ 	resaligned = xfs_aligned_fsb_count(imap->br_startoff,
+ 		imap->br_blockcount, xfs_get_cowextsz_hint(ip));
+@@ -386,17 +405,17 @@ xfs_reflink_allocate_cow(
+ 
+ 	*lockmode = XFS_ILOCK_EXCL;
+ 
+-	/*
+-	 * Check for an overlapping extent again now that we dropped the ilock.
+-	 */
+ 	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
+ 	if (error || !*shared)
+ 		goto out_trans_cancel;
++
+ 	if (found) {
+ 		xfs_trans_cancel(tp);
+ 		goto convert;
+ 	}
+ 
++	ASSERT(cmap->br_startoff > imap->br_startoff);
++
+ 	/* Allocate the entire reservation as unwritten blocks. */
+ 	nimaps = 1;
+ 	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
+@@ -416,26 +435,135 @@ xfs_reflink_allocate_cow(
+ 	 */
+ 	if (nimaps == 0)
+ 		return -ENOSPC;
++
+ convert:
+-	xfs_trim_extent(cmap, offset_fsb, count_fsb);
+-	/*
+-	 * COW fork extents are supposed to remain unwritten until we're ready
+-	 * to initiate a disk write.  For direct I/O we are going to write the
+-	 * data and need the conversion, but for buffered writes we're done.
+-	 */
+-	if (!convert_now || cmap->br_state == XFS_EXT_NORM)
+-		return 0;
+-	trace_xfs_reflink_convert_cow(ip, cmap);
+-	error = xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
+-	if (!error)
+-		cmap->br_state = XFS_EXT_NORM;
++	return xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now);
++
++out_trans_cancel:
++	xfs_trans_cancel(tp);
+ 	return error;
++}
++
++static int
++xfs_reflink_fill_delalloc(
++	struct xfs_inode	*ip,
++	struct xfs_bmbt_irec	*imap,
++	struct xfs_bmbt_irec	*cmap,
++	bool			*shared,
++	uint			*lockmode,
++	bool			convert_now)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	int			nimaps;
++	int			error;
++	bool			found;
++
++	do {
++		xfs_iunlock(ip, *lockmode);
++		*lockmode = 0;
++
++		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, 0, 0,
++				false, &tp);
++		if (error)
++			return error;
++
++		*lockmode = XFS_ILOCK_EXCL;
++
++		error = xfs_find_trim_cow_extent(ip, imap, cmap, shared,
++				&found);
++		if (error || !*shared)
++			goto out_trans_cancel;
++
++		if (found) {
++			xfs_trans_cancel(tp);
++			break;
++		}
++
++		ASSERT(isnullstartblock(cmap->br_startblock) ||
++		       cmap->br_startblock == DELAYSTARTBLOCK);
++
++		/*
++		 * Replace delalloc reservation with an unwritten extent.
++		 */
++		nimaps = 1;
++		error = xfs_bmapi_write(tp, ip, cmap->br_startoff,
++				cmap->br_blockcount,
++				XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, 0,
++				cmap, &nimaps);
++		if (error)
++			goto out_trans_cancel;
++
++		xfs_inode_set_cowblocks_tag(ip);
++		error = xfs_trans_commit(tp);
++		if (error)
++			return error;
++
++		/*
++		 * Allocation succeeded but the requested range was not even
++		 * partially satisfied?  Bail out!
++		 */
++		if (nimaps == 0)
++			return -ENOSPC;
++	} while (cmap->br_startoff + cmap->br_blockcount <= imap->br_startoff);
++
++	return xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now);
+ 
+ out_trans_cancel:
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
+ 
++/* Allocate all CoW reservations covering a range of blocks in a file. */
++int
++xfs_reflink_allocate_cow(
++	struct xfs_inode	*ip,
++	struct xfs_bmbt_irec	*imap,
++	struct xfs_bmbt_irec	*cmap,
++	bool			*shared,
++	uint			*lockmode,
++	bool			convert_now)
++{
++	int			error;
++	bool			found;
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	if (!ip->i_cowfp) {
++		ASSERT(!xfs_is_reflink_inode(ip));
++		xfs_ifork_init_cow(ip);
++	}
++
++	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
++	if (error || !*shared)
++		return error;
++
++	/* CoW fork has a real extent */
++	if (found)
++		return xfs_reflink_convert_unwritten(ip, imap, cmap,
++				convert_now);
++
++	/*
++	 * CoW fork does not have an extent and data extent is shared.
++	 * Allocate a real extent in the CoW fork.
++	 */
++	if (cmap->br_startoff > imap->br_startoff)
++		return xfs_reflink_fill_cow_hole(ip, imap, cmap, shared,
++				lockmode, convert_now);
++
++	/*
++	 * CoW fork has a delalloc reservation. Replace it with a real extent.
++	 * There may or may not be a data fork mapping.
++	 */
++	if (isnullstartblock(cmap->br_startblock) ||
++	    cmap->br_startblock == DELAYSTARTBLOCK)
++		return xfs_reflink_fill_delalloc(ip, imap, cmap, shared,
++				lockmode, convert_now);
++
++	/* Shouldn't get here. */
++	ASSERT(0);
++	return -EFSCORRUPTED;
++}
++
+ /*
+  * Cancel CoW reservations for some block range of an inode.
+  *
