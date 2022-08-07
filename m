@@ -2,234 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D879C25B0C
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Aug 2022 18:31:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED1DEC19F2A
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Aug 2022 18:36:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233115AbiHGSbr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Aug 2022 14:31:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60920 "EHLO
+        id S233475AbiHGSgK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 7 Aug 2022 14:36:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235559AbiHGSba (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Aug 2022 14:31:30 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43C3565F5;
-        Sun,  7 Aug 2022 11:31:27 -0700 (PDT)
+        with ESMTP id S232582AbiHGSgJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Aug 2022 14:36:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 402085F87
+        for <linux-xfs@vger.kernel.org>; Sun,  7 Aug 2022 11:36:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D5C07B80B84;
-        Sun,  7 Aug 2022 18:31:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F4CDC433B5;
-        Sun,  7 Aug 2022 18:31:24 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C81F161052
+        for <linux-xfs@vger.kernel.org>; Sun,  7 Aug 2022 18:36:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01EB3C433D6
+        for <linux-xfs@vger.kernel.org>; Sun,  7 Aug 2022 18:36:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659897084;
-        bh=gn5ewI7i0RHsDUB3oVGcLPcnGneDmgp7hibPLi0C6Pw=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=uMNc9RMNTUUKJGyXovvLA5tr+bK+VI0hCorFkxQzN0T2oy+UHnsykuV9b0IrcT4j2
-         aNEqsxupWlFVa5DMnHdNvyCkmfBgmXf3/lr8fDnbx19eAJ3BrYPfD698GxJvO+ZVlU
-         f8UZp/XxQJf7wkiOba6F6W+mAMncQIFUajIVz9tTQ3OPhp+WIyyVcoNHbhJNhsI+q6
-         Xa36zFJ5Vc66pbKHILScg3d4evz6DuSF2svosLwU7+9sB3q26r3R2ycXU6hqJAZw7f
-         3/NSEEi7aAkCNQIZYIlWjEOfqBWPWG/A1OS28yg2hrzxcu17MKbflgBnE0DWKaVz/5
-         BG5GpDQS+WPQw==
-Subject: [PATCH 14/14] xfs: document future directions of online fsck
+        s=k20201202; t=1659897368;
+        bh=R4qUArLI1edReQEtPoxWp8r/6NCUD4imETH6TBS8P9o=;
+        h=Date:From:To:Subject:From;
+        b=UsyyHDJzmLAWxO/CToxEtD2Jt68cWRR7a2YEwahWSASmFAjWqfITKBzizvHF8Nshv
+         q3/XRm+rJD2310fB/17dD41pfceMu7RA3C/cgNZJCu4j03kDL5u9a9OwDTz3x8R3m6
+         yN2ESjj6aN//OWKiZrIc13Iemsl2ufbIs1OPdpPGINegGiUj8o+XkQdP9FZ/3wwLnW
+         pP1wNvH2MviOVGbSX+Av7e7ugy3A6EXyPYZsn4FMuqNekeJpvOyr5O7bDWla2/yx3N
+         MH8DR0ZkW86Z+XwNWriijasJX6SuoS2FH1Yg3pXYkpe2jov1r0W1BX0MCZkANi0hlL
+         2AJOxJnM5duXA==
+Date:   Sun, 7 Aug 2022 11:36:07 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
-        chandan.babu@oracle.com, allison.henderson@oracle.com,
-        linux-fsdevel@vger.kernel.org, hch@infradead.org,
-        catherine.hoang@oracle.com
-Date:   Sun, 07 Aug 2022 11:31:24 -0700
-Message-ID: <165989708412.2495930.7011843045242516785.stgit@magnolia>
-In-Reply-To: <165989700514.2495930.13997256907290563223.stgit@magnolia>
-References: <165989700514.2495930.13997256907290563223.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to d62113303d69
+Message-ID: <YvAGFwNVtmXBC4Ma@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi folks,
 
-Add the seventh and final chapter of the online fsck documentation,
-where we talk about future functionality that can tie in with the
-functionality provided by the online fsck patchset.
+The for-next branch of the xfs-linux repository at:
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- .../filesystems/xfs-online-fsck-design.rst         |  155 ++++++++++++++++++++
- 1 file changed, 155 insertions(+)
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been updated.
 
-diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs-online-fsck-design.rst
-index adffc8c31c9c..3faaae0038a6 100644
---- a/Documentation/filesystems/xfs-online-fsck-design.rst
-+++ b/Documentation/filesystems/xfs-online-fsck-design.rst
-@@ -4071,6 +4071,8 @@ The extra flexibility enables several new use cases:
-   (``FIEXCHANGE_RANGE``) to exchange the file contents, thereby committing all
-   of the updates to the original file, or none of them.
- 
-+.. _swapext_if_unchanged:
-+
- - **Transactional file updates**: The same mechanism as above, but the caller
-   only wants the commit to occur if the original file's contents have not
-   changed.
-@@ -4822,3 +4824,156 @@ and report what has been lost.
- For media errors in blocks owned by files, the lack of parent pointers means
- that the entire filesystem must be walked to report the file paths and offsets
- corresponding to the media error.
-+
-+7. Conclusion and Future Work
-+=============================
-+
-+It is hoped that the reader of this document has followed the designs laid out
-+in this document and now has some familiarity with how XFS performs online
-+rebuilding of its metadata indices, and how filesystem users can interact with
-+that functionality.
-+Although the scope of this work is daunting, it is hoped that this guide will
-+make it easier for code readers to understand what has been built, for whom it
-+has been built, and why.
-+Please feel free to contact the XFS mailing list with questions.
-+
-+FIEXCHANGE_RANGE
-+----------------
-+
-+As discussed earlier, a second frontend to the atomic extent swap mechanism is
-+a new ioctl call that userspace programs can use to commit updates to files
-+atomically.
-+This frontend has been out for review for several years now, though the
-+necessary refinements to online repair and lack of customer demand mean that
-+the proposal has not been pushed very hard.
-+
-+Vectorized Scrub
-+----------------
-+
-+As it turns out, the :ref:`refactoring <scrubrepair>` of repair items mentioned
-+earlier was a catalyst for enabling a vectorized scrub system call.
-+Since 2018, the cost of making a kernel call has increased considerably on some
-+systems to mitigate the effects of speculative execution attacks.
-+This incentivizes program authors to make as few system calls as possible to
-+reduce the number of times an execution path crosses a security boundary.
-+
-+With vectorized scrub, userspace pushes to the kernel the identity of a
-+filesystem object, a list of scrub types to run against that object, and a
-+simple representation of the data dependencies between the selected scrub
-+types.
-+The kernel executes as much of the caller's plan as it can until it hits a
-+dependency that cannot be satisfied due to a corruption, and tells userspace
-+how much was accomplished.
-+It is hoped that ``io_uring`` will pick up enough of this functionality that
-+online fsck can use that instead of adding a separate vectored scrub system
-+call to XFS.
-+
-+The relevant patchsets are the
-+`kernel vectorized scrub
-+<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=vectorized-scrub>`_
-+and
-+`userspace vectorized scrub
-+<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=vectorized-scrub>`_
-+series.
-+
-+Quality of Service Targets for Scrub
-+------------------------------------
-+
-+One serious shortcoming of the online fsck code is that the amount of time that
-+it can spend in the kernel holding resource locks is basically unbounded.
-+Userspace is allowed to send a fatal signal to the process which will cause
-+``xfs_scrub`` to exit when it reaches a good stopping point, but there's no way
-+for userspace to provide a time budget to the kernel.
-+Given that the scrub codebase has helpers to detect fatal signals, it shouldn't
-+be too much work to allow userspace to specify a timeout for a scrub/repair
-+operation and abort the operation if it exceeds budget.
-+However, most repair functions have the property that once they begin to touch
-+ondisk metadata, the operation cannot be cancelled cleanly, after which a QoS
-+timeout is no longer useful.
-+
-+Defragmenting Free Space
-+------------------------
-+
-+Over the years, many XFS users have requested the creation of a program to
-+clear a portion of the physical storage underlying a filesystem so that it
-+becomes a contiguous chunk of free space.
-+Call this free space defragmenter ``clearspace`` for short.
-+
-+The first piece the ``clearspace`` program needs is the ability to read the
-+reverse mapping index from userspace.
-+This already exists in the form of the ``FS_IOC_GETFSMAP`` ioctl.
-+The second piece it needs is a new fallocate mode
-+(``FALLOC_FL_MAP_FREE_SPACE``) that allocates the free space in a region and
-+maps it to a file.
-+Call this file the "space collector" file.
-+The third piece is the ability to force an online repair.
-+
-+To clear all the metadata out of a portion of physical storage, clearspace
-+uses the new fallocate map-freespace call to map any free space in that region
-+to the space collector file.
-+Next, clearspace finds all metadata blocks in that region by way of
-+``GETFSMAP`` and issues forced repair requests on the data structure.
-+This often results in the metadata being rebuilt somewhere that is not being
-+cleared.
-+After each relocation, clearspace calls the "map free space" function again to
-+collect any newly freed space in the region being cleared.
-+
-+To clear all the file data out of a portion of the physical storage, clearspace
-+uses the FSMAP information to find relevant file data blocks.
-+Having identified a good target, it uses the ``FICLONERANGE`` call on that part
-+of the file to try to share the physical space with a dummy file.
-+Cloning the extent means that the original owners cannot overwrite the
-+contents; any changes will be written somewhere else via copy-on-write.
-+Clearspace makes its own copy of the frozen extent in an area that is not being
-+cleared, and uses ``FIEDEUPRANGE`` (or the :ref:`atomic extent swap
-+<swapext_if_unchanged>` feature) to change the target file's data extent
-+mapping away from the area being cleared.
-+When all other mappings have been moved, clearspace reflinks the space into the
-+space collector file so that it becomes unavailable.
-+
-+There are further optimizations that could apply to the above algorithm.
-+To clear a piece of physical storage that has a high sharing factor, it is
-+strongly desirable to retain this sharing factor.
-+In fact, these extents should be moved first to maximize sharing factor after
-+the operation completes.
-+To make this work smoothly, clearspace needs a new ioctl
-+(``FS_IOC_GETREFCOUNTS``) to report reference count information to userspace.
-+With the refcount information exposed, clearspace can quickly find the longest,
-+most shared data extents in the filesystem, and target them first.
-+
-+**Question**: How might the filesystem move inode chunks?
-+
-+*Answer*: Dave Chinner has a prototype that creates a new file with the old
-+contents and then locklessly runs around the filesystem updating directory
-+entries.
-+The operation cannot complete if the filesystem goes down.
-+That problem isn't totally insurmountable: create an inode remapping table
-+hidden behind a jump label, and a log item that tracks the kernel walking the
-+filesystem to update directory entries.
-+The trouble is, the kernel can't do anything about open files, since it cannot
-+revoke them.
-+
-+**Question**: Can static keys be used to add a revoke bailout return to
-+*every* code path coming in from userspace?
-+
-+*Answer*: In principle, yes.
-+This would eliminate the overhead of the check until a revocation happens.
-+It's not clear what we do to a revoked file after all the callers are finished
-+with it, however.
-+
-+The relevant patchsets are the
-+`kernel freespace defrag
-+<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=defrag-freespace>`_
-+and
-+`userspace freespace defrag
-+<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=defrag-freespace>`_
-+series.
-+
-+Shrinking Filesystems
-+---------------------
-+
-+Removing the end of the filesystem ought to be a simple matter of evacuating
-+the data and metadata at the end of the filesystem, and handing the freed space
-+to the shrink code.
-+That requires an evacuation of the space at end of the filesystem, which is a
-+use of free space defragmentation!
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  These are the accumulated bugfixes before I hand
+things off to Dave.
 
+The new head of the for-next branch is commit:
+
+d62113303d69 xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
+
+3 new commits:
+
+Chandan Babu R (1):
+      [d62113303d69] xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
+
+Darrick J. Wong (2):
+      [7d839e325af2] xfs: check return codes when flushing block devices
+      [f0c2d7d2abca] xfs: fix intermittent hang during quotacheck
+
+Code Diffstat:
+
+ fs/xfs/xfs_file.c    |  22 +++---
+ fs/xfs/xfs_log.c     |  12 +++-
+ fs/xfs/xfs_qm.c      |   5 ++
+ fs/xfs/xfs_reflink.c | 198 ++++++++++++++++++++++++++++++++++++++++++---------
+ 4 files changed, 192 insertions(+), 45 deletions(-)
