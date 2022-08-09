@@ -2,61 +2,60 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AF8EC25B07
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 11:17:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4355CC25B0F
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 11:17:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239836AbiHILRZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Aug 2022 07:17:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46344 "EHLO
+        id S239907AbiHILR0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Aug 2022 07:17:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239487AbiHILRY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 07:17:24 -0400
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0A91192A8;
-        Tue,  9 Aug 2022 04:17:22 -0700 (PDT)
-Received: by mail-wm1-x32a.google.com with SMTP id v5so6174958wmj.0;
-        Tue, 09 Aug 2022 04:17:22 -0700 (PDT)
+        with ESMTP id S238802AbiHILRZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 07:17:25 -0400
+Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C3B3193ED;
+        Tue,  9 Aug 2022 04:17:24 -0700 (PDT)
+Received: by mail-wr1-x430.google.com with SMTP id h13so13950539wrf.6;
+        Tue, 09 Aug 2022 04:17:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=vp7RC5iroWMajp9CZP9ejGZohtYmSygrQu36oWlg1SU=;
-        b=Z5ww8uZT2YBCQW9RTMAWfY+G6QiC7UGhFZHgYbBT+O3uJis6Glg+LI1D5P+JFyRJ3u
-         Bnedtec+u6OHcyqz5MvF0w3XGaWjeR4DHAPJ0/AM3LCcCAuXz46gYUjSDoU+0S547ybc
-         OtbVk6rCnx4G9IzXd1FTHA16RSdGUGXCSFySh+aHMnJ/Xj3HONST5KtupKTjxlYvMB0m
-         r9H38scVcQazrcGpRIHVPtWxAEnSVxG9W5ed4/bi0bOhPTTFdcpjYwCdYAdAYjtiw1Jb
-         RlminN+yB4gtBJtHqmNy9JFxXbH5Inyg3Mjcva99a4LYfcYEgPE+oR/FBJrNffSnqwHJ
-         e/rA==
+        bh=RA4DYuk+FJa2a998BAcW5CxBP4iB3ilKC4//hpI6vps=;
+        b=KWwHqC4FHlOG4vetnLtjWZx9sSgDOn8/iOkI2f59Qggvkx7E1m1BpiRstL+aJu4RHp
+         iaWYm+hUtGzEXTXSiID8SNS9c6UDLT/JDNL2ljyvAGfVwPlmgo64ZMPBma7/BDYMbt+E
+         LYOF2KA54rxGZVbFVUlfkij2vg+VUY09usLaqaUIWBgwLE/+xBuKU2OcvVa7W24/fltm
+         QoTG9LG0b1msofy1BTf9zCVY616fY53licMKAIWwsf+iFp4dJLdjpZkt6796ZwconbHc
+         wnOqFgIJ0cEbGizKwkQ2WaAsrtMzU0WNLMFMwl75VwbR9CZM4BvCMLd/vS2mNFTN5a17
+         L2jw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=vp7RC5iroWMajp9CZP9ejGZohtYmSygrQu36oWlg1SU=;
-        b=E5lsSDv0ppulWrDBSleTe18YTzepyXhBRviveDF3leu0ag2XcxHeervjfYZM+6ynDX
-         8sTZOVnWLFAk9W4KnOiMsMo6o4ebqwVZgDfOml/Ote6YKcG7HZHQ/Jj+K6s+qkcToUds
-         3n4wpAcy8gNstlSYQDm5vzI7Azg42xSyxeHgLI/DVwSkdqPmSRbn/XwN4R6tKC70aoX2
-         Ib3gAnUxb2dNQuvYSaP0KE8r3GUlR0Bfp5Su4K/HsipxiiOW6qS/uoJeThjUg+Sf7WZe
-         4FcTMrvS5vTD5uWEaJn8bKDZ2/EsGs3CHtXn0Qou1Pol+AJqRb0S6Rv65Zs1vkujygy6
-         YgyQ==
-X-Gm-Message-State: ACgBeo3fk4Nl7+SJbjP3268s25jcJjqmVgnLa9XNsPXhoarF5vg9HsPD
-        Ltj3d/H0XP3QKeecCw6ums8=
-X-Google-Smtp-Source: AA6agR413vcoKw0vBe2whSg3B/Dh96QLLlWgHyHMuaKW25GcWSEGtWyqS7cMfT/2x301idy45mUbxw==
-X-Received: by 2002:a05:600c:3487:b0:3a4:ecbf:4cb9 with SMTP id a7-20020a05600c348700b003a4ecbf4cb9mr20309322wmq.98.1660043841388;
-        Tue, 09 Aug 2022 04:17:21 -0700 (PDT)
+        bh=RA4DYuk+FJa2a998BAcW5CxBP4iB3ilKC4//hpI6vps=;
+        b=aShdgH9rRTn3TUHTyO5NYi9wYOTc+P79dMzq6t7vbexQ4X65K6nbDUbFTum9ko/Vgb
+         kzs6Nlw9ikc9UIF5fzXYp3jQFwDBDwKCMf1W0+pDl/dwTqfOiJZLDqKmNictY/T8eVtS
+         kUEO2ndY6CuOQcVOwRN4JjxWrW6KddSvjyk55XGesMZXUE8+y4wdRqIgkJCR33vQ2xht
+         dH5bOLEh2dl1CcPOctnRaSBmgrMF0sQG0UEn7RDNIWy5ex3b2JJTyaBdcUMS4fkONFwe
+         HqefMZ10YqAA16PjO9BK3x/4fjgO3y7Uqi27mAy7qcRH2Znd/ax2wnMq0Wc2sW7lKLlQ
+         OytA==
+X-Gm-Message-State: ACgBeo3NWzPkI2VmHbu3RGsZu3Yph8Vf6MDhCbsvPH0S6qt+xDtCq9zS
+        2Ol7J1mgjH/AvrZonadeFLgzoKpnuGw=
+X-Google-Smtp-Source: AA6agR44sWewvmDKjtFTdVh6/1iGBV8MLsmIknnGyb8dg4+jVSjjKjovp0kXK1N6/VrDueMKp0s6nQ==
+X-Received: by 2002:adf:e3cf:0:b0:220:cc91:94ed with SMTP id k15-20020adfe3cf000000b00220cc9194edmr14778758wrm.36.1660043842798;
+        Tue, 09 Aug 2022 04:17:22 -0700 (PDT)
 Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id l2-20020a1ced02000000b003a3170a7af9sm15906169wmh.4.2022.08.09.04.17.19
+        by smtp.gmail.com with ESMTPSA id l2-20020a1ced02000000b003a3170a7af9sm15906169wmh.4.2022.08.09.04.17.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Aug 2022 04:17:21 -0700 (PDT)
+        Tue, 09 Aug 2022 04:17:22 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
         Chandan Babu R <chandan.babu@oracle.com>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Chandan Babu R <chandanrlinux@gmail.com>
-Subject: [PATCH 5.10 CANDIDATE 3/4] xfs: only set IOMAP_F_SHARED when providing a srcmap to a write
-Date:   Tue,  9 Aug 2022 13:17:07 +0200
-Message-Id: <20220809111708.92768-4-amir73il@gmail.com>
+        Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH 5.10 CANDIDATE 4/4] xfs: fix I_DONTCACHE
+Date:   Tue,  9 Aug 2022 13:17:08 +0200
+Message-Id: <20220809111708.92768-5-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220809111708.92768-1-amir73il@gmail.com>
 References: <20220809111708.92768-1-amir73il@gmail.com>
@@ -66,101 +65,51 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-commit 72a048c1056a72e37ea2ee34cc73d8c6d6cb4290 upstream.
+commit f38a032b165d812b0ba8378a5cd237c0888ff65f upstream.
 
-While prototyping a free space defragmentation tool, I observed an
-unexpected IO error while running a sequence of commands that can be
-recreated by the following sequence of commands:
+Yup, the VFS hoist broke it, and nobody noticed. Bulkstat workloads
+make it clear that it doesn't work as it should.
 
-$ xfs_io -f -c "pwrite -S 0x58 -b 10m 0 10m" file1
-$ cp --reflink=always file1 file2
-$ punch-alternating -o 1 file2
-$ xfs_io -c "funshare 0 10m" file2
-fallocate: Input/output error
-
-I then scraped this (abbreviated) stack trace from dmesg:
-
-WARNING: CPU: 0 PID: 30788 at fs/iomap/buffered-io.c:577 iomap_write_begin+0x376/0x450
-CPU: 0 PID: 30788 Comm: xfs_io Not tainted 5.14.0-rc6-xfsx #rc6 5ef57b62a900814b3e4d885c755e9014541c8732
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
-RIP: 0010:iomap_write_begin+0x376/0x450
-RSP: 0018:ffffc90000c0fc20 EFLAGS: 00010297
-RAX: 0000000000000001 RBX: ffffc90000c0fd10 RCX: 0000000000001000
-RDX: ffffc90000c0fc54 RSI: 000000000000000c RDI: 000000000000000c
-RBP: ffff888005d5dbd8 R08: 0000000000102000 R09: ffffc90000c0fc50
-R10: 0000000000b00000 R11: 0000000000101000 R12: ffffea0000336c40
-R13: 0000000000001000 R14: ffffc90000c0fd10 R15: 0000000000101000
-FS:  00007f4b8f62fe40(0000) GS:ffff88803ec00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000056361c554108 CR3: 000000000524e004 CR4: 00000000001706f0
-Call Trace:
- iomap_unshare_actor+0x95/0x140
- iomap_apply+0xfa/0x300
- iomap_file_unshare+0x44/0x60
- xfs_reflink_unshare+0x50/0x140 [xfs 61947ea9b3a73e79d747dbc1b90205e7987e4195]
- xfs_file_fallocate+0x27c/0x610 [xfs 61947ea9b3a73e79d747dbc1b90205e7987e4195]
- vfs_fallocate+0x133/0x330
- __x64_sys_fallocate+0x3e/0x70
- do_syscall_64+0x35/0x80
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-RIP: 0033:0x7f4b8f79140a
-
-Looking at the iomap tracepoints, I saw this:
-
-iomap_iter:           dev 8:64 ino 0x100 pos 0 length 0 flags WRITE|0x80 (0x81) ops xfs_buffered_write_iomap_ops caller iomap_file_unshare
-iomap_iter_dstmap:    dev 8:64 ino 0x100 bdev 8:64 addr -1 offset 0 length 131072 type DELALLOC flags SHARED
-iomap_iter_srcmap:    dev 8:64 ino 0x100 bdev 8:64 addr 147456 offset 0 length 4096 type MAPPED flags
-iomap_iter:           dev 8:64 ino 0x100 pos 0 length 4096 flags WRITE|0x80 (0x81) ops xfs_buffered_write_iomap_ops caller iomap_file_unshare
-iomap_iter_dstmap:    dev 8:64 ino 0x100 bdev 8:64 addr -1 offset 4096 length 4096 type DELALLOC flags SHARED
-console:              WARNING: CPU: 0 PID: 30788 at fs/iomap/buffered-io.c:577 iomap_write_begin+0x376/0x450
-
-The first time funshare calls ->iomap_begin, xfs sees that the first
-block is shared and creates a 128k delalloc reservation in the COW fork.
-The delalloc reservation is returned as dstmap, and the shared block is
-returned as srcmap.  So far so good.
-
-funshare calls ->iomap_begin to try the second block.  This time there's
-no srcmap (punch-alternating punched it out!) but we still have the
-delalloc reservation in the COW fork.  Therefore, we again return the
-reservation as dstmap and the hole as srcmap.  iomap_unshare_iter
-incorrectly tries to unshare the hole, which __iomap_write_begin rejects
-because shared regions must be fully written and therefore cannot
-require zeroing.
-
-Therefore, change the buffered write iomap_begin function not to set
-IOMAP_F_SHARED when there isn't a source mapping to read from for the
-unsharing.
-
+Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/xfs_iomap.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_icache.c | 3 ++-
+ fs/xfs/xfs_iops.c   | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 74bc2beadc23..bd5a25f4952d 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1062,11 +1062,11 @@ xfs_buffered_write_iomap_begin(
- 		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, 0);
- 		if (error)
- 			return error;
--	} else {
--		xfs_trim_extent(&cmap, offset_fsb,
--				imap.br_startoff - offset_fsb);
-+		return xfs_bmbt_to_iomap(ip, iomap, &cmap, IOMAP_F_SHARED);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index deb99300d171..e69a08ed7de4 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -47,8 +47,9 @@ xfs_inode_alloc(
+ 		return NULL;
  	}
--	return xfs_bmbt_to_iomap(ip, iomap, &cmap, IOMAP_F_SHARED);
-+
-+	xfs_trim_extent(&cmap, offset_fsb, imap.br_startoff - offset_fsb);
-+	return xfs_bmbt_to_iomap(ip, iomap, &cmap, 0);
  
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	/* VFS doesn't initialise i_mode! */
++	/* VFS doesn't initialise i_mode or i_state! */
+ 	VFS_I(ip)->i_mode = 0;
++	VFS_I(ip)->i_state = 0;
+ 
+ 	XFS_STATS_INC(mp, vn_active);
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index b7f7b31a77d5..6a3026e78a9b 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1328,7 +1328,7 @@ xfs_setup_inode(
+ 	gfp_t			gfp_mask;
+ 
+ 	inode->i_ino = ip->i_ino;
+-	inode->i_state = I_NEW;
++	inode->i_state |= I_NEW;
+ 
+ 	inode_sb_list_add(inode);
+ 	/* make the inode look hashed for the writeback code */
 -- 
 2.25.1
 
