@@ -2,81 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC9F9C19F2D
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 22:56:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51EC7C19F2D
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 23:02:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229733AbiHIW4V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Aug 2022 18:56:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43128 "EHLO
+        id S229460AbiHIXCt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Aug 2022 19:02:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229673AbiHIW4U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 18:56:20 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86E7B60531
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 15:56:19 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 41CDEB81A0A
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 22:56:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5589C433D6;
-        Tue,  9 Aug 2022 22:56:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660085777;
-        bh=rDBMCD0frbeeewm+vGPL6nGv86fepSIlTqBGarD+9Ic=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=l5onreUp4aTSIr7Qy3vkUaDkVU+CuPJRd7rviR/E2NQAooPwi2N5KFJafJ3gAZhbn
-         G+yNlWNYyy4w5fNoaU958jtkWlzvLsrPPpKAiZF253NTcLW/Zl1MO/M1TjpImtc1He
-         kcnpa+VDRb9DJJkOqpsvO4ceLDdF1YWxQZBzz4krm6fbFU5Kht5VcptKYSbzB8hwYv
-         pkUvAH22hhzQ5PIv6Js7ig1kk9HwgHZHnvJ8z7Xe1+F/eEhbP6gE01qMqrMa8XHbM2
-         v4iL5MQ6Y+2b5tM97pJBDOVlLX4iFJQ0mEqWpsVYbUkMUdFxOT2uCtmI47y8Mjn8Q8
-         DqT71nHq+nofg==
-Date:   Tue, 9 Aug 2022 15:56:16 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: [RFC PATCH 20/18] xfs: drop compatibility minimum log size
- computations for reflink
-Message-ID: <YvLmEP3I2sH+Cm2+@magnolia>
-References: <20220804194013.99237-1-allison.henderson@oracle.com>
+        with ESMTP id S229445AbiHIXCt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 19:02:49 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2A59167C80;
+        Tue,  9 Aug 2022 16:02:48 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-193-158.pa.nsw.optusnet.com.au [49.181.193.158])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 527B762D44C;
+        Wed, 10 Aug 2022 09:02:46 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oLYFI-00BDH8-PC; Wed, 10 Aug 2022 09:02:44 +1000
+Date:   Wed, 10 Aug 2022 09:02:44 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Uros Bizjak <ubizjak@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH] fs/xfs: Use atomic64_try_cmpxchg in
+ xlog_grant_{add,sub}_space
+Message-ID: <20220809230244.GJ3600936@dread.disaster.area>
+References: <20220809165615.9694-1-ubizjak@gmail.com>
+ <20220809220511.GI3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220804194013.99237-1-allison.henderson@oracle.com>
+In-Reply-To: <20220809220511.GI3600936@dread.disaster.area>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62f2e797
+        a=SeswVvpAPK2RnNNwqI8AaA==:117 a=SeswVvpAPK2RnNNwqI8AaA==:17
+        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=8C0a8iNh18_4KdS3VZMA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Aug 10, 2022 at 08:05:11AM +1000, Dave Chinner wrote:
+> On Tue, Aug 09, 2022 at 06:56:15PM +0200, Uros Bizjak wrote:
+> > Use `!atomic64_try_cmpxchg(ptr, &old, new)` instead of
+> > `atomic64_cmpxchg(ptr, old, new) != old` in xlog_grant_{add,sub}_space.
+> > This has two benefits:
+> > 
+> > - The x86 cmpxchg instruction returns success in the ZF flag, so this
+> >   change saves a compare after cmpxchg, as well as a related move
+> >   instruction in the front of cmpxchg.
+> > 
+> > - atomic64_try_cmpxchg implicitly assigns the *ptr value to &old when
+> >   cmpxchg fails, enabling further code simplifications.
+> 
+> Do the two cmpxchg operations have the same memory ordering
+> semantics on failure?
+> 
+> > This patch has no functional change.
+> 
+> The patch looks ok, but ....
+> 
+> ... I'm about 2 hours away from posting a patchset that completely
+> removes the cmpxchg and the new grant head accounting has
+> significantly lower fast path overhead. It also opens the door for
+> tracking more than 2GB of log space in the grant heads.
 
-Having established that we can reduce the minimum log size computation
-for filesystems with parent pointers or any newer feature, we should
-also drop the compat minlogsize code that we added when we reduced the
-transaction reservation size for rmap and reflink.
+FYI, the original RFC for this was posted a bit over a month ago:
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_log_rlimit.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+https://lore.kernel.org/linux-xfs/20220708015558.1134330-1-david@fromorbit.com/
 
-diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
-index cc4837b948b1..c6b098d12f65 100644
---- a/fs/xfs/libxfs/xfs_log_rlimit.c
-+++ b/fs/xfs/libxfs/xfs_log_rlimit.c
-@@ -91,6 +91,16 @@ xfs_log_calc_trans_resv_for_minlogblocks(
- {
- 	unsigned int		rmap_maxlevels = mp->m_rmap_maxlevels;
- 
-+	/*
-+	 * Starting with the parent pointer feature, every new fs feature
-+	 * drops the oversized minimum log size computation introduced by the
-+	 * original reflink code.
-+	 */
-+	if (xfs_has_parent_or_newer_feature(mp)) {
-+		xfs_trans_resv_calc(mp, resv);
-+		return;
-+	}
-+
- 	/*
- 	 * In the early days of rmap+reflink, we always set the rmap maxlevels
- 	 * to 9 even if the AG was small enough that it would never grow to
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
