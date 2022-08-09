@@ -2,176 +2,218 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D22DC19F2D
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 11:46:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57B8AC25B0E
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 15:33:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242833AbiHILq0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Aug 2022 07:46:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36786 "EHLO
+        id S244931AbiHIPdz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Aug 2022 11:33:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237496AbiHILqZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 07:46:25 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C95B0248FE
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 04:46:24 -0700 (PDT)
+        with ESMTP id S236852AbiHIPdx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 11:33:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE65CF04;
+        Tue,  9 Aug 2022 08:33:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 65CFF61028
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 11:46:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C91E7C4347C
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 11:46:23 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3BA7A61281;
+        Tue,  9 Aug 2022 15:33:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96E7CC433C1;
+        Tue,  9 Aug 2022 15:33:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660045583;
-        bh=4HNK/qzcKyPu+Ed2z42rAA+FakKgTbXihb4+MLm2KuE=;
-        h=From:To:Subject:Date:From;
-        b=f8u6b5WmE+9Zn/U7SeWN1AaL1Ox68id4JLNFuX2HKh1EeifMmNPWkwYWLEVTepqHE
-         uvENv0QILAfAViutEzcKVQqsduJfTxrp4y9lILOT6odYLZFEeEsEsK8SYRtH6y9nhB
-         vtEX48N7t/DOpcbakkoAIcYfAVgs/LHVJIuezoipRbCoOnI0dkjSDhSMVrbzZHyiyL
-         bjUv9AbCoynOLJZtWoDQU/4NGi3e6RAX8rZWlb0NHpy1shBXdOqcKaM9B0ZHN469kj
-         LrKfUmvTPIHKpnfQ63a0sKjPuvV86A+7KqopznfbXhvW55jxAluqZJWfdC7HE9Awio
-         7ChAH4XkkoSqQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id B4D3DC433E4; Tue,  9 Aug 2022 11:46:23 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216343] New: XFS: no space left in xlog cause system hang
-Date:   Tue, 09 Aug 2022 11:46:23 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zhoukete@126.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression attachments.created
-Message-ID: <bug-216343-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        s=k20201202; t=1660059226;
+        bh=uEM2II5ZhoclAW3oVUSmDhxIMZ4eqsmn7nBLYONcDbU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ADqackvhvCC8wIl5U58Kf/J+cARc/gGRlEfxvLyA16uJd34PobSGVVfmZLN/PJ34Q
+         vLDEp9gMXE0wV1ro4j4eTbVie9tq1uE/nHYaLgjzDvADXUIRH+ti9hier4bBxNdsYr
+         PkkG4N5k1Vqbk1z+UCpBgBZdz+CrcxlIJvlCs6tf+MPqCQiA9thw4tIztumaKTpiMR
+         oBhrFrWDmdlcMoIph0Ea97MGZFV8ik7ZHNTZ6U9DDlrRa1b0HofZmHwJm3QcTTT9TJ
+         DL6hGoGPiCQ05x7vPGP9dv5rKWOSdKMGtXaEUnbhN9u2i+vnxzocOZgW4Me8NyZ9yT
+         vzkJo+IUAZ7UA==
+Date:   Tue, 9 Aug 2022 08:33:46 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org,
+        dhowells@redhat.com, lczerner@redhat.com, bxue@redhat.com,
+        ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [RFC PATCH 1/4] vfs: report change attribute in statx for
+ IS_I_VERSION inodes
+Message-ID: <YvJ+WkrtStRujU2/@magnolia>
+References: <20220805183543.274352-1-jlayton@kernel.org>
+ <20220805183543.274352-2-jlayton@kernel.org>
+ <20220805220136.GG3600936@dread.disaster.area>
+ <c10e4aa381aea86bb51b005887533e28f9c7302b.camel@redhat.com>
+ <33176ee0f896aef889ad1930fb1e008323135a2e.camel@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <33176ee0f896aef889ad1930fb1e008323135a2e.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
+On Mon, Aug 08, 2022 at 09:19:05AM -0400, Jeff Layton wrote:
+> On Fri, 2022-08-05 at 18:06 -0400, Jeff Layton wrote:
+> > On Sat, 2022-08-06 at 08:01 +1000, Dave Chinner wrote:
+> > > On Fri, Aug 05, 2022 at 02:35:40PM -0400, Jeff Layton wrote:
+> > > > From: Jeff Layton <jlayton@redhat.com>
+> > > > 
+> > > > Claim one of the spare fields in struct statx to hold a 64-bit change
+> > > > attribute. When statx requests this attribute, do an
+> > > > inode_query_iversion and fill the result in the field.
+> > > > 
+> > > > Also update the test-statx.c program to fetch the change attribute as
+> > > > well.
+> > > > 
+> > > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> > > > ---
+> > > >  fs/stat.c                 | 7 +++++++
+> > > >  include/linux/stat.h      | 1 +
+> > > >  include/uapi/linux/stat.h | 3 ++-
+> > > >  samples/vfs/test-statx.c  | 4 +++-
+> > > >  4 files changed, 13 insertions(+), 2 deletions(-)
+> > > > 
+> > > > diff --git a/fs/stat.c b/fs/stat.c
+> > > > index 9ced8860e0f3..976e0a59ab23 100644
+> > > > --- a/fs/stat.c
+> > > > +++ b/fs/stat.c
+> > > > @@ -17,6 +17,7 @@
+> > > >  #include <linux/syscalls.h>
+> > > >  #include <linux/pagemap.h>
+> > > >  #include <linux/compat.h>
+> > > > +#include <linux/iversion.h>
+> > > >  
+> > > >  #include <linux/uaccess.h>
+> > > >  #include <asm/unistd.h>
+> > > > @@ -118,6 +119,11 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
+> > > >  	stat->attributes_mask |= (STATX_ATTR_AUTOMOUNT |
+> > > >  				  STATX_ATTR_DAX);
+> > > >  
+> > > > +	if ((request_mask & STATX_CHGATTR) && IS_I_VERSION(inode)) {
+> > > > +		stat->result_mask |= STATX_CHGATTR;
+> > > > +		stat->chgattr = inode_query_iversion(inode);
+> > > > +	}
+> > > 
+> > > If you're going to add generic support for it, shouldn't there be a
+> > > generic test in fstests that ensures that filesystems that advertise
+> > > STATX_CHGATTR support actually behave correctly? Including across
+> > > mounts, and most importantly, that it is made properly stable by
+> > > fsync?
+> > > 
+> > > i.e. what good is this if different filesystems have random quirks
+> > > that mean it can't be relied on by userspace to tell it changes have
+> > > occurred?
+> > 
+> > Absolutely. Being able to better test the i_version field for consistent
+> > behavior is a primary goal. I haven't yet written any yet, but we'd
+> > definitely want something in xfstests if we decide this is worthwhile.
+> 
+> I started writing some tests for this today, and hit a bit of a chicken-
+> and-egg problem:
+> 
+> I'd prefer to use xfs_io for easier maintainability, but the STATX_*
+> constants are defined via UAPI header. Older kernels don't have them and
+> old xfs_io programs don't understand or report this value.
+> 
+> Should I just write a one-off binary program for xfstests to fetch this
+> value for now, or are we better off merging the patchset first, and then
+> fix xfs_io and then write the tests using the updated xfs_io program?
 
-            Bug ID: 216343
-           Summary: XFS: no space left in xlog cause system hang
-           Product: File System
-           Version: 2.5
-    Kernel Version: 5.10.38
-          Hardware: ARM
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: zhoukete@126.com
-        Regression: No
+What we've done in the past to support new APIs until they land in
+kernel headers is:
 
-Created attachment 301539
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D301539&action=3Dedit
-stack
+Add an autoconf macro to decide if the system header files are recent
+enough to support whatever functionality is needed by xfs_io;
 
-1. cannot login with ssh, system hanged and cannot do anything
-2. dmesg report 'audit: audit_backlog=3D41349 > audit_backlog_limit=3D8192'
-3. I send sysrq-crash and get vmcore file , I dont know how to reproduce it.
+Modify the build system to #define OVERRIDE_FUBAR if the system headers
+aren't new enough to have FUBAR; and
 
-Follwing is my analysis from vmcore:
+Modify (or create) the relevant header file to override the system
+header definitions as needed to support building the relevant pieces of
+code.  A year or so after the functionality lands, we can then remove
+the overrides, or just leave them in place until the next time we need
+it.
 
-The reason why tty cannot login is pid 2021571 hold the acct_process mutex,=
- and
-2021571 cannot release mutex because it is wait for xlog release space. See=
- the
-stac info in the attachment of stack.txt
+For example, Eric Biggers wanted to teach the fscrypt commands to use a
+new feature he was adding to an existing API, so he AC_DEFUN'd a macro
+that checks to see if the system linux/fs.h *does not* define a
+structure containing the desired field.  If this is the case, it sets
+need_internal_fscrypt_add_key_arg=yes.
 
-So I try to figure out what happened to xlog
+AC_DEFUN([AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG],
+  [
+    AC_CHECK_TYPE(struct fscrypt_add_key_arg,
+      [
+        AC_CHECK_MEMBER(struct fscrypt_add_key_arg.key_id,
+          ,
+          need_internal_fscrypt_add_key_arg=yes,
+          [#include <linux/fs.h>]
+        )
+      ],,
+      [#include <linux/fs.h>]
+    )
+    AC_SUBST(need_internal_fscrypt_add_key_arg)
+  ])
 
-crash> struct xfs_ail.ail_target_prev,ail_targe,ail_head=C2=A00xffff00ff884=
-f1000=20
-=C2=A0=C2=A0ail_target_prev =3D 0xe9200058600
-=C2=A0=C2=A0ail_target =3D 0xe9200058600
-=C2=A0=C2=A0ail_head =3D {
-=C2=A0=C2=A0=C2=A0=C2=A0next =3D 0xffff0340999a0a80,=C2=A0
-=C2=A0=C2=A0=C2=A0=C2=A0prev =3D 0xffff020013c66b40
-=C2=A0=C2=A0}
+This macro is called from configure.ac.
 
-there are 112 log item in ail list
-crash> list 0xffff0340999a0a80 | wc -l
-112=20
+Next, include/builddefs.in was modified to include the selected value in
+the make variables:
 
-79 item of them are xlog_inode_item
-30 item of them are xlog_buf_item
+NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
 
-crash> xfs_log_item.li_flags,li_lsn 0xffff0340999a0a80 -x=20
-  li_flags =3D 0x1
-  li_lsn =3D 0xe910005cc00 =3D=3D=3D> first item lsn
+And then the shouty variable is used in the same file to set a compiler
+define:
 
-crash> xfs_log_item.li_flags,li_lsn ffff020013c66b40 -x
-  li_flags =3D 0x1
-  li_lsn =3D 0xe9200058600 =3D=3D=3D> last item lsn
+ifeq ($(NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG),yes)
+PCFLAGS+= -DOVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG
+endif
 
-crash>xfs_log_item.li_buf=C2=A00xffff0340999a0a80=20=20=20=20=20=20=20=20=
-=20=20=20=20=20=20=20
-=C2=A0li_buf =3D 0xffff0200125b7180
+Then io/encrypt.c does the following to move the system's definition of
+struct fscrypt_add_key_arg out of the way...
 
-crash> xfs_buf.b_flags 0xffff0200125b7180 -x
-=C2=A0b_flags =3D 0x110032=C2=A0=C2=A0(XBF_WRITE|XBF_ASYNC|XBF_DONE|_XBF_IN=
-ODES|_XBF_PAGES)=20
+#ifdef OVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG
+#  define fscrypt_add_key_arg sys_fscrypt_add_key_arg
+#endif
+#include <linux/fs.h>  /* via io.h -> xfs.h -> xfs/linux.h */
 
-crash> xfs_buf.b_state 0xffff0200125b7180 -x
-  b_state =3D 0x2 (XFS_BSTATE_IN_FLIGHT)
+...so that the file can provide its own definition further down:
 
-crash> xfs_buf.b_last_error,b_retries,b_first_retry_time 0xffff0200125b7180=
- -x
-  b_last_error =3D 0x0
-  b_retries =3D 0x0
-  b_first_retry_time =3D 0x0=20
+/*
+ * Since the key_id field was added later than struct
+ * fscrypt_add_key_arg itself, we may need to override the system
+ * definition to get that field.
+ */
+#if !defined(FS_IOC_ADD_ENCRYPTION_KEY) || \
+	defined(OVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG)
+#undef fscrypt_add_key_arg
+struct fscrypt_add_key_arg {
+	struct fscrypt_key_specifier key_spec;
+	__u32 raw_size;
+	__u32 key_id;
+	__u32 __reserved[8];
+	__u8 raw[];
+};
+#endif
 
-The buf flags show the io had been done(XBF_DONE is set).
-When I review the code xfs_buf_ioend, if XBF_DONE is set, xfs_buf_inode_iod=
-one
-will be called and it will remove the log item from ail list, then release =
-the
-xlog space by moving the tail_lsn.
+Obviously, #defined constants are much easier to override:
 
-But now this item is still in the ail list, and the b_last_error =3D 0, XBF=
-_WRITE
-is set.
+#ifndef FS_IOC_ADD_ENCRYPTION_KEY
+#  define FS_IOC_ADD_ENCRYPTION_KEY		_IOWR('f', 23, struct fscrypt_add_key_arg)
+#endif
 
-xfs buf log item is the same as the inode log item.
+But I went for the full solution since you're adding fields to struct
+statx.
 
-crash> list -s xfs_log_item.li_buf 0xffff0340999a0a80
-ffff033f8d7c9de8
-=C2=A0=C2=A0li_buf =3D 0x0
-crash> xfs_buf_log_item.bli_buf=C2=A0=C2=A0ffff033f8d7c9de8
-=C2=A0=C2=A0bli_buf =3D 0xffff0200125b4a80
-crash> xfs_buf.b_flags 0xffff0200125b4a80 -x
-=C2=A0=C2=A0b_flags =3D 0x100032=C2=A0(XBF_WRITE|XBF_ASYNC|XBF_DONE|_XBF_PA=
-GES)=20
+Also, whatever you do, don't put your overrides in any file that gets
+exported via xfslibs-dev, because those files get put in /usr/include.
+We just learned that lesson the hard way with MAP_SYNC.
 
-I think it is impossible that (XBF_DONE is set & b_last_error =3D 0) and th=
-e item
-still in the ail.
+--D
 
-Is my analysis correct?=20
-Why xlog space cannot release space?
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+> -- 
+> Jeff Layton <jlayton@kernel.org>
