@@ -2,80 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51EC7C19F2D
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 23:02:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D638C19F2D
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 23:04:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229460AbiHIXCt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Aug 2022 19:02:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48804 "EHLO
+        id S229688AbiHIXEA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Aug 2022 19:04:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbiHIXCt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 19:02:49 -0400
+        with ESMTP id S229460AbiHIXD5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 19:03:57 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2A59167C80;
-        Tue,  9 Aug 2022 16:02:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1C8C56AA0C
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 16:03:57 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-193-158.pa.nsw.optusnet.com.au [49.181.193.158])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 527B762D44C;
-        Wed, 10 Aug 2022 09:02:46 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6BAF262D553
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Aug 2022 09:03:56 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oLYFI-00BDH8-PC; Wed, 10 Aug 2022 09:02:44 +1000
-Date:   Wed, 10 Aug 2022 09:02:44 +1000
+        id 1oLYGR-00BDI8-EA
+        for linux-xfs@vger.kernel.org; Wed, 10 Aug 2022 09:03:55 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.95)
+        (envelope-from <david@fromorbit.com>)
+        id 1oLYGR-00E4WT-D6
+        for linux-xfs@vger.kernel.org;
+        Wed, 10 Aug 2022 09:03:55 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Uros Bizjak <ubizjak@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH] fs/xfs: Use atomic64_try_cmpxchg in
- xlog_grant_{add,sub}_space
-Message-ID: <20220809230244.GJ3600936@dread.disaster.area>
-References: <20220809165615.9694-1-ubizjak@gmail.com>
- <20220809220511.GI3600936@dread.disaster.area>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 6/9] xfs: collapse xlog_state_set_callback in caller
+Date:   Wed, 10 Aug 2022 09:03:50 +1000
+Message-Id: <20220809230353.3353059-7-david@fromorbit.com>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220809230353.3353059-1-david@fromorbit.com>
+References: <20220809230353.3353059-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220809220511.GI3600936@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62f2e797
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62f2e7dc
         a=SeswVvpAPK2RnNNwqI8AaA==:117 a=SeswVvpAPK2RnNNwqI8AaA==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=8C0a8iNh18_4KdS3VZMA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=biHskzXt2R4A:10 a=20KFwNOVAAAA:8 a=eNFZjYxO8Yb06G2fAiIA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 10, 2022 at 08:05:11AM +1000, Dave Chinner wrote:
-> On Tue, Aug 09, 2022 at 06:56:15PM +0200, Uros Bizjak wrote:
-> > Use `!atomic64_try_cmpxchg(ptr, &old, new)` instead of
-> > `atomic64_cmpxchg(ptr, old, new) != old` in xlog_grant_{add,sub}_space.
-> > This has two benefits:
-> > 
-> > - The x86 cmpxchg instruction returns success in the ZF flag, so this
-> >   change saves a compare after cmpxchg, as well as a related move
-> >   instruction in the front of cmpxchg.
-> > 
-> > - atomic64_try_cmpxchg implicitly assigns the *ptr value to &old when
-> >   cmpxchg fails, enabling further code simplifications.
-> 
-> Do the two cmpxchg operations have the same memory ordering
-> semantics on failure?
-> 
-> > This patch has no functional change.
-> 
-> The patch looks ok, but ....
-> 
-> ... I'm about 2 hours away from posting a patchset that completely
-> removes the cmpxchg and the new grant head accounting has
-> significantly lower fast path overhead. It also opens the door for
-> tracking more than 2GB of log space in the grant heads.
+From: Dave Chinner <dchinner@redhat.com>
 
-FYI, the original RFC for this was posted a bit over a month ago:
+The function is called from a single place, and it isn't just
+setting the iclog state to XLOG_STATE_CALLBACK - it can mark iclogs
+clean, which moves tehm to states after CALLBACK. Hence the function
+is now badly named, and should just be folded into the caller where
+the iclog completion logic makes a whole lot more sense.
 
-https://lore.kernel.org/linux-xfs/20220708015558.1134330-1-david@fromorbit.com/
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c | 31 +++++++++++--------------------
+ 1 file changed, 11 insertions(+), 20 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index e420591b1a8a..5b7c91a42edf 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2520,25 +2520,6 @@ xlog_get_lowest_lsn(
+ 	return lowest_lsn;
+ }
+ 
+-static void
+-xlog_state_set_callback(
+-	struct xlog		*log,
+-	struct xlog_in_core	*iclog,
+-	xfs_lsn_t		header_lsn)
+-{
+-	/*
+-	 * If there are no callbacks on this iclog, we can mark it clean
+-	 * immediately and return. Otherwise we need to run the
+-	 * callbacks.
+-	 */
+-	if (list_empty(&iclog->ic_callbacks)) {
+-		xlog_state_clean_iclog(log, iclog);
+-		return;
+-	}
+-	trace_xlog_iclog_callback(iclog, _RET_IP_);
+-	iclog->ic_state = XLOG_STATE_CALLBACK;
+-}
+-
+ /*
+  * Return true if we need to stop processing, false to continue to the next
+  * iclog. The caller will need to run callbacks if the iclog is returned in the
+@@ -2570,7 +2551,17 @@ xlog_state_iodone_process_iclog(
+ 		lowest_lsn = xlog_get_lowest_lsn(log);
+ 		if (lowest_lsn && XFS_LSN_CMP(lowest_lsn, header_lsn) < 0)
+ 			return false;
+-		xlog_state_set_callback(log, iclog, header_lsn);
++		/*
++		 * If there are no callbacks on this iclog, we can mark it clean
++		 * immediately and return. Otherwise we need to run the
++		 * callbacks.
++		 */
++		if (list_empty(&iclog->ic_callbacks)) {
++			xlog_state_clean_iclog(log, iclog);
++			return false;
++		}
++		trace_xlog_iclog_callback(iclog, _RET_IP_);
++		iclog->ic_state = XLOG_STATE_CALLBACK;
+ 		return false;
+ 	default:
+ 		/*
 -- 
-Dave Chinner
-david@fromorbit.com
+2.36.1
+
