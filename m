@@ -2,114 +2,176 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4355CC25B0F
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 11:17:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D22DC19F2D
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 11:46:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239907AbiHILR0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Aug 2022 07:17:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46358 "EHLO
+        id S242833AbiHILq0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Aug 2022 07:46:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238802AbiHILRZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 07:17:25 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C3B3193ED;
-        Tue,  9 Aug 2022 04:17:24 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id h13so13950539wrf.6;
-        Tue, 09 Aug 2022 04:17:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=RA4DYuk+FJa2a998BAcW5CxBP4iB3ilKC4//hpI6vps=;
-        b=KWwHqC4FHlOG4vetnLtjWZx9sSgDOn8/iOkI2f59Qggvkx7E1m1BpiRstL+aJu4RHp
-         iaWYm+hUtGzEXTXSiID8SNS9c6UDLT/JDNL2ljyvAGfVwPlmgo64ZMPBma7/BDYMbt+E
-         LYOF2KA54rxGZVbFVUlfkij2vg+VUY09usLaqaUIWBgwLE/+xBuKU2OcvVa7W24/fltm
-         QoTG9LG0b1msofy1BTf9zCVY616fY53licMKAIWwsf+iFp4dJLdjpZkt6796ZwconbHc
-         wnOqFgIJ0cEbGizKwkQ2WaAsrtMzU0WNLMFMwl75VwbR9CZM4BvCMLd/vS2mNFTN5a17
-         L2jw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=RA4DYuk+FJa2a998BAcW5CxBP4iB3ilKC4//hpI6vps=;
-        b=aShdgH9rRTn3TUHTyO5NYi9wYOTc+P79dMzq6t7vbexQ4X65K6nbDUbFTum9ko/Vgb
-         kzs6Nlw9ikc9UIF5fzXYp3jQFwDBDwKCMf1W0+pDl/dwTqfOiJZLDqKmNictY/T8eVtS
-         kUEO2ndY6CuOQcVOwRN4JjxWrW6KddSvjyk55XGesMZXUE8+y4wdRqIgkJCR33vQ2xht
-         dH5bOLEh2dl1CcPOctnRaSBmgrMF0sQG0UEn7RDNIWy5ex3b2JJTyaBdcUMS4fkONFwe
-         HqefMZ10YqAA16PjO9BK3x/4fjgO3y7Uqi27mAy7qcRH2Znd/ax2wnMq0Wc2sW7lKLlQ
-         OytA==
-X-Gm-Message-State: ACgBeo3NWzPkI2VmHbu3RGsZu3Yph8Vf6MDhCbsvPH0S6qt+xDtCq9zS
-        2Ol7J1mgjH/AvrZonadeFLgzoKpnuGw=
-X-Google-Smtp-Source: AA6agR44sWewvmDKjtFTdVh6/1iGBV8MLsmIknnGyb8dg4+jVSjjKjovp0kXK1N6/VrDueMKp0s6nQ==
-X-Received: by 2002:adf:e3cf:0:b0:220:cc91:94ed with SMTP id k15-20020adfe3cf000000b00220cc9194edmr14778758wrm.36.1660043842798;
-        Tue, 09 Aug 2022 04:17:22 -0700 (PDT)
-Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id l2-20020a1ced02000000b003a3170a7af9sm15906169wmh.4.2022.08.09.04.17.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Aug 2022 04:17:22 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     "Darrick J . Wong" <djwong@kernel.org>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 5.10 CANDIDATE 4/4] xfs: fix I_DONTCACHE
-Date:   Tue,  9 Aug 2022 13:17:08 +0200
-Message-Id: <20220809111708.92768-5-amir73il@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220809111708.92768-1-amir73il@gmail.com>
-References: <20220809111708.92768-1-amir73il@gmail.com>
+        with ESMTP id S237496AbiHILqZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 07:46:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C95B0248FE
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 04:46:24 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 65CFF61028
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 11:46:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C91E7C4347C
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 11:46:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660045583;
+        bh=4HNK/qzcKyPu+Ed2z42rAA+FakKgTbXihb4+MLm2KuE=;
+        h=From:To:Subject:Date:From;
+        b=f8u6b5WmE+9Zn/U7SeWN1AaL1Ox68id4JLNFuX2HKh1EeifMmNPWkwYWLEVTepqHE
+         uvENv0QILAfAViutEzcKVQqsduJfTxrp4y9lILOT6odYLZFEeEsEsK8SYRtH6y9nhB
+         vtEX48N7t/DOpcbakkoAIcYfAVgs/LHVJIuezoipRbCoOnI0dkjSDhSMVrbzZHyiyL
+         bjUv9AbCoynOLJZtWoDQU/4NGi3e6RAX8rZWlb0NHpy1shBXdOqcKaM9B0ZHN469kj
+         LrKfUmvTPIHKpnfQ63a0sKjPuvV86A+7KqopznfbXhvW55jxAluqZJWfdC7HE9Awio
+         7ChAH4XkkoSqQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id B4D3DC433E4; Tue,  9 Aug 2022 11:46:23 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216343] New: XFS: no space left in xlog cause system hang
+Date:   Tue, 09 Aug 2022 11:46:23 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: zhoukete@126.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression attachments.created
+Message-ID: <bug-216343-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
 
-commit f38a032b165d812b0ba8378a5cd237c0888ff65f upstream.
+            Bug ID: 216343
+           Summary: XFS: no space left in xlog cause system hang
+           Product: File System
+           Version: 2.5
+    Kernel Version: 5.10.38
+          Hardware: ARM
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zhoukete@126.com
+        Regression: No
 
-Yup, the VFS hoist broke it, and nobody noticed. Bulkstat workloads
-make it clear that it doesn't work as it should.
+Created attachment 301539
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D301539&action=3Dedit
+stack
 
-Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/xfs/xfs_icache.c | 3 ++-
- fs/xfs/xfs_iops.c   | 2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+1. cannot login with ssh, system hanged and cannot do anything
+2. dmesg report 'audit: audit_backlog=3D41349 > audit_backlog_limit=3D8192'
+3. I send sysrq-crash and get vmcore file , I dont know how to reproduce it.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index deb99300d171..e69a08ed7de4 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -47,8 +47,9 @@ xfs_inode_alloc(
- 		return NULL;
- 	}
- 
--	/* VFS doesn't initialise i_mode! */
-+	/* VFS doesn't initialise i_mode or i_state! */
- 	VFS_I(ip)->i_mode = 0;
-+	VFS_I(ip)->i_state = 0;
- 
- 	XFS_STATS_INC(mp, vn_active);
- 	ASSERT(atomic_read(&ip->i_pincount) == 0);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index b7f7b31a77d5..6a3026e78a9b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1328,7 +1328,7 @@ xfs_setup_inode(
- 	gfp_t			gfp_mask;
- 
- 	inode->i_ino = ip->i_ino;
--	inode->i_state = I_NEW;
-+	inode->i_state |= I_NEW;
- 
- 	inode_sb_list_add(inode);
- 	/* make the inode look hashed for the writeback code */
--- 
-2.25.1
+Follwing is my analysis from vmcore:
 
+The reason why tty cannot login is pid 2021571 hold the acct_process mutex,=
+ and
+2021571 cannot release mutex because it is wait for xlog release space. See=
+ the
+stac info in the attachment of stack.txt
+
+So I try to figure out what happened to xlog
+
+crash> struct xfs_ail.ail_target_prev,ail_targe,ail_head=C2=A00xffff00ff884=
+f1000=20
+=C2=A0=C2=A0ail_target_prev =3D 0xe9200058600
+=C2=A0=C2=A0ail_target =3D 0xe9200058600
+=C2=A0=C2=A0ail_head =3D {
+=C2=A0=C2=A0=C2=A0=C2=A0next =3D 0xffff0340999a0a80,=C2=A0
+=C2=A0=C2=A0=C2=A0=C2=A0prev =3D 0xffff020013c66b40
+=C2=A0=C2=A0}
+
+there are 112 log item in ail list
+crash> list 0xffff0340999a0a80 | wc -l
+112=20
+
+79 item of them are xlog_inode_item
+30 item of them are xlog_buf_item
+
+crash> xfs_log_item.li_flags,li_lsn 0xffff0340999a0a80 -x=20
+  li_flags =3D 0x1
+  li_lsn =3D 0xe910005cc00 =3D=3D=3D> first item lsn
+
+crash> xfs_log_item.li_flags,li_lsn ffff020013c66b40 -x
+  li_flags =3D 0x1
+  li_lsn =3D 0xe9200058600 =3D=3D=3D> last item lsn
+
+crash>xfs_log_item.li_buf=C2=A00xffff0340999a0a80=20=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20
+=C2=A0li_buf =3D 0xffff0200125b7180
+
+crash> xfs_buf.b_flags 0xffff0200125b7180 -x
+=C2=A0b_flags =3D 0x110032=C2=A0=C2=A0(XBF_WRITE|XBF_ASYNC|XBF_DONE|_XBF_IN=
+ODES|_XBF_PAGES)=20
+
+crash> xfs_buf.b_state 0xffff0200125b7180 -x
+  b_state =3D 0x2 (XFS_BSTATE_IN_FLIGHT)
+
+crash> xfs_buf.b_last_error,b_retries,b_first_retry_time 0xffff0200125b7180=
+ -x
+  b_last_error =3D 0x0
+  b_retries =3D 0x0
+  b_first_retry_time =3D 0x0=20
+
+The buf flags show the io had been done(XBF_DONE is set).
+When I review the code xfs_buf_ioend, if XBF_DONE is set, xfs_buf_inode_iod=
+one
+will be called and it will remove the log item from ail list, then release =
+the
+xlog space by moving the tail_lsn.
+
+But now this item is still in the ail list, and the b_last_error =3D 0, XBF=
+_WRITE
+is set.
+
+xfs buf log item is the same as the inode log item.
+
+crash> list -s xfs_log_item.li_buf 0xffff0340999a0a80
+ffff033f8d7c9de8
+=C2=A0=C2=A0li_buf =3D 0x0
+crash> xfs_buf_log_item.bli_buf=C2=A0=C2=A0ffff033f8d7c9de8
+=C2=A0=C2=A0bli_buf =3D 0xffff0200125b4a80
+crash> xfs_buf.b_flags 0xffff0200125b4a80 -x
+=C2=A0=C2=A0b_flags =3D 0x100032=C2=A0(XBF_WRITE|XBF_ASYNC|XBF_DONE|_XBF_PA=
+GES)=20
+
+I think it is impossible that (XBF_DONE is set & b_last_error =3D 0) and th=
+e item
+still in the ail.
+
+Is my analysis correct?=20
+Why xlog space cannot release space?
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
