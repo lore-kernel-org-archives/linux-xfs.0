@@ -2,107 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE29DC00140
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Aug 2022 17:37:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A82BC3F6B0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 11:17:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243301AbiHHRh3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Aug 2022 13:37:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40346 "EHLO
+        id S237342AbiHILRT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Aug 2022 07:17:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236004AbiHHRh1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Aug 2022 13:37:27 -0400
-Received: from mail-qt1-x82e.google.com (mail-qt1-x82e.google.com [IPv6:2607:f8b0:4864:20::82e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 490EC13E8B
-        for <linux-xfs@vger.kernel.org>; Mon,  8 Aug 2022 10:37:27 -0700 (PDT)
-Received: by mail-qt1-x82e.google.com with SMTP id z3so7031791qtv.5
-        for <linux-xfs@vger.kernel.org>; Mon, 08 Aug 2022 10:37:27 -0700 (PDT)
+        with ESMTP id S232697AbiHILRT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 07:17:19 -0400
+Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30096192A8;
+        Tue,  9 Aug 2022 04:17:18 -0700 (PDT)
+Received: by mail-wr1-x42d.google.com with SMTP id bv3so13930906wrb.5;
+        Tue, 09 Aug 2022 04:17:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc;
-        bh=nJWYXnuVn04pyUVFY8F7wsNOJfSWUigbE1m0b0OdOyY=;
-        b=TCMdXOTs8IZAJbqDe6locfenWIt80GvYTLMIUo+cGGrdRsTGQ2AoXtFeXzk9xPft0a
-         5DrbOfQ3WHd39z5B2+fPQVWksLe+MIJ44YixAHm3cbL57WzpJDqgVQk8AHGOx0xuIdjl
-         GzJBfYosxmzpPNWkpLivqxL+Pdt+3kwit/izdouPIHuj8+8/cVpLSt6BoDC6ZwZhfQaA
-         pNdBIcqp6gmA4k6yyNm9OLXyGgJ4ps/pZvE9ryx1kuYCprbvPc67BurPxsC4N6CgFLBw
-         Fu+3ambPA35mRd31/LK8oH/5EXqBrFofq3G+SuX1zBbzF4CFiy0s08ktediN8kyaSqCA
-         /gqw==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=FZmITAqIsDdiBPzSCmaelu7mb1hKLsqxQu5syDC3GV4=;
+        b=pcN423NALx3enA3jmy9bssKaAStqxzKFOz+EpTves8T8/9LwMwkiNVRo8EWF5Z5HYI
+         g2hCx04jlp/OmrPYV1EF321GZESkFMIbCGXPb8NzwKR3kI2X0UmpzdVJ+kwyc/irmH24
+         B3jteM63TAMPFjYpS2p4V2N2cpEHo/uT5prJMJ1SGtRJDv1CSF948HB8EKuRpwcXjdEn
+         lR0ko+oP9FewAfwYoRGAYz8kL4oq46xKmh7SR+219QchjmaK2+Fa8ZAnnXeRInCxoLcA
+         hNwbazZ9NE5IgVBe4ea+XY8JJOIsBe/z2HKNXU4OARHkA2R4J85Bbke4op2dALxCeHGh
+         LkAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=nJWYXnuVn04pyUVFY8F7wsNOJfSWUigbE1m0b0OdOyY=;
-        b=HFjjxwf4YCalOC0PTQMmrytQKKSHO+r2CvmpPBQm4jHoFYazMI0R+NjdMMp4jCDn7o
-         UZVXbzfZYy+b7mYEeEgAOBa8s4AkUaOL5D8sPO9aOfXwc6QW9Ayvankn/y+pixiC0XTl
-         p0Z8hdpZ4gQcuSS6bH58Cd1QCOwpW83AAW/zKaihtDuBzIrqgpRRyho/Lr/wj5ru2YXT
-         h7MN2rrzytv/Za3dKNVGdySJN8NPOs1rMwuWDiMss9NbifSzdzzkYAtJYhz081853hMW
-         KPxwSCU0jZqwL0GRo1RbzSj2dlqTMrG6MWNBBE4UEkrnmLpd4QT4B63ZTqpyzqgs9bCk
-         iZbg==
-X-Gm-Message-State: ACgBeo2pkRRN5ephG3xQXCO5jvjinlICTU2nWsHiWZP5IYMSRsDVxhLl
-        VKnFxtxXkS5JkQPjqKkPnxY=
-X-Google-Smtp-Source: AA6agR5fxAUPkyszhui0l8Dc0y2QJ+Hv870XTtInNHISP0GXMKZjrDHua4jMQuwqUq3BJwwQHlFGLg==
-X-Received: by 2002:ac8:5754:0:b0:342:eaee:2c9f with SMTP id 20-20020ac85754000000b00342eaee2c9fmr9374373qtx.670.1659980246370;
-        Mon, 08 Aug 2022 10:37:26 -0700 (PDT)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.googlemail.com with ESMTPSA id az38-20020a05620a172600b006b8619a67f4sm9348872qkb.34.2022.08.08.10.37.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Aug 2022 10:37:24 -0700 (PDT)
-Message-ID: <ca42e6be-3565-1f38-48ed-81bd1ad9c289@gmail.com>
-Date:   Mon, 8 Aug 2022 10:37:23 -0700
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc;
+        bh=FZmITAqIsDdiBPzSCmaelu7mb1hKLsqxQu5syDC3GV4=;
+        b=l+mgJjzux3RBZx8HQcR77Q7WTLjCPY//yjVZu/v2YKZgIGFXm//pXJCl2xxdh0DR67
+         ZEHIi2FXQ4mTmBMmgaLiqVHzTUCer5NDOCCv4T4cQ8EW5R/oI3gU34malOul9wbO7SSn
+         /F11PXWMkIX8+3K5RBlvj29ZML6jXxaapPwRc5YoIU4tUe8ZCvfQ/4AdFvDJFUY9UXCd
+         6U70mNJWaHKWAbfdYND/HZdxt97nqUm9dQLy7mYN09eji6uC9Db+pHRai1K4lwU95Qsq
+         u9HCwcTrDK1SmPdkIyyLrS7qjQC0Pl4BKshT9BTfw+F0pfmJVkgNZY5iVeFbc80Q4ABK
+         vl7g==
+X-Gm-Message-State: ACgBeo0U5Um7ny4xuysWZw/Xle0n3Nepudg9sQN/OEORu2PH94Ye1P2R
+        fi8oaD3djZCnOSgkMvKuQMGTReNh+q8=
+X-Google-Smtp-Source: AA6agR6zGPxqIC65hzImu8mupLJHNyLRGU/oOMaDy9ANO60mbj5ZQfgn9knbKxQ1xWf+/9rKnoRG6g==
+X-Received: by 2002:adf:e283:0:b0:21e:26fe:14f3 with SMTP id v3-20020adfe283000000b0021e26fe14f3mr13844987wri.98.1660043836573;
+        Tue, 09 Aug 2022 04:17:16 -0700 (PDT)
+Received: from localhost.localdomain ([77.137.66.49])
+        by smtp.gmail.com with ESMTPSA id l2-20020a1ced02000000b003a3170a7af9sm15906169wmh.4.2022.08.09.04.17.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Aug 2022 04:17:16 -0700 (PDT)
+From:   Amir Goldstein <amir73il@gmail.com>
+To:     "Darrick J . Wong" <djwong@kernel.org>
+Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: [PATCH 5.10 CANDIDATE 0/4] xfs stable candidate patches for 5.10.y (from v5.15)
+Date:   Tue,  9 Aug 2022 13:17:04 +0200
+Message-Id: <20220809111708.92768-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [RFC PATCH] libxfs: stop overriding MAP_SYNC in publicly exported
- header files
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Fabrice Fontaine <fontaine.fabrice@gmail.com>
-References: <WVSe_1J22WBxe1bXs0u1-LcME14brH0fGDu5RCt5eBvqFJCSvxxAEPHIObGT4iqkEoCCZv4vpOzGZSrLjg8gcQ==@protonmail.internalid>
- <YtiPgDT3imEyU2aF@magnolia> <20220721121128.yyxnvkn4opjdgcln@orion>
- <e6ee2759-8b55-61a9-ff6c-6410d185d35e@gmail.com> <YuQBarhgxff8Hih6@magnolia>
- <86691238-3de4-418d-5e94-981de043173e@sandeen.net>
- <14b36a0e-b567-e854-8791-0aed7af0567a@gmail.com> <YvFJpctzK/9/LsV6@magnolia>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-In-Reply-To: <YvFJpctzK/9/LsV6@magnolia>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/8/22 10:36, Darrick J. Wong wrote:
-> On Mon, Aug 08, 2022 at 10:13:06AM -0700, Florian Fainelli wrote:
->> On 8/4/22 19:11, Eric Sandeen wrote:
->>>
->>>
->>> On 7/29/22 10:48 AM, Darrick J. Wong wrote:
->>>>> Darrick, do you need to re-post, or can the maintainers pick up the patch directly?
->>>> I already did:
->>>> https://lore.kernel.org/linux-xfs/YtmB005kkkErb5uw@magnolia/
->>>>
->>>> (It's August, so I think the xfsprogs maintainer might be on vacation?
->>>> Either way, I'll make sure he's aware of it before the next release.)
->>>>
->>>> --D
->>>>
->>>
->>> Yep I was, picking it up now. Thanks for the pointer Darrick.
->>>
->>> -Eric
->>
->> Eric, any chance this could be pushed to xfsprogs-dev.git so we can take the
->> patch and submit it to buildroot, OpenWrt and other projects that depend
->> upon that build fix?
-> 
-> It's queued in for-next, so the git commit ids should be stable if you
-> want to get that started now.
-> 
-> https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/commit/?h=for-next&id=28965957f4ea5c79fc0b91b997168c656a4426c5
+Hi Darrick,
 
-Woah, sorry for not noticing, thanks!
+This is a small update of simple backports from v5.15 that shouldn't be
+too hard to review.
+
+I rather take "remove support for disabling quota accounting" to 5.10.y
+even though it is not a proper bug fix, as a defensive measure and in
+order to match the expefctations of fstests from diabling quota.
+
+These backports survived the standard auto group soak for over 40 runs
+on the 5 test configs.
+
+Please ACK.
+
+Thanks,
+Amir.
+
+Christoph Hellwig (1):
+  xfs: remove support for disabling quota accounting on a mounted file
+    system
+
+Darrick J. Wong (1):
+  xfs: only set IOMAP_F_SHARED when providing a srcmap to a write
+
+Dave Chinner (2):
+  mm: Add kvrealloc()
+  xfs: fix I_DONTCACHE
+
+ fs/xfs/libxfs/xfs_trans_resv.c |  30 -----
+ fs/xfs/libxfs/xfs_trans_resv.h |   2 -
+ fs/xfs/xfs_dquot_item.c        | 134 ------------------
+ fs/xfs/xfs_dquot_item.h        |  17 ---
+ fs/xfs/xfs_icache.c            |   3 +-
+ fs/xfs/xfs_iomap.c             |   8 +-
+ fs/xfs/xfs_iops.c              |   2 +-
+ fs/xfs/xfs_log_recover.c       |   4 +-
+ fs/xfs/xfs_qm.c                |   2 +-
+ fs/xfs/xfs_qm.h                |   1 -
+ fs/xfs/xfs_qm_syscalls.c       | 240 ++-------------------------------
+ fs/xfs/xfs_trans_dquot.c       |  38 ------
+ include/linux/mm.h             |   2 +
+ mm/util.c                      |  15 +++
+ 14 files changed, 40 insertions(+), 458 deletions(-)
+
 -- 
-Florian
+2.25.1
+
