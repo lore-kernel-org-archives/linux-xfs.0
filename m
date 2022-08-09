@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17BAAC25B06
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B1EBC282E7
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Aug 2022 21:01:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229748AbiHIVB1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Aug 2022 17:01:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53952 "EHLO
+        id S229933AbiHIVBa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Aug 2022 17:01:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230322AbiHIVAq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 17:00:46 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F41552B62D;
-        Tue,  9 Aug 2022 14:00:41 -0700 (PDT)
+        with ESMTP id S230520AbiHIVBN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 17:01:13 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56DAC2CDEC;
+        Tue,  9 Aug 2022 14:01:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AB39FB8188D;
-        Tue,  9 Aug 2022 21:00:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F9CEC433C1;
-        Tue,  9 Aug 2022 21:00:38 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E910860A71;
+        Tue,  9 Aug 2022 21:01:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51394C433C1;
+        Tue,  9 Aug 2022 21:01:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660078838;
-        bh=B+7LINfVIN5J/jLBsiVtpQl19QhMXPxoFieq1IBDMbI=;
+        s=k20201202; t=1660078867;
+        bh=Hy5N6lqUOMaw+qFEPvWmXo3WWDIpgSj+uBRUm++kWQE=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=UQTGBKEZByv3g0W27KAoC5VIL9v/xEb05WOnvg6rkVN6qdh/nyJIKYIFgRMxLZZ53
-         EqKnauHWuHOANsiC1KptYDZ4m6eg+i8FO4+M1SrdLq1pn+KVVd9elzHRIEYwRzgbG4
-         d0JIf81wn3+YP1FzHaUKbl4BoRjdpyXxmVd7xV1g5FQabhT+/td9lwAfoq3HO5Bqyo
-         whpTr4yHnh1kxWaoyxe/5EE4cvupLluBhb8ggmBbVPjPrnV69iVm9q20CqJ73BQWlf
-         ye03RjgHUyy2tPai6g3SlK++44H9cUWawfWGUAt7cHw3rlxU0YcInflShPLeXz4w3z
-         MPZRzUk61n5JQ==
-Subject: [PATCH 1/1] xfs/{015,042,076}: fix mkfs failures with nrext64=1
+        b=Mmz533GSKdfBRTUZuTeYwawe4IN5dpxCM0ndvLts/qe3FAz0Z0OAmEMzj+/WrCn4k
+         ztyOL7bM5OaLFP6ZlNbTWSyb4/z5piOs9joRAhVtFneDyNopcW6WF0Ju/eT9Liiu7L
+         BT59VR+9/5g+maFjQgo0kAk5NBJ1Iis72cTd84RnoCXxrhkdcq+mMbhvDCzu4FuFK8
+         wPuePLhtCX1R9lFIWnyxqVa37ZHIgeFISY+tAEq2HnmpNh09M6uW1iFNyTfHvOrFob
+         +m1f2BZc+0MUYXaeNwM1h1mS3ndI2s5/zuccEzE2yUU1hC7SOLJnftS9RCpfo5pUFa
+         VRD8x8HCTjI2w==
+Subject: [PATCH 1/1] dmerror: support external log and realtime devices
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 09 Aug 2022 14:00:37 -0700
-Message-ID: <166007883796.3274939.8920861122422263977.stgit@magnolia>
-In-Reply-To: <166007883231.3274939.3963254355857450803.stgit@magnolia>
-References: <166007883231.3274939.3963254355857450803.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
+        tytso@mit.edu, leah.rumancik@gmail.com
+Date:   Tue, 09 Aug 2022 14:01:06 -0700
+Message-ID: <166007886688.3276417.391273830219043567.stgit@magnolia>
+In-Reply-To: <166007886131.3276417.10030668570359997591.stgit@magnolia>
+References: <166007886131.3276417.10030668570359997591.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,148 +50,268 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-One of my XFS fstests systems is configured with multiple 34G block
-devicesm each with a 4k LBA size for the scratch filesystem.  If I turn
-on large extent counts with -i nrext64=1, I see the following failures
-from each of these three tests:
+Upgrade the dmerror code to coordinate making external scratch log and
+scratch realtime devices error out along with the scratch device.  Note
+that unlike SCRATCH_DEV, we save the old rt/log devices in a separate
+variable and overwrite SCRATCH_{RT,LOG}DEV so that all the helper
+functions continue to work properly.
 
--used inodes is in range
-+max log size 4083 smaller than min log size 4287, filesystem is too small
-
-Note that this particular output is dependent on having a recent
-xfsprogs with "mkfs: complain about impossible log size constraints"
-applied, else you get a far more obscure message about the log being too
-small.
-
-It turns out that you can simulate this pretty easily:
-
-# truncate -s 34G /tmp/a; losetup -f -b 4096 /tmp/a
-# truncate -s 34G /tmp/b; losetup -f -b 4096 /tmp/b
-# mkfs.xfs -f -N /dev/loop0  -r rtdev=/dev/loop1 -d rtinherit=1,size=32m -i nrext64=1
-max log size 4083 smaller than min log size 4287, filesystem is too small
-
-If I turn off nrext64, the fs geometry I get is:
-
-meta-data=/dev/loop0             isize=512    agcount=2, agsize=4096 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=0    bigtime=1 inobtcount=1 nrext64=0
-data     =                       bsize=4096   blocks=8192, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=954, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =/dev/loop1             extsz=4096   blocks=8912896, rtextents=8912896
-
-So it's pretty obvious what happened here -- the AG size is 4096 blocks.
-mkfs has to leave enough free space in each AG to handle the AG space
-btree roots, the AG headers, and the AGFL, which means the log can't be
-more than 4083 blocks.  libxfs computes the minimum log size to be 4287
-blocks, which is why the format fails.
-
-Fix this problem by bumping the filesystems up to 96M, which provides
-enough space in each AG to handle a ~20M internal log.
+This is very similar to what we did for dm-flakey a while back.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/015     |    4 ++--
- tests/xfs/042     |   14 +++++++-------
- tests/xfs/042.out |    4 ++--
- tests/xfs/076     |    2 +-
- 4 files changed, 12 insertions(+), 12 deletions(-)
+ common/dmerror    |  159 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+ tests/generic/441 |    2 -
+ tests/generic/487 |    2 -
+ 3 files changed, 156 insertions(+), 7 deletions(-)
 
 
-diff --git a/tests/xfs/015 b/tests/xfs/015
-index 2bb7b8d5..a7f4d243 100755
---- a/tests/xfs/015
-+++ b/tests/xfs/015
-@@ -40,10 +40,10 @@ _require_scratch
- # need 128M space, don't make any assumption
- _scratch_mkfs >/dev/null 2>&1
- _scratch_mount
--_require_fs_space $SCRATCH_MNT 131072
-+_require_fs_space $SCRATCH_MNT 196608
- _scratch_unmount
+diff --git a/common/dmerror b/common/dmerror
+index 01a4c8b5..0934d220 100644
+--- a/common/dmerror
++++ b/common/dmerror
+@@ -4,25 +4,88 @@
+ #
+ # common functions for setting up and tearing down a dmerror device
  
--_scratch_mkfs_sized $((32 * 1024 * 1024)) > $tmp.mkfs.raw || _fail "mkfs failed"
-+_scratch_mkfs_sized $((96 * 1024 * 1024)) > $tmp.mkfs.raw || _fail "mkfs failed"
- cat $tmp.mkfs.raw | _filter_mkfs >$seqres.full 2>$tmp.mkfs
- # get original data blocks number and agcount
- . $tmp.mkfs
-diff --git a/tests/xfs/042 b/tests/xfs/042
-index d62eb045..657abd21 100755
---- a/tests/xfs/042
-+++ b/tests/xfs/042
-@@ -51,14 +51,14 @@ _require_scratch
++_dmerror_setup_vars()
++{
++	local backing_dev="$1"
++	local tag="$2"
++	local target="$3"
++
++	test -z "$target" && target=error
++	local blk_dev_size=$(blockdev --getsz "$backing_dev")
++
++	eval export "DMLINEAR_${tag}TABLE=\"0 $blk_dev_size linear $backing_dev 0\""
++	eval export "DMERROR_${tag}TABLE=\"0 $blk_dev_size $target $backing_dev 0\""
++}
++
+ _dmerror_setup()
+ {
+-	local dm_backing_dev=$SCRATCH_DEV
++	local rt_target=
++	local log_target=
  
- _do_die_on_error=message_only
+-	local blk_dev_size=`blockdev --getsz $dm_backing_dev`
++	for arg in "$@"; do
++		case "${arg}" in
++		no_rt)		rt_target=linear;;
++		no_log)		log_target=linear;;
++		*)		echo "${arg}: Unknown _dmerror_setup arg.";;
++		esac
++	done
  
--echo -n "Make a 48 megabyte filesystem on SCRATCH_DEV and mount... "
--_scratch_mkfs_xfs -dsize=48m,agcount=3 2>&1 >/dev/null || _fail "mkfs failed"
-+echo -n "Make a 96 megabyte filesystem on SCRATCH_DEV and mount... "
-+_scratch_mkfs_xfs -dsize=96m,agcount=3 2>&1 >/dev/null || _fail "mkfs failed"
- _scratch_mount
++	# Scratch device
+ 	export DMERROR_DEV='/dev/mapper/error-test'
++	_dmerror_setup_vars $SCRATCH_DEV
  
- echo "done"
+-	export DMLINEAR_TABLE="0 $blk_dev_size linear $dm_backing_dev 0"
++	# Realtime device.  We reassign SCRATCH_RTDEV so that all the scratch
++	# helpers continue to work unmodified.
++	if [ -n "$SCRATCH_RTDEV" ]; then
++		if [ -z "$NON_ERROR_RTDEV" ]; then
++			# Set up the device switch
++			local dm_backing_dev=$SCRATCH_RTDEV
++			export NON_ERROR_RTDEV="$SCRATCH_RTDEV"
++			SCRATCH_RTDEV='/dev/mapper/error-rttest'
++		else
++			# Already set up; recreate tables
++			local dm_backing_dev="$NON_ERROR_RTDEV"
++		fi
  
--echo -n "Reserve 16 1Mb unfragmented regions... "
--for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
-+echo -n "Reserve 32 1Mb unfragmented regions... "
-+for i in `seq 1 32`
- do
- 	_do "$XFS_IO_PROG -f -c \"resvsp 0 1m\" $SCRATCH_MNT/hole$i"
- 	_do "$XFS_IO_PROG -f -c \"resvsp 0 4k\" $SCRATCH_MNT/space$i"
-@@ -68,7 +68,7 @@ echo "done"
+-	export DMERROR_TABLE="0 $blk_dev_size error $dm_backing_dev 0"
++		_dmerror_setup_vars $dm_backing_dev RT $rt_target
++	fi
++
++	# External log device.  We reassign SCRATCH_LOGDEV so that all the
++	# scratch helpers continue to work unmodified.
++	if [ -n "$SCRATCH_LOGDEV" ]; then
++		if [ -z "$NON_ERROR_LOGDEV" ]; then
++			# Set up the device switch
++			local dm_backing_dev=$SCRATCH_LOGDEV
++			export NON_ERROR_LOGDEV="$SCRATCH_LOGDEV"
++			SCRATCH_LOGDEV='/dev/mapper/error-logtest'
++		else
++			# Already set up; recreate tables
++			local dm_backing_dev="$NON_ERROR_LOGDEV"
++		fi
++
++		_dmerror_setup_vars $dm_backing_dev LOG $log_target
++	fi
+ }
  
- # set up filesystem
- echo -n "Fill filesystem with fill file... "
--for i in `seq 0 1 31`; do
-+for i in `seq 0 1 63`; do
- 	_do "$XFS_IO_PROG -f -c \"falloc ${i}m 1m\" $SCRATCH_MNT/fill"
- done
- _do "xfs_bmap -vp $SCRATCH_MNT/fill"
-@@ -83,7 +83,7 @@ echo "done"
- # create fragmented file
- #_do "Delete every second file" "_cull_files"
- echo -n "Punch every second 4k block... "
--for i in `seq 0 8 32768`; do
-+for i in `seq 0 8 65536`; do
- 	# This generates excessive output that significantly slows down the
- 	# test. It's not necessary for debug, so just bin it.
- 	$XFS_IO_PROG -f -c "unresvsp ${i}k 4k" $SCRATCH_MNT/fill \
-@@ -94,7 +94,7 @@ _do "sum $SCRATCH_MNT/fill >$tmp.fillsum1"
- echo "done"
+ _dmerror_init()
+ {
+-	_dmerror_setup
++	_dmerror_setup "$@"
++
+ 	_dmsetup_remove error-test
+ 	_dmsetup_create error-test --table "$DMLINEAR_TABLE" || \
+ 		_fatal "failed to create dm linear device"
++
++	if [ -n "$NON_ERROR_RTDEV" ]; then
++		_dmsetup_remove error-rttest
++		_dmsetup_create error-rttest --table "$DMLINEAR_RTTABLE" || \
++			_fatal "failed to create dm linear rt device"
++	fi
++
++	if [ -n "$NON_ERROR_LOGDEV" ]; then
++		_dmsetup_remove error-logtest
++		_dmsetup_create error-logtest --table "$DMLINEAR_LOGTABLE" || \
++			_fatal "failed to create dm linear log device"
++	fi
+ }
  
- echo -n "Create one very large file... "
--_do "$here/src/fill2 -d nbytes=16000000,file=$SCRATCH_MNT/fragmented"
-+_do "$here/src/fill2 -d nbytes=32000000,file=$SCRATCH_MNT/fragmented"
- echo "done"
- _do "xfs_bmap -v $SCRATCH_MNT/fragmented"
- _do "sum $SCRATCH_MNT/fragmented >$tmp.sum1"
-diff --git a/tests/xfs/042.out b/tests/xfs/042.out
-index a25885b6..e7ec3d41 100644
---- a/tests/xfs/042.out
-+++ b/tests/xfs/042.out
-@@ -1,6 +1,6 @@
- QA output created by 042
--Make a 48 megabyte filesystem on SCRATCH_DEV and mount... done
--Reserve 16 1Mb unfragmented regions... done
-+Make a 96 megabyte filesystem on SCRATCH_DEV and mount... done
-+Reserve 32 1Mb unfragmented regions... done
- Fill filesystem with fill file... done
- Use up any further available space... done
- Punch every second 4k block... done
-diff --git a/tests/xfs/076 b/tests/xfs/076
-index 8eef1367..db88b43d 100755
---- a/tests/xfs/076
-+++ b/tests/xfs/076
-@@ -69,7 +69,7 @@ _require_xfs_sparse_inodes
- # bitmap consuming all the free space in our small data device.
- unset SCRATCH_RTDEV
+ _dmerror_mount()
+@@ -39,11 +102,27 @@ _dmerror_unmount()
  
--_scratch_mkfs "-d size=50m -m crc=1 -i sparse" | tee -a $seqres.full |
-+_scratch_mkfs "-d size=96m -m crc=1 -i sparse" | tee -a $seqres.full |
- 	_filter_mkfs > /dev/null 2> $tmp.mkfs
- . $tmp.mkfs	# for isize
+ _dmerror_cleanup()
+ {
++	test -n "$NON_ERROR_LOGDEV" && $DMSETUP_PROG resume error-logtest &>/dev/null
++	test -n "$NON_ERROR_RTDEV" && $DMSETUP_PROG resume error-rttest &>/dev/null
+ 	$DMSETUP_PROG resume error-test > /dev/null 2>&1
++
+ 	$UMOUNT_PROG $SCRATCH_MNT > /dev/null 2>&1
++
++	test -n "$NON_ERROR_LOGDEV" && _dmsetup_remove error-logtest
++	test -n "$NON_ERROR_RTDEV" && _dmsetup_remove error-rttest
+ 	_dmsetup_remove error-test
  
+ 	unset DMERROR_DEV DMLINEAR_TABLE DMERROR_TABLE
++
++	if [ -n "$NON_ERROR_LOGDEV" ]; then
++		SCRATCH_LOGDEV="$NON_ERROR_LOGDEV"
++		unset NON_ERROR_LOGDEV DMLINEAR_LOGTABLE DMERROR_LOGTABLE
++	fi
++
++	if [ -n "$NON_ERROR_RTDEV" ]; then
++		SCRATCH_RTDEV="$NON_ERROR_RTDEV"
++		unset NON_ERROR_RTDEV DMLINEAR_RTTABLE DMERROR_RTTABLE
++	fi
+ }
+ 
+ _dmerror_load_error_table()
+@@ -59,12 +138,47 @@ _dmerror_load_error_table()
+ 		suspend_opt="$*"
+ 	fi
+ 
++	# Suspend the scratch device before the log and realtime devices so
++	# that the kernel can freeze and flush the filesystem if the caller
++	# wanted a freeze.
+ 	$DMSETUP_PROG suspend $suspend_opt error-test
+ 	[ $? -ne 0 ] && _fail  "dmsetup suspend failed"
+ 
++	if [ -n "$NON_ERROR_RTDEV" ]; then
++		$DMSETUP_PROG suspend $suspend_opt error-rttest
++		[ $? -ne 0 ] && _fail "failed to suspend error-rttest"
++	fi
++
++	if [ -n "$NON_ERROR_LOGDEV" ]; then
++		$DMSETUP_PROG suspend $suspend_opt error-logtest
++		[ $? -ne 0 ] && _fail "failed to suspend error-logtest"
++	fi
++
++	# Load new table
+ 	$DMSETUP_PROG load error-test --table "$DMERROR_TABLE"
+ 	load_res=$?
+ 
++	if [ -n "$NON_ERROR_RTDEV" ]; then
++		$DMSETUP_PROG load error-rttest --table "$DMERROR_RTTABLE"
++		[ $? -ne 0 ] && _fail "failed to load error table into error-rttest"
++	fi
++
++	if [ -n "$NON_ERROR_LOGDEV" ]; then
++		$DMSETUP_PROG load error-logtest --table "$DMERROR_LOGTABLE"
++		[ $? -ne 0 ] && _fail "failed to load error table into error-logtest"
++	fi
++
++	# Resume devices in the opposite order that we suspended them.
++	if [ -n "$NON_ERROR_LOGDEV" ]; then
++		$DMSETUP_PROG resume error-logtest
++		[ $? -ne 0 ] && _fail  "failed to resume error-logtest"
++	fi
++
++	if [ -n "$NON_ERROR_RTDEV" ]; then
++		$DMSETUP_PROG resume error-rttest
++		[ $? -ne 0 ] && _fail  "failed to resume error-rttest"
++	fi
++
+ 	$DMSETUP_PROG resume error-test
+ 	resume_res=$?
+ 
+@@ -85,12 +199,47 @@ _dmerror_load_working_table()
+ 		suspend_opt="$*"
+ 	fi
+ 
++	# Suspend the scratch device before the log and realtime devices so
++	# that the kernel can freeze and flush the filesystem if the caller
++	# wanted a freeze.
+ 	$DMSETUP_PROG suspend $suspend_opt error-test
+ 	[ $? -ne 0 ] && _fail  "dmsetup suspend failed"
+ 
++	if [ -n "$NON_ERROR_RTDEV" ]; then
++		$DMSETUP_PROG suspend $suspend_opt error-rttest
++		[ $? -ne 0 ] && _fail "failed to suspend error-rttest"
++	fi
++
++	if [ -n "$NON_ERROR_LOGDEV" ]; then
++		$DMSETUP_PROG suspend $suspend_opt error-logtest
++		[ $? -ne 0 ] && _fail "failed to suspend error-logtest"
++	fi
++
++	# Load new table
+ 	$DMSETUP_PROG load error-test --table "$DMLINEAR_TABLE"
+ 	load_res=$?
+ 
++	if [ -n "$NON_ERROR_RTDEV" ]; then
++		$DMSETUP_PROG load error-rttest --table "$DMLINEAR_RTTABLE"
++		[ $? -ne 0 ] && _fail "failed to load working table into error-rttest"
++	fi
++
++	if [ -n "$NON_ERROR_LOGDEV" ]; then
++		$DMSETUP_PROG load error-logtest --table "$DMLINEAR_LOGTABLE"
++		[ $? -ne 0 ] && _fail "failed to load working table into error-logtest"
++	fi
++
++	# Resume devices in the opposite order that we suspended them.
++	if [ -n "$NON_ERROR_LOGDEV" ]; then
++		$DMSETUP_PROG resume error-logtest
++		[ $? -ne 0 ] && _fail  "failed to resume error-logtest"
++	fi
++
++	if [ -n "$NON_ERROR_RTDEV" ]; then
++		$DMSETUP_PROG resume error-rttest
++		[ $? -ne 0 ] && _fail  "failed to resume error-rttest"
++	fi
++
+ 	$DMSETUP_PROG resume error-test
+ 	resume_res=$?
+ 
+diff --git a/tests/generic/441 b/tests/generic/441
+index 0ec751da..85f29a3a 100755
+--- a/tests/generic/441
++++ b/tests/generic/441
+@@ -52,7 +52,7 @@ unset SCRATCH_RTDEV
+ 
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+-_dmerror_init
++_dmerror_init no_log
+ _dmerror_mount
+ 
+ _require_fs_space $SCRATCH_MNT 65536
+diff --git a/tests/generic/487 b/tests/generic/487
+index fda8828d..3c9b2233 100755
+--- a/tests/generic/487
++++ b/tests/generic/487
+@@ -45,7 +45,7 @@ unset SCRATCH_RTDEV
+ 
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+-_dmerror_init
++_dmerror_init no_log
+ _dmerror_mount
+ 
+ datalen=65536
 
