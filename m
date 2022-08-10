@@ -2,206 +2,215 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAD92C00140
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Aug 2022 15:54:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5027EC25B07
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Aug 2022 17:09:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231424AbiHJPyc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Aug 2022 11:54:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43122 "EHLO
+        id S233195AbiHJRJL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Aug 2022 13:09:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232846AbiHJPxr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Aug 2022 11:53:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0BFE7FE65
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Aug 2022 08:52:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D8B026112B
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Aug 2022 15:52:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3954AC433D6;
-        Wed, 10 Aug 2022 15:52:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660146742;
-        bh=ypMyPJbsXpTHBYtj21AuAbwirsTX8OvUiqE2goXnqcg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=dk0fxdJaKfKciMJ/ZX4j0JNzCSzBO5GUtAUkcesCqAWa9X/VH7wVKdyjkuLiOOt/U
-         bUwQOa53x4zMJVe2BQh3ofhSgW5ttS4SxkFsSdoI2wq8lmtko0cB4ST3hk7FXKwEEy
-         K1b+7c22DRXn0pTjBmj+HM9+U3jT0Zx21ofBJuZrRz5FL9OzzFrFTTLouyY4hAOnUI
-         jPqdPMvFJBMwe4MB+TVllR50yqZ5Iz79ZOveREqg7HCfr4zFZN/EG2qca2vjvYMoKO
-         DTFpZRuOWd6fuRRVRz5JYC+GbkK4P8ivVgOdrYQYB/cpBKZkkuII0NeEJEB3GSdQ/y
-         3rlle0hze3UBA==
-Date:   Wed, 10 Aug 2022 08:52:21 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Alli <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RESEND v2 01/18] xfs: Fix multi-transaction larp replay
-Message-ID: <YvPUNbyPWjr5yLVN@magnolia>
-References: <20220804194013.99237-1-allison.henderson@oracle.com>
- <20220804194013.99237-2-allison.henderson@oracle.com>
- <YvKQ5+XotiXFDpTA@magnolia>
- <20220810015809.GK3600936@dread.disaster.area>
- <373809e97f15e14d181fea6e170bfd8e37a9c9e4.camel@oracle.com>
- <20220810061258.GL3600936@dread.disaster.area>
+        with ESMTP id S233396AbiHJRJA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Aug 2022 13:09:00 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E09D574DD6
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Aug 2022 10:08:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1660151338; x=1691687338;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=QH5Vqi6tpf2OCY9V3MfO5tDJN5n5nryxSttn1IkQWzY=;
+  b=cF9RGFWC5uWIvF/09dAGl9fHvsjHZ5SKX4CVCxLH+MsmBeeewniydK6O
+   vZ/fiy4JhP0Q21OV/Yti6fvr6MofpAedCLpEfcWDyWsS4bhLyaQILUac6
+   c2tiwCEPckmcex3uRl4HJE77jS7FQqdVcUxa4fnMDCRTuBAOe1Cd0i2pK
+   i8VDWy+GWdKstRRlI64XeJ1lpw8uKtRNdQ9Yesr+8yNmMU1EugyywWcey
+   KNG6d2W5elB778GrCbCj3roC0War3BDM1NUWVvbgICxybN31jpoJzKlIj
+   fnXQDjzF9diZVmxnYhKKLW4qed8fTM2I3LC4undLLWar8FzQRdJ9KbsYp
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10435"; a="292398256"
+X-IronPort-AV: E=Sophos;i="5.93,227,1654585200"; 
+   d="scan'208";a="292398256"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2022 10:08:58 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,227,1654585200"; 
+   d="scan'208";a="708299396"
+Received: from lkp-server02.sh.intel.com (HELO 5d6b42aa80b8) ([10.239.97.151])
+  by fmsmga002.fm.intel.com with ESMTP; 10 Aug 2022 10:08:57 -0700
+Received: from kbuild by 5d6b42aa80b8 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oLpCS-0000Uw-1G;
+        Wed, 10 Aug 2022 17:08:56 +0000
+Date:   Thu, 11 Aug 2022 01:08:16 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org
+Subject: Re: [PATCH 1/9] xfs: move and xfs_trans_committed_bulk
+Message-ID: <202208110057.CxJjzzoM-lkp@intel.com>
+References: <20220809230353.3353059-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220810061258.GL3600936@dread.disaster.area>
+In-Reply-To: <20220809230353.3353059-2-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 10, 2022 at 04:12:58PM +1000, Dave Chinner wrote:
-> On Tue, Aug 09, 2022 at 10:01:49PM -0700, Alli wrote:
-> > On Wed, 2022-08-10 at 11:58 +1000, Dave Chinner wrote:
-> > > On Tue, Aug 09, 2022 at 09:52:55AM -0700, Darrick J. Wong wrote:
-> > > > On Thu, Aug 04, 2022 at 12:39:56PM -0700, Allison Henderson wrote:
-> > > > > Recent parent pointer testing has exposed a bug in the underlying
-> > > > > attr replay.  A multi transaction replay currently performs a
-> > > > > single step of the replay, then deferrs the rest if there is more
-> > > > > to do.
-> > > 
-> > > Yup.
-> > > 
-> > > > > This causes race conditions with other attr replays that
-> > > > > might be recovered before the remaining deferred work has had a
-> > > > > chance to finish.
-> > > 
-> > > What other attr replays are we racing against?  There can only be
-> > > one incomplete attr item intent/done chain per inode present in log
-> > > recovery, right?
-> > No, a rename queues up a set and remove before committing the
-> > transaction.  One for the new parent pointer, and another to remove the
-> > old one.
-> 
-> Ah. That really needs to be described in the commit message -
-> changing from "single intent chain per object" to "multiple
-> concurrent independent and unserialised intent chains per object" is
-> a pretty important design rule change...
-> 
-> The whole point of intents is to allow complex, multi-stage
-> operations on a single object to be sequenced in a tightly
-> controlled manner. They weren't intended to be run as concurrent
-> lines of modification on single items; if you need to do two
-> modifications on an object, the intent chain ties the two
-> modifications together into a single whole.
+Hi Dave,
 
-Back when I made the suggestion that resulted in this patch, I was
-pondering why it is that (say) atomic swapext didn't suffer from these
-recovery problems, and I realized that for any given inode, you can only
-have one ongoing swapext operation at a time.  That's why recovery of
-swapext operations works fine, whereas pptr recovery has this quirk.
+Thank you for the patch! Perhaps something to improve:
 
-At the time, my thought process was more narrowly focused on making log
-recovery mimic runtime more closely.  I didn't make the connection
-between this problem and the other open question I had (see the bottom)
-about how to fix pptr attrs when rebuilding a directory.
+[auto build test WARNING on xfs-linux/for-next]
+[also build test WARNING on linus/master next-20220810]
+[cannot apply to v5.19]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-> One of the reasons I rewrote the attr state machine for LARP was to
-> enable new multiple attr operation chains to be easily build from
-> the entry points the state machien provides. Parent attr rename
-> needs a new intent chain to be built, not run multiple independent
-> intent chains for each modification.
-> 
-> > It cant be an attr replace because technically the names are
-> > different.
-> 
-> I disagree - we have all the pieces we need in the state machine
-> already, we just need to define separate attr names for the
-> remove and insert steps in the attr intent.
-> 
-> That is, the "replace" operation we execute when an attr set
-> overwrites the value is "technically" a "replace value" operation,
-> but we actually implement it as a "replace entire attribute"
-> operation.
+url:    https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/xfs-byte-base-grant-head-reservation-tracking/20220810-072405
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+config: arm64-randconfig-r004-20220810 (https://download.01.org/0day-ci/archive/20220811/202208110057.CxJjzzoM-lkp@intel.com/config)
+compiler: clang version 16.0.0 (https://github.com/llvm/llvm-project 5f1c7e2cc5a3c07cbc2412e851a7283c1841f520)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # install arm64 cross compiling tool for clang build
+        # apt-get install binutils-aarch64-linux-gnu
+        # https://github.com/intel-lab-lkp/linux/commit/f02000d53b0e6d6ac32e63c1ac72be9aa7c1b69c
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Dave-Chinner/xfs-byte-base-grant-head-reservation-tracking/20220810-072405
+        git checkout f02000d53b0e6d6ac32e63c1ac72be9aa7c1b69c
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm64 SHELL=/bin/bash fs/xfs/
 
-OH.  Right.  I forgot that ATTR_REPLACE=="replace entire attr".
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
-If I'm understanding this right, that means that the xfs_rename patch
-ought to detect the situation where there's an existing dirent in the
-target directory, and do something along the lines of:
+All warnings (new ones prefixed by >>):
 
-	} else { /* target_ip != NULL */
-		xfs_dir_replace(...);
+>> fs/xfs/xfs_log_cil.c:729:1: warning: no previous prototype for function 'xlog_cil_ail_insert' [-Wmissing-prototypes]
+   xlog_cil_ail_insert(
+   ^
+   fs/xfs/xfs_log_cil.c:728:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   void
+   ^
+   static 
+   1 warning generated.
 
-		xfs_parent_defer_replace(tp, new_parent_ptr, target_dp,
-				old_diroffset, target_name,
-				new_diroffset);
 
-		xfs_trans_ichgtime(...);
+vim +/xlog_cil_ail_insert +729 fs/xfs/xfs_log_cil.c
 
-Where the xfs_parent_defer_replace operation does an ATTR_REPLACE to
-switch:
+   707	
+   708	/*
+   709	 * Take the checkpoint's log vector chain of items and insert the attached log
+   710	 * items into the the AIL. This uses bulk insertion techniques to minimise AIL
+   711	 * lock traffic.
+   712	 *
+   713	 * If we are called with the aborted flag set, it is because a log write during
+   714	 * a CIL checkpoint commit has failed. In this case, all the items in the
+   715	 * checkpoint have already gone through iop_committed and iop_committing, which
+   716	 * means that checkpoint commit abort handling is treated exactly the same as an
+   717	 * iclog write error even though we haven't started any IO yet. Hence in this
+   718	 * case all we need to do is iop_committed processing, followed by an
+   719	 * iop_unpin(aborted) call.
+   720	 *
+   721	 * The AIL cursor is used to optimise the insert process. If commit_lsn is not
+   722	 * at the end of the AIL, the insert cursor avoids the need to walk the AIL to
+   723	 * find the insertion point on every xfs_log_item_batch_insert() call. This
+   724	 * saves a lot of needless list walking and is a net win, even though it
+   725	 * slightly increases that amount of AIL lock traffic to set it up and tear it
+   726	 * down.
+   727	 */
+   728	void
+ > 729	xlog_cil_ail_insert(
+   730		struct xlog		*log,
+   731		struct list_head	*lv_chain,
+   732		xfs_lsn_t		commit_lsn,
+   733		bool			aborted)
+   734	{
+   735	#define LOG_ITEM_BATCH_SIZE	32
+   736		struct xfs_ail		*ailp = log->l_ailp;
+   737		struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
+   738		struct xfs_log_vec	*lv;
+   739		struct xfs_ail_cursor	cur;
+   740		int			i = 0;
+   741	
+   742		spin_lock(&ailp->ail_lock);
+   743		xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
+   744		spin_unlock(&ailp->ail_lock);
+   745	
+   746		/* unpin all the log items */
+   747		list_for_each_entry(lv, lv_chain, lv_list) {
+   748			struct xfs_log_item	*lip = lv->lv_item;
+   749			xfs_lsn_t		item_lsn;
+   750	
+   751			if (aborted)
+   752				set_bit(XFS_LI_ABORTED, &lip->li_flags);
+   753	
+   754			if (lip->li_ops->flags & XFS_ITEM_RELEASE_WHEN_COMMITTED) {
+   755				lip->li_ops->iop_release(lip);
+   756				continue;
+   757			}
+   758	
+   759			if (lip->li_ops->iop_committed)
+   760				item_lsn = lip->li_ops->iop_committed(lip, commit_lsn);
+   761			else
+   762				item_lsn = commit_lsn;
+   763	
+   764			/* item_lsn of -1 means the item needs no further processing */
+   765			if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
+   766				continue;
+   767	
+   768			/*
+   769			 * if we are aborting the operation, no point in inserting the
+   770			 * object into the AIL as we are in a shutdown situation.
+   771			 */
+   772			if (aborted) {
+   773				ASSERT(xlog_is_shutdown(ailp->ail_log));
+   774				if (lip->li_ops->iop_unpin)
+   775					lip->li_ops->iop_unpin(lip, 1);
+   776				continue;
+   777			}
+   778	
+   779			if (item_lsn != commit_lsn) {
+   780	
+   781				/*
+   782				 * Not a bulk update option due to unusual item_lsn.
+   783				 * Push into AIL immediately, rechecking the lsn once
+   784				 * we have the ail lock. Then unpin the item. This does
+   785				 * not affect the AIL cursor the bulk insert path is
+   786				 * using.
+   787				 */
+   788				spin_lock(&ailp->ail_lock);
+   789				if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
+   790					xfs_trans_ail_update(ailp, lip, item_lsn);
+   791				else
+   792					spin_unlock(&ailp->ail_lock);
+   793				if (lip->li_ops->iop_unpin)
+   794					lip->li_ops->iop_unpin(lip, 0);
+   795				continue;
+   796			}
+   797	
+   798			/* Item is a candidate for bulk AIL insert.  */
+   799			log_items[i++] = lv->lv_item;
+   800			if (i >= LOG_ITEM_BATCH_SIZE) {
+   801				xlog_cil_ail_insert_batch(ailp, &cur, log_items,
+   802						LOG_ITEM_BATCH_SIZE, commit_lsn);
+   803				i = 0;
+   804			}
+   805		}
+   806	
+   807		/* make sure we insert the remainder! */
+   808		if (i)
+   809			xlog_cil_ail_insert_batch(ailp, &cur, log_items, i, commit_lsn);
+   810	
+   811		spin_lock(&ailp->ail_lock);
+   812		xfs_trans_ail_cursor_done(&cur);
+   813		spin_unlock(&ailp->ail_lock);
+   814	}
+   815	
 
-(target_dp_ino, target_gen, old_diroffset) == <dontcare>
-
-to this:
-
-(target_dp_ino, target_gen, new_diroffset) == target_name
-
-except, I think we have to log the old name in addition to the new name,
-because userspace ATTR_REPLACE operations don't allow name changes?
-
-I guess this also implies that xfs_dir_replace will pass out the offset
-of the old name, in addition to the offset of the new name.
-
-> Without LARP, we do that overwrite in independent steps via an
-> intermediate INCOMPLETE state to allow two xattrs of the same name
-> to exist in the attr tree at the same time. IOWs, the attr value
-> overwrite is effectively a "set-swap-remove" operation on two
-> entirely independent xattrs, ensuring that if we crash we always
-> have either the old or new xattr visible.
-> 
-> With LARP, we can remove the original attr first, thereby avoiding
-> the need for two versions of the xattr to exist in the tree in the
-> first place. However, we have to do these two operations as a pair
-> of linked independent operations. The intent chain provides the
-> linking, and requires us to log the name and the value of the attr
-> that we are overwriting in the intent. Hence we can always recover
-> the modification to completion no matter where in the operation we
-> fail.
-> 
-> When it comes to a parent attr rename operation, we are effectively
-> doing two linked operations - remove the old attr, set the new attr
-> - on different attributes. Implementation wise, it is exactly the
-> same sequence as a "replace value" operation, except for the fact
-> that the new attr we add has a different name.
-> 
-> Hence the only real difference between the existing "attr replace"
-> and the intent chain we need for "parent attr rename" is that we
-> have to log two attr names instead of one. Basically, we have a new
-> XFS_ATTRI_OP_FLAGS... type for this, and that's what tells us that
-> we are operating on two different attributes instead of just one.
-
-This answers my earlier question: Yes, and yes.
-
-> The recovery operation becomes slightly different - we have to run a
-> remove on the old, then a replace on the new - so there a little bit
-> of new code needed to manage that in the state machine.
-> 
-> These, however, are just small tweaks on the existing replace attr
-> operation, and there should be little difference in performance or
-> overhead between a "replace value" and a "replace entire xattr"
-> operation as they are largely the same runtime operation for LARP.
-> 
-> > So the recovered set grows the leaf, and returns the egain, then rest
-> > gets capture committed.  Next up is the recovered remove which pulls
-> > out the fork, which causes problems when the rest of the set operation
-> > resumes as a deferred operation.
-> 
-> Yup, and all this goes away when we build the right intent chain for
-> replacing a parent attr rename....
-
-Funnily enough, just last week I had thought that online repair was
-going to require the ability to replace an entire xattr...
-
-https://djwong.org/docs/xfs-online-fsck-design/#parent-pointers
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
