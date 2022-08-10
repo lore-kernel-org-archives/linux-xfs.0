@@ -2,664 +2,375 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E21EEC25B0C
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Aug 2022 03:09:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4032C25B0D
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Aug 2022 03:09:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230151AbiHJDJd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Aug 2022 23:09:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40738 "EHLO
+        id S230155AbiHJDJe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Aug 2022 23:09:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230071AbiHJDJT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 23:09:19 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5883F7E330
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 20:09:17 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27A0DwXu002289;
-        Wed, 10 Aug 2022 03:09:12 GMT
+        with ESMTP id S230086AbiHJDJY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Aug 2022 23:09:24 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEC417E330
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Aug 2022 20:09:23 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27A0EKQ2027263;
+        Wed, 10 Aug 2022 03:09:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : subject
  : from : to : cc : date : in-reply-to : references : content-type :
  content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=5B9uA1t4rVxv3c7tN9RE2J4i/jrUs6YF24gmtvik/Ak=;
- b=rhk5ZFG1TCpblvjBIegzacD1KP6vHLrxBDqu/vULmRMvL4dphYXmfqO2iWPZxsuvp1wY
- eCz/+JVbQqx2DQoaWSQjwBhhdESlwrjEh5Ixe8l2PXLKhNtWXPbkt0BPU9jxexSDTSEH
- Obs/KpQiDHbkuBnHbseD8Gm2GjhxKBO4i9RwUuOCAZ0eSMLPjv48bfLcdx7j0SRoc3sT
- /B8iyyLXL95K1DkF56XGoI8BDRwg8VB0oYYWGtRnFlAsKPnvklagaMxNu4WQ1/WK5Oq7
- EBUjKXXm657G7PQUIvbIHE3zwW52AbphdVV2CWJ8Jf/bKOyoyQzUnAuwf+jwxSYBfoXV VA== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3huwqj0nre-1
+ bh=txezUX1VVDqN0JLxk8+U3AbEPQS6cjcdLcrM0cYvp8U=;
+ b=o/tHxkxzqCtozjXAmNt6hJJnfwCAJnbh0Fsv6fvaNX9+NQsNMeRKRJ8QR70+YnBLSAoc
+ rc86VXutsxzG8a4IXp1490SyHBnUHx4JMJ4Zy/3m9abN++w4kwHKc2Stsod3127D4iN3
+ mILrL6QpkzLfQa99MjJazfXC57fiJqj3Kc48ryzOvhW8Incx30KCxl7jmk1J52pzetqd
+ 48xYn82nV0H2jwPLe2PJ/RUgEq9Sa4VMtR1aUm41UlojWJFdfvT0aLKj5MGQIdTiHmp4
+ XEnU0anVVnlPgCzo9fYk+iuZWdQ6yhL5r6WuDzeVPfSnjzdC9jel8f/NLIzskQS++1NG NQ== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3huwq90pxp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Aug 2022 03:09:11 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 27A06GX3036503;
-        Wed, 10 Aug 2022 03:09:11 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2104.outbound.protection.outlook.com [104.47.55.104])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3huwqfggfk-1
+        Wed, 10 Aug 2022 03:09:20 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 27A05xOU019808;
+        Wed, 10 Aug 2022 03:09:19 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2107.outbound.protection.outlook.com [104.47.55.107])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3huwqhrf63-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Aug 2022 03:09:11 +0000
+        Wed, 10 Aug 2022 03:09:19 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Wy9bTeFtBfBwVxKZVC+66BIPbemt4cCSWgr6xu8fXwrdQnl0aqeEsP6nYydSUpUuCzy2WouunHAlzrEXH6WwNokKl6HCk+w4Jy0pUcm1PHHVfJnMXZP1xrWC5wuYTmjtjxkG7Jf9jsAxTFBzSJpjyoEaCT7kYUa2he1rH8Ozkc6nm43fpO6OVi3H2OZ24FE3b6bbY/S+9UB6S34ryfH7PyWwFlMzzPwm8LkrJAiabAGjRDOca9rmnBRTJ2qrgCrvzs2xvTupXbS7ayKbuAcNdKNLwhCQo7dIgZCJfY+RoCt95R+US4XHZ8GE7JdPH2M2Pl8Bl6khXepjeEeLzSlH2A==
+ b=nFAlaoMmAtn+pIK7+Y5rCpgNH1Qj1IqddIHZrFviA3a9uKQB6JWP3OkEVBAZV1IkhAFkZnIshN2B2YE1d0qIDQSLEHc3E2fS+V8qoawipJ0MT3cuqF6OY05zf4n6+nLljpT/rG4POcWgf+TgjsZPHEjjFl10czNXNZxwaD38Vi8jyGUkMgDGgRlcAAsRPO22QI+2ZuxfMMB8fDFcCWaOn5oDQuehxSHWl4pQOv5in1Jlwcmi5ihE6wSCxM1oewOtmjFz93m3eMW4LsNgjG+K45rESBT1kmLul9QYfg8dTSVxmC1Aj1YyxipUSPam9Or52ez88wrdykTz2FIWD5mkfg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5B9uA1t4rVxv3c7tN9RE2J4i/jrUs6YF24gmtvik/Ak=;
- b=gz1aBchmJqu8cAithtLl0E6F+AzKfL7/5X3hjUCw1f2I/Ept05n/4P+IzIihUISneWj/S6DwjYcEjuGfViarp9BWUvBo2r6jSue1myvtLZ9hFHZnU41ceO4925VQRpzLnDFBfFTzHBDBlBBJGwPFThY4tWZUAm0Dh2zWUIZ5wq7mrLXFq60HMhpgvi2rtq+ebEvYBYkP9S0/E6G1f7Elc9U03A0+rBOLikUPh83x91xIWbm0fsV7KmS5UqVpQZCFYZOrd16g7LaouZYrcB4F9wgoQUq2dJloE6cNpHBmZ5dUUSRSEi0c+mRPO2OLDsCyGY67fEZcEOkNjV6kWui8Nw==
+ bh=txezUX1VVDqN0JLxk8+U3AbEPQS6cjcdLcrM0cYvp8U=;
+ b=bu3Bye2XhwbuxfR050+teqsF7X6womFx7TfHssTBQVOConJhbSAuEMIP64g5j3hfxA6YyxOX3Z3MxKhvxOu86QNO8JWXcTKYUiO767UWf6Cn8iz1pNFD9g62ChgAXnbm0TB2hga1rYRV0gJnrPskAkttnbzofGJCptnDlOm56vDAOlesh9bTH3yHC5a6bcdwMqBvFKTVt3sPaFwMqDJ/zsO7fZ7CaF+GBMjGxtNzZVZAEJjO39mi0Bmof16tTKvrYUL0KLunxXy1G93vwaBXkwVyhBe4+hlW7uAven4Q7CT0AwdecUySKb5BBZLCOdJj2OJdt/vBUTMxyvgfuWYIPw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5B9uA1t4rVxv3c7tN9RE2J4i/jrUs6YF24gmtvik/Ak=;
- b=eX1YJ+EC9YOluxv3K/l90h/j6bsftdAZn+I88es9RqWepEjAWyLBuHUoW7xTqY+ERDuR8mHtAbjZIKiV5yPYjOmXx7zvR8PACbXMEmCPJsYM6X6RCE3lrobnp0/5SgWyKghbmQqsYiGJihyaTlZAmg6Edvl0bLGra6QgfUWDE6E=
+ bh=txezUX1VVDqN0JLxk8+U3AbEPQS6cjcdLcrM0cYvp8U=;
+ b=Ch7H60OV/5/bMFjRGdYD8LEwoQt8obNsabdyNuWmULLKWVKHuCJ+KOPblOiV00Ia07OtHKxnGcBB8O9lxhRVny/uWs04ow6y4TKWHgc/YxoR+SB4RCdgi8Vi+t0ZhqnmVA3r32uD4LRKjZD523cZJSBDhjGQExT7ylMqY/qUlDo=
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by CO1PR10MB4545.namprd10.prod.outlook.com (2603:10b6:303:9a::20) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5525.10; Wed, 10 Aug
- 2022 03:09:09 +0000
+ 2022 03:09:17 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::65a4:3dc0:32a1:7519]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::65a4:3dc0:32a1:7519%4]) with mapi id 15.20.5504.020; Wed, 10 Aug 2022
- 03:09:09 +0000
-Message-ID: <b77b2629f92f6898bdf05becb97e97dc5ed99856.camel@oracle.com>
-Subject: Re: [PATCH RESEND v2 12/18] xfs: parent pointer attribute creation
+ 03:09:17 +0000
+Message-ID: <6c9b64f2e3b3f3d99c0964321d83a109da9b2583.camel@oracle.com>
+Subject: Re: [PATCH RESEND v2 13/18] xfs: add parent attributes to link
 From:   Alli <allison.henderson@oracle.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 09 Aug 2022 20:09:07 -0700
-In-Reply-To: <YvKjwtiHtLq0FkCc@magnolia>
+Date:   Tue, 09 Aug 2022 20:09:15 -0700
+In-Reply-To: <YvKqzD3vmXSZqdr8@magnolia>
 References: <20220804194013.99237-1-allison.henderson@oracle.com>
-         <20220804194013.99237-13-allison.henderson@oracle.com>
-         <YvKg3XBOmAmFli0o@magnolia> <YvKjwtiHtLq0FkCc@magnolia>
+         <20220804194013.99237-14-allison.henderson@oracle.com>
+         <YvKqzD3vmXSZqdr8@magnolia>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.5-0ubuntu1 
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR03CA0229.namprd03.prod.outlook.com
- (2603:10b6:a03:39f::24) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: BYAPR04CA0024.namprd04.prod.outlook.com
+ (2603:10b6:a03:40::37) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 80e463cc-8001-46a6-f64d-08da7a7db160
+X-MS-Office365-Filtering-Correlation-Id: 1d58b117-c535-4492-0ea1-08da7a7db5e8
 X-MS-TrafficTypeDiagnostic: CO1PR10MB4545:EE_
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 23GkFfugk0KoJBgQPpbA7QWi1P32A0+YDko4xI+fvACU4Hd9yEQ3egW27XdgcKsZQqfYyZ06xMj2zk23wrRhKzQDfnWtAmVW69g2PPgfHYZFDdnvtPiHNTEaY+uYP33LZt6kA0/ispQ2DaoBKwpVqHb/x4h4EfGsXmk1WR3uPgvvAwuiojGMbLymiFQK0UaJnLUVxCVYv2hods6qOr2Oj6YjFcr0EpHTmvmmESTa8OnDy5kcxTWe1Kb2zusvWP8oKWXA8ReVkCoyVp8PfkTGcLMAGWPbXfF/yJX34PuHnMZlxyx91vVGhWXiKOw4lPe9/kdOf+Kl9xPMghIHgY53xL6bfrL6p7avXNRv2txO6jrCPu/HUvy8v73iplQvgTGIEDHFtXUgZCRRNgYTlUTnsQmZxCl/Scygqn3+DzgqOqOG9EcVuUMMpC4dV04oEZZUwFCrSnp38xEHfs6dAi/BxVQClXbhAFDTm+7AVAQJMn/t65seUF4Du47q+fuXGG0ijcgA5cMpGNSIrsm+X/Fyvh8iPwKIxNfGB8KbbMwZPtGRCFFZB24l2D3tD1BwQWH4pzSgoiepikCthTtmXSZ+hb1VF5VTGymmlZUHY4NIVaQtwnE1MnSfXRssNoMqqmFpS7miCQanzcTWjcYkH4gQrygru04vxKRx9dS/oz1raD+DnJ3XSP70K1UeYJhY5AL8LxbQ6ZWwbVKZglA17Oj2W/jaZyv2LN5X7PW0kvsfBmXmsOv3S8gjN+rm65CD3M9Qmw1gPuKrgCbUtzU7XDp/BehkEQNGqteynhK/kGy8APQ=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(346002)(136003)(376002)(39860400002)(396003)(366004)(38350700002)(38100700002)(26005)(66946007)(8676002)(4326008)(6512007)(66476007)(66556008)(36756003)(6916009)(316002)(478600001)(2616005)(86362001)(6486002)(5660300002)(2906002)(8936002)(30864003)(186003)(41300700001)(6506007)(83380400001)(52116002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: vKSFp8v/fFN/zVGuYkYuzwi6AXyXOBr++eC1ujUV+KXXwcS/kindj8Wq51yAkPydxTcN6d20PUGok5CYT3rUblhv1qbI/cYCi2a82qLrFIZIC4y4bN0ip6Y6vXfDw+20kMZ804yO+x53bEsjkhiwVgluS52hJTNDhpsL/64i3FBHIsfDbREocOs8VSt8XzNeFIPQyHusPN9WIA2p7utKhHHJPXcVk7NIJg3j38JgoZEYeTwmR1TiZPx6gJKYZagnEjPWoycazPevgw7Jz+Scn8SeAIvmhbTz73l20N5lkW2cgRBtuTrZ2LOzd6UDuHfyu83YUBCZcGYPj9u62JE3Gj9zU0iQndydZde018yB73kDCkr/CQv6uQgV5SmpawJ88thVcnbEGvciB/2vMeMm0fLopLv49umsgWOO8+MJTnHBEli+IbyKFrV+dwRyTI/06lk81vUEn/y5RiWlOhA7qaVz5sEeWN2yxxv93MlqZfAOVtGH/pJmsqysp2ojCzJ+Buw/7Hy9uFpONriMIJdcyQm4jZRflyP61VHS+X+p/PO62db+DXyWLJ+0dxoFbrtrzG62renFbR7PhNV0hcqlPGTsoor+9u/4YoZuxXR+/jzNb7E2riUWllmcfK8Xv7p9Sy17JwApT2SPa4dc8CikyqREBnBBYkpx9+dJoGZapZC/YUweGtnR/yF/E2JwT2hg+a/+WMbKuH6vjyI0RHxK5yZhhYguHyaz0oglmWZGDhNIpRX6wwbIrADTYoYv/zgUyAgK7RXfwP9bf36CKvGSV6lKFJ2C0EANC3JMYbwulPM=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(346002)(136003)(376002)(39860400002)(396003)(366004)(38350700002)(38100700002)(26005)(66946007)(8676002)(4326008)(6512007)(66476007)(66556008)(36756003)(6916009)(316002)(478600001)(2616005)(86362001)(6486002)(5660300002)(2906002)(8936002)(186003)(41300700001)(6506007)(83380400001)(52116002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?U2tSYlVXZ0VjTDYrNURNTnVDTVR5L0dxaklyMFRzbDhGNERFNVlxdS94eG02?=
- =?utf-8?B?U2lVY3QyUVQxWUVsUnZhMktTTXJ4b0xDazlHaSsrdU10ZDJVMTJBb3FQYUM5?=
- =?utf-8?B?ZUIwMVpBVnI4ZmJEZHlJLzFib3oxMnpNaGxMK2kzZCtEbFBwQmJ1R1ViWnpw?=
- =?utf-8?B?RDJmTU5GTmdjVFk5NjJ2dlFuYWl5NWpnVkFWWFpPV2c1ZXN0YWRPRmphRjdz?=
- =?utf-8?B?ckVCcHRqVHVDRFRReHI2Yk55WENjNGFyTEc5cW56RXVMMUJmZDNacnZ4TFVm?=
- =?utf-8?B?UVlEYlBiVGhiSytqWVZjVjRJV2w4YkJFazdIWjZvTHFQZUlEWGFIeXVHdENr?=
- =?utf-8?B?RVgxenhWb0dTRitvUjdHWk5pT1JZdGYrbzRiNWFTMFc1dHBLVkVIVzVXWURI?=
- =?utf-8?B?MG4zRVhHWnNwMjR2VzJ0ZVRXL3JWcTlZSXBMWkNCR1NmeGN2Tk9WajRPK1hs?=
- =?utf-8?B?VVJ6eG90VWNSTDExaStsRFM5UnVib0E2RTdjM1p6SUd6SmIyNzFvWTQwZXU4?=
- =?utf-8?B?S2puWmkxdmtaZXk5amF1MEpUeHRjN0M0ZlFvTFlYZTVUVzZuNGZ4NjhhbWNt?=
- =?utf-8?B?THVnNW1pT1lsZm93WVhvSDFuaVNLbE9EM0NNNmRsVnFEVmtFVVpRUG5OQm1K?=
- =?utf-8?B?WlJxREgrRVErN2JwKytZSE5zdzlRZjEyTXV1djZWOTE2WG5rTnVOMG16Q09x?=
- =?utf-8?B?bDh1L0oyWUJvWHQxSStoTVV2YXB5dzREQUg2T0Y0RHM5NGlEa0FrTWJnbDRS?=
- =?utf-8?B?dDZOOGRkbklnZjI0K2pRQlc4MG44YzZTbmZHVnE1Z2xGSG9SQ1B2NWR4RUly?=
- =?utf-8?B?cVBOOEFlbWlXRkZqNmtYQ1h6QUxBeXZUNzBjSlVUeDNHT1dxMmlyUXk1STRw?=
- =?utf-8?B?U1I3TUI3M0NGSkVIZWFoejErTDdRYXI3UnU0TnQ5M3NFdjhlb0RnWWNLamhh?=
- =?utf-8?B?eGZPUVdEd21WRzZNdFpZNXhOU1FuMlhEK2tueTVXVkszQkx6OXRsVzdhSVFI?=
- =?utf-8?B?WW9YQUFBRnlwbk9saDlZbDN3WVN1SGE3KzFVOWxyNVpVcU5ZbXVTVEFoTkxM?=
- =?utf-8?B?cTVoQ2Nob214aHVDaXU2dlR3UWFTc0VmYlVQMXN6aTJLaGFYbWlTVWtVdWE5?=
- =?utf-8?B?YUdMa1V1YU4zNkdINFhaVmV3RlNXOFVleERLR0U2VGZkaktaV2hNcStDcE1O?=
- =?utf-8?B?aWl0TkZMK2huRGxDd21QMG9vWHBOaDNtd1g4UVlzUCtnWGRENXUvNzN1dkdi?=
- =?utf-8?B?SlBTTkV6ZDVQTnM2bHQyMmwwNmJvamJJdHFKeWZmSHdVZEVXNTFxR0dPbnFT?=
- =?utf-8?B?dXE5V04rTHZDVjBUN3FNNWxKZTh1SjVIOGlseFhYZkJKeVpaTUJ4QjVKcytz?=
- =?utf-8?B?WlloVjJrbCtzYTRiV1BtSzg1UUVlMzlZdE1CcmVPNG9Zbm81K3R2TnhuQ01m?=
- =?utf-8?B?WWQ3YXJNUEhOSDZEQVp0NCtZVFkzc0p3M21aY2tVMWVkazU4eEh1cVM3alZw?=
- =?utf-8?B?Ris1dkhOcStJclE4TzZDdU5UMFJkV1JlaUFRdkpaWVpTemZpUGFqSTdvNjFv?=
- =?utf-8?B?QlNpWTJlT2gvSXMrcWdQMmxSZWlhNUxacnRGajMxc29KSy8zTUljbU1UbllW?=
- =?utf-8?B?QmdVbVlaUW5OcnUrMWdCdDR0YnRVYWRaMEpFYnNDby9FaktUS1MvZmVQRExD?=
- =?utf-8?B?cjNSZ3FpK3ViNEIxN2U2N0c0R2hvR3pBcitjSWM5L25sZWJ3K0pWWE1EcFc2?=
- =?utf-8?B?UUMvaUZWOXdCbEhWMTlXTFhhR3lTV3UrbWREUk82dG5rV3YveVFkV29zMHoy?=
- =?utf-8?B?UlprQThtQ2F1T2Z6THM0SlhJUndCY1hDZ2NERnF5MEg4U01qMzZ5ZzhIWmpq?=
- =?utf-8?B?UzRqek4yRG5NTEJrOHdMbnJYeXYwZ2htNGZGOFgwYkhKaDhyNE1jZUtVZkpM?=
- =?utf-8?B?aE10OU54NGNzczduOGUzMGd1Z1QyOTN6Vng5UEVOOWtjdjMrNnNNYlZLTWx0?=
- =?utf-8?B?Mk9zaVpQS3hRQjAzcllTdllUTHo2Vm14RVZDNmVKYjJwaUdrVytrdmNWd1kv?=
- =?utf-8?B?R3ZpaktHWlpNenpWdHZrQW9iTnBBWmh0ZXBQaG9yQzd6VTRIQjk1UnJSOVRl?=
- =?utf-8?B?NGFZMEU3VG8wQXMxenNqWDNQZFkvYWJmdkNwbmpra1ZQaVFDN1orY0ZDa3JE?=
- =?utf-8?B?SEE9PQ==?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?TDVhRHpYd29PcHI1SXBnYThrZ3k2cTFlbzlYam13Vi9zSUlpZ3F6S1RERVJH?=
+ =?utf-8?B?QkF5VEhoSVpIN2FaN0g2UHJiYlUzZzNITm95cWJNdXlSRE9TYjZWWXp5N0xH?=
+ =?utf-8?B?VUZaUzROOEs0YzVUc0M0ZjRvSzVzTjFpcDFEQXczSTNzNGRWb0wvUTcwMDdH?=
+ =?utf-8?B?cEtZdGxCSTUwbWUrRloxTytaZWNLMXJNcDU1WU9hN1luL0xtY2FEL2ZUSWdR?=
+ =?utf-8?B?RGNXWnFFSnYxc2FLaEUxU1FHMXdHdGhJZlIxWTdYM3JhMi9tWXVqdnpmYkxz?=
+ =?utf-8?B?bnpjL29LcFVHWEVvbUdRWldlZWVRRk9jUUlqUEQ1TEdYdTFCSXhZa0h4cWxI?=
+ =?utf-8?B?eGlZdzk5UUlsL29UVjMyajZrOEQ5STVueFN0bDhjeE1EcjhTZTl2cnhLNzMv?=
+ =?utf-8?B?UEpJVWtRdlg0ZFFQNkFDWkI2UktObmROdGdaby8xVTIrSmgxeHdiVHdUVlZR?=
+ =?utf-8?B?VFQyNEJjOEFsSFZmcWZCVVlHRVlCT2lCeUluQXd0dld5aXl5NlpLbWhMemYv?=
+ =?utf-8?B?YTdwNnNMVmtLWnVQQld2K1AzVlJkOGUrQXYybHJSVkkzYmtxcXhqSlZLdnJW?=
+ =?utf-8?B?SVpkV0U5dlBQU1lQM2pFN3c4UG4vQ3V4LzJEWUZYdk9jblo1Mzh5Y2dMUTFj?=
+ =?utf-8?B?NUMza1ZTN2oxMlVCSmZodHRtSUNJS1VOMjN5amtFdGFVQ2RHZnRlb1RqWWNh?=
+ =?utf-8?B?UkpMdlF2aTlLUUI5alNoUWpVcW11NVo5ck5HdFA0QzIrSXR1ZzlSTnNUYmdD?=
+ =?utf-8?B?dHhwSGk2L0NnSXoxbVpTWjhLUWhwR1lnWFFLV3JXbWkrYlF0MGY2YXF6Y083?=
+ =?utf-8?B?T0Roa0NLbEhHTEl6MVRMTFBjNWxyaUozMDVocGtocHZRM0o5ZURENVBWSDYv?=
+ =?utf-8?B?cEkyb0hBd0p5TG9PSE1VN3FEejJvNm55QWxkUTN6RFExaW43blI3NnJsVFA1?=
+ =?utf-8?B?VmYybnR5T25lSGI5emJuY0llUVQ3dWVWWk9CVFl6MlU5bGxyMVBpb0RUVDc3?=
+ =?utf-8?B?MVk3ZFBPb29ndGhSK2JIazVab0lTSWNwclNENDRteElzVExZZklpa3lXdTUr?=
+ =?utf-8?B?T1I5T1Jqb0E3bVFyRjlXY0MyUC9vZTMrd3Z0TzYyRXhQdGtDME9sVnZnR3Ri?=
+ =?utf-8?B?V08wU2NRczhoR2RXZi9ueDV0dFJRSCtWR0l3cFNiTmhuNUlUVi9INFlRaVhU?=
+ =?utf-8?B?amFwNGFlOG4vS2twbUlmSVBLUFVCTS9QWGNDTzRPeVlmanJMQnB5ZUhvMkUy?=
+ =?utf-8?B?VUZOUklFTm9qcEFyZXVGMGZ2UUE4clVIWHlWb3VJZm5HWkRMV3dwanlUZU4r?=
+ =?utf-8?B?WTJ1MHMzNTZGY296Z2MzYVNMNTZuRGhDUnExcXBiWUtadjQxV0ZpQVlsNk9N?=
+ =?utf-8?B?eHh1WUNaVjFJYUp6dVcxVjJ1YkZ4MlNCSkhSTUc1b3I2MEV0R0l6ZktEays3?=
+ =?utf-8?B?Zk9tMWxVTytNa1oraFlIWk16OWd6NWhKcG5kSEUwVU4wQzBlQ1RZR1plWHR0?=
+ =?utf-8?B?WEFiVkljRldCaDFHSVpCd29Cbk5Bdk9IMFZKYkdEOUtOTEV1c3VqdDlHQk56?=
+ =?utf-8?B?UlRuMmsxVEFYcThjM2NjdklRUHhBQThzamZnT0NWUlZxUklMZ1BZMmxRU1dE?=
+ =?utf-8?B?Ri9ZWCtVYU80RGN2WmkxN0tTMmlWckltUmYyeEtpQXhKZko4QnNWQ1hMSUZM?=
+ =?utf-8?B?aXFwUnFPMERlaEp4cDJYV0tZVGFENjJoRkVjTzVKeHptaXJqeE9jNUdkR0hG?=
+ =?utf-8?B?bUYvSUZpYmR3TWJVRmxjSEN2TkswcFZhcnpaeUpLZ0V0VEkzZElacFFib1pn?=
+ =?utf-8?B?Ynh3US9uM0RINzZUM0dYYTFTYUgrb2g4SVJpZGFYam5ieWswYXhmczZTbW5o?=
+ =?utf-8?B?ZzZVRWNiL3BjcDljSXFoV2xaemxxQWt5R2pkQ2dMc29nU0YweVA1QnExS3dK?=
+ =?utf-8?B?aVdINGpTbWJBSXJoYm5neEplV0x6cC9OTm82Vkl6NGFYY2hGdnRLb0hQZHMy?=
+ =?utf-8?B?bmZEd2hGSjdXUHBYVnZ6S0dzM09ZR3Q4NzZycXlHTVllNGNIOWZCNDVhUTAr?=
+ =?utf-8?B?Q0I2QWZIRXdSWGo0dVVWZDZrVTFDNnVRNmNzbDhlNlBiWUNEbzNtTGxqSCtv?=
+ =?utf-8?B?R0F4TUpzUUZVM3cydFFlT2F0UVRkbWJTVy9Nb3pQL1ZzU2xUazFkMUtUaGpP?=
+ =?utf-8?B?NGc9PQ==?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: tBgaFHasMySuf/Ax+SlHa9WcUxd3mEfKLHrC+6fHg+Md7EugM23gImvqkpeaG9zBVX7NZO4g5JTzqUi9/IX5QHtPWzg29AcM75GmbqvBRjVJ2B4Pfp7eZG8FcZS9vOqgF3MjPQMPn9+7/rqI+zP1QtEGjFDiltRHZRudRr/UcOL9FIuUWnQNUknyMjHWQsfyCMJ8B2X7TKSXRX9g9+aDqstEokXomgFD8oOEFKEhRMMyJYdkc9mnlV+3Jq+Yk8Rr75z7heVJeWWQUhI1ihIxTYAsH7VyFq0FI+nGQxS8EE536iWP7zDFj7C6sZmkby1qyE1QN+Zianjt84BAsI8AX0LZU0/smqtN7Q44JpLxxG8uLjFp3Pbugpbs6NqEWYC+8aNsQ9EaQ01476XwX1xf12s0xShVURCbFB0OapX09nqyklK1jmm9us49YAJHA6yAW72YbUk/fkY7HYEWuv9Rv60Ka3zSqIKa/IaaFiwb6QDnpagpAos7Yj6Wt5rMBbx7tnrTOLKxXYT7pN+TSraA6QQSCb8giVnZkuzxFmOe7GqHx30NfApwoC1yWssJf2ifBtFwh3dJ30sUXrXpGtXi/JzMV6JdyUAtdi6xPIDOhSA4tz+4ibNyudYMdVNrqcexj2hAxuPeStp/3uhvQt/x+POvAAd9segO9YYfduiNaH3rpHiPxuXP0AzpEBEXeZwa9u12Uv1k4BI6mzMdV5ocfjdh+UilCmsUpVrDDp2eK/xoa6fN0ILbpvIqH/MbgZTUtpHzViQWNFnqvtMqHeOQgw==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: esrXXcNcXDsBy1UchaGn1ZHM/BKJ36AbLubF13NxqXeBDsHR1ltlBcx1hmYJ9762gp2fSbkQ6a5XwwTcW3XhrNx6zpa3U/gih9WSq28TFST2FO+Sf4aifknXeaPp3aozpqRyWh4GlGHZ5+mwOgIkjMh1FAeIkO4Iq8kxj9jrwOGz7FGIO+DQDAIfwanqmwGCHvFgSYVa46nZ35frKD98T0lDGg+7uNu2Aeg3glxbeiTNaZf63svTnfCM+3jK8TMSsnTrCryZ+xcL2Lq5SAHsTgdFmA7oydYqK+7mB2ST0rl0rXRZ+47khKe2xFY4uuByIYaershBjuyUIZan4FzAhY27YP4d42gl7gVHL4+9NRV8Am4kn3oAF4Yp/88hvFPJzQqPIL1lG+0Vnw0PGrmOWpxcPmrVsrSEudNiSWZtXY3qnpnZcrN5by1skaHw+As4o18jWzEaz1U0d2sJtsu3yZodGkw67vk08F+XE1CuH2ayVnsZX6L+/+uCu2jZrPVAIkebveO0if6NMctNtYuMLP5ILwPUXgOm8Ris0AdgGKgSMI85fywGG2XKXFRoUL4Xq97oA6UEW7dqiNMrDySBnJjedmPmSclqdNqGGWz+QnId9lLM2xzVGrr43YYUbEVdUbZMkNJRypn33+BYFs4zwFYV3m77HtyZ4/3svdvRbY4Jy86jHcNafssnmL05TFCfSxkprVBniszbzNMpbx/VBDJKfoRsMNYPz5dZ3d6Y+31OOIuiN5XRX/F8+q5d+tH5yvSoc+PnE74FV34yPFqfGA==
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 80e463cc-8001-46a6-f64d-08da7a7db160
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1d58b117-c535-4492-0ea1-08da7a7db5e8
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Aug 2022 03:09:09.2862
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Aug 2022 03:09:16.8669
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ymasnaec2lyPpnwy/LzGnaChNxUvXhsAGKH9LUT0AWu04J0Py2WEjEkt/Q/eGdexTsLF5kU8P8gRgJzQ1ycXJpEb3q/oUZr63caTuse4uAc=
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0lagCsC+YFsC05NeRroXqTYpdWrRfihKXtOL76I5pdmPxGF0WshlEgmbW4ZYpZlglI7hXmRNcKtb8I/vtBpRNHysfiET3DWV8LfnexPbIJ4=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4545
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
  definitions=2022-08-10_01,2022-08-09_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 adultscore=0
- mlxlogscore=999 mlxscore=0 bulkscore=0 malwarescore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
- definitions=main-2208100008
-X-Proofpoint-ORIG-GUID: b2huk4XjGU19dfpDZdZaSZiRP8ITYN64
-X-Proofpoint-GUID: b2huk4XjGU19dfpDZdZaSZiRP8ITYN64
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ spamscore=0 phishscore=0 adultscore=0 mlxscore=0 malwarescore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2208100008
+X-Proofpoint-GUID: -UBf0gmWbagjuG-faO1sMyNMFC1bjpaV
+X-Proofpoint-ORIG-GUID: -UBf0gmWbagjuG-faO1sMyNMFC1bjpaV
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2022-08-09 at 11:13 -0700, Darrick J. Wong wrote:
-> On Tue, Aug 09, 2022 at 11:01:01AM -0700, Darrick J. Wong wrote:
-> > On Thu, Aug 04, 2022 at 12:40:07PM -0700, Allison Henderson wrote:
-> > > Add parent pointer attribute during xfs_create, and subroutines
-> > > to
-> > > initialize attributes
-> > > 
-> > > [bfoster: rebase, use VFS inode generation]
-> > > [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+On Tue, 2022-08-09 at 11:43 -0700, Darrick J. Wong wrote:
+> On Thu, Aug 04, 2022 at 12:40:08PM -0700, Allison Henderson wrote:
+> > This patch modifies xfs_link to add a parent pointer to the inode.
 > > 
-> > Nit: uint32_t, not unint32_t.
+> > [bfoster: rebase, use VFS inode fields, fix xfs_bmap_finish()
+> > usage]
+> > [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+> >            fixed null pointer bugs]
 > > 
-> > >            fixed some null pointer bugs,
-> > >            merged error handling patch,
-> > >            remove unnecessary ENOSPC handling in
-> > > xfs_attr_set_first_parent]
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > ---
-> > >  fs/xfs/Makefile            |   1 +
-> > >  fs/xfs/libxfs/xfs_attr.c   |   4 +-
-> > >  fs/xfs/libxfs/xfs_attr.h   |   4 +-
-> > >  fs/xfs/libxfs/xfs_parent.c | 134
-> > > +++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/libxfs/xfs_parent.h |  34 ++++++++++
-> > >  fs/xfs/xfs_inode.c         |  37 ++++++++--
-> > >  fs/xfs/xfs_xattr.c         |   2 +-
-> > >  fs/xfs/xfs_xattr.h         |   1 +
-> > >  8 files changed, 208 insertions(+), 9 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> > > index 1131dd01e4fe..caeea8d968ba 100644
-> > > --- a/fs/xfs/Makefile
-> > > +++ b/fs/xfs/Makefile
-> > > @@ -40,6 +40,7 @@ xfs-y				+= $(addprefix
-> > > libxfs/, \
-> > >  				   xfs_inode_fork.o \
-> > >  				   xfs_inode_buf.o \
-> > >  				   xfs_log_rlimit.o \
-> > > +				   xfs_parent.o \
-> > >  				   xfs_ag_resv.o \
-> > >  				   xfs_rmap.o \
-> > >  				   xfs_rmap_btree.o \
-> > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > > index 2ef3262f21e8..0a458ea7051f 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr.c
-> > > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > > @@ -880,7 +880,7 @@ xfs_attr_lookup(
-> > >  	return error;
-> > >  }
-> > >  
-> > > -static int
-> > > +int
-> > >  xfs_attr_intent_init(
-> > >  	struct xfs_da_args	*args,
-> > >  	unsigned int		op_flags,	/* op flag (set or
-> > > remove) */
-> > > @@ -898,7 +898,7 @@ xfs_attr_intent_init(
-> > >  }
-> > >  
-> > >  /* Sets an attribute for an inode as a deferred operation */
-> > > -static int
-> > > +int
-> > >  xfs_attr_defer_add(
-> > >  	struct xfs_da_args	*args)
-> > >  {
-> > > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> > > index af92cc57e7d8..b47417b5172f 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr.h
-> > > +++ b/fs/xfs/libxfs/xfs_attr.h
-> > > @@ -544,6 +544,7 @@ int xfs_inode_hasattr(struct xfs_inode *ip);
-> > >  bool xfs_attr_is_leaf(struct xfs_inode *ip);
-> > >  int xfs_attr_get_ilocked(struct xfs_da_args *args);
-> > >  int xfs_attr_get(struct xfs_da_args *args);
-> > > +int xfs_attr_defer_add(struct xfs_da_args *args);
-> > >  int xfs_attr_set(struct xfs_da_args *args);
-> > >  int xfs_attr_set_iter(struct xfs_attr_intent *attr);
-> > >  int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
-> > > @@ -552,7 +553,8 @@ bool xfs_attr_namecheck(struct xfs_mount *mp,
-> > > const void *name, size_t length,
-> > >  int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-> > >  void xfs_init_attr_trans(struct xfs_da_args *args, struct
-> > > xfs_trans_res *tres,
-> > >  			 unsigned int *total);
-> > > -
-> > > +int xfs_attr_intent_init(struct xfs_da_args *args, unsigned int
-> > > op_flags,
-> > > +			 struct xfs_attr_intent  **attr);
-> > >  /*
-> > >   * Check to see if the attr should be upgraded from non-existent 
-> > > or shortform to
-> > >   * single-leaf-block attribute list.
-> > > diff --git a/fs/xfs/libxfs/xfs_parent.c
-> > > b/fs/xfs/libxfs/xfs_parent.c
-> > > new file mode 100644
-> > > index 000000000000..4ab531c77d7d
-> > > --- /dev/null
-> > > +++ b/fs/xfs/libxfs/xfs_parent.c
-> > > @@ -0,0 +1,134 @@
-> > > +// SPDX-License-Identifier: GPL-2.0
-> > > +/*
-> > > + * Copyright (c) 2022 Oracle, Inc.
-> > > + * All rights reserved.
-> > > + */
-> > > +#include "xfs.h"
-> > > +#include "xfs_fs.h"
-> > > +#include "xfs_format.h"
-> > > +#include "xfs_da_format.h"
-> > > +#include "xfs_log_format.h"
-> > > +#include "xfs_shared.h"
-> > > +#include "xfs_trans_resv.h"
-> > > +#include "xfs_mount.h"
-> > > +#include "xfs_bmap_btree.h"
-> > > +#include "xfs_inode.h"
-> > > +#include "xfs_error.h"
-> > > +#include "xfs_trace.h"
-> > > +#include "xfs_trans.h"
-> > > +#include "xfs_da_btree.h"
-> > > +#include "xfs_attr.h"
-> > > +#include "xfs_da_btree.h"
-> > > +#include "xfs_attr_sf.h"
-> > > +#include "xfs_bmap.h"
-> > > +#include "xfs_defer.h"
-> > > +#include "xfs_log.h"
-> > > +#include "xfs_xattr.h"
-> > > +#include "xfs_parent.h"
-> > > +
-> > > +/*
-> > > + * Parent pointer attribute handling.
-> > > + *
-> > > + * Because the attribute value is a filename component, it will
-> > > never be longer
-> > > + * than 255 bytes. This means the attribute will always be a
-> > > local format
-> > > + * attribute as it is xfs_attr_leaf_entsize_local_max() for v5
-> > > filesystems will
-> > > + * always be larger than this (max is 75% of block size).
-> > > + *
-> > > + * Creating a new parent attribute will always create a new
-> > > attribute - there
-> > > + * should never, ever be an existing attribute in the tree for a
-> > > new inode.
-> > > + * ENOSPC behavior is problematic - creating the inode without
-> > > the parent
-> > > + * pointer is effectively a corruption, so we allow parent
-> > > attribute creation
-> > > + * to dip into the reserve block pool to avoid unexpected ENOSPC
-> > > errors from
-> > > + * occurring.
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > ---
+> >  fs/xfs/xfs_inode.c | 43 ++++++++++++++++++++++++++++++++++------
+> > ---
+> >  1 file changed, 34 insertions(+), 9 deletions(-)
 > > 
-> > Shouldn't we increase XFS_LINK_SPACE_RES to avoid this?  The
-> > reserve
-> > pool isn't terribly large (8192 blocks) and was really only
-> > supposed to
-> > save us from an ENOSPC shutdown if an unwritten extent conversion
-> > in the
-> > writeback endio handler needs a few more blocks.
-> > 
-> > IOWs, we really ought to ENOSPC at transaction reservation time
-> > instead
-> > of draining the reserve pool.
-> > 
-> > > + */
-> > > +
-> > > +
-> > > +/* Initializes a xfs_parent_name_rec to be stored as an
-> > > attribute name */
-> > > +void
-> > > +xfs_init_parent_name_rec(
-> > > +	struct xfs_parent_name_rec	*rec,
-> > > +	struct xfs_inode		*ip,
-> > > +	uint32_t			p_diroffset)
-> > > +{
-> > > +	xfs_ino_t			p_ino = ip->i_ino;
-> > > +	uint32_t			p_gen = VFS_I(ip)->i_generation;
-> > > +
-> > > +	rec->p_ino = cpu_to_be64(p_ino);
-> > > +	rec->p_gen = cpu_to_be32(p_gen);
-> > > +	rec->p_diroffset = cpu_to_be32(p_diroffset);
-> > > +}
-> > > +
-> > > +/* Initializes a xfs_parent_name_irec from an
-> > > xfs_parent_name_rec */
-> > > +void
-> > > +xfs_init_parent_name_irec(
-> > > +	struct xfs_parent_name_irec	*irec,
-> > > +	struct xfs_parent_name_rec	*rec)
-> > > +{
-> > > +	irec->p_ino = be64_to_cpu(rec->p_ino);
-> > > +	irec->p_gen = be32_to_cpu(rec->p_gen);
-> > > +	irec->p_diroffset = be32_to_cpu(rec->p_diroffset);
-> > > +}
-> > > +
-> > > +int
-> > > +xfs_parent_init(
-> > > +	xfs_mount_t                     *mp,
-> > > +	xfs_inode_t			*ip,
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index ef993c3a8963..6e5deb0d42c4 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -1228,14 +1228,16 @@ xfs_create_tmpfile(
+> >  
+> >  int
+> >  xfs_link(
+> > -	xfs_inode_t		*tdp,
+> > -	xfs_inode_t		*sip,
+> > +	struct xfs_inode	*tdp,
+> > +	struct xfs_inode	*sip,
+> >  	struct xfs_name		*target_name)
+> >  {
+> > -	xfs_mount_t		*mp = tdp->i_mount;
+> > -	xfs_trans_t		*tp;
+> > +	struct xfs_mount	*mp = tdp->i_mount;
+> > +	struct xfs_trans	*tp;
+> >  	int			error, nospace_error = 0;
+> >  	int			resblks;
+> > +	xfs_dir2_dataptr_t	diroffset;
+> > +	struct xfs_parent_defer	*parent = NULL;
+> >  
+> >  	trace_xfs_link(tdp, target_name);
+> >  
+> > @@ -1252,11 +1254,17 @@ xfs_link(
+> >  	if (error)
+> >  		goto std_return;
+> >  
+> > +	if (xfs_has_parent(mp)) {
+> > +		error = xfs_parent_init(mp, sip, target_name, &parent);
 > 
-> More nits: Please don't use struct typedefs here.
-Sure, will fix
+> Why does xfs_parent_init check xfs_has_parent if the callers already
+> do
+> that?
+It was part of the solution outlined in the last review.  It is
+redundant, but not an inappropriate sanity check for that function
+either. I can remove it from the helper if it bothers folks. 
+
 
 > 
-> > > +	struct xfs_name			*target_name,
-> > > +	struct xfs_parent_defer		**parentp)
-> > > +{
-> > > +	struct xfs_parent_defer		*parent;
-> > > +	int				error;
-> > > +
-> > > +	if (!xfs_has_parent(mp))
-> > > +		return 0;
-> > > +
-> > > +	error = xfs_attr_grab_log_assist(mp);
-> > 
-> > At some point we might want to consider boosting performance by
-> > setting
-> > XFS_SB_FEAT_INCOMPAT_LOG_XATTRS permanently when parent pointers
-> > are
-> > turned on, since adding the feature requires a synchronous bwrite
-> > of the
-> > primary superblock.
-> > 
-> > I /think/ this could be accomplished by setting the feature bit in
-> > mkfs
-> > and teaching xlog_clear_incompat to exit if xfs_has_parent()==true.
-> > Then we can skip the xfs_attr_grab_log_assist calls.
-> > 
-> > But, let's focus on getting this patchset into good enough shape
-> > that
-> > we can be confident that we don't need any ondisk format changes,
-> > and
-> > worry about speed later.
-> > 
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	parent = kzalloc(sizeof(*parent), GFP_KERNEL);
-> > 
-> > These objects are going to be created and freed fairly frequently;
-> > could
-> > you please convert these to a kmem cache?  (That can be a cleanup
-> > at the
-> > end.)
-> > 
-> > > +	if (!parent)
-> > > +		return -ENOMEM;
-> > > +
-> > > +	/* init parent da_args */
-> > > +	parent->args.dp = ip;
-> > > +	parent->args.geo = mp->m_attr_geo;
-> > > +	parent->args.whichfork = XFS_ATTR_FORK;
-> > > +	parent->args.attr_filter = XFS_ATTR_PARENT;
-> > > +	parent->args.op_flags = XFS_DA_OP_OKNOENT | XFS_DA_OP_LOGGED;
-> > > +	parent->args.name = (const uint8_t *)&parent->rec;
-> > > +	parent->args.namelen = sizeof(struct xfs_parent_name_rec);
-> > > +
-> > > +	if (target_name) {
-> > > +		parent->args.value = (void *)target_name->name;
-> > > +		parent->args.valuelen = target_name->len;
-> > > +	}
-> > > +
-> > > +	*parentp = parent;
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +int
-> > > +xfs_parent_defer_add(
-> > > +	struct xfs_trans	*tp,
-> > > +	struct xfs_inode	*ip,
-> > > +	struct xfs_parent_defer	*parent,
-> > > +	xfs_dir2_dataptr_t	diroffset)
-> > > +{
-> > > +	struct xfs_da_args	*args = &parent->args;
-> > > +
-> > > +	xfs_init_parent_name_rec(&parent->rec, ip, diroffset);
-> > > +	args->trans = tp;
-> > > +	args->hashval = xfs_da_hashname(args->name, args->namelen);
-> > > +	return xfs_attr_defer_add(args);
-> > > +}
-> > > +
-> > > +void
-> > > +xfs_parent_cancel(
-> > > +	xfs_mount_t		*mp,
-> > > +	struct xfs_parent_defer *parent)
-> > > +{
-> > > +	xlog_drop_incompat_feat(mp->m_log);
-> > > +	kfree(parent);
-> > > +}
-> > > +
-> > > diff --git a/fs/xfs/libxfs/xfs_parent.h
-> > > b/fs/xfs/libxfs/xfs_parent.h
-> > > new file mode 100644
-> > > index 000000000000..21a350b97ed5
-> > > --- /dev/null
-> > > +++ b/fs/xfs/libxfs/xfs_parent.h
-> > > @@ -0,0 +1,34 @@
-> > > +// SPDX-License-Identifier: GPL-2.0
-> > > +/*
-> > > + * Copyright (c) 2022 Oracle, Inc.
-> > > + * All Rights Reserved.
-> > > + */
-> > > +#ifndef	__XFS_PARENT_H__
-> > > +#define	__XFS_PARENT_H__
-> > > +
-> > > +/*
-> > > + * Dynamically allocd structure used to wrap the needed data to
-> > > pass around
-> > > + * the defer ops machinery
-> > > + */
-> > > +struct xfs_parent_defer {
-> > > +	struct xfs_parent_name_rec	rec;
-> > > +	struct xfs_da_args		args;
-> > > +};
-> > > +
-> > > +/*
-> > > + * Parent pointer attribute prototypes
-> > > + */
-> > > +void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
-> > > +			      struct xfs_inode *ip,
-> > > +			      uint32_t p_diroffset);
-> > > +void xfs_init_parent_name_irec(struct xfs_parent_name_irec
-> > > *irec,
-> > > +			       struct xfs_parent_name_rec *rec);
-> > > +int xfs_parent_init(xfs_mount_t *mp, xfs_inode_t *ip,
-> > > +		    struct xfs_name *target_name,
-> > > +		    struct xfs_parent_defer **parentp);
-> > > +int xfs_parent_defer_add(struct xfs_trans *tp, struct xfs_inode
-> > > *ip,
-> > > +			 struct xfs_parent_defer *parent,
-> > > +			 xfs_dir2_dataptr_t diroffset);
-> > > +void xfs_parent_cancel(xfs_mount_t *mp, struct xfs_parent_defer
-> > > *parent);
-> > > +
-> > > +#endif	/* __XFS_PARENT_H__ */
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index 09876ba10a42..ef993c3a8963 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -37,6 +37,8 @@
-> > >  #include "xfs_reflink.h"
-> > >  #include "xfs_ag.h"
-> > >  #include "xfs_log_priv.h"
-> > > +#include "xfs_parent.h"
-> > > +#include "xfs_xattr.h"
-> > >  
-> > >  struct kmem_cache *xfs_inode_cache;
-> > >  
-> > > @@ -950,7 +952,7 @@ xfs_bumplink(
-> > >  int
-> > >  xfs_create(
-> > >  	struct user_namespace	*mnt_userns,
-> > > -	xfs_inode_t		*dp,
-> > > +	struct xfs_inode	*dp,
-> > >  	struct xfs_name		*name,
-> > >  	umode_t			mode,
-> > >  	dev_t			rdev,
-> > > @@ -962,7 +964,7 @@ xfs_create(
-> > >  	struct xfs_inode	*ip = NULL;
-> > >  	struct xfs_trans	*tp = NULL;
-> > >  	int			error;
-> > > -	bool                    unlock_dp_on_error = false;
-> > > +	bool			unlock_dp_on_error = false;
-> > >  	prid_t			prid;
-> > >  	struct xfs_dquot	*udqp = NULL;
-> > >  	struct xfs_dquot	*gdqp = NULL;
-> > > @@ -970,6 +972,8 @@ xfs_create(
-> > >  	struct xfs_trans_res	*tres;
-> > >  	uint			resblks;
-> > >  	xfs_ino_t		ino;
-> > > +	xfs_dir2_dataptr_t	diroffset;
-> > > +	struct xfs_parent_defer	*parent = NULL;
-> > >  
-> > >  	trace_xfs_create(dp, name);
-> > >  
-> > > @@ -996,6 +1000,12 @@ xfs_create(
-> > >  		tres = &M_RES(mp)->tr_create;
-> > >  	}
-> > >  
-> > > +	if (xfs_has_parent(mp)) {
-> > > +		error = xfs_parent_init(mp, dp, name, &parent);
-> > > +		if (error)
-> > > +			goto out_release_dquots;
-> > > +	}
-> > > +
-> > >  	/*
-> > >  	 * Initially assume that the file does not exist and
-> > >  	 * reserve the resources for that case.  If that is not
-> > > @@ -1011,7 +1021,7 @@ xfs_create(
-> > >  				resblks, &tp);
-> > >  	}
-> > >  	if (error)
-> > > -		goto out_release_dquots;
-> > > +		goto drop_incompat;
-> > >  
-> > >  	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
-> > >  	unlock_dp_on_error = true;
-> > > @@ -1021,6 +1031,7 @@ xfs_create(
-> > >  	 * entry pointing to them, but a directory also the "." entry
-> > >  	 * pointing to itself.
-> > >  	 */
-> > > +	init_xattrs |= xfs_has_parent(mp);
-> > >  	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
-> > >  	if (!error)
-> > >  		error = xfs_init_new_inode(mnt_userns, tp, dp, ino,
-> > > mode,
-> > > @@ -1035,11 +1046,12 @@ xfs_create(
-> > >  	 * the transaction cancel unlocking dp so don't do it
-> > > explicitly in the
-> > >  	 * error path.
-> > >  	 */
-> > > -	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
-> > > +	xfs_trans_ijoin(tp, dp, 0);
-> > >  	unlock_dp_on_error = false;
-> > >  
-> > >  	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
-> > > -				   resblks - XFS_IALLOC_SPACE_RES(mp),
-> > > NULL);
-> > > +				   resblks - XFS_IALLOC_SPACE_RES(mp),
-> > > +				   &diroffset);
-> > >  	if (error) {
-> > >  		ASSERT(error != -ENOSPC);
-> > >  		goto out_trans_cancel;
-> > > @@ -1055,6 +1067,17 @@ xfs_create(
-> > >  		xfs_bumplink(tp, dp);
-> > >  	}
-> > >  
-> > > +	/*
-> > > +	 * If we have parent pointers, we need to add the attribute
-> > > containing
-> > > +	 * the parent information now.
-> > > +	 */
-> > > +	if (parent) {
-> > > +		parent->args.dp	= ip;
+> > +		if (error)
+> > +			goto std_return;
+> > +	}
+> > +
+> >  	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
 > 
-> ...and on second thought, it seems a little odd that you pass @dp to
-> xfs_parent_init only to override parent->args.dp here.  Given that
-> this
-> doesn't do anything with @parent until here, why not pass NULL to the
-> init function above?
-Sure, the init helpers are helpful, but do create some out of order
-initializing since sometimes the required parameters are not all
-available at the same time.  Will update.
+> Same comment about increasing XFS_LINK_SPACE_RES to accomodate xattr
+> expansion as I had for the last patch.
+So we do use XFS_LINK_SPACE_RES here, but didnt we update the tr_link
+below in patch 11 to accommodate for the extra space?  Maybe I'm not
+understanding why we would need both?
 
-Thanks!
+> 
+> >  	error = xfs_trans_alloc_dir(tdp, &M_RES(mp)->tr_link, sip,
+> > &resblks,
+> >  			&tp, &nospace_error);
+> >  	if (error)
+> > -		goto std_return;
+> > +		goto drop_incompat;
+> >  
+> >  	/*
+> >  	 * If we are using project inheritance, we only allow hard link
+> > @@ -1289,14 +1297,26 @@ xfs_link(
+> >  	}
+> >  
+> >  	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+> > -				   resblks, NULL);
+> > +				   resblks, &diroffset);
+> >  	if (error)
+> > -		goto error_return;
+> > +		goto out_defer_cancel;
+> >  	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD |
+> > XFS_ICHGTIME_CHG);
+> >  	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
+> >  
+> >  	xfs_bumplink(tp, sip);
+> >  
+> > +	/*
+> > +	 * If we have parent pointers, we now need to add the parent
+> > record to
+> > +	 * the attribute fork of the inode. If this is the initial
+> > parent
+> > +	 * attribute, we need to create it correctly, otherwise we can
+> > just add
+> > +	 * the parent to the inode.
+> > +	 */
+> > +	if (parent) {
+> > +		error = xfs_parent_defer_add(tp, tdp, parent,
+> > diroffset);
+> 
+> A followup to the comments I made to the previous patch about
+> parent->args.dp --
+> 
+> Since you're partially initializing the xfs_defer_parent structure
+> before you even have the dir offset, why not delay initializing the
+> parent and child pointers until the xfs_parent_defer_add step?
+> 
+> int
+> xfs_parent_init(
+> 	struct xfs_mount		*mp,
+> 	struct xfs_parent_defer		**parentp)
+> {
+> 	struct xfs_parent_defer		*parent;
+> 	int				error;
+> 
+> 	if (!xfs_has_parent(mp))
+> 		return 0;
+> 
+> 	error = xfs_attr_grab_log_assist(mp);
+> 	if (error)
+> 		return error;
+> 
+> 	parent = kzalloc(sizeof(*parent), GFP_KERNEL);
+> 	if (!parent)
+> 		return -ENOMEM;
+> 
+> 	/* init parent da_args */
+> 	parent->args.geo = mp->m_attr_geo;
+> 	parent->args.whichfork = XFS_ATTR_FORK;
+> 	parent->args.attr_filter = XFS_ATTR_PARENT;
+> 	parent->args.op_flags = XFS_DA_OP_OKNOENT | XFS_DA_OP_LOGGED;
+> 	parent->args.name = (const uint8_t *)&parent->rec;
+> 	parent->args.namelen = sizeof(struct xfs_parent_name_rec);
+> 
+> 	*parentp = parent;
+> 	return 0;
+> }
+> 
+> int
+> xfs_parent_defer_add(
+> 	struct xfs_trans	*tp,
+> 	struct xfs_parent_defer	*parent,
+> 	struct xfs_inode	*dp,
+> 	struct xfs_name		*parent_name,
+> 	xfs_dir2_dataptr_t	parent_offset,
+> 	struct xfs_inode	*child)
+> {
+> 	struct xfs_da_args	*args = &parent->args;
+> 
+> 	xfs_init_parent_name_rec(&parent->rec, dp, diroffset);
+> 	args->hashval = xfs_da_hashname(args->name, args->namelen);
+> 
+> 	args->trans = tp;
+> 	args->dp = child;
+> 	if (parent_name) {
+> 		args->name = parent_name->name;
+> 		args->valuelen = parent_name->len;
+> 	}
+> 	return xfs_attr_defer_add(args);
+> }
+> 
+> And then the callsites become:
+> 
+> 	/*
+> 	 * If we have parent pointers, we now need to add the parent
+> record to
+> 	 * the attribute fork of the inode. If this is the initial
+> parent
+> 	 * attribute, we need to create it correctly, otherwise we can
+> just add
+> 	 * the parent to the inode.
+> 	 */
+> 	if (parent) {
+> 		error = xfs_parent_defer_add(tp, parent, tdp,
+> 				target_name, diroffset, sip);
+> 		if (error)
+> 			goto out_defer_cancel;
+> 	}
+Sure, I can scoot that part down to the defer_add helper. Thanks for
+the reviews!
+
 Allison
-
+> 
+> Aside from the API suggestions, the rest looks good to me.
 > 
 > --D
 > 
-> > > +		error = xfs_parent_defer_add(tp, dp, parent,
-> > > diroffset);
-> > > +		if (error)
-> > > +			goto out_trans_cancel;
-> > > +	}
-> > > +
-> > >  	/*
-> > >  	 * If this is a synchronous mount, make sure that the
-> > >  	 * create transaction goes to disk before returning to
-> > > @@ -1080,6 +1103,7 @@ xfs_create(
-> > >  
-> > >  	*ipp = ip;
-> > >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > +	xfs_iunlock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
+> > +		if (error)
+> > +			goto out_defer_cancel;
+> > +	}
+> > +
+> >  	/*
+> >  	 * If this is a synchronous mount, make sure that the
+> >  	 * link transaction goes to disk before returning to
+> > @@ -1310,11 +1330,16 @@ xfs_link(
+> >  	xfs_iunlock(sip, XFS_ILOCK_EXCL);
+> >  	return error;
+> >  
+> > - error_return:
+> > +out_defer_cancel:
+> > +	xfs_defer_cancel(tp);
+> > +error_return:
+> >  	xfs_trans_cancel(tp);
+> >  	xfs_iunlock(tdp, XFS_ILOCK_EXCL);
+> >  	xfs_iunlock(sip, XFS_ILOCK_EXCL);
+> > - std_return:
+> > +drop_incompat:
+> > +	if (parent)
+> > +		xfs_parent_cancel(mp, parent);
+> > +std_return:
+> >  	if (error == -ENOSPC && nospace_error)
+> >  		error = nospace_error;
+> >  	return error;
+> > -- 
+> > 2.25.1
 > > 
-> > I don't think we need the ILOCK class annotations for unlocks.
-> > 
-> > Other than the two things I asked about, this is looking good.
-> > 
-> > --D
-> > 
-> > >  	return 0;
-> > >  
-> > >   out_trans_cancel:
-> > > @@ -1094,6 +1118,9 @@ xfs_create(
-> > >  		xfs_finish_inode_setup(ip);
-> > >  		xfs_irele(ip);
-> > >  	}
-> > > + drop_incompat:
-> > > +	if (parent)
-> > > +		xfs_parent_cancel(mp, parent);
-> > >   out_release_dquots:
-> > >  	xfs_qm_dqrele(udqp);
-> > >  	xfs_qm_dqrele(gdqp);
-> > > diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> > > index c325a28b89a8..d9067c5f6bd6 100644
-> > > --- a/fs/xfs/xfs_xattr.c
-> > > +++ b/fs/xfs/xfs_xattr.c
-> > > @@ -27,7 +27,7 @@
-> > >   * they must release the permission by calling
-> > > xlog_drop_incompat_feat
-> > >   * when they're done.
-> > >   */
-> > > -static inline int
-> > > +int
-> > >  xfs_attr_grab_log_assist(
-> > >  	struct xfs_mount	*mp)
-> > >  {
-> > > diff --git a/fs/xfs/xfs_xattr.h b/fs/xfs/xfs_xattr.h
-> > > index 2b09133b1b9b..3fd6520a4d69 100644
-> > > --- a/fs/xfs/xfs_xattr.h
-> > > +++ b/fs/xfs/xfs_xattr.h
-> > > @@ -7,6 +7,7 @@
-> > >  #define __XFS_XATTR_H__
-> > >  
-> > >  int xfs_attr_change(struct xfs_da_args *args);
-> > > +int xfs_attr_grab_log_assist(struct xfs_mount *mp);
-> > >  
-> > >  extern const struct xattr_handler *xfs_xattr_handlers[];
-> > >  
-> > > -- 
-> > > 2.25.1
-> > > 
 
