@@ -2,96 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41CBFC25B06
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Aug 2022 21:32:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 493A1C00140
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Aug 2022 22:56:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230239AbiHJVc0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Aug 2022 17:32:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41182 "EHLO
+        id S231499AbiHJW4X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Aug 2022 18:56:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230006AbiHJVc0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Aug 2022 17:32:26 -0400
-Received: from mail-ot1-x32a.google.com (mail-ot1-x32a.google.com [IPv6:2607:f8b0:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26603193EE;
-        Wed, 10 Aug 2022 14:32:25 -0700 (PDT)
-Received: by mail-ot1-x32a.google.com with SMTP id x1-20020a056830278100b00636774b0e54so11479345otu.4;
-        Wed, 10 Aug 2022 14:32:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=m7O12mtRE9TkWg6wBbyGMp67dOvzpuyVtE/CzOg3fqw=;
-        b=Jk54ci7PSY7tdCzqgeSF9+5dbF3gz0NvJ7ApJm97a2vB99DU4S2dySkCHFIX7h1lUv
-         qtLscUGfFOR5J85EiDuL8AEmG3pHGuyaUbZ1TSjBDYFyvYTRzaVnaQefNwzKOeyBlVKv
-         y/9OHgIdjhAqIo0YEwSfA/QGcY3kEvwWoNaEwc8ZkNoTw9WE+tjnxEC69AgU1jWZw2iP
-         m7VjmGqF3ePAgocQVKL8QJFVVqfCS8AUwzIOuyqtAlSJZXaY6NEx45JsOVac7hZMXMg/
-         1LUjz7D1rXJwdYh+rjh/Vgfn31+6bGrISFPiWvNVSCyzZYx0ZWDkQplfDvFe7vkr1Sqg
-         evfQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=m7O12mtRE9TkWg6wBbyGMp67dOvzpuyVtE/CzOg3fqw=;
-        b=VE4gYHflJADlDgD9Fr5ew1Y75GfMgtnVXWUhWhnVmcK1J6UEiOHqOlr/yC3BE0jK6d
-         0Wuaw016uif55xmpqbSMeQpW/3dY/HgQpXrVcl/RHxMEybAE+IeEY0CeGVR85OJMaX/h
-         2R0mkrB8kjLPsFtjkHy3HH0C76wBFEwEu+FSqGtL1R8GT1MLv3qC4CvS8sTpkYzwn0lj
-         Yuj8c9xjbwmpfYjWR8rGp5tUtZndJ33AvENvLRYYXy3hFonMEuBXYXrZOCc9tE81uSon
-         zTtyhZswHUelIibsh/mn3YCDZYxuzu5LkPiXYCTaEoYrfE9YesvkJIT7tZzLy8M7nMEP
-         QWnA==
-X-Gm-Message-State: ACgBeo3gycDaVjvlT9X1nSBfP1SPqFV6WGfIMh3BRhKePUGc3ue+hdE1
-        2xhZwmaMwtFL9kSyrF8dxpzkgd4QUf0Q5EUBPl4=
-X-Google-Smtp-Source: AA6agR5WI4LfxUaJ5EfyY3qi3PgJRxGO7G3AYltcG2S84baL4CCgM+/v/VC+ix3GmYp1IOK0IPYYQDO5aJHqzAN+vDM=
-X-Received: by 2002:a05:6830:6388:b0:61c:80a9:d5b6 with SMTP id
- ch8-20020a056830638800b0061c80a9d5b6mr11139969otb.124.1660167144427; Wed, 10
- Aug 2022 14:32:24 -0700 (PDT)
+        with ESMTP id S231250AbiHJW4W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Aug 2022 18:56:22 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 84134642F9;
+        Wed, 10 Aug 2022 15:56:21 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-193-158.pa.nsw.optusnet.com.au [49.181.193.158])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 68C6C62D24D;
+        Thu, 11 Aug 2022 08:56:20 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oLucc-00Bbew-Oy; Thu, 11 Aug 2022 08:56:18 +1000
+Date:   Thu, 11 Aug 2022 08:56:18 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Uros Bizjak <ubizjak@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH] fs/xfs: Use atomic64_try_cmpxchg in
+ xlog_grant_{add,sub}_space
+Message-ID: <20220810225618.GM3600936@dread.disaster.area>
+References: <20220809165615.9694-1-ubizjak@gmail.com>
+ <20220809220511.GI3600936@dread.disaster.area>
+ <20220809230244.GJ3600936@dread.disaster.area>
+ <CAFULd4YkSG4RES8=P5BjF8JH5En++XN6LpVNd391eYcy_baeyw@mail.gmail.com>
 MIME-Version: 1.0
-References: <20220719041311.709250-1-hch@lst.de> <20220728111016.uwbaywprzkzne7ib@quack3>
- <20220729092216.GE3493@suse.de> <20220729141145.GA31605@lst.de>
- <Yufx5jpyJ+zcSJ4e@cmpxchg.org> <YvQYjpDHH5KckCrw@casper.infradead.org>
-In-Reply-To: <YvQYjpDHH5KckCrw@casper.infradead.org>
-From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
-Date:   Wed, 10 Aug 2022 23:32:06 +0200
-Message-ID: <CAHpGcMLNKrOFxktaH9Wxq0M9O-m+DPrdbB7FQt7qwkzQdm-a-w@mail.gmail.com>
-Subject: Re: remove iomap_writepage v2
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Johannes Weiner <hannes@cmpxchg.org>,
-        Christoph Hellwig <hch@lst.de>, Mel Gorman <mgorman@suse.de>,
-        Jan Kara <jack@suse.cz>, Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Johannes Thumshirn <jth@kernel.org>,
-        cluster-devel <cluster-devel@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Linux-MM <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAFULd4YkSG4RES8=P5BjF8JH5En++XN6LpVNd391eYcy_baeyw@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62f43794
+        a=SeswVvpAPK2RnNNwqI8AaA==:117 a=SeswVvpAPK2RnNNwqI8AaA==:17
+        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=7-415B0cAAAA:8 a=VwQbUJbxAAAA:8
+        a=99CUqXMKFniesV8lYRMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Am Mi., 10. Aug. 2022 um 22:57 Uhr schrieb Matthew Wilcox <willy@infradead.org>:
-> On Mon, Aug 01, 2022 at 11:31:50AM -0400, Johannes Weiner wrote:
-> > XFS hasn't had a ->writepage call for a while. After LSF I internally
-> > tested dropping btrfs' callback, and the results looked good: no OOM
-> > kills with dirty/writeback pages remaining, performance parity. Then I
-> > went on vacation and Christoph beat me to the patch :)
->
-> To avoid duplicating work with you or Christoph ... it seems like the
-> plan is to kill ->writepage entirely soon, so there's no point in me
-> doing a sweep of all the filesystems to convert ->writepage to
-> ->write_folio, correct?
->
-> I assume the plan for filesystems which have a writepage but don't have
-> a ->writepages (9p, adfs, affs, bfs, ecryptfs, gfs2, hostfs, jfs, minix,
-> nilfs2, ntfs, ocfs2, reiserfs, sysv, ubifs, udf, ufs, vboxsf) is to give
-> them a writepages, modelled on iomap_writepages().  Seems that adding
-> a block_writepages() might be a useful thing for me to do?
+On Wed, Aug 10, 2022 at 09:02:16AM +0200, Uros Bizjak wrote:
+> On Wed, Aug 10, 2022 at 1:02 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Wed, Aug 10, 2022 at 08:05:11AM +1000, Dave Chinner wrote:
+> > > On Tue, Aug 09, 2022 at 06:56:15PM +0200, Uros Bizjak wrote:
+> > > > Use `!atomic64_try_cmpxchg(ptr, &old, new)` instead of
+> > > > `atomic64_cmpxchg(ptr, old, new) != old` in xlog_grant_{add,sub}_space.
+> > > > This has two benefits:
+> > > >
+> > > > - The x86 cmpxchg instruction returns success in the ZF flag, so this
+> > > >   change saves a compare after cmpxchg, as well as a related move
+> > > >   instruction in the front of cmpxchg.
+> > > >
+> > > > - atomic64_try_cmpxchg implicitly assigns the *ptr value to &old when
+> > > >   cmpxchg fails, enabling further code simplifications.
+> > >
+> > > Do the two cmpxchg operations have the same memory ordering
+> > > semantics on failure?
+> 
+> Yes. The API also provides _acquire, _release and _relaxed variants of
+> both, atomic64_cmpxchg and atomic64_try_cmpxchg.
 
-Hmm, gfs2 does have gfs2_writepages() and gfs2_jdata_writepages()
-functions, so it should probably be fine.
+Yes, I know this, which was why I was asking if the default
+behaviour is the same - many people get caught out by assuming that
+cmpxchg implies release semantics even if it fails....
 
-Thanks,
-Andreas
+> On x86, these two
+> functions actually compile to the same CMPXCHG instruction, the
+> difference is only in how the comparison is handled:
+> 
+>       15:    48 09 c2                 or     %rax,%rdx
+>       18:    48 89 c8                 mov    %rcx,%rax
+>       1b:    f0 48 0f b1 16           lock cmpxchg %rdx,(%rsi)
+>       20:    48 39 c1                 cmp    %rax,%rcx
+>       23:    74 2a                    je     4f <xlog_grant_add_space+0x4f>
+> 
+> becomes:
+> 
+>      29c:    48 09 ca                 or     %rcx,%rdx
+>      29f:    f0 48 0f b1 16           lock cmpxchg %rdx,(%rsi)
+>      2a4:    75 d2                    jne    278 <xlog_grant_add_space+0x8>
+> 
+> And as demonstrated in [1], even the fallback code compiles to a
+> better assembly.o
+
+FWIW, I mostly don't care about assembler level optimisations for
+the code I write. I'll try to write code efficiently, but I don't
+really care that much for micro-optimisation. Fundamentally, 
+focussing on optimising code down to the instruction level means you
+are not looking for algorithmic optimisations, which is where all
+the big gains typically come from....
+
+This thread demonstrates that - I get an improvement from roughly
+1.4 million transactions/s to roughly 2 million transactions/s with
+the change to the grant head accounting algorithm, whilst the
+improvement from removing 2 instructions from the cmpxchg can't
+actually be measured on my tests. i.e. the improvement is lost
+within the noise floor of the benchmarks.
+
+So, yeah, when it comes to making code faster, I focus on efficient
+algorithms rather than efficient code because algorithms are where
+the gains users will notice are....
+
+> > FYI, the original RFC for this was posted a bit over a month ago:
+> >
+> > https://lore.kernel.org/linux-xfs/20220708015558.1134330-1-david@fromorbit.com/
+> 
+> -static void
+> +void
+>  xlog_grant_sub_space(
+> 
+> [...]
+> 
+> - old = head_val;
+> - new = xlog_assign_grant_head_val(cycle, space);
+> - head_val = atomic64_cmpxchg(&head->grant, old, new);
+> - } while (head_val != old);
+> + atomic64_sub(bytes, &head->grant);
+>  }
+> 
+> I actually wondered why these two functions were not implemented as
+> atomic64_{add,sub}.
+
+Because the grant heads were not integer values that can be added
+and subtracted. Log sequence numbers (LSNs) are 64 bit objects made
+up of two discrete 32 bit values. Essentially the upper 32 bits
+counts the number of overflows of the fixed size space the lower 32
+bits accounts.
+
+The lower 32 bits matches the size of the journal, so will overflow
+at some boundary much lower than 2^32. Hence adding or subtracting
+to a LSN has to handle the space overflow/underflow itself to
+modify the overflow (cycle) counter top 32 bits appropriately.
+
+These calculations cannot be done as a single atomic operation,
+hence the crack/calc/combine/cmpxchg loops to enable them to be done
+without requiring locks in the fast path.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
