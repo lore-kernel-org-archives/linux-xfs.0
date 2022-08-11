@@ -2,152 +2,200 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E19E6C19F2A
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Aug 2022 13:02:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AE9AC25B0D
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Aug 2022 15:38:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235129AbiHKNCK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Aug 2022 09:02:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48330 "EHLO
+        id S236095AbiHKPiw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Aug 2022 11:38:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234456AbiHKNCK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Aug 2022 09:02:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B68554F69E
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Aug 2022 06:02:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1660222927;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FJdeEhDHWFr1dPxUpOHMNDdpxPpgUciIwe5FLalH2qk=;
-        b=C1fC5nf13B2XtJkDolq4Ow0BZYNTfRzpxUIqQeh92zdXfJ+LwQfh0QC8zp+hRB/NCsd0E8
-        2s8AYNZ3mm1b4aSuxJGR06FsXGa3ap84qP6gvnKobKXyHPHO9DxSRlObWYUp19cXuxUuCe
-        jgaYRlOV35osnKgpmooOgt0CVizgJXM=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-168-qNEhmLsXOP-7mE_GB6ovqw-1; Thu, 11 Aug 2022 09:02:05 -0400
-X-MC-Unique: qNEhmLsXOP-7mE_GB6ovqw-1
-Received: by mail-ed1-f72.google.com with SMTP id w17-20020a056402269100b0043da2189b71so10659035edd.6
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Aug 2022 06:02:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc;
-        bh=FJdeEhDHWFr1dPxUpOHMNDdpxPpgUciIwe5FLalH2qk=;
-        b=WMM4hNel7IdM/t+sKv9Khfc4z4Se6Jw+anJpUl1O9PyrVaPlUJbkZ/cML2x9Iws9CE
-         7EaGxtjDBOt6I1Gq+yRa07Rg8enspMGb453FzRI8qpPpBg/mA2x4sLM1iPbytdEnTd6h
-         Cfw8rYEKdVgs7htjxpulFUivz7HLdnVeMkcnks1WQYa/a58wUD2wId6oKeKqLeEV+8Ew
-         TR8uX1c/QzZHmLrH0VGu3SkJelrcKc3Is1ZlaAUXGf1pOKNi73rZkVYml31NrRSNOQpg
-         xTODJdCRCIYxvwtRQQ1NGgXsYra4hMtloLW9vsfPYF5gTRhTaXkvVf+B9i5TikeNjMQH
-         6AsA==
-X-Gm-Message-State: ACgBeo2kNX/jRU48XBzTbYCi+70eBpdltVAaB0kbCWmRuGJb9Jzc035r
-        IeXlnVqTg28cPN4vubR2una+QLYIaG2AtQuQkGrU5LNRHlabCQ1p9HfKUdNc7YUt0iPN3A2M6kM
-        iBJrSRgO+Yu9cNenMwpnf
-X-Received: by 2002:a05:6402:194e:b0:442:c81c:ca25 with SMTP id f14-20020a056402194e00b00442c81cca25mr6933522edz.137.1660222924310;
-        Thu, 11 Aug 2022 06:02:04 -0700 (PDT)
-X-Google-Smtp-Source: AA6agR5iw/QjdgrjadGt7oZSIklzIdS5GRz6KjlHAX+riTPK8HR2GWDY9qyovi0NIWJXlqUJP8WttQ==
-X-Received: by 2002:a05:6402:194e:b0:442:c81c:ca25 with SMTP id f14-20020a056402194e00b00442c81cca25mr6933506edz.137.1660222924017;
-        Thu, 11 Aug 2022 06:02:04 -0700 (PDT)
-Received: from orion (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
-        by smtp.gmail.com with ESMTPSA id f12-20020a17090631cc00b0072ee9790894sm3454532ejf.197.2022.08.11.06.02.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Aug 2022 06:02:03 -0700 (PDT)
-Date:   Thu, 11 Aug 2022 15:02:01 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Anthony Iliopoulos <ailiop@suse.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfsdump: remove BMV_IF_NO_DMAPI_READ flag
-Message-ID: <20220811130201.c52a6vfejtzb2cw6@orion>
-References: <20210331162617.17604-2-ailiop@suse.com>
+        with ESMTP id S236302AbiHKPiZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Aug 2022 11:38:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93C449926E;
+        Thu, 11 Aug 2022 08:34:04 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2A46C6164C;
+        Thu, 11 Aug 2022 15:34:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29DEFC433D6;
+        Thu, 11 Aug 2022 15:34:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660232043;
+        bh=LxSm56Y73RiuLft9uw9gT6r3ldbY9uWCMCForicZMqI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=UyN/yRsA6AV4vuzxCvi675Q5p6+/tPxbLJ132NT0/PQBN0bw7ToXr84J3rGK7eTd7
+         Dea+7jQt1GbAjKIuS4IuEn2mEf0rn3l+zPp1HeNYYEur+ZOh8Y6r+BSZNP/41fezQB
+         fGDz7FJmUrbyb+Hcrig7AAaJ4rsJCaHVrxQLH90YILlXlNHDp6AavctioKIdho2We4
+         x8lTrn2GJe74WptAATRvCN6GV7vHsmc2p3SBPrRbAwfJvjqwC/K9XTQVFl7Ow3W8Kq
+         3r2qOc6TkRNI9rNyd9/cbxAjwHpqnIit2eT78W8oS5OVCZ5Ll8+XzExWTOPxm8Dnw3
+         0J0ojw+uepQPA==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Chris Mason <clm@fb.com>, Johannes Weiner <hannes@cmpxchg.org>,
+        Domas Mituzas <domas@fb.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, hch@infradead.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.19 054/105] iomap: skip pages past eof in iomap_do_writepage()
+Date:   Thu, 11 Aug 2022 11:27:38 -0400
+Message-Id: <20220811152851.1520029-54-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220811152851.1520029-1-sashal@kernel.org>
+References: <20220811152851.1520029-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210331162617.17604-2-ailiop@suse.com>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Reviving this old patch since changes have been pushed to xfsprogs.
+From: Chris Mason <clm@fb.com>
 
-On Wed, Mar 31, 2021 at 06:26:17PM +0200, Anthony Iliopoulos wrote:
-> Use of the flag has had no effect since kernel commit 288699fecaff
-> ("xfs: drop dmapi hooks") which removed all dmapi related code, so we
-> can remove it.
-> 
-> Given that there are no other flags that need to be specified for the
-> bmap call, convert once instance of it from getbmapx to plain getbmap.
-> 
-> Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
-> ---
-> changes since v1:
->  - convert getbmapx to getbmap
-> 
->  dump/content.c | 1 -
->  dump/inomap.c  | 7 +++----
->  2 files changed, 3 insertions(+), 5 deletions(-)
-> 
-> diff --git a/dump/content.c b/dump/content.c
-> index 75b79220daf6..a40b47101a12 100644
-> --- a/dump/content.c
-> +++ b/dump/content.c
-> @@ -4287,7 +4287,6 @@ init_extent_group_context(jdm_fshandle_t *fshandlep,
->  	gcp->eg_bmap[0].bmv_offset = 0;
->  	gcp->eg_bmap[0].bmv_length = -1;
->  	gcp->eg_bmap[0].bmv_count = BMAP_LEN;
-> -	gcp->eg_bmap[0].bmv_iflags = BMV_IF_NO_DMAPI_READ;
->  	gcp->eg_nextbmapp = &gcp->eg_bmap[1];
->  	gcp->eg_endbmapp = &gcp->eg_bmap[1];
->  	gcp->eg_bmapix = 0;
-> diff --git a/dump/inomap.c b/dump/inomap.c
-> index 85d61c353cf0..f3200be471e0 100644
-> --- a/dump/inomap.c
-> +++ b/dump/inomap.c
-> @@ -1627,7 +1627,7 @@ static off64_t
->  quantity2offset(jdm_fshandle_t *fshandlep, struct xfs_bstat *statp, off64_t qty)
->  {
->  	int fd;
-> -	getbmapx_t bmap[BMAP_LEN];
-> +	struct getbmap bmap[BMAP_LEN];
+[ Upstream commit d58562ca6c992fc5577838d010c8a37401c2a831 ]
 
-This seems ok, but I still think this should be properly initialized here, like:
+iomap_do_writepage() sends pages past i_size through
+folio_redirty_for_writepage(), which normally isn't a problem because
+truncate and friends clean them very quickly.
 
-struct getbmap bmap[BMAP_LEN] = {0};
+When the system has cgroups configured, we can end up in situations
+where one cgroup has almost no dirty pages at all, and other cgroups
+consume the entire background dirty limit.  This is especially common in
+our XFS workloads in production because they have cgroups using O_DIRECT
+for almost all of the IO mixed in with cgroups that do more traditional
+buffered IO work.
 
+We've hit storms where the redirty path hits millions of times in a few
+seconds, on all a single file that's only ~40 pages long.  This leads to
+long tail latencies for file writes because the pdflush workers are
+hogging the CPU from some kworkers bound to the same CPU.
 
->  	off64_t offset;
->  	off64_t offset_next;
->  	off64_t qty_accum;
-> @@ -1647,7 +1647,6 @@ quantity2offset(jdm_fshandle_t *fshandlep, struct xfs_bstat *statp, off64_t qty)
->  	bmap[0].bmv_offset = 0;
->  	bmap[0].bmv_length = -1;
->  	bmap[0].bmv_count = BMAP_LEN;
-> -	bmap[0].bmv_iflags = BMV_IF_NO_DMAPI_READ;
->  	bmap[0].bmv_entries = -1;
->  	fd = jdm_open(fshandlep, statp, O_RDONLY);
->  	if (fd < 0) {
-> @@ -1662,7 +1661,7 @@ quantity2offset(jdm_fshandle_t *fshandlep, struct xfs_bstat *statp, off64_t qty)
->  		int eix;
->  		int rval;
->  
-> -		rval = ioctl(fd, XFS_IOC_GETBMAPX, bmap);
-> +		rval = ioctl(fd, XFS_IOC_GETBMAP, bmap);
->  		if (rval) {
->  			mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP, _(
->  			      "could not read extent map for ino %llu: %s\n"),
-> @@ -1679,7 +1678,7 @@ quantity2offset(jdm_fshandle_t *fshandlep, struct xfs_bstat *statp, off64_t qty)
->  		}
->  
->  		for (eix = 1; eix <= bmap[0].bmv_entries; eix++) {
-> -			getbmapx_t *bmapp = &bmap[eix];
-> +			struct getbmap *bmapp = &bmap[eix];
->  			off64_t qty_new;
->  			if (bmapp->bmv_block == -1) {
->  				continue; /* hole */
-> -- 
-> 2.31.0
-> 
+Reproducing this on 5.18 was tricky because 869ae85dae ("xfs: flush new
+eof page on truncate...") ends up writing/waiting most of these dirty pages
+before truncate gets a chance to wait on them.
 
+The actual repro looks like this:
+
+/*
+ * run me in a cgroup all alone.  Start a second cgroup with dd
+ * streaming IO into the block device.
+ */
+int main(int ac, char **av) {
+	int fd;
+	int ret;
+	char buf[BUFFER_SIZE];
+	char *filename = av[1];
+
+	memset(buf, 0, BUFFER_SIZE);
+
+	if (ac != 2) {
+		fprintf(stderr, "usage: looper filename\n");
+		exit(1);
+	}
+	fd = open(filename, O_WRONLY | O_CREAT, 0600);
+	if (fd < 0) {
+		err(errno, "failed to open");
+	}
+	fprintf(stderr, "looping on %s\n", filename);
+	while(1) {
+		/*
+		 * skip past page 0 so truncate doesn't write and wait
+		 * on our extent before changing i_size
+		 */
+		ret = lseek(fd, 8192, SEEK_SET);
+		if (ret < 0)
+			err(errno, "lseek");
+		ret = write(fd, buf, BUFFER_SIZE);
+		if (ret != BUFFER_SIZE)
+			err(errno, "write failed");
+		/* start IO so truncate has to wait after i_size is 0 */
+		ret = sync_file_range(fd, 16384, 4095, SYNC_FILE_RANGE_WRITE);
+		if (ret < 0)
+			err(errno, "sync_file_range");
+		ret = ftruncate(fd, 0);
+		if (ret < 0)
+			err(errno, "truncate");
+		usleep(1000);
+	}
+}
+
+And this bpftrace script will show when you've hit a redirty storm:
+
+kretprobe:xfs_vm_writepages {
+    delete(@dirty[pid]);
+}
+
+kprobe:xfs_vm_writepages {
+    @dirty[pid] = 1;
+}
+
+kprobe:folio_redirty_for_writepage /@dirty[pid] > 0/ {
+    $inode = ((struct folio *)arg1)->mapping->host->i_ino;
+    @inodes[$inode] = count();
+    @redirty++;
+    if (@redirty > 90000) {
+        printf("inode %d redirty was %d", $inode, @redirty);
+        exit();
+    }
+}
+
+This patch has the same number of failures on xfstests as unpatched 5.18:
+Failures: generic/648 xfs/019 xfs/050 xfs/168 xfs/299 xfs/348 xfs/506
+xfs/543
+
+I also ran it through a long stress of multiple fsx processes hammering.
+
+(Johannes Weiner did significant tracing and debugging on this as well)
+
+Signed-off-by: Chris Mason <clm@fb.com>
+Co-authored-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+Reported-by: Domas Mituzas <domas@fb.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/iomap/buffered-io.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index d2a9f699e17e..02b8bb46e0b3 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1478,10 +1478,10 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
+ 		pgoff_t end_index = isize >> PAGE_SHIFT;
+ 
+ 		/*
+-		 * Skip the page if it's fully outside i_size, e.g. due to a
+-		 * truncate operation that's in progress. We must redirty the
+-		 * page so that reclaim stops reclaiming it. Otherwise
+-		 * iomap_release_folio() is called on it and gets confused.
++		 * Skip the page if it's fully outside i_size, e.g.
++		 * due to a truncate operation that's in progress.  We've
++		 * cleaned this page and truncate will finish things off for
++		 * us.
+ 		 *
+ 		 * Note that the end_index is unsigned long.  If the given
+ 		 * offset is greater than 16TB on a 32-bit system then if we
+@@ -1496,7 +1496,7 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
+ 		 */
+ 		if (folio->index > end_index ||
+ 		    (folio->index == end_index && poff == 0))
+-			goto redirty;
++			goto unlock;
+ 
+ 		/*
+ 		 * The page straddles i_size.  It must be zeroed out on each
+@@ -1514,6 +1514,7 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
+ 
+ redirty:
+ 	folio_redirty_for_writepage(wbc, folio);
++unlock:
+ 	folio_unlock(folio);
+ 	return 0;
+ }
 -- 
-Carlos
+2.35.1
 
