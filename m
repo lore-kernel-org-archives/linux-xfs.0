@@ -2,67 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F38F9C3F6B0
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Aug 2022 05:58:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED92C19F2D
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Aug 2022 07:04:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229924AbiHKF6S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Aug 2022 01:58:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42360 "EHLO
+        id S233563AbiHKHEf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Aug 2022 03:04:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229786AbiHKF6S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Aug 2022 01:58:18 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 795F879A63;
-        Wed, 10 Aug 2022 22:58:16 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 2AF2968AA6; Thu, 11 Aug 2022 07:58:12 +0200 (CEST)
-Date:   Thu, 11 Aug 2022 07:58:11 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Johannes Weiner <hannes@cmpxchg.org>,
-        Christoph Hellwig <hch@lst.de>, Mel Gorman <mgorman@suse.de>,
-        Jan Kara <jack@suse.cz>, Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Johannes Thumshirn <jth@kernel.org>, cluster-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: remove iomap_writepage v2
-Message-ID: <20220811055811.GA12359@lst.de>
-References: <20220719041311.709250-1-hch@lst.de> <20220728111016.uwbaywprzkzne7ib@quack3> <20220729092216.GE3493@suse.de> <20220729141145.GA31605@lst.de> <Yufx5jpyJ+zcSJ4e@cmpxchg.org> <YvQYjpDHH5KckCrw@casper.infradead.org>
+        with ESMTP id S234318AbiHKHEe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Aug 2022 03:04:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC1D38E46D
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Aug 2022 00:04:33 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 87123614B3
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Aug 2022 07:04:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E4FF9C43140
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Aug 2022 07:04:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660201472;
+        bh=6FE/UndFtS7Zksqpo6sBgHmtIEhQJjFSvQ/HA/QKZ5k=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=dWyCjwHRiWXLlPi95+pf7oxNbgxxJI110oIntnaGbj/+NT3YdOggYWPpiRLX9wiZK
+         QMkPBvCPPJTSxgqgeVZ8n+sy2cx6MwKH9eQaekxywqBfiRta/P1At647spd4PH7bQp
+         3s5ZWlh+2GbvxbNs6ZSLK2cX2pfKkIHL/d1qDHwRPyci6aRUSlw9SGwqSojmXaEKHB
+         sfjLNlnaAQv6r7QzrCs3n7pGVnmsTWKVWgtC7mlgtAuUFJ4zMvA51wMzKpSoJcuss7
+         USfEajJp2vdp3mmqvogOOkzdz89+OtvZBy7E/XihlgL0luNis2tkz37AUIwtsiuL0v
+         dp3wIt9DO4Zow==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id D4065C433E9; Thu, 11 Aug 2022 07:04:32 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216343] XFS: no space left in xlog cause system hang
+Date:   Thu, 11 Aug 2022 07:04:32 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: zhoukete@126.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_severity
+Message-ID: <bug-216343-201763-naK1B7R3v7@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216343-201763@https.bugzilla.kernel.org/>
+References: <bug-216343-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YvQYjpDHH5KckCrw@casper.infradead.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 10, 2022 at 09:43:58PM +0100, Matthew Wilcox wrote:
-> To avoid duplicating work with you or Christoph ... it seems like the
-> plan is to kill ->writepage entirely soon, so there's no point in me
-> doing a sweep of all the filesystems to convert ->writepage to
-> ->write_folio, correct?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
 
-While I won't commit to concrete definition of "soon" I think that is
-the general plan, and I don't think converting ->writepage to
-->write_folio is needed.
+zhoukete@126.com changed:
 
-> I assume the plan for filesystems which have a writepage but don't have
-> a ->writepages (9p, adfs, affs, bfs, ecryptfs, gfs2, hostfs, jfs, minix,
-> nilfs2, ntfs, ocfs2, reiserfs, sysv, ubifs, udf, ufs, vboxsf) is to give
-> them a writepages,
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+           Severity|normal                      |high
 
-and  ->migrate_folio if missing, yes.
+--=20
+You may reply to this email to add a comment.
 
-> modelled on iomap_writepages().  Seems that adding
-> a block_writepages() might be a useful thing for me to do?
-
-We have mpage_writepages which basically is the ->writepages counterpart
-to block_write_full_page.  The only caveat is of course that it can
-use multi-block mappings from the get_bock callback, so we need to make
-sure the file systems don't do anything stupid there.
+You are receiving this mail because:
+You are watching the assignee of the bug.=
