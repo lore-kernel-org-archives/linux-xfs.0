@@ -2,114 +2,145 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16EA4C3F6B0
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Aug 2022 14:00:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3718CC00140
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Aug 2022 18:51:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232791AbiHLOAd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 12 Aug 2022 10:00:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46902 "EHLO
+        id S238393AbiHLSvd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 12 Aug 2022 14:51:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232085AbiHLOAc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Aug 2022 10:00:32 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E03EA32B9B;
-        Fri, 12 Aug 2022 07:00:30 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S238367AbiHLSvb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Aug 2022 14:51:31 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8686ADEA7
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Aug 2022 11:51:30 -0700 (PDT)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 75C513F7DF;
-        Fri, 12 Aug 2022 14:00:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1660312829;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=mmMcxR3luXAAfZt0qQrsQU3WBRdPesjPfp6BxoGMRiI=;
-        b=pXBfwu6vovlebYiTuPDJU5B3y+fUhFb5MmDxrm9WhviztSGTbnoOLz7O7/nEYSHx23GQHJ
-        Xq6DOPbZwYKWJKwrT7GrizWOjt96bp6m2oISjaLfjyKtUFOpT8GuLXhdwdDnCZlcbqGIk9
-        JusymBeXY+tzH39FGQQeNxXGh1A+AGo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1660312829;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=mmMcxR3luXAAfZt0qQrsQU3WBRdPesjPfp6BxoGMRiI=;
-        b=6uCtk6YNqCWUvLTpVyDa++OKjN5XsbhWcBGJ9RUa5c2KtvQcKEI9bV+dO2d+7ocOtyD1ld
-        UgJF/LSko6Qm3RBg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 348CE13AAE;
-        Fri, 12 Aug 2022 14:00:29 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id VbQ4C/1c9mJ5PAAAMHmgww
-        (envelope-from <pvorel@suse.cz>); Fri, 12 Aug 2022 14:00:29 +0000
-Date:   Fri, 12 Aug 2022 16:00:26 +0200
-From:   Petr Vorel <pvorel@suse.cz>
-To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>,
-        linux-xfs@vger.kernel.org
-Cc:     ltp@lists.linux.it
-Subject: Re: LTP test df01.sh detected different size of loop device in v5.19
-Message-ID: <YvZc+jvRdTLn8rus@pevik>
-Reply-To: Petr Vorel <pvorel@suse.cz>
-References: <YvZTpQFinpkB06p9@pevik>
- <YvZUfq+3HYwXEncw@pevik>
+        by sandeen.net (Postfix) with ESMTPSA id 0AB6B79E0
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Aug 2022 13:50:16 -0500 (CDT)
+Message-ID: <1a4a75bc-22a6-9f87-121b-b97de15d35f3@sandeen.net>
+Date:   Fri, 12 Aug 2022 13:51:28 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YvZUfq+3HYwXEncw@pevik>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.12.0
+Content-Language: en-US
+To:     xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs-5.19.0 released
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------P6dxwvVbFHI3JyXrsy3vOL10"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[ Cc LTP ML, sorry for the noise ]
-Petr
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------P6dxwvVbFHI3JyXrsy3vOL10
+Content-Type: multipart/mixed; boundary="------------9uNCFJub5UAJIibYF0B1SphQ";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Message-ID: <1a4a75bc-22a6-9f87-121b-b97de15d35f3@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs-5.19.0 released
 
-> > Hi all,
+--------------9uNCFJub5UAJIibYF0B1SphQ
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> > LTP test df01.sh found different size of loop device in v5.19.
-> > Test uses loop device formatted on various file systems, only XFS fails.
-> > It randomly fails during verifying that loop size usage changes:
+Hi folks,
 
-> > grep ${TST_DEVICE} output | grep -q "${total}.*${used}" [1]
+The xfsprogs repository at:
 
-> > How to reproduce:
-> > # PATH="/opt/ltp/testcases/bin:$PATH" df01.sh -f xfs # it needs several tries to hit
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> > df saved output:
-> > Filesystem     1024-blocks    Used Available Capacity Mounted on
-> > ...
-> > /dev/loop0          256672   16208    240464       7% /tmp/LTP_df01.1kRwoUCCR7/mntpoint
-> > df output:
-> > Filesystem     1024-blocks    Used Available Capacity Mounted on
-> > ...
-> > tmpfs               201780       0    201780       0% /run/user/0
-> > /dev/loop0          256672   15160    241512       6% /tmp/LTP_df01.1kRwoUCCR7/mntpoint
-> > => different size
-> > df01 4 TFAIL: 'df -k -P' failed, not expected.
+has just been updated and tagged for a v5.19.0 release. The condensed cha=
+ngelog
+since v5.18.0 is below.
 
-> > Also 'df -T -P' fails.
+Tarballs are available at:
 
-> > It might be a false positive / bug in the test, but it's at least a changed behavior.
-> > I was able to reproduce it on v5.19 distro kernels (openSUSE, Debian).
-> > I haven't bisected (yet), nor checked Jens' git tree (maybe it has been fixed).
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.19.0.ta=
+r.gz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.19.0.ta=
+r.xz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.19.0.ta=
+r.sign
 
-> Forget to note dmesg "operation not supported error" warning on *each* run (even
-> successful) on affected v5.19:
-> [ 5097.594021] loop0: detected capacity change from 0 to 524288
-> [ 5097.658201] operation not supported error, dev loop0, sector 262192 op 0x9:(WRITE_ZEROES) flags 0x8000800 phys_seg 0 prio class 0
-> [ 5097.675670] XFS (loop0): Mounting V5 Filesystem
-> [ 5097.681668] XFS (loop0): Ending clean mount
-> [ 5097.956445] XFS (loop0): Unmounting Filesystem
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-> Kind regards,
-> Petr
+The new head of the master branch is commit:
 
-> > Kind regards,
-> > Petr
+5652dc4f xfsprogs: Release v5.19.0
 
-> > [1] https://github.com/linux-test-project/ltp/blob/f42f6f3b4671f447b743afe8612917ba4362b8a6/testcases/commands/df/df01.sh#L103-L110
+xfsprogs-5.19.0 (12 Aug 2022)
+        - xfs_repair: fix printf format specifiers on 32-bit (Darrick J. =
+Wong)
+
+xfsprogs-5.19.0-rc1 (05 Aug 2022)
+        - libxfs: last bit of kernel sync
+        - libxfs: Fix MAP_SYNC build failure on MIPS/musl (Darrick J. Won=
+g)
+        - mkfs: stop allowing tiny filesystems (Darrick J. Wong)
+        - mkfs: complain about impossible log size constraints (Darrick J=
+=2E Wong)
+        - mkfs: ignore stripe geometry for small filesystems (Darrick J. =
+Wong)
+        - mkfs: update manpage of bigtime and inobtcount (Zhang Boyang)
+        - mkfs: document large extent count in --help screen (Darrick J. =
+Wong)
+        - mkfs: fix segfault with incorrect options (Darrick J. Wong)
+        - xfs_repair: Support upgrade to large extent counters (Chandan B=
+abu R)
+        - xfs_repair: check geometry before upgrades (Darrick J. Wong)
+        - xfs_repair: ignore empty xattr leaf blocks (Darrick J. Wong)
+        - xfs_repair: check rt summary/bitmap vs observations (Darrick J.=
+ Wong)
+        - xfs_repair: check free rt extent count (Darrick J. Wong)
+        - xfs_repair: detect/fix changed fields w/ nrext64 (Darrick J. Wo=
+ng)
+        - xfs_repair: clear DIFLAG2_NREXT64 w/o fs support (Darrick J. Wo=
+ng)
+        - xfs_repair: ignore log_incompat inconsistencies (Darrick J. Won=
+g)s
+        - xfs_repair: rewrite secondary supers w/ needsrepair (Darrick J.=
+ Wong)
+        - xfs_db: id the minlogsize transaction reservation (Darrick J. W=
+ong)
+
+xfsprogs-5.19.0-rc0 (22 Jun 2022)
+        - libxfs changes merged from kernels 5.18 and 5.19-rc
+        - mkfs: option to create with large extent counters (Chandan Babu=
+ R)
+        - xfs_info: Report NREXT64 feature status (Chandan Babu R)
+        - xfs_logprint: Log item printing for ATTRI & ATTRD (Allison Hend=
+erson)
+
+
+--------------9uNCFJub5UAJIibYF0B1SphQ--
+
+--------------P6dxwvVbFHI3JyXrsy3vOL10
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmL2oTAFAwAAAAAACgkQIK4WkuE93uB3
+Ag/5AZQQ1BBtfL9q//JUU70xRkxeUSwLySqEcEFBMkoHd/bZGPwsZ4LqiWucam8HEeObKt2XebwN
+jxFazlKixqYvgZOO9XYim24ruY/0SG3kdiUswvKFTCVNOcF2GOyNp5uLn3N3IvCB0/bhWSwPsRjp
+dg2nyada2Fb1xZLoaLBJuruhGicbuBponQFc+W3WKD3gO+pqzvsbDQHBwB3jG2AWF6ci1ePQn5tT
+AH4YOmFvzdFiA925p1I4y2KUunpamkXmCTJF1NUfxVbnpRVsoTK5qC6Rh8IlYNtUzZfL2Iuv9jns
+vTa6ijrOiXZ1xznrEt6PGByYMv0PvOgyoiaHH6DNwNtgL+kiXOQTq1vusw4/PTbLjgCKaUwoHJd2
+P4anyKs/oImjHFq7A+H5m3j2J7FEmzdugTuVyyHG4xufccss3JWGF5QGiiDj1t52gOX30YAncVHC
+mrSlfK39IkCuyKhDBDRNPidEjwv/8Eyd+H1FJRyCF9cZHjxl0Cm1fNKGJaodKPtWvukq2Z35Hq21
+wUxeK9hAmidJpfNeC4WVFfMlK4Cv9B4L+n2mkLT/nVNLCJBJeIM605CSYZyTACVY35WI+FML71uu
+9x8xVk1oiqmJ3artvdO+fMCjedBDaGX0CvjTmiJvgO/1tNTBDyFBzPdaO3I6risv2MbM9UHkAkuD
+Ok4=
+=NpDS
+-----END PGP SIGNATURE-----
+
+--------------P6dxwvVbFHI3JyXrsy3vOL10--
