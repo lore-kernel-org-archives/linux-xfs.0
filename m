@@ -2,145 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3718CC00140
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Aug 2022 18:51:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FBDBC25B0D
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Aug 2022 15:59:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238393AbiHLSvd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 12 Aug 2022 14:51:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53146 "EHLO
+        id S239939AbiHMP7Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 13 Aug 2022 11:59:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238367AbiHLSvb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Aug 2022 14:51:31 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8686ADEA7
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Aug 2022 11:51:30 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        with ESMTP id S239594AbiHMP7Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Aug 2022 11:59:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A0EDA474;
+        Sat, 13 Aug 2022 08:59:24 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0AB6B79E0
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Aug 2022 13:50:16 -0500 (CDT)
-Message-ID: <1a4a75bc-22a6-9f87-121b-b97de15d35f3@sandeen.net>
-Date:   Fri, 12 Aug 2022 13:51:28 -0500
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 075E360F00;
+        Sat, 13 Aug 2022 15:59:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E01AC433C1;
+        Sat, 13 Aug 2022 15:59:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660406363;
+        bh=SbHaHSSilQDE5u0TUx72flLnNzytCJ/8QABS4FwynoE=;
+        h=Date:From:To:Cc:Subject:From;
+        b=kEF85cnOEKUkRVLT8kpIgydK8FnZmVteiQ2wpj0c3laEKeaBozp4FjY21wn9Iz0SA
+         hLVSFyins1SeX47risdIom3EmPzSm+t+5Nt9ogr9QnKGOpF+8AME/S/RcMmvgl26mK
+         ztr1VVqNkeZfNdv8NZ6DrArB+OtxTExXIJTrdmuhU2LO3kYpvbIp1Fl8GNno1xdAmQ
+         WsLkUzm7PjPBoqmPyZScwIBQlxZ4hqnsz3ItBfcFkgApwNBLCRQjRowc9fA08r6TMm
+         i4Soxw0oNtryivLXgAx5I3qFQyxsyRcePdSyqat3ItG0HyLgsfiYZW7PCI4u027Vby
+         EKIIuSvT1NaNg==
+Date:   Sat, 13 Aug 2022 08:59:22 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de, fstests <fstests@vger.kernel.org>
+Subject: [GIT PULL] xfs: new code for 6.0, part 2
+Message-ID: <YvfKWgGHTQVxBFBe@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.12.0
-Content-Language: en-US
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs-5.19.0 released
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------P6dxwvVbFHI3JyXrsy3vOL10"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------P6dxwvVbFHI3JyXrsy3vOL10
-Content-Type: multipart/mixed; boundary="------------9uNCFJub5UAJIibYF0B1SphQ";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <1a4a75bc-22a6-9f87-121b-b97de15d35f3@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs-5.19.0 released
+Hi Linus,
 
---------------9uNCFJub5UAJIibYF0B1SphQ
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Please pull this second branch containing new XFS code for 6.0.  There's
+not a lot time around, just the usual bug fixes and corrections for
+missing error returns.
 
-Hi folks,
+As usual, I did a test-merge with upstream master as of a few minutes
+ago, and it completed flawlessly.  Please let me know if you encounter
+any problems.
 
-The xfsprogs repository at:
+--D
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+The following changes since commit 5e9466a5d0604e20082d828008047b3165592caf:
 
-has just been updated and tagged for a v5.19.0 release. The condensed cha=
-ngelog
-since v5.18.0 is below.
+  xfs: delete extra space and tab in blank line (2022-07-31 09:21:27 -0700)
 
-Tarballs are available at:
+are available in the Git repository at:
 
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.19.0.ta=
-r.gz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.19.0.ta=
-r.xz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.19.0.ta=
-r.sign
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.20-merge-8
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
+for you to fetch changes up to 031d166f968efba6e4f091ff75d0bb5206bb3918:
 
-The new head of the master branch is commit:
+  xfs: fix inode reservation space for removing transaction (2022-08-10 17:43:49 -0700)
 
-5652dc4f xfsprogs: Release v5.19.0
+----------------------------------------------------------------
+New code for 6.0:
+ - Return error codes from block device flushes to userspace.
+ - Fix a deadlock between reclaim and mount time quotacheck.
+ - Fix an unnecessary ENOSPC return when doing COW on a filesystem with
+   severe free space fragmentation.
+ - Fix a miscalculation in the transaction reservation computations for
+   file removal operations.
 
-xfsprogs-5.19.0 (12 Aug 2022)
-        - xfs_repair: fix printf format specifiers on 32-bit (Darrick J. =
-Wong)
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-xfsprogs-5.19.0-rc1 (05 Aug 2022)
-        - libxfs: last bit of kernel sync
-        - libxfs: Fix MAP_SYNC build failure on MIPS/musl (Darrick J. Won=
-g)
-        - mkfs: stop allowing tiny filesystems (Darrick J. Wong)
-        - mkfs: complain about impossible log size constraints (Darrick J=
-=2E Wong)
-        - mkfs: ignore stripe geometry for small filesystems (Darrick J. =
-Wong)
-        - mkfs: update manpage of bigtime and inobtcount (Zhang Boyang)
-        - mkfs: document large extent count in --help screen (Darrick J. =
-Wong)
-        - mkfs: fix segfault with incorrect options (Darrick J. Wong)
-        - xfs_repair: Support upgrade to large extent counters (Chandan B=
-abu R)
-        - xfs_repair: check geometry before upgrades (Darrick J. Wong)
-        - xfs_repair: ignore empty xattr leaf blocks (Darrick J. Wong)
-        - xfs_repair: check rt summary/bitmap vs observations (Darrick J.=
- Wong)
-        - xfs_repair: check free rt extent count (Darrick J. Wong)
-        - xfs_repair: detect/fix changed fields w/ nrext64 (Darrick J. Wo=
-ng)
-        - xfs_repair: clear DIFLAG2_NREXT64 w/o fs support (Darrick J. Wo=
-ng)
-        - xfs_repair: ignore log_incompat inconsistencies (Darrick J. Won=
-g)s
-        - xfs_repair: rewrite secondary supers w/ needsrepair (Darrick J.=
- Wong)
-        - xfs_db: id the minlogsize transaction reservation (Darrick J. W=
-ong)
+----------------------------------------------------------------
+Chandan Babu R (1):
+      xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
 
-xfsprogs-5.19.0-rc0 (22 Jun 2022)
-        - libxfs changes merged from kernels 5.18 and 5.19-rc
-        - mkfs: option to create with large extent counters (Chandan Babu=
- R)
-        - xfs_info: Report NREXT64 feature status (Chandan Babu R)
-        - xfs_logprint: Log item printing for ATTRI & ATTRD (Allison Hend=
-erson)
+Darrick J. Wong (2):
+      xfs: check return codes when flushing block devices
+      xfs: fix intermittent hang during quotacheck
 
+hexiaole (1):
+      xfs: fix inode reservation space for removing transaction
 
---------------9uNCFJub5UAJIibYF0B1SphQ--
-
---------------P6dxwvVbFHI3JyXrsy3vOL10
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmL2oTAFAwAAAAAACgkQIK4WkuE93uB3
-Ag/5AZQQ1BBtfL9q//JUU70xRkxeUSwLySqEcEFBMkoHd/bZGPwsZ4LqiWucam8HEeObKt2XebwN
-jxFazlKixqYvgZOO9XYim24ruY/0SG3kdiUswvKFTCVNOcF2GOyNp5uLn3N3IvCB0/bhWSwPsRjp
-dg2nyada2Fb1xZLoaLBJuruhGicbuBponQFc+W3WKD3gO+pqzvsbDQHBwB3jG2AWF6ci1ePQn5tT
-AH4YOmFvzdFiA925p1I4y2KUunpamkXmCTJF1NUfxVbnpRVsoTK5qC6Rh8IlYNtUzZfL2Iuv9jns
-vTa6ijrOiXZ1xznrEt6PGByYMv0PvOgyoiaHH6DNwNtgL+kiXOQTq1vusw4/PTbLjgCKaUwoHJd2
-P4anyKs/oImjHFq7A+H5m3j2J7FEmzdugTuVyyHG4xufccss3JWGF5QGiiDj1t52gOX30YAncVHC
-mrSlfK39IkCuyKhDBDRNPidEjwv/8Eyd+H1FJRyCF9cZHjxl0Cm1fNKGJaodKPtWvukq2Z35Hq21
-wUxeK9hAmidJpfNeC4WVFfMlK4Cv9B4L+n2mkLT/nVNLCJBJeIM605CSYZyTACVY35WI+FML71uu
-9x8xVk1oiqmJ3artvdO+fMCjedBDaGX0CvjTmiJvgO/1tNTBDyFBzPdaO3I6risv2MbM9UHkAkuD
-Ok4=
-=NpDS
------END PGP SIGNATURE-----
-
---------------P6dxwvVbFHI3JyXrsy3vOL10--
+ fs/xfs/libxfs/xfs_trans_resv.c |   2 +-
+ fs/xfs/xfs_file.c              |  22 +++--
+ fs/xfs/xfs_log.c               |  12 ++-
+ fs/xfs/xfs_qm.c                |   5 ++
+ fs/xfs/xfs_reflink.c           | 198 +++++++++++++++++++++++++++++++++--------
+ 5 files changed, 193 insertions(+), 46 deletions(-)
