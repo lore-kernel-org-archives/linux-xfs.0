@@ -2,99 +2,36 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FBDBC25B0D
-	for <linux-xfs@archiver.kernel.org>; Sat, 13 Aug 2022 15:59:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A5FC19F2D
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Aug 2022 17:23:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239939AbiHMP7Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 13 Aug 2022 11:59:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44578 "EHLO
+        id S239828AbiHMRXF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 13 Aug 2022 13:23:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239594AbiHMP7Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Aug 2022 11:59:25 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A0EDA474;
-        Sat, 13 Aug 2022 08:59:24 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 075E360F00;
-        Sat, 13 Aug 2022 15:59:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E01AC433C1;
-        Sat, 13 Aug 2022 15:59:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660406363;
-        bh=SbHaHSSilQDE5u0TUx72flLnNzytCJ/8QABS4FwynoE=;
-        h=Date:From:To:Cc:Subject:From;
-        b=kEF85cnOEKUkRVLT8kpIgydK8FnZmVteiQ2wpj0c3laEKeaBozp4FjY21wn9Iz0SA
-         hLVSFyins1SeX47risdIom3EmPzSm+t+5Nt9ogr9QnKGOpF+8AME/S/RcMmvgl26mK
-         ztr1VVqNkeZfNdv8NZ6DrArB+OtxTExXIJTrdmuhU2LO3kYpvbIp1Fl8GNno1xdAmQ
-         WsLkUzm7PjPBoqmPyZScwIBQlxZ4hqnsz3ItBfcFkgApwNBLCRQjRowc9fA08r6TMm
-         i4Soxw0oNtryivLXgAx5I3qFQyxsyRcePdSyqat3ItG0HyLgsfiYZW7PCI4u027Vby
-         EKIIuSvT1NaNg==
-Date:   Sat, 13 Aug 2022 08:59:22 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de, fstests <fstests@vger.kernel.org>
-Subject: [GIT PULL] xfs: new code for 6.0, part 2
-Message-ID: <YvfKWgGHTQVxBFBe@magnolia>
+        with ESMTP id S235606AbiHMRXE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Aug 2022 13:23:04 -0400
+Received: from cloudhost-4892687.us-midwest-2.nxcli.net (cloudhost-4892687.us-midwest-2.nxcli.net [199.189.224.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3048EEE13
+        for <linux-xfs@vger.kernel.org>; Sat, 13 Aug 2022 10:23:04 -0700 (PDT)
+Received: (qmail 9765 invoked by uid 10064); 13 Aug 2022 17:23:03 +0000
+To:     linux-xfs@vger.kernel.org
+Subject: =?us-ascii?Q?Crypto.com:_Investing_in_Cryptocurrency_Makes_M?=  =?us-ascii?Q?any_People_Millionaires?=
+X-PHP-Originating-Script: 10064:PHPMailer.php
+Date:   Sat, 13 Aug 2022 17:23:03 +0000
+From:   Construction <info@yourdomain.com>
+Reply-To: info@yourdomain.com
+Message-ID: <EKPVfRuQjFKZqFrn27sEsPCYcTJMh1hZdTDcCgOgI8@acadianaworkforce.org>
+X-Mailer: PHPMailer 6.6.0 (https://github.com/PHPMailer/PHPMailer)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+Message Body:
+$250 for 5 minutes on cryptocurrency http://news-kansas.amitmanjhi.com/DW-4058
 
-Please pull this second branch containing new XFS code for 6.0.  There's
-not a lot time around, just the usual bug fixes and corrections for
-missing error returns.
+--
+This e-mail was sent from a contact form on Construction (http://yourdomain.com/)
 
-As usual, I did a test-merge with upstream master as of a few minutes
-ago, and it completed flawlessly.  Please let me know if you encounter
-any problems.
-
---D
-
-The following changes since commit 5e9466a5d0604e20082d828008047b3165592caf:
-
-  xfs: delete extra space and tab in blank line (2022-07-31 09:21:27 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.20-merge-8
-
-for you to fetch changes up to 031d166f968efba6e4f091ff75d0bb5206bb3918:
-
-  xfs: fix inode reservation space for removing transaction (2022-08-10 17:43:49 -0700)
-
-----------------------------------------------------------------
-New code for 6.0:
- - Return error codes from block device flushes to userspace.
- - Fix a deadlock between reclaim and mount time quotacheck.
- - Fix an unnecessary ENOSPC return when doing COW on a filesystem with
-   severe free space fragmentation.
- - Fix a miscalculation in the transaction reservation computations for
-   file removal operations.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-----------------------------------------------------------------
-Chandan Babu R (1):
-      xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
-
-Darrick J. Wong (2):
-      xfs: check return codes when flushing block devices
-      xfs: fix intermittent hang during quotacheck
-
-hexiaole (1):
-      xfs: fix inode reservation space for removing transaction
-
- fs/xfs/libxfs/xfs_trans_resv.c |   2 +-
- fs/xfs/xfs_file.c              |  22 +++--
- fs/xfs/xfs_log.c               |  12 ++-
- fs/xfs/xfs_qm.c                |   5 ++
- fs/xfs/xfs_reflink.c           | 198 +++++++++++++++++++++++++++++++++--------
- 5 files changed, 193 insertions(+), 46 deletions(-)
