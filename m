@@ -2,91 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 143CCC25B06
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Aug 2022 02:55:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8364EC00140
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Aug 2022 09:18:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231869AbiHOCzW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 14 Aug 2022 22:55:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44702 "EHLO
+        id S231893AbiHOJSg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Aug 2022 05:18:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbiHOCzV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Aug 2022 22:55:21 -0400
-Received: from m15111.mail.126.com (m15111.mail.126.com [220.181.15.111])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B87AEDC8
-        for <linux-xfs@vger.kernel.org>; Sun, 14 Aug 2022 19:55:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=QZVW5
-        aWZ+2PASecqhmZ/TwdS7cieGr9sHQQVtFbAvNc=; b=SsLN2noDLW8/7NBiSvW/t
-        qHH4J+AXZykuRb2SIMltj7TBIGVKr4wK1e4frBtPi4OblfJ97sPhcWsB7Qdlw5AP
-        qdnut52bUBUhmiVyGUmT2oEYXVHWsPUNuzs1xaXRZPc/lzMNMmTpcNtkcd0Iz4ah
-        0gEo5gkcUcDkeE81PugVUg=
-Received: from DESKTOP-G0RBR07.localdomain (unknown [123.150.8.42])
-        by smtp1 (Coremail) with SMTP id C8mowABHZRqEtflimkd+AA--.18004S2;
-        Mon, 15 Aug 2022 10:55:01 +0800 (CST)
-From:   Xiaole He <hexiaole1994@126.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     djwong@kernel.org, hexiaole <hexiaole@kylinos.cn>
-Subject: [PATCH v2] libxfs: fix inode reservation space for removing transaction
-Date:   Mon, 15 Aug 2022 10:54:58 +0800
-Message-Id: <20220815025458.137-1-hexiaole1994@126.com>
-X-Mailer: git-send-email 2.27.0
+        with ESMTP id S231974AbiHOJS1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Aug 2022 05:18:27 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B6DFE222B1
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Aug 2022 02:18:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1660555104;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YzEAatXqK5JK8Pdw/RfxQTXvV1F1gOUlndcdx4iLrdU=;
+        b=YfJvHNPx4HjZ/23YrAVz+Za7sqiQPKG9qw98hvTFBPmOHMuF37WmjUGojPay/lAqdlSMEQ
+        cQQ4n/nb5ahEPpjoGzxsKnvFf3O6xZ/hFcLLqxSyjscK9ZR/QvyynLbMlhq+HoelMAzkNP
+        b10mEmB4qPeRix+XUK7XjeN14rCAoPA=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-446-4s5j3hCVPDimMZSLQoWatg-1; Mon, 15 Aug 2022 05:18:21 -0400
+X-MC-Unique: 4s5j3hCVPDimMZSLQoWatg-1
+Received: by mail-pg1-f200.google.com with SMTP id z18-20020a63d012000000b0041b3478e9a9so2446738pgf.17
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Aug 2022 02:18:21 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc;
+        bh=YzEAatXqK5JK8Pdw/RfxQTXvV1F1gOUlndcdx4iLrdU=;
+        b=Wk7u05ymSNRmbzt7FRV/47qkLif6lXIsOq0QHZVHbctJASCVO0bOb6ZfehZIKt/DvN
+         INQiO27w3WAMfIEaZJIx8OlqJ2ZzBjLD3KsI1R3MjHE1bY6v3x12Xxa71qgb5dS0c/4E
+         qyQ9nSBCPs+WDCMsfH17ZqYjvWDek3FRsW1gd1BSlXMQbQjrlpnbFEAlsO2yuoSgectN
+         D2MakzhKkbnx3KRWc3PpZ6WH0nugF+zBD6N6VgTHwkdb594BPXWDw3G/9cu0GFwVxT+w
+         cxvrvH0Dn8SdIWIgIK0zlqhFWA1Cr7DCeRVFQBN2ECvNKGx7PY89soRNw/1yVks4sfVM
+         J7xA==
+X-Gm-Message-State: ACgBeo2zA3eMCMY+daJo6xz5YmXnKoxGXWZYzXGYVGWCa+e5GSZ001r3
+        kPnJVpkvP330Zq/g2IQTq3GCvNbHZZ3BDyH9xJoCd7hTf1Cqb/sq20MKW6VybVErwV4biUHrBn/
+        BUOkxw2nsiYi6AVayh/39
+X-Received: by 2002:a63:5f86:0:b0:41c:f1:f494 with SMTP id t128-20020a635f86000000b0041c00f1f494mr13512006pgb.51.1660555100406;
+        Mon, 15 Aug 2022 02:18:20 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR4YDWquTXSOMm1jdVzubIv7EShj6C0xfymKBr/e9wAjBfj/MNhGAfZ1BvMKB3jFHoKLk6gs+w==
+X-Received: by 2002:a63:5f86:0:b0:41c:f1:f494 with SMTP id t128-20020a635f86000000b0041c00f1f494mr13511990pgb.51.1660555100054;
+        Mon, 15 Aug 2022 02:18:20 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id d2-20020a631d02000000b0041b823d4179sm5478507pgd.22.2022.08.15.02.18.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 Aug 2022 02:18:19 -0700 (PDT)
+Date:   Mon, 15 Aug 2022 17:18:14 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCHSET v2 0/3] fstests: refactor ext4-specific code
+Message-ID: <20220815091814.eybgwyf4bjg6m4dx@zlang-mailbox>
+References: <166007884125.3276300.15348421560641051945.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: C8mowABHZRqEtflimkd+AA--.18004S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7trW7Zw4rAF45JFy3Gr4fGrg_yoW8GFW5pF
-        n7GF4fCrn5GrySkrs7trnIqrya9ayFkr429r4ktrn3Zw1DJr17try8Kw15tFyrWr4YvF4j
-        vryDAw15uw42va7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jn18kUUUUU=
-X-Originating-IP: [123.150.8.42]
-X-CM-SenderInfo: 5kh0xt5rohimizu6ij2wof0z/1tbihAZeBlx5iyYk-gAAsI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <166007884125.3276300.15348421560641051945.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: hexiaole <hexiaole@kylinos.cn>
+On Tue, Aug 09, 2022 at 02:00:41PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> This series aims to make it so that fstests can install device mapper
+> filters for external log devices.  Before we can do that, however, we
+> need to change fstests to pass the device path of the jbd2 device to
+> mount and mkfs.  Before we can do /that/, refactor all the ext4-specific
+> code out of common/rc into a separate common/ext4 file.
+> 
+> v2: fix _scratch_mkfs_sized for ext4, don't clutter up the outputs
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+> 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
 
-In 'libxfs/xfs_trans_resv.c', the comment for transaction of removing a
-directory entry mentions that there has 2 inode size of space to be
-reserverd, but the actual code only count for 1 inode size:
+Two weeks passed, this patchset is good to me, I'd like to merge this patchset
+with "[PATCH 1/1] dmerror: support external log and realtime devices" together
+this week.
 
-/* libxfs/xfs_trans_resv.c begin */
-/*
- * For removing a directory entry we can modify:
- *    the parent directory inode: inode size
- *    the removed inode: inode size
-...
-xfs_calc_remove_reservation(
-        struct xfs_mount        *mp)
-{
-        return XFS_DQUOT_LOGRES(mp) +
-                xfs_calc_iunlink_add_reservation(mp) +
-                max((xfs_calc_inode_res(mp, 1) +
-...
-/* libxfs/xfs_trans_resv.c end */
+Reviewed-by: Zorro Lang <zlang@redhat.com>
 
-Here only count for 1 inode size to be reserved in
-'xfs_calc_inode_res(mp, 1)', rather than 2.
-
-Signed-off-by: hexiaole <hexiaole@kylinos.cn>
----
-V1 -> V2: djwong: remove redundant code citations
-
- libxfs/xfs_trans_resv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index d4a9f69e..797176d7 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -514,7 +514,7 @@ xfs_calc_remove_reservation(
- {
- 	return XFS_DQUOT_LOGRES(mp) +
- 		xfs_calc_iunlink_add_reservation(mp) +
--		max((xfs_calc_inode_res(mp, 1) +
-+		max((xfs_calc_inode_res(mp, 2) +
- 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
- 				      XFS_FSB_TO_B(mp, 1))),
- 		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
--- 
-2.27.0
+> 
+> --D
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=refactor-ext4-helpers
+> ---
+>  common/config |    4 +
+>  common/ext4   |  193 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  common/rc     |  186 ++++---------------------------------------------------
+>  common/xfs    |   23 +++++++
+>  4 files changed, 233 insertions(+), 173 deletions(-)
+>  create mode 100644 common/ext4
+> 
 
