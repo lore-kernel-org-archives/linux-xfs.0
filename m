@@ -2,168 +2,232 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E8EC00140
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Aug 2022 09:31:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24051C25B0E
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Aug 2022 09:42:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230431AbiHOJbn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Aug 2022 05:31:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54668 "EHLO
+        id S241337AbiHOJm6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Aug 2022 05:42:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232095AbiHOJbm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Aug 2022 05:31:42 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40B401117F;
-        Mon, 15 Aug 2022 02:31:41 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id F3B4B20134;
-        Mon, 15 Aug 2022 09:31:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1660555900;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
+        with ESMTP id S233186AbiHOJm5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Aug 2022 05:42:57 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E70381CB3A
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Aug 2022 02:42:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1660556575;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=5h+6dMJXLvTUhDdgYsCYGE7DqfaiThyuBXafm3lVxnk=;
-        b=psJt9Ek0Mz6wTogTcV2x4KyVeR5jUkh7Ddsmp80L0+m8lbvb8m26j4Rh91pYtO7oV5dw6C
-        NPKyHtrJAJ990nI1PifeWLtdJyyw4As6NZa1O4Ktyl7lejv1s06CnrUIQlA4OGNrllFEIW
-        pUAuIR5uZz+rsWcqb5ynh/chHvomIkQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1660555900;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=5h+6dMJXLvTUhDdgYsCYGE7DqfaiThyuBXafm3lVxnk=;
-        b=gSY3g1TpOIVFTT+Sp3UoBhTUnI33ePw+tJXSno2WTdLB9uVK6dqh0zM6WC+XSKFYp38QEX
-        cSZkSX5WlB1KZOCA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 90D8D13A93;
-        Mon, 15 Aug 2022 09:31:39 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id i8EqIXsS+mKCWwAAMHmgww
-        (envelope-from <pvorel@suse.cz>); Mon, 15 Aug 2022 09:31:39 +0000
-Date:   Mon, 15 Aug 2022 11:31:37 +0200
-From:   Petr Vorel <pvorel@suse.cz>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>,
-        linux-xfs@vger.kernel.org, ltp@lists.linux.it
-Subject: Re: LTP test df01.sh detected different size of loop device in v5.19
-Message-ID: <YvoSeTmLoQVxq7p9@pevik>
-Reply-To: Petr Vorel <pvorel@suse.cz>
-References: <YvZc+jvRdTLn8rus@pevik>
- <YvZUfq+3HYwXEncw@pevik>
- <YvZTpQFinpkB06p9@pevik>
- <20220814224440.GR3600936@dread.disaster.area>
+        bh=wD7uXfxEAZaYnpIAi/OCpwE477Qq7e7myktWuGmAh0c=;
+        b=in7ghO9VoL7CWuw8T8ZSBqsD2gtvHOghsKwqr2yiW1KoXr/pTFdfOIB93TmYfzAZ24XIvI
+        LfTSgTFR1tTkZHqr5DwhIhgUlniqQ5E+PVSS7JpkUkNqhwfjq+URiLNLSJas0ANOuBfD5Y
+        wi7WJS/snfLYIa5hi1SgfCDuReVge3o=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-73-KGCHD4uvNmKdkIWwhKcHvQ-1; Mon, 15 Aug 2022 05:42:53 -0400
+X-MC-Unique: KGCHD4uvNmKdkIWwhKcHvQ-1
+Received: by mail-qk1-f198.google.com with SMTP id i15-20020a05620a404f00b006b55998179bso6526106qko.4
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Aug 2022 02:42:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc;
+        bh=wD7uXfxEAZaYnpIAi/OCpwE477Qq7e7myktWuGmAh0c=;
+        b=YBoNl4z8GZMun7FFQqcJpmW00Gx+mNTneNrMza80IYC4OT5F4xoB7c2p80PF+NzVNB
+         M3lAXiGNTR0R6Ec7NK2wNoIS9wyMnZct+8vVzLyL/zciKqy01dr+nxb2YQv9YPJI7FJP
+         BarsXGhlNrN4yWHWHJxKRI+auLIq47aiisBhbMO3lNO7qzoVDO3uKQgR7VR0eGqHyiRl
+         kc40LsaWB4Lcn0966NCItvft9CxJdIX0RyXN/84Rcp2VSr01TGrPja+ttnGKBXmofkHW
+         hcLFN2Rl7awLBFScMq6LeFEfW0NTOhDxUvrIFLYVf7cVPp9DG6OH3gPNsoNd7G1nDFsn
+         xFog==
+X-Gm-Message-State: ACgBeo1JI/Uk1KmXZJvbF3X6p189xWZ27ESBXBwY/XNZtzZj22lZN6NX
+        E+X+bQmYoF3axCb8zxkaHqAhWzlGj4Xqi30u3RcjVoZ+oKbT+1s0OhW55tjpGORUiqvNuDLtJVM
+        PyNUGqfANlDVz0bGZzprp
+X-Received: by 2002:a37:bb05:0:b0:6b9:629e:f46b with SMTP id l5-20020a37bb05000000b006b9629ef46bmr817258qkf.521.1660556572790;
+        Mon, 15 Aug 2022 02:42:52 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR6jZ/ipfqjSf++weXOKG90EWZOsfAK7/XOngbLXBfXsUj3YKX3JhhCBsbFcL8J+0m6YJ61klg==
+X-Received: by 2002:a37:bb05:0:b0:6b9:629e:f46b with SMTP id l5-20020a37bb05000000b006b9629ef46bmr817242qkf.521.1660556572471;
+        Mon, 15 Aug 2022 02:42:52 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id x16-20020a05620a259000b006b9a89d408csm8457916qko.100.2022.08.15.02.42.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 Aug 2022 02:42:52 -0700 (PDT)
+Date:   Mon, 15 Aug 2022 17:42:46 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/3] common: disable infinite IO error retry for EIO
+ shutdown tests
+Message-ID: <20220815094246.iqrbfdkwzvrjbjb3@zlang-mailbox>
+References: <165950054404.199222.5615656337332007333.stgit@magnolia>
+ <165950055523.199222.9175019533516343488.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220814224440.GR3600936@dread.disaster.area>
+In-Reply-To: <165950055523.199222.9175019533516343488.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+On Tue, Aug 02, 2022 at 09:22:35PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> This patch fixes a rather hard to hit livelock in the tests that test
+> how xfs handles shutdown behavior when the device suddenly dies and
+> starts returing EIO all the time.  The livelock happens if the AIL is
+> stuck retrying failed metadata updates forever, the log itself is not
+> being written, and there is no more log grant space, which prevents the
+> frontend from shutting down the log due to EIO errors during
+> transactions.
+> 
+> While most users probably want the default retry-forever behavior
+> because EIO can be transient, the circumstances are different here.  The
+> tests are designed to flip the device back to working status only after
+> the unmount succeeds, so we know there's no point in the filesystem
+> retrying writes until after the unmount.
+> 
+> This fixes some of the periodic hangs in generic/019 and generic/475.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  common/dmerror           |    4 ++++
+>  common/fail_make_request |    1 +
+>  common/rc                |   31 +++++++++++++++++++++++++++----
+>  common/xfs               |   29 +++++++++++++++++++++++++++++
+>  4 files changed, 61 insertions(+), 4 deletions(-)
+> 
+> 
+> diff --git a/common/dmerror b/common/dmerror
+> index 0934d220..54122b12 100644
+> --- a/common/dmerror
+> +++ b/common/dmerror
+> @@ -138,6 +138,10 @@ _dmerror_load_error_table()
+>  		suspend_opt="$*"
+>  	fi
+>  
+> +	# If the full environment is set up, configure ourselves for shutdown
+> +	type _prepare_for_eio_shutdown &>/dev/null && \
 
-> On Fri, Aug 12, 2022 at 03:20:37PM +0200, Petr Vorel wrote:
-> > Hi all,
+I'm wondering why we need to check if _prepare_for_eio_shutdown() is defined
+at here? This patch define this function, so if we merge this patch, this
+function is exist, right?
 
-> > LTP test df01.sh found different size of loop device in v5.19.
-> > Test uses loop device formatted on various file systems, only XFS fails.
-> > It randomly fails during verifying that loop size usage changes:
+> +		_prepare_for_eio_shutdown $DMERROR_DEV
 
-> > grep ${TST_DEVICE} output | grep -q "${total}.*${used}" [1]
+Hmm... what about someone load error table, but not for testing fs shutdown?
 
-> > How to reproduce:
-> > # PATH="/opt/ltp/testcases/bin:$PATH" df01.sh -f xfs # it needs several tries to hit
+> +
+>  	# Suspend the scratch device before the log and realtime devices so
+>  	# that the kernel can freeze and flush the filesystem if the caller
+>  	# wanted a freeze.
+> diff --git a/common/fail_make_request b/common/fail_make_request
+> index 9f8ea500..b5370ba6 100644
+> --- a/common/fail_make_request
+> +++ b/common/fail_make_request
+> @@ -44,6 +44,7 @@ _start_fail_scratch_dev()
+>  {
+>      echo "Force SCRATCH_DEV device failure"
+>  
+> +    _prepare_for_eio_shutdown $SCRATCH_DEV
+>      _bdev_fail_make_request $SCRATCH_DEV 1
+>      [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+>          _bdev_fail_make_request $SCRATCH_LOGDEV 1
+> diff --git a/common/rc b/common/rc
+> index 63bafb4b..119cc477 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -4205,6 +4205,20 @@ _check_dmesg()
+>  	fi
+>  }
+>  
+> +# Make whatever configuration changes we need ahead of testing fs shutdowns due
+> +# to unexpected IO errors while updating metadata.  The sole parameter should
+> +# be the fs device, e.g.  $SCRATCH_DEV.
+> +_prepare_for_eio_shutdown()
+> +{
+> +	local dev="$1"
+> +
+> +	case "$FSTYP" in
+> +	"xfs")
+> +		_xfs_prepare_for_eio_shutdown "$dev"
+> +		;;
+> +	esac
+> +}
+> +
+>  # capture the kmemleak report
+>  _capture_kmemleak()
+>  {
+> @@ -4467,7 +4481,7 @@ run_fsx()
+>  #
+>  # Usage example:
+>  #   _require_fs_sysfs error/fail_at_unmount
+> -_require_fs_sysfs()
+> +_has_fs_sysfs()
+>  {
+>  	local attr=$1
+>  	local dname
+> @@ -4483,9 +4497,18 @@ _require_fs_sysfs()
+>  		_fail "Usage: _require_fs_sysfs <sysfs_attr_path>"
+>  	fi
+>  
+> -	if [ ! -e /sys/fs/${FSTYP}/${dname}/${attr} ];then
+> -		_notrun "This test requires /sys/fs/${FSTYP}/${dname}/${attr}"
+> -	fi
+> +	test -e /sys/fs/${FSTYP}/${dname}/${attr}
+> +}
+> +
+> +# Require the existence of a sysfs entry at /sys/fs/$FSTYP/DEV/$ATTR
+> +_require_fs_sysfs()
+> +{
+> +	_has_fs_sysfs "$@" && return
+> +
+> +	local attr=$1
+> +	local dname=$(_short_dev $TEST_DEV)
+> +
+> +	_notrun "This test requires /sys/fs/${FSTYP}/${dname}/${attr}"
+>  }
+>  
+>  _require_statx()
+> diff --git a/common/xfs b/common/xfs
+> index 92c281c6..65234c8b 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -823,6 +823,35 @@ _scratch_xfs_unmount_dirty()
+>  	_scratch_unmount
+>  }
+>  
+> +# Prepare a mounted filesystem for an IO error shutdown test by disabling retry
+> +# for metadata writes.  This prevents a (rare) log livelock when:
+> +#
+> +# - The log has given out all available grant space, preventing any new
+> +#   writers from tripping over IO errors (and shutting down the fs/log),
+> +# - All log buffers were written to disk, and
+> +# - The log tail is pinned because the AIL keeps hitting EIO trying to write
+> +#   committed changes back into the filesystem.
+> +#
+> +# Real users might want the default behavior of the AIL retrying writes forever
+> +# but for testing purposes we don't want to wait.
+> +#
+> +# The sole parameter should be the filesystem data device, e.g. $SCRATCH_DEV.
+> +_xfs_prepare_for_eio_shutdown()
+> +{
+> +	local dev="$1"
+> +	local ctlfile="error/fail_at_unmount"
+> +
+> +	# Don't retry any writes during the (presumably) post-shutdown unmount
+> +	_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 1
+> +
+> +	# Disable retry of metadata writes that fail with EIO
+> +	for ctl in max_retries retry_timeout_seconds; do
+> +		ctlfile="error/metadata/EIO/$ctl"
+> +
+> +		_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 0
+> +	done
+> +}
+> +
+>  # Skip if we are running an older binary without the stricter input checks.
+>  # Make multiple checks to be sure that there is no regression on the one
+>  # selected feature check, which would skew the result.
+> 
 
-> > df saved output:
-> > Filesystem     1024-blocks    Used Available Capacity Mounted on
-> > ...
-> > /dev/loop0          256672   16208    240464       7% /tmp/LTP_df01.1kRwoUCCR7/mntpoint
-> > df output:
-> > Filesystem     1024-blocks    Used Available Capacity Mounted on
-> > ...
-> > tmpfs               201780       0    201780       0% /run/user/0
-> > /dev/loop0          256672   15160    241512       6% /tmp/LTP_df01.1kRwoUCCR7/mntpoint
-> > => different size
-> > df01 4 TFAIL: 'df -k -P' failed, not expected.
-
-> Yup, most likely because we changed something in XFS related to
-> internal block reservation spaces. That is, the test is making
-> fundamentally flawed assumptions about filesystem used space
-> accounting.
-
-> It is wrong to assuming that the available capacity of a given empty
-> filesystem will never change.  Assumptions like this have been
-> invalid for decades because the available space can change based on
-> the underlying configuration or the filesystem. e.g. different
-> versions of mkfs.xfs set different default parameters and so simply
-> changing the version of xfsprogs you use between the two comparision
-> tests will make it fail....
-
-> And, well, XFS also has XFS_IOC_{GS}ET_RESBLKS ioctls that allow
-> userspace to change the amount of reserved blocks. They were
-> introduced in 1997, and since then we've changed the default
-> reservation the filesystem takes at least a dozen times.
-
-Thanks a lot for valuable info.
-
-> > > It might be a false positive / bug in the test, but it's at least a changed behavior.
-
-> Yup, any test that assumes "available space" does not change from
-> kernel version to kernel version is flawed. There is no guarantee
-> that this ever stays the same, nor that it needs to stay the same.
-I'm sorry I was not clear. Test [1] does not measure "available space" between
-kernel releases. It just run df command with parameters, saves it's output
-and compares "1024-blocks" and "Used" columns of df output with stat output:
-
-		local total=$(stat -f mntpoint --printf=%b)
-		local free=$(stat -f mntpoint --printf=%f)
-		local used=$((total-free))
-
-		local bsize=$(stat -f mntpoint --printf=%s)
-		total=$((($total * $bsize + 512)/ 1024))
-		used=$((($used * $bsize + 512) / 1024))
-
-And comparison with "$used" is what sometimes fails.
-
-BTW this happens on both distros when loop device is on tmpfs. I'm trying to
-trigger it on ext4 and btrfs, not successful so far. Looks like it's tmpfs
-related.
-
-If that's really expected, we might remove this check for used for XFS
-(not sure if check only for total makes sense).
-
-> > > I was able to reproduce it on v5.19 distro kernels (openSUSE, Debian).
-> > > I haven't bisected (yet), nor checked Jens' git tree (maybe it has been fixed).
-
-> > Forget to note dmesg "operation not supported error" warning on *each* run (even
-> > successful) on affected v5.19:
-> > [ 5097.594021] loop0: detected capacity change from 0 to 524288
-> > [ 5097.658201] operation not supported error, dev loop0, sector 262192 op 0x9:(WRITE_ZEROES) flags 0x8000800 phys_seg 0 prio class 0
-> > [ 5097.675670] XFS (loop0): Mounting V5 Filesystem
-> > [ 5097.681668] XFS (loop0): Ending clean mount
-> > [ 5097.956445] XFS (loop0): Unmounting Filesystem
-
-> That warning is from mkfs attempting to use fallocate(ZERO_RANGE) to
-> offload the zeroing of the journal to the block device. It would
-> seem that the loop device image file is being hosted on a filesystem
-> that does not support the fallocate() ZERO_RANGE (or maybe
-> PUNCH_HOLE) operation. That warning should simply be removed - it
-> serves no useful purpose to a user...
-Interesting. Which one of these two is not supported on tmpfs?
-
-Kind regards,
-Petr
-
-> CHeers,
-
-> Dave.
-
-[1] https://github.com/linux-test-project/ltp/blob/f42f6f3b4671f447b743afe8612917ba4362b8a6/testcases/commands/df/df01.sh
