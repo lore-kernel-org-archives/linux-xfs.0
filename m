@@ -2,194 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA508C25B06
-	for <linux-xfs@archiver.kernel.org>; Sun, 14 Aug 2022 23:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 143CCC25B06
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Aug 2022 02:55:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229604AbiHNXyy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 14 Aug 2022 19:54:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44054 "EHLO
+        id S231869AbiHOCzW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 14 Aug 2022 22:55:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbiHNXyx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Aug 2022 19:54:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16074E0D9
-        for <linux-xfs@vger.kernel.org>; Sun, 14 Aug 2022 16:54:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9D50A60F3D
-        for <linux-xfs@vger.kernel.org>; Sun, 14 Aug 2022 23:54:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id EE5C8C43140
-        for <linux-xfs@vger.kernel.org>; Sun, 14 Aug 2022 23:54:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660521292;
-        bh=GIBN95mvXQpXpHUDgwS0bz90MJgoF0cqqlcSbzSgb8Y=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=NFeML4cyvXlTZY9+msgG/7xkfoUBvfHtzHGc+F7nj8DZFcEfP5fTl7qLu/YhL3NKM
-         kFSQRMpGq4bCHDHrOSGgOneePM6DcqqvBTfhlP2SQrEjBaxLVj48wM8mtGViNDXw2W
-         qfvOar/+WoXPQGmug50P5YOdQE3xB08yNyVwoe/aFZotn3cGzjnH5XTDBKeLVhUDxV
-         8iw3DswtMnZfZ4I3RECk1N+sKAOLBpVlIbpJf+kgumljOoZc/2+wK5Ot8x8pf+P2ZX
-         N2uEOieqCyCxEMrd1/LNkmQMbnPX5LCMQ/kTt5U9cD+/QmtHnXuL9Dcm0RQoc3aTin
-         kS1+2l8nyjiOQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id DBB22C0422F; Sun, 14 Aug 2022 23:54:51 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
+        with ESMTP id S229506AbiHOCzV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Aug 2022 22:55:21 -0400
+Received: from m15111.mail.126.com (m15111.mail.126.com [220.181.15.111])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B87AEDC8
+        for <linux-xfs@vger.kernel.org>; Sun, 14 Aug 2022 19:55:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=QZVW5
+        aWZ+2PASecqhmZ/TwdS7cieGr9sHQQVtFbAvNc=; b=SsLN2noDLW8/7NBiSvW/t
+        qHH4J+AXZykuRb2SIMltj7TBIGVKr4wK1e4frBtPi4OblfJ97sPhcWsB7Qdlw5AP
+        qdnut52bUBUhmiVyGUmT2oEYXVHWsPUNuzs1xaXRZPc/lzMNMmTpcNtkcd0Iz4ah
+        0gEo5gkcUcDkeE81PugVUg=
+Received: from DESKTOP-G0RBR07.localdomain (unknown [123.150.8.42])
+        by smtp1 (Coremail) with SMTP id C8mowABHZRqEtflimkd+AA--.18004S2;
+        Mon, 15 Aug 2022 10:55:01 +0800 (CST)
+From:   Xiaole He <hexiaole1994@126.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216343] XFS: no space left in xlog cause system hang
-Date:   Sun, 14 Aug 2022 23:54:51 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: david@fromorbit.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-216343-201763-jdxdDvUKTL@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216343-201763@https.bugzilla.kernel.org/>
-References: <bug-216343-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+Cc:     djwong@kernel.org, hexiaole <hexiaole@kylinos.cn>
+Subject: [PATCH v2] libxfs: fix inode reservation space for removing transaction
+Date:   Mon, 15 Aug 2022 10:54:58 +0800
+Message-Id: <20220815025458.137-1-hexiaole1994@126.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: C8mowABHZRqEtflimkd+AA--.18004S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7trW7Zw4rAF45JFy3Gr4fGrg_yoW8GFW5pF
+        n7GF4fCrn5GrySkrs7trnIqrya9ayFkr429r4ktrn3Zw1DJr17try8Kw15tFyrWr4YvF4j
+        vryDAw15uw42va7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jn18kUUUUU=
+X-Originating-IP: [123.150.8.42]
+X-CM-SenderInfo: 5kh0xt5rohimizu6ij2wof0z/1tbihAZeBlx5iyYk-gAAsI
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
+From: hexiaole <hexiaole@kylinos.cn>
 
---- Comment #1 from Dave Chinner (david@fromorbit.com) ---
-[cc Amir, the 5.10 stable XFS maintainer]
+In 'libxfs/xfs_trans_resv.c', the comment for transaction of removing a
+directory entry mentions that there has 2 inode size of space to be
+reserverd, but the actual code only count for 1 inode size:
 
-On Tue, Aug 09, 2022 at 11:46:23AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
->=20
->             Bug ID: 216343
->            Summary: XFS: no space left in xlog cause system hang
->            Product: File System
->            Version: 2.5
->     Kernel Version: 5.10.38
->           Hardware: ARM
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: XFS
->           Assignee: filesystem_xfs@kernel-bugs.kernel.org
->           Reporter: zhoukete@126.com
->         Regression: No
->=20
-> Created attachment 301539
->   --> https://bugzilla.kernel.org/attachment.cgi?id=3D301539&action=3Dedit
-> stack
->=20
-> 1. cannot login with ssh, system hanged and cannot do anything
-> 2. dmesg report 'audit: audit_backlog=3D41349 > audit_backlog_limit=3D819=
-2'
-> 3. I send sysrq-crash and get vmcore file , I dont know how to reproduce =
-it.
->=20
-> Follwing is my analysis from vmcore:
->=20
-> The reason why tty cannot login is pid 2021571 hold the acct_process mute=
-x,
-> and
-> 2021571 cannot release mutex because it is wait for xlog release space. S=
-ee
-> the
-> stac info in the attachment of stack.txt
->=20
-> So I try to figure out what happened to xlog
->=20
-> crash> struct xfs_ail.ail_target_prev,ail_targe,ail_head=C2=A00xffff00ff8=
-84f1000=20
-> =C2=A0=C2=A0ail_target_prev =3D 0xe9200058600
-> =C2=A0=C2=A0ail_target =3D 0xe9200058600
-> =C2=A0=C2=A0ail_head =3D {
-> =C2=A0=C2=A0=C2=A0=C2=A0next =3D 0xffff0340999a0a80,=C2=A0
-> =C2=A0=C2=A0=C2=A0=C2=A0prev =3D 0xffff020013c66b40
-> =C2=A0=C2=A0}
->=20
-> there are 112 log item in ail list
-> crash> list 0xffff0340999a0a80 | wc -l
-> 112=20
->=20
-> 79 item of them are xlog_inode_item
-> 30 item of them are xlog_buf_item
->=20
-> crash> xfs_log_item.li_flags,li_lsn 0xffff0340999a0a80 -x=20
->   li_flags =3D 0x1
->   li_lsn =3D 0xe910005cc00 =3D=3D=3D> first item lsn
->=20
-> crash> xfs_log_item.li_flags,li_lsn ffff020013c66b40 -x
->   li_flags =3D 0x1
->   li_lsn =3D 0xe9200058600 =3D=3D=3D> last item lsn
->=20
-> crash>xfs_log_item.li_buf=C2=A00xffff0340999a0a80=20=20=20=20=20=20=20=20=
-=20=20=20=20=20=20=20
-> =C2=A0li_buf =3D 0xffff0200125b7180
->=20
-> crash> xfs_buf.b_flags 0xffff0200125b7180 -x
-> =C2=A0b_flags =3D 0x110032=C2=A0=C2=A0(XBF_WRITE|XBF_ASYNC|XBF_DONE|_XBF_=
-INODES|_XBF_PAGES)=20
->=20
-> crash> xfs_buf.b_state 0xffff0200125b7180 -x
->   b_state =3D 0x2 (XFS_BSTATE_IN_FLIGHT)
->=20
-> crash> xfs_buf.b_last_error,b_retries,b_first_retry_time 0xffff0200125b71=
-80
-> -x
->   b_last_error =3D 0x0
->   b_retries =3D 0x0
->   b_first_retry_time =3D 0x0=20
->=20
-> The buf flags show the io had been done(XBF_DONE is set).
-> When I review the code xfs_buf_ioend, if XBF_DONE is set,
-> xfs_buf_inode_iodone
-> will be called and it will remove the log item from ail list, then release
-> the
-> xlog space by moving the tail_lsn.
->=20
-> But now this item is still in the ail list, and the b_last_error =3D 0,
-> XBF_WRITE
-> is set.
->=20
-> xfs buf log item is the same as the inode log item.
->=20
-> crash> list -s xfs_log_item.li_buf 0xffff0340999a0a80
-> ffff033f8d7c9de8
-> =C2=A0=C2=A0li_buf =3D 0x0
-> crash> xfs_buf_log_item.bli_buf=C2=A0=C2=A0ffff033f8d7c9de8
-> =C2=A0=C2=A0bli_buf =3D 0xffff0200125b4a80
-> crash> xfs_buf.b_flags 0xffff0200125b4a80 -x
-> =C2=A0=C2=A0b_flags =3D 0x100032=C2=A0(XBF_WRITE|XBF_ASYNC|XBF_DONE|_XBF_=
-PAGES)=20
->=20
-> I think it is impossible that (XBF_DONE is set & b_last_error =3D 0) and =
-the
-> item
-> still in the ail.
->=20
-> Is my analysis correct?=20
-> Why xlog space cannot release space?
->=20
-> --=20
-> You may reply to this email to add a comment.
->=20
-> You are receiving this mail because:
-> You are watching the assignee of the bug.
+/* libxfs/xfs_trans_resv.c begin */
+/*
+ * For removing a directory entry we can modify:
+ *    the parent directory inode: inode size
+ *    the removed inode: inode size
+...
+xfs_calc_remove_reservation(
+        struct xfs_mount        *mp)
+{
+        return XFS_DQUOT_LOGRES(mp) +
+                xfs_calc_iunlink_add_reservation(mp) +
+                max((xfs_calc_inode_res(mp, 1) +
+...
+/* libxfs/xfs_trans_resv.c end */
 
---=20
-You may reply to this email to add a comment.
+Here only count for 1 inode size to be reserved in
+'xfs_calc_inode_res(mp, 1)', rather than 2.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Signed-off-by: hexiaole <hexiaole@kylinos.cn>
+---
+V1 -> V2: djwong: remove redundant code citations
+
+ libxfs/xfs_trans_resv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index d4a9f69e..797176d7 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -514,7 +514,7 @@ xfs_calc_remove_reservation(
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+ 		xfs_calc_iunlink_add_reservation(mp) +
+-		max((xfs_calc_inode_res(mp, 1) +
++		max((xfs_calc_inode_res(mp, 2) +
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+-- 
+2.27.0
+
