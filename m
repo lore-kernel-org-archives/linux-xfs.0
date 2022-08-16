@@ -2,85 +2,119 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 400EAC2BB41
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 10:27:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88420C32773
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 10:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234557AbiHPK1Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 06:27:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36862 "EHLO
+        id S234526AbiHPK3h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 06:29:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234561AbiHPK0t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 06:26:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 04878606A4
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 01:45:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1660639553;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=gIP1yViGVYvN9cx3m4jBBPVaFAFg23Pf+8Dx4Sa6RcM=;
-        b=fDOCQVohGYsIZ35UXD1gYEHE2a/TNYCHVD5HWHpwDMmi4kQs9ZrDoKg0PntJJJ/LCtQzU1
-        TfaKxcfHWqC8ZevKCp/nvPN7hh09EgzJ+AVniXmFo4Y9f/8ql+nTXvciTB6ybvTF2j8USR
-        tHBM+7FODbUdFKG9vtNog1M5FCkpC2o=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-393-GNomduv4M7G_jrBwLdt7mQ-1; Tue, 16 Aug 2022 04:45:52 -0400
-X-MC-Unique: GNomduv4M7G_jrBwLdt7mQ-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 756451C0899A
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 08:45:51 +0000 (UTC)
-Received: from [10.10.0.108] (unknown [10.40.193.155])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 36DAF492C3B
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 08:45:51 +0000 (UTC)
-Subject: [PATCH] xfsdump: Initialize getbmap structure in quantity2offset
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Date:   Tue, 16 Aug 2022 10:45:50 +0200
-Message-ID: <166063952935.40771.5357077583333371260.stgit@orion>
-User-Agent: StGit/1.4
+        with ESMTP id S234402AbiHPK3A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 06:29:00 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D01D65E309;
+        Tue, 16 Aug 2022 02:03:14 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-52-176.pa.nsw.optusnet.com.au [49.181.52.176])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 7B45B62D403;
+        Tue, 16 Aug 2022 19:03:13 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oNsTg-00Dk22-Ca; Tue, 16 Aug 2022 19:03:12 +1000
+Date:   Tue, 16 Aug 2022 19:03:12 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH v4 6/9] f2fs: don't allow DIO reads but not DIO writes
+Message-ID: <20220816090312.GU3600936@dread.disaster.area>
+References: <20220722071228.146690-1-ebiggers@kernel.org>
+ <20220722071228.146690-7-ebiggers@kernel.org>
+ <YtyoF89iOg8gs7hj@google.com>
+ <Yt7dCcG0ns85QqJe@sol.localdomain>
+ <YuXyKh8Zvr56rR4R@google.com>
+ <YvrrEcw4E+rpDLwM@sol.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.85 on 10.11.54.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YvrrEcw4E+rpDLwM@sol.localdomain>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62fb5d51
+        a=O3n/kZ8kT9QBBO3sWHYIyw==:117 a=O3n/kZ8kT9QBBO3sWHYIyw==:17
+        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=1XWaLZrsAAAA:8 a=7-415B0cAAAA:8
+        a=0f_GdJSvYQN_4D2ffm4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Prevent uninitialized data in the stack by initializing getbmap structure
-to zero.
+On Mon, Aug 15, 2022 at 05:55:45PM -0700, Eric Biggers wrote:
+> On Sat, Jul 30, 2022 at 08:08:26PM -0700, Jaegeuk Kim wrote:
+> > On 07/25, Eric Biggers wrote:
+> > > On Sat, Jul 23, 2022 at 07:01:59PM -0700, Jaegeuk Kim wrote:
+> > > > On 07/22, Eric Biggers wrote:
+> > > > > From: Eric Biggers <ebiggers@google.com>
+> > > > > 
+> > > > > Currently, if an f2fs filesystem is mounted with the mode=lfs and
+> > > > > io_bits mount options, DIO reads are allowed but DIO writes are not.
+> > > > > Allowing DIO reads but not DIO writes is an unusual restriction, which
+> > > > > is likely to be surprising to applications, namely any application that
+> > > > > both reads and writes from a file (using O_DIRECT).  This behavior is
+> > > > > also incompatible with the proposed STATX_DIOALIGN extension to statx.
+> > > > > Given this, let's drop the support for DIO reads in this configuration.
+> > > > 
+> > > > IIRC, we allowed DIO reads since applications complained a lower performance.
+> > > > So, I'm afraid this change will make another confusion to users. Could
+> > > > you please apply the new bahavior only for STATX_DIOALIGN?
+> > > > 
+> > > 
+> > > Well, the issue is that the proposed STATX_DIOALIGN fields cannot represent this
+> > > weird case where DIO reads are allowed but not DIO writes.  So the question is
+> > > whether this case actually matters, in which case we should make STATX_DIOALIGN
+> > > distinguish between DIO reads and DIO writes, or whether it's some odd edge case
+> > > that doesn't really matter, in which case we could just fix it or make
+> > > STATX_DIOALIGN report that DIO is unsupported.  I was hoping that you had some
+> > > insight here.  What sort of applications want DIO reads but not DIO writes?
+> > > Is this common at all?
+> > 
+> > I think there's no specific application to use the LFS mode at this
+> > moment, but I'd like to allow DIO read for zoned device which will be
+> > used for Android devices.
+> > 
+> 
+> So if the zoned device feature becomes widely adopted, then STATX_DIOALIGN will
+> be useless on all Android devices?  That sounds undesirable.  Are you sure that
+> supporting DIO reads but not DIO writes actually works?  Does it not cause
+> problems for existing applications?
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
+What purpose does DIO in only one direction actually serve? All it
+means is that we're forcibly mixing buffered and direct IO to the
+same file and that simply never ends well from a data coherency POV.
 
-There is already a patch on the list to remove remaining DMAPI stuff from
-xfsdump:
-xfsdump: remove BMV_IF_NO_DMAPI_READ flag
+Hence I'd suggest that mixing DIO reads and buffered writes like
+this ends up exposing uses to the worst of both worlds - all of the
+problems with none of the benefits...
 
-This patch though, does not initialize the getbmap structure, and although
-the
-first struct in the array is initialized, the remaining structures in the
-array are not, leaving garbage in the stack.
+> What we need to do is make a decision about whether this means we should build
+> in a stx_dio_direction field (indicating no support / readonly support /
+> writeonly support / readwrite support) into the API from the beginning.  If we
+> don't do that, then I don't think we could simply add such a field later, as the
+> statx_dio_*_align fields will have already been assigned their meaning.  I think
+> we'd instead have to "duplicate" the API, with STATX_DIOROALIGN and
+> statx_dio_ro_*_align fields.  That seems uglier than building a directional
+> indicator into the API from the beginning.  On the other hand, requiring all
+> programs to check stx_dio_direction would add complexity to using the API.
+> 
+> Any thoughts on this?
 
+Decide whether partial, single direction DIO serves a useful purpose
+before trying to work out what is needed in the API to indicate that
+this sort of crazy will be supported....
 
- dump/inomap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/dump/inomap.c b/dump/inomap.c
-index f3200be..c4ea21d 100644
---- a/dump/inomap.c
-+++ b/dump/inomap.c
-@@ -1627,7 +1627,7 @@ static off64_t
- quantity2offset(jdm_fshandle_t *fshandlep, struct xfs_bstat *statp, off64_t qty)
- {
- 	int fd;
--	struct getbmap bmap[BMAP_LEN];
-+	struct getbmap bmap[BMAP_LEN] = {0};
- 	off64_t offset;
- 	off64_t offset_next;
- 	off64_t qty_accum;
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
