@@ -2,106 +2,229 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E56EC25B0D
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 04:23:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB7CC2BB41
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 06:46:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229563AbiHPEXM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 00:23:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60978 "EHLO
+        id S230369AbiHPGqs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 02:46:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229541AbiHPEW4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 00:22:56 -0400
+        with ESMTP id S230292AbiHPGqX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 02:46:23 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C58337BB3D;
-        Mon, 15 Aug 2022 17:55:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 080322ED70;
+        Mon, 15 Aug 2022 18:47:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4303A6125E;
-        Tue, 16 Aug 2022 00:55:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5212EC433C1;
-        Tue, 16 Aug 2022 00:55:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A0CE26068B;
+        Tue, 16 Aug 2022 01:47:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08870C433C1;
+        Tue, 16 Aug 2022 01:47:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660611347;
-        bh=iu6B25e0sTxWSWP58J3cvJLRVLHWY1NS7egktCILRVc=;
+        s=k20201202; t=1660614452;
+        bh=UasLdHY4c8QlD9e4a8HTUpXAtzd2OS98yy6i0gbvKI4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=krd6+dWmORUQTM50F/8J5UTDFvQpmjgyE2xt2quw2vdfZh6niGmFxiiV4AIz32H48
-         v/54PgeHP2vwqXwK32ajRlxpPJzlh1estyjWKs69bXa2t8XK5AILpoD8G+6e6l6TN2
-         JacTQRI/ggjw/oFEBUWvGlPNpoBqWi7pvwHjXWTNYZ4waocnQ7ZvCRK+HV+rcPvgUj
-         rn2X10wArCcnKg5D/Bt2iE7+193xqZkmDFK77dfsfvgi03cysOyvwTWWYr7n7HZDYk
-         5Leu70it3DTXaYFTpbub7m2JQZmVrC/jYpJVhrCsVduHmj+8JAVU1IiAScCxzXl5Gb
-         5hx6GXtLZcXBw==
-Date:   Mon, 15 Aug 2022 17:55:45 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Jaegeuk Kim <jaegeuk@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCH v4 6/9] f2fs: don't allow DIO reads but not DIO writes
-Message-ID: <YvrrEcw4E+rpDLwM@sol.localdomain>
-References: <20220722071228.146690-1-ebiggers@kernel.org>
- <20220722071228.146690-7-ebiggers@kernel.org>
- <YtyoF89iOg8gs7hj@google.com>
- <Yt7dCcG0ns85QqJe@sol.localdomain>
- <YuXyKh8Zvr56rR4R@google.com>
+        b=kAf5MAU5YwEoybxxzu3BGLUU7IbujU9waEM9+LcLMr0bbwm7vtxsp5wmnLOFje+aG
+         6F2sdX04V205VAA4LNCY5OU8AY8gWSCHVQE4Va6/fk5d7HWoQP1iSPLm+PoF2xMCBW
+         XMGF7wCqvkb8jCGnsmM0PCCDXzBdRA9LVnXjByiDwNFHg58m7s7sY0wJTe33NvYWzN
+         ACXXnlhsqnFSJJgu65Lyvz6L1h8IC52JSLjPdytCvT6KeYH2UFal8SGLq5Sf7/zE5T
+         7gMTR1csyg4zD7KkiFJNAhEyGHrMZTZzLp3JjtXjI5TZL4qchsOCghpq1WcnaeN3a9
+         y44NZ9jKDAIIQ==
+Date:   Mon, 15 Aug 2022 18:47:31 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/3] common: disable infinite IO error retry for EIO
+ shutdown tests
+Message-ID: <Yvr3M8V9Tg9LQE6E@magnolia>
+References: <165950054404.199222.5615656337332007333.stgit@magnolia>
+ <165950055523.199222.9175019533516343488.stgit@magnolia>
+ <20220815094246.iqrbfdkwzvrjbjb3@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YuXyKh8Zvr56rR4R@google.com>
+In-Reply-To: <20220815094246.iqrbfdkwzvrjbjb3@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jul 30, 2022 at 08:08:26PM -0700, Jaegeuk Kim wrote:
-> On 07/25, Eric Biggers wrote:
-> > On Sat, Jul 23, 2022 at 07:01:59PM -0700, Jaegeuk Kim wrote:
-> > > On 07/22, Eric Biggers wrote:
-> > > > From: Eric Biggers <ebiggers@google.com>
-> > > > 
-> > > > Currently, if an f2fs filesystem is mounted with the mode=lfs and
-> > > > io_bits mount options, DIO reads are allowed but DIO writes are not.
-> > > > Allowing DIO reads but not DIO writes is an unusual restriction, which
-> > > > is likely to be surprising to applications, namely any application that
-> > > > both reads and writes from a file (using O_DIRECT).  This behavior is
-> > > > also incompatible with the proposed STATX_DIOALIGN extension to statx.
-> > > > Given this, let's drop the support for DIO reads in this configuration.
-> > > 
-> > > IIRC, we allowed DIO reads since applications complained a lower performance.
-> > > So, I'm afraid this change will make another confusion to users. Could
-> > > you please apply the new bahavior only for STATX_DIOALIGN?
-> > > 
+On Mon, Aug 15, 2022 at 05:42:46PM +0800, Zorro Lang wrote:
+> On Tue, Aug 02, 2022 at 09:22:35PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Well, the issue is that the proposed STATX_DIOALIGN fields cannot represent this
-> > weird case where DIO reads are allowed but not DIO writes.  So the question is
-> > whether this case actually matters, in which case we should make STATX_DIOALIGN
-> > distinguish between DIO reads and DIO writes, or whether it's some odd edge case
-> > that doesn't really matter, in which case we could just fix it or make
-> > STATX_DIOALIGN report that DIO is unsupported.  I was hoping that you had some
-> > insight here.  What sort of applications want DIO reads but not DIO writes?
-> > Is this common at all?
+> > This patch fixes a rather hard to hit livelock in the tests that test
+> > how xfs handles shutdown behavior when the device suddenly dies and
+> > starts returing EIO all the time.  The livelock happens if the AIL is
+> > stuck retrying failed metadata updates forever, the log itself is not
+> > being written, and there is no more log grant space, which prevents the
+> > frontend from shutting down the log due to EIO errors during
+> > transactions.
+> > 
+> > While most users probably want the default retry-forever behavior
+> > because EIO can be transient, the circumstances are different here.  The
+> > tests are designed to flip the device back to working status only after
+> > the unmount succeeds, so we know there's no point in the filesystem
+> > retrying writes until after the unmount.
+> > 
+> > This fixes some of the periodic hangs in generic/019 and generic/475.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  common/dmerror           |    4 ++++
+> >  common/fail_make_request |    1 +
+> >  common/rc                |   31 +++++++++++++++++++++++++++----
+> >  common/xfs               |   29 +++++++++++++++++++++++++++++
+> >  4 files changed, 61 insertions(+), 4 deletions(-)
+> > 
+> > 
+> > diff --git a/common/dmerror b/common/dmerror
+> > index 0934d220..54122b12 100644
+> > --- a/common/dmerror
+> > +++ b/common/dmerror
+> > @@ -138,6 +138,10 @@ _dmerror_load_error_table()
+> >  		suspend_opt="$*"
+> >  	fi
+> >  
+> > +	# If the full environment is set up, configure ourselves for shutdown
+> > +	type _prepare_for_eio_shutdown &>/dev/null && \
 > 
-> I think there's no specific application to use the LFS mode at this
-> moment, but I'd like to allow DIO read for zoned device which will be
-> used for Android devices.
+> I'm wondering why we need to check if _prepare_for_eio_shutdown() is defined
+> at here? This patch define this function, so if we merge this patch, this
+> function is exist, right?
+
+This mess exists because of src/dmerror, which sources common/dmerror
+but does *not* source common/rc.  src/dmerror, in turn, is a helper
+script that is called as a subprocess of src/fsync-err.c, which (as a C
+program) doesn't inherit any of the shell data contained within its
+caller (e.g. generic/441).
+
+I probably should have documented that better, but TBH I'm not fully
+convinced that I understand all this nested re-entry stuff that some of
+the dmerror tests invoke.
+
+> > +		_prepare_for_eio_shutdown $DMERROR_DEV
 > 
+> Hmm... what about someone load error table, but not for testing fs shutdown?
 
-So if the zoned device feature becomes widely adopted, then STATX_DIOALIGN will
-be useless on all Android devices?  That sounds undesirable.  Are you sure that
-supporting DIO reads but not DIO writes actually works?  Does it not cause
-problems for existing applications?
+Even the tests that use dmerror but aren't looking for an fs shutdown
+could trigger one anyway, because (a) timestamp updates, or (b) inodegc
+running in the background.  Either way, an EIO shutdown is possible, so
+we should turn off infinite retries to avoid hanging fstests.
 
-What we need to do is make a decision about whether this means we should build
-in a stx_dio_direction field (indicating no support / readonly support /
-writeonly support / readwrite support) into the API from the beginning.  If we
-don't do that, then I don't think we could simply add such a field later, as the
-statx_dio_*_align fields will have already been assigned their meaning.  I think
-we'd instead have to "duplicate" the API, with STATX_DIOROALIGN and
-statx_dio_ro_*_align fields.  That seems uglier than building a directional
-indicator into the API from the beginning.  On the other hand, requiring all
-programs to check stx_dio_direction would add complexity to using the API.
+--D
 
-Any thoughts on this?
-
-- Eric
+> > +
+> >  	# Suspend the scratch device before the log and realtime devices so
+> >  	# that the kernel can freeze and flush the filesystem if the caller
+> >  	# wanted a freeze.
+> > diff --git a/common/fail_make_request b/common/fail_make_request
+> > index 9f8ea500..b5370ba6 100644
+> > --- a/common/fail_make_request
+> > +++ b/common/fail_make_request
+> > @@ -44,6 +44,7 @@ _start_fail_scratch_dev()
+> >  {
+> >      echo "Force SCRATCH_DEV device failure"
+> >  
+> > +    _prepare_for_eio_shutdown $SCRATCH_DEV
+> >      _bdev_fail_make_request $SCRATCH_DEV 1
+> >      [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> >          _bdev_fail_make_request $SCRATCH_LOGDEV 1
+> > diff --git a/common/rc b/common/rc
+> > index 63bafb4b..119cc477 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -4205,6 +4205,20 @@ _check_dmesg()
+> >  	fi
+> >  }
+> >  
+> > +# Make whatever configuration changes we need ahead of testing fs shutdowns due
+> > +# to unexpected IO errors while updating metadata.  The sole parameter should
+> > +# be the fs device, e.g.  $SCRATCH_DEV.
+> > +_prepare_for_eio_shutdown()
+> > +{
+> > +	local dev="$1"
+> > +
+> > +	case "$FSTYP" in
+> > +	"xfs")
+> > +		_xfs_prepare_for_eio_shutdown "$dev"
+> > +		;;
+> > +	esac
+> > +}
+> > +
+> >  # capture the kmemleak report
+> >  _capture_kmemleak()
+> >  {
+> > @@ -4467,7 +4481,7 @@ run_fsx()
+> >  #
+> >  # Usage example:
+> >  #   _require_fs_sysfs error/fail_at_unmount
+> > -_require_fs_sysfs()
+> > +_has_fs_sysfs()
+> >  {
+> >  	local attr=$1
+> >  	local dname
+> > @@ -4483,9 +4497,18 @@ _require_fs_sysfs()
+> >  		_fail "Usage: _require_fs_sysfs <sysfs_attr_path>"
+> >  	fi
+> >  
+> > -	if [ ! -e /sys/fs/${FSTYP}/${dname}/${attr} ];then
+> > -		_notrun "This test requires /sys/fs/${FSTYP}/${dname}/${attr}"
+> > -	fi
+> > +	test -e /sys/fs/${FSTYP}/${dname}/${attr}
+> > +}
+> > +
+> > +# Require the existence of a sysfs entry at /sys/fs/$FSTYP/DEV/$ATTR
+> > +_require_fs_sysfs()
+> > +{
+> > +	_has_fs_sysfs "$@" && return
+> > +
+> > +	local attr=$1
+> > +	local dname=$(_short_dev $TEST_DEV)
+> > +
+> > +	_notrun "This test requires /sys/fs/${FSTYP}/${dname}/${attr}"
+> >  }
+> >  
+> >  _require_statx()
+> > diff --git a/common/xfs b/common/xfs
+> > index 92c281c6..65234c8b 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -823,6 +823,35 @@ _scratch_xfs_unmount_dirty()
+> >  	_scratch_unmount
+> >  }
+> >  
+> > +# Prepare a mounted filesystem for an IO error shutdown test by disabling retry
+> > +# for metadata writes.  This prevents a (rare) log livelock when:
+> > +#
+> > +# - The log has given out all available grant space, preventing any new
+> > +#   writers from tripping over IO errors (and shutting down the fs/log),
+> > +# - All log buffers were written to disk, and
+> > +# - The log tail is pinned because the AIL keeps hitting EIO trying to write
+> > +#   committed changes back into the filesystem.
+> > +#
+> > +# Real users might want the default behavior of the AIL retrying writes forever
+> > +# but for testing purposes we don't want to wait.
+> > +#
+> > +# The sole parameter should be the filesystem data device, e.g. $SCRATCH_DEV.
+> > +_xfs_prepare_for_eio_shutdown()
+> > +{
+> > +	local dev="$1"
+> > +	local ctlfile="error/fail_at_unmount"
+> > +
+> > +	# Don't retry any writes during the (presumably) post-shutdown unmount
+> > +	_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 1
+> > +
+> > +	# Disable retry of metadata writes that fail with EIO
+> > +	for ctl in max_retries retry_timeout_seconds; do
+> > +		ctlfile="error/metadata/EIO/$ctl"
+> > +
+> > +		_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 0
+> > +	done
+> > +}
+> > +
+> >  # Skip if we are running an older binary without the stricter input checks.
+> >  # Make multiple checks to be sure that there is no regression on the one
+> >  # selected feature check, which would skew the result.
+> > 
+> 
