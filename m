@@ -2,119 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88420C32773
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 10:29:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD8C0C25B0E
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 11:04:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234526AbiHPK3h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 06:29:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51474 "EHLO
+        id S235222AbiHPLEi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 07:04:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234402AbiHPK3A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 06:29:00 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D01D65E309;
-        Tue, 16 Aug 2022 02:03:14 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-52-176.pa.nsw.optusnet.com.au [49.181.52.176])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 7B45B62D403;
-        Tue, 16 Aug 2022 19:03:13 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oNsTg-00Dk22-Ca; Tue, 16 Aug 2022 19:03:12 +1000
-Date:   Tue, 16 Aug 2022 19:03:12 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCH v4 6/9] f2fs: don't allow DIO reads but not DIO writes
-Message-ID: <20220816090312.GU3600936@dread.disaster.area>
-References: <20220722071228.146690-1-ebiggers@kernel.org>
- <20220722071228.146690-7-ebiggers@kernel.org>
- <YtyoF89iOg8gs7hj@google.com>
- <Yt7dCcG0ns85QqJe@sol.localdomain>
- <YuXyKh8Zvr56rR4R@google.com>
- <YvrrEcw4E+rpDLwM@sol.localdomain>
+        with ESMTP id S235220AbiHPLEK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 07:04:10 -0400
+Received: from mailly.debian.org (mailly.debian.org [IPv6:2001:41b8:202:deb:6564:a62:52c3:4b72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 512293334D
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 03:11:58 -0700 (PDT)
+Received: from [192.91.235.231] (port=55036 helo=fasolo.debian.org)
+        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
+        by mailly.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <envelope@ftp-master.debian.org>)
+        id 1oNtYC-009rBr-Oc
+        for linux-xfs@vger.kernel.org; Tue, 16 Aug 2022 10:11:56 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=ftp-master.debian.org; s=smtpauto.fasolo; h=Date:Message-Id:Subject:
+        Content-Transfer-Encoding:Content-Type:MIME-Version:To:From:Reply-To:Cc:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=r+ZhG/M7DZcreU6QQc7e9yD2ZVdMm1VtgnIdcDPkDzM=; b=G2cQGPOlg2nzwW0aT+epo7EEmH
+        q6iYMPNrQqBy7SIhsoBvCcKw6C7gbzaWcVrTZFda4maqGutU1Hnwfa9T/om2WwyfoaWkZj70sSrTu
+        M26nvFYsp6RSVRsgGng6oEopQtMc5kvdZOD4jeABEC0f5mFkC5fAqoEKlI6R9Lu6ybdH+NV49Eb5d
+        dDCc/Tzr80Vpv4EHluhXZpJuaGtNvD/HRGsNC7KFnTQ0Mtf6K3DBvfanFOXh5s0nxdlZ1a8jZyciL
+        iuNvqkwl+fxtmbOWmHbJ4mj4AkSJ5G42OUuQziwawjyaiCSsWyWonPMq20Vq0wcvu418oSBjEMYFk
+        IPYrsHlA==;
+Received: from dak by fasolo.debian.org with local (Exim 4.94.2)
+        (envelope-from <envelope@ftp-master.debian.org>)
+        id 1oNtYA-003K1B-7J; Tue, 16 Aug 2022 10:11:54 +0000
+From:   Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+To:     XFS Development Team <linux-xfs@vger.kernel.org>,
+        <bage@debian.org>, Nathan Scott <nathans@debian.org>
+X-DAK:  dak process-upload
+X-Debian: DAK
+X-Debian-Package: xfsprogs
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YvrrEcw4E+rpDLwM@sol.localdomain>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62fb5d51
-        a=O3n/kZ8kT9QBBO3sWHYIyw==:117 a=O3n/kZ8kT9QBBO3sWHYIyw==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=1XWaLZrsAAAA:8 a=7-415B0cAAAA:8
-        a=0f_GdJSvYQN_4D2ffm4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Subject: xfsprogs_5.19.0-1_source.changes ACCEPTED into unstable
+Message-Id: <E1oNtYA-003K1B-7J@fasolo.debian.org>
+Date:   Tue, 16 Aug 2022 10:11:54 +0000
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 15, 2022 at 05:55:45PM -0700, Eric Biggers wrote:
-> On Sat, Jul 30, 2022 at 08:08:26PM -0700, Jaegeuk Kim wrote:
-> > On 07/25, Eric Biggers wrote:
-> > > On Sat, Jul 23, 2022 at 07:01:59PM -0700, Jaegeuk Kim wrote:
-> > > > On 07/22, Eric Biggers wrote:
-> > > > > From: Eric Biggers <ebiggers@google.com>
-> > > > > 
-> > > > > Currently, if an f2fs filesystem is mounted with the mode=lfs and
-> > > > > io_bits mount options, DIO reads are allowed but DIO writes are not.
-> > > > > Allowing DIO reads but not DIO writes is an unusual restriction, which
-> > > > > is likely to be surprising to applications, namely any application that
-> > > > > both reads and writes from a file (using O_DIRECT).  This behavior is
-> > > > > also incompatible with the proposed STATX_DIOALIGN extension to statx.
-> > > > > Given this, let's drop the support for DIO reads in this configuration.
-> > > > 
-> > > > IIRC, we allowed DIO reads since applications complained a lower performance.
-> > > > So, I'm afraid this change will make another confusion to users. Could
-> > > > you please apply the new bahavior only for STATX_DIOALIGN?
-> > > > 
-> > > 
-> > > Well, the issue is that the proposed STATX_DIOALIGN fields cannot represent this
-> > > weird case where DIO reads are allowed but not DIO writes.  So the question is
-> > > whether this case actually matters, in which case we should make STATX_DIOALIGN
-> > > distinguish between DIO reads and DIO writes, or whether it's some odd edge case
-> > > that doesn't really matter, in which case we could just fix it or make
-> > > STATX_DIOALIGN report that DIO is unsupported.  I was hoping that you had some
-> > > insight here.  What sort of applications want DIO reads but not DIO writes?
-> > > Is this common at all?
-> > 
-> > I think there's no specific application to use the LFS mode at this
-> > moment, but I'd like to allow DIO read for zoned device which will be
-> > used for Android devices.
-> > 
-> 
-> So if the zoned device feature becomes widely adopted, then STATX_DIOALIGN will
-> be useless on all Android devices?  That sounds undesirable.  Are you sure that
-> supporting DIO reads but not DIO writes actually works?  Does it not cause
-> problems for existing applications?
 
-What purpose does DIO in only one direction actually serve? All it
-means is that we're forcibly mixing buffered and direct IO to the
-same file and that simply never ends well from a data coherency POV.
 
-Hence I'd suggest that mixing DIO reads and buffered writes like
-this ends up exposing uses to the worst of both worlds - all of the
-problems with none of the benefits...
+Accepted:
 
-> What we need to do is make a decision about whether this means we should build
-> in a stx_dio_direction field (indicating no support / readonly support /
-> writeonly support / readwrite support) into the API from the beginning.  If we
-> don't do that, then I don't think we could simply add such a field later, as the
-> statx_dio_*_align fields will have already been assigned their meaning.  I think
-> we'd instead have to "duplicate" the API, with STATX_DIOROALIGN and
-> statx_dio_ro_*_align fields.  That seems uglier than building a directional
-> indicator into the API from the beginning.  On the other hand, requiring all
-> programs to check stx_dio_direction would add complexity to using the API.
-> 
-> Any thoughts on this?
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Decide whether partial, single direction DIO serves a useful purpose
-before trying to work out what is needed in the API to indicate that
-this sort of crazy will be supported....
+Format: 1.8
+Date: Fri, 12 Aug 2022 13:40:25 -0500
+Source: xfsprogs
+Architecture: source
+Version: 5.19.0-1
+Distribution: unstable
+Urgency: medium
+Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+Changed-By: Nathan Scott <nathans@debian.org>
+Changes:
+ xfsprogs (5.19.0-1) unstable; urgency=medium
+ .
+   * New upstream release
+Checksums-Sha1:
+ 2d23b468701fe1978c6e173ac01df35b3a6705e0 2041 xfsprogs_5.19.0-1.dsc
+ 12afbdd497603b98945ea18f9aa5a78c671a6e4c 1325160 xfsprogs_5.19.0.orig.tar.xz
+ 4dd3f9a23d29dc6b40296029c25e30051a48f4b7 14376 xfsprogs_5.19.0-1.debian.tar.xz
+ 192461f42a870863bd202e18ca3abf1b5fc68976 6445 xfsprogs_5.19.0-1_source.buildinfo
+Checksums-Sha256:
+ 95b49c7ea794ddd25b627bb4ab43d7f138f46e1247207509edf9f9d474873b31 2041 xfsprogs_5.19.0-1.dsc
+ 4b6c6c98c036a37f6d90c82cb7fe9405d3b5856d9345662032d01ff4b140592c 1325160 xfsprogs_5.19.0.orig.tar.xz
+ b8374b4f0807fe30d8c2bc3c29511331380c7dc5c2d7757cf34116feaa1724cd 14376 xfsprogs_5.19.0-1.debian.tar.xz
+ c99c4460f564ba056bec2a002a8ab3aafcd37a60e4e6d0027daf2478e6175374 6445 xfsprogs_5.19.0-1_source.buildinfo
+Files:
+ d3ec9e1d9e07fd15d94bf2f9411ca572 2041 admin optional xfsprogs_5.19.0-1.dsc
+ a55ac9550225b863c263852a4dcfd2fb 1325160 admin optional xfsprogs_5.19.0.orig.tar.xz
+ 9d52ba10f7ce6427cecc98409a951fad 14376 admin optional xfsprogs_5.19.0-1.debian.tar.xz
+ 428f6b43771c5360bb84da12e6a05c41 6445 admin optional xfsprogs_5.19.0-1_source.buildinfo
 
-Cheers,
+-----BEGIN PGP SIGNATURE-----
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+iQHEBAEBCgAuFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmL7aYMQHGJhZ2VAZGVi
+aWFuLm9yZwAKCRAfXHqLRVZDFHVzC/40DQnG4auQP9jS4ksD+GttMWaNulDTdtX7
+2hHeQFbqZubyBbAY86Xh3Fu6FFb+GRKoxsqEOjZ155sCRClx1ALNM2hv+PKFbbGa
+Wd1hSFsclj19+071kdEuPqq4uJtQdAFVTNMxHjpEZvIp7jJUf8q4YpPv7FhHVzJI
+2sHvLU8YLeyVURJsDaV1ASJnK77Xf5+5BSHGU98XQc44K5vTSGUVjQ+cn4WpmIaI
+0OTRrSEYymGlS+H/+kvHFKdocEKy5noEkedpBmV0eNZ+9cFvocUs05i5eP9NfosV
+BTYUSj7HLWcC5ZEmWKa0OKQ5vKbjrFhrxRqFy6J/JkBFBpbTM6SMID8QGxA+Fxla
+BfTAKLLm/SABt+5y0hV6G6BOM0A9Wed3QpHATWJqBzgwEk419K8u1OQl0H1ch18n
+W2XxJID2kuyA8uMHKvEMcsgMVF75E80mG//YHc6wkXsPGVtnrNZvMxKW0tAJaUUN
+klQc8J85BmYoPRIqajh3efEyuZgd/OY=
+=assI
+-----END PGP SIGNATURE-----
+
+
+Thank you for your contribution to Debian.
