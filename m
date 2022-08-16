@@ -2,101 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73912C3F6B0
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 15:24:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D4EC28B2B
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 15:46:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236106AbiHPPYe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 11:24:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38994 "EHLO
+        id S236206AbiHPPqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 11:46:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236102AbiHPPYV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 11:24:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 642B46B8D9
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 08:23:43 -0700 (PDT)
+        with ESMTP id S236588AbiHPPp5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 11:45:57 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3892856BA0;
+        Tue, 16 Aug 2022 08:43:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0139D610A5
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 15:23:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57EEBC433D7;
-        Tue, 16 Aug 2022 15:23:42 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 398C4B819FD;
+        Tue, 16 Aug 2022 15:43:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D84DEC433D6;
+        Tue, 16 Aug 2022 15:43:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660663422;
-        bh=DW3UrteIq29GLPDPydMzTJ1+Pb5KkDr7GwVdcVwVcp8=;
+        s=k20201202; t=1660664588;
+        bh=M3oLnJo1qmEGcHvhKv48Lhf5XwYiKJUkic7K4U2f4t4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ketd5Y9OGSy0tDKYVmHRcyRuA/Uhx/LqqsBLu3NNEpBJJApPeeSeyLAhzDJkwdb0F
-         iILdmyVaJq+7D9K/zhbGok6ka6XHpN90R6CeT1SwJSs3KRVzdZ12/80Whb3C75hgF/
-         G8daa0osunuwlAxiTiQeWyf/R3UqpKELC392odfSldkfaobkXShP0erwPcjXdprUuO
-         8sW+aN1HK4Q4iIk/m/H9Fxt465Cyjqj9P/e0akLnD8yWGTvDqJDd9DllebuGRDe6Sw
-         tagz8SxEiApBSLPRS4mvZraTTTp+4DqyBxI9+q6Sew89V0O3ZzEM2gfk7M9wRF87wF
-         gQQSOgo6WAOlg==
-Date:   Tue, 16 Aug 2022 08:23:41 -0700
+        b=j6rpiN8O9urVKjfieHeD48UO+RMAXF/2X+y+Qr/aYB82aJnWM2CeZSIkjQL4HM2CL
+         9Ta9peS4IazlR4t+ohNfv6Qu7RKWV69F18VKn8YWzkFm1FzcaXIITJ8hwOpP1CtM85
+         +zdRa8WSLsCaGFlq89blyG6Ws0GyJ+GWTZsZjcNCTFi1z/pPc0SYA0GscBOGf0v5LP
+         II6g/PUHKh827ZGhNLg7yhcmREZCZj+QXDLWwP0anVpFzu+UjTKySDNZhf8Uyesatp
+         i5KNFcnL3KxuKxmywvIK6rnh+V55GlDTw0GGqcYMSompDD6ex+dbY1aE8rKtjPwiu4
+         FeLWJCnLNwAjQ==
+Date:   Tue, 16 Aug 2022 08:43:08 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Xiaole He <hexiaole1994@126.com>
-Cc:     linux-xfs@vger.kernel.org, hexiaole <hexiaole@kylinos.cn>
-Subject: Re: [PATCH v2] libxfs: fix inode reservation space for removing
- transaction
-Message-ID: <Yvu2fcKnPkhlxq5v@magnolia>
-References: <20220815025458.137-1-hexiaole1994@126.com>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix i_version handling in xfs
+Message-ID: <Yvu7DHDWl4g1KsI5@magnolia>
+References: <20220816131736.42615-1-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220815025458.137-1-hexiaole1994@126.com>
+In-Reply-To: <20220816131736.42615-1-jlayton@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 15, 2022 at 10:54:58AM +0800, Xiaole He wrote:
-> From: hexiaole <hexiaole@kylinos.cn>
+On Tue, Aug 16, 2022 at 09:17:36AM -0400, Jeff Layton wrote:
+> The i_version in xfs_trans_log_inode is bumped for any inode update,
+> including atime-only updates due to reads. We don't want to record those
+> in the i_version, as they don't represent "real" changes. Remove that
+> callsite.
 > 
-> In 'libxfs/xfs_trans_resv.c', the comment for transaction of removing a
-> directory entry mentions that there has 2 inode size of space to be
-> reserverd, but the actual code only count for 1 inode size:
+> In xfs_vn_update_time, if S_VERSION is flagged, then attempt to bump the
+> i_version and turn on XFS_ILOG_CORE if it happens. In
+> xfs_trans_ichgtime, update the i_version if the mtime or ctime are being
+> updated.
 
-Already merged, see 6.0-rc1.
+What about operations that don't touch the mtime but change the file
+metadata anyway?  There are a few of those, like the blockgc garbage
+collector, deduperange, and the defrag tool.
+
+Zooming out a bit -- what does i_version signal, concretely?  I thought
+it was used by nfs (and maybe ceph?) to signal to clients that the file
+on the server has moved on, and the client needs to invalidate its
+caches.  I thought afs had a similar generation counter, though it's
+only used to cache file data, not metadata?  Does an i_version change
+cause all of them to invalidate caches, or is there more behavior I
+don't know about?
+
+Does that mean that we should bump i_version for any file data or
+attribute that could be queried or observed by userspace?  In which case
+I suppose this change is still correct, even if it relaxes i_version
+updates from "any change to the inode whatsoever" to "any change that
+would bump mtime".  Unless FIEMAP is part of "attributes observed by
+userspace".
+
+(The other downside I can see is that now we have to remember to bump
+timestamps for every new file operation we add, unlike the current code
+which is centrally located in xfs_trans_log_inode.)
 
 --D
 
-> 
-> /* libxfs/xfs_trans_resv.c begin */
-> /*
->  * For removing a directory entry we can modify:
->  *    the parent directory inode: inode size
->  *    the removed inode: inode size
-> ...
-> xfs_calc_remove_reservation(
->         struct xfs_mount        *mp)
-> {
->         return XFS_DQUOT_LOGRES(mp) +
->                 xfs_calc_iunlink_add_reservation(mp) +
->                 max((xfs_calc_inode_res(mp, 1) +
-> ...
-> /* libxfs/xfs_trans_resv.c end */
-> 
-> Here only count for 1 inode size to be reserved in
-> 'xfs_calc_inode_res(mp, 1)', rather than 2.
-> 
-> Signed-off-by: hexiaole <hexiaole@kylinos.cn>
+> Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 > ---
-> V1 -> V2: djwong: remove redundant code citations
+>  fs/xfs/libxfs/xfs_trans_inode.c | 17 +++--------------
+>  fs/xfs/xfs_iops.c               |  4 ++++
+>  2 files changed, 7 insertions(+), 14 deletions(-)
 > 
->  libxfs/xfs_trans_resv.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-> index d4a9f69e..797176d7 100644
-> --- a/libxfs/xfs_trans_resv.c
-> +++ b/libxfs/xfs_trans_resv.c
-> @@ -514,7 +514,7 @@ xfs_calc_remove_reservation(
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
->  		xfs_calc_iunlink_add_reservation(mp) +
-> -		max((xfs_calc_inode_res(mp, 1) +
-> +		max((xfs_calc_inode_res(mp, 2) +
->  		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+> index 8b5547073379..78bf7f491462 100644
+> --- a/fs/xfs/libxfs/xfs_trans_inode.c
+> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
+> @@ -71,6 +71,8 @@ xfs_trans_ichgtime(
+>  		inode->i_ctime = tv;
+>  	if (flags & XFS_ICHGTIME_CREATE)
+>  		ip->i_crtime = tv;
+> +	if (flags & (XFS_ICHGTIME_MOD|XFS_ICHGTIME_CHG))
+> +		inode_inc_iversion(inode);
+>  }
+>  
+>  /*
+> @@ -116,20 +118,7 @@ xfs_trans_log_inode(
+>  		spin_unlock(&inode->i_lock);
+>  	}
+>  
+> -	/*
+> -	 * First time we log the inode in a transaction, bump the inode change
+> -	 * counter if it is configured for this to occur. While we have the
+> -	 * inode locked exclusively for metadata modification, we can usually
+> -	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
+> -	 * the last time it was incremented. If we have XFS_ILOG_CORE already
+> -	 * set however, then go ahead and bump the i_version counter
+> -	 * unconditionally.
+> -	 */
+> -	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
+> -		if (IS_I_VERSION(inode) &&
+> -		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
+> -			iversion_flags = XFS_ILOG_CORE;
+> -	}
+> +	set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags);
+>  
+>  	/*
+>  	 * If we're updating the inode core or the timestamps and it's possible
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 45518b8c613c..162e044c7f56 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -718,6 +718,7 @@ xfs_setattr_nonsize(
+>  	}
+>  
+>  	setattr_copy(mnt_userns, inode, iattr);
+> +	inode_inc_iversion(inode);
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  
+>  	XFS_STATS_INC(mp, xs_ig_attrchg);
+> @@ -943,6 +944,7 @@ xfs_setattr_size(
+>  
+>  	ASSERT(!(iattr->ia_valid & (ATTR_UID | ATTR_GID)));
+>  	setattr_copy(mnt_userns, inode, iattr);
+> +	inode_inc_iversion(inode);
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  
+>  	XFS_STATS_INC(mp, xs_ig_attrchg);
+> @@ -1047,6 +1049,8 @@ xfs_vn_update_time(
+>  		inode->i_mtime = *now;
+>  	if (flags & S_ATIME)
+>  		inode->i_atime = *now;
+> +	if ((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false))
+> +		log_flags |= XFS_ILOG_CORE;
+>  
+>  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_log_inode(tp, ip, log_flags);
 > -- 
-> 2.27.0
+> 2.37.2
 > 
