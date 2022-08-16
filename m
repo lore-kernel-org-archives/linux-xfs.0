@@ -2,210 +2,132 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEDFDC2BB41
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 07:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8857C2BB41
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 08:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231180AbiHPHzR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 03:55:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51568 "EHLO
+        id S230172AbiHPIvt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 04:51:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229596AbiHPHy7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 03:54:59 -0400
+        with ESMTP id S231232AbiHPIvS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 04:51:18 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26917194E6E
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Aug 2022 22:07:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32AD6B5A71
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Aug 2022 23:56:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B2896B815B8
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 05:07:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 740A7C433C1;
-        Tue, 16 Aug 2022 05:07:15 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C7042B81623
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 06:56:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8AE47C43141
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 06:56:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660626435;
-        bh=/RaQxLqu+Q88VDaqbwLIlSxBSMDdQ0XlzpSozqa/uu4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FdKHLYjvS+bZHF4yM87Evp29AOuvDdTDM0GLa24d52Iz2ziSUr0eLjy0krI2jSTvL
-         PQ/rmNF7OJAU1vToRxLX835uXCIHpI54neKDROW4V1JTdMAbDAUwO8YC4FdeTKzVmO
-         XXZy+7dftob7xWcztm9lYvI9g3POSqRSWti32/glK7ixCZj8y0uJrpm678L8ze9UWo
-         JfpnY6BidigjIkfjXCB2CI0GVj338Srgd4o6Vn+ln1CM+pzAs2iF+3AAtgKeATlfaW
-         1dkntD76P4xr3ANPXK6LuPG3t/YvSNbY63KjeHOqsAUNT9VYPd4jGQxxMAo2VT4AIc
-         dNi09+hSs1oQg==
-Date:   Mon, 15 Aug 2022 22:07:14 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Alli <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RESEND v2 01/18] xfs: Fix multi-transaction larp replay
-Message-ID: <YvsmAgj348tlKfCL@magnolia>
-References: <20220804194013.99237-1-allison.henderson@oracle.com>
- <20220804194013.99237-2-allison.henderson@oracle.com>
- <YvKQ5+XotiXFDpTA@magnolia>
- <20220810015809.GK3600936@dread.disaster.area>
- <373809e97f15e14d181fea6e170bfd8e37a9c9e4.camel@oracle.com>
- <20220810061258.GL3600936@dread.disaster.area>
- <f85ae9d8425aaff455301b28af32ba0d813f733b.camel@oracle.com>
- <20220816005438.GT3600936@dread.disaster.area>
+        s=k20201202; t=1660632986;
+        bh=6Y0iD89Rtxuku92D6SJFlF6RKSZcva/SAIf2W+9+Gec=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=hAHW+Gyc3PYzyvzDqSQLSXxzYEtTREqAhMHVU2s8v3CAi1fyocQFh8VToTu6O0Cis
+         NrUfb+Lcm1IpwvDEdg1BFHG0+Sp9AVUE/WW5Om+Lcfa+Q9ujda+8U6kBcHWIIdSH7v
+         8zUl65W3huGSf0jbAdmhuDYg8Q/+SRPHLqwHmnN9yktdtK7MzhAT8IqvQbT+7PZzKX
+         6g9MmAoWtUfDoMijnzFLZuqzfj/KDB3JdoECXQnXrXxdJpylFNvgmWIiaSxr3E/+HX
+         qMMsD4sy9JJjtNeboUzaHy7ZasoxjkuovtwDfDJVrU+cAZ23KY0Xx8ynUc1ekUNqt9
+         yjNChh7/t8Z3g==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 77C42C433E4; Tue, 16 Aug 2022 06:56:26 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216343] XFS: no space left in xlog cause system hang
+Date:   Tue, 16 Aug 2022 06:56:26 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: zhoukete@126.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216343-201763-5uNVb4ysij@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216343-201763@https.bugzilla.kernel.org/>
+References: <bug-216343-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220816005438.GT3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 16, 2022 at 10:54:38AM +1000, Dave Chinner wrote:
-> On Thu, Aug 11, 2022 at 06:55:16PM -0700, Alli wrote:
-> > On Wed, 2022-08-10 at 16:12 +1000, Dave Chinner wrote:
-> > > On Tue, Aug 09, 2022 at 10:01:49PM -0700, Alli wrote:
-> > > > On Wed, 2022-08-10 at 11:58 +1000, Dave Chinner wrote:
-> > > > > On Tue, Aug 09, 2022 at 09:52:55AM -0700, Darrick J. Wong wrote:
-> > > > > > On Thu, Aug 04, 2022 at 12:39:56PM -0700, Allison Henderson
-> > > > > > wrote:
-> > > > > > > Recent parent pointer testing has exposed a bug in the
-> > > > > > > underlying
-> > > > > > > attr replay.  A multi transaction replay currently performs a
-> > > > > > > single step of the replay, then deferrs the rest if there is
-> > > > > > > more
-> > > > > > > to do.
-> > > > > 
-> > > > > Yup.
-> > > > > 
-> > > > > > > This causes race conditions with other attr replays that
-> > > > > > > might be recovered before the remaining deferred work has had
-> > > > > > > a
-> > > > > > > chance to finish.
-> > > > > 
-> > > > > What other attr replays are we racing against?  There can only be
-> > > > > one incomplete attr item intent/done chain per inode present in
-> > > > > log
-> > > > > recovery, right?
-> > > > No, a rename queues up a set and remove before committing the
-> > > > transaction.  One for the new parent pointer, and another to remove
-> > > > the
-> > > > old one.
-> > > 
-> > > Ah. That really needs to be described in the commit message -
-> > > changing from "single intent chain per object" to "multiple
-> > > concurrent independent and unserialised intent chains per object" is
-> > > a pretty important design rule change...
-> > > 
-> > > The whole point of intents is to allow complex, multi-stage
-> > > operations on a single object to be sequenced in a tightly
-> > > controlled manner. They weren't intended to be run as concurrent
-> > > lines of modification on single items; if you need to do two
-> > > modifications on an object, the intent chain ties the two
-> > > modifications together into a single whole.
-> > > 
-> > > One of the reasons I rewrote the attr state machine for LARP was to
-> > > enable new multiple attr operation chains to be easily build from
-> > > the entry points the state machien provides. Parent attr rename
-> > > needs a new intent chain to be built, not run multiple independent
-> > > intent chains for each modification.
-> > > 
-> > > > It cant be an attr replace because technically the names are
-> > > > different.
-> > > 
-> > > I disagree - we have all the pieces we need in the state machine
-> > > already, we just need to define separate attr names for the
-> > > remove and insert steps in the attr intent.
-> > > 
-> > > That is, the "replace" operation we execute when an attr set
-> > > overwrites the value is "technically" a "replace value" operation,
-> > > but we actually implement it as a "replace entire attribute"
-> > > operation.
-> > > 
-> > > Without LARP, we do that overwrite in independent steps via an
-> > > intermediate INCOMPLETE state to allow two xattrs of the same name
-> > > to exist in the attr tree at the same time. IOWs, the attr value
-> > > overwrite is effectively a "set-swap-remove" operation on two
-> > > entirely independent xattrs, ensuring that if we crash we always
-> > > have either the old or new xattr visible.
-> > > 
-> > > With LARP, we can remove the original attr first, thereby avoiding
-> > > the need for two versions of the xattr to exist in the tree in the
-> > > first place. However, we have to do these two operations as a pair
-> > > of linked independent operations. The intent chain provides the
-> > > linking, and requires us to log the name and the value of the attr
-> > > that we are overwriting in the intent. Hence we can always recover
-> > > the modification to completion no matter where in the operation we
-> > > fail.
-> > > 
-> > > When it comes to a parent attr rename operation, we are effectively
-> > > doing two linked operations - remove the old attr, set the new attr
-> > > - on different attributes. Implementation wise, it is exactly the
-> > > same sequence as a "replace value" operation, except for the fact
-> > > that the new attr we add has a different name.
-> > > 
-> > > Hence the only real difference between the existing "attr replace"
-> > > and the intent chain we need for "parent attr rename" is that we
-> > > have to log two attr names instead of one. 
-> > 
-> > To be clear, this would imply expanding xfs_attri_log_format to have
-> > another alfi_new_name_len feild and another iovec for the attr intent
-> > right?  Does that cause issues to change the on disk log layout after
-> > the original has merged?  Or is that ok for things that are still
-> > experimental? Thanks!
-> 
-> I think we can get away with this quite easily without breaking the
-> existing experimental code.
-> 
-> struct xfs_attri_log_format {
->         uint16_t        alfi_type;      /* attri log item type */
->         uint16_t        alfi_size;      /* size of this item */
->         uint32_t        __pad;          /* pad to 64 bit aligned */
->         uint64_t        alfi_id;        /* attri identifier */
->         uint64_t        alfi_ino;       /* the inode for this attr operation */
->         uint32_t        alfi_op_flags;  /* marks the op as a set or remove */
->         uint32_t        alfi_name_len;  /* attr name length */
->         uint32_t        alfi_value_len; /* attr value length */
->         uint32_t        alfi_attr_filter;/* attr filter flags */
-> };
-> 
-> We have a padding field in there that is currently all zeros. Let's
-> make that a count of the number of {name, value} tuples that are
-> appended to the format. i.e.
-> 
-> struct xfs_attri_log_name {
->         uint32_t        alfi_op_flags;  /* marks the op as a set or remove */
->         uint32_t        alfi_name_len;  /* attr name length */
->         uint32_t        alfi_value_len; /* attr value length */
->         uint32_t        alfi_attr_filter;/* attr filter flags */
-> };
-> 
-> struct xfs_attri_log_format {
->         uint16_t        alfi_type;      /* attri log item type */
->         uint16_t        alfi_size;      /* size of this item */
-> 	uint8_t		alfi_attr_cnt;	/* count of name/val pairs */
->         uint8_t		__pad1;          /* pad to 64 bit aligned */
->         uint16_t	__pad2;          /* pad to 64 bit aligned */
->         uint64_t        alfi_id;        /* attri identifier */
->         uint64_t        alfi_ino;       /* the inode for this attr operation */
-> 	struct xfs_attri_log_name alfi_attr[]; /* attrs to operate on */
-> };
-> 
-> Basically, the size and shape of the structure has not changed, and
-> if alfi_attr_cnt == 0 we just treat it as if alfi_attr_cnt == 1 as
-> the backwards compat code for the existing code.
-> 
-> And then we just have as many followup regions for name/val pairs
-> as are defined by the alfi_attr_cnt and alfi_attr[] parts of the
-> structure. Each attr can have a different operation performed on
-> them, and they can have different filters applied so they can exist
-> in different namespaces, too.
-> 
-> SO I don't think we need a new on-disk feature bit for this
-> enhancement - it definitely comes under the heading of "this stuff
-> is experimental, this is the sort of early structure revision that
-> EXPERIMENTAL is supposed to cover....
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
 
-You might even callit "alfi_extra_names" to avoid the "0 means 1" stuff.
-;)
+--- Comment #3 from zhoukete@126.com ---
+(In reply to Amir Goldstein from comment #2)
+>=20
+> I don't think so.
+> I think this buffer write is in-flight.
 
---D
+But how to explain the XFS_DONE flag is set.Is XFS_DONE flag means the io h=
+ad
+been done=EF=BC=9F
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+
+>=20
+> Not sure if space cannot be released or just takes a lot of time.
+
+crash> ps -m 2006840
+[0 14:35:38.418] [UN]  PID: 2006840  TASK: ffff035f80de8f80  CPU: 51  COMMA=
+ND:
+"onestor-peon"=20
+
+pid 2006840 hang 14 hours. It is waiting for the xfs buf io finish.
+So I  think it is =E2=80=98cannot be released=E2=80=99 not take a lot of ti=
+me.
+
+crash> bt 2006840
+PID: 2006840  TASK: ffff035f80de8f80  CPU: 51  COMMAND: "onestor-peon"
+ #0 [ffff80002a873580] __switch_to at ffff800010016dec
+ #1 [ffff80002a8735b0] __schedule at ffff800010a99d60
+ #2 [ffff80002a873650] schedule at ffff800010a9a1cc
+ #3 [ffff80002a873670] schedule_timeout at ffff800010a9ee00
+ #4 [ffff80002a873710] __down at ffff800010a9d2ec
+ #5 [ffff80002a8737a0] down at ffff8000100ea30c
+ #6 [ffff80002a8737c0] xfs_buf_lock at ffff800008f5bd4c [xfs]
+ #7 [ffff80002a8737f0] xfs_buf_find at ffff800008f5c3f0 [xfs]
+ #8 [ffff80002a8738b0] xfs_buf_get_map at ffff800008f5c7d4 [xfs]
+ #9 [ffff80002a873930] xfs_buf_read_map at ffff800008f5cf10 [xfs]
+#10 [ffff80002a8739a0] xfs_trans_read_buf_map at ffff800008f9c198 [xfs]
+#11 [ffff80002a873a20] xfs_da_read_buf at ffff800008f2b51c [xfs]
+#12 [ffff80002a873aa0] xfs_da3_node_read at ffff800008f2b5a4 [xfs]
+#13 [ffff80002a873ac0] xfs_da3_node_lookup_int at ffff800008f2c778 [xfs]
+#14 [ffff80002a873b60] xfs_dir2_node_removename at ffff800008f38964 [xfs]
+#15 [ffff80002a873c30] xfs_dir_removename at ffff800008f2fc6c [xfs]
+#16 [ffff80002a873c90] xfs_remove at ffff800008f77f70 [xfs]
+#17 [ffff80002a873d00] xfs_vn_unlink at ffff800008f72744 [xfs]
+#18 [ffff80002a873d50] vfs_unlink at ffff8000103264e8
+#19 [ffff80002a873d90] do_unlinkat at ffff80001032ad44
+#20 [ffff80002a873e20] __arm64_sys_unlinkat at ffff80001032ae30=20
+
+> There are several AIL/CIL improvements in upstream kernel and
+> none of them are going to land in 5.10.y.
+> The reported kernel version 5.10.38 has almost no upstream fixes
+> at all, but I don't think that any of the fixes in 5.10.y are relevant for
+> this case anyway.
+>=20
+> If this hang happens often with your workload, I suggest using
+> a newer kernel and/or formatting xfs with a larger log to meet
+> the demands of your workload.
+>=20
+
+It is just happens only once.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
