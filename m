@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F076EC25B0E
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 13:30:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 481BCC3F6B0
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 13:34:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235776AbiHPNar (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 09:30:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46278 "EHLO
+        id S232763AbiHPNeU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 09:34:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235844AbiHPNai (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 09:30:38 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 053C6B8F09;
-        Tue, 16 Aug 2022 06:30:32 -0700 (PDT)
+        with ESMTP id S235770AbiHPNeS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 09:34:18 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A57714BA43;
+        Tue, 16 Aug 2022 06:34:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 74627B819C9;
-        Tue, 16 Aug 2022 13:30:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A80BDC433D6;
-        Tue, 16 Aug 2022 13:30:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 43C1E60A09;
+        Tue, 16 Aug 2022 13:34:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48B84C433D6;
+        Tue, 16 Aug 2022 13:34:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660656629;
-        bh=FllygCNtLO2m8JRLkjcqE6kxOOJd4BymxCTrkj6ZZl0=;
+        s=k20201202; t=1660656855;
+        bh=yRKmarZ3sRxQHVQpotVy13wyeGDSiZwkyWwSPPwpR8k=;
         h=From:To:Cc:Subject:Date:From;
-        b=kSTQub2OoA7UcVv9dgvQm+K8UnBWzwKbz7m0mc6w6Wd9TlXczf07bzUBUGgoVkEI2
-         9RzvmQ+gAu8vrme7xz4Oqy222ABeq+FKICcX6FBQ/+Vt8Y64DJ/8PO9oRwE6CX+iMY
-         qxUitdJi2EtYLWxbdtSd/a1VGomV9hJ/mdw197D2Z8Pi4FiWSGIAwkq94kD2LN4z3l
-         GAZTYpZ5PHiMkpAQWARNMGVGvMm19FfziPCiWSyKM+4ti2hRAWFRZ8fdGmJBHNKTUN
-         Q7KclckrDbpIi0UKh+T7Cv28qF7DyS5W9+PR1vEnPAWDgp62ltvulgirhk9veUOS1g
-         Dpwn4jEKsMnWg==
+        b=jf5NIatr6GZhYsZZyJlmCEcWyUKj9flwn1j27o1iBmRGXNSVUadJilWlWdU4PBWRg
+         5C/cbYBVmuQklGg0x95Yp67CRBHDBA1XUegQr+wdZ3/LSeNwSw2/Y90ttE3N2DjIA0
+         nxqdOXsSRItLyuOEOHJCuwy6KWVmKpucZnK27Lh2p2UGmDxHMaHIMruFZAltUoPjCv
+         +PQGbp+4J6Wpi8BkmDqdjyvWuD2CGkkdr4e78hYVxFa8ZLwnMDBNjHRk74Wl0fSeWH
+         6qTqTUxGE/6PLpdBEE012PwdQ035injVXzU8+N3ypi1rbSC5EVw3AseFjOUjO0TxH5
+         KL6+W1g8TKUaQ==
 From:   Jeff Layton <jlayton@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, fstests@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: [xfsprogs PATCH] xfs_io: add support for mnt_id and change_attr statx fields
-Date:   Tue, 16 Aug 2022 09:30:27 -0400
-Message-Id: <20220816133027.43983-1-jlayton@kernel.org>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [xfstests PATCH] generic/693: add basic change attr test
+Date:   Tue, 16 Aug 2022 09:34:13 -0400
+Message-Id: <20220816133413.44298-1-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -45,224 +44,202 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add support for the new mnt_id field and the proposed change_attr field
-in statx to xfs_io. Add a new autoconf test to see whether the system's
-struct statx has the requisite fields. If not, or if there is no struct
-statx defined, then use the internal definitions in statx.h.
+Now that we have the ability to query the change attribute in userland,
+test that the filesystems implement it correctly. Fetch the change
+attribute before and after various operations and validate that it
+changes (or doesn't change) as expected.
 
-Wrap most of the preprocessor constants in #ifdefs so that we only
-redefine the values needed. Since we can't undefine a struct definition,
-postfix their names with "_internal" and use the preprocessor to
-override the struct definitions.
-
-Cc: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- configure.ac          |  1 +
- include/builddefs.in  |  4 ++++
- io/stat.c             |  8 ++++++--
- io/statx.h            | 29 ++++++++++++++++++++++-------
- m4/package_libcdev.m4 | 14 ++++++++++++++
- 5 files changed, 47 insertions(+), 9 deletions(-)
+ common/rc             |  17 ++++++
+ tests/generic/693     | 138 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/693.out |   1 +
+ 3 files changed, 156 insertions(+)
+ create mode 100755 tests/generic/693
+ create mode 100644 tests/generic/693.out
 
-diff --git a/configure.ac b/configure.ac
-index 6c13eff1e5e8..e1c216ef7016 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -187,6 +187,7 @@ AC_HAVE_FSETXATTR
- AC_HAVE_MREMAP
- AC_NEED_INTERNAL_FSXATTR
- AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
-+AC_NEED_INTERNAL_STATX
- AC_HAVE_GETFSMAP
- AC_HAVE_STATFS_FLAGS
- AC_HAVE_MAP_SYNC
-diff --git a/include/builddefs.in b/include/builddefs.in
-index e0a2f3cbc954..4c690ee3a89b 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -110,6 +110,7 @@ HAVE_FSETXATTR = @have_fsetxattr@
- HAVE_MREMAP = @have_mremap@
- NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
- NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
-+NEED_INTERNAL_STATX = @need_internal_statx@
- HAVE_GETFSMAP = @have_getfsmap@
- HAVE_STATFS_FLAGS = @have_statfs_flags@
- HAVE_MAP_SYNC = @have_map_sync@
-@@ -155,6 +156,9 @@ endif
- ifeq ($(NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG),yes)
- PCFLAGS+= -DOVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG
- endif
-+ifeq ($(NEED_INTERNAL_STATX),yes)
-+PCFLAGS+= -DOVERRIDE_SYSTEM_STATX
-+endif
- ifeq ($(HAVE_GETFSMAP),yes)
- PCFLAGS+= -DHAVE_GETFSMAP
- endif
-diff --git a/io/stat.c b/io/stat.c
-index b57f9eefed29..a417d859eb88 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -17,6 +17,8 @@
- 
- #include <fcntl.h>
- 
-+#define IO_STATX_MASK	(STATX_ALL | STATX_MNT_ID | STATX_CHANGE_ATTR)
-+
- static cmdinfo_t stat_cmd;
- static cmdinfo_t statfs_cmd;
- static cmdinfo_t statx_cmd;
-@@ -349,6 +351,8 @@ dump_raw_statx(struct statx *stx)
- 	printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
- 	printf("stat.dev_major = %u\n", stx->stx_dev_major);
- 	printf("stat.dev_minor = %u\n", stx->stx_dev_minor);
-+	printf("stat.mnt_id = 0x%llx\n", stx->stx_mnt_id);
-+	printf("stat.change_attr = 0x%llx\n", stx->stx_change_attr);
- 	return 0;
+Please look and make sure I'm not missing other operations that we
+should be testing here!
+
+diff --git a/common/rc b/common/rc
+index 197c94157025..b9cb47f99016 100644
+--- a/common/rc
++++ b/common/rc
+@@ -5052,6 +5052,23 @@ hexdump()
+ 	_fail "Use _hexdump(), please!"
  }
  
-@@ -367,7 +371,7 @@ statx_f(
- 	char		*p;
- 	struct statx	stx;
- 	int		atflag = 0;
--	unsigned int	mask = STATX_ALL;
-+	unsigned int	mask = IO_STATX_MASK;
- 
- 	while ((c = getopt(argc, argv, "m:rvFD")) != EOF) {
- 		switch (c) {
-@@ -375,7 +379,7 @@ statx_f(
- 			if (strcmp(optarg, "basic") == 0)
- 				mask = STATX_BASIC_STATS;
- 			else if (strcmp(optarg, "all") == 0)
--				mask = STATX_ALL;
-+				mask = IO_STATX_MASK;
- 			else {
- 				mask = strtoul(optarg, &p, 0);
- 				if (!p || p == optarg) {
-diff --git a/io/statx.h b/io/statx.h
-index c6625ac431bf..7b3b23058493 100644
---- a/io/statx.h
-+++ b/io/statx.h
-@@ -5,6 +5,7 @@
- 
- #include <unistd.h>
- #include <sys/syscall.h>
-+#include <sys/types.h>
- 
- #ifndef AT_EMPTY_PATH
- #define AT_EMPTY_PATH	0x1000
-@@ -37,10 +38,10 @@
- #ifndef STATX_TYPE
- /* Pick up kernel definitions if glibc didn't already provide them */
- #include <linux/stat.h>
--#endif
-+#endif /* STATX_TYPE */
- 
--#ifndef STATX_TYPE
--/* Local definitions if glibc & kernel headers didn't already provide them */
-+#ifdef OVERRIDE_SYSTEM_STATX
-+/* Local definitions if they don't exist or are too old */
- 
- /*
-  * Timestamp structure for the timestamps in struct statx.
-@@ -56,11 +57,12 @@
-  *
-  * __reserved is held in case we need a yet finer resolution.
-  */
--struct statx_timestamp {
-+struct statx_timestamp_internal {
- 	__s64	tv_sec;
- 	__s32	tv_nsec;
- 	__s32	__reserved;
- };
-+#define statx_timestamp statx_timestamp_internal
- 
- /*
-  * Structures for the extended file attribute retrieval system call
-@@ -99,7 +101,7 @@ struct statx_timestamp {
-  * will have values installed for compatibility purposes so that stat() and
-  * co. can be emulated in userspace.
-  */
--struct statx {
-+struct statx_internal {
- 	/* 0x00 */
- 	__u32	stx_mask;	/* What results were written [uncond] */
- 	__u32	stx_blksize;	/* Preferred general I/O size [uncond] */
-@@ -126,9 +128,13 @@ struct statx {
- 	__u32	stx_dev_major;	/* ID of device containing file [uncond] */
- 	__u32	stx_dev_minor;
- 	/* 0x90 */
--	__u64	__spare2[14];	/* Spare space for future expansion */
-+	__u64	stx_mnt_id;
-+	__u64	stx_change_attr;
-+	/* 0xa0 */
-+	__u64	__spare2[12];	/* Spare space for future expansion */
- 	/* 0x100 */
- };
-+#define statx statx_internal
- 
- /*
-  * Flags to be stx_mask
-@@ -138,6 +144,7 @@ struct statx {
-  * These bits should be set in the mask argument of statx() to request
-  * particular items when calling statx().
-  */
-+#ifndef STATX_TYPE
- #define STATX_TYPE		0x00000001U	/* Want/got stx_mode & S_IFMT */
- #define STATX_MODE		0x00000002U	/* Want/got stx_mode & ~S_IFMT */
- #define STATX_NLINK		0x00000004U	/* Want/got stx_nlink */
-@@ -153,6 +160,12 @@ struct statx {
- #define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
- #define STATX_ALL		0x00000fffU	/* All currently supported flags */
- #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx expansion */
-+#endif /* STATX_TYPE */
++_require_change_attr ()
++{
 +
-+#ifndef STATX_CHANGE_ATTR
-+#define STATX_MNT_ID		0x00001000U	/* Got stx_mnt_id */
-+#define STATX_CHANGE_ATTR	0x00002000U     /* Want/got stx_change_attr */
-+#endif /* STATX_CHANGE_ATTR */
- 
- /*
-  * Attributes to be found in stx_attributes
-@@ -165,6 +178,7 @@ struct statx {
-  * semantically.  Where possible, the numerical value is picked to correspond
-  * also.
-  */
-+#ifndef STATX_ATTR_COMPRESSED
- #define STATX_ATTR_COMPRESSED		0x00000004 /* [I] File is compressed by the fs */
- #define STATX_ATTR_IMMUTABLE		0x00000010 /* [I] File is marked immutable */
- #define STATX_ATTR_APPEND		0x00000020 /* [I] File is append-only */
-@@ -172,6 +186,7 @@ struct statx {
- #define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
- 
- #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
-+#endif /* STATX_ATTR_COMPRESSED */
- 
--#endif /* STATX_TYPE */
-+#endif /* OVERRIDE_SYSTEM_STATX */
- #endif /* XFS_IO_STATX_H */
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index bb1ab49c11e4..8fde37518323 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -507,3 +507,17 @@ AC_DEFUN([AC_PACKAGE_CHECK_LTO],
-     AC_SUBST(lto_cflags)
-     AC_SUBST(lto_ldflags)
-   ])
++	_mask=$($XFS_IO_PROG -f -c "statx -m 0x2000 -r" $TEST_DIR/change_attr_test.$$ \
++		| grep "^stat.mask" | cut -d' ' -f 3)
++	rm -f $TEST_DIR/change_attr_test.$$
++	if [ $(( ${_mask}&0x2000 )) -eq 0 ]; then
++		_notrun "$FSTYP does not support inode change attribute"
++	fi
++}
 +
-+AC_DEFUN([AC_NEED_INTERNAL_STATX],
-+  [ AC_CHECK_TYPE(struct statx,
-+      [
-+        AC_CHECK_MEMBER(struct statx.stx_change_attr,
-+          ,
-+          need_internal_statx=yes,
-+          [#include <linux/stat.h>]
-+        )
-+      ],,
-+      [#include <linux/stat.h>]
-+    )
-+    AC_SUBST(need_internal_statx)
-+  ])
++_get_change_attr ()
++{
++	$XFS_IO_PROG -r -c "statx -m 0x2000 -r" $1 | grep '^stat.change_attr' | \
++		cut -d' ' -f3
++}
++
+ init_rc
+ 
+ ################################################################################
+diff --git a/tests/generic/693 b/tests/generic/693
+new file mode 100755
+index 000000000000..fa92931d2ac8
+--- /dev/null
++++ b/tests/generic/693
+@@ -0,0 +1,138 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2021, Jeff Layton <jlayton@redhat.com>
++#
++# FS QA Test No. 693
++#
++# Test the behavior of the inode change attribute
++#
++. ./common/preamble
++_begin_fstest auto quick rw
++
++# Import common functions.
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_require_test
++_require_change_attr
++
++# from the stat.h header file
++UTIME_OMIT=1073741822
++
++testdir="$TEST_DIR/test_iversion_dir.$$"
++testfile="$testdir/test_iversion_file.$$"
++
++mkdir $testdir
++
++# DIRECTORY TESTS
++#################
++# Does dir change attr change on a create?
++old=$(_get_change_attr $testdir)
++touch $testfile
++new=$(_get_change_attr $testdir)
++if [ $old = $new ]; then
++	_fail "Change attr of dir did not change after create!"
++fi
++
++# on a hardlink?
++old=$new
++ln $testfile $testdir/linky
++new=$(_get_change_attr $testdir)
++if [ $old = $new ]; then
++	_fail "Change attr of dir did not change after hardlink!"
++fi
++
++# on an unlink?
++old=$new
++rm -f $testfile
++new=$(_get_change_attr $testdir)
++if [ $old = $new ]; then
++	_fail "Change attr of dir did not change after unlink!"
++fi
++
++# on a rename (within same dir)
++old=$new
++mv $testdir/linky $testfile
++new=$(_get_change_attr $testdir)
++if [ $old = $new ]; then
++	_fail "Change attr of dir did not change after rename!"
++fi
++
++# on a mknod
++old=$new
++mknod $testdir/pipe p
++new=$(_get_change_attr $testdir)
++if [ $old = $new ]; then
++	_fail "Change attr of dir did not change after mknod!"
++fi
++
++
++# REGULAR FILE TESTS
++####################
++# ensure change_attr changes after a write
++old=$(_get_change_attr $testfile)
++$XFS_IO_PROG -c "pwrite -W -q 0 32" $testfile
++new=$(_get_change_attr $testfile)
++if [ $old = $new ]; then
++	_fail "Change attr did not change after write!"
++fi
++
++# ensure it doesn't change after a sync
++old=$new
++sync
++new=$(_get_change_attr $testfile)
++if [ $old != $new ]; then
++	_fail "Change attr changed after sync!"
++fi
++
++# ensure change_attr does not change after read
++old=$new
++cat $testfile > /dev/null
++new=$(_get_change_attr $testfile)
++if [ $old != $new ]; then
++	_fail "Change attr changed after read!"
++fi
++
++# ensure it changes after truncate
++old=$new
++truncate --size 0 $testfile
++new=$(_get_change_attr $testfile)
++if [ $old = $new ]; then
++	_fail "Change attr did not change after truncate!"
++fi
++
++# ensure it changes after only atime update
++old=$new
++$XFS_IO_PROG -c "utimes 1 1 $UTIME_OMIT $UTIME_OMIT" $testfile
++new=$(_get_change_attr $testfile)
++if [ $old = $new ]; then
++	_fail "Change attr did not change after atime update!"
++fi
++
++# ensure it changes after utimes atime/mtime update
++old=$new
++$XFS_IO_PROG -c "utimes 1 1 1 1" $testfile
++new=$(_get_change_attr $testfile)
++if [ $old = $new ]; then
++	_fail "Change attr did not change after mtime update!"
++fi
++
++# after setting xattr
++old=$new
++setfattr -n user.foo -v bar $testfile
++new=$(_get_change_attr $testfile)
++if [ $old = $new ]; then
++	_fail "Change attr did not change after setxattr!"
++fi
++
++# after removing xattr
++old=$new
++setfattr -x user.foo $testfile
++new=$(_get_change_attr $testfile)
++if [ $old = $new ]; then
++	_fail "Change attr did not change after rmxattr!"
++fi
++
++status=0
++exit
+diff --git a/tests/generic/693.out b/tests/generic/693.out
+new file mode 100644
+index 000000000000..89ad553d911c
+--- /dev/null
++++ b/tests/generic/693.out
+@@ -0,0 +1 @@
++QA output created by 693
 -- 
 2.37.2
 
