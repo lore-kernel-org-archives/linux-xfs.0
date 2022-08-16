@@ -2,239 +2,207 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5423DC2BB41
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 16:42:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B06FEC32772
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 17:15:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233925AbiHPQmk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 12:42:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45770 "EHLO
+        id S236283AbiHPRPg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 13:15:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235958AbiHPQmj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 12:42:39 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58EBD80E86
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 09:42:35 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id bh13so9719629pgb.4
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 09:42:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dilger-ca.20210112.gappssmtp.com; s=20210112;
-        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
-         :from:from:to:cc;
-        bh=3UsEcGaqqxu6uaf6V7Db2UUvbrW1qQxZh0X1je5plvs=;
-        b=Zmvs6vXQj1YuzC5CpcL9ZdRSfRMxWuvJuG36+xzxXxSn/FnBKBWixBWCoOKIwrcf55
-         n46G64dAdkeAyCTOhtlwvPzc4Tk73T8CZOzBxW/yv7iUTcD5j+K09Xl78RS6JHAryYsH
-         dpl6GIflzqLKivwt8XMQjnVpsHzQ8A5k8FSijs3OEEXN9w0pRa/0S5IaJNPik48pckp6
-         C5aMtORn54V5bsaXmHvhAa1AZHkQKY6sgAgHPDjgbX8T2hQke1pSCge/sRvDRbpzK3+Q
-         NVCcQskda4YA0R3znKKkgXYcwZ4EYf0ewpN+JcDe6G59HZSOCmXZDesAM6+QGyO3VRhc
-         YGsQ==
+        with ESMTP id S236163AbiHPRPg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 13:15:36 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BBB57A758
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 10:15:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1660670133;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=76sG/KyxLmQ56bn83QhiqsNTUnCGsc1T0j3i3xg61zo=;
+        b=I7BQx8VeqwUg3sKZup425xGd888e25/DSLxyL6RMRWj/7Xb0YMEhCZhh2cZeBCDn9Hm9od
+        ja61qKU1BbMTSPyIVbDokgUNe6srxuS3tp9n97Y2CZp6lB2mkLtA9LpKQMyXrRq+8TG6br
+        TBr6lzMw5ZlMnWbRU9Q1i0cRv7BRQO0=
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
+ [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-341-v9yIii2_Ne2MLiRJmE2AhA-1; Tue, 16 Aug 2022 13:15:32 -0400
+X-MC-Unique: v9yIii2_Ne2MLiRJmE2AhA-1
+Received: by mail-ed1-f70.google.com with SMTP id m22-20020a056402431600b0043d6a88130aso7000127edc.18
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 10:15:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
-         :from:x-gm-message-state:from:to:cc;
-        bh=3UsEcGaqqxu6uaf6V7Db2UUvbrW1qQxZh0X1je5plvs=;
-        b=kK24LpVxac2K0XAT/dNX7/4ZSnvDjQxCkNBGFFdoFk6fq0vTQQR1GmY+uaEq6+yIys
-         cRGR0mHSumgG5EHk63l/iuxrVF3SKPMNKNRmuu7N/2myNc4QuNIiZmQfzJz5KNMxyXs6
-         N4+R5JY6zw203XZtawVu4Tv+NZX1Mg38PBrn59ReuzLncD+0woR/Zpr+ypFI2QUgWku9
-         Z+XJyQg3u1CDsFJ2YV0pv6712uI7/Zv0sJi/bTzF282hsrOJEiwiGPXb9HbBD1sAU6Tt
-         o4uhvhQXcbyRJqMDPRZpbpW0/Cd6Qu88GQsqmW0eOz8KWhH0HzmXLsdd8czXEv1Pse7X
-         qNZw==
-X-Gm-Message-State: ACgBeo2CERmRLfuWFAik5Z2YCSy/dXGiYIAWmg3xAsFZM4EDUBq/ApnZ
-        ko6e9VFBovUe1/WGa8qriFOEig==
-X-Google-Smtp-Source: AA6agR5MxmTfKKDmbSJw3suGI5oZ/F470+FJjV7/Uj0jVLBbToS4xOkVs5Jg06J4aqmXnDRNRAtD/Q==
-X-Received: by 2002:a65:6d85:0:b0:429:9ce8:6a60 with SMTP id bc5-20020a656d85000000b004299ce86a60mr4399151pgb.352.1660668154762;
-        Tue, 16 Aug 2022 09:42:34 -0700 (PDT)
-Received: from cabot.adilger.int (S01061cabc081bf83.cg.shawcable.net. [70.77.221.9])
-        by smtp.gmail.com with ESMTPSA id z25-20020a656659000000b00419b66846fcsm7761270pgv.91.2022.08.16.09.42.32
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 16 Aug 2022 09:42:33 -0700 (PDT)
-From:   Andreas Dilger <adilger@dilger.ca>
-Message-Id: <D1CDACE3-EC7E-43E4-8F49-EEA2B6E71A41@dilger.ca>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_55512B7B-3B73-458E-BB38-6700602A50E9";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH v4 6/9] f2fs: don't allow DIO reads but not DIO writes
-Date:   Tue, 16 Aug 2022 10:42:29 -0600
-In-Reply-To: <20220816090312.GU3600936@dread.disaster.area>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=76sG/KyxLmQ56bn83QhiqsNTUnCGsc1T0j3i3xg61zo=;
+        b=JPYC8IFFUuJSe4eruftMcw8teluWSftMoY3IqtWOJXD7laEwmTiZcAbRfzm75poXZ3
+         tZbP0A8HyqqTQGtIkicFrmDZIKIJbyTqMLwMConKjG2r9gVfCb0xhELUY9xq0xW79hje
+         GUJvmyoVqZ68uyU6mpy1l3lUY3grjeiERZ5GOO34T2y9AD0p/cnej20YXcyL/ePEc0J/
+         0YiSBPB1B0/p9lyOuKx9N+Izd286bLnGn4tRK4FbeHYQjMdHyo6Ost+LRtpZpOIM7msL
+         YcmDBYS5QK0/yyyjgiYFJaprgbpzaC4F/OiQsKuaUBfsf/MiIMN+lsNpn98wkcHrpLFD
+         Z77A==
+X-Gm-Message-State: ACgBeo03LjO7YlXbPZRdgH+OApmsMAbPTZArJkIR5Wx6AwhkToOEAA4B
+        HLh5jn4l3/AnTy7jvUkz5dRVh/9QsQ0Yl/nRwskFrxJdLunlBgHdyvSFjVGxeDKWKh827gya3Db
+        5JFByDfWQV+YIE18SusUbAxbTOdwS7iUcnAkP
+X-Received: by 2002:a17:907:3f24:b0:730:bcbd:395d with SMTP id hq36-20020a1709073f2400b00730bcbd395dmr14506546ejc.540.1660670131306;
+        Tue, 16 Aug 2022 10:15:31 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR60DtWRTlTqBPmwvunUq9U89uGjFYeIC8yRzoieFTiLmWCy/xDCdkYkj0UP9n143AUUCtjhkk0S1H7gbQQiUsA=
+X-Received: by 2002:a17:907:3f24:b0:730:bcbd:395d with SMTP id
+ hq36-20020a1709073f2400b00730bcbd395dmr14506527ejc.540.1660670131073; Tue, 16
+ Aug 2022 10:15:31 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220816131736.42615-1-jlayton@kernel.org>
+In-Reply-To: <20220816131736.42615-1-jlayton@kernel.org>
+From:   David Wysochanski <dwysocha@redhat.com>
+Date:   Tue, 16 Aug 2022 13:14:55 -0400
+Message-ID: <CALF+zO=OrT5tBvyL1ERD+YDSXkSAFvqQu-cQkSgWvQN8z+E_rA@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix i_version handling in xfs
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net,
-        xfs <linux-xfs@vger.kernel.org>, linux-api@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org,
-        linux-block <linux-block@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Keith Busch <kbusch@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>,
-        Eric Biggers <ebiggers@kernel.org>
-References: <20220722071228.146690-1-ebiggers@kernel.org>
- <20220722071228.146690-7-ebiggers@kernel.org> <YtyoF89iOg8gs7hj@google.com>
- <Yt7dCcG0ns85QqJe@sol.localdomain> <YuXyKh8Zvr56rR4R@google.com>
- <YvrrEcw4E+rpDLwM@sol.localdomain>
- <20220816090312.GU3600936@dread.disaster.area>
-X-Mailer: Apple Mail (2.3273)
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, Aug 16, 2022 at 9:19 AM Jeff Layton <jlayton@kernel.org> wrote:
+>
+> The i_version in xfs_trans_log_inode is bumped for any inode update,
+> including atime-only updates due to reads. We don't want to record those
+> in the i_version, as they don't represent "real" changes. Remove that
+> callsite.
+>
+> In xfs_vn_update_time, if S_VERSION is flagged, then attempt to bump the
+> i_version and turn on XFS_ILOG_CORE if it happens. In
+> xfs_trans_ichgtime, update the i_version if the mtime or ctime are being
+> updated.
+>
+> Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_trans_inode.c | 17 +++--------------
+>  fs/xfs/xfs_iops.c               |  4 ++++
+>  2 files changed, 7 insertions(+), 14 deletions(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+> index 8b5547073379..78bf7f491462 100644
+> --- a/fs/xfs/libxfs/xfs_trans_inode.c
+> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
+> @@ -71,6 +71,8 @@ xfs_trans_ichgtime(
+>                 inode->i_ctime = tv;
+>         if (flags & XFS_ICHGTIME_CREATE)
+>                 ip->i_crtime = tv;
+> +       if (flags & (XFS_ICHGTIME_MOD|XFS_ICHGTIME_CHG))
+> +               inode_inc_iversion(inode);
+>  }
+>
+>  /*
+> @@ -116,20 +118,7 @@ xfs_trans_log_inode(
+>                 spin_unlock(&inode->i_lock);
+>         }
+>
+> -       /*
+> -        * First time we log the inode in a transaction, bump the inode change
+> -        * counter if it is configured for this to occur. While we have the
+> -        * inode locked exclusively for metadata modification, we can usually
+> -        * avoid setting XFS_ILOG_CORE if no one has queried the value since
+> -        * the last time it was incremented. If we have XFS_ILOG_CORE already
+> -        * set however, then go ahead and bump the i_version counter
+> -        * unconditionally.
+> -        */
+> -       if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
+> -               if (IS_I_VERSION(inode) &&
+> -                   inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
+> -                       iversion_flags = XFS_ILOG_CORE;
+> -       }
+> +       set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags);
+>
+>         /*
+>          * If we're updating the inode core or the timestamps and it's possible
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 45518b8c613c..162e044c7f56 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -718,6 +718,7 @@ xfs_setattr_nonsize(
+>         }
+>
+>         setattr_copy(mnt_userns, inode, iattr);
+> +       inode_inc_iversion(inode);
+>         xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>
+>         XFS_STATS_INC(mp, xs_ig_attrchg);
+> @@ -943,6 +944,7 @@ xfs_setattr_size(
+>
+>         ASSERT(!(iattr->ia_valid & (ATTR_UID | ATTR_GID)));
+>         setattr_copy(mnt_userns, inode, iattr);
+> +       inode_inc_iversion(inode);
+>         xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>
+>         XFS_STATS_INC(mp, xs_ig_attrchg);
+> @@ -1047,6 +1049,8 @@ xfs_vn_update_time(
+>                 inode->i_mtime = *now;
+>         if (flags & S_ATIME)
+>                 inode->i_atime = *now;
+> +       if ((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false))
+> +               log_flags |= XFS_ILOG_CORE;
+>
+>         xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>         xfs_trans_log_inode(tp, ip, log_flags);
+> --
+> 2.37.2
+>
 
---Apple-Mail=_55512B7B-3B73-458E-BB38-6700602A50E9
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
-
-On Aug 16, 2022, at 3:03 AM, Dave Chinner <david@fromorbit.com> wrote:
->=20
-> On Mon, Aug 15, 2022 at 05:55:45PM -0700, Eric Biggers wrote:
->> On Sat, Jul 30, 2022 at 08:08:26PM -0700, Jaegeuk Kim wrote:
->>> On 07/25, Eric Biggers wrote:
->>>> On Sat, Jul 23, 2022 at 07:01:59PM -0700, Jaegeuk Kim wrote:
->>>>> On 07/22, Eric Biggers wrote:
->>>>>> From: Eric Biggers <ebiggers@google.com>
->>>>>>=20
->>>>>> Currently, if an f2fs filesystem is mounted with the mode=3Dlfs =
-and
->>>>>> io_bits mount options, DIO reads are allowed but DIO writes are =
-not.
->>>>>> Allowing DIO reads but not DIO writes is an unusual restriction, =
-which
->>>>>> is likely to be surprising to applications, namely any =
-application that
->>>>>> both reads and writes from a file (using O_DIRECT).  This =
-behavior is
->>>>>> also incompatible with the proposed STATX_DIOALIGN extension to =
-statx.
->>>>>> Given this, let's drop the support for DIO reads in this =
-configuration.
->>>>>=20
->>>>> IIRC, we allowed DIO reads since applications complained a lower =
-performance.
->>>>> So, I'm afraid this change will make another confusion to users. =
-Could
->>>>> you please apply the new bahavior only for STATX_DIOALIGN?
->>>>>=20
->>>>=20
->>>> Well, the issue is that the proposed STATX_DIOALIGN fields cannot =
-represent this
->>>> weird case where DIO reads are allowed but not DIO writes.  So the =
-question is
->>>> whether this case actually matters, in which case we should make =
-STATX_DIOALIGN
->>>> distinguish between DIO reads and DIO writes, or whether it's some =
-odd edge case
->>>> that doesn't really matter, in which case we could just fix it or =
-make
->>>> STATX_DIOALIGN report that DIO is unsupported.  I was hoping that =
-you had some
->>>> insight here.  What sort of applications want DIO reads but not DIO =
-writes?
->>>> Is this common at all?
->>>=20
->>> I think there's no specific application to use the LFS mode at this
->>> moment, but I'd like to allow DIO read for zoned device which will =
-be
->>> used for Android devices.
->>>=20
->>=20
->> So if the zoned device feature becomes widely adopted, then =
-STATX_DIOALIGN will
->> be useless on all Android devices?  That sounds undesirable.  Are you =
-sure that
->> supporting DIO reads but not DIO writes actually works?  Does it not =
-cause
->> problems for existing applications?
->=20
-> What purpose does DIO in only one direction actually serve? All it
-> means is that we're forcibly mixing buffered and direct IO to the
-> same file and that simply never ends well from a data coherency POV.
->=20
-> Hence I'd suggest that mixing DIO reads and buffered writes like
-> this ends up exposing uses to the worst of both worlds - all of the
-> problems with none of the benefits...
->=20
->> What we need to do is make a decision about whether this means we =
-should
->> build in a stx_dio_direction field (indicating no support / readonly
->> support / writeonly support / readwrite support) into the API from =
-the
->> beginning.  If we don't do that, then I don't think we could simply =
-add
->> such a field later, as the statx_dio_*_align fields will have already
->> been assigned their meaning.  I think we'd instead have to =
-"duplicate"
->> the API, with STATX_DIOROALIGN and statx_dio_ro_*_align fields.  That
->> seems uglier than building a directional indicator into the API from =
-the
->> beginning.  On the other hand, requiring all programs to check
->> stx_dio_direction would add complexity to using the API.
->>=20
->> Any thoughts on this?
->=20
-> Decide whether partial, single direction DIO serves a useful purpose
-> before trying to work out what is needed in the API to indicate that
-> this sort of crazy will be supported....
-
-Using read-only O_DIRECT makes sense for backup and other filesystem
-scanning tools that don't want to pollute the page cache of a system
-(which may be in use by other programs) while reading many files once.
-
-Using interfaces like posix_fadvise(FADV_DONTNEED) to drop file cache
-afterward is both a hassle and problematic when reading very large files
-that would push out more important pages from cache before the large
-file's pages can be dropped.
-
-
-IMHO, this whole discussion is putting the cart before the horse.
-Changing existing (and useful) IO behavior to accommodate an API that
-nobody has ever used, and is unlikely to even be widely used, doesn't
-make sense to me.  Most applications won't check or care about the new
-DIO size fields, since they've lived this long without statx() returning
-this info, and will just pick a "large enough" size (4KB, 1MB, whatever)
-that gives them the performance they need.  They *WILL* care if the app
-is suddenly unable to read data from a file in ways that have worked for
-a long time.
-
-Even if apps are modified to check these new DIO size fields, and then
-try to DIO write to a file in f2fs that doesn't allow it, then f2fs will
-return an error, which is what it would have done without the statx()
-changes, so no harm done AFAICS.
-
-Even with a more-complex DIO status return that handles a "direction"
-field (which IMHO is needlessly complex), there is always the potential
-for a TOCTOU race where a file changes between checking and access, so
-the userspace code would need to handle this.
-
-Cheers, Andreas
+I have a test (details below) that shows an open issue with NFSv4.x +
+fscache where an xfs exported filesystem would trigger unnecessary
+over the wire READs after a umount/mount cycle of the NFS mount.  I
+previously tracked this down to atime updates, but never followed
+through on any patch.  Now that Jeff worked it out and this patch is
+under review, I built 5.19 vanilla, retested, then built 5.19 + this
+patch and verified the problem is fixed.
+You can add:
+Tested-by: Dave Wysochanski <dwysocha@redhat.com>
 
 
 
+# ./t0_bz1913591.sh 4.1 xfs relatime
+Setting NFS vers=4.1 filesystem to xfs and mount options relatime,rw
+ 0. On NFS server, setup export with xfs filesystem on loop device
+/dev/loop0 /export/dir1 xfs
+rw,seclabel,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota 0 0
+ 1. On NFS client, install and enable cachefilesd
+ 2. On NFS client, mount -o vers=4.1,fsc 127.0.0.1:/export/dir1 /mnt
+ 3. On NFS client, dd if=/dev/zero of=/mnt/file1.bin bs=4096 count=1
+ 4. On NFS client, echo 3 > /proc/sys/vm/drop_caches
+ 5. On NFS client, dd if=/mnt/file1.bin of=/dev/null (read into fscache)
+ 6. On NFS client, umount /mnt
+ 7. On NFS client, mount -o vers=4.1,fsc 127.0.0.1:/export/dir1 /mnt
+ 8. On NFS client, repeat steps 4-5 (read from fscache)
+ 9. On NFS client, check for READ ops (1st number) > 0 in /proc/self/mountstats
+Found 4200 NFS READ and READ_PLUS ops in /proc/self/mountstats > 0
+                READ: 1 1 0 220 4200 0 0 1 0
+           READ_PLUS: 0 0 0 0 0 0 0 0 0
+FAILED TEST ./t0_bz1913591.sh on kernel 5.19.0 with NFS vers=4.1
+exported filesystem xfs options relatime,rw
 
 
+# ./t0_bz1913591.sh 4.1 xfs relatime
+Setting NFS vers=4.1 filesystem to xfs and mount options relatime,rw
+ 0. On NFS server, setup export with xfs filesystem on loop device
+/dev/loop0 /export/dir1 xfs
+rw,seclabel,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota 0 0
+ 1. On NFS client, install and enable cachefilesd
+ 2. On NFS client, mount -o vers=4.1,fsc 127.0.0.1:/export/dir1 /mnt
+ 3. On NFS client, dd if=/dev/zero of=/mnt/file1.bin bs=4096 count=1
+ 4. On NFS client, echo 3 > /proc/sys/vm/drop_caches
+ 5. On NFS client, dd if=/mnt/file1.bin of=/dev/null (read into fscache)
+ 6. On NFS client, umount /mnt
+ 7. On NFS client, mount -o vers=4.1,fsc 127.0.0.1:/export/dir1 /mnt
+ 8. On NFS client, repeat steps 4-5 (read from fscache)
+ 9. On NFS client, check for READ ops (1st number) > 0 in /proc/self/mountstats
+10. On NFS client, check /proc/fs/fscache/stats fscache reads incrementing
+PASSED TEST ./t0_bz1913591.sh on kernel 5.19.0i_version+ with NFS
+vers=4.1 exported filesystem xfs options relatime,rw
 
---Apple-Mail=_55512B7B-3B73-458E-BB38-6700602A50E9
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAmL7yPUACgkQcqXauRfM
-H+C5yA/9G0OeBL/KETzAPM0Gdql84d9VCjortatITeNdwHUMtP26voBr8Q5A85dE
-vey+YGYSY1rcLrN9ORjCqJ9WRD3e77oXPapHyNlqgh+x2fxGgI8Ypb34fT0oB/vu
-YTRE3UgK0IEt2ZB76AnlSOtXzHGQrME4dUNTg9NcwDIEdJL3L4FUrykhozGqkFFu
-/zxI8KCATl2lEyuse7h7DYX187W1H1tSORo4Z7BpW7JcA0F4Bw0NoNET9nhV7PlS
-GW7QqOSt46Wf+w2V6HsUhVAbLJz+3XfQ1hVO+tp3cWfqRQ54DpcqJIL0HD73GQmY
-eR6m67atxsHO2tsgOaMxcaQwTNZrmZoPveHrS5oR2Eo+qWsVn4hp5pikFGp9fyuD
-V9cUm2yFCa/bKxhwTcfSTrEO8/R7rYVX3ppqP1HGO5t9xw0vSe8Mg+wBLFG45/L9
-Bk+vfgnffDluYw546hklgu+KqD0wVkfRKUEZcimT/4Vfyg5d1GPSXTLlnjm6lWq3
-i5Y2yf2PPo+Yx25qt65QC0VkRV1dsdPLuTI9MoyKTHgYc3MlPYJoK+Ohyq8CuHq/
-W6Qpib+UBC07fdA61Qw1yJR1TfIIJ+nNFzuXvAZvINFKRDQ87npdHpuoUul1lJ6p
-eXugihjhNr7Ny2hXArGDjA/lPjTfg6gf0EPZOezgajagFOyerH4=
-=1DeF
------END PGP SIGNATURE-----
-
---Apple-Mail=_55512B7B-3B73-458E-BB38-6700602A50E9--
