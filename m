@@ -2,201 +2,239 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CCCDC2BB41
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 16:00:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5423DC2BB41
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 16:42:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236233AbiHPQAG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 12:00:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34180 "EHLO
+        id S233925AbiHPQmk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 12:42:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236277AbiHPP7n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 11:59:43 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B79262C661;
-        Tue, 16 Aug 2022 08:58:09 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 539A66120F;
-        Tue, 16 Aug 2022 15:58:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A1A0C433C1;
-        Tue, 16 Aug 2022 15:58:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660665488;
-        bh=Pb2OtpTjDkN7Ae+1Vf4Zt/xqyOYvTLGy0CE/8cgs/Po=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=YxsrZWpX/cfv/F8Ao5G20/mS+vUKD4tiWV3aJFXzKWhLCduQLoiW2OSq9B6iJMJ2N
-         qd02XWMP+yx2Fl1SYONqHNsPxjPeiI+3W3spjuDGT+jYmVc6DfJ2WOkvYLdZuZr32M
-         mYMCNiKTAlJgmv/PHzQhc6iSjwvwbI36LpbugYilfqx1LesMKmXi1FqxS3crWilvWN
-         t1gD3kFONilYyr8oEhZEQybHTz4cB7w0CRRzKrcXfulRItkmjx83vgW21NFlfZVz90
-         m4dfSW5nWwkDzlH7JKlnIE7ZT8C1GFczlRQUOAiMLAhvJq8/XtiK6nzz7WEIF2r4pt
-         laCNhLXX5FrgA==
-Message-ID: <e77fd4d19815fd661dbdb04ab27e687ff7e727eb.camel@kernel.org>
-Subject: Re: [PATCH] xfs: fix i_version handling in xfs
-From:   Jeff Layton <jlayton@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>
-Date:   Tue, 16 Aug 2022 11:58:06 -0400
-In-Reply-To: <Yvu7DHDWl4g1KsI5@magnolia>
-References: <20220816131736.42615-1-jlayton@kernel.org>
-         <Yvu7DHDWl4g1KsI5@magnolia>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
-MIME-Version: 1.0
+        with ESMTP id S235958AbiHPQmj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 12:42:39 -0400
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58EBD80E86
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 09:42:35 -0700 (PDT)
+Received: by mail-pg1-x52c.google.com with SMTP id bh13so9719629pgb.4
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 09:42:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dilger-ca.20210112.gappssmtp.com; s=20210112;
+        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
+         :from:from:to:cc;
+        bh=3UsEcGaqqxu6uaf6V7Db2UUvbrW1qQxZh0X1je5plvs=;
+        b=Zmvs6vXQj1YuzC5CpcL9ZdRSfRMxWuvJuG36+xzxXxSn/FnBKBWixBWCoOKIwrcf55
+         n46G64dAdkeAyCTOhtlwvPzc4Tk73T8CZOzBxW/yv7iUTcD5j+K09Xl78RS6JHAryYsH
+         dpl6GIflzqLKivwt8XMQjnVpsHzQ8A5k8FSijs3OEEXN9w0pRa/0S5IaJNPik48pckp6
+         C5aMtORn54V5bsaXmHvhAa1AZHkQKY6sgAgHPDjgbX8T2hQke1pSCge/sRvDRbpzK3+Q
+         NVCcQskda4YA0R3znKKkgXYcwZ4EYf0ewpN+JcDe6G59HZSOCmXZDesAM6+QGyO3VRhc
+         YGsQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
+         :from:x-gm-message-state:from:to:cc;
+        bh=3UsEcGaqqxu6uaf6V7Db2UUvbrW1qQxZh0X1je5plvs=;
+        b=kK24LpVxac2K0XAT/dNX7/4ZSnvDjQxCkNBGFFdoFk6fq0vTQQR1GmY+uaEq6+yIys
+         cRGR0mHSumgG5EHk63l/iuxrVF3SKPMNKNRmuu7N/2myNc4QuNIiZmQfzJz5KNMxyXs6
+         N4+R5JY6zw203XZtawVu4Tv+NZX1Mg38PBrn59ReuzLncD+0woR/Zpr+ypFI2QUgWku9
+         Z+XJyQg3u1CDsFJ2YV0pv6712uI7/Zv0sJi/bTzF282hsrOJEiwiGPXb9HbBD1sAU6Tt
+         o4uhvhQXcbyRJqMDPRZpbpW0/Cd6Qu88GQsqmW0eOz8KWhH0HzmXLsdd8czXEv1Pse7X
+         qNZw==
+X-Gm-Message-State: ACgBeo2CERmRLfuWFAik5Z2YCSy/dXGiYIAWmg3xAsFZM4EDUBq/ApnZ
+        ko6e9VFBovUe1/WGa8qriFOEig==
+X-Google-Smtp-Source: AA6agR5MxmTfKKDmbSJw3suGI5oZ/F470+FJjV7/Uj0jVLBbToS4xOkVs5Jg06J4aqmXnDRNRAtD/Q==
+X-Received: by 2002:a65:6d85:0:b0:429:9ce8:6a60 with SMTP id bc5-20020a656d85000000b004299ce86a60mr4399151pgb.352.1660668154762;
+        Tue, 16 Aug 2022 09:42:34 -0700 (PDT)
+Received: from cabot.adilger.int (S01061cabc081bf83.cg.shawcable.net. [70.77.221.9])
+        by smtp.gmail.com with ESMTPSA id z25-20020a656659000000b00419b66846fcsm7761270pgv.91.2022.08.16.09.42.32
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 16 Aug 2022 09:42:33 -0700 (PDT)
+From:   Andreas Dilger <adilger@dilger.ca>
+Message-Id: <D1CDACE3-EC7E-43E4-8F49-EEA2B6E71A41@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_55512B7B-3B73-458E-BB38-6700602A50E9";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH v4 6/9] f2fs: don't allow DIO reads but not DIO writes
+Date:   Tue, 16 Aug 2022 10:42:29 -0600
+In-Reply-To: <20220816090312.GU3600936@dread.disaster.area>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        xfs <linux-xfs@vger.kernel.org>, linux-api@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org,
+        linux-block <linux-block@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Keith Busch <kbusch@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>,
+        Eric Biggers <ebiggers@kernel.org>
+References: <20220722071228.146690-1-ebiggers@kernel.org>
+ <20220722071228.146690-7-ebiggers@kernel.org> <YtyoF89iOg8gs7hj@google.com>
+ <Yt7dCcG0ns85QqJe@sol.localdomain> <YuXyKh8Zvr56rR4R@google.com>
+ <YvrrEcw4E+rpDLwM@sol.localdomain>
+ <20220816090312.GU3600936@dread.disaster.area>
+X-Mailer: Apple Mail (2.3273)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2022-08-16 at 08:43 -0700, Darrick J. Wong wrote:
-> On Tue, Aug 16, 2022 at 09:17:36AM -0400, Jeff Layton wrote:
-> > The i_version in xfs_trans_log_inode is bumped for any inode update,
-> > including atime-only updates due to reads. We don't want to record thos=
-e
-> > in the i_version, as they don't represent "real" changes. Remove that
-> > callsite.
-> >=20
-> > In xfs_vn_update_time, if S_VERSION is flagged, then attempt to bump th=
-e
-> > i_version and turn on XFS_ILOG_CORE if it happens. In
-> > xfs_trans_ichgtime, update the i_version if the mtime or ctime are bein=
-g
-> > updated.
+
+--Apple-Mail=_55512B7B-3B73-458E-BB38-6700602A50E9
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
+
+On Aug 16, 2022, at 3:03 AM, Dave Chinner <david@fromorbit.com> wrote:
 >=20
-> What about operations that don't touch the mtime but change the file
-> metadata anyway?  There are a few of those, like the blockgc garbage
-> collector, deduperange, and the defrag tool.
+> On Mon, Aug 15, 2022 at 05:55:45PM -0700, Eric Biggers wrote:
+>> On Sat, Jul 30, 2022 at 08:08:26PM -0700, Jaegeuk Kim wrote:
+>>> On 07/25, Eric Biggers wrote:
+>>>> On Sat, Jul 23, 2022 at 07:01:59PM -0700, Jaegeuk Kim wrote:
+>>>>> On 07/22, Eric Biggers wrote:
+>>>>>> From: Eric Biggers <ebiggers@google.com>
+>>>>>>=20
+>>>>>> Currently, if an f2fs filesystem is mounted with the mode=3Dlfs =
+and
+>>>>>> io_bits mount options, DIO reads are allowed but DIO writes are =
+not.
+>>>>>> Allowing DIO reads but not DIO writes is an unusual restriction, =
+which
+>>>>>> is likely to be surprising to applications, namely any =
+application that
+>>>>>> both reads and writes from a file (using O_DIRECT).  This =
+behavior is
+>>>>>> also incompatible with the proposed STATX_DIOALIGN extension to =
+statx.
+>>>>>> Given this, let's drop the support for DIO reads in this =
+configuration.
+>>>>>=20
+>>>>> IIRC, we allowed DIO reads since applications complained a lower =
+performance.
+>>>>> So, I'm afraid this change will make another confusion to users. =
+Could
+>>>>> you please apply the new bahavior only for STATX_DIOALIGN?
+>>>>>=20
+>>>>=20
+>>>> Well, the issue is that the proposed STATX_DIOALIGN fields cannot =
+represent this
+>>>> weird case where DIO reads are allowed but not DIO writes.  So the =
+question is
+>>>> whether this case actually matters, in which case we should make =
+STATX_DIOALIGN
+>>>> distinguish between DIO reads and DIO writes, or whether it's some =
+odd edge case
+>>>> that doesn't really matter, in which case we could just fix it or =
+make
+>>>> STATX_DIOALIGN report that DIO is unsupported.  I was hoping that =
+you had some
+>>>> insight here.  What sort of applications want DIO reads but not DIO =
+writes?
+>>>> Is this common at all?
+>>>=20
+>>> I think there's no specific application to use the LFS mode at this
+>>> moment, but I'd like to allow DIO read for zoned device which will =
+be
+>>> used for Android devices.
+>>>=20
+>>=20
+>> So if the zoned device feature becomes widely adopted, then =
+STATX_DIOALIGN will
+>> be useless on all Android devices?  That sounds undesirable.  Are you =
+sure that
+>> supporting DIO reads but not DIO writes actually works?  Does it not =
+cause
+>> problems for existing applications?
 >=20
-
-Do those change the c/mtime at all?
-
-It's possible we're missing some places that should change the i_version
-as well. We may need some more call sites.
-
-> Zooming out a bit -- what does i_version signal, concretely?  I thought
-> it was used by nfs (and maybe ceph?) to signal to clients that the file
-> on the server has moved on, and the client needs to invalidate its
-> caches.  I thought afs had a similar generation counter, though it's
-> only used to cache file data, not metadata?  Does an i_version change
-> cause all of them to invalidate caches, or is there more behavior I
-> don't know about?
+> What purpose does DIO in only one direction actually serve? All it
+> means is that we're forcibly mixing buffered and direct IO to the
+> same file and that simply never ends well from a data coherency POV.
 >=20
-
-For NFS, it indicates a change to the change attribute indicates that
-there has been a change to the data or metadata for the file. atime
-changes due to reads are specifically exempted from this, but we do bump
-the i_version if someone (e.g.) changes the atime via utimes().=20
-
-The NFS client will generally invalidate its caches for the inode when
-it notices a change attribute change.
-
-FWIW, AFS may not meet this standard since it doesn't generally
-increment the counter on metadata changes. It may turn out that we don't
-want to expose this to the AFS client due to that (or maybe come up with
-some way to indicate this difference).
-
-> Does that mean that we should bump i_version for any file data or
-> attribute that could be queried or observed by userspace?  In which case
-> I suppose this change is still correct, even if it relaxes i_version
-> updates from "any change to the inode whatsoever" to "any change that
-> would bump mtime".  Unless FIEMAP is part of "attributes observed by
-> userspace".
+> Hence I'd suggest that mixing DIO reads and buffered writes like
+> this ends up exposing uses to the worst of both worlds - all of the
+> problems with none of the benefits...
 >=20
-> (The other downside I can see is that now we have to remember to bump
-> timestamps for every new file operation we add, unlike the current code
-> which is centrally located in xfs_trans_log_inode.)
+>> What we need to do is make a decision about whether this means we =
+should
+>> build in a stx_dio_direction field (indicating no support / readonly
+>> support / writeonly support / readwrite support) into the API from =
+the
+>> beginning.  If we don't do that, then I don't think we could simply =
+add
+>> such a field later, as the statx_dio_*_align fields will have already
+>> been assigned their meaning.  I think we'd instead have to =
+"duplicate"
+>> the API, with STATX_DIOROALIGN and statx_dio_ro_*_align fields.  That
+>> seems uglier than building a directional indicator into the API from =
+the
+>> beginning.  On the other hand, requiring all programs to check
+>> stx_dio_direction would add complexity to using the API.
+>>=20
+>> Any thoughts on this?
 >=20
+> Decide whether partial, single direction DIO serves a useful purpose
+> before trying to work out what is needed in the API to indicate that
+> this sort of crazy will be supported....
 
-The main reason for the change attribute in NFS was that NFSv3 is
-plagued with cache-coherency problems due to coarse-grained timestamp
-granularity. It was conceived as a way to indicate that the inode had
-changed without relying on timestamps.
+Using read-only O_DIRECT makes sense for backup and other filesystem
+scanning tools that don't want to pollute the page cache of a system
+(which may be in use by other programs) while reading many files once.
 
-In practice, we want to bump the i_version counter whenever the ctime or
-mtime would be changed.
+Using interfaces like posix_fadvise(FADV_DONTNEED) to drop file cache
+afterward is both a hassle and problematic when reading very large files
+that would push out more important pages from cache before the large
+file's pages can be dropped.
 
-> --D
->=20
-> > Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> > Cc: Dave Chinner <david@fromorbit.com>
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_trans_inode.c | 17 +++--------------
-> >  fs/xfs/xfs_iops.c               |  4 ++++
-> >  2 files changed, 7 insertions(+), 14 deletions(-)
-> >=20
-> > diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_=
-inode.c
-> > index 8b5547073379..78bf7f491462 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> > @@ -71,6 +71,8 @@ xfs_trans_ichgtime(
-> >  		inode->i_ctime =3D tv;
-> >  	if (flags & XFS_ICHGTIME_CREATE)
-> >  		ip->i_crtime =3D tv;
-> > +	if (flags & (XFS_ICHGTIME_MOD|XFS_ICHGTIME_CHG))
-> > +		inode_inc_iversion(inode);
-> >  }
-> > =20
-> >  /*
-> > @@ -116,20 +118,7 @@ xfs_trans_log_inode(
-> >  		spin_unlock(&inode->i_lock);
-> >  	}
-> > =20
-> > -	/*
-> > -	 * First time we log the inode in a transaction, bump the inode chang=
-e
-> > -	 * counter if it is configured for this to occur. While we have the
-> > -	 * inode locked exclusively for metadata modification, we can usually
-> > -	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
-> > -	 * the last time it was incremented. If we have XFS_ILOG_CORE already
-> > -	 * set however, then go ahead and bump the i_version counter
-> > -	 * unconditionally.
-> > -	 */
-> > -	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
-> > -		if (IS_I_VERSION(inode) &&
-> > -		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
-> > -			iversion_flags =3D XFS_ILOG_CORE;
-> > -	}
-> > +	set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags);
-> > =20
-> >  	/*
-> >  	 * If we're updating the inode core or the timestamps and it's possib=
-le
-> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > index 45518b8c613c..162e044c7f56 100644
-> > --- a/fs/xfs/xfs_iops.c
-> > +++ b/fs/xfs/xfs_iops.c
-> > @@ -718,6 +718,7 @@ xfs_setattr_nonsize(
-> >  	}
-> > =20
-> >  	setattr_copy(mnt_userns, inode, iattr);
-> > +	inode_inc_iversion(inode);
-> >  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> > =20
-> >  	XFS_STATS_INC(mp, xs_ig_attrchg);
-> > @@ -943,6 +944,7 @@ xfs_setattr_size(
-> > =20
-> >  	ASSERT(!(iattr->ia_valid & (ATTR_UID | ATTR_GID)));
-> >  	setattr_copy(mnt_userns, inode, iattr);
-> > +	inode_inc_iversion(inode);
-> >  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> > =20
-> >  	XFS_STATS_INC(mp, xs_ig_attrchg);
-> > @@ -1047,6 +1049,8 @@ xfs_vn_update_time(
-> >  		inode->i_mtime =3D *now;
-> >  	if (flags & S_ATIME)
-> >  		inode->i_atime =3D *now;
-> > +	if ((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false))
-> > +		log_flags |=3D XFS_ILOG_CORE;
-> > =20
-> >  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> >  	xfs_trans_log_inode(tp, ip, log_flags);
-> > --=20
-> > 2.37.2
-> >=20
 
---=20
-Jeff Layton <jlayton@kernel.org>
+IMHO, this whole discussion is putting the cart before the horse.
+Changing existing (and useful) IO behavior to accommodate an API that
+nobody has ever used, and is unlikely to even be widely used, doesn't
+make sense to me.  Most applications won't check or care about the new
+DIO size fields, since they've lived this long without statx() returning
+this info, and will just pick a "large enough" size (4KB, 1MB, whatever)
+that gives them the performance they need.  They *WILL* care if the app
+is suddenly unable to read data from a file in ways that have worked for
+a long time.
+
+Even if apps are modified to check these new DIO size fields, and then
+try to DIO write to a file in f2fs that doesn't allow it, then f2fs will
+return an error, which is what it would have done without the statx()
+changes, so no harm done AFAICS.
+
+Even with a more-complex DIO status return that handles a "direction"
+field (which IMHO is needlessly complex), there is always the potential
+for a TOCTOU race where a file changes between checking and access, so
+the userspace code would need to handle this.
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_55512B7B-3B73-458E-BB38-6700602A50E9
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAmL7yPUACgkQcqXauRfM
+H+C5yA/9G0OeBL/KETzAPM0Gdql84d9VCjortatITeNdwHUMtP26voBr8Q5A85dE
+vey+YGYSY1rcLrN9ORjCqJ9WRD3e77oXPapHyNlqgh+x2fxGgI8Ypb34fT0oB/vu
+YTRE3UgK0IEt2ZB76AnlSOtXzHGQrME4dUNTg9NcwDIEdJL3L4FUrykhozGqkFFu
+/zxI8KCATl2lEyuse7h7DYX187W1H1tSORo4Z7BpW7JcA0F4Bw0NoNET9nhV7PlS
+GW7QqOSt46Wf+w2V6HsUhVAbLJz+3XfQ1hVO+tp3cWfqRQ54DpcqJIL0HD73GQmY
+eR6m67atxsHO2tsgOaMxcaQwTNZrmZoPveHrS5oR2Eo+qWsVn4hp5pikFGp9fyuD
+V9cUm2yFCa/bKxhwTcfSTrEO8/R7rYVX3ppqP1HGO5t9xw0vSe8Mg+wBLFG45/L9
+Bk+vfgnffDluYw546hklgu+KqD0wVkfRKUEZcimT/4Vfyg5d1GPSXTLlnjm6lWq3
+i5Y2yf2PPo+Yx25qt65QC0VkRV1dsdPLuTI9MoyKTHgYc3MlPYJoK+Ohyq8CuHq/
+W6Qpib+UBC07fdA61Qw1yJR1TfIIJ+nNFzuXvAZvINFKRDQ87npdHpuoUul1lJ6p
+eXugihjhNr7Ny2hXArGDjA/lPjTfg6gf0EPZOezgajagFOyerH4=
+=1DeF
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_55512B7B-3B73-458E-BB38-6700602A50E9--
