@@ -2,143 +2,197 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22F1BC25B08
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Aug 2022 23:38:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3190C25B0D
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 04:22:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353745AbiHOXi0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Aug 2022 19:38:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50960 "EHLO
+        id S229577AbiHPEWD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 00:22:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353980AbiHOXhH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Aug 2022 19:37:07 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1C8F3152425;
-        Mon, 15 Aug 2022 13:09:42 -0700 (PDT)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0E76379F0;
-        Mon, 15 Aug 2022 15:08:24 -0500 (CDT)
-Message-ID: <8d33a7a0-7a7c-47a1-ed84-83fd25089897@sandeen.net>
-Date:   Mon, 15 Aug 2022 15:09:41 -0500
+        with ESMTP id S229592AbiHPEVt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 00:21:49 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BD395379043
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Aug 2022 17:54:43 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-52-176.pa.nsw.optusnet.com.au [49.181.52.176])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 494B410E89FD;
+        Tue, 16 Aug 2022 10:54:39 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oNkqs-00DbbZ-JN; Tue, 16 Aug 2022 10:54:38 +1000
+Date:   Tue, 16 Aug 2022 10:54:38 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Alli <allison.henderson@oracle.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RESEND v2 01/18] xfs: Fix multi-transaction larp replay
+Message-ID: <20220816005438.GT3600936@dread.disaster.area>
+References: <20220804194013.99237-1-allison.henderson@oracle.com>
+ <20220804194013.99237-2-allison.henderson@oracle.com>
+ <YvKQ5+XotiXFDpTA@magnolia>
+ <20220810015809.GK3600936@dread.disaster.area>
+ <373809e97f15e14d181fea6e170bfd8e37a9c9e4.camel@oracle.com>
+ <20220810061258.GL3600936@dread.disaster.area>
+ <f85ae9d8425aaff455301b28af32ba0d813f733b.camel@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.12.0
-Content-Language: en-US
-To:     Petr Vorel <pvorel@suse.cz>, Dave Chinner <david@fromorbit.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>,
-        linux-xfs@vger.kernel.org, ltp@lists.linux.it
-References: <YvZc+jvRdTLn8rus@pevik> <YvZUfq+3HYwXEncw@pevik>
- <YvZTpQFinpkB06p9@pevik> <20220814224440.GR3600936@dread.disaster.area>
- <YvoSeTmLoQVxq7p9@pevik>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: LTP test df01.sh detected different size of loop device in v5.19
-In-Reply-To: <YvoSeTmLoQVxq7p9@pevik>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f85ae9d8425aaff455301b28af32ba0d813f733b.camel@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62faead0
+        a=O3n/kZ8kT9QBBO3sWHYIyw==:117 a=O3n/kZ8kT9QBBO3sWHYIyw==:17
+        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=7-415B0cAAAA:8
+        a=SPW_LBvYJik8ORvYUScA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/15/22 4:31 AM, Petr Vorel wrote:
-> Hi Dave,
+On Thu, Aug 11, 2022 at 06:55:16PM -0700, Alli wrote:
+> On Wed, 2022-08-10 at 16:12 +1000, Dave Chinner wrote:
+> > On Tue, Aug 09, 2022 at 10:01:49PM -0700, Alli wrote:
+> > > On Wed, 2022-08-10 at 11:58 +1000, Dave Chinner wrote:
+> > > > On Tue, Aug 09, 2022 at 09:52:55AM -0700, Darrick J. Wong wrote:
+> > > > > On Thu, Aug 04, 2022 at 12:39:56PM -0700, Allison Henderson
+> > > > > wrote:
+> > > > > > Recent parent pointer testing has exposed a bug in the
+> > > > > > underlying
+> > > > > > attr replay.  A multi transaction replay currently performs a
+> > > > > > single step of the replay, then deferrs the rest if there is
+> > > > > > more
+> > > > > > to do.
+> > > > 
+> > > > Yup.
+> > > > 
+> > > > > > This causes race conditions with other attr replays that
+> > > > > > might be recovered before the remaining deferred work has had
+> > > > > > a
+> > > > > > chance to finish.
+> > > > 
+> > > > What other attr replays are we racing against?  There can only be
+> > > > one incomplete attr item intent/done chain per inode present in
+> > > > log
+> > > > recovery, right?
+> > > No, a rename queues up a set and remove before committing the
+> > > transaction.  One for the new parent pointer, and another to remove
+> > > the
+> > > old one.
+> > 
+> > Ah. That really needs to be described in the commit message -
+> > changing from "single intent chain per object" to "multiple
+> > concurrent independent and unserialised intent chains per object" is
+> > a pretty important design rule change...
+> > 
+> > The whole point of intents is to allow complex, multi-stage
+> > operations on a single object to be sequenced in a tightly
+> > controlled manner. They weren't intended to be run as concurrent
+> > lines of modification on single items; if you need to do two
+> > modifications on an object, the intent chain ties the two
+> > modifications together into a single whole.
+> > 
+> > One of the reasons I rewrote the attr state machine for LARP was to
+> > enable new multiple attr operation chains to be easily build from
+> > the entry points the state machien provides. Parent attr rename
+> > needs a new intent chain to be built, not run multiple independent
+> > intent chains for each modification.
+> > 
+> > > It cant be an attr replace because technically the names are
+> > > different.
+> > 
+> > I disagree - we have all the pieces we need in the state machine
+> > already, we just need to define separate attr names for the
+> > remove and insert steps in the attr intent.
+> > 
+> > That is, the "replace" operation we execute when an attr set
+> > overwrites the value is "technically" a "replace value" operation,
+> > but we actually implement it as a "replace entire attribute"
+> > operation.
+> > 
+> > Without LARP, we do that overwrite in independent steps via an
+> > intermediate INCOMPLETE state to allow two xattrs of the same name
+> > to exist in the attr tree at the same time. IOWs, the attr value
+> > overwrite is effectively a "set-swap-remove" operation on two
+> > entirely independent xattrs, ensuring that if we crash we always
+> > have either the old or new xattr visible.
+> > 
+> > With LARP, we can remove the original attr first, thereby avoiding
+> > the need for two versions of the xattr to exist in the tree in the
+> > first place. However, we have to do these two operations as a pair
+> > of linked independent operations. The intent chain provides the
+> > linking, and requires us to log the name and the value of the attr
+> > that we are overwriting in the intent. Hence we can always recover
+> > the modification to completion no matter where in the operation we
+> > fail.
+> > 
+> > When it comes to a parent attr rename operation, we are effectively
+> > doing two linked operations - remove the old attr, set the new attr
+> > - on different attributes. Implementation wise, it is exactly the
+> > same sequence as a "replace value" operation, except for the fact
+> > that the new attr we add has a different name.
+> > 
+> > Hence the only real difference between the existing "attr replace"
+> > and the intent chain we need for "parent attr rename" is that we
+> > have to log two attr names instead of one. 
 > 
->> On Fri, Aug 12, 2022 at 03:20:37PM +0200, Petr Vorel wrote:
->>> Hi all,
-> 
->>> LTP test df01.sh found different size of loop device in v5.19.
->>> Test uses loop device formatted on various file systems, only XFS fails.
->>> It randomly fails during verifying that loop size usage changes:
-> 
->>> grep ${TST_DEVICE} output | grep -q "${total}.*${used}" [1]
-> 
->>> How to reproduce:
->>> # PATH="/opt/ltp/testcases/bin:$PATH" df01.sh -f xfs # it needs several tries to hit
-> 
->>> df saved output:
->>> Filesystem     1024-blocks    Used Available Capacity Mounted on
->>> ...
->>> /dev/loop0          256672   16208    240464       7% /tmp/LTP_df01.1kRwoUCCR7/mntpoint
->>> df output:
->>> Filesystem     1024-blocks    Used Available Capacity Mounted on
->>> ...
->>> tmpfs               201780       0    201780       0% /run/user/0
->>> /dev/loop0          256672   15160    241512       6% /tmp/LTP_df01.1kRwoUCCR7/mntpoint
->>> => different size
->>> df01 4 TFAIL: 'df -k -P' failed, not expected.
-> 
->> Yup, most likely because we changed something in XFS related to
->> internal block reservation spaces. That is, the test is making
->> fundamentally flawed assumptions about filesystem used space
->> accounting.
-> 
->> It is wrong to assuming that the available capacity of a given empty
->> filesystem will never change.  Assumptions like this have been
->> invalid for decades because the available space can change based on
->> the underlying configuration or the filesystem. e.g. different
->> versions of mkfs.xfs set different default parameters and so simply
->> changing the version of xfsprogs you use between the two comparision
->> tests will make it fail....
-> 
->> And, well, XFS also has XFS_IOC_{GS}ET_RESBLKS ioctls that allow
->> userspace to change the amount of reserved blocks. They were
->> introduced in 1997, and since then we've changed the default
->> reservation the filesystem takes at least a dozen times.
-> 
-> Thanks a lot for valuable info.
-> 
->>>> It might be a false positive / bug in the test, but it's at least a changed behavior.
-> 
->> Yup, any test that assumes "available space" does not change from
->> kernel version to kernel version is flawed. There is no guarantee
->> that this ever stays the same, nor that it needs to stay the same.
-> I'm sorry I was not clear. Test [1] does not measure "available space" between
-> kernel releases. It just run df command with parameters, saves it's output
-> and compares "1024-blocks" and "Used" columns of df output with stat output:
+> To be clear, this would imply expanding xfs_attri_log_format to have
+> another alfi_new_name_len feild and another iovec for the attr intent
+> right?  Does that cause issues to change the on disk log layout after
+> the original has merged?  Or is that ok for things that are still
+> experimental? Thanks!
 
-Annotating what these do...
+I think we can get away with this quite easily without breaking the
+existing experimental code.
 
-> 		local total=$(stat -f mntpoint --printf=%b)  # number of blocks allocated
-> 		local free=$(stat -f mntpoint --printf=%f)   # free blocks in filesystem
-> 		local used=$((total-free))                   # (number of blocks free)
-> 
-> 		local bsize=$(stat -f mntpoint --printf=%s)  # block size ("for faster transfers")
-> 		total=$((($total * $bsize + 512)/ 1024))     # number of 1k blocks allocated?
-> 		used=$((($used * $bsize + 512) / 1024))      # number of 1k blocks used?
-> 
-> And comparison with "$used" is what sometimes fails.
-> 
-> BTW this happens on both distros when loop device is on tmpfs. I'm trying to
-> trigger it on ext4 and btrfs, not successful so far. Looks like it's tmpfs
-> related.
-> 
-> If that's really expected, we might remove this check for used for XFS
-> (not sure if check only for total makes sense).
+struct xfs_attri_log_format {
+        uint16_t        alfi_type;      /* attri log item type */
+        uint16_t        alfi_size;      /* size of this item */
+        uint32_t        __pad;          /* pad to 64 bit aligned */
+        uint64_t        alfi_id;        /* attri identifier */
+        uint64_t        alfi_ino;       /* the inode for this attr operation */
+        uint32_t        alfi_op_flags;  /* marks the op as a set or remove */
+        uint32_t        alfi_name_len;  /* attr name length */
+        uint32_t        alfi_value_len; /* attr value length */
+        uint32_t        alfi_attr_filter;/* attr filter flags */
+};
 
-It's kind of hard to follow this test, but it seems to be trying to
-ensure that df output is consistent with du (statfs) numbers, before
-and after creating and removing a 1MB file.  I guess it's literally
-testing df itself, i.e. that it actually presents the numbers it obtained
-from statfs.
+We have a padding field in there that is currently all zeros. Let's
+make that a count of the number of {name, value} tuples that are
+appended to the format. i.e.
 
-AFAICT the difference in the failure is 1024 1K blocks, which is the size
-the file that's been created and removed during the test.
+struct xfs_attri_log_name {
+        uint32_t        alfi_op_flags;  /* marks the op as a set or remove */
+        uint32_t        alfi_name_len;  /* attr name length */
+        uint32_t        alfi_value_len; /* attr value length */
+        uint32_t        alfi_attr_filter;/* attr filter flags */
+};
 
-My best guess is that this is xfs inode deferred inode inactivation hanging
-onto the space a little longer than the test expects.
+struct xfs_attri_log_format {
+        uint16_t        alfi_type;      /* attri log item type */
+        uint16_t        alfi_size;      /* size of this item */
+	uint8_t		alfi_attr_cnt;	/* count of name/val pairs */
+        uint8_t		__pad1;          /* pad to 64 bit aligned */
+        uint16_t	__pad2;          /* pad to 64 bit aligned */
+        uint64_t        alfi_id;        /* attri identifier */
+        uint64_t        alfi_ino;       /* the inode for this attr operation */
+	struct xfs_attri_log_name alfi_attr[]; /* attrs to operate on */
+};
 
-This is probably because the new-ish xfs inode inactivation no longer blocks
-on inode garbage collection during statfs().
+Basically, the size and shape of the structure has not changed, and
+if alfi_attr_cnt == 0 we just treat it as if alfi_attr_cnt == 1 as
+the backwards compat code for the existing code.
 
-IOWS, I think the test expects that free space is reflected in statfs numbers
-immediately after a file is removed, and that's no longer the case here. They
-change in between the df check and the statfs check.
+And then we just have as many followup regions for name/val pairs
+as are defined by the alfi_attr_cnt and alfi_attr[] parts of the
+structure. Each attr can have a different operation performed on
+them, and they can have different filters applied so they can exist
+in different namespaces, too.
 
-(The test isn't just checking that the values are correct, it is checking that
-the values are /immediately/ correct.)
+SO I don't think we need a new on-disk feature bit for this
+enhancement - it definitely comes under the heading of "this stuff
+is experimental, this is the sort of early structure revision that
+EXPERIMENTAL is supposed to cover....
 
-Putting a "sleep 1" after the "rm -f" in the test seems to fix it; IIRC
-the max time to wait for inodegc is 1s. This does slow the test down a bit.
+Cheers,
 
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
