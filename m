@@ -2,225 +2,157 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABB5BC25B0E
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 22:43:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B100FC25B0E
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 22:51:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237506AbiHPWnF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 18:43:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39594 "EHLO
+        id S237050AbiHPWvB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 18:51:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230056AbiHPWnF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 18:43:05 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AA42591080;
-        Tue, 16 Aug 2022 15:43:02 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-52-176.pa.nsw.optusnet.com.au [49.181.52.176])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E33B010E8833;
-        Wed, 17 Aug 2022 08:42:59 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oO5Gz-00Dy1R-GM; Wed, 17 Aug 2022 08:42:57 +1000
-Date:   Wed, 17 Aug 2022 08:42:57 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix i_version handling in xfs
-Message-ID: <20220816224257.GV3600936@dread.disaster.area>
-References: <20220816131736.42615-1-jlayton@kernel.org>
- <Yvu7DHDWl4g1KsI5@magnolia>
- <e77fd4d19815fd661dbdb04ab27e687ff7e727eb.camel@kernel.org>
+        with ESMTP id S231928AbiHPWu7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 18:50:59 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD3258B996
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 15:50:58 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27GL9Jpm004835
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 22:50:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=fjhah2WQAktj6tP0dCwDd1NT3+ezyz/zH7mGTV4O7Oo=;
+ b=JG8yy+xEHfdwiVpCSQ+XVjs1ILK/qzt3XK8NEV/zqZB0Obx5x6it2tFJzmc28mqoAZBJ
+ IoUNAItXlizX5DWZ3YKDNxHPRDypJcVKvMjF9OTMo8/noZLFyaywVvdkPb+xsi5GGzQi
+ JobvtUSEu/2Rm/HveNgNbiOgXyC4HZcrYwcu2HYAr+IDfAhT53qcYpIQu/Kzi6Uw6zIQ
+ /x8NNhQg2iHNrEiB19EloxLRwBRso2VvUBwORhpizBEnv67Oivt8LRHwK1dGhdqoMXuK
+ 03GYxJetGLnvuXiDljq7Qm3Arrjk41dSoWNWA1Fbo9H+MWy55w6rp4bhxEXsmR8jTnhH uQ== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hx3ua77f4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 22:50:58 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 27GK0TRw021278
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 22:50:57 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2108.outbound.protection.outlook.com [104.47.70.108])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3hx2d8yd3q-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 22:50:56 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hbRa+DOIuhzcng9bptdRGs+Ddgw3rrTstlm2bbhYjQfe7H4YSuIMfdwZJaAqqs807W5VN7cDprCR2M0w4HDq81tnl9th2xQKr2Rhg6PX03LrXLO8ieF4avWhsXAkh+D5cPElXDBNmETy0syDK+PeczDpwEb99jSSKiynA0ncSfql+B+qbucqIg64Sa5aUJAcl/6CXaswy+Ts2vucLxOGJMgrFVEnsECWjZ8SSp2+D8FZYMLjDcafqrqr+/4Sh5MkzzccgAZJv4ya6lU5zro7fxhNVrHytgz9/CrAjz1FSo5mOeY57AcOty6zsv8LG7jy3Y90UrleITUIKua5soV7CQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=fjhah2WQAktj6tP0dCwDd1NT3+ezyz/zH7mGTV4O7Oo=;
+ b=Z+PE4k+nINkq6pS4x3J19AKFEarv4ofR3X9D0KHo8zwRN7NeSuC2FanjUGC66CPow7HKPugVEAW/LHqbou1Lr4PxlRErUVHoVxYcNaegBvG4HXfHLqEq/wyYSFMWczcSbhnZKhUlWuBNNHIRdwy0taKdewe7d4RzxEtCCX0ogS6rZNzbu5ooN4phYOpr3xLeZx6YIh0XOLEJqhwtrmnAaufb4idsr6Hg6jUOVl9D4D+KYqGIoVcFkKDS3xzl6QmGjceJcosb0Cz5RWrgUhJcYAzHgb6BOJ4oSC7owwNZpklugyIZLQZq7HBJG+8HqoWcxeHPSbI4tJ2BfykiBXzyIQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=fjhah2WQAktj6tP0dCwDd1NT3+ezyz/zH7mGTV4O7Oo=;
+ b=bYF7iN6E+GzBGVdqV7StzHYV/gCXFZCcippJKSxarg4ST0Ks/OIpYsadYnklxLn4rqhADQ5ONGO23vX4BaVK0LBQMz3C36Xmif2E5ir0dLjpfzVZ7QyvmWYQeuMFsK0exgefAP3bdekdyh98oagwzjpjibnzMfCz1gWT2PYqOwM=
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
+ by PH7PR10MB5721.namprd10.prod.outlook.com (2603:10b6:510:130::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5504.21; Tue, 16 Aug
+ 2022 22:50:55 +0000
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::cdcc:bfdc:551c:8632]) by BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::cdcc:bfdc:551c:8632%3]) with mapi id 15.20.5525.010; Tue, 16 Aug 2022
+ 22:50:54 +0000
+From:   Catherine Hoang <catherine.hoang@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v1 0/1] xfs: add larp diagram
+Date:   Tue, 16 Aug 2022 15:50:46 -0700
+Message-Id: <20220816225047.97828-1-catherine.hoang@oracle.com>
+X-Mailer: git-send-email 2.32.0 (Apple Git-132)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BY3PR05CA0048.namprd05.prod.outlook.com
+ (2603:10b6:a03:39b::23) To BLAPR10MB5316.namprd10.prod.outlook.com
+ (2603:10b6:208:326::6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e77fd4d19815fd661dbdb04ab27e687ff7e727eb.camel@kernel.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62fc1d74
-        a=O3n/kZ8kT9QBBO3sWHYIyw==:117 a=O3n/kZ8kT9QBBO3sWHYIyw==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=VwQbUJbxAAAA:8 a=Rtz12tFEleHYSgjB_mQA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22 a=AjGcO6oz07-iQ99wixmX:22
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 3b981fe0-bfc7-4172-28b5-08da7fd9c6b8
+X-MS-TrafficTypeDiagnostic: PH7PR10MB5721:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: JfnlYqYchlWXLvW+B59EQSVbjq9EewL/EMDdV6iTgehd1CxglCd9rkX9RlVyqI1Vmfjsc7rOYYjGbCOlEiZSXqj/6x25CJga21kn2FMRfRYH5sx6GSc4ff4Yx//utfRlm9+q+DkNFdA6dOt9Ie0Nk1a1L54UANMJN4wQ0Dv9riaVqHPYsKrX3fEEIGr7ls8yOazMuj05GiQRDCjTnYQxo2rJcTGyrTEtGPYug6kOmccF+BLX9eg1EBLoUu2OhXgk0V+YEgUwqQ7vK59/ZJdh0v8hES2kZjiP4DrZ7ofvRZLAh5UTQaGVOv8mSR5ixhNOk2NBdDfT32HOme2M3aTGsvFdr34ugrgpbECEcHqGbEXMWRL4JTmvTzYxmbkDmGJ/pUuJR9DuL/pbcmf4wLdEPzSgFxhZtWMAON7IaQKo6aiQi5CdZeM7gAn+czu4yVFC92JA4wgSWdvEDma0/2K/sBwDB5XLcOKpEzb5tOg2qgL1KW/AUAtdOvG83HKbpZF0YtDJonwE4QSyYqEtcM7h4Us7Yf6XAXaIrtCvtI1mi7D9IKwKacx1JLOwO2qjNrsVh3QdZp5jJ/DKUEGeHf31d43HgxwmP7QY59E7HZzL2usrnTQ6jRyjnu6R4Dw5RO8LOnIWpYCbQXQr/MWveVmINDD+0+wGgTxixCLuBWliqdKSJjkhExrOxZ1U6J1kblj/fAdWRp8GqZXlq8/Z+UagQx6sr2cbLQul2tm3PQ5PZUIPLi37enD+5bPdig6LtYzWjw0kU0mzTmosMZ+z7JtwKKHK8oD6PUSFH318p1aE3C56Bos7wlz8Tu/xvuf0vfkm
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(376002)(346002)(136003)(39860400002)(396003)(366004)(52116002)(2906002)(66556008)(5660300002)(36756003)(66946007)(8676002)(1076003)(966005)(186003)(478600001)(66476007)(2616005)(44832011)(86362001)(6486002)(26005)(38100700002)(6506007)(8936002)(4744005)(6916009)(6666004)(316002)(41300700001)(38350700002)(6512007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?gy6uhS7apRlGahtpJKrubhVo+l/t21o+3m6hn9cA+k+ryVclFre/UPTsOTy3?=
+ =?us-ascii?Q?UoB2i29pYx7ZBDAOnBvjLHZ6D+H3XFLN5gHfy2u/O8PEWiy/4J3TwQ/7gkxS?=
+ =?us-ascii?Q?UgOmSnmYHZ22Jb49HK7R30o5wbhz8m+d/CSR8o9/xzjiLEua/8UJszhYAOlj?=
+ =?us-ascii?Q?WSiD/CDraaNcN4KjqOWLClFHk4rZF3yxRqOEFsO7FXHHgfnbbd0oLngr6NJ8?=
+ =?us-ascii?Q?flgiDNgCjeGAk6LMSA6qjaw6ON4mXRanufIg2UBBu9TskJNhjhMEQPsl/iiu?=
+ =?us-ascii?Q?eqvHP5BKOdsxBDJqNnEsJ27kc4Ytd5qNyE30PvukHqZGV9SG2buRHztnSibh?=
+ =?us-ascii?Q?IEzRzt/U2dKMI5Y2qGOADCAExcK5Pf60xEwzwN7yp7XRdDvMbm1LXFyXrVUE?=
+ =?us-ascii?Q?MjrnE0e5VW4KmcxP91EGdceD4CufwitmUtdwaQGN2naVz+qULztOaWBNZWb4?=
+ =?us-ascii?Q?aIkx/vhnlbKNnmRqt9QvQRnLCQBsHcbuYubcIwF3leanETYxJre/dfYsQvLO?=
+ =?us-ascii?Q?bhlkMFYg3JuIDcDqcLgh7ybihaWGGRk+qWHvfivwVfaslK/3Q+yBooEYtU/m?=
+ =?us-ascii?Q?YnCqEmNoY29GD5V8RTNO469Fpmmxw/P8mSOl1mNWoOqDAzFzMmkd1H+rbTXc?=
+ =?us-ascii?Q?7oQYvUCaelQ55AfslgZp+uKOihN26vPj/qKO3tQVBphLkhsKqu3mj7NeleUa?=
+ =?us-ascii?Q?AlTz6DJ1kN13ocnimq5hLbTf8cBSwerJh1bkCs/fUJXvtvdYLG0iEQEsFnTa?=
+ =?us-ascii?Q?0rPeiG5AWV0j4pJqHQLT+RfkYM2IF2O7iar2b6AsQ5MKD+31kGc1Oca+EncJ?=
+ =?us-ascii?Q?4RoEOHRnSyeuN2ca+TsdwoahVk6F7kQcd+GY/vr2Qs4VqMi9fqyTawXmIvT8?=
+ =?us-ascii?Q?tJpnPIMorWFRcUMxxuZ328iz2YZ2z4UO+PRjsga4Lx9zMm7PJCBJGCMidOl9?=
+ =?us-ascii?Q?z2YypC6dmS9Pjd45Td1YKlSNDR+GCyj4F8PjOTHvvIqgCUKi66ZBKWaDazf+?=
+ =?us-ascii?Q?4rSoLow1RSUEpErPbdTGPCsycIcUrWDdyoIGE547Kiqh4oQm8dwkjvIB0Gys?=
+ =?us-ascii?Q?NVgOt2MIwAK8g2Vf/V58+gVPJH5pg8SWFM8XeHFB5Ado2BvFiC4+dnHLR0nT?=
+ =?us-ascii?Q?C0mSehFMycY4w932QOGVV2ZoqqrGx5mWnYWZvEkZLD63b+vGj9MTfxy5uWI7?=
+ =?us-ascii?Q?C6Uy0ku8tj/NFCtuMyBZ7dvbLLDWod8qYb8iv84ex3GEwLYRF/y7SWqTXGp6?=
+ =?us-ascii?Q?665jzXMRqYfMpMt4kLfKRI3mibYuuuPj0SELXMJhaYytlbG2F+0lSgqQJyng?=
+ =?us-ascii?Q?+HEfUbbGRcKmoVCoyV4770jfZSC5xuMPFJH5M+/5D83fvmOiFQLHAwD22j2W?=
+ =?us-ascii?Q?P58k5d9fBJv74Ms/TreBortiOClas0+BWHD6a9wOrH9rc0RSXGmMn112oCkP?=
+ =?us-ascii?Q?sU7GoNtWWExH7Ba9sePKM+T+fijIDQvwU8Tugb/7pYiuLbf/gCr0G3dV54z+?=
+ =?us-ascii?Q?0hNqyWlBv0pJfkdxB/LV0avl7aJDoDDH/T/gdjoQ+pYpwwoxRXXjJkh7E+KI?=
+ =?us-ascii?Q?3LpKB10Z68uFis1aqEWCwE6qBLiWpkPz9S9uu5Rk?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3b981fe0-bfc7-4172-28b5-08da7fd9c6b8
+X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Aug 2022 22:50:54.6653
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: nqC13e92SGNXckl7MrYfgdYFMz6yPRuyBwL7pdSVZGISB0ay2eGcZhaz6PXDfBYKgWJT6eotHEYoT6JLCqp4G+ITP3/E2X3ii0viMUG1jKk=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB5721
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-16_08,2022-08-16_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0
+ malwarescore=0 phishscore=0 bulkscore=0 spamscore=0 mlxlogscore=838
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2208160082
+X-Proofpoint-ORIG-GUID: OE4riAHBt-_UvgoUbNiYt89nTyF2V4b9
+X-Proofpoint-GUID: OE4riAHBt-_UvgoUbNiYt89nTyF2V4b9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 16, 2022 at 11:58:06AM -0400, Jeff Layton wrote:
-> On Tue, 2022-08-16 at 08:43 -0700, Darrick J. Wong wrote:
-> > On Tue, Aug 16, 2022 at 09:17:36AM -0400, Jeff Layton wrote:
-> > > The i_version in xfs_trans_log_inode is bumped for any inode update,
-> > > including atime-only updates due to reads. We don't want to record those
-> > > in the i_version, as they don't represent "real" changes. Remove that
-> > > callsite.
-> > > 
-> > > In xfs_vn_update_time, if S_VERSION is flagged, then attempt to bump the
-> > > i_version and turn on XFS_ILOG_CORE if it happens. In
-> > > xfs_trans_ichgtime, update the i_version if the mtime or ctime are being
-> > > updated.
-> > 
-> > What about operations that don't touch the mtime but change the file
-> > metadata anyway?  There are a few of those, like the blockgc garbage
-> > collector, deduperange, and the defrag tool.
-> > 
-> 
-> Do those change the c/mtime at all?
-> 
-> It's possible we're missing some places that should change the i_version
-> as well. We may need some more call sites.
-> 
-> > Zooming out a bit -- what does i_version signal, concretely?  I thought
-> > it was used by nfs (and maybe ceph?) to signal to clients that the file
-> > on the server has moved on, and the client needs to invalidate its
-> > caches.  I thought afs had a similar generation counter, though it's
-> > only used to cache file data, not metadata?  Does an i_version change
-> > cause all of them to invalidate caches, or is there more behavior I
-> > don't know about?
-> > 
-> 
-> For NFS, it indicates a change to the change attribute indicates that
-> there has been a change to the data or metadata for the file. atime
-> changes due to reads are specifically exempted from this, but we do bump
-> the i_version if someone (e.g.) changes the atime via utimes(). 
+Hi all,
 
-We have relatime behaviour to optimise away unnecessary atime
-updates on reads.  Trying to explicitly exclude i_version from atime
-updates in one filesystem just because NFS doesn't need that
-information seems ....  misguided.  The -on disk- i_version
-field behaviour is defined by the filesystem implementation, not the
-NFS requirements.
+I've been working on adding a diagram to document the various logged
+attribute states and their transitions. This is largely based on Dave's
+diagram, with a couple of changes and added details.
 
-> The NFS client will generally invalidate its caches for the inode when
-> it notices a change attribute change.
->
-> FWIW, AFS may not meet this standard since it doesn't generally
-> increment the counter on metadata changes. It may turn out that we don't
-> want to expose this to the AFS client due to that (or maybe come up with
-> some way to indicate this difference).
+The diagram can also be viewed here:
+https://pasteboard.co/xyGPkCADuH4c.png
 
-In XFS, we've defined the on-disk i_version field to mean
-"increments with any persistent inode data or metadata change",
-regardless of what the high level applications that use i_version
-might actually require.
+Feedback and comments are appreciated!
 
-That some network filesystem might only need a subset of the
-metadata to be covered by i_version is largely irrelevant - if we
-don't cover every persistent inode metadata change with i_version,
-then applications that *need* stuff like atime change notification
-can't be supported.
+Catherine
 
-> > Does that mean that we should bump i_version for any file data or
-> > attribute that could be queried or observed by userspace?  In which case
-> > I suppose this change is still correct, even if it relaxes i_version
-> > updates from "any change to the inode whatsoever" to "any change that
-> > would bump mtime".  Unless FIEMAP is part of "attributes observed by
-> > userspace".
-> > 
-> > (The other downside I can see is that now we have to remember to bump
-> > timestamps for every new file operation we add, unlike the current code
-> > which is centrally located in xfs_trans_log_inode.)
-> > 
-> 
-> The main reason for the change attribute in NFS was that NFSv3 is
-> plagued with cache-coherency problems due to coarse-grained timestamp
-> granularity. It was conceived as a way to indicate that the inode had
-> changed without relying on timestamps.
+Catherine Hoang (1):
+  xfs: add larp state machine diagram
 
-Yes, and the most important design consideration for a filesystem is
-that it -must be persistent-. The constraints on i_version are much
-stricter than timestamps, and they are directly related to how the
-filesystem persists metadata changes, not how metadata is changed or
-accessed in memory.
+ Documentation/filesystems/xfs-larp-diagram.svg | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 Documentation/filesystems/xfs-larp-diagram.svg
 
-> In practice, we want to bump the i_version counter whenever the ctime or
-> mtime would be changed.
-
-What about O_NOCMTIME modifications? What about lazytime
-filesystems? These explicilty avoid or delay persisten c/mtime
-updates, and that means bumping i_version only based on c/mtime
-updates cannot be relied on. i_version is supposed to track user
-visible data and metadata changes, *not timestamp updates*.
-
-> > > Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Cc: Dave Chinner <david@fromorbit.com>
-> > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_trans_inode.c | 17 +++--------------
-> > >  fs/xfs/xfs_iops.c               |  4 ++++
-> > >  2 files changed, 7 insertions(+), 14 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> > > index 8b5547073379..78bf7f491462 100644
-> > > --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> > > +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> > > @@ -71,6 +71,8 @@ xfs_trans_ichgtime(
-> > >  		inode->i_ctime = tv;
-> > >  	if (flags & XFS_ICHGTIME_CREATE)
-> > >  		ip->i_crtime = tv;
-> > > +	if (flags & (XFS_ICHGTIME_MOD|XFS_ICHGTIME_CHG))
-> > > +		inode_inc_iversion(inode);
-> > >  }
-
-That looks wrong - this is not the only path through XFS that
-modifies timestamps, and I have to ask why this needs to be an
-explicit i_version bump given that nobody may have looked at
-i_version since the last time it was updated?.
-
-What about xfs_fs_dirty_inode() when we actually persist lazytime
-in-memory timestamp updates? We didn't bump i_version when setting
-I_DIRTY_TIME, and this patch now removes the mechanism that is used
-to bump iversion if it is needed when we persist those lazytime
-updates.....
-
-> > >  /*
-> > > @@ -116,20 +118,7 @@ xfs_trans_log_inode(
-> > >  		spin_unlock(&inode->i_lock);
-> > >  	}
-> > >  
-> > > -	/*
-> > > -	 * First time we log the inode in a transaction, bump the inode change
-> > > -	 * counter if it is configured for this to occur. While we have the
-> > > -	 * inode locked exclusively for metadata modification, we can usually
-> > > -	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
-> > > -	 * the last time it was incremented. If we have XFS_ILOG_CORE already
-> > > -	 * set however, then go ahead and bump the i_version counter
-> > > -	 * unconditionally.
-> > > -	 */
-> > > -	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
-> > > -		if (IS_I_VERSION(inode) &&
-> > > -		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
-> > > -			iversion_flags = XFS_ILOG_CORE;
-> > > -	}
-> > > +	set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags);
-
-.... and this removes the sweep that captures in-memory timestamp
-and i_version peeks between any persistent inode metadata
-modifications that have been made, regardless of whether i_version
-has already been bumped for them or not.
-
-IOws, this seems to rely on every future inode modification in XFS
-calling xfs_trans_ichgtime() to bump i_version to sweep previous VFS
-in-memory timestamp updates that this inode modification captures
-and persists to disk.
-
-This seems fragile and error prone - it's relying on the
-developers always getting timestamp and iversion updates correct,
-rather the code always guaranteeing that it captures timestamp and
-iversion updates without any extra effort.
-
-Hence, I don't think that trying to modify how filesystems persist
-and maintain i_version coherency because NFS "doesn't need i_version
-to cover atime updates" is the wrong approach. On-disk i_version
-coherency has to work for more than just one NFS implementation
-(especially now i_version will be exported to userspace!). 
-Persistent atime updates are already optimised away by relatime, and
-so I think that any further atime filtering is largely a NFS
-application layer problem and not something that should be solved by
-changing the on-disk definition of back end filesystem structure
-persistence.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.25.1
+
