@@ -2,95 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A0B6C25B0E
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Aug 2022 23:57:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B90E6C25B0E
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 00:56:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237137AbiHPX5M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 19:57:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48562 "EHLO
+        id S238080AbiHQA41 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 20:56:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229675AbiHPX5L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 19:57:11 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B261E857FF;
-        Tue, 16 Aug 2022 16:57:10 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-52-176.pa.nsw.optusnet.com.au [49.181.52.176])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id BC9F162D4F2;
-        Wed, 17 Aug 2022 09:57:09 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oO6Qm-00DzMD-14; Wed, 17 Aug 2022 09:57:08 +1000
-Date:   Wed, 17 Aug 2022 09:57:08 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix i_version handling in xfs
-Message-ID: <20220816235708.GY3600936@dread.disaster.area>
-References: <20220816131736.42615-1-jlayton@kernel.org>
- <Yvu7DHDWl4g1KsI5@magnolia>
- <e77fd4d19815fd661dbdb04ab27e687ff7e727eb.camel@kernel.org>
- <20220816224257.GV3600936@dread.disaster.area>
+        with ESMTP id S238079AbiHQA41 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 20:56:27 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CB727F240
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 17:56:26 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id a8so11152368pjg.5
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 17:56:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=G3ybyjIbOOw2/O3RrkMccEkjuyDC1jmepdpBrH/4dhI=;
+        b=hoSroQfYAvai6/8TdWOO0LB55hgQh9KW3HA8FLVrmve528Fdu3EIBZBkaut3OcpFMk
+         gwoil983+wO3Vul60Azz9KHfeg13HTI0uUhruORp9q01xKfM4QMGG1crIRbVBvVN8zPC
+         g67jFsQVhcSgD/J59DnejGxUKvOw4fS5byM8TmqmwoVNMPpEW6X4RHWdL5orBat73fA7
+         H2O/Jeok0+Rw/Z6j+lUQJQqbAvqWmZZ3e5l6i141QxrAMm+KMBgmD6YW845gtHZqb5Ju
+         tU2V2huhBl92/NQA88GCo2QOEzfiKWdSTIW/79O2v9m2zzRPgTNXXvVE88PjIjWQWrI0
+         mk1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc;
+        bh=G3ybyjIbOOw2/O3RrkMccEkjuyDC1jmepdpBrH/4dhI=;
+        b=adkO8jNmKTiR2thjInJZmRVPYXv+4yk9dmgoxT5gtmlme7gFwZawEoulZqZvCJ4kOB
+         RIQUnSbJt34vjHcQpaUO3KrWaWU8NdDzfGl7aUlBf7R7ACyrMsqkiZG0IPBRajZas8K7
+         4ETUiAKQenEwVn2qCPi2SaoByNZrkOJi5d2RAJxP/gquvb5Qijk10etblnRpYbe7Tt7W
+         i6GwdIU3T0u0Hp3xsjJqOVHhPk7G2AuNx7hI2FSNixZ5nsYzR4DgYCz0Lc6YrLvMHcIt
+         u7U4RQ+Zga7qKxucg7hXTd9MuBeICOt/dW4bIN97R1JWmqRKDlmo6klNHcHJAaQUgy2n
+         c7bA==
+X-Gm-Message-State: ACgBeo2saapbXIKhW/vlTFcxYvJ4hex38C0hKiOfpi/rdBgTEywwE6+C
+        rQqysV1Vbg546n/T9NvATeGDnaipOwc=
+X-Google-Smtp-Source: AA6agR5WtTWaHVv/qS3BukeZIskQRpmoY9Lj6myaKNeZK60UCCAOTy9xu++JTBzzx8DqdlUoyJhBoQ==
+X-Received: by 2002:a17:903:40c7:b0:16e:e32d:259c with SMTP id t7-20020a17090340c700b0016ee32d259cmr24395596pld.67.1660697785884;
+        Tue, 16 Aug 2022 17:56:25 -0700 (PDT)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:eb64:ce74:44c1:343c])
+        by smtp.gmail.com with ESMTPSA id u14-20020a17090a5e4e00b001f8aee0d826sm153458pji.53.2022.08.16.17.56.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Aug 2022 17:56:25 -0700 (PDT)
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     amir73il@gmail.com, Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH CANDIDATE 5.15 0/9] xfs stable candidate patches for 5.15.y (part 4)
+Date:   Tue, 16 Aug 2022 17:56:01 -0700
+Message-Id: <20220817005610.3170067-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.37.1.595.g718a3a8f04-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220816224257.GV3600936@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62fc2ed6
-        a=O3n/kZ8kT9QBBO3sWHYIyw==:117 a=O3n/kZ8kT9QBBO3sWHYIyw==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=7-415B0cAAAA:8
-        a=rUX31UJu9yjMAGyTwVAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 17, 2022 at 08:42:57AM +1000, Dave Chinner wrote:
-> On Tue, Aug 16, 2022 at 11:58:06AM -0400, Jeff Layton wrote:
-> > On Tue, 2022-08-16 at 08:43 -0700, Darrick J. Wong wrote:
-> > > On Tue, Aug 16, 2022 at 09:17:36AM -0400, Jeff Layton wrote:
-> > > > @@ -116,20 +118,7 @@ xfs_trans_log_inode(
-> > > >  		spin_unlock(&inode->i_lock);
-> > > >  	}
-> > > >  
-> > > > -	/*
-> > > > -	 * First time we log the inode in a transaction, bump the inode change
-> > > > -	 * counter if it is configured for this to occur. While we have the
-> > > > -	 * inode locked exclusively for metadata modification, we can usually
-> > > > -	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
-> > > > -	 * the last time it was incremented. If we have XFS_ILOG_CORE already
-> > > > -	 * set however, then go ahead and bump the i_version counter
-> > > > -	 * unconditionally.
-> > > > -	 */
-> > > > -	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
-> > > > -		if (IS_I_VERSION(inode) &&
-> > > > -		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
-> > > > -			iversion_flags = XFS_ILOG_CORE;
-> > > > -	}
-> > > > +	set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags);
-> 
-> .... and this removes the sweep that captures in-memory timestamp
-> and i_version peeks between any persistent inode metadata
-> modifications that have been made, regardless of whether i_version
-> has already been bumped for them or not.
+Hello,
 
-Which, BTW, breaks the iversion update for xfs_fs_commit_blocks()
-which the pNFS server calls to inform the filesystem that the pNFS
-client has finished writing data to a mapped region.
+No regressions were found for this set via the usual testing.
 
-This function runs unwritten extent conversion (making the data
-externally visible) and takes timestamps from the pNFS server. It
-then persists all these changes, meaning that there will be
-externally visible data, metadata and timestamp updates persisted to
-disk by the pNFS server without an iversion update occurring.
+Additional targeted testing:
 
-This iversion stuff is .... complex. It's also really easy to get
-wrong, and that's even before we start trying to optimise away stuff
-like timestamp updates....
+generic/691 for bc37e4fb5cac
+generic/681 for 871b9316e7a7
+generic/682 for 41667260bc84
+  Ensured these regression tests failed before but not after backports
 
-Cheers,
+xfs/170 for f650df7171b88
+  Was not able to reproduce failure before or after on my setup
 
-Dave.
+- Leah
+
+Brian Foster (2):
+  xfs: flush inodegc workqueue tasks before cancel
+  xfs: fix soft lockup via spinning in filestream ag selection loop
+
+Darrick J. Wong (6):
+  xfs: reserve quota for dir expansion when linking/unlinking files
+  xfs: reserve quota for target dir expansion when renaming files
+  xfs: remove infinite loop when reserving free block pool
+  xfs: always succeed at setting the reserve pool size
+  xfs: fix overfilling of reserve pool
+  xfs: reject crazy array sizes being fed to XFS_IOC_GETBMAP*
+
+Eric Sandeen (1):
+  xfs: revert "xfs: actually bump warning counts when we send warnings"
+
+ fs/xfs/xfs_filestream.c  |  7 ++--
+ fs/xfs/xfs_fsops.c       | 50 ++++++++++-------------
+ fs/xfs/xfs_icache.c      | 22 ++--------
+ fs/xfs/xfs_inode.c       | 79 ++++++++++++++++++++++--------------
+ fs/xfs/xfs_ioctl.c       |  2 +-
+ fs/xfs/xfs_trans.c       | 86 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trans.h       |  3 ++
+ fs/xfs/xfs_trans_dquot.c |  1 -
+ 8 files changed, 167 insertions(+), 83 deletions(-)
+
 -- 
-Dave Chinner
-david@fromorbit.com
+2.37.1.595.g718a3a8f04-goog
+
