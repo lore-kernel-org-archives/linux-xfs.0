@@ -2,63 +2,71 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EFF1C32771
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 13:16:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B69C25B08
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 13:16:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239061AbiHQNQO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Aug 2022 09:16:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46638 "EHLO
+        id S236141AbiHQNQU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Aug 2022 09:16:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239191AbiHQNPn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Aug 2022 09:15:43 -0400
-Received: from mail-ua1-x92c.google.com (mail-ua1-x92c.google.com [IPv6:2607:f8b0:4864:20::92c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1738185FF1
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 06:15:26 -0700 (PDT)
-Received: by mail-ua1-x92c.google.com with SMTP id m21so1253321uab.13
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 06:15:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc;
-        bh=cSo15qrf6HsTaJ5udJjVZD9V3SXs7LH28gj50HEVHFg=;
-        b=hFGVz0LR2iyiJAIC5IXIwW1H7UTKatgsEZC5nD//ICDMylDFjiIwdR6qMAoLKEdffU
-         OU4pdYxdsqnjjqyOjxKPcgWawvWtJR9xMVjXjXJAeErJlo3DFa3tPu6gC7gWR+W/Tp9P
-         6TRgI+3R2I1tVS9UGjXoGYO5+DUYeTdQWnNMAPNYVx9YwtrI38QD9mvDBTt3ACY6iIVQ
-         KMqQc7iUw/3vK+DLLqXilBpDyBr4950+a9RPbXjocg8BLIqGrTPxU1rARuziw3fL0z3H
-         mJ4qIQ+Vl4svWAdP6IGrJLXIbtLbRgQ9xHcuub0TFaibMvmREyZ6lQRIGO/qBKHfONWN
-         +9ig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc;
-        bh=cSo15qrf6HsTaJ5udJjVZD9V3SXs7LH28gj50HEVHFg=;
-        b=ZMpA+iuP9qzC4Pi0KprHI6Qch8TPn7AM6mSKHmFyrv2K3+Q/6SOIGhEm9wGbPjyc+h
-         Wp943taE8jkD+fD8gWwGtRnrynsbR5h4ihAFpTTtaSw8+Dkrt1Sa/GPRuHhB0hc61fCs
-         P3f9bDDxVpRSdVnaxVbrzNKze8/fjcjkx4G0Gan9LlmOxRnMS+p0RXRr+7FzfgxJYxp0
-         oiITgqoxGiBYQihFU5btCwam9fnfUm+R6ISNTo6suTjTGxly02eIQx7UIOgfw9iA9sFz
-         i5r4P3BeifsmSAw95GWuwxnA944Nnld3sMWkN6rVaPIl2UdSU0a+je9slanek2MX88go
-         KZyw==
-X-Gm-Message-State: ACgBeo3AYTrDG+fCj/S5OOQDzVXTpbIEFTDHfbeTtGl8+2qcbCKtx8/w
-        KVOpolmOMx9Rs1N7sdWvbtLeWeREvXr1UtdHdobF/MGMFio=
-X-Google-Smtp-Source: AA6agR7eyb8XHJnu3oIMYwlTW75vFVDOVVk8tIMU6sngRn53xLzVsQjt16rrTIoCgELiD9BkbKTT+OptMyikMXnwABI=
-X-Received: by 2002:ab0:36e3:0:b0:38c:4baa:f775 with SMTP id
- x3-20020ab036e3000000b0038c4baaf775mr10723069uau.114.1660742125162; Wed, 17
- Aug 2022 06:15:25 -0700 (PDT)
-MIME-Version: 1.0
-References: <bug-216343-201763@https.bugzilla.kernel.org/> <bug-216343-201763-sk71fw4i3o@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216343-201763-sk71fw4i3o@https.bugzilla.kernel.org/>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Wed, 17 Aug 2022 16:15:13 +0300
-Message-ID: <CAOQ4uxg0c-1dV54wEsPA8Kev9FaK==ewkHzEAxUhFXu9RqVjwQ@mail.gmail.com>
-Subject: Re: [Bug 216343] XFS: no space left in xlog cause system hang
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+        with ESMTP id S236439AbiHQNP5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Aug 2022 09:15:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93FAC50713
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 06:15:30 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0C9636133D
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 13:15:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6A011C43140
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 13:15:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660742129;
+        bh=yJfMtHa2u+rnhuEKsfL/u3OpXL1585daly5/OcqlAyE=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=odkvZNBk3vMsesqztRf7Wca+hSp7PO4VZwDJ33N0zttCYv5c6phT4M4vPsd32fscF
+         eck/8EI6m3kIUxqbU4GDGIGb3EQck2YWvWKMZ1GEHXJAwPUk74SRW3xgVM+9RcQ0s5
+         gOnbNJ6PnhBCiD7RkfZKfP17dMLSFZ7w8rvonrcOANRZwYP0rJirn9fUxKmSjVuDZZ
+         OCaQxVDnmntFEptZIixK9r4PgXtqPlGWpw+VUiLor6ahpJoY8ukI8zg6eqcCxihY8G
+         g+fywRHwRnos7wdUAWIOeF2U3aB2xsB5UF9OhopMpODG/iJ2IuP07dQIV1STEgN10K
+         SDaewcpecGpjw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 59851C433EA; Wed, 17 Aug 2022 13:15:29 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216343] XFS: no space left in xlog cause system hang
+Date:   Wed, 17 Aug 2022 13:15:28 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: amir73il@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216343-201763-9Tsrp1ERyw@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216343-201763@https.bugzilla.kernel.org/>
+References: <bug-216343-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
+
+--- Comment #6 from Amir Goldstein (amir73il@gmail.com) ---
 On Wed, Aug 17, 2022 at 1:19 PM <bugzilla-daemon@kernel.org> wrote:
 >
 > https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
@@ -128,8 +136,8 @@ Anyway, if your hardware had errors, could it be that your
 filesystem is shutting down?
 
 If it does, you may be hit by the bug fixed by
-84d8949e7707 ("xfs: hold buffer across unpin and potential shutdown process=
-ing")
+84d8949e7707 ("xfs: hold buffer across unpin and potential shutdown
+processing")
 but I am not sure if all the conditions in this bug match your case.
 
 If you did get hit by this bug, you may consider upgrade to v5.10.135
@@ -137,3 +145,9 @@ which has the bug fix.
 
 Thanks,
 Amir.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
