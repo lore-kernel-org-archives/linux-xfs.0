@@ -2,61 +2,60 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9DF4C28B2B
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 00:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24990C32774
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 00:56:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237746AbiHQA4i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Aug 2022 20:56:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47228 "EHLO
+        id S238084AbiHQA4j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Aug 2022 20:56:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238084AbiHQA4f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 20:56:35 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7CF380343
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 17:56:34 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id t22so11170301pjy.1
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 17:56:34 -0700 (PDT)
+        with ESMTP id S238085AbiHQA4h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Aug 2022 20:56:37 -0400
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41DC080523
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 17:56:37 -0700 (PDT)
+Received: by mail-pl1-x632.google.com with SMTP id o3so10704843ple.5
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Aug 2022 17:56:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=WDb9aEZliPejuLd3dSdvbkRV1lWv2feqDEDVspFqbTw=;
-        b=VGvt+8ztohvM9a0HJFADDi/nWAKzRqtcSmAfpcN7megMu8ByEfID6OU/Ik+hvgZrsQ
-         FfqbX+WmkVBoTVZbqU7eTZtlXUuIVchBXwgHJRunJ+PQwqCTDBZzv8BiSHZCdKtFl6sy
-         s6CaGmCE0uGSGqYE9zz+Zf60SjHhvlUsGKWrHhFE+Ci+goySasuEJuC7MFlHh0TejUH0
-         sqnVWkjEYS0l08P8QS02bbPg+25tHRfVPkqOlt76A5z4qmo/Jn1GyVE1xH8iq5azPYMl
-         WegMyezljdKWZKRy0Ex8LTP9Wduqi5QVZZ5NYv+oFrWE2F5wYZTLTNRUl6/jjl7kK3Lg
-         Xh2A==
+        bh=8x0W2mqGvd5EJbKKDmFhMzvn1ObNpDscBJNwevEe/ps=;
+        b=JmelRDEpXSWp2dpR5HSUAYW0qWYc9hff5wdXHSwjkORqovPJeiQRwQ0w4kHsl3/ZQv
+         xqm/lmx6kbwLv/VfaLaeb4uX0FNDyCasJDzFRXqRnuXxvoqjBF+lD28mi6s41vpQm3LB
+         qPxtrw3obPAUA5GcqnDDtSN6WjjPAPF/InZl4O40VSSb2PSWBKlZxo6h7ZIqKokQzePp
+         taTJcXLQbBaecR+b8mHPrmB8chhpAguxBwmSDJ2rVMHhAd9WCsNnCdjzx9s5sV4vadK0
+         gFOe3sq92K7//KjMMSgsnj8EiL/UeYM67IAp6BJSEHQW8WPBT4hR6WnzOYewTIRf5lnp
+         gduA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=WDb9aEZliPejuLd3dSdvbkRV1lWv2feqDEDVspFqbTw=;
-        b=F1EDSERysL+mlf4GowAZ2XnFNNWDLnPYOcSafF0pv3SbrRmAulMLgHS5BaYx5Hp9yf
-         QOc7J3M5dxNidnm6h6l/kPlnWIJ47jfJ5dJxgN/vcBmEWjqvs/28eV5uK9SNkU5oigMF
-         f8RFl099N6xxiR1cOuacaDcf9uWI/2oa4nALCuhSEzC6c5gkMLqBhWFeK0rbJ+6ZL9ps
-         JL63p6K+YuEGmLi5Enyp5sR3VI1Frv5OBpHzH+Rms+wWPip6PYFp+qApIU7lCzIsaI0a
-         hhv1k2l5+MbR7fQ4lnJFAljqmh+3ytZY7mgICAXJG4H2HTj4rHBi07sG1/MkKJGAK0Ms
-         h//Q==
-X-Gm-Message-State: ACgBeo3nYa4HCqgt/Mfz8IvzL07OA0hpMtPoIY119k/+HPwXVxT7jylQ
-        WVnQamoRTYEH8ju/sRqHEtLmhaJHlNDk0w==
-X-Google-Smtp-Source: AA6agR5ySuOIQa6i9JseWTKGk1SvAnsx3Y2XJudq/n6POA8O7fae5wAtUc1JtD9a2aVld4eTjB9q7A==
-X-Received: by 2002:a17:90a:c402:b0:1f7:75ce:1206 with SMTP id i2-20020a17090ac40200b001f775ce1206mr1240039pjt.68.1660697794111;
-        Tue, 16 Aug 2022 17:56:34 -0700 (PDT)
+        bh=8x0W2mqGvd5EJbKKDmFhMzvn1ObNpDscBJNwevEe/ps=;
+        b=n7PwUwLShh2bQmFjL446o6CattF5WvsPM4d17uTxVNh3Rpsm0jzdWC7Z4N9br9AhkH
+         Cwy2CZQ2MtrzgrisDQ5L5FDnr0PBqhT+KCQhWWYpdzGuxtpAU82Yt0FknVRqn/cl7ug0
+         kOww9b6/FdtwtWfVwe4ST7WUOAiGPmR+2DPJv8aJ1FebqaKK7uglT81RhBFh77mHYnSX
+         LikMlMMS9nPuh0hL2lzEOhENA+RsJf0tHsmTp7NSTTsUYOxHiE0o2mK9F+I7dCLD8qCr
+         gIV0ONs4W89ZLbMi/SB12LYQmAvSdlLQqMC4yCGH0Z/FFlGVECHo9/yqpVvHOxTUxtJJ
+         ChHg==
+X-Gm-Message-State: ACgBeo2+f9IYkBBOm0jBPIxnsom0mV4f3fnUV4Z+jIpjZklJDEy1NEML
+        aWKXwlBaM3Jeqci92kMW1K91e0273Md5kQ==
+X-Google-Smtp-Source: AA6agR6eMavZj+MUogq7cUoue6TI7h9irgxqIOZfn+aNJsgLVXypd3nAC7OSbYwRSs4n5jZIwfUdRA==
+X-Received: by 2002:a17:902:f610:b0:172:990e:33cd with SMTP id n16-20020a170902f61000b00172990e33cdmr1094241plg.145.1660697796575;
+        Tue, 16 Aug 2022 17:56:36 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:eb64:ce74:44c1:343c])
-        by smtp.gmail.com with ESMTPSA id u14-20020a17090a5e4e00b001f8aee0d826sm153458pji.53.2022.08.16.17.56.32
+        by smtp.gmail.com with ESMTPSA id u14-20020a17090a5e4e00b001f8aee0d826sm153458pji.53.2022.08.16.17.56.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Aug 2022 17:56:33 -0700 (PDT)
+        Tue, 16 Aug 2022 17:56:36 -0700 (PDT)
 From:   Leah Rumancik <leah.rumancik@gmail.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     amir73il@gmail.com, Brian Foster <bfoster@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <david@fromorbit.com>,
+Cc:     amir73il@gmail.com, "Darrick J. Wong" <djwong@kernel.org>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Catherine Hoang <catherine.hoang@oracle.com>,
         Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH CANDIDATE 5.15 7/9] xfs: fix soft lockup via spinning in filestream ag selection loop
-Date:   Tue, 16 Aug 2022 17:56:08 -0700
-Message-Id: <20220817005610.3170067-8-leah.rumancik@gmail.com>
+Subject: [PATCH CANDIDATE 5.15 9/9] xfs: reject crazy array sizes being fed to XFS_IOC_GETBMAP*
+Date:   Tue, 16 Aug 2022 17:56:10 -0700
+Message-Id: <20220817005610.3170067-10-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.37.1.595.g718a3a8f04-goog
 In-Reply-To: <20220817005610.3170067-1-leah.rumancik@gmail.com>
 References: <20220817005610.3170067-1-leah.rumancik@gmail.com>
@@ -66,57 +65,48 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit f650df7171b882dca737ddbbeb414100b31f16af ]
+[ Upstream commit 29d650f7e3ab55283b89c9f5883d0c256ce478b5 ]
 
-The filestream AG selection loop uses pagf data to aid in AG
-selection, which depends on pagf initialization. If the in-core
-structure is not initialized, the caller invokes the AGF read path
-to do so and carries on. If another task enters the loop and finds
-a pagf init already in progress, the AGF read returns -EAGAIN and
-the task continues the loop. This does not increment the current ag
-index, however, which means the task spins on the current AGF buffer
-until unlocked.
+Syzbot tripped over the following complaint from the kernel:
 
-If the AGF read I/O submitted by the initial task happens to be
-delayed for whatever reason, this results in soft lockup warnings
-via the spinning task. This is reproduced by xfs/170. To avoid this
-problem, fix the AGF trylock failure path to properly iterate to the
-next AG. If a task iterates all AGs without making progress, the
-trylock behavior is dropped in favor of blocking locks and thus a
-soft lockup is no longer possible.
+WARNING: CPU: 2 PID: 15402 at mm/util.c:597 kvmalloc_node+0x11e/0x125 mm/util.c:597
 
-Fixes: f48e2df8a877ca1c ("xfs: make xfs_*read_agf return EAGAIN to ALLOC_FLAG_TRYLOCK callers")
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+While trying to run XFS_IOC_GETBMAP against the following structure:
+
+struct getbmap fubar = {
+	.bmv_count	= 0x22dae649,
+};
+
+Obviously, this is a crazy huge value since the next thing that the
+ioctl would do is allocate 37GB of memory.  This is enough to make
+kvmalloc mad, but isn't large enough to trip the validation functions.
+In other words, I'm fussing with checks that were **already sufficient**
+because that's easier than dealing with 644 internal bug reports.  Yes,
+that's right, six hundred and forty-four.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Catherine Hoang <catherine.hoang@oracle.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_filestream.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index 6a3ce0f6dc9e..be9bcf8a1f99 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -128,11 +128,12 @@ xfs_filestream_pick_ag(
- 		if (!pag->pagf_init) {
- 			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
- 			if (err) {
--				xfs_perag_put(pag);
--				if (err != -EAGAIN)
-+				if (err != -EAGAIN) {
-+					xfs_perag_put(pag);
- 					return err;
-+				}
- 				/* Couldn't lock the AGF, skip this AG. */
--				continue;
-+				goto next_ag;
- 			}
- 		}
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index fba52e75e98b..bcc3c18c8080 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1545,7 +1545,7 @@ xfs_ioc_getbmap(
  
+ 	if (bmx.bmv_count < 2)
+ 		return -EINVAL;
+-	if (bmx.bmv_count > ULONG_MAX / recsize)
++	if (bmx.bmv_count >= INT_MAX / recsize)
+ 		return -ENOMEM;
+ 
+ 	buf = kvzalloc(bmx.bmv_count * sizeof(*buf), GFP_KERNEL);
 -- 
 2.37.1.595.g718a3a8f04-goog
 
