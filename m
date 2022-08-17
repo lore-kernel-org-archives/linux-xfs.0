@@ -2,142 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB74C25B08
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 20:40:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0D88C25B08
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 21:57:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242068AbiHQUk0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Aug 2022 16:40:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33270 "EHLO
+        id S242425AbiHQV5r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Aug 2022 17:57:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242054AbiHQUkX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Aug 2022 16:40:23 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E98F9DB49
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 13:40:22 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 3ABC133BE1;
-        Wed, 17 Aug 2022 20:40:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1660768821; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=6P22HJgbmvI/P6+1CJnXSSgfgTPsbSb0qtF2HE+5mTw=;
-        b=QNeGUc73g3ejBqQRu8HZWs9PskwTHgfve5sapAoVjLhR01Phx6e2N8v9d1/AvsxDoflNnw
-        sFY1Rgi2IZ5wSSxcHivMuUJhpWsIRIGS6Fgkjpk3jqtg+u0uUmSEPAtCnX50JiJrZv79IS
-        7YE0gssxSDUChLTX1I5qcLmgP3FAVB4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1660768821;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=6P22HJgbmvI/P6+1CJnXSSgfgTPsbSb0qtF2HE+5mTw=;
-        b=8D+4a8ZZSeoFMrav84oX3Nz+rN3aXh8OLoXlfC2zA1sOWfhmNfipdOk6XYzqMSzGA4V0jM
-        +hJijH+NjSJ5qVAw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id ADBB513A8E;
-        Wed, 17 Aug 2022 20:40:20 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Q7mxJzRS/WIpfgAAMHmgww
-        (envelope-from <pvorel@suse.cz>); Wed, 17 Aug 2022 20:40:20 +0000
-From:   Petr Vorel <pvorel@suse.cz>
-To:     ltp@lists.linux.it
-Cc:     Petr Vorel <pvorel@suse.cz>, Cyril Hrubis <chrubis@suse.cz>,
-        Li Wang <liwang@redhat.com>, Martin Doucha <mdoucha@suse.cz>,
-        automated-testing@yoctoproject.org,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        automated-testing@lists.yoctoproject.org
-Subject: [RFC PATCH 1/1] API: Allow to use xfs filesystems < 300 MB
-Date:   Wed, 17 Aug 2022 22:40:15 +0200
-Message-Id: <20220817204015.31420-1-pvorel@suse.cz>
-X-Mailer: git-send-email 2.37.1
+        with ESMTP id S241904AbiHQV5q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Aug 2022 17:57:46 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 30473A9241;
+        Wed, 17 Aug 2022 14:57:45 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-52-176.pa.nsw.optusnet.com.au [49.181.52.176])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id AFEC662E875;
+        Thu, 18 Aug 2022 07:57:43 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oOR2j-00ELqT-7J; Thu, 18 Aug 2022 07:57:41 +1000
+Date:   Thu, 18 Aug 2022 07:57:41 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     David Wysochanski <dwysocha@redhat.com>, djwong@kernel.org,
+        linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix i_version handling in xfs
+Message-ID: <20220817215741.GA3600936@dread.disaster.area>
+References: <20220816131736.42615-1-jlayton@kernel.org>
+ <CALF+zO=OrT5tBvyL1ERD+YDSXkSAFvqQu-cQkSgWvQN8z+E_rA@mail.gmail.com>
+ <20220816233729.GX3600936@dread.disaster.area>
+ <939469eb788014a76d5e85b4534ceb8045332622.camel@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <939469eb788014a76d5e85b4534ceb8045332622.camel@kernel.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62fd6458
+        a=O3n/kZ8kT9QBBO3sWHYIyw==:117 a=O3n/kZ8kT9QBBO3sWHYIyw==:17
+        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=uB0Jnoe4snWBMMnf3kEA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-mkfs.xfs since v5.19.0-rc1 [1] refuses to create filesystems < 300 MB.
-Reuse workaround intended for fstests: set 3 environment variables:
-export TEST_DIR=1 TEST_DEV=1 QA_CHECK_FS=1
+On Wed, Aug 17, 2022 at 08:10:22AM -0400, Jeff Layton wrote:
+> On Wed, 2022-08-17 at 09:37 +1000, Dave Chinner wrote:
+> > On Tue, Aug 16, 2022 at 01:14:55PM -0400, David Wysochanski wrote:
+> > > On Tue, Aug 16, 2022 at 9:19 AM Jeff Layton <jlayton@kernel.org> wrote:
+> > > I have a test (details below) that shows an open issue with NFSv4.x +
+> > > fscache where an xfs exported filesystem would trigger unnecessary
+> > > over the wire READs after a umount/mount cycle of the NFS mount.  I
+> > > previously tracked this down to atime updates, but never followed
+> > > through on any patch.  Now that Jeff worked it out and this patch is
+> > > under review, I built 5.19 vanilla, retested, then built 5.19 + this
+> > > patch and verified the problem is fixed.
+> > 
+> > And so the question that needs to be answered is "why isn't relatime
+> > working for this workload to avoid unnecessary atime updates"?
+> > 
+> > Which then makes me ask "what's changing atime on the server between
+> > client side reads"?
+> > 
+> > Which then makes me wonder "what's actually changing iversion on the
+> > server?" because I don't think atime is the issue here.
+> > 
+> > I suspect that Jeff's patch is affecting this test case by removing
+> > iversion updates when the data is written back on the server. i.e.
+> > delayed allocation and unwritten extent conversion will no longer
+> > bump iversion when they log the inode metadata changes associated
+> > with extent allocation to store the data being written.  There may
+> > be other places where Jeff's patch removes implicit iversion
+> > updates, too, so it may not be writeback that is the issue here.
+> > 
+> > How that impacts on the observed behaviour is dependent on things I
+> > don't know, like what cachefiles is doing in the background,
+> > especially across NFS client unmount/mount cycles. However, this all
+> > makes me think the "atime is updated" behaviour is an observed
+> > symptom of something else changing iversion and/or cmtime between
+> > reads from the server...
+> > 
+> 
+> You may be right here.
+> 
+> What I see with both noatime and relatime is that the first read after a
+> write to a file results in the i_version being incremented, but then it
+> doesn't change on subsequent reads. Write to the file again, and the
+> i_version will get incremented again on the next read and then not again
+> until there is a write.
 
-Workaround added to both C API (for .needs_device) and shell API (for
-TST_NEEDS_DEVICE=1).
+Yup, that is exactly the behaviour relatime encodes at the VFS. THe
+data write updates mtime (or is it ctime? doesn't matter, though)
+and the very next atime access check done by the VFS sees that the
+mtime is more recent than the atime, so it asks the filesystem to do
+an atime update.
 
-Fix includes any use of filesystem (C API: .all_filesystems,
-.format_device, shell API: TST_MOUNT_DEVICE=1, TST_FORMAT_DEVICE=1).
+Cheers,
 
-Fixes various C and shell API failures, e.g.:
-
-./mkfs01.sh -f xfs
-mkfs01 1 TINFO: timeout per run is 0h 5m 0s
-tst_device.c:89: TINFO: Found free device 0 '/dev/loop0'
-mkfs01 1 TFAIL: 'mkfs -t xfs  -f /dev/loop0 ' failed.
-Filesystem must be larger than 300MB.
-
-./creat09
-...
-tst_test.c:1599: TINFO: Testing on xfs
-tst_test.c:1064: TINFO: Formatting /dev/loop0 with xfs opts='' extra opts=''
-Filesystem must be larger than 300MB.
-
-Link: https://lore.kernel.org/all/164738662491.3191861.15611882856331908607.stgit@magnolia/
-
-Reported-by: Martin Doucha <mdoucha@suse.cz>
-Signed-off-by: Petr Vorel <pvorel@suse.cz>
----
-Dave, please next time remember there are other testsuites testing XFS,
-not just fstests :). How long do you plan to keep this workaround?
-
-LTP community: do we want to depend on this behavior or we just increase from 256MB to 301 MB
-(either for XFS or for all). It might not be a good idea to test size users are required
-to use.
-
-Kind regards,
-Petr
- lib/tst_test.c            | 7 +++++++
- testcases/lib/tst_test.sh | 6 +++++-
- 2 files changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/lib/tst_test.c b/lib/tst_test.c
-index 4b4dd125d..657348732 100644
---- a/lib/tst_test.c
-+++ b/lib/tst_test.c
-@@ -1160,6 +1160,13 @@ static void do_setup(int argc, char *argv[])
- 	if (tst_test->all_filesystems)
- 		tst_test->needs_device = 1;
- 
-+	/* allow to use XFS filesystem < 300 MB */
-+	if (tst_test->needs_device) {
-+		putenv("TEST_DIR=1");
-+		putenv("TEST_DEV=1");
-+		putenv("QA_CHECK_FS=1");
-+	}
-+
- 	if (tst_test->min_cpus > (unsigned long)tst_ncpus())
- 		tst_brk(TCONF, "Test needs at least %lu CPUs online", tst_test->min_cpus);
- 
-diff --git a/testcases/lib/tst_test.sh b/testcases/lib/tst_test.sh
-index 24a3d29d8..b42e54ca1 100644
---- a/testcases/lib/tst_test.sh
-+++ b/testcases/lib/tst_test.sh
-@@ -671,7 +671,11 @@ tst_run()
- 
- 	[ "$TST_MOUNT_DEVICE" = 1 ] && TST_FORMAT_DEVICE=1
- 	[ "$TST_FORMAT_DEVICE" = 1 ] && TST_NEEDS_DEVICE=1
--	[ "$TST_NEEDS_DEVICE" = 1 ] && TST_NEEDS_TMPDIR=1
-+	if [ "$TST_NEEDS_DEVICE" = 1 ]; then
-+		TST_NEEDS_TMPDIR=1
-+		# allow to use XFS filesystem < 300 MB
-+		export TEST_DIR=1 TEST_DEV=1 QA_CHECK_FS=1
-+	fi
- 
- 	if [ "$TST_NEEDS_TMPDIR" = 1 ]; then
- 		if [ -z "$TMPDIR" ]; then
+Dave.
 -- 
-2.37.1
-
+Dave Chinner
+david@fromorbit.com
