@@ -2,152 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B69C25B08
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 13:16:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9EA4C25B08
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 15:39:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236141AbiHQNQU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Aug 2022 09:16:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46230 "EHLO
+        id S237405AbiHQPjY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Aug 2022 11:39:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236439AbiHQNP5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Aug 2022 09:15:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93FAC50713
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 06:15:30 -0700 (PDT)
+        with ESMTP id S240214AbiHQPjW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Aug 2022 11:39:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDB214DF3D
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 08:39:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0C9636133D
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 13:15:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6A011C43140
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 13:15:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5F0D7614E5
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 15:39:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBA52C433C1;
+        Wed, 17 Aug 2022 15:39:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660742129;
-        bh=yJfMtHa2u+rnhuEKsfL/u3OpXL1585daly5/OcqlAyE=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=odkvZNBk3vMsesqztRf7Wca+hSp7PO4VZwDJ33N0zttCYv5c6phT4M4vPsd32fscF
-         eck/8EI6m3kIUxqbU4GDGIGb3EQck2YWvWKMZ1GEHXJAwPUk74SRW3xgVM+9RcQ0s5
-         gOnbNJ6PnhBCiD7RkfZKfP17dMLSFZ7w8rvonrcOANRZwYP0rJirn9fUxKmSjVuDZZ
-         OCaQxVDnmntFEptZIixK9r4PgXtqPlGWpw+VUiLor6ahpJoY8ukI8zg6eqcCxihY8G
-         g+fywRHwRnos7wdUAWIOeF2U3aB2xsB5UF9OhopMpODG/iJ2IuP07dQIV1STEgN10K
-         SDaewcpecGpjw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 59851C433EA; Wed, 17 Aug 2022 13:15:29 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216343] XFS: no space left in xlog cause system hang
-Date:   Wed, 17 Aug 2022 13:15:28 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: amir73il@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-216343-201763-9Tsrp1ERyw@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216343-201763@https.bugzilla.kernel.org/>
-References: <bug-216343-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        s=k20201202; t=1660750759;
+        bh=3Dtq0GV3dmWxc3If9CxkG5EltZiudOiCTSzsmHAVb6o=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Y0hq51sG5TduYO8v20X6JMffkSNimeaReLgdZpdMRIRnGn100ZKsRjP9FFK01nbpS
+         wmn05DeQyhNP6SF7YCSh9RGvvbgawHqRW8xRP4EC1Qu2xQw0eHkUabuKMnMKtuTB68
+         Pk6rmfJd3k1GS+fnY1CNzfCTmATatixvkWkzRq0QPzPjNhad61dyzSHl6RTqI0DhBz
+         yYt2m2CD7zR7u7yLogMoew1QB6Mv6AqBN7wXgqZJQ0mu+FPh5TQoFUUHbg4SdREUkX
+         CM/A8H2dBaPKmRdIerthVTnx5kLh7XMfzKjch6UqAyuTMmA1VjL0wYebs0Ls2IakqX
+         qalVcIb4Lnr7A==
+Date:   Wed, 17 Aug 2022 08:39:19 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Carlos Maiolino <cem@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfsdump: Initialize getbmap structure in quantity2offset
+Message-ID: <Yv0Lp/mpV8s0lA4X@magnolia>
+References: <166063952935.40771.5357077583333371260.stgit@orion>
+ <cUd3hfyxm_FjsQ62RYGb76fd-cEtRSCtAMq3rh_nv6T8eAwScvjwPA03iMjbKZ9h4P7uDBQk7CS3upmPOsBiwg==@protonmail.internalid>
+ <Yvu1h/dQi9CSft0X@magnolia>
+ <20220817084214.sk6oar5jlhae6blv@orion>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220817084214.sk6oar5jlhae6blv@orion>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
+On Wed, Aug 17, 2022 at 10:42:14AM +0200, Carlos Maiolino wrote:
+> On Tue, Aug 16, 2022 at 08:19:35AM -0700, Darrick J. Wong wrote:
+> > On Tue, Aug 16, 2022 at 10:45:50AM +0200, Carlos Maiolino wrote:
+> > > Prevent uninitialized data in the stack by initializing getbmap structure
+> > > to zero.
+> > 
+> > The kernel should fill out all the bmap[1..BMAP_LEN-1] entries, right?
+> > 
+> > The only part of the array that's critical to initialize to a known
+> > value is bmap[0], since that's what the kernel will read to decide what
+> > to do, right?
+> > 
+> > Or, zooming out a bit, why did you decide to initialize the struct?  Was
+> > it valgrind complaining about uninitialized ioctl memory, or did someone
+> > report a bug?
+> > 
+> 
+> I thought about this from a userspace perspective at first, and by pure code
+> inspection, not anything valgrind complained about.
+> The previous mentioned patch replaced getbmapx by getbmap to remove the
+> uninitialized bmv_iflags from the middle of bmap[0], which for sure is the most
+> critical part here.
 
---- Comment #6 from Amir Goldstein (amir73il@gmail.com) ---
-On Wed, Aug 17, 2022 at 1:19 PM <bugzilla-daemon@kernel.org> wrote:
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
->
-> --- Comment #5 from zhoukete@126.com ---
-> (In reply to Amir Goldstein from comment #4)
->
-> >
-> > According to xfs_trans_dirty_buf() I think it could mean uptodate and
-> > dirty buffer.
-> >
->
-> when I review the xfs_trans_dirty_buf code, I found that xfs inode item
-> b_log_item is null,
->
-> crash> xfs_log_item.li_buf,li_ops 0xffff0340999a0a80 -x
->   li_buf =3D 0xffff0200125b7180
->   li_ops =3D 0xffff800008faec60 <xfs_inode_item_ops>
-> crash> xfs_buf.b_log_item 0xffff0200125b7180
->   b_log_item =3D 0x0
->
-> and only xfs buf log item b_log_item has value
->
-> crash> xfs_log_item.li_buf,li_ops ffff033f8d7c9de8 -x
->   li_buf =3D 0x0
->   li_ops =3D 0xffff800008fae8d8 <xfs_buf_item_ops>
-> crash> xfs_buf_log_item.bli_buf  ffff033f8d7c9de8
->   bli_buf =3D 0xffff0200125b4a80
-> crash> xfs_buf.b_log_item 0xffff0200125b4a80
->   b_log_item =3D 0xffff033f8d7c9de8
-> crash> xfs_buf_log_item.bli_flags 0xffff033f8d7c9de8
->   bli_flags =3D 2     (XFS_BLI_DIRTY)
-> crash> xfs_buf_log_item.bli_item.li_flags  ffff033f8d7c9de8
->   bli_item.li_flags =3D 1,  (XFS_LI_IN_AIL)
->
-> So xfs buf log item XFS_DONE is set because of xfs_trans_dirty_buf(),buf =
-xfs
-> inode log item never call xfs_trans_dirty_buf() because of b_log_item =3D=
-=3D 0x0.
->
-> Do  you know the reason why xfs inode log item XFS_DONE is set=EF=BC=9F
->
+Agreed!
 
-#define XBF_DONE        (1u << 5) /* all pages in the buffer uptodate */
+> At the array declaration though, the first element is zeroed,
+> but it still leaves garbage on the remaining arrays, so, I thought it would be
+> wise to just zero out the whole array there without leaving uninitialized data
+> we might trip over in the future.
 
-Buffer uptodate does not mean that it is not dirty.
-I am not sure about the rest of your analysis.
+<shrug> In theory, if userspace range-checks itself to
+bmap[0].bmv_entries then the uninitialized array elements shouldn't be
+an issue, right?
 
-> >
-> > Maybe the hardware never returned with a response?
-> > Hard to say. Maybe someone else has ideas.
-> >
->
-> If we can prove that XFS_DONE isn't stand for iodone, I think this issue =
-may
-> cause by the hardware error.
->
-> I find the err msg in dmesg:
-> [ 9824.111366] mpt3sas_cm0: issue target reset: handle =3D (0x0034)
->
-> Maybe it tell us mpt3sas lost the io requests before.
->
+(That said, getbmap* is not an intuitive interface given that it reuses
+the same struct for the query information and the records, with the
+result that there are header fields that are ignored, and record fields
+that are meaningless.)
 
-Yes, maybe it does.
+> I just did a quick look from the kernel side, and if I'm not wrong, if the file
+> has fewer extents than the array has slots, the kernel won't touch the remaining
+> array entries, leaving that space uninitialized.
 
-Anyway, if your hardware had errors, could it be that your
-filesystem is shutting down?
+Right.
 
-If it does, you may be hit by the bug fixed by
-84d8949e7707 ("xfs: hold buffer across unpin and potential shutdown
-processing")
-but I am not sure if all the conditions in this bug match your case.
+> I don't think it's a big deal anyway, as xfsdump walk through the array based on
+> the returned entries.
 
-If you did get hit by this bug, you may consider upgrade to v5.10.135
-which has the bug fix.
+<nod>
 
-Thanks,
-Amir.
+> > (I'm actually fine with this change, I just want to know how you got
+> > here. ;))
+> 
+> Just thought it as a 'better safe than sorry' kind of situation, nothing more :P
 
---=20
-You may reply to this email to add a comment.
+<nod>
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+
+> > 
+> > --D
+> > 
+> > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > > ---
+> > >
+> > > There is already a patch on the list to remove remaining DMAPI stuff from
+> > > xfsdump:
+> > > xfsdump: remove BMV_IF_NO_DMAPI_READ flag
+> > >
+> > > This patch though, does not initialize the getbmap structure, and although
+> > > the
+> > > first struct in the array is initialized, the remaining structures in the
+> > > array are not, leaving garbage in the stack.
+> > >
+> > >
+> > >  dump/inomap.c |    2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >
+> > > diff --git a/dump/inomap.c b/dump/inomap.c
+> > > index f3200be..c4ea21d 100644
+> > > --- a/dump/inomap.c
+> > > +++ b/dump/inomap.c
+> > > @@ -1627,7 +1627,7 @@ static off64_t
+> > >  quantity2offset(jdm_fshandle_t *fshandlep, struct xfs_bstat *statp, off64_t qty)
+> > >  {
+> > >  	int fd;
+> > > -	struct getbmap bmap[BMAP_LEN];
+> > > +	struct getbmap bmap[BMAP_LEN] = {0};
+> > >  	off64_t offset;
+> > >  	off64_t offset_next;
+> > >  	off64_t qty_accum;
+> > >
+> > >
+> 
+> -- 
+> Carlos Maiolino
