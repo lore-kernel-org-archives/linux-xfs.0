@@ -2,254 +2,122 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4480BC2BB41
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 09:36:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4254FC32772
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Aug 2022 10:05:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235353AbiHQJgg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Aug 2022 05:36:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42748 "EHLO
+        id S234605AbiHQKFq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Aug 2022 06:05:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230518AbiHQJgf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Aug 2022 05:36:35 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1B01574E37;
-        Wed, 17 Aug 2022 02:36:33 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-52-176.pa.nsw.optusnet.com.au [49.181.52.176])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 351EA62D711;
-        Wed, 17 Aug 2022 19:36:30 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oOFTP-00E97n-IU; Wed, 17 Aug 2022 19:36:27 +1000
-Date:   Wed, 17 Aug 2022 19:36:27 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        linux-mm@kvack.org
-Subject: Re: Multi-page folio issues in 5.19-rc4 (was [PATCH v3 25/25] xfs:
- Support large folios)
-Message-ID: <20220817093627.GZ3600936@dread.disaster.area>
-References: <Yrku31ws6OCxRGSQ@magnolia>
- <Yrm6YM2uS+qOoPcn@casper.infradead.org>
- <YrosM1+yvMYliw2l@magnolia>
- <20220628073120.GI227878@dread.disaster.area>
- <YrrlrMK/7pyZwZj2@casper.infradead.org>
- <Yrrmq4hmJPkf5V7s@casper.infradead.org>
- <Yrr/oBlf1Eig8uKS@casper.infradead.org>
- <20220628221757.GJ227878@dread.disaster.area>
- <YruNE72sW4Aizq8U@magnolia>
- <YrxMOgIvKVe6u/uR@bfoster>
+        with ESMTP id S235935AbiHQKFq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Aug 2022 06:05:46 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 632093F336
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 03:05:45 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F31E061458
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 10:05:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5C8FCC433C1
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 10:05:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660730744;
+        bh=F8/hS6azRz6CHqvUUwzTkEcppASD9br8FEgN8J1l4Z4=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=aiXNYFHyVrr9ggVJpabtWe7Rh7tTe5A45fZaSdOojSRsk+tlXsR5kuGkdG7AMIcj+
+         ND8gZXYx2f6n+qrm13duoqaQ9wrvpIX9BkHPz6UojHxqbhLOQ/Z6ZtfFGz6dRus6Ov
+         gxSDTLpcrNn+hNjQfBPOd/vB2MOX2rVrqCDdfH7EuRrWNTFSHsweuztVNelML8PSd7
+         WWT/gfcbsJOckiRgJDlXH1TlMIx1i+poemTTU4HxSn5Z2670v6OmzN8l8K5TrOGNR/
+         w8lbZfU9AuibR5rPSXTjWi0MyHNIB7eKVSsrPvKbY8McWjk9uglubsIbdZUb4sJqsp
+         rAnF4eH1QyUCw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 39899C433E6; Wed, 17 Aug 2022 10:05:44 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216343] XFS: no space left in xlog cause system hang
+Date:   Wed, 17 Aug 2022 10:05:42 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: zhoukete@126.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216343-201763-sk71fw4i3o@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216343-201763@https.bugzilla.kernel.org/>
+References: <bug-216343-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YrxMOgIvKVe6u/uR@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62fcb6a1
-        a=O3n/kZ8kT9QBBO3sWHYIyw==:117 a=O3n/kZ8kT9QBBO3sWHYIyw==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=NesS8A8s9Lc834nT-r0A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 29, 2022 at 08:57:30AM -0400, Brian Foster wrote:
-> On Tue, Jun 28, 2022 at 04:21:55PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jun 29, 2022 at 08:17:57AM +1000, Dave Chinner wrote:
-> > > On Tue, Jun 28, 2022 at 02:18:24PM +0100, Matthew Wilcox wrote:
-> > > > On Tue, Jun 28, 2022 at 12:31:55PM +0100, Matthew Wilcox wrote:
-> > > > > On Tue, Jun 28, 2022 at 12:27:40PM +0100, Matthew Wilcox wrote:
-> > > > > > On Tue, Jun 28, 2022 at 05:31:20PM +1000, Dave Chinner wrote:
-> > > > > > > So using this technique, I've discovered that there's a dirty page
-> > > > > > > accounting leak that eventually results in fsx hanging in
-> > > > > > > balance_dirty_pages().
-> > > > > > 
-> > > > > > Alas, I think this is only an accounting error, and not related to
-> > > > > > the problem(s) that Darrick & Zorro are seeing.  I think what you're
-> > > > > > seeing is dirty pages being dropped at truncation without the
-> > > > > > appropriate accounting.  ie this should be the fix:
-> > > > > 
-> > > > > Argh, try one that actually compiles.
-> > > > 
-> > > > ... that one's going to underflow the accounting.  Maybe I shouldn't
-> > > > be writing code at 6am?
-> > > > 
-> > > > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> > > > index f7248002dad9..4eec6ee83e44 100644
-> > > > --- a/mm/huge_memory.c
-> > > > +++ b/mm/huge_memory.c
-> > > > @@ -18,6 +18,7 @@
-> > > >  #include <linux/shrinker.h>
-> > > >  #include <linux/mm_inline.h>
-> > > >  #include <linux/swapops.h>
-> > > > +#include <linux/backing-dev.h>
-> > > >  #include <linux/dax.h>
-> > > >  #include <linux/khugepaged.h>
-> > > >  #include <linux/freezer.h>
-> > > > @@ -2439,11 +2440,15 @@ static void __split_huge_page(struct page *page, struct list_head *list,
-> > > >  		__split_huge_page_tail(head, i, lruvec, list);
-> > > >  		/* Some pages can be beyond EOF: drop them from page cache */
-> > > >  		if (head[i].index >= end) {
-> > > > -			ClearPageDirty(head + i);
-> > > > -			__delete_from_page_cache(head + i, NULL);
-> > > > +			struct folio *tail = page_folio(head + i);
-> > > > +
-> > > >  			if (shmem_mapping(head->mapping))
-> > > >  				shmem_uncharge(head->mapping->host, 1);
-> > > > -			put_page(head + i);
-> > > > +			else if (folio_test_clear_dirty(tail))
-> > > > +				folio_account_cleaned(tail,
-> > > > +					inode_to_wb(folio->mapping->host));
-> > > > +			__filemap_remove_folio(tail, NULL);
-> > > > +			folio_put(tail);
-> > > >  		} else if (!PageAnon(page)) {
-> > > >  			__xa_store(&head->mapping->i_pages, head[i].index,
-> > > >  					head + i, 0);
-> > > > 
-> > > 
-> > > Yup, that fixes the leak.
-> > > 
-> > > Tested-by: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Four hours of generic/522 running is long enough to conclude that this
-> > is likely the fix for my problem and migrate long soak testing to my
-> > main g/522 rig and:
-> > 
-> > Tested-by: Darrick J. Wong <djwong@kernel.org>
-> > 
-> 
-> Just based on Willy's earlier comment.. what I would probably be a
-> little careful/curious about here is whether the accounting fix leads to
-> an indirect behavior change that does impact reproducibility of the
-> corruption problem. For example, does artificially escalated dirty page
-> tracking lead to increased reclaim/writeback activity than might
-> otherwise occur, and thus contend with the fs workload?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
 
-Yeah, I think you're right, Brian. There is an underlying problem
-here, and the writeback/memory pressure bugs exposed it for everyone
-to see.  IOWs, we do indeed have a pre-existing problem with partial
-writes, iomap, unwritten extents, writeback and memory reclaim.
+--- Comment #5 from zhoukete@126.com ---
+(In reply to Amir Goldstein from comment #4)
 
-(Please s/page/folio/ rather than complain I'm calling things pages
-and not folios, I'm juggling between RHEL-8 code and upstream
-here and it's just easier to refer to everything as pages as I write
-it.)
+>=20
+> According to xfs_trans_dirty_buf() I think it could mean uptodate and
+> dirty buffer.
+>=20
 
-(I'm assuming people are familiar with the iomap buffered IO code
-at this point.)
+when I review the xfs_trans_dirty_buf code, I found that xfs inode item
+b_log_item is null,
 
-Let's do a partial write into a page. Let's say the second half of
-the page. __iomap_begin_write() drops into iomap_adjust_read_range()
-to determine the range that needs zeroing or reading from disk.  We
-then call iomap_block_needs_zeroing() to determine if we zero -
-which we do if it's a newly allocated or unwritten extent. Otherwise
-we read it from disk.
+crash> xfs_log_item.li_buf,li_ops 0xffff0340999a0a80 -x
+  li_buf =3D 0xffff0200125b7180
+  li_ops =3D 0xffff800008faec60 <xfs_inode_item_ops>=20
+crash> xfs_buf.b_log_item 0xffff0200125b7180
+  b_log_item =3D 0x0
 
-Let's put this partial write over a large unwritten extent, which
-means we zero the first part of the page, and that writing it back
-runs unwritten extent conversion at IO completion. This changes the
-extent backing this file offset from unwritten to written.
+and only xfs buf log item b_log_item has value
 
-Then, add extreme memory pressure, so writeback is already running
-and soon after the page has been dirtied it gets marked for
-cleaning. Therefore, we have the possibility of background IO
-submission and memory reclaim occurring at the same time as new
-writes are occurring to the file.
+crash> xfs_log_item.li_buf,li_ops ffff033f8d7c9de8 -x
+  li_buf =3D 0x0
+  li_ops =3D 0xffff800008fae8d8 <xfs_buf_item_ops>=20
+crash> xfs_buf_log_item.bli_buf  ffff033f8d7c9de8
+  bli_buf =3D 0xffff0200125b4a80
+crash> xfs_buf.b_log_item 0xffff0200125b4a80
+  b_log_item =3D 0xffff033f8d7c9de8
+crash> xfs_buf_log_item.bli_flags 0xffff033f8d7c9de8
+  bli_flags =3D 2     (XFS_BLI_DIRTY)
+crash> xfs_buf_log_item.bli_item.li_flags  ffff033f8d7c9de8
+  bli_item.li_flags =3D 1,  (XFS_LI_IN_AIL)
 
-To that end, let's add a large racing write that *ends* on this same
-page that we have already partially filled with data - it will fill
-the start of the page that currently contains zeros with real data.
+So xfs buf log item XFS_DONE is set because of xfs_trans_dirty_buf(),buf xfs
+inode log item never call xfs_trans_dirty_buf() because of b_log_item =3D=
+=3D 0x0.
 
-Let's start that write() just before writeback of the already
-uptodate partial page starts. iomap_apply will map the entire
-write (and well beyond) as a single unwritten extent. This extent is
-the same extent that the original page in the page cache already
-covers, and this write would end by filling the remaining part of
-that write.
+Do  you know the reason why xfs inode log item XFS_DONE is set=EF=BC=9F
 
-While that second write is running around in the page cache
-copy-in loop for the unwritten extent that backs that range, IO
-submission runs and completes and converts the original partially
-filled page to a written extent, then marks it clean.
+>=20
+> Maybe the hardware never returned with a response?
+> Hard to say. Maybe someone else has ideas.
+>=20
 
-[ Ayup, the extent map of the file just changed to be different
-to the iomap that the current write() thinks the file layout has. ]
+If we can prove that XFS_DONE isn't stand for iodone, I think this issue may
+cause by the hardware error.
 
-Further, because the partially written page is now clean,
-memory reclaim can snaffle it up and it gets removed from the page
-cache.
+I find the err msg in dmesg:
+[ 9824.111366] mpt3sas_cm0: issue target reset: handle =3D (0x0034)=20=20
 
-The second write finally gets to the last page of it's write and
-doesn't find it in the page cache because memory reclaim removed it.
-So it pulls a new page into the page cache in iomap_begin_write(),
-and then in __iomap_begin_write we see that the we need to fill the
-second half of the page with either zeros or data from disk.
+Maybe it tell us mpt3sas lost the io requests before.
 
-We know that this data is on disk as the extent is now in written
-state.  *However*, the cached iomap that we are currently using for
-the write() says the range is -unwritten-, and so at that point
-iomap_block_needs_zeroing() says "page needs zeroing". Hence
-__iomap_begin_write zeroes the second half of the page instead of
-reading it from disk, obliterating the data that the previous write
-had already written there.
+--=20
+You may reply to this email to add a comment.
 
-Ouchy, we have data corruption because the incoming write holds a
-stale cached iomap......
-
-At this point, I had a nasty feeling of deja vu.
-
-Oh, yeah, we already infrastructure in place to avoid using stale
-cached iomaps in ->writepages....
-
-That is, iomap_writepage_map() calls ->map_block for every filesytem
-block, even though the iomap_writepage_ctx has a cached iomap in it.
-That's so the filesystem can check that the cached iomap is still
-valid whilst the page we are writing back is held locked. This
-protects writeback against races with truncate, hole punch, etc.
-
-XFS does this via a call to xfs_imap_valid() - we keep a generation
-number in the XFS extent trees that is bumped on every change so
-that we can check whether a cached iomap is still valid. If the
-generation numbers don't match, then we generate a new iomap for the
-writepage context....
-
-What is clear to me now is that we have the same stale cached iomap
-problem with iomap_apply() because writeback can change the extent
-map state in a way that influence incoming writes and those updates
-are not in any way serialised against the incoming write IO path.
-
-Hence we have to validate that the cached iomap is not stale before
-we decide what to do with a new page in the page cache (zero or read
-from disk), and we have to do this iomap validation when the newly
-instantiated page is locked and ready for initialisation.
-
-I have not thought past this point - I'm only *just* smart enough to
-be able to dig out the root cause of this problem. No scratch that,
-I'm not smart, just stubborn enough to ignore the fact I've got the
-analysis wrong at least a dozen times already.
-
-That said, this stale mapping problem existed long before we started
-using unwritten extents for delayed allocation. The change to use
-unwritten extents (to fix other data corruption issues) exposed us
-to in-memory zeroing in this race condition case rather reading the
-block of data from disk. We just hadn't armed the landmine....
-
-I suspect we are going to need a new iomap validation operation, and
-require the iomap actors to be able to handle iomap validation
-failure.  What that looks like, I don't know as my brain
-turned to goo and dribbled out my ears about 4 hours ago....
-
-BTW, all the credit for finding this goes to Frank Sorenson - he did
-all the hard work of reproducing the issue and narrowing down the
-scope of the problem to a handful of XFS commits combined with
-writeback and memory reclaim interactions. Without his hard work,
-we'd still have no idea what was going on.....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.=
