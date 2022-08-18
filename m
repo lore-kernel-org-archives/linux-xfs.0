@@ -2,161 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59E2FC00140
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Aug 2022 08:23:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FFDCC00140
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Aug 2022 09:02:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233878AbiHRIXP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Aug 2022 04:23:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57194 "EHLO
+        id S243064AbiHRJCF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Aug 2022 05:02:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240585AbiHRIXN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Aug 2022 04:23:13 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9221FB20
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Aug 2022 01:23:10 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S235263AbiHRJCE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Aug 2022 05:02:04 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9648FAE9DE
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Aug 2022 02:02:02 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2B2C8B8212C
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Aug 2022 08:23:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DD186C43140
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Aug 2022 08:23:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660810987;
-        bh=gJA5/6Q/cqoXoYfIElw6vU0sK7x9jq9F3sbqkwK30Is=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=Idub/OgsItDjlNT6pKIujVJ8OpOL5As7V1+0yvS2DrnFuhijRpwimuRp874GcSwi2
-         avojE5BUuQ5E4YcpZuFVwdarynsIRp3j5QKNSS8RU6jy2hfOOXRSBKJ6MeaK2PXy6V
-         MA8Ve6jolYr3fTIgWz0ZblGemhBGdxM1VqmFmzVEvN0mtgjnPlpR3duWAURMDY0AVh
-         lVnID+9QJjdVS9eOqCg9owiBMdpblFtFHYHTU1obWCpIRvt605C7i9BUMhmAfwGf37
-         8H93anOdZfotVcZxfwg2lp3BwRUVIoqexjH+soVqS0AKflsyg3URrwedQDT+Bv/gy4
-         BpmnnD/5KSQkw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id CA567C433E6; Thu, 18 Aug 2022 08:23:07 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216343] XFS: no space left in xlog cause system hang
-Date:   Thu, 18 Aug 2022 08:23:07 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: zhoukete@126.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-216343-201763-zGmyXERW6w@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216343-201763@https.bugzilla.kernel.org/>
-References: <bug-216343-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 19E723EEAA;
+        Thu, 18 Aug 2022 09:01:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1660813318;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2NpSkHQI7sjHC98RybX6I3TUEI/WeHC22AFP/KWPXQc=;
+        b=xY484MugSZ7zQoQs64ik4Gkh2LIq0J9JrPBayorA4y6czvsDlg8/jMNuxjIesyqw9AaBod
+        M5k64QLsSCOvZKyRZTKlMrtmISqXmBPm+kQwQcKkBzncGCH7PAAFnIHATpC+NDJOcmXmz7
+        cWu61iFx73Ozg6XB7wVe4QJlNlCQDeM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1660813318;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2NpSkHQI7sjHC98RybX6I3TUEI/WeHC22AFP/KWPXQc=;
+        b=DLMd15xBO4z0Dzq7ChXcbLoGMp1Eyh5KEt7LGKUbyu0fDFN+Raiaudsvr1ofmCeLFr9hbX
+        BrQFLyRjQqOUi+CA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B8629133B5;
+        Thu, 18 Aug 2022 09:01:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id Vl54KwYA/mJEdAAAMHmgww
+        (envelope-from <pvorel@suse.cz>); Thu, 18 Aug 2022 09:01:58 +0000
+Date:   Thu, 18 Aug 2022 11:01:56 +0200
+From:   Petr Vorel <pvorel@suse.cz>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     ltp@lists.linux.it, Cyril Hrubis <chrubis@suse.cz>,
+        Li Wang <liwang@redhat.com>, Martin Doucha <mdoucha@suse.cz>,
+        automated-testing@yoctoproject.org, linux-xfs@vger.kernel.org,
+        automated-testing@lists.yoctoproject.org
+Subject: Re: [RFC PATCH 1/1] API: Allow to use xfs filesystems < 300 MB
+Message-ID: <Yv4ABHlsP+BZ3bRD@pevik>
+Reply-To: Petr Vorel <pvorel@suse.cz>
+References: <20220817204015.31420-1-pvorel@suse.cz>
+ <Yv2A9Ggkv/NBrTd4@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yv2A9Ggkv/NBrTd4@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
+> On Wed, Aug 17, 2022 at 10:40:15PM +0200, Petr Vorel wrote:
+> > mkfs.xfs since v5.19.0-rc1 [1] refuses to create filesystems < 300 MB.
+> > Reuse workaround intended for fstests: set 3 environment variables:
+> > export TEST_DIR=1 TEST_DEV=1 QA_CHECK_FS=1
 
---- Comment #7 from zhoukete@126.com ---
-(In reply to Amir Goldstein from comment #6)
-> On Wed, Aug 17, 2022 at 1:19 PM <bugzilla-daemon@kernel.org> wrote:
-> >
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
-> >
-> > --- Comment #5 from zhoukete@126.com ---
-> > (In reply to Amir Goldstein from comment #4)
-> >
-> > >
-> > > According to xfs_trans_dirty_buf() I think it could mean uptodate and
-> > > dirty buffer.
-> > >
-> >
-> > when I review the xfs_trans_dirty_buf code, I found that xfs inode item
-> > b_log_item is null,
-> >
-> > crash> xfs_log_item.li_buf,li_ops 0xffff0340999a0a80 -x
-> >   li_buf =3D 0xffff0200125b7180
-> >   li_ops =3D 0xffff800008faec60 <xfs_inode_item_ops>
-> > crash> xfs_buf.b_log_item 0xffff0200125b7180
-> >   b_log_item =3D 0x0
-> >
-> > and only xfs buf log item b_log_item has value
-> >
-> > crash> xfs_log_item.li_buf,li_ops ffff033f8d7c9de8 -x
-> >   li_buf =3D 0x0
-> >   li_ops =3D 0xffff800008fae8d8 <xfs_buf_item_ops>
-> > crash> xfs_buf_log_item.bli_buf  ffff033f8d7c9de8
-> >   bli_buf =3D 0xffff0200125b4a80
-> > crash> xfs_buf.b_log_item 0xffff0200125b4a80
-> >   b_log_item =3D 0xffff033f8d7c9de8
-> > crash> xfs_buf_log_item.bli_flags 0xffff033f8d7c9de8
-> >   bli_flags =3D 2     (XFS_BLI_DIRTY)
-> > crash> xfs_buf_log_item.bli_item.li_flags  ffff033f8d7c9de8
-> >   bli_item.li_flags =3D 1,  (XFS_LI_IN_AIL)
-> >
-> > So xfs buf log item XFS_DONE is set because of xfs_trans_dirty_buf(),buf
-> xfs
-> > inode log item never call xfs_trans_dirty_buf() because of b_log_item =
-=3D=3D
-> 0x0.
-> >
-> > Do  you know the reason why xfs inode log item XFS_DONE is set=EF=BC=9F
-> >
->=20
-> #define XBF_DONE        (1u << 5) /* all pages in the buffer uptodate */
->=20
-> Buffer uptodate does not mean that it is not dirty.
-> I am not sure about the rest of your analysis.
->=20
-> > >
-> > > Maybe the hardware never returned with a response?
-> > > Hard to say. Maybe someone else has ideas.
-> > >
-> >
-> > If we can prove that XFS_DONE isn't stand for iodone, I think this issue
-> may
-> > cause by the hardware error.
-> >
-> > I find the err msg in dmesg:
-> > [ 9824.111366] mpt3sas_cm0: issue target reset: handle =3D (0x0034)
-> >
-> > Maybe it tell us mpt3sas lost the io requests before.
-> >
->=20
-> Yes, maybe it does.
->=20
-> Anyway, if your hardware had errors, could it be that your
-> filesystem is shutting down?
->=20
-> If it does, you may be hit by the bug fixed by
-> 84d8949e7707 ("xfs: hold buffer across unpin and potential shutdown
-> processing")
-> but I am not sure if all the conditions in this bug match your case.
->=20
-> If you did get hit by this bug, you may consider upgrade to v5.10.135
-> which has the bug fix.
->=20
-> Thanks,
-> Amir.
+> > Workaround added to both C API (for .needs_device) and shell API (for
+> > TST_NEEDS_DEVICE=1).
 
-I think xfs isn't in shutdown stat,
-crash> xfs_mount.m_flags 0xffff00ff85169000 -x
-  m_flags =3D 0x100  (XFS_MOUNT_ATTR2)
+> > Fix includes any use of filesystem (C API: .all_filesystems,
+> > .format_device, shell API: TST_MOUNT_DEVICE=1, TST_FORMAT_DEVICE=1).
 
-About the 84d8949e7707 ,I would try to back port to 5.10.38.
-Thanks
+> > Fixes various C and shell API failures, e.g.:
 
---=20
-You may reply to this email to add a comment.
+> > ./mkfs01.sh -f xfs
+> > mkfs01 1 TINFO: timeout per run is 0h 5m 0s
+> > tst_device.c:89: TINFO: Found free device 0 '/dev/loop0'
+> > mkfs01 1 TFAIL: 'mkfs -t xfs  -f /dev/loop0 ' failed.
+> > Filesystem must be larger than 300MB.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+> > ./creat09
+> > ...
+> > tst_test.c:1599: TINFO: Testing on xfs
+> > tst_test.c:1064: TINFO: Formatting /dev/loop0 with xfs opts='' extra opts=''
+> > Filesystem must be larger than 300MB.
+
+> > Link: https://lore.kernel.org/all/164738662491.3191861.15611882856331908607.stgit@magnolia/
+
+> > Reported-by: Martin Doucha <mdoucha@suse.cz>
+> > Signed-off-by: Petr Vorel <pvorel@suse.cz>
+> > ---
+> > Dave, please next time remember there are other testsuites testing XFS,
+
+> Dave?? <cough>
+Eh, I'm sorry.
+
+> > not just fstests :). How long do you plan to keep this workaround?
+
+> Forever.  In the ideal world we'll some day get around to restructuring
+> all the xfstests that do tricky things with sub-500M filesystems, but
+> that's the unfortunate part of removing support for small disks.
+
+> Most of the fstests don't care about the fs size and so they'll run with
+> the configured storage (some tens or millions of gigabytes) so we're
+> mostly using the same fs sizes that users are expected to have.
+
+Thanks for info.
+
+> > LTP community: do we want to depend on this behavior or we just increase from 256MB to 301 MB
+> > (either for XFS or for all). It might not be a good idea to test size users are required
+> > to use.
+
+> It might *not*? <confused>
+Again, I'm sorry, missing another not. I.e. I suppose normal users will not try
+to go below 301MB, therefore LTP probably should not do it either. That's why
+RFC.
+
+Kind regards,
+Petr
+
+> --D
+
+
+> > Kind regards,
+> > Petr
+> >  lib/tst_test.c            | 7 +++++++
+> >  testcases/lib/tst_test.sh | 6 +++++-
+> >  2 files changed, 12 insertions(+), 1 deletion(-)
+
+> > diff --git a/lib/tst_test.c b/lib/tst_test.c
+> > index 4b4dd125d..657348732 100644
+> > --- a/lib/tst_test.c
+> > +++ b/lib/tst_test.c
+> > @@ -1160,6 +1160,13 @@ static void do_setup(int argc, char *argv[])
+> >  	if (tst_test->all_filesystems)
+> >  		tst_test->needs_device = 1;
+
+> > +	/* allow to use XFS filesystem < 300 MB */
+> > +	if (tst_test->needs_device) {
+> > +		putenv("TEST_DIR=1");
+> > +		putenv("TEST_DEV=1");
+> > +		putenv("QA_CHECK_FS=1");
+> > +	}
+> > +
+> >  	if (tst_test->min_cpus > (unsigned long)tst_ncpus())
+> >  		tst_brk(TCONF, "Test needs at least %lu CPUs online", tst_test->min_cpus);
+
+> > diff --git a/testcases/lib/tst_test.sh b/testcases/lib/tst_test.sh
+> > index 24a3d29d8..b42e54ca1 100644
+> > --- a/testcases/lib/tst_test.sh
+> > +++ b/testcases/lib/tst_test.sh
+> > @@ -671,7 +671,11 @@ tst_run()
+
+> >  	[ "$TST_MOUNT_DEVICE" = 1 ] && TST_FORMAT_DEVICE=1
+> >  	[ "$TST_FORMAT_DEVICE" = 1 ] && TST_NEEDS_DEVICE=1
+> > -	[ "$TST_NEEDS_DEVICE" = 1 ] && TST_NEEDS_TMPDIR=1
+> > +	if [ "$TST_NEEDS_DEVICE" = 1 ]; then
+> > +		TST_NEEDS_TMPDIR=1
+> > +		# allow to use XFS filesystem < 300 MB
+> > +		export TEST_DIR=1 TEST_DEV=1 QA_CHECK_FS=1
+> > +	fi
+
+> >  	if [ "$TST_NEEDS_TMPDIR" = 1 ]; then
+> >  		if [ -z "$TMPDIR" ]; then
+> > -- 
+> > 2.37.1
+
