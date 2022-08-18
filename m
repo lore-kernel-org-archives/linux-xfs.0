@@ -2,151 +2,161 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 473EEC00140
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Aug 2022 05:08:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59E2FC00140
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Aug 2022 08:23:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241167AbiHRFIu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Aug 2022 01:08:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35120 "EHLO
+        id S233878AbiHRIXP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Aug 2022 04:23:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240770AbiHRFIt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Aug 2022 01:08:49 -0400
-Received: from mail-ua1-x936.google.com (mail-ua1-x936.google.com [IPv6:2607:f8b0:4864:20::936])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D7969E2D0
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 22:08:48 -0700 (PDT)
-Received: by mail-ua1-x936.google.com with SMTP id h19so271472uan.9
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Aug 2022 22:08:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=3xGN6r96/Y1UiUO4lWP9TbgY3FFPBwWFs/DdheQ83B4=;
-        b=CgMr98VAZsU7hxtZk5LBP2+2Rf29PoSETGDz9UKYWBu2wH79OqJafocKAbXj748Y/n
-         BGpNlFmebHQ0035+iiP4KlLND6sfPvgq6JsXurhS/KeBP/TZ/rZTC+f+IuyaS5amthxY
-         tDp31N9uZwqOdIx9UqJ3NCGKOJTgZHcZ6kr3AgeyQ0wyHJkBycs8Rn6hw0cJPEIfmobl
-         8KeAzleYGxgAKo7fPbZrcqjKMhZu0DpRFMiJEpt7yeL15oRyckXDSfutP2yAWmeGLeSu
-         xpieiNrvu+XQYum2XMa4pkpUfPGiXqrh22SE4YpZTZR5SCrnGlQmGbDp5qfErbf/CBYa
-         GTSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=3xGN6r96/Y1UiUO4lWP9TbgY3FFPBwWFs/DdheQ83B4=;
-        b=YNp8WNOQ4Et78QCsVVCMjORpGnI5pJ51Z21rYAFfk4x0mu0KO6xMSKQE46F9XxCUmO
-         v3VCnz83xPWH2A6NHq/fDyAzIEdIUNjwYEfuEwVKF2Insuu3x+C6YTB9Jb14wmdoGr7H
-         bc/J68a9OPz1h3Fna+5p3fmoxiZ6vIH6RG5a8p4zpwM9A5U2HeYf0G/NbSEAM9PXoOi7
-         Co9y6KA9Hmtk/7LaytxU+nKLFlK5IyH58DyVUGSGrcvDoKAvMAuxVF/U362npvQBP3YF
-         nEYLqs00Du99o2TYw/Zg8oWWukdKmbIa85BCMzJQVgkVrQBSH/9RoaE3btP98Ex/P/I6
-         3UmQ==
-X-Gm-Message-State: ACgBeo14cbAc2OA1S4BWDwNmXiCS9wbdGUo7sgGu7q4clVueIOLNBKHt
-        NfIrEI7A0iMC8Py+R0/wk1oPElqBmD4rUZgRVuU=
-X-Google-Smtp-Source: AA6agR4aKYzgl1P30CWDx74JjkZx5OUiQp0wIs5OKU/ZlavM4hOD9hvTPStKy8BA+4yuUClhaoFQfQGADZ0ijRQSK5M=
-X-Received: by 2002:a9f:2067:0:b0:387:984d:4a8e with SMTP id
- 94-20020a9f2067000000b00387984d4a8emr473558uam.60.1660799327324; Wed, 17 Aug
- 2022 22:08:47 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220817204015.31420-1-pvorel@suse.cz> <Yv2A9Ggkv/NBrTd4@magnolia>
-In-Reply-To: <Yv2A9Ggkv/NBrTd4@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 18 Aug 2022 08:08:35 +0300
-Message-ID: <CAOQ4uxjMEHYQwO25dhs5WtzbOkJcee0HofQDTT3cD-qXJn7xQw@mail.gmail.com>
-Subject: Re: [LTP] [RFC PATCH 1/1] API: Allow to use xfs filesystems < 300 MB
-To:     Petr Vorel <pvorel@suse.cz>, "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        automated-testing@yoctoproject.org, LTP List <ltp@lists.linux.it>,
-        automated-testing@lists.yoctoproject.org,
-        Richard Palethorpe <rpalethorpe@suse.com>,
-        Joerg Vehlow <joerg.vehlow@aox-tech.de>,
-        Eric Sandeen <sandeen@sandeen.net>
+        with ESMTP id S240585AbiHRIXN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Aug 2022 04:23:13 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9221FB20
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Aug 2022 01:23:10 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2B2C8B8212C
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Aug 2022 08:23:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id DD186C43140
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Aug 2022 08:23:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660810987;
+        bh=gJA5/6Q/cqoXoYfIElw6vU0sK7x9jq9F3sbqkwK30Is=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=Idub/OgsItDjlNT6pKIujVJ8OpOL5As7V1+0yvS2DrnFuhijRpwimuRp874GcSwi2
+         avojE5BUuQ5E4YcpZuFVwdarynsIRp3j5QKNSS8RU6jy2hfOOXRSBKJ6MeaK2PXy6V
+         MA8Ve6jolYr3fTIgWz0ZblGemhBGdxM1VqmFmzVEvN0mtgjnPlpR3duWAURMDY0AVh
+         lVnID+9QJjdVS9eOqCg9owiBMdpblFtFHYHTU1obWCpIRvt605C7i9BUMhmAfwGf37
+         8H93anOdZfotVcZxfwg2lp3BwRUVIoqexjH+soVqS0AKflsyg3URrwedQDT+Bv/gy4
+         BpmnnD/5KSQkw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id CA567C433E6; Thu, 18 Aug 2022 08:23:07 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216343] XFS: no space left in xlog cause system hang
+Date:   Thu, 18 Aug 2022 08:23:07 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: zhoukete@126.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216343-201763-zGmyXERW6w@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216343-201763@https.bugzilla.kernel.org/>
+References: <bug-216343-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 18, 2022 at 2:59 AM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> On Wed, Aug 17, 2022 at 10:40:15PM +0200, Petr Vorel wrote:
-> > mkfs.xfs since v5.19.0-rc1 [1] refuses to create filesystems < 300 MB.
-> > Reuse workaround intended for fstests: set 3 environment variables:
-> > export TEST_DIR=1 TEST_DEV=1 QA_CHECK_FS=1
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
+
+--- Comment #7 from zhoukete@126.com ---
+(In reply to Amir Goldstein from comment #6)
+> On Wed, Aug 17, 2022 at 1:19 PM <bugzilla-daemon@kernel.org> wrote:
 > >
-> > Workaround added to both C API (for .needs_device) and shell API (for
-> > TST_NEEDS_DEVICE=1).
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D216343
 > >
-> > Fix includes any use of filesystem (C API: .all_filesystems,
-> > .format_device, shell API: TST_MOUNT_DEVICE=1, TST_FORMAT_DEVICE=1).
+> > --- Comment #5 from zhoukete@126.com ---
+> > (In reply to Amir Goldstein from comment #4)
 > >
-> > Fixes various C and shell API failures, e.g.:
+> > >
+> > > According to xfs_trans_dirty_buf() I think it could mean uptodate and
+> > > dirty buffer.
+> > >
 > >
-> > ./mkfs01.sh -f xfs
-> > mkfs01 1 TINFO: timeout per run is 0h 5m 0s
-> > tst_device.c:89: TINFO: Found free device 0 '/dev/loop0'
-> > mkfs01 1 TFAIL: 'mkfs -t xfs  -f /dev/loop0 ' failed.
-> > Filesystem must be larger than 300MB.
+> > when I review the xfs_trans_dirty_buf code, I found that xfs inode item
+> > b_log_item is null,
 > >
-> > ./creat09
-> > ...
-> > tst_test.c:1599: TINFO: Testing on xfs
-> > tst_test.c:1064: TINFO: Formatting /dev/loop0 with xfs opts='' extra opts=''
-> > Filesystem must be larger than 300MB.
+> > crash> xfs_log_item.li_buf,li_ops 0xffff0340999a0a80 -x
+> >   li_buf =3D 0xffff0200125b7180
+> >   li_ops =3D 0xffff800008faec60 <xfs_inode_item_ops>
+> > crash> xfs_buf.b_log_item 0xffff0200125b7180
+> >   b_log_item =3D 0x0
 > >
-> > Link: https://lore.kernel.org/all/164738662491.3191861.15611882856331908607.stgit@magnolia/
+> > and only xfs buf log item b_log_item has value
 > >
-> > Reported-by: Martin Doucha <mdoucha@suse.cz>
-> > Signed-off-by: Petr Vorel <pvorel@suse.cz>
-> > ---
-> > Dave, please next time remember there are other testsuites testing XFS,
->
-> Dave?? <cough>
->
+> > crash> xfs_log_item.li_buf,li_ops ffff033f8d7c9de8 -x
+> >   li_buf =3D 0x0
+> >   li_ops =3D 0xffff800008fae8d8 <xfs_buf_item_ops>
+> > crash> xfs_buf_log_item.bli_buf  ffff033f8d7c9de8
+> >   bli_buf =3D 0xffff0200125b4a80
+> > crash> xfs_buf.b_log_item 0xffff0200125b4a80
+> >   b_log_item =3D 0xffff033f8d7c9de8
+> > crash> xfs_buf_log_item.bli_flags 0xffff033f8d7c9de8
+> >   bli_flags =3D 2     (XFS_BLI_DIRTY)
+> > crash> xfs_buf_log_item.bli_item.li_flags  ffff033f8d7c9de8
+> >   bli_item.li_flags =3D 1,  (XFS_LI_IN_AIL)
+> >
+> > So xfs buf log item XFS_DONE is set because of xfs_trans_dirty_buf(),buf
+> xfs
+> > inode log item never call xfs_trans_dirty_buf() because of b_log_item =
+=3D=3D
+> 0x0.
+> >
+> > Do  you know the reason why xfs inode log item XFS_DONE is set=EF=BC=9F
+> >
+>=20
+> #define XBF_DONE        (1u << 5) /* all pages in the buffer uptodate */
+>=20
+> Buffer uptodate does not mean that it is not dirty.
+> I am not sure about the rest of your analysis.
+>=20
+> > >
+> > > Maybe the hardware never returned with a response?
+> > > Hard to say. Maybe someone else has ideas.
+> > >
+> >
+> > If we can prove that XFS_DONE isn't stand for iodone, I think this issue
+> may
+> > cause by the hardware error.
+> >
+> > I find the err msg in dmesg:
+> > [ 9824.111366] mpt3sas_cm0: issue target reset: handle =3D (0x0034)
+> >
+> > Maybe it tell us mpt3sas lost the io requests before.
+> >
+>=20
+> Yes, maybe it does.
+>=20
+> Anyway, if your hardware had errors, could it be that your
+> filesystem is shutting down?
+>=20
+> If it does, you may be hit by the bug fixed by
+> 84d8949e7707 ("xfs: hold buffer across unpin and potential shutdown
+> processing")
+> but I am not sure if all the conditions in this bug match your case.
+>=20
+> If you did get hit by this bug, you may consider upgrade to v5.10.135
+> which has the bug fix.
+>=20
+> Thanks,
+> Amir.
 
-TBH, it is not about remembering, it is about running integration tests
-that catch these test bugs.
+I think xfs isn't in shutdown stat,
+crash> xfs_mount.m_flags 0xffff00ff85169000 -x
+  m_flags =3D 0x100  (XFS_MOUNT_ATTR2)
 
-Obviously, xfsprogs maintainer (Eric) is running fstests before an
-xfsprogs release, but I cannot blame Eric for not running the entire
-LTS test suite for xfsprogs release...
+About the 84d8949e7707 ,I would try to back port to 5.10.38.
+Thanks
 
-I suppose that the bots running LTP on rc kernels might want
-to consider also running LTP with rc xfsprogs/e2fsprogs/...
-otherwise, those bugs would be caught when *progs hits a distro
-that is used to run LTP.
+--=20
+You may reply to this email to add a comment.
 
-> > not just fstests :). How long do you plan to keep this workaround?
->
-> Forever.  In the ideal world we'll some day get around to restructuring
-> all the xfstests that do tricky things with sub-500M filesystems, but
-> that's the unfortunate part of removing support for small disks.
->
-
-If it's forever, then it should probably have been a command line option.
-IIUC, the motivation was to discourage users from formatting too small
-filesystems, but if users have a way to do it, they will find it anyway.
-
-Petr,
-
-Notice that the fstests hack was needed for fstests that require MAX fs size,
-while the existing LTP lib and tests only have MIN dev size requirement.
-
-> Most of the fstests don't care about the fs size and so they'll run with
-> the configured storage (some tens or millions of gigabytes) so we're
-> mostly using the same fs sizes that users are expected to have.
->
-> > LTP community: do we want to depend on this behavior or we just increase from 256MB to 301 MB
-> > (either for XFS or for all). It might not be a good idea to test size users are required
-> > to use.
->
-
-For most LTS tests, all you need to do is increase the default (DEV_MIN_SIZE)
-from 300MB to 301MB so that's not worth doing any workarounds.
-
-For the 3 memcontrol tests that require dev_min_size = 256 and run on
-all_filesystems, it does not look like changing min size is needed at all.
-
-For squashfs01 the xfs limitation is irrelevant, but generally,
-If the test min requirement (1MB) is smaller than the lib default,
-DEV_MIN_SIZE still meets the test requirement, so why bother
-going below the lib default DEV_MIN_SIZE?
-
-Thanks,
-Amir.
+You are receiving this mail because:
+You are watching the assignee of the bug.=
