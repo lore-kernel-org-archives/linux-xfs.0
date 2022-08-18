@@ -2,235 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23988C00140
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Aug 2022 21:58:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B005BC00140
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Aug 2022 23:43:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243593AbiHRV6l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Aug 2022 17:58:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54106 "EHLO
+        id S242628AbiHRXno (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Aug 2022 19:43:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232055AbiHRV6l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Aug 2022 17:58:41 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 130E412601;
-        Thu, 18 Aug 2022 14:58:35 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-52-176.pa.nsw.optusnet.com.au [49.181.52.176])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7868410E8A62;
-        Fri, 19 Aug 2022 07:58:33 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oOnX6-00EkRF-AQ; Fri, 19 Aug 2022 07:58:32 +1000
-Date:   Fri, 19 Aug 2022 07:58:32 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        linux-mm@kvack.org
-Subject: Re: Multi-page folio issues in 5.19-rc4 (was [PATCH v3 25/25] xfs:
- Support large folios)
-Message-ID: <20220818215832.GH3600936@dread.disaster.area>
-References: <YrosM1+yvMYliw2l@magnolia>
- <20220628073120.GI227878@dread.disaster.area>
- <YrrlrMK/7pyZwZj2@casper.infradead.org>
- <Yrrmq4hmJPkf5V7s@casper.infradead.org>
- <Yrr/oBlf1Eig8uKS@casper.infradead.org>
- <20220628221757.GJ227878@dread.disaster.area>
- <YruNE72sW4Aizq8U@magnolia>
- <YrxMOgIvKVe6u/uR@bfoster>
- <20220817093627.GZ3600936@dread.disaster.area>
- <Yv1/e87U/LDrfSVg@magnolia>
+        with ESMTP id S239061AbiHRXnl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Aug 2022 19:43:41 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D5F473916;
+        Thu, 18 Aug 2022 16:43:39 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 1EFC638433;
+        Thu, 18 Aug 2022 23:43:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1660866217; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=La9+IW0k9SbssyQfgfBFyxSZDH5EOI6NJimEF+rcYMk=;
+        b=vX3q6WiX21XcviJDPXBEHACGrTXJLA5pbGjU2mSnOsBSocXcGtjTXQg0HVS3aOrwx8LREV
+        IerXk8ODAbvDvDNAbGDAIw/+34a2ZM9ozdZjK4KK6xOfuLj+3qw5QiGLKftKWvtU+UH6hb
+        GUq+FgAoyJEEH1OgyPUkpQJfx0av8ZI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1660866217;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=La9+IW0k9SbssyQfgfBFyxSZDH5EOI6NJimEF+rcYMk=;
+        b=YZems7YCisDub1qabSd9tzbpqNrLitUK5PgIhgtXA5IeegfB/84GMZvpsEd+6o5oJeQl6F
+        GCnrdtT4FVOV+jAg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2F68F139B7;
+        Thu, 18 Aug 2022 23:43:34 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id Y1D4NqbO/mKOPwAAMHmgww
+        (envelope-from <neilb@suse.de>); Thu, 18 Aug 2022 23:43:34 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yv1/e87U/LDrfSVg@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=62feb60b
-        a=O3n/kZ8kT9QBBO3sWHYIyw==:117 a=O3n/kZ8kT9QBBO3sWHYIyw==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=7-415B0cAAAA:8
-        a=GHxbeFixHzRCEPZxQnkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Jeff Layton" <jlayton@kernel.org>
+Cc:     "Dave Chinner" <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix i_version handling in xfs
+In-reply-to: <ae80e71722385a85bb0949540bb4bd0a796a2e34.camel@kernel.org>
+References: <20220816131736.42615-1-jlayton@kernel.org>,
+ <Yvu7DHDWl4g1KsI5@magnolia>,
+ <e77fd4d19815fd661dbdb04ab27e687ff7e727eb.camel@kernel.org>,
+ <20220816224257.GV3600936@dread.disaster.area>,
+ <166078288043.5425.8131814891435481157@noble.neil.brown.name>,
+ <ae80e71722385a85bb0949540bb4bd0a796a2e34.camel@kernel.org>
+Date:   Fri, 19 Aug 2022 09:43:32 +1000
+Message-id: <166086621211.5425.17549139726411291019@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 17, 2022 at 04:53:31PM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 17, 2022 at 07:36:27PM +1000, Dave Chinner wrote:
-> > On Wed, Jun 29, 2022 at 08:57:30AM -0400, Brian Foster wrote:
-> > > Just based on Willy's earlier comment.. what I would probably be a
-> > > little careful/curious about here is whether the accounting fix leads to
-> > > an indirect behavior change that does impact reproducibility of the
-> > > corruption problem. For example, does artificially escalated dirty page
-> > > tracking lead to increased reclaim/writeback activity than might
-> > > otherwise occur, and thus contend with the fs workload?
+On Thu, 18 Aug 2022, Jeff Layton wrote:
+> On Thu, 2022-08-18 at 10:34 +1000, NeilBrown wrote:
+> > On Wed, 17 Aug 2022, Dave Chinner wrote:
+> > > 
+> > > In XFS, we've defined the on-disk i_version field to mean
+> > > "increments with any persistent inode data or metadata change",
+> > > regardless of what the high level applications that use i_version
+> > > might actually require.
+> > > 
+> > > That some network filesystem might only need a subset of the
+> > > metadata to be covered by i_version is largely irrelevant - if we
+> > > don't cover every persistent inode metadata change with i_version,
+> > > then applications that *need* stuff like atime change notification
+> > > can't be supported.
 > > 
-> > Yeah, I think you're right, Brian. There is an underlying problem
-> > here, and the writeback/memory pressure bugs exposed it for everyone
-> > to see.  IOWs, we do indeed have a pre-existing problem with partial
-> > writes, iomap, unwritten extents, writeback and memory reclaim.
+> > So what you are saying is that the i_version provided by XFS does not
+> > match the changeid semantics required by NFSv4.  Fair enough.  I guess
+> > we shouldn't use the one to implement the other then.
 > > 
-> > (Please s/page/folio/ rather than complain I'm calling things pages
-> > and not folios, I'm juggling between RHEL-8 code and upstream
-> > here and it's just easier to refer to everything as pages as I write
-> > it.)
+> > Maybe we should just go back to using ctime.  ctime is *exactly* what
+> > NFSv4 wants, as long as its granularity is sufficient to catch every
+> > single change.  Presumably XFS doesn't try to ensure this.  How hard
+> > would it be to get any ctime update to add at least one nanosecond?
+> > This would be enabled by a mount option, or possibly be a direct request
+> > from nfsd.
 > > 
-> > (I'm assuming people are familiar with the iomap buffered IO code
-> > at this point.)
-> > 
-> > Let's do a partial write into a page. Let's say the second half of
-> > the page. __iomap_begin_write() drops into iomap_adjust_read_range()
-> > to determine the range that needs zeroing or reading from disk.  We
-> > then call iomap_block_needs_zeroing() to determine if we zero -
-> > which we do if it's a newly allocated or unwritten extent. Otherwise
-> > we read it from disk.
-> > 
-> > Let's put this partial write over a large unwritten extent, which
-> > means we zero the first part of the page, and that writing it back
-> > runs unwritten extent conversion at IO completion. This changes the
-> > extent backing this file offset from unwritten to written.
-> > 
-> > Then, add extreme memory pressure, so writeback is already running
-> > and soon after the page has been dirtied it gets marked for
-> > cleaning. Therefore, we have the possibility of background IO
-> > submission and memory reclaim occurring at the same time as new
-> > writes are occurring to the file.
-> > 
-> > To that end, let's add a large racing write that *ends* on this same
-> > page that we have already partially filled with data - it will fill
-> > the start of the page that currently contains zeros with real data.
-> > 
-> > Let's start that write() just before writeback of the already
-> > uptodate partial page starts. iomap_apply will map the entire
-> > write (and well beyond) as a single unwritten extent. This extent is
-> > the same extent that the original page in the page cache already
-> > covers, and this write would end by filling the remaining part of
-> > that write.
-> > 
-> > While that second write is running around in the page cache
-> > copy-in loop for the unwritten extent that backs that range, IO
-> > submission runs and completes and converts the original partially
-> > filled page to a written extent, then marks it clean.
 > 
-> So if I understand this correctly --
-> 
-> Thread 1 fallocates 1G of contiguous space and writes 38 bytes to the
-> end of that gigabyte.  We instantiate a folio X for the region, zero the
-> parts we're not going to write, and copy the bytes we did want to write
-> into folio X.  The folio is now uptodate and dirty.  Thread 1 goes away.
-> 
-> Thread 2 starts a (1G-38) write of that fallocated (and mostly
-> unwritten) space.  It proceeds very slowly, one page at a time; it'll be
-> a while before it gets to folio X.
-> 
-> ramsnake.exe fires up and pushes the system hard into memory reclaim.
-> Reclaim initiates dirty writeback of folio X, which writes it to disk
-> and does the unwritten extent conversion.  Reclaim then removes X from
-> the page cache, and frees X.
-> 
-> Thread 2 finally gets to the end of its 1G write.  It is still using the
-> cached 1G unwritten mapping from before, unaware that some of the
-> mapping has changed to written state.  It grabs a folio for (1G - 38),
-> but it gets folio Y instead of folio X.  Y is not uptodate, so thread 2
-> copies bytes from userspace and zeroes the last 38 bytes.
-> 
-> **WRONG**
-> 
-> We now have folio Y with zeroes in the last 38 bytes, instead of
-> whatever thread 1 wrote.  Writeback pushes Y to disk, clobbering those
-> 38 bytes forever.
+> I think that would be an unfortunate outcome, but if we can't stop xfs
+> from bumping the i_version on atime updates, then we may have no choice
+> but to do so. I suppose we could add a fetch_iversion for xfs that takes
+> it back to using the ctime.
 
-Yes, that's pretty much it.
+"unfortunate" for who I wonder..
 
-> > [ Ayup, the extent map of the file just changed to be different
-> > to the iomap that the current write() thinks the file layout has. ]
-> > 
-> > Further, because the partially written page is now clean,
-> > memory reclaim can snaffle it up and it gets removed from the page
-> > cache.
-> > 
-> > The second write finally gets to the last page of it's write and
-> > doesn't find it in the page cache because memory reclaim removed it.
-> > So it pulls a new page into the page cache in iomap_begin_write(),
-> > and then in __iomap_begin_write we see that the we need to fill the
-> > second half of the page with either zeros or data from disk.
-> > 
-> > We know that this data is on disk as the extent is now in written
-> > state.  *However*, the cached iomap that we are currently using for
-> > the write() says the range is -unwritten-, and so at that point
-> > iomap_block_needs_zeroing() says "page needs zeroing". Hence
-> > __iomap_begin_write zeroes the second half of the page instead of
-> > reading it from disk, obliterating the data that the previous write
-> > had already written there.
+I think Trond's argument about not needing implicit updates to be
+reflected i_version is sound - as the effective i_version can be
+constructed from stored i_version plus all attributes, if you ever want
+an effective i_version that covers all implicit changes to attributes.
+However I doubt Dave will be convinced.
+
 > 
-> Yup.
+> > <rant>NFSv4 changeid is really one of the more horrible parts of the
+> > design</rant>
+> > 
 > 
-> > Ouchy, we have data corruption because the incoming write holds a
-> > stale cached iomap......
-> > 
-> > At this point, I had a nasty feeling of deja vu.
-> > 
-> > Oh, yeah, we already infrastructure in place to avoid using stale
-> > cached iomaps in ->writepages....
-> > 
-> > That is, iomap_writepage_map() calls ->map_block for every filesytem
-> > block, even though the iomap_writepage_ctx has a cached iomap in it.
-> > That's so the filesystem can check that the cached iomap is still
-> > valid whilst the page we are writing back is held locked. This
-> > protects writeback against races with truncate, hole punch, etc.
-> > 
-> > XFS does this via a call to xfs_imap_valid() - we keep a generation
-> > number in the XFS extent trees that is bumped on every change so
-> > that we can check whether a cached iomap is still valid. If the
-> > generation numbers don't match, then we generate a new iomap for the
-> > writepage context....
-> > 
-> > What is clear to me now is that we have the same stale cached iomap
-> > problem with iomap_apply() because writeback can change the extent
-> > map state in a way that influence incoming writes and those updates
-> > are not in any way serialised against the incoming write IO path.
-> > 
-> > Hence we have to validate that the cached iomap is not stale before
-> > we decide what to do with a new page in the page cache (zero or read
-> > from disk), and we have to do this iomap validation when the newly
-> > instantiated page is locked and ready for initialisation.
-> > 
-> > I have not thought past this point - I'm only *just* smart enough to
-> > be able to dig out the root cause of this problem. No scratch that,
-> > I'm not smart, just stubborn enough to ignore the fact I've got the
-> > analysis wrong at least a dozen times already.
-> > 
-> > That said, this stale mapping problem existed long before we started
-> > using unwritten extents for delayed allocation. The change to use
-> > unwritten extents (to fix other data corruption issues) exposed us
-> > to in-memory zeroing in this race condition case rather reading the
-> > block of data from disk. We just hadn't armed the landmine....
-> > 
-> > I suspect we are going to need a new iomap validation operation, and
-> > require the iomap actors to be able to handle iomap validation
-> > failure.  What that looks like, I don't know as my brain
-> > turned to goo and dribbled out my ears about 4 hours ago....
+> Hah! I was telling Tom Talpey yesterday that I thought that the change
+> counter was one of the best ideas in NFSv4 and that we should be trying
+> to get all filesystems to implement it correctly.
 > 
-> Euughg.  I suppose this means that ->iomap_begin has to be able to stuff
-> xfs_ifork.if_seq into a cookie value that we can set in struct iomap
-> somewhere?  And then iomap has to be able to call back to XFS to
-> revalidate iomap.cookie?  And if iomap.cookie != xfs_ifork.if_seq, then
-> I guess iomap will just ... unlock and put the folio, and return EAGAIN
-> (or something) so that its caller will return however many bytes have
-> been dirtied to iomap_apply so that _apply will go get a fresh mapping?
+> The part that does suck about the design is that the original specs
+> weren't specific enough about its behavior. I think that's been somewhat
+> remedied in more recent RFCs though.
 
-Yeah, something like that. I have not had time to think this through
-any further than what you've just written. It does not look like it
-will be trivial, though, and it points out that every filesystem
-using iomap for multi-page extent maps will need to implement iomap
-invalidation detection in some way.
+That's enough bate for me to expand my rant...
+The problem with changeid is that it imposes on the filesystem.  You
+CANNOT provide a compliant NFSv4 services on a filesystem which has 1
+second resolution of time stamps and no internal i_version.  When you
+are designing a protocol - particularly one where interoperability is a
+focus - making it impossible to export some common (at the time)
+filesystems correctly is crazy.
 
-We already have that for XFS with the sequence numbers, but I'm
-betting that none of the other filesystems that use iomap have the
-internal infrastructure to track racing extent map changes...
+And not at all necessary.  There is a much better way.
 
-Cheers,
+When reporting the ctime of a file, the server could add a Bool which is
+true if that time is "now" to within the resolution of the timestamp.
+If you see a "now" ctime, then you cannot use timestamps to validate any
+cached data.  i.e.  a "now" ctime is different to every other ctime,
+even another "now" ctime with the same timestamp.
+If the filesystem has high resolution timestamps, it will never say
+"now" and you get the same semantics as changeid.  If timestamps are low
+resolution, then you cannot cache a file while it is changing (unless
+you get a read delegation), but you can accurately cache a file as long
+as it doesn't change - which is all that changeid gives you anyway.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+NeilBrown
+
+
+> -- 
+> Jeff Layton <jlayton@kernel.org>
+> 
