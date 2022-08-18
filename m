@@ -2,78 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53441C00140
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Aug 2022 09:51:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF89C00140
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Aug 2022 11:01:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239604AbiHRJvO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Aug 2022 05:51:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52586 "EHLO
+        id S241074AbiHRLBG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Aug 2022 07:01:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235407AbiHRJvN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Aug 2022 05:51:13 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAC6DB07C9
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Aug 2022 02:51:12 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S240270AbiHRLBF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Aug 2022 07:01:05 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B2CF97D64;
+        Thu, 18 Aug 2022 04:01:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 902283ED3B;
-        Thu, 18 Aug 2022 09:51:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1660816271; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=izmoBcXZCzoW+ZBOVabeEeedzEn73APgAMt0TLEhuyI=;
-        b=yDTNtwzYlIIjPi7c1iVUpoVI2MyUsFqClvSt+JBa0duT6tSLC2PaYa9ZViYywW4EMI5KFG
-        x/C/+U6ahzFceEU9vMPumXSYy/Y88fhdSAodnk6A6RekxGKk4TINgynTSany89e+3J2Kfp
-        8Je4mm7YIxVF04RjH97I5QIzo306kTM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1660816271;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=izmoBcXZCzoW+ZBOVabeEeedzEn73APgAMt0TLEhuyI=;
-        b=Oi4CbHmUUC1IhkMVDqDVw1o3Ys86B+4oCvNpO8EX8FrglSXyelgEpyRjX2mCrOE03rT+kk
-        ToV0Au3NBN56wLAQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7A26D139B7;
-        Thu, 18 Aug 2022 09:51:11 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 6mhjHI8L/mIlBQAAMHmgww
-        (envelope-from <chrubis@suse.cz>); Thu, 18 Aug 2022 09:51:11 +0000
-Date:   Thu, 18 Aug 2022 11:53:08 +0200
-From:   Cyril Hrubis <chrubis@suse.cz>
-To:     Petr Vorel <pvorel@suse.cz>
-Cc:     ltp@lists.linux.it, Li Wang <liwang@redhat.com>,
-        Martin Doucha <mdoucha@suse.cz>,
-        automated-testing@yoctoproject.org,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        automated-testing@lists.yoctoproject.org
-Subject: Re: [RFC PATCH 1/1] API: Allow to use xfs filesystems < 300 MB
-Message-ID: <Yv4MBF79PnJKJbwm@yuki>
-References: <20220817204015.31420-1-pvorel@suse.cz>
+        by ams.source.kernel.org (Postfix) with ESMTPS id 28632B8214A;
+        Thu, 18 Aug 2022 11:01:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FD3DC433C1;
+        Thu, 18 Aug 2022 11:00:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660820458;
+        bh=BJ9jTJMSUZzXkT+DShf3+Vd6Whwr/ZEx748U0LZgPQ8=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=qy3yjV6lCpwWA0WKIPLxfSe7qgVUn95t+nHcrj6OEr4CFtmS2MkHcRgEe54X3eG+x
+         3cr6G6Hd+NweXZ43gxA4KXnn1b8YUdZwuh8BQhN/+aA+m5/fVOaIkqRIseecDd3IyQ
+         yEvAraJktMoqlorBj6QJB1+Q0X4pqNODCqMC2v0AOHUSEVcSJO2uPe6EQVlDV1/eCp
+         xbjxjT0H77Dejz/s1OC/1QDm1JL0EYLpvLQs4R2c4rq+Bqpg3sT5KjOPxevjYdLLLD
+         OUlKuDJ+voQNwqDOUlJVmrYQcdT5tsO2HTcAGYJQia2FH0/oPdqSAbVPCujB/CfoiW
+         szqz0Z3201s9w==
+Message-ID: <ae80e71722385a85bb0949540bb4bd0a796a2e34.camel@kernel.org>
+Subject: Re: [PATCH] xfs: fix i_version handling in xfs
+From:   Jeff Layton <jlayton@kernel.org>
+To:     NeilBrown <neilb@suse.de>, Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Date:   Thu, 18 Aug 2022 07:00:56 -0400
+In-Reply-To: <166078288043.5425.8131814891435481157@noble.neil.brown.name>
+References: <20220816131736.42615-1-jlayton@kernel.org>
+        , <Yvu7DHDWl4g1KsI5@magnolia>
+        , <e77fd4d19815fd661dbdb04ab27e687ff7e727eb.camel@kernel.org>
+        , <20220816224257.GV3600936@dread.disaster.area>
+         <166078288043.5425.8131814891435481157@noble.neil.brown.name>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220817204015.31420-1-pvorel@suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi!
-I'm starting to wonder if we should start tracking minimal FS size per
-filesystem since btrfs and xfs will likely to continue to grow and with
-that we will end up disabling the whole fs related testing on embedded
-boards with a little disk space. If we tracked that per filesystem we
-would be able to skip a subset of filesystems when there is not enough
-space. The downside is obviously that we would have to add a bit more
-complexity to the test library.
+On Thu, 2022-08-18 at 10:34 +1000, NeilBrown wrote:
+> On Wed, 17 Aug 2022, Dave Chinner wrote:
+> >=20
+> > In XFS, we've defined the on-disk i_version field to mean
+> > "increments with any persistent inode data or metadata change",
+> > regardless of what the high level applications that use i_version
+> > might actually require.
+> >=20
+> > That some network filesystem might only need a subset of the
+> > metadata to be covered by i_version is largely irrelevant - if we
+> > don't cover every persistent inode metadata change with i_version,
+> > then applications that *need* stuff like atime change notification
+> > can't be supported.
+>=20
+> So what you are saying is that the i_version provided by XFS does not
+> match the changeid semantics required by NFSv4.  Fair enough.  I guess
+> we shouldn't use the one to implement the other then.
+>=20
+> Maybe we should just go back to using ctime.  ctime is *exactly* what
+> NFSv4 wants, as long as its granularity is sufficient to catch every
+> single change.  Presumably XFS doesn't try to ensure this.  How hard
+> would it be to get any ctime update to add at least one nanosecond?
+> This would be enabled by a mount option, or possibly be a direct request
+> from nfsd.
+>=20
 
--- 
-Cyril Hrubis
-chrubis@suse.cz
+I think that would be an unfortunate outcome, but if we can't stop xfs
+from bumping the i_version on atime updates, then we may have no choice
+but to do so. I suppose we could add a fetch_iversion for xfs that takes
+it back to using the ctime.
+
+> <rant>NFSv4 changeid is really one of the more horrible parts of the
+> design</rant>
+>=20
+
+Hah! I was telling Tom Talpey yesterday that I thought that the change
+counter was one of the best ideas in NFSv4 and that we should be trying
+to get all filesystems to implement it correctly.
+
+The part that does suck about the design is that the original specs
+weren't specific enough about its behavior. I think that's been somewhat
+remedied in more recent RFCs though.
+--=20
+Jeff Layton <jlayton@kernel.org>
