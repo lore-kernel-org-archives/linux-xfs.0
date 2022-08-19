@@ -2,128 +2,168 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F963C32773
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Aug 2022 11:34:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3891DC32793
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Aug 2022 16:18:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348293AbiHSLez (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Aug 2022 07:34:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40982 "EHLO
+        id S1351834AbiHSQSV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Aug 2022 12:18:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347966AbiHSLey (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Aug 2022 07:34:54 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE905DB047;
-        Fri, 19 Aug 2022 04:34:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S1352515AbiHSQQ5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Aug 2022 12:16:57 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2EBC116ECE;
+        Fri, 19 Aug 2022 09:00:13 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5D243617AB;
-        Fri, 19 Aug 2022 11:34:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1015C433C1;
-        Fri, 19 Aug 2022 11:34:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660908892;
-        bh=V2k0NMVIrgt8WLIyR18szSE2DGtSyfglRqVICktd4EQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=gXb2Fj7z4gZg7GmGCleAWuzTrZ6C8k87aaw6G0WZCwj8Gab6EEcHiNcw3h+nJ7BB1
-         rTRJavVtvl8jZ+XNdZTgFN7RvF5kXTo3+rGAm+YeYUckRwV1flm16m27K1QiG8oFeR
-         Zhkj0cu3D4dRiYhTsl9gz2TazexVVRRALu+Jodzr5Xl+snfLn+FUhH23U11rdd7XtZ
-         C7N7ss4rQ/9kxv3yTAWFThMijQWOKHu7PMpVEIg3KO0KMWAdGhTThsC06HTjuUkzJc
-         HqBGKttMVlsD+zMCR6hMQTNMV5AzqA315Zyn4jS3qnFCCDJSn8uqYe6KpC/Acmair5
-         OnBXSlvHs376A==
-From:   Jeff Layton <jlayton@kernel.org>
-To:     "Darrick J . Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-integrity@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>, NeilBrown <neilb@suse.de>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        David Wysochanski <dwysocha@redhat.com>
-Subject: [PATCH] xfs: don't bump the i_version on an atime update in xfs_vn_update_time
-Date:   Fri, 19 Aug 2022 07:34:50 -0400
-Message-Id: <20220819113450.11885-1-jlayton@kernel.org>
-X-Mailer: git-send-email 2.37.2
+        by smtp-out2.suse.de (Postfix) with ESMTPS id C2B1B2051C;
+        Fri, 19 Aug 2022 16:00:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1660924811;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1EOPRaUipOJxcZOITEcfDSR5J7gAs1mJruhQw7ACMlA=;
+        b=smCeWKPTuJhSif5sFZ4Prn5bYmJO+mDoSbkTHJKVWW66GzH7wQ1uw+ea0D8K4+7AMWBBgo
+        wW+6I3DO+SzqwAeMD/eDwunsv/a7agp+jDAeaTLLarSgX7QyCgGNfltvmBrwcpws/rDp6+
+        JqogaYLIKSyExQcgEHCa/cXb1pIBaKE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1660924811;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1EOPRaUipOJxcZOITEcfDSR5J7gAs1mJruhQw7ACMlA=;
+        b=tnazJTR5H/s2WuWaiLEGCBInYSOSLgfJUdRxxUgjgF4Q3+o6xzmZ4mPS8hojQkdeo9XlZ+
+        eeayDImQEn+oIzDQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 35C5D13AC1;
+        Fri, 19 Aug 2022 16:00:11 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id iOwRCouz/2JbGwAAMHmgww
+        (envelope-from <pvorel@suse.cz>); Fri, 19 Aug 2022 16:00:11 +0000
+Date:   Fri, 19 Aug 2022 18:00:09 +0200
+From:   Petr Vorel <pvorel@suse.cz>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <david@fromorbit.com>,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>,
+        linux-xfs@vger.kernel.org, ltp@lists.linux.it
+Subject: Re: LTP test df01.sh detected different size of loop device in v5.19
+Message-ID: <Yv+ziab2IiVIsqN6@pevik>
+Reply-To: Petr Vorel <pvorel@suse.cz>
+References: <YvZUfq+3HYwXEncw@pevik>
+ <YvZTpQFinpkB06p9@pevik>
+ <20220814224440.GR3600936@dread.disaster.area>
+ <YvoSeTmLoQVxq7p9@pevik>
+ <8d33a7a0-7a7c-47a1-ed84-83fd25089897@sandeen.net>
+ <Yv5Z7eu5RGnutMly@pevik>
+ <f03c6929-9a14-dd58-3726-dd2c231d0981@sandeen.net>
+ <Yv5oaxsX6z2qxxF3@magnolia>
+ <Yv5wUcLpIR0hwbmI@pevik>
+ <974cc110-d47e-5fae-af5f-e2e610720e2d@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <974cc110-d47e-5fae-af5f-e2e610720e2d@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs will update the i_version when updating only the atime value, which
-is not desirable for any of the current consumers of i_version. Doing so
-leads to unnecessary cache invalidations on NFS and extra measurement
-activity in IMA.
+> On 8/18/22 12:01 PM, Petr Vorel wrote:
+> >> On Thu, Aug 18, 2022 at 11:05:33AM -0500, Eric Sandeen wrote:
+> >>> On 8/18/22 10:25 AM, Petr Vorel wrote:
+> >>>> Hi Eric, all,
 
-Add a new XFS_ILOG_NOIVER flag, and use that to indicate that the
-transaction should not update the i_version. Set that value in
-xfs_vn_update_time if we're only updating the atime.
 
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: NeilBrown <neilb@suse.de>
-Cc: Trond Myklebust <trondmy@hammerspace.com>
-Cc: David Wysochanski <dwysocha@redhat.com>
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
- fs/xfs/libxfs/xfs_log_format.h  |  2 +-
- fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
- fs/xfs/xfs_iops.c               | 10 +++++++---
- 3 files changed, 9 insertions(+), 5 deletions(-)
+> >>> ...
 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index b351b9dc6561..866a4c5cf70c 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -323,7 +323,7 @@ struct xfs_inode_log_format_32 {
- #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
- #define XFS_ILOG_DOWNER	0x200	/* change the data fork owner on replay */
- #define XFS_ILOG_AOWNER	0x400	/* change the attr fork owner on replay */
--
-+#define XFS_ILOG_NOIVER	0x800	/* don't bump i_version */
- 
- /*
-  * The timestamps are dirty, but not necessarily anything else in the inode
-diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index 8b5547073379..ffe6d296e7f9 100644
---- a/fs/xfs/libxfs/xfs_trans_inode.c
-+++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -126,7 +126,7 @@ xfs_trans_log_inode(
- 	 * unconditionally.
- 	 */
- 	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
--		if (IS_I_VERSION(inode) &&
-+		if (!(flags & XFS_ILOG_NOIVER) && IS_I_VERSION(inode) &&
- 		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
- 			iversion_flags = XFS_ILOG_CORE;
- 	}
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 45518b8c613c..54db85a43dfb 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1021,7 +1021,7 @@ xfs_vn_update_time(
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
--	int			log_flags = XFS_ILOG_TIMESTAMP;
-+	int			log_flags = XFS_ILOG_TIMESTAMP|XFS_ILOG_NOIVER;
- 	struct xfs_trans	*tp;
- 	int			error;
- 
-@@ -1041,10 +1041,14 @@ xfs_vn_update_time(
- 		return error;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (flags & S_CTIME)
-+	if (flags & S_CTIME) {
- 		inode->i_ctime = *now;
--	if (flags & S_MTIME)
-+		log_flags &= ~XFS_ILOG_NOIVER;
-+	}
-+	if (flags & S_MTIME) {
- 		inode->i_mtime = *now;
-+		log_flags &= ~XFS_ILOG_NOIVER;
-+	}
- 	if (flags & S_ATIME)
- 		inode->i_atime = *now;
- 
--- 
-2.37.2
+
+> >>>>> IOWS, I think the test expects that free space is reflected in statfs numbers
+> >>>>> immediately after a file is removed, and that's no longer the case here. They
+> >>>>> change in between the df check and the statfs check.
+
+> >>>>> (The test isn't just checking that the values are correct, it is checking that
+> >>>>> the values are /immediately/ correct.)
+
+> >>>>> Putting a "sleep 1" after the "rm -f" in the test seems to fix it; IIRC
+> >>>>> the max time to wait for inodegc is 1s. This does slow the test down a bit.
+
+> >>>> Sure, it looks like we can sleep just 50ms on my hw (although better might be to
+> >>>> poll for the result [1]), I just wanted to make sure there is no bug/regression
+> >>>> before hiding it with sleep.
+
+> >>>> Thanks for your input!
+
+> >>>> Kind regards,
+> >>>> Petr
+
+> >>>> [1] https://people.kernel.org/metan/why-sleep-is-almost-never-acceptable-in-tests
+
+> >>>>> -Eric
+
+> >>>> +++ testcases/commands/df/df01.sh
+> >>>> @@ -63,6 +63,10 @@ df_test()
+> >>>>  		tst_res TFAIL "'$cmd' failed."
+> >>>>  	fi
+
+> >>>> +	if [ "$DF_FS_TYPE" = xfs ]; then
+> >>>> +		tst_sleep 50ms
+> >>>> +	fi
+> >>>> +
+
+> >>> Probably worth at least a comment as to why ...
+
+> > Sure, that was just to document possible fix. BTW even 200ms was not reliable in
+> > the long run => not a good solution.
+
+> >>> Dave / Darrick / Brian - I'm not sure how long it might take to finish inodegc?
+> >>> A too-short sleep will let the flakiness remain ...
+
+> >> A fsfreeze -f / fsfreeze -u cycle will force all the background garbage
+> >> collection to run to completion when precise free space accounting is
+> >> being tested.
+> > Thanks for a hint, do you mean to put it into df_test after creating file with
+> > dd to wrap second df_verify (calls df) and df_check (runs stat and compare values)?
+> > Because that does not help - it fails when running in the loop (managed to break after 5th run).
+
+> I think it would go after you remove the file, to ensure that no space usage
+> changes are pending when you check.
+
+> <tests>
+
+> This seems to work fine (pseudopatch):
+
+>         ROD_SILENT rm -rf mntpoint/testimg
+
+> +       # Ensure free space change can be seen by statfs
+> +       fsfreeze -f $TST_MNTPOINT
+> +       fsfreeze -u $TST_MNTPOINT
+It looks like it works. We might add small binary which just calls these 2
+ioctl (FIFREEZE and FITHAW), just to be friendly to people on embedded
+environment with minimal dependencies (yes, some people might not install
+util-linux).
+
+>         # flush file system buffers, then we can get the actual sizes.
+>         sync
+
+
+> (although: what's the difference between $TST_MNTPOINT and mountpoint/ ?)
+Thanks for a report, fixed in 96ae882d3 ("df01.sh: Use $TST_MNTPOINT")
+
+> You just don't want to accidentally freeze the root filesystem ;)
+Sure :)
+
+Kind regards,
+Petr
+
+> -Eric
+
 
