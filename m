@@ -2,89 +2,459 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1798C32772
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Aug 2022 11:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE7EC00140
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Aug 2022 14:47:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230360AbiHULtA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 21 Aug 2022 07:49:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38836 "EHLO
+        id S229460AbiHUOrs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 21 Aug 2022 10:47:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230099AbiHULsz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Aug 2022 07:48:55 -0400
-Received: from sender-of-o50.zoho.in (sender-of-o50.zoho.in [103.117.158.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F44A19026;
-        Sun, 21 Aug 2022 04:48:50 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1661082501; cv=none; 
-        d=zohomail.in; s=zohoarc; 
-        b=a6mvjVOBl8ChnzBxpui+qVndI/h3HGnpx16bhUNbBlOrv6Z8sMO+jghYzTS1p5ryAQe2KvZXtJ3rfnyzCzgha2ANxtZS79E85N9mCWfU2hjcySHoy7h3OEAzHXzK8BXyKGIfzsnehOqyf6OIHS+4yQ8GX3JAeit36DljlV8h9bM=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.in; s=zohoarc; 
-        t=1661082501; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=AwgN4RsZJTA9+iQk7/8UqzCd1O7MqN7cM+CxvUfw26E=; 
-        b=C71iFaUNYsWoivWc9//6C7fKwUDTKxhw+sTJ1b6ww3UIrsuL5gSaMN/F+Opogy10uhzCdSuLJ3wVlk2e2Os6gXffeY5GeNnnKqLma5bCBuJd4wOfvF/w6mVegPmTJG7VywRSiPdE8pHvrog/XehsbjwQGwh1mDDaCweZnt+Vz8I=
-ARC-Authentication-Results: i=1; mx.zohomail.in;
-        dkim=pass  header.i=siddh.me;
-        spf=pass  smtp.mailfrom=code@siddh.me;
-        dmarc=pass header.from=<code@siddh.me>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1661082501;
-        s=zmail; d=siddh.me; i=code@siddh.me;
-        h=From:From:To:To:Cc:Cc:Message-ID:Subject:Subject:Date:Date:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
-        bh=AwgN4RsZJTA9+iQk7/8UqzCd1O7MqN7cM+CxvUfw26E=;
-        b=aRlO49NTaAJWJhgr67LQPL3GjwcBhrLc7M/r0WoO5Ds+sKDfKnpfwopBXNyVHvhX
-        K1MY1nhYnlMpWNe6LZv9kemOcsz7NARqLH21hGZFH/qucpaFaAvGwJ+VlZGOc0QRWGb
-        khp0PoWz7Ns7RYHNUcVaYnlpwjHq+nIoO6YHN5K0=
-Received: from localhost.localdomain (43.250.157.244 [43.250.157.244]) by mx.zoho.in
-        with SMTPS id 1661082500389589.0087066634392; Sun, 21 Aug 2022 17:18:20 +0530 (IST)
-From:   Siddh Raman Pant <code@siddh.me>
-To:     code@siddh.me
-Cc:     david@fromorbit.com, djwong@kernel.org, fgheet255t@gmail.com,
-        hch@infradead.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, riteshh@linux.ibm.com,
-        syzbot+a8e049cd3abd342936b6@syzkaller.appspotmail.com,
-        syzkaller-bugs@googlegroups.com, willy@infradead.org
-Message-ID: <20220821114816.24193-1-code@siddh.me>
-Subject: Re: [syzbot] WARNING in iomap_iter
-Date:   Sun, 21 Aug 2022 17:18:16 +0530
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <182c028abf0.2dc6f7c973088.2963173753499991828@siddh.me>
-References: <182c028abf0.2dc6f7c973088.2963173753499991828@siddh.me>
+        with ESMTP id S230436AbiHUOrr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Aug 2022 10:47:47 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 788242124F
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Aug 2022 07:47:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1661093265;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=rvRajfOlkQLT3JN8qi7J7YLwR6Xah9Q7cJYP2w1vqvI=;
+        b=QILB2lGKh9C8XrAM5mK7kCLlXd2cbyePdcwx8ytR6QIp7scRlyQD8M89nmkLFejnpbrvxK
+        RdinkNPJ+ZxbaisfDkgNPhvUAiqR0MV1DKtf0dFMMyFwyBKa7X/qv71nqtbcp98uHg9ZRS
+        y8oMvhnKtWooK4fKE33a2yI29z/7utA=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-564-btEJ-X1IMS2Gb6iZyad7eQ-1; Sun, 21 Aug 2022 10:47:37 -0400
+X-MC-Unique: btEJ-X1IMS2Gb6iZyad7eQ-1
+Received: by mail-qt1-f197.google.com with SMTP id ci6-20020a05622a260600b0034370b6f5d6so6835197qtb.14
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Aug 2022 07:47:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc;
+        bh=rvRajfOlkQLT3JN8qi7J7YLwR6Xah9Q7cJYP2w1vqvI=;
+        b=I/XYJ5fQmDGplfqCXMFuQL3CecjA3EXB2Y66dXamuiGUbU1u0X9IEvFFXG7z5h1NNt
+         QcXdsrkf3is7IzNhowgOArIZCI5WMSTOMYU3+8sVf/ctDQ/EyprPvRGN/ut/F3fgsSC2
+         1sXeo+XRLuuqiw335zUt1UBS+ITzrx6njsAleO+ynK5Kf8ueF7xMZPiQ0cInFbOvNaLa
+         n1C8TIF7g5BBb8tuPAlEqoSsRRoWXAv5TP41zAxl8v8AFQhgVK05n5p9q4hFKMBc8p+i
+         8Vk5gds7AX8ZbTeKdTWzsH9dzcG+XAgRLysfc/DKENlEBXsof7SRSCnUNH7kQzUlDJDa
+         3aRg==
+X-Gm-Message-State: ACgBeo1Jy3Cj3oh1ic//YoMvHSN1th3ob6pnp2WmWAM6J/pkq/uMHuat
+        ALuKMwqg7rpdDQsYVJTF9W9fGShsHNAJY0HWDpUGSVA7BJMZLjQt2w44S0HJiaVcr5dCvb2CZp1
+        ZqHT3i3Z+IC1jH5iibT2s
+X-Received: by 2002:a05:620a:2627:b0:6b8:c8c3:78f9 with SMTP id z39-20020a05620a262700b006b8c8c378f9mr10249009qko.641.1661093256257;
+        Sun, 21 Aug 2022 07:47:36 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR6pAqf+uKeFcmK4ezcyGWxyYikV+kDRSvlt8qCpwCKspLTvj8C+2lz4vdrvsdV3oUFZe9cyVQ==
+X-Received: by 2002:a05:620a:2627:b0:6b8:c8c3:78f9 with SMTP id z39-20020a05620a262700b006b8c8c378f9mr10248997qko.641.1661093255904;
+        Sun, 21 Aug 2022 07:47:35 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id q11-20020a05622a030b00b00342fb07944fsm7604812qtw.82.2022.08.21.07.47.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 21 Aug 2022 07:47:35 -0700 (PDT)
+Date:   Sun, 21 Aug 2022 22:47:28 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Murphy Zhou <jencce.kernel@gmail.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] tests: increase fs size for _scratch_mkfs_sized
+Message-ID: <20220821144728.eeoi332c3vhtds6q@zlang-mailbox>
+References: <20220819100149.1520583-1-jencce.kernel@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-ZohoMailClient: External
-Content-Type: text/plain; charset=utf8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220819100149.1520583-1-jencce.kernel@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-#syz test https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.gi=
-t master
+On Fri, Aug 19, 2022 at 06:01:49PM +0800, Murphy Zhou wrote:
+> Since this xfsprogs commit:
+> 	6e0ed3d19c54 mkfs: stop allowing tiny filesystems
+> testcases that makes fs smaller then 300M are not working for xfs.
+> 
+> Increase thoese numbers to 512M at least. There is no special
+> reason for the magic number 512, just double it from original
+> 256M for being reasonable small.
+> 
+> Signed-off-by: Murphy Zhou <jencce.kernel@gmail.com>
+> ---
 
----
- drivers/block/loop.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+Thanks, I hit this problem too, and not only below cases which you try to fix
+in this patch, for example xfs/520, it fails too. If you'd like to fix this
+problem, hope you can make a xfstests full run XFS at least, then check each
+failed cases, to find out which cases are affect by this change on xfsprogs.
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index e3c0ba93c1a3..a3d9af0a2077 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -979,9 +979,15 @@ loop_set_status_from_info(struct loop_device *lo,
-=20
- =09lo->lo_offset =3D info->lo_offset;
- =09lo->lo_sizelimit =3D info->lo_sizelimit;
-+=09lo->lo_flags =3D info->lo_flags;
-+
-+=09/* loff_t/int vars are assigned __u64/__u32 vars (respectively) */
-+=09if (lo->lo_offset < 0 || lo->lo_sizelimit < 0 || lo->lo_flags < 0)
-+=09=09return -EOVERFLOW;
-+
- =09memcpy(lo->lo_file_name, info->lo_file_name, LO_NAME_SIZE);
- =09lo->lo_file_name[LO_NAME_SIZE-1] =3D 0;
--=09lo->lo_flags =3D info->lo_flags;
-+
- =09return 0;
- }
-=20
---=20
-2.35.1
+Also, I think xfs list has found this problem too, due to it really cause
+lots of xfstests failures on XFS side. Double check with xfs list, if they
+have any suggestions for this.
 
+Thanks,
+Zorro
+
+>  tests/generic/015 | 2 +-
+>  tests/generic/027 | 2 +-
+>  tests/generic/077 | 2 +-
+>  tests/generic/081 | 4 ++--
+>  tests/generic/083 | 2 +-
+>  tests/generic/085 | 2 +-
+>  tests/generic/204 | 2 +-
+>  tests/generic/226 | 2 +-
+>  tests/generic/250 | 2 +-
+>  tests/generic/252 | 2 +-
+>  tests/generic/371 | 2 +-
+>  tests/generic/387 | 2 +-
+>  tests/generic/416 | 2 +-
+>  tests/generic/427 | 2 +-
+>  tests/generic/449 | 2 +-
+>  tests/generic/511 | 2 +-
+>  tests/generic/520 | 4 ++--
+>  tests/generic/536 | 2 +-
+>  tests/generic/619 | 2 +-
+>  tests/generic/626 | 2 +-
+>  tests/xfs/015     | 2 +-
+>  tests/xfs/107     | 4 ++--
+>  tests/xfs/118     | 4 ++--
+>  tests/xfs/227     | 2 +-
+>  tests/xfs/233     | 2 +-
+>  25 files changed, 29 insertions(+), 29 deletions(-)
+> 
+> diff --git a/tests/generic/015 b/tests/generic/015
+> index 10423a29..f6804897 100755
+> --- a/tests/generic/015
+> +++ b/tests/generic/015
+> @@ -31,7 +31,7 @@ _require_no_large_scratch_dev
+>  
+>  # btrfs needs at least 256MB (with upward round off) to create a non-mixed mode
+>  # fs. Ref: btrfs-progs: btrfs_min_dev_size()
+> -_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1 \
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full 2>&1 \
+>      || _fail "mkfs failed"
+>  _scratch_mount
+>  out=$SCRATCH_MNT/fillup.$$
+> diff --git a/tests/generic/027 b/tests/generic/027
+> index 47f1981d..ad8175c1 100755
+> --- a/tests/generic/027
+> +++ b/tests/generic/027
+> @@ -35,7 +35,7 @@ _require_scratch
+>  
+>  echo "Silence is golden"
+>  
+> -_scratch_mkfs_sized $((256 * 1024 * 1024)) >>$seqres.full 2>&1
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >>$seqres.full 2>&1
+>  _scratch_mount
+>  
+>  echo "Reserve 2M space" >>$seqres.full
+> diff --git a/tests/generic/077 b/tests/generic/077
+> index 94d89fae..639564ed 100755
+> --- a/tests/generic/077
+> +++ b/tests/generic/077
+> @@ -49,7 +49,7 @@ echo "*** create filesystem"
+>  _scratch_unmount >/dev/null 2>&1
+>  echo "*** MKFS ***"                         >>$seqres.full
+>  echo ""                                     >>$seqres.full
+> -fs_size=$((256 * 1024 * 1024))
+> +fs_size=$((512 * 1024 * 1024))
+>  _scratch_mkfs_sized $fs_size >> $seqres.full 2>&1 || _fail "mkfs failed"
+>  _scratch_mount
+>  mkdir $SCRATCH_MNT/subdir
+> diff --git a/tests/generic/081 b/tests/generic/081
+> index 22ac94de..8b481cb5 100755
+> --- a/tests/generic/081
+> +++ b/tests/generic/081
+> @@ -62,9 +62,9 @@ snapname=snap_$seq
+>  mnt=$TEST_DIR/mnt_$seq
+>  mkdir -p $mnt
+>  
+> -# make sure there's enough disk space for 256M lv, test for 300M here in case
+> +# make sure there's enough disk space for 256M lv, test for 512M here in case
+>  # lvm uses some space for metadata
+> -_scratch_mkfs_sized $((300 * 1024 * 1024)) >>$seqres.full 2>&1
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >>$seqres.full 2>&1
+>  $LVM_PROG vgcreate -f $vgname $SCRATCH_DEV >>$seqres.full 2>&1
+>  # We use yes pipe instead of 'lvcreate --yes' because old version of lvm
+>  # (like 2.02.95 in RHEL6) don't support --yes option
+> diff --git a/tests/generic/083 b/tests/generic/083
+> index 2a5af3cc..4c79538c 100755
+> --- a/tests/generic/083
+> +++ b/tests/generic/083
+> @@ -62,7 +62,7 @@ workout()
+>  
+>  echo "*** test out-of-space handling for random write operations"
+>  
+> -filesize=`expr 256 \* 1024 \* 1024`
+> +filesize=`expr 512 \* 1024 \* 1024`
+>  agcount=6
+>  numprocs=15
+>  numops=1500
+> diff --git a/tests/generic/085 b/tests/generic/085
+> index 786d8e6f..006fcb5d 100755
+> --- a/tests/generic/085
+> +++ b/tests/generic/085
+> @@ -50,7 +50,7 @@ setup_dmdev()
+>  
+>  echo "Silence is golden"
+>  
+> -size=$((256 * 1024 * 1024))
+> +size=$((512 * 1024 * 1024))
+>  size_in_sector=$((size / 512))
+>  _scratch_mkfs_sized $size >>$seqres.full 2>&1
+>  
+> diff --git a/tests/generic/204 b/tests/generic/204
+> index a33a090f..3589b084 100755
+> --- a/tests/generic/204
+> +++ b/tests/generic/204
+> @@ -30,7 +30,7 @@ _require_scratch
+>  # time solves this problem.
+>  [ $FSTYP = "xfs" ] && MKFS_OPTIONS="$MKFS_OPTIONS -l size=16m -i maxpct=50"
+>  
+> -SIZE=`expr 115 \* 1024 \* 1024`
+> +SIZE=`expr 512 \* 1024 \* 1024`
+>  _scratch_mkfs_sized $SIZE 2> /dev/null > $tmp.mkfs.raw
+>  cat $tmp.mkfs.raw | _filter_mkfs 2> $tmp.mkfs > /dev/null
+>  _scratch_mount
+> diff --git a/tests/generic/226 b/tests/generic/226
+> index 34434730..d814b365 100755
+> --- a/tests/generic/226
+> +++ b/tests/generic/226
+> @@ -19,7 +19,7 @@ _require_odirect
+>  
+>  _scratch_unmount 2>/dev/null
+>  echo "--> mkfs 256m filesystem"
+> -_scratch_mkfs_sized `expr 256 \* 1024 \* 1024` >> $seqres.full 2>&1
+> +_scratch_mkfs_sized `expr 512 \* 1024 \* 1024` >> $seqres.full 2>&1
+>  _scratch_mount
+>  
+>  loops=16
+> diff --git a/tests/generic/250 b/tests/generic/250
+> index 97e9522f..bd1c6ffd 100755
+> --- a/tests/generic/250
+> +++ b/tests/generic/250
+> @@ -32,7 +32,7 @@ _require_odirect
+>  # bitmap consuming all the free space in our small data device.
+>  unset SCRATCH_RTDEV
+>  
+> -fssize=$((196 * 1048576))
+> +fssize=$((512 * 1048576))
+>  echo "Format and mount"
+>  $XFS_IO_PROG -d -c "pwrite -S 0x69 -b 1048576 0 $fssize" $SCRATCH_DEV >> $seqres.full
+>  _scratch_mkfs_sized $fssize > $seqres.full 2>&1
+> diff --git a/tests/generic/252 b/tests/generic/252
+> index 8c5adb53..93ab5242 100755
+> --- a/tests/generic/252
+> +++ b/tests/generic/252
+> @@ -33,7 +33,7 @@ AIO_TEST="$here/src/aio-dio-regress/aiocp"
+>  # bitmap consuming all the free space in our small data device.
+>  unset SCRATCH_RTDEV
+>  
+> -fssize=$((196 * 1048576))
+> +fssize=$((512 * 1048576))
+>  echo "Format and mount"
+>  $XFS_IO_PROG -d -c "pwrite -S 0x69 -b 1048576 0 $fssize" $SCRATCH_DEV >> $seqres.full
+>  _scratch_mkfs_sized $fssize > $seqres.full 2>&1
+> diff --git a/tests/generic/371 b/tests/generic/371
+> index a2fdaf7b..538df647 100755
+> --- a/tests/generic/371
+> +++ b/tests/generic/371
+> @@ -20,7 +20,7 @@ _require_scratch
+>  _require_xfs_io_command "falloc"
+>  test "$FSTYP" = "xfs" && _require_xfs_io_command "extsize"
+>  
+> -_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full 2>&1
+>  _scratch_mount
+>  
+>  # Disable speculative post-EOF preallocation on XFS, which can grow fast enough
+> diff --git a/tests/generic/387 b/tests/generic/387
+> index 25ca86bb..0546b7de 100755
+> --- a/tests/generic/387
+> +++ b/tests/generic/387
+> @@ -19,7 +19,7 @@ _supported_fs generic
+>  _require_scratch_reflink
+>  
+>  #btrfs needs 256mb to create default blockgroup fs
+> -_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full 2>&1
+>  _scratch_mount
+>  
+>  testfile=$SCRATCH_MNT/testfile
+> diff --git a/tests/generic/416 b/tests/generic/416
+> index deb05f07..24fdb737 100755
+> --- a/tests/generic/416
+> +++ b/tests/generic/416
+> @@ -21,7 +21,7 @@ _begin_fstest auto enospc
+>  _supported_fs generic
+>  _require_scratch
+>  
+> -fs_size=$((128 * 1024 * 1024))
+> +fs_size=$((512 * 1024 * 1024))
+>  page_size=$(get_page_size)
+>  
+>  # We will never reach this number though
+> diff --git a/tests/generic/427 b/tests/generic/427
+> index 26385d36..4f44c2ea 100755
+> --- a/tests/generic/427
+> +++ b/tests/generic/427
+> @@ -27,7 +27,7 @@ _require_aiodio aio-dio-eof-race
+>  _require_no_compress
+>  
+>  # limit the filesystem size, to save the time of filling filesystem
+> -_scratch_mkfs_sized $((256 * 1024 * 1024)) >>$seqres.full 2>&1
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >>$seqres.full 2>&1
+>  _scratch_mount
+>  
+>  # try to write more bytes than filesystem size to fill the filesystem,
+> diff --git a/tests/generic/449 b/tests/generic/449
+> index 2b77a6a4..aebb5620 100755
+> --- a/tests/generic/449
+> +++ b/tests/generic/449
+> @@ -24,7 +24,7 @@ _require_test
+>  _require_acls
+>  _require_attrs trusted
+>  
+> -_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full 2>&1
+>  _scratch_mount || _fail "mount failed"
+>  
+>  # This is a test of xattr behavior when we run out of disk space for xattrs,
+> diff --git a/tests/generic/511 b/tests/generic/511
+> index 058d8401..8b1209d3 100755
+> --- a/tests/generic/511
+> +++ b/tests/generic/511
+> @@ -19,7 +19,7 @@ _require_scratch
+>  _require_xfs_io_command "falloc" "-k"
+>  _require_xfs_io_command "fzero"
+>  
+> -_scratch_mkfs_sized $((1024 * 1024 * 256)) >>$seqres.full 2>&1
+> +_scratch_mkfs_sized $((1024 * 1024 * 512)) >>$seqres.full 2>&1
+>  _scratch_mount
+>  
+>  $XFS_IO_PROG -fc "pwrite 0 256m" -c fsync $SCRATCH_MNT/file >>$seqres.full 2>&1
+> diff --git a/tests/generic/520 b/tests/generic/520
+> index ad6764c7..2a96dce1 100755
+> --- a/tests/generic/520
+> +++ b/tests/generic/520
+> @@ -24,8 +24,8 @@ _cleanup()
+>  . ./common/filter
+>  . ./common/dmflakey
+>  
+> -# 256MB in byte
+> -fssize=$((2**20 * 256))
+> +# 512MB in byte
+> +fssize=$((2**20 * 512))
+>  
+>  # real QA test starts here
+>  _supported_fs generic
+> diff --git a/tests/generic/536 b/tests/generic/536
+> index 986ea1ee..aac05587 100755
+> --- a/tests/generic/536
+> +++ b/tests/generic/536
+> @@ -21,7 +21,7 @@ _require_scratch
+>  _require_scratch_shutdown
+>  
+>  # create a small fs and initialize free blocks with a unique pattern
+> -_scratch_mkfs_sized $((1024 * 1024 * 100)) >> $seqres.full 2>&1
+> +_scratch_mkfs_sized $((1024 * 1024 * 512)) >> $seqres.full 2>&1
+>  _scratch_mount
+>  $XFS_IO_PROG -f -c "pwrite -S 0xab 0 100m" -c fsync $SCRATCH_MNT/spc \
+>  	>> $seqres.full 2>&1
+> diff --git a/tests/generic/619 b/tests/generic/619
+> index 6e42d677..1e883394 100755
+> --- a/tests/generic/619
+> +++ b/tests/generic/619
+> @@ -26,7 +26,7 @@
+>  . ./common/preamble
+>  _begin_fstest auto rw enospc
+>  
+> -FS_SIZE=$((240*1024*1024)) # 240MB
+> +FS_SIZE=$((512*1024*1024)) # 512MB
+>  DEBUG=1 # set to 0 to disable debug statements in shell and c-prog
+>  FACT=0.7
+>  
+> diff --git a/tests/generic/626 b/tests/generic/626
+> index 7e577798..a0411f01 100755
+> --- a/tests/generic/626
+> +++ b/tests/generic/626
+> @@ -22,7 +22,7 @@ _supported_fs generic
+>  _require_scratch
+>  _require_renameat2 whiteout
+>  
+> -_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full 2>&1
+>  _scratch_mount
+>  
+>  # Create lots of files, to help to trigger the bug easily
+> diff --git a/tests/xfs/015 b/tests/xfs/015
+> index 2bb7b8d5..1f487cae 100755
+> --- a/tests/xfs/015
+> +++ b/tests/xfs/015
+> @@ -43,7 +43,7 @@ _scratch_mount
+>  _require_fs_space $SCRATCH_MNT 131072
+>  _scratch_unmount
+>  
+> -_scratch_mkfs_sized $((32 * 1024 * 1024)) > $tmp.mkfs.raw || _fail "mkfs failed"
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) > $tmp.mkfs.raw || _fail "mkfs failed"
+>  cat $tmp.mkfs.raw | _filter_mkfs >$seqres.full 2>$tmp.mkfs
+>  # get original data blocks number and agcount
+>  . $tmp.mkfs
+> diff --git a/tests/xfs/107 b/tests/xfs/107
+> index 1ea9c492..e1f9b537 100755
+> --- a/tests/xfs/107
+> +++ b/tests/xfs/107
+> @@ -23,9 +23,9 @@ _require_scratch
+>  _require_xfs_io_command allocsp		# detect presence of ALLOCSP ioctl
+>  _require_test_program allocstale
+>  
+> -# Create a 256MB filesystem to avoid running into mkfs problems with too-small
+> +# Create a 512MB filesystem to avoid running into mkfs problems with too-small
+>  # filesystems.
+> -size_mb=256
+> +size_mb=512
+>  
+>  # Write a known pattern to the disk so that we can detect stale disk blocks
+>  # being mapped into the file.  In the test author's experience, the bug will
+> diff --git a/tests/xfs/118 b/tests/xfs/118
+> index 03755b28..6fc3cdaa 100755
+> --- a/tests/xfs/118
+> +++ b/tests/xfs/118
+> @@ -27,8 +27,8 @@ _require_scratch
+>  _require_command "$XFS_FSR_PROG" "xfs_fsr"
+>  _require_xfs_io_command "falloc"
+>  
+> -# 50M
+> -_scratch_mkfs_sized $((50 * 1024 * 1024)) >> $seqres.full 2>&1
+> +# 512M
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full 2>&1
+>  _scratch_mount
+>  
+>  echo "Silence is golden"
+> diff --git a/tests/xfs/227 b/tests/xfs/227
+> index cd927dc4..5f5f519e 100755
+> --- a/tests/xfs/227
+> +++ b/tests/xfs/227
+> @@ -122,7 +122,7 @@ create_target_attr_last()
+>  }
+>  
+>  # use a small filesystem so we can control freespace easily
+> -_scratch_mkfs_sized $((50 * 1024 * 1024)) >> $seqres.full 2>&1
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full 2>&1
+>  _scratch_mount
+>  fragment_freespace
+>  
+> diff --git a/tests/xfs/233 b/tests/xfs/233
+> index 2b2b8666..573b7a17 100755
+> --- a/tests/xfs/233
+> +++ b/tests/xfs/233
+> @@ -18,7 +18,7 @@ _require_xfs_scratch_rmapbt
+>  _require_no_large_scratch_dev
+>  
+>  echo "Format and mount"
+> -_scratch_mkfs_sized $((2 * 4096 * 4096)) > $seqres.full 2>&1
+> +_scratch_mkfs_sized $((32 * 4096 * 4096)) > $seqres.full 2>&1
+>  _scratch_mount >> $seqres.full 2>&1
+>  
+>  testdir=$SCRATCH_MNT/test-$seq
+> -- 
+> 2.31.1
+> 
 
