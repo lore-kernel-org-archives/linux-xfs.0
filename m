@@ -2,114 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF46C32772
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 16:28:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD2D1C32774
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 16:53:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbiHVQ23 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Aug 2022 12:28:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46524 "EHLO
+        id S235816AbiHVQxB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Aug 2022 12:53:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237027AbiHVQ2V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 12:28:21 -0400
-Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4208F2BD9;
-        Mon, 22 Aug 2022 09:28:19 -0700 (PDT)
-Received: by mail-wr1-x431.google.com with SMTP id n4so13878228wrp.10;
-        Mon, 22 Aug 2022 09:28:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=6pDOFEVfy1K9q+BjZ7R38iS5s9eH+edv8BSk6OFu1xM=;
-        b=bKaQQ17Lfw5igPYj6dV9/QXA4Ds6wJYo+Gqf7YVzZh6f1N4pHbLGMCEILyJ6wKiRTb
-         NRe5aGzRb7t8ue88Leeds+/k5Mqd+iEptB7v32/y5sbrKz799UczXz+EzKRwnte16ogE
-         blWjELKSP0DU+dgCmLTN/e+5zqLjnDZ0971p2ttTHRgNGv1huLmBjmRJ3ro0UeyrhNZE
-         8GC0hlOt0w0LJltpSa1bqGek8u2dHRfhWcSeLUt2Uv+5jHkoHQEoWt3unwfmci1Whc8v
-         o8IQ39WEonSLnvAGHYGp17P/FNxVBba9x8e3+MTwh5UyV56LMezHpeyvdDqO84WCQuve
-         ba3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=6pDOFEVfy1K9q+BjZ7R38iS5s9eH+edv8BSk6OFu1xM=;
-        b=mfBbW57clRH8NsDu9A/k0sx50Ju2LYL8QrAPCAPTjZrn8wh7H1L6GPZPv2V3Kyc7bv
-         1lxv0NpK8AOBWJnH8B63KScu92u2sPKDOwwTEf70Wh/eV0ZetL73kv5s6uGAQd0RbziW
-         9OhmkHD5JMi7DK4DDTisD0Hco3fghdOEGMt8DmmPvmH77NQuFOfN63xwniBtqqlikJtk
-         1GBodhbtKeIPnToVU7GCEzphq7sWh2TOEFghsYB/TPWu52XQtDqTal84SJQrqptwllfy
-         0UGwIrSNxr49puPBDHgRQ3i6E4/1x7tcAS2m68I7+rHhxUceylAXLE5jXP1SaDMCGqCN
-         9rlA==
-X-Gm-Message-State: ACgBeo280yRClksoSSNnEQr6OJ6S41/1AGilHsM/Zr/juQiAnEuAI4LP
-        BBxGVdeCTZWj0oYNsy9RC7Q=
-X-Google-Smtp-Source: AA6agR520VIAwvFoMJou/rhDZvXvNam1uJMzbEH4KqdX8iMcJ+sZYwS78dIsUOB+SjLkoCOQDLb9Ag==
-X-Received: by 2002:adf:f2ca:0:b0:225:4800:d201 with SMTP id d10-20020adff2ca000000b002254800d201mr3833968wrp.187.1661185697691;
-        Mon, 22 Aug 2022 09:28:17 -0700 (PDT)
-Received: from amir-ThinkPad-T480.ctera.local (bzq-166-168-31-246.red.bezeqint.net. [31.168.166.246])
-        by smtp.gmail.com with ESMTPSA id z13-20020a5d44cd000000b00222ed7ea203sm11749229wrr.100.2022.08.22.09.28.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Aug 2022 09:28:17 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     "Darrick J . Wong" <djwong@kernel.org>
+        with ESMTP id S234803AbiHVQxA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 12:53:00 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 876231BEAA;
+        Mon, 22 Aug 2022 09:52:59 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4B4AAB81626;
+        Mon, 22 Aug 2022 16:52:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5DA4C433D6;
+        Mon, 22 Aug 2022 16:52:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661187177;
+        bh=786U608bcYJ6Oj/Fu93LmNDbz3PrKXgXOgm41DsUmxw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=VTB07C37fBPVgLT28gXsoz+HDKPaGP1Cqq6M2t+Vtnbi91DyoUaQ9DHmvHtzuQfJK
+         SxoaEr+4o2jdZnhvf+AIL8J0Wkf97cqPXgjIvy4vzefiqozCuleCH1bto4zpUXDzXk
+         Onyn3STEOIXNSiOYypej0XJSroA9a83TS56/ETG6nNH+jdFhgu3+oMkloLa+b4lxc9
+         TKOK6p9uaKtvdcsgrAgjSw73vFhUStVOUG/jCafo5F3xYd1hkuKmEXkwxRQDg998Qx
+         ZW/YDgLh9kcA0/mQveEEQNc8/APKSHt6acKPcFOB1VnTIAEG2xI/3tS50UX7rgb76s
+         0wY+6D3yKSAVA==
+Date:   Mon, 22 Aug 2022 09:52:56 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
 Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
         Chandan Babu R <chandan.babu@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 5.10 CANDIDATE 6/6] xfs: only bother with sync_filesystem during readonly remount
-Date:   Mon, 22 Aug 2022 19:28:02 +0300
-Message-Id: <20220822162802.1661512-7-amir73il@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220822162802.1661512-1-amir73il@gmail.com>
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 5.10 CANDIDATE 0/7] xfs stable candidate patches for
+ 5.10.y (from v5.17)
+Message-ID: <YwO0aIOQ0HrZ78Sx@magnolia>
 References: <20220822162802.1661512-1-amir73il@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220822162802.1661512-1-amir73il@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+On Mon, Aug 22, 2022 at 07:27:56PM +0300, Amir Goldstein wrote:
+> Hi Darrick,
+> 
+> This is my collection of backports from v5.17.
+> 
+> Patch 1 is a small fix picked from Leah's part 3 series for 5.15.y [1].
+> 
+> Patch 2 is a small fix picked from Leah's part 4 series [2].
+> I have some more fixes queued from part 4, but they are not from v5.17,
+> so will be posted in another series for v5.18/v5.19 fixes.
+> 
+> Patches 3-6 are debt from the joint 5.10.y/5.15.y series [3].
+> Per your request in the review of that series, I collected all
+> the sync_fs patches and verified that they fix test xfs/546.
+> 
+> These patches have been spinning on kdevops for several days with
+> no regressions observed.
+> 
+> Please ACK.
 
-commit b97cca3ba9098522e5a1c3388764ead42640c1a5 upstream.
+Looks good to me,
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
-In commit 02b9984d6408, we pushed a sync_filesystem() call from the VFS
-into xfs_fs_remount.  The only time that we ever need to push dirty file
-data or metadata to disk for a remount is if we're remounting the
-filesystem read only, so this really could be moved to xfs_remount_ro.
+--D
 
-Once we've moved the call site, actually check the return value from
-sync_filesystem.
-
-Fixes: 02b9984d6408 ("fs: push sync_filesystem() down to the file system's remount_fs()")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/xfs/xfs_super.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index ff686cb16c7b..434c87cc9fbf 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1720,6 +1720,11 @@ xfs_remount_ro(
- 	};
- 	int			error;
- 
-+	/* Flush all the dirty data to disk. */
-+	error = sync_filesystem(mp->m_super);
-+	if (error)
-+		return error;
-+
- 	/*
- 	 * Cancel background eofb scanning so it cannot race with the final
- 	 * log force+buftarg wait and deadlock the remount.
-@@ -1790,8 +1795,6 @@ xfs_fc_reconfigure(
- 	if (error)
- 		return error;
- 
--	sync_filesystem(mp->m_super);
--
- 	/* inode32 -> inode64 */
- 	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
- 	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
--- 
-2.25.1
-
+> 
+> Thanks,
+> Amir.
+> 
+> [1] https://lore.kernel.org/linux-xfs/20220721213610.2794134-1-leah.rumancik@gmail.com/
+> [2] https://lore.kernel.org/linux-xfs/20220819181431.4113819-1-leah.rumancik@gmail.com/
+> [3] https://lore.kernel.org/linux-xfs/CAOQ4uxjrLUjStjDGOV2-0SK6ur07KZ8hAzb6JP+Dsm8=0iEbSA@mail.gmail.com/
+> 
+> Christoph Hellwig (1):
+>   fs: remove __sync_filesystem
+> 
+> Dan Carpenter (1):
+>   xfs: prevent a WARN_ONCE() in xfs_ioc_attr_list()
+> 
+> Darrick J. Wong (4):
+>   xfs: reject crazy array sizes being fed to XFS_IOC_GETBMAP*
+>   vfs: make sync_filesystem return errors from ->sync_fs
+>   xfs: return errors in xfs_fs_sync_fs
+>   xfs: only bother with sync_filesystem during readonly remount
+> 
+>  fs/sync.c          | 48 ++++++++++++++++++++++++----------------------
+>  fs/xfs/xfs_ioctl.c |  4 ++--
+>  fs/xfs/xfs_ioctl.h |  5 +++--
+>  fs/xfs/xfs_super.c | 13 ++++++++++---
+>  4 files changed, 40 insertions(+), 30 deletions(-)
+> 
+> -- 
+> 2.25.1
+> 
