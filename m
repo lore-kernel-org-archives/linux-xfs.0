@@ -2,385 +2,137 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED111C28D13
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 15:04:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41E13C38142
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 15:41:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235441AbiHVPEG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Aug 2022 11:04:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52020 "EHLO
+        id S236682AbiHVPlF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Aug 2022 11:41:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235955AbiHVPDx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 11:03:53 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30B32B2C
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 08:03:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 025E1B81247
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 15:03:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B39F1C433D6;
-        Mon, 22 Aug 2022 15:03:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661180622;
-        bh=6Wo25ea5rWGzQs70XxtfT17OomGFkT4jSS5Qrlvlyz8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fKRF8RAiOxKzMJizCcYTw978zzhYxv7C8kcAYiGQxiKyLydyIKMSeJMMDyoiC7ORb
-         n9BUviwRoMcQUgM+aeUnb16kawBMZ7WPbvgjFbx3jrIQ+OYbh6bRb+pptdMER2L2yz
-         WW9BQo8GO7PdVNGFoBd9siN/U2AGgHPjBZH2iPysDF35tEmQbOhcJBaM3QPb5nYZjk
-         6R8HnZMZduMpAxuoF66RMaZ/s97hu8/vAr6Zwr+QlumT2gbdAVI5U+ehNHR2L9WCzx
-         79h1XANUviUtJXK6ogG+uo0n7CsRGWTRAhhSPKJrFbgkBMqCi0NPEEw1EsJ04HQTvE
-         ZKlQmsyK0j0qg==
-Date:   Mon, 22 Aug 2022 08:03:42 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/9] xfs: move and xfs_trans_committed_bulk
-Message-ID: <YwOazokP/MTcK4ay@magnolia>
-References: <20220809230353.3353059-1-david@fromorbit.com>
- <20220809230353.3353059-2-david@fromorbit.com>
+        with ESMTP id S235097AbiHVPlD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 11:41:03 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC3E71CB12;
+        Mon, 22 Aug 2022 08:41:01 -0700 (PDT)
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27MFLBL8020163;
+        Mon, 22 Aug 2022 15:40:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : to : cc : date : in-reply-to : references : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=lddkyQHtWAfy+8kCR5xXy2/UWZSf+wIC546gE9xT5jo=;
+ b=cwWnKnfoClt3sgXZBbYK/p6r/k7vxvI6KoHJ3ma9UMShwYUoHmWXfm+PymNvxd2eGcn4
+ yIG+zkRQjzSV8aQpHEjxzYjmh7/b02KSYVt8Hy1Fg2Dgf7IN3dFHnou25prl5CfRL/dU
+ QVVj9skO4eXYQXogoJOIXUj4fSNck7a0vAcgvSUgY6VKjQUG7NiWrqBDcJZtsWvG1giV
+ KfEl2/V4T9e2DQ7VXPDtnP7DskoZ/TCJMVNw43v1qaqsH4YMsUC3Kv/p6bNqNB+nrEUC
+ Os6S+fvzP7M0cr56i1mGyjxK+WDXHaUPQFiFNcudNvc07ueL23tjaaHq9I+LJNDxDFhS Sw== 
+Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3j4cc80gs1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 22 Aug 2022 15:40:48 +0000
+Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
+        by ppma05fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 27MFa3SU004850;
+        Mon, 22 Aug 2022 15:40:46 GMT
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+        by ppma05fra.de.ibm.com with ESMTP id 3j2q899w85-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 22 Aug 2022 15:40:46 +0000
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 27MFehtG32702762
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 22 Aug 2022 15:40:43 GMT
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7015BA405C;
+        Mon, 22 Aug 2022 15:40:43 +0000 (GMT)
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id F16AAA4054;
+        Mon, 22 Aug 2022 15:40:40 +0000 (GMT)
+Received: from li-f45666cc-3089-11b2-a85c-c57d1a57929f.ibm.com (unknown [9.163.20.129])
+        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Mon, 22 Aug 2022 15:40:40 +0000 (GMT)
+Message-ID: <ceb8f09a4cb2de67f40604d03ee0c475feb3130a.camel@linux.ibm.com>
+Subject: Re: [PATCH] iversion: update comments with info about atime updates
+From:   Mimi Zohar <zohar@linux.ibm.com>
+To:     Jeff Layton <jlayton@kernel.org>, linux-fsdevel@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-integrity@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, NeilBrown <neilb@suse.de>,
+        Trond Myklebust <trondmy@hammerspace.com>,
+        Dave Chinner <david@fromorbit.com>
+Date:   Mon, 22 Aug 2022 11:40:39 -0400
+In-Reply-To: <20220822133309.86005-1-jlayton@kernel.org>
+References: <20220822133309.86005-1-jlayton@kernel.org>
+Content-Type: text/plain; charset="ISO-8859-15"
+X-Mailer: Evolution 3.28.5 (3.28.5-18.el8) 
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: p0ILes2ft5G78Rkn64Y3bsWGXPf2Mefm
+X-Proofpoint-ORIG-GUID: p0ILes2ft5G78Rkn64Y3bsWGXPf2Mefm
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220809230353.3353059-2-david@fromorbit.com>
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-22_10,2022-08-22_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ mlxlogscore=999 clxscore=1011 mlxscore=0 lowpriorityscore=0 bulkscore=0
+ priorityscore=1501 adultscore=0 phishscore=0 spamscore=0 suspectscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2208220067
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 10, 2022 at 09:03:45AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, 2022-08-22 at 09:33 -0400, Jeff Layton wrote:
+> Add an explicit paragraph codifying that atime updates due to reads
+> should not be counted against the i_version counter. None of the
+> existing subsystems that use the i_version want those counted, and
+> there is an easy workaround for those that do.
 > 
-> Ever since the CIL and delayed logging was introduced,
-> xfs_trans_committed_bulk() has been a purely CIL checkpoint
-> completion function and not a transaction commit completion
-> function. Now that we are adding log specific updates to this
-> function, it really does not have anything to do with the
-> transaction subsystem - it is really log and log item level
-> functionality.
-> 
-> This should be part of the CIL code as it is the callback
-> that moves log items from the CIL checkpoint to the AIL. Move it
-> and rename it to xlog_cil_ail_insert().
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-/me has been wondering why these two functions weren't lumped into the
-rest of the cil code for quite sometime, so thx for clarifying. :)
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
+> Cc: NeilBrown <neilb@suse.de>
+> Cc: Trond Myklebust <trondmy@hammerspace.com>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Link: https://lore.kernel.org/linux-xfs/166086932784.5425.17134712694961326033@noble.neil.brown.name/#t
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 > ---
->  fs/xfs/xfs_log_cil.c    | 132 +++++++++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_trans.c      | 129 ---------------------------------------
->  fs/xfs/xfs_trans_priv.h |   3 -
->  3 files changed, 131 insertions(+), 133 deletions(-)
+>  include/linux/iversion.h | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index eccbfb99e894..475a18493c37 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -683,6 +683,136 @@ xlog_cil_insert_items(
->  	}
->  }
->  
-> +static inline void
-> +xlog_cil_ail_insert_batch(
-> +	struct xfs_ail		*ailp,
-> +	struct xfs_ail_cursor	*cur,
-> +	struct xfs_log_item	**log_items,
-> +	int			nr_items,
-> +	xfs_lsn_t		commit_lsn)
-> +{
-> +	int	i;
-> +
-> +	spin_lock(&ailp->ail_lock);
-> +	/* xfs_trans_ail_update_bulk drops ailp->ail_lock */
-> +	xfs_trans_ail_update_bulk(ailp, cur, log_items, nr_items, commit_lsn);
-> +
-> +	for (i = 0; i < nr_items; i++) {
-> +		struct xfs_log_item *lip = log_items[i];
-> +
-> +		if (lip->li_ops->iop_unpin)
-> +			lip->li_ops->iop_unpin(lip, 0);
-> +	}
-> +}
-> +
-> +/*
-> + * Take the checkpoint's log vector chain of items and insert the attached log
-> + * items into the the AIL. This uses bulk insertion techniques to minimise AIL
-> + * lock traffic.
-> + *
-> + * If we are called with the aborted flag set, it is because a log write during
-> + * a CIL checkpoint commit has failed. In this case, all the items in the
-> + * checkpoint have already gone through iop_committed and iop_committing, which
-> + * means that checkpoint commit abort handling is treated exactly the same as an
-> + * iclog write error even though we haven't started any IO yet. Hence in this
-> + * case all we need to do is iop_committed processing, followed by an
-> + * iop_unpin(aborted) call.
-> + *
-> + * The AIL cursor is used to optimise the insert process. If commit_lsn is not
-> + * at the end of the AIL, the insert cursor avoids the need to walk the AIL to
-> + * find the insertion point on every xfs_log_item_batch_insert() call. This
-> + * saves a lot of needless list walking and is a net win, even though it
-> + * slightly increases that amount of AIL lock traffic to set it up and tear it
-> + * down.
-> + */
-> +void
-> +xlog_cil_ail_insert(
-> +	struct xlog		*log,
-> +	struct list_head	*lv_chain,
-> +	xfs_lsn_t		commit_lsn,
-> +	bool			aborted)
-> +{
-> +#define LOG_ITEM_BATCH_SIZE	32
-> +	struct xfs_ail		*ailp = log->l_ailp;
-> +	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
-> +	struct xfs_log_vec	*lv;
-> +	struct xfs_ail_cursor	cur;
-> +	int			i = 0;
-> +
-> +	spin_lock(&ailp->ail_lock);
-> +	xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
-> +	spin_unlock(&ailp->ail_lock);
-> +
-> +	/* unpin all the log items */
-> +	list_for_each_entry(lv, lv_chain, lv_list) {
-> +		struct xfs_log_item	*lip = lv->lv_item;
-> +		xfs_lsn_t		item_lsn;
-> +
-> +		if (aborted)
-> +			set_bit(XFS_LI_ABORTED, &lip->li_flags);
-> +
-> +		if (lip->li_ops->flags & XFS_ITEM_RELEASE_WHEN_COMMITTED) {
-> +			lip->li_ops->iop_release(lip);
-> +			continue;
-> +		}
-> +
-> +		if (lip->li_ops->iop_committed)
-> +			item_lsn = lip->li_ops->iop_committed(lip, commit_lsn);
-> +		else
-> +			item_lsn = commit_lsn;
-> +
-> +		/* item_lsn of -1 means the item needs no further processing */
-> +		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
-> +			continue;
-> +
-> +		/*
-> +		 * if we are aborting the operation, no point in inserting the
-> +		 * object into the AIL as we are in a shutdown situation.
-> +		 */
-> +		if (aborted) {
-> +			ASSERT(xlog_is_shutdown(ailp->ail_log));
-> +			if (lip->li_ops->iop_unpin)
-> +				lip->li_ops->iop_unpin(lip, 1);
-> +			continue;
-> +		}
-> +
-> +		if (item_lsn != commit_lsn) {
-> +
-> +			/*
-> +			 * Not a bulk update option due to unusual item_lsn.
-> +			 * Push into AIL immediately, rechecking the lsn once
-> +			 * we have the ail lock. Then unpin the item. This does
-> +			 * not affect the AIL cursor the bulk insert path is
-> +			 * using.
-> +			 */
-> +			spin_lock(&ailp->ail_lock);
-> +			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
-> +				xfs_trans_ail_update(ailp, lip, item_lsn);
-> +			else
-> +				spin_unlock(&ailp->ail_lock);
-> +			if (lip->li_ops->iop_unpin)
-> +				lip->li_ops->iop_unpin(lip, 0);
-> +			continue;
-> +		}
-> +
-> +		/* Item is a candidate for bulk AIL insert.  */
-> +		log_items[i++] = lv->lv_item;
-> +		if (i >= LOG_ITEM_BATCH_SIZE) {
-> +			xlog_cil_ail_insert_batch(ailp, &cur, log_items,
-> +					LOG_ITEM_BATCH_SIZE, commit_lsn);
-> +			i = 0;
-> +		}
-> +	}
-> +
-> +	/* make sure we insert the remainder! */
-> +	if (i)
-> +		xlog_cil_ail_insert_batch(ailp, &cur, log_items, i, commit_lsn);
-> +
-> +	spin_lock(&ailp->ail_lock);
-> +	xfs_trans_ail_cursor_done(&cur);
-> +	spin_unlock(&ailp->ail_lock);
-> +}
-> +
->  static void
->  xlog_cil_free_logvec(
->  	struct list_head	*lv_chain)
-> @@ -792,7 +922,7 @@ xlog_cil_committed(
->  		spin_unlock(&ctx->cil->xc_push_lock);
->  	}
->  
-> -	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, &ctx->lv_chain,
-> +	xlog_cil_ail_insert(ctx->cil->xc_log, &ctx->lv_chain,
->  					ctx->start_lsn, abort);
->  
->  	xfs_extent_busy_sort(&ctx->busy_extents);
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 7bd16fbff534..58c4e875eb12 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -715,135 +715,6 @@ xfs_trans_free_items(
->  	}
->  }
->  
-> -static inline void
-> -xfs_log_item_batch_insert(
-> -	struct xfs_ail		*ailp,
-> -	struct xfs_ail_cursor	*cur,
-> -	struct xfs_log_item	**log_items,
-> -	int			nr_items,
-> -	xfs_lsn_t		commit_lsn)
-> -{
-> -	int	i;
-> -
-> -	spin_lock(&ailp->ail_lock);
-> -	/* xfs_trans_ail_update_bulk drops ailp->ail_lock */
-> -	xfs_trans_ail_update_bulk(ailp, cur, log_items, nr_items, commit_lsn);
-> -
-> -	for (i = 0; i < nr_items; i++) {
-> -		struct xfs_log_item *lip = log_items[i];
-> -
-> -		if (lip->li_ops->iop_unpin)
-> -			lip->li_ops->iop_unpin(lip, 0);
-> -	}
-> -}
-> -
-> -/*
-> - * Bulk operation version of xfs_trans_committed that takes a log vector of
-> - * items to insert into the AIL. This uses bulk AIL insertion techniques to
-> - * minimise lock traffic.
-> - *
-> - * If we are called with the aborted flag set, it is because a log write during
-> - * a CIL checkpoint commit has failed. In this case, all the items in the
-> - * checkpoint have already gone through iop_committed and iop_committing, which
-> - * means that checkpoint commit abort handling is treated exactly the same
-> - * as an iclog write error even though we haven't started any IO yet. Hence in
-> - * this case all we need to do is iop_committed processing, followed by an
-> - * iop_unpin(aborted) call.
-> - *
-> - * The AIL cursor is used to optimise the insert process. If commit_lsn is not
-> - * at the end of the AIL, the insert cursor avoids the need to walk
-> - * the AIL to find the insertion point on every xfs_log_item_batch_insert()
-> - * call. This saves a lot of needless list walking and is a net win, even
-> - * though it slightly increases that amount of AIL lock traffic to set it up
-> - * and tear it down.
-> - */
-> -void
-> -xfs_trans_committed_bulk(
-> -	struct xfs_ail		*ailp,
-> -	struct list_head	*lv_chain,
-> -	xfs_lsn_t		commit_lsn,
-> -	bool			aborted)
-> -{
-> -#define LOG_ITEM_BATCH_SIZE	32
-> -	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
-> -	struct xfs_log_vec	*lv;
-> -	struct xfs_ail_cursor	cur;
-> -	int			i = 0;
-> -
-> -	spin_lock(&ailp->ail_lock);
-> -	xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
-> -	spin_unlock(&ailp->ail_lock);
-> -
-> -	/* unpin all the log items */
-> -	list_for_each_entry(lv, lv_chain, lv_list) {
-> -		struct xfs_log_item	*lip = lv->lv_item;
-> -		xfs_lsn_t		item_lsn;
-> -
-> -		if (aborted)
-> -			set_bit(XFS_LI_ABORTED, &lip->li_flags);
-> -
-> -		if (lip->li_ops->flags & XFS_ITEM_RELEASE_WHEN_COMMITTED) {
-> -			lip->li_ops->iop_release(lip);
-> -			continue;
-> -		}
-> -
-> -		if (lip->li_ops->iop_committed)
-> -			item_lsn = lip->li_ops->iop_committed(lip, commit_lsn);
-> -		else
-> -			item_lsn = commit_lsn;
-> -
-> -		/* item_lsn of -1 means the item needs no further processing */
-> -		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
-> -			continue;
-> -
-> -		/*
-> -		 * if we are aborting the operation, no point in inserting the
-> -		 * object into the AIL as we are in a shutdown situation.
-> -		 */
-> -		if (aborted) {
-> -			ASSERT(xlog_is_shutdown(ailp->ail_log));
-> -			if (lip->li_ops->iop_unpin)
-> -				lip->li_ops->iop_unpin(lip, 1);
-> -			continue;
-> -		}
-> -
-> -		if (item_lsn != commit_lsn) {
-> -
-> -			/*
-> -			 * Not a bulk update option due to unusual item_lsn.
-> -			 * Push into AIL immediately, rechecking the lsn once
-> -			 * we have the ail lock. Then unpin the item. This does
-> -			 * not affect the AIL cursor the bulk insert path is
-> -			 * using.
-> -			 */
-> -			spin_lock(&ailp->ail_lock);
-> -			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
-> -				xfs_trans_ail_update(ailp, lip, item_lsn);
-> -			else
-> -				spin_unlock(&ailp->ail_lock);
-> -			if (lip->li_ops->iop_unpin)
-> -				lip->li_ops->iop_unpin(lip, 0);
-> -			continue;
-> -		}
-> -
-> -		/* Item is a candidate for bulk AIL insert.  */
-> -		log_items[i++] = lv->lv_item;
-> -		if (i >= LOG_ITEM_BATCH_SIZE) {
-> -			xfs_log_item_batch_insert(ailp, &cur, log_items,
-> -					LOG_ITEM_BATCH_SIZE, commit_lsn);
-> -			i = 0;
-> -		}
-> -	}
-> -
-> -	/* make sure we insert the remainder! */
-> -	if (i)
-> -		xfs_log_item_batch_insert(ailp, &cur, log_items, i, commit_lsn);
-> -
-> -	spin_lock(&ailp->ail_lock);
-> -	xfs_trans_ail_cursor_done(&cur);
-> -	spin_unlock(&ailp->ail_lock);
-> -}
-> -
->  /*
->   * Sort transaction items prior to running precommit operations. This will
->   * attempt to order the items such that they will always be locked in the same
-> diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-> index d5400150358e..52a45f0a5ef1 100644
-> --- a/fs/xfs/xfs_trans_priv.h
-> +++ b/fs/xfs/xfs_trans_priv.h
-> @@ -19,9 +19,6 @@ void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
->  void	xfs_trans_del_item(struct xfs_log_item *);
->  void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
->  
-> -void	xfs_trans_committed_bulk(struct xfs_ail *ailp,
-> -				struct list_head *lv_chain,
-> -				xfs_lsn_t commit_lsn, bool aborted);
->  /*
->   * AIL traversal cursor.
+> diff --git a/include/linux/iversion.h b/include/linux/iversion.h
+> index 3bfebde5a1a6..da6cc1cc520a 100644
+> --- a/include/linux/iversion.h
+> +++ b/include/linux/iversion.h
+> @@ -9,8 +9,8 @@
+>   * ---------------------------
+>   * The change attribute (i_version) is mandated by NFSv4 and is mostly for
+>   * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
+> - * appear different to observers if there was a change to the inode's data or
+> - * metadata since it was last queried.
+> + * appear different to observers if there was an explicit change to the inode's
+> + * data or metadata since it was last queried.
 >   *
-> -- 
-> 2.36.1
-> 
+>   * Observers see the i_version as a 64-bit number that never decreases. If it
+>   * remains the same since it was last checked, then nothing has changed in the
+> @@ -18,6 +18,12 @@
+>   * anything about the nature or magnitude of the changes from the value, only
+>   * that the inode has changed in some fashion.
+>   *
+> + * Note that atime updates due to reads or similar activity do _not_ represent
+> + * an explicit change to the inode. If the only change is to the atime and it
+
+Thanks, Jeff.  The ext4 patch increments i_version on file metadata
+changes.  Could the wording here be more explicit to reflect changes
+based on either inode data or metadata changes?
+
+thanks,
+
+Mimi
+
+> + * wasn't set via utimes() or a similar mechanism, then i_version should not be
+> + * incremented. If an observer cares about atime updates, it should plan to
+> + * fetch and store them in conjunction with the i_version.
+> + *
+>   * Not all filesystems properly implement the i_version counter. Subsystems that
+>   * want to use i_version field on an inode should first check whether the
+>   * filesystem sets the SB_I_VERSION flag (usually via the IS_I_VERSION macro).
+
+
