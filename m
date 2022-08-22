@@ -2,204 +2,210 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42184C32789
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 18:22:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7102CC28D13
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 19:02:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237141AbiHVSWa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Aug 2022 14:22:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45120 "EHLO
+        id S238053AbiHVTC1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Aug 2022 15:02:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236665AbiHVSW0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 14:22:26 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42E8C474F6;
-        Mon, 22 Aug 2022 11:22:25 -0700 (PDT)
+        with ESMTP id S238061AbiHVTCI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 15:02:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1019E4E607
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 12:00:05 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AD804B81722;
-        Mon, 22 Aug 2022 18:22:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 841D2C433C1;
-        Mon, 22 Aug 2022 18:22:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7FB12611A1
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 19:00:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7042C433C1;
+        Mon, 22 Aug 2022 19:00:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661192542;
-        bh=/tpyJXjO6Yic3E7IJcvmUnNa+4Nr/vUf3u9YFHixZ2Y=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=dnzwHnapIewwCmDXke2kVm+53LUPX25tcSri8h9z1XwTOrzjVRRBlVNWKf5mPkijV
-         FkQRmiQhlSxjra5I9JIN6Z5GmlEZeR7b6hcqegQmCFGxBTSG6oO/CdXCSRz6z26bxT
-         FEWwhyagbBr6MT7BnM0Uc8LxiQr1EMQBqQ1Cin84/2FMe7qrYb9dMwrKFRmsABGL9B
-         heeA1DvdFBzp3cfobc4L/MKNuxfR00iZPF4t+Krs/picmPCS7BCaHJCzPLiDYfUQQa
-         7etSOl/AFLEeTAr5vj80NIZ4D4gaqciXIC3bETNlQnVbeTPdCQRHc1bGWKb+38hw+c
-         Rh1R91RQ2ANcg==
-Message-ID: <4cc84440d954c022d0235bf407a60da66a6ccc39.camel@kernel.org>
-Subject: Re: [PATCH] iversion: update comments with info about atime updates
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Mimi Zohar <zohar@linux.ibm.com>, linux-fsdevel@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-integrity@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, NeilBrown <neilb@suse.de>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        Dave Chinner <david@fromorbit.com>
-Date:   Mon, 22 Aug 2022 14:22:20 -0400
-In-Reply-To: <18827b350fbf6719733fda814255ec20d6dcf00f.camel@linux.ibm.com>
-References: <20220822133309.86005-1-jlayton@kernel.org>
-         <ceb8f09a4cb2de67f40604d03ee0c475feb3130a.camel@linux.ibm.com>
-         <f17b9d627703bee2a7b531a051461671648a9dbd.camel@kernel.org>
-         <18827b350fbf6719733fda814255ec20d6dcf00f.camel@linux.ibm.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
+        s=k20201202; t=1661194803;
+        bh=Oi5PASLTxAQyyuwcoUrJjyouu0IfRLxkksc4Q9RmtZY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gfada7UwfB3cJaUlJ7KaFGpEOhezRtUobs4/08HgK8NWREzkqWs3r5HN3pIMffoJ8
+         xAQMuzt6CZ0juD+M0dh3Jhn+mLyJsaZZbCWLBtzW+M/PMaThTABKJTDAZIhw2lSZ0g
+         syxmXnUyqU9w98zEJAZCkg2TmLmzvt+FQuXQ8yeUYO6s/mIW3aJs5elDk1ijs6qqZl
+         a4/XoR7U10ziZME+u9SBid3Mj+f1P0PkgNCd/4rSaB6J7d1IZTqWhKljGikYM+Gg55
+         IPuBRb7GD3uCZFZz9m5pGqr1TueJPUN2yOmK9+ksZ4TJnnGs9v0yO8omaAJJ37cxEh
+         4yU0oHQfM4TZA==
+Date:   Mon, 22 Aug 2022 12:00:03 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/9] xfs: background AIL push targets physical space, not
+ grant space
+Message-ID: <YwPSMwmcyAZfIe3M@magnolia>
+References: <20220809230353.3353059-1-david@fromorbit.com>
+ <20220809230353.3353059-4-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220809230353.3353059-4-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2022-08-22 at 13:39 -0400, Mimi Zohar wrote:
-> On Mon, 2022-08-22 at 12:22 -0400, Jeff Layton wrote:
-> > On Mon, 2022-08-22 at 11:40 -0400, Mimi Zohar wrote:
-> > > On Mon, 2022-08-22 at 09:33 -0400, Jeff Layton wrote:
-> > > > Add an explicit paragraph codifying that atime updates due to reads
-> > > > should not be counted against the i_version counter. None of the
-> > > > existing subsystems that use the i_version want those counted, and
-> > > > there is an easy workaround for those that do.
-> > > >=20
-> > > > Cc: NeilBrown <neilb@suse.de>
-> > > > Cc: Trond Myklebust <trondmy@hammerspace.com>
-> > > > Cc: Dave Chinner <david@fromorbit.com>
-> > > > Link: https://lore.kernel.org/linux-xfs/166086932784.5425.171347126=
-94961326033@noble.neil.brown.name/#t
-> > > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > > > ---
-> > > >  include/linux/iversion.h | 10 ++++++++--
-> > > >  1 file changed, 8 insertions(+), 2 deletions(-)
-> > > >=20
-> > > > diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-> > > > index 3bfebde5a1a6..da6cc1cc520a 100644
-> > > > --- a/include/linux/iversion.h
-> > > > +++ b/include/linux/iversion.h
-> > > > @@ -9,8 +9,8 @@
-> > > >   * ---------------------------
-> > > >   * The change attribute (i_version) is mandated by NFSv4 and is mo=
-stly for
-> > > >   * knfsd, but is also used for other purposes (e.g. IMA). The i_ve=
-rsion must
-> > > > - * appear different to observers if there was a change to the inod=
-e's data or
-> > > > - * metadata since it was last queried.
-> > > > + * appear different to observers if there was an explicit change t=
-o the inode's
-> > > > + * data or metadata since it was last queried.
-> > > >   *
-> > > >   * Observers see the i_version as a 64-bit number that never decre=
-ases. If it
-> > > >   * remains the same since it was last checked, then nothing has ch=
-anged in the
-> > > > @@ -18,6 +18,12 @@
-> > > >   * anything about the nature or magnitude of the changes from the =
-value, only
-> > > >   * that the inode has changed in some fashion.
-> > > >   *
-> > > > + * Note that atime updates due to reads or similar activity do _no=
-t_ represent
-> > > > + * an explicit change to the inode. If the only change is to the a=
-time and it
-> > >=20
-> > > Thanks, Jeff.  The ext4 patch increments i_version on file metadata
-> > > changes.  Could the wording here be more explicit to reflect changes
-> > > based on either inode data or metadata changes?b
-> > >=20
-> > >=20
-> >=20
-> > Thanks Mimi,
-> >=20
-> > Care to suggest some wording?
-> >=20
-> > The main issue we have is that ext4 and xfs both increment i_version on
-> > atime updates due to reads. I have patches in flight to fix those, but
-> > going forward, we want to ensure that i_version gets incremented on all
-> > changes _except_ for atime updates.
-> >=20
-> > The best wording we have at the moment is what Trond suggested, which i=
-s
-> > to classify the changes to the inode as "explicit" (someone or somethin=
-g
-> > made a deliberate change to the inode) and "implicit" (the change to th=
-e
-> > inode was due to activity such as reads that don't actually change
-> > anything).
-> >=20
-> > Is there a better way to describe this?
->=20
-> "explicit change to the inode" probably implies both the inode file
-> data and metadata, but let's call it out by saying "an explicit change
-> to either the inode data or metadata".
->=20
-> >=20
-> > > > + * wasn't set via utimes() or a similar mechanism, then i_version =
-should not be
-> > > > + * incremented. If an observer cares about atime updates, it shoul=
-d plan to
-> > > > + * fetch and store them in conjunction with the i_version.
-> > > > + *
-> > > >   * Not all filesystems properly implement the i_version counter. S=
-ubsystems that
-> > > >   * want to use i_version field on an inode should first check whet=
-her the
-> > > >   * filesystem sets the SB_I_VERSION flag (usually via the IS_I_VER=
-SION macro).
-> > >=20
-> > >=20
-> >=20
->=20
->=20
+On Wed, Aug 10, 2022 at 09:03:47AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Currently the AIL attempts to keep 25% of the "log space" free,
+> where the current used space is tracked by the reserve grant head.
+> That is, it tracks both physical space used plus the amount reserved
+> by transactions in progress.
+> 
+> When we start tail pushing, we are trying to make space for new
+> reservations by writing back older metadata and the log is generally
+> physically full of dirty metadata, and reservations for modifications
+> in flight take up whatever space the AIL can physically free up.
+> 
+> Hence we don't really need to take into account the reservation
+> space that has been used - we just need to keep the log tail moving
+> as fast as we can to free up space for more reservations to be made.
+> We know exactly how much physical space the journal is consuming in
+> the AIL (i.e. max LSN - min LSN) so we can base push thresholds
+> directly on this state rather than have to look at grant head
+> reservations to determine how much to physically push out of the
+> log.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Thanks Mimi,
+Makes sense, I think.  Though I was wondering about the last patch --
+pushing the AIL until it's empty when a trans_alloc can't find grant
+reservation could take a while on a slow storage.  Does this mean that
+we're trading the incremental freeing-up of the existing code for
+potentially higher transaction allocation latency in the hopes that more
+threads can get reservation?  Or does the "keep the AIL going" bits make
+up for that?
 
-Here's what I have now. I'll plan to send a v2 patch once others have
-had a chance to comment as well.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
--- Jeff
+--D
 
-diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-index 3bfebde5a1a6..524abd372100 100644
---- a/include/linux/iversion.h
-+++ b/include/linux/iversion.h
-@@ -9,8 +9,8 @@
-  * ---------------------------
-  * The change attribute (i_version) is mandated by NFSv4 and is mostly for
-  * knfsd, but is also used for other purposes (e.g. IMA). The i_version mu=
-st
-- * appear different to observers if there was a change to the inode's data=
- or
-- * metadata since it was last queried.
-+ * appear different to observers if there was an explicit change to the in=
-ode's
-+ * data or metadata since it was last queried.
-  *
-  * Observers see the i_version as a 64-bit number that never decreases. If=
- it
-  * remains the same since it was last checked, then nothing has changed in=
- the
-@@ -18,6 +18,13 @@
-  * anything about the nature or magnitude of the changes from the value, o=
-nly
-  * that the inode has changed in some fashion.
-  *
-+ * Note that atime updates due to reads or similar activity do not represe=
-nt
-+ * an explicit change to the inode data or metadata. If the only change is=
- to
-+ * the atime and it wasn't set via utimes() or a similar mechanism, then
-+ * i_version should not be incremented. If an observer cares about atime
-+ * updates, it should plan to fetch and store them in conjunction with the
-+ * i_version.
-+ *
-  * Not all filesystems properly implement the i_version counter. Subsystem=
-s that
-  * want to use i_version field on an inode should first check whether the
-  * filesystem sets the SB_I_VERSION flag (usually via the IS_I_VERSION mac=
-ro).
-
-
---=20
-Jeff Layton <jlayton@kernel.org>
+> ---
+>  fs/xfs/xfs_log_priv.h  | 18 ++++++++++++
+>  fs/xfs/xfs_trans_ail.c | 67 +++++++++++++++++++-----------------------
+>  2 files changed, 49 insertions(+), 36 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 91a8c74f4626..9f8c601a302b 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -622,6 +622,24 @@ xlog_wait(
+>  
+>  int xlog_wait_on_iclog(struct xlog_in_core *iclog);
+>  
+> +/* Calculate the distance between two LSNs in bytes */
+> +static inline uint64_t
+> +xlog_lsn_sub(
+> +	struct xlog	*log,
+> +	xfs_lsn_t	high,
+> +	xfs_lsn_t	low)
+> +{
+> +	uint32_t	hi_cycle = CYCLE_LSN(high);
+> +	uint32_t	hi_block = BLOCK_LSN(high);
+> +	uint32_t	lo_cycle = CYCLE_LSN(low);
+> +	uint32_t	lo_block = BLOCK_LSN(low);
+> +
+> +	if (hi_cycle == lo_cycle)
+> +	       return BBTOB(hi_block - lo_block);
+> +	ASSERT((hi_cycle == lo_cycle + 1) || xlog_is_shutdown(log));
+> +	return (uint64_t)log->l_logsize - BBTOB(lo_block - hi_block);
+> +}
+> +
+>  /*
+>   * The LSN is valid so long as it is behind the current LSN. If it isn't, this
+>   * means that the next log record that includes this metadata could have a
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index 243d6b05e5a9..d3dcb4942d6a 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -398,52 +398,47 @@ xfsaild_push_item(
+>  /*
+>   * Compute the LSN that we'd need to push the log tail towards in order to have
+>   * at least 25% of the log space free.  If the log free space already meets this
+> - * threshold, this function returns NULLCOMMITLSN.
+> + * threshold, this function returns the lowest LSN in the AIL to slowly keep
+> + * writeback ticking over and the tail of the log moving forward.
+>   */
+>  xfs_lsn_t
+>  __xfs_ail_push_target(
+>  	struct xfs_ail		*ailp)
+>  {
+> -	struct xlog	*log = ailp->ail_log;
+> -	xfs_lsn_t	threshold_lsn = 0;
+> -	xfs_lsn_t	last_sync_lsn;
+> -	int		free_blocks;
+> -	int		free_bytes;
+> -	int		threshold_block;
+> -	int		threshold_cycle;
+> -	int		free_threshold;
+> -
+> -	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
+> -	free_blocks = BTOBBT(free_bytes);
+> +	struct xlog		*log = ailp->ail_log;
+> +	struct xfs_log_item	*lip;
+>  
+> -	/*
+> -	 * Set the threshold for the minimum number of free blocks in the
+> -	 * log to the maximum of what the caller needs, one quarter of the
+> -	 * log, and 256 blocks.
+> -	 */
+> -	free_threshold = log->l_logBBsize >> 2;
+> -	if (free_blocks >= free_threshold)
+> +	xfs_lsn_t	target_lsn = 0;
+> +	xfs_lsn_t	max_lsn;
+> +	xfs_lsn_t	min_lsn;
+> +	int32_t		free_bytes;
+> +	uint32_t	target_block;
+> +	uint32_t	target_cycle;
+> +
+> +	lockdep_assert_held(&ailp->ail_lock);
+> +
+> +	lip = xfs_ail_max(ailp);
+> +	if (!lip)
+> +		return NULLCOMMITLSN;
+> +	max_lsn = lip->li_lsn;
+> +	min_lsn = __xfs_ail_min_lsn(ailp);
+> +
+> +	free_bytes = log->l_logsize - xlog_lsn_sub(log, max_lsn, min_lsn);
+> +	if (free_bytes >= log->l_logsize >> 2)
+>  		return NULLCOMMITLSN;
+>  
+> -	xlog_crack_atomic_lsn(&log->l_tail_lsn, &threshold_cycle,
+> -						&threshold_block);
+> -	threshold_block += free_threshold;
+> -	if (threshold_block >= log->l_logBBsize) {
+> -		threshold_block -= log->l_logBBsize;
+> -		threshold_cycle += 1;
+> +	target_cycle = CYCLE_LSN(min_lsn);
+> +	target_block = BLOCK_LSN(min_lsn) + (log->l_logBBsize >> 2);
+> +	if (target_block >= log->l_logBBsize) {
+> +		target_block -= log->l_logBBsize;
+> +		target_cycle += 1;
+>  	}
+> -	threshold_lsn = xlog_assign_lsn(threshold_cycle,
+> -					threshold_block);
+> -	/*
+> -	 * Don't pass in an lsn greater than the lsn of the last
+> -	 * log record known to be on disk. Use a snapshot of the last sync lsn
+> -	 * so that it doesn't change between the compare and the set.
+> -	 */
+> -	last_sync_lsn = atomic64_read(&log->l_last_sync_lsn);
+> -	if (XFS_LSN_CMP(threshold_lsn, last_sync_lsn) > 0)
+> -		threshold_lsn = last_sync_lsn;
+> +	target_lsn = xlog_assign_lsn(target_cycle, target_block);
+>  
+> -	return threshold_lsn;
+> +	/* Cap the target to the highest LSN known to be in the AIL. */
+> +	if (XFS_LSN_CMP(target_lsn, max_lsn) > 0)
+> +		return max_lsn;
+> +	return target_lsn;
+>  }
+>  
+>  static long
+> -- 
+> 2.36.1
+> 
