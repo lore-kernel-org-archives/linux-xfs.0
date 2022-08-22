@@ -2,124 +2,61 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14891C3F6B0
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 13:40:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B60C28D13
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 14:46:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234900AbiHVNkR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Aug 2022 09:40:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53162 "EHLO
+        id S235511AbiHVOqT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Aug 2022 10:46:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234115AbiHVNkR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 09:40:17 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4674213F8E;
-        Mon, 22 Aug 2022 06:40:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 08024B81215;
-        Mon, 22 Aug 2022 13:40:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0989C433D6;
-        Mon, 22 Aug 2022 13:40:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661175613;
-        bh=8Qc9eRpmV/qtcPvoaYrP/gNt01F55WiPH7SQ9+4cdl8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=MUKVa86fDGQ8tghg6Dgm8Rhh2JnuGDeA053lp9t5u4KhQyArZBKJ5HBKk3kOBYEMN
-         nARKvqE6/y2Q5c6ytOfNa84CsKCIc5bOcFmNQD+kawrr7yDkImQoQv85sft0U6iQAL
-         zZcdsRutSf5MQTIgVpw+bMIPwaqNpADfth0CLAx7ME0GMoYBn8pbrxkYA8pXAz0CJz
-         azRHV43dgsCJ93Ku+k2s6XYLGvP8lKpvpzo7hq3SmSMZdKTK0KLOgc+iMbde/4TRha
-         jVbpPmyKbs7oZjLmnIoTU0F2/wqD2IjAbnKLeuALyOvVw9ZYR0swgLUdwXeHTybYob
-         86bd1WBvENDiA==
-From:   Jeff Layton <jlayton@kernel.org>
-To:     "Darrick J . Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-integrity@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>, NeilBrown <neilb@suse.de>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        David Wysochanski <dwysocha@redhat.com>
-Subject: [PATCH v2] xfs: don't bump the i_version on an atime update in xfs_vn_update_time
-Date:   Mon, 22 Aug 2022 09:40:11 -0400
-Message-Id: <20220822134011.86558-1-jlayton@kernel.org>
-X-Mailer: git-send-email 2.37.2
+        with ESMTP id S235647AbiHVOpl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 10:45:41 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97882248C2;
+        Mon, 22 Aug 2022 07:45:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=x9nBUo0+hZpdGfurRQeuyioQwpYpr7z6L1SJHhD4mc0=; b=srfxE/Q6nHF+9wd/VdS0IGeBqk
+        kf2royYp/fC6OyojYMvfqw8KVCd2y2ud1/MytJk1LfII+B1JXMgEsLbOtJAH2Qx7kdmcwytRDwhad
+        5DaqW4FqdAmCuqWK4x7aEb7eCfZn2Ki9VSP2o9lgDZ9M92V9cdJx5ySmGrnI5VjRZ/3eE7/Gx4Uq5
+        9BPikQCIB35OtKoIZvkJdpjcsQifNaRqMycBMQ5BDX4IfY+YW28krSeF/amGzTnMuKHBs2+o++7gI
+        pyBoej4IqhLuCmY/8HwCEkgp0G6MtY5GaTyCsz4Lh4jwWQWFocaZPJnLT+EMuLxxzewm1fNg8LYtq
+        4kRO/eSQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oQ8gD-00EMmb-0K; Mon, 22 Aug 2022 14:45:29 +0000
+Date:   Mon, 22 Aug 2022 15:45:28 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Siddh Raman Pant <code@siddh.me>
+Cc:     david@fromorbit.com, djwong@kernel.org, fgheet255t@gmail.com,
+        hch@infradead.org, linux-ext4@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, riteshh@linux.ibm.com,
+        syzbot+a8e049cd3abd342936b6@syzkaller.appspotmail.com,
+        syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] WARNING in iomap_iter
+Message-ID: <YwOWiDKhVxm7m0fa@casper.infradead.org>
+References: <182c028abf0.2dc6f7c973088.2963173753499991828@siddh.me>
+ <20220821114816.24193-1-code@siddh.me>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220821114816.24193-1-code@siddh.me>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs will update the i_version when updating only the atime value, which
-is not desirable for any of the current consumers of i_version. Doing so
-leads to unnecessary cache invalidations on NFS and extra measurement
-activity in IMA.
+On Sun, Aug 21, 2022 at 05:18:16PM +0530, Siddh Raman Pant wrote:
+> @@ -979,9 +979,15 @@ loop_set_status_from_info(struct loop_device *lo,
+>  
+>  	lo->lo_offset = info->lo_offset;
+>  	lo->lo_sizelimit = info->lo_sizelimit;
+> +	lo->lo_flags = info->lo_flags;
+> +
+> +	/* loff_t/int vars are assigned __u64/__u32 vars (respectively) */
+> +	if (lo->lo_offset < 0 || lo->lo_sizelimit < 0 || lo->lo_flags < 0)
+> +		return -EOVERFLOW;
 
-Add a new XFS_ILOG_NOIVER flag, and use that to indicate that the
-transaction should not update the i_version. Set that value in
-xfs_vn_update_time if we're only updating the atime.
-
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: NeilBrown <neilb@suse.de>
-Cc: Trond Myklebust <trondmy@hammerspace.com>
-Cc: David Wysochanski <dwysocha@redhat.com>
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
- fs/xfs/libxfs/xfs_log_format.h  |  2 +-
- fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
- fs/xfs/xfs_iops.c               | 11 +++++++++--
- 3 files changed, 11 insertions(+), 4 deletions(-)
-
-v2: don't set the NOIVERS flag if S_VERSION is set
-
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index b351b9dc6561..866a4c5cf70c 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -323,7 +323,7 @@ struct xfs_inode_log_format_32 {
- #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
- #define XFS_ILOG_DOWNER	0x200	/* change the data fork owner on replay */
- #define XFS_ILOG_AOWNER	0x400	/* change the attr fork owner on replay */
--
-+#define XFS_ILOG_NOIVER	0x800	/* don't bump i_version */
- 
- /*
-  * The timestamps are dirty, but not necessarily anything else in the inode
-diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index 8b5547073379..ffe6d296e7f9 100644
---- a/fs/xfs/libxfs/xfs_trans_inode.c
-+++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -126,7 +126,7 @@ xfs_trans_log_inode(
- 	 * unconditionally.
- 	 */
- 	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
--		if (IS_I_VERSION(inode) &&
-+		if (!(flags & XFS_ILOG_NOIVER) && IS_I_VERSION(inode) &&
- 		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
- 			iversion_flags = XFS_ILOG_CORE;
- 	}
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 45518b8c613c..94f14d96641b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1041,10 +1041,17 @@ xfs_vn_update_time(
- 		return error;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (flags & S_CTIME)
-+
-+	if (!(flags & S_VERSION))
-+		log_flags |= XFS_ILOG_NOIVER;
-+	if (flags & S_CTIME) {
- 		inode->i_ctime = *now;
--	if (flags & S_MTIME)
-+		log_flags &= ~XFS_ILOG_NOIVER;
-+	}
-+	if (flags & S_MTIME) {
- 		inode->i_mtime = *now;
-+		log_flags &= ~XFS_ILOG_NOIVER;
-+	}
- 	if (flags & S_ATIME)
- 		inode->i_atime = *now;
- 
--- 
-2.37.2
-
+Why would you check lo_flags?  That really, really should be an unsigned
+type.
