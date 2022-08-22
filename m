@@ -2,75 +2,66 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4028DC28D13
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 11:46:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29FDAC28D13
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 12:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234614AbiHVLqc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Aug 2022 07:46:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45954 "EHLO
+        id S230234AbiHVM4i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Aug 2022 08:56:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234434AbiHVLqc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 07:46:32 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FBFB30F5B;
-        Mon, 22 Aug 2022 04:46:30 -0700 (PDT)
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MB9Tw5dntzlVjr;
-        Mon, 22 Aug 2022 19:43:16 +0800 (CST)
-Received: from kwepemm600003.china.huawei.com (7.193.23.202) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 22 Aug 2022 19:46:09 +0800
-Received: from [127.0.0.1] (10.174.177.249) by kwepemm600003.china.huawei.com
- (7.193.23.202) with Microsoft SMTP Server (version=TLS1_2,
+        with ESMTP id S229565AbiHVM4h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 08:56:37 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0B13B7DC;
+        Mon, 22 Aug 2022 05:56:35 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4MBC2T1sTrz1N7Vq;
+        Mon, 22 Aug 2022 20:53:05 +0800 (CST)
+Received: from huawei.com (10.175.103.91) by dggpemm500022.china.huawei.com
+ (7.185.36.162) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 22 Aug
- 2022 19:46:08 +0800
-To:     "Darrick J. Wong" <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     linfeilong <linfeilong@huawei.com>,
-        wuguanghao <wuguanghao3@huawei.com>, <liuzhiqiang26@huawei.com>
-From:   Zhiqiang Liu <liuzhiqiang26@huawei.com>
-Subject: [PATCH] xfs: donot need to check return value of xlog_kvmalloc()
-Message-ID: <514e5e4b-e7c8-365f-8459-75974c067993@huawei.com>
-Date:   Mon, 22 Aug 2022 19:46:07 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+ 2022 20:56:32 +0800
+From:   Zeng Heng <zengheng4@huawei.com>
+To:     <djwong@kernel.org>
+CC:     <liwei391@huawei.com>, <yangyingliang@huawei.com>,
+        <zhangxiaoxu5@huawei.com>, <weiyongjun1@huawei.com>,
+        <zengheng4@huawei.com>, <linux-xfs@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH -next] xfs: remove the redundant word in comment
+Date:   Mon, 22 Aug 2022 21:04:33 +0800
+Message-ID: <20220822130433.3079523-1-zengheng4@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.177.249]
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
 X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemm600003.china.huawei.com (7.193.23.202)
+ dggpemm500022.china.huawei.com (7.185.36.162)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Just remove the redundant word "being" in comment.
 
-In xfs_attri_log_nameval_alloc(), xlog_kvmalloc() is called
-to alloc memory, which will always return
-successfully, so we donot need to check return value.
-
-Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Signed-off-by: Zeng Heng <zengheng4@huawei.com>
 ---
- fs/xfs/xfs_attr_item.c | 2 --
- 1 file changed, 2 deletions(-)
+ fs/xfs/xfs_inode_item.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 5077a7ad5646..667e151a2bca 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -86,8 +86,6 @@ xfs_attri_log_nameval_alloc(
- 	 */
- 	nv = xlog_kvmalloc(sizeof(struct xfs_attri_log_nameval) +
- 					name_len + value_len);
--	if (!nv)
--		return nv;
-
- 	nv->name.i_addr = nv + 1;
- 	nv->name.i_len = name_len;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 6e19ece916bf..ca2941ab6cbc 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -550,7 +550,7 @@ xfs_inode_item_push(
+ 
+ 	if (!bp || (ip->i_flags & XFS_ISTALE)) {
+ 		/*
+-		 * Inode item/buffer is being being aborted due to cluster
++		 * Inode item/buffer is being aborted due to cluster
+ 		 * buffer deletion. Trigger a log force to have that operation
+ 		 * completed and items removed from the AIL before the next push
+ 		 * attempt.
 -- 
-2.33.0
-
+2.25.1
 
