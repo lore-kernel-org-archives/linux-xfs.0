@@ -2,159 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 543A2C3F6B0
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Aug 2022 23:58:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1B5AC28D13
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 09:36:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231631AbiHUX56 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 21 Aug 2022 19:57:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49838 "EHLO
+        id S230467AbiHVJg6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Aug 2022 05:36:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231322AbiHUX55 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Aug 2022 19:57:57 -0400
+        with ESMTP id S230370AbiHVJg4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 05:36:56 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29D451AF11;
-        Sun, 21 Aug 2022 16:57:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A9E631212
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 02:36:55 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id C51655C251;
-        Sun, 21 Aug 2022 23:57:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1661126274; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+        by smtp-out2.suse.de (Postfix) with ESMTPS id F3FAD1FB5C;
+        Mon, 22 Aug 2022 09:36:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1661161014;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=kBDPrppUbUN1rd6LE5UVlJ4gujBjDQfoU3i4Be+8PBs=;
-        b=MHjvWOV/20tT8jStaPfFs0IXQqIeiARnzJb/JuYPexBS1pOL/u5sr7LToc2PokiSuw4+cT
-        5dSJwOUHLooIU99FmxiNN97tpw5fUd5L7ccVzJEw3wnGgRNcVcqiZ2TwN8+AU544ZjyEjz
-        QsRqJ+W8JaYFyHIPAV5uFZm0KovCJSs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1661126274;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+        bh=h+BxhhYnsr6hoefbZrh0xKNdC0aNnv2SordBDWoyEew=;
+        b=D1n9Lrq7prTdH8PSJWpd8oEdbICwcabU31lNKRgcwkZeK8L4jSG4KNGDRlB53Vc1S2oH8G
+        hEYAritDsadkUHYfFVW42AqwEHYDrGWGAAN3N7YZU8au35WnGVXJ8JkgPhQZ2QFWBnaBfJ
+        MGlPkq6dqmJ5ErRn7CeF3Ht2eCWKEcI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1661161014;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=kBDPrppUbUN1rd6LE5UVlJ4gujBjDQfoU3i4Be+8PBs=;
-        b=oPfuwuIlTTj/l/sF2LNlQfVflk95/esv2KLtqvNltm680oMstDVpMXuVUB9tHBdOBJmaOP
-        qPU4sZvAgqDzyEDw==
+        bh=h+BxhhYnsr6hoefbZrh0xKNdC0aNnv2SordBDWoyEew=;
+        b=p1cLOCKxL6w3CtilKfWbq3NJDgjhpXFYw84uWQ+qRvz+2JNXTQy+jujzkY/wA8rdRep4W9
+        d8U1kEMH9GZuFlAw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B31E8139C7;
-        Sun, 21 Aug 2022 23:57:51 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 629EA13523;
+        Mon, 22 Aug 2022 09:36:53 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id yfxUGn/GAmMnKwAAMHmgww
-        (envelope-from <neilb@suse.de>); Sun, 21 Aug 2022 23:57:51 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        id sBrtFTVOA2NBdgAAMHmgww
+        (envelope-from <pvorel@suse.cz>); Mon, 22 Aug 2022 09:36:53 +0000
+Date:   Mon, 22 Aug 2022 11:36:51 +0200
+From:   Petr Vorel <pvorel@suse.cz>
+To:     Li Wang <liwang@redhat.com>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Cyril Hrubis <chrubis@suse.cz>, LTP List <ltp@lists.linux.it>,
+        Martin Doucha <mdoucha@suse.cz>,
+        automated-testing@yoctoproject.org,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        automated-testing@lists.yoctoproject.org
+Subject: Re: [Automated-testing] [RFC PATCH 1/1] API: Allow to use xfs
+ filesystems < 300 MB
+Message-ID: <YwNOMy9m72J/uH+Q@pevik>
+Reply-To: Petr Vorel <pvorel@suse.cz>
+References: <20220817204015.31420-1-pvorel@suse.cz>
+ <Yv4MBF79PnJKJbwm@yuki>
+ <Yv4eiT5L+M7dMkQ5@pevik>
+ <Yv4i0gWiHTkfWB5m@yuki>
+ <CAMuHMdUMBjCTwPu7wxrnagXnbyVxxmXN+vHmML0Lr=SyrTw0nQ@mail.gmail.com>
+ <Yv/kVXSK0xJGb3RO@pevik>
+ <CAEemH2ehh1+WPtwjzere-JEHeBUpg27w4nZs6_QG71ZTAkUzpA@mail.gmail.com>
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Jeff Layton" <jlayton@kernel.org>
-Cc:     "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org,
-        "Dave Chinner" <david@fromorbit.com>,
-        "Trond Myklebust" <trondmy@hammerspace.com>,
-        "David Wysochanski" <dwysocha@redhat.com>
-Subject: Re: [PATCH] xfs: don't bump the i_version on an atime update in
- xfs_vn_update_time
-In-reply-to: <20220819113450.11885-1-jlayton@kernel.org>
-References: <20220819113450.11885-1-jlayton@kernel.org>
-Date:   Mon, 22 Aug 2022 09:57:48 +1000
-Message-id: <166112626820.23264.11718948914253988812@noble.neil.brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAEemH2ehh1+WPtwjzere-JEHeBUpg27w4nZs6_QG71ZTAkUzpA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 19 Aug 2022, Jeff Layton wrote:
-> xfs will update the i_version when updating only the atime value, which
-> is not desirable for any of the current consumers of i_version. Doing so
-> leads to unnecessary cache invalidations on NFS and extra measurement
-> activity in IMA.
->=20
-> Add a new XFS_ILOG_NOIVER flag, and use that to indicate that the
-> transaction should not update the i_version. Set that value in
-> xfs_vn_update_time if we're only updating the atime.
->=20
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: NeilBrown <neilb@suse.de>
-> Cc: Trond Myklebust <trondmy@hammerspace.com>
-> Cc: David Wysochanski <dwysocha@redhat.com>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_log_format.h  |  2 +-
->  fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
->  fs/xfs/xfs_iops.c               | 10 +++++++---
->  3 files changed, 9 insertions(+), 5 deletions(-)
->=20
-> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> index b351b9dc6561..866a4c5cf70c 100644
-> --- a/fs/xfs/libxfs/xfs_log_format.h
-> +++ b/fs/xfs/libxfs/xfs_log_format.h
-> @@ -323,7 +323,7 @@ struct xfs_inode_log_format_32 {
->  #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
->  #define XFS_ILOG_DOWNER	0x200	/* change the data fork owner on replay */
->  #define XFS_ILOG_AOWNER	0x400	/* change the attr fork owner on replay */
-> -
-> +#define XFS_ILOG_NOIVER	0x800	/* don't bump i_version */
-> =20
->  /*
->   * The timestamps are dirty, but not necessarily anything else in the inode
-> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inod=
-e.c
-> index 8b5547073379..ffe6d296e7f9 100644
-> --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> @@ -126,7 +126,7 @@ xfs_trans_log_inode(
->  	 * unconditionally.
->  	 */
->  	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
-> -		if (IS_I_VERSION(inode) &&
-> +		if (!(flags & XFS_ILOG_NOIVER) && IS_I_VERSION(inode) &&
->  		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
->  			iversion_flags =3D XFS_ILOG_CORE;
->  	}
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 45518b8c613c..54db85a43dfb 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1021,7 +1021,7 @@ xfs_vn_update_time(
->  {
->  	struct xfs_inode	*ip =3D XFS_I(inode);
->  	struct xfs_mount	*mp =3D ip->i_mount;
-> -	int			log_flags =3D XFS_ILOG_TIMESTAMP;
-> +	int			log_flags =3D XFS_ILOG_TIMESTAMP|XFS_ILOG_NOIVER;
->  	struct xfs_trans	*tp;
->  	int			error;
-> =20
-> @@ -1041,10 +1041,14 @@ xfs_vn_update_time(
->  		return error;
-> =20
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -	if (flags & S_CTIME)
-> +	if (flags & S_CTIME) {
->  		inode->i_ctime =3D *now;
-> -	if (flags & S_MTIME)
-> +		log_flags &=3D ~XFS_ILOG_NOIVER;
-> +	}
-> +	if (flags & S_MTIME) {
->  		inode->i_mtime =3D *now;
-> +		log_flags &=3D ~XFS_ILOG_NOIVER;
-> +	}
->  	if (flags & S_ATIME)
->  		inode->i_atime =3D *now;
+Hi Li, all,
 
-I think you should also clear XFS_ILOG_NOIVER is S_VERSION is set, but
-otherwise this looks sane to me.
+> Hi Petr, All,
 
-Thanks,
-NeilBrown
+> On Sat, Aug 20, 2022 at 3:28 AM Petr Vorel <pvorel@suse.cz> wrote:
 
-> =20
-> --=20
-> 2.37.2
->=20
->=20
+> > Hi all,
+
+> > > Hi Cyril,
+
+> > > On Thu, Aug 18, 2022 at 1:28 PM Cyril Hrubis <chrubis@suse.cz> wrote:
+> > > > > > I'm starting to wonder if we should start tracking minimal FS size
+> > per
+> > > > > > filesystem since btrfs and xfs will likely to continue to grow and
+> > with
+> > > > > > that we will end up disabling the whole fs related testing on
+> > embedded
+> > > > > > boards with a little disk space. If we tracked that per filesystem
+> > we
+> > > > > > would be able to skip a subset of filesystems when there is not
+> > enough
+> > > > > > space. The downside is obviously that we would have to add a bit
+> > more
+> > > > > > complexity to the test library.
+
+> > > > > Maybe I could for start rewrite v2 (I've sent it without Cc kernel
+> > devs now it's
+> > > > > mainly LTP internal thing) as it just to have 300 MB for XFS and 256
+> > MB for the
+> > > > > rest. That would require to specify filesystem when acquiring device
+> > (NULL would
+> > > > > be for the default filesystem), that's would be worth if embedded
+> > folks counter
+> > > > > each MB. It'd be nice to hear from them.
+
+> > > > The 256MB limit was set previously due to btrfs, I bet that we can
+> > > > create smaller images for ext filesytems for example.
+
+> > Thanks for input, Geert!
+
+> > > Yeah, we used to have ext2 root file systems that fit on 1440 KiB
+> > floppies.
+> > These nice times when everything simple hadn't been solved yet ... :).
+> > > IIRC, ext3 does have a minimum size of 32 MiB or so.
+> > Interesting, I was able to create smaller.
+
+> > I did some testing minimal size (verified on chdir01 test):
+> > XFS: 300 MB, btrfs: 109 MB, ntfs: 2 MB, ext3: 2 MB, ext[24]: 1 MB, vfat: 1
+> > MB, exfat: 1 MB.
+
+> > I guess using XFS: 300 MB, btrfs: 109 MB and 16 MB for the rest could be
+> > enough.
+
+
+> I think so, tracking minimal FS size per FS is a practical idea.
+> But one thing we have to be aware of is that there may be different
+> minimal sizes for each FS version.
+> (so we'd better choose the maximum of minimal sizes).
+
+> 16MB for general FS should be fine, I will help to test that if someone
+> works out the patch.
+
+So should we combine both: minimal FS size and those XFS variables which would
+allow to use lower size for XFS? I wonder which which size would be relevant,
+it might be safer to use 64 MB:
+
+https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/tree/mkfs/xfs_mkfs.c
+/*
+ * Realistically, the log should never be smaller than 64MB.  Studies by the
+ * kernel maintainer in early 2022 have shown a dramatic reduction in long tail
+ * latency of the xlog grant head waitqueue when running a heavy metadata
+ * update workload when the log size is at least 64MB.
+ */
+
+Because there is really not a big difference between 256MB and 300MB.
+
+Kind regards,
+Petr
+
+> > But that would require to run all tests to see how many tests actually use
+> > bigger data.
+
+
+> Absolutely YES!
