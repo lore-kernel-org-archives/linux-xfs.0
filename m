@@ -2,107 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E169C38145
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 16:47:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A26AC32772
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 16:47:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245388AbiHWQrF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Aug 2022 12:47:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38822 "EHLO
+        id S245378AbiHWQr3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Aug 2022 12:47:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343901AbiHWQqW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 12:46:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1899786CF;
-        Tue, 23 Aug 2022 07:27:12 -0700 (PDT)
+        with ESMTP id S1344056AbiHWQqi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 12:46:38 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94FE213DCC;
+        Tue, 23 Aug 2022 07:26:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 80C3E615AB;
-        Tue, 23 Aug 2022 14:27:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8AB3C433D6;
-        Tue, 23 Aug 2022 14:27:11 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 36E8AB81E30;
+        Tue, 23 Aug 2022 14:26:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C57CFC433C1;
+        Tue, 23 Aug 2022 14:26:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661264831;
-        bh=aGV+Fmg/SuRFVLlUg2Us/FFj2AqB7Uc5ikRU/xAOnCU=;
+        s=k20201202; t=1661264796;
+        bh=/XRdScOVs0rz6Z1PqdGicykzKyHwkRLXRdw1F9grXUM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Dd30lzFcOIEhCPvEPTxVad9kLL+SWbC0fsOxz+BF0MJNOH8LEBCs7c6sr8cmXriO7
-         L6bMLhjd7mwlS89Q31GGdzrmw8DaurMKXLhd0gxXexaLXdanKRIlKOBdkFoVZpuCIJ
-         BvnSouvgF7m2UR+RYIX5fIvi7SACuZIuZBAJW61lB+DTpV7Y7gRorBCedgGU8vY+7N
-         P94MFdbBmCvUESV4HSFrMl9xN1WYtl8e0TFEMQGMUQzORzIfQ7IduQFxcyzi/K6zgK
-         wa6wNCTRCZmC1oKS/qFcVc2Y0MKKacZRLQm5P78jWG7PYluS4RzOcTvDtVvR8Bt5WB
-         VyGCWVbbQtTTw==
-Date:   Tue, 23 Aug 2022 07:27:11 -0700
+        b=co7q30XrHvJLqNW+RIc2a9P4mQ0G19iE7019+Bxcoiro1qynBSICXiOGGuGsnCusr
+         nOc5UG6ABXoGYcQsQR+HnEg4XktIV38yLIrA86Fa1ec07kONEf08VGIKZyvpmnWiYv
+         sAtJvh4lze4Zs9sfELafJBLavN+VJaWtCMh0IWJJmVDmgvllSa0q0MdVRz94sE1WIo
+         IlgED3wVV85xDQeH504kXcK3VpwN0qVxYRKS4xHUpRkBd5m9NYy+MOY6T4FNHl521s
+         tXbjyxk61N8Axxv0OY5h06+vX0UaBL7YjNeb/IbWS6XpXiWbK8KW9GbkXclkiEs/hb
+         ZwlrD39bQOwHw==
+Date:   Tue, 23 Aug 2022 07:26:36 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Zeng Heng <zengheng4@huawei.com>
 Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -next] xfs: remove "%Lu" which doesn't meet C standard
-Message-ID: <YwTjv0bpf3Ed0JjS@magnolia>
-References: <20220823015517.4160583-1-zengheng4@huawei.com>
+Subject: Re: [PATCH -next] xfs: remove redundant else for clean code
+Message-ID: <YwTjnM/vvzTKLQWk@magnolia>
+References: <20220823014745.4156948-1-zengheng4@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220823015517.4160583-1-zengheng4@huawei.com>
+In-Reply-To: <20220823014745.4156948-1-zengheng4@huawei.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 23, 2022 at 09:55:17AM +0800, Zeng Heng wrote:
-> The "%Lu" specifier, which represents long long unsigned,
-> doesn't meet C language standard, and even more,
-> it makes people easily mistake with "%lu", which represent
-> long unsigned. So replace "%Lu" with "llu".
+On Tue, Aug 23, 2022 at 09:47:45AM +0800, Zeng Heng wrote:
+> "else" is not generally useful after a return, so remove it for clean code.
+> 
+> There is no logical changes.
 > 
 > Signed-off-by: Zeng Heng <zengheng4@huawei.com>
+> ---
+>  fs/xfs/xfs_log.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 386b0307aed8..f6e7e4fd72ae 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -226,12 +226,12 @@ xlog_ticket_reservation(
+>  	if (head == &log->l_write_head) {
+>  		ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
+>  		return tic->t_unit_res;
+> -	} else {
+> -		if (tic->t_flags & XLOG_TIC_PERM_RESERV)
+> -			return tic->t_unit_res * tic->t_cnt;
+> -		else
+> -			return tic->t_unit_res;
+>  	}
+> +
+> +	if (tic->t_flags & XLOG_TIC_PERM_RESERV)
+> +		return tic->t_unit_res * tic->t_cnt;
+> +
+> +	return tic->t_unit_res;
 
-Yesss finally fixing this
+I think this looks correct
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/xfs/xfs_inode.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 28493c8e9bb2..b3eeeae3afe1 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3119,7 +3119,7 @@ xfs_iflush(
->  	if (XFS_TEST_ERROR(dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC),
->  			       mp, XFS_ERRTAG_IFLUSH_1)) {
->  		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
-> -			"%s: Bad inode %Lu magic number 0x%x, ptr "PTR_FMT,
-> +			"%s: Bad inode %llu magic number 0x%x, ptr "PTR_FMT,
->  			__func__, ip->i_ino, be16_to_cpu(dip->di_magic), dip);
->  		goto flush_out;
->  	}
-> @@ -3129,7 +3129,7 @@ xfs_iflush(
->  		    ip->i_df.if_format != XFS_DINODE_FMT_BTREE,
->  		    mp, XFS_ERRTAG_IFLUSH_3)) {
->  			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
-> -				"%s: Bad regular inode %Lu, ptr "PTR_FMT,
-> +				"%s: Bad regular inode %llu, ptr "PTR_FMT,
->  				__func__, ip->i_ino, ip);
->  			goto flush_out;
->  		}
-> @@ -3140,7 +3140,7 @@ xfs_iflush(
->  		    ip->i_df.if_format != XFS_DINODE_FMT_LOCAL,
->  		    mp, XFS_ERRTAG_IFLUSH_4)) {
->  			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
-> -				"%s: Bad directory inode %Lu, ptr "PTR_FMT,
-> +				"%s: Bad directory inode %llu, ptr "PTR_FMT,
->  				__func__, ip->i_ino, ip);
->  			goto flush_out;
->  		}
-> @@ -3158,7 +3158,7 @@ xfs_iflush(
->  	if (XFS_TEST_ERROR(ip->i_forkoff > mp->m_sb.sb_inodesize,
->  				mp, XFS_ERRTAG_IFLUSH_6)) {
->  		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
-> -			"%s: bad inode %Lu, forkoff 0x%x, ptr "PTR_FMT,
-> +			"%s: bad inode %llu, forkoff 0x%x, ptr "PTR_FMT,
->  			__func__, ip->i_ino, ip->i_forkoff, ip);
->  		goto flush_out;
->  	}
+>  }
+>  
+>  STATIC bool
 > -- 
 > 2.25.1
 > 
