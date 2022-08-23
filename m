@@ -2,141 +2,137 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B9C8C3F6B0
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 17:58:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4B6BC32789
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 22:26:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233140AbiHWR6W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Aug 2022 13:58:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48928 "EHLO
+        id S233830AbiHWW0F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Aug 2022 18:26:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233018AbiHWR6G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 13:58:06 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B127C88B7;
-        Tue, 23 Aug 2022 09:03:48 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S233435AbiHWWZr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 18:25:47 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAC20870B0;
+        Tue, 23 Aug 2022 15:25:42 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A69FEB81E4A;
-        Tue, 23 Aug 2022 16:03:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68E3AC433C1;
-        Tue, 23 Aug 2022 16:03:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661270626;
-        bh=DcQguS3xcqvdUwJBYUKZFjMYJ1eAQt2jFuBShofNZFM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lym0j6r1LtkcJ42JLxWeB7eOzui/CeL8GpRtf2Bf6zpWMwq3sl1gNI+bpnNtQ3RF5
-         heF/j9XzObSiiTYJprQpOWl/D30OIekk+ZiCvxb6Nc5SXUqhspkfkCrgQ6oU/07DNb
-         u/3nK2TFUZnn+esL4oNgY4lIYkmVtLPDsyqOcquw416NlqcyK/VtNkKkP+Hi531nGO
-         DAxj4R9Ve3kAsx0swBwdRIOZPAu10Vr/CLPfRrf6/QzbZoUwAb59mRv2WkA57SVe+i
-         vpRnMnwciUk6UHFRVrByeXatrwp1EWU4dyoPGw93se1xEQ3yM9VweGiaVas87S1uO/
-         Tfp530/wFr3Sw==
-Date:   Tue, 23 Aug 2022 09:03:45 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Lalith Rajendran <lalithkraj@google.com>
-Cc:     tytso@mit.edu, dilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        linux-kernel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] ext4: Make ext4_lazyinit_thread freezable.
-Message-ID: <YwT6YelUyY+fjkT4@magnolia>
-References: <20220818214049.1519544-1-lalithkraj@google.com>
- <Yv7UYfFBmRTKXNc7@magnolia>
- <CANscXK018_PSLPSeTyne7D+KWHa74kyHmdJ8Bxfxyf=5YMPSfw@mail.gmail.com>
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 907001F8A4;
+        Tue, 23 Aug 2022 22:25:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1661293540; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=FE2Al3t7IgXV7i658F8wCx+Pqa+fMKLd8YrmqYyjo2c=;
+        b=Q8gYMSsjemD43l+fHVukhYF+p5VRwHuwy5zy3Z1Y1vPTh5o6FIc+a/PSpQguOzy6uydL3h
+        BBARFegh4V6Xpilsra7Mbe7ZJ28h0POtsHebNM1hpK1qKdeXl5Aq5vuoZEI49hixlX9usF
+        45/ruW2liXm17FeQdAvoqBLEwUwjr8M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1661293540;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=FE2Al3t7IgXV7i658F8wCx+Pqa+fMKLd8YrmqYyjo2c=;
+        b=95Q12KkjJZdTEM7YMhnQyCV8dNijN9rMkjz2xVhuBNxLQruqJU6pchIWCDC9TliBDFTLzt
+        ZqqcH6RHJETiDBDA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7EBAF13A89;
+        Tue, 23 Aug 2022 22:25:37 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id TMt4DuFTBWMmKAAAMHmgww
+        (envelope-from <neilb@suse.de>); Tue, 23 Aug 2022 22:25:37 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CANscXK018_PSLPSeTyne7D+KWHa74kyHmdJ8Bxfxyf=5YMPSfw@mail.gmail.com>
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Jeff Layton" <jlayton@kernel.org>
+Cc:     "Dave Chinner" <david@fromorbit.com>,
+        "Mimi Zohar" <zohar@linux.ibm.com>, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-integrity@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org,
+        "Trond Myklebust" <trondmy@hammerspace.com>
+Subject: Re: [PATCH] iversion: update comments with info about atime updates
+In-reply-to: <df469d936b2e1c1a8c9c947896fa8a160f33b0e8.camel@kernel.org>
+References: <20220822133309.86005-1-jlayton@kernel.org>,
+ <ceb8f09a4cb2de67f40604d03ee0c475feb3130a.camel@linux.ibm.com>,
+ <f17b9d627703bee2a7b531a051461671648a9dbd.camel@kernel.org>,
+ <18827b350fbf6719733fda814255ec20d6dcf00f.camel@linux.ibm.com>,
+ <4cc84440d954c022d0235bf407a60da66a6ccc39.camel@kernel.org>,
+ <20220822233231.GJ3600936@dread.disaster.area>,
+ <6cbcb33d33613f50dd5e485ecbf6ce7e305f3d6f.camel@kernel.org>,
+ <166125468756.23264.2859374883806269821@noble.neil.brown.name>,
+ <df469d936b2e1c1a8c9c947896fa8a160f33b0e8.camel@kernel.org>
+Date:   Wed, 24 Aug 2022 08:24:47 +1000
+Message-id: <166129348704.23264.10381335282721356873@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 23, 2022 at 08:37:43AM -0700, Lalith Rajendran wrote:
-> Thank you for the comment.
-> Can you provide more details on how
-> https://lore.kernel.org/linux-fsdevel/20210417001026.23858-1-mcgrof@kernel.org/
-> is
-> related to your comment to freeze all filesystems in order?
-
-This all got started a long time ago[0] when I noticed that suspend often
-fails on my laptop because the kthread freezer will shut down some of
-XFS' low level background kernel threads before higher level background
-threads have been put to sleep.  In this case, suspend kills the buffer
-IO completion thread before the XFS log worker, which means the log
-worker stalls trying to write the log contents back to disk:
-
-[0] https://lore.kernel.org/linux-xfs/20170203010401.GR9134@birch.djwong.org/
-
-So I then proposed a patch[1] to mark the buffer completion workqueue as
-non-freezeable, which was rejected because while that will bandaid the
-suspend problem, it'll create bigger problems with hibernation because
-the log and buffer workers can keep running while hibernate tries to
-write the state of those threads out to disk:
-
-[1] https://lore.kernel.org/linux-xfs/20170327204611.GA4864@birch.djwong.org/
-
-That came with a suggestion that the power management code should freeze
-the filesystems before trying to put kthreads to sleep.  User programs
-will go to sleep trying to get write access, and all fs background
-threads will already be idle.
-
-Luis Chamberlain offered to pick up that work[2] back in 2017 to figure
-out how to freeze filesystems prior to suspend.  His first attempt
-simply walked the supers list in reverse order, and drew quite a few
-comments.  The second version[3] improved on that.
-
-[2] https://lore.kernel.org/all/20171003185313.1017-1-mcgrof@kernel.org/T/#u
-[3] https://lore.kernel.org/all/20171129232356.28296-1-mcgrof@kernel.org/T/#u
-
-Four years went by (I don't blame Luis; I've not had time to get back to
-this either) and his most recent posting[4] I think tried to restart the
-discussion.
-
-[4] https://lore.kernel.org/linux-fsdevel/20210417001026.23858-1-mcgrof@kernel.org/
-
-So that's where things stand now.  I've idly wondered if a better
-approach would be to hook filesystems into the device model so that
-filesystems could watch for suspend notifications propagating down the
-device tree and turn that into a fsfreeze, but as I mentioned, I've had
-no time to figure out how that would really work since I'm not that
-familiar with how power management works in the kernel.  I don't have a
-clue where you'd attach a network filesystem.
-
---D
-
-> Thanks,
-> Lalith
+On Tue, 23 Aug 2022, Jeff Layton wrote:
+> On Tue, 2022-08-23 at 21:38 +1000, NeilBrown wrote:
+> > On Tue, 23 Aug 2022, Jeff Layton wrote:
+> > > So, we can refer to that and simply say:
+> > > 
+> > > "If the function updates the mtime or ctime on the inode, then the
+> > > i_version should be incremented. If only the atime is being updated,
+> > > then the i_version should not be incremented. The exception to this rule
+> > > is explicit atime updates via utimes() or similar mechanism, which
+> > > should result in the i_version being incremented."
+> > 
+> > Is that exception needed?  utimes() updates ctime.
+> > 
+> > https://man7.org/linux/man-pages/man2/utimes.2.html
+> > 
+> > doesn't say that, but
+> > 
+> > https://pubs.opengroup.org/onlinepubs/007904875/functions/utimes.html
+> > 
+> > does, as does the code.
+> > 
 > 
-> On Thu, Aug 18, 2022 at 5:08 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> 
-> > On Thu, Aug 18, 2022 at 09:40:49PM +0000, Lalith Rajendran wrote:
-> > > ext4_lazyinit_thread is not set freezable. Hence when the thread calls
-> > > try_to_freeze it doesn't freeze during suspend and continues to send
-> > > requests to the storage during suspend, resulting in suspend failures.
-> >
-> > Maybe we should just make suspend freeze all the filesystems in order?
-> >
-> >
-> > https://lore.kernel.org/linux-fsdevel/20210417001026.23858-1-mcgrof@kernel.org/
-> >
-> > --D
-> >
-> > > Signed-off-by: Lalith Rajendran <lalithkraj@google.com>
-> > > ---
-> > >  fs/ext4/super.c | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > >
-> > > diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-> > > index 9a66abcca1a85..d77e0904a1327 100644
-> > > --- a/fs/ext4/super.c
-> > > +++ b/fs/ext4/super.c
-> > > @@ -3767,6 +3767,7 @@ static int ext4_lazyinit_thread(void *arg)
-> > >       unsigned long next_wakeup, cur;
-> > >
-> > >       BUG_ON(NULL == eli);
-> > > +     set_freezable();
-> > >
-> > >  cont_thread:
-> > >       while (true) {
-> > > --
-> > > 2.31.0
-> > >
-> >
+> Oh, good point! I think we can leave that out. Even better!
+
+Further, implicit mtime updates (file_update_time()) also update ctime.
+So all you need is
+   If the function updates the ctime, then i_version should be
+   incremented.
+
+and I have to ask - why not just use the ctime?  Why have another number
+that is parallel?
+
+Timestamps are updated at HZ (ktime_get_course) which is at most every
+millisecond.
+xfs stores nanosecond resolution, so about 20 bits are currently wasted.
+We could put a counter like i_version in there that only increments
+after it is viewed, then we can get all the precision we need but with
+exactly ctime semantics.
+
+The 64 change-id could comprise
+ 35 bits of seconds (nearly a millenium)
+ 16 bits of sub-seconds (just in case a higher precision time was wanted
+                         one day)
+ 13 bits of counter. - 8192 changes per tick
+
+The value exposed in i_ctime would hide the counter and just show the
+timestamp portion of what the filesystem stores.  This would ensure we
+never get changes on different files that happen in one order leaving
+timestamps with the reversed order (the timestamps could be the same,
+but that is expected).
+
+This scheme could be made to handle a sustained update rate of 1
+increment every 8 nanoseconds (if the counter were allowed to overflow
+into unused bits of the sub-second field).  This is one ever 24 CPU
+cycles.  Incrementing a counter and making it visible to all CPUs can
+probably be done in 24 cycles.  Accessing it and setting the "seen" flag
+as well might just fit with faster memory.  Getting any other useful
+work done while maintaining that rate on a single file seems unlikely.
+
+NeilBrown
