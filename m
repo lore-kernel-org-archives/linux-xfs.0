@@ -2,123 +2,198 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B6EC28D13
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 02:18:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E77A0C32789
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 03:22:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229583AbiHWCSv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Aug 2022 22:18:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44074 "EHLO
+        id S240060AbiHWDWT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Aug 2022 23:22:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231491AbiHWCSv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 22:18:51 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4C1874E86F
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 19:18:50 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-4-169.pa.nsw.optusnet.com.au [49.195.4.169])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6FB5D10E8B10;
-        Tue, 23 Aug 2022 12:18:49 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oQJV9-00GOPz-CZ; Tue, 23 Aug 2022 12:18:47 +1000
-Date:   Tue, 23 Aug 2022 12:18:47 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/9] xfs: ensure log tail is always up to date
-Message-ID: <20220823021847.GO3600936@dread.disaster.area>
-References: <20220809230353.3353059-1-david@fromorbit.com>
- <20220809230353.3353059-5-david@fromorbit.com>
- <YwQgT1i0x2i+wGF8@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YwQgT1i0x2i+wGF8@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=63043909
-        a=FOdsZBbW/tHyAhIVFJ0pRA==:117 a=FOdsZBbW/tHyAhIVFJ0pRA==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=EeSMy61KkEL7v2Yay4UA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        with ESMTP id S240041AbiHWDWT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 23:22:19 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2887854C8C
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 20:22:16 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id t11-20020a17090a510b00b001fac77e9d1fso13200058pjh.5
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 20:22:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dilger-ca.20210112.gappssmtp.com; s=20210112;
+        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
+         :from:from:to:cc;
+        bh=t5TO7xdQGMXaC5TRTQFcqhFSnLRjgf1D8C0Y6A6YDxE=;
+        b=WmzvvmXH5e7wP/UE3SOCEoTxUnalykJ3N3TkckdsZzxqPN6OxAvOMEhsFJIg72/pec
+         dV+HIGE92uLWsaavfgjKM+C+A5n4EiV88XdKFsoxydVAFe5nmQZ3wXK7pbUiZnpPSViH
+         9wcRuFbEeMk6CuUC5TU2Fsvnjo++S7A79RBLzB6Aur+2C1mdRPNWR6V9hkWGd33kuaZ6
+         xcCba0irYI0fzWODf7B+oUYh3cw5uD53qZpQUEbxAvY5/4dbEDBWYTz1DS09LYro3uwm
+         G9+kpUhWzIhcfbKMcEQU1XlfvHYa+Duf15Pq6vyDet2odUshI95kkV9niiVxvoEj4EEl
+         OWIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
+         :from:x-gm-message-state:from:to:cc;
+        bh=t5TO7xdQGMXaC5TRTQFcqhFSnLRjgf1D8C0Y6A6YDxE=;
+        b=Ol2HKV/9WcWgPeDR8xLTmSDrkzY2riX76zBcTu8kkeOBVzKLPsl8matkZ50878ZM4G
+         pz9NmtVQEGl1KO+yiJ/WtfB2vWM5tCPA6sPSzGaWRECsJjs3gilHwKImAuOsnKQJMyum
+         8evTgoUKEEqOAYON73X1lkjhSfhmQTUN5zW3qF+P40H6fq0ANpEmUjvf+SOdbNeRT+QG
+         u7MpUoeMPxcPk/9kIrD7CPtuyMBbA3HmEitzXEHn+AyZ3cGnFZPePv9Z/WvaqQJT1EnN
+         XBABP3YMrRRUojW7gCNWI6vMX2B4NX6XqZd8/fZeUtmefmL4VyrXyLxfzpss0oFRiqcI
+         DH/g==
+X-Gm-Message-State: ACgBeo0K/+HB3+fHrtNZiWnd76MAbglrZx68eQY1OnzcZ4sqMKN3sHKs
+        6mqB47/TWQhFbD3bcqaOH8jX5w==
+X-Google-Smtp-Source: AA6agR6bYAoLnjuq/NI/816MPUccS4/TdIQzRNkgRVQfsY/JSoRbcW6B7pyoAJACabZ0K9rJNxD0pA==
+X-Received: by 2002:a17:903:18b:b0:16e:f09c:919b with SMTP id z11-20020a170903018b00b0016ef09c919bmr23613380plg.135.1661224935485;
+        Mon, 22 Aug 2022 20:22:15 -0700 (PDT)
+Received: from cabot.adilger.int (S01061cabc081bf83.cg.shawcable.net. [70.77.221.9])
+        by smtp.gmail.com with ESMTPSA id b9-20020a1709027e0900b00172d52b7c03sm5372011plm.125.2022.08.22.20.22.14
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 22 Aug 2022 20:22:14 -0700 (PDT)
+From:   Andreas Dilger <adilger@dilger.ca>
+Message-Id: <21923F1E-1C54-44FB-AF7C-4CD8B4B35433@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_8E3621BA-8A02-4654-8DC0-856F43CB7C0C";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH v4 6/9] f2fs: don't allow DIO reads but not DIO writes
+Date:   Mon, 22 Aug 2022 21:22:11 -0600
+In-Reply-To: <YwAYPFxW7VV4M9D1@sol.localdomain>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        xfs <linux-xfs@vger.kernel.org>, linux-api@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org,
+        linux-block <linux-block@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Keith Busch <kbusch@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+References: <20220722071228.146690-1-ebiggers@kernel.org>
+ <20220722071228.146690-7-ebiggers@kernel.org> <YtyoF89iOg8gs7hj@google.com>
+ <Yt7dCcG0ns85QqJe@sol.localdomain> <YuXyKh8Zvr56rR4R@google.com>
+ <YvrrEcw4E+rpDLwM@sol.localdomain>
+ <20220816090312.GU3600936@dread.disaster.area>
+ <D1CDACE3-EC7E-43E4-8F49-EEA2B6E71A41@dilger.ca>
+ <YwAYPFxW7VV4M9D1@sol.localdomain>
+X-Mailer: Apple Mail (2.3273)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 22, 2022 at 05:33:19PM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 10, 2022 at 09:03:48AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Whenever we write an iclog, we call xlog_assign_tail_lsn() to update
-> > the current tail before we write it into the iclog header. This
-> > means we have to take the AIL lock on every iclog write just to
-> > check if the tail of the log has moved.
-> > 
-> > This doesn't avoid races with log tail updates - the log tail could
-> > move immediately after we assign the tail to the iclog header and
-> > hence by the time the iclog reaches stable storage the tail LSN has
-> > moved forward in memory. Hence the log tail LSN in the iclog header
-> > is really just a point in time snapshot of the current state of the
-> > AIL.
-> > 
-> > With this in mind, if we simply update the in memory log->l_tail_lsn
-> > every time it changes in the AIL, there is no need to update the in
-> > memory value when we are writing it into an iclog - it will already
-> > be up-to-date in memory and checking the AIL again will not change
-> > this.
-> 
-> This is too subtle for me to understand -- does the codebase
-> already update l_tail_lsn?  Does this patch make it do that?
 
-tl;dr: if the AIL is empty, log->l_tail_lsn is not updated on the
-first insert of a new item into the AILi and hence is stale.
-xlog_state_release_iclog() currently works around that by calling
-xlog_assign_tail_lsn() to get the tail lsn from the AIL. This change
-makes sure log->l_tail_lsn is always up to date.
+--Apple-Mail=_8E3621BA-8A02-4654-8DC0-856F43CB7C0C
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-In more detail:
+On Aug 19, 2022, at 5:09 PM, Eric Biggers <ebiggers@kernel.org> wrote:
+>=20
+> On Tue, Aug 16, 2022 at 10:42:29AM -0600, Andreas Dilger wrote:
+>>=20
+>> IMHO, this whole discussion is putting the cart before the horse.
+>> Changing existing (and useful) IO behavior to accommodate an API that
+>> nobody has ever used, and is unlikely to even be widely used, doesn't
+>> make sense to me.  Most applications won't check or care about the =
+new
+>> DIO size fields, since they've lived this long without statx() =
+returning
+>> this info, and will just pick a "large enough" size (4KB, 1MB, =
+whatever)
+>> that gives them the performance they need.  They *WILL* care if the =
+app
+>> is suddenly unable to read data from a file in ways that have worked =
+for
+>> a long time.
+>>=20
+>> Even if apps are modified to check these new DIO size fields, and =
+then
+>> try to DIO write to a file in f2fs that doesn't allow it, then f2fs =
+will
+>> return an error, which is what it would have done without the statx()
+>> changes, so no harm done AFAICS.
+>>=20
+>> Even with a more-complex DIO status return that handles a "direction"
+>> field (which IMHO is needlessly complex), there is always the =
+potential
+>> for a TOCTOU race where a file changes between checking and access, =
+so
+>> the userspace code would need to handle this.
+>=20
+> I'm having trouble making sense of your argument here; you seem to be =
+saying
+> that STATX_DIOALIGN isn't useful, so it doesn't matter if we design it
+> correctly?  That line of reasoning is concerning, as it's certainly =
+intended
+> to be useful, and if it's not useful there's no point in adding it.
+>=20
+> Are there any specific concerns that you have, besides TOCTOU races =
+and the
+> lack of support for read-only DIO?
 
-The tail update occurs in xfs_ail_update_finish(), but only if we
-pass in a non-zero tail_lsn. xfs_trans_ail_update_bulk() will only
-set a non-zero tail_lsn if it moves the log item at the tail of the
-log (i.e. we relog the tail item and move it forwards in the AIL).
+My main concern is disabling useful functionality that exists today to =
+appease
+the new DIO size API.  Whether STATX_DIOALIGN will become widely used by
+applications or not is hard to say at this point.
 
-Hence if we pass a non-zero tail_lsn to xfs_ail_update_finish(), it
-indicates it needs to check it against the LSN of the item currently
-at the tail of the AIL. If the tail LSN has not changed, we do
-nothing, if it has changed, then we call
-xlog_assign_tail_lsn_locked() to update the log tail.
+If there were separate STATX_DIOREAD and STATX_DIOWRITE flags in the =
+returned
+data, and the alignment is provided as it is today, that would be enough =
+IMHO
+to address the original use case without significant complexity.
 
-The problem with the current code is that if the AIL is empty when
-we insert the first item, we've actually moved the log tail but we
-do not update the log tail (i.e. tail_lsn is zero in this case). If
-we then release an iclog for writing at this point in time, the tail
-lsn it writes into the iclog header would be wrong - it does not
-reflect the log tail as defined by the AIL and the checkpoint that
-has just been committed.
+> I don't think that TOCTOU races are a real concern here.  Generally =
+DIO
+> constraints would only change if the application doing DIO =
+intentionally does
+> something to the file, or if there are changes that involve the =
+filesystem
+> being taken offline, e.g. the filesystem being mounted with =
+significantly
+> different options or being moved to a different block device.  And, =
+well,
+> everything else in stat()/statx() is subject to TOCTOU as well, but is =
+still
+> used...
 
-Hence xlog_state_release_iclog() called xlog_assign_tail_lsn() to
-ensure that it checked that the tail LSN it applies to the iclog
-reflects the current state of the AIL. i.e. it checks if there is an
-item in the AIL, and if so, grabs the tail_lsn from the AIL. This
-works around the fact the AIL doesn't update the log tail on the
-first insert.
+I was thinking of background filesystem operations like compression, LVM
+migration to new storage with a different sector size, etc. that may =
+change
+the DIO characteristics of the file even while it is open.  Not that I =
+think
+this will happen frequently, but it is possible, and applications =
+shouldn't
+explode if the DIO parameters change and they get an error.
 
-Hence what this patch does is have xfs_trans_ail_update_bulk set
-the tail_lsn passed to xfs_ail_update_finish() to NULLCOMMITLSN when
-it does the first insert into the AIL. NULLCOMMITLSN is a
-non-zero value that won't match with the LSN of items we just
-inserted into the AIL, and hence xfs_ail_update_finish() will go an
-update the log tail in this case.
+Cheers, Andreas
 
-Hence we close the hole when the log->l_tail_lsn is incorrect after
-the first insert into the AIL, and hence we no longer need to update
-the log->l_tail_lsn when reading it into the iclog header -
-log->l_tail_lsn is always up to date, and so we can now just read it
-in xlog_state_release_iclog() rather than having to grab the AIL
-lock and checking the AIL to update log->l_tail_lsn with the correct
-tail value from iclog IO submission....
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+
+
+--Apple-Mail=_8E3621BA-8A02-4654-8DC0-856F43CB7C0C
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAmMER+MACgkQcqXauRfM
+H+D5gBAAjf5qhCdnFlyRgIkdcPs1zELiCu4+Jw0PH5rkavcu3tVPwEBTCbHxXVMN
+6ZsFra7ARjxxj58mUSEtN9NDHwpiQreGlgqDoP+uYYb3EwiFZstja2fl0mTAytE5
+lMb8zBxkfCh8xexTnnVk7ULsOrTO+/xYTUbmRIqQvK6PTicVuO6H8FtzYFHjilnn
+/RZ8yRCndDsFmRpZCApwy26cPcP3UyrtUqz8rKk1iy5oBIC1ALvx8baYjY/Wi7Fs
+vMq1ExdKsjPPVQT5dmj1ISPRXpxTGezKhqvxNvbR/IMwKW2PzEMZzClRQnYKuWe5
+GBu6zW0mWe5l+Bg1amzve/WteBX/5i6rrkknoD58zBL8SL4LDh+uQGaM2q7EzegR
+lEc1/IpOtR1WrfmP+tOqEIfdwa4jMikNm4NKHYoQA2OQcxEzmYgtBHeeVbGOFCEq
+PRKVZbxxF2bVFWuBVbsSbAar9o6G6Ucm11LBDHkKEpn8RTqN/UeXBrcslIk9NczK
+2qtnn0jbek1OgtMEpGaajobjeqBqQUIC6/cUkU0S7Ga1LsV7D8eH5TV9EF3rWwLe
+0MJ2IWgAmbMDp7gYNVZYrsJJMrqcjphRO33u2JvwFisboKU1DD4qtfnG1vvF8u1n
+RHpWdRBE/l0VC15dWox4zVKfVgH52rkeKE8ZVkTj83NDSIidz94=
+=WmyJ
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_8E3621BA-8A02-4654-8DC0-856F43CB7C0C--
