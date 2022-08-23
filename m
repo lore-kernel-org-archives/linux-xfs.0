@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBBFFC32789
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCD7BC3F6B0
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 16:02:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244435AbiHWQCN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Aug 2022 12:02:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46808 "EHLO
+        id S244515AbiHWQCO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Aug 2022 12:02:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244277AbiHWQAm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 12:00:42 -0400
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1508923DF17;
-        Tue, 23 Aug 2022 05:12:10 -0700 (PDT)
-Received: by mail-wm1-x32e.google.com with SMTP id k6-20020a05600c1c8600b003a54ecc62f6so7616864wms.5;
-        Tue, 23 Aug 2022 05:12:10 -0700 (PDT)
+        with ESMTP id S244296AbiHWQAn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 12:00:43 -0400
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0B8CE0FFD;
+        Tue, 23 Aug 2022 05:12:17 -0700 (PDT)
+Received: by mail-wr1-x436.google.com with SMTP id r16so16750935wrm.6;
+        Tue, 23 Aug 2022 05:12:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=Z3jS9cDd3S+epLGnpe5pOc0ThMjaHgjznjX+2D3u/4c=;
-        b=n9EtjlSKfSV+gn+H9SwZMXN73r1eEYgb1NqxTc2GgJzuTbX7WFo4Fjg2dZGqKhsnHo
-         9QBVaX6AmpLDSmzsSzGey9d3h/v8aiAfJNR7uPOZ8JO3M0oq2oPB5wRzJduwInm1O9OJ
-         EJbLFZE2aVTOeuDLkCWiBcf7gnnwmR9vzrjcR04clLazJVnAvAlXnJuC5rsAeaD4V2nj
-         W2jqpSoAQ4nBFS2/OFYcev1Wd6hnnqBivQsVKMZouGSgW7qVjIZspKW3JTT+X6Ka0oiL
-         4qoRcxKtxaX/PjgVuP7eRcCmw8iw+veYQWAUuSF6H3Nvkc6y5yQzVuUAgdey2fj8kzNc
-         PM6Q==
+        bh=haOSYz+6QrKmwaD4BrFpRocUIGNsBlWlnI4UVn7k7XM=;
+        b=IWFHNFKxPBd87IynPPP9ZcVhwZYPfgzUy2oQ2ZS4mCd9zGqhQTknGrnv4q2v/o6mA7
+         EX5D+DMlkxxMg6H7XefzSCavmo9wsu3D0xGm+oxWWqFSLTrktbqoobVdNWeg1tPSi1tQ
+         OeX21yT7IvyQgvB5QD1nEU/LvPQxihMRsqDfpa/BYLgz4kqj6oQ5qUvdG9rKkjlnqXV7
+         nI/PWFIjVb16sYv2u7323DoqB87K7gK1nRWQZ0KihK03cg+elzbqy7OycoBYw3smniFj
+         mXxbuYJpjl1rhvcQMPASEPoSnFgcY1uTZfGSBAnb7dloP5kyBVg71I8eSyYO3c1YYcPH
+         zvdg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=Z3jS9cDd3S+epLGnpe5pOc0ThMjaHgjznjX+2D3u/4c=;
-        b=KdWtNQKP3ThcMtHLANue2UzJAOMScqkWKJ3+Vd52V9bDVdpNUZqHQo5F8s0+8juSc3
-         IvPunziJEqI4q+m8llBvhdqUTwLPCRMsHdu0pGuqOWwhHpKUEyWkSEam9LuZHNoMopzZ
-         mBp8vYuJCCd0VB0q4yIqaqu2RMJN0yIlO502Kgvt+eu+tG8+pBVCDrwXIWGaCnYERswb
-         zElymteCKl0gdGxafEhcUrby4y6J07FFy7dgsVYXwaFTbbfrkuGq3bxLeyHzMrA42c1D
-         RNcq9j+HFNxChG2Z/oBV3aw8jRnCAnEK3jpaL24rjPY9hmU+XJrkni9QJgaWThYLfErM
-         EAkg==
-X-Gm-Message-State: ACgBeo01FTpn3f9ycIn31/xQagXZb2CkzzYjgj2XLNemJARI31edAX9e
-        BUxsEssJ+EoyuOPDSfIKDCc=
-X-Google-Smtp-Source: AA6agR7P7GVOlr1FjIyCJFQdTjBjUUb9Re01MeZl/ZF5E65SoCa+GuB6SAY+xdXUwY2mxguF+ZNv1w==
-X-Received: by 2002:a05:600c:1f11:b0:3a5:3df9:4859 with SMTP id bd17-20020a05600c1f1100b003a53df94859mr1942884wmb.175.1661256705272;
-        Tue, 23 Aug 2022 05:11:45 -0700 (PDT)
+        bh=haOSYz+6QrKmwaD4BrFpRocUIGNsBlWlnI4UVn7k7XM=;
+        b=TPq74ALHpPhqilFQQvfdet57xyQ1xaDOEIwx72S0rlpciusF3iFv1BuhvWVPRY94fR
+         IF0e3G1hPVX6ivbgjwAWsOm7AUX/jlVhMYvIgRyQq3FaT6KDRDEQpXMgrKAIfonFxTLC
+         9g5CALEQEHgNBztxTtsYF8FxbikZ32mgbtn5mABCEZeOMLgtYD15zRAT8Izduo6D/1Lc
+         DKAe12no+oMoEXyjS5LS1rIIY6NhjM3olcOkRWKhMvPSgh1hxCjCxzrVQ9aJPqraSSUS
+         XB7mOwyjDDNYnnG4OBPU6/B4o+M8fnIi+s1qmaFu/Jl3sXsDSssbL1e72utvxuReQqGw
+         P9RA==
+X-Gm-Message-State: ACgBeo04x3dicO2RLylrLNtUTYQNMCzzNbMW1QkCNikMULNEgO2az6uZ
+        hd2VQg9XslSJWLVP0StaxKE=
+X-Google-Smtp-Source: AA6agR6qzAhyO++YetpH1tZ2m534iaSAoVAufpjuu3nwbgo+lmwmvpZzWMy9hkHeF399T7Ke7CIDNw==
+X-Received: by 2002:a5d:594a:0:b0:225:3606:da33 with SMTP id e10-20020a5d594a000000b002253606da33mr11254785wri.60.1661256712325;
+        Tue, 23 Aug 2022 05:11:52 -0700 (PDT)
 Received: from amir-ThinkPad-T480.lan ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id g11-20020a05600c4ecb00b003a4c6e67f01sm24681879wmq.6.2022.08.23.05.11.43
+        by smtp.gmail.com with ESMTPSA id g11-20020a05600c4ecb00b003a4c6e67f01sm24681879wmq.6.2022.08.23.05.11.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Aug 2022 05:11:44 -0700 (PDT)
+        Tue, 23 Aug 2022 05:11:51 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Sasha Levin <sashal@kernel.org>,
@@ -56,11 +56,10 @@ Cc:     Sasha Levin <sashal@kernel.org>,
         Luis Chamberlain <mcgrof@kernel.org>,
         Adam Manzanares <a.manzanares@samsung.com>,
         linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 5.10 v2 2/6] xfs: reject crazy array sizes being fed to XFS_IOC_GETBMAP*
-Date:   Tue, 23 Aug 2022 15:11:32 +0300
-Message-Id: <20220823121136.1806820-3-amir73il@gmail.com>
+        Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH 5.10 v2 6/6] xfs: only bother with sync_filesystem during readonly remount
+Date:   Tue, 23 Aug 2022 15:11:36 +0300
+Message-Id: <20220823121136.1806820-7-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220823121136.1806820-1-amir73il@gmail.com>
 References: <20220823121136.1806820-1-amir73il@gmail.com>
@@ -72,47 +71,50 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit 29d650f7e3ab55283b89c9f5883d0c256ce478b5 upstream.
+commit b97cca3ba9098522e5a1c3388764ead42640c1a5 upstream.
 
-Syzbot tripped over the following complaint from the kernel:
+In commit 02b9984d6408, we pushed a sync_filesystem() call from the VFS
+into xfs_fs_remount.  The only time that we ever need to push dirty file
+data or metadata to disk for a remount is if we're remounting the
+filesystem read only, so this really could be moved to xfs_remount_ro.
 
-WARNING: CPU: 2 PID: 15402 at mm/util.c:597 kvmalloc_node+0x11e/0x125 mm/util.c:597
+Once we've moved the call site, actually check the return value from
+sync_filesystem.
 
-While trying to run XFS_IOC_GETBMAP against the following structure:
-
-struct getbmap fubar = {
-	.bmv_count	= 0x22dae649,
-};
-
-Obviously, this is a crazy huge value since the next thing that the
-ioctl would do is allocate 37GB of memory.  This is enough to make
-kvmalloc mad, but isn't large enough to trip the validation functions.
-In other words, I'm fussing with checks that were **already sufficient**
-because that's easier than dealing with 644 internal bug reports.  Yes,
-that's right, six hundred and forty-four.
-
+Fixes: 02b9984d6408 ("fs: push sync_filesystem() down to the file system's remount_fs()")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Catherine Hoang <catherine.hoang@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_ioctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_super.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d973350d5946..103fa8381e7d 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1689,7 +1689,7 @@ xfs_ioc_getbmap(
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index ff686cb16c7b..434c87cc9fbf 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1720,6 +1720,11 @@ xfs_remount_ro(
+ 	};
+ 	int			error;
  
- 	if (bmx.bmv_count < 2)
- 		return -EINVAL;
--	if (bmx.bmv_count > ULONG_MAX / recsize)
-+	if (bmx.bmv_count >= INT_MAX / recsize)
- 		return -ENOMEM;
++	/* Flush all the dirty data to disk. */
++	error = sync_filesystem(mp->m_super);
++	if (error)
++		return error;
++
+ 	/*
+ 	 * Cancel background eofb scanning so it cannot race with the final
+ 	 * log force+buftarg wait and deadlock the remount.
+@@ -1790,8 +1795,6 @@ xfs_fc_reconfigure(
+ 	if (error)
+ 		return error;
  
- 	buf = kvzalloc(bmx.bmv_count * sizeof(*buf), GFP_KERNEL);
+-	sync_filesystem(mp->m_super);
+-
+ 	/* inode32 -> inode64 */
+ 	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
+ 	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
 -- 
 2.25.1
 
