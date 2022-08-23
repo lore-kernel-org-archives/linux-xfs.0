@@ -2,198 +2,54 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E77A0C32789
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 03:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D994C32793
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 07:22:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240060AbiHWDWT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Aug 2022 23:22:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48660 "EHLO
+        id S239257AbiHWHWG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Aug 2022 03:22:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240041AbiHWDWT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 23:22:19 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2887854C8C
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 20:22:16 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id t11-20020a17090a510b00b001fac77e9d1fso13200058pjh.5
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 20:22:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dilger-ca.20210112.gappssmtp.com; s=20210112;
-        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
-         :from:from:to:cc;
-        bh=t5TO7xdQGMXaC5TRTQFcqhFSnLRjgf1D8C0Y6A6YDxE=;
-        b=WmzvvmXH5e7wP/UE3SOCEoTxUnalykJ3N3TkckdsZzxqPN6OxAvOMEhsFJIg72/pec
-         dV+HIGE92uLWsaavfgjKM+C+A5n4EiV88XdKFsoxydVAFe5nmQZ3wXK7pbUiZnpPSViH
-         9wcRuFbEeMk6CuUC5TU2Fsvnjo++S7A79RBLzB6Aur+2C1mdRPNWR6V9hkWGd33kuaZ6
-         xcCba0irYI0fzWODf7B+oUYh3cw5uD53qZpQUEbxAvY5/4dbEDBWYTz1DS09LYro3uwm
-         G9+kpUhWzIhcfbKMcEQU1XlfvHYa+Duf15Pq6vyDet2odUshI95kkV9niiVxvoEj4EEl
-         OWIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
-         :from:x-gm-message-state:from:to:cc;
-        bh=t5TO7xdQGMXaC5TRTQFcqhFSnLRjgf1D8C0Y6A6YDxE=;
-        b=Ol2HKV/9WcWgPeDR8xLTmSDrkzY2riX76zBcTu8kkeOBVzKLPsl8matkZ50878ZM4G
-         pz9NmtVQEGl1KO+yiJ/WtfB2vWM5tCPA6sPSzGaWRECsJjs3gilHwKImAuOsnKQJMyum
-         8evTgoUKEEqOAYON73X1lkjhSfhmQTUN5zW3qF+P40H6fq0ANpEmUjvf+SOdbNeRT+QG
-         u7MpUoeMPxcPk/9kIrD7CPtuyMBbA3HmEitzXEHn+AyZ3cGnFZPePv9Z/WvaqQJT1EnN
-         XBABP3YMrRRUojW7gCNWI6vMX2B4NX6XqZd8/fZeUtmefmL4VyrXyLxfzpss0oFRiqcI
-         DH/g==
-X-Gm-Message-State: ACgBeo0K/+HB3+fHrtNZiWnd76MAbglrZx68eQY1OnzcZ4sqMKN3sHKs
-        6mqB47/TWQhFbD3bcqaOH8jX5w==
-X-Google-Smtp-Source: AA6agR6bYAoLnjuq/NI/816MPUccS4/TdIQzRNkgRVQfsY/JSoRbcW6B7pyoAJACabZ0K9rJNxD0pA==
-X-Received: by 2002:a17:903:18b:b0:16e:f09c:919b with SMTP id z11-20020a170903018b00b0016ef09c919bmr23613380plg.135.1661224935485;
-        Mon, 22 Aug 2022 20:22:15 -0700 (PDT)
-Received: from cabot.adilger.int (S01061cabc081bf83.cg.shawcable.net. [70.77.221.9])
-        by smtp.gmail.com with ESMTPSA id b9-20020a1709027e0900b00172d52b7c03sm5372011plm.125.2022.08.22.20.22.14
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 22 Aug 2022 20:22:14 -0700 (PDT)
-From:   Andreas Dilger <adilger@dilger.ca>
-Message-Id: <21923F1E-1C54-44FB-AF7C-4CD8B4B35433@dilger.ca>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_8E3621BA-8A02-4654-8DC0-856F43CB7C0C";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH v4 6/9] f2fs: don't allow DIO reads but not DIO writes
-Date:   Mon, 22 Aug 2022 21:22:11 -0600
-In-Reply-To: <YwAYPFxW7VV4M9D1@sol.localdomain>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net,
-        xfs <linux-xfs@vger.kernel.org>, linux-api@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org,
-        linux-block <linux-block@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Keith Busch <kbusch@kernel.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-References: <20220722071228.146690-1-ebiggers@kernel.org>
- <20220722071228.146690-7-ebiggers@kernel.org> <YtyoF89iOg8gs7hj@google.com>
- <Yt7dCcG0ns85QqJe@sol.localdomain> <YuXyKh8Zvr56rR4R@google.com>
- <YvrrEcw4E+rpDLwM@sol.localdomain>
- <20220816090312.GU3600936@dread.disaster.area>
- <D1CDACE3-EC7E-43E4-8F49-EEA2B6E71A41@dilger.ca>
- <YwAYPFxW7VV4M9D1@sol.localdomain>
-X-Mailer: Apple Mail (2.3273)
+        with ESMTP id S240690AbiHWHWE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 03:22:04 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDBD662A8A;
+        Tue, 23 Aug 2022 00:22:01 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 71DACB81BDE;
+        Tue, 23 Aug 2022 07:22:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8B82C433C1;
+        Tue, 23 Aug 2022 07:21:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1661239319;
+        bh=e9x9TwkptHkFi7m5kizk+IsBMTWlxe2MCiXeYCaPwIs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UJIcBxPwoSGJj+UZnzSGe2/7/tpMamcD5ZKWT87yzBtTqvfjU9DKkD94UIj34RY8K
+         j+ajfpi4NrmKdpSFLRC79BxdySrf38JdiiSA50AhnbDAIALz7VBBx8rtDN6k43BvCT
+         rycf/tWeXSSGAmfdqmoXE1U+6EZhaJiiRjdWZr9s=
+Date:   Tue, 23 Aug 2022 09:21:48 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Leah Rumancik <leah.rumancik@gmail.com>
+Cc:     stable@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amir73il@gmail.com
+Subject: Re: [PATCH 5.15 0/9] xfs stable candidate patches for 5.15.y (part 4)
+Message-ID: <YwSADLkBPNe7hZQs@kroah.com>
+References: <20220819181431.4113819-1-leah.rumancik@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220819181431.4113819-1-leah.rumancik@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, Aug 19, 2022 at 11:14:22AM -0700, Leah Rumancik wrote:
+> Hello,
+> 
+> Here's another round of xfs backports for 5.15.y that have been
+> through testing and ACK'd.
 
---Apple-Mail=_8E3621BA-8A02-4654-8DC0-856F43CB7C0C
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+All now queued up, thanks.
 
-On Aug 19, 2022, at 5:09 PM, Eric Biggers <ebiggers@kernel.org> wrote:
->=20
-> On Tue, Aug 16, 2022 at 10:42:29AM -0600, Andreas Dilger wrote:
->>=20
->> IMHO, this whole discussion is putting the cart before the horse.
->> Changing existing (and useful) IO behavior to accommodate an API that
->> nobody has ever used, and is unlikely to even be widely used, doesn't
->> make sense to me.  Most applications won't check or care about the =
-new
->> DIO size fields, since they've lived this long without statx() =
-returning
->> this info, and will just pick a "large enough" size (4KB, 1MB, =
-whatever)
->> that gives them the performance they need.  They *WILL* care if the =
-app
->> is suddenly unable to read data from a file in ways that have worked =
-for
->> a long time.
->>=20
->> Even if apps are modified to check these new DIO size fields, and =
-then
->> try to DIO write to a file in f2fs that doesn't allow it, then f2fs =
-will
->> return an error, which is what it would have done without the statx()
->> changes, so no harm done AFAICS.
->>=20
->> Even with a more-complex DIO status return that handles a "direction"
->> field (which IMHO is needlessly complex), there is always the =
-potential
->> for a TOCTOU race where a file changes between checking and access, =
-so
->> the userspace code would need to handle this.
->=20
-> I'm having trouble making sense of your argument here; you seem to be =
-saying
-> that STATX_DIOALIGN isn't useful, so it doesn't matter if we design it
-> correctly?  That line of reasoning is concerning, as it's certainly =
-intended
-> to be useful, and if it's not useful there's no point in adding it.
->=20
-> Are there any specific concerns that you have, besides TOCTOU races =
-and the
-> lack of support for read-only DIO?
-
-My main concern is disabling useful functionality that exists today to =
-appease
-the new DIO size API.  Whether STATX_DIOALIGN will become widely used by
-applications or not is hard to say at this point.
-
-If there were separate STATX_DIOREAD and STATX_DIOWRITE flags in the =
-returned
-data, and the alignment is provided as it is today, that would be enough =
-IMHO
-to address the original use case without significant complexity.
-
-> I don't think that TOCTOU races are a real concern here.  Generally =
-DIO
-> constraints would only change if the application doing DIO =
-intentionally does
-> something to the file, or if there are changes that involve the =
-filesystem
-> being taken offline, e.g. the filesystem being mounted with =
-significantly
-> different options or being moved to a different block device.  And, =
-well,
-> everything else in stat()/statx() is subject to TOCTOU as well, but is =
-still
-> used...
-
-I was thinking of background filesystem operations like compression, LVM
-migration to new storage with a different sector size, etc. that may =
-change
-the DIO characteristics of the file even while it is open.  Not that I =
-think
-this will happen frequently, but it is possible, and applications =
-shouldn't
-explode if the DIO parameters change and they get an error.
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_8E3621BA-8A02-4654-8DC0-856F43CB7C0C
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAmMER+MACgkQcqXauRfM
-H+D5gBAAjf5qhCdnFlyRgIkdcPs1zELiCu4+Jw0PH5rkavcu3tVPwEBTCbHxXVMN
-6ZsFra7ARjxxj58mUSEtN9NDHwpiQreGlgqDoP+uYYb3EwiFZstja2fl0mTAytE5
-lMb8zBxkfCh8xexTnnVk7ULsOrTO+/xYTUbmRIqQvK6PTicVuO6H8FtzYFHjilnn
-/RZ8yRCndDsFmRpZCApwy26cPcP3UyrtUqz8rKk1iy5oBIC1ALvx8baYjY/Wi7Fs
-vMq1ExdKsjPPVQT5dmj1ISPRXpxTGezKhqvxNvbR/IMwKW2PzEMZzClRQnYKuWe5
-GBu6zW0mWe5l+Bg1amzve/WteBX/5i6rrkknoD58zBL8SL4LDh+uQGaM2q7EzegR
-lEc1/IpOtR1WrfmP+tOqEIfdwa4jMikNm4NKHYoQA2OQcxEzmYgtBHeeVbGOFCEq
-PRKVZbxxF2bVFWuBVbsSbAar9o6G6Ucm11LBDHkKEpn8RTqN/UeXBrcslIk9NczK
-2qtnn0jbek1OgtMEpGaajobjeqBqQUIC6/cUkU0S7Ga1LsV7D8eH5TV9EF3rWwLe
-0MJ2IWgAmbMDp7gYNVZYrsJJMrqcjphRO33u2JvwFisboKU1DD4qtfnG1vvF8u1n
-RHpWdRBE/l0VC15dWox4zVKfVgH52rkeKE8ZVkTj83NDSIidz94=
-=WmyJ
------END PGP SIGNATURE-----
-
---Apple-Mail=_8E3621BA-8A02-4654-8DC0-856F43CB7C0C--
+greg k-h
