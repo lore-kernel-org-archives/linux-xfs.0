@@ -2,157 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C106C32796
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E169C38145
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 16:47:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245351AbiHWQrF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S245388AbiHWQrF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 23 Aug 2022 12:47:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39152 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343784AbiHWQqO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 12:46:14 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D8A7C7FAF;
-        Tue, 23 Aug 2022 07:28:34 -0700 (PDT)
+        with ESMTP id S1343901AbiHWQqW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 12:46:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1899786CF;
+        Tue, 23 Aug 2022 07:27:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BB566B8191E;
-        Tue, 23 Aug 2022 14:28:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61A7BC433C1;
-        Tue, 23 Aug 2022 14:28:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 80C3E615AB;
+        Tue, 23 Aug 2022 14:27:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8AB3C433D6;
+        Tue, 23 Aug 2022 14:27:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661264911;
-        bh=1MtnzPedujxaeQqskAInC5MQZi5DdXIRqiIgbQJ0P9s=;
+        s=k20201202; t=1661264831;
+        bh=aGV+Fmg/SuRFVLlUg2Us/FFj2AqB7Uc5ikRU/xAOnCU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=dyf8o4L+Yq3k5XdvTdot1BN3t7UxqOaNp3TGIpnRFxakOVhzWguSCHg6CAbMnxWrs
-         eEA5MxDPJwxC2Iuwr+rc077XBhL92lpmPspJjUq5IXAQ194rFq6RXXHGBuipskbFmQ
-         qQckzge/40HfzFDwUq+gTiHkKlbrYTJsNnm6v07WVhQ19oO4DY/d39poyTwPCMgAIY
-         mH4FH/dhkE1evJ9Yugh9ci13tclREExLnkQNRByjmk9GPr72DwAHcncjQMNpCEBS35
-         vu82Cr75Vin0ZaTrY97LJr1BmUVj5KwIXnGDO76wHkWWsnl2j1FeXPz7JjGu2P9YoH
-         y+4x6k19cDbJA==
-Date:   Tue, 23 Aug 2022 07:28:30 -0700
+        b=Dd30lzFcOIEhCPvEPTxVad9kLL+SWbC0fsOxz+BF0MJNOH8LEBCs7c6sr8cmXriO7
+         L6bMLhjd7mwlS89Q31GGdzrmw8DaurMKXLhd0gxXexaLXdanKRIlKOBdkFoVZpuCIJ
+         BvnSouvgF7m2UR+RYIX5fIvi7SACuZIuZBAJW61lB+DTpV7Y7gRorBCedgGU8vY+7N
+         P94MFdbBmCvUESV4HSFrMl9xN1WYtl8e0TFEMQGMUQzORzIfQ7IduQFxcyzi/K6zgK
+         wa6wNCTRCZmC1oKS/qFcVc2Y0MKKacZRLQm5P78jWG7PYluS4RzOcTvDtVvR8Bt5WB
+         VyGCWVbbQtTTw==
+Date:   Tue, 23 Aug 2022 07:27:11 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     fstests@vger.kernel.org, zlang@kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Check if a direct write can result in a false
- ENOSPC error
-Message-ID: <YwTkDrlpzPc2TXDC@magnolia>
-References: <20220823090433.1164296-1-chandan.babu@oracle.com>
+To:     Zeng Heng <zengheng4@huawei.com>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -next] xfs: remove "%Lu" which doesn't meet C standard
+Message-ID: <YwTjv0bpf3Ed0JjS@magnolia>
+References: <20220823015517.4160583-1-zengheng4@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220823090433.1164296-1-chandan.babu@oracle.com>
+In-Reply-To: <20220823015517.4160583-1-zengheng4@huawei.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 23, 2022 at 02:34:33PM +0530, Chandan Babu R wrote:
-> This commit adds a test to check if a direct write on a delalloc extent
-> present in CoW fork can result in a false ENOSPC error. The bug has been fixed
-> by upstream commit d62113303d691 ("xfs: Fix false ENOSPC when performing
-> direct write on a delalloc extent in cow fork").
+On Tue, Aug 23, 2022 at 09:55:17AM +0800, Zeng Heng wrote:
+> The "%Lu" specifier, which represents long long unsigned,
+> doesn't meet C language standard, and even more,
+> it makes people easily mistake with "%lu", which represent
+> long unsigned. So replace "%Lu" with "llu".
 > 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> ---
->  tests/xfs/553     | 63 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/553.out |  9 +++++++
->  2 files changed, 72 insertions(+)
->  create mode 100755 tests/xfs/553
->  create mode 100644 tests/xfs/553.out
-> 
-> diff --git a/tests/xfs/553 b/tests/xfs/553
-> new file mode 100755
-> index 00000000..78ed0995
-> --- /dev/null
-> +++ b/tests/xfs/553
-> @@ -0,0 +1,63 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test 553
-> +#
-> +# Test to check if a direct write on a delalloc extent present in CoW fork can
-> +# result in an ENOSPC error.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick clone
-> +
-> +# Import common functions.
-> +. ./common/reflink
-> +. ./common/inject
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_fixed_by_kernel_commit d62113303d691 \
-> +	"xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork"
-> +_require_scratch_reflink
-> +_require_xfs_debug
-> +_require_test_program "punch-alternating"
-> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-> +_require_xfs_io_command "reflink"
-> +_require_xfs_io_command "cowextsize"
-> +
-> +source=${SCRATCH_MNT}/source
-> +destination=${SCRATCH_MNT}/destination
-> +fragmented_file=${SCRATCH_MNT}/fragmented_file
-> +
-> +echo "Format and mount fs"
-> +_scratch_mkfs >> $seqres.full
-> +_scratch_mount >> $seqres.full
-> +
-> +echo "Create source file"
-> +$XFS_IO_PROG -f -c "pwrite 0 32M" $source >> $seqres.full
-> +
-> +echo "Reflink destination file with source file"
-> +$XFS_IO_PROG -f -c "reflink $source" $destination >> $seqres.full
-> +
-> +echo "Set destination file's cowextsize"
-> +$XFS_IO_PROG -c "cowextsize 16M" $destination >> $seqres.full
-> +
-> +echo "Fragment FS"
-> +$XFS_IO_PROG -f -c "pwrite 0 64M" $fragmented_file >> $seqres.full
-> +sync
-> +$here/src/punch-alternating $fragmented_file >> $seqres.full
-> +
-> +echo "Inject bmap_alloc_minlen_extent error tag"
-> +_scratch_inject_error bmap_alloc_minlen_extent 1
-> +
-> +echo "Create 16MiB delalloc extent in destination file's CoW fork"
-> +$XFS_IO_PROG -c "pwrite 0 4k" $destination >> $seqres.full
-> +
-> +sync
-> +
-> +echo "Direct I/O write at 12k file offset in destination file"
-> +$XFS_IO_PROG -d -c "pwrite 12k 8k" $destination >> $seqres.full
+> Signed-off-by: Zeng Heng <zengheng4@huawei.com>
 
-Does this still work if the blocksize is 64k? ;)
-
-(The rest of the test code looks ok to me)
+Yesss finally fixing this
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/553.out b/tests/xfs/553.out
-> new file mode 100644
-> index 00000000..a2e91678
-> --- /dev/null
-> +++ b/tests/xfs/553.out
-> @@ -0,0 +1,9 @@
-> +QA output created by 553
-> +Format and mount fs
-> +Create source file
-> +Reflink destination file with source file
-> +Set destination file's cowextsize
-> +Fragment FS
-> +Inject bmap_alloc_minlen_extent error tag
-> +Create 16MiB delalloc extent in destination file's CoW fork
-> +Direct I/O write at 12k file offset in destination file
+> ---
+>  fs/xfs/xfs_inode.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 28493c8e9bb2..b3eeeae3afe1 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3119,7 +3119,7 @@ xfs_iflush(
+>  	if (XFS_TEST_ERROR(dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC),
+>  			       mp, XFS_ERRTAG_IFLUSH_1)) {
+>  		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+> -			"%s: Bad inode %Lu magic number 0x%x, ptr "PTR_FMT,
+> +			"%s: Bad inode %llu magic number 0x%x, ptr "PTR_FMT,
+>  			__func__, ip->i_ino, be16_to_cpu(dip->di_magic), dip);
+>  		goto flush_out;
+>  	}
+> @@ -3129,7 +3129,7 @@ xfs_iflush(
+>  		    ip->i_df.if_format != XFS_DINODE_FMT_BTREE,
+>  		    mp, XFS_ERRTAG_IFLUSH_3)) {
+>  			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+> -				"%s: Bad regular inode %Lu, ptr "PTR_FMT,
+> +				"%s: Bad regular inode %llu, ptr "PTR_FMT,
+>  				__func__, ip->i_ino, ip);
+>  			goto flush_out;
+>  		}
+> @@ -3140,7 +3140,7 @@ xfs_iflush(
+>  		    ip->i_df.if_format != XFS_DINODE_FMT_LOCAL,
+>  		    mp, XFS_ERRTAG_IFLUSH_4)) {
+>  			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+> -				"%s: Bad directory inode %Lu, ptr "PTR_FMT,
+> +				"%s: Bad directory inode %llu, ptr "PTR_FMT,
+>  				__func__, ip->i_ino, ip);
+>  			goto flush_out;
+>  		}
+> @@ -3158,7 +3158,7 @@ xfs_iflush(
+>  	if (XFS_TEST_ERROR(ip->i_forkoff > mp->m_sb.sb_inodesize,
+>  				mp, XFS_ERRTAG_IFLUSH_6)) {
+>  		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+> -			"%s: bad inode %Lu, forkoff 0x%x, ptr "PTR_FMT,
+> +			"%s: bad inode %llu, forkoff 0x%x, ptr "PTR_FMT,
+>  			__func__, ip->i_ino, ip->i_forkoff, ip);
+>  		goto flush_out;
+>  	}
 > -- 
-> 2.35.1
+> 2.25.1
 > 
