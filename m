@@ -2,122 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63282C32789
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 02:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B6EC28D13
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 02:18:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239549AbiHWCIw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Aug 2022 22:08:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37846 "EHLO
+        id S229583AbiHWCSv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Aug 2022 22:18:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232437AbiHWCIn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 22:08:43 -0400
-X-Greylist: delayed 1871 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 22 Aug 2022 19:08:40 PDT
-Received: from m15113.mail.126.com (m15113.mail.126.com [220.181.15.113])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 69D3F33A10;
-        Mon, 22 Aug 2022 19:08:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=VcjBr
-        x5NcRDcCtos/TPNCVqfav4qyE7ow6dAU7IPv8M=; b=a4S5z2YVX3o9E+XpAyh6Y
-        68/5o/XbgsAlg7PsdMjogmE2/RqIQTsHiUC2kinOmuesKZDbPToW86DQ4hzVpC5y
-        KVGUtfATz0iJJrhAbhSq6aAS/r5VD3uRoUksaY0SBTe+hIQt7MetuN+t3akDk1no
-        wi7w+fVS7sxC+5tzjNw1Gs=
-Received: from fedora.. (unknown [123.52.27.102])
-        by smtp3 (Coremail) with SMTP id DcmowAC33o49LwRj8lDqAQ--.42709S2;
-        Tue, 23 Aug 2022 09:37:02 +0800 (CST)
-From:   zhaomzhao@126.com
-To:     djwong@kernel.org, corbet@lwn.net
-Cc:     linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Zhao Mengmeng <zhaomengmeng@kylinos.cn>
-Subject: [PATCH v1] Documentation: filesystems: xfs: update pseudocode and typo fixes
-Date:   Mon, 22 Aug 2022 21:36:53 -0400
-Message-Id: <20220823013653.203469-1-zhaomzhao@126.com>
-X-Mailer: git-send-email 2.37.1
+        with ESMTP id S231491AbiHWCSv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 22:18:51 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4C1874E86F
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Aug 2022 19:18:50 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-4-169.pa.nsw.optusnet.com.au [49.195.4.169])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6FB5D10E8B10;
+        Tue, 23 Aug 2022 12:18:49 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oQJV9-00GOPz-CZ; Tue, 23 Aug 2022 12:18:47 +1000
+Date:   Tue, 23 Aug 2022 12:18:47 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/9] xfs: ensure log tail is always up to date
+Message-ID: <20220823021847.GO3600936@dread.disaster.area>
+References: <20220809230353.3353059-1-david@fromorbit.com>
+ <20220809230353.3353059-5-david@fromorbit.com>
+ <YwQgT1i0x2i+wGF8@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: DcmowAC33o49LwRj8lDqAQ--.42709S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxXF18WrW3CryrCFWDWr48Zwb_yoWrAw1Upr
-        Za9r1rJw1kJry8Ars2qw45XryF9anYqrWUGrWqy3s3Zws8K3Zayr13tr1Y9F1kXr4ru3WY
-        vr1j9rn8Za47Ca7anT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jplk3UUUUU=
-X-Originating-IP: [123.52.27.102]
-X-CM-SenderInfo: 52kd0zp2kd0qqrswhudrp/1tbijB9md1pEJE5iSwAAsf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YwQgT1i0x2i+wGF8@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=63043909
+        a=FOdsZBbW/tHyAhIVFJ0pRA==:117 a=FOdsZBbW/tHyAhIVFJ0pRA==:17
+        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=EeSMy61KkEL7v2Yay4UA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Zhao Mengmeng <zhaomengmeng@kylinos.cn>
+On Mon, Aug 22, 2022 at 05:33:19PM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 10, 2022 at 09:03:48AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Whenever we write an iclog, we call xlog_assign_tail_lsn() to update
+> > the current tail before we write it into the iclog header. This
+> > means we have to take the AIL lock on every iclog write just to
+> > check if the tail of the log has moved.
+> > 
+> > This doesn't avoid races with log tail updates - the log tail could
+> > move immediately after we assign the tail to the iclog header and
+> > hence by the time the iclog reaches stable storage the tail LSN has
+> > moved forward in memory. Hence the log tail LSN in the iclog header
+> > is really just a point in time snapshot of the current state of the
+> > AIL.
+> > 
+> > With this in mind, if we simply update the in memory log->l_tail_lsn
+> > every time it changes in the AIL, there is no need to update the in
+> > memory value when we are writing it into an iclog - it will already
+> > be up-to-date in memory and checking the AIL again will not change
+> > this.
+> 
+> This is too subtle for me to understand -- does the codebase
+> already update l_tail_lsn?  Does this patch make it do that?
 
-According to the implementation of xfs_trans_roll(), it calls
-xfs_trans_reserve(), which reserves not only log space, but also
-free disk blocks. In short, the "transaction stuff". So change
-xfs_log_reserve() to xfs_trans_reserve().
+tl;dr: if the AIL is empty, log->l_tail_lsn is not updated on the
+first insert of a new item into the AILi and hence is stale.
+xlog_state_release_iclog() currently works around that by calling
+xlog_assign_tail_lsn() to get the tail lsn from the AIL. This change
+makes sure log->l_tail_lsn is always up to date.
 
-Besides, fix several typo issues.
+In more detail:
 
-Signed-off-by: Zhao Mengmeng <zhaomengmeng@kylinos.cn>
----
- .../filesystems/xfs-delayed-logging-design.rst       | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+The tail update occurs in xfs_ail_update_finish(), but only if we
+pass in a non-zero tail_lsn. xfs_trans_ail_update_bulk() will only
+set a non-zero tail_lsn if it moves the log item at the tail of the
+log (i.e. we relog the tail item and move it forwards in the AIL).
 
-diff --git a/Documentation/filesystems/xfs-delayed-logging-design.rst b/Documentation/filesystems/xfs-delayed-logging-design.rst
-index 4ef419f54663..02b32030bab3 100644
---- a/Documentation/filesystems/xfs-delayed-logging-design.rst
-+++ b/Documentation/filesystems/xfs-delayed-logging-design.rst
-@@ -100,7 +100,7 @@ transactions together::
- 
- 	ntp = xfs_trans_dup(tp);
- 	xfs_trans_commit(tp);
--	xfs_log_reserve(ntp);
-+	xfs_trans_reserve(ntp);
- 
- This results in a series of "rolling transactions" where the inode is locked
- across the entire chain of transactions.  Hence while this series of rolling
-@@ -191,7 +191,7 @@ transaction rolling mechanism to re-reserve space on every transaction roll. We
- know from the implementation of the permanent transactions how many transaction
- rolls are likely for the common modifications that need to be made.
- 
--For example, and inode allocation is typically two transactions - one to
-+For example, an inode allocation is typically two transactions - one to
- physically allocate a free inode chunk on disk, and another to allocate an inode
- from an inode chunk that has free inodes in it.  Hence for an inode allocation
- transaction, we might set the reservation log count to a value of 2 to indicate
-@@ -200,7 +200,7 @@ chain. Each time a permanent transaction rolls, it consumes an entire unit
- reservation.
- 
- Hence when the permanent transaction is first allocated, the log space
--reservation is increases from a single unit reservation to multiple unit
-+reservation is increased from a single unit reservation to multiple unit
- reservations. That multiple is defined by the reservation log count, and this
- means we can roll the transaction multiple times before we have to re-reserve
- log space when we roll the transaction. This ensures that the common
-@@ -259,7 +259,7 @@ the next transaction in the sequeunce, but we have none remaining. We cannot
- sleep during the transaction commit process waiting for new log space to become
- available, as we may end up on the end of the FIFO queue and the items we have
- locked while we sleep could end up pinning the tail of the log before there is
--enough free space in the log to fulfil all of the pending reservations and
-+enough free space in the log to fulfill all of the pending reservations and
- then wake up transaction commit in progress.
- 
- To take a new reservation without sleeping requires us to be able to take a
-@@ -615,7 +615,7 @@ those changes into the current checkpoint context. We then initialise a new
- context and attach that to the CIL for aggregation of new transactions.
- 
- This allows us to unlock the CIL immediately after transfer of all the
--committed items and effectively allow new transactions to be issued while we
-+committed items and effectively allows new transactions to be issued while we
- are formatting the checkpoint into the log. It also allows concurrent
- checkpoints to be written into the log buffers in the case of log force heavy
- workloads, just like the existing transaction commit code does. This, however,
-@@ -886,7 +886,7 @@ can be multiple outstanding checkpoint contexts, we can still see elevated pin
- counts, but as each checkpoint completes the pin count will retain the correct
- value according to it's context.
- 
--Just to make matters more slightly more complex, this checkpoint level context
-+Just to make matters slightly more complex, this checkpoint level context
- for the pin count means that the pinning of an item must take place under the
- CIL commit/flush lock. If we pin the object outside this lock, we cannot
- guarantee which context the pin count is associated with. This is because of
+Hence if we pass a non-zero tail_lsn to xfs_ail_update_finish(), it
+indicates it needs to check it against the LSN of the item currently
+at the tail of the AIL. If the tail LSN has not changed, we do
+nothing, if it has changed, then we call
+xlog_assign_tail_lsn_locked() to update the log tail.
+
+The problem with the current code is that if the AIL is empty when
+we insert the first item, we've actually moved the log tail but we
+do not update the log tail (i.e. tail_lsn is zero in this case). If
+we then release an iclog for writing at this point in time, the tail
+lsn it writes into the iclog header would be wrong - it does not
+reflect the log tail as defined by the AIL and the checkpoint that
+has just been committed.
+
+Hence xlog_state_release_iclog() called xlog_assign_tail_lsn() to
+ensure that it checked that the tail LSN it applies to the iclog
+reflects the current state of the AIL. i.e. it checks if there is an
+item in the AIL, and if so, grabs the tail_lsn from the AIL. This
+works around the fact the AIL doesn't update the log tail on the
+first insert.
+
+Hence what this patch does is have xfs_trans_ail_update_bulk set
+the tail_lsn passed to xfs_ail_update_finish() to NULLCOMMITLSN when
+it does the first insert into the AIL. NULLCOMMITLSN is a
+non-zero value that won't match with the LSN of items we just
+inserted into the AIL, and hence xfs_ail_update_finish() will go an
+update the log tail in this case.
+
+Hence we close the hole when the log->l_tail_lsn is incorrect after
+the first insert into the AIL, and hence we no longer need to update
+the log->l_tail_lsn when reading it into the iclog header -
+log->l_tail_lsn is always up to date, and so we can now just read it
+in xlog_state_release_iclog() rather than having to grab the AIL
+lock and checking the AIL to update log->l_tail_lsn with the correct
+tail value from iclog IO submission....
+
+Cheers,
+
+Dave.
 -- 
-2.37.1
-
+Dave Chinner
+david@fromorbit.com
