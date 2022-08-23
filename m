@@ -2,70 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FFD2C32774
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 17:42:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C476C32789
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 17:43:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232438AbiHWRmN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Aug 2022 13:42:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58300 "EHLO
+        id S232518AbiHWRnX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Aug 2022 13:43:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234187AbiHWRlA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 13:41:00 -0400
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49564AC259
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Aug 2022 08:38:16 -0700 (PDT)
-Received: by mail-il1-f197.google.com with SMTP id x7-20020a056e021ca700b002ea01be6018so1922871ill.18
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Aug 2022 08:38:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc;
-        bh=jj+DJXwrsYlSJItXjtgoHdex4lZY6RIyfIJzSWY+0OA=;
-        b=BcCM6Ur05mtQxZQXTddMM07xYpBxGSitGiJw28o+qo+7AV4iMSNotm/Y4sB9Vevu/9
-         JccZz8ntvMJOD9qXq5CldQBNvCcnfRUP4SudnvsicKk39STZosodM9J2+MUM6RNe/C0M
-         40cYygh/1tbbhnDFAYkbbyd+JM2wuKtyYL4MAvuBPOKdtj7ALvOBLiKuIgV9A+YUuhi8
-         k4MwBhM0PE1hizp/mJCk4PI3d8Nmdzp63s8nI/z5qgW1m9HE7N4SGgfAHAcFK2/RHsRF
-         PeXb4fCrvdsTtTqoYsOeMM1jcmBICN94eyyK4DrfMlsd3DvHpAf5LZZRYJhqU1JF/3PK
-         4ZQw==
-X-Gm-Message-State: ACgBeo1sZ+N1xLa38tts0zF5jRb5ghsqJVTmP6p2H2re5tXmGU4RAkU0
-        FfB8AcsnDOgQqUlX5W/AxqdHpu+BbmiMGMNZpu/HlEnoohV/
-X-Google-Smtp-Source: AA6agR6E5kQeZsO1i1vYztRzxIpze53XHYtfM9V0vZY1WanZlXP3pyvAqhiEdhMjqZJTJnrTzmbfrJBk/YwRG3atOe+jou2IskV/
-MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1c07:b0:2e9:221e:9c77 with SMTP id
- l7-20020a056e021c0700b002e9221e9c77mr98428ilh.176.1661269095633; Tue, 23 Aug
- 2022 08:38:15 -0700 (PDT)
-Date:   Tue, 23 Aug 2022 08:38:15 -0700
-In-Reply-To: <20220823152101.165538-1-code@siddh.me>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000525beb05e6ea5aeb@google.com>
-Subject: Re: [syzbot] WARNING in iomap_iter
-From:   syzbot <syzbot+a8e049cd3abd342936b6@syzkaller.appspotmail.com>
-To:     code@siddh.me, david@fromorbit.com, djwong@kernel.org,
+        with ESMTP id S230252AbiHWRmw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Aug 2022 13:42:52 -0400
+Received: from sender-of-o50.zoho.in (sender-of-o50.zoho.in [103.117.158.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 654B29E697;
+        Tue, 23 Aug 2022 08:36:12 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1661268948; cv=none; 
+        d=zohomail.in; s=zohoarc; 
+        b=eagV3hFkZYnwbakrbXhtc9g3aO1gVBHqpu49XGBsd3+riRGCjc1oktdH+w7r4IbYLLIVVQi1HljbXyXp/jCzh7pncfWAjTtGq1QUmLsFPvlH+TPR0Qitado+YS4+REvYsCUrZ3N+ZFDEC6R9QUXA1gYCrecZS/VJIA7cMRgzpRI=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.in; s=zohoarc; 
+        t=1661268948; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=48lrmCnAI4BOdsVRvDHdoRgNfI9n5wEdayysaFK+3kw=; 
+        b=dcXD5TxeXwwuSU4lCx5knnXQi3YYxBXdqNMZ1FEYGJ0RJFARdapUM9ThPe8Ra+P8ShAm8l94E2SncPcW2iTtlh1N1LWRSGu7bQssYKiOGZhdqTjv5TZqIoQUMttsWm+TVVn4eFTZOKGm8ExuQfgN7qxTwpZPPfoS3RuYSSSA9mg=
+ARC-Authentication-Results: i=1; mx.zohomail.in;
+        dkim=pass  header.i=siddh.me;
+        spf=pass  smtp.mailfrom=code@siddh.me;
+        dmarc=pass header.from=<code@siddh.me>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1661268948;
+        s=zmail; d=siddh.me; i=code@siddh.me;
+        h=From:From:To:To:Cc:Cc:Message-ID:Subject:Subject:Date:Date:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
+        bh=48lrmCnAI4BOdsVRvDHdoRgNfI9n5wEdayysaFK+3kw=;
+        b=Lj9kFMfAziwo1q654cN0YK+O2sMEGsVXCZzKujidPyswNAmPuVfgHRWm3aTBi+7T
+        XzUV4DySRehhXIf3yV1BM5TXdx+S8MyfZUt7813tUg+gn49Rj9dbjDRGI5xI23Z7lFq
+        djguecRrI4L/ogPprIO9/E4slDxNGdtxb79m6yuk=
+Received: from localhost.localdomain (103.249.234.81 [103.249.234.81]) by mx.zoho.in
+        with SMTPS id 1661268946863160.31652801965868; Tue, 23 Aug 2022 21:05:46 +0530 (IST)
+From:   Siddh Raman Pant <code@siddh.me>
+To:     willy@infradead.org
+Cc:     code@siddh.me, david@fromorbit.com, djwong@kernel.org,
         fgheet255t@gmail.com, hch@infradead.org,
         linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        riteshh@linux.ibm.com, syzkaller-bugs@googlegroups.com,
-        willy@infradead.org
-Content-Type: text/plain; charset="UTF-8"
+        riteshh@linux.ibm.com,
+        syzbot+a8e049cd3abd342936b6@syzkaller.appspotmail.com,
+        syzkaller-bugs@googlegroups.com
+Message-ID: <20220823153542.177799-1-code@siddh.me>
+Subject: Re: [syzbot] WARNING in iomap_iter
+Date:   Tue, 23 Aug 2022 21:05:42 +0530
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <YwTyO0yZmUT1MVZW@casper.infradead.org>
+References: <YwTyO0yZmUT1MVZW@casper.infradead.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+X-ZohoMailClient: External
+Content-Type: text/plain; charset=utf8
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+Oof, I didn't mean it to be there. That would actually be wrong anyways.
 
-syzbot has tested the proposed patch and the reproducer did not trigger any issue:
+Extremely sorry for the avoidable oversight,
+Siddh
 
-Reported-and-tested-by: syzbot+a8e049cd3abd342936b6@syzkaller.appspotmail.com
+#syz test https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.gi=
+t master
 
-Tested on:
+---
+ drivers/block/loop.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-commit:         072e5135 Merge tag 'nfs-for-5.20-2' of git://git.linux..
-git tree:       https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
-console output: https://syzkaller.appspot.com/x/log.txt?x=120a311d080000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=3f885f57a0f25c38
-dashboard link: https://syzkaller.appspot.com/bug?extid=a8e049cd3abd342936b6
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-patch:          https://syzkaller.appspot.com/x/patch.diff?x=169d8e5b080000
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index e3c0ba93c1a3..e1fe8eda020f 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -979,6 +979,11 @@ loop_set_status_from_info(struct loop_device *lo,
+=20
+ =09lo->lo_offset =3D info->lo_offset;
+ =09lo->lo_sizelimit =3D info->lo_sizelimit;
++
++=09/* loff_t vars have been assigned __u64 */
++=09if (lo->lo_offset < 0 || lo->lo_sizelimit < 0)
++=09=09return -EOVERFLOW;
++
+ =09memcpy(lo->lo_file_name, info->lo_file_name, LO_NAME_SIZE);
+ =09lo->lo_file_name[LO_NAME_SIZE-1] =3D 0;
+ =09lo->lo_flags =3D info->lo_flags;
+--=20
+2.35.1
 
-Note: testing is done by a robot and is best-effort only.
+
