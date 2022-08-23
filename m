@@ -2,74 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8091C32793
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Aug 2022 23:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57206C28D13
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Aug 2022 00:05:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234909AbiHVXep (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Aug 2022 19:34:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40834 "EHLO
+        id S238813AbiHWAFF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Aug 2022 20:05:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233004AbiHVXeo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 19:34:44 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 91E68564E0;
-        Mon, 22 Aug 2022 16:34:43 -0700 (PDT)
+        with ESMTP id S238567AbiHWAFE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Aug 2022 20:05:04 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7D97C52DF0;
+        Mon, 22 Aug 2022 17:05:03 -0700 (PDT)
 Received: from dread.disaster.area (pa49-195-4-169.pa.nsw.optusnet.com.au [49.195.4.169])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DFAB310E8EE0;
-        Tue, 23 Aug 2022 09:34:41 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DB21862D5C0;
+        Tue, 23 Aug 2022 10:05:01 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oQGwK-00GLjR-2u; Tue, 23 Aug 2022 09:34:40 +1000
-Date:   Tue, 23 Aug 2022 09:34:40 +1000
+        id 1oQHPg-00GMEQ-1k; Tue, 23 Aug 2022 10:05:00 +1000
+Date:   Tue, 23 Aug 2022 10:05:00 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Jeff Layton <jlayton@kernel.org>
-Cc:     "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, NeilBrown <neilb@suse.de>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        David Wysochanski <dwysocha@redhat.com>
-Subject: Re: [PATCH v2] xfs: don't bump the i_version on an atime update in
- xfs_vn_update_time
-Message-ID: <20220822233440.GK3600936@dread.disaster.area>
-References: <20220822134011.86558-1-jlayton@kernel.org>
+Cc:     Trond Myklebust <trondmy@hammerspace.com>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix i_version handling in xfs
+Message-ID: <20220823000500.GL3600936@dread.disaster.area>
+References: <20220816131736.42615-1-jlayton@kernel.org>
+ <Yvu7DHDWl4g1KsI5@magnolia>
+ <e77fd4d19815fd661dbdb04ab27e687ff7e727eb.camel@kernel.org>
+ <20220816224257.GV3600936@dread.disaster.area>
+ <c61568de755fc9cd70c80c23d63c457918ab4643.camel@hammerspace.com>
+ <20220818033731.GF3600936@dread.disaster.area>
+ <0e41fb378e57794ab2a8a714b44ef92733598e8e.camel@hammerspace.com>
+ <b8cf4464cc31dc262a2d38e66265c06bf1e35751.camel@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220822134011.86558-1-jlayton@kernel.org>
+In-Reply-To: <b8cf4464cc31dc262a2d38e66265c06bf1e35751.camel@kernel.org>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=63041292
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=630419ae
         a=FOdsZBbW/tHyAhIVFJ0pRA==:117 a=FOdsZBbW/tHyAhIVFJ0pRA==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=7-415B0cAAAA:8 a=SEtKQCMJAAAA:8
-        a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=QkFuO-hpO70cwR4qdtIA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22 a=kyTSok1ft720jgMXX5-3:22
-        a=AjGcO6oz07-iQ99wixmX:22
+        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=7-415B0cAAAA:8
+        a=NfTjnu3Su8rNoGYjGKYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 22, 2022 at 09:40:11AM -0400, Jeff Layton wrote:
-> xfs will update the i_version when updating only the atime value, which
-> is not desirable for any of the current consumers of i_version. Doing so
-> leads to unnecessary cache invalidations on NFS and extra measurement
-> activity in IMA.
-> 
-> Add a new XFS_ILOG_NOIVER flag, and use that to indicate that the
-> transaction should not update the i_version. Set that value in
-> xfs_vn_update_time if we're only updating the atime.
-> 
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: NeilBrown <neilb@suse.de>
-> Cc: Trond Myklebust <trondmy@hammerspace.com>
-> Cc: David Wysochanski <dwysocha@redhat.com>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+On Thu, Aug 18, 2022 at 07:03:42AM -0400, Jeff Layton wrote:
+> Dave, you keep talking about the xfs i_version counter as if there are
+> other applications already relying on its behavior, but I don't see how
+> that can be. There is no way for userland applications to fetch the
+> counter currently.
 
-NACK.
+You miss the point entirely: the behaviour is defined by the on-disk
+format (the di_changecount filed), not the applications that are
+using the kernel internal iversion API.
 
-We need to define exactly what iversion covers first before we go
-changing how filesystems update it. We only want to change iversion
-behaviour once, and we want it done right the first time.
+Just because there are no in-kernel users of the di_changecount
+field in the XFS inode, it does not mean that it doesn't get used by
+applications. Forensic analysis tools that walk filesystem images.
 
--Dave.
+Did you not notice that xfs_trans_log_inode() forces an iversion
+update if the inode core is marked for update:
+
+	inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
+					^^^^^^^^^^^^^^^^^^^^^^
+					this?
+
+So every modification to the inode core (which almost all inode
+modifications will do, except for pure timestamp updates) will bump
+the iversion regardless of whether it was queried or not.
+
+I use this information all the time for forensic analysis of broken
+filesystem images. There are forensic tools that use expose this
+information from filesystem images (e.g. xfs_db) so that we can use
+it for forensic analysis.
+
+See the problem? On-disk format di_changecount != NFS change
+attribute. We can implement the NFS change attribute with the
+existing di_changecount field, but if you want to constrain the
+definition of how the NFS change attribute is calculated, we can't
+necessarily implement that in di_changecount without changing the
+on-disk format definition.
+
+And, yes, this has implications for iversion being exposed to
+userspace via statx(), as I've mentioned in reply to the v2 patch
+you've posted. iversion is persistent information - you can't just
+redefine it's behaviour without some fairly serious knock-on
+effects for the subsystems that provide the persistent storage...
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
