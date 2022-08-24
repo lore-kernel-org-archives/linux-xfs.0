@@ -2,140 +2,170 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB38EC38145
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Aug 2022 12:54:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC8F8C3F6B0
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Aug 2022 15:05:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237556AbiHXMyA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Aug 2022 08:54:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53720 "EHLO
+        id S237364AbiHXPFv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Aug 2022 11:05:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237558AbiHXMx6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Aug 2022 08:53:58 -0400
+        with ESMTP id S235661AbiHXPFt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Aug 2022 11:05:49 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64B7995E4F;
-        Wed, 24 Aug 2022 05:53:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10B3784ED9;
+        Wed, 24 Aug 2022 08:05:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 828B16138B;
-        Wed, 24 Aug 2022 12:53:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF8C2C433D6;
-        Wed, 24 Aug 2022 12:53:54 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B9B2D6188C;
+        Wed, 24 Aug 2022 15:05:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F61CC433C1;
+        Wed, 24 Aug 2022 15:05:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661345635;
-        bh=9qKTFfSvvv3odyymWozZ3aH/e3Es4L33cC41zZfYrDE=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Hk1K3btiYElGBvohLpvnxQA2OisfrjMc8S/kg7OoZJF85mm9jLVcvTTAZ2Lw3evSf
-         +sk8cPvrEnDfRUlkNaDMbeNAim0UmwOmrY2pIWcRft2vYW4uPpmhpNvFOWSEFl9mf3
-         QLay6v3wIZsAU5jfFCs7L1BJGnXS/W03OFJ0YDMp4gY37+neRradBW1qYmAIK/3vXZ
-         rH0cBEQjhvbko4l7YDHO4ZvHkKsW6ii/iQNe7zRcOO0XiedDIeQ1GB55rvhtyCgtDT
-         MTwkOUMyoB8htAc5+QUeCwDFg2s1hrRx+bU8zr99viJWCFLcJrbgo2GNfUpBcdOvDe
-         UEdrfsdXKJDGw==
-Message-ID: <5f248d934ec5d2345986fd75d7d12bcd9e2f32b9.camel@kernel.org>
-Subject: Re: [PATCH] iversion: update comments with info about atime updates
-From:   Jeff Layton <jlayton@kernel.org>
-To:     NeilBrown <neilb@suse.de>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-integrity@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Trond Myklebust <trondmy@hammerspace.com>
-Date:   Wed, 24 Aug 2022 08:53:53 -0400
-In-Reply-To: <166129348704.23264.10381335282721356873@noble.neil.brown.name>
-References: <20220822133309.86005-1-jlayton@kernel.org>
-        , <ceb8f09a4cb2de67f40604d03ee0c475feb3130a.camel@linux.ibm.com>
-        , <f17b9d627703bee2a7b531a051461671648a9dbd.camel@kernel.org>
-        , <18827b350fbf6719733fda814255ec20d6dcf00f.camel@linux.ibm.com>
-        , <4cc84440d954c022d0235bf407a60da66a6ccc39.camel@kernel.org>
-        , <20220822233231.GJ3600936@dread.disaster.area>
-        , <6cbcb33d33613f50dd5e485ecbf6ce7e305f3d6f.camel@kernel.org>
-        , <166125468756.23264.2859374883806269821@noble.neil.brown.name>
-        , <df469d936b2e1c1a8c9c947896fa8a160f33b0e8.camel@kernel.org>
-         <166129348704.23264.10381335282721356873@noble.neil.brown.name>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
+        s=k20201202; t=1661353545;
+        bh=74u1AMY+frKIJLQa2qIhCk6O9IzEZU9s9XBB42TQTGc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=CiJpTtmZ9OjJppacjvOpoMRqLBsvOf3WZruVYyiMKV9cTZzG7SPLZiJPbTpgqXi4U
+         0QzwoO7mcVQRjBrgWEHIlY8C3YxbYbV8BgdjwZgs17mjaQsVU13XrCNuHPmBkbNWaG
+         apMdiJImO9imrjWwzei9iDfCNPOYAzNrvm6GHUHMOx2k1WTtPxIa3wHad98B+576+H
+         QymlvR8xXgpxTSjfqRDAQTmVd7qIbAtyhUaaD8GMZx9+C6eBkBXnjUmuIGn0ekqrh5
+         FV2Y6XPw9CNnEfJjDSa1Uzp3/a80f7erl5ZD5yyMbHDEP/fBQdegB9QANbXt40fs2f
+         9cxfcH8USVFUw==
+Date:   Wed, 24 Aug 2022 08:05:44 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     fstests@vger.kernel.org, zlang@kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V2] xfs: Check if a direct write can result in a false
+ ENOSPC error
+Message-ID: <YwY+SBk+fOh83PdI@magnolia>
+References: <20220824093057.197585-1-chandan.babu@oracle.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220824093057.197585-1-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2022-08-24 at 08:24 +1000, NeilBrown wrote:
-> On Tue, 23 Aug 2022, Jeff Layton wrote:
-> > On Tue, 2022-08-23 at 21:38 +1000, NeilBrown wrote:
-> > > On Tue, 23 Aug 2022, Jeff Layton wrote:
-> > > > So, we can refer to that and simply say:
-> > > >=20
-> > > > "If the function updates the mtime or ctime on the inode, then the
-> > > > i_version should be incremented. If only the atime is being updated=
-,
-> > > > then the i_version should not be incremented. The exception to this=
- rule
-> > > > is explicit atime updates via utimes() or similar mechanism, which
-> > > > should result in the i_version being incremented."
-> > >=20
-> > > Is that exception needed? utimes() updates ctime.
-> > >=20
-> > > https://man7.org/linux/man-pages/man2/utimes.2.html
-> > >=20
-> > > doesn't say that, but
-> > >=20
-> > > https://pubs.opengroup.org/onlinepubs/007904875/functions/utimes.html
-> > >=20
-> > > does, as does the code.
-> > >=20
-> >=20
-> > Oh, good point! I think we can leave that out. Even better!
->=20
-> Further, implicit mtime updates (file_update_time()) also update ctime.
-> So all you need is
->  If the function updates the ctime, then i_version should be
->  incremented.
->=20
-> and I have to ask - why not just use the ctime? Why have another number
-> that is parallel?
->=20
-> Timestamps are updated at HZ (ktime_get_course) which is at most every
-> millisecond.
-> xfs stores nanosecond resolution, so about 20 bits are currently wasted.
-> We could put a counter like i_version in there that only increments
-> after it is viewed, then we can get all the precision we need but with
-> exactly ctime semantics.
->=20
-> The 64 change-id could comprise
->  35 bits of seconds (nearly a millenium)
->  16 bits of sub-seconds (just in case a higher precision time was wanted
->  one day)
->  13 bits of counter. - 8192 changes per tick
+On Wed, Aug 24, 2022 at 03:00:57PM +0530, Chandan Babu R wrote:
+> This commit adds a test to check if a direct write on a delalloc extent
+> present in CoW fork can result in a false ENOSPC error. The bug has been fixed
+> by upstream commit d62113303d691 ("xfs: Fix false ENOSPC when performing
+> direct write on a delalloc extent in cow fork").
+> 
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> ---
+> Changelog:
+> V1 -> V2:
+>   1. Use file blocks as units instead of bytes to specify file offsets.
+> 
+>  tests/xfs/553     | 65 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/553.out |  9 +++++++
+>  2 files changed, 74 insertions(+)
+>  create mode 100755 tests/xfs/553
+>  create mode 100644 tests/xfs/553.out
+> 
+> diff --git a/tests/xfs/553 b/tests/xfs/553
+> new file mode 100755
+> index 00000000..ae52e9fc
+> --- /dev/null
+> +++ b/tests/xfs/553
+> @@ -0,0 +1,65 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test 553
+> +#
+> +# Test to check if a direct write on a delalloc extent present in CoW fork can
+> +# result in an ENOSPC error.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick clone
+> +
+> +# Import common functions.
+> +. ./common/reflink
+> +. ./common/inject
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_fixed_by_kernel_commit d62113303d691 \
+> +	"xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork"
+> +_require_scratch_reflink
+> +_require_xfs_debug
+> +_require_test_program "punch-alternating"
+> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+> +_require_xfs_io_command "reflink"
+> +_require_xfs_io_command "cowextsize"
+> +
+> +source=${SCRATCH_MNT}/source
+> +destination=${SCRATCH_MNT}/destination
+> +fragmented_file=${SCRATCH_MNT}/fragmented_file
+> +
+> +echo "Format and mount fs"
+> +_scratch_mkfs >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +blksz=$(_get_block_size $SCRATCH_MNT)
 
-We'd need a "seen" flag too, so maybe only 4096 changes per tick...
+_get_file_block_size, since COW can only be done in file allocation
+units.
 
->=20
-> The value exposed in i_ctime would hide the counter and just show the
-> timestamp portion of what the filesystem stores. This would ensure we
-> never get changes on different files that happen in one order leaving
-> timestamps with the reversed order (the timestamps could be the same,
-> but that is expected).
->=20
-> This scheme could be made to handle a sustained update rate of 1
-> increment every 8 nanoseconds (if the counter were allowed to overflow
-> into unused bits of the sub-second field). This is one ever 24 CPU
-> cycles. Incrementing a counter and making it visible to all CPUs can
-> probably be done in 24 cycles. Accessing it and setting the "seen" flag
-> as well might just fit with faster memory. Getting any other useful
-> work done while maintaining that rate on a single file seems unlikely.
+This is (currently) a distinction that won't make a difference until
+realtime reflink, where we'll have to deal with rextsize > 1FSB, but we
+might as well get this correct from the start.
 
-This is an interesting idea.
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-So, for NFSv4 you'd just mask off the counter bits (and "seen" flag) to
-get the ctime, and for the change attribute we'd just mask off the
-"seen" flag and put it all in there.
+--D
 
- * Implementing that for all filesystems would be a huge project though.
-   If we were implementing the i_version counter from scratch, I'd
-   probably do something along these lines. Given that we already have
-   an existing i_version counter, would there be any real benefit to
-   pursuing this avenue instead?
---=20
-Jeff Layton <jlayton@kernel.org>
+
+> +
+> +echo "Create source file"
+> +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 8192))" $source >> $seqres.full
+> +
+> +echo "Reflink destination file with source file"
+> +$XFS_IO_PROG -f -c "reflink $source" $destination >> $seqres.full
+> +
+> +echo "Set destination file's cowextsize to 4096 blocks"
+> +$XFS_IO_PROG -c "cowextsize $((blksz * 4096))" $destination >> $seqres.full
+> +
+> +echo "Fragment FS"
+> +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 16384))" $fragmented_file >> $seqres.full
+> +sync
+> +$here/src/punch-alternating $fragmented_file >> $seqres.full
+> +
+> +echo "Inject bmap_alloc_minlen_extent error tag"
+> +_scratch_inject_error bmap_alloc_minlen_extent 1
+> +
+> +echo "Create delalloc extent of length 4096 blocks in destination file's CoW fork"
+> +$XFS_IO_PROG -c "pwrite 0 $blksz" $destination >> $seqres.full
+> +
+> +sync
+> +
+> +echo "Direct I/O write at 3rd block in destination file"
+> +$XFS_IO_PROG -d -c "pwrite $((blksz * 3)) $((blksz * 2))" $destination >> $seqres.full
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/553.out b/tests/xfs/553.out
+> new file mode 100644
+> index 00000000..9f5679de
+> --- /dev/null
+> +++ b/tests/xfs/553.out
+> @@ -0,0 +1,9 @@
+> +QA output created by 553
+> +Format and mount fs
+> +Create source file
+> +Reflink destination file with source file
+> +Set destination file's cowextsize to 4096 blocks
+> +Fragment FS
+> +Inject bmap_alloc_minlen_extent error tag
+> +Create delalloc extent of length 4096 blocks in destination file's CoW fork
+> +Direct I/O write at 3rd block in destination file
+> -- 
+> 2.35.1
+> 
