@@ -2,248 +2,243 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61E53C3F6B0
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Aug 2022 13:01:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 145E6ECAA27
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Aug 2022 19:28:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242054AbiHYNBV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Aug 2022 09:01:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37660 "EHLO
+        id S229711AbiHYT25 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Aug 2022 15:28:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242057AbiHYNBT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Aug 2022 09:01:19 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EEA22B1BB;
-        Thu, 25 Aug 2022 06:01:17 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27PCkWQc022445;
-        Thu, 25 Aug 2022 13:01:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2022-7-12;
- bh=OUYi3DtBTxqEJ59jSgDbH49l5xrIRtGST3I/xTidCX0=;
- b=t72xqSuKClQPmzFVJnMDk9TVQv2jgK+0L9qdqG1pJwM8dDhPYbiI2E0GUNWYw6e9k67H
- fGye6ANKYoB0ef6cDkX9GACkad443+GBUQFjuTMkaMFunp9SZBTRF84uMKNtjT1kXOSM
- BfddCjTZxnDHbB21ThsW3QU9AjnIKwN/R1VWVh399dqS/19VnRJJLUXN+4r0rgBnvQ0B
- iPCNTSTwq3ny/jsA6z8nKSJrjJRpS1TaMzHT3IYyYtu+IevAR7TnURn43ztDmfMb4Rpp
- Wn1xG5/GCV3Np1bTWGA9NHuqFlg8DChov4NC6O2KhvsVsOaljGEGINpaiJlcXuXM3SY2 MQ== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3j5aww41sd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 25 Aug 2022 13:01:04 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 27PA47EX011171;
-        Thu, 25 Aug 2022 13:01:03 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2043.outbound.protection.outlook.com [104.47.66.43])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3j5n6mt8ua-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 25 Aug 2022 13:01:03 +0000
+        with ESMTP id S231905AbiHYT24 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Aug 2022 15:28:56 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97E37BD770;
+        Thu, 25 Aug 2022 12:28:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1661455734; x=1692991734;
+  h=date:from:to:cc:subject:message-id:references:
+   content-transfer-encoding:in-reply-to:mime-version;
+  bh=1KICcVJCBqyEk3It+OxuLPa7j5f7j8x0cDuvsHPNHf8=;
+  b=ZOyg0QQOkPmpLmCSn1KCP4A8m/OaxWyOCdsgktmN444Kv8t+bdsgwol/
+   IA9dH52I7OofVdAPsHmVpEDifT7rsvhiYQnJvsksHjbeKnOVNjP3xrnld
+   DnrLmTccQej987iEO+EdhL2+q3KpH1ASUTHS28xHfaM5OKqprYvaMKD4P
+   VKW0+83M6UIPGD4/abhPgKtquBg87FZAyUCZwBy8gySeBy4v1f3m1/EPx
+   drTsNlp5yGmkutdlKUVZ8q6ek8ItNZmF2e371KXA1S2bb/XV/AJffCzBe
+   Br4mbIi0f0UGr1TaSXohvC2mUkC6ot5trw7e8geDpHtonjJ+NyFkXTolA
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10450"; a="277356814"
+X-IronPort-AV: E=Sophos;i="5.93,264,1654585200"; 
+   d="scan'208";a="277356814"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Aug 2022 12:28:53 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,264,1654585200"; 
+   d="scan'208";a="561163665"
+Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
+  by orsmga003.jf.intel.com with ESMTP; 25 Aug 2022 12:28:53 -0700
+Received: from orsmsx607.amr.corp.intel.com (10.22.229.20) by
+ ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 25 Aug 2022 12:28:52 -0700
+Received: from orsmsx603.amr.corp.intel.com (10.22.229.16) by
+ ORSMSX607.amr.corp.intel.com (10.22.229.20) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 25 Aug 2022 12:28:52 -0700
+Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
+ orsmsx603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31 via Frontend Transport; Thu, 25 Aug 2022 12:28:52 -0700
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (104.47.59.168)
+ by edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2375.31; Thu, 25 Aug 2022 12:28:51 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Sfc/4mp75j42EBKQJxBCIVcPeVCXsz4cebmXEOwffhdciGM3ulh5XXQyuqwaGmdHLqmxZa71CIzu7ns52v2iQToGsGkojempegp013Y+6CLpZ8z+rMRVBQpAVghF6PicW/B7V9wp3OK1zv2cf4F2rS01+63uZO4IFCnUsx4oDoijFCTTum4radHbFzGZgTzQZg6ZdTmskkZPsG9gBOjYp9bL1SyjV2CsRpSdqsqdaRyHj6SsP/lZh4WwyycF3FgGTBFyg8YWIQpDMhj9VBGs8KSAwm0lNZT1BctQld7jdjR4H3OKEJcKzBxzsy9EiV7yHtsmBTgO2NspLlsM8E3ZIg==
+ b=jJ7tWKmyk7qpP0OtpvpHAohTphrQcZPCk4HXKSLtPTizQS8c6E4QrNXKiqG3lQ66rf70rcDIzR2tqELEwDewZ2Zlk/tx26I+ck3nJiBAeQhyMFYZLovWduMEJwvSrMhNgCMi6Gb2CkqYsJhCPQl1ZSBng5T6EpSVKduHq+9k797gIVRmk8G6mv795LUpZ4GqW3cN/m/fsf7/oo9PYNjq6p+nRlusM78Fzh2G9R5yDxkPWINzPZQPgaaKEDFP/JsJ13ky0+/hy7G+e299aJwVtFsEAPa5vWqiqO84IcdSS81BDs4Jdj9ll5QiYtTx52a5lo31nlB+4zzeHwQ3DfeNkA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=OUYi3DtBTxqEJ59jSgDbH49l5xrIRtGST3I/xTidCX0=;
- b=dFJqZdQTZ8GEBW91v5diS9xcgWEa0+BILJNI5doY0/oS100L071O2uV/hmL/iCv18n2uZbUN8bayFsLwXYUE0zbGLAcznPgkMnwm+01FN0TeZ1OIe322wYuMYaIE5/KYg8tOwGkQn6JpezC0KiBk+nf/4HCi4pq0pHShD3+HjQwBRYJ3MpTFd3ndO4IjBTbREIJ9616xI+sZa9zeCzRiaIQC9OE5mKiOTqqyJyLBtqX2jdzrnT8H+7GnAw+eSvbS+KRhHH2aQF7/ANeljeKhdWwAJbPzhWu2L/uMx3tAIZuvyVl1dd6jmhv1wlDTJOgefmehRoVZ0PNIa9az2C3GMw==
+ bh=/As9I/+tGP4V2qhg3J5Fl5KKE3HFjvpVHmfFsE/hSW4=;
+ b=UcvzlVBEe1sPWTvZ1cpVqDOL0r0dHahUd2qjOC3T7bKpp21DlHZCAB/bGKnsr9fswUEzFP4ojpgrgk2aHg9uUVQpYZuMBAI/BXaoTF1y/n41NaLigd+84i+wC/BH3DmYUlfAviZnmy5fJm11HfF7WevjGRC0YXsZIDGzFH1i5W/Ay3U4Su/wIiI1RXFhYxTRGbCJyUf893l0hvjRg1Aoi47/NHDcdcgtZ+gcFtUcSuxGD2AuxjqVgo4ZUBRGZBKMxznT64E0P3zonhsjqZso9X0krS07qY7kAxDnD3H16Z7wowi6scKKMDmTeMZBbM2aro1FR35LzX3JZwD/T8hIJA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OUYi3DtBTxqEJ59jSgDbH49l5xrIRtGST3I/xTidCX0=;
- b=sL0hb/Fm810uOCIJXApJIowZvuaHkfMm/LN5cB+iimFpmXaBvlZq6r6N+RqftTR1E6dNVOK2QAG2VyrXtPJyirVVJATQ4I/U490Qc7V7WjGqy98D98nA4SpZvmYZ+Nt9qUsWq4VsowcYkLBLaCzg60mdTKCYjn/cp6Jbxs1xINU=
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by PH7PR10MB6274.namprd10.prod.outlook.com (2603:10b6:510:212::14) with
- Microsoft SMTP Server (version=TLS1_2,
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
+ (2603:10b6:301:50::20) by DM6PR11MB4738.namprd11.prod.outlook.com
+ (2603:10b6:5:2a3::18) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5566.15; Thu, 25 Aug
- 2022 13:01:01 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::552:17a1:f9b2:eafc]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::552:17a1:f9b2:eafc%7]) with mapi id 15.20.5566.015; Thu, 25 Aug 2022
- 13:01:00 +0000
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     fstests@vger.kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, zlang@kernel.org,
-        linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: [PATCH V3] xfs: Check if a direct write can result in a false ENOSPC error
-Date:   Thu, 25 Aug 2022 18:30:41 +0530
-Message-Id: <20220825130042.1707017-1-chandan.babu@oracle.com>
-X-Mailer: git-send-email 2.35.1
+ 2022 19:28:50 +0000
+Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
+ ([fe80::9847:345e:4c5b:ca12]) by MWHPR1101MB2126.namprd11.prod.outlook.com
+ ([fe80::9847:345e:4c5b:ca12%6]) with mapi id 15.20.5546.024; Thu, 25 Aug 2022
+ 19:28:49 +0000
+Date:   Thu, 25 Aug 2022 12:28:45 -0700
+From:   Dan Williams <dan.j.williams@intel.com>
+To:     Dan Williams <dan.j.williams@intel.com>,
+        HORIGUCHI =?utf-8?B?TkFPWUEo5aCA5Y+j44CA55u05LmfKQ==?= 
+        <naoya.horiguchi@nec.com>
+CC:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "jane.chu@oracle.com" <jane.chu@oracle.com>,
+        "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "linmiaohe@huawei.com" <linmiaohe@huawei.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 05/14] mm: Introduce mf_dax_kill_procs() for fsdax case
+Message-ID: <6307cd6d8bec5_1b322946@dwillia2-xfh.jf.intel.com.notmuch>
+References: <20220603053738.1218681-1-ruansy.fnst@fujitsu.com>
+ <20220603053738.1218681-6-ruansy.fnst@fujitsu.com>
+ <63069db388d43_1b3229426@dwillia2-xfh.jf.intel.com.notmuch>
+ <20220824234142.GA850225@hori.linux.bs1.fc.nec.co.jp>
+ <6306fbabab4cd_18ed7294e2@dwillia2-xfh.jf.intel.com.notmuch>
+ <6307031b763be_18ed729455@dwillia2-xfh.jf.intel.com.notmuch>
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR03CA0085.apcprd03.prod.outlook.com
- (2603:1096:4:7c::13) To SA2PR10MB4587.namprd10.prod.outlook.com
- (2603:10b6:806:114::12)
+In-Reply-To: <6307031b763be_18ed729455@dwillia2-xfh.jf.intel.com.notmuch>
+X-ClientProxiedBy: SJ0PR05CA0159.namprd05.prod.outlook.com
+ (2603:10b6:a03:339::14) To MWHPR1101MB2126.namprd11.prod.outlook.com
+ (2603:10b6:301:50::20)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7dea7852-1dea-4e58-8d96-08da8699dc15
-X-MS-TrafficTypeDiagnostic: PH7PR10MB6274:EE_
+X-MS-Office365-Filtering-Correlation-Id: 56c99c02-23dd-4cad-f7c5-08da86d00969
+X-MS-TrafficTypeDiagnostic: DM6PR11MB4738:EE_
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: VMJA202iHfVkAE8o6zC/Hr/giH5liQHrchlowLXbV/bVzOUQNOZrjHbDBzkQ4+ose051HxXM1CIfyVeEvo2h4/wytnUsJrSOk4A79OjdM5eiS3dj1WEewcy8LohwxEf2rLE6ydaFK7exoATsfVj5OwXeNaUH7jXJypfahMiCIiglfZ0aV05STqVtm7fXXc4RD0bp1SgDjqa/P3mEcpNs/Bd32SsAE3rCPlqsA82DAn1+2ExclKLgFxR4pIpVV8PtRmKwBEU/eBz2PkYLThn6AYjU+dOzQqkR7PZuU4Gx4N/3Wu/jSEifzxpNilVPGKqyzqME4n7RnW+10QrG5QHrm1U/cDFFrriJG13+R4b0OGQ4CHMckDNI3L76SNd5TGjD2wkusJUr4AyQ//AbWWc89kYhLwJXXmh9hENE9D08sFbjMFf6GlbshORMHtGakngqiwjmkVa9jHOF7HqykhWP7o1K7lSc4U1x8jvb4HSpYWSkeU0MJfgObqEAk/9duo1yre7JuZjDonRWzOqGGmc7P4qiXz4xyEljkHK9TgqwfnexBPVfm1Dn9vvkCOFsFp/E8Mw8lI6JusBeHhLiBXLdEf6JX/zQ4SWdF9aAPW+EJKRf7/F9EqnBvWYaNDK9aV4x4De8/f4cIAHajamaCkysRPTswH67jfX5V7v7cQxHWo962lcgZOkNpSKsGMmsrG2PMN1VUpOdzG9ZCHzPw9XJRwyv94oI1MtarVvIKS6r7kViVWWktxsUG57UoECwW4MY
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(346002)(136003)(366004)(39860400002)(396003)(376002)(8676002)(26005)(6506007)(2906002)(52116002)(86362001)(6512007)(66946007)(6916009)(66476007)(38350700002)(36756003)(66556008)(316002)(41300700001)(38100700002)(83380400001)(6486002)(4326008)(478600001)(5660300002)(8936002)(1076003)(2616005)(6666004)(186003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: em4ImuqZilbrWCFTuNmRY1AbeNDL0N1aEs+8NuIovpHRIlf8J8SSApbFrzMsQ5uMtSRjTYjQ/tg3Mv9AWGf3EbLYUDHqUDhNKQtnnYTSAc0zMxXzlnWm94wVa1Scq9qFIir/OYeLGI0eGlucoQeSEyOckAMFwP1wdUhw1KL/iX9pMbq1WSS1+A/RHFEnFZp2KrXJc8ZfcDDqLbdo4QL9USlWns42mv37laZlpx/0tCcjB3IG54V7dUKScAvCXqq1U/7ZjrYY+uyURhzxTqILTK1bfVmxzxUf6+4y2mdU7Ve95ogJs0qKzU9WMa2DfvQq14mZUvB2TCwrZlxqpOswo318unECi4t/xJ4IzyNtpamxhkJu1eNPht5XHCPCKvx0TUO1GvjwnHVRjivtEMUL0o8/ghsfdYdppr9utyK4YQvM6UHPJJebyMcFyKIk7aTCCYd8HNZ9ZM0G/Pqb1fkHwaIIIIzvjacbUuo7uZztseYL/fbrumVdP4YXs+GRZUzxzSNBJY1U0HrN3fUMkN2gw3rczOSfYzZTUml2Xx5+IqA4NDvNXSIoUyXayEFZEIMjmc+/J9M6aVBux/AIBmEtMA8dcVSw3ULkG9zFqCc2+IIROhY6VXnia/cLTAK7mqNbe2jpnVpPqwVREqbEVDgoeIv63R9TPQsnXx1W7VJZH9ogZwrw5JxoxtnQhK/KBMKkkZYrtu0Ha0smK8RU0VEqDA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1101MB2126.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(396003)(346002)(376002)(136003)(39860400002)(366004)(6512007)(26005)(6506007)(6666004)(86362001)(82960400001)(186003)(41300700001)(83380400001)(6486002)(9686003)(478600001)(66556008)(316002)(4326008)(110136005)(54906003)(66476007)(8676002)(66946007)(7416002)(8936002)(38100700002)(2906002)(5660300002);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Z/bzNtU9TLigYt979w4BCukiVm3Wp393UeYTBDa/ZypapookTDyAU6pDb4TH?=
- =?us-ascii?Q?hhx+rJXii0f4TmMPCmyBU4hPRRIManP7q+h3z/ROO7NmfiMSFIQ6rZgvoSet?=
- =?us-ascii?Q?EWJod7Krz7zepnISnwHfVyxnnY3QZDKChJ1zTUsvMq2WQlCSTibPc4vCwONY?=
- =?us-ascii?Q?N29EJG5/hehkdT1pD5M6WCmZ/S0CWR8vzWJuWkli0cu/xapHlHF4QhpU1KLs?=
- =?us-ascii?Q?rh/GI67Ind86nB+0rkoZW5S3Cmpl6U9lbqjkGkD/o2DL4wQ2+u3IZJcFo68o?=
- =?us-ascii?Q?0vGfJGp9jL130FBlyiue+OfRtokn1V3yn2CpakPqbUEu8eB6hBQj+ZuBI/kn?=
- =?us-ascii?Q?CFmUkFvSzFlksZNurVrAnxYNqCZuY8ZlTxcWdf5k78/Ietwih5qHmXRJ/Upv?=
- =?us-ascii?Q?wCaz7DXC6DMKPiqhGXqE7LxRHRHXoq6C1On5iD/2dphhuRAmiUpyqpox6lGH?=
- =?us-ascii?Q?WbkadqX9yilbheaEAafZ2lLolPHL8wqxoSJgyLnxCtRntb5Vfu8VrFCA6rnB?=
- =?us-ascii?Q?3LCR8Ow0hGwfFSard3CJItsZibwS5xJDqaI6D/Y/XKHfFi6cfS+osIICNV6m?=
- =?us-ascii?Q?pOFhvpV23SObJvCFfSGY/dBjpVZGZttcoofF69axV1m5axT8YsuDknJSV+Ev?=
- =?us-ascii?Q?hsiAA9P5gx5nQlclapfIiR4TIBOjRRLTilg9d5VbGOhVQnXZPprAeX3pKpSb?=
- =?us-ascii?Q?WvNb+oeoc76mpdLDVhadR3qoTia9YUHmGHedbA5pGe6I/0UTUgTUCf8T0aWC?=
- =?us-ascii?Q?RYeB8FXiEbDRjNq6FiPyB6MRZDmvAljHaqbNY8xgbEZcXsoYPHVzJS5ldWac?=
- =?us-ascii?Q?V2VPX+Q5uChBSU4j5Pj4vOPuhcLZd2ah9OP93KjnFvkt8aJYP7uvF8v9CExA?=
- =?us-ascii?Q?SkacsZLvBgsmXWIaWryn4jXZU2Q1JSf1nBPnCrH1swi0UkCD2nx3oEl8tggA?=
- =?us-ascii?Q?ai1MGBFBL0xSk17VFMuefFltcSpfHHzQ8Zd1ywjLTPKJkXHhHGwjWRAAjvyD?=
- =?us-ascii?Q?eXRr66O+JGXp+5f+nx7DQFiPHNRHqhqvWlNbV9XIedy+r5AuHRSE23k76xr/?=
- =?us-ascii?Q?AKGFjq0wABj6h4cMX8rAKzCIhsLWg1OdheWzw4Kn5eHFBMlDIaeG9IajwtlX?=
- =?us-ascii?Q?0lyo0KPEtCcd9VdWy235MGK6FyfzU3I92FszK8Q+KlsWTRIXCx8yqwzXAQ03?=
- =?us-ascii?Q?g30fYqhJvXhpcnOGaT1lK6JOesuo1gl/qCPsvSTog1Q367MY34P/TLodqfJV?=
- =?us-ascii?Q?3apV2yEe2tSh0Vy1/YQhW2ARsaBhp8L1GzAjXXfRshnUxHomsvzlXzf6PLb7?=
- =?us-ascii?Q?WvgIzxBKrO+W/h/VxGxgkKU3CHFhGTvODJzlXQ8FhHwGpl2eDCJ+3bs9mjGP?=
- =?us-ascii?Q?tYNROiT7A7IXumo8JztJ1RMxaiDc8LzEmHcCrmd6tHf2DtCm1n5zDgFt9dqH?=
- =?us-ascii?Q?AojqXPid58vqeIyAZ7g3UUFyRgFzGjWp0Eql4O2F4BJT6AWYDPLTZmSrELKP?=
- =?us-ascii?Q?5+7Rol4wt/FYk+KlWhGQRxRDMBNTuI8sbo3gkNnYiS2qoI8KTPJzVIZFw0hE?=
- =?us-ascii?Q?i7Ac5ZCf5wIPveM+zQiSkG9UCHxQHrU5cZaLasGn?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7dea7852-1dea-4e58-8d96-08da8699dc15
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Q3ErQ1BFRTJoOWNndmxUQndjTEQ3cUpkakpJMnpiVUh0RlY2Z2lRQkhycUpM?=
+ =?utf-8?B?OHB0eTE2eitYdkppTitNemVseG9sbmU0T0xoOXNQVDZjeEFzR0NjbEV3Wnkw?=
+ =?utf-8?B?eHIwWk5tQWMreERXcmpRRjJCN2tKUE1sQ094MmJxSDZSaG1WRENudXI0b0xZ?=
+ =?utf-8?B?SFQ2ekdOMlQyT2tFbmxHckZEaDNXTnhObmJiTHorVDB4a0FSWGhXVUZ6ajVZ?=
+ =?utf-8?B?MTJOdzE4Zkx6ZC82Rk92MWNVSkRocE4zOTlqS0dlSzRLL2pacmFkbWJJTTRE?=
+ =?utf-8?B?UHJsdWhITC9ISktqanNJOEQ3VEdXZVBrNjQxTkN3ZjBHN2p6YkY5cFVCbnE0?=
+ =?utf-8?B?bkw0VHAvVHlmbzZsR0oyL2N5WGJXam5tWm92Z3JKUzM2QS9vMzVrY2xZNHds?=
+ =?utf-8?B?N0RWUGd2N2RkMHJRUGhDeFJWM3pjcFVuK2w4MzR0ZUdOQU5FbUVZcUlPSk54?=
+ =?utf-8?B?RzhiYk5IY21EZGRYVThMdkl2Ukk5b0ZHQ0JCbDJ6VlVkRmcyeXNJRXFNYWxm?=
+ =?utf-8?B?RW9Sbi9qSUhqN1lyRzN0U2U1RGlXbmwxSXgyQXI5dGhFY2gyaFdPekxUM3Rv?=
+ =?utf-8?B?VWIxMkJVeXp2aldza3hLU2o0K202cCszdzNrYk5IRlM1K2lxN2F3Z3JnSkhE?=
+ =?utf-8?B?TzAwL2lBcklYZlU5WnJGT1VmWDNVUlp0eElIVXdJNW1YaVVqWWFGN0NjdTho?=
+ =?utf-8?B?eU1BUFE3cXlvZDVOamxGejQ0c2hwcWliaFV5TlQ4eVpadjVBWFg5WVhPN3h3?=
+ =?utf-8?B?TTBxdEFRWncvQWE5T0FpRVFhakRjS0JDTVhSaHgyVzIra2pJRjl4aTZ0YW5W?=
+ =?utf-8?B?d2I1RG4wTmRpTTZnanNRNEI5QmVkMWxZWkNuYVZnRUYrdHVkU09TUnBqalhG?=
+ =?utf-8?B?VzVlWDJrQVE1MWlEeW5jcTRUVW4wTGVDM0RBTDJsdnc4SXhTajNtT1B1aDJk?=
+ =?utf-8?B?UW9MSEVsTFdaeDNJVE0xTExrMjNQNGhValRIMHlBRXN4RTEwSjhTcUl4N3BP?=
+ =?utf-8?B?emVpUi80RFpCZjBmcGdCc0Z5RUtoaEtETWpGSlB4V09tR0g2a1FpT0JSa2I3?=
+ =?utf-8?B?aDhQL2pxNGhVVGZCcFRpNFJoVERCaURqL1ptNUQ4TWNTcmdkMkEwVG9GeVN0?=
+ =?utf-8?B?aEszQVFGZXFGcGI1N2dzeHJobEFjM1VXV2Jsc3NyMThGR240N2sxMi9jdmJ5?=
+ =?utf-8?B?c3ZTYVMwKzYwQStNNlN5Y1lxN0xEVmQrQmg5YlRJNVk4N2VVanVTUE9EQzl0?=
+ =?utf-8?B?UFlYR2treGpaSTc4amRXbkxCWSszU3NybndhL05tUitTb2lPeHUydG5JWmx2?=
+ =?utf-8?B?OEtXT0s3WTZUeXAvYWFWS012eDk3cmFpaXNqZGJRUXE3QjRUNnlkSlBYWUMw?=
+ =?utf-8?B?M1hHd0lKMTFGdHZVcWxVTHE0UnFRYmdHU3BlSWd0ei9JZlVZRmh1NFkzRkpO?=
+ =?utf-8?B?bTd0a1hPaFhxSGI2UzROS3JVaFRuWHBqbnlScmVtaWxHZ0JrV2lRc3JmVUdX?=
+ =?utf-8?B?a2FvWXFPdERqT3JSZkFDdDhvUm9xSzRReXo1U3ZFVDl0cXJnTzVCT2ZpYVhH?=
+ =?utf-8?B?aXBSZGxJWUFReTFrWWU4QkN5UGQ4RzZISGlZRXk1bzBJK2w0QjJ0UXRvU0hH?=
+ =?utf-8?B?OVluQmxQTDhna05Wc0o5NnQ5THFIYjQzaUJiOTJEZ1ZzZi9PWVo4a2M0NlA3?=
+ =?utf-8?B?YXBQdmJkM3ZJSzdlRWJuK3UzMlBBcFJCZmZuZGJQVFdLZHBxRW1PUTZQZUx4?=
+ =?utf-8?B?Ni9oNlplWmhzdUxheEUxazVsMEFNWHMxeEVKZGVmWmZzVWc0Vm5uOVVlYmM0?=
+ =?utf-8?B?cVRxd0V6YVVJMjVOZjA1VTZYNUJ5UGpOYVFIK1o0MWQ4bGd4eWVIaCs4V1Zx?=
+ =?utf-8?B?NDRONk5PeDk3Uno5YjlZYzJxVVcvV2FXblprVitIODhTQTJXWVlKcDB5R2xw?=
+ =?utf-8?B?TFFDSGZ4ZDkzbVN3OUlsMUZaVURzSmpsb01zRGRFbFA1NnQ2a2JOWUR0MGVR?=
+ =?utf-8?B?c2x2SkFNcVVuanJENUs0Nkhxd1JNSXJpNTc1L2dBOUY3RE12RUVaUFlQc2wr?=
+ =?utf-8?B?NWxLZ1ZNY0t4SDlOckZvdEJLUTVpSHNYU3FGREhUTERxaC9UVUVpNi80ZEpX?=
+ =?utf-8?B?czNiNXF6ZDdjZzNlWnhoUkdjbmpJdmR3TXovU1h4UTR2OC9LTi9aQmtHSjRs?=
+ =?utf-8?B?aGc9PQ==?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 56c99c02-23dd-4cad-f7c5-08da86d00969
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR1101MB2126.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2022 13:01:00.7645
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2022 19:28:49.8105
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pMUZddeNw2ADvkEe0W2fpjauLMdTQgFAP9PwlARuIZKyT4R1qm88ZCpgoOC1mr55otLND6KLn2y0fLkVKakKiw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6274
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-08-25_05,2022-08-25_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- mlxlogscore=999 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2207270000 definitions=main-2208250050
-X-Proofpoint-GUID: zIlensz96nhXFNLPivv1mOdbBCPjTCFe
-X-Proofpoint-ORIG-GUID: zIlensz96nhXFNLPivv1mOdbBCPjTCFe
+X-MS-Exchange-CrossTenant-UserPrincipalName: iBL0BXl8z57CGrONJqPKjHa3wGywjTOp6dEOI4BQQeSWHCSZnvTUk6B3EpWBN2FJ1E7Le47HiQWRfet2TDW8mgaydJTkflCMWQVJf8DqLZI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB4738
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit adds a test to check if a direct write on a delalloc extent
-present in CoW fork can result in a false ENOSPC error. The bug has been fixed
-by upstream commit d62113303d691 ("xfs: Fix false ENOSPC when performing
-direct write on a delalloc extent in cow fork").
+Dan Williams wrote:
+> Dan Williams wrote:
+> > HORIGUCHI NAOYA(堀口　直也) wrote:
+> > > On Wed, Aug 24, 2022 at 02:52:51PM -0700, Dan Williams wrote:
+> > > > Shiyang Ruan wrote:
+> > > > > This new function is a variant of mf_generic_kill_procs that accepts a
+> > > > > file, offset pair instead of a struct to support multiple files sharing
+> > > > > a DAX mapping.  It is intended to be called by the file systems as part
+> > > > > of the memory_failure handler after the file system performed a reverse
+> > > > > mapping from the storage address to the file and file offset.
+> > > > > 
+> > > > > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> > > > > Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > Reviewed-by: Miaohe Lin <linmiaohe@huawei.com>
+> > > > > ---
+> > > > >  include/linux/mm.h  |  2 +
+> > > > >  mm/memory-failure.c | 96 ++++++++++++++++++++++++++++++++++++++++-----
+> > > > >  2 files changed, 88 insertions(+), 10 deletions(-)
+> > > > 
+> > > > Unfortunately my test suite was only running the "non-destructive" set
+> > > > of 'ndctl' tests which skipped some of the complex memory-failure cases.
+> > > > Upon fixing that, bisect flags this commit as the source of the following
+> > > > crash regression:
+> > > 
+> > > Thank you for testing/reporting.
+> > > 
+> > > > 
+> > > >  kernel BUG at mm/memory-failure.c:310!
+> > > >  invalid opcode: 0000 [#1] PREEMPT SMP PTI
+> > > >  CPU: 26 PID: 1252 Comm: dax-pmd Tainted: G           OE     5.19.0-rc4+ #58
+> > > >  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 0.0.0 02/06/2015
+> > > >  RIP: 0010:add_to_kill+0x304/0x400
+> > > > [..]
+> > > >  Call Trace:
+> > > >   <TASK>
+> > > >   collect_procs.part.0+0x2c8/0x470
+> > > >   memory_failure+0x979/0xf30
+> > > >   do_madvise.part.0.cold+0x9c/0xd3
+> > > >   ? lock_is_held_type+0xe3/0x140
+> > > >   ? find_held_lock+0x2b/0x80
+> > > >   ? lock_release+0x145/0x2f0
+> > > >   ? lock_is_held_type+0xe3/0x140
+> > > >   ? syscall_enter_from_user_mode+0x20/0x70
+> > > >   __x64_sys_madvise+0x56/0x70
+> > > >   do_syscall_64+0x3a/0x80
+> > > >   entry_SYSCALL_64_after_hwframe+0x46/0xb0
+> > > 
+> > > This stacktrace shows that VM_BUG_ON_VMA() in dev_pagemap_mapping_shift()
+> > > was triggered.  I think that BUG_ON is too harsh here because address ==
+> > > -EFAULT means that there's no mapping for the address.  The subsequent
+> > > code considers "tk->size_shift == 0" as "no mapping" cases, so
+> > > dev_pagemap_mapping_shift() can return 0 in such a case?
+> > > 
+> > > Could the following diff work for the issue?
+> > 
+> > This passes the "dax-ext4.sh" and "dax-xfs.sh" tests from the ndctl
+> > suite.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
----
-Changelog:
-V2 -> V3:
-  1. Use _get_file_block_size instead of _get_block_size.
+So that diff works to avoid the BUG_ON, but it does not work to handle
+the error case. I think the problem comes from:
 
-V1 -> V2:
-  1. Use file blocks as units instead of bytes to specify file offsets.
+    vma->vm_file->f_mapping != folio->mapping
 
- tests/xfs/553     | 67 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/553.out |  9 +++++++
- 2 files changed, 76 insertions(+)
- create mode 100755 tests/xfs/553
- create mode 100644 tests/xfs/553.out
-
-diff --git a/tests/xfs/553 b/tests/xfs/553
-new file mode 100755
-index 00000000..e98c04ed
---- /dev/null
-+++ b/tests/xfs/553
-@@ -0,0 +1,67 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 553
-+#
-+# Test to check if a direct write on a delalloc extent present in CoW fork can
-+# result in an ENOSPC error.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick clone
-+
-+# Import common functions.
-+. ./common/reflink
-+. ./common/inject
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_fixed_by_kernel_commit d62113303d691 \
-+	"xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork"
-+_require_scratch_reflink
-+_require_xfs_debug
-+_require_test_program "punch-alternating"
-+_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-+_require_xfs_io_command "reflink"
-+_require_xfs_io_command "cowextsize"
-+
-+source=${SCRATCH_MNT}/source
-+destination=${SCRATCH_MNT}/destination
-+fragmented_file=${SCRATCH_MNT}/fragmented_file
-+
-+echo "Format and mount fs"
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+blksz=$(_get_file_block_size $SCRATCH_MNT)
-+
-+echo "Create source file"
-+$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 8192))" $source >> $seqres.full
-+
-+echo "Reflink destination file with source file"
-+$XFS_IO_PROG -f -c "reflink $source" $destination >> $seqres.full
-+
-+echo "Set destination file's cowextsize to 4096 blocks"
-+$XFS_IO_PROG -c "cowextsize $((blksz * 4096))" $destination >> $seqres.full
-+
-+echo "Fragment FS"
-+$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 16384))" $fragmented_file \
-+	     >> $seqres.full
-+sync
-+$here/src/punch-alternating $fragmented_file >> $seqres.full
-+
-+echo "Inject bmap_alloc_minlen_extent error tag"
-+_scratch_inject_error bmap_alloc_minlen_extent 1
-+
-+echo "Create delalloc extent of length 4096 blocks in destination file's CoW fork"
-+$XFS_IO_PROG -c "pwrite 0 $blksz" $destination >> $seqres.full
-+
-+sync
-+
-+echo "Direct I/O write at 3rd block in destination file"
-+$XFS_IO_PROG -d -c "pwrite $((blksz * 3)) $((blksz * 2))" $destination \
-+	     >> $seqres.full
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/553.out b/tests/xfs/553.out
-new file mode 100644
-index 00000000..9f5679de
---- /dev/null
-+++ b/tests/xfs/553.out
-@@ -0,0 +1,9 @@
-+QA output created by 553
-+Format and mount fs
-+Create source file
-+Reflink destination file with source file
-+Set destination file's cowextsize to 4096 blocks
-+Fragment FS
-+Inject bmap_alloc_minlen_extent error tag
-+Create delalloc extent of length 4096 blocks in destination file's CoW fork
-+Direct I/O write at 3rd block in destination file
--- 
-2.35.1
-
+...where page_folio(page)->mapping is likely not setup correctly for DAX
+pages. This goes back to the broken nature of DAX page reference
+counting which I am fixing now, but this folio association also needs to
+be fixed up.
