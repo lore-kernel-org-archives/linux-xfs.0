@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CDF3C54EE9
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Aug 2022 21:47:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18AC4C3DA6B
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Aug 2022 21:47:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344574AbiHZVr2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 Aug 2022 17:47:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52746 "EHLO
+        id S1344267AbiHZVrz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 Aug 2022 17:47:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345125AbiHZVrU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Aug 2022 17:47:20 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3635DC6518;
-        Fri, 26 Aug 2022 14:47:14 -0700 (PDT)
+        with ESMTP id S1345148AbiHZVrZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Aug 2022 17:47:25 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB322D0216;
+        Fri, 26 Aug 2022 14:47:19 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D7D5AB82F01;
-        Fri, 26 Aug 2022 21:47:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84EF1C433D7;
-        Fri, 26 Aug 2022 21:47:09 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id A3D2ECE312B;
+        Fri, 26 Aug 2022 21:47:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB54EC433D6;
+        Fri, 26 Aug 2022 21:47:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661550431;
-        bh=llyB/dDhp4yZ6iBnnqq9hSWRMDoSq987ZrVnUNGUnaI=;
+        s=k20201202; t=1661550435;
+        bh=3NonU2GerMrPghH8DGEw5liykSCzElPuDvCptLZ61mI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d5nGuGeVr7KQupMAutNZrCLCkD0dEHSGGZE9JYfECP0H7I7OVx80fNFBJWF+EB1p0
-         hua15DoRUx6z6kQtH4GsQK+HWQZrU8UhS4G5OCJK6rzm0u4MhCD/aTyE6AFSUbP9Mb
-         45wAIl2HVmzYZj/Z+OswTDQ86+Jmcou176f1icl8Veu3ku091WlXrOV7GnxSqfnaH4
-         PXmn3M8ll+oJmRdMu53DzVXi+QW14yGnTekLyNHVovVSphdXHK+U45eKG840O5rG3S
-         U9jLJgfGIZkWYpXHmvmsKOxrwBBc8tEOFmzCjXbpSU5spxdFz7/KK9RMoeNwuE0iCc
-         vKa8MCgZ+2IKA==
+        b=P8Ibfp1lGyT4j3SfzJhYeRJ8QjoAXjKXdJDHFjIMuOgGhgHPxmaIZu/QUVjuf/pr4
+         LOA1O7PldD2eC3Av/Ltux4uQRjoJSIHX1Dhdr6ols5ZZpZ6Ih4+Q0XHobc4mH2VoeE
+         fBEGMxNE/3M+SoweiYZYVHCEuD+CGSzC5L68rEwxZO5IrJ3RsxbqIHOSBEx+O9y920
+         AcoBAOhQE3BLY9bNwA2dgZO6tkwmEU44wHDolEGLZyv44VtA+MmM1Zq6O8n4/HZxAA
+         3fMULJvB+hc1HNPpapY+/RBKQwjDtd9jzjzQuK5iKHBih5L9mbmrE9S8x+9WtNJspy
+         gaoOYxIKSFhHg==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
         david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
@@ -40,10 +40,11 @@ To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
 Cc:     linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ceph@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH v3 2/7] ext4: fix i_version handling in ext4
-Date:   Fri, 26 Aug 2022 17:46:58 -0400
-Message-Id: <20220826214703.134870-3-jlayton@kernel.org>
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        David Wysochanski <dwysocha@redhat.com>
+Subject: [PATCH v3 4/7] xfs: don't bump the i_version on an atime update in xfs_vn_update_time
+Date:   Fri, 26 Aug 2022 17:47:00 -0400
+Message-Id: <20220826214703.134870-5-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20220826214703.134870-1-jlayton@kernel.org>
 References: <20220826214703.134870-1-jlayton@kernel.org>
@@ -53,158 +54,85 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-ext4 currently updates the i_version counter when the atime is updated
-during a read. This is less than ideal as it can cause unnecessary cache
-invalidations with NFSv4 and unnecessary remeasurements for IMA.
+xfs will update the i_version when updating only the atime value, which
+is not desirable for any of the current consumers of i_version. Doing so
+leads to unnecessary cache invalidations on NFS and extra measurement
+activity in IMA.
 
-The increment in ext4_mark_iloc_dirty is also problematic since it can
-corrupt the i_version counter for ea_inodes. We aren't bumping the file
-times in ext4_mark_iloc_dirty, so changing the i_version there seems
-wrong, and is the cause of both problems.
+Add a new XFS_ILOG_NOIVER flag, and use that to indicate that the
+transaction should not update the i_version. Set that value in
+xfs_vn_update_time if we're only updating the atime.
 
-Remove that callsite and add increments to the setattr, setxattr and
-ioctl codepaths, at the same times that we update the ctime. The
-i_version bump that already happens during timestamp updates should take
-care of the rest.
-
-In ext4_move_extents, increment the i_version on both inodes, and also
-add in missing ctime updates.
-
-Cc: Lukas Czerner <lczerner@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: NeilBrown <neilb@suse.de>
+Cc: Trond Myklebust <trondmy@hammerspace.com>
+Cc: David Wysochanski <dwysocha@redhat.com>
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/ext4/inode.c       | 10 +++++-----
- fs/ext4/ioctl.c       |  8 ++++++++
- fs/ext4/move_extent.c |  8 ++++++++
- fs/ext4/xattr.c       |  2 ++
- 4 files changed, 23 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_log_format.h  |  2 +-
+ fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
+ fs/xfs/xfs_iops.c               | 11 +++++++++--
+ 3 files changed, 11 insertions(+), 4 deletions(-)
 
-This may have some minor conflicts with one of Lukas' patches. It shouldn't
-be too hard to resolve though.
+Dave has NACK'ed this patch, but I'm sending it as a way to illustrate
+the problem. I still think this approach should at least fix the worst
+problems with atime updates being counted. We can look to carve out
+other "spurious" i_version updates as we identify them.
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 601214453c3a..aa37bce4c541 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -5342,6 +5342,7 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 	int error, rc = 0;
- 	int orphan = 0;
- 	const unsigned int ia_valid = attr->ia_valid;
-+	bool inc_ivers = IS_I_VERSION(inode);
- 
- 	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
- 		return -EIO;
-@@ -5425,8 +5426,8 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 			return -EINVAL;
- 		}
- 
--		if (IS_I_VERSION(inode) && attr->ia_size != inode->i_size)
--			inode_inc_iversion(inode);
-+		if (attr->ia_size == inode->i_size)
-+			inc_ivers = false;
- 
- 		if (shrink) {
- 			if (ext4_should_order_data(inode)) {
-@@ -5528,6 +5529,8 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 	}
- 
- 	if (!error) {
-+		if (inc_ivers)
-+			inode_inc_iversion(inode);
- 		setattr_copy(mnt_userns, inode, attr);
- 		mark_inode_dirty(inode);
- 	}
-@@ -5731,9 +5734,6 @@ int ext4_mark_iloc_dirty(handle_t *handle,
- 	}
- 	ext4_fc_track_inode(handle, inode);
- 
--	if (IS_I_VERSION(inode))
--		inode_inc_iversion(inode);
+If however there are offline analysis tools that require atime updates
+to be counted, then we won't be able to do this. If that's the case, how
+can we fix this such that serving xfs via NFSv4 doesn't suck?
+
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index b351b9dc6561..866a4c5cf70c 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -323,7 +323,7 @@ struct xfs_inode_log_format_32 {
+ #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
+ #define XFS_ILOG_DOWNER	0x200	/* change the data fork owner on replay */
+ #define XFS_ILOG_AOWNER	0x400	/* change the attr fork owner on replay */
 -
- 	/* the do_update_inode consumes one bh->b_count */
- 	get_bh(iloc->bh);
++#define XFS_ILOG_NOIVER	0x800	/* don't bump i_version */
  
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index 3cf3ec4b1c21..60e77ae9342d 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -452,6 +452,8 @@ static long swap_inode_boot_loader(struct super_block *sb,
- 	swap_inode_data(inode, inode_bl);
- 
- 	inode->i_ctime = inode_bl->i_ctime = current_time(inode);
-+	if (IS_I_VERSION(inode))
-+		inode_inc_iversion(inode);
- 
- 	inode->i_generation = prandom_u32();
- 	inode_bl->i_generation = prandom_u32();
-@@ -665,6 +667,8 @@ static int ext4_ioctl_setflags(struct inode *inode,
- 	ext4_set_inode_flags(inode, false);
- 
- 	inode->i_ctime = current_time(inode);
-+	if (IS_I_VERSION(inode))
-+		inode_inc_iversion(inode);
- 
- 	err = ext4_mark_iloc_dirty(handle, inode, &iloc);
- flags_err:
-@@ -775,6 +779,8 @@ static int ext4_ioctl_setproject(struct inode *inode, __u32 projid)
- 
- 	EXT4_I(inode)->i_projid = kprojid;
- 	inode->i_ctime = current_time(inode);
-+	if (IS_I_VERSION(inode))
-+		inode_inc_iversion(inode);
- out_dirty:
- 	rc = ext4_mark_iloc_dirty(handle, inode, &iloc);
- 	if (!err)
-@@ -1257,6 +1263,8 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 		err = ext4_reserve_inode_write(handle, inode, &iloc);
- 		if (err == 0) {
- 			inode->i_ctime = current_time(inode);
-+			if (IS_I_VERSION(inode))
-+				inode_inc_iversion(inode);
- 			inode->i_generation = generation;
- 			err = ext4_mark_iloc_dirty(handle, inode, &iloc);
- 		}
-diff --git a/fs/ext4/move_extent.c b/fs/ext4/move_extent.c
-index 701f1d6a217f..d73ab3153218 100644
---- a/fs/ext4/move_extent.c
-+++ b/fs/ext4/move_extent.c
-@@ -6,6 +6,7 @@
-  */
- 
- #include <linux/fs.h>
-+#include <linux/iversion.h>
- #include <linux/quotaops.h>
- #include <linux/slab.h>
- #include <linux/sched/mm.h>
-@@ -683,6 +684,13 @@ ext4_move_extents(struct file *o_filp, struct file *d_filp, __u64 orig_blk,
- 			break;
- 		o_start += cur_len;
- 		d_start += cur_len;
-+
-+		orig_inode->i_ctime = current_time(orig_inode);
-+		donor_inode->i_ctime = current_time(donor_inode);
-+		if (IS_I_VERSION(orig_inode))
-+			inode_inc_iversion(orig_inode);
-+		if (IS_I_VERSION(donor_inode))
-+			inode_inc_iversion(donor_inode);
+ /*
+  * The timestamps are dirty, but not necessarily anything else in the inode
+diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+index 8b5547073379..ffe6d296e7f9 100644
+--- a/fs/xfs/libxfs/xfs_trans_inode.c
++++ b/fs/xfs/libxfs/xfs_trans_inode.c
+@@ -126,7 +126,7 @@ xfs_trans_log_inode(
+ 	 * unconditionally.
+ 	 */
+ 	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
+-		if (IS_I_VERSION(inode) &&
++		if (!(flags & XFS_ILOG_NOIVER) && IS_I_VERSION(inode) &&
+ 		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
+ 			iversion_flags = XFS_ILOG_CORE;
  	}
- 	*moved_len = o_start - orig_blk;
- 	if (*moved_len > len)
-diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
-index 533216e80fa2..e975442e4ab2 100644
---- a/fs/ext4/xattr.c
-+++ b/fs/ext4/xattr.c
-@@ -2412,6 +2412,8 @@ ext4_xattr_set_handle(handle_t *handle, struct inode *inode, int name_index,
- 	if (!error) {
- 		ext4_xattr_update_super_block(handle, inode->i_sb);
- 		inode->i_ctime = current_time(inode);
-+		if (IS_I_VERSION(inode))
-+			inode_inc_iversion(inode);
- 		if (!value)
- 			no_expand = 0;
- 		error = ext4_mark_iloc_dirty(handle, inode, &is.iloc);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 45518b8c613c..94f14d96641b 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1041,10 +1041,17 @@ xfs_vn_update_time(
+ 		return error;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	if (flags & S_CTIME)
++
++	if (!(flags & S_VERSION))
++		log_flags |= XFS_ILOG_NOIVER;
++	if (flags & S_CTIME) {
+ 		inode->i_ctime = *now;
+-	if (flags & S_MTIME)
++		log_flags &= ~XFS_ILOG_NOIVER;
++	}
++	if (flags & S_MTIME) {
+ 		inode->i_mtime = *now;
++		log_flags &= ~XFS_ILOG_NOIVER;
++	}
+ 	if (flags & S_ATIME)
+ 		inode->i_atime = *now;
+ 
 -- 
 2.37.2
 
