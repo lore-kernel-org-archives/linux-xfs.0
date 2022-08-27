@@ -2,157 +2,181 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2964EC54EE9
-	for <linux-xfs@archiver.kernel.org>; Sat, 27 Aug 2022 08:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4BD9ECAAD2
+	for <linux-xfs@archiver.kernel.org>; Sat, 27 Aug 2022 08:36:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231452AbiH0IBj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 27 Aug 2022 04:01:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48058 "EHLO
+        id S234868AbiH0IgU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 27 Aug 2022 04:36:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232714AbiH0IBg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Aug 2022 04:01:36 -0400
-Received: from mail-vk1-xa33.google.com (mail-vk1-xa33.google.com [IPv6:2607:f8b0:4864:20::a33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CDE113CD5;
-        Sat, 27 Aug 2022 01:01:34 -0700 (PDT)
-Received: by mail-vk1-xa33.google.com with SMTP id x66so1643591vkb.8;
-        Sat, 27 Aug 2022 01:01:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=lwvI7PLzkJuaBaozMxeG7nv4bRh7oWZ5nXAiBzjSaKw=;
-        b=dKfQlFbcX0HvJpVVBCaYeQasNqBpkhEBpPsrJ/BQB40gSoearOxUSOtr7sx4MBS8H1
-         DJprxt7L8G+irPqjTBB+fsvGN/tttJK0Rr4InrrNvUUIgT4NSN7TJuLri7eiyk+4Zbhb
-         f5EUlw3qI8+o2bqO5juhg4puJhc9hbQELVoTNFVSOPBw99hPZPduUeWWI9A7F5A8nAIZ
-         5OBmGyihqZtONFkWRlIkLPiNMj/AHhKKYdIjbUHulltfzcIw72/lV3zLaTkTLRWIocCq
-         bkN2P4xnnk7eIJg530eM4/ElNThc9atpqEPn1D5vbkIttkDxypZbm0JprEGNHbDBKtpY
-         e04w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=lwvI7PLzkJuaBaozMxeG7nv4bRh7oWZ5nXAiBzjSaKw=;
-        b=T1I3m+1CVStu5urUIj3JP7z5poY4/pyTMr3PBX6ivZT6CFWm4pS9Vb+ZMhk9EduEN2
-         JkmAaz1tB9DejqPuPJuQgoK1sg+xQih2FOBgcu0MVpkKDrd4J0IsGK2MSNfQF9MbLart
-         23rPiy/YHjgvZEnVE+hpNE8lqstykLIjTIq3RMppKybBavj/cFf+W602yb+IYZQHwAOU
-         US9fhPCjSzpUx9f993Lg4CRGzLKt6Q/sbslfXRI1Si8Z+4eQslsIVlyZFlu5Vip6YWUo
-         Uq1roL8ccd6GjMzpzuG1Jej8OIPRFwOVbvK9KfkF9FjrmT3ayciGSzh505xrHUQgCNwp
-         83aA==
-X-Gm-Message-State: ACgBeo1RmQHURRJcTxC+cBREmEp2K6FZSCySr+t6VSxIBGUVV9fV0VuA
-        URRuhwu75dmqCkjfazhHyRkRDibiNVe6xgvxWq4=
-X-Google-Smtp-Source: AA6agR4mVbX5F1wkDbMHeki6nd0b18/8F4ObuQhDt1kzSdi9ixc7OuAhNhUYuCdFe1SWrAaNuBG7037sSMcVrnhzDcU=
-X-Received: by 2002:a05:6122:d86:b0:37d:3fe:df43 with SMTP id
- bc6-20020a0561220d8600b0037d03fedf43mr944417vkb.15.1661587293639; Sat, 27 Aug
- 2022 01:01:33 -0700 (PDT)
+        with ESMTP id S233015AbiH0IgT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Aug 2022 04:36:19 -0400
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2040.outbound.protection.outlook.com [40.107.236.40])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 725E9B0887;
+        Sat, 27 Aug 2022 01:36:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=AAJdBdWOI3pDpYQqb7bGq8aMPrUPBUqrHObEO7HIuzte9iX+cDJiX6+ChHnthHuWlcZp4c46+YLhvMV3J1kuN1DAnFyDKGhnWqopRleHxdV1vJz3wjrtvkdiFGP4nbC2h/gcjsTQ2xZZYPEdWk/Ci0vBHzKNV0/fTN7IZe+tRTuKU35nAWgkCniz0Q3LzGP90eoV/iO+nckrVT3Xe2x0Gbn9i93reBvTvU+Eq0dNpQ5jym1ZLfrYYZdVoFS8wsYOuwdTvP7hBq/XqHnCge2Y/3Xru1ujwsGuSMOdoiAM/dmpHdX0z5ngeAMbrmtdTMTSXxzT1VvJChAFi8suBDA0UA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=UO9IhewdmpPOqvg3QpSZ5kTO1SJPtnuFZRi+d4vMGI4=;
+ b=O5+JbVTMnM3QYfSOa4LGo5c+9DLOyEg3GkOF5kPSeCogWj2ne0wWZ6LMkQADg3A3RM7IQ7SDxZwTUAVEd5HaKt2pfjo0/bJEC5CIXUsJR4VenzPuKLNTUH+tSjq+aoySaTXfpcw+YUgEIdrpHfBiYyg/NVS4S9w0RLmilc4jtqePcctFPRkqm/MpIlR8lM19e5eQqRFWtKqY9FmQggTVKqcReOMh7cU/TfHzbB617oEX10LzirdE+Iaur67vby1Z4XTuZWYsKQAakcKZD82RFcDT+6xWwPefXULgSc3fuLu1noXN/udzDVmg/BRwAXi1xDghOx+yl/ngCjuzCKq5Sg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 12.22.5.235) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=UO9IhewdmpPOqvg3QpSZ5kTO1SJPtnuFZRi+d4vMGI4=;
+ b=ePgpzUylfyGRiv8r47Kk55aMbrdcsdCdGrWr0bN2dNtm1rU3HU+WfB/1iKO6h+U1LuHyoKnYvUHPurCp6IXYfJOAVFJdC/yVPFhbLF6VZwgVTphMBAPnCd13MhKBkVKPhiPBSTCTuLZJPEkobcFefhRaDkJZyvvD17kGLd58pBFpyuce3KarbyS6j1+cppmzLHUWGNbUXEBkqBS56YA3WuJeZxgWcqNNC8WnRCMO2WTNQ3v1gXpABhmHrp4nrqlrwtk/asWJphTRIsZSvmhiO7CjTLoLjlO2bYzzPZ2XjpDG0awDTc67Ybp6a17USVR4VS2y/0cxH/Qg81tQFPYjJw==
+Received: from DM5PR07CA0092.namprd07.prod.outlook.com (2603:10b6:4:ae::21) by
+ PH8PR12MB7027.namprd12.prod.outlook.com (2603:10b6:510:1be::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5566.16; Sat, 27 Aug
+ 2022 08:36:12 +0000
+Received: from DM6NAM11FT047.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:4:ae:cafe::a9) by DM5PR07CA0092.outlook.office365.com
+ (2603:10b6:4:ae::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5566.15 via Frontend
+ Transport; Sat, 27 Aug 2022 08:36:11 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.235)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 12.22.5.235 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.235; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (12.22.5.235) by
+ DM6NAM11FT047.mail.protection.outlook.com (10.13.172.139) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.5566.15 via Frontend Transport; Sat, 27 Aug 2022 08:36:11 +0000
+Received: from drhqmail202.nvidia.com (10.126.190.181) by
+ DRHQMAIL107.nvidia.com (10.27.9.16) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.38; Sat, 27 Aug 2022 08:36:11 +0000
+Received: from drhqmail203.nvidia.com (10.126.190.182) by
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Sat, 27 Aug 2022 01:36:10 -0700
+Received: from sandstorm.attlocal.net (10.127.8.9) by mail.nvidia.com
+ (10.126.190.182) with Microsoft SMTP Server id 15.2.986.29 via Frontend
+ Transport; Sat, 27 Aug 2022 01:36:10 -0700
+From:   John Hubbard <jhubbard@nvidia.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+CC:     Jens Axboe <axboe@kernel.dk>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>, Jan Kara <jack@suse.cz>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        <linux-block@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <linux-nfs@vger.kernel.org>,
+        <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>,
+        John Hubbard <jhubbard@nvidia.com>
+Subject: [PATCH 1/6] mm/gup: introduce pin_user_page()
+Date:   Sat, 27 Aug 2022 01:36:02 -0700
+Message-ID: <20220827083607.2345453-2-jhubbard@nvidia.com>
+X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20220827083607.2345453-1-jhubbard@nvidia.com>
+References: <20220827083607.2345453-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
-References: <20220826214703.134870-1-jlayton@kernel.org> <20220826214703.134870-5-jlayton@kernel.org>
- <CAOQ4uxjzE_B_EQktLr8z8gXOhFDNm-_YpUTycfZCdaZNp-i0hQ@mail.gmail.com>
-In-Reply-To: <CAOQ4uxjzE_B_EQktLr8z8gXOhFDNm-_YpUTycfZCdaZNp-i0hQ@mail.gmail.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sat, 27 Aug 2022 11:01:22 +0300
-Message-ID: <CAOQ4uxge86g=+HPnds-wRXkFHg67G=m9rGK7V_T8yS+2=w9tmg@mail.gmail.com>
-Subject: Re: [PATCH v3 4/7] xfs: don't bump the i_version on an atime update
- in xfs_vn_update_time
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Theodore Tso <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        Neil Brown <neilb@suse.de>, Al Viro <viro@zeniv.linux.org.uk>,
-        Mimi Zohar <zohar@linux.ibm.com>, xiubli@redhat.com,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Lukas Czerner <lczerner@redhat.com>, Jan Kara <jack@suse.cz>,
-        Christian Brauner <brauner@kernel.org>,
-        Linux API <linux-api@vger.kernel.org>,
-        Linux Btrfs <linux-btrfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Ext4 <linux-ext4@vger.kernel.org>,
-        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        David Wysochanski <dwysocha@redhat.com>,
-        ceph-devel <ceph-devel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 64fbdea3-33e1-42f3-e854-08da8807326b
+X-MS-TrafficTypeDiagnostic: PH8PR12MB7027:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: qnlb2BznKuv8HSR/mOMAdLL3epBJdze+9vbcf+5R1g1XlS+98sCJbl1S4qPk+1WdMa8i82GsCphaSdMgT+43MrcYVLxMY4LmSP6zn2AzLJa28esn7gqkx20aO+nRwTWj4+pD5raxucC0Xp7lIxtFtTiISaeGPnmS2cFK1qoLHqsU6rW5AYY0AWZV9Kqt5zS9ZAFHFjUaumIC99/dcjEyDjI6W3btlj2lbRaUXil/NseqpUgUBAxG7dR4pe0WwCTzfxOSPdeAbQnENJxc6rGj2GLnTKTXx56JZil30dezGUXxOSAJliQgna0OPaEOfkUWm51NlgphKLv1EWd0ODFqIIExYXgIpKmdDcHerJIEJOC1MkVt4P2m25/4viCsQyVAJH6nI9zBEGVeDNVEH4kefpBdLMwyj6AQwSpMC8X1+k8wD/T1sXrm2Z74nbaDqpCmXaxCVZv6CyVQA356qVrHXAGmgnQppWw5hhdnEx/e7R+Q9D5WmD+El0QAOgFEBPIQj9fFjh2V8I25EjSWtURVQBN1NOc9y2mnIZz/2HqXy1G2+qbj7vWUcauZ62RiMoCpCUVHF/iP3LYwvvy6Ho4C0F7s4MmEcvbZAX6Rg59GveOCyJ4CzmTFscuJfagklCSfH3Q9N92d1BvKTNOYg6RKI7Ou9B852gNDQVkDl2HqYgxxS3du9NZJrhHoKe6VJoK79kU5oGqN/Fe3mM1mMAKJ1mHJMqWT9zfUK8LjazyDzHGalG3U9LGMWnrsejcDLDj6KGok4NbLzoZzE/GYdQ8w/y/f795NSfRHBbJZiDhTvF6NZt/95KO7VfQIyGQBNiHm0o/l7zlEYGcDUcje3QI1iPsp2Pz/fh6FgqRYceUmbC4=
+X-Forefront-Antispam-Report: CIP:12.22.5.235;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(376002)(346002)(136003)(396003)(39860400002)(46966006)(36840700001)(40470700004)(6666004)(8936002)(81166007)(4326008)(36756003)(7416002)(8676002)(40460700003)(356005)(82740400003)(70586007)(82310400005)(40480700001)(5660300002)(186003)(2906002)(86362001)(70206006)(2616005)(1076003)(47076005)(426003)(336012)(26005)(107886003)(83380400001)(36860700001)(316002)(6916009)(54906003)(41300700001)(478600001)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Aug 2022 08:36:11.7334
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 64fbdea3-33e1-42f3-e854-08da8807326b
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.235];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT047.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB7027
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 27, 2022 at 10:26 AM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> On Sat, Aug 27, 2022 at 12:49 AM Jeff Layton <jlayton@kernel.org> wrote:
-> >
-> > xfs will update the i_version when updating only the atime value, which
-> > is not desirable for any of the current consumers of i_version. Doing so
-> > leads to unnecessary cache invalidations on NFS and extra measurement
-> > activity in IMA.
-> >
-> > Add a new XFS_ILOG_NOIVER flag, and use that to indicate that the
-> > transaction should not update the i_version. Set that value in
-> > xfs_vn_update_time if we're only updating the atime.
-> >
-> > Cc: Dave Chinner <david@fromorbit.com>
-> > Cc: NeilBrown <neilb@suse.de>
-> > Cc: Trond Myklebust <trondmy@hammerspace.com>
-> > Cc: David Wysochanski <dwysocha@redhat.com>
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_log_format.h  |  2 +-
-> >  fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
-> >  fs/xfs/xfs_iops.c               | 11 +++++++++--
-> >  3 files changed, 11 insertions(+), 4 deletions(-)
-> >
-> > Dave has NACK'ed this patch, but I'm sending it as a way to illustrate
-> > the problem. I still think this approach should at least fix the worst
-> > problems with atime updates being counted. We can look to carve out
-> > other "spurious" i_version updates as we identify them.
-> >
->
-> AFAIK, "spurious" is only inode blocks map changes due to writeback
-> of dirty pages. Anybody know about other cases?
->
-> Regarding inode blocks map changes, first of all, I don't think that there is
-> any practical loss from invalidating NFS client cache on dirty data writeback,
-> because NFS server should be serving cold data most of the time.
-> If there are a few unneeded cache invalidations they would only be temporary.
->
+pin_user_page() is an externally-usable version of try_grab_page(), but
+with semantics that match get_page(), so that it can act as a drop-in
+replacement for get_page(). Specifically, pin_user_page() has a void
+return type.
 
-Unless there is an issue with a writer NFS client that invalidates its
-own attribute
-caches on server data writeback?
+pin_user_page() elevates a page's refcount using FOLL_PIN rules. This
+means that the caller must release the page via unpin_user_page().
 
-> One may even consider if NFSv4 server should not flush dirty data of an inode
-> before granting a read lease to client.
-> After all, if read lease was granted, client cached data and then server crashed
-> before persisting the dirty data, then client will have cached a
-> "future" version
-> of the data and if i_version on the server did not roll back in that situation,
-> we are looking at possible data corruptions.
->
-> Same goes for IMA. IIUC, IMA data checksum would be stored in xattr?
-> Storing in xattr a data checksum for data that is not persistent on disk
-> would be an odd choice.
->
-> So in my view, I only see benefits to current i_version users in the xfs
-> i_version implementations and I don't think that it contradicts the
-> i_version definition in the man page patch.
->
-> > If however there are offline analysis tools that require atime updates
-> > to be counted, then we won't be able to do this. If that's the case, how
-> > can we fix this such that serving xfs via NFSv4 doesn't suck?
-> >
->
-> If I read the arguments correctly, implicit atime updates could be relaxed
-> as long as this behavior is clearly documented and coherent on all
-> implementations.
->
-> Forensics and other applications that care about atime updates can and
-> should check atime and don't need i_version to know that it was changed.
-> The reliability of atime as an audit tool has dropped considerably since
-> the default in relatime.
-> If we want to be paranoid, maybe we can leave i_version increment on
-> atime updates in case the user opted-in to strict '-o atime' updates, but
-> IMO, there is no need for that.
->
-> Thanks,
-> Amir.
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+---
+ include/linux/mm.h |  1 +
+ mm/gup.c           | 33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 982f2607180b..85a105157334 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1869,6 +1869,7 @@ long pin_user_pages_remote(struct mm_struct *mm,
+ long get_user_pages(unsigned long start, unsigned long nr_pages,
+ 			    unsigned int gup_flags, struct page **pages,
+ 			    struct vm_area_struct **vmas);
++void pin_user_page(struct page *page);
+ long pin_user_pages(unsigned long start, unsigned long nr_pages,
+ 		    unsigned int gup_flags, struct page **pages,
+ 		    struct vm_area_struct **vmas);
+diff --git a/mm/gup.c b/mm/gup.c
+index 5abdaf487460..245ccb41ed8c 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -3213,6 +3213,39 @@ long pin_user_pages(unsigned long start, unsigned long nr_pages,
+ }
+ EXPORT_SYMBOL(pin_user_pages);
+ 
++/**
++ * pin_user_page() - apply a FOLL_PIN reference to a page
++ *
++ * @page: the page to be pinned.
++ *
++ * This is similar to get_user_pages(), except that the page's refcount is
++ * elevated using FOLL_PIN, instead of FOLL_GET.
++ *
++ * IMPORTANT: The caller must release the page via unpin_user_page().
++ *
++ */
++void pin_user_page(struct page *page)
++{
++	struct folio *folio = page_folio(page);
++
++	WARN_ON_ONCE(folio_ref_count(folio) <= 0);
++
++	/*
++	 * Similar to try_grab_page(): be sure to *also*
++	 * increment the normal page refcount field at least once,
++	 * so that the page really is pinned.
++	 */
++	if (folio_test_large(folio)) {
++		folio_ref_add(folio, 1);
++		atomic_add(1, folio_pincount_ptr(folio));
++	} else {
++		folio_ref_add(folio, GUP_PIN_COUNTING_BIAS);
++	}
++
++	node_stat_mod_folio(folio, NR_FOLL_PIN_ACQUIRED, 1);
++}
++EXPORT_SYMBOL(pin_user_page);
++
+ /*
+  * pin_user_pages_unlocked() is the FOLL_PIN variant of
+  * get_user_pages_unlocked(). Behavior is the same, except that this one sets
+-- 
+2.37.2
+
