@@ -2,201 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFB3C0502E
-	for <linux-xfs@archiver.kernel.org>; Sat, 27 Aug 2022 15:47:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7202AECAAD2
+	for <linux-xfs@archiver.kernel.org>; Sat, 27 Aug 2022 15:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230088AbiH0PrJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 27 Aug 2022 11:47:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51522 "EHLO
+        id S232868AbiH0PuY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 27 Aug 2022 11:50:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230144AbiH0Pq7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Aug 2022 11:46:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2E9C696C7;
-        Sat, 27 Aug 2022 08:46:58 -0700 (PDT)
+        with ESMTP id S233492AbiH0PuX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Aug 2022 11:50:23 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D4452181
+        for <linux-xfs@vger.kernel.org>; Sat, 27 Aug 2022 08:50:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 479C760DEC;
-        Sat, 27 Aug 2022 15:46:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C58DC433D6;
-        Sat, 27 Aug 2022 15:46:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3903B60CF4
+        for <linux-xfs@vger.kernel.org>; Sat, 27 Aug 2022 15:50:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EA37C433D6;
+        Sat, 27 Aug 2022 15:50:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661615217;
-        bh=/g+1KdMdMMNwBH5rRGp0ItfxfLzwtuxoX3XdO7k3htM=;
+        s=k20201202; t=1661615420;
+        bh=NJ5x97lODY/U16aFMw+j5GlhEuiMClakiUa80+yNccg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EMze+ZL51PBzh0ugehl3d1rCw6hmKjllsOO6lis5BNnf+mr2usiNTGG9H7Bs00ArA
-         aIXjeRLikNioydqEJB5dk1PIlqT5QEopXmPQrFCjQ5dHOMaIQq+UTjYrUweW81OfiV
-         BMImzDKfXQ+v1+JS+KAm6mfzFXto1YChg2ia1G10e92N9pHNDSj/Hznk3RSgnK/+zK
-         fxdiRpGnwv/uTTPcupth0OZYWCBVq8/bhDUFGSnRlM54Hxba8xaJILjrY6+QTmJm3l
-         xPPxOgJtqajNPqYTQFUDqlrSHkzDkDTLhV+VJVS+W92EhAmapwqIp6vfDhCcJF69nx
-         uMnU1n9GdP1pQ==
-Date:   Sat, 27 Aug 2022 08:46:57 -0700
+        b=XJipUi8gcoueWcPFn7kgyaUtr9wXUhFQWr9sNqAY08E2nD0kAqtcICkYX/zwy4Ktm
+         TdAAzDsmhtPXSCyw263hMv4Gw3lHb7sZ4Gl0OBeSszW5xUAsLd8O7W/4K5BRCXniJ1
+         r8O6m5TVmQMj959a1ZUkh5nkZh/22H+J3ykz5/Jr8xKjYDPHSfdMHDfpyDvAoXpCdb
+         yl7kXicxqVrKVy+kTrLYkeqwQ7S3T2q6OlhJ9okfVsPvAZXjsB5SfGxHfdfPHlU9Zr
+         1egjH3J6YeyFPOExb1kNjj8DYBBUCS+yTE0YDTNCC8TCauEI501jFqAXYeq7dDHlUp
+         CivPVU8arKZvA==
+Date:   Sat, 27 Aug 2022 08:50:20 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Amir Goldstein <amir73il@gmail.com>, Theodore Tso <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Dave Chinner <david@fromorbit.com>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        Neil Brown <neilb@suse.de>, Al Viro <viro@zeniv.linux.org.uk>,
-        Mimi Zohar <zohar@linux.ibm.com>, xiubli@redhat.com,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Lukas Czerner <lczerner@redhat.com>, Jan Kara <jack@suse.cz>,
-        Christian Brauner <brauner@kernel.org>,
-        Linux API <linux-api@vger.kernel.org>,
-        Linux Btrfs <linux-btrfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Ext4 <linux-ext4@vger.kernel.org>,
-        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        David Wysochanski <dwysocha@redhat.com>,
-        ceph-devel <ceph-devel@vger.kernel.org>
-Subject: Re: [PATCH v3 4/7] xfs: don't bump the i_version on an atime update
- in xfs_vn_update_time
-Message-ID: <Ywo8cWRcJUpLFMxJ@magnolia>
-References: <20220826214703.134870-1-jlayton@kernel.org>
- <20220826214703.134870-5-jlayton@kernel.org>
- <CAOQ4uxjzE_B_EQktLr8z8gXOhFDNm-_YpUTycfZCdaZNp-i0hQ@mail.gmail.com>
- <CAOQ4uxge86g=+HPnds-wRXkFHg67G=m9rGK7V_T8yS+2=w9tmg@mail.gmail.com>
- <35d31d0a5c6c9a20c58f55ef62355ff39a3f18c6.camel@kernel.org>
+To:     bugzilla-daemon@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 216419] New: Internal error XFS_WANT_CORRUPTED_RETURN at
+ line 442 of file fs/xfs/libxfs/xfs_alloc.c
+Message-ID: <Ywo9PImB1SvlP2wV@magnolia>
+References: <bug-216419-201763@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <35d31d0a5c6c9a20c58f55ef62355ff39a3f18c6.camel@kernel.org>
+In-Reply-To: <bug-216419-201763@https.bugzilla.kernel.org/>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 27, 2022 at 09:14:30AM -0400, Jeff Layton wrote:
-> On Sat, 2022-08-27 at 11:01 +0300, Amir Goldstein wrote:
-> > On Sat, Aug 27, 2022 at 10:26 AM Amir Goldstein <amir73il@gmail.com> wrote:
-> > > 
-> > > On Sat, Aug 27, 2022 at 12:49 AM Jeff Layton <jlayton@kernel.org> wrote:
-> > > > 
-> > > > xfs will update the i_version when updating only the atime value, which
-> > > > is not desirable for any of the current consumers of i_version. Doing so
-> > > > leads to unnecessary cache invalidations on NFS and extra measurement
-> > > > activity in IMA.
-> > > > 
-> > > > Add a new XFS_ILOG_NOIVER flag, and use that to indicate that the
-> > > > transaction should not update the i_version. Set that value in
-> > > > xfs_vn_update_time if we're only updating the atime.
-> > > > 
-> > > > Cc: Dave Chinner <david@fromorbit.com>
-> > > > Cc: NeilBrown <neilb@suse.de>
-> > > > Cc: Trond Myklebust <trondmy@hammerspace.com>
-> > > > Cc: David Wysochanski <dwysocha@redhat.com>
-> > > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_log_format.h  |  2 +-
-> > > >  fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
-> > > >  fs/xfs/xfs_iops.c               | 11 +++++++++--
-> > > >  3 files changed, 11 insertions(+), 4 deletions(-)
-> > > > 
-> > > > Dave has NACK'ed this patch, but I'm sending it as a way to illustrate
-> > > > the problem. I still think this approach should at least fix the worst
-> > > > problems with atime updates being counted. We can look to carve out
-> > > > other "spurious" i_version updates as we identify them.
-> > > > 
-> > > 
-> > > AFAIK, "spurious" is only inode blocks map changes due to writeback
-> > > of dirty pages. Anybody know about other cases?
-> > > 
-> > > Regarding inode blocks map changes, first of all, I don't think that there is
-> > > any practical loss from invalidating NFS client cache on dirty data writeback,
-> > > because NFS server should be serving cold data most of the time.
-> > > If there are a few unneeded cache invalidations they would only be temporary.
-> > > 
-> > 
-> > Unless there is an issue with a writer NFS client that invalidates its
-> > own attribute
-> > caches on server data writeback?
-> > 
+On Sat, Aug 27, 2022 at 04:50:27AM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=216419
 > 
-> The client just looks at the file attributes (of which i_version is but
-> one), and if certain attributes have changed (mtime, ctime, i_version,
-> etc...) then it invalidates its cache.
+>             Bug ID: 216419
+>            Summary: Internal error XFS_WANT_CORRUPTED_RETURN at line 442
+>                     of file fs/xfs/libxfs/xfs_alloc.c
+>            Product: File System
+>            Version: 2.5
+>     Kernel Version: 5.3.18
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: sunjunchao2870@gmail.com
+>         Regression: No
 > 
-> In the case of blocks map changes, could that mean a difference in the
-> observable sparse regions of the file? If so, then a READ_PLUS before
-> the change and a READ_PLUS after could give different results. Since
-> that difference is observable by the client, I'd think we'd want to bump
-> i_version for that anyway.
+> Created attachment 301678
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=301678&action=edit
+> messages about corrupted xfs
+> 
+> Recently I ran pressure test on xfs(almost 1.5GB/s bandwidth on write) and I
+> discovered a lot of error logs about xfs, just like:
+> Aug 21 20:31:20 rg21-oss005 kernel: XFS (bcache4): metadata I/O error in
+> "xfs_trans_read_buf_map" at daddr 0x8804a66e8 len 8 error 74
+> Aug 21 20:31:20 rg21-oss005 kernel: XFS (bcache4): Metadata CRC error detected
+> at xfs_dir3_block_read_verify+0xbf/0xe0 [xfs], xfs_dir3_block block 0x8804a66e8 
+> Aug 21 20:31:20 rg21-oss005 kernel: XFS (bcache4): Unmount and run xfs_repair
+> Aug 21 20:31:20 rg21-oss005 kernel: XFS (bcache4): First 128 bytes of corrupted
+> metadata buffer:
+> Aug 21 20:31:20 rg21-oss005 kernel: 00000000: 38 30 30 2e 30 2c 20 38 30 30 2e
+> 30 2c 20 38 30  800.0, 800.0, 80
+> Aug 21 20:31:20 rg21-oss005 kernel: 00000010: 30 2e 30 2c 20 31 34 34 30 2e 30
+> 2c 20 31 34 34  0.0, 1440.0, 144
+> Aug 21 20:31:20 rg21-oss005 kernel: 00000020: 30 2e 30 2c 20 32 30 32 39 2e 39
+> 33 37 35 2c 20  0.0, 2029.9375, 
+> Aug 21 20:31:20 rg21-oss005 kernel: 00000030: 32 30 32 39 2e 39 33 37 35 2c 20
+> 32 30 32 39 2e  2029.9375, 2029.
+> Aug 21 20:31:20 rg21-oss005 kernel: 00000040: 39 33 37 35 2c 20 32 30 32 39 2e
+> 39 33 37 35 5d  9375, 2029.9375]
+> Aug 21 20:31:20 rg21-oss005 kernel: 00000050: 2c 20 22 65 6c 61 70 73 65 64 22
+> 3a 20 5b 31 34  , "elapsed": [14
+> Aug 21 20:31:20 rg21-oss005 kernel: 00000060: 36 35 2e 31 30 35 31 30 34 34 34
+> 36 34 31 31 31  65.1051044464111
+> Aug 21 20:31:20 rg21-oss005 kernel: 00000070: 2c 20 31 34 36 37 2e 34 37 33 33
+> 31 36 31 39 32  , 1467.473316192
+> Aug 21 20:31:20 rg21-oss005 kernel: XFS (bcache4): metadata I/O error in
+> "xfs_trans_read_buf_map" at daddr 0x8804a66e8 len 8 error 74
+> 
+> and 
+> 
+> Aug 21 22:41:37 rg21-oss005 kernel: XFS (bcache4): Internal error
+> XFS_WANT_CORRUPTED_RETURN at line 442 of file fs/xfs/libxfs/xfs_alloc.c. 
+> Caller xfs_alloc_ag_vextent_near+0x7f6/0xb60 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: CPU: 23 PID: 10127 Comm: w16-5 Kdump:
+> loaded Tainted: G           OE     N 5.3.18.20211010 #4 SLE15-SP2 (unreleased)
 
-How /is/ READ_PLUS supposed to detect sparse regions, anyway?  I know
-that's been the subject of recent debate.  At least as far as XFS is
-concerned, a file range can go from hole -> delayed allocation
-reservation -> unwritten extent -> (actual writeback) -> written extent.
-The dance became rather more complex when we added COW.  If any of that
-will make a difference for READ_PLUS, then yes, I think you'd want file
-writeback activities to bump iversion to cause client invalidations,
-like (I think) Dave said.
-
-The fs/iomap/ implementation of SEEK_DATA/SEEK_HOLE reports data for
-written and delalloc extents; and an unwritten extent will report data
-for any pagecache it finds.
-
-> > > One may even consider if NFSv4 server should not flush dirty data of an inode
-> > > before granting a read lease to client.
-> > > After all, if read lease was granted, client cached data and then server crashed
-> > > before persisting the dirty data, then client will have cached a
-> > > "future" version
-> > > of the data and if i_version on the server did not roll back in that situation,
-> > > we are looking at possible data corruptions.
-> > > 
-> 
-> We don't hand out read leases if there are file descriptions open for
-> write. NFS clients usually issue a COMMIT before closing a stateid in
-> order to satisfy close-to-open cache coherency.
-> 
-> So in most cases, this is probably not an issue. It might still be
-> worthwhile to make sure of it by doing a filemap_write_and_wait before
-> we hand out a delegation, but that's likely to be a no-op in most cases
-> anyway.
-> 
-> Note too that the client will still revalidate its caches when it
-> receives attributes even when it holds a read delegation. In fact, this
-> behavior mostly papered over a rather nasty knfsd bug we found recently
-> where it was allowing conflicting activity to proceed even when there
-> was a read delegation outstanding.
->  
-> > > Same goes for IMA. IIUC, IMA data checksum would be stored in xattr?
-> > > Storing in xattr a data checksum for data that is not persistent on disk
-> > > would be an odd choice.
-> > > 
-> > > So in my view, I only see benefits to current i_version users in the xfs
-> > > i_version implementations and I don't think that it contradicts the
-> > > i_version definition in the man page patch.
-> > > 
-> > > > If however there are offline analysis tools that require atime updates
-> > > > to be counted, then we won't be able to do this. If that's the case, how
-> > > > can we fix this such that serving xfs via NFSv4 doesn't suck?
-> > > > 
-> > > 
-> > > If I read the arguments correctly, implicit atime updates could be relaxed
-> > > as long as this behavior is clearly documented and coherent on all
-> > > implementations.
-> > > 
-> > > Forensics and other applications that care about atime updates can and
-> > > should check atime and don't need i_version to know that it was changed.
-> > > The reliability of atime as an audit tool has dropped considerably since
-> > > the default in relatime.
-
-I've been waiting for Amir to appear in this discussion -- ISTR that a
-few years ago you were wanting the ability to scan a filesystem to look
-for files that have changed since a given point.  If XFS exported its
-di_changecount file attribute (as it currently behaves) via BULKSTAT,
-you'd have the ability to do that, so long as your application could
-persist bulkstat data and compare.
+Please contact your distribution partner for support...   ^^^^^^^^^
 
 --D
 
-> > > If we want to be paranoid, maybe we can leave i_version increment on
-> > > atime updates in case the user opted-in to strict '-o atime' updates, but
-> > > IMO, there is no need for that.
-> > > 
+> Aug 21 22:41:37 rg21-oss005 kernel: Hardware name: New H3C Technologies Co.,
+> Ltd. UniServer R4300 G3/RS01M2C7S, BIOS 2.00.56 12/17/2021
+> Aug 21 22:41:37 rg21-oss005 kernel: Call Trace:
+> Aug 21 22:41:37 rg21-oss005 kernel: dump_stack+0x64/0x83
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_alloc_fixup_trees+0x211/0x350 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_alloc_ag_vextent_near+0x7f6/0xb60 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_alloc_ag_vextent+0x13c/0x150 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_alloc_vextent+0x41f/0x5a0 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_bmap_btalloc+0x23c/0x8e0 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_bmapi_allocate+0x10c/0x2e0 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_bmapi_convert_delalloc+0x267/0x4a0
+> [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_map_blocks+0x195/0x3f0 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_do_writepage+0x127/0x3c0 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: write_cache_pages+0x1d3/0x410
+> Aug 21 22:41:37 rg21-oss005 kernel: ? xfs_vm_writepages+0xa0/0xa0 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: ? pagevec_lookup_entries+0x1a/0x30
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_vm_writepages+0x64/0xa0 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: do_writepages+0x1a/0x70
+> Aug 21 22:41:37 rg21-oss005 kernel: __filemap_fdatawrite_range+0xcf/0x100
+> Aug 21 22:41:37 rg21-oss005 kernel: filemap_write_and_wait_range+0x41/0xa0
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_setattr_size+0x10d/0x390 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: xfs_vn_setattr+0x6e/0xc0 [xfs]
+> Aug 21 22:41:37 rg21-oss005 kernel: notify_change+0x26c/0x450
+> Aug 21 22:41:37 rg21-oss005 kernel: do_truncate+0x72/0xc0
+> Aug 21 22:41:37 rg21-oss005 kernel: do_sys_ftruncate+0x10c/0x120
+> Aug 21 22:41:37 rg21-oss005 kernel: do_syscall_64+0x5b/0x1f0
+> Aug 21 22:41:37 rg21-oss005 kernel: entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> Aug 21 22:41:37 rg21-oss005 kernel: RIP: 0033:0x7fb5168a86e7
+> Aug 21 22:41:37 rg21-oss005 kernel: Code: 73 01 c3 48 8b 0d 89 f7 2c 00 f7 d8
+> 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 b8 4d 00
+> 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 59 f7 2c 00 f7 d8 64 89 01 48
+> Aug 21 22:41:37 rg21-oss005 kernel: RSP: 002b:00007fb237bfb498 EFLAGS: 00000206
+> ORIG_RAX: 000000000000004d
+> Aug 21 22:41:37 rg21-oss005 kernel: RAX: ffffffffffffffda RBX: 00007fb2200038c0
+> RCX: 00007fb5168a86e7
+> Aug 21 22:41:37 rg21-oss005 kernel: RDX: 00000000000000e0 RSI: 0000000002300000
+> RDI: 0000000000000074
+> Aug 21 22:41:37 rg21-oss005 kernel: RBP: 00007fb237bfc6b0 R08: 00007fb2360f6050
+> R09: 0000000000004000
+> Aug 21 22:41:37 rg21-oss005 kernel: R10: 00000000022e4000 R11: 0000000000000206
+> R12: 0000000000100000
+> Aug 21 22:41:37 rg21-oss005 kernel: R13: 0000000000001000 R14: 0000000000000074
+> R15: 00007fb237bfb680
+> Aug 21 22:41:37 rg21-oss005 kernel: XFS (bcache4): page discard on page
+> 00000000d976f7c9, inode 0x400079d77, offset 28315648.
+> Aug 21 22:41:37 rg21-oss005 kernel: XFS (bcache4): writeback error on sector
+> 42005378320
 > 
-> Thanks,
+> 
+> 
+> It seems xfs corrupted, and I repaired that by xfs_repair. But after one day, I
+> got some similar questions and xfs corrupted again and again. Is this a known
+> issue? Or am I wrong in something? Please let me known if any information is
+> missed. Thanks!
+> 
 > -- 
-> Jeff Layton <jlayton@kernel.org>
+> You may reply to this email to add a comment.
+> 
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
