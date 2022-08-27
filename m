@@ -2,121 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 831ACECAAD5
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Aug 2022 23:49:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 102CCECAAD5
+	for <linux-xfs@archiver.kernel.org>; Sat, 27 Aug 2022 03:11:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235359AbiHZXto (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 Aug 2022 19:49:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56854 "EHLO
+        id S237928AbiH0DLv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 Aug 2022 23:11:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233332AbiHZXtn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Aug 2022 19:49:43 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C87A5E42EE
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Aug 2022 16:49:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5FDBE61BE7
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Aug 2022 23:49:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFFD3C433D7;
-        Fri, 26 Aug 2022 23:49:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661557781;
-        bh=w5kuVd7wl/Jp4cNaooPenFrAiURUohxTzgF1oIbiN3s=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ro4xSxg6AgYlHNPZeRbP4d3uOCl9yQr/m/B8O6sr5JZqSgGiDU4/ZslxncVB2u2Cq
-         PwmWpKc6U5VCnpWJO07PqeNbAibixvHLsC4vx5JjKRBuiL78318aloRVat1hH0X/qv
-         3w1xu986w/94p6zE5D70660WgH4QteaDFj0MzyPYQxVzQRBPqcLEBW+H/tE2hQS69P
-         c7FG4lEl+f61zj3+Gi630i3dQe1TkBEvEc6ljZLAyGzIiAAaM+KVIDBRqwb0y3ruO8
-         730pNX2En++Bq8jwHrbld35B7DUmpOyUtgchuf8ipiO01eip15jt+Sv9hxbjBwaugg
-         Dj/JvcnAaUVng==
-Date:   Fri, 26 Aug 2022 16:49:41 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/9] xfs: background AIL push targets physical space, not
- grant space
-Message-ID: <YwlcFRSiKvqn2rGD@magnolia>
-References: <20220809230353.3353059-1-david@fromorbit.com>
- <20220809230353.3353059-4-david@fromorbit.com>
- <YwPSMwmcyAZfIe3M@magnolia>
- <20220823020103.GN3600936@dread.disaster.area>
- <YwjrFwUGdhHlvfaU@magnolia>
+        with ESMTP id S231216AbiH0DLu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Aug 2022 23:11:50 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D10E5B1ED;
+        Fri, 26 Aug 2022 20:11:48 -0700 (PDT)
+Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.53])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4MF1sR44KMzGpqY;
+        Sat, 27 Aug 2022 11:10:03 +0800 (CST)
+Received: from kwepemm600003.china.huawei.com (7.193.23.202) by
+ dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Sat, 27 Aug 2022 11:11:46 +0800
+Received: from [127.0.0.1] (10.174.177.249) by kwepemm600003.china.huawei.com
+ (7.193.23.202) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Sat, 27 Aug
+ 2022 11:11:45 +0800
+Subject: Re: [PATCH] xfs: donot need to check return value of xlog_kvmalloc()
+To:     "Darrick J. Wong" <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     linfeilong <linfeilong@huawei.com>,
+        wuguanghao <wuguanghao3@huawei.com>
+References: <514e5e4b-e7c8-365f-8459-75974c067993@huawei.com>
+From:   Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Message-ID: <c90c6f86-dc0f-07bd-2abe-77d31716ee91@huawei.com>
+Date:   Sat, 27 Aug 2022 11:11:44 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YwjrFwUGdhHlvfaU@magnolia>
+In-Reply-To: <514e5e4b-e7c8-365f-8459-75974c067993@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [10.174.177.249]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemm600003.china.huawei.com (7.193.23.202)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 26, 2022 at 08:47:35AM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 23, 2022 at 12:01:03PM +1000, Dave Chinner wrote:
-> > On Mon, Aug 22, 2022 at 12:00:03PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Aug 10, 2022 at 09:03:47AM +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Currently the AIL attempts to keep 25% of the "log space" free,
-> > > > where the current used space is tracked by the reserve grant head.
-> > > > That is, it tracks both physical space used plus the amount reserved
-> > > > by transactions in progress.
-> > > > 
-> > > > When we start tail pushing, we are trying to make space for new
-> > > > reservations by writing back older metadata and the log is generally
-> > > > physically full of dirty metadata, and reservations for modifications
-> > > > in flight take up whatever space the AIL can physically free up.
-> > > > 
-> > > > Hence we don't really need to take into account the reservation
-> > > > space that has been used - we just need to keep the log tail moving
-> > > > as fast as we can to free up space for more reservations to be made.
-> > > > We know exactly how much physical space the journal is consuming in
-> > > > the AIL (i.e. max LSN - min LSN) so we can base push thresholds
-> > > > directly on this state rather than have to look at grant head
-> > > > reservations to determine how much to physically push out of the
-> > > > log.
-> > > > 
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Makes sense, I think.  Though I was wondering about the last patch --
-> > > pushing the AIL until it's empty when a trans_alloc can't find grant
-> > > reservation could take a while on a slow storage.
+friendly ping..
 
-Now that I've had a chance to see where we're going...
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+On 2022/8/22 19:46, Zhiqiang Liu wrote:
+> In xfs_attri_log_nameval_alloc(), xlog_kvmalloc() is called
+> to alloc memory, which will always return
+> successfully, so we donot need to check return value.
+>
+> Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+> ---
+>  fs/xfs/xfs_attr_item.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index 5077a7ad5646..667e151a2bca 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -86,8 +86,6 @@ xfs_attri_log_nameval_alloc(
+>  	 */
+>  	nv = xlog_kvmalloc(sizeof(struct xfs_attri_log_nameval) +
+>  					name_len + value_len);
+> -	if (!nv)
+> -		return nv;
+>
+>  	nv->name.i_addr = nv + 1;
+>  	nv->name.i_len = name_len;
 
---D
-
-> > 
-> > The push in the grant reservation code is not a blocking push - it
-> > just tells the AIL to start pushing everything, then it goes to
-> > sleep waiting for the tail to move and space to come available. The
-> > AIL behaviour is largely unchanged, especially if the application is
-> > running under even slight memory pressure as the inode shrinker will
-> > repeatedly kick the AIL push-all trigger regardless of consumed
-> > journal/grant space.
-> 
-> Ok.
-> 
-> > > Does this mean that
-> > > we're trading the incremental freeing-up of the existing code for
-> > > potentially higher transaction allocation latency in the hopes that more
-> > > threads can get reservation?  Or does the "keep the AIL going" bits make
-> > > up for that?
-> > 
-> > So far I've typically measured slightly lower worst case latencies
-> > with this mechanism that with the existing "repeatedly push to 25%
-> > free" that we currently have. It's not really significant enough to
-> > make statements about (unlike cpu usage reductions or perf
-> > increases), but it does seem to be a bit better...
-> 
-> <nod>
-> 
-> --D
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
