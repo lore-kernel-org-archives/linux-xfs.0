@@ -2,156 +2,230 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 951EAC3DA6B
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Aug 2022 12:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D5B6C0502A
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Aug 2022 13:25:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229683AbiH1Mqj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Aug 2022 08:46:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49998 "EHLO
+        id S229626AbiH1NZp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Aug 2022 09:25:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbiH1Mqi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Aug 2022 08:46:38 -0400
-Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C019C3A48F;
-        Sun, 28 Aug 2022 05:46:37 -0700 (PDT)
-Received: by mail-wr1-x42d.google.com with SMTP id m16so7028396wru.9;
-        Sun, 28 Aug 2022 05:46:37 -0700 (PDT)
+        with ESMTP id S229436AbiH1NZm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Aug 2022 09:25:42 -0400
+Received: from mail-vs1-xe33.google.com (mail-vs1-xe33.google.com [IPv6:2607:f8b0:4864:20::e33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F5032181E;
+        Sun, 28 Aug 2022 06:25:41 -0700 (PDT)
+Received: by mail-vs1-xe33.google.com with SMTP id k2so5964170vsk.8;
+        Sun, 28 Aug 2022 06:25:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=2lKAAQGRXDFDgn5dHFEF57LITlT2u7jGFIO/enbJTdw=;
-        b=bhX0bj31MDk5ULDadl4O4OxzddlK3okdaYsAgxO9v16u4CNdio6NzKlL5eea5IH86i
-         5tYUgfijtiGWdCmmb/3ewMYyEZOyrXl1WqnFkShCw2mPxJ/ldPY47hjQA3NXyQY1aqjY
-         96wEfQAkrIXkEHkW3+a5T5S7+xYYucKchFQtmUaoFQj4nj183GAm4q2ErpUO4QJR+618
-         URE8vTgececHwSyyIMEI0X5GFN2GIGrRSsWW/i1Auqhk5B1EhYnfoezzZjwORs+WB1J8
-         UeS8RQ0trAGHz4Wex89UQ4gapuqt0G18fxzWXHzBBoYvaMVdVdkzcv9YDN6ArATojGOL
-         q0tA==
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=jJnPIiLXos1pGZCNNXz0g207shJMFvq2w6EE6u3Sb08=;
+        b=kPn9FW50BqKVOiGds0UgH1bs+xviysP6qmZCqv5tiBST88174BRcUyMuJXQvcfSlcc
+         42qsWsPkK5amx9cD7ByvWdqpBjE/ra4SiCuwU3zcfsvKuWaoT8Gi5DMhGYRUgOciSOz7
+         tCJXaTjV4sgf+pZaM58Nb8HqtMcWxfoCGe9pfVfOzHmVyvvggiHWHD4yDDKFv6X7B5uy
+         uY6J7DUBRk6AF4M7p14R2ilmayp8TivWNxZE2WAw1axPWFfpBjQf7Zsp45J9CM1Y4lh8
+         xA4yiFMZo1xRhr73M7Gh5jY5+ivon96qLczdct6Wb+qaqOB70IhIy3zkVJIhG30eUiHj
+         Xikg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=2lKAAQGRXDFDgn5dHFEF57LITlT2u7jGFIO/enbJTdw=;
-        b=TNSVGtYalK/3UNCIfZHHkm6vilFKbcykkMcVrLPnrUnYgwNppknQ/He4IjgwJKN4cR
-         2c/U1ka+Yow4TnM59EznBbJ0peLw1fTKyx/NsoFcTbr8CrXNLz8Cibq216tW5D2WCFms
-         JqFXgdx5JYoqsk75BXY21OrXpY2Cv/AsMbu6wP+30PuzOPFOv7bWeV1Pp0tu7Ruo4KS7
-         gwFHnxeaUPS+vwcxlvvEYrOOlOepxxnpYGDDyX+PZtNUyJGk1beYYlhultXpH2B3AFtH
-         w/CuIg1CQZnBN0XnvFfK9gFm2W1IQVVgyVeIrprCuYUb+PboMxZvqKfM3ejJenkYzFvn
-         T4TA==
-X-Gm-Message-State: ACgBeo0no+A5d8h3i3YCwkQSR982YLP9k7nBL4+FGTlq33AbZ4DrQPJA
-        gY0pqm2ivXS4KIy5DDkKE9g=
-X-Google-Smtp-Source: AA6agR7uHjXgZK/+0Y2cS3/yP+JzuYubAugKM9u0UaxTAPZfiTJEsUZFSaVb7no4Wul511tJt+PFuA==
-X-Received: by 2002:a5d:59aa:0:b0:21f:57a:77cc with SMTP id p10-20020a5d59aa000000b0021f057a77ccmr4007032wrr.384.1661690796301;
-        Sun, 28 Aug 2022 05:46:36 -0700 (PDT)
-Received: from amir-ThinkPad-T480.lan ([2a0d:6fc2:4b00:1500:ecf5:e90e:2ba2:1534])
-        by smtp.gmail.com with ESMTPSA id k25-20020adfd239000000b0021e43b4edf0sm4443414wrh.20.2022.08.28.05.46.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 28 Aug 2022 05:46:35 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     "Darrick J . Wong" <djwong@kernel.org>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>,
-        Frank Hofmann <fhofmann@cloudflare.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5.10 CANDIDATE 6/7] xfs: reorder iunlink remove operation in xfs_ifree
-Date:   Sun, 28 Aug 2022 15:46:13 +0300
-Message-Id: <20220828124614.2190592-7-amir73il@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220828124614.2190592-1-amir73il@gmail.com>
-References: <20220828124614.2190592-1-amir73il@gmail.com>
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=jJnPIiLXos1pGZCNNXz0g207shJMFvq2w6EE6u3Sb08=;
+        b=h4j6x37mBIsWQ+q4bwUp73VPG5i62tshPBmwbZQ9P8k6QEZiz5b5uwanniNCcLSXoD
+         WjjAvqW78HjzoklbfndE6RLHzAapx/sKoktATAB56NU659+tEiznBaz/MyRkt6WsH0aB
+         G3e3LcrRHm4pWUspuZ1nvIh8ULhl3Pn7GHOb/y554H6JmpNxf8kx30Bd1PxWpif8bZyJ
+         x0fmDZQJ+OlAqseGh4sHunt5oUTTpZMSckvocOczjfukiMKt9TeL5Nm/sjiTo9JeQdMP
+         ajZk0nUHDkjpM5twrC2MGHi2UKLh8y2gZrrxisIW1tTu6fhkI2JlYBCJUWBfuk6+k995
+         GxeQ==
+X-Gm-Message-State: ACgBeo0WoHxXS8sh6oXOwcZFwsWPqxhAbpfGQWAiKGRMOpqkQ9akngKR
+        s0yLDSXz2xHbDWpzcGCTRPKZkWyfE73HMJv3m4M=
+X-Google-Smtp-Source: AA6agR5YihNa9fdzWTu45XRhezWFmDItj8XSiiAoefP66VqkIn8e0FUykWNTGpm7/ldany6mpYtQ7ZZxQNFsslv/wmM=
+X-Received: by 2002:a67:a649:0:b0:390:88c5:6a91 with SMTP id
+ r9-20020a67a649000000b0039088c56a91mr2274114vsh.3.1661693139696; Sun, 28 Aug
+ 2022 06:25:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220826214703.134870-1-jlayton@kernel.org> <20220826214703.134870-5-jlayton@kernel.org>
+ <CAOQ4uxjzE_B_EQktLr8z8gXOhFDNm-_YpUTycfZCdaZNp-i0hQ@mail.gmail.com>
+ <CAOQ4uxge86g=+HPnds-wRXkFHg67G=m9rGK7V_T8yS+2=w9tmg@mail.gmail.com>
+ <35d31d0a5c6c9a20c58f55ef62355ff39a3f18c6.camel@kernel.org>
+ <Ywo8cWRcJUpLFMxJ@magnolia> <079df2134120f847e8237675a8cc227d6354a153.camel@hammerspace.com>
+ <b13812a68310e49cc6fb649c2b1c25287712a8af.camel@kernel.org>
+In-Reply-To: <b13812a68310e49cc6fb649c2b1c25287712a8af.camel@kernel.org>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Sun, 28 Aug 2022 16:25:28 +0300
+Message-ID: <CAOQ4uxgThXDEO3mxR_PtPgcPsF7ueqFUxHO3F3KE9sVqi8sLJQ@mail.gmail.com>
+Subject: Re: [PATCH v3 4/7] xfs: don't bump the i_version on an atime update
+ in xfs_vn_update_time
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Trond Myklebust <trondmy@hammerspace.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
+        "brauner@kernel.org" <brauner@kernel.org>,
+        "xiubli@redhat.com" <xiubli@redhat.com>,
+        "neilb@suse.de" <neilb@suse.de>,
+        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "dwysocha@redhat.com" <dwysocha@redhat.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "tytso@mit.edu" <tytso@mit.edu>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "lczerner@redhat.com" <lczerner@redhat.com>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Sat, Aug 27, 2022 at 7:10 PM Jeff Layton <jlayton@kernel.org> wrote:
+>
+> On Sat, 2022-08-27 at 16:03 +0000, Trond Myklebust wrote:
+> > On Sat, 2022-08-27 at 08:46 -0700, Darrick J. Wong wrote:
+> > > On Sat, Aug 27, 2022 at 09:14:30AM -0400, Jeff Layton wrote:
+> > > > On Sat, 2022-08-27 at 11:01 +0300, Amir Goldstein wrote:
+> > > > > On Sat, Aug 27, 2022 at 10:26 AM Amir Goldstein
+> > > > > <amir73il@gmail.com> wrote:
+> > > > > >
+> > > > > > On Sat, Aug 27, 2022 at 12:49 AM Jeff Layton
+> > > > > > <jlayton@kernel.org> wrote:
+> > > > > > >
+> > > > > > > xfs will update the i_version when updating only the atime
+> > > > > > > value, which
+> > > > > > > is not desirable for any of the current consumers of
+> > > > > > > i_version. Doing so
+> > > > > > > leads to unnecessary cache invalidations on NFS and extra
+> > > > > > > measurement
+> > > > > > > activity in IMA.
+> > > > > > >
+> > > > > > > Add a new XFS_ILOG_NOIVER flag, and use that to indicate that
+> > > > > > > the
+> > > > > > > transaction should not update the i_version. Set that value
+> > > > > > > in
+> > > > > > > xfs_vn_update_time if we're only updating the atime.
+> > > > > > >
+> > > > > > > Cc: Dave Chinner <david@fromorbit.com>
+> > > > > > > Cc: NeilBrown <neilb@suse.de>
+> > > > > > > Cc: Trond Myklebust <trondmy@hammerspace.com>
+> > > > > > > Cc: David Wysochanski <dwysocha@redhat.com>
+> > > > > > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> > > > > > > ---
+> > > > > > >  fs/xfs/libxfs/xfs_log_format.h  |  2 +-
+> > > > > > >  fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
+> > > > > > >  fs/xfs/xfs_iops.c               | 11 +++++++++--
+> > > > > > >  3 files changed, 11 insertions(+), 4 deletions(-)
+> > > > > > >
+> > > > > > > Dave has NACK'ed this patch, but I'm sending it as a way to
+> > > > > > > illustrate
+> > > > > > > the problem. I still think this approach should at least fix
+> > > > > > > the worst
+> > > > > > > problems with atime updates being counted. We can look to
+> > > > > > > carve out
+> > > > > > > other "spurious" i_version updates as we identify them.
+> > > > > > >
+> > > > > >
+> > > > > > AFAIK, "spurious" is only inode blocks map changes due to
+> > > > > > writeback
+> > > > > > of dirty pages. Anybody know about other cases?
+> > > > > >
+> > > > > > Regarding inode blocks map changes, first of all, I don't think
+> > > > > > that there is
+> > > > > > any practical loss from invalidating NFS client cache on dirty
+> > > > > > data writeback,
+> > > > > > because NFS server should be serving cold data most of the
+> > > > > > time.
+> > > > > > If there are a few unneeded cache invalidations they would only
+> > > > > > be temporary.
+> > > > > >
+> > > > >
+> > > > > Unless there is an issue with a writer NFS client that
+> > > > > invalidates its
+> > > > > own attribute
+> > > > > caches on server data writeback?
+> > > > >
+> > > >
+> > > > The client just looks at the file attributes (of which i_version is
+> > > > but
+> > > > one), and if certain attributes have changed (mtime, ctime,
+> > > > i_version,
+> > > > etc...) then it invalidates its cache.
+> > > >
+> > > > In the case of blocks map changes, could that mean a difference in
+> > > > the
+> > > > observable sparse regions of the file? If so, then a READ_PLUS
+> > > > before
+> > > > the change and a READ_PLUS after could give different results.
+> > > > Since
+> > > > that difference is observable by the client, I'd think we'd want to
+> > > > bump
+> > > > i_version for that anyway.
+> > >
+> > > How /is/ READ_PLUS supposed to detect sparse regions, anyway?  I know
+> > > that's been the subject of recent debate.  At least as far as XFS is
+> > > concerned, a file range can go from hole -> delayed allocation
+> > > reservation -> unwritten extent -> (actual writeback) -> written
+> > > extent.
+> > > The dance became rather more complex when we added COW.  If any of
+> > > that
+> > > will make a difference for READ_PLUS, then yes, I think you'd want
+> > > file
+> > > writeback activities to bump iversion to cause client invalidations,
+> > > like (I think) Dave said.
+> > >
+> > > The fs/iomap/ implementation of SEEK_DATA/SEEK_HOLE reports data for
+> > > written and delalloc extents; and an unwritten extent will report
+> > > data
+> > > for any pagecache it finds.
+> > >
+> >
+> > READ_PLUS should never return anything different than a read() system
+> > call would return for any given area. The way it reports sparse regions
+> > vs. data regions is purely an RPC formatting convenience.
+> >
+> > The only point to note about NFS READ and READ_PLUS is that because the
+> > client is forced to send multiple RPC calls if the user is trying to
+> > read a region that is larger than the 'rsize' value, it is possible
+> > that these READ/READ_PLUS calls may be processed out of order, and so
+> > the result may end up looking different than if you had executed a
+> > read() call for the full region directly on the server.
+> > However each individual READ / READ_PLUS reply should look as if the
+> > user had called read() on that rsize-sized section of the file.
+> > > >
+>
+> Yeah, thinking about it some more, simply changing the block allocation
+> is not something that should affect the ctime, so we probably don't want
+> to bump i_version on it. It's an implicit change, IOW, not an explicit
+> one.
+>
+> The fact that xfs might do that is unfortunate, but it's not the end of
+> the world and it still would conform to the proposed definition for
+> i_version. In practice, this sort of allocation change should come soon
+> after the file was written, so one would hope that any damage due to the
+> false i_version bump would be minimized.
+>
 
-commit 9a5280b312e2e7898b6397b2ca3cfd03f67d7be1 upstream.
+That was exactly my point.
 
-[backport for 5.10.y]
+> It would be nice to teach it not to do that however. Maybe we can insert
+> the NOIVER flag at a strategic place to avoid it?
 
-The O_TMPFILE creation implementation creates a specific order of
-operations for inode allocation/freeing and unlinked list
-modification. Currently both are serialised by the AGI, so the order
-doesn't strictly matter as long as the are both in the same
-transaction.
+Why would that be nice to avoid?
+You did not specify any use case where incrementing i_version
+on block mapping change matters in practice.
+On the contrary, you said that NFS client writer sends COMMIT on close,
+which should stabilize i_version for the next readers.
 
-However, if we want to move the unlinked list insertions largely out
-from under the AGI lock, then we have to be concerned about the
-order in which we do unlinked list modification operations.
-O_TMPFILE creation tells us this order is inode allocation/free,
-then unlinked list modification.
+Given that we already have an xfs implementation that does increment
+i_version on block mapping changes and it would be a pain to change
+that or add a new user options, I don't see the point in discussing it further
+unless there is a good incentive for avoiding i_version updates in those cases.
 
-Change xfs_ifree() to use this same ordering on unlinked list
-removal. This way we always guarantee that when we enter the
-iunlinked list removal code from this path, we already have the AGI
-locked and we don't have to worry about lock nesting AGI reads
-inside unlink list locks because it's already locked and attached to
-the transaction.
-
-We can do this safely as the inode freeing and unlinked list removal
-are done in the same transaction and hence are atomic operations
-with respect to log recovery.
-
-Reported-by: Frank Hofmann <fhofmann@cloudflare.com>
-Fixes: 298f7bec503f ("xfs: pin inode backing buffer to the inode log item")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/xfs/xfs_inode.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 1f61e085676b..929ed3bc5619 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2669,14 +2669,13 @@ xfs_ifree_cluster(
- }
- 
- /*
-- * This is called to return an inode to the inode free list.
-- * The inode should already be truncated to 0 length and have
-- * no pages associated with it.  This routine also assumes that
-- * the inode is already a part of the transaction.
-+ * This is called to return an inode to the inode free list.  The inode should
-+ * already be truncated to 0 length and have no pages associated with it.  This
-+ * routine also assumes that the inode is already a part of the transaction.
-  *
-- * The on-disk copy of the inode will have been added to the list
-- * of unlinked inodes in the AGI. We need to remove the inode from
-- * that list atomically with respect to freeing it here.
-+ * The on-disk copy of the inode will have been added to the list of unlinked
-+ * inodes in the AGI. We need to remove the inode from that list atomically with
-+ * respect to freeing it here.
-  */
- int
- xfs_ifree(
-@@ -2694,13 +2693,16 @@ xfs_ifree(
- 	ASSERT(ip->i_d.di_nblocks == 0);
- 
- 	/*
--	 * Pull the on-disk inode from the AGI unlinked list.
-+	 * Free the inode first so that we guarantee that the AGI lock is going
-+	 * to be taken before we remove the inode from the unlinked list. This
-+	 * makes the AGI lock -> unlinked list modification order the same as
-+	 * used in O_TMPFILE creation.
- 	 */
--	error = xfs_iunlink_remove(tp, ip);
-+	error = xfs_difree(tp, ip->i_ino, &xic);
- 	if (error)
- 		return error;
- 
--	error = xfs_difree(tp, ip->i_ino, &xic);
-+	error = xfs_iunlink_remove(tp, ip);
- 	if (error)
- 		return error;
- 
--- 
-2.25.1
-
+Thanks,
+Amir.
