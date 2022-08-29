@@ -2,182 +2,190 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F806C0502F
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Aug 2022 05:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 486BCECAAD4
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Aug 2022 06:44:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229664AbiH2Fs7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Aug 2022 01:48:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46018 "EHLO
+        id S229453AbiH2GoK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Aug 2022 02:44:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229536AbiH2Fs5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Aug 2022 01:48:57 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AAC9146214;
-        Sun, 28 Aug 2022 22:48:55 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-4-169.pa.nsw.optusnet.com.au [49.195.4.169])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 43D3562DA32;
-        Mon, 29 Aug 2022 15:48:50 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oSXdg-001DXe-Mw; Mon, 29 Aug 2022 15:48:48 +1000
-Date:   Mon, 29 Aug 2022 15:48:48 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
-        "brauner@kernel.org" <brauner@kernel.org>,
-        "xiubli@redhat.com" <xiubli@redhat.com>,
-        "neilb@suse.de" <neilb@suse.de>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "dwysocha@redhat.com" <dwysocha@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "tytso@mit.edu" <tytso@mit.edu>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "lczerner@redhat.com" <lczerner@redhat.com>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>
-Subject: Re: [PATCH v3 4/7] xfs: don't bump the i_version on an atime update
- in xfs_vn_update_time
-Message-ID: <20220829054848.GR3600936@dread.disaster.area>
-References: <20220826214703.134870-1-jlayton@kernel.org>
- <20220826214703.134870-5-jlayton@kernel.org>
- <CAOQ4uxjzE_B_EQktLr8z8gXOhFDNm-_YpUTycfZCdaZNp-i0hQ@mail.gmail.com>
- <CAOQ4uxge86g=+HPnds-wRXkFHg67G=m9rGK7V_T8yS+2=w9tmg@mail.gmail.com>
- <35d31d0a5c6c9a20c58f55ef62355ff39a3f18c6.camel@kernel.org>
- <Ywo8cWRcJUpLFMxJ@magnolia>
- <079df2134120f847e8237675a8cc227d6354a153.camel@hammerspace.com>
- <b13812a68310e49cc6fb649c2b1c25287712a8af.camel@kernel.org>
- <CAOQ4uxgThXDEO3mxR_PtPgcPsF7ueqFUxHO3F3KE9sVqi8sLJQ@mail.gmail.com>
- <732164ffb95468992035a6f597dc26e3ce39316d.camel@kernel.org>
+        with ESMTP id S229449AbiH2GoJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Aug 2022 02:44:09 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FBDF30F75
+        for <linux-xfs@vger.kernel.org>; Sun, 28 Aug 2022 23:44:07 -0700 (PDT)
+Received: from kwepemi500019.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MGLRb4GyZzlWTB;
+        Mon, 29 Aug 2022 14:40:43 +0800 (CST)
+Received: from huawei.com (10.175.124.27) by kwepemi500019.china.huawei.com
+ (7.221.188.117) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 29 Aug
+ 2022 14:44:04 +0800
+From:   Guo Xuenan <guoxuenan@huawei.com>
+To:     <linux-xfs@vger.kernel.org>, <djwong@kernel.org>
+CC:     <dchinner@redhat.com>, <chandan.babu@oracle.com>,
+        <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+        <zhengbin13@huawei.com>, <jack.qiu@huawei.com>
+Subject: [PATCH] xfs: fix uaf when leaf dir bestcount not match with dir data blocks
+Date:   Mon, 29 Aug 2022 15:02:12 +0800
+Message-ID: <20220829070212.2540615-1-guoxuenan@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <732164ffb95468992035a6f597dc26e3ce39316d.camel@kernel.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=630c5345
-        a=FOdsZBbW/tHyAhIVFJ0pRA==:117 a=FOdsZBbW/tHyAhIVFJ0pRA==:17
-        a=kj9zAlcOel0A:10 a=biHskzXt2R4A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=Emwzr4xTW__1gdtk8LEA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.124.27]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemi500019.china.huawei.com (7.221.188.117)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 28, 2022 at 10:37:37AM -0400, Jeff Layton wrote:
-> On Sun, 2022-08-28 at 16:25 +0300, Amir Goldstein wrote:
-> > On Sat, Aug 27, 2022 at 7:10 PM Jeff Layton <jlayton@kernel.org> wrote:
-> > > Yeah, thinking about it some more, simply changing the block allocation
-> > > is not something that should affect the ctime, so we probably don't want
-> > > to bump i_version on it. It's an implicit change, IOW, not an explicit
-> > > one.
-> > > 
-> > > The fact that xfs might do that is unfortunate, but it's not the end of
-> > > the world and it still would conform to the proposed definition for
-> > > i_version. In practice, this sort of allocation change should come soon
-> > > after the file was written, so one would hope that any damage due to the
-> > > false i_version bump would be minimized.
-> > > 
-> > 
-> > That was exactly my point.
-> > 
-> > > It would be nice to teach it not to do that however. Maybe we can insert
-> > > the NOIVER flag at a strategic place to avoid it?
+For leaf dir, there should be as many bestfree slots as there are dir data
+blocks that can fit under i_size. Othrewise, which may cause UAF or
+slab-out-of bound etc.
 
-No, absolutely not.
+Root cause is we don't examin the number bestfree slots, when the slots
+number less than dir data blocks, if we need to allocate new dir data block
+and update the bestfree array, we will use the dir block number as index to
+assign bestfree array, which may cause UAF or other memory access problem.
+This issue can also triggered with test cases xfs/473 from fstests.
 
-I've already explained this: The XFS *disk format specification*
-says that di_changecount is bumped for every change that is made to
-the inode.
+Simplify the testcase xfs/473 with commands below:
+DEV=/dev/sdb
+MP=/mnt/sdb
+WORKDIR=/mnt/sdb/341 #1. mkfs create new xfs image
+mkfs.xfs -f ${DEV}
+mount ${DEV} ${MP}
+mkdir -p ${WORKDIR}
+for i in `seq 1 341` #2. create leaf dir with 341 entries file name len 8
+do
+    touch ${WORKDIR}/$(printf "%08d" ${i})
+done
+inode=$(ls -i ${MP} | cut -d' ' -f1)
+umount ${MP}         #3. xfs_db set bestcount to 0
+xfs_db -x ${DEV} -c "inode ${inode}" -c "dblock 8388608" \
+-c "write ltail.bestcount 0"
+mount ${DEV} ${MP}
+touch ${WORKDIR}/{1..100}.txt #4. touch new file, reproduce
 
-Applications that are written from this specification expect the on
-disk format for a XFS given filesystem feature to remain the same
-until it is either deprecated and removed or we add feature flags to
-indicate it has different behaviour.  We can't just change the
-behaviour at a whim.
+The error log is shown as follows:
+==================================================================
+BUG: KASAN: use-after-free in xfs_dir2_leaf_addname+0x1995/0x1ac0
+Write of size 2 at addr ffff88810168b000 by task touch/1552
+CPU: 5 PID: 1552 Comm: touch Not tainted 6.0.0-rc3+ #101
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ print_report.cold+0xf6/0x691
+ kasan_report+0xa8/0x120
+ xfs_dir2_leaf_addname+0x1995/0x1ac0
+ xfs_dir_createname+0x58c/0x7f0
+ xfs_create+0x7af/0x1010
+ xfs_generic_create+0x270/0x5e0
+ path_openat+0x270b/0x3450
+ do_filp_open+0x1cf/0x2b0
+ do_sys_openat2+0x46b/0x7a0
+ do_sys_open+0xb7/0x130
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe4d9e9312b
+Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85 c0
+75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d 00
+f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+RSP: 002b:00007ffda4c16c20 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007fe4d9e9312b
+RDX: 0000000000000941 RSI: 00007ffda4c17f33 RDI: 00000000ffffff9c
+RBP: 00007ffda4c17f33 R08: 0000000000000000 R09: 0000000000000000
+R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000941
+R13: 00007fe4d9f631a4 R14: 00007ffda4c17f33 R15: 0000000000000000
+ </TASK>
 
-And that's ignoring the fact that randomly spewing NOIVER
-into transactions that modify inode metadata is a nasty hack - it
-is not desirable from a design or documentation POV, nor is it
-maintainable.
+The buggy address belongs to the physical page:
+page:ffffea000405a2c0 refcount:0 mapcount:0 mapping:0000000000000000
+index:0x0 pfn:0x10168b
+flags: 0x2fffff80000000(node=0|zone=2|lastcpupid=0x1fffff)
+raw: 002fffff80000000 ffffea0004057788 ffffea000402dbc8 0000000000000000
+raw: 0000000000000000 0000000000170000 00000000ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
 
-> > Why would that be nice to avoid?
-> > You did not specify any use case where incrementing i_version
-> > on block mapping change matters in practice.
-> > On the contrary, you said that NFS client writer sends COMMIT on close,
-> > which should stabilize i_version for the next readers.
-> > 
-> > Given that we already have an xfs implementation that does increment
-> > i_version on block mapping changes and it would be a pain to change
-> > that or add a new user options, I don't see the point in discussing it further
-> > unless there is a good incentive for avoiding i_version updates in those cases.
-> > 
-> 
-> Because the change to the block allocation doesn't represent an
-> "explicit" change to the inode. We will have bumped the ctime on the
-> original write (in update_time), but the follow-on changes that occur
-> due to that write needn't be counted as they aren't visible to the
-> client.
-> 
-> It's possible for a client to issue a read between the write and the
-> flush and get the interim value for i_version. Then, once the write
-> happens and the i_version gets bumped again, the client invalidates its
-> cache even though it needn't do so.
-> 
-> The race window ought to be relatively small, and this wouldn't result
-> in incorrect behavior that you'd notice (other than loss of
-> performance), but it's not ideal. We're doing more on-the-wire reads
-> than are necessary in this case.
-> 
-> It would be nice to have it not do that. If we end up taking this patch
-> to make it elide the i_version bumps on atime updates, we may be able to
-> set the the NOIVER flag in other cases as well, and avoid some of these
-> extra bumps.
+Memory state around the buggy address:
+ ffff88810168af00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff88810168af80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff88810168b000: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+                   ^
+ ffff88810168b080: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+ ffff88810168b100: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+==================================================================
+Disabling lock debugging due to kernel taint
+00000000: 58 44 44 33 5b 53 35 c2 00 00 00 00 00 00 00 78
+XDD3[S5........x
+XFS (sdb): Internal error xfs_dir2_data_use_free at line 1200 of file
+fs/xfs/libxfs/xfs_dir2_data.c.  Caller
+xfs_dir2_data_use_free+0x28a/0xeb0
+CPU: 5 PID: 1552 Comm: touch Tainted: G    B              6.0.0-rc3+
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ xfs_corruption_error+0x132/0x150
+ xfs_dir2_data_use_free+0x198/0xeb0
+ xfs_dir2_leaf_addname+0xa59/0x1ac0
+ xfs_dir_createname+0x58c/0x7f0
+ xfs_create+0x7af/0x1010
+ xfs_generic_create+0x270/0x5e0
+ path_openat+0x270b/0x3450
+ do_filp_open+0x1cf/0x2b0
+ do_sys_openat2+0x46b/0x7a0
+ do_sys_open+0xb7/0x130
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe4d9e9312b
+Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85 c0
+75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d 00
+f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+RSP: 002b:00007ffda4c16c20 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007fe4d9e9312b
+RDX: 0000000000000941 RSI: 00007ffda4c17f46 RDI: 00000000ffffff9c
+RBP: 00007ffda4c17f46 R08: 0000000000000000 R09: 0000000000000001
+R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000941
+R13: 00007fe4d9f631a4 R14: 00007ffda4c17f46 R15: 0000000000000000
+ </TASK>
+XFS (sdb): Corruption detected. Unmount and run xfs_repair
 
+Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+---
+ fs/xfs/libxfs/xfs_dir2_leaf.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-<sigh>
-
-Please don't make me repeat myself for the third time.
-
-Once we have decided on a solid, unchanging definition for the
-*statx user API variable*, we'll implement a new on-disk field that
-provides this information.  We will document it in the on-disk
-specification as "this is how di_iversion behaves" so that it is
-clear to everyone parsing the on-disk format or writing their own
-XFS driver how to implement it and when to expect it to
-change.
-
-Then we can add a filesystem and inode feature flags that say "inode
-has new iversion" and we use that to populate the kernel iversion
-instead of di_changecount. We keep di_changecount exactly the way it
-is now for the applications and use cases we already have for that
-specific behaviour. If the kernel and/or filesystem don't support
-the new di_iversion field, then we'll use di_changecount as it
-currently exists for the kernel iversion code.
-
-Keep in mind that we've been doing dynamic inode format updates in
-XFS for a couple of decades - users don't even have to be aware that
-they need to perform format upgrades because often they just happen
-whenever an inode is accessed. IOWs, just because we have to change
-the on-disk format to support this new iversion definition, it
-doesn't mean users have to reformat filesystems before the new
-feature can be used.
-
-Hence, over time, as distros update kernels, the XFS iversion
-behaviour will change automagically as we update inodes in existing
-filesystems as they are accessed to add and then use the new
-di_iversion field for the VFS change attribute field instead of the
-di_changecount field...
-
--Dave.
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index d9b66306a9a7..09414651ac48 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -659,6 +659,20 @@ xfs_dir2_leaf_addname(
+ 	bestsp = xfs_dir2_leaf_bests_p(ltp);
+ 	length = xfs_dir2_data_entsize(dp->i_mount, args->namelen);
+ 
++	/*
++	 * There should be as many bestfree slots as there are dir data
++	 * blocks that can fit under i_size. Othrewise, which may cause
++	 * serious problems eg. UAF or slab-out-of bound etc.
++	 */
++	if (be32_to_cpu(ltp->bestcount) !=
++			xfs_dir2_byte_to_db(args->geo, dp->i_d.di_size)) {
++		xfs_buf_ioerror_alert(lbp, __return_address);
++		if (tp->t_flags & XFS_TRANS_DIRTY)
++			xfs_force_shutdown(tp->t_mountp,
++				SHUTDOWN_CORRUPT_INCORE);
++		return -EFSCORRUPTED;
++	}
++
+ 	/*
+ 	 * See if there are any entries with the same hash value
+ 	 * and space in their block for the new entry.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.25.1
+
