@@ -2,60 +2,66 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7013CECAAA2
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Aug 2022 02:26:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DC51ECAAA2
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Aug 2022 03:34:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229513AbiH2C0Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Aug 2022 22:26:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36248 "EHLO
+        id S229487AbiH2Dej (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Aug 2022 23:34:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229462AbiH2C0X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Aug 2022 22:26:23 -0400
-Received: from out20-159.mail.aliyun.com (out20-159.mail.aliyun.com [115.124.20.159])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA6122A414
-        for <linux-xfs@vger.kernel.org>; Sun, 28 Aug 2022 19:26:20 -0700 (PDT)
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.1422334|-1;BR=01201311R111S54rulernew998_84748_2000303;CH=blue;DM=|CONTINUE|false|;DS=CONTINUE|ham_news_journal|0.329774-0.0161248-0.654101;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047211;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=1;RT=1;SR=0;TI=SMTPD_---.P2B-cMS_1661739977;
-Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.P2B-cMS_1661739977)
-          by smtp.aliyun-inc.com;
-          Mon, 29 Aug 2022 10:26:18 +0800
-Date:   Mon, 29 Aug 2022 10:26:20 +0800
-From:   Wang Yugui <wangyugui@e16-tech.com>
-To:     linux-xfs@vger.kernel.org
-Subject: questions about hybird xfs wih ssd/hdd  by realtime subvol
-Message-Id: <20220829102619.AE3B.409509F4@e16-tech.com>
+        with ESMTP id S229475AbiH2Dei (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Aug 2022 23:34:38 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B51F21E18;
+        Sun, 28 Aug 2022 20:34:35 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MGGG005HcznTmn;
+        Mon, 29 Aug 2022 11:32:08 +0800 (CST)
+Received: from huawei.com (10.175.103.91) by dggpemm500022.china.huawei.com
+ (7.185.36.162) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 29 Aug
+ 2022 11:34:31 +0800
+From:   Zeng Heng <zengheng4@huawei.com>
+To:     <djwong@kernel.org>
+CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <zengheng4@huawei.com>
+Subject: [PATCH -next 1/2] xfs: replace unnecessary seq_printf with seq_puts
+Date:   Mon, 29 Aug 2022 11:42:17 +0800
+Message-ID: <20220829034217.732635-1-zengheng4@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="GB2312"
-Content-Transfer-Encoding: 8bit
-X-Mailer: Becky! ver. 2.75.04 [en]
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500022.china.huawei.com (7.185.36.162)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+Replace seq_printf with seq_puts when const string
+in reference, which would avoid to deal with
+unnecessary string format.
 
-I saw some info about hybird xfs wih ssd/hdd  by realtime subvol.
+Signed-off-by: Zeng Heng <zengheng4@huawei.com>
+---
+ fs/xfs/xfs_stats.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hybrid XFS¡ªUsing SSDs to Supercharge HDDs at Facebook
-https://www.usenix.org/conference/srecon19asia/presentation/shamasunder
-
-There are some questions about how to control the data to save into
-normal vol or realtime subvol firstly.
-
-1, man xfsctl
-here is XFS_XFLAG_REALTIME in man xfsctl of xfsprogs 5.0 , 
-but there is no XFS_XFLAG_REALTIME in xfsprogs 5.14/5.19.
-xfsctl(XFS_XFLAG_REALTIME) will be removed in the further?
-
-2, Is there some tool to do xfsctl(XFS_XFLAG_REALTIME)?
-
-3, we build a xfs filesystem with 1G device and 1G rtdev device. and
-then we can save 2G data into this xfs filesystem.
-
-Is there any tool/kernel option/kernel patch to control the data to save
-into normal vol or realtime subvol firstly?
-
-Best Regards
-Wang Yugui (wangyugui@e16-tech.com)
-2022/08/29
-
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index 20e0534a772c..70d38b77682b 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -125,7 +125,7 @@ static int xqmstat_proc_show(struct seq_file *m, void *v)
+ {
+ 	int j;
+ 
+-	seq_printf(m, "qm");
++	seq_puts(m, "qm");
+ 	for (j = XFSSTAT_START_XQMSTAT; j < XFSSTAT_END_XQMSTAT; j++)
+ 		seq_printf(m, " %u", counter_val(xfsstats.xs_stats, j));
+ 	seq_putc(m, '\n');
+-- 
+2.25.1
 
