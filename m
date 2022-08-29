@@ -2,119 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3254DC0502E
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Aug 2022 14:21:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A31BECAAD2
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Aug 2022 14:39:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229624AbiH2OVJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Aug 2022 10:21:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43692 "EHLO
+        id S230014AbiH2Oji (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Aug 2022 10:39:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230302AbiH2OVI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Aug 2022 10:21:08 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01EA2696C3;
-        Mon, 29 Aug 2022 07:21:06 -0700 (PDT)
+        with ESMTP id S229484AbiH2Ojh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Aug 2022 10:39:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5977996779
+        for <linux-xfs@vger.kernel.org>; Mon, 29 Aug 2022 07:39:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 97DC6B810A1;
-        Mon, 29 Aug 2022 14:21:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C57FC433C1;
-        Mon, 29 Aug 2022 14:21:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EB55A60FC1
+        for <linux-xfs@vger.kernel.org>; Mon, 29 Aug 2022 14:39:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47546C433D6;
+        Mon, 29 Aug 2022 14:39:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661782864;
-        bh=U0YzpPXyBtGzDIZyOLsF0+QyAtTGeB1D5ISsYu8mmZU=;
+        s=k20201202; t=1661783976;
+        bh=SoueINanblTBnvYsLRDi9MiL6xc2uub8tqilNGU0D8A=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EO2e524W6Hd89YHfiEEz+fr/u9lu7qQCjYH2nUq0BMmLf7YWB/GM4Z3IeO03qlxqA
-         RYZUQ5xeNwyAcnMOMXUQH1jrihfiLcC/jcgc41vcKOuAhOuYM6Y2NI8HtgjtqMxsNy
-         2si7BXbGJXpj19xqEG065sPh1eNbSUl7shWmkafVmuWmtJepvfTgLz1L0hZAVLfYFE
-         lf46aEBz+/mwVOi/CH4n5ZbtEgaiqgtLMOut4lAFCJyloCx4KrdJ7olgfXgtkmqUK4
-         IegSWKhADbajYGDx94Y4Puq2wSfIPJPqJyWH7IUY7ID6p0slt7n1QNVVXFfuTEMvrr
-         uRFr4QeC62AAA==
-Date:   Mon, 29 Aug 2022 07:21:03 -0700
+        b=Qjr6X2Yq3mVrn3q3k3R0KkAFnVPDEMO+3AWvvVYT7j1tjLG0U/U7tCMS+IPfWSVTQ
+         Py+fl9GdjXhbu1FBeKdMfXVY8seaC5puhW226IF7uhmougALMarE3tt2Nj4SmkBN2c
+         g9HoW6W+x0BWwGr4cKgXNMVpEjWsBg0Jh/YfZqENDPyPlrhEDk6ya1oPyz5vqVaEHW
+         yfZnJIA8s/A8bHQtYfqay//NJyCIz9N/dGVfs8JR4jsfkWNyTHgdefGB9jqqBeaO7U
+         r1zMVJ9FacBKVCz5def6qfD5RE0sishosGyP+Xu52AQrOVU7sJ53Jo5VqbNAu/JFGH
+         wPFdxPXk3Am5A==
+Date:   Mon, 29 Aug 2022 07:39:35 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 5.10 CANDIDATE 0/7] xfs stable candidate patches for
- 5.10.y (from v5.18+)
-Message-ID: <YwzLTxUDxkefDI/g@magnolia>
-References: <20220828124614.2190592-1-amir73il@gmail.com>
+To:     Xiaole He <hexiaole1994@126.com>
+Cc:     linux-xfs@vger.kernel.org, Xiaole He <hexiaole@kylinos.cn>
+Subject: Re: [PATCH v1] xfs_db: use preferable macro to seek offset for local
+ dir3 entry fields
+Message-ID: <YwzPpxI4Uta0KreZ@magnolia>
+References: <20220829095025.10287-1-hexiaole1994@126.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220828124614.2190592-1-amir73il@gmail.com>
+In-Reply-To: <20220829095025.10287-1-hexiaole1994@126.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 28, 2022 at 03:46:07PM +0300, Amir Goldstein wrote:
-> Hi Darrick,
+On Mon, Aug 29, 2022 at 05:50:25PM +0800, Xiaole He wrote:
+> In 'xfsprogs-dev' source:
 > 
-> This 5.10.y backport series contains fixes from v5.18 and v5.19 releases.
+> /* db/dir2sf.c begin */
+>  #define        EOFF(f) bitize(offsetof(xfs_dir2_sf_entry_t, f))
+> const field_t   dir2_sf_entry_flds[] = {
+>         { "namelen", FLDT_UINT8D, OI(EOFF(namelen)), C1, 0, TYP_NONE },
+> ...
+>  #define        E3OFF(f)        bitize(offsetof(xfs_dir2_sf_entry_t, f))
+> const field_t   dir3_sf_entry_flds[] = {
+>         { "namelen", FLDT_UINT8D, OI(EOFF(namelen)), C1, 0, TYP_NONE },
+> ...
+> /* db/dir2sf.c end */
 > 
-> Patches 1-5 in this series have already been applied to 5.15.y in Leah's
-> latest update [1], so this 5.10.y is is mostly catching up with 5.15.y.
+> The macro definitions of 'EOFF' and 'E3OFF' are same, so no matter to
+> use either to seek field offset in 'dir3_sf_entry_flds'.
+> But it seems the intent of defining 'E3OFF' macro is to be used in
+> 'dir3_sf_entry_flds', and 'E3OFF' macro has not been used at any place
+> of the 'xfsprogs-dev' source:
 > 
-> Patches 2-3 from the last 5.15.y update have not been picked for 5.10.y,
-> because they were not trivial to backport as the quota code is quite
-> different betrween 5.10.y and upstream.
-> This omission leave fstests generic/681,682 broken on 5.10.y.
+> /* command begin */
+> $ grep -r E3OFF /path/to/xfsprogs-dev/git/repository/
+> ./db/dir2sf.c:#define   E3OFF(f)        bitize(offsetof(xfs_dir2_sf_entry_t, f))
+> $
+> /* command end */
 > 
-> Patches 6-7 in this 5.10.y update have not been applied to 5.15.y yet.
-> I pointed Leah's attention to these patches and she said she will
-> include them in a following 5.15.y update.
+> Above command shows the 'E3OFF' is only been defined but nerver been
+> used, that is weird, so there has reason to suspect using 'EOFF'
+> rather than 'E3OFF' in 'dir3_sf_entry_flds' is a typo, this patch fix
+> it, there has no logical change in this commit at all.
 > 
-> In particular, Darrick has pointed me at the fix in patch 6 a long time
-> ago, but I was waiting to apply fixes to 5.10.y in chronoligal order.
-> 
+> Signed-off-by: Xiaole He <hexiaole@kylinos.cn>
 
-Woot! :)
+Makes sense to me, though it took me a minute to learn to ignore the
+other #define EOFFs :/
 
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> Please note that the upstream fix 6f5097e3367a ("xfs: fix xfs_ifree()
-> error handling to not leak perag ref") Which Fixes: 9a5280b312e2e
-> ("xfs: reorder iunlink remove operation in xfs_ifree")
-> is not relevant for the 5.10.y backport.
+> ---
+>  db/dir2sf.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> These patches has gone through the usual 30 auto group runs x 5 configs
-> on kdevops.
-> 
-> Thanks,
-> Amir.
-> 
-> 
-> [1] https://lore.kernel.org/linux-xfs/20220819181431.4113819-1-leah.rumancik@gmail.com/
-> 
-> Amir Goldstein (1):
->   xfs: remove infinite loop when reserving free block pool
-> 
-> Brian Foster (1):
->   xfs: fix soft lockup via spinning in filestream ag selection loop
-> 
-> Darrick J. Wong (2):
->   xfs: always succeed at setting the reserve pool size
->   xfs: fix overfilling of reserve pool
-> 
-> Dave Chinner (2):
->   xfs: reorder iunlink remove operation in xfs_ifree
->   xfs: validate inode fork size against fork format
-> 
-> Eric Sandeen (1):
->   xfs: revert "xfs: actually bump warning counts when we send warnings"
-> 
->  fs/xfs/libxfs/xfs_inode_buf.c | 35 +++++++++++++++++------
->  fs/xfs/xfs_filestream.c       |  7 +++--
->  fs/xfs/xfs_fsops.c            | 52 ++++++++++++++---------------------
->  fs/xfs/xfs_inode.c            | 22 ++++++++-------
->  fs/xfs/xfs_mount.h            |  8 ++++++
->  fs/xfs/xfs_trans_dquot.c      |  1 -
->  6 files changed, 71 insertions(+), 54 deletions(-)
-> 
+> diff --git a/db/dir2sf.c b/db/dir2sf.c
+> index 8165b79b..9f1880dc 100644
+> --- a/db/dir2sf.c
+> +++ b/db/dir2sf.c
+> @@ -246,9 +246,9 @@ const field_t	dir3sf_flds[] = {
+>  
+>  #define	E3OFF(f)	bitize(offsetof(xfs_dir2_sf_entry_t, f))
+>  const field_t	dir3_sf_entry_flds[] = {
+> -	{ "namelen", FLDT_UINT8D, OI(EOFF(namelen)), C1, 0, TYP_NONE },
+> -	{ "offset", FLDT_DIR2_SF_OFF, OI(EOFF(offset)), C1, 0, TYP_NONE },
+> -	{ "name", FLDT_CHARNS, OI(EOFF(name)), dir2_sf_entry_name_count,
+> +	{ "namelen", FLDT_UINT8D, OI(E3OFF(namelen)), C1, 0, TYP_NONE },
+> +	{ "offset", FLDT_DIR2_SF_OFF, OI(E3OFF(offset)), C1, 0, TYP_NONE },
+> +	{ "name", FLDT_CHARNS, OI(E3OFF(name)), dir2_sf_entry_name_count,
+>  	  FLD_COUNT, TYP_NONE },
+>  	{ "inumber", FLDT_DIR2_INOU, dir3_sf_entry_inumber_offset, C1,
+>  	  FLD_OFFSET, TYP_NONE },
 > -- 
-> 2.25.1
+> 2.27.0
 > 
