@@ -2,66 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3757ECAAD2
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Aug 2022 16:24:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CABB7ECAAD5
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Aug 2022 17:36:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230286AbiH2QYQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Aug 2022 12:24:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55330 "EHLO
+        id S229635AbiH2RgQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Aug 2022 13:36:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230445AbiH2QYK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Aug 2022 12:24:10 -0400
-Received: from ms.lwn.net (ms.lwn.net [IPv6:2600:3c01:e000:3a1::42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E6208E9A1;
-        Mon, 29 Aug 2022 09:24:06 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:281:8300:73:8b7:7001:c8aa:b65f])
+        with ESMTP id S229653AbiH2RgP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Aug 2022 13:36:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1921A74E26;
+        Mon, 29 Aug 2022 10:36:13 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ms.lwn.net (Postfix) with ESMTPSA id B5F392E0;
-        Mon, 29 Aug 2022 16:24:05 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net B5F392E0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-        t=1661790245; bh=XeyUldM2kmPjFp1Z0j6QSolrm05MZv8BAzINIRKoqEY=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=RnA5M4bH42RGLuL0ljDzYlRtDkw4JhryUnz2i2GYQpk8Wl5m+XidZYec3ADf7FH/i
-         NHkkMMg6VThGrpS0kyNDpugXnksCcR5Tf41LT5z41jq62QnaJKB+ArlyCEXX2L5xby
-         jRgs8t9PpxTzdovTgn2l9HjWD6G9HYmcWhfh9Sp5uSwtMNu32RylyZ9Vci4itsVmQV
-         d2gY2Cn7DGWxWGpCjNBtrWNCL7GRq57souTK4RuLHq91i2he3VvwNyXrkelsde2BhB
-         wJWaWDBIxbbyN3TwE78EsxsSrTmU9DoBFcREZH/6HmEOaUBqkeRpVNWKOeYxMcPcRz
-         b7uVGXjJoKeqg==
-From:   Jonathan Corbet <corbet@lwn.net>
-To:     zhaomzhao@126.com, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Zhao Mengmeng <zhaomengmeng@kylinos.cn>
-Subject: Re: [PATCH v1] Documentation: filesystems: xfs: update pseudocode
- and typo fixes
-In-Reply-To: <20220823013653.203469-1-zhaomzhao@126.com>
-References: <20220823013653.203469-1-zhaomzhao@126.com>
-Date:   Mon, 29 Aug 2022 10:24:04 -0600
-Message-ID: <87a67nqaqj.fsf@meer.lwn.net>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6A971612F3;
+        Mon, 29 Aug 2022 17:36:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 862B4C433B5;
+        Mon, 29 Aug 2022 17:36:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661794572;
+        bh=rsrie5xAIPERRfy5hV2/lMm7+uIPsinOty7KExwvFfI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OZI38IqpeQLjkNktjbjkZgbz8ZZ7HJoB8Tea+n9Y1xRKTO/HyDpMNuAzHVsLOMW75
+         y7XmNUll7k9IlOpkFVIKUPeVhQTzXE7bA7F3FiNVjDZAcG1AoivaphkxETl1B+Cq7x
+         T5mDVb1ehKN6HDtTLZKJjHI/j9A37GVoqSezA4k2ffmkzvg3U4x12+5R57HMHDPY+i
+         RgVGOf9pfgD26/6OJcurpLwBP4+nLfqbkfgUY7WkfyKsmiTThx7Bz4pfjhv7vKRD4v
+         8nwYlpYJ24uSsiO0U345SWUqnGRZDyIj60mpCctnusSQkdS30E1uNNDZILEC0ABtIk
+         xM/Sy+JrekpnA==
+Date:   Mon, 29 Aug 2022 10:36:10 -0700
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH v5 6/8] f2fs: simplify f2fs_force_buffered_io()
+Message-ID: <Ywz5CrBg6udTMnW/@google.com>
+References: <20220827065851.135710-1-ebiggers@kernel.org>
+ <20220827065851.135710-7-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220827065851.135710-7-ebiggers@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-zhaomzhao@126.com writes:
+On 08/26, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
+> 
+> f2fs only allows direct I/O that is aligned to the filesystem block
+> size.  Given that fact, simplify f2fs_force_buffered_io() by removing
+> the redundant call to block_unaligned_IO().
+> 
+> This makes it easier to reuse this code for STATX_DIOALIGN.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
 
-> From: Zhao Mengmeng <zhaomengmeng@kylinos.cn>
->
-> According to the implementation of xfs_trans_roll(), it calls
-> xfs_trans_reserve(), which reserves not only log space, but also
-> free disk blocks. In short, the "transaction stuff". So change
-> xfs_log_reserve() to xfs_trans_reserve().
->
-> Besides, fix several typo issues.
->
-> Signed-off-by: Zhao Mengmeng <zhaomengmeng@kylinos.cn>
+Acked-by: Jaegeuk Kim <jaegeuk@kernel.org>
+
 > ---
->  .../filesystems/xfs-delayed-logging-design.rst       | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-
-I've applied this to the docs tree, thanks.
-
-jon
+>  fs/f2fs/file.c | 27 +++++----------------------
+>  1 file changed, 5 insertions(+), 22 deletions(-)
+> 
+> diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+> index 8a9455bf956f16..8e11311db21060 100644
+> --- a/fs/f2fs/file.c
+> +++ b/fs/f2fs/file.c
+> @@ -808,22 +808,9 @@ int f2fs_truncate(struct inode *inode)
+>  	return 0;
+>  }
+>  
+> -static int block_unaligned_IO(struct inode *inode, struct kiocb *iocb,
+> -			      struct iov_iter *iter)
+> -{
+> -	unsigned int i_blkbits = READ_ONCE(inode->i_blkbits);
+> -	unsigned int blocksize_mask = (1 << i_blkbits) - 1;
+> -	loff_t offset = iocb->ki_pos;
+> -	unsigned long align = offset | iov_iter_alignment(iter);
+> -
+> -	return align & blocksize_mask;
+> -}
+> -
+> -static bool f2fs_force_buffered_io(struct inode *inode,
+> -				   struct kiocb *iocb, struct iov_iter *iter)
+> +static bool f2fs_force_buffered_io(struct inode *inode, int rw)
+>  {
+>  	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
+> -	int rw = iov_iter_rw(iter);
+>  
+>  	if (!fscrypt_dio_supported(inode))
+>  		return true;
+> @@ -836,13 +823,9 @@ static bool f2fs_force_buffered_io(struct inode *inode,
+>  	if (f2fs_is_multi_device(sbi) && !sbi->aligned_blksize)
+>  		return true;
+>  
+> -	if (f2fs_lfs_mode(sbi) && (rw == WRITE)) {
+> -		if (block_unaligned_IO(inode, iocb, iter))
+> -			return true;
+> -		if (F2FS_IO_ALIGNED(sbi))
+> -			return true;
+> -	}
+> -	if (is_sbi_flag_set(F2FS_I_SB(inode), SBI_CP_DISABLED))
+> +	if (f2fs_lfs_mode(sbi) && rw == WRITE && F2FS_IO_ALIGNED(sbi))
+> +		return true;
+> +	if (is_sbi_flag_set(sbi, SBI_CP_DISABLED))
+>  		return true;
+>  
+>  	return false;
+> @@ -4222,7 +4205,7 @@ static bool f2fs_should_use_dio(struct inode *inode, struct kiocb *iocb,
+>  	if (!(iocb->ki_flags & IOCB_DIRECT))
+>  		return false;
+>  
+> -	if (f2fs_force_buffered_io(inode, iocb, iter))
+> +	if (f2fs_force_buffered_io(inode, iov_iter_rw(iter)))
+>  		return false;
+>  
+>  	/*
+> -- 
+> 2.37.2
