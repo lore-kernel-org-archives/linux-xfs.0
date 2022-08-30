@@ -2,90 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E5FECAAD4
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 13:02:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75404C0502E
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 13:24:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229766AbiH3NCT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Aug 2022 09:02:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40214 "EHLO
+        id S229844AbiH3NYt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Aug 2022 09:24:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230126AbiH3NCQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 09:02:16 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 069687B292
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 06:02:14 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B7A32B81AAC
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 13:02:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE168C433D6;
-        Tue, 30 Aug 2022 13:02:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661864531;
-        bh=/BCJnxIIFgcczpS+u7aEmZ+69niPbdWPiCtaDP9YY2M=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=V3pdFCdlkM67iyy0T1msR/L7+/LlHYoNZ/T8CregIfR6QMqArPBVwksQMlShE3ycU
-         bTTV1BxauB+XgkyG+LRem0lcvrQxGJbSICs9w0xU6H64qKdgH+uVKImRnAOk6Jx+wN
-         5LwloPXcYgtaNEeX2go3XcVqTMwGVHBcDlCha5ad0Dn7bP3BHw8a85Uk0ihl37njit
-         27rYvSHoqkNTXZa7CynmidJ74Ktl0P7ZZKRpVnfijcmhdCbDZFBlMrlz93wdQgEwYK
-         OjRJACnkngE6mEaEUmX5ChpAbj1olzIm0DuHg8+f//KcVRN+WleLi8C1u88aBgBEVq
-         qKv0KrBJyOOjA==
-Date:   Tue, 30 Aug 2022 15:02:07 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     Jakub Bogusz <qboosh@pld-linux.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] Polish translation update for xfsprogs 5.19.0
-Message-ID: <20220830130207.dhia5gbof7wzo7br@andromeda>
-References: <V-1rFt33HfX-PEKxCk2p6in23I_qJ6ELj6MmYMtgqjl6jHFh1hNVR4i5E1SF-RCY63GvFrKJzzv3leO8g-mpRA==@protonmail.internalid>
- <20220822160022.GA10067@stranger.qboosh.pl>
+        with ESMTP id S229484AbiH3NYr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 09:24:47 -0400
+Received: from fieldses.org (fieldses.org [IPv6:2600:3c00:e000:2f7::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EA0CF2;
+        Tue, 30 Aug 2022 06:24:44 -0700 (PDT)
+Received: by fieldses.org (Postfix, from userid 2815)
+        id 279875FF7; Tue, 30 Aug 2022 09:24:43 -0400 (EDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org 279875FF7
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
+        s=default; t=1661865883;
+        bh=kiFZ7lPyA7HTC4vyRAxhN92WkWxK7wUpm+dV4qOIgZ8=;
+        h=Date:To:Cc:Subject:References:In-Reply-To:From:From;
+        b=Nf36xb9rXfFGjVLBbMApNpIsXTzE8YkdK1hXQKX0LIG4aE5uqu40B8r9SDNAy5zvl
+         yFkby6QMMofGlZI0ZzDu2/evtTnYejNDoCWY31ec7vxzAy36igLSpogZSRKZB5cvZA
+         AenBPsSONL821mtDhhLoo8b+qko91m9EJCxicWJA=
+Date:   Tue, 30 Aug 2022 09:24:43 -0400
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     NeilBrown <neilb@suse.de>, Dave Chinner <david@fromorbit.com>,
+        tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        trondmy@hammerspace.com, viro@zeniv.linux.org.uk,
+        zohar@linux.ibm.com, xiubli@redhat.com, chuck.lever@oracle.com,
+        lczerner@redhat.com, jack@suse.cz, brauner@kernel.org,
+        linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ceph@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Colin Walters <walters@verbum.org>
+Subject: Re: [PATCH v3 1/7] iversion: update comments with info about atime
+ updates
+Message-ID: <20220830132443.GA26330@fieldses.org>
+References: <20220826214703.134870-1-jlayton@kernel.org>
+ <20220826214703.134870-2-jlayton@kernel.org>
+ <20220829075651.GS3600936@dread.disaster.area>
+ <549776abfaddcc936c6de7800b6d8249d97d9f28.camel@kernel.org>
+ <166181389550.27490.8200873228292034867@noble.neil.brown.name>
+ <f5c42c0d87dfa45188c2109ccf9baeb7a42aa27e.camel@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220822160022.GA10067@stranger.qboosh.pl>
+In-Reply-To: <f5c42c0d87dfa45188c2109ccf9baeb7a42aa27e.camel@kernel.org>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+From:   bfields@fieldses.org (J. Bruce Fields)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 22, 2022 at 06:00:22PM +0200, Jakub Bogusz wrote:
-> Hello,
-> 
-> I prepared an update of Polish translation of xfsprogs 5.19.0.
-> As previously, because of size (whole file is ~574kB, diff is ~750kB),
-> I'm sending just diff header to the list and whole file is available
-> to download at:
-> http://qboosh.pl/pl.po/xfsprogs-5.19.0.pl.po
-> (sha256: e5f73247e6c029902ef7c341170e5855599c364c50e3f98cc525a54ab17686e0)
-> 
-> Whole diff is available at:
-> http://qboosh.pl/pl.po/xfsprogs-5.19.0-pl.po-update.patch
-> (sha256: b9aa4a60c7c0984880ffbac82e836c5a202b01d481cb9a0f0398eeee6ffac637)
-> 
-> Please update.
-> 
-> 
-> Diff header is:
-> 
-> Polish translation update for xfsprogs 5.19.0.
-> 
-> Signed-off-by: Jakub Bogusz <qboosh@pld-linux.org>
+On Tue, Aug 30, 2022 at 07:40:02AM -0400, Jeff Layton wrote:
+> Yes, saying only that it must be different is intentional. What we
+> really want is for consumers to treat this as an opaque value for the
+> most part [1]. Therefore an implementation based on hashing would
+> conform to the spec, I'd think, as long as all of the relevant info is
+> part of the hash.
 
-Thanks Jakub, I'm gonna queue this update for 6.0
+It'd conform, but it might not be as useful as an increasing value.
 
-> 
-> ---
->  pl.po |17011 ++++++++++++++++++++++++++++++++++--------------------------------
->  1 file changed, 8894 insertions(+), 8117 deletions(-)
-> 
-> --- xfsprogs-5.19.0/po/pl.po.orig       2022-06-01 20:30:20.000000000 +0200
-> +++ xfsprogs-5.19.0/po/pl.po    2022-08-21 21:30:05.004759894 +0200
-> [...]
-> 
-> 
-> Regards,
-> 
-> --
-> Jakub Bogusz    http://qboosh.pl/
+E.g. a client can use that to work out which of a series of reordered
+write replies is the most recent, and I seem to recall that can prevent
+unnecessary invalidations in some cases.
 
--- 
-Carlos Maiolino
+--b.
