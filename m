@@ -2,139 +2,56 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FEB3C0502C
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 20:08:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2C1FECAAA1
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 21:01:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230451AbiH3UIe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Aug 2022 16:08:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55260 "EHLO
+        id S231124AbiH3VBl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Aug 2022 17:01:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229513AbiH3UIc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 16:08:32 -0400
-Received: from fieldses.org (fieldses.org [IPv6:2600:3c00:e000:2f7::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5F9174BA9;
-        Tue, 30 Aug 2022 13:08:30 -0700 (PDT)
-Received: by fieldses.org (Postfix, from userid 2815)
-        id 2715287D; Tue, 30 Aug 2022 16:08:30 -0400 (EDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org 2715287D
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
-        s=default; t=1661890110;
-        bh=GjE9N4MhY1Rstd09QKAZccRgooDvGy0li5Nf87Zhw4I=;
-        h=Date:To:Cc:Subject:References:In-Reply-To:From:From;
-        b=sFlhnerK/abEg8Xtyvf3yCHgYPgjeIZrbRbTGpqe6dfTZh7uW2B1Ospce75LHysE5
-         uaNCp/LA60m4L1cgiv3mGn8e1g9NUR24oEX402qiWvf8YwsZCJIOJLI1iCr8P9dnPh
-         IFTm357teraONLb68lIUlbFaH6EziF+Fi+/TA3DQ=
-Date:   Tue, 30 Aug 2022 16:08:30 -0400
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Trond Myklebust <trondmy@hammerspace.com>,
-        "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "xiubli@redhat.com" <xiubli@redhat.com>,
-        "brauner@kernel.org" <brauner@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "neilb@suse.de" <neilb@suse.de>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
-        "linux-ceph@vger.kernel.org" <linux-ceph@vger.kernel.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "tytso@mit.edu" <tytso@mit.edu>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "lczerner@redhat.com" <lczerner@redhat.com>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "walters@verbum.org" <walters@verbum.org>
-Subject: Re: [PATCH v3 1/7] iversion: update comments with info about atime
- updates
-Message-ID: <20220830200830.GJ26330@fieldses.org>
-References: <a07686e7e1d1ef15720194be2abe5681f6a6c78e.camel@kernel.org>
- <20220830144430.GD26330@fieldses.org>
- <e4815337177c74a9928098940dfdcb371017a40c.camel@hammerspace.com>
- <20220830151715.GE26330@fieldses.org>
- <3e8c7af5d39870c5b0dc61736a79bd134be5a9b3.camel@hammerspace.com>
- <4adb2abd1890b147dbc61a06413f35d2f147c43a.camel@kernel.org>
- <20220830183244.GG26330@fieldses.org>
- <b3c0e3ae74a6f30547bd5c49c32c17f1e7a13b0c.camel@kernel.org>
- <20220830194647.GI26330@fieldses.org>
- <5a3c7887aee7aa360743a71af85b94678feb4fe9.camel@kernel.org>
+        with ESMTP id S230205AbiH3VBk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 17:01:40 -0400
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 420977C769;
+        Tue, 30 Aug 2022 14:01:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=tuW9Op8uxMm/s5nLDNhxNasVJzG36UM1W1yibCDcVxs=; b=aMj5jIDmRLUduMeC5sf764/02f
+        ix+O9yo9c/B3Sm4b7XR1aXSypCXq+DgltDjDGAmsBlEG1ToVq7myUiP1rM8IOhYK2uj+3fHSZ1j7Z
+        5VZxuGEnZ6J95mysPnGaKoNBEaQgPhdWO3O7+wcwEo8i0AKPhjXObG/2OqYavyFXR/k4hGaezQQmB
+        wjsYmCS2AB57s2wSPBlH3E4wXHse7WdOnuSUq4W3k207Gp88aEGSUtXQ18rG0vz25HXJsNhaK2kaQ
+        Unfolnqa7450aXTHXZcm7eIsRw4slhVpR9XMNXtcfpcuNnimXuI0gGj/ROPB9zS3yJde7Vipnzt8u
+        hRCPyJ5w==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.95 #2 (Red Hat Linux))
+        id 1oT8MX-00ALCc-DZ;
+        Tue, 30 Aug 2022 21:01:33 +0000
+Date:   Tue, 30 Aug 2022 22:01:33 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Randy Dunlap <rdunlap@infradead.org>
+Cc:     linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        Christian Brauner <brauner@kernel.org>,
+        Seth Forshee <sforshee@kernel.org>
+Subject: Re: [PATCH] Documentation: filesystems: correct possessive "its"
+Message-ID: <Yw56rVwBRg0LbC41@ZenIV>
+References: <20220829235429.17902-1-rdunlap@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <5a3c7887aee7aa360743a71af85b94678feb4fe9.camel@kernel.org>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-From:   bfields@fieldses.org (J. Bruce Fields)
+In-Reply-To: <20220829235429.17902-1-rdunlap@infradead.org>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 30, 2022 at 03:57:09PM -0400, Jeff Layton wrote:
-> On Tue, 2022-08-30 at 15:46 -0400, J. Bruce Fields wrote:
-> > On Tue, Aug 30, 2022 at 03:30:13PM -0400, Jeff Layton wrote:
-> > > On Tue, 2022-08-30 at 14:32 -0400, J. Bruce Fields wrote:
-> > > > On Tue, Aug 30, 2022 at 01:02:50PM -0400, Jeff Layton wrote:
-> > > > > The fact that NFS kept this more loosely-defined is what allowed us to
-> > > > > elide some of the i_version bumps and regain a fair bit of performance
-> > > > > for local filesystems [1]. If the change attribute had been more
-> > > > > strictly defined like you mention, then that particular optimization
-> > > > > would not have been possible.
-> > > > > 
-> > > > > This sort of thing is why I'm a fan of not defining this any more
-> > > > > strictly than we require. Later on, maybe we'll come up with a way for
-> > > > > filesystems to advertise that they can offer stronger guarantees.
-> > > > 
-> > > > Yeah, the afs change-attribute-as-counter thing seems ambitious--I
-> > > > wouldn't even know how to define what exactly you're counting.
-> > > > 
-> > > > My one question is whether it'd be worth just defining the thing as
-> > > > *increasing*.  That's a lower bar.
-> > > > 
-> > > 
-> > > That's a very good question.
-> > > 
-> > > One could argue that NFSv4 sort of requires that for write delegations
-> > > anyway. All of the existing implementations that I know of do this, so
-> > > that wouldn't rule any of them out.
-> > > 
-> > > I'm not opposed to adding that constraint. Let me think on it a bit
-> > > more.
-> > > 
-> > > > (Though admittedly we don't quite manage it now--see again 1631087ba872
-> > > > "Revert "nfsd4: support change_attr_type attribute"".)
-> > > > 
-> > > 
-> > > Factoring the ctime into the change attr seems wrong, since a clock jump
-> > > could make it go backward. Do you remember what drove that change (see
-> > > 630458e730b8) ?
-> > > 
-> > > It seems like if the i_version were to go backward, then the ctime
-> > > probably would too, and you'd still see a duplicate change attr.
-> > 
-> > See the comment--I was worried about crashes: the change attribute isn't
-> > on disk at the time the client requests it, so after a crash the client
-> > may see it go backward.  (And then could see it repeat a value, possibly
-> > with different file contents.)
-> > 
-> > Combining it with the ctime means we get something that behaves
-> > correctly even in that case--unless the clock goes backwards.
-> > 
-> 
-> Yeah ok, I vaguely remember discussing this.
-> 
-> That seems like it has its own problem though. If you mix in the ctime
-> and the clock jumps backward, then you could end up with the same issue
-> (a stale changeid, different contents). No crash required.
+On Mon, Aug 29, 2022 at 04:54:29PM -0700, Randy Dunlap wrote:
+>  compress_log_size=%u	 Support configuring compress cluster size, the size will
+> -			 be 4KB * (1 << %u), 16KB is minimum size, also it's
+> +			 be 4KB * (1 << %u), 16KB is minimum size, also its
+>  			 default size.
 
-Yes, exactly.
-
-My feeling was that I've got no control over power failures and such,
-but the clock setting is something I can get right.  So I'd rather have
-something that depended on the latter than the former.
-
-I could be wrong.
-
---b.
+That one doesn't look like possesive to me - more like "default size is 16KB and
+values below that are not allowed"...
