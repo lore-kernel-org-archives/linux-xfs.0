@@ -2,92 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB269C65C0D
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 13:49:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6590CC3DA6B
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 13:52:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229923AbiH3NtZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Aug 2022 09:49:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57090 "EHLO
+        id S231347AbiH3NwQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Aug 2022 09:52:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231386AbiH3Nsx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 09:48:53 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51B831037F6;
-        Tue, 30 Aug 2022 06:46:42 -0700 (PDT)
-Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MH7mg5DSGzlWYp;
-        Tue, 30 Aug 2022 21:43:15 +0800 (CST)
-Received: from huawei.com (10.175.103.91) by dggpemm500022.china.huawei.com
- (7.185.36.162) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 30 Aug
- 2022 21:46:38 +0800
-From:   Zeng Heng <zengheng4@huawei.com>
-To:     <djwong@kernel.org>
-CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <zengheng4@huawei.com>
-Subject: [PATCH -next] xfs: remove "%Ld" which doesn't meet C standard
-Date:   Tue, 30 Aug 2022 21:54:22 +0800
-Message-ID: <20220830135422.2734749-1-zengheng4@huawei.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S231307AbiH3Nvz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 09:51:55 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8CDE4BA52;
+        Tue, 30 Aug 2022 06:50:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 42EBAB81C07;
+        Tue, 30 Aug 2022 13:50:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB94FC433D6;
+        Tue, 30 Aug 2022 13:50:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661867405;
+        bh=l7ELeaRTVCV4lo7/FQ0h0/nHSZnx9Fi3ScrPGF9gzvs=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=aWStCZCicrMebcTCOFe7sxaeIJUPqBAwUaEf0+CLgJ2SV1vBL9kIWVDHMZrU6a+FW
+         b9wM+EAjmMpBpn68zTuq/Oc0sLAIkrPOV+QuNAE61dO12HJ9cNoU5YwvQCyrQwHtJ7
+         d5miBia6XH86fk/Zk+SFdI0Ce87PENiBZeWTSL60/FGV0QGbue6pCsXGB9n4quAWcI
+         diZUKu5+Q0tiqX/QvnQ7X1MLf6ovVGhsyD0xQoz0v6rDTjBxAj4y0SRS20V1pvAcCa
+         QcGZgRLg2BYoUiNkCzqa/HtZVKnjjHnLKkcfSm7HbwD3G/MyLvhdJELzoBaofQajzk
+         T7OMDrGENU0IQ==
+Message-ID: <a07686e7e1d1ef15720194be2abe5681f6a6c78e.camel@kernel.org>
+Subject: Re: [PATCH v3 1/7] iversion: update comments with info about atime
+ updates
+From:   Jeff Layton <jlayton@kernel.org>
+To:     "J. Bruce Fields" <bfields@fieldses.org>
+Cc:     NeilBrown <neilb@suse.de>, Dave Chinner <david@fromorbit.com>,
+        tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        trondmy@hammerspace.com, viro@zeniv.linux.org.uk,
+        zohar@linux.ibm.com, xiubli@redhat.com, chuck.lever@oracle.com,
+        lczerner@redhat.com, jack@suse.cz, brauner@kernel.org,
+        linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ceph@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Colin Walters <walters@verbum.org>
+Date:   Tue, 30 Aug 2022 09:50:02 -0400
+In-Reply-To: <20220830132443.GA26330@fieldses.org>
+References: <20220826214703.134870-1-jlayton@kernel.org>
+         <20220826214703.134870-2-jlayton@kernel.org>
+         <20220829075651.GS3600936@dread.disaster.area>
+         <549776abfaddcc936c6de7800b6d8249d97d9f28.camel@kernel.org>
+         <166181389550.27490.8200873228292034867@noble.neil.brown.name>
+         <f5c42c0d87dfa45188c2109ccf9baeb7a42aa27e.camel@kernel.org>
+         <20220830132443.GA26330@fieldses.org>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.103.91]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemm500022.china.huawei.com (7.185.36.162)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The "%Ld" specifier, which represents long long unsigned,
-doesn't meet C language standard, and even more,
-it makes people easily mistake with "%ld", which represent
-long unsigned. So replace "%Ld" with "lld".
+On Tue, 2022-08-30 at 09:24 -0400, J. Bruce Fields wrote:
+> On Tue, Aug 30, 2022 at 07:40:02AM -0400, Jeff Layton wrote:
+> > Yes, saying only that it must be different is intentional. What we
+> > really want is for consumers to treat this as an opaque value for the
+> > most part [1]. Therefore an implementation based on hashing would
+> > conform to the spec, I'd think, as long as all of the relevant info is
+> > part of the hash.
+>=20
+> It'd conform, but it might not be as useful as an increasing value.
+>=20
+> E.g. a client can use that to work out which of a series of reordered
+> write replies is the most recent, and I seem to recall that can prevent
+> unnecessary invalidations in some cases.
+>=20
 
-Do the same with "%Lu".
+That's a good point; the linux client does this. That said, NFSv4 has a
+way for the server to advertise its change attribute behavior [1]
+(though nfsd hasn't implemented this yet). We don't have a good way to
+do that in userland for now.
 
-Signed-off-by: Zeng Heng <zengheng4@huawei.com>
----
- fs/xfs/xfs_inode_item_recover.c | 4 ++--
- fs/xfs/xfs_stats.c              | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+This is another place where fsinfo() would have been nice to have. I
+think until we have something like that, we'd want to keep our promises
+to userland to a minimum.
 
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index d28ffaebd067..0e5dba2343ea 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -321,7 +321,7 @@ xlog_recover_inode_commit_pass2(
- 	 */
- 	if (XFS_IS_CORRUPT(mp, !xfs_verify_magic16(bp, dip->di_magic))) {
- 		xfs_alert(mp,
--	"%s: Bad inode magic number, dip = "PTR_FMT", dino bp = "PTR_FMT", ino = %Ld",
-+	"%s: Bad inode magic number, dip = "PTR_FMT", dino bp = "PTR_FMT", ino = %lld",
- 			__func__, dip, bp, in_f->ilf_ino);
- 		error = -EFSCORRUPTED;
- 		goto out_release;
-@@ -329,7 +329,7 @@ xlog_recover_inode_commit_pass2(
- 	ldip = item->ri_buf[1].i_addr;
- 	if (XFS_IS_CORRUPT(mp, ldip->di_magic != XFS_DINODE_MAGIC)) {
- 		xfs_alert(mp,
--			"%s: Bad inode log record, rec ptr "PTR_FMT", ino %Ld",
-+			"%s: Bad inode log record, rec ptr "PTR_FMT", ino %lld",
- 			__func__, item, in_f->ilf_ino);
- 		error = -EFSCORRUPTED;
- 		goto out_release;
-diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-index 70d38b77682b..90a77cd3ebad 100644
---- a/fs/xfs/xfs_stats.c
-+++ b/fs/xfs/xfs_stats.c
-@@ -74,7 +74,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
- 		defer_relog += per_cpu_ptr(stats, i)->s.defer_relog;
- 	}
- 
--	len += scnprintf(buf + len, PATH_MAX-len, "xpc %Lu %Lu %Lu\n",
-+	len += scnprintf(buf + len, PATH_MAX-len, "xpc %llu %llu %llu\n",
- 			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
- 	len += scnprintf(buf + len, PATH_MAX-len, "defer_relog %llu\n",
- 			defer_relog);
--- 
-2.25.1
+[1]: https://www.rfc-editor.org/rfc/rfc7862.html#section-12.2.3 . I
+guess I should look at plumbing this in for IS_I_VERSION inodes...
+
+--=20
+Jeff Layton <jlayton@kernel.org>
+
+
 
