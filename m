@@ -2,151 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A40AECAAD3
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 02:28:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A92F0ECAAD3
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 02:49:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229834AbiH3C2R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Aug 2022 22:28:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47020 "EHLO
+        id S229689AbiH3Ctm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Aug 2022 22:49:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229544AbiH3C2Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Aug 2022 22:28:16 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB2EB9E2E8
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Aug 2022 19:28:14 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 318F9B815D1
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 02:28:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C751BC433D6;
-        Tue, 30 Aug 2022 02:28:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661826491;
-        bh=8SzvNk3YxAGYPNQZYQtcYYyK6aUb46XIvmrAUUwnHPA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EC13o+jlUuHd1pQZ9iwdaJewvHBqx7Wi0+fAe7rLU/tkZXMmScQ+x7ig4ql42qeMD
-         z4WLccv3htC4bz55+J5ZXlv9bS223/uoA1Hbn1dUKeXOXHEaKnpUdmobuCTOzuvitq
-         JjVnhnbClE4nMbZhpWtF02D1/B5X3AfbA9pDHNkb9itVz7/5RZTRfYQ4eVyy1R0hAZ
-         g51jARExLkY3m3mEulsLQXaHUZUhdzjbo3GTpYtecqaDQKvcKNNpERCbLN6kwMi/PR
-         MCZ3k/glVw80OVR3yqNLexNw2D9U6YoySeiIavzEuGSYJo26ane2TwVl2Vbvfv1RNh
-         CN2+kvwGavmIQ==
-Date:   Mon, 29 Aug 2022 19:28:11 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Wang Yugui <wangyugui@e16-tech.com>
-Cc:     Carlos Maiolino <cem@kernel.org>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: questions about hybird xfs wih ssd/hdd  by realtime subvol
-Message-ID: <Yw11u/2ghadMfLMd@magnolia>
-References: <20220829102619.AE3B.409509F4@e16-tech.com>
- <20220829082440.o3qzqdn44pw7z2ou@andromeda>
- <20220830085718.9391.409509F4@e16-tech.com>
+        with ESMTP id S229472AbiH3Ctm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Aug 2022 22:49:42 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E78E79DB48;
+        Mon, 29 Aug 2022 19:49:40 -0700 (PDT)
+Received: from canpemm500002.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MGsBJ557MzkWTJ;
+        Tue, 30 Aug 2022 10:46:00 +0800 (CST)
+Received: from [10.174.177.76] (10.174.177.76) by
+ canpemm500002.china.huawei.com (7.192.104.244) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 30 Aug 2022 10:49:37 +0800
+Subject: Re: [PATCH 3/4] mm/memory-failure: Fix detection of memory_failure()
+ handlers
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Naoya Horiguchi <naoya.horiguchi@nec.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Dave Chinner <david@fromorbit.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Jane Chu <jane.chu@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        <nvdimm@lists.linux.dev>, <linux-xfs@vger.kernel.org>,
+        <linux-mm@kvack.org>, <linux-fsdevel@vger.kernel.org>,
+        <akpm@linux-foundation.org>, <djwong@kernel.org>
+References: <166153426798.2758201.15108211981034512993.stgit@dwillia2-xfh.jf.intel.com>
+ <166153428781.2758201.1990616683438224741.stgit@dwillia2-xfh.jf.intel.com>
+From:   Miaohe Lin <linmiaohe@huawei.com>
+Message-ID: <f4f25c79-33b3-b1ae-3481-0328cbed199b@huawei.com>
+Date:   Tue, 30 Aug 2022 10:49:37 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220830085718.9391.409509F4@e16-tech.com>
+In-Reply-To: <166153428781.2758201.1990616683438224741.stgit@dwillia2-xfh.jf.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.177.76]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ canpemm500002.china.huawei.com (7.192.104.244)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 30, 2022 at 08:57:21AM +0800, Wang Yugui wrote:
-> Hi,
+On 2022/8/27 1:18, Dan Williams wrote:
+> Some pagemap types, like MEMORY_DEVICE_GENERIC (device-dax) do not even
+> have pagemap ops which results in crash signatures like this:
 > 
-> > On Mon, Aug 29, 2022 at 10:26:20AM +0800, Wang Yugui wrote:
-> > > Hi,
-> > > 
-> > > I saw some info about hybird xfs wih ssd/hdd  by realtime subvol.
-> > > 
-> > > Hybrid XFS—Using SSDs to Supercharge HDDs at Facebook
-> > > https://www.usenix.org/conference/srecon19asia/presentation/shamasunder
-> > > 
-> > > There are some questions about how to control the data to save into
-> > > normal vol or realtime subvol firstly.
-> > > 
-> > > 1, man xfsctl
-> > > here is XFS_XFLAG_REALTIME in man xfsctl of xfsprogs 5.0 ,
-> > > but there is no XFS_XFLAG_REALTIME in xfsprogs 5.14/5.19.
-> > > xfsctl(XFS_XFLAG_REALTIME) will be removed in the further?
-> > 
-> > It's been a while since XFS uses FS_XFLAG features directly, so, what you're
-> > specifically looking for is FS_XFLAG_REALTIME. xfsprogs today only has a
-> > preprocessor define:
-> > 
-> > #define XFS_XFLAG_REALTIME	FS_XFLAG_REALTIME
-> > 
-> > FS_XFLAG_REALTIME is part of the xfs realtime, unlikely it's going away without
-> > the realtime filesystems going first, so, unlikely it's gonna happen.
-> > 
-> > > 
-> > > 2, Is there some tool to do xfsctl(XFS_XFLAG_REALTIME)?
-> > 
-> > You can use xfs_io's chattr command to add/remote the REALTIME attribute of a
-> > file.
-> > 
-> > 
-> > > 
-> > > 3, we build a xfs filesystem with 1G device and 1G rtdev device. and
-> > > then we can save 2G data into this xfs filesystem.
+>   BUG: kernel NULL pointer dereference, address: 0000000000000010
+>   #PF: supervisor read access in kernel mode
+>   #PF: error_code(0x0000) - not-present page
+>   PGD 8000000205073067 P4D 8000000205073067 PUD 2062b3067 PMD 0
+>   Oops: 0000 [#1] PREEMPT SMP PTI
+>   CPU: 22 PID: 4535 Comm: device-dax Tainted: G           OE    N 6.0.0-rc2+ #59
+>   Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 0.0.0 02/06/2015
+>   RIP: 0010:memory_failure+0x667/0xba0
+>  [..]
+>   Call Trace:
+>    <TASK>
+>    ? _printk+0x58/0x73
+>    do_madvise.part.0.cold+0xaf/0xc5
 > 
-> Sorry, I cheched again.
-> This is a xfs filesystem with 2G device and 2G rtdev device
+> Check for ops before checking if the ops have a memory_failure()
+> handler.
 > 
-> > > Is there any tool/kernel option/kernel patch to control the data to save
-> > > into normal vol or realtime subvol firstly?
-> > 
-> > I didn't watch the talk you mentioned above, but when use an rt device, you
-> > don't use the 'normal' one then the rt later, or vice-versa, the rt-device is
-> > used to store data blocks for those files marked with the xattr above. For those
-> > files you want to store in the realtime device, you should add the above xattr
-> > to them.
-> 
-> Although I still fail to check/set the attr by 'lsattr/chattr', but I
-> can check the free space of 'normal' and realtime subvol now.
-> 
-> # xfs_db -c sb -c p /dev/sdb8 |grep 'fdblocks\|frextents'
-> typedef struct xfs_sb {
-> ...
-> 	uint64_t	sb_fdblocks;	/* free data blocks */
-> 	uint64_t	sb_frextents;	/* free realtime extents */
-> ...
-> }
-> 
-> And based the info from Carlos Maiolino
-> 
-> FB were running a modified kernel that selected the rt dev based on
-> the initial allocation size. Behaviour for them was predictable
-> because they also controlled the application that was storing the
-> data. See:
-> 
-> https://lore.kernel.org/linux-xfs/20171128215527.2510350-1-rwareing@fb.com/
-> 
-> With a dirty patch below for test only , Now realtime subvol will be used
-> as I expected, and that can be confirmed by
-> #xfs_db -c sb -c p /dev/sdb8 |grep 'fdblocks\|frextents'.
+> Fixes: 33a8f7f2b3a3 ("pagemap,pmem: introduce ->memory_failure()")
+> Cc: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Darrick J. Wong <djwong@kernel.org>
+> Cc: Naoya Horiguchi <naoya.horiguchi@nec.com>
+> Cc: Al Viro <viro@zeniv.linux.org.uk>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>
+> Cc: Jane Chu <jane.chu@oracle.com>
+> Cc: Matthew Wilcox <willy@infradead.org>
+> Cc: Miaohe Lin <linmiaohe@huawei.com>
+> Cc: Ritesh Harjani <riteshh@linux.ibm.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-mkfs.xfs -d rtinherit=1...
+LGTM. Thanks for fixing this.
 
---D
+Reviewed-by: Miaohe Lin <linmiaohe@huawei.com>
 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f4cc8a1aaeb4..d19e0fa34c1a 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -868,6 +868,9 @@ xfs_init_new_inode(
->                 flags |= XFS_ILOG_DEV;
->                 break;
->         case S_IFREG:
-> +               if (xfs_has_realtime(ip->i_mount))
-> +                       ip->i_diflags |= XFS_DIFLAG_REALTIME;
-> +               fallthrough;
->         case S_IFDIR:
->                 if (pip && (pip->i_diflags & XFS_DIFLAG_ANY))
->                         xfs_inode_inherit_flags(ip, pip);
+Thanks,
+Miaohe Lin
+
+
+> ---
+>  include/linux/memremap.h |    5 +++++
+>  mm/memory-failure.c      |    2 +-
+>  2 files changed, 6 insertions(+), 1 deletion(-)
 > 
-> Thanks a lot.
+> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+> index 19010491a603..c3b4cc84877b 100644
+> --- a/include/linux/memremap.h
+> +++ b/include/linux/memremap.h
+> @@ -139,6 +139,11 @@ struct dev_pagemap {
+>  	};
+>  };
+>  
+> +static inline bool pgmap_has_memory_failure(struct dev_pagemap *pgmap)
+> +{
+> +	return pgmap->ops && pgmap->ops->memory_failure;
+> +}
+> +
+>  static inline struct vmem_altmap *pgmap_altmap(struct dev_pagemap *pgmap)
+>  {
+>  	if (pgmap->flags & PGMAP_ALTMAP_VALID)
+> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+> index 14439806b5ef..8a4294afbfa0 100644
+> --- a/mm/memory-failure.c
+> +++ b/mm/memory-failure.c
+> @@ -1928,7 +1928,7 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+>  	 * Call driver's implementation to handle the memory failure, otherwise
+>  	 * fall back to generic handler.
+>  	 */
+> -	if (pgmap->ops->memory_failure) {
+> +	if (pgmap_has_memory_failure(pgmap)) {
+>  		rc = pgmap->ops->memory_failure(pgmap, pfn, 1, flags);
+>  		/*
+>  		 * Fall back to generic handler too if operation is not
 > 
-> Best Regards
-> Wang Yugui (wangyugui@e16-tech.com)
-> 2022/08/30
 > 
+> .
+> 
+
