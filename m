@@ -2,223 +2,205 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F87ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 16:38:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1DCCECAAD8
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 17:03:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229848AbiH3QiN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Aug 2022 12:38:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41412 "EHLO
+        id S229848AbiH3RDR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Aug 2022 13:03:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230034AbiH3QiL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 12:38:11 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA022DA3E9
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 09:38:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1661877490; x=1693413490;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=HWROR/yqexED/x9xlNquX5DV6EHDziaMmdq9tBE/fwk=;
-  b=kaOjGMj2FdC5UhzfdcoR2K2z9Y7+ZKr5yZiViIozVwqmiYtNmKzzrpUs
-   jxNXM5+LRhb+RL86OIkeQqe9Sw7w+4JGcQEe1WXmmZKLQneEYGoHLD6Hj
-   y1JKIDEak0XdUcqwaDhXnDEqJrwe6Yq4lwZb+VPNhNXzdxMqK1Jk7ttwq
-   83lRnHlhh/spHCp8SL+7OfUH0nDKsQPUdsb2VuFbtN9g/wxqMRiWl+3ab
-   TOAfhkzuPI01mB1HQT1lhpmW6z01BUbLrQRuqn7WF0UqBpEPCJ1kxzIix
-   HeWHN13BNd/FHh7ET+R4Gfm5vLclYUKxJLAHFvFghzRs0G0QipKjHjuZp
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10455"; a="292811829"
-X-IronPort-AV: E=Sophos;i="5.93,275,1654585200"; 
-   d="scan'208";a="292811829"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2022 09:31:26 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,275,1654585200"; 
-   d="scan'208";a="644896662"
-Received: from lkp-server02.sh.intel.com (HELO 77b6d4e16fc5) ([10.239.97.151])
-  by orsmga001.jf.intel.com with ESMTP; 30 Aug 2022 09:31:24 -0700
-Received: from kbuild by 77b6d4e16fc5 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oT496-0000PD-0R;
-        Tue, 30 Aug 2022 16:31:24 +0000
-Date:   Wed, 31 Aug 2022 00:31:07 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org
-Cc:     kbuild-all@lists.01.org
-Subject: Re: [PATCH v2] xfs: Add new name to attri/d
-Message-ID: <202208310018.1wKCQHzH-lkp@intel.com>
-References: <20220829213613.1318499-1-allison.henderson@oracle.com>
+        with ESMTP id S229550AbiH3RDA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 13:03:00 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 860F51094;
+        Tue, 30 Aug 2022 10:02:57 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id DF960CE18FF;
+        Tue, 30 Aug 2022 17:02:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9D27C433C1;
+        Tue, 30 Aug 2022 17:02:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661878974;
+        bh=A1/OrWAmF4tVj/1o13SDFHfQO6YqKZ788Ss2rMX0LCM=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=Q4+ycBFZEzObq72/7BDzPaQ4ZxVKPUWf5eZOubnxrdoYDlfyeI2+kEETrRXdY++W6
+         YkdLAHIrCmWfn25iSx2vJHS+HJUFiQu46mhPxvOjOz+VHKst5lWmfYr0QuKaAzZ8Id
+         Q+c+HFdoODsRrVdDcWVJuUq+Tmbei9JQgHiMnWm2zxLJtwQxOCHe06vs5W2YobbGuO
+         ZqzSu6vqB4cYWPaXWlifJbDQkwGjKuGoPcxrnfPUAO2HBZSLWGSucdsNo1YZhKq3zM
+         KPlwZHAJxcWHarG/dn2DQhlhOVNbJ6BkwrE18OmaYEj/dz3ftG/o2iUlssS1Ke7sRp
+         D4M90SisHpVWw==
+Message-ID: <4adb2abd1890b147dbc61a06413f35d2f147c43a.camel@kernel.org>
+Subject: Re: [PATCH v3 1/7] iversion: update comments with info about atime
+ updates
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Trond Myklebust <trondmy@hammerspace.com>,
+        "bfields@fieldses.org" <bfields@fieldses.org>
+Cc:     "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "xiubli@redhat.com" <xiubli@redhat.com>,
+        "brauner@kernel.org" <brauner@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+        "neilb@suse.de" <neilb@suse.de>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
+        "linux-ceph@vger.kernel.org" <linux-ceph@vger.kernel.org>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "tytso@mit.edu" <tytso@mit.edu>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "lczerner@redhat.com" <lczerner@redhat.com>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "walters@verbum.org" <walters@verbum.org>
+Date:   Tue, 30 Aug 2022 13:02:50 -0400
+In-Reply-To: <3e8c7af5d39870c5b0dc61736a79bd134be5a9b3.camel@hammerspace.com>
+References: <20220826214703.134870-1-jlayton@kernel.org>
+         <20220826214703.134870-2-jlayton@kernel.org>
+         <20220829075651.GS3600936@dread.disaster.area>
+         <549776abfaddcc936c6de7800b6d8249d97d9f28.camel@kernel.org>
+         <166181389550.27490.8200873228292034867@noble.neil.brown.name>
+         <f5c42c0d87dfa45188c2109ccf9baeb7a42aa27e.camel@kernel.org>
+         <20220830132443.GA26330@fieldses.org>
+         <a07686e7e1d1ef15720194be2abe5681f6a6c78e.camel@kernel.org>
+         <20220830144430.GD26330@fieldses.org>
+         <e4815337177c74a9928098940dfdcb371017a40c.camel@hammerspace.com>
+         <20220830151715.GE26330@fieldses.org>
+         <3e8c7af5d39870c5b0dc61736a79bd134be5a9b3.camel@hammerspace.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220829213613.1318499-1-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Allison,
+On Tue, 2022-08-30 at 15:43 +0000, Trond Myklebust wrote:
+> On Tue, 2022-08-30 at 11:17 -0400, J. Bruce Fields wrote:
+> > On Tue, Aug 30, 2022 at 02:58:27PM +0000, Trond Myklebust wrote:
+> > > On Tue, 2022-08-30 at 10:44 -0400, J. Bruce Fields wrote:
+> > > > On Tue, Aug 30, 2022 at 09:50:02AM -0400, Jeff Layton wrote:
+> > > > > On Tue, 2022-08-30 at 09:24 -0400, J. Bruce Fields wrote:
+> > > > > > On Tue, Aug 30, 2022 at 07:40:02AM -0400, Jeff Layton wrote:
+> > > > > > > Yes, saying only that it must be different is intentional.
+> > > > > > > What
+> > > > > > > we
+> > > > > > > really want is for consumers to treat this as an opaque
+> > > > > > > value
+> > > > > > > for the
+> > > > > > > most part [1]. Therefore an implementation based on hashing
+> > > > > > > would
+> > > > > > > conform to the spec, I'd think, as long as all of the
+> > > > > > > relevant
+> > > > > > > info is
+> > > > > > > part of the hash.
+> > > > > >=20
+> > > > > > It'd conform, but it might not be as useful as an increasing
+> > > > > > value.
+> > > > > >=20
+> > > > > > E.g. a client can use that to work out which of a series of
+> > > > > > reordered
+> > > > > > write replies is the most recent, and I seem to recall that
+> > > > > > can
+> > > > > > prevent
+> > > > > > unnecessary invalidations in some cases.
+> > > > > >=20
+> > > > >=20
+> > > > > That's a good point; the linux client does this. That said,
+> > > > > NFSv4
+> > > > > has a
+> > > > > way for the server to advertise its change attribute behavior
+> > > > > [1]
+> > > > > (though nfsd hasn't implemented this yet).
+> > > >=20
+> > > > It was implemented and reverted.=A0 The issue was that I thought
+> > > > nfsd
+> > > > should mix in the ctime to prevent the change attribute going
+> > > > backwards
+> > > > on reboot (see fs/nfsd/nfsfh.h:nfsd4_change_attribute()), but
+> > > > Trond
+> > > > was
+> > > > concerned about the possibility of time going backwards.=A0 See
+> > > > 1631087ba872 "Revert "nfsd4: support change_attr_type
+> > > > attribute"".
+> > > > There's some mailing list discussion to that I'm not turning up
+> > > > right
+> > > > now.
+> >=20
+> > https://lore.kernel.org/linux-nfs/a6294c25cb5eb98193f609a52aa8f4b5d4e81=
+279.camel@hammerspace.com/
+> > is what I was thinking of but it isn't actually that interesting.
+> >=20
+> > > My main concern was that some filesystems (e.g. ext3) were failing
+> > > to
+> > > provide sufficient timestamp resolution to actually label the
+> > > resulting
+> > > 'change attribute' as being updated monotonically. If the time
+> > > stamp
+> > > doesn't change when the file data or metadata are changed, then the
+> > > client has to perform extra checks to try to figure out whether or
+> > > not
+> > > its caches are up to date.
+> >=20
+> > That's a different issue from the one you were raising in that
+> > discussion.
+> >=20
+> > > > Did NFSv4 add change_attr_type because some implementations
+> > > > needed
+> > > > the
+> > > > unordered case, or because they realized ordering was useful but
+> > > > wanted
+> > > > to keep backwards compatibility?=A0 I don't know which it was.
+> > >=20
+> > > We implemented it because, as implied above, knowledge of whether
+> > > or
+> > > not the change attribute behaves monotonically, or strictly
+> > > monotonically, enables a number of optimisations.
+> >=20
+> > Of course, but my question was about the value of the old behavior,
+> > not
+> > about the value of the monotonic behavior.
+> >=20
+> > Put differently, if we could redesign the protocol from scratch would
+> > we
+> > actually have included the option of non-monotonic behavior?
+> >=20
+>=20
+> If we could design the filesystems from scratch, we probably would not.
+> The protocol ended up being as it is because people were trying to make
+> it as easy to implement as possible.
+>=20
+> So if we could design the filesystem from scratch, we would have
+> probably designed it along the lines of what AFS does.
+> i.e. each explicit change is accompanied by a single bump of the change
+> attribute, so that the clients can not only decide the order of the
+> resulting changes, but also if they have missed a change (that might
+> have been made by a different client).
+>=20
+> However that would be a requirement that is likely to be very specific
+> to distributed caches (and hence distributed filesystems). I doubt
+> there are many user space applications that would need that high
+> precision. Maybe MPI, but that's the only candidate I can think of for
+> now?
+>=20
 
-Thank you for the patch! Yet something to improve:
+The fact that NFS kept this more loosely-defined is what allowed us to
+elide some of the i_version bumps and regain a fair bit of performance
+for local filesystems [1]. If the change attribute had been more
+strictly defined like you mention, then that particular optimization
+would not have been possible.
 
-[auto build test ERROR on v6.0-rc3]
-[also build test ERROR on linus/master next-20220830]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+This sort of thing is why I'm a fan of not defining this any more
+strictly than we require. Later on, maybe we'll come up with a way for
+filesystems to advertise that they can offer stronger guarantees.
+--=20
+Jeff Layton <jlayton@kernel.org>
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Allison-Henderson/xfs-Add-new-name-to-attri-d/20220830-053816
-base:    b90cb1053190353cc30f0fef0ef1f378ccc063c5
-config: x86_64-rhel-8.3-kselftests (https://download.01.org/0day-ci/archive/20220831/202208310018.1wKCQHzH-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.3.0-5) 11.3.0
-reproduce (this is a W=1 build):
-        # https://github.com/intel-lab-lkp/linux/commit/68f33e68647f25b811773b237669cf26e6b43382
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Allison-Henderson/xfs-Add-new-name-to-attri-d/20220830-053816
-        git checkout 68f33e68647f25b811773b237669cf26e6b43382
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash arch/x86/entry/vdso/ fs/xfs/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
-   fs/xfs/xfs_attr_item.c: In function 'xlog_recover_attri_commit_pass2':
-   fs/xfs/xfs_attr_item.c:824:45: warning: passing argument 2 of 'xfs_attr_namecheck' makes integer from pointer without a cast [-Wint-conversion]
-     824 |                 if (!xfs_attr_namecheck(mp, attr_nname,
-         |                                             ^~~~~~~~~~
-         |                                             |
-         |                                             const void *
-   In file included from fs/xfs/xfs_attr_item.c:22:
-   fs/xfs/libxfs/xfs_attr.h:550:50: note: expected 'size_t' {aka 'long unsigned int'} but argument is of type 'const void *'
-     550 | bool xfs_attr_namecheck(const void *name, size_t length);
-         |                                           ~~~~~~~^~~~~~
->> fs/xfs/xfs_attr_item.c:824:22: error: too many arguments to function 'xfs_attr_namecheck'
-     824 |                 if (!xfs_attr_namecheck(mp, attr_nname,
-         |                      ^~~~~~~~~~~~~~~~~~
-   In file included from fs/xfs/xfs_attr_item.c:22:
-   fs/xfs/libxfs/xfs_attr.h:550:6: note: declared here
-     550 | bool xfs_attr_namecheck(const void *name, size_t length);
-         |      ^~~~~~~~~~~~~~~~~~
-
-
-vim +/xfs_attr_namecheck +824 fs/xfs/xfs_attr_item.c
-
-   756	
-   757	STATIC int
-   758	xlog_recover_attri_commit_pass2(
-   759		struct xlog                     *log,
-   760		struct list_head		*buffer_list,
-   761		struct xlog_recover_item        *item,
-   762		xfs_lsn_t                       lsn)
-   763	{
-   764		struct xfs_mount                *mp = log->l_mp;
-   765		struct xfs_attri_log_item       *attrip;
-   766		struct xfs_attri_log_format     *attri_formatp;
-   767		struct xfs_attri_log_nameval	*nv;
-   768		const void			*attr_value = NULL;
-   769		const void			*attr_name;
-   770		const void			*attr_nname = NULL;
-   771		int				i = 0;
-   772		int                             op, error = 0;
-   773	
-   774		if (item->ri_total == 0) {
-   775			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-   776			return -EFSCORRUPTED;
-   777		}
-   778	
-   779		attri_formatp = item->ri_buf[i].i_addr;
-   780		i++;
-   781	
-   782		op = attri_formatp->alfi_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
-   783		switch (op) {
-   784		case XFS_ATTRI_OP_FLAGS_SET:
-   785		case XFS_ATTRI_OP_FLAGS_REPLACE:
-   786			if (item->ri_total != 3)
-   787				error = -EFSCORRUPTED;
-   788			break;
-   789		case XFS_ATTRI_OP_FLAGS_REMOVE:
-   790			if (item->ri_total != 2)
-   791				error = -EFSCORRUPTED;
-   792			break;
-   793		case XFS_ATTRI_OP_FLAGS_NVREPLACE:
-   794			if (item->ri_total != 4)
-   795				error = -EFSCORRUPTED;
-   796			break;
-   797		default:
-   798			error = -EFSCORRUPTED;
-   799		}
-   800	
-   801		if (error) {
-   802			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-   803			return error;
-   804		}
-   805	
-   806		/* Validate xfs_attri_log_format before the large memory allocation */
-   807		if (!xfs_attri_validate(mp, attri_formatp)) {
-   808			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-   809			return -EFSCORRUPTED;
-   810		}
-   811	
-   812		attr_name = item->ri_buf[i].i_addr;
-   813		i++;
-   814	
-   815		if (!xfs_attr_namecheck(attr_name, attri_formatp->alfi_name_len)) {
-   816			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-   817			return -EFSCORRUPTED;
-   818		}
-   819	
-   820		if (attri_formatp->alfi_nname_len) {
-   821			attr_nname = item->ri_buf[i].i_addr;
-   822			i++;
-   823	
- > 824			if (!xfs_attr_namecheck(mp, attr_nname,
-   825					attri_formatp->alfi_nname_len,
-   826					attri_formatp->alfi_attr_filter)) {
-   827				XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-   828				return -EFSCORRUPTED;
-   829			}
-   830		}
-   831	
-   832		if (attri_formatp->alfi_value_len)
-   833			attr_value = item->ri_buf[i].i_addr;
-   834	
-   835		/*
-   836		 * Memory alloc failure will cause replay to abort.  We attach the
-   837		 * name/value buffer to the recovered incore log item and drop our
-   838		 * reference.
-   839		 */
-   840		nv = xfs_attri_log_nameval_alloc(attr_name,
-   841				attri_formatp->alfi_name_len, attr_nname,
-   842				attri_formatp->alfi_nname_len, attr_value,
-   843				attri_formatp->alfi_value_len);
-   844		if (!nv)
-   845			return -ENOMEM;
-   846	
-   847		attrip = xfs_attri_init(mp, nv);
-   848		error = xfs_attri_copy_format(&item->ri_buf[0], &attrip->attri_format);
-   849		if (error)
-   850			goto out;
-   851	
-   852		/*
-   853		 * The ATTRI has two references. One for the ATTRD and one for ATTRI to
-   854		 * ensure it makes it into the AIL. Insert the ATTRI into the AIL
-   855		 * directly and drop the ATTRI reference. Note that
-   856		 * xfs_trans_ail_update() drops the AIL lock.
-   857		 */
-   858		xfs_trans_ail_insert(log->l_ailp, &attrip->attri_item, lsn);
-   859		xfs_attri_release(attrip);
-   860		xfs_attri_log_nameval_put(nv);
-   861		return 0;
-   862	out:
-   863		xfs_attri_item_free(attrip);
-   864		xfs_attri_log_nameval_put(nv);
-   865		return error;
-   866	}
-   867	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+[1]:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?=
+id=3Df02a9ad1f15d
