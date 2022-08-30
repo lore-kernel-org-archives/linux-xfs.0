@@ -2,227 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31832C3DA6B
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 11:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BB4CECAAD4
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 11:52:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230464AbiH3LmQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Aug 2022 07:42:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58360 "EHLO
+        id S229669AbiH3Lw3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Aug 2022 07:52:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231216AbiH3Llz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 07:41:55 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 956D55B7B0;
-        Tue, 30 Aug 2022 04:40:10 -0700 (PDT)
+        with ESMTP id S229874AbiH3Lw2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 07:52:28 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1562D98D39
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 04:52:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CEC9BB81A5C;
-        Tue, 30 Aug 2022 11:40:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C003C433D6;
-        Tue, 30 Aug 2022 11:40:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A6AC9B81625
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 11:52:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B44C8C433D7
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 11:52:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661859605;
-        bh=9U5YNZG5kGGVOkXBz5XYF4bS4GrVUMLFarYkV3ivBmI=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=LJGU2MlvihvbWDegzJW9x4zDzYfr4RuHN1avdf2LC/d0uILp5ZxoG8FZFFVC37yiC
-         zZ/k2xcy0WiPAfZhXY1pATPJqmDLFF2rR4+T4LT0HHIaLKuNbQ4o4FY+T2NtLmOAZv
-         DNHu8b6lkZjJU6fe+lHENGmYwS9JjFl6Tvr/A7puLdcTsrBc8w5UxI7qJUTUxVdGIs
-         NsH1AiofF7wbgJapwPcvITxWN2fyStNzOHWp+xq9dfReH1WzIibxnjxXqei4581RCt
-         kvzCCbkUpOXF+iA6klzKuW9BROz+ZHywvmfybrUpmqA2U/lGefISWYhJdJ5FRUAgYi
-         pddIxrdkoReoA==
-Message-ID: <f5c42c0d87dfa45188c2109ccf9baeb7a42aa27e.camel@kernel.org>
-Subject: Re: [PATCH v3 1/7] iversion: update comments with info about atime
- updates
-From:   Jeff Layton <jlayton@kernel.org>
-To:     NeilBrown <neilb@suse.de>
-Cc:     Dave Chinner <david@fromorbit.com>, tytso@mit.edu,
-        adilger.kernel@dilger.ca, djwong@kernel.org,
-        trondmy@hammerspace.com, viro@zeniv.linux.org.uk,
-        zohar@linux.ibm.com, xiubli@redhat.com, chuck.lever@oracle.com,
-        lczerner@redhat.com, jack@suse.cz, brauner@kernel.org,
-        linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ceph@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Colin Walters <walters@verbum.org>
-Date:   Tue, 30 Aug 2022 07:40:02 -0400
-In-Reply-To: <166181389550.27490.8200873228292034867@noble.neil.brown.name>
-References: <20220826214703.134870-1-jlayton@kernel.org>
-        , <20220826214703.134870-2-jlayton@kernel.org>
-        , <20220829075651.GS3600936@dread.disaster.area>
-        , <549776abfaddcc936c6de7800b6d8249d97d9f28.camel@kernel.org>
-         <166181389550.27490.8200873228292034867@noble.neil.brown.name>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
+        s=k20201202; t=1661860344;
+        bh=rribF6Ysj+pymXte2qowh5/bhshC9mA8eBJwlAM0r1A=;
+        h=Date:From:To:Subject:From;
+        b=js5iK3FEhcnPHTpeDkKKU87rercGq2VWMbIualKE9Pq0qEUg4qpK7ryVv2eRIK+KH
+         TnHJ7ume2+eh/VXuoUE1PTb1UCJeH2U+2M+4JEWMZ8fy4d0psc1YecpJ2c6xBjufih
+         /jVAOjkpWf9uM+PgyoK4k/IfZuPBAuT3XFDTrdRIZe37f8U6zcJTgJqLFRIA0JX28r
+         U/ECgZLRWaMiuC7w8ra/nZtoU9hJvQ8pLshXZyM59w9fuBXk8EhVocZIodU4hrynjd
+         4d0uc0ckgn2ml//2/67hyKL16q8wntAHo1haBcmf8wZGPVnCx4wKdco0y2TrSkRwqj
+         BqCIUNfJxaB4Q==
+Date:   Tue, 30 Aug 2022 13:52:20 +0200
+From:   Carlos Maiolino <cem@kernel.org>
+To:     linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfsprogs for-next updated
+Message-ID: <20220830115220.5s2nlztp56fbf4xa@andromeda>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="iayq7gzlfnfd2cvn"
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2022-08-30 at 08:58 +1000, NeilBrown wrote:
-> On Mon, 29 Aug 2022, Jeff Layton wrote:
-> > On Mon, 2022-08-29 at 17:56 +1000, Dave Chinner wrote:
-> > > On Fri, Aug 26, 2022 at 05:46:57PM -0400, Jeff Layton wrote:
-> > > > The i_version field in the kernel has had different semantics over
-> > > > the decades, but we're now proposing to expose it to userland via
-> > > > statx. This means that we need a clear, consistent definition of
-> > > > what it means and when it should change.
-> > > >=20
-> > > > Update the comments in iversion.h to describe how a conformant
-> > > > i_version implementation is expected to behave. This definition
-> > > > suits the current users of i_version (NFSv4 and IMA), but is
-> > > > loose enough to allow for a wide range of possible implementations.
-> > > >=20
-> > > > Cc: Colin Walters <walters@verbum.org>
-> > > > Cc: NeilBrown <neilb@suse.de>
-> > > > Cc: Trond Myklebust <trondmy@hammerspace.com>
-> > > > Cc: Dave Chinner <david@fromorbit.com>
-> > > > Link: https://lore.kernel.org/linux-xfs/166086932784.5425.171347126=
-94961326033@noble.neil.brown.name/#t
-> > > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > > > ---
-> > > >  include/linux/iversion.h | 23 +++++++++++++++++++++--
-> > > >  1 file changed, 21 insertions(+), 2 deletions(-)
-> > > >=20
-> > > > diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-> > > > index 3bfebde5a1a6..45e93e1b4edc 100644
-> > > > --- a/include/linux/iversion.h
-> > > > +++ b/include/linux/iversion.h
-> > > > @@ -9,8 +9,19 @@
-> > > >   * ---------------------------
-> > > >   * The change attribute (i_version) is mandated by NFSv4 and is mo=
-stly for
-> > > >   * knfsd, but is also used for other purposes (e.g. IMA). The i_ve=
-rsion must
-> > > > - * appear different to observers if there was a change to the inod=
-e's data or
-> > > > - * metadata since it was last queried.
-> > > > + * appear different to observers if there was an explicit change t=
-o the inode's
-> > > > + * data or metadata since it was last queried.
-> > > > + *
-> > > > + * An explicit change is one that would ordinarily result in a cha=
-nge to the
-> > > > + * inode status change time (aka ctime). The version must appear t=
-o change, even
-> > > > + * if the ctime does not (since the whole point is to avoid missin=
-g updates due
-> > > > + * to timestamp granularity). If POSIX mandates that the ctime mus=
-t change due
-> > > > + * to an operation, then the i_version counter must be incremented=
- as well.
-> > > > + *
-> > > > + * A conformant implementation is allowed to increment the counter=
- in other
-> > > > + * cases, but this is not optimal. NFSv4 and IMA both use this val=
-ue to determine
-> > > > + * whether caches are up to date. Spurious increments can cause fa=
-lse cache
-> > > > + * invalidations.
-> > >=20
-> > > "not optimal", but never-the-less allowed - that's "unspecified
-> > > behaviour" if I've ever seen it. How is userspace supposed to
-> > > know/deal with this?
-> > >=20
-> > > Indeed, this loophole clause doesn't exist in the man pages that
-> > > define what statx.stx_ino_version means. The man pages explicitly
-> > > define that stx_ino_version only ever changes when stx_ctime
-> > > changes.
-> > >=20
-> >=20
-> > We can fix the manpage to make this more clear.
-> >=20
-> > > IOWs, the behaviour userspace developers are going to expect *does
-> > > not include* stx_ino_version changing it more often than ctime is
-> > > changed. Hence a kernel iversion implementation that bumps the
-> > > counter more often than ctime changes *is not conformant with the
-> > > statx version counter specification*. IOWs, we can't export such
-> > > behaviour to userspace *ever* - it is a non-conformant
-> > > implementation.
-> > >=20
-> >=20
-> > Nonsense. The statx version counter specification is *whatever we decid=
-e
-> > to make it*. If we define it to allow for spurious version bumps, then
-> > these implementations would be conformant.
-> >=20
-> > Given that you can't tell what or how much changed in the inode wheneve=
-r
-> > the value changes, allowing it to be bumped on non-observable changes i=
-s
-> > ok and the counter is still useful. When you see it change you need to
-> > go stat/read/getxattr etc, to see what actually happened anyway.
-> >=20
-> > Most applications won't be interested in every possible explicit change
-> > that can happen to an inode. It's likely these applications would check
-> > the parts of the inode they're interested in, and then go back to
-> > waiting for the next bump if the change wasn't significant to them.
-> >=20
-> >=20
-> > > Hence I think anything that bumps iversion outside the bounds of the
-> > > statx definition should be declared as such:
-> > >=20
-> > > "Non-conformant iversion implementations:
-> > > 	- MUST NOT be exported by statx() to userspace
-> > > 	- MUST be -tolerated- by kernel internal applications that
-> > > 	  use iversion for their own purposes."
-> > >=20
-> >=20
-> > I think this is more strict than is needed. An implementation that bump=
-s
-> > this value more often than is necessary is still useful. It's not
-> > _ideal_, but it still meets the needs of NFSv4, IMA and other potential
-> > users of it. After all, this is basically the definition of i_version
-> > today and it's still useful, even if atime update i_version bumps are
-> > currently harmful for performance.
->=20
-> Why do you want to let it be OK?  Who is hurt by it being "more strict
-> than needed"?  There is an obvious cost in not being strict as an
-> implementation can be compliant but completely useless (increment every
-> nanosecond).  So there needs to be a clear benefit to balance this.  Who
-> benefits by not being strict?
->=20
 
-Other filesystems that may not be able to provide the strict semantics
-required. I don't have any names to name here -- I'm just trying to
-ensure that we don't paint ourselves into a corner with rules that are
-more strict than we really need.
+--iayq7gzlfnfd2cvn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-If the consensus is that we should keep the definition strict, then Ican
-live with that. That might narrow the number of filesystems that can
-provide this attribute though.
+Hi folks,
 
-> Also: Your spec doesn't say it must increase, only it must be different.
-> So would as hash of all data and metadata be allowed (sysfs might be
-> able to provide that, but probably wouldn't bother).
->=20
-> Also: if stray updates are still conformant, can occasional repeated
-> values be still conformant?  I would like for a high-precision ctime
-> timestamp to be acceptable, but as time can go backwards it is currently
-> not conformant (even though the xfs iversion which is less useful is
-> actually conformant).
->=20
+The for-next branch of the xfsprogs repository at:
 
-Yes, saying only that it must be different is intentional. What we
-really want is for consumers to treat this as an opaque value for the
-most part [1]. Therefore an implementation based on hashing would
-conform to the spec, I'd think, as long as all of the relevant info is
-part of the hash.
+        git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-OTOH, hash collisions could be an issue here and I think we need to
-avoid allowing duplicate values. When it comes to watching for changes
-to an inode, false positives are generally ok since that should just
-affect performance but not functionality.
+has just been updated.
 
-False negatives are a different matter. They can lead to cache coherency
-issues with NFS, or missing remeasurements in IMA. Userland applications
-that use this could be subject to similar issues.
+This update contains the initial libxfs sync to Linux 6.0 and should be tur=
+ned
+into -rc0 once it (hopefully) gets some testing (and no complains) for more=
+ people.
+
+Please, if any questions, let me know.
+
+
+The new head of the for-next branch is commit:
+
+d3e53ab7c xfs: fix inode reservation space for removing transaction
+
+
+New Commits:
+
+Andrey Strachuk (1):
+      [798d43495] xfs: removed useless condition in function xfs_attr_node_=
+get
+
+Dan Carpenter (1):
+      [17df7eb7e] xfs: delete unnecessary NULL checks
+
+Darrick J. Wong (6):
+      [722e81c12] xfs: convert XFS_IFORK_PTR to a static inline helper
+      [7ff5f1edf] xfs: make inode attribute forks a permanent part of struc=
+t xfs_inode
+      [d4292c669] xfs: use XFS_IFORK_Q to determine the presence of an xatt=
+r fork
+      [4f8415858] xfs: replace XFS_IFORK_Q with a proper predicate function
+      [eae3e30d4] xfs: replace inode fork size macros with functions
+      [e373f06a3] xfs: don't leak memory when attr fork loading fails
+
+Dave Chinner (17):
+      [ef78f876e] xfs: make last AG grow/shrink perag centric
+      [37dc5890e] xfs: kill xfs_ialloc_pagi_init()
+      [4330a9e00] xfs: pass perag to xfs_ialloc_read_agi()
+      [87db57baf] xfs: kill xfs_alloc_pagf_init()
+      [f9084bd95] xfs: pass perag to xfs_alloc_read_agf()
+      [bc87af992] xfs: pass perag to xfs_read_agi
+      [c1030eda4] xfs: pass perag to xfs_read_agf
+      [1d202c10b] xfs: pass perag to xfs_alloc_get_freelist
+      [9a73333d9] xfs: pass perag to xfs_alloc_put_freelist
+      [75c01cccf] xfs: pass perag to xfs_alloc_read_agfl
+      [83af0d13a] xfs: Pre-calculate per-AG agbno geometry
+      [8aa34dc9b] xfs: Pre-calculate per-AG agino geometry
+      [cee2d89ae] xfs: replace xfs_ag_block_count() with perag accesses
+      [54f6b9e5e] xfs: make is_log_ag() a first class helper
+      [0b2f4162b] xfs: rework xfs_buf_incore() API
+      [69535dadf] xfs: track the iunlink list pointer in the xfs_inode
+      [b9846dc9e] xfs: double link the unlinked inode list
+
+Slark Xiao (1):
+      [e4a32219d] xfs: Fix typo 'the the' in comment
+
+Xiaole He (1):
+      [ec36ecd2d] xfs: fix comment for start time value of inode with bigti=
+me enabled
+
+hexiaole (1):
+      [d3e53ab7c] xfs: fix inode reservation space for removing transaction
+
 --=20
-Jeff Layton <jlayton@kernel.org>
+Carlos Maiolino
 
+--iayq7gzlfnfd2cvn
+Content-Type: application/pgp-signature; name="signature.asc"
 
-[1]: which may not be reasonable in the case of write delegations on
-NFSv4, since the client is expected to increment it when it has cached
-local changes.
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQT6QG4gav94c4l8aGS0VhjDaiT9IwUCYw358wAKCRC0VhjDaiT9
+I86BAP9duIY+FQVZG7gH4nS1pDHkDBGSd0ucEe+K4n9FXM8sPQD/RbznO/1XDxn6
+VUya0XGw0QO/gK9jv1Sn2cM03UnHygQ=
+=IrPk
+-----END PGP SIGNATURE-----
+
+--iayq7gzlfnfd2cvn--
