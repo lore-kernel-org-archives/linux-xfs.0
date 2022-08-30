@@ -2,135 +2,200 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BB4CECAAD4
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 11:52:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 212DFECAAD4
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Aug 2022 12:17:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229669AbiH3Lw3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Aug 2022 07:52:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50708 "EHLO
+        id S230312AbiH3MRw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Aug 2022 08:17:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229874AbiH3Lw2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 07:52:28 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1562D98D39
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 04:52:27 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A6AC9B81625
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 11:52:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B44C8C433D7
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 11:52:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661860344;
-        bh=rribF6Ysj+pymXte2qowh5/bhshC9mA8eBJwlAM0r1A=;
-        h=Date:From:To:Subject:From;
-        b=js5iK3FEhcnPHTpeDkKKU87rercGq2VWMbIualKE9Pq0qEUg4qpK7ryVv2eRIK+KH
-         TnHJ7ume2+eh/VXuoUE1PTb1UCJeH2U+2M+4JEWMZ8fy4d0psc1YecpJ2c6xBjufih
-         /jVAOjkpWf9uM+PgyoK4k/IfZuPBAuT3XFDTrdRIZe37f8U6zcJTgJqLFRIA0JX28r
-         U/ECgZLRWaMiuC7w8ra/nZtoU9hJvQ8pLshXZyM59w9fuBXk8EhVocZIodU4hrynjd
-         4d0uc0ckgn2ml//2/67hyKL16q8wntAHo1haBcmf8wZGPVnCx4wKdco0y2TrSkRwqj
-         BqCIUNfJxaB4Q==
-Date:   Tue, 30 Aug 2022 13:52:20 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfsprogs for-next updated
-Message-ID: <20220830115220.5s2nlztp56fbf4xa@andromeda>
+        with ESMTP id S230232AbiH3MRu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 08:17:50 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DBF1D2B1D
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 05:17:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1661861868;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=wStWHojG+mqSkx5w9odtf8yhDsAk+/Zs+ge/ktP/P14=;
+        b=gUknbzr40ySmQrJTnRyYtFl6KXzqRHlIMia/kSNPkvEUmGrJz6wz/3aek16LVQmUKBSYG8
+        9bMjt4ksHrjp3Hlv1nr3lgrq+zs4YIzC4B6TlcYPkokZUDRnrG3L2FAREKYNpI5HGOgu9i
+        5joC+JnkEWt6mBt38dvX+R1LmeSyoLc=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-507-EzeiPpePOnOt9ZqnH98usw-1; Tue, 30 Aug 2022 08:17:47 -0400
+X-MC-Unique: EzeiPpePOnOt9ZqnH98usw-1
+Received: by mail-wm1-f72.google.com with SMTP id f9-20020a7bcd09000000b003a62725489bso1926564wmj.2
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 05:17:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:subject:organization:from
+         :references:cc:to:content-language:user-agent:mime-version:date
+         :message-id:x-gm-message-state:from:to:cc;
+        bh=wStWHojG+mqSkx5w9odtf8yhDsAk+/Zs+ge/ktP/P14=;
+        b=CTMvtJfffl+HK6WC0qw9kFOwh9Zl0JDrPw5qoprT/UhvjPpbmQr6sYLWS9OVnI0jaP
+         Am28VwuvsFA37rMo3Tn5Oe4TjpPZEM9fKilPbq/C/BmyyrNRKu+ippBw0s4iUO7Xz3r2
+         3SzHhh2TfN1sgCI1Ytqz3bS6FmSulvj4++pPWVeQO1d47W8Eim3Eyv6nHTrCPwfOb7i+
+         CfKIB0HtfD4z2fANspj8ahw7L3GBl0W7+eYoHGQGYFcxNkZHEqfcSm9vQqvvyV4khja7
+         ma+xumADlTdvJ587adTMBPqVq2+LJTgQa6bFihwpwhRIdAGF7V5XVLiFQrKQewZkMrpz
+         B3ig==
+X-Gm-Message-State: ACgBeo3li9ZHUlKi0/S6ZWbB9FS4UOTcK+gyvRFXqAOwcWlDJAKfP3pp
+        3j5/PPRkx0c3jvs+Md+8qvubBfsTCM9/sopChK++UZsrXeSyxFENFdJ/LDMX3aIZu2bCqZxZzyz
+        exAwHRDbWgYQ0yipnLM8p
+X-Received: by 2002:adf:ed50:0:b0:225:4c37:5346 with SMTP id u16-20020adfed50000000b002254c375346mr8810775wro.207.1661861866323;
+        Tue, 30 Aug 2022 05:17:46 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR7LbEwWL4kKOvLdx0sOtNkvmwSMVrgmd2sgfE/jJVeFo0Jfzf2IRVyzOcC+QvzNNPwpyxNgIQ==
+X-Received: by 2002:adf:ed50:0:b0:225:4c37:5346 with SMTP id u16-20020adfed50000000b002254c375346mr8810749wro.207.1661861865960;
+        Tue, 30 Aug 2022 05:17:45 -0700 (PDT)
+Received: from ?IPV6:2003:cb:c70a:1000:ecb4:919b:e3d3:e20b? (p200300cbc70a1000ecb4919be3d3e20b.dip0.t-ipconnect.de. [2003:cb:c70a:1000:ecb4:919b:e3d3:e20b])
+        by smtp.gmail.com with ESMTPSA id z20-20020a05600c0a1400b003a5e9337967sm12853676wmp.13.2022.08.30.05.17.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 30 Aug 2022 05:17:45 -0700 (PDT)
+Message-ID: <5aa08b4f-251e-a63d-c36c-324a04ba24f4@redhat.com>
+Date:   Tue, 30 Aug 2022 14:17:44 +0200
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="iayq7gzlfnfd2cvn"
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Content-Language: en-US
+To:     John Hubbard <jhubbard@nvidia.com>,
+        Andrew Morton <akpm@linux-foundation.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>, Jan Kara <jack@suse.cz>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+References: <20220827083607.2345453-1-jhubbard@nvidia.com>
+ <20220827083607.2345453-2-jhubbard@nvidia.com>
+ <10a9d33a-58a3-10b3-690b-53100d4e5440@redhat.com>
+ <a47eef63-0f29-2185-f044-854ffaefae9c@nvidia.com>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+Subject: Re: [PATCH 1/6] mm/gup: introduce pin_user_page()
+In-Reply-To: <a47eef63-0f29-2185-f044-854ffaefae9c@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On 29.08.22 21:33, John Hubbard wrote:
+> On 8/29/22 05:07, David Hildenbrand wrote:
+>>> +/**
+>>> + * pin_user_page() - apply a FOLL_PIN reference to a page
+>>> + *
+>>> + * @page: the page to be pinned.
+>>> + *
+>>> + * This is similar to get_user_pages(), except that the page's refcount is
+>>> + * elevated using FOLL_PIN, instead of FOLL_GET.
+> 
+> Actually, my commit log has a more useful documentation of this routine,
+> and given the questions below, I think I'll change to that:
+> 
+>  * pin_user_page() is an externally-usable version of try_grab_page(), but with
+>  * semantics that match get_page(), so that it can act as a drop-in replacement
+>  * for get_page().
+>  *
+>  * pin_user_page() elevates a page's refcount using FOLL_PIN rules. This means
+>  * that the caller must release the page via unpin_user_page().
 
---iayq7gzlfnfd2cvn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Some thoughts:
 
-Hi folks,
+a) Can we generalize such that pages with a dedicated pincount
+(multi-page folios) are also covered? Maybe avoiding the refcount
+terminology would be best.
 
-The for-next branch of the xfsprogs repository at:
+b) Should we directly work on folios?
 
-        git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+c) Would it be valid to pass in a tail page right now?
 
-has just been updated.
+> 
+>>> + *
+>>> + * IMPORTANT: The caller must release the page via unpin_user_page().
+>>> + *
+>>> + */
+>>> +void pin_user_page(struct page *page)
+>>> +{
+>>> +	struct folio *folio = page_folio(page);
+>>> +
+>>> +	WARN_ON_ONCE(folio_ref_count(folio) <= 0);
+>>> +
+>>
+>> We should warn if the page is anon and !exclusive.
+> 
+> That would be sort of OK, because pin_user_page() is being created
+> specifically for file system (O_DIRECT cases) use, and so the pages
+> should mostly be file-backed, rather than anon. Although I'm a little
+> vague about whether all of these iov_iter cases are really always
+> file-backed pages, especially for cases such as splice(2) to an
+> O_DIRECT-opened file, that Al Viro mentioned [1].
 
-This update contains the initial libxfs sync to Linux 6.0 and should be tur=
-ned
-into -rc0 once it (hopefully) gets some testing (and no complains) for more=
- people.
+If we can, we should document that this interface is not for anonymous
+pages and WARN if pinning an anonymous page via this interface.
 
-Please, if any questions, let me know.
+The only reasonable way to obtain a pin on an anonymous page is via the
+page table. Here, FOLL_PIN should be used to do the right thing -- for
+example, unshare first (break COW) instead of pinning a shared anonymous
+page.
+
+Nothing would speak against duplicating such a pin using this interface
+(we'd have to sanity check that the page we're pinning may already be
+pinned), but I assume the pages we pin here are *not* necessarily
+obtained via GUP FOLL_PIN.
+
+I would be curious under which scenarios we could end up here with an
+anonymous page and how we obtained that reference (if not via GUP).
+
+> 
+> Can you walk me through the reasoning for why we need to keep out
+> anon shared pages? 
+
+We make sure to only pin anonymous pages that are exclusive and check
+when unpinning -- see sanity_check_pinned_pages(), there is also a
+comment in there -- that pinned anonymous pages are in fact still
+exclusive, otherwise we might have a BUG lurking somewhere that can
+result in memory corruptions or leaking information between processes.
+
+For example, once we'd pinned an anonymous pages that are not marked
+exclusive (!PageAnonExclusive), or we'd be sharing a page that is
+pinned, the next write fault would replace the page in the user page
+table due to breaking COW, and the GUP pin would point at a different
+page than the page table.
+
+Disallowing pinning of anon pages that may be shared in any case
+(FOLL_LONGTERM or not) simplifies GUP handling and allows for such
+sanity checks.
+
+(side note: after recent VM_BUG_ON discussions we might want to convert
+the VM_BUG_ON_PAGE in sanity_check_pinned_pages())
+
+> 
+>>
+>> I assume the intend is to use pin_user_page() only to duplicate pins, right?
+>>
+> 
+> Well, yes or no, depending on your use of the term "pin":
+> 
+> pin_user_page() is used on a page that already has a refcount >= 1 (so
+> no worries about speculative pinning should apply here), but the page
+> does not necessarily have any FOLL_PIN's applied to it yet (so it's not
+> "pinned" in the FOLL_PIN sense).
+
+Okay, then we should really figure out if/how anonymous pages could end
+up here. I assume they can't, really. But let's see :)
 
 
-The new head of the for-next branch is commit:
+-- 
+Thanks,
 
-d3e53ab7c xfs: fix inode reservation space for removing transaction
+David / dhildenb
 
-
-New Commits:
-
-Andrey Strachuk (1):
-      [798d43495] xfs: removed useless condition in function xfs_attr_node_=
-get
-
-Dan Carpenter (1):
-      [17df7eb7e] xfs: delete unnecessary NULL checks
-
-Darrick J. Wong (6):
-      [722e81c12] xfs: convert XFS_IFORK_PTR to a static inline helper
-      [7ff5f1edf] xfs: make inode attribute forks a permanent part of struc=
-t xfs_inode
-      [d4292c669] xfs: use XFS_IFORK_Q to determine the presence of an xatt=
-r fork
-      [4f8415858] xfs: replace XFS_IFORK_Q with a proper predicate function
-      [eae3e30d4] xfs: replace inode fork size macros with functions
-      [e373f06a3] xfs: don't leak memory when attr fork loading fails
-
-Dave Chinner (17):
-      [ef78f876e] xfs: make last AG grow/shrink perag centric
-      [37dc5890e] xfs: kill xfs_ialloc_pagi_init()
-      [4330a9e00] xfs: pass perag to xfs_ialloc_read_agi()
-      [87db57baf] xfs: kill xfs_alloc_pagf_init()
-      [f9084bd95] xfs: pass perag to xfs_alloc_read_agf()
-      [bc87af992] xfs: pass perag to xfs_read_agi
-      [c1030eda4] xfs: pass perag to xfs_read_agf
-      [1d202c10b] xfs: pass perag to xfs_alloc_get_freelist
-      [9a73333d9] xfs: pass perag to xfs_alloc_put_freelist
-      [75c01cccf] xfs: pass perag to xfs_alloc_read_agfl
-      [83af0d13a] xfs: Pre-calculate per-AG agbno geometry
-      [8aa34dc9b] xfs: Pre-calculate per-AG agino geometry
-      [cee2d89ae] xfs: replace xfs_ag_block_count() with perag accesses
-      [54f6b9e5e] xfs: make is_log_ag() a first class helper
-      [0b2f4162b] xfs: rework xfs_buf_incore() API
-      [69535dadf] xfs: track the iunlink list pointer in the xfs_inode
-      [b9846dc9e] xfs: double link the unlinked inode list
-
-Slark Xiao (1):
-      [e4a32219d] xfs: Fix typo 'the the' in comment
-
-Xiaole He (1):
-      [ec36ecd2d] xfs: fix comment for start time value of inode with bigti=
-me enabled
-
-hexiaole (1):
-      [d3e53ab7c] xfs: fix inode reservation space for removing transaction
-
---=20
-Carlos Maiolino
-
---iayq7gzlfnfd2cvn
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQT6QG4gav94c4l8aGS0VhjDaiT9IwUCYw358wAKCRC0VhjDaiT9
-I86BAP9duIY+FQVZG7gH4nS1pDHkDBGSd0ucEe+K4n9FXM8sPQD/RbznO/1XDxn6
-VUya0XGw0QO/gK9jv1Sn2cM03UnHygQ=
-=IrPk
------END PGP SIGNATURE-----
-
---iayq7gzlfnfd2cvn--
