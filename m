@@ -2,64 +2,64 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DC2BC0502A
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 04:19:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED676C54EE9
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 04:19:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231247AbiHaETM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Aug 2022 00:19:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41612 "EHLO
+        id S231693AbiHaETN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Aug 2022 00:19:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231300AbiHaES4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 00:18:56 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2075.outbound.protection.outlook.com [40.107.237.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2877EAB40F;
+        with ESMTP id S231355AbiHaES5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 00:18:57 -0400
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2051.outbound.protection.outlook.com [40.107.223.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7A90AB4CE;
         Tue, 30 Aug 2022 21:18:55 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=C2bVPqSWletShz42MXF3jiunLlg2Z/23IhC6QM1o5Va/Nczd37j7IFYyNHZd1Iaz+Eyn9Rz9prWuSTYPhcr70g6UyaJJYZZMaAjwkUhrkC8ewnIZ6sjQZcCEZt12SoM6XizV4yb69gTZKfkFg8Z+rzwnfsrKba+VWXZOn90hP75SELr852MMaSy9VNCatvlgUGpmNpS8G6mo2MzZbQkodbUjYUQlVZmowtafjGZgRtOIdgeR12f3sDX/kM/e3+yUh2dKCdtVhEVw21C7o7bKiUQhA7z1Turmspa7TQ45KNjx9JiCZkl1MU4JBYQKerMp8b1C3S5ikJ/eCX3WDOgQzQ==
+ b=guPiIGM3y8NJTpPXxTQvuVowl4Ke5zWQIP9ryEDot+Ufk6rMGI2xiTK0a1c9Lvzd0AX98QDqRPiBpVJk2Wz2/qfXMgimZ5A7OVjGTMwnpZlQG8XqnMPDf48Ic+dFD/iWIYe3dTxjsT009HN5Rk04xU1RpcQjv8Bf9BCcTSpxbLuzZelOdO5KGZziZQO6cgmuW7Su2ySt3UUOdgqDlA45l/moKJs3/vtEly22bwe+OFD1DMaS88cfIx7ihVTRyo2b9oBFbScc6obNo7oYOKygQjKs6nJE/EUhS53MF6EUbj437HNvoYErE44ng46Oxo/S3F57dbD+J2e0Y5+dH48fiQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zBugDiWZB7x/F4ljUpJEaRgWrMgNVOp/VewbCcAd91I=;
- b=M+WszXdZU/KqCUCHcqGkjAPPXst88H2o0uaCYDJ1IDkCCRE+cejzHXy28iK/o0Umq3BUtlHQCbjkyWoPswmCTNk0NR2jciKq6hOEUhgOHEXFPvECIjWcjjvsImZv7N8wTqG9yhTHuIGzYWXPkX17lqpERmkNY9SpChTQqws1aGgkE58DDbz/Vb8I/Yzta47HJtz4NThL9t6OJd9d7is5vepchz/2+lgSbftf5j01iCTqaNPIZ2K5dgpYn38L7iloeB5GS//mk8q4saTb8S3piBIG/DFZS+anpFZwkTty404rZ/jykrAAMiVdjRfzAP/CBTzKU3ItNNJqj+7bIp2AbQ==
+ bh=qxDgq14BPL52n/7cjhue2PT6ARIQiBfUGFJisDO/ekY=;
+ b=cYBLDGTsqvAmCphdRhQqI8d0rYZDvsOtb4rkBN0JSFm/iuDc+JZUy2mTnsaEGlmuDtwzFU3peyRrUJXk/oTCqPi/wUV9EK3GD2Hncq7QGKOowutBheU+zQa97y7chKDelFei7GrcHpMlaKxvb5Ks992D0577l6/Pp2L13u6Re2JZBiVio2KkOrDrwMdsYvpXXeJ6gHYvQovIQRjVe38WPmF3wEm3pTjLl4HnIFnOPbBj1tfI5kMcU7Ez7NQrPrTKey+fESnI4xwTO716Aazn6mAopRwPrOTTcvJ3sij438Xy9Nuz3GPJc9jU3lspMessdL8vJkgnJaCjdhOVjEO2Uw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.238) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ 12.22.5.236) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zBugDiWZB7x/F4ljUpJEaRgWrMgNVOp/VewbCcAd91I=;
- b=kiMv7OT6sa48i3zWVQLYJZfNYbgJKH+zwo41k7D0FAXCKQIgPOTaozLGyxF5FwtvGe21oYmoNReC3FE0kFIIH/QJp+QF6xU1Gd4SCfPYT6O8UirueYQMJSjv0DepIgsUItos6ZQ5glWBvL6JKisrlvwXitDLu+1fmVIW9DVXrAt6UrEgnuSLD2jQq+U3Yg01cGnheaN1EfcL+tatvItqobWS0fHiLdJA3qT33AA0ZS70i/QHS2LT43xGSAIsFxfzPwIbHHzfjCKH4OZSIKuTcQUn4AMrTK6R7vZS6GyubXxX2muQvFhN9kC3CDOpwLMqjhkxMiCxBd68ca2VlHWjRQ==
-Received: from MW4PR03CA0141.namprd03.prod.outlook.com (2603:10b6:303:8c::26)
- by DM8PR12MB5416.namprd12.prod.outlook.com (2603:10b6:8:28::18) with
+ bh=qxDgq14BPL52n/7cjhue2PT6ARIQiBfUGFJisDO/ekY=;
+ b=lkHgtiGj08Bud1xzpqU8q/+5Lm16BDjjvLUJ87hulnZzJPRpqaraxsihaEgSw/msBR0oTUi4Xv9dqoG8Ws5DvoqLr+5WjZuIeowI4lJ8wk6mcHl/WMtQwA9OWxbDJu1d4WTJBJohD7D7gCUjzIgpSI8xTLRiVIXdmz07pDdBXGFUbq9N9QAzX3qkRymmqNAg1RWSWQaAA2xpb0j5FZ/Ufs85HxMQEni0aDLMOKWMTPlVBsdI/t8Av5jjtklRVUtdOPoKMOkm2jBgVS/VEfHn45SsoeEIX2z5jnUUcqCLqVReFoO6cuRNFNQxotsZJXVVRoBXvMTPXLes5Bjdc+GOQA==
+Received: from MW4P223CA0011.NAMP223.PROD.OUTLOOK.COM (2603:10b6:303:80::16)
+ by PH0PR12MB5402.namprd12.prod.outlook.com (2603:10b6:510:ef::23) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5588.10; Wed, 31 Aug
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5566.15; Wed, 31 Aug
  2022 04:18:53 +0000
-Received: from CO1NAM11FT003.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:8c:cafe::a5) by MW4PR03CA0141.outlook.office365.com
- (2603:10b6:303:8c::26) with Microsoft SMTP Server (version=TLS1_2,
+Received: from CO1NAM11FT082.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:80:cafe::7f) by MW4P223CA0011.outlook.office365.com
+ (2603:10b6:303:80::16) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5588.10 via Frontend
- Transport; Wed, 31 Aug 2022 04:18:52 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.238)
+ Transport; Wed, 31 Aug 2022 04:18:53 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.236)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.238 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.238; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (12.22.5.238) by
- CO1NAM11FT003.mail.protection.outlook.com (10.13.175.93) with Microsoft SMTP
+ 12.22.5.236 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.236; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (12.22.5.236) by
+ CO1NAM11FT082.mail.protection.outlook.com (10.13.175.224) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.5588.10 via Frontend Transport; Wed, 31 Aug 2022 04:18:52 +0000
-Received: from rnnvmail205.nvidia.com (10.129.68.10) by DRHQMAIL105.nvidia.com
- (10.27.9.14) with Microsoft SMTP Server (TLS) id 15.0.1497.38; Wed, 31 Aug
- 2022 04:18:52 +0000
+ 15.20.5588.10 via Frontend Transport; Wed, 31 Aug 2022 04:18:53 +0000
+Received: from rnnvmail205.nvidia.com (10.129.68.10) by DRHQMAIL109.nvidia.com
+ (10.27.9.19) with Microsoft SMTP Server (TLS) id 15.0.1497.38; Wed, 31 Aug
+ 2022 04:18:49 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by rnnvmail205.nvidia.com
  (10.129.68.10) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Tue, 30 Aug
- 2022 21:18:51 -0700
+ 2022 21:18:48 -0700
 Received: from sandstorm.attlocal.net (10.127.8.14) by mail.nvidia.com
  (10.129.68.8) with Microsoft SMTP Server id 15.2.986.29 via Frontend
- Transport; Tue, 30 Aug 2022 21:18:50 -0700
+ Transport; Tue, 30 Aug 2022 21:18:47 -0700
 From:   John Hubbard <jhubbard@nvidia.com>
 To:     Andrew Morton <akpm@linux-foundation.org>
 CC:     Jens Axboe <axboe@kernel.dk>,
@@ -75,9 +75,9 @@ CC:     Jens Axboe <axboe@kernel.dk>,
         <linux-xfs@vger.kernel.org>, <linux-nfs@vger.kernel.org>,
         <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>,
         John Hubbard <jhubbard@nvidia.com>
-Subject: [PATCH v2 4/7] iov_iter: new iov_iter_pin_pages*() routines
-Date:   Tue, 30 Aug 2022 21:18:40 -0700
-Message-ID: <20220831041843.973026-5-jhubbard@nvidia.com>
+Subject: [PATCH v2 2/7] mm/gup: introduce pin_user_page()
+Date:   Tue, 30 Aug 2022 21:18:38 -0700
+Message-ID: <20220831041843.973026-3-jhubbard@nvidia.com>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20220831041843.973026-1-jhubbard@nvidia.com>
 References: <20220831041843.973026-1-jhubbard@nvidia.com>
@@ -87,202 +87,114 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: f7e8e07b-7016-4b6f-1204-08da8b07e9af
-X-MS-TrafficTypeDiagnostic: DM8PR12MB5416:EE_
+X-MS-Office365-Filtering-Correlation-Id: 33d05557-4ac9-4362-9877-08da8b07ea09
+X-MS-TrafficTypeDiagnostic: PH0PR12MB5402:EE_
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: gQ9eRZ8247NBf6rCDxetAkOxqaO7Ik6fWFvdkRQGZUr7MIIHeGgLahmBmHn1rYQyjCMyxETprh3C/Hccx1FmonNOfcwvZjb+8V8qtwvUsHc7uldq2VRNRrkMW4IqMFtMKvth4peQQ1Ezr2ht8s7I1cHBYocmNj0G6jgUpoM+Cbif/tdh+iKdb6GvGywi1RisEGOU22QZA5eKI4FZLjOPT1BDNs1c47veyL46i02iomjRJ9VDFDZ0OkQaY0jPDUiJUu1BByHVqVfICAhtLyGGRgHJtDo9H+BTso9ffE7mJ+SHVlI4SvrrJ+zbg4PAdpyibEc0G4TZZCpqLhRY+pTcIqSGYMD6xGBksac/yPsBHtx0tECPKq2WNE7WBJFqSxcY0A4G5j6Qt0dUEstcGLpMBD7rz9gjHz5Qwv/krDveyeXx8+ksS5R3ZlfzqOi8796pcF4qhHru2zAfnDbaazGTA00riPoHZ2HCf9qCdKcFCVuLnElFVerNoqMXmD9DAbNwTDeL6GduIdolumiQsJVVdTF2ypw+djWNIMqdLyEuMFTnXY9qSzx17mUuXESpJd8dqaTtsq+diA2FWNVLHkHEh2seUgtFCZrcIUtLkZFZxgsq2LcrjEy97MnCTfGVREmGAHGVMz5pJtZI0UvNh5ZZA8Ab0CIC2a9s/G+7vS2UvkAXhPbRPSoh7Asj6jvJJZfM27+7C0+0rmmBJLahridfppF/JBGOYmfVxGFIG2OUGqWD154ysShE6ckG82Q2yDWrLy1KQ1aIxDrCwj1qi+WrBaVQHsuLITexx/hARbjs9vBK97qx8lxtT8DdJS+2QKIj
-X-Forefront-Antispam-Report: CIP:12.22.5.238;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(346002)(136003)(376002)(396003)(46966006)(40470700004)(36840700001)(86362001)(36756003)(82740400003)(41300700001)(36860700001)(107886003)(426003)(1076003)(47076005)(26005)(336012)(2616005)(6666004)(186003)(6916009)(54906003)(40480700001)(82310400005)(70586007)(4326008)(83380400001)(8676002)(316002)(478600001)(7416002)(81166007)(70206006)(40460700003)(356005)(2906002)(8936002)(5660300002)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: JO9AWp+3mG7wrlLkjtdgvEVEjAPRhnNI96EXlv1zVTmDhbuic6JP2Wf1V7oS4MsW8KbXrJ7Iaxcg8d392ZAKu3UwUpD/Pi/NnHZGM9Ubc66eN9MYROD6GVjMC99Naiba924lWruJc9aMEs3b+C3+WGOtI4JNwsYg5nbGJJ7zzuGguUJJM1D2YRoOtIcZbH9E7lh3d9VUO8DI9LKf1IJ/joMUPvz/tF0yqllLpTm4Yq5tGHAiLHr5O51hmb8Sa0axBL0r4p1Rj0aE74SfZbAezID3wmGbMu6clCTXWfn3tMaXRoYVSKu6UI23Uate+HKUlEW/1sM5QNOJArJvRWX2SvS8msjbHh7Pksd2PLm5YfRvoWC50L36TV/xV6rPi/aQVqSceaz501xNdwsICjyFgR1aEhdGhYn/oobTUh01tsjfy5PxBbTtH9EXa5bzfVlziIPzIrGPbdeGCAEbCvc8ycvBkT6ai+6u0WA3587xRRRujR+Em6Le4P8G+TacrvFG8odnKrW9DD5d1x5UkRlSoM/cQxJw8HR2D2VT9PRCjhc0FdSoJI0xYArQ1+TWUpMzZmXslw04gGdsOiLbV1rFFQlCZy2Ypom2EFrWhrjFiDYU4ZUUf2rb3q06nyMXm/JYcZ8TV9zCszs3ObsUXMEcl622nNFIx7YB/E6jwDwv0SK642xpGkPNkL4a0EIzosaiCt27XYp15g05AaXrGIW9vOFug6TrtS/1hSL5M69Wpe4haSbNlhoQEcImvMYwAMeQoxgkbogOuzxQmWd5Tkz+PehrjogVuuZSRoQTUGzCEu/2hHoTn9Kx8fak9S/W0pWg
+X-Forefront-Antispam-Report: CIP:12.22.5.236;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(376002)(396003)(136003)(346002)(46966006)(36840700001)(40470700004)(70206006)(86362001)(82310400005)(6666004)(478600001)(107886003)(41300700001)(81166007)(26005)(336012)(82740400003)(40460700003)(40480700001)(186003)(356005)(83380400001)(47076005)(1076003)(426003)(5660300002)(2616005)(36860700001)(4326008)(8936002)(7416002)(8676002)(54906003)(2906002)(316002)(6916009)(36756003)(70586007)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2022 04:18:52.6693
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2022 04:18:53.2625
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: f7e8e07b-7016-4b6f-1204-08da8b07e9af
+X-MS-Exchange-CrossTenant-Network-Message-Id: 33d05557-4ac9-4362-9877-08da8b07ea09
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.238];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT003.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.236];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT082.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM8PR12MB5416
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB5402
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Provide two new wrapper routines that are intended for user space pages
-only:
+pin_user_page() is an externally-usable version of try_grab_page(), but
+with semantics that match get_page(), so that it can act as a drop-in
+replacement for get_page(). Specifically, pin_user_page() has a void
+return type.
 
-    iov_iter_pin_pages()
-    iov_iter_pin_pages_alloc()
-
-Internally, these routines call pin_user_pages_fast(), instead of
-get_user_pages_fast(), for user_backed_iter(i) and iov_iter_bvec(i)
-cases.
-
-As always, callers must use unpin_user_pages() or a suitable FOLL_PIN
-variant, to release the pages, if they actually were acquired via
-pin_user_pages_fast().
-
-This is a prerequisite to converting bio/block layers over to use
-pin_user_pages_fast().
+pin_user_page() elevates a page's refcount using FOLL_PIN rules. This
+means that the caller must release the page via unpin_user_page().
 
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- include/linux/uio.h |  4 +++
- lib/iov_iter.c      | 86 +++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 84 insertions(+), 6 deletions(-)
+ include/linux/mm.h |  1 +
+ mm/gup.c           | 50 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
 
-diff --git a/include/linux/uio.h b/include/linux/uio.h
-index 5896af36199c..e26908e443d1 100644
---- a/include/linux/uio.h
-+++ b/include/linux/uio.h
-@@ -251,6 +251,10 @@ ssize_t iov_iter_get_pages2(struct iov_iter *i, struct page **pages,
- 			size_t maxsize, unsigned maxpages, size_t *start);
- ssize_t iov_iter_get_pages_alloc2(struct iov_iter *i, struct page ***pages,
- 			size_t maxsize, size_t *start);
-+ssize_t iov_iter_pin_pages(struct iov_iter *i, struct page **pages,
-+			size_t maxsize, unsigned int maxpages, size_t *start);
-+ssize_t iov_iter_pin_pages_alloc(struct iov_iter *i, struct page ***pages,
-+			size_t maxsize, size_t *start);
- int iov_iter_npages(const struct iov_iter *i, int maxpages);
- void iov_iter_restore(struct iov_iter *i, struct iov_iter_state *state);
- 
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index 4b7fce72e3e5..c63ce0eadfcb 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -1425,9 +1425,31 @@ static struct page *first_bvec_segment(const struct iov_iter *i,
- 	return page;
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 61c5dc37370e..c6c98d9c38ba 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1876,6 +1876,7 @@ long pin_user_pages_remote(struct mm_struct *mm,
+ long get_user_pages(unsigned long start, unsigned long nr_pages,
+ 			    unsigned int gup_flags, struct page **pages,
+ 			    struct vm_area_struct **vmas);
++void pin_user_page(struct page *page);
+ long pin_user_pages(unsigned long start, unsigned long nr_pages,
+ 		    unsigned int gup_flags, struct page **pages,
+ 		    struct vm_area_struct **vmas);
+diff --git a/mm/gup.c b/mm/gup.c
+index 5abdaf487460..2c231dca39dd 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -3213,6 +3213,56 @@ long pin_user_pages(unsigned long start, unsigned long nr_pages,
  }
+ EXPORT_SYMBOL(pin_user_pages);
  
-+enum pages_alloc_internal_flags {
-+	USE_FOLL_GET,
-+	MAYBE_USE_FOLL_PIN
-+};
-+
-+/*
-+ * Pins pages, either via get_page(), or via pin_user_page*(). The caller is
-+ * responsible for tracking which pinning mechanism was used here, and releasing
-+ * pages via the appropriate call: put_page() or unpin_user_page().
++/**
++ * pin_user_page() - apply a FOLL_PIN reference to a file-backed page that the
++ * caller already owns.
 + *
-+ * The way to figure that out is:
++ * @page: the page to be pinned.
 + *
-+ *     a) If how_to_pin == FOLL_GET, then this routine will always pin via
-+ *        get_page().
++ * pin_user_page() elevates a page's refcount using FOLL_PIN rules. This means
++ * that the caller must release the page via unpin_user_page().
 + *
-+ *     b) If how_to_pin == MAYBE_USE_FOLL_PIN, then this routine will pin via
-+ *          pin_user_page*() for either user_backed_iter(i) cases, or
-+ *          iov_iter_is_bvec(i) cases. However, for the other cases (pipe,
-+ *          xarray), pages will be pinned via get_page().
++ * pin_user_page() is intended as a drop-in replacement for get_page(). This
++ * provides a way for callers to do a subsequent unpin_user_page() on the
++ * affected page. However, it is only intended for use by callers (file systems,
++ * block/bio) that have a file-backed page. Anonymous pages are not expected nor
++ * supported, and will generate a warning.
++ *
++ * pin_user_page() may also be thought of as an externally-usable version of
++ * try_grab_page(), but with semantics that match get_page(), so that it can act
++ * as a drop-in replacement for get_page().
++ *
++ * IMPORTANT: The caller must release the page via unpin_user_page().
++ *
 + */
- static ssize_t __iov_iter_get_pages_alloc(struct iov_iter *i,
- 		   struct page ***pages, size_t maxsize,
--		   unsigned int maxpages, size_t *start)
-+		   unsigned int maxpages, size_t *start,
-+		   enum pages_alloc_internal_flags how_to_pin)
-+
- {
- 	unsigned int n;
- 
-@@ -1454,7 +1476,12 @@ static ssize_t __iov_iter_get_pages_alloc(struct iov_iter *i,
- 		n = want_pages_array(pages, maxsize, *start, maxpages);
- 		if (!n)
- 			return -ENOMEM;
--		res = get_user_pages_fast(addr, n, gup_flags, *pages);
-+
-+		if (how_to_pin == MAYBE_USE_FOLL_PIN)
-+			res = pin_user_pages_fast(addr, n, gup_flags, *pages);
-+		else
-+			res = get_user_pages_fast(addr, n, gup_flags, *pages);
-+
- 		if (unlikely(res <= 0))
- 			return res;
- 		maxsize = min_t(size_t, maxsize, res * PAGE_SIZE - *start);
-@@ -1470,8 +1497,13 @@ static ssize_t __iov_iter_get_pages_alloc(struct iov_iter *i,
- 		if (!n)
- 			return -ENOMEM;
- 		p = *pages;
--		for (int k = 0; k < n; k++)
--			get_page(p[k] = page + k);
-+		for (int k = 0; k < n; k++) {
-+			p[k] = page + k;
-+			if (how_to_pin == MAYBE_USE_FOLL_PIN)
-+				pin_user_page(p[k]);
-+			else
-+				get_page(p[k]);
-+		}
- 		maxsize = min_t(size_t, maxsize, n * PAGE_SIZE - *start);
- 		i->count -= maxsize;
- 		i->iov_offset += maxsize;
-@@ -1497,10 +1529,29 @@ ssize_t iov_iter_get_pages2(struct iov_iter *i,
- 		return 0;
- 	BUG_ON(!pages);
- 
--	return __iov_iter_get_pages_alloc(i, &pages, maxsize, maxpages, start);
-+	return __iov_iter_get_pages_alloc(i, &pages, maxsize, maxpages, start,
-+					  USE_FOLL_GET);
- }
- EXPORT_SYMBOL(iov_iter_get_pages2);
- 
-+/*
-+ * A FOLL_PIN variant that calls pin_user_pages_fast() instead of
-+ * get_user_pages_fast().
-+ */
-+ssize_t iov_iter_pin_pages(struct iov_iter *i,
-+		   struct page **pages, size_t maxsize, unsigned int maxpages,
-+		   size_t *start)
++void pin_user_page(struct page *page)
 +{
-+	if (!maxpages)
-+		return 0;
-+	if (WARN_ON_ONCE(!pages))
-+		return -EINVAL;
++	struct folio *folio = page_folio(page);
 +
-+	return __iov_iter_get_pages_alloc(i, &pages, maxsize, maxpages, start,
-+					  MAYBE_USE_FOLL_PIN);
-+}
-+EXPORT_SYMBOL(iov_iter_pin_pages);
++	WARN_ON_ONCE(folio_ref_count(folio) <= 0);
 +
- ssize_t iov_iter_get_pages_alloc2(struct iov_iter *i,
- 		   struct page ***pages, size_t maxsize,
- 		   size_t *start)
-@@ -1509,7 +1560,8 @@ ssize_t iov_iter_get_pages_alloc2(struct iov_iter *i,
- 
- 	*pages = NULL;
- 
--	len = __iov_iter_get_pages_alloc(i, pages, maxsize, ~0U, start);
-+	len = __iov_iter_get_pages_alloc(i, pages, maxsize, ~0U, start,
-+					 USE_FOLL_GET);
- 	if (len <= 0) {
- 		kvfree(*pages);
- 		*pages = NULL;
-@@ -1518,6 +1570,28 @@ ssize_t iov_iter_get_pages_alloc2(struct iov_iter *i,
- }
- EXPORT_SYMBOL(iov_iter_get_pages_alloc2);
- 
-+/*
-+ * A FOLL_PIN variant that calls pin_user_pages_fast() instead of
-+ * get_user_pages_fast().
-+ */
-+ssize_t iov_iter_pin_pages_alloc(struct iov_iter *i,
-+		   struct page ***pages, size_t maxsize,
-+		   size_t *start)
-+{
-+	ssize_t len;
++	/*
++	 * This function is only intended for file-backed callers, who already
++	 * have a page reference.
++	 */
++	WARN_ON_ONCE(PageAnon(page));
 +
-+	*pages = NULL;
-+
-+	len = __iov_iter_get_pages_alloc(i, pages, maxsize, ~0U, start,
-+					 MAYBE_USE_FOLL_PIN);
-+	if (len <= 0) {
-+		kvfree(*pages);
-+		*pages = NULL;
++	/*
++	 * Similar to try_grab_page(): be sure to *also*
++	 * increment the normal page refcount field at least once,
++	 * so that the page really is pinned.
++	 */
++	if (folio_test_large(folio)) {
++		folio_ref_add(folio, 1);
++		atomic_add(1, folio_pincount_ptr(folio));
++	} else {
++		folio_ref_add(folio, GUP_PIN_COUNTING_BIAS);
 +	}
-+	return len;
-+}
-+EXPORT_SYMBOL(iov_iter_pin_pages_alloc);
 +
- size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum,
- 			       struct iov_iter *i)
- {
++	node_stat_mod_folio(folio, NR_FOLL_PIN_ACQUIRED, 1);
++}
++EXPORT_SYMBOL(pin_user_page);
++
+ /*
+  * pin_user_pages_unlocked() is the FOLL_PIN variant of
+  * get_user_pages_unlocked(). Behavior is the same, except that this one sets
 -- 
 2.37.2
 
