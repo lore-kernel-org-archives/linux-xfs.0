@@ -2,219 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CFA5ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 00:10:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 213BDECAAD4
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 00:18:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229979AbiHaAKh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Aug 2022 20:10:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48180 "EHLO
+        id S229899AbiHaASj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Aug 2022 20:18:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229740AbiHaAKh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 20:10:37 -0400
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 761D649B58;
-        Tue, 30 Aug 2022 17:10:34 -0700 (PDT)
-Received: by mail-pf1-x434.google.com with SMTP id q15so7528261pfn.11;
-        Tue, 30 Aug 2022 17:10:34 -0700 (PDT)
+        with ESMTP id S229778AbiHaASe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 20:18:34 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 360A09DB66;
+        Tue, 30 Aug 2022 17:18:31 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id v4so12095570pgi.10;
+        Tue, 30 Aug 2022 17:18:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc;
-        bh=QLiKYqdI1KiuJx5ULNik5L1yb8NhaJKxbFBCsKQAtBw=;
-        b=JDY1+qdiL0JRXboT215qoRyPDRoQIMzSGvN6+Pv+r1ytU3mcF9CSOzfeocPmLqhDwB
-         UMvPESXyaSEJGj01kQeOaoc38ZndtIs7q9p0F+5CSi3HuxKpCTwKOy5HxJZdxlk9cxWv
-         OgeXfLb60SPnPQdBkjpQelZvyGaCz/4OJi+UA5H3GTf5nHCHY6k+vSRKNqbhQs6XpomS
-         GbuZzmGcgLHDZwWw7ZpcNsFWqVl1eU3hLae1dgGbuvEYxtTIkp38P0F66lqyzXpjhH0l
-         5m2TMkkLR1WjwbB5ZcBElJZxmK1HVhVlytjoK84YeDSheWYWL8PusIwR0GFxDYYG3ICq
-         N7YA==
+        bh=xH0M4e5esAqM96Nf2Fl2I1Tb8x4y2NZChmoD48mDk/E=;
+        b=JbBU0u/2yskA2qh5lu9jRik+XHMhYPIDYY65Pny/EofY+Oi3Q9Lm2wwtWXCn3rMP9S
+         F4XmBabno2YHSmclQxN4VUVXExD4+SIuWT4ey1mhli6l50ZbdYlKKIj6NsYu2DqNd09t
+         S+zx2aYS+WEHvO8t/knjT/O+gfnQJXilTfaK4TH61TtGWs2RSuKB2wYQTMWGN9MagqAV
+         hdspsS0ZwARSSTNYTbso7B8xhgPzeKipPu7NhEN63Gclx9tHAfPRf47o9i19p2kk9hRN
+         FfU5iZ5HgqcRKrUxjRVyhulGjk+lOO80pedj+D/dzR7ji8Iji+/s18VzFpedZEfTPLs4
+         xJMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc;
-        bh=QLiKYqdI1KiuJx5ULNik5L1yb8NhaJKxbFBCsKQAtBw=;
-        b=Rjz7r9diXcw8f7ldk3XCLoqjqGyaevmVYITJtuxawrOs8H8jqGDr6QTX4hA+ZBYiMs
-         VXjTFDguFC2SD6mU/CjFI44T8GbXtj4ZZBMzq44bJjWYO0XDqHtnMJoD4O98AkwPovU4
-         gL1E52gWiDg7JqOr0earYuyeX31b+G+AQsKRNitWAa5KscZcVSm6Es7lMfTBETAnSF9D
-         /6Q9j0OGIk8NgbU1U47sWXby/jQvRcjbHRPrhMT/Cn4JFbQ7AP36yJqbZGAdE55n7uTF
-         NaXXoXKlBtSTysuzGO76RIEpIaUQt2NmPrmcxnxZi1WizgnWCcSVSqX/W5fsBW4KzLJH
-         KDWA==
-X-Gm-Message-State: ACgBeo2p/EeJCrwU27z94C0Cg0Rd3wygwHnZtEU4ajL85TGtnoQ/0Ue2
-        ikFuvnA9mPC85ByO4e78cWMMNHaSX9dztCkfE9NE9wW7dqA=
-X-Google-Smtp-Source: AA6agR4R2zwM5m1tdy+zEJChk+4o+Qe//ICLJUGoIw0AL8xGcj0y+QXQdofmm/zOrXCjnz+e91vfZfYWW3U6nEipYPc=
-X-Received: by 2002:aa7:8055:0:b0:536:df46:c567 with SMTP id
- y21-20020aa78055000000b00536df46c567mr23975113pfm.1.1661904633901; Tue, 30
- Aug 2022 17:10:33 -0700 (PDT)
+        bh=xH0M4e5esAqM96Nf2Fl2I1Tb8x4y2NZChmoD48mDk/E=;
+        b=Fa+b6SOnO9ewx80bi4iB3BsbR5UnnVzA+4upH1ZVS5Pwj9kCsnMDsZyBezCIBsiCHt
+         /ImDF8v7IKFrKjZCSf+m8WqyoNkTfCeGdTMz9lhD9qCAzF76VyDdTQpmL3PK8OWKtH1k
+         GCXCwSogPG3NPo3kcK5p61tDXpI4h+e1GU/3v5QKUIepC66ZBkWThIY1i0yCYM7Ve1SY
+         VpFpGnUh5ndc6MxoxcZX88PnnfFF92syXseXSOaNZE63npoYqW2k4xsASdinXBR+mXt9
+         bZf9oL7qhlFRnWAt8bY/8wYWe57fCf01lYQWHe/Ejgt+1TvyHs+cRRqUdsXWOi9YFPag
+         QL+Q==
+X-Gm-Message-State: ACgBeo06MRjcqxRQiEcoj8QocZ6198l+e9P+6RryYEfZDnZyVFgh6jrn
+        WMhOSkYimjvD2YoMidqI4rqTa25AKn6Lb31drhQ=
+X-Google-Smtp-Source: AA6agR4rubVNgj1JqK5JCzl2eJ7WlOwSsp92tDt+048P8vka/r9o//ORfL9nctaQ/jeEYicMCv9tVLzPCuylwTlP208=
+X-Received: by 2002:a63:4e25:0:b0:41c:62a2:ecc3 with SMTP id
+ c37-20020a634e25000000b0041c62a2ecc3mr20162396pgb.596.1661905109991; Tue, 30
+ Aug 2022 17:18:29 -0700 (PDT)
 MIME-Version: 1.0
 References: <20220830044433.1719246-1-jencce.kernel@gmail.com>
- <20220830044433.1719246-4-jencce.kernel@gmail.com> <Yw4nSjAsFbCYveP+@magnolia>
-In-Reply-To: <Yw4nSjAsFbCYveP+@magnolia>
+ <20220830044433.1719246-2-jencce.kernel@gmail.com> <20220830073634.7qklqvl2la53kbv4@zlang-mailbox>
+ <Yw4i0Pxz80ez7m0X@magnolia> <20220830190748.nnylphtuugxxmoy3@zlang-mailbox>
+In-Reply-To: <20220830190748.nnylphtuugxxmoy3@zlang-mailbox>
 From:   Murphy Zhou <jencce.kernel@gmail.com>
-Date:   Wed, 31 Aug 2022 08:10:21 +0800
-Message-ID: <CADJHv_tWzv6L-s63VjR0_TGZgapH5UR-S+bK41msrQJsO_o8bg@mail.gmail.com>
-Subject: Re: [PATCH v3 3/4] tests/xfs: remove single-AG options
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     fstests <fstests@vger.kernel.org>,
+Date:   Wed, 31 Aug 2022 08:18:18 +0800
+Message-ID: <CADJHv_tFtH_fihVFGLUB=GyjGJ+Neo-pj8S5DGJDFOHrW12EOA@mail.gmail.com>
+Subject: Re: [PATCH v3 1/4] tests: increase fs size for mkfs
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        fstests <fstests@vger.kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 30, 2022 at 11:05 PM Darrick J. Wong <djwong@kernel.org> wrote:
+On Wed, Aug 31, 2022 at 3:07 AM Zorro Lang <zlang@redhat.com> wrote:
 >
-> On Tue, Aug 30, 2022 at 12:44:32PM +0800, Murphy Zhou wrote:
-> > Since this xfsprogs commit:
-> >       6e0ed3d19c54 mkfs: stop allowing tiny filesystems
-> > Single-AG xfs is not allowed.
+> On Tue, Aug 30, 2022 at 07:46:40AM -0700, Darrick J. Wong wrote:
+> > On Tue, Aug 30, 2022 at 03:36:34PM +0800, Zorro Lang wrote:
+> > > On Tue, Aug 30, 2022 at 12:44:30PM +0800, Murphy Zhou wrote:
+> > > > Since this xfsprogs commit:
+> > > >   6e0ed3d19c54 mkfs: stop allowing tiny filesystems
+> > > > XFS requires filesystem size bigger then 300m.
+> > >
+> > > I'm wondering if we can just use 300M, or 512M is better. CC linux-xfs to
+> > > get more discussion about how to deal with this change on mkfs.xfs.
+> > >
+> > > >
+> > > > Increase thoese numbers to 512M at least. There is no special
+> > > > reason for the magic number 512, just double it from original
+> > > > 256M and being reasonable small.
+> > >
+> > > Hmm... do we need a global parameter to define the minimal XFS size,
+> > > or even minimal local fs size? e.g. MIN_XFS_SIZE, or MIN_FS_SIZE ...
 > >
-> > Remove agcount=1 from mkfs options and xfs/202 entirely.
+> > I think it would be a convenient time to create a helper to capture
+> > that, seeing as the LTP developers recently let slip that they have such
+> > a thing somewhere, and min fs size logic is scattered around fstests.
 >
-> It's not supported for /new/ filesystems, but the rest of the tools must
-> continue the same levels of support for existing filesystems, even if
-> they cannot be created today.
-
-All these changes, all of them, only fix mkfs complaints, not others.
-
-So it is ONLY about creating new filesystems, not the existing ones.
-
+> It's a little hard to find out all cases which use the minimal fs size.
+> But for xfs, I think we can do that with this chance. We can have:
 >
-> Second, there exist fstests that need to create a specific layout to
-> test some part of the code.  Single-AG filesystems sometimes make this
-> much easier.
+>   export XFS_MIN_SIZE=$((300 * 1024 * 1024))
+>   export XFS_MIN_LOG_SIZE=$((64 * 1024 * 1024))
+>
+> at first, then init minimal $FSTYP size likes:
+>
+>   init_min_fs_size()
+>   {
+>       case $FSTYP in
+>       xfs)
+>           FS_MIN_SIZE=$XFS_MIN_SIZE
+>           ;;
+>       *)
+>           FS_MIN_SIZE="unlimited"  # or a big enough size??
+>           ;;
+>       esac
+>   }
+>
+> Then other fs can follow this to add their size limitation.
+> Any better ideas?
 
-But it's not allowed to be made by mkfs.xfs. Most of fstests create fs
-from scratch, it's hard to cover in this situation.
+In generic/042 f2fs has a similar kind of limitation.
+
+Let me check how LTP guys handle this.
 
 Thanks,
 Murphy
 
 >
-> Both of these reasons are why fstests (and LTP) get a special pass on
-> all the new checks in mkfs 5.19.
+> Thanks,
+> Zorro
 >
-> IOWs, we still need to check that xfs_repair works ok for existing
-> single AG filesystems.  We can perhaps drop these tests in a decade or
-> so, but now is premature.
+> >
 >
-> --D
+snipped
 >
-> > Signed-off-by: Murphy Zhou <jencce.kernel@gmail.com>
-> > ---
-> >  tests/xfs/179     |  2 +-
-> >  tests/xfs/202     | 40 ----------------------------------------
-> >  tests/xfs/202.out | 29 -----------------------------
-> >  tests/xfs/520     |  2 +-
-> >  4 files changed, 2 insertions(+), 71 deletions(-)
-> >  delete mode 100755 tests/xfs/202
-> >  delete mode 100644 tests/xfs/202.out
-> >
-> > diff --git a/tests/xfs/179 b/tests/xfs/179
-> > index ec0cb7e5..f0169717 100755
-> > --- a/tests/xfs/179
-> > +++ b/tests/xfs/179
-> > @@ -22,7 +22,7 @@ _require_cp_reflink
-> >  _require_test_program "punch-alternating"
-> >
-> >  echo "Format and mount"
-> > -_scratch_mkfs -d agcount=1 > $seqres.full 2>&1
-> > +_scratch_mkfs > $seqres.full 2>&1
-> >  _scratch_mount >> $seqres.full 2>&1
-> >
-> >  testdir=$SCRATCH_MNT/test-$seq
-> > diff --git a/tests/xfs/202 b/tests/xfs/202
-> > deleted file mode 100755
-> > index 5075d3a1..00000000
-> > --- a/tests/xfs/202
-> > +++ /dev/null
-> > @@ -1,40 +0,0 @@
-> > -#! /bin/bash
-> > -# SPDX-License-Identifier: GPL-2.0
-> > -# Copyright (c) 2009 Christoph Hellwig.
-> > -#
-> > -# FS QA Test No. 202
-> > -#
-> > -# Test out the xfs_repair -o force_geometry option on single-AG filesystems.
-> > -#
-> > -. ./common/preamble
-> > -_begin_fstest repair auto quick
-> > -
-> > -# Import common functions.
-> > -. ./common/filter
-> > -. ./common/repair
-> > -
-> > -# real QA test starts here
-> > -_supported_fs xfs
-> > -
-> > -# single AG will cause default xfs_repair to fail. This test is actually
-> > -# testing the special corner case option needed to repair a single AG fs.
-> > -_require_scratch_nocheck
-> > -
-> > -#
-> > -# The AG size is limited to 1TB (or even less with historic xfsprogs),
-> > -# so chose a small enough filesystem to make sure we can actually create
-> > -# a single AG filesystem.
-> > -#
-> > -echo "== Creating single-AG filesystem =="
-> > -_scratch_mkfs_xfs -d agcount=1 -d size=$((1024*1024*1024)) >/dev/null 2>&1 \
-> > - || _fail "!!! failed to make filesystem with single AG"
-> > -
-> > -echo "== Trying to repair it (should fail) =="
-> > -_scratch_xfs_repair
-> > -
-> > -echo "== Trying to repair it with -o force_geometry =="
-> > -_scratch_xfs_repair -o force_geometry 2>&1 | _filter_repair
-> > -
-> > -# success, all done
-> > -echo "*** done"
-> > -status=0
-> > diff --git a/tests/xfs/202.out b/tests/xfs/202.out
-> > deleted file mode 100644
-> > index c2c5c881..00000000
-> > --- a/tests/xfs/202.out
-> > +++ /dev/null
-> > @@ -1,29 +0,0 @@
-> > -QA output created by 202
-> > -== Creating single-AG filesystem ==
-> > -== Trying to repair it (should fail) ==
-> > -Phase 1 - find and verify superblock...
-> > -Only one AG detected - cannot validate filesystem geometry.
-> > -Use the -o force_geometry option to proceed.
-> > -== Trying to repair it with -o force_geometry ==
-> > -Phase 1 - find and verify superblock...
-> > -Phase 2 - using <TYPEOF> log
-> > -        - zero log...
-> > -        - scan filesystem freespace and inode maps...
-> > -        - found root inode chunk
-> > -Phase 3 - for each AG...
-> > -        - scan and clear agi unlinked lists...
-> > -        - process known inodes and perform inode discovery...
-> > -        - process newly discovered inodes...
-> > -Phase 4 - check for duplicate blocks...
-> > -        - setting up duplicate extent list...
-> > -        - check for inodes claiming duplicate blocks...
-> > -Phase 5 - rebuild AG headers and trees...
-> > -        - reset superblock...
-> > -Phase 6 - check inode connectivity...
-> > -        - resetting contents of realtime bitmap and summary inodes
-> > -        - traversing filesystem ...
-> > -        - traversal finished ...
-> > -        - moving disconnected inodes to lost+found ...
-> > -Phase 7 - verify and correct link counts...
-> > -done
-> > -*** done
-> > diff --git a/tests/xfs/520 b/tests/xfs/520
-> > index d9e252bd..de70db60 100755
-> > --- a/tests/xfs/520
-> > +++ b/tests/xfs/520
-> > @@ -60,7 +60,7 @@ force_crafted_metadata() {
-> >  }
-> >
-> >  bigval=100000000
-> > -fsdsopt="-d agcount=1,size=512m"
-> > +fsdsopt="-d size=512m"
-> >
-> >  force_crafted_metadata freeblks 0 "agf 0"
-> >  force_crafted_metadata longest $bigval "agf 0"
-> > --
-> > 2.31.1
-> >
