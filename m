@@ -2,172 +2,193 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DE90ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 02:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 674A5C54EE9
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 04:18:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230250AbiHaCFM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Aug 2022 22:05:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50944 "EHLO
+        id S230039AbiHaESv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Aug 2022 00:18:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230206AbiHaCFL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 22:05:11 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89EA8CE08;
-        Tue, 30 Aug 2022 19:05:09 -0700 (PDT)
-Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.54])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4MHS8T0Z5pz1N7cZ;
-        Wed, 31 Aug 2022 10:01:29 +0800 (CST)
-Received: from huawei.com (10.175.103.91) by dggpemm500022.china.huawei.com
- (7.185.36.162) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 31 Aug
- 2022 10:05:07 +0800
-From:   Zeng Heng <zengheng4@huawei.com>
-To:     <djwong@kernel.org>, <sandeen@sandeen.net>, <dchinner@redhat.com>,
-        <chandan.babu@oracle.com>, <allison.henderson@oracle.com>,
-        <dan.carpenter@oracle.com>
-CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <zengheng4@huawei.com>
-Subject: [PATCH v2 -next] xfs: clean up "%Ld/%Lu" which doesn't meet C standard
-Date:   Wed, 31 Aug 2022 10:12:48 +0800
-Message-ID: <20220831021248.3127300-1-zengheng4@huawei.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229637AbiHaESu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 00:18:50 -0400
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2071.outbound.protection.outlook.com [40.107.92.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 698BDA8CFC;
+        Tue, 30 Aug 2022 21:18:49 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Cu4ZibaOSmtLUBAEXFuUzdscT9vjLl8i1cnBwgQcA02fM4AklZxiuZDfnpSAjIQ9QkGyaiv94jzfhs5z5P/t2CMMwJeVHDqN5D0DGHo/AlJ48dKiNZRu2bflFz5Z0hteDG1Lurna2akQT5Og4/86sViQ/iXv89dmM2Pq/7LDbUPebzayPkxVlpjyBr8pkbVOEsJn55Xx1AJGnH2Rs3EwFph7CI/8aEJRZ3lWKOy0eyRpLXQT0n7fGqWXYzydCIKSP6qpx8S6ViNXgU1jJu8yD4ggdV80Qmr9742qk8pahki8dhFR9nB9wMazqMwUVtUbZMHRi5VusGjJbJOihoxRDQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=94/SjAzGDj+eOXNQNiPy1hVg5d7HWR7l+Zp5Z4OYIJM=;
+ b=es/6l8kePsJChVH7pl6wlSq5JSnWb8GGFC/qafNMmkZQF9K5V1H2irw3+jIiWaQYY1tFMNnql8sxbvtEMg1nNfzlRK/DBzpFd8OOYAPpyO+jaBO9SofCcrP7L+S2VeYFFvsy+lwmqqi5J3nR9PBUwzb2UN1WHdSLTzK1KSCEjO3aaMVy0xplxNgILAsQLsdDyroG8ccL71bAI6E/LbwO4hwZtgTH/VEPNClhjKTp3ThNaZfpAW+JPkE3qW2GQ7UDJL7KOXuGgl4MBtHT/opGhmH5T2RcrKuhMGdWjE6GpAnDx4TP1f3rPY0oTEyQ7Kzs8CcUa5DsXUbJPjGrpzdayg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 12.22.5.238) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=94/SjAzGDj+eOXNQNiPy1hVg5d7HWR7l+Zp5Z4OYIJM=;
+ b=MTWVtcTbDvc1NxucllPyJ26GWFV5cRBBEPhK+nurvZ8vds3qwl6mr+0ucspDzT0tawPCMKU+nREa9EYbDblDePQhBOp8xLoS8/aeisdAoWV9Xh6q73QtDcUseL5QZUyp4k4FmNxU5tLYZjgzLj6omoWCj76DxSP7avrbCYQWezGNUR7L4LDVwbI7vGkt/oBl/iH7O3Hi++VseCXURCZ1wNFt2ybWYkPkzWXOXsiz3x2vj9WtBf8aBp6H3rZ8EYNrzsB9uxl4HjFUYAKl6aFfqJWPbtOqBX+z9mEmRWZoSUOV1oWgf4eLI2etvbmz8/ogmZhCaFdu7F7M/7pcTI1l2A==
+Received: from MW4PR03CA0312.namprd03.prod.outlook.com (2603:10b6:303:dd::17)
+ by BL1PR12MB5142.namprd12.prod.outlook.com (2603:10b6:208:312::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5566.15; Wed, 31 Aug
+ 2022 04:18:47 +0000
+Received: from CO1NAM11FT034.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:dd:cafe::26) by MW4PR03CA0312.outlook.office365.com
+ (2603:10b6:303:dd::17) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5566.15 via Frontend
+ Transport; Wed, 31 Aug 2022 04:18:47 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.238)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 12.22.5.238 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.238; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (12.22.5.238) by
+ CO1NAM11FT034.mail.protection.outlook.com (10.13.174.248) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.5588.10 via Frontend Transport; Wed, 31 Aug 2022 04:18:47 +0000
+Received: from rnnvmail205.nvidia.com (10.129.68.10) by DRHQMAIL105.nvidia.com
+ (10.27.9.14) with Microsoft SMTP Server (TLS) id 15.0.1497.38; Wed, 31 Aug
+ 2022 04:18:46 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by rnnvmail205.nvidia.com
+ (10.129.68.10) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Tue, 30 Aug
+ 2022 21:18:45 -0700
+Received: from sandstorm.attlocal.net (10.127.8.14) by mail.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server id 15.2.986.29 via Frontend
+ Transport; Tue, 30 Aug 2022 21:18:44 -0700
+From:   John Hubbard <jhubbard@nvidia.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+CC:     Jens Axboe <axboe@kernel.dk>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>, Jan Kara <jack@suse.cz>,
+        David Hildenbrand <david@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        <linux-block@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <linux-nfs@vger.kernel.org>,
+        <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>,
+        John Hubbard <jhubbard@nvidia.com>
+Subject: [PATCH v2 0/7] convert most filesystems to pin_user_pages_fast()
+Date:   Tue, 30 Aug 2022 21:18:36 -0700
+Message-ID: <20220831041843.973026-1-jhubbard@nvidia.com>
+X-Mailer: git-send-email 2.37.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.103.91]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpemm500022.china.huawei.com (7.185.36.162)
-X-CFilter-Loop: Reflected
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: c1211213-ea3d-4f34-5151-08da8b07e68e
+X-MS-TrafficTypeDiagnostic: BL1PR12MB5142:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Gx0BqzKA7TWn0aa5fWJsqxaLt3EJrFWbVScQUrdyWjRkR4XExbYRBvZ7tCA6MXlWT/oM4VVtnHkSlF4MTSMdBwnpyIt638URodasd3/P78RPpR4pwI/WGAeA7f/e2C1GVmozciTBGB1mTyWusfnJitIBSS4TK68Cnqft2gxf6sM2HQvu+RZZQvg7lTY8OpOSb+buG7c46pTddOZt9eclcUM6luWid4jI8PIPPM2h1i4c+7xiUoZRhILMgW9a78UFI1fS/MFLGLCSjaszL4mAApkhDEKX08g3gDut4OTrrhBvN2uAb8r12Z2rBWOH3Gx4RyIXbKU0Lj3KDJySSAcBv0qxLQ6/+Zp9kXjyAbazFdALR+UOJBdOUv5FlGtMi7CgAoLhfzmi45f1pov7ZWZCwIj4+K91foyF2GofMp9E/WKkVhsHTgXDyesQsrKO91jYAWSuV4jOJnaRQ+s0eornTiyjSA846xHpTUloUwPhqak4o93bj4E2qpvLMaUVSNFvRlTKA+GhKoQOKA4QDNsuivY3JVknP3a9BqG3SOW5LFUOw6eDZK8Poyh8qGtIkMqqv5klZdtduy0CFVBB74UEaM9MZF4o+Aw5iPQvmqK7py+r8kehftAqUsad3SoJIhPPyeqr1Yrs9ao9ntAGuBstghjhVR87Mryd87DjHJW0sJkOg/BtAT63W2K9BEOCPV7R5hf16DM0THeuKhCY2Q8th9A/bzmSehfUD7uYuks2NcwLVtrDjyAHuKDP2ev+rkAo9Rx2zHF2SdtFkwzcuBula3Q150zLR3YRKBC/dhPkGn8GMtLP6S2Q9JHi4HHb54Y/2WTGS1BJlF81d04O/5CEt5snQPBZ3RjLZXjkXew40xI/n2jiiNTWwSsd6gW/jfYx
+X-Forefront-Antispam-Report: CIP:12.22.5.238;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(396003)(376002)(136003)(39860400002)(346002)(46966006)(36840700001)(40470700004)(36860700001)(86362001)(81166007)(40460700003)(356005)(316002)(82740400003)(54906003)(6916009)(83380400001)(7416002)(70586007)(4326008)(5660300002)(8676002)(82310400005)(8936002)(2616005)(70206006)(1076003)(186003)(478600001)(41300700001)(40480700001)(966005)(26005)(47076005)(2906002)(426003)(336012)(6666004)(36756003)(107886003)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2022 04:18:47.4215
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: c1211213-ea3d-4f34-5151-08da8b07e68e
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.238];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT034.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5142
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The "%Ld" specifier, which represents long long unsigned,
-doesn't meet C language standard, and even more,
-it makes people easily mistake with "%ld", which represent
-long unsigned. So replace "%Ld" with "lld".
+This is v2. Changes since v1 are:
 
-Do the same with "%Lu".
+* Incorporated feedback from Al Viro and Jan Kara: this approach now
+pins both bvecs (ITER_BVEC) and user pages (user_backed_iter()) with
+FOLL_PIN.
 
-Signed-off-by: Zeng Heng <zengheng4@huawei.com>
----
- fs/xfs/libxfs/xfs_bmap.c        | 2 +-
- fs/xfs/libxfs/xfs_inode_fork.c  | 4 ++--
- fs/xfs/xfs_inode.c              | 8 ++++----
- fs/xfs/xfs_inode_item_recover.c | 4 ++--
- fs/xfs/xfs_stats.c              | 2 +-
- 5 files changed, 10 insertions(+), 10 deletions(-)
+* Incorporated David Hildenbrand's feedback: Rewrote pin_user_pages()
+documentation and added a WARN_ON_ONCE() to somewhat enforce the rule
+that this new function is only intended for use on file-backed pages.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index e56723dc9cd5..49d0d4ea63fc 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -294,7 +294,7 @@ xfs_check_block(
- 			else
- 				thispa = XFS_BMBT_PTR_ADDR(mp, block, j, dmxr);
- 			if (*thispa == *pp) {
--				xfs_warn(mp, "%s: thispa(%d) == pp(%d) %Ld",
-+				xfs_warn(mp, "%s: thispa(%d) == pp(%d) %lld",
- 					__func__, j, i,
- 					(unsigned long long)be64_to_cpu(*thispa));
- 				xfs_err(mp, "%s: ptrs are equal in node\n",
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 9327a4f39206..6b21760184d9 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -78,7 +78,7 @@ xfs_iformat_local(
- 	 */
- 	if (unlikely(size > XFS_DFORK_SIZE(dip, ip->i_mount, whichfork))) {
- 		xfs_warn(ip->i_mount,
--	"corrupt inode %Lu (bad size %d for local fork, size = %zd).",
-+	"corrupt inode %llu (bad size %d for local fork, size = %zd).",
- 			(unsigned long long) ip->i_ino, size,
- 			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork));
- 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-@@ -192,7 +192,7 @@ xfs_iformat_btree(
- 					XFS_DFORK_SIZE(dip, mp, whichfork) ||
- 		     ifp->if_nextents > ip->i_nblocks) ||
- 		     level == 0 || level > XFS_BM_MAXLEVELS(mp, whichfork)) {
--		xfs_warn(mp, "corrupt inode %Lu (btree).",
-+		xfs_warn(mp, "corrupt inode %llu (btree).",
- 					(unsigned long long) ip->i_ino);
- 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
- 				"xfs_iformat_btree", dfp, size,
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 28493c8e9bb2..b3eeeae3afe1 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3119,7 +3119,7 @@ xfs_iflush(
- 	if (XFS_TEST_ERROR(dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC),
- 			       mp, XFS_ERRTAG_IFLUSH_1)) {
- 		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
--			"%s: Bad inode %Lu magic number 0x%x, ptr "PTR_FMT,
-+			"%s: Bad inode %llu magic number 0x%x, ptr "PTR_FMT,
- 			__func__, ip->i_ino, be16_to_cpu(dip->di_magic), dip);
- 		goto flush_out;
- 	}
-@@ -3129,7 +3129,7 @@ xfs_iflush(
- 		    ip->i_df.if_format != XFS_DINODE_FMT_BTREE,
- 		    mp, XFS_ERRTAG_IFLUSH_3)) {
- 			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
--				"%s: Bad regular inode %Lu, ptr "PTR_FMT,
-+				"%s: Bad regular inode %llu, ptr "PTR_FMT,
- 				__func__, ip->i_ino, ip);
- 			goto flush_out;
- 		}
-@@ -3140,7 +3140,7 @@ xfs_iflush(
- 		    ip->i_df.if_format != XFS_DINODE_FMT_LOCAL,
- 		    mp, XFS_ERRTAG_IFLUSH_4)) {
- 			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
--				"%s: Bad directory inode %Lu, ptr "PTR_FMT,
-+				"%s: Bad directory inode %llu, ptr "PTR_FMT,
- 				__func__, ip->i_ino, ip);
- 			goto flush_out;
- 		}
-@@ -3158,7 +3158,7 @@ xfs_iflush(
- 	if (XFS_TEST_ERROR(ip->i_forkoff > mp->m_sb.sb_inodesize,
- 				mp, XFS_ERRTAG_IFLUSH_6)) {
- 		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
--			"%s: bad inode %Lu, forkoff 0x%x, ptr "PTR_FMT,
-+			"%s: bad inode %llu, forkoff 0x%x, ptr "PTR_FMT,
- 			__func__, ip->i_ino, ip->i_forkoff, ip);
- 		goto flush_out;
- 	}
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index d28ffaebd067..0e5dba2343ea 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -321,7 +321,7 @@ xlog_recover_inode_commit_pass2(
- 	 */
- 	if (XFS_IS_CORRUPT(mp, !xfs_verify_magic16(bp, dip->di_magic))) {
- 		xfs_alert(mp,
--	"%s: Bad inode magic number, dip = "PTR_FMT", dino bp = "PTR_FMT", ino = %Ld",
-+	"%s: Bad inode magic number, dip = "PTR_FMT", dino bp = "PTR_FMT", ino = %lld",
- 			__func__, dip, bp, in_f->ilf_ino);
- 		error = -EFSCORRUPTED;
- 		goto out_release;
-@@ -329,7 +329,7 @@ xlog_recover_inode_commit_pass2(
- 	ldip = item->ri_buf[1].i_addr;
- 	if (XFS_IS_CORRUPT(mp, ldip->di_magic != XFS_DINODE_MAGIC)) {
- 		xfs_alert(mp,
--			"%s: Bad inode log record, rec ptr "PTR_FMT", ino %Ld",
-+			"%s: Bad inode log record, rec ptr "PTR_FMT", ino %lld",
- 			__func__, item, in_f->ilf_ino);
- 		error = -EFSCORRUPTED;
- 		goto out_release;
-diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-index 70d38b77682b..90a77cd3ebad 100644
---- a/fs/xfs/xfs_stats.c
-+++ b/fs/xfs/xfs_stats.c
-@@ -74,7 +74,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
- 		defer_relog += per_cpu_ptr(stats, i)->s.defer_relog;
- 	}
- 
--	len += scnprintf(buf + len, PATH_MAX-len, "xpc %Lu %Lu %Lu\n",
-+	len += scnprintf(buf + len, PATH_MAX-len, "xpc %llu %llu %llu\n",
- 			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
- 	len += scnprintf(buf + len, PATH_MAX-len, "defer_relog %llu\n",
- 			defer_relog);
+* Added a tiny new patch to fix up the release_pages() number of pages
+argument, so as to avoid a lot of impedance-matching checks in
+subsequent patches.
+
+v1 is here:
+
+https://lore.kernel.org/all/20220827083607.2345453-1-jhubbard@nvidia.com/
+
+Original cover letter still applies, here it is for convenience:
+
+This converts the iomap core and bio_release_pages() to
+pin_user_pages_fast(), also referred to as FOLL_PIN here.
+
+The conversion is temporarily guarded by
+CONFIG_BLK_USE_PIN_USER_PAGES_FOR_DIO. In the future (not part of this
+series), when we are certain that all filesystems have converted their
+Direct IO paths to FOLL_PIN, then we can do the final step, which is to
+get rid of CONFIG_BLK_USE_PIN_USER_PAGES_FOR_DIO and search-and-replace
+the dio_w_*() functions with their final names (see bvec.h changes).
+
+I'd like to get this part committed at some point, because it seems to
+work well already. And this will help get the remaining items, below,
+converted.
+
+Status: although many filesystems have been converted, some remain to be
+investigated. These include (you can recreate this list by grepping for
+iov_iter_get_pages):
+
+	cephfs
+	cifs
+	9P
+	RDS
+	net/core: datagram.c, skmsg.c
+	net/tls
+	fs/splice.c
+
+Testing: this passes some light LTP and xfstest runs and fio and a few
+other things like that, on my local x86_64 test machine, both with and
+without CONFIG_BLK_USE_PIN_USER_PAGES_FOR_DIO being set.
+
+Conflicts: Logan, the iov_iter parts of this will conflict with your
+[PATCH v9 2/8] iov_iter: introduce iov_iter_get_pages_[alloc_]flags(),
+but I think it's easy to resolve.
+
+
+John Hubbard (7):
+  mm: change release_pages() to use unsigned long for npages
+  mm/gup: introduce pin_user_page()
+  block: add dio_w_*() wrappers for pin, unpin user pages
+  iov_iter: new iov_iter_pin_pages*() routines
+  block, bio, fs: convert most filesystems to pin_user_pages_fast()
+  NFS: direct-io: convert to FOLL_PIN pages
+  fuse: convert direct IO paths to use FOLL_PIN
+
+ block/Kconfig        | 24 +++++++++++++
+ block/bio.c          | 27 +++++++-------
+ block/blk-map.c      |  7 ++--
+ fs/direct-io.c       | 40 ++++++++++-----------
+ fs/fuse/dev.c        | 11 ++++--
+ fs/fuse/file.c       | 32 +++++++++++------
+ fs/fuse/fuse_i.h     |  1 +
+ fs/iomap/direct-io.c |  2 +-
+ fs/nfs/direct.c      | 22 ++++++------
+ include/linux/bvec.h | 37 +++++++++++++++++++
+ include/linux/mm.h   |  3 +-
+ include/linux/uio.h  |  4 +++
+ lib/iov_iter.c       | 86 ++++++++++++++++++++++++++++++++++++++++----
+ mm/gup.c             | 50 ++++++++++++++++++++++++++
+ mm/swap.c            |  6 ++--
+ 15 files changed, 282 insertions(+), 70 deletions(-)
+
+
+base-commit: dcf8e5633e2e69ad60b730ab5905608b756a032f
 -- 
-2.25.1
+2.37.2
 
