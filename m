@@ -2,186 +2,195 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3803C3DA6B
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 10:38:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41124ECAAD1
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 11:58:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229915AbiHaKiK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Aug 2022 06:38:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54334 "EHLO
+        id S230002AbiHaL6i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Aug 2022 07:58:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229591AbiHaKh7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 06:37:59 -0400
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7791FC32CD
-        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 03:37:51 -0700 (PDT)
-Received: by mail-ej1-x62e.google.com with SMTP id bj12so27439152ejb.13
-        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 03:37:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=4gYrLsowmI5GGuWghJMX58bQcBEnYZGfYoQ7YKZR6lk=;
-        b=MG4erCNWjYHuSIEvvO741xtOx0OQLZr92W0tZx5zcIBAPX8bM6MALAcK3TActnS/CL
-         onIOi9HOixErTpAkKfRcwfw9Iw6xjtu1vuufU5pwP3Eu8HphBTU/vxZRmM2vQsrnytBp
-         v88VVo5ZXt/1O0WGeHz/QV+AY5566xeU1JoAI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=4gYrLsowmI5GGuWghJMX58bQcBEnYZGfYoQ7YKZR6lk=;
-        b=EzTWvzB9gmUbKQJQhm6ucMATLB020PyvS50/7gGtvbRp+Nvwl2XQgp3FE9hbqX1cZR
-         j6RPOzixNautvnRW7howdwusOS1gyNFnDKl7zmj+WbGx3VyU304NCh5+LxFxcST5pqk9
-         N2Kg1iy2JQvAUKLDw9uSQRYCugdy8GL7macO3cjr1hOhMGmTNHhjySRh4C7HOorGlX9B
-         Lu0m71XcNdYHKIcGYPIhw6qM2VtOTGC4ZFoyfJM7hyUCBVXGS6XIkdnxFlTrFJ+ExDrQ
-         4RbjdJt+inPJ8ynwkkc+4sD0DW0r7nTp6WrezBmTnIDJNBmZ04W0ym89JMERdqGuskaO
-         o8WA==
-X-Gm-Message-State: ACgBeo3L304zJ8ux3TqIbRPAAPY4apIUgWadntzXClCiQsF2DGhqWprS
-        xi4y2fAJ6E1jueoaad+q8fckhdjzMmsTLPafkWj2QA==
-X-Google-Smtp-Source: AA6agR7DfkXT6qMIySIpM4SIr/GNRsiXgpnVMta7acmws5dJJtJteiwRbajkuBZzOw4S3rQpjWNqEBu6Ojdoat2ykNY=
-X-Received: by 2002:a17:906:8a4e:b0:740:2450:d69a with SMTP id
- gx14-20020a1709068a4e00b007402450d69amr15687098ejc.523.1661942269622; Wed, 31
- Aug 2022 03:37:49 -0700 (PDT)
+        with ESMTP id S230366AbiHaL6f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 07:58:35 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC948D275B
+        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 04:58:33 -0700 (PDT)
+Received: from kwepemi500019.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4MHjK821Y8z1N7bF;
+        Wed, 31 Aug 2022 19:54:52 +0800 (CST)
+Received: from huawei.com (10.175.124.27) by kwepemi500019.china.huawei.com
+ (7.221.188.117) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 31 Aug
+ 2022 19:58:30 +0800
+From:   Guo Xuenan <guoxuenan@huawei.com>
+To:     <linux-xfs@vger.kernel.org>, <djwong@kernel.org>,
+        <dchinner@redhat.com>
+CC:     <chandan.babu@oracle.com>, <yi.zhang@huawei.com>,
+        <houtao1@huawei.com>, <zhengbin13@huawei.com>,
+        <jack.qiu@huawei.com>, <guoxuenan@huawei.com>
+Subject: [PATCH v2] xfs: fix uaf when leaf dir bestcount not match with dir data blocks
+Date:   Wed, 31 Aug 2022 20:16:39 +0800
+Message-ID: <20220831121639.3060527-1-guoxuenan@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20220831041843.973026-1-jhubbard@nvidia.com> <20220831041843.973026-8-jhubbard@nvidia.com>
-In-Reply-To: <20220831041843.973026-8-jhubbard@nvidia.com>
-From:   Miklos Szeredi <miklos@szeredi.hu>
-Date:   Wed, 31 Aug 2022 12:37:38 +0200
-Message-ID: <CAJfpegvdTqdk9rs-yaEp1aqav4=t9qSpQri7gW8zzb+t7+_88A@mail.gmail.com>
-Subject: Re: [PATCH v2 7/7] fuse: convert direct IO paths to use FOLL_PIN
-To:     John Hubbard <jhubbard@nvidia.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>, Jan Kara <jack@suse.cz>,
-        David Hildenbrand <david@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.124.27]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500019.china.huawei.com (7.221.188.117)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 31 Aug 2022 at 06:19, John Hubbard <jhubbard@nvidia.com> wrote:
->
-> Convert the fuse filesystem to use pin_user_pages_fast() and
-> unpin_user_page(), instead of get_user_pages_fast() and put_page().
->
-> The user of pin_user_pages_fast() depends upon:
->
-> 1) CONFIG_BLK_USE_PIN_USER_PAGES_FOR_DIO, and
->
-> 2) User-space-backed pages or ITER_BVEC pages.
->
-> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
-> ---
->  fs/fuse/dev.c    | 11 +++++++++--
->  fs/fuse/file.c   | 32 +++++++++++++++++++++-----------
->  fs/fuse/fuse_i.h |  1 +
->  3 files changed, 31 insertions(+), 13 deletions(-)
->
-> diff --git a/fs/fuse/dev.c b/fs/fuse/dev.c
-> index 51897427a534..5de98a7a45b1 100644
-> --- a/fs/fuse/dev.c
-> +++ b/fs/fuse/dev.c
-> @@ -675,7 +675,12 @@ static void fuse_copy_finish(struct fuse_copy_state *cs)
->                         flush_dcache_page(cs->pg);
->                         set_page_dirty_lock(cs->pg);
->                 }
-> -               put_page(cs->pg);
-> +               if (!cs->pipebufs &&
-> +                   (user_backed_iter(cs->iter) || iov_iter_is_bvec(cs->iter)))
-> +                       dio_w_unpin_user_page(cs->pg);
-> +
-> +               else
-> +                       put_page(cs->pg);
+For leaf dir, In most cases, there should be as many bestfree slots
+as the dir data blocks that can fit under i_size (except for [1]).
 
-Why not move the logic into a helper and pass a "bool pinned" argument?
+Root cause is we don't examin the number bestfree slots, when the slots
+number less than dir data blocks, if we need to allocate new dir data
+block and update the bestfree array, we will use the dir block number as
+index to assign bestfree array, while we did not check the leaf buf
+boundary which may cause UAF or other memory access problem. This issue
+can also triggered with test cases xfs/473 from fstests.
 
->         }
->         cs->pg = NULL;
->  }
-> @@ -730,7 +735,9 @@ static int fuse_copy_fill(struct fuse_copy_state *cs)
->                 }
->         } else {
->                 size_t off;
-> -               err = iov_iter_get_pages2(cs->iter, &page, PAGE_SIZE, 1, &off);
-> +
-> +               err = dio_w_iov_iter_pin_pages(cs->iter, &page, PAGE_SIZE, 1,
-> +                                              &off);
->                 if (err < 0)
->                         return err;
->                 BUG_ON(!err);
-> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-> index 1a3afd469e3a..01da38928d0b 100644
-> --- a/fs/fuse/file.c
-> +++ b/fs/fuse/file.c
-> @@ -625,14 +625,19 @@ void fuse_read_args_fill(struct fuse_io_args *ia, struct file *file, loff_t pos,
->  }
->
->  static void fuse_release_user_pages(struct fuse_args_pages *ap,
-> -                                   bool should_dirty)
-> +                                   bool should_dirty, bool is_user_or_bvec)
->  {
->         unsigned int i;
->
-> -       for (i = 0; i < ap->num_pages; i++) {
-> -               if (should_dirty)
-> -                       set_page_dirty_lock(ap->pages[i]);
-> -               put_page(ap->pages[i]);
-> +       if (is_user_or_bvec) {
-> +               dio_w_unpin_user_pages_dirty_lock(ap->pages, ap->num_pages,
-> +                                                 should_dirty);
-> +       } else {
-> +               for (i = 0; i < ap->num_pages; i++) {
-> +                       if (should_dirty)
-> +                               set_page_dirty_lock(ap->pages[i]);
-> +                       put_page(ap->pages[i]);
-> +               }
+Considering the special case [1] , only add check bestfree array boundary,
+to avoid UAF or slab-out-of bound.
 
-Same here.
+[1] https://lore.kernel.org/all/163961697197.3129691.1911552605195534271.stgit@magnolia/
 
->         }
->  }
->
-> @@ -733,7 +738,7 @@ static void fuse_aio_complete_req(struct fuse_mount *fm, struct fuse_args *args,
->         struct fuse_io_priv *io = ia->io;
->         ssize_t pos = -1;
->
-> -       fuse_release_user_pages(&ia->ap, io->should_dirty);
-> +       fuse_release_user_pages(&ia->ap, io->should_dirty, io->is_user_or_bvec);
->
->         if (err) {
->                 /* Nothing */
-> @@ -1414,10 +1419,10 @@ static int fuse_get_user_pages(struct fuse_args_pages *ap, struct iov_iter *ii,
->         while (nbytes < *nbytesp && ap->num_pages < max_pages) {
->                 unsigned npages;
->                 size_t start;
-> -               ret = iov_iter_get_pages2(ii, &ap->pages[ap->num_pages],
-> -                                       *nbytesp - nbytes,
-> -                                       max_pages - ap->num_pages,
-> -                                       &start);
-> +               ret = dio_w_iov_iter_pin_pages(ii, &ap->pages[ap->num_pages],
-> +                                              *nbytesp - nbytes,
-> +                                              max_pages - ap->num_pages,
-> +                                              &start);
->                 if (ret < 0)
->                         break;
->
-> @@ -1483,6 +1488,10 @@ ssize_t fuse_direct_io(struct fuse_io_priv *io, struct iov_iter *iter,
->                 fl_owner_t owner = current->files;
->                 size_t nbytes = min(count, nmax);
->
-> +               /* For use in fuse_release_user_pages(): */
-> +               io->is_user_or_bvec = user_backed_iter(iter) ||
-> +                                     iov_iter_is_bvec(iter);
-> +
+Simplify the testcase xfs/473 with commands below:
+DEV=/dev/sdb
+MP=/mnt/sdb
+WORKDIR=/mnt/sdb/341 #1. mkfs create new xfs image
+mkfs.xfs -f ${DEV}
+mount ${DEV} ${MP}
+mkdir -p ${WORKDIR}
+for i in `seq 1 341` #2. create leaf dir with 341 entries file name len 8
+do
+    touch ${WORKDIR}/$(printf "%08d" ${i})
+done
+inode=$(ls -i ${MP} | cut -d' ' -f1)
+umount ${MP}         #3. xfs_db set bestcount to 0
+xfs_db -x ${DEV} -c "inode ${inode}" -c "dblock 8388608" \
+-c "write ltail.bestcount 0"
+mount ${DEV} ${MP}
+touch ${WORKDIR}/{1..100}.txt #4. touch new file, reproduce
 
-How about io->is_pinned?  And a iov_iter_is_pinned() helper?
+The error log is shown as follows:
+==================================================================
+BUG: KASAN: use-after-free in xfs_dir2_leaf_addname+0x1995/0x1ac0
+Write of size 2 at addr ffff88810168b000 by task touch/1552
+CPU: 5 PID: 1552 Comm: touch Not tainted 6.0.0-rc3+ #101
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ print_report.cold+0xf6/0x691
+ kasan_report+0xa8/0x120
+ xfs_dir2_leaf_addname+0x1995/0x1ac0
+ xfs_dir_createname+0x58c/0x7f0
+ xfs_create+0x7af/0x1010
+ xfs_generic_create+0x270/0x5e0
+ path_openat+0x270b/0x3450
+ do_filp_open+0x1cf/0x2b0
+ do_sys_openat2+0x46b/0x7a0
+ do_sys_open+0xb7/0x130
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe4d9e9312b
+Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85 c0
+75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d 00
+f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+RSP: 002b:00007ffda4c16c20 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007fe4d9e9312b
+RDX: 0000000000000941 RSI: 00007ffda4c17f33 RDI: 00000000ffffff9c
+RBP: 00007ffda4c17f33 R08: 0000000000000000 R09: 0000000000000000
+R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000941
+R13: 00007fe4d9f631a4 R14: 00007ffda4c17f33 R15: 0000000000000000
+ </TASK>
 
-Thanks,
-Miklos
+The buggy address belongs to the physical page:
+page:ffffea000405a2c0 refcount:0 mapcount:0 mapping:0000000000000000
+index:0x0 pfn:0x10168b
+flags: 0x2fffff80000000(node=0|zone=2|lastcpupid=0x1fffff)
+raw: 002fffff80000000 ffffea0004057788 ffffea000402dbc8 0000000000000000
+raw: 0000000000000000 0000000000170000 00000000ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff88810168af00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff88810168af80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff88810168b000: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+                   ^
+ ffff88810168b080: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+ ffff88810168b100: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+==================================================================
+Disabling lock debugging due to kernel taint
+00000000: 58 44 44 33 5b 53 35 c2 00 00 00 00 00 00 00 78
+XDD3[S5........x
+XFS (sdb): Internal error xfs_dir2_data_use_free at line 1200 of file
+fs/xfs/libxfs/xfs_dir2_data.c.  Caller
+xfs_dir2_data_use_free+0x28a/0xeb0
+CPU: 5 PID: 1552 Comm: touch Tainted: G    B              6.0.0-rc3+
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ xfs_corruption_error+0x132/0x150
+ xfs_dir2_data_use_free+0x198/0xeb0
+ xfs_dir2_leaf_addname+0xa59/0x1ac0
+ xfs_dir_createname+0x58c/0x7f0
+ xfs_create+0x7af/0x1010
+ xfs_generic_create+0x270/0x5e0
+ path_openat+0x270b/0x3450
+ do_filp_open+0x1cf/0x2b0
+ do_sys_openat2+0x46b/0x7a0
+ do_sys_open+0xb7/0x130
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe4d9e9312b
+Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85 c0
+75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d 00
+f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+RSP: 002b:00007ffda4c16c20 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007fe4d9e9312b
+RDX: 0000000000000941 RSI: 00007ffda4c17f46 RDI: 00000000ffffff9c
+RBP: 00007ffda4c17f46 R08: 0000000000000000 R09: 0000000000000001
+R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000941
+R13: 00007fe4d9f631a4 R14: 00007ffda4c17f46 R15: 0000000000000000
+ </TASK>
+XFS (sdb): Corruption detected. Unmount and run xfs_repair
+
+Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+Reviewed-by: Hou Tao <houtao1@huawei.com>
+---
+ fs/xfs/libxfs/xfs_dir2_leaf.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index d9b66306a9a7..4b2a72b3a6f3 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -819,6 +819,18 @@ xfs_dir2_leaf_addname(
+ 		 */
+ 		else
+ 			xfs_dir3_leaf_log_bests(args, lbp, use_block, use_block);
++		/*
++		 * An abnormal corner case, bestfree count less than data
++		 * blocks, add a condition to avoid UAF or slab-out-of bound.
++		 */
++		if ((char *)(&bestsp[use_block]) > (char *)ltp) {
++			xfs_trans_brelse(tp, lbp);
++			if (tp->t_flags & XFS_TRANS_DIRTY)
++				xfs_force_shutdown(tp->t_mountp,
++						SHUTDOWN_CORRUPT_ONDISK);
++			return -EFSCORRUPTED;
++		}
++
+ 		hdr = dbp->b_addr;
+ 		bf = xfs_dir2_data_bestfree_p(dp->i_mount, hdr);
+ 		bestsp[use_block] = bf[0].length;
+-- 
+2.25.1
+
