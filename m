@@ -2,138 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3EB0ECAAD1
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 09:44:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 357FDECAAD1
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 09:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229655AbiHaJn7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Aug 2022 05:43:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49042 "EHLO
+        id S230179AbiHaJsp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Aug 2022 05:48:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230014AbiHaJnx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 05:43:53 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 606A8CE4BC;
-        Wed, 31 Aug 2022 02:43:51 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id CD2992226F;
-        Wed, 31 Aug 2022 09:43:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1661939029; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Wf21pEEc2qn4pGtb/SmWthvBwjNCurQ6Mq3fuLKCgXM=;
-        b=ZCv8hkQMv8VLUCjw+uWsF2LGUYsHrCxsVqq3OQGJcExeJM0/HRGBDw8+/sxrpshYy2Oa6v
-        2swiTLpvpZjw3UzuYHRoCD3p8cxabr9zKD9K0aRKKqOX8D3uLDV5eAFnU9JbpejhZ7Ws3a
-        iDt5IueX4Sm74kxBss2tlSq3x1auDNg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1661939029;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Wf21pEEc2qn4pGtb/SmWthvBwjNCurQ6Mq3fuLKCgXM=;
-        b=dbelnQ/VdnnD4iu+J0ymYt3LS1MSca1P78Kt0qZxPB51wzUaPAjopEjwqz/m9HSF/ZLIPg
-        JDWp+J0k//jhQACg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B6DDE1332D;
-        Wed, 31 Aug 2022 09:43:49 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id FXOYLFUtD2PMTAAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 31 Aug 2022 09:43:49 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 2F5D0A067B; Wed, 31 Aug 2022 11:43:49 +0200 (CEST)
-Date:   Wed, 31 Aug 2022 11:43:49 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     John Hubbard <jhubbard@nvidia.com>
-Cc:     Jan Kara <jack@suse.cz>, Al Viro <viro@zeniv.linux.org.uk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 5/6] NFS: direct-io: convert to FOLL_PIN pages
-Message-ID: <20220831094349.boln4jjajkdtykx3@quack3>
-References: <20220827083607.2345453-1-jhubbard@nvidia.com>
- <20220827083607.2345453-6-jhubbard@nvidia.com>
- <YwqfWoAE2Awp4YvT@ZenIV>
- <353f18ac-0792-2cb7-6675-868d0bd41d3d@nvidia.com>
- <Ywq5ILRNxsbWvFQe@ZenIV>
- <Ywq5VrSrY341UVpL@ZenIV>
- <217b4a17-1355-06c5-291e-7980c0d3cea6@nvidia.com>
- <20220829160808.rwkkiuelipr3huxk@quack3>
- <a53b2d14-687a-16c9-2f63-4f94876f8b3c@nvidia.com>
+        with ESMTP id S230133AbiHaJsk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 05:48:40 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 254F9CEB13;
+        Wed, 31 Aug 2022 02:48:39 -0700 (PDT)
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MHfRF6VD9zkWm8;
+        Wed, 31 Aug 2022 17:44:57 +0800 (CST)
+Received: from kwepemm600003.china.huawei.com (7.193.23.202) by
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 31 Aug 2022 17:48:37 +0800
+Received: from [127.0.0.1] (10.174.177.249) by kwepemm600003.china.huawei.com
+ (7.193.23.202) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 31 Aug
+ 2022 17:48:36 +0800
+Subject: Re: [PATCH] xfs: donot need to check return value of xlog_kvmalloc()
+To:     Eric Sandeen <sandeen@sandeen.net>,
+        "Darrick J. Wong" <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     linfeilong <linfeilong@huawei.com>,
+        wuguanghao <wuguanghao3@huawei.com>
+References: <514e5e4b-e7c8-365f-8459-75974c067993@huawei.com>
+ <0ba12a13-6cc4-5f44-fa06-ead350f819d5@sandeen.net>
+From:   Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Message-ID: <b83283b2-39b3-c659-1b9f-f774af47d3f8@huawei.com>
+Date:   Wed, 31 Aug 2022 17:48:35 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a53b2d14-687a-16c9-2f63-4f94876f8b3c@nvidia.com>
+In-Reply-To: <0ba12a13-6cc4-5f44-fa06-ead350f819d5@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [10.174.177.249]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600003.china.huawei.com (7.193.23.202)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 29-08-22 12:59:26, John Hubbard wrote:
-> On 8/29/22 09:08, Jan Kara wrote:
-> >> However, the core block/bio conversion in patch 4 still does depend upon
-> >> a key assumption, which I got from a 2019 email discussion with
-> >> Christoph Hellwig and others here [1], which says:
-> >>
-> >>     "All pages released by bio_release_pages should come from
-> >>      get_get_user_pages...".
-> >>
-> >> I really hope that still holds true. Otherwise this whole thing is in
-> >> trouble.
-> >>
-> >> [1] https://lore.kernel.org/kvm/20190724053053.GA18330@infradead.org/
-> > 
-> > Well as far as I've checked that discussion, Christoph was aware of pipe
-> > pages etc. (i.e., bvecs) entering direct IO code. But he had some patches
-> > [2] which enabled GUP to work for bvecs as well (using the kernel mapping
-> > under the hood AFAICT from a quick glance at the series). I suppose we
-> > could also handle this in __iov_iter_get_pages_alloc() by grabbing pin
-> > reference instead of plain get_page() for the case of bvec iter. That way
-> > we should have only pinned pages in bio_release_pages() even for the bvec
-> > case.
-> 
-> OK, thanks, that looks viable. So, that approach assumes that the
-> remaining two cases in __iov_iter_get_pages_alloc() will never end up
-> being released via bio_release_pages():
-> 
->     iov_iter_is_pipe(i)
->     iov_iter_is_xarray(i)
-> 
-> I'm actually a little worried about ITER_XARRAY, which is a recent addition.
-> It seems to be used in ways that are similar to ITER_BVEC, and cephfs is
-> using it. It's probably OK for now, for this series, which doesn't yet
-> convert cephfs.
 
-So after looking into that a bit more, I think a clean approach would be to
-provide iov_iter_pin_pages2() and iov_iter_pages_alloc2(), under the hood
-in __iov_iter_get_pages_alloc() make sure we use pin_user_page() instead of
-get_page() in all the cases (using this in pipe_get_pages() and
-iter_xarray_get_pages() is easy) and then make all bio handling use the
-pinning variants for iters. I think at least iov_iter_is_pipe() case needs
-to be handled as well because as I wrote above, pipe pages can enter direct
-IO code e.g. for splice(2).
+On 2022/8/30 0:06, Eric Sandeen wrote:
+> On 8/22/22 6:46 AM, Zhiqiang Liu wrote:
+>> In xfs_attri_log_nameval_alloc(), xlog_kvmalloc() is called
+>> to alloc memory, which will always return
+>> successfully, so we donot need to check return value.
+>>
+>> Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+> I think this is fine. xlog_kvmalloc loops until success, and its other
+> caller does not check the return value.
+>
+> This isn't really strictly a fix (it's harmless) but it "fixes"
+>
+> Fixes: commit 4183e4f27f402 ("xfs: share xattr name and value buffers when logging xattr updates")
+>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Also I think that all iov_iter_get_pages2() (or the _alloc2 variant) users
-actually do want the "pin page" semantics in the end (they are accessing
-page contents) so eventually we should convert them all to
-iov_iter_pin_pages2() and remove iov_iter_get_pages2() altogether. But this
-will take some more conversion work with networking etc. so I'd start with
-converting bios only.
+Thanks for your reply.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Before xlog_kvmalloc was changed to "loops until success", the sanity check was necessary.
+
+As you said, this isn't really strictly a fix, so I think we should not add the Fix tag.
+
+> That said, I think that xfs_attri_log_nameval_alloc() also cannot fail, so
+> perhaps its callers don't need checks either?
+Yes, you are right. I will clean it up in the V2 patch.
+
+>> ---
+>>  fs/xfs/xfs_attr_item.c | 2 --
+>>  1 file changed, 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+>> index 5077a7ad5646..667e151a2bca 100644
+>> --- a/fs/xfs/xfs_attr_item.c
+>> +++ b/fs/xfs/xfs_attr_item.c
+>> @@ -86,8 +86,6 @@ xfs_attri_log_nameval_alloc(
+>>  	 */
+>>  	nv = xlog_kvmalloc(sizeof(struct xfs_attri_log_nameval) +
+>>  					name_len + value_len);
+>> -	if (!nv)
+>> -		return nv;
+>>
+>>  	nv->name.i_addr = nv + 1;
+>>  	nv->name.i_len = name_len;
+> .
+
