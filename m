@@ -2,79 +2,186 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E4D0ECAAD4
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 09:52:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3803C3DA6B
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 10:38:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229437AbiHaJwG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Aug 2022 05:52:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37496 "EHLO
+        id S229915AbiHaKiK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Aug 2022 06:38:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbiHaJwG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 05:52:06 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FA0F9FA93
-        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 02:52:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4D7B6B81FAC
-        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 09:52:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29FD5C433D6;
-        Wed, 31 Aug 2022 09:51:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661939520;
-        bh=AIepTHbPN5FUnPpJGGn3FVQwF902BINLW+SWEAESu1M=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hLZnlRcRozM2avzQIohpxY9mMydB3lVKwwi/aQ9dl6ep4a1Tnjvy29PUUKSTq2K4V
-         sZeuCFIjdTVJAfu48L7TkLInuw9rBtYHa5K5nHCyMTWWBP+amb6sCIqIZfUOH7u2/p
-         zxJkEUGrPYQFI+dvj55YpoghhdqtY7ENl4oYwSKhyrdltCYt6qvZOiLdZMZkXApHKo
-         hHfFG1uJkfDwWpasU1ykoFinOz64jEGyfUJ+igLTHUJwaF8pPR4ByETR87ibwXm/VZ
-         jcSN9uC9UL96r2uMZSp70ZNkmV1hcIgLAKKFTSVDIBcrMejYG/qYnSPrWNBoAhbAZl
-         lDsAkOJiGf32A==
-Date:   Wed, 31 Aug 2022 11:51:56 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     Jakub Bogusz <qboosh@pld-linux.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] Polish translation update for xfsprogs 5.19.0
-Message-ID: <20220831095156.nvwk4ypkoimqgwrv@andromeda>
-References: <V-1rFt33HfX-PEKxCk2p6in23I_qJ6ELj6MmYMtgqjl6jHFh1hNVR4i5E1SF-RCY63GvFrKJzzv3leO8g-mpRA==@protonmail.internalid>
- <20220822160022.GA10067@stranger.qboosh.pl>
+        with ESMTP id S229591AbiHaKh7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 06:37:59 -0400
+Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7791FC32CD
+        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 03:37:51 -0700 (PDT)
+Received: by mail-ej1-x62e.google.com with SMTP id bj12so27439152ejb.13
+        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 03:37:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=szeredi.hu; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=4gYrLsowmI5GGuWghJMX58bQcBEnYZGfYoQ7YKZR6lk=;
+        b=MG4erCNWjYHuSIEvvO741xtOx0OQLZr92W0tZx5zcIBAPX8bM6MALAcK3TActnS/CL
+         onIOi9HOixErTpAkKfRcwfw9Iw6xjtu1vuufU5pwP3Eu8HphBTU/vxZRmM2vQsrnytBp
+         v88VVo5ZXt/1O0WGeHz/QV+AY5566xeU1JoAI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=4gYrLsowmI5GGuWghJMX58bQcBEnYZGfYoQ7YKZR6lk=;
+        b=EzTWvzB9gmUbKQJQhm6ucMATLB020PyvS50/7gGtvbRp+Nvwl2XQgp3FE9hbqX1cZR
+         j6RPOzixNautvnRW7howdwusOS1gyNFnDKl7zmj+WbGx3VyU304NCh5+LxFxcST5pqk9
+         N2Kg1iy2JQvAUKLDw9uSQRYCugdy8GL7macO3cjr1hOhMGmTNHhjySRh4C7HOorGlX9B
+         Lu0m71XcNdYHKIcGYPIhw6qM2VtOTGC4ZFoyfJM7hyUCBVXGS6XIkdnxFlTrFJ+ExDrQ
+         4RbjdJt+inPJ8ynwkkc+4sD0DW0r7nTp6WrezBmTnIDJNBmZ04W0ym89JMERdqGuskaO
+         o8WA==
+X-Gm-Message-State: ACgBeo3L304zJ8ux3TqIbRPAAPY4apIUgWadntzXClCiQsF2DGhqWprS
+        xi4y2fAJ6E1jueoaad+q8fckhdjzMmsTLPafkWj2QA==
+X-Google-Smtp-Source: AA6agR7DfkXT6qMIySIpM4SIr/GNRsiXgpnVMta7acmws5dJJtJteiwRbajkuBZzOw4S3rQpjWNqEBu6Ojdoat2ykNY=
+X-Received: by 2002:a17:906:8a4e:b0:740:2450:d69a with SMTP id
+ gx14-20020a1709068a4e00b007402450d69amr15687098ejc.523.1661942269622; Wed, 31
+ Aug 2022 03:37:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220822160022.GA10067@stranger.qboosh.pl>
+References: <20220831041843.973026-1-jhubbard@nvidia.com> <20220831041843.973026-8-jhubbard@nvidia.com>
+In-Reply-To: <20220831041843.973026-8-jhubbard@nvidia.com>
+From:   Miklos Szeredi <miklos@szeredi.hu>
+Date:   Wed, 31 Aug 2022 12:37:38 +0200
+Message-ID: <CAJfpegvdTqdk9rs-yaEp1aqav4=t9qSpQri7gW8zzb+t7+_88A@mail.gmail.com>
+Subject: Re: [PATCH v2 7/7] fuse: convert direct IO paths to use FOLL_PIN
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>, Jan Kara <jack@suse.cz>,
+        David Hildenbrand <david@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 22, 2022 at 06:00:22PM +0200, Jakub Bogusz wrote:
-> Hello,
-> 
-> I prepared an update of Polish translation of xfsprogs 5.19.0.
-> As previously, because of size (whole file is ~574kB, diff is ~750kB),
-> I'm sending just diff header to the list and whole file is available
-> to download at:
-> http://qboosh.pl/pl.po/xfsprogs-5.19.0.pl.po
-> (sha256: e5f73247e6c029902ef7c341170e5855599c364c50e3f98cc525a54ab17686e0)
-> 
-> Whole diff is available at:
-> http://qboosh.pl/pl.po/xfsprogs-5.19.0-pl.po-update.patch
-> (sha256: b9aa4a60c7c0984880ffbac82e836c5a202b01d481cb9a0f0398eeee6ffac637)
-> 
-> Please update.
-> 
-> 
-> Diff header is:
-> 
-> Polish translation update for xfsprogs 5.19.0.
-> 
-> Signed-off-by: Jakub Bogusz <qboosh@pld-linux.org>
+On Wed, 31 Aug 2022 at 06:19, John Hubbard <jhubbard@nvidia.com> wrote:
+>
+> Convert the fuse filesystem to use pin_user_pages_fast() and
+> unpin_user_page(), instead of get_user_pages_fast() and put_page().
+>
+> The user of pin_user_pages_fast() depends upon:
+>
+> 1) CONFIG_BLK_USE_PIN_USER_PAGES_FOR_DIO, and
+>
+> 2) User-space-backed pages or ITER_BVEC pages.
+>
+> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+> ---
+>  fs/fuse/dev.c    | 11 +++++++++--
+>  fs/fuse/file.c   | 32 +++++++++++++++++++++-----------
+>  fs/fuse/fuse_i.h |  1 +
+>  3 files changed, 31 insertions(+), 13 deletions(-)
+>
+> diff --git a/fs/fuse/dev.c b/fs/fuse/dev.c
+> index 51897427a534..5de98a7a45b1 100644
+> --- a/fs/fuse/dev.c
+> +++ b/fs/fuse/dev.c
+> @@ -675,7 +675,12 @@ static void fuse_copy_finish(struct fuse_copy_state *cs)
+>                         flush_dcache_page(cs->pg);
+>                         set_page_dirty_lock(cs->pg);
+>                 }
+> -               put_page(cs->pg);
+> +               if (!cs->pipebufs &&
+> +                   (user_backed_iter(cs->iter) || iov_iter_is_bvec(cs->iter)))
+> +                       dio_w_unpin_user_page(cs->pg);
+> +
+> +               else
+> +                       put_page(cs->pg);
 
-Just for completion...
+Why not move the logic into a helper and pass a "bool pinned" argument?
 
-The patch looks fine to be applied (although I don't understand polish).
+>         }
+>         cs->pg = NULL;
+>  }
+> @@ -730,7 +735,9 @@ static int fuse_copy_fill(struct fuse_copy_state *cs)
+>                 }
+>         } else {
+>                 size_t off;
+> -               err = iov_iter_get_pages2(cs->iter, &page, PAGE_SIZE, 1, &off);
+> +
+> +               err = dio_w_iov_iter_pin_pages(cs->iter, &page, PAGE_SIZE, 1,
+> +                                              &off);
+>                 if (err < 0)
+>                         return err;
+>                 BUG_ON(!err);
+> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+> index 1a3afd469e3a..01da38928d0b 100644
+> --- a/fs/fuse/file.c
+> +++ b/fs/fuse/file.c
+> @@ -625,14 +625,19 @@ void fuse_read_args_fill(struct fuse_io_args *ia, struct file *file, loff_t pos,
+>  }
+>
+>  static void fuse_release_user_pages(struct fuse_args_pages *ap,
+> -                                   bool should_dirty)
+> +                                   bool should_dirty, bool is_user_or_bvec)
+>  {
+>         unsigned int i;
+>
+> -       for (i = 0; i < ap->num_pages; i++) {
+> -               if (should_dirty)
+> -                       set_page_dirty_lock(ap->pages[i]);
+> -               put_page(ap->pages[i]);
+> +       if (is_user_or_bvec) {
+> +               dio_w_unpin_user_pages_dirty_lock(ap->pages, ap->num_pages,
+> +                                                 should_dirty);
+> +       } else {
+> +               for (i = 0; i < ap->num_pages; i++) {
+> +                       if (should_dirty)
+> +                               set_page_dirty_lock(ap->pages[i]);
+> +                       put_page(ap->pages[i]);
+> +               }
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Same here.
 
--- 
-Carlos Maiolino
+>         }
+>  }
+>
+> @@ -733,7 +738,7 @@ static void fuse_aio_complete_req(struct fuse_mount *fm, struct fuse_args *args,
+>         struct fuse_io_priv *io = ia->io;
+>         ssize_t pos = -1;
+>
+> -       fuse_release_user_pages(&ia->ap, io->should_dirty);
+> +       fuse_release_user_pages(&ia->ap, io->should_dirty, io->is_user_or_bvec);
+>
+>         if (err) {
+>                 /* Nothing */
+> @@ -1414,10 +1419,10 @@ static int fuse_get_user_pages(struct fuse_args_pages *ap, struct iov_iter *ii,
+>         while (nbytes < *nbytesp && ap->num_pages < max_pages) {
+>                 unsigned npages;
+>                 size_t start;
+> -               ret = iov_iter_get_pages2(ii, &ap->pages[ap->num_pages],
+> -                                       *nbytesp - nbytes,
+> -                                       max_pages - ap->num_pages,
+> -                                       &start);
+> +               ret = dio_w_iov_iter_pin_pages(ii, &ap->pages[ap->num_pages],
+> +                                              *nbytesp - nbytes,
+> +                                              max_pages - ap->num_pages,
+> +                                              &start);
+>                 if (ret < 0)
+>                         break;
+>
+> @@ -1483,6 +1488,10 @@ ssize_t fuse_direct_io(struct fuse_io_priv *io, struct iov_iter *iter,
+>                 fl_owner_t owner = current->files;
+>                 size_t nbytes = min(count, nmax);
+>
+> +               /* For use in fuse_release_user_pages(): */
+> +               io->is_user_or_bvec = user_backed_iter(iter) ||
+> +                                     iov_iter_is_bvec(iter);
+> +
+
+How about io->is_pinned?  And a iov_iter_is_pinned() helper?
+
+Thanks,
+Miklos
