@@ -2,151 +2,74 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A68AECAAD4
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 01:20:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78DB3ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 01:22:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231344AbiHaBUQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Aug 2022 21:20:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43832 "EHLO
+        id S231224AbiHaBWb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Aug 2022 21:22:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231424AbiHaBUQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 21:20:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 217C91CB2D
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Aug 2022 18:20:14 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B1DE4618A8
-        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 01:20:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15BDFC433C1;
-        Wed, 31 Aug 2022 01:20:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661908813;
-        bh=ziJ3W1NKvqhfK5BJtHI8IC3ecwswvvXYn7l9VX0bo74=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=H+OPrsrslX1iUWqlmbz3R8df4zeR6GYexoRI3eaD2zFKZaB5O6yM5snieaCyjO0Mc
-         xtgdIuvAE3vhcr2YP7rkRbA7FXaxjgU2T8g2LUpAhJx2B7uFGVweIjNTsT5cNh45k4
-         B5vhGbc53tzhq+n6bsNKY5gpDj1vpprvfT67Ph+XPTZ/CaQADfN9PWUU5wsaJIAa7C
-         gAfqg1qualqg4ZK0C+zq/BWsQBjCtgPFtEnZkAjxH/Pbuqzi1lTXM6Qqgo1ZWkf8Sf
-         ew08zE/C6W8UyuRWVRho2V5hWvKmvSSGrjGG5jsMRm1E8Hd43A3wapbnaVX6vxkrOu
-         nT+hFHnmdMzqQ==
-Date:   Tue, 30 Aug 2022 18:20:12 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Wang Yugui <wangyugui@e16-tech.com>
-Cc:     Carlos Maiolino <cem@kernel.org>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: questions about hybird xfs wih ssd/hdd  by realtime subvol
-Message-ID: <Yw63TEyVBctqAtEg@magnolia>
-References: <20220830085718.9391.409509F4@e16-tech.com>
- <Yw11u/2ghadMfLMd@magnolia>
- <20220831085049.59BB.409509F4@e16-tech.com>
+        with ESMTP id S229645AbiHaBWa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Aug 2022 21:22:30 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1D4BB0888;
+        Tue, 30 Aug 2022 18:22:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+        bh=vkC7YbGzcZlYm9RaWlAt34O4KbVTqpqAYy7ynMzo02g=; b=mfp/bZ3g9+9Ju4lllH4EyuLxsq
+        XiHrpf3oC7uydhxIXrb1d20M9XXEMoN7cxOttnon7E9HOdiMUEXRbZFVls0AtN3n6IZQjPJDWWKaw
+        HCwC1U8YtykW1o8aBsw22nbmSdFnLKWg/L4gRxTmR/KljgI5EA39pDSQcs2BCg/x8r2FJPoFF37zm
+        kFAMakiv6ePHxSPVIQo/RJmggB2oXMMO1398z+2VMW3eJSf4/k3l/cEaFpCVO5l2OoUJ1HtXbUU23
+        x79TJGuNsC6UhlGGREjxC9RxquEzfjNqlRcMvhZE2nhk+1n7dwr+9wsADFtBi/G70U0U1dq8vJjHq
+        8XBjFtow==;
+Received: from [2601:1c0:6280:3f0::a6b3]
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oTCQy-002ydd-FD; Wed, 31 Aug 2022 01:22:24 +0000
+Message-ID: <ab1a33e5-01b9-79d4-662e-44c6e0e74113@infradead.org>
+Date:   Tue, 30 Aug 2022 18:22:22 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220831085049.59BB.409509F4@e16-tech.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.1.2
+Subject: Re: [PATCH] Documentation: filesystems: correct possessive "its"
+Content-Language: en-US
+To:     Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+Cc:     linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        Christian Brauner <brauner@kernel.org>,
+        Seth Forshee <sforshee@kernel.org>
+References: <20220829235429.17902-1-rdunlap@infradead.org>
+ <Yw56rVwBRg0LbC41@ZenIV> <Yw6Hp8l/7p3wbiGq@mit.edu>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <Yw6Hp8l/7p3wbiGq@mit.edu>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 31, 2022 at 08:50:50AM +0800, Wang Yugui wrote:
-> Hi,
-> 
-> > On Tue, Aug 30, 2022 at 08:57:21AM +0800, Wang Yugui wrote:
-> > > Hi,
-> > > 
-> > > > On Mon, Aug 29, 2022 at 10:26:20AM +0800, Wang Yugui wrote:
-> > > > > Hi,
-> > > > > 
-> > > > > I saw some info about hybird xfs wih ssd/hdd  by realtime subvol.
-> > > > > 
-> > > > > Hybrid XFS—Using SSDs to Supercharge HDDs at Facebook
-> > > > > https://www.usenix.org/conference/srecon19asia/presentation/shamasunder
-> > > > > 
-> > > > > There are some questions about how to control the data to save into
-> > > > > normal vol or realtime subvol firstly.
-> > > > > 
-> > > > > 1, man xfsctl
-> > > > > here is XFS_XFLAG_REALTIME in man xfsctl of xfsprogs 5.0 ,
-> > > > > but there is no XFS_XFLAG_REALTIME in xfsprogs 5.14/5.19.
-> > > > > xfsctl(XFS_XFLAG_REALTIME) will be removed in the further?
-> > > > 
-> > > > It's been a while since XFS uses FS_XFLAG features directly, so, what you're
-> > > > specifically looking for is FS_XFLAG_REALTIME. xfsprogs today only has a
-> > > > preprocessor define:
-> > > > 
-> > > > #define XFS_XFLAG_REALTIME	FS_XFLAG_REALTIME
-> > > > 
-> > > > FS_XFLAG_REALTIME is part of the xfs realtime, unlikely it's going away without
-> > > > the realtime filesystems going first, so, unlikely it's gonna happen.
-> > > > 
-> > > > > 
-> > > > > 2, Is there some tool to do xfsctl(XFS_XFLAG_REALTIME)?
-> > > > 
-> > > > You can use xfs_io's chattr command to add/remote the REALTIME attribute of a
-> > > > file.
-> > > > 
-> > > > 
-> > > > > 
-> > > > > 3, we build a xfs filesystem with 1G device and 1G rtdev device. and
-> > > > > then we can save 2G data into this xfs filesystem.
-> > > 
-> > > Sorry, I cheched again.
-> > > This is a xfs filesystem with 2G device and 2G rtdev device
-> > > 
-> > > > > Is there any tool/kernel option/kernel patch to control the data to save
-> > > > > into normal vol or realtime subvol firstly?
-> > > > 
-> > > > I didn't watch the talk you mentioned above, but when use an rt device, you
-> > > > don't use the 'normal' one then the rt later, or vice-versa, the rt-device is
-> > > > used to store data blocks for those files marked with the xattr above. For those
-> > > > files you want to store in the realtime device, you should add the above xattr
-> > > > to them.
-> > > 
-> > > Although I still fail to check/set the attr by 'lsattr/chattr', but I
-> > > can check the free space of 'normal' and realtime subvol now.
-> > > 
-> > > # xfs_db -c sb -c p /dev/sdb8 |grep 'fdblocks\|frextents'
-> > > typedef struct xfs_sb {
-> > > ...
-> > > 	uint64_t	sb_fdblocks;	/* free data blocks */
-> > > 	uint64_t	sb_frextents;	/* free realtime extents */
-> > > ...
-> > > }
-> > > 
-> > > And based the info from Carlos Maiolino
-> > > 
-> > > FB were running a modified kernel that selected the rt dev based on
-> > > the initial allocation size. Behaviour for them was predictable
-> > > because they also controlled the application that was storing the
-> > > data. See:
-> > > 
-> > > https://lore.kernel.org/linux-xfs/20171128215527.2510350-1-rwareing@fb.com/
-> > > 
-> > > With a dirty patch below for test only , Now realtime subvol will be used
-> > > as I expected, and that can be confirmed by
-> > > #xfs_db -c sb -c p /dev/sdb8 |grep 'fdblocks\|frextents'.
-> > 
-> > mkfs.xfs -d rtinherit=1...
-> 
-> 'mkfs.xfs -d rtinherit=1' works very well. Thanks a lot.
-> 
-> I noticed that 'reflink not supported with realtime devices' both in
-> mkfs.xfs and in kernel/xfs(c14632ddac98 xfs: don't allow reflink +
-> realtime filesystems).
-> 
-> Is this a limit of current design?
-> or we just disable reflink when realtime devices  just for QoS/realtime?
 
-No, just unfinished features. :/
 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-reflink
+On 8/30/22 14:56, Theodore Ts'o wrote:
+> On Tue, Aug 30, 2022 at 10:01:33PM +0100, Al Viro wrote:
+>> On Mon, Aug 29, 2022 at 04:54:29PM -0700, Randy Dunlap wrote:
+>>>  compress_log_size=%u	 Support configuring compress cluster size, the size will
+>>> -			 be 4KB * (1 << %u), 16KB is minimum size, also it's
+>>> +			 be 4KB * (1 << %u), 16KB is minimum size, also its
+>>>  			 default size.
+>>
+>> That one doesn't look like possesive to me - more like "default size is 16KB and
+>> values below that are not allowed"...
 
---D
+I have to disagree about the possessive part...
 
-> Best Regards
-> Wang Yugui (wangyugui@e16-tech.com)
-> 2022/08/31
-> 
-> 
+> That being said, it could also be rewritten to be easier to
+> understand.  e.g., "The default and minimum size is 16kb."
+
+but sure, it can be rewritten.
+
+thanks.
+-- 
+~Randy
