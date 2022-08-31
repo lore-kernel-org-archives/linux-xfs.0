@@ -2,82 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A73ECAAD4
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 09:43:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3EB0ECAAD1
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Aug 2022 09:44:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229941AbiHaJnz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Aug 2022 05:43:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48898 "EHLO
+        id S229655AbiHaJn7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Aug 2022 05:43:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229959AbiHaJnr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 05:43:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97312CD78D
-        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 02:43:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S230014AbiHaJnx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 05:43:53 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 606A8CE4BC;
+        Wed, 31 Aug 2022 02:43:51 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3EFAD61AA9
-        for <linux-xfs@vger.kernel.org>; Wed, 31 Aug 2022 09:43:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9F0DC433C1;
-        Wed, 31 Aug 2022 09:43:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661939021;
-        bh=rt7pURXg9ZNedHDemLpcv6iXZ9TkcN5w4FuO4zZwxK0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=X16swWlH++XwlXxbM5OP7X1uGpFL0IhGjGTUgwHciuK2is5hbA5uMh+k/gTpgv4RA
-         XrZ8Y2Z31PX3zNdd8UdK1cH2evtucPtGMwu8DyHNJ2AMvVaoWBHP2xTr5HjdKIvp2X
-         VK5W2/xk4hLtho6ycIQQp1PMmlXKu7d+/zmMuc2iYhD8bvaqNaeWDEIQtGf7HexJ72
-         mQms/rp2ChNbyuBA1wJtMwpJX0uib69x7EOf+TM8sLyd4ubPRuoKdgUIMamPsgpYCh
-         nzoMmVkziC6rOfSiRjQjOga3mJfI2Lihnt53Ryw1lEk88RmvSDRoelpBkzEBzJYHrF
-         44W9hGMa27jHA==
-Date:   Wed, 31 Aug 2022 11:43:25 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [ANNOUNCE] xfsprogs for-next updated
-Message-ID: <20220831094325.5dwjygbcd5mcibok@andromeda>
-References: <20220830115220.5s2nlztp56fbf4xa@andromeda>
- <rlkM2eJNcyQy7rV6YFRttkV5Yq3MmPS6qjlDjTNpzPw-H5ShdMRTb6j_nnN1KmJ4nObvtiv45xwd1cm7No9Nyg==@protonmail.internalid>
- <Yw4o0fBFRqrCHQsY@magnolia>
+        by smtp-out1.suse.de (Postfix) with ESMTPS id CD2992226F;
+        Wed, 31 Aug 2022 09:43:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1661939029; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Wf21pEEc2qn4pGtb/SmWthvBwjNCurQ6Mq3fuLKCgXM=;
+        b=ZCv8hkQMv8VLUCjw+uWsF2LGUYsHrCxsVqq3OQGJcExeJM0/HRGBDw8+/sxrpshYy2Oa6v
+        2swiTLpvpZjw3UzuYHRoCD3p8cxabr9zKD9K0aRKKqOX8D3uLDV5eAFnU9JbpejhZ7Ws3a
+        iDt5IueX4Sm74kxBss2tlSq3x1auDNg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1661939029;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Wf21pEEc2qn4pGtb/SmWthvBwjNCurQ6Mq3fuLKCgXM=;
+        b=dbelnQ/VdnnD4iu+J0ymYt3LS1MSca1P78Kt0qZxPB51wzUaPAjopEjwqz/m9HSF/ZLIPg
+        JDWp+J0k//jhQACg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B6DDE1332D;
+        Wed, 31 Aug 2022 09:43:49 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id FXOYLFUtD2PMTAAAMHmgww
+        (envelope-from <jack@suse.cz>); Wed, 31 Aug 2022 09:43:49 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 2F5D0A067B; Wed, 31 Aug 2022 11:43:49 +0200 (CEST)
+Date:   Wed, 31 Aug 2022 11:43:49 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     Jan Kara <jack@suse.cz>, Al Viro <viro@zeniv.linux.org.uk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 5/6] NFS: direct-io: convert to FOLL_PIN pages
+Message-ID: <20220831094349.boln4jjajkdtykx3@quack3>
+References: <20220827083607.2345453-1-jhubbard@nvidia.com>
+ <20220827083607.2345453-6-jhubbard@nvidia.com>
+ <YwqfWoAE2Awp4YvT@ZenIV>
+ <353f18ac-0792-2cb7-6675-868d0bd41d3d@nvidia.com>
+ <Ywq5ILRNxsbWvFQe@ZenIV>
+ <Ywq5VrSrY341UVpL@ZenIV>
+ <217b4a17-1355-06c5-291e-7980c0d3cea6@nvidia.com>
+ <20220829160808.rwkkiuelipr3huxk@quack3>
+ <a53b2d14-687a-16c9-2f63-4f94876f8b3c@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yw4o0fBFRqrCHQsY@magnolia>
+In-Reply-To: <a53b2d14-687a-16c9-2f63-4f94876f8b3c@nvidia.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 30, 2022 at 08:12:17AM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 30, 2022 at 01:52:20PM +0200, Carlos Maiolino wrote:
-> > Hi folks,
-> >
-> > The for-next branch of the xfsprogs repository at:
-> >
-> >         git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-> >
-> > has just been updated.
-> >
-> > This update contains the initial libxfs sync to Linux 6.0 and should be turned
-> > into -rc0 once it (hopefully) gets some testing (and no complains) for more people.
+On Mon 29-08-22 12:59:26, John Hubbard wrote:
+> On 8/29/22 09:08, Jan Kara wrote:
+> >> However, the core block/bio conversion in patch 4 still does depend upon
+> >> a key assumption, which I got from a 2019 email discussion with
+> >> Christoph Hellwig and others here [1], which says:
+> >>
+> >>     "All pages released by bio_release_pages should come from
+> >>      get_get_user_pages...".
+> >>
+> >> I really hope that still holds true. Otherwise this whole thing is in
+> >> trouble.
+> >>
+> >> [1] https://lore.kernel.org/kvm/20190724053053.GA18330@infradead.org/
+> > 
+> > Well as far as I've checked that discussion, Christoph was aware of pipe
+> > pages etc. (i.e., bvecs) entering direct IO code. But he had some patches
+> > [2] which enabled GUP to work for bvecs as well (using the kernel mapping
+> > under the hood AFAICT from a quick glance at the series). I suppose we
+> > could also handle this in __iov_iter_get_pages_alloc() by grabbing pin
+> > reference instead of plain get_page() for the case of bvec iter. That way
+> > we should have only pinned pages in bio_release_pages() even for the bvec
+> > case.
 > 
-> Wooo, welcome, new maintainer! :)
-
-\o/
-
+> OK, thanks, that looks viable. So, that approach assumes that the
+> remaining two cases in __iov_iter_get_pages_alloc() will never end up
+> being released via bio_release_pages():
 > 
-> > Please, if any questions, let me know.
+>     iov_iter_is_pipe(i)
+>     iov_iter_is_xarray(i)
 > 
-> For the repair deadlock fix[1], do you want me to pin the primary
-> superblock buffer to the xfs_mount like Dave suggested in [2]?
+> I'm actually a little worried about ITER_XARRAY, which is a recent addition.
+> It seems to be used in ways that are similar to ITER_BVEC, and cephfs is
+> using it. It's probably OK for now, for this series, which doesn't yet
+> convert cephfs.
 
-I'd rather have it pinned to the xfs_mount as it's often accessed, do you think
-it is doable (you mentioned you've ran into many problems with that)?
-I didn't have time to try to reproduce those deadlocks yet though.
+So after looking into that a bit more, I think a clean approach would be to
+provide iov_iter_pin_pages2() and iov_iter_pages_alloc2(), under the hood
+in __iov_iter_get_pages_alloc() make sure we use pin_user_page() instead of
+get_page() in all the cases (using this in pipe_get_pages() and
+iter_xarray_get_pages() is easy) and then make all bio handling use the
+pinning variants for iters. I think at least iov_iter_is_pipe() case needs
+to be handled as well because as I wrote above, pipe pages can enter direct
+IO code e.g. for splice(2).
 
-> 
-> [1] https://lore.kernel.org/linux-xfs/166007921743.3294543.7334567013352169774.stgit@magnolia/
-> [2] https://lore.kernel.org/linux-xfs/20220811221541.GQ3600936@dread.disaster.area/
+Also I think that all iov_iter_get_pages2() (or the _alloc2 variant) users
+actually do want the "pin page" semantics in the end (they are accessing
+page contents) so eventually we should convert them all to
+iov_iter_pin_pages2() and remove iov_iter_get_pages2() altogether. But this
+will take some more conversion work with networking etc. so I'd start with
+converting bios only.
 
+								Honza
 -- 
-Carlos Maiolino
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
