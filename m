@@ -2,144 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8873AECAAD1
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 00:28:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6762ECAAD5
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 00:38:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230455AbiIAA2m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Aug 2022 20:28:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44932 "EHLO
+        id S229720AbiIAAim (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Aug 2022 20:38:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231700AbiIAA2i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 20:28:38 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0992107C52;
-        Wed, 31 Aug 2022 17:28:36 -0700 (PDT)
+        with ESMTP id S232112AbiIAAil (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Aug 2022 20:38:41 -0400
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69DDAFE057;
+        Wed, 31 Aug 2022 17:38:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=j0HvPtELhH3B71uPg+RoqV/ydt8FuGjBSysvzMxQlCE=; b=bsHxTyn4JVY22blRnvC8UcfNri
-        bHP70HiTpbP59JKneE75L8iZ3h7LXhCKW8bL6yPBZhJ8qG3lfvv565pU+Fswh/3hjd8clIH014LwY
-        i/cLz+NBFDDae8CYdrnWZ+hhrVKz+vCnT7vh6/wkvCCTv8tO066H7VkwwrT2apY/cUPvHVHQlPdhP
-        eJ4KNl74rUbaJQRo2S+QcleBlfPGUbU0OWO+9F+VBzUyDLf7o6lL1pogPy4pNAbzQTr0N5YuEHxf/
-        74ysh1xTDDZ4SnKrMNHR6t1K+E/qOLG7F6mg8uUotHEqq0sWup2Ki3vfWPbnIR5x83sGcHEg3r4kV
-        EtnP2voA==;
-Received: from [2601:1c0:6280:3f0::a6b3] (helo=casper.infradead.org)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oTY4R-005Zgq-10; Thu, 01 Sep 2022 00:28:35 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-doc@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        Christian Brauner <brauner@kernel.org>,
-        Seth Forshee <sforshee@kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v2] Documentation: filesystems: correct possessive "its"
-Date:   Wed, 31 Aug 2022 17:28:28 -0700
-Message-Id: <20220901002828.25102-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.37.2
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=pAUCRheD7HEjVi/ypvCmDmDlGNpLzHPc+8Ry1BLGL5Y=; b=Kkt/ouct9XIMw6tkOmsU6S4gh0
+        m0aJRIol5LWmRPlMQj6EEcUbBd6CL+yJgxrzADT1Wf4exlM1w2B2Y+elhLK/xDSiNb5IXf9nRPHgD
+        QjwWzunxbAmTwk68UOmqRMuAV2798RKPDIsqzqeinPmWVr0BEr8hXs4WNMYw9ptH/PlsoIgQ2VtRa
+        QfsfNpmxbm5W0JGnHVtKlwXEKt33ktMGCPx2QvIKidb3ZAUk4/ImLf5Z3IP3dx7GZWeM1jAx2DZ88
+        vGTWM4OPiRSVC5Pkow1cvRVGFwb/9rxFEgEAcWniGihBMrZSR6pHMtXNYHrf9fmx7BSpC/ZX1TGME
+        nUdUtbPQ==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.95 #2 (Red Hat Linux))
+        id 1oTYDt-00AnMP-NE;
+        Thu, 01 Sep 2022 00:38:21 +0000
+Date:   Thu, 1 Sep 2022 01:38:21 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Jan Kara <jack@suse.cz>
+Cc:     John Hubbard <jhubbard@nvidia.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 5/6] NFS: direct-io: convert to FOLL_PIN pages
+Message-ID: <Yw/+/U9GFaNnARdk@ZenIV>
+References: <20220827083607.2345453-1-jhubbard@nvidia.com>
+ <20220827083607.2345453-6-jhubbard@nvidia.com>
+ <YwqfWoAE2Awp4YvT@ZenIV>
+ <353f18ac-0792-2cb7-6675-868d0bd41d3d@nvidia.com>
+ <Ywq5ILRNxsbWvFQe@ZenIV>
+ <Ywq5VrSrY341UVpL@ZenIV>
+ <217b4a17-1355-06c5-291e-7980c0d3cea6@nvidia.com>
+ <20220829160808.rwkkiuelipr3huxk@quack3>
+ <a53b2d14-687a-16c9-2f63-4f94876f8b3c@nvidia.com>
+ <20220831094349.boln4jjajkdtykx3@quack3>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220831094349.boln4jjajkdtykx3@quack3>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Change occurrences of "it's" that are possessive to "its"
-so that they don't read as "it is".
+On Wed, Aug 31, 2022 at 11:43:49AM +0200, Jan Kara wrote:
 
-For f2fs.rst, reword one description for better clarity.
+> So after looking into that a bit more, I think a clean approach would be to
+> provide iov_iter_pin_pages2() and iov_iter_pages_alloc2(), under the hood
+> in __iov_iter_get_pages_alloc() make sure we use pin_user_page() instead of
+> get_page() in all the cases (using this in pipe_get_pages() and
+> iter_xarray_get_pages() is easy) and then make all bio handling use the
+> pinning variants for iters. I think at least iov_iter_is_pipe() case needs
+> to be handled as well because as I wrote above, pipe pages can enter direct
+> IO code e.g. for splice(2).
+> 
+> Also I think that all iov_iter_get_pages2() (or the _alloc2 variant) users
+> actually do want the "pin page" semantics in the end (they are accessing
+> page contents) so eventually we should convert them all to
+> iov_iter_pin_pages2() and remove iov_iter_get_pages2() altogether. But this
+> will take some more conversion work with networking etc. so I'd start with
+> converting bios only.
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-fsdevel@vger.kernel.org
-Cc: linux-f2fs-devel@lists.sourceforge.net
-Cc: linux-xfs@vger.kernel.org
-Cc: Christian Brauner <brauner@kernel.org>
-Cc: Seth Forshee <sforshee@kernel.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Theodore Ts'o <tytso@mit.edu>
-Cc: Jaegeuk Kim <jaegeuk@kernel.org>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: "Christian Brauner (Microsoft)" <brauner@kernel.org>
----
-v2: Reword the compress_log_size description.
-    Rebase (the xfs file changed).
-    Add Reviewed-by: tags.
+Not sure, TBH...
 
-Thanks for Al and Ted for suggesting rewording the f2fs.rst description.
+FWIW, quite a few of the callers of iov_iter_get_pages2() do *NOT* need to
+grab any references for BVEC/XARRAY/PIPE cases.  What's more, it would be
+bloody useful to have a variant that doesn't grab references for
+!iter->user_backed case - that could be usable for KVEC as well, simplifying
+several callers.
 
- Documentation/filesystems/f2fs.rst                       |    5 ++---
- Documentation/filesystems/idmappings.rst                 |    2 +-
- Documentation/filesystems/qnx6.rst                       |    2 +-
- Documentation/filesystems/xfs-delayed-logging-design.rst |    6 +++---
- 4 files changed, 7 insertions(+), 8 deletions(-)
+Requirements:
+	* recepients of those struct page * should have a way to make
+dropping the page refs conditional (obviously); bio machinery can be told
+to do so.
+	* callers should *NOT* do something like
+	"set an ITER_BVEC iter, with page references grabbed and stashed in
+bio_vec array, call async read_iter() and drop the references in array - the
+refs we grab in dio will serve"
+Note that for sync IO that pattern is fine whether we grab/drop anything
+inside read_iter(); for async we could take depopulating the bio_vec
+array to the IO completion or downstream of that.
+	* the code dealing with the references returned by iov_iter_..._pages
+should *NOT* play silly buggers with refcounts - something like "I'll grab
+a reference, start DMA and report success; page will stay around until I
+get around to dropping the ref and callers don't need to wait for that" deep
+in the bowels of infinibad stack (or something equally tasteful) is seriously
+asking for trouble.
 
---- a/Documentation/filesystems/f2fs.rst
-+++ b/Documentation/filesystems/f2fs.rst
-@@ -286,9 +286,8 @@ compress_algorithm=%s:%d Control compres
- 			 algorithm	level range
- 			 lz4		3 - 16
- 			 zstd		1 - 22
--compress_log_size=%u	 Support configuring compress cluster size, the size will
--			 be 4KB * (1 << %u), 16KB is minimum size, also it's
--			 default size.
-+compress_log_size=%u	 Support configuring compress cluster size. The size will
-+			 be 4KB * (1 << %u). The default and minimum sizes are 16KB.
- compress_extension=%s	 Support adding specified extension, so that f2fs can enable
- 			 compression on those corresponding files, e.g. if all files
- 			 with '.ext' has high compression rate, we can set the '.ext'
---- a/Documentation/filesystems/idmappings.rst
-+++ b/Documentation/filesystems/idmappings.rst
-@@ -661,7 +661,7 @@ idmappings::
-  mount idmapping:      u0:k10000:r10000
- 
- Assume a file owned by ``u1000`` is read from disk. The filesystem maps this id
--to ``k21000`` according to it's idmapping. This is what is stored in the
-+to ``k21000`` according to its idmapping. This is what is stored in the
- inode's ``i_uid`` and ``i_gid`` fields.
- 
- When the caller queries the ownership of this file via ``stat()`` the kernel
---- a/Documentation/filesystems/qnx6.rst
-+++ b/Documentation/filesystems/qnx6.rst
-@@ -176,7 +176,7 @@ Then userspace.
- The requirement for a static, fixed preallocated system area comes from how
- qnx6fs deals with writes.
- 
--Each superblock got it's own half of the system area. So superblock #1
-+Each superblock got its own half of the system area. So superblock #1
- always uses blocks from the lower half while superblock #2 just writes to
- blocks represented by the upper half bitmap system area bits.
- 
---- a/Documentation/filesystems/xfs-delayed-logging-design.rst
-+++ b/Documentation/filesystems/xfs-delayed-logging-design.rst
-@@ -551,14 +551,14 @@ Essentially, this shows that an item tha
- and relogged, so any tracking must be separate to the AIL infrastructure. As
- such, we cannot reuse the AIL list pointers for tracking committed items, nor
- can we store state in any field that is protected by the AIL lock. Hence the
--committed item tracking needs it's own locks, lists and state fields in the log
-+committed item tracking needs its own locks, lists and state fields in the log
- item.
- 
- Similar to the AIL, tracking of committed items is done through a new list
- called the Committed Item List (CIL).  The list tracks log items that have been
- committed and have formatted memory buffers attached to them. It tracks objects
- in transaction commit order, so when an object is relogged it is removed from
--it's place in the list and re-inserted at the tail. This is entirely arbitrary
-+its place in the list and re-inserted at the tail. This is entirely arbitrary
- and done to make it easy for debugging - the last items in the list are the
- ones that are most recently modified. Ordering of the CIL is not necessary for
- transactional integrity (as discussed in the next section) so the ordering is
-@@ -884,7 +884,7 @@ pin the object the first time it is inse
- the CIL during a transaction commit, then we do not pin it again. Because there
- can be multiple outstanding checkpoint contexts, we can still see elevated pin
- counts, but as each checkpoint completes the pin count will retain the correct
--value according to it's context.
-+value according to its context.
- 
- Just to make matters slightly more complex, this checkpoint level context
- for the pin count means that the pinning of an item must take place under the
+Future plans from the last cycle included iov_iter_find_pages{,_alloc}() that
+would *not* grab references on anything other than IOVEC and UBUF (would advance
+the iterator, same as iov_iter_get_pages2(), though). Then iov_iter_get_...()
+would become a wrapper for that.  After that - look into switching the users
+of ..._get_... to ..._find_....   Hadn't done much in that direction yet,
+though - need to redo the analysis first.
+
+That primitive might very well do FOLL_PIN instead of FOLL_GET for IOVEC and
+UBUF...
