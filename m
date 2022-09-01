@@ -2,52 +2,52 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2176ECAAD3
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 13:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21BABECAAD3
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 13:36:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232892AbiIANgR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 09:36:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58128 "EHLO
+        id S233264AbiIANgT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 09:36:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232418AbiIANfm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 09:35:42 -0400
-Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B78EDB6;
-        Thu,  1 Sep 2022 06:34:06 -0700 (PDT)
-Received: by mail-wr1-x42d.google.com with SMTP id k9so22433666wri.0;
-        Thu, 01 Sep 2022 06:34:06 -0700 (PDT)
+        with ESMTP id S232420AbiIANfo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 09:35:44 -0400
+Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87BDB12AAB;
+        Thu,  1 Sep 2022 06:34:12 -0700 (PDT)
+Received: by mail-wm1-x335.google.com with SMTP id bd26-20020a05600c1f1a00b003a5e82a6474so1463832wmb.4;
+        Thu, 01 Sep 2022 06:34:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=6yyRgULoHRta/eb3LyurLgmxqUUvQOMkvOIjaPH3158=;
-        b=Sc2XuBLdQaFWHfKco2e5NBK6WsVvh1nSyCM5PUfflM3qsq8rCP1IKVyV2XAIWubo6U
-         /3GSboqR51u8Ip3kd/RRLc0nK8cCHPzncgjz2mXet7Sa2OHxvk/X3G3uebFUeDOfgT5E
-         TzAZkyHh5PaGLQ6JoUC/Ggmn7xyi8O69QMsMxYFMRi6e6AwOSadMbRYXzOytU+WYxz2b
-         LkvB19v7zYe/pgJe+JM2LNWZcDawWRoaeq6larc2UVF8kaMkuLS1PvodM5aHVHBeLmH2
-         olcvtkMLDuECMWg3oKWiyx1P+a8n8gibKhgeTFvtM+d1+PipAMITrjP5v1e/+qKDMdSS
-         8p9g==
+        bh=4oxQGuYR2UpJS0BVOv4mLxNV2a7chSFxPlvyuLBVozo=;
+        b=nfPugp+mlewgWjXzavyFXVyGayt2b2L1T8HgTXmkz9bm72dalA8eycHQhtBx5kyG04
+         9niQuzJohcBFAlj779nZ4om3Heyjs3ggoMzrFohtmFWKAqsIIQJsrVg9Rp0Hd/DL9HxR
+         0sUD+vQ9N3+hZ9bQMipJ4V03wOI6k5ee4r+jntn6sr5Ck+PdJDt6CmtcBl8FIn4+T8g1
+         4adVIBmBvn1MuaCRZLjpo6RaAQ+qGWat1Urc88uLuqvJF3rgskBy3fqSRVx375/UcsLH
+         1KRwGEcg1bus1njlgnw4quwM1eLGKQmfQKwQBYo/7bGsIn7Q6EADXtE0g9rplV6fm91j
+         ERow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date;
-        bh=6yyRgULoHRta/eb3LyurLgmxqUUvQOMkvOIjaPH3158=;
-        b=YvohwGaHE2mZONlykCFQ2uV2G3DdN5zCJ6MBblD/91ucko+tb/4OrzHQ84O22MnNSD
-         gMKm09YbXAOIyJ9oLWc19KpxB+wPIU25XrGvbdcIi/4CuzJBc6tVaOG0QPNRc/EQ9Dx0
-         RBCRpAXwrnXK7LslIL90RVwlI5ynqR5micjF6lRq9t56ZU+RZNPJRT3LQSJmTl9kOF6e
-         1inN4WYuO2kUbpV3VXgy+byzFO+FQOtCXy+Whu5k+Cgt2LXi8C8uc/iQnPsSJnAiJicb
-         V5WcFznurGGTF4GIOCv9Ucp2PL8vCBT9RFfdPtUoezib51pDbo2IDvxL/RTKmZVxB7ml
-         ZqWg==
-X-Gm-Message-State: ACgBeo2Qja/Gj2BTAO+i/or/SLVR6xXvGHj0s+AJvsBwdWx4LssTYmh5
-        dBGONbvsNRV0AB6NoUE2n6o=
-X-Google-Smtp-Source: AA6agR5Yf/y0ob8AtApCxI9+cgACE7mv51qI0KXxbcCSs8lHqHQjtAVEFrOG/CvCxCU82DSUA7M2Mg==
-X-Received: by 2002:a05:6000:1563:b0:222:c827:1a19 with SMTP id 3-20020a056000156300b00222c8271a19mr14337146wrz.705.1662039244776;
-        Thu, 01 Sep 2022 06:34:04 -0700 (PDT)
+        bh=4oxQGuYR2UpJS0BVOv4mLxNV2a7chSFxPlvyuLBVozo=;
+        b=lPXjRYcdCwBOXIXrlTr9K8qe/36+Pyu0KLNEs/RKHJuyQ/SOJHyAyNxp0jDdfmqLQ8
+         PvYmmYSHNnPfujqjcgxUI68kNxUKuLTNql9HMHP+1c5N0nM1E8cCBP0y/8lSqE9ECSU7
+         F9YQMoWFMsXGtFpAEKqtK95fEbgMSjpf6BOnzmVy0zftwnznG4McO7sUKIqgn/Vsspde
+         N5zcrYHmXqpbXXFN1608D+hDcXCpsiIbkNxiqZF6n5I/KgR4GnFnScq2Q/drugnwSH6b
+         zbBVmIaHT6o1fYcAOvOQchDjBdjACfQ7oYd//l/ZMMAt7Yd/Czb4JtWNKujomSe2ueB3
+         hGbg==
+X-Gm-Message-State: ACgBeo1sWfiHoNoYjct6QMuyqkpc/ZtLeMWgvWhfZTxX9AltUP2wh3SO
+        tvPNx9p44hOZ3V+d9blDrxxho/COggg=
+X-Google-Smtp-Source: AA6agR5Uo1m/JLdMWOG4XMVOghs3Wl4lKjEK85W9rr53mKjkzJvnaNE02uNTdzzmW5JmNm3S/cp6KQ==
+X-Received: by 2002:a1c:44d7:0:b0:3a6:725:c0a7 with SMTP id r206-20020a1c44d7000000b003a60725c0a7mr5484383wma.137.1662039252117;
+        Thu, 01 Sep 2022 06:34:12 -0700 (PDT)
 Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id az26-20020adfe19a000000b0022529d3e911sm15516390wrb.109.2022.09.01.06.34.02
+        by smtp.gmail.com with ESMTPSA id az26-20020adfe19a000000b0022529d3e911sm15516390wrb.109.2022.09.01.06.34.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Sep 2022 06:34:04 -0700 (PDT)
+        Thu, 01 Sep 2022 06:34:11 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Sasha Levin <sashal@kernel.org>,
@@ -57,10 +57,12 @@ Cc:     Sasha Levin <sashal@kernel.org>,
         Luis Chamberlain <mcgrof@kernel.org>,
         Adam Manzanares <a.manzanares@samsung.com>,
         linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 5.10 v3 1/5] xfs: remove infinite loop when reserving free block pool
-Date:   Thu,  1 Sep 2022 16:33:52 +0300
-Message-Id: <20220901133356.2473299-2-amir73il@gmail.com>
+        Eric Sandeen <sandeen@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 5.10 v3 5/5] xfs: revert "xfs: actually bump warning counts when we send warnings"
+Date:   Thu,  1 Sep 2022 16:33:56 +0300
+Message-Id: <20220901133356.2473299-6-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220901133356.2473299-1-amir73il@gmail.com>
 References: <20220901133356.2473299-1-amir73il@gmail.com>
@@ -70,116 +72,53 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-commit 15f04fdc75aaaa1cccb0b8b3af1be290e118a7bc upstream.
+From: Eric Sandeen <sandeen@redhat.com>
 
-[Added wrapper xfs_fdblocks_unavailable() for 5.10.y backport]
+commit bc37e4fb5cac2925b2e286b1f1d4fc2b519f7d92 upstream.
 
-Infinite loops in kernel code are scary.  Calls to xfs_reserve_blocks
-should be rare (people should just use the defaults!) so we really don't
-need to try so hard.  Simplify the logic here by removing the infinite
-loop.
+This reverts commit 4b8628d57b725b32616965e66975fcdebe008fe7.
 
-Cc: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+XFS quota has had the concept of a "quota warning limit" since
+the earliest Irix implementation, but a mechanism for incrementing
+the warning counter was never implemented, as documented in the
+xfs_quota(8) man page. We do know from the historical archive that
+it was never incremented at runtime during quota reservation
+operations.
+
+With this commit, the warning counter quickly increments for every
+allocation attempt after the user has crossed a quote soft
+limit threshold, and this in turn transitions the user to hard
+quota failures, rendering soft quota thresholds and timers useless.
+This was reported as a regression by users.
+
+Because the intended behavior of this warning counter has never been
+understood or documented, and the result of this change is a regression
+in soft quota functionality, revert this commit to make soft quota
+limits and timers operable again.
+
+Fixes: 4b8628d57b72 ("xfs: actually bump warning counts when we send warnings)
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_fsops.c | 52 +++++++++++++++++++---------------------------
- fs/xfs/xfs_mount.h |  8 +++++++
- 2 files changed, 29 insertions(+), 31 deletions(-)
+ fs/xfs/xfs_trans_dquot.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index ef1d5bb88b93..6d4f4271e7be 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -376,46 +376,36 @@ xfs_reserve_blocks(
- 	 * If the request is larger than the current reservation, reserve the
- 	 * blocks before we update the reserve counters. Sample m_fdblocks and
- 	 * perform a partial reservation if the request exceeds free space.
-+	 *
-+	 * The code below estimates how many blocks it can request from
-+	 * fdblocks to stash in the reserve pool.  This is a classic TOCTOU
-+	 * race since fdblocks updates are not always coordinated via
-+	 * m_sb_lock.
- 	 */
--	error = -ENOSPC;
--	do {
--		free = percpu_counter_sum(&mp->m_fdblocks) -
--						mp->m_alloc_set_aside;
--		if (free <= 0)
--			break;
--
--		delta = request - mp->m_resblks;
--		lcounter = free - delta;
--		if (lcounter < 0)
--			/* We can't satisfy the request, just get what we can */
--			fdblks_delta = free;
--		else
--			fdblks_delta = delta;
--
-+	free = percpu_counter_sum(&mp->m_fdblocks) -
-+						xfs_fdblocks_unavailable(mp);
-+	delta = request - mp->m_resblks;
-+	if (delta > 0 && free > 0) {
- 		/*
- 		 * We'll either succeed in getting space from the free block
--		 * count or we'll get an ENOSPC. If we get a ENOSPC, it means
--		 * things changed while we were calculating fdblks_delta and so
--		 * we should try again to see if there is anything left to
--		 * reserve.
--		 *
--		 * Don't set the reserved flag here - we don't want to reserve
--		 * the extra reserve blocks from the reserve.....
-+		 * count or we'll get an ENOSPC.  Don't set the reserved flag
-+		 * here - we don't want to reserve the extra reserve blocks
-+		 * from the reserve.
- 		 */
-+		fdblks_delta = min(free, delta);
- 		spin_unlock(&mp->m_sb_lock);
- 		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
- 		spin_lock(&mp->m_sb_lock);
--	} while (error == -ENOSPC);
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index fe45b0c3970c..288ea38c43ad 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -615,7 +615,6 @@ xfs_dqresv_check(
+ 			return QUOTA_NL_ISOFTLONGWARN;
+ 		}
  
--	/*
--	 * Update the reserve counters if blocks have been successfully
--	 * allocated.
--	 */
--	if (!error && fdblks_delta) {
--		mp->m_resblks += fdblks_delta;
--		mp->m_resblks_avail += fdblks_delta;
-+		/*
-+		 * Update the reserve counters if blocks have been successfully
-+		 * allocated.
-+		 */
-+		if (!error) {
-+			mp->m_resblks += fdblks_delta;
-+			mp->m_resblks_avail += fdblks_delta;
-+		}
+-		res->warnings++;
+ 		return QUOTA_NL_ISOFTWARN;
  	}
--
- out:
- 	if (outval) {
- 		outval->resblks = mp->m_resblks;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index dfa429b77ee2..3a6bc9dc11b5 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -406,6 +406,14 @@ extern int	xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount,
- 				     xfs_agnumber_t *maxagi);
- extern void	xfs_unmountfs(xfs_mount_t *);
  
-+/* Accessor added for 5.10.y backport */
-+static inline uint64_t
-+xfs_fdblocks_unavailable(
-+	struct xfs_mount	*mp)
-+{
-+	return mp->m_alloc_set_aside;
-+}
-+
- extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
- 				 bool reserved);
- extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
 -- 
 2.25.1
 
