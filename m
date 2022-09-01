@@ -2,58 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB26EECAAD3
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 10:17:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 936D0C0502C
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 10:26:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233126AbiIAKRA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 06:17:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36736 "EHLO
+        id S234009AbiIAK0i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 06:26:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230064AbiIAKQ5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 06:16:57 -0400
-Received: from mail-vk1-xa2c.google.com (mail-vk1-xa2c.google.com [IPv6:2607:f8b0:4864:20::a2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8502E134D51;
-        Thu,  1 Sep 2022 03:16:52 -0700 (PDT)
-Received: by mail-vk1-xa2c.google.com with SMTP id i129so8006140vke.3;
-        Thu, 01 Sep 2022 03:16:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=uLi7Z0/akrty86Oo3nrBunvH+TYZ+AoE/dlgGE9Xprw=;
-        b=idekwaTIblFhAInDUgjI5+/eSmpRvJrpl1n1XyImglLanT4na3gC2SllvO5DCP2w+9
-         fZ9yeSpp5/Vf1PO0I/kRWE903ykRlV7OWqlw2Q28aeU5ozStGrnVZ982Zh5nqYZRBCJn
-         ETEiGc19bPufP6KYARNwdQofPF5RqFMTMi3G74xjYhpO++lXgVK6k8+bC4/yOsVXU3tz
-         4I5dw4xxI4V74lOcDS4dGWxyssObWz7q/cdXVF5ClGc48FRk9mkT9xXL+wFWZTvkBjcW
-         w5UokG7WXHSkv9I1xXQK+GXuLgYaH32y7ET62Cp1n0jI1zzOxnfN6HWLbX4dE/IF2VHj
-         JxjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=uLi7Z0/akrty86Oo3nrBunvH+TYZ+AoE/dlgGE9Xprw=;
-        b=nLAUcEbfzq/SBqnr3RbDrf6FxVQ5chu9CC2XIng/qUBNZij9AZl9FWbYmCmKMvprTy
-         WI5nRqGQyDXpmnQHxMbBUPKqwmbj1OZlZlFpAFdR6GR5ugrdjqy1ZIh6WzTiRyxZYbxI
-         U3mvoabaBJjJK/8pFULDKe0xete/TSQ7iLSdzJlTxBJhGmL3hM6AU5FkKd+eLobZyzh0
-         z5C7Cxe34xcMpYF0cmI0LN1JAeyRfjJOHKfjxwlqfTjs2SPZZB8qt5flEGdfzM+fB5h4
-         OB2iokuRUR5UWDJfszBX+9N1UdXjQdAnOAvU7TNWhsE4m8WkqvsRlWILkdlBXBOLhocd
-         qdwg==
-X-Gm-Message-State: ACgBeo0CclickUX1s7o9ZoyIj1oZAVyAQHaZtRZE+TgmppF1Q1e0AkAI
-        ef/NchuV6UGR1gGpur+siGChZQsvElqHgXCnYdRm2QWz
-X-Google-Smtp-Source: AA6agR5gj1ga0CHpCylkBefbMoXdQrClspboU5wK9gWJ/hdJms6QVuZz7CvVQnJEvo+UrYBPLcUwwLcTFJ1cAQJwPwU=
-X-Received: by 2002:a05:6122:d86:b0:37d:3fe:df43 with SMTP id
- bc6-20020a0561220d8600b0037d03fedf43mr8095521vkb.15.1662027405175; Thu, 01
- Sep 2022 03:16:45 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220901054854.2449416-1-amir73il@gmail.com> <20220901054854.2449416-7-amir73il@gmail.com>
- <CABEBQikqj+Uwae0XMHSbU7FVcrTR7cMb6zgbiRHC0PwFfB7+qw@mail.gmail.com>
- <CAOQ4uxhNV=-nVO_ezP=Lc42+Q+A+wxdiCBqhVQz8qVkBJba1iA@mail.gmail.com> <YxB+QmIwCgMtj1r+@kroah.com>
-In-Reply-To: <YxB+QmIwCgMtj1r+@kroah.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 1 Sep 2022 13:16:33 +0300
-Message-ID: <CAOQ4uxjxq346_dwEhrTm7_WW8nDqaQxNUCfVqDwOYAJGtmtpQQ@mail.gmail.com>
-Subject: Re: [PATCH 5.10 v2 6/7] xfs: reorder iunlink remove operation in xfs_ifree
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+        with ESMTP id S234259AbiIAK0T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 06:26:19 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47F34108538;
+        Thu,  1 Sep 2022 03:26:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0B3C761CDF;
+        Thu,  1 Sep 2022 10:26:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B340AC433C1;
+        Thu,  1 Sep 2022 10:26:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1662027967;
+        bh=K2HZoQF7A8JO2OtNi6cb6Lq3BAyRtkajUMPvXcXtvLs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=kgBz1KQIzMiOqY93N7FxyB3AwdIlcFIIybSxIo3LJhXjYHSuHox1DMyjf3mVx0SoC
+         o26f+wRZAPlMkuQ99MTYyNqpK8SzgKjPiyguTXBDhCUm5N5xa4GLHj8LZXUsjHi96a
+         ebX6d594IJSaQXZJrfKVKdE4vNAyAu2CqHGO/1Ks=
+Date:   Thu, 1 Sep 2022 12:26:04 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Amir Goldstein <amir73il@gmail.com>
 Cc:     Frank Hofmann <fhofmann@cloudflare.com>,
         Sasha Levin <sashal@kernel.org>,
         "Darrick J . Wong" <djwong@kernel.org>,
@@ -66,53 +43,79 @@ Cc:     Frank Hofmann <fhofmann@cloudflare.com>,
         Dave Chinner <dchinner@redhat.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Dave Chinner <david@fromorbit.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH 5.10 v2 6/7] xfs: reorder iunlink remove operation in
+ xfs_ifree
+Message-ID: <YxCIvDAMzWdQrpEh@kroah.com>
+References: <20220901054854.2449416-1-amir73il@gmail.com>
+ <20220901054854.2449416-7-amir73il@gmail.com>
+ <CABEBQikqj+Uwae0XMHSbU7FVcrTR7cMb6zgbiRHC0PwFfB7+qw@mail.gmail.com>
+ <CAOQ4uxhNV=-nVO_ezP=Lc42+Q+A+wxdiCBqhVQz8qVkBJba1iA@mail.gmail.com>
+ <YxB+QmIwCgMtj1r+@kroah.com>
+ <CAOQ4uxjxq346_dwEhrTm7_WW8nDqaQxNUCfVqDwOYAJGtmtpQQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjxq346_dwEhrTm7_WW8nDqaQxNUCfVqDwOYAJGtmtpQQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 1, 2022 at 12:41 PM Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
->
-> On Thu, Sep 01, 2022 at 12:30:13PM +0300, Amir Goldstein wrote:
-> > On Thu, Sep 1, 2022 at 12:04 PM Frank Hofmann <fhofmann@cloudflare.com> wrote:
-> > >
-> > > On Thu, Sep 1, 2022 at 6:49 AM Amir Goldstein <amir73il@gmail.com> wrote:
-> > > >
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > >
-> > > > commit 9a5280b312e2e7898b6397b2ca3cfd03f67d7be1 upstream.
-> > > >
-> > > > [backport for 5.10.y]
-> > >
-> > > Hi Amir, hi Dave,
-> > >
-> > > I've got no objections to backporting this change at all. We've been
-> > > using the patch on our internal 5.15 tracker branch happily for
-> > > several months now.
-> > >
-> > > Would like to highlight though that it's currently not yet merged in
-> > > linux-stable 5.15 branch either (it's in 5.19 and mainline alright).
-> > > If this gets queued for 5.10 then maybe it also should be for 5.15 ?
-> > >
+On Thu, Sep 01, 2022 at 01:16:33PM +0300, Amir Goldstein wrote:
+> On Thu, Sep 1, 2022 at 12:41 PM Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
 > >
-> > Hi Frank,
+> > On Thu, Sep 01, 2022 at 12:30:13PM +0300, Amir Goldstein wrote:
+> > > On Thu, Sep 1, 2022 at 12:04 PM Frank Hofmann <fhofmann@cloudflare.com> wrote:
+> > > >
+> > > > On Thu, Sep 1, 2022 at 6:49 AM Amir Goldstein <amir73il@gmail.com> wrote:
+> > > > >
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > >
+> > > > > commit 9a5280b312e2e7898b6397b2ca3cfd03f67d7be1 upstream.
+> > > > >
+> > > > > [backport for 5.10.y]
+> > > >
+> > > > Hi Amir, hi Dave,
+> > > >
+> > > > I've got no objections to backporting this change at all. We've been
+> > > > using the patch on our internal 5.15 tracker branch happily for
+> > > > several months now.
+> > > >
+> > > > Would like to highlight though that it's currently not yet merged in
+> > > > linux-stable 5.15 branch either (it's in 5.19 and mainline alright).
+> > > > If this gets queued for 5.10 then maybe it also should be for 5.15 ?
+> > > >
+> > >
+> > > Hi Frank,
+> > >
+> > > Quoting from my cover letter:
+> > >
+> > > Patches 6-7 in this 5.10.y update have not been applied to 5.15.y yet.
+> > > I pointed Leah's attention to these patches and she said she will
+> > > include them in a following 5.15.y update.
 > >
-> > Quoting from my cover letter:
+> > And as you know, this means I can't take this series at all until that
+> > series is ready, so to help us out, in the future, just don't even send
+> > them until they are all ready together.
 > >
-> > Patches 6-7 in this 5.10.y update have not been applied to 5.15.y yet.
-> > I pointed Leah's attention to these patches and she said she will
-> > include them in a following 5.15.y update.
->
-> And as you know, this means I can't take this series at all until that
-> series is ready, so to help us out, in the future, just don't even send
-> them until they are all ready together.
->
+> 
+> What?
+> 
+> You cannot take backports to 5.10.y before they are applied to 5.15.y?
+> Since when?
 
-What?
+Since always.
 
-You cannot take backports to 5.10.y before they are applied to 5.15.y?
-Since when?
+Why would you ever want someone to upgrade from an older tree (like
+5.10.y) to a newer one (5.15.y) and have a regression?
 
-Thanks,
-Amir.
+So we always try to make sure patches are always applied to newer trees
+first.  Yes, sometimes we miss this and make mistakes, but it's always
+been this way and we fix that whenever it happens accidentally.
+
+I'll drop this series from my review queue for now until the 5.15.y
+series shows up.
+
+thanks,
+
+greg k-h
