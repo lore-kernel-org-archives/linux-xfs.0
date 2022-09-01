@@ -2,150 +2,171 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BA7C54EE9
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 14:35:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70C6CECAAD1
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 15:20:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233680AbiIAOfH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 10:35:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50916 "EHLO
+        id S233734AbiIAPUD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 11:20:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234837AbiIAOfF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 10:35:05 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91D3D1A825;
-        Thu,  1 Sep 2022 07:35:04 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0060E61D44;
-        Thu,  1 Sep 2022 14:35:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82CB4C433D6;
-        Thu,  1 Sep 2022 14:35:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662042903;
-        bh=UVUZa3kUR0wSInbe83acw9bVhEeigAl/rf7NUa/DVSg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=KwyWUQni4ybEi8ppdLhQmRhHiX299h7YjqaGrmide7cosSAluozyVsdqLd/39Pmi+
-         sK+YsrW2YVZTPoqZExOGJCjOL4Iqkl477gh4LCvu6jq873d8mAw1YQRoHtxKw1xUv0
-         n59Ku/aMXTZW9gcnem1Yi1nE/rASMQLeNEIDZFvFn8c9e+Ah1MEP6c1FWiHsWdKEur
-         5NP2v31SnKKpRhrAvu8LDDkgZyOrMGG9HrCHL5+QntKY8bpDZGGC9e7efgKGuybWct
-         zFaIRmCs38iyzdxiqQlPVYmfBxFWm0c3uhYU4aNPyx3OQfMeyJVatNOi/ZCjUW3BGT
-         8ERrPNgAG4t7A==
-From:   Zorro Lang <zlang@kernel.org>
-To:     fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3] generic: new test to verify selinux label of whiteout inode
-Date:   Thu,  1 Sep 2022 22:34:59 +0800
-Message-Id: <20220901143459.3883118-1-zlang@kernel.org>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S233758AbiIAPUA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 11:20:00 -0400
+Received: from mail-vs1-xe31.google.com (mail-vs1-xe31.google.com [IPv6:2607:f8b0:4864:20::e31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A888FE2;
+        Thu,  1 Sep 2022 08:19:53 -0700 (PDT)
+Received: by mail-vs1-xe31.google.com with SMTP id 67so18095396vsv.2;
+        Thu, 01 Sep 2022 08:19:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=SiNEe1T6tIZZaB/fQAnCMzDO9razDORz9dh9TLLjdxM=;
+        b=K+1rRZWR85MvucMTAQMD5VXjqu4rZpNAWiva0cmsR5mKelC6M+B3/F3p7V+V8fL6qN
+         MpCsmXg6DBh4eJB63PW8ffAALtovHN4IHm5sn5DY+zepS+pfFMn8XLjhLIahnH211lVT
+         jIIBFq23nh5S0EDaiXM9ACB0AWnNdlaIhtGVS7IkMguE6MG+xyuhi86Y7O5T9y74sWd0
+         SsH5viw6ffCOTNDGPPnalC6dzZCrytQyeBG6Bp4Mgw+2SIJiYGOgiPOX+HIvZu8iUvFj
+         0sq7VYD49hRfs0UkzoSWspPXSD4DgKYpReUy8Ry9OBV2EkZsapXgpb/aWsuWNdky8K7m
+         sYVQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=SiNEe1T6tIZZaB/fQAnCMzDO9razDORz9dh9TLLjdxM=;
+        b=PrF1BMbrXnSGW6Y75ycF+IgpjzJmlOJkG12rA7XRJdF0h2LbWSrCnK7A97RaJPXfmo
+         h9tXJtnpIgJzWYQ0MMX6ARkN6CNwiV5wUaGRb+b6YV/82Om/u78E5gXLexDyB7gFalxB
+         vhxKJpajNAN4wFF7SITv6ULXArvCWOqyTo0QjcxyGqvkYMKz8fbLa4IGYmi1n/0bJHgA
+         p6T8nKT6KSVZB6MWP5p+OC/NmskED4lrhIkkjT4ghkYOT5mUyYwxo4S4/n+dpN7pYzt6
+         jxUPrY6uhz13FHewwDCpbWDvXF2HLhRhi0wIOPa8bi2DXE20UJoReFFrsLVPlCYUmMlv
+         Yspg==
+X-Gm-Message-State: ACgBeo1GmHQf5pNXyuRpCMHXJmNf0/pW6YrVNWH5PiVj0HhShOnUfDSC
+        B7ujBlE3/KoMfUWOScOMvTOIi4zXkp44Ca4yvQQ=
+X-Google-Smtp-Source: AA6agR6B3udINLIqOpSb6q/M+L13xru6eM/q6S3bySQeYD5Wx47mjcwRw/u41OQHLEt9eJKnkz00n9l48DjPTqk0ayY=
+X-Received: by 2002:a67:a649:0:b0:390:88c5:6a91 with SMTP id
+ r9-20020a67a649000000b0039088c56a91mr9259872vsh.3.1662045592576; Thu, 01 Sep
+ 2022 08:19:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220901054854.2449416-1-amir73il@gmail.com> <20220901054854.2449416-7-amir73il@gmail.com>
+ <CABEBQikqj+Uwae0XMHSbU7FVcrTR7cMb6zgbiRHC0PwFfB7+qw@mail.gmail.com>
+ <CAOQ4uxhNV=-nVO_ezP=Lc42+Q+A+wxdiCBqhVQz8qVkBJba1iA@mail.gmail.com>
+ <YxB+QmIwCgMtj1r+@kroah.com> <CAOQ4uxjxq346_dwEhrTm7_WW8nDqaQxNUCfVqDwOYAJGtmtpQQ@mail.gmail.com>
+ <YxCIvDAMzWdQrpEh@kroah.com> <CAOQ4uxh0We9+56EJUSw_NAqd_TLLV1v0yvyY=dj645H_4M_AyQ@mail.gmail.com>
+ <YxCulVd4dESBjCUM@kroah.com>
+In-Reply-To: <YxCulVd4dESBjCUM@kroah.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 1 Sep 2022 18:19:41 +0300
+Message-ID: <CAOQ4uxhZyCHU1LweuLGYRK9z3SvycmpR+B6XFE=_G0ZVkY7VgA@mail.gmail.com>
+Subject: Re: [PATCH 5.10 v2 6/7] xfs: reorder iunlink remove operation in xfs_ifree
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Frank Hofmann <fhofmann@cloudflare.com>,
+        Sasha Levin <sashal@kernel.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A but on XFS cause renameat2() with flags=RENAME_WHITEOUT doesn't
-apply an selinux label. That's quite different with other fs (e.g.
-ext4, tmpfs).
+On Thu, Sep 1, 2022 at 4:07 PM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+>
+> On Thu, Sep 01, 2022 at 03:37:59PM +0300, Amir Goldstein wrote:
+> > On Thu, Sep 1, 2022 at 1:26 PM Greg Kroah-Hartman
+> > <gregkh@linuxfoundation.org> wrote:
+> > >
+> > > On Thu, Sep 01, 2022 at 01:16:33PM +0300, Amir Goldstein wrote:
+> > > > On Thu, Sep 1, 2022 at 12:41 PM Greg Kroah-Hartman
+> > > > <gregkh@linuxfoundation.org> wrote:
+> > > > >
+> > > > > On Thu, Sep 01, 2022 at 12:30:13PM +0300, Amir Goldstein wrote:
+> > > > > > On Thu, Sep 1, 2022 at 12:04 PM Frank Hofmann <fhofmann@cloudflare.com> wrote:
+> > > > > > >
+> > > > > > > On Thu, Sep 1, 2022 at 6:49 AM Amir Goldstein <amir73il@gmail.com> wrote:
+> > > > > > > >
+> > > > > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > > > >
+> > > > > > > > commit 9a5280b312e2e7898b6397b2ca3cfd03f67d7be1 upstream.
+> > > > > > > >
+> > > > > > > > [backport for 5.10.y]
+> > > > > > >
+> > > > > > > Hi Amir, hi Dave,
+> > > > > > >
+> > > > > > > I've got no objections to backporting this change at all. We've been
+> > > > > > > using the patch on our internal 5.15 tracker branch happily for
+> > > > > > > several months now.
+> > > > > > >
+> > > > > > > Would like to highlight though that it's currently not yet merged in
+> > > > > > > linux-stable 5.15 branch either (it's in 5.19 and mainline alright).
+> > > > > > > If this gets queued for 5.10 then maybe it also should be for 5.15 ?
+> > > > > > >
+> > > > > >
+> > > > > > Hi Frank,
+> > > > > >
+> > > > > > Quoting from my cover letter:
+> > > > > >
+> > > > > > Patches 6-7 in this 5.10.y update have not been applied to 5.15.y yet.
+> > > > > > I pointed Leah's attention to these patches and she said she will
+> > > > > > include them in a following 5.15.y update.
+> > > > >
+> > > > > And as you know, this means I can't take this series at all until that
+> > > > > series is ready, so to help us out, in the future, just don't even send
+> > > > > them until they are all ready together.
+> > > > >
+> > > >
+> > > > What?
+> > > >
+> > > > You cannot take backports to 5.10.y before they are applied to 5.15.y?
+> > > > Since when?
+> > >
+> > > Since always.
+> > >
+> > > Why would you ever want someone to upgrade from an older tree (like
+> > > 5.10.y) to a newer one (5.15.y) and have a regression?
+> > >
+> >
+> > That is certainly not a goal when backporting fixes to 5.10.y, but it
+> > can happen as a by-product of the decentralized nature of testing
+> > backports.
+> >
+> > But it did not bother you when xfs patches were applied to 5.4.y and
+> > no xfs patches at all applied to 5.10.y for two years?
+>
+> I've been bothered by xfs patches for so long that really, I didn't care
+> as the maintainers didn't seem bothered either :)
+>
+> But now that everything is working properly, let's do it correctly
+> please.
+>
+> > > So we always try to make sure patches are always applied to newer trees
+> > > first.  Yes, sometimes we miss this and make mistakes, but it's always
+> > > been this way and we fix that whenever it happens accidentally.
+> > >
+> >
+> > That is my intention.
+> > I will try to keep to that rule in the future.
+> > I would have waited for the patches to land in 5.15.y, but
+> > Leah got distracted by another task so I decided to not wait,
+> > knowing that the patches are already in her queue.
+> >
+> > > I'll drop this series from my review queue for now until the 5.15.y
+> > > series shows up.
+> >
+> > Please don't drop the series.
+> > Please drop patches 6-7 if you must
+> > Or if you insist I can re-post patches 1-5.
+>
+> Please resend as just the correct ones that you want so I know what to
+> pick exactly.
+>
 
-Signed-off-by: Zorro Lang <zlang@kernel.org>
----
-
-V1 -> V2:
-1) Add "whiteout" group
-2) Add commit ID which fix that bug
-3) Rebase to latest fstests for-next branch
-
-V2 -> V3:
-Rebase to latest fstests for-next branch again
+Posted v3 with patches 1-5.
 
 Thanks,
-Zorro
-
- tests/generic/695     | 64 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/695.out |  2 ++
- 2 files changed, 66 insertions(+)
- create mode 100755 tests/generic/695
- create mode 100644 tests/generic/695.out
-
-diff --git a/tests/generic/695 b/tests/generic/695
-new file mode 100755
-index 00000000..f04d4b3d
---- /dev/null
-+++ b/tests/generic/695
-@@ -0,0 +1,64 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Red Hat, Copyright.  All Rights Reserved.
-+#
-+# FS QA Test No. 695
-+#
-+# Verify selinux label can be kept after RENAME_WHITEOUT. This is
-+# a regression test for:
-+#   70b589a37e1a ("xfs: add selinux labels to whiteout inodes")
-+#
-+. ./common/preamble
-+_begin_fstest auto quick rename attr whiteout
-+
-+# Import common functions.
-+. ./common/attr
-+. ./common/renameat2
-+
-+# real QA test starts here
-+_supported_fs generic
-+_require_scratch
-+_require_attrs
-+_require_renameat2 whiteout
-+
-+_fixed_by_kernel_commit 70b589a37e1a \
-+	xfs: add selinux labels to whiteout inodes
-+
-+get_selinux_label()
-+{
-+	local label
-+
-+	label=`_getfattr --absolute-names -n security.selinux $@ | sed -n 's/security.selinux=\"\(.*\)\"/\1/p'`
-+	if [ ${PIPESTATUS[0]} -ne 0 -o -z "$label" ];then
-+		_fail "Fail to get selinux label: $label"
-+	fi
-+	echo $label
-+}
-+
-+_scratch_mkfs >> $seqres.full 2>&1
-+# SELINUX_MOUNT_OPTIONS will be set in common/config if selinux is enabled
-+if [ -z "$SELINUX_MOUNT_OPTIONS" ]; then
-+	_notrun "Require selinux to be enabled"
-+fi
-+# This test need to verify selinux labels in objects, so unset this selinux
-+# mount option
-+export SELINUX_MOUNT_OPTIONS=""
-+_scratch_mount
-+
-+touch $SCRATCH_MNT/f1
-+echo "Before RENAME_WHITEOUT" >> $seqres.full
-+ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
-+# Expect f1 and f2 have same label after RENAME_WHITEOUT
-+$here/src/renameat2 -w $SCRATCH_MNT/f1 $SCRATCH_MNT/f2
-+echo "After RENAME_WHITEOUT" >> $seqres.full
-+ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
-+label1=`get_selinux_label $SCRATCH_MNT/f1`
-+label2=`get_selinux_label $SCRATCH_MNT/f2`
-+if [ "$label1" != "$label2" ];then
-+	echo "$label1 != $label2"
-+fi
-+
-+echo "Silence is golden"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/695.out b/tests/generic/695.out
-new file mode 100644
-index 00000000..1332ff16
---- /dev/null
-+++ b/tests/generic/695.out
-@@ -0,0 +1,2 @@
-+QA output created by 695
-+Silence is golden
--- 
-2.31.1
-
+Amir.
