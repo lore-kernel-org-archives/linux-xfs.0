@@ -2,120 +2,84 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 936D0C0502C
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 10:26:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2C43ECAAD3
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 10:54:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234009AbiIAK0i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 06:26:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51834 "EHLO
+        id S233583AbiIAKy2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 06:54:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234259AbiIAK0T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 06:26:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47F34108538;
-        Thu,  1 Sep 2022 03:26:09 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0B3C761CDF;
-        Thu,  1 Sep 2022 10:26:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B340AC433C1;
-        Thu,  1 Sep 2022 10:26:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1662027967;
-        bh=K2HZoQF7A8JO2OtNi6cb6Lq3BAyRtkajUMPvXcXtvLs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kgBz1KQIzMiOqY93N7FxyB3AwdIlcFIIybSxIo3LJhXjYHSuHox1DMyjf3mVx0SoC
-         o26f+wRZAPlMkuQ99MTYyNqpK8SzgKjPiyguTXBDhCUm5N5xa4GLHj8LZXUsjHi96a
-         ebX6d594IJSaQXZJrfKVKdE4vNAyAu2CqHGO/1Ks=
-Date:   Thu, 1 Sep 2022 12:26:04 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Frank Hofmann <fhofmann@cloudflare.com>,
-        Sasha Levin <sashal@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5.10 v2 6/7] xfs: reorder iunlink remove operation in
- xfs_ifree
-Message-ID: <YxCIvDAMzWdQrpEh@kroah.com>
-References: <20220901054854.2449416-1-amir73il@gmail.com>
- <20220901054854.2449416-7-amir73il@gmail.com>
- <CABEBQikqj+Uwae0XMHSbU7FVcrTR7cMb6zgbiRHC0PwFfB7+qw@mail.gmail.com>
- <CAOQ4uxhNV=-nVO_ezP=Lc42+Q+A+wxdiCBqhVQz8qVkBJba1iA@mail.gmail.com>
- <YxB+QmIwCgMtj1r+@kroah.com>
- <CAOQ4uxjxq346_dwEhrTm7_WW8nDqaQxNUCfVqDwOYAJGtmtpQQ@mail.gmail.com>
+        with ESMTP id S233399AbiIAKy1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 06:54:27 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B9D6130A12;
+        Thu,  1 Sep 2022 03:54:27 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.56])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4MJHrh6JYJz1N7k9;
+        Thu,  1 Sep 2022 18:50:44 +0800 (CST)
+Received: from huawei.com (10.175.103.91) by dggpemm500022.china.huawei.com
+ (7.185.36.162) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 1 Sep
+ 2022 18:54:25 +0800
+From:   Zeng Heng <zengheng4@huawei.com>
+To:     <djwong@kernel.org>
+CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <zengheng4@huawei.com>
+Subject: [PATCH -next] xfs: missing space in xfs trace log
+Date:   Thu, 1 Sep 2022 19:02:05 +0800
+Message-ID: <20220901110205.565167-1-zengheng4@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjxq346_dwEhrTm7_WW8nDqaQxNUCfVqDwOYAJGtmtpQQ@mail.gmail.com>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemm500022.china.huawei.com (7.185.36.162)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 01, 2022 at 01:16:33PM +0300, Amir Goldstein wrote:
-> On Thu, Sep 1, 2022 at 12:41 PM Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> >
-> > On Thu, Sep 01, 2022 at 12:30:13PM +0300, Amir Goldstein wrote:
-> > > On Thu, Sep 1, 2022 at 12:04 PM Frank Hofmann <fhofmann@cloudflare.com> wrote:
-> > > >
-> > > > On Thu, Sep 1, 2022 at 6:49 AM Amir Goldstein <amir73il@gmail.com> wrote:
-> > > > >
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > >
-> > > > > commit 9a5280b312e2e7898b6397b2ca3cfd03f67d7be1 upstream.
-> > > > >
-> > > > > [backport for 5.10.y]
-> > > >
-> > > > Hi Amir, hi Dave,
-> > > >
-> > > > I've got no objections to backporting this change at all. We've been
-> > > > using the patch on our internal 5.15 tracker branch happily for
-> > > > several months now.
-> > > >
-> > > > Would like to highlight though that it's currently not yet merged in
-> > > > linux-stable 5.15 branch either (it's in 5.19 and mainline alright).
-> > > > If this gets queued for 5.10 then maybe it also should be for 5.15 ?
-> > > >
-> > >
-> > > Hi Frank,
-> > >
-> > > Quoting from my cover letter:
-> > >
-> > > Patches 6-7 in this 5.10.y update have not been applied to 5.15.y yet.
-> > > I pointed Leah's attention to these patches and she said she will
-> > > include them in a following 5.15.y update.
-> >
-> > And as you know, this means I can't take this series at all until that
-> > series is ready, so to help us out, in the future, just don't even send
-> > them until they are all ready together.
-> >
-> 
-> What?
-> 
-> You cannot take backports to 5.10.y before they are applied to 5.15.y?
-> Since when?
+Add space between arguments would help someone
+to locate the key words they want, so break
+quoted strings at a space character.
 
-Since always.
+Such as below:
+[Before]
+kworker/1:0-280     [001] .....   600.782135: xfs_bunmap:
+dev 7:0 ino 0x85 disize 0x0 fileoff 0x0 fsbcount 0x400000001fffffflags ATTRFORK ...
 
-Why would you ever want someone to upgrade from an older tree (like
-5.10.y) to a newer one (5.15.y) and have a regression?
+[After]
+kworker/1:2-564     [001] ..... 23817.906160: xfs_bunmap:
+dev 7:0 ino 0x85 disize 0x0 fileoff 0x0 fsbcount 0x400000001fffff flags ATTRFORK ...
 
-So we always try to make sure patches are always applied to newer trees
-first.  Yes, sometimes we miss this and make mistakes, but it's always
-been this way and we fix that whenever it happens accidentally.
+Signed-off-by: Zeng Heng <zengheng4@huawei.com>
+---
+ fs/xfs/xfs_trace.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I'll drop this series from my review queue for now until the 5.15.y
-series shows up.
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index f9057af6e0c8..cb7c81ba7fa3 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1170,7 +1170,7 @@ DECLARE_EVENT_CLASS(xfs_dqtrx_class,
+ 		__entry->ino_res_used = qtrx->qt_ino_res_used;
+ 		__entry->icount_delta = qtrx->qt_icount_delta;
+ 	),
+-	TP_printk("dev %d:%d dquot id 0x%x type %s flags %s"
++	TP_printk("dev %d:%d dquot id 0x%x type %s flags %s "
+ 		  "blk_res %llu bcount_delta %lld delbcnt_delta %lld "
+ 		  "rtblk_res %llu rtblk_res_used %llu rtbcount_delta %lld delrtb_delta %lld "
+ 		  "ino_res %llu ino_res_used %llu icount_delta %lld",
+@@ -1602,7 +1602,7 @@ TRACE_EVENT(xfs_bunmap,
+ 		__entry->caller_ip = caller_ip;
+ 		__entry->flags = flags;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx disize 0x%llx fileoff 0x%llx fsbcount 0x%llx"
++	TP_printk("dev %d:%d ino 0x%llx disize 0x%llx fileoff 0x%llx fsbcount 0x%llx "
+ 		  "flags %s caller %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+-- 
+2.25.1
 
-thanks,
-
-greg k-h
