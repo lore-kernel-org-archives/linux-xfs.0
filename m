@@ -2,51 +2,52 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E335C0502C
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 13:36:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 176A1C54EE9
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 13:36:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234362AbiIANgP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 09:36:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60994 "EHLO
+        id S232644AbiIANgQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 09:36:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232114AbiIANfm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 09:35:42 -0400
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 611EAC1C;
-        Thu,  1 Sep 2022 06:34:04 -0700 (PDT)
-Received: by mail-wm1-x335.google.com with SMTP id bd26-20020a05600c1f1a00b003a5e82a6474so1463558wmb.4;
-        Thu, 01 Sep 2022 06:34:04 -0700 (PDT)
+        with ESMTP id S232448AbiIANfn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 09:35:43 -0400
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55FB011A1B;
+        Thu,  1 Sep 2022 06:34:10 -0700 (PDT)
+Received: by mail-wr1-x42b.google.com with SMTP id b5so22379492wrr.5;
+        Thu, 01 Sep 2022 06:34:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=TmG3Y1AHEuP0q6JfKuETQ8G7rdqHcScavC2s+SiEzdw=;
-        b=hDI8z1n2jZtHmJtCNAv3SifMKHQUComiwHmCb3znQuMAoO4HaUzzNYnmapnZXPKiY/
-         KdFKHZc/gtCauiEY8+RIuaE7VdCkMuGVIDzNzKxkozM7aP8RvP8DGbzSIw0xk+6P3JWz
-         9q8St2xUhaDpBN/g86x68G4rxWlGoVExMajM/YTmoJWU7sgvwFfwusDpk4TWFwTiHSci
-         q99CORDmDyMjBR/WbTdXWyteLUrefnqDJsuMcf+vI9K2vMbEvb+Q4bOx8Rg7syXLFQb9
-         ukWTxU1G3piXjxgTfIc5UTVz50IYq2Eq2tuOVDNC9CKATYiA8GWvZthsn9E712h2s4vb
-         ap8A==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
+        bh=rXO269FD1Qqh/3kSRd+jcHDLkTXo4nk6CloH8biq0G4=;
+        b=G7guemJfElS3TczNoMMBULiKgj2V5cRpuxIlQboLqa2/8or9xnBucM1JS7HCei2gy1
+         FD/7Idf8y0PXx9LhmzoHjOcKo+uiEZEkkp6Z5Tkhq9trfBxTN4H9ZuqkDg8gR67fITRA
+         cdeTM61RfrM73u/CijeaGupj3yVEkvsXEj+i/YhpOikvaeBLZFTek8aMUQeOacm2p2O1
+         Clsu8M5tdtLawqd/37pBrjDgy+fhgGoSxdciA4i+75zSab1AUVB3mYIj3esgVuHnQU89
+         0+dlRtYTRNTUqig3CM4hBuN0SBNkVe+xUW7u0RtQ6nDGHU5tfKRNW74ZaY8bZB17BRbR
+         VvyQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=TmG3Y1AHEuP0q6JfKuETQ8G7rdqHcScavC2s+SiEzdw=;
-        b=h5AsLlNyf4G4F4ZgCs6tJWElGaXkvFotpaXDkgJLgeYXyHzk2T5DZBZg6FmlUB6BgT
-         D/wpYtC44y3oaEGq8T6TBfUFZGmrIdDsDaz7lZtYqaUKctnHcE19LpTC6iW9Xh098H+E
-         hqtB6rtUogJrweNoiYKDX7doAokpn+Um4LoS+M6RO48Ud6vSH05NRyzaJ20ToRiUs9in
-         q+2kgZUS9K4zBJZ+LkPZB6r77ZRlgx+bVhO5caFhnsS+3xYDaOyfS03SDPJAuHYGvX+Y
-         uljcWHus1SguZPctQQ7tLm+0VyiRfPBD1lAW+Y+Sm+4z8letVBQTq+fLwVz8vPHqBAOt
-         Ip6w==
-X-Gm-Message-State: ACgBeo1/255XsPNG+79mzlFML8a7911pNqVotuaO0qUc5AF2afqiIn+f
-        taMQiBKH4Dumvo7THvNNjurErFzAbLY=
-X-Google-Smtp-Source: AA6agR6VjbCu6/GGg/LkE1McQKS7Vd2Uv9qFP0kwRdnaY4kYaF23dykIIQgvWz4a8IJBkZIH+kxppA==
-X-Received: by 2002:a05:600c:1992:b0:3a6:23f6:8417 with SMTP id t18-20020a05600c199200b003a623f68417mr5024869wmq.14.1662039242851;
-        Thu, 01 Sep 2022 06:34:02 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=rXO269FD1Qqh/3kSRd+jcHDLkTXo4nk6CloH8biq0G4=;
+        b=t/DJjO7mYXWPrgmiXKb4HSgOXiyP9QSfNDznmZRZBvreuub2NpuLmCYyiz9thdVlU0
+         ZNP994GZkit72S30tA0dbgnril6SJEYJkTY4XnI97cKwSbv4poRNWR2I684EpmAskrUV
+         GrsdEa3jhYAKfOH+3CsOJVl6Pc91IFvjbg2gPVjvSPA9Byj39O9NazbE5apG4wPLWfUO
+         tWJiUM3S9Xt8Uh/+rdTqKallieHPBznTfzXgG4vqmew5nBr9kaO2aWuh3Xr1j123ksO9
+         y5n9qWiBMmLtTqDbpEuGHNFp51uYe8sVcNmbTejV/faptYNIcrCt3fiw0Ceq4ea/z/xo
+         BZ6w==
+X-Gm-Message-State: ACgBeo3dCmnAENUZSRPSNw/sSTI+7JCnBQZbvBuB7y/K0dkclRF6zL7x
+        GJsdHfAgAu/HlByH4dWyRXg=
+X-Google-Smtp-Source: AA6agR45s1ab/I1+42fPETGyFtE+7Wbc53xvDhZVC0a8wX+YRUTbNmwToh/NXjEN7vXYDfyquwXUNA==
+X-Received: by 2002:a05:6000:616:b0:226:d80b:76ab with SMTP id bn22-20020a056000061600b00226d80b76abmr11974342wrb.547.1662039248313;
+        Thu, 01 Sep 2022 06:34:08 -0700 (PDT)
 Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id az26-20020adfe19a000000b0022529d3e911sm15516390wrb.109.2022.09.01.06.34.01
+        by smtp.gmail.com with ESMTPSA id az26-20020adfe19a000000b0022529d3e911sm15516390wrb.109.2022.09.01.06.34.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Sep 2022 06:34:02 -0700 (PDT)
+        Thu, 01 Sep 2022 06:34:07 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Sasha Levin <sashal@kernel.org>,
@@ -55,55 +56,70 @@ Cc:     Sasha Levin <sashal@kernel.org>,
         Chandan Babu R <chandan.babu@oracle.com>,
         Luis Chamberlain <mcgrof@kernel.org>,
         Adam Manzanares <a.manzanares@samsung.com>,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH 5.10 v3 0/5] xfs stable patches for 5.10.y (from v5.18+)
-Date:   Thu,  1 Sep 2022 16:33:51 +0300
-Message-Id: <20220901133356.2473299-1-amir73il@gmail.com>
+        linux-xfs@vger.kernel.org, stable@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH 5.10 v3 3/5] xfs: fix overfilling of reserve pool
+Date:   Thu,  1 Sep 2022 16:33:54 +0300
+Message-Id: <20220901133356.2473299-4-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220901133356.2473299-1-amir73il@gmail.com>
+References: <20220901133356.2473299-1-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Greg,
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-This 5.10.y backport series contains fixes from v5.18 and v5.19-rc1.
+commit 82be38bcf8a2e056b4c99ce79a3827fa743df6ec upstream.
 
-The patches in this series have already been applied to 5.15.y in Leah's
-latest update [1], so this 5.10.y is is mostly catching up with 5.15.y.
+Due to cycling of m_sb_lock, it's possible for multiple callers of
+xfs_reserve_blocks to race at changing the pool size, subtracting blocks
+from fdblocks, and actually putting it in the pool.  The result of all
+this is that we can overfill the reserve pool to hilarious levels.
 
-Thanks,
-Amir.
+xfs_mod_fdblocks, when called with a positive value, already knows how
+to take freed blocks and either fill the reserve until it's full, or put
+them in fdblocks.  Use that instead of setting m_resblks_avail directly.
 
-Changes since v2:
-- Drop 2 patches not in 5.15.y yet
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Acked-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_fsops.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-Changes since v1:
-- Added ACKs
-- CC stable
-
-[1] https://lore.kernel.org/linux-xfs/20220819181431.4113819-1-leah.rumancik@gmail.com/
-
-Amir Goldstein (1):
-  xfs: remove infinite loop when reserving free block pool
-
-Brian Foster (1):
-  xfs: fix soft lockup via spinning in filestream ag selection loop
-
-Darrick J. Wong (2):
-  xfs: always succeed at setting the reserve pool size
-  xfs: fix overfilling of reserve pool
-
-Eric Sandeen (1):
-  xfs: revert "xfs: actually bump warning counts when we send warnings"
-
- fs/xfs/xfs_filestream.c  |  7 +++---
- fs/xfs/xfs_fsops.c       | 52 ++++++++++++++++------------------------
- fs/xfs/xfs_mount.h       |  8 +++++++
- fs/xfs/xfs_trans_dquot.c |  1 -
- 4 files changed, 33 insertions(+), 35 deletions(-)
-
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index dacead0d0934..775f833146e3 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -394,18 +394,17 @@ xfs_reserve_blocks(
+ 		 * count or we'll get an ENOSPC.  Don't set the reserved flag
+ 		 * here - we don't want to reserve the extra reserve blocks
+ 		 * from the reserve.
++		 *
++		 * The desired reserve size can change after we drop the lock.
++		 * Use mod_fdblocks to put the space into the reserve or into
++		 * fdblocks as appropriate.
+ 		 */
+ 		fdblks_delta = min(free, delta);
+ 		spin_unlock(&mp->m_sb_lock);
+ 		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
+-		spin_lock(&mp->m_sb_lock);
+-
+-		/*
+-		 * Update the reserve counters if blocks have been successfully
+-		 * allocated.
+-		 */
+ 		if (!error)
+-			mp->m_resblks_avail += fdblks_delta;
++			xfs_mod_fdblocks(mp, fdblks_delta, 0);
++		spin_lock(&mp->m_sb_lock);
+ 	}
+ out:
+ 	if (outval) {
 -- 
 2.25.1
 
