@@ -2,52 +2,52 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F25C7ECAAD1
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 05:49:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C37CEC67868
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 05:49:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231668AbiIAFts (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 01:49:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41126 "EHLO
+        id S233214AbiIAFtt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 01:49:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233235AbiIAFtd (ORCPT
+        with ESMTP id S233236AbiIAFtd (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 01:49:33 -0400
-Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0821B1178EB;
-        Wed, 31 Aug 2022 22:49:17 -0700 (PDT)
-Received: by mail-wm1-x32b.google.com with SMTP id d5so8415095wms.5;
-        Wed, 31 Aug 2022 22:49:16 -0700 (PDT)
+Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98B751178FB;
+        Wed, 31 Aug 2022 22:49:18 -0700 (PDT)
+Received: by mail-wm1-x331.google.com with SMTP id m17-20020a7bce11000000b003a5bedec07bso738296wmc.0;
+        Wed, 31 Aug 2022 22:49:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=6yyRgULoHRta/eb3LyurLgmxqUUvQOMkvOIjaPH3158=;
-        b=g6NuDieey/R+ImRzcZ1wTMrdAV5kCw1Q+Czn5Cfe1WToMyqnG7/QXRKJ6WXjFHgDQW
-         zoOK8QNUGf+dVhc6xklD/POc3tHL9egSXMATDefOCne8FIz7f9LAVsXrFbtgIlsyockc
-         YB4g2IAU9BF+FZd2ncNFwfnbCDLXDiJzsN84AQd0ZJ4elH3CcZNrsqiU5HC+nspXbVjE
-         Kf8RDN/wO9SSh5sSVHI0AfijvJ85ZIuw1Mo4gpLAKG0d/ASAaXyFQY95crGOqWhsfmof
-         kjz1lT398+7vSzvaBIpGI5XNWa5AbfJd41n+Ys4J4rtED0KEXdQUpTb4q9T0s4spaWAF
-         +l+w==
+        bh=xLW9Gby42tyiBFlIoDzW7LpOcnfeeekTuyuaQuWlQqE=;
+        b=g5h3FoJOwX1B/0q2TzBNU8HK5HFXNm3CfXKFc71pJYk04OeKbSr/Xri6VQvGfF8EYU
+         GFN1BqNZ0vo4ZCecNeK864N13E8kVOMjlwFW0KidBaApGVNcNPJsRUF8P6vQrbh5tPC0
+         /F63ULDpTvsGQTS2zoxNkLBaj1c10w6QOQyWIXC08jYOO4XjJaVXmaBZiTgJK3oNjhvK
+         xy9jCJIMhabxnrBpLwBru76InUebvagezSbpeYyWHC9TNX/NrlGzwBSbfvgRRpR3lqUo
+         +y2/ABJPRX2Z6vYomlnQenwBizG2pkG9LFBF3JEhdHkQXU01DSPSG5TK7z/EO9+kWr7+
+         e0YQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date;
-        bh=6yyRgULoHRta/eb3LyurLgmxqUUvQOMkvOIjaPH3158=;
-        b=wkkKR5we1Fl41cQ2I3lopI8d5dYUFbUrZnuncNDKZj2fnydnwe6OULUg1QgFZSQhMk
-         hTTq61s0oQObZKSy1gxK6uAEKuNXQAmW628GpcKN50YHMLodYFjIW5/Z31S4o6eDWU3Q
-         /NJbPQUaYJmOOqqfv7Qs4PVAbNhPDTf9voKlhoNem3uih1Y9Z1VRSO41Qao3Q2yjn0xs
-         ijkPQ96yM9QFsQN/o2VAQliXR6H0WbPUvx6lPIxRoCxACxBPs5shX5iRuMnmsDz3asP6
-         g/C083t4waUlrQ46T9ebmfvD93vgYMRWL+e4nvOBJK2vl+nbybxuUxWOwgxGMIOAqG5V
-         9Jcw==
-X-Gm-Message-State: ACgBeo0Mx0hkMuegwtEhxng2xV/BtFT23HSZMNPcuGY3/fXHGX+locYk
-        yiXfLx9a2IHSCq8/J+JTxZc=
-X-Google-Smtp-Source: AA6agR6lJRveGsUJMNiN6foTfoqKPphM/QrPewa0sAkh7Dmx37qve++Ac4G1+VxmEL6xC14o1W07BA==
-X-Received: by 2002:a05:600c:1992:b0:3a6:23f6:8417 with SMTP id t18-20020a05600c199200b003a623f68417mr3757460wmq.14.1662011343318;
-        Wed, 31 Aug 2022 22:49:03 -0700 (PDT)
+        bh=xLW9Gby42tyiBFlIoDzW7LpOcnfeeekTuyuaQuWlQqE=;
+        b=hqKPqzmft1hlVXNI3VgeVjlSjW/q+2JzJsjUAoINL5pRsweU6e5BJ/nzrr5hNp0QrS
+         HeOSgBT+bmbwOKvlQwPZri5o2sI8HH/50ltuer309nUgfslhfsjpGTOoq4+iM7emfJV3
+         eyKC2RWaMDD1tbrus0BzW74cuAr9TyGjyK+GneWBjlqvV4tqqAFv3xeEKNJ3D9SPZQlD
+         WVExacfIAciMv93TYLSfskyoNZZTj52i+vEOqBBRj/L2hu0dgZIFGaXaIdXRpDEaMCD4
+         yCREbUiDaYB1+KYdHtPv4CebVNgbHnulSs7wEANAm2ZxeMXlMv59eP9XCacUXscv7BBx
+         ERGw==
+X-Gm-Message-State: ACgBeo0DXw8HCe+OHyF/UtFGFWCM8KI+en//fNf0rvN8bUPaxm064Rmq
+        rHxENc1xcNRxQShm8M3H8nM=
+X-Google-Smtp-Source: AA6agR6lpyfen3E7ZZCl4CVsrYGtXwlqRud7ZXBehC5nogXSgojiQRclt8jcM6AlFw9ZEijwPW+8OA==
+X-Received: by 2002:a05:600c:384f:b0:3a6:603c:4338 with SMTP id s15-20020a05600c384f00b003a6603c4338mr3948107wmr.192.1662011348618;
+        Wed, 31 Aug 2022 22:49:08 -0700 (PDT)
 Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id bg15-20020a05600c3c8f00b003a4f08495b7sm4447262wmb.34.2022.08.31.22.49.01
+        by smtp.gmail.com with ESMTPSA id bg15-20020a05600c3c8f00b003a4f08495b7sm4447262wmb.34.2022.08.31.22.49.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 31 Aug 2022 22:49:02 -0700 (PDT)
+        Wed, 31 Aug 2022 22:49:08 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Sasha Levin <sashal@kernel.org>,
@@ -57,10 +57,12 @@ Cc:     Sasha Levin <sashal@kernel.org>,
         Luis Chamberlain <mcgrof@kernel.org>,
         Adam Manzanares <a.manzanares@samsung.com>,
         linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 5.10 v2 1/7] xfs: remove infinite loop when reserving free block pool
-Date:   Thu,  1 Sep 2022 08:48:48 +0300
-Message-Id: <20220901054854.2449416-2-amir73il@gmail.com>
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 5.10 v2 4/7] xfs: fix soft lockup via spinning in filestream ag selection loop
+Date:   Thu,  1 Sep 2022 08:48:51 +0300
+Message-Id: <20220901054854.2449416-5-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220901054854.2449416-1-amir73il@gmail.com>
 References: <20220901054854.2449416-1-amir73il@gmail.com>
@@ -70,116 +72,58 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-commit 15f04fdc75aaaa1cccb0b8b3af1be290e118a7bc upstream.
+From: Brian Foster <bfoster@redhat.com>
 
-[Added wrapper xfs_fdblocks_unavailable() for 5.10.y backport]
+commit f650df7171b882dca737ddbbeb414100b31f16af upstream.
 
-Infinite loops in kernel code are scary.  Calls to xfs_reserve_blocks
-should be rare (people should just use the defaults!) so we really don't
-need to try so hard.  Simplify the logic here by removing the infinite
-loop.
+The filestream AG selection loop uses pagf data to aid in AG
+selection, which depends on pagf initialization. If the in-core
+structure is not initialized, the caller invokes the AGF read path
+to do so and carries on. If another task enters the loop and finds
+a pagf init already in progress, the AGF read returns -EAGAIN and
+the task continues the loop. This does not increment the current ag
+index, however, which means the task spins on the current AGF buffer
+until unlocked.
 
-Cc: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+If the AGF read I/O submitted by the initial task happens to be
+delayed for whatever reason, this results in soft lockup warnings
+via the spinning task. This is reproduced by xfs/170. To avoid this
+problem, fix the AGF trylock failure path to properly iterate to the
+next AG. If a task iterates all AGs without making progress, the
+trylock behavior is dropped in favor of blocking locks and thus a
+soft lockup is no longer possible.
+
+Fixes: f48e2df8a877ca1c ("xfs: make xfs_*read_agf return EAGAIN to ALLOC_FLAG_TRYLOCK callers")
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_fsops.c | 52 +++++++++++++++++++---------------------------
- fs/xfs/xfs_mount.h |  8 +++++++
- 2 files changed, 29 insertions(+), 31 deletions(-)
+ fs/xfs/xfs_filestream.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index ef1d5bb88b93..6d4f4271e7be 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -376,46 +376,36 @@ xfs_reserve_blocks(
- 	 * If the request is larger than the current reservation, reserve the
- 	 * blocks before we update the reserve counters. Sample m_fdblocks and
- 	 * perform a partial reservation if the request exceeds free space.
-+	 *
-+	 * The code below estimates how many blocks it can request from
-+	 * fdblocks to stash in the reserve pool.  This is a classic TOCTOU
-+	 * race since fdblocks updates are not always coordinated via
-+	 * m_sb_lock.
- 	 */
--	error = -ENOSPC;
--	do {
--		free = percpu_counter_sum(&mp->m_fdblocks) -
--						mp->m_alloc_set_aside;
--		if (free <= 0)
--			break;
--
--		delta = request - mp->m_resblks;
--		lcounter = free - delta;
--		if (lcounter < 0)
--			/* We can't satisfy the request, just get what we can */
--			fdblks_delta = free;
--		else
--			fdblks_delta = delta;
--
-+	free = percpu_counter_sum(&mp->m_fdblocks) -
-+						xfs_fdblocks_unavailable(mp);
-+	delta = request - mp->m_resblks;
-+	if (delta > 0 && free > 0) {
- 		/*
- 		 * We'll either succeed in getting space from the free block
--		 * count or we'll get an ENOSPC. If we get a ENOSPC, it means
--		 * things changed while we were calculating fdblks_delta and so
--		 * we should try again to see if there is anything left to
--		 * reserve.
--		 *
--		 * Don't set the reserved flag here - we don't want to reserve
--		 * the extra reserve blocks from the reserve.....
-+		 * count or we'll get an ENOSPC.  Don't set the reserved flag
-+		 * here - we don't want to reserve the extra reserve blocks
-+		 * from the reserve.
- 		 */
-+		fdblks_delta = min(free, delta);
- 		spin_unlock(&mp->m_sb_lock);
- 		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
- 		spin_lock(&mp->m_sb_lock);
--	} while (error == -ENOSPC);
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index db23e455eb91..bc41ec0c483d 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -128,11 +128,12 @@ xfs_filestream_pick_ag(
+ 		if (!pag->pagf_init) {
+ 			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
+ 			if (err) {
+-				xfs_perag_put(pag);
+-				if (err != -EAGAIN)
++				if (err != -EAGAIN) {
++					xfs_perag_put(pag);
+ 					return err;
++				}
+ 				/* Couldn't lock the AGF, skip this AG. */
+-				continue;
++				goto next_ag;
+ 			}
+ 		}
  
--	/*
--	 * Update the reserve counters if blocks have been successfully
--	 * allocated.
--	 */
--	if (!error && fdblks_delta) {
--		mp->m_resblks += fdblks_delta;
--		mp->m_resblks_avail += fdblks_delta;
-+		/*
-+		 * Update the reserve counters if blocks have been successfully
-+		 * allocated.
-+		 */
-+		if (!error) {
-+			mp->m_resblks += fdblks_delta;
-+			mp->m_resblks_avail += fdblks_delta;
-+		}
- 	}
--
- out:
- 	if (outval) {
- 		outval->resblks = mp->m_resblks;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index dfa429b77ee2..3a6bc9dc11b5 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -406,6 +406,14 @@ extern int	xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount,
- 				     xfs_agnumber_t *maxagi);
- extern void	xfs_unmountfs(xfs_mount_t *);
- 
-+/* Accessor added for 5.10.y backport */
-+static inline uint64_t
-+xfs_fdblocks_unavailable(
-+	struct xfs_mount	*mp)
-+{
-+	return mp->m_alloc_set_aside;
-+}
-+
- extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
- 				 bool reserved);
- extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
 -- 
 2.25.1
 
