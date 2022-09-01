@@ -2,97 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AD46ECAAD3
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 16:10:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9721FECAAD3
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 16:12:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234403AbiIAQKB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 12:10:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38764 "EHLO
+        id S234963AbiIAQMy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 12:12:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234448AbiIAQJ7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 12:09:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A020C260D;
-        Thu,  1 Sep 2022 09:09:56 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S234961AbiIAQMw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 12:12:52 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19A1591D10
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Sep 2022 09:12:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1662048764;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=UHmYOlxrBiaepineueJ+BA2NniHKUIf3ILRk7FlgVfY=;
+        b=aSjj4Ca7JhHVT3ntvTPUW6Y6zueIStr6Ws8r6KW+HiC0FQ7stdrzEL8NMbyKY2bU5ZgUdh
+        cl7uG6hJe7n3S3XGDYVmu4cGtQCMqM4zTEZlP0uZI6E9ci4+9Q2l6CkQQDg7/xosceVW/c
+        FexT9UiTyDHNDv4SAXmMD5oJlY7SbQo=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-442-Du0mSLDPMe-xNlqIJu9UJw-1; Thu, 01 Sep 2022 12:12:40 -0400
+X-MC-Unique: Du0mSLDPMe-xNlqIJu9UJw-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 15D7861E47;
-        Thu,  1 Sep 2022 16:09:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73C24C433D6;
-        Thu,  1 Sep 2022 16:09:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662048595;
-        bh=YtnT3VTcDeGAA5aBrOmdZBzpsMAIlYi/pgEH5xxN2yY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KR9g7vhQJ1/vA61vPcKhx0VCe7lOhzWsKOh0fxel2ye4HNYX/k6jToyhnRwqeXli0
-         3PSAfn4FDMCUeM7RijiMPL1yREuXdiFrsl5P2cB0JLWzHMVT7tQb4aV3yxLqLULzgD
-         51WcItvy+ntvzMJRCJ3iXu+bhxPEx/gO7tVlYiUHoLIUbTzY5tabNxZPtQxKH8/NQG
-         phiV4F2Y6w3orZ3uJsvHTzmxnWM0buwePKD6Y1zL3GvdsrBOhX/dERZlSMQ8vxEHy5
-         Y7VwnsyUEr1kQCrdUyvAdV0mFQgl0YSaKZfISQmEdW6dZrNpKzYmAEWa7QszCBHDA6
-         gyPCDf2VI5fDg==
-Date:   Thu, 1 Sep 2022 09:09:55 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zeng Heng <zengheng4@huawei.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -next] xfs: missing space in xfs trace log
-Message-ID: <YxDZUyN1XgawXvqD@magnolia>
-References: <20220901110205.565167-1-zengheng4@huawei.com>
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C8FEF80A0AE;
+        Thu,  1 Sep 2022 16:12:39 +0000 (UTC)
+Received: from oldenburg.str.redhat.com (unknown [10.39.192.37])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 301FE40CF8F2;
+        Thu,  1 Sep 2022 16:12:34 +0000 (UTC)
+From:   Florian Weimer <fweimer@redhat.com>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
+        bfields@fieldses.org, brauner@kernel.org,
+        linux-man@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH v2] statx, inode: document the new STATX_INO_VERSION
+ field
+References: <20220901121714.20051-1-jlayton@kernel.org>
+Date:   Thu, 01 Sep 2022 18:12:33 +0200
+In-Reply-To: <20220901121714.20051-1-jlayton@kernel.org> (Jeff Layton's
+        message of "Thu, 1 Sep 2022 08:17:14 -0400")
+Message-ID: <874jxrqdji.fsf@oldenburg.str.redhat.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.2 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220901110205.565167-1-zengheng4@huawei.com>
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.84 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 01, 2022 at 07:02:05PM +0800, Zeng Heng wrote:
-> Add space between arguments would help someone
-> to locate the key words they want, so break
-> quoted strings at a space character.
-> 
-> Such as below:
-> [Before]
-> kworker/1:0-280     [001] .....   600.782135: xfs_bunmap:
-> dev 7:0 ino 0x85 disize 0x0 fileoff 0x0 fsbcount 0x400000001fffffflags ATTRFORK ...
-> 
-> [After]
-> kworker/1:2-564     [001] ..... 23817.906160: xfs_bunmap:
-> dev 7:0 ino 0x85 disize 0x0 fileoff 0x0 fsbcount 0x400000001fffff flags ATTRFORK ...
-> 
-> Signed-off-by: Zeng Heng <zengheng4@huawei.com>
+* Jeff Layton:
 
-Whoops, thanks for cleaning this up.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> @@ -411,6 +413,21 @@ and corresponds to the number in the first field in one of the records in
+>  For further information on the above fields, see
+>  .BR inode (7).
+>  .\"
+> +.TP
+> +.I stx_ino_version
+> +The inode version, also known as the inode change attribute. This
+> +value must change any time there is an inode status change. Any
+> +operation that would cause the
+> +.I stx_ctime
+> +to change must also cause
+> +.I stx_ino_version
+> +to change, even when there is no apparent change to the
+> +.I stx_ctime
+> +due to coarse timestamp granularity.
+> +.IP
+> +An observer cannot infer anything about the nature or magnitude of the change
+> +from the value of this field. A change in this value only indicates that
+> +there has been an explicit change in the inode.
 
---D
+What happens if the file system does not support i_version?
 
-> ---
->  fs/xfs/xfs_trace.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index f9057af6e0c8..cb7c81ba7fa3 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -1170,7 +1170,7 @@ DECLARE_EVENT_CLASS(xfs_dqtrx_class,
->  		__entry->ino_res_used = qtrx->qt_ino_res_used;
->  		__entry->icount_delta = qtrx->qt_icount_delta;
->  	),
-> -	TP_printk("dev %d:%d dquot id 0x%x type %s flags %s"
-> +	TP_printk("dev %d:%d dquot id 0x%x type %s flags %s "
->  		  "blk_res %llu bcount_delta %lld delbcnt_delta %lld "
->  		  "rtblk_res %llu rtblk_res_used %llu rtbcount_delta %lld delrtb_delta %lld "
->  		  "ino_res %llu ino_res_used %llu icount_delta %lld",
-> @@ -1602,7 +1602,7 @@ TRACE_EVENT(xfs_bunmap,
->  		__entry->caller_ip = caller_ip;
->  		__entry->flags = flags;
->  	),
-> -	TP_printk("dev %d:%d ino 0x%llx disize 0x%llx fileoff 0x%llx fsbcount 0x%llx"
-> +	TP_printk("dev %d:%d ino 0x%llx disize 0x%llx fileoff 0x%llx fsbcount 0x%llx "
->  		  "flags %s caller %pS",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->ino,
-> -- 
-> 2.25.1
-> 
+> diff --git a/man7/inode.7 b/man7/inode.7
+> index 9b255a890720..d5e0890a52c0 100644
+> --- a/man7/inode.7
+> +++ b/man7/inode.7
+> @@ -184,6 +184,18 @@ Last status change timestamp (ctime)
+>  This is the file's last status change timestamp.
+>  It is changed by writing or by setting inode information
+>  (i.e., owner, group, link count, mode, etc.).
+> +.TP
+> +Inode version (i_version)
+> +(not returned in the \fIstat\fP structure); \fIstatx.stx_ino_version\fP
+> +.IP
+> +This is the inode change attribute. Any operation that would result in a change
+> +to \fIstatx.stx_ctime\fP must result in a change to this value. The value must
+> +change even in the case where the ctime change is not evident due to coarse
+> +timestamp granularity.
+> +.IP
+> +An observer cannot infer anything from the returned value about the nature or
+> +magnitude of the change. If the returned value is different from the last time
+> +it was checked, then something has made an explicit change to the inode.
+
+What is the wraparound behavior for i_version?  Does it use the full
+64-bit range?
+
+If the system crashes without flushing disks, is it possible to observe
+new file contents without a change of i_version?
+
+Thanks,
+Florian
+
