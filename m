@@ -2,52 +2,52 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C37CEC67868
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 05:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29DB3ECAAD2
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 05:49:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233214AbiIAFtt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 01:49:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41132 "EHLO
+        id S231717AbiIAFtu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 01:49:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233236AbiIAFtd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 01:49:33 -0400
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98B751178FB;
-        Wed, 31 Aug 2022 22:49:18 -0700 (PDT)
-Received: by mail-wm1-x331.google.com with SMTP id m17-20020a7bce11000000b003a5bedec07bso738296wmc.0;
-        Wed, 31 Aug 2022 22:49:18 -0700 (PDT)
+        with ESMTP id S233239AbiIAFte (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 01:49:34 -0400
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62382117ACB;
+        Wed, 31 Aug 2022 22:49:20 -0700 (PDT)
+Received: by mail-wr1-x42b.google.com with SMTP id m16so20829486wru.9;
+        Wed, 31 Aug 2022 22:49:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=xLW9Gby42tyiBFlIoDzW7LpOcnfeeekTuyuaQuWlQqE=;
-        b=g5h3FoJOwX1B/0q2TzBNU8HK5HFXNm3CfXKFc71pJYk04OeKbSr/Xri6VQvGfF8EYU
-         GFN1BqNZ0vo4ZCecNeK864N13E8kVOMjlwFW0KidBaApGVNcNPJsRUF8P6vQrbh5tPC0
-         /F63ULDpTvsGQTS2zoxNkLBaj1c10w6QOQyWIXC08jYOO4XjJaVXmaBZiTgJK3oNjhvK
-         xy9jCJIMhabxnrBpLwBru76InUebvagezSbpeYyWHC9TNX/NrlGzwBSbfvgRRpR3lqUo
-         +y2/ABJPRX2Z6vYomlnQenwBizG2pkG9LFBF3JEhdHkQXU01DSPSG5TK7z/EO9+kWr7+
-         e0YQ==
+        bh=M3jAT3YQCl4NufeW6oCkMl9aVNOp6TjzxP0+mQ9Dows=;
+        b=q74S3j9a2DH2WQcHC5XMVxoVDw/gyodqLA0RLf2ByvyojIvpvtfmtB7Lu66e+pc6dL
+         4Lxla631n8+TW2rNUGZ1tjXENxN+51Up7tPqyyXNXI/3fb3gdD82OTBua6nuvuQyowkC
+         Vk2J+vl7h79XyH6g61NZMz7PjcmbYE2JFgdFNVusxZP3Jsj0t0D10HCB1DO07vVt+fqW
+         psPCQg53dGojhx/sPTAwEggvbNR/PEe0IOkOM7hkG5xzMx2V8JHVVzabLaeLapWl7yfw
+         AMYDnLf0ItvaasNmbdq6rTAX60GbcW7Oo/TUU0vSDPPbhM1kRNfWO1/NZzXcXfL0mQFl
+         uerA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date;
-        bh=xLW9Gby42tyiBFlIoDzW7LpOcnfeeekTuyuaQuWlQqE=;
-        b=hqKPqzmft1hlVXNI3VgeVjlSjW/q+2JzJsjUAoINL5pRsweU6e5BJ/nzrr5hNp0QrS
-         HeOSgBT+bmbwOKvlQwPZri5o2sI8HH/50ltuer309nUgfslhfsjpGTOoq4+iM7emfJV3
-         eyKC2RWaMDD1tbrus0BzW74cuAr9TyGjyK+GneWBjlqvV4tqqAFv3xeEKNJ3D9SPZQlD
-         WVExacfIAciMv93TYLSfskyoNZZTj52i+vEOqBBRj/L2hu0dgZIFGaXaIdXRpDEaMCD4
-         yCREbUiDaYB1+KYdHtPv4CebVNgbHnulSs7wEANAm2ZxeMXlMv59eP9XCacUXscv7BBx
-         ERGw==
-X-Gm-Message-State: ACgBeo0DXw8HCe+OHyF/UtFGFWCM8KI+en//fNf0rvN8bUPaxm064Rmq
-        rHxENc1xcNRxQShm8M3H8nM=
-X-Google-Smtp-Source: AA6agR6lpyfen3E7ZZCl4CVsrYGtXwlqRud7ZXBehC5nogXSgojiQRclt8jcM6AlFw9ZEijwPW+8OA==
-X-Received: by 2002:a05:600c:384f:b0:3a6:603c:4338 with SMTP id s15-20020a05600c384f00b003a6603c4338mr3948107wmr.192.1662011348618;
-        Wed, 31 Aug 2022 22:49:08 -0700 (PDT)
+        bh=M3jAT3YQCl4NufeW6oCkMl9aVNOp6TjzxP0+mQ9Dows=;
+        b=GKtlr5kwT08qp3AQ8waVMfQgknrPV8VgHlBW+F+jZmBzpuLdZb2/j88Nq8fn3N4OZt
+         IPFZeKQqpbaq0OH48TIGZVzpiS/jniXtTqdR1r2dMlwN+A7fnGinpokUbzO7z7waT3wj
+         Kf65GJiNiGJAZEaxSrjDQmRc94Y7ARo9qlyw/CbNDQvlHKOf+eRLzR+iXjUIcyL3m8ih
+         679cO+FWh69UFuzk3EMPjUN4BWO/zKd3k+6uc2zBC63X5mOZkAiyNpYZrKg5viV4pN9F
+         HVy/cSS7YrOWTDldYNw8GTdxgD+lWezmf6f538YH7OGWtULCUVhACkmuAB+fVXQ2cfAF
+         xiYw==
+X-Gm-Message-State: ACgBeo24hgMY8EOBbYCJnG7vdAqaA4C6rC75frPDntcXglCaTi7V5JHY
+        kMT+YOf3nNtXvlzxcfjdrkA=
+X-Google-Smtp-Source: AA6agR5ylTkx2uA7K//Y5OfnOmGzIarMLx3C+fZn4k9NX2XzlPcp0IAPpeD+4lFd9V3BJkARXK41sQ==
+X-Received: by 2002:a5d:598f:0:b0:220:8005:7def with SMTP id n15-20020a5d598f000000b0022080057defmr13924910wri.435.1662011354515;
+        Wed, 31 Aug 2022 22:49:14 -0700 (PDT)
 Received: from localhost.localdomain ([77.137.66.49])
-        by smtp.gmail.com with ESMTPSA id bg15-20020a05600c3c8f00b003a4f08495b7sm4447262wmb.34.2022.08.31.22.49.06
+        by smtp.gmail.com with ESMTPSA id bg15-20020a05600c3c8f00b003a4f08495b7sm4447262wmb.34.2022.08.31.22.49.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 31 Aug 2022 22:49:08 -0700 (PDT)
+        Wed, 31 Aug 2022 22:49:14 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Sasha Levin <sashal@kernel.org>,
@@ -57,12 +57,12 @@ Cc:     Sasha Levin <sashal@kernel.org>,
         Luis Chamberlain <mcgrof@kernel.org>,
         Adam Manzanares <a.manzanares@samsung.com>,
         linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
         Christoph Hellwig <hch@lst.de>,
         Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5.10 v2 4/7] xfs: fix soft lockup via spinning in filestream ag selection loop
-Date:   Thu,  1 Sep 2022 08:48:51 +0300
-Message-Id: <20220901054854.2449416-5-amir73il@gmail.com>
+Subject: [PATCH 5.10 v2 7/7] xfs: validate inode fork size against fork format
+Date:   Thu,  1 Sep 2022 08:48:54 +0300
+Message-Id: <20220901054854.2449416-8-amir73il@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220901054854.2449416-1-amir73il@gmail.com>
 References: <20220901054854.2449416-1-amir73il@gmail.com>
@@ -72,58 +72,87 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-commit f650df7171b882dca737ddbbeb414100b31f16af upstream.
+commit 1eb70f54c445fcbb25817841e774adb3d912f3e8 upstream.
 
-The filestream AG selection loop uses pagf data to aid in AG
-selection, which depends on pagf initialization. If the in-core
-structure is not initialized, the caller invokes the AGF read path
-to do so and carries on. If another task enters the loop and finds
-a pagf init already in progress, the AGF read returns -EAGAIN and
-the task continues the loop. This does not increment the current ag
-index, however, which means the task spins on the current AGF buffer
-until unlocked.
+[backport for 5.10.y]
 
-If the AGF read I/O submitted by the initial task happens to be
-delayed for whatever reason, this results in soft lockup warnings
-via the spinning task. This is reproduced by xfs/170. To avoid this
-problem, fix the AGF trylock failure path to properly iterate to the
-next AG. If a task iterates all AGs without making progress, the
-trylock behavior is dropped in favor of blocking locks and thus a
-soft lockup is no longer possible.
+xfs_repair catches fork size/format mismatches, but the in-kernel
+verifier doesn't, leading to null pointer failures when attempting
+to perform operations on the fork. This can occur in the
+xfs_dir_is_empty() where the in-memory fork format does not match
+the size and so the fork data pointer is accessed incorrectly.
 
-Fixes: f48e2df8a877ca1c ("xfs: make xfs_*read_agf return EAGAIN to ALLOC_FLAG_TRYLOCK callers")
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Note: this causes new failures in xfs/348 which is testing mode vs
+ftype mismatches. We now detect a regular file that has been changed
+to a directory or symlink mode as being corrupt because the data
+fork is for a symlink or directory should be in local form when
+there are only 3 bytes of data in the data fork. Hence the inode
+verify for the regular file now fires w/ -EFSCORRUPTED because
+the inode fork format does not match the format the corrupted mode
+says it should be in.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_filestream.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c | 35 ++++++++++++++++++++++++++---------
+ 1 file changed, 26 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index db23e455eb91..bc41ec0c483d 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -128,11 +128,12 @@ xfs_filestream_pick_ag(
- 		if (!pag->pagf_init) {
- 			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
- 			if (err) {
--				xfs_perag_put(pag);
--				if (err != -EAGAIN)
-+				if (err != -EAGAIN) {
-+					xfs_perag_put(pag);
- 					return err;
-+				}
- 				/* Couldn't lock the AGF, skip this AG. */
--				continue;
-+				goto next_ag;
- 			}
- 		}
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index c667c63f2cb0..fa8aefe6b7ec 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -358,19 +358,36 @@ xfs_dinode_verify_fork(
+ 	int			whichfork)
+ {
+ 	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
++	mode_t			mode = be16_to_cpu(dip->di_mode);
++	uint32_t		fork_size = XFS_DFORK_SIZE(dip, mp, whichfork);
++	uint32_t		fork_format = XFS_DFORK_FORMAT(dip, whichfork);
  
+-	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
++	/*
++	 * For fork types that can contain local data, check that the fork
++	 * format matches the size of local data contained within the fork.
++	 *
++	 * For all types, check that when the size says the should be in extent
++	 * or btree format, the inode isn't claiming it is in local format.
++	 */
++	if (whichfork == XFS_DATA_FORK) {
++		if (S_ISDIR(mode) || S_ISLNK(mode)) {
++			if (be64_to_cpu(dip->di_size) <= fork_size &&
++			    fork_format != XFS_DINODE_FMT_LOCAL)
++				return __this_address;
++		}
++
++		if (be64_to_cpu(dip->di_size) > fork_size &&
++		    fork_format == XFS_DINODE_FMT_LOCAL)
++			return __this_address;
++	}
++
++	switch (fork_format) {
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		/*
+-		 * no local regular files yet
++		 * No local regular files yet.
+ 		 */
+-		if (whichfork == XFS_DATA_FORK) {
+-			if (S_ISREG(be16_to_cpu(dip->di_mode)))
+-				return __this_address;
+-			if (be64_to_cpu(dip->di_size) >
+-					XFS_DFORK_SIZE(dip, mp, whichfork))
+-				return __this_address;
+-		}
++		if (S_ISREG(mode) && whichfork == XFS_DATA_FORK)
++			return __this_address;
+ 		if (di_nextents)
+ 			return __this_address;
+ 		break;
 -- 
 2.25.1
 
