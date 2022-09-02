@@ -2,91 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A58C6FA82
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 20:45:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5695CC6FA82
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 20:48:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229595AbiIBUpn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Sep 2022 16:45:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34772 "EHLO
+        id S230186AbiIBUsZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Sep 2022 16:48:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229579AbiIBUpm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Sep 2022 16:45:42 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99986D9D42;
-        Fri,  2 Sep 2022 13:45:41 -0700 (PDT)
+        with ESMTP id S229579AbiIBUsX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Sep 2022 16:48:23 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B3BFDAB8A
+        for <linux-xfs@vger.kernel.org>; Fri,  2 Sep 2022 13:48:22 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 002F3B82D95;
-        Fri,  2 Sep 2022 20:45:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 987ADC433C1;
-        Fri,  2 Sep 2022 20:45:38 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 366856142A
+        for <linux-xfs@vger.kernel.org>; Fri,  2 Sep 2022 20:48:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 907D8C433D6;
+        Fri,  2 Sep 2022 20:48:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662151538;
-        bh=KGoUJ0TF++94l7S9+Rc4qmXzMOED8i2XymramZvVqns=;
+        s=k20201202; t=1662151701;
+        bh=unvAbw32sNAy1x0f5haUeav4CxclY469Vy/e9WOxYsU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=O+VX8dLdxnujJYY7GKXyy1bEdukAvoz4+T6qua3yydLI50r9eLeZG2czIobySyJoS
-         5e1To6ljAq+wesfpcssrGLjoJjWM9Q0eisH5aEyk+q8CkfvR44YhwrMRAhCcj4KVuE
-         q86MyxBXtMQ40T+PHnhID4667vXMPWnB0ewGo1aQZqSRpqAHDUOwgaDsnLLgUfLJ+N
-         eUoEleQGPeqeqA+XkRIgTWGNVOnUkY1oc6uwq4Z2S0YL6sMdWEGMkt10RVjxxtQ3ws
-         nhoed9f+fZkUP4PDPFJ3nebbztpBhxZJ8wzUu4r0BtXQC1uh/69s8euh3j5FvRuRQx
-         dz94FAT/3CEow==
-Date:   Fri, 2 Sep 2022 13:45:38 -0700
+        b=twJVGLf1FvRfsSQsv6wWZCpNNUWgDuquBkWPsQLKULwEXeOU7HQWsK/yjcgtTBcDJ
+         SyV9WsdObKsUhOO4zj9HKMKrc6AtJMxpNEGFCZEzemBoVHbZ63HOnMV/uOR0YiuxCP
+         HaAv8b+WLWtfFRjprJy/u3IEeA4UgND+rgi7/PXQrofK7Y/p65g76eDQSDeMp0+Cc1
+         Po3brelisYHzEIhq+LImNxXer5enJf33j57vplNbrRzC7jkOuFucBNN9XqLyNNaTQO
+         Em60FoscGYSDTEfuESrc1VMJb0kVnoKbO6afAChNhQgJBBohPWFaghmeOEN0Iw3z+9
+         VBvs+fEUMibNQ==
+Date:   Fri, 2 Sep 2022 13:48:21 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     cgel.zte@gmail.com
-Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ye xingchen <ye.xingchen@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: Re: [PATCH linux-next] xfs: Remove the unneeded result variable
-Message-ID: <YxJrchChFK7vv+cX@magnolia>
-References: <20220902073232.319601-1-ye.xingchen@zte.com.cn>
+To:     Carlos Maiolino <cem@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs_repair: Fix check_refcount() error path
+Message-ID: <YxJsFQb+MdmeRmak@magnolia>
+References: <166212614879.31305.11337231919093625864.stgit@andromeda>
+ <166212621918.31305.17388002689404843538.stgit@andromeda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220902073232.319601-1-ye.xingchen@zte.com.cn>
+In-Reply-To: <166212621918.31305.17388002689404843538.stgit@andromeda>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 02, 2022 at 07:32:32AM +0000, cgel.zte@gmail.com wrote:
-> From: ye xingchen <ye.xingchen@zte.com.cn>
+On Fri, Sep 02, 2022 at 03:43:39PM +0200, Carlos Maiolino wrote:
+> From: Carlos Maiolino <cmaiolino@redhat.com>
 > 
-> Return the value xfs_dir_cilookup_result() directly instead of storing it
-> in another redundant variable.
+> Add proper exit error paths to avoid checking all pointers at the current path
 > 
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: ye xingchen <ye.xingchen@zte.com.cn>
+> Fixes-coverity-id: 1512651
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  repair/rmap.c |   23 +++++++++++------------
+>  1 file changed, 11 insertions(+), 12 deletions(-)
+> 
+> diff --git a/repair/rmap.c b/repair/rmap.c
+> index a7c4b25b1..0253c0c36 100644
+> --- a/repair/rmap.c
+> +++ b/repair/rmap.c
+> @@ -1377,7 +1377,7 @@ check_refcounts(
+>  	if (error) {
+>  		do_warn(_("Could not read AGF %u to check refcount btree.\n"),
+>  				agno);
+> -		goto err;
+> +		goto err_agf;
 
-LGTM.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Shouldn't this       ^^^^^^^ be err_pag, since we're erroring out and
+releasing the perag group reference?
+
+Also ... don't the "if (XXX) free(XXX)" bits take care of all this?
+
+(I can't access Coverity any more, so I don't know what's in the
+report.)
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_dir2_sf.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-> index 003812fd7d35..8cd37e6e9d38 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> @@ -865,7 +865,6 @@ xfs_dir2_sf_lookup(
->  	struct xfs_inode	*dp = args->dp;
->  	struct xfs_mount	*mp = dp->i_mount;
->  	int			i;		/* entry index */
-> -	int			error;
->  	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
->  	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
->  	enum xfs_dacmp		cmp;		/* comparison result */
-> @@ -929,8 +928,7 @@ xfs_dir2_sf_lookup(
->  	if (!ci_sfep)
->  		return -ENOENT;
->  	/* otherwise process the CI match as required by the caller */
-> -	error = xfs_dir_cilookup_result(args, ci_sfep->name, ci_sfep->namelen);
-> -	return error;
-> +	return xfs_dir_cilookup_result(args, ci_sfep->name, ci_sfep->namelen);
+>  	}
+>  
+>  	/* Leave the per-ag data "uninitialized" since we rewrite it later */
+> @@ -1386,7 +1386,7 @@ check_refcounts(
+>  	bt_cur = libxfs_refcountbt_init_cursor(mp, NULL, agbp, pag);
+>  	if (!bt_cur) {
+>  		do_warn(_("Not enough memory to check refcount data.\n"));
+> -		goto err;
+> +		goto err_bt_cur;
+>  	}
+>  
+>  	rl_rec = pop_slab_cursor(rl_cur);
+> @@ -1398,7 +1398,7 @@ check_refcounts(
+>  			do_warn(
+>  _("Could not read reference count record for (%u/%u).\n"),
+>  					agno, rl_rec->rc_startblock);
+> -			goto err;
+> +			goto err_loop;
+>  		}
+>  		if (!have) {
+>  			do_warn(
+> @@ -1413,7 +1413,7 @@ _("Missing reference count record for (%u/%u) len %u count %u\n"),
+>  			do_warn(
+>  _("Could not read reference count record for (%u/%u).\n"),
+>  					agno, rl_rec->rc_startblock);
+> -			goto err;
+> +			goto err_loop;
+>  		}
+>  		if (!i) {
+>  			do_warn(
+> @@ -1436,14 +1436,13 @@ next_loop:
+>  		rl_rec = pop_slab_cursor(rl_cur);
+>  	}
+>  
+> -err:
+> -	if (bt_cur)
+> -		libxfs_btree_del_cursor(bt_cur, error ? XFS_BTREE_ERROR :
+> -							XFS_BTREE_NOERROR);
+> -	if (pag)
+> -		libxfs_perag_put(pag);
+> -	if (agbp)
+> -		libxfs_buf_relse(agbp);
+> +err_loop:
+> +	libxfs_btree_del_cursor(bt_cur, error ?
+> +				XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+> +err_bt_cur:
+> +	libxfs_buf_relse(agbp);
+> +err_agf:
+> +	libxfs_perag_put(pag);
+>  	free_slab_cursor(&rl_cur);
 >  }
 >  
->  /*
-> -- 
-> 2.25.1
+> 
