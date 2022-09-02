@@ -2,273 +2,199 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA038C6FA82
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 01:28:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03828C6FA82
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 01:35:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234435AbiIBB2t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 21:28:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43460 "EHLO
+        id S234690AbiIBBfW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 21:35:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234372AbiIBB2s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 21:28:48 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D80D479605;
-        Thu,  1 Sep 2022 18:28:47 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id z187so458743pfb.12;
-        Thu, 01 Sep 2022 18:28:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=wdOFKuho9Zld1TwLEDrskI2ZoOHyDGzDHs92/BbP8A8=;
-        b=n709tqp0rcIBiBaB2JgoGy4MIm/Thxqtai0bj/WPQVW0420rjxiicg0QV2xA6Me+OU
-         Ao3cAv8IcVUZevpMoHW5ljUlCyG1q5DY+O0iEnjja8D8fOR6f3A0Z08QDkkaKC7tR5jV
-         DfVIc01MTZT/9PYLPpFk5mWg0EE0DgTguzE91q7pvQl3vdo6U+bD9P37iWFVNMSv9VfB
-         8ZJlQ90ySUVV7cvynl7oky3UI7H5ayZ62GmZVkfaHRuUUqo0zYEfyZjZW8/GD6Zf3XUE
-         NBvRq654Qxq+iMDztSQaJlVcEpBZCzpLNyoRY9jYEXH5Y0d6CM51OZLQXqOg6s439Mu/
-         udtw==
+        with ESMTP id S234557AbiIBBfV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 21:35:21 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A74F5B06F
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Sep 2022 18:35:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1662082518;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wu4GjUvBuNt5SvrsxfoZUzAyvaavMQCfJeiWkq7Jd7A=;
+        b=itB0ZEKlRhr4cEiuz0P4mxXbHwRXmvFtNnmsXk+Ja7v2Fa+zjYgddiJBeUMLJhX5OJK0HG
+        4q3PmdTRHgjeMfrdWb0HpwACFpD1wc2bv83sdOzw8vqHqtoIUTpLPEb7sT//+HlV86w75u
+        4EYB1GZDqhG9egYK+lQnW51M4KO9Px4=
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
+ [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-421-anc17B_cOxyMejpywtjp4g-1; Thu, 01 Sep 2022 21:35:16 -0400
+X-MC-Unique: anc17B_cOxyMejpywtjp4g-1
+Received: by mail-qt1-f200.google.com with SMTP id o21-20020ac87c55000000b00344646ea2ccso506987qtv.11
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Sep 2022 18:35:16 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=wdOFKuho9Zld1TwLEDrskI2ZoOHyDGzDHs92/BbP8A8=;
-        b=x5+aD51rXf0PrQxTJcfPVCf4MYUgc5hjVIShYpCSz1butJ3UzN7HyaJGPMCR8KGUzV
-         VmcsYz2vj/b4UbElWas7HsvIDCk35K+q5G0yrmlq0NYW/rnB6tKGGi6EBYhz/YE2gCcb
-         Qq/HxrwRq/DeX6G2e09QU9dmqlpglp3Ewg01iF20Ro25zLgIEsnXRABeHVVz1rIKWDg5
-         XjosTOta7HWaArEmzO5j+rBFazjhy/CtcxUncRCwtTuDhf6iI8paUdAGdZbCbwxPMMYX
-         QE6SiO2t4jONL8GtzX39EhtiDMUKD2/NZDk58iSBgqv3bt9JJo+0LFtWIo9Y0VNBGqha
-         lJIA==
-X-Gm-Message-State: ACgBeo2kOf8K/GKsR+B2IVsSSFKTLEJdaHS7s7s3aVIuO2xNxiGs7DuP
-        aRySTeTq4kr7tQsH6MKAeVzpwi65hpyUAsf9ZDSrqrfz
-X-Google-Smtp-Source: AA6agR6aQQYuOi09DM41oLxHzOgtFW/Fz887ks1AT8uwv3ZDP2JUZiMkHx98nZpy7zoCn1ABJ2iLiKwtPjmu26WKVP8=
-X-Received: by 2002:a05:6a00:114c:b0:528:2c7a:6302 with SMTP id
- b12-20020a056a00114c00b005282c7a6302mr33959772pfm.37.1662082127293; Thu, 01
- Sep 2022 18:28:47 -0700 (PDT)
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=wu4GjUvBuNt5SvrsxfoZUzAyvaavMQCfJeiWkq7Jd7A=;
+        b=q0TcTt9QLUbLjd3sdtw6kU0lCEI4UGUkHPSOp7NCAFaA8WydxyWpnZ9vlI1z2pMQuj
+         4YI/5qdCwSr4COuULIPFJlYPG69sh9CWdsGimYhNlJNueMnrFN/GDb29IyMl2okiwVfS
+         rGVz6VA9U9uOvH7qchEe1T3fdhHStKP/aZD8KGVoEPA2d9sbdOH90VReOuxiJyZNjcVw
+         G81SuSRP7zGMPBO8OHZyEqhBkoZKiut6YL5BW8w31nJqAob1ZY5LEf5Ad7kor00ZY62V
+         WItIORziLlTPM7Tya7RpCn7DPML7MdD36dwuiMirxE+6JqWWJuBrm/eCDb27b1AVxI1x
+         DFig==
+X-Gm-Message-State: ACgBeo1jCkVR2cCWLH/ZtTtycacHcuRst9M7LpBQejzRmYJZdaOeDGjJ
+        3wIkarXx14yu4xWt0kYFySx8b792tGIqhlrGe0HU3WfptYGjp3ihcPebOkl+td0HGfj6tZI3LdE
+        2IilDrRzT6VhCEqKO0Gvx
+X-Received: by 2002:a05:6214:2685:b0:477:1d22:f017 with SMTP id gm5-20020a056214268500b004771d22f017mr28133032qvb.96.1662082515832;
+        Thu, 01 Sep 2022 18:35:15 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR7+fU9oFjdiLPYHBFuQoLj08wbc1B+h7cyXKB88jJwDbh8PpvXRPGp/W8pFk7ledfgxxphBCQ==
+X-Received: by 2002:a05:6214:2685:b0:477:1d22:f017 with SMTP id gm5-20020a056214268500b004771d22f017mr28133018qvb.96.1662082515485;
+        Thu, 01 Sep 2022 18:35:15 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id bj8-20020a05620a190800b006af10bd3635sm459805qkb.57.2022.09.01.18.35.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Sep 2022 18:35:15 -0700 (PDT)
+Date:   Fri, 2 Sep 2022 09:35:09 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Murphy Zhou <jencce.kernel@gmail.com>
+Cc:     Zorro Lang <zlang@kernel.org>, fstests <fstests@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v3] generic: new test to verify selinux label of whiteout
+ inode
+Message-ID: <20220902013509.cbrzq5ukclpcfor4@zlang-mailbox>
+References: <20220901143459.3883118-1-zlang@kernel.org>
+ <CADJHv_vX+7tONjguTw8ZgyV9uE=OW=RtZQ_FdF2-ViGaxQbzYw@mail.gmail.com>
 MIME-Version: 1.0
-References: <20220816133413.44298-1-jlayton@kernel.org>
-In-Reply-To: <20220816133413.44298-1-jlayton@kernel.org>
-From:   Murphy Zhou <jencce.kernel@gmail.com>
-Date:   Fri, 2 Sep 2022 09:28:35 +0800
-Message-ID: <CADJHv_ufx=k+HGbL8wChLVXLsv-HOgzdMMfU4eUfnV3dZFMnaQ@mail.gmail.com>
-Subject: Re: [xfstests PATCH] generic/693: add basic change attr test
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     fstests <fstests@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CADJHv_vX+7tONjguTw8ZgyV9uE=OW=RtZQ_FdF2-ViGaxQbzYw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Jeff,
+On Fri, Sep 02, 2022 at 08:44:21AM +0800, Murphy Zhou wrote:
+> On Thu, Sep 1, 2022 at 10:47 PM Zorro Lang <zlang@kernel.org> wrote:
+> >
+> > A but on XFS cause renameat2() with flags=RENAME_WHITEOUT doesn't
+>        ^ bug
 
-Thanks for the patch!
+Sure, will fix
 
-On Tue, Aug 16, 2022 at 9:43 PM Jeff Layton <jlayton@kernel.org> wrote:
->
-> Now that we have the ability to query the change attribute in userland,
-> test that the filesystems implement it correctly. Fetch the change
-> attribute before and after various operations and validate that it
-> changes (or doesn't change) as expected.
->
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  common/rc             |  17 ++++++
->  tests/generic/693     | 138 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/693.out |   1 +
->  3 files changed, 156 insertions(+)
->  create mode 100755 tests/generic/693
->  create mode 100644 tests/generic/693.out
->
-> Please look and make sure I'm not missing other operations that we
-> should be testing here!
->
-> diff --git a/common/rc b/common/rc
-> index 197c94157025..b9cb47f99016 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -5052,6 +5052,23 @@ hexdump()
->         _fail "Use _hexdump(), please!"
->  }
->
-> +_require_change_attr ()
-> +{
-> +
-> +       _mask=$($XFS_IO_PROG -f -c "statx -m 0x2000 -r" $TEST_DIR/change_attr_test.$$ \
-> +               | grep "^stat.mask" | cut -d' ' -f 3)
-> +       rm -f $TEST_DIR/change_attr_test.$$
-> +       if [ $(( ${_mask}&0x2000 )) -eq 0 ]; then
-> +               _notrun "$FSTYP does not support inode change attribute"
-> +       fi
-> +}
-> +
-> +_get_change_attr ()
-> +{
-> +       $XFS_IO_PROG -r -c "statx -m 0x2000 -r" $1 | grep '^stat.change_attr' | \
-> +               cut -d' ' -f3
-> +}
-> +
->  init_rc
->
->  ################################################################################
-> diff --git a/tests/generic/693 b/tests/generic/693
-> new file mode 100755
-> index 000000000000..fa92931d2ac8
-> --- /dev/null
-> +++ b/tests/generic/693
-> @@ -0,0 +1,138 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2021, Jeff Layton <jlayton@redhat.com>
-> +#
-> +# FS QA Test No. 693
-> +#
-> +# Test the behavior of the inode change attribute
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick rw
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_require_test
-> +_require_change_attr
-> +
-> +# from the stat.h header file
-> +UTIME_OMIT=1073741822
-> +
-> +testdir="$TEST_DIR/test_iversion_dir.$$"
-> +testfile="$testdir/test_iversion_file.$$"
-> +
-> +mkdir $testdir
-> +
-> +# DIRECTORY TESTS
-> +#################
-> +# Does dir change attr change on a create?
-> +old=$(_get_change_attr $testdir)
-> +touch $testfile
-> +new=$(_get_change_attr $testdir)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr of dir did not change after create!"
-> +fi
-> +
-> +# on a hardlink?
-> +old=$new
-> +ln $testfile $testdir/linky
+> > apply an selinux label. That's quite different with other fs (e.g.
+> > ext4, tmpfs).
+> >
+> > Signed-off-by: Zorro Lang <zlang@kernel.org>
+> > ---
+> >
+> > V1 -> V2:
+> > 1) Add "whiteout" group
+> > 2) Add commit ID which fix that bug
+> > 3) Rebase to latest fstests for-next branch
+> >
+> > V2 -> V3:
+> > Rebase to latest fstests for-next branch again
+> >
+> > Thanks,
+> > Zorro
+> >
+> >  tests/generic/695     | 64 +++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/695.out |  2 ++
+> >  2 files changed, 66 insertions(+)
+> >  create mode 100755 tests/generic/695
+> >  create mode 100644 tests/generic/695.out
+> >
+> > diff --git a/tests/generic/695 b/tests/generic/695
+> > new file mode 100755
+> > index 00000000..f04d4b3d
+> > --- /dev/null
+> > +++ b/tests/generic/695
+> > @@ -0,0 +1,64 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2022 Red Hat, Copyright.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 695
+> > +#
+> > +# Verify selinux label can be kept after RENAME_WHITEOUT. This is
+> > +# a regression test for:
+> > +#   70b589a37e1a ("xfs: add selinux labels to whiteout inodes")
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto quick rename attr whiteout
+> > +
+> > +# Import common functions.
+> > +. ./common/attr
+> > +. ./common/renameat2
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_require_scratch
+> > +_require_attrs
+> > +_require_renameat2 whiteout
+> > +
+> > +_fixed_by_kernel_commit 70b589a37e1a \
+> > +       xfs: add selinux labels to whiteout inodes
+> > +
+> > +get_selinux_label()
+> > +{
+> > +       local label
+> > +
+> > +       label=`_getfattr --absolute-names -n security.selinux $@ | sed -n 's/security.selinux=\"\(.*\)\"/\1/p'`
+> 
+> Just curious, why `` instead of $() ? I see the latter is preferred in
+> many articles.
 
-We may need to clean up these temporary testing files.
+Haha, nothing special reason, just get used to it, without too much thinking.
+I'll replace  `` to $() in this case.
 
-Other parts look good to me.
+Thanks,
+Zorro
 
-Regards~
+> 
+> Regards~
+> 
+> > +       if [ ${PIPESTATUS[0]} -ne 0 -o -z "$label" ];then
+> > +               _fail "Fail to get selinux label: $label"
+> > +       fi
+> > +       echo $label
+> > +}
+> > +
+> > +_scratch_mkfs >> $seqres.full 2>&1
+> > +# SELINUX_MOUNT_OPTIONS will be set in common/config if selinux is enabled
+> > +if [ -z "$SELINUX_MOUNT_OPTIONS" ]; then
+> > +       _notrun "Require selinux to be enabled"
+> > +fi
+> > +# This test need to verify selinux labels in objects, so unset this selinux
+> > +# mount option
+> > +export SELINUX_MOUNT_OPTIONS=""
+> > +_scratch_mount
+> > +
+> > +touch $SCRATCH_MNT/f1
+> > +echo "Before RENAME_WHITEOUT" >> $seqres.full
+> > +ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
+> > +# Expect f1 and f2 have same label after RENAME_WHITEOUT
+> > +$here/src/renameat2 -w $SCRATCH_MNT/f1 $SCRATCH_MNT/f2
+> > +echo "After RENAME_WHITEOUT" >> $seqres.full
+> > +ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
+> > +label1=`get_selinux_label $SCRATCH_MNT/f1`
+> > +label2=`get_selinux_label $SCRATCH_MNT/f2`
+> > +if [ "$label1" != "$label2" ];then
+> > +       echo "$label1 != $label2"
+> > +fi
+> > +
+> > +echo "Silence is golden"
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/695.out b/tests/generic/695.out
+> > new file mode 100644
+> > index 00000000..1332ff16
+> > --- /dev/null
+> > +++ b/tests/generic/695.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 695
+> > +Silence is golden
+> > --
+> > 2.31.1
+> >
+> 
 
-> +new=$(_get_change_attr $testdir)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr of dir did not change after hardlink!"
-> +fi
-> +
-> +# on an unlink?
-> +old=$new
-> +rm -f $testfile
-> +new=$(_get_change_attr $testdir)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr of dir did not change after unlink!"
-> +fi
-> +
-> +# on a rename (within same dir)
-> +old=$new
-> +mv $testdir/linky $testfile
-> +new=$(_get_change_attr $testdir)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr of dir did not change after rename!"
-> +fi
-> +
-> +# on a mknod
-> +old=$new
-> +mknod $testdir/pipe p
-> +new=$(_get_change_attr $testdir)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr of dir did not change after mknod!"
-> +fi
-> +
-> +
-> +# REGULAR FILE TESTS
-> +####################
-> +# ensure change_attr changes after a write
-> +old=$(_get_change_attr $testfile)
-> +$XFS_IO_PROG -c "pwrite -W -q 0 32" $testfile
-> +new=$(_get_change_attr $testfile)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr did not change after write!"
-> +fi
-> +
-> +# ensure it doesn't change after a sync
-> +old=$new
-> +sync
-> +new=$(_get_change_attr $testfile)
-> +if [ $old != $new ]; then
-> +       _fail "Change attr changed after sync!"
-> +fi
-> +
-> +# ensure change_attr does not change after read
-> +old=$new
-> +cat $testfile > /dev/null
-> +new=$(_get_change_attr $testfile)
-> +if [ $old != $new ]; then
-> +       _fail "Change attr changed after read!"
-> +fi
-> +
-> +# ensure it changes after truncate
-> +old=$new
-> +truncate --size 0 $testfile
-> +new=$(_get_change_attr $testfile)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr did not change after truncate!"
-> +fi
-> +
-> +# ensure it changes after only atime update
-> +old=$new
-> +$XFS_IO_PROG -c "utimes 1 1 $UTIME_OMIT $UTIME_OMIT" $testfile
-> +new=$(_get_change_attr $testfile)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr did not change after atime update!"
-> +fi
-> +
-> +# ensure it changes after utimes atime/mtime update
-> +old=$new
-> +$XFS_IO_PROG -c "utimes 1 1 1 1" $testfile
-> +new=$(_get_change_attr $testfile)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr did not change after mtime update!"
-> +fi
-> +
-> +# after setting xattr
-> +old=$new
-> +setfattr -n user.foo -v bar $testfile
-> +new=$(_get_change_attr $testfile)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr did not change after setxattr!"
-> +fi
-> +
-> +# after removing xattr
-> +old=$new
-> +setfattr -x user.foo $testfile
-> +new=$(_get_change_attr $testfile)
-> +if [ $old = $new ]; then
-> +       _fail "Change attr did not change after rmxattr!"
-> +fi
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/693.out b/tests/generic/693.out
-> new file mode 100644
-> index 000000000000..89ad553d911c
-> --- /dev/null
-> +++ b/tests/generic/693.out
-> @@ -0,0 +1 @@
-> +QA output created by 693
-> --
-> 2.37.2
->
