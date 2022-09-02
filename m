@@ -2,174 +2,178 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49C4FECAAD2
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 00:44:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADBABECAAD2
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 01:19:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233374AbiIBAof (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 20:44:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57988 "EHLO
+        id S234349AbiIBBT3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 21:19:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234557AbiIBAoe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 20:44:34 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5426FA1D25;
-        Thu,  1 Sep 2022 17:44:33 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id v5so375975plo.9;
-        Thu, 01 Sep 2022 17:44:33 -0700 (PDT)
+        with ESMTP id S235180AbiIBBTV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 21:19:21 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98232A6AE0;
+        Thu,  1 Sep 2022 18:19:20 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id v5so433187plo.9;
+        Thu, 01 Sep 2022 18:19:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date;
-        bh=E4nPos8j2trGdUyNjY0PKnLHeXxwvnp6sv+OTLgAl0E=;
-        b=ZL+ic6+jtFRwUSWCyFZ2r0dFS98Dt65vIvpwBTpMG5BctwnH85/Ne74xvRV9iqN9dT
-         C/bP26kue9DaniJ304Xv6VC5T7+OgMOGN07eVk0/7DABR+H6IAP6EHvm/gMJTVWsyBhp
-         SkcgckUzhCNwAS66Dha+k67adeTTXbyRDJEbATOETPwPfKEPrk4nOy7RdVndpqUYgRX7
-         zdLns7e/t+VYh6oXfVuUuaEg1EGTHq+fbvxlvirMoODjo0i402TgcZ0YahkmSK07wdfU
-         YOt1leJWOZoeqlLmq/Aul6qqla2oNUwbVxKS9nIvIWuiHTWh9xiWcqMoeuOxMgFZXmaC
-         V91g==
+        bh=pDGIofX20XOXFmRT5L0BmUWHa+0q9FZCwKdeHLSAXCU=;
+        b=Yz/aDMArhnuxDg1TmTexUH+I5AUzQeo7g1hBq4lz7wrenEjNBkXCSpEj9dlReBSWjL
+         Ei37q+jznvVAW3tHzxqQZ83VBpYS+KqJOFngcqetntbSrga03qKIlds7xPRWeM7C8cuW
+         UZWXGH2+YgfeAm9/zbbSmD8Y7W1Q3YXZBFNyEB9UTzxL4tr5UYS0juuRRScY8s2H2VgX
+         4TOuIaeq7DolRNnmLQjOvJCj1nce8JL45bOZxL+OlJmqT3iQrTRmZC71Y7rIySRhAzoC
+         Hokoln9cdl/hsFL6CV0k4sznBP0BsDt9Vg/HpFJ2Jn2oG97oIu49NiSX7QOGl/xfXtQ1
+         Ytjw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=E4nPos8j2trGdUyNjY0PKnLHeXxwvnp6sv+OTLgAl0E=;
-        b=nytFezD8qqhWYN/IbY9t4FvuEb+piw7wYP0ootJNoHq1NYerIGemZARmMJPS3suozZ
-         HKgOi53LHQoZFUnES9/RDrAeuDfV9xNRUkEjA8WEU8SVOt6OcG1TXrI58rVClMHpj4/1
-         BRQ2XaYshhYhPY4HiMlmH9AvoCcIhpN2MqiPe5ATW57HfUTxhBzDxxEAAuJ9m1nmirlQ
-         S8jn3sJquo6SwEMFbl4r+lHUNmDxRzBUi2lJUp7lRSUvuwK0PDGCMV6UvMz+cpIpDayg
-         ta6lE+IEXJJoTaLLMFnJkBhD46n5UWF3VSKFVG6torZaXU/UmafzMiO1keQIHxhH0VPB
-         mV5Q==
-X-Gm-Message-State: ACgBeo0kNUi7VVIYK69Px9JvAf0qn4pzyjJ3FHzmYTwCKFMQrDNTeP6t
-        ySnjUhG7XAhtZdRpRzFWC7Ix/AWgqWXo7577OziUgVpy
-X-Google-Smtp-Source: AA6agR5hXCu83Oz9Z5/QKhKKAbnSHRBdja8QIfTPeYoGU2AIDP6s5EJa9wbs3VzbMmBO4ddCSqxxBlENKjrc1xraFQ4=
-X-Received: by 2002:a17:902:bd05:b0:172:ae77:1eea with SMTP id
- p5-20020a170902bd0500b00172ae771eeamr32943662pls.158.1662079472802; Thu, 01
- Sep 2022 17:44:32 -0700 (PDT)
+        bh=pDGIofX20XOXFmRT5L0BmUWHa+0q9FZCwKdeHLSAXCU=;
+        b=I0BE91EQknIAqxXK0EwOvBFRF1wntPW3QpPOOeh0f3iFyfzpZrSQu4RjkkQCF7BRlM
+         DrEqhKep0vS8IHftif65VEUV4eCJukHF+GjASxaYFW1PHuwj8gXOVgnkHXiqvYWWKmZf
+         Eb+2yXEd0ksOfsL2pavCz1uiixHEk8BOiAtPeEadayfasmefA5Y6//0j23PccTHBrH/V
+         yELO1UkVo/ltzGKWemhbewOcXh9E8YEsxl1HBgfRzkcw+YLYuzYm5lSjqO8mU3HlD6qb
+         wGkzVrmYVq4mo9Pw6FBtAepoloBAHwRMFJn0SLWtCgviOLFGQHgrtajUNegEsjMX3rbb
+         n7TA==
+X-Gm-Message-State: ACgBeo0wn9N+V2wkcipbhVRhebQptOK5h1t7wfH0bdj+CASa1UgfSj3L
+        ImnMzdLfwNuErWb1irCFC+XdYZ7XNYeF6kvBVutyegdJ
+X-Google-Smtp-Source: AA6agR4MQFTeZo+Ltc3pgimmCWIOgfaNT+7sAj4yiwuQ1+NJyA6tTt/QZqgJuMfw+CKvKQPkJL7Jhl3zUnmCCMo+1P0=
+X-Received: by 2002:a17:90a:cb14:b0:1fd:c964:f708 with SMTP id
+ z20-20020a17090acb1400b001fdc964f708mr2083064pjt.62.1662081560127; Thu, 01
+ Sep 2022 18:19:20 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220901143459.3883118-1-zlang@kernel.org>
-In-Reply-To: <20220901143459.3883118-1-zlang@kernel.org>
+References: <20220825130042.1707017-1-chandan.babu@oracle.com>
+In-Reply-To: <20220825130042.1707017-1-chandan.babu@oracle.com>
 From:   Murphy Zhou <jencce.kernel@gmail.com>
-Date:   Fri, 2 Sep 2022 08:44:21 +0800
-Message-ID: <CADJHv_vX+7tONjguTw8ZgyV9uE=OW=RtZQ_FdF2-ViGaxQbzYw@mail.gmail.com>
-Subject: Re: [PATCH v3] generic: new test to verify selinux label of whiteout inode
-To:     Zorro Lang <zlang@kernel.org>
-Cc:     fstests <fstests@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
+Date:   Fri, 2 Sep 2022 09:19:08 +0800
+Message-ID: <CADJHv_uYEL7zqhG5AwE5G6Y+0PQdx1qW-yUQ_0U7LYsW4oYwvg@mail.gmail.com>
+Subject: Re: [PATCH V3] xfs: Check if a direct write can result in a false
+ ENOSPC error
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     fstests <fstests@vger.kernel.org>, Zorro Lang <zlang@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 1, 2022 at 10:47 PM Zorro Lang <zlang@kernel.org> wrote:
+Looks good!
+
+On Thu, Aug 25, 2022 at 9:04 PM Chandan Babu R <chandan.babu@oracle.com> wrote:
 >
-> A but on XFS cause renameat2() with flags=RENAME_WHITEOUT doesn't
-       ^ bug
-> apply an selinux label. That's quite different with other fs (e.g.
-> ext4, tmpfs).
+> This commit adds a test to check if a direct write on a delalloc extent
+> present in CoW fork can result in a false ENOSPC error. The bug has been fixed
+> by upstream commit d62113303d691 ("xfs: Fix false ENOSPC when performing
+> direct write on a delalloc extent in cow fork").
 >
-> Signed-off-by: Zorro Lang <zlang@kernel.org>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 > ---
+> Changelog:
+> V2 -> V3:
+>   1. Use _get_file_block_size instead of _get_block_size.
 >
 > V1 -> V2:
-> 1) Add "whiteout" group
-> 2) Add commit ID which fix that bug
-> 3) Rebase to latest fstests for-next branch
+>   1. Use file blocks as units instead of bytes to specify file offsets.
 >
-> V2 -> V3:
-> Rebase to latest fstests for-next branch again
+>  tests/xfs/553     | 67 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/553.out |  9 +++++++
+>  2 files changed, 76 insertions(+)
+>  create mode 100755 tests/xfs/553
+>  create mode 100644 tests/xfs/553.out
 >
-> Thanks,
-> Zorro
->
->  tests/generic/695     | 64 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/695.out |  2 ++
->  2 files changed, 66 insertions(+)
->  create mode 100755 tests/generic/695
->  create mode 100644 tests/generic/695.out
->
-> diff --git a/tests/generic/695 b/tests/generic/695
+> diff --git a/tests/xfs/553 b/tests/xfs/553
 > new file mode 100755
-> index 00000000..f04d4b3d
+> index 00000000..e98c04ed
 > --- /dev/null
-> +++ b/tests/generic/695
-> @@ -0,0 +1,64 @@
+> +++ b/tests/xfs/553
+> @@ -0,0 +1,67 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat, Copyright.  All Rights Reserved.
+> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
 > +#
-> +# FS QA Test No. 695
+> +# FS QA Test 553
 > +#
-> +# Verify selinux label can be kept after RENAME_WHITEOUT. This is
-> +# a regression test for:
-> +#   70b589a37e1a ("xfs: add selinux labels to whiteout inodes")
+> +# Test to check if a direct write on a delalloc extent present in CoW fork can
+> +# result in an ENOSPC error.
 > +#
 > +. ./common/preamble
-> +_begin_fstest auto quick rename attr whiteout
+> +_begin_fstest auto quick clone
 > +
 > +# Import common functions.
-> +. ./common/attr
-> +. ./common/renameat2
+> +. ./common/reflink
+> +. ./common/inject
 > +
 > +# real QA test starts here
-> +_supported_fs generic
-> +_require_scratch
-> +_require_attrs
-> +_require_renameat2 whiteout
+> +_supported_fs xfs
+> +_fixed_by_kernel_commit d62113303d691 \
+> +       "xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork"
+> +_require_scratch_reflink
+> +_require_xfs_debug
+> +_require_test_program "punch-alternating"
+> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+> +_require_xfs_io_command "reflink"
+> +_require_xfs_io_command "cowextsize"
 > +
-> +_fixed_by_kernel_commit 70b589a37e1a \
-> +       xfs: add selinux labels to whiteout inodes
+> +source=${SCRATCH_MNT}/source
+> +destination=${SCRATCH_MNT}/destination
+> +fragmented_file=${SCRATCH_MNT}/fragmented_file
 > +
-> +get_selinux_label()
-> +{
-> +       local label
+> +echo "Format and mount fs"
+> +_scratch_mkfs >> $seqres.full
+> +_scratch_mount >> $seqres.full
 > +
-> +       label=`_getfattr --absolute-names -n security.selinux $@ | sed -n 's/security.selinux=\"\(.*\)\"/\1/p'`
-
-Just curious, why `` instead of $() ? I see the latter is preferred in
-many articles.
-
-Regards~
-
-> +       if [ ${PIPESTATUS[0]} -ne 0 -o -z "$label" ];then
-> +               _fail "Fail to get selinux label: $label"
-> +       fi
-> +       echo $label
-> +}
+> +blksz=$(_get_file_block_size $SCRATCH_MNT)
 > +
-> +_scratch_mkfs >> $seqres.full 2>&1
-> +# SELINUX_MOUNT_OPTIONS will be set in common/config if selinux is enabled
-> +if [ -z "$SELINUX_MOUNT_OPTIONS" ]; then
-> +       _notrun "Require selinux to be enabled"
-> +fi
-> +# This test need to verify selinux labels in objects, so unset this selinux
-> +# mount option
-> +export SELINUX_MOUNT_OPTIONS=""
-> +_scratch_mount
+> +echo "Create source file"
+> +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 8192))" $source >> $seqres.full
 > +
-> +touch $SCRATCH_MNT/f1
-> +echo "Before RENAME_WHITEOUT" >> $seqres.full
-> +ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
-> +# Expect f1 and f2 have same label after RENAME_WHITEOUT
-> +$here/src/renameat2 -w $SCRATCH_MNT/f1 $SCRATCH_MNT/f2
-> +echo "After RENAME_WHITEOUT" >> $seqres.full
-> +ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
-> +label1=`get_selinux_label $SCRATCH_MNT/f1`
-> +label2=`get_selinux_label $SCRATCH_MNT/f2`
-> +if [ "$label1" != "$label2" ];then
-> +       echo "$label1 != $label2"
-> +fi
+> +echo "Reflink destination file with source file"
+> +$XFS_IO_PROG -f -c "reflink $source" $destination >> $seqres.full
 > +
-> +echo "Silence is golden"
+> +echo "Set destination file's cowextsize to 4096 blocks"
+> +$XFS_IO_PROG -c "cowextsize $((blksz * 4096))" $destination >> $seqres.full
+> +
+> +echo "Fragment FS"
+> +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 16384))" $fragmented_file \
+> +            >> $seqres.full
+> +sync
+> +$here/src/punch-alternating $fragmented_file >> $seqres.full
+> +
+> +echo "Inject bmap_alloc_minlen_extent error tag"
+> +_scratch_inject_error bmap_alloc_minlen_extent 1
+> +
+> +echo "Create delalloc extent of length 4096 blocks in destination file's CoW fork"
+> +$XFS_IO_PROG -c "pwrite 0 $blksz" $destination >> $seqres.full
+> +
+> +sync
+> +
+> +echo "Direct I/O write at 3rd block in destination file"
+> +$XFS_IO_PROG -d -c "pwrite $((blksz * 3)) $((blksz * 2))" $destination \
+> +            >> $seqres.full
+> +
 > +# success, all done
 > +status=0
 > +exit
-> diff --git a/tests/generic/695.out b/tests/generic/695.out
+> diff --git a/tests/xfs/553.out b/tests/xfs/553.out
 > new file mode 100644
-> index 00000000..1332ff16
+> index 00000000..9f5679de
 > --- /dev/null
-> +++ b/tests/generic/695.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 695
-> +Silence is golden
+> +++ b/tests/xfs/553.out
+> @@ -0,0 +1,9 @@
+> +QA output created by 553
+> +Format and mount fs
+> +Create source file
+> +Reflink destination file with source file
+> +Set destination file's cowextsize to 4096 blocks
+> +Fragment FS
+> +Inject bmap_alloc_minlen_extent error tag
+> +Create delalloc extent of length 4096 blocks in destination file's CoW fork
+> +Direct I/O write at 3rd block in destination file
 > --
-> 2.31.1
+> 2.35.1
 >
