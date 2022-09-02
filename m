@@ -2,153 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 270C8C6FA83
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Sep 2022 16:30:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49C4FECAAD2
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 00:44:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234817AbiIAQac (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Sep 2022 12:30:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51248 "EHLO
+        id S233374AbiIBAof (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Sep 2022 20:44:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235050AbiIAQa1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 12:30:27 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 288F54054F;
-        Thu,  1 Sep 2022 09:30:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B533C61FA4;
-        Thu,  1 Sep 2022 16:30:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED73BC433C1;
-        Thu,  1 Sep 2022 16:30:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662049824;
-        bh=IJ0PCR/aHRiRVBBTIlB2iYhCXtiktwtTDXekHNHskb8=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Ag+0p/y9MHRUC6ul4TWQLjIrJ+7XAHSbClMDLdLD9e/Huey6Weo5MYuoX/3mugA8X
-         0k12yUDgSByRh22zychlAHEV3/q5J+hDBBb+SNSGusbGhr2SoxVqwW3Se1GFECa0Rb
-         /hbHFqRNJsPkNmgZydl/Sa4lCR9tprV6kXjW3f6sE5LrZNyfvrqXjxV/fBrhz2qaq9
-         Yr+MwcBrLcLT5ia5nhq2C2d0km7Mp8ywszbpYXLNMHzSQCm+S48owcryMD6DdWjRE7
-         PQlyGD8bVFJM5NN1qVzOZNbP5miip9A6N3bC8nYHHSovbBhipoRpW7VCC3cWkGMpEn
-         VYaGqsFDmIJmw==
-Message-ID: <81e57e81e4570d1659098f2bbc7c9049a605c5e8.camel@kernel.org>
-Subject: Re: [RFC PATCH v2] statx, inode: document the new STATX_INO_VERSION
- field
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Florian Weimer <fweimer@redhat.com>
-Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
-        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
-        bfields@fieldses.org, brauner@kernel.org,
-        linux-man@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Date:   Thu, 01 Sep 2022 12:30:20 -0400
-In-Reply-To: <874jxrqdji.fsf@oldenburg.str.redhat.com>
-References: <20220901121714.20051-1-jlayton@kernel.org>
-         <874jxrqdji.fsf@oldenburg.str.redhat.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
+        with ESMTP id S234557AbiIBAoe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Sep 2022 20:44:34 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5426FA1D25;
+        Thu,  1 Sep 2022 17:44:33 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id v5so375975plo.9;
+        Thu, 01 Sep 2022 17:44:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=E4nPos8j2trGdUyNjY0PKnLHeXxwvnp6sv+OTLgAl0E=;
+        b=ZL+ic6+jtFRwUSWCyFZ2r0dFS98Dt65vIvpwBTpMG5BctwnH85/Ne74xvRV9iqN9dT
+         C/bP26kue9DaniJ304Xv6VC5T7+OgMOGN07eVk0/7DABR+H6IAP6EHvm/gMJTVWsyBhp
+         SkcgckUzhCNwAS66Dha+k67adeTTXbyRDJEbATOETPwPfKEPrk4nOy7RdVndpqUYgRX7
+         zdLns7e/t+VYh6oXfVuUuaEg1EGTHq+fbvxlvirMoODjo0i402TgcZ0YahkmSK07wdfU
+         YOt1leJWOZoeqlLmq/Aul6qqla2oNUwbVxKS9nIvIWuiHTWh9xiWcqMoeuOxMgFZXmaC
+         V91g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=E4nPos8j2trGdUyNjY0PKnLHeXxwvnp6sv+OTLgAl0E=;
+        b=nytFezD8qqhWYN/IbY9t4FvuEb+piw7wYP0ootJNoHq1NYerIGemZARmMJPS3suozZ
+         HKgOi53LHQoZFUnES9/RDrAeuDfV9xNRUkEjA8WEU8SVOt6OcG1TXrI58rVClMHpj4/1
+         BRQ2XaYshhYhPY4HiMlmH9AvoCcIhpN2MqiPe5ATW57HfUTxhBzDxxEAAuJ9m1nmirlQ
+         S8jn3sJquo6SwEMFbl4r+lHUNmDxRzBUi2lJUp7lRSUvuwK0PDGCMV6UvMz+cpIpDayg
+         ta6lE+IEXJJoTaLLMFnJkBhD46n5UWF3VSKFVG6torZaXU/UmafzMiO1keQIHxhH0VPB
+         mV5Q==
+X-Gm-Message-State: ACgBeo0kNUi7VVIYK69Px9JvAf0qn4pzyjJ3FHzmYTwCKFMQrDNTeP6t
+        ySnjUhG7XAhtZdRpRzFWC7Ix/AWgqWXo7577OziUgVpy
+X-Google-Smtp-Source: AA6agR5hXCu83Oz9Z5/QKhKKAbnSHRBdja8QIfTPeYoGU2AIDP6s5EJa9wbs3VzbMmBO4ddCSqxxBlENKjrc1xraFQ4=
+X-Received: by 2002:a17:902:bd05:b0:172:ae77:1eea with SMTP id
+ p5-20020a170902bd0500b00172ae771eeamr32943662pls.158.1662079472802; Thu, 01
+ Sep 2022 17:44:32 -0700 (PDT)
 MIME-Version: 1.0
+References: <20220901143459.3883118-1-zlang@kernel.org>
+In-Reply-To: <20220901143459.3883118-1-zlang@kernel.org>
+From:   Murphy Zhou <jencce.kernel@gmail.com>
+Date:   Fri, 2 Sep 2022 08:44:21 +0800
+Message-ID: <CADJHv_vX+7tONjguTw8ZgyV9uE=OW=RtZQ_FdF2-ViGaxQbzYw@mail.gmail.com>
+Subject: Re: [PATCH v3] generic: new test to verify selinux label of whiteout inode
+To:     Zorro Lang <zlang@kernel.org>
+Cc:     fstests <fstests@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 2022-09-01 at 18:12 +0200, Florian Weimer wrote:
-> * Jeff Layton:
->=20
-> > @@ -411,6 +413,21 @@ and corresponds to the number in the first field i=
-n one of the records in
-> >  For further information on the above fields, see
-> >  .BR inode (7).
-> >  .\"
-> > +.TP
-> > +.I stx_ino_version
-> > +The inode version, also known as the inode change attribute. This
-> > +value must change any time there is an inode status change. Any
-> > +operation that would cause the
-> > +.I stx_ctime
-> > +to change must also cause
-> > +.I stx_ino_version
-> > +to change, even when there is no apparent change to the
-> > +.I stx_ctime
-> > +due to coarse timestamp granularity.
-> > +.IP
-> > +An observer cannot infer anything about the nature or magnitude of the=
- change
-> > +from the value of this field. A change in this value only indicates th=
-at
-> > +there has been an explicit change in the inode.
->=20
-> What happens if the file system does not support i_version?
->=20
+On Thu, Sep 1, 2022 at 10:47 PM Zorro Lang <zlang@kernel.org> wrote:
+>
+> A but on XFS cause renameat2() with flags=RENAME_WHITEOUT doesn't
+       ^ bug
+> apply an selinux label. That's quite different with other fs (e.g.
+> ext4, tmpfs).
+>
+> Signed-off-by: Zorro Lang <zlang@kernel.org>
+> ---
+>
+> V1 -> V2:
+> 1) Add "whiteout" group
+> 2) Add commit ID which fix that bug
+> 3) Rebase to latest fstests for-next branch
+>
+> V2 -> V3:
+> Rebase to latest fstests for-next branch again
+>
+> Thanks,
+> Zorro
+>
+>  tests/generic/695     | 64 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/695.out |  2 ++
+>  2 files changed, 66 insertions(+)
+>  create mode 100755 tests/generic/695
+>  create mode 100644 tests/generic/695.out
+>
+> diff --git a/tests/generic/695 b/tests/generic/695
+> new file mode 100755
+> index 00000000..f04d4b3d
+> --- /dev/null
+> +++ b/tests/generic/695
+> @@ -0,0 +1,64 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022 Red Hat, Copyright.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 695
+> +#
+> +# Verify selinux label can be kept after RENAME_WHITEOUT. This is
+> +# a regression test for:
+> +#   70b589a37e1a ("xfs: add selinux labels to whiteout inodes")
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick rename attr whiteout
+> +
+> +# Import common functions.
+> +. ./common/attr
+> +. ./common/renameat2
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_require_scratch
+> +_require_attrs
+> +_require_renameat2 whiteout
+> +
+> +_fixed_by_kernel_commit 70b589a37e1a \
+> +       xfs: add selinux labels to whiteout inodes
+> +
+> +get_selinux_label()
+> +{
+> +       local label
+> +
+> +       label=`_getfattr --absolute-names -n security.selinux $@ | sed -n 's/security.selinux=\"\(.*\)\"/\1/p'`
 
-The STATX_INO_VERSION bit will not be set in stx_mask field of the
-response.
+Just curious, why `` instead of $() ? I see the latter is preferred in
+many articles.
 
-> > diff --git a/man7/inode.7 b/man7/inode.7
-> > index 9b255a890720..d5e0890a52c0 100644
-> > --- a/man7/inode.7
-> > +++ b/man7/inode.7
-> > @@ -184,6 +184,18 @@ Last status change timestamp (ctime)
-> >  This is the file's last status change timestamp.
-> >  It is changed by writing or by setting inode information
-> >  (i.e., owner, group, link count, mode, etc.).
-> > +.TP
-> > +Inode version (i_version)
-> > +(not returned in the \fIstat\fP structure); \fIstatx.stx_ino_version\f=
-P
-> > +.IP
-> > +This is the inode change attribute. Any operation that would result in=
- a change
-> > +to \fIstatx.stx_ctime\fP must result in a change to this value. The va=
-lue must
-> > +change even in the case where the ctime change is not evident due to c=
-oarse
-> > +timestamp granularity.
-> > +.IP
-> > +An observer cannot infer anything from the returned value about the na=
-ture or
-> > +magnitude of the change. If the returned value is different from the l=
-ast time
-> > +it was checked, then something has made an explicit change to the inod=
-e.
->=20
-> What is the wraparound behavior for i_version?  Does it use the full
-> 64-bit range?
->=20
+Regards~
 
-All of the existing implementations use all 64 bits. If you were to
-increment a 64 bit value every nanosecond, it will take >500 years for
-it to wrap. I'm hoping that's good enough. ;)
-
-The implementation that all of the local Linux filesystems use track
-whether the value has been queried using one bit, so there you only get
-63 bits of counter.
-
-My original thinking here was that we should leave the spec "loose" to
-allow for implementations that may not be based on a counter. E.g. could
-some filesystem do this instead by hashing certain metadata?
-
-It's arguable though that the NFSv4 spec requires that this be based on
-a counter, as the client is required to increment it in the case of
-write delegations.
-
-> If the system crashes without flushing disks, is it possible to observe
-> new file contents without a change of i_version?
-
-Yes, I think that's possible given the current implementations.
-
-We don't have a great scheme to combat that at the moment, other than
-looking at this in conjunction with the ctime. As long as the clock
-doesn't jump backward after the crash and it takes more than one jiffy
-to get the host back up, then you can be reasonably sure that
-i_version+ctime should never repeat.
-
-Maybe that's worth adding to the NOTES section of the manpage?
---=20
-Jeff Layton <jlayton@kernel.org>
+> +       if [ ${PIPESTATUS[0]} -ne 0 -o -z "$label" ];then
+> +               _fail "Fail to get selinux label: $label"
+> +       fi
+> +       echo $label
+> +}
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1
+> +# SELINUX_MOUNT_OPTIONS will be set in common/config if selinux is enabled
+> +if [ -z "$SELINUX_MOUNT_OPTIONS" ]; then
+> +       _notrun "Require selinux to be enabled"
+> +fi
+> +# This test need to verify selinux labels in objects, so unset this selinux
+> +# mount option
+> +export SELINUX_MOUNT_OPTIONS=""
+> +_scratch_mount
+> +
+> +touch $SCRATCH_MNT/f1
+> +echo "Before RENAME_WHITEOUT" >> $seqres.full
+> +ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
+> +# Expect f1 and f2 have same label after RENAME_WHITEOUT
+> +$here/src/renameat2 -w $SCRATCH_MNT/f1 $SCRATCH_MNT/f2
+> +echo "After RENAME_WHITEOUT" >> $seqres.full
+> +ls -lZ $SCRATCH_MNT >> $seqres.full 2>&1
+> +label1=`get_selinux_label $SCRATCH_MNT/f1`
+> +label2=`get_selinux_label $SCRATCH_MNT/f2`
+> +if [ "$label1" != "$label2" ];then
+> +       echo "$label1 != $label2"
+> +fi
+> +
+> +echo "Silence is golden"
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/695.out b/tests/generic/695.out
+> new file mode 100644
+> index 00000000..1332ff16
+> --- /dev/null
+> +++ b/tests/generic/695.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 695
+> +Silence is golden
+> --
+> 2.31.1
+>
