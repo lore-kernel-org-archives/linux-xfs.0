@@ -2,134 +2,63 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5695CC6FA82
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 20:48:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C97A9C6FA82
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 21:55:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230186AbiIBUsZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Sep 2022 16:48:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37288 "EHLO
+        id S229579AbiIBVzV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Sep 2022 17:55:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229579AbiIBUsX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Sep 2022 16:48:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B3BFDAB8A
-        for <linux-xfs@vger.kernel.org>; Fri,  2 Sep 2022 13:48:22 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 366856142A
-        for <linux-xfs@vger.kernel.org>; Fri,  2 Sep 2022 20:48:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 907D8C433D6;
-        Fri,  2 Sep 2022 20:48:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662151701;
-        bh=unvAbw32sNAy1x0f5haUeav4CxclY469Vy/e9WOxYsU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=twJVGLf1FvRfsSQsv6wWZCpNNUWgDuquBkWPsQLKULwEXeOU7HQWsK/yjcgtTBcDJ
-         SyV9WsdObKsUhOO4zj9HKMKrc6AtJMxpNEGFCZEzemBoVHbZ63HOnMV/uOR0YiuxCP
-         HaAv8b+WLWtfFRjprJy/u3IEeA4UgND+rgi7/PXQrofK7Y/p65g76eDQSDeMp0+Cc1
-         Po3brelisYHzEIhq+LImNxXer5enJf33j57vplNbrRzC7jkOuFucBNN9XqLyNNaTQO
-         Em60FoscGYSDTEfuESrc1VMJb0kVnoKbO6afAChNhQgJBBohPWFaghmeOEN0Iw3z+9
-         VBvs+fEUMibNQ==
-Date:   Fri, 2 Sep 2022 13:48:21 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Carlos Maiolino <cem@kernel.org>
+        with ESMTP id S229566AbiIBVzT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Sep 2022 17:55:19 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0237C57212
+        for <linux-xfs@vger.kernel.org>; Fri,  2 Sep 2022 14:55:18 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-4-169.pa.nsw.optusnet.com.au [49.195.4.169])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E079510E9B61;
+        Sat,  3 Sep 2022 07:55:17 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oUEdA-00346O-M0; Sat, 03 Sep 2022 07:55:16 +1000
+Date:   Sat, 3 Sep 2022 07:55:16 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs_repair: Fix check_refcount() error path
-Message-ID: <YxJsFQb+MdmeRmak@magnolia>
-References: <166212614879.31305.11337231919093625864.stgit@andromeda>
- <166212621918.31305.17388002689404843538.stgit@andromeda>
+Subject: Re: Creating written extents beyond EOF
+Message-ID: <20220902215516.GX3600936@dread.disaster.area>
+References: <877d2np6im.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <166212621918.31305.17388002689404843538.stgit@andromeda>
+In-Reply-To: <877d2np6im.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=63127bc6
+        a=FOdsZBbW/tHyAhIVFJ0pRA==:117 a=FOdsZBbW/tHyAhIVFJ0pRA==:17
+        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=f81itDO6iUBRiaN4Oa0A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 02, 2022 at 03:43:39PM +0200, Carlos Maiolino wrote:
-> From: Carlos Maiolino <cmaiolino@redhat.com>
+On Thu, Sep 01, 2022 at 06:55:31PM +0530, Chandan Babu R wrote:
+> Hi Dave,
 > 
-> Add proper exit error paths to avoid checking all pointers at the current path
+> 7684e2c4384d5d1f884b01ab8bff2369e4db0bff
+> (https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7684e2c4384d5d1f884b01ab8bff2369e4db0bff)
+> is one of the commits that needs to be backported to 5.4.y stable kernel.
 > 
-> Fixes-coverity-id: 1512651
+> The commit message mentions that we could have written extents beyond EOF. I
+> am unable to come up with a sequence of commands that could create such
+> extents.
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  repair/rmap.c |   23 +++++++++++------------
->  1 file changed, 11 insertions(+), 12 deletions(-)
-> 
-> diff --git a/repair/rmap.c b/repair/rmap.c
-> index a7c4b25b1..0253c0c36 100644
-> --- a/repair/rmap.c
-> +++ b/repair/rmap.c
-> @@ -1377,7 +1377,7 @@ check_refcounts(
->  	if (error) {
->  		do_warn(_("Could not read AGF %u to check refcount btree.\n"),
->  				agno);
-> -		goto err;
-> +		goto err_agf;
+> Can you please explain how a user could create a file having written extents
+> beyond EOF?
 
-Shouldn't this       ^^^^^^^ be err_pag, since we're erroring out and
-releasing the perag group reference?
+That bug fix was committed in v5.5. We didn't convert delalloc to
+use unwritten extents until v5.8 via commit a5949d3faedf.
 
-Also ... don't the "if (XXX) free(XXX)" bits take care of all this?
-
-(I can't access Coverity any more, so I don't know what's in the
-report.)
-
---D
-
->  	}
->  
->  	/* Leave the per-ag data "uninitialized" since we rewrite it later */
-> @@ -1386,7 +1386,7 @@ check_refcounts(
->  	bt_cur = libxfs_refcountbt_init_cursor(mp, NULL, agbp, pag);
->  	if (!bt_cur) {
->  		do_warn(_("Not enough memory to check refcount data.\n"));
-> -		goto err;
-> +		goto err_bt_cur;
->  	}
->  
->  	rl_rec = pop_slab_cursor(rl_cur);
-> @@ -1398,7 +1398,7 @@ check_refcounts(
->  			do_warn(
->  _("Could not read reference count record for (%u/%u).\n"),
->  					agno, rl_rec->rc_startblock);
-> -			goto err;
-> +			goto err_loop;
->  		}
->  		if (!have) {
->  			do_warn(
-> @@ -1413,7 +1413,7 @@ _("Missing reference count record for (%u/%u) len %u count %u\n"),
->  			do_warn(
->  _("Could not read reference count record for (%u/%u).\n"),
->  					agno, rl_rec->rc_startblock);
-> -			goto err;
-> +			goto err_loop;
->  		}
->  		if (!i) {
->  			do_warn(
-> @@ -1436,14 +1436,13 @@ next_loop:
->  		rl_rec = pop_slab_cursor(rl_cur);
->  	}
->  
-> -err:
-> -	if (bt_cur)
-> -		libxfs_btree_del_cursor(bt_cur, error ? XFS_BTREE_ERROR :
-> -							XFS_BTREE_NOERROR);
-> -	if (pag)
-> -		libxfs_perag_put(pag);
-> -	if (agbp)
-> -		libxfs_buf_relse(agbp);
-> +err_loop:
-> +	libxfs_btree_del_cursor(bt_cur, error ?
-> +				XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-> +err_bt_cur:
-> +	libxfs_buf_relse(agbp);
-> +err_agf:
-> +	libxfs_perag_put(pag);
->  	free_slab_cursor(&rl_cur);
->  }
->  
-> 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
