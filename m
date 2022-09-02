@@ -2,95 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86A4AC6FA81
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 07:04:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0C0FECAAA1
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Sep 2022 07:32:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234101AbiIBHES (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Sep 2022 03:04:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46144 "EHLO
+        id S235127AbiIBHcj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Sep 2022 03:32:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230295AbiIBHER (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Sep 2022 03:04:17 -0400
-Received: from mail-ua1-x929.google.com (mail-ua1-x929.google.com [IPv6:2607:f8b0:4864:20::929])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C012FBC101;
-        Fri,  2 Sep 2022 00:04:16 -0700 (PDT)
-Received: by mail-ua1-x929.google.com with SMTP id x5so508220uaf.0;
-        Fri, 02 Sep 2022 00:04:16 -0700 (PDT)
+        with ESMTP id S229514AbiIBHci (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Sep 2022 03:32:38 -0400
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B7C4B5147;
+        Fri,  2 Sep 2022 00:32:37 -0700 (PDT)
+Received: by mail-pg1-x52f.google.com with SMTP id v4so1232589pgi.10;
+        Fri, 02 Sep 2022 00:32:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=D5mNJYlN1uS8OgKjt0YRjR63MZ/emfhtzN8JpVQFkdY=;
-        b=TyoSedZlNm0kRQmcISzVC8xkaZYDUns1VRhaL5OtQa16w7buPs/aCoCXyFwF9mxtuK
-         L1jbMOxlf/bU3NFrhZ/6+UVMWokdVo/MYS4gmJGpZh14aPkWhGNEYd4lUgI82v4NbB5Q
-         N99v50L/2Zid65zgdPvHp9QsN+OUWyAQ+wiwQKBK+yrxLbb8j61iR6DzNZb2mf26QiRV
-         /9bOhVdkvmRP7uJeIDqwWTslZsUyUN98pHW4FHi8D3qZEsU1Px8BAYZ9uROyLG14UKfb
-         tSogGmL2tYlI9CiLBqDJcJEXBxnC+fixEYEk1giMGMxqtTpP90vOt9Rf7hIUO5LEvC7D
-         2sng==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=z9kAPseJetbuZBdM95ehLDErpmOHHqA6j0W1oEZy7Mo=;
+        b=a4HIf/Upa39kXBIx139TT2Uo/S1foBoH7hX/9egihEfdPTSFYrBShRUjPeNE4aAYw4
+         FU9Xz+zFdSfmn7+vwDmd3Ub9dZahFc2Ao0Mo+N6gb3lZnyIL+tnNeqsCQU1ZvdNRsQuq
+         9s96Go99K/3ROfxkLy3fB/QxgMtn1gFWBZ4u4U0GUqu3CWXJZpUv2Y/9qqo9SaSRN/nN
+         hO9pbl9ng6ArUGJbR6Q6eqfL2cqIn+dV96BYjYQNCmXdz2etU0STrCPdtKmHYuU7D2Lb
+         lASINEVZPK7CycihwSj1LlmW5uNR6xSNbYOiLQISsSZd6XbE8MffEoOnL0C40oMOj7s7
+         IlJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=D5mNJYlN1uS8OgKjt0YRjR63MZ/emfhtzN8JpVQFkdY=;
-        b=qHutcoIU4EV52nn2pI4uK1lDrRpCUngI3nz8NXV0iFSwDmP3/3lvmB7WXd1N2067YC
-         HcZURPfx6foZbbbdOz7Fmbpp7ZV4N3NggNRuDkB56PcergGq+Z1FtHsaohHhTQ4KxsPX
-         ZGq+fry8cS60vGXK8hmlPQN0McY9dbQ9XSFJEwLoelUTFaBRnJ/jdrBkakr6mNMeTyNn
-         /3Hzi7akxAtKv3m7p+KTjYmiQMw+XXK1DzD5+6r9gTnR5cu03FR2WYCz6F4AaPZ1Nj8i
-         zSU0yF+igeeoHfGcB6/kRQFPa2DR+Zhobd9C1BiWkxKcnXhTjVr4ToLHbx1f02zJLhB8
-         1Ohw==
-X-Gm-Message-State: ACgBeo0zEgloaVuShYcooD2Fizci+Zno43wcggaKxpLCHAjp/u30a+jv
-        PoqaNJpZqGMw2k4nvcS53okoYA19EwWfbgrXHZY=
-X-Google-Smtp-Source: AA6agR7wlzsvRio8NikTh1qfXvXSSvbH4+yU6cAsVJmWRLwsa2E+u+QpgUCDsB22SSwvuFn7kilLOlNAqC/c5/aAgCk=
-X-Received: by 2002:a9f:2067:0:b0:387:984d:4a8e with SMTP id
- 94-20020a9f2067000000b00387984d4a8emr10527013uam.60.1662102255887; Fri, 02
- Sep 2022 00:04:15 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=z9kAPseJetbuZBdM95ehLDErpmOHHqA6j0W1oEZy7Mo=;
+        b=X1p8C4WPMnWDrcbNNkyU0uPd7ArXfrsFEpY87tdhCAGk7K4XOk6/kOAp5YNsj64Z36
+         UT/09MVkSh2OWiAJ6seJCDcqnumiKrx+MNiyk2fuXsFGSJNX2+QADi5VjM/GZbarIE17
+         Gy/Nwm/BSR4Cs5kgfMFshEUZMnoVdeqHCGprVyrwfqx3l8QacJ1+GjmEZhdeRCPSgjbg
+         7oSlcOV5u+G8Lwe8CBtxrYiMU9LSCdi3LITfgDXTzxCt8Xa282PKYYBNPUUHJBrb6xpA
+         7R4HuE2YZqVI5/f13ZBKn1QcZbB+2U9665r84FQ9R+3DCDHbAQkGZ1+PXS9jet1okYv4
+         RBAw==
+X-Gm-Message-State: ACgBeo20TMfD9CDVOdVA6YhRESC8aYJDNUS7pMtEPYWlFosNXiVyZeLd
+        YxtM3AqFiQP/yQac0PpQpfY=
+X-Google-Smtp-Source: AA6agR7E4UC4nbW5TsTctTGTWE7CcyiGWLlvlDZNq3vvFfl3HPSSslwtBu7SqB/xv6b+venqkA37uw==
+X-Received: by 2002:a63:4608:0:b0:41a:617f:e194 with SMTP id t8-20020a634608000000b0041a617fe194mr30476071pga.152.1662103956983;
+        Fri, 02 Sep 2022 00:32:36 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id j3-20020a170902da8300b001752216ca51sm891235plx.39.2022.09.02.00.32.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 Sep 2022 00:32:36 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: ye.xingchen@zte.com.cn
+To:     djwong@kernel.org
+Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ye xingchen <ye.xingchen@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH linux-next] xfs: Remove the unneeded result variable
+Date:   Fri,  2 Sep 2022 07:32:32 +0000
+Message-Id: <20220902073232.319601-1-ye.xingchen@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20220901133356.2473299-1-amir73il@gmail.com> <20220901133356.2473299-2-amir73il@gmail.com>
- <YxGfxaCrKW9NUxYZ@kroah.com>
-In-Reply-To: <YxGfxaCrKW9NUxYZ@kroah.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Fri, 2 Sep 2022 10:04:04 +0300
-Message-ID: <CAOQ4uxgL82GpXdGhKH7YxwCT6wm-5HobQpeuAYARUFzPRvXu9Q@mail.gmail.com>
-Subject: Re: [PATCH 5.10 v3 1/5] xfs: remove infinite loop when reserving free
- block pool
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 2, 2022 at 9:16 AM Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
->
-> On Thu, Sep 01, 2022 at 04:33:52PM +0300, Amir Goldstein wrote:
-> > commit 15f04fdc75aaaa1cccb0b8b3af1be290e118a7bc upstream.
-> >
-> > [Added wrapper xfs_fdblocks_unavailable() for 5.10.y backport]
->
-> You forgot the correct Author/From: information here :(
->
-> Please be more careful next time.
->
+From: ye xingchen <ye.xingchen@zte.com.cn>
 
-Sorry.
-I noticed that happens from time to time and sometimes
-I catch that.
-I wonder why/when git has done that. during cherry-pick? rebase?
-I certainly did not do --reset-author at any point.
+Return the value xfs_dir_cilookup_result() directly instead of storing it
+in another redundant variable.
 
-I might have added an original commit adding the Accessor
-and then squashed it in rebase. That may be the reason.
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: ye xingchen <ye.xingchen@zte.com.cn>
+---
+ fs/xfs/libxfs/xfs_dir2_sf.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-I'll remember to add the From: check to my pre-post eyeballing.
-
-Thanks,
-Amir.
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 003812fd7d35..8cd37e6e9d38 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -865,7 +865,6 @@ xfs_dir2_sf_lookup(
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	int			i;		/* entry index */
+-	int			error;
+ 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
+ 	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
+ 	enum xfs_dacmp		cmp;		/* comparison result */
+@@ -929,8 +928,7 @@ xfs_dir2_sf_lookup(
+ 	if (!ci_sfep)
+ 		return -ENOENT;
+ 	/* otherwise process the CI match as required by the caller */
+-	error = xfs_dir_cilookup_result(args, ci_sfep->name, ci_sfep->namelen);
+-	return error;
++	return xfs_dir_cilookup_result(args, ci_sfep->name, ci_sfep->namelen);
+ }
+ 
+ /*
+-- 
+2.25.1
