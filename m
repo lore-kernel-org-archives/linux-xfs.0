@@ -2,195 +2,156 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC5E7C6FA86
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Sep 2022 16:03:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76F8FECAAD5
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Sep 2022 07:05:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234774AbiIDQDQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Sep 2022 12:03:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57702 "EHLO
+        id S237014AbiIEHFb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Sep 2022 03:05:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234765AbiIDQDJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Sep 2022 12:03:09 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26DDC399DB;
-        Sun,  4 Sep 2022 09:02:49 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 284CUHjL004049;
-        Sun, 4 Sep 2022 16:02:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=sJvZgWEsj5bvHrZogtLXt63CpaVGAkhv3TIxYvZqxHY=;
- b=yLxLVYrNVY2al9wT+9v53bAwNtksqhnfzdVu9q2uuHUqxZRjgz5mN4mT6NSwoJ64as4J
- mzxXewY4TYXfYy7c4+muSKWCS+7u8f73RbG+mM7Ury6bo5LdVha7m6ALm4N+JWqR6nJS
- vuoDS+6oFj2agssraYv9kYvTr+8KW6GZnK5+gUcFRds0jAiSmjQAgw/aOijlpBIhCZwu
- TY4zhqKeiYGdsM9qMOlkINKjWj5+7Qbm+0DiMa2vuWx8P+qcgC5bQyamei9GTcAnITU+
- 6jCoB0ETL5FXg6WceD96jEq3hpka7CP6+p/YXwL2xGZdObVFje4hgaJtXElXaKkAauW5 BA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jbwq29y33-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 04 Sep 2022 16:02:47 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 284C0Vr0002885;
-        Sun, 4 Sep 2022 16:02:46 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2103.outbound.protection.outlook.com [104.47.58.103])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jbwc0teyj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 04 Sep 2022 16:02:46 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nHMMT53ZE7Bxgom3+RsqBIXpOiCpVBMUU1/Rf2Dng0gHJroAJQB4iVDtEjKI3/MySU/75cjEHftF2iHZ/19KNsAfRjGUVjHlbwH/vzrsVKL912fBUL3SoHTIAw5JHVc7NX2YvI7YI/rNrH3zCrfVgSK4HaWBjG8Ff3WO7B3OlAt9DRQrjg6cc604v/C+NqKtvlZXJx4ZwKAuA3plg1+XqlAJkdqW1kEGqWbUXL28lQWVHV0YeoS1xEax1ZTjAip9Ek7Puso8lFnl/ZVTm9L84vRggjUZh9LVCWZbXPJDRvGj2KfHKqA4wZxPBgMEScYyC9oiQXiA0jqUWhvlFPHjew==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=sJvZgWEsj5bvHrZogtLXt63CpaVGAkhv3TIxYvZqxHY=;
- b=Rt0Gk2MQ+3kDb/5czyCxUX+4pSLTUoV4d3qqFwuHyKNqQ7/oj++gFisa16m2UHzaNkyDvqwpNPU4NEwNIRi6r/PQ0VzzNIMdylTKKceZDLm/93B30g5HMuwDhg114uEFf8n4VDVcIDyyQgEQCoKivcN5/QGPrzVmkA4ZiqoA5JsWMoVqAQ3v6AkXuHWmpRajskzVSM509vNIOeuLXlZO9aK9EwP2k5fNfYkgi5wMkEE/+nxd61J7Iv5nke4Qvu901NXhmDD14Rvl6/cDmYNtDX6M87st0IRliKStqfpkfje61s3eyGB8IUbhLhUfrEl81jaYUjfyMEY5vVNKLEINRQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sJvZgWEsj5bvHrZogtLXt63CpaVGAkhv3TIxYvZqxHY=;
- b=xrc0z09ehvH5U78mPrb+in2iAaC/KB7OOc6hXMCU0uADeS+Fjk39AfC3tRUUGxyCeUQGjItxwlRnPG1gYkHVyaUyrJzOeeE6PH2cjHFmvcIt0N7uzK/NdGpqFVSFxCZ32/teoh4YONaqiRnTmMiXJNdz7rptdxGmTvhEau72Yqk=
-Received: from BN0PR10MB5128.namprd10.prod.outlook.com (2603:10b6:408:117::24)
- by CH0PR10MB5177.namprd10.prod.outlook.com (2603:10b6:610:df::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5588.10; Sun, 4 Sep
- 2022 16:02:44 +0000
-Received: from BN0PR10MB5128.namprd10.prod.outlook.com
- ([fe80::25d6:da15:34d:92fa]) by BN0PR10MB5128.namprd10.prod.outlook.com
- ([fe80::25d6:da15:34d:92fa%4]) with mapi id 15.20.5588.017; Sun, 4 Sep 2022
- 16:02:44 +0000
-From:   Chuck Lever III <chuck.lever@oracle.com>
-To:     Zorro Lang <zlang@redhat.com>
-CC:     "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
-        "djwong@vger.kernel.org" <djwong@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: generic/650 makes v6.0-rc client unusable
-Thread-Topic: generic/650 makes v6.0-rc client unusable
-Thread-Index: AQHYv8UPIvgoSU1RX0u5XzLtJ9lDJ63PQWGAgAAunIA=
-Date:   Sun, 4 Sep 2022 16:02:44 +0000
-Message-ID: <0AB3B4E6-3B0F-4F04-8618-A3257D820FAA@oracle.com>
-References: <3E21DFEA-8DF7-484B-8122-D578BFF7F9E0@oracle.com>
- <20220904131553.bqdsfbfhmdpuujd3@zlang-mailbox>
-In-Reply-To: <20220904131553.bqdsfbfhmdpuujd3@zlang-mailbox>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3696.120.41.1.1)
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 1085cbef-9b16-49c5-b871-08da8e8ee741
-x-ms-traffictypediagnostic: CH0PR10MB5177:EE_
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: IOxW7wo6aOgRmsm14y7nODkhx/Z9LLD3ks5mHxVvC646GQNxB06kYm36hOpL6+EVKO9skZj/SzXwdluLWeNKWJhUfbqprtk8bmtdVtTqxUywPrY6SM6YfgXMUfSYvwrMP3jRGZus5hjs5VpwpUmfz9UCJkk5gBH/Oj4MLQswZSL3OsRQxI7hcWrUpsZIT3Xtep9nLaqWIFB64x0xgbIvzKPJIGlVGemsh7w6+ezoyRLdRRlRIamlbe0pEXnbjA0Kw2GHUVuQOjC+JvbIvSzvof0gJu2bm02nzm2mvtTxxKznGweuUi/3aFbv07LBmErifYvKEx5iEju3JTXwYsvjUwVmqYK6oKUMzL9+92MJDM7zuY4+xCMoClvO0CQniHNU71kidRdYZ4mG0MjCIQCyy8yt7eV4QXxytDgaqvgEnRiCSixoDoeiONTeGylKhIOKbhmhTbzyMdnTZ8fNJV3PvLw/Oo8GN83RiOxdgeSLWPsebrbUAEqoOr8EVECH36dywuE62yFi0VWrXCegdLtmevA4kp7Tjyi3ew6EcWBywQW7KA7xmzXg3G/Dk/UKyeDwm39cRnRM5thCg6lFSJHsrq73J3SMUIDpcLTFv5Yk6hNzxUHuRzvIR3jXlSpiI1iXGviy4cY9DRoQSVU9co407XbM31eLlaJ0/4yrrgmshj9wGfMjNmiy5aAcS+4zHfyjY1DYj4HDerzKzlA/KUPfnJTyIgRWB6yfMXKfKIPTJFAGJE5DcPwREyBiiCDVTtUJIkJhhX+J4CvZyHMPl3Aq6rFDGPbekB7cMFrpFLiKTEhhPv9bCqIq94zfR+2W0b3bTrz5qdPUTMzCcY5CzDfJZA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN0PR10MB5128.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(366004)(376002)(136003)(39860400002)(396003)(346002)(2616005)(186003)(66446008)(8676002)(478600001)(4326008)(316002)(54906003)(6916009)(36756003)(64756008)(6486002)(76116006)(66476007)(66556008)(66946007)(91956017)(71200400001)(53546011)(33656002)(2906002)(122000001)(86362001)(6506007)(5660300002)(26005)(8936002)(41300700001)(6512007)(83380400001)(38100700002)(38070700005)(41533002)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?gR/9qPRueW+ZuddeJtfe3Q7dFXo/07dySfPjO5l+tkFnAr435EL2vINy0LXR?=
- =?us-ascii?Q?cHSZoBqpwy6uNnfIPnqcDQkt5X4i1WpHMmYKmwBsL6lfzgz1yMMFWHb/5N8R?=
- =?us-ascii?Q?D5lhAyvWBtUpxknHFPnQOkUsMFqUe3O3PQw96pmyyS8CZ68pKEgB0/ThR7wW?=
- =?us-ascii?Q?vx38BMff95nVmDp0l3Iw9KQ7oO8WWc1liSAfoThsqlZJWaJ/UYnTV6sWNGMe?=
- =?us-ascii?Q?pKoQUE7oyxocMdKO6KJkhmRinJvXNepEwDBhsq2UdRjDLxdkPYm3uLjNPBzw?=
- =?us-ascii?Q?eCi3SPdt99EKA2LkLbKAGctNvuyfit0kXEKvsu8Qz+EDJVXj95Jg3XnQT0Hq?=
- =?us-ascii?Q?osz8RQgEUxC7DQ1+xwHCdeXrexjXG9tXhy2KmxwEA6rK27NRr32KgHwoaOu1?=
- =?us-ascii?Q?bm9brEN+WoWMLW9BXvh1EK5QerSwNxHZgQgiyTha4J1wo7EiNR+avbZ5MXnh?=
- =?us-ascii?Q?v/+1FNJXqJDhC6C6Wcak3aZ8BsVZBwaDJZ0uXN5YoMWIAk1ymMwCdbmdo5Vq?=
- =?us-ascii?Q?/UPqjD3KWltPz0MzsKHLNOQFxpc81lAdp1qWx+ATOB8iVsUwdf7Q2BYOG0sJ?=
- =?us-ascii?Q?gwuR5Ze3E4jeb8gqoX1Av8yJvcf3aKRNFA+NYW4xf5yyx3GfkD5oi7T33qE5?=
- =?us-ascii?Q?sWllKDXyoH8bOrCLXaOf42WABD5MkP8Lt/z6IaDAO6JjXuVVKKpMFbWKihaR?=
- =?us-ascii?Q?MZ5wlzHKqFGfrNmeTfG0CiTtMG0i80oGhzV97lv/SPWuG7gB8RGZDLezduIt?=
- =?us-ascii?Q?2u8EeoQiDuWjq74lKRTRi8MkPBuI40UH5aK3akeLkm+ImyX4/lOoi6BYFvYD?=
- =?us-ascii?Q?VuB6xTPU+XPaNPzprpQTBXvlTUgfHZv8VyYKoj5G/xM2JIzfSbkUie4/bLw3?=
- =?us-ascii?Q?yQsrCo7OlsRK7Rv9wQhvexnMDsmnPbQsivSmZKPu4fO04ZDy1Ql8bA0dHMay?=
- =?us-ascii?Q?FPtnxhzEYkgdkLWJJcXeloe7as4iwyysEeGQm4HPiFk7Q/XQZuknn7IHePkG?=
- =?us-ascii?Q?QQg2e6VJYOmxUDoxRoYnIM8ZEatDVfB7vnS6v7ipyy/BB8fFQG2vCSnEEXZN?=
- =?us-ascii?Q?B+JaE7TS/Z8A7fetFExiO9Pzz40YjLumnIHDhs8N2BmgZhS6gsYmh0hpzHYZ?=
- =?us-ascii?Q?uqxnWws0c7SM5NT33h1kWVYP1yqpM56XCmnAj1KlprhJbQcAg6/MxfVnIKB4?=
- =?us-ascii?Q?CzSklg0gHIA5WiMrBV9l4zEXZHKKslYfZP9MHmcuiXYCR76e++BBWCBhIcWg?=
- =?us-ascii?Q?AMChMOeRb7CbbHXT6LVHHs/4lcOEBjJ5qPlXVp9CcfNk2+XbESPMrKcb8iE9?=
- =?us-ascii?Q?yUyhzfPJCgkcPNa/qr4D/6r1/5s1rzvTQtm0MKzS9Fz8qa/l9SqoYjAkLyST?=
- =?us-ascii?Q?2sb14czpcoS4YxFp7VsvO6IjnZ1wZvR0LYS/XpUCjUfqijwbSn5vknssrtz0?=
- =?us-ascii?Q?ZGL0BtHMePxqMH0VI/0M920m/JF+FO2+1l5uzmHWUSW7VDKEbznNkTnfxtt5?=
- =?us-ascii?Q?6wI96I72sRvLTkQ4j0/eS85y34h/qH8jMUsNYgscMJAO83uSIN4iyvJKWn0x?=
- =?us-ascii?Q?K4PunsshTPnnvRDlQbb/rLyCvamnvuwGGxYhNjYsWPohI6qkxHVKB2I07uso?=
- =?us-ascii?Q?iw=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <A0908AE75556A649BA776C7DF0285C17@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S236998AbiIEHF3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Sep 2022 03:05:29 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F33D31225
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Sep 2022 00:05:29 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B9C2461113
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Sep 2022 07:05:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77629C433D6;
+        Mon,  5 Sep 2022 07:05:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1662361528;
+        bh=mJSV8Aln/wfly6x4clNvioI3is0kevVumMzp4Wcrhgk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Wx1r9AT1BPAC1ALAAXizAaD3qF7QJC5+Di2Wur2wzVuWXH9LS0a/PVNKjCmXckinQ
+         w8X6eL5qc6nsar+/h5bkmAt4cwLWkGPHLeRM7AYrzutEjSanV2d6pBsPbp8D1vpXzm
+         neuOfHb1S+Mfxgdd6aqxByUmbjYvlq1WWZ2rRJvzMk1ojAEU2VLhmNYveoAqgWPHIK
+         1lLqwDYCuQtZPMBmoGqSx/onl+ohb6AQ4UcxRGO74OmQcRnUoFoGSZGEprbulYvvq+
+         C/0ky+NfDAgYPriSqRJtwJ6GJiL+4ctTjJ41K8f3dGdbhMLyOoOVYr9bLStaYwn2T7
+         Br9gklcSzLOQw==
+Date:   Mon, 5 Sep 2022 09:05:24 +0200
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs_repair: Fix check_refcount() error path
+Message-ID: <20220905070524.ew6bqxlpn2x4extw@andromeda>
+References: <166212614879.31305.11337231919093625864.stgit@andromeda>
+ <166212621918.31305.17388002689404843538.stgit@andromeda>
+ <tVoGmfcAatKg-ouPdfZ7AXjfQoZE56EAH9d7-THujiFxvfw4TrOZ_hgBZFB1NGqDxvyDL6u_oMyBEkSHEi6OWw==@protonmail.internalid>
+ <YxJsFQb+MdmeRmak@magnolia>
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BN0PR10MB5128.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1085cbef-9b16-49c5-b871-08da8e8ee741
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Sep 2022 16:02:44.1884
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: m8D8GtFn3f3xiNmxQa24yGy+0DHVcz+sJXaxFcWFvNFN3RF4PlA+3Dd8OkKYyil+HF5r4XVxVf6XPOm+JnZlvw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5177
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-09-04_02,2022-08-31_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0 phishscore=0
- mlxlogscore=999 spamscore=0 adultscore=0 mlxscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
- definitions=main-2209040081
-X-Proofpoint-GUID: pocGIbqku0MwAjqsvJO13QEgY5dAtFqh
-X-Proofpoint-ORIG-GUID: pocGIbqku0MwAjqsvJO13QEgY5dAtFqh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YxJsFQb+MdmeRmak@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi-
+On Fri, Sep 02, 2022 at 01:48:21PM -0700, Darrick J. Wong wrote:
+> On Fri, Sep 02, 2022 at 03:43:39PM +0200, Carlos Maiolino wrote:
+> > From: Carlos Maiolino <cmaiolino@redhat.com>
+> >
+> > Add proper exit error paths to avoid checking all pointers at the current path
+> >
+> > Fixes-coverity-id: 1512651
+> >
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  repair/rmap.c |   23 +++++++++++------------
+> >  1 file changed, 11 insertions(+), 12 deletions(-)
+> >
+> > diff --git a/repair/rmap.c b/repair/rmap.c
+> > index a7c4b25b1..0253c0c36 100644
+> > --- a/repair/rmap.c
+> > +++ b/repair/rmap.c
+> > @@ -1377,7 +1377,7 @@ check_refcounts(
+> >  	if (error) {
+> >  		do_warn(_("Could not read AGF %u to check refcount btree.\n"),
+> >  				agno);
+> > -		goto err;
+> > +		goto err_agf;
+> 
+> Shouldn't this       ^^^^^^^ be err_pag, since we're erroring out and
+> releasing the perag group reference?
 
-> On Sep 4, 2022, at 9:15 AM, Zorro Lang <zlang@redhat.com> wrote:
->=20
-> On Sat, Sep 03, 2022 at 06:43:29PM +0000, Chuck Lever III wrote:
->> While investigating some of the other issues that have been
->> reported lately, I've found that my v6.0-rc3 NFS/TCP client
->> goes off the rails often (but not always) during generic/650.
->>=20
->> This is the test that runs a workload while offlining and
->> onlining CPUs. My test client has 12 physical cores.
->>=20
->> The test appears to start normally, but then after a bit
->> the NFS server workload drops to zero and the NFS mount
->> disappears. I can't run programs (sudo, for example) on
->> the client. Can't log in, even on the console. The console
->> has a constant stream of "can't rotate log: Input/Output
->> error" type messages.
->>=20
->> I haven't looked further into this yet. Actually I'm not
->> quite sure where to start looking.
->>=20
->> I recently switched this client from a local /home to an
->> NFS-mounted one, and that's where the xfstests are built
->> and run from, fwiw.
->=20
-> If most of users complain generic/650, I'd like to exclude g/650 from the
-> "auto" default run group. Any more points?
+At first I named it err_pag, but pag is used here only to read the agf, and when
+reading agf fail is why we end up reaching this error path, so I thought it
+would be more specific to name it err_agf.
+> 
+> Also ... don't the "if (XXX) free(XXX)" bits take care of all this?
+> 
 
-Well generic/650 was passing for me before v6.0-rc, and IMO
-it is a tough but reasonable test, considering the ubiquitous
-use of workqueues and other scheduling primitives in our
-filesystems.
+Yeah, it does. But that's exactly what coverity is complaining about. We check
+for a NULL pointer 'after' we dereference it earlier, to be more specific:
 
-So I think I caught a real bug, but I need a couple more days
-to work it out before deciding generic/650 is throwing false
-negatives and is thus not worth running in the "auto" group.
+---
+Type: Dereference before NULL check
+Null-checking pag suggests that it may be null, but it has already been
+dereferenced on all paths leading to the check
+---
 
-I can't really say whether Ted's failing tests are the
-result of an interaction with the GCE platform or the test
-itself. Ie, his patch might be the right approach -- exclude
-it based on the test platform.
+Both patches fix the same issue type.
 
+> (I can't access Coverity any more, so I don't know what's in the
+> report.)
+> 
+> --D
+> 
+> >  	}
+> >
+> >  	/* Leave the per-ag data "uninitialized" since we rewrite it later */
+> > @@ -1386,7 +1386,7 @@ check_refcounts(
+> >  	bt_cur = libxfs_refcountbt_init_cursor(mp, NULL, agbp, pag);
+> >  	if (!bt_cur) {
+> >  		do_warn(_("Not enough memory to check refcount data.\n"));
+> > -		goto err;
+> > +		goto err_bt_cur;
+> >  	}
+> >
+> >  	rl_rec = pop_slab_cursor(rl_cur);
+> > @@ -1398,7 +1398,7 @@ check_refcounts(
+> >  			do_warn(
+> >  _("Could not read reference count record for (%u/%u).\n"),
+> >  					agno, rl_rec->rc_startblock);
+> > -			goto err;
+> > +			goto err_loop;
+> >  		}
+> >  		if (!have) {
+> >  			do_warn(
+> > @@ -1413,7 +1413,7 @@ _("Missing reference count record for (%u/%u) len %u count %u\n"),
+> >  			do_warn(
+> >  _("Could not read reference count record for (%u/%u).\n"),
+> >  					agno, rl_rec->rc_startblock);
+> > -			goto err;
+> > +			goto err_loop;
+> >  		}
+> >  		if (!i) {
+> >  			do_warn(
+> > @@ -1436,14 +1436,13 @@ next_loop:
+> >  		rl_rec = pop_slab_cursor(rl_cur);
+> >  	}
+> >
+> > -err:
+> > -	if (bt_cur)
+> > -		libxfs_btree_del_cursor(bt_cur, error ? XFS_BTREE_ERROR :
+> > -							XFS_BTREE_NOERROR);
+> > -	if (pag)
+> > -		libxfs_perag_put(pag);
+> > -	if (agbp)
+> > -		libxfs_buf_relse(agbp);
+> > +err_loop:
+> > +	libxfs_btree_del_cursor(bt_cur, error ?
+> > +				XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+> > +err_bt_cur:
+> > +	libxfs_buf_relse(agbp);
+> > +err_agf:
+> > +	libxfs_perag_put(pag);
+> >  	free_slab_cursor(&rl_cur);
+> >  }
+> >
+> >
 
---
-Chuck Lever
-
-
-
+-- 
+Carlos Maiolino
