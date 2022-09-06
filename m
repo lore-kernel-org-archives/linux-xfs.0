@@ -2,51 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3095EC6FA8D
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Sep 2022 08:11:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E3C6ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Sep 2022 09:29:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233951AbiIFILq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Sep 2022 04:11:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54992 "EHLO
+        id S238981AbiIFJ3J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Sep 2022 05:29:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239087AbiIFIL0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 04:11:26 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0E61754AA;
-        Tue,  6 Sep 2022 01:11:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=BaxZ4xrTAfmnQpu1FWHDq9b/Q4
-        4NQW8r6DzhULWWFTzIQyFtOoRDl/gd6W/UDwqJQWEglq+NEr6ZZKf+lqsn0Sx6dhduKMacJOrehFs
-        Uye5wOnh0Fw0In2tAQgMLT7jOxMl8o369S7uUmDszvl4/EqRRChb9guHaexaCXBT9OhiaEdWIDosu
-        bYKDx2E8q6blOVG7Hw4nEYXm2u6zJSiqf9Z+GIDMzKP8wWVfNBQe37hZ1j27AI742w9JjywX/Ci+Z
-        bcLH0Eb2J49C9nGimwys8W4wpf1BhBcAQI6tIKOUi2HT8ran79+4cVe5f1cLrRXAqADOAr79gDVdH
-        Vun/yftA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oVTg0-00B7mp-Sw; Tue, 06 Sep 2022 08:11:20 +0000
-Date:   Tue, 6 Sep 2022 01:11:20 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCH v5 8/8] xfs: support STATX_DIOALIGN
-Message-ID: <YxcAqLtDZix6/Zxw@infradead.org>
-References: <20220827065851.135710-1-ebiggers@kernel.org>
- <20220827065851.135710-9-ebiggers@kernel.org>
+        with ESMTP id S239684AbiIFJ2k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 05:28:40 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FDA8578A6;
+        Tue,  6 Sep 2022 02:28:28 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MMKkT35zdznV69;
+        Tue,  6 Sep 2022 17:25:53 +0800 (CST)
+Received: from huawei.com (10.175.103.91) by dggpemm500022.china.huawei.com
+ (7.185.36.162) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 6 Sep
+ 2022 17:28:25 +0800
+From:   Zeng Heng <zengheng4@huawei.com>
+To:     <djwong@kernel.org>, <dchinner@redhat.com>
+CC:     <chandan.babu@oracle.com>, <linux-xfs@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <zengheng4@huawei.com>,
+        <weiyongjun1@huawei.com>, <guoxuenan@huawei.com>
+Subject: [PATCH -next] xfs: rmap: only XFS_DATA_FORK field would be set shared
+Date:   Tue, 6 Sep 2022 17:35:54 +0800
+Message-ID: <20220906093554.899222-1-zengheng4@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220827065851.135710-9-ebiggers@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemm500022.china.huawei.com (7.185.36.162)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good:
+whichfork could be one of the following 3 types:
+XFS_DATA_FORK
+XFS_ATTR_FORK
+XFS_COW_FORK
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+XFS_COW_FORK is in-memory field instead of on-disk
+field, which doesn't need to update in rmap_btree
+(already preclude by `xfs_rmap_update_is_needed` ahead).
+
+XFS_ATTR_FORK field doesn't support reflink share.
+
+So here propose to set "whichfork == XFS_DATA_FORK"
+as condition.
+
+Signed-off-by: Zeng Heng <zengheng4@huawei.com>
+---
+ fs/xfs/libxfs/xfs_rmap.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 094dfc897ebc..74b34a331cf0 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2549,7 +2549,7 @@ xfs_rmap_map_extent(
+ 	if (!xfs_rmap_update_is_needed(tp->t_mountp, whichfork))
+ 		return;
+ 
+-	if (whichfork != XFS_ATTR_FORK && xfs_is_reflink_inode(ip))
++	if (whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(ip))
+ 		type = XFS_RMAP_MAP_SHARED;
+ 
+ 	__xfs_rmap_add(tp, type, ip->i_ino, whichfork, PREV);
+@@ -2568,7 +2568,7 @@ xfs_rmap_unmap_extent(
+ 	if (!xfs_rmap_update_is_needed(tp->t_mountp, whichfork))
+ 		return;
+ 
+-	if (whichfork != XFS_ATTR_FORK && xfs_is_reflink_inode(ip))
++	if (whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(ip))
+ 		type = XFS_RMAP_UNMAP_SHARED;
+ 
+ 	__xfs_rmap_add(tp, type, ip->i_ino, whichfork, PREV);
+@@ -2593,7 +2593,7 @@ xfs_rmap_convert_extent(
+ 	if (!xfs_rmap_update_is_needed(mp, whichfork))
+ 		return;
+ 
+-	if (whichfork != XFS_ATTR_FORK && xfs_is_reflink_inode(ip))
++	if (whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(ip))
+ 		type = XFS_RMAP_CONVERT_SHARED;
+ 
+ 	__xfs_rmap_add(tp, type, ip->i_ino, whichfork, PREV);
+-- 
+2.25.1
+
