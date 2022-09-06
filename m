@@ -2,75 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC3A2C6FA86
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Sep 2022 18:37:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9922C6FA8C
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Sep 2022 19:29:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229561AbiIFSgd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Sep 2022 14:36:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36254 "EHLO
+        id S229907AbiIFT3n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Sep 2022 15:29:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229826AbiIFSgR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 14:36:17 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A07680480
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Sep 2022 11:36:06 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id v202-20020a252fd3000000b006a8f6c5d39bso5312637ybv.21
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Sep 2022 11:36:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=content-transfer-encoding:cc:to:from:subject:message-id
-         :mime-version:date:from:to:cc:subject:date;
-        bh=i0R53TAK8Pvv1dqj3X6sLp/mYhXJAf8bewUjnJrtogc=;
-        b=oiA1uT/TkBmmqbTWbkabtss704rsOio/xfNZfZkhOW8PVou+H8Sv8ARoqgMaM+bH2c
-         lsZWIaE+KwXDl4TaNk8A3Lp4MLSqKCjh7EspIfr2aukRK0hhUp8PA3GJp3LzzCNs6n5Y
-         25F5Ee2zOh8ZUuD3dbNEj20UEMQO9BsEqIRTqlIWk7wh6i2HATLmFT9HW8nPRNdUq3Xu
-         CkLUW2U9hBCCzIRQyFuO7a/KALCtcGG10BeaMiFp3NucRsG7fJyBBw7vg2kkjJMLuQrs
-         M5HYZcOsqT5kk6KlIzWYt8jR8UiEyF8kYKHcxNQxfCHecs7htrEolEeoYl2YKgUx589X
-         EQfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:from:subject:message-id
-         :mime-version:date:x-gm-message-state:from:to:cc:subject:date;
-        bh=i0R53TAK8Pvv1dqj3X6sLp/mYhXJAf8bewUjnJrtogc=;
-        b=EOJ21sE4atDqh+0eI1m73+qwyXPWYUKZ1ywOYkaDp8a5k2fsVF35IT+8YYsKskjsYH
-         +x97uj4b5Ca9Af7JXbj92w6j62+UWrBCarin/sHR0XkGA1fbWkMboJUdz/MFjgu0WL23
-         kWinVB8PLvP3r3Y118TC6KSo0T/i7nXcBEkFdSbjLaClzmIk34WiCAAmm5cHjlHhh1yk
-         vh/DwEDWROv2maEV93p8BjpTZVcFqfPvkdvQYvF0o6vb7b2caCguBvIhyAHsgJlrfVGc
-         EBNes2d5ESmW5iIsiQHAJXaGJXjKh2r72b+u5H6D62cb2qHJWTZ16Y6Po8ExeFQBUGtW
-         j1Vw==
-X-Gm-Message-State: ACgBeo0P5G3CWvLc7F2oJQA0BhEpLaGDFfb/KjsqqNSocMNH3k4adf6C
-        +0s5tsMRKwcjOvqJKKQz9VH/R1FwYHqVUDK/kQ==
-X-Google-Smtp-Source: AA6agR68wmtnyd+6tLLKnKjrQMkTdwVdgbm15czxZnqbkWTAuhNE9Qc+94GhH3giQsB+i4aE5T/pLqg/pkNM/mwcTw==
-X-Received: from varshat.c.googlers.com ([fda3:e722:ac3:cc00:24:72f4:c0a8:a35])
- (user=teratipally job=sendgmr) by 2002:a5b:84a:0:b0:67c:1db1:2069 with SMTP
- id v10-20020a5b084a000000b0067c1db12069mr35622834ybq.507.1662489365256; Tue,
- 06 Sep 2022 11:36:05 -0700 (PDT)
-Date:   Tue,  6 Sep 2022 18:35:59 +0000
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.37.2.789.g6183377224-goog
-Message-ID: <20220906183600.1926315-1-teratipally@google.com>
-Subject: Request to cherry-pick 01ea173e103edd5ec41acec65b9261b87e123fc2 to v5.10
-From:   Varsha Teratipally <teratipally@google.com>
-To:     Amir Goldstein <amir73il@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S229469AbiIFT3k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 15:29:40 -0400
+Received: from fieldses.org (fieldses.org [IPv6:2600:3c00:e000:2f7::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54E9BDFC5;
+        Tue,  6 Sep 2022 12:29:38 -0700 (PDT)
+Received: by fieldses.org (Postfix, from userid 2815)
+        id 665A8478E; Tue,  6 Sep 2022 15:29:37 -0400 (EDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org 665A8478E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
+        s=default; t=1662492577;
+        bh=XGLBKT9w9XX1IQDmpohtQXUS/bQ7LEyWy9wLLV07wy4=;
+        h=Date:To:Cc:Subject:References:In-Reply-To:From:From;
+        b=f0TOYAqq3DNhAF6nnR14fIi4+n8N0qXVeyO94lwN5bTTt1ovuVrBbkE6i4nvkhYyp
+         j0myfRk6evmW/J/L2L1kMLeesn7O3mG0DduGlRFV2P9AFb/bXCDMRRy89+G2ibprFK
+         bVDUxUV/CaccjngHJ3w9sgmffnlehVAnqqho7iJA=
+Date:   Tue, 6 Sep 2022 15:29:37 -0400
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Florian Weimer <fweimer@redhat.com>, tytso@mit.edu,
+        adilger.kernel@dilger.ca, djwong@kernel.org, david@fromorbit.com,
+        trondmy@hammerspace.com, neilb@suse.de, viro@zeniv.linux.org.uk,
+        zohar@linux.ibm.com, xiubli@redhat.com, chuck.lever@oracle.com,
+        lczerner@redhat.com, jack@suse.cz, brauner@kernel.org,
+        linux-man@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH v2] statx, inode: document the new STATX_INO_VERSION
+ field
+Message-ID: <20220906192937.GE25323@fieldses.org>
+References: <20220901121714.20051-1-jlayton@kernel.org>
+ <874jxrqdji.fsf@oldenburg.str.redhat.com>
+ <81e57e81e4570d1659098f2bbc7c9049a605c5e8.camel@kernel.org>
+ <87ilm066jh.fsf@oldenburg.str.redhat.com>
+ <d1ee62062c3f805460b7bdf2776e759be4dba43f.camel@kernel.org>
+ <b8b0c5adc6598c57fb109447e3bc54492b54c36a.camel@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b8b0c5adc6598c57fb109447e3bc54492b54c36a.camel@kernel.org>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+From:   bfields@fieldses.org (J. Bruce Fields)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+On Tue, Sep 06, 2022 at 01:04:05PM -0400, Jeff Layton wrote:
+> On Tue, 2022-09-06 at 12:41 -0400, Jeff Layton wrote:
+> > On Tue, 2022-09-06 at 14:17 +0200, Florian Weimer wrote:
+> > > * Jeff Layton:
+> > > 
+> > > > All of the existing implementations use all 64 bits. If you were to
+> > > > increment a 64 bit value every nanosecond, it will take >500 years for
+> > > > it to wrap. I'm hoping that's good enough. ;)
+> > > > 
+> > > > The implementation that all of the local Linux filesystems use track
+> > > > whether the value has been queried using one bit, so there you only get
+> > > > 63 bits of counter.
+> > > > 
+> > > > My original thinking here was that we should leave the spec "loose" to
+> > > > allow for implementations that may not be based on a counter. E.g. could
+> > > > some filesystem do this instead by hashing certain metadata?
+> > > 
+> > > Hashing might have collisions that could be triggered deliberately, so
+> > > probably not a good idea.  It's also hard to argue that random
+> > > collisions are unlikely.
+> > > 
+> > 
+> > In principle, if a filesystem could guarantee enough timestamp
+> > resolution, it's possible collisions could be hard to achieve. It's also
+> > possible you could factor in other metadata that wasn't necessarily
+> > visible to userland to try and ensure uniqueness in the counter.
+> > 
+> > Still...
 
-Commit 01ea173e103edd5ec41acec65b9261b87e123fc2 (upstream: xfs: fix up
-non-directory creation in SGID directories) fixes an issue where in xfs
-sometimes, a local user could create files with an unitended group
-permissions as an owner and execution where a directory is SGID and belongs=
- to a certain group and is writable by a user who is not a member of this g=
-roup and seems like a good candidate for the v5.10 stable tree given that 5=
-.10 is used in versions of debian, ubuntu.
+I've got one other nagging worry, about the ordering of change attribute
+updates with respect to their corresponding changes.  I think with
+current implementations it's possible that the only change attribute
+update(s) may happen while the old file data is still visible, which
+means a concurrent reader could cache the old data with the new change
+attribute, and be left with a stale cache indefinitely.
 
-This patch applies cleanly. Let me know what you think
+For the purposes of close-to-open semantics I think that's not a
+problem, though.
 
+There may be some previous discussion of this in mailing list archives.
 
+--b.
