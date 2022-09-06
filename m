@@ -2,124 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC858C6FA89
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC3A2C6FA86
 	for <linux-xfs@archiver.kernel.org>; Tue,  6 Sep 2022 18:37:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229600AbiIFSge (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Sep 2022 14:36:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36388 "EHLO
+        id S229561AbiIFSgd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Sep 2022 14:36:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229965AbiIFSgV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 14:36:21 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26F599D112
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Sep 2022 11:36:12 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id d8-20020a25bc48000000b00680651cf051so9149227ybk.23
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Sep 2022 11:36:12 -0700 (PDT)
+        with ESMTP id S229826AbiIFSgR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 14:36:17 -0400
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A07680480
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Sep 2022 11:36:06 -0700 (PDT)
+Received: by mail-yb1-xb4a.google.com with SMTP id v202-20020a252fd3000000b006a8f6c5d39bso5312637ybv.21
+        for <linux-xfs@vger.kernel.org>; Tue, 06 Sep 2022 11:36:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date;
-        bh=tg8eRVP8zBLy5T3GrQ7FiT/ZQysxW7XYE3PgBG3r7xA=;
-        b=S3eZGAdLMcRRyRY6vszLIP46WXXfNPaFsof6i/+H/9GzjHxhbEo/ukVAclyOQblN+j
-         YtC9+9a9bf+fQBYWTX2gtTRsGmMO1RU0UpyyaTw8bFvLbUjeDGJox/tUHnaOTJEKG87k
-         ko89Igxd7SucaTD1zRmPXSO/8FLT9aC6uUZf9i20oB0fQdh/C5KIi7Kk4O+ajyZoiIgk
-         yZdpOlRttxfvW0p6D76rsn1ghk2P8VgSflKUjamOXZ0pDZaT5mntm0KP0oPRArqMY70V
-         fW74DDoADRoOEe+akXtGOqkkmO+qUy7v7CI1HWbmbT8vvsTKxTxVC+TRynMhzmIj1NEH
-         kCYQ==
+        h=content-transfer-encoding:cc:to:from:subject:message-id
+         :mime-version:date:from:to:cc:subject:date;
+        bh=i0R53TAK8Pvv1dqj3X6sLp/mYhXJAf8bewUjnJrtogc=;
+        b=oiA1uT/TkBmmqbTWbkabtss704rsOio/xfNZfZkhOW8PVou+H8Sv8ARoqgMaM+bH2c
+         lsZWIaE+KwXDl4TaNk8A3Lp4MLSqKCjh7EspIfr2aukRK0hhUp8PA3GJp3LzzCNs6n5Y
+         25F5Ee2zOh8ZUuD3dbNEj20UEMQO9BsEqIRTqlIWk7wh6i2HATLmFT9HW8nPRNdUq3Xu
+         CkLUW2U9hBCCzIRQyFuO7a/KALCtcGG10BeaMiFp3NucRsG7fJyBBw7vg2kkjJMLuQrs
+         M5HYZcOsqT5kk6KlIzWYt8jR8UiEyF8kYKHcxNQxfCHecs7htrEolEeoYl2YKgUx589X
+         EQfw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date;
-        bh=tg8eRVP8zBLy5T3GrQ7FiT/ZQysxW7XYE3PgBG3r7xA=;
-        b=ARCvfZ6UYkc3qhg2aHBLjq6GahdGc0fzOM8+twGuTKob3N9CXg436mHYt/sTopkNw6
-         6blLj8VME9FFUBDeJ9gqvsR/8xZgA3g3N4Wrjuh77WtPJhgfPheCV5NMFa+PqPbaAqmg
-         hSs8J9wPhksxDKBuKb38KjX6JBkCM1qd/Nvv8otFsg3chdnHxD1y1iejAsHnjND+PRM/
-         PcvC6G2+DGS+VQR1fmIZ3jDe2PUM/Bsd6ze3JLcMpQQCAqmW9s74i+3VvKPJDnW0OxUS
-         P7Uv32yLuaNVJDIrDmkb2jX3qpvvSf5eAcbaeEq3qut9S85HhtTjZa8fOKe/o4WXDPfm
-         2WEA==
-X-Gm-Message-State: ACgBeo196O0zAYn2jvxX0QjgCyTvNgo0m1WqjeqM2Zokl9udYJZpjIRW
-        9Zs7oITu4VBXTQnFotmyZWfNhzgmbxgJHg9PpA==
-X-Google-Smtp-Source: AA6agR6Vwr8MTE4dfhtiRJCF7nEbIHmBe90cMOH5rLhEb7utSv2g93fnXwMtOaf2cBTNvcUPMwCRqRrVvJJTAdM4+Q==
+        h=content-transfer-encoding:cc:to:from:subject:message-id
+         :mime-version:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=i0R53TAK8Pvv1dqj3X6sLp/mYhXJAf8bewUjnJrtogc=;
+        b=EOJ21sE4atDqh+0eI1m73+qwyXPWYUKZ1ywOYkaDp8a5k2fsVF35IT+8YYsKskjsYH
+         +x97uj4b5Ca9Af7JXbj92w6j62+UWrBCarin/sHR0XkGA1fbWkMboJUdz/MFjgu0WL23
+         kWinVB8PLvP3r3Y118TC6KSo0T/i7nXcBEkFdSbjLaClzmIk34WiCAAmm5cHjlHhh1yk
+         vh/DwEDWROv2maEV93p8BjpTZVcFqfPvkdvQYvF0o6vb7b2caCguBvIhyAHsgJlrfVGc
+         EBNes2d5ESmW5iIsiQHAJXaGJXjKh2r72b+u5H6D62cb2qHJWTZ16Y6Po8ExeFQBUGtW
+         j1Vw==
+X-Gm-Message-State: ACgBeo0P5G3CWvLc7F2oJQA0BhEpLaGDFfb/KjsqqNSocMNH3k4adf6C
+        +0s5tsMRKwcjOvqJKKQz9VH/R1FwYHqVUDK/kQ==
+X-Google-Smtp-Source: AA6agR68wmtnyd+6tLLKnKjrQMkTdwVdgbm15czxZnqbkWTAuhNE9Qc+94GhH3giQsB+i4aE5T/pLqg/pkNM/mwcTw==
 X-Received: from varshat.c.googlers.com ([fda3:e722:ac3:cc00:24:72f4:c0a8:a35])
- (user=teratipally job=sendgmr) by 2002:a0d:cb91:0:b0:345:454a:77d2 with SMTP
- id n139-20020a0dcb91000000b00345454a77d2mr8387739ywd.402.1662489371543; Tue,
- 06 Sep 2022 11:36:11 -0700 (PDT)
-Date:   Tue,  6 Sep 2022 18:36:00 +0000
-In-Reply-To: <20220906183600.1926315-1-teratipally@google.com>
+ (user=teratipally job=sendgmr) by 2002:a5b:84a:0:b0:67c:1db1:2069 with SMTP
+ id v10-20020a5b084a000000b0067c1db12069mr35622834ybq.507.1662489365256; Tue,
+ 06 Sep 2022 11:36:05 -0700 (PDT)
+Date:   Tue,  6 Sep 2022 18:35:59 +0000
 Mime-Version: 1.0
-References: <20220906183600.1926315-1-teratipally@google.com>
 X-Mailer: git-send-email 2.37.2.789.g6183377224-goog
-Message-ID: <20220906183600.1926315-2-teratipally@google.com>
-Subject: [PATCH] xfs: fix up non-directory creation in SGID directories
+Message-ID: <20220906183600.1926315-1-teratipally@google.com>
+Subject: Request to cherry-pick 01ea173e103edd5ec41acec65b9261b87e123fc2 to v5.10
 From:   Varsha Teratipally <teratipally@google.com>
 To:     Amir Goldstein <amir73il@gmail.com>,
         "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Christian Brauner <christian.brauner@ubuntu.com>
+        stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+Hi all,
 
-XFS always inherits the SGID bit if it is set on the parent inode, while
-the generic inode_init_owner does not do this in a few cases where it can
-create a possible security problem, see commit 0fa3ecd87848
-("Fix up non-directory creation in SGID directories") for details.
+Commit 01ea173e103edd5ec41acec65b9261b87e123fc2 (upstream: xfs: fix up
+non-directory creation in SGID directories) fixes an issue where in xfs
+sometimes, a local user could create files with an unitended group
+permissions as an owner and execution where a directory is SGID and belongs=
+ to a certain group and is writable by a user who is not a member of this g=
+roup and seems like a good candidate for the v5.10 stable tree given that 5=
+.10 is used in versions of debian, ubuntu.
 
-Switch XFS to use the generic helper for the normal path to fix this,
-just keeping the simple field inheritance open coded for the case of the
-non-sgid case with the bsdgrpid mount option.
+This patch applies cleanly. Let me know what you think
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Reported-by: Christian Brauner <christian.brauner@ubuntu.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_inode.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 8ebd9c64aa48..e2a1db4cee43 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -775,6 +775,7 @@ xfs_init_new_inode(
- 	prid_t			prid,
- 	struct xfs_inode	**ipp)
- {
-+	struct inode		*dir = pip ? VFS_I(pip) : NULL;
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	struct xfs_inode	*ip;
- 	unsigned int		flags;
-@@ -804,18 +805,17 @@ xfs_init_new_inode(
- 
- 	ASSERT(ip != NULL);
- 	inode = VFS_I(ip);
--	inode->i_mode = mode;
- 	set_nlink(inode, nlink);
--	inode->i_uid = current_fsuid();
- 	inode->i_rdev = rdev;
- 	ip->i_d.di_projid = prid;
- 
--	if (pip && XFS_INHERIT_GID(pip)) {
--		inode->i_gid = VFS_I(pip)->i_gid;
--		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
--			inode->i_mode |= S_ISGID;
-+	if (dir && !(dir->i_mode & S_ISGID) &&
-+	    (mp->m_flags & XFS_MOUNT_GRPID)) {
-+		inode->i_uid = current_fsuid();
-+		inode->i_gid = dir->i_gid;
-+		inode->i_mode = mode;
- 	} else {
--		inode->i_gid = current_fsgid();
-+		inode_init_owner(inode, dir, mode);
- 	}
- 
- 	/*
--- 
-2.37.2.789.g6183377224-goog
 
