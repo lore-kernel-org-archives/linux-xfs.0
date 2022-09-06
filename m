@@ -2,112 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD3B8C38145
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Sep 2022 10:21:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E53C54EE9
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Sep 2022 12:21:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239293AbiIFKVR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Sep 2022 06:21:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56254 "EHLO
+        id S240022AbiIFMVp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Sep 2022 08:21:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232752AbiIFKVM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 06:21:12 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4A5B41D28;
-        Tue,  6 Sep 2022 03:21:08 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 8B1691F9B8;
-        Tue,  6 Sep 2022 10:21:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1662459667; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S240036AbiIFMUx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 08:20:53 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D3577B1ED
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Sep 2022 05:17:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1662466669;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=JRzzxJnv5MaykTq7esKm/SId3jWkWiPAdjMo5oqrhRE=;
-        b=KxJvAYQmECJdKHflrlphoK6jMea5m356jipctQWsyyBn2mXvuIKqE/JpJczXYmkvoH9nO8
-        NoOB88iSwiI2Ub8MVRt1ql+V2Du8naLMoby+IJylMg9zSLiTlT9sPsRaZXQbR44F6irWgs
-        wfZCT1dxVKV4e5PjvHq5w10DQUscpmI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1662459667;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=JRzzxJnv5MaykTq7esKm/SId3jWkWiPAdjMo5oqrhRE=;
-        b=plZXEtxGbS1qVODpVEpx1mvVcKzPPQXJbGzq02JAcGOhoP0DN1kZuv58cv4wa0hVHaZblC
-        6/YkhJlMFnkIsNAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        bh=YjvVsGnaOPZ/gpG0KVHSfjbjbq9SkmePYc60DJuuWGs=;
+        b=cT+7bCVxJgQLFqa1HP+1ZQIb55muguaQsYrHBkRhzzdY6qJycblS0wqgVjnGjsm2aVCYqb
+        hXzoqZP/ZbeAJiRe5Lrxcw+TXSvcnlNisF65z641R8AAIrKmOuQSsfyrt0JjQYIGd2Uhdm
+        f3eTlgaNZFd3mI0sU6vACDPWA+py8uc=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-47-HSUfhPJXM-2ppp1fdmrDZw-1; Tue, 06 Sep 2022 08:17:46 -0400
+X-MC-Unique: HSUfhPJXM-2ppp1fdmrDZw-1
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6F33D13A7A;
-        Tue,  6 Sep 2022 10:21:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id M/EfGxMfF2POBgAAMHmgww
-        (envelope-from <jack@suse.cz>); Tue, 06 Sep 2022 10:21:07 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 053EBA067E; Tue,  6 Sep 2022 12:21:06 +0200 (CEST)
-Date:   Tue, 6 Sep 2022 12:21:06 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     John Hubbard <jhubbard@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>, Jan Kara <jack@suse.cz>,
-        David Hildenbrand <david@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 4/7] iov_iter: new iov_iter_pin_pages*() routines
-Message-ID: <20220906102106.q23ovgyjyrsnbhkp@quack3>
-References: <20220831041843.973026-1-jhubbard@nvidia.com>
- <20220831041843.973026-5-jhubbard@nvidia.com>
- <YxbtF1O8+kXhTNaj@infradead.org>
- <103fe662-3dc8-35cb-1a68-dda8af95c518@nvidia.com>
- <Yxb7YQWgjHkZet4u@infradead.org>
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id E76891C06901;
+        Tue,  6 Sep 2022 12:17:44 +0000 (UTC)
+Received: from oldenburg.str.redhat.com (unknown [10.39.192.109])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E9F5940334C;
+        Tue,  6 Sep 2022 12:17:39 +0000 (UTC)
+From:   Florian Weimer <fweimer@redhat.com>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
+        bfields@fieldses.org, brauner@kernel.org,
+        linux-man@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH v2] statx, inode: document the new STATX_INO_VERSION
+ field
+References: <20220901121714.20051-1-jlayton@kernel.org>
+        <874jxrqdji.fsf@oldenburg.str.redhat.com>
+        <81e57e81e4570d1659098f2bbc7c9049a605c5e8.camel@kernel.org>
+Date:   Tue, 06 Sep 2022 14:17:38 +0200
+In-Reply-To: <81e57e81e4570d1659098f2bbc7c9049a605c5e8.camel@kernel.org> (Jeff
+        Layton's message of "Thu, 01 Sep 2022 12:30:20 -0400")
+Message-ID: <87ilm066jh.fsf@oldenburg.str.redhat.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.2 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yxb7YQWgjHkZet4u@infradead.org>
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.10
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 06-09-22 00:48:49, Christoph Hellwig wrote:
-> On Tue, Sep 06, 2022 at 12:44:28AM -0700, John Hubbard wrote:
-> > OK, that part is clear.
-> > 
-> > >  - for the pin case don't use the existing bvec helper at all, but
-> > >    copy the logic for the block layer for not pinning.
-> > 
-> > I'm almost, but not quite sure I get the idea above. Overall, what
-> > happens to bvec pages? Leave the get_page() pin in place for FOLL_GET
-> > (or USE_FOLL_GET), I suppose, but do...what, for FOLL_PIN callers?
-> 
-> Do not change anyhing for FOLL_GET callers, as they are on the way out
-> anyway.
-> 
-> For FOLL_PIN callers, never pin bvec and kvec pages:  For file systems
-> not acquiring a reference is obviously safe, and the other callers will
-> need an audit, but I can't think of why it woul  ever be unsafe.
+* Jeff Layton:
 
-Are you sure about "For file systems not acquiring a reference is obviously
-safe"? I can see places e.g. in orangefs, afs, etc. which create bvec iters
-from pagecache pages. And then we have iter_file_splice_write() which
-creates bvec from pipe pages (which can also be pagecache pages if
-vmsplice() is used). So perhaps there are no lifetime issues even without
-acquiring a reference (but looking at the code I would not say it is
-obvious) but I definitely don't see how it would be safe to not get a pin
-to signal to filesystem backing the pagecache page that there is DMA
-happening to/from the page.
+> All of the existing implementations use all 64 bits. If you were to
+> increment a 64 bit value every nanosecond, it will take >500 years for
+> it to wrap. I'm hoping that's good enough. ;)
+>
+> The implementation that all of the local Linux filesystems use track
+> whether the value has been queried using one bit, so there you only get
+> 63 bits of counter.
+>
+> My original thinking here was that we should leave the spec "loose" to
+> allow for implementations that may not be based on a counter. E.g. could
+> some filesystem do this instead by hashing certain metadata?
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Hashing might have collisions that could be triggered deliberately, so
+probably not a good idea.  It's also hard to argue that random
+collisions are unlikely.
+
+> It's arguable though that the NFSv4 spec requires that this be based on
+> a counter, as the client is required to increment it in the case of
+> write delegations.
+
+Yeah, I think it has to be monotonic.
+
+>> If the system crashes without flushing disks, is it possible to observe
+>> new file contents without a change of i_version?
+>
+> Yes, I think that's possible given the current implementations.
+>
+> We don't have a great scheme to combat that at the moment, other than
+> looking at this in conjunction with the ctime. As long as the clock
+> doesn't jump backward after the crash and it takes more than one jiffy
+> to get the host back up, then you can be reasonably sure that
+> i_version+ctime should never repeat.
+>
+> Maybe that's worth adding to the NOTES section of the manpage?
+
+I'd appreciate that.
+
+Thanks,
+Florian
+
