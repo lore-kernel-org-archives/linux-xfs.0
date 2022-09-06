@@ -2,162 +2,209 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54E2FC6FA86
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Sep 2022 13:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9EC1C6FA86
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Sep 2022 16:22:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240431AbiIFN3j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Sep 2022 09:29:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46582 "EHLO
+        id S230056AbiIFQWg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Sep 2022 12:22:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240167AbiIFN3h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 09:29:37 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35214BC05;
-        Tue,  6 Sep 2022 06:29:35 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D44BAB818C2;
-        Tue,  6 Sep 2022 13:29:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 791BCC433D6;
-        Tue,  6 Sep 2022 13:29:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662470972;
-        bh=eT4U+WivGyOotiGD0LRV2zLl7flGTzXZdjdWMcvNt7E=;
-        h=From:To:Cc:Subject:Date:From;
-        b=XwovBfCAI5xmw0RPdItCdZLjQ7bhW5v9Eu/vggCoju8MpsiPBXQ9MB2FAMttCv+DJ
-         nNFf4HHdz4g+SXNSMUeZuf3erv08qXCs76NUClj77fMxrGkpexrIX0KiBJSs6U6lea
-         9T5yCH9BS4KEJiwDQv3CKt0Iaxtygw8eFvyYON+QXJ0tmYGToCCggQFH3M6U/QMCdL
-         io2MN9GWbXvJuhHMWUHnhg4WzOz8GYzvsNHs65QkYDYqt+Za12C1yUaIdLNRr/jD5M
-         cS9+EXliVqd5LDrc34V0Nrx1sGR8zzIZtyqalLz/D+OAPa/mnX5D5iR0PCCL/LqEvE
-         BvVSERciktYmA==
-From:   Jeff Layton <jlayton@kernel.org>
-To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
-        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
-        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com,
-        linux-man@vger.kernel.org
-Cc:     linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [man-pages RFC PATCH v3] statx, inode: document the STATX_INO_VERSION field
-Date:   Tue,  6 Sep 2022 09:29:28 -0400
-Message-Id: <20220906132928.106134-1-jlayton@kernel.org>
-X-Mailer: git-send-email 2.37.3
+        with ESMTP id S233327AbiIFQWO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Sep 2022 12:22:14 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F7E865556;
+        Tue,  6 Sep 2022 08:50:52 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 286FY78e021984;
+        Tue, 6 Sep 2022 15:50:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=Sf9IxrWq/EFeTeEyDTeXiTjrfJts7NV+eozWWOmGnHM=;
+ b=0oVmT+wo6YGF7Pwym6bqDTyBOfhdGB9bQLaBhSGxICpMMg2WyKW7RMflW0TdG00Xlq/V
+ +c7w0XFu1xfdYbl8waPch++/xvs7niBZo7GbMcwER4bkKCtr/KV37oPktQZIfn6wahD6
+ YVbQfR8bDCpoC5N85rTPVIiZZQqBDUsS5PEB0gZT9olVJXszGkj/wag4ZueSF79NIWvW
+ fcuB8tlR+RPeMZVyEj4jKI27jeQ41/2zwFYZNvpsMFdyGmloGepH7KbMg6a3VZDP4JE6
+ K8aqc+S0SZFgb4LhYhwL7N19nBSdk2Asik7nTwD5j88CANamdrG8Mympa9aPHaR1iE3q Yg== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jbwq2ebp9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 06 Sep 2022 15:50:50 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 286EwCJM037531;
+        Tue, 6 Sep 2022 15:50:49 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2177.outbound.protection.outlook.com [104.47.56.177])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jbwc2ts42-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 06 Sep 2022 15:50:49 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Mone3WSctuiW0MIaNrdJqY9ael73qY5jQo0LYeMpq+gt0Tzt5xI4Ri9GHoBvuth/DdnhQOjEsdEUATQqNNrizKMucVq80dOkB7S7qjMG5cATL7VqPJZiLJjToUCNN0wYszVIq2+T1gN/RRQSfMsxaspisWhEBdbujBNvexIayqCTAJhSYPyMMQBxD/4WsNqK/TXq7A2a2ZXxzuzd0Uo/1z1ZpNR6PwXTcYwGcJLQHtMKgcK4lxWEZgBB7XXXvo512X++jRVSDJ7SWwWftnsMs0t2cvE071uhU22cVSocIwH573wXrTukBlfxqR7RlZPFADPec464w678TIwuXsYWmg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Sf9IxrWq/EFeTeEyDTeXiTjrfJts7NV+eozWWOmGnHM=;
+ b=Z5YxYtYYi0mwri0BgUF+IOJtJckQnI9RK8dUwyzSgy9UKLbLC51a6+dreZ0u2oEE25+AF62U6ysDeMk1sziZmTX1R4QyGC4evgtWRKlS4dXKIA0shOcm25s/C4PoeRzfYo54uJb5OCvn+uxp91M9p/MsG4/QQCt30BnGGD10Bo5fZ4UdciHKDp0/Gef7Sj2CRA5MrC4tiyS3pJB9HvWbUXWiORoLrxSFzzVZyu5yB7nH/mhua/h+pz2gCey3p6oooIedixHGUohwx+XxaSzDGg87hbhil4zAJbJPsP2xAKKK3c/eALOTK7fJgrzmwZJZY7IeEOKZtqWSYJQn4JYVew==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Sf9IxrWq/EFeTeEyDTeXiTjrfJts7NV+eozWWOmGnHM=;
+ b=Y75fQJKM/bIaTUzAiwb4vD/CRllrRE86auHhZXUBTK2xb64j/IZ9P/DaCuoe2bksprZUD6yP5GxIy24WpzYZezXvsCYRbUied4vBkreuPOX3hCbX/FrhMIa0ZiRTzpg26hKqoGwYNVZCZjfP7UFUTU22DkV5nToPlBV1kxlX+U8=
+Received: from BN0PR10MB5128.namprd10.prod.outlook.com (2603:10b6:408:117::24)
+ by DM4PR10MB6255.namprd10.prod.outlook.com (2603:10b6:8:8e::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5588.14; Tue, 6 Sep
+ 2022 15:50:47 +0000
+Received: from BN0PR10MB5128.namprd10.prod.outlook.com
+ ([fe80::25d6:da15:34d:92fa]) by BN0PR10MB5128.namprd10.prod.outlook.com
+ ([fe80::25d6:da15:34d:92fa%4]) with mapi id 15.20.5588.017; Tue, 6 Sep 2022
+ 15:50:47 +0000
+From:   Chuck Lever III <chuck.lever@oracle.com>
+To:     Zorro Lang <zlang@redhat.com>
+CC:     "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
+        "djwong@vger.kernel.org" <djwong@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: generic/650 makes v6.0-rc client unusable
+Thread-Topic: generic/650 makes v6.0-rc client unusable
+Thread-Index: AQHYv8UPIvgoSU1RX0u5XzLtJ9lDJ63PQWGAgAAunICAAyFTAA==
+Date:   Tue, 6 Sep 2022 15:50:47 +0000
+Message-ID: <EC58E371-ED4B-4C36-B45E-EF2B861CAE65@oracle.com>
+References: <3E21DFEA-8DF7-484B-8122-D578BFF7F9E0@oracle.com>
+ <20220904131553.bqdsfbfhmdpuujd3@zlang-mailbox>
+ <0AB3B4E6-3B0F-4F04-8618-A3257D820FAA@oracle.com>
+In-Reply-To: <0AB3B4E6-3B0F-4F04-8618-A3257D820FAA@oracle.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3696.120.41.1.1)
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 41b10499-fcb2-4741-b708-08da901f90dd
+x-ms-traffictypediagnostic: DM4PR10MB6255:EE_
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: CPfyGcscqURceI32WJae9xmxh27JUqcUFzSbcPWxg11JhlVzoecfx1/oFH0MnojzMQhpekWYkXhB0bHiwW5RwuLQgmtUxdU39tNracL4I5Onvr2w9SQpxQnD6E0Yn12rTWjbZxCatdd6Kpu/AgKLHm/heBFT4KHBxDVFLgE5G5nupp4km/SAsNz/b1V3njIvmQhqCZWtuwvx1UZoEGqL+XxtmUUOlE20HCdVV8mnlI5X2dd1C3sKI+pZCn7linN/PRnz6cIsOz8tjBldP9QkuHlb4TTXzK4AbfhRlGYV/Gk0jY7u8xAwb1IItMbnwLAMPySDvDKlJ74HX+e1NMFUz748uDAQzefj5gIBhH4yQ+Dpgf4l7P1J+9Tj/0drW7POKjyaiQ5xtSWoPjbKD5dm/onWU1aagaHTe1vAN/QJ/YhA5yZlDXMZFSPJG/SGP5KSTcHCTy3wrYindoVGtGFLrZq1jH+WVoAS9pRerU1jf4UvqyyoyC+Z+I0Kmzm1XS/Enf6JOHAzbrZRAb4/zdzFpmNP4biSwFax+FfXpeO/T7HwBZZ230GhSaA3aJLUyzpoLibq04G8iPhBRRjfIbIM08b1wb9zt34AMOulXm+5rQ8h+1KmcFZO0gLrR985KMoH7U7dmdV7i2qiJXdKaiyq2gRQbSscu/WQN1+2pZJYToqRUDNDn3gIq7uOQlD4XwE/rUnSZQ13iMj6waDbctVFvel47raBbREGoGHTIw1+3Y0FqsnQHChWZI5LpPZ4+6FAC9t2rDwLQLPMyCxmMnC9PKoJ208iXunNxcab/4/LfNku4wjtIt84UQVfq6VG94bwOeqId6qA/VOguPupzGHElQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN0PR10MB5128.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(39860400002)(136003)(366004)(396003)(376002)(346002)(53546011)(38070700005)(6486002)(83380400001)(66946007)(186003)(64756008)(4326008)(66556008)(66446008)(41300700001)(76116006)(8676002)(91956017)(66476007)(478600001)(8936002)(2616005)(5660300002)(33656002)(86362001)(6506007)(38100700002)(54906003)(6916009)(71200400001)(6512007)(36756003)(122000001)(26005)(316002)(2906002)(41533002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?FdBf4egL1FO3qyA0HvbJFsedN8aMiOB07afSZoWwNWsj4lzdWXGL5MvYyK1R?=
+ =?us-ascii?Q?uo5Omy3/6ycJrjZCWshjDPgD9iUE8QTd1rgW1x4rzbcwWlhG1GwLoqdb10Ng?=
+ =?us-ascii?Q?Yl5J0yxuU5ov2kqDZixXQIpR1Wl4Pg3IaeIF8RzgFdF6XlWGxGUl2QAOmR3B?=
+ =?us-ascii?Q?3d7nx7cxZyw3CJasY4AqDQhM9ACCrJYmMmOg1zm6c5DpkoZGpTj+Bt5eOD3w?=
+ =?us-ascii?Q?3lHISaEcszlPNflpFD8iD/msg3yWzdp8w6RZH0GMO3HdrhSRUPyuEHNb/eNy?=
+ =?us-ascii?Q?pk00YHlt59BZLoKEz5mcpIYe01htXm+bsFf3iZm5mDuoTvQRxRPrY4rAEMqm?=
+ =?us-ascii?Q?3dXt3G8cq9DrtfD81+Igp3l+bZfm5LLLHM7/thq5BqIPO3S2T9TkKHaaFcDv?=
+ =?us-ascii?Q?XNEo3NMdpnCI9ciJUN/hNaxA+yNikRi5h4FSYJcoXPLJv0D+v7DKJmEZJ3Ce?=
+ =?us-ascii?Q?nC9CqadHbVwqk/Y7LqgER5F7aOjWFHfZ39bfc3FGlPFaFHmXT0xiNpo0KsAo?=
+ =?us-ascii?Q?SAZQ9gluegZ05izGvd2IWyeXndQrRVXtP+uzxQ1Q46umMvY82Q+D+GmnUH3A?=
+ =?us-ascii?Q?3TYvy21sDeZyCm+D6CAB+L38RH57LCZVGsbDZvgBLX5W1i4vhUHfn5yYOKbz?=
+ =?us-ascii?Q?PlX67igTdI3mDQhElaGnaICJVqLQz9KLqg2JjK9vRt4M8tSDkiJlKSGt8V68?=
+ =?us-ascii?Q?gcmGbtBurc2QHTHQVdxuAFOs9ntkUMwD/qoQVGPoxnacVspPfOOW21pNoKm2?=
+ =?us-ascii?Q?tjI+Hkv9FB58IGzoyy9a4fFb6C61DcpbiJLDc8FgLEkHuFmYv/1+a/vLbyNk?=
+ =?us-ascii?Q?1UatHLQFF2AbW1V/vESyS8raRBJUSkgsxeDHXHS3OEeTlYAHTEeecOmFoZD0?=
+ =?us-ascii?Q?NmcAs4h8Dl4RIdu+2ayytO6G5vd5TVaInpJX0ZdzTY6N/97RRyqAMtXfoDqM?=
+ =?us-ascii?Q?8HEU3nrLr5YQ75uLy+9Dt7eXpE31Rqup7iMXxrFqbRh362eHQNJ7rOmUnjSV?=
+ =?us-ascii?Q?x0MOFKontlfcQmnJDdGzTSlBJE3rzKm1boYOWBx17X5f6jJxbR1nq1PNFdMT?=
+ =?us-ascii?Q?CJ/0SFkfNc9qB0fEeDCFV1Z059zVNU4gpJ/Ay4ozPinsLfxgbOgPdIGHxfI0?=
+ =?us-ascii?Q?Cp0abpq1wQPcQ1ZQ8qFfUf/w+G6etPJGNxVOC1PRkMthnTfzjZJBbCucoYVZ?=
+ =?us-ascii?Q?GpzpF+Kgm4gaRM4P+s6Gn44Yl1cttOqKfU7P1jw06y3/DeqFNM5QPeyEA/3F?=
+ =?us-ascii?Q?Kt2kadHMzgj1WF6ioTHDVgSJdenXCJeBZ5CElYeak9y0gtlNgtODhn+3Umj8?=
+ =?us-ascii?Q?ndYYN2WJHboHnsFZs0q096pRqA0emPl3HjvrjBh/eGlJGJpiurSO5KwxzdeK?=
+ =?us-ascii?Q?SXET2LhFAGr/jrYBB5t6jcgpGijj+WQIXl5gaLQd3V3EJzfM2iu5Ucm4TKUJ?=
+ =?us-ascii?Q?WaiNKTNecg5w4YK5Z4depFGPdxippVfIXrSOMIid84vq1XO15tvJ8qTAK0nc?=
+ =?us-ascii?Q?iioHAjnJTVqkmASL7Ka5yyueyUwQM3dIy0axIfyETimCaOJ/85Tgaal+GSvW?=
+ =?us-ascii?Q?LAWYF4ZEE3pnZ1slDENzGzmrC1V4QeJUDdOW/fGvqf/Za9H5wiUImmAgIhRT?=
+ =?us-ascii?Q?ug=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <F66F475E2CE5C24A9C6A95D024C643DE@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN0PR10MB5128.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 41b10499-fcb2-4741-b708-08da901f90dd
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Sep 2022 15:50:47.4556
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: hVQo6Cufd0nFYqV0iTMfK+MK63L4jpFGr5OBkc0AcF3rPg+35mo0gKCsNi1ctJr6JGBGR/hs0X3jcKRukzRA7g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB6255
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-06_09,2022-09-06_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0 phishscore=0
+ mlxlogscore=999 spamscore=0 adultscore=0 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
+ definitions=main-2209060075
+X-Proofpoint-GUID: e7g4yzeIBJP3OXuQQELQCR3I1IjWFzVY
+X-Proofpoint-ORIG-GUID: e7g4yzeIBJP3OXuQQELQCR3I1IjWFzVY
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I'm proposing to expose the inode change attribute via statx [1]. Document
-what this value means and what an observer can infer from a change in
-its value.
 
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-[1]: https://lore.kernel.org/linux-nfs/20220826214703.134870-1-jlayton@kernel.org/T/#t
----
- man2/statx.2 |  8 ++++++++
- man7/inode.7 | 34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 42 insertions(+)
+> On Sep 4, 2022, at 12:02 PM, Chuck Lever III <chuck.lever@oracle.com> wro=
+te:
+>=20
+> Hi-
+>=20
+>> On Sep 4, 2022, at 9:15 AM, Zorro Lang <zlang@redhat.com> wrote:
+>>=20
+>> On Sat, Sep 03, 2022 at 06:43:29PM +0000, Chuck Lever III wrote:
+>>> While investigating some of the other issues that have been
+>>> reported lately, I've found that my v6.0-rc3 NFS/TCP client
+>>> goes off the rails often (but not always) during generic/650.
+>>>=20
+>>> This is the test that runs a workload while offlining and
+>>> onlining CPUs. My test client has 12 physical cores.
+>>>=20
+>>> The test appears to start normally, but then after a bit
+>>> the NFS server workload drops to zero and the NFS mount
+>>> disappears. I can't run programs (sudo, for example) on
+>>> the client. Can't log in, even on the console. The console
+>>> has a constant stream of "can't rotate log: Input/Output
+>>> error" type messages.
+>>>=20
+>>> I haven't looked further into this yet. Actually I'm not
+>>> quite sure where to start looking.
+>>>=20
+>>> I recently switched this client from a local /home to an
+>>> NFS-mounted one, and that's where the xfstests are built
+>>> and run from, fwiw.
+>>=20
+>> If most of users complain generic/650, I'd like to exclude g/650 from th=
+e
+>> "auto" default run group. Any more points?
+>=20
+> Well generic/650 was passing for me before v6.0-rc, and IMO
+> it is a tough but reasonable test, considering the ubiquitous
+> use of workqueues and other scheduling primitives in our
+> filesystems.
+>=20
+> So I think I caught a real bug, but I need a couple more days
+> to work it out before deciding generic/650 is throwing false
+> negatives and is thus not worth running in the "auto" group.
 
-v3: Move most verbiage to inode(7)
-    Clarify that this must be monotonically increasing
-    Flesh out usage discussion
-    Mention issues with value moving backward and how to combat them
+Following up. I can't reproduce it any more. I've heard more
+than one report that this failure can happen on non-NFS
+configurations. I'd therefore conclude that I haven't caught
+a bug in something I'm actively testing.
 
-diff --git a/man2/statx.2 b/man2/statx.2
-index 0d1b4591f74c..d98d5148a442 100644
---- a/man2/statx.2
-+++ b/man2/statx.2
-@@ -62,6 +62,7 @@ struct statx {
-     __u32 stx_dev_major;   /* Major ID */
-     __u32 stx_dev_minor;   /* Minor ID */
-     __u64 stx_mnt_id;      /* Mount ID */
-+    __u64 stx_ino_version; /* Inode change attribute */
- };
- .EE
- .in
-@@ -247,6 +248,7 @@ STATX_BTIME	Want stx_btime
- STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
- 	It is deprecated and should not be used.
- STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
-+STATX_INO_VERSION	Want stx_ino_version (DRAFT)
- .TE
- .in
- .PP
-@@ -407,10 +409,16 @@ This is the same number reported by
- .BR name_to_handle_at (2)
- and corresponds to the number in the first field in one of the records in
- .IR /proc/self/mountinfo .
-+.TP
-+.I stx_ino_version
-+The inode version, also known as the inode change attribute. See
-+.BR inode (7)
-+for details.
- .PP
- For further information on the above fields, see
- .BR inode (7).
- .\"
-+.TP
- .SS File attributes
- The
- .I stx_attributes
-diff --git a/man7/inode.7 b/man7/inode.7
-index 9b255a890720..80c2ed4acccd 100644
---- a/man7/inode.7
-+++ b/man7/inode.7
-@@ -184,6 +184,12 @@ Last status change timestamp (ctime)
- This is the file's last status change timestamp.
- It is changed by writing or by setting inode information
- (i.e., owner, group, link count, mode, etc.).
-+.TP
-+Inode version (i_version)
-+(not returned in the \fIstat\fP structure); \fIstatx.stx_ino_version\fP
-+.IP
-+This is the inode change counter. See the discussion of
-+\fBthe inode version counter\fP, below.
- .PP
- The timestamp fields report time measured with a zero point at the
- .IR Epoch ,
-@@ -424,6 +430,34 @@ on a directory means that a file
- in that directory can be renamed or deleted only by the owner
- of the file, by the owner of the directory, and by a privileged
- process.
-+.SS The inode version counter
-+.PP
-+The
-+.I statx.stx_ino_version
-+field is the inode change counter. Any operation that would result in a
-+change to \fIstatx.stx_ctime\fP must result in an increase to this value.
-+The value must increase even in the case where the ctime change is not
-+evident due to coarse timestamp granularity.
-+.PP
-+An observer cannot infer anything from amount of increase about the
-+nature or magnitude of the change. If the returned value is different
-+from the last time it was checked, then something has made an explicit
-+data and/or metadata change to the inode.
-+.PP
-+In the event of a system crash, this value can appear to go backward,
-+if it were queried before ever being written to the backing store. If
-+the value were then incremented again after restart, then an observer
-+could miss noticing a change.
-+.PP
-+In order to guard against this, it is recommended to also watch the
-+\fIstatx.stx_ctime\fP for changes when watching this value. As long as the
-+system clock doesn't jump backward during the crash, an observer can be
-+reasonably sure that the i_version and ctime together represent a unique inode
-+state.
-+.PP
-+The i_version is a Linux extension and is not supported by all filesystems.
-+The application must verify that the \fISTATX_INO_VERSION\fP bit is set in the
-+returned \fIstatx.stx_mask\fP before relying on this field.
- .SH STANDARDS
- If you need to obtain the definition of the
- .I blkcnt_t
--- 
-2.37.3
+Carry on!
+
+
+> I can't really say whether Ted's failing tests are the
+> result of an interaction with the GCE platform or the test
+> itself. Ie, his patch might be the right approach -- exclude
+> it based on the test platform.
+
+--
+Chuck Lever
+
+
 
