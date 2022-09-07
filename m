@@ -2,113 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26C95C38145
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 09:10:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C476BC54EE9
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 09:46:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229976AbiIGJKO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Sep 2022 05:10:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47896 "EHLO
+        id S229619AbiIGJqQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Sep 2022 05:46:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229560AbiIGJKL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 05:10:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B84D174B84;
-        Wed,  7 Sep 2022 02:10:09 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229464AbiIGJqP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 05:46:15 -0400
+Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ECDBAB400;
+        Wed,  7 Sep 2022 02:46:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1662543971; i=@fujitsu.com;
+        bh=tirKYeQVFZpCtn4kxRPrTN8XmF01/d/HAUe+01mJjBU=;
+        h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=Ic8tDoGmqPFtJppVsiDegCrz3ODHSmyreE1X2857PemJz0o+Eln7pdFYi1RXtCamv
+         88ndAhzyt0G/gP64QdXtPl+n3kcUnW9loPheZ8uKhwtFVB2VxLdEg2mjUkKCfOVuJN
+         svnrTO+gSsaJ8zirKf5Fk0Jj05tyq1taUnUW4B0bi4zWqQU0U8oGo3MEu5UOM/ebN3
+         oTFfGM73qZQHwNbEvWq/a0FCjrsLfV8cCW94ezovpW788dGx1IWxEEcZguEKS+LxGi
+         KFk0hMWhpySejnuS14oBd24PSmrUuHbbUNB7k1Otdy1zlybcuDUhhTHqGu8ifqPcZ4
+         75jbee10hevIg==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBKsWRWlGSWpSXmKPExsViZ8ORqJuUIZF
+  ssP+GtMX0qRcYLbYcu8docfkJn8XpCYuYLHa/vslmsWfvSRaLy7vmsFncW/Of1WLXnx3sFit/
+  /GF14PI4tUjCY/MKLY/Fe14yeWxa1cnmsenTJHaPF5tnMnp8fHqLxePzJrkAjijWzLyk/IoE1
+  ox/myewFGznrHjwfw9zA+NG9i5GTg4hgS2MEsu21HQxcgHZy5kkjq1awAzhbGOUaLj1jQmkil
+  fATuL+pP9sIDaLgIpEw6pvbBBxQYmTM5+wgNiiAskSdw+vB7OFBXwlHt6/BWazCehIXFjwl7W
+  LkYNDRMBYYlpTIsh8ZoFrjBLbnjxjB4kLCVRIrN7OAVLOKeAqsb3nNthaZgELicVvDrJD2PIS
+  zVtnM4OUSwgoSczsjgcJSwB1Nk4/xARhq0lcPbeJeQKj0Cwkx81CMmkWkkkLGJlXMVolFWWmZ
+  5TkJmbm6BoaGOgaGprqGpvrGlrqJVbpJuqlluqWpxaX6BrpJZYX66UWF+sVV+Ym56To5aWWbG
+  IERmJKsarwDsaOlT/1DjFKcjApifLGeUkkC/El5adUZiQWZ8QXleakFh9ilOHgUJLgjQsFygk
+  WpaanVqRl5gCTAkxagoNHSYR3SjJQmre4IDG3ODMdInWKUZdjbcOBvcxCLHn5ealS4ryJ6UBF
+  AiBFGaV5cCNgCeoSo6yUMC8jAwODEE9BalFuZgmq/CtGcQ5GJWHe+jSgKTyZeSVwm14BHcEEd
+  MTWQHGQI0oSEVJSDUxlotMMF/K8mHTq60+rfRLve2fP9QwQv6AoFysyj1vNcFoSy4ynOfaWYS
+  E3o6IZ3l0vfrREwY/9X/OOoID4nFYRnY2bz/3p9IhnfTdLuXnOZVf748f3XI+dJ33p/rejDz+
+  ++L+FMWkj8zWje0WdvREnXgfnpT+0ajxgM91zsyz7B616/ZJurU3+/VabY1LjliousY+O25zz
+  +NOkLcdvnynxm7B9Qu/N2yXdfg+Xrost1Hy5bulyo0yf9OkeezqXvDI0iX+XdHTfoashKZkW+
+  e8/BP2JP1g0lfGY6eq+9Gm/fKWniUWIHhVrbSmy29vdtIR/yoUE4RXXd8YIFgWpPI173SiWWf
+  7AtLWPo/CdXqsSS3FGoqEWc1FxIgAWB9RHywMAAA==
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-4.tower-565.messagelabs.com!1662543970!133438!1
+X-Originating-IP: [62.60.8.97]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.87.3; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 15620 invoked from network); 7 Sep 2022 09:46:10 -0000
+Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
+  by server-4.tower-565.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 7 Sep 2022 09:46:10 -0000
+Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id 1A961100192;
+        Wed,  7 Sep 2022 10:46:10 +0100 (BST)
+Received: from R01UKEXCASM121.r01.fujitsu.local (R01UKEXCASM121 [10.183.43.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3A50B617D8;
-        Wed,  7 Sep 2022 09:10:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BFE0C433C1;
-        Wed,  7 Sep 2022 09:10:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662541808;
-        bh=a6rxNDyNfNYsftFOTgasxTViBPk+jSbvU4105tQOkhw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=WbUGnYmnyFUJoHmUJJNdkTfTbKlPdXgHPr6kq8a5AS52w8H4F2fLqyyuPqnpfXV8k
-         37Zvs4OH5t6Hisr1Kr1ar+Srb4OFC2sceheTmucJeYWHEk0UabmunmqGt+Rmk/BZA+
-         MIBjoqwWGIc1EU3fa/Pn7cfW3nZvtyCJNLWYMQY+jxycJNzGnHvEuiUs0DKarv6FSg
-         XcNIBcxLDyRBP1Qbu0guN/v1Kfnb3RRqgCT2UJ3oHI7Yc1I2V8NTb8eTLSB5xrknjZ
-         ATDIZfsT+DqdOdZMjCbb2DP99VSiZ1Mj/Xnsu3jHmWSU81XAYsNmH/NaXvzC45Ug5c
-         w/N7bwzH1xjJw==
-Date:   Wed, 7 Sep 2022 11:10:02 +0200
-From:   Christian Brauner <brauner@kernel.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v5 1/8] statx: add direct I/O alignment information
-Message-ID: <20220907091002.6ay72r4tgk5g6rma@wittgenstein>
-References: <20220827065851.135710-1-ebiggers@kernel.org>
- <20220827065851.135710-2-ebiggers@kernel.org>
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id 0E01D10018D;
+        Wed,  7 Sep 2022 10:46:10 +0100 (BST)
+Received: from [192.168.22.78] (10.167.225.141) by
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.32; Wed, 7 Sep 2022 10:46:06 +0100
+Message-ID: <bf68da75-5b05-5376-c306-24f9d2b92e80@fujitsu.com>
+Date:   Wed, 7 Sep 2022 17:46:00 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20220827065851.135710-2-ebiggers@kernel.org>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.1.2
+Subject: Re: [PATCH v8 0/3] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <dan.j.williams@intel.com>, <djwong@kernel.org>
+CC:     <linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>,
+        <nvdimm@lists.linux.dev>, <linux-xfs@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <hch@infradead.org>,
+        <david@fromorbit.com>, <jane.chu@oracle.com>
+References: <9e9521a4-6e07-e226-2814-b78a2451656b@fujitsu.com>
+ <1662114961-66-1-git-send-email-ruansy.fnst@fujitsu.com>
+In-Reply-To: <1662114961-66-1-git-send-email-ruansy.fnst@fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 26, 2022 at 11:58:44PM -0700, Eric Biggers wrote:
-> From: Eric Biggers <ebiggers@google.com>
-> 
-> Traditionally, the conditions for when DIO (direct I/O) is supported
-> were fairly simple.  For both block devices and regular files, DIO had
-> to be aligned to the logical block size of the block device.
-> 
-> However, due to filesystem features that have been added over time (e.g.
-> multi-device support, data journalling, inline data, encryption, verity,
-> compression, checkpoint disabling, log-structured mode), the conditions
-> for when DIO is allowed on a regular file have gotten increasingly
-> complex.  Whether a particular regular file supports DIO, and with what
-> alignment, can depend on various file attributes and filesystem mount
-> options, as well as which block device(s) the file's data is located on.
-> 
-> Moreover, the general rule of DIO needing to be aligned to the block
-> device's logical block size was recently relaxed to allow user buffers
-> (but not file offsets) aligned to the DMA alignment instead.  See
-> commit bf8d08532bc1 ("iomap: add support for dma aligned direct-io").
-> 
-> XFS has an ioctl XFS_IOC_DIOINFO that exposes DIO alignment information.
-> Uplifting this to the VFS is one possibility.  However, as discussed
-> (https://lore.kernel.org/linux-fsdevel/20220120071215.123274-1-ebiggers@kernel.org/T/#u),
-> this ioctl is rarely used and not known to be used outside of
-> XFS-specific code.  It was also never intended to indicate when a file
-> doesn't support DIO at all, nor was it intended for block devices.
-> 
-> Therefore, let's expose this information via statx().  Add the
-> STATX_DIOALIGN flag and two new statx fields associated with it:
-> 
-> * stx_dio_mem_align: the alignment (in bytes) required for user memory
->   buffers for DIO, or 0 if DIO is not supported on the file.
-> 
-> * stx_dio_offset_align: the alignment (in bytes) required for file
->   offsets and I/O segment lengths for DIO, or 0 if DIO is not supported
->   on the file.  This will only be nonzero if stx_dio_mem_align is
->   nonzero, and vice versa.
-> 
-> Note that as with other statx() extensions, if STATX_DIOALIGN isn't set
-> in the returned statx struct, then these new fields won't be filled in.
-> This will happen if the file is neither a regular file nor a block
-> device, or if the file is a regular file and the filesystem doesn't
-> support STATX_DIOALIGN.  It might also happen if the caller didn't
-> include STATX_DIOALIGN in the request mask, since statx() isn't required
-> to return unrequested information.
-> 
-> This commit only adds the VFS-level plumbing for STATX_DIOALIGN.  For
-> regular files, individual filesystems will still need to add code to
-> support it.  For block devices, a separate commit will wire it up too.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
-> ---
+ping
 
-Looks good to me,
-Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
+在 2022/9/2 18:35, Shiyang Ruan 写道:
+> Changes since v7:
+>    1. Add P1 to fix calculation mistake
+>    2. Add P2 to move drop_pagecache_sb() to super.c for xfs to use
+>    3. P3: Add invalidate all mappings after sync.
+>    4. P3: Set offset&len to be start&length of device when it is to be removed.
+>    5. Rebase on 6.0-rc3 + Darrick's patch[1] + Dan's patch[2].
+> 
+> Changes since v6:
+>    1. Rebase on 6.0-rc2 and Darrick's patch[1].
+> 
+> [1]: https://lore.kernel.org/linux-xfs/Yv5wIa2crHioYeRr@magnolia/
+> [2]: https://lore.kernel.org/linux-xfs/166153426798.2758201.15108211981034512993.stgit@dwillia2-xfh.jf.intel.com/
+> 
+> Shiyang Ruan (3):
+>    xfs: fix the calculation of length and end
+>    fs: move drop_pagecache_sb() for others to use
+>    mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+> 
+>   drivers/dax/super.c         |  3 ++-
+>   fs/drop_caches.c            | 33 ---------------------------------
+>   fs/super.c                  | 34 ++++++++++++++++++++++++++++++++++
+>   fs/xfs/xfs_notify_failure.c | 31 +++++++++++++++++++++++++++----
+>   include/linux/fs.h          |  1 +
+>   include/linux/mm.h          |  1 +
+>   6 files changed, 65 insertions(+), 38 deletions(-)
+> 
