@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D7E7C6FA83
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 11:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2372C6FA8B
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 11:34:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbiIGLdr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Sep 2022 07:33:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36898 "EHLO
+        id S230126AbiIGLeA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Sep 2022 07:34:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230007AbiIGLd2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 07:33:28 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 289D4B69FE;
-        Wed,  7 Sep 2022 04:33:27 -0700 (PDT)
+        with ESMTP id S230131AbiIGLdh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 07:33:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAA10B6D3B;
+        Wed,  7 Sep 2022 04:33:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 90DADB81C54;
-        Wed,  7 Sep 2022 11:33:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21A83C433D7;
-        Wed,  7 Sep 2022 11:33:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2A5366187D;
+        Wed,  7 Sep 2022 11:33:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A775C4347C;
+        Wed,  7 Sep 2022 11:33:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662550404;
-        bh=pgdqISJ78hjl4jnmYpYl02FTsH6QtwIm0GzwJzLcJeo=;
+        s=k20201202; t=1662550415;
+        bh=bADt1iW34YbhBu0nCRLgIJOflnIt9uISyZ+7TvMIyC0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jUc7JHz1Hr2VUZGmUY4B2Dzd5YyfayOVb2CGCl2Zf2UIARfJWnVLP+OXLTGgPO92g
-         AhLkb5dQ9JbjsORHi2Ax36RR74jMzgvHINBHQI6UyFgf2jN5fn/63ipvLH4ra4ahtV
-         skULuiwl0q3Wy+Vi1CS8FMxQupOejwnl6u4CtO5lcEv0x5O0a/y5xb1Zi/ewxZxXds
-         jARtbume4Mw03XpbL02ybRsrBXOKeiXKY3NgiuX2Kny8KdaX6kWEtWVG7210oIERkE
-         O/QczdmNwXrYTxn+O56xquvTObPPvgSm1Ujr2fWFDysoa2oMg1+MEm3g01n8Kp6hhR
-         kOEgcTuiayIdA==
+        b=LIHpAJkbrDAVtPfHWfF4I7zF2vabNDa5VrfuVkaXm8jSr1TXUmi5JMMK82FS6JNbE
+         t3hJ5xiaYPXg6i29gLuGo6NtwTy0OQznk7/4YWxsUtA6/fqfQopX1SfJ1rv5ABYlvk
+         ZmXNLySTVMcIX6YjV6wgjm1VNaGpIb2u94deAfag9SZVsyBzbksFTdXCCBJB1Pz7Lj
+         3Xe2KDEQwJKi9NfeerWlkmb+5SkHy5xeKSjfcD+hm6sbS+NfNNJhp9dNdop1wLehL8
+         E7Ph4hYbZZ1zWxVAqLwpGpx5szLoT9CLkuodddgZF84WqyigcF2pxuyFBtv80uMjqH
+         4xKGMepbha3Qg==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
         david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
@@ -40,11 +40,10 @@ To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
 Cc:     linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Colin Walters <walters@verbum.org>
-Subject: [PATCH v4 1/6] iversion: update comments with info about atime updates
-Date:   Wed,  7 Sep 2022 07:33:13 -0400
-Message-Id: <20220907113318.21810-2-jlayton@kernel.org>
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH v4 6/6] ceph: fill in the change attribute in statx requests
+Date:   Wed,  7 Sep 2022 07:33:18 -0400
+Message-Id: <20220907113318.21810-7-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20220907113318.21810-1-jlayton@kernel.org>
 References: <20220907113318.21810-1-jlayton@kernel.org>
@@ -54,45 +53,59 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The i_version field in the kernel has had different semantics over
-the decades, but we're now proposing to expose it to userland via
-statx. This means that we need a clear, consistent definition of
-what it means and when it should change.
+When statx requests the change attribute, request the full gamut of caps
+(similarly to how ctime is handled). When the change attribute seems to
+be valid, return it in the ino_version field.
 
-Update the comments in iversion.h to describe when the i_version
-must change.
-
-Cc: Colin Walters <walters@verbum.org>
-Cc: NeilBrown <neilb@suse.de>
-Cc: Trond Myklebust <trondmy@hammerspace.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Link: https://lore.kernel.org/linux-xfs/166086932784.5425.17134712694961326033@noble.neil.brown.name/#t
+Reviewed-by: Xiubo Li <xiubli@redhat.com>
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- include/linux/iversion.h | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ fs/ceph/inode.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-index 3bfebde5a1a6..0555a3851dbf 100644
---- a/include/linux/iversion.h
-+++ b/include/linux/iversion.h
-@@ -9,8 +9,14 @@
-  * ---------------------------
-  * The change attribute (i_version) is mandated by NFSv4 and is mostly for
-  * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
-- * appear different to observers if there was a change to the inode's data or
-- * metadata since it was last queried.
-+ * appear larger to observers if there was an explicit change to the inode's
-+ * data or metadata since it was last queried.
-+ *
-+ * An explicit change is one that would ordinarily result in a change to the
-+ * inode status change time (aka ctime). i_version must appear to change, even
-+ * if the ctime does not (since the whole point is to avoid missing updates due
-+ * to timestamp granularity). If POSIX mandates that the ctime must change due
-+ * to an operation, then the i_version counter must be incremented as well.
-  *
-  * Observers see the i_version as a 64-bit number that never decreases. If it
-  * remains the same since it was last checked, then nothing has changed in the
+diff --git a/fs/ceph/inode.c b/fs/ceph/inode.c
+index 42351d7a0dd6..ccc926a7dcb0 100644
+--- a/fs/ceph/inode.c
++++ b/fs/ceph/inode.c
+@@ -2415,10 +2415,10 @@ static int statx_to_caps(u32 want, umode_t mode)
+ {
+ 	int mask = 0;
+ 
+-	if (want & (STATX_MODE|STATX_UID|STATX_GID|STATX_CTIME|STATX_BTIME))
++	if (want & (STATX_MODE|STATX_UID|STATX_GID|STATX_CTIME|STATX_BTIME|STATX_INO_VERSION))
+ 		mask |= CEPH_CAP_AUTH_SHARED;
+ 
+-	if (want & (STATX_NLINK|STATX_CTIME)) {
++	if (want & (STATX_NLINK|STATX_CTIME|STATX_INO_VERSION)) {
+ 		/*
+ 		 * The link count for directories depends on inode->i_subdirs,
+ 		 * and that is only updated when Fs caps are held.
+@@ -2429,11 +2429,10 @@ static int statx_to_caps(u32 want, umode_t mode)
+ 			mask |= CEPH_CAP_LINK_SHARED;
+ 	}
+ 
+-	if (want & (STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_SIZE|
+-		    STATX_BLOCKS))
++	if (want & (STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_SIZE|STATX_BLOCKS|STATX_INO_VERSION))
+ 		mask |= CEPH_CAP_FILE_SHARED;
+ 
+-	if (want & (STATX_CTIME))
++	if (want & (STATX_CTIME|STATX_INO_VERSION))
+ 		mask |= CEPH_CAP_XATTR_SHARED;
+ 
+ 	return mask;
+@@ -2475,6 +2474,11 @@ int ceph_getattr(struct user_namespace *mnt_userns, const struct path *path,
+ 		valid_mask |= STATX_BTIME;
+ 	}
+ 
++	if (request_mask & STATX_INO_VERSION) {
++		stat->ino_version = inode_peek_iversion_raw(inode);
++		valid_mask |= STATX_INO_VERSION;
++	}
++
+ 	if (ceph_snap(inode) == CEPH_NOSNAP)
+ 		stat->dev = inode->i_sb->s_dev;
+ 	else
 -- 
 2.37.3
 
