@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94B8BC6FA8D
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 11:33:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5925BC6FA8E
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 11:33:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230223AbiIGLdq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Sep 2022 07:33:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36990 "EHLO
+        id S230007AbiIGLds (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Sep 2022 07:33:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230089AbiIGLdd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 07:33:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22679B6D01;
-        Wed,  7 Sep 2022 04:33:32 -0700 (PDT)
+        with ESMTP id S230011AbiIGLd2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 07:33:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A465B6D07;
+        Wed,  7 Sep 2022 04:33:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B654A6185F;
-        Wed,  7 Sep 2022 11:33:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0801C4347C;
-        Wed,  7 Sep 2022 11:33:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EB2126187C;
+        Wed,  7 Sep 2022 11:33:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 665D1C433C1;
+        Wed,  7 Sep 2022 11:33:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662550411;
-        bh=UtpmRgctuu/Uj5QkJbhrsp/EEwNxyiqmQFCHXeh1350=;
+        s=k20201202; t=1662550406;
+        bh=4Wib3fNt64VOneA2MVI2ZHf68wx0/SLas54CS8oHEX4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gEjTJB2eeaSYFBLsRymBFqIkjtbgN0EvVQZJxP0JbjBcr0cQYf1GTTQnoAquh1sPV
-         XoLQKuHzKjXpxHuLB882sFfNpVGL7Eb7lsNd1X3d9vEfCv5ndSlM2Bwnmp43dpwmWe
-         zDusx1LG8MRqghzMJk8hXwFkEP9c/f+1tazGGZuoyGkc/VbfbYXC8kElAG4TFTy/vx
-         tD60GUQvEBofEb+zf/aLJigxZNqoa06xpNZ37zTkf15h3iWfFE51BHdTNMO+MqN+2d
-         ud3aGQlz7Sz1LNbJxb+CMzML7D7VyIOQnuvJXQfo0Q3qskmq1C4werVKbMJS5PhbN2
-         8DBGmeCN2w9Ag==
+        b=kR4FlIC2bVhB59ohkJXJHMSaHuEENO23KM51TfJLa/UHZOu9XaF048K9xokSS3PW6
+         vxsZZ8p3u3gtn2dBIzhuqmEZn509LePD7s5jidCjt1prOuXkVVrkyOUtqdeawQW/oM
+         w+1yzHKjXvXbIFj1ToqWkcr6sLL+44fJZ89SZH8gQ7mLG0U06bJyy6w6wJksPs47oQ
+         XSFiFI0jLSF5uHQl1v0OHdtsASy2aPcSUE3f4GJoMYZv/qo2S/dApKWuqUhODa5v8u
+         KloD/it+0WifBNh1fv1GVHYd7WeqS6O3A5IEGEHBqtAOly10a+ypT1KqJ4Sgt1XVxf
+         CeQH8ZNtRrv1Q==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
         david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
@@ -40,13 +40,10 @@ To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
 Cc:     linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Jeff Layton <jlayton@redhat.com>,
-        David Howells <dhowells@redhat.com>,
-        Frank Filz <ffilzlnx@mindspring.com>
-Subject: [PATCH v4 4/6] vfs: report an inode version in statx for IS_I_VERSION inodes
-Date:   Wed,  7 Sep 2022 07:33:16 -0400
-Message-Id: <20220907113318.21810-5-jlayton@kernel.org>
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH v4 2/6] ext4: fix i_version handling in ext4
+Date:   Wed,  7 Sep 2022 07:33:14 -0400
+Message-Id: <20220907113318.21810-3-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20220907113318.21810-1-jlayton@kernel.org>
 References: <20220907113318.21810-1-jlayton@kernel.org>
@@ -56,131 +53,166 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Jeff Layton <jlayton@redhat.com>
+ext4 currently updates the i_version counter when the atime is updated
+during a read. This is less than ideal as it can cause unnecessary cache
+invalidations with NFSv4 and unnecessary remeasurements for IMA.
 
-The NFS server and IMA both rely heavily on the i_version counter, but
-it's largely invisible to userland, which makes it difficult to test its
-behavior. This value would also be of use to userland NFS servers, and
-other applications that want a reliable way to know whether there might
-have been an explicit change to an inode since they last checked.
+The increment in ext4_mark_iloc_dirty is also problematic since it can
+corrupt the i_version counter for ea_inodes. We aren't bumping the file
+times in ext4_mark_iloc_dirty, so changing the i_version there seems
+wrong, and is the cause of both problems.
 
-Claim one of the spare fields in struct statx to hold a 64-bit inode
-version attribute. This value must change with any explicit, observeable
-metadata or data change. Note that atime updates are excluded from this,
-unless it is due to an explicit change via utimes or similar mechanism.
+Remove that callsite and add increments to the setattr, setxattr and
+ioctl codepaths, at the same times that we update the ctime. The
+i_version bump that already happens during timestamp updates should take
+care of the rest.
 
-When statx requests this attribute on an IS_I_VERSION inode, do an
-inode_query_iversion and fill the result in the field. Also, update the
-test-statx.c program to display the inode version and the mountid.
+In ext4_move_extents, increment the i_version on both inodes, and also
+add in missing ctime updates.
 
-Cc: David Howells <dhowells@redhat.com>
-Cc: Frank Filz <ffilzlnx@mindspring.com>
+Cc: Lukas Czerner <lczerner@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/stat.c                 | 7 +++++++
- include/linux/stat.h      | 1 +
- include/uapi/linux/stat.h | 3 ++-
- samples/vfs/test-statx.c  | 8 ++++++--
- 4 files changed, 16 insertions(+), 3 deletions(-)
+ fs/ext4/inode.c       | 15 +++++----------
+ fs/ext4/ioctl.c       |  8 ++++++++
+ fs/ext4/move_extent.c |  8 ++++++++
+ fs/ext4/xattr.c       |  2 ++
+ 4 files changed, 23 insertions(+), 10 deletions(-)
 
-diff --git a/fs/stat.c b/fs/stat.c
-index 9ced8860e0f3..d892909836aa 100644
---- a/fs/stat.c
-+++ b/fs/stat.c
-@@ -17,6 +17,7 @@
- #include <linux/syscalls.h>
- #include <linux/pagemap.h>
- #include <linux/compat.h>
+Note that this patch is based on top of this patch from Lukas:
+
+    ext4: don't increase iversion counter for ea_inodes
+
+It won't apply cleanly to mainline without that.
+
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 2a220be34caa..aa37bce4c541 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -5342,6 +5342,7 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
+ 	int error, rc = 0;
+ 	int orphan = 0;
+ 	const unsigned int ia_valid = attr->ia_valid;
++	bool inc_ivers = IS_I_VERSION(inode);
+ 
+ 	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
+ 		return -EIO;
+@@ -5425,8 +5426,8 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
+ 			return -EINVAL;
+ 		}
+ 
+-		if (IS_I_VERSION(inode) && attr->ia_size != inode->i_size)
+-			inode_inc_iversion(inode);
++		if (attr->ia_size == inode->i_size)
++			inc_ivers = false;
+ 
+ 		if (shrink) {
+ 			if (ext4_should_order_data(inode)) {
+@@ -5528,6 +5529,8 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
+ 	}
+ 
+ 	if (!error) {
++		if (inc_ivers)
++			inode_inc_iversion(inode);
+ 		setattr_copy(mnt_userns, inode, attr);
+ 		mark_inode_dirty(inode);
+ 	}
+@@ -5731,14 +5734,6 @@ int ext4_mark_iloc_dirty(handle_t *handle,
+ 	}
+ 	ext4_fc_track_inode(handle, inode);
+ 
+-	/*
+-	 * ea_inodes are using i_version for storing reference count, don't
+-	 * mess with it
+-	 */
+-	if (IS_I_VERSION(inode) &&
+-	    !(EXT4_I(inode)->i_flags & EXT4_EA_INODE_FL))
+-		inode_inc_iversion(inode);
+-
+ 	/* the do_update_inode consumes one bh->b_count */
+ 	get_bh(iloc->bh);
+ 
+diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+index 3cf3ec4b1c21..60e77ae9342d 100644
+--- a/fs/ext4/ioctl.c
++++ b/fs/ext4/ioctl.c
+@@ -452,6 +452,8 @@ static long swap_inode_boot_loader(struct super_block *sb,
+ 	swap_inode_data(inode, inode_bl);
+ 
+ 	inode->i_ctime = inode_bl->i_ctime = current_time(inode);
++	if (IS_I_VERSION(inode))
++		inode_inc_iversion(inode);
+ 
+ 	inode->i_generation = prandom_u32();
+ 	inode_bl->i_generation = prandom_u32();
+@@ -665,6 +667,8 @@ static int ext4_ioctl_setflags(struct inode *inode,
+ 	ext4_set_inode_flags(inode, false);
+ 
+ 	inode->i_ctime = current_time(inode);
++	if (IS_I_VERSION(inode))
++		inode_inc_iversion(inode);
+ 
+ 	err = ext4_mark_iloc_dirty(handle, inode, &iloc);
+ flags_err:
+@@ -775,6 +779,8 @@ static int ext4_ioctl_setproject(struct inode *inode, __u32 projid)
+ 
+ 	EXT4_I(inode)->i_projid = kprojid;
+ 	inode->i_ctime = current_time(inode);
++	if (IS_I_VERSION(inode))
++		inode_inc_iversion(inode);
+ out_dirty:
+ 	rc = ext4_mark_iloc_dirty(handle, inode, &iloc);
+ 	if (!err)
+@@ -1257,6 +1263,8 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 		err = ext4_reserve_inode_write(handle, inode, &iloc);
+ 		if (err == 0) {
+ 			inode->i_ctime = current_time(inode);
++			if (IS_I_VERSION(inode))
++				inode_inc_iversion(inode);
+ 			inode->i_generation = generation;
+ 			err = ext4_mark_iloc_dirty(handle, inode, &iloc);
+ 		}
+diff --git a/fs/ext4/move_extent.c b/fs/ext4/move_extent.c
+index 701f1d6a217f..d73ab3153218 100644
+--- a/fs/ext4/move_extent.c
++++ b/fs/ext4/move_extent.c
+@@ -6,6 +6,7 @@
+  */
+ 
+ #include <linux/fs.h>
 +#include <linux/iversion.h>
- 
- #include <linux/uaccess.h>
- #include <asm/unistd.h>
-@@ -118,6 +119,11 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
- 	stat->attributes_mask |= (STATX_ATTR_AUTOMOUNT |
- 				  STATX_ATTR_DAX);
- 
-+	if ((request_mask & STATX_INO_VERSION) && IS_I_VERSION(inode)) {
-+		stat->result_mask |= STATX_INO_VERSION;
-+		stat->ino_version = inode_query_iversion(inode);
-+	}
+ #include <linux/quotaops.h>
+ #include <linux/slab.h>
+ #include <linux/sched/mm.h>
+@@ -683,6 +684,13 @@ ext4_move_extents(struct file *o_filp, struct file *d_filp, __u64 orig_blk,
+ 			break;
+ 		o_start += cur_len;
+ 		d_start += cur_len;
 +
- 	mnt_userns = mnt_user_ns(path->mnt);
- 	if (inode->i_op->getattr)
- 		return inode->i_op->getattr(mnt_userns, path, stat,
-@@ -611,6 +617,7 @@ cp_statx(const struct kstat *stat, struct statx __user *buffer)
- 	tmp.stx_dev_major = MAJOR(stat->dev);
- 	tmp.stx_dev_minor = MINOR(stat->dev);
- 	tmp.stx_mnt_id = stat->mnt_id;
-+	tmp.stx_ino_version = stat->ino_version;
- 
- 	return copy_to_user(buffer, &tmp, sizeof(tmp)) ? -EFAULT : 0;
- }
-diff --git a/include/linux/stat.h b/include/linux/stat.h
-index 7df06931f25d..9cd77eb7bc1a 100644
---- a/include/linux/stat.h
-+++ b/include/linux/stat.h
-@@ -50,6 +50,7 @@ struct kstat {
- 	struct timespec64 btime;			/* File creation time */
- 	u64		blocks;
- 	u64		mnt_id;
-+	u64		ino_version;
- };
- 
- #endif
-diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
-index 1500a0f58041..48d9307d7f31 100644
---- a/include/uapi/linux/stat.h
-+++ b/include/uapi/linux/stat.h
-@@ -124,7 +124,7 @@ struct statx {
- 	__u32	stx_dev_minor;
- 	/* 0x90 */
- 	__u64	stx_mnt_id;
--	__u64	__spare2;
-+	__u64	stx_ino_version; /* Inode change attribute */
- 	/* 0xa0 */
- 	__u64	__spare3[12];	/* Spare space for future expansion */
- 	/* 0x100 */
-@@ -152,6 +152,7 @@ struct statx {
- #define STATX_BASIC_STATS	0x000007ffU	/* The stuff in the normal stat struct */
- #define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
- #define STATX_MNT_ID		0x00001000U	/* Got stx_mnt_id */
-+#define STATX_INO_VERSION	0x00002000U	/* Want/got stx_change_attr */
- 
- #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx expansion */
- 
-diff --git a/samples/vfs/test-statx.c b/samples/vfs/test-statx.c
-index 49c7a46cee07..23e68036fdfb 100644
---- a/samples/vfs/test-statx.c
-+++ b/samples/vfs/test-statx.c
-@@ -107,6 +107,8 @@ static void dump_statx(struct statx *stx)
- 	printf("Device: %-15s", buffer);
- 	if (stx->stx_mask & STATX_INO)
- 		printf(" Inode: %-11llu", (unsigned long long) stx->stx_ino);
-+	if (stx->stx_mask & STATX_MNT_ID)
-+		printf(" MountId: %llx", stx->stx_mnt_id);
- 	if (stx->stx_mask & STATX_NLINK)
- 		printf(" Links: %-5u", stx->stx_nlink);
- 	if (stx->stx_mask & STATX_TYPE) {
-@@ -145,7 +147,9 @@ static void dump_statx(struct statx *stx)
- 	if (stx->stx_mask & STATX_CTIME)
- 		print_time("Change: ", &stx->stx_ctime);
- 	if (stx->stx_mask & STATX_BTIME)
--		print_time(" Birth: ", &stx->stx_btime);
-+		print_time("Birth: ", &stx->stx_btime);
-+	if (stx->stx_mask & STATX_INO_VERSION)
-+		printf("Inode Version: 0x%llx\n", stx->stx_ino_version);
- 
- 	if (stx->stx_attributes_mask) {
- 		unsigned char bits, mbits;
-@@ -218,7 +222,7 @@ int main(int argc, char **argv)
- 	struct statx stx;
- 	int ret, raw = 0, atflag = AT_SYMLINK_NOFOLLOW;
- 
--	unsigned int mask = STATX_BASIC_STATS | STATX_BTIME;
-+	unsigned int mask = STATX_BASIC_STATS | STATX_BTIME | STATX_MNT_ID | STATX_INO_VERSION;
- 
- 	for (argv++; *argv; argv++) {
- 		if (strcmp(*argv, "-F") == 0) {
++		orig_inode->i_ctime = current_time(orig_inode);
++		donor_inode->i_ctime = current_time(donor_inode);
++		if (IS_I_VERSION(orig_inode))
++			inode_inc_iversion(orig_inode);
++		if (IS_I_VERSION(donor_inode))
++			inode_inc_iversion(donor_inode);
+ 	}
+ 	*moved_len = o_start - orig_blk;
+ 	if (*moved_len > len)
+diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
+index 533216e80fa2..e975442e4ab2 100644
+--- a/fs/ext4/xattr.c
++++ b/fs/ext4/xattr.c
+@@ -2412,6 +2412,8 @@ ext4_xattr_set_handle(handle_t *handle, struct inode *inode, int name_index,
+ 	if (!error) {
+ 		ext4_xattr_update_super_block(handle, inode->i_sb);
+ 		inode->i_ctime = current_time(inode);
++		if (IS_I_VERSION(inode))
++			inode_inc_iversion(inode);
+ 		if (!value)
+ 			no_expand = 0;
+ 		error = ext4_mark_iloc_dirty(handle, inode, &is.iloc);
 -- 
 2.37.3
 
