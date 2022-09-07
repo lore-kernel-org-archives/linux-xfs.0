@@ -2,91 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3929EC54EE9
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 07:46:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B931C54EE9
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 08:45:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229629AbiIGHqr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Sep 2022 03:46:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40326 "EHLO
+        id S229695AbiIGIpn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Sep 2022 04:45:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229939AbiIGHqc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 03:46:32 -0400
-Received: from mail-vs1-xe31.google.com (mail-vs1-xe31.google.com [IPv6:2607:f8b0:4864:20::e31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF1569E8B5;
-        Wed,  7 Sep 2022 00:46:31 -0700 (PDT)
-Received: by mail-vs1-xe31.google.com with SMTP id n125so14051557vsc.5;
-        Wed, 07 Sep 2022 00:46:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date;
-        bh=70UlwKdvq7GCSl1IbEvE1dyc4cQjRqwl7FIkEoDrwBc=;
-        b=gxENM3C5F/mywTCZjPzfG6V5EIvSHxSCqhJc0UIsQZrs0XWrlJVrw0WQrNZRioOOiP
-         wDLaRWt5myCkFnsgPQFpDQgUDPTWODeEW50CByj0vbbs+rcipZ9tN3NQ1BAPsDSJnjyO
-         2opDHjziA3CpiB0JiYyVfKsQ6dmaCK4/bzXbWTtwUL2TqY0M9xyxbqabDHlATL1EffBO
-         EPXQFtZjcdQ2bo9cp5iVPmyADfCdH/8LNrBKek3LdfQqHcOFheLwo5f5pm/up29C3XzE
-         PJ39NymUSNHGnCzJzDqmFnGjbEsP5kbUGXmO4GmZttcwC6R5SBAyzungYgtwYYA6t/gb
-         kGxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=70UlwKdvq7GCSl1IbEvE1dyc4cQjRqwl7FIkEoDrwBc=;
-        b=G63ye3JtXHcR+vPJEx6uRc0m7vINjUY10XRaFtgc6s6bq92GnmaLj3itnplsKZpL/c
-         iqJrhYNT42KvRjXop86d18ApaL9y6vgwhmkTRO680k/CaK+awduM6PQ7TYhzSlZLW96L
-         Sn8956FLnieoIu4Z3Rc49DmtLas/mreTOlP/pHWC60jkf+ndl24JY/glTgeG5XtouEn0
-         b4D5uXHVYI9AemLWDvC82yUEt0K3h/UrKH08YUqDO2zkj0sS7DCRLxXfKlDqQqU0OxNt
-         XvSDamWVbCAN/ES+F4NTJlzW2O1IbGGYv90WIXr0xgGSSr76JkE3kx7EO+NO2Vy4L4p1
-         9nIw==
-X-Gm-Message-State: ACgBeo2yIC5PAYQmcjN00Av2izvc8Zhk2BNihWhFisBxxNFr2bz9paP0
-        BYxCg5F0gL80T6dvvrJq1Fmm7RIR7/1vU3+slN3vAhsZJkQ=
-X-Google-Smtp-Source: AA6agR6yyYcaIk9n4JzQ9dl81gPkNJ+UBU3hY4U/5E+5LQpAjGggTmyFyfJHh9AjJUl7m++VA/jK35zZbvb2BAc2kz4=
-X-Received: by 2002:a67:d00f:0:b0:397:f237:98f3 with SMTP id
- r15-20020a67d00f000000b00397f23798f3mr613990vsi.71.1662536790612; Wed, 07 Sep
- 2022 00:46:30 -0700 (PDT)
+        with ESMTP id S229572AbiIGIpm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 04:45:42 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86E3C72EE1;
+        Wed,  7 Sep 2022 01:45:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=EBn6+PekQ9HgWpOyL3HjDLpM5I9iK8a5/LWby5GXm9w=; b=oVetsvWLvH5eTqsi2zWONtOAC3
+        rpZ6+qvDKI37kr2ze2cMlVgkhAfvPg6uiUWsrUYR9ZcUyYQNl4xeK1t6c4whmVHD1E23Mhxgz01wR
+        vXF5bBSal2savl00zL3GewiEwtqdPIW0eH0UH4EbDt3Wi2PxSzFltT2mdaBrlbik3gmpqAjya3jSQ
+        NGIUR67sBaEfsENy+OvVHmXQ7qCuMwLTtqbOKQl1Wv+5Kl/t2anvwTp1DeYUFuU8DAs/eLpqyNY3y
+        FxW4UOxkCgD0Il8Z5AF1hAzQ0cfHvx1nSsH2xsI4w6iHAzjsFq53EgVIyPzPpxzmtV9iZ+vo4btdE
+        qjixFbYg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oVqgY-004SGZ-4V; Wed, 07 Sep 2022 08:45:26 +0000
+Date:   Wed, 7 Sep 2022 01:45:26 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        David Hildenbrand <david@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 4/7] iov_iter: new iov_iter_pin_pages*() routines
+Message-ID: <YxhaJktqtHw3QTSG@infradead.org>
+References: <20220831041843.973026-1-jhubbard@nvidia.com>
+ <20220831041843.973026-5-jhubbard@nvidia.com>
+ <YxbtF1O8+kXhTNaj@infradead.org>
+ <103fe662-3dc8-35cb-1a68-dda8af95c518@nvidia.com>
+ <Yxb7YQWgjHkZet4u@infradead.org>
+ <20220906102106.q23ovgyjyrsnbhkp@quack3>
 MIME-Version: 1.0
-References: <20220906183600.1926315-1-teratipally@google.com>
-In-Reply-To: <20220906183600.1926315-1-teratipally@google.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Wed, 7 Sep 2022 10:46:19 +0300
-Message-ID: <CAOQ4uxiNqxx1jK9k2-3yuvVTRwc09__5XMu7MdX75K1FGp5Dhg@mail.gmail.com>
-Subject: Re: Request to cherry-pick 01ea173e103edd5ec41acec65b9261b87e123fc2
- to v5.10
-To:     Varsha Teratipally <teratipally@google.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220906102106.q23ovgyjyrsnbhkp@quack3>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 6, 2022 at 9:36 PM Varsha Teratipally
-<teratipally@google.com> wrote:
->
-> Hi all,
->
-> Commit 01ea173e103edd5ec41acec65b9261b87e123fc2 (upstream: xfs: fix up
-> non-directory creation in SGID directories) fixes an issue where in xfs
-> sometimes, a local user could create files with an unitended group
-> permissions as an owner and execution where a directory is SGID and belon=
-gs to a certain group and is writable by a user who is not a member of this=
- group and seems like a good candidate for the v5.10 stable tree given that=
- 5.10 is used in versions of debian, ubuntu.
->
-> This patch applies cleanly. Let me know what you think
->
+On Tue, Sep 06, 2022 at 12:21:06PM +0200, Jan Kara wrote:
+> > For FOLL_PIN callers, never pin bvec and kvec pages:  For file systems
+> > not acquiring a reference is obviously safe, and the other callers will
+> > need an audit, but I can't think of why it woul  ever be unsafe.
+> 
+> Are you sure about "For file systems not acquiring a reference is obviously
+> safe"? I can see places e.g. in orangefs, afs, etc. which create bvec iters
+> from pagecache pages. And then we have iter_file_splice_write() which
+> creates bvec from pipe pages (which can also be pagecache pages if
+> vmsplice() is used). So perhaps there are no lifetime issues even without
+> acquiring a reference (but looking at the code I would not say it is
+> obvious) but I definitely don't see how it would be safe to not get a pin
+> to signal to filesystem backing the pagecache page that there is DMA
+> happening to/from the page.
 
-Since you already posted the patch, I wrote what I think on the post:
-
-https://lore.kernel.org/linux-xfs/CAOQ4uxi_Q8aXUg+FM0Q9__t=3DKqJSVqOgkS8j8k=
-NC3MQfniZLWA@mail.gmail.com/
-
-Bottom line - I think that the patch should be applied to 5.10.y
-without further delay.
-
-Thanks,
-Amir.
+I mean in the context of iov_iter_get_pages callers, that is direct
+I/O.  Direct callers of iov_iter_bvec which then pass that iov to
+->read_iter / ->write_iter will need to hold references (those are
+the references that the callers of iov_iter_get_pages rely on!).
