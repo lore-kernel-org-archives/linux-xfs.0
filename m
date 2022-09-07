@@ -2,127 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07276C6FA8B
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 13:58:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 087E5C6FA89
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 14:01:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229788AbiIGN61 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Sep 2022 09:58:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44750 "EHLO
+        id S229718AbiIGOBN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Sep 2022 10:01:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229607AbiIGN6Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 09:58:24 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 504D91929C;
-        Wed,  7 Sep 2022 06:58:22 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 04692204E9;
-        Wed,  7 Sep 2022 13:58:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1662559101; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=vSloOVBt4ejDDmCVbuxcpjAf3Vez01oYnT3kbC/eglE=;
-        b=wfbYC+GH+4qYotz04AEU4Dm7UhV9eGvv2uf62IJJg+AjU3+OLZ/jRyiPwuk7Ec0OE10q/4
-        WIEHStDXEwpi/bD95O8WqZxvQi2BB2k+7tn8VwxBgnJu+Rst6eYYYJmo5X/GhDMRtwzAOS
-        kKeMc4zJkzfKOYhMsVpESvQWwyvmXuo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1662559101;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=vSloOVBt4ejDDmCVbuxcpjAf3Vez01oYnT3kbC/eglE=;
-        b=ELRZ7afbYvgq3ID3xjOyZKMFv9gamlOnz0D3xdSxyyKAQVqUT+H5dRk5B1yWkmS/NSIO+w
-        vGVHL5o92da/16Bg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D119D13486;
-        Wed,  7 Sep 2022 13:58:20 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id nXABM3yjGGPhNAAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 07 Sep 2022 13:58:20 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id B5313A067E; Wed,  7 Sep 2022 15:51:53 +0200 (CEST)
-Date:   Wed, 7 Sep 2022 15:51:53 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
-        NeilBrown <neilb@suse.de>, tytso@mit.edu,
-        adilger.kernel@dilger.ca, djwong@kernel.org, david@fromorbit.com,
-        trondmy@hammerspace.com, viro@zeniv.linux.org.uk,
-        zohar@linux.ibm.com, xiubli@redhat.com, chuck.lever@oracle.com,
-        lczerner@redhat.com, jack@suse.cz, brauner@kernel.org,
-        fweimer@redhat.com, linux-man@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-Message-ID: <20220907135153.qvgibskeuz427abw@quack3>
-References: <20220907111606.18831-1-jlayton@kernel.org>
- <166255065346.30452.6121947305075322036@noble.neil.brown.name>
- <79aaf122743a295ddab9525d9847ac767a3942aa.camel@kernel.org>
- <20220907125211.GB17729@fieldses.org>
- <771650a814ab1ff4dc5473d679936b747d9b6cf5.camel@kernel.org>
+        with ESMTP id S229490AbiIGOBM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 10:01:12 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74958B1CF
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Sep 2022 07:01:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=qUHCmSEQ/OxxvMN5VAXM/SqIQYYB6uDrsIH91iso8r4=; b=OVPw/idbA/1M9Zz45yEYMPPhWe
+        b4ewhuBCUzuP/l48P7fFWZ1GgA1LyVFhm+7zm68W59jDoqRrXWu7vs5HQ6Ue5/bABuC+7HNjX5jgL
+        L4r8OLiro6OEL4jkMAN+R6WKd2Dnb06LRKfP5G1Fp62zLzRvOlm4kWZPBBVs/Yi5ZtWloHlqW3Q9J
+        M4mp/GWiO5dHMaUJvtfyJ6JqyI2ZHibE5Gv6KOl8MHq5aLObizUFqWG+tGbdtfY6pdOQ95G1XnzWh
+        J8kEEFHlAbuESvj+nWb3fEQr9QIf42T8k/KLOzqMD2dAeKgc94d7uxYN3qnsVYjc3a4T+hGOtPYwK
+        YQmACIlg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oVvc7-006glH-3o; Wed, 07 Sep 2022 14:01:11 +0000
+Date:   Wed, 7 Sep 2022 07:01:11 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/9] xfs: AIL doesn't need manual pushing
+Message-ID: <YxikJ9D5SY/eSZlz@infradead.org>
+References: <20220809230353.3353059-1-david@fromorbit.com>
+ <20220809230353.3353059-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <771650a814ab1ff4dc5473d679936b747d9b6cf5.camel@kernel.org>
+In-Reply-To: <20220809230353.3353059-3-david@fromorbit.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 07-09-22 09:12:34, Jeff Layton wrote:
-> On Wed, 2022-09-07 at 08:52 -0400, J. Bruce Fields wrote:
-> > On Wed, Sep 07, 2022 at 08:47:20AM -0400, Jeff Layton wrote:
-> > > On Wed, 2022-09-07 at 21:37 +1000, NeilBrown wrote:
-> > > > On Wed, 07 Sep 2022, Jeff Layton wrote:
-> > > > > +The change to \fIstatx.stx_ino_version\fP is not atomic with respect to the
-> > > > > +other changes in the inode. On a write, for instance, the i_version it usually
-> > > > > +incremented before the data is copied into the pagecache. Therefore it is
-> > > > > +possible to see a new i_version value while a read still shows the old data.
-> > > > 
-> > > > Doesn't that make the value useless?
-> > > > 
-> > > 
-> > > No, I don't think so. It's only really useful for comparing to an older
-> > > sample anyway. If you do "statx; read; statx" and the value hasn't
-> > > changed, then you know that things are stable. 
-> > 
-> > I don't see how that helps.  It's still possible to get:
-> > 
-> > 		reader		writer
-> > 		------		------
-> > 				i_version++
-> > 		statx
-> > 		read
-> > 		statx
-> > 				update page cache
-> > 
-> > right?
-> > 
-> 
-> Yeah, I suppose so -- the statx wouldn't necessitate any locking. In
-> that case, maybe this is useless then other than for testing purposes
-> and userland NFS servers.
-> 
-> Would it be better to not consume a statx field with this if so? What
-> could we use as an alternate interface? ioctl? Some sort of global
-> virtual xattr? It does need to be something per-inode.
+First a note: the explanations in this email thread were really
+helpful understanding the patch.  Can you make sure they are
+recorded in the next version of the commit message?
 
-I was thinking how hard would it be to increment i_version after updating
-data but it will be rather hairy. In particular because of stuff like
-IOCB_NOWAIT support which needs to bail if i_version update is needed. So
-yeah, I don't think there's an easy way how to provide useful i_version for
-general purpose use.
+Otherwise just some nitpicks:
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> -xfs_lsn_t
+> -xlog_grant_push_threshold(
+> -	struct xlog	*log,
+> -	int		need_bytes)
+
+This is moved around and reappears as xfs_ail_push_target.  Maybe
+split the move, rename and drop of the need_bytes into a separate
+cleanup patch after this main one.
+
+> +int xlog_space_left(struct xlog	 *log, atomic64_t *head);
+
+Odd indentation with the tab before *log here.
+
+> +xfs_lsn_t		__xfs_ail_push_target(struct xfs_ail *ailp);
+> +static inline xfs_lsn_t xfs_ail_push_target(struct xfs_ail *ailp)
+> +{
+> +	xfs_lsn_t	lsn;
+> +
+> +	spin_lock(&ailp->ail_lock);
+> +	lsn = __xfs_ail_push_target(ailp);
+> +	spin_unlock(&ailp->ail_lock);
+> +	return lsn;
+> +}
+
+Before this patch xfs_defer_relog called xlog_grant_push_threshold
+without the ail_lock, why is ail_lock needed now?
