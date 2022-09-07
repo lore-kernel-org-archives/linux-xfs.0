@@ -2,130 +2,48 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ABAAC6FA82
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 13:12:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7122C38145
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 13:51:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229882AbiIGNMn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Sep 2022 09:12:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42554 "EHLO
+        id S230080AbiIGNvp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Sep 2022 09:51:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbiIGNMm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 09:12:42 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A2022E688;
-        Wed,  7 Sep 2022 06:12:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A3E01B81CAB;
-        Wed,  7 Sep 2022 13:12:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 457FEC433C1;
-        Wed,  7 Sep 2022 13:12:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662556358;
-        bh=V132xHGgL1w8NHdBoiYyAL47s8tfLlop3oD1g1fj82U=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=G1Jm4lJM23B3IaP893itjGYX74m99ASPpvW2J4WhPcn/YmxsxbxA3Qu8Q1WTBBOod
-         3oQ7NyGRNn9EC4E7ywA0efUlS5RaH51RNfrhInHxVLRQtqvaPQmTE0FNXCKdkOT4fq
-         hkfTcYv8lixZeuNOAKOujT24sSlMKFaPnO6Q+vw0gOlPYBGKl5UwqfYVZjThZe7B6W
-         3mzVasOKwgCIpWc3kCktbm1g06RbSMBBKbVC8OCqFvDySzCLlz5+tfdKtcyqmv72MS
-         BPibXbvvVwhBG/7CPQjwHJj98CsPU5n+dzw1m1ZgJKMUBtDa6CzGdsf1h4j2G5I2Mu
-         m6WkYDXixYGeA==
-Message-ID: <771650a814ab1ff4dc5473d679936b747d9b6cf5.camel@kernel.org>
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-From:   Jeff Layton <jlayton@kernel.org>
-To:     "J. Bruce Fields" <bfields@fieldses.org>
-Cc:     NeilBrown <neilb@suse.de>, tytso@mit.edu, adilger.kernel@dilger.ca,
-        djwong@kernel.org, david@fromorbit.com, trondmy@hammerspace.com,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
-        brauner@kernel.org, fweimer@redhat.com, linux-man@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Date:   Wed, 07 Sep 2022 09:12:34 -0400
-In-Reply-To: <20220907125211.GB17729@fieldses.org>
-References: <20220907111606.18831-1-jlayton@kernel.org>
-         <166255065346.30452.6121947305075322036@noble.neil.brown.name>
-         <79aaf122743a295ddab9525d9847ac767a3942aa.camel@kernel.org>
-         <20220907125211.GB17729@fieldses.org>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
+        with ESMTP id S229673AbiIGNvc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 09:51:32 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64C55AB418
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Sep 2022 06:51:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=4IAHWwFa6pwdJivjZDdOEW0uw9vRrLiXURdEuLCyWPU=; b=S8DrTvdHsJCvLOy6/ODmcov5dU
+        Tf6De0rQ2Zi4WhHAuiNALhw1d7bVfrLshi3T5vFdhjppugo5qv92CJ86GEYI68P/kdr8xEXkdtJhX
+        fUhf3mG1BY/kRXAoBv9MPMmoTxZ9eqCxAeWfvKmDNfo9CkiCufri7Y9tgjyAwZJsUdWhu6JCOUZh4
+        /E/QVPu34ZOHin/B66A/glsNTzOXbiru7vVA19WI0aks4FG5Dz+lhIGvJMDYZuekNpFRCEw2GIMY+
+        EfAEwicIz3S/WgWT3q47fUIW28PMbSvSIOvPILr1bcbnWzrEbnfj8dsWqcAYPKqCn2W5r4ZUtxLVv
+        A2sTHBdQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oVvSY-006dRt-6E; Wed, 07 Sep 2022 13:51:18 +0000
+Date:   Wed, 7 Sep 2022 06:51:18 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] xfs: move and xfs_trans_committed_bulk
+Message-ID: <Yxih1kBXRZCK72Ir@infradead.org>
+References: <20220809230353.3353059-1-david@fromorbit.com>
+ <20220809230353.3353059-2-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220809230353.3353059-2-david@fromorbit.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2022-09-07 at 08:52 -0400, J. Bruce Fields wrote:
-> On Wed, Sep 07, 2022 at 08:47:20AM -0400, Jeff Layton wrote:
-> > On Wed, 2022-09-07 at 21:37 +1000, NeilBrown wrote:
-> > > On Wed, 07 Sep 2022, Jeff Layton wrote:
-> > > > +The change to \fIstatx.stx_ino_version\fP is not atomic with respe=
-ct to the
-> > > > +other changes in the inode. On a write, for instance, the i_versio=
-n it usually
-> > > > +incremented before the data is copied into the pagecache. Therefor=
-e it is
-> > > > +possible to see a new i_version value while a read still shows the=
- old data.
-> > >=20
-> > > Doesn't that make the value useless?
-> > >=20
-> >=20
-> > No, I don't think so. It's only really useful for comparing to an older
-> > sample anyway. If you do "statx; read; statx" and the value hasn't
-> > changed, then you know that things are stable.=20
->=20
-> I don't see how that helps.  It's still possible to get:
->=20
-> 		reader		writer
-> 		------		------
-> 				i_version++
-> 		statx
-> 		read
-> 		statx
-> 				update page cache
->=20
-> right?
->=20
+As the bot pointed out xlog_cil_ail_insert should to be marked static
+now.  Otherwise looks good:
 
-Yeah, I suppose so -- the statx wouldn't necessitate any locking. In
-that case, maybe this is useless then other than for testing purposes
-and userland NFS servers.
-
-Would it be better to not consume a statx field with this if so? What
-could we use as an alternate interface? ioctl? Some sort of global
-virtual xattr? It does need to be something per-inode.
-
-> >=20
-> > > Surely the change number must
-> > > change no sooner than the change itself is visible, otherwise stale d=
-ata
-> > > could be cached indefinitely.
-> > >=20
-> > > If currently implementations behave this way, surely they are broken.
-> >=20
-> > It's certainly not ideal but we've never been able to offer truly atomi=
-c
-> > behavior here given that Linux is a general-purpose OS. The behavior is
-> > a little inconsistent too:
-> >=20
-> > The c/mtime update and i_version bump on directories (mostly) occur
-> > after the operation. c/mtime updates for files however are mostly drive=
-n
-> > by calls to file_update_time, which happens before data is copied to th=
-e
-> > pagecache.
-> >=20
-> > It's not clear to me why it's done this way. Maybe to ensure that the
-> > metadata is up to date in the event that a statx comes in? Improving
-> > this would be nice, but I don't see a way to do that without regressing
-> > performance.
-> > --=20
-> > Jeff Layton <jlayton@kernel.org>
-
---=20
-Jeff Layton <jlayton@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
