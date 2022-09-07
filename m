@@ -2,75 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41449C54EE9
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 14:04:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DED4C6FA90
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Sep 2022 14:05:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229595AbiIGOEv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Sep 2022 10:04:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56076 "EHLO
+        id S229977AbiIGOFP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Sep 2022 10:05:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229948AbiIGOEp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 10:04:45 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 350ED1707A
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Sep 2022 07:04:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ZZvEnJ67hemFcUGkffl3ojqPT/uoPF5vgkYFllqoZeQ=; b=gwuRUkYUZaRZ6Xe0o3M/vpiykR
-        U79GYyjsRJW/ZZE7TmfPaCu6+k92kkqWMt+6sKj3Tbs0IDYUVVltGFvSI2m1itRq1wGcobOwoA9cD
-        ewJzRvnLTRywplNMIfwX/H0ndpPH24cv0hPKfKtLDgSMFfULTwutRYzF7KTgq4lghqoCmX6YoVGSh
-        jomOV63cb8sZC5MVotBGRha+xCXUOMZjavZNmlnjKoivQhPTNo1BPjsh4bT5bdxLCNCXmPRRm1Js2
-        8TwmXtbYYzMxnW0pvZ0vRu29Utj6qQfnDW25wHz81dVf0TCAbLkB23k551Ry2ZSH2RlKZg5SiAFDt
-        MzIEl1Tw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oVvfU-006hoO-DL; Wed, 07 Sep 2022 14:04:40 +0000
-Date:   Wed, 7 Sep 2022 07:04:40 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/9] xfs: background AIL push targets physical space, not
- grant space
-Message-ID: <Yxik+N0dAPfEbe1i@infradead.org>
-References: <20220809230353.3353059-1-david@fromorbit.com>
- <20220809230353.3353059-4-david@fromorbit.com>
+        with ESMTP id S229596AbiIGOFN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 10:05:13 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0E982EF07;
+        Wed,  7 Sep 2022 07:05:11 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4CEC0B81CBB;
+        Wed,  7 Sep 2022 14:05:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4B7BC433D7;
+        Wed,  7 Sep 2022 14:05:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1662559508;
+        bh=5lNGsOF2ajdE3eZM/ZhuIKJFPKWxkqc/O43CxlRdETw=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=iHINgelRFdW9XpgWxJT4+BZAOcCagp76Jlx168FXARg9CGlzv1O9X1nbzOBkyWnfH
+         DvcNjBBa2NBfDaLCDdulT4eoGcqyRAfrU7Pkwia/jC++XRnrwvEDdA0yuBiidY8n9z
+         xkYy9xO+PosTOFM/Z5gioUWOqnPpGn/5RwsW5IwsGpJjb3aTgJMDcNaTBbwPxGb/9N
+         75WPXU/Rxqm3c7uF3u+uomA6YVE4jfr4fX45ocNA2xpSTYq8csdcEYk8JWzhh8IS7f
+         P17k7h+Nxi28WUxLZC8RBrkt6nvaFageSdyvAPIJW2/KPzvp7KNqmcmCCL7jNYUMVD
+         KO6UPHjE9x1IQ==
+Message-ID: <c22baa64133a23be3aba81df23b4af866df51343.camel@kernel.org>
+Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
+ STATX_INO_VERSION field
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Trond Myklebust <trondmy@hammerspace.com>,
+        "bfields@fieldses.org" <bfields@fieldses.org>
+Cc:     "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "xiubli@redhat.com" <xiubli@redhat.com>,
+        "brauner@kernel.org" <brauner@kernel.org>,
+        "neilb@suse.de" <neilb@suse.de>,
+        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "fweimer@redhat.com" <fweimer@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
+        "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "tytso@mit.edu" <tytso@mit.edu>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "lczerner@redhat.com" <lczerner@redhat.com>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>
+Date:   Wed, 07 Sep 2022 10:05:05 -0400
+In-Reply-To: <8a71986b4fb61cd9b4adc8b4250118cbb19eec58.camel@hammerspace.com>
+References: <20220907111606.18831-1-jlayton@kernel.org>
+         <166255065346.30452.6121947305075322036@noble.neil.brown.name>
+         <79aaf122743a295ddab9525d9847ac767a3942aa.camel@kernel.org>
+         <20220907125211.GB17729@fieldses.org>
+         <771650a814ab1ff4dc5473d679936b747d9b6cf5.camel@kernel.org>
+         <8a71986b4fb61cd9b4adc8b4250118cbb19eec58.camel@hammerspace.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220809230353.3353059-4-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->  __xfs_ail_push_target(
->  	struct xfs_ail		*ailp)
->  {
-> +	struct xlog		*log = ailp->ail_log;
-> +	struct xfs_log_item	*lip;
->  
-> +	xfs_lsn_t	target_lsn = 0;
+On Wed, 2022-09-07 at 13:55 +0000, Trond Myklebust wrote:
+> On Wed, 2022-09-07 at 09:12 -0400, Jeff Layton wrote:
+> > On Wed, 2022-09-07 at 08:52 -0400, J. Bruce Fields wrote:
+> > > On Wed, Sep 07, 2022 at 08:47:20AM -0400, Jeff Layton wrote:
+> > > > On Wed, 2022-09-07 at 21:37 +1000, NeilBrown wrote:
+> > > > > On Wed, 07 Sep 2022, Jeff Layton wrote:
+> > > > > > +The change to \fIstatx.stx_ino_version\fP is not atomic with
+> > > > > > respect to the
+> > > > > > +other changes in the inode. On a write, for instance, the
+> > > > > > i_version it usually
+> > > > > > +incremented before the data is copied into the pagecache.
+> > > > > > Therefore it is
+> > > > > > +possible to see a new i_version value while a read still
+> > > > > > shows the old data.
+> > > > >=20
+> > > > > Doesn't that make the value useless?
+> > > > >=20
+> > > >=20
+> > > > No, I don't think so. It's only really useful for comparing to an
+> > > > older
+> > > > sample anyway. If you do "statx; read; statx" and the value
+> > > > hasn't
+> > > > changed, then you know that things are stable.=20
+> > >=20
+> > > I don't see how that helps.=A0 It's still possible to get:
+> > >=20
+> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0reader=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0writer
+> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0------=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0------
+> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0i_version++
+> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0statx
+> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0read
+> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0statx
+> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0update page cache
+> > >=20
+> > > right?
+> > >=20
+> >=20
+> > Yeah, I suppose so -- the statx wouldn't necessitate any locking. In
+> > that case, maybe this is useless then other than for testing purposes
+> > and userland NFS servers.
+> >=20
+> > Would it be better to not consume a statx field with this if so? What
+> > could we use as an alternate interface? ioctl? Some sort of global
+> > virtual xattr? It does need to be something per-inode.
+>=20
+> I don't see how a non-atomic change attribute is remotely useful even
+> for NFS.
+>=20
+> The main problem is not so much the above (although NFS clients are
+> vulnerable to that too) but the behaviour w.r.t. directory changes.
+>=20
+> If the server can't guarantee that file/directory/... creation and
+> unlink are atomically recorded with change attribute updates, then the
+> client has to always assume that the server is lying, and that it has
+> to revalidate all its caches anyway. Cue endless readdir/lookup/getattr
+> requests after each and every directory modification in order to check
+> that some other client didn't also sneak in a change of their own.
+>=20
 
-Any reason for the empty line and different indentation here?
+We generally hold the parent dir's inode->i_rwsem exclusively over most
+important directory changes, and the times/i_version are also updated
+while holding it. What we don't do is serialize reads of this value vs.
+the i_rwsem, so you could see new directory contents alongside an old
+i_version. Maybe we should be taking it for read when we query it on a
+directory?
 
-> +	xfs_lsn_t	max_lsn;
-> +	xfs_lsn_t	min_lsn;
-> +	int32_t		free_bytes;
-> +	uint32_t	target_block;
-> +	uint32_t	target_cycle;
-> +
-> +	lockdep_assert_held(&ailp->ail_lock);
-> +
-> +	lip = xfs_ail_max(ailp);
-> +	if (!lip)
-> +		return NULLCOMMITLSN;
-> +	max_lsn = lip->li_lsn;
-> +	min_lsn = __xfs_ail_min_lsn(ailp);
-
-Ok, this appears to be when we actually need the ail_lock added in the
-previous patch.
-
-Otherwise looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Achieving atomicity with file writes though is another matter entirely.
+I'm not sure that's even doable or how to approach it if so.
+Suggestions?
+--=20
+Jeff Layton <jlayton@kernel.org>
