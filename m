@@ -2,226 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14261C6FA8A
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Sep 2022 00:54:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FCC0ECAAD3
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Sep 2022 01:57:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230163AbiIHAyD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Sep 2022 20:54:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56824 "EHLO
+        id S229919AbiIHB55 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Sep 2022 21:57:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229577AbiIHAyB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 20:54:01 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 897431A812;
-        Wed,  7 Sep 2022 17:54:00 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S229498AbiIHB54 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2022 21:57:56 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA33B83041;
+        Wed,  7 Sep 2022 18:57:55 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 32F7020A2D;
-        Thu,  8 Sep 2022 00:53:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1662598439; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=R8Iu4FM2zldNHQkNV6Nu5dZQzcCSA2VlVjgRccQaV5E=;
-        b=pG7jBRfjKAxooVMpjdQN6pPNAP5vPLTNYpmRLh4K9j4keuGLgXaAJG2uxTPQ9PukBJiYUr
-        s6HUBHh76OOsG657aRAhPxPZdeaYDooNX3u43+8575fHUK7a5NS4s+ov/cjcD1TB+J54vN
-        B04XSOcKEJtD+G94bxuaS1+T9xSJp3k=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1662598439;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=R8Iu4FM2zldNHQkNV6Nu5dZQzcCSA2VlVjgRccQaV5E=;
-        b=xq4QQnNCrxZRtzC/NolV/wIBoeRjsWxc1LfwG7RDJdLDewsqQg8DIzKpUmp/6hDZ3u3Nhl
-        8+hu1ihMhxHTg4DQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B4C1D1339E;
-        Thu,  8 Sep 2022 00:53:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id j4RdGh89GWPMDAAAMHmgww
-        (envelope-from <neilb@suse.de>); Thu, 08 Sep 2022 00:53:51 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6574F61B0F;
+        Thu,  8 Sep 2022 01:57:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E32DC433D7;
+        Thu,  8 Sep 2022 01:57:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1662602274;
+        bh=7ooBitzRYUJELUWbfYkVWsRQPk0BuVGZdsj0IAR+jZA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ZAPvIm6VTZt0+YRfvi4eVryi7yTE19bTcuiHu9yDc04BslUaZzQ/USd83npthd1ig
+         X3EpGOHOD4P2XZ44dhHqEB1Q+JdBIbvu5x4mEMieI+4W4y0blLVqpq/pI7GPQ8Io+5
+         /1fYyaQlgVuOL++KvGkNpJ7fk+Wcqvo0cF+pjwtqv4RIAX2Mh6BxPxhwddHqeNkdPx
+         NYYxZmiwg7arRj0P1jdyNdrfXZjmBZ0Wjs0TKFjIzcTHx6w3gePPUwKQ4Ftre+qoc4
+         ur/5IxyTkTnu3JsEDTaBuh2AU2Zn0u2/InRS35XgRPCHeiGLCg48EYJj/HSEoX5QxK
+         hpq3GqfFJI+tA==
+Date:   Wed, 7 Sep 2022 18:57:52 -0700
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Randy Dunlap <rdunlap@infradead.org>
+Cc:     linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        Christian Brauner <brauner@kernel.org>,
+        Seth Forshee <sforshee@kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Theodore Ts'o <tytso@mit.edu>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH v2] Documentation: filesystems: correct possessive "its"
+Message-ID: <YxlMIJ+BgjTbGHNI@google.com>
+References: <20220901002828.25102-1-rdunlap@infradead.org>
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Trond Myklebust" <trondmy@hammerspace.com>
-Cc:     "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "xiubli@redhat.com" <xiubli@redhat.com>,
-        "brauner@kernel.org" <brauner@kernel.org>,
-        "bfields@fieldses.org" <bfields@fieldses.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "fweimer@redhat.com" <fweimer@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "jlayton@kernel.org" <jlayton@kernel.org>,
-        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
-        "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "tytso@mit.edu" <tytso@mit.edu>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "lczerner@redhat.com" <lczerner@redhat.com>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-In-reply-to: <9f8b9ee28dcc479ab6fb1105fc12ff190a9b5c48.camel@hammerspace.com>
-References: <20220907111606.18831-1-jlayton@kernel.org>,
- <166255065346.30452.6121947305075322036@noble.neil.brown.name>,
- <79aaf122743a295ddab9525d9847ac767a3942aa.camel@kernel.org>,
- <20220907125211.GB17729@fieldses.org>,
- <771650a814ab1ff4dc5473d679936b747d9b6cf5.camel@kernel.org>,
- <8a71986b4fb61cd9b4adc8b4250118cbb19eec58.camel@hammerspace.com>,
- <166259706887.30452.6749778447732126953@noble.neil.brown.name>,
- <9f8b9ee28dcc479ab6fb1105fc12ff190a9b5c48.camel@hammerspace.com>
-Date:   Thu, 08 Sep 2022 10:53:35 +1000
-Message-id: <166259841505.30452.6627904866093896202@noble.neil.brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220901002828.25102-1-rdunlap@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 08 Sep 2022, Trond Myklebust wrote:
-> On Thu, 2022-09-08 at 10:31 +1000, NeilBrown wrote:
-> > On Wed, 07 Sep 2022, Trond Myklebust wrote:
-> > > On Wed, 2022-09-07 at 09:12 -0400, Jeff Layton wrote:
-> > > > On Wed, 2022-09-07 at 08:52 -0400, J. Bruce Fields wrote:
-> > > > > On Wed, Sep 07, 2022 at 08:47:20AM -0400, Jeff Layton wrote:
-> > > > > > On Wed, 2022-09-07 at 21:37 +1000, NeilBrown wrote:
-> > > > > > > On Wed, 07 Sep 2022, Jeff Layton wrote:
-> > > > > > > > +The change to \fIstatx.stx_ino_version\fP is not atomic
-> > > > > > > > with
-> > > > > > > > respect to the
-> > > > > > > > +other changes in the inode. On a write, for instance,
-> > > > > > > > the
-> > > > > > > > i_version it usually
-> > > > > > > > +incremented before the data is copied into the
-> > > > > > > > pagecache.
-> > > > > > > > Therefore it is
-> > > > > > > > +possible to see a new i_version value while a read still
-> > > > > > > > shows the old data.
-> > > > > > >=20
-> > > > > > > Doesn't that make the value useless?
-> > > > > > >=20
-> > > > > >=20
-> > > > > > No, I don't think so. It's only really useful for comparing
-> > > > > > to an
-> > > > > > older
-> > > > > > sample anyway. If you do "statx; read; statx" and the value
-> > > > > > hasn't
-> > > > > > changed, then you know that things are stable.=20
-> > > > >=20
-> > > > > I don't see how that helps.=C2=A0 It's still possible to get:
-> > > > >=20
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0reader=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0writer
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0------=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0------
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0i_version++
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0statx
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0read
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0statx
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0update page cache
-> > > > >=20
-> > > > > right?
-> > > > >=20
-> > > >=20
-> > > > Yeah, I suppose so -- the statx wouldn't necessitate any locking.
-> > > > In
-> > > > that case, maybe this is useless then other than for testing
-> > > > purposes
-> > > > and userland NFS servers.
-> > > >=20
-> > > > Would it be better to not consume a statx field with this if so?
-> > > > What
-> > > > could we use as an alternate interface? ioctl? Some sort of
-> > > > global
-> > > > virtual xattr? It does need to be something per-inode.
-> > >=20
-> > > I don't see how a non-atomic change attribute is remotely useful
-> > > even
-> > > for NFS.
-> > >=20
-> > > The main problem is not so much the above (although NFS clients are
-> > > vulnerable to that too) but the behaviour w.r.t. directory changes.
-> > >=20
-> > > If the server can't guarantee that file/directory/... creation and
-> > > unlink are atomically recorded with change attribute updates, then
-> > > the
-> > > client has to always assume that the server is lying, and that it
-> > > has
-> > > to revalidate all its caches anyway. Cue endless
-> > > readdir/lookup/getattr
-> > > requests after each and every directory modification in order to
-> > > check
-> > > that some other client didn't also sneak in a change of their own.
-> >=20
-> > NFS re-export doesn't support atomic change attributes on
-> > directories.
-> > Do we see the endless revalidate requests after directory
-> > modification
-> > in that situation?=C2=A0 Just curious.
->=20
-> Why wouldn't NFS re-export be capable of supporting atomic change
-> attributes in those cases, provided that the server does? It seems to
-> me that is just a question of providing the correct information w.r.t.
-> atomicity to knfsd.
+On 08/31, Randy Dunlap wrote:
+> Change occurrences of "it's" that are possessive to "its"
+> so that they don't read as "it is".
+> 
+> For f2fs.rst, reword one description for better clarity.
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Cc: Jonathan Corbet <corbet@lwn.net>
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: linux-f2fs-devel@lists.sourceforge.net
+> Cc: linux-xfs@vger.kernel.org
+> Cc: Christian Brauner <brauner@kernel.org>
+> Cc: Seth Forshee <sforshee@kernel.org>
+> Cc: Al Viro <viro@zeniv.linux.org.uk>
+> Cc: Theodore Ts'o <tytso@mit.edu>
+> Cc: Jaegeuk Kim <jaegeuk@kernel.org>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: "Christian Brauner (Microsoft)" <brauner@kernel.org>
 
-I don't know if it "could" but as far as I can see the Linux nfsd server
-doesn't.
-NFS sets EXPORT_OP_NOATOMIC_ATTR which causes ->fs_no_atomic_attr to be
-set so cinfo->atomic reported back to the client is always false.
+Thanks, for f2fs part.
 
->=20
-> ...but yes, a quick glance at nfs4_update_changeattr_locked(), and what
-> happens when !cinfo->atomic should tell you all you need to know.
+Reviewed-by: Jaegeuk Kim <jaegeuk@kernel.org>
 
-Yep, I can see that all the directory cache is invalidated.  I was more
-wondering if anyone had noticed this causing performance problems.  I
-suspect there are some workloads where is isn't noticeable, and others
-where it would be quite unpleasant.
-
-Chuck said recently:
-
-> My impression is that pre/post attributes in NFSv3 have not
-> turned out to be as useful as their inventors predicted.
-
-https://lore.kernel.org/linux-nfs/8F16D957-F43A-4E5B-AA28-AAFCF43222E2@oracle=
-.com/
-
-I wonder how accurate that impression is.
-
-Thanks,
-NeilBrown
-
-
-
->=20
-> --=20
-> Trond Myklebust
-> Linux NFS client maintainer, Hammerspace
-> trond.myklebust@hammerspace.com
->=20
->=20
->=20
+> ---
+> v2: Reword the compress_log_size description.
+>     Rebase (the xfs file changed).
+>     Add Reviewed-by: tags.
+> 
+> Thanks for Al and Ted for suggesting rewording the f2fs.rst description.
+> 
+>  Documentation/filesystems/f2fs.rst                       |    5 ++---
+>  Documentation/filesystems/idmappings.rst                 |    2 +-
+>  Documentation/filesystems/qnx6.rst                       |    2 +-
+>  Documentation/filesystems/xfs-delayed-logging-design.rst |    6 +++---
+>  4 files changed, 7 insertions(+), 8 deletions(-)
+> 
+> --- a/Documentation/filesystems/f2fs.rst
+> +++ b/Documentation/filesystems/f2fs.rst
+> @@ -286,9 +286,8 @@ compress_algorithm=%s:%d Control compres
+>  			 algorithm	level range
+>  			 lz4		3 - 16
+>  			 zstd		1 - 22
+> -compress_log_size=%u	 Support configuring compress cluster size, the size will
+> -			 be 4KB * (1 << %u), 16KB is minimum size, also it's
+> -			 default size.
+> +compress_log_size=%u	 Support configuring compress cluster size. The size will
+> +			 be 4KB * (1 << %u). The default and minimum sizes are 16KB.
+>  compress_extension=%s	 Support adding specified extension, so that f2fs can enable
+>  			 compression on those corresponding files, e.g. if all files
+>  			 with '.ext' has high compression rate, we can set the '.ext'
+> --- a/Documentation/filesystems/idmappings.rst
+> +++ b/Documentation/filesystems/idmappings.rst
+> @@ -661,7 +661,7 @@ idmappings::
+>   mount idmapping:      u0:k10000:r10000
+>  
+>  Assume a file owned by ``u1000`` is read from disk. The filesystem maps this id
+> -to ``k21000`` according to it's idmapping. This is what is stored in the
+> +to ``k21000`` according to its idmapping. This is what is stored in the
+>  inode's ``i_uid`` and ``i_gid`` fields.
+>  
+>  When the caller queries the ownership of this file via ``stat()`` the kernel
+> --- a/Documentation/filesystems/qnx6.rst
+> +++ b/Documentation/filesystems/qnx6.rst
+> @@ -176,7 +176,7 @@ Then userspace.
+>  The requirement for a static, fixed preallocated system area comes from how
+>  qnx6fs deals with writes.
+>  
+> -Each superblock got it's own half of the system area. So superblock #1
+> +Each superblock got its own half of the system area. So superblock #1
+>  always uses blocks from the lower half while superblock #2 just writes to
+>  blocks represented by the upper half bitmap system area bits.
+>  
+> --- a/Documentation/filesystems/xfs-delayed-logging-design.rst
+> +++ b/Documentation/filesystems/xfs-delayed-logging-design.rst
+> @@ -551,14 +551,14 @@ Essentially, this shows that an item tha
+>  and relogged, so any tracking must be separate to the AIL infrastructure. As
+>  such, we cannot reuse the AIL list pointers for tracking committed items, nor
+>  can we store state in any field that is protected by the AIL lock. Hence the
+> -committed item tracking needs it's own locks, lists and state fields in the log
+> +committed item tracking needs its own locks, lists and state fields in the log
+>  item.
+>  
+>  Similar to the AIL, tracking of committed items is done through a new list
+>  called the Committed Item List (CIL).  The list tracks log items that have been
+>  committed and have formatted memory buffers attached to them. It tracks objects
+>  in transaction commit order, so when an object is relogged it is removed from
+> -it's place in the list and re-inserted at the tail. This is entirely arbitrary
+> +its place in the list and re-inserted at the tail. This is entirely arbitrary
+>  and done to make it easy for debugging - the last items in the list are the
+>  ones that are most recently modified. Ordering of the CIL is not necessary for
+>  transactional integrity (as discussed in the next section) so the ordering is
+> @@ -884,7 +884,7 @@ pin the object the first time it is inse
+>  the CIL during a transaction commit, then we do not pin it again. Because there
+>  can be multiple outstanding checkpoint contexts, we can still see elevated pin
+>  counts, but as each checkpoint completes the pin count will retain the correct
+> -value according to it's context.
+> +value according to its context.
+>  
+>  Just to make matters slightly more complex, this checkpoint level context
+>  for the pin count means that the pinning of an item must take place under the
