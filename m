@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5CB8C54EE9
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Sep 2022 17:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FC83C6FA8B
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Sep 2022 17:25:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231172AbiIHRZN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Sep 2022 13:25:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55526 "EHLO
+        id S231755AbiIHRZO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Sep 2022 13:25:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230337AbiIHRZB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2022 13:25:01 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AFC44F3AF;
-        Thu,  8 Sep 2022 10:24:57 -0700 (PDT)
+        with ESMTP id S229491AbiIHRY6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2022 13:24:58 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A014EE0A;
+        Thu,  8 Sep 2022 10:24:54 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1795D61DC4;
-        Thu,  8 Sep 2022 17:24:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D855C433C1;
-        Thu,  8 Sep 2022 17:24:54 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 35065B821DC;
+        Thu,  8 Sep 2022 17:24:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8AEBC433C1;
+        Thu,  8 Sep 2022 17:24:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662657896;
-        bh=WFvAjH2w5GVc6nFr7pNbwOG1HEvACl7dXWMHqViQw+4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=t5lYUJGXCSDG0moMKIJfyQ2A2Yt+4MF2J7q6c6mbQ4X8DrtiiKies4mYwwNOYKglJ
-         Buek3QIy25r5PP0Lf/65kbnpC+VzrBVqGg+lx+gKQvS8FWtb9tU9fD21RbPJUpHheg
-         S7ugbf45n2gyt/YhAdN0AWRvfLVHnVBtlz67ukrugKuzxxO4+KwVKWaFuCL2b1jWWw
-         G+J2y2ibTvFB+JsCVZEpGSk9z/5Yuhr96eW1oKGkBoQgusweeEkelLgOV6SkiC9Uib
-         U4eOyXxaoR9sl5w1id+pofjHikcNLYZvCc6X4jUpjv1o3dtmW6gDHTY1eJ0dxwNe4q
-         t8/QGSVacu8LQ==
+        s=k20201202; t=1662657891;
+        bh=jJcFm13hVF9RY9y/OKHnwztBV1qiy0LTPkPTC1q0taw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=qSgcME4dLdsxXrisJmoKXG1TUhRdr502APJkM8P+y8mGawxcYHF4Vbsp6U+AbzBcN
+         2buc6MAuMnTh+7N+Zpg6yFn/WaXGA6OZeTSMbmmloXPaBHpK3tX9gMenyJaauoirRT
+         GglAlnFZPmkcgd4XpkjLJ+wEDCDT3b+RCMkjTC6iI5SQm3ebRnpc+L4rAQP5Iwbyeq
+         T5LjD0nOG5UK51pJV09uUXidU/U9g4V4gSUW1DyZEK+fnTgpWjFTpH8OwmZeEuI6js
+         Gp5bMJkFa9Th3p+zoQ/smtzzIKb6VlglHE1eqz3KAV3NAUc0wwO6okbNxPvMjZjyls
+         D/lja4aKOv+0Q==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
         david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
@@ -41,172 +41,71 @@ Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Subject: [PATCH v5 2/8] ext4: fix i_version handling in ext4
-Date:   Thu,  8 Sep 2022 13:24:42 -0400
-Message-Id: <20220908172448.208585-3-jlayton@kernel.org>
+Subject: [PATCH v5 0/8] vfs/nfsd: clean up handling of the i_version counter
+Date:   Thu,  8 Sep 2022 13:24:40 -0400
+Message-Id: <20220908172448.208585-1-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.3
-In-Reply-To: <20220908172448.208585-1-jlayton@kernel.org>
-References: <20220908172448.208585-1-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-ext4 currently updates the i_version counter when the atime is updated
-during a read. This is less than ideal as it can cause unnecessary cache
-invalidations with NFSv4 and unnecessary remeasurements for IMA.
+v5: don't try to expose i_version to userland (yet)
+    use getattr to get i_version in nfsd
+    take inode lock when getting i_version
 
-The increment in ext4_mark_iloc_dirty is also problematic since it can
-corrupt the i_version counter for ea_inodes. We aren't bumping the file
-times in ext4_mark_iloc_dirty, so changing the i_version there seems
-wrong, and is the cause of both problems.
+This set is a bit different from the earlier ones. In particular, it
+does not try to expose i_version to userland. STATX_INO_VERSION is added
+as a kernel-only symbol (for now), and the infrastructure is changed
+around to use it.
 
-Remove that callsite and add increments to the setattr, setxattr and
-ioctl codepaths, at the same times that we update the ctime. The
-i_version bump that already happens during timestamp updates should take
-care of the rest.
+This allows us to fetch the i_version during the getattr operation, and
+eliminate the fetch_iversion export operation. This is a much more
+natual way to handle the i_version counter in nfsd and, as a bonus, this
+should allow nfsd to use ceph's i_version counter too. Huzzah!
 
-In ext4_move_extents, increment the i_version on both inodes, and also
-add in missing ctime updates.
+The first two patches fix up ext4's i_version handling and enable it
+unconditionally. Those can go in independently of the rest, IMO. Ted, if
+you're ok with those and want to pick them up then that would be great.
 
-Cc: Lukas Czerner <lczerner@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
- fs/ext4/inode.c       | 15 +++++----------
- fs/ext4/ioctl.c       |  8 ++++++++
- fs/ext4/move_extent.c |  8 ++++++++
- fs/ext4/xattr.c       |  2 ++
- 4 files changed, 23 insertions(+), 10 deletions(-)
+The rest of the patches clean up the i_version handling, but should not
+change the userland API at all.  This should make it very simple to
+expose i_version to userland in the future if we decide to do so. Maybe
+we should take these in via the nfsd tree? I'm not sure here.
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 2a220be34caa..aa37bce4c541 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -5342,6 +5342,7 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 	int error, rc = 0;
- 	int orphan = 0;
- 	const unsigned int ia_valid = attr->ia_valid;
-+	bool inc_ivers = IS_I_VERSION(inode);
- 
- 	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
- 		return -EIO;
-@@ -5425,8 +5426,8 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 			return -EINVAL;
- 		}
- 
--		if (IS_I_VERSION(inode) && attr->ia_size != inode->i_size)
--			inode_inc_iversion(inode);
-+		if (attr->ia_size == inode->i_size)
-+			inc_ivers = false;
- 
- 		if (shrink) {
- 			if (ext4_should_order_data(inode)) {
-@@ -5528,6 +5529,8 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 	}
- 
- 	if (!error) {
-+		if (inc_ivers)
-+			inode_inc_iversion(inode);
- 		setattr_copy(mnt_userns, inode, attr);
- 		mark_inode_dirty(inode);
- 	}
-@@ -5731,14 +5734,6 @@ int ext4_mark_iloc_dirty(handle_t *handle,
- 	}
- 	ext4_fc_track_inode(handle, inode);
- 
--	/*
--	 * ea_inodes are using i_version for storing reference count, don't
--	 * mess with it
--	 */
--	if (IS_I_VERSION(inode) &&
--	    !(EXT4_I(inode)->i_flags & EXT4_EA_INODE_FL))
--		inode_inc_iversion(inode);
--
- 	/* the do_update_inode consumes one bh->b_count */
- 	get_bh(iloc->bh);
- 
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index 3cf3ec4b1c21..60e77ae9342d 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -452,6 +452,8 @@ static long swap_inode_boot_loader(struct super_block *sb,
- 	swap_inode_data(inode, inode_bl);
- 
- 	inode->i_ctime = inode_bl->i_ctime = current_time(inode);
-+	if (IS_I_VERSION(inode))
-+		inode_inc_iversion(inode);
- 
- 	inode->i_generation = prandom_u32();
- 	inode_bl->i_generation = prandom_u32();
-@@ -665,6 +667,8 @@ static int ext4_ioctl_setflags(struct inode *inode,
- 	ext4_set_inode_flags(inode, false);
- 
- 	inode->i_ctime = current_time(inode);
-+	if (IS_I_VERSION(inode))
-+		inode_inc_iversion(inode);
- 
- 	err = ext4_mark_iloc_dirty(handle, inode, &iloc);
- flags_err:
-@@ -775,6 +779,8 @@ static int ext4_ioctl_setproject(struct inode *inode, __u32 projid)
- 
- 	EXT4_I(inode)->i_projid = kprojid;
- 	inode->i_ctime = current_time(inode);
-+	if (IS_I_VERSION(inode))
-+		inode_inc_iversion(inode);
- out_dirty:
- 	rc = ext4_mark_iloc_dirty(handle, inode, &iloc);
- 	if (!err)
-@@ -1257,6 +1263,8 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 		err = ext4_reserve_inode_write(handle, inode, &iloc);
- 		if (err == 0) {
- 			inode->i_ctime = current_time(inode);
-+			if (IS_I_VERSION(inode))
-+				inode_inc_iversion(inode);
- 			inode->i_generation = generation;
- 			err = ext4_mark_iloc_dirty(handle, inode, &iloc);
- 		}
-diff --git a/fs/ext4/move_extent.c b/fs/ext4/move_extent.c
-index 701f1d6a217f..d73ab3153218 100644
---- a/fs/ext4/move_extent.c
-+++ b/fs/ext4/move_extent.c
-@@ -6,6 +6,7 @@
-  */
- 
- #include <linux/fs.h>
-+#include <linux/iversion.h>
- #include <linux/quotaops.h>
- #include <linux/slab.h>
- #include <linux/sched/mm.h>
-@@ -683,6 +684,13 @@ ext4_move_extents(struct file *o_filp, struct file *d_filp, __u64 orig_blk,
- 			break;
- 		o_start += cur_len;
- 		d_start += cur_len;
-+
-+		orig_inode->i_ctime = current_time(orig_inode);
-+		donor_inode->i_ctime = current_time(donor_inode);
-+		if (IS_I_VERSION(orig_inode))
-+			inode_inc_iversion(orig_inode);
-+		if (IS_I_VERSION(donor_inode))
-+			inode_inc_iversion(donor_inode);
- 	}
- 	*moved_len = o_start - orig_blk;
- 	if (*moved_len > len)
-diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
-index 533216e80fa2..e975442e4ab2 100644
---- a/fs/ext4/xattr.c
-+++ b/fs/ext4/xattr.c
-@@ -2412,6 +2412,8 @@ ext4_xattr_set_handle(handle_t *handle, struct inode *inode, int name_index,
- 	if (!error) {
- 		ext4_xattr_update_super_block(handle, inode->i_sb);
- 		inode->i_ctime = current_time(inode);
-+		if (IS_I_VERSION(inode))
-+			inode_inc_iversion(inode);
- 		if (!value)
- 			no_expand = 0;
- 		error = ext4_mark_iloc_dirty(handle, inode, &is.iloc);
+The last patch should be considered an RFC. I think that that approach
+should prevent the potential race, without adding new work in the
+write codepath.
+
+Jeff Layton (8):
+  iversion: clarify when the i_version counter must be updated
+  ext4: fix i_version handling in ext4
+  ext4: unconditionally enable the i_version counter
+  vfs: plumb i_version handling into struct kstat
+  nfs: report the inode version in getattr if requested
+  ceph: report the inode version in getattr if requested
+  nfsd: use the getattr operation to fetch i_version
+  nfsd: take inode_lock when querying for NFSv4 GETATTR
+
+ fs/ceph/inode.c          | 14 +++++++++-----
+ fs/ext4/inode.c          | 15 +++++----------
+ fs/ext4/ioctl.c          |  4 ++++
+ fs/ext4/move_extent.c    |  6 ++++++
+ fs/ext4/super.c          | 13 ++++---------
+ fs/ext4/xattr.c          |  1 +
+ fs/nfs/export.c          |  7 -------
+ fs/nfs/inode.c           |  7 +++++--
+ fs/nfsd/nfs4xdr.c        | 17 ++++++++++++++++-
+ fs/nfsd/nfsfh.c          |  6 ++++++
+ fs/nfsd/nfsfh.h          |  9 ++++-----
+ fs/nfsd/vfs.h            |  7 ++++++-
+ fs/stat.c                | 14 +++++++++++++-
+ include/linux/exportfs.h |  1 -
+ include/linux/iversion.h | 10 ++++++++--
+ include/linux/stat.h     |  4 ++++
+ 16 files changed, 91 insertions(+), 44 deletions(-)
+
 -- 
 2.37.3
 
