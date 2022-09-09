@@ -2,199 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0581ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Sep 2022 13:01:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A26BDC6FA82
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Sep 2022 13:49:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229964AbiIINBg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Sep 2022 09:01:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35542 "EHLO
+        id S231935AbiIINtO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Sep 2022 09:49:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229919AbiIINBf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2022 09:01:35 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 182167E32D
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Sep 2022 06:01:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1662728493;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=7roVqgiLTtD9K+hJlFUdG9Wb1smDN31yGHEloDLRN0o=;
-        b=TswIDIgLz+yNZk7RdTzkXhGOchJqmSPMZCcnBS/npq80Rvd9uGLIt2kObNbBvV6zW7H+WC
-        Ib2YExifaxGgnIpeTDHg5ma3FBvV3jjreLSMclsDmgAzq3SXqizeXUZQYAXnDN0VruV2rH
-        rSwoqSjwyU1JG9zOxL7/OZ8brpsswcY=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-348-nkI0JwQHORKj5ckHOv1v8A-1; Fri, 09 Sep 2022 09:01:31 -0400
-X-MC-Unique: nkI0JwQHORKj5ckHOv1v8A-1
-Received: by mail-qk1-f200.google.com with SMTP id x22-20020a05620a259600b006b552a69231so1346617qko.18
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Sep 2022 06:01:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=7roVqgiLTtD9K+hJlFUdG9Wb1smDN31yGHEloDLRN0o=;
-        b=U57ngOQO/FzVfRNlF2XNXIR1mG1cIURKxWJdhXJD4nuh3IFlUHAwQalc1tpuM7E3pj
-         JHoNnRAiQ5D61mirR1zPkbLKr2xgOy4lGClT4CZqlXp7Vaflr9eqdvVywZox1CJjjE4o
-         PyY2l+HR5QNNDGThH0CN9OuuCiWGG+xNdqUYTz/alQ6/keZfYVO8hm97sNSbCdpv4vt0
-         o3yKWfxcjpQ/jzjn63QnjxsY20gzFoeN5p+ZV44n7Y9qYwzRmSjNI1EjujX3s571GZcR
-         3CO+LlGl68TOagosFiffKh2piekjTX42iYPYzvBPNgoafJlSDuL/0eVJJ5RS1rTadVgG
-         y2uw==
-X-Gm-Message-State: ACgBeo3UtrgQM15Z6oET37dZ9Z+3qOgFQ1SCi5sJQ3/U2ZTLXseXTF92
-        BROKuLH/qLf3bZbxmNl5H97v0D6sq/h+W8TknTgXwZfMBFV/SRoYfiauRnbPkCH/lFX/toNTSn8
-        O6wzNTZfoTu023+msAQN9
-X-Received: by 2002:a0c:e103:0:b0:4aa:b54b:e396 with SMTP id w3-20020a0ce103000000b004aab54be396mr11039012qvk.42.1662728490186;
-        Fri, 09 Sep 2022 06:01:30 -0700 (PDT)
-X-Google-Smtp-Source: AA6agR7A0i1+JhxQx9EsIr4UP9K7Sqz06e67+5wJ5s4maBLPeuImTnuNnbKxlFxyWzpKAPruI184vg==
-X-Received: by 2002:a0c:e103:0:b0:4aa:b54b:e396 with SMTP id w3-20020a0ce103000000b004aab54be396mr11038913qvk.42.1662728489147;
-        Fri, 09 Sep 2022 06:01:29 -0700 (PDT)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id r8-20020ac87ee8000000b0034355a352d1sm306127qtc.92.2022.09.09.06.01.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Sep 2022 06:01:28 -0700 (PDT)
-Date:   Fri, 9 Sep 2022 09:01:25 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@infradead.org" <hch@infradead.org>,
-        =?utf-8?B?WWFuZywgWGlhby/mnagg5pmT?= <yangx.jy@fujitsu.com>
-Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
-Message-ID: <Yxs5Jb7Yt2c6R6eW@bfoster>
-References: <20220609143435.393724-1-ruansy.fnst@fujitsu.com>
- <Yr5AV5HaleJXMmUm@magnolia>
- <74b0a034-8c77-5136-3fbd-4affb841edcb@fujitsu.com>
- <Ytl7yJJL1fdC006S@magnolia>
- <7fde89dc-2e8f-967b-d342-eb334e80255c@fujitsu.com>
- <YuNn9NkUFofmrXRG@magnolia>
- <0ea1cbe1-79d7-c22b-58bf-5860a961b680@fujitsu.com>
- <YusYDMXLYxzqMENY@magnolia>
- <dd363bd8-2dbd-5d9c-0406-380b60c5f510@fujitsu.com>
+        with ESMTP id S232022AbiIINsw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2022 09:48:52 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBD5E1440B1;
+        Fri,  9 Sep 2022 06:48:41 -0700 (PDT)
+Received: from letrec.thunk.org (guestnat-104-133-160-102.corp.google.com [104.133.160.102] (may be forged))
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 289DmD4S023395
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 9 Sep 2022 09:48:15 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1662731299; bh=O5sAtHVRdkSq6fYIsc381bORr53qSj8BKwqEoyxQ59Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=PmbwItvn9P3WqbgD5xUd+ssUjKyMScw+Pr6EgsRKO9wCSCDDPWa+jc92EnUQTGb5I
+         JTs6ZJDJLL1zNDfS/OL+dy9pZ/XjEZoEOOcQETfbLaSdWLs+zlJbJizGH0+89J+bkk
+         zvIz7o8V9KeYYD8irYItIozZ/3p3dEXptOMt68Ky3/EGg1rmTSGChq4Kdv1AcozORP
+         jCSoZ2JO95UmLiyYwKUz1Iij2oyigPv0/SAdG+4VChwK1yIO2U7PkMv6DYXVeT6/7w
+         Sbw2kiE3sE9AT8ZvP5uB96BevaqxBbbKtvmQDTKdzt5qvjfZv/l5C3MDkjy9nthcsA
+         7oN/BE/T/tIBg==
+Received: by letrec.thunk.org (Postfix, from userid 15806)
+        id DD0598C2B49; Fri,  9 Sep 2022 09:48:12 -0400 (EDT)
+Date:   Fri, 9 Sep 2022 09:48:12 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     "J. Bruce Fields" <bfields@fieldses.org>, Jan Kara <jack@suse.cz>,
+        NeilBrown <neilb@suse.de>, adilger.kernel@dilger.ca,
+        djwong@kernel.org, david@fromorbit.com, trondmy@hammerspace.com,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, brauner@kernel.org,
+        fweimer@redhat.com, linux-man@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
+ STATX_INO_VERSION field
+Message-ID: <YxtEHIkfX0nQQC0n@mit.edu>
+References: <771650a814ab1ff4dc5473d679936b747d9b6cf5.camel@kernel.org>
+ <20220907135153.qvgibskeuz427abw@quack3>
+ <166259786233.30452.5417306132987966849@noble.neil.brown.name>
+ <20220908083326.3xsanzk7hy3ff4qs@quack3>
+ <YxoIjV50xXKiLdL9@mit.edu>
+ <02928a8c5718590bea5739b13d6b6ebe66cac577.camel@kernel.org>
+ <20220908155605.GD8951@fieldses.org>
+ <9e06c506fd6b3e3118da0ec24276e85ea3ee45a1.camel@kernel.org>
+ <YxstWiu34TfJ6muW@mit.edu>
+ <6173b33e43ac8b0e4377b5d65fec7231608f71f7.camel@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <dd363bd8-2dbd-5d9c-0406-380b60c5f510@fujitsu.com>
+In-Reply-To: <6173b33e43ac8b0e4377b5d65fec7231608f71f7.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 08, 2022 at 09:46:04PM +0800, Shiyang Ruan wrote:
+On Fri, Sep 09, 2022 at 08:47:17AM -0400, Jeff Layton wrote:
 > 
-> 
-> 在 2022/8/4 8:51, Darrick J. Wong 写道:
-> > On Wed, Aug 03, 2022 at 06:47:24AM +0000, ruansy.fnst@fujitsu.com wrote:
-> 
-> ...
-> 
-> > > > > > > 
-> > > > > > > BTW, since these patches (dax&reflink&rmap + THIS + pmem-unbind) are
-> > > > > > > waiting to be merged, is it time to think about "removing the
-> > > > > > > experimental tag" again?  :)
-> > > > > > 
-> > > > > > It's probably time to take up that question again.
-> > > > > > 
-> > > > > > Yesterday I tried running generic/470 (aka the MAP_SYNC test) and it
-> > > > > > didn't succeed because it sets up dmlogwrites atop dmthinp atop pmem,
-> > > > > > and at least one of those dm layers no longer allows fsdax pass-through,
-> > > > > > so XFS silently turned mount -o dax into -o dax=never. :(
-> > > > > 
-> > > > > Hi Darrick,
-> > > > > 
-> > > > > I tried generic/470 but it didn't run:
-> > > > >      [not run] Cannot use thin-pool devices on DAX capable block devices.
-> > > > > 
-> > > > > Did you modify the _require_dm_target() in common/rc?  I added thin-pool
-> > > > > to not to check dax capability:
-> > > > > 
-> > > > >            case $target in
-> > > > >            stripe|linear|log-writes|thin-pool)  # add thin-pool here
-> > > > >                    ;;
-> > > > > 
-> > > > > then the case finally ran and it silently turned off dax as you said.
-> > > > > 
-> > > > > Are the steps for reproduction correct? If so, I will continue to
-> > > > > investigate this problem.
-> > > > 
-> > > > Ah, yes, I did add thin-pool to that case statement.  Sorry I forgot to
-> > > > mention that.  I suspect that the removal of dm support for pmem is
-> > > > going to force us to completely redesign this test.  I can't really
-> > > > think of how, though, since there's no good way that I know of to gain a
-> > > > point-in-time snapshot of a pmem device.
-> > > 
-> > > Hi Darrick,
-> > > 
-> > >   > removal of dm support for pmem
-> > > I think here we are saying about xfstest who removed the support, not
-> > > kernel?
-> > > 
-> > > I found some xfstests commits:
-> > > fc7b3903894a6213c765d64df91847f4460336a2  # common/rc: add the restriction.
-> > > fc5870da485aec0f9196a0f2bed32f73f6b2c664  # generic/470: use thin-pool
-> > > 
-> > > So, this case was never able to run since the second commit?  (I didn't
-> > > notice the not run case.  I thought it was expected to be not run.)
-> > > 
-> > > And according to the first commit, the restriction was added because
-> > > some of dm devices don't support dax.  So my understanding is: we should
-> > > redesign the case to make the it work, and firstly, we should add dax
-> > > support for dm devices in kernel.
-> > 
-> > dm devices used to have fsdax support; I think Christoph is actively
-> > removing (or already has removed) all that support.
-> > 
-> > > In addition, is there any other testcase has the same problem?  so that
-> > > we can deal with them together.
-> > 
-> > The last I checked, there aren't any that require MAP_SYNC or pmem aside
-> > from g/470 and the three poison notification tests that you sent a few
-> > days ago.
-> > 
-> > --D
-> > 
-> 
-> Hi Darrick, Brian
-> 
-> I made a little investigation on generic/470.
-> 
-> This case was able to run before introducing thin-pool[1], but since that,
-> it became 'Failed'/'Not Run' because thin-pool does not support DAX.  I have
-> checked the log of thin-pool, it never supports DAX.  And, it's not someone
-> has removed the fsdax support.  So, I think it's not correct to bypass the
-> requirement conditions by adding 'thin-pool' to _require_dm_target().
-> 
-> As far as I known, to prevent out-of-order replay of dm-log-write, thin-pool
-> was introduced (to provide discard zeroing).  Should we solve the
-> 'out-of-order replay' issue instead of avoiding it by thin-pool? @Brian
-> 
+> i_version only changes now if someone has queried it since it was last
+> changed. That makes a huge difference in performance. We can try to
+> optimize it further, but it probably wouldn't move the needle much under
+> real workloads.
 
-Yes.. I don't recall all the internals of the tools and test, but IIRC
-it relied on discard to perform zeroing between checkpoints or some such
-and avoid spurious failures. The purpose of running on dm-thin was
-merely to provide reliable discard zeroing behavior on the target device
-and thus to allow the test to run reliably.
+Good point.  And to be clear, from NFS's perspective, you only need to
+have i_version bumped if there is a user-visible change to the
+file. --- with an explicit exception here of the FIEMAP system call,
+since in the case of a delayed allocation, FIEMAP might change from
+reporting:
 
-Brian
+ ext:     logical_offset:        physical_offset: length:   expected: flags:
+   0:        0..       0:          0..         0:      0:             last,unknown_loc,delalloc,eof
 
-> Besides, since it's not a fsdax problem, I think there is nothing need to be
-> fixed in fsdax.  I'd like to help it solved, but I'm still wondering if we
-> could back to the original topic("Remove Experimental Tag") firstly? :)
-> 
-> 
-> [1] fc5870da485aec0f9196a0f2bed32f73f6b2c664 generic/470: use thin volume
-> for dmlogwrites target device
-> 
-> 
-> --
-> Thanks,
-> Ruan.
-> 
-> 
+to this:
 
+ ext:     logical_offset:        physical_offset: length:   expected: flags:
+   0:        0..       0:  190087172.. 190087172:      1:             last,eof
+
+after a sync(2) or fsync(2) call, or after time passes.
+
+> Great! That's what I was hoping for with ext4. Would you be willing to
+> pick up these two patches for v6.1?
+> 
+> https://lore.kernel.org/linux-ext4/20220908172448.208585-3-jlayton@kernel.org/T/#u
+> https://lore.kernel.org/linux-ext4/20220908172448.208585-4-jlayton@kernel.org/T/#u
+
+I think you mean:
+
+https://lore.kernel.org/linux-ext4/20220908172448.208585-2-jlayton@kernel.org/T/#u
+https://lore.kernel.org/linux-ext4/20220908172448.208585-3-jlayton@kernel.org/T/#u
+
+Right?
+
+BTW, sorry for not responding to these patches earlier; between
+preparing for the various Linux conferences in Dublin next week, and
+being in Zurich and meeting with colleagues at $WORK all of this week,
+I'm a bit behind on my patch reviews.
+
+Cheers,
+
+					- Ted
