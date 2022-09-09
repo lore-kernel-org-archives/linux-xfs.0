@@ -2,110 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A26BDC6FA82
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Sep 2022 13:49:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26177ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Sep 2022 14:40:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231935AbiIINtO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Sep 2022 09:49:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54414 "EHLO
+        id S231200AbiIIOky (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Sep 2022 10:40:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232022AbiIINsw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2022 09:48:52 -0400
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBD5E1440B1;
-        Fri,  9 Sep 2022 06:48:41 -0700 (PDT)
-Received: from letrec.thunk.org (guestnat-104-133-160-102.corp.google.com [104.133.160.102] (may be forged))
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 289DmD4S023395
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 9 Sep 2022 09:48:15 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1662731299; bh=O5sAtHVRdkSq6fYIsc381bORr53qSj8BKwqEoyxQ59Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=PmbwItvn9P3WqbgD5xUd+ssUjKyMScw+Pr6EgsRKO9wCSCDDPWa+jc92EnUQTGb5I
-         JTs6ZJDJLL1zNDfS/OL+dy9pZ/XjEZoEOOcQETfbLaSdWLs+zlJbJizGH0+89J+bkk
-         zvIz7o8V9KeYYD8irYItIozZ/3p3dEXptOMt68Ky3/EGg1rmTSGChq4Kdv1AcozORP
-         jCSoZ2JO95UmLiyYwKUz1Iij2oyigPv0/SAdG+4VChwK1yIO2U7PkMv6DYXVeT6/7w
-         Sbw2kiE3sE9AT8ZvP5uB96BevaqxBbbKtvmQDTKdzt5qvjfZv/l5C3MDkjy9nthcsA
-         7oN/BE/T/tIBg==
-Received: by letrec.thunk.org (Postfix, from userid 15806)
-        id DD0598C2B49; Fri,  9 Sep 2022 09:48:12 -0400 (EDT)
-Date:   Fri, 9 Sep 2022 09:48:12 -0400
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     "J. Bruce Fields" <bfields@fieldses.org>, Jan Kara <jack@suse.cz>,
-        NeilBrown <neilb@suse.de>, adilger.kernel@dilger.ca,
-        djwong@kernel.org, david@fromorbit.com, trondmy@hammerspace.com,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, brauner@kernel.org,
-        fweimer@redhat.com, linux-man@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-Message-ID: <YxtEHIkfX0nQQC0n@mit.edu>
-References: <771650a814ab1ff4dc5473d679936b747d9b6cf5.camel@kernel.org>
- <20220907135153.qvgibskeuz427abw@quack3>
- <166259786233.30452.5417306132987966849@noble.neil.brown.name>
- <20220908083326.3xsanzk7hy3ff4qs@quack3>
- <YxoIjV50xXKiLdL9@mit.edu>
- <02928a8c5718590bea5739b13d6b6ebe66cac577.camel@kernel.org>
- <20220908155605.GD8951@fieldses.org>
- <9e06c506fd6b3e3118da0ec24276e85ea3ee45a1.camel@kernel.org>
- <YxstWiu34TfJ6muW@mit.edu>
- <6173b33e43ac8b0e4377b5d65fec7231608f71f7.camel@kernel.org>
+        with ESMTP id S230108AbiIIOkv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2022 10:40:51 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C7E1B14DC
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Sep 2022 07:40:50 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 8921768AA6; Fri,  9 Sep 2022 16:40:47 +0200 (CEST)
+Date:   Fri, 9 Sep 2022 16:40:47 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Christian Brauner <brauner@kernel.org>
+Cc:     "Darrick J . Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Seth Forshee <sforshee@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: port to vfs{g,u}id_t and associated helpers
+Message-ID: <20220909144047.GA10312@lst.de>
+References: <20220909095659.944062-1-brauner@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6173b33e43ac8b0e4377b5d65fec7231608f71f7.camel@kernel.org>
+In-Reply-To: <20220909095659.944062-1-brauner@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 09, 2022 at 08:47:17AM -0400, Jeff Layton wrote:
+On Fri, Sep 09, 2022 at 11:56:59AM +0200, Christian Brauner wrote:
+> A while ago we introduced a dedicated vfs{g,u}id_t type in commit
+> 1e5267cd0895 ("mnt_idmapping: add vfs{g,u}id_t"). We already switched
+> over a good part of the VFS. Ultimately we will remove all legacy
+> idmapped mount helpers that operate only on k{g,u}id_t in favor of the
+> new type safe helpers that operate on vfs{g,u}id_t.
 > 
-> i_version only changes now if someone has queried it since it was last
-> changed. That makes a huge difference in performance. We can try to
-> optimize it further, but it probably wouldn't move the needle much under
-> real workloads.
-
-Good point.  And to be clear, from NFS's perspective, you only need to
-have i_version bumped if there is a user-visible change to the
-file. --- with an explicit exception here of the FIEMAP system call,
-since in the case of a delayed allocation, FIEMAP might change from
-reporting:
-
- ext:     logical_offset:        physical_offset: length:   expected: flags:
-   0:        0..       0:          0..         0:      0:             last,unknown_loc,delalloc,eof
-
-to this:
-
- ext:     logical_offset:        physical_offset: length:   expected: flags:
-   0:        0..       0:  190087172.. 190087172:      1:             last,eof
-
-after a sync(2) or fsync(2) call, or after time passes.
-
-> Great! That's what I was hoping for with ext4. Would you be willing to
-> pick up these two patches for v6.1?
+> Cc: Dave Chinner <dchinner@redhat.com>
+> Cc: Seth Forshee (Digital Ocean) <sforshee@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Darrick J. Wong <djwong@kernel.org>
+> Cc: linux-xfs@vger.kernel.org
+> Signed-off-by: Christian Brauner (Microsoft) <brauner@kernel.org>
+> ---
+>  fs/xfs/xfs_inode.c  | 5 ++---
+>  fs/xfs/xfs_iops.c   | 6 ++++--
+>  fs/xfs/xfs_itable.c | 8 ++++++--
+>  3 files changed, 12 insertions(+), 7 deletions(-)
 > 
-> https://lore.kernel.org/linux-ext4/20220908172448.208585-3-jlayton@kernel.org/T/#u
-> https://lore.kernel.org/linux-ext4/20220908172448.208585-4-jlayton@kernel.org/T/#u
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 28493c8e9bb2..bca204a5aecf 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -835,9 +835,8 @@ xfs_init_new_inode(
+>  	 * ID or one of the supplementary group IDs, the S_ISGID bit is cleared
+>  	 * (and only if the irix_sgid_inherit compatibility variable is set).
+>  	 */
+> -	if (irix_sgid_inherit &&
+> -	    (inode->i_mode & S_ISGID) &&
+> -	    !in_group_p(i_gid_into_mnt(mnt_userns, inode)))
+> +	if (irix_sgid_inherit && (inode->i_mode & S_ISGID) &&
+> +	    !vfsgid_in_group_p(i_gid_into_vfsgid(mnt_userns, inode)))
+>  		inode->i_mode &= ~S_ISGID;
+>  
+>  	ip->i_disk_size = 0;
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 45518b8c613c..5d670c85dcc2 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -558,6 +558,8 @@ xfs_vn_getattr(
+>  	struct inode		*inode = d_inode(path->dentry);
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> +	vfsuid_t		vfsuid = i_uid_into_vfsuid(mnt_userns, inode);
+> +	vfsgid_t		vfsgid = i_gid_into_vfsgid(mnt_userns, inode);
+>  
+>  	trace_xfs_getattr(ip);
+>  
+> @@ -568,8 +570,8 @@ xfs_vn_getattr(
+>  	stat->dev = inode->i_sb->s_dev;
+>  	stat->mode = inode->i_mode;
+>  	stat->nlink = inode->i_nlink;
+> -	stat->uid = i_uid_into_mnt(mnt_userns, inode);
+> -	stat->gid = i_gid_into_mnt(mnt_userns, inode);
+> +	stat->uid = vfsuid_into_kuid(vfsuid);
+> +	stat->gid = vfsgid_into_kgid(vfsgid);
+>  	stat->ino = ip->i_ino;
+>  	stat->atime = inode->i_atime;
+>  	stat->mtime = inode->i_mtime;
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index 36312b00b164..a1c2bcf65d37 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -66,6 +66,8 @@ xfs_bulkstat_one_int(
+>  	struct xfs_bulkstat	*buf = bc->buf;
+>  	xfs_extnum_t		nextents;
+>  	int			error = -EINVAL;
+> +	vfsuid_t		vfsuid;
+> +	vfsgid_t		vfsgid;
+>  
+>  	if (xfs_internal_inum(mp, ino))
+>  		goto out_advance;
+> @@ -81,14 +83,16 @@ xfs_bulkstat_one_int(
+>  	ASSERT(ip != NULL);
+>  	ASSERT(ip->i_imap.im_blkno != 0);
+>  	inode = VFS_I(ip);
+> +	vfsuid = i_uid_into_vfsuid(mnt_userns, inode);
+> +	vfsgid = i_gid_into_vfsgid(mnt_userns, inode);
+>  
+>  	/* xfs_iget returns the following without needing
+>  	 * further change.
+>  	 */
+>  	buf->bs_projectid = ip->i_projid;
+>  	buf->bs_ino = ino;
+> -	buf->bs_uid = from_kuid(sb_userns, i_uid_into_mnt(mnt_userns, inode));
+> -	buf->bs_gid = from_kgid(sb_userns, i_gid_into_mnt(mnt_userns, inode));
+> +	buf->bs_uid = from_kuid(sb_userns, vfsuid_into_kuid(vfsuid));
+> +	buf->bs_gid = from_kgid(sb_userns, vfsgid_into_kgid(vfsgid));
 
-I think you mean:
-
-https://lore.kernel.org/linux-ext4/20220908172448.208585-2-jlayton@kernel.org/T/#u
-https://lore.kernel.org/linux-ext4/20220908172448.208585-3-jlayton@kernel.org/T/#u
-
-Right?
-
-BTW, sorry for not responding to these patches earlier; between
-preparing for the various Linux conferences in Dublin next week, and
-being in Zurich and meeting with colleagues at $WORK all of this week,
-I'm a bit behind on my patch reviews.
-
-Cheers,
-
-					- Ted
+So we convert i_uid into vfsguid into kuid into the user space visible
+one here.  I wonder if there is any good short cut, as reading this
+chaing feels odd.  But I guess that's what we get for a non-VFS
+ioctl interface exposint uids/gids.
