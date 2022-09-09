@@ -2,94 +2,219 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A0ADECAAD5
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Sep 2022 03:11:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E03C6FA8B
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Sep 2022 06:42:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230395AbiIIDLu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Sep 2022 23:11:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54458 "EHLO
+        id S231225AbiIIGmC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Sep 2022 02:42:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbiIIDLR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2022 23:11:17 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2D7A12FBA5;
-        Thu,  8 Sep 2022 20:08:04 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id o2-20020a17090a9f8200b0020025a22208so4112384pjp.2;
-        Thu, 08 Sep 2022 20:08:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=tfo8TYu87tsXI35iIDHFqgjxZ2aTN0d14oH0zZ3h950=;
-        b=NOi6w8xaArh8KWMXSGsdqISbwMcvrjhaQoHVAE7Cr5ohwX2GRUmDAXFyZczvOV7MzL
-         EIlizR3DJ1vSfWvsMmAO28hoQgdDVRWDuiuOPrp6ikl3aiR4zlY9qMz7Hy8xSeX46udL
-         eO5ZlqaaOSQSw/QRNHEESfy7BSq2kSYDQ2VI+chOhiml0q3yBc68IwmIZDY34Sq7NKlW
-         LGXQLa8ujQuKEObWXS6baztCZXh/wRmT0yUcGdgDGciqC6NoTaykv/0gkt524KfiX/WK
-         hvXHFfwe8A415G+RcU6N5EFQu9hnOjW8ruvI7fBYc4fb64JLt4lOuOSUsR3/MvjYEwcA
-         344Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=tfo8TYu87tsXI35iIDHFqgjxZ2aTN0d14oH0zZ3h950=;
-        b=3dYpYvB4qWXBoxtEhWuWCRyKZv5aTY/C+bPZV143SFLVcQT1/90k6fkC1nm5h1O5MA
-         1L+8LfW0Etr1jTr6aTQ0pOsvd5eP4mwRffnBkec5jE5B2oS6TTSYLBFqVvEB4sd5LrL6
-         MYe5Lqepu2Yx6xJ3LwfR0n+LJijTnIh3Ng0QdeoFE4Z83UnhUR7FmueRcanCcjQ53dU7
-         i8RcLnJ1RNXYaGM0yQvvDT8JByEEAP7Ubz4/5DOWxpLXqhSRHP/1P41Y3unc+rVYC1CC
-         HRUdCN00pnEqnolcwrs9FD8yVP7kKceJaUSdML3FrDHEIL6EMWRaADrqDSC0vkOLdMih
-         hwtw==
-X-Gm-Message-State: ACgBeo1z1T7F7b2y8ykwPV9NmOLvx7tiBxiEvFyVl6bQOU1pyV+R0pOP
-        DezxKOZaoUVxxuZjEKgAQAg=
-X-Google-Smtp-Source: AA6agR6dazOvdkxB0hx4/JSPMNTl81X7/daOsgoGNQL6cNLll+TXNduM8XxJnhyqCmKO6FFMaoSoMg==
-X-Received: by 2002:a17:902:bd49:b0:172:df88:8981 with SMTP id b9-20020a170902bd4900b00172df888981mr12063778plx.120.1662692883336;
-        Thu, 08 Sep 2022 20:08:03 -0700 (PDT)
-Received: from localhost.localdomain ([165.154.253.46])
-        by smtp.gmail.com with ESMTPSA id u11-20020a170902714b00b0017544b55277sm254125plm.126.2022.09.08.20.08.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Sep 2022 20:08:02 -0700 (PDT)
-From:   Stephen Zhang <starzhangzsd@gmail.com>
-X-Google-Original-From: Stephen Zhang <zhangshida@kylinos.cn>
-To:     djwong@kernel.org, dchinner@redhat.com, chandan.babu@oracle.com
-Cc:     zhangshida@kylinos.cn, starzhangzsd@gmail.com,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: remove the redundant check in xfs_bmap_first_unused
-Date:   Fri,  9 Sep 2022 11:07:56 +0800
-Message-Id: <20220909030756.3916297-1-zhangshida@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S230113AbiIIGl7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2022 02:41:59 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F086C10043D;
+        Thu,  8 Sep 2022 23:41:53 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 63F58223CF;
+        Fri,  9 Sep 2022 06:41:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1662705712; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=yu9RUrvQxAp2Fwf5ytrIMONKOHocNgrjkYLX/KWmaXI=;
+        b=fnx4L3TRvm7ivccqTWoZ0YtWUYcY+D9ZxAZGDhBgo37sBA/T0aQbgG6OHbtlGec9adsq8E
+        5HzIEN6DRXftpAKhAUJNpLoKQPTW6mcV+tw35b0VOy4ilMlRbstQPo11SkefQxxUAlodRb
+        UJ/mgeNoLD9djtqe0p2bvwr0xGWzjsw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1662705712;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=yu9RUrvQxAp2Fwf5ytrIMONKOHocNgrjkYLX/KWmaXI=;
+        b=o7rI0SCETDdSZb5fZLS/rndvwmAOsDGOGxBlP8QvX3nqHAyoPxX9zWeZ73w4A6jtSgij2C
+        FeUntuj8ItjuWfCA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 016AC139D5;
+        Fri,  9 Sep 2022 06:41:44 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id osOjKSjgGmOTHwAAMHmgww
+        (envelope-from <neilb@suse.de>); Fri, 09 Sep 2022 06:41:44 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Trond Myklebust" <trondmy@hammerspace.com>
+Cc:     "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "xiubli@redhat.com" <xiubli@redhat.com>,
+        "brauner@kernel.org" <brauner@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+        "bfields@fieldses.org" <bfields@fieldses.org>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "fweimer@redhat.com" <fweimer@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
+        "jlayton@kernel.org" <jlayton@kernel.org>,
+        "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "tytso@mit.edu" <tytso@mit.edu>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "lczerner@redhat.com" <lczerner@redhat.com>,
+        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>
+Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
+ STATX_INO_VERSION field
+In-reply-to: <8d638cb3c63b0d2da8679b5288d1622fdb387f83.camel@hammerspace.com>
+References: <20220907111606.18831-1-jlayton@kernel.org>,
+ <166255065346.30452.6121947305075322036@noble.neil.brown.name>,
+ <79aaf122743a295ddab9525d9847ac767a3942aa.camel@kernel.org>,
+ <20220907125211.GB17729@fieldses.org>,
+ <771650a814ab1ff4dc5473d679936b747d9b6cf5.camel@kernel.org>,
+ <20220907135153.qvgibskeuz427abw@quack3>,
+ <166259786233.30452.5417306132987966849@noble.neil.brown.name>,
+ <20220908083326.3xsanzk7hy3ff4qs@quack3>, <YxoIjV50xXKiLdL9@mit.edu>,
+ <02928a8c5718590bea5739b13d6b6ebe66cac577.camel@kernel.org>,
+ <166267775728.30452.17640919701924887771@noble.neil.brown.name>,
+ <91e31d20d66d6f47fe12c80c34b1cffdfc202b6a.camel@hammerspace.com>,
+ <166268467103.30452.1687952324107257676@noble.neil.brown.name>,
+ <166268566751.30452.13562507405746100242@noble.neil.brown.name>,
+ <29a6c2e78284e7947ddedf71e5cb9436c9330910.camel@hammerspace.com>,
+ <8d638cb3c63b0d2da8679b5288d1622fdb387f83.camel@hammerspace.com>
+Date:   Fri, 09 Sep 2022 16:41:41 +1000
+Message-id: <166270570118.30452.16939807179630112340@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Given that
-        max >= lowest,
-hence if
-        got.br_startoff >= max + len,
-then, at the same time,
-        got.br_startoff >= lowest + len,
+On Fri, 09 Sep 2022, Trond Myklebust wrote:
+> On Fri, 2022-09-09 at 01:10 +0000, Trond Myklebust wrote:
+> > On Fri, 2022-09-09 at 11:07 +1000, NeilBrown wrote:
+> > > On Fri, 09 Sep 2022, NeilBrown wrote:
+> > > > On Fri, 09 Sep 2022, Trond Myklebust wrote:
+> > > >=20
+> > > > >=20
+> > > > > IOW: the minimal condition needs to be that for all cases
+> > > > > below,
+> > > > > the
+> > > > > application reads 'state B' as having occurred if any data was
+> > > > > committed to disk before the crash.
+> > > > >=20
+> > > > > Application=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Filesystem
+> > > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> > > > > read change attr <- 'state A'
+> > > > > read data <- 'state A'
+> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0write data -> 'state B'
+> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0<crash>+<reboot>
+> > > > > read change attr <- 'state B'
+> > > >=20
+> > > > The important thing here is to not see 'state A'.=C2=A0 Seeing 'state
+> > > > C'
+> > > > should be acceptable.=C2=A0 Worst case we could merge in wall-clock
+> > > > time
+> > > > of
+> > > > system boot, but the filesystem should be able to be more helpful
+> > > > than
+> > > > that.
+> > > >=20
+> > >=20
+> > > Actually, without the crash+reboot it would still be acceptable to
+> > > see
+> > > "state A" at the end there - but preferably not for long.
+> > > From the NFS perspective, the changeid needs to update by the time
+> > > of
+> > > a
+> > > close or unlock (so it is visible to open or lock), but before that
+> > > it
+> > > is just best-effort.
+> >=20
+> > Nope. That will inevitably lead to data corruption, since the
+> > application might decide to use the data from state A instead of
+> > revalidating it.
+> >=20
+>=20
+> The point is, NFS is not the only potential use case for change
+> attributes. We wouldn't be bothering to discuss statx() if it was.
 
-So the check here is redundant, remove it.
+My understanding is that it was primarily a desire to add fstests to
+exercise the i_version which motivated the statx extension.
+Obviously we should prepare for other uses though.
 
-Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
----
- fs/xfs/libxfs/xfs_bmap.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+>=20
+> I could be using O_DIRECT, and all the tricks in order to ensure that
+> my stock broker application (to choose one example) has access to the
+> absolute very latest prices when I'm trying to execute a trade.
+> When the filesystem then says 'the prices haven't changed since your
+> last read because the change attribute on the database file is the
+> same' in response to a statx() request with the AT_STATX_FORCE_SYNC
+> flag set, then why shouldn't my application be able to assume it can
+> serve those prices right out of memory instead of having to go to disk?
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index e56723dc9cd5..f8a984c41b01 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1230,8 +1230,7 @@ xfs_bmap_first_unused(
- 		/*
- 		 * See if the hole before this extent will work.
- 		 */
--		if (got.br_startoff >= lowest + len &&
--		    got.br_startoff - max >= len)
-+		if (got.br_startoff - max >= len)
- 			break;
- 		lastaddr = got.br_startoff + got.br_blockcount;
- 		max = XFS_FILEOFF_MAX(lastaddr, lowest);
--- 
-2.25.1
+I would think that such an application would be using inotify rather
+than having to poll.  But certainly we should have a clear statement of
+quality-of-service parameters in the documentation.
+If we agree that perfect atomicity is what we want to promise, and that
+the cost to the filesystem and the statx call is acceptable, then so be it.
 
+My point wasn't to say that atomicity is bad.  It was that:
+ - if the i_version change is visible before the change itself is
+   visible, then that is a correctness problem.
+ - if the i_version change is only visible some time after the change
+   itself is visible, then that is a quality-of-service issue.
+I cannot see any room for debating the first.  I do see some room to
+debate the second.
+
+Cached writes, directory ops, and attribute changes are, I think, easy
+enough to provide truly atomic i_version updates with the change being
+visible.
+
+Changes to a shared memory-mapped files is probably the hardest to
+provide timely i_version updates for.  We might want to document an
+explicit exception for those.  Alternately each request for i_version
+would need to find all pages that are writable, remap them read-only to
+catch future writes, then update i_version if any were writable (i.e.
+->mkwrite had been called).  That is the only way I can think of to
+provide atomicity.
+
+O_DIRECT writes are a little easier than mmapped files.  I suspect we
+should update the i_version once the device reports that the write is
+complete, but a parallel reader could have seem some of the write before
+that moment.  True atomicity could only be provided by taking some
+exclusive lock that blocked all O_DIRECT writes.  Jeff seems to be
+suggesting this, but I doubt the stock broker application would be
+willing to make the call in that case.  I don't think I would either.
+
+NeilBrown
+
+>=20
+> --=20
+> Trond Myklebust
+> Linux NFS client maintainer, Hammerspace
+> trond.myklebust@hammerspace.com
+>=20
+>=20
+>=20
