@@ -2,92 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 338F5C6FA89
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Sep 2022 20:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C571C6FA82
+	for <linux-xfs@archiver.kernel.org>; Sat, 10 Sep 2022 02:38:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230032AbiIIUo6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Sep 2022 16:44:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37656 "EHLO
+        id S229796AbiIJCiv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Sep 2022 22:38:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229890AbiIIUou (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2022 16:44:50 -0400
-X-Greylist: delayed 613 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 09 Sep 2022 13:44:35 PDT
-Received: from mail.stoffel.org (li1843-175.members.linode.com [172.104.24.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6AD518E3C;
-        Fri,  9 Sep 2022 13:44:28 -0700 (PDT)
-Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by mail.stoffel.org (Postfix) with ESMTPSA id 7A8FB270B5;
-        Fri,  9 Sep 2022 16:34:14 -0400 (EDT)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-        id 2733AA7E79; Fri,  9 Sep 2022 16:34:14 -0400 (EDT)
+        with ESMTP id S229491AbiIJCiu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2022 22:38:50 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEBCFF0A83
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Sep 2022 19:38:49 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id t3so3431837ply.2
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Sep 2022 19:38:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=tCZg1NS699l3g3L72xV4b7UJBf9E4aktwcPjQf4BBII=;
+        b=atfcSFjB0T+5zzUqVLPDLXNMCO1INYCh2IH75EQ4AJSPg2vy0Q9JPNrbE37wNCwMDZ
+         aKppw4VjK6cdFkrzGBIEztWLUMW4OivXjmpcPIQ2IB0hQ7ZX1IdxE0YhPyGDX26hfS9D
+         14oVd1q5Ho8z0icO4thOCstyu10cTnsSQXQscSD9/2KXYshFhxLLvSRPAOORqLxxK/gA
+         nBwdl1tJLpmdpWgzHtg1lP+o8Hfq7490BH+gIMe/nRBJHBvDfB8ofuK0PkBAplXIG+ot
+         H2ajQi8IlziaM5GSGKF9896ji32UCUT9rlhyDxZwzGtuI5ltqDpw62+EhZyb8eCHUJMe
+         SGuQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=tCZg1NS699l3g3L72xV4b7UJBf9E4aktwcPjQf4BBII=;
+        b=A7q91G3iy3WPIkc0EAVpf1Axq7qiJev2kPD1tJtWKlel8I6TcoWqm3lM5lCNwug3pI
+         lkKACYQs0G3uJszYrzQaQLJYW9URCWlc/WUzWhac181iF3RA719IdMXyVQTGpHs9D1rO
+         cjZilzEEaCQEtclOw6DbATBmeVzgnrlKjhA6u6/T8CMW1n1mkwq9X/6lQh/Id47DnOEH
+         adCCguvgeMihIUCVPV4gGBCzFL/bwMP+ZG+S/Du+KORwQpfSEcLgWo/BGM0aKe1VzKRa
+         RvlujDilNzshaRVm1DKsFA1V5IZLKPBOUmuatYu3sNRzp5zmgyK9G+cmQjHqCj156/XY
+         Q4tQ==
+X-Gm-Message-State: ACgBeo2V7agfnfkWeY6KQh1fQqzkK+coDhxYicpmlsSMtJ+68kb694wp
+        n3juCPS1j2krGscoxAOJHWw=
+X-Google-Smtp-Source: AA6agR67Vw9uFsCZoleVPhUq90rD5DNNS4npR78p1BYCd8cJUOiwZYbCDWxzarR6AvEffmCHxtvBdA==
+X-Received: by 2002:a17:90a:fd8c:b0:200:8cf9:63f4 with SMTP id cx12-20020a17090afd8c00b002008cf963f4mr12500158pjb.201.1662777529044;
+        Fri, 09 Sep 2022 19:38:49 -0700 (PDT)
+Received: from localhost.localdomain ([165.154.253.46])
+        by smtp.gmail.com with ESMTPSA id s9-20020a170902ea0900b0015e8d4eb26esm1132301plg.184.2022.09.09.19.38.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Sep 2022 19:38:48 -0700 (PDT)
+From:   Stephen Zhang <starzhangzsd@gmail.com>
+X-Google-Original-From: Stephen Zhang <zhangshida@kylinos.cn>
+To:     djwong@kernel.org, dchinner@redhat.com, chandan.babu@oracle.com,
+        yang.guang5@zte.com.cn
+Cc:     zhangshida@kylinos.cn, starzhangzsd@gmail.com,
+        linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: eliminate the potential overflow risk in xfs_da_grow_inode_int
+Date:   Sat, 10 Sep 2022 10:38:39 +0800
+Message-Id: <20220910023839.3964539-1-zhangshida@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <25371.41798.87576.861659@quad.stoffel.home>
-Date:   Fri, 9 Sep 2022 16:34:14 -0400
-From:   "John Stoffel" <john@stoffel.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
-        Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        NeilBrown <neilb@suse.de>, adilger.kernel@dilger.ca,
-        djwong@kernel.org, david@fromorbit.com, trondmy@hammerspace.com,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, brauner@kernel.org,
-        fweimer@redhat.com, linux-man@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-In-Reply-To: <44efe219dbf511492b21a653905448d43d0f3363.camel@kernel.org>
-References: <79aaf122743a295ddab9525d9847ac767a3942aa.camel@kernel.org>
-        <20220907125211.GB17729@fieldses.org>
-        <771650a814ab1ff4dc5473d679936b747d9b6cf5.camel@kernel.org>
-        <20220907135153.qvgibskeuz427abw@quack3>
-        <166259786233.30452.5417306132987966849@noble.neil.brown.name>
-        <20220908083326.3xsanzk7hy3ff4qs@quack3>
-        <YxoIjV50xXKiLdL9@mit.edu>
-        <02928a8c5718590bea5739b13d6b6ebe66cac577.camel@kernel.org>
-        <20220908155605.GD8951@fieldses.org>
-        <9e06c506fd6b3e3118da0ec24276e85ea3ee45a1.camel@kernel.org>
-        <20220908182252.GA18939@fieldses.org>
-        <44efe219dbf511492b21a653905448d43d0f3363.camel@kernel.org>
-X-Mailer: VM 8.2.0b under 27.1 (x86_64-pc-linux-gnu)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->>>>> "Jeff" == Jeff Layton <jlayton@kernel.org> writes:
+The problem lies in the for-loop of xfs_da_grow_inode_int:
+======
+for(){
+        nmap = min(XFS_BMAP_MAX_NMAP, count);
+        ...
+        error = xfs_bmapi_write(...,&mapp[mapi], &nmap);//(..., $1, $2)
+        ...
+        mapi += nmap;
+}
+=====
+where $1 stands for the start address of the array,
+while $2 is used to indicate the size of the array.
 
-> On Thu, 2022-09-08 at 14:22 -0400, J. Bruce Fields wrote:
->> On Thu, Sep 08, 2022 at 01:40:11PM -0400, Jeff Layton wrote:
->> > Yeah, ok. That does make some sense. So we would mix this into the
->> > i_version instead of the ctime when it was available. Preferably, we'd
->> > mix that in when we store the i_version rather than adding it afterward.
->> > 
->> > Ted, how would we access this? Maybe we could just add a new (generic)
->> > super_block field for this that ext4 (and other filesystems) could
->> > populate at mount time?
->> 
->> Couldn't the filesystem just return an ino_version that already includes
->> it?
->> 
+The array $1 will advanced by $nmap in each iteration after
+the allocation of extents.
+But the size $2 still remains constant, which is determined by
+min(XFS_BMAP_MAX_NMAP, count).
 
-> Yes. That's simple if we want to just fold it in during getattr. If we
-> want to fold that into the values stored on disk, then I'm a little less
-> clear on how that will work.
+Hence there is a risk of overflow when the remained space in
+the array is less than $2.
+So variablize the array size $2 correspondingly in each iteration
+to eliminate the risk.
 
-I wonder if this series should also include some updates to the
-various xfstests to hopefully document in code what this statx() call
-will do in various situations.  Or at least document how to test it in
-some manner?  Especially since it's layers on top of layers to make
-this work. 
+Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
+---
+ fs/xfs/libxfs/xfs_da_btree.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-My assumption is that if the underlying filesystem doesn't support the
-new values, it just returns 0 or c_time?
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index e7201dc68f43..3ef8c04624cc 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2192,7 +2192,7 @@ xfs_da_grow_inode_int(
+ 		 */
+ 		mapp = kmem_alloc(sizeof(*mapp) * count, 0);
+ 		for (b = *bno, mapi = 0; b < *bno + count; ) {
+-			nmap = min(XFS_BMAP_MAX_NMAP, count);
++			nmap = min(XFS_BMAP_MAX_NMAP, count - mapi);
+ 			c = (int)(*bno + count - b);
+ 			error = xfs_bmapi_write(tp, dp, b, c,
+ 					xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA,
+-- 
+2.25.1
 
-John
