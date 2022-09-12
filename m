@@ -2,102 +2,130 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BF71ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Sep 2022 03:15:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46163ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Sep 2022 05:00:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229456AbiILDPe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 11 Sep 2022 23:15:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47464 "EHLO
+        id S229498AbiILFAz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Sep 2022 01:00:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbiILDPb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Sep 2022 23:15:31 -0400
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC4A717E00
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Sep 2022 20:15:29 -0700 (PDT)
-Received: by mail-ej1-x62b.google.com with SMTP id dv25so17040078ejb.12
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Sep 2022 20:15:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date;
-        bh=c7adxJw+p44IAmh4KskrQQ8vtDBGxQjqP39fSBRdd/c=;
-        b=Qm9Ey8t/tEE13QD2yrenxx5BZO1R6drDluzl+zXxFOEhpBVWxVKNZk6jvOlHoh6Zq9
-         h0qYiot5XZ/wWbcxBggUQNRlSbJRoaVfAIdnqsJGDutP0edWQa+LWfxDqMarDTiMN4/9
-         UOUKxB5l8saU7EJ336bTs4PblJj7t96TiHQBuAzVJCoFHur/vQHS7F5j/6BlRVjUEp7v
-         fOh9i3O/4juqPoYGUQTw8dH/8hC+CKjz9IwXvBMzVx4MWFw8O3YsdPFKZJ1tgkQkFmkl
-         QTC59OQ3K5eEF2EBrISDwmRMqh5RvvLAq3yM7YZ46rhyFLnW0QVO81qwqhPL0zjM17E9
-         Dyhw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=c7adxJw+p44IAmh4KskrQQ8vtDBGxQjqP39fSBRdd/c=;
-        b=1TWwVQAevUmXrR5hrnhuNOMIYDUxejrmrOEucnjros6n+4MAW6HXEOnlUQYmQhVW3E
-         EgqUF1uSdAb8wq83LTo0r4DEgqX5EEcxEK+1hC0fB67FRybD6EjQYYuUulirU7oktezY
-         WEHjxLgOQWjBHD8amZ+xU54YMq6WyCaJDnKorqsPVPfQ6BDPPaA1oA0MonhA9Ckm5LER
-         VjocFfw6lcDtWdeRMLMAIepOAoej7D1A2W6fbiXzqK/BL5MWFf/Q7B8IfbPmZgX8yJCR
-         MB5vXszRw/yNQhCORD+b6Y/eTjOEPE0KVE5fsF56RvbchrZ0+cV6RMOR4BU2DupQWN2W
-         Tkww==
-X-Gm-Message-State: ACgBeo3tC7m6I/1yvhV2BsIy62XIQxKSI6l9M6J6J1hKU6imuJi1WwEv
-        al8SA5NjNTqBaenLPMGv6wOkKAqX3oYCAaaZvUg=
-X-Google-Smtp-Source: AA6agR7wQtLGOfy0lhiK7wLD9FGmuhPXdlvXnZ5d2M7h95MLSxtuKma2oV/GwNVvSKyerJAQV1ELEpOkVuWPVKd/8TQ=
-X-Received: by 2002:a17:907:a049:b0:77c:1f27:1b28 with SMTP id
- gz9-20020a170907a04900b0077c1f271b28mr4765082ejc.20.1662952527819; Sun, 11
- Sep 2022 20:15:27 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220911033137.4010427-1-zhangshida@kylinos.cn> <20220911222024.GY3600936@dread.disaster.area>
-In-Reply-To: <20220911222024.GY3600936@dread.disaster.area>
-From:   Stephen Zhang <starzhangzsd@gmail.com>
-Date:   Mon, 12 Sep 2022 11:14:51 +0800
-Message-ID: <CANubcdUrZQTQnokcb8FUm31sgUToriaS1uNVXNYvNyeZ+ZUHkA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix up the comment in xfs_dir2_isleaf
-To:     Dave Chinner <david@fromorbit.com>
+        with ESMTP id S229447AbiILFAy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2022 01:00:54 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0CFEE222B8
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Sep 2022 22:00:51 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-149-49.pa.vic.optusnet.com.au [49.186.149.49])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id F2B2662DF17;
+        Mon, 12 Sep 2022 15:00:49 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oXbYu-006iyH-6Y; Mon, 12 Sep 2022 15:00:48 +1000
+Date:   Mon, 12 Sep 2022 15:00:48 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Stephen Zhang <starzhangzsd@gmail.com>
 Cc:     djwong@kernel.org, dchinner@redhat.com, chandan.babu@oracle.com,
         zhangshida@kylinos.cn, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] xfs: fix up the comment in xfs_dir2_isleaf
+Message-ID: <20220912050048.GC3600936@dread.disaster.area>
+References: <20220911033137.4010427-1-zhangshida@kylinos.cn>
+ <20220911222024.GY3600936@dread.disaster.area>
+ <CANubcdUrZQTQnokcb8FUm31sgUToriaS1uNVXNYvNyeZ+ZUHkA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANubcdUrZQTQnokcb8FUm31sgUToriaS1uNVXNYvNyeZ+ZUHkA@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=631ebd03
+        a=XTRC1Ovx3SkpaCW1YxGVGA==:117 a=XTRC1Ovx3SkpaCW1YxGVGA==:17
+        a=IkcTkHD0fZMA:10 a=xOM3xZuef0cA:10 a=7-415B0cAAAA:8
+        a=XKeJ_9J_KWCVfxwrrIMA:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dave Chinner <david@fromorbit.com> =E4=BA=8E2022=E5=B9=B49=E6=9C=8812=E6=97=
-=A5=E5=91=A8=E4=B8=80 06:20=E5=86=99=E9=81=93=EF=BC=9A
->
-> The "*vp" parameter should be a "bool *isleaf", in which case the
-> return value is obvious and the comment can be removed. Then the
-> logic in the function can be cleaned up to be obvious instead of
-> relying on easy to mistake conditional logic in assignemnts...
+On Mon, Sep 12, 2022 at 11:14:51AM +0800, Stephen Zhang wrote:
+> Dave Chinner <david@fromorbit.com> 于2022年9月12日周一 06:20写道：
+> >
+> > The "*vp" parameter should be a "bool *isleaf", in which case the
+> > return value is obvious and the comment can be removed. Then the
+> > logic in the function can be cleaned up to be obvious instead of
+> > relying on easy to mistake conditional logic in assignemnts...
+> 
+> Thanks for the suggestion.In order to make sure we are at the same page,
+> so this change will be shown like:
 
-Thanks for the suggestion.In order to make sure we are at the same page,
-so this change will be shown like:
-=3D=3D=3D=3D
- xfs_dir2_isblock(
-        struct xfs_da_args      *args,
--       int                     *vp)    /* out: 1 is block, 0 is not block =
-*/
-+       bool                    *isblock)
- {
-        xfs_fileoff_t           last;   /* last file offset */
-        int                     rval;
+That's not what I was thinking. Cleanup involves converting
+everything over to standard formatting and conventions. It also
+means rethinking the logic to make the code more correct, easier to
+read and understand, and so involves more than just changing the
+name of a variable.
 
-        if ((rval =3D xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK))=
-)
-                return rval;
--       rval =3D XFS_FSB_TO_B(args->dp->i_mount, last) =3D=3D args->geo->bl=
-ksize;
-+       *isblock =3D XFS_FSB_TO_B(args->dp->i_mount, last) =3D=3D args->geo=
-->blksize;
-        if (XFS_IS_CORRUPT(args->dp->i_mount,
--                          rval !=3D 0 &&
-+                          *isblock &&
-                           args->dp->i_disk_size !=3D args->geo->blksize))
-                return -EFSCORRUPTED;
--       *vp =3D rval;
-        return 0;
- }
-=3D=3D=3D=3D
+> ====
+>  xfs_dir2_isblock(
+>         struct xfs_da_args      *args,
+> -       int                     *vp)    /* out: 1 is block, 0 is not block */
+> +       bool                    *isblock)
+>  {
+>         xfs_fileoff_t           last;   /* last file offset */
+>         int                     rval;
+> 
+>         if ((rval = xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK)))
+>                 return rval;
 
-Thanks,
+We don't put assingments in if statements anymore, so this needs to
+be rewritten in the form:
 
-Stephen.
+	error = foo();
+	if (error) {
+		....
+		return error;
+	}
+
+> -       rval = XFS_FSB_TO_B(args->dp->i_mount, last) == args->geo->blksize;
+> +       *isblock = XFS_FSB_TO_B(args->dp->i_mount, last) == args->geo->blksize;
+
+Similarly, we don't elide if() statements in this way anymore,
+because it's easy to mistake this code as a multiple assignment
+rather than a combination of assignment and logic. if() is much
+clearer.
+
+>         if (XFS_IS_CORRUPT(args->dp->i_mount,
+> -                          rval != 0 &&
+> +                          *isblock &&
+>                            args->dp->i_disk_size != args->geo->blksize))
+>                 return -EFSCORRUPTED;
+
+And this only ever evaluates as true if *isblock is true, so why
+run this logic check when *isblock is false?
+
+IOWs, we can rearrange the logic so that it's made up of simple,
+individual single comparisons that are obviously self documenting:
+
+int
+xfs_dir2_isblock(
+	struct xfs_da_args	*args,
+	bool			*isblock)
+{
+	struct xfs_mount	*mp = args->dp->i_mount;
+	xfs_fileoff_t		eof;
+	int			error;
+
+	error = xfs_bmap_last_offset(args->dp, &eof, XFS_DATA_FORK);
+	if (error)
+		return error;
+
+	*isblock = false;
+	if (XFS_FSB_TO_B(mp, eof) != args->geo->blksize)
+		return 0;
+
+	*isblock = true;
+	if (XFS_IS_CORRUPT(mp, args->dp->i_disk_size != args->geo->blksize))
+		return -EFSCORRUPTED;
+	return 0;
+}
+
+
+-- 
+Dave Chinner
+david@fromorbit.com
