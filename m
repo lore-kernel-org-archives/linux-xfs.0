@@ -2,119 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F63CECAAA1
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Sep 2022 01:32:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BF71ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Sep 2022 03:15:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229527AbiILBb7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 11 Sep 2022 21:31:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42466 "EHLO
+        id S229456AbiILDPe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 11 Sep 2022 23:15:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229492AbiILBb6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Sep 2022 21:31:58 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5606C23BFE
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Sep 2022 18:31:57 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-149-49.pa.vic.optusnet.com.au [49.186.149.49])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E6D6462DFC8;
-        Mon, 12 Sep 2022 11:31:55 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oXYIk-006fS6-1y; Mon, 12 Sep 2022 11:31:54 +1000
-Date:   Mon, 12 Sep 2022 11:31:54 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Guo Xuenan <guoxuenan@huawei.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org, dchinner@redhat.com,
-        chandan.babu@oracle.com, yi.zhang@huawei.com, houtao1@huawei.com,
-        zhengbin13@huawei.com, jack.qiu@huawei.com
-Subject: Re: [PATCH v2] xfs: fix uaf when leaf dir bestcount not match with
- dir data blocks
-Message-ID: <20220912013154.GB3600936@dread.disaster.area>
-References: <20220831121639.3060527-1-guoxuenan@huawei.com>
+        with ESMTP id S229510AbiILDPb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Sep 2022 23:15:31 -0400
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC4A717E00
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Sep 2022 20:15:29 -0700 (PDT)
+Received: by mail-ej1-x62b.google.com with SMTP id dv25so17040078ejb.12
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Sep 2022 20:15:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date;
+        bh=c7adxJw+p44IAmh4KskrQQ8vtDBGxQjqP39fSBRdd/c=;
+        b=Qm9Ey8t/tEE13QD2yrenxx5BZO1R6drDluzl+zXxFOEhpBVWxVKNZk6jvOlHoh6Zq9
+         h0qYiot5XZ/wWbcxBggUQNRlSbJRoaVfAIdnqsJGDutP0edWQa+LWfxDqMarDTiMN4/9
+         UOUKxB5l8saU7EJ336bTs4PblJj7t96TiHQBuAzVJCoFHur/vQHS7F5j/6BlRVjUEp7v
+         fOh9i3O/4juqPoYGUQTw8dH/8hC+CKjz9IwXvBMzVx4MWFw8O3YsdPFKZJ1tgkQkFmkl
+         QTC59OQ3K5eEF2EBrISDwmRMqh5RvvLAq3yM7YZ46rhyFLnW0QVO81qwqhPL0zjM17E9
+         Dyhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=c7adxJw+p44IAmh4KskrQQ8vtDBGxQjqP39fSBRdd/c=;
+        b=1TWwVQAevUmXrR5hrnhuNOMIYDUxejrmrOEucnjros6n+4MAW6HXEOnlUQYmQhVW3E
+         EgqUF1uSdAb8wq83LTo0r4DEgqX5EEcxEK+1hC0fB67FRybD6EjQYYuUulirU7oktezY
+         WEHjxLgOQWjBHD8amZ+xU54YMq6WyCaJDnKorqsPVPfQ6BDPPaA1oA0MonhA9Ckm5LER
+         VjocFfw6lcDtWdeRMLMAIepOAoej7D1A2W6fbiXzqK/BL5MWFf/Q7B8IfbPmZgX8yJCR
+         MB5vXszRw/yNQhCORD+b6Y/eTjOEPE0KVE5fsF56RvbchrZ0+cV6RMOR4BU2DupQWN2W
+         Tkww==
+X-Gm-Message-State: ACgBeo3tC7m6I/1yvhV2BsIy62XIQxKSI6l9M6J6J1hKU6imuJi1WwEv
+        al8SA5NjNTqBaenLPMGv6wOkKAqX3oYCAaaZvUg=
+X-Google-Smtp-Source: AA6agR7wQtLGOfy0lhiK7wLD9FGmuhPXdlvXnZ5d2M7h95MLSxtuKma2oV/GwNVvSKyerJAQV1ELEpOkVuWPVKd/8TQ=
+X-Received: by 2002:a17:907:a049:b0:77c:1f27:1b28 with SMTP id
+ gz9-20020a170907a04900b0077c1f271b28mr4765082ejc.20.1662952527819; Sun, 11
+ Sep 2022 20:15:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220831121639.3060527-1-guoxuenan@huawei.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=631e8c0c
-        a=XTRC1Ovx3SkpaCW1YxGVGA==:117 a=XTRC1Ovx3SkpaCW1YxGVGA==:17
-        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=ReYYYOgS4Q7m7cgRrO8A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+References: <20220911033137.4010427-1-zhangshida@kylinos.cn> <20220911222024.GY3600936@dread.disaster.area>
+In-Reply-To: <20220911222024.GY3600936@dread.disaster.area>
+From:   Stephen Zhang <starzhangzsd@gmail.com>
+Date:   Mon, 12 Sep 2022 11:14:51 +0800
+Message-ID: <CANubcdUrZQTQnokcb8FUm31sgUToriaS1uNVXNYvNyeZ+ZUHkA@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix up the comment in xfs_dir2_isleaf
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     djwong@kernel.org, dchinner@redhat.com, chandan.babu@oracle.com,
+        zhangshida@kylinos.cn, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 31, 2022 at 08:16:39PM +0800, Guo Xuenan wrote:
-> For leaf dir, In most cases, there should be as many bestfree slots
-> as the dir data blocks that can fit under i_size (except for [1]).
-> 
-> Root cause is we don't examin the number bestfree slots, when the slots
-> number less than dir data blocks, if we need to allocate new dir data
-> block and update the bestfree array, we will use the dir block number as
-> index to assign bestfree array, while we did not check the leaf buf
-> boundary which may cause UAF or other memory access problem. This issue
-> can also triggered with test cases xfs/473 from fstests.
-> 
-> Considering the special case [1] , only add check bestfree array boundary,
-> to avoid UAF or slab-out-of bound.
-> 
-> [1] https://lore.kernel.org/all/163961697197.3129691.1911552605195534271.stgit@magnolia/
-> 
-> Simplify the testcase xfs/473 with commands below:
-> DEV=/dev/sdb
-> MP=/mnt/sdb
-> WORKDIR=/mnt/sdb/341 #1. mkfs create new xfs image
-> mkfs.xfs -f ${DEV}
-> mount ${DEV} ${MP}
-> mkdir -p ${WORKDIR}
-> for i in `seq 1 341` #2. create leaf dir with 341 entries file name len 8
-> do
->     touch ${WORKDIR}/$(printf "%08d" ${i})
-> done
-> inode=$(ls -i ${MP} | cut -d' ' -f1)
-> umount ${MP}         #3. xfs_db set bestcount to 0
-> xfs_db -x ${DEV} -c "inode ${inode}" -c "dblock 8388608" \
-> -c "write ltail.bestcount 0"
-> mount ${DEV} ${MP}
-> touch ${WORKDIR}/{1..100}.txt #4. touch new file, reproduce
-.....
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index d9b66306a9a7..4b2a72b3a6f3 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -819,6 +819,18 @@ xfs_dir2_leaf_addname(
->  		 */
->  		else
->  			xfs_dir3_leaf_log_bests(args, lbp, use_block, use_block);
-> +		/*
-> +		 * An abnormal corner case, bestfree count less than data
-> +		 * blocks, add a condition to avoid UAF or slab-out-of bound.
-> +		 */
-> +		if ((char *)(&bestsp[use_block]) > (char *)ltp) {
-> +			xfs_trans_brelse(tp, lbp);
-> +			if (tp->t_flags & XFS_TRANS_DIRTY)
-> +				xfs_force_shutdown(tp->t_mountp,
-> +						SHUTDOWN_CORRUPT_ONDISK);
-> +			return -EFSCORRUPTED;
-> +		}
-> +
+Dave Chinner <david@fromorbit.com> =E4=BA=8E2022=E5=B9=B49=E6=9C=8812=E6=97=
+=A5=E5=91=A8=E4=B8=80 06:20=E5=86=99=E9=81=93=EF=BC=9A
+>
+> The "*vp" parameter should be a "bool *isleaf", in which case the
+> return value is obvious and the comment can be removed. Then the
+> logic in the function can be cleaned up to be obvious instead of
+> relying on easy to mistake conditional logic in assignemnts...
 
-As I explained here:
+Thanks for the suggestion.In order to make sure we are at the same page,
+so this change will be shown like:
+=3D=3D=3D=3D
+ xfs_dir2_isblock(
+        struct xfs_da_args      *args,
+-       int                     *vp)    /* out: 1 is block, 0 is not block =
+*/
++       bool                    *isblock)
+ {
+        xfs_fileoff_t           last;   /* last file offset */
+        int                     rval;
 
-https://lore.kernel.org/linux-xfs/20220829081244.GT3600936@dread.disaster.area/
+        if ((rval =3D xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK))=
+)
+                return rval;
+-       rval =3D XFS_FSB_TO_B(args->dp->i_mount, last) =3D=3D args->geo->bl=
+ksize;
++       *isblock =3D XFS_FSB_TO_B(args->dp->i_mount, last) =3D=3D args->geo=
+->blksize;
+        if (XFS_IS_CORRUPT(args->dp->i_mount,
+-                          rval !=3D 0 &&
++                          *isblock &&
+                           args->dp->i_disk_size !=3D args->geo->blksize))
+                return -EFSCORRUPTED;
+-       *vp =3D rval;
+        return 0;
+ }
+=3D=3D=3D=3D
 
-We don't check for overruns caused by on-disk format corruptions in
-every operation - we catch the corruption when the metadata is first
-read into memory via the verifier.
+Thanks,
 
-Please add a check for a corrupt/mismatched best sizes array to
-xfs_dir3_leaf_check_int() so that the corruption is detected on
-first read and the internal directory code is never exposed to such
-issues.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Stephen.
