@@ -2,148 +2,204 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B79ECAAD3
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 17:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13394ECAAD3
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 17:45:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229479AbiINRjv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Sep 2022 13:39:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34692 "EHLO
+        id S229484AbiINRpv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Sep 2022 13:45:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229640AbiINRju (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 13:39:50 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 210AC1CFFF;
-        Wed, 14 Sep 2022 10:39:49 -0700 (PDT)
+        with ESMTP id S229541AbiINRpu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 13:45:50 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D433A12D3D
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2022 10:45:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 52F95CE16CF;
-        Wed, 14 Sep 2022 17:39:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4513C433D6;
-        Wed, 14 Sep 2022 17:39:45 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 6C015CE16B9
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2022 17:45:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58955C433D6;
+        Wed, 14 Sep 2022 17:45:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663177185;
-        bh=jAoe8rod4miBlbOtF7K50ewWnbNqgqXI3Yje7HLHh+A=;
+        s=k20201202; t=1663177543;
+        bh=3BhpTt2q60TFuydNwFgbbsMgtAAU4NT9+IxnimbLwfk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mzldVwPEZfcuVCDzLrIdyphRXNOD7zQBlXZkE2k2TWCpO/cNRm5tjDOee42OVONnu
-         lMMAG4PdkfJdBcaUp5PxvrrJ3D17CHBheNWIREv7ixEdYSC5JCjei/WdCHxmV8UpxW
-         2vKvzktwyH/RQIXifZWUO7CNMxiSGq1ct4VbRauIhUkuAbjbK7gU6Liyo8ciRVCgEN
-         hD7ooMrJE1CnU+94JdCM1MHD1uyL0qG5IvTpwRqEw750w06njtqVWMeLrQGQWzik1A
-         n1h9X7Q/mum5bjtq5+yjIHthLMyvHzv2PmI6jGaUHut4IB83rqdPk1JeSpgkFZySm+
-         68VOE4e2Rv7AQ==
-Date:   Wed, 14 Sep 2022 10:39:45 -0700
+        b=ZqHtMqI0OeiBifPT3hPJtA1s42eIpVIQZUMW9s2pqgIrN+9S/A/8CStynfX9quu0E
+         /M0EIgD26IyXhjTqjLiEIrf1CeItUv+SXUrPp9EKNMwNnmvUiU0e0EnRZBcXATliY2
+         zojpAaYOE124TdhElxRTMrxYVGf9Dtnv2VHjB8Fh8534YIdq4qH4Zl3u2yHfLQ3Stu
+         2kpuhzsDDBSFt0kSq7WxeZEJZPSNqM7nnCUbjwzt9CbEYsC3VhYS5qfhk3QAD2XK+d
+         iyCO4Q2ogHYBia4dE85ZaDKMWpA+PsEB9LVfwQEUio1vnJcQamh/Zp7Af4zLGIR0lu
+         sgTTa/TAhyUYQ==
+Date:   Wed, 14 Sep 2022 10:45:42 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
- workload
-Message-ID: <YyIR4XmDYkYIK2ad@magnolia>
-References: <CAOQ4uxgu4uKJp5t+RoumMneR6bw_k0CRhGhU-SLAky4VHSg9MQ@mail.gmail.com>
- <20220617151135.yc6vytge6hjabsuz@quack3>
- <CAOQ4uxjvx33KRSm-HX2AjL=aB5yO=FeWokZ1usDKW7+R4Ednhg@mail.gmail.com>
- <20220620091136.4uosazpwkmt65a5d@quack3.lan>
- <CAOQ4uxg+uY5PdcU1=RyDWCxbP4gJB3jH1zkAj=RpfndH9czXbg@mail.gmail.com>
- <20220621085956.y5wyopfgzmqkaeiw@quack3.lan>
- <CAOQ4uxheatf+GCHxbUDQ4s4YSQib3qeYVeXZwEicR9fURrEFBA@mail.gmail.com>
- <CAOQ4uxguwnx4AxXqp_zjg39ZUaTGJEM2wNUPnNdtiqV2Q9woqA@mail.gmail.com>
- <YyH61deSiW1TnY//@magnolia>
- <CAOQ4uxhFJWW-ykyzomHCUWfWvbJNEmetw0G5mUYjFGoYJBb7NA@mail.gmail.com>
+To:     bugzilla-daemon@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 216486] New: [xfstests generic/447] xfs_scrub always
+ complains fs corruption
+Message-ID: <YyITRqoh7rP2pzNm@magnolia>
+References: <bug-216486-201763@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhFJWW-ykyzomHCUWfWvbJNEmetw0G5mUYjFGoYJBb7NA@mail.gmail.com>
+In-Reply-To: <bug-216486-201763@https.bugzilla.kernel.org/>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 14, 2022 at 07:29:15PM +0300, Amir Goldstein wrote:
-> > > Dave, Christoph,
-> > >
-> > > I know that you said that changing the atomic buffered read semantics
-> > > is out of the question and that you also objected to a mount option
-> > > (which nobody will know how to use) and I accept that.
-> > >
-> > > Given that a performant range locks implementation is not something
-> > > trivial to accomplish (Dave please correct me if I am wrong),
-> > > and given the massive performance impact of XFS_IOLOCK_SHARED
-> > > on this workload,
-> > > what do you think about POSIX_FADV_TORN_RW that a specific
-> > > application can use to opt-out of atomic buffer read semantics?
-> > >
-> > > The specific application that I want to modify to use this hint is Samba.
-> > > Samba uses IO threads by default to issue pread/pwrite on the server
-> > > for IO requested by the SMB client. The IO size is normally larger than
-> > > xfs block size and the range may not be block aligned.
-> > >
-> > > The SMB protocol has explicit byte range locks and the server implements
-> > > them, so it is pretty safe to assume that a client that did not request
-> > > range locks does not need xfs to do the implicit range locking for it.
-> > >
-> > > For this reason and because of the huge performance win,
-> > > I would like to implement POSIX_FADV_TORN_RW in xfs and
-> > > have Samba try to set this hint when supported.
-> > >
-> > > It is very much possible that NFSv4 servers (user and kennel)
-> > > would also want to set this hint for very similar reasons.
-> > >
-> > > Thoughts?
-> >
-> > How about range locks for i_rwsem and invalidate_lock?  That could
-> > reduce contention on VM farms, though I can only assume that, given that
-> > I don't have a reference implementation to play with...
-> >
+On Wed, Sep 14, 2022 at 08:12:56AM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=216486
 > 
-> If you are asking if I have the bandwidth to work on range lock
-> then the answer is that I do not.
+>             Bug ID: 216486
+>            Summary: [xfstests generic/447] xfs_scrub always complains  fs
+>                     corruption
+>            Product: File System
+>            Version: 2.5
+>     Kernel Version: 6.0.0-rc4+
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: zlang@redhat.com
+>         Regression: No
 > 
-> IIRC, Dave had a WIP and ran some benchmarks with range locks,
-> but I do not know at which state that work is.
+> Recently xfstests generic/447 always fails[1][2][3] on latest xfs kernel with
+> xfsprogs. It's reproducible on 1k blocksize and rmapbt enabled XFS (-b
+> size=1024 -m rmapbt=1). Not sure if it's a kernel bug or a xfsprogs issue, or
+> an expected failure.
 
-Yeah, that's what I was getting at -- I really wish Dave would post that
-as an RFC.  The last time I talked to him about it, he was worried that
-the extra complexity of the range lock structure would lead to more
-memory traffic and overhead.
+It's an expected failure that is one of the many things fixed by the
+online fsck patchset.  The solution I came up with is described here:
+https://djwong.org/docs/xfs-online-fsck-design/#eventual-consistency-vs-online-fsck
 
-I /know/ there are a lot of cloud vendors that would appreciate the
-speedup that range locking might provide.  I'm also fairly sure there
-are also people who want maximum single threaded iops and will /not/
-like range locks, but I think we ought to let kernel distributors choose
-which one they want.
-
-Recently I've been playing around with static keys, because certain
-parts of xfs online fsck need to hook into libxfs.  The hooks have some
-overhead, so I'd want to reduce the cost of that to making the
-instruction prefetcher skip over a nop sled when fsck isn't running.
-I sorta suspect this is a way out -- the distributor selects a default
-locking implementation at kbuild time, and we allow a kernel command
-line parameter to switch (if desired) during early boot.  That only
-works if the compiler supports asm goto (iirc) but that's not /so/
-uncommon.
-
-I'll try to prod Dave about this later today, maybe we can find someone
-to work on it if he'd post the prototype.
+The TLDR is that scrub is probably racing with a thread that's in the
+middle of doing a file mapping change that involves both an rmap and a
+refcount update.  This is possible because we don't hold the AGF buffer
+between work items in a defer ops chain.
 
 --D
 
-> The question is, if application developers know (or believe)
-> that their application does not care about torn reads, are we
-> insisting not to allow them to opt out of atomic buffered reads
-> (which they do not need) because noone has the time to
-> work on range locks?
+> [1]
+> SECTION       -- default
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 hp-xxxxxxxx-01
+> 6.0.0-0.rc4.20220906git53e99dcff61e.32.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Wed
+> Sep 7 07:51:49 UTC 2022
+> MKFS_OPTIONS  -- -f -b size=1024 -m rmapbt=1 /dev/sda3
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda3 /mnt/scratch
 > 
-> If that is the final decision then if customers come to me to
-> complain about this workload, my response will be:
+> generic/447 246s ... _check_xfs_filesystem: filesystem on /dev/sda3 failed
+> scrub
+> (see /root/git/xfstests/results//default/generic/447.full for details)
 > 
-> If this workload is important for your application, either
-> - contribute developer resource to work on range locks
-> - carry a patch in your kernel
-> or
-> - switch to another filesystem for this workload
+> [2]
+> # cat results//default/generic/447.full
+> meta-data=/dev/sda3              isize=512    agcount=16, agsize=3276544 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+> data     =                       bsize=1024   blocks=52424704, imaxpct=25
+>          =                       sunit=256    swidth=256 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=1024   blocks=65536, version=2
+>          =                       sectsz=512   sunit=256 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> creating 2097152 blocks...
+> wrote 2147483648/2147483648 bytes at offset 0
+> 2.000 GiB, 512 ops; 0:00:07.59 (269.766 MiB/sec and 67.4414 ops/sec)
+> Punching file2...
+> ...done
+> _check_xfs_filesystem: filesystem on /dev/sda3 failed scrub
+> *** xfs_scrub -v -d -n output ***
+> EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+> Phase 1: Find filesystem geometry.
+> /mnt/scratch: using 1 threads to scrub.
+> Phase 2: Check internal metadata.
+> Corruption: AG 0 reference count btree: Repairs are required. (scrub.c line
+> 196)
+> Info: AG 1 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 2 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 3 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 4 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 5 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 6 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 7 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 8 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 9 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 10 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 11 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 12 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 13 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 14 superblock: Optimization is possible. (scrub.c line 212)
+> Info: AG 15 superblock: Optimization is possible. (scrub.c line 212)
+> Phase 3: Scan all inodes.
+> Info: inode 512 (0/512) inode record: Cross-referencing failed. (scrub.c line
+> 117)
+> Info: inode 515 (0/515) inode record: Cross-referencing failed. (scrub.c line
+> 117)
+> Info: inode 517 (0/517) inode record: Cross-referencing failed. (scrub.c line
+> 117)
+> Info: inode 517 (0/517) data block map: Cross-referencing failed. (scrub.c line
+> 117)
+> Info: /mnt/scratch: Optimizations of inode record are possible. (scrub.c line
+> 253)
+> Phase 5: Check directory tree.
+> Info: /mnt/scratch: Filesystem has errors, skipping connectivity checks.
+> (phase5.c line 392)
+> Phase 7: Check summary counters.
+> 5.2GiB data used;  6 inodes used.
+> 1.1GiB data found; 5 inodes found.
+> 5 inodes counted; 6 inodes checked.
+> /mnt/scratch: corruptions found: 1
+> /mnt/scratch: Re-run xfs_scrub without -n.
+> *** end xfs_scrub output
 > 
-> Thanks,
-> Amir.
+> [3]
+> # dmesg
+> [329558.995550] run fstests generic/447 at 2022-09-13 14:01:24
+> [329560.019866] systemd[1]: Started fstests-generic-447.scope - /usr/bin/bash
+> -c test -w /proc/self/oom_score_adj && echo 250 > /proc/self/oom_score_adj;
+> exec ./tests/generic/447.
+> [329561.466573] XFS (sda3): Mounting V5 Filesystem
+> [329561.542655] XFS (sda3): Ending clean mount
+> [329561.596681] XFS (sda3): Unmounting Filesystem
+> [329561.598209] systemd[1]: mnt-scratch.mount: Deactivated successfully.
+> [329562.183863] XFS (sda3): Mounting V5 Filesystem
+> [329562.265873] XFS (sda3): Ending clean mount
+> [329727.320231] systemd[1]: mnt-scratch.mount: Deactivated successfully.
+> [329729.160375] XFS (sda3): Unmounting Filesystem
+> [329730.480159] XFS (sda3): Mounting V5 Filesystem
+> [329730.559529] XFS (sda3): Ending clean mount
+> [329730.595342] systemd[1]: fstests-generic-447.scope: Deactivated
+> successfully.
+> [329730.597524] systemd[1]: fstests-generic-447.scope: Consumed 2min 44.321s
+> CPU time.
+> [329730.641904] XFS (sda5): Unmounting Filesystem
+> [329730.644716] systemd[1]: mnt-test.mount: Deactivated successfully.
+> [329730.899455] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at
+> your own risk!
+> [329743.405813] XFS (sda3): Corruption detected during scrub.
+> [329743.922150] XFS (sda3): Corruption detected during scrub.
+> [329744.438304] XFS (sda3): Corruption detected during scrub.
+> [329744.956067] XFS (sda3): Corruption detected during scrub.
+> [329745.472617] XFS (sda3): Corruption detected during scrub.
+> [329745.988849] XFS (sda3): Corruption detected during scrub.
+> [329746.505812] XFS (sda3): Corruption detected during scrub.
+> [329747.022342] XFS (sda3): Corruption detected during scrub.
+> [329747.538927] XFS (sda3): Corruption detected during scrub.
+> [329748.055586] XFS (sda3): Corruption detected during scrub.
+> [329748.572338] XFS (sda3): Corruption detected during scrub.
+> [329911.911869] XFS (sda3): Unmounting Filesystem
+> [329911.913058] XFS (sda3): Uncorrected metadata errors detected; please run
+> xfs_repair.
+> [329911.913588] systemd[1]: mnt-scratch.mount: Deactivated successfully.
+> 
+> -- 
+> You may reply to this email to add a comment.
+> 
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
