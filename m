@@ -2,128 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60184C6FA82
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 16:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3A33C6FA82
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 16:32:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230104AbiINQbM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Sep 2022 12:31:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42468 "EHLO
+        id S230211AbiINQck (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Sep 2022 12:32:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230080AbiINQat (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 12:30:49 -0400
-Received: from mail-vs1-xe36.google.com (mail-vs1-xe36.google.com [IPv6:2607:f8b0:4864:20::e36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6EE1D87;
-        Wed, 14 Sep 2022 09:29:28 -0700 (PDT)
-Received: by mail-vs1-xe36.google.com with SMTP id j17so9067188vsp.5;
-        Wed, 14 Sep 2022 09:29:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=a3dst0aSf2zayTlO/YB7FAv0EeIEaJQ9bTaWo3LOZD0=;
-        b=Q46TWpeHpm3O8AV6cy/41MaIU4mILJKzGYvmwpMVTC2cWO2EIcAjk9sDvtxDX2+UW5
-         uXdDf07csx+MytlIA6RUsWPgJCbUEbOmJ/P/cp1AOHa7qcNik0xurGNXJisjFS971Lz/
-         n4j7ul6dus5OltUXeFnIEM0q3s+2fbUtmQMJJGsF1lnUoeX6ruVuc5AV//mdC1yps2O2
-         Im4NelpDLpVqvhUlq28KiKTLf8W0O6ri21wxaRSkiGBjxNkrJ/naqBxRMIiXXqOUjSm5
-         dFINuSenJbWSAHKmNPXYp8EMpYwO+A7FT+Vs+iVH10NZruoG6e1UjsQLt3DtQHyPC9hX
-         9wdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=a3dst0aSf2zayTlO/YB7FAv0EeIEaJQ9bTaWo3LOZD0=;
-        b=WvFo/YeIci1s7KfMY4wlnn9JXSVkhomnu3xhoEdWtOnjKibeq4dVDhRjP+q5S2RKWg
-         LnqokRdeHJnZC6GUu0DJ9qCUeyf5PwlaG9GelumY9lIv2n/neSH40dv7ezIxRxOV9eax
-         ANcb/F+SQQvwXbcnnVu9dt1fs54dWftnADe/jAuIm/HHKO+jytmlXQN6XfCJrnyNJXmz
-         1XF0u4Fs7UJf9uo+zDssZlB8ocLZrkKxwKvQ2qy5UUrJMHvVqp2uu9NGHS7Xb1qQasr3
-         IOvnaYEkJLVhJZQyTMfZfD79yoCfU9ALhYVXpXn2XE4IfyiPqcV7FT33Mcr6nZdd90u5
-         MunQ==
-X-Gm-Message-State: ACgBeo0VKfXLtEt6bbozkI4y0dXe5BhmtuU0QtqyWXZ/HDCDMYviOmZZ
-        AzVVGqmmBsv1eJdi74hGds5/NqQ91TEXDSAonYY=
-X-Google-Smtp-Source: AA6agR5+ImxaL4AeQP9SfBAnuGBXvLDNf9jUU3kPq0qe/zzqhTj536JyL3hbnqlLloq/uT7lgfdxr7WObpcVT18/kng=
-X-Received: by 2002:a67:a243:0:b0:398:a30e:1566 with SMTP id
- t3-20020a67a243000000b00398a30e1566mr4430524vsh.2.1663172967364; Wed, 14 Sep
- 2022 09:29:27 -0700 (PDT)
+        with ESMTP id S229953AbiINQb6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 12:31:58 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC1C184EE6
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2022 09:30:53 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AA1DFB8172C
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2022 16:30:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65861C433C1;
+        Wed, 14 Sep 2022 16:30:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1663173051;
+        bh=nDoEtahN4tKZsm0V31ArWRKiFXRi//uV6bal8lGr/nw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SeJ0s19wRoNKS/TRmTgsHGBBde9D0ezh66wdushd825nT4WAQx3fxXderpJz4/Bmb
+         laQp5plNOAgqgdP3Mxi4CXWpPMXaNhYg4EejMtbf0/xyUkw8X9X0oO4kVKQGY3wiJ3
+         zgZa5maotbhdAxMkRCy2RrYeRHxtdD94Os7esud7k43f+L2iDmKt06vHJFNpUbDlFB
+         8kDfPUIDZvFMubp18rUSu0VyXBL7NTEVpmihgu8Vmgx/Eg3q+YTdANdp41iXeg4QMG
+         BddZ6N/1G7AzAfhZxHpvbe400iMhi6PGB5D6YF614sqHH+A3d28P+miOrP9eiT2XX8
+         F7Q0FK0FaqiBQ==
+Date:   Wed, 14 Sep 2022 09:30:50 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Guo Xuenan <guoxuenan@huawei.com>, linux-xfs@vger.kernel.org,
+        dchinner@redhat.com, chandan.babu@oracle.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, zhengbin13@huawei.com, jack.qiu@huawei.com
+Subject: Re: [PATCH v2] xfs: fix uaf when leaf dir bestcount not match with
+ dir data blocks
+Message-ID: <YyIBugls6dI4xOUV@magnolia>
+References: <20220831121639.3060527-1-guoxuenan@huawei.com>
+ <20220912013154.GB3600936@dread.disaster.area>
 MIME-Version: 1.0
-References: <CAOQ4uxhxgYASST1k-UaqfbLL9ERquHaKL2jtydB2+iF9aT8SRQ@mail.gmail.com>
- <20190409082605.GA8107@quack2.suse.cz> <CAOQ4uxgu4uKJp5t+RoumMneR6bw_k0CRhGhU-SLAky4VHSg9MQ@mail.gmail.com>
- <20220617151135.yc6vytge6hjabsuz@quack3> <CAOQ4uxjvx33KRSm-HX2AjL=aB5yO=FeWokZ1usDKW7+R4Ednhg@mail.gmail.com>
- <20220620091136.4uosazpwkmt65a5d@quack3.lan> <CAOQ4uxg+uY5PdcU1=RyDWCxbP4gJB3jH1zkAj=RpfndH9czXbg@mail.gmail.com>
- <20220621085956.y5wyopfgzmqkaeiw@quack3.lan> <CAOQ4uxheatf+GCHxbUDQ4s4YSQib3qeYVeXZwEicR9fURrEFBA@mail.gmail.com>
- <CAOQ4uxguwnx4AxXqp_zjg39ZUaTGJEM2wNUPnNdtiqV2Q9woqA@mail.gmail.com> <YyH61deSiW1TnY//@magnolia>
-In-Reply-To: <YyH61deSiW1TnY//@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Wed, 14 Sep 2022 19:29:15 +0300
-Message-ID: <CAOQ4uxhFJWW-ykyzomHCUWfWvbJNEmetw0G5mUYjFGoYJBb7NA@mail.gmail.com>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw workload
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220912013154.GB3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> > Dave, Christoph,
-> >
-> > I know that you said that changing the atomic buffered read semantics
-> > is out of the question and that you also objected to a mount option
-> > (which nobody will know how to use) and I accept that.
-> >
-> > Given that a performant range locks implementation is not something
-> > trivial to accomplish (Dave please correct me if I am wrong),
-> > and given the massive performance impact of XFS_IOLOCK_SHARED
-> > on this workload,
-> > what do you think about POSIX_FADV_TORN_RW that a specific
-> > application can use to opt-out of atomic buffer read semantics?
-> >
-> > The specific application that I want to modify to use this hint is Samba.
-> > Samba uses IO threads by default to issue pread/pwrite on the server
-> > for IO requested by the SMB client. The IO size is normally larger than
-> > xfs block size and the range may not be block aligned.
-> >
-> > The SMB protocol has explicit byte range locks and the server implements
-> > them, so it is pretty safe to assume that a client that did not request
-> > range locks does not need xfs to do the implicit range locking for it.
-> >
-> > For this reason and because of the huge performance win,
-> > I would like to implement POSIX_FADV_TORN_RW in xfs and
-> > have Samba try to set this hint when supported.
-> >
-> > It is very much possible that NFSv4 servers (user and kennel)
-> > would also want to set this hint for very similar reasons.
-> >
-> > Thoughts?
->
-> How about range locks for i_rwsem and invalidate_lock?  That could
-> reduce contention on VM farms, though I can only assume that, given that
-> I don't have a reference implementation to play with...
->
+On Mon, Sep 12, 2022 at 11:31:54AM +1000, Dave Chinner wrote:
+> On Wed, Aug 31, 2022 at 08:16:39PM +0800, Guo Xuenan wrote:
+> > For leaf dir, In most cases, there should be as many bestfree slots
+> > as the dir data blocks that can fit under i_size (except for [1]).
+> > 
+> > Root cause is we don't examin the number bestfree slots, when the slots
+> > number less than dir data blocks, if we need to allocate new dir data
+> > block and update the bestfree array, we will use the dir block number as
+> > index to assign bestfree array, while we did not check the leaf buf
+> > boundary which may cause UAF or other memory access problem. This issue
+> > can also triggered with test cases xfs/473 from fstests.
+> > 
+> > Considering the special case [1] , only add check bestfree array boundary,
+> > to avoid UAF or slab-out-of bound.
+> > 
+> > [1] https://lore.kernel.org/all/163961697197.3129691.1911552605195534271.stgit@magnolia/
+> > 
+> > Simplify the testcase xfs/473 with commands below:
+> > DEV=/dev/sdb
+> > MP=/mnt/sdb
+> > WORKDIR=/mnt/sdb/341 #1. mkfs create new xfs image
+> > mkfs.xfs -f ${DEV}
+> > mount ${DEV} ${MP}
+> > mkdir -p ${WORKDIR}
+> > for i in `seq 1 341` #2. create leaf dir with 341 entries file name len 8
+> > do
+> >     touch ${WORKDIR}/$(printf "%08d" ${i})
+> > done
+> > inode=$(ls -i ${MP} | cut -d' ' -f1)
+> > umount ${MP}         #3. xfs_db set bestcount to 0
+> > xfs_db -x ${DEV} -c "inode ${inode}" -c "dblock 8388608" \
+> > -c "write ltail.bestcount 0"
+> > mount ${DEV} ${MP}
+> > touch ${WORKDIR}/{1..100}.txt #4. touch new file, reproduce
+> .....
+> > diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > index d9b66306a9a7..4b2a72b3a6f3 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > @@ -819,6 +819,18 @@ xfs_dir2_leaf_addname(
+> >  		 */
+> >  		else
+> >  			xfs_dir3_leaf_log_bests(args, lbp, use_block, use_block);
+> > +		/*
+> > +		 * An abnormal corner case, bestfree count less than data
+> > +		 * blocks, add a condition to avoid UAF or slab-out-of bound.
+> > +		 */
+> > +		if ((char *)(&bestsp[use_block]) > (char *)ltp) {
 
-If you are asking if I have the bandwidth to work on range lock
-then the answer is that I do not.
+Aha, so this /can/ be detected by walking off the end of the buffer...
 
-IIRC, Dave had a WIP and ran some benchmarks with range locks,
-but I do not know at which state that work is.
+> > +			xfs_trans_brelse(tp, lbp);
+> > +			if (tp->t_flags & XFS_TRANS_DIRTY)
+> > +				xfs_force_shutdown(tp->t_mountp,
+> > +						SHUTDOWN_CORRUPT_ONDISK);
+> > +			return -EFSCORRUPTED;
+> > +		}
+> > +
+> 
+> As I explained here:
+> 
+> https://lore.kernel.org/linux-xfs/20220829081244.GT3600936@dread.disaster.area/
+> 
+> We don't check for overruns caused by on-disk format corruptions in
+> every operation - we catch the corruption when the metadata is first
+> read into memory via the verifier.
+> 
+> Please add a check for a corrupt/mismatched best sizes array to
+> xfs_dir3_leaf_check_int() so that the corruption is detected on
+> first read and the internal directory code is never exposed to such
+> issues.
 
-The question is, if application developers know (or believe)
-that their application does not care about torn reads, are we
-insisting not to allow them to opt out of atomic buffered reads
-(which they do not need) because noone has the time to
-work on range locks?
+...in which case this should go in the buffer verifier.  Seconded.
 
-If that is the final decision then if customers come to me to
-complain about this workload, my response will be:
+--D
 
-If this workload is important for your application, either
-- contribute developer resource to work on range locks
-- carry a patch in your kernel
-or
-- switch to another filesystem for this workload
-
-Thanks,
-Amir.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
