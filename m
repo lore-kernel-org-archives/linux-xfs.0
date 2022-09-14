@@ -2,211 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1829ECAAD8
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 03:47:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58D54ECAAD8
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 03:51:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229667AbiINDr0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Sep 2022 23:47:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60558 "EHLO
+        id S229838AbiINDvm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Sep 2022 23:51:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229824AbiINDrY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Sep 2022 23:47:24 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C33E6F252
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Sep 2022 20:47:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1663127242;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=JfEyaIK5t5t2zBsurteXVraVZM5Dvm9NZ2TrwIG60I0=;
-        b=NnmOwco9kw2CGsTo53zHUanYouuqavLiGMOn6fmeKfoObs2jZrqcbu9jf5FuDYjxVlsT7Q
-        fEeGq4fZjxv3dl2/amd9CYTR91Mi+CrvOjEDyYVDn5h7CMGFoN5vPAEoRz/v+Vqr2sVt4z
-        /6wijEiJ0kg+UniLX1k7ceNP6j9ebJw=
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
- [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-202-ovuRhZCkOkmoUsErajW_Vg-1; Tue, 13 Sep 2022 23:47:20 -0400
-X-MC-Unique: ovuRhZCkOkmoUsErajW_Vg-1
-Received: by mail-pg1-f200.google.com with SMTP id s68-20020a632c47000000b00434e0e75076so6679482pgs.7
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Sep 2022 20:47:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=JfEyaIK5t5t2zBsurteXVraVZM5Dvm9NZ2TrwIG60I0=;
-        b=rm/2n0EXMsiA6NEIZhKTLHIFFqEpUmjID0OoZfd7Cee5MyAUBg4hHGQdrbgZlpyRNn
-         QjN4vm0qnsdY7BxzACr04Rwr+9eKWWWznUYP4Sm66kibrnee6tvMMsy9IM//yl6tKx5r
-         iHCYKxgJo3GwuapckA2ZgWyJg3Jh1bH2plQ+6yOy/pTvLLQ9zsQf4LtuOmsya3k7wEh7
-         iOlzA7bb/2Kibg3yDtEDEoVM9Gdi5KwVQLINdS7uCnu8wyb+Hl0Yb1XZN0XaaJl9DfE6
-         TEqmey0vf5XbBtNEe/CtkYlZ13fXCRGylY3bjwqgZK37HsBeC/amaQirKo+oUT/elBUj
-         geKg==
-X-Gm-Message-State: ACgBeo3RAW64LijkpPCZJjU7CIAcpUpqla/iOKLKmgkFhsQw8C5ToS5W
-        YV/G7hHocH5XYQ4Ad46g1D5DNJbNGu8DdWcXsbe1oGfLbUtONuA9q5KluzcAZYiX6FVChpd5G6C
-        GzF0SxlL7K7UiT1wtbxdejfkhSkSkPdHFQwVaDKodqWbqcDdvyHY6ruypR9vCq/+cuAvIwKiL
-X-Received: by 2002:a05:6a00:234b:b0:545:fec9:abca with SMTP id j11-20020a056a00234b00b00545fec9abcamr6188149pfj.14.1663127238075;
-        Tue, 13 Sep 2022 20:47:18 -0700 (PDT)
-X-Google-Smtp-Source: AA6agR52dAllOChkt5xtuAoVitGUTXVYmlYpwMgHZR1Gl8pTb7BjzlThSAicmqDL8e2pC3ogKXasNw==
-X-Received: by 2002:a05:6a00:234b:b0:545:fec9:abca with SMTP id j11-20020a056a00234b00b00545fec9abcamr6188127pfj.14.1663127237707;
-        Tue, 13 Sep 2022 20:47:17 -0700 (PDT)
-Received: from snowcrash.redhat.com ([2001:8003:4800:1b00:4c4a:1757:c744:923])
-        by smtp.gmail.com with ESMTPSA id b8-20020a17090a6ac800b001f8b3f7cc16sm7997932pjm.57.2022.09.13.20.47.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Sep 2022 20:47:16 -0700 (PDT)
-From:   Donald Douwsma <ddouwsma@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Donald Douwsma <ddouwsma@redhat.com>
-Subject: [PATCH] xfsrestore: fix inventory unpacking
-Date:   Wed, 14 Sep 2022 13:47:08 +1000
-Message-Id: <20220914034708.1605288-1-ddouwsma@redhat.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229824AbiINDvl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Sep 2022 23:51:41 -0400
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 430606F26F;
+        Tue, 13 Sep 2022 20:51:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=TsvPRmshdxnvSY7tVAecRy6+/ce+5hAWcS0J6w4JVyE=; b=utEF1SOCThG3gcFxitxIjq3WGs
+        IHfq+Z1KW6tA+eL0Sb+cwipStWaYLjhRhDVZ8GZwNeZmjvBd05BRjtyauZaHH7ZZsrmJ5jQ9m7NYH
+        t5YnppvGuDY68g9HYjVC2w5Z2W2ZRP72TY/rLYf5gK5zcB6xl2TQzc8waMQW+L4/KmLbLr+tX1SHf
+        wva/bWAZqkuKFcKia9aZdCn5gJ0/PD4X1KzRVwCHXE2T9wrl7lomyCDzaAAQRhl9Ob3eHi4ibY6gS
+        2A/E8y+stzUFsaCfnKU1fUsoMPrEmJ9V+q/Xc7gYpbpZ/qBuLSMLG/JKoH2axtiXJ3qbsfdU1SaT+
+        ODK9JccA==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1oYJQj-00G2aP-2o;
+        Wed, 14 Sep 2022 03:51:17 +0000
+Date:   Wed, 14 Sep 2022 04:51:17 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Jan Kara <jack@suse.cz>, John Hubbard <jhubbard@nvidia.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        David Hildenbrand <david@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 4/7] iov_iter: new iov_iter_pin_pages*() routines
+Message-ID: <YyFPtTtxYozCuXvu@ZenIV>
+References: <20220831041843.973026-1-jhubbard@nvidia.com>
+ <20220831041843.973026-5-jhubbard@nvidia.com>
+ <YxbtF1O8+kXhTNaj@infradead.org>
+ <103fe662-3dc8-35cb-1a68-dda8af95c518@nvidia.com>
+ <Yxb7YQWgjHkZet4u@infradead.org>
+ <20220906102106.q23ovgyjyrsnbhkp@quack3>
+ <YxhaJktqtHw3QTSG@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YxhaJktqtHw3QTSG@infradead.org>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When xfsrestore reads the inventory from tape media it fails to convert
-media file records from bigendin. If the xfsdump inventory is not
-available xfsrestore will write this invalid record to the on-line
-inventory.
+On Wed, Sep 07, 2022 at 01:45:26AM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 06, 2022 at 12:21:06PM +0200, Jan Kara wrote:
+> > > For FOLL_PIN callers, never pin bvec and kvec pages:  For file systems
+> > > not acquiring a reference is obviously safe, and the other callers will
+> > > need an audit, but I can't think of why it woul  ever be unsafe.
+> > 
+> > Are you sure about "For file systems not acquiring a reference is obviously
+> > safe"? I can see places e.g. in orangefs, afs, etc. which create bvec iters
+> > from pagecache pages. And then we have iter_file_splice_write() which
+> > creates bvec from pipe pages (which can also be pagecache pages if
+> > vmsplice() is used). So perhaps there are no lifetime issues even without
+> > acquiring a reference (but looking at the code I would not say it is
+> > obvious) but I definitely don't see how it would be safe to not get a pin
+> > to signal to filesystem backing the pagecache page that there is DMA
+> > happening to/from the page.
+> 
+> I mean in the context of iov_iter_get_pages callers, that is direct
+> I/O.  Direct callers of iov_iter_bvec which then pass that iov to
+> ->read_iter / ->write_iter will need to hold references (those are
+> the references that the callers of iov_iter_get_pages rely on!).
 
-[root@rhel8 xfsdump-dev]# xfsdump -I
-file system 0:
-        fs id:          26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
-        session 0:
-                mount point:    rhel8:/boot
-                device:         rhel8:/dev/sda1
-                time:           Fri Sep  9 14:29:03 2022
-                session label:  ""
-                session id:     05f11cfe-2301-4000-89f2-2025091da413
-                level:          0
-                resumed:        NO
-                subtree:        NO
-                streams:        1
-                stream 0:
-                        pathname:       /dev/nst0
-                        start:          ino 133 offset 0
-                        end:            ino 1572997 offset 0
-                        interrupted:    YES
-                        media files:    1
-                        media file 0:
-                                mfile index:    33554432
-                                mfile type:     data
-                                mfile size:     211187836911616
-                                mfile start:    ino 9583660007044415488 offset 0
-                                mfile end:      ino 9583686395323482112 offset 0
-                                media label:    ""
-                                media id:       4bf9ed40-6377-4926-be62-1bf7b59b1619
-xfsdump: Dump Status: SUCCESS
+Unless I'm misreading Jan, the question is whether they should get or
+pin.  AFAICS, anyone who passes the sucker to ->read_iter() (or ->recvmsg(),
+or does direct copy_to_iter()/zero_iter(), etc.) is falling under
+=================================================================================
+CASE 5: Pinning in order to write to the data within the page
+-------------------------------------------------------------
+Even though neither DMA nor Direct IO is involved, just a simple case of "pin,
+write to a page's data, unpin" can cause a problem. Case 5 may be considered a
+superset of Case 1, plus Case 2, plus anything that invokes that pattern. In
+other words, if the code is neither Case 1 nor Case 2, it may still require
+FOLL_PIN, for patterns like this:
 
-The invalid start and end inode information cause xfsrestore to consider
-that non-directory files do not reside in the current media and will
-fail to restore them.
+Correct (uses FOLL_PIN calls):
+    pin_user_pages()
+    write to the data within the pages
+    unpin_user_pages()
 
-The behaviour of an initial restore may succeed if the position of the
-tape is such that the data file is encountered before the inventory
-file. Subsequent restores will use the invalid on-line inventory and
-fail to restore files.
+INCORRECT (uses FOLL_GET calls):
+    get_user_pages()
+    write to the data within the pages
+    put_page()
+=================================================================================
 
-Fix this by correctly unpacking the inventory data. Also handle multiple
-streams and untangle the logic where stobj_unpack_sessinfo is called.
+Regarding iter_file_splice_write() case, do we need to pin pages
+when we are not going to modify the data in those?
 
-Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
----
- inventory/inv_stobj.c | 38 ++++++++++++++------------------------
- restore/content.c     | 13 +++++--------
- 2 files changed, 19 insertions(+), 32 deletions(-)
-
-diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
-index c20e71c..efaf46d 100644
---- a/inventory/inv_stobj.c
-+++ b/inventory/inv_stobj.c
-@@ -1008,7 +1008,7 @@ stobj_unpack_sessinfo(
-         size_t             bufsz,
- 	invt_sessinfo_t   *s)
- {
--	uint 		 i;
-+	uint 		 i, j;
- 	char	         *tmpbuf;
- 	char 		 *p = (char *)bufp;
- 
-@@ -1080,35 +1080,25 @@ stobj_unpack_sessinfo(
- 	p += sizeof(invt_session_t);
- 
- 	/* the array of all the streams belonging to this session */
--	xlate_invt_stream((invt_stream_t *)p, (invt_stream_t *)tmpbuf, 1);
--	bcopy(tmpbuf, p, sizeof(invt_stream_t));
- 	s->strms = (invt_stream_t *)p;
--	p += s->ses->s_cur_nstreams * sizeof(invt_stream_t);
-+        for (i = 0; i < s->ses->s_cur_nstreams; i++) {
-+                xlate_invt_stream((invt_stream_t *)p, 
-+				  (invt_stream_t *)tmpbuf, 1);
-+                bcopy(tmpbuf, p, sizeof(invt_stream_t));
-+                p += sizeof(invt_stream_t);
-+        }
- 
- 	/* all the media files */
- 	s->mfiles = (invt_mediafile_t *)p;
--
--#ifdef INVT_DELETION
--	{
--		int tmpfd = open("moids", O_RDWR | O_CREAT, S_IRUSR|S_IWUSR);
--		uint j;
--		invt_mediafile_t *mmf = s->mfiles;
--		for (i=0; i< s->ses->s_cur_nstreams; i++) {
--			for (j=0; j< s->strms[i].st_nmediafiles;
--			     j++, mmf++)
--				xlate_invt_mediafile((invt_mediafile_t *)mmf, (invt_mediafile_t *)tmpbuf, 1);
--				bcopy(tmpbuf, mmf, sizeof(invt_mediafile_t));
--				put_invtrecord(tmpfd, &mmf->mf_moid,
--					 sizeof(uuid_t), 0, SEEK_END, 0);
-+	for (i=0; i< s->ses->s_cur_nstreams; i++) {
-+		for (j=0; j < s->strms[i].st_nmediafiles; j++) {
-+			xlate_invt_mediafile((invt_mediafile_t *)p, 
-+					     (invt_mediafile_t *)tmpbuf, 1);
-+			bcopy(tmpbuf, p, sizeof(invt_mediafile_t));
-+			p +=  sizeof(invt_mediafile_t);
- 		}
--		close(tmpfd);
- 	}
--#endif
--	for (i = 0; i < s->ses->s_cur_nstreams; i++) {
--		p += (size_t) (s->strms[i].st_nmediafiles)
--			* sizeof(invt_mediafile_t);
--	}
--
-+	
- 	/* sanity check the size of the buffer given to us vs. the size it
- 	   should be */
- 	if ((size_t) (p - (char *) bufp) != bufsz) {
-diff --git a/restore/content.c b/restore/content.c
-index b3999f9..bbced2d 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -5463,17 +5463,14 @@ pi_addfile(Media_t *Mediap,
- 			 * desc.
- 			 */
- 			sessp = 0;
--			if (!buflen) {
--				ok = BOOL_FALSE;
--			} else {
--			    /* extract the session information from the buffer */
--			    if (stobj_unpack_sessinfo(bufp, buflen, &sessinfo)<0) {
--				ok = BOOL_FALSE;
--			    } else {
-+			ok = BOOL_FALSE;
-+			/* extract the session information from the buffer */
-+			if (buflen && 
-+			    stobj_unpack_sessinfo(bufp, buflen, &sessinfo)) {
- 				stobj_convert_sessinfo(&sessp, &sessinfo);
- 				ok = BOOL_TRUE;
--			    }
- 			}
-+
- 			if (!ok || !sessp) {
- 				mlog(MLOG_DEBUG | MLOG_WARNING | MLOG_MEDIA, _(
- 				      "on-media session "
--- 
-2.31.1
+The same goes for afs, AFAICS; I started to type "... and everything that passes
+WRITE to iov_iter_bvec()", but...
+drivers/vhost/vringh.c:1165:            iov_iter_bvec(&iter, READ, iov, ret, translated);
+drivers/vhost/vringh.c:1198:            iov_iter_bvec(&iter, WRITE, iov, ret, translated);
+is backwards - READ is for data destinations, comes with copy_to_iter(); WRITE is
+for data sources and it comes with copy_from_iter()...
+I'm really tempted to slap
+	if (WARN_ON(i->data_source))
+		return 0;
+into copy_to_iter() et.al., along with its opposite for copy_from_iter().
+And see who comes screaming...  Things like
+        if (unlikely(iov_iter_is_pipe(i) || iov_iter_is_discard(i))) {
+                WARN_ON(1);
+                return 0;
+        }
+in e.g. csum_and_copy_from_iter() would be replaced by that, and become
+easier to understand...
+These two are also getting it wrong, BTW:
+drivers/target/target_core_file.c:340:  iov_iter_bvec(&iter, READ, bvec, sgl_nents, len);
+drivers/target/target_core_file.c:476:  iov_iter_bvec(&iter, READ, bvec, nolb, len);
 
