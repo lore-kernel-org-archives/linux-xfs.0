@@ -2,106 +2,127 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50CF1ECAAD3
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 16:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76CDEC6FA82
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 16:42:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229852AbiINQj7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Sep 2022 12:39:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36628 "EHLO
+        id S229521AbiINQmy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Sep 2022 12:42:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229861AbiINQj4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 12:39:56 -0400
+        with ESMTP id S229875AbiINQmx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 12:42:53 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1934EE2A;
-        Wed, 14 Sep 2022 09:39:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 102965FF55;
+        Wed, 14 Sep 2022 09:42:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 743FFB8188A;
-        Wed, 14 Sep 2022 16:39:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27B4DC433D6;
-        Wed, 14 Sep 2022 16:39:41 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BD282B8172B;
+        Wed, 14 Sep 2022 16:42:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68C01C433C1;
+        Wed, 14 Sep 2022 16:42:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663173581;
-        bh=ZveLLZvJ+Ts6o0HbiWXx2xckAfycFTaLYVEB1OTB1JI=;
+        s=k20201202; t=1663173769;
+        bh=5rjnZD4aW6Ta7RnXoGxlFAwk+JqLOxszQ44sIzN65/k=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aGkulEqu6Y3SXg7eBlpZ8+XKiNwDWdU+lbMHC2JnBrw4vtH/yFmKFbaB7NUcNU7RW
-         KqwhV/uM4x17hc40rIciAqM7XuDnBrxUqRPnciG9q5N7pJF9vWFncEAbtDwoixY3j+
-         NdDpdBHYZO5bPZmZai1TryUev3jPY2dNB453t0K0m11gRyleFCtf4I74Q0ZZTMdG4D
-         KLcM8IUeqi5GLAwoLRV8+jDTIsrGp+GJ7ibwQzD19pjUzZfWRH3oOtbXY11IIHEeTn
-         xTrFsJxSu5iWElKLrIh47Pyd295awgvqYEyb3rGi5GUcV3UvYDt/PxVJjrwtk9zgvm
-         q0vmAuuQpHOqA==
-Date:   Wed, 14 Sep 2022 09:39:40 -0700
+        b=HIfbNPuyzSs45A+qFUmsLkLy+OLSCzaFrqkfB5h7CKohyL43gm71wS4YsFZuOuvDY
+         C3geizrBnXtwIwazo3rZmp8T3qWRfS5nHIlv59cNZsLnkyFdcwi+bq6zy6xfSFCb5v
+         ZRcDu94pvz0ChOaHQlYMcWxfJxRIA1eJBy9ZNoE2o3ilQBm0OEEOgnxQhi6NozyFxB
+         2exBGmh+ilVmwmrSM9cFTjN/DywFrVHTXEOJNYl4gh6RS39+Us/APOAZpiyWWSak96
+         Bo9l94NrOIvx0/P9JiqgjlhYK4sV28O2ahVQZJ3Z7Bk7fsvSjxqamttWdxqHiQx2Nq
+         YNBoxXe+ewODg==
+Date:   Wed, 14 Sep 2022 09:42:48 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Varsha Teratipally <teratipally@google.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] xfs: fix up non-directory creation in SGID directories
-Message-ID: <YyIDzPTn99XLTCFp@magnolia>
-References: <20220906183600.1926315-1-teratipally@google.com>
- <20220906183600.1926315-2-teratipally@google.com>
- <YxnWi5YcuY6Rbodt@kroah.com>
- <CAOQ4uxi4UH2pDEe1c6Mn52Qh1GABv2axuQqN=D6QHc7rKwQ2zQ@mail.gmail.com>
+To:     Stephen Zhang <starzhangzsd@gmail.com>
+Cc:     Dave Chinner <david@fromorbit.com>, dchinner@redhat.com,
+        chandan.babu@oracle.com, zhangshida@kylinos.cn,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: remove the redundant check in xfs_bmap_first_unused
+Message-ID: <YyIEiEXJuExymird@magnolia>
+References: <20220909030756.3916297-1-zhangshida@kylinos.cn>
+ <20220911231251.GA3600936@dread.disaster.area>
+ <CANubcdWe9thzi0WXHBg+vccP7UaGv1c8FiGQkORV6PGw_4cOwQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi4UH2pDEe1c6Mn52Qh1GABv2axuQqN=D6QHc7rKwQ2zQ@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANubcdWe9thzi0WXHBg+vccP7UaGv1c8FiGQkORV6PGw_4cOwQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 08, 2022 at 03:02:41PM +0300, Amir Goldstein wrote:
-> On Thu, Sep 8, 2022 at 2:48 PM Greg KH <gregkh@linuxfoundation.org> wrote:
+On Mon, Sep 12, 2022 at 02:39:23PM +0800, Stephen Zhang wrote:
+> Dave Chinner <david@fromorbit.com> 于2022年9月12日周一 07:12写道：
+> > Given that all the types and comparisons involved are 64 bit
+> > unsigned:
 > >
-> > On Tue, Sep 06, 2022 at 06:36:00PM +0000, Varsha Teratipally wrote:
-> > > From: Christoph Hellwig <hch@lst.de>
-> > >
-> > > XFS always inherits the SGID bit if it is set on the parent inode, while
-> > > the generic inode_init_owner does not do this in a few cases where it can
-> > > create a possible security problem, see commit 0fa3ecd87848
-> > > ("Fix up non-directory creation in SGID directories") for details.
-> > >
-> > > Switch XFS to use the generic helper for the normal path to fix this,
-> > > just keeping the simple field inheritance open coded for the case of the
-> > > non-sgid case with the bsdgrpid mount option.
-> > >
-> > > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> > > Reported-by: Christian Brauner <christian.brauner@ubuntu.com>
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > typedef uint64_t        xfs_fileoff_t;  /* block number in a file */
 > >
-> > Why did you not sign off on this if you are forwarding it on?
+> > #define XFS_FILEOFF_MAX(a,b) max_t(xfs_fileoff_t, (a), (b))
 > >
-> > Also, what is the git id of this commit in Linus's tree (we need that
-> > hint...)
+> >         xfs_fileoff_t br_startoff;
 > >
-> > Please fix both up and resend and get the ack of the stable xfs
-> > developers on it as well.
+> >         xfs_fileoff_t           lastaddr = 0;
+> >         xfs_fileoff_t           lowest, max;
+> >
+> > We end up with the following calculations (in FSBs, not bytes):
+> >
+> >         lowest + len    = 0x800000ULL + 1
+> >                         = 0x800001ULL
+> >
+> >         got.br_startoff - max   = 0ULL - 0x800000
+> >                                 = 0xffffffffff800000ULL
+> >
+> > and so the existing check is:
+> >
+> >         if (0 >= 0x800001ULL && 0xffffffffff800000 >= 1)
+> >
+> > which evaluates as false because the extent that was found is not
+> > beyond the initial offset (first_unused) that we need to start
+> > searching at.
+> >
+> > With your modification, this would now evaluate as:
+> >
+> >         if (0xffffffffff800000 >= 1)
+> >
+> > Because of the underflow, this would then evaluate as true  and we'd
+> > return 0 as the first unused offset. This is incorrect as we do not
+> > have a hole at offset 0, nor is it within the correct directory
+> > offset segment, nor is it within the search bounds we have
+> > specified.
+> >
+> > If these were all signed types, then your proposed code might be
+> > correct. But they are unsigned and hence we have to ensure that we
+> > handle overflow/underflow appropriately.
+> >
+> > Which leads me to ask: did you test this change before you send
+> > it to the list?
 > >
 > 
-> Varsha,
+> I am so sorry about the mistake, and thanks for your elaboration about
+> this problem. it indeed teaches me a lesson about the necessity of test
+> even for the simplest change.
 > 
-> FWIW, I re-tested the patch on top of v5.10.141,
-> so when re-posting [PATCH 5.10] you may add:
-> 
-> Tested-by: Amir Goldstein <amir73il@gmail.com>
-> 
-> Darrick or Christoph,
-> 
-> Can you please ACK this patch?
+> By the way, theoretically, in order to solve this, I wonder if we could
+> change the code in the following way:
+> ====
+> xfs_bmap_first_unused(
+>                 /*
+>                  * See if the hole before this extent will work.
+>                  */
+> -               if (got.br_startoff >= lowest + len &&
+> -                   got.br_startoff - max >= len)
+> +               if (got.br_startoff >= max + len)
 
-With all the bookkeepping bits corrected (and assuming that the VFS
-fixes have been or are about to be applied):
-
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Er... what problem does this solve?  Is there a defect in this range
+checking code?  Why not leave it alone, since that's less retesting for
+all of us.
 
 --D
 
+>                         break;
+> ====
 > 
 > Thanks,
-> Amir.
+> 
+> Stephen.
