@@ -2,112 +2,167 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8328ECAAD8
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 11:51:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F131C6FA82
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 12:34:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229978AbiINLvY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Sep 2022 07:51:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40164 "EHLO
+        id S229624AbiINMem (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Sep 2022 08:34:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229484AbiINLvW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 07:51:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4941377540;
-        Wed, 14 Sep 2022 04:51:21 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D859B61C1E;
-        Wed, 14 Sep 2022 11:51:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A191C433D7;
-        Wed, 14 Sep 2022 11:51:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663156280;
-        bh=X6kiqA3vAvyzSls3/AgVE2v/FEsxYi7tj84qKsyADRM=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=uJa0v9qeHwb8WVGx+Pmyq1IzVgQKGgEg/HVaKyYqi96uBhi47IDhEKa1x4Ul1y0mH
-         /w90TOMFwH8kX9giXvz3W7flfTWbaM/Q/B5u1FqNrs4/7m5vC5BEULUm6DShkSly67
-         R4FDaE8yKtWgRjMSHxFLOtV0ClClIS3Za4N0HVNMlYGwsaCBuyHg+x7bZb6huOD/AZ
-         +tCl7Au0A3qvfkB7e2I85bZG1RfS02XFGZrPXuvukiTg61tOt/3PRMn8l3KuDmd0yW
-         6EJnF4409xTaQzTOH2UpI4g9rYBZ9RZnaoTzMRSsuBl8UEr5bjmRE/e9vXQhQoG0+U
-         8NgmKnbtCRvmw==
-Message-ID: <f8a41b55efd1c59bc63950e8c1b734626d970a90.camel@kernel.org>
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-From:   Jeff Layton <jlayton@kernel.org>
-To:     NeilBrown <neilb@suse.de>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "xiubli@redhat.com" <xiubli@redhat.com>,
-        "brauner@kernel.org" <brauner@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "bfields@fieldses.org" <bfields@fieldses.org>,
-        "fweimer@redhat.com" <fweimer@redhat.com>,
+        with ESMTP id S229837AbiINMeh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 08:34:37 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3F425F6E
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2022 05:34:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1663158872;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0WuM4/y8wFci5Yb9BetZR1iZBMrvylQvcf2F8aOMYug=;
+        b=PG+VxQZ4qmaBwKFAThufYz8hGowxNj4H98LnzhNebHEy23vKIi/QkJszVj++euEBBxGKJx
+        Zn/0eM6iug97VQ05X6Gr3rsQwgryZw8Jx3cSVAdE9+uj5kWkuUfEqDUMRyVhDAu5f48QmY
+        OWvvh4cwYS/BQ6/Z2NkFz3kQp/hGLeU=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-183-9YCfd_pWO46Lwlzv1U1bsg-1; Wed, 14 Sep 2022 08:34:31 -0400
+X-MC-Unique: 9YCfd_pWO46Lwlzv1U1bsg-1
+Received: by mail-qt1-f197.google.com with SMTP id o22-20020ac85a56000000b0034481129ce6so12294354qta.19
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2022 05:34:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=0WuM4/y8wFci5Yb9BetZR1iZBMrvylQvcf2F8aOMYug=;
+        b=qHbaRYGOHUxvEElH5UoRBWDwcMyNYHWyDDVTMEo4At1kcJ+dZuHuncDYjXXdlPONgw
+         r3BJEJhsyfnx/I8YUjMsxcZ/sBD4MIt1BAojvJyov1YXIAe6KEENaxhLuln62TvYwg3o
+         T0KhIjO079irh6bt4kUopEwU03fjEknCo2RxbW+rCj4Js8YAacN5yc6kvMtstBpZEZn+
+         T84c6HZbk14EOPC1rnEcIv2W2VmZVYlc9uwDnrH4sMsllbCHeGMokZX0K09Sq4wDeygv
+         3KAAP8g6tL0EeBKp+KadvxNmO5oQfI4gCTZy2D3XQqdrMGEcJbLKuBkVnP/Po/+MYeQ5
+         7sxg==
+X-Gm-Message-State: ACgBeo2eyeErcqjw3jCxIkgjJauRzmGIFxFtqKCo2GwZGxau2sDXdzQ+
+        p2oD4HRjsRm7mL2JJPEin+lX391RR1bW2pR5JoGIeWwQ6N+fWo07P3bBTqjKzyZN06IA1+ckv9X
+        pKj5+Yew3vG7ZIZjh0dSq
+X-Received: by 2002:ae9:ef4f:0:b0:6cb:d294:3333 with SMTP id d76-20020ae9ef4f000000b006cbd2943333mr21462392qkg.511.1663158871080;
+        Wed, 14 Sep 2022 05:34:31 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR7+6bExWI+uWylwesVJstucAaJ7UtNHMvbmYB8afATxXLCYgE2pRAXKONekZ9BBOAOgRjMg6g==
+X-Received: by 2002:ae9:ef4f:0:b0:6cb:d294:3333 with SMTP id d76-20020ae9ef4f000000b006cbd2943333mr21462371qkg.511.1663158870858;
+        Wed, 14 Sep 2022 05:34:30 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id b3-20020a05620a118300b006b8f4ade2c9sm1650081qkk.19.2022.09.14.05.34.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Sep 2022 05:34:29 -0700 (PDT)
+Date:   Wed, 14 Sep 2022 08:34:26 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     =?utf-8?B?WWFuZywgWGlhby/mnagg5pmT?= <yangx.jy@fujitsu.com>
+Cc:     =?utf-8?B?UnVhbiwgU2hpeWFuZy/pmK4g5LiW6Ziz?= 
+        <ruansy.fnst@fujitsu.com>, "Darrick J. Wong" <djwong@kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
-        "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "tytso@mit.edu" <tytso@mit.edu>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
         "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "lczerner@redhat.com" <lczerner@redhat.com>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>
-Date:   Wed, 14 Sep 2022 07:51:16 -0400
-In-Reply-To: <166311144203.20483.1888757883086697314@noble.neil.brown.name>
-References: <91e31d20d66d6f47fe12c80c34b1cffdfc202b6a.camel@hammerspace.com>
-        , <166268467103.30452.1687952324107257676@noble.neil.brown.name>
-        , <166268566751.30452.13562507405746100242@noble.neil.brown.name>
-        , <29a6c2e78284e7947ddedf71e5cb9436c9330910.camel@hammerspace.com>
-        , <8d638cb3c63b0d2da8679b5288d1622fdb387f83.camel@hammerspace.com>
-        , <166270570118.30452.16939807179630112340@noble.neil.brown.name>
-        , <33d058be862ccc0ccaf959f2841a7e506e51fd1f.camel@kernel.org>
-        , <166285038617.30452.11636397081493278357@noble.neil.brown.name>
-        , <2e34a7d4e1a3474d80ee0402ed3bc0f18792443a.camel@kernel.org>
-        , <166302538820.30452.7783524836504548113@noble.neil.brown.name>
-        , <20220913011518.GE3600936@dread.disaster.area>
-        , <b67fe8b26977dc1213deb5ec815a53a26d31fbc0.camel@kernel.org>
-         <166311144203.20483.1888757883086697314@noble.neil.brown.name>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
+Message-ID: <YyHKUhOgHdTKPQXL@bfoster>
+References: <74b0a034-8c77-5136-3fbd-4affb841edcb@fujitsu.com>
+ <Ytl7yJJL1fdC006S@magnolia>
+ <7fde89dc-2e8f-967b-d342-eb334e80255c@fujitsu.com>
+ <YuNn9NkUFofmrXRG@magnolia>
+ <0ea1cbe1-79d7-c22b-58bf-5860a961b680@fujitsu.com>
+ <YusYDMXLYxzqMENY@magnolia>
+ <dd363bd8-2dbd-5d9c-0406-380b60c5f510@fujitsu.com>
+ <Yxs5Jb7Yt2c6R6eW@bfoster>
+ <7fdc9e88-f255-6edb-7964-a5a82e9b1292@fujitsu.com>
+ <76ea04b4-bad7-8cb3-d2c6-4ad49def4e05@fujitsu.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <76ea04b4-bad7-8cb3-d2c6-4ad49def4e05@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2022-09-14 at 09:24 +1000, NeilBrown wrote:
-> On Wed, 14 Sep 2022, Jeff Layton wrote:
-> >=20
-> > At that point, bumping i_version both before and after makes a bit more
-> > sense, since it better ensures that a change will be noticed, whether
-> > the related read op comes before or after the statx.
->=20
-> How does bumping it before make any sense at all?  Maybe it wouldn't
-> hurt much, but how does it help anyone at all?
->=20
+On Wed, Sep 14, 2022 at 05:38:02PM +0800, Yang, Xiao/杨 晓 wrote:
+> On 2022/9/14 14:44, Yang, Xiao/杨 晓 wrote:
+> > On 2022/9/9 21:01, Brian Foster wrote:
+> > > Yes.. I don't recall all the internals of the tools and test, but IIRC
+> > > it relied on discard to perform zeroing between checkpoints or some such
+> > > and avoid spurious failures. The purpose of running on dm-thin was
+> > > merely to provide reliable discard zeroing behavior on the target device
+> > > and thus to allow the test to run reliably.
+> > Hi Brian,
+> > 
+> > As far as I know, generic/470 was original designed to verify
+> > mmap(MAP_SYNC) on the dm-log-writes device enabling DAX. Due to the
+> > reason, we need to ensure that all underlying devices under
+> > dm-log-writes device support DAX. However dm-thin device never supports
+> > DAX so
+> > running generic/470 with dm-thin device always returns "not run".
+> > 
+> > Please see the difference between old and new logic:
+> > 
+> >            old logic                          new logic
+> > ---------------------------------------------------------------
+> > log-writes device(DAX)                 log-writes device(DAX)
+> >              |                                       |
+> > PMEM0(DAX) + PMEM1(DAX)       Thin device(non-DAX) + PMEM1(DAX)
+> >                                            |
+> >                                          PMEM0(DAX)
+> > ---------------------------------------------------------------
+> > 
+> > We think dm-thin device is not a good solution for generic/470, is there
+> > any other solution to support both discard zero and DAX?
+> 
+> Hi Brian,
+> 
+> I have sent a patch[1] to revert your fix because I think it's not good for
+> generic/470 to use thin volume as my revert patch[1] describes:
+> [1] https://lore.kernel.org/fstests/20220914090625.32207-1-yangx.jy@fujitsu.com/T/#u
+> 
 
-My assumption (maybe wrong) was that timestamp updates were done before
-the actual write by design. Does doing it before the write make increase
-the chances that the inode metadata writeout will get done in the same
-physical I/O as the data write? IDK, just speculating here.
+I think the history here is that generic/482 was changed over first in
+commit 65cc9a235919 ("generic/482: use thin volume as data device"), and
+then sometime later we realized generic/455,457,470 had the same general
+flaw and were switched over. The dm/dax compatibility thing was probably
+just an oversight, but I am a little curious about that because it should
+have been obvious that the change caused the test to no longer run. Did
+something change after that to trigger that change in behavior?
 
-If there's no benefit to doing it before then we should just move it
-afterward.
+> With the revert, generic/470 can always run successfully on my environment
+> so I wonder how to reproduce the out-of-order replay issue on XFS v5
+> filesystem?
+> 
 
+I don't quite recall the characteristics of the failures beyond that we
+were seeing spurious test failures with generic/482 that were due to
+essentially putting the fs/log back in time in a way that wasn't quite
+accurate due to the clearing by the logwrites tool not taking place. If
+you wanted to reproduce in order to revisit that, perhaps start with
+generic/482 and let it run in a loop for a while and see if it
+eventually triggers a failure/corruption..?
 
->   i_version must appear to change no sooner than the change it reflects
->   becomes visible and no later than the request which initiated that
->   change is acknowledged as complete.
->=20
-> Why would that definition ever not be satisfactory?
+> PS: I want to reproduce the issue and try to find a better solution to fix
+> it.
+> 
 
-It's fine with me.
---=20
-Jeff Layton <jlayton@kernel.org>
+It's been a while since I looked at any of this tooling to semi-grok how
+it works. Perhaps it could learn to rely on something more explicit like
+zero range (instead of discard?) or fall back to manual zeroing? If the
+eventual solution is simple and low enough overhead, it might make some
+sense to replace the dmthin hack across the set of tests mentioned
+above.
+
+Brian
+
+> Best Regards,
+> Xiao Yang
+> 
+> > 
+> > BTW, only log-writes, stripe and linear support DAX for now.
+> 
+
