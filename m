@@ -2,226 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2415AECAAD8
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 08:13:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A9C2C6FA91
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Sep 2022 09:39:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230044AbiININA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Sep 2022 04:13:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60042 "EHLO
+        id S230132AbiINJjA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Sep 2022 05:39:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229812AbiINIM6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 04:12:58 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAD994F19E
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2022 01:12:57 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S231623AbiINJih (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2022 05:38:37 -0400
+Received: from mail3.bemta32.messagelabs.com (mail3.bemta32.messagelabs.com [195.245.230.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D5061D30D;
+        Wed, 14 Sep 2022 02:38:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1663148294; i=@fujitsu.com;
+        bh=innjE3mvg9WVMWJzn0D35+35BLJpTlYCkV//jqcaPTo=;
+        h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=eWRfEpTdDCcjBYExPlWkki9pEX4dQ84IDqVrLIhElUaMXjQXqS/Xu1KLHEbpiswOZ
+         WQqtQho3toovWzXIe02pKYbXt7iPQK2H2gq4v5I7f26uNQc8krUGr1hq3cQG2FB8AC
+         QFo6WcoAcLbE/GEDQnI8GsZofQ9Ugflh3i6owAYCCEfGnXmsHuWiuSdtnfKDxDB0T3
+         Xe72ZatvfhmeiylaNfGNaJmXyCIBvAC2I6x1mYs8DfeRc4DkywUYpHqBgBG+g5a7/w
+         hHEikKkwbO8qaOLu+r8DeQfs2ZrhJJe3rLNuVOgtVmzITT5NqS7irFAchd//4WR0l7
+         MQn6mRMAHZMYA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDKsWRWlGSWpSXmKPExsViZ8MxSZd1oWK
+  ywctGZYt3n6ssthy7x2hx+QmfxekJi5gs9uw9yWJxedccNotdf3awW6z88YfVgcPj1CIJj80r
+  tDw2repk83ixeSajx/t9V9k8Pm+SC2CLYs3MS8qvSGDNeHl2I2vBd/6KjT2LWRoYm3i6GLk4h
+  AS2MEocnveRHcJZziTReuw6I4SzjVFiz7oDzF2MHBy8AnYSh3uSuhg5OVgEVCUWbTjEBGLzCg
+  hKnJz5hAXEFhVIkri64S4riC0s4CuxdlMfM4jNJuAoMW/WRjaQMSICeRLTFiuBjGcW+MAk0fP
+  3NxPErgvMEnf33AZr5hSwl1g25xVYM7OAhcTiNwfZIWx5ieats8HiEgKKEm1L/rFD2BUSjdMh
+  DpIQUJO4em4T8wRGoVlI7puFZNQsJKMWMDKvYrRKKspMzyjJTczM0TU0MNA1NDTVNdE1MrbUS
+  6zSTdRLLdUtTy0u0TXUSywv1kstLtYrrsxNzknRy0st2cQIjLKUYpb3Oxib+n7qHWKU5GBSEu
+  X98FUhWYgvKT+lMiOxOCO+qDQntfgQowwHh5IE7/65islCgkWp6akVaZk5wIiHSUtw8CiJ8Or
+  NAUrzFhck5hZnpkOkTjEac5zfuX8vM8e82f/2Mwux5OXnpUqJ866cD1QqAFKaUZoHNwiWiC4x
+  ykoJ8zIyMDAI8RSkFuVmlqDKv2IU52BUEub9OA9oCk9mXgncvldApzABnWJkLQ9ySkkiQkqqg
+  UlM6q6KVGtzXo7vbLXDB/2mv1XRFLEuTpnhvN6v/v7cDYrmWyPTKndkl0kucZWoM7tfJXPdSU
+  RIqHjyI+m9Pw0f7y95Nyt1dpmAQM4N77pnP389W1+m7Fxb6tVq8fWATMOjvIby4O8Z3w2nHWq
+  qXDf91JrdVRnRc+Zs4NV73u7Q/jrolVFS+613shdlFHLVBY/z7+lW1i9ctnLzHZbW+gkfuRjs
+  H/3gzup4LJ+hkn2k7/+PQGPJH4+Ka3tOSPeoy7JOfT37M++p7Rx69wrsC1pYO7qXX9ggnBK5w
+  nZWlDOzyD3Tl8E2MaWOX7/mPjvCOzVX9qTE1e+XJpZcl8/6594Qa8fjduybN+sDxt/xSizFGY
+  mGWsxFxYkAcPuL/L8DAAA=
+X-Env-Sender: yangx.jy@fujitsu.com
+X-Msg-Ref: server-10.tower-585.messagelabs.com!1663148293!213906!1
+X-Originating-IP: [62.60.8.146]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.87.3; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 25920 invoked from network); 14 Sep 2022 09:38:13 -0000
+Received: from unknown (HELO n03ukasimr02.n03.fujitsu.local) (62.60.8.146)
+  by server-10.tower-585.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 14 Sep 2022 09:38:13 -0000
+Received: from n03ukasimr02.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTP id 27CF01000CC;
+        Wed, 14 Sep 2022 10:38:13 +0100 (BST)
+Received: from R01UKEXCASM121.r01.fujitsu.local (R01UKEXCASM121 [10.183.43.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3FF55618E1
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2022 08:12:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 92AE9C43142
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2022 08:12:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663143176;
-        bh=n8weGN2l32EPVeJ0tXN8KDtw9ZI69VFxAbY01ro0/9E=;
-        h=From:To:Subject:Date:From;
-        b=W0eltCTqT5rTK+jT8CDyv/90bjEHWfe5tpmwV41MLDM4bV6Aa/rRchNVLgOu4ES6j
-         9M90sD+vcTFh5Lqq3IMZIy6xUn/bDc4UA4w0KBPDocuUeXxg45wM1VcD0JGV9kW4Au
-         1FRTUbmHw2ZUjBLeLh4Q1ATtfn5i9A4fLnppGDXkOA5PcJZ1f8uWZapr8LiWo0KyXQ
-         rXfytqL3lAGeH9EHLvuq+gjuqfjptESZOPGi1G8lhcdvGYro1pTXM84LamnpKjv9Dj
-         uIj1Av+0OelCxFhYF51kqg85d4ESnIuyKYmoXIWzT4MdJQckVpZGyPoiRpk2K99/fc
-         B2ZW4P9M4Mvkg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 809C8C433E7; Wed, 14 Sep 2022 08:12:56 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216486] New: [xfstests generic/447] xfs_scrub always complains 
- fs corruption
-Date:   Wed, 14 Sep 2022 08:12:56 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression
-Message-ID: <bug-216486-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTPS id 1AAEB100078;
+        Wed, 14 Sep 2022 10:38:13 +0100 (BST)
+Received: from [10.167.215.54] (10.167.215.54) by
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.32; Wed, 14 Sep 2022 10:38:09 +0100
+Message-ID: <76ea04b4-bad7-8cb3-d2c6-4ad49def4e05@fujitsu.com>
+Date:   Wed, 14 Sep 2022 17:38:02 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
+From:   =?UTF-8?B?WWFuZywgWGlhby/mnagg5pmT?= <yangx.jy@fujitsu.com>
+To:     Brian Foster <bfoster@redhat.com>,
+        =?UTF-8?B?UnVhbiwgU2hpeWFuZy/pmK4g5LiW6Ziz?= 
+        <ruansy.fnst@fujitsu.com>
+CC:     "Darrick J. Wong" <djwong@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@infradead.org" <hch@infradead.org>
+References: <20220609143435.393724-1-ruansy.fnst@fujitsu.com>
+ <Yr5AV5HaleJXMmUm@magnolia>
+ <74b0a034-8c77-5136-3fbd-4affb841edcb@fujitsu.com>
+ <Ytl7yJJL1fdC006S@magnolia>
+ <7fde89dc-2e8f-967b-d342-eb334e80255c@fujitsu.com>
+ <YuNn9NkUFofmrXRG@magnolia>
+ <0ea1cbe1-79d7-c22b-58bf-5860a961b680@fujitsu.com>
+ <YusYDMXLYxzqMENY@magnolia>
+ <dd363bd8-2dbd-5d9c-0406-380b60c5f510@fujitsu.com> <Yxs5Jb7Yt2c6R6eW@bfoster>
+ <7fdc9e88-f255-6edb-7964-a5a82e9b1292@fujitsu.com>
+In-Reply-To: <7fdc9e88-f255-6edb-7964-a5a82e9b1292@fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.215.54]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216486
+On 2022/9/14 14:44, Yang, Xiao/杨 晓 wrote:
+> On 2022/9/9 21:01, Brian Foster wrote:
+>> Yes.. I don't recall all the internals of the tools and test, but IIRC
+>> it relied on discard to perform zeroing between checkpoints or some such
+>> and avoid spurious failures. The purpose of running on dm-thin was
+>> merely to provide reliable discard zeroing behavior on the target device
+>> and thus to allow the test to run reliably.
+> Hi Brian,
+> 
+> As far as I know, generic/470 was original designed to verify
+> mmap(MAP_SYNC) on the dm-log-writes device enabling DAX. Due to the
+> reason, we need to ensure that all underlying devices under
+> dm-log-writes device support DAX. However dm-thin device never supports
+> DAX so
+> running generic/470 with dm-thin device always returns "not run".
+> 
+> Please see the difference between old and new logic:
+> 
+>            old logic                          new logic
+> ---------------------------------------------------------------
+> log-writes device(DAX)                 log-writes device(DAX)
+>              |                                       |
+> PMEM0(DAX) + PMEM1(DAX)       Thin device(non-DAX) + PMEM1(DAX)
+>                                            |
+>                                          PMEM0(DAX)
+> ---------------------------------------------------------------
+> 
+> We think dm-thin device is not a good solution for generic/470, is there
+> any other solution to support both discard zero and DAX?
 
-            Bug ID: 216486
-           Summary: [xfstests generic/447] xfs_scrub always complains  fs
-                    corruption
-           Product: File System
-           Version: 2.5
-    Kernel Version: 6.0.0-rc4+
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: zlang@redhat.com
-        Regression: No
+Hi Brian,
 
-Recently xfstests generic/447 always fails[1][2][3] on latest xfs kernel wi=
-th
-xfsprogs. It's reproducible on 1k blocksize and rmapbt enabled XFS (-b
-size=3D1024 -m rmapbt=3D1). Not sure if it's a kernel bug or a xfsprogs iss=
-ue, or
-an expected failure.
+I have sent a patch[1] to revert your fix because I think it's not good 
+for generic/470 to use thin volume as my revert patch[1] describes:
+[1] 
+https://lore.kernel.org/fstests/20220914090625.32207-1-yangx.jy@fujitsu.com/T/#u
 
-[1]
-SECTION       -- default
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 hp-xxxxxxxx-01
-6.0.0-0.rc4.20220906git53e99dcff61e.32.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC W=
-ed
-Sep 7 07:51:49 UTC 2022
-MKFS_OPTIONS  -- -f -b size=3D1024 -m rmapbt=3D1 /dev/sda3
-MOUNT_OPTIONS -- -o context=3Dsystem_u:object_r:root_t:s0 /dev/sda3 /mnt/sc=
-ratch
+With the revert, generic/470 can always run successfully on my 
+environment so I wonder how to reproduce the out-of-order replay issue 
+on XFS v5 filesystem?
 
-generic/447 246s ... _check_xfs_filesystem: filesystem on /dev/sda3 failed
-scrub
-(see /root/git/xfstests/results//default/generic/447.full for details)
+PS: I want to reproduce the issue and try to find a better solution to 
+fix it.
 
-[2]
-# cat results//default/generic/447.full
-meta-data=3D/dev/sda3              isize=3D512    agcount=3D16, agsize=3D32=
-76544 blks
-         =3D                       sectsz=3D512   attr=3D2, projid32bit=3D1
-         =3D                       crc=3D1        finobt=3D1, sparse=3D1, r=
-mapbt=3D1
-         =3D                       reflink=3D1    bigtime=3D1 inobtcount=3D=
-1 nrext64=3D0
-data     =3D                       bsize=3D1024   blocks=3D52424704, imaxpc=
-t=3D25
-         =3D                       sunit=3D256    swidth=3D256 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1
-log      =3Dinternal log           bsize=3D1024   blocks=3D65536, version=
-=3D2
-         =3D                       sectsz=3D512   sunit=3D256 blks, lazy-co=
-unt=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
-creating 2097152 blocks...
-wrote 2147483648/2147483648 bytes at offset 0
-2.000 GiB, 512 ops; 0:00:07.59 (269.766 MiB/sec and 67.4414 ops/sec)
-Punching file2...
-...done
-_check_xfs_filesystem: filesystem on /dev/sda3 failed scrub
-*** xfs_scrub -v -d -n output ***
-EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
-Phase 1: Find filesystem geometry.
-/mnt/scratch: using 1 threads to scrub.
-Phase 2: Check internal metadata.
-Corruption: AG 0 reference count btree: Repairs are required. (scrub.c line
-196)
-Info: AG 1 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 2 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 3 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 4 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 5 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 6 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 7 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 8 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 9 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 10 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 11 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 12 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 13 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 14 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 15 superblock: Optimization is possible. (scrub.c line 212)
-Phase 3: Scan all inodes.
-Info: inode 512 (0/512) inode record: Cross-referencing failed. (scrub.c li=
-ne
-117)
-Info: inode 515 (0/515) inode record: Cross-referencing failed. (scrub.c li=
-ne
-117)
-Info: inode 517 (0/517) inode record: Cross-referencing failed. (scrub.c li=
-ne
-117)
-Info: inode 517 (0/517) data block map: Cross-referencing failed. (scrub.c =
-line
-117)
-Info: /mnt/scratch: Optimizations of inode record are possible. (scrub.c li=
-ne
-253)
-Phase 5: Check directory tree.
-Info: /mnt/scratch: Filesystem has errors, skipping connectivity checks.
-(phase5.c line 392)
-Phase 7: Check summary counters.
-5.2GiB data used;  6 inodes used.
-1.1GiB data found; 5 inodes found.
-5 inodes counted; 6 inodes checked.
-/mnt/scratch: corruptions found: 1
-/mnt/scratch: Re-run xfs_scrub without -n.
-*** end xfs_scrub output
+Best Regards,
+Xiao Yang
 
-[3]
-# dmesg
-[329558.995550] run fstests generic/447 at 2022-09-13 14:01:24
-[329560.019866] systemd[1]: Started fstests-generic-447.scope - /usr/bin/ba=
-sh
--c test -w /proc/self/oom_score_adj && echo 250 > /proc/self/oom_score_adj;
-exec ./tests/generic/447.
-[329561.466573] XFS (sda3): Mounting V5 Filesystem
-[329561.542655] XFS (sda3): Ending clean mount
-[329561.596681] XFS (sda3): Unmounting Filesystem
-[329561.598209] systemd[1]: mnt-scratch.mount: Deactivated successfully.
-[329562.183863] XFS (sda3): Mounting V5 Filesystem
-[329562.265873] XFS (sda3): Ending clean mount
-[329727.320231] systemd[1]: mnt-scratch.mount: Deactivated successfully.
-[329729.160375] XFS (sda3): Unmounting Filesystem
-[329730.480159] XFS (sda3): Mounting V5 Filesystem
-[329730.559529] XFS (sda3): Ending clean mount
-[329730.595342] systemd[1]: fstests-generic-447.scope: Deactivated
-successfully.
-[329730.597524] systemd[1]: fstests-generic-447.scope: Consumed 2min 44.321s
-CPU time.
-[329730.641904] XFS (sda5): Unmounting Filesystem
-[329730.644716] systemd[1]: mnt-test.mount: Deactivated successfully.
-[329730.899455] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at
-your own risk!
-[329743.405813] XFS (sda3): Corruption detected during scrub.
-[329743.922150] XFS (sda3): Corruption detected during scrub.
-[329744.438304] XFS (sda3): Corruption detected during scrub.
-[329744.956067] XFS (sda3): Corruption detected during scrub.
-[329745.472617] XFS (sda3): Corruption detected during scrub.
-[329745.988849] XFS (sda3): Corruption detected during scrub.
-[329746.505812] XFS (sda3): Corruption detected during scrub.
-[329747.022342] XFS (sda3): Corruption detected during scrub.
-[329747.538927] XFS (sda3): Corruption detected during scrub.
-[329748.055586] XFS (sda3): Corruption detected during scrub.
-[329748.572338] XFS (sda3): Corruption detected during scrub.
-[329911.911869] XFS (sda3): Unmounting Filesystem
-[329911.913058] XFS (sda3): Uncorrected metadata errors detected; please run
-xfs_repair.
-[329911.913588] systemd[1]: mnt-scratch.mount: Deactivated successfully.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+> 
+> BTW, only log-writes, stripe and linear support DAX for now.
