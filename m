@@ -2,48 +2,53 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F4FCC6FA91
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Sep 2022 03:36:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B32EC6FA93
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Sep 2022 03:36:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230017AbiIPDgl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Sep 2022 23:36:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56970 "EHLO
+        id S229773AbiIPDgp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Sep 2022 23:36:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229773AbiIPDgS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Sep 2022 23:36:18 -0400
+        with ESMTP id S229679AbiIPDg2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Sep 2022 23:36:28 -0400
 Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1F8B89809;
-        Thu, 15 Sep 2022 20:36:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF1139D126;
+        Thu, 15 Sep 2022 20:36:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663299373; x=1694835373;
+  t=1663299386; x=1694835386;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=qfzx5y9B9XHcY/WNGZvpd9adYJw1q+hyjxJ0sZQS8JA=;
-  b=eWigBSljAb7z3Tke61JlKS+I5LMhsoVPUuVMsyfbmv1wmpceppEtGHnl
-   Ef8T/rnnqSilGFUJC5+qCkeFdvJF5fxFxNq9XIbxk+D8YiRKY9i/AxWn8
-   MIBXf6yFYEJfARh1927+PB1T43ejxqmHfeiCXYMNOFO8sG5wMhMpHPqyq
-   F3Cw0AmIrRLKzsHoowMreQ/0CVTVCVWaTHAzG0VWvpXVf873ywPrkOPSK
-   vX2FMlyhFunJuU9iyZWa8cZxocZ+hkmRdO5+yVrKs6+ce13H0/5qzynxU
-   la0rMnC0xCCCBilPJ2ZDZMiLWwxFVOPpGp2tYt2cOv698GODiAZPxUQc3
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10471"; a="325170420"
+  bh=ajaFzvrRPG16T180cU73eT4NP/l2RlRiUDdGWZj7wgU=;
+  b=M7BW1+EzIhNgpVsBTrNRSxKsaN2T/mazZoEBrJxq+h5Oxk59wtKgHC4V
+   uV7mKLkszUHF9dPikfeweM2+81CAq/yWd2GwEzHvLADFuKqvasA325CVf
+   nFt6s1kv1MmREQpFwhQ4WK0wGXZ/Yckb9k9C7AtyOz22p3nMcEZTb6FWr
+   AM2JZ89R/kREtAqLd8lis0oSzI7tBZkN/0KPlXaq9CzN5MWuZKrrDkCsu
+   4k4hqj4FnMgKpNVx7BrIXDwV6dWmT/VsS+PygiUsdUYOmlHdLx5RFeHfM
+   Gyeym6sGIpV86x1AtnngNrmb+V10+q7pqGoFXlwNLq4Bwb1KYV0JhqLZw
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10471"; a="325170450"
 X-IronPort-AV: E=Sophos;i="5.93,319,1654585200"; 
-   d="scan'208";a="325170420"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2022 20:36:13 -0700
+   d="scan'208";a="325170450"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2022 20:36:26 -0700
 X-IronPort-AV: E=Sophos;i="5.93,319,1654585200"; 
-   d="scan'208";a="648099963"
+   d="scan'208";a="679809498"
 Received: from colinlix-mobl.amr.corp.intel.com (HELO dwillia2-xfh.jf.intel.com) ([10.209.29.52])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2022 20:36:13 -0700
-Subject: [PATCH v2 11/18] devdax: Minor warning fixups
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2022 20:36:25 -0700
+Subject: [PATCH v2 13/18] dax: Prep mapping helpers for compound pages
 From:   Dan Williams <dan.j.williams@intel.com>
 To:     akpm@linux-foundation.org
-Cc:     hch@lst.de, linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+Cc:     Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Christoph Hellwig <hch@lst.de>,
+        John Hubbard <jhubbard@nvidia.com>,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
         linux-ext4@vger.kernel.org
-Date:   Thu, 15 Sep 2022 20:36:13 -0700
-Message-ID: <166329937313.2786261.6805174536617254263.stgit@dwillia2-xfh.jf.intel.com>
+Date:   Thu, 15 Sep 2022 20:36:25 -0700
+Message-ID: <166329938508.2786261.5544204703263725154.stgit@dwillia2-xfh.jf.intel.com>
 In-Reply-To: <166329930818.2786261.6086109734008025807.stgit@dwillia2-xfh.jf.intel.com>
 References: <166329930818.2786261.6086109734008025807.stgit@dwillia2-xfh.jf.intel.com>
 User-Agent: StGit/0.18-3-g996c
@@ -54,38 +59,97 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Fix a missing prototype warning for dev_dax_probe(), and fix
-dax_holder() comment block format.
+In preparation for device-dax to use the same mapping machinery as
+fsdax, add support for device-dax compound pages.
 
+Presently this is handled by dax_set_mapping() which is careful to only
+update page->mapping for head pages. However, it does that by looking at
+properties in the 'struct dev_dax' instance associated with the page.
+Switch to just checking PageHead() directly in the functions that
+iterate over pages in a large mapping.
+
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Jan Kara <jack@suse.cz>
+Cc: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: John Hubbard <jhubbard@nvidia.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/dax-private.h |    1 +
- drivers/dax/super.c       |    2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/dax/Kconfig   |    1 +
+ drivers/dax/mapping.c |   16 ++++++++++++++++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/drivers/dax/dax-private.h b/drivers/dax/dax-private.h
-index 1c974b7caae6..202cafd836e8 100644
---- a/drivers/dax/dax-private.h
-+++ b/drivers/dax/dax-private.h
-@@ -87,6 +87,7 @@ static inline struct dax_mapping *to_dax_mapping(struct device *dev)
- }
+diff --git a/drivers/dax/Kconfig b/drivers/dax/Kconfig
+index 205e9dda8928..2eddd32c51f4 100644
+--- a/drivers/dax/Kconfig
++++ b/drivers/dax/Kconfig
+@@ -9,6 +9,7 @@ if DAX
+ config DEV_DAX
+ 	tristate "Device DAX: direct access mapping device"
+ 	depends on TRANSPARENT_HUGEPAGE
++	depends on !FS_DAX_LIMITED
+ 	help
+ 	  Support raw access to differentiated (persistence, bandwidth,
+ 	  latency...) memory via an mmap(2) capable character
+diff --git a/drivers/dax/mapping.c b/drivers/dax/mapping.c
+index 70576aa02148..5d4b9601f183 100644
+--- a/drivers/dax/mapping.c
++++ b/drivers/dax/mapping.c
+@@ -345,6 +345,8 @@ static vm_fault_t dax_associate_entry(void *entry,
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		struct page *page = pfn_to_page(pfn);
  
- phys_addr_t dax_pgoff_to_phys(struct dev_dax *dev_dax, pgoff_t pgoff, unsigned long size);
-+int dev_dax_probe(struct dev_dax *dev_dax);
++		page = compound_head(page);
++
+ 		if (flags & DAX_COW) {
+ 			dax_mapping_set_cow(page);
+ 		} else {
+@@ -353,6 +355,9 @@ static vm_fault_t dax_associate_entry(void *entry,
+ 			page->index = index + i++;
+ 			page_ref_inc(page);
+ 		}
++
++		if (PageHead(page))
++			break;
+ 	}
  
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
- static inline bool dax_align_valid(unsigned long align)
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 9b5e2a5eb0ae..4909ad945a49 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -475,7 +475,7 @@ EXPORT_SYMBOL_GPL(put_dax);
- /**
-  * dax_holder() - obtain the holder of a dax device
-  * @dax_dev: a dax_device instance
--
-+ *
-  * Return: the holder's data which represents the holder if registered,
-  * otherwize NULL.
-  */
+ 	return 0;
+@@ -372,6 +377,9 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+ 
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		page = pfn_to_page(pfn);
++
++		page = compound_head(page);
++
+ 		if (dax_mapping_is_cow(page->mapping)) {
+ 			/* keep the CoW flag if this page is still shared */
+ 			if (page->index-- > 0)
+@@ -383,6 +391,9 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+ 		}
+ 		page->mapping = NULL;
+ 		page->index = 0;
++
++		if (PageHead(page))
++			break;
+ 	}
+ 
+ 	if (trunc && !dax_mapping_is_cow(page->mapping)) {
+@@ -660,11 +671,16 @@ static struct page *dax_zap_pages(struct xa_state *xas, void *entry)
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		struct page *page = pfn_to_page(pfn);
+ 
++		page = compound_head(page);
++
+ 		if (zap)
+ 			page_ref_dec(page);
+ 
+ 		if (!ret && !dax_page_idle(page))
+ 			ret = page;
++
++		if (PageHead(page))
++			break;
+ 	}
+ 
+ 	if (zap)
 
