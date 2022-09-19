@@ -2,257 +2,398 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47451C54EE9
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Sep 2022 13:13:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8221C6FA90
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Sep 2022 16:11:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230187AbiISNNL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Sep 2022 09:13:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34784 "EHLO
+        id S229706AbiISQL5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Sep 2022 12:11:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229737AbiISNNJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2022 09:13:09 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0833818B07;
-        Mon, 19 Sep 2022 06:13:08 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 3E6ECCE10C5;
-        Mon, 19 Sep 2022 13:13:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E5C3C433D6;
-        Mon, 19 Sep 2022 13:13:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663593184;
-        bh=zdqdu0iqK3lpkefJfnopHzwRQytsQHl1o57nfALcMmg=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=lF6uMc92oOq+K1gl/oWQybTPzfvNPS8M3b6CFkhXxto4SGv3tGZgj1tqQqFCZ5QQz
-         vOPPOdhl2tWMEHLGAezmh7/B/T+MtC8ky2uy9qdZ1o2DsTHPSeKp51RZ2XJ/YSByx0
-         fE3wYAvToilWekqsphVAbWHB5lahMYGkxP8o6C3Scpvr8lvsrFyycjm4x5G3YGE8Mx
-         IW6gR/A3YgbHSXV7vF6gqi0+EON1NM43LNG6Vml7g0vImEcDryVfDQPALTao/cSL0m
-         jBg7H42N5OzaCH/PNPtkLh7FqEuPCJNCKNcFsg5MKI12RsGgNvJCY3pOewTf4/2byu
-         NRLIvHDObfSKg==
-Message-ID: <87fb43b117472c0a4c688c37a925ac51738c8826.camel@kernel.org>
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Theodore Ts'o <tytso@mit.edu>, NeilBrown <neilb@suse.de>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        "bfields@fieldses.org" <bfields@fieldses.org>,
-        "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "brauner@kernel.org" <brauner@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "fweimer@redhat.com" <fweimer@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
-        "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "xiubli@redhat.com" <xiubli@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "lczerner@redhat.com" <lczerner@redhat.com>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
-Date:   Mon, 19 Sep 2022 09:13:00 -0400
-In-Reply-To: <20220918235344.GH3600936@dread.disaster.area>
-References: <577b6d8a7243aeee37eaa4bbb00c90799586bc48.camel@hammerspace.com>
-         <1a968b8e87f054e360877c9ab8cdfc4cfdfc8740.camel@kernel.org>
-         <0646410b6d2a5d19d3315f339b2928dfa9f2d922.camel@hammerspace.com>
-         <34e91540c92ad6980256f6b44115cf993695d5e1.camel@kernel.org>
-         <871f9c5153ddfe760854ca31ee36b84655959b83.camel@hammerspace.com>
-         <e8922bc821a40f5a3f0a1301583288ed19b6891b.camel@kernel.org>
-         <166328063547.15759.12797959071252871549@noble.neil.brown.name>
-         <YyQdmLpiAMvl5EkU@mit.edu>
-         <7027d1c2923053fe763e9218d10ce8634b56e81d.camel@kernel.org>
-         <24005713ad25370d64ab5bd0db0b2e4fcb902c1c.camel@kernel.org>
-         <20220918235344.GH3600936@dread.disaster.area>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
+        with ESMTP id S229688AbiISQL4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2022 12:11:56 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7FCF24BD8;
+        Mon, 19 Sep 2022 09:11:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663603914; x=1695139914;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=VN0E0H5V3LgM+cMDZKfSfUqI54GPl39S5DCoHTJfYUA=;
+  b=cCJvVmvPELlSBjSI9jdm4AcXRH8he7sIYhLpHYOIkk6qbcO7GmSuDiYc
+   CwqqpRFARHWCjb7WoFu+bPwPdTHcXSXynpQVUvOmnlE+NNkKHWQH1IXLz
+   xSpXWkdH5Pqjv77EAdFwzRNojjsUdsxJ1JYnO0bhlpXdeuGP0dHOEyUb+
+   zQBawjtl9UEAL1aZIg9AhPZhDJdzXJqYJ+6bz31DPUmvquRGXII3BJIE7
+   4EycTBqC98+m5z0xkThKmxtwQ6F+1DvA+EN1jjetVHf75i5+hgR63cfQ9
+   n+ixrx2NBR7nMkV4sVqfEVNiyl8koyVHp4LECDSHXUVtvJ/aePIZJpauS
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10475"; a="325735972"
+X-IronPort-AV: E=Sophos;i="5.93,328,1654585200"; 
+   d="scan'208";a="325735972"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2022 09:11:54 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,328,1654585200"; 
+   d="scan'208";a="620908317"
+Received: from fmsmsx602.amr.corp.intel.com ([10.18.126.82])
+  by fmsmga007.fm.intel.com with ESMTP; 19 Sep 2022 09:11:54 -0700
+Received: from fmsmsx611.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx602.amr.corp.intel.com (10.18.126.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 19 Sep 2022 09:11:54 -0700
+Received: from fmsmsx603.amr.corp.intel.com (10.18.126.83) by
+ fmsmsx611.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 19 Sep 2022 09:11:53 -0700
+Received: from fmsedg601.ED.cps.intel.com (10.1.192.135) by
+ fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31 via Frontend Transport; Mon, 19 Sep 2022 09:11:53 -0700
+Received: from NAM04-DM6-obe.outbound.protection.outlook.com (104.47.73.43) by
+ edgegateway.intel.com (192.55.55.70) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2375.31; Mon, 19 Sep 2022 09:11:53 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BrnQReM7ch1Qp2y8X/GpK3zZ910uFasvTHS7xUyOv1nslWaIluB7T+QPOxFlFZ7pL/59QiVKzc4QG0Xnz7aHSOjD4O6DZCHrLce3Jut8SV2d2sSTHe2MZ/T6ZvWri4KxOZcqiDB+K4KHHPPREUYHxuCyCQIfQiVOtNM4r/nIWHBRQv0JRBOSG2Za0/3fvVmWbZrBUdIRu17bA3cDREkRWJnoNJvD3tsFfH65DwX1SLPMKg9ni+d+ZoI8iG6hQSEFlBhPtJqd9L7FjFeDBMlNoZPaj/SBABoXBisOiX2Pgh0fhJnyeQboPs5zVl7u/LBZa6Opt81nD4nk7IjD26sElQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=DPcGIQmAaOH1CraeAEBL8KL2/8nG8ph3hbnGDKlHHMU=;
+ b=E/tdjWZ8m8xaB6tmwCoJo/TR4EpjX/iKzAmOVeauxlw3ALstS1m3azzuV1pNQMtuZBQEftb2Q9XcFfOIfAeKcesdmSqrKN3edXFGMcQQgahkwpaAemttWbfkJ1AhcCPkP05vthvCOfFFGNgbnEejev5jrmeReFmd13Vt5aMQyx8jU6Y8e0bMwZUQ703odEoqczsi3j9BMU+GbuZ4cT/ezGub4SwGurkkraTqkOeTiBuKul4v+IkOTDwx92gZWkRuykxdqlVwgZgIfm0xFkoZQnHNFU9DNX4nUy4WE7CYYioBj/M8BYbwT3F3XwOjWHL7g/ENprc2TZOD6g6YfAEwOQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
+ (2603:10b6:301:50::20) by BN9PR11MB5465.namprd11.prod.outlook.com
+ (2603:10b6:408:11e::18) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5632.21; Mon, 19 Sep
+ 2022 16:11:51 +0000
+Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
+ ([fe80::9847:345e:4c5b:ca12]) by MWHPR1101MB2126.namprd11.prod.outlook.com
+ ([fe80::9847:345e:4c5b:ca12%6]) with mapi id 15.20.5632.021; Mon, 19 Sep 2022
+ 16:11:51 +0000
+Date:   Mon, 19 Sep 2022 09:11:48 -0700
+From:   Dan Williams <dan.j.williams@intel.com>
+To:     Dave Chinner <david@fromorbit.com>,
+        Dan Williams <dan.j.williams@intel.com>
+CC:     <akpm@linux-foundation.org>, Matthew Wilcox <willy@infradead.org>,
+        "Jan Kara" <jack@suse.cz>, "Darrick J. Wong" <djwong@kernel.org>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Christoph Hellwig <hch@lst.de>,
+        John Hubbard <jhubbard@nvidia.com>,
+        <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>,
+        <linux-ext4@vger.kernel.org>
+Subject: Re: [PATCH v2 05/18] xfs: Add xfs_break_layouts() to the inode
+ eviction path
+Message-ID: <632894c4738d8_2a6ded294a@dwillia2-xfh.jf.intel.com.notmuch>
+References: <166329930818.2786261.6086109734008025807.stgit@dwillia2-xfh.jf.intel.com>
+ <166329933874.2786261.18236541386474985669.stgit@dwillia2-xfh.jf.intel.com>
+ <20220918225731.GG3600936@dread.disaster.area>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20220918225731.GG3600936@dread.disaster.area>
+X-ClientProxiedBy: SJ0PR03CA0027.namprd03.prod.outlook.com
+ (2603:10b6:a03:33a::32) To MWHPR1101MB2126.namprd11.prod.outlook.com
+ (2603:10b6:301:50::20)
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MWHPR1101MB2126:EE_|BN9PR11MB5465:EE_
+X-MS-Office365-Filtering-Correlation-Id: 915436a7-b58a-4fc5-ab16-08da9a59a989
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: m7J85kc01GbZYesk64ywtUxCaKywDjU9MMqop+mHGSDiRx+kglENiE3/kM63H4wzC/+vZ7wRZU4qjFOuHkTAthgcAgWIuz+EEmXZXfm/7SqiT7T8zqkvJdnmTq4lMVv6GBVkitPnGDoKvWlIPEs/g/DWju6mH8c2dCd8Y6ZDL+X6O1GVwHaTrDj8WkY2cLwApz19I5cokXrdLhBRqSTzYcHAuL2rHpk/gG9yoGbT4ta6aVLY5uO+vcm310j4/rHuTwGlD5sboVIvL9mrHji2KGJ2ybdkahCcX1YEWfkAjRD3YcRqG505RDBozD+5WD3Su2NM1R0sbMEoc9q7gzAopfEIdUqlMXaChsQk/fiEo74yj0mhsmza/bf+5Rd+NR4TUylR96hlRyzvddlID7IOrR2Ca6GjnQW0M5r/K7/lRsDXaZIY/x9d51n49hPE3VcH+ffsxWS2qVzGniqegXM+VW7MF7r8Q+RuKj/KnP4PiLW32XK0YWtAAGn8czeLyLtKgU5pcnwA5qHzvgGP4QtWttXFobE0Lgxfpov1B1DAazRsyrURGsAao9O4tuCTBnCgI0z+abmd5EwminM0yFAQHveJwdhcwNZpmiQZHtyXLVS7OUajgB3sxxqHQ8IYS3qu0Iq2YOupLKyRJc4sRIjlvPc0tp+fAS8rg+rm4yK4rVxAKu4+2SqAEdwOsobvVIOgGavHsb6r92tJRiTNZffwDQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1101MB2126.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(376002)(346002)(396003)(366004)(136003)(39860400002)(451199015)(6506007)(4326008)(2906002)(86362001)(38100700002)(8936002)(6512007)(9686003)(6486002)(26005)(66476007)(8676002)(66946007)(41300700001)(6666004)(478600001)(82960400001)(110136005)(83380400001)(66556008)(186003)(5660300002)(54906003)(316002)(7416002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?WHErHPzxFLpKovVGulo33I3Uj1UqsTYPR9mts+7cAEVm2AJ7Bk5GGt44MsNu?=
+ =?us-ascii?Q?CXz3gyx1OQX+CECh48YqX3xlDAiCKKBxxsDuEp6xKqPvS9k0ZRiK5xjVQbxJ?=
+ =?us-ascii?Q?XkX8O8hIV+2eEUym5wYM/7cEntbicv2GA2QivBVE6RCnFdbl3dw69t+vOhjM?=
+ =?us-ascii?Q?BsD/8hT3/4zmzCWopq0qnRPNJerSrFj6rhYP2tuGJUkf0i6n6SPPljg/9uXj?=
+ =?us-ascii?Q?ueTUOOQRGNpef4gup+nJJsSz4IFXAn36dv95sXH1PSkceLR8tvTSPb9zldtQ?=
+ =?us-ascii?Q?vqF4bXq1CguRsgcYL7cnn0J5DG1Y0wr9m+o4W3JsE/+sxz2TkEOzAaPJ3acP?=
+ =?us-ascii?Q?s2gKd26wy2g50tj7bXx+t6wq2WHg95c0JvFtWocpKyKdXrbXpct9cazkwOO6?=
+ =?us-ascii?Q?c03TCS1GwjeH1Q8hivW2TAZk0vLqcegtN58WkeOfg4Xz9l21hiA/D2kAdzls?=
+ =?us-ascii?Q?71wEpQOgIqxdlt4+TN0zR5UQzAc8JhtSDxWYduZXkcrJcliRpWuQjBeoC/gB?=
+ =?us-ascii?Q?r5gD+Seiy7MnK1P+jlcouZ6ACTiMEUAOuCLYJdaAHj11cplxlkYOtLC9ayoi?=
+ =?us-ascii?Q?pwYu9x7wPD73+7ZjCtxqOoRc2g1KYsD+qxpBVC4WVWeEOX1EIvsNObHPMhcI?=
+ =?us-ascii?Q?2QtukTP7HiE0aw56X1ytS2qPW/eGirSGTnUZ/V5hXmT2pFHbC05MJ49KdEuM?=
+ =?us-ascii?Q?IU5wD/dR+LwC1/72W90QSXj6mM14XBY/0N0qsWOrcltnz2e2jz2w4UfXzBG5?=
+ =?us-ascii?Q?uxBEX2Ioem0dGeS+MBu5S3/SmV+jIOpy1QfD9Jr3j8z7IvuAWKz+s4G0PBtm?=
+ =?us-ascii?Q?ysYl8DM9U35y9DEauq+Durn8q2M7QjwkmccFmeEgUyZPfCi1/ayLkb7/Dotq?=
+ =?us-ascii?Q?5u3P+vQmNRtDytmrQUz4AOKnKOeTKdQAlfFipUCNr3PeslVed81CgEespWxY?=
+ =?us-ascii?Q?xQKsERR1kuK0qjK9ScvIC392dmDVS07mKRL5D3GtvrYUDWMXHdMXu1/3I1nW?=
+ =?us-ascii?Q?R4b9VOvZbQ5kF+f65GzmSN0jZTHKPNbP3IIle6KRkkouTbmJvQsfYE1IGHch?=
+ =?us-ascii?Q?V4svDoJhykAWbIYc07oCQ4rJfk7pqJWKgIcabjKkp6VOUN1G3ZOf29B0SbGW?=
+ =?us-ascii?Q?elFms3R5vA4E2PgfnApD3phrlCIVqrhZXGh5AaE9UobLFl40mOA2g8n/TheM?=
+ =?us-ascii?Q?CYd6OIJgMnOum/PD9bxUJSN5oKZBklX09qbgagttG6k2uey1y0saSPTIrt0b?=
+ =?us-ascii?Q?fwlfpm8DEj0TWmuRORBwRxc6U3mrb+mAXgPRmv2xhPwJeF/W1ZK8ZNYv1yXQ?=
+ =?us-ascii?Q?JVMLoeVFNKq+it5SHN6HAgbZTMjbGap9AcGEkzIRaZq6jsXAOmxyuXZE2jZw?=
+ =?us-ascii?Q?ItZ1MNB0p3eTymeCOOgJ7e6KIQbquQwDfort66/mtZdZPouV8HF2XRnWMs8c?=
+ =?us-ascii?Q?pi9fFmHJj50e0QqwA5Rit5tGTxPfyZjldkveJZCPcA54hQ4cCb4CV6wnwcrQ?=
+ =?us-ascii?Q?/rD/hI9OvmxuCvOT6qsu9e3dNcIRix27sP1qXcoa3yyUU8iVfgxurBnV4Hrl?=
+ =?us-ascii?Q?Zf5Xy31dT6hMSEa1ahl9tBtNz66R9Pyaw//7cf2GLJglhWvaidgUX9Sy0Wy5?=
+ =?us-ascii?Q?ZA=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 915436a7-b58a-4fc5-ab16-08da9a59a989
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR1101MB2126.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Sep 2022 16:11:51.5828
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: JezHI4rgMyDoSGRnr8WK/A1KuAknPtjwfKN4hK+hX+bYSMY4gIqD9izjko0TTliZYOmyLPpAhdRF63uGaqO/tL3QM6MSVr1RLcPY8CE7CUM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR11MB5465
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2022-09-19 at 09:53 +1000, Dave Chinner wrote:
-> On Fri, Sep 16, 2022 at 11:11:34AM -0400, Jeff Layton wrote:
-> > On Fri, 2022-09-16 at 07:36 -0400, Jeff Layton wrote:
-> > > On Fri, 2022-09-16 at 02:54 -0400, Theodore Ts'o wrote:
-> > > > On Fri, Sep 16, 2022 at 08:23:55AM +1000, NeilBrown wrote:
-> > > > > > > If the answer is that 'all values change', then why store the=
- crash
-> > > > > > > counter in the inode at all? Why not just add it as an offset=
- when
-> > > > > > > you're generating the user-visible change attribute?
-> > > > > > >=20
-> > > > > > > i.e. statx.change_attr =3D inode->i_version + (crash counter =
-* offset)
-> > > >=20
-> > > > I had suggested just hashing the crash counter with the file system=
-'s
-> > > > on-disk i_version number, which is essentially what you are suggest=
-ed.
-> > > >=20
-> > > > > > Yes, if we plan to ensure that all the change attrs change afte=
-r a
-> > > > > > crash, we can do that.
-> > > > > >=20
-> > > > > > So what would make sense for an offset? Maybe 2**12? One would =
-hope that
-> > > > > > there wouldn't be more than 4k increments before one of them ma=
-de it to
-> > > > > > disk. OTOH, maybe that can happen with teeny-tiny writes.
-> > > > >=20
-> > > > > Leave it up the to filesystem to decide.  The VFS and/or NFSD sho=
-uld
-> > > > > have not have part in calculating the i_version.  It should be en=
-tirely
-> > > > > in the filesystem - though support code could be provided if comm=
-on
-> > > > > patterns exist across filesystems.
-> > > >=20
-> > > > Oh, *heck* no.  This parameter is for the NFS implementation to
-> > > > decide, because it's NFS's caching algorithms which are at stake he=
-re.
-> > > >=20
-> > > > As a the file system maintainer, I had offered to make an on-disk
-> > > > "crash counter" which would get updated when the journal had gotten
-> > > > replayed, in addition to the on-disk i_version number.  This will b=
-e
-> > > > available for the Linux implementation of NFSD to use, but that's u=
-p
-> > > > to *you* to decide how you want to use them.
-> > > >=20
-> > > > I was perfectly happy with hashing the crash counter and the i_vers=
-ion
-> > > > because I had assumed that not *that* much stuff was going to be
-> > > > cached, and so invalidating all of the caches in the unusual case
-> > > > where there was a crash was acceptable.  After all it's a !@#?!@
-> > > > cache.  Caches sometimmes get invalidated.  "That is the order of
-> > > > things." (as Ramata'Klan once said in "Rocks and Shoals")
-> > > >=20
-> > > > But if people expect that multiple TB's of data is going to be stor=
-ed;
-> > > > that cache invalidation is unacceptable; and that a itsy-weeny chan=
-ce
-> > > > of false negative failures which might cause data corruption might =
-be
-> > > > acceptable tradeoff, hey, that's for the system which is providing
-> > > > caching semantics to determine.
-> > > >=20
-> > > > PLEASE don't put this tradeoff on the file system authors; I would
-> > > > much prefer to leave this tradeoff in the hands of the system which=
- is
-> > > > trying to do the caching.
-> > > >=20
-> > >=20
-> > > Yeah, if we were designing this from scratch, I might agree with leav=
-ing
-> > > more up to the filesystem, but the existing users all have pretty muc=
-h
-> > > the same needs. I'm going to plan to try to keep most of this in the
-> > > common infrastructure defined in iversion.h.
-> > >=20
-> > > Ted, for the ext4 crash counter, what wordsize were you thinking? I
-> > > doubt we'll be able to use much more than 32 bits so a larger integer=
- is
-> > > probably not worthwhile. There are several holes in struct super_bloc=
-k
-> > > (at least on x86_64), so adding this field to the generic structure
-> > > needn't grow it.
-> >=20
-> > That said, now that I've taken a swipe at implementing this, I need mor=
-e
-> > information than just the crash counter. We need to multiply the crash
-> > counter with a reasonable estimate of the maximum number of individual
-> > writes that could occur between an i_version being incremented and that
-> > value making it to the backing store.
-> >=20
-> > IOW, given a write that bumps the i_version to X, how many more write
-> > calls could race in before X makes it to the platter? I took a SWAG and
-> > said 4k in an earlier email, but I don't really have a way to know, and
-> > that could vary wildly with different filesystems and storage.
-> >=20
-> > What I'd like to see is this in struct super_block:
-> >=20
-> > 	u32		s_version_offset;
->=20
-> 	u64		s_version_salt;
->=20
+Dave Chinner wrote:
+> On Thu, Sep 15, 2022 at 08:35:38PM -0700, Dan Williams wrote:
+> > In preparation for moving DAX pages to be 0-based rather than 1-based
+> > for the idle refcount, the fsdax core wants to have all mappings in a
+> > "zapped" state before truncate. For typical pages this happens naturally
+> > via unmap_mapping_range(), for DAX pages some help is needed to record
+> > this state in the 'struct address_space' of the inode(s) where the page
+> > is mapped.
+> > 
+> > That "zapped" state is recorded in DAX entries as a side effect of
+> > xfs_break_layouts(). Arrange for it to be called before all truncation
+> > events which already happens for truncate() and PUNCH_HOLE, but not
+> > truncate_inode_pages_final(). Arrange for xfs_break_layouts() before
+> > truncate_inode_pages_final().
+> 
+> Ugh. That's nasty and awful.
+> 
+> 
+> 
+> > Cc: Matthew Wilcox <willy@infradead.org>
+> > Cc: Jan Kara <jack@suse.cz>
+> > Cc: "Darrick J. Wong" <djwong@kernel.org>
+> > Cc: Jason Gunthorpe <jgg@nvidia.com>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: John Hubbard <jhubbard@nvidia.com>
+> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> > ---
+> >  fs/xfs/xfs_file.c  |   13 +++++++++----
+> >  fs/xfs/xfs_inode.c |    3 ++-
+> >  fs/xfs/xfs_inode.h |    6 ++++--
+> >  fs/xfs/xfs_super.c |   22 ++++++++++++++++++++++
+> >  4 files changed, 37 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 556e28d06788..d3ff692d5546 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -816,7 +816,8 @@ xfs_wait_dax_page(
+> >  int
+> >  xfs_break_dax_layouts(
+> >  	struct inode		*inode,
+> > -	bool			*retry)
+> > +	bool			*retry,
+> > +	int			state)
+> >  {
+> >  	struct page		*page;
+> >  
+> > @@ -827,8 +828,8 @@ xfs_break_dax_layouts(
+> >  		return 0;
+> >  
+> >  	*retry = true;
+> > -	return ___wait_var_event(page, dax_page_idle(page), TASK_INTERRUPTIBLE,
+> > -				 0, 0, xfs_wait_dax_page(inode));
+> > +	return ___wait_var_event(page, dax_page_idle(page), state, 0, 0,
+> > +				 xfs_wait_dax_page(inode));
+> >  }
+> >  
+> >  int
+> > @@ -839,14 +840,18 @@ xfs_break_layouts(
+> >  {
+> >  	bool			retry;
+> >  	int			error;
+> > +	int			state = TASK_INTERRUPTIBLE;
+> >  
+> >  	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
+> >  
+> >  	do {
+> >  		retry = false;
+> >  		switch (reason) {
+> > +		case BREAK_UNMAP_FINAL:
+> > +			state = TASK_UNINTERRUPTIBLE;
+> > +			fallthrough;
+> >  		case BREAK_UNMAP:
+> > -			error = xfs_break_dax_layouts(inode, &retry);
+> > +			error = xfs_break_dax_layouts(inode, &retry, state);
+> >  			if (error || retry)
+> >  				break;
+> >  			fallthrough;
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 28493c8e9bb2..72ce1cb72736 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -3452,6 +3452,7 @@ xfs_mmaplock_two_inodes_and_break_dax_layout(
+> >  	struct xfs_inode	*ip1,
+> >  	struct xfs_inode	*ip2)
+> >  {
+> > +	int			state = TASK_INTERRUPTIBLE;
+> >  	int			error;
+> >  	bool			retry;
+> >  	struct page		*page;
+> > @@ -3463,7 +3464,7 @@ xfs_mmaplock_two_inodes_and_break_dax_layout(
+> >  	retry = false;
+> >  	/* Lock the first inode */
+> >  	xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
+> > -	error = xfs_break_dax_layouts(VFS_I(ip1), &retry);
+> > +	error = xfs_break_dax_layouts(VFS_I(ip1), &retry, state);
+> >  	if (error || retry) {
+> >  		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
+> >  		if (error == 0 && retry)
+> > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> > index fa780f08dc89..e4994eb6e521 100644
+> > --- a/fs/xfs/xfs_inode.h
+> > +++ b/fs/xfs/xfs_inode.h
+> > @@ -454,11 +454,13 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
+> >   * layout-holder has a consistent view of the file's extent map. While
+> >   * BREAK_WRITE breaks can be satisfied by recalling FL_LAYOUT leases,
+> >   * BREAK_UNMAP breaks additionally require waiting for busy dax-pages to
+> > - * go idle.
+> > + * go idle. BREAK_UNMAP_FINAL is an uninterruptible version of
+> > + * BREAK_UNMAP.
+> >   */
+> >  enum layout_break_reason {
+> >          BREAK_WRITE,
+> >          BREAK_UNMAP,
+> > +        BREAK_UNMAP_FINAL,
+> >  };
+> >  
+> >  /*
+> > @@ -531,7 +533,7 @@ xfs_itruncate_extents(
+> >  }
+> >  
+> >  /* from xfs_file.c */
+> > -int	xfs_break_dax_layouts(struct inode *inode, bool *retry);
+> > +int	xfs_break_dax_layouts(struct inode *inode, bool *retry, int state);
+> >  int	xfs_break_layouts(struct inode *inode, uint *iolock,
+> >  		enum layout_break_reason reason);
+> >  
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 9ac59814bbb6..ebb4a6eba3fc 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -725,6 +725,27 @@ xfs_fs_drop_inode(
+> >  	return generic_drop_inode(inode);
+> >  }
+> >  
+> > +STATIC void
+> > +xfs_fs_evict_inode(
+> > +	struct inode		*inode)
+> > +{
+> > +	struct xfs_inode	*ip = XFS_I(inode);
+> > +	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+> > +	long			error;
+> > +
+> > +	xfs_ilock(ip, iolock);
+> 
+> I'm guessing you never ran this through lockdep.
 
-IDK...it _is_ an offset since we're folding it in with addition, and it
-has a real meaning. Filesystems do need to be cognizant of that fact, I
-think.
+I always run with lockdep enabled in my development kernels, but maybe my
+testing was insufficient? Somewhat moot with your concerns below...
 
-Also does anyone have a preference on doing this vs. a get_version_salt
-or get_version_offset sb operation? I figured the value should be mostly
-static so it'd be nice to avoid an operation for it.
+> The general rule is that XFS should not take inode locks directly in
+> the inode eviction path because lockdep tends to throw all manner of
+> memory reclaim related false positives when we do this. We most
+> definitely don't want to be doing this for anything other than
+> regular files that are DAX enabled, yes?
 
-> > ...and then individual filesystems can calculate:
-> >=20
-> > 	crash_counter * max_number_of_writes
-> >=20
-> > and put the correct value in there at mount time.
->=20
-> Other filesystems might not have a crash counter but have other
-> information that can be substituted, like a mount counter or a
-> global change sequence number that is guaranteed to increment from
-> one mount to the next.=20
->=20
+Guilty. I sought to satisfy the locking expectations of the
+break_layouts internals rather than drop the unnecessary locking.
 
-The problem there is that you're going to cause the invalidation of all
-of the NFS client's cached regular files, even on clean server reboots.
-That's not a desirable outcome.
+> 
+> We also don't want to arbitrarily block memory reclaim for long
+> periods of time waiting on an inode lock.  People seem to get very
+> upset when we introduce unbound latencies into the memory reclaim
+> path...
+> 
+> Indeed, what are you actually trying to serialise against here?
+> Nothing should have a reference to the inode, nor should anything be
+> able to find and take a new reference to the inode while it is being
+> evicted....
 
-> Further, have you thought about what "max number of writes" might
-> be in ten years time? e.g.  what happens if a filesysetm as "max
-> number of writes" being greater than 2^32? I mean, we already have
-> machines out there running Linux with 64-128TB of physical RAM, so
-> it's already practical to hold > 2^32 individual writes to a single
-> inode that each bump i_version in memory....
+Ok.
 
-> So when we consider this sort of scale, the "crash counter * max
-> writes" scheme largely falls apart because "max writes" is a really
-> large number to begin with. We're going to be stuck with whatever
-> algorithm is decided on for the foreseeable future, so we must
-> recognise that _we've already overrun 32 bit counter schemes_ in
-> terms of tracking "i_version changes in memory vs what we have on
-> disk".
->=20
-> Hence I really think that we should be leaving the implementation of
-> the salt value to the individual filesysetms as different
-> filesytsems are aimed at different use cases and so may not
-> necessarily have to all care about the same things (like 2^32 bit
-> max write overruns).  All the high level VFS code then needs to do
-> is add the two together:
->=20
-> 	statx.change_attr =3D inode->i_version + sb->s_version_salt;
->=20
+> 
+> > +	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP_FINAL);
+> > +
+> > +	/* The final layout break is uninterruptible */
+> > +	ASSERT_ALWAYS(!error);
+> 
+> We don't do error handling with BUG(). If xfs_break_layouts() truly
+> can't fail (what happens if the fs is shut down and some internal
+> call path now detects that and returns -EFSCORRUPTED?), theni
+> WARN_ON_ONCE() and continuing to tear down the inode so the system
+> is not immediately compromised is the appropriate action here.
+> 
+> > +
+> > +	truncate_inode_pages_final(&inode->i_data);
+> > +	clear_inode(inode);
+> > +
+> > +	xfs_iunlock(ip, iolock);
+> > +}
+> 
+> That all said, this really looks like a bit of a band-aid.
 
-Yeah, I have thought about that. I was really hoping that file systems
-wouldn't leave so many ephemeral changes lying around before logging
-something. It's actually not as bad as it sounds. You'd need that number
-of inode changes in memory + queries of i_version, alternating. When
-there are no queries, nothing changes. But, the number of queries is
-hard to gauge too as it's very dependent on workload, hardware, etc.
+It definitely is since DAX is in this transitory state between doing
+some activities page-less and others with page metadata. If DAX was
+fully committed to behaving like a typical page then
+unmap_mapping_range() would have already satisfied this reference
+counting situation.
 
-If the sky really is the limit on unlogged inode changes, then what do
-you suggest? One idea:
+> I can't work out why would we we ever have an actual layout lease
+> here that needs breaking given they are file based and active files
+> hold a reference to the inode. If we ever break that, then I suspect
+> this change will cause major problems for anyone using pNFS with XFS
+> as xfs_break_layouts() can end up waiting for NFS delegation
+> revocation. This is something we should never be doing in inode
+> eviction/memory reclaim.
+> 
+> Hence I have to ask why this lease break is being done
+> unconditionally for all inodes, instead of only calling
+> xfs_break_dax_layouts() directly on DAX enabled regular files?  I
+> also wonder what exciting new system deadlocks this will create
+> because BREAK_UNMAP_FINAL can essentially block forever waiting on
+> dax mappings going away. If that DAX mapping reclaim requires memory
+> allocations.....
 
-We could try to kick off a write_inode in the background when the
-i_version gets halfway to the limit. Eventually the nfs server could
-just return NFS4ERR_DELAY on a GETATTR if it looked like the reported
-version was going to cross the threshold. It'd be ugly, but hopefully
-wouldn't happen much if things are tuned well.
+There should be no memory allocations in the DAX mapping reclaim path.
+Also, the page pins it waits for are precluded from being GUP_LONGTERM.
 
-Tracking that info might be expensive though. We'd need at least another
-u64 field in struct inode for the latest on-disk version. Maybe we can
-keep that in the fs-specific part of the inode somehow so we don't need
-to grow generic struct inode?
---=20
-Jeff Layton <jlayton@kernel.org>
+> 
+> /me looks deeper into the dax_layout_busy_page() stuff and realises
+> that both ext4 and XFS implementations of ext4_break_layouts() and
+> xfs_break_dax_layouts() are actually identical.
+> 
+> That is, filemap_invalidate_unlock() and xfs_iunlock(ip,
+> XFS_MMAPLOCK_EXCL) operate on exactly the same
+> inode->i_mapping->invalidate_lock. Hence the implementations in ext4
+> and XFS are both functionally identical.
+
+I assume you mean for the purposes of this "final" break since
+xfs_file_allocate() holds XFS_IOLOCK_EXCL over xfs_break_layouts().
+
+> Further, when the inode is
+> in the eviction path there is no reason for needing to take that
+> mapping->invalidation_lock to invalidate remaining stale DAX
+> mappings before truncate blasts them away.
+> 
+> IOWs, I don't see why fixing this problem needs to add new code to
+> XFS or ext4 at all. The DAX mapping invalidation and waiting can be
+> done enitrely within truncate_inode_pages_final() (conditional on
+> IS_DAX()) after mapping_set_exiting() has been set with generic code
+> and it should not require locking at all. I also think that
+> ext4_break_layouts() and xfs_break_dax_layouts() should be merged
+> into a generic dax infrastructure function so the filesystems don't
+> need to care about the internal details of DAX mappings at all...
+
+Yes, I think I can make that happen. Thanks Dave.
