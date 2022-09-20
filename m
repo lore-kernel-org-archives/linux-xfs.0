@@ -2,243 +2,203 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66F1FC6FA92
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Sep 2022 00:16:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57B17C54EE9
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Sep 2022 01:17:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229802AbiITAQ4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Sep 2022 20:16:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49036 "EHLO
+        id S229581AbiITBRZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Sep 2022 21:17:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbiITAQx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2022 20:16:53 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6483E45040;
-        Mon, 19 Sep 2022 17:16:52 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-183-60.pa.nsw.optusnet.com.au [49.180.183.60])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 26A048AA16C;
-        Tue, 20 Sep 2022 10:16:47 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oaQwP-009ndF-PX; Tue, 20 Sep 2022 10:16:45 +1000
-Date:   Tue, 20 Sep 2022 10:16:45 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Theodore Ts'o <tytso@mit.edu>, NeilBrown <neilb@suse.de>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        "bfields@fieldses.org" <bfields@fieldses.org>,
-        "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "brauner@kernel.org" <brauner@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "fweimer@redhat.com" <fweimer@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
-        "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "xiubli@redhat.com" <xiubli@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "lczerner@redhat.com" <lczerner@redhat.com>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-Message-ID: <20220920001645.GN3600936@dread.disaster.area>
-References: <0646410b6d2a5d19d3315f339b2928dfa9f2d922.camel@hammerspace.com>
- <34e91540c92ad6980256f6b44115cf993695d5e1.camel@kernel.org>
- <871f9c5153ddfe760854ca31ee36b84655959b83.camel@hammerspace.com>
- <e8922bc821a40f5a3f0a1301583288ed19b6891b.camel@kernel.org>
- <166328063547.15759.12797959071252871549@noble.neil.brown.name>
- <YyQdmLpiAMvl5EkU@mit.edu>
- <7027d1c2923053fe763e9218d10ce8634b56e81d.camel@kernel.org>
- <24005713ad25370d64ab5bd0db0b2e4fcb902c1c.camel@kernel.org>
- <20220918235344.GH3600936@dread.disaster.area>
- <87fb43b117472c0a4c688c37a925ac51738c8826.camel@kernel.org>
+        with ESMTP id S229472AbiITBRY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2022 21:17:24 -0400
+Received: from mail1.bemta37.messagelabs.com (mail1.bemta37.messagelabs.com [85.158.142.113])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 913F1422DD;
+        Mon, 19 Sep 2022 18:17:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1663636640; i=@fujitsu.com;
+        bh=D8XfSt7EsVqxu3xA7NaRDArw/jwaG+CKPnYKQWjU1+A=;
+        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=F1YiOkQtfzMgn8TwgFdnyHazVmrQ0qVlEqyJV4tgCsurMW7LLQ/+UD6PRs8IpYIR6
+         fiL0h40I6d+aPLaX9H0DHYovh3YkAqDr9KQ5B5ERFFS4KijhkQSK5ybc0Xn9Mn1CPy
+         mN/bDiuAMY6jLZuWL8e51T1JVN038zQuz+V841aGdO6qhmLg1pUoKsLGUuA4oyehPb
+         aKoY8syfFy4LR+sdVtWLqhyp1kreicYvikdKMqi6kuWsszeeZrr9l9U9YkU/j5YVj7
+         acWLvLbR3Ouz9IE7fLZvR0ODLnCWOtjvzavk/3CbyJpHdUy5pMSeb0gl5Xso+oGnnf
+         WOkXLiSRxROwQ==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJKsWRWlGSWpSXmKPExsViZ8ORqDtPRDP
+  ZYNFycYvpUy8wWmw5do/R4vITPos9e0+yWFzeNYfN4t6a/6wWu/7sYLdY+eMPqwOHx6lFEh6L
+  97xk8ti0qpPNY9OnSeweLzbPZPT4vEkugC2KNTMvKb8igTVjYkMXY8EtzYo3e56xNTCuVu5i5
+  OIQEtjCKPH/3RZmCGc5k8TN8/PYIZztjBJzbnUzdjFycPAK2Em0zLTtYuTkYBFQlfi+eAkjiM
+  0rIChxcuYTFhBbVCBZ4u7h9WC2sICjxKupLWA1IgJqEpMm7QBbwCxwhFHix/IWqAVLGCVOTr7
+  EDlLFJqAjcWHBX1YQm1PAWmLiuQlgNrOAhcTiNwfZIWx5ieats5lBDpIQUJKY2R0PEpYQqJBo
+  nH6ICcJWk7h6bhPzBEahWUjum4Vk0iwkkxYwMq9itE4qykzPKMlNzMzRNTQw0DU0NNW1NNM1N
+  NNLrNJN1Est1c3LLyrJ0DXUSywv1kstLtYrrsxNzknRy0st2cQIjLWU4gSBHYx79/3SO8Qoyc
+  GkJMrLVaeRLMSXlJ9SmZFYnBFfVJqTWnyIUYaDQ0mC115QM1lIsCg1PbUiLTMHGPcwaQkOHiU
+  R3jJuoDRvcUFibnFmOkTqFKMux9TZ//YzC7Hk5eelSonzzgWZIQBSlFGaBzcCloIuMcpKCfMy
+  MjAwCPEUpBblZpagyr9iFOdgVBLm7QRZxZOZVwK36RXQEUxAR9xQUQc5oiQRISXVwCR1aH8la
+  8/Dm0/5dTRjgg+s3G08T++O0/H+jw6hBgtSDn4+Os3k3IbZv3/8Lj9+X/rItYtTU1nWS1kcnp
+  /9yJrbIvK1nF/T/U1isrfv/lv46tuPrCBPttBC5lDRmTFamnOj1ZR5GRr0ygNtAlw954idPT3
+  rm+w7rm/sUS2FQR6JDeEJLx5oXjn0a86Rlxu4MhyOuk3gzrov7fraVWHZof1NfpJdJu3Ped8u
+  m5k9tc4i3mu+3PMVc9fXFSod0yqM0nd6fjPh5Ql9i5p1d/VVua4kn9I7vfjD/yczJRdc+OBo6
+  FfAFqpc96orfqH3PI/jnNzh0rlFxf/Xp1nYPPilJcRo8agl6xBXpPj5ysiZb5VYijMSDbWYi4
+  oTAZ9sfPi8AwAA
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-9.tower-728.messagelabs.com!1663636637!206431!1
+X-Originating-IP: [62.60.8.97]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.87.3; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 13415 invoked from network); 20 Sep 2022 01:17:18 -0000
+Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
+  by server-9.tower-728.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 20 Sep 2022 01:17:18 -0000
+Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id B496010019A;
+        Tue, 20 Sep 2022 02:17:17 +0100 (BST)
+Received: from R01UKEXCASM121.r01.fujitsu.local (R01UKEXCASM121 [10.183.43.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id A6134100197;
+        Tue, 20 Sep 2022 02:17:17 +0100 (BST)
+Received: from [192.168.22.78] (10.167.225.141) by
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.32; Tue, 20 Sep 2022 02:17:14 +0100
+Message-ID: <1bc45fd2-f5e2-dd7b-0c9e-e3ab2527d736@fujitsu.com>
+Date:   Tue, 20 Sep 2022 09:17:07 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87fb43b117472c0a4c688c37a925ac51738c8826.camel@kernel.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=63290673
-        a=mj5ET7k2jFntY++HerHxfg==:117 a=mj5ET7k2jFntY++HerHxfg==:17
-        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=7-415B0cAAAA:8
-        a=PBuYFrC3Npbnkw49Qb4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.1.2
+Subject: Re: [RFC PATCH] xfs: drop experimental warning for fsdax
+To:     Dave Chinner <david@fromorbit.com>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <djwong@kernel.org>,
+        <dan.j.williams@intel.com>
+References: <1663234002-17-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <20220919045003.GJ3600936@dread.disaster.area>
+ <20220919211533.GK3600936@dread.disaster.area>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <20220919211533.GK3600936@dread.disaster.area>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 19, 2022 at 09:13:00AM -0400, Jeff Layton wrote:
-> On Mon, 2022-09-19 at 09:53 +1000, Dave Chinner wrote:
-> > On Fri, Sep 16, 2022 at 11:11:34AM -0400, Jeff Layton wrote:
-> > > On Fri, 2022-09-16 at 07:36 -0400, Jeff Layton wrote:
-> > > > On Fri, 2022-09-16 at 02:54 -0400, Theodore Ts'o wrote:
-> > > > > On Fri, Sep 16, 2022 at 08:23:55AM +1000, NeilBrown wrote:
-> > > > > > > > If the answer is that 'all values change', then why store the crash
-> > > > > > > > counter in the inode at all? Why not just add it as an offset when
-> > > > > > > > you're generating the user-visible change attribute?
-> > > > > > > > 
-> > > > > > > > i.e. statx.change_attr = inode->i_version + (crash counter * offset)
-> > > > > 
-> > > > > I had suggested just hashing the crash counter with the file system's
-> > > > > on-disk i_version number, which is essentially what you are suggested.
-> > > > > 
-> > > > > > > Yes, if we plan to ensure that all the change attrs change after a
-> > > > > > > crash, we can do that.
-> > > > > > > 
-> > > > > > > So what would make sense for an offset? Maybe 2**12? One would hope that
-> > > > > > > there wouldn't be more than 4k increments before one of them made it to
-> > > > > > > disk. OTOH, maybe that can happen with teeny-tiny writes.
-> > > > > > 
-> > > > > > Leave it up the to filesystem to decide.  The VFS and/or NFSD should
-> > > > > > have not have part in calculating the i_version.  It should be entirely
-> > > > > > in the filesystem - though support code could be provided if common
-> > > > > > patterns exist across filesystems.
-> > > > > 
-> > > > > Oh, *heck* no.  This parameter is for the NFS implementation to
-> > > > > decide, because it's NFS's caching algorithms which are at stake here.
-> > > > > 
-> > > > > As a the file system maintainer, I had offered to make an on-disk
-> > > > > "crash counter" which would get updated when the journal had gotten
-> > > > > replayed, in addition to the on-disk i_version number.  This will be
-> > > > > available for the Linux implementation of NFSD to use, but that's up
-> > > > > to *you* to decide how you want to use them.
-> > > > > 
-> > > > > I was perfectly happy with hashing the crash counter and the i_version
-> > > > > because I had assumed that not *that* much stuff was going to be
-> > > > > cached, and so invalidating all of the caches in the unusual case
-> > > > > where there was a crash was acceptable.  After all it's a !@#?!@
-> > > > > cache.  Caches sometimmes get invalidated.  "That is the order of
-> > > > > things." (as Ramata'Klan once said in "Rocks and Shoals")
-> > > > > 
-> > > > > But if people expect that multiple TB's of data is going to be stored;
-> > > > > that cache invalidation is unacceptable; and that a itsy-weeny chance
-> > > > > of false negative failures which might cause data corruption might be
-> > > > > acceptable tradeoff, hey, that's for the system which is providing
-> > > > > caching semantics to determine.
-> > > > > 
-> > > > > PLEASE don't put this tradeoff on the file system authors; I would
-> > > > > much prefer to leave this tradeoff in the hands of the system which is
-> > > > > trying to do the caching.
-> > > > > 
-> > > > 
-> > > > Yeah, if we were designing this from scratch, I might agree with leaving
-> > > > more up to the filesystem, but the existing users all have pretty much
-> > > > the same needs. I'm going to plan to try to keep most of this in the
-> > > > common infrastructure defined in iversion.h.
-> > > > 
-> > > > Ted, for the ext4 crash counter, what wordsize were you thinking? I
-> > > > doubt we'll be able to use much more than 32 bits so a larger integer is
-> > > > probably not worthwhile. There are several holes in struct super_block
-> > > > (at least on x86_64), so adding this field to the generic structure
-> > > > needn't grow it.
-> > > 
-> > > That said, now that I've taken a swipe at implementing this, I need more
-> > > information than just the crash counter. We need to multiply the crash
-> > > counter with a reasonable estimate of the maximum number of individual
-> > > writes that could occur between an i_version being incremented and that
-> > > value making it to the backing store.
-> > > 
-> > > IOW, given a write that bumps the i_version to X, how many more write
-> > > calls could race in before X makes it to the platter? I took a SWAG and
-> > > said 4k in an earlier email, but I don't really have a way to know, and
-> > > that could vary wildly with different filesystems and storage.
-> > > 
-> > > What I'd like to see is this in struct super_block:
-> > > 
-> > > 	u32		s_version_offset;
-> > 
-> > 	u64		s_version_salt;
-> > 
+Hi Dave,
+
+在 2022/9/20 5:15, Dave Chinner 写道:
+> On Mon, Sep 19, 2022 at 02:50:03PM +1000, Dave Chinner wrote:
+>> On Thu, Sep 15, 2022 at 09:26:42AM +0000, Shiyang Ruan wrote:
+>>> Since reflink&fsdax can work together now, the last obstacle has been
+>>> resolved.  It's time to remove restrictions and drop this warning.
+>>>
+>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+>>
+>> I haven't looked at reflink+DAX for some time, and I haven't tested
+>> it for even longer. So I'm currently running a v6.0-rc6 kernel with
+>> "-o dax=always" fstests run with reflink enabled and it's not
+>> looking very promising.
+>>
+>> All of the fsx tests are failing with data corruption, several
+>> reflink/clone tests are failing with -EINVAL (e.g. g/16[45]) and
+>> *lots* of tests are leaving stack traces from WARN() conditions in
+>> DAx operations such as dax_insert_entry(), dax_disassociate_entry(),
+>> dax_writeback_mapping_range(), iomap_iter() (called from
+>> dax_dedupe_file_range_compare()), and so on.
+>>
+>> At thsi point - the tests are still running - I'd guess that there's
+>> going to be at least 50 test failures by the time it completes -
+>> in comparison using "-o dax=never" results in just a single test
+>> failure and a lot more tests actually being run.
 > 
-> IDK...it _is_ an offset since we're folding it in with addition, and it
-> has a real meaning. Filesystems do need to be cognizant of that fact, I
-> think.
+> The end results with dax+reflink were:
 > 
-> Also does anyone have a preference on doing this vs. a get_version_salt
-> or get_version_offset sb operation? I figured the value should be mostly
-> static so it'd be nice to avoid an operation for it.
+> SECTION       -- xfs_dax
+> =========================
 > 
-> > > ...and then individual filesystems can calculate:
-> > > 
-> > > 	crash_counter * max_number_of_writes
-> > > 
-> > > and put the correct value in there at mount time.
-> > 
-> > Other filesystems might not have a crash counter but have other
-> > information that can be substituted, like a mount counter or a
-> > global change sequence number that is guaranteed to increment from
-> > one mount to the next. 
-> > 
+> Failures: generic/051 generic/068 generic/074 generic/075
+> generic/083 generic/091 generic/112 generic/127 generic/164
+> generic/165 generic/175 generic/231 generic/232 generic/247
+> generic/269 generic/270 generic/327 generic/340 generic/388
+> generic/390 generic/413 generic/447 generic/461 generic/471
+> generic/476 generic/517 generic/519 generic/560 generic/561
+> generic/605 generic/617 generic/619 generic/630 generic/649
+> generic/650 generic/656 generic/670 generic/672 xfs/011 xfs/013
+> xfs/017 xfs/068 xfs/073 xfs/104 xfs/127 xfs/137 xfs/141 xfs/158
+> xfs/168 xfs/179 xfs/243 xfs/297 xfs/305 xfs/328 xfs/440 xfs/442
+> xfs/517 xfs/535 xfs/538 xfs/551 xfs/552
+> Failed 61 of 1071 tests
 > 
-> The problem there is that you're going to cause the invalidation of all
-> of the NFS client's cached regular files, even on clean server reboots.
-> That's not a desirable outcome.
+> Ok, so I did a new no-reflink run as a baseline, because it is a
+> while since I've tested DAX at all:
+> 
+> SECTION       -- xfs_dax_noreflink
+> =========================
+> Failures: generic/051 generic/068 generic/074 generic/075
+> generic/083 generic/112 generic/231 generic/232 generic/269
+> generic/270 generic/340 generic/388 generic/461 generic/471
+> generic/476 generic/519 generic/560 generic/561 generic/617
+> generic/650 generic/656 xfs/011 xfs/013 xfs/017 xfs/073 xfs/297
+> xfs/305 xfs/517 xfs/538
+> Failed 29 of 1071 tests
+> 
+> Yeah, there's still lots of warnings from dax_insert_entry() and
+> friends like:
+> 
+> [43262.025815] WARNING: CPU: 9 PID: 1309428 at fs/dax.c:380 dax_insert_entry+0x2ab/0x320
+> [43262.028355] Modules linked in:
+> [43262.029386] CPU: 9 PID: 1309428 Comm: fsstress Tainted: G W          6.0.0-rc6-dgc+ #1543
+> [43262.032168] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+> [43262.034840] RIP: 0010:dax_insert_entry+0x2ab/0x320
+> [43262.036358] Code: 08 48 83 c4 30 5b 5d 41 5c 41 5d 41 5e 41 5f c3 48 8b 58 20 48 8d 53 01 e9 65 ff ff ff 48 8b 58 20 48 8d 53 01 e9 50 ff ff ff <0f> 0b e9 70 ff ff ff 31 f6 4c 89 e7 e8 84 b1 5a 00 eb a4 48 81 e6
+> [43262.042255] RSP: 0018:ffffc9000a0cbb78 EFLAGS: 00010002
+> [43262.043946] RAX: ffffea0018cd1fc0 RBX: 0000000000000001 RCX: 0000000000000001
+> [43262.046233] RDX: ffffea0000000000 RSI: 0000000000000221 RDI: ffffea0018cd2000
+> [43262.048518] RBP: 0000000000000011 R08: 0000000000000000 R09: 0000000000000000
+> [43262.050762] R10: ffff888241a6d318 R11: 0000000000000001 R12: ffffc9000a0cbc58
+> [43262.053020] R13: ffff888241a6d318 R14: ffffc9000a0cbe20 R15: 0000000000000000
+> [43262.055309] FS:  00007f8ce25e2b80(0000) GS:ffff8885fec80000(0000) knlGS:0000000000000000
+> [43262.057859] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [43262.059713] CR2: 00007f8ce25e1000 CR3: 0000000152141001 CR4: 0000000000060ee0
+> [43262.061993] Call Trace:
+> [43262.062836]  <TASK>
+> [43262.063557]  dax_fault_iter+0x243/0x600
+> [43262.064802]  dax_iomap_pte_fault+0x199/0x360
+> [43262.066197]  __xfs_filemap_fault+0x1e3/0x2c0
+> [43262.067602]  __do_fault+0x31/0x1d0
+> [43262.068719]  __handle_mm_fault+0xd6d/0x1650
+> [43262.070083]  ? do_mmap+0x348/0x540
+> [43262.071200]  handle_mm_fault+0x7a/0x1d0
+> [43262.072449]  ? __kvm_handle_async_pf+0x12/0xb0
+> [43262.073908]  exc_page_fault+0x1d9/0x810
+> [43262.075123]  asm_exc_page_fault+0x22/0x30
+> [43262.076413] RIP: 0033:0x7f8ce268bc23
 
-Stop saying "anything less than perfect is unacceptible". I *know*
-that changing the salt on every mount might result in less than
-perfect results, but the fact is that a -false negative- is a data
-corruption event, whilst a false positive is not. False positives
-may not be desirable, but false negatives are *not acceptible at
-all*.
+Thanks for testing.  I just ran the xfstests and got these failures too. 
+  The failure at dax_insert_entry() appeared during my development but 
+was fixed before I sent the patchset.  Now I am looking for what's wrong 
+with it.
 
-XFS can give you a guarantee of no false negatives right now with no
-on-disk format changes necessary, but it comes with the downside of
-false positives. That's not the end of the world, and it gives NFS
-the functionality it needs immediately and allows us time to add
-purpose-built on-disk functionality that gives NFS exactly what it
-wants. The reality is that this purpose-built on-disk change will
-take years to roll out to production systems, whilst using what we
-have now is just a kernel patch and upgrade away....
+BTW, which groups did you test?  I usually test quick,clone group.
 
-Changing on-disk metadata formats takes time, no matter how simple
-the change, and this timeframe is not something the NFS server
-actually controls.
 
-But there is a way for the NFS server to define and control it's own
-on-disk persistent metadata: *extended attributes*.
+--
+Thanks,
+Ruan.
 
-How about we set a "crash" extended attribute on the root of an NFS
-export when the filesystem is exported, and then remove it when the
-filesystem is unexported.
-
-This gives the NFS server it's own persistent attribute that tells
-it whether the filesystem was *unexported* cleanly. If the exportfs
-code calls syncfs() before the xattr is removed, then it guarantees
-that everything the NFS clients have written and modified will be
-exactly present the next time the filesystem is exported. If the
-"crash" xattr is present when the filesystem is exported, then it
-wasn't cleanly synced before it was taken out of service, and so
-something may have been lost and the "crash counter" needs to be
-bumped.
-
-Yes, the "crash counter" is held in another xattr, so that it is
-persistent across crash and mount/unmount cycles. If the crash
-xattr is present, the NFSD reads, bumps and writes the crash counter
-xattr, and uses the new value for the life of that export. If the
-crash xattr is not present, then is just reads the counter xattr and
-uses it unchanged.
-
-IOWs, the NFS server can define it's own on-disk persistent metadata
-using xattrs, and you don't need local filesystems to be modified at
-all. You can add the crash epoch into the change attr that is sent
-to NFS clients without having to change the VFS i_version
-implementation at all.
-
-This whole problem is solvable entirely within the NFS server code,
-and we don't need to change local filesystems at all. NFS can
-control the persistence and format of the xattrs it uses, and it
-does not need new custom on-disk format changes from every
-filesystem to support this new application requirement.
-
-At this point, NFS server developers don't need to care what the
-underlying filesystem format provides - the xattrs provide the crash
-detection and enumeration the NFS server functionality requires.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> So it looks to me like DAX is well and truly broken in 6.0-rc6. And,
+> yes, I'm running the fixes in mm-hotifxes-stable branch that allow
+> xfs/550 to pass.
+> 
+> Who is actually testing this DAX code, and what are they actually
+> testing on? These are not random failures - I haven't run DAX
+> testing since ~5.18, and none of these failures were present on the
+> same DAX test VM running the same configuration back then....
+> 
+> -Dave.
