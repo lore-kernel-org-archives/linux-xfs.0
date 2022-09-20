@@ -2,154 +2,218 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE376C6FA82
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Sep 2022 01:33:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7917DC6FA8B
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Sep 2022 02:24:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229563AbiITBdA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Sep 2022 21:33:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44184 "EHLO
+        id S229566AbiITCYo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Sep 2022 22:24:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229549AbiITBc7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2022 21:32:59 -0400
+        with ESMTP id S230135AbiITCYn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2022 22:24:43 -0400
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8B5CE5141E;
-        Mon, 19 Sep 2022 18:32:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AC8752198;
+        Mon, 19 Sep 2022 19:24:40 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-183-60.pa.nsw.optusnet.com.au [49.180.183.60])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D79D51100B90;
-        Tue, 20 Sep 2022 11:32:54 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DFD521100A0C;
+        Tue, 20 Sep 2022 12:24:39 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oaS85-009p1o-Hg; Tue, 20 Sep 2022 11:32:53 +1000
-Date:   Tue, 20 Sep 2022 11:32:53 +1000
+        id 1oaSwB-009pkO-5K; Tue, 20 Sep 2022 12:24:39 +1000
+Date:   Tue, 20 Sep 2022 12:24:39 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, djwong@kernel.org,
-        dan.j.williams@intel.com
-Subject: Re: [RFC PATCH] xfs: drop experimental warning for fsdax
-Message-ID: <20220920013253.GO3600936@dread.disaster.area>
-References: <1663234002-17-1-git-send-email-ruansy.fnst@fujitsu.com>
- <20220919045003.GJ3600936@dread.disaster.area>
- <20220919211533.GK3600936@dread.disaster.area>
- <1bc45fd2-f5e2-dd7b-0c9e-e3ab2527d736@fujitsu.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>,
+        Christoph Hellwig <hch@lst.de>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
+ workload
+Message-ID: <20220920022439.GP3600936@dread.disaster.area>
+References: <CAOQ4uxjvx33KRSm-HX2AjL=aB5yO=FeWokZ1usDKW7+R4Ednhg@mail.gmail.com>
+ <20220620091136.4uosazpwkmt65a5d@quack3.lan>
+ <CAOQ4uxg+uY5PdcU1=RyDWCxbP4gJB3jH1zkAj=RpfndH9czXbg@mail.gmail.com>
+ <20220621085956.y5wyopfgzmqkaeiw@quack3.lan>
+ <CAOQ4uxheatf+GCHxbUDQ4s4YSQib3qeYVeXZwEicR9fURrEFBA@mail.gmail.com>
+ <CAOQ4uxguwnx4AxXqp_zjg39ZUaTGJEM2wNUPnNdtiqV2Q9woqA@mail.gmail.com>
+ <YyH61deSiW1TnY//@magnolia>
+ <CAOQ4uxhFJWW-ykyzomHCUWfWvbJNEmetw0G5mUYjFGoYJBb7NA@mail.gmail.com>
+ <YyIR4XmDYkYIK2ad@magnolia>
+ <20220919230947.GM3600936@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1bc45fd2-f5e2-dd7b-0c9e-e3ab2527d736@fujitsu.com>
+In-Reply-To: <20220919230947.GM3600936@dread.disaster.area>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=63291847
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=63292468
         a=mj5ET7k2jFntY++HerHxfg==:117 a=mj5ET7k2jFntY++HerHxfg==:17
-        a=IkcTkHD0fZMA:10 a=xOM3xZuef0cA:10 a=omOdbC7AAAAA:8 a=7-415B0cAAAA:8
-        a=8IwbCyiyGxmv9gt3Ff4A:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=7-415B0cAAAA:8
+        a=FzvLjUrc44N2CQQ84gcA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 20, 2022 at 09:17:07AM +0800, Shiyang Ruan wrote:
-> Hi Dave,
-> 
-> 在 2022/9/20 5:15, Dave Chinner 写道:
-> > On Mon, Sep 19, 2022 at 02:50:03PM +1000, Dave Chinner wrote:
-> > > On Thu, Sep 15, 2022 at 09:26:42AM +0000, Shiyang Ruan wrote:
-> > > > Since reflink&fsdax can work together now, the last obstacle has been
-> > > > resolved.  It's time to remove restrictions and drop this warning.
-> > > > 
-> > > > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > > 
-> > > I haven't looked at reflink+DAX for some time, and I haven't tested
-> > > it for even longer. So I'm currently running a v6.0-rc6 kernel with
-> > > "-o dax=always" fstests run with reflink enabled and it's not
-> > > looking very promising.
-> > > 
-> > > All of the fsx tests are failing with data corruption, several
-> > > reflink/clone tests are failing with -EINVAL (e.g. g/16[45]) and
-> > > *lots* of tests are leaving stack traces from WARN() conditions in
-> > > DAx operations such as dax_insert_entry(), dax_disassociate_entry(),
-> > > dax_writeback_mapping_range(), iomap_iter() (called from
-> > > dax_dedupe_file_range_compare()), and so on.
-> > > 
-> > > At thsi point - the tests are still running - I'd guess that there's
-> > > going to be at least 50 test failures by the time it completes -
-> > > in comparison using "-o dax=never" results in just a single test
-> > > failure and a lot more tests actually being run.
-> > 
-> > The end results with dax+reflink were:
-> > 
-> > SECTION       -- xfs_dax
-> > =========================
-> > 
-> > Failures: generic/051 generic/068 generic/074 generic/075
-> > generic/083 generic/091 generic/112 generic/127 generic/164
-> > generic/165 generic/175 generic/231 generic/232 generic/247
-> > generic/269 generic/270 generic/327 generic/340 generic/388
-> > generic/390 generic/413 generic/447 generic/461 generic/471
-> > generic/476 generic/517 generic/519 generic/560 generic/561
-> > generic/605 generic/617 generic/619 generic/630 generic/649
-> > generic/650 generic/656 generic/670 generic/672 xfs/011 xfs/013
-> > xfs/017 xfs/068 xfs/073 xfs/104 xfs/127 xfs/137 xfs/141 xfs/158
-> > xfs/168 xfs/179 xfs/243 xfs/297 xfs/305 xfs/328 xfs/440 xfs/442
-> > xfs/517 xfs/535 xfs/538 xfs/551 xfs/552
-> > Failed 61 of 1071 tests
-> > 
-> > Ok, so I did a new no-reflink run as a baseline, because it is a
-> > while since I've tested DAX at all:
-> > 
-> > SECTION       -- xfs_dax_noreflink
-> > =========================
-> > Failures: generic/051 generic/068 generic/074 generic/075
-> > generic/083 generic/112 generic/231 generic/232 generic/269
-> > generic/270 generic/340 generic/388 generic/461 generic/471
-> > generic/476 generic/519 generic/560 generic/561 generic/617
-> > generic/650 generic/656 xfs/011 xfs/013 xfs/017 xfs/073 xfs/297
-> > xfs/305 xfs/517 xfs/538
-> > Failed 29 of 1071 tests
-> > 
-> > Yeah, there's still lots of warnings from dax_insert_entry() and
-> > friends like:
-> > 
-> > [43262.025815] WARNING: CPU: 9 PID: 1309428 at fs/dax.c:380 dax_insert_entry+0x2ab/0x320
-> > [43262.028355] Modules linked in:
-> > [43262.029386] CPU: 9 PID: 1309428 Comm: fsstress Tainted: G W          6.0.0-rc6-dgc+ #1543
-> > [43262.032168] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
-> > [43262.034840] RIP: 0010:dax_insert_entry+0x2ab/0x320
-> > [43262.036358] Code: 08 48 83 c4 30 5b 5d 41 5c 41 5d 41 5e 41 5f c3 48 8b 58 20 48 8d 53 01 e9 65 ff ff ff 48 8b 58 20 48 8d 53 01 e9 50 ff ff ff <0f> 0b e9 70 ff ff ff 31 f6 4c 89 e7 e8 84 b1 5a 00 eb a4 48 81 e6
-> > [43262.042255] RSP: 0018:ffffc9000a0cbb78 EFLAGS: 00010002
-> > [43262.043946] RAX: ffffea0018cd1fc0 RBX: 0000000000000001 RCX: 0000000000000001
-> > [43262.046233] RDX: ffffea0000000000 RSI: 0000000000000221 RDI: ffffea0018cd2000
-> > [43262.048518] RBP: 0000000000000011 R08: 0000000000000000 R09: 0000000000000000
-> > [43262.050762] R10: ffff888241a6d318 R11: 0000000000000001 R12: ffffc9000a0cbc58
-> > [43262.053020] R13: ffff888241a6d318 R14: ffffc9000a0cbe20 R15: 0000000000000000
-> > [43262.055309] FS:  00007f8ce25e2b80(0000) GS:ffff8885fec80000(0000) knlGS:0000000000000000
-> > [43262.057859] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > [43262.059713] CR2: 00007f8ce25e1000 CR3: 0000000152141001 CR4: 0000000000060ee0
-> > [43262.061993] Call Trace:
-> > [43262.062836]  <TASK>
-> > [43262.063557]  dax_fault_iter+0x243/0x600
-> > [43262.064802]  dax_iomap_pte_fault+0x199/0x360
-> > [43262.066197]  __xfs_filemap_fault+0x1e3/0x2c0
-> > [43262.067602]  __do_fault+0x31/0x1d0
-> > [43262.068719]  __handle_mm_fault+0xd6d/0x1650
-> > [43262.070083]  ? do_mmap+0x348/0x540
-> > [43262.071200]  handle_mm_fault+0x7a/0x1d0
-> > [43262.072449]  ? __kvm_handle_async_pf+0x12/0xb0
-> > [43262.073908]  exc_page_fault+0x1d9/0x810
-> > [43262.075123]  asm_exc_page_fault+0x22/0x30
-> > [43262.076413] RIP: 0033:0x7f8ce268bc23
-> 
-> Thanks for testing.  I just ran the xfstests and got these failures too.
-> The failure at dax_insert_entry() appeared during my development but was
-> fixed before I sent the patchset.  Now I am looking for what's wrong with
-> it.
-> 
-> BTW, which groups did you test?  I usually test quick,clone group.
+On Tue, Sep 20, 2022 at 09:09:47AM +1000, Dave Chinner wrote:
+> On Wed, Sep 14, 2022 at 10:39:45AM -0700, Darrick J. Wong wrote:
+> > On Wed, Sep 14, 2022 at 07:29:15PM +0300, Amir Goldstein wrote:
+> > > > > Dave, Christoph,
+> > > > >
+> > > > > I know that you said that changing the atomic buffered read semantics
+> > > > > is out of the question and that you also objected to a mount option
+> > > > > (which nobody will know how to use) and I accept that.
+> > > > >
+> > > > > Given that a performant range locks implementation is not something
+> > > > > trivial to accomplish (Dave please correct me if I am wrong),
+> > > > > and given the massive performance impact of XFS_IOLOCK_SHARED
+> > > > > on this workload,
+> > > > > what do you think about POSIX_FADV_TORN_RW that a specific
+> > > > > application can use to opt-out of atomic buffer read semantics?
+> > > > >
+> > > > > The specific application that I want to modify to use this hint is Samba.
+> > > > > Samba uses IO threads by default to issue pread/pwrite on the server
+> > > > > for IO requested by the SMB client. The IO size is normally larger than
+> > > > > xfs block size and the range may not be block aligned.
+> > > > >
+> > > > > The SMB protocol has explicit byte range locks and the server implements
+> > > > > them, so it is pretty safe to assume that a client that did not request
+> > > > > range locks does not need xfs to do the implicit range locking for it.
 
-These are auto group runs, as I normally do for testing patches.
+That doesn't cover concurrent local (server side) access to the
+file. It's not uncommon to have the same filesystems exported by
+both Samba and NFS at the same time, and the only point of
+co-ordination between the two is the underlying local filesystem....
 
-Cheers,
+IOWs, when we are talking about local filesystem behaviour, what a
+network protocol does above the filesystem is largely irrelevant to
+the synchronisation required within the filesystem
+implementation....
 
-Dave.
+> > > > > For this reason and because of the huge performance win,
+> > > > > I would like to implement POSIX_FADV_TORN_RW in xfs and
+> > > > > have Samba try to set this hint when supported.
+> > > > >
+> > > > > It is very much possible that NFSv4 servers (user and kennel)
+> > > > > would also want to set this hint for very similar reasons.
+> > > > >
+> > > > > Thoughts?
+> > > >
+> > > > How about range locks for i_rwsem and invalidate_lock?  That could
+> > > > reduce contention on VM farms, though I can only assume that, given that
+> > > > I don't have a reference implementation to play with...
+> > > >
+> > > 
+> > > If you are asking if I have the bandwidth to work on range lock
+> > > then the answer is that I do not.
+> > > 
+> > > IIRC, Dave had a WIP and ran some benchmarks with range locks,
+> > > but I do not know at which state that work is.
+> > 
+> > Yeah, that's what I was getting at -- I really wish Dave would post that
+> > as an RFC.  The last time I talked to him about it, he was worried that
+> > the extra complexity of the range lock structure would lead to more
+> > memory traffic and overhead.
+> 
+> The reason I haven't posted it is that I don't think range locks can
+> ever be made to perform and scale as we need for the IO path.
+
+[snip range lock scalability and perf issues]
+
+As I just discussed on #xfs with Darrick, there are other options
+we can persue here.
+
+The first question we need to ask ourselves is this: what are we
+protecting against with exclusive buffered write behaviour?
+
+The answer is that we know there are custom enterprise database
+applications out there that assume that 8-16kB buffered writes are
+atomic. I wish I could say these are legacy applications these days,
+but they aren't - they are still in production use, and the
+applications build on those custom database engines are still under
+active development and use.
+
+AFAIK, the 8kB atomic write behaviour is historical and came from
+applications originally designed for Solaris and hardware that
+had an 8kB page size. Hence buffered 8kB writes were assumed to be
+the largest atomic write size that concurrent reads would not see
+write tearing. These applications are now run on x86-64 boxes with
+4kB page size, but they still assume that 8kB writes are atomic and
+can't tear.
+
+So, really, these days the atomic write behaviour of XFS is catering
+for these small random read/write IO applications, not to provide
+atomic writes for bulk data moving applications writing 2GB of data
+per write() syscall. Hence we can fairly safely say that we really
+only need "exclusive" buffered write locking for relatively small
+multipage IOs, not huge IOs.
+
+We can do single page shared buffered writes immediately - we
+guarantee that while the folio is locked, a buffered read cannot
+access the data until the folio is unlocked. So that could be the
+first step to relaxing the exclusive locking requirement for
+buffered writes.
+
+Next we need to consider that we now have large folio support in the
+page cache, which means we can treat contiguous file ranges larger
+than a single page a single atomic unit if they are covered by a
+multi-page folio. As such, if we have a single multi-page folio that
+spans the entire write() range already in cache, we can run that
+write atomically under a shared IO lock the same as we can do with
+single page folios.
+
+However, what happens if the folio is smaller than the range we need
+to write? Well, in that case, we have to abort the shared lock write
+and upgrade to an exclusive lock before trying again.
+
+Of course, we can only determine if the write can go ahead once we
+have the folio locked. That means we need a new non-blocking write
+condition to be handled by the iomap code. We already have several
+of them because of IOCB_NOWAIT semantics that io_uring requires for
+buffered writes, so we are already well down the path of needing to
+support fully non-blocking writes through iomap.
+
+Further, the recent concurrent write data corruption that we
+uncovered requires a new hook in the iomap write path to allow
+writes to be aborted for remapping because the cached iomap has
+become stale. This validity check can only be done once the folio
+has locked - if the cached iomap is stale once we have the page
+locked, then we have to back out and remap the write range and
+re-run the write.
+
+IOWs, we are going to have to add write retries to the iomap write
+path for data integrity purposes. These checks must be done only
+after the folio has been locked, so we really end up getting the
+"can't do atomic write" retry infrastructure for free with the data
+corruption fixes...
+
+With this in place, it becomes trivial to support atomic writes with
+shared locking all the way up to PMD sizes (or whatever the maximum
+multipage folio size the arch supports is) with a minimal amount of
+extra code.
+
+At this point, we have a buffered write path that tries to do shared
+locking first, and only falls back to exclusive locking if the page
+cache doesn't contain a folio large enough to soak up the entire
+write.
+
+In future, Darrick suggested we might be able to do a "trygetlock a
+bunch of folios" operation that locks a range of folios within the
+current iomap in one go, and then we write into all of them in a
+batch before unlocking them all. This would give us multi-folio
+atomic writes with shared locking - this is much more complex, and
+it's unclear that multi-folio write batching will gain us anything
+over the single folio check described above...
+
+Finally, for anything that is concurrently reading and writing lots
+of data in chunks larger than PMD sizes, the application should
+really be using DIO with AIO or io_uring. So falling back to
+exclusive locking for such large single buffered write IOs doesn't
+seem like a huge issue right now....
+
+Thoughts?
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
