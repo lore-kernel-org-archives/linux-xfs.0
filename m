@@ -2,308 +2,250 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D1B1C6FA8E
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Sep 2022 10:26:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C0BEECAAD8
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Sep 2022 12:48:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230122AbiITK0Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Sep 2022 06:26:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36686 "EHLO
+        id S230121AbiITMs4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Sep 2022 08:48:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbiITK0N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Sep 2022 06:26:13 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BD006CF53;
-        Tue, 20 Sep 2022 03:26:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2E634B81919;
-        Tue, 20 Sep 2022 10:26:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D19F5C433D7;
-        Tue, 20 Sep 2022 10:26:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663669568;
-        bh=CfYggY63xXFOFDlUv3QHzC9zaQxFWgjKwb6NJCfeB8I=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=AatulgnVi+oP+ht5RosHsv4/XrHEYN3qk6v3Z+p8LohnnJWJObNoXGauCVLho+3+m
-         brdN0h6chvkSLhiEIraDpkfHPeLqcxeMJRp87+hayjAev1bHkcNcTDz/yKsfKZAUfd
-         R5yUwM6rHfpnzhMFzVHUpxlbbD9H6vTr2rFC0o19LUnOFkFfch+zPUBl5IgRNhXVfb
-         2epe3wBGhZl9QTao88k4L33f2d413iVb0MNJdXy29tSZLTJ3e3hT5Rvb603rGE9/vP
-         xzzzBVdmphB4s7fOrTV+wXQJwDiSArur6JTOUmz8TQ+67g+Y99vtp+GGTzZUgKQ39l
-         lfxGb7gkQLPsg==
-Message-ID: <5832424c328ea427b5c6ecdaa6dd53f3b99c20a0.camel@kernel.org>
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Theodore Ts'o <tytso@mit.edu>, NeilBrown <neilb@suse.de>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        "bfields@fieldses.org" <bfields@fieldses.org>,
-        "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "brauner@kernel.org" <brauner@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "fweimer@redhat.com" <fweimer@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
-        "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "xiubli@redhat.com" <xiubli@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "lczerner@redhat.com" <lczerner@redhat.com>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
-Date:   Tue, 20 Sep 2022 06:26:05 -0400
-In-Reply-To: <20220920001645.GN3600936@dread.disaster.area>
-References: <0646410b6d2a5d19d3315f339b2928dfa9f2d922.camel@hammerspace.com>
-         <34e91540c92ad6980256f6b44115cf993695d5e1.camel@kernel.org>
-         <871f9c5153ddfe760854ca31ee36b84655959b83.camel@hammerspace.com>
-         <e8922bc821a40f5a3f0a1301583288ed19b6891b.camel@kernel.org>
-         <166328063547.15759.12797959071252871549@noble.neil.brown.name>
-         <YyQdmLpiAMvl5EkU@mit.edu>
-         <7027d1c2923053fe763e9218d10ce8634b56e81d.camel@kernel.org>
-         <24005713ad25370d64ab5bd0db0b2e4fcb902c1c.camel@kernel.org>
-         <20220918235344.GH3600936@dread.disaster.area>
-         <87fb43b117472c0a4c688c37a925ac51738c8826.camel@kernel.org>
-         <20220920001645.GN3600936@dread.disaster.area>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-1.fc36) 
+        with ESMTP id S229843AbiITMsz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Sep 2022 08:48:55 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 326C36B8F1
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Sep 2022 05:48:51 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28KAPJmD006020;
+        Tue, 20 Sep 2022 12:48:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=D2ZYftHq/GIdTf79+X7w9qhjfDFbLsEh9zUbpurOhmo=;
+ b=MK0IgzRgAi3kAHKctZcJ0keHFtALkt+M7KgEjNqWB3Zh+9cKqcXXhge8W8KlQgOXmF97
+ 4fzLpylCRIVIpA+KbkhaQXEoxTM2XjcdNMDDjW67YNBdeTzgm8aB4QjTLkyL2vykXZcS
+ CcOEQA4YGXJOwgRKrJuGAw5YIKZlaYudczyXOKNi8XS93iTJyxPQz+13fTPqSrXe9c7C
+ EiY4oAVO8cisguWL+tiUFbQ7DzERNACwntvbuqAJYTceoBJVyA4ZwnNiyy5kLmRfCvK8
+ NH/ZNhRje0xoglLF2IeZdIcSnkDVVWw2kPp8swXn8mQmmJOpDUyajH+foh4OI17GpF/8 Dw== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jn69kpt65-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 20 Sep 2022 12:48:46 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 28KArngQ025548;
+        Tue, 20 Sep 2022 12:48:45 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2168.outbound.protection.outlook.com [104.47.59.168])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jp39drhd2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 20 Sep 2022 12:48:45 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=C/6EwBDjRBpAse6XlnFnv45/Cj5uSFo+SSlvyw+VWyA4bP+ZT9jrji1aYRBMU9fOEcriwz8n7JG/4L8U8KcSDTbza941UpXfIai/O3LGjuVUakYsLDOZ2AfAwbaut9ijnsPNd7y1rmGmByhhLIGWzQNjv8X10y4LFBBBmMXUDzCkBhdXJ5Hp+RGf5OhLOHDktdTuXzOhHm0xCq0z3HxEy/5+NHNUMYEAcIUwE4S29dk2xqDe5HOCVbXuw+6rq976aVuGfoyL0/+7hkGqLeSJZ4dW1ZFMyabho7Yt5kc1jBlKfgUlcOD10X30U4fpSCt4CxVaruiv5RFdHZ3E38Ndpw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=D2ZYftHq/GIdTf79+X7w9qhjfDFbLsEh9zUbpurOhmo=;
+ b=FhN3lkx4vlagAqTJ8eFKM33OpWX9iwxJ5LcUhujqpi7lFyD3LSRHJj8fz87m2kwM15RBq8bIiUb9crgalz0mNVQD71sCDR1QW+zl/K0UVCd/NacaXZeFhrgHgYa9Wbps0tYqsMOePhID0IsWBV+6QsMLMaIRSPEPMGjojQjpmpGumSyh5e/yduyK/8TJ25XGwb+1dykgLBHq74a+oIr4iiVRSDg+Uoqdm5A5KDjUb93ZKmmzhwTb+y8V1MTokHvFK2NsFl1AywkP8TgYVJQaDG+Jy7y1dVVUZw9AAxUZEhPkShfEvfCUZvJ//Z+UgcR0Q+nL4gu6V+/KdjhOowsEyg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=D2ZYftHq/GIdTf79+X7w9qhjfDFbLsEh9zUbpurOhmo=;
+ b=K2CPLhCla+uN+eAzTShKL3E67Mz7Im0dfM+tJceb/URx+NIf5EG56eYkM2s5BE6YQRzn878GHKhU/H+v5a6HaUJfhrBiUU5mh1jTbzaPJUbDjDaFkdPXIJipNZwkLbwU9HvoL5y7wnwRW2248IPufbYFHamyDJDoUInMxwS4z68=
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
+ by CH0PR10MB4987.namprd10.prod.outlook.com (2603:10b6:610:c1::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5632.21; Tue, 20 Sep
+ 2022 12:48:43 +0000
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::822f:1816:1c2c:43d1]) by SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::822f:1816:1c2c:43d1%7]) with mapi id 15.20.5654.014; Tue, 20 Sep 2022
+ 12:48:43 +0000
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     djwong@kernel.org
+Cc:     chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
+        amir73il@gmail.com, leah.rumancik@gmail.com
+Subject: [PATCH 5.4 CANDIDATE V2 00/17] xfs stable candidate patches for 5.4.y (from v5.5)
+Date:   Tue, 20 Sep 2022 18:18:19 +0530
+Message-Id: <20220920124836.1914918-1-chandan.babu@oracle.com>
+X-Mailer: git-send-email 2.35.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: TYXPR01CA0061.jpnprd01.prod.outlook.com
+ (2603:1096:403:a::31) To SA1PR10MB5867.namprd10.prod.outlook.com
+ (2603:10b6:806:22b::9)
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|CH0PR10MB4987:EE_
+X-MS-Office365-Filtering-Correlation-Id: f9990e66-36f5-492d-de99-08da9b067307
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: fqevYZFCPUt3Chv1QKzBbVX5RLfgSknYK2+b3ulpWkl7jgP/xyd4QJldCzmdGZsjP3MTekwjBuS9ormvvmWHMPAOciqnJfBbJsh0XppPsYSYG4G1GD8HOcd+G2be19zHoxoS/LfkOCkQdTbOus6KG2BCu3VpgRZVQieo0uPrtmMIN6moVCNU4Vjl3HJ1jqcnmXOA5ZAViTxvmN/WomnQTbtiBX+kGq1KvsTgfxj6t1X0XWi3Mbjg48pisCSWQxQifJvtuPjw3hBRiFjfsmSnP41WzjMaY10grataKZ1K6l9D4AILfnnLmEJOVyyTGItSrZapCEyOz5MkAghzoEgjpkkuFsBcfP76FsIRiBX3lTt/9LnTktm3iA+QH5UZgiC9UrA0u3vWvV/PUtsyPpXtTAbeePqvPvfaeTN2BaE531VJ6RapCvZlIgDh6CJtEdvLoFQvM3tSVm29xaMomPqXKgd3wMPRNkHBZhmr03fZ0LtDBkjGhORVmjOugMFo8sQjRq/cmqShiOnoscKEw6hALFugHC+HUbgENqcNFgh6LPBzsDxfWZySrJ2W+czzMaTdlIAeHCCFkXONPLey06xOA8NQt3QQgs/32kQ99T4/88WnLDLGkX13bXQXI9YsZWAcO5zV4GyKZbPmf9DRcIgMJLibkH3qzbmnQgiTscqd8YDCWdJhTgb861dxdSzdu1QL
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(39860400002)(346002)(136003)(376002)(366004)(396003)(451199015)(66476007)(66556008)(66946007)(5660300002)(4326008)(86362001)(8936002)(6916009)(316002)(38100700002)(8676002)(83380400001)(41300700001)(6666004)(6506007)(6486002)(2616005)(478600001)(186003)(1076003)(6512007)(26005)(36756003)(2906002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hN29Um0ridQkaogLl2ps3vOKVUpZ9bAFHQdzFY4LW467A8vFSEYz96fwjVe9?=
+ =?us-ascii?Q?sY4sZ5eat4WmTqTGlj8eB/7taTO2eiPFYZZnbLAG25gw721A2klayq4JsJgS?=
+ =?us-ascii?Q?AuJOX+gtN32gSGFzx2ipTS1PSK0qEYS78xkDDeT9m+A53/Z8KhGIOd7zSllY?=
+ =?us-ascii?Q?w4wWwNecP0WBen4ixVHMJCMUf0Iulk1YTgtsyWiDhRgV/JPMisrHHDxDits2?=
+ =?us-ascii?Q?AKTrmkyL45agotfD8UY1WlVd78IdY0RU4WDqIJf2RbqOPzseZuEdX4n3BMg7?=
+ =?us-ascii?Q?Wa7iA6dYQUB6lK88vkxhGWA1CNtS67nKb/OvAhJUxE7Us3e8MCROUm26YE7g?=
+ =?us-ascii?Q?tReHuhz74uM4VObZAdUnU2dXvWslLOopQisHHKOYqWc7Db8QmKIXh4KNCoQR?=
+ =?us-ascii?Q?2lPpiSGZU8TZPeRRSheq1gD9gZ++oWlASq83wRDLcXztNpRjlN50tFcnjjAu?=
+ =?us-ascii?Q?/BHvIO8xA/w9aHaRoD/pCSiZrzcY1t+3AmVXtUcb3osVAflfwCo5A7NtGt45?=
+ =?us-ascii?Q?jPUAXXhPkx91AiQt5X2jvInJ1GwEG+/UEeE/TfPBDxxg2yFpjKEtBwaXtzbe?=
+ =?us-ascii?Q?zHu4u2xQy28yLorRfh7YgWFXdksDn15FIIYJM6s8H5hL0qhuqA5rKs6eij6a?=
+ =?us-ascii?Q?GQ9VWda0hwgvBR1df5hqPKlaYWecsz51lAxI6NzNpHF0l3X3oxlBb89K6ZkA?=
+ =?us-ascii?Q?da2o4LnXs3aUz7vjx+ZTGGy1Xg5ecXU07iH3wZ5RWa34xo3in3YUfwjM8MCL?=
+ =?us-ascii?Q?jiok+QZuDIq0ApP3gxLWeF8ST18t5qvlu10Me+jtytfliaHCVztS8O7MzJmD?=
+ =?us-ascii?Q?jC/UQYQyaY6qZr3afoUpib3YxT8diBvtpJhMsDm0iR54h4LpBk0ZC2YfupIV?=
+ =?us-ascii?Q?aYplhvUKUf5Y1AayAooI53sZoOD7bLZ8RwIiarHUuNcdGWqv6n+WYJuFPTQK?=
+ =?us-ascii?Q?nqX1Rho/rHJ+jXv7ZO6bRpNg6OKqwBimgLLaD2/NPc2Rw7BcmETsd7asZNUX?=
+ =?us-ascii?Q?t434gXaJThvvlaGoRKqSay5XrvIfvoZR73L3QjpOujO78JtUcSop3EMYWYHF?=
+ =?us-ascii?Q?UQdZbrKUAhgkOkj74N5bc/do/4oIwNlwudRiPzUnXlFyg/12qz7bHSV0XBEh?=
+ =?us-ascii?Q?uDuLbT+bE+LDHwxDu5cnDNielpDo6ZA6fMbBDpSb0Dzq36zfDioMaoMwJTa3?=
+ =?us-ascii?Q?MBoYq2Q73og/Y9lSUAuNflxX/GQmU2imqT4gBK5TQkDpWepYdah7F6Jsylad?=
+ =?us-ascii?Q?2iCRmHbmH+PBYDBwerxhikQ3aWhR4FL/dN2f4lcz8Wv6+oyAjKPqSlv0KahO?=
+ =?us-ascii?Q?eX/Yl+JiGfrNzDAkHS4eUau6jJtJQ1S8TTr9QWXKapx/fb6e4PwHPDB89dB9?=
+ =?us-ascii?Q?n+vVjdqA5f+XFx+H2egsOR0enazL9fv6W4hHinW0bI71e5ai/QH2j9YU5+Hy?=
+ =?us-ascii?Q?5Rs9nt5aXPTHjHyOhl/fELl+kQpv096nMLhSCxxPdHJRsnKUTsKLI+2KQmoJ?=
+ =?us-ascii?Q?+6ytzE3c0MeAUFfm1w3xykNASAcqOA86h75/eD9ODIIM4/kze4ZW11Tmwdhr?=
+ =?us-ascii?Q?JL/izFqb1fAMMNlOAPY7VLOq1QxN5FKaV4gaFeum?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f9990e66-36f5-492d-de99-08da9b067307
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Sep 2022 12:48:43.0850
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1GuarHCU6Axd1l+HHO7Na/D10xm2Kt5mDREXuEuwc+MQvsoo30PBZM+IEuiEOQKjeO8N19bWML016Pg9r6Nlsg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB4987
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-20_04,2022-09-20_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ bulkscore=0 mlxscore=0 malwarescore=0 suspectscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
+ definitions=main-2209200076
+X-Proofpoint-ORIG-GUID: 3pwaopsVuG_jE9qZW8tYQ3jyAuVck_Qb
+X-Proofpoint-GUID: 3pwaopsVuG_jE9qZW8tYQ3jyAuVck_Qb
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2022-09-20 at 10:16 +1000, Dave Chinner wrote:
-> On Mon, Sep 19, 2022 at 09:13:00AM -0400, Jeff Layton wrote:
-> > On Mon, 2022-09-19 at 09:53 +1000, Dave Chinner wrote:
-> > > On Fri, Sep 16, 2022 at 11:11:34AM -0400, Jeff Layton wrote:
-> > > > On Fri, 2022-09-16 at 07:36 -0400, Jeff Layton wrote:
-> > > > > On Fri, 2022-09-16 at 02:54 -0400, Theodore Ts'o wrote:
-> > > > > > On Fri, Sep 16, 2022 at 08:23:55AM +1000, NeilBrown wrote:
-> > > > > > > > > If the answer is that 'all values change', then why store=
- the crash
-> > > > > > > > > counter in the inode at all? Why not just add it as an of=
-fset when
-> > > > > > > > > you're generating the user-visible change attribute?
-> > > > > > > > >=20
-> > > > > > > > > i.e. statx.change_attr =3D inode->i_version + (crash coun=
-ter * offset)
-> > > > > >=20
-> > > > > > I had suggested just hashing the crash counter with the file sy=
-stem's
-> > > > > > on-disk i_version number, which is essentially what you are sug=
-gested.
-> > > > > >=20
-> > > > > > > > Yes, if we plan to ensure that all the change attrs change =
-after a
-> > > > > > > > crash, we can do that.
-> > > > > > > >=20
-> > > > > > > > So what would make sense for an offset? Maybe 2**12? One wo=
-uld hope that
-> > > > > > > > there wouldn't be more than 4k increments before one of the=
-m made it to
-> > > > > > > > disk. OTOH, maybe that can happen with teeny-tiny writes.
-> > > > > > >=20
-> > > > > > > Leave it up the to filesystem to decide.  The VFS and/or NFSD=
- should
-> > > > > > > have not have part in calculating the i_version.  It should b=
-e entirely
-> > > > > > > in the filesystem - though support code could be provided if =
-common
-> > > > > > > patterns exist across filesystems.
-> > > > > >=20
-> > > > > > Oh, *heck* no.  This parameter is for the NFS implementation to
-> > > > > > decide, because it's NFS's caching algorithms which are at stak=
-e here.
-> > > > > >=20
-> > > > > > As a the file system maintainer, I had offered to make an on-di=
-sk
-> > > > > > "crash counter" which would get updated when the journal had go=
-tten
-> > > > > > replayed, in addition to the on-disk i_version number.  This wi=
-ll be
-> > > > > > available for the Linux implementation of NFSD to use, but that=
-'s up
-> > > > > > to *you* to decide how you want to use them.
-> > > > > >=20
-> > > > > > I was perfectly happy with hashing the crash counter and the i_=
-version
-> > > > > > because I had assumed that not *that* much stuff was going to b=
-e
-> > > > > > cached, and so invalidating all of the caches in the unusual ca=
-se
-> > > > > > where there was a crash was acceptable.  After all it's a !@#?!=
-@
-> > > > > > cache.  Caches sometimmes get invalidated.  "That is the order =
-of
-> > > > > > things." (as Ramata'Klan once said in "Rocks and Shoals")
-> > > > > >=20
-> > > > > > But if people expect that multiple TB's of data is going to be =
-stored;
-> > > > > > that cache invalidation is unacceptable; and that a itsy-weeny =
-chance
-> > > > > > of false negative failures which might cause data corruption mi=
-ght be
-> > > > > > acceptable tradeoff, hey, that's for the system which is provid=
-ing
-> > > > > > caching semantics to determine.
-> > > > > >=20
-> > > > > > PLEASE don't put this tradeoff on the file system authors; I wo=
-uld
-> > > > > > much prefer to leave this tradeoff in the hands of the system w=
-hich is
-> > > > > > trying to do the caching.
-> > > > > >=20
-> > > > >=20
-> > > > > Yeah, if we were designing this from scratch, I might agree with =
-leaving
-> > > > > more up to the filesystem, but the existing users all have pretty=
- much
-> > > > > the same needs. I'm going to plan to try to keep most of this in =
-the
-> > > > > common infrastructure defined in iversion.h.
-> > > > >=20
-> > > > > Ted, for the ext4 crash counter, what wordsize were you thinking?=
- I
-> > > > > doubt we'll be able to use much more than 32 bits so a larger int=
-eger is
-> > > > > probably not worthwhile. There are several holes in struct super_=
-block
-> > > > > (at least on x86_64), so adding this field to the generic structu=
-re
-> > > > > needn't grow it.
-> > > >=20
-> > > > That said, now that I've taken a swipe at implementing this, I need=
- more
-> > > > information than just the crash counter. We need to multiply the cr=
-ash
-> > > > counter with a reasonable estimate of the maximum number of individ=
-ual
-> > > > writes that could occur between an i_version being incremented and =
-that
-> > > > value making it to the backing store.
-> > > >=20
-> > > > IOW, given a write that bumps the i_version to X, how many more wri=
-te
-> > > > calls could race in before X makes it to the platter? I took a SWAG=
- and
-> > > > said 4k in an earlier email, but I don't really have a way to know,=
- and
-> > > > that could vary wildly with different filesystems and storage.
-> > > >=20
-> > > > What I'd like to see is this in struct super_block:
-> > > >=20
-> > > > 	u32		s_version_offset;
-> > >=20
-> > > 	u64		s_version_salt;
-> > >=20
-> >=20
-> > IDK...it _is_ an offset since we're folding it in with addition, and it
-> > has a real meaning. Filesystems do need to be cognizant of that fact, I
-> > think.
-> >=20
-> > Also does anyone have a preference on doing this vs. a get_version_salt
-> > or get_version_offset sb operation? I figured the value should be mostl=
-y
-> > static so it'd be nice to avoid an operation for it.
-> >=20
-> > > > ...and then individual filesystems can calculate:
-> > > >=20
-> > > > 	crash_counter * max_number_of_writes
-> > > >=20
-> > > > and put the correct value in there at mount time.
-> > >=20
-> > > Other filesystems might not have a crash counter but have other
-> > > information that can be substituted, like a mount counter or a
-> > > global change sequence number that is guaranteed to increment from
-> > > one mount to the next.=20
-> > >=20
-> >=20
-> > The problem there is that you're going to cause the invalidation of all
-> > of the NFS client's cached regular files, even on clean server reboots.
-> > That's not a desirable outcome.
->=20
-> Stop saying "anything less than perfect is unacceptible". I *know*
-> that changing the salt on every mount might result in less than
-> perfect results, but the fact is that a -false negative- is a data
-> corruption event, whilst a false positive is not. False positives
-> may not be desirable, but false negatives are *not acceptible at
-> all*.
->=20
-> XFS can give you a guarantee of no false negatives right now with no
-> on-disk format changes necessary, but it comes with the downside of
-> false positives. That's not the end of the world, and it gives NFS
-> the functionality it needs immediately and allows us time to add
-> purpose-built on-disk functionality that gives NFS exactly what it
-> wants. The reality is that this purpose-built on-disk change will
-> take years to roll out to production systems, whilst using what we
-> have now is just a kernel patch and upgrade away....
->=20
-> Changing on-disk metadata formats takes time, no matter how simple
-> the change, and this timeframe is not something the NFS server
-> actually controls.
->=20
-> But there is a way for the NFS server to define and control it's own
-> on-disk persistent metadata: *extended attributes*.
->=20
-> How about we set a "crash" extended attribute on the root of an NFS
-> export when the filesystem is exported, and then remove it when the
-> filesystem is unexported.
->=20
-> This gives the NFS server it's own persistent attribute that tells
-> it whether the filesystem was *unexported* cleanly. If the exportfs
-> code calls syncfs() before the xattr is removed, then it guarantees
-> that everything the NFS clients have written and modified will be
-> exactly present the next time the filesystem is exported. If the
-> "crash" xattr is present when the filesystem is exported, then it
-> wasn't cleanly synced before it was taken out of service, and so
-> something may have been lost and the "crash counter" needs to be
-> bumped.
->=20
-> Yes, the "crash counter" is held in another xattr, so that it is
-> persistent across crash and mount/unmount cycles. If the crash
-> xattr is present, the NFSD reads, bumps and writes the crash counter
-> xattr, and uses the new value for the life of that export. If the
-> crash xattr is not present, then is just reads the counter xattr and
-> uses it unchanged.
->=20
-> IOWs, the NFS server can define it's own on-disk persistent metadata
-> using xattrs, and you don't need local filesystems to be modified at
-> all. You can add the crash epoch into the change attr that is sent
-> to NFS clients without having to change the VFS i_version
-> implementation at all.
->=20
-> This whole problem is solvable entirely within the NFS server code,
-> and we don't need to change local filesystems at all. NFS can
-> control the persistence and format of the xattrs it uses, and it
-> does not need new custom on-disk format changes from every
-> filesystem to support this new application requirement.
->=20
-> At this point, NFS server developers don't need to care what the
-> underlying filesystem format provides - the xattrs provide the crash
-> detection and enumeration the NFS server functionality requires.
->=20
+Hi Darrick,
 
-Doesn't the filesystem already detect when it's been mounted after an
-unclean shutdown? I'm not sure what good we'll get out of bolting this
-scheme onto the NFS server, when the filesystem could just as easily
-give us this info.
+This 5.4.y backport series contains fixes from v5.5 release.
 
-In any case, the main problem at this point is not so much in detecting
-when there has been an unclean shutdown, but rather what to do when
-there is one. We need to to advance the presented change attributes
-beyond the largest possible one that may have been handed out prior to
-the crash.=20
+This patchset has been tested by executing fstests (via kdevops) using
+the following XFS configurations,
 
-How do we determine what that offset should be? Your last email
-suggested that there really is no limit to the number of i_version bumps
-that can happen in memory before one of them makes it to disk. What can
-we do to address that?
---=20
-Jeff Layton <jlayton@kernel.org>
+1. No CRC (with 512 and 4k block size).
+2. Reflink/Rmapbt (1k and 4k block size).
+3. Reflink without Rmapbt.
+4. External log device.
+
+The following lists patches which required other dependency patches to
+be included,
+
+1. 050552cbe06a3a9c3f977dcf11ff998ae1d5c2d5
+   xfs: fix some memory leaks in log recovery
+   - 895e196fb6f84402dcd0c1d3c3feb8a58049564e
+     xfs: convert EIO to EFSCORRUPTED when log contents are invalid
+   - 895e196fb6f84402dcd0c1d3c3feb8a58049564e
+     xfs: constify the buffer pointer arguments to error functions
+   - a5155b870d687de1a5f07e774b49b1e8ef0f6f50
+     xfs: always log corruption errors
+2. 13eaec4b2adf2657b8167b67e27c97cc7314d923
+   xfs: don't commit sunit/swidth updates to disk if that would cause
+   repair failures
+   - 1cac233cfe71f21e069705a4930c18e48d897be6
+     xfs: refactor agfl length computation function
+   - 4f5b1b3a8fa07dc8ecedfaf539b3deed8931a73e
+     xfs: split the sunit parameter update into two parts
+
+Changelog:
+V1 -> V2:
+  1. Drop "xfs: include QUOTA, FATAL ASSERT build options in
+     XFS_BUILD_OPTIONS" commit since it does not fix a real bug.
+
+Brian Foster (2):
+  xfs: stabilize insert range start boundary to avoid COW writeback race
+  xfs: use bitops interface for buf log item AIL flag check
+
+Chandan Babu R (1):
+  MAINTAINERS: add Chandan as xfs maintainer for 5.4.y
+
+Christoph Hellwig (1):
+  xfs: slightly tweak an assert in xfs_fs_map_blocks
+
+Darrick J. Wong (11):
+  xfs: replace -EIO with -EFSCORRUPTED for corrupt metadata
+  xfs: add missing assert in xfs_fsmap_owner_from_rmap
+  xfs: range check ri_cnt when recovering log items
+  xfs: attach dquots and reserve quota blocks during unwritten
+    conversion
+  xfs: convert EIO to EFSCORRUPTED when log contents are invalid
+  xfs: constify the buffer pointer arguments to error functions
+  xfs: always log corruption errors
+  xfs: fix some memory leaks in log recovery
+  xfs: refactor agfl length computation function
+  xfs: split the sunit parameter update into two parts
+  xfs: don't commit sunit/swidth updates to disk if that would cause
+    repair failures
+
+Dave Chinner (1):
+  iomap: iomap that extends beyond EOF should be marked dirty
+
+kaixuxia (1):
+  xfs: Fix deadlock between AGI and AGF when target_ip exists in
+    xfs_rename()
+
+ MAINTAINERS                    |   3 +-
+ fs/xfs/libxfs/xfs_alloc.c      |  27 ++++--
+ fs/xfs/libxfs/xfs_attr_leaf.c  |  12 ++-
+ fs/xfs/libxfs/xfs_bmap.c       |  16 +++-
+ fs/xfs/libxfs/xfs_btree.c      |   5 +-
+ fs/xfs/libxfs/xfs_da_btree.c   |  24 +++--
+ fs/xfs/libxfs/xfs_dir2.c       |   4 +-
+ fs/xfs/libxfs/xfs_dir2.h       |   2 +
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |   4 +-
+ fs/xfs/libxfs/xfs_dir2_node.c  |  12 ++-
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  28 +++++-
+ fs/xfs/libxfs/xfs_ialloc.c     |  64 +++++++++++++
+ fs/xfs/libxfs/xfs_ialloc.h     |   1 +
+ fs/xfs/libxfs/xfs_inode_fork.c |   6 ++
+ fs/xfs/libxfs/xfs_refcount.c   |   4 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c   |   6 +-
+ fs/xfs/xfs_acl.c               |  15 ++-
+ fs/xfs/xfs_attr_inactive.c     |  10 +-
+ fs/xfs/xfs_attr_list.c         |   5 +-
+ fs/xfs/xfs_bmap_item.c         |   7 +-
+ fs/xfs/xfs_bmap_util.c         |  12 +++
+ fs/xfs/xfs_buf_item.c          |   2 +-
+ fs/xfs/xfs_dquot.c             |   2 +-
+ fs/xfs/xfs_error.c             |  27 +++++-
+ fs/xfs/xfs_error.h             |   7 +-
+ fs/xfs/xfs_extfree_item.c      |   5 +-
+ fs/xfs/xfs_fsmap.c             |   1 +
+ fs/xfs/xfs_inode.c             |  32 ++++++-
+ fs/xfs/xfs_inode_item.c        |   5 +-
+ fs/xfs/xfs_iomap.c             |  17 ++++
+ fs/xfs/xfs_iops.c              |  10 +-
+ fs/xfs/xfs_log_recover.c       |  72 +++++++++-----
+ fs/xfs/xfs_message.c           |   2 +-
+ fs/xfs/xfs_message.h           |   2 +-
+ fs/xfs/xfs_mount.c             | 168 +++++++++++++++++++++++----------
+ fs/xfs/xfs_pnfs.c              |   4 +-
+ fs/xfs/xfs_qm.c                |  13 ++-
+ fs/xfs/xfs_refcount_item.c     |   5 +-
+ fs/xfs/xfs_rmap_item.c         |   9 +-
+ fs/xfs/xfs_trace.h             |  21 +++++
+ include/linux/iomap.h          |   2 +
+ 41 files changed, 523 insertions(+), 150 deletions(-)
+
+-- 
+2.35.1
+
