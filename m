@@ -2,283 +2,241 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5054C6FA8B
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Sep 2022 23:09:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66F1FC6FA92
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Sep 2022 00:16:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229939AbiISXJ4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Sep 2022 19:09:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59958 "EHLO
+        id S229802AbiITAQ4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Sep 2022 20:16:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229599AbiISXJz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2022 19:09:55 -0400
+        with ESMTP id S229498AbiITAQx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2022 20:16:53 -0400
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0DB7A6588;
-        Mon, 19 Sep 2022 16:09:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6483E45040;
+        Mon, 19 Sep 2022 17:16:52 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-183-60.pa.nsw.optusnet.com.au [49.180.183.60])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CB9018A9C44;
-        Tue, 20 Sep 2022 09:09:48 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 26A048AA16C;
+        Tue, 20 Sep 2022 10:16:47 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oaPtb-009mXt-At; Tue, 20 Sep 2022 09:09:47 +1000
-Date:   Tue, 20 Sep 2022 09:09:47 +1000
+        id 1oaQwP-009ndF-PX; Tue, 20 Sep 2022 10:16:45 +1000
+Date:   Tue, 20 Sep 2022 10:16:45 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
- workload
-Message-ID: <20220919230947.GM3600936@dread.disaster.area>
-References: <20220617151135.yc6vytge6hjabsuz@quack3>
- <CAOQ4uxjvx33KRSm-HX2AjL=aB5yO=FeWokZ1usDKW7+R4Ednhg@mail.gmail.com>
- <20220620091136.4uosazpwkmt65a5d@quack3.lan>
- <CAOQ4uxg+uY5PdcU1=RyDWCxbP4gJB3jH1zkAj=RpfndH9czXbg@mail.gmail.com>
- <20220621085956.y5wyopfgzmqkaeiw@quack3.lan>
- <CAOQ4uxheatf+GCHxbUDQ4s4YSQib3qeYVeXZwEicR9fURrEFBA@mail.gmail.com>
- <CAOQ4uxguwnx4AxXqp_zjg39ZUaTGJEM2wNUPnNdtiqV2Q9woqA@mail.gmail.com>
- <YyH61deSiW1TnY//@magnolia>
- <CAOQ4uxhFJWW-ykyzomHCUWfWvbJNEmetw0G5mUYjFGoYJBb7NA@mail.gmail.com>
- <YyIR4XmDYkYIK2ad@magnolia>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Theodore Ts'o <tytso@mit.edu>, NeilBrown <neilb@suse.de>,
+        Trond Myklebust <trondmy@hammerspace.com>,
+        "bfields@fieldses.org" <bfields@fieldses.org>,
+        "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "brauner@kernel.org" <brauner@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+        "fweimer@redhat.com" <fweimer@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
+        "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "xiubli@redhat.com" <xiubli@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "lczerner@redhat.com" <lczerner@redhat.com>,
+        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
+Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
+ STATX_INO_VERSION field
+Message-ID: <20220920001645.GN3600936@dread.disaster.area>
+References: <0646410b6d2a5d19d3315f339b2928dfa9f2d922.camel@hammerspace.com>
+ <34e91540c92ad6980256f6b44115cf993695d5e1.camel@kernel.org>
+ <871f9c5153ddfe760854ca31ee36b84655959b83.camel@hammerspace.com>
+ <e8922bc821a40f5a3f0a1301583288ed19b6891b.camel@kernel.org>
+ <166328063547.15759.12797959071252871549@noble.neil.brown.name>
+ <YyQdmLpiAMvl5EkU@mit.edu>
+ <7027d1c2923053fe763e9218d10ce8634b56e81d.camel@kernel.org>
+ <24005713ad25370d64ab5bd0db0b2e4fcb902c1c.camel@kernel.org>
+ <20220918235344.GH3600936@dread.disaster.area>
+ <87fb43b117472c0a4c688c37a925ac51738c8826.camel@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YyIR4XmDYkYIK2ad@magnolia>
+In-Reply-To: <87fb43b117472c0a4c688c37a925ac51738c8826.camel@kernel.org>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6328f6bd
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=63290673
         a=mj5ET7k2jFntY++HerHxfg==:117 a=mj5ET7k2jFntY++HerHxfg==:17
-        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=9EkRCnL_sJbdCUU_ZCUA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=7-415B0cAAAA:8
+        a=PBuYFrC3Npbnkw49Qb4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 14, 2022 at 10:39:45AM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 14, 2022 at 07:29:15PM +0300, Amir Goldstein wrote:
-> > > > Dave, Christoph,
-> > > >
-> > > > I know that you said that changing the atomic buffered read semantics
-> > > > is out of the question and that you also objected to a mount option
-> > > > (which nobody will know how to use) and I accept that.
-> > > >
-> > > > Given that a performant range locks implementation is not something
-> > > > trivial to accomplish (Dave please correct me if I am wrong),
-> > > > and given the massive performance impact of XFS_IOLOCK_SHARED
-> > > > on this workload,
-> > > > what do you think about POSIX_FADV_TORN_RW that a specific
-> > > > application can use to opt-out of atomic buffer read semantics?
-> > > >
-> > > > The specific application that I want to modify to use this hint is Samba.
-> > > > Samba uses IO threads by default to issue pread/pwrite on the server
-> > > > for IO requested by the SMB client. The IO size is normally larger than
-> > > > xfs block size and the range may not be block aligned.
-> > > >
-> > > > The SMB protocol has explicit byte range locks and the server implements
-> > > > them, so it is pretty safe to assume that a client that did not request
-> > > > range locks does not need xfs to do the implicit range locking for it.
-> > > >
-> > > > For this reason and because of the huge performance win,
-> > > > I would like to implement POSIX_FADV_TORN_RW in xfs and
-> > > > have Samba try to set this hint when supported.
-> > > >
-> > > > It is very much possible that NFSv4 servers (user and kennel)
-> > > > would also want to set this hint for very similar reasons.
-> > > >
-> > > > Thoughts?
-> > >
-> > > How about range locks for i_rwsem and invalidate_lock?  That could
-> > > reduce contention on VM farms, though I can only assume that, given that
-> > > I don't have a reference implementation to play with...
-> > >
+On Mon, Sep 19, 2022 at 09:13:00AM -0400, Jeff Layton wrote:
+> On Mon, 2022-09-19 at 09:53 +1000, Dave Chinner wrote:
+> > On Fri, Sep 16, 2022 at 11:11:34AM -0400, Jeff Layton wrote:
+> > > On Fri, 2022-09-16 at 07:36 -0400, Jeff Layton wrote:
+> > > > On Fri, 2022-09-16 at 02:54 -0400, Theodore Ts'o wrote:
+> > > > > On Fri, Sep 16, 2022 at 08:23:55AM +1000, NeilBrown wrote:
+> > > > > > > > If the answer is that 'all values change', then why store the crash
+> > > > > > > > counter in the inode at all? Why not just add it as an offset when
+> > > > > > > > you're generating the user-visible change attribute?
+> > > > > > > > 
+> > > > > > > > i.e. statx.change_attr = inode->i_version + (crash counter * offset)
+> > > > > 
+> > > > > I had suggested just hashing the crash counter with the file system's
+> > > > > on-disk i_version number, which is essentially what you are suggested.
+> > > > > 
+> > > > > > > Yes, if we plan to ensure that all the change attrs change after a
+> > > > > > > crash, we can do that.
+> > > > > > > 
+> > > > > > > So what would make sense for an offset? Maybe 2**12? One would hope that
+> > > > > > > there wouldn't be more than 4k increments before one of them made it to
+> > > > > > > disk. OTOH, maybe that can happen with teeny-tiny writes.
+> > > > > > 
+> > > > > > Leave it up the to filesystem to decide.  The VFS and/or NFSD should
+> > > > > > have not have part in calculating the i_version.  It should be entirely
+> > > > > > in the filesystem - though support code could be provided if common
+> > > > > > patterns exist across filesystems.
+> > > > > 
+> > > > > Oh, *heck* no.  This parameter is for the NFS implementation to
+> > > > > decide, because it's NFS's caching algorithms which are at stake here.
+> > > > > 
+> > > > > As a the file system maintainer, I had offered to make an on-disk
+> > > > > "crash counter" which would get updated when the journal had gotten
+> > > > > replayed, in addition to the on-disk i_version number.  This will be
+> > > > > available for the Linux implementation of NFSD to use, but that's up
+> > > > > to *you* to decide how you want to use them.
+> > > > > 
+> > > > > I was perfectly happy with hashing the crash counter and the i_version
+> > > > > because I had assumed that not *that* much stuff was going to be
+> > > > > cached, and so invalidating all of the caches in the unusual case
+> > > > > where there was a crash was acceptable.  After all it's a !@#?!@
+> > > > > cache.  Caches sometimmes get invalidated.  "That is the order of
+> > > > > things." (as Ramata'Klan once said in "Rocks and Shoals")
+> > > > > 
+> > > > > But if people expect that multiple TB's of data is going to be stored;
+> > > > > that cache invalidation is unacceptable; and that a itsy-weeny chance
+> > > > > of false negative failures which might cause data corruption might be
+> > > > > acceptable tradeoff, hey, that's for the system which is providing
+> > > > > caching semantics to determine.
+> > > > > 
+> > > > > PLEASE don't put this tradeoff on the file system authors; I would
+> > > > > much prefer to leave this tradeoff in the hands of the system which is
+> > > > > trying to do the caching.
+> > > > > 
+> > > > 
+> > > > Yeah, if we were designing this from scratch, I might agree with leaving
+> > > > more up to the filesystem, but the existing users all have pretty much
+> > > > the same needs. I'm going to plan to try to keep most of this in the
+> > > > common infrastructure defined in iversion.h.
+> > > > 
+> > > > Ted, for the ext4 crash counter, what wordsize were you thinking? I
+> > > > doubt we'll be able to use much more than 32 bits so a larger integer is
+> > > > probably not worthwhile. There are several holes in struct super_block
+> > > > (at least on x86_64), so adding this field to the generic structure
+> > > > needn't grow it.
+> > > 
+> > > That said, now that I've taken a swipe at implementing this, I need more
+> > > information than just the crash counter. We need to multiply the crash
+> > > counter with a reasonable estimate of the maximum number of individual
+> > > writes that could occur between an i_version being incremented and that
+> > > value making it to the backing store.
+> > > 
+> > > IOW, given a write that bumps the i_version to X, how many more write
+> > > calls could race in before X makes it to the platter? I took a SWAG and
+> > > said 4k in an earlier email, but I don't really have a way to know, and
+> > > that could vary wildly with different filesystems and storage.
+> > > 
+> > > What I'd like to see is this in struct super_block:
+> > > 
+> > > 	u32		s_version_offset;
 > > 
-> > If you are asking if I have the bandwidth to work on range lock
-> > then the answer is that I do not.
+> > 	u64		s_version_salt;
 > > 
-> > IIRC, Dave had a WIP and ran some benchmarks with range locks,
-> > but I do not know at which state that work is.
 > 
-> Yeah, that's what I was getting at -- I really wish Dave would post that
-> as an RFC.  The last time I talked to him about it, he was worried that
-> the extra complexity of the range lock structure would lead to more
-> memory traffic and overhead.
+> IDK...it _is_ an offset since we're folding it in with addition, and it
+> has a real meaning. Filesystems do need to be cognizant of that fact, I
+> think.
+> 
+> Also does anyone have a preference on doing this vs. a get_version_salt
+> or get_version_offset sb operation? I figured the value should be mostly
+> static so it'd be nice to avoid an operation for it.
+> 
+> > > ...and then individual filesystems can calculate:
+> > > 
+> > > 	crash_counter * max_number_of_writes
+> > > 
+> > > and put the correct value in there at mount time.
+> > 
+> > Other filesystems might not have a crash counter but have other
+> > information that can be substituted, like a mount counter or a
+> > global change sequence number that is guaranteed to increment from
+> > one mount to the next. 
+> > 
+> 
+> The problem there is that you're going to cause the invalidation of all
+> of the NFS client's cached regular files, even on clean server reboots.
+> That's not a desirable outcome.
 
-The reason I haven't posted it is that I don't think range locks can
-ever be made to perform and scale as we need for the IO path.
+Stop saying "anything less than perfect is unacceptible". I *know*
+that changing the salt on every mount might result in less than
+perfect results, but the fact is that a -false negative- is a data
+corruption event, whilst a false positive is not. False positives
+may not be desirable, but false negatives are *not acceptible at
+all*.
 
-The problem with range locks is that the structure that tracks the
-locked ranges needs locking itself, and that means taking an IO lock
-is no longer just a single atomic operation - it's at least two
-atomic ops (lock, unlock on a spin lock) and then a bunch of cache
-misses while searching up the structure containing the range locks
-looking for overlaps.
+XFS can give you a guarantee of no false negatives right now with no
+on-disk format changes necessary, but it comes with the downside of
+false positives. That's not the end of the world, and it gives NFS
+the functionality it needs immediately and allows us time to add
+purpose-built on-disk functionality that gives NFS exactly what it
+wants. The reality is that this purpose-built on-disk change will
+take years to roll out to production systems, whilst using what we
+have now is just a kernel patch and upgrade away....
 
-Hence a { range_lock(); range_unlock(); } pair is at minimum twice as
-costly { down_read(); up_read(); } and that shows up dramatically
-with direct IO. My test system (2s, 32p) handles about 3 million
-atomic ops for a single cacheline across many CPUs before it breaks
-down into cacheline contention and goes really slow.
+Changing on-disk metadata formats takes time, no matter how simple
+the change, and this timeframe is not something the NFS server
+actually controls.
 
-That means I can run 1.6 million read/write DIO iops to a single
-file on the test machine with shared rwsem locking (~3.2 million
-atomic ops a second) but with range locks (assuming just atomic op
-overhead) that drops to ~800k r/w DIO ops. The hardware IO capacity
-is just over 1.7MIOPS...
+But there is a way for the NFS server to define and control it's own
+on-disk persistent metadata: *extended attributes*.
 
-In reality, this contended cacheline is not the limiting factor for
-range locks - the limiting factor is the time it takes to run the
-critical section inside that lock.  This was found with the mmap_sem
-when it was converted to range locks - the cache misses doing
-rb-tree pointer chasing with the spinlock held meant that the actual
-range lock rate topped out at about 180k lock,unlock pairs per
-second. i.e. an order of magnitude slower than a rwsem on this
-machine.
+How about we set a "crash" extended attribute on the root of an NFS
+export when the filesystem is exported, and then remove it when the
+filesystem is unexported.
 
-Read this thread again:
+This gives the NFS server it's own persistent attribute that tells
+it whether the filesystem was *unexported* cleanly. If the exportfs
+code calls syncfs() before the xattr is removed, then it guarantees
+that everything the NFS clients have written and modified will be
+exactly present the next time the filesystem is exported. If the
+"crash" xattr is present when the filesystem is exported, then it
+wasn't cleanly synced before it was taken out of service, and so
+something may have been lost and the "crash counter" needs to be
+bumped.
 
-https://lore.kernel.org/linux-xfs/20190416122240.GN29573@dread.disaster.area/
+Yes, the "crash counter" is held in another xattr, so that it is
+persistent across crash and mount/unmount cycles. If the crash
+xattr is present, the NFSD reads, bumps and writes the crash counter
+xattr, and uses the new value for the life of that export. If the
+crash xattr is not present, then is just reads the counter xattr and
+uses it unchanged.
 
-That's really the elephant in the range locking room: a range lock
-with a locked search and update aglorithm can't scale beyond a
-single CPU in it's critical section. It's a hard limit no matter how
-many CPUs you have and how much concurrency the workload has - the
-range lock has a single threaded critical section that results in a
-hard computational limit on range lock operations.
+IOWs, the NFS server can define it's own on-disk persistent metadata
+using xattrs, and you don't need local filesystems to be modified at
+all. You can add the crash epoch into the change attr that is sent
+to NFS clients without having to change the VFS i_version
+implementation at all.
 
-Hence I was looking at using a novel OLC btree algorithm for storing
-the range locks. The RCU-based OLC btree is largely lockless,
-allowing conconcurrent search, insert and delete operations on range
-based index. I've largely got the OLC btree to work, but that simply
-exposed a further problem that range locks need to handle.
+This whole problem is solvable entirely within the NFS server code,
+and we don't need to change local filesystems at all. NFS can
+control the persistence and format of the xattrs it uses, and it
+does not need new custom on-disk format changes from every
+filesystem to support this new application requirement.
 
-That is, the biggest problem for scaling range lock performance is
-that locking is mostly singleton operation - very few workloads
-actually use concurrent access to a single file and hence need
-multiple range locks held at once. As a result, the typical
-concurrent IO range lock workload results in a single node btree,
-and so all lookups, inserts and remove hammer the seqlocks on a
-single node and we end up contending on a single cache line again.
-Comared to a rwsem, we consume a lot more CPU overhead before we
-detect a change has occurred and we need to go around and try again.
-
-That said, it's better than previous range lock implementations in
-that it gets up to about 400-450k mixed DIO and buffered iops, but
-it is still way, way down on using a shared rwsem or serialising at
-a page granularity via page locks.
-
-Yes, I know there are many advantages to range locking. Because we
-can exclude specific ranges, operations like truncate, fallocate,
-buffered writes, etc can all run concurrently with reads. DIO can
-run perfectly coherently with buffered IO (mmap is still a
-problem!). We can extend files without having to serialise against
-other IO within the existing EOF. We can pass lock contexts with AIO
-so that the inode can be unlocked at completion and we can get rid
-of the nasty inode_dio_wait() stuff we have for synchronisation with
-DIO. And so on.
-
-IOWs, while there are many upsides to range locking the reality is
-that single file IO performance will not scale to storage hardware
-capability any more. I have few thoughts on how range locking could
-be further optimised to avoid such overheads in the cases where
-range locking is not necessary, but I really don't think that the
-scalability of a range lock will ever be sufficient to allow us to
-track every IO we have in flight.
-
-> I /know/ there are a lot of cloud vendors that would appreciate the
-> speedup that range locking might provide.  I'm also fairly sure there
-> are also people who want maximum single threaded iops and will /not/
-> like range locks, but I think we ought to let kernel distributors choose
-> which one they want.
-
-Speedup for what operations? Not single file DIO, and only for mixed
-buffered read/write. Perhaps for mixed fallocate/DIO workloads might
-benefit, but I reluctantly came to the conclusion that there really
-aren't many workloads that even a highly optimised rangelock would
-actually end up improving performance for...
-
-> Recently I've been playing around with static keys, because certain
-> parts of xfs online fsck need to hook into libxfs.  The hooks have some
-> overhead, so I'd want to reduce the cost of that to making the
-> instruction prefetcher skip over a nop sled when fsck isn't running.
-> I sorta suspect this is a way out -- the distributor selects a default
-> locking implementation at kbuild time, and we allow a kernel command
-> line parameter to switch (if desired) during early boot.  That only
-> works if the compiler supports asm goto (iirc) but that's not /so/
-> uncommon.
-
-I think it's a lot harder than that. The range lock requires a
-signification on-stack structure to be declared in the context that
-the lock is being taken. i.e.:
-
-+#define RANGE_LOCK_FULL                (LLONG_MAX)
-+
-+struct range_lock {
-+       uint64_t                start;
-+       uint64_t                end;
-+       struct list_head        wait_list;
-+#ifdef __KERNEL__
-+       struct task_struct      *task;
-+#else
-+       pthread_cond_t          task;
-+#endif
-+};
-+
-+#define __RANGE_LOCK_INITIALIZER(__name, __start, __end) {             \
-+               .start = (__start)                                      \
-+               ,.end = (__end)                                         \
-+               ,.wait_list = LIST_HEAD_INIT((__name).wait_list)        \
-+       }
-+
-+#define DEFINE_RANGE_LOCK(name, start, end)                            \
-+       struct range_lock name = __RANGE_LOCK_INITIALIZER((name), (start), (end))
-+
-+#define DEFINE_RANGE_LOCK_FULL(name)                                   \
-+       struct range_lock name = __RANGE_LOCK_INITIALIZER((name), 0, RANGE_LOCK_FULL)
-
-
-And code that uses it looks like:
-
-+static inline void
-+xfs_iolock_range_init(
-+       struct xfs_inode        *ip,
-+       struct range_lock       *rlock,
-+       uint64_t                start,
-+       uint64_t                count)
-+{
-+       int                     rounding;
-+
-+       rounding = max_t(int, i_blocksize(VFS_I(ip)), PAGE_SIZE);
-+       range_lock_init(rlock, round_down(start, rounding),
-+                               round_up(start + count, rounding));
-+}
-+
- STATIC ssize_t
- xfs_file_dio_read(
-        struct kiocb            *iocb,
-        struct iov_iter         *to)
- {
-        struct xfs_inode        *ip = XFS_I(file_inode(iocb->ki_filp));
-+       size_t                  count = iov_iter_count(to);
-        ssize_t                 ret;
-+       struct range_lock       rlock;
-
-        trace_xfs_file_direct_read(iocb, to);
-
--       if (!iov_iter_count(to))
-+       if (!count)
-                return 0; /* skip atime */
-
-        file_accessed(iocb->ki_filp);
-
--       ret = xfs_ilock_iocb(iocb, XFS_VFSLOCK_SHARED);
-+       xfs_iolock_range_init(ip, &rlock, iocb->ki_pos, count);
-+       ret = xfs_ilock_iocb(iocb, &rlock, XFS_VFSLOCK_SHARED);
-
-Hence I don't think this is as simple as using static keys to switch
-code paths as there's a whole lot more information that needs to be
-set up for range locks compared to just using rwsems....
+At this point, NFS server developers don't need to care what the
+underlying filesystem format provides - the xattrs provide the crash
+detection and enumeration the NFS server functionality requires.
 
 -Dave.
 -- 
