@@ -2,172 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 758B5C32771
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Sep 2022 08:30:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7B2FC6FA8B
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Sep 2022 09:02:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229675AbiIUIaO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Sep 2022 04:30:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33452 "EHLO
+        id S230369AbiIUJCW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Sep 2022 05:02:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229687AbiIUIaK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2022 04:30:10 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 427AE12765;
-        Wed, 21 Sep 2022 01:30:07 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 24A2211010A1;
-        Wed, 21 Sep 2022 18:30:06 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oav7M-00AKcy-H0; Wed, 21 Sep 2022 18:30:04 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1oav7M-005vTb-1Y;
-        Wed, 21 Sep 2022 18:30:04 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org
-Subject: [PATCH 2/2] xfs: use iomap_valid method to detect stale cached iomaps
-Date:   Wed, 21 Sep 2022 18:29:59 +1000
-Message-Id: <20220921082959.1411675-3-david@fromorbit.com>
-X-Mailer: git-send-email 2.37.2
-In-Reply-To: <20220921082959.1411675-1-david@fromorbit.com>
-References: <20220921082959.1411675-1-david@fromorbit.com>
+        with ESMTP id S230355AbiIUJCT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2022 05:02:19 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06228857E7;
+        Wed, 21 Sep 2022 02:02:13 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6538CB82EC6;
+        Wed, 21 Sep 2022 09:02:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3BC4C433C1;
+        Wed, 21 Sep 2022 09:02:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1663750931;
+        bh=/Hc3OgBN6R6g+SbhVdDMl56jPmzJ6KYpC0YKu675wTs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hSpypWQxvJ5DvRm0FQkIAocXE0dyS7DG6l5STuw9ZZgrEVaGX2Ou/sjgoLkcRqexe
+         oyt7xvbbyslMS4b+3OGFwAXdJ1us5B+rlFzLhSC+66JGE8tcIhIuvMRZcjhmRohjJm
+         u7jud5PdTET3M1+q/0TJ56XmW2skIIenSs1LWQ+Q=
+Date:   Wed, 21 Sep 2022 11:01:33 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     sashal@kernel.org, mcgrof@kernel.org, linux-xfs@vger.kernel.org,
+        stable@vger.kernel.org, djwong@kernel.org, amir73il@gmail.com,
+        leah.rumancik@gmail.com
+Subject: Re: [PATCH 5.4 00/17] xfs stable patches for 5.4.y (from v5.5)
+Message-ID: <YyrS7dE8UtDydjZF@kroah.com>
+References: <20220921032352.307699-1-chandan.babu@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=632acb8e
-        a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
-        a=xOM3xZuef0cA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=9OLnYhGjAqVIL6cWKtQA:9 a=AjGcO6oz07-iQ99wixmX:22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220921032352.307699-1-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Sep 21, 2022 at 08:53:35AM +0530, Chandan Babu R wrote:
+> Hi Greg,
+> 
+> This 5.4.y backport series contains fixes from v5.5. The patchset has
+> been acked by Darrick.
+> 
+> Brian Foster (2):
+>   xfs: stabilize insert range start boundary to avoid COW writeback race
+>   xfs: use bitops interface for buf log item AIL flag check
+> 
+> Chandan Babu R (1):
+>   MAINTAINERS: add Chandan as xfs maintainer for 5.4.y
+> 
+> Christoph Hellwig (1):
+>   xfs: slightly tweak an assert in xfs_fs_map_blocks
+> 
+> Darrick J. Wong (11):
+>   xfs: replace -EIO with -EFSCORRUPTED for corrupt metadata
+>   xfs: add missing assert in xfs_fsmap_owner_from_rmap
+>   xfs: range check ri_cnt when recovering log items
+>   xfs: attach dquots and reserve quota blocks during unwritten
+>     conversion
+>   xfs: convert EIO to EFSCORRUPTED when log contents are invalid
+>   xfs: constify the buffer pointer arguments to error functions
+>   xfs: always log corruption errors
+>   xfs: fix some memory leaks in log recovery
+>   xfs: refactor agfl length computation function
+>   xfs: split the sunit parameter update into two parts
+>   xfs: don't commit sunit/swidth updates to disk if that would cause
+>     repair failures
+> 
+> Dave Chinner (1):
+>   iomap: iomap that extends beyond EOF should be marked dirty
+> 
+> kaixuxia (1):
+>   xfs: Fix deadlock between AGI and AGF when target_ip exists in
+>     xfs_rename()
+> 
+>  MAINTAINERS                    |   3 +-
+>  fs/xfs/libxfs/xfs_alloc.c      |  27 ++++--
+>  fs/xfs/libxfs/xfs_attr_leaf.c  |  12 ++-
+>  fs/xfs/libxfs/xfs_bmap.c       |  16 +++-
+>  fs/xfs/libxfs/xfs_btree.c      |   5 +-
+>  fs/xfs/libxfs/xfs_da_btree.c   |  24 +++--
+>  fs/xfs/libxfs/xfs_dir2.c       |   4 +-
+>  fs/xfs/libxfs/xfs_dir2.h       |   2 +
+>  fs/xfs/libxfs/xfs_dir2_leaf.c  |   4 +-
+>  fs/xfs/libxfs/xfs_dir2_node.c  |  12 ++-
+>  fs/xfs/libxfs/xfs_dir2_sf.c    |  28 +++++-
+>  fs/xfs/libxfs/xfs_ialloc.c     |  64 +++++++++++++
+>  fs/xfs/libxfs/xfs_ialloc.h     |   1 +
+>  fs/xfs/libxfs/xfs_inode_fork.c |   6 ++
+>  fs/xfs/libxfs/xfs_refcount.c   |   4 +-
+>  fs/xfs/libxfs/xfs_rtbitmap.c   |   6 +-
+>  fs/xfs/xfs_acl.c               |  15 ++-
+>  fs/xfs/xfs_attr_inactive.c     |  10 +-
+>  fs/xfs/xfs_attr_list.c         |   5 +-
+>  fs/xfs/xfs_bmap_item.c         |   7 +-
+>  fs/xfs/xfs_bmap_util.c         |  12 +++
+>  fs/xfs/xfs_buf_item.c          |   2 +-
+>  fs/xfs/xfs_dquot.c             |   2 +-
+>  fs/xfs/xfs_error.c             |  27 +++++-
+>  fs/xfs/xfs_error.h             |   7 +-
+>  fs/xfs/xfs_extfree_item.c      |   5 +-
+>  fs/xfs/xfs_fsmap.c             |   1 +
+>  fs/xfs/xfs_inode.c             |  32 ++++++-
+>  fs/xfs/xfs_inode_item.c        |   5 +-
+>  fs/xfs/xfs_iomap.c             |  17 ++++
+>  fs/xfs/xfs_iops.c              |  10 +-
+>  fs/xfs/xfs_log_recover.c       |  72 +++++++++-----
+>  fs/xfs/xfs_message.c           |   2 +-
+>  fs/xfs/xfs_message.h           |   2 +-
+>  fs/xfs/xfs_mount.c             | 168 +++++++++++++++++++++++----------
+>  fs/xfs/xfs_pnfs.c              |   4 +-
+>  fs/xfs/xfs_qm.c                |  13 ++-
+>  fs/xfs/xfs_refcount_item.c     |   5 +-
+>  fs/xfs/xfs_rmap_item.c         |   9 +-
+>  fs/xfs/xfs_trace.h             |  21 +++++
+>  include/linux/iomap.h          |   2 +
+>  41 files changed, 523 insertions(+), 150 deletions(-)
+> 
+> -- 
+> 2.35.1
+> 
 
-Now that iomap supports a mechanism to validate cached iomaps for
-buffered write operations, hook it up to the XFS buffered write ops
-so that we can avoid data corruptions that result from stale cached
-iomaps. See:
+All now queued up, thanks.
 
-https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
-
-or the ->iomap_valid() introduction commit for exact details of the
-corruption vector.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_iomap.c | 53 ++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 49 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 07da03976ec1..2e77ae817e6b 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -91,6 +91,12 @@ xfs_bmbt_to_iomap(
- 	if (xfs_ipincount(ip) &&
- 	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
- 		iomap->flags |= IOMAP_F_DIRTY;
-+
-+	/*
-+	 * Sample the extent tree sequence so that we can detect if the tree
-+	 * changes while the iomap is still being used.
-+	 */
-+	*((int *)&iomap->private) = READ_ONCE(ip->i_df.if_seq);
- 	return 0;
- }
- 
-@@ -915,6 +921,7 @@ xfs_buffered_write_iomap_begin(
- 	int			allocfork = XFS_DATA_FORK;
- 	int			error = 0;
- 	unsigned int		lockmode = XFS_ILOCK_EXCL;
-+	u16			remap_flags = 0;
- 
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
-@@ -926,6 +933,20 @@ xfs_buffered_write_iomap_begin(
- 
- 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
- 
-+	/*
-+	 * If we are remapping a stale iomap, preserve the IOMAP_F_NEW flag
-+	 * if it is passed to us. This will only be set if we are remapping a
-+	 * range that we just allocated and hence had set IOMAP_F_NEW on. We
-+	 * need to set it again here so any further writes over this newly
-+	 * allocated region we are remapping are preserved.
-+	 *
-+	 * This pairs with the code in xfs_buffered_write_iomap_end() that skips
-+	 * punching newly allocated delalloc regions that have iomaps marked as
-+	 * stale.
-+	 */
-+	if (iomap->flags & IOMAP_F_STALE)
-+		remap_flags = iomap->flags & IOMAP_F_NEW;
-+
- 	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
- 	if (error)
- 		return error;
-@@ -1100,7 +1121,7 @@ xfs_buffered_write_iomap_begin(
- 
- found_imap:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0);
-+	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, remap_flags);
- 
- found_cow:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-@@ -1160,13 +1181,20 @@ xfs_buffered_write_iomap_end(
- 
- 	/*
- 	 * Trim delalloc blocks if they were allocated by this write and we
--	 * didn't manage to write the whole range.
-+	 * didn't manage to write the whole range. If the iomap was marked stale
-+	 * because it is no longer valid, we are going to remap this range
-+	 * immediately, so don't punch it out.
- 	 *
--	 * We don't need to care about racing delalloc as we hold i_mutex
-+	 * XXX (dgc): This next comment and assumption is totally bogus because
-+	 * iomap_page_mkwrite() runs through here and it doesn't hold the
-+	 * i_rwsem. Hence this whole error handling path may be badly broken.
-+	 *
-+	 * We don't need to care about racing delalloc as we hold i_rwsem
- 	 * across the reserve/allocate/unreserve calls. If there are delalloc
- 	 * blocks in the range, they are ours.
- 	 */
--	if ((iomap->flags & IOMAP_F_NEW) && start_fsb < end_fsb) {
-+	if (((iomap->flags & (IOMAP_F_NEW | IOMAP_F_STALE)) == IOMAP_F_NEW) &&
-+	    start_fsb < end_fsb) {
- 		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
- 					 XFS_FSB_TO_B(mp, end_fsb) - 1);
- 
-@@ -1182,9 +1210,26 @@ xfs_buffered_write_iomap_end(
- 	return 0;
- }
- 
-+/*
-+ * Check that the iomap passed to us is still valid for the given offset and
-+ * length.
-+ */
-+static bool
-+xfs_buffered_write_iomap_valid(
-+	struct inode		*inode,
-+	const struct iomap	*iomap)
-+{
-+	int			seq = *((int *)&iomap->private);
-+
-+	if (seq != READ_ONCE(XFS_I(inode)->i_df.if_seq))
-+		return false;
-+	return true;
-+}
-+
- const struct iomap_ops xfs_buffered_write_iomap_ops = {
- 	.iomap_begin		= xfs_buffered_write_iomap_begin,
- 	.iomap_end		= xfs_buffered_write_iomap_end,
-+	.iomap_valid		= xfs_buffered_write_iomap_valid,
- };
- 
- static int
--- 
-2.37.2
-
+greg k-h
