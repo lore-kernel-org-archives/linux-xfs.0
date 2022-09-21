@@ -2,173 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28296C6FA8E
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Sep 2022 00:38:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C91AC6FA82
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Sep 2022 00:48:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230441AbiIUAiV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Sep 2022 20:38:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35270 "EHLO
+        id S231152AbiIUAss (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Sep 2022 20:48:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230388AbiIUAiN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Sep 2022 20:38:13 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66723211
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Sep 2022 17:38:11 -0700 (PDT)
+        with ESMTP id S230300AbiIUAsr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Sep 2022 20:48:47 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEC7979A57
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Sep 2022 17:48:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1E7EFB81178
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2022 00:38:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1CEEC433B5;
-        Wed, 21 Sep 2022 00:38:08 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id C4313CE1C03
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2022 00:48:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BAEEC433D6;
+        Wed, 21 Sep 2022 00:48:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663720688;
-        bh=waD+v5PUpmztJpngkmASY9Wce4K82TLv9zfPdaCF7Ow=;
+        s=k20201202; t=1663721322;
+        bh=m3Trpq84zyI1plwXjoclrE+5xh6TM6LfkgHkcnuod58=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pO2PgDZfNiBGR6t9mAM299FkDtGvqPDPA2M/fTtMClQiXVoxr2AO1VNEQ1PFYRV3f
-         p1vz0/GgWorhEPOgioODcN05grtn/UJ6xHiLjCZZ3tzLdOyg/0tKjSoU+vc86c/45z
-         8Ei4kbGGLtwrz1zJkOMTYPd3SliQQpHQ6gNppek84vIPYdVds31Pk80tf73xe6Q+tV
-         r8Lkd42JWDuPXuUaWIDOvq0pVd2CJJI2xg3bDeHNLqjnIhx9F+x+HGTB+J80fR/poF
-         ibAlrLwr/mSPFEcriyh8uH5KPBkY0STXpFPm0287rB5LEmZoSbn9JCe2fEYnWM4UUq
-         fVU1VxAvln+rg==
-Date:   Tue, 20 Sep 2022 17:38:08 -0700
+        b=ayEDh+fEE4Ga+ants/CuWJXFhj0FfxwFUEubKgDBIMasgByYcFzJZLv8rYJF9rjat
+         S72CKHL2DgGjnioscYLOQo4nM8Lq8qc+AcNKzjskTCMA1y5LMcBczPTpI+TAZ6cUG0
+         aePL6k1UCoOAn6ky/Wowz9adbd1Wc7sbvOB85ULOr1HKm+fa4GB+xFa/qkd7b7z86T
+         T/WpMSunQS7CshQ5U9H5AypdEpOdoU0eDJ4nuqNDYJJ/BQaDGJFclWQ1Y32rQEQyRQ
+         ltrgNRSZWQaoMdbkY8fOYX6LXMcocjLTQMqOATKsUmef/q95PTE87fAQxlJ56LZ9iZ
+         yQocRqejQbwvQ==
+Date:   Tue, 20 Sep 2022 17:48:41 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        leah.rumancik@gmail.com
-Subject: Re: [PATCH 5.4 CANDIDATE V2 00/17] xfs stable candidate patches for
- 5.4.y (from v5.5)
-Message-ID: <Yypc8E7m0aySJW3f@magnolia>
-References: <20220920124836.1914918-1-chandan.babu@oracle.com>
+To:     Stephen Zhang <starzhangzsd@gmail.com>
+Cc:     dchinner@redhat.com, chandan.babu@oracle.com,
+        yang.guang5@zte.com.cn, zhangshida@kylinos.cn,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: trim the mapp array accordingly in
+ xfs_da_grow_inode_int
+Message-ID: <YypfaXzd3usW6b5i@magnolia>
+References: <20220918064808.1206441-1-zhangshida@kylinos.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220920124836.1914918-1-chandan.babu@oracle.com>
+In-Reply-To: <20220918064808.1206441-1-zhangshida@kylinos.cn>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 20, 2022 at 06:18:19PM +0530, Chandan Babu R wrote:
-> Hi Darrick,
+On Sun, Sep 18, 2022 at 02:48:08PM +0800, Stephen Zhang wrote:
+> Take a look at the for-loop in xfs_da_grow_inode_int:
+> ======
+> for(){
+>         nmap = min(XFS_BMAP_MAX_NMAP, count);
+>         ...
+>         error = xfs_bmapi_write(...,&mapp[mapi], &nmap);//(..., $1, $2)
+>         ...
+>         mapi += nmap;
+> }
+> =====
+> where $1 stands for the start address of the array,
+> while $2 is used to indicate the size of the array.
 > 
-> This 5.4.y backport series contains fixes from v5.5 release.
+> The array $1 will advance by $nmap in each iteration after
+> the allocation of extents.
+> But the size $2 still remains unchanged, which is determined by
+> min(XFS_BMAP_MAX_NMAP, count).
 > 
-> This patchset has been tested by executing fstests (via kdevops) using
-> the following XFS configurations,
+> It seems that it has forgotten to trim the mapp array after each
+> iteration, so change it.
 > 
-> 1. No CRC (with 512 and 4k block size).
-> 2. Reflink/Rmapbt (1k and 4k block size).
-> 3. Reflink without Rmapbt.
-> 4. External log device.
-> 
-> The following lists patches which required other dependency patches to
-> be included,
-> 
-> 1. 050552cbe06a3a9c3f977dcf11ff998ae1d5c2d5
->    xfs: fix some memory leaks in log recovery
->    - 895e196fb6f84402dcd0c1d3c3feb8a58049564e
->      xfs: convert EIO to EFSCORRUPTED when log contents are invalid
->    - 895e196fb6f84402dcd0c1d3c3feb8a58049564e
->      xfs: constify the buffer pointer arguments to error functions
->    - a5155b870d687de1a5f07e774b49b1e8ef0f6f50
->      xfs: always log corruption errors
-> 2. 13eaec4b2adf2657b8167b67e27c97cc7314d923
->    xfs: don't commit sunit/swidth updates to disk if that would cause
->    repair failures
->    - 1cac233cfe71f21e069705a4930c18e48d897be6
->      xfs: refactor agfl length computation function
->    - 4f5b1b3a8fa07dc8ecedfaf539b3deed8931a73e
->      xfs: split the sunit parameter update into two parts
-> 
-> Changelog:
-> V1 -> V2:
->   1. Drop "xfs: include QUOTA, FATAL ASSERT build options in
->      XFS_BUILD_OPTIONS" commit since it does not fix a real bug.
+> Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
 
-For patches 4, 5, and 14:
-Acked-by: Darrick J. Wong <djwong@kernel.org>
-
-Since I suppose we /do/ want LTS maintainers to be able to run fstests
-without so much ASSERT noise. :)
+I think this look correct...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+> ---
+> Changes from v1:
+> - Using the current calculation to calculate the remaining number of
+>   blocks is enough, as suggested by Dave.
+> ---
+>  fs/xfs/libxfs/xfs_da_btree.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Brian Foster (2):
->   xfs: stabilize insert range start boundary to avoid COW writeback race
->   xfs: use bitops interface for buf log item AIL flag check
-> 
-> Chandan Babu R (1):
->   MAINTAINERS: add Chandan as xfs maintainer for 5.4.y
-> 
-> Christoph Hellwig (1):
->   xfs: slightly tweak an assert in xfs_fs_map_blocks
-> 
-> Darrick J. Wong (11):
->   xfs: replace -EIO with -EFSCORRUPTED for corrupt metadata
->   xfs: add missing assert in xfs_fsmap_owner_from_rmap
->   xfs: range check ri_cnt when recovering log items
->   xfs: attach dquots and reserve quota blocks during unwritten
->     conversion
->   xfs: convert EIO to EFSCORRUPTED when log contents are invalid
->   xfs: constify the buffer pointer arguments to error functions
->   xfs: always log corruption errors
->   xfs: fix some memory leaks in log recovery
->   xfs: refactor agfl length computation function
->   xfs: split the sunit parameter update into two parts
->   xfs: don't commit sunit/swidth updates to disk if that would cause
->     repair failures
-> 
-> Dave Chinner (1):
->   iomap: iomap that extends beyond EOF should be marked dirty
-> 
-> kaixuxia (1):
->   xfs: Fix deadlock between AGI and AGF when target_ip exists in
->     xfs_rename()
-> 
->  MAINTAINERS                    |   3 +-
->  fs/xfs/libxfs/xfs_alloc.c      |  27 ++++--
->  fs/xfs/libxfs/xfs_attr_leaf.c  |  12 ++-
->  fs/xfs/libxfs/xfs_bmap.c       |  16 +++-
->  fs/xfs/libxfs/xfs_btree.c      |   5 +-
->  fs/xfs/libxfs/xfs_da_btree.c   |  24 +++--
->  fs/xfs/libxfs/xfs_dir2.c       |   4 +-
->  fs/xfs/libxfs/xfs_dir2.h       |   2 +
->  fs/xfs/libxfs/xfs_dir2_leaf.c  |   4 +-
->  fs/xfs/libxfs/xfs_dir2_node.c  |  12 ++-
->  fs/xfs/libxfs/xfs_dir2_sf.c    |  28 +++++-
->  fs/xfs/libxfs/xfs_ialloc.c     |  64 +++++++++++++
->  fs/xfs/libxfs/xfs_ialloc.h     |   1 +
->  fs/xfs/libxfs/xfs_inode_fork.c |   6 ++
->  fs/xfs/libxfs/xfs_refcount.c   |   4 +-
->  fs/xfs/libxfs/xfs_rtbitmap.c   |   6 +-
->  fs/xfs/xfs_acl.c               |  15 ++-
->  fs/xfs/xfs_attr_inactive.c     |  10 +-
->  fs/xfs/xfs_attr_list.c         |   5 +-
->  fs/xfs/xfs_bmap_item.c         |   7 +-
->  fs/xfs/xfs_bmap_util.c         |  12 +++
->  fs/xfs/xfs_buf_item.c          |   2 +-
->  fs/xfs/xfs_dquot.c             |   2 +-
->  fs/xfs/xfs_error.c             |  27 +++++-
->  fs/xfs/xfs_error.h             |   7 +-
->  fs/xfs/xfs_extfree_item.c      |   5 +-
->  fs/xfs/xfs_fsmap.c             |   1 +
->  fs/xfs/xfs_inode.c             |  32 ++++++-
->  fs/xfs/xfs_inode_item.c        |   5 +-
->  fs/xfs/xfs_iomap.c             |  17 ++++
->  fs/xfs/xfs_iops.c              |  10 +-
->  fs/xfs/xfs_log_recover.c       |  72 +++++++++-----
->  fs/xfs/xfs_message.c           |   2 +-
->  fs/xfs/xfs_message.h           |   2 +-
->  fs/xfs/xfs_mount.c             | 168 +++++++++++++++++++++++----------
->  fs/xfs/xfs_pnfs.c              |   4 +-
->  fs/xfs/xfs_qm.c                |  13 ++-
->  fs/xfs/xfs_refcount_item.c     |   5 +-
->  fs/xfs/xfs_rmap_item.c         |   9 +-
->  fs/xfs/xfs_trace.h             |  21 +++++
->  include/linux/iomap.h          |   2 +
->  41 files changed, 523 insertions(+), 150 deletions(-)
-> 
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index e7201dc68f43..e576560b46e9 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -2192,8 +2192,8 @@ xfs_da_grow_inode_int(
+>  		 */
+>  		mapp = kmem_alloc(sizeof(*mapp) * count, 0);
+>  		for (b = *bno, mapi = 0; b < *bno + count; ) {
+> -			nmap = min(XFS_BMAP_MAX_NMAP, count);
+>  			c = (int)(*bno + count - b);
+> +			nmap = min(XFS_BMAP_MAX_NMAP, c);
+>  			error = xfs_bmapi_write(tp, dp, b, c,
+>  					xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA,
+>  					args->total, &mapp[mapi], &nmap);
 > -- 
-> 2.35.1
+> 2.27.0
 > 
