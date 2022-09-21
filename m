@@ -2,239 +2,170 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A952AC6FA91
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Sep 2022 00:53:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF5B3C54EE9
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Sep 2022 00:58:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231207AbiIUAxy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Sep 2022 20:53:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34264 "EHLO
+        id S230352AbiIUA6w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Sep 2022 20:58:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229791AbiIUAxx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Sep 2022 20:53:53 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C4C4796B9
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Sep 2022 17:53:51 -0700 (PDT)
+        with ESMTP id S229599AbiIUA6v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Sep 2022 20:58:51 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D58379A55;
+        Tue, 20 Sep 2022 17:58:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 02231B82DD1
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2022 00:53:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC512C433D6;
-        Wed, 21 Sep 2022 00:53:48 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 16510B8128A;
+        Wed, 21 Sep 2022 00:58:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B18D5C433D6;
+        Wed, 21 Sep 2022 00:58:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663721628;
-        bh=/2cCDKZRY3SXt0G/OcB98tp+f44sHBVtWYxP2fjELAQ=;
+        s=k20201202; t=1663721927;
+        bh=Tk5BZ3s9YloXqflrMgU4zATgp2PDiyQTeakuZwFxfJM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=L+gyIJcFBaEAuifDXOP89G2cxrv09lKYSMtC+x3PgSicb2SCCWyey8uaAJ6v44yQk
-         FgsFvRNl+ASMSd4RAKgSTRpV4IObM+6RhRaLpfrFkIntk0c4V+n4ib3St2fo27plzD
-         mLyz8J/0GPHiE2C2wYF6WKi4f/sWrhEA30M31MRpP9DYh8XJ8rvEUth1ylb8SI/ZQh
-         P4bqGsLcprSnc4mzfV4HXQbTxUOj57kN15h+ayKgIkkCCmdQ4BDAFbSc7zNKTEhCYK
-         d4t/5ohs1cP6Kt2vKB3NXGb5quYdYPA8CDC88HHoQE/iV67+kCfZEQ72N+wk9tKXoz
-         UUHk2q+PYLF8w==
-Date:   Tue, 20 Sep 2022 17:53:48 -0700
+        b=cta/AORVvHnTh04B4P8+nB9nYCUCnOkbBCigdJ92AcISI42UNbPXAKtG7h2zotGbl
+         v+qEtiNDoPyQNfAsPl/psNg2ZTKHSU2AycXrq8UWakpVNfrG9XAy4RmRq65MthNh8c
+         jVi21gUNufeRnUxUuoqv3jwH+t/EiT5DXt/1fRplerCe/bASJMkxJzjjtVE6XmD98z
+         NFH11cV4Poy3ddKcGWTSwFUVI3uAqk/36iS4mopI/+sN+2PzY4k+T23pJ+SLBWXZV2
+         258wU7Zzw9BzSlvBx7XYp7oj02O6xZuBmnWScCxEdHV/uvdxudw6sQX7vtid/396Lw
+         /4P1criyOQoBw==
+Date:   Tue, 20 Sep 2022 17:58:47 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Stephen Zhang <starzhangzsd@gmail.com>
-Cc:     dchinner@redhat.com, chandan.babu@oracle.com,
-        zhangshida@kylinos.cn, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: rearrange the logic and remove the broken
- comment for xfs_dir2_isxx
-Message-ID: <YypgnAWbZi9ZUZEW@magnolia>
-References: <20220918065026.1207016-1-zhangshida@kylinos.cn>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
+        hch@infradead.org, jane.chu@oracle.com
+Subject: Re: [PATCH 3/3] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+Message-ID: <Yyphx31m5fO+OZCI@magnolia>
+References: <9e9521a4-6e07-e226-2814-b78a2451656b@fujitsu.com>
+ <1662114961-66-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <1662114961-66-4-git-send-email-ruansy.fnst@fujitsu.com>
+ <20220920024519.GQ3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220918065026.1207016-1-zhangshida@kylinos.cn>
+In-Reply-To: <20220920024519.GQ3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 18, 2022 at 02:50:26PM +0800, Stephen Zhang wrote:
-> xfs_dir2_isleaf is used to see if the directory is a single-leaf
-> form directory instead, as commented right above the function.
+On Tue, Sep 20, 2022 at 12:45:19PM +1000, Dave Chinner wrote:
+> On Fri, Sep 02, 2022 at 10:36:01AM +0000, Shiyang Ruan wrote:
+> > This patch is inspired by Dan's "mm, dax, pmem: Introduce
+> > dev_pagemap_failure()"[1].  With the help of dax_holder and
+> > ->notify_failure() mechanism, the pmem driver is able to ask filesystem
+> > (or mapped device) on it to unmap all files in use and notify processes
+> > who are using those files.
+> > 
+> > Call trace:
+> > trigger unbind
+> >  -> unbind_store()
+> >   -> ... (skip)
+> >    -> devres_release_all()   # was pmem driver ->remove() in v1
+> >     -> kill_dax()
+> >      -> dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_PRE_REMOVE)
+> >       -> xfs_dax_notify_failure()
+> > 
+> > Introduce MF_MEM_PRE_REMOVE to let filesystem know this is a remove
+> > event.  So do not shutdown filesystem directly if something not
+> > supported, or if failure range includes metadata area.  Make sure all
+> > files and processes are handled correctly.
+> > 
+> > [1]: https://lore.kernel.org/linux-mm/161604050314.1463742.14151665140035795571.stgit@dwillia2-desk3.amr.corp.intel.com/
+> > 
+> > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> > ---
+> >  drivers/dax/super.c         |  3 ++-
+> >  fs/xfs/xfs_notify_failure.c | 23 +++++++++++++++++++++++
+> >  include/linux/mm.h          |  1 +
+> >  3 files changed, 26 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> > index 9b5e2a5eb0ae..cf9a64563fbe 100644
+> > --- a/drivers/dax/super.c
+> > +++ b/drivers/dax/super.c
+> > @@ -323,7 +323,8 @@ void kill_dax(struct dax_device *dax_dev)
+> >  		return;
+> >  
+> >  	if (dax_dev->holder_data != NULL)
+> > -		dax_holder_notify_failure(dax_dev, 0, U64_MAX, 0);
+> > +		dax_holder_notify_failure(dax_dev, 0, U64_MAX,
+> > +				MF_MEM_PRE_REMOVE);
+> >  
+> >  	clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
+> >  	synchronize_srcu(&dax_srcu);
+> > diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+> > index 3830f908e215..5e04ba7fa403 100644
+> > --- a/fs/xfs/xfs_notify_failure.c
+> > +++ b/fs/xfs/xfs_notify_failure.c
+> > @@ -22,6 +22,7 @@
+> >  
+> >  #include <linux/mm.h>
+> >  #include <linux/dax.h>
+> > +#include <linux/fs.h>
+> >  
+> >  struct xfs_failure_info {
+> >  	xfs_agblock_t		startblock;
+> > @@ -77,6 +78,9 @@ xfs_dax_failure_fn(
+> >  
+> >  	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
+> >  	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
+> > +		/* The device is about to be removed.  Not a really failure. */
+> > +		if (notify->mf_flags & MF_MEM_PRE_REMOVE)
+> > +			return 0;
+> >  		notify->want_shutdown = true;
+> >  		return 0;
+> >  	}
+> > @@ -182,12 +186,23 @@ xfs_dax_notify_failure(
+> >  	struct xfs_mount	*mp = dax_holder(dax_dev);
+> >  	u64			ddev_start;
+> >  	u64			ddev_end;
+> > +	int			error;
+> >  
+> >  	if (!(mp->m_super->s_flags & SB_BORN)) {
+> >  		xfs_warn(mp, "filesystem is not ready for notify_failure()!");
+> >  		return -EIO;
+> >  	}
+> >  
+> > +	if (mf_flags & MF_MEM_PRE_REMOVE) {
+> > +		xfs_info(mp, "device is about to be removed!");
+> > +		down_write(&mp->m_super->s_umount);
+> > +		error = sync_filesystem(mp->m_super);
+> > +		drop_pagecache_sb(mp->m_super, NULL);
+> > +		up_write(&mp->m_super->s_umount);
+> > +		if (error)
+> > +			return error;
 > 
-> Besides getting rid of the broken comment, we rearrange the logic by
-> converting everything over to standard formatting and conventions,
-> at the same time, to make it easier to understand and self documenting.
-> 
-> Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
-> ---
-> Changes from v1:
-> - v1 is only designed to fix the broken comment, while v2 rearranges the
->   logic in addition to that, which is suggested by Dave.
-> ---
->  fs/xfs/libxfs/xfs_dir2.c  | 50 +++++++++++++++++++++++----------------
->  fs/xfs/libxfs/xfs_dir2.h  |  4 ++--
->  fs/xfs/scrub/dir.c        |  2 +-
->  fs/xfs/xfs_dir2_readdir.c |  2 +-
->  4 files changed, 34 insertions(+), 24 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index 76eedc2756b3..33738165d67d 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -261,7 +261,7 @@ xfs_dir_createname(
->  {
->  	struct xfs_da_args	*args;
->  	int			rval;
-> -	int			v;		/* type-checking value */
-> +	bool			v;		/* type-checking value */
->  
->  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
->  
-> @@ -357,7 +357,7 @@ xfs_dir_lookup(
->  {
->  	struct xfs_da_args	*args;
->  	int			rval;
-> -	int			v;	  /* type-checking value */
-> +	bool			v;	  /* type-checking value */
->  	int			lock_mode;
->  
->  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
-> @@ -435,7 +435,7 @@ xfs_dir_removename(
->  {
->  	struct xfs_da_args	*args;
->  	int			rval;
-> -	int			v;		/* type-checking value */
-> +	bool			v;		/* type-checking value */
->  
->  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
->  	XFS_STATS_INC(dp->i_mount, xs_dir_remove);
-> @@ -493,7 +493,7 @@ xfs_dir_replace(
->  {
->  	struct xfs_da_args	*args;
->  	int			rval;
-> -	int			v;		/* type-checking value */
-> +	bool			v;		/* type-checking value */
->  
->  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
->  
-> @@ -610,19 +610,23 @@ xfs_dir2_grow_inode(
->  int
->  xfs_dir2_isblock(
->  	struct xfs_da_args	*args,
-> -	int			*vp)	/* out: 1 is block, 0 is not block */
-> +	bool			*isblock)
->  {
-> -	xfs_fileoff_t		last;	/* last file offset */
-> -	int			rval;
-> +	struct xfs_mount	*mp = args->dp->i_mount;
-> +	xfs_fileoff_t		eof;
-> +	int			error;
->  
-> -	if ((rval = xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK)))
-> -		return rval;
-> -	rval = XFS_FSB_TO_B(args->dp->i_mount, last) == args->geo->blksize;
-> -	if (XFS_IS_CORRUPT(args->dp->i_mount,
-> -			   rval != 0 &&
-> -			   args->dp->i_disk_size != args->geo->blksize))
-> +	error = xfs_bmap_last_offset(args->dp, &eof, XFS_DATA_FORK);
-> +	if (error)
-> +		return error;
-> +
-> +	*isblock = false;
-> +	if (XFS_FSB_TO_B(mp, eof) != args->geo->blksize)
-> +		return 0;
-> +
-> +	*isblock = true;
-> +	if (XFS_IS_CORRUPT(mp, args->dp->i_disk_size != args->geo->blksize))
->  		return -EFSCORRUPTED;
-> -	*vp = rval;
->  	return 0;
+> If the device is about to go away unexpectedly, shouldn't this shut
+> down the filesystem after syncing it here?  If the filesystem has
+> been shut down, then everything will fail before removal finally
+> triggers, and the act of unmounting the filesystem post device
+> removal will clean up the page cache and all the other caches.
 
-Stylistic note: One has to be careful with these functions that pass out
-a value /and/ potentially return a negative errno -- one has to be
-careful about specifying whether or not callers should expect the out
-parameter to be set if an errno is returned.  I think it looks slightly
-better to see things like:
+IIRC they want to kill all the processes with MAP_SYNC mappings sooner
+than whenever the admin gets around to unmounting the filesystem, which
+is why PRE_REMOVE will then go walk the rmapbt to find processes to
+shoot down.  I'm not sure, though, if drop_pagecache_sb only touches
+DRAM page cache or if it'll shoot down fsdax mappings too?
 
-	if (XFS_FSB_TO_B(mp, eof) != args->geo->blksize) {
-		*isblock = false;
-		return 0;
-	}
+> IOWs, I don't understand why the page cache is considered special
+> here (as opposed to, say, the inode or dentry caches), nor why we
+> aren't shutting down the filesystem directly after syncing it to
+> disk to ensure that we don't end up with applications losing data as
+> a result of racing with the removal....
 
-	if (XFS_IS_CORRUPT(mp, args->dp->i_disk_size != args->geo->blksize))
-		return -EFSCORRUPTED;
-
-	*isblock = true;
-	return 0;
-
-
-But for this patch that really doesn't matter, so:
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+But yeah, we might as well shut down the fs at the end of PRE_REMOVE
+handling, if the rmap walk hasn't already done that.
 
 --D
 
-
->  }
->  
-> @@ -632,14 +636,20 @@ xfs_dir2_isblock(
->  int
->  xfs_dir2_isleaf(
->  	struct xfs_da_args	*args,
-> -	int			*vp)	/* out: 1 is block, 0 is not block */
-> +	bool			*isleaf)
->  {
-> -	xfs_fileoff_t		last;	/* last file offset */
-> -	int			rval;
-> +	xfs_fileoff_t		eof;
-> +	int			error;
->  
-> -	if ((rval = xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK)))
-> -		return rval;
-> -	*vp = last == args->geo->leafblk + args->geo->fsbcount;
-> +	error = xfs_bmap_last_offset(args->dp, &eof, XFS_DATA_FORK);
-> +	if (error)
-> +		return error;
-> +
-> +	*isleaf = false;
-> +	if (eof != args->geo->leafblk + args->geo->fsbcount)
-> +		return 0;
-> +
-> +	*isleaf = true;
->  	return 0;
->  }
->  
-> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-> index b6df3c34b26a..dd39f17dd9a9 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.h
-> +++ b/fs/xfs/libxfs/xfs_dir2.h
-> @@ -61,8 +61,8 @@ extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
->  /*
->   * Interface routines used by userspace utilities
->   */
-> -extern int xfs_dir2_isblock(struct xfs_da_args *args, int *r);
-> -extern int xfs_dir2_isleaf(struct xfs_da_args *args, int *r);
-> +extern int xfs_dir2_isblock(struct xfs_da_args *args, bool *isblock);
-> +extern int xfs_dir2_isleaf(struct xfs_da_args *args, bool *isleaf);
->  extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
->  				struct xfs_buf *bp);
->  
-> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-> index 5abb5fdb71d9..b9c5764e7437 100644
-> --- a/fs/xfs/scrub/dir.c
-> +++ b/fs/xfs/scrub/dir.c
-> @@ -676,7 +676,7 @@ xchk_directory_blocks(
->  	xfs_dablk_t		dabno;
->  	xfs_dir2_db_t		last_data_db = 0;
->  	bool			found;
-> -	int			is_block = 0;
-> +	bool			is_block = false;
->  	int			error;
->  
->  	/* Ignore local format directories. */
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index e295fc8062d8..9f3ceb461515 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -512,7 +512,7 @@ xfs_readdir(
->  {
->  	struct xfs_da_args	args = { NULL };
->  	unsigned int		lock_mode;
-> -	int			isblock;
-> +	bool			isblock;
->  	int			error;
->  
->  	trace_xfs_readdir(dp);
-> -- 
-> 2.27.0
+> Cheers,
 > 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
