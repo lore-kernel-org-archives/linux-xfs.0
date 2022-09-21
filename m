@@ -2,257 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4925ECAAD8
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Sep 2022 11:20:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 046E7C6FA8E
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Sep 2022 14:03:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229562AbiIULUX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Sep 2022 07:20:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59086 "EHLO
+        id S229543AbiIUODa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Sep 2022 10:03:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbiIULUV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2022 07:20:21 -0400
-Received: from mail-vk1-xa2f.google.com (mail-vk1-xa2f.google.com [IPv6:2607:f8b0:4864:20::a2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36B5662A9A;
-        Wed, 21 Sep 2022 04:20:20 -0700 (PDT)
-Received: by mail-vk1-xa2f.google.com with SMTP id g27so2983492vkl.3;
-        Wed, 21 Sep 2022 04:20:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=anU1i7MF58NuViEAXkHY0FObccWlEMJ/allqA3IY4JU=;
-        b=IUbNlfgnSKAWC3Fhvc11b0WnSQpC0q7oOEbHD9uvEUoeSIcKztG5+0U+NS0x5MpRsE
-         r4hb+tOzwFa3461TcHU1CqIkivtkNqhq0u38Zg0qJ3jYYISg2jk78YHHsUvMPpsCh99W
-         /5yFlvX+zv+FfGhW4qGbpmrK4NIqkb1y+2iz7L+EE3mceCOs9FL2Qn6OKeCtiVKqwb4h
-         KSnm6+cn5C6Zj9+10szVvNxBbKkvKzVvOJ2HqR2EajFzkXiKWHjIlx3YeyS1nTv3EMvv
-         fKvLxE4ywhPvXojpnVEWBOezpnY2eJr+Q/fYtGMOZq24Z5xNUfYJTCkYP1aBIw6sL5qS
-         ZxSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=anU1i7MF58NuViEAXkHY0FObccWlEMJ/allqA3IY4JU=;
-        b=oH25gptimr11nRZc3ZVM4MFv4Y3tDl0MDe3S2hS83q6ENwOenUN89wegdg5QDoxdy0
-         uFVJPn9jzuckmIgzpMyJ66sb16RfhtASomLy0qR49/SMpcZgSaaGJ/9n6uORp97wmY8F
-         vkRYJWobb7nInVS8wLv1/LRA0UqWn63rT/j8AmxYryG8VSk80NJL+tGocuhf6cR/3qGo
-         kPgUhqkXotsiTDAu9nkca7TTXYY+C9kyLENRAHrg9cTkkyTME++ww9gHszwPJgE8CDVJ
-         gi5tSWI1JaAQH5Nj8uVUTbjgqS6DiTVoB+5n9WyCK33FG1X9pAsEKfObsy55jmN+zTAI
-         Ypiw==
-X-Gm-Message-State: ACrzQf2bLdP7Fz7TKksulpyZmXe6PSZ2HYP3zrMZqWPpI1do2DwHXO66
-        QPsAvUn6euulxd/QEs5Wfv/2V5Bgb7PRE3s5HAA=
-X-Google-Smtp-Source: AMsMyM4KSqcuc6B7TOWUec0eZnzNQqxNHwe+OgLBDCok4SOygwE6J+nXWOzEe2YbhujI+z6gYGk/noqCN6J172rhrPI=
-X-Received: by 2002:a1f:a004:0:b0:398:3e25:d2a7 with SMTP id
- j4-20020a1fa004000000b003983e25d2a7mr10228391vke.36.1663759219145; Wed, 21
- Sep 2022 04:20:19 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAOQ4uxjvx33KRSm-HX2AjL=aB5yO=FeWokZ1usDKW7+R4Ednhg@mail.gmail.com>
- <20220620091136.4uosazpwkmt65a5d@quack3.lan> <CAOQ4uxg+uY5PdcU1=RyDWCxbP4gJB3jH1zkAj=RpfndH9czXbg@mail.gmail.com>
- <20220621085956.y5wyopfgzmqkaeiw@quack3.lan> <CAOQ4uxheatf+GCHxbUDQ4s4YSQib3qeYVeXZwEicR9fURrEFBA@mail.gmail.com>
- <CAOQ4uxguwnx4AxXqp_zjg39ZUaTGJEM2wNUPnNdtiqV2Q9woqA@mail.gmail.com>
- <YyH61deSiW1TnY//@magnolia> <CAOQ4uxhFJWW-ykyzomHCUWfWvbJNEmetw0G5mUYjFGoYJBb7NA@mail.gmail.com>
- <YyIR4XmDYkYIK2ad@magnolia> <20220919230947.GM3600936@dread.disaster.area>
- <20220920022439.GP3600936@dread.disaster.area> <CAOQ4uxgNBWpdpoXrqwhtGkMCLr3aAdv2=_oEYtafWK1WrP4-hw@mail.gmail.com>
-In-Reply-To: <CAOQ4uxgNBWpdpoXrqwhtGkMCLr3aAdv2=_oEYtafWK1WrP4-hw@mail.gmail.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Wed, 21 Sep 2022 14:20:07 +0300
-Message-ID: <CAOQ4uxj4uCRkqN+L1RYmY9Ey=eu3xp249Y6BYU-JQFjgGrOdQg@mail.gmail.com>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw workload
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        with ESMTP id S229571AbiIUOD3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2022 10:03:29 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2072.outbound.protection.outlook.com [40.107.220.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19FA33C164;
+        Wed, 21 Sep 2022 07:03:28 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NRNUtRSsHE3adKUax27AF0zEJjC73VaivZ/vqaqlP1FnN47iNCnR7phjdcjtxkHr81KBtFbUuBYgmhPaw/npCRsJsbTWIZaftm0o2nU8nGbtSjIppSnJmTVGQMto/1ISbQySApOtLv3JZxqRaS62XJuoZT9Was0//ap+pWLO6VpOmBit0OkZlnHfNW5w5XbsrFlm/yCLPOo8qrkVyEaPwBwxi9iOelSgX2cZiAst7c/yIUFKD7/avWcyc2RmJrN1rGVWcxGriazQuy6vJuAMvldMZaltubzqMo/ijBBMY0/tFTk8/hqqnXoy7DsZLwy6tYw6S0T57vlWzS7XjkYBoQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Yvqs4A/mqsRrXyiHP3KDP4QYwI5/VBZJY9qmgn6n8C0=;
+ b=Qfynx3SujWj0qaqThfiFnm2P91I7rYiK+3wPaSnbp7JiZOszPDkozqNT/riCWfnECu1/RKh88UdJZySCCBi3/nzaTfvTmWwfczjeSyVC2itnC+0ZOH3qHEcWRYEw7PFx7yMNZkgt3/189qGh3KbrI79bM2W9mXOGadNnqTCi4leqMWOz72oDWf3qkUp1l49kG0r4HtGh6VQwfahf9v74fgpmfgdDKPwv7nc5up+o08yMkqBEPApuFKFQHlZl9MrTZiVq+lOgXQhdm64z9HDnC5w6blgiNW36soJndNx9t6yt0j+WinW4zDEsHi542CsZ+e9Q9noVrA5B3waAJJV9/w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Yvqs4A/mqsRrXyiHP3KDP4QYwI5/VBZJY9qmgn6n8C0=;
+ b=CO2YhnQFL4/oIwDEgBk2Q4/gfn3uk4sZY6OnzbJpHj/984P1gvOM8quLOyuil9njksaoCL5Zsx2ncC2muyK0q+tUmnghprwzdK7AqlmlUEKS807YIA19e3ciX8whPuEng7Mxs0Q0/sSUGZL+6FHoirip7vRhyZl4XMvuHujC9E9SJUtKQ3FG6iyzp+Hr7WETRyZEro2Y/titEkbKRjMTpf900PczBK7fy0qwXJ2jIpDOdTDcvAr5K9JINDz8/yCj4wqWSpC5CXm3+OdfoSb+0pdOpIEwl5BPSKP6s4IZCLVDbK4xXG4mmJSZaG7K7fr+khRHAHJw4E8RKxV5+V43fQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
+ by SA1PR12MB7443.namprd12.prod.outlook.com (2603:10b6:806:2b7::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5632.18; Wed, 21 Sep
+ 2022 14:03:26 +0000
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::462:7fe:f04f:d0d5]) by MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::462:7fe:f04f:d0d5%7]) with mapi id 15.20.5654.016; Wed, 21 Sep 2022
+ 14:03:26 +0000
+Date:   Wed, 21 Sep 2022 11:03:25 -0300
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     akpm@linux-foundation.org, Matthew Wilcox <willy@infradead.org>,
+        Jan Kara <jack@suse.cz>, "Darrick J. Wong" <djwong@kernel.org>,
         Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        John Hubbard <jhubbard@nvidia.com>,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2 10/18] fsdax: Manage pgmap references at entry
+ insertion and deletion
+Message-ID: <YysZrdF/BSQhjWZs@nvidia.com>
+References: <166329930818.2786261.6086109734008025807.stgit@dwillia2-xfh.jf.intel.com>
+ <166329936739.2786261.14035402420254589047.stgit@dwillia2-xfh.jf.intel.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <166329936739.2786261.14035402420254589047.stgit@dwillia2-xfh.jf.intel.com>
+X-ClientProxiedBy: MN2PR16CA0063.namprd16.prod.outlook.com
+ (2603:10b6:208:234::32) To MN2PR12MB4192.namprd12.prod.outlook.com
+ (2603:10b6:208:1d5::15)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN2PR12MB4192:EE_|SA1PR12MB7443:EE_
+X-MS-Office365-Filtering-Correlation-Id: ef07b360-34d7-466a-997b-08da9bda0dd9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: IepXeZcPeBxe0vN344WDYmIlOhi4+OrkVOGWyhTKo2Wb8sQV7ZLa9VqGERzISS9NJTYYz9qjrmanjoUlF0eWsuPww0uraLyzZN5ciCOcvmTASPzK7AuiKQyiBAdldyLXifZVM+7M1/wGKBgERxqHfggBsCQFo9FRSzht9WJpujoROU3dLgkH4XGLROXH/UQ1tcLSN3XzY8un7IJYnsETLGmYiv8bTgFTle4K7WDHM4Y0x+l//Ztzq4GMvm06YX0QyedKrBU4oughAaywKRqLo6oB0cUBsV1n21TyRfWwVxhbfs0Cnw0iO4YrCM5z3JKwd417f6fMFdXGCG5zw94giuxJCKKhShu3FL6Zmfoh0NwV5xe9QNQGDubsZQqal23PDxN5KVCkam0c2rK147CxKTDwmXpcEGWFGfoZdyYquzdZJLIX74qL5/l2RbA3eNEfUhzC/zBhJa2mlDY6xH41/9z8orgz23Z4oykJDNSBKdhtwmftKUuiVZWeB7oABE3qf3Hm2IDdNJq5bS8A1gNX/nAGEP+y2lBrQ3XtRVbRoJZ12r1uM+ISDkQnhmiefJSAHcmmEWdaAbHP78PDD2mlfUinMEcZnALMdw3w+FWhRvfBaRazLSrWjFT4YTKYNbx6rRcq/yUTNsHw+CrSUTrzA8i44DNtfhv1KzpD5GemRHkfG5yOq94BNqNqJqpXwsJD6wqaibVmHhJ83jgVQEzmeA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(396003)(136003)(366004)(39860400002)(376002)(346002)(451199015)(41300700001)(186003)(83380400001)(5660300002)(38100700002)(2906002)(54906003)(66556008)(6916009)(478600001)(316002)(8936002)(7416002)(6486002)(36756003)(66946007)(2616005)(6506007)(66476007)(4326008)(8676002)(86362001)(6512007)(26005);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?k9NNNFW/EAQBgUM+DK1oZp/HQjNtZEdxNvhTSwp60nPL0OShlIftoM16BFFE?=
+ =?us-ascii?Q?TxnxyThJ36JOTekmALC4ppTqvR5oEDEKHFXCT6jQO1eOpyq9iSW/d4ouw8Fe?=
+ =?us-ascii?Q?0PAmhJ9H7vR5mS6WTzueijsBJmt0t8t+VH6Lbhx1oMXNp+RTZWVq0BPhSZhc?=
+ =?us-ascii?Q?dGmZGlYYnJ3oxyh0fETembdM2v1acxKrI+a2jP74fre+AjH2nWc63uWDyMzt?=
+ =?us-ascii?Q?Vr+mvRnuWECH29dwG5buGeL2N11ra6GgkKL3VhyVyPLm1ahr+QUuklLGVaz5?=
+ =?us-ascii?Q?DhBE9GyZC5d/kAJjW+fI/kBzZwbux/GOL/+rwtuwTmWyh24Qroyz9OFkyKEK?=
+ =?us-ascii?Q?V5iP7xz9H6cU6ed1n5Yi2HPKGrFT53ufOiv+EoEmFQr2HYcQgID3xTHQKQg+?=
+ =?us-ascii?Q?7BP07zl0DMDl2JG2AFfU7MUrHdCkGEDc0hEQfDGQhzHJ6Tq3X7LMPCRkJ4BS?=
+ =?us-ascii?Q?0lhOQ/0cyYBEE17TOXdq1NuP4v4QCS2suzc6oo6zG28GWkh2VlhwVgtJmXZf?=
+ =?us-ascii?Q?VsaCUFKRva+CMj/QFI0pb78yLb7myLfdsGEykpGh98MFFqCwHfBOr2Xo8z8H?=
+ =?us-ascii?Q?d/F4Zzw+CAanTuriFCGh0TgVGZwuNU84qPgtE2drXp6VhxMl22KWyCLOS75t?=
+ =?us-ascii?Q?R3ngl1cJUW4XZv39f8uZdu4o6eb/6B1C/weAdUx7rfv6nnIqiY/eUUsFyYLd?=
+ =?us-ascii?Q?FKxgLLQpLJSPgKe9TJQZgvyV8o6ig1DbwKbu5iPIQKYCJD5eJ6ziJainoQUH?=
+ =?us-ascii?Q?E8aO0YtDfhpOq8+MGGW2xGVCtLI2iUZ2jKULPcUobhlvLIfHNA/jQMbEkIKl?=
+ =?us-ascii?Q?gLDTy8EC7t2jwE/oTY5oETy9mvTmBGKh4HpjTtcB+3CRzSb9BUbunixBXt0w?=
+ =?us-ascii?Q?lQh8xciOn8SPFm59VVPYXW7Mf4ZJBN0JdGr24q/88+uiR1gHlvtTYy63RkH3?=
+ =?us-ascii?Q?1SsFIlgZK9lcOsTmsiskbbJF5AmerKd1c7MFFeilscSYMGARLtiKAw5N9b7l?=
+ =?us-ascii?Q?j9swqAF7+AMuIcFZU9mV8mZoTIOkg6GO7hnHjMXq/+BvASIW2iiIF5BOEMHH?=
+ =?us-ascii?Q?m+55PcOf1U1YTI5zBs7vLcDqFUkNpKYcSSsI9Gyt9bMGhVL1zbvNf5g/riWJ?=
+ =?us-ascii?Q?BBLNrtCO9AzZJFJXr4n/krBYxx9EQEqky5igL1xi2AkqlgofaTLkWdR7wRSf?=
+ =?us-ascii?Q?xEeNZcVy9tPAOWOI3wXEuaA/I4VdrbkgJg0jZvfzCqAhM+/wCJHzl0J4vodE?=
+ =?us-ascii?Q?bAbjSDVOZuGJiR8BCi4SA6L8DX2pMA5Qvi59AJt6kgWcH+AfKm7WnRYtuwbB?=
+ =?us-ascii?Q?wUmx1H+K0XqJ4J+twHUjCVYsoWsIlKsDC8KWwdI6CJTBMCfkeHi0Z3qC2UaU?=
+ =?us-ascii?Q?KziZWfY0H+XlGiLnKyFCculZToSoNuwb5GRpPT0yOD/8XOedwX5KgM5f3xy0?=
+ =?us-ascii?Q?5LsiJBB/K9rqbS0Dq7CHC4++i7w1rRTfBvrBQzrejdm6SgwqhnmaOf4pT6cw?=
+ =?us-ascii?Q?y0F95elXbGSdZh45plpHGDm4q89adjNA9PgnZ4LsxwStHbsi1wCOB5hZYIOA?=
+ =?us-ascii?Q?iVasPDqmkXygYMG7r+dzNQAtmf5lv1NR9rBg3o7j?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ef07b360-34d7-466a-997b-08da9bda0dd9
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Sep 2022 14:03:26.5618
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 5o2QvWsQVMxBoGhUx4ypqUUMg+akEqEACasop4laEQ1pKWsE2nf1wb98da+kE7LC
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB7443
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 20, 2022 at 6:08 AM Amir Goldstein <amir73il@gmail.com> wrote:
->
-[...]
+On Thu, Sep 15, 2022 at 08:36:07PM -0700, Dan Williams wrote:
+> The percpu_ref in 'struct dev_pagemap' is used to coordinate active
+> mappings of device-memory with the device-removal / unbind path. It
+> enables the semantic that initiating device-removal (or
+> device-driver-unbind) blocks new mapping and DMA attempts, and waits for
+> mapping revocation or inflight DMA to complete.
 
-> > As I just discussed on #xfs with Darrick, there are other options
-> > we can persue here.
-> >
-> > The first question we need to ask ourselves is this: what are we
-> > protecting against with exclusive buffered write behaviour?
-> >
-> > The answer is that we know there are custom enterprise database
-> > applications out there that assume that 8-16kB buffered writes are
-> > atomic. I wish I could say these are legacy applications these days,
-> > but they aren't - they are still in production use, and the
-> > applications build on those custom database engines are still under
-> > active development and use.
-> >
-> > AFAIK, the 8kB atomic write behaviour is historical and came from
-> > applications originally designed for Solaris and hardware that
-> > had an 8kB page size. Hence buffered 8kB writes were assumed to be
-> > the largest atomic write size that concurrent reads would not see
-> > write tearing. These applications are now run on x86-64 boxes with
-> > 4kB page size, but they still assume that 8kB writes are atomic and
-> > can't tear.
-> >
->
-> Interesting. I did not know which applications needed that behavior.
-> The customer benchmark that started the complaint uses 8k buffered
-> IO size (as do the benchmarks that I posted in this thread), so far as
-> I am concerned, fixing small buffered IO will solve the problem.
->
-> > So, really, these days the atomic write behaviour of XFS is catering
-> > for these small random read/write IO applications, not to provide
-> > atomic writes for bulk data moving applications writing 2GB of data
-> > per write() syscall. Hence we can fairly safely say that we really
-> > only need "exclusive" buffered write locking for relatively small
-> > multipage IOs, not huge IOs.
-> >
-> > We can do single page shared buffered writes immediately - we
-> > guarantee that while the folio is locked, a buffered read cannot
-> > access the data until the folio is unlocked. So that could be the
-> > first step to relaxing the exclusive locking requirement for
-> > buffered writes.
-> >
-> > Next we need to consider that we now have large folio support in the
-> > page cache, which means we can treat contiguous file ranges larger
-> > than a single page a single atomic unit if they are covered by a
-> > multi-page folio. As such, if we have a single multi-page folio that
-> > spans the entire write() range already in cache, we can run that
-> > write atomically under a shared IO lock the same as we can do with
-> > single page folios.
-> >
-> > However, what happens if the folio is smaller than the range we need
-> > to write? Well, in that case, we have to abort the shared lock write
-> > and upgrade to an exclusive lock before trying again.
-> >
+This seems strange to me
 
-Please correct me if I am wrong, but with current upstream, the only
-way that multi page folios are created for 4K block / 4K page setup are
-during readahead.
+The pagemap should be ref'd as long as the filesystem is mounted over
+the dax. The ref should be incrd when the filesystem is mounted and
+decrd when it is unmounted.
 
-We *could* allocate multi page folios on write to an allocated block range
-that maps inside a single extent, but there is no code for that today.
+When the filesystem unmounts it should zap all the mappings (actually
+I don't think you can even unmount a filesystem while mappings are
+open) and wait for all page references to go to zero, then put the
+final pagemap back.
 
-It seems that without this code, any write to a region of page cache not
-pre-populated using readahead, would get exclusive iolock for 8K buffered
-writes until that single page folio cache entry is evicted.
+The rule is nothing can touch page->pgmap while page->refcount == 0,
+and if page->refcount != 0 then page->pgmap must be valid, without any
+refcounting on the page map itself.
 
-Am I reading the iomap code correctly?
+So, why do we need pgmap refcounting all over the place? It seems like
+it only existed before because of the abuse of the page->refcount?
 
-> > Of course, we can only determine if the write can go ahead once we
-> > have the folio locked. That means we need a new non-blocking write
-> > condition to be handled by the iomap code. We already have several
-> > of them because of IOCB_NOWAIT semantics that io_uring requires for
-> > buffered writes, so we are already well down the path of needing to
-> > support fully non-blocking writes through iomap.
-> >
-> > Further, the recent concurrent write data corruption that we
-> > uncovered requires a new hook in the iomap write path to allow
-> > writes to be aborted for remapping because the cached iomap has
-> > become stale. This validity check can only be done once the folio
-> > has locked - if the cached iomap is stale once we have the page
-> > locked, then we have to back out and remap the write range and
-> > re-run the write.
-> >
-> > IOWs, we are going to have to add write retries to the iomap write
-> > path for data integrity purposes. These checks must be done only
-> > after the folio has been locked, so we really end up getting the
-> > "can't do atomic write" retry infrastructure for free with the data
-> > corruption fixes...
-> >
-> > With this in place, it becomes trivial to support atomic writes with
-> > shared locking all the way up to PMD sizes (or whatever the maximum
-> > multipage folio size the arch supports is) with a minimal amount of
-> > extra code.
-> >
-> > At this point, we have a buffered write path that tries to do shared
-> > locking first, and only falls back to exclusive locking if the page
-> > cache doesn't contain a folio large enough to soak up the entire
-> > write.
-> >
-> > In future, Darrick suggested we might be able to do a "trygetlock a
-> > bunch of folios" operation that locks a range of folios within the
-> > current iomap in one go, and then we write into all of them in a
-> > batch before unlocking them all. This would give us multi-folio
-> > atomic writes with shared locking - this is much more complex, and
-> > it's unclear that multi-folio write batching will gain us anything
-> > over the single folio check described above...
-> >
-> > Finally, for anything that is concurrently reading and writing lots
-> > of data in chunks larger than PMD sizes, the application should
-> > really be using DIO with AIO or io_uring. So falling back to
-> > exclusive locking for such large single buffered write IOs doesn't
-> > seem like a huge issue right now....
-> >
-> > Thoughts?
->
-> That sounds like a great plan.
-> I especially liked the "get it for free" part ;)
-> Is there already WIP for the data integrity issue fix?
->
-
-OK. I see your patch set.
-
-> If there is anything I can do to assist, run the benchmark or anything
-> please let me know.
->
-> In the meanwhile, I will run the benchmark with XFS_IOLOCK_SHARED
-> on the write() path.
->
-
-As expected, results without exclusive iolock look very good [*].
-
-Thanks,
-Amir.
-
-[*] I ran the following fio workload on e2-standard-8 GCE machine:
-
-[global]
-filename=/mnt/xfs/testfile.fio
-norandommap
-randrepeat=0
-size=5G
-bs=8K
-ioengine=psync
-numjobs=8
-group_reporting=1
-direct=0
-fallocate=1
-end_fsync=0
-runtime=60
-
-[xfs-read]
-readwrite=randread
-
-[xfs-write]
-readwrite=randwrite
-
-========================= v6.0-rc4 (BAD) =========
-Run #1:
-   READ: bw=7053KiB/s (7223kB/s)
-  WRITE: bw=155MiB/s (163MB/s)
-
-Run #2:
-   READ: bw=4672KiB/s (4784kB/s)
-  WRITE: bw=355MiB/s (372MB/s)
-
-Run #3:
-   READ: bw=5887KiB/s (6028kB/s)
-  WRITE: bw=137MiB/s (144MB/s)
-
-========================= v6.0-rc4 (read no iolock like ext4 - GOOD) =========
-   READ: bw=742MiB/s (778MB/s)
-  WRITE: bw=345MiB/s (361MB/s)
-
-========================= v6.0-rc4 (write shared iolock - BETTER) =========
-Run #1:
-   READ: bw=762MiB/s (799MB/s)
-  WRITE: bw=926MiB/s (971MB/s)
-
-Run #2:
-   READ: bw=170MiB/s (178MB/s)
-  WRITE: bw=982MiB/s (1029MB/s)
-
-Run #3:
-   READ: bw=755MiB/s (792MB/s)
-  WRITE: bw=933MiB/s (978MB/s)
+Jason
