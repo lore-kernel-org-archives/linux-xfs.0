@@ -2,150 +2,94 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D9E3C54EE9
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 15:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7842BC6FA86
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 15:47:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231733AbiIVPVe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Sep 2022 11:21:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46942 "EHLO
+        id S231597AbiIVPrk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Sep 2022 11:47:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231564AbiIVPVd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 11:21:33 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95A44F1D48;
-        Thu, 22 Sep 2022 08:21:32 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 47B08B83840;
-        Thu, 22 Sep 2022 15:21:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E68C1C433D6;
-        Thu, 22 Sep 2022 15:21:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663860090;
-        bh=ntYvVBCQ6P4bG/5f9Tcc2zWBaGUCQPXTBLzTwbEgO2A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SGSr8PEjm2DE2J7GmmeRagjGWkrQ3GQhWqyf9yTiD/PSFmw9OlrKb0GWMzrwxElwn
-         28FiYHNSua0PlRLwfpzmGiuIFLskWWAbs/PVFE8Cm9IxV67ZuMfYsyliesPL5KLuKN
-         8Tp36SRXQHE1UM5SsTZ1p+rSCXVO+hfjlAgCI3JWnmEYvbx9GIBnGImte98LCZ8ZKP
-         qKHEX6D7Eh615TJ6M9KE4uLiTw5X3kcFwMeF6hHbD56QodIfmY8Dyl640pK+/WSFsl
-         i0+U9oMm88vexkk19EHRq/bw3QUbDEwq8qClA1x7TJX9yxyGZEwDBc8LD0yYKXXdVG
-         n68s/7BYyltRw==
-Date:   Thu, 22 Sep 2022 08:21:29 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Sasha Levin <sashal@kernel.org>,
+        with ESMTP id S231715AbiIVPrh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 11:47:37 -0400
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72BA5D58BC;
+        Thu, 22 Sep 2022 08:47:36 -0700 (PDT)
+Received: by mail-wr1-x433.google.com with SMTP id c11so16171038wrp.11;
+        Thu, 22 Sep 2022 08:47:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=UYXRye64GfI8JuQepi0CogOynp4VVQTGOWPwuZU4C4Q=;
+        b=VPaL+A7u1WrdrZXyoSI1oGVQfREnPAb4TDXu+2XQ2nI93tMdmdL5FlYMPLtFTBYI1C
+         Cep+U1Sohks16xTvpxcDA0gZdwrW/GogH9UIBH1V2BI46Mme9WothP7RxWAW/SR/IPbV
+         l/AsEnlNOGe59LNTIqlFVEDWpF90m4iZO7CKQDGPLp5nBW2WmcdLTqxm1L0cgzdb5+lf
+         vdWaWBWSIAp9ybl627l+LVfaJg8MPEZh0f5IFVFU8WRsnqCUcRE4AvVj0h5z6r3cBCqR
+         VsbbSQPekISb8jTB2BG6nOyTOS0e0HhVfcJ7JYqiRxiQ4w2K8kEDwI2Kj9JZUo8ZJOmf
+         PyYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=UYXRye64GfI8JuQepi0CogOynp4VVQTGOWPwuZU4C4Q=;
+        b=5VF6BEJ4XCUQ2qqTtudk+uIlQPZizBnFau9moTv+S5mgQYW05o2Ozmb0xHNZOLm4hq
+         rRFGlu+lDGNb+u6GC45CeoPrL3Q9Y8Nx1pXsh4YcEBttBE69aIcJN9pj0PpVMXJrTabF
+         e0+JllQR4DPMQyKJ6HW12DcWqvVSg7lL6bxWE8khtvu9mmeM1vmlHGjBI+u0dcGKhr9O
+         wJWu+eMxLQ6rYcRd01X0RfmwP1XtNTA3987YjE7GqvnDJ+Uoq6up3mhBq8J2Rk5hTIgU
+         qaxHK7fgP9J2JWCzU2VomdkQWB1iEpcPvOESZTKEcgSVdvm26DKvURvttf7qvBP5bDhg
+         j0uA==
+X-Gm-Message-State: ACrzQf2ihbHI5I1uzjbe608+f2lU4cTTckWDShLGyM119v74mbPgzgYT
+        vQUKl1yr6t/2601j0wHnTGv9yMWReoc=
+X-Google-Smtp-Source: AMsMyM4WYj4g7CiULRqYgelItrcYl0B4CvqL7lprJ2+qxm+t9IBvizYy3xH1qUaV246SkXRROEXyaQ==
+X-Received: by 2002:a05:6000:2c5:b0:22b:c77:7690 with SMTP id o5-20020a05600002c500b0022b0c777690mr2504835wry.563.1663861654865;
+        Thu, 22 Sep 2022 08:47:34 -0700 (PDT)
+Received: from amir-ThinkPad-T480.lan ([5.29.8.191])
+        by smtp.gmail.com with ESMTPSA id z5-20020a5d6405000000b0022af9555669sm6272386wru.99.2022.09.22.08.47.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Sep 2022 08:47:34 -0700 (PDT)
+From:   Amir Goldstein <amir73il@gmail.com>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Sasha Levin <sashal@kernel.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
         Leah Rumancik <leah.rumancik@gmail.com>,
         Chandan Babu R <chandan.babu@oracle.com>,
-        Varsha Teratipally <teratipally@google.com>,
-        Christian Brauner <brauner@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>
-Subject: Re: [PATCH 5.10] xfs: fix up non-directory creation in SGID
- directories
-Message-ID: <Yyx9eaKyYC08vOvq@magnolia>
-References: <20220922084956.74262-1-amir73il@gmail.com>
+        linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH 5.10 0/2] re-send two xfs stable patches for 5.10.y (from v5.18+)
+Date:   Thu, 22 Sep 2022 18:47:26 +0300
+Message-Id: <20220922154728.97402-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220922084956.74262-1-amir73il@gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 22, 2022 at 11:49:56AM +0300, Amir Goldstein wrote:
-> From: Christoph Hellwig <hch@lst.de>
-> 
-> commit 01ea173e103edd5ec41acec65b9261b87e123fc2 upstream.
-> 
-> XFS always inherits the SGID bit if it is set on the parent inode, while
-> the generic inode_init_owner does not do this in a few cases where it can
-> create a possible security problem, see commit 0fa3ecd87848
-> ("Fix up non-directory creation in SGID directories") for details.
-> 
-> Switch XFS to use the generic helper for the normal path to fix this,
-> just keeping the simple field inheritance open coded for the case of the
-> non-sgid case with the bsdgrpid mount option.
-> 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Reported-by: Christian Brauner <christian.brauner@ubuntu.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> Acked-off-by: Darrick J. Wong <djwong@kernel.org>
+Hi Greg,
 
-(H)acked-off-by?  I suppose we /are/ grafting bits of trees... :D
+These are the two patches that you asked me [1] to defer until they
+are posted to 5.15.y.
 
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Now that Leah has posted them for 5.15.y [2], please apply them also
+to 5.10.y.
 
---D
+Note that Leah has an extra patch in her 5.15.y series:
+"xfs: fix xfs_ifree() error handling to not leak perag ref"
+This fix does not apply and is not relevant to 5.10.y.
 
-> ---
-> 
-> Hi Greg,
-> 
-> This is an old debt of a patch that was dropped during review of my
-> batch of 5.10.y xfs backports from v5.12 [1].
-> 
-> Recently, Varsha requested the inclusion of this fix in 5.10.y
-> and Darrick has Acked it [2].
-> 
-> I have another series of SGID related fixes that also apply to 5.15.y
-> which I am collaborating on testing with Leah, but as both Christian and
-> Christoph commented in the original patch review [3], this fix from
-> v5.12 is independent of the rest of the SGID fixes and is well worth
-> backporting.
-> 
-> Thanks,
-> Amir.
-> 
-> [1] https://lore.kernel.org/linux-xfs/20220606143255.685988-1-amir73il@gmail.com/
-> [2] https://lore.kernel.org/linux-xfs/YyIDzPTn99XLTCFp@magnolia/
-> [3] https://lore.kernel.org/linux-xfs/20220608082654.GA16753@lst.de/
-> 
->  fs/xfs/xfs_inode.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 929ed3bc5619..19008838df76 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -802,6 +802,7 @@ xfs_ialloc(
->  	xfs_buf_t	**ialloc_context,
->  	xfs_inode_t	**ipp)
->  {
-> +	struct inode	*dir = pip ? VFS_I(pip) : NULL;
->  	struct xfs_mount *mp = tp->t_mountp;
->  	xfs_ino_t	ino;
->  	xfs_inode_t	*ip;
-> @@ -847,18 +848,17 @@ xfs_ialloc(
->  		return error;
->  	ASSERT(ip != NULL);
->  	inode = VFS_I(ip);
-> -	inode->i_mode = mode;
->  	set_nlink(inode, nlink);
-> -	inode->i_uid = current_fsuid();
->  	inode->i_rdev = rdev;
->  	ip->i_d.di_projid = prid;
->  
-> -	if (pip && XFS_INHERIT_GID(pip)) {
-> -		inode->i_gid = VFS_I(pip)->i_gid;
-> -		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
-> -			inode->i_mode |= S_ISGID;
-> +	if (dir && !(dir->i_mode & S_ISGID) &&
-> +	    (mp->m_flags & XFS_MOUNT_GRPID)) {
-> +		inode->i_uid = current_fsuid();
-> +		inode->i_gid = dir->i_gid;
-> +		inode->i_mode = mode;
->  	} else {
-> -		inode->i_gid = current_fsgid();
-> +		inode_init_owner(inode, dir, mode);
->  	}
->  
->  	/*
-> -- 
-> 2.25.1
-> 
+Thanks,
+Amir.
+
+[1] https://lore.kernel.org/linux-xfs/YxCulVd4dESBjCUM@kroah.com/
+[2] https://lore.kernel.org/linux-xfs/20220922151501.2297190-1-leah.rumancik@gmail.com/
+
+Dave Chinner (2):
+  xfs: reorder iunlink remove operation in xfs_ifree
+  xfs: validate inode fork size against fork format
+
+ fs/xfs/libxfs/xfs_inode_buf.c | 35 ++++++++++++++++++++++++++---------
+ fs/xfs/xfs_inode.c            | 22 ++++++++++++----------
+ 2 files changed, 38 insertions(+), 19 deletions(-)
+
+-- 
+2.25.1
+
