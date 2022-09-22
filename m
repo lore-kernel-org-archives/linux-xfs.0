@@ -2,236 +2,280 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2210ECAAD8
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 21:56:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4515AC6FA86
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 22:59:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230249AbiIVV4a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Sep 2022 17:56:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34566 "EHLO
+        id S229570AbiIVW7p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Sep 2022 18:59:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230146AbiIVV42 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 17:56:28 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0708B109779;
-        Thu, 22 Sep 2022 14:56:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663883787; x=1695419787;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=TF9ohMeOdxOMPU8wNWg0+uO+8siZDUoP9TRt2qswqGM=;
-  b=YVCtePsdNdUSfWnpRqv4RHQQ5FW3aFMfYgmEK1tNnqW7HN1487fiOMt9
-   P3wCOsgFLTGB5bLcMfsDpZ5xpshgLRmTM457zxRRP8zQvw6OXEn4L45uy
-   BvUctomkPOLYS6NRPKYhuEnOOQTmAcwHerY8jh6N3PY4cg8h3L/Tfdw2F
-   Jrv9mm0PAIwCUD4ZdKNkKMF/bpaVAH6UO90pjNVUivJGPlMu1grE4QOUl
-   MD7bE46pcIp3YRFRWPHK6nVLCC6NsEmfCzDsLdb2d9byZDpRk/SRxop+p
-   4MnYjE2fuzh8XUFmbf2Z3A9/Jrp7UYT9i8bxQVJPeKk+bQ352IjjkPQrh
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10478"; a="301883635"
-X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
-   d="scan'208";a="301883635"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 14:54:48 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
-   d="scan'208";a="650712718"
-Received: from orsmsx603.amr.corp.intel.com ([10.22.229.16])
-  by orsmga008.jf.intel.com with ESMTP; 22 Sep 2022 14:54:48 -0700
-Received: from orsmsx601.amr.corp.intel.com (10.22.229.14) by
- ORSMSX603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 22 Sep 2022 14:54:48 -0700
-Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
- orsmsx601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31 via Frontend Transport; Thu, 22 Sep 2022 14:54:48 -0700
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (104.47.70.108)
- by edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2375.31; Thu, 22 Sep 2022 14:54:47 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=F4sD3tzhetkJTXC+Y+SI9pb4PaN/zbzPlN7Qa0HNBk8RBcvSB/nk6HP/4v/LqHoZdzjr13M++WsdAkW8qLAO9CXVI8xpjGDta2UAVIVq012EKCQva9v6XA6BFSesVU7v81APX8Tgax13uaJ7XD9B7jYnp0OlOTn0VUJi76JcpkUNWA2pH5KxIrrfK9aPFRePIaYha1E3Mf98kbjq6zvh7A/zANVPbCombdXSbCqz0k3ju+HEP3A94Xmysblf78WA199GlNprQAFK7qyJDUDkLMK1/ARNSn3kYBcaP7rmZXJJRnf5aW4hlE5xRwKRcUIuiBt2CrxhB4k3lh50Gwsdlw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=hickjYoSb4cp8i3n8hOMWQH35gIZl17oBPYyhW8xE8k=;
- b=nltHbLBknIajovejgjo74sdAkYF8eXcL5AWuMPJ26lI2kCLgmkUkx8vjGOb4UMo3NsuFWpKuMhQpmv/0r6GABt1rx3930LRtj5aQL+d7h1/ge9nRRPG/DUp3p3pwy1qlmfF5+zwtdeb/DsxPIURVrPyeAImF7rMf+8e/jGGKdM3xfwiAnM+FRuBJXkp+2rrjZmCHGzbeQb7uk5nvSPwoVhyRrCxZsJqWBscnj/ZTmPuNzh14sT2iT56Ti9z5xDmgRXUjG0aL5t6Yj2Xn3DErYNaoOBMY+caB04TMZupIYX2hca8DOlKxDq4tl/ZtjKvGP+UUviRxMnzoHGEvGETd6w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
- (2603:10b6:301:50::20) by DM6PR11MB4676.namprd11.prod.outlook.com
- (2603:10b6:5:2a7::9) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.19; Thu, 22 Sep
- 2022 21:54:44 +0000
-Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
- ([fe80::9847:345e:4c5b:ca12]) by MWHPR1101MB2126.namprd11.prod.outlook.com
- ([fe80::9847:345e:4c5b:ca12%6]) with mapi id 15.20.5654.017; Thu, 22 Sep 2022
- 21:54:44 +0000
-Date:   Thu, 22 Sep 2022 14:54:42 -0700
-From:   Dan Williams <dan.j.williams@intel.com>
-To:     Jason Gunthorpe <jgg@nvidia.com>,
-        Dan Williams <dan.j.williams@intel.com>
-CC:     <akpm@linux-foundation.org>, Matthew Wilcox <willy@infradead.org>,
-        "Jan Kara" <jack@suse.cz>, "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        John Hubbard <jhubbard@nvidia.com>,
-        <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>,
-        <linux-ext4@vger.kernel.org>
-Subject: Re: [PATCH v2 10/18] fsdax: Manage pgmap references at entry
- insertion and deletion
-Message-ID: <632cd9a2a023_3496294da@dwillia2-xfh.jf.intel.com.notmuch>
-References: <166329930818.2786261.6086109734008025807.stgit@dwillia2-xfh.jf.intel.com>
- <166329936739.2786261.14035402420254589047.stgit@dwillia2-xfh.jf.intel.com>
- <YysZrdF/BSQhjWZs@nvidia.com>
- <632b2b4edd803_66d1a2941a@dwillia2-xfh.jf.intel.com.notmuch>
- <632b8470d34a6_34962946d@dwillia2-xfh.jf.intel.com.notmuch>
- <YyuLLsindwo0prz4@nvidia.com>
- <632ba8eaa5aea_349629422@dwillia2-xfh.jf.intel.com.notmuch>
- <YyurdXnW7SyEndHV@nvidia.com>
- <632bc5c4363e9_349629486@dwillia2-xfh.jf.intel.com.notmuch>
- <YyyhrTxFJZlMGYY6@nvidia.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <YyyhrTxFJZlMGYY6@nvidia.com>
-X-ClientProxiedBy: BY5PR16CA0005.namprd16.prod.outlook.com
- (2603:10b6:a03:1a0::18) To MWHPR1101MB2126.namprd11.prod.outlook.com
- (2603:10b6:301:50::20)
+        with ESMTP id S229759AbiIVW7m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 18:59:42 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 74914240A8;
+        Thu, 22 Sep 2022 15:59:38 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9D29D8AAE53;
+        Fri, 23 Sep 2022 08:59:36 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1obVAM-00Ay6t-DW; Fri, 23 Sep 2022 08:59:34 +1000
+Date:   Fri, 23 Sep 2022 08:59:34 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC PATCH 0/2] iomap/xfs: fix data corruption due to stale
+ cached iomaps
+Message-ID: <20220922225934.GU3600936@dread.disaster.area>
+References: <20220921082959.1411675-1-david@fromorbit.com>
+ <Yyvjtpi49YSUej+w@magnolia>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWHPR1101MB2126:EE_|DM6PR11MB4676:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0e638cc0-afd0-4200-56d3-08da9ce50f47
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: c8MAe3YfJib/tYsvR11rQsklxtGbJp5uYtSahxmP57deoYa8fFlJkEOkLikg2dqezHGtFaL8LDHASoSRBwy7uZXA0UOFXNPDt1ABI4NUjaUeD4cJEEVJe1zGkLddhZLxPyPZj1p5ve6O5oGO8M4+UwK4TXNQCZlQCKdnvwuW3PvR0jCSC+PkUVvnMFxGfWIeME5BQJOZuXhOZi869bdppUc2o2mD416Tbou5pcXLaNvJUpmFi9Idzs6/ouqFX6Sm67dh5iengJyf54nkhjPM0e0CFKT31GciG9Xa0/Puvjcd97DhrWkUqhwuiSdasySe8qtUjkl+MYB4N3HCZvXBD+YdgmI+Vq6yCW+v7B85EBZGXE9uJlPBFGtWGB1YphH+vPHCh8yVs0vwcc3AKtu3taomhOU70EDOL2FaDRwnIncJj5T+CB/jx31yp+cCUwTMx5V2X+QaaL5n8ZfI1+OCsX74HoTtfQ7w5zlvhw7vqxtRRmtfWjXQmZYsJaTywLCnRflaibrRo6gsLru5T45OqKP/QkBRzVlw5lWOKGEUMOD3aerLzjAuu+F7AeUcSbRAdtYLBmZYI9vtG0W6mu1ydxOLdTDaTw6Wuwbls7kdDdRUzLdJAhIlGKcoDIDVmeYJYlSItSo7ADW3xjjdB1BHK909jdUqkFud+sJB2hxbYozr7AcA9ts+Ri8wuTSasc72jjEgrRdKNEDjGjlBa18o8Q==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1101MB2126.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(39860400002)(366004)(136003)(396003)(376002)(346002)(451199015)(186003)(2906002)(83380400001)(26005)(9686003)(6512007)(5660300002)(8936002)(7416002)(86362001)(6506007)(41300700001)(66946007)(66476007)(4326008)(8676002)(66556008)(54906003)(478600001)(316002)(38100700002)(110136005)(6486002)(82960400001);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?SjVEZaLuoaxFGcixmOXu+D+H/8F1u9EX8E9yZUL3llbn9kpaap+arHS/+RiT?=
- =?us-ascii?Q?6GqHm7RcfTsyZFWmzcIsapd/vGzdNL7/i976ZoXTQJ0WFYhnvUpnKgJSf6US?=
- =?us-ascii?Q?OQqoWWr5QC8lcahNCCrwWYJ3PMM+dwDjCJr+zVL5Stu7WNr+GN1eCWwhSrng?=
- =?us-ascii?Q?K6hVitDGR3TZsijFJFsm4UuOOwnKBONsLTfc0dcqQAWmVls3+nxxhHwG008C?=
- =?us-ascii?Q?o+kqy8oczZq0U3CDQ95foLEqJxC39Ol40GlqY146nPP1dr5LZ/NW9v0Gmg+1?=
- =?us-ascii?Q?VJOMZaeF5K2zKD+2R/RSISVXuV9yX8prKPU2+4abxhi/uTekk/whll3Yrjv4?=
- =?us-ascii?Q?aF5xsDlPqvSB4Slc13puVf7pASfeMu+Hm032etNezT+8DcPfV9hItYlm4683?=
- =?us-ascii?Q?f7NMUyAPvW2gZeSJfApVO44xT+/Y3XYuRnwQZbT3Fy9J3oDFJo3GCtraW0Lk?=
- =?us-ascii?Q?3V0UzgTUPea4pQCsrJfZQuZUQP/tdTKrOfSBwkNsdBhbJwF2RcZFmTcYdU4w?=
- =?us-ascii?Q?rcj7y1qZ4aJOIk+D2tL6OR6vBtJmQ/IG4OhIGvA7CebQq4/5cTnGj4Sblktv?=
- =?us-ascii?Q?NIkP4B+pfTD/gojWehSV0tJLUaSdKst20+ant4hOwLQOsyhfNGRJUiLB6x8m?=
- =?us-ascii?Q?XOv8JX7egJcYKvatjIPX9hGOH/m+jxbAEExzNZV7TW8gogf83Z0HMoL0mzFo?=
- =?us-ascii?Q?kciIH3dXhUrj3S0KXEyZ2+xqh/osHSFEy1PsgM7xgp/Ud5yhXAwrAS/rZjXB?=
- =?us-ascii?Q?hDCk1RU/Ahi1GYVaV3ishiAXDD1wm4iSQOm8sUoDFfYR8DgL0Vns+SOJcLj2?=
- =?us-ascii?Q?PINW3rbyPh5wTQ3keCKBtiIKQgHNkZE9lmjjWFPzCYJY5LUWC1Bt19vuZE26?=
- =?us-ascii?Q?rBh4vAXNhxjKv+iBNh6lNkwPcqaY4viYpx9SX/SHqmZttkOxgVmz33tNn6Wp?=
- =?us-ascii?Q?Z6HgqxAiva0mGltnmjCHKiZfuqzY9dMQzWRt4/1LDS6QQJFeyn53wF1U6NtV?=
- =?us-ascii?Q?jGskkHgKrkTRE7tTJgEQpNMzxz06nnnKo0H0/2MHi8ui+dLH7KO30b2/cou6?=
- =?us-ascii?Q?kZcTm/9rZ0w+qqrY5OHV28Egwz1Dx3oMxvjXfK4nFZBWCVjOsrzozHAuex/j?=
- =?us-ascii?Q?yUZwD7nMBOC18XlkWKoBVLR1MAUnWNkQUQWiEn2IN2jWLGVMYUo3SPkEVPPF?=
- =?us-ascii?Q?eTo3ufQSwx7b/hzJcoRbjBNT0IwK+vwD/0Cccsi8ByA0j830lTHngbjbc9GZ?=
- =?us-ascii?Q?sC22kAMc29KwzpU9YRHtgxH7XBjGHHMP/u7JuJRdUS5eiGzlaPGTdUY+f6T3?=
- =?us-ascii?Q?H/CYH4+Dt4cNex9JF2gRD14BFCqmKf7p2cuKThqtIPNVJI4T4i7I3FDaiEXL?=
- =?us-ascii?Q?rzIemf00u11vYH6i0SluzetqocZVCtSsEEs3VSyeJbffkX3IMjQ2sGg4XEXF?=
- =?us-ascii?Q?JQ8MWxv+JNh5PIdyET1n47rCjbKtlO6kEiXtHK6FHrMbZwWR1lkfgWxJilac?=
- =?us-ascii?Q?UKuBo9iIsLvUPElCYptFY9MSemf0ymVUn3UcXv61H32YcJic4nXWWFzoe4sQ?=
- =?us-ascii?Q?xp4ic65eO+/fYpq77L+pfcGdKBf3wNClPa91UzV2edBHREfTGLiJg3CnppSE?=
- =?us-ascii?Q?Bg=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0e638cc0-afd0-4200-56d3-08da9ce50f47
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR1101MB2126.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Sep 2022 21:54:44.5529
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fCo50yv28oDj6vc7UGfFBbbrgdiCpcu0G/dlLqrRjwNrigveLBnfZLcZBk/mW3fOikGt8j6rAwYldddp5Rm+4CLWXQwXrhWncwa+BKYY4eA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB4676
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yyvjtpi49YSUej+w@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=632ce8d8
+        a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
+        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=2hJliK1U0HaKiL3xgs4A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Jason Gunthorpe wrote:
-> On Wed, Sep 21, 2022 at 07:17:40PM -0700, Dan Williams wrote:
-> > Jason Gunthorpe wrote:
-> > > On Wed, Sep 21, 2022 at 05:14:34PM -0700, Dan Williams wrote:
-> > > 
-> > > > > Indeed, you could reasonably put such a liveness test at the moment
-> > > > > every driver takes a 0 refcount struct page and turns it into a 1
-> > > > > refcount struct page.
-> > > > 
-> > > > I could do it with a flag, but the reason to have pgmap->ref managed at
-> > > > the page->_refcount 0 -> 1 and 1 -> 0 transitions is so at the end of
-> > > > time memunmap_pages() can look at the one counter rather than scanning
-> > > > and rescanning all the pages to see when they go to final idle.
-> > > 
-> > > That makes some sense too, but the logical way to do that is to put some
-> > > counter along the page_free() path, and establish a 'make a page not
-> > > free' path that does the other side.
-> > > 
-> > > ie it should not be in DAX code, it should be all in common pgmap
-> > > code. The pgmap should never be freed while any page->refcount != 0
-> > > and that should be an intrinsic property of pgmap, not relying on
-> > > external parties.
+On Wed, Sep 21, 2022 at 09:25:26PM -0700, Darrick J. Wong wrote:
+> On Wed, Sep 21, 2022 at 06:29:57PM +1000, Dave Chinner wrote:
+> > Hi folks,
 > > 
-> > I just do not know where to put such intrinsics since there is nothing
-> > today that requires going through the pgmap object to discover the pfn
-> > and 'allocate' the page.
+> > THese patches address the data corruption first described here:
+> > 
+> > https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
+> > 
+> > This data corruption has been seen in high profile production
+> > systems so there is some urgency to fix it. The underlying flaw is
+> > essentially a zero-day iomap bug, so whatever fix we come up with
+> > needs to be back portable to all supported stable kernels (i.e.
+> > ~4.18 onwards).
+> > 
+> > A combination of concurrent write()s, writeback IO completion, and
+> > memory reclaim combine to expose the fact that the cached iomap that
+> > is held across an iomap_begin/iomap_end iteration can become stale
+> > without the iomap iterator actor being aware that the underlying
+> > filesystem extent map has changed.
+> > 
+> > Hence actions based on the iomap state (e.g. is unwritten or newly
+> > allocated) may actually be incorrect as writeback actions may have
+> > changed the state (unwritten to written, delalloc to unwritten or
+> > written, etc). This affects partial block/page operations, where we
+> > may need to read from disk or zero cached pages depending on the
+> > actual extent state. Memory reclaim plays it's part here in that it
+> > removes pages containing partial state from the page cache, exposing
+> > future partial page/block operations to incorrect behaviour.
+> > 
+> > Really, we should have known that this would be a problem - we have
+> > exactly the same issue with cached iomaps for writeback, and the
+> > ->map_blocks callback that occurs for every filesystem block we need
+> > to write back is responsible for validating the cached iomap is
+> > still valid. The data corruption on the write() side is a result of
+> > not validating that the iomap is still valid before we initialise
+> > new pages and prepare them for data to be copied in to them....
+> > 
+> > I'm not really happy with the solution I have for triggering
+> > remapping of an iomap when the current one is considered stale.
+> > Doing the right thing requires both iomap_iter() to handle stale
+> > iomaps correctly (esp. the "map is invalid before the first actor
+> > operation" case), and it requires the filesystem
+> > iomap_begin/iomap_end operations to co-operate and be aware of stale
+> > iomaps.
+> > 
+> > There are a bunch of *nasty* issues around handling failed writes in
+> > XFS taht this has exposed - a failed write() that races with a
+> > mmap() based write to the same delalloc page will result in the mmap
+> > writes being silently lost if we punch out the delalloc range we
+> > allocated but didn't write to. g/344 and g/346 expose this bug
+> > directly if we punch out delalloc regions allocated by now stale
+> > mappings.
 > 
-> I think that is just a new API that wrappers the set refcount = 1,
-> percpu refcount and maybe building appropriate compound pages too.
-> 
-> Eg maybe something like:
-> 
->   struct folio *pgmap_alloc_folios(pgmap, start, length)
-> 
-> And you get back maximally sized allocated folios with refcount = 1
-> that span the requested range.
-> 
-> > In other words make dax_direct_access() the 'allocation' event that pins
-> > the pgmap? I might be speaking a foreign language if you're not familiar
-> > with the relationship of 'struct dax_device' to 'struct dev_pagemap'
-> > instances. This is not the first time I have considered making them one
-> > in the same.
-> 
-> I don't know enough about dax, so yes very foreign :)
-> 
-> I'm thinking broadly about how to make pgmap usable to all the other
-> drivers in a safe and robust way that makes some kind of logical sense.
+> Yuck.  I'm pretty sure that callers (xfs_buffered_write_iomap_end) is
+> supposed to call truncate_pagecache_range with the invalidatelock (fka
+> MMAPLOCK) held.
 
-I think the API should be pgmap_folio_get() because, at least for DAX,
-the memory is already allocated. The 'allocator' for fsdax is the
-filesystem block allocator, and pgmap_folio_get() grants access to a
-folio in the pgmap by a pfn that the block allocator knows about. If the
-GPU use case wants to wrap an allocator around that they can, but the
-fundamental requirement is check if the pgmap is dead and if not elevate
-the page reference.
+Yup, there's multiple problems with this code; apart from
+recognising that it is obviously broken and definitely problematic,
+I haven't dug into it further.
 
-So something like:
+> > Then, because we can't punch out the delalloc we allocated region
+> > safely when we have a stale iomap, we have to ensure when we remap
+> > it the IOMAP_F_NEW flag is preserved so that the iomap code knows
+> > that it is uninitialised space that is being written into so it will
+> > zero sub page/sub block ranges correctly.
+> 
+> Hm.  IOMAP_F_NEW results in zeroing around, right?  So if the first
+> ->iomap_begin got a delalloc mapping, but by the time we got the folio
+> locked someone else managed to writeback and evict the page, we'd no
+> longer want that zeroing ... right?
 
-/**
- * pgmap_get_folio() - reference a folio in a live @pgmap by @pfn
- * @pgmap: live pgmap instance, caller ensures this does not race @pgmap death
- * @pfn: page frame number covered by @pgmap
- */
-struct folio *pgmap_get_folio(struct dev_pagemap *pgmap, unsigned long pfn)
-{
-        struct page *page;
-        
-        VM_WARN_ONCE(pgmap != xa_load(&pgmap_array, PHYS_PFN(phys)));
-        
-        if (WARN_ONCE(percpu_ref_is_dying(&pgmap->ref)))
-                return NULL;
-        page = pfn_to_page(pfn);
-        return page_folio(page);
-}
+Yes, and that is one of the sources of the data corruption - zeroing
+when we shouldn't.
 
-This does not create compound folios, that needs to be coordinated with
-the caller and likely needs an explicit
+There are multiple vectors to having a stale iomap here:
 
-    pgmap_construct_folio(pgmap, pfn, order)
+1. we allocate the delalloc range, giving us IOMAP_DELALLOC and
+   IOMAP_F_NEW. Writeback runs, allocating the range as unwritten.
+   Even though the iomap is now stale, there is no data corruption
+   in this case because the range is unwritten and so we still need
+   zeroing.
 
-...call that can be done while holding locks against operations that
-will cause the folio to be broken down.
+2. Same as above, but IO completion converts the range to written.
+   Data corruption occurs in this case because IOMAP_F_NEW causes
+   incorrect page cache zeroing to occur on partial page writes.
+
+3. We have an unwritten extent (prealloc, writeback in progress,
+   etc) so we have IOMAP_UNWRITTEN. These require zeroing,
+   regardless of whether IOMAP_F_NEW is set or not. Extent is
+   written behind our backs, unwritten conversion occurs, and now we
+   zero partial pages when we shouldn't.
+
+Other issues I've found:
+
+4. page faults can run the buffered write path concurrently with
+   write() because they aren't serialised against each other. Hence
+   we can have overlapping concurrent iomap_iter() operations with
+   different zeroing requirements and it's anyone's guess as to
+   which will win the race to the page lock and do the initial
+   zeroing. This is a potential silent mmap() write data loss
+   vector.
+
+5. anything that can modify the extent layout without holding the
+   i_rwsem exclusive can race with iomap iterating the extent list.
+   Holding the i_rwsem shared and modifying the extent list (e.g.
+   direct IO writes) can result in iomaps changing in the middle of,
+   say, buffered reads (e.g. hole->unwritten->written).
+
+IOWs, we must always treat iomaps that are returned by iomap_iter()
+to the actor functions as volatile and potentially invalid. If we
+are using folio locks to ensure only one task is accessing page
+cache data at any given time, then we *always* need to check that
+the iomap is valid once we have the folio locked. If the iomap is
+invalid, then we have to remap the file offset before deciding wht
+to do with the data in the page....
+
+> > As a result, ->iomap_begin() needs to know if the previous iomap was
+> > IOMAP_F_STALE, and if so, it needs to know if that previous iomap
+> > was IOMAP_F_NEW so it can propagate it to the remap.
+> > 
+> > So the fix is awful, messy, and I really, really don't like it. But
+> > I don't have any better ideas right now, and the changes as
+> > presented fix the reproducer for the original data corruption and
+> > pass fstests without and XFS regressions for block size <= page size
+> > configurations.
+> > 
+> > Thoughts?
+> 
+> I have a related question about another potential corruption vector in
+> writeback.  If write_cache_pages selects a folio for writeback, it'll
+> call clear_page_dirty_for_io to clear the PageDirty bit before handing
+> it to iomap_writepage, right?
+
+Yes all interactions from that point onwards until we mark the folio
+as under writeback are done under the folio lock, so they should be
+atomic from the perspective of the data paths that dirty/clean the
+page.
+
+> What happens if iomap_writepage_map errors out (say because ->map_blocks
+> returns an error) without adding the folio to any ioend?
+
+Without reading further:
+
+1. if we want to retry the write, we folio_redirty_for_writepage(),
+unlock it and return with no error. Essentially we just skip over
+it.
+
+2. If we want to fail the write, we should call set_mapping_error()
+to record the failure for the next syscall to report and, maybe, set
+the error flag/clear the uptodate flag on the folio depending on
+whether we want the data to remain valid in memory or not.
+
+> I think in
+> that case we'll follow the (error && !count) case, in which we unlock
+> the folio and exit without calling folio_redirty_for_writepage, right?
+> The error will get recorded in the mapping for the next fsync, I think,
+> but I also wonder if we *should* redirty because the mapping failed, not
+> the attempt at persistence.
+
+*nod*
+
+I think the question that needs to be answered here is this: in what
+case is an error being returned from ->map_blocks a recoverable
+error that a redirty + future writeback retry will succeed?
+
+AFAICT, all cases from XFS this is a fatal error (e.g. corruption of
+the BMBT), so the failure will persist across all attempts to retry
+the write?
+
+Perhaps online repair will change this (i.e. in the background
+repair fixes the BMBT corruption and so the next attempt to write
+the data will succeed) so I can see that we *might* need to redirty
+the page in this case, but....
+
+> This isn't a problem for XFS because the next buffered write will mark
+> the page dirty again, but I've been trawling through the iomap buffer
+> head code (because right now we have a serious customer escalation on
+> 4.14) and I noticed that we never clear the dirty state on the buffer
+> heads.  gfs2 is the only user of iomap buffer head code, but that stands
+> out as something that doesn't quite smell right.  I /think/ this is a
+> result of XFS dropping buffer heads in 4.19, hoisting the writeback
+> framework to fs/iomap/ in 5.5, and only adding buffer heads back to
+> iomap later.
+
+Seems plausible.
+
+> The reason I even noticed this at all is because of what 4.14 does --
+> back in those days, initiating writeback on a page clears the dirty
+> bit from the attached buffer heads in xfs_start_buffer_writeback.  If
+> xfs_writepage_map fails to initiate any writeback IO at all, then it
+> simply unlocks the page and exits without redirtying the page.  IOWs, it
+> causes the page and buffer head state to become inconsistent, because
+> now the page thinks it is clean but the BHs think they are dirty.
+> 
+> Worse yet, if userspace responds to the EIO by reissuing the write()
+> calls, the write code will see BH_Dirty set on the buffer and doesn't
+> even try to set PageDirty, which means ... that the page never gets
+> written to disk again!
+> 
+> There are three questions in my mind:
+> 
+> A. Upstream iomap writeback code doesn't change (AFAICT) the buffer head
+> dirty state.  I don't know if this is really broken?  Or maybe gfs2 just
+> doesn't notice or care?
+
+You'd need to talk to the GFS2 ppl about that - I haven't paid any
+attention to the iomap bufferhead code and so I have no idea what
+constraints it is operating under or what bufferhead state GFS2 even
+needs...
+
+> B. Should writeback be redirtying any folios that aren't added to an
+> ioend?  I'm not sure that doing so is correct, since writeback to a
+> shutdown filesystem won't clear the dirty pages.
+
+See above - I think the action depends on the error being returned.
+If it's a fatal error that can never succeed in future (e.g.  fs is
+shutdown), then we should not redirty the page and just error it
+out. If it's not a fatal error, then *maybe* we should be redirtying
+the page. Of course, this can lead to dirty pages that can never be
+written.....
+
+> C. Gotta figure out why our 4.14 kernel doesn't initiate writeback.
+> At this point we're pretty sure it's because we're actually hitting the
+> same RCA as commit d9252d526ba6 ("xfs: validate writeback mapping using
+> data fork seq counter").  Given the (stale) data it has, it never
+> manages to get a valid mapping, and just... exits xfs_map_blocks without
+> doing anything.
+
+I haven't looked at any code that old for a long while, so I can't
+really help you there... :/
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
