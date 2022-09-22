@@ -2,167 +2,201 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9102CC6FA86
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 09:44:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75293C6FA86
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 09:56:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229826AbiIVJou (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Sep 2022 05:44:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36916 "EHLO
+        id S231347AbiIVJ4q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Sep 2022 05:56:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230470AbiIVJos (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 05:44:48 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 014EA23BFC;
-        Thu, 22 Sep 2022 02:44:45 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28M9ZHac007165;
-        Thu, 22 Sep 2022 09:44:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
- to : cc : subject : date : in-reply-to : message-id : content-type :
- mime-version; s=corp-2022-7-12;
- bh=3i/XYYwmQ4Vwv6/bg0kV2DoPnRXPWBWDJe0Yj190sV4=;
- b=fbrzCQlT6OY1b64OBxelmXmucs/qCi1uW4cTA1FaOlBfKQKC8B8LIHkXlq1G1eQq1b48
- Q8tmLzo7arnWl99cLaJ1vOWiJBBpjYVWCPkUqP4p27Xkv1aatdSp6iE83LrqMEXrhVMP
- NNj7T6NfL2JIVhcxmYnAhfQzOWgOyX2NzwZVs11mh9O5o3Yv8UMOLj1Pysg2Hlo7K6Ru
- JimbH1E/hr3LIiKJKZuktu4LzCjWUIcef7tEpAwcEw3aP5pBDrnhtqFnLjBVPv/z1uO9
- DVPpkILOJZEtm9+6XGVfvNrM2QtAXBv89CvVjp0DDowI3JRdss5lqeHJi4fLQYKz8Z7f 2Q== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jn6f0mkgc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Sep 2022 09:44:39 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 28M8lVA8033840;
-        Thu, 22 Sep 2022 09:44:38 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2172.outbound.protection.outlook.com [104.47.59.172])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3jp39ndugx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Sep 2022 09:44:38 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lub+SvNzOP6qiR7kUnvuNOsXyIOQYp+dcUVN1tx9PfM/RbqL/rChMctZNvZlLH081VXovecAcloWlZ2n1UHMk6OccfxpqRvYvg3G4xKrtNYcBtEcSIntr+tPzRF1DPxw+eHQKSZO0zlxym5DJClajdy/E/pEpeE0o+NUe6jeRLdn7NG8AxnQynEDt6rl5lAzWN9212dwcysDuImuiqVvHmA1I4TNwVK9ccFyZdjBkTlOD02j50zYzgETA9zaRGA0hhTtiwtgtox8IvbzGnTp9sN6Ul1kAC4mqXPbAxPvnbYVpvfVBRVnGVhMM3go3bzdhywjMBcmvpKI2DK7HS1b7Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3i/XYYwmQ4Vwv6/bg0kV2DoPnRXPWBWDJe0Yj190sV4=;
- b=X16GlD1UEFZemjXbBAr2vIMj9h45n0gvDaye4YW5BTbqOlnc6ioFiU95SJdsL856nu/mA2+EUEADPLM519A8SvqFAySQS3QQAZmagErtU7qcePZmUiJ8LQRBUItqZONeYcJkGiLvGnmyv1aWWK1nO//xZ1tHgek46TyjIAhwdsXSAboLws6xr9Trs346r4QgosE8ht/MMpYdxo04k4LZEzDJhLeXPDf+/eikm2o0jcyIDacfk3d4Z0vM/I2CtOnOA0WtPoFwv8mlyhgM/RDhPCMaYoleAcAfjThZqGej3tV5NroKcTJ9vAzTq1pf3icv8Ew44iJmFlq9erGLAahVnw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S231223AbiIVJ4V (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 05:56:21 -0400
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 051FCD74FB;
+        Thu, 22 Sep 2022 02:55:21 -0700 (PDT)
+Received: by mail-wr1-x434.google.com with SMTP id c11so14588836wrp.11;
+        Thu, 22 Sep 2022 02:55:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3i/XYYwmQ4Vwv6/bg0kV2DoPnRXPWBWDJe0Yj190sV4=;
- b=k4MLFEAN7Ys+7O50Kx4wtZbqBOM18cQcBWKB0TTkh5e/esCTlBR50ILUNN7zhq7xlaByZG9b/Jm///q48WGmLxmBpPGgbAmzfgQ3bXR2+tNxr7fqHUrNwvNGSOKc2sRJjL9BV3sNpTh3Q/fDWTyrIuJsupkhNJBl06w9nI2HmWE=
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
- by IA0PR10MB6721.namprd10.prod.outlook.com (2603:10b6:208:441::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.17; Thu, 22 Sep
- 2022 09:44:36 +0000
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::822f:1816:1c2c:43d1]) by SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::822f:1816:1c2c:43d1%7]) with mapi id 15.20.5654.014; Thu, 22 Sep 2022
- 09:44:36 +0000
-References: <20220921032352.307699-1-chandan.babu@oracle.com>
- <YyrS7dE8UtDydjZF@kroah.com> <Yysu56U3OYFozSLD@kroah.com>
-User-agent: mu4e 1.6.10; emacs 27.1
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     sashal@kernel.org, mcgrof@kernel.org, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org, djwong@kernel.org, amir73il@gmail.com,
-        leah.rumancik@gmail.com
-Subject: Re: [PATCH 5.4 00/17] xfs stable patches for 5.4.y (from v5.5)
-Date:   Thu, 22 Sep 2022 14:46:16 +0530
-In-reply-to: <Yysu56U3OYFozSLD@kroah.com>
-Message-ID: <871qs3pwu9.fsf@debian-BULLSEYE-live-builder-AMD64>
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR06CA0246.apcprd06.prod.outlook.com
- (2603:1096:4:ac::30) To SA1PR10MB5867.namprd10.prod.outlook.com
- (2603:10b6:806:22b::9)
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=3KZuhIbDsTmS90rWhTQ5Pzbw5OkmbaOMfSrIrIm8xy4=;
+        b=ReyEEc6cyNQu9PfbZH6KMcAsTWJaHLFwoUH7J4nSuug2svcotV24dTuvsbkRXHCGnG
+         Cr2k4IB1E3lLATq8zLVo3N2TE6V/bWRmggIIyJGUzV+9//5wkBmdlvnHD34JwyxsIX0U
+         h4OCXgVefr6e3LwAYDKfnqYPnsFNjwoRuWeCfZH8yuVGVq989l5PrX9dNAPoE70sSw1t
+         C/DuJtpWBDwZ1ZmhD+cPJ7Tkpwc9pDvTd3CHd0lWxtxUg+9kIBQOOd3j1BaeYa+VcdDr
+         irQzkv3xWJEqF/aa+UU6A3hyVZGx2s1YJ1K6K8CfK+EOqDu7ukiWiPweTMoOUfaNH9V6
+         mCGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=3KZuhIbDsTmS90rWhTQ5Pzbw5OkmbaOMfSrIrIm8xy4=;
+        b=wKmgZwpoRYysyopUEAad4omexoSB7XKCAOMcK1kMks/ShkOd/o2v181afp79SBFU96
+         +2OszTY+Pxzt2V8r/tTDUVnyFDn5q4yfQFk9rf8kaMupruFwFl1/dlYSy4+5NAi2YXVi
+         feUVA9BPLTrG+AYRw6PTEhxSTPKid3kVxcaoQAsIMe/xHwJYOjnx43N3doCrI6PgKGR3
+         6MowpX+/fVUFwrZNaYjDGgTGkVG9xOVOer84dWGK2c1p0QCDEVcF2Fbm5zbQuQae2wqd
+         prUAVCtOZTgMjwISdctNpcA5Izaw0T3W64tBJ4ZYHYARwCHhTieI4qFizuCf1BT3c6Qw
+         tNug==
+X-Gm-Message-State: ACrzQf1/iG+ri6RrHojl72sEQyNgWadzLDMsTLyDxYewzYxBIfvLt21+
+        5AKMAz8DyF8BcCa1FubczJeFl4HsyiI=
+X-Google-Smtp-Source: AMsMyM6t9YZr1ElRNqIU022/2zzUvuGs7SgaV8WTbISA8nIGuvQffKhrMB8GRUpi3kB5eZlw6avjfA==
+X-Received: by 2002:a05:6000:1447:b0:22a:ea42:29f7 with SMTP id v7-20020a056000144700b0022aea4229f7mr1539727wrx.38.1663840519700;
+        Thu, 22 Sep 2022 02:55:19 -0700 (PDT)
+Received: from amir-ThinkPad-T480.lan ([5.29.8.191])
+        by smtp.gmail.com with ESMTPSA id r125-20020a1c2b83000000b003a541d893desm5583233wmr.38.2022.09.22.02.55.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Sep 2022 02:55:19 -0700 (PDT)
+From:   Amir Goldstein <amir73il@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH] xfs: take shared inode lock on single page buffered writes
+Date:   Thu, 22 Sep 2022 12:55:14 +0300
+Message-Id: <20220922095514.79607-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|IA0PR10MB6721:EE_
-X-MS-Office365-Filtering-Correlation-Id: 85ecb91d-013a-4c5d-a8ef-08da9c7f0f56
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: yaEIzbq1k1qPkRLyNaBYC2l1JOjRFvvdPq6/N07rLFkQNP5YfC1b9S+Jl34P/uKcgMjXpqrLnkvekwlD4NMGjkYbRKIjl3UEHIM7ePulra79/fO+JECki+uDcknItHHYRr9DATr16Dr0deKt8sdFdrIXYiUxs2yIoc2HsqnXnt1B2elkR8+P9WX5XoQpN4kZP3wzvEQ62cl8NedaleDTGdyq7b67bGOK976GBaIUaR1P3woiLaxjD2P+LtHdZxhGaEP9cghZO/wSHOBzJQyf/TN7oSU2ZZK71d4+xJjlQVeu2moRiUNz0Sw2qQb03yTx4UAuoC80Vtk+RSHW6MhK5xFW+qPzWxR7j172nrnmwusPPl0MfcUKaGZaW2DSMnOBOI/Ao5wko1hlg3siJMA8l1/qxCcsH58Az+MGijvMIqhV4p5DvspEnD+EekijjsBFCexiZ+a0f6tKPQO/Qy9lo0XzhzntZ97nrUPvsV+P+ra7oXAHtL/9iJdX3WXOeUiuZEgG8pR/9x7p1pt01oQbAs6rlzo+zsQk+meVXDKN9eDFtSbIr+7XbNIfQAa4CioysHB3FBQSb+bmFYRLDg+cFe1Pq9z+SxIeAbOoVYXDNhRHEOd9SLQOYoevZhKnJyxhDa219BQP3DGLkZrbxsW7NhDR9eE33cwPfd05teMhOVKP7tECkNQqYp+oAq/L6areQ966ot/AAOQYKRz6pkNkqQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(39860400002)(366004)(376002)(136003)(396003)(346002)(451199015)(9686003)(186003)(53546011)(26005)(6506007)(6512007)(6666004)(4326008)(83380400001)(2906002)(5660300002)(66946007)(4744005)(6916009)(478600001)(33716001)(6486002)(66556008)(8676002)(66476007)(41300700001)(316002)(8936002)(86362001)(38100700002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?JBG3mgvmYwJTid6v7SqZ1i2bIdJUKwXrAlDuwBhTurq95sBQX4kiWQdlzAdJ?=
- =?us-ascii?Q?/O4Alqwpz2guq2imOnUqwvLSjNMizbXHPAEtVvAXfNR2eGXxTMRuBgFaSAKK?=
- =?us-ascii?Q?jmQPsnzdqQZiXs9OM9ZgTPc+lAqvdcvl5sgw1O+k4hwDHsLzPyiw8wIwjGw7?=
- =?us-ascii?Q?YQCRxWrZnpqwCOGVqsBdsImS94H32UOmzS0PebZPPO6vJFpijkOyn1K8mUr1?=
- =?us-ascii?Q?LI1ZxeRxMnW2l8F5xHTrACdXxo91oCX1WHI8e8gNlavLZl87wD2Oa9tfAPxA?=
- =?us-ascii?Q?s9nwu8VUwabsdPjTOrsY2OsrmHZWXgMqjr4P+pvWduTQEyTw5pUSHcyswx9Q?=
- =?us-ascii?Q?/ckfOo5NrXgEiVcDCqZPZpL/AIg7AifGI9VFnBzRxyxAE62xRFa7A/cEeoQK?=
- =?us-ascii?Q?O5cpJGrVIB5KCNhK8xPMw5EA3CI9ctm5Dqk+syJw89X+6nkN8hHXOE9jGqKB?=
- =?us-ascii?Q?F4W2bxnfg2ZDywR6OEz3uqpulqim3Q85MPrQ7gi8/6FvMlqG9hJwNCzjz/hh?=
- =?us-ascii?Q?VEtwi9ruCishMVqe4NAeU8y08cqYzG8z/LRBK3dEXV0Xwzm/ybtviHz0PY2N?=
- =?us-ascii?Q?xyB3OJnDVxvUjbHreKovCqC8/7vbCCoUuURcvyW4A+iLd0tsjdN0zntulvLp?=
- =?us-ascii?Q?Wy1R9yToE/HZCAE9cI1OuyKh01xKZpqsU6DnWKK0EXMCN7zwWyHs7oVUiw49?=
- =?us-ascii?Q?pMTkts7QC6vqyargr7RTZgvnIL/YZ8r9uods4W4AoXNHWUV1ZvNnwRuhCjWd?=
- =?us-ascii?Q?v7uEzDiexyeN1mX2oLCcpIWTtxU4rk08bEBCPvLH5b/S42rTDq9JhKGjz8ar?=
- =?us-ascii?Q?Ueb4zfxzrXfFuQm2nQVYWfG/c2mtoUqDZWRzGzH0T0akkXjWRcQzn+4GX7RV?=
- =?us-ascii?Q?13whAzGW7t+uXfj5B+eoezaDRw4NEbXZ2GoLh8xtvxw8bQyTB6+ACOxf9SvV?=
- =?us-ascii?Q?fp6QZHyjJR6Maa7F3PRDzXjJLhuQwJEyYFokTKZamEsJvIUY5H9mr4BAr4kP?=
- =?us-ascii?Q?8srfoAAN0NZgrWXeRUqO0Y/0Eq0rAFGk8NjnuuROTwZlVLUcAYOQYIUBuzhK?=
- =?us-ascii?Q?SQeXgE2NUHDBIx3V1BSqDvCx6GEjc/6OIneQ6/8N7hDBLAe5wkT6A4DyUSdK?=
- =?us-ascii?Q?im3+reEb1QLBg2beXGzOtVcdFWU14pD4pLlvmNb/5LpkUpsmKTfnSAHq5n+1?=
- =?us-ascii?Q?LiGtrrNXfwxaacaDJbXxWCSg7C3Jl71IMo8jrpo9gu6i0ZTj4PZ7zkLbqD8H?=
- =?us-ascii?Q?vQSI/BmqFQ6MukDN3TNM1YwO8xfQlCQkRpqvbmzKn9KNv/eUh925p413Etdp?=
- =?us-ascii?Q?Ny+UtS+3SnJtCtqIjfSijvnzHwXj/IpAYZ7bz94zvVPvVfb9X7hDU0kSbPnt?=
- =?us-ascii?Q?S3pKE1jlLslchetQtM9IZSQ5fvKls+RCfiwKUDXXkyc3877EZLT3pE/RQZix?=
- =?us-ascii?Q?N66h26ibJ9hSwdNuDaJSC8do8DkP9dQXxs8qAiQAr5AwzqoboU0l6uGvJwrP?=
- =?us-ascii?Q?6M8646lhpdM2kSJHGvD0JdTWEFl/AhGpdFNviFZg8a3x+JiIUaWJzr7txQ2G?=
- =?us-ascii?Q?Ey/sNNksFvXXl93XRJ+ttfs/FQmMMDasjT7U7we9?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 85ecb91d-013a-4c5d-a8ef-08da9c7f0f56
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Sep 2022 09:44:36.1758
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: TIcM5OI6BM8LTRTJsiiYtaU8dUJbklW1mNzJF4v4zujQbYv5CADgD3XGXze7ub2Iiwhe9iZBlGE4e5OCGY4yrQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR10MB6721
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-22_06,2022-09-20_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 malwarescore=0
- spamscore=0 mlxscore=0 adultscore=0 mlxlogscore=999 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
- definitions=main-2209220064
-X-Proofpoint-GUID: JFJuE84g-qN8F-9Phatotr6v1umnihyM
-X-Proofpoint-ORIG-GUID: JFJuE84g-qN8F-9Phatotr6v1umnihyM
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 21, 2022 at 05:33:59 PM +0200, Greg KH wrote:
-> On Wed, Sep 21, 2022 at 11:01:33AM +0200, Greg KH wrote:
->> On Wed, Sep 21, 2022 at 08:53:35AM +0530, Chandan Babu R wrote:
->> > Hi Greg,
->> > 
->> > This 5.4.y backport series contains fixes from v5.5. The patchset has
->> > been acked by Darrick.
->> > 
-[...]
->> > 
->> 
->> All now queued up, thanks.
->
-> Any specific reason why you didn't also include 2 other commits in this
-> series, that fix issues that were created by some patches in this
-> series?
->
-> I am referring to:
-> 	496b9bcd62b0 ("xfs: fix use-after-free when aborting corrupt attr inactivation")
-> 	6da1b4b1ab36 ("xfs: fix an ABBA deadlock in xfs_rename")
->
+Unlike many other Linux filesystems, xfs takes a shared inode lock on
+buffered reads and exclusive inode lock on buffered writes to guarantee
+that buffered writes are atomic w.r.t. buffered reads.
 
-I had not considered the possibility of fixes introducing regressions. I will
-test these patches and send them to the mailing list soon. Thanks for pointing
-out the missing patches.
+ext4 for example, takes an exclusive inode lock on buffered writes, but
+does not take an inode lock on buffered reads.
 
+This difference in behavior is attributed to legacy xfs code that pre
+dates Linux.
+
+The contention on inode lock in a concurrent mixed randrw workload
+causes severe performance degradation in xfs compared to ext4.
+
+When write range is within the bounds of a single page, the page
+lock guarantees that the write is atomic w.r.t buffered reads.
+In that case, take shared inode lock on write to avoid the unneeded
+contention in case of a randrw workload using 4K IO buffer size.
+
+This optimization could be extended to slightly larger IO buffer size
+that falls within the bounds of a single folio, by limiting iomap to map
+a single folio and if that fails, fall back to exclusive inode lock.
+
+The performance improvment was demonstrated by running the following
+fio workload on a e2-standard-8 GCE machine:
+
+[global]
+filename=testfile.fio
+norandommap
+randrepeat=0
+size=5G
+bs=4K
+ioengine=psync
+numjobs=8
+group_reporting=1
+direct=0
+fallocate=1
+end_fsync=0
+runtime=60
+[read]
+readwrite=randread
+[write]
+readwrite=randwrite
+
+The numbers in the table below represent the range of results in
+different test runs per tested filesystem.
+Each test was run on a freshly formatted fs with single test file with
+written extents and cold caches.
+
+     FS:   ext4               xfs                  xfs+ (this path)
+   READ:   136MB/s-210MB/s     2.7MB/s-6.3MB/s     747MB/s-771MB/s
+  WRITE:   227MB/s-248MB/s    86.3MB/s-171MB/s     973MB/s-1050MB/s
+
+Needless to say, xfs performance on the same workload with 8K IO buffer
+size is not improved by this patch and are just as bad as 4K IO buffer
+without the patch.
+
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Link: https://lore.kernel.org/linux-xfs/20220920022439.GP3600936@dread.disaster.area/
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+
+Hi Dave and Darrick,
+
+Following the discussions on my previous patch [1]
+("xfs: reduce ilock contention on buffered randrw workload")
+
+Here is a patch that optimizes the low hanging case of single page.
+As you can see in the commit message, the optimization fixes the
+performance of 4K IO workload.
+
+I verified no regrerssions with -g quick on default 4K block config and
+started running -g auto on all kdevop configs including 1K block configs.
+
+Regarding the followup higher order folio optimizations, please let
+me know if you intend to work on the large folio mapping iomap write
+code or if you prefer to guide me to do that work.
+
+Thanks,
+Amir.
+
+[1] https://lore.kernel.org/linux-xfs/20220920022439.GP3600936@dread.disaster.area/
+
+ fs/xfs/xfs_file.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index c6c80265c0b2..3c17f2461ec2 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -703,12 +703,29 @@ xfs_file_buffered_write(
+ {
+ 	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	ssize_t			ret;
++	ssize_t			ret = 0;
++	off_t			end_pos = iocb->ki_pos + iov_iter_count(from);
+ 	bool			cleared_space = false;
+ 	unsigned int		iolock;
+ 
+ write_retry:
+ 	iolock = XFS_IOLOCK_EXCL;
++	/*
++	 * When write range is within the bounds of a single page, the page
++	 * lock guarantees that the write is atomic w.r.t buffered reads.
++	 * In that case, take shared iolock to avoid contention on iolock in
++	 * concurrent mixed read-write workloads.
++	 *
++	 * Write retry after space cleanup is not interesting to optimize,
++	 * so don't bother optimizing this case.
++	 *
++	 * TODO: Expand this optimization to write range that may fall within
++	 * the bounds of a single folio, ask iomap to try to write into a single
++	 * folio and if that fails, write_retry with exclusive iolock.
++	 */
++	if (!ret && iocb->ki_pos >> PAGE_SHIFT == (end_pos - 1) >> PAGE_SHIFT)
++		iolock = XFS_IOLOCK_SHARED;
++
+ 	ret = xfs_ilock_iocb(iocb, iolock);
+ 	if (ret)
+ 		return ret;
+@@ -740,6 +757,7 @@ xfs_file_buffered_write(
+ 		xfs_iunlock(ip, iolock);
+ 		xfs_blockgc_free_quota(ip, XFS_ICWALK_FLAG_SYNC);
+ 		cleared_space = true;
++		ret = -EAGAIN;
+ 		goto write_retry;
+ 	} else if (ret == -ENOSPC && !cleared_space) {
+ 		struct xfs_icwalk	icw = {0};
+@@ -750,6 +768,7 @@ xfs_file_buffered_write(
+ 		xfs_iunlock(ip, iolock);
+ 		icw.icw_flags = XFS_ICWALK_FLAG_SYNC;
+ 		xfs_blockgc_free_space(ip->i_mount, &icw);
++		ret = -EAGAIN;
+ 		goto write_retry;
+ 	}
+ 
 -- 
-chandan
+2.25.1
+
