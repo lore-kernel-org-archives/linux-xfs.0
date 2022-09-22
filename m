@@ -2,185 +2,315 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C2DDECAAD8
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 04:25:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 555BCC6FA82
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 05:45:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229825AbiIVEZa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Sep 2022 00:25:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45524 "EHLO
+        id S229624AbiIVFpH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Sep 2022 01:45:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230062AbiIVEZ3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 00:25:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A0F997D50;
-        Wed, 21 Sep 2022 21:25:28 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C81766339B;
-        Thu, 22 Sep 2022 04:25:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28344C433D6;
-        Thu, 22 Sep 2022 04:25:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663820727;
-        bh=fhxb9Ujouso7mvKXcXZZreR1NM0VJLISASIaPz93N8w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=DWtqiZ0YbFW4yNaCEOkZvlHlWyp89VGLQu48e1x1Lrn3VGGdEqhOn/soLInZNDFU6
-         g5XCPETAaaLw46iY7H6Lau/qhxAQy9r+hU/s/ekk4qFWEV4gujt4Jk3+vVnaFVsgvB
-         J5681NXALapd2gfO+aw1Ddq9hAXu/56+8lfDaiP1XyM+viTashCOwA7nr1Ecm4gb6h
-         rBLDll9h4PgREJlpIBlMh/TCZ+M6dgV/uIZAWUBpKxgvHSkKlCqP0IFWyQQAKo7wpi
-         LjU6CpdQy28VHJ9Sc6Ym6+S5dGtI0GsxRM/7HzYq6tpyx19/LItOiYawDaJz9NAkJt
-         sDLT4QRDInPvw==
-Date:   Wed, 21 Sep 2022 21:25:26 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/2] iomap/xfs: fix data corruption due to stale
- cached iomaps
-Message-ID: <Yyvjtpi49YSUej+w@magnolia>
-References: <20220921082959.1411675-1-david@fromorbit.com>
+        with ESMTP id S229701AbiIVFpG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 01:45:06 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D663F57260
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2022 22:45:04 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28M3DwSa022580
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Sep 2022 05:45:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=PCg43059bb/F0MfwljiRDfwi6I/Hijgr2U2qx17RX/0=;
+ b=JFnDwvMrXiRXQTwY564kx04Q5CPAdN+MRgw8VyQl8Ge7EBmdtjRoqtA4qiZonBIyKMuT
+ nUObOnbCereYYDAWKr37ONGgxP38Se2SgrIPszfKKBPtVPLvyC3oxUMRYPiHfclE5YOO
+ ytzCrI0FnE7b8ktJ2I3nSEr05Q21yUzbz2rwHmACMn+8mQRzZfsVQIkYaTftBtUjZpUB
+ u873w0WIKLu3m31KhI5HP6vQuVQAUe0YS6jQ+PVDXo93coDF2oWYWBFov4PogDNQLM8o
+ p+DRHl+EwfdYyyi40pmaFUpykFsGx+0TVvuFJanAKok+jscjR01LnAbx+1q/ljZ97i9P vw== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jn6stmkr9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Sep 2022 05:45:04 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 28M5Qb98007161
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Sep 2022 05:45:03 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3jp3cq703h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Sep 2022 05:45:02 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=HWjQNSjuWbvSN/mZCMdDaY3/H+4kYgJOcg33r8tRs/J2WjBqtaMe2HiL8IYMVLgjV78xgEx5qyJ3yLBj/iV6Kd5gKMGDucRGUhumqmMxLsCaEgJoMu0NFkOORgw5XHO6EudJQFhJ7ANg40Db4AajAwugp7+C5oNQrwMncyXtVtlZFUvYnc+H5E7hOQfaqPpxSkis2EXpbDU0bQ0xUs+3i2X3fv9LmV9IFAUyVb7+O8sW+t52yM1L1ylcPuia0qWJvBkFTMyrQ3LfEZfVFY7wxvOssVvgccMuByvrbQg7ZB6nnn+bPA+qNmspe6EzhLnbBewUgW8yTvOvvJejHFd+/Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PCg43059bb/F0MfwljiRDfwi6I/Hijgr2U2qx17RX/0=;
+ b=kY3KZsqVk4vN3FZhEb7t6EPmd3IElwx+qWS2j6dgJizy4M0jwB5NZQxeLaGWETXyU9c+xfvRL9WCxsbF/9ScU3DY3WV1Ymf8jT0ENDmUdvczFd3FmgdKoLfE9GClUyIEp9YRmNujj2OpYZIcoj8QbatOihfi99T/f5zYwYcm6GvZD5/NOBloCDeebt6Uz2k9gW7KW+rrdjNQq/SD6ecOd1vKBaZ05XBV482RtpEVDWZk1bWE6xUeAJUSFUcoTnvEAwXI6tBON5bmcmp81INK1g6Z/yM2VXYxQQ7DIEQlhZe7Cn23SXR7i/AEpYKlTThMDfa6picZYajM9aYAAr2QlQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PCg43059bb/F0MfwljiRDfwi6I/Hijgr2U2qx17RX/0=;
+ b=glQjdyxb0K9Qnp4Jm85mF/MRH8NCxSEHM5UCT7wtzupAE3sbW2EnAaZYIpzY6ZG3yAFFKTTHn4aIxdjGJbRTDrFCORuNvv/StEuLYC4HIO7C59HCJT71mnMd192OG34BbT42kh1p7+d68Wc4cv49WMfvbtTABV3XUX/FJp+arhE=
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by PH7PR10MB6627.namprd10.prod.outlook.com (2603:10b6:510:20a::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.14; Thu, 22 Sep
+ 2022 05:45:01 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::1c59:e718:73e3:f1f9]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::1c59:e718:73e3:f1f9%3]) with mapi id 15.20.5654.017; Thu, 22 Sep 2022
+ 05:45:01 +0000
+From:   allison.henderson@oracle.com
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v3 00/26] Parent Pointers
+Date:   Wed, 21 Sep 2022 22:44:32 -0700
+Message-Id: <20220922054458.40826-1-allison.henderson@oracle.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR03CA0244.namprd03.prod.outlook.com
+ (2603:10b6:a03:3a0::9) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220921082959.1411675-1-david@fromorbit.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BY5PR10MB4306:EE_|PH7PR10MB6627:EE_
+X-MS-Office365-Filtering-Correlation-Id: 31483439-1a09-443f-f36c-08da9c5d9755
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: W3bGjHA/PMbsSr/UvAhDEUiTgUjJr5pEa+7liUs+7UHjZqk5hZSMOWENUQKoV1zGRrtTR7FcKkmlhP5xbpsP70TWwz+06r5G+Pzgnrdffy77VcBlcVs4RtWidK6ve6TTFK/Nu1DTEIz19kPz9IaW7beGxIZVYfPt3XCLzzrxpMTlA6wQa3MCnfncCd6vLyFh3FcZidA1AzrtYYRBun+jASLWBb3djFnbnbWcMb5FRiLKBn0VnvemstmyvTFKuNHwP/rfbryWQKX3WVsw7XFYUZxmZJjibQNgXDgvRQ08a/7HHXderuGmLdFavtsQ2nPtvsFvs1+F+LYayvTiSGGINrW0fc+0Pj9CU3Uq/RVOV75dIoajgIjbVBHPp+d1R7iI0DDm6F58K2ZfRKnMmIi7D7Hv/60I2dzjICTy4GfvQ1JC5YzKshV7LFNnRTWLGm9pZ4OJ0jgd29JWjucIcGnBWhla6NJYsN/3VQ4nkAwv4oHPruLHZhOPnm/L0E+DDUkJQlfGdZiqJMCu+0YXW0ZBxg7259AFWWCI+s/xB37+Jj5ViPdqyvujrkMuDJEJrHwR+kGF/cPuQTWvNihXIoSayo0AVEKNa4zRUc6BHllfciyN0Upf6dBx2kw+749EUBtegHAOOwgwFytHBsoaAk7CVMSjzAYxChH7NoDLNx6k/ztN+DKTLxFp6O/joAov88Qkd+FEUjop4dYO1vDY1lcQGta18U3580cyzE/3ohZFCSIeLGl1MLoSDuo8NIucHfMLbqZ5E8c6NxH+t9GbDPJXEw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(39860400002)(346002)(136003)(366004)(396003)(376002)(451199015)(316002)(83380400001)(38100700002)(66946007)(36756003)(66476007)(86362001)(2906002)(66556008)(8676002)(966005)(6486002)(478600001)(6512007)(26005)(2616005)(6916009)(186003)(6666004)(1076003)(41300700001)(5660300002)(8936002)(9686003)(6506007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?VjFbWHc87gpKP6LXdaIFNHdKivcB2nKW5b1l+QskJ9CTtDcFWJQg8Z1cVuL0?=
+ =?us-ascii?Q?vnGbY68hHUs2F5thrgNB8FCDVyQikMTSMYbiotsfhmyLNsugDZ973maCazQT?=
+ =?us-ascii?Q?4FDM70psBAf1Mp7Z+SH42BTlWQBx9EFUGyTH90ygEACvuvYWP5KiGUg7fIig?=
+ =?us-ascii?Q?aPwlamM2Nn4HnCw1yp5tx+ps5UcoQfykI6mcrEy8JXibTFcsaczUppeXvedn?=
+ =?us-ascii?Q?IFijVLK1FsYJjxeL/Klt3ro1J+WS5UguVK4TCItDLCM4KLtVSc5sOpy3T5qO?=
+ =?us-ascii?Q?JrcYt0lJUW0Pr9ztPvHu4ywQfkZRLljUh2ISQeusdCIJjUAsjmxKirlrFtBy?=
+ =?us-ascii?Q?T9iiSxmo9Qkx8+xjYbSX53GXcH0DzSrMev+x5LDG17mggeW14gRP7O8SkRdk?=
+ =?us-ascii?Q?O4uAtj20rbg/HaynQPPHqdc/Y6KZMIkxgJMpNBczZ7jFCOuF9r6IBCPZjW5j?=
+ =?us-ascii?Q?VIUc2t5cRTTwDk4tPRqjH6nrCZTK34jbLRFcVHut1Xs5NcnNtuHZfLRwG5Ke?=
+ =?us-ascii?Q?6wDYTBh27oaE5FMmbNcvfLwggg/gEZhbAmmfuw56Eo+c7Hs3nwo5AjbAExFk?=
+ =?us-ascii?Q?tQtDEU/E2aF2isVR802B8ZbN3yICFT/ouLxXnqGcw7HUsgUr8F2NEVwhBlQJ?=
+ =?us-ascii?Q?GBEQTFW004k9H18+uGGdHUoJLaTWO0xf7OJnc7R8TrpBK/QL0nCzw6PZgTkl?=
+ =?us-ascii?Q?z/Qvu5Hl5i0PnaK2FUN0Y2H5N3EhVE5MNe1B/H6bFEL4qHRw/emsHugpyrik?=
+ =?us-ascii?Q?OED0JLjDyA9vx38lD2D4ZchwCGdL56OZ21QMSHtsyetgGlTZJMUc9n4aGmeY?=
+ =?us-ascii?Q?POCL4dij+0+hpzVtf3lniOsWyKRAIValPv341SKmssMqH9ph+3O2Fkxjw6VJ?=
+ =?us-ascii?Q?wA30zQPd1vzWsMxBK3zCktUDKKpSAc++6Q01Tm6nyXyVxX5crsw7DzSMTdC9?=
+ =?us-ascii?Q?Er/F9JqAMKW0+Q48qigS8B9atMiyPZ5sfxTTR9JQ9bV9jv3fUFZlN2uAqxJP?=
+ =?us-ascii?Q?z/1DNsupdi63RQVI/YtQnqbZRhmgY+SxkhN+KnjQq2lJRoLt7PKtaWhMwY9g?=
+ =?us-ascii?Q?srdqgBspMTt98D71iVpwS/hK0M8MN4Qncd4ci7DrajR27dE7ukbXHmZqF4qL?=
+ =?us-ascii?Q?cJ8yU+FD92bdhyGn9KfafYeMRODnPKLuqzbsT6539aGij61GdTlNpIhCVU4O?=
+ =?us-ascii?Q?IyIbgs/dBtyXdZwIL320d7Aa0wfHR3+bgUEe+XpQtPTjLD7K2KWvNfvD3vDu?=
+ =?us-ascii?Q?j5zsZCLEj94dveB+vZxMG8nYMq9wod5qrYN6KHocn1SM2zper6Y4zWBm8VoX?=
+ =?us-ascii?Q?5l/xkLF0eAeUa3oL+FtdjquZ/YyOSTgxwrqCc+05FU/RzSFxG59+lyKhV+OS?=
+ =?us-ascii?Q?Ekky4kKC3jdFksG2Snv8pVbyjNIkinySQYE0ELML0WRJUySjjCmHWYPDtg5f?=
+ =?us-ascii?Q?9wRyyse/IlMMu+71A//e86J/vaHqcbyCVGhPgsIEzksuhBEzwSCBoTUZrTkn?=
+ =?us-ascii?Q?w8T5AhB2+BLDK/N2q9A3bYAUw8GUeOhM90TlNamkDAMe52B8ivYbH/6G030O?=
+ =?us-ascii?Q?1DF+jl59kNjlVr/fFH4QiKatLs5ucZD6JkUZdV/oEs1fbGEg4iD14mOkCiZR?=
+ =?us-ascii?Q?kw=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 31483439-1a09-443f-f36c-08da9c5d9755
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Sep 2022 05:45:01.2480
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: JqQuZUqA/1XabYNMyUGDnGoNSi2AqGsgKamllNncddubYMd3j6Y5mM57aWh/1xcdi0eYrhsddnxCinkY3EdZkJoIdzBYjFHsVY/dUfpJHeU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6627
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-22_02,2022-09-20_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ spamscore=0 adultscore=0 mlxscore=0 malwarescore=0 bulkscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2209220037
+X-Proofpoint-GUID: PGQKpdgfFuVNWH1krZkWmJ5Mvni-Lh1-
+X-Proofpoint-ORIG-GUID: PGQKpdgfFuVNWH1krZkWmJ5Mvni-Lh1-
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 21, 2022 at 06:29:57PM +1000, Dave Chinner wrote:
-> Hi folks,
-> 
-> THese patches address the data corruption first described here:
-> 
-> https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
-> 
-> This data corruption has been seen in high profile production
-> systems so there is some urgency to fix it. The underlying flaw is
-> essentially a zero-day iomap bug, so whatever fix we come up with
-> needs to be back portable to all supported stable kernels (i.e.
-> ~4.18 onwards).
-> 
-> A combination of concurrent write()s, writeback IO completion, and
-> memory reclaim combine to expose the fact that the cached iomap that
-> is held across an iomap_begin/iomap_end iteration can become stale
-> without the iomap iterator actor being aware that the underlying
-> filesystem extent map has changed.
-> 
-> Hence actions based on the iomap state (e.g. is unwritten or newly
-> allocated) may actually be incorrect as writeback actions may have
-> changed the state (unwritten to written, delalloc to unwritten or
-> written, etc). This affects partial block/page operations, where we
-> may need to read from disk or zero cached pages depending on the
-> actual extent state. Memory reclaim plays it's part here in that it
-> removes pages containing partial state from the page cache, exposing
-> future partial page/block operations to incorrect behaviour.
-> 
-> Really, we should have known that this would be a problem - we have
-> exactly the same issue with cached iomaps for writeback, and the
-> ->map_blocks callback that occurs for every filesystem block we need
-> to write back is responsible for validating the cached iomap is
-> still valid. The data corruption on the write() side is a result of
-> not validating that the iomap is still valid before we initialise
-> new pages and prepare them for data to be copied in to them....
-> 
-> I'm not really happy with the solution I have for triggering
-> remapping of an iomap when the current one is considered stale.
-> Doing the right thing requires both iomap_iter() to handle stale
-> iomaps correctly (esp. the "map is invalid before the first actor
-> operation" case), and it requires the filesystem
-> iomap_begin/iomap_end operations to co-operate and be aware of stale
-> iomaps.
-> 
-> There are a bunch of *nasty* issues around handling failed writes in
-> XFS taht this has exposed - a failed write() that races with a
-> mmap() based write to the same delalloc page will result in the mmap
-> writes being silently lost if we punch out the delalloc range we
-> allocated but didn't write to. g/344 and g/346 expose this bug
-> directly if we punch out delalloc regions allocated by now stale
-> mappings.
+From: Allison Henderson <allison.henderson@oracle.com>
 
-Yuck.  I'm pretty sure that callers (xfs_buffered_write_iomap_end) is
-supposed to call truncate_pagecache_range with the invalidatelock (fka
-MMAPLOCK) held.
+Hi all,
 
-> Then, because we can't punch out the delalloc we allocated region
-> safely when we have a stale iomap, we have to ensure when we remap
-> it the IOMAP_F_NEW flag is preserved so that the iomap code knows
-> that it is uninitialised space that is being written into so it will
-> zero sub page/sub block ranges correctly.
+This is the latest parent pointer attributes for xfs.
+The goal of this patch set is to add a parent pointer attribute to each inode.
+The attribute name containing the parent inode, generation, and directory
+offset, while the  attribute value contains the file name.  This feature will
+enable future optimizations for online scrub, or any other feature that could
+make use of quickly deriving an inodes path from  the mount point.  
 
-Hm.  IOMAP_F_NEW results in zeroing around, right?  So if the first
-->iomap_begin got a delalloc mapping, but by the time we got the folio
-locked someone else managed to writeback and evict the page, we'd no
-longer want that zeroing ... right?
+This set can be viewed on github here
+https://github.com/allisonhenderson/xfs/tree/xfs_new_pptrsv3_rebase4
 
-> As a result, ->iomap_begin() needs to know if the previous iomap was
-> IOMAP_F_STALE, and if so, it needs to know if that previous iomap
-> was IOMAP_F_NEW so it can propagate it to the remap.
-> 
-> So the fix is awful, messy, and I really, really don't like it. But
-> I don't have any better ideas right now, and the changes as
-> presented fix the reproducer for the original data corruption and
-> pass fstests without and XFS regressions for block size <= page size
-> configurations.
-> 
-> Thoughts?
+And the corresponding xfsprogs code is here
+https://github.com/allisonhenderson/xfsprogs/tree/xfsprogs_new_pptrs_v3_rebase3
 
-I have a related question about another potential corruption vector in
-writeback.  If write_cache_pages selects a folio for writeback, it'll
-call clear_page_dirty_for_io to clear the PageDirty bit before handing
-it to iomap_writepage, right?
+This set has been tested with the below parent pointers tests
+https://www.spinics.net/lists/fstests/msg19963.html
 
-What happens if iomap_writepage_map errors out (say because ->map_blocks
-returns an error) without adding the folio to any ioend?  I think in
-that case we'll follow the (error && !count) case, in which we unlock
-the folio and exit without calling folio_redirty_for_writepage, right?
-The error will get recorded in the mapping for the next fsync, I think,
-but I also wonder if we *should* redirty because the mapping failed, not
-the attempt at persistence.
 
-This isn't a problem for XFS because the next buffered write will mark
-the page dirty again, but I've been trawling through the iomap buffer
-head code (because right now we have a serious customer escalation on
-4.14) and I noticed that we never clear the dirty state on the buffer
-heads.  gfs2 is the only user of iomap buffer head code, but that stands
-out as something that doesn't quite smell right.  I /think/ this is a
-result of XFS dropping buffer heads in 4.19, hoisting the writeback
-framework to fs/iomap/ in 5.5, and only adding buffer heads back to
-iomap later.
+Updates since v2:
 
-The reason I even noticed this at all is because of what 4.14 does --
-back in those days, initiating writeback on a page clears the dirty
-bit from the attached buffer heads in xfs_start_buffer_writeback.  If
-xfs_writepage_map fails to initiate any writeback IO at all, then it
-simply unlocks the page and exits without redirtying the page.  IOWs, it
-causes the page and buffer head state to become inconsistent, because
-now the page thinks it is clean but the BHs think they are dirty.
+xfs: Hold inode locks in xfs_rename
+  NEW
 
-Worse yet, if userspace responds to the EIO by reissuing the write()
-calls, the write code will see BH_Dirty set on the buffer and doesn't
-even try to set PageDirty, which means ... that the page never gets
-written to disk again!
+xfs: Expose init_xattrs in xfs_create_tmpfile
+  NEW
+  
+xfs: Add parent pointers to xfs_cross_rename
+  NEW
+  
+xfs: Indent xfs_rename
+  NEW
+  
+xfs: Add parent pointers to rename
+  Added parent pointers for WIP
 
-There are three questions in my mind:
+xfs: Add xfs_verify_pptr
+   Fixed indentaion in xfs_verify_pptr
+   Updates for new name field
 
-A. Upstream iomap writeback code doesn't change (AFAICT) the buffer head
-dirty state.  I don't know if this is really broken?  Or maybe gfs2 just
-doesn't notice or care?
+xfs: extend transaction reservations for parent attributes
+   Moved/removed stale comments in xfs_calc_parent_ptr_reservations and  xfs_calc_namespace_reservations
+   Reduced resp->tr_rename.tr_logres in xfs_calc_parent_ptr_reservations since logged attrs can separate transaction updates
+   Updated inode reservation in xfs_calc_rename_reservation
 
-B. Should writeback be redirtying any folios that aren't added to an
-ioend?  I'm not sure that doing so is correct, since writeback to a
-shutdown filesystem won't clear the dirty pages.
+xfs: parent pointer attribute creation
+   Moved target id and name parameters from xfs_parent_init to xfs_parent_defer_add
 
-C. Gotta figure out why our 4.14 kernel doesn't initiate writeback.
-At this point we're pretty sure it's because we're actually hitting the
-same RCA as commit d9252d526ba6 ("xfs: validate writeback mapping using
-data fork seq counter").  Given the (stale) data it has, it never
-manages to get a valid mapping, and just... exits xfs_map_blocks without
-doing anything.
+xfs: add parent attributes to link
+   Rebase updates to xfs_parent_init and xfs_parent_defer_add
+  
+xfs: remove parent pointers in unlink
+    Rebase updates xfs_parent_init and xfs_parent_defer_remove.
+    Renamed ip to dp in xfs_parent_defer_remove
+    Simplified xfs_has_parent check in xfs_remove
 
---D
+xfs: Add parent pointers to rename
+  Rebase updates to xfs_parent_init, xfs_parent_defer_remove and
+     xfs_parent_defer_replace
 
-> -Dave.
-> 
-> 
+xfs: Add parent pointers to symlink
+   NEW
+
+xfs: Filter XFS_ATTR_PARENT for get_fattr
+   NEW
+
+xfs: Add parent pointer ioctl
+   Added new XFS_PPTR_FLAG_ALL
+   Removed namelen from xfs_parent_ptr.  Added rsvd
+   Renamed XFS_IOC_GETPPOINTER to XFS_IOC_GETPARENT
+   Added const qualifier to xfs_init_parent
+   Added XFS_IOC_ATTR_PARENT check in xfs_attrmulti_attr_set and
+      xfs_ioc_attrmulti_one
+   Updated SDX headers
+
+   In xfs_ioc_get_parent_pointer:
+     Updated kmem_alloc to kmalloc 
+     Updated return codes for copy to/from user to -EFAULT
+     Updated XFS_PPTR_OFLAG_* handling
+     Removed GFP_NOFS | __GFP_NOFAIL from realloc
+
+   In xfs_attr_get_parent_pointer:
+     Fixed indentation
+     Updated error returns to -EFSCORRUPTED
+     Changed xfs_ilock to xfs_ilock_attr_map_shared
+     Added inode checking
+
+xfs: drop compatibility minimum log size computations for reflink
+   NEW
+xfs: Filter XFS_ATTR_PARENT for get_fattr
+   NEW
+
+Investigated removeing memset in xfs_attr_get_parent_pointer
+  Trips assertion for non-zeroed context
+   XFS: Assertion failed: !context->seen_enough, file: fs/xfs/xfs_ioctl.c, line: 317
+
+Questions comments and feedback appreciated!
+
+Thanks all!
+Allison
+
+Allison Henderson (26):
+  xfs: Add new name to attri/d
+  xfs: Increase XFS_DEFER_OPS_NR_INODES to 5
+  xfs: Hold inode locks in xfs_ialloc
+  xfs: Hold inode locks in xfs_trans_alloc_dir
+  xfs: Hold inode locks in xfs_rename
+  xfs: Expose init_xattrs in xfs_create_tmpfile
+  xfs: get directory offset when adding directory name
+  xfs: get directory offset when removing directory name
+  xfs: get directory offset when replacing a directory name
+  xfs: add parent pointer support to attribute code
+  xfs: define parent pointer xattr format
+  xfs: Add xfs_verify_pptr
+  xfs: extend transaction reservations for parent attributes
+  xfs: parent pointer attribute creation
+  xfs: add parent attributes to link
+  xfs: add parent attributes to symlink
+  xfs: remove parent pointers in unlink
+  xfs: Add parent pointers to xfs_cross_rename
+  xfs: Indent xfs_rename
+  xfs: Add parent pointers to rename
+  xfs: Add the parent pointer support to the  superblock version 5.
+  xfs: Add helper function xfs_attr_list_context_init
+  xfs: Filter XFS_ATTR_PARENT for getfattr
+  xfs: Add parent pointer ioctl
+  xfs: fix unit conversion error in xfs_log_calc_max_attrsetm_res
+  xfs: drop compatibility minimum log size computations for reflink
+
+ fs/xfs/Makefile                |   2 +
+ fs/xfs/libxfs/xfs_attr.c       |  71 ++++++-
+ fs/xfs/libxfs/xfs_attr.h       |  13 +-
+ fs/xfs/libxfs/xfs_da_btree.h   |   3 +
+ fs/xfs/libxfs/xfs_da_format.h  |  33 ++-
+ fs/xfs/libxfs/xfs_defer.c      |  28 ++-
+ fs/xfs/libxfs/xfs_defer.h      |   8 +-
+ fs/xfs/libxfs/xfs_dir2.c       |  21 +-
+ fs/xfs/libxfs/xfs_dir2.h       |   7 +-
+ fs/xfs/libxfs/xfs_dir2_block.c |   9 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |   8 +-
+ fs/xfs/libxfs/xfs_dir2_node.c  |   8 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c    |   6 +
+ fs/xfs/libxfs/xfs_format.h     |   4 +-
+ fs/xfs/libxfs/xfs_fs.h         |  60 ++++++
+ fs/xfs/libxfs/xfs_log_format.h |   7 +-
+ fs/xfs/libxfs/xfs_log_rlimit.c |  53 +++++
+ fs/xfs/libxfs/xfs_parent.c     | 193 +++++++++++++++++
+ fs/xfs/libxfs/xfs_parent.h     |  45 ++++
+ fs/xfs/libxfs/xfs_sb.c         |   4 +
+ fs/xfs/libxfs/xfs_trans_resv.c | 135 +++++++++---
+ fs/xfs/scrub/attr.c            |   2 +-
+ fs/xfs/xfs_attr_item.c         | 115 ++++++++--
+ fs/xfs/xfs_attr_item.h         |   1 +
+ fs/xfs/xfs_attr_list.c         |  64 ++++--
+ fs/xfs/xfs_file.c              |   1 +
+ fs/xfs/xfs_inode.c             | 374 +++++++++++++++++++++++++--------
+ fs/xfs/xfs_inode.h             |   3 +-
+ fs/xfs/xfs_ioctl.c             | 160 ++++++++++++--
+ fs/xfs/xfs_ioctl.h             |   2 +
+ fs/xfs/xfs_iops.c              |   3 +-
+ fs/xfs/xfs_ondisk.h            |   4 +
+ fs/xfs/xfs_parent_utils.c      | 126 +++++++++++
+ fs/xfs/xfs_parent_utils.h      |  11 +
+ fs/xfs/xfs_qm.c                |   4 +-
+ fs/xfs/xfs_super.c             |   4 +
+ fs/xfs/xfs_symlink.c           |  35 ++-
+ fs/xfs/xfs_trans.c             |   6 +-
+ fs/xfs/xfs_xattr.c             |   2 +-
+ fs/xfs/xfs_xattr.h             |   1 +
+ 40 files changed, 1427 insertions(+), 209 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_parent.c
+ create mode 100644 fs/xfs/libxfs/xfs_parent.h
+ create mode 100644 fs/xfs/xfs_parent_utils.c
+ create mode 100644 fs/xfs/xfs_parent_utils.h
+
+-- 
+2.25.1
+
