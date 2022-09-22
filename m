@@ -2,151 +2,150 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57950C6FA93
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 15:15:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D9E3C54EE9
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 15:21:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231546AbiIVPPN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Sep 2022 11:15:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36614 "EHLO
+        id S231733AbiIVPVe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Sep 2022 11:21:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231562AbiIVPPL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 11:15:11 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EC4D8287A;
-        Thu, 22 Sep 2022 08:15:10 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id q3so10072873pjg.3;
-        Thu, 22 Sep 2022 08:15:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=NxspQXAnOPXdOcsoGGcm2jmpUfq1/5tS5wtqThXN2nM=;
-        b=SoYUhgHaVeP4UbQW7xnaBGhKWiEHMek4YpDkg4eSBlj6kukaSmYw7wdSo3sURD7Ksz
-         EPsJfcI2L64uawR8h9nMLqHJg6NQmHho1F3Np+9fVcev++6Tlvn4+w9yFrYhA0QHH+tK
-         Y+LakEDwuar6VxwjckN2e94G3gWRTK+5bP38DUqOayT6p+z0hkE0x9tJ9D/J76bcqraV
-         Gy9RFMQyFUFLruADWrmp6pF/B7Ib6FLP875peOLJaYi0yEBki8ZgaUJ2Gt76wLHBq2CD
-         awAJ9CIkrNpU4Y8MjoSZCFBknYvzmYrzrvhQbt9iH7Gzob2Af/ugWEiPcnkD8Uk0XSX+
-         bZFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=NxspQXAnOPXdOcsoGGcm2jmpUfq1/5tS5wtqThXN2nM=;
-        b=NVtXD4tAiALSdsVQdmRIWsQw0iYVteC9JyPHtvq0KyFe9Y16oeyzpBMijA7IbeGDgO
-         cvNFnec846fBvkmXlFQX2SmKz2oBLIKIMbUDIhGcf1YOjH8B/exUmh1TOLQeHghNEFb6
-         tGetFXFMrJ+CPsw0oWq9aoOmCaXKETJP8gTLKUgQzgNClJxEBQ/KQNZROWOmlT7HH2dc
-         qZPWgrE97XHjTydRRqbebWOZHtPVBnyI/V42IPZ+ZUvSW6cN1aiXpqzre9LXroy0NDzR
-         ajY5CGawnW4AOTd+VFvlAJze1uL2max2jY6idek/9Gyn4osENzL0H/HxCdsWilfOf8hD
-         lHSQ==
-X-Gm-Message-State: ACrzQf3ARVvkYTBnlfdyvz+8mFlcE1RYK66CFBKR+ysL+VwkpEsX4C+w
-        50qaXSb0+ve8yt3JHSYVk2xXRGjge6pfZg==
-X-Google-Smtp-Source: AMsMyM5TJDh9782yTwk+EH0ta7zhtY1igrSjty3AQGwoy6moYFGiHP9u2AY0+keX9+F++XXR4Lpf6g==
-X-Received: by 2002:a17:902:d2c2:b0:177:ed66:798 with SMTP id n2-20020a170902d2c200b00177ed660798mr3737603plc.76.1663859709117;
-        Thu, 22 Sep 2022 08:15:09 -0700 (PDT)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:500f:884a:5cc3:35d4])
-        by smtp.gmail.com with ESMTPSA id m10-20020a170902db0a00b001745662d568sm4226042plx.278.2022.09.22.08.15.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Sep 2022 08:15:08 -0700 (PDT)
-From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     stable@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        chandan.babu@oracle.com, Dave Chinner <dchinner@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 v2 3/3] xfs: validate inode fork size against fork format
-Date:   Thu, 22 Sep 2022 08:15:01 -0700
-Message-Id: <20220922151501.2297190-4-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.37.3.968.ga6b4b080e4-goog
-In-Reply-To: <20220922151501.2297190-1-leah.rumancik@gmail.com>
-References: <20220922151501.2297190-1-leah.rumancik@gmail.com>
+        with ESMTP id S231564AbiIVPVd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 11:21:33 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95A44F1D48;
+        Thu, 22 Sep 2022 08:21:32 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 47B08B83840;
+        Thu, 22 Sep 2022 15:21:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E68C1C433D6;
+        Thu, 22 Sep 2022 15:21:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1663860090;
+        bh=ntYvVBCQ6P4bG/5f9Tcc2zWBaGUCQPXTBLzTwbEgO2A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SGSr8PEjm2DE2J7GmmeRagjGWkrQ3GQhWqyf9yTiD/PSFmw9OlrKb0GWMzrwxElwn
+         28FiYHNSua0PlRLwfpzmGiuIFLskWWAbs/PVFE8Cm9IxV67ZuMfYsyliesPL5KLuKN
+         8Tp36SRXQHE1UM5SsTZ1p+rSCXVO+hfjlAgCI3JWnmEYvbx9GIBnGImte98LCZ8ZKP
+         qKHEX6D7Eh615TJ6M9KE4uLiTw5X3kcFwMeF6hHbD56QodIfmY8Dyl640pK+/WSFsl
+         i0+U9oMm88vexkk19EHRq/bw3QUbDEwq8qClA1x7TJX9yxyGZEwDBc8LD0yYKXXdVG
+         n68s/7BYyltRw==
+Date:   Thu, 22 Sep 2022 08:21:29 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Sasha Levin <sashal@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Varsha Teratipally <teratipally@google.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        stable@vger.kernel.org,
+        Christian Brauner <christian.brauner@ubuntu.com>
+Subject: Re: [PATCH 5.10] xfs: fix up non-directory creation in SGID
+ directories
+Message-ID: <Yyx9eaKyYC08vOvq@magnolia>
+References: <20220922084956.74262-1-amir73il@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220922084956.74262-1-amir73il@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Sep 22, 2022 at 11:49:56AM +0300, Amir Goldstein wrote:
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> commit 01ea173e103edd5ec41acec65b9261b87e123fc2 upstream.
+> 
+> XFS always inherits the SGID bit if it is set on the parent inode, while
+> the generic inode_init_owner does not do this in a few cases where it can
+> create a possible security problem, see commit 0fa3ecd87848
+> ("Fix up non-directory creation in SGID directories") for details.
+> 
+> Switch XFS to use the generic helper for the normal path to fix this,
+> just keeping the simple field inheritance open coded for the case of the
+> non-sgid case with the bsdgrpid mount option.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Reported-by: Christian Brauner <christian.brauner@ubuntu.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> Acked-off-by: Darrick J. Wong <djwong@kernel.org>
 
-[ Upstream commit 1eb70f54c445fcbb25817841e774adb3d912f3e8 ]
+(H)acked-off-by?  I suppose we /are/ grafting bits of trees... :D
 
-xfs_repair catches fork size/format mismatches, but the in-kernel
-verifier doesn't, leading to null pointer failures when attempting
-to perform operations on the fork. This can occur in the
-xfs_dir_is_empty() where the in-memory fork format does not match
-the size and so the fork data pointer is accessed incorrectly.
-
-Note: this causes new failures in xfs/348 which is testing mode vs
-ftype mismatches. We now detect a regular file that has been changed
-to a directory or symlink mode as being corrupt because the data
-fork is for a symlink or directory should be in local form when
-there are only 3 bytes of data in the data fork. Hence the inode
-verify for the regular file now fires w/ -EFSCORRUPTED because
-the inode fork format does not match the format the corrupted mode
-says it should be in.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_inode_buf.c | 35 ++++++++++++++++++++++++++---------
- 1 file changed, 26 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 3932b4ebf903..f84d3fbb9d3d 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -337,19 +337,36 @@ xfs_dinode_verify_fork(
- 	int			whichfork)
- {
- 	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
-+	mode_t			mode = be16_to_cpu(dip->di_mode);
-+	uint32_t		fork_size = XFS_DFORK_SIZE(dip, mp, whichfork);
-+	uint32_t		fork_format = XFS_DFORK_FORMAT(dip, whichfork);
- 
--	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
-+	/*
-+	 * For fork types that can contain local data, check that the fork
-+	 * format matches the size of local data contained within the fork.
-+	 *
-+	 * For all types, check that when the size says the should be in extent
-+	 * or btree format, the inode isn't claiming it is in local format.
-+	 */
-+	if (whichfork == XFS_DATA_FORK) {
-+		if (S_ISDIR(mode) || S_ISLNK(mode)) {
-+			if (be64_to_cpu(dip->di_size) <= fork_size &&
-+			    fork_format != XFS_DINODE_FMT_LOCAL)
-+				return __this_address;
-+		}
-+
-+		if (be64_to_cpu(dip->di_size) > fork_size &&
-+		    fork_format == XFS_DINODE_FMT_LOCAL)
-+			return __this_address;
-+	}
-+
-+	switch (fork_format) {
- 	case XFS_DINODE_FMT_LOCAL:
- 		/*
--		 * no local regular files yet
-+		 * No local regular files yet.
- 		 */
--		if (whichfork == XFS_DATA_FORK) {
--			if (S_ISREG(be16_to_cpu(dip->di_mode)))
--				return __this_address;
--			if (be64_to_cpu(dip->di_size) >
--					XFS_DFORK_SIZE(dip, mp, whichfork))
--				return __this_address;
--		}
-+		if (S_ISREG(mode) && whichfork == XFS_DATA_FORK)
-+			return __this_address;
- 		if (di_nextents)
- 			return __this_address;
- 		break;
--- 
-2.37.3.968.ga6b4b080e4-goog
+--D
 
+> ---
+> 
+> Hi Greg,
+> 
+> This is an old debt of a patch that was dropped during review of my
+> batch of 5.10.y xfs backports from v5.12 [1].
+> 
+> Recently, Varsha requested the inclusion of this fix in 5.10.y
+> and Darrick has Acked it [2].
+> 
+> I have another series of SGID related fixes that also apply to 5.15.y
+> which I am collaborating on testing with Leah, but as both Christian and
+> Christoph commented in the original patch review [3], this fix from
+> v5.12 is independent of the rest of the SGID fixes and is well worth
+> backporting.
+> 
+> Thanks,
+> Amir.
+> 
+> [1] https://lore.kernel.org/linux-xfs/20220606143255.685988-1-amir73il@gmail.com/
+> [2] https://lore.kernel.org/linux-xfs/YyIDzPTn99XLTCFp@magnolia/
+> [3] https://lore.kernel.org/linux-xfs/20220608082654.GA16753@lst.de/
+> 
+>  fs/xfs/xfs_inode.c | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 929ed3bc5619..19008838df76 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -802,6 +802,7 @@ xfs_ialloc(
+>  	xfs_buf_t	**ialloc_context,
+>  	xfs_inode_t	**ipp)
+>  {
+> +	struct inode	*dir = pip ? VFS_I(pip) : NULL;
+>  	struct xfs_mount *mp = tp->t_mountp;
+>  	xfs_ino_t	ino;
+>  	xfs_inode_t	*ip;
+> @@ -847,18 +848,17 @@ xfs_ialloc(
+>  		return error;
+>  	ASSERT(ip != NULL);
+>  	inode = VFS_I(ip);
+> -	inode->i_mode = mode;
+>  	set_nlink(inode, nlink);
+> -	inode->i_uid = current_fsuid();
+>  	inode->i_rdev = rdev;
+>  	ip->i_d.di_projid = prid;
+>  
+> -	if (pip && XFS_INHERIT_GID(pip)) {
+> -		inode->i_gid = VFS_I(pip)->i_gid;
+> -		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
+> -			inode->i_mode |= S_ISGID;
+> +	if (dir && !(dir->i_mode & S_ISGID) &&
+> +	    (mp->m_flags & XFS_MOUNT_GRPID)) {
+> +		inode->i_uid = current_fsuid();
+> +		inode->i_gid = dir->i_gid;
+> +		inode->i_mode = mode;
+>  	} else {
+> -		inode->i_gid = current_fsgid();
+> +		inode_init_owner(inode, dir, mode);
+>  	}
+>  
+>  	/*
+> -- 
+> 2.25.1
+> 
