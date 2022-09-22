@@ -2,69 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9154C6FA86
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 14:45:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7E6AC6FA82
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Sep 2022 15:15:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230096AbiIVOp5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Sep 2022 10:45:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53868 "EHLO
+        id S231272AbiIVPPL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Sep 2022 11:15:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230077AbiIVOp4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 10:45:56 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5088EC55D;
-        Thu, 22 Sep 2022 07:45:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=5kHgWCwEbxWgmMTo+jNfFcNjbPacO3aCj4iIOLbRicU=; b=2vNBwsjTTn0LUzW+5rfX5DzXI5
-        TtTFhfRXDFW9bxswhf5umeUoHtQWTq494DPJyBDzsBDF+Hzd0O4OQl1hbhet7nu0uxIy3LVqS3jq4
-        mmRRlHSH6lMf+EVh5Bg0CCptDYO+kgsxNDmFi0oKZ5eFoKri3/nKBMvPbIaXrSN5nZsNnKa2hp+0u
-        loVHOn5Rl3eRq1aVFDWBsGY2aWKTN+VErE1Ub+Mq7/lsBCzYbOQN4MFiTfKVdAov5FfZTpOvmIHhi
-        Yf6igs3SHVMhbmBQgLfRksuQYYs4EXrd+/kAGW1nVLuZxVs0TwN2uLhANKB0eNq63SmTPCQBKMVhc
-        Vs04x6Jw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1obNSU-00G9HJ-Ui; Thu, 22 Sep 2022 14:45:46 +0000
-Date:   Thu, 22 Sep 2022 07:45:46 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     David Hildenbrand <david@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 4/7] iov_iter: new iov_iter_pin_pages*() routines
-Message-ID: <Yyx1GtvLe2fkCtbP@infradead.org>
-References: <20220906102106.q23ovgyjyrsnbhkp@quack3>
- <YxhaJktqtHw3QTSG@infradead.org>
- <YyFPtTtxYozCuXvu@ZenIV>
- <20220914145233.cyeljaku4egeu4x2@quack3>
- <YyIEgD8ksSZTsUdJ@ZenIV>
- <20220915081625.6a72nza6yq4l5etp@quack3>
- <YyPXqfyf37CUbOf0@ZenIV>
- <YylJU+BKw5R8u7dw@ZenIV>
- <Yyxy4HFMhpbU/wLu@infradead.org>
- <c100fcd6-60fb-6650-fdac-7cc3a3bbc464@redhat.com>
+        with ESMTP id S231528AbiIVPPI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 11:15:08 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAB5D97507;
+        Thu, 22 Sep 2022 08:15:05 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id o99-20020a17090a0a6c00b002039c4fce53so2710720pjo.2;
+        Thu, 22 Sep 2022 08:15:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=lnuz47dK1eYqQrB9YHQb6+A8b+I/Nzs+ej6QCQpp5uY=;
+        b=IxCEwUst3nir6/P+I7umvU60vzi5cKn1v8YxcAWrbC+T/3jR7FdiAMbj3ZxzvPCPsk
+         Xk6LyhmfVRDuW2P47HRwiYpcRNn2m1xY2Bdsj1iq5Oh9KApeZaS49OllxoxD7Q3V+rn9
+         SaNwAM0Nse9ks6JO/r2Isl3bpgVIMC5fsW8FsL7J79GQIXsU8VV/vhudcoi3Xlvv9DWm
+         WVZEima05jCfHE1WlpkXdahSwvfCVm6iH2Ibe1Whb79RW02qwWmX1sD7Mi10x12Pqt/C
+         zPH5U+EHSUiMV/xbly71EaLEcOGclVDCy5adZx7HxI4fKaoJ6XqIRHYnK9Vhw2H0Ih/R
+         /cuQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=lnuz47dK1eYqQrB9YHQb6+A8b+I/Nzs+ej6QCQpp5uY=;
+        b=nkrnG+RnP1BgGQ3/SxQy5JqT+4alSVUICZPqGgOP067JixlmO1plwB6h6B6tmayXwO
+         byl1v9SIF+5c27oNmrumU6eySYQDfqmcHGRk1BCnpRvmWUgW8TDtdwOF5rWFVY7cdiqT
+         d+IyhW/xWXJwqKY7vqoTW0lYEoNRcZIbNzU73a7yNDJMsqZR+S7f0jdoGbrnqflDI8ut
+         FwKTWSbjQbmOwyEp48df8V1WgxT9xirVDSazdHy2YdqrAWJdt6Xlm1KvkZmC86wDw+Yk
+         PBXFL54vlRFnCTdoOIpLISITI6Gf7U4hdZLCnjrCEFKKzsni+1iNCLhaTbxD1WYh2hln
+         FHPQ==
+X-Gm-Message-State: ACrzQf1CV2PIwCHyjzsczW0DNF19zTwk9y/lZ0q89+v9KPYqMXOZChOD
+        vpCyideqUSowqmjIM8/2nwJqjlfl1p0=
+X-Google-Smtp-Source: AMsMyM4UuTn0WARWkYIfuUfgbMtcIxecuFkmgTdOh4Cj446WoCwjj3pU+T4X5KuZsYXp3J56O5LMyQ==
+X-Received: by 2002:a17:902:da8b:b0:178:3980:4597 with SMTP id j11-20020a170902da8b00b0017839804597mr3839550plx.113.1663859704961;
+        Thu, 22 Sep 2022 08:15:04 -0700 (PDT)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:500f:884a:5cc3:35d4])
+        by smtp.gmail.com with ESMTPSA id m10-20020a170902db0a00b001745662d568sm4226042plx.278.2022.09.22.08.15.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Sep 2022 08:15:04 -0700 (PDT)
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     stable@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
+        chandan.babu@oracle.com, Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 v2 0/3] xfs stable candidate patches (part 5)
+Date:   Thu, 22 Sep 2022 08:14:58 -0700
+Message-Id: <20220922151501.2297190-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.37.3.968.ga6b4b080e4-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c100fcd6-60fb-6650-fdac-7cc3a3bbc464@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 22, 2022 at 04:43:57PM +0200, David Hildenbrand wrote:
-> I assume they are not anon pages as in "PageAnon()", but simply not
-> pagecache pages, correct?
+Hi Greg,
 
-Yes, sorry.  From the page allocator and not added to the page cache.
+These patches correspond to the last two patches from the 5.10 series
+[1]. These patches were postponed for 5.10 until they were tested on
+5.15. I have tested these on 5.15 (40 runs of the auto group x 4
+configs).
+
+Best,
+Leah
+
+Changes v1-> v2:
+- Added Acks
+
+[1] https://lore.kernel.org/linux-xfs/20220901054854.2449416-1-amir73il@gmail.com/
+
+
+Brian Foster (1):
+  xfs: fix xfs_ifree() error handling to not leak perag ref
+
+Dave Chinner (2):
+  xfs: reorder iunlink remove operation in xfs_ifree
+  xfs: validate inode fork size against fork format
+
+ fs/xfs/libxfs/xfs_inode_buf.c | 35 ++++++++++++++++++++++++++---------
+ fs/xfs/xfs_inode.c            | 22 ++++++++++++----------
+ 2 files changed, 38 insertions(+), 19 deletions(-)
+
+-- 
+2.37.3.968.ga6b4b080e4-goog
+
