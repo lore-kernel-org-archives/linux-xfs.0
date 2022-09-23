@@ -2,147 +2,214 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9AAAECAAD8
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 16:14:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46035ECAAD8
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 16:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231623AbiIWQOF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Sep 2022 12:14:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36328 "EHLO
+        id S232460AbiIWQaD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Sep 2022 12:30:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229495AbiIWQOE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 12:14:04 -0400
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 439E91280F1;
-        Fri, 23 Sep 2022 09:14:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=YgHH6pk3nJLXW2jbXtGoxm+4FKcaifQJYVKj+aRwkxg=; b=ELnSTSol/sfK6s31ClYuS8gszF
-        sgXyMtpRrY266URjhhF2+1SDFZPQ78gjuIuhX2IKz28nBNhRVMvO+lvdYB0u9QfxT77iP5VaWVadQ
-        XQ7c8C2XILfSmvEUEZNndcp74iadwyK5fGrJ2BFrCVFtzqPwlVzV8idNgG0D9vuRVL5c60jrYWDzq
-        7t0rwxdFdeOKfLhnBFBDnyEJQ9KRzGyGnf7Y6ovolAFvEL3wYKawkB7tGYFSqpHRkMjTbebYoWz82
-        P+56yyxTj49Ngg8b0QDC7L5mid0UQH+ffCszwa9c1DnG3p+HPNkrve7pWm/ViH77+sQ5wQ2HwLSDK
-        1uOznKEw==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1oblJ8-002uO3-0s;
-        Fri, 23 Sep 2022 16:13:42 +0000
-Date:   Fri, 23 Sep 2022 17:13:42 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Jan Kara <jack@suse.cz>, John Hubbard <jhubbard@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        David Hildenbrand <david@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 4/7] iov_iter: new iov_iter_pin_pages*() routines
-Message-ID: <Yy3bNjaiUoGv/djG@ZenIV>
-References: <20220906102106.q23ovgyjyrsnbhkp@quack3>
- <YxhaJktqtHw3QTSG@infradead.org>
- <YyFPtTtxYozCuXvu@ZenIV>
- <20220914145233.cyeljaku4egeu4x2@quack3>
- <YyIEgD8ksSZTsUdJ@ZenIV>
- <20220915081625.6a72nza6yq4l5etp@quack3>
- <YyvG+Oih2A37Grcf@ZenIV>
- <YyxzYTlyGhbb2MOu@infradead.org>
- <Yy00eSjyxvUIp7D5@ZenIV>
- <Yy1x8QE9YA4HHzbQ@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        with ESMTP id S229538AbiIWQaB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 12:30:01 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9C944AD5E;
+        Fri, 23 Sep 2022 09:29:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663950599; x=1695486599;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=evPPg4gNTcbhBmranJt88xKrfhR+56VB+I1SanGeBIc=;
+  b=SX6+QZYq3K8EpjUPPqE0yY6BU1XZJBizgy4plYq2Qz378mYuDFur0AUz
+   Cmg1jhYZfIJgDQ19ifPA+JFI1Fb4BbBbwqXtvi1ibAewD5Vp44U2yniJQ
+   19NH2/KC06Q1k8okzeW8mo7+xkPsAbDA8fGfQSzAkOFKONG8XPDmRybMW
+   tNIbnq3nE28jjD3eynd7ixcqrKTIOd7173D01512R/QZrCwJxlK+Z9B7E
+   On6MuE+RpLbgTm4PFOI05dkfm/ipDsmoxStEiIX4IhSeJonhqWR3CWOAv
+   1fVR5Ufr5GoUVsP0T5C5uIHIDsyRycRVDdI5GrZbGkFvE3CBigmQvxFy8
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10479"; a="300610898"
+X-IronPort-AV: E=Sophos;i="5.93,339,1654585200"; 
+   d="scan'208";a="300610898"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2022 09:29:58 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,339,1654585200"; 
+   d="scan'208";a="571427840"
+Received: from fmsmsx601.amr.corp.intel.com ([10.18.126.81])
+  by orsmga003.jf.intel.com with ESMTP; 23 Sep 2022 09:29:58 -0700
+Received: from fmsmsx608.amr.corp.intel.com (10.18.126.88) by
+ fmsmsx601.amr.corp.intel.com (10.18.126.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 23 Sep 2022 09:29:57 -0700
+Received: from FMSEDG603.ED.cps.intel.com (10.1.192.133) by
+ fmsmsx608.amr.corp.intel.com (10.18.126.88) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31 via Frontend Transport; Fri, 23 Sep 2022 09:29:57 -0700
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (104.47.55.103)
+ by edgegateway.intel.com (192.55.55.68) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2375.31; Fri, 23 Sep 2022 09:29:57 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=AikExckdPCwaH/IRFYWNHQbrNsHY3ca5tzauAkcqIoGA11J/e8nh7CRNWYVLGPTWSMlOUD8pGBOuINnM2Sx8pLQbUBdLgfYvywkicW4MC8YSgsaAxp6bQz3g8sVJIhNAGaoSI/FA/UyCqOIxhAhzlDECzuP5hRJG1Z6TaWVfcUc62PXySPpK2OHynXKMYjo4UZzQ/dLRq4ZCz58d8VT5sRi8ugZTz50Sa5C1mXZHK1+gI8EiOqgE6sKqD7ERSN46439rN4m350t96lf0Oh04aV5Y+fNCk+Oi5pNLU1CWDYBvg/mkvytLIf3n/JYbHwZVXdw9jwlBBRZyxxllU/zdEw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=h/pStw/n0Ztp9YLr4pkeoMC1TxDN+qphQnGfCaRPsl4=;
+ b=LYiUibCmK4JB1rboi/eAB2e68YaePym/4do6sQ8o1t+vsBRMlKwX91VVvcDne+2rek3Lwp+YJPmYTAJmIwt9p29q82dYrqd4VvYo/qGbJV19Q40L0bX5s8cdi0WO9O6Nh8qglzn+G6aKBgGxTYalHgdcMnBo/gn1P+7luUccvpsfm67ury/ZCAW50WfKbD4jKlbiiHsFDMHOszeeYyQSp53lzho3t2UfB0OcHXPfFB5VpFv2uzeilZ3oUy37H5lTVHxZx/Eu8VnHwi7UrSkIECFqdni2FwIzeOBgkCAOsD6OAPjSaTU6zKqgJNgvnX/oOAvJBs6NhofkAuSSPWrOJw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
+ (2603:10b6:301:50::20) by SA1PR11MB6918.namprd11.prod.outlook.com
+ (2603:10b6:806:2bf::8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5632.18; Fri, 23 Sep
+ 2022 16:29:55 +0000
+Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
+ ([fe80::9847:345e:4c5b:ca12]) by MWHPR1101MB2126.namprd11.prod.outlook.com
+ ([fe80::9847:345e:4c5b:ca12%6]) with mapi id 15.20.5654.020; Fri, 23 Sep 2022
+ 16:29:54 +0000
+Date:   Fri, 23 Sep 2022 09:29:51 -0700
+From:   Dan Williams <dan.j.williams@intel.com>
+To:     Jason Gunthorpe <jgg@nvidia.com>,
+        Dan Williams <dan.j.williams@intel.com>
+CC:     <akpm@linux-foundation.org>, Matthew Wilcox <willy@infradead.org>,
+        "Jan Kara" <jack@suse.cz>, "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        John Hubbard <jhubbard@nvidia.com>,
+        <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>,
+        <linux-ext4@vger.kernel.org>
+Subject: Re: [PATCH v2 10/18] fsdax: Manage pgmap references at entry
+ insertion and deletion
+Message-ID: <632ddeffd86ff_33d629490@dwillia2-xfh.jf.intel.com.notmuch>
+References: <YysZrdF/BSQhjWZs@nvidia.com>
+ <632b2b4edd803_66d1a2941a@dwillia2-xfh.jf.intel.com.notmuch>
+ <632b8470d34a6_34962946d@dwillia2-xfh.jf.intel.com.notmuch>
+ <YyuLLsindwo0prz4@nvidia.com>
+ <632ba8eaa5aea_349629422@dwillia2-xfh.jf.intel.com.notmuch>
+ <YyurdXnW7SyEndHV@nvidia.com>
+ <632bc5c4363e9_349629486@dwillia2-xfh.jf.intel.com.notmuch>
+ <YyyhrTxFJZlMGYY6@nvidia.com>
+ <632cd9a2a023_3496294da@dwillia2-xfh.jf.intel.com.notmuch>
+ <Yy2ziac3GdHrpxuh@nvidia.com>
+Content-Type: text/plain; charset="us-ascii"
 Content-Disposition: inline
-In-Reply-To: <Yy1x8QE9YA4HHzbQ@infradead.org>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <Yy2ziac3GdHrpxuh@nvidia.com>
+X-ClientProxiedBy: BY3PR03CA0029.namprd03.prod.outlook.com
+ (2603:10b6:a03:39a::34) To MWHPR1101MB2126.namprd11.prod.outlook.com
+ (2603:10b6:301:50::20)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MWHPR1101MB2126:EE_|SA1PR11MB6918:EE_
+X-MS-Office365-Filtering-Correlation-Id: efb33aa0-0229-4bf0-bc89-08da9d80d89d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 5fxE9V4ay7yk73clkRiOwDmy++TlhJacWBg1SFZlQQZ5WBm9wnxcFGumfZbF4LL59PW26fYLNRImyNG3lknup2hJHN0o1OfY87P5qPVbSbWulEsBCFnHF8oIoxI/wIiw4ymqma1WMLUG0+9JLk4WAzWaJ9u6MU2O9e1wAAhtCEkYDk3gpcdpnwdn7IJl7tW0ESuMBFKZ+QbzQXWWVDqVl3YCe+jK4um/3C3f0J+MbKfouBE7qmuA2bjKJPlniqRz3BS79LWU9gQ4ckPhsK+zNeBC7OCiiKtT1hJZypYKbcgR8kC3o7n2hUSN4/N3ZUJMK4NBy7boSQhC6TN7AFx0bcRIREEDiPcHNWL51ss97LbKWK4B3/nKt1rGP8IZSZxkNwbsMPKSiDNDCKp/nkY2b1ViWh7itTEe3JYK1EOUJII1bsiO8LaOw7YWs8nLHtRakXfN9GTfjnTddFjPAFDUYzk+i2TgG/EGqWHBjMVV2sGYQtOkI4gfLv1WI9pIfQjD1mwqla+TXjnhZgZf3wM++K/LyYL/GohpPj3jqaPa5u1LuAHstGCY92DXnkc8yYXpQusOjbRQLDCV7mEdtK2lsQq/uoYfTDAn/7gflUk+8mUfOplpqIaqqDSwxxP8RfDiaoCE7qvh7/Mmg4NEw1J4aIwYdGo5yTYYqkq9msjRY9+ZJDWxD83oA/Eu/G/yq9CB0mwWdVs79suEQez4WN3gMg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1101MB2126.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(136003)(396003)(346002)(39860400002)(376002)(366004)(451199015)(110136005)(316002)(41300700001)(9686003)(26005)(6512007)(6506007)(54906003)(478600001)(8936002)(6666004)(82960400001)(2906002)(5660300002)(7416002)(66946007)(4326008)(186003)(6486002)(86362001)(8676002)(38100700002)(83380400001)(66556008)(66476007);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?NLdrMbpZFa1vGifbgaQnNIS0dv6rH53N4c4tik8LOW3eDwLxWul9q2GfDnxD?=
+ =?us-ascii?Q?d/+5q7vjynaHVdrVG/moz/TfE+0CZND+Lzz3qLpCiUkbQHK0vpXI/tE+yOWC?=
+ =?us-ascii?Q?iv2mairKwgjMYeNb+ommhFOwMXinU7YY/8zBCnaL0LEDPRNCPrO3pMFNgVLI?=
+ =?us-ascii?Q?cBW2y00OCiX7GkiiOYdZbDL7aLai3nVZgRCIC8YD06f2mJgI2UFwSFNr+IUv?=
+ =?us-ascii?Q?qN16TlSja2srS7NoVZQArJLLyK7KJ7Uwm3PXHryoHEfm84cIC9WHS0YB2CBD?=
+ =?us-ascii?Q?mXn3X50n/6lV8J3D2LoMvr0mG7S4jsTU/u2lQumCI85K6aNqWcTmrAcHyztW?=
+ =?us-ascii?Q?LyLH/d2j+mRzrEE2se+tyQO5fv2yVM3E+TzSqZHDh3lZ/K6gw/mG5G1nuIkE?=
+ =?us-ascii?Q?o3dnQL345GqwSee3ijRIaEH8nmcfCAvsq5smvioh31+SKDc9ygGzKwSLbDta?=
+ =?us-ascii?Q?GirJH4TX39oGNsJPw1AHAG7AWFDUVebDyI3gYUNMSqDxtGM2xwgzIC5li+GK?=
+ =?us-ascii?Q?7wJdCgZfMwRJPe5IWnPkiAxf0X5wnEm/dw4icQH+tyiCOKFvRMO+fM131wi6?=
+ =?us-ascii?Q?ZXBiw8T389ekoquTFseJZrIes4Qza96I6e99457IdF8p8eFXu3zK4cIwfs9k?=
+ =?us-ascii?Q?lyiKAm4PBQP/I2P68Nlic9UlVyQN82Uh55veCazfHMiL+btZTQAMWzMmyAIc?=
+ =?us-ascii?Q?8XhKKds5SMaOmHLpZUSkK5F5aNi8iY/Aa3APo7vLl7VyURBABvQUU8JMeFDp?=
+ =?us-ascii?Q?1smP970Lpu2XfKLC0kzRurp5ux+WqvtQSHL+H4e5Gy3tXQvH4WmeEHKbHTG0?=
+ =?us-ascii?Q?4AyiYx1jJman5q4dEAxvb++N/XLSo5weuymlAYTCAz1p3J5bq3grfhZlqLpl?=
+ =?us-ascii?Q?ZP1JqwEjRXjwv6ud+peZNl6Op4QoBEeAwvNkUtAAuOMYL1LlTp3TBxLaAk0J?=
+ =?us-ascii?Q?EagfEhLd+KL08DmqjRsCfpyLs97k1rPs255PHPHgynIbyKYKP1Ru0GUHyHIi?=
+ =?us-ascii?Q?4xuiM4bq8sKbR0Za4t9E7M10iqWyk8KiAdyFoSuk4uSZ0wYSLaTB20QGuBdc?=
+ =?us-ascii?Q?oz/2wdQ5gvgtw8DDWwGkQhcHRSemVGFSA3FsvkEKh3PKR9/foWfRiQI4BPku?=
+ =?us-ascii?Q?qs8dckYVZrYU6kpnxjkSw9yE4tMHI/vK/E9pv22wSoZRUNaYwneuIvNSB/4Y?=
+ =?us-ascii?Q?SeMssP/Anno3u22JZrVQMGg4ezeaH2pxFuec3GuZFRGFElQkw+1uYMi+T7Go?=
+ =?us-ascii?Q?OfjKIMHYhcoRWIGWq8jJ7p4r4V+t/dMd/rFz7fkUA3UtgLUns5POpP7DUxuo?=
+ =?us-ascii?Q?7PP+kT6tbVnbaep7Q/wrIuA/LKDFal9hoo1Mi9ypfn5imkuNM9yEtIKOL89y?=
+ =?us-ascii?Q?aCQCdmHhFlqMd4+IcPwpjbmk4gXx8QUAn1HKuoagL+Esf2ktJxymNJ4iTwKx?=
+ =?us-ascii?Q?2P+m0bwaQFMC3FzvItOfLIsetCDEEVYx5JpM2O8k1IJ9yaHYJfpDIp686u2y?=
+ =?us-ascii?Q?m90N58MGcl9ssLgTzClDGkBvgVSqPTu0VyB4liPUvvcnd5V3TqWOKNtQ7xpU?=
+ =?us-ascii?Q?gdTp2P4MmZ7MzeK5zC36voAmRozBL8SIN9wheBprgYtZsbcAj++ClimJ66Em?=
+ =?us-ascii?Q?4g=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: efb33aa0-0229-4bf0-bc89-08da9d80d89d
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR1101MB2126.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2022 16:29:54.3812
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yOSSoLg1OHcDLgLN+HCiV1ENgCFrn9GraHnKQYnl+P/iKXYJ/5FaFvZ3O16DC1bTw3Obkr2/U1T8lcWk5mlPdALc13JDsCD7l85RTq9uiLY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR11MB6918
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 23, 2022 at 01:44:33AM -0700, Christoph Hellwig wrote:
-
-> Why would I?  We generall do have or should have the iov_iter around.
-
-Not for async IO.
-
-> And for the common case where we don't (bios) we can carry that
-> information in the bio as it needs a special unmap helper anyway.
-
-*Any* async read_iter is like that.
-
-> > Where are they getting
-> > dropped and what guarantees that IO is complete by that point?
+Jason Gunthorpe wrote:
+> On Thu, Sep 22, 2022 at 02:54:42PM -0700, Dan Williams wrote:
 > 
-> The exact place depens on the exact taaraget frontend of which we have
-> a few.  But it happens from the end_io callback that is triggered
-> through a call to target_complete_cmd.
-
-OK...
-
-> > The reason I'm asking is that here you have an ITER_BVEC possibly fed to
-> > __blkdev_direct_IO_async(), with its
-> >         if (iov_iter_is_bvec(iter)) {
-> >                 /*
-> >                  * Users don't rely on the iterator being in any particular
-> >                  * state for async I/O returning -EIOCBQUEUED, hence we can
-> >                  * avoid expensive iov_iter_advance(). Bypass
-> >                  * bio_iov_iter_get_pages() and set the bvec directly.
-> >                  */
-> >                 bio_iov_bvec_set(bio, iter);
-> > which does *not* grab the page referneces.  Sure, bio_release_pages() knows
-> > to leave those alone and doesn't drop anything.  However, what is the
-> > mechanism preventing the pages getting freed before the IO completion
-> > in this case?
+> > > I'm thinking broadly about how to make pgmap usable to all the other
+> > > drivers in a safe and robust way that makes some kind of logical sense.
+> > 
+> > I think the API should be pgmap_folio_get() because, at least for DAX,
+> > the memory is already allocated. 
 > 
-> The contract that callers of bvec iters need to hold their own
-> references as without that doing I/O do them would be unsafe.  It they
-> did not hold references the pages could go away before even calling
-> bio_iov_iter_get_pages (or this open coded bio_iov_bvec_set).
+> I would pick a name that has some logical connection to
+> ops->page_free()
+> 
+> This function is starting a pairing where once it completes page_free
+> will eventually be called.
 
-You are mixing two issues here - holding references to pages while using
-iov_iter instance is obvious; holding them until async IO is complete, even
-though struct iov_iter might be long gone by that point is a different
-story.
+Following Dave's note that this is an 'arbitration' mechanism I think
+request/release is more appropriate than alloc/free for what this is doing.
 
-And originating iov_iter instance really can be long-gone by the time
-of IO completion - requirement to keep it around would be very hard to
-satisfy.  I've no objections to requiring the pages in ITER_BVEC to be
-preserved at least until the IO completion by means independent of
-whatever ->read_iter/->write_iter does to them, but
-	* that needs to be spelled out very clearly and
-	* we need to verify that it is, indeed, the case for all existing
-iov_iter_bvec callers, preferably with comments next to non-obvious ones
-(something that is followed only by the sync IO is obvious)
+> 
+> > /**
+> >  * pgmap_get_folio() - reference a folio in a live @pgmap by @pfn
+> >  * @pgmap: live pgmap instance, caller ensures this does not race @pgmap death
+> >  * @pfn: page frame number covered by @pgmap
+> >  */
+> > struct folio *pgmap_get_folio(struct dev_pagemap *pgmap, unsigned long pfn)
+> > {
+> >         struct page *page;
+> >         
+> >         VM_WARN_ONCE(pgmap != xa_load(&pgmap_array, PHYS_PFN(phys)));
+> >
+> >         if (WARN_ONCE(percpu_ref_is_dying(&pgmap->ref)))
+> >                 return NULL;
+> 
+> This shouldn't be a WARN?
 
-That goes not just for bio - if we make get_pages *NOT* grab references
-on ITER_BVEC (and I'm all for it), we need to make sure that those
-pages won't be retained after the original protection runs out.  Which
-includes the reference put into struct nfs_request, for example, as well
-as whatever ceph transport is doing, etc.  Another thing that needs to
-be sorted out is __zerocopy_sg_from_iter() and its callers - AFAICS,
-all of those are in ->sendmsg() with MSG_ZEROCOPY in flags.
+It's a bug if someone calls this after killing the pgmap. I.e.  the
+expectation is that the caller is synchronzing this. The only reason
+this isn't a VM_WARN_ONCE is because the sanity check is cheap, but I do
+not expect it to fire on anything but a development kernel.
 
-It's a non-trivial amount of code audit - we have about 40 iov_iter_bvec()
-callers in the tree, and while many are clearly sync-only... the ones
-that are not tend to balloon into interesting analysis of call chains, etc.
+> 
+> >         page = pfn_to_page(pfn);
+> >         return page_folio(page);
+> > }
+> 
+> Yeah, makes sense to me, but I would do a len as well to amortize the
+> cost of all these checks..
+> 
+> > This does not create compound folios, that needs to be coordinated with
+> > the caller and likely needs an explicit
+> 
+> Does it? What situations do you think the caller needs to coordinate
+> the folio size? Caller should call the function for each logical unit
+> of storage it wants to allocate from the pgmap..
 
-Don't get me wrong - that analysis needs to be done, just don't expect
-it to be trivial.  And it will require quite a bit of cooperation from the
-folks familiar with e.g. drivers/target, or with ceph transport layer,
-etc.
-
-FWIW, my preference would be along the lines of
-
-	Backing memory for any non user-backed iov_iter should be protected
-	from reuse by creator of iov_iter and that protection should continue
-	through not just all synchronous operations with iov_iter in question
-	- it should last until all async operations involving that memory are
-	finished.  That continued protection must not depend upon taking
-	extra page references, etc. while we are working with iov_iter.
-
-But getting there will take quite a bit of code audit and probably some massage
-as well.
+The problem for fsdax is that it needs to gather all the PTEs, hold a
+lock to synchronize against events that would shatter a huge page, and
+then build up the compound folio metadata before inserting the PMD. So I
+think that flow is request all pfns, lock, fixup refcounts, build up
+compound folio, insert huge i_pages entry, unlock and install the pmd.
