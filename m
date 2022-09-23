@@ -2,198 +2,325 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20425C04A95
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 21:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6006C07E9D
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 22:08:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229608AbiIWVwO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Sep 2022 17:52:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54756 "EHLO
+        id S229657AbiIWWIt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Sep 2022 18:08:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229511AbiIWVwN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 17:52:13 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B53B61323E2
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 14:52:12 -0700 (PDT)
+        with ESMTP id S229666AbiIWWIt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 18:08:49 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADEA0147F0E
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 15:08:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 513C461050
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 21:52:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB5D3C433C1;
-        Fri, 23 Sep 2022 21:52:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 43F9C61315
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 22:08:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99A72C433D6;
+        Fri, 23 Sep 2022 22:08:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663969931;
-        bh=7NzcoDRmhoyo1TAyJXAOrq+rQXL2S27FJZe5JEbBGbU=;
+        s=k20201202; t=1663970926;
+        bh=Q240PI8i5FgDJYUlpQxexRm5QeOoGYkD7ychwoffdNg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=b11+4nk8OsGE2/vzdRE/k+/7q4CqW1hEMRWpaZEkYmtgpqYyHjhUP9yvd/aapZcgK
-         ECN5itHg4dmwFoCO2NB2go/8xdZhvGn91u/HUGdPSfDaET6FGrxzHhQXCChCl+AZjV
-         JO3FSoZ6L1RVbTVaUv7yuAaLNXbJkrTqvvJf6RLqRghAsR76SNX+j8M7/J/9Jd8+Bv
-         BZVi+1cq7JObyJ2gEAflCVL1EAgt8ZCBcrXVsU+PgUSAmkhw23Fe4ssldjl3zjaozo
-         BXTTVVgGlhdPvHi7CWPa6+0SMumS7RxRSt0ID0ANmJzywYLtfVtJvb7cxy5UhAAS4b
-         YwMYSbtTRQsSQ==
-Date:   Fri, 23 Sep 2022 14:52:11 -0700
+        b=LanWvwaexVKip4CbvB1iZYtFHpj2OWw6asy7aT7CzJDb8vvxL1mrmOay67NttLb4Z
+         GWfKuix6Ocz9iG8d4zRlM74IVSt3R7gNOX8TwpSZPCb0ScvbS/+QD6WmNs1+wCZcoj
+         r0iffCkfue8XtavkbVUi0BY4aQwDzDJXw6CP1c6o6sBcoLWTw9eDGhmfReWkOCZXQn
+         jRQrF9YvrkbN+z/4RWc3/dXAI3KeGi0HbSnn/ilEsTbIC7Y1ww0LZxZedeziZVJLtg
+         gtG/O3GXYXOPSw1hHqc7K2Q898yiWyQZO38vBK87B0l9wrmohRLJH8pn/WgspsOwB+
+         LgI1RT4GXxJNQ==
+Date:   Fri, 23 Sep 2022 15:08:44 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     allison.henderson@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 18/26] xfs: Add parent pointers to xfs_cross_rename
-Message-ID: <Yy4qi1rUB6lj542c@magnolia>
+Subject: Re: [PATCH v3 20/26] xfs: Add parent pointers to rename
+Message-ID: <Yy4ubKiwEpzpwUJZ@magnolia>
 References: <20220922054458.40826-1-allison.henderson@oracle.com>
- <20220922054458.40826-19-allison.henderson@oracle.com>
+ <20220922054458.40826-21-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220922054458.40826-19-allison.henderson@oracle.com>
+In-Reply-To: <20220922054458.40826-21-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 21, 2022 at 10:44:50PM -0700, allison.henderson@oracle.com wrote:
+On Wed, Sep 21, 2022 at 10:44:52PM -0700, allison.henderson@oracle.com wrote:
 > From: Allison Henderson <allison.henderson@oracle.com>
 > 
-> Cross renames are handled separately from standard renames, and
-> need different handling to update the parent attributes correctly.
+> This patch removes the old parent pointer attribute during the rename
+> operation, and re-adds the updated parent pointer.  In the case of
+> xfs_cross_rename, we modify the routine not to roll the transaction just
+> yet.  We will do this after the parent pointer is added in the calling
+> xfs_rename function.
 > 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/xfs_inode.c | 85 ++++++++++++++++++++++++++++++++++++++--------
->  1 file changed, 70 insertions(+), 15 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c   |  2 +-
+>  fs/xfs/libxfs/xfs_attr.h   |  1 +
+>  fs/xfs/libxfs/xfs_parent.c | 31 +++++++++++++++++
+>  fs/xfs/libxfs/xfs_parent.h |  7 ++++
+>  fs/xfs/xfs_inode.c         | 69 +++++++++++++++++++++++++++++++++++---
+>  5 files changed, 104 insertions(+), 6 deletions(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index e967728d1ee7..3f9bd8401f33 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -923,7 +923,7 @@ xfs_attr_defer_add(
+>  }
+>  
+>  /* Sets an attribute for an inode as a deferred operation */
+> -static int
+> +int
+>  xfs_attr_defer_replace(
+>  	struct xfs_da_args	*args)
+>  {
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 033005542b9e..985761264d1f 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -546,6 +546,7 @@ int xfs_attr_get_ilocked(struct xfs_da_args *args);
+>  int xfs_attr_get(struct xfs_da_args *args);
+>  int xfs_attr_defer_add(struct xfs_da_args *args);
+>  int xfs_attr_defer_remove(struct xfs_da_args *args);
+> +int xfs_attr_defer_replace(struct xfs_da_args *args);
+>  int xfs_attr_set(struct xfs_da_args *args);
+>  int xfs_attr_set_iter(struct xfs_attr_intent *attr);
+>  int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
+> diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
+> index 378fa227b87f..7db1570e1841 100644
+> --- a/fs/xfs/libxfs/xfs_parent.c
+> +++ b/fs/xfs/libxfs/xfs_parent.c
+> @@ -141,6 +141,37 @@ xfs_parent_defer_remove(
+>  	return xfs_attr_defer_remove(args);
+>  }
+>  
+> +
+> +int
+> +xfs_parent_defer_replace(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*old_ip,
+> +	struct xfs_parent_defer	*old_parent,
+> +	xfs_dir2_dataptr_t	old_diroffset,
+> +	struct xfs_name		*parent_name,
+> +	struct xfs_inode	*new_ip,
+> +	struct xfs_parent_defer	*new_parent,
+> +	xfs_dir2_dataptr_t	new_diroffset,
+> +	struct xfs_inode	*child)
+> +{
+> +	struct xfs_da_args	*args = &new_parent->args;
+> +
+> +	xfs_init_parent_name_rec(&old_parent->rec, old_ip, old_diroffset);
+> +	xfs_init_parent_name_rec(&new_parent->rec, new_ip, new_diroffset);
+> +	new_parent->args.name = (const uint8_t *)&old_parent->rec;
+> +	new_parent->args.namelen = sizeof(struct xfs_parent_name_rec);
+> +	new_parent->args.new_name = (const uint8_t *)&new_parent->rec;
+> +	new_parent->args.new_namelen = sizeof(struct xfs_parent_name_rec);
+> +	args->trans = tp;
+> +	args->dp = child;
+> +	if (parent_name) {
+> +		new_parent->args.value = (void *)parent_name->name;
+> +		new_parent->args.valuelen = parent_name->len;
+> +	}
+> +	args->hashval = xfs_da_hashname(args->name, args->namelen);
+> +	return xfs_attr_defer_replace(args);
+> +}
+> +
+>  void
+>  xfs_parent_cancel(
+>  	xfs_mount_t		*mp,
+> diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
+> index 79d3fabb5e56..b2ed4f373799 100644
+> --- a/fs/xfs/libxfs/xfs_parent.h
+> +++ b/fs/xfs/libxfs/xfs_parent.h
+> @@ -27,6 +27,13 @@ int xfs_parent_init(xfs_mount_t *mp, struct xfs_parent_defer **parentp);
+>  int xfs_parent_defer_add(struct xfs_trans *tp, struct xfs_parent_defer *parent,
+>  			 struct xfs_inode *dp, struct xfs_name *parent_name,
+>  			 xfs_dir2_dataptr_t diroffset, struct xfs_inode *child);
+> +int xfs_parent_defer_replace(struct xfs_trans *tp, struct xfs_inode *old_ip,
+> +			 struct xfs_parent_defer *old_parent,
+> +			 xfs_dir2_dataptr_t old_diroffset,
+> +			 struct xfs_name *parent_name, struct xfs_inode *new_ip,
+> +			 struct xfs_parent_defer *new_parent,
+> +			 xfs_dir2_dataptr_t new_diroffset,
+> +			 struct xfs_inode *child);
+>  int xfs_parent_defer_remove(struct xfs_trans *tp, struct xfs_inode *dp,
+>  			    struct xfs_parent_defer *parent,
+>  			    xfs_dir2_dataptr_t diroffset,
 > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 1a35dc972d4d..51724af22bf9 100644
+> index 4a8399d35b17..3a2bec4ba228 100644
 > --- a/fs/xfs/xfs_inode.c
 > +++ b/fs/xfs/xfs_inode.c
-> @@ -2682,27 +2682,49 @@ xfs_finish_rename(
->   */
->  STATIC int
->  xfs_cross_rename(
-> -	struct xfs_trans	*tp,
-> -	struct xfs_inode	*dp1,
-> -	struct xfs_name		*name1,
-> -	struct xfs_inode	*ip1,
-> -	struct xfs_inode	*dp2,
-> -	struct xfs_name		*name2,
-> -	struct xfs_inode	*ip2,
-> -	int			spaceres)
-> +	struct xfs_trans		*tp,
-> +	struct xfs_inode		*dp1,
-> +	struct xfs_name			*name1,
-> +	struct xfs_inode		*ip1,
-> +	struct xfs_inode		*dp2,
-> +	struct xfs_name			*name2,
-> +	struct xfs_inode		*ip2,
-> +	int				spaceres)
->  {
-> -	int		error = 0;
-> -	int		ip1_flags = 0;
-> -	int		ip2_flags = 0;
-> -	int		dp2_flags = 0;
-> +	struct xfs_mount		*mp = dp1->i_mount;
-> +	int				error = 0;
-> +	int				ip1_flags = 0;
-> +	int				ip2_flags = 0;
-> +	int				dp2_flags = 0;
-> +	int				new_diroffset, old_diroffset;
+> @@ -2912,6 +2912,12 @@ xfs_rename(
+>  	int				spaceres;
+>  	bool				retried = false;
+>  	int				error, nospace_error = 0;
+> +	xfs_dir2_dataptr_t		new_diroffset;
+> +	xfs_dir2_dataptr_t		old_diroffset;
 > +	struct xfs_parent_defer		*old_parent_ptr = NULL;
 > +	struct xfs_parent_defer		*new_parent_ptr = NULL;
-> +	struct xfs_parent_defer		*old_parent_ptr2 = NULL;
-> +	struct xfs_parent_defer		*new_parent_ptr2 = NULL;
-> +
-> +
+> +	struct xfs_parent_defer		*target_parent_ptr = NULL;
+> +	struct xfs_parent_defer		*wip_parent_ptr = NULL;
+>  
+>  	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
+>  
+> @@ -2925,7 +2931,8 @@ xfs_rename(
+>  	 */
+>  	if (flags & RENAME_WHITEOUT) {
+>  		error = xfs_rename_alloc_whiteout(mnt_userns, src_name,
+> -						  target_dp, false, &wip);
+> +						  target_dp, xfs_has_parent(mp),
+> +						  &wip);
+>  		if (error)
+>  			return error;
+>  
+> @@ -2935,6 +2942,24 @@ xfs_rename(
+>  
+>  	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip, wip,
+>  				inodes, &num_inodes);
 > +	if (xfs_has_parent(mp)) {
 > +		error = xfs_parent_init(mp, &old_parent_ptr);
 > +		if (error)
-> +			goto out_trans_abort;
+> +			goto out_release_wip;
 > +		error = xfs_parent_init(mp, &new_parent_ptr);
 > +		if (error)
-> +			goto out_trans_abort;
-> +		error = xfs_parent_init(mp, &old_parent_ptr2);
-> +		if (error)
-> +			goto out_trans_abort;
-> +		error = xfs_parent_init(mp, &new_parent_ptr2);
-> +		if (error)
-> +			goto out_trans_abort;
-
-Four?  I think this means that xfs_calc_rename_reservation needs to do:
-
-	overhead += 4 * (sizeof(struct xfs_attri_log_item) +
-				whatever_else);
-
-Right?
-
-The rest of the patch looks fine, though...
-
+> +			goto out_release_wip;
+> +		if (wip) {
+> +			error = xfs_parent_init(mp, &wip_parent_ptr);
+> +			if (error)
+> +				goto out_release_wip;
+> +		}
+> +		if (target_ip != NULL) {
+> +			error = xfs_parent_init(mp, &target_parent_ptr);
+> +			if (error)
+> +				goto out_release_wip;
+> +		}
 > +	}
 >  
->  	/* Swap inode number for dirent in first parent */
-> -	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, spaceres, NULL);
-> +	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, spaceres, &old_diroffset);
->  	if (error)
->  		goto out_trans_abort;
->  
->  	/* Swap inode number for dirent in second parent */
-> -	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, spaceres, NULL);
-> +	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, spaceres, &new_diroffset);
->  	if (error)
->  		goto out_trans_abort;
->  
-> @@ -2763,6 +2785,28 @@ xfs_cross_rename(
->  		}
->  	}
->  
-> +	if (xfs_has_parent(mp)) {
-> +		error = xfs_parent_defer_replace(tp, dp1,
-> +						  old_parent_ptr,
-> +						  old_diroffset,
-> +						  name2,
-> +						  dp2,
-> +						  new_parent_ptr,
-> +						  new_diroffset, ip1);
+>  retry:
+>  	nospace_error = 0;
 
-...if you reflowed this to do two-tab indenting instead of kernel-style
-indenting I wouldn't be sad. ;)
+Same block reservation comment as most of the previous ones, except this
+one is super nasty:
+
+unsigned int
+xfs_rename_space_res(
+	struct xfs_mount	*mp,
+	struct xfs_name		*src_name,
+	struct xfs_parent_defer	*target_parent_ptr,
+	struct xfs_name		*target_name,
+	struct xfs_parent_defer	*new_parent_ptr,
+	struct xfs_inode	*wip)
+{
+	unsigned int		ret;
+
+	/* XXX is the target_name->len usage below correct? */
+	ret = XFS_DIRREMOVE_SPACE_RES(mp) +
+			XFS_DIRENTER_SPACE_RES(mp, target_name->len);
+
+	if (new_parent_ptr) {
+		if (wip)
+			ret += xfs_pptr_calc_space_res(mp, src_name->len);
+		ret += 2 * xfs_pptr_calc_space_res(mp, target_name->len);
+	}
+	if (target_parent_ptr)
+		ret += xfs_pptr_calc_space_res(mp, target_name->len);
+
+	return ret;
+}
+
+xfs_rename(...)
+{
+	spacres = xfs_rename_space_res(mp, src_name, target_parent_ptr,
+			target_name, new_parent_ptr, wip);
+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_rename, spaceres, 0,
+			0, &tp);
+	/* ... */
+}
+
+(The rest of the logic looks ok now.)
 
 --D
 
-> +		if (error)
-> +			goto out_trans_abort;
+> @@ -3110,7 +3135,7 @@ xfs_rename(
+>  		 * to account for the ".." reference from the new entry.
+>  		 */
+>  		error = xfs_dir_createname(tp, target_dp, target_name,
+> -					   src_ip->i_ino, spaceres, NULL);
+> +					   src_ip->i_ino, spaceres, &new_diroffset);
+>  		if (error)
+>  			goto out_trans_cancel;
+>  
+> @@ -3131,7 +3156,7 @@ xfs_rename(
+>  		 * name at the destination directory, remove it first.
+>  		 */
+>  		error = xfs_dir_replace(tp, target_dp, target_name,
+> -					src_ip->i_ino, spaceres, NULL);
+> +					src_ip->i_ino, spaceres, &new_diroffset);
+>  		if (error)
+>  			goto out_trans_cancel;
+>  
+> @@ -3204,14 +3229,39 @@ xfs_rename(
+>  	 */
+>  	if (wip)
+>  		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
+> -					spaceres, NULL);
+> +					spaceres, &old_diroffset);
+>  	else
+>  		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+> -					   spaceres, NULL);
+> +					   spaceres, &old_diroffset);
+>  
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> +	if (new_parent_ptr) {
+> +		if (wip) {
+> +			error = xfs_parent_defer_add(tp, wip_parent_ptr,
+> +						     src_dp, src_name,
+> +						     old_diroffset, wip);
+> +			if (error)
+> +				goto out_trans_cancel;
+> +		}
 > +
-> +		error = xfs_parent_defer_replace(tp, dp2,
-> +						  new_parent_ptr2,
-> +						  new_diroffset,
-> +						  name1,
-> +						  dp1,
-> +						  old_parent_ptr2,
-> +						  old_diroffset, ip2);
+> +		error = xfs_parent_defer_replace(tp, src_dp, old_parent_ptr,
+> +						 old_diroffset, target_name,
+> +						 target_dp, new_parent_ptr,
+> +						 new_diroffset, src_ip);
 > +		if (error)
-> +			goto out_trans_abort;
+> +			goto out_trans_cancel;
 > +	}
 > +
->  	if (ip1_flags) {
->  		xfs_trans_ichgtime(tp, ip1, ip1_flags);
->  		xfs_trans_log_inode(tp, ip1, XFS_ILOG_CORE);
-> @@ -2777,10 +2821,21 @@ xfs_cross_rename(
+> +	if (target_parent_ptr) {
+> +		error = xfs_parent_defer_remove(tp, target_dp,
+> +						target_parent_ptr,
+> +						new_diroffset, target_ip);
+> +		if (error)
+> +			goto out_trans_cancel;
+> +	}
+> +
+>  	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>  	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
+>  	if (new_parent)
+> @@ -3234,6 +3284,15 @@ xfs_rename(
+>  			i--;
 >  	}
->  	xfs_trans_ichgtime(tp, dp1, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
->  	xfs_trans_log_inode(tp, dp1, XFS_ILOG_CORE);
-> -	return xfs_finish_rename(tp);
->  
-> +	error = xfs_finish_rename(tp);
-> +	goto out;
->  out_trans_abort:
->  	xfs_trans_cancel(tp);
-> +out:
+>  out_release_wip:
 > +	if (new_parent_ptr)
 > +		xfs_parent_cancel(mp, new_parent_ptr);
 > +	if (old_parent_ptr)
 > +		xfs_parent_cancel(mp, old_parent_ptr);
-> +	if (new_parent_ptr2)
-> +		xfs_parent_cancel(mp, new_parent_ptr2);
-> +	if (old_parent_ptr2)
-> +		xfs_parent_cancel(mp, old_parent_ptr2);
+> +	if (target_parent_ptr)
+> +		xfs_parent_cancel(mp, target_parent_ptr);
+> +	if (wip_parent_ptr)
+> +		xfs_parent_cancel(mp, wip_parent_ptr);
 > +
->  	return error;
->  }
->  
+>  	if (wip)
+>  		xfs_irele(wip);
+>  	if (error == -ENOSPC && nospace_error)
 > -- 
 > 2.25.1
 > 
