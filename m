@@ -2,183 +2,241 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F148C04A95
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 21:18:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9604C07E9D
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 21:22:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231701AbiIWVS3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Sep 2022 17:18:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39510 "EHLO
+        id S230113AbiIWVW3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Sep 2022 17:22:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229891AbiIWVS2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 17:18:28 -0400
+        with ESMTP id S232630AbiIWVW1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 17:22:27 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9F92122062
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 14:18:27 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A69E120BF5
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 14:22:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 31B7E60CE8
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 21:18:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75003C433D6;
-        Fri, 23 Sep 2022 21:18:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DED3861B68
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 21:22:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17E9BC433D6;
+        Fri, 23 Sep 2022 21:22:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663967906;
-        bh=xDDOl5zlHvvymRj03ZkcYEom0ApYDHGX4rXFCK2uqR4=;
+        s=k20201202; t=1663968145;
+        bh=wxmNEOVNcf10/EdJP7F4zXhPlhGjwq5WKPtiFeYnV6M=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=a7N+hLyy2fR/2Cmp06EzPKQGpi9B0v3lo8ab58/hEe+/y2L5JHCMESLDNfL9qm98W
-         xtZUPkpllBJd63QqRUZ52ryfIRRlx4M+3nZwx+mzRaEESd9MATGusSRFMUYZnp/6DP
-         0E0bh2AlA1i+QVDlqva8oex3/n7vCMMh8sYG54HXmOng1EXrYmb0/ADjS4x4Aih9uK
-         L0vO5INn0HNSOLjQunBeFsMQsuile1GwrRlWfQdjHhtGLqKCgO33z/LaVGMn3dL91E
-         R7xmc7q1oojEPsphnkl+I3Rt5t9yK/dSJoctlmjY2UMumFmZvRF2B64U6Mg4bEcWjs
-         n0q6Obp8mpjCw==
-Date:   Fri, 23 Sep 2022 14:18:25 -0700
+        b=EwXT4HTD6Bv22w3UEAYGB2oTSSw353+VvTJkRcCbVZ/KmyaLeIzP9qiL+yottSci/
+         ORNvM508RSjAicsNc8veIWcxPfvsSL+0NH0IqvrwqUc4J6EccI+xOyqElQghq8jeka
+         Wp46WUDZSgm+R2SLFYqbKLCWVC6gWFuOSUtQfmVkbBWDGYA2/umdqadPNRxlcgRyH3
+         sc80+Tk74NXC8cGZNQlFjdApdd2cPmPgHwTu1faMnOfYDrsQBDJD0tYzQrNSZDBeT6
+         /dGAQ1UzAUVuPLTKQSSZVkXvzC64GDStJwfP+nSOftnYfQB3V4Gn/x3+FOSGJv2YOy
+         iY+2QOtbCydHQ==
+Date:   Fri, 23 Sep 2022 14:22:24 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v3 06/26] xfs: Expose init_xattrs in xfs_create_tmpfile
-Message-ID: <Yy4ioSD9SiMktxqe@magnolia>
+To:     allison.henderson@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 17/26] xfs: remove parent pointers in unlink
+Message-ID: <Yy4jkMAy20T3LIfs@magnolia>
 References: <20220922054458.40826-1-allison.henderson@oracle.com>
- <20220922054458.40826-7-allison.henderson@oracle.com>
- <Yy4IFZXqpgJbupD2@magnolia>
- <4859b4a707017188da640bc34abea1eac8793f19.camel@oracle.com>
+ <20220922054458.40826-18-allison.henderson@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4859b4a707017188da640bc34abea1eac8793f19.camel@oracle.com>
+In-Reply-To: <20220922054458.40826-18-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 23, 2022 at 08:45:22PM +0000, Allison Henderson wrote:
-> On Fri, 2022-09-23 at 12:25 -0700, Darrick J. Wong wrote:
-> > On Wed, Sep 21, 2022 at 10:44:38PM -0700,
-> > allison.henderson@oracle.com wrote:
-> > > From: Allison Henderson <allison.henderson@oracle.com>
-> > > 
-> > > Tmp files are used as part of rename operations and will need attr
-> > > forks
-> > > initialized for parent pointers.  Expose the init_xattrs parameter
-> > > to
-> > > the calling function to initialize the fork.
-> > > 
-> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_inode.c | 8 +++++---
-> > >  fs/xfs/xfs_inode.h | 2 +-
-> > >  fs/xfs/xfs_iops.c  | 3 ++-
-> > >  3 files changed, 8 insertions(+), 5 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index 4bfa4a1579f0..ff680de560d2 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -1108,6 +1108,7 @@ xfs_create_tmpfile(
-> > >         struct user_namespace   *mnt_userns,
-> > >         struct xfs_inode        *dp,
-> > >         umode_t                 mode,
-> > > +       bool                    init_xattrs,
-> > >         struct xfs_inode        **ipp)
-> > >  {
-> > >         struct xfs_mount        *mp = dp->i_mount;
-> > > @@ -1148,7 +1149,7 @@ xfs_create_tmpfile(
-> > >         error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
-> > >         if (!error)
-> > >                 error = xfs_init_new_inode(mnt_userns, tp, dp, ino,
-> > > mode,
-> > > -                               0, 0, prid, false, &ip);
-> > > +                               0, 0, prid, init_xattrs, &ip);
-> > >         if (error)
-> > >                 goto out_trans_cancel;
-> > >  
-> > > @@ -2726,6 +2727,7 @@ xfs_rename_alloc_whiteout(
-> > >         struct user_namespace   *mnt_userns,
-> > >         struct xfs_name         *src_name,
-> > >         struct xfs_inode        *dp,
-> > > +       bool                    init_xattrs,
-> > >         struct xfs_inode        **wip)
-> > >  {
-> > >         struct xfs_inode        *tmpfile;
-> > > @@ -2733,7 +2735,7 @@ xfs_rename_alloc_whiteout(
-> > >         int                     error;
-> > >  
-> > >         error = xfs_create_tmpfile(mnt_userns, dp, S_IFCHR |
-> > > WHITEOUT_MODE,
-> > > -                                  &tmpfile);
-> > > +                                  init_xattrs, &tmpfile);
-> > 
-> > Whiteouts are created prior to being added to a directory, right?
-> > If so, shouldn't this be s/init_xattrs/true/g to save time?
-> well, replaced with xfs_has_parent(mp) if we want to retain the non
-> parent code functionality.  I dont know that it really saves that much
-> time, but we can implement it that way of folks prefer.
+On Wed, Sep 21, 2022 at 10:44:49PM -0700, allison.henderson@oracle.com wrote:
+> From: Allison Henderson <allison.henderson@oracle.com>
+> 
+> This patch removes the parent pointer attribute during unlink
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c   |  2 +-
+>  fs/xfs/libxfs/xfs_attr.h   |  1 +
+>  fs/xfs/libxfs/xfs_parent.c | 17 +++++++++++++++++
+>  fs/xfs/libxfs/xfs_parent.h |  4 ++++
+>  fs/xfs/xfs_inode.c         | 29 +++++++++++++++++++++++------
+>  5 files changed, 46 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 805aaa5639d2..e967728d1ee7 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -946,7 +946,7 @@ xfs_attr_defer_replace(
+>  }
+>  
+>  /* Removes an attribute for an inode as a deferred operation */
+> -static int
+> +int
+>  xfs_attr_defer_remove(
+>  	struct xfs_da_args	*args)
+>  {
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 0cf23f5117ad..033005542b9e 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -545,6 +545,7 @@ bool xfs_attr_is_leaf(struct xfs_inode *ip);
+>  int xfs_attr_get_ilocked(struct xfs_da_args *args);
+>  int xfs_attr_get(struct xfs_da_args *args);
+>  int xfs_attr_defer_add(struct xfs_da_args *args);
+> +int xfs_attr_defer_remove(struct xfs_da_args *args);
+>  int xfs_attr_set(struct xfs_da_args *args);
+>  int xfs_attr_set_iter(struct xfs_attr_intent *attr);
+>  int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
+> diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
+> index dddbf096a4b5..378fa227b87f 100644
+> --- a/fs/xfs/libxfs/xfs_parent.c
+> +++ b/fs/xfs/libxfs/xfs_parent.c
+> @@ -124,6 +124,23 @@ xfs_parent_defer_add(
+>  	return xfs_attr_defer_add(args);
+>  }
+>  
+> +int
+> +xfs_parent_defer_remove(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*dp,
+> +	struct xfs_parent_defer	*parent,
+> +	xfs_dir2_dataptr_t	diroffset,
+> +	struct xfs_inode	*child)
+> +{
+> +	struct xfs_da_args	*args = &parent->args;
+> +
+> +	xfs_init_parent_name_rec(&parent->rec, dp, diroffset);
+> +	args->trans = tp;
+> +	args->dp = child;
+> +	args->hashval = xfs_da_hashname(args->name, args->namelen);
+> +	return xfs_attr_defer_remove(args);
+> +}
+> +
+>  void
+>  xfs_parent_cancel(
+>  	xfs_mount_t		*mp,
+> diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
+> index 971044458f8a..79d3fabb5e56 100644
+> --- a/fs/xfs/libxfs/xfs_parent.h
+> +++ b/fs/xfs/libxfs/xfs_parent.h
+> @@ -27,6 +27,10 @@ int xfs_parent_init(xfs_mount_t *mp, struct xfs_parent_defer **parentp);
+>  int xfs_parent_defer_add(struct xfs_trans *tp, struct xfs_parent_defer *parent,
+>  			 struct xfs_inode *dp, struct xfs_name *parent_name,
+>  			 xfs_dir2_dataptr_t diroffset, struct xfs_inode *child);
+> +int xfs_parent_defer_remove(struct xfs_trans *tp, struct xfs_inode *dp,
+> +			    struct xfs_parent_defer *parent,
+> +			    xfs_dir2_dataptr_t diroffset,
+> +			    struct xfs_inode *child);
+>  void xfs_parent_cancel(xfs_mount_t *mp, struct xfs_parent_defer *parent);
+>  
+>  #endif	/* __XFS_PARENT_H__ */
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index af3f5edb7319..1a35dc972d4d 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2465,16 +2465,18 @@ xfs_iunpin_wait(
+>   */
+>  int
+>  xfs_remove(
+> -	xfs_inode_t             *dp,
+> +	struct xfs_inode	*dp,
+>  	struct xfs_name		*name,
+> -	xfs_inode_t		*ip)
+> +	struct xfs_inode	*ip)
+>  {
+> -	xfs_mount_t		*mp = dp->i_mount;
+> -	xfs_trans_t             *tp = NULL;
+> +	struct xfs_mount	*mp = dp->i_mount;
+> +	struct xfs_trans	*tp = NULL;
+>  	int			is_dir = S_ISDIR(VFS_I(ip)->i_mode);
+>  	int			dontcare;
+>  	int                     error = 0;
+>  	uint			resblks;
+> +	xfs_dir2_dataptr_t	dir_offset;
+> +	struct xfs_parent_defer	*parent = NULL;
+>  
+>  	trace_xfs_remove(dp, name);
+>  
+> @@ -2489,6 +2491,12 @@ xfs_remove(
+>  	if (error)
+>  		goto std_return;
+>  
+> +	if (xfs_has_parent(mp)) {
+> +		error = xfs_parent_init(mp, &parent);
+> +		if (error)
+> +			goto std_return;
+> +	}
+> +
+>  	/*
+>  	 * We try to get the real space reservation first, allowing for
+>  	 * directory btree deletion(s) implying possible bmap insert(s).  If we
 
-I didn't used to think it would make much difference, but the reason why
-the init_xattrs thing got added is that Dave benchmarked file creation
-on a system that has selinux enabled (and hence sets selinux security
-xattrs on every file created) and discovered that it /did/ make a
-difference.
+Same thing here:
+
+unsigned int
+xfs_remove_space_res(
+        struct xfs_mount        *mp,
+        unsigned int            namelen)
+{
+        unsigned int            ret = XFS_DIRREMOVE_SPACE_RES(mp);
+
+        if (xfs_has_parent(mp))
+                ret += xfs_pptr_calc_space_res(mp, namelen);
+
+        return ret;
+}
+
+xfs_remove(..)
+{
+	/* ... */
+
+	resblks = xfs_remove_space_res(mp, name->len);
+	error = xfs_trans_alloc_dir(dp, &M_RES(mp)->tr_remove, ip,
+			&resblks, &tp, &dontcare);
+	/* removal code... */
+}
 
 --D
 
-> > 
-> > Everything else in here looks good though!
-> Thanks!
-> Allison
-> 
-> > 
-> > --D
-> > 
-> > >         if (error)
-> > >                 return error;
-> > >  
-> > > @@ -2797,7 +2799,7 @@ xfs_rename(
-> > >          */
-> > >         if (flags & RENAME_WHITEOUT) {
-> > >                 error = xfs_rename_alloc_whiteout(mnt_userns,
-> > > src_name,
-> > > -                                                 target_dp, &wip);
-> > > +                                                 target_dp, false,
-> > > &wip);
-> > >                 if (error)
-> > >                         return error;
-> > >  
-> > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> > > index 2eaed98af814..5735de32beeb 100644
-> > > --- a/fs/xfs/xfs_inode.h
-> > > +++ b/fs/xfs/xfs_inode.h
-> > > @@ -478,7 +478,7 @@ int         xfs_create(struct user_namespace
-> > > *mnt_userns,
-> > >                            umode_t mode, dev_t rdev, bool
-> > > need_xattr,
-> > >                            struct xfs_inode **ipp);
-> > >  int            xfs_create_tmpfile(struct user_namespace
-> > > *mnt_userns,
-> > > -                          struct xfs_inode *dp, umode_t mode,
-> > > +                          struct xfs_inode *dp, umode_t mode, bool
-> > > init_xattrs,
-> > >                            struct xfs_inode **ipp);
-> > >  int            xfs_remove(struct xfs_inode *dp, struct xfs_name
-> > > *name,
-> > >                            struct xfs_inode *ip);
-> > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > index 5d670c85dcc2..07a26f4f6348 100644
-> > > --- a/fs/xfs/xfs_iops.c
-> > > +++ b/fs/xfs/xfs_iops.c
-> > > @@ -200,7 +200,8 @@ xfs_generic_create(
-> > >                                 xfs_create_need_xattr(dir,
-> > > default_acl, acl),
-> > >                                 &ip);
-> > >         } else {
-> > > -               error = xfs_create_tmpfile(mnt_userns, XFS_I(dir),
-> > > mode, &ip);
-> > > +               error = xfs_create_tmpfile(mnt_userns, XFS_I(dir),
-> > > mode, false,
-> > > +                                          &ip);
-> > >         }
-> > >         if (unlikely(error))
-> > >                 goto out_free_acl;
-> > > -- 
-> > > 2.25.1
-> > > 
+> @@ -2505,7 +2513,7 @@ xfs_remove(
+>  			&tp, &dontcare);
+>  	if (error) {
+>  		ASSERT(error != -ENOSPC);
+> -		goto std_return;
+> +		goto drop_incompat;
+>  	}
+>  
+>  	/*
+> @@ -2559,12 +2567,18 @@ xfs_remove(
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> -	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks, NULL);
+> +	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks, &dir_offset);
+>  	if (error) {
+>  		ASSERT(error != -ENOENT);
+>  		goto out_trans_cancel;
+>  	}
+>  
+> +	if (parent) {
+> +		error = xfs_parent_defer_remove(tp, dp, parent, dir_offset, ip);
+> +		if (error)
+> +			goto out_trans_cancel;
+> +	}
+> +
+>  	/*
+>  	 * If this is a synchronous mount, make sure that the
+>  	 * remove transaction goes to disk before returning to
+> @@ -2589,6 +2603,9 @@ xfs_remove(
+>   out_unlock:
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> + drop_incompat:
+> +	if (parent)
+> +		xfs_parent_cancel(mp, parent);
+>   std_return:
+>  	return error;
+>  }
+> -- 
+> 2.25.1
 > 
