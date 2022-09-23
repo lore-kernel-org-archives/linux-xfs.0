@@ -2,186 +2,444 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C009C04A95
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 17:42:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4A21C04A95
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 18:53:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232072AbiIWRmc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Sep 2022 13:42:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38346 "EHLO
+        id S229539AbiIWSx3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Sep 2022 14:53:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230241AbiIWRmb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 13:42:31 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2047.outbound.protection.outlook.com [40.107.237.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 581EE25C5D;
-        Fri, 23 Sep 2022 10:42:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HJ+DMukW4KToRMHdR45fLtxYfFmNAMFYnrJwQnxw4VpovISpw2xZKK7hjJegnRjuNI6maLTjJrf730dfcES/tn1SO9bVqDk4+edkowzZl5Pfla4+AqS6KspU/aSc97S1SJYga8/w4SImg084Maxf+BC6xAgnSZimn27skNak8ZGxB8a0cOrKzKyz0VK/R/zQE0q3l2VdhLBS1a52OBnKCbPNsptvwsqMEuv7y6V3Y0zxnd2VuYARvkaycktdTBZQ03tMewBwSSHAFJP5G5zoyt5KOxbMM936lA2ThZLEIBEPeL/uaohfl5wHwMFqA8n5fQerpN+MZ+p+sWXge8FoYA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1mxuJ2UaqE340BCDMHPEPcTbFhSlojnrOKn2aCWzCSU=;
- b=XDRGhOSKYKckLWLARHJUgrjMZHc1Mu2ZbCBIf7WQHd8O9i7azqWsN1ovIYvdQbIqh1HQzCVCax3bLmX4aJ0Rgi/abafwhFaBKuN7JOacJlVU/QnRGFWuPgQA0DOR19OWyvovjtjr1V9LTTel2Jy7GOSTEagl8epaObfYJHczHELnfuCEp5YC3qpvcxLyw5GvfTE/dLPUu4a0rq190JoyiDWQqEodELTLK3A3i7op24PNv3ZC+I/xy8hWx7urP286yVxQOK02xGF0vqduv/QOExhAzikbv/qMmqv3ik6JYT/xj8m8fYG19B1m5S0FXjGsd2pv+VuFotazUN7hubMwQQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1mxuJ2UaqE340BCDMHPEPcTbFhSlojnrOKn2aCWzCSU=;
- b=Y2g+G68iWHeRbU9wV8Gtd5CZ6O6VLOSJdnVUND3XqRrfyVafSqdheZx3jy3W5uMG2Fzy6v+uYoSivp4P9W5zd6hjiEfiopUoisoAFzdcFTz2B/9NALB42mTmk4X3tZQYsVaoxyW3TjBSXT62ClHTg8MuzE6RNdT7FD4QuBxFM8umWehnKl6C7MBxNfR+C/Vy7JYRYYTjrM3bYj5BbNmzoMJ9cb1WkVjJrjrthtQD32I4OyUzhMUEyIGL7TGkdKUPcc4G6NW/bNjpqHEd7BL2cWyp2ktPSBSJC14MbDH9IkrPEmC5X9rLczjJv6PjGuvFoyCkOLFdthEYWtTUHzSkBA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
- by MN0PR12MB5882.namprd12.prod.outlook.com (2603:10b6:208:37a::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.20; Fri, 23 Sep
- 2022 17:42:28 +0000
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::462:7fe:f04f:d0d5]) by MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::462:7fe:f04f:d0d5%7]) with mapi id 15.20.5654.020; Fri, 23 Sep 2022
- 17:42:28 +0000
-Date:   Fri, 23 Sep 2022 14:42:27 -0300
-From:   Jason Gunthorpe <jgg@nvidia.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     akpm@linux-foundation.org, Matthew Wilcox <willy@infradead.org>,
-        Jan Kara <jack@suse.cz>, "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        John Hubbard <jhubbard@nvidia.com>,
-        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v2 10/18] fsdax: Manage pgmap references at entry
- insertion and deletion
-Message-ID: <Yy3wA7/bkza7NO1J@nvidia.com>
-References: <632b2b4edd803_66d1a2941a@dwillia2-xfh.jf.intel.com.notmuch>
- <632b8470d34a6_34962946d@dwillia2-xfh.jf.intel.com.notmuch>
- <YyuLLsindwo0prz4@nvidia.com>
- <632ba8eaa5aea_349629422@dwillia2-xfh.jf.intel.com.notmuch>
- <YyurdXnW7SyEndHV@nvidia.com>
- <632bc5c4363e9_349629486@dwillia2-xfh.jf.intel.com.notmuch>
- <YyyhrTxFJZlMGYY6@nvidia.com>
- <632cd9a2a023_3496294da@dwillia2-xfh.jf.intel.com.notmuch>
- <Yy2ziac3GdHrpxuh@nvidia.com>
- <632ddeffd86ff_33d629490@dwillia2-xfh.jf.intel.com.notmuch>
+        with ESMTP id S229517AbiIWSx3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 14:53:29 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D5D512113D
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 11:53:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F2E37B819FE
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 18:53:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 898F8C433D6;
+        Fri, 23 Sep 2022 18:53:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1663959204;
+        bh=kus+GgGoQffPGA/pMW+kE1NBkghvQVPb8n4Vaw5NjOU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OVAzigs0DhkbKbhaedl/L91rLUDVcpw53fwfer8jeVuyUoR7ka+pYnIPoM/i9hUGn
+         TmR86pkvu7U58UtMDMM92p7qfJiFSdjqshx09/W8qSCKoGmfxDGxZlMzbFy3OoF1kE
+         JqqAeb99KOj1g1TSSWFHrMWARgjiyMyZqIZmm+j6xJhkB1zRgdRKSKk2m6cUBct8Ct
+         Mg74Sea1EsSlJTPUgHl591uX+mQivPtibs3mqHoizfM8dL80YHIuQ+G0GMmecQbrmW
+         RSmPedCthK18C9aMZfphEGfaBY5KmXhXgfIXt9eFhlM1OKgQ7l3pKMcor1gj/NnRpU
+         1k44GJwA/aJqg==
+Date:   Fri, 23 Sep 2022 11:53:24 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     allison.henderson@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 01/26] xfs: Add new name to attri/d
+Message-ID: <Yy4ApOh1RuUbC8gW@magnolia>
+References: <20220922054458.40826-1-allison.henderson@oracle.com>
+ <20220922054458.40826-2-allison.henderson@oracle.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <632ddeffd86ff_33d629490@dwillia2-xfh.jf.intel.com.notmuch>
-X-ClientProxiedBy: MN2PR01CA0045.prod.exchangelabs.com (2603:10b6:208:23f::14)
- To MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN2PR12MB4192:EE_|MN0PR12MB5882:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1795f795-587a-43de-ef23-08da9d8afbe3
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 3u2o33zHnWHdzRZW68SgZ2ovQJfjmQYQVa2fhqZf8B1fkluXJtV42A6KxHdVuVZ3QOKoOq5xgXnTB5T4mNDmmXz2XStM34ohEaNas0f8PwT+Ocm5soIBGFhyfIdaSD38Ssf4EbqwtiwKMZ48ork8VRqC7/Txi7cfN9p1THW+tBzFW6jz96r7S019coqsG0BpUU19DvxlzU6sOMUMCvw4UL2cTesfxpoTbmUwKVvJGAN0cDiiLAsJjGGtC/JPwG53UX2ZBpR4VkCWJaXCEFPVGasF9sc/m6mHWBYcZvJQhsZ1P3mbVFFVjYG9J5UK5veDyryWhzDe/wriDUW9VBZfmZcT3yLPdjfZ3AOzZJT9D8d62dPGXYySw90Xi+FjJm6hADfKs74jRL9hSMDPMUzHo/2akA6HY92E4AsISpKsmbQH5pcEQA+sOhW7Wk+BRl3BR6ohb9kXgWoVYKgTksN/MlYuAMWJim6aQARwzKtUxrDdUINS1+1HayHRG2sS4uEXQpuTzIrM4217qcYFNGofVrJhOKacbPPrqNE3ZaMw9sfqS6L2+lWN6UwKL5aHRDXT/nc/96RzXlPBmIbQT29Y8/bXQEypXjH63zsMIEDHbXeezs+0r6ve0U234CLYDMyETYSLN1yRgzptr4mKHZSg4oZbt0aYdxDS7Tc8k4FaaAyAU4KyolbXZipMSWFwK5b+lXb/8ZrdK7wI0zasAbcxOQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(39860400002)(376002)(346002)(396003)(366004)(136003)(451199015)(6506007)(8676002)(66476007)(66556008)(86362001)(66946007)(41300700001)(4326008)(8936002)(26005)(6486002)(6512007)(316002)(36756003)(6916009)(478600001)(186003)(2906002)(2616005)(38100700002)(83380400001)(7416002)(5660300002)(54906003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?jMc5S62bdSvBTmu+UcpvOjOCtFa+Co2TmNpWbugmv3EMS1q1Hy4SZwrH63v7?=
- =?us-ascii?Q?iqyVdvHWA+ifGUeneE+E+KVl9LNrmmi643OzZ2LIlMGAH9PlD588314MKs9i?=
- =?us-ascii?Q?aSOwQeLNsJ4Fq2TjjGMMQ5VZQs3YmfQM5xw5Mi4GODhTc1zGDsBpXrwTbn+N?=
- =?us-ascii?Q?1JsWNwXGOXME3fo9zw8xCzElOh0/KG/86os2M6ycVECxgB8C/jWpi18B8VeV?=
- =?us-ascii?Q?GmeQ9JY1QoglBfnoBwaUGpM4uzip5vXrhBg1YVH8FYJQ37S4o9GXyTMKSf+v?=
- =?us-ascii?Q?tfOhzlltecjo1V/4xr5SG7O/w6dElvvR46L0AKMCsqN96A9zP/9e5OXX2MaX?=
- =?us-ascii?Q?8yW0deBCIvzCInQ/RQ2fkTsBa2TVWECCyMabNorXTXLdxQYLO2Vvx7ggEasC?=
- =?us-ascii?Q?vRPHlKLjKsTxfgVZcDRjPFrd2U/TsjJwgvciJQUq0ugef1f3yJeLJjyE6jta?=
- =?us-ascii?Q?uUX6u4LO/mbZ27n9KoQFA0XvNPn3iCW7s71Eq4Ek4a1VTsZ366juLuZWc5Xx?=
- =?us-ascii?Q?IhrLHdHMxp5k2UG+Cy1w8tNBnMQlztHR4Kxihu7dR3XtKDCMFsDqc99sSjNP?=
- =?us-ascii?Q?/HM1H9vR42IgGYCmKw5Igb+IZ6RhoncUx4AwFxDHDBqrJGtbVn9UQnwMg92o?=
- =?us-ascii?Q?ygemDGFFgzhs5IfiRIlscUk7xJtChe+L6kT+c9cAUsZOhgBVEX4pI6+vWI1j?=
- =?us-ascii?Q?t4SXgHm/kt4JNUTJSCo6GVx7Z+iVYDXftdlzQsRKsZTH9ZmatWYYDW4P2bz/?=
- =?us-ascii?Q?dEyy+e4VKSUv6I1RcbY9Wqg3nrktqpXwMRcdM6Y77TX8D2DYpCQxV/Jy1Sbb?=
- =?us-ascii?Q?gJavGQUOpOmc8DmbJjTQXgSIjOD7cIJCk2YijeB4UvOwHpSHai8cqNcWEM/p?=
- =?us-ascii?Q?vkmjw11ORrpKb8D0q3Kp0z0kBKZzAVXZPt4Vc4+eE8VDZ4exORA47yedmk0f?=
- =?us-ascii?Q?/N9bpxGnpmQSU5/qYxyoNBbzjfJwuNaBA0CUSbPBjBlUYoHGV9LfOf8St0FK?=
- =?us-ascii?Q?gq9d3Qi8BtzlGeeCBavjGw+ax21j/Akixge9HxYV/7oUy0j1KjwxuI1Jh34v?=
- =?us-ascii?Q?gr14mSdvIvClB279p53MZmEFi0BUf9n2JvNJlnUGlycbm731ubORUJO/C2a/?=
- =?us-ascii?Q?YRzJffNebMk3EU4wkViPtCviKG79WeeSM/NV496yWcS3eKmKzcFlnbyHiHYE?=
- =?us-ascii?Q?e8xx0axXN0dU9hycKtuvVmJgSOTcgN9RV8+s7ZUvnFN0QGjTaHuYci2ePCXc?=
- =?us-ascii?Q?aDV41Vn1fN9ZfJHYIwmmyZKE8MadT/cOTs3b7njdv6gb4uIX4Vyn74ERnA88?=
- =?us-ascii?Q?dUOzBtPhr3Pb1fx9rh+gjUy01+TShYkKRdG67JYa/blRkmLzFm9hwiOS/kRr?=
- =?us-ascii?Q?NtRldqxcqK3RS/7bmwrWviox97vqlAgLQyIcSBfjakrabr3ZfHIMsYEkWq6V?=
- =?us-ascii?Q?xSdKvEerzDfv1ZxOXGFU/8In5ob0djcAfacPihw2Rge7N2JAgMA60O2HB+Qf?=
- =?us-ascii?Q?IMtVpiv7DFm8pBw8fCKExHnspUgYKpsgCzwZem+swCrVfijij0kOh9quBKgw?=
- =?us-ascii?Q?r7wWDKOfxK2rMlbmPFhqOlbMY6Luds7AYikGakOn?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1795f795-587a-43de-ef23-08da9d8afbe3
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2022 17:42:28.4663
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: jtC9cEeuoEPk9FBLNAdHbS0JZ6zaiUxuAslRrE/yX8AfYxdBJj13DP75dTKbdF1j
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB5882
+In-Reply-To: <20220922054458.40826-2-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 23, 2022 at 09:29:51AM -0700, Dan Williams wrote:
-> > > /**
-> > >  * pgmap_get_folio() - reference a folio in a live @pgmap by @pfn
-> > >  * @pgmap: live pgmap instance, caller ensures this does not race @pgmap death
-> > >  * @pfn: page frame number covered by @pgmap
-> > >  */
-> > > struct folio *pgmap_get_folio(struct dev_pagemap *pgmap,
-> > > unsigned long pfn)
-
-Maybe should be not be pfn but be 'offset from the first page of the
-pgmap' ? Then we don't need the xa_load stuff, since it cann't be
-wrong by definition.
-
-> > > {
-> > >         struct page *page;
-> > >         
-> > >         VM_WARN_ONCE(pgmap != xa_load(&pgmap_array, PHYS_PFN(phys)));
-> > >
-> > >         if (WARN_ONCE(percpu_ref_is_dying(&pgmap->ref)))
-> > >                 return NULL;
-> > 
-> > This shouldn't be a WARN?
+On Wed, Sep 21, 2022 at 10:44:33PM -0700, allison.henderson@oracle.com wrote:
+> From: Allison Henderson <allison.henderson@oracle.com>
 > 
-> It's a bug if someone calls this after killing the pgmap. I.e.  the
-> expectation is that the caller is synchronzing this. The only reason
-> this isn't a VM_WARN_ONCE is because the sanity check is cheap, but I do
-> not expect it to fire on anything but a development kernel.
-
-OK, that makes sense
-
-But shouldn't this get the pgmap refcount here? The reason we started
-talking about this was to make all the pgmap logic self contained so
-that the pgmap doesn't pass its own destroy until all the all the
-page_free()'s have been done.
-
-> > > This does not create compound folios, that needs to be coordinated with
-> > > the caller and likely needs an explicit
-> > 
-> > Does it? What situations do you think the caller needs to coordinate
-> > the folio size? Caller should call the function for each logical unit
-> > of storage it wants to allocate from the pgmap..
+> This patch adds two new fields to the atti/d.  They are nname and
+> nnamelen.  This will be used for parent pointer updates since a
+> rename operation may cause the parent pointer to update both the
+> name and value.  So we need to carry both the new name as well as
+> the target name in the attri/d.
 > 
-> The problem for fsdax is that it needs to gather all the PTEs, hold a
-> lock to synchronize against events that would shatter a huge page, and
-> then build up the compound folio metadata before inserting the PMD. 
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c       |  12 +++-
+>  fs/xfs/libxfs/xfs_attr.h       |   4 +-
+>  fs/xfs/libxfs/xfs_da_btree.h   |   2 +
+>  fs/xfs/libxfs/xfs_log_format.h |   6 +-
+>  fs/xfs/xfs_attr_item.c         | 108 ++++++++++++++++++++++++++++-----
+>  fs/xfs/xfs_attr_item.h         |   1 +
+>  6 files changed, 113 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index e28d93d232de..b1dbed7655e8 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -423,6 +423,12 @@ xfs_attr_complete_op(
+>  	args->op_flags &= ~XFS_DA_OP_REPLACE;
+>  	if (do_replace) {
+>  		args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
+> +		if (args->new_namelen > 0) {
+> +			args->name = args->new_name;
+> +			args->namelen = args->new_namelen;
 
-Er, at this point we are just talking about acquiring virgin pages
-nobody else is using, not inserting things. There is no possibility of
-conurrent shattering because, by definition, nothing else can
-reference these struct pages at this instant.
+/me wonders, do we need to null out new_name and new_namelen here?
 
-Also, the caller must already be serializating pgmap_get_folio()
-against concurrent calls on the same pfn (since it is an error to call
-pgmap_get_folio() on an non-free pfn)
+I /think/ the answer is that the current codebase doesn't care since
+we're now doing XFS_DA_OP_ADDNAME, and addname looks only at
+name/namelen and has no idea that new_name/new_namelen even exist?
 
-So, I would expect the caller must already have all the necessary
-locking to accept maximally sized folios.
+> +			args->hashval = xfs_da_hashname(args->name,
+> +							args->namelen);
+> +		}
+>  		return replace_state;
+>  	}
+>  	return XFS_DAS_DONE;
+> @@ -922,9 +928,13 @@ xfs_attr_defer_replace(
+>  	struct xfs_da_args	*args)
+>  {
+>  	struct xfs_attr_intent	*new;
+> +	int			op_flag;
+>  	int			error = 0;
+>  
+> -	error = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_REPLACE, &new);
+> +	op_flag = args->new_namelen == 0 ? XFS_ATTRI_OP_FLAGS_REPLACE :
+> +		  XFS_ATTRI_OP_FLAGS_NVREPLACE;
+> +
+> +	error = xfs_attr_intent_init(args, op_flag, &new);
+>  	if (error)
+>  		return error;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 81be9b3e4004..3e81f3f48560 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -510,8 +510,8 @@ struct xfs_attr_intent {
+>  	struct xfs_da_args		*xattri_da_args;
+>  
+>  	/*
+> -	 * Shared buffer containing the attr name and value so that the logging
+> -	 * code can share large memory buffers between log items.
+> +	 * Shared buffer containing the attr name, new name, and value so that
+> +	 * the logging code can share large memory buffers between log items.
+>  	 */
+>  	struct xfs_attri_log_nameval	*xattri_nameval;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+> index ffa3df5b2893..a4b29827603f 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.h
+> +++ b/fs/xfs/libxfs/xfs_da_btree.h
+> @@ -55,7 +55,9 @@ enum xfs_dacmp {
+>  typedef struct xfs_da_args {
+>  	struct xfs_da_geometry *geo;	/* da block geometry */
+>  	const uint8_t		*name;		/* string (maybe not NULL terminated) */
+> +	const uint8_t	*new_name;	/* new attr name */
+>  	int		namelen;	/* length of string (maybe no NULL) */
+> +	int		new_namelen;	/* new attr name len */
+>  	uint8_t		filetype;	/* filetype of inode for directories */
+>  	void		*value;		/* set of bytes (maybe contain NULLs) */
+>  	int		valuelen;	/* length of value */
 
-eg if it has some reason to punch a hole in the contiguous range
-(shatter the folio) it must *already* serialize against
-pgmap_get_folio(), since something like punching a hole must know with
-certainty if any struct pages are refcount != 0 or not, and must not
-race with something trying to set their refcount to 1.
+/me starts to wonder if the two name len fields and the value len field
+ought to be u8/u16 to conserve space in xfs_da_args, but that's an
+optimization question for after this patchset.
 
-Jason
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index b351b9dc6561..62f40e6353c2 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -117,7 +117,8 @@ struct xfs_unmount_log_format {
+>  #define XLOG_REG_TYPE_ATTRD_FORMAT	28
+>  #define XLOG_REG_TYPE_ATTR_NAME	29
+>  #define XLOG_REG_TYPE_ATTR_VALUE	30
+> -#define XLOG_REG_TYPE_MAX		30
+> +#define XLOG_REG_TYPE_ATTR_NNAME	31
+> +#define XLOG_REG_TYPE_MAX		31
+>  
+>  
+>  /*
+> @@ -909,6 +910,7 @@ struct xfs_icreate_log {
+>  #define XFS_ATTRI_OP_FLAGS_SET		1	/* Set the attribute */
+>  #define XFS_ATTRI_OP_FLAGS_REMOVE	2	/* Remove the attribute */
+>  #define XFS_ATTRI_OP_FLAGS_REPLACE	3	/* Replace the attribute */
+> +#define XFS_ATTRI_OP_FLAGS_NVREPLACE	4	/* Replace attr name and val */
+>  #define XFS_ATTRI_OP_FLAGS_TYPE_MASK	0xFF	/* Flags type mask */
+>  
+>  /*
+> @@ -926,7 +928,7 @@ struct xfs_icreate_log {
+>  struct xfs_attri_log_format {
+>  	uint16_t	alfi_type;	/* attri log item type */
+>  	uint16_t	alfi_size;	/* size of this item */
+> -	uint32_t	__pad;		/* pad to 64 bit aligned */
+> +	uint32_t	alfi_nname_len;	/* attr new name length */
+>  	uint64_t	alfi_id;	/* attri identifier */
+>  	uint64_t	alfi_ino;	/* the inode for this attr operation */
+>  	uint32_t	alfi_op_flags;	/* marks the op as a set or remove */
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index cf5ce607dc05..9414ee94829c 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -75,6 +75,8 @@ static inline struct xfs_attri_log_nameval *
+>  xfs_attri_log_nameval_alloc(
+>  	const void			*name,
+>  	unsigned int			name_len,
+> +	const void			*nname,
+> +	unsigned int			nname_len,
+>  	const void			*value,
+>  	unsigned int			value_len)
+>  {
+> @@ -85,15 +87,25 @@ xfs_attri_log_nameval_alloc(
+>  	 * this. But kvmalloc() utterly sucks, so we use our own version.
+>  	 */
+>  	nv = xlog_kvmalloc(sizeof(struct xfs_attri_log_nameval) +
+> -					name_len + value_len);
+> +					name_len + nname_len + value_len);
+>  
+>  	nv->name.i_addr = nv + 1;
+>  	nv->name.i_len = name_len;
+>  	nv->name.i_type = XLOG_REG_TYPE_ATTR_NAME;
+>  	memcpy(nv->name.i_addr, name, name_len);
+>  
+> +	if (nname_len) {
+> +		nv->nname.i_addr = nv->name.i_addr + name_len;
+> +		nv->nname.i_len = nname_len;
+> +		memcpy(nv->nname.i_addr, nname, nname_len);
+> +	} else {
+> +		nv->nname.i_addr = NULL;
+> +		nv->nname.i_len = 0;
+> +	}
+> +	nv->nname.i_type = XLOG_REG_TYPE_ATTR_NNAME;
+> +
+>  	if (value_len) {
+> -		nv->value.i_addr = nv->name.i_addr + name_len;
+> +		nv->value.i_addr = nv->name.i_addr + nname_len + name_len;
+>  		nv->value.i_len = value_len;
+>  		memcpy(nv->value.i_addr, value, value_len);
+>  	} else {
+> @@ -147,11 +159,15 @@ xfs_attri_item_size(
+>  	*nbytes += sizeof(struct xfs_attri_log_format) +
+>  			xlog_calc_iovec_len(nv->name.i_len);
+>  
+> -	if (!nv->value.i_len)
+> -		return;
+> +	if (nv->nname.i_len) {
+> +		*nvecs += 1;
+> +		*nbytes += xlog_calc_iovec_len(nv->nname.i_len);
+> +	}
+>  
+> -	*nvecs += 1;
+> -	*nbytes += xlog_calc_iovec_len(nv->value.i_len);
+> +	if (nv->value.i_len) {
+> +		*nvecs += 1;
+> +		*nbytes += xlog_calc_iovec_len(nv->value.i_len);
+> +	}
+>  }
+>  
+>  /*
+> @@ -181,6 +197,9 @@ xfs_attri_item_format(
+>  	ASSERT(nv->name.i_len > 0);
+>  	attrip->attri_format.alfi_size++;
+>  
+> +	if (nv->nname.i_len > 0)
+> +		attrip->attri_format.alfi_size++;
+> +
+>  	if (nv->value.i_len > 0)
+>  		attrip->attri_format.alfi_size++;
+>  
+> @@ -188,6 +207,10 @@ xfs_attri_item_format(
+>  			&attrip->attri_format,
+>  			sizeof(struct xfs_attri_log_format));
+>  	xlog_copy_from_iovec(lv, &vecp, &nv->name);
+> +
+> +	if (nv->nname.i_len > 0)
+> +		xlog_copy_from_iovec(lv, &vecp, &nv->nname);
+> +
+>  	if (nv->value.i_len > 0)
+>  		xlog_copy_from_iovec(lv, &vecp, &nv->value);
+>  }
+> @@ -396,6 +419,7 @@ xfs_attr_log_item(
+>  	attrp->alfi_op_flags = attr->xattri_op_flags;
+>  	attrp->alfi_value_len = attr->xattri_nameval->value.i_len;
+>  	attrp->alfi_name_len = attr->xattri_nameval->name.i_len;
+> +	attrp->alfi_nname_len = attr->xattri_nameval->nname.i_len;
+>  	ASSERT(!(attr->xattri_da_args->attr_filter & ~XFS_ATTRI_FILTER_MASK));
+>  	attrp->alfi_attr_filter = attr->xattri_da_args->attr_filter;
+>  }
+> @@ -437,7 +461,8 @@ xfs_attr_create_intent(
+>  		 * deferred work state structure.
+>  		 */
+>  		attr->xattri_nameval = xfs_attri_log_nameval_alloc(args->name,
+> -				args->namelen, args->value, args->valuelen);
+> +				args->namelen, args->new_name,
+> +				args->new_namelen, args->value, args->valuelen);
+>  	}
+>  
+>  	attrip = xfs_attri_init(mp, attr->xattri_nameval);
+> @@ -525,9 +550,6 @@ xfs_attri_validate(
+>  	unsigned int			op = attrp->alfi_op_flags &
+>  					     XFS_ATTRI_OP_FLAGS_TYPE_MASK;
+>  
+> -	if (attrp->__pad != 0)
+> -		return false;
+
+I don't think it's correct to remove this check entirely -- NVREPLACE is
+the only operation that uses nname/nname_len, right?  Shouldn't this be:
+
+	if (op_flags != XFS_ATTRI_OP_FLAGS_NVREPLACE &&
+	    attrp->alfi_nname_len != 0)
+		return false;
+
+> -
+>  	if (attrp->alfi_op_flags & ~XFS_ATTRI_OP_FLAGS_TYPE_MASK)
+>  		return false;
+>  
+> @@ -539,6 +561,7 @@ xfs_attri_validate(
+>  	case XFS_ATTRI_OP_FLAGS_SET:
+>  	case XFS_ATTRI_OP_FLAGS_REPLACE:
+>  	case XFS_ATTRI_OP_FLAGS_REMOVE:
+> +	case XFS_ATTRI_OP_FLAGS_NVREPLACE:
+>  		break;
+>  	default:
+>  		return false;
+> @@ -548,9 +571,14 @@ xfs_attri_validate(
+>  		return false;
+>  
+>  	if ((attrp->alfi_name_len > XATTR_NAME_MAX) ||
+> +	    (attrp->alfi_nname_len > XATTR_NAME_MAX) ||
+>  	    (attrp->alfi_name_len == 0))
+>  		return false;
+>  
+> +	if (op == XFS_ATTRI_OP_FLAGS_REMOVE &&
+> +	    attrp->alfi_value_len != 0)
+> +		return false;
+
+This change fixes a validation flaw in existing code, right?
+
+If so, it ought to be a separate patc... you know what?  26 patches is
+enough, I'll let this one slide since LARP is still experimental.
+
+--D
+
+> +
+>  	return xfs_verify_ino(mp, attrp->alfi_ino);
+>  }
+>  
+> @@ -611,6 +639,8 @@ xfs_attri_item_recover(
+>  	args->whichfork = XFS_ATTR_FORK;
+>  	args->name = nv->name.i_addr;
+>  	args->namelen = nv->name.i_len;
+> +	args->new_name = nv->nname.i_addr;
+> +	args->new_namelen = nv->nname.i_len;
+>  	args->hashval = xfs_da_hashname(args->name, args->namelen);
+>  	args->attr_filter = attrp->alfi_attr_filter & XFS_ATTRI_FILTER_MASK;
+>  	args->op_flags = XFS_DA_OP_RECOVERY | XFS_DA_OP_OKNOENT |
+> @@ -621,6 +651,7 @@ xfs_attri_item_recover(
+>  	switch (attr->xattri_op_flags) {
+>  	case XFS_ATTRI_OP_FLAGS_SET:
+>  	case XFS_ATTRI_OP_FLAGS_REPLACE:
+> +	case XFS_ATTRI_OP_FLAGS_NVREPLACE:
+>  		args->value = nv->value.i_addr;
+>  		args->valuelen = nv->value.i_len;
+>  		args->total = xfs_attr_calc_size(args, &local);
+> @@ -710,6 +741,7 @@ xfs_attri_item_relog(
+>  	new_attrp->alfi_op_flags = old_attrp->alfi_op_flags;
+>  	new_attrp->alfi_value_len = old_attrp->alfi_value_len;
+>  	new_attrp->alfi_name_len = old_attrp->alfi_name_len;
+> +	new_attrp->alfi_nname_len = old_attrp->alfi_nname_len;
+>  	new_attrp->alfi_attr_filter = old_attrp->alfi_attr_filter;
+>  
+>  	xfs_trans_add_item(tp, &new_attrip->attri_item);
+> @@ -731,10 +763,41 @@ xlog_recover_attri_commit_pass2(
+>  	struct xfs_attri_log_nameval	*nv;
+>  	const void			*attr_value = NULL;
+>  	const void			*attr_name;
+> -	int                             error;
+> +	const void			*attr_nname = NULL;
+> +	int				i = 0;
+> +	int                             op, error = 0;
+>  
+> -	attri_formatp = item->ri_buf[0].i_addr;
+> -	attr_name = item->ri_buf[1].i_addr;
+> +	if (item->ri_total == 0) {
+> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+> +		return -EFSCORRUPTED;
+> +	}
+> +
+> +	attri_formatp = item->ri_buf[i].i_addr;
+> +	i++;
+> +
+> +	op = attri_formatp->alfi_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
+> +	switch (op) {
+> +	case XFS_ATTRI_OP_FLAGS_SET:
+> +	case XFS_ATTRI_OP_FLAGS_REPLACE:
+> +		if (item->ri_total != 3)
+> +			error = -EFSCORRUPTED;
+> +		break;
+> +	case XFS_ATTRI_OP_FLAGS_REMOVE:
+> +		if (item->ri_total != 2)
+> +			error = -EFSCORRUPTED;
+> +		break;
+> +	case XFS_ATTRI_OP_FLAGS_NVREPLACE:
+> +		if (item->ri_total != 4)
+> +			error = -EFSCORRUPTED;
+> +		break;
+> +	default:
+> +		error = -EFSCORRUPTED;
+> +	}
+> +
+> +	if (error) {
+> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+> +		return error;
+> +	}
+>  
+>  	/* Validate xfs_attri_log_format before the large memory allocation */
+>  	if (!xfs_attri_validate(mp, attri_formatp)) {
+> @@ -742,13 +805,27 @@ xlog_recover_attri_commit_pass2(
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> +	attr_name = item->ri_buf[i].i_addr;
+> +	i++;
+> +
+>  	if (!xfs_attr_namecheck(attr_name, attri_formatp->alfi_name_len)) {
+>  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> +	if (attri_formatp->alfi_nname_len) {
+> +		attr_nname = item->ri_buf[i].i_addr;
+> +		i++;
+> +
+> +		if (!xfs_attr_namecheck(attr_nname,
+> +				attri_formatp->alfi_nname_len)) {
+> +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+> +			return -EFSCORRUPTED;
+> +		}
+> +	}
+> +
+>  	if (attri_formatp->alfi_value_len)
+> -		attr_value = item->ri_buf[2].i_addr;
+> +		attr_value = item->ri_buf[i].i_addr;
+>  
+>  	/*
+>  	 * Memory alloc failure will cause replay to abort.  We attach the
+> @@ -756,7 +833,8 @@ xlog_recover_attri_commit_pass2(
+>  	 * reference.
+>  	 */
+>  	nv = xfs_attri_log_nameval_alloc(attr_name,
+> -			attri_formatp->alfi_name_len, attr_value,
+> +			attri_formatp->alfi_name_len, attr_nname,
+> +			attri_formatp->alfi_nname_len, attr_value,
+>  			attri_formatp->alfi_value_len);
+>  
+>  	attrip = xfs_attri_init(mp, nv);
+> diff --git a/fs/xfs/xfs_attr_item.h b/fs/xfs/xfs_attr_item.h
+> index 3280a7930287..24d4968dd6cc 100644
+> --- a/fs/xfs/xfs_attr_item.h
+> +++ b/fs/xfs/xfs_attr_item.h
+> @@ -13,6 +13,7 @@ struct kmem_zone;
+>  
+>  struct xfs_attri_log_nameval {
+>  	struct xfs_log_iovec	name;
+> +	struct xfs_log_iovec	nname;
+>  	struct xfs_log_iovec	value;
+>  	refcount_t		refcount;
+>  
+> -- 
+> 2.25.1
+> 
