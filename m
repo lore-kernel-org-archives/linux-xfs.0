@@ -2,137 +2,156 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6116BC04A95
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 19:04:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B89DDC04A95
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 19:21:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232441AbiIWTEw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Sep 2022 15:04:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46692 "EHLO
+        id S232628AbiIWTVi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Sep 2022 15:21:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231255AbiIWTEn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 15:04:43 -0400
+        with ESMTP id S232301AbiIWTVf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 15:21:35 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA54C15FFA
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 12:04:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B116EBD69
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 12:21:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A43E461251
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 19:04:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7F77C433D6;
-        Fri, 23 Sep 2022 19:04:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 95E9161387
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 19:21:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2CFFC433C1;
+        Fri, 23 Sep 2022 19:21:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663959877;
-        bh=6WoaECrHgc2b/R2BytfUofXFIXHWj8oysvtmP726YyU=;
+        s=k20201202; t=1663960893;
+        bh=wsGWfb0utMYkk0C6MY2DOwAj7ko9EgtEHg/WM4Udeac=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gWc/BywJvmXifQ7DR/e0HJpOSFsQq9VRdJp0wdgj2Yu1mui3iXqWrputBrNxAQHv+
-         lsbur4de8bvAWIKp7IusnTLUfgG2fZPc7QkTKoibhuAuh2XA35DKWtjolGgkbkWASA
-         EB4FiwpWP+iZF3646u5P4IUzvKwKkklvA9Ewd888gxCXsPLINesSml4EQpIgWHu5yj
-         YBcQLuMQvt2QCsFKgnsXYyIPzQE8oWVhQlRzW6FbeflS1dzx0CR1XyRlQwK2bHPEnb
-         MP6tG6EWFW4qEFfBDdcZrBq8tDRZFPqujPvOAWyz/IYFiLnpfAvdvX3T7A+Bg43Y7j
-         N1IX0T2q/1OWw==
-Date:   Fri, 23 Sep 2022 12:04:37 -0700
+        b=Bl/WKbuG7Nxer+Nhihls2i1PKmWvWm//JDnhzgYuHHGIyuhtnD5KXkT3xCjhL5TF4
+         ONicGKg/n4Tz42vGpw/jE3Z3UMW+TKDDjDKq6Lyl8XyxQLrc6cwmwQdma/iVHOkdmo
+         ok0wR1VP4pf0mI/o71+1MvPxaLxM2mWxgp5pLd/5emRVmTdfm1UPrv6A4StSkM1ta/
+         VKJhSPLVLOCzQsbEmFduFm4CCNqCsvPBDztrYzYK8nsu+yMyNfLWsQqWF51OLboZdc
+         1kg8C2Pazr3pCdsbW5jzb7GgbUyBbAyYbJxUSFoVlVvqGRqGIZouH2PTWuNgUp+aVc
+         LR+Oae8C84x8g==
+Date:   Fri, 23 Sep 2022 12:21:33 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     allison.henderson@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 04/26] xfs: Hold inode locks in xfs_trans_alloc_dir
-Message-ID: <Yy4DRQ8MDJBmuntO@magnolia>
+Subject: Re: [PATCH v3 05/26] xfs: Hold inode locks in xfs_rename
+Message-ID: <Yy4HPUJR7Wathz+A@magnolia>
 References: <20220922054458.40826-1-allison.henderson@oracle.com>
- <20220922054458.40826-5-allison.henderson@oracle.com>
+ <20220922054458.40826-6-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220922054458.40826-5-allison.henderson@oracle.com>
+In-Reply-To: <20220922054458.40826-6-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 21, 2022 at 10:44:36PM -0700, allison.henderson@oracle.com wrote:
+On Wed, Sep 21, 2022 at 10:44:37PM -0700, allison.henderson@oracle.com wrote:
 > From: Allison Henderson <allison.henderson@oracle.com>
 > 
-> Modify xfs_trans_alloc_dir to hold locks after return.  Caller will be
-> responsible for manual unlock.  We will need this later to hold locks
-> across parent pointer operations
+> Modify xfs_rename to hold all inode locks across a rename operation
+> We will need this later when we add parent pointers
 > 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/xfs_inode.c | 35 ++++++++++++++++++++++-------------
+>  1 file changed, 22 insertions(+), 13 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 9a3174a8f895..4bfa4a1579f0 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2837,18 +2837,16 @@ xfs_rename(
+>  	xfs_lock_inodes(inodes, num_inodes, XFS_ILOCK_EXCL);
+>  
+>  	/*
+> -	 * Join all the inodes to the transaction. From this point on,
+> -	 * we can rely on either trans_commit or trans_cancel to unlock
+> -	 * them.
+> +	 * Join all the inodes to the transaction.
+>  	 */
+> -	xfs_trans_ijoin(tp, src_dp, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, src_dp, 0);
+>  	if (new_parent)
+> -		xfs_trans_ijoin(tp, target_dp, XFS_ILOCK_EXCL);
+> -	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
+> +		xfs_trans_ijoin(tp, target_dp, 0);
+> +	xfs_trans_ijoin(tp, src_ip, 0);
+>  	if (target_ip)
+> -		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
+> +		xfs_trans_ijoin(tp, target_ip, 0);
+>  	if (wip)
+> -		xfs_trans_ijoin(tp, wip, XFS_ILOCK_EXCL);
+> +		xfs_trans_ijoin(tp, wip, 0);
+>  
+>  	/*
+>  	 * If we are using project inheritance, we only allow renames
+> @@ -2862,10 +2860,12 @@ xfs_rename(
+>  	}
+>  
+>  	/* RENAME_EXCHANGE is unique from here on. */
+> -	if (flags & RENAME_EXCHANGE)
+> -		return xfs_cross_rename(tp, src_dp, src_name, src_ip,
+> +	if (flags & RENAME_EXCHANGE) {
+> +		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
+>  					target_dp, target_name, target_ip,
+>  					spaceres);
+> +		goto out_unlock;
+> +	}
+>  
+>  	/*
+>  	 * Try to reserve quota to handle an expansion of the target directory.
+> @@ -3090,12 +3090,21 @@ xfs_rename(
+>  		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
+>  
+>  	error = xfs_finish_rename(tp);
+> -	if (wip)
+> -		xfs_irele(wip);
+> -	return error;
+> +
+> +	goto out_unlock;
+>  
+>  out_trans_cancel:
+>  	xfs_trans_cancel(tp);
+> +out_unlock:
+> +	/* Unlock inodes in reverse order */
+> +	for (i = num_inodes - 1; i >= 0; i--) {
+> +		if (inodes[i])
+> +			xfs_iunlock(inodes[i], XFS_ILOCK_EXCL);
+> +
+> +		/* Skip duplicate inodes if src and target dps are the same */
+> +		if (i && (inodes[i] == inodes[i - 1]))
+> +			i--;
+> +	}
 
-Looks ok,
+Could you hoist this to a static inline xfs_iunlock_after_rename
+function that is adjacent to xfs_sort_for_rename, please?  It's easier
+to verify that it does the right thing w.r.t. multiple array references
+pointing to the same incore inode when the two array management
+functions are right next to each other.
+
+static inline void
+xfs_iunlock_after_rename(
+	struct xfs_inode	**i_tab,
+	int			num_inodes)
+{
+	for (i = num_inodes - 1; i >= 0; i--) {
+		/* Skip duplicate inodes if src and target dps are the same */
+		if (!i_tab[i] || (i > 0 && i_tab[i] == i_tab[i - 1]))
+			continue;
+		xfs_iunlock(i_tab[i], XFS_ILOCK_EXCL);
+	}
+}
+
+With that cleaned up,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/xfs/xfs_inode.c | 14 ++++++++++++--
->  fs/xfs/xfs_trans.c |  6 ++++--
->  2 files changed, 16 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f21f625b428e..9a3174a8f895 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1277,10 +1277,15 @@ xfs_link(
->  	if (xfs_has_wsync(mp) || xfs_has_dirsync(mp))
->  		xfs_trans_set_sync(tp);
->  
-> -	return xfs_trans_commit(tp);
-> +	error = xfs_trans_commit(tp);
-> +	xfs_iunlock(tdp, XFS_ILOCK_EXCL);
-> +	xfs_iunlock(sip, XFS_ILOCK_EXCL);
-> +	return error;
->  
->   error_return:
->  	xfs_trans_cancel(tp);
-> +	xfs_iunlock(tdp, XFS_ILOCK_EXCL);
-> +	xfs_iunlock(sip, XFS_ILOCK_EXCL);
->   std_return:
->  	if (error == -ENOSPC && nospace_error)
->  		error = nospace_error;
-> @@ -2516,15 +2521,20 @@ xfs_remove(
->  
->  	error = xfs_trans_commit(tp);
->  	if (error)
-> -		goto std_return;
-> +		goto out_unlock;
->  
->  	if (is_dir && xfs_inode_is_filestream(ip))
->  		xfs_filestream_deassociate(ip);
->  
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	xfs_iunlock(dp, XFS_ILOCK_EXCL);
->  	return 0;
->  
->   out_trans_cancel:
->  	xfs_trans_cancel(tp);
-> + out_unlock:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	xfs_iunlock(dp, XFS_ILOCK_EXCL);
->   std_return:
->  	return error;
->  }
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 7bd16fbff534..ac98ff416e54 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -1356,6 +1356,8 @@ xfs_trans_alloc_ichange(
->   * The caller must ensure that the on-disk dquots attached to this inode have
->   * already been allocated and initialized.  The ILOCKs will be dropped when the
->   * transaction is committed or cancelled.
-> + *
-> + * Caller is responsible for unlocking the inodes manually upon return
->   */
->  int
->  xfs_trans_alloc_dir(
-> @@ -1386,8 +1388,8 @@ xfs_trans_alloc_dir(
->  
->  	xfs_lock_two_inodes(dp, XFS_ILOCK_EXCL, ip, XFS_ILOCK_EXCL);
->  
-> -	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
-> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> +	xfs_trans_ijoin(tp, dp, 0);
-> +	xfs_trans_ijoin(tp, ip, 0);
->  
->  	error = xfs_qm_dqattach_locked(dp, false);
->  	if (error) {
+>  out_release_wip:
+>  	if (wip)
+>  		xfs_irele(wip);
 > -- 
 > 2.25.1
 > 
