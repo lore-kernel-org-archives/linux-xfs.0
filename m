@@ -2,156 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B89DDC04A95
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 19:21:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 371C7C04A95
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 19:23:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232628AbiIWTVi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Sep 2022 15:21:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40054 "EHLO
+        id S232584AbiIWTXd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Sep 2022 15:23:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232301AbiIWTVf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 15:21:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B116EBD69
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 12:21:35 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 95E9161387
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 19:21:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2CFFC433C1;
-        Fri, 23 Sep 2022 19:21:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663960893;
-        bh=wsGWfb0utMYkk0C6MY2DOwAj7ko9EgtEHg/WM4Udeac=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Bl/WKbuG7Nxer+Nhihls2i1PKmWvWm//JDnhzgYuHHGIyuhtnD5KXkT3xCjhL5TF4
-         ONicGKg/n4Tz42vGpw/jE3Z3UMW+TKDDjDKq6Lyl8XyxQLrc6cwmwQdma/iVHOkdmo
-         ok0wR1VP4pf0mI/o71+1MvPxaLxM2mWxgp5pLd/5emRVmTdfm1UPrv6A4StSkM1ta/
-         VKJhSPLVLOCzQsbEmFduFm4CCNqCsvPBDztrYzYK8nsu+yMyNfLWsQqWF51OLboZdc
-         1kg8C2Pazr3pCdsbW5jzb7GgbUyBbAyYbJxUSFoVlVvqGRqGIZouH2PTWuNgUp+aVc
-         LR+Oae8C84x8g==
-Date:   Fri, 23 Sep 2022 12:21:33 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     allison.henderson@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 05/26] xfs: Hold inode locks in xfs_rename
-Message-ID: <Yy4HPUJR7Wathz+A@magnolia>
-References: <20220922054458.40826-1-allison.henderson@oracle.com>
- <20220922054458.40826-6-allison.henderson@oracle.com>
-MIME-Version: 1.0
+        with ESMTP id S231547AbiIWTXc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 15:23:32 -0400
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2057.outbound.protection.outlook.com [40.107.223.57])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B41BF12CCAC;
+        Fri, 23 Sep 2022 12:23:30 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=gH39KCFqPHQGyx+47OJ28XvIj7B9kqvG/MgEo0fBkYSURfQDxSpVGYRhAVEApBggZZodet0nv9g/0a4s9B2GhZC36tYrsTBiOt1LJeZZOFj252gkE9CUXBi5aR+5ipeAK9IRwS1TRvlaFt/XhUzRM5J3PSNgGLUvCgeksddJwssjVBPMULmglZTM/UwMdhLM4h683GbpLwWDTJSYVxL5nYFjmptkan3eVKxk9EX+GE2lZFMH4KPwiMHnhYZkyUAFWNm3FoM+9IGA/pr8wuZmit0Ff9AmEvePiXQgoLk4CW9F2vtK+0xcTZ9U6jKu50+UePjFBEg7kSH612dWOrGSzQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=nVK/Z5zRuhte9hNy+yqLj5FhGmtu3n4t2TwOt95DtTY=;
+ b=EyVC2UG+BWjx60eIRV75NavEEm4OiW4AoDQ6S8VaU2JK32XeDm+1tYI4cJVXigFHDcUqUwfRVS18Gwc6ErY4UIHgVbDHBzyK5cG/1CJf/mJ/sxJPPYiLl1rMESWFvDR+xjlnXoIqHBN9ymiatB0kfDdHo20BQAgXBr115TG77ugGLLh+1b2l3O3r8sB4kZC7aGqfWtQZldkIufipPSIozDlIyHW3oS5T/bxnFX4qYAijsIgpvaM+DNS+YD56WtVQJCa4+QcRcjdp5DT+/qSlyaUKORt9QKkz6wcrk3yxMs6HVElHQ8n6EDKGXGlHcsAR3ce/SZmxm9oWI65ssUwsCQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nVK/Z5zRuhte9hNy+yqLj5FhGmtu3n4t2TwOt95DtTY=;
+ b=RopMQvwM8H9t/8QexA9+QPnA1AEnudFMwmL1PBYQ+CiZOV2DIiyzuTfrIPHa4PgGJiLMWNkRjJI67c91521ZqRgiTwdzMLxQh0pYIPF6iZvqBrBzvRf2pK6+tuLv79egP4AoT0TpZSaVsTleY3E8AC+Lxc+lQ4Wf4TvmrBo60BjFADymT6Qzzm+xKbUlVweLPIWVkXJdzRWlt4sYN71MqP6RsM3l0Zek6FmjFjankt322TbzvcGZv2sF0NAfTpc5O+qZSeAeFyReCBpdTJ5YzPiXgiOqmA413jUVs6sIxc8l2eja/iQNmMyiOAxqveqDeM2Kq0Y8sLu61hyts9T6lw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
+ by PH8PR12MB7446.namprd12.prod.outlook.com (2603:10b6:510:216::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.18; Fri, 23 Sep
+ 2022 19:23:28 +0000
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::462:7fe:f04f:d0d5]) by MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::462:7fe:f04f:d0d5%7]) with mapi id 15.20.5654.020; Fri, 23 Sep 2022
+ 19:23:27 +0000
+Date:   Fri, 23 Sep 2022 16:23:26 -0300
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     akpm@linux-foundation.org, Matthew Wilcox <willy@infradead.org>,
+        Jan Kara <jack@suse.cz>, "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        John Hubbard <jhubbard@nvidia.com>,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2 10/18] fsdax: Manage pgmap references at entry
+ insertion and deletion
+Message-ID: <Yy4Hrve6Ncg6YsGd@nvidia.com>
+References: <YyuLLsindwo0prz4@nvidia.com>
+ <632ba8eaa5aea_349629422@dwillia2-xfh.jf.intel.com.notmuch>
+ <YyurdXnW7SyEndHV@nvidia.com>
+ <632bc5c4363e9_349629486@dwillia2-xfh.jf.intel.com.notmuch>
+ <YyyhrTxFJZlMGYY6@nvidia.com>
+ <632cd9a2a023_3496294da@dwillia2-xfh.jf.intel.com.notmuch>
+ <Yy2ziac3GdHrpxuh@nvidia.com>
+ <632ddeffd86ff_33d629490@dwillia2-xfh.jf.intel.com.notmuch>
+ <Yy3wA7/bkza7NO1J@nvidia.com>
+ <632e031958740_33d629428@dwillia2-xfh.jf.intel.com.notmuch>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220922054458.40826-6-allison.henderson@oracle.com>
+In-Reply-To: <632e031958740_33d629428@dwillia2-xfh.jf.intel.com.notmuch>
+X-ClientProxiedBy: BLAPR03CA0082.namprd03.prod.outlook.com
+ (2603:10b6:208:329::27) To MN2PR12MB4192.namprd12.prod.outlook.com
+ (2603:10b6:208:1d5::15)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN2PR12MB4192:EE_|PH8PR12MB7446:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7892aff8-f4f8-494f-6ede-08da9d991796
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: PR0tPDsJWqS/oNPRF8nR7KfY8KV87gWRKEpNZjgrVU71o3o0zKiVBQ2y+WsMq+7QadazgoAg2ItmG4jF1oNIb4ArebxiSTgSJOFEmk4k6g1Yub0sY2kr+MhSS2NZjRpRitLWFYswoQZ+S5QzM1WQUU7HrSqP+W1fGse+h+IGUIO45WAR1tM4Xa0QkYxsMtku+OM1tYxFqr4vBWBRKqjM5V2IF7+W81uRvcST79SZu5U70L6CojB/KlfJjoJk9d9IYooBfiYN1H9o/TukC6eOxDsvN2uQ8QIXsJ3D2ou+MIHEbGSucba5qncHzBADPX9B62sZQshXEeQbRl0ZNUnVfqAOMcCkd8rmxmXanaLV2LaLJr/QQBoL1Z2jwYAz8w5AoGOXmiIPUrB8ruGVD6qoxzSLu9iYmozio9oyYm0DBxfbXZeFe6afZ1YqhT4i/Rji3dga+zo1UwneXxNkbMoaoCbF47MEo06VJXsDOXKyYl/heM9vPIyagSoZ5r6Cd949Nl/kKEmA09F0RlYTzvyP9xX6SD94a61woRBkAHuE/FvxfY+9RGY0kYwdyGJ5BznBrkrCxWA5H2lGityP5LhrRgUhpKJfewn5Nma/aUK6GXYUOVIDAEf72faGF2TGA5/iVi7sH9/Ym7qnXhYFXFWfgxF+rar36sCevrSMnrSV3mNXnjlf4PhD883Kdu3bsx8QmUUvbKYAQ5LLRO3nIa2EYA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(346002)(396003)(366004)(39860400002)(376002)(136003)(451199015)(316002)(186003)(6486002)(6916009)(54906003)(8936002)(6506007)(36756003)(5660300002)(7416002)(2906002)(86362001)(8676002)(41300700001)(478600001)(6512007)(38100700002)(2616005)(4326008)(26005)(66556008)(66946007)(83380400001)(66476007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/z1snNPhOxxWHM9vbrZ7NcbtSWs7AJi7rv8E6mulvsvG/lFPTD7lQnertqSl?=
+ =?us-ascii?Q?rmUg+Wu+yTgbnPhojSaFN3xoHWhyhglXG++ajDZz2t+/CB3Qw7gH+OVTIQ1v?=
+ =?us-ascii?Q?RUTRzocwJwh8bJQ9cxuFiyPuOnp7oQ5HuIrnN4O45XLwlIToahURE6zjqO/f?=
+ =?us-ascii?Q?/jTFOY2+zNZboQBIvzI6faGAyuRrBauW+hA5o0yc308eoXQrrR6qqrNwCWBV?=
+ =?us-ascii?Q?Trgw4ZBIamIqvYKp/RAa8cWyf7OXn3WMjDN7kMou5RazDxX7fTrdthnWEeA7?=
+ =?us-ascii?Q?AoPo3E1Omho9yQhQzs0za5CO1RzfMcekvumbPqBO9d2opOJU7aLoC5I6nPwa?=
+ =?us-ascii?Q?h65moacerFz+cUsqBdeYZSpQd8aUVqkQh0gG07vPm6aCuehrG0lYyIS5ITsl?=
+ =?us-ascii?Q?TXfigCZtVkQPbCh80ztPC7aEa5I3j2tzJQzyM7ll20z6upR25MCrML4kb/Tv?=
+ =?us-ascii?Q?kXMiyp8A+oQ/fRwic1Hfx/A5uGPqmCVDdJ9EaddDonnxxLTSfWv1sIUF3/MH?=
+ =?us-ascii?Q?d5FXexSMwhwPexyTlhj+l4eza2u4+xmKRo2O5mEjKD25EdtH/uqQg/tLT6oH?=
+ =?us-ascii?Q?qr/7894OkxZvSTTNob3q3v0gqX2+GVvw5aVLhavQmVavhYmQoRYO4I3Y0yke?=
+ =?us-ascii?Q?cwoNkg6O1+YUw8uR8w6WmQURAnIZ9uzzfkuVm8txGBHWgTPaUsgMFcLfpQNS?=
+ =?us-ascii?Q?581kO8bIeZErbCZpSsmRD1YlAzgSmCuHb+YlngcWkVaLs4wS/A/1a7BsClYD?=
+ =?us-ascii?Q?bV4Pw5+q5H+TuvvFd4NR7eeBQRwn9svRQb2lUra/SwhF2/uh/1xlBYn9Jtg/?=
+ =?us-ascii?Q?aAETtyV3THZ856vWlS8+mCtZYfg7bNgeQsgpzEFh84cBZVVzUHg1fsk7q/nU?=
+ =?us-ascii?Q?WfOf/XxdB8+TiiapK/fWSFJG2kDUrQZZPpugkUyWsu/QgN5DfMNpuDlFogBm?=
+ =?us-ascii?Q?yRFdMXaLu6vcbIWG6Mdq59fiCnRK5XjByVMdF4zWo/ZbgCDlSE7q6pUNKNcF?=
+ =?us-ascii?Q?ZNnEEVTF1cg2zch/pZ6Gdqjarhd9CqMD1IlJmPVSC1vZet2I8lCtkUwKZ2yR?=
+ =?us-ascii?Q?hEJZGjH2o4GpCcY1rWVmhoZkI5V+bsLqLnKZSVteOsmERdDX6XoVBb7c+iWf?=
+ =?us-ascii?Q?D6j0gydHyzpaI0IVKSkUuXofoJTDLUjYMFbQqKvXYts7SbOrQbdUAdCOdiZA?=
+ =?us-ascii?Q?zxm520us0PJyB0NVHfNqI5oRtxT1ECVR5TEiA5quivAMYTUX9UsLJLBnE/6C?=
+ =?us-ascii?Q?JHwFKg+urysSEtUQBUa4Rcja4QoZ57et4vRSCV9yAw/PEm7s2r9w3vHxSGnk?=
+ =?us-ascii?Q?ukG5Hug9U22R2PyuFByBHseeASSdw+erDlaWPrK8QWW/3XQRe4jmDGombTK8?=
+ =?us-ascii?Q?fLM9XCo1mXKEvuLZHXaZhjBsnCvK2uEguZJ2vYBLrANfW7jcZx61hrTrSkOT?=
+ =?us-ascii?Q?P9uWqbFYNc8KyZg/5I5F7TkiV9MtTNdkHdAQR+gGIAh1Gzg+2QAl/Mt89HQ0?=
+ =?us-ascii?Q?KKRuOfIcvoyHk+Lehuuf4ezX4zfIUvid/4+MIMBQ1BbxsXe2wpk6gXVlfSP7?=
+ =?us-ascii?Q?2G7quzXGiwtERB5K5ftRKZgHdoQjfOSCkVET+qN8?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7892aff8-f4f8-494f-6ede-08da9d991796
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2022 19:23:27.9356
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: nyVn+69DxCacTCH2F8ofuHhcDHyaQlflJ/a+g9qNpg2K//tbVci2xdWTjMiLRlP7
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB7446
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 21, 2022 at 10:44:37PM -0700, allison.henderson@oracle.com wrote:
-> From: Allison Henderson <allison.henderson@oracle.com>
-> 
-> Modify xfs_rename to hold all inode locks across a rename operation
-> We will need this later when we add parent pointers
-> 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
->  fs/xfs/xfs_inode.c | 35 ++++++++++++++++++++++-------------
->  1 file changed, 22 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 9a3174a8f895..4bfa4a1579f0 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2837,18 +2837,16 @@ xfs_rename(
->  	xfs_lock_inodes(inodes, num_inodes, XFS_ILOCK_EXCL);
->  
->  	/*
-> -	 * Join all the inodes to the transaction. From this point on,
-> -	 * we can rely on either trans_commit or trans_cancel to unlock
-> -	 * them.
-> +	 * Join all the inodes to the transaction.
->  	 */
-> -	xfs_trans_ijoin(tp, src_dp, XFS_ILOCK_EXCL);
-> +	xfs_trans_ijoin(tp, src_dp, 0);
->  	if (new_parent)
-> -		xfs_trans_ijoin(tp, target_dp, XFS_ILOCK_EXCL);
-> -	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
-> +		xfs_trans_ijoin(tp, target_dp, 0);
-> +	xfs_trans_ijoin(tp, src_ip, 0);
->  	if (target_ip)
-> -		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
-> +		xfs_trans_ijoin(tp, target_ip, 0);
->  	if (wip)
-> -		xfs_trans_ijoin(tp, wip, XFS_ILOCK_EXCL);
-> +		xfs_trans_ijoin(tp, wip, 0);
->  
->  	/*
->  	 * If we are using project inheritance, we only allow renames
-> @@ -2862,10 +2860,12 @@ xfs_rename(
->  	}
->  
->  	/* RENAME_EXCHANGE is unique from here on. */
-> -	if (flags & RENAME_EXCHANGE)
-> -		return xfs_cross_rename(tp, src_dp, src_name, src_ip,
-> +	if (flags & RENAME_EXCHANGE) {
-> +		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
->  					target_dp, target_name, target_ip,
->  					spaceres);
-> +		goto out_unlock;
-> +	}
->  
->  	/*
->  	 * Try to reserve quota to handle an expansion of the target directory.
-> @@ -3090,12 +3090,21 @@ xfs_rename(
->  		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
->  
->  	error = xfs_finish_rename(tp);
-> -	if (wip)
-> -		xfs_irele(wip);
-> -	return error;
-> +
-> +	goto out_unlock;
->  
->  out_trans_cancel:
->  	xfs_trans_cancel(tp);
-> +out_unlock:
-> +	/* Unlock inodes in reverse order */
-> +	for (i = num_inodes - 1; i >= 0; i--) {
-> +		if (inodes[i])
-> +			xfs_iunlock(inodes[i], XFS_ILOCK_EXCL);
-> +
-> +		/* Skip duplicate inodes if src and target dps are the same */
-> +		if (i && (inodes[i] == inodes[i - 1]))
-> +			i--;
-> +	}
+On Fri, Sep 23, 2022 at 12:03:53PM -0700, Dan Williams wrote:
 
-Could you hoist this to a static inline xfs_iunlock_after_rename
-function that is adjacent to xfs_sort_for_rename, please?  It's easier
-to verify that it does the right thing w.r.t. multiple array references
-pointing to the same incore inode when the two array management
-functions are right next to each other.
+> Perhaps, I'll take a look. The scenario I am more concerned about is
+> processA sets up a VMA of PAGE_SIZE and races processB to fault in the
+> same filesystem block with a VMA of PMD_SIZE. Right now processA gets a
+> PTE mapping and processB gets a PMD mapping, but the refcounting is all
+> handled in small pages. I need to investigate more what is needed for
+> fsdax to support folio_size() > mapping entry size.
 
-static inline void
-xfs_iunlock_after_rename(
-	struct xfs_inode	**i_tab,
-	int			num_inodes)
-{
-	for (i = num_inodes - 1; i >= 0; i--) {
-		/* Skip duplicate inodes if src and target dps are the same */
-		if (!i_tab[i] || (i > 0 && i_tab[i] == i_tab[i - 1]))
-			continue;
-		xfs_iunlock(i_tab[i], XFS_ILOCK_EXCL);
-	}
-}
+This is fine actually.
 
-With that cleaned up,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+The PMD/PTE can hold a tail page. So the page cache will hold a PMD
+sized folio, procesA will have a PTE pointing to a tail page and
+processB will have a PMD pointing at the head page.
 
---D
+For the immediate instant you can keep accounting for each tail page
+as you do now, just with folio wrappers. Once you have proper folios
+you shift the accounting responsibility to the core code and the core
+will faster with one ref per PMD/PTE.
 
->  out_release_wip:
->  	if (wip)
->  		xfs_irele(wip);
-> -- 
-> 2.25.1
-> 
+The trick with folios is probably going to be breaking up a folio. THP
+has some nasty stuff for that, but I think a FS would be better to
+just revoke the entire folio, bring the refcount to 0, change the
+underling physical mapping, and then fault will naturally restore a
+properly sized folio to accomodate the new physical layout.
+
+ie you never break up a folio once it is created from the pgmap.
+
+What you want is to have largest possibile folios because it optimizes
+all the handling logic.
+
+.. and then you are well positioned to do some kind of trick where the
+FS asserts at mount time that it never needs a folio less than order X
+and you can then trigger the devdax optimization of folding struct
+page memory and significantly reducing the wastage for struct page..
+
+Jason
+
