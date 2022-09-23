@@ -2,191 +2,1884 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E0CC6FA8B
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 00:41:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D95AECAAD8
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 00:54:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230102AbiIWAlS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Sep 2022 20:41:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50062 "EHLO
+        id S231382AbiIWAyM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Sep 2022 20:54:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229518AbiIWAlR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 20:41:17 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 085E410809F;
-        Thu, 22 Sep 2022 17:41:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663893676; x=1695429676;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=aU4ZP06IU/1HDPOnq7u5dk0yNQ4F4YOLndy8O9xY3oc=;
-  b=l+bOZwPWwz6LEYt6uBn+XX1tj45zlIB6jGu5r0zZMKtxnaNNUYHZL3dq
-   sednHHatSBxSXLI5zB1xA/9bvFhlONqweJy/par8p7P7UciGDoIRcqxdf
-   /RqaABPiixgN0ID7dNgecMMl+jAWnzAIpmFnJYHNVhCbyQ+Sx+q224aYw
-   P6KvNJGUebyZaw3qUKxXL5lE5UPRGhuNEfQG1l71XUa2xRYRSKobgUqKD
-   Tj8+V6PHFvKL6nuhD3iBkyKwABWhhvleCiQ6MnhqzCEUz5yttAUb9ptrs
-   akT3H6XFrdMlSkpKzu3s9ABI/K0sM6eh6m6j/BZ647I9I+8zrngcviOhS
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10478"; a="283566758"
-X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
-   d="scan'208";a="283566758"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 17:41:15 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
-   d="scan'208";a="620023837"
-Received: from fmsmsx602.amr.corp.intel.com ([10.18.126.82])
-  by orsmga002.jf.intel.com with ESMTP; 22 Sep 2022 17:41:14 -0700
-Received: from fmsmsx611.amr.corp.intel.com (10.18.126.91) by
- fmsmsx602.amr.corp.intel.com (10.18.126.82) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 22 Sep 2022 17:41:14 -0700
-Received: from fmsmsx601.amr.corp.intel.com (10.18.126.81) by
- fmsmsx611.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 22 Sep 2022 17:41:13 -0700
-Received: from fmsedg602.ED.cps.intel.com (10.1.192.136) by
- fmsmsx601.amr.corp.intel.com (10.18.126.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31 via Frontend Transport; Thu, 22 Sep 2022 17:41:13 -0700
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (104.47.57.176)
- by edgegateway.intel.com (192.55.55.71) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2375.31; Thu, 22 Sep 2022 17:41:13 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PPYPHEyw4hm9id5Begv4GlnfRugV+89SLIUD7q7+DWiVLTLTXrx/zAxUpU+gamtFXqsMnoBv2x8cV9Stqhctp8+Tz1HSztbrVnKpuGNtm+RZBbYyV1mOZ9f9I6w2EKfDNMsg6ZXXfjD28iAoqL5JMqp36MbTt3J38cUgQunIuLcJkNhQ53qZ/fwxmLA+g4uIXewuZJ05F4pMZtNoft14HaQSvPjUDw94sM9jRpJk0pQV3YHVr+k1yBB+qA/ZKiRgE8UZPxDwDv5aO0yaZx6Fxswz+CdJ/WzUBwvbiiJOB0RjlIphu/8Oq25QJNYbRViAMTeZNVTRPB7ITdL/2ejFOw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XflN0Hp/URuVhTKrxjinxniEL3BoWmH0T0hpjdDAjfs=;
- b=f0yYmt3+FC1X9wbjFi4mCfLVNZo3W6vdRvB6xJ2Bqd946HJtXliJQOWOWy0OShal3pzUE0TJafkMbQ9sAFyUTOEGh4c26Exq9ZFL0wonQdASFc7kXyAfs3MnG/kGo4DE3G9/FEkP52p85h4opAZc4Rsq52p2cZvtDbvzZAh/3XBpzJfkm2YDu5idv7IwdGENrESq8/BXkET9XS7dxC0Y/x0PHPcQbEx6SgR4NXKeqAJR7ccxj12Xx1B6w2k0siF4rWHE409wnWS2UY5CyXJyCgF4VhUENcW21UpCmJn+98OZB3t0HvaH2UPAyZhVU5giiwaLgDXELe+yNJCrszemcg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
- (2603:10b6:301:50::20) by DS0PR11MB6472.namprd11.prod.outlook.com
- (2603:10b6:8:c0::9) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5612.22; Fri, 23 Sep
- 2022 00:41:12 +0000
-Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
- ([fe80::9847:345e:4c5b:ca12]) by MWHPR1101MB2126.namprd11.prod.outlook.com
- ([fe80::9847:345e:4c5b:ca12%6]) with mapi id 15.20.5654.017; Fri, 23 Sep 2022
- 00:41:12 +0000
-Date:   Thu, 22 Sep 2022 17:41:08 -0700
-From:   Dan Williams <dan.j.williams@intel.com>
-To:     Dave Chinner <david@fromorbit.com>,
-        Jason Gunthorpe <jgg@nvidia.com>
-CC:     Dan Williams <dan.j.williams@intel.com>,
-        <akpm@linux-foundation.org>, Matthew Wilcox <willy@infradead.org>,
-        Jan Kara <jack@suse.cz>, "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        John Hubbard <jhubbard@nvidia.com>,
-        <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>,
-        <linux-ext4@vger.kernel.org>
-Subject: Re: [PATCH v2 05/18] xfs: Add xfs_break_layouts() to the inode
- eviction path
-Message-ID: <632d00a491d0d_4a67429488@dwillia2-xfh.jf.intel.com.notmuch>
-References: <166329930818.2786261.6086109734008025807.stgit@dwillia2-xfh.jf.intel.com>
- <166329933874.2786261.18236541386474985669.stgit@dwillia2-xfh.jf.intel.com>
- <20220918225731.GG3600936@dread.disaster.area>
- <632894c4738d8_2a6ded294a@dwillia2-xfh.jf.intel.com.notmuch>
- <20220919212959.GL3600936@dread.disaster.area>
- <6329ee04c9272_2a6ded294bf@dwillia2-xfh.jf.intel.com.notmuch>
- <20220921221416.GT3600936@dread.disaster.area>
- <YyuQI08LManypG6u@nvidia.com>
- <20220923001846.GX3600936@dread.disaster.area>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20220923001846.GX3600936@dread.disaster.area>
-X-ClientProxiedBy: BYAPR08CA0050.namprd08.prod.outlook.com
- (2603:10b6:a03:117::27) To MWHPR1101MB2126.namprd11.prod.outlook.com
- (2603:10b6:301:50::20)
+        with ESMTP id S231537AbiIWAyK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 20:54:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07DBF5A2DD
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Sep 2022 17:54:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1663894446;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=pPTY6Jhwli0uq1P//XQgfRtWfaWYTO2TH2Ni8gzgiXA=;
+        b=Z6IZhjz1WF9vTCT4sUcF9IQ689t23DLWCCvaSJUBVY79rnB1D7nIDi6edj4OO4o2pTWDMN
+        W53pNG5p/cRPpLRfRqxExHb4+xATgTwaDD1scSxa+g9XqE4rmZYCfw34zYpJTXyEi17VtP
+        2pltQHDcdofVxHKGPu6wFUC/HCaFhT8=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-306-1EJ39yiRN7GaI_dErnUOFw-1; Thu, 22 Sep 2022 20:53:57 -0400
+X-MC-Unique: 1EJ39yiRN7GaI_dErnUOFw-1
+Received: by mail-pj1-f69.google.com with SMTP id 2-20020a17090a0b8200b001fdb8fd5f29so5693637pjr.8
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Sep 2022 17:53:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=pPTY6Jhwli0uq1P//XQgfRtWfaWYTO2TH2Ni8gzgiXA=;
+        b=JTDQsgMXS0Z8kpwCX8YdqvNUCa8WRzmbXeE4QFSb4+VerJQIKJDHkidtLanrdpxiAh
+         9LfkADPhjSpDp0ErJUiB8GrdsvYJrcOqa6EOso2iBuVSaO51bHRmbhzDclm6s4XR8F5D
+         ysay6whwleMoUjGsXPL67YvdiyxAmv1rMruichjWmo6kfztslTsGk8wwnedERPtUNQuu
+         eXTBbTZ8texImhi4R3EQeMDV2b64KQXSWLdUDZY/z3f/yEuCm8UdEwygrFxbmhKyvJxT
+         QEE0NS1xky0pKFsJdLchUzig1ykYBjMRJ+Frhr0mF0wq82VnHR8N0TrJUedHCKoKW44s
+         vAJQ==
+X-Gm-Message-State: ACrzQf2j4uPEB0Uw8xNll13cQ+r0TMcJq0ADyPHVAL8O8eKDBlPpRRuG
+        k+o5MK66Fov0M8L0q2xdMGb1d6P75+JH1j41jA2EKi3BKJCn5FWU+Xj1JHbRWuKA0r8H/IQ2Ho7
+        +AzCPkTEZ7BHGkrDXa4BF
+X-Received: by 2002:a17:90b:3ec9:b0:203:27a3:166f with SMTP id rm9-20020a17090b3ec900b0020327a3166fmr18079381pjb.109.1663894435549;
+        Thu, 22 Sep 2022 17:53:55 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM47CJx8E2KfRurznhbkRnYbY4qcfReN2kCcbQjOvE5NLZ/0/GfJCp6vCGE/gA0EZC60mk2EEg==
+X-Received: by 2002:a17:90b:3ec9:b0:203:27a3:166f with SMTP id rm9-20020a17090b3ec900b0020327a3166fmr18079347pjb.109.1663894434915;
+        Thu, 22 Sep 2022 17:53:54 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id q10-20020aa7842a000000b00546d8c2185dsm5207286pfn.170.2022.09.22.17.53.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Sep 2022 17:53:54 -0700 (PDT)
+Date:   Fri, 23 Sep 2022 08:53:50 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
+        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v1 1/1] xfstests: Add parent pointer test
+Message-ID: <20220923005350.fhnfr52mdsnqsazv@zlang-mailbox>
+References: <20220614220129.20847-1-catherine.hoang@oracle.com>
+ <20220614220129.20847-2-catherine.hoang@oracle.com>
+ <20220922163759.ivffu46l2xiy7tq6@zlang-mailbox>
+ <5605ee82c1c85531bd91b497cb87c545695408db.camel@oracle.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWHPR1101MB2126:EE_|DS0PR11MB6472:EE_
-X-MS-Office365-Filtering-Correlation-Id: a3fbaecb-b50e-4f22-85f4-08da9cfc505d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: xRXX+3AljMLjs7O9HHZrEXcnjFtWw4+QmIDcLarlRM9YxlT1NojOuzTjgqLxXA53WToxpfbbUJA+RjP6JdFizeO3VgTVDUKKxWuvBbve6WjQHBEaj01lDQ5baaTryESucPWblcu/xOkk5z9uMH3jwde0BLmADuTc/JEonR35D47byMBVzZ+KdAyJfVs45KzXfolAHqbnv/aPPxnap24b8uYgT/VNgJzsuMOXR7cpVvAeZvi3psyqe6el4LWTdSWqDmwnOpYBxVfj+5jwYdmxFII3stpXwubrxVsHJtYkcNqLHxg0aFX9jtupjBeDH1T4K3RiqR2oNoD1DW1XI7IGKJsTFh201Z/vs/ylsrv9JTVIGRGQxEfR55ZQrjgrq+kwMoc8y9uQO6S90p6CNK4k9wuEtDzFmWtPZ/zT75griw9szS0wTO5xotU3MGy1rNwH7ldQdOv6WeqJRtPGXG9YukdL6Pk+IrYdXXSX73qoRXj+zx42Mh0Aph+Om/XqS5AsESGNFen7dwWrUU0PT5JEz06v+kKhR8O7a2kr2ez0rdXb7tz8udSHfC1jttFB71uYthRDIdI4A5VfK2Ux9wdzK5x7ZSNqGCS3QgHx56ebhUqmibRoAto7z46648EDo0UNpsjFhxykmQOXEdViNLKyjBkyoxocfcFglx2pA2NYzOPtSKmzFKbxxpct6IhDKcP7Kk2KwKe1lQyoTF00bcx+/GBPd6APzbSw7kv8it8rWXAwLKjJzIrW3Y6pex6XeTqd
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1101MB2126.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(39860400002)(396003)(136003)(376002)(366004)(346002)(451199015)(966005)(66946007)(38100700002)(8936002)(8676002)(66476007)(4326008)(82960400001)(478600001)(26005)(5660300002)(41300700001)(7416002)(6666004)(9686003)(186003)(6506007)(316002)(110136005)(54906003)(6512007)(2906002)(6486002)(66556008)(86362001)(83380400001);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?8KJho5nTh6dtabWTn7bMg8ms0+FxM4pRWPlxz5vEf+3U0R3YRtJS7EGuHwYl?=
- =?us-ascii?Q?5f5SrC04lihJmq8pMTxD/Uj2GoXv6suYk326SLAJeRk4E2L1Fz92iaP83u0r?=
- =?us-ascii?Q?4P+nqJeidgwwKRZyP8a8n945s8FpslQN91v7UQ95WsPpSsvWcpkoqzcGWlB7?=
- =?us-ascii?Q?P4sh/1EqB5PNMWXThCoTR7dhleFNYBQGs2fUnEf2NmYKBbCCpkeR4sKb0tJR?=
- =?us-ascii?Q?O4TQW1V1cRUHFBRF0/LK0DcZfy074BNaknbnpSuKvajzG31QDSncJcOJP/tc?=
- =?us-ascii?Q?ASTDsGnUixyUQelK2i66rnXnM3vhwCsSTQwEF/HNltTs9lZ5akTtdSoGPUeP?=
- =?us-ascii?Q?7RN86mFdXuxTz8q6JFgmJ75yrBrexahXL3iK+QtAg5ZaeMCNPF+Ey+oYXS96?=
- =?us-ascii?Q?96+8qJZBy7dLgTOcHJInxMuBduKE9fuvrO/Jx9bkRg3yXM6XRjeFgE0Um65p?=
- =?us-ascii?Q?vcNPraT/uRdWkvVWMzFbuky5ZcL/lJZ6S4MEdyg+DXxJmoNJvufVaypldVNj?=
- =?us-ascii?Q?UiHaQ6LnVli/0fCId2UtSzc+D2P5aGTeJfq4hTWrJoqBxleEJDV8oIk2Kpw9?=
- =?us-ascii?Q?2nf6HVmjJNe8q6QoS4Mtx52ioAczBDvJaQK1nnbziEoRJ0AI+fZoWLQ8/dhh?=
- =?us-ascii?Q?aZ5ymrUtfXyrgXEnozGgjDUYWTLMWrO916b7QiCKgvb+SaBLNTy2FVdrbSHa?=
- =?us-ascii?Q?/VdOx9x9NrNYY8yT40+F78y/mR5UcMHPuTXdZkafEYYu1IVLfVXiE7WCJZ11?=
- =?us-ascii?Q?7iyTCBjDw79xwBNBhFEAdl8Kj7bJzO8ZSRiaJQcVYdixAOE7zrYSMmHkRD/w?=
- =?us-ascii?Q?HJbHULcV6/OCvR06sBslGYuEZ3phDZDsf7s3/MbHLOk5hUa/vRkgkiPrGX5e?=
- =?us-ascii?Q?23YrTOxxk6vIpdRSQx/Q+VZaKGFRPGEkO5ShFEhWf9llUN0wp3K38RS3TmG2?=
- =?us-ascii?Q?shOWjx1RQJuSVo92Qwy5f1LG09V55DgNNiCvwWbfCuMCi20eES0Tgoj/642x?=
- =?us-ascii?Q?0Uy6MeE6OYoUg0fFTKL4NUgAa2EvZRHCnc5eiNshTdAmhjdZv4LjKat1rnEU?=
- =?us-ascii?Q?3tPsbrloCCKcFun6zyA/UnYHdWRvOxF75RnVK1xrj8w21soREBUOdR6Y7Gj4?=
- =?us-ascii?Q?0I61U5vs0ipvXkXtBmwE0fYujXIRU8WUVtMLusAZFII48PYmex+7RQVxkNnr?=
- =?us-ascii?Q?ef37Ks6JarpPhE6gk3zB6ZQXlX3XZMYt2oD8mV1/UkCzKGeE8kohdjUadk2O?=
- =?us-ascii?Q?jkhgnQ5Nbpa3eufjOVF4u0Wig4a8jYqF66l0aJkNSdLA/l6kKnLdCSnna2cG?=
- =?us-ascii?Q?uM7WYaUtFau7imu//97IA6YdTgt7MdxlTGjNzMRDwBgsngGKRFQkCew1Bh82?=
- =?us-ascii?Q?pEJNYB6rIcoRRG7K10YBvU4hjFIk7kq8z79eXedIAJnRdEJASwUJdS9NV2xs?=
- =?us-ascii?Q?WdNHnr/9xj1uiK6F063MFKpZdeYyFiOI4i5wNR8yxYY1nOaN3ZcgRV5ND4nB?=
- =?us-ascii?Q?OZk1q1fSEsWSWXRCF4s9EwlChT5Cinxde/0GDTjXYI2JJpqLR2U4XEqT9ZRM?=
- =?us-ascii?Q?5BV0FStyle6wLDTlZYRdA4XIHKqME6Hu4vB2X00JtQAtOHjW+01VZIGZmtw2?=
- =?us-ascii?Q?jQ=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: a3fbaecb-b50e-4f22-85f4-08da9cfc505d
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR1101MB2126.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2022 00:41:12.2063
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: as8ido6b9zpye3yWOM1vHEkLAylK2NQG7fvmweuK+V0UiePHB0+rH33waX2ofEP/OS5KWppu+UbPKkjXsjBHLK/3GbRiy/kMGLwd0V2/vr4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR11MB6472
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5605ee82c1c85531bd91b497cb87c545695408db.camel@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dave Chinner wrote:
-> On Wed, Sep 21, 2022 at 07:28:51PM -0300, Jason Gunthorpe wrote:
-> > On Thu, Sep 22, 2022 at 08:14:16AM +1000, Dave Chinner wrote:
+On Thu, Sep 22, 2022 at 06:45:09PM +0000, Allison Henderson wrote:
+> On Fri, 2022-09-23 at 00:37 +0800, Zorro Lang wrote:
+> > On Tue, Jun 14, 2022 at 03:01:29PM -0700, Catherine Hoang wrote:
+> > > From: Allison Henderson <allison.henderson@oracle.com>
+> > > 
+> > > This patch adds a test for basic parent pointer operations,
+> > > including link, unlink, rename, overwrite, hardlinks and
+> > > error inject.
+> > > 
+> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > > Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> > > ---
+> > >  common/parent       |  196 +++++++++
+> > >  common/rc           |    3 +
+> > >  doc/group-names.txt |    1 +
+> > >  tests/xfs/547       |  126 ++++++
+> > >  tests/xfs/547.out   |   59 +++
+> > >  tests/xfs/548       |   97 +++++
+> > >  tests/xfs/548.out   | 1002
+> > > +++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/549       |  110 +++++
+> > >  tests/xfs/549.out   |   14 +
+> > >  9 files changed, 1608 insertions(+)
+> > >  create mode 100644 common/parent
+> > >  create mode 100755 tests/xfs/547
+> > >  create mode 100644 tests/xfs/547.out
+> > >  create mode 100755 tests/xfs/548
+> > >  create mode 100644 tests/xfs/548.out
+> > >  create mode 100755 tests/xfs/549
+> > >  create mode 100644 tests/xfs/549.out
+> > > 
+> > > diff --git a/common/parent b/common/parent
+> > > new file mode 100644
+> > > index 00000000..0af12553
+> > > --- /dev/null
+> > > +++ b/common/parent
+> > > @@ -0,0 +1,196 @@
+> > > +#
+> > > +# Parent pointer common functions
+> > > +#
+> > > +
+> > > +#
+> > > +# parse_parent_pointer parents parent_inode parent_pointer_name
+> > > +#
+> > > +# Given a list of parent pointers, find the record that matches
+> > > +# the given inode and filename
+> > > +#
+> > > +# inputs:
+> > > +# parents      : A list of parent pointers in the format of:
+> > > +#                inode/generation/name_length/name
+> > > +# parent_inode : The parent inode to search for
+> > > +# parent_name  : The parent name to search for
+> > > +#
+> > > +# outputs:
+> > > +# PPINO         : Parent pointer inode
+> > > +# PPGEN         : Parent pointer generation
+> > > +# PPNAME        : Parent pointer name
+> > > +# PPNAME_LEN    : Parent pointer name length
+> > > +#
+> > > +_parse_parent_pointer()
+> > > +{
+> > > +       local parents=$1
+> > > +       local pino=$2
+> > > +       local parent_pointer_name=$3
+> > > +
+> > > +       local found=0
+> > > +
+> > > +       # Find the entry that has the same inode as the parent
+> > > +       # and parse out the entry info
+> > > +       while IFS=\/ read PPINO PPGEN PPNAME_LEN PPNAME; do
+> > > +               if [ "$PPINO" != "$pino" ]; then
+> > > +                       continue
+> > > +               fi
+> > > +
+> > > +               if [ "$PPNAME" != "$parent_pointer_name" ]; then
+> > > +                       continue
+> > > +               fi
+> > > +
+> > > +               found=1
+> > > +               break
+> > > +       done <<< $(echo "$parents")
+> > > +
+> > > +       # Check to see if we found anything
+> > > +       # We do not fail the test because we also use this
+> > > +       # routine to verify when parent pointers should
+> > > +       # be removed or updated  (ie a rename or a move
+> > > +       # operation changes your parent pointer)
+> > > +       if [ $found -eq "0" ]; then
+> > > +               return 1
+> > > +       fi
+> > > +
+> > > +       # Verify the parent pointer name length is correct
+> > > +       if [ "$PPNAME_LEN" -ne "${#parent_pointer_name}" ]
+> > > +       then
+> > > +               _fail "Bad parent pointer reclen"
+> > > +       fi
+> > > +
+> > > +       #return sucess
+> > > +       return 0
+> > > +}
+> > > +
+> > > +#
+> > > +# _verify_parent parent_path parent_pointer_name child_path
+> > > +#
+> > > +# Verify that the given child path lists the given parent as a
+> > > parent pointer
+> > > +# and that the parent pointer name matches the given name
+> > > +#
+> > > +# Examples:
+> > > +#
+> > > +# #simple example
+> > > +# mkdir testfolder1
+> > > +# touch testfolder1/file1
+> > > +# verify_parent testfolder1 file1 testfolder1/file1
+> > > +#
+> > > +# # In this above example, we want to verify that "testfolder1"
+> > > +# # appears as a parent pointer of "testfolder1/file1". 
+> > > Additionally
+> > > +# # we verify that the name record of the parent pointer is
+> > > "file1"
+> > > +#
+> > > +#
+> > > +# #hardlink example
+> > > +# mkdir testfolder1
+> > > +# mkdir testfolder2
+> > > +# touch testfolder1/file1
+> > > +# ln testfolder1/file1 testfolder2/file1_ln
+> > > +# verify_parent testfolder2 file1_ln testfolder1/file1
+> > > +#
+> > > +# # In this above example, we want to verify that "testfolder2"
+> > > +# # appears as a parent pointer of "testfolder1/file1". 
+> > > Additionally
+> > > +# # we verify that the name record of the parent pointer is
+> > > "file1_ln"
+> > > +#
+> > > +_verify_parent()
+> > > +{
+> > > +
+
+useless empty line ^^
+
+> > > +       local parent_path=$1
+> > > +       local parent_pointer_name=$2
+> > > +       local child_path=$3
+> > > +
+> > > +       local parent_ppath="$parent_path/$parent_pointer_name"
+> > > +
+> > > +       # Verify parent exists
+> > > +       if [ ! -d $SCRATCH_MNT/$parent_path ]; then
+> > > +               _fail "$SCRATCH_MNT/$parent_path not found"
+> > > +       else
+> > > +               echo "*** $parent_path OK"
+> > > +       fi
+> > > +
+> > > +       # Verify child exists
+> > > +       if [ ! -f $SCRATCH_MNT/$child_path ]; then
+> > > +               _fail "$SCRATCH_MNT/$child_path not found"
+> > > +       else
+> > > +               echo "*** $child_path OK"
+> > > +       fi
+> > > +
+> > > +       # Verify the parent pointer name exists as a child of the
+> > > parent
+> > > +       if [ ! -f $SCRATCH_MNT/$parent_ppath ]; then
+> > > +               _fail "$SCRATCH_MNT/$parent_ppath not found"
+> > > +       else
+> > > +               echo "*** $parent_ppath OK"
+> > > +       fi
+> > > +
+> > > +       # Get the inodes of both parent and child
+> > > +       pino="$(stat -c '%i' $SCRATCH_MNT/$parent_path)"
+> > > +       cino="$(stat -c '%i' $SCRATCH_MNT/$child_path)"
+> > > +
+> > > +       # Get all the parent pointers of the child
+> > > +       parents=($($XFS_IO_PROG -x -c "parent -f -i $pino -n
+> > > $parent_pointer_name" $SCRATCH_MNT/$child_path))
+> > > +       if [[ $? != 0 ]]; then
+> > > +                _fail "No parent pointers found for $child_path"
+> > > +       fi
+> > > +
+> > > +       # Parse parent pointer output.
+> > > +       # This sets PPINO PPGEN PPNAME PPNAME_LEN
+> > > +       _parse_parent_pointer $parents $pino $parent_pointer_name
+> > > +
+> > > +       # If we didnt find one, bail out
+> > > +       if [ $? -ne 0 ]; then
+> > > +               _fail "No parent pointer record found for
+> > > $parent_path in $child_path"
+> > > +       fi
+> > > +
+> > > +       # Verify the inode generated by the parent pointer name is
+> > > +       # the same as the child inode
+> > > +       pppino="$(stat -c '%i' $SCRATCH_MNT/$parent_ppath)"
+> > > +       if [ $cino -ne $pppino ]
+> > > +       then
+> > > +               _fail "Bad parent pointer name value for
+> > > $child_path."\
+> > > +                               "$SCRATCH_MNT/$parent_ppath belongs
+> > > to inode $PPPINO, but should be $cino"
+> > > +       fi
+> > > +
+> > > +       echo "*** Verified parent pointer:"\
+> > > +                       "name:$PPNAME, namelen:$PPNAME_LEN"
+> > > +       echo "*** Parent pointer OK for child $child_path"
+> > > +}
+> > > +
+> > > +#
+> > > +# _verify_parent parent_pointer_name pino child_path
+> > > +#
+> > > +# Verify that the given child path contains no parent pointer
+> > > entry
+> > > +# for the given inode and file name
+> > > +#
+> > > +_verify_no_parent()
+> > > +{
+> > > +
+
+empty line at beginning too, is it a code style?
+
+> > > +       local parent_pname=$1
+> > > +       local pino=$2
+> > > +       local child_path=$3
+> > > +
+> > > +       # Verify child exists
+> > > +       if [ ! -f $SCRATCH_MNT/$child_path ]; then
+> > > +               _fail "$SCRATCH_MNT/$child_path not found"
+> > > +       else
+> > > +               echo "*** $child_path OK"
+> > > +       fi
+> > > +
+> > > +       # Get all the parent pointers of the child
+> > > +       local parents=($($XFS_IO_PROG -x -c "parent -f -i $pino -n
+> > > $parent_pname" $SCRATCH_MNT/$child_path))
 > > 
-> > > Where are these DAX page pins that don't require the pin holder to
-> > > also hold active references to the filesystem objects coming from?
+> > I didn't see anywhere (in this patch) call `_require_xfs_io_command
+> > parent`.
+> > Shouldn't we make sure the "parent" feature is support by userspace
+> > and
+> > kernel both?
+> Sure, I think you're right, we can add "_require_xfs_io_command parent"
+> at the top of the tests
+
+Thanks, by the way, can you separate this patch to 3~4 patches as a patchset,
+it's a little hard for me to go through this long patch and page up and down
+to review sometimes :)
+
+> 
 > > 
-> > O_DIRECT and things like it.
+> > > +       if [[ $? != 0 ]]; then
+> > > +               return 0
+> > > +       fi
+> > > +
+> > > +       # Parse parent pointer output.
+> > > +       # This sets PPINO PPGEN PPNAME PPNAME_LEN
+> > > +       _parse_parent_pointer $parents $pino $parent_pname
+> > > +
+> > > +       # If we didnt find one, return sucess
+> > > +       if [ $? -ne 0 ]; then
+> > > +               return 0
+> > > +       fi
+> > > +
+> > > +       _fail "Parent pointer entry found where none should:"\
+> > > +                       "inode:$PPINO, gen:$PPGEN,"
+> > > +                       "name:$PPNAME, namelen:$PPNAME_LEN"
+> > > +}
+> > > +
+> > > diff --git a/common/rc b/common/rc
+> > > index 4201a059..68752cdc 100644
+> > > --- a/common/rc
+> > > +++ b/common/rc
+> > > @@ -2701,6 +2701,9 @@ _require_xfs_io_command()
+> > >                 echo $testio | grep -q "invalid option" && \
+> > >                         _notrun "xfs_io $command support is
+> > > missing"
+> > >                 ;;
+> > > +       "parent")
+> > > +               testio=`$XFS_IO_PROG -x -c "parent" $TEST_DIR 2>&1`
+> > > +               ;;
+> > >         "pwrite")
+> > >                 # -N (RWF_NOWAIT) only works with direct vectored
+> > > I/O writes
+> > >                 local pwrite_opts=" "
+> > > diff --git a/doc/group-names.txt b/doc/group-names.txt
+> > > index e8e3477e..98bbe3b7 100644
+> > > --- a/doc/group-names.txt
+> > > +++ b/doc/group-names.txt
+> > > @@ -77,6 +77,7 @@ nfs4_acl              NFSv4 access control lists
+> > >  nonsamefs              overlayfs layers on different filesystems
+> > >  online_repair          online repair functionality tests
+> > >  other                  dumping ground, do not add more tests to
+> > > this group
+> > > +parent                 Parent pointer tests
+> > >  pattern                        specific IO pattern tests
+> > >  perms                  access control and permission checking
+> > >  pipe                   pipe functionality
+> > > diff --git a/tests/xfs/547 b/tests/xfs/547
+> > > new file mode 100755
+> > > index 00000000..5c7d1d45
+> > > --- /dev/null
+> > > +++ b/tests/xfs/547
+> > > @@ -0,0 +1,126 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2022, Oracle and/or its affiliates.  All Rights
+> > > Reserved.
+> > > +#
+> > > +# FS QA Test 547
+> > > +#
+> > > +# simple parent pointer test
+> > > +#
+> > > +
+> > > +. ./common/preamble
+> > > +_begin_fstest auto quick parent
+> > > +
+> > > +cleanup()
+> > > +{
+> > > +       cd /
+> > > +       rm -f $tmp.*
+> > > +       echo 0 > /sys/fs/xfs/debug/larp
+> > > +}
+> > > +
+> > > +full()
+> > > +{
+> > > +    echo ""            >>$seqres.full
+> > > +    echo "*** $* ***"  >>$seqres.full
+> > > +    echo ""            >>$seqres.full
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/filter
+> > > +. ./common/reflink
+> > > +. ./common/inject
+> > > +. ./common/parent
+> > > +
+> > > +# Modify as appropriate
+> > > +_supported_fs xfs
+> > > +_require_scratch
+> > > +_require_xfs_sysfs debug/larp
+> > > +_require_xfs_io_error_injection "larp"
+> > > +
+> > > +echo 1 > /sys/fs/xfs/debug/larp
+
+I remembered last time you backup the value of the xfs/debug/larp, then restore
+it in cleanup, refer to xfs/018 (it might be recommended by Dave?).
+
+> > > +
+> > > +# real QA test starts here
+> > > +
+> > > +# Create a directory tree using a protofile and
+> > > +# make sure all inodes created have parent pointers
+> > > +
+> > > +protofile=$tmp.proto
+> > > +
+> > > +cat >$protofile <<EOF
+> > > +DUMMY1
+> > > +0 0
+> > > +: root directory
+> > > +d--777 3 1
+> > > +: a directory
+> > > +testfolder1 d--755 3 1
+> > > +file1 ---755 3 1 /dev/null
+> > > +$
+> > > +: back in the root
+> > > +testfolder2 d--755 3 1
+> > > +file2 ---755 3 1 /dev/null
+> > > +: done
+> > > +$
+> > > +EOF
+> > > +
+> > > +if [ $? -ne 0 ]
+> > > +then
+> > > +    _fail "failed to create test protofile"
+> > > +fi
+> > > +
+> > > +_scratch_mkfs -f -n parent=1 -p $protofile >>$seqres.full 2>&1 \
+> > > +       || _fail "mkfs failed"
+> > 
+> > I think we'd better to check if current fs userspace and kernel
+> > support
+> > "parent" feature. If it's supported, then we should report failure if
+> > mkfs fails. Or we should skip the test before real testing start.
+> > (same
+> > below)
+> Alrighty, we can add a _require_xfs_mkfs_parent function over in
+> common/xfs
+
+I'm wondering if old kernel can mount xfs with "parent=1"? If not, we need
+a _require_xfs_parent. For example we have below 3 function in common/xfs:
+
+_require_xfs_mkfs_crc : check if current mkfs.xfs support crc=1 option
+_require_xfs_crc : check if current kernel can mount a xfs with crc=1
+_require_scratch_xfs_crc : check if current SCRATCH_DEV is crc enabled
+
+As the parent feature isn't big as crc feature, so I think you can refer
+to _require_xfs_sparse_inodes or _require_xfs_nrext64, check mkfs and kernel
+support parent feature in one function. Then you can use:
+
+  _require_xfs_parent # check mkfs and kernel/mount support parent feature
+  _require_xfs_io_command parent # check if xfs_io support parent command
+
+at the beginning of each cases.
+
+
+
+Thanks,
+Zorro
+
 > 
-> O_DIRECT IO to a file holds a reference to a struct file which holds
-> an active reference to the struct inode. Hence you can't reclaim an
-> inode while an O_DIRECT IO is in progress to it. 
+> Thanks for the reviews!
+> Allison
 > 
-> Similarly, file-backed pages pinned from user vmas have the inode
-> pinned by the VMA having a reference to the struct file passed to
-> them when they are instantiated. Hence anything using mmap() to pin
-> file-backed pages (i.e. applications using FSDAX access from
-> userspace) should also have a reference to the inode that prevents
-> the inode from being reclaimed.
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > > +_check_scratch_fs
+> > > +
+> > > +_scratch_mount >>$seqres.full 2>&1 \
+> > > +       || _fail "mount failed"
+> > > +
+> > > +testfolder1="testfolder1"
+> > > +testfolder2="testfolder2"
+> > > +file1="file1"
+> > > +file2="file2"
+> > > +file3="file3"
+> > > +file4="file4"
+> > > +file5="file5"
+> > > +file1_ln="file1_link"
+> > > +
+> > > +echo ""
+> > > +# Create parent pointer test
+> > > +_verify_parent "$testfolder1" "$file1" "$testfolder1/$file1"
+> > > +
+> > > +echo ""
+> > > +# Move parent pointer test
+> > > +mv $SCRATCH_MNT/$testfolder1/$file1
+> > > $SCRATCH_MNT/$testfolder2/$file1
+> > > +_verify_parent "$testfolder2" "$file1" "$testfolder2/$file1"
+> > > +
+> > > +echo ""
+> > > +# Hard link parent pointer test
+> > > +ln $SCRATCH_MNT/$testfolder2/$file1
+> > > $SCRATCH_MNT/$testfolder1/$file1_ln
+> > > +_verify_parent "$testfolder1" "$file1_ln" 
+> > > "$testfolder1/$file1_ln"
+> > > +_verify_parent "$testfolder1" "$file1_ln"  "$testfolder2/$file1"
+> > > +_verify_parent "$testfolder2" "$file1"    
+> > > "$testfolder1/$file1_ln"
+> > > +_verify_parent "$testfolder2" "$file1"     "$testfolder2/$file1"
+> > > +
+> > > +echo ""
+> > > +# Remove hard link parent pointer test
+> > > +ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder2/$file1)"
+> > > +rm $SCRATCH_MNT/$testfolder2/$file1
+> > > +_verify_parent    "$testfolder1" "$file1_ln"
+> > > "$testfolder1/$file1_ln"
+> > > +_verify_no_parent "$file1" "$ino" "$testfolder1/$file1_ln"
+> > > +
+> > > +echo ""
+> > > +# Rename parent pointer test
+> > > +ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder1/$file1_ln)"
+> > > +mv $SCRATCH_MNT/$testfolder1/$file1_ln
+> > > $SCRATCH_MNT/$testfolder1/$file2
+> > > +_verify_parent    "$testfolder1" "$file2"    "$testfolder1/$file2"
+> > > +_verify_no_parent "$file1_ln" "$ino" "$testfolder1/$file2"
+> > > +
+> > > +echo ""
+> > > +# Over write parent pointer test
+> > > +touch $SCRATCH_MNT/$testfolder2/$file3
+> > > +_verify_parent    "$testfolder2" "$file3"    "$testfolder2/$file3"
+> > > +ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder2/$file3)"
+> > > +mv -f $SCRATCH_MNT/$testfolder2/$file3
+> > > $SCRATCH_MNT/$testfolder1/$file2
+> > > +_verify_parent    "$testfolder1" "$file2"    "$testfolder1/$file2"
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/547.out b/tests/xfs/547.out
+> > > new file mode 100644
+> > > index 00000000..e0ce9e65
+> > > --- /dev/null
+> > > +++ b/tests/xfs/547.out
+> > > @@ -0,0 +1,59 @@
+> > > +QA output created by 547
+> > > +
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +
+> > > +*** testfolder2 OK
+> > > +*** testfolder2/file1 OK
+> > > +*** testfolder2/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder2/file1
+> > > +
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link OK
+> > > +*** testfolder1/file1_link OK
+> > > +*** Verified parent pointer: name:file1_link, namelen:10
+> > > +*** Parent pointer OK for child testfolder1/file1_link
+> > > +*** testfolder1 OK
+> > > +*** testfolder2/file1 OK
+> > > +*** testfolder1/file1_link OK
+> > > +*** Verified parent pointer: name:file1_link, namelen:10
+> > > +*** Parent pointer OK for child testfolder2/file1
+> > > +*** testfolder2 OK
+> > > +*** testfolder1/file1_link OK
+> > > +*** testfolder2/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link
+> > > +*** testfolder2 OK
+> > > +*** testfolder2/file1 OK
+> > > +*** testfolder2/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder2/file1
+> > > +
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link OK
+> > > +*** testfolder1/file1_link OK
+> > > +*** Verified parent pointer: name:file1_link, namelen:10
+> > > +*** Parent pointer OK for child testfolder1/file1_link
+> > > +*** testfolder1/file1_link OK
+> > > +
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file2 OK
+> > > +*** testfolder1/file2 OK
+> > > +*** Verified parent pointer: name:file2, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file2
+> > > +*** testfolder1/file2 OK
+> > > +
+> > > +*** testfolder2 OK
+> > > +*** testfolder2/file3 OK
+> > > +*** testfolder2/file3 OK
+> > > +*** Verified parent pointer: name:file3, namelen:5
+> > > +*** Parent pointer OK for child testfolder2/file3
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file2 OK
+> > > +*** testfolder1/file2 OK
+> > > +*** Verified parent pointer: name:file2, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file2
+> > > diff --git a/tests/xfs/548 b/tests/xfs/548
+> > > new file mode 100755
+> > > index 00000000..229d871a
+> > > --- /dev/null
+> > > +++ b/tests/xfs/548
+> > > @@ -0,0 +1,97 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2022, Oracle and/or its affiliates.  All Rights
+> > > Reserved.
+> > > +#
+> > > +# FS QA Test 548
+> > > +#
+> > > +# multi link parent pointer test
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest auto quick parent
+> > > +
+> > > +cleanup()
+> > > +{
+> > > +       cd /
+> > > +       rm -f $tmp.*
+> > > +       echo 0 > /sys/fs/xfs/debug/larp
+> > > +}
+> > > +
+> > > +full()
+> > > +{
+> > > +    echo ""            >>$seqres.full
+> > > +    echo "*** $* ***"  >>$seqres.full
+> > > +    echo ""            >>$seqres.full
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/filter
+> > > +. ./common/reflink
+> > > +. ./common/inject
+> > > +. ./common/parent
+> > > +
+> > > +# Modify as appropriate
+> > > +_supported_fs xfs
+> > > +_require_scratch
+> > > +_require_xfs_io_error_injection "larp"
+> > > +_require_xfs_sysfs debug/larp
+> > > +
+> > > +echo 1 > /sys/fs/xfs/debug/larp
+> > > +
+> > > +# real QA test starts here
+> > > +
+> > > +# Create a directory tree using a protofile and
+> > > +# make sure all inodes created have parent pointers
+> > > +
+> > > +protofile=$tmp.proto
+> > > +
+> > > +cat >$protofile <<EOF
+> > > +DUMMY1
+> > > +0 0
+> > > +: root directory
+> > > +d--777 3 1
+> > > +: a directory
+> > > +testfolder1 d--755 3 1
+> > > +file1 ---755 3 1 /dev/null
+> > > +: done
+> > > +$
+> > > +EOF
+> > > +
+> > > +if [ $? -ne 0 ]
+> > > +then
+> > > +    _fail "failed to create test protofile"
+> > > +fi
+> > > +
+> > > +_scratch_mkfs -f -n parent=1 -p $protofile >>$seqresres.full 2>&1
+> > > \
+> > > +       || _fail "mkfs failed"
+> > > +_check_scratch_fs
+> > > +
+> > > +_scratch_mount >>$seqres.full 2>&1 \
+> > > +       || _fail "mount failed"
+> > > +
+> > > +testfolder1="testfolder1"
+> > > +testfolder2="testfolder2"
+> > > +file1="file1"
+> > > +file2="file2"
+> > > +file3="file3"
+> > > +file4="file4"
+> > > +file5="file5"
+> > > +file1_ln="file1_link"
+> > > +
+> > > +echo ""
+> > > +# Multi link parent pointer test
+> > > +NLINKS=100
+> > > +for (( j=0; j<$NLINKS; j++ )); do
+> > > +       ln $SCRATCH_MNT/$testfolder1/$file1
+> > > $SCRATCH_MNT/$testfolder1/$file1_ln.$j
+> > > +       _verify_parent    "$testfolder1" "$file1_ln.$j"   
+> > > "$testfolder1/$file1"
+> > > +       _verify_parent    "$testfolder1" "$file1"         
+> > > "$testfolder1/$file1_ln.$j"
+> > > +done
+> > > +# Multi unlink parent pointer test
+> > > +for (( j=$NLINKS-1; j<=0; j-- )); do
+> > > +       ino="$(stat -c '%i'
+> > > $SCRATCH_MNT/$testfolder1/$file1_ln.$j)"
+> > > +       rm $SCRATCH_MNT/$testfolder1/$file1_ln.$j
+> > > +       _verify_no_parent "$file1_ln.$j" "$ino"
+> > > "$testfolder1/$file1"
+> > > +done
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/548.out b/tests/xfs/548.out
+> > > new file mode 100644
+> > > index 00000000..afdc083b
+> > > --- /dev/null
+> > > +++ b/tests/xfs/548.out
+> > > @@ -0,0 +1,1002 @@
+> > > +QA output created by 548
+> > > +
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.0 OK
+> > > +*** Verified parent pointer: name:file1_link.0, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.0 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.0
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.1 OK
+> > > +*** Verified parent pointer: name:file1_link.1, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.2 OK
+> > > +*** Verified parent pointer: name:file1_link.2, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.2 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.2
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.3 OK
+> > > +*** Verified parent pointer: name:file1_link.3, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.3 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.3
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.4 OK
+> > > +*** Verified parent pointer: name:file1_link.4, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.4 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.4
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.5 OK
+> > > +*** Verified parent pointer: name:file1_link.5, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.5 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.5
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.6 OK
+> > > +*** Verified parent pointer: name:file1_link.6, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.6 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.6
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.7 OK
+> > > +*** Verified parent pointer: name:file1_link.7, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.7 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.7
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.8 OK
+> > > +*** Verified parent pointer: name:file1_link.8, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.8 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.8
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.9 OK
+> > > +*** Verified parent pointer: name:file1_link.9, namelen:12
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.9 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.9
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.10 OK
+> > > +*** Verified parent pointer: name:file1_link.10, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.10 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.10
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.11 OK
+> > > +*** Verified parent pointer: name:file1_link.11, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.11 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.11
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.12 OK
+> > > +*** Verified parent pointer: name:file1_link.12, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.12 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.12
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.13 OK
+> > > +*** Verified parent pointer: name:file1_link.13, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.13 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.13
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.14 OK
+> > > +*** Verified parent pointer: name:file1_link.14, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.14 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.14
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.15 OK
+> > > +*** Verified parent pointer: name:file1_link.15, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.15 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.15
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.16 OK
+> > > +*** Verified parent pointer: name:file1_link.16, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.16 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.16
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.17 OK
+> > > +*** Verified parent pointer: name:file1_link.17, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.17 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.17
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.18 OK
+> > > +*** Verified parent pointer: name:file1_link.18, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.18 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.18
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.19 OK
+> > > +*** Verified parent pointer: name:file1_link.19, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.19 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.19
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.20 OK
+> > > +*** Verified parent pointer: name:file1_link.20, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.20 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.20
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.21 OK
+> > > +*** Verified parent pointer: name:file1_link.21, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.21 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.21
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.22 OK
+> > > +*** Verified parent pointer: name:file1_link.22, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.22 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.22
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.23 OK
+> > > +*** Verified parent pointer: name:file1_link.23, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.23 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.23
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.24 OK
+> > > +*** Verified parent pointer: name:file1_link.24, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.24 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.24
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.25 OK
+> > > +*** Verified parent pointer: name:file1_link.25, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.25 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.25
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.26 OK
+> > > +*** Verified parent pointer: name:file1_link.26, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.26 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.26
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.27 OK
+> > > +*** Verified parent pointer: name:file1_link.27, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.27 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.27
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.28 OK
+> > > +*** Verified parent pointer: name:file1_link.28, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.28 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.28
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.29 OK
+> > > +*** Verified parent pointer: name:file1_link.29, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.29 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.29
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.30 OK
+> > > +*** Verified parent pointer: name:file1_link.30, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.30 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.30
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.31 OK
+> > > +*** Verified parent pointer: name:file1_link.31, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.31 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.31
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.32 OK
+> > > +*** Verified parent pointer: name:file1_link.32, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.32 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.32
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.33 OK
+> > > +*** Verified parent pointer: name:file1_link.33, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.33 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.33
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.34 OK
+> > > +*** Verified parent pointer: name:file1_link.34, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.34 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.34
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.35 OK
+> > > +*** Verified parent pointer: name:file1_link.35, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.35 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.35
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.36 OK
+> > > +*** Verified parent pointer: name:file1_link.36, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.36 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.36
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.37 OK
+> > > +*** Verified parent pointer: name:file1_link.37, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.37 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.37
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.38 OK
+> > > +*** Verified parent pointer: name:file1_link.38, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.38 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.38
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.39 OK
+> > > +*** Verified parent pointer: name:file1_link.39, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.39 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.39
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.40 OK
+> > > +*** Verified parent pointer: name:file1_link.40, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.40 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.40
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.41 OK
+> > > +*** Verified parent pointer: name:file1_link.41, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.41 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.41
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.42 OK
+> > > +*** Verified parent pointer: name:file1_link.42, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.42 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.42
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.43 OK
+> > > +*** Verified parent pointer: name:file1_link.43, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.43 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.43
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.44 OK
+> > > +*** Verified parent pointer: name:file1_link.44, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.44 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.44
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.45 OK
+> > > +*** Verified parent pointer: name:file1_link.45, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.45 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.45
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.46 OK
+> > > +*** Verified parent pointer: name:file1_link.46, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.46 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.46
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.47 OK
+> > > +*** Verified parent pointer: name:file1_link.47, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.47 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.47
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.48 OK
+> > > +*** Verified parent pointer: name:file1_link.48, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.48 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.48
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.49 OK
+> > > +*** Verified parent pointer: name:file1_link.49, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.49 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.49
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.50 OK
+> > > +*** Verified parent pointer: name:file1_link.50, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.50 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.50
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.51 OK
+> > > +*** Verified parent pointer: name:file1_link.51, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.51 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.51
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.52 OK
+> > > +*** Verified parent pointer: name:file1_link.52, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.52 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.52
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.53 OK
+> > > +*** Verified parent pointer: name:file1_link.53, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.53 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.53
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.54 OK
+> > > +*** Verified parent pointer: name:file1_link.54, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.54 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.54
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.55 OK
+> > > +*** Verified parent pointer: name:file1_link.55, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.55 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.55
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.56 OK
+> > > +*** Verified parent pointer: name:file1_link.56, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.56 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.56
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.57 OK
+> > > +*** Verified parent pointer: name:file1_link.57, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.57 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.57
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.58 OK
+> > > +*** Verified parent pointer: name:file1_link.58, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.58 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.58
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.59 OK
+> > > +*** Verified parent pointer: name:file1_link.59, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.59 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.59
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.60 OK
+> > > +*** Verified parent pointer: name:file1_link.60, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.60 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.60
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.61 OK
+> > > +*** Verified parent pointer: name:file1_link.61, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.61 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.61
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.62 OK
+> > > +*** Verified parent pointer: name:file1_link.62, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.62 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.62
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.63 OK
+> > > +*** Verified parent pointer: name:file1_link.63, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.63 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.63
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.64 OK
+> > > +*** Verified parent pointer: name:file1_link.64, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.64 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.64
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.65 OK
+> > > +*** Verified parent pointer: name:file1_link.65, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.65 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.65
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.66 OK
+> > > +*** Verified parent pointer: name:file1_link.66, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.66 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.66
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.67 OK
+> > > +*** Verified parent pointer: name:file1_link.67, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.67 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.67
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.68 OK
+> > > +*** Verified parent pointer: name:file1_link.68, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.68 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.68
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.69 OK
+> > > +*** Verified parent pointer: name:file1_link.69, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.69 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.69
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.70 OK
+> > > +*** Verified parent pointer: name:file1_link.70, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.70 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.70
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.71 OK
+> > > +*** Verified parent pointer: name:file1_link.71, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.71 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.71
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.72 OK
+> > > +*** Verified parent pointer: name:file1_link.72, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.72 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.72
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.73 OK
+> > > +*** Verified parent pointer: name:file1_link.73, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.73 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.73
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.74 OK
+> > > +*** Verified parent pointer: name:file1_link.74, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.74 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.74
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.75 OK
+> > > +*** Verified parent pointer: name:file1_link.75, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.75 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.75
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.76 OK
+> > > +*** Verified parent pointer: name:file1_link.76, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.76 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.76
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.77 OK
+> > > +*** Verified parent pointer: name:file1_link.77, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.77 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.77
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.78 OK
+> > > +*** Verified parent pointer: name:file1_link.78, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.78 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.78
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.79 OK
+> > > +*** Verified parent pointer: name:file1_link.79, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.79 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.79
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.80 OK
+> > > +*** Verified parent pointer: name:file1_link.80, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.80 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.80
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.81 OK
+> > > +*** Verified parent pointer: name:file1_link.81, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.81 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.81
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.82 OK
+> > > +*** Verified parent pointer: name:file1_link.82, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.82 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.82
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.83 OK
+> > > +*** Verified parent pointer: name:file1_link.83, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.83 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.83
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.84 OK
+> > > +*** Verified parent pointer: name:file1_link.84, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.84 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.84
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.85 OK
+> > > +*** Verified parent pointer: name:file1_link.85, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.85 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.85
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.86 OK
+> > > +*** Verified parent pointer: name:file1_link.86, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.86 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.86
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.87 OK
+> > > +*** Verified parent pointer: name:file1_link.87, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.87 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.87
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.88 OK
+> > > +*** Verified parent pointer: name:file1_link.88, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.88 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.88
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.89 OK
+> > > +*** Verified parent pointer: name:file1_link.89, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.89 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.89
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.90 OK
+> > > +*** Verified parent pointer: name:file1_link.90, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.90 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.90
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.91 OK
+> > > +*** Verified parent pointer: name:file1_link.91, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.91 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.91
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.92 OK
+> > > +*** Verified parent pointer: name:file1_link.92, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.92 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.92
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.93 OK
+> > > +*** Verified parent pointer: name:file1_link.93, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.93 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.93
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.94 OK
+> > > +*** Verified parent pointer: name:file1_link.94, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.94 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.94
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.95 OK
+> > > +*** Verified parent pointer: name:file1_link.95, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.95 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.95
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.96 OK
+> > > +*** Verified parent pointer: name:file1_link.96, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.96 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.96
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.97 OK
+> > > +*** Verified parent pointer: name:file1_link.97, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.97 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.97
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.98 OK
+> > > +*** Verified parent pointer: name:file1_link.98, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.98 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.98
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** testfolder1/file1_link.99 OK
+> > > +*** Verified parent pointer: name:file1_link.99, namelen:13
+> > > +*** Parent pointer OK for child testfolder1/file1
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file1_link.99 OK
+> > > +*** testfolder1/file1 OK
+> > > +*** Verified parent pointer: name:file1, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file1_link.99
+> > > diff --git a/tests/xfs/549 b/tests/xfs/549
+> > > new file mode 100755
+> > > index 00000000..e8e74b8a
+> > > --- /dev/null
+> > > +++ b/tests/xfs/549
+> > > @@ -0,0 +1,110 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2022, Oracle and/or its affiliates.  All Rights
+> > > Reserved.
+> > > +#
+> > > +# FS QA Test 549
+> > > +#
+> > > +# parent pointer inject test
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest auto quick parent
+> > > +
+> > > +cleanup()
+> > > +{
+> > > +       cd /
+> > > +       rm -f $tmp.*
+> > > +       echo 0 > /sys/fs/xfs/debug/larp
+> > > +}
+> > > +
+> > > +full()
+> > > +{
+> > > +    echo ""            >>$seqres.full
+> > > +    echo "*** $* ***"  >>$seqres.full
+> > > +    echo ""            >>$seqres.full
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/filter
+> > > +. ./common/reflink
+> > > +. ./common/inject
+> > > +. ./common/parent
+> > > +
+> > > +# Modify as appropriate
+> > > +_supported_fs xfs
+> > > +_require_scratch
+> > > +_require_xfs_sysfs debug/larp
+> > > +_require_xfs_io_error_injection "larp"
+> > > +
+> > > +echo 1 > /sys/fs/xfs/debug/larp
+> > > +
+> > > +# real QA test starts here
+> > > +
+> > > +# Create a directory tree using a protofile and
+> > > +# make sure all inodes created have parent pointers
+> > > +
+> > > +protofile=$tmp.proto
+> > > +
+> > > +cat >$protofile <<EOF
+> > > +DUMMY1
+> > > +0 0
+> > > +: root directory
+> > > +d--777 3 1
+> > > +: a directory
+> > > +testfolder1 d--755 3 1
+> > > +file1 ---755 3 1 /dev/null
+> > > +$
+> > > +: back in the root
+> > > +testfolder2 d--755 3 1
+> > > +file2 ---755 3 1 /dev/null
+> > > +: done
+> > > +$
+> > > +EOF
+> > > +
+> > > +if [ $? -ne 0 ]
+> > > +then
+> > > +    _fail "failed to create test protofile"
+> > > +fi
+> > > +
+> > > +_scratch_mkfs -f -n parent=1 -p $protofile >>$seqres.full 2>&1 \
+> > > +       || _fail "mkfs failed"
+> > > +_check_scratch_fs
+> > > +
+> > > +_scratch_mount >>$seqres.full 2>&1 \
+> > > +       || _fail "mount failed"
+> > > +
+> > > +testfolder1="testfolder1"
+> > > +testfolder2="testfolder2"
+> > > +file1="file1"
+> > > +file2="file2"
+> > > +file3="file3"
+> > > +file4="file4"
+> > > +file5="file5"
+> > > +file1_ln="file1_link"
+> > > +
+> > > +echo ""
+> > > +
+> > > +# Create files
+> > > +touch $SCRATCH_MNT/$testfolder1/$file4
+> > > +_verify_parent    "$testfolder1" "$file4" "$testfolder1/$file4"
+> > > +
+> > > +# Inject error
+> > > +_scratch_inject_error "larp"
+> > > +
+> > > +# Move files
+> > > +mv $SCRATCH_MNT/$testfolder1/$file4
+> > > $SCRATCH_MNT/$testfolder2/$file5 2>&1 | _filter_scratch
+> > > +
+> > > +# FS should be shut down, touch will fail
+> > > +touch $SCRATCH_MNT/$testfolder2/$file5 2>&1 | _filter_scratch
+> > > +
+> > > +# Remount to replay log
+> > > +_scratch_remount_dump_log >> $seqres.full
+> > > +
+> > > +# FS should be online, touch should succeed
+> > > +touch $SCRATCH_MNT/$testfolder2/$file5
+> > > +
+> > > +# Check files again
+> > > +_verify_parent    "$testfolder2" "$file5" "$testfolder2/$file5"
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/549.out b/tests/xfs/549.out
+> > > new file mode 100644
+> > > index 00000000..1af49c73
+> > > --- /dev/null
+> > > +++ b/tests/xfs/549.out
+> > > @@ -0,0 +1,14 @@
+> > > +QA output created by 549
+> > > +
+> > > +*** testfolder1 OK
+> > > +*** testfolder1/file4 OK
+> > > +*** testfolder1/file4 OK
+> > > +*** Verified parent pointer: name:file4, namelen:5
+> > > +*** Parent pointer OK for child testfolder1/file4
+> > > +mv: cannot stat 'SCRATCH_MNT/testfolder1/file4': Input/output
+> > > error
+> > > +touch: cannot touch 'SCRATCH_MNT/testfolder2/file5': Input/output
+> > > error
+> > > +*** testfolder2 OK
+> > > +*** testfolder2/file5 OK
+> > > +*** testfolder2/file5 OK
+> > > +*** Verified parent pointer: name:file5, namelen:5
+> > > +*** Parent pointer OK for child testfolder2/file5
+> > > -- 
+> > > 2.25.1
+> > > 
+> > 
 > 
-> So I'm at a loss to understand what "things like it" might actually
-> mean. Can you actually describe a situation where we actually permit
-> (even temporarily) these use-after-free scenarios?
 
-Jason mentioned a scenario here:
-
-https://lore.kernel.org/all/YyuoE8BgImRXVkkO@nvidia.com/
-
-Multi-thread process where thread1 does open(O_DIRECT)+mmap()+read() and
-thread2 does memunmap()+close() while the read() is inflight.
-
-Sounds plausible to me, but I have not tried to trigger it with a focus
-test.
