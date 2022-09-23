@@ -2,111 +2,172 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93AFEC6FA86
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 08:44:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3952C6FA82
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 09:40:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230113AbiIWIos (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Sep 2022 04:44:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56326 "EHLO
+        id S231919AbiIWJkv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Sep 2022 05:40:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229706AbiIWIoq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 04:44:46 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA65347B87;
-        Fri, 23 Sep 2022 01:44:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=nNv86JWq7K4SrXi9kThW3IL/MbxUCnwp29q6ItT7Jcw=; b=mZ8CmQuWblk1MMVUpDuLR6qc2s
-        66kAf6IwGc9rz0v2QxusGWOBx/z7JWCpwJXwtQQfoZl02tWSFIeMLPbv6Y8FLFUcMX5RNQyuMyjNm
-        2MGSOlBfZUOF3LiHToMr2YMxtlRl+e7cmeIS9x7sZKYj9mQbVlaIHExj1LBNB8vuyeJOWksc5BLvN
-        nPucVivNwS7UH0z21KZ4o09dDV43l7Y1TIlsWlLIFZqIkl+lF4tXhcr6mMihC0eK0a4ng9TjYi2fy
-        Re5oLmrnTKJy1TB7kLdq4LFaKHsUAY6WZuzCKzI5722zzZ/Qq6ez4BCJv73S/3i7ZgPbsi1+l4f4v
-        /WaWCnfw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1obeIT-00327F-D2; Fri, 23 Sep 2022 08:44:33 +0000
-Date:   Fri, 23 Sep 2022 01:44:33 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Al Viro <viro@zeniv.linux.org.uk>
-Cc:     Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
+        with ESMTP id S232006AbiIWJir (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 05:38:47 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A30FF1873;
+        Fri, 23 Sep 2022 02:38:05 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id CA09F21A63;
+        Fri, 23 Sep 2022 09:38:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1663925883; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=bndYC5R0I4YgJGO4guaGwuqL0KUo/BZ7Mi4kZdQckaE=;
+        b=YUEiD3qlDTE6kfrELEyA6DtKQfZ0Z+lFXfep2GktpftEQDVLbnyfS1R5/SSne35rBzcs3l
+        GoY7lcn3f9+optdT8RUNJrmlCwSXqZ/AklzJklYsKLNIXPhDSGAO0D1dUVoFhOG77ru9JY
+        i8AOqEBC5HoQzGRwksUlYLvNaCJ0ONQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1663925883;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=bndYC5R0I4YgJGO4guaGwuqL0KUo/BZ7Mi4kZdQckaE=;
+        b=1cq16cCNLVPsPcsJejQybf10gm0fZ/HKzz/EgMTKikDllXQPpuy4rYG0qwnsQ8tfTxR+w6
+        egBrBNbiBpwcP+DA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B8E3A13A00;
+        Fri, 23 Sep 2022 09:38:03 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id sMoWLXt+LWMvKQAAMHmgww
+        (envelope-from <jack@suse.cz>); Fri, 23 Sep 2022 09:38:03 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 57D2AA0685; Fri, 23 Sep 2022 11:38:03 +0200 (CEST)
+Date:   Fri, 23 Sep 2022 11:38:03 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@nvidia.com>, akpm@linux-foundation.org,
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
         John Hubbard <jhubbard@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        David Hildenbrand <david@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 4/7] iov_iter: new iov_iter_pin_pages*() routines
-Message-ID: <Yy1x8QE9YA4HHzbQ@infradead.org>
-References: <Yxb7YQWgjHkZet4u@infradead.org>
- <20220906102106.q23ovgyjyrsnbhkp@quack3>
- <YxhaJktqtHw3QTSG@infradead.org>
- <YyFPtTtxYozCuXvu@ZenIV>
- <20220914145233.cyeljaku4egeu4x2@quack3>
- <YyIEgD8ksSZTsUdJ@ZenIV>
- <20220915081625.6a72nza6yq4l5etp@quack3>
- <YyvG+Oih2A37Grcf@ZenIV>
- <YyxzYTlyGhbb2MOu@infradead.org>
- <Yy00eSjyxvUIp7D5@ZenIV>
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2 05/18] xfs: Add xfs_break_layouts() to the inode
+ eviction path
+Message-ID: <20220923093803.nroajmvn7twuptez@quack3>
+References: <166329933874.2786261.18236541386474985669.stgit@dwillia2-xfh.jf.intel.com>
+ <20220918225731.GG3600936@dread.disaster.area>
+ <632894c4738d8_2a6ded294a@dwillia2-xfh.jf.intel.com.notmuch>
+ <20220919212959.GL3600936@dread.disaster.area>
+ <6329ee04c9272_2a6ded294bf@dwillia2-xfh.jf.intel.com.notmuch>
+ <20220921221416.GT3600936@dread.disaster.area>
+ <YyuQI08LManypG6u@nvidia.com>
+ <20220923001846.GX3600936@dread.disaster.area>
+ <632d00a491d0d_4a67429488@dwillia2-xfh.jf.intel.com.notmuch>
+ <20220923021012.GZ3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yy00eSjyxvUIp7D5@ZenIV>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20220923021012.GZ3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 23, 2022 at 05:22:17AM +0100, Al Viro wrote:
-> > Add a iov_iter_unpin_pages that does the right thing based on the
-> > type.  (block will need a modified copy of it as it doesn't keep
-> > the pages array around, but logic will be the same).
+On Fri 23-09-22 12:10:12, Dave Chinner wrote:
+> On Thu, Sep 22, 2022 at 05:41:08PM -0700, Dan Williams wrote:
+> > Dave Chinner wrote:
+> > > On Wed, Sep 21, 2022 at 07:28:51PM -0300, Jason Gunthorpe wrote:
+> > > > On Thu, Sep 22, 2022 at 08:14:16AM +1000, Dave Chinner wrote:
+> > > > 
+> > > > > Where are these DAX page pins that don't require the pin holder to
+> > > > > also hold active references to the filesystem objects coming from?
+> > > > 
+> > > > O_DIRECT and things like it.
+> > > 
+> > > O_DIRECT IO to a file holds a reference to a struct file which holds
+> > > an active reference to the struct inode. Hence you can't reclaim an
+> > > inode while an O_DIRECT IO is in progress to it. 
+> > > 
+> > > Similarly, file-backed pages pinned from user vmas have the inode
+> > > pinned by the VMA having a reference to the struct file passed to
+> > > them when they are instantiated. Hence anything using mmap() to pin
+> > > file-backed pages (i.e. applications using FSDAX access from
+> > > userspace) should also have a reference to the inode that prevents
+> > > the inode from being reclaimed.
+> > > 
+> > > So I'm at a loss to understand what "things like it" might actually
+> > > mean. Can you actually describe a situation where we actually permit
+> > > (even temporarily) these use-after-free scenarios?
+> > 
+> > Jason mentioned a scenario here:
+> > 
+> > https://lore.kernel.org/all/YyuoE8BgImRXVkkO@nvidia.com/
+> > 
+> > Multi-thread process where thread1 does open(O_DIRECT)+mmap()+read() and
+> > thread2 does memunmap()+close() while the read() is inflight.
 > 
-> Huh?  You want to keep the type (+ direction) of iov_iter in any structure
-> a page reference coming from iov_iter_get_pages might end up in?  IDGI...
-
-Why would I?  We generall do have or should have the iov_iter around.
-And for the common case where we don't (bios) we can carry that
-information in the bio as it needs a special unmap helper anyway.
-
-But if you don't want to use the iov_iter for some reason, we'll just
-need to condense the information to a flags variable and then pass that.
-
+> And, ah, what production application does this and expects to be
+> able to process the result of the read() operation without getting a
+> SEGV?
 > 
-> BTW, speaking of lifetime rules - am I right assuming that fd_execute_rw()
-> does IO on pages of the scatterlist passed to it?
+> There's a huge difference between an unlikely scenario which we need
+> to work (such as O_DIRECT IO to/from a mmap() buffer at a different
+> offset on the same file) and this sort of scenario where even if we
+> handle it correctly, the application can't do anything with the
+> result and will crash immediately....
 
-Yes.
+I'm not sure I fully follow what we are concerned about here. As you've
+written above direct IO holds reference to the inode until it is completed
+(through kiocb->file->inode chain). So direct IO should be safe?
 
-> Where are they getting
-> dropped and what guarantees that IO is complete by that point?
+I'd be more worried about stuff like vmsplice() that can add file pages
+into pipe without holding inode alive in any way and keeping them there for
+arbitrarily long time. Didn't we want to add FOLL_LONGTERM to gup executed
+from vmsplice() to avoid issues like this?
 
-The exact place depens on the exact taaraget frontend of which we have
-a few.  But it happens from the end_io callback that is triggered
-through a call to target_complete_cmd.
+> > Sounds plausible to me, but I have not tried to trigger it with a focus
+> > test.
+> 
+> If there really are applications this .... broken, then it's not the
+> responsibility of the filesystem to paper over the low level page
+> reference tracking issues that cause it.
+> 
+> i.e. The underlying problem here is that memunmap() frees the VMA
+> while there are still active task-based references to the pages in
+> that VMA. IOWs, the VMA should not be torn down until the O_DIRECT
+> read has released all the references to the pages mapped into the
+> task address space.
+> 
+> This just doesn't seem like an issue that we should be trying to fix
+> by adding band-aids to the inode life-cycle management.
 
-> The reason I'm asking is that here you have an ITER_BVEC possibly fed to
-> __blkdev_direct_IO_async(), with its
->         if (iov_iter_is_bvec(iter)) {
->                 /*
->                  * Users don't rely on the iterator being in any particular
->                  * state for async I/O returning -EIOCBQUEUED, hence we can
->                  * avoid expensive iov_iter_advance(). Bypass
->                  * bio_iov_iter_get_pages() and set the bvec directly.
->                  */
->                 bio_iov_bvec_set(bio, iter);
-> which does *not* grab the page referneces.  Sure, bio_release_pages() knows
-> to leave those alone and doesn't drop anything.  However, what is the
-> mechanism preventing the pages getting freed before the IO completion
-> in this case?
+I agree that freeing VMA while there are pinned pages is ... inconvenient.
+But that is just how gup works since the beginning - the moment you have
+struct page reference, you completely forget about the mapping you've used
+to get to the page. So anything can happen with the mapping after that
+moment. And in case of pages mapped by multiple processes I can easily see
+that one of the processes decides to unmap the page (and it may well be
+that was the initial process that acquired page references) while others
+still keep accessing the page using page references stored in some internal
+structure (RDMA anyone?). I think it will be rather difficult to come up
+with some scheme keeping VMA alive while there are pages pinned without
+regressing userspace which over the years became very much tailored to the
+peculiar gup behavior.
 
-The contract that callers of bvec iters need to hold their own
-references as without that doing I/O do them would be unsafe.  It they
-did not hold references the pages could go away before even calling
-bio_iov_iter_get_pages (or this open coded bio_iov_bvec_set).
+I can imagine we would keep *inode* referenced while there are its pages
+pinned. That should not be that difficult but at least in naive
+implementation that would put rather heavy stress on inode refcount under
+some loads so I don't think that's useful either.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
