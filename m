@@ -2,121 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 770D7ECAAD8
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 02:10:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E15AAECAAD8
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 03:20:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232197AbiIWCKU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Sep 2022 22:10:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45154 "EHLO
+        id S229892AbiIWDUO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Sep 2022 23:20:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232173AbiIWCKT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 22:10:19 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 69F2A81685;
-        Thu, 22 Sep 2022 19:10:16 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C1A911100A56;
-        Fri, 23 Sep 2022 12:10:14 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1obY8q-00B1Gp-Qs; Fri, 23 Sep 2022 12:10:12 +1000
-Date:   Fri, 23 Sep 2022 12:10:12 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Jason Gunthorpe <jgg@nvidia.com>, akpm@linux-foundation.org,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        John Hubbard <jhubbard@nvidia.com>,
-        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v2 05/18] xfs: Add xfs_break_layouts() to the inode
- eviction path
-Message-ID: <20220923021012.GZ3600936@dread.disaster.area>
-References: <166329930818.2786261.6086109734008025807.stgit@dwillia2-xfh.jf.intel.com>
- <166329933874.2786261.18236541386474985669.stgit@dwillia2-xfh.jf.intel.com>
- <20220918225731.GG3600936@dread.disaster.area>
- <632894c4738d8_2a6ded294a@dwillia2-xfh.jf.intel.com.notmuch>
- <20220919212959.GL3600936@dread.disaster.area>
- <6329ee04c9272_2a6ded294bf@dwillia2-xfh.jf.intel.com.notmuch>
- <20220921221416.GT3600936@dread.disaster.area>
- <YyuQI08LManypG6u@nvidia.com>
- <20220923001846.GX3600936@dread.disaster.area>
- <632d00a491d0d_4a67429488@dwillia2-xfh.jf.intel.com.notmuch>
+        with ESMTP id S229706AbiIWDUN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2022 23:20:13 -0400
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30584814D1;
+        Thu, 22 Sep 2022 20:20:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Q+FM57iduMogJtSFwZB4LfTdEsChuEHae2/DVlkArcM=; b=sk/KR0xPUKPHHKWolvPzsqAt4o
+        o9FlyBUe1wX2zq2RbXWaAJTiFJqpuaVPHn1hI4kFCMLxmK2i4rRcZyBQ7i8qSoGeGHFgdH3ZJ0UN5
+        dLNBxE5Tu66mnNUVk9JDrYHLUSZ5tR8FUBrd6EieY3EtTeOzsSdqmQkk2T5jFMG+0yVorDIOTv6BI
+        x2e9UgKUZKYh/UhIHRV8YFxRZVu+ZhV9ughRdGArDVjBkXAu9QUFk9H7Msq1b4dF/F8zWJ6sfxbPX
+        1KW1gnVTo+E89ZNUi1kmPsIS+V0iIkxK6dzo7GQGwpv2V3hXCjpWSwrQMvlVc1ZMa41+fwRncsoTL
+        6/jkjISg==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1obZE6-002eVa-0R;
+        Fri, 23 Sep 2022 03:19:42 +0000
+Date:   Fri, 23 Sep 2022 04:19:42 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Jan Kara <jack@suse.cz>
+Cc:     John Hubbard <jhubbard@nvidia.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        David Hildenbrand <david@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 4/7] iov_iter: new iov_iter_pin_pages*() routines
+Message-ID: <Yy0lztxfwfGXFme4@ZenIV>
+References: <Yxb7YQWgjHkZet4u@infradead.org>
+ <20220906102106.q23ovgyjyrsnbhkp@quack3>
+ <YxhaJktqtHw3QTSG@infradead.org>
+ <YyFPtTtxYozCuXvu@ZenIV>
+ <20220914145233.cyeljaku4egeu4x2@quack3>
+ <YyIEgD8ksSZTsUdJ@ZenIV>
+ <20220915081625.6a72nza6yq4l5etp@quack3>
+ <YyvG+Oih2A37Grcf@ZenIV>
+ <a6f95605-c2d5-6ec5-b85c-d1f3f8664646@nvidia.com>
+ <20220922112935.pep45vfqfw5766gq@quack3>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <632d00a491d0d_4a67429488@dwillia2-xfh.jf.intel.com.notmuch>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=632d1587
-        a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
-        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=VwQbUJbxAAAA:8 a=Ikd4Dj_1AAAA:8
-        a=7-415B0cAAAA:8 a=-v9MXSeZNPeA8zCCQKoA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220922112935.pep45vfqfw5766gq@quack3>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 22, 2022 at 05:41:08PM -0700, Dan Williams wrote:
-> Dave Chinner wrote:
-> > On Wed, Sep 21, 2022 at 07:28:51PM -0300, Jason Gunthorpe wrote:
-> > > On Thu, Sep 22, 2022 at 08:14:16AM +1000, Dave Chinner wrote:
-> > > 
-> > > > Where are these DAX page pins that don't require the pin holder to
-> > > > also hold active references to the filesystem objects coming from?
-> > > 
-> > > O_DIRECT and things like it.
-> > 
-> > O_DIRECT IO to a file holds a reference to a struct file which holds
-> > an active reference to the struct inode. Hence you can't reclaim an
-> > inode while an O_DIRECT IO is in progress to it. 
-> > 
-> > Similarly, file-backed pages pinned from user vmas have the inode
-> > pinned by the VMA having a reference to the struct file passed to
-> > them when they are instantiated. Hence anything using mmap() to pin
-> > file-backed pages (i.e. applications using FSDAX access from
-> > userspace) should also have a reference to the inode that prevents
-> > the inode from being reclaimed.
-> > 
-> > So I'm at a loss to understand what "things like it" might actually
-> > mean. Can you actually describe a situation where we actually permit
-> > (even temporarily) these use-after-free scenarios?
+On Thu, Sep 22, 2022 at 01:29:35PM +0200, Jan Kara wrote:
+
+> > This rule would mostly work, as long as we can relax it in some cases, to
+> > allow pinning of both source and dest pages, instead of just destination
+> > pages, in some cases. In particular, bio_release_pages() has lost all
+> > context about whether it was a read or a write request, as far as I can
+> > tell. And bio_release_pages() is the primary place to unpin pages for
+> > direct IO.
 > 
-> Jason mentioned a scenario here:
-> 
-> https://lore.kernel.org/all/YyuoE8BgImRXVkkO@nvidia.com/
-> 
-> Multi-thread process where thread1 does open(O_DIRECT)+mmap()+read() and
-> thread2 does memunmap()+close() while the read() is inflight.
+> Well, we already do have BIO_NO_PAGE_REF bio flag that gets checked in
+> bio_release_pages(). I think we can easily spare another bio flag to tell
+> whether we need to unpin or not. So as long as all the pages in the created
+> bio need the same treatment, the situation should be simple.
 
-And, ah, what production application does this and expects to be
-able to process the result of the read() operation without getting a
-SEGV?
+Yes.  Incidentally, the same condition is already checked by the creators
+of those bio - see the assorted should_dirty logics.
 
-There's a huge difference between an unlikely scenario which we need
-to work (such as O_DIRECT IO to/from a mmap() buffer at a different
-offset on the same file) and this sort of scenario where even if we
-handle it correctly, the application can't do anything with the
-result and will crash immediately....
-
-> Sounds plausible to me, but I have not tried to trigger it with a focus
-> test.
-
-If there really are applications this .... broken, then it's not the
-responsibility of the filesystem to paper over the low level page
-reference tracking issues that cause it.
-
-i.e. The underlying problem here is that memunmap() frees the VMA
-while there are still active task-based references to the pages in
-that VMA. IOWs, the VMA should not be torn down until the O_DIRECT
-read has released all the references to the pages mapped into the
-task address space.
-
-This just doesn't seem like an issue that we should be trying to fix
-by adding band-aids to the inode life-cycle management.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+While we are at it - how much of the rationale around bio_check_pages_dirty()
+doing dirtying is still applicable with pinning pages before we stick them
+into bio?  We do dirty them before submitting bio, then on completion
+bio_check_pages_dirty() checks if something has marked them clean while
+we'd been doing IO; if all of them are still dirty we just drop the pages
+(well, unpin and drop), otherwise we arrange for dirty + unpin + drop
+done in process context (via schedule_work()).  Can they be marked clean by
+anyone while they are pinned?  After all, pinning is done to prevent
+writeback getting done on them while we are modifying the suckers...
