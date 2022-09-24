@@ -2,602 +2,774 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 950E4C04A95
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Sep 2022 00:30:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 001CFC07E9D
+	for <linux-xfs@archiver.kernel.org>; Sat, 24 Sep 2022 00:49:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230421AbiIXAae (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Sep 2022 20:30:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39472 "EHLO
+        id S230113AbiIXAty (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Sep 2022 20:49:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229514AbiIXAad (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 20:30:33 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A362D844F3
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 17:30:30 -0700 (PDT)
+        with ESMTP id S230079AbiIXAtw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 20:49:52 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56F8325C5A;
+        Fri, 23 Sep 2022 17:49:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0FF0CB80943
-        for <linux-xfs@vger.kernel.org>; Sat, 24 Sep 2022 00:30:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9914BC433D6;
-        Sat, 24 Sep 2022 00:30:27 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DEB7AB815B4;
+        Sat, 24 Sep 2022 00:49:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73B0BC433C1;
+        Sat, 24 Sep 2022 00:49:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663979427;
-        bh=eK+WK8dVNGPNpASqZuxPCrsc65N+cNGi5PTVrphK+eo=;
+        s=k20201202; t=1663980586;
+        bh=w3ncYbAZVqVmZUaZ2xMVsQOw6b3krBG1QnRzmI5mIYo=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sW+Pjt3XKGkiaj1xH/qHT3H/yG2ZZ+dHOQYUKNvgkLrhWD+dtBfMkcD0fDa/OYfA4
-         1QghyUFcQRMh0uztwzW6RuOtEFTZraeCEMLXwm6c7F22T9RkziSCgi5QtqLPImFEyY
-         bHTh92Th08hg7NyzUEFI25GKuxSGhVkdbQki5JM2PdYXT5emyjTlCG9q520bC5mvPM
-         SM3v3ZDz7Rb7wP4o6PhpVesRcIviXtrx7Rl2YPUKCIFupv+gf0NJSVIuYEQX4Emgwb
-         t8zTUhyI1sL5rS50Ynh3fbH05UuAWfGnVthjwLqn68UGTFP9RZ0axl6Dg8mW/KL+4f
-         ZxA1w87J0kNlQ==
-Date:   Fri, 23 Sep 2022 17:30:27 -0700
+        b=uNqVMMJ83laaT00mv0LsrlCiCPGSTjPi1zLg2s344BEcuUyzxGE41v+3h7uHrjB+S
+         KkWmTvmDq026qoNBqv72RED2dOwJE1lFHBHNdEhXoKWMsjkdSXhTrp6871R40qhIbs
+         Jq5HQ0PmurFyZ9RxkyxJVmKY+dmt0xL9dSwwfNyVIb6lLlbmrzYv8hwl4HsBDSMu6b
+         +WD9kqJGQYvN68anJwOTh6ByIvrBpse51NK6cufEVV9pWq70UmZ3qhtjCHRon9Hkn5
+         U1S45s4fppL8krM4FYUSlmEEc5UbfNzyBZCu2W//uG8SrgSd0Lzv5Bvgub7sSN9g2L
+         6TFwV0yVi3ZUA==
+Date:   Fri, 23 Sep 2022 17:49:45 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     allison.henderson@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 24/26] xfs: Add parent pointer ioctl
-Message-ID: <Yy5Pox+x86HvXoWj@magnolia>
-References: <20220922054458.40826-1-allison.henderson@oracle.com>
- <20220922054458.40826-25-allison.henderson@oracle.com>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH v1 1/1] xfstests: Add parent pointer test
+Message-ID: <Yy5UKf1SxzszOCYw@magnolia>
+References: <20220614220129.20847-1-catherine.hoang@oracle.com>
+ <20220614220129.20847-2-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220922054458.40826-25-allison.henderson@oracle.com>
+In-Reply-To: <20220614220129.20847-2-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 21, 2022 at 10:44:56PM -0700, allison.henderson@oracle.com wrote:
+On Tue, Jun 14, 2022 at 03:01:29PM -0700, Catherine Hoang wrote:
 > From: Allison Henderson <allison.henderson@oracle.com>
 > 
-> This patch adds a new file ioctl to retrieve the parent pointer of a
-> given inode
+> This patch adds a test for basic parent pointer operations,
+> including link, unlink, rename, overwrite, hardlinks and
+> error inject.
 > 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-
-To recap from the v2 thread:
-
-Parent pointers are backwards links through the directory tree.  xfsdump
-already records the forward links in the dump file.  xfsrestore uses
-those forward links to rebuild the directory tree, which recreates the
-parent pointers automatically.  Hence we don't need ATTRMULTI to reveal
-(or recreate) the parent pointer xattrs; the kernel does that when we
-create the directory tree.
-
-The second reason I can think of why we don't want to expose the parent
-pointers through the xattr APIs is that we don't want to reveal ondisk
-metadata directly to users -- some day we might want to change wthat's
-stored on disk, or store them in a totally separate structure, or
-whatever.
-
-If we force the interface to be the GETPARENTS ioctl, then we've
-decoupled the front and backends.  I conclude that the /only/ userspace
-API that should ever touch parent pointers is XFS_IOC_GETPARENTS.
-
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 > ---
->  fs/xfs/Makefile            |   1 +
->  fs/xfs/libxfs/xfs_fs.h     |  59 +++++++++++++++++
->  fs/xfs/libxfs/xfs_parent.c |  10 +++
->  fs/xfs/libxfs/xfs_parent.h |   2 +
->  fs/xfs/xfs_ioctl.c         | 106 ++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_ondisk.h        |   4 ++
->  fs/xfs/xfs_parent_utils.c  | 126 +++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_parent_utils.h  |  11 ++++
->  8 files changed, 316 insertions(+), 3 deletions(-)
+>  common/parent       |  196 +++++++++
+>  common/rc           |    3 +
+>  doc/group-names.txt |    1 +
+>  tests/xfs/547       |  126 ++++++
+>  tests/xfs/547.out   |   59 +++
+>  tests/xfs/548       |   97 +++++
+>  tests/xfs/548.out   | 1002 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/549       |  110 +++++
+>  tests/xfs/549.out   |   14 +
+>  9 files changed, 1608 insertions(+)
+>  create mode 100644 common/parent
+>  create mode 100755 tests/xfs/547
+>  create mode 100644 tests/xfs/547.out
+>  create mode 100755 tests/xfs/548
+>  create mode 100644 tests/xfs/548.out
+>  create mode 100755 tests/xfs/549
+>  create mode 100644 tests/xfs/549.out
 > 
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index e2b2cf50ffcf..42d0496fdad7 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -86,6 +86,7 @@ xfs-y				+= xfs_aops.o \
->  				   xfs_mount.o \
->  				   xfs_mru_cache.o \
->  				   xfs_pwork.o \
-> +				   xfs_parent_utils.o \
->  				   xfs_reflink.o \
->  				   xfs_stats.o \
->  				   xfs_super.o \
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index b0b4d7a3aa15..42bb343f6952 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -574,6 +574,7 @@ typedef struct xfs_fsop_handlereq {
->  #define XFS_IOC_ATTR_SECURE	0x0008	/* use attrs in security namespace */
->  #define XFS_IOC_ATTR_CREATE	0x0010	/* fail if attr already exists */
->  #define XFS_IOC_ATTR_REPLACE	0x0020	/* fail if attr does not exist */
-> +#define XFS_IOC_ATTR_PARENT	0x0040  /* use attrs in parent namespace */
-
-We definitely don't need this in the userspace API anymore.
-
->  typedef struct xfs_attrlist_cursor {
->  	__u32		opaque[4];
-> @@ -752,6 +753,63 @@ struct xfs_scrub_metadata {
->  				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
->  #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
->  
-> +#define XFS_PPTR_MAXNAMELEN				256
-> +
-> +/* return parents of the handle, not the open fd */
-> +#define XFS_PPTR_IFLAG_HANDLE  (1U << 0)
-> +
-> +/* target was the root directory */
-> +#define XFS_PPTR_OFLAG_ROOT    (1U << 1)
-> +
-> +/* Cursor is done iterating pptrs */
-> +#define XFS_PPTR_OFLAG_DONE    (1U << 2)
-> +
-> + #define XFS_PPTR_FLAG_ALL     (XFS_PPTR_IFLAG_HANDLE | XFS_PPTR_OFLAG_ROOT | \
-> +				XFS_PPTR_OFLAG_DONE)
-> +
-> +/* Get an inode parent pointer through ioctl */
-> +struct xfs_parent_ptr {
-> +	__u64		xpp_ino;			/* Inode */
-> +	__u32		xpp_gen;			/* Inode generation */
-> +	__u32		xpp_diroffset;			/* Directory offset */
-> +	__u32		xpp_rsvd;			/* Reserved */
-> +	__u32		xpp_pad;
-
-No need for two empty __u32, right?
-
-	__u64		xpp_reserved;
-
-> +	__u8		xpp_name[XFS_PPTR_MAXNAMELEN];	/* File name */
-> +};
-> +
-> +/* Iterate through an inodes parent pointers */
-> +struct xfs_pptr_info {
-
-The fields in here ought to have short comments:
-
-/* File handle, if XFS_PPTR_IFLAG_HANDLE is set */
-> +	struct xfs_handle		pi_handle;
-
-/*
- * Structure to track progress in iterating the parent pointers.
- * Must be initialized to zeroes before the first ioctl call, and
- * not touched by callers after that.
- */
-> +	struct xfs_attrlist_cursor	pi_cursor;
-
-/* Operational flags: XFS_PPTR_*FLAG* */
-> +	__u32				pi_flags;
-
-/* Must be set to zero */
-> +	__u32				pi_reserved;
-
-/* # of entries in array */
-> +	__u32				pi_ptrs_size;
-
-/* # of entries filled in (output) */
-> +	__u32				pi_ptrs_used;
-
-/* Must be set to zero */
-> +	__u64				pi_reserved2[6];
-> +
-> +	/*
-> +	 * An array of struct xfs_parent_ptr follows the header
-> +	 * information. Use XFS_PPINFO_TO_PP() to access the
-
-s/XFS_PPINFO_TO_PP/xfs_ppinfo_to_pp/
-
-> +	 * parent pointer array entries.
-> +	 */
-> +	struct xfs_parent_ptr		pi_parents[];
-> +};
-> +
-> +static inline size_t
-> +xfs_pptr_info_sizeof(int nr_ptrs)
-> +{
-> +	return sizeof(struct xfs_pptr_info) +
-> +	       (nr_ptrs * sizeof(struct xfs_parent_ptr));
-> +}
-> +
-> +static inline struct xfs_parent_ptr*
-> +xfs_ppinfo_to_pp(
-> +	struct xfs_pptr_info	*info,
-> +	int			idx)
-> +{
-> +	return &info->pi_parents[idx];
-> +}
-> +
->  /*
->   * ioctl limits
->   */
-> @@ -797,6 +855,7 @@ struct xfs_scrub_metadata {
->  /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
->  #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
->  #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
-> +#define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_parent_ptr)
->  
->  /*
->   * ioctl commands that replace IRIX syssgi()'s
-> diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-> index 7db1570e1841..58382a5c40a6 100644
-> --- a/fs/xfs/libxfs/xfs_parent.c
-> +++ b/fs/xfs/libxfs/xfs_parent.c
-> @@ -26,6 +26,16 @@
->  #include "xfs_xattr.h"
->  #include "xfs_parent.h"
->  
-> +/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
-> +void
-> +xfs_init_parent_ptr(struct xfs_parent_ptr		*xpp,
-> +		    const struct xfs_parent_name_rec	*rec)
-> +{
-> +	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
-> +	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
-> +	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
-> +}
-> +
->  /*
->   * Parent pointer attribute handling.
->   *
-> diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
-> index b2ed4f373799..99765e65af8d 100644
-> --- a/fs/xfs/libxfs/xfs_parent.h
-> +++ b/fs/xfs/libxfs/xfs_parent.h
-> @@ -23,6 +23,8 @@ void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
->  			      uint32_t p_diroffset);
->  void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
->  			       struct xfs_parent_name_rec *rec);
-> +void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
-> +			 const struct xfs_parent_name_rec *rec);
->  int xfs_parent_init(xfs_mount_t *mp, struct xfs_parent_defer **parentp);
->  int xfs_parent_defer_add(struct xfs_trans *tp, struct xfs_parent_defer *parent,
->  			 struct xfs_inode *dp, struct xfs_name *parent_name,
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 5b600d3f7981..7dc9f37d96cb 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -37,6 +37,7 @@
->  #include "xfs_health.h"
->  #include "xfs_reflink.h"
->  #include "xfs_ioctl.h"
-> +#include "xfs_parent_utils.h"
->  #include "xfs_xattr.h"
->  
->  #include <linux/mount.h>
-> @@ -355,6 +356,8 @@ xfs_attr_filter(
->  		return XFS_ATTR_ROOT;
->  	if (ioc_flags & XFS_IOC_ATTR_SECURE)
->  		return XFS_ATTR_SECURE;
-> +	if (ioc_flags & XFS_IOC_ATTR_PARENT)
-> +		return XFS_ATTR_PARENT;
->  	return 0;
->  }
->  
-> @@ -422,7 +425,8 @@ xfs_ioc_attr_list(
->  	/*
->  	 * Reject flags, only allow namespaces.
->  	 */
-> -	if (flags & ~(XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
-> +	if (flags & ~(XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE |
-> +		      XFS_IOC_ATTR_PARENT))
->  		return -EINVAL;
->  	if (flags == (XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
->  		return -EINVAL;
-> @@ -538,6 +542,9 @@ xfs_attrmulti_attr_set(
->  	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
->  		return -EPERM;
->  
-> +	if (flags & XFS_IOC_ATTR_PARENT)
-> +		return -EINVAL;
-> +
->  	if (ubuf) {
->  		if (len > XFS_XATTR_SIZE_MAX)
->  			return -EINVAL;
-> @@ -567,7 +574,9 @@ xfs_ioc_attrmulti_one(
->  	unsigned char		*name;
->  	int			error;
->  
-> -	if ((flags & XFS_IOC_ATTR_ROOT) && (flags & XFS_IOC_ATTR_SECURE))
-> +	if (((flags & XFS_IOC_ATTR_ROOT) &&
-> +	    ((flags & XFS_IOC_ATTR_SECURE) || (flags & XFS_IOC_ATTR_PARENT))) ||
-> +	    ((flags & XFS_IOC_ATTR_SECURE) && (flags & XFS_IOC_ATTR_PARENT)))
-
-All these bits go away since XFS_IOC_ATTR_PARENT is no longer
-necessary...
-
->  		return -EINVAL;
->  
->  	name = strndup_user(uname, MAXNAMELEN);
-> @@ -1679,6 +1688,96 @@ xfs_ioc_scrub_metadata(
->  	return 0;
->  }
->  
-> +/*
-> + * IOCTL routine to get the parent pointers of an inode and return it to user
-> + * space.  Caller must pass a buffer space containing a struct xfs_pptr_info,
-> + * followed by a region large enough to contain an array of struct
-> + * xfs_parent_ptr of a size specified in pi_ptrs_size.  If the inode contains
-> + * more parent pointers than can fit in the buffer space, caller may re-call
-> + * the function using the returned pi_cursor to resume iteration.  The
-> + * number of xfs_parent_ptr returned will be stored in pi_ptrs_used.
-> + *
-> + * Returns 0 on success or non-zero on failure
-> + */
-> +STATIC int
-> +xfs_ioc_get_parent_pointer(
-> +	struct file			*filp,
-> +	void				__user *arg)
-> +{
-> +	struct xfs_pptr_info		*ppi = NULL;
-> +	int				error = 0;
-> +	struct xfs_inode		*ip = XFS_I(file_inode(filp));
-> +	struct xfs_mount		*mp = ip->i_mount;
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EPERM;
-> +
-> +	/* Allocate an xfs_pptr_info to put the user data */
-> +	ppi = kmalloc(sizeof(struct xfs_pptr_info), 0);
-> +	if (!ppi)
-> +		return -ENOMEM;
-> +
-> +	/* Copy the data from the user */
-> +	error = copy_from_user(ppi, arg, sizeof(struct xfs_pptr_info));
-> +	if (error) {
-> +		error = -EFAULT;
-> +		goto out;
-> +	}
-> +
-> +	/* Check size of buffer requested by user */
-> +	if (xfs_pptr_info_sizeof(ppi->pi_ptrs_size) > XFS_XATTR_LIST_MAX) {
-> +		error = -ENOMEM;
-> +		goto out;
-> +	}
-> +
-> +	if (ppi->pi_flags & ~XFS_PPTR_FLAG_ALL) {
-> +		error = -EINVAL;
-> +		goto out;
-> +	}
-> +	ppi->pi_flags &= ~(XFS_PPTR_OFLAG_ROOT | XFS_PPTR_OFLAG_DONE);
-> +
-> +	/*
-> +	 * Now that we know how big the trailing buffer is, expand
-> +	 * our kernel xfs_pptr_info to be the same size
-> +	 */
-> +	ppi = krealloc(ppi, xfs_pptr_info_sizeof(ppi->pi_ptrs_size), 0);
-> +	if (!ppi)
-> +		return -ENOMEM;
-> +
-> +	if (ppi->pi_flags & XFS_PPTR_IFLAG_HANDLE) {
-> +		error = xfs_iget(mp, NULL, ppi->pi_handle.ha_fid.fid_ino,
-> +				0, 0, &ip);
-> +		if (error)
-> +			goto out;
-> +
-> +		if (VFS_I(ip)->i_generation != ppi->pi_handle.ha_fid.fid_gen) {
-> +			error = -EINVAL;
-> +			goto out;
-> +		}
-> +	}
-> +
-> +	if (ip->i_ino == mp->m_sb.sb_rootino)
-> +		ppi->pi_flags |= XFS_PPTR_OFLAG_ROOT;
-> +
-> +	/* Get the parent pointers */
-> +	error = xfs_attr_get_parent_pointer(ip, ppi);
-> +
-> +	if (error)
-> +		goto out;
-> +
-> +	/* Copy the parent pointers back to the user */
-> +	error = copy_to_user(arg, ppi,
-> +			xfs_pptr_info_sizeof(ppi->pi_ptrs_size));
-> +	if (error) {
-> +		error = -EFAULT;
-> +		goto out;
-> +	}
-> +
-> +out:
-> +	kmem_free(ppi);
-> +	return error;
-> +}
-> +
->  int
->  xfs_ioc_swapext(
->  	xfs_swapext_t	*sxp)
-> @@ -1968,7 +2067,8 @@ xfs_file_ioctl(
->  
->  	case XFS_IOC_FSGETXATTRA:
->  		return xfs_ioc_fsgetxattra(ip, arg);
-> -
-> +	case XFS_IOC_GETPARENTS:
-> +		return xfs_ioc_get_parent_pointer(filp, arg);
->  	case XFS_IOC_GETBMAP:
->  	case XFS_IOC_GETBMAPA:
->  	case XFS_IOC_GETBMAPX:
-> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> index 758702b9495f..765eb514a917 100644
-> --- a/fs/xfs/xfs_ondisk.h
-> +++ b/fs/xfs/xfs_ondisk.h
-> @@ -135,6 +135,10 @@ xfs_check_ondisk_structs(void)
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_attri_log_format,	40);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_attrd_log_format,	16);
->  
-> +	/* parent pointer ioctls */
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_parent_ptr,            280);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_pptr_info,             104);
-> +
->  	/*
->  	 * The v5 superblock format extended several v4 header structures with
->  	 * additional data. While new fields are only accessible on v5
-> diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
+> diff --git a/common/parent b/common/parent
 > new file mode 100644
-> index 000000000000..fd7156addd38
+> index 00000000..0af12553
 > --- /dev/null
-> +++ b/fs/xfs/xfs_parent_utils.c
-> @@ -0,0 +1,126 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2022 Oracle, Inc.
-> + * All rights reserved.
-> + */
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_format.h"
-> +#include "xfs_log_format.h"
-> +#include "xfs_shared.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
-> +#include "xfs_bmap_btree.h"
-> +#include "xfs_inode.h"
-> +#include "xfs_error.h"
-> +#include "xfs_trace.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
-> +#include "xfs_attr.h"
-> +#include "xfs_ioctl.h"
-> +#include "xfs_parent.h"
-> +#include "xfs_da_btree.h"
+> +++ b/common/parent
+> @@ -0,0 +1,196 @@
+> +#
+> +# Parent pointer common functions
+> +#
 > +
-> +/*
-> + * Get the parent pointers for a given inode
-> + *
-> + * Returns 0 on success and non zero on error
-> + */
-> +int
-> +xfs_attr_get_parent_pointer(
-> +	struct xfs_inode		*ip,
-> +	struct xfs_pptr_info		*ppi)
+> +#
+> +# parse_parent_pointer parents parent_inode parent_pointer_name
+> +#
+> +# Given a list of parent pointers, find the record that matches
+> +# the given inode and filename
+> +#
+> +# inputs:
+> +# parents	: A list of parent pointers in the format of:
+> +#		  inode/generation/name_length/name
+> +# parent_inode	: The parent inode to search for
+> +# parent_name	: The parent name to search for
+> +#
+> +# outputs:
+> +# PPINO         : Parent pointer inode
+> +# PPGEN         : Parent pointer generation
+> +# PPNAME        : Parent pointer name
+> +# PPNAME_LEN    : Parent pointer name length
+> +#
+> +_parse_parent_pointer()
+> +{
+> +	local parents=$1
+> +	local pino=$2
+> +	local parent_pointer_name=$3
+> +
+> +	local found=0
+> +
+> +	# Find the entry that has the same inode as the parent
+> +	# and parse out the entry info
+> +	while IFS=\/ read PPINO PPGEN PPNAME_LEN PPNAME; do
+> +		if [ "$PPINO" != "$pino" ]; then
+> +			continue
+> +		fi
+> +
+> +		if [ "$PPNAME" != "$parent_pointer_name" ]; then
+> +			continue
+> +		fi
+> +
+> +		found=1
+> +		break
+> +	done <<< $(echo "$parents")
+> +
+> +	# Check to see if we found anything
+> +	# We do not fail the test because we also use this
+> +	# routine to verify when parent pointers should
+> +	# be removed or updated  (ie a rename or a move
+> +	# operation changes your parent pointer)
+> +	if [ $found -eq "0" ]; then
+> +		return 1
+> +	fi
+> +
+> +	# Verify the parent pointer name length is correct
+> +	if [ "$PPNAME_LEN" -ne "${#parent_pointer_name}" ]
+> +	then
+> +		_fail "Bad parent pointer reclen"
+
+Do you really want to _fail the whole test immediately?  Or simply let
+the golden output comparison mark the test failed because there's
+unexpected output from "echo 'bad parent pointer reclen'" ?
+
+> +	fi
+> +
+> +	#return sucess
+> +	return 0
+> +}
+> +
+> +#
+> +# _verify_parent parent_path parent_pointer_name child_path
+> +#
+> +# Verify that the given child path lists the given parent as a parent pointer
+> +# and that the parent pointer name matches the given name
+> +#
+> +# Examples:
+> +#
+> +# #simple example
+> +# mkdir testfolder1
+> +# touch testfolder1/file1
+> +# verify_parent testfolder1 file1 testfolder1/file1
+> +#
+> +# # In this above example, we want to verify that "testfolder1"
+> +# # appears as a parent pointer of "testfolder1/file1".  Additionally
+> +# # we verify that the name record of the parent pointer is "file1"
+> +#
+> +#
+> +# #hardlink example
+> +# mkdir testfolder1
+> +# mkdir testfolder2
+> +# touch testfolder1/file1
+> +# ln testfolder1/file1 testfolder2/file1_ln
+> +# verify_parent testfolder2 file1_ln testfolder1/file1
+> +#
+> +# # In this above example, we want to verify that "testfolder2"
+> +# # appears as a parent pointer of "testfolder1/file1".  Additionally
+> +# # we verify that the name record of the parent pointer is "file1_ln"
+> +#
+> +_verify_parent()
 > +{
 > +
-> +	struct xfs_attrlist		*alist;
-> +	struct xfs_attrlist_ent		*aent;
-> +	struct xfs_parent_ptr		*xpp;
-> +	struct xfs_parent_name_rec	*xpnr;
-> +	char				*namebuf;
-> +	unsigned int			namebuf_size;
-> +	int				name_len, i, error = 0;
-> +	unsigned int			ioc_flags = XFS_IOC_ATTR_PARENT;
-> +	unsigned int			lock_mode, flags = XFS_ATTR_PARENT;
-> +	struct xfs_attr_list_context	context;
+> +	local parent_path=$1
+> +	local parent_pointer_name=$2
+> +	local child_path=$3
 > +
-> +	/* Allocate a buffer to store the attribute names */
-> +	namebuf_size = sizeof(struct xfs_attrlist) +
-> +		       (ppi->pi_ptrs_size) * sizeof(struct xfs_attrlist_ent);
-> +	namebuf = kvzalloc(namebuf_size, GFP_KERNEL);
-> +	if (!namebuf)
-> +		return -ENOMEM;
+> +	local parent_ppath="$parent_path/$parent_pointer_name"
 > +
-> +	memset(&context, 0, sizeof(struct xfs_attr_list_context));
-> +	error = xfs_ioc_attr_list_context_init(ip, namebuf, namebuf_size,
-> +			ioc_flags, &context);
-> +	if (error)
-> +		goto out_kfree;
+> +	# Verify parent exists
+> +	if [ ! -d $SCRATCH_MNT/$parent_path ]; then
+> +		_fail "$SCRATCH_MNT/$parent_path not found"
+> +	else
+> +		echo "*** $parent_path OK"
+> +	fi
+> +
+> +	# Verify child exists
+> +	if [ ! -f $SCRATCH_MNT/$child_path ]; then
+> +		_fail "$SCRATCH_MNT/$child_path not found"
+> +	else
+> +		echo "*** $child_path OK"
+> +	fi
+> +
+> +	# Verify the parent pointer name exists as a child of the parent
+> +	if [ ! -f $SCRATCH_MNT/$parent_ppath ]; then
+> +		_fail "$SCRATCH_MNT/$parent_ppath not found"
+> +	else
+> +		echo "*** $parent_ppath OK"
+> +	fi
+> +
+> +	# Get the inodes of both parent and child
+> +	pino="$(stat -c '%i' $SCRATCH_MNT/$parent_path)"
+> +	cino="$(stat -c '%i' $SCRATCH_MNT/$child_path)"
+> +
+> +	# Get all the parent pointers of the child
+> +	parents=($($XFS_IO_PROG -x -c "parent -f -i $pino -n $parent_pointer_name" $SCRATCH_MNT/$child_path))
+> +	if [[ $? != 0 ]]; then
+> +		 _fail "No parent pointers found for $child_path"
+> +	fi
+> +
+> +	# Parse parent pointer output.
+> +	# This sets PPINO PPGEN PPNAME PPNAME_LEN
+> +	_parse_parent_pointer $parents $pino $parent_pointer_name
+> +
+> +	# If we didnt find one, bail out
+> +	if [ $? -ne 0 ]; then
+> +		_fail "No parent pointer record found for $parent_path in $child_path"
+> +	fi
+> +
+> +	# Verify the inode generated by the parent pointer name is
+> +	# the same as the child inode
+> +	pppino="$(stat -c '%i' $SCRATCH_MNT/$parent_ppath)"
+> +	if [ $cino -ne $pppino ]
+> +	then
+> +		_fail "Bad parent pointer name value for $child_path."\
+> +				"$SCRATCH_MNT/$parent_ppath belongs to inode $PPPINO, but should be $cino"
+> +	fi
+> +
+> +	echo "*** Verified parent pointer:"\
+> +			"name:$PPNAME, namelen:$PPNAME_LEN"
+> +	echo "*** Parent pointer OK for child $child_path"
+> +}
+> +
+> +#
+> +# _verify_parent parent_pointer_name pino child_path
+> +#
+> +# Verify that the given child path contains no parent pointer entry
+> +# for the given inode and file name
+> +#
+> +_verify_no_parent()
+> +{
+> +
+> +	local parent_pname=$1
+> +	local pino=$2
+> +	local child_path=$3
+> +
+> +	# Verify child exists
+> +	if [ ! -f $SCRATCH_MNT/$child_path ]; then
+> +		_fail "$SCRATCH_MNT/$child_path not found"
+> +	else
+> +		echo "*** $child_path OK"
+> +	fi
+> +
+> +	# Get all the parent pointers of the child
+> +	local parents=($($XFS_IO_PROG -x -c "parent -f -i $pino -n $parent_pname" $SCRATCH_MNT/$child_path))
+> +	if [[ $? != 0 ]]; then
+> +		return 0
+> +	fi
+> +
+> +	# Parse parent pointer output.
+> +	# This sets PPINO PPGEN PPNAME PPNAME_LEN
+> +	_parse_parent_pointer $parents $pino $parent_pname
+> +
+> +	# If we didnt find one, return sucess
+> +	if [ $? -ne 0 ]; then
+> +		return 0
+> +	fi
+> +
+> +	_fail "Parent pointer entry found where none should:"\
+> +			"inode:$PPINO, gen:$PPGEN,"
+> +			"name:$PPNAME, namelen:$PPNAME_LEN"
+> +}
+> +
+> diff --git a/common/rc b/common/rc
+> index 4201a059..68752cdc 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2701,6 +2701,9 @@ _require_xfs_io_command()
+>  		echo $testio | grep -q "invalid option" && \
+>  			_notrun "xfs_io $command support is missing"
+>  		;;
+> +	"parent")
+> +		testio=`$XFS_IO_PROG -x -c "parent" $TEST_DIR 2>&1`
+> +		;;
+>  	"pwrite")
+>  		# -N (RWF_NOWAIT) only works with direct vectored I/O writes
+>  		local pwrite_opts=" "
+> diff --git a/doc/group-names.txt b/doc/group-names.txt
+> index e8e3477e..98bbe3b7 100644
+> --- a/doc/group-names.txt
+> +++ b/doc/group-names.txt
+> @@ -77,6 +77,7 @@ nfs4_acl		NFSv4 access control lists
+>  nonsamefs		overlayfs layers on different filesystems
+>  online_repair		online repair functionality tests
+>  other			dumping ground, do not add more tests to this group
+> +parent			Parent pointer tests
+>  pattern			specific IO pattern tests
+>  perms			access control and permission checking
+>  pipe			pipe functionality
+> diff --git a/tests/xfs/547 b/tests/xfs/547
+> new file mode 100755
+> index 00000000..5c7d1d45
+> --- /dev/null
+> +++ b/tests/xfs/547
+> @@ -0,0 +1,126 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test 547
+> +#
+> +# simple parent pointer test
+> +#
+> +
+> +. ./common/preamble
+> +_begin_fstest auto quick parent
+> +
+> +cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	echo 0 > /sys/fs/xfs/debug/larp
+> +}
+> +
+> +full()
+> +{
+> +    echo ""            >>$seqres.full
+> +    echo "*** $* ***"  >>$seqres.full
+> +    echo ""            >>$seqres.full
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/filter
+> +. ./common/reflink
+> +. ./common/inject
+> +. ./common/parent
+> +
+> +# Modify as appropriate
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_xfs_sysfs debug/larp
+> +_require_xfs_io_error_injection "larp"
+> +
+> +echo 1 > /sys/fs/xfs/debug/larp
 
-And now that we don't have XFS_IOC_ATTR_PARENT anymore, change this to:
-
-	memset(&context, 0, sizeof(struct xfs_attr_list_context));
-	error = xfs_ioc_attr_list_context_init(ip, namebuf,
-			namebuf_size, 0, &context);
-	if (error)
-		goto out_kfree;
-	context.attr_flags = XFS_ATTR_PARENT;
-
-This way you can reuse the xfs_attr_list* infrastructure without needing
-to add flags to the userspace xattr APIs or then have to filter that out
-from all the incoming xattr calls.
+Doesn't the parent pointer code turn on LARP mode automatically?
+Why does the test need to do that explicitly?
 
 > +
-> +	/* Copy the cursor provided by caller */
-> +	memcpy(&context.cursor, &ppi->pi_cursor,
-> +		sizeof(struct xfs_attrlist_cursor));
-> +	context.attr_filter = XFS_ATTR_PARENT;
+> +# real QA test starts here
 > +
-> +	lock_mode = xfs_ilock_attr_map_shared(ip);
+> +# Create a directory tree using a protofile and
+> +# make sure all inodes created have parent pointers
 > +
-> +	error = xfs_attr_list_ilocked(&context);
-> +	if (error)
-> +		goto out_kfree;
+> +protofile=$tmp.proto
 > +
-> +	alist = (struct xfs_attrlist *)namebuf;
-> +	for (i = 0; i < alist->al_count; i++) {
-> +		struct xfs_da_args args = {
-> +			.geo = ip->i_mount->m_attr_geo,
-> +			.whichfork = XFS_ATTR_FORK,
-> +			.dp = ip,
-> +			.namelen = sizeof(struct xfs_parent_name_rec),
-> +			.attr_filter = flags,
-> +			.op_flags = XFS_DA_OP_OKNOENT,
+> +cat >$protofile <<EOF
+> +DUMMY1
+> +0 0
+> +: root directory
+> +d--777 3 1
+> +: a directory
+> +testfolder1 d--755 3 1
+> +file1 ---755 3 1 /dev/null
+> +$
+> +: back in the root
+> +testfolder2 d--755 3 1
+> +file2 ---755 3 1 /dev/null
+> +: done
+> +$
+> +EOF
+> +
+> +if [ $? -ne 0 ]
+> +then
+> +    _fail "failed to create test protofile"
+> +fi
+> +
+> +_scratch_mkfs -f -n parent=1 -p $protofile >>$seqres.full 2>&1 \
+> +	|| _fail "mkfs failed"
+> +_check_scratch_fs
+> +
+> +_scratch_mount >>$seqres.full 2>&1 \
+> +	|| _fail "mount failed"
+> +
+> +testfolder1="testfolder1"
+> +testfolder2="testfolder2"
+> +file1="file1"
+> +file2="file2"
+> +file3="file3"
+> +file4="file4"
+> +file5="file5"
+> +file1_ln="file1_link"
+> +
+> +echo ""
+> +# Create parent pointer test
+> +_verify_parent "$testfolder1" "$file1" "$testfolder1/$file1"
+> +
+> +echo ""
+> +# Move parent pointer test
+> +mv $SCRATCH_MNT/$testfolder1/$file1 $SCRATCH_MNT/$testfolder2/$file1
+> +_verify_parent "$testfolder2" "$file1" "$testfolder2/$file1"
+> +
+> +echo ""
+> +# Hard link parent pointer test
+> +ln $SCRATCH_MNT/$testfolder2/$file1 $SCRATCH_MNT/$testfolder1/$file1_ln
+> +_verify_parent "$testfolder1" "$file1_ln"  "$testfolder1/$file1_ln"
+> +_verify_parent "$testfolder1" "$file1_ln"  "$testfolder2/$file1"
+> +_verify_parent "$testfolder2" "$file1"     "$testfolder1/$file1_ln"
+> +_verify_parent "$testfolder2" "$file1"     "$testfolder2/$file1"
+> +
+> +echo ""
+> +# Remove hard link parent pointer test
+> +ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder2/$file1)"
+> +rm $SCRATCH_MNT/$testfolder2/$file1
+> +_verify_parent    "$testfolder1" "$file1_ln" "$testfolder1/$file1_ln"
+> +_verify_no_parent "$file1" "$ino" "$testfolder1/$file1_ln"
+> +
+> +echo ""
+> +# Rename parent pointer test
+> +ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder1/$file1_ln)"
+> +mv $SCRATCH_MNT/$testfolder1/$file1_ln $SCRATCH_MNT/$testfolder1/$file2
+> +_verify_parent    "$testfolder1" "$file2"    "$testfolder1/$file2"
+> +_verify_no_parent "$file1_ln" "$ino" "$testfolder1/$file2"
+> +
+> +echo ""
+> +# Over write parent pointer test
+> +touch $SCRATCH_MNT/$testfolder2/$file3
+> +_verify_parent    "$testfolder2" "$file3"    "$testfolder2/$file3"
+> +ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder2/$file3)"
+> +mv -f $SCRATCH_MNT/$testfolder2/$file3 $SCRATCH_MNT/$testfolder1/$file2
+> +_verify_parent    "$testfolder1" "$file2"    "$testfolder1/$file2"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/547.out b/tests/xfs/547.out
+> new file mode 100644
+> index 00000000..e0ce9e65
+> --- /dev/null
+> +++ b/tests/xfs/547.out
+> @@ -0,0 +1,59 @@
+> +QA output created by 547
+> +
+> +*** testfolder1 OK
+> +*** testfolder1/file1 OK
+> +*** testfolder1/file1 OK
+> +*** Verified parent pointer: name:file1, namelen:5
+> +*** Parent pointer OK for child testfolder1/file1
+> +
+> +*** testfolder2 OK
+> +*** testfolder2/file1 OK
+> +*** testfolder2/file1 OK
+> +*** Verified parent pointer: name:file1, namelen:5
+> +*** Parent pointer OK for child testfolder2/file1
+> +
+> +*** testfolder1 OK
+> +*** testfolder1/file1_link OK
+> +*** testfolder1/file1_link OK
+> +*** Verified parent pointer: name:file1_link, namelen:10
+> +*** Parent pointer OK for child testfolder1/file1_link
+> +*** testfolder1 OK
+> +*** testfolder2/file1 OK
+> +*** testfolder1/file1_link OK
+> +*** Verified parent pointer: name:file1_link, namelen:10
+> +*** Parent pointer OK for child testfolder2/file1
+> +*** testfolder2 OK
+> +*** testfolder1/file1_link OK
+> +*** testfolder2/file1 OK
+> +*** Verified parent pointer: name:file1, namelen:5
+> +*** Parent pointer OK for child testfolder1/file1_link
+> +*** testfolder2 OK
+> +*** testfolder2/file1 OK
+> +*** testfolder2/file1 OK
+> +*** Verified parent pointer: name:file1, namelen:5
+> +*** Parent pointer OK for child testfolder2/file1
+> +
+> +*** testfolder1 OK
+> +*** testfolder1/file1_link OK
+> +*** testfolder1/file1_link OK
+> +*** Verified parent pointer: name:file1_link, namelen:10
+> +*** Parent pointer OK for child testfolder1/file1_link
+> +*** testfolder1/file1_link OK
+> +
+> +*** testfolder1 OK
+> +*** testfolder1/file2 OK
+> +*** testfolder1/file2 OK
+> +*** Verified parent pointer: name:file2, namelen:5
+> +*** Parent pointer OK for child testfolder1/file2
+> +*** testfolder1/file2 OK
+> +
+> +*** testfolder2 OK
+> +*** testfolder2/file3 OK
+> +*** testfolder2/file3 OK
+> +*** Verified parent pointer: name:file3, namelen:5
+> +*** Parent pointer OK for child testfolder2/file3
+> +*** testfolder1 OK
+> +*** testfolder1/file2 OK
+> +*** testfolder1/file2 OK
+> +*** Verified parent pointer: name:file2, namelen:5
+> +*** Parent pointer OK for child testfolder1/file2
+> diff --git a/tests/xfs/548 b/tests/xfs/548
+> new file mode 100755
+> index 00000000..229d871a
+> --- /dev/null
+> +++ b/tests/xfs/548
+> @@ -0,0 +1,97 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test 548
+> +#
+> +# multi link parent pointer test
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick parent
+> +
+> +cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	echo 0 > /sys/fs/xfs/debug/larp
+> +}
+> +
+> +full()
+> +{
+> +    echo ""            >>$seqres.full
+> +    echo "*** $* ***"  >>$seqres.full
+> +    echo ""            >>$seqres.full
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/filter
+> +. ./common/reflink
+> +. ./common/inject
+> +. ./common/parent
+> +
+> +# Modify as appropriate
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_xfs_io_error_injection "larp"
+> +_require_xfs_sysfs debug/larp
+> +
+> +echo 1 > /sys/fs/xfs/debug/larp
+> +
+> +# real QA test starts here
+> +
+> +# Create a directory tree using a protofile and
+> +# make sure all inodes created have parent pointers
+> +
+> +protofile=$tmp.proto
+> +
+> +cat >$protofile <<EOF
+> +DUMMY1
+> +0 0
+> +: root directory
+> +d--777 3 1
+> +: a directory
+> +testfolder1 d--755 3 1
+> +file1 ---755 3 1 /dev/null
+> +: done
+> +$
+> +EOF
+> +
+> +if [ $? -ne 0 ]
+> +then
+> +    _fail "failed to create test protofile"
+> +fi
+> +
+> +_scratch_mkfs -f -n parent=1 -p $protofile >>$seqresres.full 2>&1 \
+> +	|| _fail "mkfs failed"
+> +_check_scratch_fs
+> +
+> +_scratch_mount >>$seqres.full 2>&1 \
+> +	|| _fail "mount failed"
+> +
+> +testfolder1="testfolder1"
+> +testfolder2="testfolder2"
+> +file1="file1"
+> +file2="file2"
+> +file3="file3"
+> +file4="file4"
+> +file5="file5"
+> +file1_ln="file1_link"
+> +
+> +echo ""
+> +# Multi link parent pointer test
+> +NLINKS=100
+> +for (( j=0; j<$NLINKS; j++ )); do
+> +	ln $SCRATCH_MNT/$testfolder1/$file1 $SCRATCH_MNT/$testfolder1/$file1_ln.$j
+> +	_verify_parent    "$testfolder1" "$file1_ln.$j"    "$testfolder1/$file1"
+> +	_verify_parent    "$testfolder1" "$file1"          "$testfolder1/$file1_ln.$j"
+> +done
+> +# Multi unlink parent pointer test
+> +for (( j=$NLINKS-1; j<=0; j-- )); do
+> +	ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder1/$file1_ln.$j)"
+> +	rm $SCRATCH_MNT/$testfolder1/$file1_ln.$j
+> +	_verify_no_parent "$file1_ln.$j" "$ino" "$testfolder1/$file1"
+> +done
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/548.out b/tests/xfs/548.out
+> new file mode 100644
+> index 00000000..afdc083b
+> --- /dev/null
+> +++ b/tests/xfs/548.out
+> @@ -0,0 +1,1002 @@
+> +QA output created by 548
+> +
+> +*** testfolder1 OK
 
-We hold the ILOCK between the list and the attr getting, so we shouldn't
-need OKNOENT here to avoid error returns, right?
+<snip>
 
-> +		};
+> +*** testfolder1 OK
+> +*** testfolder1/file1_link.99 OK
+> +*** testfolder1/file1 OK
+> +*** Verified parent pointer: name:file1, namelen:5
+> +*** Parent pointer OK for child testfolder1/file1_link.99
+> diff --git a/tests/xfs/549 b/tests/xfs/549
+> new file mode 100755
+> index 00000000..e8e74b8a
+> --- /dev/null
+> +++ b/tests/xfs/549
+> @@ -0,0 +1,110 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test 549
+> +#
+> +# parent pointer inject test
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick parent
 > +
-> +		xpp = xfs_ppinfo_to_pp(ppi, i);
-> +		memset(xpp, 0, sizeof(struct xfs_parent_ptr));
-> +		aent = (struct xfs_attrlist_ent *)
-> +			&namebuf[alist->al_offset[i]];
-> +		xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
+> +cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	echo 0 > /sys/fs/xfs/debug/larp
+> +}
 > +
-> +		if (aent->a_valuelen > XFS_PPTR_MAXNAMELEN) {
-> +			error = -EFSCORRUPTED;
-> +			goto out_kfree;
-> +		}
-> +		name_len = aent->a_valuelen;
+> +full()
+> +{
+> +    echo ""            >>$seqres.full
+> +    echo "*** $* ***"  >>$seqres.full
+> +    echo ""            >>$seqres.full
+> +}
 > +
-> +		args.name = (char *)xpnr;
-> +		args.hashval = xfs_da_hashname(args.name, args.namelen),
-> +		args.value = (unsigned char *)(xpp->xpp_name);
-> +		args.valuelen = name_len;
+> +# get standard environment, filters and checks
+> +. ./common/filter
+> +. ./common/reflink
+> +. ./common/inject
+> +. ./common/parent
 > +
-> +		error = xfs_attr_get_ilocked(&args);
-> +		error = (error == -EEXIST ? 0 : error);
-> +		if (error) {
-> +			error = -EFSCORRUPTED;
-> +			goto out_kfree;
-> +		}
+> +# Modify as appropriate
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_xfs_sysfs debug/larp
+> +_require_xfs_io_error_injection "larp"
 > +
-> +		xfs_init_parent_ptr(xpp, xpnr);
-> +		if(!xfs_verify_ino(args.dp->i_mount, xpp->xpp_ino)) {
+> +echo 1 > /sys/fs/xfs/debug/larp
+> +
+> +# real QA test starts here
+> +
+> +# Create a directory tree using a protofile and
+> +# make sure all inodes created have parent pointers
 
-Space before the '('
-
-> +			error = -EFSCORRUPTED;
-> +			goto out_kfree;
-> +		}
-> +	}
-> +	ppi->pi_ptrs_used = alist->al_count;
-> +	if (!alist->al_more)
-> +		ppi->pi_flags |= XFS_PPTR_OFLAG_DONE;
-> +
-> +	/* Update the caller with the current cursor position */
-> +	memcpy(&ppi->pi_cursor, &context.cursor,
-> +		sizeof(struct xfs_attrlist_cursor));
-
-Two tabs for the continuation line.
+Looks like we're testing the error injection knobs too?
 
 --D
 
 > +
-> +out_kfree:
-> +	xfs_iunlock(ip, lock_mode);
-> +	kvfree(namebuf);
+> +protofile=$tmp.proto
 > +
-> +	return error;
-> +}
+> +cat >$protofile <<EOF
+> +DUMMY1
+> +0 0
+> +: root directory
+> +d--777 3 1
+> +: a directory
+> +testfolder1 d--755 3 1
+> +file1 ---755 3 1 /dev/null
+> +$
+> +: back in the root
+> +testfolder2 d--755 3 1
+> +file2 ---755 3 1 /dev/null
+> +: done
+> +$
+> +EOF
 > +
-> diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
+> +if [ $? -ne 0 ]
+> +then
+> +    _fail "failed to create test protofile"
+> +fi
+> +
+> +_scratch_mkfs -f -n parent=1 -p $protofile >>$seqres.full 2>&1 \
+> +	|| _fail "mkfs failed"
+> +_check_scratch_fs
+> +
+> +_scratch_mount >>$seqres.full 2>&1 \
+> +	|| _fail "mount failed"
+> +
+> +testfolder1="testfolder1"
+> +testfolder2="testfolder2"
+> +file1="file1"
+> +file2="file2"
+> +file3="file3"
+> +file4="file4"
+> +file5="file5"
+> +file1_ln="file1_link"
+> +
+> +echo ""
+> +
+> +# Create files
+> +touch $SCRATCH_MNT/$testfolder1/$file4
+> +_verify_parent    "$testfolder1" "$file4" "$testfolder1/$file4"
+> +
+> +# Inject error
+> +_scratch_inject_error "larp"
+> +
+> +# Move files
+> +mv $SCRATCH_MNT/$testfolder1/$file4 $SCRATCH_MNT/$testfolder2/$file5 2>&1 | _filter_scratch
+> +
+> +# FS should be shut down, touch will fail
+> +touch $SCRATCH_MNT/$testfolder2/$file5 2>&1 | _filter_scratch
+> +
+> +# Remount to replay log
+> +_scratch_remount_dump_log >> $seqres.full
+> +
+> +# FS should be online, touch should succeed
+> +touch $SCRATCH_MNT/$testfolder2/$file5
+> +
+> +# Check files again
+> +_verify_parent    "$testfolder2" "$file5" "$testfolder2/$file5"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/549.out b/tests/xfs/549.out
 > new file mode 100644
-> index 000000000000..ad60baee8b2a
+> index 00000000..1af49c73
 > --- /dev/null
-> +++ b/fs/xfs/xfs_parent_utils.h
-> @@ -0,0 +1,11 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2022 Oracle, Inc.
-> + * All rights reserved.
-> + */
-> +#ifndef	__XFS_PARENT_UTILS_H__
-> +#define	__XFS_PARENT_UTILS_H__
+> +++ b/tests/xfs/549.out
+> @@ -0,0 +1,14 @@
+> +QA output created by 549
 > +
-> +int xfs_attr_get_parent_pointer(struct xfs_inode *ip,
-> +				struct xfs_pptr_info *ppi);
-> +#endif	/* __XFS_PARENT_UTILS_H__ */
+> +*** testfolder1 OK
+> +*** testfolder1/file4 OK
+> +*** testfolder1/file4 OK
+> +*** Verified parent pointer: name:file4, namelen:5
+> +*** Parent pointer OK for child testfolder1/file4
+> +mv: cannot stat 'SCRATCH_MNT/testfolder1/file4': Input/output error
+> +touch: cannot touch 'SCRATCH_MNT/testfolder2/file5': Input/output error
+> +*** testfolder2 OK
+> +*** testfolder2/file5 OK
+> +*** testfolder2/file5 OK
+> +*** Verified parent pointer: name:file5, namelen:5
+> +*** Parent pointer OK for child testfolder2/file5
 > -- 
 > 2.25.1
 > 
