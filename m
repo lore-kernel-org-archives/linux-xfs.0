@@ -2,376 +2,826 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07248C04A95
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Sep 2022 23:53:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B7EDC07E9D
+	for <linux-xfs@archiver.kernel.org>; Sat, 24 Sep 2022 00:01:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232939AbiIWXxf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Sep 2022 19:53:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43072 "EHLO
+        id S231841AbiIXABh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Sep 2022 20:01:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231387AbiIWXxd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 19:53:33 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3ED96137E4D
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 16:53:31 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28NJEG3C012724;
-        Fri, 23 Sep 2022 23:53:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=iO31PbvZqWWQgli0AqMqOU6w2oikZnMNMfad8SMTvgg=;
- b=rQXVNdlwA9mwpE8dkCKXO6HsPRgjvSAu+voxvfLviD/4pVJKCRtzcGWx+R+vyeHR4CWu
- P/fSpQky2Y3D67YFjx8l8uUrpXOqIPmkzJKVEbNarrklAvUdhTFCNwoVvhmqed/ryfQq
- PU9l6qgqYjbwdfbg63AOj+V52ntNihmzZgSwSeysx06QBQ93a6e2XbU2SNXb5r+eeplj
- tsMifQpJ5CqxUT92pcHl1jxlsp9xLApQlbSFVJDTFCbds+6W/DZks5cfvHNcspf2zbd2
- JVbOV6wJ5H+fnyLIFtLf1n6NsvYGNE0OJSHNe/nPwYaZXRPl9eIvQ0MWpQ5Q0XNRXiWT rA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jn69m20vj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 23 Sep 2022 23:53:25 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 28NMsarN001906;
-        Fri, 23 Sep 2022 23:53:24 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2177.outbound.protection.outlook.com [104.47.59.177])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jp39ub7tf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 23 Sep 2022 23:53:24 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JsQvwJz2mBo+0WT7a0BdDmmgjRHNcE8DhNiGH5QOHU/I4qu8WTuShe3yulMUIQBdMDSbBP6TeOtu6nehzCYvq7L4ALfQ37Gug+r+78uKSNyLvctw6xlX/MZJ5jEV2OZR/0fc5LTfq4ffZsEox6PXSFDi6bYBB/XvLKLW1x0iwKcLvfmaj6ugdZvfgQz74PMqNMq1ZL11awNHn7iG+SjrgI12tWIoyVg43LPPpsYdFupgmQ49pB+G/WTQVmJjtpuItTdBtu1WsMMS8l7pTCq5t0d97su4YQBmDgYx2jgDBvftOpBI7iHD+LJ+VJLuoXCjNMe9F7IZHaFN1Z5z2GMDiw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iO31PbvZqWWQgli0AqMqOU6w2oikZnMNMfad8SMTvgg=;
- b=CKEC+TAImJ9ZHUhP2vCh1sFmHb6uogBBX7oMvxbcIHuHzHl9w332x5mHxq1CYTA2jwzHRB4zINwLcsmuvFy3lU7pe5/WHEsAhanbCiCaenIocKo1mf47q5RpUYjLgOwRgo/PaN2XYz9WHdU9Q29nIdltee21fIEb+BcJal4KG409YPu4U2BHjmmRHRvlxE+VKg3iAoTTJVAOTVArHEE+0f+CnjfHMmor4iJv8WuyAa2sMLDeHwcFabPEPZjQ6UVSjrgbuLL6qCXnfFd/yt8sONcvDjkHBDX+WWcLpRWDp/WdhGEvBhWjaWVDIlk1IZjpks4lCJg1CjNtK6BXWat/iw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iO31PbvZqWWQgli0AqMqOU6w2oikZnMNMfad8SMTvgg=;
- b=l4BJyayww4UdBOYT1pwKzssQkyZcPekHAVx15ZBGdYw781/7Gji1FOyUPWCW8HBs8EzNMfY4Jk1Uai2/RGcLZiQ8LuxZqsUYTVt5cHaoUxGJLPILYHpfWL63bxgzF1+33mAPrU/Nl2no0bcgf5BCs9mW21+WNkQiEzKsp7ohdgY=
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by DS7PR10MB4877.namprd10.prod.outlook.com (2603:10b6:5:3a3::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.20; Fri, 23 Sep
- 2022 23:53:22 +0000
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::1c59:e718:73e3:f1f9]) by BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::1c59:e718:73e3:f1f9%3]) with mapi id 15.20.5654.020; Fri, 23 Sep 2022
- 23:53:22 +0000
-From:   Allison Henderson <allison.henderson@oracle.com>
-To:     "djwong@kernel.org" <djwong@kernel.org>
-CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v3 13/26] xfs: extend transaction reservations for parent
- attributes
-Thread-Topic: [PATCH v3 13/26] xfs: extend transaction reservations for parent
- attributes
-Thread-Index: AQHYzkZ/ko3Skan5wEGiO8fXOW9tpK3tdpSAgAA8MgA=
-Date:   Fri, 23 Sep 2022 23:53:22 +0000
-Message-ID: <56e66827346fcc5ba40805a34abffc95f16c740b.camel@oracle.com>
-References: <20220922054458.40826-1-allison.henderson@oracle.com>
-         <20220922054458.40826-14-allison.henderson@oracle.com>
-         <Yy4Uc62AbxUAWDXg@magnolia>
-In-Reply-To: <Yy4Uc62AbxUAWDXg@magnolia>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.44.1-0ubuntu1 
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BY5PR10MB4306:EE_|DS7PR10MB4877:EE_
-x-ms-office365-filtering-correlation-id: 37d4bdc1-a82e-43c9-342b-08da9dbecca5
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: hXwAAx6PbZP2zftinyuPx5jLpmgU2Os4TLTgDiIu2W9sHBbC8MNRS7rzsUkydS4EKbIDy/3DzFXz3NyekQayeR8S8tbjIyIihrKakyAbkLNPNEJlBURYLIgJFeyV/+duKHJBBmmcjDOS8bscNbsF1qF8AVyKB5p11pttdoFcPOfj2nPowUrQa1ey5gngGb3pSvr1IdgyhNVupfaByiPQyd/B0wS561NFqEUCz1oMd3181hMVh6TZTsOqXPiaZ9/2bHDiVIPwiwo30R/v2rtnYR83EXTcU+JHsHlw2BIIvyiO9LLsrMWKf8sjL7ZJTeV5sN6Hl8nmd3T//I1S7Nnfm2/Zefky5Ego35+WiJJT3W5HJ0uBV1srRw/3xZjJmse6uyhM67eto7x3hraTBqK7bLqCnkeXOmYRv1E8B/0SCWF0u/vdJU0X+FigQg9mcXBbbQjyIyqMq8lqhwbenS8cts5zonRJpTgXdQyt12LIHiQiQ+79ss9Ut2oP6jTFnFtCjIY7/dzVH9R0194d2IgoTXviYRF5yvDHwUiNpgqkK5wLu54IMo2qGU407Rx05ZOYilvdYzqJAeWETmdm7VWziOF+lhK31xZF3nOdwD9GYAsmnZUptUz4EcHf5mdyt1f9eFooPcCvPig0FXiDImm79cJSN80l2IY8YBHq9G25UpWMABRG9AacUYQAm2KW5rw0M+Jz/wSdwqZjCYgyn+oiKpP7uWqaYLdzLaWAGfoFG+8SV2EWioona2DEMeehhHhV
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(346002)(396003)(39860400002)(366004)(136003)(376002)(451199015)(6486002)(71200400001)(66446008)(66946007)(36756003)(6916009)(64756008)(478600001)(66476007)(66556008)(4326008)(8676002)(76116006)(8936002)(41300700001)(316002)(38070700005)(186003)(2616005)(122000001)(86362001)(38100700002)(6512007)(26005)(6506007)(83380400001)(2906002)(5660300002)(30864003)(44832011);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?aG40emZReFcwT1psSDJxNWI0RXRySlBsdW5Ud3IrRkxkKzdxVEZkYnVRTEdX?=
- =?utf-8?B?ckVSdzdUL1B2VXVWUnBERWJzUmpQSGV6VjRyU0JmRlhYTTVvMjBFbm53Wnc4?=
- =?utf-8?B?N2syaUpJMGYySURXa2xkWTE2RFRrQzJvSVptR2hMbnZpTTZneTl1dmJtWElR?=
- =?utf-8?B?WE9KN2pyQWVIUzBkSnJ1SmcwTk5CZ0p4VVhuSzFnMnN0QlVHdTI2MFJzaXh3?=
- =?utf-8?B?b0RJa1dad2lpNm1VRGtEYWVaMnF0MzhhSWQrNmhYUS8rNVdQRTR6VzN6eG9X?=
- =?utf-8?B?akI4QXQydkNPcXlLQ1hiRnNOcU1kS2k0OGh5ejJ2TXJONjhGK3pETXVBd2VT?=
- =?utf-8?B?VTNOVVNCMW5YQW1VT1pWOFhmYWVKUmhDN2theFRFOEtpOFBPb0lVQ21hR0JL?=
- =?utf-8?B?UUFiL1hNSWtaUVJpaWVGZTFkWW5uZGtyQ1FGU3JwSU5CczdPREVBY0JBNnhq?=
- =?utf-8?B?eStJeDBtQmt3QkprenVYc2tyV1VPYnVXMnlDTVNQcWt2ZStvTWQxYitoVUtZ?=
- =?utf-8?B?NjRTT05LNE1rbG1LZTNtUVQvc0djT3B1eTJ3cmVBV0huNnRUQzlkZ2l0blUy?=
- =?utf-8?B?NDB5eU1qNzl0Sm5yYkc1bU02NTdUZDVCbEgzSGd6YXlvaDYxMnZpRkRJdTR4?=
- =?utf-8?B?TTk4WDVLV0FWdXNyaXpoV2c2YzluZ1laWkQwMGc4RS9MQUxGL2VXZ09mOThI?=
- =?utf-8?B?aUF6djFXWkZOM3NkRVlDSmtTbkJRV0huM2JzNiticzJsNHB3YTNpYXRRRTZK?=
- =?utf-8?B?UUsyODZkQVhMemxWa0NERHVPUHpIdHRlaHZqQmMxUEVoMUtsRzgvbFdIY0FK?=
- =?utf-8?B?MzVqL052ck5qM2ZxKzZHeGhKYVhBYTZmV25xWGN4Q1lTZEM0dXNaK1hJV2oy?=
- =?utf-8?B?Zlp3TWUxY0tBZm9peHpLb2JBajNlNzBEQVozb2dEQmhsQXY4K0hHTTNBcmRF?=
- =?utf-8?B?WDQ5M2l0K3k1QjhiczMveHlHMnhsZUhFRTE5V1U4NUVCVDQ0cUxmUmQ4ci9t?=
- =?utf-8?B?ODNMZzJoT0llcUY4a3lNbk0vUFh3QURBM1lma2FMNnBvejd0VXVkQ01RRFZn?=
- =?utf-8?B?QnVHeE1jQkVaZDRkWkJ1cHFJU1RSNXlmVkwxbXBFajFwOTJUbmtyb0phQ0JF?=
- =?utf-8?B?ZEIwUDhLQUxPTUYwaTdYb0xLRXhXaGI4VXRuQk4xVmlFUnp2UnJ0bUFnNndl?=
- =?utf-8?B?a2pOZzV0OUhzQ00yb1lvMm1ObE4zeEMzOXlJZFlqSFBQZ0pDUWpmbVhYREth?=
- =?utf-8?B?THNCcmx2Tmt1M2NuaDlhNEkvbHFiMnd2NWJBbkdEamsrUDRUR2Qvb0RHM3dG?=
- =?utf-8?B?MjM3aFNudHVLUS8rV3hLYVZaTkZuV2U4c1V3NjVLQ2xQWG9rM3Jqc3BWTktI?=
- =?utf-8?B?cUx2Q3N4ekxUZEd3N2hxeStoS21RcVpDckxDeGZzUVdSQVRHdFdYREZtcko3?=
- =?utf-8?B?TlVsOFZ1QlZkNXllRmlrTjY4R3lOVm0xRmFmZVVNSXI4TUNXM1JrMUtZUk0x?=
- =?utf-8?B?bzJDSzFPWEVncDg1R2NQS09XR2FlOVVpa0QyZFhGekloVnBxU2RwT1VKZjRZ?=
- =?utf-8?B?OXNYL2JzVy9Ta0xra2c2OFFFS0J4bnFsOHVtR0REM3p0WUdvTGdiSkdQOVNs?=
- =?utf-8?B?bGJEclNDVm85a2t3TE82K3lIcElIYVk2SEQvYjNhZVlYMUk0SnVNOHZSQk01?=
- =?utf-8?B?ZzF3SkQxdTNEaUJLN3h2SXY1WlVicGIyUUFaRDBSY2hGWFdGZ0RjbFRqNnpD?=
- =?utf-8?B?ZklTQjlhc2kzMi9wbWVWanRza3NRcmpIOTVNT2RFK3BzYlZXZ2pOZnhaSklY?=
- =?utf-8?B?d2YwdlRnMHVZUlZtSEFBL2haWFErQldaMm1UOXh6aEFQenN3d1JHRVhzS1Vy?=
- =?utf-8?B?QUhteHNhaWl6K3orakRJdE1qa01LR292UjE0TkwreEpmbWNGZzhGa1ZBekhM?=
- =?utf-8?B?eU1KTmJ3NlNSRHNxVkJEV0pXQzMxT1pqNUJOTzBSVTJML0xqYm5rdVBOdVJm?=
- =?utf-8?B?WGhBZm9TckFBZmMzcUhqVW1pVFY2UVFrbk44YmdHd3VXWHN6MVhZVzhDbUV0?=
- =?utf-8?B?Rzd5YnNDanlBMnZ1Wm5pMHQzeHJzY1V5SXBvQ1BFV1NFaDZXOHRvOGZ5SUp1?=
- =?utf-8?B?Qmw3N0ViUEtPMDJxN2JZR1g1L2FodjFJalpORGl4YndkMnNLVkZyQUFQSFNj?=
- =?utf-8?B?VXc9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <F702B40A19036D46B26C87AA345580F0@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S232339AbiIXABf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2022 20:01:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 309DAE7E0D
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2022 17:01:33 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BBF5B60C44
+        for <linux-xfs@vger.kernel.org>; Sat, 24 Sep 2022 00:01:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E910C433C1;
+        Sat, 24 Sep 2022 00:01:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1663977692;
+        bh=Mt5iPDhve6yo8pIu3Dta5is4CInWhinCzW18MCtCtYM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RLVwlFR9NYo4zu1Loqc626EZLEEx9MCXRcwjpOIcR20h6Ul8KfURGD7+oR8J+5LA6
+         tX649PArkNh79AHBAH1p8mttKe1ebaXes2RtDAn6uEhZZmAsNJhmaCH8mU0iqxk9ZK
+         BvlV77ReTpfmV277HYXeZEwoq27yIJs0cW8LcG1OKn3jw3ucIjuvVPHbqdQPZCOdn1
+         Sy42AM4K66tBLVGNWvc0aX85OU5ZBUhrDD3lP+bGSpBG2BqECRP1Ur3KN00HIGu1GH
+         m3rdMZ0PXNSnlGuBSAh+5dGy5sC6xiXelVS+rIFIdG5ij4eNZcy55gs5rMKICiWXxE
+         yPxdokqHpJgzQ==
+Date:   Fri, 23 Sep 2022 17:01:31 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Alli <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RESEND v2 18/18] xfs: Add parent pointer ioctl
+Message-ID: <Yy5I26u5CTryDdpA@magnolia>
+References: <20220804194013.99237-1-allison.henderson@oracle.com>
+ <20220804194013.99237-19-allison.henderson@oracle.com>
+ <YvK06Xy2T7TgQcm0@magnolia>
+ <a4dc88d719e7c7240de3bf6695eeaa2d4ed59db2.camel@oracle.com>
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 37d4bdc1-a82e-43c9-342b-08da9dbecca5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Sep 2022 23:53:22.8447
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: k9D6tQzne6m9YfB7dTd6tPHbYFQ2hrCXGykedVZ7g7TD4t6qAjByefVua5V3LFRQqWMhHY+aiiSivKUBRpzGQwzGmObWmpFakgF3tYsb21Y=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB4877
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-23_10,2022-09-22_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- phishscore=0 bulkscore=0 malwarescore=0 spamscore=0 suspectscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2209230154
-X-Proofpoint-ORIG-GUID: NIZO6o7r7Ui0_nvxrVfufKRlWRMWjMU3
-X-Proofpoint-GUID: NIZO6o7r7Ui0_nvxrVfufKRlWRMWjMU3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a4dc88d719e7c7240de3bf6695eeaa2d4ed59db2.camel@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gRnJpLCAyMDIyLTA5LTIzIGF0IDEzOjE3IC0wNzAwLCBEYXJyaWNrIEouIFdvbmcgd3JvdGU6
-Cj4gT24gV2VkLCBTZXAgMjEsIDIwMjIgYXQgMTA6NDQ6NDVQTSAtMDcwMCwKPiBhbGxpc29uLmhl
-bmRlcnNvbkBvcmFjbGUuY29twqB3cm90ZToKPiA+IEZyb206IEFsbGlzb24gSGVuZGVyc29uIDxh
-bGxpc29uLmhlbmRlcnNvbkBvcmFjbGUuY29tPgo+ID4gCj4gPiBXZSBuZWVkIHRvIGFkZCwgcmVt
-b3ZlIG9yIG1vZGlmeSBwYXJlbnQgcG9pbnRlciBhdHRyaWJ1dGVzIGR1cmluZwo+ID4gY3JlYXRl
-L2xpbmsvdW5saW5rL3JlbmFtZSBvcGVyYXRpb25zIGF0b21pY2FsbHkgd2l0aCB0aGUgZGlyZW50
-cyBpbgo+ID4gdGhlCj4gPiBwYXJlbnQgZGlyZWN0b3JpZXMgYmVpbmcgbW9kaWZpZWQuIFRoaXMg
-bWVhbnMgdGhleSBuZWVkIHRvIGJlCj4gPiBtb2RpZmllZAo+ID4gaW4gdGhlIHNhbWUgdHJhbnNh
-Y3Rpb24gYXMgdGhlIHBhcmVudCBkaXJlY3RvcmllcywgYW5kIHNvIHdlIG5lZWQKPiA+IHRvIGFk
-ZAo+ID4gdGhlIHJlcXVpcmVkIHNwYWNlIGZvciB0aGUgYXR0cmlidXRlIG1vZGlmaWNhdGlvbnMg
-dG8gdGhlCj4gPiB0cmFuc2FjdGlvbgo+ID4gcmVzZXJ2YXRpb25zLgo+ID4gCj4gPiBTaWduZWQt
-b2ZmLWJ5OiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+Cj4gPiBTaWduZWQtb2Zm
-LWJ5OiBBbGxpc29uIEhlbmRlcnNvbiA8YWxsaXNvbi5oZW5kZXJzb25Ab3JhY2xlLmNvbT4KPiA+
-IC0tLQo+ID4gwqBmcy94ZnMvbGlieGZzL3hmc190cmFuc19yZXN2LmMgfCAxMzUgKysrKysrKysr
-KysrKysrKysrKysrKysrKystLS0KPiA+IC0tLS0KPiA+IMKgMSBmaWxlIGNoYW5nZWQsIDEwNiBp
-bnNlcnRpb25zKCspLCAyOSBkZWxldGlvbnMoLSkKPiA+IAo+ID4gZGlmZiAtLWdpdCBhL2ZzL3hm
-cy9saWJ4ZnMveGZzX3RyYW5zX3Jlc3YuYwo+ID4gYi9mcy94ZnMvbGlieGZzL3hmc190cmFuc19y
-ZXN2LmMKPiA+IGluZGV4IDJjNGFkNmU0YmIxNC4uZjc3OTk4MDBkNTU2IDEwMDY0NAo+ID4gLS0t
-IGEvZnMveGZzL2xpYnhmcy94ZnNfdHJhbnNfcmVzdi5jCj4gPiArKysgYi9mcy94ZnMvbGlieGZz
-L3hmc190cmFuc19yZXN2LmMKPiA+IEBAIC0xOSw2ICsxOSw3IEBACj4gPiDCoCNpbmNsdWRlICJ4
-ZnNfdHJhbnMuaCIKPiA+IMKgI2luY2x1ZGUgInhmc19xbS5oIgo+ID4gwqAjaW5jbHVkZSAieGZz
-X3RyYW5zX3NwYWNlLmgiCj4gPiArI2luY2x1ZGUgInhmc19hdHRyX2l0ZW0uaCIKPiA+IMKgCj4g
-PiDCoCNkZWZpbmUgX0FMTE9DwqB0cnVlCj4gPiDCoCNkZWZpbmUgX0ZSRUXCoMKgZmFsc2UKPiA+
-IEBAIC00MjEsMjggKzQyMiw0NSBAQCB4ZnNfY2FsY19pdHJ1bmNhdGVfcmVzZXJ2YXRpb25fbWlu
-bG9nc2l6ZSgKPiA+IMKgfQo+ID4gwqAKPiA+IMKgLyoKPiA+IC0gKiBJbiByZW5hbWluZyBhIGZp
-bGVzIHdlIGNhbiBtb2RpZnk6Cj4gPiAtICrCoMKgwqAgdGhlIGZvdXIgaW5vZGVzIGludm9sdmVk
-OiA0ICogaW5vZGUgc2l6ZQo+ID4gKyAqIEluIHJlbmFtaW5nIGEgZmlsZXMgd2UgY2FuIG1vZGlm
-eSAodDEpOgo+ID4gKyAqwqDCoMKgIHRoZSBmb3VyIGlub2RlcyBpbnZvbHZlZDogNSAqIGlub2Rl
-IHNpemUKPiAKPiAuLi50aGUgKmZpdmUqIGlub2RlcyBpbnZvbHZlZC4uLgo+IAo+IEFsc28gLS0g
-ZXZlbiBiZWZvcmUgcGFyZW50IHBvaW50ZXJzIHdlIGNvdWxkIGhhdmUgZml2ZSBpbm9kZXMKPiBp
-bnZvbHZlZAo+IGluIGEgcmVuYW1lIHRyYW5zYWN0aW9uLCBzbyBJIHRoaW5rIHRoaXMgY2hhbmdl
-IG5lZWRzIHRvIGJlIGEKPiBzZXBhcmF0ZQo+IGJ1Z2ZpeCBhdCB0aGUgc3RhcnQgb2YgdGhlIHNl
-cmllcy7CoCBSZW5hbWUgaXNuJ3QgZXhwZXJpbWVudGFsLCBzbyBJCj4gY2FuJ3QgbGV0IHRoaXMg
-b25lIHNsaWRlLiA6LwpJIHNlZSwgb2sgSSB3aWxsIHNwbGl0IHRoaXMgb25lIG91dCB0aGVuCgo+
-IAo+ID4gwqAgKsKgwqDCoCB0aGUgdHdvIGRpcmVjdG9yeSBidHJlZXM6IDIgKiAobWF4IGRlcHRo
-ICsgdjIpICogZGlyIGJsb2NrCj4gPiBzaXplCj4gPiDCoCAqwqDCoMKgIHRoZSB0d28gZGlyZWN0
-b3J5IGJtYXAgYnRyZWVzOiAyICogbWF4IGRlcHRoICogYmxvY2sgc2l6ZQo+ID4gwqAgKiBBbmQg
-dGhlIGJtYXBfZmluaXNoIHRyYW5zYWN0aW9uIGNhbiBmcmVlIGRpciBhbmQgYm1hcCBibG9ja3MK
-PiA+ICh0d28gc2V0cwo+ID4gLSAqwqDCoMKgwqDCoG9mIGJtYXAgYmxvY2tzKSBnaXZpbmc6Cj4g
-PiArICrCoMKgwqDCoMKgb2YgYm1hcCBibG9ja3MpIGdpdmluZyAodDIpOgo+ID4gwqAgKsKgwqDC
-oCB0aGUgYWdmIGZvciB0aGUgYWdzIGluIHdoaWNoIHRoZSBibG9ja3MgbGl2ZTogMyAqIHNlY3Rv
-cgo+ID4gc2l6ZQo+ID4gwqAgKsKgwqDCoCB0aGUgYWdmbCBmb3IgdGhlIGFncyBpbiB3aGljaCB0
-aGUgYmxvY2tzIGxpdmU6IDMgKiBzZWN0b3IKPiA+IHNpemUKPiA+IMKgICrCoMKgwqAgdGhlIHN1
-cGVyYmxvY2sgZm9yIHRoZSBmcmVlIGJsb2NrIGNvdW50OiBzZWN0b3Igc2l6ZQo+ID4gwqAgKsKg
-wqDCoCB0aGUgYWxsb2NhdGlvbiBidHJlZXM6IDMgZXh0cyAqIDIgdHJlZXMgKiAoMiAqIG1heCBk
-ZXB0aCAtCj4gPiAxKSAqIGJsb2NrIHNpemUKPiA+ICsgKiBJZiBwYXJlbnQgcG9pbnRlcnMgYXJl
-IGVuYWJsZWQgKHQzKSwgdGhlbiBlYWNoIHRyYW5zYWN0aW9uIGluCj4gPiB0aGUgY2hhaW4KPiA+
-ICsgKsKgwqDCoCBtdXN0IGJlIGNhcGFibGUgb2Ygc2V0dGluZyBvciByZW1vdmluZyB0aGUgZXh0
-ZW5kZWQKPiA+IGF0dHJpYnV0ZQo+ID4gKyAqwqDCoMKgIGNvbnRhaW5pbmcgdGhlIHBhcmVudCBp
-bmZvcm1hdGlvbi7CoCBJdCBtdXN0IGFsc28gYmUgYWJsZSB0bwo+ID4gaGFuZGxlCj4gPiArICrC
-oMKgwqAgdGhlIHRocmVlIHhhdHRyIGludGVudCBpdGVtcyB0aGF0IHRyYWNrIHRoZSBwcm9ncmVz
-cyBvZiB0aGUKPiA+IHBhcmVudAo+ID4gKyAqwqDCoMKgIHBvaW50ZXIgdXBkYXRlLgo+ID4gwqAg
-Ki8KPiA+IMKgU1RBVElDIHVpbnQKPiA+IMKgeGZzX2NhbGNfcmVuYW1lX3Jlc2VydmF0aW9uKAo+
-ID4gwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCB4ZnNfbW91bnTCoMKgwqDCoMKgwqDCoMKgKm1wKQo+
-ID4gwqB7Cj4gPiAtwqDCoMKgwqDCoMKgwqByZXR1cm4gWEZTX0RRVU9UX0xPR1JFUyhtcCkgKwo+
-ID4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoG1heCgoeGZzX2NhbGNfaW5vZGVfcmVz
-KG1wLCA0KSArCj4gPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgeGZz
-X2NhbGNfYnVmX3JlcygyICogWEZTX0RJUk9QX0xPR19DT1VOVChtcCksCj4gPiAtwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgIFhGU19GU0JfVE9fQihtcCwgMSkpKSwKPiA+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqAgKHhmc19jYWxjX2J1Zl9yZXMoNywgbXAtPm1fc2Iuc2Jfc2VjdHNpemUp
-ICsKPiA+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB4ZnNfY2FsY19i
-dWZfcmVzKHhmc19hbGxvY2ZyZWVfYmxvY2tfY291bnQobXAsCj4gPiAzKSwKPiA+IC3CoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqAgWEZTX0ZTQl9UT19CKG1wLCAxKSkpKTsKPiA+ICvCoMKgwqDCoMKgwqDCoHVuc2ln
-bmVkIGludMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoG92ZXJoZWFkID0gWEZTX0RRVU9UX0xPR1JF
-UyhtcCk7Cj4gPiArwqDCoMKgwqDCoMKgwqBzdHJ1Y3QgeGZzX3RyYW5zX3Jlc3bCoMKgwqAqcmVz
-cCA9IE1fUkVTKG1wKTsKPiA+ICvCoMKgwqDCoMKgwqDCoHVuc2lnbmVkIGludMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoHQxLCB0MiwgdDMgPSAwOwo+ID4gKwo+ID4gK8KgwqDCoMKgwqDCoMKgdDEg
-PSB4ZnNfY2FsY19pbm9kZV9yZXMobXAsIDUpICsKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-IHhmc19jYWxjX2J1Zl9yZXMoMiAqIFhGU19ESVJPUF9MT0dfQ09VTlQobXApLAo+ID4gK8KgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBYRlNfRlNCX1RPX0IobXAs
-IDEpKTsKPiA+ICsKPiA+ICvCoMKgwqDCoMKgwqDCoHQyID0geGZzX2NhbGNfYnVmX3Jlcyg3LCBt
-cC0+bV9zYi5zYl9zZWN0c2l6ZSkgKwo+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqAgeGZzX2Nh
-bGNfYnVmX3Jlcyh4ZnNfYWxsb2NmcmVlX2Jsb2NrX2NvdW50KG1wLCAzKSwKPiA+ICvCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgWEZTX0ZTQl9UT19CKG1wLCAx
-KSk7Cj4gPiArCj4gPiArwqDCoMKgwqDCoMKgwqBpZiAoeGZzX2hhc19wYXJlbnQobXApKSB7Cj4g
-PiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgdDMgPSBtYXgocmVzcC0+dHJfYXR0cnNl
-dG0udHJfbG9ncmVzLAo+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmVzcC0+dHJfYXR0cnJtLnRyX2xvZ3Jlcyk7Cj4gCj4g
-T29oIEkgbGlrZSB0aGlzIHJlZmFjdG9yaW5nIG9mIHhmc19jYWxjX3JlbmFtZV9yZXNlcnZhdGlv
-bi4gOikKPiAKPiBJIGd1ZXNzIHdlIG5vdyB0cl9hdHRye3NldG0scm19IGJlZm9yZSBjb21wdXRp
-bmcgdGhlIHJlbmFtZQo+IHJlc2VydmF0aW9uCj4gc28gdGhpcyBpcyBvay4KPiAKPiA+ICvCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBvdmVyaGVhZCArPSAzICogKHNpemVvZihzdHJ1Y3QK
-PiA+IHhmc19hdHRyaV9sb2dfaXRlbSkpOwo+IAo+IFNob3VsZCB0aGUgc2l6ZSBvZiB0aGUgbmFt
-ZSwgbmV3bmFtZSwgYW5kIHZhbHVlIGJ1ZmZlcnMgYmUgYWRkZWQgaW50bwo+IG92ZXJoZWFkP8Kg
-IFRoZXkgdGFrZSB1cCBsb2cgc3BhY2UgdG9vLgpUaGF0IHdvdWxkIG1ha2Ugc2Vuc2UsIGJ1dCB3
-ZSBjYW50IHJlYWxseSBjYWxjdWxhdGUgdGhhdCBhaGVhZCBvZiB0aW1lCndpdGggb3V0IGp1c3Qg
-YXNzdW1pbmcgdGhlIG1heCBzaXplIHdoaWNoIGlzIHVwIHRvIDY0ayBmb3IgdGhlIHZhbHVlLiAK
-TWF5YmUgdGhvc2Ugc2l6ZXMgc2hvdWxkIGJlIGFkZGVkIG9uIGFmdGVyIHdlIGtub3cgd2hhdCB0
-aGV5IGFyZT8KCj4gCj4gPiArwqDCoMKgwqDCoMKgwqB9Cj4gPiArCj4gPiArwqDCoMKgwqDCoMKg
-wqByZXR1cm4gb3ZlcmhlYWQgKyBtYXgzKHQxLCB0MiwgdDMpOwo+ID4gwqB9Cj4gPiDCoAo+ID4g
-wqAvKgo+ID4gQEAgLTkwOSwyNCArOTI3LDU5IEBAIHhmc19jYWxjX3NiX3Jlc2VydmF0aW9uKAo+
-ID4gwqDCoMKgwqDCoMKgwqDCoHJldHVybiB4ZnNfY2FsY19idWZfcmVzKDEsIG1wLT5tX3NiLnNi
-X3NlY3RzaXplKTsKPiA+IMKgfQo+ID4gwqAKPiA+IC12b2lkCj4gPiAteGZzX3RyYW5zX3Jlc3Zf
-Y2FsYygKPiA+IC3CoMKgwqDCoMKgwqDCoHN0cnVjdCB4ZnNfbW91bnTCoMKgwqDCoMKgwqDCoMKg
-Km1wLAo+ID4gLcKgwqDCoMKgwqDCoMKgc3RydWN0IHhmc190cmFuc19yZXN2wqDCoMKgKnJlc3Ap
-Cj4gPiArLyoKPiA+ICsgKiBDYWxjdWxhdGUgZXh0cmEgc3BhY2UgbmVlZGVkIGZvciBwYXJlbnQg
-cG9pbnRlciBhdHRyaWJ1dGVzCj4gPiArICovCj4gPiArU1RBVElDIHZvaWQKPiA+ICt4ZnNfY2Fs
-Y19wYXJlbnRfcHRyX3Jlc2VydmF0aW9ucygKPiA+ICvCoMKgwqDCoMKgwqDCoHN0cnVjdCB4ZnNf
-bW91bnTCoMKgwqDCoCAqbXApCj4gPiDCoHsKPiA+IC3CoMKgwqDCoMKgwqDCoGludMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGxvZ2NvdW50X2FkaiA9IDA7Cj4gPiAr
-wqDCoMKgwqDCoMKgwqBzdHJ1Y3QgeGZzX3RyYW5zX3Jlc3bCoMKgICpyZXNwID0gTV9SRVMobXAp
-Owo+ID4gwqAKPiA+IC3CoMKgwqDCoMKgwqDCoC8qCj4gPiAtwqDCoMKgwqDCoMKgwqAgKiBUaGUg
-Zm9sbG93aW5nIHRyYW5zYWN0aW9ucyBhcmUgbG9nZ2VkIGluIHBoeXNpY2FsIGZvcm1hdAo+ID4g
-YW5kCj4gPiAtwqDCoMKgwqDCoMKgwqAgKiByZXF1aXJlIGEgcGVybWFuZW50IHJlc2VydmF0aW9u
-IG9uIHNwYWNlLgo+ID4gLcKgwqDCoMKgwqDCoMKgICovCj4gPiAtwqDCoMKgwqDCoMKgwqByZXNw
-LT50cl93cml0ZS50cl9sb2dyZXMgPSB4ZnNfY2FsY193cml0ZV9yZXNlcnZhdGlvbihtcCwKPiA+
-IGZhbHNlKTsKPiA+IC3CoMKgwqDCoMKgwqDCoHJlc3AtPnRyX3dyaXRlLnRyX2xvZ2NvdW50ID0g
-WEZTX1dSSVRFX0xPR19DT1VOVDsKPiA+IC3CoMKgwqDCoMKgwqDCoHJlc3AtPnRyX3dyaXRlLnRy
-X2xvZ2ZsYWdzIHw9IFhGU19UUkFOU19QRVJNX0xPR19SRVM7Cj4gPiArwqDCoMKgwqDCoMKgwqBp
-ZiAoIXhmc19oYXNfcGFyZW50KG1wKSkKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqByZXR1cm47Cj4gPiDCoAo+ID4gLcKgwqDCoMKgwqDCoMKgcmVzcC0+dHJfaXRydW5jYXRlLnRy
-X2xvZ3JlcyA9Cj4gPiB4ZnNfY2FsY19pdHJ1bmNhdGVfcmVzZXJ2YXRpb24obXAsIGZhbHNlKTsK
-PiA+IC3CoMKgwqDCoMKgwqDCoHJlc3AtPnRyX2l0cnVuY2F0ZS50cl9sb2djb3VudCA9IFhGU19J
-VFJVTkNBVEVfTE9HX0NPVU5UOwo+ID4gLcKgwqDCoMKgwqDCoMKgcmVzcC0+dHJfaXRydW5jYXRl
-LnRyX2xvZ2ZsYWdzIHw9IFhGU19UUkFOU19QRVJNX0xPR19SRVM7Cj4gPiArwqDCoMKgwqDCoMKg
-wqByZXNwLT50cl9yZW5hbWUudHJfbG9ncmVzICs9IG1heChyZXNwLQo+ID4gPnRyX2F0dHJzZXRt
-LnRyX2xvZ3JlcywKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgcmVzcC0KPiA+ID50cl9hdHRy
-cm0udHJfbG9ncmVzKTsKPiA+ICvCoMKgwqDCoMKgwqDCoHJlc3AtPnRyX3JlbmFtZS50cl9sb2dj
-b3VudCArPSBtYXgocmVzcC0KPiA+ID50cl9hdHRyc2V0bS50cl9sb2djb3VudCwKPiA+ICvCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgIHJlc3AtCj4gPiA+dHJfYXR0cnJtLnRyX2xvZ2NvdW50KTsK
-PiAKPiBEb2Vzbid0IHhmc19jYWxjX3JlbmFtZV9yZXNlcnZhdGlvbiBhZGQgdGhpcyB0byB0cl9y
-ZW5hbWUgYWxyZWFkeT8KT2gsIEkgdGhpbmsgd2UgY2FuIHJlbW92ZSB0aGUgdHJfcmVuYW1lLnRy
-X2xvZ3JlcyB1cGRhdGUuICBCdXQgbm90IHRoZQpsb2djb3VudCB1cGRhdGUgcmlnaHQ/Cgp4ZnNf
-Y2FsY19yZW5hbWVfcmVzZXJ2YXRpb24ganVzdCBjYWxjdWxhdGVzIHdoYXQgdHJfcmVuYW1lLnRy
-X2xvZ3JlcwpzaG91bGQgYmUsIGJ1dCBpdCBkb2VzbnQgbWFrZSBhbnkgYWRkaXRpb25zLiAgSXQn
-cyB0aGF0J3MgdXNlZCBvdmVyIGluCnhmc19jYWxjX25hbWVzcGFjZV9yZXNlcnZhdGlvbnMsIGJ1
-dCB3ZSBzdGlsbCBuZWVkIHRvIHVwZGF0ZQp0cl9yZW5hbWUudHJfbG9nY291bnQgd2hpY2ggaXMg
-c2VwYXJhdGUgZmllbGQgZnJvbSB0cl9yZW5hbWUudHJfbG9ncmVzLgoKCj4gCj4gPiArCj4gPiAr
-wqDCoMKgwqDCoMKgwqByZXNwLT50cl9jcmVhdGUudHJfbG9ncmVzICs9IHJlc3AtPnRyX2F0dHJz
-ZXRtLnRyX2xvZ3JlczsKPiA+ICvCoMKgwqDCoMKgwqDCoHJlc3AtPnRyX2NyZWF0ZS50cl9sb2dj
-b3VudCArPSByZXNwLQo+ID4gPnRyX2F0dHJzZXRtLnRyX2xvZ2NvdW50Owo+ID4gKwo+ID4gK8Kg
-wqDCoMKgwqDCoMKgcmVzcC0+dHJfbWtkaXIudHJfbG9ncmVzICs9IHJlc3AtPnRyX2F0dHJzZXRt
-LnRyX2xvZ3JlczsKPiA+ICvCoMKgwqDCoMKgwqDCoHJlc3AtPnRyX21rZGlyLnRyX2xvZ2NvdW50
-ICs9IHJlc3AtCj4gPiA+dHJfYXR0cnNldG0udHJfbG9nY291bnQ7Cj4gPiArCj4gPiArwqDCoMKg
-wqDCoMKgwqByZXNwLT50cl9saW5rLnRyX2xvZ3JlcyArPSByZXNwLT50cl9hdHRyc2V0bS50cl9s
-b2dyZXM7Cj4gPiArwqDCoMKgwqDCoMKgwqByZXNwLT50cl9saW5rLnRyX2xvZ2NvdW50ICs9IHJl
-c3AtPnRyX2F0dHJzZXRtLnRyX2xvZ2NvdW50Owo+ID4gKwo+ID4gK8KgwqDCoMKgwqDCoMKgcmVz
-cC0+dHJfc3ltbGluay50cl9sb2dyZXMgKz0gcmVzcC0+dHJfYXR0cnNldG0udHJfbG9ncmVzOwo+
-ID4gK8KgwqDCoMKgwqDCoMKgcmVzcC0+dHJfc3ltbGluay50cl9sb2djb3VudCArPSByZXNwLQo+
-ID4gPnRyX2F0dHJzZXRtLnRyX2xvZ2NvdW50Owo+ID4gKwo+ID4gK8KgwqDCoMKgwqDCoMKgcmVz
-cC0+dHJfcmVtb3ZlLnRyX2xvZ3JlcyArPSByZXNwLT50cl9hdHRycm0udHJfbG9ncmVzOwo+ID4g
-K8KgwqDCoMKgwqDCoMKgcmVzcC0+dHJfcmVtb3ZlLnRyX2xvZ2NvdW50ICs9IHJlc3AtPnRyX2F0
-dHJybS50cl9sb2djb3VudDsKPiAKPiBTaG91bGRuJ3QgZWFjaCBvZiB0aGVzZSArPSBhZGRpdGlv
-bnMgYmUgbWFkZSB0bwo+IHhmc19jYWxjX3tpY3JlYXRlLG1rZGlyLGxpbmssc3ltbGluayxyZW1v
-dmV9X3Jlc2VydmF0aW9uLAo+IHJlc3BlY3RpdmVseT8KPiAKCkkgc3VwcG9zZSB3ZSBjb3VsZCBy
-ZWRvIGl0IHRoYXQgd2F5PyAgQnV0IHRoZW4gbm90IGFsbCBvZiB0aGUgIis9Igp3b3VsZCBkaXNh
-cHBlYXIgaWYgdGhleSB3b3JrZWQgbGlrZSB4ZnNfY2FsY19yZW5hbWVfcmVzZXJ2YXRpb24uICBK
-dXN0CnRoZSAqLnRyX2xvZ3Jlcy4gIERvIHdlIHJlYWxseSB3YW50IHNlcGFyYXRlIHdyYXBwZXJz
-IGZvciBqdXN0IHRoZXNlCm9uZWxpbmVycyB0aG91Z2g/CgpBbGxpc29uCgo+IC0tRAo+IAo+ID4g
-K30KPiA+ICsKPiA+ICsvKgo+ID4gKyAqIE5hbWVzcGFjZSByZXNlcnZhdGlvbnMuCj4gPiArICoK
-PiA+ICsgKiBUaGVzZSBnZXQgdHJpY2t5IHdoZW4gcGFyZW50IHBvaW50ZXJzIGFyZSBlbmFibGVk
-IGFzIHdlIGhhdmUKPiA+IGF0dHJpYnV0ZQo+ID4gKyAqIG1vZGlmaWNhdGlvbnMgb2NjdXJyaW5n
-IGZyb20gd2l0aGluIHRoZXNlIHRyYW5zYWN0aW9ucy4gUmF0aGVyCj4gPiB0aGFuIGNvbmZ1c2UK
-PiA+ICsgKiBlYWNoIG9mIHRoZXNlIHJlc2VydmF0aW9uIGNhbGN1bGF0aW9ucyB3aXRoIHRoZSBj
-b25kaXRpb25hbAo+ID4gYXR0cmlidXRlCj4gPiArICogcmVzZXJ2YXRpb25zLCBhZGQgdGhlbSBo
-ZXJlIGluIGEgY2xlYXIgYW5kIGNvbmNpc2UgbWFubmVyLiBUaGlzCj4gPiBhc3N1bWVzIHRoYXQK
-PiA+ICsgKiB0aGUgYXR0cmlidXRlIHJlc2VydmF0aW9ucyBoYXZlIGFscmVhZHkgYmVlbiBjYWxj
-dWxhdGVkLgo+ID4gKyAqCj4gPiArICogTm90ZSB0aGF0IHdlIG9ubHkgaW5jbHVkZSB0aGUgc3Rh
-dGljIGF0dHJpYnV0ZSByZXNlcnZhdGlvbgo+ID4gaGVyZTsgdGhlIHJ1bnRpbWUKPiA+ICsgKiBy
-ZXNlcnZhdGlvbiB3aWxsIGhhdmUgdG8gYmUgbW9kaWZpZWQgYnkgdGhlIHNpemUgb2YgdGhlCj4g
-PiBhdHRyaWJ1dGVzIGJlaW5nCj4gPiArICogYWRkZWQvcmVtb3ZlZC9tb2RpZmllZC4gU2VlIHRo
-ZSBjb21tZW50cyBvbiB0aGUgYXR0cmlidXRlCj4gPiByZXNlcnZhdGlvbgo+ID4gKyAqIGNhbGN1
-bGF0aW9ucyBmb3IgbW9yZSBkZXRhaWxzLgo+ID4gKyAqLwo+ID4gK1NUQVRJQyB2b2lkCj4gPiAr
-eGZzX2NhbGNfbmFtZXNwYWNlX3Jlc2VydmF0aW9ucygKPiA+ICvCoMKgwqDCoMKgwqDCoHN0cnVj
-dCB4ZnNfbW91bnTCoMKgwqDCoMKgwqDCoMKgKm1wLAo+ID4gK8KgwqDCoMKgwqDCoMKgc3RydWN0
-IHhmc190cmFuc19yZXN2wqDCoMKgKnJlc3ApCj4gPiArewo+ID4gK8KgwqDCoMKgwqDCoMKgQVNT
-RVJUKHJlc3AtPnRyX2F0dHJzZXRtLnRyX2xvZ3JlcyA+IDApOwo+ID4gwqAKPiA+IMKgwqDCoMKg
-wqDCoMKgwqByZXNwLT50cl9yZW5hbWUudHJfbG9ncmVzID0KPiA+IHhmc19jYWxjX3JlbmFtZV9y
-ZXNlcnZhdGlvbihtcCk7Cj4gPiDCoMKgwqDCoMKgwqDCoMKgcmVzcC0+dHJfcmVuYW1lLnRyX2xv
-Z2NvdW50ID0gWEZTX1JFTkFNRV9MT0dfQ09VTlQ7Cj4gPiBAQCAtOTQ4LDE1ICsxMDAxLDM3IEBA
-IHhmc190cmFuc19yZXN2X2NhbGMoCj4gPiDCoMKgwqDCoMKgwqDCoMKgcmVzcC0+dHJfY3JlYXRl
-LnRyX2xvZ2NvdW50ID0gWEZTX0NSRUFURV9MT0dfQ09VTlQ7Cj4gPiDCoMKgwqDCoMKgwqDCoMKg
-cmVzcC0+dHJfY3JlYXRlLnRyX2xvZ2ZsYWdzIHw9IFhGU19UUkFOU19QRVJNX0xPR19SRVM7Cj4g
-PiDCoAo+ID4gK8KgwqDCoMKgwqDCoMKgcmVzcC0+dHJfbWtkaXIudHJfbG9ncmVzID0geGZzX2Nh
-bGNfbWtkaXJfcmVzZXJ2YXRpb24obXApOwo+ID4gK8KgwqDCoMKgwqDCoMKgcmVzcC0+dHJfbWtk
-aXIudHJfbG9nY291bnQgPSBYRlNfTUtESVJfTE9HX0NPVU5UOwo+ID4gK8KgwqDCoMKgwqDCoMKg
-cmVzcC0+dHJfbWtkaXIudHJfbG9nZmxhZ3MgfD0gWEZTX1RSQU5TX1BFUk1fTE9HX1JFUzsKPiA+
-ICsKPiA+ICvCoMKgwqDCoMKgwqDCoHhmc19jYWxjX3BhcmVudF9wdHJfcmVzZXJ2YXRpb25zKG1w
-KTsKPiA+ICt9Cj4gPiArCj4gPiArdm9pZAo+ID4gK3hmc190cmFuc19yZXN2X2NhbGMoCj4gPiAr
-wqDCoMKgwqDCoMKgwqBzdHJ1Y3QgeGZzX21vdW50wqDCoMKgwqDCoMKgwqDCoCptcCwKPiA+ICvC
-oMKgwqDCoMKgwqDCoHN0cnVjdCB4ZnNfdHJhbnNfcmVzdsKgwqDCoCpyZXNwKQo+ID4gK3sKPiA+
-ICvCoMKgwqDCoMKgwqDCoGludMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoGxvZ2NvdW50X2FkaiA9IDA7Cj4gPiArCj4gPiArwqDCoMKgwqDCoMKgwqAvKgo+ID4gK8Kg
-wqDCoMKgwqDCoMKgICogVGhlIGZvbGxvd2luZyB0cmFuc2FjdGlvbnMgYXJlIGxvZ2dlZCBpbiBw
-aHlzaWNhbCBmb3JtYXQKPiA+IGFuZAo+ID4gK8KgwqDCoMKgwqDCoMKgICogcmVxdWlyZSBhIHBl
-cm1hbmVudCByZXNlcnZhdGlvbiBvbiBzcGFjZS4KPiA+ICvCoMKgwqDCoMKgwqDCoCAqLwo+ID4g
-K8KgwqDCoMKgwqDCoMKgcmVzcC0+dHJfd3JpdGUudHJfbG9ncmVzID0geGZzX2NhbGNfd3JpdGVf
-cmVzZXJ2YXRpb24obXAsCj4gPiBmYWxzZSk7Cj4gPiArwqDCoMKgwqDCoMKgwqByZXNwLT50cl93
-cml0ZS50cl9sb2djb3VudCA9IFhGU19XUklURV9MT0dfQ09VTlQ7Cj4gPiArwqDCoMKgwqDCoMKg
-wqByZXNwLT50cl93cml0ZS50cl9sb2dmbGFncyB8PSBYRlNfVFJBTlNfUEVSTV9MT0dfUkVTOwo+
-ID4gKwo+ID4gK8KgwqDCoMKgwqDCoMKgcmVzcC0+dHJfaXRydW5jYXRlLnRyX2xvZ3JlcyA9Cj4g
-PiB4ZnNfY2FsY19pdHJ1bmNhdGVfcmVzZXJ2YXRpb24obXAsIGZhbHNlKTsKPiA+ICvCoMKgwqDC
-oMKgwqDCoHJlc3AtPnRyX2l0cnVuY2F0ZS50cl9sb2djb3VudCA9IFhGU19JVFJVTkNBVEVfTE9H
-X0NPVU5UOwo+ID4gK8KgwqDCoMKgwqDCoMKgcmVzcC0+dHJfaXRydW5jYXRlLnRyX2xvZ2ZsYWdz
-IHw9IFhGU19UUkFOU19QRVJNX0xPR19SRVM7Cj4gPiArCj4gPiDCoMKgwqDCoMKgwqDCoMKgcmVz
-cC0+dHJfY3JlYXRlX3RtcGZpbGUudHJfbG9ncmVzID0KPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHhmc19jYWxjX2NyZWF0ZV90bXBmaWxlX3Jlc2Vy
-dmF0aW9uKG1wKTsKPiA+IMKgwqDCoMKgwqDCoMKgwqByZXNwLT50cl9jcmVhdGVfdG1wZmlsZS50
-cl9sb2djb3VudCA9Cj4gPiBYRlNfQ1JFQVRFX1RNUEZJTEVfTE9HX0NPVU5UOwo+ID4gwqDCoMKg
-wqDCoMKgwqDCoHJlc3AtPnRyX2NyZWF0ZV90bXBmaWxlLnRyX2xvZ2ZsYWdzIHw9Cj4gPiBYRlNf
-VFJBTlNfUEVSTV9MT0dfUkVTOwo+ID4gwqAKPiA+IC3CoMKgwqDCoMKgwqDCoHJlc3AtPnRyX21r
-ZGlyLnRyX2xvZ3JlcyA9IHhmc19jYWxjX21rZGlyX3Jlc2VydmF0aW9uKG1wKTsKPiA+IC3CoMKg
-wqDCoMKgwqDCoHJlc3AtPnRyX21rZGlyLnRyX2xvZ2NvdW50ID0gWEZTX01LRElSX0xPR19DT1VO
-VDsKPiA+IC3CoMKgwqDCoMKgwqDCoHJlc3AtPnRyX21rZGlyLnRyX2xvZ2ZsYWdzIHw9IFhGU19U
-UkFOU19QRVJNX0xPR19SRVM7Cj4gPiAtCj4gPiDCoMKgwqDCoMKgwqDCoMKgcmVzcC0+dHJfaWZy
-ZWUudHJfbG9ncmVzID0geGZzX2NhbGNfaWZyZWVfcmVzZXJ2YXRpb24obXApOwo+ID4gwqDCoMKg
-wqDCoMKgwqDCoHJlc3AtPnRyX2lmcmVlLnRyX2xvZ2NvdW50ID0gWEZTX0lOQUNUSVZFX0xPR19D
-T1VOVDsKPiA+IMKgwqDCoMKgwqDCoMKgwqByZXNwLT50cl9pZnJlZS50cl9sb2dmbGFncyB8PSBY
-RlNfVFJBTlNfUEVSTV9MT0dfUkVTOwo+ID4gQEAgLTk4Niw2ICsxMDYxLDggQEAgeGZzX3RyYW5z
-X3Jlc3ZfY2FsYygKPiA+IMKgwqDCoMKgwqDCoMKgwqByZXNwLT50cl9xbV9kcWFsbG9jLnRyX2xv
-Z2NvdW50ID0gWEZTX1dSSVRFX0xPR19DT1VOVDsKPiA+IMKgwqDCoMKgwqDCoMKgwqByZXNwLT50
-cl9xbV9kcWFsbG9jLnRyX2xvZ2ZsYWdzIHw9IFhGU19UUkFOU19QRVJNX0xPR19SRVM7Cj4gPiDC
-oAo+ID4gK8KgwqDCoMKgwqDCoMKgeGZzX2NhbGNfbmFtZXNwYWNlX3Jlc2VydmF0aW9ucyhtcCwg
-cmVzcCk7Cj4gPiArCj4gPiDCoMKgwqDCoMKgwqDCoMKgLyoKPiA+IMKgwqDCoMKgwqDCoMKgwqAg
-KiBUaGUgZm9sbG93aW5nIHRyYW5zYWN0aW9ucyBhcmUgbG9nZ2VkIGluIGxvZ2ljYWwgZm9ybWF0
-Cj4gPiB3aXRoCj4gPiDCoMKgwqDCoMKgwqDCoMKgICogYSBkZWZhdWx0IGxvZyBjb3VudC4KPiA+
-IC0tIAo+ID4gMi4yNS4xCj4gPiAKCg==
+On Tue, Aug 09, 2022 at 08:09:51PM -0700, Alli wrote:
+> On Tue, 2022-08-09 at 12:26 -0700, Darrick J. Wong wrote:
+> > On Thu, Aug 04, 2022 at 12:40:13PM -0700, Allison Henderson wrote:
+> > > This patch adds a new file ioctl to retrieve the parent pointer of
+> > > a
+> > > given inode
+> > > 
+> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > > ---
+> > >  fs/xfs/Makefile            |   1 +
+> > >  fs/xfs/libxfs/xfs_fs.h     |  57 ++++++++++++++++
+> > >  fs/xfs/libxfs/xfs_parent.c |  10 +++
+> > >  fs/xfs/libxfs/xfs_parent.h |   2 +
+> > >  fs/xfs/xfs_ioctl.c         |  95 +++++++++++++++++++++++++-
+> > >  fs/xfs/xfs_ondisk.h        |   4 ++
+> > >  fs/xfs/xfs_parent_utils.c  | 134
+> > > +++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/xfs_parent_utils.h  |  22 ++++++
+> > >  8 files changed, 323 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> > > index caeea8d968ba..998658e40ab4 100644
+> > > --- a/fs/xfs/Makefile
+> > > +++ b/fs/xfs/Makefile
+> > > @@ -86,6 +86,7 @@ xfs-y				+= xfs_aops.o \
+> > >  				   xfs_mount.o \
+> > >  				   xfs_mru_cache.o \
+> > >  				   xfs_pwork.o \
+> > > +				   xfs_parent_utils.o \
+> > >  				   xfs_reflink.o \
+> > >  				   xfs_stats.o \
+> > >  				   xfs_super.o \
+> > > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > > index b0b4d7a3aa15..ba6ec82a0272 100644
+> > > --- a/fs/xfs/libxfs/xfs_fs.h
+> > > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > > @@ -574,6 +574,7 @@ typedef struct xfs_fsop_handlereq {
+> > >  #define XFS_IOC_ATTR_SECURE	0x0008	/* use attrs in
+> > > security namespace */
+> > >  #define XFS_IOC_ATTR_CREATE	0x0010	/* fail if attr
+> > > already exists */
+> > >  #define XFS_IOC_ATTR_REPLACE	0x0020	/* fail if attr
+> > > does not exist */
+> > > +#define XFS_IOC_ATTR_PARENT	0x0040  /* use attrs in parent
+> > > namespace */
+> > 
+> > This is the userspace API header, so I wonder -- should we allow
+> > XFS_IOC_ATTRLIST_BY_HANDLE and XFS_IOC_ATTRMULTI_BY_HANDLE to access
+> > parent pointers?
+> Well, the ioc is how the test cases get the pptrs back out in order to
+> verify parent pointers are working.  So we need to keep at least that,
+> but then I think it makes worrying about other forms of access feel
+> sort of silly since we're not really hiding anything.  They would have
+> to pass in the parent filter flag which wasnt allowable until now, so
+> it's not like having pptrs appear in the list when asked for is
+> inappropriate.
+> 
+> > 
+> > I think it's *definitely* incorrect to let ATTR_OP_REMOVE or
+> > ATTR_OP_SET
+> > (attrmulti subcommands) to mess with parent pointers.
+> Ok, I can see if I can add some sanity checking there.
+> 
+> > 
+> > I don't think attrlist or ATTR_OP_GET should be touching them either,
+> > particularly since you're defining a new ioctl to extract *only* the
+> > parent pointers.
+> > 
+> > If there wasn't XFS_IOC_GETPPOINTER then perhaps it would be ok to
+> > allow
+> > reads via ATTRLIST/ATTRMULTI.  But even then, I don't think we want
+> > things like xfsdump to think that it has to preserve those attributes
+> > since xfsrestore will reconstruct the directory tree (and hence the
+> > pptrs) for us.
+> Hrmm, not sure I follow this part, the point of pptrs are to
+> reconstruct the tree, so wouldnt we want them preserved?
+
+Parent pointers are backwards links through the directory tree.  xfsdump
+already records the forward links in the dump file.  xfsrestore uses
+those forward links to rebuild the directory tree, which recreates the
+parent pointers automatically.  Hence we don't need ATTRMULTI to reveal
+(or recreate) the parent pointer xattrs; the kernel does that when we
+create the directory tree.
+
+The second reason I can think of why we don't want to expose the parent
+pointers through the xattr APIs is that we don't want to reveal ondisk
+metadata directly to users -- some day we might want to change wthat's
+stored on disk, or store them in a totally separate structure, or
+whatever.
+
+If we force the interface to be the GETPARENTS ioctl, then we've
+decoupled the front and backends.  I conclude that the /only/ userspace
+API that should ever touch parent pointers is XFS_IOC_GETPARENTS.
+
+I'll forward this on to the v3 thread too.
+
+--D
+
+> > 
+> > >  
+> > >  typedef struct xfs_attrlist_cursor {
+> > >  	__u32		opaque[4];
+> > > @@ -752,6 +753,61 @@ struct xfs_scrub_metadata {
+> > >  				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
+> > >  #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN |
+> > > XFS_SCRUB_FLAGS_OUT)
+> > >  
+> > > +#define XFS_PPTR_MAXNAMELEN				256
+> > > +
+> > > +/* return parents of the handle, not the open fd */
+> > > +#define XFS_PPTR_IFLAG_HANDLE  (1U << 0)
+> > > +
+> > > +/* target was the root directory */
+> > > +#define XFS_PPTR_OFLAG_ROOT    (1U << 1)
+> > > +
+> > > +/* Cursor is done iterating pptrs */
+> > > +#define XFS_PPTR_OFLAG_DONE    (1U << 2)
+> > > +
+> > > +/* Get an inode parent pointer through ioctl */
+> > > +struct xfs_parent_ptr {
+> > > +	__u64		xpp_ino;			/* Inode */
+> > > +	__u32		xpp_gen;			/* Inode
+> > > generation */
+> > > +	__u32		xpp_diroffset;			/*
+> > > Directory offset */
+> > > +	__u32		xpp_namelen;			/* File
+> > > name length */
+> > > +	__u32		xpp_pad;
+> > > +	__u8		xpp_name[XFS_PPTR_MAXNAMELEN];	/* File
+> > > name */
+> > 
+> > Since xpp_name is a fixed-length array that is long enough to ensure
+> > that there's a null at the end of the name, we don't need
+> > xpp_namelen.
+> > 
+> > I wonder if xpp_namelen and xpp_pad should simply turn into a u64
+> > field
+> > that's defined zero for future expansion?
+> Sure, I'll see if I can remove it and add a reserved field
+> 
+> > 
+> > > +};
+> > > +
+> > > +/* Iterate through an inodes parent pointers */
+> > > +struct xfs_pptr_info {
+> > > +	struct xfs_handle		pi_handle;
+> > > +	struct xfs_attrlist_cursor	pi_cursor;
+> > > +	__u32				pi_flags;
+> > > +	__u32				pi_reserved;
+> > > +	__u32				pi_ptrs_size;
+> > 
+> > Is this the number of elements in pi_parents[]?
+> Yes, it's the number parent pointers in the array
+> 
+> > 
+> > > +	__u32				pi_ptrs_used;
+> > > +	__u64				pi_reserved2[6];
+> > > +
+> > > +	/*
+> > > +	 * An array of struct xfs_parent_ptr follows the header
+> > > +	 * information. Use XFS_PPINFO_TO_PP() to access the
+> > > +	 * parent pointer array entries.
+> > > +	 */
+> > > +	struct xfs_parent_ptr		pi_parents[];
+> > > +};
+> > > +
+> > > +static inline size_t
+> > > +xfs_pptr_info_sizeof(int nr_ptrs)
+> > > +{
+> > > +	return sizeof(struct xfs_pptr_info) +
+> > > +	       (nr_ptrs * sizeof(struct xfs_parent_ptr));
+> > > +}
+> > > +
+> > > +static inline struct xfs_parent_ptr*
+> > > +xfs_ppinfo_to_pp(
+> > > +	struct xfs_pptr_info	*info,
+> > > +	int			idx)
+> > > +{
+> > > +
+> > 
+> > Nit: extra space.
+> Will fix
+> 
+> > 
+> > > +	return &info->pi_parents[idx];
+> > > +}
+> > > +
+> > >  /*
+> > >   * ioctl limits
+> > >   */
+> > > @@ -797,6 +853,7 @@ struct xfs_scrub_metadata {
+> > >  /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+> > >  #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct
+> > > xfs_scrub_metadata)
+> > >  #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct
+> > > xfs_ag_geometry)
+> > > +#define XFS_IOC_GETPPOINTER	_IOR ('X', 62, struct
+> > > xfs_parent_ptr)
+> > 
+> > I wonder if this name should more strongly emphasize that it's for
+> > reading
+> > the parents of a file?
+> > 
+> > #define XFS_IOC_GETPARENTS	_IOWR(...)
+> Sure, that sounds fine i think
+> 
+> > 
+> > Also, the ioctl reads and writes its parameter, so this is _IOWR, not
+> > _IOR.
+> > 
+> > BTW, is there a sample manpage somewhere?
+> The userspace branch adds some new flags to xfsprogs and some usage
+> help to explain how to use them.  See the last patch in the branch:
+> https://github.com/allisonhenderson/xfsprogs/tree/xfsprogs_new_pptrsv2
+> 
+> But it's just for printing the parent pointers out, it doesn't have a
+> man page for how to write your own ioctl.  I suppose we could add it
+> though.
+> 
+> > 
+> > >  
+> > >  /*
+> > >   * ioctl commands that replace IRIX syssgi()'s
+> > > diff --git a/fs/xfs/libxfs/xfs_parent.c
+> > > b/fs/xfs/libxfs/xfs_parent.c
+> > > index 03f03f731d02..d9c922a78617 100644
+> > > --- a/fs/xfs/libxfs/xfs_parent.c
+> > > +++ b/fs/xfs/libxfs/xfs_parent.c
+> > > @@ -26,6 +26,16 @@
+> > >  #include "xfs_xattr.h"
+> > >  #include "xfs_parent.h"
+> > >  
+> > > +/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
+> > > +void
+> > > +xfs_init_parent_ptr(struct xfs_parent_ptr	*xpp,
+> > > +		    struct xfs_parent_name_rec	*rec)
+> > 
+> > The second parameter ought to be const struct xfs_parent_name_rec
+> > *rec
+> > to make it unambiguous to readers which is the source and which is
+> > the
+> > destination argument.
+> Ok, will update
+> 
+> > 
+> > > +{
+> > > +	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
+> > > +	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
+> > > +	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
+> > > +}
+> > > +
+> > >  /*
+> > >   * Parent pointer attribute handling.
+> > >   *
+> > > diff --git a/fs/xfs/libxfs/xfs_parent.h
+> > > b/fs/xfs/libxfs/xfs_parent.h
+> > > index 67948f4b3834..53161b79d1e2 100644
+> > > --- a/fs/xfs/libxfs/xfs_parent.h
+> > > +++ b/fs/xfs/libxfs/xfs_parent.h
+> > > @@ -23,6 +23,8 @@ void xfs_init_parent_name_rec(struct
+> > > xfs_parent_name_rec *rec,
+> > >  			      uint32_t p_diroffset);
+> > >  void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
+> > >  			       struct xfs_parent_name_rec *rec);
+> > > +void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
+> > > +			 struct xfs_parent_name_rec *rec);
+> > >  int xfs_parent_init(xfs_mount_t *mp, xfs_inode_t *ip,
+> > >  		    struct xfs_name *target_name,
+> > >  		    struct xfs_parent_defer **parentp);
+> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > > index 5b600d3f7981..8a9530588ef4 100644
+> > > --- a/fs/xfs/xfs_ioctl.c
+> > > +++ b/fs/xfs/xfs_ioctl.c
+> > > @@ -37,6 +37,7 @@
+> > >  #include "xfs_health.h"
+> > >  #include "xfs_reflink.h"
+> > >  #include "xfs_ioctl.h"
+> > > +#include "xfs_parent_utils.h"
+> > >  #include "xfs_xattr.h"
+> > >  
+> > >  #include <linux/mount.h>
+> > > @@ -355,6 +356,8 @@ xfs_attr_filter(
+> > >  		return XFS_ATTR_ROOT;
+> > >  	if (ioc_flags & XFS_IOC_ATTR_SECURE)
+> > >  		return XFS_ATTR_SECURE;
+> > > +	if (ioc_flags & XFS_IOC_ATTR_PARENT)
+> > > +		return XFS_ATTR_PARENT;
+> > >  	return 0;
+> > >  }
+> > >  
+> > > @@ -422,7 +425,8 @@ xfs_ioc_attr_list(
+> > >  	/*
+> > >  	 * Reject flags, only allow namespaces.
+> > >  	 */
+> > > -	if (flags & ~(XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
+> > > +	if (flags & ~(XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE |
+> > > +		      XFS_IOC_ATTR_PARENT))
+> > >  		return -EINVAL;
+> > 
+> > I think xfs_ioc_attrmulti_one needs filtering for
+> > XFS_IOC_ATTR_PARENT,
+> > if we're still going to allow attrlist/attrmulti to return parent
+> > pointers.
+> Ok, will update that one as well then
+> 
+> > 
+> > >  	if (flags == (XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
+> > >  		return -EINVAL;
+> > > @@ -1679,6 +1683,92 @@ xfs_ioc_scrub_metadata(
+> > >  	return 0;
+> > >  }
+> > >  
+> > > +/*
+> > > + * IOCTL routine to get the parent pointers of an inode and return
+> > > it to user
+> > > + * space.  Caller must pass a buffer space containing a struct
+> > > xfs_pptr_info,
+> > > + * followed by a region large enough to contain an array of struct
+> > > + * xfs_parent_ptr of a size specified in pi_ptrs_size.  If the
+> > > inode contains
+> > > + * more parent pointers than can fit in the buffer space, caller
+> > > may re-call
+> > > + * the function using the returned pi_cursor to resume
+> > > iteration.  The
+> > > + * number of xfs_parent_ptr returned will be stored in
+> > > pi_ptrs_used.
+> > > + *
+> > > + * Returns 0 on success or non-zero on failure
+> > > + */
+> > > +STATIC int
+> > > +xfs_ioc_get_parent_pointer(
+> > > +	struct file			*filp,
+> > > +	void				__user *arg)
+> > > +{
+> > > +	struct xfs_pptr_info		*ppi = NULL;
+> > > +	int				error = 0;
+> > > +	struct xfs_inode		*ip = XFS_I(file_inode(filp));
+> > > +	struct xfs_mount		*mp = ip->i_mount;
+> > > +
+> > > +	if (!capable(CAP_SYS_ADMIN))
+> > > +		return -EPERM;
+> > > +
+> > > +	/* Allocate an xfs_pptr_info to put the user data */
+> > > +	ppi = kmem_alloc(sizeof(struct xfs_pptr_info), 0);
+> > 
+> > New code should call kmalloc instead of the old kmem_alloc wrapper.
+> > 
+> Ok, will update
+> 
+> > > +	if (!ppi)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	/* Copy the data from the user */
+> > > +	error = copy_from_user(ppi, arg, sizeof(struct xfs_pptr_info));
+> > 
+> > Note: copy_from_user returns the number of bytes *not* copied.  If
+> > you
+> > receive a nonzero return value, error usually gets set to EFAULT.
+> ooooh. ok, will fix that then.
+> 
+> > 
+> > > +	if (error)
+> > > +		goto out;
+> > > +
+> > > +	/* Check size of buffer requested by user */
+> > > +	if (xfs_pptr_info_sizeof(ppi->pi_ptrs_size) >
+> > > XFS_XATTR_LIST_MAX) {
+> > > +		error = -ENOMEM;
+> > > +		goto out;
+> > > +	}
+> > > +
+> > > +	if (ppi->pi_flags != 0 && ppi->pi_flags !=
+> > > XFS_PPTR_IFLAG_HANDLE) {
+> > 
+> > 	if (ppi->pi_flags & ~XFS_PPTR_IFLAG_HANDLE) ?
+> > 
+> > (If we really want to be pedantic, this really ought to be:
+> > 
+> > #define XFS_PPTR_IFLAG_ALL	(XFS_PPTR_IFLAG_HANDLE)
+> > 
+> > 	if (ppi->pi_flags & ~XFS_PPTR_IFLAG_ALL)
+> > 		return -EINVAL;
+> > 
+> > Or you could be more flexible, since the kernel could just set the
+> > OFLAGs appropriately and not care about their value on input:
+> > 
+> > #define XFS_PPTR_FLAG_ALL	(XFS_PPTR_IFLAG_HANDLE |
+> > XFS_PPTR_OFLAG...)
+> > 
+> > 	if (ppi->pi_flags & ~XFS_PPTR_FLAG_ALL)
+> > 		return -EINVAL;
+> > 
+> > 	ppi->pi_flags &= ~(XFS_PPTR_OFLAG_ROOT | XFS_PPTR_OFLAG_DONE);
+> 
+> Oh, I see, sure that makes sense.
+> > 
+> > > +		error = -EINVAL;
+> > > +		goto out;
+> > > +	}
+> > > +
+> > > +	/*
+> > > +	 * Now that we know how big the trailing buffer is, expand
+> > > +	 * our kernel xfs_pptr_info to be the same size
+> > > +	 */
+> > > +	ppi = krealloc(ppi, xfs_pptr_info_sizeof(ppi->pi_ptrs_size),
+> > > +		       GFP_NOFS | __GFP_NOFAIL);
+> > > +	if (!ppi)
+> > > +		return -ENOMEM;
+> > 
+> > Why NOFS and NOFAIL?  We don't have any writeback resources locked
+> > (transactions and ILOCKs) so we can hit ourselves up for memory.
+> Ok, will update
+> 
+> > 
+> > > +
+> > > +	if (ppi->pi_flags == XFS_PPTR_IFLAG_HANDLE) {
+> > 
+> > 	if (ppi->pi_flags & XFS_PPTR_IFLAG_HANDLE) {
+> ok, will fix
+> 
+> > 
+> > > +		error = xfs_iget(mp, NULL, ppi-
+> > > >pi_handle.ha_fid.fid_ino,
+> > > +				0, 0, &ip);
+> > > +		if (error)
+> > > +			goto out;
+> > > +
+> > > +		if (VFS_I(ip)->i_generation != ppi-
+> > > >pi_handle.ha_fid.fid_gen) {
+> > > +			error = -EINVAL;
+> > > +			goto out;
+> > > +		}
+> > > +	}
+> > > +
+> > > +	if (ip->i_ino == mp->m_sb.sb_rootino)
+> > > +		ppi->pi_flags |= XFS_PPTR_OFLAG_ROOT;
+> > > +
+> > > +	/* Get the parent pointers */
+> > > +	error = xfs_attr_get_parent_pointer(ip, ppi);
+> > > +
+> > > +	if (error)
+> > > +		goto out;
+> > > +
+> > > +	/* Copy the parent pointers back to the user */
+> > > +	error = copy_to_user(arg, ppi,
+> > > +			xfs_pptr_info_sizeof(ppi->pi_ptrs_size));
+> > 
+> > Same note as the one I made for copy_from_user.
+> > 
+> Will update
+> 
+> > > +	if (error)
+> > > +		goto out;
+> > > +
+> > > +out:
+> > > +	kmem_free(ppi);
+> > > +	return error;
+> > > +}
+> > > +
+> > >  int
+> > >  xfs_ioc_swapext(
+> > >  	xfs_swapext_t	*sxp)
+> > > @@ -1968,7 +2058,8 @@ xfs_file_ioctl(
+> > >  
+> > >  	case XFS_IOC_FSGETXATTRA:
+> > >  		return xfs_ioc_fsgetxattra(ip, arg);
+> > > -
+> > > +	case XFS_IOC_GETPPOINTER:
+> > > +		return xfs_ioc_get_parent_pointer(filp, arg);
+> > >  	case XFS_IOC_GETBMAP:
+> > >  	case XFS_IOC_GETBMAPA:
+> > >  	case XFS_IOC_GETBMAPX:
+> > > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> > > index 758702b9495f..765eb514a917 100644
+> > > --- a/fs/xfs/xfs_ondisk.h
+> > > +++ b/fs/xfs/xfs_ondisk.h
+> > > @@ -135,6 +135,10 @@ xfs_check_ondisk_structs(void)
+> > >  	XFS_CHECK_STRUCT_SIZE(struct xfs_attri_log_format,	40);
+> > >  	XFS_CHECK_STRUCT_SIZE(struct xfs_attrd_log_format,	16);
+> > >  
+> > > +	/* parent pointer ioctls */
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_parent_ptr,            280);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_pptr_info,             104);
+> > > +
+> > >  	/*
+> > >  	 * The v5 superblock format extended several v4 header
+> > > structures with
+> > >  	 * additional data. While new fields are only accessible on v5
+> > > diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
+> > > new file mode 100644
+> > > index 000000000000..3351ce173075
+> > > --- /dev/null
+> > > +++ b/fs/xfs/xfs_parent_utils.c
+> > > @@ -0,0 +1,134 @@
+> > > +/*
+> > > + * Copyright (c) 2015 Red Hat, Inc.
+> > > + * All rights reserved.
+> > > + *
+> > > + * This program is free software; you can redistribute it and/or
+> > > + * modify it under the terms of the GNU General Public License as
+> > > + * published by the Free Software Foundation.
+> > > + *
+> > > + * This program is distributed in the hope that it would be
+> > > useful,
+> > > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > + * GNU General Public License for more details.
+> > > + *
+> > > + * You should have received a copy of the GNU General Public
+> > > License
+> > > + * along with this program; if not, write the Free Software
+> > > Foundation
+> > > + */
+> > 
+> > Please condense this boilerplate down to a SPDX tag and a copyright
+> > statement.
+> Sure, will do
+> 
+> > 
+> > > +#include "xfs.h"
+> > > +#include "xfs_fs.h"
+> > > +#include "xfs_format.h"
+> > > +#include "xfs_log_format.h"
+> > > +#include "xfs_shared.h"
+> > > +#include "xfs_trans_resv.h"
+> > > +#include "xfs_mount.h"
+> > > +#include "xfs_bmap_btree.h"
+> > > +#include "xfs_inode.h"
+> > > +#include "xfs_error.h"
+> > > +#include "xfs_trace.h"
+> > > +#include "xfs_trans.h"
+> > > +#include "xfs_da_format.h"
+> > > +#include "xfs_da_btree.h"
+> > > +#include "xfs_attr.h"
+> > > +#include "xfs_ioctl.h"
+> > > +#include "xfs_parent.h"
+> > > +#include "xfs_da_btree.h"
+> > > +
+> > > +/*
+> > > + * Get the parent pointers for a given inode
+> > > + *
+> > > + * Returns 0 on success and non zero on error
+> > > + */
+> > > +int
+> > > +xfs_attr_get_parent_pointer(struct xfs_inode		*ip,
+> > > +			    struct xfs_pptr_info	*ppi)
+> > > +
+> > > +{
+> > > +
+> > > +	struct xfs_attrlist		*alist;
+> > 
+> > int
+> > xfs_attr_get_parent_pointer(
+> > 	struct xfs_inode		*ip,
+> > 	struct xfs_pptr_info		*ppi)
+> > {
+> > 	struct xfs_attrlist		*alist;
+> will fix
+> 
+> > 
+> > 
+> > > +	struct xfs_attrlist_ent		*aent;
+> > > +	struct xfs_parent_ptr		*xpp;
+> > > +	struct xfs_parent_name_rec	*xpnr;
+> > > +	char				*namebuf;
+> > > +	unsigned int			namebuf_size;
+> > > +	int				name_len;
+> > > +	int				error = 0;
+> > > +	unsigned int			ioc_flags =
+> > > XFS_IOC_ATTR_PARENT;
+> > > +	unsigned int			flags = XFS_ATTR_PARENT;
+> > > +	int				i;
+> > > +	struct xfs_attr_list_context	context;
+> > > +
+> > > +	/* Allocate a buffer to store the attribute names */
+> > > +	namebuf_size = sizeof(struct xfs_attrlist) +
+> > > +		       (ppi->pi_ptrs_size) * sizeof(struct
+> > > xfs_attrlist_ent);
+> > > +	namebuf = kvzalloc(namebuf_size, GFP_KERNEL);
+> > > +	if (!namebuf)
+> > > +		return -ENOMEM;
+> > 
+> > Do we need the buffer to be zeroed if xfs_attr_list is just going to
+> > set
+> > its contents?
+> I think i might have initially done this out of habit, but I think it's
+> safe to remove.
+> 
+> > 
+> > > +
+> > > +	memset(&context, 0, sizeof(struct xfs_attr_list_context));
+> > > +	error = xfs_ioc_attr_list_context_init(ip, namebuf,
+> > > namebuf_size,
+> > > +			ioc_flags, &context);
+> > 
+> > Aha, so the internal implementation has access to
+> > xfs_attr_list_context
+> > before it calls into the attr list code.  Ok, in that case, xfs_fs.h
+> > doesn't need the XFS_IOC_ATTR_PARENT flag, and you can set
+> > context.attr_filter = XFS_ATTR_PARENT here.  Then we don't have to
+> > worry
+> > about the existing xattr bulk ioctls returning parent pointers.Oh ok.
+> >  I'll see if I can take it out
+> Oh ok, I'll take a look and see it it can come out.
+> 
+> > 
+> > > +
+> > > +	/* Copy the cursor provided by caller */
+> > > +	memcpy(&context.cursor, &ppi->pi_cursor,
+> > > +	       sizeof(struct xfs_attrlist_cursor));
+> > > +
+> > > +	if (error)
+> > > +		goto out_kfree;
+> > 
+> > Why does the error check come after copying the cursor into the
+> > onstack
+> > variable?
+> Hmm, there might have been a reason at one point, but I
+> think xfs_ioc_attr_list_context_init could actually just be a void
+> return now.
+> 
+> > 
+> > > +
+> > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > 
+> > xfs_ilock_attr_map_shared() ?
+> Ok, will update
+> 
+> > 
+> > > +
+> > > +	error = xfs_attr_list_ilocked(&context);
+> > > +	if (error)
+> > > +		goto out_kfree;
+> > > +
+> > > +	alist = (struct xfs_attrlist *)namebuf;
+> > > +	for (i = 0; i < alist->al_count; i++) {
+> > > +		struct xfs_da_args args = {
+> > > +			.geo = ip->i_mount->m_attr_geo,
+> > > +			.whichfork = XFS_ATTR_FORK,
+> > > +			.dp = ip,
+> > > +			.namelen = sizeof(struct xfs_parent_name_rec),
+> > > +			.attr_filter = flags,
+> > > +			.op_flags = XFS_DA_OP_OKNOENT,
+> > > +		};
+> > > +
+> > > +		xpp = xfs_ppinfo_to_pp(ppi, i);
+> > > +		memset(xpp, 0, sizeof(struct xfs_parent_ptr));
+> > > +		aent = (struct xfs_attrlist_ent *)
+> > > +			&namebuf[alist->al_offset[i]];
+> > > +		xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
+> > > +
+> > > +		if (aent->a_valuelen > XFS_PPTR_MAXNAMELEN) {
+> > > +			error = -ERANGE;
+> > > +			goto out_kfree;
+> > 
+> > If a parent pointer has a name longer than MAXNAMELEN then isn't that
+> > a
+> > corruption?  And in that case, -EFSCORRUPTED would be more
+> > appropriate
+> > here, right?
+> I think so, will fix
+> 
+> > 
+> > > +		}
+> > > +		name_len = aent->a_valuelen;
+> > > +
+> > > +		args.name = (char *)xpnr;
+> > > +		args.hashval = xfs_da_hashname(args.name,
+> > > args.namelen),
+> > > +		args.value = (unsigned char *)(xpp->xpp_name);
+> > > +		args.valuelen = name_len;
+> > > +
+> > > +		error = xfs_attr_get_ilocked(&args);
+> > 
+> > If error is ENOENT (or ENOATTR or whatever the return value is when
+> > the
+> > attr doesn't exist) then shouldn't that be treated as a corruption
+> > too?
+> > We still hold the ILOCK from earlier.  I don't think OKNOENT is
+> > correct
+> > either.
+> Hmm, I think I likely borrowed this from similar code else where, but
+> if the inode is locked in this case probably any error is grounds for
+> corruption.  will update
+> 
+> > 
+> > > +		error = (error == -EEXIST ? 0 : error);
+> > > +		if (error)
+> > > +			goto out_kfree;
+> > > +
+> > > +		xpp->xpp_namelen = name_len;
+> > > +		xfs_init_parent_ptr(xpp, xpnr);
+> > 
+> > Also, should we validate xpnr before copying it out to userspace?
+> > If, say, the inode number is bogus, that should generate an
+> > EFSCORRUPTED.
+> I suppose we could validate the inode while we have it here.
+> 
+> > 
+> > > +	}
+> > > +	ppi->pi_ptrs_used = alist->al_count;
+> > > +	if (!alist->al_more)
+> > > +		ppi->pi_flags |= XFS_PPTR_OFLAG_DONE;
+> > > +
+> > > +	/* Update the caller with the current cursor position */
+> > > +	memcpy(&ppi->pi_cursor, &context.cursor,
+> > > +		sizeof(struct xfs_attrlist_cursor));
+> > 
+> > Glad you remembered to do this; attrmulti forgot to do this for a
+> > long
+> > time. :)
+> :-)  I do recall running into it some time ago
+> 
+> > 
+> > > +
+> > > +out_kfree:
+> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > +	kmem_free(namebuf);
+> > 
+> > kvfree, since you got namebuf from kvzalloc.
+> Alrighty
+> 
+> > 
+> > > +
+> > > +	return error;
+> > > +}
+> > > +
+> > > diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
+> > > new file mode 100644
+> > > index 000000000000..0e952b2ebd4a
+> > > --- /dev/null
+> > > +++ b/fs/xfs/xfs_parent_utils.h
+> > > @@ -0,0 +1,22 @@
+> > > +/*
+> > > + * Copyright (c) 2017 Oracle, Inc.
+> > 
+> > 2022?
+> Sure, will update date
+> 
+> > 
+> > > + * All Rights Reserved.
+> > > + *
+> > > + * This program is free software; you can redistribute it and/or
+> > > + * modify it under the terms of the GNU General Public License as
+> > > + * published by the Free Software Foundation.
+> > > + *
+> > > + * This program is distributed in the hope that it would be
+> > > useful,
+> > > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > + * GNU General Public License for more details.
+> > > + *
+> > > + * You should have received a copy of the GNU General Public
+> > > License
+> > > + * along with this program; if not, write the Free Software
+> > > Foundation Inc.
+> > 
+> > This also needs to be condensed to a SPDX header and a copyright
+> > statement.
+> Right, will clean that up too
+> 
+> Thanks for the reviews!
+> Allison
+> 
+> > 
+> > > + */
+> > > +#ifndef	__XFS_PARENT_UTILS_H__
+> > > +#define	__XFS_PARENT_UTILS_H__
+> > > +
+> > > +int xfs_attr_get_parent_pointer(struct xfs_inode *ip,
+> > > +				struct xfs_pptr_info *ppi);
+> > > +#endif	/* __XFS_PARENT_UTILS_H__ */
+> > > -- 
+> > > 2.25.1
+> > > 
+> 
