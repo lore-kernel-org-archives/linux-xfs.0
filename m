@@ -2,224 +2,205 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2235C6FA82
-	for <linux-xfs@archiver.kernel.org>; Sun, 25 Sep 2022 13:34:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D16ACC6FA82
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Sep 2022 23:54:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231805AbiIYNeG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 25 Sep 2022 09:34:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40442 "EHLO
+        id S230509AbiIYXyR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 25 Sep 2022 19:54:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230505AbiIYNdy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Sep 2022 09:33:54 -0400
-Received: from mail1.bemta32.messagelabs.com (mail1.bemta32.messagelabs.com [195.245.230.66])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43B0630F46;
-        Sun, 25 Sep 2022 06:33:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1664112831; i=@fujitsu.com;
-        bh=rWTztagXd3ebhKKtakvx6uZbv7eYUy2//ebuLJtL8JA=;
-        h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-         MIME-Version:Content-Type;
-        b=Lt7Piz77zrIHn3rVDAmF3B3G0FOeODoqbIlHD28UEvd+29YWSJqpUg+03a4asbXw+
-         /d7eA16vNiYO3mJTph8f7f8QIafRDPFFROTa4fI712OUb/fq2waP2JjdrhTumUZzlF
-         55sBCYZuizYesn7bCbXonmL8Got4dT8Gcsga2Cs3q0F2KzNgEB27A8OGwkORpzeSSy
-         YRbKgRc8f9znc2KFmd88MS0xq96F5wxWU0foiNcxX0krTrwThqNJ7nOmEn8j04xcE8
-         2DX3R/gHfXTM3sXqPb4T03hsC4X5rnnO4s9mI/rCfQ1KjQe2vetPygaRY6nU0613tE
-         s7s4o8UeuOllQ==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPKsWRWlGSWpSXmKPExsViZ8ORpLsvwiD
-  ZYNN8EYvpUy8wWmw5do/R4vITPovTExYxWezZe5LF4vKuOWwW99b8Z7XY9WcHu8XKH39YHTg9
-  Ti2S8Ni8Qstj8Z6XTB6bVnWyeWz6NInd48XmmYwenzfJBbBHsWbmJeVXJLBmrPr0jb1gr3LF6
-  oMT2BoYH8l2MXJxCAlsZJRYvOQsE4SzhEnizMObUM5eRomzC5aydDFycrAJ6EhcWPCXFSQhIj
-  CJUeLYjZvMIAlmgQSJ9i/XmEBsYQE3idOb17CC2CwCqhKTXv9lBLF5BVwkrq3sYgOxJQQUJKY
-  8fA/WyyngKrF0yiqwXiGgmp69Z5kg6gUlTs58wgIxX0Li4IsXQPUcQL1KEjO74yHGVEg0Tj/E
-  BGGrSVw9t4l5AqPgLCTds5B0L2BkWsVolVSUmZ5RkpuYmaNraGCga2hoqmuoa2RorpdYpZuol
-  1qqW55aXKJrqJdYXqyXWlysV1yZm5yTopeXWrKJERhLKcWMN3cwtvb91DvEKMnBpCTKe9TPIF
-  mILyk/pTIjsTgjvqg0J7X4EKMMB4eSBO8BN6CcYFFqempFWmYOMK5h0hIcPEoivIUgrbzFBYm
-  5xZnpEKlTjMYcaxsO7GXmmDr7335mIZa8/LxUKXHeleFApQIgpRmleXCDYOnmEqOslDAvIwMD
-  gxBPQWpRbmYJqvwrRnEORiVhXrdgoCk8mXklcPteAZ3CBHSKHZ8+yCkliQgpqQYm5YlNp2asv
-  KSt9EDwypwXSSIbT05hbnCw8z3+8YX/sWaR6UVB+RcYMmc84HN1uhl90c/uda/uHa3jHe93dv
-  Y1SQZfl/HL2a8b7tbV52jY8cVA1TnZweWWw62r/m7/5W41i+/1/3aaU8HsW3XsrJOiU81ZrKQ
-  dL29r0vPS93E/kaM79Qa3lHu+u4Hn1pBZlwKOn/7HalFz7qmLWNEcr5L3uuzfT9ilClw3aXm0
-  6tnTS858RgpeaaoRimssb7aWrGqZbczCWm/Oo56nW7z1YId7z249iSdr1J9a9sV+4qz7VldYt
-  baLVWLTatmJJmlf/UwktT3/mMkej/loZyIadPmBjPTuljjL/ATVBWxWSizFGYmGWsxFxYkAAW
-  T7+7IDAAA=
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-4.tower-591.messagelabs.com!1664112830!124372!1
-X-Originating-IP: [62.60.8.98]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.87.3; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 27799 invoked from network); 25 Sep 2022 13:33:50 -0000
-Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
-  by server-4.tower-591.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 25 Sep 2022 13:33:50 -0000
-Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id DAE041AD;
-        Sun, 25 Sep 2022 14:33:49 +0100 (BST)
-Received: from R01UKEXCASM121.r01.fujitsu.local (R01UKEXCASM121 [10.183.43.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id CEF3D1AC;
-        Sun, 25 Sep 2022 14:33:49 +0100 (BST)
-Received: from localhost.localdomain (10.167.225.141) by
- R01UKEXCASM121.r01.fujitsu.local (10.183.43.173) with Microsoft SMTP Server
- (TLS) id 15.0.1497.32; Sun, 25 Sep 2022 14:33:46 +0100
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <djwong@kernel.org>, <david@fromorbit.com>,
-        <dan.j.williams@intel.com>, <hch@infradead.org>
-Subject: [PATCH 3/3] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
-Date:   Sun, 25 Sep 2022 13:33:23 +0000
-Message-ID: <1664112803-57-4-git-send-email-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1664112803-57-1-git-send-email-ruansy.fnst@fujitsu.com>
-References: <1664112803-57-1-git-send-email-ruansy.fnst@fujitsu.com>
+        with ESMTP id S229824AbiIYXyQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Sep 2022 19:54:16 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 24A0F23162;
+        Sun, 25 Sep 2022 16:54:15 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B069E1100D90;
+        Mon, 26 Sep 2022 09:54:09 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ocbRn-00CADQ-Ot; Mon, 26 Sep 2022 09:54:07 +1000
+Date:   Mon, 26 Sep 2022 09:54:07 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@nvidia.com>, akpm@linux-foundation.org,
+        Matthew Wilcox <willy@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        John Hubbard <jhubbard@nvidia.com>,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2 05/18] xfs: Add xfs_break_layouts() to the inode
+ eviction path
+Message-ID: <20220925235407.GA3600936@dread.disaster.area>
+References: <20220918225731.GG3600936@dread.disaster.area>
+ <632894c4738d8_2a6ded294a@dwillia2-xfh.jf.intel.com.notmuch>
+ <20220919212959.GL3600936@dread.disaster.area>
+ <6329ee04c9272_2a6ded294bf@dwillia2-xfh.jf.intel.com.notmuch>
+ <20220921221416.GT3600936@dread.disaster.area>
+ <YyuQI08LManypG6u@nvidia.com>
+ <20220923001846.GX3600936@dread.disaster.area>
+ <632d00a491d0d_4a67429488@dwillia2-xfh.jf.intel.com.notmuch>
+ <20220923021012.GZ3600936@dread.disaster.area>
+ <20220923093803.nroajmvn7twuptez@quack3>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM121.r01.fujitsu.local (10.183.43.173)
-X-Virus-Scanned: ClamAV using ClamSMTP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220923093803.nroajmvn7twuptez@quack3>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6330ea24
+        a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
+        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=VwQbUJbxAAAA:8 a=Ikd4Dj_1AAAA:8
+        a=7-415B0cAAAA:8 a=6WIxVItXUT_raNPUQEAA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patch is inspired by Dan's "mm, dax, pmem: Introduce
-dev_pagemap_failure()"[1].  With the help of dax_holder and
-->notify_failure() mechanism, the pmem driver is able to ask filesystem
-(or mapped device) on it to unmap all files in use and notify processes
-who are using those files.
+On Fri, Sep 23, 2022 at 11:38:03AM +0200, Jan Kara wrote:
+> On Fri 23-09-22 12:10:12, Dave Chinner wrote:
+> > On Thu, Sep 22, 2022 at 05:41:08PM -0700, Dan Williams wrote:
+> > > Dave Chinner wrote:
+> > > > On Wed, Sep 21, 2022 at 07:28:51PM -0300, Jason Gunthorpe wrote:
+> > > > > On Thu, Sep 22, 2022 at 08:14:16AM +1000, Dave Chinner wrote:
+> > > > > 
+> > > > > > Where are these DAX page pins that don't require the pin holder to
+> > > > > > also hold active references to the filesystem objects coming from?
+> > > > > 
+> > > > > O_DIRECT and things like it.
+> > > > 
+> > > > O_DIRECT IO to a file holds a reference to a struct file which holds
+> > > > an active reference to the struct inode. Hence you can't reclaim an
+> > > > inode while an O_DIRECT IO is in progress to it. 
+> > > > 
+> > > > Similarly, file-backed pages pinned from user vmas have the inode
+> > > > pinned by the VMA having a reference to the struct file passed to
+> > > > them when they are instantiated. Hence anything using mmap() to pin
+> > > > file-backed pages (i.e. applications using FSDAX access from
+> > > > userspace) should also have a reference to the inode that prevents
+> > > > the inode from being reclaimed.
+> > > > 
+> > > > So I'm at a loss to understand what "things like it" might actually
+> > > > mean. Can you actually describe a situation where we actually permit
+> > > > (even temporarily) these use-after-free scenarios?
+> > > 
+> > > Jason mentioned a scenario here:
+> > > 
+> > > https://lore.kernel.org/all/YyuoE8BgImRXVkkO@nvidia.com/
+> > > 
+> > > Multi-thread process where thread1 does open(O_DIRECT)+mmap()+read() and
+> > > thread2 does memunmap()+close() while the read() is inflight.
+> > 
+> > And, ah, what production application does this and expects to be
+> > able to process the result of the read() operation without getting a
+> > SEGV?
+> > 
+> > There's a huge difference between an unlikely scenario which we need
+> > to work (such as O_DIRECT IO to/from a mmap() buffer at a different
+> > offset on the same file) and this sort of scenario where even if we
+> > handle it correctly, the application can't do anything with the
+> > result and will crash immediately....
+> 
+> I'm not sure I fully follow what we are concerned about here. As you've
+> written above direct IO holds reference to the inode until it is completed
+> (through kiocb->file->inode chain). So direct IO should be safe?
 
-Call trace:
-trigger unbind
- -> unbind_store()
-  -> ... (skip)
-   -> devres_release_all()   # was pmem driver ->remove() in v1
-    -> kill_dax()
-     -> dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_PRE_REMOVE)
-      -> xfs_dax_notify_failure()
+AFAICT, it's the user buffer allocated by mmap() that the direct IO
+is DMAing into/out of that is the issue here. i.e. mmap() a file
+that is DAX enabled, pass the mmap region to DIO on a non-dax file,
+GUP in the DIO path takes a page pin on user pages that are DAX
+mapped, the userspace application then unmaps the file pages and
+unlinks the FSDAX file.
 
-Introduce MF_MEM_PRE_REMOVE to let filesystem know this is a remove
-event.  So do not shutdown filesystem directly if something not
-supported, or if failure range includes metadata area.  Make sure all
-files and processes are handled correctly.
+At this point the FSDAX mapped inode has no active references, so
+the filesystem frees the inode and it's allocated storage space, and
+now the DIO or whatever is holding the GUP reference is
+now a moving storage UAF violation. What ever is holding the GUP
+reference doesn't even have a reference to the FSDAX filesystem -
+the DIO fd could point to a file in a different filesystem
+altogether - and so the fsdax filesytem could be unmounted at this
+point whilst the application is still actively using the storage
+underlying the filesystem.
 
-[1]: https://lore.kernel.org/linux-mm/161604050314.1463742.14151665140035795571.stgit@dwillia2-desk3.amr.corp.intel.com/
+That's just .... broken.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- drivers/dax/super.c         |  3 ++-
- fs/xfs/xfs_notify_failure.c | 28 +++++++++++++++++++++++++++-
- include/linux/mm.h          |  1 +
- 3 files changed, 30 insertions(+), 2 deletions(-)
+> I'd be more worried about stuff like vmsplice() that can add file pages
+> into pipe without holding inode alive in any way and keeping them there for
+> arbitrarily long time. Didn't we want to add FOLL_LONGTERM to gup executed
+> from vmsplice() to avoid issues like this?
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 9b5e2a5eb0ae..cf9a64563fbe 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -323,7 +323,8 @@ void kill_dax(struct dax_device *dax_dev)
- 		return;
- 
- 	if (dax_dev->holder_data != NULL)
--		dax_holder_notify_failure(dax_dev, 0, U64_MAX, 0);
-+		dax_holder_notify_failure(dax_dev, 0, U64_MAX,
-+				MF_MEM_PRE_REMOVE);
- 
- 	clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
- 	synchronize_srcu(&dax_srcu);
-diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-index 3830f908e215..5c1e678a1285 100644
---- a/fs/xfs/xfs_notify_failure.c
-+++ b/fs/xfs/xfs_notify_failure.c
-@@ -22,6 +22,7 @@
- 
- #include <linux/mm.h>
- #include <linux/dax.h>
-+#include <linux/fs.h>
- 
- struct xfs_failure_info {
- 	xfs_agblock_t		startblock;
-@@ -77,6 +78,9 @@ xfs_dax_failure_fn(
- 
- 	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
- 	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-+		/* The device is about to be removed.  Not a really failure. */
-+		if (notify->mf_flags & MF_MEM_PRE_REMOVE)
-+			return 0;
- 		notify->want_shutdown = true;
- 		return 0;
- 	}
-@@ -168,7 +172,9 @@ xfs_dax_notify_ddev_failure(
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
- 		if (!error)
- 			error = -EFSCORRUPTED;
--	}
-+	} else if (mf_flags & MF_MEM_PRE_REMOVE)
-+		xfs_force_shutdown(mp, SHUTDOWN_FORCE_UMOUNT);
-+
- 	return error;
- }
- 
-@@ -182,12 +188,24 @@ xfs_dax_notify_failure(
- 	struct xfs_mount	*mp = dax_holder(dax_dev);
- 	u64			ddev_start;
- 	u64			ddev_end;
-+	int			error;
- 
- 	if (!(mp->m_super->s_flags & SB_BORN)) {
- 		xfs_warn(mp, "filesystem is not ready for notify_failure()!");
- 		return -EIO;
- 	}
- 
-+	if (mf_flags & MF_MEM_PRE_REMOVE) {
-+		xfs_info(mp, "device is about to be removed!");
-+		down_write(&mp->m_super->s_umount);
-+		error = sync_filesystem(mp->m_super);
-+		/* invalidate_inode_pages2() invalidates dax mapping */
-+		super_drop_pagecache(mp->m_super, invalidate_inode_pages2);
-+		up_write(&mp->m_super->s_umount);
-+		if (error)
-+			return error;
-+	}
-+
- 	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_daxdev == dax_dev) {
- 		xfs_debug(mp,
- 			 "notify_failure() not supported on realtime device!");
-@@ -196,6 +214,8 @@ xfs_dax_notify_failure(
- 
- 	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
- 	    mp->m_logdev_targp != mp->m_ddev_targp) {
-+		if (mf_flags & MF_MEM_PRE_REMOVE)
-+			return 0;
- 		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
- 		return -EFSCORRUPTED;
-@@ -209,6 +229,12 @@ xfs_dax_notify_failure(
- 	ddev_start = mp->m_ddev_targp->bt_dax_part_off;
- 	ddev_end = ddev_start + bdev_nr_bytes(mp->m_ddev_targp->bt_bdev) - 1;
- 
-+	/* Notify failure on the whole device */
-+	if (offset == 0 && len == U64_MAX) {
-+		offset = ddev_start;
-+		len = bdev_nr_bytes(mp->m_ddev_targp->bt_bdev);
-+	}
-+
- 	/* Ignore the range out of filesystem area */
- 	if (offset + len - 1 < ddev_start)
- 		return -ENXIO;
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 21f8b27bd9fd..9122a1c57dd2 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -3183,6 +3183,7 @@ enum mf_flags {
- 	MF_UNPOISON = 1 << 4,
- 	MF_SW_SIMULATED = 1 << 5,
- 	MF_NO_RETRY = 1 << 6,
-+	MF_MEM_PRE_REMOVE = 1 << 7,
- };
- int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
- 		      unsigned long count, int mf_flags);
+Yes, ISTR that was part of the plan - use FOLL_LONGTERM to ensure
+FSDAX can't run operations that pin pages but don't take fs
+references. I think that's how we prevented RDMA users from pinning
+FSDAX direct mapped storage media in this way. It does not, however,
+prevent the above "short term" GUP UAF situation from occurring.
+
+> > > Sounds plausible to me, but I have not tried to trigger it with a focus
+> > > test.
+> > 
+> > If there really are applications this .... broken, then it's not the
+> > responsibility of the filesystem to paper over the low level page
+> > reference tracking issues that cause it.
+> > 
+> > i.e. The underlying problem here is that memunmap() frees the VMA
+> > while there are still active task-based references to the pages in
+> > that VMA. IOWs, the VMA should not be torn down until the O_DIRECT
+> > read has released all the references to the pages mapped into the
+> > task address space.
+> > 
+> > This just doesn't seem like an issue that we should be trying to fix
+> > by adding band-aids to the inode life-cycle management.
+> 
+> I agree that freeing VMA while there are pinned pages is ... inconvenient.
+> But that is just how gup works since the beginning - the moment you have
+> struct page reference, you completely forget about the mapping you've used
+> to get to the page. So anything can happen with the mapping after that
+> moment. And in case of pages mapped by multiple processes I can easily see
+> that one of the processes decides to unmap the page (and it may well be
+> that was the initial process that acquired page references) while others
+> still keep accessing the page using page references stored in some internal
+> structure (RDMA anyone?).
+
+Yup, and this is why RDMA on FSDAX using this method of pinning pages
+will end up corrupting data and filesystems, hence FOLL_LONGTERM
+protecting against most of these situations from even arising. But
+that's that workaround, not a long term solution that allows RDMA to
+be run on FSDAX managed storage media.
+
+I said on #xfs a few days ago:
+
+[23/9/22 10:23] * dchinner is getting deja vu over this latest round
+of "dax mappings don't pin the filesystem objects that own the
+storage media being mapped"
+
+And I'm getting that feeling again right now...
+
+> I think it will be rather difficult to come up
+> with some scheme keeping VMA alive while there are pages pinned without
+> regressing userspace which over the years became very much tailored to the
+> peculiar gup behavior.
+
+Perhaps all we should do is add a page flag for fsdax mapped pages
+that says GUP must pin the VMA, so only mapped pages that fall into
+this category take the perf penalty of VMA management.
+
+> I can imagine we would keep *inode* referenced while there are its pages
+> pinned.
+
+We can do that by pinning the VMA, yes?
+
+> That should not be that difficult but at least in naive
+> implementation that would put rather heavy stress on inode refcount under
+> some loads so I don't think that's useful either.
+
+Having the workaround be sub-optimal for high performance workloads
+is a good way of discouraging applications from doing fundamentally
+broken crap without actually breaking anything....
+
+-Dave.
+
 -- 
-2.37.3
-
+Dave Chinner
+david@fromorbit.com
