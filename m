@@ -2,228 +2,93 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66A4CC07E9D
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Sep 2022 15:28:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB7BCC6FA8E
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Sep 2022 16:58:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236599AbiIZP2O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Sep 2022 11:28:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44082 "EHLO
+        id S229550AbiIZQ6I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Sep 2022 12:58:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236646AbiIZP0N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2022 11:26:13 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C35E812AAD;
-        Mon, 26 Sep 2022 07:10:57 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 7A7551F8AA;
-        Mon, 26 Sep 2022 14:10:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1664201456; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=TlFGu5xf/L1Qiw7ID2qQl3vNpuCcb+T6b07/3KaOKVs=;
-        b=lt5eQhEU21zFImCJ4p/J8li9f1EZU/75GeyWieUdU6emksZtc9Zl1k88t8VPtIJiyc/5HV
-        4e8+zJXOF1YBQED1MK5S5WCfVob1wt0CDP4a8X5baitR+bF15Qo0DyUM+LTzkbeiV9PPws
-        Xvdkx6k5Rm4yUMxxEO1n4L8xQE2Qo88=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1664201456;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=TlFGu5xf/L1Qiw7ID2qQl3vNpuCcb+T6b07/3KaOKVs=;
-        b=FGPMP4E/xZWSlHk+Onq6+WTUzUu2EHdw1V6ZNYZgyh9msW4LsknhLYCiDOkp1Md4evkYio
-        Yrwi0Myuo4O1HeAQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5E206139BD;
-        Mon, 26 Sep 2022 14:10:56 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 9k1XF/CyMWPAAgAAMHmgww
-        (envelope-from <jack@suse.cz>); Mon, 26 Sep 2022 14:10:56 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id BAEB9A0685; Mon, 26 Sep 2022 16:10:55 +0200 (CEST)
-Date:   Mon, 26 Sep 2022 16:10:55 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@nvidia.com>, akpm@linux-foundation.org,
-        Matthew Wilcox <willy@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
+        with ESMTP id S230091AbiIZQ5w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2022 12:57:52 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FB07293;
+        Mon, 26 Sep 2022 08:54:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=GLjOCldwMSYbtIvOp9MNc738nkI+qSWqG0cQCtDGyYs=; b=iKgsgckx1BpnYBt1Ml1luRzlNo
+        UEaD93VJ/NaxUNW6l6hN4BiK/C+lXg9TvmRBVZsr6VTRgniAUARhROkGwU1gb/+ga6hgyHbqIk4/Z
+        MZ2vk2dp+YZ4n0PysUqI70IA94ZPELr3jKfzqB+j9wqcDa40U1/yUR6ed5i6U/Ooq6akJwUIH9LCc
+        4FE9DI2L7LRdgnfG+csHbDb8jVG/m3HrQoeTsrshIrc6b/uSVjKzkoMcldkhksDV/gf35W549vzaw
+        QW3k1gYHecYAhnbGFnhN3AfKto9jFnIhYWcwx925qCXeqVUi440PLfDtd4qG2idoghktcU6o/gEhs
+        CpXOoeeQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1ocqQR-005okf-Pg; Mon, 26 Sep 2022 15:53:43 +0000
+Date:   Mon, 26 Sep 2022 08:53:43 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Al Viro <viro@zeniv.linux.org.uk>
+Cc:     Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
         John Hubbard <jhubbard@nvidia.com>,
-        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v2 05/18] xfs: Add xfs_break_layouts() to the inode
- eviction path
-Message-ID: <20220926141055.sdlm3hkfepa7azf2@quack3>
-References: <632894c4738d8_2a6ded294a@dwillia2-xfh.jf.intel.com.notmuch>
- <20220919212959.GL3600936@dread.disaster.area>
- <6329ee04c9272_2a6ded294bf@dwillia2-xfh.jf.intel.com.notmuch>
- <20220921221416.GT3600936@dread.disaster.area>
- <YyuQI08LManypG6u@nvidia.com>
- <20220923001846.GX3600936@dread.disaster.area>
- <632d00a491d0d_4a67429488@dwillia2-xfh.jf.intel.com.notmuch>
- <20220923021012.GZ3600936@dread.disaster.area>
- <20220923093803.nroajmvn7twuptez@quack3>
- <20220925235407.GA3600936@dread.disaster.area>
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        David Hildenbrand <david@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 4/7] iov_iter: new iov_iter_pin_pages*() routines
+Message-ID: <YzHLB4lGa2vktN7W@infradead.org>
+References: <YxhaJktqtHw3QTSG@infradead.org>
+ <YyFPtTtxYozCuXvu@ZenIV>
+ <20220914145233.cyeljaku4egeu4x2@quack3>
+ <YyIEgD8ksSZTsUdJ@ZenIV>
+ <20220915081625.6a72nza6yq4l5etp@quack3>
+ <YyvG+Oih2A37Grcf@ZenIV>
+ <YyxzYTlyGhbb2MOu@infradead.org>
+ <Yy00eSjyxvUIp7D5@ZenIV>
+ <Yy1x8QE9YA4HHzbQ@infradead.org>
+ <Yy3bNjaiUoGv/djG@ZenIV>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220925235407.GA3600936@dread.disaster.area>
+In-Reply-To: <Yy3bNjaiUoGv/djG@ZenIV>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 26-09-22 09:54:07, Dave Chinner wrote:
-> On Fri, Sep 23, 2022 at 11:38:03AM +0200, Jan Kara wrote:
-> > On Fri 23-09-22 12:10:12, Dave Chinner wrote:
-> > > On Thu, Sep 22, 2022 at 05:41:08PM -0700, Dan Williams wrote:
-> > > > Dave Chinner wrote:
-> > > > > On Wed, Sep 21, 2022 at 07:28:51PM -0300, Jason Gunthorpe wrote:
-> > > > > > On Thu, Sep 22, 2022 at 08:14:16AM +1000, Dave Chinner wrote:
-> > > > > > 
-> > > > > > > Where are these DAX page pins that don't require the pin holder to
-> > > > > > > also hold active references to the filesystem objects coming from?
-> > > > > > 
-> > > > > > O_DIRECT and things like it.
-> > > > > 
-> > > > > O_DIRECT IO to a file holds a reference to a struct file which holds
-> > > > > an active reference to the struct inode. Hence you can't reclaim an
-> > > > > inode while an O_DIRECT IO is in progress to it. 
-> > > > > 
-> > > > > Similarly, file-backed pages pinned from user vmas have the inode
-> > > > > pinned by the VMA having a reference to the struct file passed to
-> > > > > them when they are instantiated. Hence anything using mmap() to pin
-> > > > > file-backed pages (i.e. applications using FSDAX access from
-> > > > > userspace) should also have a reference to the inode that prevents
-> > > > > the inode from being reclaimed.
-> > > > > 
-> > > > > So I'm at a loss to understand what "things like it" might actually
-> > > > > mean. Can you actually describe a situation where we actually permit
-> > > > > (even temporarily) these use-after-free scenarios?
-> > > > 
-> > > > Jason mentioned a scenario here:
-> > > > 
-> > > > https://lore.kernel.org/all/YyuoE8BgImRXVkkO@nvidia.com/
-> > > > 
-> > > > Multi-thread process where thread1 does open(O_DIRECT)+mmap()+read() and
-> > > > thread2 does memunmap()+close() while the read() is inflight.
-> > > 
-> > > And, ah, what production application does this and expects to be
-> > > able to process the result of the read() operation without getting a
-> > > SEGV?
-> > > 
-> > > There's a huge difference between an unlikely scenario which we need
-> > > to work (such as O_DIRECT IO to/from a mmap() buffer at a different
-> > > offset on the same file) and this sort of scenario where even if we
-> > > handle it correctly, the application can't do anything with the
-> > > result and will crash immediately....
-> > 
-> > I'm not sure I fully follow what we are concerned about here. As you've
-> > written above direct IO holds reference to the inode until it is completed
-> > (through kiocb->file->inode chain). So direct IO should be safe?
-> 
-> AFAICT, it's the user buffer allocated by mmap() that the direct IO
-> is DMAing into/out of that is the issue here. i.e. mmap() a file
-> that is DAX enabled, pass the mmap region to DIO on a non-dax file,
-> GUP in the DIO path takes a page pin on user pages that are DAX
-> mapped, the userspace application then unmaps the file pages and
-> unlinks the FSDAX file.
-> 
-> At this point the FSDAX mapped inode has no active references, so
-> the filesystem frees the inode and it's allocated storage space, and
-> now the DIO or whatever is holding the GUP reference is
-> now a moving storage UAF violation. What ever is holding the GUP
-> reference doesn't even have a reference to the FSDAX filesystem -
-> the DIO fd could point to a file in a different filesystem
-> altogether - and so the fsdax filesytem could be unmounted at this
-> point whilst the application is still actively using the storage
-> underlying the filesystem.
-> 
-> That's just .... broken.
+On Fri, Sep 23, 2022 at 05:13:42PM +0100, Al Viro wrote:
+> You are mixing two issues here - holding references to pages while using
+> iov_iter instance is obvious; holding them until async IO is complete, even
+> though struct iov_iter might be long gone by that point is a different
+> story.
 
-Hum, so I'm confused (and my last email probably was as well). So let me
-spell out the details here so that I can get on the same page about what we
-are trying to solve:
+But someone needs to hold a refernce until the I/O is completed, because
+the I/O obviously needs the pages.  Yes, we could say the callers holds
+them and can drop the references right after I/O submission, while
+the method needs to grab another reference.  But that is more
+complicated and is more costly than just holding the damn reference.
 
-For FSDAX, backing storage for a page must not be freed (i.e., filesystem
-must to free corresponding block) while there are some references to the
-page. This is achieved by calls to dax_layout_busy_page() from the
-filesystem before truncating file / punching hole into a file. So AFAICT
-this is working correctly and I don't think the patch series under
-discussion aims to change this besides the change in how page without
-references is detected.
+> And originating iov_iter instance really can be long-gone by the time
+> of IO completion - requirement to keep it around would be very hard to
+> satisfy.  I've no objections to requiring the pages in ITER_BVEC to be
+> preserved at least until the IO completion by means independent of
+> whatever ->read_iter/->write_iter does to them, but
+> 	* that needs to be spelled out very clearly and
+> 	* we need to verify that it is, indeed, the case for all existing
+> iov_iter_bvec callers, preferably with comments next to non-obvious ones
+> (something that is followed only by the sync IO is obvious)
 
-Now there is a separate question that while someone holds a reference to
-FSDAX page, the inode this page belongs to can get evicted from memory. For
-FSDAX nothing prevents that AFAICT. If this happens, we loose track of the
-page<->inode association so if somebody later comes and truncates the
-inode, we will not detect the page belonging to the inode is still in use
-(dax_layout_busy_page() does not find the page) and we have a problem.
-Correct?
+Agreed.
 
-> > I'd be more worried about stuff like vmsplice() that can add file pages
-> > into pipe without holding inode alive in any way and keeping them there for
-> > arbitrarily long time. Didn't we want to add FOLL_LONGTERM to gup executed
-> > from vmsplice() to avoid issues like this?
-> 
-> Yes, ISTR that was part of the plan - use FOLL_LONGTERM to ensure
-> FSDAX can't run operations that pin pages but don't take fs
-> references. I think that's how we prevented RDMA users from pinning
-> FSDAX direct mapped storage media in this way. It does not, however,
-> prevent the above "short term" GUP UAF situation from occurring.
+> That goes not just for bio - if we make get_pages *NOT* grab references
+> on ITER_BVEC (and I'm all for it), we need to make sure that those
+> pages won't be retained after the original protection runs out.
 
-If what I wrote above is correct, then I understand and agree.
-
-> > I agree that freeing VMA while there are pinned pages is ... inconvenient.
-> > But that is just how gup works since the beginning - the moment you have
-> > struct page reference, you completely forget about the mapping you've used
-> > to get to the page. So anything can happen with the mapping after that
-> > moment. And in case of pages mapped by multiple processes I can easily see
-> > that one of the processes decides to unmap the page (and it may well be
-> > that was the initial process that acquired page references) while others
-> > still keep accessing the page using page references stored in some internal
-> > structure (RDMA anyone?).
-> 
-> Yup, and this is why RDMA on FSDAX using this method of pinning pages
-> will end up corrupting data and filesystems, hence FOLL_LONGTERM
-> protecting against most of these situations from even arising. But
-> that's that workaround, not a long term solution that allows RDMA to
-> be run on FSDAX managed storage media.
-> 
-> I said on #xfs a few days ago:
-> 
-> [23/9/22 10:23] * dchinner is getting deja vu over this latest round
-> of "dax mappings don't pin the filesystem objects that own the
-> storage media being mapped"
-> 
-> And I'm getting that feeling again right now...
-> 
-> > I think it will be rather difficult to come up
-> > with some scheme keeping VMA alive while there are pages pinned without
-> > regressing userspace which over the years became very much tailored to the
-> > peculiar gup behavior.
-> 
-> Perhaps all we should do is add a page flag for fsdax mapped pages
-> that says GUP must pin the VMA, so only mapped pages that fall into
-> this category take the perf penalty of VMA management.
-
-Possibly. But my concern with VMA pinning was not only about performance
-but also about applications relying on being able to unmap pages that are
-currently pinned. At least from some processes one of which may be the one
-doing the original pinning. But yeah, the fact that FOLL_LONGTERM is
-forbidden with DAX somewhat restricts the insanity we have to deal with. So
-maybe pinning the VMA for DAX mappings might actually be a workable
-solution.
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Yes.
