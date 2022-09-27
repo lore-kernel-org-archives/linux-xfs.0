@@ -2,149 +2,242 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F60AC6FA94
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Sep 2022 13:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7C16C07E9D
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Sep 2022 16:04:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232912AbiI0NXa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Sep 2022 09:23:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52668 "EHLO
+        id S232923AbiI0QEx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Sep 2022 12:04:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232882AbiI0NWu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2022 09:22:50 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 767151B2D13;
-        Tue, 27 Sep 2022 06:18:59 -0700 (PDT)
+        with ESMTP id S232498AbiI0QEa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2022 12:04:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C75801C8893;
+        Tue, 27 Sep 2022 09:02:54 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 62FDEB81BE5;
-        Tue, 27 Sep 2022 13:18:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06FECC43141;
-        Tue, 27 Sep 2022 13:18:43 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E3D4F61A90;
+        Tue, 27 Sep 2022 16:02:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D400C433D6;
+        Tue, 27 Sep 2022 16:02:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664284726;
-        bh=75r45GYNmdQ6TGZtVM1PaqeQt62nqyjqpVvH5ey6w3w=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=fl/6F/CbEzRJTGc0S8S+u4io0/U1Y20LUrcV8EI3ai8sfiZq7a4r0+QeC02bKrgC4
-         7HLpeekjBIf7338lAJOzta/LOslAVVelG3jIV1Lvn6wCxaW7H+tOwrFkKYSVJIeAz8
-         /Dns3spD7Duj6yT0m9RoAt8Ok1gNZQmxjyeybUAIEzuijiFrg6vhwlJ5lZy6iCXJr7
-         XaUkai7saTAfwQ7h38pJ0iO5LTsAKKJO2EcfaHan35eEHdu3BlHxlrm+iLEsC8YZtA
-         wYCyXxLU7CInTWkFKw/JgXdTP65K/aQBbe0kZCxmfO6ZROiBEORjT7PgdJKddfO079
-         J+SzYeeiBsV9Q==
-Message-ID: <6012013b1fd92e5dad7927d8133d5d5b3cd76e3f.camel@kernel.org>
-Subject: Re: [man-pages RFC PATCH v4] statx, inode: document the new
- STATX_INO_VERSION field
-From:   Jeff Layton <jlayton@kernel.org>
-To:     NeilBrown <neilb@suse.de>
-Cc:     Trond Myklebust <trondmy@hammerspace.com>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "zohar@linux.ibm.com" <zohar@linux.ibm.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "brauner@kernel.org" <brauner@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "bfields@fieldses.org" <bfields@fieldses.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "fweimer@redhat.com" <fweimer@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "chuck.lever@oracle.com" <chuck.lever@oracle.com>,
-        "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "tytso@mit.edu" <tytso@mit.edu>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "xiubli@redhat.com" <xiubli@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "lczerner@redhat.com" <lczerner@redhat.com>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
-Date:   Tue, 27 Sep 2022 09:18:42 -0400
-In-Reply-To: <166423223623.17572.7229091435446226718@noble.neil.brown.name>
-References: <24005713ad25370d64ab5bd0db0b2e4fcb902c1c.camel@kernel.org>
-        , <20220918235344.GH3600936@dread.disaster.area>
-        , <87fb43b117472c0a4c688c37a925ac51738c8826.camel@kernel.org>
-        , <20220920001645.GN3600936@dread.disaster.area>
-        , <5832424c328ea427b5c6ecdaa6dd53f3b99c20a0.camel@kernel.org>
-        , <20220921000032.GR3600936@dread.disaster.area>
-        , <93b6d9f7cf997245bb68409eeb195f9400e55cd0.camel@kernel.org>
-        , <20220921214124.GS3600936@dread.disaster.area>
-        , <e04e349170bc227b330556556d0592a53692b5b5.camel@kernel.org>
-        , <1ef261e3ff1fa7fcd0d75ed755931aacb8062de2.camel@kernel.org>
-        , <20220923095653.5c63i2jgv52j3zqp@quack3>
-        , <2d41c08e1fd96d55c794c3b4cd43a51a0494bfcf.camel@hammerspace.com>
-        , <baf852dfb57aaf5a670bc88236f8d62c99668fcc.camel@kernel.org>
-         <166423223623.17572.7229091435446226718@noble.neil.brown.name>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
+        s=k20201202; t=1664294569;
+        bh=q2PgX0FVMvjEOsQGJ0Z4Rp2fHN8quFSL88LHc/A4pJQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=LepGIAypkn5ICKnpSqAhtivRKIpbQawmlkzkmPTkrkDxHuURprVN5KhuGEw+fL7bU
+         GTnsGpQvPcdFa5DOps2nSqKruetSljruJsRo5J84Oz4WYTVdkHp1cdWFG14mk0ZNKB
+         ONOvno4yA5WYYJmMbtqJLZ+NJk2hx1MPuiTuJAd4TicZrmskpXpJvNFv1PMpJQqnP0
+         TqjCc+EzTHREppb+xZf5PY2oVToms4GFYfLiFlFC6msC30PSwVezO1Q7JYjnFLrbN2
+         hVOcrQZ/DdYTI4PBlCa6VG/RtCvzkDRLmh6n38Hdn0y6KBOw+BGiIcy5Zi4stjcRhI
+         0iLkbMKTXnSbw==
+Date:   Tue, 27 Sep 2022 09:02:48 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        dan.j.williams@intel.com
+Subject: Re: [RFC PATCH] xfs: drop experimental warning for fsdax
+Message-ID: <YzMeqNg56v0/t/8x@magnolia>
+References: <1663234002-17-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <20220919045003.GJ3600936@dread.disaster.area>
+ <20220919211533.GK3600936@dread.disaster.area>
+ <f10de555-370b-f236-1107-e3089258ebbc@fujitsu.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <f10de555-370b-f236-1107-e3089258ebbc@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2022-09-27 at 08:43 +1000, NeilBrown wrote:
-> On Fri, 23 Sep 2022, Jeff Layton wrote:
-> >=20
-> > Absolutely. That is the downside of this approach, but the priority her=
-e
-> > has always been to improve nfsd. If we don't get the ability to present
-> > this info via statx, then so be it. Later on, I suppose we can move tha=
-t
-> > handling into the kernel in some fashion if we decide it's worthwhile.
-> >=20
-> > That said, not having this in statx makes it more difficult to test
-> > i_version behavior. Maybe we can add a generic ioctl for that in the
-> > interim?
->=20
-> I wonder if we are over-thinking this, trying too hard, making "perfect"
-> the enemy of "good".
-> While we agree that the current implementation of i_version is
-> imperfect, it isn't causing major data corruption all around the world.
-> I don't think there are even any known bug reports are there?
-> So while we do want to fix it as best we can, we don't need to make that
-> the first priority.
->=20
-> I think the first priority should be to document how we want it to work,
-> which is what this thread is really all about.  The documentation can
-> note that some (all) filesystems do not provide perfect semantics across
-> unclean restarts, and can list any other anomalies that we are aware of.
-> And on that basis we can export the current i_version to user-space via
-> statx and start trying to write some test code.
->=20
-> We can then look at moving the i_version/ctime update from *before* the
-> write to *after* the write, and any other improvements that can be
-> achieved easily in common code.  We can then update the man page to say
-> "since Linux 6.42, this list of anomalies is no longer present".
->=20
-> Then we can explore some options for handling unclean restart - in a
-> context where we can write tests and maybe even demonstrate a concrete
-> problem before we start trying to fix it.
->=20
+On Tue, Sep 27, 2022 at 02:53:14PM +0800, Shiyang Ruan wrote:
+> 
+> 
+> 在 2022/9/20 5:15, Dave Chinner 写道:
+> > On Mon, Sep 19, 2022 at 02:50:03PM +1000, Dave Chinner wrote:
+> > > On Thu, Sep 15, 2022 at 09:26:42AM +0000, Shiyang Ruan wrote:
+> > > > Since reflink&fsdax can work together now, the last obstacle has been
+> > > > resolved.  It's time to remove restrictions and drop this warning.
+> > > > 
+> > > > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> > > 
+> > > I haven't looked at reflink+DAX for some time, and I haven't tested
+> > > it for even longer. So I'm currently running a v6.0-rc6 kernel with
+> > > "-o dax=always" fstests run with reflink enabled and it's not
+> > > looking very promising.
+> > > 
+> > > All of the fsx tests are failing with data corruption, several
+> > > reflink/clone tests are failing with -EINVAL (e.g. g/16[45]) and
+> > > *lots* of tests are leaving stack traces from WARN() conditions in
+> > > DAx operations such as dax_insert_entry(), dax_disassociate_entry(),
+> > > dax_writeback_mapping_range(), iomap_iter() (called from
+> > > dax_dedupe_file_range_compare()), and so on.
+> > > 
+> > > At thsi point - the tests are still running - I'd guess that there's
+> > > going to be at least 50 test failures by the time it completes -
+> > > in comparison using "-o dax=never" results in just a single test
+> > > failure and a lot more tests actually being run.
+> > 
+> > The end results with dax+reflink were:
+> > 
+> > SECTION       -- xfs_dax
+> > =========================
+> > 
+> > Failures: generic/051 generic/068 generic/074 generic/075
+> > generic/083 generic/091 generic/112 generic/127 generic/164
+> > generic/165 generic/175 generic/231 generic/232 generic/247
+> > generic/269 generic/270 generic/327 generic/340 generic/388
+> > generic/390 generic/413 generic/447 generic/461 generic/471
+> > generic/476 generic/517 generic/519 generic/560 generic/561
+> > generic/605 generic/617 generic/619 generic/630 generic/649
+> > generic/650 generic/656 generic/670 generic/672 xfs/011 xfs/013
+> > xfs/017 xfs/068 xfs/073 xfs/104 xfs/127 xfs/137 xfs/141 xfs/158
+> > xfs/168 xfs/179 xfs/243 xfs/297 xfs/305 xfs/328 xfs/440 xfs/442
+> > xfs/517 xfs/535 xfs/538 xfs/551 xfs/552
+> > Failed 61 of 1071 tests
+> > 
+> > Ok, so I did a new no-reflink run as a baseline, because it is a
+> > while since I've tested DAX at all:
+> > 
+> > SECTION       -- xfs_dax_noreflink
+> > =========================
+> > Failures: generic/051 generic/068 generic/074 generic/075
+> > generic/083 generic/112 generic/231 generic/232 generic/269
+> > generic/270 generic/340 generic/388 generic/461 generic/471
+> > generic/476 generic/519 generic/560 generic/561 generic/617
+> > generic/650 generic/656 xfs/011 xfs/013 xfs/017 xfs/073 xfs/297
+> > xfs/305 xfs/517 xfs/538
+> > Failed 29 of 1071 tests
+> > 
+> > Yeah, there's still lots of warnings from dax_insert_entry() and
+> > friends like:
+> > 
+> > [43262.025815] WARNING: CPU: 9 PID: 1309428 at fs/dax.c:380 dax_insert_entry+0x2ab/0x320
+> > [43262.028355] Modules linked in:
+> > [43262.029386] CPU: 9 PID: 1309428 Comm: fsstress Tainted: G W          6.0.0-rc6-dgc+ #1543
+> > [43262.032168] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+> > [43262.034840] RIP: 0010:dax_insert_entry+0x2ab/0x320
+> > [43262.036358] Code: 08 48 83 c4 30 5b 5d 41 5c 41 5d 41 5e 41 5f c3 48 8b 58 20 48 8d 53 01 e9 65 ff ff ff 48 8b 58 20 48 8d 53 01 e9 50 ff ff ff <0f> 0b e9 70 ff ff ff 31 f6 4c 89 e7 e8 84 b1 5a 00 eb a4 48 81 e6
+> > [43262.042255] RSP: 0018:ffffc9000a0cbb78 EFLAGS: 00010002
+> > [43262.043946] RAX: ffffea0018cd1fc0 RBX: 0000000000000001 RCX: 0000000000000001
+> > [43262.046233] RDX: ffffea0000000000 RSI: 0000000000000221 RDI: ffffea0018cd2000
+> > [43262.048518] RBP: 0000000000000011 R08: 0000000000000000 R09: 0000000000000000
+> > [43262.050762] R10: ffff888241a6d318 R11: 0000000000000001 R12: ffffc9000a0cbc58
+> > [43262.053020] R13: ffff888241a6d318 R14: ffffc9000a0cbe20 R15: 0000000000000000
+> > [43262.055309] FS:  00007f8ce25e2b80(0000) GS:ffff8885fec80000(0000) knlGS:0000000000000000
+> > [43262.057859] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > [43262.059713] CR2: 00007f8ce25e1000 CR3: 0000000152141001 CR4: 0000000000060ee0
+> > [43262.061993] Call Trace:
+> > [43262.062836]  <TASK>
+> > [43262.063557]  dax_fault_iter+0x243/0x600
+> > [43262.064802]  dax_iomap_pte_fault+0x199/0x360
+> > [43262.066197]  __xfs_filemap_fault+0x1e3/0x2c0
+> > [43262.067602]  __do_fault+0x31/0x1d0
+> > [43262.068719]  __handle_mm_fault+0xd6d/0x1650
+> > [43262.070083]  ? do_mmap+0x348/0x540
+> > [43262.071200]  handle_mm_fault+0x7a/0x1d0
+> > [43262.072449]  ? __kvm_handle_async_pf+0x12/0xb0
+> > [43262.073908]  exc_page_fault+0x1d9/0x810
+> > [43262.075123]  asm_exc_page_fault+0x22/0x30
+> > [43262.076413] RIP: 0033:0x7f8ce268bc23
+> > 
+> > So it looks to me like DAX is well and truly broken in 6.0-rc6. And,
+> > yes, I'm running the fixes in mm-hotifxes-stable branch that allow
+> > xfs/550 to pass.
+> 
+> I have tested these two mode for many times:
+> 
+> xfs_dax mode did failed so many cases.  (If you tested with this "drop"
+> patch, some warning around "dax_dedupe_file_range_compare()" won't occur any
+> more.)  I think warning around "dax_disassociate_entry()" is a problem with
+> concurrency.  Still looking into it.
+> 
+> But xfs_dax_noreflink didn't have so many failure, just 3 in my environment:
+> Failures: generic/471 generic/519 xfs/148.  I am thinking that did you
+> forget to reformat the TEST_DEV to be non-reflink before run the test?  If
+> so it will make sense.
 
-We can also argue that crash resilience isn't a hard requirement for all
-possible applications. We'll definitely need some sort of mitigation for
-nfsd so we can claim that it's MONOTONIC [1], but local applications may
-not care whether the value rolls backward after a crash, since they
-would have presumably crashed as well and may not be persisting values.
+FWIW I saw dmesg failures in xfs/517 and xfs/013 starting with 6.0-rc5,
+and I haven't even turned on reflink yet:
 
-IOW, I think I agree with Dave C. that crash resilience for regular
-files is best handled at the application level (with the first
-application being knfsd). RFC 7862 requires that the change_attr_type be
-homogeneous across the entire filesystem, so we don't have the option of
-deciding that on a per-inode basis. If we want to advertise it, we have
-ensure that all inode types conform.
+run fstests xfs/517 at 2022-09-26 19:53:34
+XFS (pmem1): EXPERIMENTAL Large extent counts feature in use. Use at your own risk!
+XFS (pmem1): Mounting V5 Filesystem
+XFS (pmem1): Ending clean mount
+XFS (pmem1): Quotacheck needed: Please wait.
+XFS (pmem1): Quotacheck: Done.
+XFS (pmem1): Unmounting Filesystem
+XFS (pmem0): EXPERIMENTAL online scrub feature in use. Use at your own risk!
+XFS (pmem1): EXPERIMENTAL Large extent counts feature in use. Use at your own risk!
+XFS (pmem1): Mounting V5 Filesystem
+XFS (pmem1): Ending clean mount
+XFS (pmem1): Quotacheck needed: Please wait.
+XFS (pmem1): Quotacheck: Done.
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 415317 at fs/dax.c:380 dax_insert_entry+0x22d/0x320
+Modules linked in: xfs nft_chain_nat xt_REDIRECT nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set nft_compat ip_set_hash_mac ip_set nf_tables libcrc32c bfq nfnetlink pvpanic_mmio pvpanic nd_pmem dax_pmem nd_btt sch_fq_codel fuse configfs ip_tables x_tables overlay nfsv4 af_packet [last unloaded: scsi_d
 
-I think for nfsd, a crash counter tracked in userland by nfsdcld
-multiplied by some large number of reasonable version bumps in a jiffy
-would work well and allow us to go back to advertising the value as
-MONOTONIC.=A0That's a bit of a project though and may take a while.
+CPU: 1 PID: 415317 Comm: fsstress Tainted: G        W          6.0.0-rc7-xfsx #rc7 727341edbd0773a36b78b09dab448fa1896eb3a5
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
+RIP: 0010:dax_insert_entry+0x22d/0x320
+Code: e0 48 83 c4 20 5b 5d 41 5c 41 5d 41 5e 41 5f c3 48 8b 58 20 48 8d 53 01 e9 62 ff ff ff 48 8b 58 20 48 8d 53 01 e9 4d ff ff ff <0f> 0b e9 6d ff ff ff 31 f6 48 89 ef e8 72 74 12 00 eb a1 83 e0 02
+RSP: 0000:ffffc90004693b28 EFLAGS: 00010002
+RAX: ffffea0010a20480 RBX: 0000000000000001 RCX: 0000000000000001
+RDX: ffffea0000000000 RSI: 0000000000000033 RDI: ffffea0010a204c0
+RBP: ffffc90004693c08 R08: 0000000000000000 R09: 0000000000000000
+R10: ffff88800c226228 R11: 0000000000000001 R12: 0000000000000011
+R13: ffff88800c226228 R14: ffffc90004693e08 R15: 0000000000000000
+FS:  00007f3aad8db740(0000) GS:ffff88803ed00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f3aad8d1000 CR3: 0000000043104003 CR4: 00000000001706e0
+Call Trace:
+ <TASK>
+ dax_fault_iter+0x26e/0x670
+ dax_iomap_pte_fault+0x1ab/0x3e0
+ __xfs_filemap_fault+0x32f/0x5a0 [xfs c617487f99e14abfa5deb24e923415b927df3d4b]
+ __do_fault+0x30/0x1e0
+ do_fault+0x316/0x6d0
+ ? mmap_region+0x2a5/0x620
+ __handle_mm_fault+0x649/0x1250
+ handle_mm_fault+0xc1/0x220
+ do_user_addr_fault+0x1ac/0x610
+ ? _copy_to_user+0x63/0x80
+ exc_page_fault+0x63/0x130
+ asm_exc_page_fault+0x22/0x30
+RIP: 0033:0x7f3aada7f1ca
+Code: c5 fe 7f 07 c5 fe 7f 47 20 c5 fe 7f 47 40 c5 fe 7f 47 60 c5 f8 77 c3 66 0f 1f 84 00 00 00 00 00 40 0f b6 c6 48 89 d1 48 89 fa <f3> aa 48 89 d0 c5 f8 77 c3 66 66 2e 0f 1f 84 00 00 00 00 00 66 90
+RSP: 002b:00007ffe47afa688 EFLAGS: 00010206
+RAX: 000000000000002e RBX: 0000000000033000 RCX: 000000000000999c
+RDX: 00007f3aad8d1000 RSI: 000000000000002e RDI: 00007f3aad8d1000
+RBP: 0000558851e13240 R08: 0000000000000000 R09: 0000000000033000
+R10: 0000000000000008 R11: 0000000000000246 R12: 028f5c28f5c28f5c
+R13: 8f5c28f5c28f5c29 R14: 000000000000999c R15: 0000000000001c81
+ </TASK>
+---[ end trace 0000000000000000 ]---
+XFS (pmem0): Unmounting Filesystem
+XFS (pmem1): EXPERIMENTAL online scrub feature in use. Use at your own risk!
+XFS (pmem1): *** REPAIR SUCCESS ino 0x80 type probe agno 0x0 inum 0x0 gen 0x0 flags 0x80000001 error 0
+XFS (pmem1): Unmounting Filesystem
+XFS (pmem1): EXPERIMENTAL Large extent counts feature in use. Use at your own risk!
+XFS (pmem1): Mounting V5 Filesystem
+XFS (pmem1): Ending clean mount
+XFS (pmem1): Unmounting Filesystem
 
-For presentation via statx, maybe we can create a
-STATX_ATTR_VERSION_MONOTONIC bit for stx_attributes for when the
-filesystem can provide that sort of guarantee. I may just add that
-internally for now anyway, since that would make for nicer layering.
+--D
 
-[1]: https://datatracker.ietf.org/doc/html/rfc7862#section-12.2.3
---=20
-Jeff Layton <jlayton@kernel.org>
+> 
+> 
+> --
+> Thanks,
+> Ruan.
+> 
+> > 
+> > Who is actually testing this DAX code, and what are they actually
+> > testing on? These are not random failures - I haven't run DAX
+> > testing since ~5.18, and none of these failures were present on the
+> > same DAX test VM running the same configuration back then....
+> > 
+> > -Dave.
