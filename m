@@ -2,212 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BFDDC04A95
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Sep 2022 05:28:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B27C32771
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Sep 2022 05:53:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231278AbiI1F21 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Sep 2022 01:28:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36404 "EHLO
+        id S232557AbiI1Fxa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Sep 2022 01:53:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229678AbiI1F20 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2022 01:28:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 813001CE17E
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Sep 2022 22:28:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CCEA761D07
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Sep 2022 05:28:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C0B6C433D6;
-        Wed, 28 Sep 2022 05:28:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664342904;
-        bh=vw4elpFDxpQRQpiNqPwhf/U724dC1IxE0A+phxCcrac=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=g/I/Jn/blm+t12fPpp7XExJvBGnr5Qg8yxSX4bKC+yYzcWZGVnxgaswRNnYdTbQmi
-         XsO/Db2x/isbMUMF4yHFkNEpPP1pDw9ozZHJGNq21pXH7qIQ3iJggryF4BMmQnB4XW
-         kD0qzUD2N3/b9yEiCahtCs13WGgvT/6jHue2cxj7nxRlWJEDPXvzMmWYT/dUhfoniP
-         4+z2wZNG0T2hlFmIYKAXKvjeilqnTrVYJeNXbl6+OcIpWDWUf8e2Dv2HCT8ux72feP
-         IppxpSJsy9zc04Iivk+SehsXz/vmF3cF5LCYMRm/aRoGEU3wHznGsEOt78lTlhlN4M
-         DFxL0PYF6ESGA==
-Date:   Tue, 27 Sep 2022 22:28:23 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jan Tulak <jtulak@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2 v6] fsck.xfs: allow forced repairs using xfs_repair
-Message-ID: <YzPbd1nbb30Wd8ji@magnolia>
-References: <20180316170720.44227-1-jtulak@redhat.com>
- <20180323143313.31277-1-jtulak@redhat.com>
+        with ESMTP id S230514AbiI1Fx3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2022 01:53:29 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F5DA10FE06
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Sep 2022 22:53:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1664344408;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=uf+u19nhI2iiuTuqcPH1L7lStf0jB8sO9GDxYPITTSM=;
+        b=UXWzKvlnN4Z4hmarnUCKCTsytAjCc2fiXHnk6U6PmbvPYmZP72orUj5fP577gjIQu5f6Kq
+        pTf1pzJn7t1TDHZ+bYt8UHHlWI3/QS5wVIfcvvLrTgyZD5G1TDgXoNe/qZJCG11VLKV40Y
+        QsqYKIQtd35ZZtEE56+LmvCSmsn3pu4=
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
+ [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-388-_1BZcB4yObu5U1jdLvPZ_Q-1; Wed, 28 Sep 2022 01:53:25 -0400
+X-MC-Unique: _1BZcB4yObu5U1jdLvPZ_Q-1
+Received: by mail-pg1-f198.google.com with SMTP id s15-20020a63524f000000b0043891d55a30so6847263pgl.16
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Sep 2022 22:53:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=uf+u19nhI2iiuTuqcPH1L7lStf0jB8sO9GDxYPITTSM=;
+        b=YeNNPXTeZPKmAoRHLSxK1vBuLKfWYFtUj495/tShaeIxK+N9RjNFY8+ESRRe0/PYxp
+         tiwicnk7NWWfjHQD75oQ7Y429Wdr1qN2/WBRsjsoZX7pEtNPMx7x4/i1cNj8ms12WKp1
+         w+BAihynA4Qe+wdoZ1Cj4NxhvDOlyWbN7JWFfcBSrSHL1DinJIKiXLgaRhV+5sF9VgKo
+         GcyhXTs9Lg7aQU4aNrYXDAAXv581bloWNwRJYV8RKSsm8HgZbCZIWmZKMim36aAnSMIZ
+         Wdb0puk8732uRtlhIu8uG2CC1ZNALaXuyqzG0c0jdNIQ7em0VeQzPjVJcCskhrqqSwbI
+         YuFA==
+X-Gm-Message-State: ACrzQf2NMHVWZUH+zzGTe3y3+r/6zfMx2IOpxoYG4WS5pxCU3wRogEmC
+        /fVOPaT8Tqwm3acJj3pZ4nv9lSCd+gSQLl/EBZS4G5WH44iENXRlh04iK3//Q2X4rNrVWrQiVYS
+        kUKYL/uxCJIYilMVqiJ0MrCiSEGu6IrkQFWWRBF6HQDhb+ZUiAHholrMedvlOOX74x7J3W7ja
+X-Received: by 2002:a63:191d:0:b0:434:4bb3:e016 with SMTP id z29-20020a63191d000000b004344bb3e016mr28436125pgl.133.1664344404520;
+        Tue, 27 Sep 2022 22:53:24 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM4mgPLDfLlYR6zX5wHVCHewVMTmTE7Stfc+4IU1dNPxUaWa7CX3vFgN3BCm+6TFR830xr4CLQ==
+X-Received: by 2002:a63:191d:0:b0:434:4bb3:e016 with SMTP id z29-20020a63191d000000b004344bb3e016mr28436110pgl.133.1664344404185;
+        Tue, 27 Sep 2022 22:53:24 -0700 (PDT)
+Received: from snowcrash.redhat.com ([2001:8003:4800:1b00:4c4a:1757:c744:923])
+        by smtp.gmail.com with ESMTPSA id o129-20020a62cd87000000b005544229b992sm2912971pfg.22.2022.09.27.22.53.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Sep 2022 22:53:23 -0700 (PDT)
+From:   Donald Douwsma <ddouwsma@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Donald Douwsma <ddouwsma@redhat.com>
+Subject: [PATCH v2 0/3] xfsrestore: fix inventory unpacking
+Date:   Wed, 28 Sep 2022 15:53:04 +1000
+Message-Id: <20220928055307.79341-1-ddouwsma@redhat.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180323143313.31277-1-jtulak@redhat.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 23, 2018 at 03:33:13PM +0100, Jan Tulak wrote:
-> The fsck.xfs script did nothing, because xfs doesn't need a fsck to be
-> run on every unclean shutdown. However, sometimes it may happen that the
-> root filesystem really requires the usage of xfs_repair and then it is a
-> hassle. This patch makes the situation a bit easier by detecting forced
-> checks (/forcefsck or fsck.mode=force) and invoking xfs_repair.
-> 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> 
-> ---
-> Changelog:
-> v6:
-> - update exit code 3->4
-> - avoid hardcoding xfs_repair path
-> - rename $BIN->$xfs_repair
-> - remove mounted check - xfs_repair does it on its own
-> - small manpage edit
-> - better explanation in the comment
-> v5:
-> - Change the message for xfs_repair code 2
-> v4:
-> - man page changes
-> v3:
-> - too quick with fixing in v2... add line at the end of the file
-> v2:
-> - return the "exit 0" at the end
-> 
-> v1:
-> - test for xfs_repair binary
-> - run only in non-interactive session
-> - translate xfs_repair return codes to fsck ones
-> - run only if the filesystem is not mounted
-> - add manpage update
-> ---
->  fsck/xfs_fsck.sh    | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  man/man8/fsck.xfs.8 |  7 +++++++
->  2 files changed, 63 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
-> index e52969e4..c9fc3eb3 100755
-> --- a/fsck/xfs_fsck.sh
-> +++ b/fsck/xfs_fsck.sh
-> @@ -3,11 +3,35 @@
->  # Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
->  #
->  
-> +NAME=$0
-> +
-> +# get the right return code for fsck
-> +function repair2fsck_code() {
-> +	case $1 in
-> +	0)  return 0 # everything is ok
-> +		;;
-> +	1)  echo "$NAME error: xfs_repair could not fix the filesystem." 1>&2
-> +		return 4 # errors left uncorrected
-> +		;;
-> +	2)  echo "$NAME error: The filesystem log is dirty, mount it to recover" \
-> +		     "the log. If that fails, refer to the section DIRTY LOGS in the" \
-> +		     "xfs_repair manual page." 1>&2
-> +		return 4 # dirty log, don't do anything and let the user solve it
-> +		;;
-> +	4)  return 1 # The fs has been fixed
-> +		;;
-> +	*)  echo "$NAME error: An unknown return code from xfs_repair '$1'" 1>&2
-> +		return 4 # something went wrong with xfs_repair
-> +	esac
-> +}
-> +
->  AUTO=false
-> -while getopts ":aApy" c
-> +FORCE=false
-> +while getopts ":aApyf" c
->  do
->  	case $c in
->  	a|A|p|y)	AUTO=true;;
-> +	f)      	FORCE=true;;
->  	esac
->  done
->  eval DEV=\${$#}
-> @@ -15,6 +39,37 @@ if [ ! -e $DEV ]; then
->  	echo "$0: $DEV does not exist"
->  	exit 8
->  fi
-> +
-> +# The flag -f is added by systemd/init scripts when /forcefsck file is present
-> +# or fsck.mode=force is used during boot; an unclean shutdown won't trigger
-> +# this check, user has to explicitly require a forced fsck.
-> +# But first of all, test if it is a non-interactive session.
-> +# Invoking xfs_repair via fsck.xfs is only intended to happen via initscripts.
-> +# Normal administrative filesystem repairs should always invoke xfs_repair
-> +# directly.
-> +#
-> +# Use multiple methods to capture most of the cases:
-> +# The case for *i* and -n "$PS1" are commonly suggested in bash manual
-> +# and the -t 0 test checks stdin
-> +case $- in
-> +	*i*) FORCE=false ;;
-> +esac
-> +if [ -n "$PS1" -o -t 0 ]; then
-> +	FORCE=false
-> +fi
-> +
-> +if $FORCE; then
-> +	XFS_REPAIR=`command -v xfs_repair`
-> +	if [ ! -x "$XFS_REPAIR" ] ; then
-> +		echo "$NAME error: xfs_repair was not found!" 1>&2
-> +		exit 4
-> +	fi
-> +
-> +	$XFS_REPAIR -e $DEV
-> +	repair2fsck_code $?
+When xfsrestore reads its inventory from tape it fails to convert the media
+record on bigendian systems, if the online inventory is unavailable this results
+in invalid data being writen to the online inventory and failure to restore
+non-directory files.
 
-Just to reopen years-old discussions --
+The series fixes the converstion and related issues.
 
-Recently, a customer decided to add "fsck.mode=force" to the kernel
-command line to force systemd to fsck the rootfs on boot.  They
-performed a powerfail simulation, and on next boot they were dropped to
-an emergency shell because the log was dirty and xfs_repair returned a
-nonzero error code.  If the system was rebooted cleanly then xfs_repair
-rebuilds the space metadata and exits quietly.
+---
+v2
+- Seperate out cleanup and content.c changes, fix whitespace.
+- Show a full reproducer in the first patch.
 
-Earlier in this thread we decided not to do a mount/umount cycle to
-clear a dirty log for fear that the mount could crash the kernel.  Would
-anyone like to entertain the idea of adding that cycle to fsck.xfs if
-the program argv includes '-y' and xfs_repair returns 2?  That would
-only happen if the sysadmin *also* adds "fsck.repair=yes" to the kernel
-command line.
+Donald Douwsma (3):
+  xfsrestore: fix inventory unpacking
+  xfsrestore: stobj_unpack_sessinfo cleanup
+  xfsrestore: untangle inventory unpacking logic
 
-Omitting a fsck.repair= setting means systemd passes -a to fsck instead
-of -y.
+ inventory/inv_stobj.c | 40 ++++++++++++++--------------------------
+ restore/content.c     | 13 +++++--------
+ 2 files changed, 19 insertions(+), 34 deletions(-)
 
---D
+-- 
+2.31.1
 
-> +	exit $?
-> +fi
-> +
->  if $AUTO; then
->  	echo "$0: XFS file system."
->  else
-> diff --git a/man/man8/fsck.xfs.8 b/man/man8/fsck.xfs.8
-> index ace7252d..a51baf7c 100644
-> --- a/man/man8/fsck.xfs.8
-> +++ b/man/man8/fsck.xfs.8
-> @@ -21,6 +21,13 @@ If you wish to check the consistency of an XFS filesystem,
->  or repair a damaged or corrupt XFS filesystem,
->  see
->  .BR xfs_repair (8).
-> +.PP
-> +However, the system administrator can force
-> +.B fsck.xfs
-> +to run
-> +.BR xfs_repair (8)
-> +at boot time by creating a /forcefsck file or booting the system with
-> +"fsck.mode=force" on the kernel command line.
->  .
->  .SH FILES
->  .IR /etc/fstab .
-> -- 
-> 2.16.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
