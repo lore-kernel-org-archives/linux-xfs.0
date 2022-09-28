@@ -2,176 +2,265 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF47C6FA8E
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Sep 2022 13:42:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34EA2C04A95
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Sep 2022 14:46:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234148AbiI1NmK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Sep 2022 09:42:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60554 "EHLO
+        id S233951AbiI1Oqf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Sep 2022 10:46:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231567AbiI1NmI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2022 09:42:08 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 204F16E2F4;
-        Wed, 28 Sep 2022 06:42:05 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S233742AbiI1Oqe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2022 10:46:34 -0400
+Received: from mail1.bemta37.messagelabs.com (mail1.bemta37.messagelabs.com [85.158.142.112])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 306008A1F4;
+        Wed, 28 Sep 2022 07:46:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1664376390; i=@fujitsu.com;
+        bh=u+LhVQV/HbjRTQHH0kNWrfjWcEe+JWhmErkOKYcsk2A=;
+        h=Message-ID:Date:MIME-Version:From:Subject:To:CC:References:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=cHZSyB9HN2XOzMbef7pO8ZmUkUnhT0aHze6ztR798tcggyMuGtrnrxWwowhuCPaQJ
+         ndjsmqaOwJkWx8Mljgy2X1GbFJQPSDyQrsK+2367LLB7A+f2qxj6N+2OaDKUdZ+mVd
+         8jWT1TDptspIjbpb/msa90ySEYxDD5mVMfz99t7kuWKwGYGebIYshkF0DjVGZvbuuv
+         XNgrQbcfFea2JfwvQXY0LbQEUHZKv+UVh4HuYv1NxEWMYVvhfaq8bevCYniQ02n3HE
+         2o1vIEwgr/Mst5FLR0YbyPmUqPT3kElNSOTPCf4xTJFKqw8cC1xbWudshWLnYGexTU
+         xYXQ8yyCFXiTg==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDKsWRWlGSWpSXmKPExsViZ8ORpOsaZ5J
+  s0NwhbDF96gVGiy3H7jFaXH7CZ7Fn70kWi8u75rBZ3Fvzn9Vi158d7BYrf/xhdeDwOLVIwmPx
+  npdMHptWdbJ5bPo0id3jxeaZjB6fN8kFsEWxZuYl5VcksGYcPTWXrWCLa8XebyYNjJNNuxi5O
+  IQENjJK9C5sYoVwljBJXLh5ignC2cIosW3PW6AMJwevgJ3E8dU7GEFsFgFViYNbtrNBxAUlTs
+  58wgJiiwokS3ydepEJxGYT0JG4sOAvWK+wgKPEq6ktQL0cHCICvhIT9oWDzGcWWMcosXt5PyP
+  c5kNrljGDNHAKWEs0rdwEtoBZwEJi8ZuD7BC2vETz1tlgNRICChKvvrQxQtgVErNmtTFB2GoS
+  V89tYp7AKDQLyX2zkIyahWTUAkbmVYw2SUWZ6RkluYmZObqGBga6hoamupZmuoaWxnqJVbqJe
+  qmlunn5RSUZuoZ6ieXFeqnFxXrFlbnJOSl6eaklmxiB0ZZSnHBwB+OKfb/0DjFKcjApifKWyp
+  skC/El5adUZiQWZ8QXleakFh9ilOHgUJLgLQ0HygkWpaanVqRl5gAjHyYtwcGjJMLrFgqU5i0
+  uSMwtzkyHSJ1itOdY23BgLzPHhgcg8uqVK0By6ux/+5mFWPLy81KlxHk/RwC1CYC0ZZTmwQ2F
+  JapLjLJSwryMDAwMQjwFqUW5mSWo8q8YxTkYlYR5Q2KBpvBk5pXA7X4FdBYT0FkfmYxBzipJR
+  EhJNTBt4GrtkFvJZnO4L3R6gvuOMMmelWfu/+zYEPg1qjhb0GZvfNb3A4s5Nmu572BiPmsj3s
+  t/3qyJ6Y3PpzN1JQ1HGDqYknOvKJySyE7m8WW9cjvIxL6+K0s2x6DXhmNXzfakCrm1HAql3+Q
+  4nXoiLjOt7rLW4TlzJ0rm58QjW90YXU79vbeMVzxm9b5zvewxq/ae5Jhfvbw38AXHFoZnZ6eZ
+  Tn/2R0ZyRoCzj5OB/8mMx3V8NwKZmTL2Xn/3+u9bL717RitaBfyjZF0yRJ/xN1bqvH+/28JHc
+  8Hb1xJsGyPsin+sEpw3eUFfpvcdHq9jq9/83n9khzu7L/9e0dp+bbY0z30TM94/U1KfKl29So
+  mlOCPRUIu5qDgRAIEUzAXPAwAA
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-5.tower-728.messagelabs.com!1664376388!103507!1
+X-Originating-IP: [62.60.8.98]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.87.3; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 10309 invoked from network); 28 Sep 2022 14:46:29 -0000
+Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
+  by server-5.tower-728.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 28 Sep 2022 14:46:29 -0000
+Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id 9A2A01AB;
+        Wed, 28 Sep 2022 15:46:28 +0100 (BST)
+Received: from R01UKEXCASM126.r01.fujitsu.local (R01UKEXCASM126 [10.183.43.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9F8F761EB1;
-        Wed, 28 Sep 2022 13:42:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB686C433D6;
-        Wed, 28 Sep 2022 13:42:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664372524;
-        bh=PDniZhspoAjFGFPMZfaZ8GgB4DLLy5mz44zztNU7B+8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=DqtgQ/m//i1BdMXDYXkHNALzJc+Fb2CkxwupnjD5iFoPUOy+RjGzDkBw6u16woact
-         Ek+6D4V044/DHPxZTiHl8kuYrAVeeMg2TUGzyu9mlJpBrkxFJqDxhyeySNUTWPuyDE
-         hkbGAN5/XfCvtPpm39Zv+BugYwMfdEX6eE42uDuYEIIMtghXn56j8tNz+CdNoTpYGY
-         oLA0DJOske77HfN24JeefL9hG37cIs4JMzuBMxszwi1t7W9Jgu94CxlxxpRk9x88qB
-         1bv9fv5W8vrBkEn3A2+rUfg9FkuebF8rP6DNdglXtFDEV9ehvhMRQoF+tvVevKpvLP
-         8XuQDoIktoBXA==
-From:   Jeff Layton <jlayton@kernel.org>
-To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
-        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
-        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com,
-        linux-man@vger.kernel.org
-Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: [man-pages RFC PATCH v6] statx, inode: document the new STATX_VERSION field
-Date:   Wed, 28 Sep 2022 09:42:00 -0400
-Message-Id: <20220928134200.28741-1-jlayton@kernel.org>
-X-Mailer: git-send-email 2.37.3
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id 8E59A1AD;
+        Wed, 28 Sep 2022 15:46:28 +0100 (BST)
+Received: from [10.167.201.6] (10.167.201.6) by
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.32; Wed, 28 Sep 2022 15:46:24 +0100
+Message-ID: <2428b01d-afc7-7b33-1088-e34d68029e19@fujitsu.com>
+Date:   Wed, 28 Sep 2022 22:46:17 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Subject: Re: [RFC PATCH] xfs: drop experimental warning for fsdax
+To:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <dan.j.williams@intel.com>
+References: <1663234002-17-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <20220919045003.GJ3600936@dread.disaster.area>
+ <20220919211533.GK3600936@dread.disaster.area>
+ <f10de555-370b-f236-1107-e3089258ebbc@fujitsu.com>
+ <YzMeqNg56v0/t/8x@magnolia> <20220927235129.GC3600936@dread.disaster.area>
+In-Reply-To: <20220927235129.GC3600936@dread.disaster.area>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.201.6]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I'm proposing to expose the inode change attribute via statx [1]. Document
-what this value means and what an observer can infer from it changing.
 
-NB: this will probably have conflicts with the STATX_DIOALIGN doc
-patches, but we should be able to resolve those before merging anything.
 
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
+在 2022/9/28 7:51, Dave Chinner 写道:
+> On Tue, Sep 27, 2022 at 09:02:48AM -0700, Darrick J. Wong wrote:
+>> On Tue, Sep 27, 2022 at 02:53:14PM +0800, Shiyang Ruan wrote:
+...
+>>>
+>>> I have tested these two mode for many times:
+>>>
+>>> xfs_dax mode did failed so many cases.  (If you tested with this "drop"
+>>> patch, some warning around "dax_dedupe_file_range_compare()" won't occur any
+>>> more.)  I think warning around "dax_disassociate_entry()" is a problem with
+>>> concurrency.  Still looking into it.
+>>>
+>>> But xfs_dax_noreflink didn't have so many failure, just 3 in my environment:
+>>> Failures: generic/471 generic/519 xfs/148.  I am thinking that did you
+>>> forget to reformat the TEST_DEV to be non-reflink before run the test?  If
+>>> so it will make sense.
+> 
+> No, I did not forget to turn off reflink for the test device:
+> 
+> # ./run_check.sh --mkfs-opts "-m reflink=0,rmapbt=1" --run-opts "-s xfs_dax_noreflink -g auto"
+> umount: /mnt/test: not mounted.
+> umount: /mnt/scratch: not mounted.
+> wrote 8589934592/8589934592 bytes at offset 0
+> 8.000 GiB, 8192 ops; 0:00:03.99 (2.001 GiB/sec and 2049.0850 ops/sec)
+> wrote 8589934592/8589934592 bytes at offset 0
+> 8.000 GiB, 8192 ops; 0:00:04.13 (1.936 GiB/sec and 1982.5453 ops/sec)
+> meta-data=/dev/pmem0             isize=512    agcount=4, agsize=524288 blks
+>           =                       sectsz=4096  attr=2, projid32bit=1
+>           =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>           =                       reflink=0    bigtime=1 inobtcount=1 nrext64=0
+> data     =                       bsize=4096   blocks=2097152, imaxpct=25
+>           =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=16384, version=2
+>           =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> .....
+> Running: MOUNT_OPTIONS= ./check -R xunit -b -s xfs_dax_noreflink -g auto
+> SECTION       -- xfs_dax_noreflink
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 test3 6.0.0-rc6-dgc+ #1543 SMP PREEMPT_DYNAMIC Mon Sep 19 07:46:37 AEST 2022
+> MKFS_OPTIONS  -- -f -m reflink=0,rmapbt=1 /dev/pmem1
+> MOUNT_OPTIONS -- -o dax=always -o context=system_u:object_r:root_t:s0 /dev/pmem1 /mnt/scratch
+> 
+> So, yeah, reflink was turned off on both test and scratch devices,
+> and dax=always on both the test and scratch devices was used to
+> ensure that DAX was always in use.
+> 
+> 
+>> FWIW I saw dmesg failures in xfs/517 and xfs/013 starting with 6.0-rc5,
+>> and I haven't even turned on reflink yet:
+>>
+>> run fstests xfs/517 at 2022-09-26 19:53:34
+>> XFS (pmem1): EXPERIMENTAL Large extent counts feature in use. Use at your own risk!
+>> XFS (pmem1): Mounting V5 Filesystem
+>> XFS (pmem1): Ending clean mount
+>> XFS (pmem1): Quotacheck needed: Please wait.
+>> XFS (pmem1): Quotacheck: Done.
+>> XFS (pmem1): Unmounting Filesystem
+>> XFS (pmem0): EXPERIMENTAL online scrub feature in use. Use at your own risk!
+>> XFS (pmem1): EXPERIMENTAL Large extent counts feature in use. Use at your own risk!
+>> XFS (pmem1): Mounting V5 Filesystem
+>> XFS (pmem1): Ending clean mount
+>> XFS (pmem1): Quotacheck needed: Please wait.
+>> XFS (pmem1): Quotacheck: Done.
+>> ------------[ cut here ]------------
+>> WARNING: CPU: 1 PID: 415317 at fs/dax.c:380 dax_insert_entry+0x22d/0x320
+>> Modules linked in: xfs nft_chain_nat xt_REDIRECT nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set nft_compat ip_set_hash_mac ip_set nf_tables libcrc32c bfq nfnetlink pvpanic_mmio pvpanic nd_pmem dax_pmem nd_btt sch_fq_codel fuse configfs ip_tables x_tables overlay nfsv4 af_packet [last unloaded: scsi_d
+>>
+>> CPU: 1 PID: 415317 Comm: fsstress Tainted: G        W          6.0.0-rc7-xfsx #rc7 727341edbd0773a36b78b09dab448fa1896eb3a5
+>> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
+>> RIP: 0010:dax_insert_entry+0x22d/0x320
+>> Code: e0 48 83 c4 20 5b 5d 41 5c 41 5d 41 5e 41 5f c3 48 8b 58 20 48 8d 53 01 e9 62 ff ff ff 48 8b 58 20 48 8d 53 01 e9 4d ff ff ff <0f> 0b e9 6d ff ff ff 31 f6 48 89 ef e8 72 74 12 00 eb a1 83 e0 02
+>> RSP: 0000:ffffc90004693b28 EFLAGS: 00010002
+>> RAX: ffffea0010a20480 RBX: 0000000000000001 RCX: 0000000000000001
+>> RDX: ffffea0000000000 RSI: 0000000000000033 RDI: ffffea0010a204c0
+>> RBP: ffffc90004693c08 R08: 0000000000000000 R09: 0000000000000000
+>> R10: ffff88800c226228 R11: 0000000000000001 R12: 0000000000000011
+>> R13: ffff88800c226228 R14: ffffc90004693e08 R15: 0000000000000000
+>> FS:  00007f3aad8db740(0000) GS:ffff88803ed00000(0000) knlGS:0000000000000000
+>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>> CR2: 00007f3aad8d1000 CR3: 0000000043104003 CR4: 00000000001706e0
+>> Call Trace:
+>>   <TASK>
+>>   dax_fault_iter+0x26e/0x670
+>>   dax_iomap_pte_fault+0x1ab/0x3e0
+>>   __xfs_filemap_fault+0x32f/0x5a0 [xfs c617487f99e14abfa5deb24e923415b927df3d4b]
+>>   __do_fault+0x30/0x1e0
+>>   do_fault+0x316/0x6d0
+>>   ? mmap_region+0x2a5/0x620
+>>   __handle_mm_fault+0x649/0x1250
+>>   handle_mm_fault+0xc1/0x220
+>>   do_user_addr_fault+0x1ac/0x610
+>>   ? _copy_to_user+0x63/0x80
+>>   exc_page_fault+0x63/0x130
+>>   asm_exc_page_fault+0x22/0x30
+>> RIP: 0033:0x7f3aada7f1ca
+>> Code: c5 fe 7f 07 c5 fe 7f 47 20 c5 fe 7f 47 40 c5 fe 7f 47 60 c5 f8 77 c3 66 0f 1f 84 00 00 00 00 00 40 0f b6 c6 48 89 d1 48 89 fa <f3> aa 48 89 d0 c5 f8 77 c3 66 66 2e 0f 1f 84 00 00 00 00 00 66 90
+>> RSP: 002b:00007ffe47afa688 EFLAGS: 00010206
+>> RAX: 000000000000002e RBX: 0000000000033000 RCX: 000000000000999c
+>> RDX: 00007f3aad8d1000 RSI: 000000000000002e RDI: 00007f3aad8d1000
+>> RBP: 0000558851e13240 R08: 0000000000000000 R09: 0000000000033000
+>> R10: 0000000000000008 R11: 0000000000000246 R12: 028f5c28f5c28f5c
+>> R13: 8f5c28f5c28f5c29 R14: 000000000000999c R15: 0000000000001c81
+>>   </TASK>
+>> ---[ end trace 0000000000000000 ]---
+>> XFS (pmem0): Unmounting Filesystem
+>> XFS (pmem1): EXPERIMENTAL online scrub feature in use. Use at your own risk!
+>> XFS (pmem1): *** REPAIR SUCCESS ino 0x80 type probe agno 0x0 inum 0x0 gen 0x0 flags 0x80000001 error 0
+>> XFS (pmem1): Unmounting Filesystem
+>> XFS (pmem1): EXPERIMENTAL Large extent counts feature in use. Use at your own risk!
+>> XFS (pmem1): Mounting V5 Filesystem
+>> XFS (pmem1): Ending clean mount
+>> XFS (pmem1): Unmounting Filesystem
+> 
+> Yup, that's the same as what I'm seeing.
 
-[1]: https://lore.kernel.org/linux-nfs/20220826214703.134870-1-jlayton@kernel.org/T/#t
----
- man2/statx.2 | 13 +++++++++++++
- man7/inode.7 | 36 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 49 insertions(+)
+Could you send me your kernel config (or other configs needed for the 
+test)?  I still cannot reproduce this warning when reflink is off, even 
+without this drop patch.  Maybe something different in config file?
 
-v6: incorporate Neil's suggestions
-    clarify how well-behaved filesystems should order things
 
-diff --git a/man2/statx.2 b/man2/statx.2
-index 0d1b4591f74c..ee7005334a2f 100644
---- a/man2/statx.2
-+++ b/man2/statx.2
-@@ -62,6 +62,7 @@ struct statx {
-     __u32 stx_dev_major;   /* Major ID */
-     __u32 stx_dev_minor;   /* Minor ID */
-     __u64 stx_mnt_id;      /* Mount ID */
-+    __u64 stx_version;     /* Inode change attribute */
- };
- .EE
- .in
-@@ -247,6 +248,7 @@ STATX_BTIME	Want stx_btime
- STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
- 	It is deprecated and should not be used.
- STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
-+STATX_VERSION	Want stx_version (DRAFT)
- .TE
- .in
- .PP
-@@ -407,10 +409,16 @@ This is the same number reported by
- .BR name_to_handle_at (2)
- and corresponds to the number in the first field in one of the records in
- .IR /proc/self/mountinfo .
-+.TP
-+.I stx_version
-+The inode version, also known as the inode change attribute. See
-+.BR inode (7)
-+for details.
- .PP
- For further information on the above fields, see
- .BR inode (7).
- .\"
-+.TP
- .SS File attributes
- The
- .I stx_attributes
-@@ -489,6 +497,11 @@ without an explicit
- See
- .BR mmap (2)
- for more information.
-+.TP
-+.BR STATX_ATTR_VERSION_MONOTONIC " (since Linux 6.?)"
-+The stx_version value monotonically increases over time and will never appear
-+to go backward, even in the event of a crash. This can allow an application to
-+make a better determination about ordering when viewing different versions.
- .SH RETURN VALUE
- On success, zero is returned.
- On error, \-1 is returned, and
-diff --git a/man7/inode.7 b/man7/inode.7
-index 9b255a890720..e8adb63b1f6a 100644
---- a/man7/inode.7
-+++ b/man7/inode.7
-@@ -184,6 +184,12 @@ Last status change timestamp (ctime)
- This is the file's last status change timestamp.
- It is changed by writing or by setting inode information
- (i.e., owner, group, link count, mode, etc.).
-+.TP
-+Inode version (version)
-+(not returned in the \fIstat\fP structure); \fIstatx.stx_version\fP
-+.IP
-+This is the inode change counter. See the discussion of
-+\fBthe inode version counter\fP, below.
- .PP
- The timestamp fields report time measured with a zero point at the
- .IR Epoch ,
-@@ -424,6 +430,36 @@ on a directory means that a file
- in that directory can be renamed or deleted only by the owner
- of the file, by the owner of the directory, and by a privileged
- process.
-+.SS The inode version counter
-+.PP
-+The \fIstatx.stx_version\fP field is the inode change counter. Any operation
-+that could result in a change to \fIstatx.stx_ctime\fP must result in an
-+increase to this value. Soon after a change has been made, an stx_version value
-+should appear to be larger than previous readings. This is the case even
-+when a ctime change is not evident due to coarse timestamp granularity.
-+.PP
-+An observer cannot infer anything from amount of increase about the
-+nature or magnitude of the change. In fact, a single increment can reflect
-+multiple discrete changes if the value was not checked while those changes
-+were being processed.
-+.PP
-+Changes to stx_version are not necessarily atomic with the change itself, but
-+well-behaved filesystems should increment stx_version after a change has been
-+made visible to observers rather than before. This is especially important for
-+read-caching algorithms which could be fooled into associating a newer
-+stx_version with an older version of data. Note that this does leave a window
-+of time where a change may be visible, but the old stx_version is still being
-+reported.
-+.PP
-+In the event of a system crash, this value can appear to go backward if it was
-+queried before ever being written to the backing store. Applications that
-+persist stx_version values across a reboot should take care to mitigate this.
-+If the filesystem reports \fISTATX_ATTR_VERSION_MONOTONIC\fP in
-+\fIstatx.stx_attributes\fP, then it is not subject to this problem.
-+.PP
-+The stx_version is a Linux extension and is not supported by all filesystems.
-+The application must verify that the \fISTATX_VERSION\fP bit is set in the
-+returned \fIstatx.stx_mask\fP before relying on this field.
- .SH STANDARDS
- If you need to obtain the definition of the
- .I blkcnt_t
--- 
-2.37.3
+PS: I specifically tried the two cases Darrick mentioned (on v6.0-rc6):
 
+[root@f33 xfstests-dev]# mkfs.xfs -m reflink=0,rmapbt=1 /dev/pmem0.1 -f
+meta-data=/dev/pmem0.1           isize=512    agcount=4, agsize=257920 blks
+          =                       sectsz=4096  attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+          =                       reflink=0    bigtime=1 inobtcount=1 
+nrext64=0
+data     =                       bsize=4096   blocks=1031680, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=16384, version=2
+          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@f33 xfstests-dev]# mkfs.xfs -m reflink=0,rmapbt=1 /dev/pmem0 -f
+meta-data=/dev/pmem0             isize=512    agcount=4, agsize=257920 blks
+          =                       sectsz=4096  attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+          =                       reflink=0    bigtime=1 inobtcount=1 
+nrext64=0
+data     =                       bsize=4096   blocks=1031680, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=16384, version=2
+          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@f33 xfstests-dev]# ./check xfs/013 xfs/517
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 f33 6.0.0-rc6 #84 SMP PREEMPT_DYNAMIC Wed 
+Sep 28 18:27:33 CST 2022
+MKFS_OPTIONS  -- -f -m reflink=0,rmapbt=1 /dev/pmem0.1
+MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:root_t:s0 
+/dev/pmem0.1 /mnt/scratch
+
+xfs/013 127s ...  166s
+xfs/517 66s ...  66s
+Ran: xfs/013 xfs/517
+Passed all 2 tests
+
+
+
+--
+Thanks,
+Ruan.
+
+> 
+> Cheers,
+> 
+> Dave.
