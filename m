@@ -2,149 +2,275 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 948C9C04A95
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Sep 2022 10:13:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B063C04A95
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Sep 2022 13:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233083AbiI1KNA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Sep 2022 06:13:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36030 "EHLO
+        id S233720AbiI1NAl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Sep 2022 09:00:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229847AbiI1KM7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2022 06:12:59 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C792F2743
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Sep 2022 03:12:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1664359976;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=34ah5Qx5SWB/Hj8cpIchXCXz8Ue2F2IGLqZPbERHyto=;
-        b=V/icuWO1Uk5cYwIGAYdEYiLYI9CjX4ud4KtB6F0DN08FZQu0qKZGsbdSubv4Z4qFrxU5eB
-        1hYuhKWZMx7S/3GfZTcqQkPCYsc8WdPNi7DlRdBNqXom0wV+zZmTK2aeYBIT5k54ygzStv
-        6E1D9C//pGLsYzhNdJSyH5aMWrVo73k=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-348-ZwAxJKRSPz6KjZh9k5cUnA-1; Wed, 28 Sep 2022 06:12:55 -0400
-X-MC-Unique: ZwAxJKRSPz6KjZh9k5cUnA-1
-Received: by mail-qk1-f197.google.com with SMTP id bi3-20020a05620a318300b006cf2d389cdaso9076707qkb.8
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Sep 2022 03:12:55 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
-        bh=34ah5Qx5SWB/Hj8cpIchXCXz8Ue2F2IGLqZPbERHyto=;
-        b=CFstt2PvzBGIHO9hqTwd5PJBQ5Un1Dd/EZ//cLkTEiHD+teHnhDimU0F67Ddkya3Iu
-         jnzQPIruvcEmYrwThwohhVwedofDt3X9t3LlXZeu2dvrvn9JE8YiIy95GRug6ixsT+ub
-         DAzrLIDKlZU51EmKQbvc9HWww0dCQsq73G16V0wwOSJsEQiKuXBXi74HoUGn4pWodsHK
-         VnPmvxibMIhQoENja8wtEOMT8BZE5CafrFrrBAS4w68Rioi7t/D4sWVRx5fjezlnNSbD
-         TpozDhyAWrgpHOtm2xrQPfmisVOjrrY3OGHkBN5rN4RvLttjyMw6eJV/yzBYb5giO84k
-         T1IQ==
-X-Gm-Message-State: ACrzQf1BJ4ruBdBl7TWTmeZRQCBpjdwiadEEUSFwvcuNWSGni3jX5QgI
-        vueMCFd1f6lSr/W1da2oXzVkQsBZXqseNjDDN87/hFRY8YnQFCyE8VeY8DT/gLXw4Yg6cTJZObf
-        XR5+YQ8lGbTaUHjP8bg+M
-X-Received: by 2002:ac8:5909:0:b0:35b:ce5c:ed73 with SMTP id 9-20020ac85909000000b0035bce5ced73mr25392045qty.635.1664359975047;
-        Wed, 28 Sep 2022 03:12:55 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM4JGBVNtWy9tMXwmkgIEckWnJDeIWtEspWCYEjr0BDUO+vSzCxJn35ZnruFwmn/0lxjiUIm0A==
-X-Received: by 2002:ac8:5909:0:b0:35b:ce5c:ed73 with SMTP id 9-20020ac85909000000b0035bce5ced73mr25392025qty.635.1664359974780;
-        Wed, 28 Sep 2022 03:12:54 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id h12-20020a05620a284c00b006b5e296452csm2448074qkp.54.2022.09.28.03.12.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Sep 2022 03:12:54 -0700 (PDT)
-Date:   Wed, 28 Sep 2022 18:12:49 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 3/3] xfs/229: do not _xfs_force_bdev on TEST_DIR
-Message-ID: <20220928101249.we2numsrkpzbruqx@zlang-mailbox>
-References: <166433903099.2008389.13181182359220271890.stgit@magnolia>
- <166433904802.2008389.15649565619122354418.stgit@magnolia>
+        with ESMTP id S233247AbiI1NAh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2022 09:00:37 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3045D5BC1B;
+        Wed, 28 Sep 2022 06:00:32 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E787AB8205D;
+        Wed, 28 Sep 2022 13:00:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 935D6C433D6;
+        Wed, 28 Sep 2022 13:00:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664370026;
+        bh=6Plk2FQMLoQz2N+IjumMqtplgUTDGnYPF6Nv6GQhRNo=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=Ay67VgSuT1NiQhXFkbJpXpoaU+VoqWPs93W6Y30xzeDDn2RVfeJxXjiKxNd5g94lX
+         Tyish0mvFiaer03rTB349TKk6SzTkrWvjt2PWVg/5cLXMfzqslMZ+vRYtnLfTzpLUE
+         GXJ63hNNkeUuqs2d2vsIgnnFwpZ3raHliWBhcmmqQJadG6qTK8goxINqhyM4PFoNWm
+         ecYEKiEFD4aa+36ie0VHW2NIn85vlpZHG4qqKHwybO9i5bBBTmYppNRYUgSGJDxx2A
+         jdTyWKuh+tMQaD/uZlRD6EA+oH1Bxj2b4QBSK/7UnhQUa9nuCluBu/ZMixo2BDPHQM
+         rNpHaVWWmTAgg==
+Message-ID: <78d8154b3deddf2e9674323a0066db4270eb5b59.camel@kernel.org>
+Subject: Re: [PATCH] statx, inode: document the new STATX_VERSION field
+From:   Jeff Layton <jlayton@kernel.org>
+To:     NeilBrown <neilb@suse.de>
+Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        david@fromorbit.com, trondmy@hammerspace.com,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
+        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com,
+        linux-man@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Date:   Wed, 28 Sep 2022 09:00:23 -0400
+In-Reply-To: <166432039241.17572.3454219701145225283@noble.neil.brown.name>
+References: <20220927203550.331261-1-jlayton@kernel.org>
+         <166432039241.17572.3454219701145225283@noble.neil.brown.name>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <166433904802.2008389.15649565619122354418.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 27, 2022 at 09:24:08PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> In commit ea15099b71, I observed that this test tries to test the
-> behavior of the extent size hint on the data device.  If the test runner
-> set up MKFS_OPTIONS such that the filesystem gets created with a
-> realtime section and rtinherit set on the root directory, then the
-> preconditions of this test (creating files on the data section) is not
-> satisfied and the results of this test are incorrect.  The solution was
-> to force all files created by this test to be assigned to the data
-> section.
-> 
-> Unfortunately, the correction that I made has side effects beyond this
-> test -- by clearing rtinherit on $TEST_DIR, all tests that run after
-> this one will create files on the data section, because the test
-> filesystem persists for the duration of the entire test run.  This leads
-> to the wrong things being tested.
-> 
-> Fix this new problem by clearing the rtinherit flag on $TDIR, which
-> contains the files created by this test and is removed during cleanup,
-> and leave a few comments celebrating our new discoveries.
-> 
-> Fixes: ea15099b71 ("xfs: force file creation to the data device for certain layout tests")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+On Wed, 2022-09-28 at 09:13 +1000, NeilBrown wrote:
+> On Wed, 28 Sep 2022, Jeff Layton wrote:
+> > I'm proposing to expose the inode change attribute via statx [1]. Docum=
+ent
+> > what this value means and what an observer can infer from it changing.
+> >=20
+> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> >=20
+> > [1]: https://lore.kernel.org/linux-nfs/d9c065939af2728b1c0768d5ef752699=
+5b634902.camel@kernel.org/T/#t
+> > ---
+> >  man2/statx.2 | 13 +++++++++++++
+> >  man7/inode.7 | 31 +++++++++++++++++++++++++++++++
+> >  2 files changed, 44 insertions(+)
+> >=20
+> > Another RFC posting to hopefully nail down the desired semantics. I
+> > purposefully left out verbiage around atomicity, with the expectation
+> > that we should be able to make the existing filesystems that support
+> > i_version bump the counter after a write instead of before.
+>=20
+> I think we do need documentation about ordering.  Users will depend on
+> the version number not being seen to increase before the change is
+> visible.  They may also depend on the increase being visible when a
+> {f,i,fa}notify event is generated.  Having this explicitly documented
+> gives fs/vfs developers a clear reference, and application developers a
+> clear promise.
+>=20
+> >=20
+> > Also, for v5:
+> > - drop _INO/_ino from the name (it's redunant)
+> > - add STATX_ATTR_VERSION_MONOTONIC
+> >=20
+> > diff --git a/man2/statx.2 b/man2/statx.2
+> > index 0d1b4591f74c..b2fdb5ddf97a 100644
+> > --- a/man2/statx.2
+> > +++ b/man2/statx.2
+> > @@ -62,6 +62,7 @@ struct statx {
+> >      __u32 stx_dev_major;   /* Major ID */
+> >      __u32 stx_dev_minor;   /* Minor ID */
+> >      __u64 stx_mnt_id;      /* Mount ID */
+> > +    __u64 stx_version; /* Inode change attribute */
+> >  };
+> >  .EE
+> >  .in
+> > @@ -247,6 +248,7 @@ STATX_BTIME	Want stx_btime
+> >  STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
+> >  	It is deprecated and should not be used.
+> >  STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
+> > +STATX_VERSION	Want stx_version (DRAFT)
+> >  .TE
+> >  .in
+> >  .PP
+> > @@ -407,10 +409,16 @@ This is the same number reported by
+> >  .BR name_to_handle_at (2)
+> >  and corresponds to the number in the first field in one of the records=
+ in
+> >  .IR /proc/self/mountinfo .
+> > +.TP
+> > +.I stx_version
+> > +The inode version, also known as the inode change attribute. See
+> > +.BR inode (7)
+> > +for details.
+> >  .PP
+> >  For further information on the above fields, see
+> >  .BR inode (7).
+> >  .\"
+> > +.TP
+> >  .SS File attributes
+> >  The
+> >  .I stx_attributes
+> > @@ -489,6 +497,11 @@ without an explicit
+> >  See
+> >  .BR mmap (2)
+> >  for more information.
+> > +.TP
+> > +.BR STATX_ATTR_VERSION_MONOTONIC " (since Linux 6.?)"
+> > +The stx_version value monotonically increases over time and will never=
+ appear
+> > +to go backward, even in the event of a crash. This can allow an applic=
+ation to
+> > +make a better determination about ordering when viewing different vers=
+ions.
+> >  .SH RETURN VALUE
+> >  On success, zero is returned.
+> >  On error, \-1 is returned, and
+> > diff --git a/man7/inode.7 b/man7/inode.7
+> > index 9b255a890720..ec7f80dacaa8 100644
+> > --- a/man7/inode.7
+> > +++ b/man7/inode.7
+> > @@ -184,6 +184,12 @@ Last status change timestamp (ctime)
+> >  This is the file's last status change timestamp.
+> >  It is changed by writing or by setting inode information
+> >  (i.e., owner, group, link count, mode, etc.).
+> > +.TP
+> > +Inode version (version)
+> > +(not returned in the \fIstat\fP structure); \fIstatx.stx_version\fP
+> > +.IP
+> > +This is the inode change counter. See the discussion of
+> > +\fBthe inode version counter\fP, below.
+> >  .PP
+> >  The timestamp fields report time measured with a zero point at the
+> >  .IR Epoch ,
+> > @@ -424,6 +430,31 @@ on a directory means that a file
+> >  in that directory can be renamed or deleted only by the owner
+> >  of the file, by the owner of the directory, and by a privileged
+> >  process.
+> > +.SS The inode version counter
+> > +.PP
+> > +The
+> > +.I statx.stx_version
+> > +field is the inode change counter. Any operation that would result in =
+a
+> > +change to \fIstatx.stx_ctime\fP must result in an increase to this val=
+ue.
+> > +The value must increase even in the case where the ctime change is not
+> > +evident due to coarse timestamp granularity.
+>=20
+> I think "could result" rather than "would result".
+>=20
+> I'm a little uncomfortable with "must result" given that we don't
+> increase the value when the previous value hasn't been seen.
+> We could say "must cause subsequent reads of this counter to be larger
+> than any previous read", but that is somewhat verbose.
+>=20
 
-OK, good news is most of _xfs_force_bdev run on SCRATCH_MNT, only this x/229 run
-on TEST_DIR. Better to not change TEST_DIR directly, to avoid it affect later
-testing. Thanks for fix it.
+Phrasing this is tricky. We want to start incrementing i_version after a
+write rather than before, but that means there will be a window where a
+read would show the new data but the stx_version hasn't been incremented
+yet. I think I'll just add a separate paragraph spelling that out.
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+> > +.PP
+> > +An observer cannot infer anything from amount of increase about the
+> > +nature or magnitude of the change. If the returned value is different
+> > +from the last time it was checked, then something has made an explicit
+> > +data and/or metadata change to the inode.
+>=20
+> Maybe it would be enough to be more explicit here:
+>  ...  or magnitude of that change.  In fact, a single increment can
+>  reflect multiple discrete changes if the value was not checked during
+>  those changes.
+> ??
+>=20
+> Maybe it is a small point, but these two paragraphs seem to be
+> contradictory.  If a change MUST increase the counter, then surely 6
+> changes MUST increase the counter by at least 6, so you CAN infer
+> something from the magnitude..
+>=20
+>=20
+> I would also prefer using the passive voice rather than the vague
+> "something".
+> ...  then an explicit data and/or metadata change has been made to the
+> inode.
+>=20
 
-Thanks,
-Zorro
+Good points. I made those changes.
 
->  common/xfs    |    3 +++
->  tests/xfs/229 |    7 ++++++-
->  2 files changed, 9 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/common/xfs b/common/xfs
-> index 170dd621a1..e1c15d3d04 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -201,6 +201,9 @@ _xfs_get_file_block_size()
->  # For each directory, each file subsequently created will target the given
->  # device for file data allocations.  For each empty regular file, each
->  # subsequent file data allocation will be on the given device.
-> +#
-> +# NOTE: If you call this on $TEST_DIR, you must reset the rtinherit flag state
-> +# before the end of the test to avoid polluting subsequent tests.
->  _xfs_force_bdev()
->  {
->  	local device="$1"
-> diff --git a/tests/xfs/229 b/tests/xfs/229
-> index 2221b9c49c..a58fd16bba 100755
-> --- a/tests/xfs/229
-> +++ b/tests/xfs/229
-> @@ -31,11 +31,16 @@ _require_fs_space $TEST_DIR 3200000
->  TDIR="${TEST_DIR}/t_holes"
->  NFILES="10"
->  EXTSIZE="256k"
-> -_xfs_force_bdev data $TEST_DIR
->  
->  # Create the test directory
->  mkdir ${TDIR}
->  
-> +# Per-directory extent size hints aren't particularly useful for files that
-> +# are created on the realtime section.  Force the test file to be created on
-> +# the data directory.  Do not change the rtinherit flag on $TEST_DIR because
-> +# that will affect other tests.
-> +_xfs_force_bdev data $TDIR
-> +
->  # Set the test directory extsize
->  $XFS_IO_PROG -c "extsize ${EXTSIZE}" ${TDIR}
->  
-> 
+> > +.PP
+> > +In the event of a system crash this value can appear to go backward,
+> > +if it were queried before being written to the backing store. If
+> > +the value were then incremented again after restart, then an observer
+>=20
+> I think the "incremented after restart" is irrelevant.  If the value is
+> queried before being written to backing store, and then after a crash
+> the value from backing store is used, the value will appear to go
+> backwards.  This is enough to mean it isn't MONOTONIC.
+>=20
 
+Ok.
+
+> > +could miss noticing a change. Applications that persist stx_version va=
+lues
+> > +across a reboot should take care to mitigate this problem. If the file=
+system
+> > +reports \fISTATX_ATTR_VERSION_MONOTONIC\fP in stx_attributes, then it =
+is not
+> > +subject to this problem.
+>=20
+> I do like the addition of STATX_ATTR_VERSION_MONOTONIC here.
+>=20
+
+I like communicating this to userland. I wish we had a different way to
+do it than using stx_attributes.
+
+According to RFC7862, this has to be a property of the filesystem, not
+of an individual inode. You can't have a mix of monotonic and undefined
+change attrs on a filesystem. Reporting this per-inode makes it seem
+like you can though.
+
+This would probably have been better expressed via something like
+fsinfo(). Unfortunately, that didn't make it in, so this is probably the
+next best thing. When we document the internal kernel interfaces, we'll
+want to ensure that filesystems don't try to set this to different
+values on the the same filesystem.
+
+
+
+> > +.PP
+> > +The stx_version is a Linux extension and is not supported by all files=
+ystems.
+> > +The application must verify that the \fISTATX_VERSION\fP bit is set in=
+ the
+> > +returned \fIstatx.stx_mask\fP before relying on this field.
+> >  .SH STANDARDS
+> >  If you need to obtain the definition of the
+> >  .I blkcnt_t
+> > --=20
+> > 2.37.3
+> >=20
+> >=20
+>=20
+> Thanks,
+> NeilBrown
+
+Thanks for the input, Neil!
+
+I'll send out a v6 patch in a bit with some revisions.
+--=20
+Jeff Layton <jlayton@kernel.org>
