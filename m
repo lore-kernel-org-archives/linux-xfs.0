@@ -2,370 +2,175 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F0C5C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Sep 2022 18:17:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E44BC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Sep 2022 18:45:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234417AbiI2SRY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Sep 2022 14:17:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58848 "EHLO
+        id S233878AbiI2Spq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Sep 2022 14:45:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235182AbiI2SRX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2022 14:17:23 -0400
+        with ESMTP id S235906AbiI2SpN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2022 14:45:13 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56C951F5A30
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Sep 2022 11:17:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AFAB46601;
+        Thu, 29 Sep 2022 11:44:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E9F7C62127
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Sep 2022 18:17:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C3F4C433C1;
-        Thu, 29 Sep 2022 18:17:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6C3FC6214E;
+        Thu, 29 Sep 2022 18:44:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3F5FC433D6;
+        Thu, 29 Sep 2022 18:44:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664475441;
-        bh=fONu4FS2iQlmOkFNECNiDZ6JcZYFTasNFzMy3ftkVvg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KesuZBIrvUwXkRdPsDt6fJfMgASHDSrvMJN5dxNs+/xYCHaOSimY91/C3ufUTKzm8
-         lTifc/8GZsjvBvxOs7Z0RflElK+nT78/qRN630BI+VNdnWgIpL87KhUi3x5a2CqzIj
-         JLD/r2HmmCz4RHZ+jNKghPlYTcn9KI0+tqM6T/aGLN7O7Zt+YEY0Rm3kHA7g956i9z
-         lN19+Mi18yf/8AxzWT2kUjg0Vh4fsFc8fa/dDxdKJG5xqixUFtF0WaX6T3pDf6quDt
-         mDnJNZ2X73WY19sBWiGzrBklmOfTAScOsfrOMZP3nq58hMAQt9blQGQAfZYAn78aGF
-         JRyGUU3Rpwr9A==
-Date:   Thu, 29 Sep 2022 11:17:20 -0700
+        s=k20201202; t=1664477089;
+        bh=0KnwtA9Cwe2++avaO7tjcOi6jtjCLsv4zJ2fFcjZtHU=;
+        h=Date:From:To:Subject:From;
+        b=BjPRO7oYCJniGiw9QqKMWC3xrGskpJ2k5SGBTnzknC6G368AwS2NGTJIseeuyMmeF
+         V4Die4J6SZEdIJy0GazRiuB1xhFtKLMDgUNuSSGTdmOe95YJPQNrdmNIcSbI1sC/0f
+         dHVnoilAglgJ9ibFahrBSsgzoi6XX9b60jdA2fb7uMcr1VSx+hsRwkxOydWBvIAj/l
+         1NIp/k6AcbDaIb0cWuFQof38esOWsxLcM20lDyRgBwu4PVLVjDkgD0zfS2lfDp25eD
+         Wcu1hMfc/9UXHvwBNr3YfrHj5zkqbb1VCJrouAANCfqr0yC8VOn2lTS559+frBzso2
+         p/hpz+iF6XSoA==
+Date:   Thu, 29 Sep 2022 11:44:49 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Hironori Shiina <shiina.hironori@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, Gao Xiang <hsiangkao@redhat.com>,
-        Donald Douwsma <ddouwsma@redhat.com>,
-        Hironori Shiina <shiina.hironori@fujitsu.com>
-Subject: Re: [RFC PATCH V3] xfsrestore: fix rootdir due to xfsdump bulkstat
- misuse
-Message-ID: <YzXhMJmbEsEueRKy@magnolia>
-References: <20201116080723.1486270-1-hsiangkao@redhat.com>
- <20220928191052.410437-1-shiina.hironori@fujitsu.com>
+To:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] iomap: fix memory corruption when recording errors during
+ writeback
+Message-ID: <YzXnoR0UMBVfoaOf@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220928191052.410437-1-shiina.hironori@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 28, 2022 at 03:10:52PM -0400, Hironori Shiina wrote:
-> From: Gao Xiang <hsiangkao@redhat.com>
-> 
-> If rootino is wrong and misspecified to a subdir inode #,
-> the following assertion could be triggered:
->   assert(ino != persp->p_rootino || hardh == persp->p_rooth);
-> 
-> This patch adds a '-x' option (another awkward thing is that
-> the codebase doesn't support long options) to address
-> problamatic images by searching for the real dir, the reason
-> that I don't enable it by default is that I'm not very confident
-> with the xfsrestore codebase and xfsdump bulkstat issue will
-> also be fixed immediately as well, so this function might be
-> optional and only useful for pre-exist corrupted dumps.
+From: Darrick J. Wong <djwong@kernel.org>
 
-As far as fixing xfsdump -- wasn't XFS_BULK_IREQ_SPECIAL_ROOT supposed
-to solve that problem by enabling dump to discover it it's really been
-passed the fs root directory?
+Every now and then I see this crash on arm64:
 
---D
+Unable to handle kernel NULL pointer dereference at virtual address 00000000000000f8
+Buffer I/O error on dev dm-0, logical block 8733687, async page read
+Mem abort info:
+  ESR = 0x0000000096000006
+  EC = 0x25: DABT (current EL), IL = 32 bits
+  SET = 0, FnV = 0
+  EA = 0, S1PTW = 0
+  FSC = 0x06: level 2 translation fault
+Data abort info:
+  ISV = 0, ISS = 0x00000006
+  CM = 0, WnR = 0
+user pgtable: 64k pages, 42-bit VAs, pgdp=0000000139750000
+[00000000000000f8] pgd=0000000000000000, p4d=0000000000000000, pud=0000000000000000, pmd=0000000000000000
+Internal error: Oops: 96000006 [#1] PREEMPT SMP
+Buffer I/O error on dev dm-0, logical block 8733688, async page read
+Dumping ftrace buffer:
+Buffer I/O error on dev dm-0, logical block 8733689, async page read
+   (ftrace buffer empty)
+XFS (dm-0): log I/O error -5
+Modules linked in: dm_thin_pool dm_persistent_data
+XFS (dm-0): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x1ec/0x590 [xfs] (fs/xfs/xfs_trans_buf.c:296).
+ dm_bio_prison
+XFS (dm-0): Please unmount the filesystem and rectify the problem(s)
+XFS (dm-0): xfs_imap_lookup: xfs_ialloc_read_agi() returned error -5, agno 0
+ dm_bufio dm_log_writes xfs nft_chain_nat xt_REDIRECT nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip6t_REJECT
+potentially unexpected fatal signal 6.
+ nf_reject_ipv6
+potentially unexpected fatal signal 6.
+ ipt_REJECT nf_reject_ipv4
+CPU: 1 PID: 122166 Comm: fsstress Tainted: G        W          6.0.0-rc5-djwa #rc5 3004c9f1de887ebae86015f2677638ce51ee7
+ rpcsec_gss_krb5 auth_rpcgss xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set nft_compat ip_set_hash_mac ip_set nf_tables
+Hardware name: QEMU KVM Virtual Machine, BIOS 1.5.1 06/16/2021
+pstate: 60001000 (nZCv daif -PAN -UAO -TCO -DIT +SSBS BTYPE=--)
+ ip_tables
+pc : 000003fd6d7df200
+ x_tables
+lr : 000003fd6d7df1ec
+ overlay nfsv4
+CPU: 0 PID: 54031 Comm: u4:3 Tainted: G        W          6.0.0-rc5-djwa #rc5 3004c9f1de887ebae86015f2677638ce51ee7405
+Hardware name: QEMU KVM Virtual Machine, BIOS 1.5.1 06/16/2021
+Workqueue: writeback wb_workfn
+sp : 000003ffd9522fd0
+ (flush-253:0)
+pstate: 60401005 (nZCv daif +PAN -UAO -TCO -DIT +SSBS BTYPE=--)
+pc : errseq_set+0x1c/0x100
+x29: 000003ffd9522fd0 x28: 0000000000000023 x27: 000002acefeb6780
+x26: 0000000000000005 x25: 0000000000000001 x24: 0000000000000000
+x23: 00000000ffffffff x22: 0000000000000005
+lr : __filemap_set_wb_err+0x24/0xe0
+ x21: 0000000000000006
+sp : fffffe000f80f760
+x29: fffffe000f80f760 x28: 0000000000000003 x27: fffffe000f80f9f8
+x26: 0000000002523000 x25: 00000000fffffffb x24: fffffe000f80f868
+x23: fffffe000f80fbb0 x22: fffffc0180c26a78 x21: 0000000002530000
+x20: 0000000000000000 x19: 0000000000000000 x18: 0000000000000000
 
-> In details, my understanding of the original logic is
->  1) xfsrestore will create a rootdir node_t (p_rooth);
->  2) it will build the tree hierarchy from inomap and adopt
->     the parent if needed (so inodes whose parent ino hasn't
->     detected will be in the orphan dir, p_orphh);
->  3) during this period, if ino == rootino and
->     hardh != persp->p_rooth (IOWs, another node_t with
->     the same ino # is created), that'd be definitely wrong.
-> 
-> So the proposal fix is that
->  - considering the xfsdump root ino # is a subdir inode, it'll
->    trigger ino == rootino && hardh != persp->p_rooth condition;
->  - so we log this node_t as persp->p_rooth rather than the
->    initial rootdir node_t created in 1);
->  - we also know that this node is actually a subdir, and after
->    the whole inomap is scanned (IOWs, the tree is built),
->    the real root dir will have the orphan dir parent p_orphh;
->  - therefore, we walk up by the parent until some node_t has
->    the p_orphh, so that's it.
-> 
-> Cc: Donald Douwsma <ddouwsma@redhat.com>
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> Signed-off-by: Hironori Shiina <shiina.hironori@fujitsu.com>
-> ---
-> 
-> changes since RFC v2:
->  - re-adopt the orphanage dir to the fixed root for creating a
->    correct path of the orphanage dir.
-> 
->  - add description of the new '-x' option to the man page.
-> 
-> changes since RFC v1:
->  - fix non-dir fake rootino cases since tree_begindir()
->    won't be triggered for these non-dir, and we could do
->    that in tree_addent() instead (fault injection verified);
-> 
->  - fix fake rootino case with gen = 0 as well, for more
->    details, see the inlined comment in link_hardh()
->    (fault injection verified as well).
-> 
->  common/main.c         |  1 +
->  man/man8/xfsrestore.8 | 14 +++++++++
->  restore/content.c     |  7 +++++
->  restore/getopt.h      |  4 +--
->  restore/tree.c        | 72 ++++++++++++++++++++++++++++++++++++++++---
->  restore/tree.h        |  2 ++
->  6 files changed, 94 insertions(+), 6 deletions(-)
-> 
-> diff --git a/common/main.c b/common/main.c
-> index 1db07d4..6141ffb 100644
-> --- a/common/main.c
-> +++ b/common/main.c
-> @@ -988,6 +988,7 @@ usage(void)
->  	ULO(_("(contents only)"),			GETOPT_TOC);
->  	ULO(_("<verbosity {silent, verbose, trace}>"),	GETOPT_VERBOSITY);
->  	ULO(_("(use small tree window)"),		GETOPT_SMALLWINDOW);
-> +	ULO(_("(try to fix rootdir due to xfsdump issue)"),GETOPT_FIXROOTDIR);
->  	ULO(_("(don't restore extended file attributes)"), GETOPT_NOEXTATTR);
->  	ULO(_("(restore root dir owner/permissions)"),	GETOPT_ROOTPERM);
->  	ULO(_("(restore DMAPI event settings)"),	GETOPT_SETDM);
-> diff --git a/man/man8/xfsrestore.8 b/man/man8/xfsrestore.8
-> index 60e4309..df7dde0 100644
-> --- a/man/man8/xfsrestore.8
-> +++ b/man/man8/xfsrestore.8
-> @@ -240,6 +240,20 @@ but does not create or modify any files or directories.
->  It may be desirable to set the verbosity level to \f3silent\f1
->  when using this option.
->  .TP 5
-> +.B \-x
-> +This option may be useful to fix an issue which the files are restored
-> +to orphanage directory because of xfsdump (v3.1.7 - v3.1.9) problem.
-> +A normal dump cannot be restored with this option. This option works
-> +only for a corrupted dump.
-> +If a dump is created by problematic xfsdump (v3.1.7 - v3.1.9), you
-> +should see the contents of the dump with \f3\-t\f1 option before
-> +restoring. Then, if a file is placed to the orphanage directory, you need to
-> +use this \f3\-x\f1 option to restore the dump. Otherwise, you can restore
-> +the dump without this option.
-> +
-> +In the cumulative mode, this option is required only for a base (level 0)
-> +dump. You no longer need this option for level 1+ dumps.
-> +.TP 5
->  \f3\-v\f1 \f2verbosity\f1
->  .\" set inter-paragraph distance to 0
->  .PD 0
-> diff --git a/restore/content.c b/restore/content.c
-> index b19bb90..fdf26dd 100644
-> --- a/restore/content.c
-> +++ b/restore/content.c
-> @@ -861,6 +861,7 @@ static int quotafilecheck(char *type, char *dstdir, char *quotafile);
->  
->  bool_t content_media_change_needed;
->  bool_t restore_rootdir_permissions;
-> +bool_t need_fixrootdir;
->  char *media_change_alert_program = NULL;
->  size_t perssz;
->  
-> @@ -958,6 +959,7 @@ content_init(int argc, char *argv[], size64_t vmsz)
->  	stsz = 0;
->  	interpr = BOOL_FALSE;
->  	restore_rootdir_permissions = BOOL_FALSE;
-> +	need_fixrootdir = BOOL_FALSE;
->  	optind = 1;
->  	opterr = 0;
->  	while ((c = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
-> @@ -1186,6 +1188,9 @@ content_init(int argc, char *argv[], size64_t vmsz)
->  		case GETOPT_FMT2COMPAT:
->  			tranp->t_truncategenpr = BOOL_TRUE;
->  			break;
-> +		case GETOPT_FIXROOTDIR:
-> +			need_fixrootdir = BOOL_TRUE;
-> +			break;
->  		}
->  	}
->  
-> @@ -3129,6 +3134,8 @@ applydirdump(drive_t *drivep,
->  			return rv;
->  		}
->  
-> +		if (need_fixrootdir)
-> +			tree_fixroot();
->  		persp->s.dirdonepr = BOOL_TRUE;
->  	}
->  
-> diff --git a/restore/getopt.h b/restore/getopt.h
-> index b5bc004..b0c0c7d 100644
-> --- a/restore/getopt.h
-> +++ b/restore/getopt.h
-> @@ -26,7 +26,7 @@
->   * purpose is to contain that command string.
->   */
->  
-> -#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JKL:M:NO:PQRS:TUVWX:Y:"
-> +#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wxABCDEFG:H:I:JKL:M:NO:PQRS:TUVWX:Y:"
->  
->  #define GETOPT_WORKSPACE	'a'	/* workspace dir (content.c) */
->  #define GETOPT_BLOCKSIZE        'b'     /* blocksize for rmt */
-> @@ -51,7 +51,7 @@
->  /*				'u' */
->  #define	GETOPT_VERBOSITY	'v'	/* verbosity level (0 to 4) */
->  #define	GETOPT_SMALLWINDOW	'w'	/* use a small window for dir entries */
-> -/*				'x' */
-> +#define GETOPT_FIXROOTDIR	'x'	/* try to fix rootdir due to bulkstat misuse */
->  /*				'y' */
->  /*				'z' */
->  #define	GETOPT_NOEXTATTR	'A'	/* do not restore ext. file attr. */
-> diff --git a/restore/tree.c b/restore/tree.c
-> index 5429b74..bfa07fe 100644
-> --- a/restore/tree.c
-> +++ b/restore/tree.c
-> @@ -15,7 +15,6 @@
->   * along with this program; if not, write the Free Software Foundation,
->   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->   */
-> -
->  #include <stdio.h>
->  #include <unistd.h>
->  #include <stdlib.h>
-> @@ -262,6 +261,7 @@ extern void usage(void);
->  extern size_t pgsz;
->  extern size_t pgmask;
->  extern bool_t restore_rootdir_permissions;
-> +extern bool_t need_fixrootdir;
->  
->  /* forward declarations of locally defined static functions ******************/
->  
-> @@ -328,10 +328,47 @@ static tran_t *tranp = 0;
->  static char *persname = PERS_NAME;
->  static char *orphname = ORPH_NAME;
->  static xfs_ino_t orphino = ORPH_INO;
-> +static nh_t orig_rooth = NH_NULL;
->  
->  
->  /* definition of locally defined global functions ****************************/
->  
-> +void
-> +tree_fixroot(void)
-> +{
-> +	nh_t		rooth = persp->p_rooth;
-> +	xfs_ino_t 	rootino;
-> +
-> +	while (1) {
-> +		nh_t	parh;
-> +		node_t *rootp = Node_map(rooth);
-> +
-> +		rootino = rootp->n_ino;
-> +		parh = rootp->n_parh;
-> +		Node_unmap(rooth, &rootp);
-> +
-> +		if (parh == rooth ||
-> +		/*
-> +		 * since all new node (including non-parent)
-> +		 * would be adopted into orphh
-> +		 */
-> +		    parh == persp->p_orphh ||
-> +		    parh == NH_NULL)
-> +			break;
-> +		rooth = parh;
-> +	}
-> +
-> +	if (rooth != persp->p_rooth) {
-> +		persp->p_rooth = rooth;
-> +		persp->p_rootino = rootino;
-> +		disown(rooth);
-> +		adopt(persp->p_rooth, persp->p_orphh, NH_NULL);
-> +
-> +		mlog(MLOG_NORMAL, _("fix root # to %llu (bind mount?)\n"),
-> +		     rootino);
-> +	}
-> +}
-> +
->  /* ARGSUSED */
->  bool_t
->  tree_init(char *hkdir,
-> @@ -746,7 +783,8 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
->  	/* lookup head of hardlink list
->  	 */
->  	hardh = link_hardh(ino, gen);
-> -	assert(ino != persp->p_rootino || hardh == persp->p_rooth);
-> +	if (need_fixrootdir == BOOL_FALSE)
-> +		assert(ino != persp->p_rootino || hardh == persp->p_rooth);
->  
->  	/* already present
->  	 */
-> @@ -815,7 +853,6 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
->  		adopt(persp->p_orphh, hardh, NRH_NULL);
->  		*dahp = dah;
->  	}
-> -
->  	return hardh;
->  }
->  
-> @@ -960,6 +997,7 @@ tree_addent(nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen)
->  				}
->  			} else {
->  				assert(hardp->n_nrh != NRH_NULL);
-> +
->  				namebuflen
->  				=
->  				namreg_get(hardp->n_nrh,
-> @@ -1110,6 +1148,13 @@ tree_addent(nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen)
->  		      ino,
->  		      gen);
->  	}
-> +	/* found the fake rootino from subdir, need fix p_rooth. */
-> +	if (need_fixrootdir == BOOL_TRUE &&
-> +	    persp->p_rootino == ino && hardh != persp->p_rooth) {
-> +		mlog(MLOG_NORMAL,
-> +		     _("found fake rootino #%llu, will fix.\n"), ino);
-> +		persp->p_rooth = hardh;
-> +	}
->  	return RV_OK;
->  }
->  
-> @@ -3808,7 +3853,26 @@ selsubtree_recurse_down(nh_t nh, bool_t sensepr)
->  static nh_t
->  link_hardh(xfs_ino_t ino, gen_t gen)
->  {
-> -	return hash_find(ino, gen);
-> +	nh_t tmp = hash_find(ino, gen);
-> +
-> +	/*
-> +	 * XXX (another workaround): the simply way is that don't reuse node_t
-> +	 * with gen = 0 created in tree_init(). Otherwise, it could cause
-> +	 * xfsrestore: tree.c:1003: tree_addent: Assertion
-> +	 * `hardp->n_nrh != NRH_NULL' failed.
-> +	 * and that node_t is a dir node but the fake rootino could be a non-dir
-> +	 * plus reusing it could cause potential loop in tree hierarchy.
-> +	 */
-> +	if (need_fixrootdir == BOOL_TRUE &&
-> +	    ino == persp->p_rootino && gen == 0 &&
-> +	    orig_rooth == NH_NULL) {
-> +		mlog(MLOG_NORMAL,
-> +_("link out fake rootino %llu with gen=0 created in tree_init()\n"), ino);
-> +		link_out(tmp);
-> +		orig_rooth = tmp;
-> +		return NH_NULL;
-> +	}
-> +	return tmp;
->  }
->  
->  /* returns following node in hard link list
-> diff --git a/restore/tree.h b/restore/tree.h
-> index bf66e3d..f5bd4ff 100644
-> --- a/restore/tree.h
-> +++ b/restore/tree.h
-> @@ -18,6 +18,8 @@
->  #ifndef TREE_H
->  #define TREE_H
->  
-> +void tree_fixroot(void);
-> +
->  /* tree_init - creates a new tree abstraction.
->   */
->  extern bool_t tree_init(char *hkdir,
-> -- 
-> 2.37.3
-> 
+x17: 0000000000000000 x16: 0000000000000000 x15: 0000000000000000
+x14: 0000000000000001 x13: 0000000000470af3 x12: fffffc0058f70000
+x11: 0000000000000040 x10: 0000000000001b20 x9 : fffffe000836b288
+x8 : fffffc00eb9fd480 x7 : 0000000000f83659 x6 : 0000000000000000
+x5 : 0000000000000869 x4 : 0000000000000005 x3 : 00000000000000f8
+x20: 000003fd6d740020 x19: 000000000001dd36 x18: 0000000000000001
+x17: 000003fd6d78704c x16: 0000000000000001 x15: 000002acfac87668
+x2 : 0000000000000ffa x1 : 00000000fffffffb x0 : 00000000000000f8
+Call trace:
+ errseq_set+0x1c/0x100
+ __filemap_set_wb_err+0x24/0xe0
+ iomap_do_writepage+0x5e4/0xd5c
+ write_cache_pages+0x208/0x674
+ iomap_writepages+0x34/0x60
+ xfs_vm_writepages+0x8c/0xcc [xfs 7a861f39c43631f15d3a5884246ba5035d4ca78b]
+x14: 0000000000000000 x13: 2064656e72757465 x12: 0000000000002180
+x11: 000003fd6d8a82d0 x10: 0000000000000000 x9 : 000003fd6d8ae288
+x8 : 0000000000000083 x7 : 00000000ffffffff x6 : 00000000ffffffee
+x5 : 00000000fbad2887 x4 : 000003fd6d9abb58 x3 : 000003fd6d740020
+x2 : 0000000000000006 x1 : 000000000001dd36 x0 : 0000000000000000
+CPU: 1 PID: 122167 Comm: fsstress Tainted: G        W          6.0.0-rc5-djwa #rc5 3004c9f1de887ebae86015f2677638ce51ee7
+ do_writepages+0x90/0x1c4
+ __writeback_single_inode+0x4c/0x4ac
+Hardware name: QEMU KVM Virtual Machine, BIOS 1.5.1 06/16/2021
+ writeback_sb_inodes+0x214/0x4ac
+ wb_writeback+0xf4/0x3b0
+pstate: 60001000 (nZCv daif -PAN -UAO -TCO -DIT +SSBS BTYPE=--)
+ wb_workfn+0xfc/0x580
+ process_one_work+0x1e8/0x480
+pc : 000003fd6d7df200
+ worker_thread+0x78/0x430
+
+This crash is a result of iomap_writepage_map encountering some sort of
+error during writeback and wanting to set that error code in the file
+mapping so that fsync will report it.  Unfortunately, the code
+dereferences folio->mapping after unlocking the folio, which means that
+another thread could have removed the page from the page cache
+(writeback doesn't hold the invalidation lock) and give it to somebody
+else.
+
+At best we crash the system like above; at worst, we corrupt memory or
+set an error on some other unsuspecting file while failing to record the
+problems with *this* file.  Regardless, fix the problem by reporting the
+error to the inode mapping.
+
+NOTE: Commit 598ecfbaa742 lifted the XFS writeback code to iomap, so
+this fix should be backported to XFS in the 4.6-5.4 kernels in addition
+to iomap in the 5.5-5.19 kernels.
+
+Fixes: e735c0079465 ("iomap: Convert iomap_add_to_ioend() to take a folio")
+Probably-Fixes: 598ecfbaa742 ("iomap: lift the xfs writeback code to iomap")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/iomap/buffered-io.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index ca5c62901541..77d59c159248 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1421,7 +1421,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 	if (!count)
+ 		folio_end_writeback(folio);
+ done:
+-	mapping_set_error(folio->mapping, error);
++	mapping_set_error(inode->i_mapping, error);
+ 	return error;
+ }
+ 
