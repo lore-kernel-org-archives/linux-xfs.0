@@ -2,292 +2,178 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72992C32771
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Sep 2022 02:15:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E3A3C07E9D
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Sep 2022 08:26:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233350AbiI2CPm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Sep 2022 22:15:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59050 "EHLO
+        id S235534AbiI2I0m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Sep 2022 04:26:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234551AbiI2CPl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2022 22:15:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59A9D10952C;
-        Wed, 28 Sep 2022 19:15:28 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0917E61AD2;
-        Thu, 29 Sep 2022 02:15:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 660A1C433D7;
-        Thu, 29 Sep 2022 02:15:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664417727;
-        bh=k2wflFgQECzPufVWTIiUxC7W+iON7k0EvxVQlitKNZ4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Jmzhf9wzYUFIDKe6epFS2KMsQj/U1Avnfky0FL3FMC+CzfYZOEC2GTH36nAJ1tPQF
-         4f4FYTuLfiw1gYNnL6dLn712yt9ib3YNmBz5ktvgNYxniSvetmCqsx0equWnHUL3hk
-         GIA6kJMlLQxGiWGqyk6wK1/zeAuVvtnCnJA0IKM+2Y6ASGc2AJQxQUHFygcAhmbq6D
-         ExN0EQCEW3nSJmKVUP5HSZKQOShO/QUd0mJoFwf3EH/DM2XPCxu2kbm6QbG4Ijz3C+
-         3bEsMwBp7t5o4gH3vgR+xcnrW70C0dEbz7MkTxmM9k8Kp2wORUk+bDHV9oxOtskoU4
-         e10GAgLls1aOQ==
-Date:   Wed, 28 Sep 2022 19:15:26 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/2] iomap/xfs: fix data corruption due to stale
- cached iomaps
-Message-ID: <YzT/vk6lABR/jSvl@magnolia>
-References: <20220921082959.1411675-1-david@fromorbit.com>
- <Yyvjtpi49YSUej+w@magnolia>
- <20220922225934.GU3600936@dread.disaster.area>
- <YzPYuu7GtzoN4tB+@magnolia>
- <20220929021128.GF3600936@dread.disaster.area>
+        with ESMTP id S235503AbiI2I03 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2022 04:26:29 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF8781162D3
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Sep 2022 01:26:25 -0700 (PDT)
+Received: from kwepemi500019.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MdRFn4sl0zpVS6;
+        Thu, 29 Sep 2022 16:23:25 +0800 (CST)
+Received: from huawei.com (10.175.124.27) by kwepemi500019.china.huawei.com
+ (7.221.188.117) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 29 Sep
+ 2022 16:26:22 +0800
+From:   Guo Xuenan <guoxuenan@huawei.com>
+To:     <david@fromorbit.com>, <dchinner@redhat.com>
+CC:     <chandan.babu@oracle.com>, <djwong@kernel.org>,
+        <guoxuenan@huawei.com>, <houtao1@huawei.com>,
+        <jack.qiu@huawei.com>, <linux-xfs@vger.kernel.org>,
+        <yi.zhang@huawei.com>, <zhengbin13@huawei.com>
+Subject: [PATCH v4] xfs: fix exception caused by unexpected illegal bestcount in leaf dir
+Date:   Thu, 29 Sep 2022 16:51:55 +0800
+Message-ID: <20220929085155.475484-1-guoxuenan@huawei.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220912013154.GB3600936@dread.disaster.area>
+References: <20220912013154.GB3600936@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220929021128.GF3600936@dread.disaster.area>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.124.27]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemi500019.china.huawei.com (7.221.188.117)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 29, 2022 at 12:11:28PM +1000, Dave Chinner wrote:
-> On Tue, Sep 27, 2022 at 10:16:42PM -0700, Darrick J. Wong wrote:
-> > On Fri, Sep 23, 2022 at 08:59:34AM +1000, Dave Chinner wrote:
-> > > On Wed, Sep 21, 2022 at 09:25:26PM -0700, Darrick J. Wong wrote:
-> > > > On Wed, Sep 21, 2022 at 06:29:57PM +1000, Dave Chinner wrote:
-> > > > > Hi folks,
-> > > > > 
-> > > > > THese patches address the data corruption first described here:
-> > > > > 
-> > > > > https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
-> > > > > 
-> > > > > This data corruption has been seen in high profile production
-> > > > > systems so there is some urgency to fix it. The underlying flaw is
-> > > > > essentially a zero-day iomap bug, so whatever fix we come up with
-> > > > > needs to be back portable to all supported stable kernels (i.e.
-> > > > > ~4.18 onwards).
-> > > > > 
-> > > > > A combination of concurrent write()s, writeback IO completion, and
-> > > > > memory reclaim combine to expose the fact that the cached iomap that
-> > > > > is held across an iomap_begin/iomap_end iteration can become stale
-> > > > > without the iomap iterator actor being aware that the underlying
-> > > > > filesystem extent map has changed.
-> > > > > 
-> > > > > Hence actions based on the iomap state (e.g. is unwritten or newly
-> > > > > allocated) may actually be incorrect as writeback actions may have
-> > > > > changed the state (unwritten to written, delalloc to unwritten or
-> > > > > written, etc). This affects partial block/page operations, where we
-> > > > > may need to read from disk or zero cached pages depending on the
-> > > > > actual extent state. Memory reclaim plays it's part here in that it
-> > > > > removes pages containing partial state from the page cache, exposing
-> > > > > future partial page/block operations to incorrect behaviour.
-> > > > > 
-> > > > > Really, we should have known that this would be a problem - we have
-> > > > > exactly the same issue with cached iomaps for writeback, and the
-> > > > > ->map_blocks callback that occurs for every filesystem block we need
-> > > > > to write back is responsible for validating the cached iomap is
-> > > > > still valid. The data corruption on the write() side is a result of
-> > > > > not validating that the iomap is still valid before we initialise
-> > > > > new pages and prepare them for data to be copied in to them....
-> > > > > 
-> > > > > I'm not really happy with the solution I have for triggering
-> > > > > remapping of an iomap when the current one is considered stale.
-> > > > > Doing the right thing requires both iomap_iter() to handle stale
-> > > > > iomaps correctly (esp. the "map is invalid before the first actor
-> > > > > operation" case), and it requires the filesystem
-> > > > > iomap_begin/iomap_end operations to co-operate and be aware of stale
-> > > > > iomaps.
-> > > > > 
-> > > > > There are a bunch of *nasty* issues around handling failed writes in
-> > > > > XFS taht this has exposed - a failed write() that races with a
-> > > > > mmap() based write to the same delalloc page will result in the mmap
-> > > > > writes being silently lost if we punch out the delalloc range we
-> > > > > allocated but didn't write to. g/344 and g/346 expose this bug
-> > > > > directly if we punch out delalloc regions allocated by now stale
-> > > > > mappings.
-> > > > 
-> > > > Yuck.  I'm pretty sure that callers (xfs_buffered_write_iomap_end) is
-> > > > supposed to call truncate_pagecache_range with the invalidatelock (fka
-> > > > MMAPLOCK) held.
-> > > 
-> > > Yup, there's multiple problems with this code; apart from
-> > > recognising that it is obviously broken and definitely problematic,
-> > > I haven't dug into it further.
-> > 
-> > ...and I've been so buried in attending meetings and livedebug sessions
-> > related to a 4.14 corruption that now I'm starved of time to fully think
-> > through all the implications of this one. :(
-> > 
-> > > > > Then, because we can't punch out the delalloc we allocated region
-> > > > > safely when we have a stale iomap, we have to ensure when we remap
-> > > > > it the IOMAP_F_NEW flag is preserved so that the iomap code knows
-> > > > > that it is uninitialised space that is being written into so it will
-> > > > > zero sub page/sub block ranges correctly.
-> > > > 
-> > > > Hm.  IOMAP_F_NEW results in zeroing around, right?  So if the first
-> > > > ->iomap_begin got a delalloc mapping, but by the time we got the folio
-> > > > locked someone else managed to writeback and evict the page, we'd no
-> > > > longer want that zeroing ... right?
-> > > 
-> > > Yes, and that is one of the sources of the data corruption - zeroing
-> > > when we shouldn't.
-> > > 
-> > > There are multiple vectors to having a stale iomap here:
-> > > 
-> > > 1. we allocate the delalloc range, giving us IOMAP_DELALLOC and
-> > >    IOMAP_F_NEW. Writeback runs, allocating the range as unwritten.
-> > >    Even though the iomap is now stale, there is no data corruption
-> > >    in this case because the range is unwritten and so we still need
-> > >    zeroing.
-> > 
-> > ...and I guess this at least happens more often now that writeback does
-> > delalloc -> unwritten -> write -> unwritten conversion?
-> 
-> *nod*
-> 
-> > > 2. Same as above, but IO completion converts the range to written.
-> > >    Data corruption occurs in this case because IOMAP_F_NEW causes
-> > >    incorrect page cache zeroing to occur on partial page writes.
-> > > 
-> > > 3. We have an unwritten extent (prealloc, writeback in progress,
-> > >    etc) so we have IOMAP_UNWRITTEN. These require zeroing,
-> > >    regardless of whether IOMAP_F_NEW is set or not. Extent is
-> > >    written behind our backs, unwritten conversion occurs, and now we
-> > >    zero partial pages when we shouldn't.
-> > 
-> > Yikes.
-> > 
-> > > Other issues I've found:
-> > > 
-> > > 4. page faults can run the buffered write path concurrently with
-> > >    write() because they aren't serialised against each other. Hence
-> > >    we can have overlapping concurrent iomap_iter() operations with
-> > >    different zeroing requirements and it's anyone's guess as to
-> > >    which will win the race to the page lock and do the initial
-> > >    zeroing. This is a potential silent mmap() write data loss
-> > >    vector.
-> > 
-> > TBH I've long wondered why IOLOCK and MMAPLOCK both seemingly protected
-> > pagecache operations but the buffered io paths never seemed to take the
-> > MMAPLOCK, and if there was some subtle way things could go wrong.
-> 
-> We can't take MMAPLOCK in the buffered IO path because the user
-> buffer could be a mmap()d range of the same file and we need to be
-> able to fault in those pages during copyin/copyout. Hence we can't
-> hold the MMAPLOCK across iomap_iter(), nor across
-> .iomap_begin/.iomap_end context pairs.
+For leaf dir, In most cases, there should be as many bestfree slots
+as the dir data blocks that can fit under i_size (except for [1]).
 
-Ahh, right, I forgot that case. >:O
+Root cause is we don't examin the number bestfree slots, when the slots
+number less than dir data blocks, if we need to allocate new dir data
+block and update the bestfree array, we will use the dir block number as
+index to assign bestfree array, while we did not check the leaf buf
+boundary which may cause UAF or other memory access problem. This issue
+can also triggered with test cases xfs/473 from fstests.
 
-> taking the MMAPLOCK and dropping it again can be done in iomap_begin
-> or iomap_end, as long as those methods aren't called from the page
-> fault path....
-> 
-> > > 5. anything that can modify the extent layout without holding the
-> > >    i_rwsem exclusive can race with iomap iterating the extent list.
-> > >    Holding the i_rwsem shared and modifying the extent list (e.g.
-> > >    direct IO writes) can result in iomaps changing in the middle of,
-> > >    say, buffered reads (e.g. hole->unwritten->written).
-> > 
-> > Yep.  I wonder, can this result in other incorrect write behavior that
-> > you and I haven't thought of yet?
-> 
-> Entirely possible - this code is complex and there are lots of very
-> subtle interactions and we've already found several bonus broken
-> bits as a result. Hence I wouldn't be surprised if we've missed
-> other subtle issues and/or not fully grokked the implications of the
-> broken bits we've found...
-> 
-> [....]
-> 
-> > > > What happens if iomap_writepage_map errors out (say because ->map_blocks
-> > > > returns an error) without adding the folio to any ioend?
-> > > 
-> > > Without reading further:
-> > > 
-> > > 1. if we want to retry the write, we folio_redirty_for_writepage(),
-> > > unlock it and return with no error. Essentially we just skip over
-> > > it.
-> > 
-> > If the fs isn't shut down, I guess we could redirty the page, though I
-> > guess the problem is that the page is now stuck in dirty state until
-> > xfs_scrub fixes the problem.  If it fixes the problem.
-> > 
-> > I think for bufferhead users it's nastier because we might have a
-> > situation where pagedirty is unset but BH_Dirty is still set.  It
-> > certainly is a problem on 4.14.
-> > 
-> > > 2. If we want to fail the write, we should call set_mapping_error()
-> > > to record the failure for the next syscall to report and, maybe, set
-> > > the error flag/clear the uptodate flag on the folio depending on
-> > > whether we want the data to remain valid in memory or not.
-> > 
-> > <nod> That seems to be happening.  Sort of.
-> > 
-> > I think there's also a UAF in iomap_writepage_map -- if the folio is
-> > unlocked and we cleared (or never set) PageWriteback, isn't it possible
-> > that by the time we get to the mapping_set_error, the folio could have
-> > been torn out of the page cache and reused somewhere else?
-> 
-> We still have a reference to the folio at this point from the lookup
-> in write_cache_pages(). Hence the folio can't be freed while we are
-> running iomap_writepage_map().
-> 
-> However, we have unlocked the folio, and we don't hold either the IO
-> lock or the invalidate lock and so the folio could get punched out
-> of the page cache....
-> 
-> > In which case, we're at best walking off a NULL mapping and crashing the
-> > system, and at worst setting an IO error on the wrong mapping?
-> 
-> Yes, I think so - we could walk off a NULL mapping here,
-> but because write_cache_pages() still holds a page reference, the
-> page won't get freed from under us so we won't ever see the wrong
-> mapping being set here.
-> 
-> I think we could fix that simply by using inode->i_mapping instead
-> of folio->mapping...
+According to Dave Chinner & Darrick's suggestion, adding buffer verifier
+to detect this abnormal situation in time.
+Simplify the testcase for fstest xfs/554 [1]
 
-Oh.  Yes.  I'll get on that tomorrow.
+The error log is shown as follows:
+==================================================================
+BUG: KASAN: use-after-free in xfs_dir2_leaf_addname+0x1995/0x1ac0
+Write of size 2 at addr ffff88810168b000 by task touch/1552
+CPU: 5 PID: 1552 Comm: touch Not tainted 6.0.0-rc3+ #101
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ print_report.cold+0xf6/0x691
+ kasan_report+0xa8/0x120
+ xfs_dir2_leaf_addname+0x1995/0x1ac0
+ xfs_dir_createname+0x58c/0x7f0
+ xfs_create+0x7af/0x1010
+ xfs_generic_create+0x270/0x5e0
+ path_openat+0x270b/0x3450
+ do_filp_open+0x1cf/0x2b0
+ do_sys_openat2+0x46b/0x7a0
+ do_sys_open+0xb7/0x130
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe4d9e9312b
+Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85 c0
+75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d 00
+f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+RSP: 002b:00007ffda4c16c20 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007fe4d9e9312b
+RDX: 0000000000000941 RSI: 00007ffda4c17f33 RDI: 00000000ffffff9c
+RBP: 00007ffda4c17f33 R08: 0000000000000000 R09: 0000000000000000
+R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000941
+R13: 00007fe4d9f631a4 R14: 00007ffda4c17f33 R15: 0000000000000000
+ </TASK>
 
-> > > > I think in
-> > > > that case we'll follow the (error && !count) case, in which we unlock
-> > > > the folio and exit without calling folio_redirty_for_writepage, right?
-> > > > The error will get recorded in the mapping for the next fsync, I think,
-> > > > but I also wonder if we *should* redirty because the mapping failed, not
-> > > > the attempt at persistence.
-> > > 
-> > > *nod*
-> > > 
-> > > I think the question that needs to be answered here is this: in what
-> > > case is an error being returned from ->map_blocks a recoverable
-> > > error that a redirty + future writeback retry will succeed?
-> > > 
-> > > AFAICT, all cases from XFS this is a fatal error (e.g. corruption of
-> > > the BMBT), so the failure will persist across all attempts to retry
-> > > the write?
-> > > 
-> > > Perhaps online repair will change this (i.e. in the background
-> > > repair fixes the BMBT corruption and so the next attempt to write
-> > > the data will succeed) so I can see that we *might* need to redirty
-> > > the page in this case, but....
-> > 
-> > ...but I don't know that we can practically wait for repairs to happen
-> > because the page is now stuck in dirty state indefinitely.
-> 
-> *nod*
-> 
-> So do we treat it as fatal for now, and revisit it later when online
-> repair might be able to do something better here? 
+The buggy address belongs to the physical page:
+page:ffffea000405a2c0 refcount:0 mapcount:0 mapping:0000000000000000
+index:0x0 pfn:0x10168b
+flags: 0x2fffff80000000(node=0|zone=2|lastcpupid=0x1fffff)
+raw: 002fffff80000000 ffffea0004057788 ffffea000402dbc8 0000000000000000
+raw: 0000000000000000 0000000000170000 00000000ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
 
-Sounds good to me.
+Memory state around the buggy address:
+ ffff88810168af00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff88810168af80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff88810168b000: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+                   ^
+ ffff88810168b080: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+ ffff88810168b100: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+==================================================================
+Disabling lock debugging due to kernel taint
+00000000: 58 44 44 33 5b 53 35 c2 00 00 00 00 00 00 00 78
+XDD3[S5........x
+XFS (sdb): Internal error xfs_dir2_data_use_free at line 1200 of file
+fs/xfs/libxfs/xfs_dir2_data.c.  Caller
+xfs_dir2_data_use_free+0x28a/0xeb0
+CPU: 5 PID: 1552 Comm: touch Tainted: G    B              6.0.0-rc3+
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ xfs_corruption_error+0x132/0x150
+ xfs_dir2_data_use_free+0x198/0xeb0
+ xfs_dir2_leaf_addname+0xa59/0x1ac0
+ xfs_dir_createname+0x58c/0x7f0
+ xfs_create+0x7af/0x1010
+ xfs_generic_create+0x270/0x5e0
+ path_openat+0x270b/0x3450
+ do_filp_open+0x1cf/0x2b0
+ do_sys_openat2+0x46b/0x7a0
+ do_sys_open+0xb7/0x130
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe4d9e9312b
+Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85 c0
+75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d 00
+f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+RSP: 002b:00007ffda4c16c20 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007fe4d9e9312b
+RDX: 0000000000000941 RSI: 00007ffda4c17f46 RDI: 00000000ffffff9c
+RBP: 00007ffda4c17f46 R08: 0000000000000000 R09: 0000000000000001
+R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000941
+R13: 00007fe4d9f631a4 R14: 00007ffda4c17f46 R15: 0000000000000000
+ </TASK>
+XFS (sdb): Corruption detected. Unmount and run xfs_repair
 
---D
+[1] https://lore.kernel.org/all/20220928095355.2074025-1-guoxuenan@huawei.com/
+Reviewed-by: Hou Tao <houtao1@huawei.com>
+Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+---
+ fs/xfs/libxfs/xfs_dir2_leaf.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index d9b66306a9a7..bf4633b228cd 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -146,6 +146,7 @@ xfs_dir3_leaf_check_int(
+ 	xfs_dir2_leaf_tail_t		*ltp;
+ 	int				stale;
+ 	int				i;
++	xfs_dir2_db_t			db;
+ 
+ 	ltp = xfs_dir2_leaf_tail_p(geo, leaf);
+ 
+@@ -175,6 +176,9 @@ xfs_dir3_leaf_check_int(
+ 		}
+ 		if (hdr->ents[i].address == cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
+ 			stale++;
++		db = xfs_dir2_dataptr_to_db(geo, be32_to_cpu(hdr->ents[i].address));
++		if (db >= be32_to_cpu(ltp->bestcount))
++			return __this_address;
+ 	}
+ 	if (hdr->stale != stale)
+ 		return __this_address;
+-- 
+2.25.1
+
