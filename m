@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20EC6C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Sep 2022 11:27:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13013C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Sep 2022 11:27:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231764AbiI3L1C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Sep 2022 07:27:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52552 "EHLO
+        id S231300AbiI3L1S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Sep 2022 07:27:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230085AbiI3L02 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2022 07:26:28 -0400
+        with ESMTP id S230365AbiI3L0a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2022 07:26:30 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBC56FAEA;
-        Fri, 30 Sep 2022 04:18:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BA4E33F;
+        Fri, 30 Sep 2022 04:19:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AC356B827AA;
-        Fri, 30 Sep 2022 11:18:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5374EC433C1;
-        Fri, 30 Sep 2022 11:18:42 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1AC6DB82796;
+        Fri, 30 Sep 2022 11:19:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0497C4347C;
+        Fri, 30 Sep 2022 11:18:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664536724;
-        bh=qW5czRWn4GLiEtwmzJqFOMVb5w3oIFlZuNEbzaPShnI=;
-        h=From:To:Cc:Subject:Date:From;
-        b=qclGvuAaez5oX3gT5MUceMEYs9CNEX5R4R1bJF3WZ+L0+aYeWJ84DC5WTsT2xi8ia
-         U6cqxRjw80Txiw9vnu1hf973zEHsjPBWdl8q8vj7PSw8GbhVSfgi/4a5NVCGKZOFIU
-         BpT/1wGxzvsMtbjFGbXSIjk1VDdol6BqOFBhGa/z+KyWOLCN3krK9RFIpF/7dg0cLx
-         p6ye45BNLcd1z55bJMnBvTPVQcy4ZQA0nChO3ZKY63MmuWekHHjZTQnp5zC7tNugQh
-         FNt3Gv9RE0QvUuoMNl57bfwV9VVo6BLFr0yJH7M/cCMBzImSL2XuPSc1fpR8Xthb0H
-         z2UeJq0yMeptA==
+        s=k20201202; t=1664536739;
+        bh=St1cCChc0lbaP2GGgoYTfAcwzz9QW4MhOm7A/jIRCQo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=kMwAocvfHTBKUtRqGroqE07NXObF5mX7jhX8Yb75KJ4sLpO6GlqOMMbKvITUPYfDG
+         VhfFiQdBwCDsLYoWGp0y+JBTZy+X6CxdqsNIuRCyrFFtQE6m6Dd31cQAhlMcTrWUin
+         uCWwnsAOKlIMBSMoOqhAfKjdBmumYru8t29F21uX2gOVDn61SaA/jZieZliVKTQMhh
+         5T5zCYz+IqB3XcLMC2kFSiwNDl43vnl61dWKX8TqFGByzF3u0ZsTTogDC4YAuoJVcS
+         O9LWMRwSxm/DtMXhe3LJPWKnvulaQEsZvuS1TFagOrdQ/WbFuCNC/LAvnRxGdJ7/NV
+         uwyWWsIN1JHtQ==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
         david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
@@ -40,79 +40,156 @@ To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
 Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH v6 0/9] vfs/nfsd: clean up handling of i_version counter
-Date:   Fri, 30 Sep 2022 07:18:31 -0400
-Message-Id: <20220930111840.10695-1-jlayton@kernel.org>
+        linux-xfs@vger.kernel.org, Jeff Layton <jlayton@redhat.com>
+Subject: [PATCH v6 7/9] vfs: expose STATX_VERSION to userland
+Date:   Fri, 30 Sep 2022 07:18:38 -0400
+Message-Id: <20220930111840.10695-8-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.3
+In-Reply-To: <20220930111840.10695-1-jlayton@kernel.org>
+References: <20220930111840.10695-1-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-v6: add support for STATX_ATTR_VERSION_MONOTONIC
-    add patch to expose i_version counter to userland
-    patches to update times/version after copying write data
+From: Jeff Layton <jlayton@redhat.com>
 
-An updated set of i_version handling changes! I've dropped the earlier
-ext4 patches since Ted has picked up the relevant ext4 ones.
+Claim one of the spare fields in struct statx to hold a 64-bit inode
+version attribute. When userland requests STATX_VERSION, copy the
+value from the kstat struct there, and stop masking off
+STATX_ATTR_VERSION_MONOTONIC.
 
-This set is based on linux-next, to make sure we don't collide with the
-statx DIO alignment patches, and some other i_version cleanups that are
-in flight.  I'm hoping those land in 6.1.
+Update the test-statx sample program to output the change attr and
+MountId.
 
-There are a few changes since v5, mostly centered around adding
-STATX_ATTR_VERSION_MONOTONIC. I've also re-added the patch to expose
-STATX_VERSION to userland via statx. What I'm proposing should now
-(mostly) conform to the semantics I layed out in the manpage patch I
-sent recently [1].
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+ fs/stat.c                 | 12 +++---------
+ include/linux/stat.h      |  9 ---------
+ include/uapi/linux/stat.h |  6 ++++--
+ samples/vfs/test-statx.c  |  8 ++++++--
+ 4 files changed, 13 insertions(+), 22 deletions(-)
 
-Finally, I've added two patches to make __generic_file_write_iter and
-ext4 update the c/mtime after copying file data instead of before, which
-Neil pointed out makes for better cache-coherency handling. Those should
-take care of ext4 and tmpfs. xfs and btrfs will need to make the same
-changes.
-
-One thing I'm not sure of is what we should do if update_times fails
-after an otherwise successful write. Should we just ignore that and move
-on (and maybe WARN)? Return an error? Set a writeback error? What's the
-right recourse there?
-
-I'd like to go ahead and get the first 6 patches from this series into
-linux-next fairly soon, so if anyone has objections, please speak up!
-
-[1]: https://lore.kernel.org/linux-nfs/20220928134200.28741-1-jlayton@kernel.org/T/#u
-
-Jeff Layton (9):
-  iversion: move inode_query_iversion to libfs.c
-  iversion: clarify when the i_version counter must be updated
-  vfs: plumb i_version handling into struct kstat
-  nfs: report the inode version in getattr if requested
-  ceph: report the inode version in getattr if requested
-  nfsd: use the getattr operation to fetch i_version
-  vfs: expose STATX_VERSION to userland
-  vfs: update times after copying data in __generic_file_write_iter
-  ext4: update times after I/O in write codepaths
-
- fs/ceph/inode.c           | 16 +++++++++----
- fs/ext4/file.c            | 20 +++++++++++++---
- fs/libfs.c                | 36 +++++++++++++++++++++++++++++
- fs/nfs/export.c           |  7 ------
- fs/nfs/inode.c            | 10 ++++++--
- fs/nfsd/nfs4xdr.c         |  4 +++-
- fs/nfsd/nfsfh.c           | 40 ++++++++++++++++++++++++++++++++
- fs/nfsd/nfsfh.h           | 29 +----------------------
- fs/nfsd/vfs.h             |  7 +++++-
- fs/stat.c                 |  7 ++++++
- include/linux/exportfs.h  |  1 -
- include/linux/iversion.h  | 48 ++++++++-------------------------------
- include/linux/stat.h      |  2 +-
- include/uapi/linux/stat.h |  6 +++--
- mm/filemap.c              | 17 ++++++++++----
- samples/vfs/test-statx.c  |  8 +++++--
- 16 files changed, 163 insertions(+), 95 deletions(-)
-
+diff --git a/fs/stat.c b/fs/stat.c
+index e7f8cd4b24e1..8396c372022f 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -593,11 +593,9 @@ cp_statx(const struct kstat *stat, struct statx __user *buffer)
+ 
+ 	memset(&tmp, 0, sizeof(tmp));
+ 
+-	/* STATX_VERSION is kernel-only for now */
+-	tmp.stx_mask = stat->result_mask & ~STATX_VERSION;
++	tmp.stx_mask = stat->result_mask;
+ 	tmp.stx_blksize = stat->blksize;
+-	/* STATX_ATTR_VERSION_MONOTONIC is kernel-only for now */
+-	tmp.stx_attributes = stat->attributes & ~STATX_ATTR_VERSION_MONOTONIC;
++	tmp.stx_attributes = stat->attributes;
+ 	tmp.stx_nlink = stat->nlink;
+ 	tmp.stx_uid = from_kuid_munged(current_user_ns(), stat->uid);
+ 	tmp.stx_gid = from_kgid_munged(current_user_ns(), stat->gid);
+@@ -621,6 +619,7 @@ cp_statx(const struct kstat *stat, struct statx __user *buffer)
+ 	tmp.stx_mnt_id = stat->mnt_id;
+ 	tmp.stx_dio_mem_align = stat->dio_mem_align;
+ 	tmp.stx_dio_offset_align = stat->dio_offset_align;
++	tmp.stx_version = stat->version;
+ 
+ 	return copy_to_user(buffer, &tmp, sizeof(tmp)) ? -EFAULT : 0;
+ }
+@@ -636,11 +635,6 @@ int do_statx(int dfd, struct filename *filename, unsigned int flags,
+ 	if ((flags & AT_STATX_SYNC_TYPE) == AT_STATX_SYNC_TYPE)
+ 		return -EINVAL;
+ 
+-	/* STATX_VERSION is kernel-only for now. Ignore requests
+-	 * from userland.
+-	 */
+-	mask &= ~STATX_VERSION;
+-
+ 	error = vfs_statx(dfd, filename, flags, &stat, mask);
+ 	if (error)
+ 		return error;
+diff --git a/include/linux/stat.h b/include/linux/stat.h
+index 4e9428d86a3a..69c79e4fd1b1 100644
+--- a/include/linux/stat.h
++++ b/include/linux/stat.h
+@@ -54,13 +54,4 @@ struct kstat {
+ 	u32		dio_offset_align;
+ 	u64		version;
+ };
+-
+-/* These definitions are internal to the kernel for now. Mainly used by nfsd. */
+-
+-/* mask values */
+-#define STATX_VERSION		0x40000000U	/* Want/got stx_change_attr */
+-
+-/* file attribute values */
+-#define STATX_ATTR_VERSION_MONOTONIC	0x8000000000000000ULL /* version monotonically increases */
+-
+ #endif
+diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
+index 7cab2c65d3d7..4a0a1f27c059 100644
+--- a/include/uapi/linux/stat.h
++++ b/include/uapi/linux/stat.h
+@@ -127,7 +127,8 @@ struct statx {
+ 	__u32	stx_dio_mem_align;	/* Memory buffer alignment for direct I/O */
+ 	__u32	stx_dio_offset_align;	/* File offset alignment for direct I/O */
+ 	/* 0xa0 */
+-	__u64	__spare3[12];	/* Spare space for future expansion */
++	__u64	stx_version; /* Inode change attribute */
++	__u64	__spare3[11];	/* Spare space for future expansion */
+ 	/* 0x100 */
+ };
+ 
+@@ -154,6 +155,7 @@ struct statx {
+ #define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
+ #define STATX_MNT_ID		0x00001000U	/* Got stx_mnt_id */
+ #define STATX_DIOALIGN		0x00002000U	/* Want/got direct I/O alignment info */
++#define STATX_VERSION		0x00004000U	/* Want/got stx_version */
+ 
+ #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx expansion */
+ 
+@@ -189,6 +191,6 @@ struct statx {
+ #define STATX_ATTR_MOUNT_ROOT		0x00002000 /* Root of a mount */
+ #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
+ #define STATX_ATTR_DAX			0x00200000 /* File is currently in DAX state */
+-
++#define STATX_ATTR_VERSION_MONOTONIC	0x00400000 /* stx_version increases w/ every change */
+ 
+ #endif /* _UAPI_LINUX_STAT_H */
+diff --git a/samples/vfs/test-statx.c b/samples/vfs/test-statx.c
+index 49c7a46cee07..bdbc371c9774 100644
+--- a/samples/vfs/test-statx.c
++++ b/samples/vfs/test-statx.c
+@@ -107,6 +107,8 @@ static void dump_statx(struct statx *stx)
+ 	printf("Device: %-15s", buffer);
+ 	if (stx->stx_mask & STATX_INO)
+ 		printf(" Inode: %-11llu", (unsigned long long) stx->stx_ino);
++	if (stx->stx_mask & STATX_MNT_ID)
++		printf(" MountId: %llx", stx->stx_mnt_id);
+ 	if (stx->stx_mask & STATX_NLINK)
+ 		printf(" Links: %-5u", stx->stx_nlink);
+ 	if (stx->stx_mask & STATX_TYPE) {
+@@ -145,7 +147,9 @@ static void dump_statx(struct statx *stx)
+ 	if (stx->stx_mask & STATX_CTIME)
+ 		print_time("Change: ", &stx->stx_ctime);
+ 	if (stx->stx_mask & STATX_BTIME)
+-		print_time(" Birth: ", &stx->stx_btime);
++		print_time("Birth: ", &stx->stx_btime);
++	if (stx->stx_mask & STATX_VERSION)
++		printf("Inode Version: 0x%llx\n", stx->stx_version);
+ 
+ 	if (stx->stx_attributes_mask) {
+ 		unsigned char bits, mbits;
+@@ -218,7 +222,7 @@ int main(int argc, char **argv)
+ 	struct statx stx;
+ 	int ret, raw = 0, atflag = AT_SYMLINK_NOFOLLOW;
+ 
+-	unsigned int mask = STATX_BASIC_STATS | STATX_BTIME;
++	unsigned int mask = STATX_BASIC_STATS | STATX_BTIME | STATX_MNT_ID | STATX_VERSION;
+ 
+ 	for (argv++; *argv; argv++) {
+ 		if (strcmp(*argv, "-F") == 0) {
 -- 
 2.37.3
 
