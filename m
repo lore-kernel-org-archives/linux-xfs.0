@@ -2,74 +2,165 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB13C43217
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Sep 2022 08:03:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9919C41535
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Sep 2022 11:27:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229852AbiI3IDZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Sep 2022 04:03:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53872 "EHLO
+        id S232113AbiI3L1C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Sep 2022 07:27:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230261AbiI3IDW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2022 04:03:22 -0400
-X-Greylist: delayed 447 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 30 Sep 2022 01:03:21 PDT
-Received: from mail.lefinish.com (mail.lefinish.com [45.86.209.157])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB24D129FC8
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Sep 2022 01:03:21 -0700 (PDT)
-Received: by mail.lefinish.com (Postfix, from userid 1001)
-        id D7AC383BC6; Fri, 30 Sep 2022 09:55:46 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=lefinish.com; s=mail;
-        t=1664524552; bh=gfWmJwOZk+B/IN1TMPg7emKhIvoExrJdUiyEL8yd2Jk=;
-        h=Date:From:To:Subject:From;
-        b=G5txT/bIg3Vr/XEO2BnvLcNqQ7QVLf6fvuvo41p5K391nXcBdXJe2+ZOzjJjUJ8HK
-         +okxYanma728VFezU8oTUr1njLnW7WSgo/KP0A2CqdRT5YmMd62yLoo8YkjKAjk/94
-         RTgHaKCw4GtbcwQ66E+m8WQJMTUGeVHnKzHDZyDqzS15UbNG1Kb4teu6I9vFr3Ld+M
-         n/EgrHMXiWNxqp4ctpqFyA35stIf8ARD/KMlmcW7XqSr9JIBiJTzwwdhaAm0Zxi0Ug
-         AYOMjUSXjvi6eGdCLXfgdZ6q6Qbka8QWYjsv8g2CPgT4uCwkkDBEJ2iWvopcD0zvip
-         WY7jJUpAB/9uw==
-Received: by mail.lefinish.com for <linux-xfs@vger.kernel.org>; Fri, 30 Sep 2022 07:55:46 GMT
-Message-ID: <20220930084500-0.1.1x.8wbo.0.cb6rn4x1bn@lefinish.com>
-Date:   Fri, 30 Sep 2022 07:55:46 GMT
-From:   "Corey Webb" <corey.webb@lefinish.com>
-To:     <linux-xfs@vger.kernel.org>
-Subject: Help with the project
-X-Mailer: mail.lefinish.com
+        with ESMTP id S232307AbiI3L02 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2022 07:26:28 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87D3929378;
+        Fri, 30 Sep 2022 04:18:49 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C1731B8280C;
+        Fri, 30 Sep 2022 11:18:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AA6AC43470;
+        Fri, 30 Sep 2022 11:18:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664536726;
+        bh=S/Dx1SlVR4nhbzfbebAjqPJrTxRJSD7/7YKwODgznpg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=qqhBm8i+JoI2zMoaavTiAn1oZA2BRa2zQ73rhoHUGNk2X16KSZTAPGBSp45NIvjov
+         sPmWO0td/2BEU9CvBurIUiLAmE0gfKdkstk5LGPWvCSUsvyTz7qMr1aCwoQcJU6K6J
+         bXSLl771ipnsemKit3USDA8GfYnigLhyirbjYZ3yMXTWFfViPZiNUu+aMtwVfhDrMC
+         elCka/qE+claAKyQDuyP4+xRHOCgTxrlM+gTI4bdzoVuKEBkUtpUvSq7H2N2lpRm0s
+         7V0DUa82mgFAwJt5InCu2EVTFKfpd+/o+dcLP5dieoaNLOyu3NZDhlR08hlA2JsR7h
+         YM9w3zRGytFhQ==
+From:   Jeff Layton <jlayton@kernel.org>
+To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
+        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com
+Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: [PATCH v6 1/9] iversion: move inode_query_iversion to libfs.c
+Date:   Fri, 30 Sep 2022 07:18:32 -0400
+Message-Id: <20220930111840.10695-2-jlayton@kernel.org>
+X-Mailer: git-send-email 2.37.3
+In-Reply-To: <20220930111840.10695-1-jlayton@kernel.org>
+References: <20220930111840.10695-1-jlayton@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,=20
+There's no need to have such a large function forcibly inlined.
 
-I would like to reach the person responsible for the implementation of yo=
-ur company's goals, vision and mission or the decision-maker in the devel=
-opment of your technology strategy.
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+ fs/libfs.c               | 36 ++++++++++++++++++++++++++++++++++++
+ include/linux/iversion.h | 38 ++------------------------------------
+ 2 files changed, 38 insertions(+), 36 deletions(-)
 
-I represent provider of lucrative IT solutions that remove the barriers t=
-o process development resulting from limited access to appropriate IT res=
-ources.
-
-We guarantee you access to the knowledge and experience of outstanding 3,=
-000 software developers from Poland and 500 professional consultants and =
-senior developers in the United States and other Western countries. =20
-
-We respond to a variety of needs, ranging from expanding your project tea=
-m with specialists with specific skills to supporting project managers, e=
-xperienced innovation teams to creating a Minimum Viable Project (MVP).
-
-The comprehensiveness of our services guarantees you dynamic software dev=
-elopment including creation, testing and implementation systems that are =
-the backbone of effective management of the entire organization.
-
-A partnership that lasts for years is the best proof that our clients mee=
-t their unique requirements within a specific timeframe, introduce new op=
-portunities and grow their business while we solve their problems.
-
-Are you available for a brief call? I will be looking forward to hearing =
-from you.
-
-
-Best regards
-Corey Webb
+diff --git a/fs/libfs.c b/fs/libfs.c
+index 682d56345a1c..5ae81466a422 100644
+--- a/fs/libfs.c
++++ b/fs/libfs.c
+@@ -1566,3 +1566,39 @@ bool inode_maybe_inc_iversion(struct inode *inode, bool force)
+ 	return true;
+ }
+ EXPORT_SYMBOL(inode_maybe_inc_iversion);
++
++/**
++ * inode_query_iversion - read i_version for later use
++ * @inode: inode from which i_version should be read
++ *
++ * Read the inode i_version counter. This should be used by callers that wish
++ * to store the returned i_version for later comparison. This will guarantee
++ * that a later query of the i_version will result in a different value if
++ * anything has changed.
++ *
++ * In this implementation, we fetch the current value, set the QUERIED flag and
++ * then try to swap it into place with a cmpxchg, if it wasn't already set. If
++ * that fails, we try again with the newly fetched value from the cmpxchg.
++ */
++u64 inode_query_iversion(struct inode *inode)
++{
++	u64 cur, new;
++
++	cur = inode_peek_iversion_raw(inode);
++	do {
++		/* If flag is already set, then no need to swap */
++		if (cur & I_VERSION_QUERIED) {
++			/*
++			 * This barrier (and the implicit barrier in the
++			 * cmpxchg below) pairs with the barrier in
++			 * inode_maybe_inc_iversion().
++			 */
++			smp_mb();
++			break;
++		}
++
++		new = cur | I_VERSION_QUERIED;
++	} while (!atomic64_try_cmpxchg(&inode->i_version, &cur, new));
++	return cur >> I_VERSION_QUERIED_SHIFT;
++}
++EXPORT_SYMBOL(inode_query_iversion);
+diff --git a/include/linux/iversion.h b/include/linux/iversion.h
+index e27bd4f55d84..6755d8b4f20b 100644
+--- a/include/linux/iversion.h
++++ b/include/linux/iversion.h
+@@ -234,42 +234,6 @@ inode_peek_iversion(const struct inode *inode)
+ 	return inode_peek_iversion_raw(inode) >> I_VERSION_QUERIED_SHIFT;
+ }
+ 
+-/**
+- * inode_query_iversion - read i_version for later use
+- * @inode: inode from which i_version should be read
+- *
+- * Read the inode i_version counter. This should be used by callers that wish
+- * to store the returned i_version for later comparison. This will guarantee
+- * that a later query of the i_version will result in a different value if
+- * anything has changed.
+- *
+- * In this implementation, we fetch the current value, set the QUERIED flag and
+- * then try to swap it into place with a cmpxchg, if it wasn't already set. If
+- * that fails, we try again with the newly fetched value from the cmpxchg.
+- */
+-static inline u64
+-inode_query_iversion(struct inode *inode)
+-{
+-	u64 cur, new;
+-
+-	cur = inode_peek_iversion_raw(inode);
+-	do {
+-		/* If flag is already set, then no need to swap */
+-		if (cur & I_VERSION_QUERIED) {
+-			/*
+-			 * This barrier (and the implicit barrier in the
+-			 * cmpxchg below) pairs with the barrier in
+-			 * inode_maybe_inc_iversion().
+-			 */
+-			smp_mb();
+-			break;
+-		}
+-
+-		new = cur | I_VERSION_QUERIED;
+-	} while (!atomic64_try_cmpxchg(&inode->i_version, &cur, new));
+-	return cur >> I_VERSION_QUERIED_SHIFT;
+-}
+-
+ /*
+  * For filesystems without any sort of change attribute, the best we can
+  * do is fake one up from the ctime:
+@@ -283,6 +247,8 @@ static inline u64 time_to_chattr(struct timespec64 *t)
+ 	return chattr;
+ }
+ 
++u64 inode_query_iversion(struct inode *inode);
++
+ /**
+  * inode_eq_iversion_raw - check whether the raw i_version counter has changed
+  * @inode: inode to check
+-- 
+2.37.3
 
