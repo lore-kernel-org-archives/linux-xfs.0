@@ -2,340 +2,197 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE791C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Sep 2022 23:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6122C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Sep 2022 00:33:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbiI2Xdh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Sep 2022 19:33:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39262 "EHLO
+        id S229853AbiI3Ad5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Sep 2022 20:33:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229695AbiI2Xdg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2022 19:33:36 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EEE2148A3B;
-        Thu, 29 Sep 2022 16:33:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1664494415; x=1696030415;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=YODarNyCUPSF5Edu5GDkNQ/U/BYzubYuSL0cEGsufkw=;
-  b=afTKj4GNof1LvRLcyLsoZikTtinT4O3vLLLqn7f88jRO6kDCcIX+XyQU
-   i0BVaDxbdw2IqPlEb2y+EWI8o9bTwjCLSfkX26INWHP8DG+ces4Fp/G0n
-   1gWOjdvE5bUA/epus/J6cLe0LUMsckNz+S6SDcns4twt1HzxRuMojmy/+
-   wV/WvhG/kI2sJSc9DLZxrE/WLPXpvtwyJ072iuNMgu7c+DhbhVec+dNc1
-   vfmwlE9I2BgJoGD3iOL4cKXYvYmcUG/mXMfVzfkrU+IN05yFCaizYFvb3
-   XJi6Wnwdv1wZ6yxvUGe4cfffxR0/VUhB0PuhicZT5vykLY8SjHY0NGO69
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10485"; a="285193024"
-X-IronPort-AV: E=Sophos;i="5.93,356,1654585200"; 
-   d="scan'208";a="285193024"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2022 16:33:34 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10485"; a="711588817"
-X-IronPort-AV: E=Sophos;i="5.93,356,1654585200"; 
-   d="scan'208";a="711588817"
-Received: from orsmsx601.amr.corp.intel.com ([10.22.229.14])
-  by FMSMGA003.fm.intel.com with ESMTP; 29 Sep 2022 16:33:34 -0700
-Received: from orsmsx607.amr.corp.intel.com (10.22.229.20) by
- ORSMSX601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 29 Sep 2022 16:33:33 -0700
-Received: from orsmsx607.amr.corp.intel.com (10.22.229.20) by
- ORSMSX607.amr.corp.intel.com (10.22.229.20) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 29 Sep 2022 16:33:33 -0700
-Received: from orsedg603.ED.cps.intel.com (10.7.248.4) by
- orsmsx607.amr.corp.intel.com (10.22.229.20) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31 via Frontend Transport; Thu, 29 Sep 2022 16:33:33 -0700
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (104.47.66.42) by
- edgegateway.intel.com (134.134.137.100) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2375.31; Thu, 29 Sep 2022 16:33:33 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hMJUKcxE5PH290xShl8JaVns9RwS3tzRMoR1PI+ZyQ5tUrWu2/7ztQKRCU3WGaQEm2vQjHJrtkdgPCZU/jeqFCKqzv3UviamLjLDBq+7KtjOKsOhnUVd6eBcF8h4zBOVHBKnvx2jJZmiTNtPLOvSHTQ9ozKCd85B1VTVyBSl5SYbtFKPi5nJr+QlDJTOw89rxxC26kSGtL24PD76e9Pcf1u0hu8QU0jY/YDKU7ORVlnWMIhxOeM9nnzcYEC6WLVaS7Qm7cq8LadmrzcrrpFdpn2U8YaVqccAw2gds6FPgUqqK7j6rRpd8Y+7k+YlpfACjhlVw/Rqck75fWLOBgx2mw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=YYt3TiYg8LBLIfJZIj/MPC3BExVArjXnHuO7Pv9WkDs=;
- b=kBbUaDF8g+BWL324G5qqAJQM6MUIRayI4YKChDPx1AimuLoz4XdrB1bk6vuKS9ZXjrWXZh967QAThF1EdkEvY8xCNan4/lLGOWJjofLtr/ER3hjvHv7r9n55qETAI5xXk5G5VxOial58CUrrwIWxwdKV1qpLC7LW5mq3jfE1xnWcV6FZQj3oE3Z8IDrnZLbUychwAgs6EN92HiC8ytpkl+5GFRrn1A4dOkfDoUy6uhkJPZVVssZ/J6oxTjIJ4mrwpEQGSK3WoVhTHKPWVRiTfcS+4Pr0R2q/xOyAe814JsjGxQRCvGWPtRVPcsgmrn+Avr3ducR3zDedUXVStgTfPQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
- (2603:10b6:301:50::20) by IA0PR11MB7210.namprd11.prod.outlook.com
- (2603:10b6:208:440::20) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.26; Thu, 29 Sep
- 2022 23:33:30 +0000
-Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
- ([fe80::7d5a:684d:99f7:4e83]) by MWHPR1101MB2126.namprd11.prod.outlook.com
- ([fe80::7d5a:684d:99f7:4e83%12]) with mapi id 15.20.5676.017; Thu, 29 Sep
- 2022 23:33:30 +0000
-Date:   Thu, 29 Sep 2022 16:33:27 -0700
-From:   Dan Williams <dan.j.williams@intel.com>
-To:     Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>
-CC:     Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>,
-        "Jason Gunthorpe" <jgg@nvidia.com>, <akpm@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Christoph Hellwig" <hch@lst.de>,
-        John Hubbard <jhubbard@nvidia.com>,
-        <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>,
-        <linux-ext4@vger.kernel.org>
-Subject: Re: [PATCH v2 05/18] xfs: Add xfs_break_layouts() to the inode
- eviction path
-Message-ID: <63362b4781294_795a6294f0@dwillia2-xfh.jf.intel.com.notmuch>
-References: <20220919212959.GL3600936@dread.disaster.area>
- <6329ee04c9272_2a6ded294bf@dwillia2-xfh.jf.intel.com.notmuch>
- <20220921221416.GT3600936@dread.disaster.area>
- <YyuQI08LManypG6u@nvidia.com>
- <20220923001846.GX3600936@dread.disaster.area>
- <632d00a491d0d_4a67429488@dwillia2-xfh.jf.intel.com.notmuch>
- <20220923021012.GZ3600936@dread.disaster.area>
- <20220923093803.nroajmvn7twuptez@quack3>
- <20220925235407.GA3600936@dread.disaster.area>
- <20220926141055.sdlm3hkfepa7azf2@quack3>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20220926141055.sdlm3hkfepa7azf2@quack3>
-X-ClientProxiedBy: SJ0PR03CA0039.namprd03.prod.outlook.com
- (2603:10b6:a03:33e::14) To MWHPR1101MB2126.namprd11.prod.outlook.com
- (2603:10b6:301:50::20)
+        with ESMTP id S229771AbiI3Ad4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2022 20:33:56 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E9D69201928;
+        Thu, 29 Sep 2022 17:33:54 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id F14211101193;
+        Fri, 30 Sep 2022 10:33:52 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oe3yR-00DlGg-OL; Fri, 30 Sep 2022 10:33:51 +1000
+Date:   Fri, 30 Sep 2022 10:33:51 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     cgroups@vger.kernel.org
+Cc:     linux-mm@kvack.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] memcg: calling reclaim_high(GFP_KERNEL) in GFP_NOFS
+ context deadlocks
+Message-ID: <20220930003351.GJ3600936@dread.disaster.area>
+References: <20220929215440.1967887-1-david@fromorbit.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWHPR1101MB2126:EE_|IA0PR11MB7210:EE_
-X-MS-Office365-Filtering-Correlation-Id: f1bee1f8-54bd-4d03-1ac4-08daa2730435
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: V5/lihoI/MKJXlEBMEUM4NUPMUUkSzujDK+x8ynssmmJWCrI3OU8lLNo0x/EJL3QS3zx0R3jiuCnvu+CwVWi88wXxOrHr9UI1W3CWK78rEdojq3VXuYyRH+v0U38zXij2SWI7XKwyks9Tna/8Xl9+EVbrgSjQ/DH2e7+OMH07bIOvh3ce1PVEyRSt6AVSX1D1FuJ1RR2a7zZ2ricgOgBf9Y7eiGJjQoyGsLXLF3D+9Bx81Cnu2JPbOwEIPW3VeEwXJo5AgbVl0jwG2QSdcO7pyVQ97VKQsy9AKKK5UqshnDPTbzLgMMtJKj5xLw72afK7aMoI+xaN1TAtD38n9aAIGwop5r0SVGtO86f9vTeVP7DdgwovSNoVHW+EJmNQs4LNQKJK33yGlkz8bNeTh7oVpQnSK4+WH0JB9LtrCOEk4zjoUA8yXgLHv2jNESVMEeuFyDdm97I5ZBngmTpwtJCDZO/u6V3JPoZUe0gS/0FoKW/JJm9eg0aJ6mqVyHMYgiTE1A/tVEzSDJoJzOrOzTKTyyh2vIL/dnqJXZKmSRufZW8GAocCTpR6rYtBPMmLtH1StQlYI/OAolut4ajallcQCro0hGqUmqZHsWATMrmunwoaR7n9TfyIZNHK2GzusG/iCD23ePoJ9a6UHOr5KDJSfD08rZjAbWYhK+fLaOfdDLCYp9rOeyrB863MuujtTLtmhrM3NOYuHrWrLsZuWTC4wUX85aZHI2QnW2LzwGqlSuT6y+PHWPMpNzSNZ7AAtyZ
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1101MB2126.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(376002)(39860400002)(136003)(346002)(396003)(366004)(451199015)(5660300002)(2906002)(6486002)(38100700002)(86362001)(478600001)(82960400001)(7416002)(186003)(66946007)(54906003)(8676002)(110136005)(4326008)(966005)(8936002)(41300700001)(316002)(66556008)(66476007)(6666004)(9686003)(26005)(6512007)(83380400001)(66899015)(6506007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?fZuncF4KqQ4D1lYmMqHPbzYgAfr9JdNAAL5NUAuVCWReUgIz7hAw6DpVampy?=
- =?us-ascii?Q?Db8NUK6EXtJoNuUV2+Ezau1xs8FHM3I2Q6kRHMRWUxZVtJmTuofAffTlKU/C?=
- =?us-ascii?Q?SiAoVPrw9/U0m3oaF9flZEPE2W2noxfNXEIEq1qf5WTF/2eNjni+lWGNY2pL?=
- =?us-ascii?Q?K8bbc688df24zaOffzRiGts2qZxVJbVOQ8cI03NU3NBEA4upgUbcHaDfOa9c?=
- =?us-ascii?Q?QBrvJCaHUE15U2TkbBTXByqmz7EsSzlYMhrv1yhnreOb8OWRMh98XAQXIFZZ?=
- =?us-ascii?Q?rU9C1uKimEWRpJ8JTPqLkfZppVEee4S0unqTJITF6RLwcolrTcdPKzxUWEMs?=
- =?us-ascii?Q?OzBJTaey3dRZkIiDC/YDUfQQ/vFxhYYM8YGUT/91znxjx/tVWfTGUjqvDb2L?=
- =?us-ascii?Q?JDlF/UVmibVfGh9NByK98FVOIz4wSUyo32vifzQEj6wS1iuzD7fON9ngPS0x?=
- =?us-ascii?Q?rj3thsuRQ7Fmy7zm5rz33YEX1H55zOlONMMu+d49DWCB1glukUNfi+YJCQfu?=
- =?us-ascii?Q?msaEvjouLbWl+pGGfXT7WMZCojc2b+WgrolOlCyR+7NFUxc8Tt/FtLUraKCK?=
- =?us-ascii?Q?fa9ic1yqybv5JvI70pUx9sFNnAa6vBFn/avXr7nJcNNnQd/hk6xBkWfAE32N?=
- =?us-ascii?Q?dJmu133nfKM1xXH8mj6j5fZ1+ATFe3RdLC+Bl9TpbhTeaSmKW0TdkhIqb68Y?=
- =?us-ascii?Q?rHlESb59lRLOop2tko2jn7MJcdD5xeM+Co6131VgdiSD9CIYShPAAj8J15tG?=
- =?us-ascii?Q?ArYYyPAnu75tWMlhwxBx6FybS4u5Zk2JlVX5SxIVZN6aM1625qwDX6ediXt2?=
- =?us-ascii?Q?JFTv9YdAHNl/XvgKqVLPF6+9/iU2X+4o1AIwngVBBSi2cKWanc0MeBdPkpQH?=
- =?us-ascii?Q?M6Gq5gi+A6OvZW4iknIxaPSFymDGE9/QgCu/wE+v+V060n94pslLcu94/KtI?=
- =?us-ascii?Q?9xqvwftu4Prk1/wpgoBzS0UYoZqMuHWRxfBGTYognSspT6PORHDmFbIBpM07?=
- =?us-ascii?Q?7Kuzoyg6EWusQF/A8QS5dxjtH2UtAZ5Mi6DrlFHWoGyhH+q6sex65RIU9QZJ?=
- =?us-ascii?Q?6UgBqx2BivfcS4nB6UeCPeDr+nDo7iZyTdcCoSMCYkNL/kovpouxtDG9pab2?=
- =?us-ascii?Q?SjJ3qeYTJfst7tYkr/tgE5w6X6oYOfDjl4Q9cAC0nVBr0pDpPLxeT+4XAL+S?=
- =?us-ascii?Q?HOeRaLSimtWsoI9qVjDSDjFBVBsNTSHJAMfxBwo+FkuebkbGxpviEuZtothA?=
- =?us-ascii?Q?q81EnFVF30fgZHjBie/HrjtFE6OpDV12yiE0rL59z+o96kOJkaiXcPGNGm91?=
- =?us-ascii?Q?FVX8EGzHxTBmuQ6szJ8TyuGWVfgIgTLXVGMryXSlyu3eQKbcLWwTSAVoxLy1?=
- =?us-ascii?Q?BEAKSiZlDqBIRG6n2pABdHMGSLCUYz5eu54WmbZaphclyunligYJO8UGd48s?=
- =?us-ascii?Q?vNqprJT/LJLpajwdB0S4R/Xo0s9wrbOY2uaV/PEvvnYMJSjHz5G/Z79VMiDI?=
- =?us-ascii?Q?RkQoz4Bu9TCf2i9Rw5t/EUpZ3xCoZjOibKpSiggkhpWO7sY72AuBKtSo0SG6?=
- =?us-ascii?Q?3NU8VOMsdmdPafHokH+H13fZ6Kn+r7qedjeRMKX3M6NLPnl4M0zAXHHWFL6G?=
- =?us-ascii?Q?bQ=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: f1bee1f8-54bd-4d03-1ac4-08daa2730435
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR1101MB2126.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Sep 2022 23:33:30.4061
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: KFxikyDz/3+kbcnl/A8lptYVDe52QvVEAXI9GG0baEW8kI8dq2Ft4Am5qjMcYx76F5VOnzPix6s0pWanaRkFhULlzDd5ww7tOqY8zvusu50=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR11MB7210
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220929215440.1967887-1-david@fromorbit.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=63363972
+        a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
+        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=37rDS-QxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=fl4qZB1B0tTFcq_AKD4A:9 a=CjuIK1q_8ugA:10
+        a=k1Nq6YrhK2t884LQW06G:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Jan Kara wrote:
-> On Mon 26-09-22 09:54:07, Dave Chinner wrote:
-> > On Fri, Sep 23, 2022 at 11:38:03AM +0200, Jan Kara wrote:
-> > > On Fri 23-09-22 12:10:12, Dave Chinner wrote:
-> > > > On Thu, Sep 22, 2022 at 05:41:08PM -0700, Dan Williams wrote:
-> > > > > Dave Chinner wrote:
-> > > > > > On Wed, Sep 21, 2022 at 07:28:51PM -0300, Jason Gunthorpe wrote:
-> > > > > > > On Thu, Sep 22, 2022 at 08:14:16AM +1000, Dave Chinner wrote:
-> > > > > > > 
-> > > > > > > > Where are these DAX page pins that don't require the pin holder to
-> > > > > > > > also hold active references to the filesystem objects coming from?
-> > > > > > > 
-> > > > > > > O_DIRECT and things like it.
-> > > > > > 
-> > > > > > O_DIRECT IO to a file holds a reference to a struct file which holds
-> > > > > > an active reference to the struct inode. Hence you can't reclaim an
-> > > > > > inode while an O_DIRECT IO is in progress to it. 
-> > > > > > 
-> > > > > > Similarly, file-backed pages pinned from user vmas have the inode
-> > > > > > pinned by the VMA having a reference to the struct file passed to
-> > > > > > them when they are instantiated. Hence anything using mmap() to pin
-> > > > > > file-backed pages (i.e. applications using FSDAX access from
-> > > > > > userspace) should also have a reference to the inode that prevents
-> > > > > > the inode from being reclaimed.
-> > > > > > 
-> > > > > > So I'm at a loss to understand what "things like it" might actually
-> > > > > > mean. Can you actually describe a situation where we actually permit
-> > > > > > (even temporarily) these use-after-free scenarios?
-> > > > > 
-> > > > > Jason mentioned a scenario here:
-> > > > > 
-> > > > > https://lore.kernel.org/all/YyuoE8BgImRXVkkO@nvidia.com/
-> > > > > 
-> > > > > Multi-thread process where thread1 does open(O_DIRECT)+mmap()+read() and
-> > > > > thread2 does memunmap()+close() while the read() is inflight.
-> > > > 
-> > > > And, ah, what production application does this and expects to be
-> > > > able to process the result of the read() operation without getting a
-> > > > SEGV?
-> > > > 
-> > > > There's a huge difference between an unlikely scenario which we need
-> > > > to work (such as O_DIRECT IO to/from a mmap() buffer at a different
-> > > > offset on the same file) and this sort of scenario where even if we
-> > > > handle it correctly, the application can't do anything with the
-> > > > result and will crash immediately....
-> > > 
-> > > I'm not sure I fully follow what we are concerned about here. As you've
-> > > written above direct IO holds reference to the inode until it is completed
-> > > (through kiocb->file->inode chain). So direct IO should be safe?
-> > 
-> > AFAICT, it's the user buffer allocated by mmap() that the direct IO
-> > is DMAing into/out of that is the issue here. i.e. mmap() a file
-> > that is DAX enabled, pass the mmap region to DIO on a non-dax file,
-> > GUP in the DIO path takes a page pin on user pages that are DAX
-> > mapped, the userspace application then unmaps the file pages and
-> > unlinks the FSDAX file.
-> > 
-> > At this point the FSDAX mapped inode has no active references, so
-> > the filesystem frees the inode and it's allocated storage space, and
-> > now the DIO or whatever is holding the GUP reference is
-> > now a moving storage UAF violation. What ever is holding the GUP
-> > reference doesn't even have a reference to the FSDAX filesystem -
-> > the DIO fd could point to a file in a different filesystem
-> > altogether - and so the fsdax filesytem could be unmounted at this
-> > point whilst the application is still actively using the storage
-> > underlying the filesystem.
-> > 
-> > That's just .... broken.
+[oops, cc should have been linux-mm@kvack.org]
+
+On Fri, Sep 30, 2022 at 07:54:40AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Hum, so I'm confused (and my last email probably was as well). So let me
-> spell out the details here so that I can get on the same page about what we
-> are trying to solve:
+> This should be more obvious, but gfpflags_allow_blocking() is not
+> the same thing as a GFP_KERNEL reclaim contexts. The former checks
+> GFP_DIRECT_RECLAIM which tells us if direct reclaim is allowed. The
+> latter (GFP_KERNEL) allows blocking on anything, including
+> filesystem and IO structures during reclaim.
 > 
-> For FSDAX, backing storage for a page must not be freed (i.e., filesystem
-> must to free corresponding block) while there are some references to the
-> page. This is achieved by calls to dax_layout_busy_page() from the
-> filesystem before truncating file / punching hole into a file. So AFAICT
-> this is working correctly and I don't think the patch series under
-> discussion aims to change this besides the change in how page without
-> references is detected.
-
-Correct. All the nominal truncate paths via hole punch and
-truncate_setsize() are already handled for a long time now. However,
-what was not covered was the truncate that happens at iput_final() time.
-In that case the code has just been getting lucky for all that time.
-There is thankfully a WARN() that will trigger if the iput_final()
-truncate happens while a page is referenced, so it is at least not
-silent.
-
-I know Dave is tired of this discussion, but every time he engages the
-solution gets better, like finding this iput_final() bug, so I hope he
-continues to engage here and I'm grateful for the help.
-
-> Now there is a separate question that while someone holds a reference to
-> FSDAX page, the inode this page belongs to can get evicted from memory. For
-> FSDAX nothing prevents that AFAICT. If this happens, we loose track of the
-> page<->inode association so if somebody later comes and truncates the
-> inode, we will not detect the page belonging to the inode is still in use
-> (dax_layout_busy_page() does not find the page) and we have a problem.
-> Correct?
-
-The WARN would fire at iput_final(). Everything that happens after
-that is in UAF territory. In my brief search I did not see reports of
-this WARN firing, but it is past time to fix it.
-
-> > > I'd be more worried about stuff like vmsplice() that can add file pages
-> > > into pipe without holding inode alive in any way and keeping them there for
-> > > arbitrarily long time. Didn't we want to add FOLL_LONGTERM to gup executed
-> > > from vmsplice() to avoid issues like this?
-> > 
-> > Yes, ISTR that was part of the plan - use FOLL_LONGTERM to ensure
-> > FSDAX can't run operations that pin pages but don't take fs
-> > references. I think that's how we prevented RDMA users from pinning
-> > FSDAX direct mapped storage media in this way. It does not, however,
-> > prevent the above "short term" GUP UAF situation from occurring.
+> However, we do lots of memory allocation from various filesystems we
+> are under GFP_NOFS contexts, including page cache folios. Hence if
+> direct reclaim in GFP_NOFS context waits on filesystem progress
+> (e.g. waits on folio writeback) then memory reclaim can deadlock.
 > 
-> If what I wrote above is correct, then I understand and agree.
+> e.g. page cache allocation (which is GFP_NOFS context) gets stuck
+> waiting on page writeback like so:
 > 
-> > > I agree that freeing VMA while there are pinned pages is ... inconvenient.
-> > > But that is just how gup works since the beginning - the moment you have
-> > > struct page reference, you completely forget about the mapping you've used
-> > > to get to the page. So anything can happen with the mapping after that
-> > > moment. And in case of pages mapped by multiple processes I can easily see
-> > > that one of the processes decides to unmap the page (and it may well be
-> > > that was the initial process that acquired page references) while others
-> > > still keep accessing the page using page references stored in some internal
-> > > structure (RDMA anyone?).
-> > 
-> > Yup, and this is why RDMA on FSDAX using this method of pinning pages
-> > will end up corrupting data and filesystems, hence FOLL_LONGTERM
-> > protecting against most of these situations from even arising. But
-> > that's that workaround, not a long term solution that allows RDMA to
-> > be run on FSDAX managed storage media.
-> > 
-> > I said on #xfs a few days ago:
-> > 
-> > [23/9/22 10:23] * dchinner is getting deja vu over this latest round
-> > of "dax mappings don't pin the filesystem objects that own the
-> > storage media being mapped"
-> > 
-> > And I'm getting that feeling again right now...
-> > 
-> > > I think it will be rather difficult to come up
-> > > with some scheme keeping VMA alive while there are pages pinned without
-> > > regressing userspace which over the years became very much tailored to the
-> > > peculiar gup behavior.
-> > 
-> > Perhaps all we should do is add a page flag for fsdax mapped pages
-> > that says GUP must pin the VMA, so only mapped pages that fall into
-> > this category take the perf penalty of VMA management.
+> [   75.943494] task:test_write      state:D stack:12560 pid: 3728 ppid:  3613 flags:0x00004002
+> [   75.944788] Call Trace:
+> [   75.945183]  <TASK>
+> [   75.945543]  __schedule+0x2f9/0xa30
+> [   75.946118]  ? __mod_memcg_lruvec_state+0x41/0x90
+> [   75.946895]  schedule+0x5a/0xc0
+> [   75.947397]  io_schedule+0x42/0x70
+> [   75.947992]  folio_wait_bit_common+0x159/0x3d0
+> [   75.948732]  ? dio_warn_stale_pagecache.part.0+0x50/0x50
+> [   75.949505]  folio_wait_writeback+0x28/0x80
+> [   75.950163]  shrink_page_list+0x96e/0xc30
+> [   75.950843]  shrink_lruvec+0x558/0xb80
+> [   75.951440]  shrink_node+0x2c6/0x700
+> [   75.952059]  do_try_to_free_pages+0xd5/0x570
+> [   75.952771]  try_to_free_mem_cgroup_pages+0x105/0x220
+> [   75.953548]  reclaim_high.constprop.0+0xa3/0xf0
+> [   75.954209]  mem_cgroup_handle_over_high+0x8f/0x280
+> [   75.955025]  ? kmem_cache_alloc_lru+0x1c6/0x3f0
+> [   75.955781]  try_charge_memcg+0x6c3/0x820
+> [   75.956436]  ? __mem_cgroup_threshold+0x16/0x150
+> [   75.957204]  charge_memcg+0x76/0xf0
+> [   75.957810]  __mem_cgroup_charge+0x29/0x80
+> [   75.958464]  __filemap_add_folio+0x225/0x590
+> [   75.959112]  ? scan_shadow_nodes+0x30/0x30
+> [   75.959794]  filemap_add_folio+0x37/0xa0
+> [   75.960432]  __filemap_get_folio+0x1fd/0x340
+> [   75.961141]  ? xas_load+0x5/0xa0
+> [   75.961712]  iomap_write_begin+0x103/0x6a0
+> [   75.962390]  ? filemap_dirty_folio+0x5c/0x80
+> [   75.963106]  ? iomap_write_end+0xa2/0x2b0
+> [   75.963744]  iomap_file_buffered_write+0x17c/0x380
+> [   75.964546]  xfs_file_buffered_write+0xb1/0x2e0
+> [   75.965286]  ? xfs_file_buffered_write+0x2b2/0x2e0
+> [   75.966097]  vfs_write+0x2ca/0x3d0
+> [   75.966702]  __x64_sys_pwrite64+0x8c/0xc0
+> [   75.967349]  do_syscall_64+0x35/0x80
 > 
-> Possibly. But my concern with VMA pinning was not only about performance
-> but also about applications relying on being able to unmap pages that are
-> currently pinned. At least from some processes one of which may be the one
-> doing the original pinning. But yeah, the fact that FOLL_LONGTERM is
-> forbidden with DAX somewhat restricts the insanity we have to deal with. So
-> maybe pinning the VMA for DAX mappings might actually be a workable
-> solution.
+> At this point, the system has 58 pending XFS IO completions that are
+> stuck waiting for workqueue progress:
+> 
+> [ 1664.460579] workqueue xfs-conv/dm-0: flags=0x4c
+> [ 1664.461332]   pwq 48: cpus=24 node=3 flags=0x0 nice=0 active=58/256 refcnt=59
+> [ 1664.461335]     pending: xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io
+> 
+> and nothing is making progress. The reason progress is not being
+> made is not clear from what I can gather from the steaming corpse,
+> but it is clear that the memcg reclaim code should not be blocking
+> on filesystem related objects in GFP_NOFS allocation contexts.
+> 
+> We have the reclaim context parameters right there when we call
+> mem_cgroup_handle_over_high(), so pass them down the stack so memcg
+> reclaim doesn't cause deadlocks. This makes the reclaim deadlocks in
+> the test I've been running go away.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  include/linux/memcontrol.h       | 4 ++--
+>  include/linux/resume_user_mode.h | 2 +-
+>  mm/memcontrol.c                  | 6 +++---
+>  3 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 6257867fbf95..575bb8cfc810 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -919,7 +919,7 @@ unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
+>  	return READ_ONCE(mz->lru_zone_size[zone_idx][lru]);
+>  }
+>  
+> -void mem_cgroup_handle_over_high(void);
+> +void mem_cgroup_handle_over_high(gfp_t gfp_mask);
+>  
+>  unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg);
+>  
+> @@ -1433,7 +1433,7 @@ static inline void folio_memcg_unlock(struct folio *folio)
+>  {
+>  }
+>  
+> -static inline void mem_cgroup_handle_over_high(void)
+> +static inline void mem_cgroup_handle_over_high(gfp_t gfp_mask)
+>  {
+>  }
+>  
+> diff --git a/include/linux/resume_user_mode.h b/include/linux/resume_user_mode.h
+> index 285189454449..f8f3e958e9cf 100644
+> --- a/include/linux/resume_user_mode.h
+> +++ b/include/linux/resume_user_mode.h
+> @@ -55,7 +55,7 @@ static inline void resume_user_mode_work(struct pt_regs *regs)
+>  	}
+>  #endif
+>  
+> -	mem_cgroup_handle_over_high();
+> +	mem_cgroup_handle_over_high(GFP_KERNEL);
+>  	blkcg_maybe_throttle_current();
+>  
+>  	rseq_handle_notify_resume(NULL, regs);
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index b69979c9ced5..09fbebff9796 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2491,7 +2491,7 @@ static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
+>   * Scheduled by try_charge() to be executed from the userland return path
+>   * and reclaims memory over the high limit.
+>   */
+> -void mem_cgroup_handle_over_high(void)
+> +void mem_cgroup_handle_over_high(gfp_t gfp_mask)
+>  {
+>  	unsigned long penalty_jiffies;
+>  	unsigned long pflags;
+> @@ -2519,7 +2519,7 @@ void mem_cgroup_handle_over_high(void)
+>  	 */
+>  	nr_reclaimed = reclaim_high(memcg,
+>  				    in_retry ? SWAP_CLUSTER_MAX : nr_pages,
+> -				    GFP_KERNEL);
+> +				    gfp_mask);
+>  
+>  	/*
+>  	 * memory.high is breached and reclaim is unable to keep up. Throttle
+> @@ -2755,7 +2755,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
+>  	    !(current->flags & PF_MEMALLOC) &&
+>  	    gfpflags_allow_blocking(gfp_mask)) {
+> -		mem_cgroup_handle_over_high();
+> +		mem_cgroup_handle_over_high(gfp_mask);
+>  	}
+>  	return 0;
+>  }
+> -- 
+> 2.37.2
+> 
+> 
 
-As far as I can see, VMAs are not currently reference counted they are
-just added / deleted from an mm_struct, and nothing guarantees
-mapping_mapped() stays true while a page is pinned.
-
-I like Dave's mental model that the inode is the arbiter for the page,
-and the arbiter is not allowed to go out of scope before asserting that
-everything it granted previously has been returned.
-
-write_inode_now() unconditionally invokes dax_writeback_mapping_range()
-when the inode is committed to going out of scope. write_inode_now() is
-allowed to sleep until all dirty mapping entries are written back. I see
-nothing wrong with additionally checking for entries with elevated page
-reference counts and doing a:
-
-    __wait_var_event(page, dax_page_idle(page));
-
-Since the inode is out of scope there should be no concerns with racing
-new 0 -> 1 page->_refcount transitions. Just wait for transient page
-pins to finally drain to zero which should already be on the order of
-the wait time to complete synchrounous writeback in the dirty inode
-case.
+-- 
+Dave Chinner
+david@fromorbit.com
