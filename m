@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B47CAC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Sep 2022 11:27:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C25B1C4321E
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Sep 2022 11:27:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230134AbiI3L1W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Sep 2022 07:27:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32840 "EHLO
+        id S231744AbiI3L1X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Sep 2022 07:27:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231177AbiI3L0b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2022 07:26:31 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA7E2EE2E;
-        Fri, 30 Sep 2022 04:19:06 -0700 (PDT)
+        with ESMTP id S232575AbiI3L03 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2022 07:26:29 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30A063ECC4;
+        Fri, 30 Sep 2022 04:18:54 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 77060B8280D;
-        Fri, 30 Sep 2022 11:19:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AF6BC4347C;
-        Fri, 30 Sep 2022 11:19:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BD7C662299;
+        Fri, 30 Sep 2022 11:18:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45083C4347C;
+        Fri, 30 Sep 2022 11:18:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664536744;
-        bh=x94ngh3SR30xuVLdH4ioO8YH0PC8Q6w0q3cK1o2WgAs=;
+        s=k20201202; t=1664536733;
+        bh=RJmSmkbr0DPIG61xWI+MMXJapiGj8COfeLHhDCBUg/g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E1+suCyBf4Mq23dZykr03FKvOkB2KN2pmo4hPt9FSzh5mDyAgRwzx4IBi3jD2xYta
-         2aH0OFlPU2JQZt0iJZDPo+cYiYNcx36IEelulL17hYdS4gazqnHPs16SmxbYG7/sIh
-         Mn4Q66DPEqaqeLSh88qk9dZa9Z+SLVE+UCijLAM0IQjzkK+04GeTC+Y6owqADky9WX
-         6QI36erT6IJdk6dUqhK+InrXSOp5nQD/lPUXYB6IWKocKgbeYVjwswHwH3urvBP8HN
-         fKO0R+gneckl6h3osuEOy9z4kQ2Iw97ImHbJTgAgvforuxHZb1TWNVjqkRNIonephB
-         t2vFf8ic4Ckug==
+        b=qSgdTK0OkVqwuPneLv8OETMMx+MgJGaIW8o8j/RrOd+1X4XklGgsgv+VO7ZCVpFzS
+         m39M+7b3tW7h2s/S1s1HQslRMr/yZbSzTHLj4bItFJi16KX5RHuh4F7+MBpFNh3Om9
+         Be0JAf/us9KqWqmXjTtzI94l1o8fO+7YhUw9cHpm5/b1MdORIGcnuSWKIQKjmCwJSK
+         CfkAOG9TrJ69UPkDSqjsb/UgFQTgW8XIEkD8Y5B5O8mbZbvchl7Z1eEbhsuzbYaxxD
+         J2buF3KHDJbsuYGrh4rsD/11byM8hFPgLA5oWkhWWdeQV5sv0F6yf2k+TcqUPIQUJ+
+         g40PWwUX4LrpQ==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
         david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
@@ -41,9 +41,9 @@ Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Subject: [PATCH v6 9/9] ext4: update times after I/O in write codepaths
-Date:   Fri, 30 Sep 2022 07:18:40 -0400
-Message-Id: <20220930111840.10695-10-jlayton@kernel.org>
+Subject: [PATCH v6 4/9] nfs: report the inode version in getattr if requested
+Date:   Fri, 30 Sep 2022 07:18:35 -0400
+Message-Id: <20220930111840.10695-5-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20220930111840.10695-1-jlayton@kernel.org>
 References: <20220930111840.10695-1-jlayton@kernel.org>
@@ -53,79 +53,58 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The times currently get updated before the data is copied (or the DIO is
-issued) which is problematic for NFSv4. A READ+GETATTR could race with a
-write in such a way to make the client associate the state of the file
-with the wrong change attribute, and that association could persist
-indefinitely if the file sees no further changes.
-
-For this reason, it's better to bump the times and change attribute
-after the data has been copied or the DIO write issued.
+Allow NFS to report the i_version in getattr requests. Since the cost to
+fetch it is relatively cheap, do it unconditionally and just set the
+flag if it looks like it's valid. Also, conditionally enable the
+MONOTONIC flag when the server reports its change attr type as such.
 
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/ext4/file.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+ fs/nfs/inode.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 109d07629f81..1fa8e0239856 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -246,7 +246,7 @@ static ssize_t ext4_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 	if (count <= 0)
- 		return count;
+diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
+index bea7c005119c..5cb7017e5089 100644
+--- a/fs/nfs/inode.c
++++ b/fs/nfs/inode.c
+@@ -830,6 +830,8 @@ static u32 nfs_get_valid_attrmask(struct inode *inode)
+ 		reply_mask |= STATX_UID | STATX_GID;
+ 	if (!(cache_validity & NFS_INO_INVALID_BLOCKS))
+ 		reply_mask |= STATX_BLOCKS;
++	if (!(cache_validity & NFS_INO_INVALID_CHANGE))
++		reply_mask |= STATX_VERSION;
+ 	return reply_mask;
+ }
  
--	ret = file_modified(iocb->ki_filp);
-+	ret = file_remove_privs(iocb->ki_filp);
- 	if (ret)
- 		return ret;
- 	return count;
-@@ -269,7 +269,11 @@ static ssize_t ext4_buffered_write_iter(struct kiocb *iocb,
- 	current->backing_dev_info = inode_to_bdi(inode);
- 	ret = generic_perform_write(iocb, from);
- 	current->backing_dev_info = NULL;
--
-+	if (ret > 0) {
-+		ssize_t ret2 = file_update_time(iocb->ki_filp);
-+		if (ret2)
-+			ret = ret2;
-+	}
+@@ -848,7 +850,7 @@ int nfs_getattr(struct user_namespace *mnt_userns, const struct path *path,
+ 
+ 	request_mask &= STATX_TYPE | STATX_MODE | STATX_NLINK | STATX_UID |
+ 			STATX_GID | STATX_ATIME | STATX_MTIME | STATX_CTIME |
+-			STATX_INO | STATX_SIZE | STATX_BLOCKS;
++			STATX_INO | STATX_SIZE | STATX_BLOCKS | STATX_VERSION;
+ 
+ 	if ((query_flags & AT_STATX_DONT_SYNC) && !force_sync) {
+ 		if (readdirplus_enabled)
+@@ -877,7 +879,7 @@ int nfs_getattr(struct user_namespace *mnt_userns, const struct path *path,
+ 	/* Is the user requesting attributes that might need revalidation? */
+ 	if (!(request_mask & (STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_CTIME|
+ 					STATX_MTIME|STATX_UID|STATX_GID|
+-					STATX_SIZE|STATX_BLOCKS)))
++					STATX_SIZE|STATX_BLOCKS|STATX_VERSION)))
+ 		goto out_no_revalidate;
+ 
+ 	/* Check whether the cached attributes are stale */
+@@ -915,6 +917,10 @@ int nfs_getattr(struct user_namespace *mnt_userns, const struct path *path,
+ 
+ 	generic_fillattr(&init_user_ns, inode, stat);
+ 	stat->ino = nfs_compat_user_ino64(NFS_FILEID(inode));
++	stat->version = inode_peek_iversion_raw(inode);
++	stat->attributes_mask |= STATX_ATTR_VERSION_MONOTONIC;
++	if (server->change_attr_type != NFS4_CHANGE_TYPE_IS_UNDEFINED)
++		stat->attributes |= STATX_ATTR_VERSION_MONOTONIC;
+ 	if (S_ISDIR(inode->i_mode))
+ 		stat->blksize = NFS_SERVER(inode)->dtsize;
  out:
- 	inode_unlock(inode);
- 	if (likely(ret > 0)) {
-@@ -455,7 +459,7 @@ static ssize_t ext4_dio_write_checks(struct kiocb *iocb, struct iov_iter *from,
- 		goto restart;
- 	}
- 
--	ret = file_modified(file);
-+	ret = file_remove_privs(file);
- 	if (ret < 0)
- 		goto out;
- 
-@@ -572,6 +576,11 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	if (extend)
- 		ret = ext4_handle_inode_extension(inode, offset, ret, count);
- 
-+	if (ret > 0) {
-+		ssize_t ret2 = file_update_time(iocb->ki_filp);
-+		if (ret2)
-+			ret = ret2;
-+	}
- out:
- 	if (ilock_shared)
- 		inode_unlock_shared(inode);
-@@ -653,6 +662,11 @@ ext4_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 
- 	if (extend)
- 		ret = ext4_handle_inode_extension(inode, offset, ret, count);
-+	if (ret > 0) {
-+		ssize_t ret2 = file_update_time(iocb->ki_filp);
-+		if (ret2)
-+			ret = ret2;
-+	}
- out:
- 	inode_unlock(inode);
- 	if (ret > 0)
 -- 
 2.37.3
 
