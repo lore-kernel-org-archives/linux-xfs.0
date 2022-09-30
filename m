@@ -2,197 +2,282 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6122C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Sep 2022 00:33:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31647C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Sep 2022 01:04:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229853AbiI3Ad5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Sep 2022 20:33:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51352 "EHLO
+        id S229902AbiI3BEF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Sep 2022 21:04:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229771AbiI3Ad4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2022 20:33:56 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E9D69201928;
-        Thu, 29 Sep 2022 17:33:54 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id F14211101193;
-        Fri, 30 Sep 2022 10:33:52 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oe3yR-00DlGg-OL; Fri, 30 Sep 2022 10:33:51 +1000
-Date:   Fri, 30 Sep 2022 10:33:51 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     cgroups@vger.kernel.org
-Cc:     linux-mm@kvack.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] memcg: calling reclaim_high(GFP_KERNEL) in GFP_NOFS
- context deadlocks
-Message-ID: <20220930003351.GJ3600936@dread.disaster.area>
-References: <20220929215440.1967887-1-david@fromorbit.com>
+        with ESMTP id S229846AbiI3BEE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2022 21:04:04 -0400
+X-Greylist: delayed 243 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 29 Sep 2022 18:04:02 PDT
+Received: from esa10.hc1455-7.c3s2.iphmx.com (esa10.hc1455-7.c3s2.iphmx.com [139.138.36.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDFA11F8C3D
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Sep 2022 18:04:02 -0700 (PDT)
+X-IronPort-AV: E=McAfee;i="6500,9779,10485"; a="78273514"
+X-IronPort-AV: E=Sophos;i="5.93,357,1654527600"; 
+   d="scan'208";a="78273514"
+Received: from unknown (HELO yto-r2.gw.nic.fujitsu.com) ([218.44.52.218])
+  by esa10.hc1455-7.c3s2.iphmx.com with ESMTP; 30 Sep 2022 09:56:44 +0900
+Received: from yto-m4.gw.nic.fujitsu.com (yto-nat-yto-m4.gw.nic.fujitsu.com [192.168.83.67])
+        by yto-r2.gw.nic.fujitsu.com (Postfix) with ESMTP id 65176D6251;
+        Fri, 30 Sep 2022 09:56:43 +0900 (JST)
+Received: from m3002.s.css.fujitsu.com (msm3.b.css.fujitsu.com [10.128.233.104])
+        by yto-m4.gw.nic.fujitsu.com (Postfix) with ESMTP id A656AF0FFC;
+        Fri, 30 Sep 2022 09:56:42 +0900 (JST)
+Received: from [10.8.170.187] (unknown [10.8.170.187])
+        by m3002.s.css.fujitsu.com (Postfix) with ESMTP id 2A30C202614A;
+        Fri, 30 Sep 2022 09:56:42 +0900 (JST)
+Message-ID: <1444b9b5-363a-163c-0513-55d1ea951799@fujitsu.com>
+Date:   Fri, 30 Sep 2022 09:56:41 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220929215440.1967887-1-david@fromorbit.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=63363972
-        a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
-        a=kj9zAlcOel0A:10 a=xOM3xZuef0cA:10 a=37rDS-QxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=fl4qZB1B0tTFcq_AKD4A:9 a=CjuIK1q_8ugA:10
-        a=k1Nq6YrhK2t884LQW06G:22 a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+From:   =?UTF-8?B?R290b3UsIFlhc3Vub3JpL+S6lOWztiDlurfmloc=?= 
+        <y-goto@fujitsu.com>
+Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
+To:     =?UTF-8?B?WWFuZywgWGlhby/mnagg5pmT?= <yangx.jy@fujitsu.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        "hch@infradead.org" <hch@infradead.org>
+Cc:     =?UTF-8?B?UnVhbiwgU2hpeWFuZy/pmK4g5LiW6Ziz?= 
+        <ruansy.fnst@fujitsu.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "david@fromorbit.com" <david@fromorbit.com>, zwisler@kernel.org,
+        Jeff Moyer <jmoyer@redhat.com>, dm-devel@redhat.com,
+        toshi.kani@hpe.com
+References: <Ytl7yJJL1fdC006S@magnolia>
+ <7fde89dc-2e8f-967b-d342-eb334e80255c@fujitsu.com>
+ <YuNn9NkUFofmrXRG@magnolia>
+ <0ea1cbe1-79d7-c22b-58bf-5860a961b680@fujitsu.com>
+ <YusYDMXLYxzqMENY@magnolia>
+ <dd363bd8-2dbd-5d9c-0406-380b60c5f510@fujitsu.com> <Yxs5Jb7Yt2c6R6eW@bfoster>
+ <7fdc9e88-f255-6edb-7964-a5a82e9b1292@fujitsu.com>
+ <76ea04b4-bad7-8cb3-d2c6-4ad49def4e05@fujitsu.com> <YyHKUhOgHdTKPQXL@bfoster>
+ <YyIBMJzmbZsUBHpy@magnolia>
+ <a6e7f4eb-0664-bbe8-98d2-f8386b226113@fujitsu.com>
+ <e3d51a6b-12e9-2a19-1280-5fd9dd64117c@fujitsu.com>
+ <deb54a77-90d3-df44-1880-61cce6e3f670@fujitsu.com>
+Content-Language: en-US
+In-Reply-To: <deb54a77-90d3-df44-1880-61cce6e3f670@fujitsu.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[oops, cc should have been linux-mm@kvack.org]
+Hello everyone,
 
-On Fri, Sep 30, 2022 at 07:54:40AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 2022/09/20 11:38, Yang, Xiao/杨 晓 wrote:
+> Hi Darrick, Brian and Christoph
 > 
-> This should be more obvious, but gfpflags_allow_blocking() is not
-> the same thing as a GFP_KERNEL reclaim contexts. The former checks
-> GFP_DIRECT_RECLAIM which tells us if direct reclaim is allowed. The
-> latter (GFP_KERNEL) allows blocking on anything, including
-> filesystem and IO structures during reclaim.
+> Ping. I hope to get your feedback.
 > 
-> However, we do lots of memory allocation from various filesystems we
-> are under GFP_NOFS contexts, including page cache folios. Hence if
-> direct reclaim in GFP_NOFS context waits on filesystem progress
-> (e.g. waits on folio writeback) then memory reclaim can deadlock.
+> 1) I have confirmed that the following patch set did not change the test 
+> result of generic/470 with thin-volume. Besides, I didn't see any 
+> failure when running generic/470 based on normal PMEM device instaed of 
+> thin-volume.
+> https://lore.kernel.org/linux-xfs/20211129102203.2243509-1-hch@lst.de/
 > 
-> e.g. page cache allocation (which is GFP_NOFS context) gets stuck
-> waiting on page writeback like so:
+> 2) I can reproduce the failure of generic/482 without thin-volume.
 > 
-> [   75.943494] task:test_write      state:D stack:12560 pid: 3728 ppid:  3613 flags:0x00004002
-> [   75.944788] Call Trace:
-> [   75.945183]  <TASK>
-> [   75.945543]  __schedule+0x2f9/0xa30
-> [   75.946118]  ? __mod_memcg_lruvec_state+0x41/0x90
-> [   75.946895]  schedule+0x5a/0xc0
-> [   75.947397]  io_schedule+0x42/0x70
-> [   75.947992]  folio_wait_bit_common+0x159/0x3d0
-> [   75.948732]  ? dio_warn_stale_pagecache.part.0+0x50/0x50
-> [   75.949505]  folio_wait_writeback+0x28/0x80
-> [   75.950163]  shrink_page_list+0x96e/0xc30
-> [   75.950843]  shrink_lruvec+0x558/0xb80
-> [   75.951440]  shrink_node+0x2c6/0x700
-> [   75.952059]  do_try_to_free_pages+0xd5/0x570
-> [   75.952771]  try_to_free_mem_cgroup_pages+0x105/0x220
-> [   75.953548]  reclaim_high.constprop.0+0xa3/0xf0
-> [   75.954209]  mem_cgroup_handle_over_high+0x8f/0x280
-> [   75.955025]  ? kmem_cache_alloc_lru+0x1c6/0x3f0
-> [   75.955781]  try_charge_memcg+0x6c3/0x820
-> [   75.956436]  ? __mem_cgroup_threshold+0x16/0x150
-> [   75.957204]  charge_memcg+0x76/0xf0
-> [   75.957810]  __mem_cgroup_charge+0x29/0x80
-> [   75.958464]  __filemap_add_folio+0x225/0x590
-> [   75.959112]  ? scan_shadow_nodes+0x30/0x30
-> [   75.959794]  filemap_add_folio+0x37/0xa0
-> [   75.960432]  __filemap_get_folio+0x1fd/0x340
-> [   75.961141]  ? xas_load+0x5/0xa0
-> [   75.961712]  iomap_write_begin+0x103/0x6a0
-> [   75.962390]  ? filemap_dirty_folio+0x5c/0x80
-> [   75.963106]  ? iomap_write_end+0xa2/0x2b0
-> [   75.963744]  iomap_file_buffered_write+0x17c/0x380
-> [   75.964546]  xfs_file_buffered_write+0xb1/0x2e0
-> [   75.965286]  ? xfs_file_buffered_write+0x2b2/0x2e0
-> [   75.966097]  vfs_write+0x2ca/0x3d0
-> [   75.966702]  __x64_sys_pwrite64+0x8c/0xc0
-> [   75.967349]  do_syscall_64+0x35/0x80
-> 
-> At this point, the system has 58 pending XFS IO completions that are
-> stuck waiting for workqueue progress:
-> 
-> [ 1664.460579] workqueue xfs-conv/dm-0: flags=0x4c
-> [ 1664.461332]   pwq 48: cpus=24 node=3 flags=0x0 nice=0 active=58/256 refcnt=59
-> [ 1664.461335]     pending: xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io, xfs_end_io
-> 
-> and nothing is making progress. The reason progress is not being
-> made is not clear from what I can gather from the steaming corpse,
-> but it is clear that the memcg reclaim code should not be blocking
-> on filesystem related objects in GFP_NOFS allocation contexts.
-> 
-> We have the reclaim context parameters right there when we call
-> mem_cgroup_handle_over_high(), so pass them down the stack so memcg
-> reclaim doesn't cause deadlocks. This makes the reclaim deadlocks in
-> the test I've been running go away.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  include/linux/memcontrol.h       | 4 ++--
->  include/linux/resume_user_mode.h | 2 +-
->  mm/memcontrol.c                  | 6 +++---
->  3 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 6257867fbf95..575bb8cfc810 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -919,7 +919,7 @@ unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
->  	return READ_ONCE(mz->lru_zone_size[zone_idx][lru]);
->  }
->  
-> -void mem_cgroup_handle_over_high(void);
-> +void mem_cgroup_handle_over_high(gfp_t gfp_mask);
->  
->  unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg);
->  
-> @@ -1433,7 +1433,7 @@ static inline void folio_memcg_unlock(struct folio *folio)
->  {
->  }
->  
-> -static inline void mem_cgroup_handle_over_high(void)
-> +static inline void mem_cgroup_handle_over_high(gfp_t gfp_mask)
->  {
->  }
->  
-> diff --git a/include/linux/resume_user_mode.h b/include/linux/resume_user_mode.h
-> index 285189454449..f8f3e958e9cf 100644
-> --- a/include/linux/resume_user_mode.h
-> +++ b/include/linux/resume_user_mode.h
-> @@ -55,7 +55,7 @@ static inline void resume_user_mode_work(struct pt_regs *regs)
->  	}
->  #endif
->  
-> -	mem_cgroup_handle_over_high();
-> +	mem_cgroup_handle_over_high(GFP_KERNEL);
->  	blkcg_maybe_throttle_current();
->  
->  	rseq_handle_notify_resume(NULL, regs);
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index b69979c9ced5..09fbebff9796 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2491,7 +2491,7 @@ static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
->   * Scheduled by try_charge() to be executed from the userland return path
->   * and reclaims memory over the high limit.
->   */
-> -void mem_cgroup_handle_over_high(void)
-> +void mem_cgroup_handle_over_high(gfp_t gfp_mask)
->  {
->  	unsigned long penalty_jiffies;
->  	unsigned long pflags;
-> @@ -2519,7 +2519,7 @@ void mem_cgroup_handle_over_high(void)
->  	 */
->  	nr_reclaimed = reclaim_high(memcg,
->  				    in_retry ? SWAP_CLUSTER_MAX : nr_pages,
-> -				    GFP_KERNEL);
-> +				    gfp_mask);
->  
->  	/*
->  	 * memory.high is breached and reclaim is unable to keep up. Throttle
-> @@ -2755,7 +2755,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
->  	    !(current->flags & PF_MEMALLOC) &&
->  	    gfpflags_allow_blocking(gfp_mask)) {
-> -		mem_cgroup_handle_over_high();
-> +		mem_cgroup_handle_over_high(gfp_mask);
->  	}
->  	return 0;
->  }
-> -- 
-> 2.37.2
-> 
-> 
+> 3) Is it necessary to make thin-volume support DAX. Is there any use 
+> case for the requirement?
 
--- 
-Dave Chinner
-david@fromorbit.com
+
+Though I asked other place(*), I really want to know the usecase of
+dm-thin-volume with DAX and reflink.
+
+
+In my understanding, dm-thin-volume seems to provide similar feature 
+like reflink of xfs. Both feature provide COW update to reduce usage of
+its region, and snapshot feature, right?
+
+I found that docker seems to select one of them (or other feature which 
+supports COW). Then user don't need to use thin-volume and reflink at 
+same time.
+
+Database which uses FS-DAX may want to use snapshot for its data of 
+FS-DAX, its user seems to be satisfied with reflink or thin-volume.
+
+So I could not find on what use-case user would like to use 
+dm-thin-volume and reflink at same time.
+
+The only possibility is that the user has mistakenly configured 
+dm-thinpool and reflink to be used at the same time, but if that is the 
+case, it seems to be better for the user to disable one or the other.
+
+I really wander why dm-thin-volume must be used with reflik and FS-DAX.
+
+If my understanding is something wrong, please correct me.
+
+(*)https://lore.kernel.org/all/TYWPR01MB1008258F474CA2295B4CD3D9B90549@TYWPR01MB10082.jpnprd01.prod.outlook.com/
+
+Thanks,
+---
+Yasunori Goto
+
+
+> 
+> Best Regards,
+> Xiao Yang
+> 
+> On 2022/9/16 10:04, Yang, Xiao/杨 晓 wrote:
+>> On 2022/9/15 18:14, Yang, Xiao/杨 晓 wrote:
+>>> On 2022/9/15 0:28, Darrick J. Wong wrote:
+>>>> On Wed, Sep 14, 2022 at 08:34:26AM -0400, Brian Foster wrote:
+>>>>> On Wed, Sep 14, 2022 at 05:38:02PM +0800, Yang, Xiao/杨 晓 wrote:
+>>>>>> On 2022/9/14 14:44, Yang, Xiao/杨 晓 wrote:
+>>>>>>> On 2022/9/9 21:01, Brian Foster wrote:
+>>>>>>>> Yes.. I don't recall all the internals of the tools and test, 
+>>>>>>>> but IIRC
+>>>>>>>> it relied on discard to perform zeroing between checkpoints or 
+>>>>>>>> some such
+>>>>>>>> and avoid spurious failures. The purpose of running on dm-thin was
+>>>>>>>> merely to provide reliable discard zeroing behavior on the 
+>>>>>>>> target device
+>>>>>>>> and thus to allow the test to run reliably.
+>>>>>>> Hi Brian,
+>>>>>>>
+>>>>>>> As far as I know, generic/470 was original designed to verify
+>>>>>>> mmap(MAP_SYNC) on the dm-log-writes device enabling DAX. Due to the
+>>>>>>> reason, we need to ensure that all underlying devices under
+>>>>>>> dm-log-writes device support DAX. However dm-thin device never 
+>>>>>>> supports
+>>>>>>> DAX so
+>>>>>>> running generic/470 with dm-thin device always returns "not run".
+>>>>>>>
+>>>>>>> Please see the difference between old and new logic:
+>>>>>>>
+>>>>>>>             old logic                          new logic
+>>>>>>> ---------------------------------------------------------------
+>>>>>>> log-writes device(DAX)                 log-writes device(DAX)
+>>>>>>>               |                                       |
+>>>>>>> PMEM0(DAX) + PMEM1(DAX)       Thin device(non-DAX) + PMEM1(DAX)
+>>>>>>>                                             |
+>>>>>>>                                           PMEM0(DAX)
+>>>>>>> ---------------------------------------------------------------
+>>>>>>>
+>>>>>>> We think dm-thin device is not a good solution for generic/470, 
+>>>>>>> is there
+>>>>>>> any other solution to support both discard zero and DAX?
+>>>>>>
+>>>>>> Hi Brian,
+>>>>>>
+>>>>>> I have sent a patch[1] to revert your fix because I think it's not 
+>>>>>> good for
+>>>>>> generic/470 to use thin volume as my revert patch[1] describes:
+>>>>>> [1] 
+>>>>>> https://lore.kernel.org/fstests/20220914090625.32207-1-yangx.jy@fujitsu.com/T/#u 
+>>>>>>
+>>>>>>
+>>>>>
+>>>>> I think the history here is that generic/482 was changed over first in
+>>>>> commit 65cc9a235919 ("generic/482: use thin volume as data 
+>>>>> device"), and
+>>>>> then sometime later we realized generic/455,457,470 had the same 
+>>>>> general
+>>>>> flaw and were switched over. The dm/dax compatibility thing was 
+>>>>> probably
+>>>>> just an oversight, but I am a little curious about that because it 
+>>>>> should
+>>>>
+>>>> It's not an oversight -- it used to work (albeit with EXPERIMENTAL
+>>>> tags), and now we've broken it on fsdax as the pmem/blockdev divorce
+>>>> progresses.
+>>> Hi
+>>>
+>>> Do you mean that the following patch set changed the test result of 
+>>> generic/470 with thin-volume? (pass => not run/failure)
+>>> https://lore.kernel.org/linux-xfs/20211129102203.2243509-1-hch@lst.de/
+>>>
+>>>>
+>>>>> have been obvious that the change caused the test to no longer run. 
+>>>>> Did
+>>>>> something change after that to trigger that change in behavior?
+>>>>>
+>>>>>> With the revert, generic/470 can always run successfully on my 
+>>>>>> environment
+>>>>>> so I wonder how to reproduce the out-of-order replay issue on XFS v5
+>>>>>> filesystem?
+>>>>>>
+>>>>>
+>>>>> I don't quite recall the characteristics of the failures beyond 
+>>>>> that we
+>>>>> were seeing spurious test failures with generic/482 that were due to
+>>>>> essentially putting the fs/log back in time in a way that wasn't quite
+>>>>> accurate due to the clearing by the logwrites tool not taking 
+>>>>> place. If
+>>>>> you wanted to reproduce in order to revisit that, perhaps start with
+>>>>> generic/482 and let it run in a loop for a while and see if it
+>>>>> eventually triggers a failure/corruption..?
+>>>>>
+>>>>>> PS: I want to reproduce the issue and try to find a better 
+>>>>>> solution to fix
+>>>>>> it.
+>>>>>>
+>>>>>
+>>>>> It's been a while since I looked at any of this tooling to 
+>>>>> semi-grok how
+>>>>> it works.
+>>>>
+>>>> I /think/ this was the crux of the problem, back in 2019?
+>>>> https://lore.kernel.org/fstests/20190227061529.GF16436@dastard/
+>>>
+>>> Agreed.
+>>>
+>>>>
+>>>>> Perhaps it could learn to rely on something more explicit like
+>>>>> zero range (instead of discard?) or fall back to manual zeroing?
+>>>>
+>>>> AFAICT src/log-writes/ actually /can/ do zeroing, but (a) it probably
+>>>> ought to be adapted to call BLKZEROOUT and (b) in the worst case it
+>>>> writes zeroes to the entire device, which is/can be slow.
+>>>>
+>>>> For a (crass) example, one of my cloudy test VMs uses 34GB partitions,
+>>>> and for cost optimization purposes we're only "paying" for the cheapest
+>>>> tier.  Weirdly that maps to an upper limit of 6500 write iops and
+>>>> 48MB/s(!) but that would take about 20 minutes to zero the entire
+>>>> device if the dm-thin hack wasn't in place.  Frustratingly, it doesn't
+>>>> support discard or write-zeroes.
+>>>
+>>> Do you mean that discard zero(BLKDISCARD) is faster than both fill 
+>>> zero(BLKZEROOUT) and write zero on user space?
+>>
+>> Hi Darrick, Brian and Christoph
+>>
+>> According to the discussion about generic/470. I wonder if it is 
+>> necessary to make thin-pool support DAX. Is there any use case for the 
+>> requirement?
+>>
+>> Best Regards,
+>> Xiao Yang
+>>>
+>>> Best Regards,
+>>> Xiao Yang
+>>>>
+>>>>> If the
+>>>>> eventual solution is simple and low enough overhead, it might make 
+>>>>> some
+>>>>> sense to replace the dmthin hack across the set of tests mentioned
+>>>>> above.
+>>>>
+>>>> That said, for a *pmem* test you'd expect it to be faster than that...
+>>>>
+>>>> --D
+>>>>
+>>>>> Brian
+>>>>>
+>>>>>> Best Regards,
+>>>>>> Xiao Yang
+>>>>>>
+>>>>>>>
+>>>>>>> BTW, only log-writes, stripe and linear support DAX for now.
+>>>>>>
+>>>>>
+
