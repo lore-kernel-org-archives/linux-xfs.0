@@ -2,137 +2,155 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA102C4332F
-	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 07:09:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02236C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 18:23:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229677AbiJBHJG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 2 Oct 2022 03:09:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45906 "EHLO
+        id S230015AbiJBSXZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 2 Oct 2022 14:23:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229540AbiJBHJE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 03:09:04 -0400
-Received: from mail-ua1-x92c.google.com (mail-ua1-x92c.google.com [IPv6:2607:f8b0:4864:20::92c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2B173F337;
-        Sun,  2 Oct 2022 00:09:03 -0700 (PDT)
-Received: by mail-ua1-x92c.google.com with SMTP id d3so2016558uav.7;
-        Sun, 02 Oct 2022 00:09:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=LXHdxUnEPRav2MpSDEM7tzyEf7YMDJf0LVPzraEFzIk=;
-        b=Qy5cxZways54nm/9MLDMp7+yWjordQLhW4//q/MyefIXCYOy1h5MQByuVKHMix/oyX
-         h7FHj+ttjYM/fAIPn6+T5SEQqWWRSAwc3zlwOOqY2SOcjrgHQOgwsSBB5UwcCy+weIC6
-         Xa+gdIeodO4XtvTSIhF8TkLHdGRQ8F16yUUZcWnEQZBRm4A0ebUaZkW4lwEGpO4j91B2
-         rA0TYnsxr8rXrpTlO5ow2PiQ7a6brhQGV+SIkVbTPHAP++s5g8pfa6EJIjmsOUT1Wjxg
-         mO6BR6Am82qVA+aCQkWVTPoDkfFnokQBR+ZwfwzLo1fIR5O8W0GsZeqllCQHo4vqLVcr
-         QEpw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=LXHdxUnEPRav2MpSDEM7tzyEf7YMDJf0LVPzraEFzIk=;
-        b=d1JHtUrTqtYb7qJ3q7MvlBgLjNu47nU+89+P0+VYk+N5KtT5Dqpe+CiqLVzbMzMNLX
-         Kq+ryVQxBZ3zFom7RJcHBh883E7Q9BBMADK7u/X18m5CupjhMePWFhr+D1DriFPu3tyJ
-         07frTdR+TisO8AlU0HZ3t/6LN6GXWq8sI59CY1gQqOkehYk7N/h/4oKJAPp1SWApzk4H
-         JQB8Xeicp5t7uy/Q0sumsBrIyyq7n2J/THdGzFLjgYr9N3fhoKeSNAKFdkCxrySziNEr
-         9xytp8DybuPp6gO6M2SVgFMxlBb2lyOwTEM6xz61qcRkO8gGZrT+5OGL8JpXs2Lkx9kq
-         wJtQ==
-X-Gm-Message-State: ACrzQf1THfFcyAhO//5QSgvz30judBjegzIVkIC/XRUvPZImdRptP54z
-        WUTMUIvhIo3tseuXnXYFbpFEEWzUQxbtRXQY520=
-X-Google-Smtp-Source: AMsMyM4lxq8AMEBGfxhYSFJxHI6bK6WI16yGisB2NddH2eWCjim+p2nhUlJ9NU/wgxtpH+PtkMxn0OySNuUsyVaDhoI=
-X-Received: by 2002:a9f:3562:0:b0:3d0:ad99:b875 with SMTP id
- o89-20020a9f3562000000b003d0ad99b875mr8123774uao.102.1664694542759; Sun, 02
- Oct 2022 00:09:02 -0700 (PDT)
+        with ESMTP id S229825AbiJBSXZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 14:23:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0250D25295;
+        Sun,  2 Oct 2022 11:23:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 69FD960EFD;
+        Sun,  2 Oct 2022 18:23:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2336C433D6;
+        Sun,  2 Oct 2022 18:23:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664735002;
+        bh=R5rco/Adg7gtF7f1H6/jhwzvu66VL8b5efPjc60F8JE=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Ob/+xzT+puItAXkn3G1LgEB/mHyeM2CuDLUMw/XWX1r0Nn/yIO3dhH7LfJEaidM7J
+         Mb42PVC1LpqE+vhqPKXg4yYpbdpMAiBqtaZ7QMtp6OTZ9cBoKMzdy1syL3EHq43hhx
+         nyQzyYUKw6PpFGiTloexLSOGV3dYMOTwDbLXcI0StrbW5qXjdAQDY7HVD/zymD7rhm
+         ObFmFZwNs+qzsCTnkJzXT93Xv+9uIFEQUvGignDolefD32ZeTHvAOwKWMZwdwUjZgJ
+         ETMj47uj4rGWFdHGj2a+sHvhOHr216bIaGyLJzK98b3169KXvCnJi5H0gYd+KPrV7D
+         XaQnHtcnMp/Ow==
+Subject: [PATCHSET v23.3 00/14] xfs: design documentation for online fsck
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
+        chandan.babu@oracle.com, allison.henderson@oracle.com,
+        linux-fsdevel@vger.kernel.org, hch@infradead.org,
+        catherine.hoang@oracle.com, david@fromorbit.com
+Date:   Sun, 02 Oct 2022 11:19:43 -0700
+Message-ID: <166473478338.1082796.8807888906305023929.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-References: <20220930111840.10695-1-jlayton@kernel.org> <20220930111840.10695-9-jlayton@kernel.org>
-In-Reply-To: <20220930111840.10695-9-jlayton@kernel.org>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sun, 2 Oct 2022 10:08:51 +0300
-Message-ID: <CAOQ4uxgofERYwN7AfYFWqQMpQH5y3LV+6UuGfjU29gZXNf7-vQ@mail.gmail.com>
-Subject: Re: [PATCH v6 8/9] vfs: update times after copying data in __generic_file_write_iter
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
-        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
-        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com,
-        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 30, 2022 at 2:30 PM Jeff Layton <jlayton@kernel.org> wrote:
->
-> The c/mtime and i_version currently get updated before the data is
-> copied (or a DIO write is issued), which is problematic for NFS.
->
-> READ+GETATTR can race with a write (even a local one) in such a way as
-> to make the client associate the state of the file with the wrong change
-> attribute. That association can persist indefinitely if the file sees no
-> further changes.
->
-> Move the setting of times to the bottom of the function in
-> __generic_file_write_iter and only update it if something was
-> successfully written.
->
+Hi all,
 
-This solution is wrong for several reasons:
+After six years of development and a nearly two year hiatus from
+patchbombing, I think it is time to resume the process of merging the
+online fsck feature into XFS.  The full patchset comprises 105 separate
+patchsets that capture 470 patches across the kernel, xfsprogs, and
+fstests projects.
 
-1. There is still file_update_time() in ->page_mkwrite() so you haven't
-    solved the problem completely
-2. The other side of the coin is that post crash state is more likely to end
-    up data changes without mtime/ctime change
+I would like to merge this feature into upstream in time for the 2023
+LTS kernel.  As of 5.15 (aka last year's LTS), we have merged all
+generally useful infrastructure improvements into the regular
+filesystem.  The only changes to the core filesystem that remain are the
+ones that are only useful to online fsck itself.  In other words, the
+vast majority of the new code in the patchsets comprising the online
+fsck feature are is mostly self contained and can be turned off via
+Kconfig.
 
-If I read the problem description correctly, then a solution that invalidates
-the NFS cache before AND after the write would be acceptable. Right?
-Would an extra i_version bump after the write solve the race?
+Many of you readers might be wondering -- why have I chosen to make one
+large submission with 100+ patchsets comprising ~500 patches?  Why
+didn't I merge small pieces of functionality bit by bit and revise
+common code as necessary?  Well, the simple answer is that in the past
+six years, the fundamental algorithms have been revised repeatedly as
+I've built out the functionality.  In other words, the codebase as it is
+now has the benefit that I now know every piece that's necessary to get
+the job done in a reasonable manner and within the constraints laid out
+by community reviews.  I believe this has reduced code churn in mainline
+and freed up my time so that I can iterate faster.
 
-> If the time update fails, log a warning once, but don't fail the write.
-> All of the existing callers use update_time functions that don't fail,
-> so we should never trip this.
->
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  mm/filemap.c | 17 +++++++++++++----
->  1 file changed, 13 insertions(+), 4 deletions(-)
->
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 15800334147b..72c0ceb75176 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3812,10 +3812,6 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
->         if (err)
->                 goto out;
->
-> -       err = file_update_time(file);
-> -       if (err)
-> -               goto out;
-> -
->         if (iocb->ki_flags & IOCB_DIRECT) {
->                 loff_t pos, endbyte;
->
-> @@ -3868,6 +3864,19 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
->                         iocb->ki_pos += written;
->         }
->  out:
-> +       if (written > 0) {
-> +               err = file_update_time(file);
-> +               /*
-> +                * There isn't much we can do at this point if updating the
-> +                * times fails after a successful write. The times and i_version
-> +                * should still be updated in the inode, and it should still be
-> +                * marked dirty, so hopefully the next inode update will catch it.
-> +                * Log a warning once so we have a record that something untoward
-> +                * has occurred.
-> +                */
-> +               WARN_ONCE(err, "Failed to update m/ctime after write: %ld\n", err);
+As a concession to the mail servers, I'm breaking up the submission into
+smaller pieces; I'm only pushing the design document and the revisions
+to the existing scrub code, which is the first 20% of the patches.
+Also, I'm arbitrarily restarting the version numbering by reversioning
+all patchsets from version 22 to epoch 23, version 1.
 
-pr_warn_once() please - this is not a programming assertion.
+The big question to everyone reading this is: How might I convince you
+that there is more merit in merging the whole feature and dealing with
+the consequences than continuing to maintain it out of tree?
 
-Thanks,
-Amir.
+---------
+
+To prepare the XFS community and potential patch reviewers for the
+upstream submission of the online fsck feature, I decided to write a
+document capturing the broader picture behind the online repair
+development effort.  The document begins by defining the problems that
+online fsck aims to solve and outlining specific use cases for the
+functionality.
+
+Using that as a base, the rest of the design document presents the high
+level algorithms that fulfill the goals set out at the start and the
+interactions between the large pieces of the system.  Case studies round
+out the design documentation by adding the details of exactly how
+specific parts of the online fsck code integrate the algorithms with the
+filesystem.
+
+The goal of this effort is to help the XFS community understand how the
+gigantic online repair patchset works.  The questions I submit to the
+community reviewers are:
+
+1. As you read the design doc (and later the code), do you feel that you
+   understand what's going on well enough to try to fix a bug if you
+   found one?
+
+2. What sorts of interactions between systems (or between scrub and the
+   rest of the kernel) am I missing?
+
+3. Do you feel confident enough in the implementation as it is now that
+   the benefits of merging the feature (as EXPERIMENTAL) outweigh any
+   potential disruptions to XFS at large?
+
+4. Are there problematic interactions between subsystems that ought to
+   be cleared up before merging?
+
+I intend to commit this document to the kernel's documentation directory
+when we start merging the patchset, albeit without the links to
+git.kernel.org.  A much more readable version of this is posted at:
+https://djwong.org/docs/xfs-online-fsck-design/
+
+v2: add missing sections about: all the in-kernel data structures and
+    new apis that the scrub and repair functions use; how xattrs and
+    directories are checked; how space btree records are checked; and
+    add more details to the parts where all these bits tie together.
+    Proofread for verb tense inconsistencies and eliminate vague 'we'
+    usage.  Move all the discussion of what we can do with pageable
+    kernel memory into a single source file and section.  Document where
+    log incompat feature locks fit into the locking model.
+
+v3: resync with 6.0, fix a few typos, begin discussion of the merging
+    plan for this megapatchset.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=online-fsck-design
+---
+ Documentation/filesystems/index.rst                |    1 
+ .../filesystems/xfs-online-fsck-design.rst         | 4979 ++++++++++++++++++++
+ .../filesystems/xfs-self-describing-metadata.rst   |    1 
+ 3 files changed, 4981 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs-online-fsck-design.rst
+
