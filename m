@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22C0AC433FE
-	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 18:35:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09117C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 18:35:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230108AbiJBSff (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 2 Oct 2022 14:35:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39930 "EHLO
+        id S230102AbiJBSfq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 2 Oct 2022 14:35:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230102AbiJBSfd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 14:35:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 462532A956
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 11:35:32 -0700 (PDT)
+        with ESMTP id S230101AbiJBSfq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 14:35:46 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCF0F2B625
+        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 11:35:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4F64360F04
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 18:35:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A98D4C433D6;
-        Sun,  2 Oct 2022 18:35:31 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 80123B80D88
+        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 18:35:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CCABC433D6;
+        Sun,  2 Oct 2022 18:35:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664735731;
-        bh=UBkf+Qtv+Qc5Zqh3Kys0oOebeY2eO+WGm9sAAvAu3GE=;
+        s=k20201202; t=1664735742;
+        bh=/1Ir53agzvSCtIdGn9gzJeDDQuthEAXwKkIqgM0lu5Y=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=CotHJ7MOQgegByFqCirrBCKMymTtjw1eo/AviSmKvnWsSe1Lq7HSs9dICmsq7nVvD
-         R6kEW27NhShSlKt8fuV13pP8Zm8AaN2dKJZjdbs1cWDY1mEqQ1R8ThNpgUV2XskXQz
-         7BUgLciyOgCxBgqYH5er/xotc2h+3rrv+Qw+Xzl4W0ddeQGwL5bnOovP7wl0w6nG3d
-         YQ1+UZ4k3cNndVOBtMVshUSPOALcPqybcEsjcdnIW1uDWTtDihztAX+f/5tQBSHD9y
-         GS1V9eiWPqfA0hym8y3eLsfF4kif/f2Im1jCJ9zjgNHUMwnSCxsc7D8uev7eTO671f
-         7CqDmgPX7lOxw==
-Subject: [PATCH 1/6] xfs: change bmap scrubber to store the previous mapping
+        b=BovnOEyveTQSem8bw363V90KNVH8mE4GyWPBdgDUA7st8p9BkvFuWvpycO1Gbmk9I
+         jqSkPsfEVJp86YlHW5jqbIxFoRF2i+caSp2ZjnqjJ9u+GXEOH+h8ajoZ0ZcijyGLuJ
+         i14iQXn5eJgt+LjuvtCVyQ+K/6YPVwNDrMdrOq/79pu/VhVutWV0nUlNkGGEwQlBqx
+         M8y6o2xO/oSuPemXAa7rCnevxdP3FHPF+WJGiUDdw9oe/SXr9G0KW181e8qfs2kCxT
+         27plWCU61tDVkcEVcWYxwhh0tJe1dO6pms3i6bjXHj4utYm/3ZYJfeH5JL+GSrVSAU
+         337MywT81rW9A==
+Subject: [PATCH 2/6] xfs: alert the user about data/attr fork mappings that
+ could be merged
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Sun, 02 Oct 2022 11:20:36 -0700
-Message-ID: <166473483619.1084923.6959896326767155292.stgit@magnolia>
+Message-ID: <166473483633.1084923.15717918189479146706.stgit@magnolia>
 In-Reply-To: <166473483595.1084923.1946295148534639238.stgit@magnolia>
 References: <166473483595.1084923.1946295148534639238.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,66 +50,60 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Convert the inode data/attr/cow fork scrubber to remember the entire
-previous mapping, not just the next expected offset.  No behavior
-changes here, but this will enable some better checking in subsequent
-patches.
+If the data or attr forks have mappings that could be merged, let the
+user know that the structure could be optimized.  This isn't a
+filesystem corruption since the regular filesystem does not try to be
+smart about merging bmbt records.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/bmap.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ fs/xfs/scrub/bmap.c |   27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
 
 diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index d310f74fe650..aaa73a2bdd17 100644
+index aaa73a2bdd17..0f5d7fb61ca1 100644
 --- a/fs/xfs/scrub/bmap.c
 +++ b/fs/xfs/scrub/bmap.c
-@@ -94,7 +94,8 @@ xchk_setup_inode_bmap(
- struct xchk_bmap_info {
- 	struct xfs_scrub	*sc;
- 	struct xfs_iext_cursor	icur;
--	xfs_fileoff_t		lastoff;
-+	struct xfs_bmbt_irec	prev_rec;
+@@ -390,6 +390,29 @@ xchk_bmap_dirattr_extent(
+ 		xchk_fblock_set_corrupt(info->sc, info->whichfork, off);
+ }
+ 
++/* Are these two mappings mergeable? */
++static inline bool
++xchk_bmap_mergeable(
++	struct xchk_bmap_info		*info,
++	const struct xfs_bmbt_irec	*b2)
++{
++	const struct xfs_bmbt_irec	*b1 = &info->prev_rec;
 +
- 	bool			is_rt;
- 	bool			is_shared;
- 	bool			was_loaded;
-@@ -402,7 +403,8 @@ xchk_bmap_iextent(
- 	 * Check for out-of-order extents.  This record could have come
- 	 * from the incore list, for which there is no ordering check.
- 	 */
--	if (irec->br_startoff < info->lastoff)
-+	if (irec->br_startoff < info->prev_rec.br_startoff +
-+				info->prev_rec.br_blockcount)
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
- 				irec->br_startoff);
++	/* Skip uninitialized prev_rec and COW fork extents */
++	if (b1->br_blockcount == 0)
++		return false;
++	if (info->whichfork == XFS_COW_FORK)
++		return false;
++
++	if (b1->br_startoff + b1->br_blockcount != b2->br_startoff)
++		return false;
++	if (b1->br_startblock + b1->br_blockcount != b2->br_startblock)
++		return false;
++	if (b1->br_blockcount + b2->br_blockcount > BMBT_BLOCKCOUNT_MASK)
++		return false;
++	return b1->br_state == b2->br_state;
++}
++
+ /* Scrub a single extent record. */
+ STATIC void
+ xchk_bmap_iextent(
+@@ -441,6 +464,10 @@ xchk_bmap_iextent(
+ 	if (info->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+ 		return;
  
-@@ -703,7 +705,8 @@ xchk_bmap_iextent_delalloc(
- 	 * Check for out-of-order extents.  This record could have come
- 	 * from the incore list, for which there is no ordering check.
- 	 */
--	if (irec->br_startoff < info->lastoff)
-+	if (irec->br_startoff < info->prev_rec.br_startoff +
-+				info->prev_rec.br_blockcount)
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
- 				irec->br_startoff);
- 
-@@ -797,7 +800,6 @@ xchk_bmap(
- 		goto out;
- 
- 	/* Scrub extent records. */
--	info.lastoff = 0;
- 	ifp = xfs_ifork_ptr(ip, whichfork);
- 	for_each_xfs_iext(ifp, &info.icur, &irec) {
- 		if (xchk_should_terminate(sc, &error) ||
-@@ -814,7 +816,7 @@ xchk_bmap(
- 			xchk_bmap_iextent_delalloc(ip, &info, &irec);
- 		else
- 			xchk_bmap_iextent(ip, &info, &irec);
--		info.lastoff = irec.br_startoff + irec.br_blockcount;
-+		memcpy(&info.prev_rec, &irec, sizeof(struct xfs_bmbt_irec));
- 	}
- 
- 	error = xchk_bmap_check_rmaps(sc, whichfork);
++	/* Notify the user of mergeable records in the data/attr forks. */
++	if (xchk_bmap_mergeable(info, irec))
++		xchk_ino_set_preen(info->sc, info->sc->ip->i_ino);
++
+ 	if (info->is_rt)
+ 		xchk_bmap_rt_iextent_xref(ip, info, irec);
+ 	else
 
