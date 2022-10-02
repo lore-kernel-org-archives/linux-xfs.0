@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84450C433FE
-	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 18:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E6C1C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 18:24:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229946AbiJBSYq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 2 Oct 2022 14:24:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47282 "EHLO
+        id S229734AbiJBSYu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 2 Oct 2022 14:24:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229734AbiJBSYp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 14:24:45 -0400
+        with ESMTP id S229935AbiJBSYs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 14:24:48 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF5C4D48
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 11:24:41 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ED29B85F
+        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 11:24:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6A05760EFD
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 18:24:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C54BCC433C1;
-        Sun,  2 Oct 2022 18:24:40 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EF11160EFD
+        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 18:24:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56EFEC433D6;
+        Sun,  2 Oct 2022 18:24:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664735080;
-        bh=w5fNzhYNWvbI8Bui3kq5Ct2Em5XL5W7QzFdD3Zl5Bdo=;
+        s=k20201202; t=1664735086;
+        bh=PjRCFSSuoxJf7Icc2KdXlq3X6fUuWbLfhpTnyoarjPM=;
         h=Subject:From:To:Cc:Date:From;
-        b=BcXuibOJHUwfmzERAqlGprtVqWgPEjn7M2zs0b+eXleOQCjMJAmelo3fmQcNulZB0
-         3HaFm7TRPZKvGhy2U6dJwZTBhlCIxOnyNgHelp3t1pqENDI2nEpQOFAdE0s7feWi+P
-         V98HYv7BQPuoA7H/pIaWpa7P7XgBcGT/t/oRLlc6Z6Ve9q+Yu2Kx+YK2/s07TGkP24
-         j9GZRBFfvIYk3U6wKgGNPpcGruC8/PkJt899Ei3IuKYRNcu94W+Czk2QTNIujausDI
-         7tkdxzcL/1f3kaVwNMih4opMwLeELJNeo0aAvtDkn6/tWZSZmjCctgjfbwYXkEnU6R
-         rzrtpdAQh49eQ==
-Subject: [PATCHSET v23.1 0/3] xfs: fix iget usage in directory scrub
+        b=puqMgxFBEcoFkSF9e8QnwNNAdCpUi4ZttJDdaqimT8L4DtKe6UXrT02a3/Lb72XY0
+         M4wHNamtrJWCp8ZO2VzjoBVHy2e+pLtIE7QQ4cSc+kRWSVUAXf+sjgg+ivesnLmg9l
+         /ieG0M1p4KG95FxEn0EXMapNykMkCap+UIntj0/87srZL2i3gmQspxN5ZeLqjxV5PE
+         8gmUJZMEN5mKxVM3j2jixBhoOsjHuvfHVZiHeUDk4qixN6mTbbiqYoUu9OJPSfLZwG
+         SQq/DzEqdWNcdCmsFU6/QxMHaf9YAH7DwL/IwvbNn/q5ZiJR47gn2BlMAbLnUVhAcp
+         ye/siuAkpSkhQ==
+Subject: [PATCHSET v23.1 0/6] xfs: detect mergeable and overlapping btree
+ records
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Sun, 02 Oct 2022 11:20:32 -0700
-Message-ID: <166473483259.1084804.16578148649615408100.stgit@magnolia>
+Date:   Sun, 02 Oct 2022 11:20:36 -0700
+Message-ID: <166473483595.1084923.1946295148534639238.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,12 +48,36 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-In this series, we fix some problems with how the directory scrubber
-grabs child inodes.  First, we want to reduce EDEADLOCK returns by
-replacing fixed-iteration loops with interruptible trylock loops.
-Second, we add UNTRUSTED to the child iget call so that we can detect a
-dirent that points to an unallocated inode.  Third, we fix a bug where
-we weren't checking the inode pointed to by dotdot entries at all.
+While I was doing differential fuzz analysis between xfs_scrub and
+xfs_repair, I noticed that xfs_repair was only partially effective at
+detecting btree records that can be merged, and xfs_scrub totally didn't
+notice at all.
+
+For every interval btree type except for the bmbt, there should never
+exist two adjacent records with adjacent keyspaces because the
+blockcount field is always large enough to span the entire keyspace of
+the domain.  This is because the free space, rmap, and refcount btrees
+have a blockcount field large enough to store the maximum AG length, and
+there can never be an allocation larger than an AG.
+
+The bmbt is a different story due to its ondisk encoding where the
+blockcount is only 21 bits wide.  Because AGs can span up to 2^31 blocks
+and the RT volume can span up to 2^52 blocks, a preallocation of 2^22
+blocks will be expressed as two records of 2^21 length.  We don't
+opportunistically combine records when doing bmbt operations, which is
+why the fsck tools have never complained about this scenario.
+
+Offline repair is partially effective at detecting mergeable records
+because I taught it to do that for the rmap and refcount btrees.  This
+series enhances the free space, rmap, and refcount scrubbers to detect
+mergeable records.  For the bmbt, it will flag the file as being
+eligible for an optimization to shrink the size of the data structure.
+
+The last patch in this set also enhances the rmap scrubber to detect
+records that overlap incorrectly.  This check is done automatically for
+non-overlapping btree types, but we have to do it separately for the
+rmapbt because there are constraints on which allocation types are
+allowed to overlap.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -63,11 +88,11 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-dir-iget-fixes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-detect-mergeable-records
 ---
- fs/xfs/scrub/common.c |   22 -----
- fs/xfs/scrub/common.h |    1 
- fs/xfs/scrub/dir.c    |   79 +++++++------------
- fs/xfs/scrub/parent.c |  203 +++++++++++++++++++++++--------------------------
- 4 files changed, 126 insertions(+), 179 deletions(-)
+ fs/xfs/scrub/alloc.c    |   31 +++++++++++-
+ fs/xfs/scrub/bmap.c     |   39 +++++++++++++--
+ fs/xfs/scrub/refcount.c |   50 +++++++++++++++++++
+ fs/xfs/scrub/rmap.c     |  126 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 238 insertions(+), 8 deletions(-)
 
